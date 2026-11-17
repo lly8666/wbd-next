@@ -1,6 +1,6 @@
 # Android Root 原生客户端适配｜授权施工方案（2026-11-17）
 
-**状态：A7 同源 Android ARM64 Go/Rust Native+Root APK BUILD_PASS、Linux 原服务端 oracle PASS；真实包名/UID JVM17断言、Launcher可见性Manifest、A6 callback/Stop静态门 PASS。Android16 ARM64 guest 因托管ARM64无KVM仍 ENV_BLOCKED，P2/P3正式业务 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
+**状态：A8原Go认证后1–8 UID组v2持久路由事务Host PASS、Java多App19断言PASS、ARM64原Go/Rust+签名APK BUILD_PASS、Linux原服务端oracle PASS；Android16 ARM64 guest因托管runner无KVM仍 ENV_BLOCKED，P2/P3正式业务 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
 
 ## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
 
@@ -72,6 +72,8 @@ per-App 仅改变业务 IP 出口，不重建 netd 每UID DNS、不恢复共享�
 - [A6 Action44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256)，SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`：**5/5 Jobs SUCCESS**，原M3、ARM64 Bionic原Go/Rust、签名Root APK、原Linux WBD server oracle；Java事件Network门16断言、生成的Root Stop脚本 `sh -n` 11断言、`owner.pid`旧2/新3字段POSIX解析PASS。`ubuntu-24.04-arm`实测 `aarch64` 但 `/dev/kvm` 不可访问，**ARM64 Android P2/P3 环境 `ENV_BLOCKED`，不是正式Root App联网通过**；不再尝试已有hang的macOS AVD。需可信有KVM的ARM64 Actions runner及固定Cuttlefish镜像/host工具，否则保持NOT_RUN。
 
 - [A7 Action44060369629](https://github.com/lly8666/wbd-next/actions/runs/44060369629)，SOURCE `170ed6e47b0878d470cc83ef3cdebe9e781cfe7b`：**5/5 Jobs SUCCESS**，原Go/Rust ARM64 Bionic+签名无VpnService APK BUILD_PASS、原Linux WBD server oracle PASS；A7 `InstalledAppTarget` JVM真实包名/UID 17断言 PASS、最小Launcher `<queries>` Manifest PASS、A6网络回调16/Stop语法11及owner PID兼容回归PASS。**真正 Android16 PackageManager/卸载广播/Root UID路由及 Android↔Linux业务依然NOT_RUN**；aarch64托管runner `/dev/kvm` 不可用、Cuttlefish P2/P3 `ENV_BLOCKED`。共享UID不能逐包分开；不得把编译的包选择器冒称真实Android per-app功能完成。
+
+- [A8同源 Action44063911490](https://github.com/lly8666/wbd-next/actions/runs/44063911490)，SOURCE `c76215d1ea4a215560b401c47ef5d1342ef70bf2`，**5/5 Jobs SUCCESS**：v2多UID rootjournal Go测试（部分失败回滚、跨版本崩溃恢复、活Owner锁、外国priority/table拒绝）、Java多包UID组19断言、原M3、Android ARM64真实原Go/Rust ELF与签名Root APK、Linux原server标准TLS/租约/M4双向UDP/Stop oracle均PASS；A6/A7 Host回归保留。首轮[Action44063385632](https://github.com/lly8666/wbd-next/actions/runs/44063385632) Java非法系统UID构造器负例测试夹具FAIL已按实际修复，不能改写旧FAIL。修复SOURCE治理[Action44063911524](https://github.com/lly8666/wbd-next/actions/runs/44063911524)因只改测试/devlog而未同改功能卡FAIL，当前最终证据提交补齐卡片；不把治理失败写成软件失败。**真 Android16 ARM64 PackageManager、内核多UID rule、App→su/与Linux双向WBD仍NOT_RUN**：Actions ARM64 runner`/dev/kvm`不可用，Cuttlefish P2/P3`ENV_BLOCKED`。DNS/分流尚未开发实际系统E2E，实体KSU最后。
 
 ### Actions 准入、各层真实验收及最后实体终验
 

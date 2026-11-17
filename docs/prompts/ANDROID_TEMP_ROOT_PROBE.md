@@ -13,6 +13,8 @@
 
 - [A7 Action44060369629](https://github.com/lly8666/wbd-next/actions/runs/44060369629)，SOURCE `170ed6e47b0878d470cc83ef3cdebe9e781cfe7b`：**5/5 Jobs SUCCESS**，原Go/Rust ARM64 Bionic+签名无VpnService APK BUILD_PASS、原Linux WBD server oracle PASS；A7 `InstalledAppTarget` JVM真实包名/UID 17断言 PASS、最小Launcher `<queries>` Manifest PASS、A6网络回调16/Stop语法11及owner PID兼容回归PASS。**真正 Android16 PackageManager/卸载广播/Root UID路由及 Android↔Linux业务依然NOT_RUN**；aarch64托管runner `/dev/kvm` 不可用、Cuttlefish P2/P3 `ENV_BLOCKED`。共享UID不能逐包分开；不得把编译的包选择器冒称真实Android per-app功能完成。
 
+- [A8同源 Action44063911490](https://github.com/lly8666/wbd-next/actions/runs/44063911490)，SOURCE `c76215d1ea4a215560b401c47ef5d1342ef70bf2`，**5/5 Jobs SUCCESS**：v2多UID rootjournal Go测试（部分失败回滚、跨版本崩溃恢复、活Owner锁、外国priority/table拒绝）、Java多包UID组19断言、原M3、Android ARM64真实原Go/Rust ELF与签名Root APK、Linux原server标准TLS/租约/M4双向UDP/Stop oracle均PASS；A6/A7 Host回归保留。首轮[Action44063385632](https://github.com/lly8666/wbd-next/actions/runs/44063385632) Java非法系统UID构造器负例测试夹具FAIL已按实际修复，不能改写旧FAIL。修复SOURCE治理[Action44063911524](https://github.com/lly8666/wbd-next/actions/runs/44063911524)因只改测试/devlog而未同改功能卡FAIL，当前最终证据提交补齐卡片；不把治理失败写成软件失败。**真 Android16 ARM64 PackageManager、内核多UID rule、App→su/与Linux双向WBD仍NOT_RUN**：Actions ARM64 runner`/dev/kvm`不可用，Cuttlefish P2/P3`ENV_BLOCKED`。DNS/分流尚未开发实际系统E2E，实体KSU最后。
+
 ## Actions 分层门禁，真实软件先行，实体 KSU 最后
 - **P0**：同一 SOURCE/manifest/SHA 的 Android ARM64-v8a Bionic 原 Go/Rust/Java APK、16KiB、原 M3 wire oracle，`BUILD_PASS`。
 - **P1**：同源 Linux 原 Go/Rust client+server 的标准 TLS、认证、/32租约、真实收发、Stop，`LINUX_ORACLE_PASS`。

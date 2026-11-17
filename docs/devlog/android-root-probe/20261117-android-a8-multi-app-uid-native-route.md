@@ -20,3 +20,11 @@
 ## 首轮失败定位及修复（保留真实 FAIL）
 
 SOURCE `4d89814c4d92e825c664807b1c7de72c43a23080`，[Actions #44063385632](https://github.com/lly8666/wbd-next/actions/runs/44063385632)：原M3 PASS、ARM64原Go/Rust Native构建及包含新group全部Go单测 PASS，但 `root-arm64-app` 失败在 host `SelectedAppGroupTest`：测试先调用 `new InstalledAppTarget(...,9999/0)`，其生产构造器正确拒绝系统/Root UID并抛 `IllegalArgumentException`；夹具错误地预期非法对象能构造后再被分组拒绝，导致未到 APK build。修复把非法 UID 负例改为显式期待在目标对象构造器失败，保留另外的组装阶段拒绝与共享UID测试。**旧Action仍是FAIL，不重写成PASS**，待修复SOURCE新的完整5 Job实际结果。
+
+## A8 同源最终 Actions、原失败与治理边界
+
+修复SOURCE `c76215d1ea4a215560b401c47ef5d1342ef70bf2` 的 [Action44063911490](https://github.com/lly8666/wbd-next/actions/runs/44063911490) 已 **5/5 Jobs SUCCESS**：原M3 wire、原Go/Rust ARM64 Bionic Native、独立签名Root APK、原Linux server标准TLS/真实租约/原Rust M4双向UDP/Stop oracle，以及ARM64 host KVM准入的环境票据。新Go `rootjournal` group transaction Fake ip Runner测试 PASS，Java `ANDROID_ROOT_MULTI_APP_UID_GROUP_CONTRACT_PASS assertions=19`，旧安装包UID策略17断言、Network事件16断言、POSIX Stop11断言亦同SOURCE PASS。
+
+首轮源码 `4d89814c4d92e825c664807b1c7de72c43a23080` [Action44063385632](https://github.com/lly8666/wbd-next/actions/runs/44063385632) 的测试夹具把构造器应拒绝的系统UID9999/RootUID0当成合法对象而FAIL；真实生产构造器本就正确拒绝，已把负例改为分层断言并完整复跑。修复源码 [治理44063911524](https://github.com/lly8666/wbd-next/actions/runs/44063911524) 因带`feature-impact`但该次没有修改feature卡而FAIL；此次证据提交同步功能卡治理。所有旧FAIL不得改写为PASS。
+
+A8软件门是**host Go模拟ip Runner + host Java纯逻辑 + 原Go/Rust ARM64实际ELF链接/ APK + Linux真正协议oracle**，不能证明实际Android16 `ip -4 rule uidrange`、P3原App→su、两个普通App数据面、真实DNS UDP/TCP53/分流或终验KernelSU。托管ARM64 host`aarch64`却`KVM_NOT_ACCESSIBLE`，P2/P3仍ENV_BLOCKED；本次没有进行实体设备操作。
