@@ -73,6 +73,13 @@ unzip -p out/android-root-app/wbd-root-arm64-debug.apk \
   assets/native-arm64/libwbd_engine-arm64.so >"$dir/apk-rust-arm64.so"
 cmp "$dir/apk-go-arm64" out/android-root-app-native/wbd-v4-client-arm64
 cmp "$dir/apk-rust-arm64.so" out/android-root-app-native/libwbd_engine-arm64.so
+# Real ARM64 binary must discover the exact Rust .so beside itself under
+# KernelSU. Source-lock the actual ELF's DT_NEEDED and $ORIGIN RUNPATH,
+# not merely its compiler flag or the Android ABI marketing string.
+readelf -d out/android-root-app-native/wbd-v4-client-arm64 \
+  >"$dir/elf-dynamic-linker.txt"
+grep -Fq 'Shared library: [libwbd_engine.so]' "$dir/elf-dynamic-linker.txt"
+grep -Fq 'Library runpath: [$ORIGIN]' "$dir/elf-dynamic-linker.txt"
 python3 - <<'PY'
 from pathlib import Path
 import struct

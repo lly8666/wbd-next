@@ -157,8 +157,19 @@ for pair in "aarch64 arm64"; do
   rust_target=aarch64-linux-android
   cc="$tool/${rust_target}28-clang"
   export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
-  export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384"
+  # Android x86_64 KVM + NDK translation (and real ARM64 Bionic)
+  # does not reliably propagate a privileged "su -c" LD_LIBRARY_PATH to
+  # the translated AArch64 dynamic linker. The real original-Go binary
+  # and its shared-Rust owner are staged in the SAME owned root directory.
+  # DT_RUNPATH=$ORIGIN makes this an actual relocatable Android product,
+  # instead of a Host-only Go/Rust link or a privileged-env guess.
+  export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384 -Wl,-rpath,\$ORIGIN"
   (cd legacy && go build -trimpath -buildvcs=false -tags "$go_tags" -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
+  # Test actual source-locked linked ELF rather than checking only flags.
+  readelf -d "out/android-product-a1/wbd-v4-client-$goarch" \
+    >"out/android-product-a1/linker-$goarch.txt"
+  grep -Fq 'Shared library: [libwbd_engine.so]' "out/android-product-a1/linker-$goarch.txt"
+  grep -Fq 'Library runpath: [$ORIGIN]' "out/android-product-a1/linker-$goarch.txt"
   unset CGO_LDFLAGS
 done
 python3 - <<'PY'

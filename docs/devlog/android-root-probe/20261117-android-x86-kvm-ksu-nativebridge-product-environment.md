@@ -51,3 +51,16 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"记录第三轮KSU guest bash -n匹配引号错误FAIL和NativeBridge NOT_RUN，恢复源锁脚本语法并将真实AArch64 exec提前。"}
 ```
+
+## x86_64 KVM API36 KSU + ARM64 NativeBridge真实执行、库发现FAIL（2026-11-17）
+
+SOURCE `1faf0aedc7802c77c3f45986cea50710b244f5b4` [Action44118042917](https://github.com/lly8666/wbd-next/actions/runs/44118042917)：全部旧10个 Host/ARM64原生ELF/签名APK/Linux真TLS/认证租约/M4 UDP/Stop oracle **SUCCESS**；新KSU guest Job **FAIL**，完整原始artifacts [14343003956](https://github.com/lly8666/wbd-next/actions/runs/44118042917/artifacts/14343003956) 显示:
+- API36 Android16 `uname=x86_64`, SELinux Enforcing, KSU root`uid=0(root) context=u:r:ksu:s0`；`ro.product.cpu.abilist=x86_64,arm64-v8a`, `ro.dalvik.vm.native.bridge=libndk_translation.so`, `ro.enable.native.bridge.exec=1`, 真系统`/system/lib64/libndk_translation.so`和`/proc/sys/fs/binfmt_misc/arm64_exe`处理器均存在。
+- 同SOURCE正式APK所含原AArch64 Go ELF及Rust.so已经真实`adb push`至Root环境，`su`下原ARM64 Go的真实`execve`进入Bionic动态链接器，却报`CANNOT LINK EXECUTABLE "/data/local/tmp/wbd-product-arm64": library "libwbd_engine.so" not found: needed by main executable`。并非`Exec format error`，但`arm64_native_exec`仍NOT_PROVEN，后续真正TLS、App Activity未执行。
+- 已下载同SHA实际ARM64 Go ELF，用`readelf -d`证实`DT_NEEDED=libwbd_engine.so`而**没有 DT_RUNPATH**；Rust so真实同目录，`su -c`的LD_LIBRARY_PATH在NativeBridge场景未能使加载器找到它。
+
+本批对原Android Go CGo链接器加`-Wl,-rpath,\$ORIGIN`；正式Root App原布局就将Go主程序和真实Rust .so放同一私有root-owned目录，ELF `$ORIGIN` runpath是生产修复而非测试sidecar。Android ARM64构建须对实际产物`readelf -d`同时断言Rust`DT_NEEDED`及`RUNPATH [$ORIGIN]`，KSU真实guest验收也检测同APK ELF字节。已在本地Go CGo dummy中实测相同`CGO_LDFLAGS`得到`RUNPATH [$ORIGIN]`，**这只证明链接参数可行**，仍须下一同SHA Android Actions实测；无Go/Rust FakeTLS/PN/AEAD/Stop协议改动，历史失败保留。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"原Android ARM64 Go真正通过x86 KVM+KSU NativeBridge binfmt到Bionic，因原ELF缺RUNPATH找不到Rust.so FAIL；修原CGo $ORIGIN RUNPATH并核同SHA ELF动态节。"}
+```
