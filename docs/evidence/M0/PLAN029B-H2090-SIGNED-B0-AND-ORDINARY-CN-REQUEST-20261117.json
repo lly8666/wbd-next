@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2090",
+  "date": "2026-11-17",
+  "source_sha": "d0dd9f1bcd662360473a8269effa413369875fb7",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "prior_real_native_b0": {
+    "source_sha": "d0dd9f1bcd662360473a8269effa413369875fb7",
+    "action": 44056378053,
+    "job": 133949818062,
+    "artifact": 14316613440,
+    "result": "PASS_SCOPED_SIGNED_B0_DNS_A_AAAA_UDP_TCP_AND_STOP",
+    "ordinary_dns4": "203.0.113.77",
+    "ttl": 2,
+    "original_windows_winsock": "UDP_A,UDP_AAAA,TCP_AAAA,TCP_A",
+    "linux_tun_dns_upstream": "physical genuine UDP and TCP sockets A only",
+    "aaaa_upstream_leaks": 0,
+    "direct_business_nat": "ABSENT",
+    "business": "PASS_TWO_OS_TUNNEL_TCP_UDP",
+    "stop": "PASS_BOTH_OWNED"
+  },
+  "new_requested_scene": {
+    "marker": "[plan029b-b2-cn-ordinary-real]",
+    "status": "NOT_RUN",
+    "os": "Windows2025 Wintun/Npcap and WSL2 original TUN",
+    "mode": "normal",
+    "outer_mtu": 1460,
+    "selector": "--split-enable --route-mode=bypass-lan-cn --cn-domain-direct=false",
+    "cn_dns": "physical unique direct upstream, real CNAME edge.cdn.example and A 203.0.113.77 TTL2",
+    "non_cn_dns": "TUN unique resolver same A 203.0.113.77 TTL2",
+    "business": "real Windows Winsock UDP CN and non-CN to same overseas actual A must both enter authenticated Linux TUN, not Direct/FakeIP",
+    "stop": "both original TLS/Rust/OS/WAL owner cleanup"
+  },
+  "known_limits": [
+    "H2090 new-source real advanced FakeIP distinct scenario NOT_RUN",
+    "physical IPv6 Wintun ingress/B3 NOT_RUN",
+    "real GUI multistage migration on source/H2090 B4 NOT_RUN",
+    "same VM B5 10Mbps CPU/GiB and latency A/B NOT_RUN"
+  ],
+  "original_H2083_release_export_failure": "FAIL_RETAINED",
+  "original_H2077_scoped_pass": "DISTINCT_OLD_SOURCE_ONLY"
+}

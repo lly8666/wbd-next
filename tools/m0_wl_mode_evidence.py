@@ -44,6 +44,9 @@ LOGS=(
  "plan029-h1778-linux-flow-pressure.log","plan029-h1778-windows-flow-pressure.log",
  "plan029-h1794-linux-two-tcp53.log","plan029-h1794-windows-app-tcp53.log",
  "plan029-h2063-ttl-guest.log","plan029-bootstrap-tc-guest.log",
+ # 029B signed real OS app DNS/ordinary CN receipts, bounded and redacted.
+ "plan029b-b0-dns-guest.log","plan029b-b0-dns-windows.log",
+ "plan029b-b2-ordinary-guest.log","plan029b-b2-ordinary-windows.log",
  "auto-adaptive-windows-udp.log","auto-adaptive-linux-udp.log",
  "auto-revision-windows-udp.log","auto-revision-linux-udp.log",
  "wl-n0-windows-app.log","wl-n0-linux-app.log",
