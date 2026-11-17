@@ -40,3 +40,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"封存B2c2b2纠正后同SOURCE Android ARM64/原Linux oracle 10/10 PASS及旧过滤器FAIL；Rust DNS实际M4 TX/认证RX/Stop接线默认冷关闭，Android真DNS仍NOT_RUN。"}
 ```
+
+## 功能卡大小治理修复（历史证据不删除）
+
+SOURCE `f05806113ca43985acda467cc9970951336a584a` [governance Action44099045610](https://github.com/lly8666/wbd-next/actions/runs/44099045610) FAIL；先前修复测试选择的 `b36e6aef9a68cd22f43ff44da30b59d41bcb3c62` [governance Action44098023151](https://github.com/lly8666/wbd-next/actions/runs/44098023151) 也 FAIL；两次皆因 `android-root-native-client.json` 超过 `tools/feature_catalog.py` 的16KiB大小硬门，未进入后续治理步骤，非产品Host/ARM64/Linux协议失败。
+
+本次不放宽feature_catalog门槛、不删除任何`verification`历史结果/FAIL/NOT_RUN或`limitations`；仅把`code_refs`与`doc_refs`收束为原Rust M4/DNS、Go冷控制、Root App/NDK构建及近两阶段开发日志等现行稳定入口。较旧的文件和devlog仍在历史提交、对应功能日志及Git仓库，相关已有Actions来源不改。卡体 UTF-8 从 17495B 降至 13302B，保留充裕增量空间。该提交**仅为治理元数据**，产品同源10/10仍只归属代码SOURCE `b36e6aef9a68cd22f43ff44da30b59d41bcb3c62`，不把docs HEAD当新产品实测。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"修复功能卡16KiB大小门槛：仅缩减冗长code_refs/doc_refs索引，全部历史verification及局限保留，并封存两次catalog失败；不改Rust生产协议/Android真实DNS状态。"}
+```
