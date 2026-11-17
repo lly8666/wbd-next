@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2085,
-  "checkpoint_sha": "45fc57cfd9985ce79e437205c2a17062dd6b08ec",
+  "sequence": 2086,
+  "checkpoint_sha": "1a9459285cbeab48e6db5f40953a9789cedf1b99",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2085 PLAN029B after H2084 CI: fix Windows-only ordinary CN UDP Rust test DnsAResolution path E0422; update exact native scope unit to require default always-built Rust V3 release feature and unconditional PE export pre-driver instead of obsolete conditional H1843 layout; slim governance hot references. H2084 WinForms and ABI PASS, cheap gate FAIL, Windows Rust pressure FAIL, governance hot FAIL; all preserved. Source candidate not real signed qualified.",
-  "why_now": "H2084 source45fc Actions: 44047001012 cheap unit FAIL test_h1843_real_product_v3_abi_built_and_checked_before_driver IndexError due old feature string; 44047000813 Windows Rust pure FAIL E0422 DnsAResolution new test; 44047000928 governance combined hot 32893 chars > 32768, feature catalog structure itself PASS. WinForms real Go CLI/source 44047000912 PASS, r0-native-abi 44047000808 PASS, cross 44047000811 PASS, native-functional 44047000779 PASS. Signed no-scene not run because cheap gate intentionally failed.",
+  "current_task": "H2086 029B exact cheap CI fixture repair: H2085 tests/test_m0_native_ci_scope.py reused first assertIn getattr occurrence in older H1859 test and left H1843 escaped V3 export literal. Fix both distinct method-local assertions (P1/P2 default V3 feature; H1843 unconditional real PE check), static pre-validate against actual workflow text. H2085 governance/native ABI/cross/native-functional/Win Rust pressure PASS, cheap gate FAIL; no signed network from H2085. Product code unchanged.",
+  "why_now": "H2085 source1a945 Action44050649777 cheap Run python -m unittest tests.test_m0_native_ci_scope -v failed exactly H1859 NameError abi_section and H1843 AssertionError escaped PE export string. Original H2084 E0422 Windows Rust unit is corrected, H2085 Windows/Linux Rust pressure 44050649813 PASS and governance 44050649785 PASS, static 44050649812 PASS; only cheap test blocked proper native job. Stronger method-local static checks added before H2086 commit.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2085 native cheap gate/governance/Windows Rust+Go+WinForms and exact default release V3 PE export, then one signed original Windows2025/WSL2 Normal/off real UDP/TCP DNS/Stop. For B2 normal CN+advanced CN/TTL and B3 physical IPv6 true ingress, prepare minimum independent exact-source cases after B0; B5 same-VM fair comparison remains NOT_RUN. Do not run 028/030 old matrix.",
+  "next_action": "Run H2086 cheap gate/governance, exact Rust Win tests, PE export and real signed Windows2025↔WSL2 Normal off /32 + UDP/TCP + DNS/Stop; note B0 actual A/AAAA/TCP53 only when observed and full B0–B5 remains open. After one signed true B0, add bounded independent B2 normal CN vs explicit advanced and B3 real IPv6, then B5 same-VM short fair A/B. No 028/030 old matrix.",
   "unverified": true,
-  "last_tested_source": "45fc57cfd9985ce79e437205c2a17062dd6b08ec",
+  "last_tested_source": "1a9459285cbeab48e6db5f40953a9789cedf1b99",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2085-H2084-CI-FIRST-BOUNDARY-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2086-H2085-CI-SCOPE-TWO-ASSERTIONS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2085-WINDOWS-DNS-TEST-CI-SCOPE-REPAIR.md",
-    "docs/evidence/M0/PLAN029B-H2085-H2084-CI-FIRST-BOUNDARY-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2086-SCOPE-ASSERTION-FIX.md",
+    "docs/evidence/M0/PLAN029B-H2086-H2085-CI-SCOPE-TWO-ASSERTIONS-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/devlog/M0/20261117-PLAN029B-H2084-PRODUCTION-V3-EXPORT-AND-CN-GUI-REGRESSION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2085 only first exposed pure CI/test and bounded hot governance repairs, no protocol or product behavior changes. H2084 source fresh WinForms/ABI PASS but cheap scope, Win Rust missing import and governance overbudget FAIL. H2083 real signed off first FAIL missing V3 exported symbol; H2084 fixed release code but not yet physical qualified. B0–B5 still NOT_RUN for new product, old H2077 PASS_SCOPED independent."
+  "partial_summary": "H2086 only two CI assertion lines repaired with exact function scopes and static proof; H2085 actual Windows/Linux Rust pressure/gov/ABI PASS but cheap gate failure prevented signed native. No product behavior changed, B0–B5 signed new SOURCE NOT_RUN; original H2077 PASS separate."
 }

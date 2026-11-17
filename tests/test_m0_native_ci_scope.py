@@ -100,7 +100,7 @@ class NativeSmokeScopeTests(unittest.TestCase):
                       "WBD_WL_TUN_MTU:"):
             row=next(x for x in source.splitlines() if x.strip().startswith(field))
             self.assertIn("[plan029-v3-real-p2-bulk]",row)
-        self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',abi_section)
+        self.assertIn("$features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'",source)
 
     def test_h1868_one_native_direct_pressure_scenario_has_same_mtu_and_v3(self):
         path=Path(__file__).resolve().parents[1] / ".github/workflows/m0-wl-public-normal-full.yml"
@@ -166,7 +166,7 @@ class NativeSmokeScopeTests(unittest.TestCase):
         abi_section=workflow.split(
             "Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll",1)[1]
         abi_section=abi_section.split("windows-binary-manifest.json",1)[0]
-        self.assertIn('getattr(d,\\"wbd_m0_win_native_v3_start\\")',abi_section)
+        self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',abi_section)
         self.assertIn("if($LASTEXITCODE -ne 0){throw 'PLAN029B default public Rust V3 ABI missing in release DLL'}",abi_section)
         self.assertNotIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' or",abi_section)
         self.assertIn("if (os.environ.get('WBD_PLAN029_NATIVE_V3_TRIAL')=='1' or",workflow)
