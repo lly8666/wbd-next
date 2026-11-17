@@ -26,6 +26,8 @@ def txt(name):
 uid=txt("ksu-shell-id.txt")
 execout=txt("arm64-exec.txt")
 app=txt("app-launch.txt")
+def probe_ok(output,exitfile,marker):
+    return "PASS" if txt(exitfile)=="0" and marker in txt(output) else "NOT_PROVEN"
 d={
  "schema":"wbd-android-kvm-x86_64-ksu-arm64-nativebridge-product/v1",
  "source":os.environ["GITHUB_SHA"],
@@ -37,7 +39,11 @@ d={
  "ksu_app_su":"NOT_RUN",
  "selinux":txt("getenforce.txt"),
  "native_bridge_props":txt("native-bridge.txt"),
- "arm64_native_exec":"PASS" if "ANDROID_AARCH64_GO_RUNTIME_STARTED" in execout else "NOT_PROVEN",
+ "arm64_ndk_min_exec":probe_ok("ndk-min-exec.txt","ndk-min-exit-code.txt","WBD_ANDROID_ARM64_NDK_MIN_EXEC_PASS"),
+ "arm64_pure_go_runtime":probe_ok("go-min-exec.txt","go-min-exit-code.txt","WBD_ANDROID_ARM64_PURE_GO_RUNTIME_PASS"),
+ "arm64_rust_dlopen":probe_ok("rust-dlopen.txt","rust-dlopen-exit-code.txt","WBD_ANDROID_ARM64_RUST_DLOPEN_PASS"),
+ "arm64_native_exec":"PASS" if txt("arm64-exit-code.txt")=="0" and "ANDROID_AARCH64_GO_RUNTIME_STARTED" in execout else "NOT_PROVEN",
+ "arm64_native_exit_code":txt("arm64-exit-code.txt"),
  "product_app_launch":"PASS" if "ACTIVITY_STARTED" in app else "NOT_PROVEN",
  "wbd_android_linux_tls_auth_lease":"NOT_RUN",
  "wbd_app_dns_tcp_udp_stop":"NOT_RUN",
@@ -62,6 +68,10 @@ test -s out/ksu/patched-ramdisk.img
 test -s out/ksu/manager.apk
 test -s out/android-root-app-native/wbd-v4-client-arm64
 test -s out/android-root-app-native/libwbd_engine-arm64.so
+# Test-only ARM64 executables built by the exact product SOURCE job;
+# they are never shipped in the official APK or treated as WBD success.
+test -s out/android-root-app-native/ksu-arm64-ndk-probe
+test -s out/android-root-app-native/ksu-arm64-go-probe
 test -s out/android-root-app/wbd-root-arm64-debug.apk
 test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
 test "$(cat out/android-root-app/SOURCE)" = "$GITHUB_SHA"
@@ -209,20 +219,62 @@ adb shell su -c 'chmod 755 /data/local/tmp/wbd-product-arm64; chmod 644 /data/lo
 local_hash="$(sha256sum out/android-root-app-native/wbd-v4-client-arm64 | cut -d ' ' -f1)"
 remote_hash="$(adb shell su -c 'sha256sum /data/local/tmp/wbd-product-arm64' | tr -d '\r' | cut -d ' ' -f1)"
 test "$local_hash" = "$remote_hash"
+phase="NATIVEBRIDGE_LAYERED_ARM64_EXEC_DIAG"
+adb push out/android-root-app-native/ksu-arm64-ndk-probe \
+  /data/local/tmp/wbd-ndk-arm64-probe >"$dir/ndk-probe-push.txt"
+adb push out/android-root-app-native/ksu-arm64-go-probe \
+  /data/local/tmp/wbd-go-arm64-probe >"$dir/go-probe-push.txt"
+adb shell su -c 'chmod 755 /data/local/tmp/wbd-ndk-arm64-probe /data/local/tmp/wbd-go-arm64-probe' \
+  >"$dir/probe-chmod.txt" 2>&1
+# Each result is a real Bionic/NativeBridge process. Every probe is
+# independent; never short-circuit before the original WBD execution.
+set +e
+adb shell su -c '/data/local/tmp/wbd-ndk-arm64-probe --self' >"$dir/ndk-min-exec.txt" 2>&1
+ndkrc=$?
+adb shell su -c '/data/local/tmp/wbd-go-arm64-probe' >"$dir/go-min-exec.txt" 2>&1
+gorc=$?
+adb shell su -c '/data/local/tmp/wbd-ndk-arm64-probe --dlopen /data/local/tmp/libwbd_engine.so' >"$dir/rust-dlopen.txt" 2>&1
+rustrc=$?
+set -e
+printf '%s\n' "$ndkrc" >"$dir/ndk-min-exit-code.txt"
+printf '%s\n' "$gorc" >"$dir/go-min-exit-code.txt"
+printf '%s\n' "$rustrc" >"$dir/rust-dlopen-exit-code.txt"
+phase="ORIGINAL_ARM64_GO_RUST_EXEC_RUNTIME"
 set +e
 adb shell su -c 'LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/wbd-product-arm64 --help' \
   >"$dir/arm64-exec.txt" 2>&1
 rc=$?
 set -e
 echo "$rc" >"$dir/arm64-exit-code.txt"
+# The original Go may fail during executable startup; capture a real
+# tombstone/crash buffer (no user credentials are supplied in this gate).
+adb logcat -d -b crash -t 600 >"$dir/arm64-crash-logcat.txt" 2>&1 || true
+adb logcat -d -t 800 >"$dir/arm64-recent-logcat.txt" 2>&1 || true
+adb shell su -c 'ls -lt /data/tombstones' >"$dir/tombstone-list.txt" 2>&1 || true
+adb shell su -c 'f=$(ls -t /data/tombstones/tombstone_* 2>/dev/null | head -1); test -n "$f" && head -n 220 "$f"' \
+  >"$dir/latest-tombstone-excerpt.txt" 2>&1 || true
+printf 'NDK_ARM64_EXIT=%s PURE_GO_ARM64_EXIT=%s RUST_DLOPEN_EXIT=%s ORIGINAL_WBD_ARM64_EXIT=%s\n' \
+  "$ndkrc" "$gorc" "$rustrc" "$rc"
 if grep -Eiq 'Usage of|Usage:|--peer-ip|peer-ip|--android-network-handle|android-network-handle' "$dir/arm64-exec.txt" &&
    ! grep -Eiq 'exec format|not executable|not found|failed to execute|bad ELF' "$dir/arm64-exec.txt";then
   echo "ANDROID_AARCH64_GO_RUNTIME_STARTED" >>"$dir/arm64-exec.txt"
 else
-  echo "ENV_BLOCKED_NATIVEBRIDGE_AARCH64_RAW_EXEC: guest did not execute exact ARM64 Go ELF" >&2
+  echo "ENV_BLOCKED_NATIVEBRIDGE_AARCH64_RAW_EXEC: original ARM64 WBD did not complete --help" >&2
   cat "$dir/native-bridge.txt" >&2
-  tail -n 70 "$dir/arm64-exec.txt" >&2
+  for f in ndk-min-exec.txt go-min-exec.txt rust-dlopen.txt arm64-exec.txt latest-tombstone-excerpt.txt;do
+    echo "=== $f ===" >&2
+    tail -n 85 "$dir/$f" >&2 || true
+  done
   exit 10
+fi
+# All diagnostic subprocesses must succeed independently; do not mark the
+# genuine product as 'runtime qualified' because a test-only sidecar ran.
+if [[ "$ndkrc" != 0 || "$gorc" != 0 || "$rustrc" != 0 ]] ||
+   ! grep -q 'WBD_ANDROID_ARM64_NDK_MIN_EXEC_PASS' "$dir/ndk-min-exec.txt" ||
+   ! grep -q 'WBD_ANDROID_ARM64_PURE_GO_RUNTIME_PASS' "$dir/go-min-exec.txt" ||
+   ! grep -q 'WBD_ANDROID_ARM64_RUST_DLOPEN_PASS' "$dir/rust-dlopen.txt";then
+  echo "NATIVEBRIDGE_LAYERED_ARM64_DIAGNOSTIC_FAIL: no false-positive product pass" >&2
+  exit 13
 fi
 phase="REAL_PRODUCT_APK_ACTIVITY"
 adb shell am start -n org.wbdnext.rootclient/.RootClientActivity >"$dir/app-launch.txt" 2>&1

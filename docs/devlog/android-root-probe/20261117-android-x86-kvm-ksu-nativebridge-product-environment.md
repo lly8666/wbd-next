@@ -74,3 +74,15 @@ SOURCE `b3166604b972cc32eea1c0313f10ddfc82f71208` [Action44120418078](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"Go原Android ARM64 ELF真实$ORIGIN RUNPATH存在但CGO重复五次，新增单条grep错误FAIL；修源码锁建构与KSU两层gate允许仅重复$ORIGIN，保留全部历史验证。"}
 ```
+
+## 2026-11-18 恢复最新远端：NativeBridge真实SIGSEGV与分层诊断
+
+SOURCE `32e32e8ccceb1adf1d895e9327d378faa5353a7a` [Action44121481475](https://github.com/lly8666/wbd-next/actions/runs/44121481475) completed/**FAIL**。旧10个产品Job（Android ARM64 Go/Rust ELF/签名APK、Host M3/M4/DNS、同源Linux真TLS/租约/UDP/Stop oracle）全PASS，但新增KSU guest运行**FAIL**。原始[artifact14346456086](https://github.com/lly8666/wbd-next/actions/runs/44121481475/artifacts/14346456086)不抹除。
+
+真实Android16 API36 x86_64 KVM+官方KernelSU `uid=0(root),context=u:r:ksu:s0`；libndk_translation.so与binfmt_misc/arm64_exe存在。签名APK同SOURCE原Go与Rust ARM64共享库一致，真实Go ELF的`DT_NEEDED=libwbd_engine.so`、`RUNPATH=[$ORIGIN:$ORIGIN:$ORIGIN:$ORIGIN:$ORIGIN]`均PASS；不再发生找不到Rust.so，**但真正`--help`进程SIGSEGV exit139**，不证明是翻译器、Rust或Go哪一方，也不证明正式WBD业务完成。Android App→Root真TLS/租约/TUN/Stop与Android↔Linux server E2E继续NOT_RUN。
+
+本批只添加同SOURCE构建的测试专用两个`android/arm64` ELF：NDK最小C + 纯Go CGO0。guest真实顺序执行NDK自身、纯Go、NDK`dlopen`真实Rust `libwbd_engine.so`并`dlsym`已导出函数（**不调用WBD原业务或伪造密码/AEAD**）、最后再执行与签名APK逐字节相同的正式 ARM64 原Go/Rust主程序。收集每一个退出码、真实marker、原进程实际输出、Android `logcat -b crash`和最近tombstone有界摘录，明确定位翻译器/Go runtime/Rust loader/原合体程序四层。诊断侧车**绝不放入正式APK**，旧红门和Source lock保留；本批新源码实际Android run提交前NOT_RUN，实体KSU终验仍要用户另授权。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"恢复最新真实KSU NativeBridge原ARM64 Go+Rust SIGSEGV 139失败并保留证据；新增测试专用NDK/纯Go/Rust动态载入层次与Android崩溃收据，不伪装正式TLS或业务。"}
+```

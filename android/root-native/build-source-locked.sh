@@ -171,6 +171,25 @@ for pair in "aarch64 arm64"; do
   grep -Fq 'Shared library: [libwbd_engine.so]' "out/android-product-a1/linker-$goarch.txt"
   grep -Eq 'Library runpath: \[\$ORIGIN(:\$ORIGIN)*\]' "out/android-product-a1/linker-$goarch.txt"
   unset CGO_LDFLAGS
+  # Exact-SHA Android ARM64 diagnosis ONLY: distinguish Bionic/native
+  # translator, pure-Go runtime, and real Rust dlopen from original WBD.
+  # Not included in APK; no mock TLS/AEAD/client/server/data path.
+  "$cc" -std=c11 -O2 -Wall -Wextra -Werror -fPIE -pie \
+    -Wl,-z,max-page-size=16384 \
+    -o "$GITHUB_WORKSPACE/out/android-product-a1/ksu-arm64-ndk-probe" \
+    android/root-app/ci/nativebridge-arm64-ndk-probe.c -ldl
+  GO111MODULE=off CGO_ENABLED=0 GOTOOLCHAIN=local \
+    go build -trimpath -buildvcs=false \
+    -o "$GITHUB_WORKSPACE/out/android-product-a1/ksu-arm64-go-probe" \
+    android/root-app/ci/nativebridge-arm64-go-probe.go
+  python3 - <<'PYARM64'
+from pathlib import Path
+import struct
+for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe"):
+    raw=(Path("out/android-product-a1")/name).read_bytes()
+    assert raw[:5]==b"\x7fELF\x02" and struct.unpack_from("<H",raw,18)[0]==183,name
+print("ARM64_NATIVEBRIDGE_DIAGNOSTIC_PROBES_SOURCE_COMPILED_ONLY")
+PYARM64
 done
 python3 - <<'PY'
 import json,os,hashlib,pathlib,struct
