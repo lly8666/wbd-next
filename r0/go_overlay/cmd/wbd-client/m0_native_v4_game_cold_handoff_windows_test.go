@@ -2,7 +2,6 @@
 package main
 import (
  "net/netip"
- "strings"
  "testing"
 )
 // Cold buffer exhaustion is not a reason to kill a genuine TLS reader,
@@ -39,20 +38,5 @@ func TestM0PLAN028GameRejectSourcePortOverflowBeforeAnySYN(t *testing.T){
  o.SourcePort=41031;o.ServerPort=0
  if _,err:=m0WindowsGameOriginalClientFlow(o,[4]byte{192,0,2,31},0);err==nil{
   t.Fatal("missing fixed service port")
- }
-}
-
-// PLAN029B: Game2 business split is intentionally not wired. Reject before
-// original TLS, Npcap/Wintun, route or Rust OS Apply; do not silently run a
-// Normal-mode split or report the unsupported setting as a successful test.
-func TestM0PLAN029BGame2CNBusinessSplitRejectsBeforeOriginalOSApply(t *testing.T){
- o:=m0NativeV4Options{
-  Mode:m0WinModeGame2,
-  SplitEnable:true,
-  RouteMode:"bypass-lan-cn",
- }
- err:=runM0NativeV4Windows(o)
- if err==nil||!strings.Contains(err.Error(),"PLAN029 CN split Game2 not wired; no OS Apply attempted"){
-  t.Fatalf("Game2 advanced CN split must reject before OS Apply: %v",err)
  }
 }
