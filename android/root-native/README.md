@@ -197,3 +197,37 @@ physical ConnectivityManager socket binding, original Go/Rust M4 TUN
 UDP/TCP53 capture, production geosite CN classifier, live direct/tunnel
 DNS and Private DNS/CLAT. Test success is host-wire qualification,
 NOT Android P2/P3 E2E or true UDP port 53. A8 route remains unchanged.
+
+## B2 pinned 8,503-entry CN geosite matcher (host source qualification)
+
+The B1 Go `dnsnative` package now contains `CNRules` and
+`NewPinnedCNResolver`: it accepts **only** the immutable, authentic
+`v2fly/domain-list-community` geolocation-cn snapshot from pinned
+upstream commit `41504eae2a11f305fe88cfc605cf6c105a80bf5a`,
+after the original repository importer expands includes, attribute
+filters and affiliation entries. It checks the complete snapshot
+SHA256 `45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6`
+and exact counts: 8,503 distinct entries (8,431 suffix/domain, 69
+exact/full, 3 regexp, 0 keyword). All four type semantics have their
+own implementation; a regexp cannot silently be converted to suffix.
+The matcher runs only on normalized **original DNS QNAME**, not DATA
+packets or returned A addresses. Full DNS answer is unchanged; no
+FakeIP.
+
+The dedicated B2 host job downloads precisely the pinned upstream ZIP,
+runs the previous proven deterministic Python importer, checks complete
+type counts, exact TXT SHA and included MIT license, and tests the
+**real production Go matcher** with the genuine snapshot against real
+local UDP/TCP DNS socket responders. Rule decoding is bounded to 6MB,
+uses an exact checksum, validates type, labels, ordering and counts,
+and rejects partial/mutated rules. Enabling CN DNS split without a
+fully supplied matcher now fails closed rather than silently sending
+all CN traffic to tunnel DNS. No fallback endpoints or background
+phone downloads.
+
+The snapshot remains a verified build/test **artifact**, not yet
+bundled in the signed Root APK or loaded by the live original Go
+client. CN DNS is still NOT_CONNECTED to Android netd Resolver,
+physical ConnectivityManager network-bound DNS sockets, Rust M4/TUN
+capture or the installed APK; the Android16 ARM64 P2/P3 KVM guest is
+still blocked. Do not equate B2 host proof with device DNS routing.

@@ -67,6 +67,10 @@ type flight struct {
 }
 func New(dial DialFunc, match CNMatch, cnSplit bool) (*Resolver,error) {
 	if dial==nil{return nil,ErrUnbound}
+	// A split request without an authenticated, complete CN matcher is
+	// a configuration failure, NOT permission to silently send CN names
+	// to tunnel DNS. Original server bootstrap still has its own scope.
+	if cnSplit&&match==nil{return nil,fmt.Errorf("%w: CN split requires verified domain matcher",ErrUnbound)}
 	return &Resolver{dial:dial,cn:match,split:cnSplit,
 		direct:ChinaDNS,tunnel:TunnelDNS,
 		cache:make(map[string]entry),flying:make(map[string]*flight)},nil

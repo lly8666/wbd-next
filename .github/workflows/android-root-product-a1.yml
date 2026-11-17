@@ -51,6 +51,32 @@ jobs:
           path: out/android-b1-dnsnative/
           retention-days: 14
           if-no-files-found: warn
+  b2-authentic-cn-geosite-host:
+    # The EXACT upstream revision, original include/attr/affiliation importer,
+    # genuine 8503-rule SHA and real Go DNS socket tests. Host only.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Import immutable v2fly CN8503 and run full-typed Go matcher / real host DNS wire
+        shell: bash
+        run: bash android/root-native/ci/dns-b2-pinned-cn.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: |
+            out/android-b2-cn-geosite/cn-geosite-provenance.json
+            out/android-b2-cn-geosite/wbd-cn-geosite.txt
+            out/android-b2-cn-geosite/wbd-cn-geosite-license.txt
+            out/android-b2-cn-geosite/import-log.json
+            out/android-b2-cn-geosite/go-matcher-wire.log
+            out/android-b2-cn-geosite/receipt.json
+          retention-days: 14
+          if-no-files-found: warn
   original-m3-wire-oracle:
     # This is a pure M3 wire unit-test host: NO Android x86 target and
     # no second app/crypto implementation. Runs independently of NDK link.
