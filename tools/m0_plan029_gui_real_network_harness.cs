@@ -6,12 +6,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Wbd.Gui;
 public static class Plan029GuiReal {
- static volatile bool ready,applied,inner;
+ static volatile bool ready,applied,inner,paddingNpf;
+ static volatile int paddingRecords,paddingBytes;
  static void Need(bool yes,string text){if(!yes)throw new IOException(text);}
  static void Tick(){Application.DoEvents();Thread.Sleep(25);}
  static IEnumerable<Control> Children(Control c){
@@ -34,6 +36,14 @@ public static class Plan029GuiReal {
   if(raw.StartsWith("WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 ") &&
     raw.Contains("outer_config=1460") && raw.Contains("planned=1389") &&
     raw.Contains("applied=1389"))inner=true;
+  var match=Regex.Match(raw,@"^WBD_PLAN029_M1_STARTUP_PADDING_NPF_RECEIPT mode=flows copied_records=(\d+) copied_bytes=(\d+) source=original_Rust_M1_authenticated_NPF_accepted$");
+  if(match.Success){
+   int records,bytes;
+   if(int.TryParse(match.Groups[1].Value,out records) &&
+      int.TryParse(match.Groups[2].Value,out bytes)){
+    paddingRecords=records;paddingBytes=bytes;paddingNpf=true;
+   }
+  }
   if(raw.IndexOf("password",StringComparison.OrdinalIgnoreCase)>=0 ||
      raw.IndexOf("route-key",StringComparison.OrdinalIgnoreCase)>=0)return;
   Console.WriteLine(raw);Console.Out.Flush();
@@ -53,6 +63,12 @@ public static class Plan029GuiReal {
      PortableStore.ReadBounded(file));
    Need(seed!=null && seed.ContainsKey("split-enable") &&
     seed.ContainsKey("tls-ca-pem"),"missing GUI source fields");
+   bool flows=Environment.GetEnvironmentVariable(
+    "WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1";
+   string expectedPadding=flows?"flows":"off";
+   Need(seed.ContainsKey("startup-padding") &&
+    Convert.ToString(seed["startup-padding"])==expectedPadding,
+    "true user GUI cold padding choice not loaded");
    var profile=store.Book.Profiles[0];
    store.ImportValues(profile,seed);store.Save();
    Need(Convert.ToInt32(store.Fields.Single(x=>x.Key=="mtu").Default)==1460 &&
@@ -71,7 +87,9 @@ public static class Plan029GuiReal {
    Need(Convert.ToInt32(effective["mtu"])==1460 &&
     Convert.ToInt32(effective["derived-inner-tun-mtu"])==1389 &&
     Convert.ToBoolean(effective["split-enable"]) &&
-    Convert.ToString(effective["route-mode"])=="bypass-lan-cn",
+    Convert.ToString(effective["route-mode"])=="bypass-lan-cn" &&
+    effective.ContainsKey("startup-padding") &&
+    Convert.ToString(effective["startup-padding"])==expectedPadding,
     "Go/Rust owner effective not matching GUI config");
    Console.WriteLine("PLAN029_REAL_GUI_GO_RUST_CONFIG_OUTER1460_INNER1389_PASS");
    Click(form,"保存配置");Tick();
@@ -110,6 +128,8 @@ public static class Plan029GuiReal {
    }
    Need(!client.Active && Label(form,"state")=="未连接",
     "original WinForms Disconnect never completed");
+   if(flows)Need(paddingNpf && paddingRecords>0 && paddingBytes>0,
+    "original GUI selected flows but Rust M1/Npcap copied no actual padded record");
    string wal=store.InRoot("data/network-state.json");
    foreach(var suffix in new[]{"",".n4-owned-wal",".n4-owned-wal.routes",
       ".routes",".plan029-defender-tcp"})
@@ -119,7 +139,10 @@ public static class Plan029GuiReal {
    store.WriteAtomic("data/plan029-gui-real-receipt.json",
     "{\"schema_version\":1,\"original_buttons\":true,\"source_locked_go_rust\":true,"+
     "\"outer\":1460,\"inner_os_applied\":1389,\"real_native_ready\":true,"+
-    "\"owned_stop\":true,\"business\":\"EXTERNALLY_CHECKED\"}");
+    "\"owned_stop\":true,\"business\":\"EXTERNALLY_CHECKED\","+
+    "\"startup_padding_mode\":\""+expectedPadding+"\","+
+    "\"padding_npf_copied_records\":"+paddingRecords+","+
+    "\"padding_npf_copied_bytes\":"+paddingBytes+"}");
    Console.WriteLine("PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS");Console.Out.Flush();
    return 0;
   }catch(Exception e){

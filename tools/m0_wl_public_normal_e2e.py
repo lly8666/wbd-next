@@ -35,11 +35,16 @@ if p029_p1_cn and not p029_p1_policy:
 # Wintun and one Rust owner; no simulated GUI or routing Applied receipt.
 p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
+p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
 p029_boot_tc=os.environ.get("WBD_PLAN029_BOOTSTRAP_TC_SCENE")=="1"
 if p029_boot_tc and not (p029_product and p029_direct and not p029_gui and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("real same-endpoint bootstrap requires original Normal CN default1460")
 if p029_gui and not (p029_product and p029_direct and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("true GUI original signed CN default1460 needed")
+if p029_gui_padding and not (
+    p029_gui and not p029_boot_tc and p029_direct and p029_product and
+    native_outer=="default1460" and mode=="normal"):
+ raise RuntimeError("H2059 GUI flows requires only original nonCI CN/1460 GUI; no private trial")
 p029_ipv6=os.environ.get("WBD_PLAN029_D4_IPV6_SCENE")=="1"
 ipv6_probe_before=None
 ipv6_probe_active=None
@@ -2479,6 +2484,33 @@ print(json.dumps(result),flush=True)
    text=(out/"client.log").read_text(errors="replace")
    if "PLAN029_REAL_GUI_WINFORMS_BUTTON_CONNECT_APPLIED_PASS" not in text or "PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS" not in text:
     raise RuntimeError("original native GUI marker missing despite separate kernel business")
+   if p029_gui_padding:
+    # Separate source-locked GUI selector vs original Go effective config
+    # vs post-business Rust M1 actual NPF wire copy. No ciphertext or
+    # simulated NPF observer. H2031 physical capture already independent.
+    receipt=report["plan029_gui_live"]
+    copies=re.findall(
+     r"WBD_PLAN029_M1_STARTUP_PADDING_NPF_RECEIPT mode=flows copied_records=(\d+) copied_bytes=(\d+) source=original_Rust_M1_authenticated_NPF_accepted",
+     text)
+    if (len(copies)!=1 or receipt["startup_padding_mode"]!="flows" or
+        int(copies[0][0])<1 or int(copies[0][1])<1 or
+        receipt["npf_copied_records"]!=int(copies[0][0]) or
+        receipt["npf_copied_bytes"]!=int(copies[0][1]) or
+        report["stop"]!="PASS_BOTH_OWNED" or
+        report["app_duplex"]!="PASS_ACTUAL_TWO_OS_KERNEL_UDP" or
+        report["tcp_duplex"]!="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"):
+     raise RuntimeError("H2059 original GUI flows effective/Rust signed M1 NPF/OS duplex Stop missing")
+    report["plan029_gui_startup_padding_effective"]={
+     "source_sha":os.environ["GITHUB_SHA"],
+     "status":"PASS_SCOPED_ORIGINAL_GUI_FLOWS_M1_NPF_AND_OWNED_STOP",
+     "saved_gui":"flows","go_effective":"flows",
+     "npf_copied_records":int(copies[0][0]),
+     "npf_copied_bytes":int(copies[0][1]),
+     "original_approved_business":"CN_DIRECT_AND_TUNNEL_TCP_UDP",
+     "stop":"PASS_BOTH_OWNED",
+     "cpu_rss_ab":"NOT_MEASURED",
+     "physical_padding_pcap":"H2031_HISTORICAL_SOURCE_ONLY_NOT_REPEATED"}
+    print("PLAN029_H2059_ORIGINAL_GUI_FLOWS_M1_NPF_SAME_SOURCE_KERNEL_AND_STOP_PASS",flush=True)
    print("PLAN029_REAL_GUI_WINTUN_TWO_EGRESS_STOP_PASS_SCOPED",flush=True)
   print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_SIGNED_BOTH_OS_AND_STOP_PASS_SCOPED",flush=True)
  if p029_padding:

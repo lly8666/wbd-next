@@ -76,7 +76,10 @@ def prepare(root,out,client,rust,original_args,rules):
   raise RuntimeError("test-owned GUI CN domain source drift")
  # Original WinForms user field default MUST be tested, not the CLI --mtu.
  assert "mtu" not in seed
- seed["startup-padding"]="off"
+ # Real WinForms selection is the ONLY cold source; don't inject a
+ # private Rust enable flag or modify the NPF capture path.
+ gui_flows=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
+ seed["startup-padding"]="flows" if gui_flows else "off"
  (data/"gui-seed.json").write_text(json.dumps(seed,separators=(",",":")),encoding="utf-8")
  print("PLAN029_GUI_EXACT_GO_RUST_WINFORMS_BUILD_SOURCE_AND_SIGNED_NPCAP_DLLS_PASS",flush=True)
  return [str(gui/"GuiReal.exe"),str(gui),str(data/"gui-seed.json")],gui
@@ -89,9 +92,19 @@ def receipt_and_cleanup(gui):
         and status.get("outer")==1460 and status.get("inner_os_applied")==1389
         and status.get("real_native_ready") and status.get("owned_stop")):
   raise RuntimeError("GUI actual OS Applied/Stop not qualified")
+ expected="flows" if os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1" else "off"
+ if status.get("startup_padding_mode")!=expected:
+  raise RuntimeError("GUI padding effective receipt != original saved selector")
+ if expected=="flows" and not (
+  status.get("padding_npf_copied_records",0)>0 and
+  status.get("padding_npf_copied_bytes",0)>0):
+  raise RuntimeError("GUI flows has no real Rust M1 NPF copied bytes")
  for secret in ("route-key.hex","gui-seed.json","server-ca.pem",
                 "profiles.json","active.json","pending.json"):
   (gui/"data"/secret).unlink(missing_ok=True)
  return {"status":"PASS_SCOPED_ORIGINAL_GUI_SOURCE_LOCKED",
    "outer":1460,"inner_os":1389,"stop":"PASS_BOTH_OWNED",
-   "cpu_scope":"GUI_PARENT_ONLY_GO_RUST_NOT_SAMPLED"}
+   "cpu_scope":"GUI_PARENT_ONLY_GO_RUST_NOT_SAMPLED",
+   "startup_padding_mode":expected,
+   "npf_copied_records":status.get("padding_npf_copied_records",0),
+   "npf_copied_bytes":status.get("padding_npf_copied_bytes",0)}

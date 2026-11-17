@@ -171,6 +171,14 @@
       "action": 44001435567,
       "status": "PASS_WINDOWS_LINUX_REAL_PROCESS_ABORT_PURE_NOT_WIN_WAL",
       "test": "Windows/Linux Rust test subprocess real fsync ACK then std::process::abort without Drop; parent opens journal and checks FakeIP identity/TTL quarantine/new alias not announced. NOT original Wintun/OS crash."
+    },
+    {
+      "id": "H2059_gui_flows_effective_original_rust_npf",
+      "source": null,
+      "action": null,
+      "status": "IMPLEMENTED_PENDING_TRUE_SIGNED_NATIVE_ACTION",
+      "test": "Original WinForms saved flows selection, Go source --check-config effective flows, original M1 actual NPF copied records+bytes, same real CN Direct/Tunnel kernel business and original owned Stop",
+      "non_goal": "H2031 physical encrypted padding repeat and off/on CPU RSS not in this scene"
     }
   ],
   "selected_unverified": {
@@ -184,7 +192,7 @@
     "resource_full_FakeIP_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
     "resource_full_direct": "H1868_SCOPED_REAL",
     "startup_padding_off_on_sameVM_CPU_RSS": "NOT_RUN",
-    "GUI_effective_padding": "PENDING_H2048_GUI_CONFIG_NOT_PADDING_OFF_ON",
+    "GUI_effective_padding": "H2059_SCOPED_REAL_GUI_FLOWS_NPF_PENDING_NATIVE_ACTION_NOT_YET_PASS",
     "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
   },
   "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",

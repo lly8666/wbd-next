@@ -1040,6 +1040,7 @@ jobs:
       WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]'))) && '1' || '0' }}
       WBD_PLAN029_PRODUCT_SPLIT_SCENE: ${{ github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-real-product-cn]') || contains(github.event.head_commit.message, '[plan029-real-gui-cn]') || contains(github.event.head_commit.message, '[plan029-real-dns-tc]')) && '1' || '0' }}
       WBD_PLAN029_GUI_REAL_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && '1' || '0' }}
+      WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && contains(github.event.head_commit.message, '[plan029-h2059-gui-padding]') && '1' || '0' }}
       WBD_PLAN029_BOOTSTRAP_TC_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-dns-tc]') && '1' || '0' }}
       # D4 read-only real Windows IPv6 route/Stop policy witness, same
       # explicit CN product as the existing signed Normal scene.
@@ -2608,6 +2609,19 @@ jobs:
                 throw 'H1840 explicit nonCI Normal CN split missing current-source actual signed Wintun/OS/direct+tunnel/Stop receipts'
               }
               Write-Output 'PLAN029_H1840_PRODUCT_NONCI_CN_SPLIT_SIGNED_TWO_OS_AND_OWNED_STOP_PASS_SCOPED'
+              if($env:WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE -eq '1'){
+                $pad=$result.plan029_gui_startup_padding_effective
+                if($null -eq $pad -or $pad.source_sha -ne $env:GITHUB_SHA -or
+                   $pad.status -ne 'PASS_SCOPED_ORIGINAL_GUI_FLOWS_M1_NPF_AND_OWNED_STOP' -or
+                   $pad.saved_gui -ne 'flows' -or $pad.go_effective -ne 'flows' -or
+                   [int]$pad.npf_copied_records -lt 1 -or
+                   [int]$pad.npf_copied_bytes -lt 1 -or
+                   $pad.stop -ne 'PASS_BOTH_OWNED' -or
+                   $pad.cpu_rss_ab -ne 'NOT_MEASURED'){
+                   throw 'H2059 original WinForms flows effective/real Rust M1 NPF/OS Stop missing'
+                }
+                Write-Output 'PLAN029_H2059_GUI_FLOWS_REAL_M1_NPF_AND_BOTH_OS_STOP_VERIFIED_NOT_AB_CPU'
+              }
             }
             # PLAN029 has real original Windows->Linux outward Tunnel TCP.
             # The historical 028 duplex inbound comparator remains intact
