@@ -1,6 +1,6 @@
 # Android Root 原生客户端适配｜授权施工方案（2026-11-17）
 
-**状态：A8原Go认证后1–8 UID组v2持久路由事务Host PASS、Java多App19断言PASS、ARM64原Go/Rust+签名APK BUILD_PASS、Linux原服务端oracle PASS；Android16 ARM64 guest因托管runner无KVM仍 ENV_BLOCKED，P2/P3正式业务 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
+**状态：B1 原Go DNS UDP/TCP真实loopback 7项Host PASS（同源ARM64 Go交叉编译）；A8多UID路由Go测试、签名APK及原Linux oracle PASS。正式Android系统DNS/物理Network/TUN出站仍 NOT_CONNECTED；ARM64 P2/P3因KVM缺失 ENV_BLOCKED、实体P5 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
 
 ## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
 
@@ -28,7 +28,7 @@
 | 包 | 实施范围 | 本次状态 | 验收 |
 |---|---|---|---|
 | **A 产品装配与首次 Normal/off 真连接** | 固定原Go/共享Rust源码；Android NDK/Bionic ABI/链接/16KiB页；平台物理绑定、root TUN ownership、启动停止；复用Go TLS/认证/租约/原Rust steady path | **BUILD_PASS + LINUX_ORACLE_PASS；Android业务NOT_RUN** | 同SOURCE P2 真实 ARM64 Android Cuttlefish 原Bionic→原Linux server 真协议/数据，再 P3 普通签名 APK→受控 su 真实双向 TCP/UDP 与 Stop；实体 KernelSU 兼容性最后终验 |
-| **B 路由、统一 DNS、App 选择** | 独立可撤销主网络增量；按App UID规则；两DNS上游UDP53/TCP53、TTL/缓存；真实App系统Resolver；手动规则包原子更新 | PLANNED | 真直连不经WBD、隧道经过服务端；真实系统DNS、应用选择和owned回收均实测 |
+| **B 路由、统一 DNS、App 选择** | A8多包UID原Go持久路由已Host测试；B1双DNS真实UDP/TCP线报文/TTL缓存/同上游TC回退Host 7项已通过；生产Geosite/物理Network/WBD TUN DNS截获未接线 | **B1 HOST_DNS_WIRE_PASS；ANDROID_SYSTEM_DNS_NOT_CONNECTED** | 真实Android16 App Resolver/物理及隧道两个出站、完整IP规则/Private DNS/无跨DNS回退及owned回收必须实测 |
 | **C 产品模式与生命周期** | Normal/off、fixed/auto、Game原有lane；低频状态、前台Service、网络callback、重认证/轮换/切网、资源观测 | PLANNED | 同源模式及Stop；一次实际网络切换；有限业务 p99/CPU/RSS/idle 唤醒 |
 | **D 条件热点USB与PR整合** | 手机/热点/USB独立开关、系统共享SNAT/conntrack、真实offload/CLAT边界、回归/PR | PLANNED | 已授权真机专项结果 + 清晰NOT_RUN 清单 + PR；未经验收不得自合 main |
 
@@ -74,6 +74,8 @@ per-App 仅改变业务 IP 出口，不重建 netd 每UID DNS、不恢复共享�
 - [A7 Action44060369629](https://github.com/lly8666/wbd-next/actions/runs/44060369629)，SOURCE `170ed6e47b0878d470cc83ef3cdebe9e781cfe7b`：**5/5 Jobs SUCCESS**，原Go/Rust ARM64 Bionic+签名无VpnService APK BUILD_PASS、原Linux WBD server oracle PASS；A7 `InstalledAppTarget` JVM真实包名/UID 17断言 PASS、最小Launcher `<queries>` Manifest PASS、A6网络回调16/Stop语法11及owner PID兼容回归PASS。**真正 Android16 PackageManager/卸载广播/Root UID路由及 Android↔Linux业务依然NOT_RUN**；aarch64托管runner `/dev/kvm` 不可用、Cuttlefish P2/P3 `ENV_BLOCKED`。共享UID不能逐包分开；不得把编译的包选择器冒称真实Android per-app功能完成。
 
 - [A8同源 Action44063911490](https://github.com/lly8666/wbd-next/actions/runs/44063911490)，SOURCE `c76215d1ea4a215560b401c47ef5d1342ef70bf2`，**5/5 Jobs SUCCESS**：v2多UID rootjournal Go测试（部分失败回滚、跨版本崩溃恢复、活Owner锁、外国priority/table拒绝）、Java多包UID组19断言、原M3、Android ARM64真实原Go/Rust ELF与签名Root APK、Linux原server标准TLS/租约/M4双向UDP/Stop oracle均PASS；A6/A7 Host回归保留。首轮[Action44063385632](https://github.com/lly8666/wbd-next/actions/runs/44063385632) Java非法系统UID构造器负例测试夹具FAIL已按实际修复，不能改写旧FAIL。修复SOURCE治理[Action44063911524](https://github.com/lly8666/wbd-next/actions/runs/44063911524)因只改测试/devlog而未同改功能卡FAIL，当前最终证据提交补齐卡片；不把治理失败写成软件失败。**真 Android16 ARM64 PackageManager、内核多UID rule、App→su/与Linux双向WBD仍NOT_RUN**：Actions ARM64 runner`/dev/kvm`不可用，Cuttlefish P2/P3`ENV_BLOCKED`。DNS/分流尚未开发实际系统E2E，实体KSU最后。
+
+- [B1 同源 Action44069144804](https://github.com/lly8666/wbd-next/actions/runs/44069144804)，SOURCE `8534a9182475a07072a4ae0e77807e23e6a3261f`，**6/6 Jobs SUCCESS**：原Go独立DNS模块 Host **真实UDP/TCP loopback7组**（原始QNAME分流、bootstrap物理、split关闭、TC→同DNS同Path TCP、无跨上游回退、坏ID/畸形包拒绝、TTL缓存/并发合并）PASS；同源原Go/Rust ARM64 Native、Root签名APK、原M3、Linux标准TLS/租约/M4 UDP/Stop oracle PASS；DNS包另交叉编译Android ARM64 test ELF但**并未接入运行中原Go CLI或Android system Resolver/原Rust M4 TUN**。ARM64 host仍`KVM_NOT_ACCESSIBLE`，P2/P3 `ENV_BLOCKED`，不能宣称 Android DNS 可用。下一步优先 B2 同源CN Geosite真实规则数据/真实Path绑定/系统DNS拦截和IP分流，实体KSU最后。
 
 ### Actions 准入、各层真实验收及最后实体终验
 

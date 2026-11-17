@@ -16,3 +16,9 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B1单向绑定式原Go双端点DNS真实UDP/TCP wire、TC同端点回退、TTL缓存/并发有界及独立真实loopback Actions门；不宣称Android系统Resolver已接线。"}
 ```
+
+## B1 本SOURCE Actions 真实验收结果
+
+[Android ARM64原产品 Action #44069144804](https://github.com/lly8666/wbd-next/actions/runs/44069144804) SOURCE `8534a9182475a07072a4ae0e77807e23e6a3261f`：**6/6 Jobs SUCCESS**。独立`b1-dns-wire-loopback`执行真正Go loopback UDP/TCP responder，七组`TestOriginalQNameSelectsCNPhysicalOrTunnelWithoutFakeIP`、`TestSplitOffUsesTunnelBootstrapAlwaysPhysical`、`TestTruncatedUDPOnlyTCP53SameEndpointAndPath`、`TestRefuseCrossFallbackIfSelectedPathFails`、`TestRejectSpoofedTransactionAndMalformedQuestions`、`TestBoundedTTLCacheIDRewriteAndExpiration`、`TestConcurrentQueriesCoalesceWithoutBackgroundTimers`均PASS；打印`ANDROID_B1_DNS_WIRE_REAL_LOOPBACK_ONLY_PASS`，source-locked host receipt附Hash。原Go donor源锁及Android ARM64测试ELF交叉编译、原Go/Rust Bionic ELF、A8 rootjournal、原M3、独立签名Root APK与原Linux真TLS/租约/Rust M4双向UDP/Stop oracle均PASS。
+
+ARM64 host准入结果仍`KVM_NOT_ACCESSIBLE arch aarch64 kvm NOT_AVAILABLE`，不启动Android userdebug guest。**B1资格是HOST_REAL_UDP_TCP_DNS_WIRE_PASS，不是ANDROID_SYSTEM_DNS_PASS**：正式App/原Go持续业务尚无DNS socket路径绑定、CN geosite真实数据、TUN包捕获、Android Resolver重定向/Root路由回读、TCP53真实运营网络、DoT/DoH/CLAT。故P2/P3与实体P5仍NOT_RUN。版本A8真实多UID路由原有代码未变。
