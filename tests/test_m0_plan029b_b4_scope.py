@@ -48,7 +48,7 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
             'raw_socket("eth0")', 'raw_socket("wbdwl4")',
             'b"P29B4-G1"', 'b"P29B4-G2"', 'b"P29B4-G3"',
             'b"P29B4-STALE-G2"', 'b"P29B4-STALE-G3"',
-            'b"\\xc6\\x12"', 'if peer[0] != expected',
+            'b"\\xc6\\x12"', 'peer[0] != expected or phase + "_data" in observed',
             '"physical" if phase == "advanced" else "tun"',
             '"raw_old_fake_ipv4_egress": raw_fake',
             'len(observed) == 6',
