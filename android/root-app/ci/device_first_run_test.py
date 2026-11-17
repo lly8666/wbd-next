@@ -63,6 +63,20 @@ class FirstRunTests(unittest.TestCase):
         report = d.summarize([], e, e2, [], [], True)
         self.assertEqual(report["owned_kernel_routes_after_stop"], "PASS")
         self.assertEqual(report["original_go_rust_joined_stop"], "NOT_RUN")
+        authentic=e + ["AUTHENTICATED_LEASE_OS_READBACK",
+                       "ORIGINAL_GO_RUST_HANDOFF"]
+        verified_stop=authentic + ["STOP_REQUESTED", "STOP_SIGNAL_ACCEPTED",
+                                 "ORIGINAL_GO_UID_ROUTE_STOP_DRAINED",
+                                 "ORIGINAL_GO_RUST_STOP_JOINED",
+                                 "ROOT_PROCESS_EXIT_ZERO", "OWNER_CLEANUP_FINISHED"]
+        report=d.summarize([], authentic, verified_stop, [], [], True)
+        self.assertEqual(report["original_go_rust_joined_stop"],"PASS")
+        self.assertEqual(report["original_tls_authenticated_lease_os_readback"],"PASS")
+        self.assertEqual(report["real_android_linux_tls_and_data_e2e"],"NOT_RUN")
+        with_signal_only=authentic+["STOP_REQUESTED","STOP_SIGNAL_ACCEPTED",
+                                    "ROOT_PROCESS_EXIT_ZERO"]
+        report=d.summarize([],authentic,with_signal_only,[],[],True)
+        self.assertEqual(report["original_go_rust_joined_stop"],"NOT_RUN")
         report = d.summarize([], e, e2, [], [{"priority":9600}], True)
         self.assertEqual(report["owned_kernel_routes_after_stop"], "FAIL")
         report = d.summarize([], e, e2, None, [], True)
@@ -95,6 +109,32 @@ class FirstRunTests(unittest.TestCase):
                 z.writestr("assets/native-arm64/x86-probe",b"bad")
             with self.assertRaises(ValueError):
                 d.inspect_apk(path)
+
+    def test_owned_route_table_and_tun_missing_are_distinct(self):
+        class Fixture(d.Device):
+            def __init__(self, rows):
+                self.rows=rows
+            def shell(self,*args):
+                return self.rows[args]
+
+        normal_rules=("ip","-4","rule","show")
+        normal_table=("ip","-4","route","show","table","19842")
+        normal_tun=("ip","link","show","dev","wbdv40")
+        normal={
+            normal_rules:(0,"0: from all lookup local\n",""),
+            normal_table:(2,"","Error: ipv4: FIB table does not exist."),
+            normal_tun:(1,"","Device \"wbdv40\" does not exist.")
+        }
+        self.assertEqual(Fixture(normal).route_rules(),[])
+        with_tun=dict(normal)
+        with_tun[normal_tun]=(0,"102: wbdv40: <POINTOPOINT> mtu 1400\n","")
+        self.assertEqual(Fixture(with_tun).route_rules()[0]["priority"],-2)
+        with_table=dict(normal)
+        with_table[normal_table]=(0,"10.66.0.0/24 dev wbdv40\n","")
+        self.assertEqual(Fixture(with_table).route_rules()[0]["priority"],-1)
+        unreadable=dict(normal)
+        unreadable[normal_table]=(1,"","Permission denied")
+        self.assertIsNone(Fixture(unreadable).route_rules())
 
     def test_private_output_has_only_filtered_data(self):
         with tempfile.TemporaryDirectory() as td:

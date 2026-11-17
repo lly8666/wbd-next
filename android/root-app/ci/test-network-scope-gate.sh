@@ -96,11 +96,17 @@ print("ANDROID_ROOT_OWNED_PID_2_AND_3_FIELD_PARSE_PASS")
 assert 'WBD_ROOT_DIAG' in s
 assert 'RootDiagnosticReceipt.Event.NATIVE_M4_AND_UID_READY' in s
 assert 'RootDiagnosticReceipt.Event.STOP_SIGNAL_ACCEPTED' in s
+assert 'RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_STOP_JOINED' in s
+assert 'RootDiagnosticReceipt.Event.AUTHENTICATED_LEASE_OS_READBACK' in s
 assert 'RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED' in s
 assert 'Log.i("WBD_ROOT_DIAG",event.name())' in s
 accept=Path("android/root-app/ci/device_first_run.py").read_text()
 assert '"real_android_linux_tls_and_data_e2e": "NOT_RUN"' in accept
-assert '"original_go_rust_joined_stop": "NOT_RUN"' in accept
+assert '"original_go_rust_joined_stop":' in accept
+assert '"ORIGINAL_GO_RUST_STOP_JOINED"' in accept
+assert '"AUTHENTICATED_LEASE_OS_READBACK"' in accept
+assert '"FIB table does not exist"' in accept
+assert '"wbdv40"' in accept
 assert 'sudo' not in accept and 'pkill' not in accept
 print("ANDROID_ROOT_DEVICE_DIAGNOSTIC_AND_OPERATOR_BUNDLE_HOST_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")

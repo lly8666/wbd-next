@@ -236,9 +236,13 @@ preflight, hashed WBD-owned rule state and whitelisted stage codes; it
 intentionally excludes raw logcat/tombstones, user identifiers and secrets.
 Do not assume arbitrary Android traffic, real TLS, joined Rust Stop or
 system Resolver passed from a host build, Activity startup or this receipt.
-A private-rule rollback PASS only means the inspected WBD-owned rules
-are empty after the explicit user Stop **and** the Service cleanup event
-was observed. If the route reader is unavailable, mark NOT_RUN; if private
+A rollback PASS requires the dedicated UID rules, table19842 routes
+and wbdv40 TUN to be absent after explicit Stop **and** the Service
+cleanup event to have been observed. A separate original-Go native
+joined-Stop PASS requires the real V4_PUBLIC_NATIVE_STOP_DRAINED log
+marker from native.Close(), original M4+UID readiness, user Stop and
+native exit zero; sending SIGTERM alone can NEVER pass that gate.
+An observed 132/139 original process exit is classified FAIL, not PASS. If the route reader is unavailable, mark NOT_RUN; if private
 rules remain, FAIL without attempting dangerous automatic repair.
 The owner-controlled original-Go/Rust Stop and its existing route journal
 remain the only production cleanup mechanism.

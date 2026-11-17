@@ -6,7 +6,7 @@
 
 当前仍是 source `eb278a02ee11442521b54288ae9c50bc6fd1d795` [Action44138382581](https://github.com/lly8666/wbd-next/actions/runs/44138382581) **10/11 PASS、overall FAIL**：原Go完整client CLI通过隔离测试库NDK/c-shared运行exit0，但正式ARM64 ELF直接启动在 x86 NativeBridge `SIGSEGV139`。真实ARM64 KSU设备上的原Go ELF、TLS/租约、Rust M4 RAW/TUN、DNS、Stop**均NOT_RUN**。
 
-优先构建的是**正式ARM64 APK可诊断+用户自主Start/Stop+只读ADB一键采集**，不继续扩展NativeBridge小探针：`RootDiagnosticReceipt`用固定enum记录源SHA校验、真实物理Network/包UID、original-Go native M4/UID就绪、精确Stop信号/owner退出阶段，禁止自由文本/凭据/密钥/源stdout；PC脚本先验真`uname -m=aarch64`/API36/正式APK源锁及16KiB ELF、检查私人route表19842/pref9600..9607是否有残留，再由用户在原Root APK中手动Start/Stop，生成仅含事件码+路由哈希的脱敏ZIP。脚本默认仅只读，不执行su/kill/netd/route修改，只有用户带`--install`显式选择安装；不碰未经用户授权的实体机。保留原Go/Rust Stop和双DNS关闭。此批源码未完成同源CI前只标`PLANNED`。
+优先构建的是**正式ARM64 APK可诊断+用户自主Start/Stop+只读ADB一键采集**，不继续扩展NativeBridge小探针：`RootDiagnosticReceipt`用固定enum记录源SHA校验、真实物理Network/包UID、original-Go native M4/UID就绪、精确Stop信号/owner退出阶段，禁止自由文本/凭据/密钥/源stdout；PC脚本先验真`uname -m=aarch64`/API36/正式APK源锁及16KiB ELF、检查私人route表19842/pref9600..9607是否有残留，再由用户在原Root APK中手动Start/Stop，生成仅含事件码+路由哈希的脱敏ZIP。脚本默认仅只读，不执行su/kill/netd/route修改，只有用户带`--install`显式选择安装；不碰未经用户授权的实体机。保留原Go/Rust Stop和双DNS关闭。A9第一批同SOURCE `8435b0e29669375a5eb43b48dfb9d4e9ffb74b97` [Action44145241110](https://github.com/lly8666/wbd-next/actions/runs/44145241110) 10/11 Jobs PASS（正式签名APK、Java/Python主机A9、同源Linux真TLS/租约/M4/Stop），但总Action FAIL仍是x86 NativeBridge原Go ELF139；真ARM64设备业务NOT_RUN。A9b原Go native.Stop日志证明及专用路由表/TUN只读回滚增强待新SOURCE CI验证。
 
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A9真实ARM64 KSU第一次集中验收：原APK固定无凭据阶段码、用户手动Start/Stop、只读ADB/Source/ELF/路由回滚证据，保留正式ELF139和实际Android业务NOT_RUN。"}

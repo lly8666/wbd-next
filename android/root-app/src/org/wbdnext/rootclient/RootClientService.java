@@ -355,6 +355,17 @@ public final class RootClientService extends Service {
                 String line;
                 while((line=lines.readLine())!=null){
                     if(line.length()>4096)line=line.substring(0,4096);
+                    // ORIGINAL-Go emits these only AFTER true TLS lease
+                    // kernel readback, Rust M4 handoff or successful joined
+                    // cleanup. We record no variable part of native stdout.
+                    if(line.contains("V4_PUBLIC_LEASE_APPLIED role=client"))
+                        trace(RootDiagnosticReceipt.Event.AUTHENTICATED_LEASE_OS_READBACK);
+                    if(line.contains("V4_PUBLIC_GO_RX_HANDOFF role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_HANDOFF);
+                    if(line.contains("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_STOP_DRAINED);
+                    if(line.contains("V4_PUBLIC_NATIVE_STOP_DRAINED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_STOP_JOINED);
                     if(!uidReady&&line.contains("V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED")){
                         uidReady=true;
                         trace(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT);
@@ -375,6 +386,8 @@ public final class RootClientService extends Service {
             int exit=p.waitFor();
             trace(exit==0?RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_ZERO:
                 RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            if(exit==139)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_139);
+            if(exit==132)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_132);
             status=exit==0
                 ?"ORIGINAL_NATIVE_EXITED_ZERO — phone data not independently verified"
                 :"ROOT_OR_NATIVE_EXIT_"+exit+" — route/journal and Stop need inspection";

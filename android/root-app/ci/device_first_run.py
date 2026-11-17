@@ -25,7 +25,10 @@ EVENTS = frozenset("""
 START_REQUESTED NETWORK_SCOPE_VERIFIED APP_UID_GROUP_VERIFIED
 ROOT_STAGE_REQUESTED NATIVE_SOURCE_VERIFIED ROOT_GRANT_REQUESTED
 ROOT_PROCESS_LAUNCHED NATIVE_M4_RECEIPT UID_ROUTE_RECEIPT
-NATIVE_M4_AND_UID_READY ROOT_PROCESS_EXIT_ZERO ROOT_PROCESS_EXIT_NONZERO
+NATIVE_M4_AND_UID_READY AUTHENTICATED_LEASE_OS_READBACK
+ORIGINAL_GO_RUST_HANDOFF ORIGINAL_GO_UID_ROUTE_STOP_DRAINED
+ORIGINAL_GO_RUST_STOP_JOINED ROOT_PROCESS_EXIT_139 ROOT_PROCESS_EXIT_132
+ROOT_PROCESS_EXIT_ZERO ROOT_PROCESS_EXIT_NONZERO
 ROOT_LAUNCH_FAILED START_REFUSED STOP_REQUESTED STOP_SIGNAL_STARTED
 STOP_SIGNAL_ACCEPTED STOP_SIGNAL_REFUSED STOP_SIGNAL_ERROR
 OWNER_CLEANUP_FINISHED
@@ -136,8 +139,30 @@ class Device:
         return parse_events(out) if rc == 0 else []
 
     def route_rules(self):
+        # All three WBD-owned kernel resource classes must be empty at
+        # Stop: UID rule, dedicated table 19842, and the non-persistent
+        # wbdv40 TUN. Only SHA hashes are exported (never IPs or UIDs).
         rc, out, _ = self.shell("ip", "-4", "rule", "show")
-        return owned_rules(out) if rc == 0 else None
+        if rc:
+            return None
+        records = owned_rules(out)
+        rc, table, err = self.shell("ip", "-4", "route", "show", "table", "19842")
+        if rc and not re.search(r"(?:FIB table does not exist|No such file or directory)",
+                                table + err, re.I):
+            return None
+        if rc == 0:
+            for line in table.splitlines():
+                if line.strip():
+                    records.append({"priority": -1,
+                        "sha256": hashlib.sha256(line.strip().encode()).hexdigest()})
+        rc, link, err = self.shell("ip", "link", "show", "dev", "wbdv40")
+        if rc == 0:
+            records.append({"priority": -2,
+                "sha256": hashlib.sha256(b"WBD_TUN_PRESENT").hexdigest()})
+        elif not re.search(r"(?:does not exist|Cannot find device|No such device)",
+                           link + err, re.I):
+            return None
+        return sorted(records, key=lambda x: (x["priority"], x["sha256"]))
 
 
 def preflight(device, apk):
@@ -173,10 +198,22 @@ def summarize(baseline, mid, final, route_before, route_after, interactive):
         "physical_network_selection": "PASS" if "NETWORK_SCOPE_VERIFIED" in observed else "NOT_RUN",
         "installed_app_uid_check": "PASS" if "APP_UID_GROUP_VERIFIED" in observed else "NOT_RUN",
         "original_m4_and_uid_receipt": "PASS" if "NATIVE_M4_AND_UID_READY" in observed else "NOT_RUN",
+        "original_tls_authenticated_lease_os_readback":
+            "PASS" if "AUTHENTICATED_LEASE_OS_READBACK" in observed else "NOT_RUN",
+        "original_go_rust_m4_handoff":
+            "PASS" if "ORIGINAL_GO_RUST_HANDOFF" in observed else "NOT_RUN",
+        "native_exit_139_sigsegv":
+            "FAIL" if "ROOT_PROCESS_EXIT_139" in observed else "NOT_RUN",
+        "native_exit_132_sigill":
+            "FAIL" if "ROOT_PROCESS_EXIT_132" in observed else "NOT_RUN",
         "native_root_process_exit": "PASS" if "ROOT_PROCESS_EXIT_ZERO" in observed
             else "FAIL" if "ROOT_PROCESS_EXIT_NONZERO" in observed else "NOT_RUN",
         "owned_kernel_routes_after_stop": rollback,
-        "original_go_rust_joined_stop": "NOT_RUN",
+        "original_go_rust_joined_stop":
+            "PASS" if all(x in observed for x in
+                ("STOP_REQUESTED", "NATIVE_M4_AND_UID_READY",
+                 "ORIGINAL_GO_RUST_STOP_JOINED", "ROOT_PROCESS_EXIT_ZERO"))
+            else "NOT_RUN",
         "real_android_linux_tls_and_data_e2e": "NOT_RUN",
         "system_dns_resolver_and_tcp53": "NOT_RUN",
         "ordinary_app_kernel_su_grant": "NOT_RUN",

@@ -19,3 +19,14 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"首次ARM64 KSU集中验收所需正式Root Service固定脱敏阶段收据/原Stop保留/PC端只读ADB诊断与有界私有规则回读，host Java/Python严谨验证；设备未运行。"}
 ```
+
+
+## A9b 强化正式原Go成功Stop/回滚证据（不加新协议）
+
+对真实原 Go `linux.go` 行为的源码核对：`V4_PUBLIC_LEASE_APPLIED role=client`仅在真实受保护TLS/32租约通过本地OS配置readback后打印；`V4_PUBLIC_GO_RX_HANDOFF role=client`在原Rust M4启动并交出原RAW/TUN归属后打印；`V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client`仅在调用原Go rootjournal Stop撤回UID路由成功后打印；`V4_PUBLIC_NATIVE_STOP_DRAINED role=client`只在撤回路由且`native.Close()`真成功（原Rust线程/loan join）后打印。这些固定字符串在正式 Service 根进程stdout处理内仅映射为固定事件码，不输出含凭据/网络状态的原native日志。非零进程退出中`132`/`139`单独输出固定FAIL分类；不把Shell signal当native Stop。
+
+ADB首测脚本除UID rule pref9600..9607/readback，还检查真正的**私有表19842 IPv4路由**与本地非持久`wbdv40` TUN是否消失。三种资源都只输出状态/哈希，读权限不足标`NOT_RUN`，存在残留标`FAIL`且不执行自动清理。真正原Go Rust Stop需要原 M4/UID就绪、用户 Stop、原`V4_PUBLIC_NATIVE_STOP_DRAINED`对应固定事件、原生进程exit0才可标PASS；Android↔Linux应用数据回环与系统DNS仍保持`NOT_RUN`，不以单机日志冒充真实包验收。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"新增真实原Go TLS租约/Rust接管/UID route撤回/native.Close joined Stop固定码与SIGILL/SIGSEGV固定FAIL，ADB原路由表/TUN资源回读、只读无Root改动。"}
+```
