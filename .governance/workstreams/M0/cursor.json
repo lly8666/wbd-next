@@ -4,29 +4,30 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2073,
-  "checkpoint_sha": "d9401756abb7c0d262082de4c7cea8236e1c94bd",
+  "sequence": 2074,
+  "checkpoint_sha": "fb84d98f67be05ec57161549d5b1de5bb1248d85",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2073 governance/source metadata repair after H2072 real Entry Health wiring: restore existing feature card under 16KiB and add exact old tested product source_sha to H2072 NOT_RUN evidence. New Windows product still NOT_RUN.",
-  "why_now": "H2072 auto push governance Action44031316080 failed with oversized Windows feature card; governance.py validate also requires every cursor.evidence_refs JSON source_sha equal cursor.last_tested_source (2fca), missing from new H2072 source-only evidence. Precise record fix, no product changes or native dispatch.",
+  "current_task": "H2074 new frozen SOURCE signed native ordinary three-scene acceptance request: live Windows M4 Entry Health arm in H2072 is compiled Windows/Rust/Linux source-gate PASS; real original WinForms second generation still NOT_RUN. Existing one builder GUI then two independent source-reusing hostname TC TCP53 and TTL restart Actions; capture actual first fault, no repeat probes.",
+  "why_now": "H2072 build and focused ABI/normal rust tests PASS via Action44031316173/44031316195/44031316149/44031316187; H2073 governance Action44031795000 SUCCESS. Need true B Health AEAD/PN and OS Applied/Direct-Tunnel/Stop. The existing H2065 compiled SOURCE fanout has no code duplication and is scoped to exactly three ordinary scenarios, not old 028 matrices.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2073 auto push checks and existing H2072 CI; verify source compilation. No native workflow_dispatch is currently started. After exact new source and manifest compile, one approved real GUI reconnect as builder, then only if B authenticated Health, B OS Applied, Direct/Tunnel TCP/UDP/Stop PASS reuse source for independent domain and TTL normal cases. Keep H2070 FAIL, no exotic stress.",
+  "next_action": "Collect exactly H2074 source locked GUI+domain_reconnect+dns_ttl_restart real original Windows2025/WSL2 Actions and ZIPs; confirm B AEAD/PN Health route promotion, 2nd OS1460/inner1389, Direct/Tunnel TCP/UDP, TTL3 and exact owner Stop; if fail only first novel boundary. After functional PASS check H2072 impacted old Normal/off periodic Health, Fixed/Auto native control and Game source compile/short regression; do not rerun old extreme P1/P2/028 matrix. Update cursor/evidence and stop only on all ordinary 029 exits.",
   "unverified": true,
   "last_tested_source": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json",
-    "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json"
+    "docs/evidence/M0/PLAN029-H2074-SOURCE-BUILDER-THREE-REAL-SCENES-PENDING-20261117.json",
+    "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2074-ONE-SOURCE-THREE-ORDINARY-NATIVE.md",
+    "docs/evidence/M0/PLAN029-H2074-SOURCE-BUILDER-THREE-REAL-SCENES-PENDING-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2072-WINDOWS-LIVE-HEALTH-FIX.md",
     "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2071-SERVER-B-RAW-EVIDENCE.md",
     "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2070-ONE-SERVER-M4-RX-DIAG.md",
-    "docs/evidence/M0/PLAN029-H2070-H2067-SECOND-M4-RX-FAIL-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2067-WINDOWS-COLD-HEALTH-GATE.md"
+    "docs/evidence/M0/PLAN029-H2070-H2067-SECOND-M4-RX-FAIL-20261117.json"
   ],
   "open_requests": [],
-  "partial_summary": "Source-only live Windows native Health startup wiring; native compile/real second GUI/OS/Direct-Tunnel/third TTL still NOT_RUN. H2070 signed FAIL remains. First GUI OS/Stop, physical second-domain TC TCP53, TTL2 first two replies remain separate historical scoped evidence. User normal-scope excludes extreme saturation/abort/old IPv6 matrix."
+  "partial_summary": "H2072 native Entry Health code now compiled/ABI/local pure PASS; physical B reauth still NOT_RUN. H2074 new intended same-SOURCE builder GUI and independent source-reused DNS domain/TTL normal cases; no extra extreme/matrix. H2070 old signed FAIL retained."
 }
