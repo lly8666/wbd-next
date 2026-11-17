@@ -447,16 +447,20 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('pub unsafe extern "C" fn wbd_m0_win_native_v3_start(',rust)
         self.assertIn('#[cfg(feature="m0_v4_probe")]',rust)
         self.assertIn("[plan029-v3-real-p2-rebuild]",w)
-        # Explicit real product also requires the very same exact V3 ABI.
-        # Old test assumed it was private-trial-only and prevented build.
+        # PLAN029B: real Normal/off uses the V3 public DNS/padding owner.
+        # Legacy P1/P2 still select their own bounded runtime scenes, but
+        # the Windows release DLL exports the V3 entry unconditionally.
+        release="$features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'"
+        self.assertIn(release,w)
+        self.assertNotIn("$features+=',m0_v4_probe'",w)
         self.assertIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or",w)
         self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or",w)
         self.assertIn("$env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){",w)
         self.assertIn("wbd_m0_win_game_native_v4_tcp_control",w)
-        self.assertIn("$features+=',m0_v4_probe'",w)
         self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',w)
-        self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)
-        self.assertLess(w.index("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS"),
+        gate="PLAN029B_H2084_ACTUAL_WINDOWS_DEFAULT_V3_DLL_EXPORT_PASS"
+        self.assertIn(gate,w)
+        self.assertLess(w.index(gate),
                         w.index("Full public-run signed original Npcap and Wintun driver install"))
     def test_h1849_p2_identical_app_nagle_and_failed_scene_udp_progress(self):
         import ast

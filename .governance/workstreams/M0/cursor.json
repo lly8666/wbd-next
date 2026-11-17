@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2086,
-  "checkpoint_sha": "1a9459285cbeab48e6db5f40953a9789cedf1b99",
+  "sequence": 2087,
+  "checkpoint_sha": "69cdf7efc45425114e7d692f4598427cda74bac2",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2086 029B exact cheap CI fixture repair: H2085 tests/test_m0_native_ci_scope.py reused first assertIn getattr occurrence in older H1859 test and left H1843 escaped V3 export literal. Fix both distinct method-local assertions (P1/P2 default V3 feature; H1843 unconditional real PE check), static pre-validate against actual workflow text. H2085 governance/native ABI/cross/native-functional/Win Rust pressure PASS, cheap gate FAIL; no signed network from H2085. Product code unchanged.",
-  "why_now": "H2085 source1a945 Action44050649777 cheap Run python -m unittest tests.test_m0_native_ci_scope -v failed exactly H1859 NameError abi_section and H1843 AssertionError escaped PE export string. Original H2084 E0422 Windows Rust unit is corrected, H2085 Windows/Linux Rust pressure 44050649813 PASS and governance 44050649785 PASS, static 44050649812 PASS; only cheap test blocked proper native job. Stronger method-local static checks added before H2086 commit.",
-  "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Run H2086 cheap gate/governance, exact Rust Win tests, PE export and real signed Windows2025↔WSL2 Normal off /32 + UDP/TCP + DNS/Stop; note B0 actual A/AAAA/TCP53 only when observed and full B0–B5 remains open. After one signed true B0, add bounded independent B2 normal CN vs explicit advanced and B3 real IPv6, then B5 same-VM short fair A/B. No 028/030 old matrix.",
+  "current_task": "H2087 029B update last stale H1820 native CI source gate for actual production Windows release: default Rust V3 feature present, no conditional append, same actual PE export check before signed driver; preserve still-selective old P1/P2 scene fields. H2086 cheap test source passed H1843/H1859 but FAIL H1820 one obsolete feature/marker assertion, no signed physical jobs launched. H2087 changes only historical source-test assertion and M0 evidence. Exact subsequent cheap modules scanned for old V3 marker, no hits.",
+  "why_now": "H2086 Action44051188600 cheap suite passed tests.test_m0_native_ci_scope and Python IPv6 route/QPC etc until tests.test_m0_plan029_h1749_signed_direct_order old H1820 asserted removed string '$features+=,m0_v4_probe' and old PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS; real H2084 workflow now uses unconditional new release feature and marker PLAN029B_H2084_ACTUAL_WINDOWS_DEFAULT_V3_DLL_EXPORT_PASS. Production code unchanged since H2084, governance 44051188494 to collect and signed H2086 explicitly NOT_RUN due cheap fail.",
+  "done_when": "PLAN029B B0–B5 scoped exit with actual original signed Win2025 Wintun/Npcap↔WSL2 source-pinned Normal: off/all no business Direct/FakeIP NAT/actor yet public UDP/TCP53 DNS/bootstrap/padding survives, ordinary CN verified A/CNAME/TTL and IP-only real business route vs explicit advanced FakeIP, local AAAA UDP/TCP and genuine IPv6 ingress safely ignored without IPv4 starvation, GUI/CLI new default false/old missing key true, owned OS/WAL Stop, same VM 10Mbps moderate A/B CPU/GiB/latency budget. Unsupported Game2/Game4 truthful NOT_RUN/reject, 028/030 untouched and old FAIL retained.",
+  "next_action": "Collect H2087 cheap gate end-to-end, current Windows Go/Rust exact source, actual release PE V3 export and genuine signed Normal/off Windows2025↔WSL2 UDP+TCP/Stop. After signed B0, implement smallest separate B2 ordinary CN real A and advanced FakeIP, B3 real IPv6 ingress and B5 fair short same VM A/B if new source stable. No 028/030 matrix.",
   "unverified": true,
-  "last_tested_source": "1a9459285cbeab48e6db5f40953a9789cedf1b99",
+  "last_tested_source": "69cdf7efc45425114e7d692f4598427cda74bac2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2086-H2085-CI-SCOPE-TWO-ASSERTIONS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2087-H2086-H1820-SOURCE-GATE-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2086-SCOPE-ASSERTION-FIX.md",
-    "docs/evidence/M0/PLAN029B-H2086-H2085-CI-SCOPE-TWO-ASSERTIONS-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2087-UNCONDITIONAL-V3-H1820-CI.md",
+    "docs/evidence/M0/PLAN029B-H2087-H2086-H1820-SOURCE-GATE-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/devlog/M0/20261117-PLAN029B-H2084-PRODUCTION-V3-EXPORT-AND-CN-GUI-REGRESSION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2086 only two CI assertion lines repaired with exact function scopes and static proof; H2085 actual Windows/Linux Rust pressure/gov/ABI PASS but cheap gate failure prevented signed native. No product behavior changed, B0–B5 signed new SOURCE NOT_RUN; original H2077 PASS separate."
+  "partial_summary": "H2087 only source-guard unit test migration from obsolete conditional V3 packaging to current always included public Rust V3 DLL; H2086 cheap gate FAIL old H1820 assertion; all earlier H1843/H1859 now PASS. H2085 source 1a945 Windows Rust components/ABI/governance PASS. Current signed B0–B5 NOT_RUN; old H2083 signed FAIL missing export kept and original H2077 PASS separate."
 }
