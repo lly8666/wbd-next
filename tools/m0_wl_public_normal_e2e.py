@@ -37,6 +37,7 @@ p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
 p029b_b0=os.environ.get("WBD_PLAN029B_B0_DNS_SCENE")=="1"
 p029b_b2=os.environ.get("WBD_PLAN029B_B2_ORDINARY_SCENE")=="1"
 p029b_b3=os.environ.get("WBD_PLAN029B_B3_IPV6_SCENE")=="1"
+p029b_b4=os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
 p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
 p029_gui_reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
@@ -51,7 +52,7 @@ if p029_server_rx_diag and not (p029_gui_reconnect and p029_three_case=="gui_rec
  raise RuntimeError("H2070 raw server observer only on one real GUI reconnect scene")
 if p029_boot_tc and not (p029_product and p029_direct and (not p029_gui or p029_boot_reconnect) and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("real same-endpoint bootstrap requires original Normal CN default1460")
-if p029_gui and not (p029_product and p029_direct and mode=="normal" and native_outer=="default1460"):
+if p029_gui and not ((p029_product and p029_direct or p029b_b4) and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("true GUI original signed CN default1460 needed")
 if p029_gui_padding and not (
     p029_gui and not p029_boot_tc and p029_direct and p029_product and
@@ -201,6 +202,15 @@ if p029b_b2 and (mode!="normal" or native_outer!="default1460" or
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
     os.environ.get("GITHUB_ACTIONS")!="true"):
  raise RuntimeError("029B B2 ordinary CN requires exclusive signed real Normal V3")
+if p029b_b4 and not (
+    mode=="normal" and native_outer=="default1460" and
+    p029_gui and not (p029_direct or p029_product or p029_gui_reconnect or
+    p029b_b0 or p029b_b2 or p029b_b3 or p029_padding or
+    p029_p1_policy or p029_game4_cn or p029_cdn or p029_tcp53 or
+    p029_boot_tc or p029_dns_ttl or p029_p2 or plan028_owned_switch) and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="0" and
+    os.environ.get("GITHUB_ACTIONS")=="true"):
+ raise RuntimeError("B4 requires exclusive original WinForms three-generation Normal 1460 signed scene")
 if plan028_owned_mtu_only and (not plan028_owned_switch or mode!='normal' or native_outer!='default1460'):
  raise RuntimeError('PLAN028 true physical MTU-only original Windows WSL2 test requires owned source IP, Normal Off and default1460')
 if plan028_owned_switch and (mode not in ('normal','fixed','auto','game4','game4-fec') or native_outer!='default1460'):
@@ -492,10 +502,10 @@ try:
  # per *actual* source port, before tuple/AEAD. No unfiltered RX fallback,
  # no debug packet capture or new product thread in release defaults.
  server_rx_diag=" WBD_PLAN028_EXTERNAL_STAGE_DIAG=1" if p029_server_rx_diag else ""
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
- if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2:
+ if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4:
   # The existing Linux kernel TUN must have a test-owned PUBLIC /32 alias
   # for protected Tunnel business. Its ordinary 10.66.0.1 RFC1918 address
   # would be Direct by policy and could fake a successful split test.
@@ -529,6 +539,23 @@ try:
    rules.write_text("cn.example\n",encoding="ascii")
   os.environ["WBD_PLAN029_CN_RULES_FILE"]=str(rules)
   (out/"plan029-h1775-cn-one32.txt").write_text(p029_converse_cn4+"/32\n",encoding="ascii")
+ if p029b_b4:
+  # The test-owned /32 physical route is needed only for advanced CN.
+  # It is removed after first owned Stop while the Linux original TUN
+  # retains its separate authenticated /32 for ordinary and all.
+  if p029_alias_proc is None or p029_alias_proc.wait(timeout=25)!=0 or not (
+      out/"plan029-h1745-owned-tun-alias.txt").is_file():
+   raise RuntimeError("B4 original Linux TUN /32 alias absent")
+  host=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host:raise RuntimeError("B4 signed physical Windows source unknown")
+  h1775_owned_apply(host,peer,target=p029_tunnel_alias,tag="h2010")
+  guest_log=(out/"plan029b-b4-guest.log").open("w");logs.append(guest_log)
+  p029b_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "python3","-u",unix(root/"tools/m0_plan029b_b4_guest.py"),
+    peer,host,"10.66.0.2","10.66.0.1",p029_tunnel_alias],
+    stdout=guest_log,stderr=subprocess.STDOUT)
+  ready(out/"plan029b-b4-guest.log","PLAN029B_B4_LINUX_DNS_AND_BUSINESS_READY",
+        p029b_guest,25)
  # One genuine WSL2 eth0 physical packet capture starts before the
  # original Normal Go TLS/NPF client. It stays active through actual
  # Tunnel TCP/UDP apps, then is stopped at owned Stop; only bounded
@@ -577,11 +604,16 @@ try:
   raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
  if p029_padding:
   # Same default Normal original Windows Wintun pipeline; no new test
   # sender or artificial packet shape. Only the selected mode changes.
   args.extend(["--startup-padding","flows"])
+ if p029b_b4:
+  args.extend(["--split-enable","--cn-domain-direct=true",
+               "--cn-rules-file",str(rules),
+               "--dns.direct",peer,"--dns.tunnel","10.66.0.1",
+               "--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")])
  if p029b_b2:
   # New fresh CN default: direct DNS for CN only, but real overseas A
   # business must remain Tunnel without an advanced FakeIP journal.
