@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2094,
-  "checkpoint_sha": "5327acf268f49c6edc860400bfab2e12d381fbfc",
+  "sequence": 2095,
+  "checkpoint_sha": "e60671470e1c4f7d28f279a725dbbb66ceea78b1",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2094 B2 H2093 actual signed source5327 Action44068272525: both original Windows/Linux ordinary-CN DNS real A/CNAME/TTL2 and CN/nonCN shared 203.0.113.77 UDP Tunnel PASS pre-Stop. Full native FAIL on legacy Linux->Windows TCP45902 after B2, Windows->Linux TCP succeeds; Stop NOT_RUN. Root cause in test-only owned Win Defender listener ACL: B2 guest explicitly source-binds 203.0.113.77 but workflow selector omits B2 and allows only 10.66.0.1. Add B2 to same exact one-IP owned firewall rule; do not change product TCP stack/Defender.",
-  "why_now": "H2093 native run44068272525 job133990330687 FAIL (original artifact14321499645 ZIP SHA256 b07f419975a6a3df60a7c53b3300d8b65011aa7275c0fb86c35252b8c59d87bc). B2 guest reports 1 valid direct physical CN DNS + 1 tunnel nonCN DNS; Windows real A shared-CDN UDP both Tunnel, no business physical. Generic later TCP Windows->Linux echo passes, Linux->Windows inbound times out. Workflow scoped TCP allow remote=10.66.0.1 absent B2 while source-bound guest client=203.0.113.77. Fix the test-owned ACL, preserve H2093 FAIL and NOT_RUN Stop. Product code unchanged.",
+  "current_task": "H2095 B2 H2094 actual signed SOURCE688193 Action44071943887: Windows test app original real CN/direct DNS and nonCN/Tunnel DNS same overseas A/CNAME/TTL2, both original kernel UDP businesses via Tunnel PASS pre-Stop. Linux original guest all four expected receipts PASS before 0.5s linger, then independent Windows OS NCSI query msftconnecttest.com on correct Tunnel DNS (ID a0a3 not B2 script 6202) falsely raised wrong question. Exact original client finally WAL+Rust Stop PASS but full Action FAIL before legacy TCP; H2094 exact owned ACL not yet qualified. Fix fixture only: scope bounded unrelated source-identical tunnel DNS tickets by original ID/QNAME, retain hard failure on test wrong exit/QNAME/retries.",
+  "why_now": "H2094 true signed job134002610538 Action44071943887 source688193 FAIL; original artifact14323013719 zip sha256 285c553911baed9db0a1726b4feee60bfa21e181f052c03077e5bc0f3196b72e. All four expected events already in guest before unrelated OS www.msftconnecttest.com A id a0a3 in tunnel-only lane; original B2 Windows app file real A+2 UDP PASS, client owned finally Stop PASS. H2093 had later reverse TCP failure from exact owned firewall ACL (corrected but untested here), don't promote that. H2095 one bounded fixture filter only; no product change.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "One source-frozen signed Windows2025/WSL2 H2094 [plan029b-b2-cn-ordinary-real] with corrected exact owned 45902 ACL, preserve both directions original TCP and Stop gates. If new failure has same first observable cause, inspect original Wintun/TUN SYN witness, not relax oracle. After full B2 ordinary signed PASS proceed B2 advanced, B3 actual IPv6, B4 lifecycle, B5 fair same-VM 10Mbps; don't preclaim.",
+  "next_action": "One source-frozen H2095 [plan029b-b2-cn-ordinary-real] original Windows2025 signed Wintun/Npcap vs WSL2, exact B2 CN vs nonCN DNS/Tunnel UDP, following legacy TCP45902 both directions and owned Stop. If the same first invalid unrelated OS DNS still arises twice without fresh information, narrow first unique packet capture and stop; no general DNS suppressor, no product TCP rewrite. Advanced B2, true IPv6, lifecycle/Game and same-VM bounded 10Mbps remain NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "5327acf268f49c6edc860400bfab2e12d381fbfc",
+  "last_tested_source": "688193af6b395a36f2916b6c8c53aaa86252b4e0",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2094-H2093-B2-DNS-PASS-TCP-ACL-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2095-H2094-NCSI-POST-EXPECTED-FIRST-FAIL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2094-B2-OWNED-TCP-ACL.md",
-    "docs/evidence/M0/PLAN029B-H2094-H2093-B2-DNS-PASS-TCP-ACL-FAIL-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2095-B2-EXACT-DNS-TICKET.md",
+    "docs/evidence/M0/PLAN029B-H2095-H2094-NCSI-POST-EXPECTED-FIRST-FAIL-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2088 and H2089 independently scoped signed Normal/off and B0 DNS PASS. H2091/H2092 full B2 FAIL prior DNS mismatch. H2093 source5327 genuine B2 CN/direct DNS and shared overseas A/Tunnel UDP both PASS preStop with one valid attempt each, but full native FAIL on legacy reverse TCP due B2 selector omitted in test-only exact Windows inbound firewall rule; Stop NOT_RUN. H2094 surgical fixture ACL correction requests one new real run, not yet verified. Advanced B2/B3/B4/B5 NOT_RUN/PARTIAL."
+  "partial_summary": "H2088 H2089 true Normal/off and DNS B0 scoped PASS; H2093 source5327 B2 ordinary real DNS+UDP both exits preStop PASS, reverse TCP 45902 FAIL test-owned firewall incorrect remote ACL. H2094 source688193 corrects ACL but full Action44071943887 FAIL before legacy TCP because *unrelated* real OS NCSI request ID a0a3 through correct Tunnel DNS during guest 0.5s linger; all four B2 desired app/kernel events already succeeded. Original product finally Stop PASS, full B2 still FAIL. H2095 bounded fixed-ID fixture scope one real retry NOT_RUN. B2 advanced, B3-B5 not qualified."
 }

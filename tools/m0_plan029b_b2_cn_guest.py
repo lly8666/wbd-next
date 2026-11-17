@@ -29,6 +29,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
     print("PLAN029B_B2_REAL_LINUX_DNS_AND_TUNNEL_READY", flush=True)
     until = time.monotonic() + 36
     linger = None
+    unrelated_tunnel_dns = 0
     while time.monotonic() < until:
         if len(seen) == 4 and linger is None:
             linger = time.monotonic() + 0.5
@@ -52,7 +53,32 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                                        "tun_destination": overseas}
                 sock.sendto(wire + b"-REPLY", peer)
                 continue
-            if len(wire) < 12 or wire[2:6] != b"\x01\x00\x00\x01" or \
+            # H2094 first error: original Windows NCSI issued a distinct
+            # non-CN A query through the *correct* Tunnel DNS endpoint
+            # AFTER all four B2 expected kernel receipts. The guest must
+            # qualify only this scene's 0x6202 tunnel ticket, not turn
+            # unrelated genuine OS DNS into a fake product misroute.
+            # CN misroute, expected-ID wrong question, malformed wire and
+            # any physical-lane unexpected QNAME remain hard failures.
+            if label == "global_dns" and len(wire) >= 12 and \
+               wire[:2] != b"\\x62\\x02" and wire[2:6] == b"\\x01\\x00\\x00\\x01" and \
+               wire[12:] not in (CN + A, GLOBAL + A):
+                unrelated_tunnel_dns += 1
+                if unrelated_tunnel_dns > 4:
+                    raise RuntimeError("B2 excessive unrelated OS tunnel DNS packets")
+                if unrelated_tunnel_dns == 1:
+                    print("PLAN029B_B2_UNRELATED_TUNNEL_OS_DNS " +
+                          json.dumps({"lane": label, "source": peer[0],
+                                      "id": wire[:2].hex(),
+                                      "question_prefix48": wire[12:60].hex(),
+                                      "expected_test_id": "6202",
+                                      "status": "OBSERVED_NOT_B2_TEST_TICKET"},
+                                     sort_keys=True), flush=True)
+                continue
+            if label == "global_dns" and wire[12:] == GLOBAL + A and \
+               wire[:2] != b"\\x62\\x02":
+                raise RuntimeError("B2 original Windows tunnel transaction ID was changed")
+            if len(wire) < 12 or wire[2:6] != b"\\x01\\x00\\x00\\x01" or \
                wire[12:] != ip + A:
                 # H2093 one bounded first-error witness. The previous
                 # H2092 packet did not match the expected question; never
@@ -110,6 +136,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
         raise RuntimeError("B2 missing genuine split DNS or TUN data: " + repr(seen))
     print("PLAN029B_B2_REAL_LINUX_CN_PHYSICAL_DNS_AND_BOTH_TUNNEL_DATA " +
           json.dumps({"source_real_ip": overseas, "events": seen,
+                      "unrelated_tunnel_dns": unrelated_tunnel_dns,
                       "physical_business_packets": 0,
                       "result": "PASS_REAL_PHYSICAL_CN_DNS_OVERSEAS_BOTH_TUNNEL"}, sort_keys=True),
           flush=True)
