@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2096,
-  "checkpoint_sha": "aa53d4b3b73d57d993f5bb0da1f29e8cc54462ef",
+  "sequence": 2097,
+  "checkpoint_sha": "ad86b55f4b206484d68a724634bc67e4c3ac661c",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2096 source readback of H2095 fixture shows Python byte literals escaped twice: b\"\\\\x62\\\\x02\" would compare ASCII escape characters, not original DNS ID 0x6202; likewise DNS flags. This is a true test fixture error before H2095 signed result. Correct both literal forms and add Python AST bytes regression. H2095 original Action44074535313 sourceaa53 is already running; don't dispatch another same-scene Action or conceal its result. Product unchanged.",
-  "why_now": "H2095 true source 688193 B2 first error from unrelated Windows NCSI DNS on correctly tunnel-led nonCN; H2095 first attempted fixture sourceaa53 accidentally used double escaped source literals despite static text test. H2096 corrects only syntax semantics with parsed AST exact bytes to avoid false ticket matching and unbounded retries; no new signed scenario until active H2095 Action concludes. Historic H2093/H2094 FAIL and B2 preStop successes retained.",
+  "current_task": "H2097 exact B2 ordinary real retry after H2095 signed Action44074535313 sourceaa53 failed on fixture double-escaped DNS query flags. Original guest first DNS was correct CN QNAME/physical source/id 0001; guest raises FIRST_INVALID because b\"\\\\x01...\" matched ASCII not DNS wire, original Windows receives SERVFAIL 8182. H2096 sourcead86 now correct bytes, AST literal regression and cheap+WinGo/Rust+LinuxRust PASS. Request ONE new source-locked [plan029b-b2-cn-ordinary-real] signed run; no product code/ABI change.",
+  "why_now": "H2095 native Win2025 signed Npcap/Wintun↔WSL2 Action44074535313 job134012128647 FAIL; original ZIP artifact14325645963 SHA256 311d822575373c4b050cf955871cfd682e153744083e301621b895e3e7e13b43. Original guest observed 32B correct CN request (0001 0100 0001 ... www.cn.example A) on physical direct DNS then rejected due double-escaped comparison, Windows original returns 6201 8182 SERVFAIL; test client finally owned WAL/kernel Stop PASS, legacy TCP NOT_RUN, not a product classification claim. H2096 has immutable first correction, native scope SKIPPED correctly. One real source-frozen H2097 retry with corrected exact DNS bytes is justified; preserve H2093/H2094/H2095 FAIL.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect running H2095 Action44074535313 sourceaa53 exact verdict. The now-corrected H2096 code has NOT_RUN physical status and no marker; only after active Action terminates, one source-frozen intentional real B2 run if still necessary. Other B2 advanced, true IPv6, B4 lifecycle/Game, same-VM B5 NOT_RUN.",
+  "next_action": "Collect H2097 one source-frozen real signed B2 ordinary Action result for CN physical DNS A/CNAME/TTL2, nonCN Tunnel DNS same A, two Tunnel business receipts, existing bidirectional kernel TCP45902 & owned Stop; require original artifact+SHA and exact SOURCE/Effective. On FAIL narrow the first new wire packet; no additional same-error rerun. If PASS, continue separate B2 advanced CN and then B3 genuine IPv6, B4 GUI/Stop/Game, B5 bounded same-VM 10Mbps CPU/p99; no 028 matrix.",
   "unverified": true,
-  "last_tested_source": "688193af6b395a36f2916b6c8c53aaa86252b4e0",
+  "last_tested_source": "aa53d4b3b73d57d993f5bb0da1f29e8cc54462ef",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2095-H2094-NCSI-POST-EXPECTED-FIRST-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2097-H2095-DOUBLE-ESCAPED-UPSTREAM-DNS-FAIL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2096-B2-WIRE-BYTES-CORRECTION.md",
-    "docs/evidence/M0/PLAN029B-H2095-H2094-NCSI-POST-EXPECTED-FIRST-FAIL-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2097-ONE-SIGNED-B2-RETRY.md",
+    "docs/evidence/M0/PLAN029B-H2097-H2095-DOUBLE-ESCAPED-UPSTREAM-DNS-FAIL-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2094 source688193 real B2 four expected original Windows/WSL2 kernel DNS+UDP events PASS, full Action FAIL due unrelated NCSI query observed during fixture 0.5s linger; original client Stop finally PASS, legacy TCP not reached. H2095 sourceaa53 fixture ticket filter escaped byte literals incorrectly, running signed Action44074535313 verdict not yet known. H2096 corrects test literals and adds AST bytes regression with no new native scene. Product B0 scoped PASS older source; B2 advanced/B3/B4/B5 pending."
+  "partial_summary": "H2095 sourceaa53 true signed B2 Action44074535313 FAIL: original Linux physical DNS received correct CN packet but Python guest byte flag literal was double-escaped and rejects all expected requests; original Windows received matching ID+QNAME SERVFAIL 8182, not a proven production misroute. Original Go finally owned Stop PASS, legacy TCP and full B2 NOT_RUN. H2096 sourcead86 AST bytes and four cheap Windows/Linux compilation checks PASS, no native by correct gate. H2097 requests one independent corrected-source native B2 scene; verdict NOT_RUN until artifact. Older B0 scoped PASS, H2093 B2 preStop partial PASS, B2 advanced/B3/B4/B5 pending."
 }

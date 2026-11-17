@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2097",
+  "date": "2026-11-17",
+  "source_sha": "aa53d4b3b73d57d993f5bb0da1f29e8cc54462ef",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action": {
+    "id": 44074535313,
+    "job_id": 134012128647,
+    "conclusion": "failure",
+    "artifact_id": 14325645963,
+    "artifact_sha256": "311d822575373c4b050cf955871cfd682e153744083e301621b895e3e7e13b43",
+    "source_sha": "aa53d4b3b73d57d993f5bb0da1f29e8cc54462ef",
+    "build_windows_go": "PASS",
+    "build_windows_rust": "PASS",
+    "build_linux_rust": "PASS",
+    "real_signed_windows_wsl2": "RAN_FAIL"
+  },
+  "exact_first_failure": {
+    "real_guest_physical_dns_packet": {
+      "source": "172.20.32.1",
+      "id": "0001",
+      "header12": "000101000001000000000000",
+      "question": "www.cn.example A IN",
+      "expected_question": "www.cn.example A IN",
+      "first_invalid_raised": true
+    },
+    "original_windows_app_reply": {
+      "id": "6201",
+      "flags": "8182",
+      "rcode": "SERVFAIL",
+      "question": "www.cn.example A IN"
+    },
+    "actual_cause": "TEST_GUEST_DOUBLE_ESCAPED_PYTHON_BYTES_LITERALS_CONDITION_NEVER_MATCHED_GENUINE_DNS_FLAGS",
+    "fixed_in_source": "ad86b55f4b206484d68a724634bc67e4c3ac661c",
+    "fix_checks": "Python AST exact byte literals 0x6202 and 0x01000001 plus H2096 cheap source gates",
+    "product_egress_qualification": "NOT_ESTABLISHED_THIS_ACTION",
+    "valid_b2_dns_and_tun_packet_receipts": "NOT_RUN_STOPPED_AT_FIRST_CN_DNS",
+    "native_bidirectional_tcp": "NOT_RUN",
+    "original_go_finally_stop": "PASS_M0_PLAN027_NATIVE_STOP_RESULT_stage_wal_kernel_crypto",
+    "complete_scene": "FAIL"
+  },
+  "planned_retry": {
+    "marker": "[plan029b-b2-cn-ordinary-real]",
+    "new_source_sha": "H2097_COMMIT_TO_BE_PUBLISHED",
+    "scene": "original Normal ordinary CN single signed Windows2025 Wintun/Npcap vs WSL2",
+    "status": "NOT_RUN",
+    "no_matrix": true
+  },
+  "remaining": {
+    "advanced_cn": "NOT_RUN",
+    "real_ipv6": "NOT_RUN",
+    "full_gui_reconnect": "NOT_RUN",
+    "game_entry": "NOT_RUN",
+    "same_vm_10mbps_cpu_p99": "NOT_RUN"
+  }
+}
