@@ -25,38 +25,52 @@ for name in ("wbd-v4-client-arm64","libwbd_engine-arm64.so"):
     assert m["artifacts"][name]["elf"]["min_pt_load_align"]>=16384
 print("ANDROID_A3_SAME_SOURCE_BIONIC_ARM64_ASSETS_VERIFIED")
 PY
-python3 r0/go_overlay/assembly/assemble.py \
-  --legacy-root legacy --overlay-root . \
-  --manifest r0/go_overlay/assembly/manifest-plan020-m0.json \
-  --receipt out/android-a3-linux/assembly.json
+# Same donor and current overlay as the proven Android native builder.
+# Historic PLAN020 result blobs are deliberately NOT repinned.
+python3 tools/m0_install_public_faketcp.py --check-only
+python3 tools/m0_install_public_faketcp.py legacy
+cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/
+cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/
+for name in raw_android_network_android.go raw_android_network_linux.go;do
+  test ! -e "legacy/internal/faketcp/$name"
+  cp "r0/go_overlay/internal/faketcp/$name" "legacy/internal/faketcp/$name"
+done
+python3 tools/m0_install_public_realityfront_tests.py legacy
+mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+for file in r0/go_overlay/internal/realityfront/*.go;do
+  name="$(basename "$file")"
+  case "$name" in
+    tls_test.go|wire_qualification_test.go) continue ;;
+    tls.go)
+      test "$(git -C legacy hash-object internal/realityfront/tls.go)" = 518a18104803baf75c703fd8b038f2126beb8d64
+      cp "$file" legacy/internal/realityfront/tls.go
+      continue ;;
+  esac
+  test ! -e "legacy/internal/realityfront/$name" || {
+    echo "donor overlay collision: $name" >&2;exit 1;
+  }
+  cp "$file" "legacy/internal/realityfront/$name"
+done
+cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+mkdir -p legacy/internal/v4productcli/rootjournal
+cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
+for role in client server;do
+  cp "r0/go_overlay/cmd/wbd-v4-$role/main.go" "legacy/cmd/wbd-v4-$role/main.go"
+done
+test ! -e legacy/internal/realityfront/v4_route_prelude.go
 python3 - <<'PY'
 import json,os,pathlib
-root=pathlib.Path.cwd(); donor=root/"legacy"
-rec=json.loads((root/"out/android-a3-linux/assembly.json").read_text())
-assert rec["overlay_source"]==os.environ["GITHUB_SHA"]
-assert rec["legacy_source"]=="a7a82db31fe736ffedee330795a3234d358f1984"
-for part in ("internal/realityfront","internal/v4productcli"):
-    for src in (root/"r0/go_overlay"/part).glob("*.go"):
-        if src.name.endswith("_test.go") and src.name not in (
-            "admission_v4_test.go","v4_tls_handshake_contract_test.go"):
-            continue
-        dst=donor/part/src.name
-        if dst.exists():
-            assert dst.read_bytes()==src.read_bytes(),str(src)
-        else:
-            dst.parent.mkdir(parents=True,exist_ok=True)
-            dst.write_bytes(src.read_bytes())
-for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
-    src=root/"r0/go_overlay/internal/faketcp"/name
-    dst=donor/"internal/faketcp"/name
-    assert not dst.exists(),str(dst)
-    dst.write_bytes(src.read_bytes())
-for role in ("client","server"):
-    dst=donor/("cmd/wbd-v4-"+role+"/main.go")
-    dst.parent.mkdir(parents=True,exist_ok=True)
-    dst.write_bytes((root/("r0/go_overlay/cmd/wbd-v4-"+role+"/main.go")).read_bytes())
-assert not (donor/"internal/realityfront/v4_route_prelude.go").exists()
-print("ANDROID_A3_SOURCE_LOCKED_LINUX_SERVER_ASSEMBLY_PASS")
+p=pathlib.Path("out/android-a3-linux")
+m=json.loads((p/"validated-native/manifest.json").read_text())
+assert m["source"]==os.environ["GITHUB_SHA"]
+assert m["donor_go"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+(p/"assembly.json").write_text(json.dumps({
+ "schema":"android-a3-current-overlay-assembly-v1",
+ "source":os.environ["GITHUB_SHA"],"go_donor":m["donor_go"],
+ "assembly":"same_current_android_original_go_donor_overlay",
+ "historic_plan020":"PRESERVED_UNMODIFIED_NOT_USED",
+ "linux_real_protocol":"NOT_RUN"},indent=2)+"\n")
+print("ANDROID_A3_ORIGINAL_LINUX_SERVER_CURRENT_DONOR_OVERLAY_PASS")
 PY
 rustup toolchain install 1.85.1 --profile minimal
 cargo +1.85.1 build --locked --release -p wbd-engine \

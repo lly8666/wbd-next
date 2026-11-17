@@ -18,3 +18,8 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"修复新增Actions-first摘要导致的feature JSON超16KiB，保留原历史与完整计划。"}
 ```
+
+## A3首轮 Action 真实失败及装配夹具修复
+
+- SOURCE `7296fa2d9c114202c7e7462b737aff980d157889` [Action44041088298](https://github.com/lly8666/wbd-next/actions/runs/44041088298)：`original-m3-wire-oracle`、`arm64-native`、`root-arm64-app` PASS；新增 `linux-original-server-normal-off` **FAIL**：旧 PLAN020 固定 result_blob 与当前 `r0/go_overlay/internal/v4productcli/linux.go` 不匹配，未运行 Linux 业务。原 PLAN020 历史不重写。
+- 定点修复仅换为 Android A1 已验证的 pinned original-Go donor + 现行 overlay 组装流程，独立 A3 装配收据记录同 SOURCE；本次未改原Go/Rust协议代码。下一 SOURCE 的 Linux Go 编译/真实网络结果仍 NOT_RUN，待 Actions。

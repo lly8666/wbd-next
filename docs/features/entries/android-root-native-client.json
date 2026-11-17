@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "Android ARM64原Go/Rust/M3和Root APK BUILD_PASS；Android真连接NOT_RUN。软件功能Actions-first，实体设备最终验收。",
+  "summary": "Android ARM64原Go/Rust/M3及APK BUILD_PASS；Linux原server oracle装配待重验；Android真连接NOT_RUN。Actions-first。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
