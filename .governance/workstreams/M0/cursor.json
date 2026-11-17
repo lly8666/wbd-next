@@ -4,29 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2042,
-  "checkpoint_sha": "0f141e86826eb695cc358444b7bb09e64105016c",
+  "sequence": 2044,
+  "checkpoint_sha": "e0a3f44461111aae5e3e17e4252f16202c5c4151",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2042 bootstrap same dns.direct physical UDP TC=1 -> TCP/53 only on validated original NIC/source and async FakeIP writer bounded pressure tests implemented; SOURCE native tests and GUI real network NOT_RUN pending Action.",
-  "why_now": "User scoped PLAN029 closeout to GUI real Connect/Stop, same endpoint TC/bootstrap/recovery, five quota classes, and SOURCE evidence archive; no IPv6/P1/P2 expansion. H2041 Game4 verified.",
+  "current_task": "H2044 fix first native assembly failure: exact overlay bootstrap test blob pin; maintain GUI/DNS/writer narrow closeout only. Source-locked Windows build and Rust capacity component checks in flight, do not rerun or claim PASS.",
+  "why_now": "H2042 H1661 Action43992426014 stopped at native bootstrap source blob mismatch before Go compiler; H2043 Action43992703610 stopped at next native bootstrap _test.go blob. Fixed exact manifest. Governance lacked per-commit feature-impact and cursor exceeded bounded context_refs; both corrected.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact SOURCE GitHub Windows source build and Windows/Linux Rust component results first; if successful run one original GUI-origin signed scenario, no duplicate dispatch. Preserve unverified native TC/bootstrap/writer until real evidence.",
+  "next_action": "Collect completed H2044 Go/Win/Lin Rust Actions before further changes. GUI real ClientSession signed network, five small quota classes and crash/reconnect TC remain OPEN; no unverified green promotion.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2044-ASSEMBLY-STOP-RESTORE.md",
     "docs/devlog/M0/20261117-PLAN029-H2042-SCOPED-DNS-TC-WRITER-CODING.md",
-    "docs/devlog/M0/20261117-PLAN029-H2041-GAME4-CN-TRUE-FOUR-LANE-TWO-EXITS-STOP.md",
-    "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2040-REGISTER-H2031-REAL-PADDING-FEATURE-VERIFICATION.md",
-    "docs/devlog/M0/20261117-PLAN029-H2039-FIX-G2-EVIDENCE-SINGLE-SOURCE-CURSOR.md",
-    "docs/evidence/M0/PLAN029-H2007-H2005-REAL-EVENT-UDP-P99-20261116.json",
-    "docs/devlog/M0/20261117-PLAN029-H2038-GAME4-TRUE-TUNNEL-TCP-ALIAS-OWNED-ALLOW.md",
-    "docs/devlog/M0/20261117-PLAN029-H2037-GAME4-IFINDEX-MTU-TWO-COLD-ARGS.md",
-    "docs/devlog/M0/20261117-PLAN029-H2036-COLLECT-H2031-REAL-PADDING-20-30-WINDOW.md"
+    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
+    "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
