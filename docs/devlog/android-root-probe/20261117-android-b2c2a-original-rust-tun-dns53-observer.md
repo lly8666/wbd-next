@@ -23,3 +23,11 @@
 SOURCE `e22b456155ca30e75d5c86c9c29b903d7ea351c9` [Action #44085089405](https://github.com/lly8666/wbd-next/actions/runs/44085089405) **9/9 Jobs SUCCESS**。独立`b2c2-original-rust-tun-dns-ingress-host`确认5项Rust报文格式边界测试 `test result: ok. 5 passed; 0 failed`，输出`ANDROID_B2C2A_ORIGINAL_RUST_SINGLE_TUN_DNS53_OBSERVER_HOST_PASS_NO_REDIRECT`；source check逐项固定原M4仅一处真实TUN `read_ip_scatter`、原认证`original_complete_ipv4_head`前置、原`seal_android_read_normal_ip`照旧。真实Android ARM64 Rust ELF的新增C符号`wbd_m0_embedded_go_loop_dns_ingress_observed`通过强制dynsym门，B2c1物理socket host4项、B1原Go DNS host7项、B2固定CN8503真源/Host DNS、原M3 LINK20、原Go/Rust Android ARM64 16KiB ELF、独立签名Root APK CN8503 TXT/MIT/source哈希、原Linux服务端真TLS/授权租约/Rust M4双向UDP/Stop oracle均PASS；Linux Job日志`ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN`。ARM64 Cuttlefish host日志`ANDROID_ARM64_KVM_HOST_ADMISSION_ONLY KVM_NOT_ACCESSIBLE arch aarch64 kvm NOT_AVAILABLE`。
 
 本次只完成**现有Rust唯一TUN入口的不可破坏识别与有界诊断**。其Rust FFI只给UDP候选数/TCP候选数/不完整候选数，`hijack_enabled=0`，**无系统DNS接线、没有DNS backend TCP流重组、没有隧道1.1.1.1独立出站DNS或物理223.5.5.5实际Android发包、没有新的DNS应答回注或改变原M1/M3密文**。Host Rust测试是结构正确的报文字节/边界测试，不是Android真实TUN网络测试；即使9/9不能宣称Android DNS E2E。P2/P3 ENV_BLOCKED/NOT_RUN，实体P5最后另授权，main/M0不改。
+
+## B2c2a 功能卡单独更正的治理失败与同提交复核
+
+代码SOURCE `e22b456155ca30e75d5c86c9c29b903d7ea351c9` 的 [Action44085089405](https://github.com/lly8666/wbd-next/actions/runs/44085089405) 仍是**9/9产品Job PASS**。证据文档SOURCE `3e499c59772540eace90c56978821410f91239b4` 治理与维护均PASS。随后单独修正功能卡“同源Job待结束”过时文案的SOURCE `55200a56b23becb1e2d5afd956c087b358de8412` 的 [governance #44086471444](https://github.com/lly8666/wbd-next/actions/runs/44086471444) **FAIL**：功能卡更改但同一commit没有更新含 `feature-impact` 的devlog；此为申报治理FAIL，非Rust DNS或真Linux协议测试失败。现以**同一commit同步变更功能卡和当前devlog的如下feature-impact块**修复，保留旧FAIL，不将其误记为全绿。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B2c2a同源9/9真软件门后同步纠正只读Rust DNS53观察功能卡与开发日志声明，未开启系统DNS/双出口。"}
+```
