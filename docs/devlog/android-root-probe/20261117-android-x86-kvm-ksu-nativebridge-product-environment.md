@@ -64,3 +64,13 @@ SOURCE `1faf0aedc7802c77c3f45986cea50710b244f5b4` [Action44118042917](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"原Android ARM64 Go真正通过x86 KVM+KSU NativeBridge binfmt到Bionic，因原ELF缺RUNPATH找不到Rust.so FAIL；修原CGo $ORIGIN RUNPATH并核同SHA ELF动态节。"}
 ```
+
+## ARM64 RUNPATH单条断言误判导致同SOURCE构建门FAIL（2026-11-17）
+
+SOURCE `b3166604b972cc32eea1c0313f10ddfc82f71208` [Action44120418078](https://github.com/lly8666/wbd-next/actions/runs/44120418078)：真实Android ARM64 Go/Rust构建生成了正确格式的ELF，但是`arm64-native` Job **FAIL** 于新增过于狭窄的grep断言；该次的Root APK、同源Linux oracle、KSU NativeBridge guest全部 **SKIPPED**，不存在Android设备链接实测。已下载真实Source工件 [14345396049](https://github.com/lly8666/wbd-next/actions/runs/44120418078/artifacts/14345396049) 并在宿主直接 `readelf -d`：`DT_NEEDED=[libwbd_engine.so]`，`DT_RUNPATH=[$ORIGIN:$ORIGIN:$ORIGIN:$ORIGIN:$ORIGIN]`。Go CGO对多个cgo链接对象重复注入`$ORIGIN`，全是相同合法相对路径，没有任何其他路径；先前`grep -Fq 'Library runpath: [$ORIGIN]'`要求整个字段恰好一个，因此错误红门。原Rust和DNS Host实际测试PASS。
+
+只更正两个 SOURCE 门`android/root-native/build-source-locked.sh`与`android/root-app/ci/x86-kvm-ksu-arm64-nativebridge.sh`，允许仅重复`$ORIGIN`的RUNPATH、拒绝其他路径：`grep -Eq 'Library runpath: \[\$ORIGIN(:\$ORIGIN)*\]'`。本地正反字符串已验PASS；不修改已经真实链接出DT_RUNPATH的Android Go/Rust生产源码。功能卡保留全部48历史verification（包括此次FAIL）与各source/evidence/status，只压缩两条旧验收scope说明便于低于16KiB硬门。当前新SOURCE未跑，不能把Host/本地grep说成Android设备PASS。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"Go原Android ARM64 ELF真实$ORIGIN RUNPATH存在但CGO重复五次，新增单条grep错误FAIL；修源码锁建构与KSU两层gate允许仅重复$ORIGIN，保留全部历史验证。"}
+```

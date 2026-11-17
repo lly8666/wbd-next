@@ -169,7 +169,7 @@ for pair in "aarch64 arm64"; do
   readelf -d "out/android-product-a1/wbd-v4-client-$goarch" \
     >"out/android-product-a1/linker-$goarch.txt"
   grep -Fq 'Shared library: [libwbd_engine.so]' "out/android-product-a1/linker-$goarch.txt"
-  grep -Fq 'Library runpath: [$ORIGIN]' "out/android-product-a1/linker-$goarch.txt"
+  grep -Eq 'Library runpath: \[\$ORIGIN(:\$ORIGIN)*\]' "out/android-product-a1/linker-$goarch.txt"
   unset CGO_LDFLAGS
 done
 python3 - <<'PY'

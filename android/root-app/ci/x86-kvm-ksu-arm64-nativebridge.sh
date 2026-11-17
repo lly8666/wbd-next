@@ -79,7 +79,7 @@ cmp "$dir/apk-rust-arm64.so" out/android-root-app-native/libwbd_engine-arm64.so
 readelf -d out/android-root-app-native/wbd-v4-client-arm64 \
   >"$dir/elf-dynamic-linker.txt"
 grep -Fq 'Shared library: [libwbd_engine.so]' "$dir/elf-dynamic-linker.txt"
-grep -Fq 'Library runpath: [$ORIGIN]' "$dir/elf-dynamic-linker.txt"
+grep -Eq 'Library runpath: \[\$ORIGIN(:\$ORIGIN)*\]' "$dir/elf-dynamic-linker.txt"
 python3 - <<'PY'
 from pathlib import Path
 import struct
