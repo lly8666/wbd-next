@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2098,
-  "checkpoint_sha": "5d6656fe0c1d67c3d8ca88e94a306c367aaf0434",
+  "sequence": 2099,
+  "checkpoint_sha": "d9435610939774e601895d9dd998ec828174ef0f",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2098 H2097 source5d6656 only governance Action44078097514 PASS; no m0-wl workflow triggered because commit was doc/cursor-only and workflow on.push.paths did not match. H2097 physical=NOT_RUN, never count as H2096 signed result. H2098 attaches exact B2 Python AST DNS wire regression to original cheap workflow; test path trigger included, explicit one-scene marker on commit requests correct new-SOURCE Win2025 Wintun/Npcap↔WSL2 B2. Preserve product source unchanged; no old Actions re-dispatch.",
-  "why_now": "H2095 SOURCEaa53 signed original guest rejected valid CN DNS due wrong double-escaped Python bytes, original Windows got SERVFAIL; H2096 sourcead86 fixes and tests AST. H2097 documentation-only push did not match native on.push.paths and only Action44078097514 governance PASS; no real source5d native Action (NOT_RUN). H2098 meaningful source contract fix ensures B2 ticket regression runs before signed native and one marker triggers pipeline. One owner, no product changes, no 028 matrix.",
+  "current_task": "H2099 collect H2098 SOURCEd943 signed Action44078530417 exact original artifact14327500131 sha256 13a6340f2da28d3e1113bc784711a515c62190e4755829a33633d7729d4b1c1e. Real Windows2025 signed Npcap/Wintun↔WSL2 Normal B2 ordinary CN/direct DNS A CNAME TTL2 & nonCN/Tunnel DNS same overseas A each one upstream request, original Windows Wintun UDP both Tunnel, physical business0, generic kernel UDP/TCP both directions and owned Stop PASS; one unrelated Windows NCSI tunneled background DNS logged separate. B2 ordinary SCOPED_PASS; advanced/B3/B4/B5 remain NOT_RUN.",
+  "why_now": "H2098 corrected fixture source d943 Action44078530417 overall and native-public-two-os job SUCCESS, original ZIP hash verified and manifest source = product_binary_source = fixture_source = linux_binary_source. Both DNS choices and CDN business are physically proven, legacy TCP45902 ACL fix verified by both-source-bound actual 40B kernel streams, original Stop and Npcap cleanup true. No performance CPU comparison or actual IPv6 packet in this scene. Update original dns-split-ipv6 card with scope and evidence; retain old FAILs rather than general closeout.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2098 signed B2 native job SOURCE+original manifest SHA, physical CN DNS vs nonCN Tunnel DNS shared real A/TTL2 and both Tunnel UDP, followed by exact owned TCP45902 both directions and original Stop; on first FAIL inspect actual guest receipt and do not repeat same error without new info. After B2 ordinary, separate advanced+genuine IPv6+GUI/Stop/Game+10Mbps sameVM A/B remain.",
+  "next_action": "Implement/verify one independent advanced CN FakeIP normal signed representative using mature H1808/D3 fixtures/current canonical setting; afterwards B3 stage_sources ReadResult::Skipped must count full Wintun work quantum (Rust currently increments captured only for Frame), prove actual IPv6 injection on controlled Windows route alongside IPv4, no claims from absent IPv6 route. B4 GUI/Stop/Game and B5 sameVM capacity10Mbps CPU/GiB small-flow p99 remain scoped NOT_RUN; no 028/power matrix.",
   "unverified": true,
-  "last_tested_source": "aa53d4b3b73d57d993f5bb0da1f29e8cc54462ef",
+  "last_tested_source": "d9435610939774e601895d9dd998ec828174ef0f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2097-H2095-DOUBLE-ESCAPED-UPSTREAM-DNS-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2099-H2098-B2-ORDINARY-SIGNED-REAL-PASS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2098-CHEAP-GATE-NATIVE-PATH.md",
-    "docs/evidence/M0/PLAN029B-H2097-H2095-DOUBLE-ESCAPED-UPSTREAM-DNS-FAIL-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2099-B2-ORDINARY-SIGNED-COLLECT.md",
+    "docs/evidence/M0/PLAN029B-H2099-H2098-B2-ORDINARY-SIGNED-REAL-PASS-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2095 signed Action44074535313 SOURCEaa53 FAIL first valid Linux CN physical DNS queried and rejected by double-escaped fixture wire bytes; Windows SERVFAIL, full B2 & TCP NOT_RUN, original Go finally Stop PASS. H2096 sourcead86 corrected bytes and AST static check, cheap+Go/Rust builds PASS, native skipped. H2097 source5d doc-only push governance PASS but m0-wl workflow NOT_TRIGGERED, physical NOT_RUN. H2098 binds AST cheap source gate and valid workflow path plus deliberate B2 marker; new signed native physical result not yet verified. B0 earlier scoped PASS, advanced/B3/B4/B5 pending."
+  "partial_summary": "H2098 SOURCEd943 Action44078530417 original full Win2025 signed Wintun/Npcap↔WSL2 PASS with original B2 ordinary CN physical DNS true A/CNAME/TTL2, nonCN DNS Tunnel same overseas A, both original Wintun UDP Tunnel and physical business0, legacy kernel TCP both directions, owned Stop. One unrelated NCSI DNS on correct Tunnel logged and not mistaken for test ticket. This is B2 ordinary scope only. H2093-H2095 FAIL and H2097 NOT_RUN retained. B2 advanced, B3 real IPv6 and fairness, B4 original GUI/reconnect/Game, B5 same VM bounded CPU/p99 still open."
 }
