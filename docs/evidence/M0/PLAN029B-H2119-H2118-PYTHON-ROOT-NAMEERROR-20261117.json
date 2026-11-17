@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2119",
+  "date": "2026-11-17",
+  "source_sha": "d69a5a0247f05447140b49ce7684e4b54f9aeca2",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "run": {
+    "id": 44123359648,
+    "conclusion": "failure",
+    "cheap_job_id": 134180396014,
+    "cheap_job": "failure",
+    "first_failed_step": "Run python -m unittest tests.test_m0_native_ci_scope -v",
+    "go_preflight": "SKIPPED_DUE_TO_CHEAP",
+    "governance_action": 44123359542,
+    "governance": "success",
+    "feature_catalog": "success",
+    "governance_maintenance": 44123359622,
+    "maintenance": "failure"
+  },
+  "first_error": {
+    "type": "TEST_ONLY_PYTHON_NAMEERROR",
+    "test": "tests.test_m0_native_ci_scope.NativeSmokeScopeTests.test_plan029b_b4_original_go_cold_test_is_actually_run",
+    "file": "tests/test_m0_native_ci_scope.py",
+    "line": 107,
+    "exception": "NameError: name 'ROOT' is not defined",
+    "resolution": "Use same file's Path(__file__).resolve().parents[1] root instead of undeclared module-level ROOT; keep exact compiled Go test run gate"
+  },
+  "physical_and_product": {
+    "B4_original_three_gen_network": "NOT_RUN",
+    "B4_pure_go_test": "NOT_RUN_ON_H2118",
+    "B3_original_signed_128": "PASS_SCOPED_PRIOR_SOURCE",
+    "B5_sameVM10Mbps": "NOT_RUN"
+  }
+}

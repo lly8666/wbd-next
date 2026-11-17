@@ -104,8 +104,9 @@ class NativeSmokeScopeTests(unittest.TestCase):
             "[plan029-game4-cn-real]"))
 
     def test_plan029b_b4_original_go_cold_test_is_actually_run(self):
-        workflow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
-        go=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go").read_text()
+        root=Path(__file__).resolve().parents[1]
+        workflow=(root/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        go=(root/"r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go").read_text()
         name="TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter"
         self.assertIn("client.test.exe '-test.run=^"+name+chr(36)+"' '-test.count=1' '-test.v'",workflow)
         self.assertIn("PLAN029B_B4_GO_THREE_GENERATIONS_COLD_UNIT_PASS_NO_OS",workflow)

@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2118,
-  "checkpoint_sha": "0efa73336f04eb0fbb8e5ef7469f64a6a48fa2c5",
+  "sequence": 2119,
+  "checkpoint_sha": "d69a5a0247f05447140b49ce7684e4b54f9aeca2",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2118 H2117 original M0-WIN-LINUX Action44122245145 FAIL 0 jobs because test-runner YAML line truncated; governance feature-catalog/maintenance also FAIL Python static SyntaxError. Root cause JS String.replace replacement containing dollar+apostrophe expanded suffix and cut rest, not Go tests/product. H2118 rederive source-locked full workflow/static test files from prior a560 and use callback replacement, GitHub blob readback exactly matches complete added B4 Go unit test-run line and static assertion. No native marker. True current SOURCE cheap GO test NOT_RUN until Action. H2112 B3 prior signed scope PASS unchanged.",
-  "why_now": "The only requested new action H2117 had zero jobs and corrupt test code due source editing template expansion; fail-closed CI worked. H2118 restores entire original valid file before inserting the new exact Windows client.test.exe execution gate and regression test. Scope is only test infrastructure, no OS/Wintun/owner product code.",
+  "current_task": "H2119 H2118 source d69a original Action44123359648 cheap FAIL due new static test tests/test_m0_native_ci_scope.py:107 NameError ROOT undefined; H2118 Windows Go stage NOT_RUN, governance/feature catalog PASS. H2119 fixes only test-local root=Path(__file__).resolve().parents[1], new Go exact test execution gate intact, source H2119 preflight NOT_RUN at commit. Old H2117 zero-job invalid workflow FAIL also retained. H2116 source a560 original Windows/Linux Go+Rust compile PASS only, H2112 B3 real signed /128 PASS_SCOPED.",
+  "why_now": "Original H2118 cheap failure at Python static test initial line, not any Go or Rust product behavior. Fix only root variable using same module test style, preserve exact existing compiled client.test.exe -test.run B4 three-gen on real Windows CI without driver. H2118 GUI multi-gen still NOT_RUN.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect exact H2118 GO Windows preflight real TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter exit and marker, governance/check YAML. If fail repair one first cause only. Then B4 true original WinForms three-generation advanced→ordinary→all with real OS Applied, DNS/cache/old FakeIP no tunnel, original Stop each and Game representative. B5 sameVM10Mbps CPU/GiB/RSS/p99 remains NOT_RUN.",
+  "next_action": "Collect H2119 cheap test correct root, Windows Go original assembled test EXPLICITLY EXECUTED; if test fails collect exact Go assert first, not assume. Only after PASS build actual B4 signed WinForms+Go/Rust/WSL2 sequential advanced→ordinary→all OS Applied/Stop, old FakeIP quarantine and DNS flush; Game2/4 representative and B5 sameVM<=10Mbps CPU/GiB/p99 remain separate.",
   "unverified": true,
-  "last_tested_source": "0efa73336f04eb0fbb8e5ef7469f64a6a48fa2c5",
+  "last_tested_source": "d69a5a0247f05447140b49ce7684e4b54f9aeca2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2118-H2117-WORKFLOW-INTERPOLATION-INVALID-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2119-H2118-PYTHON-ROOT-NAMEERROR-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2118-COMPLETE-WORKFLOW-B4-GO-TEST.md",
-    "docs/evidence/M0/PLAN029B-H2118-H2117-WORKFLOW-INTERPOLATION-INVALID-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2119-STATIC-TEST-ROOT-REPAIR.md",
+    "docs/evidence/M0/PLAN029B-H2119-H2118-PYTHON-ROOT-NAMEERROR-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2112 signed B3 /128 IPv6+IPv4+Stop PASS_SCOPED; H2114 feature catalog restored PASS. H2115 assembly test SHA mismatch first cheap FAIL, H2116 Windows Go/Win-Linux Rust compile PASS but B4 Go test not executed. H2117 malformed YAML/Python test runner FAIL zero jobs, H2118 repaired exact source/verified Git blobs pending Action. Actual B4 GUI multigen/Game and B5 performance OPEN."
+  "partial_summary": "H2112 original signed IPv6 /128+IPv4 real Stop PASS_SCOPED; H2114 feature catalog PASS. B4 pure Go+Rust three-gen test staged H2115 but test overlay pin cheap FAIL, H2116 assembled Go+Win/Linux Rust compile PASS, H2117 malformed YAML/Python FAIL, H2118 cheap static ROOT NameError FAIL; H2119 fixes NameError. B4 GUI/Game true network and B5 sameVM perf still OPEN."
 }
