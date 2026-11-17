@@ -95,6 +95,20 @@ public static class Plan029BThreeRealGUI {
   Console.WriteLine("PLAN029B_B4_REAL_GUI_GENERATION_APPLIED ordinal="+ordinal);
   Console.Out.Flush();
  }
+ static void WaitGuestReady() {
+  // This is only a test-owned prerequisite from an already bound original
+  // Linux kernel DNS/TUN witness. It is NOT Windows/Rust product Ready.
+  string path=Environment.GetEnvironmentVariable("WBD_PLAN029B_B4_GUEST_READY_PATH");
+  string source=Environment.GetEnvironmentVariable("GITHUB_SHA");
+  Need(!String.IsNullOrEmpty(path)&&!String.IsNullOrEmpty(source),
+       "signed source-locked guest readiness fence missing");
+  var clock=Stopwatch.StartNew();
+  while(clock.ElapsedMilliseconds<35000) {
+   Tick();
+   if(File.Exists(path)&&File.ReadAllText(path).Trim()==source)return;
+  }
+  throw new IOException("original Linux kernel DNS/TUN witness never ready");
+ }
  static string QueryA(int ordinal) {
   byte[] name=new byte[]{3,119,119,119,2,99,110,7,101,120,97,109,112,108,101,0};
   byte[] query=new byte[12+name.Length+4];
@@ -248,6 +262,7 @@ public static class Plan029BThreeRealGUI {
     }
     CheckEffective(Effective(store,profile,client,ordinal),ordinal);
     Connect(form,client,ordinal);
+    if(ordinal==1)WaitGuestReady();
     string ip=QueryA(ordinal);
     if(ordinal==1)firstFake=ip;
     Business(ip,ordinal,false);
