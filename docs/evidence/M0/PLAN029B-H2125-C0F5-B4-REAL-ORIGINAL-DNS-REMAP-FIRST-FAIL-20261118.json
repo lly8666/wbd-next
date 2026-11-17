@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2125",
+  "date": "2026-11-18",
+  "source_sha": "c0f5cdf2610cbfb6c103bc1cf51bf1c949f47314",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action": {
+    "id": 44144504089,
+    "conclusion": "failure",
+    "native_job_id": 134259369739,
+    "artifact_id": 14356372886,
+    "zip_sha256": "4252f580f5dd9f88ca2491f01f4906268e9943611f70f98760fb8a5a5e4c9e68",
+    "members": 26,
+    "crc": "PASS",
+    "product_source": "c0f5cdf2610cbfb6c103bc1cf51bf1c949f47314",
+    "fixture_source": "c0f5cdf2610cbfb6c103bc1cf51bf1c949f47314",
+    "original_windows_binary_sha256": {
+      "exe": "a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46",
+      "dll": "9b0777fbfacc9f11b042ddbb75c5efd95508cfccc6f7f5fd492314dc38d27df0"
+    }
+  },
+  "components": {
+    "cheap": "PASS",
+    "win_go": "PASS",
+    "win_rust": "PASS",
+    "linux_rust": "PASS",
+    "linux_build": "PASS",
+    "win_product_build": "PASS"
+  },
+  "actual_windows": {
+    "original_winforms_generation1": "PASS_OS_APPLIED_READY",
+    "real_wintun_outer_mtu": 1460,
+    "real_wintun_inner_os_mtu": 1389,
+    "real_wintun_udp": "SUCCESS_TWO_DIRECTIONS",
+    "first_cn_dns_response": {
+      "rcode": 2,
+      "answer_count": 0,
+      "response_len": 32
+    },
+    "actual_owned_stop": "PASS_ON_FAILURE",
+    "m4_sessions": 1
+  },
+  "first_original_guest_packet": {
+    "device": "physical eth0",
+    "source_ipv4": "172.22.64.1",
+    "source_port": 63278,
+    "expected_source_ipv4": "172.22.64.1",
+    "upstream_transaction_id": "0001",
+    "original_windows_application_query_id": "2961",
+    "query_exact_cn_qname": true,
+    "flags": "0100",
+    "qdcount": 1,
+    "question_type": "A",
+    "wire_bytes": 32,
+    "guest_first_failure": "unexpected_ticket_or_physical_fallback"
+  },
+  "cause_narrowed": "Test fixture incorrectly assumed upstream DNS transaction ID remains equal to original WinForms application ID; real owned DNS forwarder remapped 2961 to 0001. Keep exact physical/tunnel source/qname/type and generation proof.",
+  "corrective_sources": {
+    "source_change": "4fe9cdd27a6c14df7e31e7b4285c7b30dadf1f22",
+    "preflight_action": 44147216905,
+    "preflight_result": "FAIL_STATIC_ASSERT_OLD_IF_TEXT",
+    "actual_native_for_preflight": "NOT_RUN",
+    "source_test_assert_fix": "cb40f28ea70789baaab6549ea3cf084f22f2decc",
+    "next_action_id": 44147461765,
+    "next_action_at_recording": "IN_PROGRESS_OR_NOT_YET_FINAL"
+  },
+  "not_qualified": {
+    "b4_full_three_gen": "FAIL_ONLY_FIRST_DNS",
+    "game2_game4": "NOT_RUN",
+    "b5_same_vm_10mbps": "NOT_RUN",
+    "plan029b": "OPEN",
+    "plan029": "OPEN"
+  }
+}
