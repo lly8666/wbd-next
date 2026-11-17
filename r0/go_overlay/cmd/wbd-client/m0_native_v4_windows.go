@@ -1012,6 +1012,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
  var transport m0NativeV4ProductPeer
  var tcpSynthetic netip.Addr
+ var tcpDNSOnly bool
  // Only explicit CI measurement chooses the retained original Go packet pump.
  // The product default remains the Rust-only Wintun/Npcap NativeOwner; the
  // override does not change original credential TLS, OS WAL or session scope.
@@ -1049,6 +1050,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if e!=nil{return fmt.Errorf("PLAN029 original Go cold V3 rejected: %w",e)}
   if trial!=nil{
    nativePeer.plan029Cold=trial
+   tcpDNSOnly=trial.RouteMode==0
    if trial.TCPSynthetic4!=[4]byte{}{tcpSynthetic=netip.AddrFrom4(trial.TCPSynthetic4)}
    fmt.Printf("WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=%d requested_route_mode=%s business_split=%t cn_domain_fakeip=%t direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 readiness=AWAIT_REAL_OS_RUST_RECEIPT\\n",
     trial.RouteMode,o.RouteMode,trial.RouteMode!=0,trial.PolicyFlags&1!=0,
@@ -1122,7 +1124,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if tcpErr=owner.Plan029EnableNativeTCPAfterDefender(ctx,port);tcpErr!=nil{
    return errors.Join(fmt.Errorf("PLAN029 Rust TCP ENABLE: %w",tcpErr),cleanup())
   }
-  if trial!=nil&&trial.RouteMode==0{
+  if tcpDNSOnly{
    fmt.Printf("WBD_PLAN029B_PUBLIC_DNS_TCP_ONLY_ENABLED_COLD port=%d synthetic=%s direct_business_nat=0 exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
   }else{
    fmt.Printf("WBD_PLAN029_NATIVE_DIRECT_TCP_ENABLED_COLD port=%d synthetic=%s exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
