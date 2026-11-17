@@ -9,18 +9,18 @@
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
   "current_task": "H2124 SOURCE c0f5cdf only first B4 original WSL2 guest DNS ticket bounded hash-only fault + static guard; new Action44144504089 cheap PASS, WindowsGo/WinRust/LinuxRust IN_PROGRESS, signed Win2025 real B4 NOT_RUN_TO_COMPLETION at collection. Predecessor SOURCE7269 signed Action44138696793 genuine gen1 OS Applied/Ready then physical CN A SERVFAIL rcode2/0; guest original unexpected DNS ticket; both owned Stop PASS_ON_FAILURE. B4 Game B5 OPEN.",
-  "why_now": "H2123 actual signed ZIP14354147838 exposed first Linux guest DNS unexpected ticket, narrower than prior SERVFAIL. Maintain physical DNS fail-closed, collect exact bounded peer/lane/id/header/hash once; no wider re-runs without new information.",
+  "why_now": "H2123 actual signed ZIP14354147838 exposed first Linux guest DNS unexpected ticket, narrower than prior SERVFAIL. Maintain physical DNS fail-closed, collect exact bounded peer/lane/id/header/hash once; no wider re-runs without new information. H2124 provenance governance guard: evidence_refs are exact one tested SOURCE7269; prior b1ab historical evidence is context-only, candidate c0f remains nested NOT_RUN.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
   "next_action": "Collect Action44144504089 first exact original signed guest PLAN029B_B4_FIRST_UNEXPECTED_DNS (or genuine 3-generation PASS) and verify source/hash/CRC and all 3 OS Applied/Stop. If same failure and no new information stop repeated Actions and reduce to first upstream packet. After B4, Game2/4 representative and B5 bounded same-VM 10Mbps per-actual-GiB/CPU/RSS/p99; never claim cross-VM gain.",
   "unverified": true,
   "last_tested_source": "7269b71ec2421868b5a45c0af4f1d1475a262c04",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2124-H2123-FIRST-DNS-TICKET-BOUNDED-NOTRUN-20261118.json",
-    "docs/evidence/M0/PLAN029B-H2123-H2122-FIRST-REAL-GUI-DNS-NODATA-FAIL-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2124-H2123-FIRST-DNS-TICKET-BOUNDED-NOTRUN-20261118.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261118-PLAN029B-H2124-BOUND-FIRST-GUEST-DNS-TICKET.md",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
+    "docs/evidence/M0/PLAN029B-H2123-H2122-FIRST-REAL-GUI-DNS-NODATA-FAIL-20261118.json"
   ],
   "open_requests": [],
   "partial_summary": "H2123 original 7269 native gen1 OS Applied/Ready, physical CN DNS SERVFAIL, guest unknown ticket and abort; original Stop passed. H2124 c0f5 guest first-fault bounded diagnostic launched, not PASS. H2120 pure B4 and B0-B3 limited previous proofs retained; Game/B5/029B exit NOT_RUN."
