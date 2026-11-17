@@ -128,6 +128,21 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertIn(
             'out/"plan029-h1745-owned-tun-alias.txt"', app)
 
+    def test_plan029b_b2_guest_exact_ticket_is_a_required_cheap_gate(self):
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/m0-wl-public-normal-full.yml").read_text(
+                        encoding="utf-8")
+        self.assertIn("- tests/test_m0_plan029b_b2_guest_scope.py", workflow)
+        self.assertIn(
+            "python -m unittest tests.test_m0_plan029b_b2_guest_scope -v",
+            workflow)
+        # Test-only changes do not automatically consume a costly VM;
+        # a single deliberate source-locked B2 marker does.
+        changed = ["tests/test_m0_plan029b_b2_guest_scope.py"]
+        self.assertFalse(requires_native_smoke("push", changed))
+        self.assertTrue(requires_native_smoke(
+            "push", changed, "[plan029b-b2-cn-ordinary-real]"))
+
     def test_h1859_p1_and_p2_bulk_both_build_exact_v3_before_native(self):
         source=(Path(__file__).resolve().parents[1] /
                 ".github/workflows/m0-wl-public-normal-full.yml").read_text()

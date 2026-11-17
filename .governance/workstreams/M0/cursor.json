@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2097,
-  "checkpoint_sha": "ad86b55f4b206484d68a724634bc67e4c3ac661c",
+  "sequence": 2098,
+  "checkpoint_sha": "5d6656fe0c1d67c3d8ca88e94a306c367aaf0434",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2097 exact B2 ordinary real retry after H2095 signed Action44074535313 sourceaa53 failed on fixture double-escaped DNS query flags. Original guest first DNS was correct CN QNAME/physical source/id 0001; guest raises FIRST_INVALID because b\"\\\\x01...\" matched ASCII not DNS wire, original Windows receives SERVFAIL 8182. H2096 sourcead86 now correct bytes, AST literal regression and cheap+WinGo/Rust+LinuxRust PASS. Request ONE new source-locked [plan029b-b2-cn-ordinary-real] signed run; no product code/ABI change.",
-  "why_now": "H2095 native Win2025 signed Npcap/Wintun↔WSL2 Action44074535313 job134012128647 FAIL; original ZIP artifact14325645963 SHA256 311d822575373c4b050cf955871cfd682e153744083e301621b895e3e7e13b43. Original guest observed 32B correct CN request (0001 0100 0001 ... www.cn.example A) on physical direct DNS then rejected due double-escaped comparison, Windows original returns 6201 8182 SERVFAIL; test client finally owned WAL/kernel Stop PASS, legacy TCP NOT_RUN, not a product classification claim. H2096 has immutable first correction, native scope SKIPPED correctly. One real source-frozen H2097 retry with corrected exact DNS bytes is justified; preserve H2093/H2094/H2095 FAIL.",
+  "current_task": "H2098 H2097 source5d6656 only governance Action44078097514 PASS; no m0-wl workflow triggered because commit was doc/cursor-only and workflow on.push.paths did not match. H2097 physical=NOT_RUN, never count as H2096 signed result. H2098 attaches exact B2 Python AST DNS wire regression to original cheap workflow; test path trigger included, explicit one-scene marker on commit requests correct new-SOURCE Win2025 Wintun/Npcap↔WSL2 B2. Preserve product source unchanged; no old Actions re-dispatch.",
+  "why_now": "H2095 SOURCEaa53 signed original guest rejected valid CN DNS due wrong double-escaped Python bytes, original Windows got SERVFAIL; H2096 sourcead86 fixes and tests AST. H2097 documentation-only push did not match native on.push.paths and only Action44078097514 governance PASS; no real source5d native Action (NOT_RUN). H2098 meaningful source contract fix ensures B2 ticket regression runs before signed native and one marker triggers pipeline. One owner, no product changes, no 028 matrix.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2097 one source-frozen real signed B2 ordinary Action result for CN physical DNS A/CNAME/TTL2, nonCN Tunnel DNS same A, two Tunnel business receipts, existing bidirectional kernel TCP45902 & owned Stop; require original artifact+SHA and exact SOURCE/Effective. On FAIL narrow the first new wire packet; no additional same-error rerun. If PASS, continue separate B2 advanced CN and then B3 genuine IPv6, B4 GUI/Stop/Game, B5 bounded same-VM 10Mbps CPU/p99; no 028 matrix.",
+  "next_action": "Collect H2098 signed B2 native job SOURCE+original manifest SHA, physical CN DNS vs nonCN Tunnel DNS shared real A/TTL2 and both Tunnel UDP, followed by exact owned TCP45902 both directions and original Stop; on first FAIL inspect actual guest receipt and do not repeat same error without new info. After B2 ordinary, separate advanced+genuine IPv6+GUI/Stop/Game+10Mbps sameVM A/B remain.",
   "unverified": true,
   "last_tested_source": "aa53d4b3b73d57d993f5bb0da1f29e8cc54462ef",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029B-H2097-H2095-DOUBLE-ESCAPED-UPSTREAM-DNS-FAIL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2097-ONE-SIGNED-B2-RETRY.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2098-CHEAP-GATE-NATIVE-PATH.md",
     "docs/evidence/M0/PLAN029B-H2097-H2095-DOUBLE-ESCAPED-UPSTREAM-DNS-FAIL-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2095 sourceaa53 true signed B2 Action44074535313 FAIL: original Linux physical DNS received correct CN packet but Python guest byte flag literal was double-escaped and rejects all expected requests; original Windows received matching ID+QNAME SERVFAIL 8182, not a proven production misroute. Original Go finally owned Stop PASS, legacy TCP and full B2 NOT_RUN. H2096 sourcead86 AST bytes and four cheap Windows/Linux compilation checks PASS, no native by correct gate. H2097 requests one independent corrected-source native B2 scene; verdict NOT_RUN until artifact. Older B0 scoped PASS, H2093 B2 preStop partial PASS, B2 advanced/B3/B4/B5 pending."
+  "partial_summary": "H2095 signed Action44074535313 SOURCEaa53 FAIL first valid Linux CN physical DNS queried and rejected by double-escaped fixture wire bytes; Windows SERVFAIL, full B2 & TCP NOT_RUN, original Go finally Stop PASS. H2096 sourcead86 corrected bytes and AST static check, cheap+Go/Rust builds PASS, native skipped. H2097 source5d doc-only push governance PASS but m0-wl workflow NOT_TRIGGERED, physical NOT_RUN. H2098 binds AST cheap source gate and valid workflow path plus deliberate B2 marker; new signed native physical result not yet verified. B0 earlier scoped PASS, advanced/B3/B4/B5 pending."
 }

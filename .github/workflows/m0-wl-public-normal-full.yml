@@ -72,6 +72,7 @@ on:
       - r0/go_overlay/internal/faketcp/npcap_native_handoff_windows_test.go
       - tools/m0_native_ci_scope.py
       - tests/test_m0_native_ci_scope.py
+      - tests/test_m0_plan029b_b2_guest_scope.py
       - tests/test_m0_plan029_h1749_signed_direct_order.py
       # H1901: any edit to either test-only high-rate fixture/contract
       # must trigger the SAME real signed original Windows/WSL2 source.
@@ -670,6 +671,9 @@ jobs:
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v
       - run: python -m unittest tests.test_m0_native_ci_scope -v
+      # H2098: freeze exact 0x6202 DNS ticket + 0x01000001 wire bytes
+      # before the expensive source-pinned Win2025 Wintun↔WSL2 B2 scene.
+      - run: python -m unittest tests.test_m0_plan029b_b2_guest_scope -v
       - run: python -m py_compile tools/m0_plan029b_b0_dns_guest.py tools/m0_plan029b_b0_dns_windows.py tools/m0_plan029b_b2_cn_windows.py tools/m0_plan029b_b2_cn_guest.py tools/m0_wl_public_normal_e2e.py
       - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
       - run: python -m unittest tests.test_m0_plan029_h1966_steady_qpc -v
