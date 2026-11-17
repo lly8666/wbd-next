@@ -258,6 +258,44 @@ func m0WindowsOriginalColdClientPort(configured uint16,generation uint64)(uint16
  if candidate==uint64(configured){return 0,windowsclient.ErrN4NativeGuard}
  return uint16(candidate),nil
 }
+// PLAN029 H2065: A normal WinForms Disconnect destroys the original Go
+// process after owned WAL Stop. The original Linux FakeTCP server may still
+// retain its old 4-tuple. The next process must use a NEW cold source port.
+// Persist a bounded non-secret ordinal in this portable client's data
+// directory; it is cold configuration metadata, not a live OS resource.
+// Sync it BEFORE sending SYN so an abort skips rather than reuses a tuple.
+type m0WindowsColdTupleOrdinal struct{
+ Schema uint32 `json:"schema"`
+ Next uint64 `json:"next"`
+}
+func m0WindowsReserveColdTupleOrdinal(statePath string)(uint64,error){
+ if statePath==""{return 0,windowsclient.ErrN4NativeGuard}
+ dir:=filepath.Dir(filepath.Clean(statePath))
+ name:=filepath.Join(dir,".wbd-next-cold-tuple-ordinal.json")
+ current:=uint64(1)
+ raw,err:=os.ReadFile(name)
+ if err==nil{
+  if len(raw)>128{return 0,errors.New("cold tuple state exceeds bound")}
+  var state m0WindowsColdTupleOrdinal
+  if json.Unmarshal(raw,&state)!=nil||state.Schema!=1||
+   state.Next==0||state.Next>65535{
+   return 0,errors.New("invalid cold tuple state; refusing source port reuse")
+  }
+  current=state.Next
+ }else if !errors.Is(err,os.ErrNotExist){return 0,err}
+ next:=current+1
+ if next>65535{next=1}
+ payload,err:=json.Marshal(m0WindowsColdTupleOrdinal{Schema:1,Next:next})
+ if err!=nil{return 0,err}
+ tmp,err:=os.CreateTemp(dir,".wbd-next-cold-tuple-*.tmp")
+ if err!=nil{return 0,err}
+ defer os.Remove(tmp.Name())
+ if _,err=tmp.Write(payload);err!=nil{tmp.Close();return 0,err}
+ if err=tmp.Sync();err!=nil{tmp.Close();return 0,err}
+ if err=tmp.Close();err!=nil{return 0,err}
+ if err=os.Rename(tmp.Name(),name);err!=nil{return 0,err}
+ return current,nil
+}
 func m0WindowsPhysicalPathLivenessChanged(current,next m0WindowsPhysicalPath,err error)bool{
  return err==nil&&next.ifindex!=0&&next.source4.Is4()&&
   next.physicalMTU>=576&&next!=current
@@ -590,8 +628,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  // local tuple set, so only Normal/Fixed/Auto use this cold port.
  coldSourcePort:=o.SourcePort
  if o.Mode!=m0WinModeGame2&&o.Mode!=m0WinModeGame4{
-  coldSourcePort,err=m0WindowsOriginalColdClientPort(o.SourcePort,generation)
+  // Every *actual* cold original TLS start reserves one new tuple,
+  // including same-process cold reauth and new GUI Go child processes.
+  // A failed pre-TLS attempt consumes one ordinal; it cannot revive an
+  // old authenticated server-side 4-tuple from the previous session.
+  ordinal,portErr:=m0WindowsReserveColdTupleOrdinal(o.StatePath)
+  if portErr!=nil{return fmt.Errorf("PLAN029 cold tuple ordinal: %w",portErr)}
+  coldSourcePort,err=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal)
   if err!=nil{return err}
+  fmt.Printf("WBD_PLAN029_COLD_TLS_PROCESS_PORT_ORDINAL ordinal=%d configured_port=%d source=portable_cold_state\n",
+   ordinal,o.SourcePort)
   fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=%t\n",
    generation,o.SourcePort,coldSourcePort,o.ServerPort,coldSourcePort!=o.SourcePort)
  }

@@ -1210,7 +1210,7 @@ jobs:
       # assembled Go donor; on reuse, materialize that donor for GUI *only*.
       # Never recompile or relabel the old product binaries as new SOURCE.
       - name: Restore original GUI schema for H2062 frozen binary native reuse
-        if: env.WBD_WL_REUSE_RUN_ID == '44007996775' && inputs.plan029_case != 'none'
+        if: env.WBD_WL_REUSE_RUN_ID != '' && inputs.plan029_case != 'none'
         run: python tools/prepare_windows_wiring.py
       - name: Prepare exact original Go and current native bridge with shared preflight assembler
         if: env.WBD_WL_REUSE_RUN_ID == ''
@@ -1330,6 +1330,46 @@ jobs:
             result/wl-public/windows-binary-manifest.json
           retention-days: 30
           if-no-files-found: error
+      # H2065 build-once / 3 independent native scenes. This one push
+      # builds current modified original Go once, tests H2061 GUI normal,
+      # and dispatches domain + TTL to independent Windows VMs while the
+      # first native job continues. Each reuses this new SOURCE's immutable
+      # Windows EXE/DLL and Linux peer SHA, never old 0e57 binaries.
+      - name: H2065 source-frozen two independent DNS scenarios after new binary upload
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan029-h2065-build-and-fanout]') && env.WBD_WL_REUSE_RUN_ID == ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          if($env:GITHUB_RUN_ATTEMPT -ne '1'){
+            Write-Output 'H2065_NO_REDISPATCH_ON_RERUN'
+            exit 0
+          }
+          $repo=$env:GITHUB_REPOSITORY
+          $sha=$env:GITHUB_SHA
+          $runid=$env:GITHUB_RUN_ID
+          $current=(& gh api "repos/$repo/git/ref/heads/main" --jq '.object.sha').Trim()
+          if($LASTEXITCODE -ne 0 -or $current -ne $sha){throw 'H2065 main moved; no mixed product/fixture dispatch'}
+          $names=@(& gh api "repos/$repo/actions/runs/$runid/artifacts?per_page=100" --jq '.artifacts[].name')
+          if($LASTEXITCODE -ne 0 -or $names -notcontains "m0-wl-windows-product-binaries-$sha"){
+            throw 'H2065 new source binaries not uploaded; no DNS dispatch'
+          }
+          foreach($scene in @('domain_reconnect','dns_ttl_restart')){
+            $rows=(& gh run list --repo $repo --workflow m0-wl-public-normal-full.yml --limit 70 --json headSha,event,displayTitle | ConvertFrom-Json)
+            if($LASTEXITCODE -ne 0){throw 'H2065 dedup audit failed'}
+            $existing=@($rows | Where-Object {
+              $_.headSha -eq $sha -and $_.event -eq 'workflow_dispatch' -and
+              $_.displayTitle.Contains("case=$scene")
+            })
+            if($existing.Count -gt 0){
+              Write-Output "H2065_ALREADY_RUNNING case=$scene"
+              continue
+            }
+            & gh workflow run m0-wl-public-normal-full.yml --repo $repo --ref main -f public_mode=normal -f native_outer_mtu=default1460 -f "plan029_case=$scene" -f "perf_reuse_run_id=$runid" -f "perf_binary_source_sha=$sha"
+            if($LASTEXITCODE -ne 0){throw "H2065 dispatch failed $scene"}
+            Write-Output "H2065_QUEUED_NOT_PASS scene=$scene product_source=$sha"
+          }
       - name: Verify Windows bound authenticated RX high-water without false TCP ACK
         if: env.WBD_WL_REUSE_RUN_ID == ''
         shell: pwsh
@@ -1457,8 +1497,8 @@ jobs:
               assert m.get('original_go_source','a7a82db31fe736ffedee330795a3234d358f1984')=='a7a82db31fe736ffedee330795a3234d358f1984'
           elif (os.environ.get('WBD_PLAN029_THREE_CASE') in
                 ('gui_reconnect','domain_reconnect','dns_ttl_restart') and
-                os.environ.get('WBD_WL_REUSE_RUN_ID')=='44007996775' and
-                m['source_sha']=='0e57cab2d53e2c95962eb673050fa54695fd3665'):
+                os.environ.get('WBD_WL_REUSE_RUN_ID') and
+                m['source_sha']==os.environ.get('WBD_WL_BINARY_SOURCE')):
               assert m['features']=='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration,m0_v4_probe'
               assert m.get('native_fec_acceleration') is True
               assert m.get('isa_l_source')=='c387163fcbca62701d646149564c550c78a4f985'
@@ -2684,9 +2724,7 @@ jobs:
                 }
                 Write-Output 'PLAN029_H2061_TWO_ORDINARY_GUI_GENERATIONS_SIGNED_OS_AND_STOP_PASS'
                 if($env:WBD_PLAN029_THREE_CASE -ne 'none'){
-                  $original='0e57cab2d53e2c95962eb673050fa54695fd3665'
-                  if($env:WBD_WL_BINARY_SOURCE -ne $original -or
-                     $result.product_binary_source -ne $original -or
+                  if($result.product_binary_source -ne $env:WBD_WL_BINARY_SOURCE -or
                      $result.fixture_source -ne $env:GITHUB_SHA){
                     throw 'H2062 fixture vs binary source provenance mismatch'
                   }

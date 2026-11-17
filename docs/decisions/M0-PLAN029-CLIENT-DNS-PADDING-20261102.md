@@ -119,3 +119,9 @@ H1832正式冷配置新增`split-enable`（默认false，显式开启下次连�
 - `dns_ttl_restart`：真实 WinForms/Wintun 应用对 `www.cn.example` 三次 CN DNS：首次、等待 2s TTL 过期后的再次查询、普通断开/重连后再次查询；Linux eth0 对三个唯一 DNS ID 都给出真实物理 A/CNAME、有效 FakeIP 回包。随后复用原完整 Direct 32KiB TCP/UDP、Tunnel TCP/UDP 与 owned Stop。不可将缓存单测或 GUI 标记冒充原生验收。
 
 上述均为 `IMPLEMENTED_TEST_FIXTURE_PENDING_NATIVE`，只有 ZIP 源锁与实际应用/物理端口/Stop 回执齐全后可标 `PASS_SCOPED`；若 WSL2 启动失败仅记 `ENVIRONMENT_BLOCKED`，不是产品业务 FAIL。除首次编译 Source 的旧 Action 外不重复其仍在途的 dispatch；新 Action 只为三个不同网络场景。
+
+## 2026-11-17 H2065｜正常 Stop → 新 Go 进程源端口持久轮换
+
+最新真实 H2064 同 SOURCE 三 Action 已通过首次 Windows GUI/OS1460/1389、物理双 DNS／CN FakeIP TTL2 过期、owned Stop；但第二次 WinForms 正常 Connect 确实创建了新 Go 进程，其 FakeTCP TLS SYN 沿用物理源端口41031、没有 SYNACK。旧 `m0WindowsOriginalColdClientPort` 只按**进程内** generation 递增，因此正常 GUI 子进程重启重复旧 4tuple，不能靠重跑 Runner 或改测试标 PASS。
+
+本轮新增轻量客户端 Go **冷代际 port ordinal 的非敏感 portable 文件**：每次真正进入 TCP cold TLS 前持久更新，下一 Connect 选不同 TCP 4tuple，目录与现有 owned state 同一便携程序数据目录；该文件是下一次启动必需的非secret配置状态，不是 WFP/OS 活租约，正常 Stop 清理仍只恢复本项目 live OS 资源。缺损记录 fail-closed，不重用旧端口。Game/FEC/标准 TLS/认证/wire 不变。纯单元/旧 SOURCE PASS 不升级新产品：新增 SHA 真 Windows 双代和第二 DNS/TTL 三独立场验收 PASS 才能结束日常用户范围。
