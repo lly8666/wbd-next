@@ -87,6 +87,15 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.mu.Lock()
     defer p.mu.Unlock()
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
+    // Android first-connect has ONLY the source-locked original Normal/off
+    // Rust M4, no active Fixed/Auto, M2 feedback or native outer repair.
+    // Reject an unsupported request before even beginning authenticated TLS.
+    if runtime.GOOS=="android" &&
+       (p.cfg.FECMode!=""&&p.cfg.FECMode!=FecV2Off||
+        !p.cfg.DisableOuterRepair||p.cfg.SharedTun!=nil||
+        !cfg.AutoLease){
+        return nil,ErrAdmissionUnsupported
+    }
     conn:=assoc.BootstrapConn()
     if conn==nil{return nil,ErrAdmissionParams}
     // One TLS exporter binds the requested FEC mode to the same
@@ -173,7 +182,9 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if err==nil{
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
     }
-    if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
+    if err==nil&&runtime.GOOS!="android"{
+        err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)
+    }
     if err==nil{
         keepalive,dead:=p.cfg.HealthKeepaliveSeconds,p.cfg.HealthDeadAfterSeconds
         if keepalive==0{keepalive=15}
@@ -181,7 +192,12 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
-    if err==nil{err=bridge.armOriginalPublicM2Feedback(0)} // public Linux client always expects original Legacy peer
+    // Source-locked Android feature3/off does not advertise the unported
+    // original mature firstsend M2 receipt/outer repair capability.
+    // The original TLS/AEAD/replay and canonical encrypted Health stay live.
+    if err==nil&&runtime.GOOS!="android"{
+        err=bridge.armOriginalPublicM2Feedback(0)
+    }
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
     if err!=nil{
         shutdown:=p.closeLocked()

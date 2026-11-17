@@ -79,6 +79,7 @@ for pair in "aarch64 arm64"; do
       wbd_m0_embedded_go_attach_raw_rx_on_interface \
       wbd_m0_embedded_go_attach_tun \
       wbd_m0_embedded_go_loop_start wbd_m0_embedded_go_loop_stats \
+       wbd_m0_embedded_go_loop_thread_cpu \
       wbd_m0_embedded_go_loop_authenticated_dead \
       wbd_m0_embedded_go_loop_authenticated_peer_predead \
       wbd_m0_embedded_go_loop_authenticated_peer_health \
@@ -130,8 +131,10 @@ d={"schema":"android-root-product-a1-rust-cold-build/v1",
 (p/"rust-cold-stage-manifest.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
 (p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\n")
 PY
-# Do not bypass the genuine original-Go full product link with unresolved
-# FEC/Game/M2 symbols: ARM64 Normal/off worker source != finished client.
+# Genuine original-Go Normal/off link remains a hard gate. Android CGo
+# links only mandatory native original M1/M3/M4/Health/Stop. Optional
+# Fixed/FEC/Game and Linux-only diagnostics fail closed in Go, not via
+# fabricated native ELF symbols or a suppressed linker error.
 for pair in "aarch64 arm64"; do
   read -r triple goarch <<< "$pair"
   rust_target=aarch64-linux-android
@@ -156,6 +159,7 @@ def elf(path):
     for i in range(phnum):
         t=struct.unpack_from(bo+"I",b,phoff+i*entsize)[0]
         if t==1:aligns.append(struct.unpack_from(bo+"Q",b,phoff+i*entsize+48)[0])
+    assert e_type in (2,3) and e_machine==183,(path,"not AArch64 ELF")
     assert aligns and all(v>=16384 for v in aligns),(path,aligns)
     return {"type":e_type,"machine":e_machine,"min_pt_load_align":min(aligns)}
 result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_SHA"],
@@ -164,7 +168,7 @@ result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_
 "android_abis":["arm64"],"go_os":"android","android_api":28,
 "go_build_tags":"wbd_v4_embedded_go","go_fec_game_native":"NOT_COMPILED_UNSUPPORTED",
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
-"elf":elf(x) if x.name.endswith(".so") else None} for x in art},
+"elf":elf(x) if x.name.endswith(".so") or x.name=="wbd-v4-client-arm64" else None} for x in art},
 "production_tls_auth_lease":"NOT_RUN","actual_tun_data":"NOT_RUN",
 "android_root_app_install":"NOT_RUN","physical_acceleration":"NOT_RUN",
 "real_server_connection":"NOT_RUN"}

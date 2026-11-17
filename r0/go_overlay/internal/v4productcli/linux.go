@@ -217,7 +217,10 @@ func parse(role string,args []string)(config,error){
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
-    outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
+    outerDefault:="on"
+    if runtime.GOOS=="android"{outerDefault="off"}
+    outerRepair:=flags.String("outer-repair",outerDefault,
+        "outer DATA retransmission on|off; Android ARM64 Normal/off first-connect supports off only")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
@@ -764,6 +767,14 @@ func Run(role string,args []string)(retErr error){
         if role!="client"||cfg.androidNetworkHandle==0||iface.MTU<68||iface.MTU>65535{
             return fmt.Errorf("Android physical Network/MTU unavailable")
         }
+        if cfg.gameLanes!=0||cfg.mixedModes||
+           cfg.fecMode!=realityfront.FecV2Off||!cfg.disableOuterRepair||
+           !cfg.autoIP||cfg.rotationInterval!=0{
+            // No fake Game/Fixed/M2, and no automatic A/B transfer without
+            // a real shared TUN native owner. Explicit reauth after Stop
+            // remains the single original normal/off client pathway.
+            return fmt.Errorf("Android ARM64 first-connect requires Normal/off, protected auto /32, outer-repair off and no overlap rotation")
+        }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
     }
     // Product SYN MSS and initial record offer are computed from the same
@@ -815,7 +826,7 @@ func Run(role string,args []string)(retErr error){
     // Both Normal and Game auto-/32 use ONE process-wide native Rust
     // reader, even while old A and new B independently own their raw
     // Game/Normal M4 drivers. No additional TUN fd or Go packet pump.
-    if role=="client"&&cfg.autoIP{
+    if role=="client"&&cfg.autoIP&&runtime.GOOS!="android"{
         shared,e:=realityfront.NewV4LinuxSharedTun(tun.f,cfg.tunName)
         if e!=nil{return e}
         cfg.sharedTun=shared
@@ -841,7 +852,7 @@ func Run(role string,args []string)(retErr error){
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
-    if role=="client"&&cfg.autoIP{
+    if role=="client"&&cfg.autoIP&&runtime.GOOS!="android"{
         // PLAN028 only for real protected automatic IPv4 on Linux Normal.
         // The one process-shared Rust TUN reader already exists above and
         // remains owned across simultaneous A+B TLS/native generations.

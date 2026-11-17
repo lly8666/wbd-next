@@ -102,3 +102,20 @@ exported: an accidental Linux-only cfg had excluded the existing
 verified-lease FFI. The Android MTU readback uses the exact selected
 physical RAW socket and the SAME Rust FrameBudget's peer MSS/record/LINK
 deductions, never the default unbound Android Network.
+
+## ARM64 A3: bounded real original-Go Normal/off link
+
+The original Linux CGo control bridge is unchanged for Linux (`!android`
+build selection). Android's separately compiled original-Go control adapter
+references **only** genuine Rust TLS/lease/M1/M3/M4/Health/Stop and real
+physical MTU functions; optional unfinished M2/Fixed/FEC/Game/shared-TUN/
+Linux diagnostics fail closed as unsupported Go capabilities, never native
+placeholder exports. Original authenticated Linux behavior is preserved.
+
+Android first connect uses its owned native RAW/TUN generation without
+pretending to have Linux's process-shared tun or A/B promotion. Only feature3/
+Normal/off, verified auto-/32 and outer repair OFF are currently allowed.
+
+The bounded native RX worker reuses one M1-ready Vec across all raw packets;
+thread CPU telemetry samples Bionic CLOCK_THREAD_CPUTIME_ID per readiness
+turn rather than per packet, reporting real worker CPU only.

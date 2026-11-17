@@ -10,7 +10,7 @@
 #![cfg(all(target_os="android",target_arch="aarch64"))]
 use super::{Entry,session,PH_ACTIVE,PH_STOPPING,OK,INVALID,UNKNOWN,BAD_STAGE,FULL};
 use crate::v4_native_health::{AuthenticatedActivity,HealthClock,HealthPolicy,ControlDue};
-use crate::runtime::TxDispatch;
+use crate::runtime::{TxDispatch,RxPacket};
 use wbd_platform::android_root_io::{
     AndroidBoundRawRx,AndroidBoundRawTx,AndroidOwnedTun,AndroidWorkerWake,
 };
@@ -29,6 +29,9 @@ pub(super) struct AndroidOriginalStats{
     pub(super) peer_preauth_due:AtomicBool,
     pub(super) peer_verified_health:AtomicBool,
     pub(super) scope_invalid:AtomicBool,
+    // Read from each true Bionic worker's CLOCK_THREAD_CPUTIME_ID;
+    // reported as actual kernel thread CPU, never wall time or a guess.
+    rx_cpu_ns:AtomicU64,tx_cpu_ns:AtomicU64,
     ip_id:AtomicU32,
 }
 pub(super) struct AndroidOriginalWorkers{
@@ -47,6 +50,21 @@ impl AndroidOriginalWorkers{
         let tx=self.tx.join().is_ok();
         w1&&w2&&rx&&tx
     }
+}
+const CLOCK_THREAD_CPUTIME_ID:i32=3;
+#[repr(C)]
+struct AndroidThreadCpuTime{sec:i64,nsec:i64}
+unsafe extern "C"{
+    fn clock_gettime(clock_id:i32,out:*mut AndroidThreadCpuTime)->i32;
+}
+fn thread_cpu_ns()->u64{
+    let mut t=AndroidThreadCpuTime{sec:0,nsec:0};
+    if unsafe{clock_gettime(CLOCK_THREAD_CPUTIME_ID,&mut t)}!=0 ||
+       t.sec<0||!(0..1_000_000_000).contains(&t.nsec){
+        return 0
+    }
+    (t.sec as u64).saturating_mul(1_000_000_000)
+        .saturating_add(t.nsec as u64)
 }
 fn now()->MonoNs{
     static BOOT:OnceLock<Instant>=OnceLock::new();
@@ -124,9 +142,11 @@ fn raw_worker(
     tun:Arc<AndroidOwnedTun>,stats:Arc<AndroidOriginalStats>,
     activity:Arc<AuthenticatedActivity>,peer_wake:Arc<AndroidWorkerWake>,
 ){
-    // ONE original-generation M1 slab is acquired per kernel packet,
-    // and the same M3 opener examines it before any business TUN write.
+    // ONE original-generation M1 slab per kernel read; retain the same
+    // one-slot vector across packets, never allocate a Vec in the RX hot path.
+    let mut rx_storage:Vec<RxPacket>=Vec::with_capacity(1);
     while !shutdown.load(Ordering::Acquire){
+        stats.rx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
         let ready=wake.wait_readable(raw.readiness_fd(),30_000);
         if shutdown.load(Ordering::Acquire){break}
         let Ok(true)=ready else{
@@ -168,21 +188,24 @@ fn raw_worker(
                 };
                 stats.raw_candidates.fetch_add(1,Ordering::Relaxed);
                 let lease=e.client_lease_ipv4;
-                let (returned,report,delivered,failed,healthy,hint,retired)={
+                let (report,delivered,failed,healthy,hint,retired)={
                     let Entry{owner,normal,..}=&mut *e;
                     let Some(reassembly)=normal.as_mut()else{break};
                     match owner.drain_android_normal_off_to_tun(
-                        reassembly,&tun,lease,at,Vec::with_capacity(1)
+                        reassembly,&tun,lease,at,
+                        std::mem::take(&mut rx_storage),
                     ){
-                        Ok(result)=>result,
-                        Err((_,unused))=>{
-                            drop(unused);
+                        Ok((returned,report,delivered,failed,healthy,hint,retired))=>{
+                            rx_storage=returned;
+                            (report,delivered,failed,healthy,hint,retired)
+                        },
+                        Err((_,returned))=>{
+                            rx_storage=returned;
                             stats.rx_error.fetch_add(1,Ordering::Relaxed);
                             break
                         }
                     }
                 };
-                drop(returned);
                 e.arena.drain_returns();
                 stats.rx.fetch_add(u64::from(delivered),Ordering::Relaxed);
                 stats.rx_error.fetch_add(
@@ -208,6 +231,7 @@ fn raw_worker(
             }
         }
     }
+    stats.rx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
     if shutdown.load(Ordering::Acquire){
         let _=peer_wake.signal_stop();
     }
@@ -225,6 +249,7 @@ fn tun_worker(
     let mut scratch=vec![0u8;65_535]; // one bounded preallocated M4 output slab
     let mut last_scope=Instant::now()-Duration::from_secs(2);
     while !shutdown.load(Ordering::Acquire){
+        stats.tx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
         let at=now();
         activity.absorb(&mut clock);
         if clock.preterminal_cold_reauth_due(at.0){
@@ -317,6 +342,7 @@ fn tun_worker(
         }
     }
     clock.stopped();
+    stats.tx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
     if shutdown.load(Ordering::Acquire){
         let _=peer_wake.signal_stop();
     }
@@ -431,6 +457,22 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
         tx.write(c.tx.load(Ordering::Relaxed));
         rx_err.write(c.rx_error.load(Ordering::Relaxed));
         tx_err.write(c.tx_error.load(Ordering::Relaxed));
+    }
+    OK
+}
+/// Authentic Bionic thread CPU time, bounded readback only. No JNI,
+/// synthetic CPU estimate, wall-clock duty-cycle or per-record callbacks.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_thread_cpu(
+    h:u64,rx_ns:*mut u64,tx_ns:*mut u64,
+)->i32{
+    if rx_ns.is_null()||tx_ns.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_workers.is_none(){return BAD_STAGE}
+    unsafe{
+        rx_ns.write(e.android_metrics.rx_cpu_ns.load(Ordering::Relaxed));
+        tx_ns.write(e.android_metrics.tx_cpu_ns.load(Ordering::Relaxed));
     }
     OK
 }

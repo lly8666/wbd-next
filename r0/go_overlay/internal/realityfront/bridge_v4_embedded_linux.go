@@ -1,4 +1,4 @@
-//go:build linux && cgo && wbd_v4_embedded_go
+//go:build linux && !android && cgo && wbd_v4_embedded_go
 
 // Developer-opt-in non-_test package-private Go→Rust control adapter.
 // Caller is only the credential-verified EstablishServerV4 ownerBridge path.
