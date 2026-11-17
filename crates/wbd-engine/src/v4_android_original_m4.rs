@@ -17,6 +17,7 @@ use wbd_codec::link_fec_wire::{
 };
 use wbd_platform::android_root_io::{
     AndroidBoundRawRx,AndroidBoundRawTx,AndroidOwnedTun,AndroidWorkerWake,
+    AndroidBoundPhysicalDnsUdp,
 };
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,Presentation,PacketPersona};
 use wbd_types::MonoNs;
@@ -41,6 +42,8 @@ pub(super) struct AndroidOriginalStats{
     // readv. Only bounded metadata; no QNAME log, redirect or extra reader.
     dns_udp53_seen:AtomicU64,dns_tcp53_seen:AtomicU64,
     dns_unready:AtomicU64,
+    dns_physical_tx:AtomicU64,dns_physical_rx:AtomicU64,
+    dns_physical_error:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -325,7 +328,8 @@ fn original_complete_ipv4_head(
 fn tun_worker(
     cell:Arc<Mutex<Entry>>,shutdown:Arc<AtomicBool>,
     wake:Arc<AndroidWorkerWake>,tun:Arc<AndroidOwnedTun>,
-    raw:Arc<AndroidBoundRawTx>,stats:Arc<AndroidOriginalStats>,
+    raw:Arc<AndroidBoundRawTx>,dns:Option<Arc<AndroidBoundPhysicalDnsUdp>>,
+    stats:Arc<AndroidOriginalStats>,
     activity:Arc<AuthenticatedActivity>,policy:HealthPolicy,
     peer_wake:Arc<AndroidWorkerWake>
 ){
@@ -337,6 +341,14 @@ fn tun_worker(
     // Common small packets go directly kernel -> M1 slab, with ZERO copy.
     let mut overflow=vec![0u8;MAX_LOGICAL_DATAGRAM];
     let mut jumbo_spare=Vec::<u8>::with_capacity(MAX_LOGICAL_DATAGRAM);
+    // Same original M4 TX thread owns the bounded physical DNS transaction
+    // slots and scratch, not a parallel reader or a Go/JNI data callback.
+    let mut physical_flows=
+        crate::v4_android_dns_physical_flow::PhysicalDnsUdpFlows::default();
+    let mut physical_wire=[0u8;
+        crate::v4_android_dns_physical_flow::MAX_DNS_WIRE];
+    let mut physical_packet=[0u8;
+        crate::v4_android_dns_physical_flow::MAX_DNS_REPLY_IPV4];
     let mut pending=None::<PendingAndroidJumbo>;
     let mut next_packet_id=1u32;
     let mut last_scope=Instant::now()-Duration::from_secs(2);
@@ -358,7 +370,9 @@ fn tun_worker(
         if last_scope.elapsed()>=Duration::from_secs(1){
             let bound=match cell.lock(){
                 Ok(e)=>e.android_physical.as_ref().is_some_and(|scope|
-                    raw.check_scope(&scope.interface,scope.ifindex).is_ok()),
+                    raw.check_scope(&scope.interface,scope.ifindex).is_ok()&&
+                    dns.as_ref().is_none_or(|socket|
+                        socket.recheck(&scope.interface,scope.ifindex).is_ok())),
                 Err(_)=>false,
             };
             if !bound{
@@ -429,16 +443,65 @@ fn tun_worker(
             .unwrap_or(at.0.saturating_add(30_000_000_000));
         let timeout=((due.saturating_sub(at.0)+999_999)/1_000_000)
             .min(1_000).max(1) as i32;
-        let ready=wake.wait_readable(tun.readiness_fd(),timeout);
+        let readiness=if let Some(socket)=dns.as_ref(){
+            wake.wait_tun_and_physical_dns(
+                tun.readiness_fd(),socket.readiness_fd(),timeout)
+        }else{
+            wake.wait_readable(tun.readiness_fd(),timeout).map(|v|(v,false))
+        };
         if shutdown.load(Ordering::Acquire){break}
-        let Ok(true)=ready else{
-            if ready.is_err(){
+        let (tun_ready,dns_ready)=match readiness{
+            Ok(v)=>v,
+            Err(_)=>{
                 stats.scope_invalid.store(true,Ordering::Release);
                 shutdown.store(true,Ordering::Release);
                 break
             }
-            continue
         };
+        if dns_ready{
+            if let Some(socket)=dns.as_ref(){
+                // This is NOT an authenticated remote WBD packet. Only a
+                // physically connected 223.5.5.5 socket, an original owned
+                // query ID/QNAME and the exact original lease may deliver.
+                for _ in 0..8{
+                    if shutdown.load(Ordering::Acquire){break}
+                    let n=match socket.read_answer(
+                        tun.generation(),&mut physical_wire){
+                        Ok(n)=>n,
+                        Err(err) if err.kind()==std::io::ErrorKind::WouldBlock=>break,
+                        Err(_)=>{
+                            stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                            shutdown.store(true,Ordering::Release);
+                            break
+                        }
+                    };
+                    let Ok(e)=cell.lock()else{
+                        shutdown.store(true,Ordering::Release);break
+                    };
+                    if e.phase!=PH_ACTIVE||!e.android_dns_hijack_ready||
+                       !e.android_dns_physical_ready{
+                        stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                        break
+                    }
+                    let result=physical_flows.receive(
+                        &physical_wire[..n],&mut physical_packet,
+                        now().0/1_000_000);
+                    match result{
+                        Ok(len) if e.client_lease_ipv4.is_some_and(|lease|
+                            physical_packet[16..20]==lease) &&
+                            tun.write_scoped_physical_dns_ip(
+                                e.generation,&physical_packet[..len]
+                            ).ok()==Some(len)=>{
+                            stats.dns_physical_rx.fetch_add(1,Ordering::Relaxed);
+                        }
+                        _=>{
+                            stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                        }
+                    }
+                }
+            }
+        }
+        if !tun_ready{continue}
         // One sparse normal packet is sent immediately, never held waiting
         // for batch fill. Eight bounded source turns before Health/Stop.
         for turn in 0..8{
@@ -517,6 +580,37 @@ fn tun_worker(
             let escaped=head.starts_with(LINK_MAGIC);
             let at=now();
             if n<=head_cap&&!escaped{
+                if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&
+                   matches!(dns_observation,
+                     crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+                    // This separate cold gate is UNGRANTABLE until a
+                    // complete authenticated original-Go CN selector,
+                    // physical UDP/TCP53 and system Resolver ownership
+                    // admit exactly the correct name for physical egress.
+                    if let Some(socket)=dns.as_ref(){
+                        let packet=&slab.writable()[14..14+n];
+                        match physical_flows.prepare(
+                            packet,&mut physical_wire,at.0/1_000_000){
+                            Ok((len,id))=>{
+                                if socket.send_question(
+                                    tun.generation(),&physical_wire[..len]).is_ok(){
+                                    stats.dns_physical_tx.fetch_add(1,Ordering::Relaxed);
+                                }else{
+                                    physical_flows.cancel(id);
+                                    stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                                }
+                            }
+                            Err(_)=>{
+                                stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                            }
+                        }
+                    }else{
+                        shutdown.store(true,Ordering::Release);
+                        stats.scope_invalid.store(true,Ordering::Release);
+                    }
+                    e.arena.drain_returns();
+                    continue
+                }
                 // Only a completely admitted DNS generation may replace
                 // original DNS with 1.1.1.1 on the same loaned M1 slab.
                 // No Go/JNI per packet, alternate TUN reader or fallback.
@@ -567,6 +661,32 @@ fn tun_worker(
                 stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                 break
             }
+            if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&
+               matches!(crate::v4_android_dns_ingress::observe_ipv4_dns53(
+                   &jumbo_spare,n
+               ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+                if let Some(socket)=dns.as_ref(){
+                    match physical_flows.prepare(
+                        &jumbo_spare,&mut physical_wire,at.0/1_000_000){
+                        Ok((len,id))=>{
+                            if socket.send_question(
+                                tun.generation(),&physical_wire[..len]).is_ok(){
+                                stats.dns_physical_tx.fetch_add(1,Ordering::Relaxed);
+                            }else{
+                                physical_flows.cancel(id);
+                                stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                            }
+                        }
+                        Err(_)=>{
+                            stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                        }
+                    }
+                }else{
+                    shutdown.store(true,Ordering::Release);
+                    stats.scope_invalid.store(true,Ordering::Release);
+                }
+                continue
+            }
             // DNS with EDNS can exceed the common slab head; inspect the
             // one already-collected complete IP before M3 fragmentation.
             if e.android_dns_hijack_ready &&
@@ -616,6 +736,8 @@ fn tun_worker(
             break
         }
     }
+    physical_flows.stop();
+    if let Some(socket)=dns.as_ref(){socket.begin_stop()}
     clock.stopped();
     stats.tx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
     if shutdown.load(Ordering::Acquire){
@@ -641,6 +763,17 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
        e.owner.android_normal_off_frame_budget(scope.mtu).is_err(){
         return INVALID
     }
+    let dns=if e.android_dns_hijack_ready&&e.android_dns_physical_ready{
+        // True original-Go authenticated generation, physical handle and
+        // scope are required before *any* DNS socket is opened.
+        match AndroidBoundPhysicalDnsUdp::open(
+            scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
+            e.flow.client_ip,e.generation
+        ){
+            Ok(fd)=>Some(Arc::new(fd)),
+            Err(_)=>return INVALID,
+        }
+    }else{None};
     let rx_wake=match AndroidWorkerWake::new(){Ok(v)=>Arc::new(v),Err(_)=>return INVALID};
     let tx_wake=match AndroidWorkerWake::new(){Ok(v)=>Arc::new(v),Err(_)=>return INVALID};
     let activity=Arc::new(AuthenticatedActivity::default());
@@ -704,7 +837,7 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
     let tx_peer=Arc::clone(&rx_wake);
     let tx_handle=match thread::Builder::new().name("wbd-arm64-original-tx".into())
         .spawn(move||tun_worker(
-            tx_cell,tx_shutdown,tx_event,tun,tx,tx_stats,activity,policy,tx_peer
+            tx_cell,tx_shutdown,tx_event,tun,tx,dns,tx_stats,activity,policy,tx_peer
         )){
         Ok(v)=>v,
         Err(_)=>{

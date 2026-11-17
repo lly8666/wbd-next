@@ -23,6 +23,8 @@ const SOL_SOCKET: c_int = 1;
 const SO_BINDTODEVICE: c_int = 25;
 const AF_INET: c_int = 2;
 const SOCK_RAW: c_int = 3;
+const SOCK_DGRAM: c_int = 2;
+const IPPROTO_UDP: c_int = 17;
 const SOCK_NONBLOCK: c_int = 0x800;
 const SOCK_CLOEXEC: c_int = 0x80000;
 const IPPROTO_TCP: c_int = 6;
@@ -37,6 +39,10 @@ unsafe extern "C" {
     fn if_nametoindex(name: *const std::ffi::c_char) -> c_uint;
     fn setsockopt(fd: c_int, level: c_int, option: c_int, value: *const c_void, len: u32) -> c_int;
     fn socket(domain: c_int, kind: c_int, protocol: c_int) -> c_int;
+    fn connect(fd: c_int, addr: *const c_void, length: u32) -> c_int;
+    fn getsockname(fd: c_int, addr: *mut c_void, length: *mut u32) -> c_int;
+    fn getsockopt(fd: c_int, level: c_int, opt: c_int,
+        data: *mut c_void, length: *mut u32) -> c_int;
     fn read(fd: c_int, data: *mut c_void, len: usize) -> isize;
     fn readv(fd: c_int, iov: *const AndroidIovec, iovcnt: c_int) -> isize;
     fn write(fd: c_int, data: *const c_void, len: usize) -> isize;
@@ -151,6 +157,31 @@ impl AndroidOwnedTun {
         if n as usize>65_535{
             return Err(io::Error::new(io::ErrorKind::InvalidData,
                 "kernel TUN packet larger than max IPv4 datagram"))
+        }
+        Ok(n as usize)
+    }
+    /// Physical DNS replies are NOT remote-WBD-AEAD-authenticated. Callers
+    /// must have already matched the physically connected 223.5.5.5:53
+    /// socket, scoped generation, original DNS ID/QNAME and intended
+    /// destination lease. This is the SAME original TUN FD/BorrowFence,
+    /// not a second tun owner or an invented authenticated receipt.
+    pub fn write_scoped_physical_dns_ip(
+        &self,generation:u32,packet:&[u8],
+    )->io::Result<usize>{
+        if generation!=self.generation||!self.active.load(Ordering::Acquire)||
+           packet.len()<28||packet[0]>>4!=4||packet[9]!=17||
+           u16::from_be_bytes([packet[2],packet[3]]) as usize!=packet.len()||
+           u16::from_be_bytes([packet[20],packet[21]])!=53{
+            return Err(io::Error::new(io::ErrorKind::InvalidData,
+                "wrong Android original-generation scoped physical DNS IP"))
+        }
+        let _loan=self.borrow.try_enter_ready().map_err(|_|
+            io::Error::from(io::ErrorKind::BrokenPipe))?;
+        let n=unsafe{write(self.fd.as_raw_fd(),packet.as_ptr().cast(),packet.len())};
+        if n<0{return Err(io::Error::last_os_error())}
+        if n as usize!=packet.len(){
+            return Err(io::Error::new(io::ErrorKind::WriteZero,
+                "short physical DNS TUN write"))
         }
         Ok(n as usize)
     }
@@ -509,6 +540,125 @@ impl AndroidBoundRawTx {
     }
 }
 
+/// One original M4 generation's actual Android kernel UDP socket, connected
+/// exclusively to CN physical DNS 223.5.5.5:53. The NDK sets the exact
+/// ConnectivityManager Network and SO_BINDTODEVICE *before* connect;
+/// getsockname and SO_BINDTODEVICE readback must agree with cold Go scope.
+/// There is never a root UID global mark, DNS fallback or sidecar TUN reader.
+pub struct AndroidBoundPhysicalDnsUdp {
+    fd:OwnedFd,
+    generation:u32,
+    mtu:u32,
+    stopping:AtomicBool,
+    borrow:BorrowFence,
+}
+impl AndroidBoundPhysicalDnsUdp {
+    pub fn open(
+        network_handle:u64,interface:&str,ifindex:u32,mtu:u32,
+        source_ipv4:[u8;4],generation:u32,
+    )->io::Result<Self>{
+        if generation==0||mtu<MIN_IPV4_MTU||mtu>MAX_IPV4_MTU||
+           source_ipv4==[0;4]||source_ipv4[0]>=224{
+            return Err(io::Error::new(io::ErrorKind::InvalidInput,
+                "invalid physical DNS original generation"))
+        }
+        let raw=unsafe{socket(AF_INET,SOCK_DGRAM|SOCK_NONBLOCK|SOCK_CLOEXEC,IPPROTO_UDP)};
+        if raw<0{return Err(io::Error::last_os_error())}
+        let fd=unsafe{OwnedFd::from_raw_fd(raw)};
+        let bound=bind_underlay_socket(fd.as_raw_fd(),network_handle,interface)?;
+        if bound!=ifindex{
+            return Err(io::Error::new(io::ErrorKind::InvalidData,
+                "physical DNS bound wrong ifindex"))
+        }
+        check_bound_interface_mtu(fd.as_raw_fd(),interface,ifindex,mtu)?;
+        let expected=name_bytes(interface)?;
+        let mut actual=[0u8;IFNAMSIZ];
+        let mut name_len=actual.len() as u32;
+        let rc=unsafe{getsockopt(fd.as_raw_fd(),SOL_SOCKET,SO_BINDTODEVICE,
+            actual.as_mut_ptr().cast(),&mut name_len)};
+        if rc!=0{return Err(io::Error::last_os_error())}
+        if name_len==0||name_len>IFNAMSIZ as u32||
+           actual[..expected.as_bytes().len()]!=expected.as_bytes()[..]{
+            return Err(io::Error::new(io::ErrorKind::InvalidData,
+                "physical DNS SO_BINDTODEVICE readback mismatch"))
+        }
+        let peer=AndroidSockAddrIn{
+            family:AF_INET as u16,port:53u16.to_be(),
+            ip_be:u32::from_ne_bytes([223,5,5,5]),zero:[0;8],
+        };
+        if unsafe{connect(fd.as_raw_fd(),(&peer as *const AndroidSockAddrIn).cast(),
+            std::mem::size_of::<AndroidSockAddrIn>() as u32)}!=0{
+            return Err(io::Error::last_os_error())
+        }
+        let mut local=AndroidSockAddrIn{
+            family:0,port:0,ip_be:0,zero:[0;8],
+        };
+        let mut local_size=std::mem::size_of::<AndroidSockAddrIn>() as u32;
+        if unsafe{getsockname(fd.as_raw_fd(),
+            (&mut local as *mut AndroidSockAddrIn).cast(),&mut local_size)}!=0{
+            return Err(io::Error::last_os_error())
+        }
+        if local_size<std::mem::size_of::<AndroidSockAddrIn>() as u32||
+           local.family!=AF_INET as u16||
+           local.ip_be.to_ne_bytes()!=source_ipv4{
+            return Err(io::Error::new(io::ErrorKind::InvalidData,
+                "physical DNS socket local source differs from original Go network"))
+        }
+        Ok(Self{fd,generation,mtu,
+            stopping:AtomicBool::new(false),borrow:BorrowFence::default()})
+    }
+    pub fn readiness_fd(&self)->RawFd{self.fd.as_raw_fd()}
+    pub fn recheck(&self,interface:&str,ifindex:u32)->io::Result<()>{
+        if self.stopping.load(Ordering::Acquire){
+            return Err(io::Error::from(io::ErrorKind::BrokenPipe))
+        }
+        check_bound_interface_mtu(self.fd.as_raw_fd(),interface,ifindex,self.mtu)
+    }
+    pub fn begin_stop(&self){
+        self.stopping.store(true,Ordering::Release);
+        self.borrow.begin_stop();
+    }
+    pub fn stop_until(&self,deadline:Instant)->StopResult{
+        self.begin_stop();
+        self.borrow.wait_drained_until(deadline)
+    }
+    pub fn send_question(&self,generation:u32,query:&[u8])->io::Result<()>{
+        if self.stopping.load(Ordering::Acquire)||generation!=self.generation||
+           !(17..=4096).contains(&query.len()){
+            return Err(io::Error::from(io::ErrorKind::BrokenPipe))
+        }
+        let _loan=self.borrow.try_enter_ready().map_err(|_|
+            io::Error::from(io::ErrorKind::BrokenPipe))?;
+        let sent=unsafe{sendto(self.fd.as_raw_fd(),query.as_ptr().cast(),
+            query.len(),MSG_DONTWAIT,std::ptr::null(),0)};
+        if sent<0{return Err(io::Error::last_os_error())}
+        if sent as usize!=query.len(){
+            return Err(io::Error::new(io::ErrorKind::WriteZero,
+                "short physical DNS UDP send"))
+        }
+        Ok(())
+    }
+    pub fn read_answer(&self,generation:u32,buf:&mut [u8])->io::Result<usize>{
+        if self.stopping.load(Ordering::Acquire)||generation!=self.generation||
+           buf.len()<4096{
+            return Err(io::Error::from(io::ErrorKind::BrokenPipe))
+        }
+        let _loan=self.borrow.try_enter_ready().map_err(|_|
+            io::Error::from(io::ErrorKind::BrokenPipe))?;
+        // MSG_TRUNC returns actual datagram size, so a large DNS answer
+        // must not be accidentally treated as a truncated valid question.
+        let n=unsafe{recvfrom(self.fd.as_raw_fd(),buf.as_mut_ptr().cast(),
+            buf.len(),MSG_DONTWAIT|MSG_TRUNC,
+            std::ptr::null_mut(),std::ptr::null_mut())};
+        if n<0{return Err(io::Error::last_os_error())}
+        if n as usize>buf.len(){
+            return Err(io::Error::new(io::ErrorKind::InvalidData,
+                "physical DNS oversized UDP reply"))
+        }
+        Ok(n as usize)
+    }
+}
+
 // One kernel eventfd per original M4 worker: Stop interrupts an idle poll
 // immediately. No 10ms periodic wake, no Go/Java DATA callbacks, no global
 // signal handler. Both wake FDs are held until both original workers join.
@@ -534,6 +684,35 @@ impl AndroidWorkerWake{
         if n==one.len() as isize{Ok(())}
         else if n<0{Err(io::Error::last_os_error())}
         else{Err(io::ErrorKind::WriteZero.into())}
+    }
+    /// The same original TX worker may wait for the one TUN reader and the
+    /// physically bound DNS reply socket together. Stop eventfd interrupts
+    /// both; the poll does not introduce another reader/thread or 1ms busy
+    /// timer. Return bit0=TUN, bit1=physical UDP53.
+    pub fn wait_tun_and_physical_dns(
+        &self,tun_fd:RawFd,dns_fd:RawFd,timeout_ms:i32
+    )->io::Result<(bool,bool)>{
+        if tun_fd<0||dns_fd<0||timeout_ms<0{
+            return Err(io::ErrorKind::InvalidInput.into())
+        }
+        let mut fds=[
+            AndroidPollFd{fd:tun_fd,events:POLLIN,revents:0},
+            AndroidPollFd{fd:dns_fd,events:POLLIN,revents:0},
+            AndroidPollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0},
+        ];
+        let n=unsafe{poll(fds.as_mut_ptr(),fds.len(),timeout_ms)};
+        if n<0{
+            let err=io::Error::last_os_error();
+            return if err.kind()==io::ErrorKind::Interrupted{
+                Ok((false,false))
+            }else{Err(err)}
+        }
+        if n==0||fds[2].revents!=0{return Ok((false,false))}
+        if fds[0].revents & !POLLIN!=0||fds[1].revents & !POLLIN!=0{
+            return Err(io::Error::new(io::ErrorKind::BrokenPipe,
+                "original Android TUN/physical DNS poll invalid"))
+        }
+        Ok((fds[0].revents&POLLIN!=0,fds[1].revents&POLLIN!=0))
     }
     /// No session lock held across kernel poll. Stops on eventfd readiness,
     /// HUP, ERR, NVAL or external owner shutdown, not on fabricated activity.

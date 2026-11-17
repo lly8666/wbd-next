@@ -54,6 +54,10 @@ mod v4_android_dns_ingress;
 // and scoped physical/tunnel DNS lifecycle are independently proven.
 #[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
 mod v4_android_dns_udp_flow;
+// B2c2c: the original Android Rust M4-only physical socket's bounded
+// inverse IPv4 reply path; physical replies are not remote-AEAD payloads.
+#[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
+mod v4_android_dns_physical_flow;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;

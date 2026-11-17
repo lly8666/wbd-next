@@ -827,6 +827,10 @@ struct Entry{
     // Android system Resolver ingress have one authenticated owned lifecycle.
     #[cfg(all(target_os="android",target_arch="aarch64"))]
     android_dns_hijack_ready:bool,
+    // The separate physical-DNS owner is NOT peer-AEAD-authenticated.
+    // Do not arm before verified CN/Resolver/TCP53 generation admission.
+    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    android_dns_physical_ready:bool,
     #[cfg(all(target_os="android",target_arch="aarch64"))]
     android_workers:Option<android_original_m4::AndroidOriginalWorkers>,
     #[cfg(all(target_os="android",target_arch="aarch64"))]
@@ -1180,6 +1184,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::default(),
         #[cfg(all(target_os="android",target_arch="aarch64"))]
         android_dns_hijack_ready:false,
+        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        android_dns_physical_ready:false,
         #[cfg(all(target_os="android",target_arch="aarch64"))]
         android_workers:None,
         #[cfg(all(target_os="android",target_arch="aarch64"))]
@@ -2888,6 +2894,7 @@ fn stop(handle:u64)->i32{
         // Both M4 kernel threads are joined. Retire every outstanding DNS
         // reverse-map slot before crypto/TUN FD retirement of this generation.
         e.android_dns_hijack_ready=false;
+        e.android_dns_physical_ready=false;
         e.android_dns_flows.stop();
     }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};

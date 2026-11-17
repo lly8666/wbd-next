@@ -17,11 +17,13 @@ names=[
  "b2c2b1_rust_udp53_rejects_wrong_upstream_id_qname_and_replay",
  "b2c2b1_rust_udp53_owner_has_exact_bounded_capacity_and_stop",
  "b2c2b1_rust_udp53_rejects_fragments_and_malformed_without_packet_mutation",
- "b2c2b2_m4_uses_only_tunnel_dns_source_and_owned_reply_ports"
+ "b2c2b2_m4_uses_only_tunnel_dns_source_and_owned_reply_ports",
+ "b2c2b3_physical_owned_ipv4_udp53_real_question_reply_checksum",
+ "b2c2b3_physical_no_cross_flow_no_unowned_reply_after_stop"
 ]
 for test in names:
  assert f"test v4_android_dns_udp_flow::tests::{test} ... ok" in log,test
-assert "test result: ok. 5 passed;" in log,log[-1500:]
+assert "test result: ok. 7 passed;" in log,log[-1500:]
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
 lib=Path("crates/wbd-engine/src/lib.rs").read_text()
 m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
@@ -52,6 +54,23 @@ assert "receiver.accept_authenticated_link(" in owner
 assert "android_dns_flows.stop();" in entry
 assert "android_dns_hijack_ready:false" in entry
 assert "android_dns_hijack_ready:true" not in entry
+assert "android_dns_physical_ready:false" in entry
+assert "android_dns_physical_ready:true" not in entry
+physical=Path("crates/wbd-engine/src/v4_android_dns_physical_flow.rs").read_text()
+platform=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+assert 'struct PhysicalDnsUdpFlows' in physical
+assert 'FIRST_DNS_ID:u16=0x7100' in physical
+assert 'MAX_AGE_MS:u64=12_000' in physical
+assert 'pub(crate) fn receive(' in physical and 'pub(crate) fn prepare(' in physical
+assert m4.count("physical_flows.prepare(")==2
+assert 'physical_flows.receive(' in m4 and 'physical_flows.stop();' in m4
+assert 'AndroidBoundPhysicalDnsUdp::open(' in m4
+assert 'wait_tun_and_physical_dns(' in m4
+assert 'tun.write_scoped_physical_dns_ip(' in m4
+assert 'pub struct AndroidBoundPhysicalDnsUdp' in platform
+assert 'bind_underlay_socket(fd.as_raw_fd(),network_handle,interface)?' in platform
+assert 'getsockopt(' in platform and 'getsockname(' in platform
+assert 'pub fn write_scoped_physical_dns_ip(' in platform
 assert "std::net::" not in wire and "read_ip_scatter" not in wire
 receipt={
  "schema":"wbd-android-b2c2b1-original-rust-dns-udp-inverse-map/v1",
@@ -67,10 +86,13 @@ receipt={
  "m4_tx_rx_same_owner_dns_hooks":"SOURCE_GATE_PASS",
  "m4_live_rewrite_query_and_reply":"CONNECTED_BUT_COLD_DISABLED",
  "android_system_resolver":"NOT_CONNECTED",
- "physical_scoped_dns_and_tunnel_reply_backend":"NOT_CONNECTED",
+ "physical_scoped_dns_and_tunnel_reply_backend":"ORIGINAL_M4_REAL_PHYSICAL_FD_AND_TUNNEL_RX_HOOKS_CONNECTED_COLD_DISABLED",
+ "physical_actual_udp53_socket":"NOT_OPENED_DEFAULT_FALSE",
+ "physical_reply_aead_authentication":"NOT_APPLICABLE_CONNECTED_KERNEL_UDP_ID_QNAME",
+ "physical_ipv4_checksums_original_resolution_rewrite":"HOST_PASS",
  "android16_p2_p3":"ENV_BLOCKED_KVM_NOT_AVAILABLE",
  "physical_ksu_p5":"NOT_RUN"
 }
 (out/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
-print("ANDROID_B2C2B2_ORIGINAL_RUST_M4_DNS_TX_RX_STOP_SOURCE_GATE_PASS_COLD_DISABLED")
+print("ANDROID_B2C2C_ORIGINAL_RUST_M4_PHYSICAL_DNS_UDP_AND_TUNNEL_OWNER_SOURCE_GATE_PASS_COLD_DISABLED")
 PY
