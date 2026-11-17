@@ -4,7 +4,7 @@
   "task": "H2121",
   "date": "2026-11-18",
   "candidate": "B4_SIGNED_ORIGINAL_WINFORMS_THREE_GENERATION_SINGLE_SOURCE",
-  "source_sha": "PENDING_SOURCE_FREEZE_ON_MAIN",
+  "source_sha": "3811cb1446b7a609c3b7276ffe36aa6dbdf9e0c8",
   "result": "NOT_RUN",
   "artifact_verified": false,
   "origin": {
@@ -45,5 +45,21 @@
     44122245145,
     44123359648
   ],
-  "qualification": "NOT_RUN; no actual Windows signed source verification or feature promotion"
+  "qualification": "H2121 candidate SOURCE3811 accurately staged. First cheap failed stale test assertion; actual signed original Windows B4 NOT_RUN. H2122 current same-product SOURCE b1ab native OS in progress, never promote early.",
+  "original_candidate_first_action": {
+    "run_id": 44135003298,
+    "source_sha": "3811cb1446b7a609c3b7276ffe36aa6dbdf9e0c8",
+    "cheap": "FAIL_LEGACY_H1749_CAS_STRING",
+    "native": "SKIPPED_CHEAP_FAIL",
+    "scope": "B4_REAL_WINDOWS_NOT_RUN"
+  },
+  "follow_up_main": {
+    "run_id": 44135197316,
+    "source_sha": "b1ab51be87c6d0c0aadd57283ac12da34ca238bf",
+    "cheap": "PASS",
+    "original_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "signed_native": "IN_PROGRESS_AT_H2122"
+  }
 }
