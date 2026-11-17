@@ -182,16 +182,6 @@ if [[ "$ksu_ready" != 1 ]];then
 fi
 adb shell su -c 'id -Z' >"$dir/ksu-shell-selinux.txt" 2>&1 || true
 adb shell su -c 'cat /proc/self/status' >"$dir/ksu-capabilities.txt" 2>&1 || true
-phase="REAL_PRODUCT_APK_ACTIVITY"
-adb shell am start -n org.wbdnext.rootclient/.RootClientActivity >"$dir/app-launch.txt" 2>&1
-if grep -Eqi 'error|exception|permission denied' "$dir/app-launch.txt";then
-  cat "$dir/app-launch.txt" >&2
-  exit 11
-fi
-printf '\nACTIVITY_STARTED\n' >>"$dir/app-launch.txt"
-adb shell pidof org.wbdnext.rootclient >"$dir/app-process.txt"
-test -s "$dir/app-process.txt"
-adb shell dumpsys package org.wbdnext.rootclient >"$dir/app-package-dump.txt" 2>&1
 phase="NATIVEBRIDGE_ABI_AND_AARCH64_ELF_RUNTIME"
 {
   echo "kernel=$(adb shell uname -m | tr -d '\r')"
@@ -227,5 +217,35 @@ else
   tail -n 70 "$dir/arm64-exec.txt" >&2
   exit 10
 fi
+phase="REAL_PRODUCT_APK_ACTIVITY"
+adb shell am start -n org.wbdnext.rootclient/.RootClientActivity >"$dir/app-launch.txt" 2>&1
+if grep -Eqi 'error|exception|permission denied' "$dir/app-launch.txt";then
+  cat "$dir/app-launch.txt" >&2
+  exit 11
+fi
+# Android ActivityManager returns as soon as it accepts the launch intent.
+# An immediate pidof is NOT a product crash receipt. Check bounded process
+# readiness and package state; if it fails, preserve the actual Java logcat
+# instead of returning an opaque shell exit1 before native ABI evidence.
+app_ready=0
+for _ in $(seq 1 20);do
+  adb shell pidof org.wbdnext.rootclient >"$dir/app-process.txt" 2>&1 || true
+  if grep -Eq '^[0-9]+([[:space:]][0-9]+)*
+echo "ANDROID_X86_KVM_REAL_KSU_ARM64_NATIVEBRIDGE_GO_RUNTIME_AND_APK_LAUNCH_PASS; APP_SU_AND_BUSINESS_NOT_RUN"
+ "$dir/app-process.txt";then
+    app_ready=1
+    break
+  fi
+  sleep 1
+done
+adb shell dumpsys package org.wbdnext.rootclient >"$dir/app-package-dump.txt" 2>&1 || true
+if [[ "$app_ready" != 1 ]];then
+  adb logcat -d -t 800 >"$dir/app-logcat.txt" 2>&1 || true
+  adb shell dumpsys activity activities >"$dir/app-activity-state.txt" 2>&1 || true
+  echo "ANDROID_PRODUCT_ACTIVITY_FAILED_TO_START: no live process after accepted launch" >&2
+  cat "$dir/app-launch.txt" "$dir/app-process.txt" >&2
+  exit 11
+fi
+printf '\nACTIVITY_STARTED\n' >>"$dir/app-launch.txt"
 phase="KSU_ARM64_EXEC_AND_APK_ACTIVITY_PASS_P2_RUNTIME_ONLY"
 echo "ANDROID_X86_KVM_REAL_KSU_ARM64_NATIVEBRIDGE_GO_RUNTIME_AND_APK_LAUNCH_PASS; APP_SU_AND_BUSINESS_NOT_RUN"

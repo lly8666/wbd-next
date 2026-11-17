@@ -28,3 +28,16 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"旧KSU普通App真实环境同源PASS，ARM64正式产物首轮双启动后缺Manager二次激活su导致FAIL；修复真实Manager第二次开机初始化并保留原FAIL。"}
 ```
+
+## 修复版第2次真实KSU结果和测试执行顺序纠正（2026-11-17）
+
+源码 `b5870751e668abe86cbf65a145d723d538b78438` [Android产品Action44115164331](https://github.com/lly8666/wbd-next/actions/runs/44115164331) 已经**10/10旧产品Jobs PASS**（Go/Rust Bionic、签名APK、Linux真协议oracle、Host/Rust DNS/M3）；新增第11项**FAIL**，其诊断artifact [14342342784](https://github.com/lly8666/wbd-next/actions/runs/44115164331/artifacts/14342342784) 具体证据：
+- 两次Android16 API36 x86_64 KVM启动/ADB/SELinux Enforcing均PASS；签名APK内真实ARM64 Go/Rust精确SHA验证PASS，安装正式Root App SUCCESS；
+- 修复后Manager二次启动成功，`ksu-shell-id.txt` 是 `uid=0(root) gid=0(root) groups=0(root) context=u:r:ksu:s0`，`CapEff=000001ffffffffff`；上一轮127 su阻断已解决；
+- `adb shell am start ...RootClientActivity`返回`Starting: Intent ...`，但脚本紧接立即用`adb shell pidof org.wbdnext.rootclient` 得到空文件并exit1；`receipt.json`标`phase=REAL_PRODUCT_APK_ACTIVITY`，故NativeBridge ABI / ARM64 ELF**尚未被执行**，不能当作NativeBridge兼容性结论。此次未记录Android logcat，不能声称Activity已稳定运行。
+
+下一源码修复把NativeBridge硬件/真实AArch64执行提到Activity PID之前，ActivityManager启动后有界20x1s PID查询，失败保留logcat+activity dump。不得把`Starting: Intent`当Activity正常显示或WBD真TLS；新SOURCE Action仍须再跑。早期两次FAIL完整保留。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"x86 KVM Android16 KernelSU二次Manager已成功真实su UID0；第2次同源产品Job被过早Activity pidof检查阻断NativeBridge，移动ABI执行优先并增加有限PID/logcat实际诊断。"}
+```
