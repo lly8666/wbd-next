@@ -53,3 +53,13 @@ SOURCE `067e3fe91b106abdd50f12a9e8e31ea241e1a01f` [Action44013768079](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A1在真实Go CGo链接发现Rust V4 Go owner仅Linux装配，最小拓宽原私有认证冷模块的Android64编译并检查真实FFI导出；M4数据面仍NOT_RUN。"}
 ```
+
+## A1 第七次：真正进入原Go Rust所有权模块后的平台边界
+
+SOURCE `b2fe8422682e7e2dd34ce39211cb2f1f3dfcdd2a` [Action44014373562](https://github.com/lly8666/wbd-next/actions/runs/44014373562) **FAIL/RUST_BIONIC_CFG**，16项编译错误集中在原Linux-only kernel M4字段/辅助函数不应于Android无驱动阶段被引用：`OriginalOuterRepair` Linux-only类型的字段无OS门，`attach_tun`仍直接调用Linux `ScopedTunSink`，`PollFd/LoopCounts/ClockTimespec/ppoll` Linux-only类型的辅助函数少了同条件门，以及 `protected_features` 认证冷字段在Android被Game冷验证读取却没有对应字段。现在只对这些既有符号施加匹配内核驱动的Linux门，保留Android共享冷认证字段；既不引入Glibc类型到Bionic，也不在Android提供假的M4替身。Linux GNU/musl和Windows默认功能条件保持不变。
+
+这些更正仅为跨平台编译核准，真实WBD链接/传输/MTU/Stop仍是NOT_RUN，最新Action将独立决定符号是否导出与Go CGo是否能链接。再次FAIL按原链路补真实Android底层适配，而非禁用失败测试。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"实编译原私有Go-Rust冷认证模块发现16处Linux-only M4字段/辅助函数cfg遗漏，最小限定内核驱动以保持Bionic只复用同一冷owner，不增加假M4。"}
+```

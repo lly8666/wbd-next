@@ -844,7 +844,8 @@ struct Entry{
     native_retire_notice_sent:bool,
     #[cfg(feature="fec2_product_record")]
     native_retire_notice_attempts:u8,
-    #[cfg(feature="fec2_product_record")]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
     // One authenticated, immutable-per-worker public policy. V3 ON remains
     // unchanged; OFF cannot hold repair ciphertext or send outer DATA copies.
@@ -854,7 +855,8 @@ struct Entry{
     normal_off_applied_revision:u64,
     // Ordinary non-probe owner: only Go verified TLS feature7 may stage FEC2
     // Fixed. This is an intent, NEVER an applied claim before kernel FEC.
-    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),
+    any(all(target_os="linux",any(target_env="gnu",target_env="musl")),target_os="android")))]
     protected_features:u16,
     // One original credential-checked Go TLS GoLane snapshot. This remains
     // dormant until a complete original 2/4 lane set consumes it exactly
@@ -1168,13 +1170,15 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         native_retire_notice_sent:false,
         #[cfg(feature="fec2_product_record")]
         native_retire_notice_attempts:0,
-        #[cfg(feature="fec2_product_record")]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         original_outer:None,
         #[cfg(feature="fec2_product_record")]
         outer_repair_enabled:true,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_off_applied_revision:0,
-        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),
+    any(all(target_os="linux",any(target_env="gnu",target_env="musl")),target_os="android")))]
         protected_features:handoff.negotiated_features,
         #[cfg(feature="fec2_product_record")]
         game_pending_cold:if handoff.negotiated_features==7{Some(data)}else{None},
@@ -3969,6 +3973,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     e.client_lease_ipv4=Some(expected);
     OK
 }
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     if fd<3{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -4139,7 +4144,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 struct PollFd {fd:c_int,events:i16,revents:i16}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {
     fn ppoll(fds:*mut PollFd,count:usize,timeout:*const ClockTimespec,
         sigmask:*const core::ffi::c_void)->c_int;
@@ -5457,7 +5463,8 @@ fn loop_now()->MonoNs{
 /// Developer original-Go/Rust Linux Normal/FEC cold socket A/B only.
 /// An effective buffer must be read from the SAME raw TX fd; Linux wmem_max
 /// may clamp a request. This never changes FEC, PN or sendmmsg retry policy.
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn configure_original_raw_tx_ab(tx:&mut ScopedRawIpv4Tx,server:bool)
     ->Result<(),i32>
 {
@@ -7230,7 +7237,8 @@ fn m0_fec_native_m4_quanta_control_and_source_fairness_budget(){
     assert_eq!((remaining.saturating_sub(1)/4).min(5),2);
     assert_eq!(remaining-8,1);
 }
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -7241,7 +7249,8 @@ fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
     let got=unsafe{ppoll(&mut p,1,&ts,std::ptr::null())};
     got>0 && p.revents&1!=0
 }
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_raw_rx_stage_snapshot(c:&LoopCounts)->(u64,u64,u64,u64){
     (
         c.rx_chain[0].load(Ordering::Relaxed), // native observed raw L3 entries
@@ -7264,6 +7273,7 @@ fn m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract(){
     c.rx.store(0,Ordering::Relaxed);
     assert_eq!(original_raw_rx_stage_snapshot(&c),(37,21,9,0));
 }
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
