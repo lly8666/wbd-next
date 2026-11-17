@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2114,
-  "checkpoint_sha": "d5461c23b3a2551fa2f10e222667221f030bd50f",
+  "sequence": 2115,
+  "checkpoint_sha": "bd12a57d78ea7bcc6055f71ef1fedfe123ac6914",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2114 H2113 source d546 governance SUCCESS but feature catalog FAIL because dns-split-ipv6.json exceeded fixed 16KiB entry size when recording genuine H2112 B3 PASS_SCOPED. Original H2112 signed Action44108913670 and ZIP14339823791 remain PASS_SCOPED /128 16 AF_INET6 /12 IPv4/52 aggregate Rust drops plus exact cleanup/Stop; not global IPv6. H2114 shorten only repeated feature-card platform/scope wording, keep all 56 historical records/evidence/source, under 16384 bytes. Source H2114 governance/catalog result NOT_RUN pending.",
-  "why_now": "Action44117607469 catalog job134159884017 first error 'feature card must be bounded regular JSON'; role structure PASS. H2113 original card ~17KiB > 16KiB, H2114 card byte-readback16382B. Keep historical verdicts intact. B4 GUI lifecycle and Game and B5 sameVM performance remain NOT_RUN.",
+  "current_task": "H2115: H2114 source bd12 feature catalog and governance Action44118837452 PASS, prior H2113 card16KiB FAIL preserved. H2112 B3 signed source417e original Wintun /128 AF_INET6 16/IPv4 12/skips52/route cleanup/owned Stop PASS_SCOPED; no global claim. New H2115 pure Go/Rust B4 tests model sequential fresh advanced CN→ordinary CN→all generation and reject previously announced FakeIP in new ordinary/all, never reopen inactive journal, DNS/Tunnel retained; no product runtime change. Source H2115 cheap/real NOT_RUN until Action.",
+  "why_now": "B3 one current SOURCE real signed /128 accepted and catalog restored; user continuation B4 lifecycle first prove cold config and old 198.18/16 path never enters Tunnel/Direct after new generation. H2115 touches only Go/Rust test bodies; no signed multi-gen GUI/Stop verdict yet.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2114 feature catalog governance PASS/first FAIL. Then B4 one real original WinForms/Go/Rust advanced CN→ordinary CN→split-off/all with 3 real Stop/Apply and DNS old FakeIP no escape; only one scenario Action, no inactive writer. Add limited Game2/Game4 real entrance if possible. B5 sameVM <=10Mbps CPU/GiB+RSS+p99 paired normal after functional gates. No host-global IPv6 claim or 030.",
+  "next_action": "Collect H2115 Go Windows and Rust x64 pure tests current SOURCE, cheap/governance, no test-only PASS falsely raised to OS. Next B4 minimally extend original WinForms owner/GUI signed Normal default1460, three actual generations advanced CN→ordinary CN→all with physical/Tunnel DNS, old FakeIP quarantine, 3 owned Stop and cache/route/WAL cleanup; one source-frozen scene only. Game2/4 representative separately; B5 same VM <=10Mbps CPU/GiB/RSS/p99 paired after functional gates.",
   "unverified": true,
-  "last_tested_source": "d5461c23b3a2551fa2f10e222667221f030bd50f",
+  "last_tested_source": "bd12a57d78ea7bcc6055f71ef1fedfe123ac6914",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2114-H2113-FEATURE-CARD-SIZE-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2115-H2114-FEATURE-CATALOG-RECOVERY-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2114-FEATURE-CARD-BOUND.md",
-    "docs/evidence/M0/PLAN029B-H2114-H2113-FEATURE-CARD-SIZE-FAIL-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2115-B4-THREE-COLD-GENERATIONS.md",
+    "docs/evidence/M0/PLAN029B-H2115-H2114-FEATURE-CATALOG-RECOVERY-20261117.json",
     "docs/evidence/M0/PLAN029B-H2113-H2112-B3-REAL-SIGNED-IPV6-MIX-PASS-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2112 actual original Win2025 Wintun /128 AF_INET6 16, IPv4 12, Rust skips52, both owned Stop PASS_SCOPED and original manifest+CRC verified. H2113 feature card overflow FAIL separate, H2114 shrink only catalog metadata. B0/B2 scoped old-SOURCE PASS; B4 3-gen GUI/Game and B5 same VM performance OPEN. Historical H2108/H2107 FAIL preserved."
+  "partial_summary": "H2112 B3 true signed /128 IPv6+IPv4+Stop PASS_SCOPED, no host-global IPv6 guarantee. H2113 feature card overflow old FAIL, H2114 card bounded 16382 bytes governance/catalog PASS. H2115 B4 pure three-generation Go+Rust tests staged; original GUI multigen, Game2/4, B5 perf NOT_RUN; 029/029B open, 030 not started."
 }

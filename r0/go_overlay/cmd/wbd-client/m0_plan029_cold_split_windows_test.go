@@ -182,6 +182,58 @@ func TestPlan029BAllOffIgnoresInactiveBusinessCapacity(t *testing.T){
  }
 }
 
+// B4: three genuine cold-configuration generations must not resurrect a
+// retired FakeIP writer or force disabled Direct resources to be present.
+func TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter(t *testing.T){
+ t.Setenv("GITHUB_ACTIONS","false")
+ t.Setenv("WBD_PLAN029_NATIVE_V3_TRIAL","")
+ physical:=netip.MustParseAddr("10.1.0.7")
+ lease:=netip.MustParseAddr("10.234.12.34")
+ root:=t.TempDir()
+ rules:=filepath.Join(root,"cn-domains.txt")
+ if err:=os.WriteFile(rules,[]byte("cn.example\n"),0600);err!=nil{t.Fatal(err)}
+ o:=plan029Options("bypass-lan-cn")
+ o.SplitEnable=true
+ o.CNDomainDirect=true
+ o.StatePath=filepath.Join(root,"network-state")
+ o.CNRulesFile=rules
+ first,err:=m0Plan029TrialCold(o,physical,14,lease,1389,[16]byte{2})
+ if err!=nil||first==nil||first.RouteMode!=2||first.PolicyFlags!=1||
+  len(first.Domains)==0||len(first.FakeJournalPath)==0{
+  t.Fatalf("advanced generation must own selective FakeIP: %+v %v",first,err)
+ }
+ // The cold constructor must never read, unlink, truncate or re-open the
+ // prior generation's file in ordinary/all mode. A real network WAL Stop
+ // remains a separate signed B4 test, not this pure admission assertion.
+ previousJournal:=string(first.FakeJournalPath)
+ sentinel:=[]byte("TEST_ONLY_PREVIOUS_GENERATION_DO_NOT_REBIND")
+ if err:=os.WriteFile(previousJournal,sentinel,0600);err!=nil{t.Fatal(err)}
+ o.CNDomainDirect=false
+ second,err:=m0Plan029TrialCold(o,physical,14,lease,1389,[16]byte{3})
+ if err!=nil||second==nil||second.RouteMode!=2||second.PolicyFlags!=0||
+  len(second.Domains)==0||len(second.FakeJournalPath)!=0||
+  first.TCPSynthetic4==second.TCPSynthetic4{
+  t.Fatalf("ordinary generation must keep CN DNS but no old FakeIP writer: %+v %v",second,err)
+ }
+ o.SplitEnable=false
+ o.RouteMode="all"
+ o.CNRulesFile=filepath.Join(root,"old-rules-absent")
+ o.ChinaIPFile=filepath.Join(root,"old-ips-absent")
+ o.DirectFlowHard=^uint32(0)
+ third,err:=m0Plan029TrialCold(o,physical,14,lease,1389,[16]byte{4})
+ if err!=nil||third==nil||third.RouteMode!=0||third.PolicyFlags!=0||
+  len(third.Domains)!=0||len(third.Direct)!=0||len(third.CN)!=0||
+  len(third.FakeJournalPath)!=0||third.DirectHard!=16384||
+  second.TCPSynthetic4==third.TCPSynthetic4||
+  third.DirectDNS!=first.DirectDNS||third.TunnelDNS!=first.TunnelDNS{
+  t.Fatalf("split-off must keep DNS/epoch while abandoning business Direct: %+v %v",third,err)
+ }
+ got,err:=os.ReadFile(previousJournal)
+ if err!=nil||string(got)!=string(sentinel){
+  t.Fatalf("old FakeIP writer was touched across cold generations: %v",err)
+ }
+}
+
 func TestPlan029GenerationSyntheticOnlyOneOwnedHost(t *testing.T){
  install:=[16]byte{1};e1:=[16]byte{2};e2:=[16]byte{3}
  a,err:=m0Plan029SyntheticForGeneration(install,e1)
