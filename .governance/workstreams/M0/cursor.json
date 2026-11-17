@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2110,
-  "checkpoint_sha": "44ea3189728548117b543dac7940a69710feca21",
+  "sequence": 2111,
+  "checkpoint_sha": "401d072bc7077b7d8d98b95b3ec9fe041271251c",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2110 evidence H2107 Normal/off signed Action44101072122 FAIL before network: gh same-source Linux product ZIP download HTTP503 GitHub egress account limit; Linux artifact existed, Win/Linux Rust+Go release checks PASS, native apps/Stop NOT_RUN. H2109 governance source44ea PASS. Original H2108 B3 signed Win2025 Action44102947133 frozen source5bb remains in progress; do not redispatch. B4/B5 remain OPEN.",
-  "why_now": "Read actual Windows native job134104539391: HTTP 503 Egress is over the account limit from GitHub blob while gh run download same-run artifact, not product build or first-byte IPv6 defect. Do not substitute old Source/Linux binaries, upload raw artifacts, bypass SHA or call NOT_RUN a PASS.",
+  "current_task": "H2111 H2108 original B3 source5bb Action44102947133 native FAIL in test-only owner precondition (Get-NetAdapter count/InterfaceDescription Wintun), before test-owned /128 or AF_INET6 sender. Same source original Windows TLS/Wintun/OS Applied, Rust IPv6 background skips=17, Linux+Windows owner Stop/WAL PASS, no B3 16 test packets. H2111 replace fragile friendly NIC assertion with checksum-verified original Go v2 active four-stage generation WAL PnP/index/LUID/GUID/alias + uniquely matched real Windows IPv4 lease and IPv6 Get-NetIPInterface; when NetAdapter visible also match GUID and Enabled binding. No route/WFP/Go product edit, one cheap unit contract before independent new B3 marker.",
+  "why_now": "H2108 Action44102947133 job134111066080 FAIL first in source_wintun precondition, original ZIP14338805926 SHA256 8bc06f68ff7d66b2f9a72c09a4e923acc39d6abe9d6b9dc3e9f0142244bd65e1 CRC PASS. Old OR test cannot distinguish Get-NetAdapter missing/ambiguous vs description mismatch. Original Go n4NativeUnifiedTxn source pins Wintun Index/GUID/LUID/PnP hash in SHA256 WAL; use it instead of friendly NIC string, while original OS IPv4+IPv6 interface and active generation must still independently match. Rust Stop background v6 skips17 is NOT own AF_INET6 trial PASS.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2108 Action44102947133 source5bb B3 original AF_INET6/IPv4 test after exact-same-run artifact/download: require 16 Win real IPv6 sends, Rust Wintun skip>=16, IPv4 echo 12, owned route cleanup, original OS/WAL Stop. If HTTP503 repeat, record external blocking evidence; no duplicate action until terminal. B4 GUI advanced→ordinary→all and Game entry, B5 sameVM10Mbps CPU/GiB/p99 still NOT_RUN.",
+  "next_action": "Collect H2111 cheap unit ast+synthetic original Go SHA WAL validation and WinGo/Rust source checks. Only after PASS, one fresh-source [plan029b-b3-ipv6-real] genuine Win2025 original Wintun scenario with test-owned /128, 16 real AF_INET6 sends, Rust SkippedIpv6>=16 and interleaved 12 IPv4 TUN echoes, exact route/address cleanup and original both-owned Stop. If original WAL/IPv6 interface precondition fails record first true OS error, no global IPv6 claim. B4 real GUI multigen/Game and B5 sameVM 10Mbps remain.",
   "unverified": true,
-  "last_tested_source": "5a80e0ea8e027f5b7649042ef988ef9bb2c51838",
+  "last_tested_source": "5bb367e86c81cb61b68be7c9772c0ea866f69fde",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2110-H2107-NORMAL-OFF-ARTIFACT-EGRESS-503-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2111-H2108-B3-REAL-OWNER-NIC-FIRST-FAIL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2110-H2107-EGRESS-503-QUALIFICATION.md",
-    "docs/evidence/M0/PLAN029B-H2110-H2107-NORMAL-OFF-ARTIFACT-EGRESS-503-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2111-B3-PINNED-WAL-OWNER.md",
+    "docs/evidence/M0/PLAN029B-H2111-H2108-B3-REAL-OWNER-NIC-FIRST-FAIL-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2110 H2107 original Normal/off Action44101072122 FAIL GitHub artifact egress HTTP503 before network; source5a80 cheap Win/Rust release + Linux built PASS, Wintun apps NOT_RUN. H2109 governance FIX PASS; H2108 true B3 Action44102947133 source5bb in flight. Prior B0/B2 GUI scoped PASS independent SOURCES. B4/B5 open."
+  "partial_summary": "B0 H2103 and B2 H2098 ordinary/H2101 advanced distinct signed functional PASS; H2104 real WinForms/Go config PASS. H2105/6 B3 compile FAIL; H2107 compiler PASS but standalone Normal native failed GitHub HTTP503; H2108 B3 original NativeOS/Stop PASS scoped but test precondition FAIL: original 17 background IPv6 skipped, zero test16 AF_INET6, zero interleaved12. H2109/10 gov PASS, H2111 fixture owner now pinned WAL+actual OS. B4/B5 open."
 }

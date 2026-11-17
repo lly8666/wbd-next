@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2111",
+  "date": "2026-11-17",
+  "source_sha": "5bb367e86c81cb61b68be7c9772c0ea866f69fde",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "action": {
+    "run_id": 44102947133,
+    "job_id": 134111066080,
+    "conclusion": "failure",
+    "attempt": 1
+  },
+  "original_artifact": {
+    "id": 14338805926,
+    "name": "m0-wl-full-public-normal-direct-h1506-legacy-44102947133",
+    "zip_sha256": "8bc06f68ff7d66b2f9a72c09a4e923acc39d6abe9d6b9dc3e9f0142244bd65e1",
+    "zip_crc": "PASS_ALL_MEMBERS",
+    "source_fields": "source=linux_binary_source=product_binary_source=fixture_source=5bb367e86c81cb61b68be7c9772c0ea866f69fde",
+    "windows_exe_sha256": "a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46",
+    "windows_rust_dll_sha256": "829e5f8e6f447e1e30bce3d6255b3336440877e5043f817247808646e8a2ba96",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71"
+  },
+  "first_error": {
+    "stage": "B3 original Windows AF_INET6 /128 test-owner precondition",
+    "first_oracle": "Get-NetAdapter -IncludeHidden count=1 AND InterfaceDescription contains Wintun",
+    "observed": "B3 original lease ifindex not a unique genuine Wintun",
+    "ambiguity": "OR count!=1 OR description_notmatching, original assertion does not distinguish; no application IPv6 generated",
+    "cause_scope": "TEST_ONLY_OWNER_PROBE_ADAPTER_FRIENDLY_DESCRIPTION_NOT_AUTHORITATIVE",
+    "planned_fix": "Read the exact original Go generation checksum WAL (PnP SHA, index, GUID, alias) and cross-check one real 10.66.0.2 IPv4 lease and Get-NetIPInterface IPv6 index; if Get-NetAdapter returns a unique NIC additionally match GUID and reject disabled binding; never infer Wintun by friendly description"
+  },
+  "qualified_original_product": {
+    "go_tls": "PASS_REAL",
+    "windows_signed_npcap_wintun": "PASS_REAL",
+    "os_applied": "PASS_REAL",
+    "rust_v3_dns_only_no_direct_nat": "PASS_REAL_LOG",
+    "rust_stop": "PASS_STAGE_WAL_KERNEL_CRYPTO",
+    "windows_wal_restored": true,
+    "linux_original_stop": "PASS_DRAINED",
+    "wintun_background_ipv6_skips": 17,
+    "orig_ipv4_udp_rx": "OBSERVED_NOT_MIXED_B3"
+  },
+  "b3_trial": {
+    "test_owned_ula_route": "NOT_CREATED",
+    "windows_af_inet6_user_test_sends": 0,
+    "ipv4_interleaved_12": "NOT_RUN",
+    "ipv6_test_packets_at_Wintun": "NOT_PROVEN",
+    "test_route_cleanup": "NOT_APPLICABLE_NO_INTENT",
+    "B3_result": "FAIL_PRECONDITION",
+    "physical_bound_onlink_ipv6": "NOT_PROVEN",
+    "host_global_ipv6": "NOT_PROVEN"
+  },
+  "not_covered": {
+    "B4_multi_generation_gui_game": "NOT_RUN",
+    "B5_same_VM_10Mbps": "NOT_RUN"
+  }
+}

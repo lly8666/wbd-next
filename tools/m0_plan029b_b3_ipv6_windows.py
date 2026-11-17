@@ -5,8 +5,12 @@ No host-global IPv6 disabling, WFP/Defender change, unbinding, new IPv6
 module or product packet injection. Always remove the exact test-owned
 address/route (including failed pre-Stop operation), never foreign routes.
 """
+import hashlib
+import hmac
 import json
 import os
+import re
+import uuid
 from pathlib import Path
 import socket
 import subprocess
@@ -31,24 +35,109 @@ def osjson(cmd):
     if not rows:raise RuntimeError("B3 Windows OS IPv6 snapshot is empty")
     return json.loads(rows[-1])
 
-def source_wintun():
-    return osjson(r"""
+def read_original_wintun_wal(out):
+    """Use Go's existing generation+PnP checksum WAL, never a guessed NIC name.
+
+    H2108 proved the active real Wintun does not necessarily advertise
+    "Wintun" through Get-NetAdapter.InterfaceDescription. It DOES have an
+    exact source-held Go WAL, interface index, LUID/GUID and pinned PnP hash.
+    This is a read-only observation; it cannot authorize network mutation
+    without the additional unique live Windows lease+IPv6 interface checks.
+    """
+    p=out/"owned-wal.json.n4-owned-wal"
+    if p.is_symlink() or not p.is_file() or not 0<p.stat().st_size<=65536:
+        raise RuntimeError("B3 original Go generation WAL absent/foreign/oversize")
+    raw=p.read_bytes().strip()
+    prefix=b'{"data":'
+    separator=b',"sha256":"'
+    at=raw.rfind(separator)
+    if not raw.startswith(prefix) or at<len(prefix) or not raw.endswith(b'"}') or raw.count(separator)!=1:
+        raise RuntimeError("B3 original Go generation WAL envelope shape invalid")
+    payload=raw[len(prefix):at]
+    try:
+        expected=raw[at+len(separator):-2].decode("ascii")
+        envelope=json.loads(raw)
+        data=json.loads(payload)
+    except (UnicodeError,ValueError,TypeError) as exc:
+        raise RuntimeError("B3 original Go WAL is not valid JSON or checksum") from exc
+    if (not re.fullmatch(r"[0-9a-f]{64}",expected) or
+        not hmac.compare_digest(hashlib.sha256(payload).hexdigest(),expected) or
+        not isinstance(envelope,dict) or envelope.get("data")!=data or
+        envelope.get("sha256")!=expected or not isinstance(data,dict) or
+        data.get("schema")!="wbd-n4-native-network-txn/v2" or
+        data.get("phase")!="active"):
+        raise RuntimeError("B3 original Go current generation checksum/WAL phase invalid")
+    records=data.get("records")
+    if (not isinstance(records,list) or len(records)!=4 or
+        [x.get("name") for x in records if isinstance(x,dict)]!=
+            ["lease","mtu","dns","routes"] or
+        any(x.get("state")!="owned" for x in records)):
+        raise RuntimeError("B3 original Go four-stage owned WAL not applied")
+    identity=data.get("identity")
+    if not isinstance(identity,dict):
+        raise RuntimeError("B3 original Go Wintun owner identity missing")
+    try:
+        index=identity["wintun_index"]
+        luid=identity["wintun_luid"]
+        alias=identity["adapter_alias"]
+        guid=str(uuid.UUID(identity["wintun_guid"]))
+        pin=identity["pnp_instance_sha256"]
+        installation=identity["installation"]
+        generation=identity["generation"]
+    except (KeyError,TypeError,ValueError,AttributeError) as exc:
+        raise RuntimeError("B3 original Go pinned Wintun identity malformed") from exc
+    if (type(index) is not int or index<=0 or
+        type(luid) is not int or luid<=0 or
+        alias!="WBDWLMAIN" or not isinstance(pin,str) or
+        not re.fullmatch(r"[0-9a-f]{64}",pin) or
+        any(not isinstance(x,list) or len(x)!=16 or
+            not all(type(n) is int and 0<=n<=255 for n in x) or
+            not any(x) for x in (installation,generation))):
+        raise RuntimeError("B3 original Go Wintun PnP/index/alias/epoch not pinned")
+    return {"ifindex":index,"wintun_guid":guid,"adapter_alias":alias,
+            "wal_sha256":expected,
+            "generation_fingerprint":hashlib.sha256(bytes(generation)).hexdigest()}
+
+def source_wintun(owner):
+    # The actual OS IPv4 lease and IPv6 interface MUST resolve to the SAME
+    # current pinned WAL index. Get-NetAdapter is auxiliary: on this signed
+    # runner its friendly description is not the original Wintun driver ID.
+    # When visible, its GUID and disabled IPv6 binding are still hard gates.
+    if (type(owner.get("ifindex")) is not int or owner["ifindex"]<1 or
+        owner.get("adapter_alias")!="WBDWLMAIN"):
+        raise RuntimeError("B3 foreign pinned original owner")
+    return osjson((r"""
 $ip=@(Get-NetIPAddress -AddressFamily IPv4 -IPAddress '10.66.0.2' -ErrorAction SilentlyContinue)
 if($ip.Count -ne 1){throw 'B3 no unique live original Wintun IPv4 lease'}
 $index=[int]$ip[0].InterfaceIndex
+if($index -ne WAL_INDEX -or [string]$ip[0].InterfaceAlias -ne 'WBDWLMAIN'){
+ throw 'B3 real IPv4 lease did not match original generation WAL'}
+$if6=@(Get-NetIPInterface -AddressFamily IPv6 -InterfaceIndex WAL_INDEX -ErrorAction SilentlyContinue)
+if($if6.Count -ne 1 -or [int]$if6[0].InterfaceIndex -ne WAL_INDEX){
+ throw 'B3 original owned Wintun has no IPv6 IP stack interface'}
 $ad=@(Get-NetAdapter -IncludeHidden | Where-Object { [int]$_.ifIndex -eq $index })
-if($ad.Count -ne 1 -or $ad[0].InterfaceDescription -notmatch 'Wintun'){
-  throw 'B3 original lease ifindex not a unique genuine Wintun'}
-$bind=@(Get-NetAdapterBinding -Name $ad[0].Name -ComponentID ms_tcpip6)
-if($bind.Count -ne 1 -or -not $bind[0].Enabled){
-  throw 'B3 Wintun IPv6 must remain bound; no test unbind allowed'}
+if($ad.Count -gt 1){throw 'B3 duplicate adapter with pinned original Wintun index'}
+$bindingEvidence='ORIGINAL_WAL_PLUS_GET_NETIPINTERFACE_IPV6'
+$desc='OS_ADAPTER_DESCRIPTION_NOT_AVAILABLE'
+if($ad.Count -eq 1){
+ $guid=([string]$ad[0].InterfaceGuid).Trim('{}').ToLowerInvariant()
+ if($guid -ne 'WAL_GUID'){throw 'B3 real NIC GUID differs from pinned original Go WAL'}
+ $desc=[string]$ad[0].InterfaceDescription
+ $bind=@(Get-NetAdapterBinding -Name $ad[0].Name -ComponentID ms_tcpip6 -ErrorAction SilentlyContinue)
+ if($bind.Count -gt 1){throw 'B3 duplicate current IPv6 binding'}
+ if($bind.Count -eq 1){
+  if(-not $bind[0].Enabled){throw 'B3 original Wintun IPv6 binding disabled'}
+  $bindingEvidence='PINNED_WAL_OS_GUID_AND_NETADAPTERBINDING_ENABLED'
+ }
+}
 $addr=@(Get-NetIPAddress -AddressFamily IPv6 -IPAddress 'fd73:29b:2026::2' -ErrorAction SilentlyContinue)
 $route=@(Get-NetRoute -AddressFamily IPv6 -DestinationPrefix 'fd73:29b:2026::1/128' -ErrorAction SilentlyContinue)
 if($addr.Count -or $route.Count){throw 'B3 foreign same exact ULA test resource'}
 [pscustomobject]@{ifindex=$index;binding_enabled=$true;
-  existing_addr=0;existing_route=0;wintun_description=$ad[0].InterfaceDescription} |
- ConvertTo-Json -Compress
-""")
+  binding_evidence=$bindingEvidence;original_wal_guid='WAL_GUID';
+  original_generation_owner=$true;existing_addr=0;existing_route=0;
+  wintun_description=$desc} | ConvertTo-Json -Compress
+""").replace("WAL_INDEX",str(owner["ifindex"])).replace("WAL_GUID",owner["wintun_guid"]))
 
 def add_owned(index):
     return osjson((r"""
@@ -145,10 +234,14 @@ def main():
         cleanup(out)
         return
     if (out/RECEIPT).exists():raise RuntimeError("B3 existing intent file, refusing overwrite")
-    pre=source_wintun()
+    owner=read_original_wintun_wal(out)
+    pre=source_wintun(owner)
     row={"scope":"PLAN029B_B3_EXACT_SOURCE_OWNED_IPV6","source_sha":os.environ["GITHUB_SHA"],
          "lease4":"10.66.0.2","src6":SRC6,"prefix":PREFIX,"ifindex":int(pre["ifindex"]),
          "original_route_count":0,"original_address_count":0,"ipv6_binding_enabled":True,
+         "binding_evidence":pre["binding_evidence"],
+         "original_go_wal_sha256":owner["wal_sha256"],
+         "generation_fingerprint":owner["generation_fingerprint"],
          "stage":"PRE_MUTATION_INTENT","cleanup":"PENDING"}
     out.mkdir(parents=True,exist_ok=True)
     (out/RECEIPT).write_text(json.dumps(row,indent=2)+"\n",encoding="utf-8")

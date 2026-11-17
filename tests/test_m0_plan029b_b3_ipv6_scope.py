@@ -1,6 +1,9 @@
 """B3 pure source guards: real kernel IPv6 + original IPv4, not route-only PASS."""
 import ast
+import hashlib
+import json
 from pathlib import Path
+import tempfile
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -38,6 +41,59 @@ class Plan029BRealIPv6(unittest.TestCase):
         self.assertIn("Windows source-locked PLAN029 probe cargo check",wf)
         self.assertIn("cargo +1.85.1 check --locked --release",wf)
         self.assertIn("--features m0_v4_embedded_go,m0_v4_probe,fec2_product_record --lib",wf)
+    def test_go_generation_pinned_wal_checksum_and_os_cross_identity(self):
+        from tools.m0_plan029b_b3_ipv6_windows import read_original_wintun_wal
+        guid="fe5a2b3c-0244-4dae-8023-dacb9d016dd4"
+        identity={"installation":[1]*16,"generation":[2]*16,
+                  "wintun_luid":1234,"wintun_index":37,
+                  "wintun_guid":guid,"adapter_alias":"WBDWLMAIN",
+                  "pnp_instance_sha256":"a"*64}
+        data={"schema":"wbd-n4-native-network-txn/v2",
+              "identity":identity,"phase":"active",
+              "records":[{"name":name,"state":"owned","before":{}}
+                         for name in ("lease","mtu","dns","routes")]}
+        def original_go_envelope(obj,sha_override=None):
+            raw=json.dumps(obj,separators=(",",":"),ensure_ascii=False).encode()
+            sha=sha_override or hashlib.sha256(raw).hexdigest()
+            return b'{"data":'+raw+b',"sha256":"'+sha.encode()+b'"}'
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);file=root/"owned-wal.json.n4-owned-wal"
+            file.write_bytes(original_go_envelope(data))
+            owner=read_original_wintun_wal(root)
+            self.assertEqual(owner["ifindex"],37)
+            self.assertEqual(owner["adapter_alias"],"WBDWLMAIN")
+            self.assertEqual(owner["wintun_guid"],guid)
+            self.assertEqual(len(owner["generation_fingerprint"]),64)
+            file.write_bytes(original_go_envelope(data,"b"*64))
+            with self.assertRaisesRegex(RuntimeError,"checksum"):
+                read_original_wintun_wal(root)
+            data["identity"]["adapter_alias"]="Ethernet"
+            file.write_bytes(original_go_envelope(data))
+            with self.assertRaisesRegex(RuntimeError,"pinned"):
+                read_original_wintun_wal(root)
+            data["identity"]["adapter_alias"]="WBDWLMAIN"
+            data["phase"]="cleaning"
+            file.write_bytes(original_go_envelope(data))
+            with self.assertRaisesRegex(RuntimeError,"phase"):
+                read_original_wintun_wal(root)
+
+    def test_h2111_os_preflight_never_replaces_original_owner_with_nic_description(self):
+        source=(ROOT/"tools/m0_plan029b_b3_ipv6_windows.py").read_text()
+        self.assertIn("owned-wal.json.n4-owned-wal",source)
+        self.assertIn("original_go_wal_sha256",source)
+        self.assertIn("hmac.compare_digest",source)
+        self.assertIn('data.get("schema")!="wbd-n4-native-network-txn/v2"',source)
+        self.assertIn('identity["pnp_instance_sha256"]',source)
+        self.assertIn("Get-NetIPInterface -AddressFamily IPv6 -InterfaceIndex WAL_INDEX",source)
+        self.assertIn("if($index -ne WAL_INDEX",source)
+        self.assertIn("if($guid -ne 'WAL_GUID')",source)
+        self.assertIn("Get-NetAdapterBinding",source)
+        self.assertIn("not $bind[0].Enabled",source)
+        self.assertNotIn("InterfaceDescription -notmatch 'Wintun'",source)
+        self.assertNotIn("Disable-NetAdapterBinding",source)
+        self.assertNotIn("Set-NetAdapterBinding",source)
+        self.assertIn("New-NetRoute -InterfaceIndex IDX",source)
+        self.assertIn("Remove-NetRoute -AddressFamily IPv6",source)
     def test_real_windows_os_owned_route_and_kernel_send_with_cleanup(self):
         win=(ROOT/"tools/m0_plan029b_b3_ipv6_windows.py").read_text()
         guest=(ROOT/"tools/m0_plan029b_b3_ipv4_guest.py").read_text()
