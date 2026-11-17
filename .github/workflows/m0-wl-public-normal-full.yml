@@ -3243,6 +3243,36 @@ jobs:
               Write-Output 'PLAN029_H1794_REAL_APP_TCP53_DIRECT_AND_TUNNEL_TWO_OS_OWNED_STOP_PASS_SCOPED'
             }
             Write-Output 'PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED'
+          } elseif($env:WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE -eq '1') {
+            # The original B4 signed Normal scene uses the existing genuine
+            # Windows->Linux Tunnel TCP application test. The unrelated
+            # historical PLAN028 reverse inbound comparator must not make
+            # three successfully stopped real GUI sessions appear to fail.
+            # Require actual original Win2025+WSL2 product, not synthetic
+            # GUI/UDP-only proof or a borrowed older-source result.
+            $b4=$result.plan029b_b4_three_real_gui
+            if($result.source -ne $env:GITHUB_SHA -or
+               $result.mode -ne 'normal' -or
+               $result.mode_public -ne 'PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal' -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP' -or
+               $result.actual_kernel_tcp.windows.client_echo -ne $true -or
+               $result.actual_kernel_tcp.linux.received_bytes -le 0 -or
+               $result.stop -ne 'PASS_BOTH_OWNED' -or
+               $result.requested_original_win_mtu -ne 1460 -or
+               $b4.source_sha -ne $env:GITHUB_SHA -or
+               $b4.original_gui.source -ne $env:GITHUB_SHA -or
+               $b4.original_gui.status -ne 'PASS_ORIGINAL_GUI_THREE_GENERATIONS_AFTER_NATIVE_VERIFICATION' -or
+               $b4.original_gui.real_applied -ne 3 -or
+               $b4.original_gui.owned_stop -ne 3 -or
+               $b4.original_linux.result -ne 'PASS_THREE_REAL_GUI_GENERATION_EGRESS' -or
+               $b4.original_linux.raw_old_fake_ipv4_egress -ne 0 -or
+               $b4.original_linux.stale_old_fake_business -ne 0 -or
+               $b4.linux_authenticated_sessions -ne 3 -or
+               @($b4.actual_MTU_MSS.generations).Count -ne 3){
+              throw 'B4 signed original three REAL GUI+DNS/UDP/TCP+MTU+owned Stop proof absent'
+            }
+            Write-Output 'PLAN029B_B4_ORIGINAL_THREE_GUI_REAL_UDP_TCP_AND_OWNED_STOP_NATIVE_GATE_PASS_SCOPED'
           } elseif($env:WBD_WL_PUBLIC_MODES -ne 'all' -and $env:WBD_WL_ABBA_NATIVE -ne '1' -and $env:WBD_PLAN028_TWO_REAL_CLIENTS -ne '1') {
             if($result.mode -ne $env:WBD_WL_PUBLIC_MODES -or
                $result.mode_public -ne ('PASS_ACTUAL_WINDOWS_LINUX_NATIVE_'+$env:WBD_WL_PUBLIC_MODES) -or

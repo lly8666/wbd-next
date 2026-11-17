@@ -46,6 +46,19 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         self.assertIn('m0_plan029_h1762_oneway_tunnel_tcp.py', e2e)
         self.assertIn('report["tcp_duplex"]="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"', e2e)
         self.assertIn('if wt.wait(timeout=36)!=0 or lt.wait(timeout=7)!=0:', e2e)
+        # The signed 534b original native report was PASS with genuine
+        # one-way TCP and all three GUI Stops, while PowerShell still
+        # demanded the legacy two-way PLAN028 comparator. Preserve that
+        # generic rule unchanged, and add an exclusive fail-closed B4 gate.
+        workflow = (ROOT / ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("elseif($env:WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE -eq '1')", workflow)
+        self.assertIn("$result.tcp_duplex -ne 'PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP'", workflow)
+        self.assertIn("$b4.original_gui.real_applied -ne 3", workflow)
+        self.assertIn("$b4.original_gui.owned_stop -ne 3", workflow)
+        self.assertIn("$b4.original_linux.raw_old_fake_ipv4_egress -ne 0", workflow)
+        self.assertIn("@($b4.actual_MTU_MSS.generations).Count -ne 3", workflow)
+        self.assertIn("$result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP'", workflow)
+        self.assertIn("PLAN029B_B4_ORIGINAL_THREE_GUI_REAL_UDP_TCP_AND_OWNED_STOP_NATIVE_GATE_PASS_SCOPED", workflow)
         self.assertIn('"historical_028_linux_to_windows_tcp"]="NOT_RUN_028_SCOPED"', e2e)
         ast.parse(e2e)
         ast.parse(bridge)
