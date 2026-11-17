@@ -30,5 +30,8 @@
     "workflow_dispatch": false
   },
   "normal_user_scope": "One GUI reconnect then existing domain reconnect and CN DNS TTL restart; no extreme resource/old IPv6 stress",
-  "plan029_complete": false
+  "plan029_complete": false,
+  "source_sha": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
+  "result": "NOT_RUN",
+  "artifact_verified": false
 }

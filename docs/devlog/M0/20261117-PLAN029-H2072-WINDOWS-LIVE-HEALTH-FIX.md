@@ -6,6 +6,8 @@
 
 **本次源改**：在 Windows `start_native` 确认 Wintun、Npcap 实句柄，排除已启动同一 owner 后，锁实际 Entry 并以 `m.health.arm_client_cold_ready(m2_clock().0)` 激活原有五次冷 Health，再启动原 native TX/RX。沿原 PN/AEAD/重放/加密 kind1 TLV；Linux B 必须有真实 authenticated hint 才可晋级 /32。无 WFP/协议/ABI/线程/安全门槛改动。H2067 单测注释明确它只测时序，不冒称生产接线。
 
+**H2073 记录卫生**：H2072 push 的 feature catalog 因功能卡超 16KiB 失败，现恢复原紧凑卡；governance 还因本条 NOT_RUN evidence 缺少和 `last_tested_source=2fca` 一致的 `source_sha` 失败，已补 `result=NOT_RUN`、`artifact_verified=false`，不把新 d940 当实测。故这两项 CI 失败是元数据结构问题，不证明/否定实际冷 Health 修复。
+
 **本 SOURCE 未编译/未做真实 Windows 原生测试**，不得称已修好联网；本次未重复 dispatch。后继只复用已批准三个日常场：先 GUI 真 Disconnect→Connect 一场（B Health/ /32、OS1460/内层1389、两出口 TCP/UDP、两端 Stop 都要 PASS），该场通过才同产品 hash 复用独立域名二次 UDP TC→同 TCP53 与 TTL2 Stop/重开第三答。若仍失败，下一轮一次 B M3 open/TLV/hint 数字诊断，不重刷 H2070 旧 RAW 探针。极端满载、慢盘/崩溃、旧 IPv6 矩阵按最新用户限定不新增。
 
 ```feature-impact
