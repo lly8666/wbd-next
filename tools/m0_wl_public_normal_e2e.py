@@ -4,7 +4,7 @@ import os,sys,subprocess,time,json,hashlib,pathlib,re,threading,faulthandler,ate
 from m0_wl_native_resource_sampler import sample_windows_original_process
 from m0_wl_windows_cpu_audit import summarize_windows_cpu
 from m0_wl_mode_runtime_report import source_locked_observability,summarize_auto_udp_progress,native_auto_true_applied_snapshots
-from m0_wl_native_mtu_contract import configured_native_test_mtu,native_outer_choice,verified_native_windows_inner_mtu
+from m0_wl_native_mtu_contract import configured_native_test_mtu,native_outer_choice,verified_native_windows_inner_mtu,verified_native_windows_two_generation_inner_mtus
 from m0_wl_n0_drop_delta import latest_counter, measured_delta
 from m0_wl_impairment_profile import get_profile
 from m0_wl_lock_profile import parse_native_lock_profile
@@ -952,18 +952,19 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if native_outer!="legacy1400":
   # Independently validate the numeric receipt emitted by the REAL
   # same-generation Windows N4 owner before READY; no hand-fed inner MTU.
-  if plan028_owned_switch:
-   # The previous single-generation receipt helper is intentionally strict.
-   # This specific authentic .1→.9 path has exactly TWO real generations.
-   # Validate BOTH separately, not a synthesized collapsed last value.
-   os_rows=re.findall(
-    r"^WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=\d+ applied=\d+ outer_config=\d+$",
-    winlog,re.MULTILINE)
-   if len(os_rows)!=2:
-    raise RuntimeError("PLAN028 original Windows generations require exactly two genuine OS MTU receipts")
-   per_gen_inner=[verified_native_windows_inner_mtu(row,configured_mtu) for row in os_rows]
+  if plan028_owned_switch or p029_gui_reconnect:
+   # Both native OS generations are real. The old single-receipt verifier
+   # correctly refuses concatenated logs, but GUI Disconnect->Connect has
+   # two independent Go child processes even without PLAN028 MTU mutation.
+   # Parse precisely two numeric receipts, each checked against outer MTU.
+   try:
+    per_gen_inner=verified_native_windows_two_generation_inner_mtus(winlog,configured_mtu)
+   except ValueError as exc:
+    kind="PLAN028" if plan028_owned_switch else "PLAN029_GUI_RECONNECT"
+    raise RuntimeError(kind+" requires exactly two genuine OS MTU receipts") from exc
    windows_inner=per_gen_inner[-1]
-   report["plan028_actual_windows_two_generation_os_inner_mtu"]=per_gen_inner
+   report["plan028_actual_windows_two_generation_os_inner_mtu" if plan028_owned_switch
+          else "plan029_actual_windows_two_generation_os_inner_mtu"]=per_gen_inner
   else:
    windows_inner=verified_native_windows_inner_mtu(winlog,configured_mtu)
   if mode=="normal":

@@ -1,3 +1,4 @@
+# H2076: only fixture MTU double-generation receipt fix, reuse frozen product SOURCE498a in three independent normal scenes; do not rebuild product.
 # H2075 PLAN029 original-source one-build three ordinary GUI/domain/TTL real Actions: workflow path must match on.push.paths; no new task/test or legacy matrix.
 # H2002 exact normal physical-vs-FakeIP UDP 3size RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt] after bounded event wake; no TCP bulk, no extreme tests.
 # H1999 independent signed 3-size Direct UDP RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt], ordinary 120 per arm.
@@ -367,7 +368,7 @@ jobs:
           CHANGE_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
-          if [[ "$CHANGE_EVENT" == 'push' && ( "$CHANGE_MESSAGE" == *'[plan029-h2062-three-normal-reuse]'* || "$CHANGE_MESSAGE" == *'[plan029-h2066-server-accept]'* || "$CHANGE_MESSAGE" == *'[plan029-h2070-single-raw-rx]'* ) ]]; then
+          if [[ "$CHANGE_EVENT" == 'push' && ( "$CHANGE_MESSAGE" == *'[plan029-h2062-three-normal-reuse]'* || "$CHANGE_MESSAGE" == *'[plan029-h2066-server-accept]'* || "$CHANGE_MESSAGE" == *'[plan029-h2070-single-raw-rx]'* || "$CHANGE_MESSAGE" == *'[plan029-h2076-fixture-reuse]'* ) ]]; then
             # This push dispatches three distinct real-native Actions; do
             # not run a fourth normal network scenario on the coordinator.
             echo native_smoke=false >> "$GITHUB_OUTPUT"
@@ -393,13 +394,13 @@ jobs:
           python tools/m0_native_ci_scope.py --event "$CHANGE_EVENT" \
             --files "$changed" --message "$CHANGE_MESSAGE" >> "$GITHUB_OUTPUT"
       - name: H2062 dispatch three independent ordinary native Actions
-        if: github.event_name == 'push' && (contains(github.event.head_commit.message, '[plan029-h2062-three-normal-reuse]') || contains(github.event.head_commit.message, '[plan029-h2066-server-accept]'))
+        if: github.event_name == 'push' && (contains(github.event.head_commit.message, '[plan029-h2062-three-normal-reuse]') || contains(github.event.head_commit.message, '[plan029-h2066-server-accept]') || contains(github.event.head_commit.message, '[plan029-h2076-fixture-reuse]'))
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          FROZEN_SOURCE: ${{ contains(github.event.head_commit.message, '[plan029-h2066-server-accept]') && 'fb24fe784d960e3e8bf4ca63cc2a22332247e1dd' || '0e57cab2d53e2c95962eb673050fa54695fd3665' }}
-          FROZEN_RUN: ${{ contains(github.event.head_commit.message, '[plan029-h2066-server-accept]') && '44017075750' || '44007996775' }}
+          FROZEN_SOURCE: ${{ contains(github.event.head_commit.message, '[plan029-h2076-fixture-reuse]') && '498a5a61a8e8eff1d8263529457f1523f3b21ff7' || contains(github.event.head_commit.message, '[plan029-h2066-server-accept]') && 'fb24fe784d960e3e8bf4ca63cc2a22332247e1dd' || '0e57cab2d53e2c95962eb673050fa54695fd3665' }}
+          FROZEN_RUN: ${{ contains(github.event.head_commit.message, '[plan029-h2076-fixture-reuse]') && '44032936928' || contains(github.event.head_commit.message, '[plan029-h2066-server-accept]') && '44017075750' || '44007996775' }}
         run: |
           set -euo pipefail
           test "$GITHUB_REF_NAME" = main

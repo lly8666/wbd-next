@@ -1,5 +1,5 @@
 import unittest
-from tools.m0_wl_native_mtu_contract import exact_native_test_mtu,native_outer_choice,configured_native_test_mtu,verified_native_windows_inner_mtu
+from tools.m0_wl_native_mtu_contract import exact_native_test_mtu,native_outer_choice,configured_native_test_mtu,verified_native_windows_inner_mtu,verified_native_windows_two_generation_inner_mtus
 from unittest.mock import patch
 
 class NativeM4MTUTests(unittest.TestCase):
@@ -40,3 +40,20 @@ class NativeM4MTUTests(unittest.TestCase):
   for bad_outer in (0,1501,1460.0,None,True):
    with self.assertRaises(ValueError):
     verified_native_windows_inner_mtu(line,bad_outer)
+
+ def test_plan029_winforms_two_real_children_have_two_independent_mtu_receipts(self):
+  row="WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=1389 applied=1389 outer_config=1460"
+  two="child-A ready\n"+row+"\nchild-B ready\n"+row+"\n"
+  self.assertEqual(verified_native_windows_two_generation_inner_mtus(two,1460),[1389,1389])
+  # Original one-generation check remains strict; do not make it accept two.
+  with self.assertRaises(ValueError):verified_native_windows_inner_mtu(two,1460)
+  self.assertEqual(verified_native_windows_two_generation_inner_mtus(
+   two.replace("\n","\r\n"),1460),[1389,1389])
+  for broken in (
+   row+"\n",
+   two+row+"\n",
+   "child-A\n"+row+"\nchild-B\nWBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=1389 applied=1388 outer_config=1460\n",
+   "child-A\n"+row+"\nchild-B\nWBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=1389 applied=1389 outer_config=1500\n",
+   two+"WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 forged\n",
+  ):
+   with self.assertRaises(ValueError):verified_native_windows_two_generation_inner_mtus(broken,1460)

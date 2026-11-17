@@ -48,3 +48,19 @@ def verified_native_windows_inner_mtu(log:str,configured_outer:int)->int:
  if outer!=configured_outer or planned!=applied or not 576<=applied<=outer:
   raise ValueError("Windows numeric OS MTU mismatches outer or planned inner")
  return applied
+
+def verified_native_windows_two_generation_inner_mtus(log:str,configured_outer:int)->list[int]:
+    """Two genuine WinForms child generations, not one merged synthetic MTU.
+
+    Retain the original strict one-receipt helper for single-generation
+    Normal/Fixed/Auto. Windows CRLF is accepted only as a line-ending
+    normalization; each numeric receipt still validates its own real
+    planned/applied/outer relationship.
+    """
+    if not isinstance(log,str):
+        raise ValueError("invalid Windows MTU evidence")
+    normalized=log.replace("\r\n","\n")
+    rows=[m.group(0) for m in _WINDOWS_INNER_MTU_RECEIPT.finditer(normalized)]
+    if len(rows)!=2 or normalized.count("WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1")!=2:
+        raise ValueError("expected exactly two genuine Windows OS MTU receipts")
+    return [verified_native_windows_inner_mtu(row,configured_outer) for row in rows]
