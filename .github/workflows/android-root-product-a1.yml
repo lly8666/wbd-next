@@ -98,6 +98,23 @@ jobs:
           path: out/android-b2c-physical/
           retention-days: 14
           if-no-files-found: warn
+  b2c2-original-rust-tun-dns-ingress-host:
+    # Original Rust one-TUN reader transparent DNS53 observation, host only.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Rust one-readv IPv4 DNS53 byte-level test and unchanged AEAD owner gate
+        shell: bash
+        run: bash android/root-native/ci/dns-b2c2-rust-ingress-host.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2c2a-rust-single-tun-dns53-${{ github.sha }}
+          path: out/android-b2c2-rust-ingress/
+          retention-days: 14
+          if-no-files-found: warn
   original-m3-wire-oracle:
     # This is a pure M3 wire unit-test host: NO Android x86 target and
     # no second app/crypto implementation. Runs independently of NDK link.

@@ -44,6 +44,11 @@ pub mod cold_v4;
 mod v4_owner_crypto;
 /// PLAN028 authenticated per-device inner source gate before native TUN write.
 mod v4_session_address;
+// B2c2a: no-copy IPv4 UDP/TCP53 observation at the existing single
+// Android original Rust TUN reader. Host parser tests are source-locked;
+// no DNS redirect, fake-IP, second TUN consumer or packet mutation.
+#[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
+mod v4_android_dns_ingress;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;

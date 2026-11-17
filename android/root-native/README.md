@@ -288,3 +288,31 @@ evidence. The already pinned original ARM64 Android CGO build
 must link the NDK implementation called by the cold original-Go
 client; a separate Android CGO=0 test ELF only builds the
 fail-closed stub. Neither counts as P2/P3 Android guest/root execution.
+
+## B2c2a: genuine original Rust M4 ONE-TUN IPv4 DNS53 observer
+
+The authenticated Android ARM64 original Rust `tun_worker` remains the
+**only** owner of `AndroidOwnedTun::read_ip_scatter`. After the original
+leased-/32/IPv4 validation, it inspects the kernel-filled, unmodified M1
+slab for strictly bounded IPv4 UDP DNS question port 53 and for a TCP
+destination-port-53 **flow candidate**. No additional TUN read,
+buffer copy, Go/Java callback, timer or extra worker is introduced.
+The qualified packet is still passed **unchanged** into the original
+Rust M1/M3 authenticated AEAD/PN worker. Jumbo/partial-scatter and
+malformed datagrams receive a bounded metadata-only diagnostic,
+not an unqualified DNS reply or redirection. For TCP, observing a
+SYN does **not** claim DNS TCP stream reassembly.
+
+The Android Rust ELF exposes a readonly stats-only original-owner
+`wbd_m0_embedded_go_loop_dns_ingress_observed` C ABI: qualified UDP,
+TCP flow candidates, incomplete candidates, and
+`hijack_enabled=0`. This does not alter the old Go ABI methods or
+enable any DNS effect. Host Rust tests exercise actual constructed
+IPv4/UDP/TCP53 wire bytes and adversarial length, fragment, name,
+EDNS and scatter boundary cases, with source assertions for one
+kernel readv and preserved AEAD seal. Real Android TUN reception,
+223.5.5.5 physical DNS socket runtime, 1.1.1.1 tunnel-specific
+backend, DNS answer injection, Android Resolver interception and
+per-App CN IP routing are still NOT_CONNECTED/NOT_RUN. Follow-up
+B2c2b must qualify bound output/reply mapping **before** any packet
+is diverted or dropped.

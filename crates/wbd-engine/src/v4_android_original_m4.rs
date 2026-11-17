@@ -37,6 +37,10 @@ pub(super) struct AndroidOriginalStats{
     // reported as actual kernel thread CPU, never wall time or a guess.
     rx_cpu_ns:AtomicU64,tx_cpu_ns:AtomicU64,
     ip_id:AtomicU32,
+    // B2c2a transparent ingress observations from the ONE original M4
+    // readv. Only bounded metadata; no QNAME log, redirect or extra reader.
+    dns_udp53_seen:AtomicU64,dns_tcp53_seen:AtomicU64,
+    dns_unready:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -485,6 +489,23 @@ fn tun_worker(
                 stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                 break
             }
+            // Observe each authentic TUN datagram exactly at the EXISTING
+            // one-syscall Rust M4 ingress, only after the original /32
+            // lease/IPv4 gate and before M1 seal. This NEVER consumes,
+            // rewrites or drops it: no DNS backend or inverse mapping has
+            // been admitted yet. No second read, worker or Go JNI callback.
+            match crate::v4_android_dns_ingress::observe_ipv4_dns53(head,n){
+                crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}=>{
+                    stats.dns_udp53_seen.fetch_add(1,Ordering::Relaxed);
+                },
+                crate::v4_android_dns_ingress::Dns53Observation::TcpPort53=>{
+                    stats.dns_tcp53_seen.fetch_add(1,Ordering::Relaxed);
+                },
+                crate::v4_android_dns_ingress::Dns53Observation::Incomplete=>{
+                    stats.dns_unready.fetch_add(1,Ordering::Relaxed);
+                },
+                crate::v4_android_dns_ingress::Dns53Observation::NotDns=>{},
+            }
             let escaped=head.starts_with(LINK_MAGIC);
             let at=now();
             if n<=head_cap&&!escaped{
@@ -677,6 +698,29 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
         tx.write(c.tx.load(Ordering::Relaxed));
         rx_err.write(c.rx_error.load(Ordering::Relaxed));
         tx_err.write(c.tx_error.load(Ordering::Relaxed));
+    }
+    OK
+}
+/// B2c2a readonly diagnostics for packets *seen* by the ONE real Rust
+/// M4 TUN worker. No answer counts, endpoint validation or delivery claims:
+/// hijack_enabled=0 until physical + tunnel DNS backend, reply inversion
+/// and Android Resolver proof independently qualify. Caller owns three
+/// counters and can read them only while the original worker is alive.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_dns_ingress_observed(
+    h:u64,udp_seen:*mut u64,tcp_seen:*mut u64,
+    incomplete:*mut u64,hijack_enabled:*mut u32
+)->i32{
+    if udp_seen.is_null()||tcp_seen.is_null()||incomplete.is_null()||
+       hijack_enabled.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_workers.is_none(){return BAD_STAGE}
+    unsafe{
+        udp_seen.write(e.android_metrics.dns_udp53_seen.load(Ordering::Relaxed));
+        tcp_seen.write(e.android_metrics.dns_tcp53_seen.load(Ordering::Relaxed));
+        incomplete.write(e.android_metrics.dns_unready.load(Ordering::Relaxed));
+        hijack_enabled.write(0); // Must NEVER claim DNS interception here.
     }
     OK
 }
