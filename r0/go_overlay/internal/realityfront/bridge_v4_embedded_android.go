@@ -57,6 +57,7 @@ extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint
 extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_predead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_health(uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_loop_physical_scope_invalid(uint64_t,uint32_t *);
 
 
 
@@ -492,6 +493,8 @@ type V4PublicLoopPulse struct{
     // Only true after exact candidate native Normal or Game AEAD/PN opened
     // the canonical server Health kind0 after full remote M4 Commit.
     AuthenticatedPeerControl bool
+    // Bionic physical scope invalidation, not authenticated peer Health death.
+    PhysicalScopeInvalid bool
 }
 func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
     if b==nil||!b.committed||b.stopped||b.handle==0 {
@@ -519,7 +522,15 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
     if rc!=0{return V4PublicLoopPulse{},fmt.Errorf(
         "%w: candidate native peer Health readback=%d",
         errV4Embedded,int(rc))}
+    // Immediate authenticated-owner physical-borrow failure is separate
+    // from dead90 or any reverse authenticated Health receipt.
+    var scopeInvalid C.uint32_t
+    rc=C.wbd_m0_embedded_go_loop_physical_scope_invalid(
+        C.uint64_t(b.handle),&scopeInvalid)
+    if rc!=0{return V4PublicLoopPulse{},fmt.Errorf(
+        "%w: real Bionic underlay scope readback=%d",errV4Embedded,int(rc))}
     return V4PublicLoopPulse{
+        PhysicalScopeInvalid:scopeInvalid!=0,
         RxRecords:stats.RxOK,TxRecords:stats.TxOK,
         RxErrors:stats.RxErr,TxErrors:stats.TxErr,
         RxThreadCPUns:rx,TxThreadCPUns:tx,

@@ -43,6 +43,12 @@ for file in r0/go_overlay/internal/realityfront/*.go; do
   cp "$file" "legacy/internal/realityfront/$name"
 done
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+mkdir -p legacy/internal/v4productcli/rootjournal
+cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
+# Portable kernel-policy state machine tests are host-Go pure stdlib:
+# NO Android x86/32-bit build/packaging/test target. The real Android
+# product is still only GOOS=android GOARCH=arm64 below.
+(cd legacy && go test -count=1 ./internal/v4productcli/rootjournal)
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Android ARM64 first authentic Go/Rust product is Normal/off only.
@@ -80,6 +86,7 @@ for pair in "aarch64 arm64"; do
       wbd_m0_embedded_go_attach_tun \
       wbd_m0_embedded_go_loop_start wbd_m0_embedded_go_loop_stats \
        wbd_m0_embedded_go_loop_thread_cpu \
+       wbd_m0_embedded_go_loop_physical_scope_invalid \
       wbd_m0_embedded_go_loop_authenticated_dead \
       wbd_m0_embedded_go_loop_authenticated_peer_predead \
       wbd_m0_embedded_go_loop_authenticated_peer_health \

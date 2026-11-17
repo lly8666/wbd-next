@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "仅Android arm64-v8a 原生Root客户端：原Go认证租约 + Rust共享PN/AEAD/M1/M3 + ARM64 Bionic RAW/TUN双M4原生线程、加密Health和eventfd有序Stop；仍待真实Go全链接与真机验收。",
+  "summary": "Android arm64-v8a原Go TLS/自动/32＋原Rust共享M1/M3/M4 AEAD/PN/Health/Stop已有完整产品链接＋LINK20测试PASS。A4新增Root单UID可回滚路由和物理scope终止，待同SOURCE CI/真机。无VpnService/FakeIP。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -20,7 +20,7 @@
     "android_abi": "arm64-v8a ONLY; Android x86/x86_64/32bit OUT OF SCOPE"
   },
   "usage": {
-    "cli": "ARM64 only: android/root-native/build-source-locked.sh；原 Go 完整 M4 linker 和真连接仍未通过。",
+    "cli": "原Go ARM64 Normal/off已完整链接；A4 --android-route-uid=<普通APP UID>，独立table19842/pref9600，根目录journal和真实Network handle；KSU实机NOT_RUN。",
     "config": "预计包名/用户/默认模式、每App follow/split/global/direct、两单DNS、手动规则更新；尚未作为产品配置生效",
     "gui": "计划Java原生安装App选择/搜索/批量/Start/Stop/状态；当前设置页仅诊断配置预览"
   },
@@ -48,7 +48,11 @@
     "r0/go_overlay/internal/v4productcli/game_disabled_android.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_android.go",
-    "crates/wbd-codec/src/link_fec_wire.rs"
+    "crates/wbd-codec/src/link_fec_wire.rs",
+    "r0/go_overlay/internal/v4productcli/android_root_route_android.go",
+    "r0/go_overlay/internal/v4productcli/android_root_route_linux.go",
+    "r0/go_overlay/internal/v4productcli/rootjournal/journal.go",
+    "r0/go_overlay/internal/v4productcli/rootjournal/journal_test.go"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -61,7 +65,8 @@
     "docs/devlog/android-root-probe/20261117-android-arm64-a2-normal-m1m3-batch.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a2-m4-real-worker-health-stop.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a3-normal-off-link-separation.md",
-    "docs/devlog/android-root-probe/20261117-android-arm64-a3-original-m3-jumbo-scatter.md"
+    "docs/devlog/android-root-probe/20261117-android-arm64-a3-original-m3-jumbo-scatter.md",
+    "docs/devlog/android-root-probe/20261117-android-arm64-a4-root-uid-route-journal.md"
   ],
   "verification": [
     {
@@ -253,9 +258,8 @@
     "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。",
     "A1/A2历史 Actions 的失败、双ABI过往证据和源码修复均保留在专门devlog及verification；当前仅Android ARM64、Rust真 M4 编译与真实Go/设备各自独立验收。",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
-    "ARM64 Native M4原Normal/off/Health/Stop、物理MTU已跨编译；A3新增真实M3 LINK20零拷贝scatter/jumbo待同源CI和真机验收，成熟Fixed/FEC/Game、Root UI/路由仍待工作。",
     "原Go Android授权/32绑定现有C ABI被Linux-only双cfg错误屏蔽，修正为真实Android ARM64导出；物理真实RAW FD读回后按原Rust MSS/Link/AEAD FrameBudget得到TUN inner IP MTU，不允许自报、默认路由或伪装控制接口。",
-    "A3 ARM64原TUN readv常包零额外拷贝、最大65KiB原M3 LINK20分片同SOURCE native编译与wire oracle PASS；真实内核RAW/TUN、TLS/Health/Stop/Root仍NOT_RUN。"
+    "A4：真实Go认证/32+Rust M4后单APP UID独立route table19842/pref9600；fsync 0600 journal、flock拒绝多进程并发、内核核对撤销；真实Android16 KSU、iproute2、App和双向数据NOT_RUN。"
   ],
   "promotion": null
 }

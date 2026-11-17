@@ -701,6 +701,8 @@ type V4PublicLoopPulse struct{
     // Only true after exact candidate native Normal or Game AEAD/PN opened
     // the canonical server Health kind0 after full remote M4 Commit.
     AuthenticatedPeerControl bool
+    // Bionic physical scope invalidation, not authenticated peer Health death.
+    PhysicalScopeInvalid bool
 }
 func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
     if b==nil||!b.committed||b.stopped||b.handle==0 {

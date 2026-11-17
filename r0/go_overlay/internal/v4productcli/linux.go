@@ -122,6 +122,7 @@ type config struct{
     underlayBudgetMTU int
     androidNetworkHandle uint64 // selected physical ConnectivityManager Network
     androidPhysicalMTU uint32 // same interface cold readback
+    androidRouteUID int // optional explicit single APP UID, NEVER root/global
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
@@ -183,6 +184,8 @@ func parse(role string,args []string)(config,error){
     flags:=flag.NewFlagSet("wbd-v4-"+role,flag.ContinueOnError)
     iface:=flags.String("raw-interface","","real physical underlay interface")
     androidNet:=flags.Uint64("android-network-handle",0,"Android client-only Network.getNetworkHandle() (mandatory; cold per-socket binding)")
+    androidRouteUID:=flags.Int("android-route-uid",0,
+        "Android ARM64 Root ONLY: one app UID (>=10000) routed after original TLS/lease/M4, 0 disables routing")
     ip:=flags.String("local-ip","","underlay local IPv4")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     defaultPort:=uint(0)
@@ -224,17 +227,24 @@ func parse(role string,args []string)(config,error){
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
-    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
+    tunFqDefault:=600
+    if runtime.GOOS=="android"{tunFqDefault=0}
+    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",tunFqDefault,
+        "owned Linux TUN fq 600Mbps (Android default 0: cannot assume tc or qdisc support)")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
     if runtime.GOOS=="android"{
         if role!="client"||*androidNet==0{
             return c,fmt.Errorf("Android root client needs explicit physical Network handle")
         }
-    }else if *androidNet!=0{
-        return c,fmt.Errorf("android-network-handle is Android-only")
+        if *androidRouteUID!=0&&(*androidRouteUID<10000||*androidRouteUID>1999999){
+            return c,fmt.Errorf("Android route UID must identify one non-system application")
+        }
+    }else if *androidNet!=0||*androidRouteUID!=0{
+        return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
+    c.androidRouteUID=*androidRouteUID
     modeGiven,autoGiven:=false,false
     flags.Visit(func(f *flag.Flag){if f.Name=="mode"{modeGiven=true};if f.Name=="auto-ip"{autoGiven=true}})
     if role=="server"&&*manualLease!=""&&!modeGiven{*mode="normal"}
@@ -565,6 +575,12 @@ type ownedTun struct{
 // Original kernel-owned /dev/net/tun FD, never a synthetic traffic adapter.
 func openTun(name,cidr string,mtu int)(*ownedTun,error){
     fd,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if err!=nil&&runtime.GOOS=="android"&&errors.Is(err,os.ErrNotExist){
+        // Android kernels expose the SAME real char TUN under either path;
+        // only ENOENT warrants a second path. The exact TUNSETIFF ioctl
+        // still authenticates a true IFF_TUN|IFF_NO_PI descriptor.
+        fd,err=os.OpenFile("/dev/tun",os.O_RDWR,0)
+    }
     if err!=nil{return nil,err}
     var ifr [40]byte
     copy(ifr[:16],[]byte(name))
@@ -604,6 +620,7 @@ func originalRandomISN()(uint32,error){
     return n,nil
 }
 var errPublicNativePeerDead=errors.New("original Rust authenticated peer dead; Go cold TLS reauthorization required")
+var errPublicNativePhysicalScopeLost=errors.New("Android original Rust underlay Network/ifindex invalid; withdraw UID route and stop, no cold retry")
 
 // Only after authenticated Rust HealthClock dead AND a real TUN wake may the
 // original Go cold client retry a transient TLS/FakeTCP timeout. This never
@@ -702,6 +719,11 @@ func monitorPublicNativePeer(ctx context.Context,errs <-chan error,
   if !live(){continue}
   stats,e:=pulse()
   if e!=nil{continue}
+  if stats.PhysicalScopeInvalid{
+   // This is not authenticated peer-dead evidence and must not permit
+   // cold TLS reauth. Stop the old route and owner immediately.
+   return errPublicNativePhysicalScopeLost
+  }
   if publicNativeHealthDead(stats){return errPublicNativePeerDead}
   // Only original *client* preterminal Health evidence can request
   // cold B. One notification per exact generation; it does not
@@ -1299,7 +1321,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }
     nativeAdmissionStart:=time.Now()
     stopColdRTO:=driveOriginalClientColdBootstrapRTO(dialCtx,assoc)
-    _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg)
+    authenticated,err:=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg)
     resent,retryErr:=stopColdRTO()
     if resent>0{
         log.Printf("V4_PUBLIC_FAKETCP_CLIENT_COLD_DATA_RTO role=client mode=%s actual_original_retransmissions=%d post_detach=0",
@@ -1336,6 +1358,25 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         }
         log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_PROVEN role=client generation=%d client_port=%d native_authenticated_control_or_ipv4=1 tun_route_promoted=1",
             c.rotationGeneration,c.localPort)
+    }
+    // Only after genuine Go TLS credentials, a protected server-signed /32,
+    // exact installed kernel address, Rust M4 workers AND DATA handoff may
+    // Android grant ONE app UID a dedicated private route. Never a global
+    // default/main-table route, VpnService, FakeIP or early pre-auth grant.
+    var undoRootRoute func()error
+    if runtime.GOOS=="android"&&c.androidRouteUID!=0{
+        var authorizedLease string
+        if authenticated==nil{
+            return errors.Join(fmt.Errorf("missing real authenticated lease session"),native.Close())
+        }
+        authorizedLease,err=authenticated.AuthenticatedLeaseIPv4()
+        if err==nil{
+            undoRootRoute,err=androidRootRouteAfterNative(c,tun,authorizedLease)
+        }
+        if err!=nil{return errors.Join(
+            fmt.Errorf("Android exact original-Go authenticated routing denied: %w",err),
+            native.Close(),
+        )}
     }
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=native_ready unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(nativeAdmissionStart).Milliseconds())}
     log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=client mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
@@ -1406,7 +1447,20 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                     proof.PositiveConfirmationMeanUs,proof.PositiveConfirmationMeanKnown)
             }
     }
-    closeErr:=native.Close()
+    // Stop ordering: withdraw the only UID ingress route FIRST; only
+    // thereafter stop/join original Rust RX/TX, release loans and TUN FD.
+    // If cleanup cannot prove the kernel rule absent, return a hard error
+    // and preserve the root-only journal for exact crash recovery.
+    var routeErr error
+    if undoRootRoute!=nil{
+        routeErr=undoRootRoute()
+        if routeErr==nil{
+            log.Printf("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client")
+        }else{
+            log.Printf("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_UNPROVEN role=client err=%v",routeErr)
+        }
+    }
+    closeErr:=errors.Join(routeErr,native.Close())
     if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=client")}
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr

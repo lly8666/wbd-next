@@ -138,3 +138,24 @@ regenerated with an already-consumed PN. Native Health remains fair.
 CI also runs a pure M3 LINK20 byte-oracle independently of the Android ARM64
 build; neither the oracle nor the cross-compiled ELF claims device
 execution, real network data delivery or Root permissions.
+
+## A4: authenticated single-app UID route (not a VPN Service)
+
+Optional Android-only `--android-route-uid=<non-system App UID>`
+grants ONE application a kernel rule in private IPv4 table 19842,
+priority 9600, only AFTER original Go verified TLS/auto /32, actual
+TUN address readback, original Rust M4 loop start and FakeTCP handoff.
+Default UID 0 changes no routing; it never captures the native root
+Go process or other apps. No global main route, DNS, fwmark or VpnService.
+
+Root-only 0700 directory, 0600 O_EXCL/O_NOFOLLOW fsync'd journal and
+nonblocking cross-process flock preserve exact UID/TUN ownership.
+First remove the app UID rule, then private route, verify both absent,
+unlink/fsync journal and release lock BEFORE original Rust Stop/join.
+Crashes recover exactly those kernel objects; live old owner cannot
+be preempted. Separate real native underlay-invalid terminal flag
+withdraws the route without forging an authenticated-peer dead flag.
+
+Pure Go fake-kernel state-machine tests run before ARM64 native CGo gate.
+Neither source compilation nor host tests prove real Android KSU,
+iproute2 uidrange, TLS/lease, kernel TUN I/O or Root application UI.

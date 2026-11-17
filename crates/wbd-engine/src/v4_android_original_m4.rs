@@ -707,6 +707,23 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_authenticated_dead(
     unsafe{dead.write(u32::from(e.android_metrics.authenticated_peer_dead.load(Ordering::Acquire)))};
     OK
 }
+/// A physical Network/scope error is NOT evidence of peer Health death.
+/// It is a separate terminal session signal: Go MUST withdraw its private
+/// app UID route and Stop/join immediately, not wait for dead90 or falsely
+/// reauthorize TLS using a fabricated authenticated-peer event.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_physical_scope_invalid(
+    h:u64,invalid:*mut u32,
+)->i32{
+    if invalid.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.android_workers.is_none(){return BAD_STAGE}
+    unsafe{invalid.write(u32::from(
+        e.android_metrics.scope_invalid.load(Ordering::Acquire)
+    ))};
+    OK
+}
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_loop_authenticated_peer_predead(
     h:u64,predead:*mut u32
