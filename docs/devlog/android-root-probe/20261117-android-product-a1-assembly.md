@@ -27,3 +27,11 @@ Rust `wbd-platform::android_root_io` 是 Android-only owned TUN FD / exact Andro
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"根据Android/Bionic c_char实编译失败最小修复if_nametoindex ABI；继续源锁构建验证，真实连接仍未测。"}
 ```
+
+## A1 第四次构建：原共享加密C库的真实NDK工具链失败
+
+源码 `64edbb3d32cf70463f81cbb397ff1bb65c931f7c` [Action44013459586](https://github.com/lly8666/wbd-next/actions/runs/44013459586) **FAIL/AWS_LC_CROSS_CC**：Bionic C ABI与新平台Rust代码编译已越过，`aws-lc-sys@0.45.0` 经 `cc-rs` 默认查找不存在的 `aarch64-linux-android-clang`。Cargo linker变量仅作用Rust链接，不等于依赖C编译器设置。已按实际NDK wrapper路径设置 `CC_aarch64_linux_android/CC_x86_64_linux_android` 和 `AR_...`，下次Action确认是否通过。原Go entry/build tags依旧Linux-only，编译符号闭环未验，不能宣称真实客户端成功。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A1因aws-lc-sys没有NDK交叉C编译器而失败；给cc-rs配置精确NDK两个目标CC/AR并保留失败证据，产品连接NOT_RUN。"}
+```

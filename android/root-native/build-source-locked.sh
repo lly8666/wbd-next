@@ -14,6 +14,12 @@ rustup toolchain install 1.85.1 --profile minimal
 rustup target add --toolchain 1.85.1 aarch64-linux-android x86_64-linux-android
 export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$tool/aarch64-linux-android28-clang"
 export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$tool/x86_64-linux-android28-clang"
+# aws-lc-sys/cc-rs does NOT honor Cargo's linker setting for its C objects.
+# NDK has API-qualified clang wrappers, not aarch64-linux-android-clang.
+export CC_aarch64_linux_android="$tool/aarch64-linux-android28-clang"
+export CC_x86_64_linux_android="$tool/x86_64-linux-android28-clang"
+export AR_aarch64_linux_android="$tool/llvm-ar"
+export AR_x86_64_linux_android="$tool/llvm-ar"
 export RUSTFLAGS="-C link-arg=-Wl,-z,max-page-size=16384"
 mkdir -p out/android-product-a1
 # Exact public original-Go source-lock installation; do not duplicate legacy.

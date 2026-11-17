@@ -78,7 +78,8 @@
     "当前无Android可安装正式WBD客户端APK；仅有诊断APK。",
     "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。",
     "A1 首次workflow语法错误及 Bionic NDK _IOR/_IOW 头文件缺失分别留有Action44012875741/44013027549 FAIL；产品仍NOT_RUN。",
-    "Action44013224466 Rust Android c_char signedness compile FAIL，修正采用 std::ffi::c_char；未完成Go链接。"
+    "Action44013224466 Rust Android c_char signedness compile FAIL，修正采用 std::ffi::c_char；未完成Go链接。",
+    "Android A1源锁首次加密库交叉编译 Action44013459586 因 aws-lc-sys/cc-rs 默认 C clang 路径缺失 FAIL；已显式配置CC/AR，后续Action决定结果。"
   ],
   "promotion": null
 }
