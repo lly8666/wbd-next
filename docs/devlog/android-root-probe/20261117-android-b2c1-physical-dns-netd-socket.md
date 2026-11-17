@@ -17,3 +17,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B2c1原Go Android物理DNS NDK netd套接字预连接绑定、真实Network接口IPv4冷范围验证及host真实UDP/TCP回环fail-closed门，不宣称TUN/Resolver/Android设备DNS已接。"}
 ```
+
+## 首轮同源失败及修复（旧FAIL永久保留）
+
+SOURCE `6b5a48de1d5e21ea0a7ef53ffc82f4f2dc0b3892` [Actions #44080505516](https://github.com/lly8666/wbd-next/actions/runs/44080505516)：B2c1独立真正Linux lo UDP/TCP host套接字四组全部PASS，B1/B2真实规则DNS Host、原M3、governance均PASS；但**原Android ARM64 Go/Rust Native job FAIL**：Rust已构建，真正Android Go CGO编译`physical_android_cgo.go:49:21 undefined: syscall.GetsockoptString`，Android Go syscall包无该Linux便利函数；APK与Linux oracle因need被skip，因此绝不写8/8。修复版不删回读校验，改用Android Bionic NDK C `getsockopt(fd,SOL_SOCKET,SO_BINDTODEVICE,...)`，`IFNAMSIZ`固定缓冲且读长度检查、`strcmp`精确核对，错误fail closed；源锁脚本同时要求真实C回读。待新SOURCE独立Actions全门、签名APK与原Linux oracle实证。

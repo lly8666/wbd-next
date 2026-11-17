@@ -5,6 +5,23 @@ package dnsnative
 /*
 #cgo LDFLAGS: -landroid
 #include <android/multinetwork.h>
+#include <errno.h>
+#include <net/if.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+
+// Android Go syscall intentionally omits GetsockoptString. Read back the
+// SAME socket's SO_BINDTODEVICE through a length-bounded Bionic NDK call;
+// never drop this safety check merely to make the ARM64 build succeed.
+static int wbd_dns_socket_device_matches(int fd,const char *expected){
+ char actual[IFNAMSIZ]={0};
+ socklen_t n=(socklen_t)sizeof(actual);
+ if(getsockopt(fd,SOL_SOCKET,SO_BINDTODEVICE,actual,&n)!=0)return -errno;
+ if(n==0||n>sizeof(actual))return 0;
+ actual[IFNAMSIZ-1]='\0';
+ return strcmp(actual,expected)==0?1:0;
+}
 */
 import "C"
 
@@ -12,6 +29,7 @@ import (
  "context"
  "fmt"
  "syscall"
+ "unsafe"
 )
 
 // NewAndroidPhysicalDNSDialer provides REAL netd pre-connect binding for
@@ -29,6 +47,8 @@ func NewAndroidPhysicalDNSDialer(s PhysicalScope)(DialFunc,error){
  return newScopedPhysicalDialer(s,ChinaDNS,
   func(ctx context.Context,network string,conn syscall.RawConn)error{
    if err:=ctx.Err();err!=nil{return err}
+   name:=C.CString(s.InterfaceName)
+   defer C.free(unsafe.Pointer(name))
    var markErr error
    err:=conn.Control(func(fd uintptr){
     // The same API is already used for the original Go RAW SYN/TLS fd.
@@ -46,10 +66,14 @@ func NewAndroidPhysicalDNSDialer(s PhysicalScope)(DialFunc,error){
      markErr=fmt.Errorf("DNS Android physical device bind: %w",e)
      return
     }
-    name,e:=syscall.GetsockoptString(int(fd),syscall.SOL_SOCKET,
-     syscall.SO_BINDTODEVICE)
-    if e!=nil||name!=s.InterfaceName{
-     markErr=fmt.Errorf("%w: Android physical socket device readback failed",ErrUnbound)
+    readback:=int(C.wbd_dns_socket_device_matches(C.int(fd),name))
+    if readback!=1{
+     if readback<0{
+      markErr=fmt.Errorf("DNS Android physical device readback: %w",
+       syscall.Errno(-readback))
+     }else{
+      markErr=fmt.Errorf("%w: Android socket device does not match selected interface",ErrUnbound)
+     }
      return
     }
    })

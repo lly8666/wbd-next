@@ -28,7 +28,9 @@ common=(root/"dnsnative/physical.go").read_text()
 go=(root/"linux.go").read_text()
 assert "#include <android/multinetwork.h>" in source
 assert "C.android_setsocknetwork" in source and "SO_BINDTODEVICE" in source
-assert "GetsockoptString" in source and "ErrUnbound" in source
+assert "wbd_dns_socket_device_matches" in source and "getsockopt(" in source
+assert "#include <net/if.h>" in source and "IFNAMSIZ" in source
+assert "strcmp(actual,expected)==0?1:0" in source and "ErrUnbound" in source
 assert "d.ControlContext=" in common and "d.LocalAddr=" in common
 assert 'network4:=network+"4"' in common
 assert "dnsnative.NewAndroidPhysicalDNSDialer(" in go
