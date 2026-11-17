@@ -33,3 +33,17 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"纠正B2c2c物理DNS的Android SO_BINDTODEVICE读回必须完整名称匹配；随Host新模块定位修复整包验证，旧FAIL保留。"}
 ```
+
+## 修复后同SOURCE验收最终结论
+
+冻结产品SOURCE `9d902a171764b832b3528b111ce6a371a5feedb2`， [原Android ARM64完整产品 Action #44108696248](https://github.com/lly8666/wbd-next/actions/runs/44108696248) **10/10 Jobs SUCCESS**：原Rust物理DNS+隧道DNS IPv4/UDP真实 packet 7项Host，原M4单TUN DNS ingress、原M3、B1原Go双DNS真socket wire、B2a源锁8503 CN geosite、B2c1物理Socket Host、原Go/Rust Bionic ARM64 ELF/16KiB、同SHA签名正式Root APK、原Linux WBD服务端真TLS/凭据认证/租约/原M4双向UDP/Stop oracle均PASS。此SHA [governance #44108696324](https://github.com/lly8666/wbd-next/actions/runs/44108696324) SUCCESS。
+
+明确保留最早 `71565fd189b0cbff63358f480e1da14388a7af6f` [Action44107830995](https://github.com/lly8666/wbd-next/actions/runs/44107830995) **FAIL**：Rust测试实际7/7 PASS，但报告器把新增新模块测试路径误写为旧模块；其他9/10 Jobs PASS。修复时还收紧同FD `SO_BINDTODEVICE` readback完整接口名，防止名称前缀误判，并经修正版Bionic全量编译。
+
+[Android ARM64环境准入Job日志](https://github.com/lly8666/wbd-next/actions/runs/44108696248) 仍为 `ANDROID_ARM64_KVM_HOST_ADMISSION_ONLY KVM_NOT_ACCESSIBLE arch aarch64 kvm NOT_AVAILABLE`：只报告宿主机不具备真guest执行资格，**没有启动Android16模拟器，更没有普通App UDP/TCP、物理DNS读回、Root动态选路的Android实际成功记录**；实体KSU未授权。所有原M4 DNS劫持和物理权限冷门都保持关闭，普通应用系统DNS TCP53/完整原Go8503→Rust分类与netd Resolver由下一包完成。
+
+下一步集中完成**CN8503可信冷传Rust+真实QNAME选出口、物理DNS TC到TCP53与Tunnel TCP53、系统netd Resolver owned引流/回滚**，不扩大极端用例；之后争取真实ARM64 KVM/P2/P3或经用户授权实体P5，才能宣布Android业务验收。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"封存B2c2c原Rust M4单TX物理DNS UDP53及同TUN逆回包同源10/10 PASS、前一版Host错误FAIL与KVM实际阻断；双DNS冷许可仍关，实体未测试。"}
+```
