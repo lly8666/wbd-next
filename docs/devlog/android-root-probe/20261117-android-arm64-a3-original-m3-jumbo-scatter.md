@@ -23,3 +23,12 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"原Go Android ARM64完整CGo与Rust同源ELF首次PASS并核验hash；Bionic单readv常包直入原M1、完整65KiB jumbo原M3 LINK20零分配分片与固定PN/MTU/packetID、8帧turn和Health公平性；独立并行wire oracle，真机仍NOT_RUN。"}
 ```
+
+## 同一批原 M3/TUN 首次并行 CI：精确 Rust trait 修复
+
+- **SOURCE** `bcebdd5956232967bbf4cd750961e84ad85bbc7d`；[ARM64+原 M3 Wire Oracle Action44030658742](https://github.com/lly8666/wbd-next/actions/runs/44030658742)：独立 **original-m3-wire-oracle PASS**（65535B、LINK magic/MTU、容量不足逐字节验证），**arm64-native FAIL**（五处同一 Rust E0599：新 `v4_android_original_m4.rs` 在调用原M1 `UniqueBuffer::writable()` 前没有引入已有 `wbd_types::buffer_contract::UniqueSealable` trait）。所以该SOURCE的原Go最终链接 **NOT_RUN**，不能继承上一SOURCE的Go ELF PASS。治理 #44030658698 PASS。
+- 本修复仅在**真正原共享M1 Owner** 引用本来实现 `writable()` 的原 trait，不重新实现缓存、替换加密、增加拷贝或修改 wire。继续保留同一物理ifindex、原 authenticated /32、真实原 M3 LINK20 和 BorrowFence 退出。修复后的 ARM64 构建与手机仍待各自结果；真机 **NOT_RUN**。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"独立原M3 LINK20 byte oracle PASS，ARM64 A3 readv/jumbo源代码因5个相同的原M1 UniqueSealable trait未导入而编译FAIL；只导入原trait修复，不改线协议、加密/PN、热路径拷贝或Stop语义。"}
+```

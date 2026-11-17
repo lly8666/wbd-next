@@ -11,6 +11,7 @@
 use super::{Entry,session,PH_ACTIVE,PH_STOPPING,OK,INVALID,UNKNOWN,BAD_STAGE,FULL};
 use crate::v4_native_health::{AuthenticatedActivity,HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::{TxDispatch,RxPacket};
+use wbd_types::buffer_contract::UniqueSealable;
 use wbd_codec::link_fec_wire::{
     LinkPacketPlan,LinkMode,LINK_MAGIC,MAX_LOGICAL_DATAGRAM,
 };
