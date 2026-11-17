@@ -9,6 +9,8 @@
 - [Action44042235770](https://github.com/lly8666/wbd-next/actions/runs/44042235770)，SOURCE `37f1b8abc77cc878d245b5b6dd1995c435ba259e`：四个 native/app/Linux oracle jobs PASS；macOS ARM64 Android16 AOSP 模拟器 QEMU 线程挂死、ADB 不上线，约10分钟后 guest job FAIL。对 Android 运行而言 `ENV_BLOCKED`，真实 APK 安装/原生联机 `NOT_RUN`，不能标成应用回归 FAIL。
 - `adb root` 使 adbd/shell 以调试权限运行，**不等于普通 App 能调用 `su -c`**。KernelSU Root Profile 可改变 UID/GID、groups、Capabilities、SELinux 域；即使双方 `uid=0` 也不能证明相同访问权限。旧 KSU 的 App→su 成功不能反推 adb-root 等价，亦不能用 adb-root 代替正式 App 的授权闭环。只允许对**相同操作及真实可观察结果**宣称指定范围行为等价，不宣称全面等价。
 
+- [A6 Action44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256)，SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`：**5/5 Jobs SUCCESS**，原M3、ARM64 Bionic原Go/Rust、签名Root APK、原Linux WBD server oracle；Java事件Network门16断言、生成的Root Stop脚本 `sh -n` 11断言、`owner.pid`旧2/新3字段POSIX解析PASS。`ubuntu-24.04-arm`实测 `aarch64` 但 `/dev/kvm` 不可访问，**ARM64 Android P2/P3 环境 `ENV_BLOCKED`，不是正式Root App联网通过**；不再尝试已有hang的macOS AVD。需可信有KVM的ARM64 Actions runner及固定Cuttlefish镜像/host工具，否则保持NOT_RUN。
+
 ## Actions 分层门禁，真实软件先行，实体 KSU 最后
 - **P0**：同一 SOURCE/manifest/SHA 的 Android ARM64-v8a Bionic 原 Go/Rust/Java APK、16KiB、原 M3 wire oracle，`BUILD_PASS`。
 - **P1**：同源 Linux 原 Go/Rust client+server 的标准 TLS、认证、/32租约、真实收发、Stop，`LINUX_ORACLE_PASS`。

@@ -28,3 +28,9 @@ Java状态门、Android Native Go/Rust构建、签名APK、原Linux server oracl
 [修复版 Action44055875477](https://github.com/lly8666/wbd-next/actions/runs/44055875477) SOURCE `79f029867fd20d0196c26e78de30762b91b9676e`：Java NetworkCallback 16断言 PASS；`RootStopCommand.build()` 实际生成的 `su -c` 脚本接受 POSIX `sh -n` 解析，11断言 PASS；同SOURCE ARM64 Native 与 Root APK BUILD_PASS。同SOURCE 原Linux WBD server oracle PASS，Android runtime依然NOT_RUN。**这些是Java/语法/构建结果，不是设备Root Stop PASS。**
 
 复审发现新 owner.pid 为 `pid starttime token` 三字段，旧启动冲突检查却用两变量 `read oldpid oldstart`，POSIX read 会把第三字段合并进 `oldstart`，可能错过仍活旧进程。本次修正为 `read oldpid oldstart oldgeneration`，新增 host shell 读取旧2字段和新3字段的兼容回归门；仅确保 launch 防抢占条件正确解析，不冒充 Android 上真实 PID 启停已运行。
+
+## A6 当前最终同源验收（SOURCE f7f142da）
+
+[Action #44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256)：**5/5 jobs SUCCESS**（原M3 wire、原Go/Rust ARM64 Native、Root APK、原Linux server Normal/off oracle、ARM64 host准入）。`root-arm64-app` logs 明确 `ANDROID_NETWORK_CALLBACK_SCOPE_GATE_PASS assertions=16`、`ANDROID_ROOT_EXACT_STOP_POSIX_SYNTAX_PASS assertions=11`、`ANDROID_ROOT_OWNED_PID_2_AND_3_FIELD_PARSE_PASS`、`ANDROID_ROOT_ARM64_APP_AND_NATIVE_ASSETS_SOURCE_LOCKED_BUILD_PASS`。Linux job `ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN`。此结论只证明Java/脚本语法/Android编译和Linux真实协议，**不证明 Root Stop 在Android内核执行**。
+
+`arm64-cuttlefish-host-admission` 在 GitHub托管 `ubuntu-24.04-arm` 实测 `arch=aarch64`、`kvm=NOT_AVAILABLE`，票据 `KVM_NOT_ACCESSIBLE`、`ENV_BLOCKED`；未下载/启动Cuttlefish镜像、未装 APK、未授权 `su`、未跑 Android↔Linux。下一步维持 P2/P3 所需的可用 ARM64 KVM Actions runner + 固定Cuttlefish镜像/host tools准入；此前可继续开发/Actions验证无guest依赖的软件切片；所有实体机动作待软件完工后用户单独批准。

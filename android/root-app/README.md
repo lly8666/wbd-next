@@ -94,3 +94,7 @@ ENV_BLOCKED historical evidence, not silently overwritten.
 The exact Stop shell is now emitted by source-shared `RootStopCommand.build()` and its **production command string** is passed to a real host `sh -n` parser during Actions. This additional cold-control test catches syntax faults that the Android Java compiler alone cannot detect. Neither a successful parse nor APK build is a substitute for true rooted Android Stop.
 
 Owner takeover protection now parses both the legacy two-field and new three-field root-only `owner.pid` records into three separate shell variables, so the generation token is not mistakenly folded into the kernel process starttime. This is checked by a host POSIX shell fixture in Actions; runtime Root safety remains Android-P3 NOT_RUN.
+
+### A6 accepted CI evidence
+
+[Actions #44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256) at SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`: **5/5 jobs PASS**; Android ARM64 Go/Rust and signed Root APK BUILD_PASS, original Linux WBD server oracle PASS, JVM NetworkCallback gate 16 assertions, production Stop script POSIX sh -n 11 assertions, and old/new owner.pid parsing regression PASS. Host ARM64 has no accessible `/dev/kvm`, so Android guest/App Root/true network E2E remain **ENV_BLOCKED / NOT_RUN**. This does not authorize physical devices.

@@ -1,6 +1,6 @@
 # Android Root 原生客户端适配｜授权施工方案（2026-11-17）
 
-**状态：IN_PROGRESS；同源 Linux 原 WBD server 真协议 oracle PASS，Android ARM64 真客户端业务仍 NOT_RUN，macOS AVD ENV_BLOCKED。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
+**状态：A6 同源 Android ARM64 Native/Root APK BUILD_PASS、原 Linux WBD server oracle PASS；原生 NetworkCallback/Stop 静态语法门 PASS；真 Android ARM64 guest 因 Actions ARM64 host 无 KVM 而 ENV_BLOCKED，产品 P2/P3 实际联机 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
 
 ## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
 
@@ -68,6 +68,8 @@ per-App 仅改变业务 IP 出口，不重建 netd 每UID DNS、不恢复共享�
 - [KSU Action43986417528](https://github.com/lly8666/wbd-next/actions/runs/43986417528)，SOURCE `09a6a7e5f8aef5c3b38abb262655561ca89e5f9a`：Android16 **x86_64** AVD 普通 App `org.wbdnext.rootprobe`（targetSdk37）真实通过 KSU3.3.1 Manager 的 `su`，Root UID0、NET_ADMIN/NET_RAW CapEff、`u:r:ksu:s0`，SELinux Enforcing，内核 TUN/RAW/UID路由、App UDP/TCP及隔离 DNS和回收均有证据。`ksu-boot-and-test.sh` 明言**不执行 `adb root`**，ADB 仅运送/读取指令，`adb shell su` 也不等于 `adb root`。**已证明 KSU 单侧功能，完全没有同机 adb-root 配对试验，`ADB_ROOT_VS_KSU_EQUIVALENCE=NOT_PROVEN`**；旧 x86 不能代替新 ARM64 正式 WBD。
 - [Action44041601960](https://github.com/lly8666/wbd-next/actions/runs/44041601960) Android ELF/APK `BUILD_PASS` + 同 SOURCE 原 Linux server↔Linux peer 标准TLS/租约/M4双向UDP/Stop `LINUX_ORACLE_PASS`，并非 Android 真连接。[Action44042235770](https://github.com/lly8666/wbd-next/actions/runs/44042235770) 其后的 ARM64 macOS Android16 AOSP emulator QEMU 主循环/CPU 线程卡住，ADB 不上线约10分钟，guest `ENV_BLOCKED`/`NOT_RUN`，不能误判 WBD 应用失败。
 - `adb root` 只证明 adbd/shell 可获得调试 Root，不授予普通 App `su`。KSU Root Profile 可限制 `su` 的 UID/GID、groups、capabilities、SELinux；**`uid=0` 或 `getenforce=Enforcing` 均不足以证明权限或网络行为等价**。只能对同一程序/同操作/相同 Android 系统网络语义/可观测结果在指定范围内认定行为等价，不能宣布 Root 提供者全面等价。
+
+- [A6 Action44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256)，SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`：**5/5 Jobs SUCCESS**，原M3、ARM64 Bionic原Go/Rust、签名Root APK、原Linux WBD server oracle；Java事件Network门16断言、生成的Root Stop脚本 `sh -n` 11断言、`owner.pid`旧2/新3字段POSIX解析PASS。`ubuntu-24.04-arm`实测 `aarch64` 但 `/dev/kvm` 不可访问，**ARM64 Android P2/P3 环境 `ENV_BLOCKED`，不是正式Root App联网通过**；不再尝试已有hang的macOS AVD。需可信有KVM的ARM64 Actions runner及固定Cuttlefish镜像/host工具，否则保持NOT_RUN。
 
 ### Actions 准入、各层真实验收及最后实体终验
 
