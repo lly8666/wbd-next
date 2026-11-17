@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2107",
+  "date": "2026-11-17",
+  "source_sha": "0956c04ca4ba87201e2229bb701fa24bca734385",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action": {
+    "id": 44096919880,
+    "conclusion": "failure",
+    "run_attempt": 1,
+    "job_id": 134089553672,
+    "job": "native-public-two-os",
+    "failing_step": "Build actual original Windows Rust M1 M2 M3 release DLL"
+  },
+  "first_error": {
+    "type": "RUSTC_E0004_NON_EXHAUSTIVE",
+    "feature_set": "m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration",
+    "uncovered_read_result": "Ok(ReadResult::SkippedIpv6)",
+    "locations": [
+      {
+        "file": "crates/wbd-engine/src/v4_windows_plan029_udp_gate.rs",
+        "line": 82
+      },
+      {
+        "file": "crates/wbd-engine/src/v4_windows_plan029_tcp_gate.rs",
+        "line": 87
+      },
+      {
+        "file": "crates/wbd-engine/src/v4_windows_plan029_dns_gate.rs",
+        "line": 62
+      }
+    ]
+  },
+  "preflight": {
+    "cheap_workflow": "PASS",
+    "windows_go": "PASS",
+    "windows_rust_without_m0_v4_probe": "PASS",
+    "linux_rust": "PASS",
+    "real_linux_assembly": "PASS",
+    "win_rust_release_with_m0_v4_probe": "FAIL"
+  },
+  "physical": {
+    "signed_windows_wintun_npcap": "NOT_RUN_BEFORE_DLL",
+    "windows_AF_INET6_16": "NOT_RUN",
+    "original_wintun_ipv6_skip_counter": "NOT_RUN",
+    "linux_ipv4_echo_12": "NOT_RUN",
+    "source_locked_dual_stop": "NOT_RUN"
+  },
+  "release_scope": "FAIL_BUILD_ONLY_NOT_B3_PACKET_FAIL_AND_NOT_HOST_IPV6_SECURITY_PROOF",
+  "correction": "H2107 three old m0_v4_probe read matches add typed SkippedIpv6 to existing skip branches; preflight Windows source-locked release cargo check with probe features; no extra owner or IPv6 module"
+}

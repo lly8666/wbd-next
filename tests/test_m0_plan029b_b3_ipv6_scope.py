@@ -19,6 +19,25 @@ class Plan029BRealIPv6(unittest.TestCase):
         self.assertIn("Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>{",game)
         self.assertIn("Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,",game)
         self.assertIn("c.rejected.fetch_add(1,Ordering::Relaxed);",game)
+    def test_all_three_original_nonproduct_plan029_probe_readers_handle_ipv6_skip(self):
+        # H2106 library-only Rust tests omit m0_v4_probe, while original
+        # signed Windows release always enables it. Each probe keeps its
+        # existing wait/break semantics: IPv6 NEVER reaches IPv4 decode.
+        parts={
+            "udp":"Ok(ReadResult::Skipped|ReadResult::SkippedIpv6|ReadResult::NoPacket|ReadResult::EndOfStream)=>{",
+            "tcp":"Ok(ReadResult::NoPacket|ReadResult::Skipped|ReadResult::SkippedIpv6|ReadResult::EndOfStream)=>break,",
+            "dns":"Ok(ReadResult::Skipped|ReadResult::SkippedIpv6|ReadResult::NoPacket|ReadResult::EndOfStream)=>{",
+        }
+        for name,arm in parts.items():
+            with self.subTest(name=name):
+                file=ROOT/("crates/wbd-engine/src/v4_windows_plan029_"+name+"_gate.rs")
+                text=file.read_text()
+                self.assertIn('feature="m0_v4_probe"',text)
+                self.assertIn(arm,text)
+        wf=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("Windows source-locked PLAN029 probe cargo check",wf)
+        self.assertIn("cargo +1.85.1 check --locked --release",wf)
+        self.assertIn("--features m0_v4_embedded_go,m0_v4_probe,fec2_product_record --lib",wf)
     def test_real_windows_os_owned_route_and_kernel_send_with_cleanup(self):
         win=(ROOT/"tools/m0_plan029b_b3_ipv6_windows.py").read_text()
         guest=(ROOT/"tools/m0_plan029b_b3_ipv4_guest.py").read_text()

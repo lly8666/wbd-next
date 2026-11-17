@@ -133,7 +133,7 @@ fn run(c:&WbdP029OwnedDirectTcpTrialV1)->i32{
               }
             }
           }
-          Ok(ReadResult::NoPacket|ReadResult::Skipped|ReadResult::EndOfStream)=>break,
+          Ok(ReadResult::NoPacket|ReadResult::Skipped|ReadResult::SkippedIpv6|ReadResult::EndOfStream)=>break,
           Err(e)=>{eprintln!("PLAN029_H1706_FIRST_ERROR wintun_read {e:?}");return 11}
         }
       }

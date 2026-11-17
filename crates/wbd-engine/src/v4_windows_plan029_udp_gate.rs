@@ -92,7 +92,7 @@ fn exec(c:&WbdP029OwnedDirectUdpTrialV1)->i32{
                     Ok(_)|Err(_)=>{}
                 }
             }
-            Ok(ReadResult::Skipped|ReadResult::NoPacket|ReadResult::EndOfStream)=>{
+            Ok(ReadResult::Skipped|ReadResult::SkippedIpv6|ReadResult::NoPacket|ReadResult::EndOfStream)=>{
                 match wait_ready(&[rx.event()],20){
                     Ok(WaitResult::Timeout|WaitResult::Ready(_))=>{}
                     Err(e)=>{eprintln!("PLAN029_H1704_FIRST_ERROR stage=wait_wintun error={e:?}");return 4}

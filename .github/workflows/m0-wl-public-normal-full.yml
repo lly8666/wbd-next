@@ -885,6 +885,13 @@ jobs:
           rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
           & cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib -- --test-threads=1 --skip runtime::directional::pinned_rtrb_overlay_proof::r1_direction_m0_pinned_rtrb_overlay_source_exact_native_ci --skip runtime::generation_release::r1_owner_release_compiled_once_hosted_cpu_latency_provenance
           if($LASTEXITCODE -ne 0){throw 'Windows full Rust library unit regression FAIL'}
+          # H2107: source-locked production feature set for the 3 older
+          # Windows-only UDP/TCP/DNS probe gates. Ordinary --lib tests
+          # deliberately omit m0_v4_probe, so they could not catch E0004.
+          # No driver or real OS/packet claim follows from cargo check.
+          & cargo +1.85.1 check --locked --release -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,fec2_product_record --lib
+          if($LASTEXITCODE -ne 0){throw 'Windows source-locked PLAN029 probe cargo check FAIL'}
+          Write-Output 'Windows source-locked PLAN029 probe cargo check PASS_NO_OS'
           # M0/R2 genuine frozen M1 receipt, M3 AEAD replay and M4
           # ready-only copy: run EVERY integration fixture as a separate
           # non-network, source-locked Windows program, no skip/xfail.

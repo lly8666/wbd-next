@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2106,
-  "checkpoint_sha": "71f6756a6c04adf1ad0f7334b11d1be3d77be1b8",
+  "sequence": 2107,
+  "checkpoint_sha": "0956c04ca4ba87201e2229bb701fa24bca734385",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2106 H2105 signed B3 source71f675 Windows Rust library unit compile FAIL_E0004 before genuine AF_INET6: newly typed Wintun SkippedIpv6 not covered in original Game Wintun and Game NPF ReadResult matches v4_windows_game_native_runtime.rs:397,914. Cheap, WinGo and LinuxRust tests PASS. Fix only these two Game reader matches by reusing already existing Skipped branch/continue (no product logic, FEC or TCP refactor), static test both. Keep H2105 Action44095335952 in flight, don't cancel/reassign/duplicate; B3 physical NOT_RUN until exact result.",
-  "why_now": "H2105 Action44095335952 job134081225073 WinRust rustc E0004 at game runtime 397,914. Existing Native Normal branch skips IPv6 fair, Game reader still exhaustive matching older ReadResult; correction is compile exhaustivity only with original Game Skipped action. Historic H2104 real GUI/Go compile PASS and H2103 Normal/off true signed PASS retained. H2105 original Action44095335952 terminal FAILURE after same Windows Rust DLL E0004; Windows driver/app IPv6 stage never reached, original signed product artifact absent. H2106 one corrected Game exhaustive match rerun permitted after first Action terminated.",
+  "current_task": "H2107 original H2106 signed Win2025 B3 Action44096919880 terminal FAIL during Rust original release DLL: E0004 three PLAN029 m0_v4_probe UDP/TCP/DNS read matches omit new internal SkippedIpv6. H2106 Go+Linux+Windows Rust library (without m0_v4_probe) PASS, so CI missed feature-conditional compilation; no driver/AF_INET6/Stop reached. H2107 patches exactly three old diagnostic skip match arms and adds Windows preflight cargo check --release --features m0_v4_probe (no driver, cheap); new original Action source status NOT_RUN; do not dispatch real B3 until feature preflight PASS.",
+  "why_now": "Action44096919880 completed failure, native job134089553672 step Build actual original Windows Rust M1 M2 M3 release DLL. Rustc E0004 in v4_windows_plan029_udp_gate.rs:82/tcp_gate.rs:87/dns_gate.rs:62 with original native feature set m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration. Existing early Windows Rust library --features m0_v4_embedded_go,fec2_product_record passed because these modules cfg(feature=m0_v4_probe) absent. Fix in probe-only diagnosis, don't touch active Rust Normal IPv6 ingress/Go/old TCP, test source cheap first before one genuine B3 replay.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "H2105 original Action44095335952 terminal FAIL solely Windows Rust Game reader E0004 before B3 AF_INET6; H2106 exact Game two-read match correction now requests one [plan029b-b3-ipv6-real] Win2025/WSL2 original signing. Check Windows Rust compile before B3, actual /128 Wintun route + 16 AF_INET6 kernel send + 12 mixed IPv4 echoes + Rust skipped v6 Stop>=16 + exact test cleanup and both owned Stop. B4 Game GUI reconnect and B5 sameVM <=10Mbps CPU/GiB/p99 still NOT_RUN.",
+  "next_action": "First collect H2107 same-source cheap Windows release cargo check with m0_v4_probe, original Go and Linux Rust/Windows Rust units. Only after full cheap SUCCESS add one explicit [plan029b-b3-ipv6-real] scene marker on next frozen-source governance entry, build signed original Win2025/WSL2. Require exact test-only /128 Wintun route+real AF_INET6 16 sends, original Rust skipped_ipv6 >=16, 12 live IPv4 TUN echoes, test route cleanup, original Go/Rust dual owned Stop. FAIL or NOT_RUN if no packet or missing OS prerequisite; B4 real GUI Game/multigeneration and B5 same VM10Mbps CPU/GiB/p99 remain.",
   "unverified": true,
-  "last_tested_source": "71f6756a6c04adf1ad0f7334b11d1be3d77be1b8",
+  "last_tested_source": "0956c04ca4ba87201e2229bb701fa24bca734385",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2106-H2105-WIN-RUST-GAME-SKIP-COMPILE-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2107-H2106-WINDOWS-PROBE-RELEASE-E0004-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2106-GAME-READRESULT-FIRST-COMPILE.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2107-FEATURE-PROBE-RELEASE-GATE.md",
+    "docs/evidence/M0/PLAN029B-H2107-H2106-WINDOWS-PROBE-RELEASE-E0004-20261117.json",
     "docs/evidence/M0/PLAN029B-H2106-H2105-WIN-RUST-GAME-SKIP-COMPILE-FAIL-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2105-H2104-GUI-SOURCE-CONFIG-PASS-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2104 source969ce WinForms→Go CLI config PASS same source, not original network. H2105 source71f675 B3 submitted, cheap PASS, Windows Go PASS, Linux Rust PASS, Windows Rust FAIL E0004 two Game native match arms omitted new internal IPv6 skip. H2106 fixes exact two exhaustive matches, no new machinery. H2105 B3 true Windows AF_INET6/Stop still NOT_RUN until original Action resolves; B4 Game GUI and B5 <=10Mbps perf pending."
+  "partial_summary": "H2103 B0 original Normal/off true kernel and Stop PASS older source; H2098 ordinary CN & H2101 advanced CI FakeIP distinct source PASS; H2104 WinForms/Go config PASS source969ce, no OS. H2105 native first FAIL Game E0004; H2106 native second FAIL PLAN029 probe-only UDP/TCP/DNS E0004 in release feature set despite normal Windows Rust library PASS. H2107 exact gated matches and cheap feature-aware preflight, true B3 NOT_RUN and no global IPv6 security claim. B4 Game GUI and B5 <=10Mbps sameVM perf open."
 }
