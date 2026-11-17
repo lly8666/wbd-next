@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2108",
+  "date": "2026-11-17",
+  "source_sha": "5a80e0ea8e027f5b7649042ef988ef9bb2c51838",
+  "result": "PASS",
+  "scope": "SAME_SOURCE_WINDOWS_FEATURE_GATED_RELEASE_CARGO_CHECK_AND_UNIT_COMPILE_ONLY",
+  "artifact_verified": true,
+  "action": {
+    "id": 44101072122,
+    "window_unit_job_id": 134101340279,
+    "window_unit_conclusion": "success",
+    "linux_rust_unit_conclusion": "success",
+    "windows_go_compile_conclusion": "success",
+    "cheap_workflow_conclusion": "success",
+    "source_locked_linux_original_build_conclusion": "success",
+    "normal_off_native_status_at_collection": "IN_PROGRESS_SEPARATE"
+  },
+  "release_probe": {
+    "feature_set": "m0_v4_embedded_go,m0_v4_probe,fec2_product_record",
+    "command": "cargo +1.85.1 check --locked --release -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,fec2_product_record --lib",
+    "result": "PASS_NO_OS",
+    "original_WINDOWS_Rust_lib_test": 416,
+    "original_R2_receipt_test": 11,
+    "windows_release_probe_error_count": 0
+  },
+  "artifacts": [
+    {
+      "id": 14337270024,
+      "zip_sha256": "46508f738ac0e2f5f6623ef192d8336d52eba32a02528b1a28ac1549e05efb4d",
+      "crc": "PASS_2_MEMBERS",
+      "source_sha": "5a80e0ea8e027f5b7649042ef988ef9bb2c51838",
+      "scope": "WINDOWS_LIB_R2_NO_REAL_NATIVE"
+    },
+    {
+      "id": 14336771399,
+      "zip_sha256": "978ef30f2f7099c81c04cbfb7efc86d4c40e0e34b99cb90c9c0d53dada8ae476",
+      "crc": "PASS_3_MEMBERS",
+      "source_sha": "5a80e0ea8e027f5b7649042ef988ef9bb2c51838",
+      "scope": "ORIGINAL_GO_COMPILE_ASSEMBLY_ONLY"
+    }
+  ],
+  "other_diagnostics": [
+    {
+      "run": 44101072346,
+      "scene": "H1704 original signed Wintun independent Linux guest UDP diagnostic",
+      "action_conclusion": "success",
+      "artifact_downloaded": false
+    },
+    {
+      "run": 44101072126,
+      "scene": "H1706 original signed Wintun independent Linux guest TCP diagnostic",
+      "action_conclusion": "success",
+      "artifact_downloaded": false
+    },
+    {
+      "run": 44101072359,
+      "scene": "H1713 original signed Wintun CN DNS/FakeIP diagnostic",
+      "action_conclusion": "success",
+      "artifact_downloaded": false
+    }
+  ],
+  "not_proven": {
+    "same_source_real_B3_Wintun_AF_INET6": "NOT_RUN",
+    "new_generation_B3_owned_stop": "NOT_RUN",
+    "host_global_ipv6": "NOT_PROVEN",
+    "B4_GUI_mode_switch": "NOT_RUN",
+    "B5_10Mbps_same_VM_performance": "NOT_RUN"
+  },
+  "reason": "H2107 three probe-only ReadResult::SkippedIpv6 matches now compile using correct Windows m0_v4_probe release features; this is NOT a network/IPv6 packet qualification"
+}

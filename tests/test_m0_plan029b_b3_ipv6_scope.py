@@ -58,6 +58,15 @@ class Plan029BRealIPv6(unittest.TestCase):
         self.assertIn("sent6!=16 or got4!=12",win)
         self.assertIn('row.get("source_sha")!=os.environ.get("GITHUB_SHA")',win)
         self.assertIn("PLAN029B_B3_LINUX_TUN_IPV4_READY",guest)
+    def test_original_b3_never_claims_global_host_ipv6_and_always_cleans_route(self):
+        harness=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
+        self.assertIn('int(skips[0])<16',harness)
+        self.assertIn('"physical_bound_onlink_ipv6":"NOT_PROVEN_BLOCKED"',harness)
+        self.assertIn('"global_ipv6_leak_claim":False',harness)
+        self.assertIn('owned.get("cleanup")!="PASS_EXACT_TEST_OWNED_IPV6_ADDRESS_ROUTE_ABSENT"',harness)
+        self.assertIn('if p029b_b3 and (out/"plan029b-b3-owned-ipv6-route.json").exists():',harness)
+        # Source is a test-scoped /128; never assert physical-bound or
+        # on-link bypass flows are globally intercepted by Wintun.
     def test_only_one_real_windows_signed_normal_scene_original_owned_stop(self):
         e2e=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
         workflow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
