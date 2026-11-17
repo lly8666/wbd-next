@@ -1,13 +1,15 @@
-# Android临时root探测｜长期接续提示词
+# Android Root 原生客户端｜长期启动提示词（2026-11-17）
 
-你负责 `lly8666/wbd-next` 的 `experiment/android-temp-root-probe` 独立实验。先恢复本分支实际HEAD和未提交内容，不去main接M0任务。只做临时root能力探针与Actions可行性验证，不直接开发完整Android客户端，不部署手机。
+负责 `lly8666/wbd-next` **`experiment/android-temp-root-probe`** 上的正式 Android root 原生 WBD 客户端适配；用户已明确取消旧“只探针、不开发客户端”限制。仅此分支施工，最终 PR → main；main M0任务、registry/cursor不得直接改。每次先查远端最新HEAD/main、已提交变更、最近devlog/功能卡、在途Actions，聊天缺失按实际代码/证据恢复，不把历史SHA当最新；无远端worktree不能声称检查过未提交本地变更。
 
-按顺序读：根AGENTS/章程 → `docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md` → `docs/features/entries/android-temp-root-probe.json` → `docs/devlog/android-root-probe/` 最新日志及其Actions。先收已运行结果；上轮意外中断未留痕就据git/run/产物补事实再续做，不重复dispatch、不全读历史。2026-10-22旧方案暂停Android的限制已被本次“独立能力探测”授权覆盖，完整客户端仍未开工。
+精简阅读入口：`AGENTS.md` / `PROJECT_CHARTER.md` → [现行施工方案](../plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md) → [产品功能卡](../features/entries/android-root-native-client.json) → `docs/devlog/android-root-probe/` 最新施工日志与Action；深历史按需查。旧探针历史在 [KSU 20261117](../devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md)，不继续增加合成按钮。2026-11-17已将main `0e57cab2d53e2c95962eb673050fa54695fd3665` merge到本分支，merge `d5126fcd4cc7c848b62181ebddf8dadcb4225397`；此时间点后的真实HEAD必须重新检查。
 
-实施Rust轻量原生探针，必要时加薄Kotlin测试壳；默认只读，显式exercise才做owned临时改动。检查真正TUN读写、raw收发、权限/cap/SELinux、路由/fwmark、NAT/转发、DNS/IPv6、网络绑定/切换通知、后台与清理。无VpnService；不动现有FEC/重传/TLS/MTU核心；不安装root、不改system/boot、不关闭SELinux、不清空系统规则。热点/USB复用系统共享，offload和CLAT边界要查清；只有模拟转发不能宣布真实共享可用。
+**主旨**：真实业务首到、p99/跨流无HOL、低CPU/低唤醒、有界内存和易维护。标准真实TLS ClientHello→认证/租约、Go冷控制+Rust成熟steady FEC/crypto/MTU/retransmission/generation/owned Stop必须复用；不能新Android协议/模仿TLS/按包Go/Java/JNI；直连用Android内核原TCP路径，WBD流才TUN；无VpnService/FakeIP。现有GNU/musl模块不得直接冒充Bionic可用；NDK ABI、arm64装载/16KiB、实际加速都要核。
 
-先在Actions测试Android9/API28到开工时最新稳定版（方案当前Android17/API37），包括12L/API32。编译一次按SOURCE/manifest/hash复用；最低/最新两个canary先跑，再补中间版本。一个Action一个模拟器/场景，独立Actions默认最多3条并行。确认KVM和镜像真实root能力，缺镜像/权限/性能受限如实分类，不循环重试或降低target/关闭SELinux刷绿。app→su、adb root、CI替身必须分开，root镜像不能证明真机root管理器兼容。
+**当前工作包**：A 产品装配→Normal/off Android KSU↔真实Linux WBD服务端。先固定原Go donor `r0/go_overlay/assembly`、Go cold入Rust原owner和Android Bionic链接/系统socket/TUN边界，再以真实TLS/认证/租约和双向TCP+UDP给出同源证据；尚未真连接时只能写 NOT_RUN。B=主网络owned规则+无FakeIP统一双DNS UDP/TCP53+真实安装App选择/包名解析+手动规则更新，C=FEC/模式/回调切网/lifecycle/能耗，D=物理热点USB条件接入/PR。每包写齐有关代码/UI/配置/夹具后冻结SOURCE测试，不要每个函数刷大型Action。
 
-按计划短流量验证即可，不跑完整产品弱网/大吞吐矩阵，不拿AVD CPU声称手机省电。能独立判断的实现直接做，先完成一组连贯代码再验证；失败先判断代码、权限还是环境，再修受影响项，勿叠框架/钻牛角尖。测试代码、工作流、报告都以本任务前缀隔离；不改M0注册/游标、不取消别人的任务。
+**DNS**：仅全局普通DNS；CN域名开关（split默认开/global默认关），CN→223.5.5.5物理，其他→1.1.1.1隧道，关时统一隧道；server bootstrap一律物理；真实A后业务按IP/UID出网，非强制域名IP缓存；没有跨出口回退/每App DNS身份追踪/DoH劫持。每App跟随/分流/全隧道/直连，真实安装App列表与搜索/批量，不要求UID输入；内核CN共享集合，避免每App复制规则。全局IPv6不得禁，内层阻断按既有策略。按需离线规则+手动轻量更新，无周期唤醒。
 
-每个完整工作包留短devlog、精确SOURCE/Actions/hash和feature-impact；状态写回本功能卡，保留失败/未测。完成全版本结果表或明确受阻项、权限最小集、可行性结论和真机待验清单后收口。再次收到本提示词且任务已完成，仅报告完成与未验边界，不自行扩任务。
+**安全/运行**：已有root为前提，普通前台服务可出现；不提权、不刷机、不改boot/system、不关闭SELinux、不装常驻模块；原生root进程持有数据/物理socket，IPC低频。owned增量、compare-before-restore，不flush或篡改netd全fwmark、不让整个root UID绕路；App网络事件驱动同一成熟re-auth/MTU，不创建第二定时器。真机部署需明确设备授权。
+
+**测试与停止**：所有自动测试用Actions，真实协议首次同源Linux server在Android16 KSU；一个Action一个网络场景，同 SOURCE/manifest/hash复用；未跑就NOT_RUN。先 Normal/off，后双DNS/2 App/模式/换网/Stop，10–20Mbps短验而非无止境优化；ARM64硬件、热点USB/CLAT/能耗真机需授权。每完整包更新功能卡/短devlog，记SOURCE、Actions、失败/未测和唯一下一步。main仅开工、真实连接后、最后整合前同步，历史不重写。完成授权范围、合理验收和PR准备即报告完成，不续造探针或优化任务。

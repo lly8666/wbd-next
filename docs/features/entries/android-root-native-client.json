@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "id": "android-root-native-client",
+  "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
+  "summary": "复用原Go标准TLS认证冷控制和Rust产品数据面，以已有Root下的TUN/内核策略实现Android手机业务、统一DNS、按App出口；真实产品连接仍未接线。",
+  "owner": "Android 原生客户端适配（用户独立授权，非M0）",
+  "stage": "experimental",
+  "development_branch": "experiment/android-temp-root-probe",
+  "available_on": [],
+  "defaults": {
+    "mode": "split（待实现）",
+    "cn_domain_dns_split": "on（待实现）",
+    "cn_domain_dns_global": "off（待实现）",
+    "cn_dns": "223.5.5.5（待实现）",
+    "tunnel_dns": "1.1.1.1（待实现）",
+    "fakeip": "off；禁止",
+    "vpn_service": "disabled"
+  },
+  "usage": {
+    "cli": "产品Start/Stop、标准TLS客户端和Root工作进程尚未接线；现有 probe 命令仅诊断",
+    "config": "预计包名/用户/默认模式、每App follow/split/global/direct、两单DNS、手动规则更新；尚未作为产品配置生效",
+    "gui": "计划Java原生安装App选择/搜索/批量/Start/Stop/状态；当前设置页仅诊断配置预览"
+  },
+  "code_refs": [],
+  "doc_refs": [
+    "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
+    "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
+    "docs/devlog/android-root-probe/20261117-android-native-client-kickoff.md",
+    "docs/devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md"
+  ],
+  "verification": [
+    {
+      "platform": "Android16 KSU x86_64 AVD",
+      "scope": "正式Go TLS认证/租约→Rust Normal/off→实际服务端TCP/UDP/Stop",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Android16 ARM64 KSU physical",
+      "scope": "正式WBD连接、系统DNS/路由Apply、App配置与恢复",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Android9–17 NDK",
+      "scope": "Bionic 真实产品构建及16KiB装载与ISA加速",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Android actual tether",
+      "scope": "Wi-Fi热点USB转发/offload/蜂窝CLAT/切网与能耗",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "旧Root探针 PASS 只证明隔离内核/能力；普通系统DNS/真实WBD服务器、生产内核路由与真热点尚无产品证据。",
+    "当前无Android可安装正式WBD客户端APK；仅有诊断APK。",
+    "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。"
+  ],
+  "promotion": null
+}
