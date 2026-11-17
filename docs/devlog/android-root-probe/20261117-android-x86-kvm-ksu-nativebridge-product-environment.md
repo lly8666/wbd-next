@@ -18,3 +18,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"按用户最新优先级复用历史x86_64 KVM+KernelSU AVD验证同源码原ARM64 Go/Rust产品NativeBridge真实execve和签名APK安装/Activity，历史probe PASS与产品Android E2E严格分开。"}
 ```
+
+## 首次同SOURCE Android KSU 运行结果与时序修复
+
+正式产品源码 `ee31c0e46df5fb48df3a47dce525216e53949833` 的旧 [KSU Action44113392897](https://github.com/lly8666/wbd-next/actions/runs/44113392897) **SUCCESS**：重跑历史真实Android16 API36 x86_64 KVM/KSU3.3.1，普通App→Manager授权Root，旧x86诊断进程真实TUN/RAW/UID/UDP53/TCP/私有TLS、SIGKILL/Stop等PASS。该历史**x86诊断**不是正式WBD的ARM64 Go/Rust TLS业务PASS。
+
+同SOURCE新的 [ARM64产品KSU NativeBridge Action44113392855](https://github.com/lly8666/wbd-next/actions/runs/44113392855) **FAIL**：artifact 14342865202确认同SHA原Go/Rust ARM64 ELF与签名APK字节一致，两次Android16 KVM guest真启动/ADB device、SELinux Enforcing均PASS，但第二次冷启动后Manager需重装、`ksu-shell-id.txt`出现`/system/bin/sh: su: inaccessible or not found`(exit127)，执行NativeBridge前就失败。原旧KSU同SHA artifact里`fixture-shell-su.txt`记录`uid=0(root) context=u:r:ksu:s0`，且其历史脚本在重装Manager后显式`am start -n me.weishu.kernelsu/me.weishu.kernelsu.ui.MainActivity`。本次源锁修复该二次Manager启动并限定18次2秒的真实`su`readiness；没有修改产品 Go/Rust、协议或Root权限假信号。下一SOURCE未跑前NativeBridge及正式App Root↔Linux真业务均**NOT_RUN**。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"旧KSU普通App真实环境同源PASS，ARM64正式产物首轮双启动后缺Manager二次激活su导致FAIL；修复真实Manager第二次开机初始化并保留原FAIL。"}
+```

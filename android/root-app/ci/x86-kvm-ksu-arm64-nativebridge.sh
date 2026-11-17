@@ -159,8 +159,27 @@ fi
 if ! adb shell pm path org.wbdnext.rootclient | grep -q '^package:';then
   adb install -r out/android-root-app/wbd-root-arm64-debug.apk >"$dir/reinstall-product.txt"
 fi
-adb shell su -c id >"$dir/ksu-shell-id.txt" 2>&1
-grep -q 'uid=0(' "$dir/ksu-shell-id.txt"
+# KSU's real /system/bin/su is installed by the official Manager at
+# second-boot startup. The known-good historical workflow explicitly
+# re-launches MainActivity after reinstall; omitting that produced 127
+# ("su: inaccessible or not found") in the first product gate, BEFORE any
+# ARM64/NativeBridge syscall. Repeat exactly the proven init sequence.
+adb shell am start -n me.weishu.kernelsu/me.weishu.kernelsu.ui.MainActivity \
+  >"$dir/manager-second-launch.txt" 2>&1
+ksu_ready=0
+for _ in $(seq 1 18);do
+  adb shell su -c id >"$dir/ksu-shell-id.txt" 2>&1 || true
+  if grep -q 'uid=0(' "$dir/ksu-shell-id.txt";then
+    ksu_ready=1
+    break
+  fi
+  sleep 2
+done
+if [[ "$ksu_ready" != 1 ]];then
+  echo "KSU_INIT_BLOCKED: official Manager did not provision real shell su after second boot" >&2
+  cat "$dir/manager-second-launch.txt" "$dir/ksu-shell-id.txt" >&2
+  exit 12
+fi
 adb shell su -c 'id -Z' >"$dir/ksu-shell-selinux.txt" 2>&1 || true
 adb shell su -c 'cat /proc/self/status' >"$dir/ksu-capabilities.txt" 2>&1 || true
 phase="REAL_PRODUCT_APK_ACTIVITY"
