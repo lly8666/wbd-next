@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "Android ARM64原Go/Rust/M3及APK BUILD_PASS；Linux原server oracle装配待重验；Android真连接NOT_RUN。Actions-first。",
+  "summary": "Android ARM64原生/Root APK BUILD_PASS，同源原Linux服务器TLS/租约/UDP/Stop oracle PASS（bb30ed3/Action44041601960）；Android KSU E2E仍NOT_RUN。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -60,7 +60,8 @@
     "android/root-app/src/org/wbdnext/rootclient/RootClientService.java",
     "android/root-app/ci/build-source-locked.sh",
     "android/root-app/README.md",
-    "android/root-native/ci/linux-original-oracle.sh"
+    "android/root-native/ci/linux-original-oracle.sh",
+    "android/root-app/ci/arm64-aosp-install.sh"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",

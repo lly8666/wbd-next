@@ -141,3 +141,45 @@ jobs:
             fixed-kernel-result/public-v4-normal-business.log
           retention-days: 14
           if-no-files-found: warn
+  root-arm64-aosp-guest:
+    # True ARM64 Android16 AOSP APK install/Activity on Apple Silicon.
+    # Not KSU, not native root or Android-Linux E2E.
+    needs: [root-arm64-app]
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions: {contents: read, actions: read}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: out/android-a3-guest
+      - name: Establish fail-closed guest status until actual ARM64 emulator executes
+        shell: bash
+        run: |
+          test "$(cat out/android-a3-guest/SOURCE)" = "$GITHUB_SHA"
+          printf '{"source":"%s","status":"ENV_BLOCKED","android_arm64_aosp":"NOT_RUN","android16_ksu":"NOT_RUN","android_linux_e2e":"NOT_RUN"}\n' "$GITHUB_SHA" > out/android-a3-guest/guest-receipt.json
+      - name: Run signed same-source original ARM64 APK on actual Android16 ARM64 AOSP
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: 36
+          system-image-api-level: 36.1
+          target: google_apis
+          arch: arm64-v8a
+          profile: pixel_7
+          emulator-boot-timeout: 600
+          disable-animations: true
+          force-avd-creation: true
+          emulator-options: -no-snapshot -wipe-data -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on
+          script: bash android/root-app/ci/arm64-aosp-install.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-a3-arm64-aosp-guest-${{ github.sha }}
+          path: |
+            out/android-a3-guest/guest-receipt.json
+            out/android-a3-guest/package-path.txt
+            out/android-a3-guest/activity-launch.txt
+          retention-days: 14
+          if-no-files-found: warn

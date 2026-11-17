@@ -23,3 +23,13 @@
 
 - SOURCE `7296fa2d9c114202c7e7462b737aff980d157889` [Action44041088298](https://github.com/lly8666/wbd-next/actions/runs/44041088298)：`original-m3-wire-oracle`、`arm64-native`、`root-arm64-app` PASS；新增 `linux-original-server-normal-off` **FAIL**：旧 PLAN020 固定 result_blob 与当前 `r0/go_overlay/internal/v4productcli/linux.go` 不匹配，未运行 Linux 业务。原 PLAN020 历史不重写。
 - 定点修复仅换为 Android A1 已验证的 pinned original-Go donor + 现行 overlay 组装流程，独立 A3 装配收据记录同 SOURCE；本次未改原Go/Rust协议代码。下一 SOURCE 的 Linux Go 编译/真实网络结果仍 NOT_RUN，待 Actions。
+
+## 已通过真实原Linux服务器 oracle；进入真实ARM64 Android虚拟装载门
+
+- SOURCE `bb30ed3d864460dc22af67aaade1d17c47182c58` [Android ARM64 Action44041601960](https://github.com/lly8666/wbd-next/actions/runs/44041601960)：`original-m3-wire-oracle`、`arm64-native`、`root-arm64-app`、`linux-original-server-normal-off` **四Job全PASS**。同源Android native artifact14308954289、Root APK artifact14309303428、原Linux服务端 oracle artifact14309029780；A3 Linux job实际先对Android ELF/SOURCE/SHA核验，再原Linux ARM64 client↔server真TCP首个标准 ClientHello（无私有前导）、真实TLS/自动租约/Rust M4双向UDP及owned Stop，输出 `ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN`。**证据级别 LINUX_ORACLE_PASS；未在Android运行，不得升级。** 同 SOURCE Governance44041601845 PASS。
+- 新增 `macos-15` Apple Silicon + Android16 ARM64 AOSP emulator 的签名APK安装/Activity真实运行工作流，仍复用同 SOURCE root APK artifact；仅测AOSP ARM64实际安装/显示，不是KSU、不启动Root业务、不能证明Android Bionic Go/Rust的数据路径。此步骤尚未执行，新SOURCE未有结果；失败按 guest-receipt `ENV_BLOCKED` 分辨Android镜像/runner问题。
+- 唯一下一步：新SOURCE运行ARM64 AOSP guest门；具备实际KSU ARM64 Actions guest/runner后再做APK↔同源Linux原server A3完整真实协议与双向业务/Stop；实体设备仅完工后最后授权。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"封存同SOURCE Android BUILD_PASS和原Linux服务端真实TLS/lease/UDP/Stop LINUX_ORACLE_PASS；新增Actions原生ARM64 AOSP APK安装/Activity验证，仍明确KSU E2E NOT_RUN。"}
+```
