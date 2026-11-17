@@ -17,3 +17,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B2b固定真8503 TXT+MIT/来源锁从同SOURCE B2 Actions打进签名APK，由Android App 0600私有暂存并交原Go Android-only Root冷校验；数据包DNS及KSU运行仍未接。"}
 ```
+
+## 第一轮同源结果与失败修复（旧失败保留）
+
+SOURCE `3979663868d2de59fe8e1dc17923a6c88913cd49` [Action 44076363045](https://github.com/lly8666/wbd-next/actions/runs/44076363045)：B2真上游8503 + private 0600/no-symlink/改字节失败负例 Host Go PASS；原M3及ARM64原Go/Rust ELF PASS，Root签名APK工作流**SOURCE与TXT SHA/MIT签名资产进入ZIP且逐文件回读PASS**，A6/A7/A8 JVM/Stop回归PASS；Cuttlefish ARM64 host仍缺KVM。**Linux原服务端Job FAIL**，不是TLS/UDP真业务FAIL：`linux-original-oracle.sh` donor assembler复制了`v4productcli/*.go`与`rootjournal/*.go`却没复制B1引入、现在被`linux.go`引用的子包`dnsnative/*.go`；Go module编译器报`no required module provides package github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative`，因此该Job没有进入原Linux真TLS/业务阶段。修复仅使Linux oracle也复制完全相同的源码锁定`dnsnative`库，不改Linux运行时业务逻辑。旧Action FAIL不能写为7/7；须看新SOURCE完整实测结果。

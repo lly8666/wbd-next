@@ -54,6 +54,11 @@ done
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 mkdir -p legacy/internal/v4productcli/rootjournal
 cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
+# linux.go now names the same pure-Go pinned CN8503 cold parser package.
+# The Linux oracle donor overlay must assemble that library too, even
+# though the Android-only CLI flag is rejected and no Linux DNS path runs.
+mkdir -p legacy/internal/v4productcli/dnsnative
+cp r0/go_overlay/internal/v4productcli/dnsnative/*.go legacy/internal/v4productcli/dnsnative/
 for role in client server;do
   cp "r0/go_overlay/cmd/wbd-v4-$role/main.go" "legacy/cmd/wbd-v4-$role/main.go"
 done
