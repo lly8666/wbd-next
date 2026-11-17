@@ -38,6 +38,15 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         self.assertIn('exact("WBD_WINDOWS_CLIENT_READY")!=3', e2e)
         self.assertIn('exact("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS")!=3', e2e)
         self.assertIn('h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")', e2e)
+        # H2126 true signed three-GUI DNS/data/stops all passed, but a
+        # legacy PLAN028 Linux->Windows inbound TCP comparator failed after
+        # the B4 business proof. Keep the real original Windows->Linux
+        # Tunnel TCP test; do not skip TCP or promote the old 028 direction.
+        self.assertIn('if p029_direct or p029b_b4:', e2e)
+        self.assertIn('m0_plan029_h1762_oneway_tunnel_tcp.py', e2e)
+        self.assertIn('report["tcp_duplex"]="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"', e2e)
+        self.assertIn('if wt.wait(timeout=36)!=0 or lt.wait(timeout=7)!=0:', e2e)
+        self.assertIn('"historical_028_linux_to_windows_tcp"]="NOT_RUN_028_SCOPED"', e2e)
         ast.parse(e2e)
         ast.parse(bridge)
 

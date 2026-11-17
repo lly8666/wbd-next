@@ -1680,13 +1680,14 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
                                           wdata["fake4"],unix,ready)
    print("PLAN029_H1815_P2_PHYSICAL1M_DIRECT1M_AND_CONCURRENT_TUNNEL_SMALL_UDP_PRE_STOP",flush=True)
  # Functional-only *real TCP* over the same original authenticated public
- # Wintun/TUN: each OS binds one TCP listener and dials the other. Two
- # independently established IPv4 streams must echo exact application bytes.
- # This is NOT a throughput/RTT/packet-loss measurement or fake carrier ACK.
- if p029_direct:
-  # This 029 business direction is actual Windows-app -> Linux TUN TCP.
-  # PLAN028's previously failing Linux->Windows inbound comparator remains
-  # untouched below in else, and is NOT promoted or relabeled as passed.
+ # Wintun/TUN. For PLAN029B B4, require the existing original real kernel
+ # Windows->Linux Tunnel TCP with a source-locked Linux listener/echo.
+ # The historical PLAN028 Linux->Windows inbound comparator is not a B4
+ # requirement; never disguise its known independent FAIL as B4 product FAIL.
+ if p029_direct or p029b_b4:
+  # Same genuine one-way TCP test already required for PLAN029 Direct.
+  # Normal B4 has three actual GUI generations; the final all generation
+  # remains OS Applied until external Stop after this TCP proof.
   app=root/"tools"/"m0_plan029_h1762_oneway_tunnel_tcp.py"
   ltlog=(out/"linux-tcp-app.log").open("w");logs.append(ltlog)
   wtlog=(out/"windows-tcp-app.log").open("w");logs.append(wtlog)
