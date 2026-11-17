@@ -1948,6 +1948,7 @@ jobs:
           # is the same public Linux TUN alias; H1936 A1 TCP was
           # blocked by the old 10.66.0.1-only Windows listener ACL.
           $tcpRemote=if($env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1' -or
+                        $env:WBD_PLAN029B_B2_ORDINARY_SCENE -eq '1' -or
                         $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1' -or
                         ($env:WBD_PLAN029_P1_AB_SCENE -eq '1' -and
                          $env:WBD_PLAN029_P1_POLICY_ABBA_SCENE -eq '1')){

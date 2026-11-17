@@ -103,6 +103,31 @@ class NativeSmokeScopeTests(unittest.TestCase):
             "docs/devlog/M0/20261116-PLAN029-H2022.md"],
             "[plan029-game4-cn-real]"))
 
+    def test_plan029b_b2_alias_has_exact_owned_tcp_acl(self):
+        # H2093's original Linux client binds the real guest TUN /32
+        # 203.0.113.77, not its 10.66.0.1 primary address. The former
+        # must be admitted by the ONE owned 45902 test firewall rule,
+        # else the legacy reverse TCP comparator fails after B2 DNS/UDP
+        # already passed. Do not change the product Defender policy.
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / ".github/workflows/m0-wl-public-normal-full.yml").read_text(
+            encoding="utf-8")
+        selector = workflow.split("$tcpRemote=if(", 1)[1].split(
+            "$tcpRuleName=", 1)[0]
+        self.assertIn("WBD_PLAN029B_B2_ORDINARY_SCENE -eq '1'", selector)
+        self.assertIn("'203.0.113.77'", selector)
+        self.assertIn("}else{'10.66.0.1'}", selector)
+        self.assertIn(
+            "-LocalAddress '10.66.0.2' -RemoteAddress $tcpRemote -LocalPort 45902",
+            workflow)
+        self.assertIn("Remove-NetFirewallRule -Name $tcpRuleName", workflow)
+        app = (root / "tools/m0_wl_public_normal_e2e.py").read_text(
+            encoding="utf-8")
+        self.assertIn(
+            'source_address=(local,0)', app)
+        self.assertIn(
+            'out/"plan029-h1745-owned-tun-alias.txt"', app)
+
     def test_h1859_p1_and_p2_bulk_both_build_exact_v3_before_native(self):
         source=(Path(__file__).resolve().parents[1] /
                 ".github/workflows/m0-wl-public-normal-full.yml").read_text()
