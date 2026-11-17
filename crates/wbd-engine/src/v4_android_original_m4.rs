@@ -153,6 +153,9 @@ fn raw_worker(
     // ONE original-generation M1 slab per kernel read; retain the same
     // one-slot vector across packets, never allocate a Vec in the RX hot path.
     let mut rx_storage:Vec<RxPacket>=Vec::with_capacity(1);
+    let mut dns_reply_scratch=Vec::with_capacity(
+        crate::v4_android_dns_udp_flow::MAX_DNS_IPV4_PACKET
+    );
     while !shutdown.load(Ordering::Acquire){
         stats.rx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
         let ready=wake.wait_readable(raw.readiness_fd(),30_000);
@@ -197,11 +200,14 @@ fn raw_worker(
                 stats.raw_candidates.fetch_add(1,Ordering::Relaxed);
                 let lease=e.client_lease_ipv4;
                 let (report,delivered,failed,healthy,hint,retired)={
-                    let Entry{owner,normal,..}=&mut *e;
+                    let Entry{owner,normal,android_dns_flows,
+                        android_dns_hijack_ready,..}=&mut *e;
                     let Some(reassembly)=normal.as_mut()else{break};
                     match owner.drain_android_normal_off_to_tun(
                         reassembly,&tun,lease,at,
                         std::mem::take(&mut rx_storage),
+                        android_dns_flows,*android_dns_hijack_ready,
+                        &mut dns_reply_scratch,
                     ){
                         Ok((returned,report,delivered,failed,healthy,hint,retired))=>{
                             rx_storage=returned;
@@ -494,7 +500,9 @@ fn tun_worker(
             // lease/IPv4 gate and before M1 seal. This NEVER consumes,
             // rewrites or drops it: no DNS backend or inverse mapping has
             // been admitted yet. No second read, worker or Go JNI callback.
-            match crate::v4_android_dns_ingress::observe_ipv4_dns53(head,n){
+            let dns_observation=
+                crate::v4_android_dns_ingress::observe_ipv4_dns53(head,n);
+            match dns_observation{
                 crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}=>{
                     stats.dns_udp53_seen.fetch_add(1,Ordering::Relaxed);
                 },
@@ -509,6 +517,21 @@ fn tun_worker(
             let escaped=head.starts_with(LINK_MAGIC);
             let at=now();
             if n<=head_cap&&!escaped{
+                // Only a completely admitted DNS generation may replace
+                // original DNS with 1.1.1.1 on the same loaned M1 slab.
+                // No Go/JNI per packet, alternate TUN reader or fallback.
+                if e.android_dns_hijack_ready &&
+                   matches!(dns_observation,
+                       crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+                    let dns_packet=&mut slab.writable()[14..14+n];
+                    if e.android_dns_flows.rewrite_query(
+                        dns_packet,at.0/1_000_000
+                    ).is_err(){
+                        e.arena.drain_returns();
+                        stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                        break
+                    }
+                }
                 // Common O(1) hot path: original owner AEAD/PN directly
                 // over the kernel-filled slab, immutable M4 RAW sendto.
                 match e.owner.seal_android_read_normal_ip(
@@ -541,6 +564,18 @@ fn tun_worker(
                 jumbo_spare.extend_from_slice(&overflow[..n-head_cap]);
             }
             if jumbo_spare.len()!=n{
+                stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                break
+            }
+            // DNS with EDNS can exceed the common slab head; inspect the
+            // one already-collected complete IP before M3 fragmentation.
+            if e.android_dns_hijack_ready &&
+               matches!(crate::v4_android_dns_ingress::observe_ipv4_dns53(
+                   &jumbo_spare,n
+               ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}) &&
+               e.android_dns_flows.rewrite_query(
+                   &mut jumbo_spare,now().0/1_000_000
+               ).is_err(){
                 stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                 break
             }
@@ -621,9 +656,15 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
         let lease=e.client_lease_ipv4;
         let at=now();
         let drained={
-            let Entry{owner,normal,..}=&mut *e;
+            let mut dns_reply_scratch=Vec::with_capacity(
+                crate::v4_android_dns_udp_flow::MAX_DNS_IPV4_PACKET
+            );
+            let Entry{owner,normal,android_dns_flows,
+                android_dns_hijack_ready,..}=&mut *e;
             owner.drain_android_normal_off_to_tun(
-                normal.as_mut().unwrap(),&tun,lease,at,Vec::with_capacity(32)
+                normal.as_mut().unwrap(),&tun,lease,at,Vec::with_capacity(32),
+                android_dns_flows,*android_dns_hijack_ready,
+                &mut dns_reply_scratch
             )
         };
         match drained{

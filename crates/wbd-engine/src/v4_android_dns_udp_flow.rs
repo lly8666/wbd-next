@@ -12,6 +12,8 @@ const CAP:usize=64;
 const FIRST_PORT:u16=50_000;
 const MAX_AGE_MS:u64=12_000;
 const QUESTION_MAX:usize=260;
+// At most IPv4 options + UDP header + the B1 bounded DNS wire size.
+pub(crate) const MAX_DNS_IPV4_PACKET:usize=60+8+4096;
 
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum FlowError { Malformed,Capacity,Unowned,Expired,QuestionMismatch }
@@ -123,6 +125,19 @@ fn question(dns:&[u8],response:bool)->Result<Question,FlowError>{
     })
 }
 impl TunnelDnsUdpFlows {
+    /// Cheap candidate check after the ORIGINAL AEAD/replay+M3 reassembly,
+    /// before an authenticated IP packet reaches the actual TUN writer.
+    /// A candidate with a bad length/checksum/question must be rejected by
+    /// rewrite_reply, never transparently delivered as another DNS server.
+    pub(crate) fn is_tunnel_reply_candidate(packet:&[u8])->bool{
+        if packet.len()<28||packet[0]>>4!=4||packet[9]!=17||
+           packet[12..16]!=TUNNEL_DNS{return false}
+        let ihl=usize::from(packet[0]&15)*4;
+        if ihl<20||ihl>60||ihl+8>packet.len(){return false}
+        let port=be16(&packet[ihl+2..ihl+4]);
+        be16(&packet[ihl..ihl+2])==53&&
+            (FIRST_PORT..FIRST_PORT+CAP as u16).contains(&port)
+    }
     pub(crate) fn len(&self)->usize{
         self.slots.iter().filter(|x|x.is_some()).count()
     }
@@ -312,6 +327,28 @@ mod tests {
         t.stop();
         assert_eq!(t.len(),0);
         assert_eq!(t.rewrite_reply(&mut too_late,3),Err(FlowError::Unowned));
+    }
+    #[test]
+    fn b2c2b2_m4_uses_only_tunnel_dns_source_and_owned_reply_ports(){
+        let mut owner=TunnelDnsUdpFlows::default();
+        let mut request=packet(&dns_query("wbd.example",44),
+            [10,0,0,7],[8,8,4,4],41001,53);
+        assert!(!TunnelDnsUdpFlows::is_tunnel_reply_candidate(&request));
+        owner.rewrite_query(&mut request,1).unwrap();
+        let response=reply_for(&request,"wbd.example");
+        assert!(TunnelDnsUdpFlows::is_tunnel_reply_candidate(&response));
+        let mut other=response.clone();other[12]=9;
+        assert!(!TunnelDnsUdpFlows::is_tunnel_reply_candidate(&other));
+        let mut other=response.clone();other[20]=0;other[21]=54;
+        assert!(!TunnelDnsUdpFlows::is_tunnel_reply_candidate(&other));
+        let mut other=response.clone();other[22]=1;other[23]=0;
+        assert!(!TunnelDnsUdpFlows::is_tunnel_reply_candidate(&other));
+        let mut returned=response.clone();
+        owner.rewrite_reply(&mut returned,2).unwrap();
+        assert_eq!(&returned[12..16],&[8,8,4,4]);
+        assert_eq!(&returned[22..24],&41001u16.to_be_bytes());
+        owner.stop();
+        assert_eq!(owner.len(),0);
     }
     #[test]
     fn b2c2b1_rust_udp53_rejects_fragments_and_malformed_without_packet_mutation(){

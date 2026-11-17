@@ -1961,6 +1961,8 @@ impl ProtectedScopedOwner{
     pub(crate) fn drain_android_normal_off_to_tun(
         &mut self,receiver:&mut NormalOffReceive,tun:&AndroidOwnedTun,
         lease:Option<[u8;4]>,now:MonoNs,storage:Vec<RxPacket>,
+        dns_flows:&mut crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows,
+        dns_capture_enabled:bool,dns_reply_scratch:&mut Vec<u8>,
     )->Result<(Vec<RxPacket>,NormalOffReport,u32,u32,bool,Option<u64>,bool),
         (ProtectedCryptoError,Vec<RxPacket>)>{
         if self.state!=OwnerPhase::Active||tun.generation()!=self.generation||
@@ -1979,10 +1981,36 @@ impl ProtectedScopedOwner{
             |_pn,link|{
                 receiver.accept_authenticated_link(
                     _pn,link,ms,&mut |_id,business|{
-                        if crate::v4_session_address::admitted_client_destination(
+                        if !crate::v4_session_address::admitted_client_destination(
                             business,lease
-                        )&&tun.write_authenticated_ip(business)
-                            .ok()==Some(business.len()){
+                        ){
+                            failed=failed.saturating_add(1);
+                            return
+                        }
+                        let mut ip=business;
+                        if dns_capture_enabled &&
+                           crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::
+                               is_tunnel_reply_candidate(business){
+                            if business.len()>
+                               crate::v4_android_dns_udp_flow::MAX_DNS_IPV4_PACKET{
+                                failed=failed.saturating_add(1);
+                                return
+                            }
+                            // The original AEAD/PN and complete M3 gate
+                            // have already accepted this IP. Only a real
+                            // owned Tunnel DNS reply is copied and inverse
+                            // mapped, before the ONE original TUN writer.
+                            dns_reply_scratch.clear();
+                            dns_reply_scratch.extend_from_slice(business);
+                            if dns_flows.rewrite_reply(
+                                dns_reply_scratch.as_mut_slice(),ms
+                            ).is_err(){
+                                failed=failed.saturating_add(1);
+                                return
+                            }
+                            ip=dns_reply_scratch.as_slice();
+                        }
+                        if tun.write_authenticated_ip(ip).ok()==Some(ip.len()){
                             delivered=delivered.saturating_add(1)
                         }else{
                             failed=failed.saturating_add(1)

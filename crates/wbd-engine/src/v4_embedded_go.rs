@@ -822,6 +822,12 @@ struct Entry{
     #[cfg(target_os="android")]
     android_tun:Option<Arc<AndroidOwnedTun>>,
     #[cfg(all(target_os="android",target_arch="aarch64"))]
+    android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows,
+    // Fail-closed until physical and Tunnel DNS, CN policy, TCP53 and
+    // Android system Resolver ingress have one authenticated owned lifecycle.
+    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    android_dns_hijack_ready:bool,
+    #[cfg(all(target_os="android",target_arch="aarch64"))]
     android_workers:Option<android_original_m4::AndroidOriginalWorkers>,
     #[cfg(all(target_os="android",target_arch="aarch64"))]
     android_joining:bool,
@@ -1170,6 +1176,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_raw_tx:None,
         #[cfg(target_os="android")]
         android_tun:None,
+        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::default(),
+        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        android_dns_hijack_ready:false,
         #[cfg(all(target_os="android",target_arch="aarch64"))]
         android_workers:None,
         #[cfg(all(target_os="android",target_arch="aarch64"))]
@@ -2872,6 +2882,13 @@ fn stop(handle:u64)->i32{
         if let Some(raw)=e.android_raw_rx.as_ref(){raw.begin_stop()}
         if let Some(raw)=e.android_raw_tx.as_ref(){raw.begin_stop()}
         if let Some(tun)=e.android_tun.as_ref(){tun.begin_stop()}
+    }
+    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    {
+        // Both M4 kernel threads are joined. Retire every outstanding DNS
+        // reverse-map slot before crypto/TUN FD retirement of this generation.
+        e.android_dns_hijack_ready=false;
+        e.android_dns_flows.stop();
     }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
     let mut drained=retired.ready.batch_handles_released();
