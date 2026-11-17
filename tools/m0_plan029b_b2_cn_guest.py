@@ -52,11 +52,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                                        "tun_destination": overseas}
                 sock.sendto(wire + b"-REPLY", peer)
                 continue
-            if label in seen:
-                raise RuntimeError("B2 two upstream queries for one real app DNS ticket")
             if len(wire) < 12 or wire[2:6] != b"\x01\x00\x00\x01" or \
                wire[12:] != ip + A:
                 raise RuntimeError("B2 wrong real upstream domain/question")
+            # The original Windows application deliberately retries its
+            # same-id UDP ticket on a timeout, and the Rust owner may issue
+            # a second UDP attempt to the *same* chosen physical/TUN DNS
+            # endpoint. PLAN029 §4 permits at most two bounded attempts.
+            # Never collapse, hide or accept unbounded repeated upstream
+            # traffic, a different QNAME/qtype, another peer or a cross-lane
+            # fallback: all are checked before counting this attempt.
+            prior = seen.get(label)
+            attempts = (prior["physical_attempts"] if prior else 0) + 1
+            if attempts > 2:
+                raise RuntimeError("B2 excessive same-endpoint DNS upstream retry")
+            upstream_ids = list(prior["upstream_ids"]) if prior else []
+            upstream_ids.append("%04x" % int.from_bytes(wire[:2], "big"))
             if label == "cn_dns":
                 cname = (b"\xc0\x0c\x00\x05\x00\x01" +
                          struct.pack("!IH", 2, len(EDGE)) + EDGE)
@@ -75,7 +86,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
             seen[label] = {"question": "www.cn.example" if ip == CN else "www.globalx.example",
                            "source": peer[0], "upstream": physical if label == "cn_dns" else tunnel,
                            "ttl": 2, "real_a": overseas,
-                           "cname": bool(cname)}
+                           "cname": bool(cname),
+                           "physical_attempts": attempts, "upstream_ids": upstream_ids}
     if set(seen) != {"cn_dns", "global_dns", "P29B-CN-TUNNEL", "P29B-GLOBAL-TUNNEL"}:
         raise RuntimeError("B2 missing genuine split DNS or TUN data: " + repr(seen))
     print("PLAN029B_B2_REAL_LINUX_CN_PHYSICAL_DNS_AND_BOTH_TUNNEL_DATA " +

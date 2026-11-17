@@ -4,24 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2091,
-  "checkpoint_sha": "63985588e613bda4c76c743b2b15a9a9e7aca263",
+  "sequence": 2092,
+  "checkpoint_sha": "071dde382a314d52fa2959201317b166b3f08677",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2091 unblock exact source-locked 029B B2 original Windows2025/WSL2 ordinary CN real-A signed network: H2090 Go/Windows Rust/Linux Rust/cheap preflights PASS, governance structure PASS, but native-public-two-os job SKIPPED because explicit [plan029b-b2-cn-ordinary-real] missing in tools/m0_native_ci_scope.py marker whitelist. Feature catalog structure PASS, 121 historical tests only H1934 source string check FAIL after B2 reuses same owned TUN alias. Add explicit scoped B2 marker and method-local unit, update old H1934 same alias expectation. Product code unchanged; H2090 B2 signed NOT_RUN preserved.",
-  "why_now": "H2090 source63985588 Action44059476705 cheap and both Go/Rust unit compile PASS but native SKIPPED by intended diff classification: selector had B0 but not B2 marker. Governance Action44059476683 structure PASS; Feature catalog check artifact status PASS but separate old test_h1934_policy_wiring asserts exact original 3-arm alias conditional, now B2 reuses same alias, so test FAIL. H2089 44056378053 true signed B0 DNS A/AAAA and Stop PASS_SCOPED independent. New SOURCE H2091 has no B2 signed yet.",
+  "current_task": "H2092 B2 real signed original Windows/WSL2 first boundary: Action44060263345 source071d full native FAIL because Linux B2 DNS guest requires exactly one upstream per DNS QNAME and crashes on allowed same-direction retry (at most two UDP attempts). Inspected original ZIP artifact14318238283: Windows real app PASS CN physical CNAME+real-A TTL2, nonCN TUN real same overseas A, two actual overseas Tunnel business replies, ordinary no FakeIP; guest exited before full signed both-owned Stop validation. Change only guest strict per-lane two-attempt bound with exact peer/question and count/IDs report. H2091 FAIL preserved, product code unchanged; H2092 next signed rerun PENDING.",
+  "why_now": "H2091 Action44060263345 cheap, Windows Go/Rust/Linux Rust & Linux real builder PASS; native-public-two-os job 133962868439 FAIL. Raw result shows Linux guest RuntimeError 'B2 two upstream queries for one real app DNS ticket'; its own if label in seen rejects even a second UDP query despite existing PLAN029 contract §4 allowing total max two same-endpoint UDP tries. Windows real application log independently PASS 4 original app stages with CN real CNAME+A/TTL2, nonCN same A, both via authenticated Tunnel. Fix fixture without enlarging 5s DNS budget, changing real owner, or hiding retry count; original Linux guest crashed before final report/owned Stop.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2091 explicit native marker and genuine signed Normal outer1460 B2 original Windows CN physical DNS CNAME/real A, nonCN TUN DNS same A and both real overseas TUN business, both owned Stops; if first genuine failure fix only that and retain FAIL. Then advanced CN true physical and B3 genuine IPv6 entry, GUI lifecycle B4 and same-VM modest B5. No 028/030 old matrix.",
+  "next_action": "Collect exactly one H2092 source-locked signed B2 original Windows2025/WSL2 native. Require guest sees both resolver lanes with <=2 same endpoint physical UDP tries each, exact QNAME/type/source, CNAME real A TTL2 and both overseas Tunnel app replies; verify full owned Stop and original GUI/Normal regression. If >2 retries or new first failure, preserve FAIL and diagnose product (not weaken again). After B2 PASS pursue smallest advanced CN true and IPv6 real Wintun/GUI lifecycle and B5 10Mbps same-VM sequential.",
   "unverified": true,
-  "last_tested_source": "63985588e613bda4c76c743b2b15a9a9e7aca263",
+  "last_tested_source": "071dde382a314d52fa2959201317b166b3f08677",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2091-H2090-B2-NATIVE-SCOPE-FIX-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2092-H2091-B2-BOUNDED-DNS-RETRY-FAIL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2091-B2-NATIVE-SCOPE-H1934-FIX.md",
-    "docs/evidence/M0/PLAN029B-H2091-H2090-B2-NATIVE-SCOPE-FIX-20261117.json",
-    "docs/prompts/M0-PLAN029B.md"
+    "docs/devlog/M0/20261117-PLAN029B-H2092-B2-BOUNDED-DNS-RETRY-ORACLE.md",
+    "docs/evidence/M0/PLAN029B-H2092-H2091-B2-BOUNDED-DNS-RETRY-FAIL-20261117.json",
+    "docs/prompts/M0-PLAN029B.md",
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2089 source d0dd9f true signed B0 UDP/TCP53 real A TTL2/AAAA local NODATA zero leak and Stop PASS_SCOPED. H2090 source63985588 Go/Rust/cheap PASS, governance PASS, new B2 native SKIPPED due unregistered scope marker; H1934 old text test FAIL. H2091 only scene marker plus old source-wiring check and evidence; signed new CN B2 remains NOT_RUN until actual job."
+  "partial_summary": "H2089 old exact SOURCE d0dd true signed B0 real DNS UDP/TCP53 AAAA NODATA Stop PASS_SCOPED. H2091 SOURCE071d signed B2 Windows original app four-stage true CNAME real A/Tunnel business PASS, but Linux guest overly strict one-upstream-count died on a same-endpoint retry => native overall FAIL, owned Stop final NOT_RUN. H2092 test-only bounded 2-attempt/endpoint retry + report count, one exact native retest pending. B3/B4/B5 full exit NOT_RUN."
 }
