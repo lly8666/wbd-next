@@ -147,3 +147,224 @@ pub fn open_bound_raw_tcp(network_handle: u64, interface: &str)
     let index = bind_underlay_socket(owned.as_raw_fd(), network_handle, interface)?;
     Ok((owned, index))
 }
+
+
+// A2 Android-only kernel I/O seam for the ORIGINAL Rust authenticated M4
+// worker. The structs own only Bionic FDs; no credentials, TLS, FEC, packet
+// scheduler or route mutation lives here. Integration with M4 is NOT_RUN.
+const IPPROTO_RAW: c_int = 255;
+const IPPROTO_IP: c_int = 0;
+const IP_HDRINCL: c_int = 3;
+const SO_ATTACH_FILTER: c_int = 26;
+const SIOCGIFMTU: usize = 0x8921;
+const MSG_DONTWAIT: c_int = 0x40;
+const MSG_TRUNC: c_int = 0x20;
+const MIN_IPV4_MTU: u32 = 68;
+const MAX_IPV4_MTU: u32 = 65535;
+
+#[repr(C)]
+struct AndroidSockAddrIn {
+    family: u16,
+    port: u16,
+    ip_be: u32,
+    zero: [u8; 8],
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct AndroidSockFilter {
+    code: u16,
+    jt: u8,
+    jf: u8,
+    k: u32,
+}
+#[repr(C)]
+struct AndroidSockFprog {
+    len: u16,
+    filter: *const AndroidSockFilter,
+}
+unsafe extern "C" {
+    fn sendto(fd: c_int, data: *const c_void, len: usize, flags: c_int,
+        address: *const c_void, address_len: u32) -> isize;
+    fn recvfrom(fd: c_int, data: *mut c_void, len: usize, flags: c_int,
+        address: *mut c_void, address_len: *mut u32) -> isize;
+}
+
+/// Read back the physical interface MTU using the *same* bound socket.
+/// Go's cold Network callback must rotate/re-authorize a changed ifindex/MTU;
+/// this is not a second netlink listener or a per-packet ioctl.
+pub fn check_bound_interface_mtu(
+    fd: RawFd, interface: &str, expected_ifindex: u32, expected_mtu: u32,
+) -> io::Result<()> {
+    let name = name_bytes(interface)?;
+    if fd < 0 || expected_ifindex == 0 ||
+        !(MIN_IPV4_MTU..=MAX_IPV4_MTU).contains(&expected_mtu) {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid network scope"));
+    }
+    let observed_index = unsafe { if_nametoindex(name.as_ptr()) };
+    if observed_index == 0 || observed_index != expected_ifindex {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "physical ifindex changed"));
+    }
+    let mut req = [0u8; IFREQ_BYTES];
+    req[..name.as_bytes().len()].copy_from_slice(name.as_bytes());
+    if unsafe { ioctl(fd, SIOCGIFMTU, req.as_mut_ptr()) } != 0 {
+        return Err(io::Error::last_os_error());
+    }
+    let observed_mtu = i32::from_ne_bytes(req[16..20].try_into().unwrap());
+    if observed_mtu <= 0 || observed_mtu as u32 != expected_mtu {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "physical MTU changed"));
+    }
+    Ok(())
+}
+
+fn exact_raw_tcp_filter(
+    source: [u8; 4], destination: [u8; 4],
+    source_port: u16, destination_port: u16,
+) -> io::Result<[AndroidSockFilter; 13]> {
+    if source_port == 0 || destination_port == 0 ||
+        source[0] == 0 || destination[0] == 0 {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid owned TCP tuple"));
+    }
+    // Exactly the mature Linux M4 13-insn classic BPF shape: protocol,
+    // source/destination IP and TCP ports at variable IPv4 IHL. Bionic
+    // sock_filter/sock_fprog are verified against the NDK at build time.
+    let load = |code, k| AndroidSockFilter { code, jt: 0, jf: 0, k };
+    let eq = |k, jf| AndroidSockFilter { code: 0x15, jt: 0, jf, k };
+    Ok([
+        load(0x30, 9), eq(6, 10),
+        load(0x20, 12), eq(u32::from_be_bytes(source), 8),
+        load(0x20, 16), eq(u32::from_be_bytes(destination), 6),
+        load(0xb1, 0),
+        load(0x48, 0), eq(u32::from(source_port), 3),
+        load(0x48, 2), eq(u32::from(destination_port), 1),
+        load(0x06, u32::MAX), load(0x06, 0),
+    ])
+}
+
+/// Kernel-only raw RX descriptor, with NO unfiltered fallback. A packet
+/// remains unauthenticated until the existing Rust M3 opener validates it.
+pub struct AndroidBoundRawRx {
+    fd: OwnedFd,
+    generation: u32,
+    mtu: u32,
+    stopping: AtomicBool,
+}
+impl AndroidBoundRawRx {
+    pub fn open_exact(
+        network_handle: u64, interface: &str, expected_ifindex: u32,
+        expected_mtu: u32, generation: u32,
+        source: [u8; 4], destination: [u8; 4],
+        source_port: u16, destination_port: u16,
+    ) -> io::Result<Self> {
+        if generation == 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "missing generation"));
+        }
+        let instructions = exact_raw_tcp_filter(source, destination, source_port, destination_port)?;
+        let (fd, index) = open_bound_raw_tcp(network_handle, interface)?;
+        if index != expected_ifindex {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "raw RX wrong ifindex"));
+        }
+        check_bound_interface_mtu(fd.as_raw_fd(), interface, index, expected_mtu)?;
+        let program = AndroidSockFprog { len: instructions.len() as u16,
+            filter: instructions.as_ptr() };
+        let rc = unsafe { setsockopt(fd.as_raw_fd(), SOL_SOCKET, SO_ATTACH_FILTER,
+            (&program as *const AndroidSockFprog).cast(),
+            std::mem::size_of::<AndroidSockFprog>() as u32) };
+        if rc != 0 { return Err(io::Error::last_os_error()); }
+        Ok(Self { fd, generation, mtu: expected_mtu,
+            stopping: AtomicBool::new(false) })
+    }
+    pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
+    pub fn begin_stop(&self) { self.stopping.store(true, Ordering::Release); }
+    /// Nonblocking *one* kernel read into the original M1-owned slab. The
+    /// caller must use shared rx_ipv4_tcp parsing and original M3 AEAD/PN.
+    pub fn read_untrusted(&self, generation: u32, buffer: &mut [u8]) -> io::Result<usize> {
+        if self.stopping.load(Ordering::Acquire) || generation != self.generation {
+            return Err(io::ErrorKind::BrokenPipe.into());
+        }
+        if buffer.len() < 40 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "small M1 slab"));
+        }
+        let cap = buffer.len().min(self.mtu as usize);
+        let n = unsafe { recvfrom(self.fd.as_raw_fd(), buffer.as_mut_ptr().cast(), cap,
+            MSG_DONTWAIT | MSG_TRUNC, std::ptr::null_mut(), std::ptr::null_mut()) };
+        if n < 0 { return Err(io::Error::last_os_error()); }
+        if n as usize > cap {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "truncated raw RX"));
+        }
+        Ok(n as usize)
+    }
+}
+
+/// Scoped native RAW TX. Only the original M4 may supply a fully formed
+/// IPv4/TCP packet from shared ipv4_tcp::build over an immutable M3 record.
+/// No direct-app TCP relay, Go data pump, or alternative TCP/IP stack.
+pub struct AndroidBoundRawTx {
+    fd: OwnedFd,
+    generation: u32,
+    mtu: u32,
+    source: [u8; 4],
+    destination: [u8; 4],
+    stopping: AtomicBool,
+}
+impl AndroidBoundRawTx {
+    pub fn open(
+        network_handle: u64, interface: &str, expected_ifindex: u32,
+        expected_mtu: u32, generation: u32,
+        source: [u8; 4], destination: [u8; 4],
+    ) -> io::Result<Self> {
+        if generation == 0 || source[0] == 0 ||
+            destination[0] == 0 || destination[0] >= 224 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid owned outer tuple"));
+        }
+        let raw = unsafe { socket(AF_INET, SOCK_RAW | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_RAW) };
+        if raw < 0 { return Err(io::Error::last_os_error()); }
+        let fd = unsafe { OwnedFd::from_raw_fd(raw) };
+        let index = bind_underlay_socket(fd.as_raw_fd(), network_handle, interface)?;
+        if index != expected_ifindex {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "raw TX wrong ifindex"));
+        }
+        check_bound_interface_mtu(fd.as_raw_fd(), interface, index, expected_mtu)?;
+        let hdrincl: c_int = 1;
+        if unsafe { setsockopt(fd.as_raw_fd(), IPPROTO_IP, IP_HDRINCL,
+            (&hdrincl as *const c_int).cast(), std::mem::size_of::<c_int>() as u32) } != 0 {
+            return Err(io::Error::last_os_error());
+        }
+        Ok(Self { fd, generation, mtu: expected_mtu, source, destination,
+            stopping: AtomicBool::new(false) })
+    }
+    pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
+    pub fn begin_stop(&self) { self.stopping.store(true, Ordering::Release); }
+    /// Kernel copy != remote delivery. Short/uncertain sends are returned
+    /// as errors; never reseal a PN or silently try an unbound route.
+    /// route_budget is the shared native M4's last approved PMTU snapshot,
+    /// not a per-packet Go callback or an independently refreshed timer.
+    pub fn send_built_outer(
+        &self, generation: u32, packet: &[u8], route_budget: u32,
+    ) -> io::Result<usize> {
+        if self.stopping.load(Ordering::Acquire) || generation != self.generation {
+            return Err(io::ErrorKind::BrokenPipe.into());
+        }
+        if packet.len() < 40 || route_budget < MIN_IPV4_MTU ||
+            route_budget > self.mtu || packet.len() > route_budget as usize ||
+            packet.len() > MAX_IPV4_MTU as usize || packet[0] >> 4 != 4 ||
+            (packet[0] & 15) < 5 || packet[9] != IPPROTO_TCP as u8 ||
+            usize::from(u16::from_be_bytes([packet[2], packet[3]])) != packet.len() ||
+            packet[12..16] != self.source || packet[16..20] != self.destination ||
+            u16::from_be_bytes([packet[6], packet[7]]) & 0x3fff != 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid original M4 outer"));
+        }
+        let address = AndroidSockAddrIn {
+            family: AF_INET as u16, port: 0,
+            ip_be: u32::from_ne_bytes(self.destination), zero: [0; 8],
+        };
+        let sent = unsafe { sendto(self.fd.as_raw_fd(), packet.as_ptr().cast(),
+            packet.len(), MSG_DONTWAIT,
+            (&address as *const AndroidSockAddrIn).cast(),
+            std::mem::size_of::<AndroidSockAddrIn>() as u32) };
+        if sent < 0 { return Err(io::Error::last_os_error()); }
+        if sent as usize != packet.len() {
+            return Err(io::Error::new(io::ErrorKind::WriteZero, "uncertain raw short send"));
+        }
+        Ok(sent as usize)
+    }
+}

@@ -30,7 +30,8 @@
     "android/root-native/build-source-locked.sh",
     ".github/workflows/android-root-product-a1.yml",
     "crates/wbd-engine/src/lib.rs",
-    "crates/wbd-engine/src/v4_embedded_go.rs"
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "android/root-native/README.md"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -109,7 +110,8 @@
     "Action44014373562 原Go-Rust共享V4冷owner在Bionic编译发现16个Linux M4专属字段/辅助函数条件门遗漏；正在按原内核驱动条件修正，未用stub冒充实际M4。",
     "Action44014838092 ARM64 Rust cold ABI导出通过但完整原Go CGo链接缺AndroidM4 RAW/TUN/Health/MTU符号，属于实际未实现；未生成真实WBD产品客户端APK。",
     "A1 双ABI冷编译证据生成器修正 Python ELF magic 字节及 SOURCE 换行转义；后续同源Action须独立验证，未标产品成功。",
-    "同源码c385502a A1 Action44015392698 双ABI Bionic C静态ABI、shared Rust original protected cold FFI与16KiB ELF PASS（ZIP14298207771）；arm64原Go完整链接仍FAIL于M4, x86完整链接NOT_RUN，非可安装产品APK。"
+    "同源码c385502a A1 Action44015392698 双ABI Bionic C静态ABI、shared Rust original protected cold FFI与16KiB ELF PASS（ZIP14298207771）；arm64原Go完整链接仍FAIL于M4, x86完整链接NOT_RUN，非可安装产品APK。",
+    "A2 Bionic RAW IPv4 TX/tuple-filtered RX socket owner与ifindex/MTU冷读回已编写，尚未被共享Rust M4主循环消费；系统/真机socket行为、同源服务器业务均NOT_RUN；不可将此称为可连接客户端。"
   ],
   "promotion": null
 }

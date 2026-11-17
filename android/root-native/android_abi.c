@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <linux/if_tun.h>
 #include <linux/if_packet.h>
+#include <linux/filter.h>
 #include <android/multinetwork.h>
 
 _Static_assert(sizeof(void *) == 8, "Android product requires 64-bit pointers");
@@ -19,6 +20,10 @@ _Static_assert(IFNAMSIZ == 16, "unexpected ifname length");
 _Static_assert(TUNGETIFF == 0x800454d2UL, "TUNGETIFF ABI changed");
 _Static_assert(TUNSETIFF == 0x400454caUL, "TUNSETIFF ABI changed");
 _Static_assert(SO_BINDTODEVICE == 25, "socket binding ABI changed");
+_Static_assert(SIOCGIFMTU == 0x8921UL, "Bionic interface MTU ioctl changed");
+_Static_assert(SO_ATTACH_FILTER == 26, "Bionic classic BPF socket option changed");
+_Static_assert(sizeof(struct sock_filter) == 8, "Bionic sock_filter layout changed");
+_Static_assert(sizeof(struct sock_fprog) == 16, "Bionic sock_fprog layout changed");
 int wbd_android_abi_gate_only(void) {
     // Symbol references force header/type checking, not a device operation.
     net_handle_t network = 0;
