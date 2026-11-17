@@ -4,7 +4,7 @@
 
 ## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
 
-**唯一 Android 目标 ABI 是 `arm64-v8a`**（Rust `aarch64-linux-android` / Go `GOARCH=arm64`）。不再进行 Android x86、x86_64、armeabi-v7a 的开发、交叉编译、打包或验收；已存在的 x86 Android 源码/ZIP/Actions 仅历史留档，不代表新目标。Linux/Windows x86 产品、回归和保护区完全不受影响。首个真业务目标 Android16 ARM64 KernelSU；Android9–17 仅按可用 ARM64 镜像/真机选择后续覆盖，无 ARM64 镜像记 NOT_RUN，不补 x86 平台测试。真机操作仍需用户明确授权。
+**唯一 Android 目标 ABI 是 `arm64-v8a`**（Rust `aarch64-linux-android` / Go `GOARCH=arm64`）。不再进行 Android x86、x86_64、armeabi-v7a 的开发、交叉编译、打包或验收；已存在的 x86 Android 源码/ZIP/Actions 仅历史留档，不代表新目标。Linux/Windows x86 产品、回归和保护区完全不受影响。首个 Actions 真业务目标是 Android16 ARM64 userdebug/Cuttlefish P2 原生及 P3 普通 App→受控 su；Android16 ARM64 实体 KernelSU 仅最后专项终验；Android9–17 仅按可用 ARM64 镜像/真机选择后续覆盖，无 ARM64 镜像记 NOT_RUN，不补 x86 平台测试。真机操作仍需用户明确授权。
 
 **工作节奏**：以一次可审计的大批次推进同一功能纵切面，Go 原 TLS/租约冷控制、Rust 既有 PN/AEAD/M3/M4、Bionic RAW/TUN/物理Network、owned Stop、Android 构建和文档同时推进。互不相依的代码研读、平台接口、纯协议、Go CLI/UI 和文档尽量并行；合并时统一检查 source-lock、generation/lease、MTU、BorrowFence/Stop，一次 SOURCE 集中跑 ARM64 Actions，避免为孤立小改动重复触发较重构建。真正 Go→Rust 链接及真设备验收仍有顺序依赖，禁止 fake stub / 合成 PASS。更大批次也不以跳过安全、测试或日志为代价。
 
@@ -32,7 +32,7 @@
 | **C 产品模式与生命周期** | Normal/off、fixed/auto、Game原有lane；低频状态、前台Service、网络callback、重认证/轮换/切网、资源观测 | PLANNED | 同源模式及Stop；一次实际网络切换；有限业务 p99/CPU/RSS/idle 唤醒 |
 | **D 条件热点USB与PR整合** | 手机/热点/USB独立开关、系统共享SNAT/conntrack、真实offload/CLAT边界、回归/PR | PLANNED | 已授权真机专项结果 + 清晰NOT_RUN 清单 + PR；未经验收不得自合 main |
 
-**历史早期A1记录（不代表现行待办；后续ARM64原Go/Rust完整链接已PASS）：A1 ARM64+X86_64 Bionic ABI + 同一共享 Rust Go↔Rust 认证冷所有权真实C ABI导出、双64位 ELF 16KiB对齐（SOURCE `c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5`，Action44015392698，阶段清单/ZIP14298207771）；但原Go完整产品连接器在ARM64因 Android M4 RAW/TUN/Health/MTU 产品符号未移植而链接FAIL，x86完整链接NOT_RUN。下一步：A2 抽出经核验的共享 M4 owner 驱动接口，把 Android Root TUN/物理RAW、网络绑定接到原 Rust PN/AEAD/Stop；A3 再在 Android16 KSU 与同源 Linux 服务端真实 TLS/认证/租约及 TCP/UDP 收发验收。** A1 的构建或符号检查不能宣称 A2/A3 成功；不要重新扩张短时探针按钮。
+**历史早期A1记录（不代表现行待办；后续ARM64原Go/Rust完整链接已PASS）：A1 ARM64+X86_64 Bionic ABI + 同一共享 Rust Go↔Rust 认证冷所有权真实C ABI导出、双64位 ELF 16KiB对齐（SOURCE `c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5`，Action44015392698，阶段清单/ZIP14298207771）；但原Go完整产品连接器在ARM64因 Android M4 RAW/TUN/Health/MTU 产品符号未移植而链接FAIL，x86完整链接NOT_RUN。**彼时历史下一步（现已完成 ARM64 原生链接，不再作为当前待办）**：A2 抽出经核验的共享 M4 owner 驱动接口，把 Android Root TUN/物理RAW、网络绑定接到原 Rust PN/AEAD/Stop；A3 再验真实 Android 与同源 Linux 服务端 TLS/认证/租约及 TCP/UDP 收发（现行准入以 §8.0 P2/P3 为准，实体 KSU 最后终验）。** A1 的构建或符号检查不能宣称 A2/A3 成功；不要重新扩张短时探针按钮。
 
 ### A2 ARM64 原 M4 施工切片：就绪线程/Health/Stop
 
@@ -90,7 +90,7 @@ P2 可以先解除 Bionic 运行/内核协议风险，但**A 包产品完成必�
 
 ## 8. Action 分层验收和边界
 
-- A：一Action一网络场景，source lock + manifest + hash复用原Go donor/Rust/Android，先Android16 KSU ↔ 同源Linux服务端标准TLS/认证/租约/Normal-off的真双向TCP/UDP + Stop，再冻SOURCE、写证据。不借现有合成DNS/loopback TCP结果推广。Android ARM64实际装载、ISA加速必须真机证明。
+- A：同一SOURCE/manifest/hash复用原Go donor/Rust/Android与原Linux服务端；现有Linux-only真实协议oracle PASS。按§8.0 P2§真实ARM64 Android userdebug原Bionic→Linux真 TLS/认证/租约/双向TCP/UDP/Stop，再按§8.0 P3§普通App→受控su同源闭环；不能用合成DNS/loopback TCP或adb root代替P3。Android硬件ISA加速须最终实体机确认。
 - B：两真实App（跟随/直连/规则分流/全隧道），受控解析CN、非CN、CN→海外A、UDP/TCP53/截断、bootstrap与不回环、手动规则成功/失败保旧、主网络Apply/Stop；少量公网解析，勿把某域名公网A写死。
 - C：fixed/auto/Game原档位与lanes、重认证/切网、idle/wake、异常退出、普通/近MTU；低负载10–20Mbps、30–60秒先读CPU/RSS/p99和空闲唤醒，性能容量不足便停止，不刷500Mbps，不拿AVD代表手机耗电。
 - D：实际ARM64手机Root授权、真实热点/USB、offload、CLAT/蜂窝切换/功耗专项另列授权与NOT_RUN。Android9–17只看可运行 ARM64 镜像或已授权真机，缺 ARM64 镜像记 NOT_RUN，不运行 Android x86 矩阵；adb-root不代表App su全版本。旧Windows/Linux产品不许回归。
