@@ -15,3 +15,15 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B2c3原Root App+原Go cold增加物理Network精确绑定服务器域名DNS bootstrap后再发真实FakeTCP/TLS；新增原DNS真实UDP/TCP与Java源夹具，普通App DNS仍冷关闭。"}
 ```
+
+## 本批 SOURCE 结论（同源整包已冻结）
+
+代码SOURCE `fe9a548045d61adcbb54a86df57c753232b7dc89` 的 [Android ARM64产品Action #44102216916](https://github.com/lly8666/wbd-next/actions/runs/44102216916) **10/10 Jobs SUCCESS**，包括原Go B1真本地UDP53和同端TCP53/CNAME原问题校验（新增B2c3三项PASS）、B2c1物理socket Host、B2a固定CN8503、原Rust单TUN DNS ingress及64槽逆映射、原M3、Android ARM64真实Bionic CGo+Rust ELF/16KiB、源码锁签名Root APK及同源原Linux真TLS/认证租约/M4双向UDP/Stop oracle。治理 [Action #44102216643](https://github.com/lly8666/wbd-next/actions/runs/44102216643) SUCCESS。
+
+**Android运行结论必须独立**：同源ARM64准入仅输出 `ANDROID_ARM64_KVM_HOST_ADMISSION_ONLY KVM_NOT_ACCESSIBLE arch aarch64 kvm NOT_AVAILABLE`，没有启动Android模拟器、没有真实设备的DNS/TLS日志、无实体KSU新授权。普通App物理/隧道双DNS UDP/TCP53、系统Resolver接管/owned Stop以及CN域名分流 **NOT_CONNECTED/NOT_RUN**；原M4 `hijack_enabled=0`。本包虽在Go runtime真实发DNS socket但目前只能断言 Android NDK链接和Host真实socket，不声称实际Bionic网关回包已证。
+
+后续唯一下一步为一次完整包：在现有唯一原Rust M4 owner内接齐普通App双DNS、CN冷规则和系统Resolver准入；以ARM64 Android16可执行环境→同源Linux真实Normal/off业务验收，实体机需明确授权。本批无需添加更多合成探针或长时性能矩阵。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"封存B2c3服务器FQDN真实物理DNS cold入口同源ARM64/Go Host/Linux oracle 10/10及治理通过，并明确Android emulator KVM阻断与真实DNS NOT_RUN。"}
+```
