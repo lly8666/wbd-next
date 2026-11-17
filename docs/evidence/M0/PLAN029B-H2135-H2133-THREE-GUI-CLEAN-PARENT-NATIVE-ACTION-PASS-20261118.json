@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2135",
+  "date": "2026-11-18",
+  "source_sha": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "action": {
+    "id": 44198794225,
+    "conclusion": "success",
+    "native_job_id": 134449721702,
+    "native": "success",
+    "cheap": "success",
+    "windows_go": "success",
+    "windows_rust": "success",
+    "linux_rust": "success",
+    "original_linux_build": "success",
+    "original_windows_build": "success",
+    "artifact_id": 14381915071,
+    "zip_sha256": "70ef3b00000f07791a51516e41e9b34b81eb052f9704042e6aaee7201897f08a",
+    "zip_entries": 28,
+    "all_crc": "PASS",
+    "manifest_source": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+    "original_win_exe_sha256": "a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46",
+    "original_linux_rust_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71"
+  },
+  "actual_win2025_wsl2_original_b4": {
+    "gui": "REAL_ORIGINAL_WINFORMS_BUTTON_GO_RUST",
+    "generations": 3,
+    "original_tls_source_ports": [
+      41031,
+      41032,
+      41033
+    ],
+    "outer_mtu_each": 1460,
+    "wintun_inner_os_mtu_each": [
+      1389,
+      1389,
+      1389
+    ],
+    "original_syn_synack_mss_each": [
+      1420,
+      1420,
+      1420
+    ],
+    "three_options": [
+      {
+        "ordinal": 1,
+        "route_mode": "bypass-lan-cn",
+        "cn_domain_direct": true,
+        "dns_upstream": "real_physical",
+        "cn_a": "FakeIP",
+        "business": "Direct_original_kernel"
+      },
+      {
+        "ordinal": 2,
+        "route_mode": "bypass-lan-cn",
+        "cn_domain_direct": false,
+        "dns_upstream": "real_physical",
+        "cn_a": "real 203.0.113.77",
+        "business": "Tunnel_original_kernel"
+      },
+      {
+        "ordinal": 3,
+        "route_mode": "all",
+        "split_enable": false,
+        "dns_upstream": "real_tunnel",
+        "cn_a": "real 203.0.113.77",
+        "business": "Tunnel_original_kernel"
+      }
+    ],
+    "physical_and_tun_guest_dns_business": "PASS_THREE_REAL_GUI_GENERATION_EGRESS",
+    "real_win32_udp_echo_generations": 3,
+    "linux_guest_upstream_dns_transactions": {
+      "advanced": 1,
+      "ordinary": 1,
+      "all": 1
+    },
+    "old_fakeip_application_reply": 0,
+    "old_fakeip_kernel_egress": 0,
+    "old_fake_business_markers": 0,
+    "actual_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "actual_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "actual_linux_tcp_received_bytes": 36,
+    "original_winforms_real_os_applied": 3,
+    "original_winforms_rust_wal_stop_per_generation": 3,
+    "original_winforms_form_closed_after_all_three_owned_stops": true,
+    "original_gui_parent_exit_code": 0,
+    "original_linux_m4_authenticated_sessions": 3,
+    "original_linux_shared_tun_stop": "PASS",
+    "mode_result": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+    "mode_batch": "PASS",
+    "both_owners_stop": "PASS_BOTH_OWNED"
+  },
+  "limits": {
+    "windows_real_GUI_B4": "PASS_SCOPED",
+    "b0_b3": "HISTORICAL_SCOPED_PASS_NOT_RERUN",
+    "game4_fec_off_outer1400": "H2134_CURRENT_SCOPE_PASS",
+    "game2_advanced_split": "UNSUPPORTED_EXECUTABLE_NOT_RUN",
+    "b5_sameVM_10mbps_cpu_gib_rss_p99": "NOT_RUN",
+    "normal_b4_cpu_p99": "NOT_MEASURED",
+    "plan029b": "OPEN",
+    "plan029": "OPEN",
+    "plan030": "NOT_STARTED"
+  }
+}
