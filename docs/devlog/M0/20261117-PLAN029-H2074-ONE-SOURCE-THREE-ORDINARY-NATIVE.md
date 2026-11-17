@@ -7,3 +7,7 @@
 只取必要第一失败：Linux server B 后真实 M3 AEAD/unique PN kind1/Health hint、旧 A /32 更新和精确 Stop、Windows B OS 1460/inner1389 Applied、单 DNS 两出口 TCP/UDP、第三次 TTL FakeIP 与正常重新连接。已实现的 P1/P2 纯组件、旧 Game4/FEC/Normal外观等历史证据保留，不跑极端 CPU/RSS/IPv6 全矩阵。新增控制只影响 native Normal/Fixed/Auto 冷启动 Health；实网通过后对原模式做小范围接线/编译回归，不能拿单个子测试替代产品结论。
 
 如当前新源码 Action 仍不通过，按首个新增失败修复并记录 FAIL，保留单条真实场景重测的权限；绝不放松服务端认证门或假 OS Ready。
+
+## H2075 source trigger correction
+
+H2074 文档提交没有匹配 `m0-wl-public-normal-full.yml` 的 `on.push.paths`，GitHub 只有 governance Action、无 native，**H2074 原生 NOT_RUN**。本次在同一个现有 workflow 仅添加不影响执行的顶部注释，形成真正 native path-trigger；复用已有 H2065 build-once/二场 fanout，不改 workflow 条件、fixture 逻辑或产品代码。仍等待三个真实 Action 的最终运行回执。

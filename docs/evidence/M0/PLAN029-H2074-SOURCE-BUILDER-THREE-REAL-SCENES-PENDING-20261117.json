@@ -56,5 +56,8 @@
   "workflow_dispatch_count_planned": 2,
   "push_builder_count_planned": 1,
   "run_id": null,
-  "legacy_fail_reference": "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json"
+  "legacy_fail_reference": "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json",
+  "status": "H2074_NO_NATIVE_RUN",
+  "note": "Commit 13b9295 doc-only change did not match native workflow on.push.paths; no Windows native Action was dispatched. H2075 existing workflow file inert comment is needed to trigger it.",
+  "workflow_dispatch_count_observed": 0
 }
