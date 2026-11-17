@@ -16,3 +16,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A8真实安装包多选1..16、canonical 1..8 UIDs接原Go Android-only group CLI和rootjournal version2共享表/优先级规则、锁/持久化/回滚/跨版本恢复；待同源Actions且真Android P2/P3未运行。"}
 ```
+
+## 首轮失败定位及修复（保留真实 FAIL）
+
+SOURCE `4d89814c4d92e825c664807b1c7de72c43a23080`，[Actions #44063385632](https://github.com/lly8666/wbd-next/actions/runs/44063385632)：原M3 PASS、ARM64原Go/Rust Native构建及包含新group全部Go单测 PASS，但 `root-arm64-app` 失败在 host `SelectedAppGroupTest`：测试先调用 `new InstalledAppTarget(...,9999/0)`，其生产构造器正确拒绝系统/Root UID并抛 `IllegalArgumentException`；夹具错误地预期非法对象能构造后再被分组拒绝，导致未到 APK build。修复把非法 UID 负例改为显式期待在目标对象构造器失败，保留另外的组装阶段拒绝与共享UID测试。**旧Action仍是FAIL，不重写成PASS**，待修复SOURCE新的完整5 Job实际结果。

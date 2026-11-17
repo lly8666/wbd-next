@@ -24,6 +24,12 @@ public final class SelectedAppGroupTest {
         catch(IllegalArgumentException e){rejected=true;}
         check(rejected,reason);
     }
+    private static void mustRejectInvalidTarget(String name,int uid,String reason){
+        boolean rejected=false;
+        try{new InstalledAppTarget(name,name,uid);}
+        catch(IllegalArgumentException e){rejected=true;}
+        check(rejected,reason);
+    }
     public static void main(String[] args){
         InstalledAppTarget a=app("com.a.alpha",12010),b=app("com.b.beta",12045);
         InstalledAppTarget c=app("com.c.gamma",12045);
@@ -49,8 +55,8 @@ public final class SelectedAppGroupTest {
         mustFail(new ArrayList<>(),"empty selection");
         mustFail(Arrays.asList(a,a),"duplicate package");
         mustFail(Arrays.asList(app("org.wbdnext.rootclient",10101)),"own UID/own package");
-        mustFail(Arrays.asList(app("com.bad.system",9999)),"system UID");
-        mustFail(Arrays.asList(app("com.bad.root",0)),"root UID");
+        mustRejectInvalidTarget("com.bad.system",9999,"system UID rejected before assembly");
+        mustRejectInvalidTarget("com.bad.root",0,"root UID rejected before assembly");
         mustFail(Arrays.asList(app("com.a.alpha",10101)),"alias of owner UID");
         List<InstalledAppTarget> nine=new ArrayList<>();
         for(int i=0;i<9;i++)nine.add(app("com.test.app"+i,11000+i));
