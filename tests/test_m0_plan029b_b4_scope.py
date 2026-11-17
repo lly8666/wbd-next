@@ -34,6 +34,14 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         self.assertIn("m0_plan029b_b4_real_gui.cs", bridge)
         self.assertIn("plan029b-b4-three-real-receipt.json", bridge)
         self.assertIn("PLAN029B_B4_THREE_REAL_GUI_GENERATIONS_AND_STOPS_COMPLETE", e2e)
+        # H2129 signed three original GUI generations and three real
+        # WAL Stops all succeeded, but the WinForms parent did not exit
+        # within the supervisor deadline. Close the genuine MainForm only
+        # AFTER all Stop/async UI callbacks and BEFORE final receipt.
+        self.assertIn('form.Close();',gui)
+        self.assertIn('Need(!client.Active && Status(form,"state")=="未连接"',gui)
+        self.assertIn("PLAN029B_B4_ORIGINAL_FORM_CLOSED_AFTER_THREE_OWNED_STOPS",gui)
+        self.assertLess(gui.index('form.Close();'),gui.index('store.WriteAtomic("data/plan029b-b4-three-real-receipt.json"'))
         self.assertIn("server_text.count(\"V4_PUBLIC_MULTI_SESSION_READY role=server one_port=443\")!=3", e2e)
         self.assertIn('exact("WBD_WINDOWS_CLIENT_READY")!=3', e2e)
         self.assertIn('exact("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS")!=3', e2e)

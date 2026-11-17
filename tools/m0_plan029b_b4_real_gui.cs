@@ -308,6 +308,19 @@ public static class Plan029BThreeRealGUI {
      ReadSupervisor("continue-ordinary",30000);
     }
    }
+   // All three ORIGINAL WinForms Disconnect buttons already joined the
+   // original Rust owners and restored OS WAL. Finish the REAL form's UI
+   // lifetime before publishing a final receipt. H2129 had all three
+   // genuine Stop markers but the parent remained alive until the
+   // supervisor's bounded wait failed. A foreground GUI handle must not
+   // survive a completed three-generation test.
+   Need(!client.Active && Status(form,"state")=="未连接",
+        "original final GUI Stop not complete before form close");
+   Tick(); // drain queued original BeginInvoke state after last owned Stop
+   form.Close();
+   Need(form.IsDisposed,"original WinForms form did not close after Stop");
+   Console.WriteLine("PLAN029B_B4_ORIGINAL_FORM_CLOSED_AFTER_THREE_OWNED_STOPS");
+   Console.Out.Flush();
    store.WriteAtomic("data/plan029b-b4-three-real-receipt.json",
      "{\"schema_version\":1,\"original_gui\":true,\"generations\":3,"+
      "\"real_applied\":3,\"owned_stop\":3,\"mtu\":1460,\"inner\":1389,"+
