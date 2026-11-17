@@ -21,3 +21,11 @@
 ## 首轮同源 FAIL：真实规则不保证任意 `.cn` 命中
 
 [Action 44072465559](https://github.com/lly8666/wbd-next/actions/runs/44072465559) SOURCE `92c4be735f5f582137f001d9cc14a315f90b03cc`：固定上游Zip成功导入，`ANDROID_B2_PINNED_CN_GEOSITE_IMPORT_8503_PASS`（SHA256、8503及各类型数量均正确），原Go matcher严格类型语义和真UDP/TCP CN/隧道/TC测试可运行；B2单测`TestPinnedCNGeosite8503FullTypedSnapshotAndNoSilentFallback`期望`foo.example.cn`为真CN而失败。真实固定8503条Geosite**未保证所有`.cn`后缀必命中**，不能因为旧KSU私有netns合成`.cn`样例就自行加未源锁的泛域规则。修复把此域名改为**明确负例**，正例只验证该固定规则真实含有的`www.baidu.com`、`www.qq.com`及`baidu.com`。旧失败保留，修复SOURCE需要新Actions6+ Job全验，不能修改旧Action结论。
+
+## B2a 修复版最终同源 Actions 真结果
+
+[Action 44073025085](https://github.com/lly8666/wbd-next/actions/runs/44073025085)，源码 `6dc6e9f0fc51ac885ba4c8832be0c63789d44f49`，**7/7 Jobs SUCCESS**：B2真固定源8,503条MIT/SHA及domain8431/full69/regexp3/keyword0；`ANDROID_B2_PINNED_CN_GEOSITE_IMPORT_8503_PASS`、`ANDROID_B2_PINNED_CN_8503_GO_DNS_REAL_HOST_LOOPBACK_PASS`；Go matcher full/domain/keyword/regexp区分、坏SHA/截断拒绝、真实CN/非CN/原Bootstrap在host UDP/TCP同endpoint应答均PASS。其他Job：B1普通DNS7组UDP/TCP回归、原M3 wire、原Go/Rust Android ARM64真实ELF+Go B2交叉编译、独立签名Root APK、原Linux server真TLS/租约/Rust M4双向UDP/Stop oracle、ARM64 KVM准入票据全PASS。
+
+**旧失败不改写**：[Action44072465559](https://github.com/lly8666/wbd-next/actions/runs/44072465559)固定源SHA/条数其实PASS，但测试夹具错误要求`foo.example.cn`必CN，真实8,503规则不含覆盖任意`.cn`的泛后缀，故B2单测FAIL；当前同源以它为负例，绝不手工添加宽泛`.cn`，旧失败仍FAIL。真实规则不会自动涵盖所有中国域名，Android UI后续应解释可手动前台更新规则。
+
+本批源码没有实际把8503 TXT/MIT LICENSE打入正式APK/原Go CLI（仅独立Actions工件供后续B2b使用）；没有真实Android物理Network socket/TUN DNS收发、系统netd Resolver捕获、CN IPv4路由或KernelSU真机运行。**合格结论只有 B2_PINNED_CN_GO_HOST_WIRE_PASS；P2/P3 ENV_BLOCKED/NOT_RUN、P5最终另授权**。

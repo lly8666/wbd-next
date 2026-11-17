@@ -17,6 +17,8 @@
 
 - [B1 同源 Action44069144804](https://github.com/lly8666/wbd-next/actions/runs/44069144804)，SOURCE `8534a9182475a07072a4ae0e77807e23e6a3261f`，**6/6 Jobs SUCCESS**：原Go独立DNS模块 Host **真实UDP/TCP loopback7组**（原始QNAME分流、bootstrap物理、split关闭、TC→同DNS同Path TCP、无跨上游回退、坏ID/畸形包拒绝、TTL缓存/并发合并）PASS；同源原Go/Rust ARM64 Native、Root签名APK、原M3、Linux标准TLS/租约/M4 UDP/Stop oracle PASS；DNS包另交叉编译Android ARM64 test ELF但**并未接入运行中原Go CLI或Android system Resolver/原Rust M4 TUN**。ARM64 host仍`KVM_NOT_ACCESSIBLE`，P2/P3 `ENV_BLOCKED`，不能宣称 Android DNS 可用。下一步优先 B2 同源CN Geosite真实规则数据/真实Path绑定/系统DNS拦截和IP分流，实体KSU最后。
 
+- [B2a 修复版 Action44073025085](https://github.com/lly8666/wbd-next/actions/runs/44073025085)，SOURCE `6dc6e9f0fc51ac885ba4c8832be0c63789d44f49`，**7/7 Jobs SUCCESS**：老诊断v2fly固定提交`41504eae2a11f305fe88cfc605cf6c105a80bf5a` 导入8,503条规则，真实SHA `45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6`，domain8431/full69/regexp3/keyword0，MIT LICENSE；原Go B2a CNRules四语义、坏SHA/截断拒绝和实际host UDP/TCP53格式/同endpoint TC loopback PASS，B1普通DNS回归、原M3、ARM64 Go/Rust Native+Go B2交叉编译、签名无VPN Root APK、原Linux服务器真TLS/租约/Rust M4/UDP/Stop oracle均PASS。**首轮 [Action44072465559](https://github.com/lly8666/wbd-next/actions/runs/44072465559) B2测试夹具FAIL**：误将`foo.example.cn`认为固定Geosite应命中；真实规则不覆盖所有`.cn`，改为负例且源规则未变，旧FAIL保留。Android物理/隧道DNS socket未接、真系统Resolver未接、CN数据仍仅Action工件，P2/P3受host KVM缺失ENV_BLOCKED、实体KSU最后。
+
 ## Actions 分层门禁，真实软件先行，实体 KSU 最后
 - **P0**：同一 SOURCE/manifest/SHA 的 Android ARM64-v8a Bionic 原 Go/Rust/Java APK、16KiB、原 M3 wire oracle，`BUILD_PASS`。
 - **P1**：同源 Linux 原 Go/Rust client+server 的标准 TLS、认证、/32租约、真实收发、Stop，`LINUX_ORACLE_PASS`。
@@ -31,4 +33,4 @@
 
 ## 永久产品红线与唯一下一步
 只做 Android arm64-v8a；固定原 Go donor `a7a82db31fe736ffedee330795a3234d358f1984`、原 Go 标准ClientHello/TLS/认证/租约冷代际、共享 Rust M1/M3/M4/PN/AEAD/FEC/MTU/Health/Stop。无 VpnService、FakeIP、Android新协议、逐包 Java/JNI/shell，直连保留内核原 TCP、WBD 才走 TUN；不刷真机、不关 SELinux、不写系统常驻 Root 模块。精确 owned journal/flock/compare-before-restore，禁止破坏 Android netd/全局路由或 root UID 放行。普通DNS只用 CN `223.5.5.5` 物理与隧道 `1.1.1.1`、bootstrap物理、失败不换上游；普通 per-App DNS不造 UID 身份。低频事件式 Network callback，降低空闲唤醒。单 SOURCE/manifest/hash 复用已构建原件，一个独立网络场景一个 Job，保留每次 FAIL/ENV_BLOCKED/NOT_RUN、短 devlog、功能卡和必要证据，不刷孤立小测试；main同步仅原既定窗口，PR保持 Draft。
-**当前唯一下一步**：B1真实Host DNS wire已PASS但正式Android DNS完全未接线。优先B2将经过核验的CN Geosite规则、同一路径物理Network/原WBD TUN出站与普通UDP/TCP53捕获真实接到原Go/Rust owner，逐场景Actions先测；完整直连/规则分流/系统Resolver暂NOT_RUN。并行保持KVM可用ARM64 userdebug准入，具备真实guest后才跑P2原Bionic→Linux及P3正式App自己受控su/双向DNS/业务/Stop；物理KSU仅最后独立授权，不借用旧x86探针宣称通过。
+**当前唯一下一步**：B2a固定真实8503规则+Go普通双DNS host线协议已通过、**但规则包尚未装入正式签名APK和原Go CLI**。按Actions-first进行B2b：同源固定TXT+MIT license/SHA捆包→Root冷Go加载；真实选中ConnectivityManager Network socket绑定（本地冷绑定可复测）与原WBD内层TUN的DNS socket+UDP/TCP53 ingress/返包，强制fail-closed不跨DNS上游；然后CN IP/direct/global/split的owned规则隔离验证。宿主ARM64无KVM，P2/P3普通App真实netd与服务端E2E仍NOT_RUN，具真实ARM64 KVM userdebug后再验证，不动实体KSU直到全部软件专项并经用户最后授权。
