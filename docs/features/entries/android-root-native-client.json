@@ -139,6 +139,34 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Android NDK arm64-v8a",
+      "scope": "A2 same original-Go donor compiled through Android cold AF_PACKET/raw Network binding, shared Rust authenticated Network/RAW/TUN FFI and 16KiB ELF; actual Network binding syscall NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "14290758ee93535e6bf87de76a1feaffc8852ab5",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44019938479"
+    },
+    {
+      "platform": "Android NDK x86_64",
+      "scope": "A2 same original-Go donor compiled through Android cold AF_PACKET/raw Network binding, shared Rust authenticated Network/RAW/TUN FFI and 16KiB ELF; actual Network binding syscall NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "14290758ee93535e6bf87de76a1feaffc8852ab5",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44019938479"
+    },
+    {
+      "platform": "Android NDK arm64-v8a",
+      "scope": "A2 complete original-Go product CGo link to original Rust M4 Normal/off/FEC/Game/Health worker (undefined real symbols)",
+      "status": "FAIL",
+      "source_sha": "14290758ee93535e6bf87de76a1feaffc8852ab5",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44019938479"
+    },
+    {
+      "platform": "Android NDK x86_64",
+      "scope": "A2 complete original-Go product CGo link after arm64 gate failure",
+      "status": "NOT_RUN",
+      "source_sha": "14290758ee93535e6bf87de76a1feaffc8852ab5",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44019938479"
     }
   ],
   "limitations": [
@@ -158,7 +186,8 @@
     "A2 SOURCE 097d3b0e Action44017866225 overall FAIL: NDK C ABI + dual Rust cold .so ELF build PASS with independently matched artifact14299801880 ZIP SHA256 47c6e5c29387a2efd0fda411a8cb556d2e0a9bf5ad0802a6b190f5043f9a8914; arm64 real original-Go M4 link FAIL missing symbols, x86 complete Go link NOT_RUN. No Android raw socket runtime/real WBD/owned worker proof.",
     "A2二批：原Go post-TLS/Detach限定Android物理Network/ifindex/MTU，并以同一共享Rust认证Entry打开/持有真实RAW RX/TX和TUN FD；未移植原M4 TX/RX/Health/MTU完整线程，Android业务仍NOT_RUN；源锁Action独立验收。",
     "A2 FD在同一 Rust Entry 上引入原 wbd-platform::r1::BorrowFence：每次Bionic RAW/TUN真实syscall CAS借用、begin_stop阻止新借用、Stop检查零inflight并在未排空时STOP_INCOMPLETE；仍未运行原M4线程、尚无真WBD连接。",
-    "新增原Go SYN/ClientHello之前 Android 物理 Network Handle raw发送FD绑定（android_setsocknetwork+SO_BINDTODEVICE），AF_PACKET收端继续采用原donor内核接口+端口过滤；需 Android Controller 提供真实 handle，交叉编译≠设备权限、实际TLS或完整M4 PASS。"
+    "新增原Go SYN/ClientHello之前 Android 物理 Network Handle raw发送FD绑定（android_setsocknetwork+SO_BINDTODEVICE），AF_PACKET收端继续采用原donor内核接口+端口过滤；需 Android Controller 提供真实 handle，交叉编译≠设备权限、实际TLS或完整M4 PASS。",
+    "A2 SOURCE 14290758 Action44019938479 overall FAIL: NDK arm64/x86_64 cold ABI + actual Android Go pre-TLS bind source CGo compiled to final link, 16KiB ELF, source-locked raw/owner C ABI BUILD_PASS; whole ARM64 Go M4 link FAIL missing real Normal/off/FEC/Game/loop; x86 full link NOT_RUN; no real TLS or Android socket runtime executed."
   ],
   "promotion": null
 }

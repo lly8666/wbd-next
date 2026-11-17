@@ -40,3 +40,17 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"原Go冷 SYN/TLS 发送 socket 按唯一Android Network/ifindex/MTU在 ClientHello 前绑定，精确 source-locked overlay 文件，完整 WBD M4业务仍NOT_RUN。"}
 ```
+
+## A2 冷 SOCK/raw/TUN 与原产品连接器构建证据封存
+
+- **SOURCE** `14290758ee93535e6bf87de76a1feaffc8852ab5`，原 Go donor `a7a82db31fe736ffedee330795a3234d358f1984`，本源码 [Android product A1 workflow44019938479](https://github.com/lly8666/wbd-next/actions/runs/44019938479) **overall FAIL**，真实错误来自原 ARM64 Go 最终 `ld.lld` 链接：`wbd_m0_embedded_go_normal_off_stage/readback`、原 Fixed/Game/FEC2 原产品 ABI、`loop_*`、Health/MTU等尚未接入 Android M4（部分错误列表被 `--error-limit` 截断）。仍然禁止提供假符号替身。x86_64 Go **完整链接 NOT_RUN**。
+- 同一 Action 的 Android arm64-v8a + x86_64 **Bionic C ABI、Rust原 `prepare/stage/commit/stop` 及 `android_bind_physical/attach_raw_rx_on_interface/attach_tun` 导出、16KiB ELF** 阶段 BUILD_PASS。原 Go 中新增的 pre-TLS `android_setsocknetwork` / `SO_BINDTODEVICE` CGo 代码已编译进入原 Go 客户端链接阶段，但实际 Android Socket/Network权限是否允许、真 ClientHello/认证/租约绝不由构建判定。
+- [stage artifact14300577315](https://github.com/lly8666/wbd-next/actions/runs/44019938479/artifacts/14300577315) 已独立下载解包并校验 ZIP SHA256 `27f45dca5dd3cc6f5b94b9bdca7245f1056691420bd80517d87ad675c07effe1`。清单 `scope=RUST_COLD_ABI_PLUS_ANDROID_OWNED_FD_ATTACH_ONLY`，双ABI `.so` SHA和清单一致，PT_LOAD均16384，非设备实际装载。原Go CGo尚未生成完整产品可执行文件。
+- [Feature/Governance44019938358](https://github.com/lly8666/wbd-next/actions/runs/44019938358) **PASS**；[governance-maintenance44019938589](https://github.com/lly8666/wbd-next/actions/runs/44019938589) **PASS**。之前的 GitHub Actions FAIL/PASS原样保留；main `fb24fe784d960e3e8bf4ca63cc2a22332247e1dd` 未变，本阶段不再同步 main。
+- **NOT_RUN**：Android16 KSU ↔ 同源真实 Linux WBD server 标准 TLS ClientHello→认证/租约、ARM64设备本地 root GO/Rust 装载/RAW socket绑定、原 M4 TCP/UDP/TUN双向业务、p99/CPU/唤醒/MTU/Health完整 owned Stop/切网、热点/USB/ISA。未操作未授权真机；当前仍没有可正式安装使用的原生WBD APK。
+
+**单一实际下一步**：从原 `v4_embedded_go.rs` M4 成熟 TX/RX worker 抽出共享正常 Normal/off driver adapter，将已接入的 Android RAW/TUN FD、真实 MTU预算/Health、generation 和原同步 Stop join 接至 **同一** Rust PN/AEAD/M3/FEC/重传 owner，先解决原 Go ARM64/x86_64 全链接失败；**之后**才以同源 Linux server 做 Android16 KSU 真实Normal/off双向TCP/UDP。禁止用stub或旧isolated探针冒充产品业务。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A2 SOURCE 14290758，双ABI原Go SYN/TLS physical Network冷代码编译与原Rust fd cold ABI阶段PASS，完整ARM64 M4 Go链接FAIL、真连接NOT_RUN，下载ZIP SHA校核和Governance PASS封存。"}
+```
