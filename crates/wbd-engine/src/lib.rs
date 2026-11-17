@@ -49,6 +49,11 @@ mod v4_session_address;
 // no DNS redirect, fake-IP, second TUN consumer or packet mutation.
 #[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
 mod v4_android_dns_ingress;
+// B2c2b1 bounded UDP DNS53 5-tuple transaction inverse NAT. Android ARM64
+// original Rust-only candidate; never arm before BOTH authenticated reply
+// and scoped physical/tunnel DNS lifecycle are independently proven.
+#[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
+mod v4_android_dns_udp_flow;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;

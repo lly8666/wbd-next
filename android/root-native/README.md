@@ -316,3 +316,31 @@ backend, DNS answer injection, Android Resolver interception and
 per-App CN IP routing are still NOT_CONNECTED/NOT_RUN. Follow-up
 B2c2b must qualify bound output/reply mapping **before** any packet
 is diverted or dropped.
+
+## B2c2b1: original Rust bounded UDP53 Tunnel inverse packet mapping
+
+B2c2a qualified the sole Rust original-M4 TUN `read_ip_scatter`
+DNS53 detection. The next built-in Rust engine **candidate**,
+`v4_android_dns_udp_flow.rs`, is a 64-entry, 12-second bounded
+transaction owner for real IPv4 UDP DNS packet bytes: it changes the
+original destination to the single approved Tunnel `1.1.1.1:53`
+and assigns a per-slot translated UDP source port. Only an authenticated
+peer's source-`1.1.1.1:53` reply directed to the exact client IP,
+translated port, DNS transaction ID and canonicalized question can
+be inverse-rewritten back to the app's original resolver tuple.
+Both IPv4 and mandatory nonzero UDP checksums are recalculated
+without touching the DNS wire payload, generating fake IPs, sending
+any uncategorized query to OS DNS, or adding another TUN reader.
+Full table or malformed/fragmented packets are refused **without
+modifying the input**; exact retransmits reuse their slot, expired
+entries refuse replays, and Stop clears all slots.
+
+**The module remains explicitly UNARMED**. The original Android
+Rust M4 still sends all DNS traffic unchanged through the original
+M1/M3/AEAD path with `hijack_enabled=0`; the DNS transformation
+cannot run on actual TUN packets until authenticated RX reply
+inversion, CN policy, safely scoped physical UDP/TCP plus true
+Tunnel/host DNS backend, and Stop gating are installed together.
+The Rust tests use real complete IPv4/UDP packet bytes and
+checksum verification; they do NOT constitute a real Android16 DNS
+query, UDP53 system interception, or physical/signed KSU device E2E.

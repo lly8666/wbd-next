@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Original Rust ONLY, fixed-capacity authenticated-M4 candidate DNS53 NAT.
+# Real IPv4/UDP packet/checksum bytes, but NOT Android TUN/netd runtime.
+set -euo pipefail
+cd "${GITHUB_WORKSPACE:?source checkout required}"
+test "$(git rev-parse HEAD)" = "${GITHUB_SHA:?missing SHA}"
+mkdir -p out/android-b2c2b-dns-flow
+cargo +1.85.1 test --locked -p wbd-engine --lib b2c2b1_rust_udp53 \
+  -- --nocapture 2>&1 | tee out/android-b2c2b-dns-flow/test.log
+python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,os
+out=Path("out/android-b2c2b-dns-flow")
+log=(out/"test.log").read_text()
+names=[
+ "b2c2b1_rust_udp53_tunnel_real_ipv4_packet_pair_inverse_and_checksums",
+ "b2c2b1_rust_udp53_rejects_wrong_upstream_id_qname_and_replay",
+ "b2c2b1_rust_udp53_owner_has_exact_bounded_capacity_and_stop",
+ "b2c2b1_rust_udp53_rejects_fragments_and_malformed_without_packet_mutation"
+]
+for test in names:
+ assert f"test v4_android_dns_udp_flow::tests::{test} ... ok" in log,test
+assert "test result: ok. 4 passed;" in log,log[-1500:]
+wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
+lib=Path("crates/wbd-engine/src/lib.rs").read_text()
+m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+assert 'const TUNNEL_DNS:[u8;4]=[1,1,1,1];' in wire
+assert 'const CAP:usize=64;' in wire
+assert 'const MAX_AGE_MS:u64=12_000;' in wire
+assert 'fn rewrite_query(' in wire and 'fn rewrite_reply(' in wire
+assert 'fn set_checksums(' in wire and 'fn stop(&mut self)' in wire
+assert 'mod v4_android_dns_udp_flow;' in lib
+assert 'hijack_enabled.write(0)' in m4
+assert m4.count("tun.read_ip_scatter(")==1
+assert "rewrite_query(" not in m4 and "rewrite_reply(" not in m4
+assert "std::net::" not in wire and "read_ip_scatter" not in wire
+receipt={
+ "schema":"wbd-android-b2c2b1-original-rust-dns-udp-inverse-map/v1",
+ "source":os.environ["GITHUB_SHA"],
+ "rust_udp_packet_pair_checksum_and_inverse_map":"PASS",
+ "rust_dns_txid_qname_src_and_reply_validation":"PASS",
+ "bounded_slots":64,"expiry_ms":12000,
+ "capacity_fail_closed_and_stop_revoke":"PASS",
+ "malformed_fragment_no_mutation":"PASS",
+ "source_sha256":hashlib.sha256(wire.encode()).hexdigest(),
+ "original_android_arm64_rust_elf_compilation":"SEPARATE_JOB_PENDING",
+ "m4_dns_capture_hijack_enabled":0,
+ "m4_live_rewrite_query_and_reply":"NOT_CONNECTED",
+ "android_system_resolver":"NOT_CONNECTED",
+ "physical_scoped_dns_and_tunnel_reply_backend":"NOT_CONNECTED",
+ "android16_p2_p3":"ENV_BLOCKED_KVM_NOT_AVAILABLE",
+ "physical_ksu_p5":"NOT_RUN"
+}
+(out/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+print("ANDROID_B2C2B1_RUST_UDP_DNS53_BOUNDED_INVERSE_PACKET_HOST_PASS_NOT_LIVE")
+PY

@@ -115,6 +115,24 @@ jobs:
           path: out/android-b2c2-rust-ingress/
           retention-days: 14
           if-no-files-found: warn
+  b2c2b-rust-dns-udp-inverse-map:
+    # Fixed-capacity 5-tuple/ID mapping on real IPv4/UDP packet bytes,
+    # host only; neither a second TUN reader nor an active DNS hijacker.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Test original Rust bounded DNS53 inverse five-tuple and checksum
+        shell: bash
+        run: bash android/root-native/ci/dns-b2c2b-rust-udp-map-host.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2c2b-rust-dns-udp-map-${{ github.sha }}
+          path: out/android-b2c2b-dns-flow/
+          retention-days: 14
+          if-no-files-found: warn
   original-m3-wire-oracle:
     # This is a pure M3 wire unit-test host: NO Android x86 target and
     # no second app/crypto implementation. Runs independently of NDK link.
