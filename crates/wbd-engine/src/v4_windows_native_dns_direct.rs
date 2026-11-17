@@ -530,7 +530,7 @@ mod tests{
             resolver_port:53,policy_revision:1};
         let client=DnsClient{src4:0x0aea0c22,src_port:42053,
             requested_dns4:0x08080808,original_id:0x6601};
-        let answer=DnsAResolution{status:DnsAnswerStatus::Answered,
+        let answer=crate::v4_client_dns_answer::DnsAResolution{status:DnsAnswerStatus::Answered,
             canonical:"cn.example".into(),cname_chain:vec![],
             candidates:vec![crate::v4_client_dns_answer::ResolvedA{
                 address:0xc6336417,ttl:2}]};

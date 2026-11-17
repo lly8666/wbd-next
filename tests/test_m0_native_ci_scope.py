@@ -100,7 +100,7 @@ class NativeSmokeScopeTests(unittest.TestCase):
                       "WBD_WL_TUN_MTU:"):
             row=next(x for x in source.splitlines() if x.strip().startswith(field))
             self.assertIn("[plan029-v3-real-p2-bulk]",row)
-        self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',source)
+        self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',abi_section)
 
     def test_h1868_one_native_direct_pressure_scenario_has_same_mtu_and_v3(self):
         path=Path(__file__).resolve().parents[1] / ".github/workflows/m0-wl-public-normal-full.yml"
@@ -155,15 +155,20 @@ class NativeSmokeScopeTests(unittest.TestCase):
         # Signed product build and runtime selection are different knobs.
         # The CI-only trial stays off in the original Go child, but that
         # cannot imply shipping a DLL without the V3 entrypoint.
-        feature_section=workflow.split("$features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'",1)[1]
-        feature_section=feature_section.split("& cargo +1.85.1 build --locked --release",1)[0]
-        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'",feature_section)
-        self.assertIn("$features+=',m0_v4_probe'",feature_section)
-        self.assertIn("WBD_PLAN029_NATIVE_V3_TRIAL -eq '1'",feature_section)
-        abi_section=workflow.split("Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll",1)[1]
+        # H2085: H2083's signed Normal/off failed to load the V3 entry.
+        # The actual Windows release DLL now ships V3 unconditionally,
+        # regardless of the legacy trial or explicit CN scene selector.
+        line="$features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'"
+        self.assertEqual(workflow.count(line),1)
+        section=workflow.split(line,1)[1].split(
+            "& cargo +1.85.1 build --locked --release",1)[0]
+        self.assertNotIn("$features+=',m0_v4_probe'",section)
+        abi_section=workflow.split(
+            "Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll",1)[1]
         abi_section=abi_section.split("windows-binary-manifest.json",1)[0]
-        self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1'",abi_section)
-        self.assertIn("getattr(d,\"wbd_m0_win_native_v3_start\")",abi_section)
+        self.assertIn('getattr(d,\\"wbd_m0_win_native_v3_start\\")',abi_section)
+        self.assertIn("if($LASTEXITCODE -ne 0){throw 'PLAN029B default public Rust V3 ABI missing in release DLL'}",abi_section)
+        self.assertNotIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' or",abi_section)
         self.assertIn("if (os.environ.get('WBD_PLAN029_NATIVE_V3_TRIAL')=='1' or",workflow)
         self.assertIn("os.environ.get('WBD_PLAN029_PRODUCT_SPLIT_SCENE')=='1' or",workflow)
 
