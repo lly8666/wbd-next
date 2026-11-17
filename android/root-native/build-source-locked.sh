@@ -59,6 +59,16 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
   lib="target/$rust_target/release/libwbd_engine.so"
   test -s "$lib"
   cp "$lib" "out/android-product-a1/libwbd_engine-$goarch.so"
+  # Private authenticated Go TLS cold-owner symbols must be provided by the
+  # SAME shared Rust engine, not a fake or adapter-local stub. M4 symbols
+  # and actual kernel delivery remain separately required for true client.
+  for symbol in wbd_m0_embedded_go_prepare_client wbd_m0_embedded_go_stage \
+      wbd_m0_embedded_go_commit wbd_m0_embedded_go_stop; do
+    "$tool/llvm-nm" -D "$lib" | grep -Eq " [TW] ${symbol}$" || {
+      echo "ANDROID_RUST_AUTHENTICATED_COLD_FFI_MISSING: $symbol" >&2
+      exit 1
+    }
+  done
   export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
   export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine"
   (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)

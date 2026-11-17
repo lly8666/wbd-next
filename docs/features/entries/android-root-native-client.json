@@ -28,7 +28,9 @@
     "crates/wbd-platform/src/lib.rs",
     "android/root-native/android_abi.c",
     "android/root-native/build-source-locked.sh",
-    ".github/workflows/android-root-product-a1.yml"
+    ".github/workflows/android-root-product-a1.yml",
+    "crates/wbd-engine/src/lib.rs",
+    "crates/wbd-engine/src/v4_embedded_go.rs"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -80,7 +82,8 @@
     "A1 首次workflow语法错误及 Bionic NDK _IOR/_IOW 头文件缺失分别留有Action44012875741/44013027549 FAIL；产品仍NOT_RUN。",
     "Action44013224466 Rust Android c_char signedness compile FAIL，修正采用 std::ffi::c_char；未完成Go链接。",
     "Android A1源锁首次加密库交叉编译 Action44013459586 因 aws-lc-sys/cc-rs 默认 C clang 路径缺失 FAIL；已显式配置CC/AR，后续Action决定结果。",
-    "Action44013768079 Android Bionic C+Rust共享引擎交叉编译通过，但原Go产品缺wbd_v4_fec2_product编译tag导致类型未定义；已匹配原公共Linux发布的标签闭包，实际Android M4连接未验证。"
+    "Action44013768079 Android Bionic C+Rust共享引擎交叉编译通过，但原Go产品缺wbd_v4_fec2_product编译tag导致类型未定义；已匹配原公共Linux发布的标签闭包，实际Android M4连接未验证。",
+    "Action44014077113 原Go源码已编译至Android最终链接，但Rust原产品v4_embedded_go模块Linux-only导致原始authenticated owner ABI缺失；现仅启用同一Rust模块Android64冷认证ABI编译，不视为M4可用。"
   ],
   "promotion": null
 }

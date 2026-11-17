@@ -118,7 +118,12 @@ mod v4_windows_native_dns_tcp;
 // listener); no second Wintun reader or per-query background thread.
 #[cfg(target_os="windows")]
 mod v4_windows_native_dns_client_tcp;
-#[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
+// Keep ONE original protected Go↔Rust V4 generation/AEAD owner for Linux
+// and Android. The platform-specific raw/TUN M4 worker stays separately
+// gated; including this module alone does NOT enable Android data delivery.
+#[cfg(all(feature = "m0_v4_embedded_go",
+          any(target_os = "linux",
+              all(target_os = "android", target_pointer_width = "64"))))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device
 // lease, OS applied status or product activation is granted by this module.

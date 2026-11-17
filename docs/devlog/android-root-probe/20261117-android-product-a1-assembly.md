@@ -43,3 +43,13 @@ SOURCE `067e3fe91b106abdd50f12a9e8e31ea241e1a01f` [Action44013768079](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A1源锁Go生产模块缺Game类型，修正为既有Linux公共产品构建使用的Go/Rust feature闭包；仅build检查，实际AndroidWBD未接通。"}
 ```
+
+## A1 第六次构建：Go↔Rust原认证所有权实际链接断口
+
+固定 `19115a34bef1ec3c8213c16e953062254e9ae93c` [Action44014077113](https://github.com/lly8666/wbd-next/actions/runs/44014077113) **FAIL/GO_RUST_PRODUCT_LINK**：NDK两个ABI C校验、共享Rust release、原Go源锁源码编译（`wbd_v4_embedded_go,wbd_v4_fec2_product` tags）已到最终原生链接阶段；`ld.lld` 报 `wbd_m0_embedded_go_abort/prepare/commit/attach_raw_rx/attach_tun/loop_start/... undefined symbol`。确认 `crates/wbd-engine/src/lib.rs` 原 `v4_embedded_go` 模块仅在Linux启用，Android曾误编译了无该认证owner的普通cdylib。这**明确不属于Go客户端成功**。
+
+本切片仅将 **原同一个** `v4_embedded_go` Rust 模块在Android64条件下进入编译，验证已有标准Go认证TLS冷所有权 `prepare_client/stage/commit/stop` C ABI是否真实导出；不创建Android专用认证者、不复制Rust加密核心。原模块内GNU/musl raw/TUN worker和M4生命周期仍受原条件编译屏障保护，因此本步 **不会** 宣称真实M4收发。下一Action如有编译/链接错误按实际逐项移植，绝不添加假stub绕过缺失的产品符号。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A1在真实Go CGo链接发现Rust V4 Go owner仅Linux装配，最小拓宽原私有认证冷模块的Android64编译并检查真实FFI导出；M4数据面仍NOT_RUN。"}
+```
