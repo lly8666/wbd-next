@@ -1,3 +1,4 @@
+import ast
 import unittest
 from pathlib import Path
 
@@ -21,6 +22,15 @@ class B2GuestExactTicketScope(unittest.TestCase):
         self.assertIn('if wire not in markers or wire.decode() in seen:', guest)
         self.assertIn('if set(seen) != {"cn_dns", "global_dns",', guest)
         self.assertIn('"unrelated_tunnel_dns": unrelated_tunnel_dns', guest)
+        # Parse the genuine Python AST: a doubled backslash in source
+        # creates ASCII bytes \\x62, not the DNS ID 0x6202.
+        byte_literals = {node.value for node in ast.walk(ast.parse(guest))
+                         if isinstance(node, ast.Constant)
+                         and isinstance(node.value, bytes)}
+        self.assertIn(bytes.fromhex("6202"), byte_literals)
+        self.assertIn(bytes.fromhex("01000001"), byte_literals)
+        self.assertNotIn(bytes([92, 120, 54, 50, 92, 120, 48, 50]), byte_literals)
+
         # Product and fixture physical-CN QNAME continue to fail closed.
         self.assertIn('raise RuntimeError("B2 wrong real upstream domain/question")', guest)
 

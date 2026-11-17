@@ -61,7 +61,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
             # CN misroute, expected-ID wrong question, malformed wire and
             # any physical-lane unexpected QNAME remain hard failures.
             if label == "global_dns" and len(wire) >= 12 and \
-               wire[:2] != b"\\x62\\x02" and wire[2:6] == b"\\x01\\x00\\x00\\x01" and \
+               wire[:2] != b"\x62\x02" and wire[2:6] == b"\x01\x00\x00\x01" and \
                wire[12:] not in (CN + A, GLOBAL + A):
                 unrelated_tunnel_dns += 1
                 if unrelated_tunnel_dns > 4:
@@ -76,9 +76,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                                      sort_keys=True), flush=True)
                 continue
             if label == "global_dns" and wire[12:] == GLOBAL + A and \
-               wire[:2] != b"\\x62\\x02":
+               wire[:2] != b"\x62\x02":
                 raise RuntimeError("B2 original Windows tunnel transaction ID was changed")
-            if len(wire) < 12 or wire[2:6] != b"\\x01\\x00\\x00\\x01" or \
+            if len(wire) < 12 or wire[2:6] != b"\x01\x00\x00\x01" or \
                wire[12:] != ip + A:
                 # H2093 one bounded first-error witness. The previous
                 # H2092 packet did not match the expected question; never
