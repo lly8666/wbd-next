@@ -115,16 +115,16 @@
     },
     {
       "id": "H2050_GUI_signed_npcap_repair",
-      "source": null,
-      "action": null,
-      "status": "IMPLEMENTED_NOT_TESTED",
+      "source": "1dcb8c33055d382dcdcdd7d43918033709a3377c",
+      "action": 43998891197,
+      "status": "H2050_EXIT1_HISTORICAL_FIRST_FAULT_RETAINED_H2055_LATER_PASS",
       "first_boundary": "Bundled exact signed Npcap userland DLL into real WinForms client EXE folder; original Go TLS/OS Applied/Stop still pending."
     },
     {
       "id": "H2051_physical_TC_new_exact_WSL_grant_and_five_quota_pure",
-      "source": null,
-      "action": null,
-      "status": "IMPLEMENTED_NOT_TESTED",
+      "source": "09c6a794b68447f1e6711db0f237b0beae9c37c8",
+      "action": 43999380296,
+      "status": "H2051_NATIVE_UDP_TIMEOUT_H2056_LATER_PASS_FIVE_CLASS_PURE_PASS",
       "test": "physical single dns.direct UDP TC->TCP53 in original signed Normal CN plus one engine bounded quota old Direct/Tunnel recovery and Windows kernel TCP independent relay test"
     },
     {
@@ -143,10 +143,11 @@
     },
     {
       "id": "H2055_GUI_real_original_replay",
-      "source": null,
-      "action": null,
-      "status": "PENDING_EXACT_NATIVE_ACTION",
-      "test": "One original WinForms STA real signed Go/Rust source, WSL2 Direct+Tunnel and Stop, no double Form.Dispose, require child exit0 and independently verified kernel business"
+      "source": "e586ca2396535781a41cea3a454da45c32808aa7",
+      "action": 44000778566,
+      "status": "PASS_REAL_GUI_ORIGINAL_OS_DIRECT_TUNNEL_AND_STOP",
+      "test": "One original WinForms STA real signed Go/Rust source, WSL2 Direct+Tunnel and Stop, no double Form.Dispose, require child exit0 and independently verified kernel business",
+      "artifact": 14292293757
     },
     {
       "id": "H2051_physical_TC_direct_two_os_attempt",
@@ -157,35 +158,61 @@
     },
     {
       "id": "H2056_physical_TC_after_H2053_os_mac",
-      "source": null,
-      "action": null,
-      "status": "PENDING_EXACT_NATIVE_ACTION",
-      "test": "Original signed Windows physical NPF UDP source/dst/guest L2 matching, same dns.direct UDP TC response + exact TCP/53 DNS ID and QNAME, original TLS + Direct/Tunnel kernel business/Stop, real guest stage receipt."
+      "source": "17ebe7e91830595d6083dd8314716f99e8c99918",
+      "action": 44001081299,
+      "status": "PASS_REAL_PHYSICAL_UDP_TC1_SAME_TCP53_AND_OS_STOP",
+      "test": "Original signed Windows physical NPF UDP source/dst/guest L2 matching, same dns.direct UDP TC response + exact TCP/53 DNS ID and QNAME, original TLS + Direct/Tunnel kernel business/Stop, real guest stage receipt.",
+      "artifact": 14292184174,
+      "reconnect": "NOT_RUN"
     },
     {
       "id": "H2057_async_fake_writer_true_child_abort",
-      "source": null,
-      "action": null,
-      "status": "PURE_PROCESS_CRASH_TEST_IMPLEMENTED_NOT_VERIFIED",
+      "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+      "action": 44001435567,
+      "status": "PASS_WINDOWS_LINUX_REAL_PROCESS_ABORT_PURE_NOT_WIN_WAL",
       "test": "Windows/Linux Rust test subprocess real fsync ACK then std::process::abort without Drop; parent opens journal and checks FakeIP identity/TTL quarantine/new alias not announced. NOT original Wintun/OS crash."
     }
   ],
   "selected_unverified": {
-    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "H2050_NATIVE_ALL_BUSINESS_AND_WAL_STOP_SEEN_ACTION_FAIL; H2055_GUI_RETEST_PENDING",
-    "DNS_bootstrap_same_endpoint_TC_real": "H2051_FAIL_NPF_UDP_TIMEOUT_H2053_MAC_CORRECTED_H2056_PENDING",
-    "DNS_bootstrap_after_reconnect": "NOT_RUN",
+    "DNS_bootstrap_after_reconnect": "H2056_FIRST_COLD_PASS; ORIGINAL_RECONNECT_SECOND_GENERATION_NOT_RUN",
     "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
-    "FakeIP_durable_unexpected_process_crash_recovery": "H2057_REAL_CHILD_ABORT_FS_REOPEN_COMPONENT_PENDING",
+    "FakeIP_durable_unexpected_process_crash_recovery": "H2057_REAL_CHILD_ABORT_PURE_PASS; NATIVE_GO_WINTUN_WIN_OS_WAL_CRASH_NOT_RUN",
     "FakeIP_writer_slow_disk_vs_other_live_flows": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
-    "resource_full_tcp_resident_buffer_original_concurrent": "H2051_WINDOWS_LOOPBACK_TEST_PENDING_NATIVE_NOT_RUN",
-    "resource_full_dns_cache_original_concurrent": "H2051_PURE_TEST_PENDING_NATIVE_NOT_RUN",
-    "resource_full_dns_pending_original_concurrent": "H2051_PURE_TEST_PENDING_NATIVE_NOT_RUN",
-    "resource_full_FakeIP_original_concurrent": "H2051_PURE_TEST_PENDING_NATIVE_NOT_RUN",
+    "resource_full_tcp_resident_buffer_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
+    "resource_full_dns_cache_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
+    "resource_full_dns_pending_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
+    "resource_full_FakeIP_original_concurrent": "H2051_WIN_LINUX_SMALL_COMPONENT_PASS; NATIVE_CONCURRENT_WINTUN_PRESSURE_NOT_RUN",
     "resource_full_direct": "H1868_SCOPED_REAL",
     "startup_padding_off_on_sameVM_CPU_RSS": "NOT_RUN",
     "GUI_effective_padding": "PENDING_H2048_GUI_CONFIG_NOT_PADDING_OFF_ON",
     "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
   },
   "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",
-  "closure_status": "SELECTED_SCOPE_PARTIAL_NATIVE_RECEIPTS_NO_FULL_PRODUCT_PASS"
+  "closure_status": "USER_SELECTED_PARTIAL_PASS_GUI_H2055_BOOTSTRAP_TC_H2056_FAKEIP_CRASH_PURE_H2057_OTHER_SCOPES_OPEN",
+  "selected_verified": {
+    "real_original_GUI_Connect_OS_Applied_Direct_Tunnel_Stop": {
+      "source": "e586ca2396535781a41cea3a454da45c32808aa7",
+      "action": 44000778566,
+      "status": "PASS_SCOPED_REAL_KERNEL"
+    },
+    "real_first_cold_physical_UDP_TC_same_TCP53": {
+      "source": "17ebe7e91830595d6083dd8314716f99e8c99918",
+      "action": 44001081299,
+      "status": "PASS_SCOPED_REAL_OS_WIRE"
+    },
+    "FakeIP_async_child_process_abort_FS_recovery": {
+      "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+      "action": 44001435567,
+      "status": "COMPONENT_PROCESS_CRASH_PASS_NOT_PRODUCT_OS_WAL"
+    },
+    "small_class_quota_independent_Rust": {
+      "source": "81748492a093495da4fa000bba9a6d745bd5dc4c",
+      "action": 44001435567,
+      "status": "PURE_COMPONENT_PASS_NOT_SAME_VM_STRESS"
+    },
+    "Game4_padding_historical": "H2041_H2031_RETAINED_SEPARATE_SOURCE"
+  },
+  "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H2058-GUI-DNS-TC-REAL-FAKEABORT-20261117.json"
+  ]
 }
