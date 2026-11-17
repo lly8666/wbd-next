@@ -8,7 +8,7 @@
 
 **工作节奏**：以一次可审计的大批次推进同一功能纵切面，Go 原 TLS/租约冷控制、Rust 既有 PN/AEAD/M3/M4、Bionic RAW/TUN/物理Network、owned Stop、Android 构建和文档同时推进。互不相依的代码研读、平台接口、纯协议、Go CLI/UI 和文档尽量并行；合并时统一检查 source-lock、generation/lease、MTU、BorrowFence/Stop，一次 SOURCE 集中跑 ARM64 Actions，避免为孤立小改动重复触发较重构建。真正 Go→Rust 链接及真设备验收仍有顺序依赖，禁止 fake stub / 合成 PASS。更大批次也不以跳过安全、测试或日志为代价。
 
-**当前唯一下一步 A2**：已认证的原 Go 冷代际内，把 Bionic 物理 RAW/TUN 交给原 Rust M1/M3 Normal/off + 连续 M4、Health、MTU、同步 Stop，实现 ARM64 完整原Go链接；A3 才连 Android16 ARM64 KSU ↔ 同源 Linux server 真实标准TLS/认证/租约/TCP/UDP。FEC/Game/B/C/D 不得绕过首次真实 Normal/off。优先首次可达 > p99/无跨流HOL > CPU/空闲唤醒 > 有界内存 > 维护性。
+**当前唯一下一步 A3 Actions-first**：已核验 SOURCE `d7e2e2936b283bf1ad4c02dbcec2e59c92297e61` Android ARM64 原Go/Rust完整CGo链接、M3 oracle、独立Root APK 三 Job BUILD_PASS（Action `44035987188`）；Android16 KSU客户端↔同源Linux服务端真实TLS/认证/租约/TCP/UDP/Stop依然 **NOT_RUN**。先 Actions 真实 Linux server oracle，再 Actions ARM64 KSU guest 真客户端双端测试；没有该执行环境记 `ENV_BLOCKED`/`NOT_RUN`，不以Linux-only/x86探针替代。优先首次可达 > p99/无跨流HOL > CPU/空闲唤醒 > 有界内存 > 维护性。
 
 ## 1. 事实基线（不得将能力探测当产品链路）
 
@@ -62,6 +62,14 @@ per-App 仅改变业务 IP 出口，不重建 netd 每UID DNS、不恢复共享�
 
 生产路由/DNS修改以 **owned journal / 可重放撤销** 为准：只增加精确规则/表/链、应用现有状态改变时compare-before-restore，正常Stop/异常退出回收；禁止 `ip rule flush`、全机规则快照整体恢复、向所有root UID放行、隐式默认直连泄漏。若root失权/进程双死不能撤销则明确报告，避免在正常路径叠极端恢复框架。
 
+## 8.0 新授权：软件全功能 Actions-first，实体设备最后终验（2026-11-17）
+
+- 用户已授权在 `experiment/android-temp-root-probe` 施工、提交及运行 GitHub Actions；PR #36 保持 Draft。main/M0 registry/cursor 不直接修改。Actions 虚拟测试不授权操作用户实体手机。
+- **阶段顺序：A→B→C→D 全软件功能先在 Actions 测试，最后才申请实体手机终验**。每个功能以同 SOURCE/manifest/hash 的 Actions 行为证据验收，不能凭编译、原探针或说明升级通过。实体手机、真实热点USB/offload/CLAT/功耗等需单独最后授权；CI无法覆盖者状态为 `NOT_RUN_PHYSICAL_FINAL`，不声称 Actions PASS。
+- A 严格分级：① Android Bionic Go/Rust/Java APK `BUILD_PASS`；② 同 SOURCE 原 Linux server+Linux peer 真标准TLS ClientHello/认证/自动租约/Rust M4 UDP和Stop `LINUX_ORACLE_PASS`；③ Actions 内真正 Android16 ARM64 KSU guest/runner 使用正式APK和Linux原server完成真实TCP/UDP/Stop `ANDROID_LINUX_E2E_PASS`；④ 实体设备 `PHYSICAL_FINAL_PASS`。①+② **不等于③**。旧x86 KSU、adb-root、假TLS或合成网络均不能替代③。
+- GitHub 托管Runner若缺 ARM64/KSU 客户端可运行环境，记录 `ENV_BLOCKED` 并维持 Android E2E `NOT_RUN`；先获得具真正 ARM64 KSU 的 Actions runner/虚拟设备而非提前改跑实体手机。真实Linux counterpart Action可单独先测，但只能作为服务器oracle。
+- B 需 A3 真连接 Actions PASS 后对生产双DNS UDP/TCP53、CN规则、真实安装App包名/UID及跟随/分流/全隧道/直连、owned Apply/Stop、更新失败保旧逐场景验收；C 需真实模式/FEC/重认证/网络callback/MTU及10–20Mbps 30–60s的p99/CPU/RSS/idle唤醒；D 软件共享行为先Actions，物理热点/USB/蜂窝CLAT/功耗留最终专项。
+- 一个 Action 只执行一个网络场景，冻结 SOURCE/manifest/hash 复用原Go donor、Rust、Android APK和Linux server。保留历史 FAIL/NOT_RUN、runner 的 ENV_BLOCKED；不上传凭据、TCP正文或大pcap；主线同步只在既定窗口，不自行合并main。
 ## 8. Action 分层验收和边界
 
 - A：一Action一网络场景，source lock + manifest + hash复用原Go donor/Rust/Android，先Android16 KSU ↔ 同源Linux服务端标准TLS/认证/租约/Normal-off的真双向TCP/UDP + Stop，再冻SOURCE、写证据。不借现有合成DNS/loopback TCP结果推广。Android ARM64实际装载、ISA加速必须真机证明。

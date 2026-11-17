@@ -105,3 +105,39 @@ jobs:
             out/android-root-app/badging.txt
           retention-days: 14
           if-no-files-found: warn
+  linux-original-server-normal-off:
+    # Genuine original Linux Go/Rust server + Linux peer: NOT Android E2E.
+    needs: [arm64-native]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Test original real Linux server oracle against source-locked Android ARM64 binaries
+        shell: bash
+        run: bash android/root-native/ci/linux-original-oracle.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-a3-real-linux-server-oracle-${{ github.sha }}
+          path: |
+            out/android-a3-linux/manifest.json
+            out/android-a3-linux/assembly.json
+            out/android-a3-linux/live-original-linux.log
+            fixed-kernel-result/plan028-tls-wire-audit.json
+            fixed-kernel-result/public-v4-normal-business.log
+          retention-days: 14
+          if-no-files-found: warn

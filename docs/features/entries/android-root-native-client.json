@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "Android arm64-v8a原Go TLS/租约、Rust共享M1/M3/M4、原Root单UID事务和独立无VpnService APK均BUILD_PASS；本轮强化Root runtime目录防symlink，Android16 KSU实机仍NOT_RUN。",
+  "summary": "Android ARM64原Go/Rust/M3及独立Root APK BUILD_PASS（d7e2e293/Action44035987188）；Android↔Linux真实连接NOT_RUN。全部软件功能先Actions验收，实体设备最后终验。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -59,7 +59,8 @@
     "android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java",
     "android/root-app/src/org/wbdnext/rootclient/RootClientService.java",
     "android/root-app/ci/build-source-locked.sh",
-    "android/root-app/README.md"
+    "android/root-app/README.md",
+    "android/root-native/ci/linux-original-oracle.sh"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -74,7 +75,8 @@
     "docs/devlog/android-root-probe/20261117-android-arm64-a3-normal-off-link-separation.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a3-original-m3-jumbo-scatter.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a4-root-uid-route-journal.md",
-    "docs/devlog/android-root-probe/20261117-android-arm64-a5-first-root-app.md"
+    "docs/devlog/android-root-probe/20261117-android-arm64-a5-first-root-app.md",
+    "docs/devlog/android-root-probe/20261117-android-a3-actions-first-contract.md"
   ],
   "verification": [
     {
@@ -272,6 +274,13 @@
       "status": "BUILD_PASS",
       "source_sha": "1cfbfe2a91bc369037f9f78abf88cf76320900dd",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44035287415"
+    },
+    {
+      "platform": "GitHub Actions original Linux ARM64 server counterpart",
+      "scope": "Same SOURCE Android Bionic artifacts validated; original Linux client/server TLS, lease, Rust M4 bidirectional UDP/Stop only (NOT Android runtime)",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -280,7 +289,8 @@
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
     "A4：真实Go认证/32+Rust M4后单APP UID独立route table19842/pref9600；fsync 0600 journal、flock拒绝多进程并发、内核核对撤销；真实Android16 KSU、iproute2、App和双向数据NOT_RUN。",
     "A5 Java Root App仅App UI/进程控制，A4实际原Go/Rust已BUILD_PASS；A5独立APK和Android16 KSU真机TLS/双向包/Stop仍需实测；不含VpnService/FakeIP。",
-    "A5后续Root runtime安装目录必须先检查非symlink且root-owned 0700后才chown/复制ELF；新补丁CI与设备仍需独立验收。"
+    "A5后续Root runtime安装目录必须先检查非symlink且root-owned 0700后才chown/复制ELF；新补丁CI与设备仍需独立验收。",
+    "用户授权所有功能先Actions、实体手机最后验收。Linux-only oracle不等于Android E2E；缺ARM64 KSU Actions环境标ENV_BLOCKED/NOT_RUN，不用旧x86替代。"
   ],
   "promotion": null
 }
