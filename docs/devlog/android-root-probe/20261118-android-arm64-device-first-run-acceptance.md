@@ -52,3 +52,17 @@ ADB首测脚本除UID rule pref9600..9607/readback，还检查真正的**私有�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"封存A9b第二次Java/Python已PASS但最后源码静态引号要求误FAIL的同源Action；改为匹配真实FIB缺表逻辑的文本，保持设备未测与原Go ELF139红门。"}
 ```
+
+## A9b 最终同SOURCE正式诊断APK已生成（2026-11-18）
+
+正式代码 `d73d9b713d4fb71fb0ff00ae8177c916ede46f84` [Action #44148161549](https://github.com/lly8666/wbd-next/actions/runs/44148161549) **10/11 PASS，overall FAIL**，且严格保持历史签名APK和测试只跑ARM64。真实原 Rust/Go Android Bionic ARM64、同SOURCE签名`wbd-root-arm64-debug.apk`、原TLS/租约/Linux服务端Normal/off oracle、CN8503/物理DNS、M3/DNS Host、原 Java enum 轮转、**全部7项 Python 本地ADB验收测试**均PASS，APK实际已经使用Android SDK36编译并经 apksigner verify、签名ZIP中源SHA/两份ARM64 ELF/16KiB/原CN规则校验。工件 [android-root-original-arm64-app](https://github.com/lly8666/wbd-next/actions/runs/44148161549) 的APK源哈希`d73d9b713d4fb71fb0ff00ae8177c916ede46f84`，文件SHA256 `d513308ff60c024f09a307bd10e6552a5c7505c234a15793dbd11afc3aec6977`，本次独立从Actions artifact解包`sha256sum -c SHA256SUMS`全部PASS，再在APK内二次验证相同SOURCE和原Go/Rust机器码183。
+
+第11项真实**x86_64 KVM Android16 API36+KernelSU3.3.1+ARM64 NativeBridge** KSU测试仍如预期 **FAIL**：同源APK Activity启动PASS，原Rust动态库与测试专用Go c-shared `Run(client,--help)`仍exit0；但原Go正式ARM64 ELF直接`execve --help`仍exit139 SIGSEGV，真Android↔Linux原协议及Root数据业务**NOT_RUN**。此红门不得通过Host/正式APK构建结论覆盖，不把本测试专用共享库打包进APK。真正ARM64 KSU手机未授权、未执行。
+
+首次实机集中联调用`android/root-app/ci/device_first_run.py`（用户提供自己的ADB设备+正式APK），启动前严格内核`aarch64`/Android16、APK真实SOURCE；只有显式`--install`会修改设备安装，默认无Root/route/kill/netd操作。由用户在原App界面手动Start/Stop，脚本最多保留固定枚举状态、UID/路由表19842/TUN存在状态及散列，不含用户密码/密钥/原Go stdout/原始logcat；只在原Go对应 `V4_PUBLIC_NATIVE_STOP_DRAINED`且原M4+UID就绪/原进程exit0后称native.joined Stop成功。原TLS/租约、Rust RX/TX和内核实际TCP/UDP必须由真设备单独核实，DNS系统接管两个冷门均false，CN8503/TCP53/netd未入场。
+
+A9b可交付状态 **BUILD_PASS**（仅原Android ARM64产品编译/Host诊断+签名APK），P2/P3真实ARM64 root/TLS/TUN/Stop仍**NOT_RUN**；Draft PR#36仍不合入main/M0。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"封存source d73d9b真实A9b签名ARM64 Debug APK、Java enum+7项ADB Python、Linux原协议oracle等10/11 PASS及KSU原Go正式ELF139红门/实机NOT_RUN，首次设备一键只读诊断交付。"}
+```
