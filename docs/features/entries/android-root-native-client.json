@@ -153,7 +153,8 @@
     "同源码c385502a A1 Action44015392698 双ABI Bionic C静态ABI、shared Rust original protected cold FFI与16KiB ELF PASS（ZIP14298207771）；arm64原Go完整链接仍FAIL于M4, x86完整链接NOT_RUN，非可安装产品APK。",
     "A2 Bionic RAW IPv4 TX/tuple-filtered RX socket owner与ifindex/MTU冷读回已编写，尚未被共享Rust M4主循环消费；系统/真机socket行为、同源服务器业务均NOT_RUN；不可将此称为可连接客户端。",
     "A2 SOURCE 097d3b0e Action44017866225 overall FAIL: NDK C ABI + dual Rust cold .so ELF build PASS with independently matched artifact14299801880 ZIP SHA256 47c6e5c29387a2efd0fda411a8cb556d2e0a9bf5ad0802a6b190f5043f9a8914; arm64 real original-Go M4 link FAIL missing symbols, x86 complete Go link NOT_RUN. No Android raw socket runtime/real WBD/owned worker proof.",
-    "A2二批：原Go post-TLS/Detach限定Android物理Network/ifindex/MTU，并以同一共享Rust认证Entry打开/持有真实RAW RX/TX和TUN FD；未移植原M4 TX/RX/Health/MTU完整线程，Android业务仍NOT_RUN；源锁Action独立验收。"
+    "A2二批：原Go post-TLS/Detach限定Android物理Network/ifindex/MTU，并以同一共享Rust认证Entry打开/持有真实RAW RX/TX和TUN FD；未移植原M4 TX/RX/Health/MTU完整线程，Android业务仍NOT_RUN；源锁Action独立验收。",
+    "A2 FD在同一 Rust Entry 上引入原 wbd-platform::r1::BorrowFence：每次Bionic RAW/TUN真实syscall CAS借用、begin_stop阻止新借用、Stop检查零inflight并在未排空时STOP_INCOMPLETE；仍未运行原M4线程、尚无真WBD连接。"
   ],
   "promotion": null
 }

@@ -14,3 +14,15 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"原Go TLS/Detach冷控制加入仅Android物理Network scope，原共享Rust认证Entry实际收养四元组 RAW RX/TX及TUN FD，NDK双ABI源锁符号校验；M4真实worker仍NOT_RUN。"}
 ```
+
+## A2 原 Rust 借用栅栏与源锁构建记录
+
+在同一 `wbd-platform::r1::BorrowFence` 上补齐 Android RAW RX/TX、TUN 读写的同步借用，原 `v4_embedded_go::stop` 在结束原 Rust owner 后核对每个借用归零；不凭借 AtomicBool 猜测已无 syscall，未排空返回 `STOP_INCOMPLETE` 并保留 FD。未创建第二 loop 或调度器，原 Linux 代码路径保持不变。
+
+**上一 SOURCE 真实结果**：`ce9be27b318cb44abe86c7c740028173488444b5`，[Action44019082492](https://github.com/lly8666/wbd-next/actions/runs/44019082492) **overall FAIL**；两种 Bionic C ABI、共享 Rust 原认证 cold FFI 及新增 Android Network+RAW/TUN FFI、16KiB PT_LOAD **BUILD_PASS**。原 Go ARM64 完整 M4 链接仍 **FAIL**（`normal_off_*`、原产品 FEC/Game、loop/Health/MTU 等）；x86 Go 全链接 **NOT_RUN**。已独立读取 [artifact14299639612](https://github.com/lly8666/wbd-next/actions/runs/44019082492/artifacts/14299639612)：ZIP SHA256 `09096d7cd178240088bc4c01fe0be3c95d97bef73c67cc4d28c21b0eb1fb8903`，两 .so 与 stage manifest SHA相符，ARM64 `a0e491f2f914d5c2907d869c47e1ca128ef9ba32adc9a58f1e4e8913a63e6179`，x86_64 `35532b2bd8ec3eb0754c8b4be9945ef231a9b1f6a2f006253226492efb7eba77`；stage标记 `RUST_COLD_ABI_PLUS_ANDROID_OWNED_FD_ATTACH_ONLY`，非真socket运行证据。
+
+**本次 BorrowFence SOURCE** 提交后 Actions 再判；Bionic实际收发、同源真实Linux WBD server TLS/认证/租约双向TCP/UDP、完整M4工作线程join、物理 ARM64/耗电均 **NOT_RUN**。单一下一步仍为把现有 FD 消费接入共享原Rust M4成熟 worker 与真实 Go 全链接。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A2真实同源Bionic冷Owner附接 Action证据封存；复用 wbd-platform::r1 借用栅栏阻止未排空FD提前Stop；不伪造已接通M4。"}
+```

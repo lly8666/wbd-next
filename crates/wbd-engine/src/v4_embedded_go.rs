@@ -2843,8 +2843,19 @@ fn stop(handle:u64)->i32{
     }
     #[cfg(target_os="android")]
     {
-        // No native worker or detached loan has received an Arc here.
-        // These are cold-only fd owners, not a completed M4 transport Stop.
+        // All Android syscalls borrow exactly one original wbd-platform::r1
+        // guard. Begin-stop wins atomically over new borrows; no in-flight
+        // I/O permits FD release. No Android M4 worker has been spawned yet.
+        let deadline=std::time::Instant::now();
+        for result in [
+            e.android_raw_rx.as_ref().map(|x|x.stop_until(deadline)),
+            e.android_raw_tx.as_ref().map(|x|x.stop_until(deadline)),
+            e.android_tun.as_ref().map(|x|x.stop_until(deadline)),
+        ]{
+            if result.is_some_and(|v|v!=wbd_platform::r1::StopResult::Drained){
+                drained=false
+            }
+        }
         drained &= e.android_raw_rx.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
         drained &= e.android_raw_tx.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
         drained &= e.android_tun.as_ref().is_none_or(|x|Arc::strong_count(x)==1);

@@ -27,3 +27,7 @@ No VpnService, fake TLS, new protocol or probe-derived production success.
   Android-only original Go post-TLS, post-Detach physical Network/MTU bridge.
   The Linux twin rejects Android-only values and preserves its existing path.
   The root app must supply a real Network handle; none is invented here.
+
+- A2 borrowed-I/O safety: existing `wbd-platform::r1::BorrowFence` guards
+  every synchronous RAW/TUN syscall. Original Entry Stop refuses to close an
+  FD with outstanding driver loans; M4 worker join is still **NOT_RUN**.

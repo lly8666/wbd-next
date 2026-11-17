@@ -8,6 +8,8 @@ use std::ffi::{c_int, c_uint, c_void, CString};
 use std::io;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Instant;
+use crate::r1::{BorrowFence,BorrowError,StopResult};
 
 const IFNAMSIZ: usize = 16;
 const IFREQ_BYTES: usize = 40; // Android 64-bit struct ifreq; asserted in NDK C compile.
@@ -62,6 +64,7 @@ pub struct AndroidOwnedTun {
     name: String,
     generation: u32,
     active: AtomicBool,
+    borrow: BorrowFence,
 }
 impl AndroidOwnedTun {
     pub fn adopt(fd: OwnedFd, expected_name: &str, generation: u32)
@@ -90,17 +93,26 @@ impl AndroidOwnedTun {
             && unsafe { fcntl(fd.as_raw_fd(), F_SETFL, old | O_NONBLOCK) } < 0 {
             return Err((io::Error::last_os_error(), fd));
         }
-        Ok(Self { fd, name: expected_name.to_owned(), generation, active: AtomicBool::new(true) })
+        Ok(Self { fd, name: expected_name.to_owned(), generation, active: AtomicBool::new(true), borrow: BorrowFence::default() })
     }
 
     pub fn name(&self) -> &str { &self.name }
     pub fn generation(&self) -> u32 { self.generation }
     pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
-    pub fn begin_stop(&self) { self.active.store(false, Ordering::Release); }
+    pub fn begin_stop(&self) {
+        self.active.store(false, Ordering::Release);
+        self.borrow.begin_stop();
+    }
+    pub fn stop_until(&self, deadline: Instant) -> StopResult {
+        self.begin_stop();
+        self.borrow.wait_drained_until(deadline)
+    }
 
     pub fn read_ip(&self, packet: &mut [u8]) -> io::Result<usize> {
         if !self.active.load(Ordering::Acquire) { return Err(io::ErrorKind::BrokenPipe.into()); }
         if packet.is_empty() { return Err(io::ErrorKind::InvalidInput.into()); }
+        let _loan = self.borrow.try_enter_ready()
+            .map_err(|_|io::Error::from(io::ErrorKind::BrokenPipe))?;
         let count = unsafe { read(self.fd.as_raw_fd(), packet.as_mut_ptr().cast(), packet.len()) };
         if count < 0 { Err(io::Error::last_os_error()) } else { Ok(count as usize) }
     }
@@ -109,6 +121,8 @@ impl AndroidOwnedTun {
     pub fn write_authenticated_ip(&self, packet: &[u8]) -> io::Result<usize> {
         if !self.active.load(Ordering::Acquire) { return Err(io::ErrorKind::BrokenPipe.into()); }
         if packet.is_empty() { return Err(io::ErrorKind::InvalidInput.into()); }
+        let _loan = self.borrow.try_enter_ready()
+            .map_err(|_|io::Error::from(io::ErrorKind::BrokenPipe))?;
         let count = unsafe { write(self.fd.as_raw_fd(), packet.as_ptr().cast(), packet.len()) };
         if count < 0 { Err(io::Error::last_os_error()) } else { Ok(count as usize) }
     }
@@ -247,6 +261,7 @@ pub struct AndroidBoundRawRx {
     generation: u32,
     mtu: u32,
     stopping: AtomicBool,
+    borrow: BorrowFence,
 }
 impl AndroidBoundRawRx {
     pub fn open_exact(
@@ -271,10 +286,17 @@ impl AndroidBoundRawRx {
             std::mem::size_of::<AndroidSockFprog>() as u32) };
         if rc != 0 { return Err(io::Error::last_os_error()); }
         Ok(Self { fd, generation, mtu: expected_mtu,
-            stopping: AtomicBool::new(false) })
+            stopping: AtomicBool::new(false), borrow: BorrowFence::default() })
     }
     pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
-    pub fn begin_stop(&self) { self.stopping.store(true, Ordering::Release); }
+    pub fn begin_stop(&self) {
+        self.stopping.store(true, Ordering::Release);
+        self.borrow.begin_stop();
+    }
+    pub fn stop_until(&self, deadline: Instant) -> StopResult {
+        self.begin_stop();
+        self.borrow.wait_drained_until(deadline)
+    }
     /// Nonblocking *one* kernel read into the original M1-owned slab. The
     /// caller must use shared rx_ipv4_tcp parsing and original M3 AEAD/PN.
     pub fn read_untrusted(&self, generation: u32, buffer: &mut [u8]) -> io::Result<usize> {
@@ -284,6 +306,10 @@ impl AndroidBoundRawRx {
         if buffer.len() < 40 {
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "small M1 slab"));
         }
+        let _loan = self.borrow.try_enter_ready().map_err(|error|match error {
+            BorrowError::Stopping => io::Error::from(io::ErrorKind::BrokenPipe),
+            BorrowError::TooManyLoans => io::Error::from(io::ErrorKind::OutOfMemory),
+        })?;
         let cap = buffer.len().min(self.mtu as usize);
         let n = unsafe { recvfrom(self.fd.as_raw_fd(), buffer.as_mut_ptr().cast(), cap,
             MSG_DONTWAIT | MSG_TRUNC, std::ptr::null_mut(), std::ptr::null_mut()) };
@@ -305,6 +331,7 @@ pub struct AndroidBoundRawTx {
     source: [u8; 4],
     destination: [u8; 4],
     stopping: AtomicBool,
+    borrow: BorrowFence,
 }
 impl AndroidBoundRawTx {
     pub fn open(
@@ -330,10 +357,17 @@ impl AndroidBoundRawTx {
             return Err(io::Error::last_os_error());
         }
         Ok(Self { fd, generation, mtu: expected_mtu, source, destination,
-            stopping: AtomicBool::new(false) })
+            stopping: AtomicBool::new(false), borrow: BorrowFence::default() })
     }
     pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
-    pub fn begin_stop(&self) { self.stopping.store(true, Ordering::Release); }
+    pub fn begin_stop(&self) {
+        self.stopping.store(true, Ordering::Release);
+        self.borrow.begin_stop();
+    }
+    pub fn stop_until(&self, deadline: Instant) -> StopResult {
+        self.begin_stop();
+        self.borrow.wait_drained_until(deadline)
+    }
     /// Kernel copy != remote delivery. Short/uncertain sends are returned
     /// as errors; never reseal a PN or silently try an unbound route.
     /// route_budget is the shared native M4's last approved PMTU snapshot,
@@ -353,6 +387,10 @@ impl AndroidBoundRawTx {
             u16::from_be_bytes([packet[6], packet[7]]) & 0x3fff != 0 {
             return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid original M4 outer"));
         }
+        let _loan = self.borrow.try_enter_ready().map_err(|error|match error {
+            BorrowError::Stopping => io::Error::from(io::ErrorKind::BrokenPipe),
+            BorrowError::TooManyLoans => io::Error::from(io::ErrorKind::OutOfMemory),
+        })?;
         let address = AndroidSockAddrIn {
             family: AF_INET as u16, port: 0,
             ip_be: u32::from_ne_bytes(self.destination), zero: [0; 8],
