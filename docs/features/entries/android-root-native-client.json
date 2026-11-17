@@ -196,6 +196,13 @@
       "status": "FAIL",
       "source_sha": "f490df0670804814d6fb60ff2a9dd9699ffc147f",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44024127542"
+    },
+    {
+      "platform": "Android ARM64 aarch64-linux-android M4 original owner",
+      "scope": "Real M1/M3/M4+Health+eventfd Stop Rust release compiled to ELF64 AArch64 min PT_LOAD align16KiB and independently inspected dynamic symbols (loop_start, Health, cold prepare all genuinely exported). Stage script FALSE FAIL: set -o pipefail caught llvm-nm SIGPIPE after grep -q successful match; original-Go full link NOT_RUN at this SOURCE, phone NOT_RUN.",
+      "status": "BUILD_PASS",
+      "source_sha": "2b8e662547e8d994f6ae201f3ad414019bd63774",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44024436340"
     }
   ],
   "limitations": [
@@ -220,7 +227,8 @@
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
     "ARM64 ONLY SOURCE 2951cda2 Action44021966186 overall FAIL at original Go ld.lld missing Fixed/FEC/Game/native continuous M4 interfaces; Rust original M1/M3 and Bionic compile PASS, stage ZIP14300864286 SHA256 90cfb9be158c6c30e9043e89749f2075d74e7a9129cb8dc79fe53aa11a5aa00c. ARM64 .so sha256 76816bd9ffd851974563656ef2e31041e0904cec34db938fd590844e4eff3ad3 e_machine183 PT_LOAD16384, manifest matched; x86 no artifacts; real KSU/WBD/TCP/UDP NOT_RUN.",
     "ARM64 A2新增真实Native M4 source：最多8包/turn的RX/TX readiness、原M1/M3/HealthClock、eventfd双线程Stop/join与物理ifindex/MTU验真；跨编译不能证明真机运行；M3 jumbo、原M2/FEC/Game、UI/root owned routes完整联接未就绪。",
-    "f490df06 ARM64 source-locked build did NOT pass Rust: two E0599 unresolved original owner normal_firstsend_identity due Linux/Windows-only cfg; follow-on exact shared method target cfg fix; real native M4 test not run, previous Go full link failure still applicable."
+    "f490df06 ARM64 source-locked build did NOT pass Rust: two E0599 unresolved original owner normal_firstsend_identity due Linux/Windows-only cfg; follow-on exact shared method target cfg fix; real native M4 test not run, previous Go full link failure still applicable.",
+    "SOURCE2b8e compiler and Android ARM64 M4 actual .so ELF produced, but Action44024436340 overall FAIL at source-lock checker SIGPIPE false negative; source-locked Go full link NOT_RUN. Verified artifact14301758387 ZIP SHA256 47279d89e5ddfe67d5be7a4be7c2351be708e7ee084c53da3a0e368696667c86, lib .so SHA256 df8ad737e631e66b99e836422d8c33d844036d5e4d972b47ba1ea9842417764e, ELF machine183 PT_LOAD16384; grep -q pipeline fixed with full llvm-nm output snapshot, never relax ABI exports."
   ],
   "promotion": null
 }

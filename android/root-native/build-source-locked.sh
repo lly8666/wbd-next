@@ -63,6 +63,14 @@ for pair in "aarch64 arm64"; do
   # All cold+M4 symbols must resolve from the SAME real Rust AEAD/PN owner;
   # these native methods actually start/join original M1/M3 Bionic workers.
   # Building their ELF does NOT prove kernel permission or live traffic.
+  # Under set -o pipefail, llvm-nm | grep -q can report SIGPIPE (141)
+  # when grep exits after the FIRST valid symbol; it was wrongly logged as
+  # "MISSING" on SOURCE 2b8e even though readelf/nm proved the ABI exists.
+  # Materialize the full exported-symbol table exactly ONCE before checking.
+  # Every symbol below must still be exported by the SAME real Rust ELF.
+  symbol_table="out/android-product-a1/libwbd_engine-$goarch.dynsym.txt"
+  "$tool/llvm-nm" -D "$lib" > "$symbol_table"
+  test -s "$symbol_table"
   for symbol in wbd_m0_embedded_go_prepare_client wbd_m0_embedded_go_stage \
       wbd_m0_embedded_go_commit wbd_m0_embedded_go_stop \
       wbd_m0_embedded_go_android_bind_physical \
@@ -74,8 +82,8 @@ for pair in "aarch64 arm64"; do
       wbd_m0_embedded_go_loop_authenticated_peer_health \
       wbd_m0_embedded_go_public_native_health_config \
       wbd_m0_embedded_go_public_native_health_effective; do
-    "$tool/llvm-nm" -D "$lib" | grep -Eq " [TW] ${symbol}$" || {
-      echo "ANDROID_RUST_AUTHENTICATED_COLD_FFI_MISSING: $symbol" >&2
+    grep -Eq " [TW] ${symbol}$" "$symbol_table" || {
+      echo "ANDROID_ARM64_ORIGINAL_RUST_ELF_EXPORT_MISSING: $symbol" >&2
       exit 1
     }
   done

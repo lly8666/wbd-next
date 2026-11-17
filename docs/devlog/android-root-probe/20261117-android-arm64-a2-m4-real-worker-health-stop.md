@@ -24,3 +24,16 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"M4 SOURCE f490 ARM64 编译首次FAIL精准定位两处原TLS身份方法Android cfg缺口；原方法目标编译修正且去除未用助手；治理PASS，真机M4仍NOT_RUN。"}
 ```
+
+## ARM64 M4 Rust ELF真实导出 vs 源锁 grep -q/pipefail 误报
+
+- **SOURCE `2b8e662547e8d994f6ae201f3ad414019bd63774`** [ARM64 Action44024436340](https://github.com/lly8666/wbd-next/actions/runs/44024436340) **overall FAIL**，但已明确不是新增原Rust M4 compile/link出错：`cargo +1.85.1 build --release --target aarch64-linux-android -p wbd-engine` 实际 `Finished release`，生成唯一 ARM64 `.so`；出错点是 `set -euo pipefail` 下 `llvm-nm -D "$lib" | grep -Eq " [TW] symbol$"` 的 grep `-q` 提前退出，导致 `llvm-nm` 的 SIGPIPE 非零码被 Bash `pipefail` 判成假 `MISSING wbd_m0_embedded_go_prepare_client`。
+- 已独立读取 [artifact14301758387](https://github.com/lly8666/wbd-next/actions/runs/44024436340/artifacts/14301758387)，下载 ZIP SHA256 `47279d89e5ddfe67d5be7a4be7c2351be708e7ee084c53da3a0e368696667c86`；其中 `libwbd_engine-arm64.so` SHA256 `df8ad737e631e66b99e836422d8c33d844036d5e4d972b47ba1ea9842417764e`，ELF64 AArch64 machine183、PT_LOAD min alignment 16384，`readelf -sW` 和 `nm -D` **实际看到 `wbd_m0_embedded_go_prepare_client`、`loop_start`、`loop_stats`、authenticated_dead/predead/peer_health、native_health_config/effective、android_raw/tun attach、Stop/Release** 为 GLOBAL/动态导出；因此可写 **M4 ARM64 源码/真实 Rust ELF 编译 PASS**，但绝不是 Android 上真实 M4 运行 PASS。
+- **本修复**不是跳过ABI：将 `llvm-nm -D` 输出预先完整重定向一次到同源 ARM64 ELF `.dynsym.txt`，再逐个对文件执行相同的严格 `[TW] symbol$` 检查，避免管道SIGPIPE 假失败。真实缺失符号仍 FAIL，允许下一步进入**原 Go 完整产品链接**核实，不会用伪造 C ABI 兜底。
+- 该 SOURCE 没有跑到原 Go product CGo link；Go FULL LINK **NOT_RUN**；Android16 KSU真实原 Go TLS/认证/lease，M4双向 TCP/UDP、Health/MTU/Stop真设备均 **NOT_RUN**，FEC/Game仍未完整Android移植。Feature/Governance `[Action44024436425](https://github.com/lly8666/wbd-next/actions/runs/44024436425)` **PASS**。
+
+**唯一下一步**：在同一ARM64 ABI导出严格门通过后跑原Go完整链接，定位未移植原M2/Fixed/FEC/Game真实符号，逐项真实移植/有证据的Normal-off原Go产品源分层，不添加任何无行为假占位。随后获设备授权再真机验收。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"SOURCE2b8e ARM64原Rust M4真实ELF/Health/eventfd等符号已动态导出、16KiB验证；CI grep-q+pipefail误报已改全符号表文件逐项严格校验；完整Go链接与真机依旧NOT_RUN。"}
+```
