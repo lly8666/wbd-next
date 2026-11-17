@@ -17,3 +17,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B2复用固定v2fly CN geosite8503全类型SHA规则、原Go CNRules真实匹配/Host DNS socket与不可用配置fail-closed；Android实际DNS出口和App/P3仍NOT_CONNECTED。"}
 ```
+
+## 首轮同源 FAIL：真实规则不保证任意 `.cn` 命中
+
+[Action 44072465559](https://github.com/lly8666/wbd-next/actions/runs/44072465559) SOURCE `92c4be735f5f582137f001d9cc14a315f90b03cc`：固定上游Zip成功导入，`ANDROID_B2_PINNED_CN_GEOSITE_IMPORT_8503_PASS`（SHA256、8503及各类型数量均正确），原Go matcher严格类型语义和真UDP/TCP CN/隧道/TC测试可运行；B2单测`TestPinnedCNGeosite8503FullTypedSnapshotAndNoSilentFallback`期望`foo.example.cn`为真CN而失败。真实固定8503条Geosite**未保证所有`.cn`后缀必命中**，不能因为旧KSU私有netns合成`.cn`样例就自行加未源锁的泛域规则。修复把此域名改为**明确负例**，正例只验证该固定规则真实含有的`www.baidu.com`、`www.qq.com`及`baidu.com`。旧失败保留，修复SOURCE需要新Actions6+ Job全验，不能修改旧Action结论。

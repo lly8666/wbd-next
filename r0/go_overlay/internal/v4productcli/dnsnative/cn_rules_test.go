@@ -57,10 +57,12 @@ func TestPinnedCNGeosite8503FullTypedSnapshotAndNoSilentFallback(t *testing.T){
   st.Regex!=3||st.Keyword!=0||st.SHA256!=PinnedCNSHA256{
   t.Fatalf("geosite silently dropped typed rules: %+v",st)
  }
- for _,name:=range []string{"www.baidu.com","www.qq.com","foo.example.cn"}{
+ // Real pinned geolocation-cn does NOT imply an automatic "*.cn" rule.
+ // The older KSU synthetic domain examples are not an upstream geosite oracle.
+ for _,name:=range []string{"www.baidu.com","www.qq.com","baidu.com"}{
   if !r.Match(name){t.Fatalf("missing authentic CN rule for %s",name)}
  }
- for _,name:=range []string{"www.example.net","baidu.com.evil.example",
+ for _,name:=range []string{"www.example.net","foo.example.cn","baidu.com.evil.example",
   "invalid..domain","-illegal.cn"}{
   if r.Match(name){t.Fatalf("CN rules overmatch non-CN or invalid name %q",name)}
  }
