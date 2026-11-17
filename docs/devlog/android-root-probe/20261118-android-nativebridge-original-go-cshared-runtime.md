@@ -34,3 +34,15 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"新KSU实测完整原Go c-shared进入真实导出时SIGILL132，tombstone为独立klauspost/cpuid/v2 MIDR_EL1；仅测试库增加noasm CPU探测备选路径，官方Go/Rust客户端不变。"}
 ```
+
+## 2026-11-18 同SOURCE Android 原Go CLI真实调用PASS，但官方产品仍红门
+
+CODE SOURCE `eb278a02ee11442521b54288ae9c50bc6fd1d795` 的 [Android完整产品Action #44138382581](https://github.com/lly8666/wbd-next/actions/runs/44138382581) **10/11 Jobs SUCCESS、总体 FAIL**。第11项实际 Android16 API36 x86_64 KVM + KernelSU3.3.1 + libndk_translation 原始 [artifact #14353107725](https://github.com/lly8666/wbd-next/actions/runs/44138382581/artifacts/14353107725) 已人工解包核实：`original-go-cshared-help-exit-code.txt=0`，真`original-go-cshared-help.txt`输出`Usage of wbd-v4-client`、`-android-network-handle`、`-peer-host`及`WBD_ANDROID_ARM64_ORIGINAL_GO_CLIENT_HELP_RETURNED`/`WBD_ANDROID_ARM64_ORIGINAL_GO_CSHARED_HELP_PASS`，JSON receipt 的 `arm64_original_go_cshared_help=PASS`。该被调用函数是**真实原 Go donor `v4productcli.Run("client", ["--help"])`**，不是返回常数的探针，也实测加载同SOURCE真正Rust共享库。模拟器限制仅由复制的Go1.23.12标准库MIDR条件与本诊断库`noasm`规避，官方签名APK ELF未经替换。
+
+同一JSON明确`arm64_native_exec=NOT_PROVEN`、`arm64_native_exit_code=139`：**原官方ARM64 ELF直接`execve --help`仍SIGSEGV**；Android Root APK Activity安装启动PASS只证明UI可运行；用户App→KSU真实授权、原Go真TLS/租约、Rust原M4 RAW/TUN及普通App DNS/Stop与Android↔Linux同源真实网络业务依然**NOT_RUN**。不把测试共享库当生产二进制，不允许将10/11写成整轮PASS。其余10个独立Job为ARM64 Go/Rust原生ELF/签名APK、Go/Rust Host、CN8503及同源Linux原协议真实TLS/租约/M4/Stop oracle，均PASS。
+
+仅完成本轮来源可追溯的开发记录；下一真实入场需在受控环境中从原Go参数校验逐步进入物理Network/真实Linux server Normal/off，或在真实ARM64内核验证官方Go ELF启动；实体KSU用户未授权，不部署。正式DNS劫持和物理DNS cold gates继续false。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"记录同SOURCE Android16 KSU真实原Go Run(client,--help)测试共享库exit0与CLI标记PASS，正式原ARM64 Go ELF139及真业务NOT_RUN，Action总体FAIL保持。"}
+```
