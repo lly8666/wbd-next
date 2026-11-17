@@ -38,7 +38,8 @@
     "docs/prompts/ANDROID_TEMP_ROOT_PROBE.md",
     "docs/devlog/android-root-probe/20261117-android-native-client-kickoff.md",
     "docs/devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md",
-    "docs/devlog/android-root-probe/20261117-android-product-a1-assembly.md"
+    "docs/devlog/android-root-probe/20261117-android-product-a1-assembly.md",
+    "docs/devlog/android-root-probe/20261117-android-product-a2-raw-bionic-io.md"
   ],
   "verification": [
     {
@@ -96,6 +97,41 @@
       "status": "PLANNED",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Android NDK arm64-v8a",
+      "scope": "A2 Bionic SIOCGIFMTU/classic-BPF C ABI gate + original shared Rust cold FFI .so (16KiB PT_LOAD, SHA256 bf2261b2ebd33656cb0df9efc1bc7b16aa462cb9fee2c389192d23b86e458be8); Android RAW runtime NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "097d3b0e95872c2aaad317e3647f59101ba315fc",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44017866225"
+    },
+    {
+      "platform": "Android NDK x86_64",
+      "scope": "A2 Bionic SIOCGIFMTU/classic-BPF C ABI gate + original shared Rust cold FFI .so (16KiB PT_LOAD, SHA256 53a9445f1d5083b09c8d2d74cf57363648956b6292aba18664bb6e34f669c7ec); Android RAW runtime NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "097d3b0e95872c2aaad317e3647f59101ba315fc",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44017866225"
+    },
+    {
+      "platform": "Android NDK arm64-v8a",
+      "scope": "A2 source-locked original-Go client full CGo link to real Android M4 RAW/TUN/Health/MTU worker; undefined original M4 symbols",
+      "status": "FAIL",
+      "source_sha": "097d3b0e95872c2aaad317e3647f59101ba315fc",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44017866225"
+    },
+    {
+      "platform": "Android NDK x86_64",
+      "scope": "A2 original-Go client full CGo M4 link was not reached after arm64 gate failure",
+      "status": "NOT_RUN",
+      "source_sha": "097d3b0e95872c2aaad317e3647f59101ba315fc",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44017866225"
+    },
+    {
+      "platform": "Android16 KSU native device/server",
+      "scope": "A2 physical Android RAW socket execution, original TLS/auth/lease Rust owner Normal/off, two-way TCP/UDP, owned Stop",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -111,7 +147,8 @@
     "Action44014838092 ARM64 Rust cold ABI导出通过但完整原Go CGo链接缺AndroidM4 RAW/TUN/Health/MTU符号，属于实际未实现；未生成真实WBD产品客户端APK。",
     "A1 双ABI冷编译证据生成器修正 Python ELF magic 字节及 SOURCE 换行转义；后续同源Action须独立验证，未标产品成功。",
     "同源码c385502a A1 Action44015392698 双ABI Bionic C静态ABI、shared Rust original protected cold FFI与16KiB ELF PASS（ZIP14298207771）；arm64原Go完整链接仍FAIL于M4, x86完整链接NOT_RUN，非可安装产品APK。",
-    "A2 Bionic RAW IPv4 TX/tuple-filtered RX socket owner与ifindex/MTU冷读回已编写，尚未被共享Rust M4主循环消费；系统/真机socket行为、同源服务器业务均NOT_RUN；不可将此称为可连接客户端。"
+    "A2 Bionic RAW IPv4 TX/tuple-filtered RX socket owner与ifindex/MTU冷读回已编写，尚未被共享Rust M4主循环消费；系统/真机socket行为、同源服务器业务均NOT_RUN；不可将此称为可连接客户端。",
+    "A2 SOURCE 097d3b0e Action44017866225 overall FAIL: NDK C ABI + dual Rust cold .so ELF build PASS with independently matched artifact14299801880 ZIP SHA256 47c6e5c29387a2efd0fda411a8cb556d2e0a9bf5ad0802a6b190f5043f9a8914; arm64 real original-Go M4 link FAIL missing symbols, x86 complete Go link NOT_RUN. No Android raw socket runtime/real WBD/owned worker proof."
   ],
   "promotion": null
 }

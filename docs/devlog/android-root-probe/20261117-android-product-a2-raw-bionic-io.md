@@ -14,3 +14,16 @@ SOURCE：本次提交 SHA 以 GitHub commit 为准；提交前未声称测试通
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A2首个原生I/O施工切片，Android内核RAW TX/RX四元组过滤、特定Network/MTU/代际强绑定与NDK ABI门；尚未M4接线及真实业务测试。"}
 ```
+
+## A2 源锁构建与治理收口（2026-11-17）
+
+- **SOURCE**：`097d3b0e95872c2aaad317e3647f59101ba315fc`，原 Go donor `a7a82db31fe736ffedee330795a3234d358f1984`。构建 [Action44017866225](https://github.com/lly8666/wbd-next/actions/runs/44017866225) **overall FAIL**，但子步骤 NDK arm64-v8a/x86_64 的 Bionic C ABI 静态检查、同一 Rust `prepare/stage/commit/stop` 冷 FFI 导出、双 16KiB ELF 构建 **BUILD_PASS**。这只证明源码可编译；**A2 Android RAW 内核行为未运行**。arm64 原 Go `cmd/wbd-v4-client` CGo 最终链接 **FAIL**（原 M4 `attach_raw_rx`、`attach_tun`、`loop_start`、Health/MTU/FEC 等符号仍未在 Android Rust 导出）；x86_64 完整 Go 链接 **NOT_RUN**。
+- **同源产物**：[artifact14299801880](https://github.com/lly8666/wbd-next/actions/runs/44017866225/artifacts/14299801880) ZIP SHA256 `47c6e5c29387a2efd0fda411a8cb556d2e0a9bf5ad0802a6b190f5043f9a8914`，独立下载解包核验 `rust-cold-stage-manifest.json` 与 .so SHA256 一致；ARM64 ELF e_machine=183, PT_LOAD最小对齐16384, SHA256 `bf2261b2ebd33656cb0df9efc1bc7b16aa462cb9fee2c389192d23b86e458be8`；x86_64 machine=62, 对齐16384, SHA256 `53a9445f1d5083b09c8d2d74cf57363648956b6292aba18664bb6e34f669c7ec`。清单明确 `SHARED_RUST_COLD_ABI_ONLY`，不代表完整客户端链接成功。与旧 A1 相同的 Rust .so SHA 不代表新 Android RAW 系统调用被真机执行。
+- **Governance**：初始 [Action44017866230](https://github.com/lly8666/wbd-next/actions/runs/44017866230) **FAIL**：devlog `feature-impact` Markdown 围栏意外带反斜杠，非产品编译问题；文档独立修复 SOURCE `403d0d531206ab51157ddb29fba2274e8934df6f` 后 [Action44017973893](https://github.com/lly8666/wbd-next/actions/runs/44017973893) **PASS**。失败保留，不改写旧 Action。
+- **NOT_RUN**：Android16 KSU↔同源真实 Linux 服务端标准 TLS ClientHello/身份认证/租约、RAW/Rust M4 收发、TUN/双向 TCP+UDP、真实 Stop/异常恢复、物理 arm64 装载/16KiB、网络切换/能耗/ISA、业务 p99；没有部署设备授权，也没有把编译当真实业务证据。
+
+**唯一下一步仍为 A2**：在 `v4_embedded_go.rs` 同一原 Go 认证代际内复用 M4 handler 并接入 Android RAW/TUN/MTU/Health/owned worker Stop 的真实实现，消除真实完整 Go 链接缺口；之后 A3 才做 Android16 KSU↔真实 Linux server Normal/off 的同源业务验收。不得添加假 ABI stub 或另建逐包控制循环。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"以SOURCE097d3b0e和Action44017866225封存双ABI Bionic冷FFI构建PASS与ARM64完整Go/M4链接FAIL，独立ZIP/hash核验；治理失败及修复PASS照实留存，实际WBD仍NOT_RUN。"}
+```
