@@ -1,6 +1,6 @@
 # Android Root 原生客户端适配｜授权施工方案（2026-11-17）
 
-**状态：B2a 固定上游8,503条CN Geosite SHA/全类型原Go匹配和真实DNS UDP/TCP Host PASS；同源7/7 ARM64 Native、签名Root APK、原Linux server oracle PASS。规则数据仍仅CI工件、未捆入APK或接常驻Go CLI；Android系统DNS/物理Network/TUN出站 NOT_CONNECTED，P2/P3无KVM ENV_BLOCKED、实体P5 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
+**状态：B2b 同SOURCE CN8503 TXT+MIT+来源锁已进入正式签名Root APK、Java私有0600暂存及原Go Android-only冷文件读入链路已编译/Host安全测试PASS；原Go/Rust ARM64 ELF、B2主机真实UDP/TCP DNS及原Linux协议oracle 7/7 PASS。正式Android Root App→su/Go读取权限仍NOT_RUN，物理Network/TUN DNS socket与系统Resolver NOT_CONNECTED；P2/P3因托管ARM64缺KVM ENV_BLOCKED，实体P5 NOT_RUN。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
 
 ## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
 
@@ -28,7 +28,7 @@
 | 包 | 实施范围 | 本次状态 | 验收 |
 |---|---|---|---|
 | **A 产品装配与首次 Normal/off 真连接** | 固定原Go/共享Rust源码；Android NDK/Bionic ABI/链接/16KiB页；平台物理绑定、root TUN ownership、启动停止；复用Go TLS/认证/租约/原Rust steady path | **BUILD_PASS + LINUX_ORACLE_PASS；Android业务NOT_RUN** | 同SOURCE P2 真实 ARM64 Android Cuttlefish 原Bionic→原Linux server 真协议/数据，再 P3 普通签名 APK→受控 su 真实双向 TCP/UDP 与 Stop；实体 KernelSU 兼容性最后终验 |
-| **B 路由、统一 DNS、App 选择** | A8多UID journal Host通过；B1普通双DNS真实UDP/TCP Host通过；B2a 固定CN Geosite 8503条全类型/SHA实源Host PASS。B2b需将规则包捆入Root APK/Go加载、物理Network与WBD TUN真实socket及UDP/TCP53截获接到owner | **B2a PINNED_CN_HOST_PASS；ANDROID_SYSTEM_DNS_NOT_CONNECTED** | Android16普通App系统Resolver/2条真出口、完整CN IP direct/规则分流/Private DNS及owned Stop仍未运行 |
+| **B 路由、统一 DNS、App 选择** | A8多UID Host验证；B1双DNS UDP/TCP真实host通过；B2a真实CN8503全类型；B2b同SHA原规则+MIT进入正式签名APK、App0600到原Go Android-only冷校验代码与Host安全测试PASS。B2c待完成真正物理Network/TUN DNS socket、系统UDP/TCP53接管及CN IP split/direct策略 | **B2b SIGNED_CN8503_ASSET_BUILD_PASS；ANDROID_DNS_NOT_CONNECTED** | Android16普通App系统Resolver/真实Root Go冷文件读回、物理与隧道两出口、IP规则/Private DNS/owned Stop仍NOT_RUN |
 | **C 产品模式与生命周期** | Normal/off、fixed/auto、Game原有lane；低频状态、前台Service、网络callback、重认证/轮换/切网、资源观测 | PLANNED | 同源模式及Stop；一次实际网络切换；有限业务 p99/CPU/RSS/idle 唤醒 |
 | **D 条件热点USB与PR整合** | 手机/热点/USB独立开关、系统共享SNAT/conntrack、真实offload/CLAT边界、回归/PR | PLANNED | 已授权真机专项结果 + 清晰NOT_RUN 清单 + PR；未经验收不得自合 main |
 
@@ -78,6 +78,8 @@ per-App 仅改变业务 IP 出口，不重建 netd 每UID DNS、不恢复共享�
 - [B1 同源 Action44069144804](https://github.com/lly8666/wbd-next/actions/runs/44069144804)，SOURCE `8534a9182475a07072a4ae0e77807e23e6a3261f`，**6/6 Jobs SUCCESS**：原Go独立DNS模块 Host **真实UDP/TCP loopback7组**（原始QNAME分流、bootstrap物理、split关闭、TC→同DNS同Path TCP、无跨上游回退、坏ID/畸形包拒绝、TTL缓存/并发合并）PASS；同源原Go/Rust ARM64 Native、Root签名APK、原M3、Linux标准TLS/租约/M4 UDP/Stop oracle PASS；DNS包另交叉编译Android ARM64 test ELF但**并未接入运行中原Go CLI或Android system Resolver/原Rust M4 TUN**。ARM64 host仍`KVM_NOT_ACCESSIBLE`，P2/P3 `ENV_BLOCKED`，不能宣称 Android DNS 可用。下一步优先 B2 同源CN Geosite真实规则数据/真实Path绑定/系统DNS拦截和IP分流，实体KSU最后。
 
 - [B2a 修复版 Action44073025085](https://github.com/lly8666/wbd-next/actions/runs/44073025085)，SOURCE `6dc6e9f0fc51ac885ba4c8832be0c63789d44f49`，**7/7 Jobs SUCCESS**：老诊断v2fly固定提交`41504eae2a11f305fe88cfc605cf6c105a80bf5a` 导入8,503条规则，真实SHA `45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6`，domain8431/full69/regexp3/keyword0，MIT LICENSE；原Go B2a CNRules四语义、坏SHA/截断拒绝和实际host UDP/TCP53格式/同endpoint TC loopback PASS，B1普通DNS回归、原M3、ARM64 Go/Rust Native+Go B2交叉编译、签名无VPN Root APK、原Linux服务器真TLS/租约/Rust M4/UDP/Stop oracle均PASS。**首轮 [Action44072465559](https://github.com/lly8666/wbd-next/actions/runs/44072465559) B2测试夹具FAIL**：误将`foo.example.cn`认为固定Geosite应命中；真实规则不覆盖所有`.cn`，改为负例且源规则未变，旧FAIL保留。Android物理/隧道DNS socket未接、真系统Resolver未接、CN数据仍仅Action工件，P2/P3受host KVM缺失ENV_BLOCKED、实体KSU最后。
+
+- [B2b 修复版 Action44077291894](https://github.com/lly8666/wbd-next/actions/runs/44077291894)，SOURCE `26dc7ea1cf550b57c11103ea5b7ae2e103854699`，**7/7 Jobs SUCCESS**：原v2fly固定提交真实CN8503及MIT/SHA、Go 0600/NoFollow/symlink+篡改拒绝Host测试、B1 UDP/TCP DNS及原M3、Go/Rust ARM64原Native、独立签名Root APK内的真实规则TXT/许可证/provenance逐字节验证及原Go `--android-cn-geosite-file`冷装载源码门、Linux原WBD server真实TLS/授权/租约/Rust M4/UDP/Stop oracle均PASS。旧 [Action44076363045](https://github.com/lly8666/wbd-next/actions/runs/44076363045) 仅Linux oracle Job FAIL：独立donor拼装缺复制Go新`dnsnative`包，Go编译依赖未找到，**未执行真Linux业务**；修复代码 `linux-original-oracle.sh` 同源复制该包、不改变原协议，故旧FAIL保留、新SOURCE全重跑。正负证据均是软件；Android普通App→KSU su、原Go Root实际0600文件读取、系统Resolver及物理/WBD TUN真实DNS仍NOT_RUN/NOT_CONNECTED。Cuttlefish ARM64准入 `KVM_NOT_ACCESSIBLE`，P2/P3 `ENV_BLOCKED`，实体P5最后另授权。
 
 ### Actions 准入、各层真实验收及最后实体终验
 
