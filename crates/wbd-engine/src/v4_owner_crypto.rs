@@ -1857,39 +1857,36 @@ impl ProtectedScopedOwner{
         }).map_err(|_|ProtectedCryptoError::Tx)
     }
 
-    /// Real TUN bytes in the original M1 slab, then the SAME original
-    /// LINK+AEAD/PN and FrozenRecord TX. Large datagrams must be fragmented
-    /// by the missing shared M4 jumbo path; never send truncated IPv4.
-    pub(crate) fn seal_android_tun_normal_off(
+    /// Original-GO authenticated /32 and one FULL original kernel TUN IP
+    /// already read by the Bionic vectored read into the SAME M1 slab.
+    /// Common packets spend ZERO extra copies or per-packet allocations;
+    /// oversized/magic payloads use the original M3 LINK20 planner instead.
+    /// No second TUN read, no truncated IPv4, no fake PN/seq identity.
+    pub(crate) fn seal_android_read_normal_ip(
         &mut self,tun:&AndroidOwnedTun,mut slab:UniqueBuffer,
-        frame:FrameBudget,carrier_snapshot:u64,now:MonoNs,
+        payload_len:usize,frame:FrameBudget,carrier_snapshot:u64,
+        lease:Option<[u8;4]>,now:MonoNs,
     )->Result<(u64,u32,usize,usize),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
-           tun.generation()!=self.generation{
+           tun.generation()!=self.generation||lease.is_none(){
             return Err(ProtectedCryptoError::Inactive)
         }
         let capacity=slab.writable().len().checked_sub(14)
             .ok_or(ProtectedCryptoError::Tx)?;
         let limit=frame.single_business_payload_mtu.min(capacity);
-        if limit<20{return Err(ProtectedCryptoError::Tx)}
-        let attempt=limit.saturating_add(1).min(capacity);
-        let len=tun.read_ip(&mut slab.writable()[14..14+attempt])
-            .map_err(|_|ProtectedCryptoError::Owner)?;
-        if len==0||len>limit{return Err(ProtectedCryptoError::Tx)}
-        // A truncated TUN read may return exactly the buffer capacity.
-        // Require the entire IPv4 datagram length to match actual bytes
-        // BEFORE any original AEAD PN or driver loan is consumed.
-        let packet=&slab.writable()[14..14+len];
-        if len<20||packet[0]>>4!=4||
+        if payload_len<20||payload_len>limit{return Err(ProtectedCryptoError::Tx)}
+        let packet=&slab.writable()[14..14+payload_len];
+        if packet[0]>>4!=4||
            usize::from(packet[0]&15)*4<20||
-           usize::from(packet[0]&15)*4>len||
-           usize::from(u16::from_be_bytes([packet[2],packet[3]]))!=len{
+           usize::from(packet[0]&15)*4>payload_len||
+           usize::from(u16::from_be_bytes([packet[2],packet[3]]))!=payload_len||
+           !crate::v4_session_address::admitted_client_source(packet,lease){
             return Err(ProtectedCryptoError::Tx)
         }
         let (pn,seq,wire)=self.seal_normal_off_one(
-            slab,len,frame,carrier_snapshot,now
+            slab,payload_len,frame,carrier_snapshot,now
         )?;
-        Ok((pn,seq,wire,len))
+        Ok((pn,seq,wire,payload_len))
     }
 
     /// Original M1 slab and original extended seq32 admission. Kernel/BPF

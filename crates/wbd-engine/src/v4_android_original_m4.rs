@@ -11,6 +11,9 @@
 use super::{Entry,session,PH_ACTIVE,PH_STOPPING,OK,INVALID,UNKNOWN,BAD_STAGE,FULL};
 use crate::v4_native_health::{AuthenticatedActivity,HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::{TxDispatch,RxPacket};
+use wbd_codec::link_fec_wire::{
+    LinkPacketPlan,LinkMode,LINK_MAGIC,MAX_LOGICAL_DATAGRAM,
+};
 use wbd_platform::android_root_io::{
     AndroidBoundRawRx,AndroidBoundRawTx,AndroidOwnedTun,AndroidWorkerWake,
 };
@@ -236,6 +239,78 @@ fn raw_worker(
         let _=peer_wake.signal_stop();
     }
 }
+/// One authenticated logical IPv4 datagram, one fixed original M3
+/// LINK20 packet ID and frame stride. Original M1 issues each PN exactly
+/// once; a changed scope or uncertain kernel copy RETIRES its remaining
+/// tail. Owned only by TX worker, never visible to Go/JNI.
+struct PendingAndroidJumbo{
+    source:Vec<u8>,packet_id:u32,frame_mtu:usize,
+    issued:usize,total:usize,generation:u32,physical_mtu:u32,
+}
+enum JumboTurn{Copied{done:bool},Deferred,Abandoned}
+fn send_android_jumbo_one(
+    e:&mut Entry,plan:&mut PendingAndroidJumbo,
+    raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
+    dispatch:&mut Vec<TxDispatch>,wire_scratch:&mut [u8],
+    at:MonoNs,
+)->JumboTurn{
+    let Some(scope)=e.android_physical.as_ref()else{return JumboTurn::Abandoned};
+    if e.phase!=PH_ACTIVE||e.generation!=plan.generation||
+       scope.mtu!=plan.physical_mtu||plan.issued>=plan.total{
+        return JumboTurn::Abandoned
+    }
+    let Ok(frame)=e.owner.android_normal_off_frame_budget(scope.mtu)
+        else{return JumboTurn::Abandoned};
+    if frame.link_frame_mtu!=plan.frame_mtu{return JumboTurn::Abandoned}
+    // Reserve original M1 ownership BEFORE constructing the next unique
+    // fragment. Capacity pressure defers without spending a PN or ID.
+    let mut slab=match e.arena.allocate(){
+        Ok(x)=>x,
+        Err(wbd_types::buffer_contract::BufferContractError::NoCapacity)=>
+            return JumboTurn::Deferred,
+        Err(_)=>return JumboTurn::Abandoned,
+    };
+    let Some(cap)=slab.writable().len().checked_sub(14)
+        else{return JumboTurn::Abandoned};
+    let mut m3=match LinkPacketPlan::new(
+        &plan.source,plan.frame_mtu,LinkMode::FixedOff,plan.packet_id
+    ){
+        Ok(v)=>v,Err(_)=>return JumboTurn::Abandoned,
+    };
+    if m3.resume_issued(plan.issued).is_err(){
+        return JumboTurn::Abandoned
+    }
+    let max_payload=cap.min(frame.single_business_payload_mtu);
+    let emitted=match m3.issue_next_into(
+        frame.link_frame_mtu,&mut slab.writable()[14..14+max_payload]
+    ){
+        Ok(Some(bytes))=>bytes,
+        _=>return JumboTurn::Abandoned,
+    };
+    // The codec emitted exact original LINK20, not a local packet format.
+    // Original owner seals AEAD+PN+TCP Seq once into one FrozenRecord.
+    let (pn,_,_)=match e.owner.seal_normal_off_fragment_one(
+        slab,emitted,frame,u64::from(scope.mtu),at
+    ){
+        Ok(v)=>v,Err(_)=>return JumboTurn::Abandoned,
+    };
+    if send_staged(e,raw,stats,dispatch,wire_scratch,at)!=Some(pn){
+        return JumboTurn::Abandoned
+    }
+    plan.issued=m3.issued();
+    JumboTurn::Copied{done:plan.issued==plan.total}
+}
+fn original_complete_ipv4_head(
+    head:&[u8],total:usize,lease:[u8;4],
+)->bool{
+    head.len()>=20&&total>=20&&total<=MAX_LOGICAL_DATAGRAM&&
+    head[0]>>4==4&&
+    usize::from(head[0]&15)*4>=20&&
+    usize::from(head[0]&15)*4<=head.len()&&
+    usize::from(u16::from_be_bytes([head[2],head[3]]))==total&&
+    crate::v4_session_address::admitted_client_source(head,Some(lease))
+}
+
 fn tun_worker(
     cell:Arc<Mutex<Entry>>,shutdown:Arc<AtomicBool>,
     wake:Arc<AndroidWorkerWake>,tun:Arc<AndroidOwnedTun>,
@@ -246,7 +321,13 @@ fn tun_worker(
     let mut clock=HealthClock::new(policy,now().0);
     clock.arm_client_cold_ready(now().0);
     let mut storage:Vec<TxDispatch>=Vec::with_capacity(1);
-    let mut scratch=vec![0u8;65_535]; // one bounded preallocated M4 output slab
+    let mut wire_scratch=vec![0u8;65_535];
+    // One reusable 65KiB overflow iovec and one reusable jumbo source.
+    // Common small packets go directly kernel -> M1 slab, with ZERO copy.
+    let mut overflow=vec![0u8;MAX_LOGICAL_DATAGRAM];
+    let mut jumbo_spare=Vec::<u8>::with_capacity(MAX_LOGICAL_DATAGRAM);
+    let mut pending=None::<PendingAndroidJumbo>;
+    let mut next_packet_id=1u32;
     let mut last_scope=Instant::now()-Duration::from_secs(2);
     while !shutdown.load(Ordering::Acquire){
         stats.tx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
@@ -260,15 +341,16 @@ fn tun_worker(
             shutdown.store(true,Ordering::Release);
             break
         }
-        // Every 1s at most, read the EXACT original bound FD's ifindex/MTU.
-        // A changed physical Network fails closed, never emits by fallback.
+        // Exactly the previously selected physical Network. Revalidation
+        // is low frequency (1Hz), and loss of scope is terminal, not a
+        // fallback to Android's global/default route.
         if last_scope.elapsed()>=Duration::from_secs(1){
-            let scope_ok=match cell.lock(){
+            let bound=match cell.lock(){
                 Ok(e)=>e.android_physical.as_ref().is_some_and(|scope|
                     raw.check_scope(&scope.interface,scope.ifindex).is_ok()),
                 Err(_)=>false,
             };
-            if !scope_ok{
+            if !bound{
                 stats.scope_invalid.store(true,Ordering::Release);
                 shutdown.store(true,Ordering::Release);
                 break
@@ -278,7 +360,7 @@ fn tun_worker(
         if matches!(clock.control_due(at.0),ControlDue::Health){
             let copied=match cell.lock(){
                 Ok(mut e) if e.phase==PH_ACTIVE=>send_authenticated_health(
-                    &mut e,&raw,&stats,&mut storage,&mut scratch,at,
+                    &mut e,&raw,&stats,&mut storage,&mut wire_scratch,at,
                     clock.local_idle_ns(at.0)
                 ),
                 _=>false,
@@ -286,10 +368,54 @@ fn tun_worker(
             clock.on_health_send_result(at.0,copied);
         }
         if shutdown.load(Ordering::Acquire){break}
+
+        // Fragment work owns the logical IP packet until all original
+        // M3 frames are definitely kernel copied. No fresh TUN read, no
+        // interleaved packet IDs, and at most eight sends before Health.
+        if pending.is_some(){
+            let mut retire=false;
+            let mut deferred=false;
+            for _ in 0..8{
+                if shutdown.load(Ordering::Acquire){break}
+                let Ok(mut e)=cell.lock()else{
+                    shutdown.store(true,Ordering::Release);break
+                };
+                if e.phase!=PH_ACTIVE{retire=true;break}
+                let at=now();
+                let outcome=send_android_jumbo_one(
+                    &mut e,pending.as_mut().expect("owned pending"),
+                    &raw,&stats,&mut storage,&mut wire_scratch,at,
+                );
+                match outcome{
+                    JumboTurn::Copied{done}=>{
+                        clock.on_local_business(at.0);
+                        if done{retire=true;break}
+                    },
+                    JumboTurn::Deferred=>{deferred=true;break},
+                    JumboTurn::Abandoned=>{
+                        stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                        stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                        retire=true;
+                        break
+                    },
+                }
+            }
+            if retire{
+                if let Some(mut finished)=pending.take(){
+                    // Reuse the same bounded jumbo source storage next time;
+                    // retired fragments/IDs are never republished.
+                    finished.source.clear();
+                    jumbo_spare=finished.source;
+                }
+            }else if deferred && !shutdown.load(Ordering::Acquire){
+                thread::sleep(Duration::from_millis(1));
+            }
+            continue
+        }
+
         let at=now();
-        let due=clock.next_deadline().unwrap_or(at.0.saturating_add(30_000_000_000));
-        // Eventfd gives immediate Stop; one 1Hz physical scope refresh
-        // stays bounded even when Health next fires only after 15 seconds.
+        let due=clock.next_deadline()
+            .unwrap_or(at.0.saturating_add(30_000_000_000));
         let timeout=((due.saturating_sub(at.0)+999_999)/1_000_000)
             .min(1_000).max(1) as i32;
         let ready=wake.wait_readable(tun.readiness_fd(),timeout);
@@ -302,43 +428,135 @@ fn tun_worker(
             }
             continue
         };
-        // Bounded ingress turn. It cannot starve the existing shared Health
-        // deadline: after at most 8 packets, return to the same clock.
-        for turn in 0..8 {
+        // One sparse normal packet is sent immediately, never held waiting
+        // for batch fill. Eight bounded source turns before Health/Stop.
+        for turn in 0..8{
             if shutdown.load(Ordering::Acquire){break}
-            if turn>0&&!wake.wait_readable(tun.readiness_fd(),0).unwrap_or(false){
-                break
-            }
+            if turn>0&&!wake.wait_readable(tun.readiness_fd(),0)
+                .unwrap_or(false){break}
             let Ok(mut e)=cell.lock()else{
                 shutdown.store(true,Ordering::Release);break
             };
             if e.phase!=PH_ACTIVE{break}
-            let physical=match e.android_physical.as_ref(){
-                Some(x)=>x.mtu,None=>break,
+            let Some(physical)=e.android_physical.as_ref().map(|s|s.mtu)
+                else{break};
+            let Some(lease)=e.client_lease_ipv4 else{
+                stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                shutdown.store(true,Ordering::Release);
+                break
             };
             let frame=match e.owner.android_normal_off_frame_budget(physical){
+                Ok(x)=>x,Err(_)=>{
+                    stats.tx_error.fetch_add(1,Ordering::Relaxed);break
+                },
+            };
+            // Reserve ONE original M1 loan BEFORE consuming the TUN packet.
+            let mut slab=match e.arena.allocate(){
+                Ok(v)=>v,Err(_)=>break
+            };
+            let head_cap=frame.single_business_payload_mtu.min(
+                slab.writable().len().saturating_sub(14));
+            if head_cap<20||head_cap>MAX_LOGICAL_DATAGRAM{
+                stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                break
+            }
+            // Linux TUN read() with a small buffer DESTROYS oversized IP.
+            // Two kernel iovecs preserve the entire datagram in one syscall.
+            // Normal IP: kernel writes directly into the SAME original M1
+            // slab [14..] and no user-space memcpy or per-packet Vec occurs.
+            let read=tun.read_ip_scatter(
+                &mut slab.writable()[14..14+head_cap],
+                &mut overflow[..MAX_LOGICAL_DATAGRAM-head_cap],
+            );
+            let n=match read{
                 Ok(x)=>x,
                 Err(_)=>{
-                    stats.tx_error.fetch_add(1,Ordering::Relaxed);break
+                    stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                    e.arena.drain_returns();
+                    break
                 }
             };
-            let slab=match e.arena.allocate(){Ok(v)=>v,Err(_)=>break};
+            let head_len=n.min(head_cap);
+            let head=&slab.writable()[14..14+head_len];
+            if !original_complete_ipv4_head(head,n,lease){
+                e.arena.drain_returns();
+                stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                break
+            }
+            let escaped=head.starts_with(LINK_MAGIC);
             let at=now();
-            match e.owner.seal_android_tun_normal_off(
-                &tun,slab,frame,u64::from(physical),at
+            if n<=head_cap&&!escaped{
+                // Common O(1) hot path: original owner AEAD/PN directly
+                // over the kernel-filled slab, immutable M4 RAW sendto.
+                match e.owner.seal_android_read_normal_ip(
+                    &tun,slab,n,frame,u64::from(physical),Some(lease),at
+                ){
+                    Ok((pn,_,_,_))=>{
+                        if send_staged(
+                            &mut e,&raw,&stats,&mut storage,
+                            &mut wire_scratch,at
+                        )==Some(pn){
+                            clock.on_local_business(at.0);
+                        }
+                    },
+                    Err(_)=>{
+                        e.arena.drain_returns();
+                        stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                        stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                        break
+                    },
+                }
+                continue
+            }
+
+            // Jumbo or LINK-magic escape is RARE. Copy into one reusable
+            // 65KiB buffer, then the ORIGINAL pure M3 LINK20 planner
+            // stages bounded fragments into subsequent original M1 loans.
+            jumbo_spare.clear();
+            jumbo_spare.extend_from_slice(head);
+            if n>head_cap{
+                jumbo_spare.extend_from_slice(&overflow[..n-head_cap]);
+            }
+            if jumbo_spare.len()!=n{
+                stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                break
+            }
+            let Some(packet_id_after)=next_packet_id.checked_add(1)else{
+                // A same-generation u32 packet ID must never wrap/reuse.
+                stats.tx_error.fetch_add(1,Ordering::Relaxed);
+                shutdown.store(true,Ordering::Release);
+                break
+            };
+            let m3=match LinkPacketPlan::new(
+                &jumbo_spare,frame.link_frame_mtu,
+                LinkMode::FixedOff,next_packet_id,
             ){
-                Ok(_)=>{
-                    let _=send_staged(&mut e,&raw,&stats,&mut storage,&mut scratch,at);
-                },
-                Err(_)=>{
-                    // TUN is destructive; invalid/oversized input is counted,
-                    // never re-encrypted, replayed, or silently delivered.
-                    e.arena.drain_returns();
+                Ok(v)=>v,Err(_)=>{
                     stats.tx_error.fetch_add(1,Ordering::Relaxed);
                     stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                     break
                 },
+            };
+            let total_frames=m3.total_frames();
+            if total_frames==0||total_frames>256{
+                stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                break
             }
+            drop(m3); // end immutable borrow before moving source ownership
+            let packet_id=next_packet_id;
+            next_packet_id=packet_id_after;
+            pending=Some(PendingAndroidJumbo{
+                source:std::mem::take(&mut jumbo_spare),
+                packet_id,frame_mtu:frame.link_frame_mtu,
+                issued:0,total:total_frames,
+                generation:e.generation,physical_mtu:physical,
+            });
+            // No second TUN read until this logical datagram is complete
+            // or retired. Return the unused original slab before fragments.
+            drop(slab);
+            e.arena.drain_returns();
+            break
         }
     }
     clock.stopped();
@@ -351,7 +569,8 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.server_side||e.android_workers.is_some()||
-       e.android_joining||e.protected_features!=3||
+       e.android_joining||e.client_lease_ipv4.is_none()||
+       e.protected_features!=3||
        e.android_physical.as_ref().is_none_or(|p|p.ifindex!=ifindex)||
        e.normal.is_none(){
         return BAD_STAGE

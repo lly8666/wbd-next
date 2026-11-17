@@ -38,6 +38,7 @@ unsafe extern "C" {
     fn setsockopt(fd: c_int, level: c_int, option: c_int, value: *const c_void, len: u32) -> c_int;
     fn socket(domain: c_int, kind: c_int, protocol: c_int) -> c_int;
     fn read(fd: c_int, data: *mut c_void, len: usize) -> isize;
+    fn readv(fd: c_int, iov: *const AndroidIovec, iovcnt: c_int) -> isize;
     fn write(fd: c_int, data: *const c_void, len: usize) -> isize;
 }
 
@@ -55,6 +56,9 @@ fn name_bytes(name: &str) -> io::Result<CString> {
     }
     CString::new(name).map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "NUL in name"))
 }
+
+#[repr(C)]
+struct AndroidIovec{base:*mut c_void,len:usize}
 
 /// A single already-created TUN descriptor is MOVED into Rust after
 /// authenticated cold-control. Never calls TUNSETIFF, changes netd, or
@@ -115,6 +119,40 @@ impl AndroidOwnedTun {
             .map_err(|_|io::Error::from(io::ErrorKind::BrokenPipe))?;
         let count = unsafe { read(self.fd.as_raw_fd(), packet.as_mut_ptr().cast(), packet.len()) };
         if count < 0 { Err(io::Error::last_os_error()) } else { Ok(count as usize) }
+    }
+    /// A FULL original kernel IPv4 packet is gathered in one TUN readv.
+    /// The first iovec points DIRECTLY into its original M1 slab, so the
+    /// common <=link-MTU packet has ZERO intermediate copies. The second
+    /// iovec only catches a rare jumbo/virtio-GSO tail into a reusable
+    /// worker-owned scratch; no kernel-truncated packet is ever sealed.
+    ///
+    /// Both slices must cover >=65535 bytes in total or fail before a
+    /// destructive TUN read. The original BorrowFence encloses this SINGLE
+    /// syscall and Stop cannot close the owned descriptor until it returns.
+    pub fn read_ip_scatter(
+        &self,head:&mut [u8],overflow:&mut [u8],
+    )->io::Result<usize>{
+        if !self.active.load(Ordering::Acquire){
+            return Err(io::ErrorKind::BrokenPipe.into())
+        }
+        if head.len()<20 || head.len()>65_535 ||
+           head.len().saturating_add(overflow.len())<65_535 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput,
+                "original TUN readv must preserve the full inner IPv4 packet"))
+        }
+        let _loan=self.borrow.try_enter_ready().map_err(|_|
+            io::Error::from(io::ErrorKind::BrokenPipe))?;
+        let iov=[
+            AndroidIovec{base:head.as_mut_ptr().cast(),len:head.len()},
+            AndroidIovec{base:overflow.as_mut_ptr().cast(),len:overflow.len()},
+        ];
+        let n=unsafe{readv(self.fd.as_raw_fd(),iov.as_ptr(),2)};
+        if n<0{return Err(io::Error::last_os_error())}
+        if n as usize>65_535{
+            return Err(io::Error::new(io::ErrorKind::InvalidData,
+                "kernel TUN packet larger than max IPv4 datagram"))
+        }
+        Ok(n as usize)
     }
     /// Only the authenticated data owner can call this after remote AEAD +
     /// valid leased-address checks; kernel copy is NOT a delivery receipt.

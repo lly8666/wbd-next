@@ -12,6 +12,7 @@ on:
       - "crates/wbd-engine/src/v4_embedded_go.rs"
       - "crates/wbd-engine/src/v4_android_original_m4.rs"
       - "crates/wbd-engine/src/v4_owner_crypto.rs"
+      - "crates/wbd-codec/src/link_fec_wire.rs"
       - "crates/wbd-engine/src/v4_session_address.rs"
       - "crates/wbd-platform/src/ipv4_tcp.rs"
       - "crates/wbd-platform/src/rx_ipv4_tcp.rs"
@@ -30,6 +31,17 @@ concurrency:
   group: android-product-a1-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  original-m3-wire-oracle:
+    # This is a pure M3 wire unit-test host: NO Android x86 target and
+    # no second app/crypto implementation. Runs independently of NDK link.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Assert zero-allocation M3 LINK20 bytes match original Go fixture
+        shell: bash
+        run: cargo +1.85.1 test --locked -p wbd-codec arm64_original_m4_slab_link_plan_is_byte_identical_and_capacity_fail_closed
   arm64-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

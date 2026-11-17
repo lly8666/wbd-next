@@ -119,3 +119,22 @@ Normal/off, verified auto-/32 and outer repair OFF are currently allowed.
 The bounded native RX worker reuses one M1-ready Vec across all raw packets;
 thread CPU telemetry samples Bionic CLOCK_THREAD_CPUTIME_ID per readiness
 turn rather than per packet, reporting real worker CPU only.
+
+## A3 original M3 full-IP TUN readv and bounded jumbo TX
+
+The Android original M4 reads one COMPLETE TUN IPv4 datagram using two
+kernel iovecs under the existing BorrowFence: small traffic goes straight
+into its original M1 slab (no extra copy/Vec); jumbo overflow goes into a
+one-time preallocated 65KiB TX worker scratch. The original authenticated
+client /32 source and exact IPv4 length are checked BEFORE original PN seal.
+
+The ORIGINAL M3 `LinkPacketPlan` issues its unchanged LINK20 bytes directly
+to loaned original M1 slabs (including LINK_MAGIC escape), for up to eight
+definitely kernel-copied immutable FrozenRecords per work turn. One packet
+ID, generation, stride and physical MTU are fixed. On ambiguous send,
+Stop or scope change the remaining fragment plan is retired, never
+regenerated with an already-consumed PN. Native Health remains fair.
+
+CI also runs a pure M3 LINK20 byte-oracle independently of the Android ARM64
+build; neither the oracle nor the cross-compiled ELF claims device
+execution, real network data delivery or Root permissions.

@@ -47,7 +47,8 @@
     "r0/go_overlay/internal/realityfront/bridge_v4_android_normal_lane_no_fec_android.go",
     "r0/go_overlay/internal/v4productcli/game_disabled_android.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go",
-    "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_android.go"
+    "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_android.go",
+    "crates/wbd-codec/src/link_fec_wire.rs"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -59,7 +60,8 @@
     "docs/devlog/android-root-probe/20261117-android-product-a2-cold-network-handoff.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a2-normal-m1m3-batch.md",
     "docs/devlog/android-root-probe/20261117-android-arm64-a2-m4-real-worker-health-stop.md",
-    "docs/devlog/android-root-probe/20261117-android-arm64-a3-normal-off-link-separation.md"
+    "docs/devlog/android-root-probe/20261117-android-arm64-a3-normal-off-link-separation.md",
+    "docs/devlog/android-root-probe/20261117-android-arm64-a3-original-m3-jumbo-scatter.md"
   ],
   "verification": [
     {
@@ -229,6 +231,13 @@
       "status": "FAIL",
       "source_sha": "1b044ed3f76a4674e75ee409fe9746ba22343e84",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026702035"
+    },
+    {
+      "platform": "Android ARM64 original Go Normal/off native build",
+      "scope": "Genuine original Go CGo Android arm64 executable AND original Rust M1/M3/M4/Health/Stop Bionic .so full link PASS; both ELF machine183 min PT_LOAD alignment16384, hashes verified from same source ZIP; not a real-device connection/Root app acceptance.",
+      "status": "BUILD_PASS",
+      "source_sha": "02c2772d8d44da76db3210a69ffdebd277f4e4b3",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44029417500"
     }
   ],
   "limitations": [
@@ -238,14 +247,11 @@
     "A1/A2历史 Actions 的失败、双ABI过往证据和源码修复均保留在专门devlog及verification；当前仅Android ARM64、Rust真 M4 编译与真实Go/设备各自独立验收。",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
     "SOURCE2951 ARM64 Rust/Bionic构建通过，原Go M4/FEC/Game全链接失败；详见A2 devlog。",
-    "ARM64 A2新增真实Native M4 source：最多8包/turn的RX/TX readiness、原M1/M3/HealthClock、eventfd双线程Stop/join与物理ifindex/MTU验真；跨编译不能证明真机运行；M3 jumbo、原M2/FEC/Game、UI/root owned routes完整联接未就绪。",
-    "f490df06 ARM64 source-locked build did NOT pass Rust: two E0599 unresolved original owner normal_firstsend_identity due Linux/Windows-only cfg; follow-on exact shared method target cfg fix; real native M4 test not run, previous Go full link failure still applicable.",
-    "SOURCE2b8e ARM64原M4真实Rust ELF和符号通过；Go链接被nm|grep-q/pipefail误报跳过，见M4 devlog。",
+    "ARM64 Native M4原Normal/off/Health/Stop、物理MTU已跨编译；A3新增真实M3 LINK20零拷贝scatter/jumbo待同源CI和真机验收，成熟Fixed/FEC/Game、Root UI/路由仍待工作。",
     "Android ARM64 first original-Go Normal/off only: compile existing !wbd_v4_fec2_product variants; native Fixed/Auto/Game refuse unsupported, not fabricated C ABI. Same Go cold TLS and Rust original M1/M3/Health/Stop.",
-    "Normal/off Android sole-source edition adds real original TLS policy-verified Normal lane type only to satisfy pre-existing server adoption parameter; no new Game/FEC native ABI or fallback and no VpnService.",
-    "Android-only no-FEC Go CLI retains exact original detached TLS FinalACK cold guard for Normal and fail-closed 7-argument Game supervisor signature; Linux variant remains unchanged by explicit !android tag.",
     "原Go Android授权/32绑定现有C ABI被Linux-only双cfg错误屏蔽，修正为真实Android ARM64导出；物理真实RAW FD读回后按原Rust MSS/Link/AEAD FrameBudget得到TUN inner IP MTU，不允许自报、默认路由或伪装控制接口。",
-    "A3 ARM64仅Normal/off原Go控制桥：Fixed/Auto/Game/M2/outer修复及Linux-only诊断通过真实Go策略明确拒绝；Rust原TLS lease+M1/M3/M4/Health/Stop保留，待完整链接和真机独立验收。"
+    "A3 ARM64仅Normal/off原Go控制桥：Fixed/Auto/Game/M2/outer修复及Linux-only诊断通过真实Go策略明确拒绝；Rust原TLS lease+M1/M3/M4/Health/Stop保留，待完整链接和真机独立验收。",
+    "A3 ARM64原M3：TUN单readv散集正常IPv4零拷贝、超MTU完整65KiB暂存、原LINK20按同generation/MTU/packetID逐PN分片；单turn最多8帧，失败放弃余片避免重复PN。真实Android TUN设备行为仍NOT_RUN。"
   ],
   "promotion": null
 }
