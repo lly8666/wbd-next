@@ -21,3 +21,11 @@
 ## 首轮同源失败及修复（旧FAIL永久保留）
 
 SOURCE `6b5a48de1d5e21ea0a7ef53ffc82f4f2dc0b3892` [Actions #44080505516](https://github.com/lly8666/wbd-next/actions/runs/44080505516)：B2c1独立真正Linux lo UDP/TCP host套接字四组全部PASS，B1/B2真实规则DNS Host、原M3、governance均PASS；但**原Android ARM64 Go/Rust Native job FAIL**：Rust已构建，真正Android Go CGO编译`physical_android_cgo.go:49:21 undefined: syscall.GetsockoptString`，Android Go syscall包无该Linux便利函数；APK与Linux oracle因need被skip，因此绝不写8/8。修复版不删回读校验，改用Android Bionic NDK C `getsockopt(fd,SOL_SOCKET,SO_BINDTODEVICE,...)`，`IFNAMSIZ`固定缓冲且读长度检查、`strcmp`精确核对，错误fail closed；源锁脚本同时要求真实C回读。待新SOURCE独立Actions全门、签名APK与原Linux oracle实证。
+
+## B2c1 修复SOURCE 8/8 同源真实结果及后续边界
+
+修复版 SOURCE `abec46f78515a86228f7e29b2ada069545278f5e` [Action44081252165](https://github.com/lly8666/wbd-next/actions/runs/44081252165) **8/8 Jobs SUCCESS**。新增`b2c-physical-scoped-dns-host`四组Host真socket测试均PASS：本机`lo`内核真实ifindex/MTU/127.0.0.1，实际DNS UDP→TC同Endpoint TCP及两个独立fd的`net.Dialer.ControlContext` pre-connect回调；拒绝Tunnel path、外来DNS端点、IPv6或错协议、物理handle/ifindex/MTU/IP漂移、模拟netd绑定失败（零UDP发包）。本Job打印`ANDROID_B2C_PHYSICAL_SCOPE_REAL_HOST_SOCKET_PASS_ANDROID_NETD_RUNTIME_NOT_RUN`并生成带SOURCE与Android CGo source hash的receipt。
+
+`arm64-native`真实原Go Android Bionic CGO完整链接了`physical_android_cgo.go`的NDK `android_setsocknetwork`和有界`getsockopt(SO_BINDTODEVICE)`真实接口，同时源锁原Rust M4/原Go RAW/TUN Normal/off全构建PASS；B1 Host DNS wire、B2固定真实8503规则、原M3、正式无VPN签名Root APK的CN8503+MIT验证PASS。原Linux WBD server真TLS/认证/自动/32租约/真实Rust M4双向UDP/Stop oracle日志 `ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN` PASS。托管ARM64`KVM_NOT_ACCESSIBLE`准入Job绿色仅表示环境审计，Android16 guest未跑。
+
+初次 SOURCE `6b5a48de...` [Action44080505516](https://github.com/lly8666/wbd-next/actions/runs/44080505516) 的Android编译`undefined: syscall.GetsockoptString` FAIL与APK/Linux oracle skip**不更改历史**；修复没有去除socket Readback，而是换Bionic NDK中长度有界的`getsockopt`。不能把源码编译或Host callback当Android netd绑定成功：原Go仅cold构造物理DialFunc，`socket_opened=0 dns_capture=NOT_CONNECTED`；未实现系统Resolver、Rust唯一TUN DNS捕获、Tunnel DNS fd/回注、真实Android/KernelSU App→su认证联机、CN IP/direct/Private DNS/owned Stop。P2/P3/P5全NOT_RUN或ENV_BLOCKED，实体最后独立授权。
