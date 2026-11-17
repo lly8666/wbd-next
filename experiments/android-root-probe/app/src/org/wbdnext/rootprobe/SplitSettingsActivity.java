@@ -308,6 +308,30 @@ public final class SplitSettingsActivity extends Activity {
         }catch(Exception e){return "ENV_BLOCKED：su/配置验证失败 "+e;}
         finally{if(p!=null)p.destroy();}
     }
+    @Override public void onWindowFocusChanged(boolean hasFocus){
+        super.onWindowFocusChanged(hasFocus);
+        // The first file write is onCreate (often BEFORE WindowManager
+        // grants focus). CI must never consume an indefinitely stale
+        // window_focused=false snapshot after the Activity becomes active.
+        // Deliver a fresh witness only after this actual Android callback.
+        if(packageInput!=null){
+            witnessLastMs=0;
+            packageInput.postDelayed(()->{
+                witnessLastMs=0;
+                emitVisibleBounds();
+            },150);
+        }
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(packageInput!=null){
+            witnessLastMs=0;
+            packageInput.postDelayed(()->{
+                witnessLastMs=0;
+                emitVisibleBounds();
+            },280);
+        }
+    }
     @Override public void onCreate(Bundle b){
         super.onCreate(b);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
