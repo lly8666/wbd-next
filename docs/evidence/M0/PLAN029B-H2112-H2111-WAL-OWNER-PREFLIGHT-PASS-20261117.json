@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2112",
+  "date": "2026-11-17",
+  "source_sha": "d2b70092215adcfd61d1e3adea502f4096bef901",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "H2111_TEST_ONLY_WINDOWS_WAL_IDENTITY_PREFLIGHT_AND_COMPILATION_NO_NEW_REAL_B3",
+  "action": {
+    "run_id": 44107631933,
+    "conclusion": "success",
+    "cheap_full_workflow": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "windows_go": "PASS",
+    "original_signed_native": "SKIPPED_NO_SCENE_MARKER"
+  },
+  "artifacts": [
+    {
+      "id": 14338783388,
+      "zip_sha256": "eccb455f0afcfbe28b0a4caadb05942411e1a3671722886ac57be93d526b2ff3",
+      "crc": "PASS_2_MEMBERS",
+      "source": "d2b70092215adcfd61d1e3adea502f4096bef901",
+      "scope": "RUST_LIB_AND_R2_ONLY"
+    },
+    {
+      "id": 14337554692,
+      "zip_sha256": "65875d38b1109315099ae50491a5b5c17aa390df61da4bce1b580d2ddbebea07",
+      "crc": "PASS_3_MEMBERS",
+      "source": "d2b70092215adcfd61d1e3adea502f4096bef901",
+      "scope": "ORIGINAL_GO_COMPILE_ONLY"
+    }
+  ],
+  "checks": {
+    "test_go_generation_pinned_wal_checksum_and_os_cross_identity": "PASS",
+    "test_h2111_os_preflight_never_replaces_original_owner_with_nic_description": "PASS",
+    "test_real_windows_os_owned_route_and_kernel_send_with_cleanup": "PASS_STATIC_ONLY",
+    "test_original_b3_never_claims_global_host_ipv6_and_always_cleans_route": "PASS_STATIC_ONLY",
+    "windows_probe_feature_release": "PASS",
+    "original_go_assembly": "PASS",
+    "governance_action_44107630112": "PASS",
+    "governance_maintenance_action_44107630421": "PASS"
+  },
+  "source_gating": {
+    "original_go_wal": "ACTIVE_4_STAGE_V2_GENERATION_WAL_SHA256_PNP_PIN_GUID_ALIAS_INDEX_LUID",
+    "os": "ONE_REAL_IPV4_LEASE_MATCHES_WAL_INDEX_AND_UNIQUE_IPV6_NETIPINTERFACE",
+    "binding": "IF_NETADAPTER_ENUMERABLE_ASSERT_SAME_GUID_AND_ENABLED_MS_TCPIP6",
+    "global_ipv6_protection": "NOT_CLAIMED"
+  },
+  "not_covered": {
+    "H2112_live_B3_AF_INET6_16": "NOT_RUN_BEFORE_MARKER",
+    "real_ipv4_12": "NOT_RUN",
+    "B4_multi_generation_game": "NOT_RUN",
+    "B5_sameVM_10Mbps_CPU_p99": "NOT_RUN"
+  }
+}

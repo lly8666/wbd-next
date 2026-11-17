@@ -51,7 +51,7 @@ def read_original_wintun_wal(out):
     prefix=b'{"data":'
     separator=b',"sha256":"'
     at=raw.rfind(separator)
-    if not raw.startswith(prefix) or at<len(prefix) or not raw.endswith(b'"}') or raw.count(separator)!=1:
+    if not raw.startswith(prefix) or at<len(prefix) or not raw.endswith(b'"}'):
         raise RuntimeError("B3 original Go generation WAL envelope shape invalid")
     payload=raw[len(prefix):at]
     try:

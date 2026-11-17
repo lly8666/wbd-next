@@ -64,6 +64,11 @@ class Plan029BRealIPv6(unittest.TestCase):
             self.assertEqual(owner["adapter_alias"],"WBDWLMAIN")
             self.assertEqual(owner["wintun_guid"],guid)
             self.assertEqual(len(owner["generation_fingerprint"]),64)
+            # Original Go stage snapshots can themselves have a "sha256"
+            # field. The *last* delimiter belongs to the outer WAL envelope.
+            data["records"][0]["before"]["sha256"]="nested-baseline-hash"
+            file.write_bytes(original_go_envelope(data))
+            self.assertEqual(read_original_wintun_wal(root)["ifindex"],37)
             file.write_bytes(original_go_envelope(data,"b"*64))
             with self.assertRaisesRegex(RuntimeError,"checksum"):
                 read_original_wintun_wal(root)

@@ -4,24 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2111,
-  "checkpoint_sha": "401d072bc7077b7d8d98b95b3ec9fe041271251c",
+  "sequence": 2112,
+  "checkpoint_sha": "d2b70092215adcfd61d1e3adea502f4096bef901",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2111 H2108 original B3 source5bb Action44102947133 native FAIL in test-only owner precondition (Get-NetAdapter count/InterfaceDescription Wintun), before test-owned /128 or AF_INET6 sender. Same source original Windows TLS/Wintun/OS Applied, Rust IPv6 background skips=17, Linux+Windows owner Stop/WAL PASS, no B3 16 test packets. H2111 replace fragile friendly NIC assertion with checksum-verified original Go v2 active four-stage generation WAL PnP/index/LUID/GUID/alias + uniquely matched real Windows IPv4 lease and IPv6 Get-NetIPInterface; when NetAdapter visible also match GUID and Enabled binding. No route/WFP/Go product edit, one cheap unit contract before independent new B3 marker.",
-  "why_now": "H2108 Action44102947133 job134111066080 FAIL first in source_wintun precondition, original ZIP14338805926 SHA256 8bc06f68ff7d66b2f9a72c09a4e923acc39d6abe9d6b9dc3e9f0142244bd65e1 CRC PASS. Old OR test cannot distinguish Get-NetAdapter missing/ambiguous vs description mismatch. Original Go n4NativeUnifiedTxn source pins Wintun Index/GUID/LUID/PnP hash in SHA256 WAL; use it instead of friendly NIC string, while original OS IPv4+IPv6 interface and active generation must still independently match. Rust Stop background v6 skips17 is NOT own AF_INET6 trial PASS.",
+  "current_task": "H2112 H2111 signed test-only Go WAL identity/IPv4-IPv6 ifindex preflight code passed exact-source cheap WindowsRust/Go/LinuxRust, original Win native not run by design. Fix nested baseline sha256 delimiter false-reject in Go WAL scanner (use final outer envelope hash, still SHA256 verify), add synthetic nested proof. Dispatch one source-locked [plan029b-b3-ipv6-real] original Win2025 Wintun/Npcap↔WSL2 Normal/off default1460 actual AF_INET6 /128+IPv4 mixed with owned Stop. H2108 old signed Action44102947133 FAIL precondition before test sender but original network/WAL Stop true PASS and background v6 skipped17 only.",
+  "why_now": "H2111 Action44107631933 cheap, Windows Rust, Linux Rust, Windows Go all PASS, governance PASS. Original ZIP14338783388 SHA256 eccb455f0afcfbe28b0a4caadb05942411e1a3671722886ac57be93d526b2ff3 and Win Go ZIP14337554692 SHA256 65875d38b1109315099ae50491a5b5c17aa390df61da4bce1b580d2ddbebea07 CRC/source both checked. Original Go WAL record baseline may itself contain sha256; last sha256 token is top-level envelope checksum, not first/unique inner occurrence. No product code changed.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2111 cheap unit ast+synthetic original Go SHA WAL validation and WinGo/Rust source checks. Only after PASS, one fresh-source [plan029b-b3-ipv6-real] genuine Win2025 original Wintun scenario with test-owned /128, 16 real AF_INET6 sends, Rust SkippedIpv6>=16 and interleaved 12 IPv4 TUN echoes, exact route/address cleanup and original both-owned Stop. If original WAL/IPv6 interface precondition fails record first true OS error, no global IPv6 claim. B4 real GUI multigen/Game and B5 sameVM 10Mbps remain.",
+  "next_action": "Collect exactly one H2112 [plan029b-b3-ipv6-real] signed source original full ZIP/first error. Need original WAL SHA active/owner and OS ifindex/IPv6, 16 real AF_INET6 sendto, Rust Wintun skipped>=16, 12 interleaved WSL2 TUN IPv4 echo, exact test-owned /128 route cleanup, both original WAL Stop. If blocked, mark FAIL/NOT_RUN, never general IPv6 guarantee. B4 real GUI multigen/Game and B5 sameVM<=10Mbps CPU/GiB p99 remain NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "5bb367e86c81cb61b68be7c9772c0ea866f69fde",
+  "last_tested_source": "d2b70092215adcfd61d1e3adea502f4096bef901",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2111-H2108-B3-REAL-OWNER-NIC-FIRST-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2112-H2111-WAL-OWNER-PREFLIGHT-PASS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2111-B3-PINNED-WAL-OWNER.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2112-B3-GO-WAL-OUTER-SHA.md",
+    "docs/evidence/M0/PLAN029B-H2112-H2111-WAL-OWNER-PREFLIGHT-PASS-20261117.json",
     "docs/evidence/M0/PLAN029B-H2111-H2108-B3-REAL-OWNER-NIC-FIRST-FAIL-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "B0 H2103 and B2 H2098 ordinary/H2101 advanced distinct signed functional PASS; H2104 real WinForms/Go config PASS. H2105/6 B3 compile FAIL; H2107 compiler PASS but standalone Normal native failed GitHub HTTP503; H2108 B3 original NativeOS/Stop PASS scoped but test precondition FAIL: original 17 background IPv6 skipped, zero test16 AF_INET6, zero interleaved12. H2109/10 gov PASS, H2111 fixture owner now pinned WAL+actual OS. B4/B5 open."
+  "partial_summary": "H2103 off, H2098 CN ordinary, H2101 advanced CI signed scoped PASS older source; H2104 WinForms/Go migration compiled PASS. H2105/H2106 B3 build E0004 FAIL, H2107 feature release PASS, H2108 signed original Go/Rust/Stop PASS scoped but own IPv6 sender blocked at friendly NIC name precheck, B3 FAIL. H2111 pinned WAL/OS test code cheap PASS, H2112 one real B3 retry scheduled. B4/B5 OPEN."
 }
