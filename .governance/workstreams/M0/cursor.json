@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2108,
-  "checkpoint_sha": "5a80e0ea8e027f5b7649042ef988ef9bb2c51838",
+  "sequence": 2109,
+  "checkpoint_sha": "5bb367e86c81cb61b68be7c9772c0ea866f69fde",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2108 H2107 Windows release m0_v4_probe cargo check PASS after three original PLAN029 diagnostic gate ReadResult::SkippedIpv6 E0004 fixes. 416 Windows Rust lib + 11 R2 tests PASS, Linux Rust/Win Go source and Linux original-build PASS; three independent signed H1704 UDP/H1706 TCP/H1713 CN DNS diagnostic Actions SUCCESS. H2107 original Normal/off real signed job still running separately; no current B3 AF_INET6 or Stop from that scene. H2108 exactly one new B3 signed original Win2025 Wintun/Npcap↔WSL2 Normal/off 1460 host /128 route AF_INET6 16 mixed IPv4 12, internal Wintun version6 skip count and owned Stop; source H2108 test only adds no-host-global-claim gate, no product logic edits.",
-  "why_now": "H2107 Action44101072122 Windows Rust original job134101340279 PASS 416+11 and cargo +1.85.1 check --locked --release --features m0_v4_embedded_go,m0_v4_probe,fec2_product_record PASS_NO_OS, ZIP14337270024 sha256 46508f738ac0e2f5f6623ef192d8336d52eba32a02528b1a28ac1549e05efb4d CRC2. Go preflight ZIP14336771399 sha256 978ef30f2f7099c81c04cbfb7efc86d4c40e0e34b99cb90c9c0d53dada8ae476 CRC3, assembly original Go same overlay source, actual final rust from preflight only NOT_RUN. H1704 signed UDP Action44101072346, H1706 signed TCP Action44101072126, H1713 signed CN DNS FakeIP Action44101072359 each Action SUCCESS; not repromoted as B3 real IPv6. H2106 original release failure due three m0_v4_probe diagnostic matches fixed exactly in H2107, now source-ready for unique real B3. H2107 separate original normal/off native Action still in progress; distinct scenario allowed.",
+  "current_task": "H2109 restore governance hot-read size without changing B3 source. H2108 Action44102947133 one real signed Wintun /128 AF_INET6+IPv4 scene in flight; don't re-dispatch. H2107 feature-gated Windows release check and 416+11 Rust tests PASS; H2108 governance hot bytes 33101>32768 FAIL.",
+  "why_now": "H2108 governance Action44102947353 original ZIP14336478652 confirms structure BLOCKED hot bytes33101/32768; feature catalog ZIP14336093609 checked PASS, 121 tests pass. Trim only redundant M0 cursor prose; detailed 029B scope and SHA/source remain in evidence/devlog. Original H2108 signed network not yet qualified.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2108 single [plan029b-b3-ipv6-real] original Win2025 signed Action and its original ZIP/source/hashes. Require actual Wintun IPv6 binding, exact test-owned route fd73:29b:2026::1/128, original Win AF_INET6 sendto 16, genuine Rust Wintun skipped_ipv6>=16, 12 mixed IPv4 TUN echo, exact route/address cleanup, both original owned Stop/WAL. If precondition fails mark FAIL/NOT_RUN first OS error and preserve true route+host limitation, no global IPv6 PASS. Also collect separate H2107 Normal/off native terminal (not same source as H2108), then B4 advanced→ordinary→all GUI/Stop and B5 <=10Mbps sameVM CPU/GiB/p99.",
+  "next_action": "Collect H2108 B3 real Win2025 Action44102947133 source5bb: exact test-owned Wintun /128 and AF_INET6 16 sendto, Rust version6 skip>=16, 12 Linux TUN IPv4 echoes, route cleanup and original Stop. Also close H2107 Normal/off signed source5a80 independently. No fake IPv6 global claim. Then B4 advanced→ordinary→all real GUI/generation/Game; B5 sameVM10Mbps CPU/GiB/p99.",
   "unverified": true,
   "last_tested_source": "5a80e0ea8e027f5b7649042ef988ef9bb2c51838",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029B-H2108-H2107-WINDOWS-PROBE-RELEASE-PASS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2108-SIGNED-B3-RELEASE-READY.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2109-CURSOR-HOT-BUDGET.md",
+    "docs/evidence/M0/PLAN029B-H2109-H2108-GOVERNANCE-HOT-BUDGET-FAIL-20261117.json",
     "docs/evidence/M0/PLAN029B-H2108-H2107-WINDOWS-PROBE-RELEASE-PASS-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2107-H2106-WINDOWS-PROBE-RELEASE-E0004-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2103 B0 Normal/off original signed Pass older source; H2098 ordinary CN/H2101 advanced CI distinct signed outputs PASS. H2104 WinForms/Go source-bounded GUI migration config PASS. H2105 and H2106 attempted B3 but Win Rust compile E0004 in Game then probe-only gates, no real IPv6 sent. H2107 Win feature-gated release check and 416+11 Windows Rust/R2 tests PASS source5a80, three old signed probe diagnostics SUCCESS independently; original Normal/off real rerun currently in flight. H2108 one true B3 signed scoped IPv6 /128 route mixed IPv4 scene requested, no result yet. B4 GUI multi-gen/Game and B5 sameVM 10Mbps open."
+  "partial_summary": "B0 H2103 old signed PASS; B2 ordinary H2098 and advanced H2101 scoped signed PASS; H2104 compiled WinForms migration PASS. H2105/H2106 B3 native build FAIL before packet, H2107 Windows probe release compile PASS source5a80. H2108 real B3 in flight, its governance hot budget FAIL being fixed here. B4/B5 OPEN."
 }

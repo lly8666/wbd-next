@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2109",
+  "date": "2026-11-17",
+  "source_sha": "5bb367e86c81cb61b68be7c9772c0ea866f69fde",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "action": {
+    "id": 44102947353,
+    "conclusion": "failure",
+    "governance_job_id": 134107535285,
+    "feature_catalog_job_id": 134107536011
+  },
+  "original_artifacts": [
+    {
+      "id": 14336478652,
+      "name": "governance",
+      "zip_sha256": "28590733b2d70ac2815ee8abe266375788dc01d62dce3b3a69aaa60e4297bd74",
+      "crc": "PASS",
+      "file": "structure.json",
+      "result": "BLOCKED",
+      "reason": "combined hot byte budget exceeded: 33101"
+    },
+    {
+      "id": 14336093609,
+      "name": "feature_catalog",
+      "zip_sha256": "00729800d10f91007617677747fdec0871eefb36729c03020343669d37101c9b",
+      "crc": "PASS",
+      "result": "PASS_CATALOG_STRUCTURE_ONLY",
+      "unit_tests": "121_PASS"
+    }
+  ],
+  "governance": {
+    "identity": "PASS",
+    "role": "PASS",
+    "structure": "FAIL_HOT_READ_BUDGET",
+    "limit_bytes": 32768,
+    "actual_bytes": 33101,
+    "over_by_bytes": 333,
+    "feature_content_valid": true
+  },
+  "physical_scope": {
+    "b3_signed_action_id": 44102947133,
+    "source_sha": "5bb367e86c81cb61b68be7c9772c0ea866f69fde",
+    "real_ipv6_packet": "NOT_RUN_OR_IN_PROGRESS_AT_COLLECTION",
+    "product_regression": "UNAFFECTED_BY_METADATA_BUDGET_FAILURE"
+  },
+  "fix": "Shrink M0 cursor repeated prose only, preserve evidence refs, SOURCE, mode statuses, no B3 marker/re-dispatch."
+}
