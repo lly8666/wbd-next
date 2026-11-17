@@ -103,6 +103,182 @@ class NativeSmokeScopeTests(unittest.TestCase):
             "docs/devlog/M0/20261116-PLAN029-H2022.md"],
             "[plan029-game4-cn-real]"))
 
+    def test_plan029b_b4_original_go_three_generation_is_executed_not_just_compiled(self):
+        workflow = (ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        exact="TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter"
+        self.assertIn("client.test.exe '-test.run=^"+exact+"
+        # H2093's original Linux client binds the real guest TUN /32
+        # 203.0.113.77, not its 10.66.0.1 primary address. The former
+        # must be admitted by the ONE owned 45902 test firewall rule,
+        # else the legacy reverse TCP comparator fails after B2 DNS/UDP
+        # already passed. Do not change the product Defender policy.
+        root = Path(__file__).resolve().parents[1]
+        workflow = (root / ".github/workflows/m0-wl-public-normal-full.yml").read_text(
+            encoding="utf-8")
+        selector = workflow.split("$tcpRemote=if(", 1)[1].split(
+            "$tcpRuleName=", 1)[0]
+        self.assertIn("WBD_PLAN029B_B2_ORDINARY_SCENE -eq '1'", selector)
+        self.assertIn("'203.0.113.77'", selector)
+        self.assertIn("}else{'10.66.0.1'}", selector)
+        self.assertIn(
+            "-LocalAddress '10.66.0.2' -RemoteAddress $tcpRemote -LocalPort 45902",
+            workflow)
+        self.assertIn("Remove-NetFirewallRule -Name $tcpRuleName", workflow)
+        app = (root / "tools/m0_wl_public_normal_e2e.py").read_text(
+            encoding="utf-8")
+        self.assertIn(
+            'source_address=(local,0)', app)
+        self.assertIn(
+            'out/"plan029-h1745-owned-tun-alias.txt"', app)
+
+    def test_plan029b_b2_guest_exact_ticket_is_a_required_cheap_gate(self):
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/m0-wl-public-normal-full.yml").read_text(
+                        encoding="utf-8")
+        self.assertIn("- tests/test_m0_plan029b_b2_guest_scope.py", workflow)
+        self.assertIn(
+            "python -m unittest tests.test_m0_plan029b_b2_guest_scope -v",
+            workflow)
+        # Test-only changes do not automatically consume a costly VM;
+        # a single deliberate source-locked B2 marker does.
+        changed = ["tests/test_m0_plan029b_b2_guest_scope.py"]
+        self.assertFalse(requires_native_smoke("push", changed))
+        self.assertTrue(requires_native_smoke(
+            "push", changed, "[plan029b-b2-cn-ordinary-real]"))
+
+    def test_plan029b_advanced_fakeip_uses_one_existing_original_d3_scene(self):
+        # Reuse the mature one-VM CNAME->multi-A physical CN and
+        # two distinct owned FakeIP mappings. It is an explicit CI
+        # advanced semantic test, NOT an imported GUI profile/migration.
+        # Do not accidentally select the ordinary-real-A scene as well.
+        changed = ["tests/test_m0_native_ci_scope.py"]
+        advanced = "[plan029-v3-real-d3-multia]"
+        self.assertFalse(requires_native_smoke("push", changed))
+        self.assertTrue(requires_native_smoke("push", changed, advanced))
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/m0-wl-public-normal-full.yml").read_text(
+                        encoding="utf-8")
+        for field in ("WBD_PLAN029_NATIVE_V3_TRIAL:",
+                      "WBD_PLAN029_V3_DIRECT_SCENE:",
+                      "WBD_PLAN029_D3_MULTIA_SCENE:"):
+            row = next(line for line in workflow.splitlines()
+                       if line.strip().startswith(field))
+            self.assertIn(advanced, row)
+        ordinary = next(line for line in workflow.splitlines()
+                        if line.strip().startswith(
+                            "WBD_PLAN029B_B2_ORDINARY_SCENE:"))
+        self.assertNotIn(advanced, ordinary)
+        self.assertIn("WBD_PLAN029_D3_MULTIA_SCENE -eq '1'", workflow)
+        self.assertIn(
+            "PLAN029_H1807_REAL_CN_CNAME_TWO_A_TWO_FAKEIP_DIRECT_UDP_OWNED_STOP_PASS_SCOPED",
+            workflow)
+        app = (Path(__file__).resolve().parents[1] /
+               "tools/m0_wl_public_normal_e2e.py").read_text(encoding="utf-8")
+        self.assertIn('p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"', app)
+        self.assertIn('if p029_multia:', app)
+        self.assertIn('report["plan029_d3_multia_real"]', app)
+
+    def test_h1859_p1_and_p2_bulk_both_build_exact_v3_before_native(self):
+        source=(Path(__file__).resolve().parents[1] /
+                ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        trial=next(x for x in source.splitlines()
+                   if x.strip().startswith("WBD_PLAN029_NATIVE_V3_TRIAL:"))
+        for marker in ("[plan029-v3-real-p1-tunnel-ab]",
+                       "[plan029-v3-real-p2-bulk]"):
+            self.assertIn(marker,trial)
+        for field in ("WBD_PLAN029_V3_DIRECT_SCENE:",
+                      "WBD_WL_NATIVE_OUTER_MTU_REQUEST:",
+                      "WBD_WL_TUN_MTU:"):
+            row=next(x for x in source.splitlines() if x.strip().startswith(field))
+            self.assertIn("[plan029-v3-real-p2-bulk]",row)
+        self.assertIn("$features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'",source)
+
+    def test_h1868_one_native_direct_pressure_scenario_has_same_mtu_and_v3(self):
+        path=Path(__file__).resolve().parents[1] / ".github/workflows/m0-wl-public-normal-full.yml"
+        flow=path.read_text()
+        marker="[plan029-v3-real-direct-pressure]"
+        for field in ("WBD_PLAN029_NATIVE_V3_TRIAL:",
+                      "WBD_PLAN029_V3_DIRECT_SCENE:",
+                      "WBD_WL_NATIVE_OUTER_MTU_REQUEST:",
+                      "WBD_WL_TUN_MTU:"):
+            row=next(line for line in flow.splitlines() if line.strip().startswith(field))
+            self.assertIn(marker,row)
+        self.assertIn("WBD_PLAN029_DIRECT_PRESSURE:",flow)
+        self.assertIn("if($env:WBD_PLAN029_DIRECT_PRESSURE -eq '1')",flow)
+
+    def test_plan029_real_gui_config_source_does_not_borrow_old_rust_dll(self):
+        gui = (Path(__file__).resolve().parents[1] /
+               ".github/workflows/m0-plan029-h1663-gui-domain-mtu-vm.yml").read_text()
+        self.assertIn("tools/m0_plan029_gui_address_mtu_harness.cs", gui)
+        self.assertIn("m0_plan029_*.go", gui)
+        self.assertIn("workflow_dispatch:", gui)
+        self.assertIn("python tools/prepare_windows_wiring.py", gui)
+        self.assertIn("current-plan029-native.exe", gui)
+        self.assertIn("cargo +1.85.1 build --locked --release -p wbd-engine", gui)
+        self.assertIn("Copy-Item -LiteralPath $rustDLL -Destination result/gui/wbd_engine.dll", gui)
+        self.assertIn("rust_source_sha=$env:GITHUB_SHA", gui)
+        self.assertIn('rust_abi_scope="CURRENT_SOURCE_CONFIG_CHECK_ONLY"', gui)
+        self.assertNotIn("PINNED_RUST_PRODUCT", gui)
+        self.assertNotIn("actions/download-artifact@", gui)
+        self.assertNotIn("pinned-rust/wbd_engine.dll", gui)
+        # Whole manifest changes no longer cause a stale Rust product check.
+        self.assertNotIn('      - "r0/go_overlay/assembly/manifest-plan020-m0.json"', gui)
+
+    def test_plan029_nonci_product_split_has_one_outer_mtu_source_contract(self):
+        # A source-only native build can be green while the actual signed
+        # runner aborts before OS Apply if these two selectors diverge.
+        # This is the first failure of H1840, not a Linux/Wintun bug.
+        flow = (Path(__file__).resolve().parents[1] /
+                ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        outer = next(x for x in flow.splitlines()
+                     if x.strip().startswith("WBD_WL_NATIVE_OUTER_MTU_REQUEST:"))
+        requested = next(x for x in flow.splitlines()
+                         if x.strip().startswith("WBD_WL_TUN_MTU:"))
+        marker = "[plan029-real-product-cn]"
+        self.assertIn(marker, outer)
+        self.assertIn("'default1460'", outer.split(marker, 1)[1].split("||", 1)[0])
+        self.assertIn(marker, requested)
+        self.assertIn("'1460'", requested.split(marker, 1)[1].split("||", 1)[0])
+
+    def test_h1843_real_product_v3_abi_built_and_checked_before_driver(self):
+        workflow=(Path(__file__).resolve().parents[1] /
+                  ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        # Signed product build and runtime selection are different knobs.
+        # The CI-only trial stays off in the original Go child, but that
+        # cannot imply shipping a DLL without the V3 entrypoint.
+        # H2085: H2083's signed Normal/off failed to load the V3 entry.
+        # The actual Windows release DLL now ships V3 unconditionally,
+        # regardless of the legacy trial or explicit CN scene selector.
+        line="$features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'"
+        self.assertEqual(workflow.count(line),1)
+        section=workflow.split(line,1)[1].split(
+            "& cargo +1.85.1 build --locked --release",1)[0]
+        self.assertNotIn("$features+=',m0_v4_probe'",section)
+        abi_section=workflow.split(
+            "Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll",1)[1]
+        abi_section=abi_section.split("windows-binary-manifest.json",1)[0]
+        self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',abi_section)
+        self.assertIn("if($LASTEXITCODE -ne 0){throw 'PLAN029B default public Rust V3 ABI missing in release DLL'}",abi_section)
+        self.assertNotIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' or",abi_section)
+        self.assertIn("if (os.environ.get('WBD_PLAN029_NATIVE_V3_TRIAL')=='1' or",workflow)
+        self.assertIn("os.environ.get('WBD_PLAN029_PRODUCT_SPLIT_SCENE')=='1' or",workflow)
+
+    def test_unknown_diff_fails_open_to_native(self):
+        self.assertTrue(requires_native_smoke("push", []))
+        self.assertTrue(requires_native_smoke("unknown", ["docs/README.md"]))
+
+
+if __name__ == "__main__":
+    unittest.main()
+",workflow)
+        self.assertIn("PLAN029B_B4_GO_THREE_GENERATIONS_COLD_UNIT_PASS_NO_OS",workflow)
+        self.assertIn("Windows Go production and test compilation only",workflow)
+        test=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go").read_text()
+        self.assertIn("func "+exact+"(t *testing.T)",test)
+        self.assertIn("len(second.FakeJournalPath)!=0",test)
+        self.assertIn("len(third.FakeJournalPath)!=0",test)
+        self.assertIn("TEST_ONLY_PREVIOUS_GENERATION_DO_NOT_REBIND",test)
+
     def test_plan029b_b2_alias_has_exact_owned_tcp_acl(self):
         # H2093's original Linux client binds the real guest TUN /32
         # 203.0.113.77, not its 10.66.0.1 primary address. The former

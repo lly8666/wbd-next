@@ -4,25 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2116,
-  "checkpoint_sha": "11596bbb17e08a667f4f838080e7c2c09635e3f9",
+  "sequence": 2117,
+  "checkpoint_sha": "a560d3514480e1937a39a5c037dbb6dea643fe6d",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2116 H2115 pure Go+Rust B4 three-generation tests source11596; original M0-WIN-LINUX Action44119996395 cheap FAIL before native due pinned assembly result_blob mismatch for newly changed Go m0_plan029_cold_split_windows_test.go. H2116 updates exactly manifest-plan020-m0 one result_blob to 4097f..., retains all other source pins and test logic. Linux Rust component and governance PASS independent; Windows Rust/WinForms/Go results still in flight at last capture. B4 original GUI multi-gen NOT_RUN; H2112 B3 original /128 signed PASS_SCOPED.",
-  "why_now": "Original job134168406022 first traceback prepare_windows_wiring.py --check-only ValueError assembly blob mismatch; old result_blob 0c51df... test new SHA 4097f... Because actual Go cold test changed but immutable assembly not updated; no product packet executed. Fix only assembly manifest exact test blob SHA, no bypass.",
+  "current_task": "H2117 H2116 original Win2025 Go/Rust Windows/Linux CI after one assembly test blob pin fix PASS, signed native intentionally SKIPPED. Artifact14346440193 GO_COMPILE_ONLY original source a560 and artifact14346250607 WinRust/R2 pass CRC/source. H2115 new Go B4 advanced→ordinary→all test was *compiled but NOT EXECUTED*; H2117 explicitly executes compiled client.test.exe exact three-gen test in original Windows Go preflight, hard fail on nonzero. Preserve Rust old-FakeIP policy unit, no new real OS claim. H2112 original signed B3 /128 real packet PASS_SCOPED.",
+  "why_now": "Previous H2115 cheap/WinForms Go assembly pinned blob failure fixed by H2116; Action44120844855 full cheap+Go+WinRust+LinuxRust SUCCESS. But Go preflight used go test -c on ./cmd/wbd-client and did not run H2115 added original cold test. H2117 exact Windows client.test.exe -test.run and static source assertions close that explicit qualification gap before true B4 GUI multi-connect.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2116 source-locked cheap original Go assembler/check and Windows x64 Go and Win/Linux Rust tests; if another first error fix it without adding rerun duplicate. Then implement one real WinForms advanced→ordinary→all multi-generation GUI/Stop/old FakeIP/managed DNS exact same signed Windows/WSL2 source scenario and Game representative; B5 true sameVM<=10Mbps CPU/GiB/RSS/p99 after functionality.",
+  "next_action": "Collect H2117 original Windows Go exact test execution exit/receipt PASS or first FAIL; no signed B4 yet. Then prepare one source-frozen genuine WinForms 3 generation advanced CN→ordinary CN→all on actual Win2025 signed Go/Rust/Wintun/Npcap↔WSL2; require each native Applied/owned Stop plus old FakeIP leak negative and DNS/cache/lane late work. Game2/Game4 supported entrance separately; B5 paired sameVM <=10Mbps CPU/GiB/RSS/p99 remains NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "11596bbb17e08a667f4f838080e7c2c09635e3f9",
+  "last_tested_source": "a560d3514480e1937a39a5c037dbb6dea643fe6d",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2116-H2115-WINDOWS-ASSEMBLY-TEST-BLOB-FIRST-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2117-H2116-ASSEMBLY-PIN-COMPILE-PASS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2116-ASSEMBLY-PIN-ONLY.md",
-    "docs/evidence/M0/PLAN029B-H2116-H2115-WINDOWS-ASSEMBLY-TEST-BLOB-FIRST-FAIL-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029B-H2115-B4-THREE-COLD-GENERATIONS.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2117-ACTUALLY-RUN-B4-GO-COLD.md",
+    "docs/evidence/M0/PLAN029B-H2117-H2116-ASSEMBLY-PIN-COMPILE-PASS-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2112 real signed B3 /128 AF_INET6 16 IPv4 12 Rust skip52 (background included), exact owned cleanup and original dual Stop PASS_SCOPED. H2114 feature catalog bound fixed PASS. H2115 B4 cold pure tests submitted but M0 native cheap FAIL on Go test assembly pin, H2116 manifest pin fix. Actual three-gen GUI/Game and B5 perf NOT_RUN; 029B/029 open, 030 not started."
+  "partial_summary": "B3 H2112 original signed /128 real AF_INET6 16 IPv4 12 Rust skipped52 background included + true Stop PASS_SCOPED. H2113 catalog overbudget FAIL fixed H2114 PASS. B4 H2115 Go+Rust pure tests; H2115 assembly cheap FAIL fixed H2116 CI compiles PASS, Go test not executed so H2117 forces real Go test. Full B4 GUI/Game and B5 perf OPEN, no 029/030 closure."
 }

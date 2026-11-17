@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2117",
+  "date": "2026-11-17",
+  "source_sha": "a560d3514480e1937a39a5c037dbb6dea643fe6d",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "SOURCE_LOCKED_ASSEMBLY_AND_GO_RUST_BUILD_ONLY_B4_GO_CASE_WAS_NOT_EXECUTED",
+  "action": {
+    "id": 44120844855,
+    "conclusion": "success",
+    "jobs": {
+      "cheap": "success",
+      "windows_go": "success",
+      "windows_rust": "success",
+      "linux_rust": "success",
+      "signed_native": "SKIPPED"
+    },
+    "governance_action": 44120845001,
+    "governance": "success",
+    "feature_catalog": "success",
+    "standalone_H1661_windows_compile_action": 44120845123,
+    "standalone_H1661_windows_compile": "success"
+  },
+  "artifacts": [
+    {
+      "id": 14346440193,
+      "zip_sha256": "e890cb021387185ce1d0694f3a6e3c8b0b6f47aef47847a2e6c0ecdadb1223de",
+      "entries": 3,
+      "crc": "PASS",
+      "source_sha": "a560d3514480e1937a39a5c037dbb6dea643fe6d",
+      "preflight": {
+        "result": "PASS",
+        "scope": "GO_COMPILE_ONLY",
+        "native_product": "NOT_RUN"
+      }
+    },
+    {
+      "id": 14346250607,
+      "zip_sha256": "f2076a0fedd47db09ef48440db205a9dbbfd5a3fff09346adc01525af8feca23",
+      "entries": 2,
+      "crc": "PASS",
+      "source_sha": "a560d3514480e1937a39a5c037dbb6dea643fe6d",
+      "scope": "WINDOWS_RUST_ELIGIBLE_LIBRARY_R2_NO_REAL_NETWORK"
+    }
+  ],
+  "test_truth": {
+    "go_b4_three_generation_compiled": "PASS",
+    "go_b4_three_generation_executed": "NOT_RUN_H2116_WINDOWS_GO_ONLY_GO_TEST_C",
+    "rust_b4_three_generation_executed": "PASS_SOURCE_LOCKED_WINDOWS_AND_LINUX_LIB_TEST",
+    "original_b4_winforms_three_connects": "NOT_RUN",
+    "old_fakeip_after_reconnect_actual_socket": "NOT_RUN",
+    "original_signed_stop_3": "NOT_RUN"
+  },
+  "first_failure_history": {
+    "run_id": 44119996395,
+    "source_sha": "11596bbb17e08a667f4f838080e7c2c09635e3f9",
+    "result": "FAIL",
+    "first_error": "assembly blob mismatch for new Go cold test",
+    "preserved": true
+  },
+  "next_fix": "H2117 Windows preflight executes targeted already-compiled client.test.exe test via -test.run exact, with negative static contract; no driver/Stop claims",
+  "B3": "H2112 scoped real Win2025 Wintun /128 IPv6+IPv4+both owned Stop PASS old SOURCE",
+  "B5": "NOT_RUN_SAMEVM_10Mbps"
+}
