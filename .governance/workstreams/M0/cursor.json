@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2059,
-  "checkpoint_sha": "362dd2e424974b0b274f9a44235dc9dbd13744a2",
+  "sequence": 2060,
+  "checkpoint_sha": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2059 focused single SOURCE original WinForms cold user padding flows → Go --check-config effective → original Rust M1 NPF actual copied_records/bytes with real CN Direct/Tunnel kernel TCP/UDP and Stop; distinct from H2031 encrypted pcap and independent CPU/RSS A/B OPEN. H2058 GUI H2055 and TC H2056 already actual native PASS.",
-  "why_now": "H2055 true original GUI signed native 1460/1389 and two egress Stop PASS, but startup padding was saved off. H2031 old SOURCE confirmed real encrypted record padding in Normal all-Tunnel but did not prove GUI flows effective. This source binds original GUI user choice, Go effective, same SOURCE original Rust M1 NPF and owned Stop in one focused normal CN scene.",
+  "current_task": "H2060 correct strict governance single-SOURCE cursor evidence lock: retain H2041 native exact tested source only in evidence_refs, treat H2058 multi-Actions different-SOURCE verified summary as context_refs. H2059 GUI real flows source Action on previous commit in progress, not yet source-promoted.",
+  "why_now": "Governance Action44005240778 first fault 'evidence is for a different SOURCE' because previous H2058 multi-SOURCE evidence was mistakenly added to strict per-cursor evidence_refs alongside H2041. Restore original cursor invariant; don't change original run results or weaken governance. H2058 per-action evidence remains linked from context and source ledger.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2059 original native Action first failure or signed GUI + M1 NPF receipt, then user-selected open DNS second cold reconnect / native FS crash/slow IO / 5-class real Wintun pressure / GUI CPU/RSS. No H2031/H2041 replay.",
+  "next_action": "Collect H2059 original WinForms flows native and strict governance; if actual GUI flows NPF no-copy fix only first real boundary. Remaining real DNS generation2/product crash/slow IO/5-class stress/GUI CPU RSS still OPEN.",
   "unverified": true,
-  "last_tested_source": "17ebe7e91830595d6083dd8314716f99e8c99918",
+  "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
-    "docs/evidence/M0/PLAN029-H2058-GUI-DNS-TC-REAL-FAKEABORT-20261117.json"
+    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261117-PLAN029-H2059-GUI-FLOWS-REAL-EFFECTIVE.md",
     "docs/evidence/M0/PLAN029-H2058-GUI-DNS-TC-REAL-FAKEABORT-20261117.json",
-    "docs/evidence/M0/PLAN029-H2049-USER-SCOPED-SOURCE-LEDGER-20261117.json"
+    "docs/evidence/M0/PLAN029-H2049-USER-SCOPED-SOURCE-LEDGER-20261117.json",
+    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
