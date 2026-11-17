@@ -35,6 +35,9 @@ if p029_p1_cn and not p029_p1_policy:
 # Wintun and one Rust owner; no simulated GUI or routing Applied receipt.
 p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
+p029_boot_tc=os.environ.get("WBD_PLAN029_BOOTSTRAP_TC_SCENE")=="1"
+if p029_boot_tc and not (p029_product and p029_direct and not p029_gui and mode=="normal" and native_outer=="default1460"):
+ raise RuntimeError("real same-endpoint bootstrap requires original Normal CN default1460")
 if p029_gui and not (p029_product and p029_direct and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("true GUI original signed CN default1460 needed")
 p029_ipv6=os.environ.get("WBD_PLAN029_D4_IPV6_SCENE")=="1"
@@ -326,6 +329,7 @@ def stop_windows(p):
    except subprocess.TimeoutExpired:p.kill()
 w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=p029_pressure_guest=p029_pressure_win=p029_tcp53_guest=p029_tcp53_win=None;logs=[]
 p029_cdn_guest=p029_cdn_win=None
+p029_boot_tc_guest=None
 padding_capture=None
 padding_capture_source=None
 route_local=route_guest=None
@@ -538,6 +542,16 @@ try:
   # existing 32KiB P2 probe and bounded 60s FIN grace. Never widen
   # a production default; source-locked CI-only argument.
   args.extend(["--direct-flow-hard","256"])
+ if p029_boot_tc:
+  # Real server host DNS resolved before Go/Rust TLS, no Go package mocks.
+  args[args.index("--server-ip")+1]="vpn.edge.cn.example"
+  host4=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host4:raise RuntimeError("no verified physical host source")
+  bootlog=(out/"plan029-bootstrap-tc-guest.log").open("w");logs.append(bootlog)
+  p029_boot_tc_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+   "python3","-u",unix(root/"tools"/"m0_plan029_bootstrap_tc_real_guest.py"),peer,host4],
+   stdout=bootlog,stderr=subprocess.STDOUT)
+  ready(out/"plan029-bootstrap-tc-guest.log","PLAN029_BOOTSTRAP_TC_GUEST_READY",p029_boot_tc_guest,12)
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
@@ -663,6 +677,14 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
  ready(out/"client.log","WBD_WINDOWS_CLIENT_READY",w,30)
+ if p029_boot_tc:
+  if p029_boot_tc_guest.wait(timeout=8)!=0:raise RuntimeError("physical same endpoint bootstrap failed: "+(out/"plan029-bootstrap-tc-guest.log").read_text(errors="replace")[-900:])
+  recs=[v.split(" ",1)[1] for v in (out/"plan029-bootstrap-tc-guest.log").read_text().splitlines() if v.startswith("PLAN029_BOOTSTRAP_TC_GUEST_RECEIPT ")]
+  if len(recs)!=1:raise RuntimeError("no exact TC/TCP Linux proof")
+  proof=json.loads(recs[0]);txt=(out/"client.log").read_text(errors="replace")
+  if not(proof["udp_tc"]==1 and proof["tcp_a"]==1 and proof["physical_host"]==host4 and "WBD_PLAN029_BOOTSTRAP_DNS_SELECTED" in txt and "host=vpn.edge.cn.example" in txt and "resolver4="+peer in txt and "selected4="+peer in txt):raise RuntimeError("original Go physical TC TCP selected4 absent")
+  report["plan029_physical_bootstrap_tc"]={"status":"PASS_REAL_WINDOWS_NPCAP_LINUX_KERNEL_UDP_TC_TCP53","linux_dns":proof,"tls_sni_unchanged":"wbd-v4.example.test","reconnect":"NOT_RUN","no_cross_dns":True}
+  print("PLAN029_REAL_PHYSICAL_BOOTSTRAP_UDP_TC_TCP53_SAME_ENDPOINT_PASS",flush=True)
  if p029_ipv6:
   # Only after the REAL original owner has emitted READY/Applied,
   # and while it is live; no fake receipt supplied by this fixture.
@@ -2972,6 +2994,10 @@ finally:
     wsl("ip","addr","del",p029_tunnel_alias+"/32","dev","wbdwl4",timeout=8)
   except Exception:pass
  stop_windows(w);stop_linux()
+ if p029_boot_tc and p029_boot_tc_guest is not None and p029_boot_tc_guest.poll() is None:
+  p029_boot_tc_guest.terminate()
+  try:p029_boot_tc_guest.wait(timeout=4)
+  except subprocess.TimeoutExpired:p029_boot_tc_guest.kill()
  if p029_ipv6:
   try:
    from m0_plan029_d4_ipv6_route_probe import evaluate as ipv6_evaluate

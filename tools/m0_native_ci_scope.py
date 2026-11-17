@@ -65,6 +65,7 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029-v3-real-direct-pressure]",
     "[plan029-real-product-cn]",
     "[plan029-real-gui-cn]",
+    "[plan029-real-dns-tc]",
     "[plan029-game4-cn-real]",
 )
 

@@ -4,21 +4,21 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2046,
-  "checkpoint_sha": "969da571374506e405c6b3c1d0f3b94ecf1b5d3e",
+  "sequence": 2047,
+  "checkpoint_sha": "fb69da88c58b4d914e3ae09ecce838785322541a",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2046 bounded feature card UTF8 <=16KiB with all prior statuses/evidence rows; H2045 WinForms real signed Action still running, do not dispatch again.",
-  "why_now": "H2044 Windows original Go SOURCE Action43992993306 successful, H2043 two OS Rust pressure pure Action43992703683 success. H2044 feature catalog failed because pretty-printed card over16KiB; correct minification in this batch. No fake GUI origin claims.",
+  "current_task": "H2047 one actual physical Windows Npcap UDP TC=1 to same WSL2 TCP53 source/ID/QNAME DNS for server FQDN before authenticated TLS, followed by original Normal CN two egress and Stop. H2045 GUI native in flight; no same-scene redispatch.",
+  "why_now": "Go bootstrap TC cold logic now compiles H2044; physical same-resolver Windows socket and Linux kernel receipts remain NOT_RUN, independent Action required.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2045 real GUI signed native Action; fix first boundary if failure. Same-endpoint physical TC and five-category on-wire pressure still OPEN.",
+  "next_action": "Collect H2045 GUI origin and H2047 physical TC original native Actions without repeat; only fix first failure. Other specific DNS TTL/reconnect/pressure still OPEN.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029-H2046-BOUNDED-FEATURE-UTF8.md",
+    "docs/devlog/M0/20261117-PLAN029-H2047-REAL-BOOTSTRAP-TC-CANDIDATE.md",
     "docs/devlog/M0/20261117-PLAN029-H2045-GUI-REAL-SIGNED-CANDIDATE.md",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
     "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
