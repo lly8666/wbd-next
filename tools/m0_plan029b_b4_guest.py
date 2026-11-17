@@ -20,9 +20,13 @@ if lease != "10.66.0.2" or tunnel != "10.66.0.1" or overseas != "203.0.113.77":
 qname = b"\x03www\x02cn\x07example\x00"
 question = qname + b"\x00\x01\x00\x01"
 edge = b"\x04edge\x03cdn\x07example\x00"
-dns_ids = {b"\x29\x61": ("advanced", physical, host),
-           b"\x29\x62": ("ordinary", physical, host),
-           b"\x29\x63": ("all", tunnel, lease)}
+# Windows app query IDs belong to its socket; the original Rust DNS
+# forwarder legitimately allocates a NEW upstream ID per cold generation.
+# The guest checks actual kernel source/lane/question, then echoes that
+# upstream ID; the WinForms query independently checks the restored app ID.
+app_ids = {"advanced": b"\x29\x61",
+           "ordinary": b"\x29\x62",
+           "all": b"\x29\x63"}
 business = {b"P29B4-G1": ("advanced", host),
             b"P29B4-G2": ("ordinary", lease),
             b"P29B4-G3": ("all", lease)}
@@ -55,7 +59,7 @@ def first_dns_fault(reason, sock, wire, peer):
         "question_sha256_24": hashlib.sha256(wire[12:]).hexdigest()[:24],
         "qname_matches_cn_ticket": wire[12:] == question,
         "tail_qtype": wire[-4:-2].hex() if len(wire) >= 16 else "",
-        "expected_ids": sorted(x.hex() for x in dns_ids),
+        "application_ids_not_upstream_ids": sorted(x.hex() for x in app_ids.values()),
         "already_accepted": sorted(observed),
     }, sort_keys=True), flush=True)
     raise RuntimeError("B4 original DNS first unexpected packet: " + reason)
@@ -95,8 +99,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                 if data not in business:
                     raise RuntimeError("unrecognized B4 business on physical/TUN")
                 phase, expected = business[data]
-                if peer[0] != expected or phase + "_data" in observed:
-                    raise RuntimeError("B4 wrong or duplicate business egress " + phase)
+                if (peer[0] != expected or phase + "_data" in observed or
+                        phase + "_dns" not in observed):
+                    raise RuntimeError("B4 wrong, early or duplicate business egress " + phase)
                 observed[phase + "_data"] = {
                     "source": peer[0],
                     "lane": "physical" if phase == "advanced" else "tun",
@@ -106,22 +111,42 @@ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as direct, \
                 continue
             if len(data) < 12 or data[4:6] != b"\x00\x01":
                 first_dns_fault("invalid_dns_header", sock, data, peer)
-            ticket = data[:2]
-            if ticket not in dns_ids:
-                # Windows NCSI can independently query the Tunnel DNS;
-                # it is not a B4 transaction. Never count it as PASS.
-                if (sock is tunneled and peer[0] == lease and unrelated < 12
-                        and data[2:6] == b"\x01\x00\x00\x01"
-                        and data[12:] != question):
-                    unrelated += 1
-                    continue
-                first_dns_fault("unexpected_ticket_or_physical_fallback", sock, data, peer)
-            phase, dst, source = dns_ids[ticket]
-            selected = direct if dst == physical else tunneled
-            if sock is not selected or peer[0] != source or \
-               data[2:6] != b"\x01\x00\x00\x01" or data[12:] != question:
-                first_dns_fault("wrong_upstream_lane_qname_type_" + phase,
+            # The original Rust owner changes the DNS transaction ID on
+            # its upstream socket (native H2124 physical CN ID 0001 while
+            # the original WinForms app sent 2961). Requiring equality
+            # between these two distinct ID namespaces caused a false
+            # SERVFAIL. Retain exact original kernel lane, source, question
+            # and strict generation ordering rather than trusting that ID.
+            if (sock is tunneled and peer[0] == lease and unrelated < 12 and
+                    data[2:6] == b"\x01\x00\x00\x01" and
+                    data[12:] != question):
+                # Windows NCSI queries are not B4 transactions and never
+                # count towards a phase; do not allow physical fallback.
+                unrelated += 1
+                continue
+            if data[2:6] != b"\x01\x00\x00\x01" or data[12:] != question:
+                first_dns_fault("wrong_dns_flags_qname_or_qtype", sock, data, peer)
+            if sock is direct and peer[0] == host:
+                if "ordinary_data" in observed:
+                    first_dns_fault("physical_dns_after_ordinary", sock, data, peer)
+                phase = "ordinary" if "advanced_data" in observed else "advanced"
+            elif sock is tunneled and peer[0] == lease:
+                if "ordinary_data" not in observed:
+                    first_dns_fault("tunnel_cn_before_all", sock, data, peer)
+                phase = "all"
+            else:
+                first_dns_fault("wrong_original_kernel_dns_lane_or_source",
                                 sock, data, peer)
+            # Before accepting business the WinForms app must independently
+            # receive a response whose ID is its own 2961/2962/2963.
+            if phase + "_dns" not in observed:
+                print("PLAN029B_B4_ORIGINAL_DNS_UPSTREAM_TRANSACTION " +
+                      json.dumps({"phase": phase, "lane": "physical"
+                                  if sock is direct else "tunnel",
+                                  "upstream_id": data[:2].hex(),
+                                  "app_id_expected": app_ids[phase].hex(),
+                                  "source_ipv4": peer[0]}, sort_keys=True),
+                      flush=True)
             attempts[phase] = attempts.get(phase, 0) + 1
             if attempts[phase] > 2:
                 raise RuntimeError("B4 excessive upstream retransmission " + phase)

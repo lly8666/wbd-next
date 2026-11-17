@@ -62,7 +62,20 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         self.assertIn('hashlib.sha256(wire[12:]).hexdigest()[:24]', guest)
         self.assertIn('"qname_matches_cn_ticket": wire[12:] == question', guest)
         self.assertIn('peer[0] == lease and unrelated < 12', guest)
-        self.assertIn('first_dns_fault("unexpected_ticket_or_physical_fallback"', guest)
+        # H2124 signed guest: app ID 2961 was correctly translated by
+        # the original Rust owner to upstream ID 0001. Only the correct
+        # original DNS socket, source, qname/qtype and generation sequence
+        # qualify, and the guest echoes the upstream ticket unchanged.
+        self.assertIn("PLAN029B_B4_ORIGINAL_DNS_UPSTREAM_TRANSACTION", guest)
+        self.assertIn('"upstream_id": data[:2].hex()', guest)
+        self.assertIn('"app_id_expected": app_ids[phase].hex()', guest)
+        self.assertIn('if "ordinary_data" in observed:', guest)
+        self.assertIn('if "ordinary_data" not in observed:', guest)
+        self.assertIn('phase + "_dns" not in observed', guest)
+        self.assertIn('first_dns_fault("wrong_original_kernel_dns_lane_or_source"', guest)
+        self.assertIn('first_dns_fault("wrong_dns_flags_qname_or_qtype"', guest)
+        self.assertIn('reply = data[:2] + b"\\x81\\x80', guest)
+        self.assertNotIn('if ticket not in dns_ids:', guest)
         self.assertIn('raise RuntimeError("B4 original DNS first unexpected packet:', guest)
         self.assertIn("PLAN029B_B4_REAL_LINUX_EGRESS", guest)
         # H2123 actual signed first failure: physical CN A had no
