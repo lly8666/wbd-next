@@ -327,6 +327,28 @@ mod tests{
             tunnel:Ipv4Addr::new(1,1,1,1)}.valid());
     }
     #[test]
+    fn plan029b_ordinary_cn_tcp53_keeps_validated_real_a_and_ttl(){
+        let question=TcpClientDnsQuestion{wire:vec![],
+            original_id:0x6601,qname:"cn.example".into(),qtype:1};
+        let mut raw=vec![0u8;12];
+        raw[..2].copy_from_slice(&0x6601u16.to_be_bytes());
+        raw[2..4].copy_from_slice(&0x8180u16.to_be_bytes());
+        raw[4..6].copy_from_slice(&1u16.to_be_bytes());
+        raw[6..8].copy_from_slice(&1u16.to_be_bytes());
+        raw.extend_from_slice(&[2,b'c',b'n',7,b'e',b'x',b'a',b'm',
+                                b'p',b'l',b'e',0,0,1,0,1]);
+        raw.extend_from_slice(&[0xc0,0x0c,0,1,0,1,0,0,0,2,0,4,
+                                198,51,100,23]);
+        let reply=checked_client_reply(&question,DnsEgress::Direct,
+            &raw,None,None).expect("real CN A preserved on original TCP53");
+        assert_eq!(reply,raw,"no FakeIP, CNAME/TTL/flags unchanged");
+        // An upstream answer for a different original transaction may not
+        // be admitted as a local A merely because qname matches.
+        raw[1]=0x02;
+        assert!(checked_client_reply(&question,DnsEgress::Direct,
+            &raw,None,None).is_none());
+    }
+    #[test]
     fn plan029_app_cn_tcp53_only_durable_fake_never_shared_cdn_real(){
         let resolved=DnsAResolution{status:DnsAnswerStatus::Answered,
             canonical:"cn.example".into(),cname_chain:vec![],

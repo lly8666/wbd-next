@@ -150,6 +150,7 @@ public static class Plan029GuiReal {
    Need(Convert.ToInt32(effective["mtu"])==1460 &&
     Convert.ToInt32(effective["derived-inner-tun-mtu"])==1389 &&
     Convert.ToBoolean(effective["split-enable"]) &&
+    Convert.ToBoolean(effective["cn-domain-direct"]) &&
     Convert.ToString(effective["route-mode"])=="bypass-lan-cn" &&
     effective.ContainsKey("startup-padding") &&
     Convert.ToString(effective["startup-padding"])==expectedPadding,

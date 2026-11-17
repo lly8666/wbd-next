@@ -522,6 +522,42 @@ mod tests{
         std::fs::remove_file(path).unwrap();
     }
     #[test]
+    fn plan029b_ordinary_cn_udp_preserves_real_a_ttl_no_fake_writer(){
+        let mut dns=DirectDns::new(Ipv4Addr::new(10,1,0,7),14,
+            Ipv4Addr::new(10,234,12,34),Ipv4Addr::new(223,5,5,5),1280);
+        let key=QueryKey{name:"cn.example".into(),qtype:1,
+            lane:ResolverLane::Direct,resolver4:0xdf050505,
+            resolver_port:53,policy_revision:1};
+        let client=DnsClient{src4:0x0aea0c22,src_port:42053,
+            requested_dns4:0x08080808,original_id:0x6601};
+        let answer=DnsAResolution{status:DnsAnswerStatus::Answered,
+            canonical:"cn.example".into(),cname_chain:vec![],
+            candidates:vec![crate::v4_client_dns_answer::ResolvedA{
+                address:0xc6336417,ttl:2}]};
+        let mut wire=vec![0u8;12];
+        wire[..2].copy_from_slice(&0x8111u16.to_be_bytes());
+        wire[2..4].copy_from_slice(&0x8180u16.to_be_bytes());
+        wire[4..6].copy_from_slice(&1u16.to_be_bytes());
+        wire[6..8].copy_from_slice(&1u16.to_be_bytes());
+        wire.extend_from_slice(&[2,b'c',b'n',7,b'e',b'x',b'a',b'm',
+                                b'p',b'l',b'e',0,0,1,0,1]);
+        wire.extend_from_slice(&[0xc0,0x0c,0,1,0,1,0,0,0,2,0,4,
+                                 198,51,100,23]);
+        dns.resolved(ValidatedReply{key,waiters:vec![client],answer},
+            &wire,None,None,10);
+        let response=dns.pop().expect("ordinary CN response after validated A");
+        let mut expected=wire.clone();
+        expected[..2].copy_from_slice(&0x6601u16.to_be_bytes());
+        assert_eq!(&response[28..],&expected);
+        assert_eq!(&response[12..16],&[8,8,8,8]);
+        assert_eq!(&response[16..20],&[10,234,12,34]);
+        assert_eq!(&response[20..22],&53u16.to_be_bytes());
+        assert_eq!(&response[22..24],&42053u16.to_be_bytes());
+        assert_eq!(dns.cache_counts(),(0,0),
+            "ordinary CN never allocates FakeIP DNS cache");
+        assert_eq!(dns.counts(),(0,0,0));
+    }
+    #[test]
     fn plan029_direct_dns_one_socket_endpoint_bounded_no_journal_leak(){
         let mut dns=DirectDns::new(Ipv4Addr::new(10,1,0,7),14,
             Ipv4Addr::new(10,234,12,34),Ipv4Addr::new(223,5,5,5),1280);

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2084",
+  "date": "2026-11-17",
+  "source_sha": "12db9e2464c52e149b94701ac258d4b1a2f1fa34",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "qualification": "H2083_REAL_SIGNED_NATIVE_NORMAL_FAIL_BEFORE_READY",
+  "original_native_failure": {
+    "action": 44045024679,
+    "job_id": 133910829960,
+    "product_binary_source_sha": "12db9e2464c52e149b94701ac258d4b1a2f1fa34",
+    "phase": "Win2025 original Windows Go signed Wintun+NPF ↔ WSL2",
+    "observed": "Failed to find wbd_m0_win_native_v3_start procedure in result/wl-public/wbd_engine.dll",
+    "first_boundary": "release binary compiled without m0_v4_probe; Go public split-off now intentionally attaches Rust V3",
+    "status": "FAIL",
+    "native_business": "NOT_RUN",
+    "os_applied": "NOT_RUN"
+  },
+  "prior_preflights_pass": {
+    "go_source": 44045024654,
+    "go_wal": 44045024564,
+    "windows_two_owner": 44045024648,
+    "original_tls": 44045024685,
+    "governance": 44045024767,
+    "linux_and_win_rust_and_go_for_source": "PASS_JOBS_IN_44045024679"
+  },
+  "h2084_changes": {
+    "workflow_default_binary": "m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration",
+    "required_pe_export": "wbd_m0_win_native_v3_start",
+    "export_check_when": "every newly compiled default Windows DLL before native driver",
+    "ordinary_cn_udp_a_ttl_unit": "ADDED_NOT_RUN",
+    "ordinary_cn_tcp53_a_ttl_unit": "ADDED_NOT_RUN",
+    "existing_029_advanced_gui": "explicit --cn-domain-direct=true, origin old H2077 semantics; NOT_RETESTED",
+    "portable_gui_legacy_key_missing": "expected true; fresh false; explicit false sticky; NOT_RETESTED"
+  },
+  "new_source": "H2084_UNVERIFIED",
+  "b0_real_native": "NOT_RUN_NEW_SOURCE",
+  "b2_b3_b4_b5": "NOT_RUN",
+  "old_h2077_normal": "PASS_SCOPED_H2077_DIFFERENT_PRODUCT_SOURCE"
+}

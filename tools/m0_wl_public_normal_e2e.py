@@ -563,7 +563,10 @@ try:
  if p029_product:
   # Same Next-Connect CLI fields a portable user enters in real WinForms,
   # not WBD_PLAN029_CN_RULES_FILE or any GITHUB_ACTIONS test switch.
-  args.extend(["--split-enable","--cn-rules-file",str(rules)])
+  # Retain the historical H2077 signed GUI FakeIP scenario explicitly:
+  # fresh PLAN029B profiles otherwise default ordinary CN real-A mode.
+  args.extend(["--split-enable","--cn-domain-direct=true",
+               "--cn-rules-file",str(rules)])
  if p029_pressure:
   args.extend(["--direct-flow-hard","8"])
  if p029_tcp128:
@@ -615,7 +618,8 @@ try:
   # H1845: freeze exact user-facing CLI *and* child environment before
   # spawning the genuine original Go product. Only then can real signed
   # OS Applied/Ready and Stop prove non-CI activation. No trial fallback.
-  if (product_user_args.count("--split-enable")!=1 or product_user_args.count("--cn-rules-file")!=1 or
+  if (product_user_args.count("--split-enable")!=1 or product_user_args.count("--cn-domain-direct=true")!=1 or
+      product_user_args.count("--cn-rules-file")!=1 or
       client_env.get("GITHUB_ACTIONS")!="false" or
       client_env.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
       "WBD_PLAN029_CN_RULES_FILE" in client_env):
@@ -784,9 +788,10 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   ipv6_probe_active=ipv6_route_snapshot("active_signed_original_product")
  if p029_product:
   cold_log=(out/"client.log").read_text(errors="replace")
-  if ("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE" not in cold_log or
-      "source=explicit_config readiness=AWAIT_REAL_OS_RUST_RECEIPT" not in cold_log or
-      "source=source_locked_CI_trial" in cold_log):
+  if ("WBD_PLAN029B_V3_COLD_EFFECTIVE" not in cold_log or
+      "cn_domain_fakeip=true" not in cold_log or
+      "business_split=true" not in cold_log or
+      "readiness=AWAIT_REAL_OS_RUST_RECEIPT" not in cold_log):
    raise RuntimeError("H1840 REAL product split did not select explicit --split-enable")
   # READY must follow real signed Wintun native OS WAL, not a GUI mock.
   if "WBD_WINDOWS_OS_APPLIED" not in cold_log:

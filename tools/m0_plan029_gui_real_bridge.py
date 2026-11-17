@@ -48,7 +48,14 @@ def prepare(root,out,client,rust,original_args,rules):
   k=flags[j]
   if not k.startswith("--"):raise RuntimeError("unpaired original CLI argument")
   name=k[2:]
-  if name in ("native-v4-product","control-stdin","split-enable"):
+  if name.startswith("cn-domain-direct="):
+   # The original Go Bool flag accepts =true/=false, not a separate
+   # positional boolean argument. Preserve the exact real user flag.
+   key,encoded=name.split("=",1)
+   if encoded not in ("true","false"):
+    raise RuntimeError("invalid original advanced CN Bool")
+   name=key;value=(encoded=="true");j+=1
+  elif name in ("native-v4-product","control-stdin","split-enable"):
    value=True;j+=1
   else:
    if j+1>=len(flags):raise RuntimeError("missing original CLI value")
@@ -60,7 +67,7 @@ def prepare(root,out,client,rust,original_args,rules):
   if name in ("server-port","source-port","lanes","direct-flow-hard"):
    value=int(value)
   seed[name]=value
- if seed.get("split-enable") is not True or seed.get("route-mode")!="bypass-lan-cn":
+ if seed.get("split-enable") is not True or seed.get("route-mode")!="bypass-lan-cn" or seed.get("cn-domain-direct") is not True:
   raise RuntimeError("no explicit GUI CN union")
  data=gui/"data";data.mkdir(parents=True,exist_ok=True)
  owned={"route-key-hex-file":"route-key.hex","tls-ca-pem":"server-ca.pem",

@@ -4,28 +4,27 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2083,
-  "checkpoint_sha": "875fdca2481767f20e9668070caf021478b6d950",
+  "sequence": 2084,
+  "checkpoint_sha": "12db9e2464c52e149b94701ac258d4b1a2f1fa34",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2083 correct H2082 real Windows Go production compiler first error: trial declared inside NativePeer cold block not visible in later post-OS TCP activation log; export derived same-generation tcpDNSOnly bool instead. Strict active original assembly result_blob corrected. Governance combined hot context byte budget 32768 exceeded by 35; cut legacy hot doc reference without removing evidence. H2082 native ABI/static/native functional passed, signed 029B not qualified.",
-  "why_now": "H2082 Action44044462149 original-Go Win cold unit and Action44044462119 plan020 Go WAL FAIL undefined trial at m0_native_v4_windows.go:1125; new log was only added reason. Governance Action44044462367 structure BLOCKED combined hot bytes32803 > 32768. H2082 r0-native-abi44044462134 PASS, native-functional44044462254 PASS, static44044462361 PASS, fake-platform44044462219 PASS, existing original Go other failures preserved.",
+  "current_task": "H2084 PLAN029B first actual signed Windows2025/WSL2 Normal off FAIL at source12db: original Go always selects base Rust V3 for public DNS/padding, but release workflow built DLL without m0_v4_probe unless explicit legacy PLAN029 scene; missing procedure wbd_m0_win_native_v3_start. H2084 fixes immutable actual Windows DLL feature and adds pre-driver PE export gate unconditionally; also pairs ordinary CN actual original A/TTL UDP+TCP Rust tests and preserves prior advanced FakeIP H2077 GUI scene with explicit cn-domain-direct=true and GUI old-key migration test. New production hardware source pending; old native fail retained.",
+  "why_now": "H2083 original Windows Go build+Windows/Linux Rust+Linux peer+governance SUCCESS; signed Action44045024679 real Windows product FAILED before Ready: client log 'Failed to find wbd_m0_win_native_v3_start procedure', body DNS-only All reached Rust V3 by design, but CI release DLL feature only enabled for old V3 trial/split case. Exact binary manifest and Go package built okay; no actual app packet qualifies. Fix the real release feature gate, not Go fallback to old V2 or spoofed readiness.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Confirm H2083 exact Go source build and WinForms + Rust component, then B0 minimal DNS TCP and old native Normal signed regression. Only if exact new binary source is qualified run targeted PLAN029B native B0–B4, later B5 10Mbps same-VM fair A/B. Keep PR35 merged, 028/030 untouched; no dishonest PASS.",
+  "next_action": "Collect H2084 exact source Windows DLL PE V3 export pre-driver, original signed Normal/off UDP TCP Stop, Windows Go/Rust library and GUI/CLI source + new ordinary/advanced CN regression tests. Only after real B0 confirmed run minimum independent new B2 ordinary/advanced and B3 physical IPv6 plus same VM B5 protection if supported by fixture; no 028/030 matrix. Preserve H2083 FAIL and historic H2077 PASS.",
   "unverified": true,
-  "last_tested_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "last_tested_source": "12db9e2464c52e149b94701ac258d4b1a2f1fa34",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2083-H2082-FIRST-BUILD-FAIL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2084-H2083-V3-RELEASE-EXPORT-FAIL-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2083-GO-TRIAL-SCOPE-HOT-BUDGET.md",
-    "docs/evidence/M0/PLAN029B-H2083-H2082-FIRST-BUILD-FAIL-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2084-PRODUCTION-V3-EXPORT-AND-CN-GUI-REGRESSION.md",
+    "docs/evidence/M0/PLAN029B-H2084-H2083-V3-RELEASE-EXPORT-FAIL-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/devlog/M0/20261117-PLAN029B-H2082-DNS-TCP-ONLY-IPV6-FAIRNESS.md",
-    "docs/evidence/M0/PLAN029B-H2082-DNS-TCP-ONLY-IPV6-FIXTURE-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2082 Rust code new DNS-only actor and IPv6 Wintun unit compiles in ABI/native-functional, but exact current Go product build FAIL single undefined trial variable and governance hot bytes >cap; H2083 fixes those without protocol/behavior changes. B0–B5 physical still NOT_RUN."
+  "partial_summary": "H2083 real signed Normal/off first hardware FAIL missing V3 PE export (release CI feature omitted) before genuine Ready; H2084 compile new default release with V3 and pre-driver native PE gate. New 029B ordinary CN real-A UDP/TCP tests and old H2077 advanced GUI FakeIP fixture explicitly opt-in new CN bool. B0–B5 full physical exit NOT_RUN. Prior failures preserved."
 }

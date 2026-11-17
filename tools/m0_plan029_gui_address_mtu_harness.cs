@@ -119,6 +119,19 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Need(Convert.ToBoolean(p.Values["split-enable"]) &&
       Convert.ToString(p.Values["cn-rules-file"])=="data/h1835-cn-domains.txt",
       "H1835_real_assembled_GUI_saved_cn_effective_portable");
+    // Old saved profiles/imported JSON missing the new field must retain
+    // pre-029B advanced FakeIP. New values false remain explicit.
+    var fresh029B=new Dictionary<string,object>(p.Values);
+    Need(!Convert.ToBoolean(fresh029B["cn-domain-direct"]),
+      "H2084_new_profile_advanced_CN_defaults_false");
+    var legacy029=new Dictionary<string,object>(fresh029B);
+    legacy029.Remove("cn-domain-direct");
+    store.ImportValues(p,legacy029);
+    Need(Convert.ToBoolean(p.Values["cn-domain-direct"]),
+      "H2084_legacy_missing_selector_migrates_advanced_true");
+    store.ImportValues(p,fresh029B);
+    Need(!Convert.ToBoolean(p.Values["cn-domain-direct"]),
+      "H2084_explicit_false_survives_legacy_migration");
     // A real Go parser must reject missing CN domain rules with explicit
     // split enabled. GUI cannot silently fall back to the old tunnel path.
     form.SetEditor("cn-rules-file","");

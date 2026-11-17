@@ -1,3 +1,4 @@
+# H2084 PLAN029B default All/Normal now requires the V3 DLL export as a production invariant, not only explicitly flagged scenes.
 # H2076: only fixture MTU double-generation receipt fix, reuse frozen product SOURCE498a in three independent normal scenes; do not rebuild product.
 # H2075 PLAN029 original-source one-build three ordinary GUI/domain/TTL real Actions: workflow path must match on.push.paths; no new task/test or legacy matrix.
 # H2002 exact normal physical-vs-FakeIP UDP 3size RTT [plan029-v3-real-direct-udp] [plan029-h1999-direct-udp-rtt] after bounded event wake; no TCP bulk, no extreme tests.
@@ -1317,7 +1318,10 @@ jobs:
           if(-not $archive){throw 'ISA-L static MSVC release archive missing'}
           $env:WBD_ISAL_PREFIX=$archive.Directory.FullName
           $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
-          $features='m0_v4_embedded_go,fec2_product_record,native_fec_acceleration'
+          # PLAN029B H2084: Off/All is still the authenticated Rust V3
+          # public DNS/Tunnel/padding owner. Its real cold start MUST have
+          # the V3 DLL export, even without an explicit CN trial marker.
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
           if($env:WBD_WL_PROBE_LOCKS -eq '1'){$features+=',win_native_lock_profile'}
           if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
              $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
@@ -1326,7 +1330,6 @@ jobs:
             # private trial, but activation comes only from --split-enable.
             # Do not omit the ABI from the normal release DLL on product
             # test sources; never silently borrow an earlier probe DLL.
-            $features+=',m0_v4_probe'
             Write-Output 'PLAN029_EXACT_SOURCE_V3_ABI_FOR_EXPLICIT_OR_TRIAL'
           }
           & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
@@ -1341,17 +1344,14 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows native original owner full-module functional regression FAIL'}
           Copy-Item target/release/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item result/wbd-client-embedded.exe result/wl-public/wbd-client-embedded.exe
-          if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or
-             $env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or
-             $env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
-            # Real Windows native DLL load/export, before any driver install.
-            # A manifest with ISA-L but no m0_v4_probe is NOT a V3 binary.
-            & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start"); print("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS")'
-            if($LASTEXITCODE -ne 0){throw 'PLAN029 source-built V3 actual Rust DLL export missing; refusing native Wintun'}
-            if($env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
+          # Every real 029B Normal/off, CN and legacy 029B V3 caller uses
+          # this same exact release binary, not merely explicit tests.
+          # Prove the actual PE export before opening any signed Wintun/NPF.
+          & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start"); print("PLAN029B_H2084_ACTUAL_WINDOWS_DEFAULT_V3_DLL_EXPORT_PASS")'
+          if($LASTEXITCODE -ne 0){throw 'PLAN029B default public Rust V3 ABI missing in release DLL'}
+          if($env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){
               & python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("result/wl-public/wbd_engine.dll")); getattr(d,"wbd_m0_win_game_native_v4_start"); getattr(d,"wbd_m0_win_game_native_v4_tcp_control"); print("PLAN029_H2022_ACTUAL_WINDOWS_GAME4_NATIVE_SPLIT_AND_TCP_CONTROL_DLL_ABI_PASS")'
               if($LASTEXITCODE -ne 0){throw 'Game4 CN V4 Rust native FFI absent before Wintun'}
-            }
           }
           [ordered]@{source_sha=$env:GITHUB_SHA;features=$features;isa_l_source='c387163fcbca62701d646149564c550c78a4f985';
             native_fec_acceleration=$true;
