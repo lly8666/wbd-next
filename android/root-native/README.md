@@ -83,3 +83,10 @@ No placeholder FEC/Game C symbols, no second TLS/AEAD or fake M2.
 Original Android Normal/off `stage/readback` verifies this same
 Go-authenticated nonzero epoch, feature3 and increasing revision. A green
 Rust ARM64 ELF still does NOT mean a linked Go executable or real device.
+
+The existing non-FEC original Go server adoption signature names a
+`V4LinuxGameAuthenticatedLane` whose definition originally lives only in
+the mature Game build. Android's Normal/off product edition now supplies
+only that original protected **Normal** type and a strict policy reader,
+requiring real ColdSnapshot/commit/association and refusing every FEC/Game
+policy. This is type-level source closure, NOT a stub Game runtime.

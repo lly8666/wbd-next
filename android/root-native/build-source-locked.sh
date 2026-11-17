@@ -83,7 +83,9 @@ for pair in "aarch64 arm64"; do
       wbd_m0_embedded_go_loop_authenticated_peer_predead \
       wbd_m0_embedded_go_loop_authenticated_peer_health \
       wbd_m0_embedded_go_public_native_health_config \
-      wbd_m0_embedded_go_public_native_health_effective; do
+      wbd_m0_embedded_go_public_native_health_effective \
+      wbd_m0_embedded_go_normal_off_stage \
+      wbd_m0_embedded_go_normal_off_readback; do
     grep -Eq " [TW] ${symbol}$" "$symbol_table" || {
       echo "ANDROID_ARM64_ORIGINAL_RUST_ELF_EXPORT_MISSING: $symbol" >&2
       exit 1

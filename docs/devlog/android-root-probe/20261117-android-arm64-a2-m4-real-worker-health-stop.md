@@ -50,3 +50,15 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"同源ARM64 Bionic Rust M4真实链接已过，改用仓库已有原Go Normal/off源码版，Fixed/Game不再拉取未实现模式且明确fail-closed；Android原TLS epoch单调OFF revision真实 ABI与16KiB功能卡治理修复。"}
 ```
+
+## Normal/off Go type闭包：仅Android source-locked原TLS真实类型
+
+- `116164a89d329d05216cb768f8aed369fed61172` [Action44025435963](https://github.com/lly8666/wbd-next/actions/runs/44025435963) Rust ARM64原M4/Health/Stop与源锁严格导出BUILD_PASS，但原Go `!wbd_v4_fec2_product` 版在 **Go源代码类型检查** 阶段FAIL：`bridge_v4_linux_server_product.go:180:11: undefined: V4LinuxGameAuthenticatedLane`；原成熟Game代码只在`wbd_v4_fec2_product`标签存在。完整Go link此源码 **NOT_RUN**；A3真机同源TLS/UDP/TCP仍NOT_RUN。相同SOURCE功能卡16KiB治理 [Action44025435946](https://github.com/lly8666/wbd-next/actions/runs/44025435946) **PASS**。
+- 本批仅Android `!wbd_v4_fec2_product` 原Go源码增量定义 `V4LinuxGameAuthenticatedLane` 的**真实受保护Normal模式**参数类型及 `ProtectedMode`：强检查已认证 ColdSnapshot/原Rust commit/原FakeTCP association、原已验证的policy.Transport==Normal、1 lane、NormalFEC与GameFEC均OFF。真实Game/Fixed仍错误拒绝；没有新增Game native入口、伪造M2或绕开原Go TLS。Linux/Windows源文件不更改。
+- ARM64 Rust真实 `normal_off_stage/readback` 同认证epoch/单调revision导出符号加入精确动态ELF必需名单；治理卡删重复的旧日志说明（记录仍在不可变devlog/verifications），保证 UTF-8 长度低于仓库原16KiB硬限制。未宣称本SOURCE编译或真机已PASS。
+
+**下一步**：用同SOURCE ARM64 Actions验真 Go Normal/off 源码类型闭包与完整原CGo链接；对剩余真实原M2/Health/Stop控制ABI做原能力移植，未完成不能认为可正式连接；真机授权后再进A3。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"仅Android无FEC版原Go源锁补真实TLS受保护Normal lane类型/模式验证，Game和Fixed仍显式不可用；原RustOFF真实ABI纳入符号门，16KiB功能卡重复历史压缩。"}
+```
