@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2123,
-  "checkpoint_sha": "36cf5488f096cdf98dfa0d97dce3cd6273bb4cb5",
+  "sequence": 2124,
+  "checkpoint_sha": "c0f5cdf2610cbfb6c103bc1cf51bf1c949f47314",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2123 original Action44135197316 SOURCE b1ab51b original full cheap/WinGo/WinRust/LinuxRust/Linux+Win product build PASS, signed native Windows2025/WSL2 B4 FAIL after genuine GUI generation1 OS Applied/Ready: first C# real CN A answer negative/empty; original Win Rust owned Stop/WAL PASS. Original b1ab artifact14352941680 ZIP sha256 d4ce8398... 24 CRC PASS; b1ab same product/fixture/Linux source. B4 3-gen NOT_RUN/FAIL, Game2/4 and B5 NOT_RUN.",
-  "why_now": "Inspect actual original client.log first error after first real OS Applied and signed HyperV/WSL ownership: B4 did not request prior H2050 scoped physical UDP53 HyperV grant; original generic normal duplex used RFC1918 10.66.0.1 instead of existing public TUN /32 when CN Direct, causing repeated Windows kernel UDP error 10051. Repair only these two test fixture entry gates; preserve prior verified H2050, B0-B3 and TCP/FEC hot path.",
+  "current_task": "H2124 SOURCE c0f5cdf only first B4 original WSL2 guest DNS ticket bounded hash-only fault + static guard; new Action44144504089 cheap PASS, WindowsGo/WinRust/LinuxRust IN_PROGRESS, signed Win2025 real B4 NOT_RUN_TO_COMPLETION at collection. Predecessor SOURCE7269 signed Action44138696793 genuine gen1 OS Applied/Ready then physical CN A SERVFAIL rcode2/0; guest original unexpected DNS ticket; both owned Stop PASS_ON_FAILURE. B4 Game B5 OPEN.",
+  "why_now": "H2123 actual signed ZIP14354147838 exposed first Linux guest DNS unexpected ticket, narrower than prior SERVFAIL. Maintain physical DNS fail-closed, collect exact bounded peer/lane/id/header/hash once; no wider re-runs without new information.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "One new source-frozen main marker [plan029b-b4-gui-three-real] after prior native Action44135197316 terminal, only signed B4 Normal/1460 WinForms three generations. Read actual first bounded DNS rcode/answer/guest physical socket; if still same nonanswer twice with no new info, stop broad reruns and inspect first upstream packet/HyperV first. Then three original OS Applied/owned Stops, source-locked ZIP/hash/CRC, stale FakeIP physical/TUN no egress, Game2/4, B5 sameVM<=10Mbps.",
+  "next_action": "Collect Action44144504089 first exact original signed guest PLAN029B_B4_FIRST_UNEXPECTED_DNS (or genuine 3-generation PASS) and verify source/hash/CRC and all 3 OS Applied/Stop. If same failure and no new information stop repeated Actions and reduce to first upstream packet. After B4, Game2/4 representative and B5 bounded same-VM 10Mbps per-actual-GiB/CPU/RSS/p99; never claim cross-VM gain.",
   "unverified": true,
-  "last_tested_source": "b1ab51be87c6d0c0aadd57283ac12da34ca238bf",
+  "last_tested_source": "7269b71ec2421868b5a45c0af4f1d1475a262c04",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029B-H2124-H2123-FIRST-DNS-TICKET-BOUNDED-NOTRUN-20261118.json",
     "docs/evidence/M0/PLAN029B-H2123-H2122-FIRST-REAL-GUI-DNS-NODATA-FAIL-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029B-H2123-FIRST-REAL-GUI-CN-DNS-SCOPED-FIX.md",
-    "docs/evidence/M0/PLAN029B-H2123-H2122-FIRST-REAL-GUI-DNS-NODATA-FAIL-20261118.json",
+    "docs/devlog/M0/20261118-PLAN029B-H2124-BOUND-FIRST-GUEST-DNS-TICKET.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2123 original signed Windows2025 SOURCE b1ab51b B4 gen1 actual GUI original TLS/Npcap/Wintun OS Applied+Ready and fail-owned Stop PASS; first exact CN A negative/empty FAIL in C# after 15s, three gen remain NOT_RUN. Real B4 guest physical UDP53 HyperV admit and public TUN alias original duplex selector staged candidate, source-freeze not yet tested. H2120 pure B4 PASS, H2112 scoped IPv6 PASS prior, H2099 ordinary B2 and H2103 advanced scoped previous. B5/Game2/4 NOT_RUN; 029/029B OPEN,030 not started."
+  "partial_summary": "H2123 original 7269 native gen1 OS Applied/Ready, physical CN DNS SERVFAIL, guest unknown ticket and abort; original Stop passed. H2124 c0f5 guest first-fault bounded diagnostic launched, not PASS. H2120 pure B4 and B0-B3 limited previous proofs retained; Game/B5/029B exit NOT_RUN."
 }
