@@ -71,6 +71,7 @@ EXPLICIT_NATIVE_MARKERS = (
     # no implicit old P1/P2 or 028 stress scene. Product PASS needs the
     # genuine signed Windows↔WSL2 OS/UDP/TCP/Stop evidence, not this flag.
     "[plan029b-normal-off-smoke]",
+    "[plan029b-b0-dns-real]",
 )
 
 

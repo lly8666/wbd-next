@@ -34,6 +34,7 @@ if p029_p1_cn and not p029_p1_policy:
 # switches off in the launched original Go process. One source, one signed
 # Wintun and one Rust owner; no simulated GUI or routing Applied receipt.
 p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
+p029b_b0=os.environ.get("WBD_PLAN029B_B0_DNS_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
 p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
 p029_gui_reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
@@ -172,6 +173,16 @@ if p029_direct and not p029_product and (mode!="normal" or
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="1" or
     os.environ.get("GITHUB_ACTIONS")!="true"):
  raise RuntimeError("PLAN029 legacy Direct CN trial requires exact source-locked Normal V3")
+# B0 uses the original Normal/Tunnel owner with zero business Direct. It is
+# one source-locked genuine Windows+WSL2 run, never a private V3 trial or
+# a second DNS thread/adapter in the shipping product.
+if p029b_b0 and (mode!="normal" or p029_direct or p029_product or
+    p029_gui or p029_padding or p029_p2 or p029_p1_policy or
+    p029_game4_cn or p029_boot_tc or p029_tcp53 or p029_cdn or
+    p029_cache or p029_pressure or p029_ipv6 or
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
+    os.environ.get("GITHUB_ACTIONS")!="true"):
+ raise RuntimeError("029B B0 only one signed original Normal/off DNS A/AAAA UDP/TCP53")
 if plan028_owned_mtu_only and (not plan028_owned_switch or mode!='normal' or native_outer!='default1460'):
  raise RuntimeError('PLAN028 true physical MTU-only original Windows WSL2 test requires owned source IP, Normal Off and default1460')
 if plan028_owned_switch and (mode not in ('normal','fixed','auto','game4','game4-fec') or native_outer!='default1460'):
@@ -354,7 +365,7 @@ def stop_windows(p):
    except subprocess.TimeoutExpired:p.kill()
 w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=p029_pressure_guest=p029_pressure_win=p029_tcp53_guest=p029_tcp53_win=None;logs=[]
 p029_cdn_guest=p029_cdn_win=None
-p029_boot_tc_guest=p029_ttl_guest=None
+p029_boot_tc_guest=p029_ttl_guest=p029b_guest=None
 padding_capture=None
 padding_capture_source=None
 route_local=route_guest=None
@@ -553,6 +564,10 @@ try:
   # Same default Normal original Windows Wintun pipeline; no new test
   # sender or artificial packet shape. Only the selected mode changes.
   args.extend(["--startup-padding","flows"])
+ if p029b_b0:
+  # The actual Linux original server TUN address is the sole dns.tunnel
+  # endpoint; no CN/direct resolver or system fallback is added.
+  args.extend(["--dns.tunnel","10.66.0.1"])
  if p029_direct or p029_p1_cn or p029_game4_cn:
   # The exact Linux guest is the ONLY direct resolver for this controlled
   # scene; it also hosts an independent real physical business UDP socket.
@@ -731,6 +746,63 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
        ("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED"
         if p029_gui_reconnect else "WBD_WINDOWS_CLIENT_READY"),
        w,110 if p029_gui_reconnect else 30)
+ if p029b_b0:
+  # A real Windows Winsock application probes the original Wintun lease.
+  # Only its two A tickets reach the genuine Linux kernel TUN resolver;
+  # both AAAA (UDP/TCP53) MUST be locally answered NOERROR/NODATA.
+  guest_path=out/"plan029b-b0-dns-guest.log"
+  guest_log=guest_path.open("w");logs.append(guest_log)
+  p029b_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "python3","-u",unix(root/"tools"/"m0_plan029b_b0_dns_guest.py"),
+    "10.66.0.1","10.66.0.2"],stdout=guest_log,stderr=subprocess.STDOUT)
+  ready(guest_path,"PLAN029B_B0_REAL_LINUX_TUN_DNS_READY",p029b_guest,12)
+  win_path=out/"plan029b-b0-dns-windows.log"
+  with win_path.open("w") as win_log:
+   result=subprocess.run([sys.executable,str(root/"tools"/"m0_plan029b_b0_dns_windows.py"),
+      "10.66.0.2","10.66.0.1"],stdout=win_log,stderr=subprocess.STDOUT,
+      timeout=55,check=False)
+  if result.returncode!=0:
+   raise RuntimeError("real Windows Winsock app B0 DNS failed: "+
+                      win_path.read_text(errors="replace")[-1300:])
+  if p029b_guest.wait(timeout=9)!=0:
+   raise RuntimeError("real Linux TUN DNS A-only upstream failed: "+
+                      guest_path.read_text(errors="replace")[-1000:])
+  def b0_receipt(path,marker):
+   rows=[json.loads(line.split(" ",1)[1]) for line in
+      path.read_text(errors="replace").splitlines()
+      if line.startswith(marker+" ")]
+   if len(rows)!=1:raise RuntimeError("missing exact B0 original receipt "+marker)
+   return rows[0]
+  win_dns=b0_receipt(win_path,"PLAN029B_B0_REAL_WINDOWS_APP_DNS_UDP_TCP_A_AAAA")
+  guest_dns=b0_receipt(guest_path,"PLAN029B_B0_REAL_LINUX_TUN_DNS_RECEIPT")
+  if (win_dns.get("result")!="PASS_REAL_WIN_WINTUN_UDP_TCP53_A_AAAA" or
+      guest_dns.get("result")!="PASS_REAL_TUN_UDP_AND_TCP53_A_ONLY" or
+      set(guest_dns.get("upstream_a",{}))!={"udp","tcp"} or
+      guest_dns.get("leaked_aaaa")!=0 or
+      set(win_dns.get("results",{}))!={"udp_a","udp_aaaa","tcp_aaaa","tcp_a"} or
+      [win_dns["results"][k]["result"] for k in
+       ("udp_a","udp_aaaa","tcp_aaaa","tcp_a")]!=
+      ["REAL_A_TTL2_NOT_FAKEIP","NOERROR_NODATA_LOCAL",
+       "NOERROR_NODATA_LOCAL","REAL_A_TTL2_NOT_FAKEIP"]):
+   raise RuntimeError("signed 029B B0 app A/AAAA on two real DNS sockets did not match")
+  cold=(out/"client.log").read_text(errors="replace")
+  if ("WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=0" not in cold or
+      "business_split=false" not in cold or
+      "cn_domain_fakeip=false" not in cold or
+      "WBD_PLAN029B_PUBLIC_DNS_TCP_ONLY_ENABLED_COLD" not in cold or
+      "direct_business_nat=0" not in cold or
+      "WBD_WINDOWS_OS_APPLIED" not in cold):
+   raise RuntimeError("B0 actual original Rust/OS DNS-only resource and Applied missing")
+  report["plan029b_b0_real_managed_dns"]={
+    "source_sha":os.environ["GITHUB_SHA"],
+    "status":"PENDING_GENUINE_BOTH_OWNED_STOP",
+    "windows_actual_winsock":win_dns,
+    "linux_actual_tun_dns":guest_dns,
+    "fakeip_journal":"NO_ADVANCED_WRITER_SOURCE_V2_OFF",
+    "direct_business_nat":"ABSENT_RUST_DNS_TCP_ONLY_SOURCE",
+    "stop":"NOT_RUN_UNTIL_BOTH_OWNED"}
+  print("PLAN029B_B0_REAL_WINDOWS_WSL2_UDP_TCP53_A_FROM_TUN_AAAA_LOCAL_PASS_PRE_STOP",
+        flush=True)
  if p029_boot_tc:
   if p029_boot_tc_guest.wait(timeout=8)!=0:
    raise RuntimeError("physical same endpoint bootstrap failed: "+(out/"plan029-bootstrap-tc-guest.log").read_text(errors="replace")[-900:])
@@ -2538,6 +2610,22 @@ print(json.dumps(result),flush=True)
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if p029b_b0:
+  b0=report.get("plan029b_b0_real_managed_dns",{})
+  text=(out/"client.log").read_text(errors="replace")
+  wal=out/"owned-wal.json.n4-owned-wal"
+  routes=out/"owned-wal.json.n4-owned-wal.routes"
+  defender=out/"owned-wal.json.plan029-defender-tcp"
+  if (b0.get("source_sha")!=os.environ["GITHUB_SHA"] or
+      b0.get("status")!="PENDING_GENUINE_BOTH_OWNED_STOP" or
+      "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS" not in text or
+      "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1" not in text or
+      wal.exists() or routes.exists() or defender.exists()):
+   raise RuntimeError("B0 original Rust DNS-only native owned Stop/WAL cleanup missing")
+  b0["status"]="PASS_SCOPED_SIGNED_B0_DNS_A_AAAA_UDP_TCP_AND_STOP"
+  b0["stop"]="PASS_BOTH_OWNED"
+  print("PLAN029B_B0_SIGNED_REAL_DNS_A_AAAA_UDP_TCP53_AND_OWNED_STOP_PASS_SCOPED",
+        flush=True)
  if p029_game4_cn:
   g4=report.get("plan029_game4_cn_real",{})
   if (g4.get("source_sha")!=os.environ["GITHUB_SHA"] or
@@ -3154,7 +3242,7 @@ finally:
   (out/"plan029-padding-capture.pid").unlink(missing_ok=True)
  resource_stop.set()
  if resource_worker is not None:resource_worker.join(timeout=3)
- for p in (wa,la,wt,lt,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):
+ for p in (wa,la,wt,lt,p029b_guest,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):
   if p is not None and p.poll() is None:p.terminate()
  if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():
   try:h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")

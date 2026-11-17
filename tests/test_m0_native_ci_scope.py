@@ -74,6 +74,8 @@ class NativeSmokeScopeTests(unittest.TestCase):
             "push",changed,"[plan029b-normal-off-smoke]"))
         self.assertFalse(requires_native_smoke(
             "push",changed,"[plan029b-b0-unrequested]"))
+        self.assertTrue(requires_native_smoke(
+            "push",changed,"[plan029b-b0-dns-real]"))
 
     def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
         workflow = (Path(__file__).resolve().parents[1] /

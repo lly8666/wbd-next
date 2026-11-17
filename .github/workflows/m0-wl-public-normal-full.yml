@@ -108,6 +108,8 @@ on:
       - tools/m0_plan029_h1760_guest_physical_direct_tcp.py
       - tools/m0_plan029_h1760_windows_fakeip_direct_tcp.py
       - tools/m0_plan029_h1762_oneway_tunnel_tcp.py
+      - tools/m0_plan029b_b0_dns_guest.py
+      - tools/m0_plan029b_b0_dns_windows.py
       - tools/m0_plan029_h1765_linux_tun_dns.py
       - tools/m0_plan029_h1765_windows_tunnel_dns.py
       - tools/m0_plan029_h1767_linux_dns_blackhole.py
@@ -666,6 +668,7 @@ jobs:
       - run: python tools/check_workflows.py
       - run: python -m unittest tests.test_delivery_ci -v
       - run: python -m unittest tests.test_m0_native_ci_scope -v
+      - run: python -m py_compile tools/m0_plan029b_b0_dns_guest.py tools/m0_plan029b_b0_dns_windows.py tools/m0_wl_public_normal_e2e.py
       - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
       - run: python -m unittest tests.test_m0_plan029_h1966_steady_qpc -v
       - run: python -m unittest tests.test_m0_plan029_h1972_post_ingress -v
@@ -1122,6 +1125,9 @@ jobs:
       # One explicit current-SOURCE signed Windows NativeOwner V3
       # Tunnel-only qualification. No PLAN028 matrix or public default.
       WBD_PLAN029_NATIVE_V3_TRIAL: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-direct-pressure]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-rebuild]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-bulk]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p1-tunnel-ab]') && '1' || github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-v3-real-p2-mixed]') && '1' || github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-v3-real-tunnel]') || (contains(github.event.head_commit.message, '[plan029-v3-real-direct-udp]') || contains(github.event.head_commit.message, '[plan029-v3-real-d3-multia]'))) && '1' || '0' }}
+      # H2089: one signed original Normal/off B0 DNS UDP/TCP53 A/AAAA
+      # source-locked scene. Does not implicitly select CN, Game or 028.
+      WBD_PLAN029B_B0_DNS_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029b-b0-dns-real]') && '1' || '0' }}
       WBD_PLAN029_PRODUCT_SPLIT_SCENE: ${{ (inputs.plan029_case == 'gui_reconnect' || inputs.plan029_case == 'domain_reconnect' || inputs.plan029_case == 'dns_ttl_restart') && '1' || (github.ref_name == 'main' && (contains(github.event.head_commit.message, '[plan029-real-product-cn]') || contains(github.event.head_commit.message, '[plan029-real-gui-cn]') || contains(github.event.head_commit.message, '[plan029-real-dns-tc]')) && '1' || '0') }}
       WBD_PLAN029_GUI_REAL_SCENE: ${{ (inputs.plan029_case == 'gui_reconnect' || inputs.plan029_case == 'domain_reconnect' || inputs.plan029_case == 'dns_ttl_restart') && '1' || (github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && '1' || '0') }}
       WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && contains(github.event.head_commit.message, '[plan029-h2059-gui-padding]') && '1' || '0' }}
