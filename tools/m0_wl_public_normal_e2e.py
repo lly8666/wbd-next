@@ -38,6 +38,7 @@ p029b_b0=os.environ.get("WBD_PLAN029B_B0_DNS_SCENE")=="1"
 p029b_b2=os.environ.get("WBD_PLAN029B_B2_ORDINARY_SCENE")=="1"
 p029b_b3=os.environ.get("WBD_PLAN029B_B3_IPV6_SCENE")=="1"
 p029b_b4=os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1"
+p029b_b5=os.environ.get("WBD_PLAN029B_B5_SAMEVM_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
 p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
 p029_gui_reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
@@ -202,6 +203,17 @@ if p029b_b2 and (mode!="normal" or native_outer!="default1460" or
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
     os.environ.get("GITHUB_ACTIONS")!="true"):
  raise RuntimeError("029B B2 ordinary CN requires exclusive signed real Normal V3")
+if p029b_b5 and not (
+    mode=="normal" and native_outer=="default1460" and
+    os.environ.get("GITHUB_ACTIONS")=="true" and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="0" and
+    os.environ.get("WBD_WL_V2_SCENARIO")==
+     "scenarios/plan027a-h941-normal-1460-10m-25ms-loss0-60s.json" and
+    os.environ.get("WBD_PLAN029B_B5_ARM") in ("off","requested_all") and
+    not (p029b_b4 or p029b_b0 or p029b_b2 or p029b_b3 or p029_direct or
+         p029_gui or p029_product or p029_game4_cn or p029_p1_policy or
+         p029_padding or p029_p2)):
+ raise RuntimeError("B5 exact source-pinned one Normal 10Mbps V3 all/off arm required")
 if p029b_b4 and not (
     mode=="normal" and native_outer=="default1460" and
     p029_gui and not (p029_direct or p029_product or p029_gui_reconnect or
@@ -593,11 +605,18 @@ try:
   raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 or p029b_b5 else "bypass-lan"),"--outer-repair",outer_repair]
  if p029_padding:
   # Same default Normal original Windows Wintun pipeline; no new test
   # sender or artificial packet shape. Only the selected mode changes.
   args.extend(["--startup-padding","flows"])
+ if p029b_b5:
+  # User-facing V3 cold config on BOTH legs. No private CI trial bit.
+  # The only requested difference is split=false vs split=true while
+  # route-mode=all; neither may allocate business Direct or Fake writer.
+  args.extend(["--dns.direct",peer,"--dns.tunnel","10.66.0.1"])
+  if os.environ["WBD_PLAN029B_B5_ARM"]=="requested_all":
+   args.extend(["--split-enable","--cn-domain-direct=false"])
  if p029b_b4:
   args.extend(["--split-enable","--cn-domain-direct=true",
                "--cn-rules-file",str(rules),

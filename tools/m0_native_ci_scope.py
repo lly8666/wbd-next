@@ -77,6 +77,7 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029b-b2-cn-ordinary-real]",
     "[plan029b-b3-ipv6-real]",
     "[plan029b-b4-gui-three-real]",
+    "[plan029b-b5-samevm-10m]",
 )
 
 
