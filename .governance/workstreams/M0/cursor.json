@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2051,
-  "checkpoint_sha": "1dcb8c33055d382dcdcdd7d43918033709a3377c",
+  "sequence": 2052,
+  "checkpoint_sha": "09c6a794b68447f1e6711db0f237b0beae9c37c8",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2051 physically original Windows NPF single DNS TC/TCP guest with scoped HyperV grants; new independent action marker; adds small-budget Rust five class pure tests including actual Windows TCP kernel loopback sibling progress + old flow recovery (NOT native OS Wintun). H2050 GUI original native Action separate SOURCE in progress.",
-  "why_now": "H2047 native TC UDP timeout before WSL physical DNS readback; H2050 pinned two HyperV rules before UDP and exact cleanup. User requires 5-class small pressure rather than H1868 hard8 only.",
+  "current_task": "H2052 fix H2051 feature catalog exact declaration; mark DNS card five-class small quota component tests RUNNING, original GUI H2050 and physical TC H2051 both original native in progress. No false PASS.",
+  "why_now": "H2051 Action43999380337 feature catalog FAIL because devlog updated dns-split-ipv6 but feature card untouched. H2050 governance PASS. Correct catalog only; no second real scene dispatch.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect exact H2050 GUI and H2051 physical DNS TCP and Windows/Linux quota Rust status, fix first failed boundary; do not treat two pure unit tests as same-VM real pressure.",
+  "next_action": "Collect H2051 actual Windows/Linux quota tests, H2050 real GUI and H2051 physical bootstrap Action first, then exact source ledger closure. Do not promote partial native results.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2052-FEATURE-IMPACT-REPAIR.md",
     "docs/devlog/M0/20261117-PLAN029-H2051-FIVE-QUOTA-COMPONENT-REAL-TC.md",
-    "docs/devlog/M0/20261117-PLAN029-H2050-GUI-NPCAP-BOOTSTRAP-FIREWALL.md",
     "docs/evidence/M0/PLAN029-H2049-USER-SCOPED-SOURCE-LEDGER-20261117.json",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
