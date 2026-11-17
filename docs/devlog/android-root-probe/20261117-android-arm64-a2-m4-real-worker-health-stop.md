@@ -85,3 +85,17 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"ARM64原Go Normal/off首次走到真实ld.lld链接并精确列出剩余原M2/FEC/route符号；修复原认证租约/32被误加Linux条件遮蔽，新增真实绑定物理RAW+原Rust预算的Android MTU读回。"}
 ```
+
+## 本轮最终SOURCE/Action证据冻结：ARM64原Rust M4 ABI已完成构建，Go产品仍未链接
+
+- **SOURCE** `1b044ed3f76a4674e75ee409fe9746ba22343e84`，唯一 Android目标 `arm64-v8a`；[ARM64 Action44026702035](https://github.com/lly8666/wbd-next/actions/runs/44026702035) **overall FAIL**。但其中真实 Bionic `android_abi.c`、共享 Rust 原AEAD+PN/M1/M3+M4双线程/eventfd/Health/Stop、原Go认证后的租约 `/32`、真实绑定 RAW TX 读回 MTU/FrameBudget、Normal/off revision C ABI 和 16KiB ELF **BUILD_PASS**。原-Go无FEC版的 `realityfront`、`v4productcli` 和 cmd/wbd-v4-client 所有 Go 代码已编译到最终CGo `ld.lld`，**最终链接 FAIL** 于原FEC/M2/SharedTun/route/diagnostic余符号，完整原Go二进制仍不存在。
+- 与上一SOURCE相比，两项实际产品FFI `wbd_m0_embedded_go_bind_authenticated_client_ipv4` 和 `wbd_m0_embedded_go_observed_tx_ipv4_mtu` **不再在undefined symbols名单中**；其真实Rust函数已由ELF符号表/同source严格nm验证为 GLOBAL FUNC。这不是用stub应付原Go链接；Native旧Fixed/成熟M2、共享TUN代际promotion、route/quality等仍需原实现，错误列表受lld默认20条截断，不能据此断言其余ABI已解决。
+- [Artifact14303282058](https://github.com/lly8666/wbd-next/actions/runs/44026702035/artifacts/14303282058) 已独立下载并核验：ZIP SHA256 `861529ae769e5463f8fe1cf1de15a0a8cc3ae2bb526136135fd9f1e3953f4d70`；唯一 `libwbd_engine-arm64.so` SHA256 `49c0b53fdcdfbd13419e641d35df29de09254beb042e701b4acdafcc23ce2331` 与真实内置manifest一致，ELF machine=183，PT_LOAD最小16384；同包有 `SOURCE`、`abi-arm64.o`、完整 `.dynsym.txt` 和`rust-cold-stage-manifest.json`，无Android x86 ABI。stage manifest诚实标 `SOURCE_COMPILED_NOT_EXECUTED`，Go full linker由后续真实日志判FAIL。
+- [Governance44026702031](https://github.com/lly8666/wbd-next/actions/runs/44026702031) **PASS**。本批不触碰main/M0 registry/cursor、不改变Linux/Windows x86行为、PR#36仍Draft；未获取真机额外部署授权。
+- **NOT_RUN**：原Go Android16 ARM64 KSU 与真同源Linux WBD服务端标准 TLS ClientHello/auth/lease、任何实机M4 TCP/UDP 双向业务、真实内核RAW/TUN权限、M4 owned线程join/Health/MTU切网、系统DNS/应用路由/热点USB/p99/CPU/RSS。不得依据ELF源码编译称产品连接通过。
+
+**唯一下一步**：优先把原Go `!wbd_v4_fec2_product` **未启用**的Fixed/FEC/Game源码引用按明确不支持的原能力边界拆分，真正需要的原M2/SharedTun/route/Stop状态则按原Rust实义移植，不加fake C ABI/跳链接门；使ARM64原Go Normal/off二进制全链接，再进入受授权设备 A3 真机验证。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"SOURCE1b044 Action44026702035真实ARM64 Rust M1M3M4/Health/Stop/认证lease和物理MTU、ELF/导出PASS，原Go CGo最终链接仍FAIL；ZIP/.so SHA验证和Gov PASS封存，真机NOT_RUN。"}
+```

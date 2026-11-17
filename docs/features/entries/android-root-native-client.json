@@ -212,6 +212,20 @@
       "status": "FAIL",
       "source_sha": "33c4b2883064ea295a98bf1433f5ea3d940d2fd6",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026223115"
+    },
+    {
+      "platform": "Android ARM64 Bionic genuine Rust original Normal/off M4 / lease / MTU",
+      "scope": "Source-locked original Go donor and Android Bionic C+Rust actual M1/M3/M4+Health+eventfd Stop+authenticated /32+physical RAW MTU; original complete .so ELF64 AArch64 machine183 min16KiB, all native required exports checked in same true .so, artifact hashes verified; code compiled only, not device-executed.",
+      "status": "BUILD_PASS",
+      "source_sha": "1b044ed3f76a4674e75ee409fe9746ba22343e84",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026702035"
+    },
+    {
+      "platform": "Android ARM64 original Go Normal/off full product link",
+      "scope": "CGo full ld.lld still FAIL: original Fixed/M2, shared TUN promotion, route diagnostics, optional public FEC/outer and loop introspection unported. Go source/type compilation PASS, but no product client executable, physical Android KSU NOT_RUN.",
+      "status": "FAIL",
+      "source_sha": "1b044ed3f76a4674e75ee409fe9746ba22343e84",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44026702035"
     }
   ],
   "limitations": [
