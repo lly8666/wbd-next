@@ -28,3 +28,15 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"记录B2c2b2首轮Rust Host过滤器只跑旧4项导致第5项漏选FAIL；修正SOURCE测试选择为完整B2c2b五项，不改原Rust生产数据路径。"}
 ```
+
+## 修复后的同SOURCE完整结论（2026-11-17）
+
+最终代码SOURCE `b36e6aef9a68cd22f43ff44da30b59d41bcb3c62` 的 [Android root产品Action #44098023555](https://github.com/lly8666/wbd-next/actions/runs/44098023555) **10/10 Jobs SUCCESS**：B2c2b Host跑齐5项真实IPv4/UDP包、五元组/ID/QNAME反向重写和源端口候选/Stop及源码门，原M4单TUN ingress Host、原M3、Go B1 DNS UDP/TCP wire、真实CN8503规则、物理Socket Host、Bionic Android ARM64原Go/Rust Native ELF/16KiB、签名Root APK、原Linux WBD服务端真TLS/认证租约/原Rust M4双向UDP/Stop oracle均PASS。Android ARM64 Cuttlefish Job日志实际为 `ANDROID_ARM64_KVM_HOST_ADMISSION_ONLY KVM_NOT_ACCESSIBLE arch aarch64 kvm NOT_AVAILABLE`，仅环境准入作业PASS，**没有启动Android guest**。
+
+保留首轮 `686c6257e12f28fb4ad06cfafea16c3859cd536b` [Action44097311545](https://github.com/lly8666/wbd-next/actions/runs/44097311545) **overall FAIL**：旧4项Rust测试PASS但新5号测试因过滤器遗漏未运行；该轮ARM64 Native/APK/Linux oracle均PASS，新SOURCE只改Host测试过滤器。当前Rust真实M4短包/jumbo TX和原认证RX/Stop已经源代码接线但 `android_dns_hijack_ready=false`且`hijack_enabled=0`，DNS真实双出口/系统Resolver/普通App、Android16 guest P2/P3、实体KSU P5仍 **NOT_RUN/NOT_CONNECTED**。非实时业务PASS；不把Linux真实WBD业务搬作Android业务结果。
+
+**唯一下一步**：一次跨层批次补齐Android真实普通DNS物理/隧道双后端与系统Resolver owned准入、CN域名和TCP53，再在可执行Android16 ARM64环境对同源原Linux服务端走Normal/off真实查询/Stop；真机需新授权。不改main/M0。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"封存B2c2b2纠正后同SOURCE Android ARM64/原Linux oracle 10/10 PASS及旧过滤器FAIL；Rust DNS实际M4 TX/认证RX/Stop接线默认冷关闭，Android真DNS仍NOT_RUN。"}
+```
