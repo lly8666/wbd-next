@@ -20,7 +20,7 @@ def prepare(root,out,client,rust,original_args,rules):
    "/langversion:latest","/target:exe","/platform:x64","/utf8output",
    "/codepage:65001","/out:"+str(gui/"GuiReal.exe"),
    "/reference:"+str(gui/"WBD.exe"),*refs,
-   str(root/"tools"/"m0_plan029_gui_real_network_harness.cs")],
+   str(root/"tools"/("m0_plan029b_b4_real_gui.cs" if os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1" else "m0_plan029_gui_real_network_harness.cs"))],
    cwd=root,check=True,timeout=60)
  # The real legacy Npcap loader resolves wpcap.dll relative to the ORIGINAL
  # Go child EXE. GUI has a distinct portable working directory; never borrow
@@ -92,6 +92,29 @@ def prepare(root,out,client,rust,original_args,rules):
  return [str(gui/"GuiReal.exe"),str(gui),str(data/"gui-seed.json")],gui
 
 def receipt_and_cleanup(gui):
+ if os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1":
+  receipt=gui/"data/plan029b-b4-three-real-receipt.json"
+  if not receipt.is_file():raise RuntimeError("B4 genuine three-generation WinForms receipt absent")
+  state=json.loads(receipt.read_text())
+  if not(state.get("original_gui") is True and
+         state.get("generations")==3 and state.get("real_applied")==3 and
+         state.get("owned_stop")==3 and state.get("mtu")==1460 and
+         state.get("inner")==1389 and
+         state.get("cn_dns_physical")==2 and state.get("all_dns_tunnel")==1 and
+         state.get("advanced_fakeip") is True and
+         state.get("ordinary_real_a") is True and
+         state.get("all_real_a") is True and
+         state.get("stale_fake_app_attempts")==2 and
+         state.get("stale_fake_journal_unchanged") is True):
+   raise RuntimeError("B4 signed WinForms three-generation state mismatched")
+  for secret in ("route-key.hex","gui-seed.json","server-ca.pem",
+                 "profiles.json","active.json","pending.json"):
+   (gui/"data"/secret).unlink(missing_ok=True)
+  return {"status":"PASS_ORIGINAL_GUI_THREE_GENERATIONS_AFTER_NATIVE_VERIFICATION",
+          "real_applied":3,"owned_stop":3,
+          "physical_cn_dns":2,"tunnel_all_dns":1,
+          "retired_fake_attempts":2,
+          "source":os.environ["GITHUB_SHA"]}
  receipt=gui/"data/plan029-gui-real-receipt.json"
  if not receipt.is_file():raise RuntimeError("original WinForms signed Stop receipt absent")
  status=json.loads(receipt.read_text())
