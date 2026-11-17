@@ -76,7 +76,8 @@
   "limitations": [
     "旧Root探针 PASS 只证明隔离内核/能力；普通系统DNS/真实WBD服务器、生产内核路由与真热点尚无产品证据。",
     "当前无Android可安装正式WBD客户端APK；仅有诊断APK。",
-    "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。"
+    "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。",
+    "A1 首次workflow语法错误及 Bionic NDK _IOR/_IOW 头文件缺失分别留有Action44012875741/44013027549 FAIL；产品仍NOT_RUN。"
   ],
   "promotion": null
 }

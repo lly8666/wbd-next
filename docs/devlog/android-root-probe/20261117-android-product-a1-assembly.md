@@ -9,3 +9,13 @@ Rust `wbd-platform::android_root_io` 是 Android-only owned TUN FD / exact Andro
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A1新增Android Bionic 64bit布局/底层root TUN和物理Network绑定源码，接入原Go/Rust source-locked交叉构建；产品链路严格未测。"}
 ```
+
+## A1 source-locked CI 失败与定点修复（不变造成功）
+
+- `b33039f67585191ffa83c27892e55839be73d86d` [Action44012875741](https://github.com/lly8666/wbd-next/actions/runs/44012875741)：**FAIL/WORKFLOW_INVALID**，新workflow run-name的 `\\$\{\{ github.sha \}\}` 在YAML双引号中为未知反斜杠转义，零作业。修正见 `d50e9e8200ac4f15ef5b978da30e99dcc6bc5ddf`，不属于产品编译失败。
+- `d50e9e8200ac4f15ef5b978da30e99dcc6bc5ddf` [Action44013027549](https://github.com/lly8666/wbd-next/actions/runs/44013027549)：**FAIL/NDK_HEADER**，Android C `<linux/if_tun.h>` 的 `TUNGETIFF/TUNSETIFF` 展开需先显式导入 `<sys/ioctl.h>/<linux/ioctl.h>` 才能得到 `_IOR/_IOW`。尚未进入Rust/Go链接，不能写 `BUILD_PASS`。
+- 当前修正仅补必要头文件，接下来的A1 Action才可证实更深层编译。若再失败，分辨 Rust Android C ABI、Go Android编译或测试环境，不进行Linux整套代码复制。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"Bionic产品A1编译夹具修正头文件依赖，记录初始Action失败及精确SOURCE；产品能力仍未认证或实际接通。"}
+```

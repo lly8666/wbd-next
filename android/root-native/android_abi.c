@@ -1,6 +1,8 @@
 // NDK/Bionic source-locked layout gate; compile for each Android64 ABI.
 // This is NOT a Linux GNU/musl ABI assertion and does not touch device state.
 #include <stddef.h>
+#include <sys/ioctl.h>
+#include <linux/ioctl.h>
 #include <stdint.h>
 #include <net/if.h>
 #include <netinet/in.h>
