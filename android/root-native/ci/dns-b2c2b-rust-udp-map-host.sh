@@ -5,7 +5,7 @@ set -euo pipefail
 cd "${GITHUB_WORKSPACE:?source checkout required}"
 test "$(git rev-parse HEAD)" = "${GITHUB_SHA:?missing SHA}"
 mkdir -p out/android-b2c2b-dns-flow
-cargo +1.85.1 test --locked -p wbd-engine --lib b2c2b1_rust_udp53 \
+cargo +1.85.1 test --locked -p wbd-engine --lib b2c2b \
   -- --nocapture 2>&1 | tee out/android-b2c2b-dns-flow/test.log
 python3 - <<'PY'
 from pathlib import Path

@@ -18,3 +18,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B2c2b2原Rust M4唯一TUN TX短包/jumbo与原AEAD/M3 authenticated RX实际UDP DNS53映射hook、同代Stop；冷许可仍false且hijack=0，无Android物理双DNS真实运行声称。"}
 ```
+
+## 首轮SOURCE结果与一次测试选择修复（保留失败）
+
+原代码SOURCE `686c6257e12f28fb4ad06cfafea16c3859cd536b` 的 [Android产品Action #44097311545](https://github.com/lly8666/wbd-next/actions/runs/44097311545)：Rust B2c2b1四项均PASS，但新增B2c2b2命名测试没有被旧`cargo test --lib b2c2b1_rust_udp53`过滤器选择，Host脚本要求5项因此**FAIL**；这是测试覆盖选择缺口，不是观测到产品数据包读写错误。其他已完成Job中ARM64 Bionic原Go/Rust完整构建及正式签名Root APK PASS，Linux oracle是否通过由Action最终结论裁决。既有FAIL照旧保留。
+
+本次仅将Rust Host过滤器扩大为`b2c2b`，覆盖旧4项和新增第5项；不修改产品M4/AEAD/RAW/TUN/NAT。必须在新SOURCE重跑全部产品Actions；新的同源结论在Actions完成前仍 **NOT_RUN**。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"记录B2c2b2首轮Rust Host过滤器只跑旧4项导致第5项漏选FAIL；修正SOURCE测试选择为完整B2c2b五项，不改原Rust生产数据路径。"}
+```
