@@ -620,7 +620,12 @@ try:
   args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1",
                "--china-ip-file",str(out/("plan029-h1934-cn4096.txt" if p029_p1_cn else "plan029-h1775-cn-one32.txt"))])
  if p029_game4_cn:
-  args.extend(["--split-enable","--cn-rules-file",str(rules)])
+  # 029B fresh profiles default ordinary CN (real A). This original
+  # Game4 signed FakeIP test intentionally selects the ONE advanced
+  # cn-domain-direct option, exactly as its physical Direct oracle needs.
+  # No legacy missing-key/default-true assumption and no test-only Rust bit.
+  args.extend(["--split-enable","--cn-domain-direct=true",
+               "--cn-rules-file",str(rules)])
  if p029_product:
   # Same Next-Connect CLI fields a portable user enters in real WinForms,
   # not WBD_PLAN029_CN_RULES_FILE or any GITHUB_ACTIONS test switch.
