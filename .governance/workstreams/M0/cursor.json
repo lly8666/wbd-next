@@ -4,24 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2135,
-  "checkpoint_sha": "ef7ec369d99bab6f12365763d9e7a34e7620c075",
+  "sequence": 2136,
+  "checkpoint_sha": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2135 sourceec494 Action44198794225 original signed native Windows2025↔WSL2 B4 REAL 3 WinForms advanced->ordinary->all GUI OS Applied, CNAME real DNS two lanes, FakeIP isolation, original Wintun Go/Rust UDP/TCP, 3 TLS source ports, MTU1460 inner1389 MSS1420, 3 Stop/WAL, genuine WinForms Close and GUI parent rc0, Linux shared M4/TUN Stop FULL Action SUCCESS PASS_SCOPED. Independent Game4 H2134 SOURCE5fc22 four authentic lanes FEC off MTU1400 PASS. B5 sameVM10Mbps CPU/GiB RSS and p99 NOT_RUN.",
-  "why_now": "H2133 signed artifact ZIP14381915071 SHA256 70ef3b... CRC28, actual original client and linux receipts + true GUI process exit0 and native job SUCCESS. Previous H2129 parent failure resolved after real form.Close, without relaxing OS/WAL. B4 done; no rerun. Need P-B1/P-B2 bounded performance then 029 residual.",
+  "current_task": "H2136 B5 single signed exact source d4ddd74 Action44201457211 one Windows2025/WSL2 same-VM normal original Rust V3 public both legs 10Mbps each direction 60s A split-off/all then B split-requested/all source-exact identical binaries, CPU/actual first-delivered GiB, process user/kernel RSS and true UDP p99+longest gap, original TCP functional+Stop. At collection cheap PASS, Linux Rust PASS, WinGo/WinRust IN_PROGRESS, native NOT_RUN. B4 H2135 sourceec494 original 3 GUI/Stop full Action SUCCESS, Game4 H2134 source5fc four lanes FEC off MTU1400 full Action SUCCESS. Game2 advanced split unsupported source fail-closed. B5 tcp small-p99 NOT_RUN.",
+  "why_now": "B0–B4 normal/GUI and Game4 signed source-qualified now complete; P-B1 sameVM 10Mbps real throughput CPU/actualGiB with p99 is the sole newly issued bounded performance scene. Do not compare V2 against V3 or claim p99 from functional echo; no old 028 workload matrices.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "No duplicate B4 or Game4 native Actions. B4 signed original completed; Game4 FEC off/MTU1400 completed. For remaining B5 only bounded same-VM normal <=10Mbps sequential A/B actual delivered GiB CPU seconds/RSS and measured business UDP/TCP p99 if available, preserving mode/DNS/padding/repair equivalence and source hash; do not launch 028/030 matrix. Explicit Game2 split advanced unsupported, execution NOT_RUN.",
+  "next_action": "Collect Action44201457211 original SOURCEd4ddd74 all cheap/WinGo/WinRust/LinuxRust/Win2025 native results, two sequential 60s sameVM arms source+binary sha, actual 10Mbps offered/first delivered GiB, CPU per GiB/RSS and 200+ real UDP RTT p99/gap, original TCP functional and both owned Stops; check zip SHA256/CRC. Preserve any true FAIL and TCP small-request p99 NOT_RUN. Then user-normal-scope 029B/029 closeout per plan 20261117, no 030/028 matrix.",
   "unverified": true,
   "last_tested_source": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029B-H2136-SAMEVM-B5-10MBPS-BOUNDED-TWO-ARM.md",
     "docs/devlog/M0/20261118-PLAN029B-H2135-THREE-GUI-PARENT-OWNED-STOP-TRUE-PASS.md",
     "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2135 B4 SOURCEec494 original signed 3 real GUI generation OS Applied/DNS/UDP + original TCP, real 3 Rust Stop/WAL, WinForms form close/parent exit0, Linux guest no old fake egress, full native Action44198794225 SUCCESS; default1460 1389 inner MSS1420. H2134 SOURCE5fc Game4 advanced fake CN FEC off/outer1400 full Action44197717052 SUCCESS. Game2 advanced split rejects, B5 sameVM10Mbps cpu/GiB/p99 NOT_RUN, 029/029B OPEN, 030 not started."
+  "partial_summary": "H2135 B4 full signed Normal 3 GUI + actual parent exit/Stop PASS sourceec494 Action44198794225; H2134 Game4 four real Game FEC off advanced CN PASS source5fc Action44197717052. H2136 source d4d bounded sameVM Normal 2x10Mbps no private CI V3 trial one Action44201457211 cheap PASS/Linux Rust PASS/WinGo+Rust still in progress, original native pending. Game2 split:true explicitly rejects before OS Apply source, executed NOT_RUN. B5 TCP small p99 NOT_RUN."
 }
