@@ -2785,6 +2785,49 @@ print(json.dumps(result),flush=True)
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if p029b_b4:
+  # Signed source-locked proof: no synthetic OS/Ready, no single- or
+  # two-generation Go check-config substituted for three REAL button
+  # connections, three original Rust Stops and one Linux kernel observer.
+  from m0_plan029_gui_real_bridge import receipt_and_cleanup
+  gui=receipt_and_cleanup(gui_root)
+  client_text=(out/"client.log").read_text(errors="replace")
+  server_text=(out/"server.log").read_text(errors="replace")
+  def exact(prefix):
+   return sum(row.startswith(prefix) for row in client_text.splitlines())
+  if (exact("PLAN029B_B4_REAL_GUI_GENERATION_APPLIED ordinal=")!=3 or
+      exact("PLAN029B_B4_REAL_GUI_OWNED_STOP_WAL_CLEAN ordinal=")!=3 or
+      exact("WBD_WINDOWS_OS_APPLIED")!=3 or
+      exact("WBD_WINDOWS_CLIENT_READY")!=3 or
+      exact("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS")!=3 or
+      exact("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")!=3 or
+      "PLAN029B_B4_THREE_REAL_GUI_GENERATIONS_AND_STOPS_COMPLETE" not in client_text or
+      server_text.count("V4_PUBLIC_MULTI_SESSION_READY role=server one_port=443")!=3 or
+      (gui_root/"data/network-state.json.n4-owned-wal").exists() or
+      (gui_root/"data/network-state.json.n4-owned-wal.routes").exists() or
+      (gui_root/"data/network-state.json.plan029-defender-tcp").exists() or
+      (out/"plan029-h2010-owned-route-alias.json").exists()):
+   raise RuntimeError("B4 signed genuine three-GUI OS/M4/Stop/WAL proof absent")
+  p029b_guest.wait(timeout=12)
+  if p029b_guest.returncode:
+   raise RuntimeError("B4 original Linux physical/tunnel DNS/data witness failed")
+  rows=[line.split("PLAN029B_B4_REAL_LINUX_EGRESS ",1)[1]
+        for line in (out/"plan029b-b4-guest.log").read_text(errors="replace").splitlines()
+        if "PLAN029B_B4_REAL_LINUX_EGRESS " in line]
+  if len(rows)!=1:raise RuntimeError("B4 original Linux kernel scene receipt absent")
+  guest=json.loads(rows[0])
+  if (guest.get("result")!="PASS_THREE_REAL_GUI_GENERATION_EGRESS" or
+      guest.get("stale_old_fake_business")!=0 or
+      guest.get("raw_old_fake_ipv4_egress")!=0):
+   raise RuntimeError("B4 real egress violated ordinary/all/old FakeIP")
+  report["plan029b_b4_three_real_gui"]={
+   "source_sha":os.environ["GITHUB_SHA"],
+   "original_gui":gui,"original_linux":guest,
+   "windows_applied":3,"windows_owned_stops":3,
+   "linux_authenticated_sessions":3,
+   "actual_MTU_MSS":report.get("plan029b_b4_three_original_syn_synack_mss"),
+   "status":"PASS_SCOPED_ORIGINAL_THREE_GENERATION_REAL_GUI_AND_STOP"}
+  print("PLAN029B_B4_SIGNED_REAL_WINFORMS_ADVANCED_ORDINARY_ALL_OWNED_STOP_PASS_SCOPED",flush=True)
  if p029b_b0:
   b0=report.get("plan029b_b0_real_managed_dns",{})
   text=(out/"client.log").read_text(errors="replace")
@@ -3321,7 +3364,14 @@ print(json.dumps(result),flush=True)
   expected=1 if outer_repair=="on" else 0
   win_text=(out/"client.log").read_text(errors="replace")
   linux_text=(out/"server.log").read_text(errors="replace")
-  if plan028_owned_switch:
+  if p029b_b4:
+   win_rows=re.findall(r"WBD_WINDOWS_OUTER_REPAIR_EFFECTIVE enabled=(\d+) shadow_limit=(\d+) source=original_rust_owner",win_text)
+   linux_rows=re.findall(r"V4_PUBLIC_M2_OUTER role=server [^\n]*repair_enabled=(\d+) ",linux_text)
+   win_ok=len(win_rows)==3 and all(int(v)==expected for v,limit in win_rows)
+   linux_ok=len(linux_rows)==3 and all(int(v)==expected for v in linux_rows)
+   report["original_outer_repair_effective"]={
+    "windows":win_ok,"linux":linux_ok,"enabled":expected,"generations":3}
+  elif plan028_owned_switch:
    # Two *real* native Rust generations, each OS readback before Stop.
    # The shared Linux server now snapshots each original Rust session
    # before exact per-owner Stop; no CLI flag is accepted as readback.
