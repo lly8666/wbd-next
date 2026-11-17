@@ -555,6 +555,10 @@ try:
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
+ # Exact original user CLI before adapting transport to the real
+ # WinForms process argv. H1845 must check the frozen user config,
+ # never mistake GUI parent process flags for the Go child flags.
+ product_user_args=tuple(args)
  if p029_gui:
   from m0_plan029_gui_real_bridge import prepare
   args,gui_root=prepare(root,out,cli,lib,args,rules)
@@ -573,12 +577,12 @@ try:
   # H1845: freeze exact user-facing CLI *and* child environment before
   # spawning the genuine original Go product. Only then can real signed
   # OS Applied/Ready and Stop prove non-CI activation. No trial fallback.
-  if (args.count("--split-enable")!=1 or args.count("--cn-rules-file")!=1 or
+  if (product_user_args.count("--split-enable")!=1 or product_user_args.count("--cn-rules-file")!=1 or
       client_env.get("GITHUB_ACTIONS")!="false" or
       client_env.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
       "WBD_PLAN029_CN_RULES_FILE" in client_env):
    raise RuntimeError("H1845 explicit product CN source still depends on private trial")
-  owned_cn=pathlib.Path(args[args.index("--cn-rules-file")+1])
+  owned_cn=pathlib.Path(product_user_args[product_user_args.index("--cn-rules-file")+1])
   if (not owned_cn.is_absolute() or
       owned_cn.resolve()!=rules.resolve() or
       # Python Windows write_text translates LF into CRLF. Compare the

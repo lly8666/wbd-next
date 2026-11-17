@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2047,
-  "checkpoint_sha": "fb69da88c58b4d914e3ae09ecce838785322541a",
+  "sequence": 2048,
+  "checkpoint_sha": "87eea943160e2ea51bde0fb6c61f0424d929b351",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2047 one actual physical Windows Npcap UDP TC=1 to same WSL2 TCP53 source/ID/QNAME DNS for server FQDN before authenticated TLS, followed by original Normal CN two egress and Stop. H2045 GUI native in flight; no same-scene redispatch.",
-  "why_now": "Go bootstrap TC cold logic now compiles H2044; physical same-resolver Windows socket and Linux kernel receipts remain NOT_RUN, independent Action required.",
+  "current_task": "H2048 exact original CLI argument snapshot before real WinForms GUI parent argv conversion; H2045 Action43994188290 failed H1845 prestart assertion after GUI compilation, no OS Applied/real business tested. H2047 physical TC separate original native action in flight.",
+  "why_now": "H2045 actual Windows native Action43994188290 source969da57 first fail Python prestart H1845: GUI args replaced child CLI args before same-user-config guard. Fix only fixture identity source, preserve all Go/Rust admission and owned Stop.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2045 GUI origin and H2047 physical TC original native Actions without repeat; only fix first failure. Other specific DNS TTL/reconnect/pressure still OPEN.",
+  "next_action": "Collect one H2048 recheck original signed GUI Action and H2047 TC Action. Do not repeat H2041 Game4/padding H2031. Keep GUI network NOT_RUN until real action.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2048-FIX-GUI-USER-ARGV-FREEZE.md",
     "docs/devlog/M0/20261117-PLAN029-H2047-REAL-BOOTSTRAP-TC-CANDIDATE.md",
-    "docs/devlog/M0/20261117-PLAN029-H2045-GUI-REAL-SIGNED-CANDIDATE.md",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
     "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
   ],
