@@ -794,12 +794,22 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # Keep the same two real kernel app generators alive while the human GUI
  # performs its ordinary first Disconnect / second Connect. The second
  # generation is separately proved by later CN Direct and Tunnel apps.
- app_runtime=["2",".09","130"] if p029_gui_reconnect else []
+ app_runtime=["2",".09","220"] if p029b_b4 else ["2",".09","130"] if p029_gui_reconnect else []
  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),linux_app4,"10.66.0.2",unix(done),*app_runtime],stdout=llog,stderr=subprocess.STDOUT)
  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2",linux_app4,str(done),*app_runtime],stdout=wlog,stderr=subprocess.STDOUT)
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
- ready(out/"client.log",
+ if p029b_b4:
+  # The first signed GUI Stop authorizes removal of the test-owned
+  # physical /32 before allowing ordinary CN to use the same real A.
+  ready(out/"client.log","PLAN029B_B4_PHASE1_STOP_ROUTE_RELEASE_REQUIRED",w,110)
+  h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")
+  if (out/"plan029-h2010-owned-route-alias.json").exists():
+   raise RuntimeError("B4 physical /32 present before ordinary CN")
+  w.stdin.write("continue-ordinary\n");w.stdin.flush()
+  ready(out/"client.log","PLAN029B_B4_THIRD_APPLIED",w,145)
+ else:
+  ready(out/"client.log",
        ("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED"
         if p029_gui_reconnect else "WBD_WINDOWS_CLIENT_READY"),
        w,110 if p029_gui_reconnect else 30)
@@ -1028,7 +1038,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "direct_tunnel_business":"PENDING","owned_stop":"PENDING"}
   print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_OWNED_OS_APPLIED_PRE_BUSINESS",flush=True)
  ready(out/"server.log",("V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else
-   "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect) and not is_game else
+   "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) and not is_game else
    "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),s,8)
  if tls_wire:
   end_tls_capture()
