@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2121",
+  "date": "2026-11-18",
+  "candidate": "B4_SIGNED_ORIGINAL_WINFORMS_THREE_GENERATION_SINGLE_SOURCE",
+  "source_sha": "PENDING_SOURCE_FREEZE_ON_MAIN",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "origin": {
+    "base_main": "a91b158ace18880db1a3dce078cc71ab912c4102",
+    "last_tested_source": "22473652eb20a2d0127272f8c1c0496197b43710",
+    "last_completed_action": 44124045844,
+    "last_completed_scope": "B4_PURE_COMPONENT_ONLY"
+  },
+  "scope": {
+    "old_fakeip_advanced_generation": "NOT_RUN",
+    "normal_ordinary_real_A_physical_CN_DNS_tunnel_business": "NOT_RUN",
+    "all_mode_tunnel_CN_DNS_and_business": "NOT_RUN",
+    "three_original_GUI_OS_APPLIED": "NOT_RUN",
+    "three_owned_rust_stop_and_WAL_absent": "NOT_RUN",
+    "stale_fakeip_real_application_ingress_vs_original_Linux_physical_and_TUN": "NOT_RUN",
+    "original_three_TLS_SYNACK_M4_MTU_MSS": "NOT_RUN",
+    "original_windows_linux_kernel_udp_tcp": "NOT_RUN",
+    "Game2_Game4": "NOT_RUN",
+    "B5_same_VM_10Mbps_CPU_per_actual_GiB_RSS_wake_TCP_UDP_p99": "NOT_RUN"
+  },
+  "intent": {
+    "action_marker": "[plan029b-b4-gui-three-real]",
+    "single_scene": "Normal,1460,original signed Win2025 Wintun/Npcap↔WSL2",
+    "sequence": [
+      "advanced CN fake source physical egress",
+      "first real owned Stop+CAS remove physical /32",
+      "ordinary CN real-A Tunnel only",
+      "second owned Stop",
+      "all/off CN DNS and real-A Tunnel",
+      "stale FakeIP application re-send",
+      "third owned Stop"
+    ],
+    "original_reuse": "one signed Go/Rust/GUI build and original guest; exact SOURCE/hash/CRC once",
+    "other_scenes": "NO_AUTOMATIC_DISPATCH"
+  },
+  "historic_failures_retained": [
+    44119996395,
+    44122245145,
+    44123359648
+  ],
+  "qualification": "NOT_RUN; no actual Windows signed source verification or feature promotion"
+}

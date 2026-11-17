@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2120,
-  "checkpoint_sha": "22473652eb20a2d0127272f8c1c0496197b43710",
+  "sequence": 2121,
+  "checkpoint_sha": "a91b158ace18880db1a3dce078cc71ab912c4102",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2120 H2119 original Windows CI Action44124045844 SUCCESS SOURCE224736; real executed Go compiled client.test.exe TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter PASS 0.01s; Win Rust 417 lib+11 R2 and Linux Rust334 lib+11 R2 PASS including stale-FakeIP three-gen pure test; full cheap/Windows Go/Win+Linux Rust PASS. Source-locked ZIP14346572866 SHA256 7c42b... CRC3 and WinRustZIP14346443150 SHA256 073702... CRC2. Full original Win2025 three GUI Applied/Stop NOT_RUN, Game2/4 and B5 sameVM10Mbps CPU/GiB/p99 OPEN. H2112 original /128 IPv6+IPv4 signed PASS_SCOPED remains separate.",
-  "why_now": "H2119 Go exact test finally ran, verified named '--- PASS: TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter' and CI marker in original Windows job134183397827, not merely compiled. Win/Linux Rust test names also actual PASS, source/cid+CRC verified. History H2115 pin/H2117 workflow/H2118 NameError FAIL preserved; no current source signed B4 OS evidence.",
+  "current_task": "H2121 B4 one original WinForms advanced CN→ordinary CN→all three cold Connect/owned Stop REAL SIGNED scenario source-staged only. H2120 source224736 original Go named three-gen test+Win/Linux Rust pure PASS; new B4 signed Windows2025 Wintun/Npcap↔WSL2 NOT_RUN until one explicit [plan029b-b4-gui-three-real] main SOURCE Action and native hash/CRC verified. No production Go/Rust modified. H2112 B3 /128 IPv6+IPv4 signed PASS_SCOPED prior SOURCE; Game2/4 and B5 sameVM10Mbps CPU/GiB/p99 remain NOT_RUN.",
+  "why_now": "Existing H2066 only admits two GUI child TLS source ports and two M4/MSS/Stop receipts, which cannot prove B4 three effective generations. A standalone genuine three-phase GUI and Linux DNS/physical/TUN observer now stages hard signed gates, with test-owned CAS route removal after first original Stop. No new Direct TCP, repair or wire edits.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "B4 real signed minimal one Action: use actual WinForms UI SetEditor/SaveEditor/ConnectSelectedAsync, sequential advanced CN→ordinary CN→all generation with original Win2025 Go/Rust/Npcap/Wintun↔WSL2; each phase original OS Applied, physical vs Tunnel DNS, old FakeIP from advanced never rebind/egress, flush/lane late callbacks, 3 exact owned Stops/WAL/routes; build strict original 3-gen MTU/MSS/lease receipts and bounded signed source marker only once after cheap. Game2/4 representative scene later. B5 sameVM <=10Mbps A/B CPU seconds/actual GiB/RSS+TCP/UDP p99 separate. 029B and 029 not closed, 030 not started.",
+  "next_action": "One source-frozen main [plan029b-b4-gui-three-real] CI: first cheap original Python/static and Go/Windows/Linux Rust; then exactly one signed Normal 1460 original Win2025 WinForms three-generation+WSL2 physical/TUN DNS and UDP/TCP/Stop. Collect exact original Go/Rust/GUI source hashes, artifacts, 3 applied+3 owned Stop/M4/MSS receipts and first failure if any; no repeated old B0-B3 or 028 matrix. Then Game2/4 representative and B5 sameVM<=10Mbps CPU/GiB/RSS/host CPU/wakes/TCP-UDP p99, then 029 remaining tasks.",
   "unverified": true,
   "last_tested_source": "22473652eb20a2d0127272f8c1c0496197b43710",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2120-H2119-B4-THREE-GENERATION-PURE-PASS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2121-B4-ORIGINAL-GUI-THREE-GENERATION-STAGED-NOTRUN-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2120-B4-THREE-GENERATION-PURE-PASS.md",
-    "docs/evidence/M0/PLAN029B-H2120-H2119-B4-THREE-GENERATION-PURE-PASS-20261117.json",
+    "docs/devlog/M0/20261118-PLAN029B-H2121-B4-THREE-REAL-GUI-SIGNED-SCENE-STAGED.md",
+    "docs/evidence/M0/PLAN029B-H2121-B4-ORIGINAL-GUI-THREE-GENERATION-STAGED-NOTRUN-20261118.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2112 B3 real signed Wintun test-only /128 AF_INET6 16+IPv4 12+Stop PASS_SCOPED not global. H2113 feature card overbudget FAIL fixed H2114 PASS. H2115 B4 pure tests introduced; H2115 assembly SHA FAIL fixed H2116 compile PASS; H2117 malformed YAML/Python FAIL; H2118 static ROOT NameError FAIL; H2119 real named original Win Go/Rust pure B4 PASS on source224736; B4 genuine GUI/Game and B5 sameVM 10Mbps perf still NOT_RUN."
+  "partial_summary": "H2120 original source224736 pure triple Go/Rust PASS, H2112 prior signed B3 scoped PASS. H2121 B4 genuine three WinForms user Connect/Stop + exclusive normal physical/TUN DNS/UDP witness + three original Go TLS SYN/SYNACK/M4/MTU/WAL strict test source staged, NOT_RUN on original Windows2025. B5 sameVM 10Mbps and Game2/4 NOT_RUN; 029/029B OPEN, 030 not started."
 }

@@ -76,6 +76,7 @@ EXPLICIT_NATIVE_MARKERS = (
     # original Windows2025/WSL2 Wintun vs physical and Tunnel DNS.
     "[plan029b-b2-cn-ordinary-real]",
     "[plan029b-b3-ipv6-real]",
+    "[plan029b-b4-gui-three-real]",
 )
 
 

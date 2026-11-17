@@ -122,3 +122,51 @@ def verified_plan029_gui_two_child_shared_manual_mss(win,linux,outer):
    "source_port_distinct":True,"real_server_synack_count":2,
    "real_server_m4_ready_count":2,
    "linux_peer_syn_mss":"NOT_LOGGED_SHARED_MANUAL"}
+
+
+def verified_plan029b_b4_three_gui_child_mss(win, linux, outer):
+ """Require three true original Go TLS child processes, not three printouts.
+
+ Each child has internal generation=1; the real protected Linux server
+ continuously admits three one-port 443 authenticated M4 sessions.
+ """
+ if outer!=1460:raise ValueError("B4 GUI outer must be native 1460")
+ cold=re.findall(r"^WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=(\d+) mode=(\S+) configured_outer_mtu=(\d+) physical_outer_mtu=(\d+) effective_outer_mtu=(\d+) local_advertised_mss=(\d+) inner_mtu_planned=(\d+) limiting_reason=(\w+) source=RUST_V1_REAL_OS$",win,re.MULTILINE)
+ ports=re.findall(r"^WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=1 configured_port=41031 source_port=(\d+) original_peer_port=443 same_ip_reauth_safe_tuple=(true|false)$",win,re.MULTILINE)
+ syn=re.findall(r"^WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=1 local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)$",win,re.MULTILINE)
+ peer=re.findall(r"^WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=1 peer_advertised_mss=(\d+) local_advertised_mss=(\d+)$",win,re.MULTILINE)
+ server_syn=re.findall(r"V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=server generation=1 kind=SYNACK local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)",linux)
+ server_ready=re.findall(r"V4_PUBLIC_MULTI_SESSION_READY role=server one_port=(\d+) active_detached_flows=(\d+) auto_lease=0 original_TLS=1 Rust_M4=1",linux)
+ prep=one(linux,r"V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=\d+ outer_config=(\d+) interface=(\d+) advertised_mss=(\d+) record_offer=(\d+) tun_planned=(\d+)","B4 real Linux MTU")
+ if (len(cold)!=3 or len(ports)!=3 or len(set(p[0] for p in ports))!=3 or
+     ports[0]!=("41031","false") or any(x[1]!="true" for x in ports[1:]) or
+     len(syn)!=3 or len(peer)!=3 or len(server_syn)!=3 or
+     len(server_ready)!=3 or any(x[0]!="443" for x in server_ready) or
+     len(re.findall(r"V4_PUBLIC_MULTI_SESSION_READY[^\n]*",linux))!=3):
+  raise ValueError("B4 three independent original Go child/SYNACK/M4 receipts missing")
+ so,sp,sm,sr,si=map(int,prep)
+ if so!=outer or sp<576 or sm!=min(outer,sp)-40 or sr!=sm or si!=sm-31:
+  raise ValueError("B4 original Linux shared MTU/MSS/record drift")
+ rows=[]
+ for i,(g,mode,oc,physical,effective,mss,inner,reason) in enumerate(cold):
+  oc,physical,effective,mss,inner=map(int,(oc,physical,effective,mss,inner))
+  if (g!="1" or mode!="normal" or oc!=outer or physical<576 or
+      effective!=min(outer,physical) or mss!=effective-40 or
+      inner!=mss-31 or
+      reason!=("physical_interface_ipv4" if physical<outer else "configured_outer_ipv4")):
+   raise ValueError("B4 real original Windows child "+str(i+1)+" MSS budget invalid")
+  ws,wb=syn[i];remote,local=peer[i];svr,svr_bytes=server_syn[i]
+  if (int(ws)!=mss or wb.lower()!="0204"+format(mss,"04x") or
+      int(remote)!=sm or int(local)!=mss or int(svr)!=sm or
+      svr_bytes.lower()!="0204"+format(sm,"04x")):
+   raise ValueError("B4 true peer MSS/TCP options mismatch child "+str(i+1))
+  rows.append({"ordinal":i+1,"windows_source_port":int(ports[i][0]),
+    "windows_local_SYN_MSS":mss,"linux_local_SYNACK_MSS":sm,
+    "windows_real_inner_mtu":inner,"windows_physical_mtu":physical,
+    "linux_real_physical_mtu":sp,
+    "real_TCP_options":wb.lower(),
+    "source":"ORIGINAL_GO_TCP_SYN_PROTECTED_LINUX_RUST_M4"})
+ return {"generations":rows,"one_original_server_port":443,
+   "original_real_tls_children":3,"original_server_m4_admissions":3,
+   "original_linux_synack_count":3,
+   "source_port_distinct":True,"linux_peer_syn_mss":"NOT_LOGGED_SHARED_MANUAL"}

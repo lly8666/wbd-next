@@ -37,6 +37,7 @@ p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
 p029b_b0=os.environ.get("WBD_PLAN029B_B0_DNS_SCENE")=="1"
 p029b_b2=os.environ.get("WBD_PLAN029B_B2_ORDINARY_SCENE")=="1"
 p029b_b3=os.environ.get("WBD_PLAN029B_B3_IPV6_SCENE")=="1"
+p029b_b4=os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
 p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
 p029_gui_reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
@@ -51,7 +52,7 @@ if p029_server_rx_diag and not (p029_gui_reconnect and p029_three_case=="gui_rec
  raise RuntimeError("H2070 raw server observer only on one real GUI reconnect scene")
 if p029_boot_tc and not (p029_product and p029_direct and (not p029_gui or p029_boot_reconnect) and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("real same-endpoint bootstrap requires original Normal CN default1460")
-if p029_gui and not (p029_product and p029_direct and mode=="normal" and native_outer=="default1460"):
+if p029_gui and not ((p029_product and p029_direct or p029b_b4) and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("true GUI original signed CN default1460 needed")
 if p029_gui_padding and not (
     p029_gui and not p029_boot_tc and p029_direct and p029_product and
@@ -201,6 +202,15 @@ if p029b_b2 and (mode!="normal" or native_outer!="default1460" or
     os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
     os.environ.get("GITHUB_ACTIONS")!="true"):
  raise RuntimeError("029B B2 ordinary CN requires exclusive signed real Normal V3")
+if p029b_b4 and not (
+    mode=="normal" and native_outer=="default1460" and
+    p029_gui and not (p029_direct or p029_product or p029_gui_reconnect or
+    p029b_b0 or p029b_b2 or p029b_b3 or p029_padding or
+    p029_p1_policy or p029_game4_cn or p029_cdn or p029_tcp53 or
+    p029_boot_tc or p029_dns_ttl or p029_p2 or plan028_owned_switch) and
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")=="0" and
+    os.environ.get("GITHUB_ACTIONS")=="true"):
+ raise RuntimeError("B4 requires exclusive original WinForms three-generation Normal 1460 signed scene")
 if plan028_owned_mtu_only and (not plan028_owned_switch or mode!='normal' or native_outer!='default1460'):
  raise RuntimeError('PLAN028 true physical MTU-only original Windows WSL2 test requires owned source IP, Normal Off and default1460')
 if plan028_owned_switch and (mode not in ('normal','fixed','auto','game4','game4-fec') or native_outer!='default1460'):
@@ -492,10 +502,10 @@ try:
  # per *actual* source port, before tuple/AEAD. No unfiltered RX fallback,
  # no debug packet capture or new product thread in release defaults.
  server_rx_diag=" WBD_PLAN028_EXTERNAL_STAGE_DIAG=1" if p029_server_rx_diag else ""
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
- if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2:
+ if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4:
   # The existing Linux kernel TUN must have a test-owned PUBLIC /32 alias
   # for protected Tunnel business. Its ordinary 10.66.0.1 RFC1918 address
   # would be Direct by policy and could fake a successful split test.
@@ -529,6 +539,12 @@ try:
    rules.write_text("cn.example\n",encoding="ascii")
   os.environ["WBD_PLAN029_CN_RULES_FILE"]=str(rules)
   (out/"plan029-h1775-cn-one32.txt").write_text(p029_converse_cn4+"/32\n",encoding="ascii")
+ if p029b_b4:
+  # Owner-only test /32 first: the WSL original TUN is created by TLS
+  # server lifecycle and must not be awaited before the real client starts.
+  host=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host:raise RuntimeError("B4 signed physical Windows source unknown")
+  h1775_owned_apply(host,peer,target=p029_tunnel_alias,tag="h2010")
  # One genuine WSL2 eth0 physical packet capture starts before the
  # original Normal Go TLS/NPF client. It stays active through actual
  # Tunnel TCP/UDP apps, then is stopped at owned Stop; only bounded
@@ -577,11 +593,16 @@ try:
   raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 else "bypass-lan"),"--outer-repair",outer_repair]
  if p029_padding:
   # Same default Normal original Windows Wintun pipeline; no new test
   # sender or artificial packet shape. Only the selected mode changes.
   args.extend(["--startup-padding","flows"])
+ if p029b_b4:
+  args.extend(["--split-enable","--cn-domain-direct=true",
+               "--cn-rules-file",str(rules),
+               "--dns.direct",peer,"--dns.tunnel","10.66.0.1",
+               "--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")])
  if p029b_b2:
   # New fresh CN default: direct DNS for CN only, but real overseas A
   # business must remain Tunnel without an advanced FakeIP journal.
@@ -648,6 +669,8 @@ try:
  # Original signed Windows Go passes one cold diagnostic bit to Rust only
  # for this P2 scene; ordinary users never incur socket-byte telemetry.
  client_env=os.environ.copy()
+ if p029b_b4:
+  client_env["WBD_PLAN029B_B4_GUEST_READY_PATH"]=str(gui_root/"data/plan029b-b4-guest-ready.flag")
  if p029_p2:client_env["WBD_PLAN029_P2_RELAY_DIAG"]="1"
  if p029_abba:client_env["WBD_PLAN029_P2_ABBA_SCENE"]="1"
  if p029_tcp128:client_env["WBD_PLAN029_TCP128_SCENE"]="1"
@@ -762,12 +785,35 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # Keep the same two real kernel app generators alive while the human GUI
  # performs its ordinary first Disconnect / second Connect. The second
  # generation is separately proved by later CN Direct and Tunnel apps.
- app_runtime=["2",".09","130"] if p029_gui_reconnect else []
+ app_runtime=["2",".09","220"] if p029b_b4 else ["2",".09","130"] if p029_gui_reconnect else []
  la=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","python3",unix(app),linux_app4,"10.66.0.2",unix(done),*app_runtime],stdout=llog,stderr=subprocess.STDOUT)
  wa=subprocess.Popen([sys.executable,str(app),"10.66.0.2",linux_app4,str(done),*app_runtime],stdout=wlog,stderr=subprocess.STDOUT)
+ if p029b_b4:
+  if p029_alias_proc is None or p029_alias_proc.wait(timeout=25)!=0 or not (
+      out/"plan029-h1745-owned-tun-alias.txt").is_file():
+   raise RuntimeError("B4 genuine server TUN public alias not ready")
+  guest_log=(out/"plan029b-b4-guest.log").open("w");logs.append(guest_log)
+  p029b_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "python3","-u",unix(root/"tools/m0_plan029b_b4_guest.py"),
+    peer,host,"10.66.0.2","10.66.0.1",p029_tunnel_alias],
+    stdout=guest_log,stderr=subprocess.STDOUT)
+  ready(out/"plan029b-b4-guest.log","PLAN029B_B4_LINUX_DNS_AND_BUSINESS_READY",
+        p029b_guest,25)
+  (gui_root/"data/plan029b-b4-guest-ready.flag").write_text(os.environ["GITHUB_SHA"])
+
  # This READY remains owned exclusively by the unmodified real product.
  game_cold_stage("COLD_READY_WAIT")
- ready(out/"client.log",
+ if p029b_b4:
+  # The first signed GUI Stop authorizes removal of the test-owned
+  # physical /32 before allowing ordinary CN to use the same real A.
+  ready(out/"client.log","PLAN029B_B4_PHASE1_STOP_ROUTE_RELEASE_REQUIRED",w,110)
+  h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")
+  if (out/"plan029-h2010-owned-route-alias.json").exists():
+   raise RuntimeError("B4 physical /32 present before ordinary CN")
+  w.stdin.write("continue-ordinary\n");w.stdin.flush()
+  ready(out/"client.log","PLAN029B_B4_THIRD_APPLIED",w,145)
+ else:
+  ready(out/"client.log",
        ("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED"
         if p029_gui_reconnect else "WBD_WINDOWS_CLIENT_READY"),
        w,110 if p029_gui_reconnect else 30)
@@ -996,7 +1042,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "direct_tunnel_business":"PENDING","owned_stop":"PENDING"}
   print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_OWNED_OS_APPLIED_PRE_BUSINESS",flush=True)
  ready(out/"server.log",("V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else
-   "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect) and not is_game else
+   "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) and not is_game else
    "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),s,8)
  if tls_wire:
   end_tls_capture()
@@ -1149,7 +1195,15 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if native_outer!="legacy1400":
   # Independently validate the numeric receipt emitted by the REAL
   # same-generation Windows N4 owner before READY; no hand-fed inner MTU.
-  if plan028_owned_switch or p029_gui_reconnect:
+  if p029b_b4:
+   receipts=re.findall(
+    r"WBD_WINDOWS_INNER_OS_MTU_APPLIED_V1 planned=(\d+) applied=(\d+) outer_config=(\d+)",
+    winlog)
+   if len(receipts)!=3 or any(tuple(map(int,row))!=(1389,1389,1460) for row in receipts):
+    raise RuntimeError("B4 three actual Windows Wintun OS MTU receipts absent")
+   windows_inner=1389
+   report["plan029b_b4_three_original_windows_inner_mtu"]=receipts
+  elif plan028_owned_switch or p029_gui_reconnect:
    # Both native OS generations are real. The old single-receipt verifier
    # correctly refuses concatenated logs, but GUI Disconnect->Connect has
    # two independent Go child processes even without PLAN028 MTU mutation.
@@ -1215,6 +1269,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     per_gen_wire=verified_plan028_shared_manual_two_generation_v4_mss(winlog,linux_log,configured_mtu)
     report["plan028_actual_two_generation_syn_synack_mss"]=per_gen_wire
     budget_and_wire=per_gen_wire[-1]
+   elif p029b_b4:
+    from m0_wl_public_mss_contract import verified_plan029b_b4_three_gui_child_mss
+    budget_and_wire=verified_plan029b_b4_three_gui_child_mss(
+     winlog,linux_log,configured_mtu)
+    report["plan029b_b4_three_original_syn_synack_mss"]=budget_and_wire
    elif p029_gui_reconnect:
     # H2067: two *different* original WinForms Go child processes both
     # start internal generation=1, but use physical ports 41031 then
@@ -2726,10 +2785,53 @@ print(json.dumps(result),flush=True)
  stop_linux();s.wait(timeout=10)
  stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and plan028_owned_switch else
   "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
-  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect) else
+  "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
  if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
  report["stop"]="PASS_BOTH_OWNED"
+ if p029b_b4:
+  # Signed source-locked proof: no synthetic OS/Ready, no single- or
+  # two-generation Go check-config substituted for three REAL button
+  # connections, three original Rust Stops and one Linux kernel observer.
+  from m0_plan029_gui_real_bridge import receipt_and_cleanup
+  gui=receipt_and_cleanup(gui_root)
+  client_text=(out/"client.log").read_text(errors="replace")
+  server_text=(out/"server.log").read_text(errors="replace")
+  def exact(prefix):
+   return sum(row.startswith(prefix) for row in client_text.splitlines())
+  if (exact("PLAN029B_B4_REAL_GUI_GENERATION_APPLIED ordinal=")!=3 or
+      exact("PLAN029B_B4_REAL_GUI_OWNED_STOP_WAL_CLEAN ordinal=")!=3 or
+      exact("WBD_WINDOWS_OS_APPLIED")!=3 or
+      exact("WBD_WINDOWS_CLIENT_READY")!=3 or
+      exact("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS")!=3 or
+      exact("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")!=3 or
+      "PLAN029B_B4_THREE_REAL_GUI_GENERATIONS_AND_STOPS_COMPLETE" not in client_text or
+      server_text.count("V4_PUBLIC_MULTI_SESSION_READY role=server one_port=443")!=3 or
+      (gui_root/"data/network-state.json.n4-owned-wal").exists() or
+      (gui_root/"data/network-state.json.n4-owned-wal.routes").exists() or
+      (gui_root/"data/network-state.json.plan029-defender-tcp").exists() or
+      (out/"plan029-h2010-owned-route-alias.json").exists()):
+   raise RuntimeError("B4 signed genuine three-GUI OS/M4/Stop/WAL proof absent")
+  p029b_guest.wait(timeout=12)
+  if p029b_guest.returncode:
+   raise RuntimeError("B4 original Linux physical/tunnel DNS/data witness failed")
+  rows=[line.split("PLAN029B_B4_REAL_LINUX_EGRESS ",1)[1]
+        for line in (out/"plan029b-b4-guest.log").read_text(errors="replace").splitlines()
+        if "PLAN029B_B4_REAL_LINUX_EGRESS " in line]
+  if len(rows)!=1:raise RuntimeError("B4 original Linux kernel scene receipt absent")
+  guest=json.loads(rows[0])
+  if (guest.get("result")!="PASS_THREE_REAL_GUI_GENERATION_EGRESS" or
+      guest.get("stale_old_fake_business")!=0 or
+      guest.get("raw_old_fake_ipv4_egress")!=0):
+   raise RuntimeError("B4 real egress violated ordinary/all/old FakeIP")
+  report["plan029b_b4_three_real_gui"]={
+   "source_sha":os.environ["GITHUB_SHA"],
+   "original_gui":gui,"original_linux":guest,
+   "windows_applied":3,"windows_owned_stops":3,
+   "linux_authenticated_sessions":3,
+   "actual_MTU_MSS":report.get("plan029b_b4_three_original_syn_synack_mss"),
+   "status":"PASS_SCOPED_ORIGINAL_THREE_GENERATION_REAL_GUI_AND_STOP"}
+  print("PLAN029B_B4_SIGNED_REAL_WINFORMS_ADVANCED_ORDINARY_ALL_OWNED_STOP_PASS_SCOPED",flush=True)
  if p029b_b0:
   b0=report.get("plan029b_b0_real_managed_dns",{})
   text=(out/"client.log").read_text(errors="replace")
@@ -3266,7 +3368,14 @@ print(json.dumps(result),flush=True)
   expected=1 if outer_repair=="on" else 0
   win_text=(out/"client.log").read_text(errors="replace")
   linux_text=(out/"server.log").read_text(errors="replace")
-  if plan028_owned_switch:
+  if p029b_b4:
+   win_rows=re.findall(r"WBD_WINDOWS_OUTER_REPAIR_EFFECTIVE enabled=(\d+) shadow_limit=(\d+) source=original_rust_owner",win_text)
+   linux_rows=re.findall(r"V4_PUBLIC_M2_OUTER role=server [^\n]*repair_enabled=(\d+) ",linux_text)
+   win_ok=len(win_rows)==3 and all(int(v)==expected for v,limit in win_rows)
+   linux_ok=len(linux_rows)==3 and all(int(v)==expected for v in linux_rows)
+   report["original_outer_repair_effective"]={
+    "windows":win_ok,"linux":linux_ok,"enabled":expected,"generations":3}
+  elif plan028_owned_switch:
    # Two *real* native Rust generations, each OS readback before Stop.
    # The shared Linux server now snapshots each original Rust session
    # before exact per-owner Stop; no CLI flag is accepted as readback.
@@ -3396,7 +3505,7 @@ finally:
  if resource_worker is not None:resource_worker.join(timeout=3)
  for p in (wa,la,wt,lt,p029b_guest,p029_guest_proc,p029_client_proc,p029_alias_proc,p029_tun_dns_guest,p029_tun_dns_win,p029_dns_blackhole_guest,p029_dns_blackhole_win,p029_d2_tun_guest,p029_d2_tun_win,p029_d2_cn_guest,p029_d2_cn_win,p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):
   if p is not None and p.poll() is None:p.terminate()
- if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():
+ if (p029_cdn or p029b_b4) and (out/"plan029-h2010-owned-route-alias.json").exists():
   try:h1775_owned_cleanup(target=p029_tunnel_alias,tag="h2010")
   except Exception as exc:
    report["plan029_h2010_owned_cleanup"]="FAIL_OWNED_ROUTE_ALIAS"
@@ -3428,7 +3537,7 @@ finally:
     raise RuntimeError("foreign Tunnel DNS alias receipt; preserve OS address")
   except Exception as exc:
    print("PLAN029_H1765_TUNNEL_DNS_ALIAS_CLEANUP_FAILED "+str(exc)[-250:],flush=True)
- if (p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
+ if (p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
   # Exact ephemeral TUN alias only: cleanup is idempotent even after the
   # server has already removed its own interface on normal Stop.
   try:
