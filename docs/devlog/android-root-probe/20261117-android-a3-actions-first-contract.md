@@ -9,3 +9,12 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"用户Actions-first全功能再实体终验；新增同SOURCE Linux真服务端原Go/Rust oracle，Android E2E未测。"}
 ```
+
+## 本SOURCE首次治理失败与定点修复
+
+- SOURCE `7296fa2d9c114202c7e7462b737aff980d157889` [Governance44041088212](https://github.com/lly8666/wbd-next/actions/runs/44041088212) **FAIL**：新增功能卡 JSON 超过 16KiB；未进入第二治理门。此失败不影响既有 Bionic BUILD_PASS，也不能把在途 Linux oracle 写成通过。
+- 修复仅删除本次新增的重复验证空条目/限制短句、缩短摘要；验收分级和失败证据仍在现行计划与本 devlog 中。改动不触及产品代码或 main。以修复SOURCE的治理为准。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"修复新增Actions-first摘要导致的feature JSON超16KiB，保留原历史与完整计划。"}
+```
