@@ -171,3 +171,29 @@ into a signed SDK35 APK, with SHA/ELF/16KiB and no-VpnService checks.
 The Root Service issues SIGTERM only to the exact live PID/starttime/exe
 and waits for the original Go/Native owner to actually exit. All Android
 phone traffic and device root permission remain NOT_RUN.
+
+## B1 ordinary DNS wire: real host UDP/TCP test, not Android interception
+
+An original-Go source-locked `internal/v4productcli/dnsnative` package
+implements no-FakeIP DNS question parsing, actual UDP DNS request/answer,
+and TCP retry **only to the same upstream and route** after TC=1.
+Configured production endpoints are **223.5.5.5:53** (physical CN DNS)
+and **1.1.1.1:53** (WBD tunnel DNS). Split-enabled queries use the
+original QNAME with caller-provided CNMatch; split off sends ordinary
+queries to tunnel DNS. Bootstrap domain queries always use physical CN.
+There is no fallback to the other upstream or implicit OS DNS.
+
+Every socket uses an injected path-aware DialFunc; nil fails closed.
+The component itself never opens an unbound net.Dialer. Strict DNS
+ID/question checks, bounded wire sizes, 256-entry positive TTL cache,
+ID rewriting, 64 independent in-flight cap and identical query
+coalescing use no background timers. A parallel Actions job runs
+**actual UDP and TCP loopback responders on ephemeral ports**, not fake
+DNS strings. The original ARM64 build installs the same package into
+the pinned Go donor and cross-compiles an Android ARM64 test ELF.
+
+**Not yet integrated:** Android system resolver interception, actual
+physical ConnectivityManager socket binding, original Go/Rust M4 TUN
+UDP/TCP53 capture, production geosite CN classifier, live direct/tunnel
+DNS and Private DNS/CLAT. Test success is host-wire qualification,
+NOT Android P2/P3 E2E or true UDP port 53. A8 route remains unchanged.

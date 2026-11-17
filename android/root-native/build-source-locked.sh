@@ -45,10 +45,19 @@ done
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 mkdir -p legacy/internal/v4productcli/rootjournal
 cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
+# B1 native DNS transport is source-locked but NOT yet connected
+# to Android system resolver/TUN capture or Network socket binding.
+mkdir -p legacy/internal/v4productcli/dnsnative
+cp r0/go_overlay/internal/v4productcli/dnsnative/*.go legacy/internal/v4productcli/dnsnative/
 # Portable kernel-policy state machine tests are host-Go pure stdlib:
 # NO Android x86/32-bit build/packaging/test target. The real Android
 # product is still only GOOS=android GOARCH=arm64 below.
 (cd legacy && go test -count=1 ./internal/v4productcli/rootjournal)
+# Android ARM64 cross-compile only; test ELF is NOT executed or deployed.
+(cd legacy && GOOS=android GOARCH=arm64 CGO_ENABLED=0 GOTOOLCHAIN=local go test -c \
+  -o "$GITHUB_WORKSPACE/out/android-product-a1/dnsnative-arm64.test" \
+  ./internal/v4productcli/dnsnative)
+test -s out/android-product-a1/dnsnative-arm64.test
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Android ARM64 first authentic Go/Rust product is Normal/off only.
