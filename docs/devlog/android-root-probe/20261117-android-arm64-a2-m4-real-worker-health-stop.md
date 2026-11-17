@@ -37,3 +37,16 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"SOURCE2b8e ARM64原Rust M4真实ELF/Health/eventfd等符号已动态导出、16KiB验证；CI grep-q+pipefail误报已改全符号表文件逐项严格校验；完整Go链接与真机依旧NOT_RUN。"}
 ```
+
+## A2 Normal/off 真源码分层 + Feature Catalog 16KiB 治理恢复
+
+- **SOURCE `69f262e13df239bb84fde42d4492d03c8257ac4f`** [ARM64 Action44024830339](https://github.com/lly8666/wbd-next/actions/runs/44024830339) **overall FAIL**。完整Rust ARM64 M1/M3/M4/Health/eventfd Stop `.so` release 和真实动态导出 ABI 严格校验通过、16KiB ELF通过；已进入**原 Go 产品最终链接**，失败的主体是尚未移植Android的原Fixed/FEC/Game/M2 native符号（也含normal_off_readback）。Go最终完整产品仍FAIL；真机仍NOT_RUN。
+- [Feature Catalog Action44024830317](https://github.com/lly8666/wbd-next/actions/runs/44024830317) **FAIL**：`tools/feature_catalog.py` 原有16KiB单卡UTF-8限制被增长的历史 `limitations` 超过；本批压缩冗余历史描述、保留verifications/原devlog完整错误详情，**绝不放宽原16KiB治理标准**。
+- 本批 ARM64 原 Go 改用**源码已有** `!wbd_v4_fec2_product` 发行分支，原Normal/off TLS/租约/同RustM4链路不变，原Go对Fixed/Auto/Game2/4采用其已有 `ErrAdmissionUnsupported` 实际fail-closed行为。既不冒充已做FEC/Game，也不为Normal/off首连引入未授权替代协议；Rust codec保留编译，模式/版本的正式成熟移植放后续。
+- Android新增`normal_off_stage/readback`：同一原Go认证TLS非零epoch、feature3、同代际Active、strictly-increasing revision才发布真实OFF状态并读回；不复制Linux Fixed/FEC事务，也不伪造APPLIED、M2收据。Native CGo原stage/readback ABI不是空壳。
+
+本 SOURCE 的 ARM64 Action/完整Go linker后续如实记录；Android16 ARM64 KSU真实原Go TLS/auth/lease、M4 TCP/UDP收发、Health/Stop与应用/Root Controller仍**NOT_RUN**。唯一下一步是消除真实Normal/off必需的Go链接/运行前置项，再获真机授权连接同源Linux WBD。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"同源ARM64 Bionic Rust M4真实链接已过，改用仓库已有原Go Normal/off源码版，Fixed/Game不再拉取未实现模式且明确fail-closed；Android原TLS epoch单调OFF revision真实 ABI与16KiB功能卡治理修复。"}
+```

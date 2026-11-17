@@ -223,12 +223,13 @@
     "A2二批：原Go post-TLS/Detach限定Android物理Network/ifindex/MTU，并以同一共享Rust认证Entry打开/持有真实RAW RX/TX和TUN FD；未移植原M4 TX/RX/Health/MTU完整线程，Android业务仍NOT_RUN；源锁Action独立验收。",
     "A2 FD在同一 Rust Entry 上引入原 wbd-platform::r1::BorrowFence：每次Bionic RAW/TUN真实syscall CAS借用、begin_stop阻止新借用、Stop检查零inflight并在未排空时STOP_INCOMPLETE；仍未运行原M4线程、尚无真WBD连接。",
     "新增原Go SYN/ClientHello之前 Android 物理 Network Handle raw发送FD绑定（android_setsocknetwork+SO_BINDTODEVICE），AF_PACKET收端继续采用原donor内核接口+端口过滤；需 Android Controller 提供真实 handle，交叉编译≠设备权限、实际TLS或完整M4 PASS。",
-    "A2 SOURCE 14290758 Action44019938479 overall FAIL: NDK arm64/x86_64 cold ABI + actual Android Go pre-TLS bind source CGo compiled to final link, 16KiB ELF, source-locked raw/owner C ABI BUILD_PASS; whole ARM64 Go M4 link FAIL missing real Normal/off/FEC/Game/loop; x86 full link NOT_RUN; no real TLS or Android socket runtime executed.",
+    "A2 SOURCE14290758 ARM64 Rust cold ABI通过，原Go M4链接失败；旧Android x86仅历史留档。完整证据见A2 devlog。",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
-    "ARM64 ONLY SOURCE 2951cda2 Action44021966186 overall FAIL at original Go ld.lld missing Fixed/FEC/Game/native continuous M4 interfaces; Rust original M1/M3 and Bionic compile PASS, stage ZIP14300864286 SHA256 90cfb9be158c6c30e9043e89749f2075d74e7a9129cb8dc79fe53aa11a5aa00c. ARM64 .so sha256 76816bd9ffd851974563656ef2e31041e0904cec34db938fd590844e4eff3ad3 e_machine183 PT_LOAD16384, manifest matched; x86 no artifacts; real KSU/WBD/TCP/UDP NOT_RUN.",
+    "SOURCE2951 ARM64 Rust/Bionic构建通过，原Go M4/FEC/Game全链接失败；详见A2 devlog。",
     "ARM64 A2新增真实Native M4 source：最多8包/turn的RX/TX readiness、原M1/M3/HealthClock、eventfd双线程Stop/join与物理ifindex/MTU验真；跨编译不能证明真机运行；M3 jumbo、原M2/FEC/Game、UI/root owned routes完整联接未就绪。",
     "f490df06 ARM64 source-locked build did NOT pass Rust: two E0599 unresolved original owner normal_firstsend_identity due Linux/Windows-only cfg; follow-on exact shared method target cfg fix; real native M4 test not run, previous Go full link failure still applicable.",
-    "SOURCE2b8e compiler and Android ARM64 M4 actual .so ELF produced, but Action44024436340 overall FAIL at source-lock checker SIGPIPE false negative; source-locked Go full link NOT_RUN. Verified artifact14301758387 ZIP SHA256 47279d89e5ddfe67d5be7a4be7c2351be708e7ee084c53da3a0e368696667c86, lib .so SHA256 df8ad737e631e66b99e836422d8c33d844036d5e4d972b47ba1ea9842417764e, ELF machine183 PT_LOAD16384; grep -q pipeline fixed with full llvm-nm output snapshot, never relax ABI exports."
+    "SOURCE2b8e ARM64原M4真实Rust ELF和符号通过；Go链接被nm|grep-q/pipefail误报跳过，见M4 devlog。",
+    "Android ARM64 first original-Go Normal/off only: compile existing !wbd_v4_fec2_product variants; native Fixed/Auto/Game refuse unsupported, not fabricated C ABI. Same Go cold TLS and Rust original M1/M3/Health/Stop."
   ],
   "promotion": null
 }

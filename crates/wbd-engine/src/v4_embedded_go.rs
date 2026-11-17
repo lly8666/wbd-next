@@ -827,6 +827,9 @@ struct Entry{
     android_joining:bool,
     #[cfg(all(target_os="android",target_arch="aarch64"))]
     android_seq_anchor:u64,
+    // Authenticated original Go feature3 Normal/off revision, not FEC APPLIED.
+    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    android_off_applied_revision:u64,
     #[cfg(all(target_os="android",target_arch="aarch64"))]
     android_metrics:Arc<android_original_m4::AndroidOriginalStats>,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -1173,6 +1176,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_joining:false,
         #[cfg(all(target_os="android",target_arch="aarch64"))]
         android_seq_anchor:u64::from(handoff.rx_boundary),
+        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        android_off_applied_revision:0,
         #[cfg(all(target_os="android",target_arch="aarch64"))]
         android_metrics:Arc::new(android_original_m4::AndroidOriginalStats::default()),
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]

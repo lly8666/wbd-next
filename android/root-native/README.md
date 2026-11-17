@@ -72,3 +72,14 @@ has missing genuine original modes; ARM64 health and Stop are not yet
 device-executed. One source lock and static M4 symbol check CANNOT be
 promoted into real WBD connectivity, multi-IP jumbo delivery, finished
 root UI/controller, FEC/Game or Android16 KSU acceptance.
+
+## ARM64 Normal/off original-Go product edition
+
+Source-locked Go now uses original `wbd_v4_embedded_go` **without**
+`wbd_v4_fec2_product`; the repository already provides disabled
+Fixed/Auto/Game branches which explicitly reject unsupported modes.
+No placeholder FEC/Game C symbols, no second TLS/AEAD or fake M2.
+
+Original Android Normal/off `stage/readback` verifies this same
+Go-authenticated nonzero epoch, feature3 and increasing revision. A green
+Rust ARM64 ELF still does NOT mean a linked Go executable or real device.

@@ -45,11 +45,13 @@ done
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
-# Normal/off only. Native ISA-L FEC is intentionally NOT a first-connect gate.
-# Original-Go Linux source has a *compile-time* Game-lane type dependency in
-# bridge_v4_linux_server_product.go even when product mode is Normal/off.
-# Match the mature public Go build tags; FEC stays disabled at runtime for A1.
+# Android ARM64 first authentic Go/Rust product is Normal/off only.
+# Use the ALREADY-EXISTING original-Go !wbd_v4_fec2_product source variants.
+# Native Fixed/Auto and Game are explicitly UNAVAILABLE until real ARM64
+# FEC/M2/Game kernels exist; never introduce dummy C ABI to force green.
+# Keep original Rust Health/M1/M3 + future codec in this source stage.
 features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
+go_tags=wbd_v4_embedded_go
 for pair in "aarch64 arm64"; do
   read -r triple goarch <<< "$pair"
   rust_target=aarch64-linux-android
@@ -109,7 +111,7 @@ def inspect(path,expected_machine):
 d={"schema":"android-root-product-a1-rust-cold-build/v1",
    "source":os.environ["GITHUB_SHA"],
    "pinned_original_go":"a7a82db31fe736ffedee330795a3234d358f1984",
-   "scope":"ORIGINAL_ARM64_M1_M3_PLUS_M4_WORKER_HEALTH_STOP_COMPILED_ONLY",
+   "scope":"ORIGINAL_ARM64_NORMAL_OFF_M1_M3_M4_HEALTH_COMPILED_ONLY",
    "android_c_abi_static_checks":"PASS_IN_WORKFLOW",
    "original_rust_cold_prepare_stage_commit_stop_symbols":"PASS_IN_WORKFLOW",
    "android_original_owner_network_raw_tun_ffi_symbols":"PASS_IN_WORKFLOW",
@@ -132,7 +134,7 @@ for pair in "aarch64 arm64"; do
   cc="$tool/${rust_target}28-clang"
   export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
   export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384"
-  (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
+  (cd legacy && go build -trimpath -buildvcs=false -tags "$go_tags" -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
   unset CGO_LDFLAGS
 done
 python3 - <<'PY'
@@ -156,6 +158,7 @@ result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_
 "donor_go":"a7a82db31fe736ffedee330795a3234d358f1984",
 "rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record","mode":"NORMAL_OFF_BUILD_ONLY",
 "android_abis":["arm64"],"go_os":"android","android_api":28,
+"go_build_tags":"wbd_v4_embedded_go","go_fec_game_native":"NOT_COMPILED_UNSUPPORTED",
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
 "elf":elf(x) if x.name.endswith(".so") else None} for x in art},
 "production_tls_auth_lease":"NOT_RUN","actual_tun_data":"NOT_RUN",

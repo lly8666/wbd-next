@@ -509,3 +509,39 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_native_health_effective(
     }
     OK
 }
+
+// Same original-Go authenticated epoch/revision Normal/off approval used
+// by its existing Linux native control bridge, implemented on the original
+// Android Entry. This is NOT a missing-FEC/Game ABI stand-in: it strictly
+// limits grants to real TLS feature3 and publishes only an OFF revision.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_stage(
+    h:u64,epoch_ptr:*const u8,epoch_len:usize,revision:u64
+)->i32{
+    if epoch_ptr.is_null()||epoch_len!=16||revision==0{return INVALID}
+    let epoch=unsafe{std::slice::from_raw_parts(epoch_ptr,16)};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_joining||e.protected_features!=3||
+       e.owner.normal_firstsend_identity().is_none_or(
+           |(_,exact)|exact.as_slice()!=epoch
+       ){return BAD_STAGE}
+    if revision<=e.android_off_applied_revision{return INVALID}
+    e.android_off_applied_revision=revision;
+    OK
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_readback(
+    h:u64,epoch_ptr:*const u8,epoch_len:usize,out:*mut u64
+)->i32{
+    if epoch_ptr.is_null()||epoch_len!=16||out.is_null(){return INVALID}
+    let epoch=unsafe{std::slice::from_raw_parts(epoch_ptr,16)};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_joining||e.protected_features!=3||
+       e.owner.normal_firstsend_identity().is_none_or(
+           |(_,exact)|exact.as_slice()!=epoch
+       ){return BAD_STAGE}
+    unsafe{out.write(e.android_off_applied_revision)};
+    OK
+}
