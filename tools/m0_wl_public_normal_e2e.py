@@ -757,8 +757,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
       [int(v[0]) for v in phases]!=[1,2,3] or
       [v[2] for v in phases]!=["2961","2962","2963"]):
    raise RuntimeError("H2063 real TTL expiration/normal GUI reconnect DNS app/physical three-phase mismatch")
-  if [q["id"] for q in receipts[0]["queries"]]!=["2961","2962","2963"]:
-   raise RuntimeError("H2063 physical DNS three distinct transaction identities not observed")
+  physical_tuples=[(q.get("source_port"),q["id"]) for q in receipts[0]["queries"]]
+  if len(physical_tuples)!=3 or len(set(physical_tuples))!=3:
+   raise RuntimeError("H2063 three distinct physical socket+DNS ID transactions absent")
+  # App and physical DNS ID namespaces differ; after reconnect Rust can
+  # restart its upstream ID counter, so compare unique socket+ID tuples.
   report["plan029_dns_ttl_restart"]={
    "source_sha":os.environ["GITHUB_SHA"],
    "product_binary_source":report["product_binary_source"],

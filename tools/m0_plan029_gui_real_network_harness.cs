@@ -23,7 +23,14 @@ public static class Plan029GuiReal {
  }
  static void Click(MainForm f,string text){
   var b=Children(f).OfType<Button>().FirstOrDefault(x=>x.Text==text);
-  Need(b!=null,"real GUI button absent: "+text);b.PerformClick();
+  Need(b!=null,"real GUI button absent: "+text);
+  Need(b.Enabled,"real GUI button disabled at click: "+text);
+  b.PerformClick();
+ }
+ static bool ButtonReady(MainForm f,string text){
+  var b=Children(f).OfType<Button>().FirstOrDefault(x=>x.Text==text);
+  Need(b!=null,"real GUI button absent: "+text);
+  return b.Enabled;
  }
  static string Label(MainForm f,string field){
   var obj=typeof(MainForm).GetField(field,
@@ -77,9 +84,15 @@ public static class Plan029GuiReal {
     var origin=(IPEndPoint)remote;
     if(origin.Port!=53 || !origin.Address.Equals(target.Address) ||
        count<16 || packet[0]!=query[0] || packet[1]!=query[1])continue;
-    Need((packet[2]&128)!=0 && (packet[3]&15)==0 &&
-      (packet[6]!=0 || packet[7]!=0),
-      "actual CN DNS returned negative/empty response");
+    if((packet[2]&128)==0 || (packet[3]&15)!=0 ||
+        (packet[6]==0 && packet[7]==0)){
+     Console.WriteLine("PLAN029_H2063_TTL_APP_NEGATIVE phase="+ordinal+
+      " rcode="+(packet[3]&15)+" answers="+
+      ((packet[6]<<8)|packet[7])+" response_len="+count+
+      " txid="+query[0].ToString("x2")+query[1].ToString("x2"));
+     Console.Out.Flush();
+     throw new IOException("actual CN DNS returned negative/empty response");
+    }
     var a=new IPAddress(new byte[]{packet[count-4],packet[count-3],
        packet[count-2],packet[count-1]});
     string fake=a.ToString();
@@ -171,10 +184,12 @@ public static class Plan029GuiReal {
     clock.Restart();
     while(clock.ElapsedMilliseconds<34000){
      Tick();
-     if(!client.Active && Label(form,"state")=="未连接")break;
+     if(!client.Active && Label(form,"state")=="未连接" &&
+        ButtonReady(form,"连接 / 切换"))break;
     }
-    Need(!client.Active && Label(form,"state")=="未连接",
-     "first original GUI Stop did not finish before reconnect");
+    Need(!client.Active && Label(form,"state")=="未连接" &&
+       ButtonReady(form,"连接 / 切换"),
+      "first original GUI Stop or disabled connect button did not finish");
     string firstWal=store.InRoot("data/network-state.json");
     foreach(var suffix in new[]{"",".n4-owned-wal",".n4-owned-wal.routes",
       ".routes",".plan029-defender-tcp"})
@@ -183,6 +198,8 @@ public static class Plan029GuiReal {
     Console.Out.Flush();
     ready=false;applied=false;inner=false;
     Click(form,"连接 / 切换");
+    Console.WriteLine("PLAN029_H2064_SECOND_REAL_GUI_ENABLED_BUTTON_CLICKED");
+    Console.Out.Flush();
     clock.Restart();
     while(clock.ElapsedMilliseconds<60000){
      Tick();

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "date": "2026-11-17",
+  "task": "H2064",
+  "qualification": "REAL_NATIVE_FIRST_GENERATION_PASS_SECOND_GENERATION_OR_TTL_FAIL",
+  "fixture_source_sha": "35a5294656d8c91f0bc311ed685bf25f3940a9e1",
+  "product_binary_source_sha": "0e57cab2d53e2c95962eb673050fa54695fd3665",
+  "runs": [
+    {
+      "scene": "gui_reconnect",
+      "run": 44014381270,
+      "artifact_id": 14298411784,
+      "status": "FAIL_SECOND_GUI_READY_NOT_EMITTED",
+      "original_first_generation": "REAL_TLS_OS_APPLIED_1460_1389_WAL_STOP_PASS",
+      "original_second_generation": "NOT_RUN_NO_ORIGINAL_CHILD_LOG"
+    },
+    {
+      "scene": "domain_reconnect",
+      "run": 44014385888,
+      "artifact_id": 14298251666,
+      "status": "FAIL_SECOND_GUI_READY_NOT_EMITTED",
+      "original_first_generation": "REAL_PHYSICAL_UDP_TC_SAME_TCP53_AND_TLS_OS_WAL_STOP_PASS",
+      "physical_first_tc_id": "e752",
+      "original_second_generation": "NOT_RUN_NO_SECOND_CHILD_LOG"
+    },
+    {
+      "scene": "dns_ttl_restart",
+      "run": 44014389751,
+      "artifact_id": 14297649170,
+      "status": "FAIL_TTL_SECOND_CN_DNS_RESPONSE",
+      "original_first_generation": "REAL_TLS_OS_APPLIED_1460_1389",
+      "cn_first_fakeip": "198.18.0.1",
+      "cn_second_after_2800ms": "NEGATIVE_OR_EMPTY_RESPONSE_UNRESOLVED_FIRST",
+      "original_second_generation": "NOT_RUN"
+    }
+  ],
+  "facts": [
+    "WINFORMS MainForm.DisconnectAsync ShowState('未连接') is before RunAsync finally {busy=false; connect.Enabled=true}",
+    "H2061 harness loop was checking Active false+state 未连接 only, so PerformClick on disabled connect can be ignored",
+    "Rust DnsPending::begin rewrites physical upstream DNS IDs to its own counter; across normal restart upstream ID may repeat",
+    "TTL failed before normal restart and no original physical guest log archived in first run"
+  ],
+  "fix": [
+    "wait for original enabled GUI button before second PerformClick; log actual enabled click",
+    "use physical source_port plus upstream id as transaction identity, while app txid stays 2961/2/3",
+    "preserve bounded physical TTL and bootstrap guest logs and negative client rcode"
+  ],
+  "no_false_promotion": "No second generation PASS, no TTL expiry PASS, no status overwritten, owner cleanup maintained."
+}

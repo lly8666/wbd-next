@@ -26,12 +26,14 @@ try:
         response+=cname+b"\x00\x01\x00\x01"+struct.pack("!I",2)+b"\x00\x04"+socket.inet_aton(guest)
         if dns.sendto(response,remote)!=len(response):
             raise RuntimeError("short physical DNS reply")
-        identity=packet[:2].hex()
-        if identity not in [q["id"] for q in received]:
-            expected="29%02x"%(0x61+len(received))
-            if identity!=expected:
-                raise RuntimeError("unexpected new DNS transaction during TTL/reconnect")
-            received.append({"ordinal":len(received)+1,"id":identity,
+        identity=(remote[1],packet[:2].hex())
+        if identity not in [(q["source_port"],q["id"]) for q in received]:
+            # Native DNS remaps app ID to an upstream ID; after GUI restart
+            # its ID generator may legitimately reset. A physical transaction
+            # is the socket port + upstream ID tuple, not the app ID alone.
+            # A retransmit from the same physical socket is not new work.
+            received.append({"ordinal":len(received)+1,"id":identity[1],
+                             "source_port":identity[0],
                              "physical_source":remote[0],"resolver":guest,"ttl":2})
             print("PLAN029_H2063_TTL_GUEST_PHYSICAL_RX "+
                   json.dumps(received[-1],sort_keys=True),flush=True)
