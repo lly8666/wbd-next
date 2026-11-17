@@ -233,7 +233,11 @@ class NativeDirectOrder(unittest.TestCase):
         # H1775 DNS→CN-IP use case must retain its old one-/32 fallback.
         self.assertIn('"--china-ip-file",str(out/("plan029-h1934-cn4096.txt" if p029_p1_cn else "plan029-h1775-cn-one32.txt"))',S)
         self.assertIn('if p029_direct or p029_p1_cn or p029_game4_cn:',S)
-        self.assertIn('args.extend(["--split-enable","--cn-rules-file",str(rules)])',S)
+        # H2130 keeps the historical Game4 advanced FakeIP scene explicit.
+        # 029B fresh default is ordinary CN; missing advanced flag is no
+        # longer equivalent. Retain one original signed Direct/Tunnel case.
+        self.assertIn('args.extend(["--split-enable","--cn-domain-direct=true",',S)
+        self.assertIn('"--cn-rules-file",str(rules)])',S)
         self.assertIn('if p029_p1_cn and not p029_p1_policy:',S)
         self.assertLess(S.index("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED"),
                         S.index("PLAN029_H1775_REAL_NONCN_TUNNEL_DNS_CN_IP_PHYSICAL_DIRECT_UDP_PASS_PRE_CLEANUP"))
