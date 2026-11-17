@@ -211,12 +211,15 @@ for pair in "aarch64 arm64"; do
   # Test-only full original-Go product logic through a verified NativeBridge
   # c-shared runtime. This is the exact source-locked donor/overlay and real
   # Rust .so, but a quarantined patched Go1.23 GOROOT plus a test-only export.
+  # The NativeBridge translator cannot execute klauspost/cpuid/v2
+  # MIDR_EL1 system-register reads. Its upstream noasm tag is used ONLY
+  # in this diagnostic c-shared build; not in the official product.
   # The signed APK's unmodified GO executable remains the actual product and
   # MUST continue to fail its own x86 NativeBridge gate if SIGSEGV persists.
   GOROOT="$patched_go_root" CGO_ENABLED=1 GOTOOLCHAIN=local \
     CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384 -Wl,-rpath,\$ORIGIN" \
     bash -c 'cd legacy && go build -buildmode=c-shared -trimpath -buildvcs=false \
-      -tags "wbd_v4_embedded_go,wbd_ksu_cshared_test" \
+      -tags "wbd_v4_embedded_go,wbd_ksu_cshared_test,noasm" \
       -o "$GITHUB_WORKSPACE/out/android-product-a1/libksu-arm64-original-go-cshared-midr.so" \
       ./cmd/wbd-v4-client'
   readelf -d "out/android-product-a1/libksu-arm64-original-go-cshared-midr.so" \

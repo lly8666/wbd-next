@@ -22,3 +22,15 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"承接KSU真NativeBridge Go c-shared隔离MIDR后PASS但原ARM64 Go ELF139阻断，新增同源码原Go Run(client,--help)测试专用共享库及NDK实际调用/ELF与APK源锁，正式客户端不变。"}
 ```
+
+## 真实Android原Go共享入口失败与最小兼容路径（同源码记录）
+
+原入口 SOURCE `0c550361dbdfa5c6ddc58aa28e7161b6a9aa7b2a` 的 [完整 Action #44136737310](https://github.com/lly8666/wbd-next/actions/runs/44136737310) **10/11 Jobs PASS、总 FAIL**。原Go/Rust ARM64完整链接/符号/SHA、签名Root APK、Host M3/M4/DNS/CN8503、Linux原TLS/租约/UDP/Stop oracle均PASS；x86_64 KVM Android16 KSU第11项FAIL，原始[artifact 14352851799](https://github.com/lly8666/wbd-next/actions/runs/44136737310/artifacts/14352851799)保留。
+
+真实Android16结果：KSU uid0、原NDK ARM64 exit0、原Rust `libwbd_engine.so` dlopen exit0、隔离Go1.23标准库MIDR后的常数函数c-shared exit0；**本SOURCE新增原Go完整客户端c-shared的真实NDK `dlopen` 与 `dlsym`成功，但导出原 `v4productcli.Run(client,--help)` 调用前 SIGILL exit132**，没有打印原Go flag/help完成标记。此次tombstone经 `logcat -b crash` 精确指向 `/data/local/tmp/libwbd-original-go-cshared-midr.so (github.com/klauspost/cpuid/v2.getMidr.abi0+0)`，NativeBridge `UndefinedInsnThunk` 对应 `MRS MIDR_EL1` 指令 `0xd5380000`，与之前已隔离的 Go stdlib `internal/cpu.getMIDR` 并非同一个检测模块。正式原Go可执行文件 `--help` 仍SIGSEGV139，Root APK Activity PID仍PASS，Android WBD业务全 NOT_RUN。
+
+下一 SOURCE 仅将**测试专用的原Go c-shared**编译tags增加上游CPU探测库标准 `noasm` 后端，避免 `klauspost/cpuid/v2` 的 MIDR_EL1 指令；沿用隔离Go1.23 GOROOT，对正式 `wbd-v4-client-arm64`、签名APK、Go标准TLS/凭据与 Rust AEAD/PN/Stop **零修改**。CPU探测asm禁用可能改变测试库的性能/CPU特性报告，绝不拿它作为原生ARM64手机性能或安全验收。原Action失败、完整业务未测与新SOURCE待测都原样保留。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"新KSU实测完整原Go c-shared进入真实导出时SIGILL132，tombstone为独立klauspost/cpuid/v2 MIDR_EL1；仅测试库增加noasm CPU探测备选路径，官方Go/Rust客户端不变。"}
+```
