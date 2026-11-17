@@ -22,8 +22,16 @@ def prepare(root,out,client,rust,original_args,rules):
    "/reference:"+str(gui/"WBD.exe"),*refs,
    str(root/"tools"/"m0_plan029_gui_real_network_harness.cs")],
    cwd=root,check=True,timeout=60)
+ # The real legacy Npcap loader resolves wpcap.dll relative to the ORIGINAL
+ # Go child EXE. GUI has a distinct portable working directory; never borrow
+ # a global PATH or a stale test-only fake DLL. These came from the exact
+ # already-verified official signed Npcap 1.88 install in this runner.
  for src,dst in ((client,gui/"wbd-client.exe"),(rust,gui/"wbd_engine.dll"),
-                 (out/"wintun.dll",gui/"wintun.dll")):
+                 (out/"wintun.dll",gui/"wintun.dll"),
+                 (out/"wpcap.dll",gui/"wpcap.dll"),
+                 (out/"Packet.dll",gui/"Packet.dll")):
+  if not src.is_file() or src.stat().st_size<10000:
+   raise RuntimeError("missing exact installed original driver/user DLL "+src.name)
   shutil.copy2(src,dst)
   if hashlib.sha256(src.read_bytes()).digest()!=hashlib.sha256(dst.read_bytes()).digest():
    raise RuntimeError("GUI linked product binary differs from exact SOURCE")
@@ -70,7 +78,7 @@ def prepare(root,out,client,rust,original_args,rules):
  assert "mtu" not in seed
  seed["startup-padding"]="off"
  (data/"gui-seed.json").write_text(json.dumps(seed,separators=(",",":")),encoding="utf-8")
- print("PLAN029_GUI_EXACT_GO_RUST_WINFORMS_BUILD_SOURCE_PASS",flush=True)
+ print("PLAN029_GUI_EXACT_GO_RUST_WINFORMS_BUILD_SOURCE_AND_SIGNED_NPCAP_DLLS_PASS",flush=True)
  return [str(gui/"GuiReal.exe"),str(gui),str(data/"gui-seed.json")],gui
 
 def receipt_and_cleanup(gui):

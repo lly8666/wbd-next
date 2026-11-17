@@ -1706,6 +1706,46 @@ jobs:
             $receipt | ConvertTo-Json | Set-Content $dnsIntent
             Write-Output 'PLAN029_H1794_OWNED_PHYSICAL_GUEST_TCP53_HYPERV_READBACK_PASS'
           }
+          # H2050: physical cold bootstrap TC=1 is a guest UDP53 *and*
+          # same-address TCP53 test BEFORE original TLS/Wintun/OS Applied.
+          # The previously configured Hyper-V grants covered only TCP443
+          # and test Direct TCP46112, so an NPF UDP53 query was dropped by
+          # the WSL firewall. Scope BOTH grants to this one original guest
+          # and source, with intent-before-apply and exact owned cleanup.
+          if($env:WBD_PLAN029_BOOTSTRAP_TC_SCENE -eq '1'){
+            if($env:WBD_PLAN029_V3_DIRECT_SCENE -ne '1' -or
+               $env:WBD_PLAN029_APP_TCP53_SCENE -eq '1'){
+              throw 'H2050 cold TC bootstrap has a distinct physical DNS grant'
+            }
+            foreach($proto in @('UDP','TCP')){
+              $dnsName=$ruleName+'-P029-BOOTDNS-'+$proto
+              $intent="result/wl-public/hyperv-bootstrap-$($proto.ToLowerInvariant())53-owned.json"
+              if(Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction SilentlyContinue){
+                throw 'foreign same-run bootstrap DNS rule'
+              }
+              [ordered]@{name=$dnsName;creator_id=[string]$creator[0].VMCreatorId;
+                protocol=$proto;port=53;local_ip=$guestIP;
+                remote_ip=[string]$source[0].IPAddress;
+                scope='H2050_COLD_ORIGINAL_PHYSICAL_DNS_TC_SINGLE_ENDPOINT';
+                state='INTENT'} | ConvertTo-Json | Set-Content $intent
+              New-NetFirewallHyperVRule -Name $dnsName -DisplayName $dnsName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol $proto -LocalAddresses $guestIP -RemoteAddresses ([string]$source[0].IPAddress) -LocalPorts '53' -ErrorAction Stop | Out-Null
+              $read=Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction Stop
+              $protocolNames=if($proto -eq 'UDP'){@('UDP','17')}else{@('TCP','6')}
+              if($null -eq $read -or $read.Direction -ne 'Inbound' -or
+                 $read.Action -ne 'Allow' -or
+                 [string]$read.Protocol -notin $protocolNames -or
+                 [string]$read.LocalPorts -ne '53' -or
+                 [string]$read.LocalAddresses -ne $guestIP -or
+                 [string]$read.RemoteAddresses -ne [string]$source[0].IPAddress -or
+                 [string]$read.VMCreatorId -ne [string]$creator[0].VMCreatorId){
+                throw 'H2050 actual HyperV physical DNS owned rule readback mismatch'
+              }
+              $receipt=Get-Content $intent -Raw | ConvertFrom-Json
+              $receipt.state='OWNED'
+              $receipt | ConvertTo-Json | Set-Content $intent
+            }
+            Write-Output ('PLAN029_H2050_TRUE_PHYSICAL_DNS_GUEST_HYPERV_UDP53_TCP53_EXACT_SCOPED source='+[string]$source[0].IPAddress+' guest='+$guestIP)
+          }
           if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){Write-Output 'WL_GAME_NATIVE_STAGE HYPERV_RULE_INSTALLED'}
           # Real NPF header showed original product SYN destination MAC equals
           # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
@@ -3068,6 +3108,43 @@ jobs:
             }
             Write-Output 'PLAN029_H1794_EXACT_TCP53_PHYSICAL_RULE_RECOVERED'
           }else{Write-Output 'PLAN029_H1794_NO_OWNED_GUEST_TCP53_RULE'}
+      - name: Recover H2050 exact owned WSL physical bootstrap UDP53 and TCP53
+        if: always()
+        timeout-minutes: 2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $base='WBD-M0-WL-'+$env:GITHUB_RUN_ID+'-'+$env:GITHUB_RUN_ATTEMPT+'-P029-BOOTDNS-'
+          foreach($proto in @('UDP','TCP')){
+            $name=$base+$proto
+            $receipt="result/wl-public/hyperv-bootstrap-$($proto.ToLowerInvariant())53-owned.json"
+            $live=Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+            if($null -eq $live){continue}
+            if(-not (Test-Path -LiteralPath $receipt)){
+              throw 'unreceipted cold bootstrap DNS HyperV rule; refuse broad deletion'
+            }
+            $owner=Get-Content $receipt -Raw | ConvertFrom-Json
+            $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop |
+              Where-Object {$_.FriendlyName -eq 'WSL'})
+            $protocolNames=if($proto -eq 'UDP'){@('UDP','17')}else{@('TCP','6')}
+            if($owner.name -ne $name -or $owner.protocol -ne $proto -or
+               $owner.port -ne 53 -or $owner.state -notin @('INTENT','OWNED') -or
+               $creator.Count -ne 1 -or
+               [string]$creator[0].VMCreatorId -ne $owner.creator_id -or
+               [string]$live.VMCreatorId -ne $owner.creator_id -or
+               [string]$live.Protocol -notin $protocolNames -or
+               [string]$live.LocalPorts -ne '53' -or
+               [string]$live.LocalAddresses -ne $owner.local_ip -or
+               [string]$live.RemoteAddresses -ne $owner.remote_ip -or
+               $live.Direction -ne 'Inbound' -or $live.Action -ne 'Allow'){
+               throw 'foreign cold bootstrap DNS rule; preserve for manual WAL recovery'
+            }
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction Stop
+            if(Get-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue){
+              throw 'H2050 exact physical DNS grant still live after Stop'
+            }
+            Write-Output ('PLAN029_H2050_PHYSICAL_BOOTSTRAP_RULE_OWNED_STOP_REMOVED '+$proto)
+          }
       - name: Delete only exact owned WSL2 guest MAC neighbor after public Stop
         if: always()
         timeout-minutes: 2
@@ -3193,6 +3270,9 @@ jobs:
             result/wl-public/hyperv-rule.json
             result/wl-public/hyperv-direct-tcp-owned.json
             result/wl-public/hyperv-direct-dns-tcp-owned.json
+            result/wl-public/hyperv-bootstrap-udp53-owned.json
+            result/wl-public/hyperv-bootstrap-tcp53-owned.json
+            result/wl-public/plan029-bootstrap-tc-guest.log
             result/wl-public/native-wsl-neighbor-owner.json
           retention-days: 30
           if-no-files-found: warn

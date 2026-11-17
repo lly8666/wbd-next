@@ -101,20 +101,29 @@
       "id": "H2048_GUI_original_retry",
       "source": "b26098e3f4dd0577ab18422c1fa7a0700021c448",
       "action": 43995805550,
-      "status": "IN_PROGRESS_UNVERIFIED",
-      "test": "original WinForms real button with frozen pre-conversion CLI, config readback and real kernel two-egress/Stop"
+      "status": "FAIL_BEFORE_GUI_OS_APPLIED",
+      "test": "original WinForms real button with frozen pre-conversion CLI, config readback and real kernel two-egress/Stop",
+      "first_boundary": "Action43995805550 original source-locked GUI Go/COLD outer1460 inner1389 passed; GO child failed loading wpcap.dll from independent WinForms portable EXE directory. No signed OS Applied or business."
     },
     {
       "id": "H2047_physical_single_DNS_TC",
       "source": "87eea943160e2ea51bde0fb6c61f0424d929b351",
       "action": 43995525313,
-      "status": "IN_PROGRESS_UNVERIFIED",
-      "test": "real Windows Npcap UDP TC -> WSL2 physical TCP53 same resolver ID/QNAME/source, followed by original TLS and two-exit/Stop"
+      "status": "FAIL_BEFORE_TCP_FALLBACK",
+      "test": "real Windows Npcap UDP TC -> WSL2 physical TCP53 same resolver ID/QNAME/source, followed by original TLS and two-exit/Stop",
+      "first_boundary": "Action43995525313 physical NPF UDP53 cold A lookup timeout; WSL HyperV had only original TCP443/46112 guest inbound grants, H2050 adds exact boot UDP/TCP53 grant. No TCP proof."
+    },
+    {
+      "id": "H2050_GUI_signed_npcap_repair",
+      "source": null,
+      "action": null,
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "first_boundary": "Bundled exact signed Npcap userland DLL into real WinForms client EXE folder; original Go TLS/OS Applied/Stop still pending."
     }
   ],
   "selected_unverified": {
-    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "PENDING_H2048",
-    "DNS_bootstrap_same_endpoint_TC_real": "PENDING_H2047",
+    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "RETRY_H2050_NOT_RUN",
+    "DNS_bootstrap_same_endpoint_TC_real": "H2047_FAILED_UDP_TIMEOUT_H2050_TEST_GRANT_PENDING",
     "DNS_bootstrap_after_reconnect": "NOT_RUN",
     "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
     "FakeIP_durable_unexpected_process_crash_recovery": "PURE_TEST_ONLY_NATIVE_NOT_RUN",
@@ -129,5 +138,5 @@
     "default1460_Game4": "NOT_RUN_USER_EXCLUDED_CURRENT_CLOSURE"
   },
   "invariant": "No existing old FAIL/NOT_RUN reclassified; provenance exact source per native receipt; separate sources cannot be composed into a same-source all-product PASS.",
-  "closure_status": "SELECTED_SCOPE_IN_PROGRESS_NO_DELIVERY_PROMOTION"
+  "closure_status": "SELECTED_SCOPE_IN_PROGRESS_NEW_NATIVE_SOURCES_UNVERIFIED"
 }

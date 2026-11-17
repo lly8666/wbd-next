@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2049,
-  "checkpoint_sha": "b26098e3f4dd0577ab18422c1fa7a0700021c448",
+  "sequence": 2050,
+  "checkpoint_sha": "f71a2b6ddbb4871eb98f9f256b03e9d098d0c75b",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2049 immutable source-specific 029 user-scoped inventory, no full plan promotion. H2045 actual GUI first FAIL H1845 prestart, corrected H2048 original Action in-flight; H2047 independent physical TC Action in-flight.",
-  "why_now": "H2045 actual Windows native Action43994188290 source969da57 first fail Python prestart H1845: GUI args replaced child CLI args before same-user-config guard. Fix only fixture identity source, preserve all Go/Rust admission and owned Stop.",
+  "current_task": "H2050 exact real original WinForms Npcap signed DLL userland bundle copied from same verified driver source; H2048 actual GUI native failed wpcap.dll absent. H2047 physical TC native failed physical NPF UDP53 timeout; add bounded owned HyperV WSL UDP53/TCP53 grants and owned exact cleanup. New GUI source Action pending.",
+  "why_now": "H2048 run43995805550 failed after correct Go/Rust MSS budget at Npcap DLL load from GUI-specific EXE folder. H2047 run43995525313 failed at physical A query timeout before TLS; WSL Hyper-V has only TCP443/46112 inbound grants. Build/source validation green, actual native receipts missing.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2048 and H2047 native original results first, then update this report from exact Actions and close only proven scoped subexits. Do not relabel pending or re-run H2031/H2041.",
+  "next_action": "Collect H2050 GUI real native pass/failure first. Once source fix confirmed, dispatch one separate H2051 TCP TC native scene on later commit marker. Do not re-run Game4 H2041 or H2031 padding.",
   "unverified": true,
   "last_tested_source": "60e4cc57e42be083d2338ae570749331b0e8b4b1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2050-GUI-NPCAP-BOOTSTRAP-FIREWALL.md",
     "docs/evidence/M0/PLAN029-H2049-USER-SCOPED-SOURCE-LEDGER-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2049-PROVENANCE-NO-PROMOTION.md",
     "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json",
     "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
   ],
