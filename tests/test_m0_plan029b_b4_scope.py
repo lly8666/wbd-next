@@ -55,6 +55,13 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         ):
             self.assertIn(gate, guest)
         self.assertIn("PLAN029B_B4_REAL_LINUX_EGRESS", guest)
+        # H2123 actual signed first failure: physical CN A had no
+        # positive answer and generic normal app used RFC1918 Direct;
+        # this exact source must re-use the protected Tunnel public /32.
+        e2e = (ROOT / "tools/m0_wl_public_normal_e2e.py").read_text()
+        self.assertIn('linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4', e2e)
+        self.assertIn('if p029_p1_policy or p029_game4_cn or p029b_b4:', e2e)
+        self.assertIn('PLAN029B_B4_FIRST_DNS_REPLY_FAILURE', (ROOT / "tools/m0_plan029b_b4_real_gui.cs").read_text())
 
     def test_exact_source_one_action_and_no_prior_matrices(self):
         workflow = (ROOT / ".github/workflows/m0-wl-public-normal-full.yml").read_text()
@@ -63,6 +70,10 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         self.assertIn(marker, workflow)
         self.assertIn(marker, scope)
         self.assertIn("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE:", workflow)
+        self.assertIn("PLAN029B_B4_EXACT_ORIGINAL_GUEST_PHYSICAL_UDP53_OWNED_APPLIED", workflow)
+        self.assertIn("hyperv-bootstrap-udp53-owned.json", workflow)
+        self.assertIn("Recover H2050 exact owned WSL physical bootstrap UDP53 and TCP53", workflow)
+        self.assertIn('"plan029b-b4-guest.log",', (ROOT / "tools/m0_wl_mode_evidence.py").read_text())
         self.assertIn("tests.test_m0_plan029b_b4_scope -v", workflow)
         self.assertIn("tools/m0_plan029b_b4_guest.py", workflow)
         self.assertIn("tools/m0_plan029b_b4_real_gui.cs", workflow)

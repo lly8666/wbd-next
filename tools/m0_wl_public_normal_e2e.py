@@ -777,11 +777,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if done.exists():done.unlink()
  llog=(out/"linux-app.log").open("w");logs.append(llog)
  wlog=(out/"windows-app.log").open("w");logs.append(wlog)
- if p029_p1_policy or p029_game4_cn:
+ if p029_p1_policy or p029_game4_cn or p029b_b4:
   if p029_alias_proc is None or p029_alias_proc.wait(timeout=25)!=0 or not (
       out/"plan029-h1745-owned-tun-alias.txt").is_file():
    raise RuntimeError("H1934 Linux original public TUN alias never applied")
- linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 else "10.66.0.1"
+ linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 else "10.66.0.1"
  # Keep the same two real kernel app generators alive while the human GUI
  # performs its ordinary first Disconnect / second Connect. The second
  # generation is separately proved by later CN Direct and Tunnel apps.

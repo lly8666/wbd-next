@@ -135,9 +135,17 @@ public static class Plan029BThreeRealGUI {
     var endpoint=(IPEndPoint)from;
     if(!endpoint.Address.Equals(remote.Address) || endpoint.Port!=53 ||
        n<16 || buffer[0]!=query[0] || buffer[1]!=query[1])continue;
-    Need((buffer[2]&128)!=0&&(buffer[3]&15)==0&&
-         (buffer[6]!=0||buffer[7]!=0),
-         "real A CNAME/TTL answer absent or negative");
+    if((buffer[2]&128)==0||(buffer[3]&15)!=0||
+       (buffer[6]==0&&buffer[7]==0)){
+     // One bounded diagnostic only on the exact first genuine DNS ticket;
+     // do not log query contents, credentials or per-packet data.
+     Console.WriteLine("PLAN029B_B4_FIRST_DNS_REPLY_FAILURE ordinal="+ordinal+
+        " rcode="+(buffer[3]&15)+
+        " answer_count="+((buffer[6]<<8)|buffer[7])+
+        " reply_len="+n+" lane="+(ordinal==3?"tunnel":"physical"));
+     Console.Out.Flush();
+     throw new IOException("PLAN029B B4 real A CNAME/TTL answer absent or negative");
+    }
     string ip=new IPAddress(new byte[]{buffer[n-4],buffer[n-3],
                                        buffer[n-2],buffer[n-1]}).ToString();
     Need(ordinal==1?ip.StartsWith("198.18.",StringComparison.Ordinal):

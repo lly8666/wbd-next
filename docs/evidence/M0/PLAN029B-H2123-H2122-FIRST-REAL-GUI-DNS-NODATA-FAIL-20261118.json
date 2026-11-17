@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2123",
+  "date": "2026-11-18",
+  "source_sha": "b1ab51be87c6d0c0aadd57283ac12da34ca238bf",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "run": {
+    "id": 44135197316,
+    "attempt": 1,
+    "conclusion": "failure",
+    "native_job_id": 134226463265,
+    "native": "failure",
+    "cheap": "success",
+    "windows_go": "success",
+    "windows_rust": "success",
+    "linux_rust": "success",
+    "linux_original_build": "success",
+    "windows_release_build": "success"
+  },
+  "archive": {
+    "id": 14352941680,
+    "name": "m0-wl-full-public-normal-direct-h1506-legacy-44135197316",
+    "zip_sha256": "d4ce8398baff7fc4fac7344759b1684adb2da6a1d23d661fb102995e294ff91b",
+    "members": 24,
+    "crc": "PASS",
+    "source_fields_match": [
+      "b1ab51be87c6d0c0aadd57283ac12da34ca238bf",
+      "b1ab51be87c6d0c0aadd57283ac12da34ca238bf",
+      "b1ab51be87c6d0c0aadd57283ac12da34ca238bf"
+    ]
+  },
+  "first_error": {
+    "stage": "B4_ORIGINAL_GUI_GEN1_POST_OS_APPLIED_QUERY_A",
+    "original_line": "PLAN029B_B4_FIRST_FAILURE IOException PLAN029B B4 real A CNAME/TTL answer absent or negative",
+    "source": "mode-results/normal/client.log:163",
+    "prior_receipts": [
+      "WBD_WINDOWS_OS_APPLIED",
+      "WBD_WINDOWS_CLIENT_READY",
+      "PLAN029B_B4_REAL_GUI_GENERATION_APPLIED ordinal=1"
+    ],
+    "last_real_dns_positive": "NOT_PROVEN",
+    "upstream_physical_guest_rx": "NOT_CAPTURED_IN_FIRST_ARCHIVE",
+    "upper_error": "PLAN029B_B4_PHASE1_STOP_ROUTE_RELEASE_REQUIRED process exited 1"
+  },
+  "actual_native": {
+    "go_rust_auth_tls": "PASS",
+    "windows_original_wintun_os_applied": 1,
+    "windows_owned_stop": "PASS_ON_FAILURE",
+    "linux_actual_m4_sessions": 1,
+    "linux_native_stop": "PASS",
+    "old_fakeip_egress": "NOT_RUN",
+    "business_3gen": "NOT_RUN",
+    "windows_ipv6_skipped_stop": 17,
+    "original_win_duplex": "NOT_QUALIFIED"
+  },
+  "hypothesized_fixture_gaps": {
+    "physical_dns_udp53": "B4 flag omitted prior scoped HyperV UDP53 grant; H2050 original demonstrated it is needed for physical WSL guest",
+    "normal_duplex_ip": "B4 public alias absent in generic linux_app4 selection, original C2S10.66.0.1 return error 10051"
+  },
+  "corrective_candidate": "Only source-locked original B4 fixture reuse one owner-based HyperV UDP53 rule, existing real TUN public alias selection, bounded first negative DNS tuple and guest log to original archive; no product Rust/Go/wire change",
+  "not_qualified": {
+    "three_real_GUIs": "FAIL_FIRST_GENERATION_DNS",
+    "Game2_Game4": "NOT_RUN",
+    "B5_same_VM_10mbps_cpu_gib_rss_p99": "NOT_RUN"
+  },
+  "old_historical_fails_preserved": [
+    44119996395,
+    44122245145,
+    44123359648,
+    44135003298
+  ]
+}

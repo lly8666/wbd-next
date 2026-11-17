@@ -47,6 +47,7 @@ LOGS=(
  # 029B signed real OS app DNS/ordinary CN receipts, bounded and redacted.
  "plan029b-b0-dns-guest.log","plan029b-b0-dns-windows.log",
  "plan029b-b2-ordinary-guest.log","plan029b-b2-ordinary-windows.log",
+ "plan029b-b4-guest.log",
  "auto-adaptive-windows-udp.log","auto-adaptive-linux-udp.log",
  "auto-revision-windows-udp.log","auto-revision-linux-udp.log",
  "wl-n0-windows-app.log","wl-n0-linux-app.log",

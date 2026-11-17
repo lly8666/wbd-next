@@ -1938,6 +1938,42 @@ jobs:
             }
             Write-Output ('PLAN029_H2050_TRUE_PHYSICAL_DNS_GUEST_HYPERV_UDP53_TCP53_EXACT_SCOPED source='+[string]$source[0].IPAddress+' guest='+$guestIP)
           }
+          # H2123 B4 only: real CN DNS physical UDP/53 on the original
+          # signed WSL2 guest. H2050 already established that the separate
+          # TCP443 HyperV rule does not permit UDP53. Reuse its EXACT
+          # test-owned DNS-rule receipt/cleanup shape; do NOT widen TLS443
+          # or add a firewall product policy or additional DNS server.
+          if($env:WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE -eq '1'){
+            if($env:WBD_PLAN029_BOOTSTRAP_TC_SCENE -eq '1' -or
+               $env:WBD_PLAN029_V3_DIRECT_SCENE -eq '1'){
+              throw 'B4 physical DNS one-scene grant cannot join old Direct/TC'
+            }
+            $dnsName=$ruleName+'-P029-BOOTDNS-UDP'
+            $intent='result/wl-public/hyperv-bootstrap-udp53-owned.json'
+            if(Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction SilentlyContinue){
+              throw 'foreign B4 original WSL UDP53 rule'
+            }
+            [ordered]@{name=$dnsName;creator_id=[string]$creator[0].VMCreatorId;
+              protocol='UDP';port=53;local_ip=$guestIP;
+              remote_ip=[string]$source[0].IPAddress;
+              scope='PLAN029B_B4_ONLY_ORIGINAL_PHYSICAL_CN_DNS';state='INTENT'} |
+              ConvertTo-Json | Set-Content $intent
+            New-NetFirewallHyperVRule -Name $dnsName -DisplayName $dnsName -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol UDP -LocalAddresses $guestIP -RemoteAddresses ([string]$source[0].IPAddress) -LocalPorts '53' -ErrorAction Stop | Out-Null
+            $read=Get-NetFirewallHyperVRule -Name $dnsName -ErrorAction Stop
+            if($null -eq $read -or $read.Direction -ne 'Inbound' -or
+               $read.Action -ne 'Allow' -or
+               [string]$read.Protocol -notin @('UDP','17') -or
+               [string]$read.LocalPorts -ne '53' -or
+               [string]$read.LocalAddresses -ne $guestIP -or
+               [string]$read.RemoteAddresses -ne [string]$source[0].IPAddress -or
+               [string]$read.VMCreatorId -ne [string]$creator[0].VMCreatorId){
+              throw 'B4 exact owned HyperV physical UDP53 failed real readback'
+            }
+            $receipt=Get-Content $intent -Raw | ConvertFrom-Json
+            $receipt.state='OWNED'
+            $receipt | ConvertTo-Json | Set-Content $intent
+            Write-Output 'PLAN029B_B4_EXACT_ORIGINAL_GUEST_PHYSICAL_UDP53_OWNED_APPLIED'
+          }
           if($env:WBD_WL_GAME_FEC_RESCUE -eq '1'){Write-Output 'WL_GAME_NATIVE_STAGE HYPERV_RULE_INSTALLED'}
           # Real NPF header showed original product SYN destination MAC equals
           # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2

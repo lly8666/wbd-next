@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2122,
-  "checkpoint_sha": "b1ab51be87c6d0c0aadd57283ac12da34ca238bf",
+  "sequence": 2123,
+  "checkpoint_sha": "36cf5488f096cdf98dfa0d97dce3cd6273bb4cb5",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2122 original main b1ab51b cheap all PASS, Linux/Windows Rust PASS, Windows Go exact three-generation test+compile PASS; one signed native Win2025/WSL2 Action44135197316 build PASS and OS job in progress, B4 actual three GUI OS Applied/Stop NOT_RUN until real evidence. H2121 source3811 cheap FAIL at H1749 stale CAS string; H2122 one test-only string correction, no product changes. H2112 scoped /128 IPv6 PASS previous source; Game2/Game4 and B5 sameVM<=10Mbps CPU/GiB/p99 NOT_RUN.",
-  "why_now": "main governance Action44135197359 first structural FAIL: cursor evidence_refs incorrectly pointed to staged NOT_RUN candidate source rather than last_tested_source=224736. Restore exact H2120 PASS evidence as last tested; keep H2121 NOT_RUN as context and actual 3811 source. Active signed native original run is not interrupted or duplicated.",
+  "current_task": "H2123 original Action44135197316 SOURCE b1ab51b original full cheap/WinGo/WinRust/LinuxRust/Linux+Win product build PASS, signed native Windows2025/WSL2 B4 FAIL after genuine GUI generation1 OS Applied/Ready: first C# real CN A answer negative/empty; original Win Rust owned Stop/WAL PASS. Original b1ab artifact14352941680 ZIP sha256 d4ce8398... 24 CRC PASS; b1ab same product/fixture/Linux source. B4 3-gen NOT_RUN/FAIL, Game2/4 and B5 NOT_RUN.",
+  "why_now": "Inspect actual original client.log first error after first real OS Applied and signed HyperV/WSL ownership: B4 did not request prior H2050 scoped physical UDP53 HyperV grant; original generic normal duplex used RFC1918 10.66.0.1 instead of existing public TUN /32 when CN Direct, causing repeated Windows kernel UDP error 10051. Repair only these two test fixture entry gates; preserve prior verified H2050, B0-B3 and TCP/FEC hot path.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect existing original Action44135197316 native-public-two-os job134226463265 real SOURCE b1ab51b, require exact three WinForms OS Applied, physical→Tunnel DNS/data, old FakeIP no external bytes, same original Go/Rust/GUI/WSL hash, 3 owned Stop/MTU/MSS. If real first FAIL, fix only root cause with one later source-frozen Action; do not rerun old B0–B3. Game2/4 representatives and B5 sameVM<=10Mbps still pending.",
+  "next_action": "One new source-frozen main marker [plan029b-b4-gui-three-real] after prior native Action44135197316 terminal, only signed B4 Normal/1460 WinForms three generations. Read actual first bounded DNS rcode/answer/guest physical socket; if still same nonanswer twice with no new info, stop broad reruns and inspect first upstream packet/HyperV first. Then three original OS Applied/owned Stops, source-locked ZIP/hash/CRC, stale FakeIP physical/TUN no egress, Game2/4, B5 sameVM<=10Mbps.",
   "unverified": true,
-  "last_tested_source": "22473652eb20a2d0127272f8c1c0496197b43710",
+  "last_tested_source": "b1ab51be87c6d0c0aadd57283ac12da34ca238bf",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2120-H2119-B4-THREE-GENERATION-PURE-PASS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2123-H2122-FIRST-REAL-GUI-DNS-NODATA-FAIL-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029B-H2122-SOURCE-LOCKED-B4-CHEAP-GATES-CURSOR-REF.md",
-    "docs/evidence/M0/PLAN029B-H2121-B4-ORIGINAL-GUI-THREE-GENERATION-STAGED-NOTRUN-20261118.json",
+    "docs/devlog/M0/20261118-PLAN029B-H2123-FIRST-REAL-GUI-CN-DNS-SCOPED-FIX.md",
+    "docs/evidence/M0/PLAN029B-H2123-H2122-FIRST-REAL-GUI-DNS-NODATA-FAIL-20261118.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2120 SOURCE224736 Go/Windows/Linux Rust pure B4 PASS proven; H2112 genuine Wintun /128 mixed IPv4 scoped PASS. H2121 original signed B4 native scenario staged, SOURCE3811 cheap FAIL old H1749 literal; H2122 main b1ab cheap PASS and Win/Linux Go/Rust compile PASS, signed OS still IN_PROGRESS. B4 real Game/Stop source not yet qualified; B5 sameVM10Mbps OPEN; 029/029B OPEN, 030 not started."
+  "partial_summary": "H2123 original signed Windows2025 SOURCE b1ab51b B4 gen1 actual GUI original TLS/Npcap/Wintun OS Applied+Ready and fail-owned Stop PASS; first exact CN A negative/empty FAIL in C# after 15s, three gen remain NOT_RUN. Real B4 guest physical UDP53 HyperV admit and public TUN alias original duplex selector staged candidate, source-freeze not yet tested. H2120 pure B4 PASS, H2112 scoped IPv6 PASS prior, H2099 ordinary B2 and H2103 advanced scoped previous. B5/Game2/4 NOT_RUN; 029/029B OPEN,030 not started."
 }
