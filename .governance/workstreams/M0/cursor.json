@@ -4,25 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2112,
-  "checkpoint_sha": "d2b70092215adcfd61d1e3adea502f4096bef901",
+  "sequence": 2113,
+  "checkpoint_sha": "417e0e069659ff392d53ce0343c383fee7ae2915",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2112 H2111 signed test-only Go WAL identity/IPv4-IPv6 ifindex preflight code passed exact-source cheap WindowsRust/Go/LinuxRust, original Win native not run by design. Fix nested baseline sha256 delimiter false-reject in Go WAL scanner (use final outer envelope hash, still SHA256 verify), add synthetic nested proof. Dispatch one source-locked [plan029b-b3-ipv6-real] original Win2025 Wintun/Npcap↔WSL2 Normal/off default1460 actual AF_INET6 /128+IPv4 mixed with owned Stop. H2108 old signed Action44102947133 FAIL precondition before test sender but original network/WAL Stop true PASS and background v6 skipped17 only.",
-  "why_now": "H2111 Action44107631933 cheap, Windows Rust, Linux Rust, Windows Go all PASS, governance PASS. Original ZIP14338783388 SHA256 eccb455f0afcfbe28b0a4caadb05942411e1a3671722886ac57be93d526b2ff3 and Win Go ZIP14337554692 SHA256 65875d38b1109315099ae50491a5b5c17aa390df61da4bce1b580d2ddbebea07 CRC/source both checked. Original Go WAL record baseline may itself contain sha256; last sha256 token is top-level envelope checksum, not first/unique inner occurrence. No product code changed.",
+  "current_task": "H2113 review original H2112 signed real Win2025 Wintun/Npcap↔WSL2 Normal/off Action44108913670 SUCCESS. Exact source417e; ZIP14339823791 SHA256 a0ffa8b899dea3e55bb06a599ba110c5e56e30d3ea8adeb20ee3d75c872f5619 CRC27 PASS; AF_INET6 16, WSL2 TUN IPv4 12, original Rust IPv6 dropped52 (includes unrelated), pinned Go WAL & OS GUID/binding PASS, exact /128 cleanup, both owned Stop/TLS/UDP/TCP PASS_SCOPED. Scope does NOT include host-global/physical-bound/onlink IPv6. Feature card updated. Next B4 GUI advanced→ordinary→all lifecycle and Game representative; B5 same-VM 10Mbps CPU/GiB/p99.",
+  "why_now": "H2112 Action and original ZIP/product source/hashes verified. H2108 B3 prior FAIL pre-original sender remains historical FAIL, no new rerun. Source-lock scope isolated /128; background skip counter is aggregate, never misrepresent per-packet global IPv6 intercept.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect exactly one H2112 [plan029b-b3-ipv6-real] signed source original full ZIP/first error. Need original WAL SHA active/owner and OS ifindex/IPv6, 16 real AF_INET6 sendto, Rust Wintun skipped>=16, 12 interleaved WSL2 TUN IPv4 echo, exact test-owned /128 route cleanup, both original WAL Stop. If blocked, mark FAIL/NOT_RUN, never general IPv6 guarantee. B4 real GUI multigen/Game and B5 sameVM<=10Mbps CPU/GiB p99 remain NOT_RUN.",
+  "next_action": "B4: use original WinForms GUI and exact-source Go/Rust/Npcap/Wintun on Windows↔WSL2; bounded sequential advanced CN→ordinary CN→split-off all generation each real GUI Stop/Apply and scoped DNS/FakeIP/Tunnel/old FakeIP reject, no implicit other modes. Cheap static tests before one real marker; record first FAIL, no global IPv6 claim. B5 follow separate sameVM 10Mbps A/B, true CPU/GiB+RSS+p99/Stop. Keep Game/ARM gaps explicit.",
   "unverified": true,
-  "last_tested_source": "d2b70092215adcfd61d1e3adea502f4096bef901",
+  "last_tested_source": "417e0e069659ff392d53ce0343c383fee7ae2915",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2112-H2111-WAL-OWNER-PREFLIGHT-PASS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2113-H2112-B3-REAL-SIGNED-IPV6-MIX-PASS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2112-B3-GO-WAL-OUTER-SHA.md",
-    "docs/evidence/M0/PLAN029B-H2112-H2111-WAL-OWNER-PREFLIGHT-PASS-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2111-H2108-B3-REAL-OWNER-NIC-FIRST-FAIL-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2113-B3-ORIGINAL-SIGNED-RESULT.md",
+    "docs/evidence/M0/PLAN029B-H2113-H2112-B3-REAL-SIGNED-IPV6-MIX-PASS-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2103 off, H2098 CN ordinary, H2101 advanced CI signed scoped PASS older source; H2104 WinForms/Go migration compiled PASS. H2105/H2106 B3 build E0004 FAIL, H2107 feature release PASS, H2108 signed original Go/Rust/Stop PASS scoped but own IPv6 sender blocked at friendly NIC name precheck, B3 FAIL. H2111 pinned WAL/OS test code cheap PASS, H2112 one real B3 retry scheduled. B4/B5 OPEN."
+  "partial_summary": "H2112 B3 real signed /128 IPv6+IPv4+Stop PASS_SCOPED, B0 H2103 and B2 ordinary H2098/advanced H2101 scoped PASS on older SOURCE; H2104 WinForms/Go migration config PASS. H2105/6 old release FAIL, H2108 first NIC predicate FAIL, H2107 HTTP503 fail archived. B4 GUI lifetime/Game, B5 sameVM <=10Mbps still OPEN; 029 not closed, 030 not started."
 }

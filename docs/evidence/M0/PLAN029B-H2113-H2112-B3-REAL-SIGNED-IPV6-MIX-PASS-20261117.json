@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2113",
+  "date": "2026-11-17",
+  "source_sha": "417e0e069659ff392d53ce0343c383fee7ae2915",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_ORIGINAL_WINDOWS2025_WINTUN_AF_INET6_IPV4_INTERLEAVE_NOT_GLOBAL_HOST_IPV6",
+  "run": {
+    "id": 44108913670,
+    "attempt": 1,
+    "conclusion": "success",
+    "native_job_id": 134132799214,
+    "native_conclusion": "success",
+    "cheap": "PASS",
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "linux_product_build": "PASS"
+  },
+  "artifact": {
+    "id": 14339823791,
+    "name": "m0-wl-full-public-normal-direct-h1506-legacy-44108913670",
+    "zip_sha256": "a0ffa8b899dea3e55bb06a599ba110c5e56e30d3ea8adeb20ee3d75c872f5619",
+    "crc": "PASS_ALL_27_MEMBERS",
+    "report": "mode-results/normal/report.json",
+    "source_fields_equal": [
+      "417e0e069659ff392d53ce0343c383fee7ae2915",
+      "417e0e069659ff392d53ce0343c383fee7ae2915",
+      "417e0e069659ff392d53ce0343c383fee7ae2915",
+      "417e0e069659ff392d53ce0343c383fee7ae2915"
+    ]
+  },
+  "b3_exact": {
+    "mode": "normal",
+    "outer_mtu": 1460,
+    "inner_mtu": 1389,
+    "route": "fd73:29b:2026::1/128",
+    "source_ipv6": "fd73:29b:2026::2",
+    "wintun_ifindex": 30,
+    "real_wintun_ipv6_binding": "PINNED_WAL_OS_GUID_AND_NETADAPTERBINDING_ENABLED",
+    "original_go_wal_sha256": "0711abae2eff61a09ed67fd4285db65f79185bf110ea26a87274bdef3172218b",
+    "real_windows_AF_INET6_kernel_sendto": 16,
+    "real_WSL2_ipv4_TUN_interleaved_echo": 12,
+    "original_rust_wintun_ipv6_skipped_stop": 52,
+    "skip_scope": "STOP_AGGREGATE_CONTAINS_SYSTEM_BACKGROUND_NO_PER_PACKET_16_TO_16_ATTRIBUTION",
+    "original_test_owned_cleanup": "PASS_EXACT_TEST_OWNED_IPV6_ADDRESS_ROUTE_ABSENT",
+    "original_windows_and_linux_owned_stop": "PASS_BOTH_OWNED",
+    "tls": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "both_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "both_kernel_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "rust_stop_log": "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
+    "win_os_cleanup": "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1",
+    "linux_stop": "V4_PUBLIC_NATIVE_STOP_DRAINED role=server"
+  },
+  "manifest": {
+    "windows_cli_sha256": "a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46",
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71"
+  },
+  "limitations": {
+    "physical_bound_or_onlink_ipv6": "NOT_PROVEN_BLOCKED",
+    "host_global_ipv6_leak": "NOT_PROVEN",
+    "b3_all_and_cn_aaaa_full_matrix": "NOT_RUN_THIS_ACTION_OTHER_SCOPED_OLD_EVIDENCE",
+    "test_owned_receipt_stage": "PRE_MUTATION_INTENT_READ_BACK_ON_CLEANUP_ONLY_ROUTE_EXECUTE_AND_ECHO_FROM_OTHER_RECEIPTS",
+    "b4_gui_advanced_to_ordinary_to_all": "NOT_RUN",
+    "game2_game4": "NOT_RUN",
+    "b5_same_vm_10mbps_cpu_gib_p99": "NOT_RUN",
+    "old_source_reuse": "FORBIDDEN"
+  },
+  "history_fail_preserved": [
+    {
+      "run": 44096919880,
+      "first_error": "Rust original release E0004"
+    },
+    {
+      "run": 44101072122,
+      "first_error": "GitHub artifact HTTP503 before business"
+    },
+    {
+      "run": 44102947133,
+      "first_error": "old test-only NIC description precondition before test AF_INET6"
+    }
+  ]
+}
