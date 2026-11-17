@@ -42,3 +42,12 @@ C helper只`poll`最多9.5秒，在真实TUN FD读取一个IPv4 packet，对真�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"冻结用户提供的A10实体ARM64 KSU原Go/TUN/RAW/路由回滚PASS回执，独立A11真实本APK UID UDP→TEMP TUN逐字节收包/专用表精确rollback源码与CI，仍不宣称原TLS/M3/M4/DNS已验证。"}
 ```
+
+
+## A11同SOURCE Host/NDK/签名APK构建成果（设备包验收未完成）
+
+A11 真实代码 SOURCE `a3e52ae39f3d0e45317263c317c56f82724ccd35` 的 [Android ARM64 Action44202325595](https://github.com/lly8666/wbd-next/actions/runs/44202325595) 已证明：`ANDROID_ARM64_A11_ACTUAL_UID_TO_TUN_PACKET_SCOPE_AUDIT_PASS`、`ANDROID_ARM64_A11_REAL_UID_TUN_PACKET_SCRIPT_HOST_PASS`、`ANDROID_ARM64_ROOT_DEBUG_ONLY_TUN_RAW_SELFTEST_ABI_SHA_PASS` 及 `ANDROID_ROOT_ARM64_APP_AND_NATIVE_ASSETS_SOURCE_LOCKED_BUILD_PASS sdk=36`；Root APK Job SUCCESS，原Go/Rust ARM64、CN8503及同Linux服务器测试全部PASS。Signed APK artifact id`14383120148`，APK实际SHA256 `077f1e797dd888c66e30a69e18c0a965a471c51b144f179baea72b23be3cc4b1`，A11临时TUN helper SHA256`720fd3d94758acc6e5d1d2a04f5d32550a721e33e4a717988d654506ada680f0`。上述是 **BUILD_PASS**，没有远程操作用户设备；A11实体单包入TUN仍 **NOT_RUN**。全部11 Jobs里10项SUCCESS，整轮Action**FAIL**唯一一项是x86_64 KVM KSU NativeBridge `ORIGINAL_WBD_ARM64_EXIT=139`、`ORIGINAL_GO_CSHARED_HELP_EXIT=0`。用户的真ARM64手机A10已经原Go ELF HELP PASS，两个不同CPU/翻译器结果不冲突；不豁免或跳过原红门。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"记录A11同源码真实NDK/Host/签名APK BUILD_PASS与来源SHA及产物digest；保留真机A10用户PASS但A11设备NOT_RUN，x86 NativeBridge原Go ELF139不豁免。"}
+```
