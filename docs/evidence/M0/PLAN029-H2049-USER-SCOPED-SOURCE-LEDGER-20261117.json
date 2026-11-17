@@ -138,12 +138,19 @@
       "id": "H2054_GUI_StopSTA_fix",
       "source": null,
       "action": null,
-      "status": "IMPLEMENTED_NOT_TESTED",
-      "test": "Same exact signed original WinForms/kernel scene; no extra Form.Dispose after separately proven owned Stop; requires exit0, same SOURCE signed OS Applied and full business."
+      "status": "CODE_FIXED_NATIVE_NOT_TRIGGERED",
+      "test": "H2054 harness-only changed excluded on.push.paths; fixed in H2055 workflow."
+    },
+    {
+      "id": "H2055_GUI_real_original_replay",
+      "source": null,
+      "action": null,
+      "status": "PENDING_EXACT_NATIVE_ACTION",
+      "test": "One original WinForms STA real signed Go/Rust source, WSL2 Direct+Tunnel and Stop, no double Form.Dispose, require child exit0 and independently verified kernel business"
     }
   ],
   "selected_unverified": {
-    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "H2050_REAL_APPLIED_AND_ALL_KERNEL_BUSINESS_WAL_STOP_OBSERVED_BUT_ACTION_FAIL_H2054_RECHECK",
+    "GUI_Connect_actual_OS_Applied_kernel_business_and_Stop": "H2050_NATIVE_ALL_BUSINESS_AND_WAL_STOP_SEEN_ACTION_FAIL; H2055_GUI_RETEST_PENDING",
     "DNS_bootstrap_same_endpoint_TC_real": "H2047_FAILED_UDP_TIMEOUT_H2050_TEST_GRANT_PENDING",
     "DNS_bootstrap_after_reconnect": "NOT_RUN",
     "DNS_cache_TTL_real_restart": "PURE_TEST_ONLY_NATIVE_NOT_RUN",

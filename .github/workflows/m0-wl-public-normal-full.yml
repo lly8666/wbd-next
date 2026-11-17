@@ -92,6 +92,13 @@ on:
       - tests/test_delivery_ci.py
       - tools/m0-plan028-win-wsl-product-owned-alias.ps1
       - tools/m0_wl_public_normal_e2e.py
+      # Real original WinForms STA button fixture, signed same-Go/Rust product,
+      # and the independent cold physical UDP TC/TCP WSL2 DNS fixture.
+      # A fixture-only change must not silently skip its exact native Action.
+      # The separate native-scope gate still demands the explicit commit marker.
+      - tools/m0_plan029_gui_real_network_harness.cs
+      - tools/m0_plan029_gui_real_bridge.py
+      - tools/m0_plan029_bootstrap_tc_real_guest.py
       - tools/m0_plan029_h2019_wire_padding_pcap.py
       - tools/m0_plan029_h1745_guest_dns_direct.py
       - tools/m0_plan029_h1745_win_client_dns_direct.py
