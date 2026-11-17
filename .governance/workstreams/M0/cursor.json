@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2128,
-  "checkpoint_sha": "43f988d37edcb54e537b14d2f5a73aab4d6609fd",
+  "sequence": 2132,
+  "checkpoint_sha": "5fc22aef30aa4440e81257e67fded501fece3080",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2128 original cde9 Action44153223434 source-locked signed Win2025/WSL2 FAIL: original GUI advanced gen1 and ordinary gen2 Applied/real CN DNS+UDP and owned Stop PASS; gen3 all stopped before Connect because harness repeated disabled 保存配置 click after form.SaveEditor+original Go Validate effective. No product Rust/Go failure evidence. H2129 source43f test-only skips duplicate Save on gen2/3 but preserves three genuine Connect/Stop, new Action44195727026 cheap PASS, other CI IN_PROGRESS. Game2/4 B5 NOT_RUN.",
-  "why_now": "Original signed zip14359994122 SHA256 b3062c... 26 CRC PASS first failure at gen3 UI Save button, not DNS/route/network. Avoid repeating 029 B0-B3 and avoid weakening true GUI Connect/Disconnect/Stop.",
+  "current_task": "H2132 parallel independent original signed one-scene B4 H2129 SOURCE43f Action44195727026 all cheap/WinGo/WinRust/LinuxRust/LinuxBuild PASS native Win2025/WSL2 IN_PROGRESS; one Game4 advanced CN H2132 SOURCE5fc Action44197717052 cheap PASS, WindowsGo/WinRust/LinuxRust IN_PROGRESS. Prior Game4 H2130 5e2 Action44197234669 FAIL_CHEAP stale H1775 static+missing feature-impact, H2131 2aa Action44197448012 FAIL_CHEAP frozen Go overlay blob mismatch; no Game4 native on either. H2132 restores exact original Go overlay bytes and adds feature-impact; B5 sameVM NOT_RUN.",
+  "why_now": "Need preserve H2129 live B4 and Game4 distinct Action/SOURCE. H2130 and H2131 failed before any product native run; avoid re-signing frozen Go source or pretending Game2 unsupported split is a real Game2 business PASS. Current H2132 source 5fc Go overlay sha b3c138 original, Python Game4 explicit cn-domain-direct true advanced per new 029B semantics.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2129 Action44195727026 exact SOURCE43f manifest/go+rust hashes and CRC, real original GUI Gen1/2/3 OS Applied+MTU/MSS+physical/tunnel DNS and business+retired FakeIP+3 owned Stop+original Windows-to-Linux TCP+final CI gate. If green mark B4 scoped PASS and proceed minimal Game2/Game4 then B5 sameVM <=10Mbps sequential AB. Else fix only first true failure; preserve no unseen result as PASS.",
+  "next_action": "Collect H2129 Action44195727026 SOURCE43f native B4 true triple original GUI/Go effective, original DNS/UDP/TCP/MTU/MSS, three OS Applied/Stop and final CI result; independently collect Game4 H2132 Action44197717052 SOURCE5fc cheap+source-locked Game4 actual four TLS lanes, advanced CN FakeIP physical Direct and Tunnel real TCP/UDP, owned Stop. If either fail fix first real error only, one Action/scenario. Game2 advanced split must report explicit unsupported before OS Apply, no pretend real support. Then perform bounded sameVM<=10Mbps CPU per GiB/RSS and p99 or preserve NOT_RUN.",
   "unverified": true,
-  "last_tested_source": "cde9e7921737aad6f332a10fb738e2a4d764e9dd",
+  "last_tested_source": "2aa28ab92bf5ac324b556d65ab9b39801f6d49c6",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2128-H2128-THIRD-GUI-REDUNDANT-SAVE-BUTTON-REAL-FAIL-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2132-H2130-H2131-GAME4-PREFLIGHT-FAIL-AND-SOURCE-FREEZE-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029B-H2128-THIRD-GUI-SAVED-BUTTON-FIRST-FAIL.md",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
-    "docs/evidence/M0/PLAN029B-H2127-H2127-B4-ORIGINAL-PRODUCT-PASS-NATIVE-CI-GATE-FAIL-20261118.json"
+    "docs/devlog/M0/20261118-PLAN029B-H2130-H2131-GAME4-ADVANCED-FLAG-SIGNED-ASYNC.md",
+    "docs/evidence/M0/PLAN029B-H2128-H2128-THIRD-GUI-REDUNDANT-SAVE-BUTTON-REAL-FAIL-20261118.json",
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2128 original cde9 Action44153223434 failed at third original WinForms Save button already persisted/disabled, first two original real GUI Applied/DNS/UDP/Stop PASS; no Rust Go product hot path FAIL. H2129 source43f cheap PASS candidate B4 native running; B0-B3 historical PASS_SCOPED, Game/B5 NOT_RUN, 029/029B OPEN."
+  "partial_summary": "H2129 B4 SOURCE43f real Action44195727026 native pending after all component+original Linux build PASS. Game4 new explicit advanced CN fixture SOURCE5fc Action44197717052 cheap PASS and other component jobs pending. H2130/H2131 Game4 sources only cheap FAIL stale static/frozen Go overlay, reverted exact original Go test blob, no native. Game2 split=true unsupported source fail-closed only, actual mode NOT_RUN. P-B1/P-B2 sameVM10Mbps CPU/GiB/RSS/p99 NOT_RUN. 029/029B OPEN."
 }
