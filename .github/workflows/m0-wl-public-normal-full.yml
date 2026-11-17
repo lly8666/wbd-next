@@ -1205,6 +1205,13 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: "1.23.12", cache: false}
+      # Frozen product EXE/DLL and Linux .so are reused byte-for-byte.
+      # The test's original WinForms schema still comes from the exact
+      # assembled Go donor; on reuse, materialize that donor for GUI *only*.
+      # Never recompile or relabel the old product binaries as new SOURCE.
+      - name: Restore original GUI schema for H2062 frozen binary native reuse
+        if: env.WBD_WL_REUSE_RUN_ID == '44007996775' && inputs.plan029_case != 'none'
+        run: python tools/prepare_windows_wiring.py
       - name: Prepare exact original Go and current native bridge with shared preflight assembler
         if: env.WBD_WL_REUSE_RUN_ID == ''
         run: python tools/prepare_windows_wiring.py
