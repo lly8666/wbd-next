@@ -44,9 +44,11 @@ public final class RootClientActivity extends Activity {
         new AlertDialog.Builder(this)
             .setTitle("Android ARM64 / KernelSU 一键自检")
             .setMessage("不需要服务器地址/用户名/密钥。\n\n将请求 KernelSU Root 授权，" +
-                "创建并关闭临时真实 TUN，测试 RAW/物理网络绑定，短暂添加仅对本 APK UID " +
-                "和测试地址 192.0.2.1/32 生效的独立规则/table19843，并立刻尝试" +
-                "完整撤销。不会修改默认路由、其他 App UID、原 WBD table19842、" +
+                "创建并关闭临时真实 TUN，测试 RAW/物理网络绑定；" +
+                "还会用本 APK 自己的 UID 向保留测试地址 192.0.2.1:43999 " +
+                "发送一个固定 UDP 测试包，观察它是否经独立策略规则进入临时 TUN。" +
+                "仅短暂改本 APK UID 的 table19843/pref9699，立即尝试撤销。" +
+                "不会修改默认路由、其他 App UID、原 WBD table19842、" +
                 "系统 DNS 或任何 TLS/AEAD 数据面。\n\n" +
                 "异常被强行杀进程时无法绝对保证回滚；若结果显示回滚失败，请停止后检查。")
             .setNegativeButton("取消",null)
@@ -209,8 +211,9 @@ public final class RootClientActivity extends Activity {
             "No VpnService or FakeIP. Normal/off only. Real traffic NOT YET DEVICE-QUALIFIED.");
         pane.addView(intro);
         TextView diagHint=new TextView(this);
-        diagHint.setText("首次上真 ARM64 手机：直接点下面一键自检，不需要填写任何服务器参数。" +
-            " 这是独立内核能力测试；只有真正有效的 WBD 服务器/密钥才可使用 START 联网。");
+        diagHint.setText("真 ARM64 KernelSU 手机可直接一键测真实 App UID→内核路由→临时 TUN 的固定 UDP 包，" +
+            "不需要服务器参数；这并不等于原 Rust M4 或生产目标 App 转发验收。" +
+            " 真实 WBD 服务器与密钥只用于下面单独的 START。");
         pane.addView(diagHint);
         networks=new Spinner(this);
         pane.addView(networks);
@@ -219,7 +222,7 @@ public final class RootClientActivity extends Activity {
         refresh.setOnClickListener(v->chooseNetworks());
         pane.addView(refresh);
         Button selfTestButton=new Button(this);
-        selfTestButton.setText("一键自检 ARM64 / KSU / TUN / RAW / UID 路由及回滚（免服务器）");
+        selfTestButton.setText("一键自检 ARM64 / KSU / TUN / RAW / 真实UID入TUN及回滚（免服务器）");
         selfTestButton.setOnClickListener(v->runDeviceSelfTest());
         pane.addView(selfTestButton);
         deviceSelfTestResult=new TextView(this);

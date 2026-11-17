@@ -47,4 +47,44 @@ assert 'device-selftest-arm64.c' in build
 assert 'sha256sum "$assets/device-selftest-arm64"' in build
 assert '"debug_only_tun_raw_uid_routing_selftest_asset":True' in build
 assert '"device_kernel_selftest_execution":"NOT_RUN"' in build
+
+# A11 is a true, single kernel-routed app-UID UDP packet, never mocked TLS.
+# The Android app process sends the packet; ROOT/NDK only captures it.
+packet=(base/"src/org/wbdnext/rootclient/RootUidTunPacketScript.java").read_text()
+for token in ("192.0.2.1/32 dev wbdst11 table 19843",
+              "pref 9699 uidrange ",
+              "ip -4 route get 192.0.2.1 uid ",
+              "dev wbdst11( |$)",
+              "WBD_A11_UID_TUN_SEND_READY",
+              "WBD_A11_UID_TUN_PACKET_PASS",
+              "WBD_A11_UID_TUN_ROLLBACK_PASS",
+              "trap cleanup EXIT",
+              "if wait",
+              "cap_pid=$!",
+              "198.18.0.1/30",
+              "WBD_A11_TUN_UID"):
+    assert token in packet,token
+for forbidden in ("route add default", "route replace default",
+                  "table 19842", "pref 9600", "iptables ",
+                  "nft ", "netd", "--server", "tcpdump"):
+    assert forbidden not in packet,forbidden
+selftest=java
+for token in ("new DatagramSocket()",
+              "new DatagramPacket(",
+              "InetAddress.getByAddress(reserved)",
+              "RootUidTunPacketScript.PAYLOAD.getBytes(",
+              "RootUidTunPacketScript.build(",
+              "UID_TUN_PACKET_PASS",
+              "UID_TUN_ROLLBACK_PASS",
+              "REAL_APP_UID_TO_TEMP_TUN_PACKET=PASS"):
+    assert token in selftest,token
+assert selftest.index("nativeCaptureConfirmed&&sendAttempted&&cleanupConfirmed")>0
+for token in ("--uid-tun-capture", "poll(&pfd, 1, 9500)",
+              "192 && packet[17] == 0", "packet[ihl+3]) == 43999",
+              "memcmp(packet + ihl + 8, payload, sizeof(payload)-1)",
+              "close(fd)", "O_EXCL", "O_NOFOLLOW"):
+    assert token in native,token
+assert 'sendto(' not in native and 'TUNSETPERSIST, &ifr' not in native
+assert 'device-selftest-arm64.c' in build
+print("ANDROID_ARM64_A11_ACTUAL_UID_TO_TUN_PACKET_SCOPE_AUDIT_PASS")
 print("ANDROID_ARM64_ONE_TAP_SELFTEST_STATIC_SCOPE_AND_SHA_AUDIT_PASS")

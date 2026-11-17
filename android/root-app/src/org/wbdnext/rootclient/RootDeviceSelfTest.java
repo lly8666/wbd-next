@@ -5,6 +5,9 @@ import android.os.Build;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +24,82 @@ import java.util.List;
  */
 final class RootDeviceSelfTest {
     private RootDeviceSelfTest(){}
+    private static boolean uidPacketEvent(String code){
+        for(String allowed:UID_PACKET_EVENTS)if(allowed.equals(code))return true;
+        return false;
+    }
+    private static final String[] UID_PACKET_EVENTS={
+        "ROOT_FAIL","REFUSED","UID_TUN_COLLISION",
+        "UID_TUN_CREATE_FAIL","UID_TUN_SETUP_FAIL","UID_TUN_ROUTE_FAIL",
+        "UID_ROUTE_LOOKUP_FAIL","UID_TUN_SEND_READY",
+        "UID_TUN_PACKET_PASS","UID_TUN_PACKET_FAIL",
+        "UID_TUN_ROLLBACK_PASS","UID_TUN_ROLLBACK_FAIL","SCRIPT_DONE"
+    };
+
+    private static void realUidTunPacketTest(File sourceLockedHelper,int ownUid,
+                                              List<String> events){
+        if(!(events.contains("ROOT_PASS") &&
+             events.contains("TUN_PASS") &&
+             events.contains("ROUTE_UID_PASS") &&
+             events.contains("ROUTE_ROLLBACK_PASS"))){
+            events.add("REAL_APP_UID_TUN_PACKET=NOT_RUN (previous gate failed)");
+            return;
+        }
+        boolean sendAttempted=false;
+        boolean nativeCaptureConfirmed=false;
+        boolean cleanupConfirmed=false;
+        try{
+            String script=RootUidTunPacketScript.build(sourceLockedHelper,ownUid);
+            Process shell=new ProcessBuilder("su","-c",script)
+                .redirectErrorStream(true).start();
+            try(BufferedReader reader=new BufferedReader(
+                new InputStreamReader(shell.getInputStream(),StandardCharsets.UTF_8))){
+                String line;
+                while((line=reader.readLine())!=null){
+                    if(!line.startsWith("WBD_A11_"))continue;
+                    String event=line.substring("WBD_A11_".length()).trim();
+                    if(!uidPacketEvent(event))continue;
+                    if(!events.contains("A11_"+event))events.add("A11_"+event);
+                    if("UID_TUN_SEND_READY".equals(event)&&!sendAttempted){
+                        sendAttempted=true;
+                        // Runs in this original Android app's real kernel
+                        // UID. Do NOT Network.bindSocket / bindProcessToNetwork:
+                        // this is precisely a natural unbound App UID flow.
+                        // No resolver, plaintext credential or external host.
+                        try(DatagramSocket sender=new DatagramSocket()){
+                            byte[] bytes=RootUidTunPacketScript.PAYLOAD.getBytes(
+                                StandardCharsets.US_ASCII);
+                            byte[] reserved={(byte)192,0,2,1};
+                            DatagramPacket packet=new DatagramPacket(
+                                bytes,bytes.length,
+                                InetAddress.getByAddress(reserved),
+                                RootUidTunPacketScript.PORT);
+                            sender.send(packet);
+                            events.add("A11_APP_UID_UDP_SEND_ATTEMPTED");
+                        }catch(Exception ignored){
+                            // The kernel route can reject socket egress.
+                            events.add("A11_APP_UID_UDP_SEND_FAILED");
+                        }
+                    }
+                    if("UID_TUN_PACKET_PASS".equals(event))
+                        nativeCaptureConfirmed=true;
+                    if("UID_TUN_ROLLBACK_PASS".equals(event))
+                        cleanupConfirmed=true;
+                }
+            }
+            if(shell.waitFor()!=0)events.add("A11_ROOT_CHILD_EXIT_NONZERO");
+            if(nativeCaptureConfirmed&&sendAttempted&&cleanupConfirmed){
+                events.add("REAL_APP_UID_TO_TEMP_TUN_PACKET=PASS (kernel packet observed)");
+            }else{
+                events.add("REAL_APP_UID_TO_TEMP_TUN_PACKET=NOT_PROVEN");
+            }
+            if(!cleanupConfirmed)events.add("A11_ROUTE_ROLLBACK=NOT_VERIFIED");
+        }catch(Exception e){
+            events.add("REAL_APP_UID_TO_TEMP_TUN_PACKET=NOT_PROVEN");
+            events.add("A11_LAUNCH=FAIL ("+e.getClass().getSimpleName()+")");
+        }
+    }
+
     static final String[] CODES={
         "ROOT_PASS","ROOT_FAIL",
         "GO_ELF_HELP_PASS","GO_ELF_HELP_FAIL","GO_ELF_SIGSEGV","GO_ELF_SIGILL",
@@ -179,6 +258,7 @@ final class RootDeviceSelfTest {
             if(rc!=0)events.add("ROOT_RUN_EXIT_NONZERO");
             if(!events.contains("ROUTE_ROLLBACK_PASS")&&
                !events.contains("ROUTE_ROLLBACK_FAIL"))events.add("ROUTE_ROLLBACK=NOT_VERIFIED");
+            realUidTunPacketTest(diag,android.os.Process.myUid(),events);
         }catch(Exception e){
             events.add("ROOT_TEST_LAUNCH=FAIL ("+e.getClass().getSimpleName()+")");
         }

@@ -1,7 +1,8 @@
 /*
  * ARM64-only, DEBUG-APK isolated kernel-capability admission binary.
  * Not the WBD client, never used as an alternate TLS/Rust/M4 packet path.
- * Actual open(ioctl TUNSETIFF)/AF_PACKET/SO_BINDTODEVICE, no packet IO.
+ * Actual TUNSETIFF/AF_PACKET/SO_BINDTODEVICE and bounded A11 TUN read.
+ * Never sends external traffic or replaces original Go/Rust data-plane.
  */
 #include <arpa/inet.h>
 #include <errno.h>
@@ -11,6 +12,8 @@
 #include <linux/if_tun.h>
 #include <net/if.h>
 #include <netinet/in.h>
+#include <poll.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -82,6 +85,69 @@ static int underlay_check(const char *interface) {
     return ok == 0 ? 0 : 3;
 }
 
+
+/*
+ * A11 ONLY: real unbound app-UID DatagramSocket -> Linux policy route ->
+ * ephemeral TUN. Exact constant TEST-NET-1/32, UDP port and payload, never
+ * source address, packet bytes, UID or application data are logged.
+ *
+ * The parent Root shell alone owns policy route mutation/rollback; this
+ * bounded helper owns only its nonpersistent TUN FD, never TUNSETPERSIST.
+ * Only a trusted 0700 root-owned directory receives the ready marker.
+ */
+static int uid_tun_capture(const char *ready_file) {
+    const char name[] = "wbdst11";
+    const char payload[] = "WBD_A11_TUN_UID";
+    if (!ready_file || strlen(ready_file) >= 256 ||
+        strncmp(ready_file, "/data/local/tmp/wbd-next-selftest/",
+                sizeof("/data/local/tmp/wbd-next-selftest/")-1) != 0)
+        return 40;
+    if (if_nametoindex(name) != 0) return 41;
+    int fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
+    if (fd < 0) return 42;
+    struct ifreq ifr;
+    memset(&ifr, 0, sizeof(ifr));
+    ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+    snprintf(ifr.ifr_name, IFNAMSIZ, "%s", name);
+    if (ioctl(fd, TUNSETIFF, &ifr) < 0) {
+        close(fd);
+        return 43;
+    }
+    int marker = open(ready_file,
+        O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
+    if (marker < 0) {
+        close(fd);
+        return 44;
+    }
+    close(marker);
+    int found = 0;
+    struct pollfd pfd;
+    pfd.fd = fd;
+    pfd.events = POLLIN;
+    pfd.revents = 0;
+    /* hard bounded: test-only, never a packet-processing service */
+    int rv = poll(&pfd, 1, 9500);
+    if (rv > 0 && (pfd.revents & POLLIN)) {
+        uint8_t packet[2048];
+        ssize_t n = read(fd, packet, sizeof(packet));
+        if (n >= 20 && (packet[0] >> 4) == 4) {
+            size_t ihl = (size_t)(packet[0] & 15) * 4;
+            if (ihl >= 20 && (size_t)n >= ihl + 8 + sizeof(payload)-1 &&
+                packet[9] == 17 &&
+                packet[16] == 192 && packet[17] == 0 &&
+                packet[18] == 2 && packet[19] == 1 &&
+                ((unsigned int)packet[ihl+2] << 8 | packet[ihl+3]) == 43999 &&
+                packet[ihl+4] == 0 &&
+                (size_t)packet[ihl+5] >= 8 + sizeof(payload)-1 &&
+                memcmp(packet + ihl + 8, payload, sizeof(payload)-1) == 0) {
+                found = 1;
+            }
+        }
+    }
+    close(fd); /* kernel frees the test TUN; no persistence */
+    return found ? 0 : 45;
+}
+
 int main(int argc, char **argv) {
     if (argc == 2 && strcmp(argv[1], "--tun") == 0)
         return tun_check();
@@ -89,5 +155,7 @@ int main(int argc, char **argv) {
         return raw_check(argv[2]);
     if (argc == 3 && strcmp(argv[1], "--underlay") == 0)
         return underlay_check(argv[2]);
+    if (argc == 3 && strcmp(argv[1], "--uid-tun-capture") == 0)
+        return uid_tun_capture(argv[2]);
     return 64;
 }

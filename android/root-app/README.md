@@ -304,3 +304,40 @@ VpnService/FakeIP。
 卸载旧版 `org.wbdnext.rootclient` 再装新的调试APK；卸载会擦除本
 App 私有配置/密钥，切勿在原业务正在运行时卸载，也不能使用
 `adb install -r` 绕过签名校验。
+
+
+## A11 — 真正本APK UID UDP包进入临时TUN（无服务器、原协议不变）
+
+A10 用户在本人真 ARM64 KernelSU 手机上报告 ROOT、原Go ELF帮助、
+TUN创建/销毁、RAW、物理Network、私有UID规则和回滚全部PASS，
+但它证明的是**规则安装及内核能力**，不是包真的进TUN。
+
+新 A11 在**同一个一键自检按钮**后自动追加隔离的真实包检验
+（只在 A10 的 Root/TUN/Route UID/Rollback 四项全PASS时）。
+由本 Android APK 进程的真正Linux UID经未绑定Network的
+`DatagramSocket`发送单个固定 `WBD_A11_TUN_UID` UDP payload
+给 **仅用于文档的 TEST-NET-1 IPv4 `192.0.2.1:43999`**。
+原生调试helper有界9.5秒持有非持久`wbdst11` TUN FD，
+内核独立路由表19843只有此/32路由和本 APK 精确 UID pref9699；
+在`ip route get ... uid APK_UID`读回确定`wbdst11`之前**禁止发送**。
+C在真正的TUN FD里逐字节检验原IPv4/UDP包内容，不造数据面、
+不经任意互联网服务器，不读取任何应用原始流量，原真实Go/Rust
+M3/M4协议不做替代。流程结束/失败陷阱先撤规则和路由再join helper
+关闭TUN，并读回3种资源是否残留。
+
+只有出现 `A11_UID_TUN_PACKET_PASS`、`A11_UID_TUN_ROLLBACK_PASS`
+与 `REAL_APP_UID_TO_TEMP_TUN_PACKET=PASS`，才可以说在本人设备上
+真实本APK UID 的单包进入了TUN（仍不是别的用户App、
+生产WBD原Rust M4、TLS/租约或系统DNS的PASS）。
+
+如果 `A11_UID_ROUTE_LOOKUP_FAIL`，意味着当前 Android kernel
+的按UID路由读回接口可能不支持/拒绝该命令，测试将安全不发包；
+如果 `A11_UID_TUN_PACKET_FAIL`，则说明Java UDP发送未被此
+独立TUN按固定验证条件捕获，**不应宣称路由劫持成功**。
+任何`A11_UID_TUN_ROLLBACK_FAIL`必须停止重复测试并人工核查
+pref9699/table19843/wbdst11。系统DNS双门仍关闭、原WBD
+服务器TLS/Rust真实转发/Stop独立NOT_RUN。
+
+此自检使用单独的测试VIP、测试UID和权限，**绝不**使用
+用户填写的WBD服务器地址或密码；升级 Actions 一次性签名
+调试APK如果报签名冲突，用户须备份且确认WBD已停止后手动卸旧版。

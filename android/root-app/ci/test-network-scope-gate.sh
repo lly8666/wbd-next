@@ -33,6 +33,10 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReceiptTest
 PYTHONPATH=android/root-app/ci python3 -m unittest -v device_first_run_test
 python3 android/root-app/ci/test-device-selftest-source.py
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootUidTunPacketScript.java \
+  android/root-app/ci/RootUidTunPacketScriptTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootUidTunPacketScriptTest
 python3 - <<'PY'
 from pathlib import Path
 s=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
