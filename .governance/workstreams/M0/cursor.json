@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2133,
-  "checkpoint_sha": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+  "sequence": 2134,
+  "checkpoint_sha": "4d4127b6be9fb8e6f193149cac3dc8cd1ba78160",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2133 signed original B4 H2129 SOURCE43f Action44195727026 real 3 WinForms OS Applied/DNS+UDP+TCP and 3 Rust owned WAL Stop success receipts, Linux guest six cases PASS no stale fake egress; outer Action FAIL at parent GUI exit/stop_windows(w) returncode qualification. H2133 SOURCEec49461 calls form.Close() only after third original Stop and requires disposal before final receipt, Action44198794225 in progress. Independent Game4 H2132 SOURCE5fc Action44197717052 native running. B5 10Mbps not run.",
-  "why_now": "Original ZIP14379488033 SHA256 c9fc9d... CRC28 confirms no missing product Stop; only native GUI parent/outer stop qualifier failed, exact timeout vs nonzero exit not directly distinguished. Preserve red Action while making original UI form lifecycle complete before claiming success.",
+  "current_task": "H2134 signed Game4 source5fc Action44197717052 complete PASS original 4 real TLS lanes explicit 029B advanced CN physical DNS/FakeIP Direct TCP32k/UDP, bidirectional Tunnel TCP/UDP and both owned Stops, original Windows2025 native+full Action SUCCESS; scope FEC off original legacy1400, no p99. Parallel B4 H2133 sourceec494 Action44198794225 in progress, B5 NOT_RUN.",
+  "why_now": "Verify original ZIP14380098426 SHA256 fba228b2... CRC27 and source-locked EXE/DLL/Linux + real native action SUCCESS, no borrow of old H2041 evidence. Game2 opt-in advanced split unsupported; B5 still separate.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2133 Action44198794225 signed SOURCEec49461 cheap and real Windows2025/WSL2 three original GUI/Stop plus natural GUI process exit and full workflow PASS; inspect first failure only if red. Independently collect Game4 Action44197717052 SOURCE5fc original four lanes advanced CN physical fakeIP + tunnel TCP/UDP + Stop. Do not re-trigger either in progress. Game2 advanced split unsupported, actual executable not run; B5 bounded sameVM10Mbps CPU/GiB+RSS+p99 still NOT_RUN.",
+  "next_action": "Collect H2133 original B4 Action44198794225 sourceec494, verify native 3 GUI Applied/DNS/UDP/TCP + three Stop/parent normal exit/full Action and ZIP hash. If PASS archive. Game4 current FEC off 1400 PASS_SCOPED. Then B5 sameVM<=10Mbps sequential A/B CPU/realGiB/RSS/p99 or keep NOT_RUN, and 029 residual, no 030.",
   "unverified": true,
-  "last_tested_source": "43f988d37edcb54e537b14d2f5a73aab4d6609fd",
+  "last_tested_source": "5fc22aef30aa4440e81257e67fded501fece3080",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2133-H2129-B4-THREE-TRUE-GUI-STOP-PASS-PARENT-EXIT-FAIL-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029B-H2133-GUI-PARENT-EXIT-AFTER-THREE-REAL-STOPS.md",
-    "docs/evidence/M0/PLAN029B-H2132-H2130-H2131-GAME4-PREFLIGHT-FAIL-AND-SOURCE-FREEZE-20261118.json",
+    "docs/devlog/M0/20261118-PLAN029B-H2134-GAME4-ADVANCED-CN-TRUE-NATIVE-PASS.md",
+    "docs/evidence/M0/PLAN029B-H2133-H2129-B4-THREE-TRUE-GUI-STOP-PASS-PARENT-EXIT-FAIL-20261118.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2129 source43f signed 3 actual GUI generations Applied/DNS/UDP/TCP 3 native owned Stop, Linux DNS/data guest and no fake leak PASS_SCOPED, full Action FAIL due GUI host process exit qualification after real Stop. H2133 sourceec494 only test GUI normal form.Close before final receipt, action44198794225 in progress. Game4 source5fc signed44197717052 in progress; Game2 split unsupported, B5 actual sameVM perf NOT_RUN."
+  "partial_summary": "H2134 Game4 SOURCE5fc signed Action44197717052 full SUCCESS four original Game4 TLS lanes FEC off explicit advanced CN physical DNS FakeIP Direct TCP/UDP+Tunnel 2wayTCP/UDP and Stop; legacy outer MTU1400, no p99. B4 H2133 Sourceec494 signed Action44198794225 in progress; Game2 split true rejected early source-only, B5 NOT_RUN."
 }
