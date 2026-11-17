@@ -91,11 +91,10 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         self.assertEqual(len(rows["generations"]), 3)
         self.assertEqual([row["windows_source_port"] for row in rows["generations"]],
                          [41031, 41032, 41033])
-        for truncated in (win[:-4], linux[:-2]):
-            with self.subTest(kind="truncated", sample=len(truncated)):
-                with self.assertRaises(ValueError):
-                    verify("\n".join(truncated if truncated is not linux[:-2] else win),
-                           "\n".join(truncated if truncated is linux[:-2] else linux), 1460)
+        with self.assertRaises(ValueError):
+            verify("\n".join(win[:-4]), "\n".join(linux), 1460)
+        with self.assertRaises(ValueError):
+            verify("\n".join(win), "\n".join(linux[:-2]), 1460)
         duplicate = copy.copy(win)
         duplicate[5] = duplicate[1]
         with self.assertRaises(ValueError):
