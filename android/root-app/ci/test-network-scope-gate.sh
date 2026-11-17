@@ -24,6 +24,14 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/ci/ServerAddressTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.ServerAddressTest
+# Exact production Root Service diagnostic writer, not a fabricated
+# Android guest or Go/TLS success. Verify fixed enums, bounded retention,
+# no untrusted metadata and Device acceptance report semantics.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java \
+  android/root-app/ci/RootDiagnosticReceiptTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReceiptTest
+PYTHONPATH=android/root-app/ci python3 -m unittest -v device_first_run_test
 python3 - <<'PY'
 from pathlib import Path
 s=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
@@ -83,5 +91,17 @@ with tempfile.TemporaryDirectory() as td:
         result=subprocess.run(["sh","-c",cmd,"sh",str(p)],capture_output=True,text=True,check=True)
         assert result.stdout==expected,(payload,result.stdout)
 print("ANDROID_ROOT_OWNED_PID_2_AND_3_FIELD_PARSE_PASS")
+# Same-source fixed-enum, credential-free diagnostic receipts; never
+# echo arbitrary native stdout and never count a Stop TERM as joined Stop.
+assert 'WBD_ROOT_DIAG' in s
+assert 'RootDiagnosticReceipt.Event.NATIVE_M4_AND_UID_READY' in s
+assert 'RootDiagnosticReceipt.Event.STOP_SIGNAL_ACCEPTED' in s
+assert 'RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED' in s
+assert 'Log.i("WBD_ROOT_DIAG",event.name())' in s
+accept=Path("android/root-app/ci/device_first_run.py").read_text()
+assert '"real_android_linux_tls_and_data_e2e": "NOT_RUN"' in accept
+assert '"original_go_rust_joined_stop": "NOT_RUN"' in accept
+assert 'sudo' not in accept and 'pkill' not in accept
+print("ANDROID_ROOT_DEVICE_DIAGNOSTIC_AND_OPERATOR_BUNDLE_HOST_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY

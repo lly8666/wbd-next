@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
@@ -46,6 +47,18 @@ public final class RootClientService extends Service {
     private ConnectivityManager.NetworkCallback watchedCallback;
     private NetworkScopeGate watchedGate;
     private BroadcastReceiver installedPackageWatch;
+    // Fixed-enum events only. No network endpoint, package name, password,
+    // generation token, route key, TLS transcript or raw native stdout.
+    private RootDiagnosticReceipt diagnostics;
+    @Override public void onCreate(){
+        super.onCreate();
+        diagnostics=new RootDiagnosticReceipt(
+            new File(getFilesDir(),"wbd-root-diagnostic.txt"));
+    }
+    private void trace(RootDiagnosticReceipt.Event event){
+        if(diagnostics!=null)diagnostics.record(event);
+        Log.i("WBD_ROOT_DIAG",event.name());
+    }
 
     private static String newOwnerToken(){
         byte[] bytes=new byte[16];
@@ -175,6 +188,7 @@ public final class RootClientService extends Service {
         }
         stopping.set(false);
         stopSignalDispatched.set(false);
+        trace(RootDiagnosticReceipt.Event.START_REQUESTED);
         try{
             notification();
             long handle=intent.getLongExtra("handle",0);
@@ -185,6 +199,7 @@ public final class RootClientService extends Service {
             if(iface==null||local==null)throw new IllegalStateException("Missing actual Network");
             PhysicalNetwork chosen=PhysicalNetwork.exact(this,handle,iface,index,mtu,local);
             if(chosen==null)throw new IllegalStateException("ConnectivityManager Network changed");
+            trace(RootDiagnosticReceipt.Event.NETWORK_SCOPE_VERIFIED);
             String peer=intent.getStringExtra("peer");
             String sni=intent.getStringExtra("sni");
             String user=intent.getStringExtra("user");
@@ -199,6 +214,7 @@ public final class RootClientService extends Service {
                !InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)){
                 throw new IllegalArgumentException("Selected installed package/UID group changed or invalid");
             }
+            trace(RootDiagnosticReceipt.Event.APP_UID_GROUP_VERIFIED);
             selection=chosen;
             ownerToken=newOwnerToken();
             watchPhysicalNetwork(chosen);
@@ -206,11 +222,13 @@ public final class RootClientService extends Service {
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                 chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("Physical Network changed during callback registration");
+            trace(RootDiagnosticReceipt.Event.ROOT_STAGE_REQUESTED);
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,targetUids,targetPackages,hasCA),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
+            trace(RootDiagnosticReceipt.Event.START_REFUSED);
             status="START_REFUSED: "+e.getMessage();
             running.set(false);
             stopWatchingPhysicalNetwork();
@@ -309,9 +327,10 @@ public final class RootClientService extends Service {
     }
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
                          int port,int[] targetUids,String[] targetPackages,boolean hasCA){
-        boolean nativeReady=false,uidReady=false;
+        boolean nativeReady=false,uidReady=false,readyRecorded=false;
         try{
             NativePayload code=NativePayload.stage(this);
+            trace(RootDiagnosticReceipt.Event.NATIVE_SOURCE_VERIFIED);
             if(PhysicalNetwork.exact(this,net.handle,net.interfaceName,net.ifindex,
                   net.mtu,net.address)==null){
                 throw new IllegalStateException("physical Android Network changed during staging");
@@ -323,10 +342,12 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Root launch withdrawn before native start");
                 if(!InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids))
                     throw new IllegalStateException("Selected UID group changed before Root grant");
+                trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
                     launchCommand(code,net,peer,sni,user,port,targetUids,hasCA,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
+                trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);
             }
             if(stopping.get())signalRootStopIfStarted();
             try(BufferedReader lines=new BufferedReader(
@@ -334,11 +355,17 @@ public final class RootClientService extends Service {
                 String line;
                 while((line=lines.readLine())!=null){
                     if(line.length()>4096)line=line.substring(0,4096);
-                    if(line.contains("V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED"))
+                    if(!uidReady&&line.contains("V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED")){
                         uidReady=true;
-                    if(line.contains("V4_ORIGINAL_GO_CLIENT_NATIVE_READY"))
+                        trace(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT);
+                    }
+                    if(!nativeReady&&line.contains("V4_ORIGINAL_GO_CLIENT_NATIVE_READY")){
                         nativeReady=true;
-                    if(uidReady&&nativeReady&&!stopping.get()){
+                        trace(RootDiagnosticReceipt.Event.NATIVE_M4_RECEIPT);
+                    }
+                    if(uidReady&&nativeReady&&!stopping.get()&&!readyRecorded){
+                        readyRecorded=true;
+                        trace(RootDiagnosticReceipt.Event.NATIVE_M4_AND_UID_READY);
                         status="NATIVE_M4_READY + OWNED_UID_GROUP_READBACK; real Android traffic unverified";
                     }
                     // Deliberately don't echo username, auth errors, route
@@ -346,10 +373,13 @@ public final class RootClientService extends Service {
                 }
             }
             int exit=p.waitFor();
+            trace(exit==0?RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_ZERO:
+                RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
             status=exit==0
                 ?"ORIGINAL_NATIVE_EXITED_ZERO — phone data not independently verified"
                 :"ROOT_OR_NATIVE_EXIT_"+exit+" — route/journal and Stop need inspection";
         }catch(Exception e){
+            trace(RootDiagnosticReceipt.Event.ROOT_LAUNCH_FAILED);
             status="ROOT_OR_NATIVE_FAILURE: "+e.getClass().getSimpleName()+
                 " (no claimed native readiness)";
         }finally{
@@ -365,6 +395,7 @@ public final class RootClientService extends Service {
             stopping.set(false);
             stopWatchingPhysicalNetwork();
             stopWatchingSelectedPackage();
+            trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED);
             stopForeground(true);
             stopSelf();
         }
@@ -373,6 +404,7 @@ public final class RootClientService extends Service {
         if(root==null||ownerToken==null||
            !stopSignalDispatched.compareAndSet(false,true))return;
         final String token=ownerToken;
+        trace(RootDiagnosticReceipt.Event.STOP_SIGNAL_STARTED);
         new Thread(()->{
             try{
                 Process p=new ProcessBuilder("su","-c",RootStopCommand.build(token))
@@ -383,17 +415,22 @@ public final class RootClientService extends Service {
                 }
                 int code=p.waitFor();
                 if(code!=0){
+                    trace(RootDiagnosticReceipt.Event.STOP_SIGNAL_REFUSED);
                     status="STOP_NOT_CONFIRMED ("+code+") — exact root generation/PID check failed";
                     // Do not clear stopping and accidentally reauthorize.
+                }else{
+                    trace(RootDiagnosticReceipt.Event.STOP_SIGNAL_ACCEPTED);
                 }
                 // Signal delivery alone is NOT Go/Rust joined Stop.
             }catch(Exception e){
+                trace(RootDiagnosticReceipt.Event.STOP_SIGNAL_ERROR);
                 status="STOP_NOT_CONFIRMED — unable to signal exact root process";
             }
         },"wbd-root-stop-signal").start();
     }
     private void requestStop(String why){
         if(!running.get()||!stopping.compareAndSet(false,true))return;
+        trace(RootDiagnosticReceipt.Event.STOP_REQUESTED);
         status="STOP_REQUESTED ("+why+") — waiting for original Go/Rust joined Stop";
         // Before su launch: runRoot cancels at ownerLaunchLock.
         // During su launch: runRoot signals after root is published.

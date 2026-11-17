@@ -184,3 +184,65 @@ consumed by a DNS packet handler**. The system Resolver, physical
 `android_setsocknetwork` DNS fd binding, inner Rust M4/TUN UDP/TCP53
 capture/response and per-App actual data split remain NOT_CONNECTED.
 No Java packet path, background downloads, VPN or FakeIP was added.
+
+
+## A9 first ARM64 KernelSU device acceptance — safe diagnostic package
+
+This is a first-run operator workflow, NOT a claim that an ARM64 Android
+device or original Android-to-Linux WBD session has already passed.
+The product is still only Android ARM64 Bionic original-Go + original-Rust
+Normal/off, with both DNS capture gates disabled.
+
+The signed Root APK now persists a bounded app-private receipt, and logs only
+fixed allowlisted event names under the WBD_ROOT_DIAG tag. No username, app
+package, server IP, owner token, original stdout, credential, TLS transcript,
+route key, or individual UID is emitted to ADB or the ZIP. Native READY is
+only observed after the original Go/Rust M4 and owned UID-route receipts;
+sending SIGTERM is explicitly NOT counted as joined Stop.
+
+On an authorized Android16 ARM64 KernelSU **device** (not the prior x86 KVM
+NativeBridge guest), use Python 3 and adb from a computer. First examine
+your own chosen signed artifact; CI uses a disposable debug-signing key,
+and an existing installation signed with a different key may not upgrade.
+
+Run an operator-controlled, single-session Start/Stop test:
+
+```bash
+python3 android/root-app/ci/device_first_run.py \
+  --apk /path/to/wbd-root-arm64-debug.apk --install \
+  --output out/device-acceptance/first-run
+```
+
+The script verifies local signed-archive ARM64 ELF/SOURCE byte integrity
+(but does not itself verify APK signing), requires a kernel reported as
+aarch64 and Android API36, checks for pre-existing WBD-owned routing rules,
+then opens the original app Activity. The **user** selects physical Network,
+installed App and own authorized Linux server, enters secrets on the phone,
+presses Start, then Stop, and presses Enter at two CLI prompts. This is
+deliberate: the script never enters credentials, asks for shell su, modifies
+netd/routes, kills a process, or bypasses KernelSU Manager. Use --serial for
+multiple connected devices. --install is the only opt-in device mutation;
+omit it when the correct APK is already installed.
+
+For read-only support collection without launching an app:
+
+```bash
+python3 android/root-app/ci/device_first_run.py --collect-only \
+  --output out/device-acceptance/read-only
+```
+
+The resulting private acceptance-bundle.zip contains only structured
+preflight, hashed WBD-owned rule state and whitelisted stage codes; it
+intentionally excludes raw logcat/tombstones, user identifiers and secrets.
+Do not assume arbitrary Android traffic, real TLS, joined Rust Stop or
+system Resolver passed from a host build, Activity startup or this receipt.
+A private-rule rollback PASS only means the inspected WBD-owned rules
+are empty after the explicit user Stop **and** the Service cleanup event
+was observed. If the route reader is unavailable, mark NOT_RUN; if private
+rules remain, FAIL without attempting dangerous automatic repair.
+The owner-controlled original-Go/Rust Stop and its existing route journal
+remain the only production cleanup mechanism.
+
+If the original app cannot start, use the read-only collection mode or
+share the sanitized ZIP after examining it. Never share the Android
+password/route key or raw logcat.

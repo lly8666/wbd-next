@@ -2,6 +2,16 @@
 
 **状态（2026-11-18）：Android16 API36 x86_64 KVM/KernelSU3.3.1/ARM64 NativeBridge 已实际执行原 Go CLI；SOURCE `eb278a02ee11442521b54288ae9c50bc6fd1d795` [Action44138382581](https://github.com/lly8666/wbd-next/actions/runs/44138382581) 10/11 Jobs SUCCESS、overall FAIL。**原Go `v4productcli.Run(client,--help)`通过测试专用 NDK→c-shared(隔离MIDR/noasm)+真Rust共享库在Android guest exit0、原CLI参数及函数标记PASS；**正式签名APK的原ARM64 Go ELF直接执行SIGSEGV139**，真Android↔Linux TLS/租约、RAW/TUN、App DNS/Stop仍NOT_RUN；B2c2c DNS劫持冷门false，实体KSU未授权。旧证据不覆盖。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
 
+## A9. 真实ARM64 KSU第一次集中联调准备（2026-11-18）
+
+当前仍是 source `eb278a02ee11442521b54288ae9c50bc6fd1d795` [Action44138382581](https://github.com/lly8666/wbd-next/actions/runs/44138382581) **10/11 PASS、overall FAIL**：原Go完整client CLI通过隔离测试库NDK/c-shared运行exit0，但正式ARM64 ELF直接启动在 x86 NativeBridge `SIGSEGV139`。真实ARM64 KSU设备上的原Go ELF、TLS/租约、Rust M4 RAW/TUN、DNS、Stop**均NOT_RUN**。
+
+优先构建的是**正式ARM64 APK可诊断+用户自主Start/Stop+只读ADB一键采集**，不继续扩展NativeBridge小探针：`RootDiagnosticReceipt`用固定enum记录源SHA校验、真实物理Network/包UID、original-Go native M4/UID就绪、精确Stop信号/owner退出阶段，禁止自由文本/凭据/密钥/源stdout；PC脚本先验真`uname -m=aarch64`/API36/正式APK源锁及16KiB ELF、检查私人route表19842/pref9600..9607是否有残留，再由用户在原Root APK中手动Start/Stop，生成仅含事件码+路由哈希的脱敏ZIP。脚本默认仅只读，不执行su/kill/netd/route修改，只有用户带`--install`显式选择安装；不碰未经用户授权的实体机。保留原Go/Rust Stop和双DNS关闭。此批源码未完成同源CI前只标`PLANNED`。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A9真实ARM64 KSU第一次集中验收：原APK固定无凭据阶段码、用户手动Start/Stop、只读ADB/Source/ELF/路由回滚证据，保留正式ELF139和实际Android业务NOT_RUN。"}
+```
+
 ## 0a. 当前最高优先：复用 x86_64 KVM + KernelSU 3.3.1、核验 ARM64 Native Bridge（用户最新指示）
 
 2026-11-17 用户明确要求先恢复过去成功的 x86_64 KVM / Android16 API36 / KernelSU 环境，再验证当前正式 ARM64 Native Bridge Go/Rust + Root APK 所有可能的业务，之后才继续增加产品功能。**x86_64 仅作为仿真机 KVM guest 架构，不编译或发布 x86_64 版本的正式WBD客户端**，唯一产品 ABI 仍 arm64-v8a。此条更新覆盖早期“只优先ARM64 KVM/Cuttlefish”的试验环境选择，但不解除应用权限、TLS、AEAD、NativeBridge真实执行和源码锁红线。
