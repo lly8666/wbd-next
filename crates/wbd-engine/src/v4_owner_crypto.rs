@@ -16,6 +16,8 @@ use wbd_platform::ipv4_tcp::{Ipv4Tuple as AndroidTuple,PacketPersona as AndroidP
 use wbd_platform::rx_ipv4_tcp::extend_seq32 as android_extend_seq32;
 #[cfg(all(target_os="android",target_arch="aarch64"))]
 use wbd_codec::path_budget::{FrameBudgetInput as AndroidFrameInput,FecReservation as AndroidFec};
+#[cfg(all(target_os="android",target_arch="aarch64"))]
+use wbd_types::buffer_contract::FrozenRecordHandle;
 
 use crate::runtime::early_rx::{EarlyAccepted, EarlyError, EarlyLimits, EarlyRetirement, EarlyRxOwner};
 // Original protected Go StageTransition.MaxTransitionRecords is 64.
@@ -1600,7 +1602,7 @@ impl ProtectedScopedOwner {
     /// This does NOT construct a second opener, take Go's TCP ACK as trust,
     /// or implement repair dispatch. The typed callback must be paired with
     /// the current tunnel epoch/directional M2 receipt scope by its caller.
-    #[cfg(target_os="windows")]
+    #[cfg(any(target_os="windows",all(target_os="android",target_arch="aarch64")))]
     pub(crate) fn drain_windows_authenticated_kind1<F,G>(
         &mut self,now:MonoNs,storage:Vec<RxPacket>,
         mut accept_link:F,mut accept_kind1:G,
@@ -1897,7 +1899,7 @@ impl ProtectedScopedOwner{
         &mut self,driver:&AndroidBoundRawRx,mut slab:UniqueBuffer,
         tuple:AndroidTuple<'_>,persona:AndroidPersona,
         trusted_anchor:u64,now:MonoNs,
-    )->Result<usize,(ProtectedCryptoError,UniqueBuffer)>{
+    )->Result<(usize,u64),(ProtectedCryptoError,UniqueBuffer)>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
            driver.generation()!=self.generation||driver.is_stopping(){
             return Err((ProtectedCryptoError::Inactive,slab))
@@ -1917,7 +1919,7 @@ impl ProtectedScopedOwner{
         };
         self.offer_after_active(slab,0..len,absolute,now)
             .map_err(|(_,buf)|(ProtectedCryptoError::Owner,buf))?;
-        Ok(len)
+        Ok((len,absolute))
     }
 
     /// One same M1 immutable ready record, shared pure IPv4/TCP writer and
@@ -1927,7 +1929,7 @@ impl ProtectedScopedOwner{
         &mut self,driver:&AndroidBoundRawTx,tuple:AndroidTuple<'_>,
         presentation:AndroidPresentation,route_budget:u32,now:MonoNs,
         storage:&mut Vec<TxDispatch>,scratch:&mut [u8],
-    )->Result<usize,ProtectedCryptoError>{
+    )->Result<(usize,u64),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
            driver.generation()!=self.generation||driver.is_stopping()||
            !storage.is_empty()||storage.capacity()!=1{
@@ -1945,35 +1947,59 @@ impl ProtectedScopedOwner{
             if ready.len()!=1||ready[0].kind!=crate::runtime::TxKind::Fresh{
                 return Err(ProtectedCryptoError::Tx)
             }
+            let original_pn=ready[0].record.metadata().pn.0;
             driver.send_original_frozen(
                 self.generation,&ready[0].record,tuple,presentation,
                 route_budget,scratch
-            ).map_err(|_|ProtectedCryptoError::Owner)
+            ).map(|n|(n,original_pn)).map_err(|_|ProtectedCryptoError::Owner)
         })();
         *storage=batch.recycle();
         outcome
     }
 
-    /// Only post-AEAD+replay original M3 complete LINK is written to TUN;
-    /// original Go protected /32 is a destination gate for Android client.
+    /// ONE existing protected replay opener shared by Windows kind1 and
+    /// Linux-style Normal/off. Canonical Health is parsed ONLY after AEAD and
+    /// unique PN, and complete M3 LINK is the sole Android TUN write source.
+    /// Tuple/checksum or raw ACK is never Health, receipt or peer proof.
     pub(crate) fn drain_android_normal_off_to_tun(
         &mut self,receiver:&mut NormalOffReceive,tun:&AndroidOwnedTun,
         lease:Option<[u8;4]>,now:MonoNs,storage:Vec<RxPacket>,
-    )->Result<(Vec<RxPacket>,NormalOffReport,u32,u32),
+    )->Result<(Vec<RxPacket>,NormalOffReport,u32,u32,bool,Option<u64>,bool),
         (ProtectedCryptoError,Vec<RxPacket>)>{
-        if self.state!=OwnerPhase::Active||tun.generation()!=self.generation{
+        if self.state!=OwnerPhase::Active||tun.generation()!=self.generation||
+           !receiver.accepts(self){
             return Err((ProtectedCryptoError::Inactive,storage))
         }
-        let mut delivered=0u32;let mut failed=0u32;
-        let (returned,report)=self.drain_normal_off(
-            receiver,now,storage,|_pn,business|{
-                if crate::v4_session_address::admitted_client_destination(
-                    business,lease
-                )&&tun.write_authenticated_ip(business).ok()==Some(business.len()){
-                    delivered+=1
-                }else{failed+=1}
+        let mut delivered=0u32;
+        let mut failed=0u32;
+        let mut healthy=false;
+        let mut idle_hint=None;
+        let mut retire=false;
+        let mut report=NormalOffReport::default();
+        let ms=now.0/1_000_000;
+        let (returned,authenticated)=self.drain_windows_authenticated_kind1(
+            now,storage,
+            |_pn,link|{
+                receiver.accept_authenticated_link(
+                    _pn,link,ms,&mut |_id,business|{
+                        if crate::v4_session_address::admitted_client_destination(
+                            business,lease
+                        )&&tun.write_authenticated_ip(business)
+                            .ok()==Some(business.len()){
+                            delivered=delivered.saturating_add(1)
+                        }else{
+                            failed=failed.saturating_add(1)
+                        }
+                    },&mut report
+                )
+            },
+            |_pn,control|{
+                healthy=true;
+                idle_hint=control.peer_idle_ns;
+                retire=control.peer_retire;
             }
         )?;
-        Ok((returned,report,delivered,failed))
+        report.authenticated=authenticated;
+        Ok((returned,report,delivered,failed,healthy,idle_hint,retire))
     }
 }

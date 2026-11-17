@@ -399,6 +399,16 @@ impl AndroidBoundRawTx {
         self.begin_stop();
         self.borrow.wait_drained_until(deadline)
     }
+    /// Reconfirm ifindex/MTU on the same physically bound RAW socket before
+    /// spending original M1 PN. A changed Network must reauthenticate into
+    /// the next generation, never send via the default Android route.
+    pub fn check_scope(&self,interface:&str,ifindex:u32)->io::Result<()>{
+        if self.is_stopping(){
+            return Err(io::Error::from(io::ErrorKind::BrokenPipe))
+        }
+        check_bound_interface_mtu(self.fd.as_raw_fd(),interface,ifindex,self.mtu)
+    }
+
     /// Build the exact original Ipv4/TCP presentation around the already
     /// encrypted immutable FrozenRecord and its original PN/seq metadata.
     /// Caller preallocates a reusable scratch buffer; no Go, TLS, heap or
@@ -458,5 +468,53 @@ impl AndroidBoundRawTx {
             return Err(io::Error::new(io::ErrorKind::WriteZero, "uncertain raw short send"));
         }
         Ok(sent as usize)
+    }
+}
+
+// One kernel eventfd per original M4 worker: Stop interrupts an idle poll
+// immediately. No 10ms periodic wake, no Go/Java DATA callbacks, no global
+// signal handler. Both wake FDs are held until both original workers join.
+const EFD_NONBLOCK:c_int=0x800;
+const EFD_CLOEXEC:c_int=0x80000;
+const POLLIN:i16=1;
+#[repr(C)]
+struct AndroidPollFd {fd:c_int,events:i16,revents:i16}
+unsafe extern "C" {
+    fn eventfd(initial:c_uint,flags:c_int)->c_int;
+    fn poll(fds:*mut AndroidPollFd,count:usize,timeout_ms:c_int)->c_int;
+}
+pub struct AndroidWorkerWake{fd:OwnedFd}
+impl AndroidWorkerWake{
+    pub fn new()->io::Result<Self>{
+        let fd=unsafe{eventfd(0,EFD_NONBLOCK|EFD_CLOEXEC)};
+        if fd<0{return Err(io::Error::last_os_error())}
+        Ok(Self{fd:unsafe{OwnedFd::from_raw_fd(fd)}})
+    }
+    pub fn signal_stop(&self)->io::Result<()>{
+        let one=1u64.to_ne_bytes();
+        let n=unsafe{write(self.fd.as_raw_fd(),one.as_ptr().cast(),one.len())};
+        if n==one.len() as isize{Ok(())}
+        else if n<0{Err(io::Error::last_os_error())}
+        else{Err(io::ErrorKind::WriteZero.into())}
+    }
+    /// No session lock held across kernel poll. Stops on eventfd readiness,
+    /// HUP, ERR, NVAL or external owner shutdown, not on fabricated activity.
+    pub fn wait_readable(&self,device_fd:RawFd,timeout_ms:i32)->io::Result<bool>{
+        if device_fd<0||timeout_ms<0{return Err(io::ErrorKind::InvalidInput.into())}
+        let mut fds=[
+            AndroidPollFd{fd:device_fd,events:POLLIN,revents:0},
+            AndroidPollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0},
+        ];
+        let n=unsafe{poll(fds.as_mut_ptr(),fds.len(),timeout_ms)};
+        if n<0{
+            let err=io::Error::last_os_error();
+            return if err.kind()==io::ErrorKind::Interrupted{Ok(false)}else{Err(err)}
+        }
+        if n==0||fds[1].revents!=0{return Ok(false)}
+        if fds[0].revents & !POLLIN!=0{
+            return Err(io::Error::new(io::ErrorKind::BrokenPipe,
+                "Android original M4 device poll error/hup"))
+        }
+        Ok(fds[0].revents&POLLIN!=0)
     }
 }

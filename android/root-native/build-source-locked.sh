@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# A1: compile real shared WBD Rust ABI and original-Go PRODUCT sources for
-# Android/Bionic. This is an integration build GATE, not a connected client.
+# ARM64-only original-Go + shared Rust M1/M3 and Bionic M4/Health/Stop source gate.
+# Real Go final link and phone traffic remain independent truthful gates.
 set -euo pipefail
 cd "${GITHUB_WORKSPACE:?Actions checkout required}"
 test "$(git rev-parse HEAD)" = "${GITHUB_SHA:?SOURCE required}"
@@ -60,14 +60,20 @@ for pair in "aarch64 arm64"; do
   lib="target/$rust_target/release/libwbd_engine.so"
   test -s "$lib"
   cp "$lib" "out/android-product-a1/libwbd_engine-$goarch.so"
-  # Private authenticated Go TLS cold-owner symbols must be provided by the
-  # SAME shared Rust engine, not a fake or adapter-local stub. M4 symbols
-  # and actual kernel delivery remain separately required for true client.
+  # All cold+M4 symbols must resolve from the SAME real Rust AEAD/PN owner;
+  # these native methods actually start/join original M1/M3 Bionic workers.
+  # Building their ELF does NOT prove kernel permission or live traffic.
   for symbol in wbd_m0_embedded_go_prepare_client wbd_m0_embedded_go_stage \
       wbd_m0_embedded_go_commit wbd_m0_embedded_go_stop \
       wbd_m0_embedded_go_android_bind_physical \
       wbd_m0_embedded_go_attach_raw_rx_on_interface \
-      wbd_m0_embedded_go_attach_tun; do
+      wbd_m0_embedded_go_attach_tun \
+      wbd_m0_embedded_go_loop_start wbd_m0_embedded_go_loop_stats \
+      wbd_m0_embedded_go_loop_authenticated_dead \
+      wbd_m0_embedded_go_loop_authenticated_peer_predead \
+      wbd_m0_embedded_go_loop_authenticated_peer_health \
+      wbd_m0_embedded_go_public_native_health_config \
+      wbd_m0_embedded_go_public_native_health_effective; do
     "$tool/llvm-nm" -D "$lib" | grep -Eq " [TW] ${symbol}$" || {
       echo "ANDROID_RUST_AUTHENTICATED_COLD_FFI_MISSING: $symbol" >&2
       exit 1
@@ -95,21 +101,23 @@ def inspect(path,expected_machine):
 d={"schema":"android-root-product-a1-rust-cold-build/v1",
    "source":os.environ["GITHUB_SHA"],
    "pinned_original_go":"a7a82db31fe736ffedee330795a3234d358f1984",
-   "scope":"RUST_COLD_ABI_PLUS_ANDROID_OWNED_FD_ATTACH_ONLY",
+   "scope":"ORIGINAL_ARM64_M1_M3_PLUS_M4_WORKER_HEALTH_STOP_COMPILED_ONLY",
    "android_c_abi_static_checks":"PASS_IN_WORKFLOW",
    "original_rust_cold_prepare_stage_commit_stop_symbols":"PASS_IN_WORKFLOW",
    "android_original_owner_network_raw_tun_ffi_symbols":"PASS_IN_WORKFLOW",
    "native":{abi:inspect(p/("libwbd_engine-"+abi+".so"),mach)
              for abi,mach in (("arm64",183),)},
    "original_go_full_link":"NOT_YET_RUN_AT_THIS_STAGE",
-   "authenticated_product_M4_worker":"NOT_RUN",
+   "authenticated_product_M4_worker":"SOURCE_COMPILED_NOT_EXECUTED",
+   "original_health_clock_control":"SOURCE_COMPILED_NOT_EXECUTED",
+   "eventfd_owned_stop_join":"SOURCE_COMPILED_NOT_EXECUTED",
    "real_server_TLS_auth_lease_data_stop":"NOT_RUN",
    "physical_android_load":"NOT_RUN"}
 (p/"rust-cold-stage-manifest.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
 (p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\n")
 PY
-# Do not remove the failing link gate: until real Android RAW/TUN M4 owner
-# is wired this must FAIL and never publish a pretend client binary.
+# Do not bypass the genuine original-Go full product link with unresolved
+# FEC/Game/M2 symbols: ARM64 Normal/off worker source != finished client.
 for pair in "aarch64 arm64"; do
   read -r triple goarch <<< "$pair"
   rust_target=aarch64-linux-android

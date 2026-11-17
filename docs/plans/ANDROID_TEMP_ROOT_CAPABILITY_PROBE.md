@@ -34,6 +34,10 @@
 
 **历史证据（非当前目标矩阵）：A1 ARM64+X86_64 Bionic ABI + 同一共享 Rust Go↔Rust 认证冷所有权真实C ABI导出、双64位 ELF 16KiB对齐（SOURCE `c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5`，Action44015392698，阶段清单/ZIP14298207771）；但原Go完整产品连接器在ARM64因 Android M4 RAW/TUN/Health/MTU 产品符号未移植而链接FAIL，x86完整链接NOT_RUN。下一步：A2 抽出经核验的共享 M4 owner 驱动接口，把 Android Root TUN/物理RAW、网络绑定接到原 Rust PN/AEAD/Stop；A3 再在 Android16 KSU 与同源 Linux 服务端真实 TLS/认证/租约及 TCP/UDP 收发验收。** A1 的构建或符号检查不能宣称 A2/A3 成功；不要重新扩张短时探针按钮。
 
+### A2 ARM64 原 M4 施工切片：就绪线程/Health/Stop
+
+本批沿同一冷 Go 已认证 generation 复用原 Rust `ProtectedScopedOwner`，在 ARM64-only `v4_android_original_m4.rs` 中把 Bionic RAW/TUN 接成最多 8 个包/次的双原生就绪线程：沿既有 M1 FrozenRecord、原 PN/AEAD/唯一重放、M3 LINK 及认证 /32 TUN gating；原 `HealthClock` 发送/解析真实加密 kind0，原 `BorrowFence` 持有每次 syscall，同一原 Owner 的 Stop 先 eventfd 唤醒两个线程并 join，再停止密码状态和关闭 FD。切网 ifindex/物理MTU通过原已绑定 RAW FD 定期读回，不回退默认网络。Android 仅编译 ARM64。**此处均是代码施工，不等于编译、链接或设备运行通过。** 大包/fragment/真实FEC/Game/完整原Go产品符号和 Root控制器仍属真实未解决项。
+
 ## 4. 真正的 Android 产品架构
 
 Java 原生 Activity → 配置/应用列表/授权/Start/Stop/状态 controller → 低频进程IPC → UID0 native worker（Go cold TLS/auth/lease、Rust稳态、TUN、raw/physical socket）→ owned内核路由/网络绑定。Android连接遵循系统当前 Network/ifindex/源地址/MTU；bootstrap域名DNS必须物理直连且在建链前完成。root UID不是万能出口放行，不能覆写 netd fwmark；隔离表夹具与生产净增量行为分离。Linux现有入口/默认值不得改变。Android app/NDK ELF 采用真实 Bionic 构建，检查 syscall/struct布局/链接/arm64 4KiB与16KiB；cross-build 不等于设备装载，不等于 ARM crypto/FEC ISA 实际选择。

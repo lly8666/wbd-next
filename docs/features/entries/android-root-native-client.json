@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "Android arm64-v8a Root 原生 WBD：仅 ARM64 同源 Go TLS/租约和原 Rust M1/M3/M4 + Bionic RAW/TUN，真业务与完整M4仍待验。",
+  "summary": "仅Android arm64-v8a 原生Root客户端：原Go认证租约 + Rust共享PN/AEAD/M1/M3 + ARM64 Bionic RAW/TUN双M4原生线程、加密Health和eventfd有序Stop；仍待真实Go全链接与真机验收。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -42,7 +42,8 @@
     "crates/wbd-engine/src/v4_owner_crypto.rs",
     "crates/wbd-engine/src/v4_session_address.rs",
     "crates/wbd-platform/src/ipv4_tcp.rs",
-    "crates/wbd-platform/src/rx_ipv4_tcp.rs"
+    "crates/wbd-platform/src/rx_ipv4_tcp.rs",
+    "crates/wbd-engine/src/v4_android_original_m4.rs"
   ],
   "doc_refs": [
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
@@ -52,7 +53,8 @@
     "docs/devlog/android-root-probe/20261117-android-product-a1-assembly.md",
     "docs/devlog/android-root-probe/20261117-android-product-a2-raw-bionic-io.md",
     "docs/devlog/android-root-probe/20261117-android-product-a2-cold-network-handoff.md",
-    "docs/devlog/android-root-probe/20261117-android-arm64-a2-normal-m1m3-batch.md"
+    "docs/devlog/android-root-probe/20261117-android-arm64-a2-normal-m1m3-batch.md",
+    "docs/devlog/android-root-probe/20261117-android-arm64-a2-m4-real-worker-health-stop.md"
   ],
   "verification": [
     {
@@ -209,7 +211,8 @@
     "新增原Go SYN/ClientHello之前 Android 物理 Network Handle raw发送FD绑定（android_setsocknetwork+SO_BINDTODEVICE），AF_PACKET收端继续采用原donor内核接口+端口过滤；需 Android Controller 提供真实 handle，交叉编译≠设备权限、实际TLS或完整M4 PASS。",
     "A2 SOURCE 14290758 Action44019938479 overall FAIL: NDK arm64/x86_64 cold ABI + actual Android Go pre-TLS bind source CGo compiled to final link, 16KiB ELF, source-locked raw/owner C ABI BUILD_PASS; whole ARM64 Go M4 link FAIL missing real Normal/off/FEC/Game/loop; x86 full link NOT_RUN; no real TLS or Android socket runtime executed.",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
-    "ARM64 ONLY SOURCE 2951cda2 Action44021966186 overall FAIL at original Go ld.lld missing Fixed/FEC/Game/native continuous M4 interfaces; Rust original M1/M3 and Bionic compile PASS, stage ZIP14300864286 SHA256 90cfb9be158c6c30e9043e89749f2075d74e7a9129cb8dc79fe53aa11a5aa00c. ARM64 .so sha256 76816bd9ffd851974563656ef2e31041e0904cec34db938fd590844e4eff3ad3 e_machine183 PT_LOAD16384, manifest matched; x86 no artifacts; real KSU/WBD/TCP/UDP NOT_RUN."
+    "ARM64 ONLY SOURCE 2951cda2 Action44021966186 overall FAIL at original Go ld.lld missing Fixed/FEC/Game/native continuous M4 interfaces; Rust original M1/M3 and Bionic compile PASS, stage ZIP14300864286 SHA256 90cfb9be158c6c30e9043e89749f2075d74e7a9129cb8dc79fe53aa11a5aa00c. ARM64 .so sha256 76816bd9ffd851974563656ef2e31041e0904cec34db938fd590844e4eff3ad3 e_machine183 PT_LOAD16384, manifest matched; x86 no artifacts; real KSU/WBD/TCP/UDP NOT_RUN.",
+    "ARM64 A2新增真实Native M4 source：最多8包/turn的RX/TX readiness、原M1/M3/HealthClock、eventfd双线程Stop/join与物理ifindex/MTU验真；跨编译不能证明真机运行；M3 jumbo、原M2/FEC/Game、UI/root owned routes完整联接未就绪。"
   ],
   "promotion": null
 }

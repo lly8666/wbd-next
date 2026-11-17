@@ -30,7 +30,10 @@ No VpnService, fake TLS, new protocol or probe-derived production success.
 
 - A2 borrowed-I/O safety: existing `wbd-platform::r1::BorrowFence` guards
   every synchronous RAW/TUN syscall. Original Entry Stop refuses to close an
-  FD with outstanding driver loans; M4 worker join is still **NOT_RUN**.
+  FD with outstanding driver loans. A new ARM64-only original M4 Normal/off
+  worker now calls the same M1/M3 owner; Stop signals two kernel eventfds,
+  synchronously joins RX/TX, then retires the original owner and FDs.
+  **Source compilation is not actual device I/O or join evidence.**
 
 - Before the first original Go FakeTCP SYN/TLS ClientHello, Android root cold
   CLI requires `--android-network-handle`; `faketcp` uses libandroid
@@ -48,3 +51,24 @@ Large cross-layer SOURCE batches combine original Go cold control, shared Rust
 M1/M3, actual Bionic RAW/TUN, borrowed-FD Stop and catalog/governance.
 Independent code paths are prepared concurrently, then integrated once and
 validated by one ARM64 Actions run. No fake M4 ABI to force the link green.
+
+## ARM64 A2 original M4 worker batch
+
+`crates/wbd-engine/src/v4_android_original_m4.rs` is a **real**
+ARM64-only pair of native readiness threads (not placeholder C symbols):
+- Original M1 slab and single M3 replay/AEAD/Normal LINK, strict checksum/
+  tuple original carrier and verified Go client /32 before TUN delivery.
+- Original FrozenRecord/PN + shared IPv4/TCP writer on bound RAW socket;
+  no Go/Java packet callbacks or auto-resend of an uncertain send.
+- Original canonical encrypted HealthClock kind0 from the very same Rust
+  owner: only native AEAD+unique PN+typed control can refresh peer activity.
+- Physical Network MTU and ifindex recheck, fail-closed on changes.
+- One eventfd per worker, no 10ms idle spinner; Stop signals both, joins
+  both BEFORE original crypto retirement, checks original BorrowFence and
+  removes owned RAW/TUN FDs only after drained.
+
+**Remaining blockers**: source-locked ARM64 Go *full* FEC/Game/M2 linker
+has missing genuine original modes; ARM64 health and Stop are not yet
+device-executed. One source lock and static M4 symbol check CANNOT be
+promoted into real WBD connectivity, multi-IP jumbo delivery, finished
+root UI/controller, FEC/Game or Android16 KSU acceptance.
