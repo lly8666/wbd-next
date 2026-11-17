@@ -62,3 +62,14 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"仅Android无FEC版原Go源锁补真实TLS受保护Normal lane类型/模式验证，Game和Fixed仍显式不可用；原RustOFF真实ABI纳入符号门，16KiB功能卡重复历史压缩。"}
 ```
+
+## A2 原Go无FEC Normal客户端的冷 ACK 与Game supervisor 正确分层
+
+- 前 SOURCE `3349c63291a5d40e725d36fb34fb71d75c80f9e4` [ARM64 Action44025826215](https://github.com/lly8666/wbd-next/actions/runs/44025826215) 原Rust ARM64 M4 / Normal/off stage/readback 编译和动态ELF符号导出 **BUILD_PASS**，原Go已有真实认证Normal lane类型的编译问题修复。Go包 `internal/realityfront` 源码检查通过，但 `internal/v4productcli` 再报告三个精确缺口：原 `repeatOriginalDetachedTLSFinalACK` 定义被Game build-tag包住、无Game变体 `runGameClientGeneration` 仅6参数而原路径supervisor用7参数、缺原cold candidate错误分类常量。因此本SOURCE Go **类型编译FAIL**，还没到最终Go链接。 [Governance44025826225](https://github.com/lly8666/wbd-next/actions/runs/44025826225) **PASS**。
+- 本批只给 Android `!wbd_v4_fec2_product` 自己的新 `game_disabled_android.go` 保留**完全相同**原 `game_linux.go` 的有界Cold FinalTLS ACK duplicate（<=4480ms、仅verified FakeTCP Detached、原association+原tuple）、七实参 supervisor 函数签名和受控 cold candidate 分类；Game2/4运行严格拒绝，绝不允许Go独自起另一个虚假Game lane。原 `game_disabled_linux.go` 只加 `!android` build-tag，Linux构建逻辑不改变。无需复制Game FEC/Engine M4。
+
+同SOURCE Actions后评估本批完整Go CGo链接；Android16 ARM64 KSU真机、标准TLS认证lease、TCP/UDP数据、Health/Stop性能均NOT_RUN。不跳过任何原Rust真实native符号闸；缺口只能用现有真实原Go行为/原Rust逻辑补全。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"ARM64无FEC Go原产品保留真实Normal冷FinalACK原逻辑及原Game路径supervisor 7参签名，Game严格不可用；Linux build tags不改运行，治理/真实M4仍保留。"}
+```

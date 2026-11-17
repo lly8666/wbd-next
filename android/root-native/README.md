@@ -90,3 +90,9 @@ the mature Game build. Android's Normal/off product edition now supplies
 only that original protected **Normal** type and a strict policy reader,
 requiring real ColdSnapshot/commit/association and refusing every FEC/Game
 policy. This is type-level source closure, NOT a stub Game runtime.
+
+Android's existing Normal/off CLI also needs the exact original FakeTCP
+detached final-TLS-ACK bounded cold retry, which used to live behind
+Game's optional Go build tag. The Android-only no-FEC file retains the
+**identical verified ACK behavior**, while the original Linux file is
+selected unchanged on Linux and all Game calls fail closed.
