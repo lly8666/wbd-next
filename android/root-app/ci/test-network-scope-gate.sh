@@ -20,6 +20,10 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
   android/root-app/ci/SelectedAppGroupTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.SelectedAppGroupTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
+  android/root-app/ci/ServerAddressTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.ServerAddressTest
 python3 - <<'PY'
 from pathlib import Path
 s=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
@@ -33,11 +37,14 @@ assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; nev
 assert s.count('InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)')>=2, "multi UID identity rechecked on Service and pre-su"
 assert 'watchSelectedPackages(targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw group on package events"
 assert '"--android-route-uids"' in s and '"--android-route-uid"' in s, "real original Go CLI group and one-UID flags"
+assert 'ServerAddress.isIPv4Literal(peer)?"--peer-ip":"--peer-host"' in s
+assert 'ServerAddress.valid(peer)' in s
 a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert 'target_packages' in a and 'target_uids' in a
 assert 'SelectedAppGroup.from(' in a and 'InstalledAppCatalog.stillSameGroup(' in a
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
 assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
+assert 'ServerAddress.valid(peer)' in a and 'Server underlay IPv4 or DNS name' in a
 go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
 assert 'rootjournal.NewGroup(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=' in go
 j=Path("r0/go_overlay/internal/v4productcli/rootjournal/group.go").read_text()
@@ -54,6 +61,9 @@ cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
 assert 'cnGeositeFile:=flags.String("android-cn-geosite-file"' in cold
 assert 'dnsnative.ReadPinnedCNFile(*cnGeositeFile)' in cold
 assert 'dns_capture=NOT_CONNECTED' in cold
+assert 'peerHost:=flags.String("peer-host"' in cold
+assert 'dnsnative.ResolveBootstrapIPv4(' in cold
+assert 'V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED' in cold
 typed=Path("r0/go_overlay/internal/v4productcli/dnsnative/cn_rules.go").read_text()
 assert 'syscall.O_NOFOLLOW|syscall.O_NONBLOCK' in typed
 assert 'st.Mode().Perm()!=0600' in typed

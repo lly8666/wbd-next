@@ -193,7 +193,7 @@ public final class RootClientService extends Service {
             String[] targetPackages=intent.getStringArrayExtra("target_packages");
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
             if(peer==null||sni==null||user==null||
-                !peer.matches("[0-9.]{7,15}")||
+                !ServerAddress.valid(peer)||
                 sni.length()==0||user.length()==0||
                 port<1||port>65535||
                !InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)){
@@ -229,12 +229,13 @@ public final class RootClientService extends Service {
                                  String user,int peerPort,int[] targetUids,
                                  boolean hasCA,String token){
         List<String> args=new ArrayList<>();
+        String serverAddressFlag=ServerAddress.isIPv4Literal(peer)?"--peer-ip":"--peer-host";
         String[] fixed={
             "--mode","normal","--auto-ip",
             "--raw-interface",net.interfaceName,
             "--android-network-handle",Long.toUnsignedString(net.handle),
             "--local-ip",net.address,
-            "--peer-ip",peer,
+            serverAddressFlag,peer,
             "--peer-port",Integer.toString(peerPort),
             "--local-port",Integer.toString(40000+new SecureRandom().nextInt(20000)),
             "--tun-name","wbdv40",

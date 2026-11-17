@@ -30,7 +30,7 @@ public final class RootClientActivity extends Activity {
     private final List<PhysicalNetwork> physical=new ArrayList<>();
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
-    private EditText serverIP,serverName,user,password,routeKey,caPEM,serverPort;
+    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort;
     private Spinner networks;
     private LinearLayout appChoices;
     private TextView status;
@@ -88,19 +88,6 @@ public final class RootClientActivity extends Activity {
             checkedApps.put(app.packageName,cb);
         }
     }
-    private static boolean ipv4(String s){
-        String[] parts=s.split("\\.",-1);
-        if(parts.length!=4)return false;
-        for(String p:parts){
-            if(p.length()==0||p.length()>3)return false;
-            for(int i=0;i<p.length();i++){
-                if(p.charAt(i)<'0'||p.charAt(i)>'9')return false;
-            }
-            try{if(Integer.parseInt(p)>255)return false;}
-            catch(NumberFormatException e){return false;}
-        }
-        return true;
-    }
     private void privateText(String file,String text)throws Exception{
         try(FileOutputStream out=openFileOutput(file,Context.MODE_PRIVATE)){
             out.write(text.getBytes(StandardCharsets.UTF_8));
@@ -117,7 +104,7 @@ public final class RootClientActivity extends Activity {
                 scope.ifindex,scope.mtu,scope.address)==null){
                 throw new IllegalArgumentException("Selected Network changed; refresh before Start");
             }
-            String peer=serverIP.getText().toString().trim();
+            String peer=serverAddress.getText().toString().trim();
             String sni=serverName.getText().toString().trim();
             String account=user.getText().toString().trim();
             String secret=password.getText().toString();
@@ -133,7 +120,7 @@ public final class RootClientActivity extends Activity {
             if(!InstalledAppCatalog.stillSameGroup(this,chosen.packages,chosen.uids))
                 throw new IllegalArgumentException("Selected package/UID changed; refresh");
             int port=Integer.parseInt(serverPort.getText().toString().trim());
-            if(!ipv4(peer)||sni.length()==0||sni.length()>253||
+            if(!ServerAddress.valid(peer)||sni.length()==0||sni.length()>253||
                account.length()==0||account.length()>128||
                secret.length()==0||secret.length()>512||
                !key.matches("[0-9a-fA-F]{64}")||
@@ -189,7 +176,7 @@ public final class RootClientActivity extends Activity {
         refresh.setText("Refresh physical Networks");
         refresh.setOnClickListener(v->chooseNetworks());
         pane.addView(refresh);
-        serverIP=input(pane,"Server underlay IPv4 (literal)",InputType.TYPE_CLASS_TEXT);
+        serverAddress=input(pane,"Server underlay IPv4 or DNS name (physical DNS bootstrap)",InputType.TYPE_CLASS_TEXT);
         serverName=input(pane,"Standard TLS server name / SNI",InputType.TYPE_CLASS_TEXT);
         serverPort=input(pane,"Original FakeTCP peer port",InputType.TYPE_CLASS_NUMBER);
         serverPort.setText("443");

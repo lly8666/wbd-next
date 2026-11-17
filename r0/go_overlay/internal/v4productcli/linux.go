@@ -78,6 +78,7 @@ type config struct{
     rawInterface string
     localIP netip.Addr
     peerIP netip.Addr
+    peerHost string // Android Root DNS A bootstrap before real FakeTCP SYN
     localPort uint16
     peerPort uint16
     tunName string
@@ -225,6 +226,7 @@ func parse(role string,args []string)(config,error){
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
     ip:=flags.String("local-ip","","underlay local IPv4")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
+    peerHost:=flags.String("peer-host","","Android Root client only: physical 223.5.5.5 DNS server name bootstrap before FakeTCP SYN")
     defaultPort:=uint(0)
     if role=="server"{defaultPort=443}
     port:=flags.Uint("local-port",defaultPort,"original FakeTCP local port (server default 443)")
@@ -274,6 +276,9 @@ func parse(role string,args []string)(config,error){
         if role!="client"||*androidNet==0{
             return c,fmt.Errorf("Android root client needs explicit physical Network handle")
         }
+        if *peerHost!=""&&*peer!=""{
+            return c,fmt.Errorf("Android peer-host and peer-ip are mutually exclusive")
+        }
         if *androidRouteUID!=0&&(*androidRouteUID<10000||*androidRouteUID>1999999){
             return c,fmt.Errorf("Android route UID must identify one non-system application")
         }
@@ -290,7 +295,7 @@ func parse(role string,args []string)(config,error){
             }
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
-             *androidRouteGroup!=""||*cnGeositeFile!=""{
+             *androidRouteGroup!=""||*cnGeositeFile!=""||*peerHost!=""{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -492,9 +497,16 @@ func parse(role string,args []string)(config,error){
         if *cert==""||*key==""{return c,fmt.Errorf("tls-cert and tls-key required")}
         c.tlsCert=*cert;c.tlsKey=*key
     }else{
-        parsed,err=netip.ParseAddr(*peer)
-        if err!=nil||!parsed.Is4(){return c,fmt.Errorf("peer-ip requires IPv4")}
-        c.peerIP=parsed
+        if *peerHost!=""{
+            if runtime.GOOS!="android"||!dnsnative.ValidBootstrapHostname(*peerHost){
+                return c,fmt.Errorf("peer-host requires a valid Android physical bootstrap DNS name")
+            }
+            c.peerHost=*peerHost
+        }else{
+            parsed,err=netip.ParseAddr(*peer)
+            if err!=nil||!parsed.Is4(){return c,fmt.Errorf("peer-ip requires IPv4")}
+            c.peerIP=parsed
+        }
         if *remotePort==0||*remotePort>65535{return c,fmt.Errorf("peer-port invalid")}
         c.peerPort=uint16(*remotePort)
     }
@@ -867,6 +879,20 @@ func Run(role string,args []string)(retErr error){
         // This is scope construction, not an outbound DNS socket or proof
         // of System Resolver interception/physical netd permission.
         log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_COLD_SCOPE_CHECKED socket_opened=0 dns_capture=NOT_CONNECTED")
+        if cfg.peerHost!=""{
+            // Original Go cold DNS wire/ID/QNAME and scoped Bionic netd
+            // UDP/TCP socket. The only DNS upstream is 223.5.5.5 physical;
+            // DNS failure aborts before the first original FakeTCP SYN.
+            dnsCtx,cancelDNS:=context.WithTimeout(context.Background(),5*time.Second)
+            resolved,resolveErr:=dnsnative.ResolveBootstrapIPv4(
+                dnsCtx,cfg.peerHost,cfg.androidPhysicalDNSDial)
+            cancelDNS()
+            if resolveErr!=nil{
+                return fmt.Errorf("Android physical server bootstrap failed before FakeTCP SYN: %w",resolveErr)
+            }
+            cfg.peerIP=resolved
+            log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=223.5.5.5 udp_tcp53_original_go=1",cfg.peerHost)
+        }
     }
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.

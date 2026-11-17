@@ -9,6 +9,9 @@ go test -count=1 -timeout=45s -v \
   ./r0/go_overlay/internal/v4productcli/dnsnative \
   | tee out/android-b1-dnsnative/wire-tests.log
 grep -Fq "TestOriginalQNameSelectsCNPhysicalOrTunnelWithoutFakeIP" out/android-b1-dnsnative/wire-tests.log
+grep -Fq -- "--- PASS: TestB2c3BootstrapPhysicalRealUDP53AndSameEndpointTCP" out/android-b1-dnsnative/wire-tests.log
+grep -Fq -- "--- PASS: TestB2c3BootstrapCompressedCNAMEAAndAnswerIdentity" out/android-b1-dnsnative/wire-tests.log
+grep -Fq -- "--- PASS: TestB2c3BootstrapRejectsMalformedNameOrUnavailablePhysical" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "TestTruncatedUDPOnlyTCP53SameEndpointAndPath" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "TestRefuseCrossFallbackIfSelectedPathFails" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "TestConcurrentQueriesCoalesceWithoutBackgroundTimers" out/android-b1-dnsnative/wire-tests.log
@@ -25,7 +28,8 @@ receipt={
  "fixed_production_upstreams":["223.5.5.5:53","1.1.1.1:53"],
  "local_loopback_ports":"EPHEMERAL_NOT_PORT_53",
  "selected_path_dialer":"DEPENDENCY_INJECTION_TEST_ONLY",
- "android_physical_network_and_tun_binding":"NOT_CONNECTED",
+ "android_physical_network_and_tun_binding":"COMPILED_NETD_PHYSICAL_BOOTSTRAP_NOT_DEVICE_RUN",
+ "b2c3_real_host_dns_bootstrap_udp_tcp_cname":"PASS",
  "android_system_resolver_dns_interception":"NOT_RUN",
  "android_go_rust_m4_dns_interception":"NOT_CONNECTED",
  "physical_android16_ksu":"DEFERRED",
