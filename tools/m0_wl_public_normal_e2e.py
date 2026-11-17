@@ -36,6 +36,7 @@ if p029_p1_cn and not p029_p1_policy:
 p029_product=os.environ.get("WBD_PLAN029_PRODUCT_SPLIT_SCENE")=="1"
 p029b_b0=os.environ.get("WBD_PLAN029B_B0_DNS_SCENE")=="1"
 p029b_b2=os.environ.get("WBD_PLAN029B_B2_ORDINARY_SCENE")=="1"
+p029b_b3=os.environ.get("WBD_PLAN029B_B3_IPV6_SCENE")=="1"
 p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
 p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
 p029_gui_reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
@@ -177,6 +178,14 @@ if p029_direct and not p029_product and (mode!="normal" or
 # B0 uses the original Normal/Tunnel owner with zero business Direct. It is
 # one source-locked genuine Windows+WSL2 run, never a private V3 trial or
 # a second DNS thread/adapter in the shipping product.
+if p029b_b3 and (mode!="normal" or p029b_b0 or p029b_b2 or
+    p029_direct or p029_product or p029_gui or p029_ipv6 or
+    p029_padding or p029_p2 or p029_p1_policy or p029_game4_cn or
+    p029_boot_tc or p029_tcp53 or p029_cdn or p029_cache or
+    p029_pressure or native_outer!="default1460" or
+    os.environ.get("WBD_PLAN029_NATIVE_V3_TRIAL")!="0" or
+    os.environ.get("GITHUB_ACTIONS")!="true"):
+ raise RuntimeError("029B B3 requires one exclusive real Normal/off 1460 signed IPv6/IPv4 mixed original owner")
 if p029b_b0 and (mode!="normal" or p029_direct or p029_product or
     p029_gui or p029_padding or p029_p2 or p029_p1_policy or
     p029_game4_cn or p029_boot_tc or p029_tcp53 or p029_cdn or
@@ -870,6 +879,50 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    "real_windows_app":wr,"real_linux_physical_and_tun":gr,
    "fakeip":"NO_FAKE_WRITER_ON_ORDINARY_SOURCE","stop":"NOT_RUN"}
 
+ if p029b_b3:
+  # Existing true original TLS/Wintun OS Applied and Linux TUN already
+  # qualified by the same Normal owner. One test-only Wintun /128 IPv6.
+  guest_path=out/"plan029b-b3-guest.log"
+  guest_log=guest_path.open("w");logs.append(guest_log)
+  p029b_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "python3","-u",unix(root/"tools"/"m0_plan029b_b3_ipv4_guest.py"),
+    "10.66.0.1","10.66.0.2"],stdout=guest_log,stderr=subprocess.STDOUT)
+  ready(guest_path,"PLAN029B_B3_LINUX_TUN_IPV4_READY",p029b_guest,12)
+  win_path=out/"plan029b-b3-windows.log"
+  with win_path.open("w") as wf:
+   result=subprocess.run([sys.executable,
+       str(root/"tools"/"m0_plan029b_b3_ipv6_windows.py"),
+       "--execute",str(out)],stdout=wf,stderr=subprocess.STDOUT,timeout=85,check=False)
+  if result.returncode:
+   raise RuntimeError("B3 real Windows AF_INET6/IPv4 sender route first failure: "+
+                      win_path.read_text(errors="replace")[-1100:])
+  if p029b_guest.wait(timeout=10):
+   raise RuntimeError("B3 true Linux TUN IPv4 echo missing: "+
+                      guest_path.read_text(errors="replace")[-950:])
+  def b3r(path,marker):
+   found=[json.loads(line.split(" ",1)[1]) for line in
+          path.read_text(errors="replace").splitlines()
+          if line.startswith(marker+" ")]
+   if len(found)!=1:raise RuntimeError("B3 exact original kernel receipt missing "+marker)
+   return found[0]
+  wr=b3r(win_path,"PLAN029B_B3_ORIGINAL_WINDOWS_REAL_IPV6_IPV4")
+  gr=b3r(guest_path,"PLAN029B_B3_ORIGINAL_LINUX_TUN_IPV4")
+  owned=json.loads((out/"plan029b-b3-owned-ipv6-route.json").read_text())
+  if (wr.get("result")!="PASS_PRE_STOP_AF_INET6_WINTUN_ROUTE_AND_IPV4" or
+      wr.get("source_sha")!=os.environ["GITHUB_SHA"] or
+      wr.get("ipv6_sent")!=16 or wr.get("ipv4_echo")!=12 or
+      gr.get("result")!="PASS_REAL_LINUX_IPV4_TUN_MIX" or
+      gr.get("unique_echo")!=12 or
+      owned.get("cleanup")!="PASS_EXACT_TEST_OWNED_IPV6_ADDRESS_ROUTE_ABSENT" or
+      owned.get("source_sha")!=os.environ["GITHUB_SHA"]):
+   raise RuntimeError("B3 AF_INET6 source route, IPv4 echo or test-owned Stop cleanup missing")
+  report["plan029b_b3_ipv6_actual"]={
+   "source_sha":os.environ["GITHUB_SHA"],
+   "status":"PENDING_GENUINE_RUST_WINTUN_IPV6_AND_BOTH_OWNED_STOP",
+   "win_original_kernel":wr,"linux_original_tun":gr,
+   "test_owned_ipv6":owned,"physical_bound_onlink_ipv6":"NOT_PROVEN_BLOCKED",
+   "global_ipv6_leak_claim":False,"owned_stop":"NOT_RUN"}
+  print("PLAN029B_B3_GENUINE_WINDOWS_KERNEL_AF_INET6_INTERLEAVED_IPV4_PRE_STOP",flush=True)
  if p029_boot_tc:
   if p029_boot_tc_guest.wait(timeout=8)!=0:
    raise RuntimeError("physical same endpoint bootstrap failed: "+(out/"plan029-bootstrap-tc-guest.log").read_text(errors="replace")[-900:])
@@ -2708,6 +2761,23 @@ print(json.dumps(result),flush=True)
   proof["stop"]="PASS_BOTH_OWNED"
   print("PLAN029B_B2_SIGNED_REAL_ORDINARY_CN_VS_GLOBAL_SAME_CDN_TUNNEL_OWNED_STOP_PASS",
         flush=True)
+ if p029b_b3:
+  proof=report.get("plan029b_b3_ipv6_actual",{})
+  original=(out/"client.log").read_text(errors="replace")
+  skips=re.findall(r"PLAN029B_WINTUN_IPV6_SKIPPED_STOP packets=(\d+) joined=true",original)
+  if (proof.get("source_sha")!=os.environ["GITHUB_SHA"] or
+      proof.get("status")!="PENDING_GENUINE_RUST_WINTUN_IPV6_AND_BOTH_OWNED_STOP" or
+      len(skips)!=1 or int(skips[0])<16 or
+      "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS" not in original or
+      "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1" not in original or
+      (out/"owned-wal.json.n4-owned-wal").exists() or
+      (out/"owned-wal.json.n4-owned-wal.routes").exists() or
+      (out/"owned-wal.json.plan029-defender-tcp").exists()):
+   raise RuntimeError("B3 original Wintun must genuinely skip IPv6 and preserve IPv4/Stop")
+  proof["wintun_ipv6_skipped"]=int(skips[0])
+  proof["owned_stop"]="PASS_BOTH_OWNED"
+  proof["status"]="PASS_SCOPED_REAL_AF_INET6_WINTUN_IPV4_MIX_AND_STOP"
+  print("PLAN029B_B3_SIGNED_REAL_AF_INET6_WINTUN_SKIP_IPV4_PROGRESS_BOTH_STOP_PASS_SCOPED",flush=True)
  if p029_game4_cn:
   g4=report.get("plan029_game4_cn_real",{})
   if (g4.get("source_sha")!=os.environ["GITHUB_SHA"] or
@@ -3366,6 +3436,18 @@ finally:
    if p029_tunnel_alias+"/32" in attached:
     wsl("ip","addr","del",p029_tunnel_alias+"/32","dev","wbdwl4",timeout=8)
   except Exception:pass
+ if p029b_b3 and (out/"plan029b-b3-owned-ipv6-route.json").exists():
+  # ALWAYS exact generation/CAS cleanup, including an aborted application.
+  # Test route/address have no business underlay/global host ownership.
+  try:
+   cleared=subprocess.run([sys.executable,str(root/"tools"/"m0_plan029b_b3_ipv6_windows.py"),
+     "--cleanup",str(out)],capture_output=True,text=True,timeout=35,check=False)
+   if cleared.returncode:
+    report["plan029b_b3_cleanup_failure"]=(cleared.stderr or cleared.stdout)[-700:]
+    print("PLAN029B_B3_TEST_ROUTE_FINAL_CLEANUP_FAIL "+
+          report["plan029b_b3_cleanup_failure"],flush=True)
+  except Exception as issue:
+   report["plan029b_b3_cleanup_failure"]=str(issue)[-700:]
  stop_windows(w);stop_linux()
  for guest in (p029_boot_tc_guest,p029_ttl_guest):
   if guest is not None and guest.poll() is None:

@@ -39,6 +39,8 @@ pub enum ReadResult {
     Frame(usize),
     NoPacket,
     Skipped,
+    // Wintun first-byte IPv6; distinct only for bounded Stop evidence.
+    SkippedIpv6,
     EndOfStream,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -399,7 +401,10 @@ impl WintunRx {
             Ok(ReadResult::Skipped)
         } else {
             let data = unsafe { std::slice::from_raw_parts(raw, n) };
-            if data[0] >> 4 != 4 {
+            if data[0] >> 4 == 6 {
+                // Reuse original first-byte check; never copy/deliver IPv6.
+                Ok(ReadResult::SkippedIpv6)
+            } else if data[0] >> 4 != 4 {
                 Ok(ReadResult::Skipped)
             } else if n > dst.len() {
                 Err(NativeIoError::BufferTooSmall)
@@ -562,7 +567,7 @@ mod tests {
         let fns=WintunFns{receive:recv_ipv6_then_ipv4,release,allocate,send};
         let (mut rx,_)=unsafe{split_borrowed_wintun(1,2,fns).unwrap()};
         let mut slab=[0xAAu8;128];
-        assert_eq!(rx.read(&mut slab),Ok(ReadResult::Skipped));
+        assert_eq!(rx.read(&mut slab),Ok(ReadResult::SkippedIpv6));
         assert_eq!(RELEASES.load(Ordering::SeqCst),1);
         assert!(slab.iter().all(|&b|b==0xAA),
             "IPv6 never copied into IPv4/M1/Tunnel slab");

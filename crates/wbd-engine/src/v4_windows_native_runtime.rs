@@ -238,6 +238,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      post_ingress_direct_to_rx:AtomicU64,
      tx_after_rx:AtomicU64,
      rejected:AtomicU64,
+     skipped_ipv6:AtomicU64, // only Wintun first-byte v6; Stop-only readback
      fresh_outer_bytes:AtomicU64,
      // Accepted by the genuine Npcap driver prefix, not just proposed
      // by the pre-seal policy. No public ABI change or per-DATA log.
@@ -265,6 +266,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              rx_tx_notify_attempts:AtomicU64::new(0),
              post_ingress_direct_to_rx:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
+             skipped_ipv6:AtomicU64::new(0),
              fresh_outer_bytes:AtomicU64::new(0),
              startup_pad_npf_bytes:AtomicU64::new(0),
              startup_pad_npf_records:AtomicU64::new(0),
@@ -529,11 +531,15 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              },
              Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
              Ok(ReadResult::Skipped)=>{
-                 // This Wintun loan was consumed and released even when
-                 // IPv6/non-IPv4. Count its RX quantum without staging it
-                 // for Tunnel, business Direct, FEC or padding. Otherwise
-                 // BATCH skipped loans hide the next ready IPv4 packet.
+                 // Even invalid Wintun loans were consumed/released; fair quantum.
                  captured+=1;
+                 counters.rejected.fetch_add(1,Ordering::Relaxed);
+             },
+             Ok(ReadResult::SkippedIpv6)=>{
+                 // Same existing first-byte branch. No copy, Tunnel, Direct
+                 // classification, AEAD, FEC or per-packet log.
+                 captured+=1;
+                 counters.skipped_ipv6.fetch_add(1,Ordering::Relaxed);
                  counters.rejected.fetch_add(1,Ordering::Relaxed);
              },
              Err(_)=>return Err(BAD_STAGE),
@@ -1471,7 +1477,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              let n=match npf.read(&mut frame){
                  Ok(ReadResult::Frame(n))=>n,
                  Ok(ReadResult::NoPacket)=>break,
-                 Ok(ReadResult::Skipped)=>continue,
+                 Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,
                  Ok(ReadResult::EndOfStream)=>return BAD_STAGE,
                  Err(_)=>return BAD_STAGE,
              };
@@ -1879,6 +1885,8 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      };
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+     eprintln!("PLAN029B_WINTUN_IPV6_SKIPPED_STOP packets={} joined=true original_wintun_owner=1",
+         session.counters.skipped_ipv6.load(Ordering::Relaxed));
      eprintln!("WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake={} tx_wake_attempts={} rx_data_delivered={} joined=true",
          RX_WAKE_BATCH,
          session.counters.rx_tx_notify_attempts.load(Ordering::Relaxed),
@@ -2159,6 +2167,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          // scheduler's consumed-slot quantum must still be complete.
          let all_skipped=StageWork{tunnel:0,captured:BATCH,direct:0};
          assert!(all_skipped.quantum_full());
+         assert_ne!(ReadResult::SkippedIpv6, ReadResult::Skipped);
          let mixed=StageWork{tunnel:1,captured:BATCH,direct:0};
          assert!(mixed.quantum_full());
          assert!(!StageWork{tunnel:1,captured:BATCH-1,direct:0}.quantum_full());

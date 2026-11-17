@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2104,
-  "checkpoint_sha": "15978946fe382d6f124c64eceb81fcd7de2a2822",
+  "sequence": 2105,
+  "checkpoint_sha": "969ce2b1a321e3a122c7cc235db7da45a7f13a17",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2104 collect H2103 source159789 true signed Win2025 Normal/off full two-way kernel UDP/TCP+real Wintun/Npcap TLS/WAL Stop PASS; public DNS-only TCP listener visible, no business Direct NAT. Existing source H2102 Go cold all/off inactive Direct hard cap fix still leaked original early Go CLI --check-config validation. H2104 changes exactly main_windows.go manifest patch to guard active business split only, source-lock derived blob, extend actual WinForms→Go validation on all/off stale DirectHard=16385+missing CN source and old CN missing/explicit-false persistence on reopened GUI. Real GUI VM pending; B3 actual IPv6 and B5 CPU/p99 NOT_RUN.",
-  "why_now": "H2103 Action44085831814 job134050923926 SUCCESS original ZIP artifact14329403547 SHA256 b364c172281608bda0b9d4deb1269dcde83f3308472f023360659bd5185c0757, source/fixture/product/linux source all 15978946..., original Normal route_mode=0 business_split=false, DNS TCP only direct_business_nat=0, Win/Linux UDP/TCP duplex and both-owned Stop PASS, 1400 outer legacy CI selector, no IPv6 sent. H2102 protected Rust/Go cold helper test is insufficient if original main Go preflight rejects saved inactive Direct cap before calling it; fix only inactive admission. Current B4 WinForms source exact VM NOT_RUN.",
+  "current_task": "H2105 H2104 SOURCE969ce actual WinForms/Go CLI/Rust DLL read-only config source-frozen PASS, old CN selector missing key migrated to true and explicit false preserved across reopened portable profile, all/off stale Direct hard cap accepted. Original GUI OS applied NOT_RUN. H2105 new real signed Normal/off AF_INET6 Wintun narrow test-owned /128 route with 16 kernel IPv6 sends+12 IPv4 TUN echoes, first-byte SkippedIpv6 only stop counter, owned route cleanup and both-owned Stop; new source status NOT_RUN. Global host IPv6 and Game/perf not proven.",
+  "why_now": "H2104 Action44091381879 job134067061653 SUCCESS original ZIP artifact14331293478 sha256 0c102af7ca7eac545fb9550c719dfab1981e6ee102bfbd4e16656153507f8f5e CRC9; original Go SHA a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46 Rust DLL aa8579739a253677d06089abcd4465c4543e7f072fe210969890f92fcde154df. H2104 Go CLI 44091382013 and source-locked cheap Windows/Linux 44091381897 PASS; native sign skipped correctly. Old D4 lacked actual IPv6 send/route, cannot conclude block. B3 needs original Wintun first byte v6 skip with true OS AF_INET6 send and fair IPv4 progress.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect same SOURCE H2104 Windows2025 compiled real WinForms/Go CLI + Rust DLL GUI workflow (triggered by harness) with positive all/off inactive Direct hard cap & missing CN source, active mode fails, saved legacy missing key true, explicit false reopen; do not call it signed OS Applied. If Go CLI gate FAIL inspect first original Go config validation, no second framework. Then B3 real controlled Wintun IPv6 route+actual AF_INET6 mixed IPv4/Stop, B4 signed real GUI cold/reconnect/Game and B5 paired sameVM <=10Mbps CPU/GiB/p99. No weak-network 028 full matrix.",
+  "next_action": "Collect H2105 [plan029b-b3-ipv6-real] one source-frozen signed original Windows2025 Wintun/Npcap↔WSL2 Normal/off: real Windows AF_INET6 16 sendto on exact owned /128 Wintun route, Rust first-byte v6 Skipped STOP>=16, 12 mixed IPv4 TUN echoes, dual real TCP/UDP, route/address exact removed and both owned WAL Stop. If Win IPv6 binding/route/kernel send unavailable record first error FAIL/NOT_RUN, never claim global block. Then B4 actual GUI multi-generation/Game, B5 sameVM <=10Mbps CPU/GiB/p99; don't redo 028 or weak matrix.",
   "unverified": true,
-  "last_tested_source": "15978946fe382d6f124c64eceb81fcd7de2a2822",
+  "last_tested_source": "969ce2b1a321e3a122c7cc235db7da45a7f13a17",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2104-H2103-SIGNED-NORMAL-OFF-PASS-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2105-H2104-GUI-SOURCE-CONFIG-PASS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2104-COLD-CLI-GUI-MIGRATION.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2105-REAL-OWNED-IPV6.md",
+    "docs/evidence/M0/PLAN029B-H2105-H2104-GUI-SOURCE-CONFIG-PASS-20261117.json",
     "docs/evidence/M0/PLAN029B-H2104-H2103-SIGNED-NORMAL-OFF-PASS-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2103-B2-ADVANCED-20261117.json",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2098 sourced943 signed ordinary CN shared overseas real A two separate DNS/Tunnel UDP TCP/Stop PASS; H2101 sourceb7bb CI advanced CN FakeIP CNAME two A physical Direct UDP/TCP32KiB/Stop PASS, both older SOURCES. H2102 source dae Win/GUI native preflight FAIL due stale manifest, corrected H2103; H2103 source159789 original signed Normal/off dual kernel UDP/TCP Stop true PASS with DNS-only minimal listener, but no B3 IPv6 send and outer legacy1400. H2104 tightens Go original CLI early inactive cap to match Rust cold helper; actual GUI/Go compiled test requested but not yet qualified. Real IPv6, B4 full multi-generation/Game and B5 sameVM 10Mbps pending."
+  "partial_summary": "B2 ordinary H2098 and advanced CI H2101 independently signed true destination/DNS/FakeIP+Stop PASS. H2103 original Normal/off signed original kernel TCP/UDP Stop PASS. H2104 source969ce real WinForms/Go/Rust config-only GUI PASS missing-key true/explicit false persisted, all/off ignores inactive cap, active CN rejects bad; not OS Applied. H2105 scoped genuine IPv6 original Wintun route+kernel packet test NOT_RUN until signed Action. Other host IPv6 paths, B4 signed GUI/Game and B5 sameVM perf remain unverified."
 }

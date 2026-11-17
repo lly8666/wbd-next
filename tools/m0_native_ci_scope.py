@@ -75,6 +75,7 @@ EXPLICIT_NATIVE_MARKERS = (
     # PLAN029B H2091: one independent source-locked ordinary CN real-A
     # original Windows2025/WSL2 Wintun vs physical and Tunnel DNS.
     "[plan029b-b2-cn-ordinary-real]",
+    "[plan029b-b3-ipv6-real]",
 )
 
 
