@@ -262,7 +262,9 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('report["plan029_d3_direct_hard_pressure"]["stop"]="PASS_BOTH_OWNED"',S)
         self.assertIn('p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):',S)
         self.assertIn('p029_cdn_guest=p029_cdn_win=None',S)
-        self.assertIn('if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():',S)
+        # The old CDN route owner remains exact-CAS; B4 may only reuse
+        # that test-owned route during its first advanced generation.
+        self.assertIn('if (p029_cdn or p029b_b4) and (out/"plan029-h2010-owned-route-alias.json").exists():',S)
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text()
         self.assertIn("WBD_PLAN029_DIRECT_PRESSURE:",W)
