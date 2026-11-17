@@ -142,7 +142,14 @@ public final class RootClientService extends Service {
         }
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
         shell.append("p=").append(q(ROOT)).append("; ");
-        shell.append("mkdir -p \"$p\"; chmod 700 \"$p\"; ");
+        // /data/local/tmp may be writable to shell/other actors.
+        // A pre-existing symlink or non-root directory must NEVER be
+        // chmod'ed, followed, or used for root binary installation.
+        shell.append("test ! -L \"$p\"; ");
+        shell.append("if [ ! -e \"$p\" ]; then mkdir -m 700 \"$p\"; fi; ");
+        shell.append("test -d \"$p\" && test ! -L \"$p\"; ");
+        shell.append("test \"$(stat -c %u \"$p\")\" = 0; ");
+        shell.append("test \"$(stat -c %a \"$p\")\" = 700; ");
         // Verify prior root PID is not still live BEFORE replacing a
         // previous owner's lockless cold stage or installing a second TUN.
         shell.append("if [ -f \"$p/owner.pid\" ]; then ");

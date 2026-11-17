@@ -58,3 +58,5 @@ not a systemwide service, DNS takeover or hotspot.
 `main`, M0 registry/cursor, the existing Linux/Windows products and
 the old Android VpnService shell are untouched. Only arm64-v8a is built,
 signed or tested as an Android target.
+
+Root launch hardening: no root filesystem mutations are allowed on a pre-existing symlink, foreign-owned directory, or directory lacking owner-only 0700 mode. Real stat UID/mode readback happens BEFORE native binary copy or chmod; active prior PID+kernel starttime checks precede ELF replacement.

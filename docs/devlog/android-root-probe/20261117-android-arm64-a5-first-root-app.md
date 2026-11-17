@@ -16,3 +16,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"独立Android ARM64 Java原生Root App，真ConnectivityManager物理Network、私有凭据/单UID、同SOURCE签名APK内原Go/Rust ELF与严格PID/starttime Stop，不新增VPN/JNI/TLS/AEAD；SDK/真机单独门。"}
 ```
+
+## A5原Go/Rust同源Root APK三门PASS及后续Root目录安全补丁
+
+- SOURCE 1cfbfe2a91bc369037f9f78abf88cf76320900dd: [ARM64 Action44035287415](https://github.com/lly8666/wbd-next/actions/runs/44035287415) 原M3 wire oracle、真实原Go/Rust Native ARM64完整CGo、独立Java SDK35无VpnService Root APK三个job **全部PASS**；[Governance44035287468](https://github.com/lly8666/wbd-next/actions/runs/44035287468) PASS。A5 APK artifact14306977329真实解包：ZIP SHA256 7b8da07169db2e0565b4cdeb47f64e6c1389de59da42e09ac1deca587a8fd33f，APK SHA256 4faad321629e88435a70e495315e8177e45bba614e73f424c5d1d5a3faf386a7。APK内原Go ELF SHA256 d39ffe9cf579e8b19a1bebbfa6f912c7ff08fed54084ab8dabc6b8273699dcb7，原Rust共享so SHA256 6a3b1b808e382db53272f46326fee21f461660a97fe3cbb0ea03f3562b95035f；双方machine183，最小PT_LOAD 16384，APK原生来源=1cfb，Manifest无VpnService，无Android x86资产。
+- 本后续安全加固：/data/local/tmp是可触及父目录，Root启动脚本旧版先mkdir -p/chmod，可能沿预建symlink修改其他目录权限。现在**任何chmod、ELF复制之前**禁止symbolic link，只有缺失时创建0700目录，之后使用真实stat核对owner uid0/mode700，外国目录失败且不修改。启动前先核原活PID/进程starttime再覆盖ELF，保留原进程精确Stop能力。此修复SOURCE须重新跑完整CI，旧A5成功不能代替修复版的验收。
+- 用户Android16 ARM64 KSU Root授权、真实iproute2 uidrange、原Go标准TLS/凭据/租约、手机双向TCP/UDP、Stop路由及借用资源、网络变更、DNS、耗电/性能、热点评测**均NOT_RUN**；Debug签名非生产发行签名。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"封存A5同源ARM64 Native+原M3+独立无VpnService APK三CI PASS及真实ZIP/ELF SHA，并对共享父目录Root symlink攻击面增加源锁防护；新源码和真机分别验收。"}
+```

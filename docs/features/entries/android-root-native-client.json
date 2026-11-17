@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "Android arm64-v8a原Go TLS/租约＋原Rust M1/M3/M4/Health/Stop、单UID Root journal已有BUILD_PASS；A5新增独立无VpnService原生Root App（同源码Go/Rust ELF）待SDK CI/真机。",
+  "summary": "Android arm64-v8a原Go TLS/租约、Rust共享M1/M3/M4、原Root单UID事务和独立无VpnService APK均BUILD_PASS；本轮强化Root runtime目录防symlink，Android16 KSU实机仍NOT_RUN。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -265,6 +265,13 @@
       "status": "BUILD_PASS",
       "source_sha": "20d7c7ffaaeefcae96ab5f03c656994466420eac",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44033543628"
+    },
+    {
+      "platform": "Android ARM64 no-VpnService rooted original Go/Rust APK",
+      "scope": "Same SOURCE native AArch64 original Go/Rust full link, original M3 oracle and independent Java ARM64 no-VpnService signed APK three CI jobs PASS; real phone Root/TLS/traffic NOT_RUN.",
+      "status": "BUILD_PASS",
+      "source_sha": "1cfbfe2a91bc369037f9f78abf88cf76320900dd",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44035287415"
     }
   ],
   "limitations": [
@@ -272,7 +279,8 @@
     "禁止修改main/M0 registry/cursor；旧Android VpnService壳非本产品入口。",
     "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
     "A4：真实Go认证/32+Rust M4后单APP UID独立route table19842/pref9600；fsync 0600 journal、flock拒绝多进程并发、内核核对撤销；真实Android16 KSU、iproute2、App和双向数据NOT_RUN。",
-    "A5 Java Root App仅App UI/进程控制，A4实际原Go/Rust已BUILD_PASS；A5独立APK和Android16 KSU真机TLS/双向包/Stop仍需实测；不含VpnService/FakeIP。"
+    "A5 Java Root App仅App UI/进程控制，A4实际原Go/Rust已BUILD_PASS；A5独立APK和Android16 KSU真机TLS/双向包/Stop仍需实测；不含VpnService/FakeIP。",
+    "A5后续Root runtime安装目录必须先检查非symlink且root-owned 0700后才chown/复制ELF；新补丁CI与设备仍需独立验收。"
   ],
   "promotion": null
 }
