@@ -26,6 +26,7 @@ import (
     "net/netip"
     "os"
     "os/exec"
+    "runtime"
     "os/signal"
     "strconv"
     "strings"
@@ -119,6 +120,8 @@ type config struct{
     // Cold generation's kernel-selected path budget; zero for the older
     // non-path-supervised product. Never user-supplied or serialized.
     underlayBudgetMTU int
+    androidNetworkHandle uint64 // selected physical ConnectivityManager Network
+    androidPhysicalMTU uint32 // same interface cold readback
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
@@ -178,7 +181,8 @@ func parse(role string,args []string)(config,error){
     c.role=role
     if role!="client"&&role!="server"{return c,fmt.Errorf("unknown role")}
     flags:=flag.NewFlagSet("wbd-v4-"+role,flag.ContinueOnError)
-    iface:=flags.String("raw-interface","","real Linux underlay device")
+    iface:=flags.String("raw-interface","","real physical underlay interface")
+    androidNet:=flags.Uint64("android-network-handle",0,"Android client-only Network.getNetworkHandle() (mandatory; cold per-socket binding)")
     ip:=flags.String("local-ip","","underlay local IPv4")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     defaultPort:=uint(0)
@@ -220,6 +224,14 @@ func parse(role string,args []string)(config,error){
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
+    if runtime.GOOS=="android"{
+        if role!="client"||*androidNet==0{
+            return c,fmt.Errorf("Android root client needs explicit physical Network handle")
+        }
+    }else if *androidNet!=0{
+        return c,fmt.Errorf("android-network-handle is Android-only")
+    }
+    c.androidNetworkHandle=*androidNet
     modeGiven,autoGiven:=false,false
     flags.Visit(func(f *flag.Flag){if f.Name=="mode"{modeGiven=true};if f.Name=="auto-ip"{autoGiven=true}})
     if role=="server"&&*manualLease!=""&&!modeGiven{*mode="normal"}
@@ -748,6 +760,12 @@ func Run(role string,args []string)(retErr error){
     if err!=nil{return err}
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
+    if runtime.GOOS=="android"{
+        if role!="client"||cfg.androidNetworkHandle==0||iface.MTU<68||iface.MTU>65535{
+            return fmt.Errorf("Android physical Network/MTU unavailable")
+        }
+        cfg.androidPhysicalMTU=uint32(iface.MTU)
+    }
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
     // Pure Rust pre-TLS derives the advertised SYN ceiling from the same
@@ -838,6 +856,14 @@ func Run(role string,args []string)(retErr error){
             faketcp.RawIPv4EndpointOptions{ReceivePort:cfg.localPort},
         )
         if err!=nil{return err}
+        // Before any genuine FakeTCP SYN or standard ClientHello: select only
+        // the cold raw sender's exact Android physical Network. The AF_PACKET
+        // receiver is already bound to this interface by original Go.
+        if err=raw.BindAndroidNetwork(cfg.androidNetworkHandle,
+            cfg.rawInterface,iface.Index,iface.MTU);err!=nil{
+            _=raw.Close()
+            return err
+        }
         // Real AF_PACKET endpoint is now bound to the configured local
         // port. The netns harness must not equate an earlier TUN file
         // with a listening FakeTCP server (SYN startup race).
@@ -1245,6 +1271,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     native,err:=realityfront.NewV4LinuxClientProduct(
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
+            AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
+            AndroidPhysicalMTU:c.androidPhysicalMTU,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),

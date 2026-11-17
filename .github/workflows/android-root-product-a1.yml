@@ -14,6 +14,8 @@ on:
       - "crates/wbd-codec/Cargo.toml"
       - "Cargo.lock"
       - "r0/go_overlay/internal/realityfront/**"
+      - "r0/go_overlay/internal/faketcp/raw_android_network_*.go"
+      - "r0/go_overlay/internal/v4productcli/linux.go"
       - "r0/go_overlay/internal/v4productcli/**"
       - "tools/m0_install_public_faketcp.py"
       - "tools/m0_install_public_realityfront_tests.py"

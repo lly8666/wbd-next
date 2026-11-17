@@ -31,3 +31,9 @@ No VpnService, fake TLS, new protocol or probe-derived production success.
 - A2 borrowed-I/O safety: existing `wbd-platform::r1::BorrowFence` guards
   every synchronous RAW/TUN syscall. Original Entry Stop refuses to close an
   FD with outstanding driver loans; M4 worker join is still **NOT_RUN**.
+
+- Before the first original Go FakeTCP SYN/TLS ClientHello, Android root cold
+  CLI requires `--android-network-handle`; `faketcp` uses libandroid
+  per-socket `android_setsocknetwork` plus exact SO_BINDTODEVICE on its
+  existing IPPROTO_RAW sender, while keeping original AF_PACKET RX. This
+  does not make existing Linux CLI TUN setup Android production routing.

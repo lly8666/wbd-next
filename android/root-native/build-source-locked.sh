@@ -27,6 +27,11 @@ python3 tools/m0_install_public_faketcp.py --check-only
 python3 tools/m0_install_public_faketcp.py legacy
 cp r0/go_overlay/internal/faketcp/raw_detached_data_linux.go legacy/internal/faketcp/
 cp r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go legacy/internal/faketcp/
+# Source-locked Android-only pre-TLS physical Network binding. Original donor untouched.
+for name in raw_android_network_android.go raw_android_network_linux.go; do
+  test ! -e "legacy/internal/faketcp/$name" || { echo "donor collision: $name" >&2; exit 1; }
+  cp "r0/go_overlay/internal/faketcp/$name" "legacy/internal/faketcp/$name"
+done
 python3 tools/m0_install_public_realityfront_tests.py legacy
 mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
 for file in r0/go_overlay/internal/realityfront/*.go; do

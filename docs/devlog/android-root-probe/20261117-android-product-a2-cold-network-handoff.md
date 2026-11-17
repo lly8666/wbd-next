@@ -26,3 +26,17 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A2真实同源Bionic冷Owner附接 Action证据封存；复用 wbd-platform::r1 借用栅栏阻止未排空FD提前Stop；不伪造已接通M4。"}
 ```
+
+## A2 冷握手真物理 Network 接线
+
+原 pinned Go donor 的 `RawIPv4Endpoint` 使用 AF_PACKET RX（内核按接口/端口过滤）及 AF_INET IPPROTO_RAW TX。此前只给 **TLS 后 Rust DATA** 绑定 Android Network，无法保证标准 TLS 前的原 FakeTCP SYN 和 ClientHello 物理出网。
+
+现在在同一原Go SYN/TLS流程 **任何 SYN 之前**，使用 Android-only 的 `android_setsocknetwork` + `SO_BINDTODEVICE` 绑定原 sendFD，失败完整关闭原两 FD；没有另造 TLS、TCP 或 Go 数据面。原 CLI 在 Android client 上强制非零 `--android-network-handle`，由系统 ConnectivityManager 的真实 Network 对象提供；接口 MTU 在冷入口读回，并传往认证后共享 Rust Entry。Linux原 Go 路径保留默认行为；原 donor SHA仍按 source-lock 验证，增量文件经 overlay 装配而不复制旧 donor 源。新 CGo Android 文件不影响 Linux GNU/musl。
+
+**上一 SOURCE** `7f5fbda33c3fd26d615923bd93793998de8ad7e8` [Action44019457210](https://github.com/lly8666/wbd-next/actions/runs/44019457210)：双 Android ABI Rust冷/实际FD FFI构建通过，原 ARM64 Go M4 全链接 **FAIL**于未移植的原Normal/off/FEC/Game/loop符号；[Governance44019457225](https://github.com/lly8666/wbd-next/actions/runs/44019457225) **PASS**。本提交新的 source-locked Action 才可裁决源代码的 Android Go CGo 编译/链接。Android16 KSU 与 Linux真server标准 TLS、租约、双向TCP/UDP、root设备实际装载仍 **NOT_RUN**。原 Android CLI 的 TUN/路由并未完成生产 owned 增量适配，不能视为正式可安装App。
+
+**唯一下一步：** 实现同一Rust M4成熟Normal/off线程对 Android RAW/TUN/MTU/Health 的消费与同步 Stop，消除原产品 Go 链接缺口，随后A3真实设备同源连接。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"原Go冷 SYN/TLS 发送 socket 按唯一Android Network/ifindex/MTU在 ClientHello 前绑定，精确 source-locked overlay 文件，完整 WBD M4业务仍NOT_RUN。"}
+```
