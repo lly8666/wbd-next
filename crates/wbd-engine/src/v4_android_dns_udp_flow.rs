@@ -323,7 +323,7 @@ mod tests {
             match tamper{
                 0=>p[6]=0x20, // first fragment flag
                 1=>p[7]=1, // nonfirst fragment
-                2=>p[24]=0, // mismatched UDP length
+                2=>p[25]=0, // corrupt actual nonzero UDP length LOW byte
                 3=>p[23]=54, // wrong target port
                 4=>p[32]=2, // QR=1 response, not question
                 _=>p[0]=0x60, // not IPv4

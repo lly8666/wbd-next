@@ -17,3 +17,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B2c2b1原Rust引擎同源固定64项UDP53问答五元组/ID/QNAME反向映射与IPv4 UDP校验和完整包测试；原M4保持不劫持无第二TUN读者，Android真正DNS仍未接。"}
 ```
+
+## 首轮同源测试的负例夹具失败（保留历史）
+
+SOURCE `1288f1f714f6fc9a1f2e732b077ba3e455da6b25` [Action44090496300](https://github.com/lly8666/wbd-next/actions/runs/44090496300)，B2c2b1真实完整IPv4/UDP packet的双向反向映射、checksum、ID/QNAME防串答、64槽容量/Stop三项Rust Host测试PASS；第四项`b2c2b1_rust_udp53_rejects_fragments_and_malformed_without_packet_mutation` FAIL，原因是畸形长度测试把`p[24]`（UDP长度**高字节、本来就是0**）再次设0，报文本身完全合法，所以产品候选正确接受为`Ok(())`。只将该负例改为`p[25]=0`（实际原UDP长度低字节非0、必须被拒绝），不改变解析/映射实现。前一Action的FAIL如实保留；必须新SOURCE重新跑全套Actions，不使用旧Native/APK/Linux工件代替同源证据。
