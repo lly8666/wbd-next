@@ -297,7 +297,7 @@ struct ProbeTcp128{
 pub(crate) struct NativeTcpActor{
     lease:u32,synthetic:u32,
     physical:Ipv4Addr,ifindex:u32,
-    listener:TcpListener,nat:DirectTcpNat,
+    listener:TcpListener,nat:Option<DirectTcpNat>,
     pending:HashMap<u16,(TcpNatKey,u64)>,
     pending_physical:HashMap<u16,PendingPhysical>,
     preconnect_signed:bool,
@@ -349,14 +349,18 @@ impl NativeTcpActor{
     /// cannot install routes, modify global firewall, or start threads.
     pub(crate) fn new(lease:Ipv4Addr,synthetic:Ipv4Addr,
         physical:Ipv4Addr,ifindex:u32,hard:usize,
-        fake_range:(u32,u32))->Result<Self,()>{
+        fake_range:(u32,u32),business_direct:bool)->Result<Self,()>{
         if !safe_synthetic(u32::from(lease),u32::from(physical),
                 u32::from(synthetic),fake_range)||
            ifindex==0||hard==0||hard>16384{return Err(())}
         let listener=open_kernel_tcp_listener(lease).map_err(|_|())?;
         let port=listener.local_addr().map_err(|_|())?.port();
-        let nat=DirectTcpNat::new(u32::from(lease),u32::from(synthetic),
-            port,hard).map_err(|_|())?;
+        // PLAN029B B0: keep one exact-owned DNS TCP listener/NAT but do
+        // not even construct the business Direct TCP NAT table in All/off.
+        let nat=if business_direct{
+            Some(DirectTcpNat::new(u32::from(lease),u32::from(synthetic),
+                port,hard).map_err(|_|())?)
+        }else{None};
         let dns_nat=DirectTcpNat::new_dns(u32::from(lease),
             u32::from(synthetic),port).map_err(|_|())?;
         let socket_events=SocketReadiness::new().map_err(|_|())?;
@@ -601,7 +605,8 @@ impl NativeTcpActor{
     // Used only by original signed TX mailbox trace: the kernel-local
     // socket sees an assigned proxy source port, not the app source port.
     pub(crate) fn original_source_for_proxy(&self,p:u16)->Option<u16>{
-        self.nat.by_nat_port(p).map(|x|x.key.source_port)
+        self.nat.as_ref().and_then(|nat|
+            nat.by_nat_port(p).map(|x|x.key.source_port))
     }
     /// A TCP reply that could not enter the bounded TX->RX mailbox MUST
     /// stay in its exact NAT order. Dropping one translated TCP ACK/DATA
@@ -675,15 +680,18 @@ impl NativeTcpActor{
             self.record_ready_full();
             return Err(())
         }
-        let was=self.nat.len();
+        let was=self.nat.as_ref().ok_or(())?.len();
         let mut rewritten=packet.to_vec();
-        let entry=self.nat.to_listener_in_place(&mut rewritten,real,now_ms)
+        let entry=self.nat.as_mut().ok_or(())?
+            .to_listener_in_place(&mut rewritten,real,now_ms)
             .map_err(|_|())?;
         if self.enqueue_owned(rewritten).is_err(){
-            if self.nat.len()>was{self.nat.retire(entry.key);}
+            if let Some(nat)=self.nat.as_mut(){
+                if nat.len()>was{nat.retire(entry.key);}
+            }
             return Err(())
         }
-        if self.nat.len()>was{
+        if self.nat.as_ref().is_some_and(|nat|nat.len()>was){
             let deadline=now_ms.saturating_add(PENDING_MS);
             self.pending.insert(entry.proxy_port,(entry.key,deadline));
             self.deadlines.push_back((entry.proxy_port,deadline));
@@ -729,7 +737,10 @@ impl NativeTcpActor{
         }
         let mut rewritten=packet.to_vec();
         if self.dns_nat.to_app_in_place(&mut rewritten)
-            .or_else(|_|self.nat.to_app_in_place(&mut rewritten)).is_err(){
+            .or_else(|original|match self.nat.as_mut(){
+                Some(nat)=>nat.to_app_in_place(&mut rewritten),
+                None=>Err(original),
+            }).is_err(){
             return Some(Err(()))
         }
         Some(self.enqueue_owned(rewritten))
@@ -766,7 +777,8 @@ impl NativeTcpActor{
                 }
                 continue
             }
-            let Some(entry)=self.nat.accepted(u32::from(*peer.ip()),peer.port())
+            let Some(entry)=self.nat.as_ref().and_then(|nat|
+                nat.accepted(u32::from(*peer.ip()),peer.port()))
                 else{continue};
             if !self.pending.contains_key(&entry.proxy_port){continue}
             self.pending.remove(&entry.proxy_port);
@@ -790,7 +802,7 @@ impl NativeTcpActor{
                         .and_then(|_|self.socket_events.watch(
                             socket.raw_socket(),shard,EVENT_CONNECT));
                     if watches.is_err(){
-                        self.nat.retire(entry.key);
+                        if let Some(nat)=self.nat.as_mut(){nat.retire(entry.key);}
                         retired.push(entry.key);
                         continue
                     }
@@ -801,7 +813,7 @@ impl NativeTcpActor{
                     let fast_forward=if entry.key.target_port==46116{
                         if let Some(ordinal)=self.probe_abba_next.as_mut(){
                             if *ordinal>=4{
-                                self.nat.retire(entry.key);
+                                if let Some(nat)=self.nat.as_mut(){nat.retire(entry.key);}
                                 retired.push(entry.key);
                                 continue
                             }
@@ -858,7 +870,7 @@ impl NativeTcpActor{
                     self.enqueue_port(entry.proxy_port,now_ms); // probe immediate connect
                 },
                 Err(_)=>{
-                    self.nat.retire(entry.key);
+                    if let Some(nat)=self.nat.as_mut(){nat.retire(entry.key);}
                     retired.push(entry.key)
                 }
             }
@@ -1171,7 +1183,7 @@ impl NativeTcpActor{
                 // Closed kernel socket retains only exact reverse NAT grace,
                 // not any event handle, pending Vec or ready work ticket.
                 self.closing.defer(flow.proxy_port,flow.key,now_ms);
-            }else if self.nat.retire(flow.key){
+            }else if self.nat.as_mut().is_some_and(|nat|nat.retire(flow.key)){
                 retired.push(flow.key)
             }
         }
@@ -1191,13 +1203,15 @@ impl NativeTcpActor{
             // Drop only the exact unaccepted generation's early physical
             // socket. No socket survives the 30-second SYN admission limit.
             self.pending_physical.remove(&port);
-            self.nat.retire(key);
+            if let Some(nat)=self.nat.as_mut(){nat.retire(key);}
             retired.push(key);
         }
         // Metadata-only closing flows are never on the fast 10ms wake.
         // Their final FakeIP ref is released only after the exact NAT
         // reverse mapping can no longer be needed for TCP retransmission.
-        self.closing.expire_some(now_ms,&mut self.nat,&mut retired);
+        if let Some(nat)=self.nat.as_mut(){
+            self.closing.expire_some(now_ms,nat,&mut retired);
+        }
         for _ in 0..64 {
             let Some(&(port,due))=self.dns_deadlines.front()else{break};
             if due>now_ms{break}

@@ -114,7 +114,7 @@ impl UdpEmptyPollTurn{
 struct PendingKernelTcp {
     lease:Ipv4Addr,synthetic:Ipv4Addr,
     physical:Ipv4Addr,ifindex:u32,hard:usize,
-    fake_range:(u32,u32),
+    fake_range:(u32,u32),business_direct:bool,
 }
 pub(crate) struct NativeSplitWorker {
     ingress:PacketIngress,
@@ -280,7 +280,7 @@ impl NativeSplitWorker {
             }
             Some(PendingKernelTcp{lease,synthetic,physical:underlay,
                 ifindex:c.physical_ifindex,hard:c.direct_hard as usize,
-                fake_range:(start,end)})
+                fake_range:(start,end),business_direct:mode!=Mode::All})
         };
         let steady_signed=cfg!(feature="m0_v4_probe") &&
             std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
@@ -340,7 +340,8 @@ impl NativeSplitWorker {
         if self.tcp_enabled||self.tcp.is_some(){return Err(())}
         let plan=self.tcp_plan.ok_or(())?;
         let actor=NativeTcpActor::new(plan.lease,plan.synthetic,
-            plan.physical,plan.ifindex,plan.hard,plan.fake_range)?;
+            plan.physical,plan.ifindex,plan.hard,plan.fake_range,
+            plan.business_direct)?;
         let port=actor.listener_port()?;
         if port==0{return Err(())}
         self.tcp=Some(actor);
@@ -1099,6 +1100,23 @@ mod tests{
             assert_eq!(&reply[28..30],&dns[..2]); // original id
         }
         assert!(!owner.has_udp_flows());
+    }
+    #[test]
+    fn plan029b_all_dns_only_tcp_plan_has_no_business_direct_nat(){
+        let mut cfg=config(&[],&[],b"");
+        cfg.route_mode=0;cfg.policy_flags=0;
+        cfg.tcp_synthetic4=[198,19,66,4];
+        let mut worker=unsafe{NativeSplitWorker::new(&cfg)}.unwrap();
+        let deferred=worker.tcp_plan.expect("one post-OS DNS TCP listener");
+        assert!(!deferred.business_direct);
+        assert!(!worker.tcp_enabled,"no listener before OS Apply + Defender");
+        assert!(worker.tcp.is_none());
+        assert!(worker.udp.is_none());
+        assert!(worker.fakes.is_none());
+        assert!(worker.journal.is_none());
+        assert_eq!(worker.on_packet(&packet([198,19,66,4],443,b"x"),12),
+            NativeDecision::Tunnel);
+        assert!(worker.tcp.is_none());
     }
     #[test]
     fn plan029b_ordinary_cn_keeps_domain_dns_but_never_allocates_fake_writer(){

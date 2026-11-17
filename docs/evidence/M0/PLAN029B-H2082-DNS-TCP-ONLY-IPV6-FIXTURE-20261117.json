@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2082",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "source_candidate": "SELF_SHA_PENDING",
+  "implementation": [
+    {
+      "path": "crates/wbd-engine/src/v4_windows_native_tcp_direct.rs",
+      "claim": "NativeTcpActor::new business_direct=false creates only DNS NAT/listener; no DirectTcpNat or business sockets"
+    },
+    {
+      "path": "crates/wbd-engine/src/v4_windows_native_split.rs",
+      "claim": "Mode All plan marks business_direct=false; same original post-OS owned prepare+Defender arm+Stop"
+    },
+    {
+      "path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
+      "claim": "All/off synthetic /32 now solely DNS TCP and is generation scoped; business CN/Direct rules still absent"
+    },
+    {
+      "path": "crates/wbd-platform/src/windows_native_io.rs",
+      "claim": "borrowed IPv6 packet skipped/released, next IPv4 frame accepted in same worker test"
+    },
+    {
+      "path": "tools/m0_plan029_gui_address_mtu_harness.cs",
+      "claim": "Game4 + all allowed as effective split-off, fresh cn-domain-direct GUI Bool false"
+    }
+  ],
+  "h2081_qualifications": {
+    "go_native_source_build": 44042989623,
+    "go_conclusion": "success",
+    "rust_native_abi": 44042989392,
+    "abi_conclusion": "success",
+    "rust_cross_abi": 44042989441,
+    "cross_conclusion": "success",
+    "rust_native_functional": 44042989366,
+    "functional_conclusion": "success",
+    "gui_no_network": 44042989350,
+    "gui_result": "FAIL_STALE_GAME4_ALL_TEST",
+    "governance": 44042989638,
+    "governance_result": "FAIL_UNBOUNDED_CONTEXT_REFS",
+    "original_normal_old_source": "PASS_SCOPED_H2077"
+  },
+  "new_source_signed_native": "NOT_RUN",
+  "actual_ipv6_real_os": "NOT_RUN",
+  "b5_same_vm_cpu_and_p99": "NOT_RUN"
+}

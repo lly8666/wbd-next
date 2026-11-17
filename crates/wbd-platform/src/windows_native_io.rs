@@ -539,6 +539,39 @@ mod tests {
         frame[34..60].fill(0);
         assert_eq!(ethernet_ipv4(&frame[..60]),Some(IPV4.as_slice()));
     }
+    static MIXED_READS:AtomicUsize=AtomicUsize::new(0);
+    static IPV6: [u8;40]=[
+        0x60,0,0,0,0,0,17,64,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,2,
+    ];
+    unsafe extern "system" fn recv_ipv6_then_ipv4(
+        _: *mut c_void,size:*mut u32)->*const u8{
+        if MIXED_READS.fetch_add(1,Ordering::SeqCst)==0{
+            unsafe{*size=IPV6.len() as u32};
+            IPV6.as_ptr()
+        }else{
+            unsafe{*size=IPV4.len() as u32};
+            IPV4.as_ptr()
+        }
+    }
+    #[test]
+    fn plan029b_real_wintun_loan_ipv6_skipped_then_ipv4_delivered_without_stall(){
+        MIXED_READS.store(0,Ordering::SeqCst);
+        RELEASES.store(0,Ordering::SeqCst);
+        let fns=WintunFns{receive:recv_ipv6_then_ipv4,release,allocate,send};
+        let (mut rx,_)=unsafe{split_borrowed_wintun(1,2,fns).unwrap()};
+        let mut slab=[0xAAu8;128];
+        assert_eq!(rx.read(&mut slab),Ok(ReadResult::Skipped));
+        assert_eq!(RELEASES.load(Ordering::SeqCst),1);
+        assert!(slab.iter().all(|&b|b==0xAA),
+            "IPv6 never copied into IPv4/M1/Tunnel slab");
+        assert_eq!(rx.read(&mut slab),Ok(ReadResult::Frame(IPV4.len())));
+        assert_eq!(&slab[..IPV4.len()],&IPV4);
+        assert_eq!(RELEASES.load(Ordering::SeqCst),2);
+        // No additional NPF/Go reader, no IPv6 tunnel/Rust M1 DATA
+        // and no lost next-ready IPv4; physical Windows OS proof separate.
+    }
     #[test]
     fn outbound_requires_complete_ipv4_and_real_wintun_send() {
         SENT.store(0, Ordering::SeqCst);

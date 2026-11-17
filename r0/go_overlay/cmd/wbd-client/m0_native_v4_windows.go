@@ -1122,7 +1122,11 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if tcpErr=owner.Plan029EnableNativeTCPAfterDefender(ctx,port);tcpErr!=nil{
    return errors.Join(fmt.Errorf("PLAN029 Rust TCP ENABLE: %w",tcpErr),cleanup())
   }
-  fmt.Printf("WBD_PLAN029_NATIVE_DIRECT_TCP_ENABLED_COLD port=%d synthetic=%s exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
+  if trial!=nil&&trial.RouteMode==0{
+   fmt.Printf("WBD_PLAN029B_PUBLIC_DNS_TCP_ONLY_ENABLED_COLD port=%d synthetic=%s direct_business_nat=0 exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
+  }else{
+   fmt.Printf("WBD_PLAN029_NATIVE_DIRECT_TCP_ENABLED_COLD port=%d synthetic=%s exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
+  }
   select{
   case <-pathChanged:return errors.Join(errM0WindowsPhysicalPathChanged,cleanup())
   default:

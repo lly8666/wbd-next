@@ -109,7 +109,7 @@ func TestPlan029GoV3TrialOnlyOwnedCIAndExplicitValidatedDomains(t *testing.T){
  // Explicit route-mode all does NOT silently allocate CN-domain tracking.
  o.RouteMode="all"
  c,e=m0Plan029TrialCold(o,physical,14,lease,1280,[16]byte{2})
- if e!=nil||c==nil||c.TCPSynthetic4!=[4]byte{}||len(c.Domains)!=0||len(c.FakeJournalPath)!=0{
+ if e!=nil||c==nil||c.TCPSynthetic4==[4]byte{}||len(c.Domains)!=0||len(c.FakeJournalPath)!=0{
   t.Fatal("all mode allocated CN trie/journal",e)
  }
 }
@@ -142,7 +142,7 @@ func TestPlan029ExplicitProductSplitOutsideCIUsesOnlyConfiguredRules(t *testing.
   14,netip.MustParseAddr("10.234.12.34"),1280,[16]byte{2});
   err!=nil||cold==nil||cold.RouteMode!=0||cold.PolicyFlags!=0||
   len(cold.CN)!=0||len(cold.Direct)!=0||len(cold.Domains)!=0||
-  len(cold.FakeJournalPath)!=0||cold.TCPSynthetic4!=[4]byte{}{
+  len(cold.FakeJournalPath)!=0||cold.TCPSynthetic4==[4]byte{}{
   t.Fatal("disabled business still needs DNS/padding V3, not Direct or FakeIP",err)
  }
 }

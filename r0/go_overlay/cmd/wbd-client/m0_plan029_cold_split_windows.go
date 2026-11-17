@@ -179,13 +179,12 @@ func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
    (effective.CNDomainDirect&&len(c.FakeJournalPath)==0)){
   return nil,errM0Plan029Cold
  }
- // All/off stays Tunnel-only; no business Direct TCP, UDP, FakeIP or trie.
- // Existing public single DNS, bootstrap and Normal startup-padding remain
- // attached to this same original authenticated Rust owner.
- if c.RouteMode!=0{
-  synth,e:=m0Plan029SyntheticForGeneration(o.Installation,epoch)
-  if e!=nil{return nil,e}
-  c.TCPSynthetic4=synth
- }
+ // All/off still needs ONE post-OS DNS-only TCP53 listener; the distinct
+ // Rust business Direct TCP NAT table is NOT created in route-mode All.
+ // This generation-owned synthetic /32 exists solely for its DNS TCP
+ // return/Defender lease, with the original bounded Rust TX/Stop owner.
+ synth,e:=m0Plan029SyntheticForGeneration(o.Installation,epoch)
+ if e!=nil{return nil,e}
+ c.TCPSynthetic4=synth
  return &c,nil
 }

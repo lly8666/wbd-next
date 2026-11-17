@@ -4,32 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2081,
-  "checkpoint_sha": "b52f92bb7b613991e4da040b19e8978232b464c6",
+  "sequence": 2082,
+  "checkpoint_sha": "96fd1b81b0cc38a6bbda8b17e6cf5d932be856d1",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2081 fix two existing expected-behavior fixture mismatches from H2080: Rust NativeSplitWorker test helper still emitted V1 while native cold ABI intentionally V2; original Go old PLAN029 unit still required split=false to return nil/V2, now 029B explicitly requires Rust V3 public DNS/padding and business-off. No product code behavior changed; new Rust/Go real compile/functional still pending.",
-  "why_now": "H2080 cross ABI 44042418383 PASS, ABI 44042418407 PASS, governance 44042418496 PASS, native-functional 44042418733 PASS. H2080 source-only Go Action44042418488 failed only TestPlan029GoV3TrialOnlyOwnedCIAndExplicitValidatedDomains old nil expectation; H2080 Rust component44042418360 9 tests failed because fixture config version1 mismatched newly versioned cold ABI2. Both updated to explicit B0 behavior/V2 fixture, prior failures retained.",
+  "current_task": "H2082 029B B0 close business split without Direct TCP NAT but retain one post-OS local DNS TCP53 listener in the exact original Rust NativeTcpActor/owned Defender+Stop. Original Go route-mode all now provides only per-generation synthetic/32 for DNS TCP, no CN/Direct policy routes, UDP Direct None, Fake writer None. Rust Win Wintun IPv6 loan skip+release then genuine IPv4 receive single-worker test, not product proof. Old CLI/WinForms Game4+all fixture updated to 029B effective split off. Source new tests pending.",
+  "why_now": "H2081 original Go source build 44042989623 PASS, native ABI44042989392 PASS, cross ABI44042989441 PASS, Rust pressure44042989598 PASS, native functional44042989366 PASS; GUI/CLI pure fixture44042989350 FAIL stale Game4+all reject assertion; governance44042989638 FAIL context_refs>8, feature catalog PASS. B0 still had no TCP53 without business Direct. H2082 fixes exact first boundaries; does not claim signed 029B business.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect H2081 current-source Windows Go assembly tests, Rust/ABI & Windows/WSL2 old Normal regression; fix only new first real bug. 029B B0 DNS-only TCP53 and real IPv6 Wintun/GUI effective/B5 still NOT_RUN; do not claim completion or run old 028 matrix.",
+  "next_action": "Collect H2082 source Go/Rust/UI compile, native component and original Normal smoke. If compiler first-error fix once. Then implement/verify one signed bounded B0–B4 Windows/WSL2 original GUI with matched source and controlled IPv6+IPv4 actual Wintun packets and normal CN/advanced CDN, B5 sequential same-VM reasonable 10Mbps CPU/GiB/P99 evidence; don't run 028/030 matrix. Keep H2077 old Normal PASS and new unmeasured FAIL/NOT_RUN.",
   "unverified": true,
   "last_tested_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2081-H2080-TWO-FIXTURES-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2080-H2079-CI-FIRST-BOUNDARY-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2082-DNS-TCP-ONLY-IPV6-FIXTURE-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2081-COLD-ABI-FIXTURE-MIGRATION.md",
-    "docs/evidence/M0/PLAN029B-H2081-H2080-TWO-FIXTURES-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029B-H2080-FIRST-CI-REPAIR.md",
-    "docs/evidence/M0/PLAN029B-H2080-H2079-CI-FIRST-BOUNDARY-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029B-H2079-PRODUCT-INITIAL-CANDIDATE.md",
-    "docs/evidence/M0/PLAN029B-H2079-PRODUCT-CANDIDATE-NOTRUN-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2082-DNS-TCP-ONLY-IPV6-FAIRNESS.md",
+    "docs/evidence/M0/PLAN029B-H2082-DNS-TCP-ONLY-IPV6-FIXTURE-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
-    "docs/devlog/M0/20261117-PLAN029B-H2078-PR35-MAIN-REBASE.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2081-COLD-ABI-FIXTURE-MIGRATION.md",
+    "docs/evidence/M0/PLAN029B-H2081-H2080-TWO-FIXTURES-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2079-PRODUCT-INITIAL-CANDIDATE.md",
     "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2081 existing tests adapted to explicitly selected new 029B semantics (Rust cold version2, split-off nonnil V3 DNS/padding). No user-facing product correctness claim; Go and Rust H2080 full compile/old original test partial PASS, new H2081 pending."
+  "partial_summary": "H2082 B0 resource-focused code candidate adds post-OS DNS-only TCP listener with business NAT None; off/all no Direct UDP or FakeIP, plus Wintun IPv6 then IPv4 loan unit, GUI effective Game4+all fixture correction. H2081 CIs Go/ABI/Rust pure success, GUI stale test FAIL; 029B signed B0–B5 still NOT_RUN."
 }

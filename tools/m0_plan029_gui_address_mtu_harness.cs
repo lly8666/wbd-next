@@ -55,6 +55,10 @@ public static class M0Plan029GUIAddressMTUVMHarness {
      "H1835_actual_GUI_CN_split_toggle_source");
    Need(store.Fields.Single(f=>f.Key=="cn-rules-file").Section=="网络",
      "H1835_actual_GUI_CN_domain_rule_source");
+   Need(store.Fields.Single(f=>f.Key=="cn-domain-direct").Section=="网络" &&
+     store.Fields.Single(f=>f.Key=="cn-domain-direct").Kind=="Bool" &&
+     !Convert.ToBoolean(store.Fields.Single(f=>f.Key=="cn-domain-direct").Default),
+     "H2082_new_029B_advanced_CN_Bool_off_by_default");
    Need(!Convert.ToBoolean(store.Fields.Single(f=>f.Key=="split-enable").Default),
      "H1835_split_off_by_default");
    Need(store.Fields.Single(f=>f.Key=="route-mode").Label.Contains("域名"),"CN_route_mode_label_shows_domain_union");
@@ -98,6 +102,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("direct-flow-hard","2");
     store.WriteAtomic("data/h1835-cn-domains.txt","cn.example\n=exact.cn\n");
     form.SetEditor("split-enable",true);
+    form.SetEditor("cn-domain-direct",false);
     form.SetEditor("cn-rules-file","data/h1835-cn-domains.txt");
     form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-ip","EDGE.Example.Test.");
@@ -108,6 +113,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Correct(Check(store,p,"data/h1663-normal.json",cli),"route-mode","bypass-lan-cn");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"direct-flow-hard","2");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"split-enable","true");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"cn-domain-direct","false");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"cn-rules-file",
       store.InRoot("data/h1835-cn-domains.txt"));
     Need(Convert.ToBoolean(p.Values["split-enable"]) &&
@@ -141,10 +147,13 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("lanes","4");
     form.SetEditor("fec.mode","off");
     form.SaveEditor();
-    bool rejectedGameSplit=false;
-    try{Check(store,p,"data/h1835-game4-split-invalid.json",cli);}
-    catch(Exception){rejectedGameSplit=true;}
-    Need(rejectedGameSplit,"H1835_real_Go_CLI_rejects_unwired_Game4_CN_before_OS");
+    // 029B: mode=all is business split OFF even when the toggle is saved
+    // true. Game4+all must keep its old Rust/Go path, not be rejected as
+    // an unsupported CN/FakeIP activation. Real Game4 network is separate.
+    var gameAll=Check(store,p,"data/h2082-game4-split-all.json",cli);
+    Correct(gameAll,"route-mode","all");
+    Correct(gameAll,"split-enable","true");
+    Correct(gameAll,"cn-domain-direct","false");
     form.SetEditor("split-enable",false);form.SaveEditor();
     var game=Check(store,p,"data/h1663-game4.json",cli);
     Correct(game,"server-ip","EDGE.Example.Test.");
