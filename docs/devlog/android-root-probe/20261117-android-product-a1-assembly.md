@@ -19,3 +19,11 @@ Rust `wbd-platform::android_root_io` 是 Android-only owned TUN FD / exact Andro
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"Bionic产品A1编译夹具修正头文件依赖，记录初始Action失败及精确SOURCE；产品能力仍未认证或实际接通。"}
 ```
+
+## Bionic signedness：A1第3次构建反馈
+
+源码 `a50db413a337044e55a93d7c0f7d8c17476c1597` [Action44013224466](https://github.com/lly8666/wbd-next/actions/runs/44013224466) **FAIL/PRODUCT_RUST_TARGET**：NDK ifreq/TUN `android_abi.c` 已通过，编译随后在 Rust `if_nametoindex` 入口报 `expected *const i8, found *const u8`（Android Bionic `c_char` signedness 与 GNU 假定不同）。修正声明为 `std::ffi::c_char`，不修改全平台GNU声明，不忽略错误，不宣称 Go/Rust owner已连通。下一SOURCE继续检查Rust编译与真正Go链接。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"根据Android/Bionic c_char实编译失败最小修复if_nametoindex ABI；继续源锁构建验证，真实连接仍未测。"}
+```

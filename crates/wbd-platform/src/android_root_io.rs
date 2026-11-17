@@ -32,7 +32,7 @@ const _: [(); IFREQ_BYTES] = [(); std::mem::size_of::<[u8; 40]>()];
 unsafe extern "C" {
     fn ioctl(fd: c_int, request: usize, ...) -> c_int;
     fn fcntl(fd: c_int, request: c_int, ...) -> c_int;
-    fn if_nametoindex(name: *const i8) -> c_uint;
+    fn if_nametoindex(name: *const std::ffi::c_char) -> c_uint;
     fn setsockopt(fd: c_int, level: c_int, option: c_int, value: *const c_void, len: u32) -> c_int;
     fn socket(domain: c_int, kind: c_int, protocol: c_int) -> c_int;
     fn read(fd: c_int, data: *mut c_void, len: usize) -> isize;
