@@ -41,3 +41,14 @@ ADB首测脚本除UID rule pref9600..9607/readback，还检查真正的**私有�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"保留A9b Java host测试在已有固定EXIT139枚举上误FAIL，修封闭enum的正反测试输入且不放宽任意动态文本；新源码整套CI重新验收。"}
 ```
+
+
+## A9b 第二次 Host 静态引号断言误FAIL（源码保留）
+
+`4546ec24fee66e4ebef480b369ec81401e74f793` [Action44147186560](https://github.com/lly8666/wbd-next/actions/runs/44147186560) **Java固定收据测试PASS**、7个Python ADB离线测试均PASS、其他ARM64原生和DNS/M3 Host PASS。随后同一 `test-network-scope-gate.sh` 的文本防护断言仍旧在第73行报FAIL：它原样要求字符串 `"FIB table does not exist"` 含一对引号，而真正Python源码的正则是 `r"(?:FIB table does not exist|No such file or directory)"`，确实覆盖该错误但没有恰好的引号边界。此时签名APK Job因Host脚本FAIL未执行，KSU依赖SKIPPED；并非设备、WBD生产JNI/Rust或kernel故障。
+
+本批只将该检查改为 `assert 'FIB table does not exist' in accept`，其余防护继续对源码中已经真实存在的字面量与7个Python行为测试断言，并在提交前直接核对测试的每一个关键字都能在真实脚本中找到；与Go/Rust正式业务、root等任何权限机制无关。新SOURCE必须真实Build APK才能把A9b标BUILD_PASS，整轮KSU仍可因原Go ELF139单独FAIL。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"封存A9b第二次Java/Python已PASS但最后源码静态引号要求误FAIL的同源Action；改为匹配真实FIB缺表逻辑的文本，保持设备未测与原Go ELF139红门。"}
+```

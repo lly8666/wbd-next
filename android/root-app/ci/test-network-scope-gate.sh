@@ -105,7 +105,7 @@ assert '"real_android_linux_tls_and_data_e2e": "NOT_RUN"' in accept
 assert '"original_go_rust_joined_stop":' in accept
 assert '"ORIGINAL_GO_RUST_STOP_JOINED"' in accept
 assert '"AUTHENTICATED_LEASE_OS_READBACK"' in accept
-assert '"FIB table does not exist"' in accept
+assert 'FIB table does not exist' in accept
 assert '"wbdv40"' in accept
 assert 'sudo' not in accept and 'pkill' not in accept
 print("ANDROID_ROOT_DEVICE_DIAGNOSTIC_AND_OPERATOR_BUNDLE_HOST_PASS")
