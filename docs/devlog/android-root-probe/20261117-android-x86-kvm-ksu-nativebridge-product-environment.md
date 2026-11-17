@@ -41,3 +41,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"x86 KVM Android16 KernelSU二次Manager已成功真实su UID0；第2次同源产品Job被过早Activity pidof检查阻断NativeBridge，移动ABI执行优先并增加有限PID/logcat实际诊断。"}
 ```
+
+## 第三轮KSU环境源锁失败与修复
+
+`bca7c3189d9a149abffeb30fda9cb3d7242da2c0` [Action44116782883](https://github.com/lly8666/wbd-next/actions/runs/44116782883) 旧10项Host/ARM64 native/signed Root APK/Linux原真TLS oracle均PASS；第11项KSU guest **FAIL于bash -n**：line249 `unexpected EOF while looking for matching single quote`，未启动guest，更未执行NativeBridge。实际原因是用JS `String.replace`拼接包含 PID regex `$'`的代码段，`$'`会被JS解释为原始字符串后缀而破坏shell单引号。历史失败保留。
+
+修正从上轮已通过`bash -n`的脚本 `b5870751e668abe86cbf65a145d723d538b78438` 源码按JS slice重建，NativeBridge AArch64原Go exec优先于Activity PID，Activity后做有界20s实际PID和失败logcat，新增块本地`bash -n`与PID正则检查通过。新SOURCE整脚本是否PASS只看下一Actions；未将旧KSU诊断套作正式Go TLS连接，Go/Rust产品代码未改。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"记录第三轮KSU guest bash -n匹配引号错误FAIL和NativeBridge NOT_RUN，恢复源锁脚本语法并将真实AArch64 exec提前。"}
+```

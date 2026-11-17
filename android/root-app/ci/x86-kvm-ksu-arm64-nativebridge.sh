@@ -223,16 +223,13 @@ if grep -Eqi 'error|exception|permission denied' "$dir/app-launch.txt";then
   cat "$dir/app-launch.txt" >&2
   exit 11
 fi
-# Android ActivityManager returns as soon as it accepts the launch intent.
-# An immediate pidof is NOT a product crash receipt. Check bounded process
-# readiness and package state; if it fails, preserve the actual Java logcat
-# instead of returning an opaque shell exit1 before native ABI evidence.
+# ActivityManager returns "Starting" before Java onCreate; pidof may be
+# empty until Zygote forks. Evidence requires an actual process, not just
+# a successful shell command and a synthetic status flag.
 app_ready=0
 for _ in $(seq 1 20);do
   adb shell pidof org.wbdnext.rootclient >"$dir/app-process.txt" 2>&1 || true
-  if grep -Eq '^[0-9]+([[:space:]][0-9]+)*
-echo "ANDROID_X86_KVM_REAL_KSU_ARM64_NATIVEBRIDGE_GO_RUNTIME_AND_APK_LAUNCH_PASS; APP_SU_AND_BUSINESS_NOT_RUN"
- "$dir/app-process.txt";then
+  if grep -Eq '^[0-9]+([[:space:]][0-9]+)*$' "$dir/app-process.txt";then
     app_ready=1
     break
   fi
