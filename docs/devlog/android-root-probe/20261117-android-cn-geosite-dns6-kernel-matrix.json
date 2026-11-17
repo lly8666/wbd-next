@@ -1,0 +1,174 @@
+{
+  "schema": "wbd-android-cn-geosite-private-dns-matrix/v1",
+  "date": "2026-11-17",
+  "branch": "experiment/android-temp-root-probe",
+  "source_commit": "09a6a7e5f8aef5c3b38abb262655561ca89e5f9a",
+  "github_action": "https://github.com/lly8666/wbd-next/actions/runs/43986417528",
+  "github_action_status": "SUCCESS",
+  "artifact_id": 14286390166,
+  "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/43986417528/artifacts/14286390166",
+  "artifact_zip_sha256": "5acfa2fcaf58d3c43bc96b6c3375fb555685bd87ca9757c486d605838bfd9009",
+  "environment": {
+    "os": "Android16",
+    "api": 36,
+    "apk_target_sdk": 37,
+    "abi_runtime": "x86_64",
+    "abi_cross_built": [
+      "x86_64",
+      "aarch64"
+    ],
+    "manager": "genuine KernelSU3.3.1 prepatched AVD",
+    "root_acquisition": "KernelSU already present; DirtyFrag NOT_RUN",
+    "app_uid": 10218,
+    "kernel_su_uid": 0,
+    "selinux": "Enforcing"
+  },
+  "geosite": {
+    "source": "v2fly/domain-list-community",
+    "source_commit": "41504eae2a11f305fe88cfc605cf6c105a80bf5a",
+    "source_archive_sha256": "7db80e6c9793875a176d8ce4950df318cb40b69ad2547c34d9b61440efb15466",
+    "text_sha256": "45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6",
+    "license": "MIT bundled in signed APK",
+    "rule_count": 8503,
+    "domain_suffix_count": 8431,
+    "full_domain_count": 69,
+    "regexp_count": 3,
+    "keyword_count": 0,
+    "cn_ipv4_cidr_count": 5500,
+    "cn_ipv4_compiled_intervals": 4119,
+    "status": "APP_SAVED_THEN_KSU_NATIVE_SHA_VERIFIED"
+  },
+  "native_dns": {
+    "status": "SUPPORTED_IN_SCOPE",
+    "actual_real_kernel_ipv4_udp53": true,
+    "network_namespace_before": "net:[4026531840]",
+    "network_namespace_after": "net:[4026533060]",
+    "host_netd_modified": false,
+    "synthetic_physical_device": "private nonpersistent TUN 198.51.100.1/30",
+    "synthetic_tunnel_device": "private nonpersistent TUN 198.18.253.1/30",
+    "synthetic_answer_A": "8.8.8.8",
+    "six_cases": [
+      {
+        "case": "split_baidu_com_cn_dns_direct",
+        "qname": "www.baidu.com",
+        "egress": "direct_synthetic",
+        "udp_egress_bytes": 59,
+        "udp_ingress_bytes": 75,
+        "dns_payload_received_bytes": 47,
+        "reply_verified": true,
+        "real_A_data_egress": "TUNNEL"
+      },
+      {
+        "case": "split_example_net_dns_tunnel",
+        "qname": "www.example.net",
+        "egress": "tunnel_synthetic",
+        "udp_egress_bytes": 61,
+        "udp_ingress_bytes": 77,
+        "dns_payload_received_bytes": 49,
+        "reply_verified": true,
+        "real_A_data_egress": "TUNNEL"
+      },
+      {
+        "case": "split_cn_suffix_dns_direct",
+        "qname": "foo.example.cn",
+        "egress": "direct_synthetic",
+        "udp_egress_bytes": 60,
+        "udp_ingress_bytes": 76,
+        "dns_payload_received_bytes": 48,
+        "reply_verified": true,
+        "real_A_data_egress": "TUNNEL"
+      },
+      {
+        "case": "split_bootstrap_dns_direct",
+        "qname": "wbd-bootstrap.example.net",
+        "egress": "direct_synthetic",
+        "udp_egress_bytes": 71,
+        "udp_ingress_bytes": 87,
+        "dns_payload_received_bytes": 59,
+        "reply_verified": true,
+        "real_A_data_egress": "CONTROL_ONLY_PHYSICAL"
+      },
+      {
+        "case": "global_baidu_com_dns_tunnel",
+        "qname": "www.baidu.com",
+        "egress": "tunnel_synthetic",
+        "udp_egress_bytes": 59,
+        "udp_ingress_bytes": 75,
+        "dns_payload_received_bytes": 47,
+        "reply_verified": true,
+        "real_A_data_egress": "TUNNEL"
+      },
+      {
+        "case": "global_bootstrap_dns_direct",
+        "qname": "wbd-bootstrap.example.net",
+        "egress": "direct_synthetic",
+        "udp_egress_bytes": 71,
+        "udp_ingress_bytes": 87,
+        "dns_payload_received_bytes": 59,
+        "reply_verified": true,
+        "real_A_data_egress": "CONTROL_ONLY_PHYSICAL"
+      }
+    ],
+    "passed": 6,
+    "total": 6,
+    "direct": 4,
+    "tunnel": 2,
+    "dns_transaction_verified_all": true
+  },
+  "app_ui": {
+    "status": "APP_ONSCREEN_ROOT_CN_GEOSITE_DNS_PRIVATE_KERNEL_PASS",
+    "actual_visible_button_touched": true,
+    "saved_config": true,
+    "root_native_validation": true,
+    "per_app_edit_same_source": "NOT_RUN",
+    "per_app_edit_historical_pass": "https://github.com/lly8666/wbd-next/actions/runs/43909181856"
+  },
+  "same_source_regression": {
+    "embedded_diagnostic": "EMBEDDED_APK_DEVICE_DIAGNOSTIC_PASS",
+    "app_origin_udp": "APP_UID_TUN_ROUNDTRIP_PASS",
+    "normal_app_dns_tls": "MAINSTREAM_DNS_TLS_PASS",
+    "sigkill_watchdog": "SIGKILL_WATCHDOG_CLEANUP_PASS",
+    "kernel_uid_route_tests": "10/10",
+    "ipv6_tun": "PASS",
+    "policy_route": "PASS",
+    "synthetic_wifi_clients": 2,
+    "synthetic_usb_clients": 1,
+    "synthetic_nat_conntrack": "PASS",
+    "manual_restore_first": "RESTORED",
+    "manual_restore_second": "ALREADY_CLEAN",
+    "android_global_rules_routes_exact_equal": true
+  },
+  "not_run": [
+    "real external CN resolver 223.5.5.5",
+    "real external tunneled resolver 1.1.1.1",
+    "Android system DNS interception, PrivateDNS/DoH",
+    "production WBD TLS encrypted tunnel and lease/session",
+    "Android main network netd Apply and persistent exact restore journal",
+    "real Wi-Fi hotspot downstream",
+    "real USB tether downstream",
+    "eBPF/hardware tether offload handling",
+    "physical Wi-Fi-cellular network switching",
+    "physical IPv6-only CLAT",
+    "Android foreground service/Doze lifecycle",
+    "DirtyFrag actual exploit for temporary Root",
+    "Android ARM64 runtime on hardware"
+  ],
+  "earlier_failures": [
+    {
+      "source": "a49bd16c6d6d8728597bf0ad21745b18784ab805",
+      "run": 43951593575,
+      "stage": "UI snapshot window_focused=false stale despite visible button",
+      "result": "FAIL"
+    },
+    {
+      "source": "bd3109b0e9d3d84f7dc46a39476492c404c790b4",
+      "run": 43985292694,
+      "stage": "DNS UDP received bytes but unit compared 4096-byte buffer trailing zeros",
+      "result": "FAIL"
+    }
+  ],
+  "global_network_claim": "NOT_APPLIED_AND_NOT_CHANGED",
+  "fakeip": false,
+  "vpnservice": false,
+  "core_wbd_modified": false
+}
