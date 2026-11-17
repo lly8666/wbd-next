@@ -121,10 +121,22 @@ fn attempt_case(test:&Case,direct:&File,tunnel:&File,id:u16)->io::Result<Value>{
  if written as usize!=packet.len(){return Err(io::Error::new(ErrorKind::WriteZero,"short DNS TUN ingress"))}
  let mut response=[0u8;4096];
  let (got,src)=socket.recv_from(&mut response)?;
- if src.ip()!=Ipv4Addr::from(peer) || src.port()!=53 || got!=resp.len()||
-     response[..got]!=resp || response[..2]!=id.to_be_bytes() ||
-     response[6..8]!=1u16.to_be_bytes()||!response.ends_with(&ANSWER) {
-   return Err(io::Error::other("DNS UDP response wrong transaction/answer/route"))
+ // recv_from returns a length into a reusable 4096-byte buffer. Validate
+ // ONLY the received bytes. Checking response.ends_with() on the entire
+ // buffer compares unwritten zero padding and spuriously rejects genuine
+ // kernel-delivered DNS A replies.
+ let received=&response[..got];
+ let src_ok=src.ip()==Ipv4Addr::from(peer) && src.port()==53;
+ let length_ok=got==resp.len();
+ let body_ok=received==resp.as_slice();
+ let id_ok=received.get(..2)==Some(&id.to_be_bytes()[..]);
+ let answer_count_ok=received.get(6..8)==Some(&1u16.to_be_bytes()[..]);
+ let answer_tail_ok=received.ends_with(&ANSWER);
+ if !(src_ok && length_ok && body_ok && id_ok && answer_count_ok && answer_tail_ok){
+   return Err(io::Error::other(format!(
+     "case={} DNS UDP kernel response mismatch: src_ok={src_ok} length_ok={length_ok} body_ok={body_ok} id_ok={id_ok} answer_count_ok={answer_count_ok} answer_tail_ok={answer_tail_ok} recv_bytes={got} expected_bytes={} src={src}",
+     test.label,resp.len()
+   )))
  }
  Ok(json!({"case":test.label,"qname":test.qname,"purpose_egress":label,
    "actual_kernel_tun_egress_bytes":egress_bytes,
@@ -198,5 +210,11 @@ mod tests{
   let a=answer(&q).unwrap();
   assert_eq!(&q[..2],&a[..2]);
   assert_eq!(&a[a.len()-4..],&ANSWER);
+  let mut recv_buffer=[0u8;4096];
+  recv_buffer[..a.len()].copy_from_slice(&a);
+  // A real recv_from returns the actual payload length. The original
+  // failure checked the full 4096-byte buffer and always saw zero padding.
+  assert!(!recv_buffer.ends_with(&ANSWER));
+  assert!(recv_buffer[..a.len()].ends_with(&ANSWER));
  }
 }
