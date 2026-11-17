@@ -4,25 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2100,
-  "checkpoint_sha": "19398cc24386a42a702cceb66e25135945c71b88",
+  "sequence": 2101,
+  "checkpoint_sha": "4a0b4efe6d0d05f29411fe3816382edebca12b68",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2100 collect H2098 SOURCEd943 B2 ordinary true signed PASS and bounded original feature card. H2099 source19398 governance PASS but Feature catalog Action44080799703 FAIL feature card >16KiB (17035 bytes >16384). Keep H2098 original verified evidence and all historical non-null SOURCE PASS/FAIL, replace obsolete no-source CN NOT_RUN placeholder with exact H2098 scoped entry, retain IPv6 NOT_RUN and advanced limitation; trim only stale doc indexes to make file valid. No product/ABI change, no new physical Action.",
-  "why_now": "Feature catalog first observable FAIL 'feature card must be bounded regular JSON' due original dns-split-ipv6.json old16370B + H2099 new scoped append 665B =>17035B. Correct by cardinality-preserving replacement of obsolete unverified CN placeholder and pruning only redundant history references (source evidence remains), maintain single card under 16KiB. H2098 signed Action44078530417 native and SHA artifact genuine PASS unaffected.",
+  "current_task": "H2101 B2 advanced CN signed one original D3 multi-A scene: H2100 governance Action44081559353 both Governance+Feature catalog PASS after bounded dns-split-ipv6 card under 16KiB. Reuse mature existing [plan029-v3-real-d3-multia] Normal signed original Win2025 Wintun/Npcap↔WSL2 CNAME+two real A -> two distinct FakeIP, physical Direct DNS/UDP, original 32KiB Direct TCP FIN, Tunnel TCP/UDP, owned Stop. Test-only on.push.paths under tests/test_m0_native_ci_scope.py, with static source gate ensuring no simultaneous ordinary B2 or other scenario. Advanced engine trial only; not yet canonical GUI/migration acceptance.",
+  "why_now": "H2098 actual source d943 ordinary CN real-A dual DNS physical PASS, exact evidence H2099. Advanced branch needs independently observed FakeAllocator/FakeJournal physical publication, no cross CDN real-IP Direct; old H1808 signed D3 has strict original physical/multi-A/Stop oracle. After H2100 card source19398 oversize catalog fail, H2100 source4a0 governance pass. H2101 only adds cheap D3 wiring assertion and one commit-message marker, no duplicate ordinary B2, no product edit.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2100 governance+feature catalog PASS on bounded card. Then one independent advanced-CN FakeIP signed representative, B3 already-observed Wintun skipped IPv6 consumption fairness fix and honest physical IPv6 route+mixed IPv4 proof, B4 GUI/Stop/Game, B5 bounded same-VM 10Mbps comparison. Do not reuse H2098 B2 ordinary PASS as advanced/IPv6/performance.",
+  "next_action": "Collect H2101 one signed SOURCE original Windows2025+WSL2 D3 advanced CNAME two-A FakeIP distinct mapped/direct actual UDP+TCP/Stop and artifact SHA. Mark genuine CI advanced semantics only; do not claim GUI canonical toggle/legacy migration. On failure inspect first new actual wire and preserve FAIL. Then B3 Wintun skipped IPv6 consumption fairness fix and real packet check; B4 config/GUI reconnect/Game and B5 sameVM <=10Mbps remain.",
   "unverified": true,
   "last_tested_source": "d9435610939774e601895d9dd998ec828174ef0f",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029B-H2099-H2098-B2-ORDINARY-SIGNED-REAL-PASS-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2100-BOUNDED-FEATURE-CARD.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2101-D3-ADVANCED-ONE-SIGNED.md",
     "docs/evidence/M0/PLAN029B-H2099-H2098-B2-ORDINARY-SIGNED-REAL-PASS-20261117.json",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2098 SOURCEd943 true signed original Normal B2 ordinary CN A/CNAME/TTL2 dual DNS and same overseas A both Tunnel UDP, original kernel TCP duplex and owned Stop PASS, original artifact14327500131 SHA256 13a6340f... valid. H2099 source19398 evidence/cursor governance PASS, feature catalog FAIL only card size 17035>16384. H2100 bounded card fix retains all 56 original real-source verifications and replaces obsolete CN NOT_RUN slot with scoped H2098; advanced FakeIP/actual IPv6/GUI Game/performance still NOT_RUN."
+  "partial_summary": "H2098 source d943 original B2 ordinary CN real overseas A/CNAME/TTL2, physical CN vs Tunnel nonCN DNS, same overseas A both Tunnel UDP, native TCP duplex/Stop PASS. Original artifact14327500131 exact SHA recorded in H2099 evidence and bounded dns-split-ipv6 card. H2100 source4a0 Governance & Feature catalog PASS (16,284B card), all real-SOURCE history retained. H2101 requests single mature H1808/D3 advanced CN physical CNAME/multia/FakeIP signed scenario; new SOURCE true signed result NOT_RUN. Advanced GUI/migration still NOT_RUN, true IPv6/Game/sameVM perf NOT_RUN."
 }

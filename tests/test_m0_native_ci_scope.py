@@ -143,6 +143,38 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertTrue(requires_native_smoke(
             "push", changed, "[plan029b-b2-cn-ordinary-real]"))
 
+    def test_plan029b_advanced_fakeip_uses_one_existing_original_d3_scene(self):
+        # Reuse the mature one-VM CNAME->multi-A physical CN and
+        # two distinct owned FakeIP mappings. It is an explicit CI
+        # advanced semantic test, NOT an imported GUI profile/migration.
+        # Do not accidentally select the ordinary-real-A scene as well.
+        changed = ["tests/test_m0_native_ci_scope.py"]
+        advanced = "[plan029-v3-real-d3-multia]"
+        self.assertFalse(requires_native_smoke("push", changed))
+        self.assertTrue(requires_native_smoke("push", changed, advanced))
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/m0-wl-public-normal-full.yml").read_text(
+                        encoding="utf-8")
+        for field in ("WBD_PLAN029_NATIVE_V3_TRIAL:",
+                      "WBD_PLAN029_V3_DIRECT_SCENE:",
+                      "WBD_PLAN029_D3_MULTIA_SCENE:"):
+            row = next(line for line in workflow.splitlines()
+                       if line.strip().startswith(field))
+            self.assertIn(advanced, row)
+        ordinary = next(line for line in workflow.splitlines()
+                        if line.strip().startswith(
+                            "WBD_PLAN029B_B2_ORDINARY_SCENE:"))
+        self.assertNotIn(advanced, ordinary)
+        self.assertIn("WBD_PLAN029_D3_MULTIA_SCENE -eq '1'", workflow)
+        self.assertIn(
+            "PLAN029_H1807_REAL_CN_CNAME_TWO_A_TWO_FAKEIP_DIRECT_UDP_OWNED_STOP_PASS_SCOPED",
+            workflow)
+        app = (Path(__file__).resolve().parents[1] /
+               "tools/m0_wl_public_normal_e2e.py").read_text(encoding="utf-8")
+        self.assertIn('p029_multia=os.environ.get("WBD_PLAN029_D3_MULTIA_SCENE")=="1"', app)
+        self.assertIn('if p029_multia:', app)
+        self.assertIn('report["plan029_d3_multia_real"]', app)
+
     def test_h1859_p1_and_p2_bulk_both_build_exact_v3_before_native(self):
         source=(Path(__file__).resolve().parents[1] /
                 ".github/workflows/m0-wl-public-normal-full.yml").read_text()
