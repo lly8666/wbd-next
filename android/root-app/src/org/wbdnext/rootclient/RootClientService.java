@@ -4,6 +4,11 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
@@ -27,24 +32,79 @@ public final class RootClientService extends Service {
     public static volatile String status="NOT_RUNNING (actual device NOT_QUALIFIED)";
     private final AtomicBoolean running=new AtomicBoolean(false);
     private final AtomicBoolean stopping=new AtomicBoolean(false);
-    private final Handler timer=new Handler(Looper.getMainLooper());
+    private final AtomicBoolean stopSignalDispatched=new AtomicBoolean(false);
+    private final Object ownerLaunchLock=new Object();
+    private final Handler networkEvents=new Handler(Looper.getMainLooper());
     private volatile Process root;
     private volatile PhysicalNetwork selection;
+    private volatile String ownerToken;
+    private ConnectivityManager watchedManager;
+    private ConnectivityManager.NetworkCallback watchedCallback;
+    private NetworkScopeGate watchedGate;
 
-    private final Runnable networkWatch=new Runnable(){
-        @Override public void run(){
-            if(running.get()&&!stopping.get()&&selection!=null){
-                PhysicalNetwork current=PhysicalNetwork.exact(
-                    RootClientService.this,selection.handle,
-                    selection.interfaceName,selection.ifindex,
-                    selection.mtu,selection.address);
-                if(current==null){
-                    requestStop("PHYSICAL_NETWORK_LOST — withdrawing UID policy");
-                }
-            }
-            if(running.get())timer.postDelayed(this,1000);
+    private static String newOwnerToken(){
+        byte[] bytes=new byte[16];
+        new SecureRandom().nextBytes(bytes);
+        StringBuilder out=new StringBuilder(32);
+        for(byte b:bytes){
+            int v=b&0xff;
+            out.append(Character.forDigit(v>>>4,16));
+            out.append(Character.forDigit(v&15,16));
         }
-    };
+        return out.toString();
+    }
+    private void watchPhysicalNetwork(final PhysicalNetwork chosen){
+        ConnectivityManager cm=getSystemService(ConnectivityManager.class);
+        if(cm==null)throw new IllegalStateException("ConnectivityManager unavailable");
+        final NetworkScopeGate gate=new NetworkScopeGate(chosen.handle);
+        ConnectivityManager.NetworkCallback callback=new ConnectivityManager.NetworkCallback(){
+            @Override public void onLost(Network network){
+                if(gate.lost(network.getNetworkHandle()))
+                    requestStop("PHYSICAL_NETWORK_LOST — withdrawing UID policy");
+            }
+            @Override public void onCapabilitiesChanged(Network network,NetworkCapabilities caps){
+                boolean valid=caps!=null&&
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)&&
+                    !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)&&
+                    (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)||
+                     caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR));
+                if(gate.changed(network.getNetworkHandle(),valid))
+                    requestStop("PHYSICAL_NETWORK_CAPABILITIES_CHANGED");
+            }
+            @Override public void onLinkPropertiesChanged(Network network,LinkProperties link){
+                if(gate.selected(network.getNetworkHandle())&&
+                   gate.changed(network.getNetworkHandle(),chosen.matchesLinkProperties(link)))
+                    requestStop("PHYSICAL_NETWORK_LINK_CHANGED");
+            }
+            @Override public void onBlockedStatusChanged(Network network,boolean blocked){
+                if(gate.blocked(network.getNetworkHandle(),blocked))
+                    requestStop("PHYSICAL_NETWORK_BLOCKED");
+            }
+        };
+        // Register ALL physical candidates, not only the default network.
+        // A different Network's event cannot revoke our selected handle.
+        NetworkRequest request=new NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build();
+        cm.registerNetworkCallback(request,callback,networkEvents);
+        synchronized(this){
+            watchedManager=cm;
+            watchedCallback=callback;
+            watchedGate=gate;
+        }
+    }
+    private void stopWatchingPhysicalNetwork(){
+        ConnectivityManager cm;
+        ConnectivityManager.NetworkCallback cb;
+        synchronized(this){
+            cm=watchedManager;cb=watchedCallback;
+            if(watchedGate!=null)watchedGate.close();
+            watchedManager=null;watchedCallback=null;watchedGate=null;
+        }
+        if(cm!=null&&cb!=null){
+            try{cm.unregisterNetworkCallback(cb);}
+            catch(IllegalArgumentException ignored){/* already unregistered */ }
+        }
+    }
     @Override public IBinder onBind(Intent i){return null;}
     private static String q(String s){
         // One POSIX shell token, including otherwise untrusted CLI labels.
@@ -73,6 +133,7 @@ public final class RootClientService extends Service {
             return START_NOT_STICKY;
         }
         stopping.set(false);
+        stopSignalDispatched.set(false);
         try{
             notification();
             long handle=intent.getLongExtra("handle",0);
@@ -96,14 +157,21 @@ public final class RootClientService extends Service {
                 throw new IllegalArgumentException("Invalid single-app root policy");
             }
             selection=chosen;
+            ownerToken=newOwnerToken();
+            watchPhysicalNetwork(chosen);
+            if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
+                chosen.ifindex,chosen.mtu,chosen.address)==null)
+                throw new IllegalStateException("Physical Network changed during callback registration");
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,uid,hasCA),"wbd-native-root-owner");
             owner.start();
-            timer.post(networkWatch);
         }catch(Exception e){
             status="START_REFUSED: "+e.getMessage();
             running.set(false);
+            stopWatchingPhysicalNetwork();
+            selection=null;
+            ownerToken=null;
             new File(getFilesDir(),"wbd-pass.secret").delete();
             new File(getFilesDir(),"wbd-route.secret").delete();
             stopForeground(true);
@@ -114,7 +182,7 @@ public final class RootClientService extends Service {
     private String launchCommand(NativePayload nativeCode,
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int targetUid,
-                                 boolean hasCA){
+                                 boolean hasCA,String token){
         List<String> args=new ArrayList<>();
         String[] fixed={
             "--mode","normal","--auto-ip",
@@ -171,7 +239,7 @@ public final class RootClientService extends Service {
         // Shell exec preserves $$ + proc stat starttime as real native
         // Go process PID; Stop checks the same exact process, not pkill -f.
         shell.append("set -- $(cat /proc/$$/stat); native_start=${22}; ");
-        shell.append("printf '%s %s\\n' \"$$\" \"$native_start\" > \"$p/owner.pid\"; ");
+        shell.append("printf '%s %s %s\\n' \"$$\" \"$native_start\" ").append(q(token)).append(" > \"$p/owner.pid\"; ");
         shell.append("chmod 600 \"$p/owner.pid\"; ");
         shell.append("LD_LIBRARY_PATH=\"$p\"; export LD_LIBRARY_PATH; ");
         shell.append("exec \"$p/wbd-v4-client-arm64\" ");
@@ -188,10 +256,16 @@ public final class RootClientService extends Service {
                 throw new IllegalStateException("physical Android Network changed during staging");
             }
             status="ROOT_STARTING — exact native SOURCE "+code.source.substring(0,12);
-            Process p=new ProcessBuilder("su","-c",
-                launchCommand(code,net,peer,sni,user,port,uid,hasCA))
-                .redirectErrorStream(true).start();
-            root=p;
+            Process p;
+            synchronized(ownerLaunchLock){
+                if(stopping.get())
+                    throw new IllegalStateException("Root launch withdrawn before native start");
+                p=new ProcessBuilder("su","-c",
+                    launchCommand(code,net,peer,sni,user,port,uid,hasCA,ownerToken))
+                    .redirectErrorStream(true).start();
+                root=p;
+            }
+            if(stopping.get())signalRootStopIfStarted();
             try(BufferedReader lines=new BufferedReader(
                 new InputStreamReader(p.getInputStream()))){
                 String line;
@@ -223,35 +297,40 @@ public final class RootClientService extends Service {
             new File(getFilesDir(),"wbd-route.secret").delete();
             root=null;
             selection=null;
+            ownerToken=null;
             running.set(false);
             stopping.set(false);
-            timer.removeCallbacks(networkWatch);
+            stopWatchingPhysicalNetwork();
             stopForeground(true);
             stopSelf();
         }
     }
-    private static String stopCommand(){
-        // Never kill by name/wildcard; only exact root-owned PID + kernel
-        // process starttime + real executable identity. GO handles
-        // SIGTERM through its existing signal.NotifyContext -> owner Stop.
-        return "set -eu; p="+q(ROOT)+"; "+
-            "read pid expected < \"$p/owner.pid\"; "+
+    private static String stopCommand(String token){
+        // Only signal THIS owner generation, even if a previous Root worker
+        // still owns an older pid file after a refused overlapping launch.
+        // Wait boundedly only during Stop for the su shell to write owner.pid.
+        return "set -eu; p="+q(ROOT)+"; n=0; "+
+            "while [ \"$n\" -lt 60 ]; do "+
+            "if [ -r \"$p/owner.pid\" ]; then "+
+            "read pid expected generation < \"$p/owner.pid\"; "+
+            "if [ \"$generation\" = "+q(token)+" ]; then "+
             "case \"$pid\" in ''|*[!0-9]*) exit 51;; esac; "+
-            "test -r \"/proc/$pid/stat\"; "+
+            "if [ -r \"/proc/$pid/stat\" ]; then "+
             "set -- $(cat \"/proc/$pid/stat\"); "+
-            "test \"${22}\" = \"$expected\"; "+
+            "if [ \"${22}\" = \"$expected\" ]; then "+
             "actual=$(readlink \"/proc/$pid/exe\"); "+
-            "test \"$actual\" = \"$p/wbd-v4-client-arm64\"; "+
-            "kill -TERM \"$pid\"";
+            "if [ \"$actual\" = \"$p/wbd-v4-client-arm64\" ]; then "+
+            "kill -TERM \"$pid\"; exit 0; "+
+            "fi; fi; fi; fi; "+
+            "n=$((n+1)); sleep 0.2; done; exit 55";
     }
-    private void requestStop(String why){
-        if(!running.get()||!stopping.compareAndSet(false,true)){
-            return;
-        }
-        status="STOP_REQUESTED ("+why+") — waiting for original Go/Rust joined Stop";
+    private void signalRootStopIfStarted(){
+        if(root==null||ownerToken==null||
+           !stopSignalDispatched.compareAndSet(false,true))return;
+        final String token=ownerToken;
         new Thread(()->{
             try{
-                Process p=new ProcessBuilder("su","-c",stopCommand())
+                Process p=new ProcessBuilder("su","-c",stopCommand(token))
                     .redirectErrorStream(true).start();
                 try(BufferedReader r=new BufferedReader(
                     new InputStreamReader(p.getInputStream()))){
@@ -259,16 +338,21 @@ public final class RootClientService extends Service {
                 }
                 int code=p.waitFor();
                 if(code!=0){
-                    status="STOP_NOT_CONFIRMED ("+code+") — exact root PID check failed";
-                    stopping.set(false);
+                    status="STOP_NOT_CONFIRMED ("+code+") — exact root generation/PID check failed";
+                    // Do not clear stopping and accidentally reauthorize.
                 }
-                // Successful kill(SIGTERM) is NOT a completion receipt;
-                // only real original Go/Rust process exit proves join.
+                // Signal delivery alone is NOT Go/Rust joined Stop.
             }catch(Exception e){
-                status="STOP_NOT_CONFIRMED — unable to signal actual root process";
-                stopping.set(false);
+                status="STOP_NOT_CONFIRMED — unable to signal exact root process";
             }
         },"wbd-root-stop-signal").start();
+    }
+    private void requestStop(String why){
+        if(!running.get()||!stopping.compareAndSet(false,true))return;
+        status="STOP_REQUESTED ("+why+") — waiting for original Go/Rust joined Stop";
+        // Before su launch: runRoot cancels at ownerLaunchLock.
+        // During su launch: runRoot signals after root is published.
+        signalRootStopIfStarted();
     }
     @Override public void onTaskRemoved(Intent rootIntent){
         requestStop("APP_TASK_REMOVED");
@@ -276,7 +360,7 @@ public final class RootClientService extends Service {
     }
     @Override public void onDestroy(){
         requestStop("SERVICE_DESTROYED");
-        timer.removeCallbacks(networkWatch);
+        stopWatchingPhysicalNetwork();
         super.onDestroy();
     }
 }

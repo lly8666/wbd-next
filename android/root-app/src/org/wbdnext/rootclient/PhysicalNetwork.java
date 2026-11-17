@@ -86,6 +86,30 @@ final class PhysicalNetwork {
         }
         return out;
     }
+    // Consume the callback's own LinkProperties, never synchronously
+    // requery ConnectivityManager inside its asynchronous callback.
+    boolean matchesLinkProperties(LinkProperties link){
+        if(link==null||!interfaceName.equals(link.getInterfaceName()))return false;
+        try{
+            NetworkInterface iface=NetworkInterface.getByName(interfaceName);
+            if(iface==null||!iface.isUp()||iface.getIndex()!=ifindex||
+                iface.getMTU()!=mtu)return false;
+            boolean linkAddress=false,kernelAddress=false;
+            for(LinkAddress a:link.getLinkAddresses()){
+                if(a.getAddress() instanceof Inet4Address &&
+                    address.equals(a.getAddress().getHostAddress())){
+                    linkAddress=true;break;
+                }
+            }
+            java.util.Enumeration<java.net.InetAddress> addrs=iface.getInetAddresses();
+            while(addrs.hasMoreElements()){
+                if(address.equals(addrs.nextElement().getHostAddress())){
+                    kernelAddress=true;break;
+                }
+            }
+            return linkAddress&&kernelAddress;
+        }catch(Exception ignored){return false;}
+    }
     static PhysicalNetwork exact(Context ctx,long handle,String iface,
                                  int ifindex,int mtu,String address){
         for(PhysicalNetwork n:available(ctx)){

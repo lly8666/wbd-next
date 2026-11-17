@@ -60,3 +60,33 @@ the old Android VpnService shell are untouched. Only arm64-v8a is built,
 signed or tested as an Android target.
 
 Root launch hardening: no root filesystem mutations are allowed on a pre-existing symlink, foreign-owned directory, or directory lacking owner-only 0700 mode. Real stat UID/mode readback happens BEFORE native binary copy or chmod; active prior PID+kernel starttime checks precede ELF replacement.
+
+## A6: selected physical Network events and source-locked host admission
+
+The foreground Service now uses a single, per-session
+`ConnectivityManager.registerNetworkCallback`, rather than a one-second
+`postDelayed` network polling loop. Only loss/blocking or a scope-changing
+`NetworkCapabilities` / `LinkProperties` callback for the **selected**
+Network revokes its root worker; unrelated Wi-Fi/cellular events are ignored.
+Callbacks consume their supplied state snapshots (no synchronous
+ConnectivityManager lookups) and are unregistered after the owner exits.
+The original Rust physical-scope check remains independent; this version
+**stops**, rather than promising seamless failover, on physical-scope change.
+
+Before su launch, the root owner rechecks the exact physical Network.
+A Stop/loss during staged launch cancels a not-yet-started owner. For an
+already started generation, one bounded cold Stop signal verifies its
+unique random 128-bit generation token in root-owned `owner.pid`, its
+kernel PID starttime and `/proc/PID/exe` before SIGTERM, so a newer
+session cannot kill an older unrelated worker by stale pid-file identity.
+Signal delivery is not counted as joined Go/Rust Stop success.
+
+The same-source Actions APK job compiles and runs a **pure-Java
+NetworkScopeGate unit test**. A separate `ubuntu-24.04-arm` job records
+the actual ARM64 host architecture and KVM device permissions, but DOES
+NOT boot Cuttlefish (a pinned matching guest image/host-tools set is
+still not provisioned). A successful preflight Action does **not**
+qualify Android, KernelSU or true Android↔Linux traffic: P2/P3/physical
+remain NOT_RUN until an actual ARM64 guest and authorized runtime are
+available. The previous macOS QEMU guest hang is retained as
+ENV_BLOCKED historical evidence, not silently overwritten.
