@@ -75,3 +75,50 @@ def verified_plan028_shared_manual_two_generation_v4_mss(win,linux,outer):
    "linux_initial_tun_planned":si,"linux_received_peer_syn_mss":"NOT_LOGGED_SHARED_MANUAL",
    "proof":"REAL_WINDOWS_SYN_AND_LINUX_SYNACK_TWO_PROTECTED_SHARED_READY"})
  return proof
+
+
+def verified_plan029_gui_two_child_shared_manual_mss(win,linux,outer):
+ """Two distinct WinForms child PIDs both report internal generation=1.
+ The authenticated Linux shared server proves two 443 SYNACK and M4 Ready;
+ never interpret those two separate processes as one Go generation 1+2.
+ """
+ if outer!=1460:raise ValueError("normal GUI two cold outer must be 1460")
+ cold=re.findall(r"^WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=(\d+) mode=(\S+) configured_outer_mtu=(\d+) physical_outer_mtu=(\d+) effective_outer_mtu=(\d+) local_advertised_mss=(\d+) inner_mtu_planned=(\d+) limiting_reason=(\w+) source=RUST_V1_REAL_OS$",win,re.MULTILINE)
+ ports=re.findall(r"^WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=1 configured_port=41031 source_port=(\d+) original_peer_port=443 same_ip_reauth_safe_tuple=(true|false)$",win,re.MULTILINE)
+ syn=re.findall(r"^WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=1 local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)$",win,re.MULTILINE)
+ seen=re.findall(r"^WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=1 peer_advertised_mss=(\d+) local_advertised_mss=(\d+)$",win,re.MULTILINE)
+ server_syn=re.findall(r"V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=server generation=1 kind=SYNACK local_advertised_mss=(\d+) tcp_option_bytes=([0-9a-fA-F]+)",linux)
+ server_ready=re.findall(r"V4_PUBLIC_MULTI_SESSION_READY role=server one_port=(\d+) active_detached_flows=(\d+) auto_lease=0 original_TLS=1 Rust_M4=1",linux)
+ prep=one(linux,r"V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=\d+ outer_config=(\d+) interface=(\d+) advertised_mss=(\d+) record_offer=(\d+) tun_planned=(\d+)","Linux shared original MTU")
+ if (len(cold)!=2 or ports!=[("41031","false"),("41032","true")] or
+     len(syn)!=2 or len(seen)!=2 or len(server_syn)!=2 or
+     server_ready!=[("443","1"),("443","2")] or
+     len(re.findall(r"V4_PUBLIC_MULTI_SESSION_READY[^\n]*",linux))!=2):
+  raise ValueError("two distinct true GUI child SYN/SYNACK/M4 proof absent")
+ so,sp,sm,sr,si=map(int,prep)
+ if (so!=outer or sp<576 or sm!=min(outer,sp)-40 or
+     sr!=sm or si!=sm-31):
+  raise ValueError("original shared Linux physical MTU/MSS budget drift")
+ rows=[]
+ for i,(g,mode,oc,physical,effective,mss,inner,reason) in enumerate(cold):
+  oc,physical,effective,mss,inner=map(int,(oc,physical,effective,mss,inner))
+  if (g!="1" or mode!="normal" or oc!=outer or physical<576 or
+      effective!=min(outer,physical) or mss!=effective-40 or
+      inner!=mss-31 or
+      reason!=("physical_interface_ipv4" if physical<outer else "configured_outer_ipv4")):
+   raise ValueError("real GUI child physical MSS budget mismatch")
+  ws,wb=syn[i];peer,peer_local=seen[i];svr,svr_bytes=server_syn[i]
+  if (int(ws)!=mss or wb.lower()!="0204"+format(mss,"04x") or
+      int(peer)!=sm or int(peer_local)!=mss or int(svr)!=sm or
+      svr_bytes.lower()!="0204"+format(sm,"04x")):
+   raise ValueError("real per-child original TCP SYN vs Linux SYNACK mismatch")
+  rows.append({"windows_child_ordinal":i+1,"source_port":int(ports[i][0]),
+    "windows_cold_internal_generation":1,"windows_local_syn_mss":mss,
+    "linux_local_synack_mss":sm,"windows_physical_ip_mtu":physical,
+    "windows_inner_planned":inner,"linux_physical_ip_mtu":sp,
+    "linux_record_offer":sr,
+    "proof":"TWO_REAL_GUI_CHILDREN_TWO_LINUX_AUTHENTICATED_M4_TCP_OPTION_BYTES"})
+ return {"generations":rows,"shared_original_server_port":443,
+   "source_port_distinct":True,"real_server_synack_count":2,
+   "real_server_m4_ready_count":2,
+   "linux_peer_syn_mss":"NOT_LOGGED_SHARED_MANUAL"}

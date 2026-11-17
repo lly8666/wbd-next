@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2066,
-  "checkpoint_sha": "fb24fe784d960e3e8bf4ca63cc2a22332247e1dd",
+  "sequence": 2067,
+  "checkpoint_sha": "4633f9e8c1da206401ee8952db07e2e65c83fb8d",
   "progress": "in_progress",
   "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2066 server-side actual SYN isolation. H2065 Windows Go selected new physical client port 41032 and eth0 capture has 6 new SYNs with no server SYNACK. Original Linux normal singleton runServer drops initial SYN when handoffCommitted=true; server did not exit, filter pure BPF test preserves new peer port. Existing Linux shared manual-/32 server is correct supported continuous listener; run three independent new fixture scenes with exactly source-locked H2065 compiled Windows/Linux product fb24..., no rebuild, require two server SYNACK/authenticated Rust M4 and two owner Stops.",
-  "why_now": "H2065 domain Action44018142299 real kernel capture 41031 first SYN and six 41032 SYN retransmissions, zero corresponding second SYNACK; server log exactly one SYN/SYNACK, one original M4 ready and final Stop. The singleton original Go runServer explicitly drops any SYN after handoff. Actual corrected client port is not sufficient while single-session server CLI lacks server-provisioned manual /32 shared generation replacement.",
+  "current_task": "H2067 real 3 H2066 independent Windows/WSL2 runs showed 2 physically observed SYNACK + original TLS and Rust server B candidate, but all failed second native M4 reverse Health. Shared manual /32 server waits 5s for B client authenticated Health; original Windows Rust native cold start did not arm immediate five-copy Health, leaving default 15s tick. Patch only verified Windows M4 worker birth to arm pre-existing canonical kind0 cold ready, same authenticated AEAD/PN, never allow server route promotion from raw SYN or TLS. New product source build and 3 independent ordinary tests required; not PASS.",
+  "why_now": "H2066 actions GUI44020809932 (ZIP14301231995), domain44020814338 (ZIP14300937695), TTL44020818591 (ZIP14300698642) all real WSL2/source/hash, 2 SYNACK, 2 TLS clients, second Native M4 sender TXCopied≈232–248 but RXDelivered=0; server V4_PUBLIC_NORMAL_TUN_CANDIDATE_DEFERRED, 5s later V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN and retains A route. Original Windows native Health interval15s; existing Linux client's HealthClock.arm_client_cold_ready after M4 startup already sends bounded five canonical kind0 receipts, but Windows start_native never calls it. H2066 TTL2 first and after expiry FakeIP physical PASS; post-restart not run.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Verify original existing server --manual-client-lease4 10.66.0.2/32 config on three independent signed Windows2025/WSL2 scenes with immutable fb24 H2065 EXE/DLL/SO artifact per SHA; require two physical server SYNACK, two V4_PUBLIC_MULTI_SESSION_READY, old/new per-owner Rust Stop and one shared-TUN Stop. Then prove H2061 GUI and domain two physical TC/TCP bootstrap and TTL2 FakeIP 3 phases plus actual Direct/Tunnel and Stop. Retain all previous native failures, no pressure or crash tests. If fails capture first new boundary.",
+  "next_action": "Build once H2067 actual modified Windows Rust DLL+ original Go Windows EXE and Linux peer under SAME new SHA; run original GUI H2061 as builder and fan-out exactly domain and TTL independent Actions under H2065 existing build-once tag, source-hash receipts. Must see B authenticated M4 Health, server route promotion/old A retired, original second Windows OS Applied, real TCP/UDP Direct+Tunnel and Stop; preserve original 3 H2066 failures. Do NOT remove 5s security gate, BPF filter or turn TLS into successful promotion.",
   "unverified": true,
   "last_tested_source": "0e57cab2d53e2c95962eb673050fa54695fd3665",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2066-SERVER-SYN-ROOT-20261117.json"
+    "docs/evidence/M0/PLAN029-H2067-H2066-M4-REVERSE-FIRST-FAIL-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029-H2067-WINDOWS-COLD-HEALTH-GATE.md",
+    "docs/evidence/M0/PLAN029-H2067-H2066-M4-REVERSE-FIRST-FAIL-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2066-SERVER-REACCEPT-SHARED-32.md",
     "docs/evidence/M0/PLAN029-H2066-SERVER-SYN-ROOT-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2065-NORMAL-GUI-COLD-TUPLE-RESTART.md",
-    "docs/evidence/M0/PLAN029-H2064-H2063-FIRST-NATIVE-RESULT-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2064-SECOND-GUI-CLICK-AND-TTL-UPSTREAM-ID.md",
-    "docs/devlog/M0/20261117-PLAN029-H2062-THREE-ORDINARY-REUSE.md"
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md"
   ],
   "open_requests": [],
   "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."

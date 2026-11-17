@@ -1909,6 +1909,24 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  mod tests {
      use super::*;
      #[test]
+     fn plan029_h2067_native_cold_m4_sends_existing_health_before_5s_server_gate(){
+         use crate::v4_native_health::{HealthClock,HealthPolicy};
+         let at=100_000_000_000u64;
+         let mut clock=HealthClock::new(HealthPolicy::default_connected(),at);
+         assert!(!clock.tx_due(at)); // prior Windows default: 15s, misses B
+         clock.arm_client_cold_ready(at); // called only at real M4 worker birth
+         assert!(clock.tx_due(at));
+         let mut now=at;
+         for n in 0..5 {
+             assert!(clock.tx_due(now),"bounded native cold Health copy {n}");
+             clock.on_health_send_result(now,true);
+             if n<4 {now+=400_000_000;assert!(clock.tx_due(now));}
+         }
+         assert!(!clock.tx_due(now+1_000_000_000));
+         assert!(clock.next_tx_deadline().is_some_and(|d|
+             d>at+5_000_000_000)); // restored ordinary 15s health
+     }
+     #[test]
      fn plan029_h1977_only_valid_1024_tcp_data_sequenced_for_boundaries(){
          let mut packet=[0u8;1064]; // 20 IPv4 + 20 TCP + 1024 bytes
          packet[0]=0x45;packet[9]=6;

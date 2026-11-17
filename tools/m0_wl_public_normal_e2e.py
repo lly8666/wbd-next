@@ -1010,6 +1010,15 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     per_gen_wire=verified_plan028_shared_manual_two_generation_v4_mss(winlog,linux_log,configured_mtu)
     report["plan028_actual_two_generation_syn_synack_mss"]=per_gen_wire
     budget_and_wire=per_gen_wire[-1]
+   elif p029_gui_reconnect:
+    # H2067: two *different* original WinForms Go child processes both
+    # start internal generation=1, but use physical ports 41031 then
+    # 41032. The original shared server has two authenticated M4 owners.
+    # A singleton one() MSS auditor is not capable of proving this case.
+    from m0_wl_public_mss_contract import verified_plan029_gui_two_child_shared_manual_mss
+    budget_and_wire=verified_plan029_gui_two_child_shared_manual_mss(
+     winlog,linux_log,configured_mtu)
+    report["plan029_two_gui_child_real_syn_synack_mss"]=budget_and_wire
    else:
     budget_and_wire=verified_current_v4_mss(winlog,linux_log,configured_mtu)
    report["plan027a_real_syn_synack_mss"]=budget_and_wire
