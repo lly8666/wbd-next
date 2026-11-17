@@ -102,6 +102,9 @@ def receipt_and_cleanup(gui):
  reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
  if bool(status.get("normal_reconnect_completed"))!=reconnect:
   raise RuntimeError("real original second GUI Connect receipt missing")
+ ttl=os.environ.get("WBD_PLAN029_DNS_TTL_RESTART_SCENE")=="1"
+ if bool(status.get("dns_ttl_restart_completed"))!=ttl:
+  raise RuntimeError("real physical TTL+reconnect GUI receipt absent or unexpected")
  for secret in ("route-key.hex","gui-seed.json","server-ca.pem",
                 "profiles.json","active.json","pending.json"):
   (gui/"data"/secret).unlink(missing_ok=True)
@@ -110,5 +113,8 @@ def receipt_and_cleanup(gui):
    "cpu_scope":"GUI_PARENT_ONLY_GO_RUST_NOT_SAMPLED",
    "startup_padding_mode":expected,
    "normal_reconnect_completed":reconnect,
+   "dns_ttl_restart_completed":ttl,
+   "product_binary_source":os.environ.get("WBD_WL_BINARY_SOURCE",os.environ["GITHUB_SHA"]),
+   "fixture_source":os.environ["GITHUB_SHA"],
    "npf_copied_records":status.get("padding_npf_copied_records",0),
    "npf_copied_bytes":status.get("padding_npf_copied_bytes",0)}

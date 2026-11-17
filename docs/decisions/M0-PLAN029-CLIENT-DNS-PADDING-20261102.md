@@ -107,3 +107,15 @@ H1832正式冷配置新增`split-enable`（默认false，显式开启下次连�
 此修订仅改变**本轮开发/测试预算**，不改变既有产品功能的安全边界、资源限额或历史证据事实。用户明确“不再搞特别极端工况测试和适配”，要求以最短路径完成普通 WinForms 保存→有效配置→Connect/正常 Disconnect→重新 Connect、默认1460/自动内层、CN IP＋域名/单DNS、真实Direct/Tunnel TCP/UDP及Normal Padding生效。已证H2055/2056/2059不同SOURCE原生结果保留；H2031密文Padding、H2041 Game4不重跑。
 
 本轮**不再补测/扩展**极端五类同时满额、慢磁盘人为阻塞、强制杀进程/整机、长时间高负载或大规模CPU/RSS A/B、IPv6旧矩阵、同海外CDN双域名相反出口。其证据范围保持`NOT_RUN`/历史组件限定，不得标`PASS`或因未跑就误判日常使用失败。保留旧契约整体D1–D5/P1–P2尚未全部达标的事实：仅按用户新限定口径进行**日常使用范围的 scoped closeout**，不要把它提升为全场景的完结。
+
+## 2026-11-17 H2062｜三个日常小场景独立 Action、同一已编译产品
+
+用户明确授权把 H2061 普通 WinForms Disconnect→Connect、服务器域名在首次 DNS 接管后再 Connect、CN DNS TTL 过期与 FakeIP 正常 Stop/重启恢复 **一口气分为三个独立 Windows2025/WSL2 Action**。极端资源满、慢盘、强制崩溃、高吞吐矩阵继续 `NOT_REQUIRED_FOR_USER_NORMAL_SCOPE`；历史 `NOT_RUN` 和 FAIL 不改。
+
+复用 H2061 Action `44007996775` 在 WSL2 环境启动之前已上传、但**尚未获得原生业务资格**的 Windows EXE/Rust DLL 与 Linux Go/Rust SO；产品 SOURCE 固定 `0e57cab2d53e2c95962eb673050fa54695fd3665`，每份归档的 `manifest source_sha`、各文件 SHA256、ABI 和当前产品路径不变证明后，才用新 fixture SOURCE 的测试代码。不同 SOURCE 绝不合并为一个新产品 SOURCE 合格。每 Action 一 VM/一网络场景，正常 Stop/owned journal/finally 清理；协调 push 只 dispatch，不再创建第 4 个原生场。
+
+- `gui_reconnect`：原 H2061 两次 WinForms Connect 与 OS 1460/1389、两次 WAL Stop、第二代真实 Direct/Tunnel TCP/UDP。
+- `domain_reconnect`：同 GUI 两代，服务器设为 `vpn.edge.cn.example`，Linux eth0 原生 UDP TC1/同 endpoint TCP53 分别收到两次查询与回答，原 TLS SNI 不变，两代 OS Applied 与第二代双出口。
+- `dns_ttl_restart`：真实 WinForms/Wintun 应用对 `www.cn.example` 三次 CN DNS：首次、等待 2s TTL 过期后的再次查询、普通断开/重连后再次查询；Linux eth0 对三个唯一 DNS ID 都给出真实物理 A/CNAME、有效 FakeIP 回包。随后复用原完整 Direct 32KiB TCP/UDP、Tunnel TCP/UDP 与 owned Stop。不可将缓存单测或 GUI 标记冒充原生验收。
+
+上述均为 `IMPLEMENTED_TEST_FIXTURE_PENDING_NATIVE`，只有 ZIP 源锁与实际应用/物理端口/Stop 回执齐全后可标 `PASS_SCOPED`；若 WSL2 启动失败仅记 `ENVIRONMENT_BLOCKED`，不是产品业务 FAIL。除首次编译 Source 的旧 Action 外不重复其仍在途的 dispatch；新 Action 只为三个不同网络场景。

@@ -38,7 +38,12 @@ p029_gui=os.environ.get("WBD_PLAN029_GUI_REAL_SCENE")=="1"
 p029_gui_padding=os.environ.get("WBD_PLAN029_GUI_PADDING_EFFECTIVE_SCENE")=="1"
 p029_gui_reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
 p029_boot_tc=os.environ.get("WBD_PLAN029_BOOTSTRAP_TC_SCENE")=="1"
-if p029_boot_tc and not (p029_product and p029_direct and not p029_gui and mode=="normal" and native_outer=="default1460"):
+p029_three_case=os.environ.get("WBD_PLAN029_THREE_CASE","none")
+if p029_three_case not in ("none","gui_reconnect","domain_reconnect","dns_ttl_restart"):
+ raise RuntimeError("unknown bounded PLAN029 ordinary scene")
+p029_boot_reconnect=p029_three_case=="domain_reconnect"
+p029_dns_ttl=p029_three_case=="dns_ttl_restart"
+if p029_boot_tc and not (p029_product and p029_direct and (not p029_gui or p029_boot_reconnect) and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("real same-endpoint bootstrap requires original Normal CN default1460")
 if p029_gui and not (p029_product and p029_direct and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("true GUI original signed CN default1460 needed")
@@ -47,10 +52,14 @@ if p029_gui_padding and not (
     native_outer=="default1460" and mode=="normal"):
  raise RuntimeError("H2059 GUI flows requires only original nonCI CN/1460 GUI; no private trial")
 if p029_gui_reconnect and not (
-    p029_gui and not p029_boot_tc and not p029_gui_padding and
+    p029_gui and (not p029_boot_tc or p029_boot_reconnect) and not p029_gui_padding and
     p029_product and p029_direct and mode=="normal" and
     native_outer=="default1460"):
  raise RuntimeError("H2061 only ordinary original WinForms GUI normal Stop and fresh Connect")
+if p029_boot_reconnect and not(p029_boot_tc and p029_gui_reconnect and p029_gui):
+ raise RuntimeError("domain TC reconnect requires original GUI and two generations")
+if p029_dns_ttl and not(p029_gui and p029_gui_reconnect and not p029_boot_tc):
+ raise RuntimeError("TTL FakeIP restart requires original GUI and no physical bootstrap listener")
 p029_ipv6=os.environ.get("WBD_PLAN029_D4_IPV6_SCENE")=="1"
 ipv6_probe_before=None
 ipv6_probe_active=None
@@ -191,7 +200,9 @@ server_mode=("fec-fixed --fec-profile 6" if fixed6 else
              game_mode+(" --game-fec fixed6" if game_fixed else " --game-fec off") if is_game
              else "normal")
 client_fec="fixed" if fixed6 or game_fixed else "auto" if mode.startswith("auto") else "off"
-report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],"mode":mode,
+report={"source":os.environ["GITHUB_SHA"],"linux_binary_source":os.environ["LINUX_BINARY_SRC"],
+ "product_binary_source":os.environ.get("WBD_WL_BINARY_SOURCE",os.environ["GITHUB_SHA"]),
+ "fixture_source":os.environ["GITHUB_SHA"],"mode":mode,
  "mode_public":"NOT_RUN","normal_public":"NOT_RUN","windows_ready":"NOT_RUN",
  "linux_ready":"NOT_RUN","app_duplex":"NOT_RUN","tcp_duplex":"NOT_RUN",
  "stop":"NOT_RUN","WL_N0":"NOT_RUN","WL_P200":"NOT_RUN","WL_N1":"NOT_RUN","WL_N5":"NOT_RUN",
@@ -340,7 +351,7 @@ def stop_windows(p):
    except subprocess.TimeoutExpired:p.kill()
 w=s=wa=la=wt=lt=tls_capture=p029_alias_proc=p029_guest_proc=p029_client_proc=p029_tun_dns_guest=p029_tun_dns_win=p029_dns_blackhole_guest=p029_dns_blackhole_win=p029_d2_tun_guest=p029_d2_tun_win=p029_d2_cn_guest=p029_d2_cn_win=p029_pressure_guest=p029_pressure_win=p029_tcp53_guest=p029_tcp53_win=None;logs=[]
 p029_cdn_guest=p029_cdn_win=None
-p029_boot_tc_guest=None
+p029_boot_tc_guest=p029_ttl_guest=None
 padding_capture=None
 padding_capture_source=None
 route_local=route_guest=None
@@ -560,9 +571,18 @@ try:
   if not host4:raise RuntimeError("no verified physical host source")
   bootlog=(out/"plan029-bootstrap-tc-guest.log").open("w");logs.append(bootlog)
   p029_boot_tc_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-   "python3","-u",unix(root/"tools"/"m0_plan029_bootstrap_tc_real_guest.py"),peer,host4],
+   "python3","-u",unix(root/"tools"/"m0_plan029_bootstrap_tc_real_guest.py"),
+   peer,host4,*(["reconnect"] if p029_boot_reconnect else [])],
    stdout=bootlog,stderr=subprocess.STDOUT)
   ready(out/"plan029-bootstrap-tc-guest.log","PLAN029_BOOTSTRAP_TC_GUEST_READY",p029_boot_tc_guest,12)
+ if p029_dns_ttl:
+  host4=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host4:raise RuntimeError("H2063 physical host source missing")
+  ttl_log=(out/"plan029-h2063-ttl-guest.log").open("w");logs.append(ttl_log)
+  p029_ttl_guest=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+    "python3","-u",unix(root/"tools"/"m0_plan029_h2063_ttl_real_guest.py"),
+    peer,host4],stdout=ttl_log,stderr=subprocess.STDOUT)
+  ready(out/"plan029-h2063-ttl-guest.log","PLAN029_H2063_TTL_GUEST_READY",p029_ttl_guest,12)
  if native_outer=="default1460":
   # Prove both real defaults by OMITTING their explicit user MTU flags.
   index=args.index("--mtu");del args[index:index+2]
@@ -701,13 +721,53 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
         if p029_gui_reconnect else "WBD_WINDOWS_CLIENT_READY"),
        w,110 if p029_gui_reconnect else 30)
  if p029_boot_tc:
-  if p029_boot_tc_guest.wait(timeout=8)!=0:raise RuntimeError("physical same endpoint bootstrap failed: "+(out/"plan029-bootstrap-tc-guest.log").read_text(errors="replace")[-900:])
-  recs=[v.split(" ",1)[1] for v in (out/"plan029-bootstrap-tc-guest.log").read_text().splitlines() if v.startswith("PLAN029_BOOTSTRAP_TC_GUEST_RECEIPT ")]
-  if len(recs)!=1:raise RuntimeError("no exact TC/TCP Linux proof")
-  proof=json.loads(recs[0]);txt=(out/"client.log").read_text(errors="replace")
-  if not(proof["udp_tc"]==1 and proof["tcp_a"]==1 and proof["physical_host"]==host4 and "WBD_PLAN029_BOOTSTRAP_DNS_SELECTED" in txt and "host=vpn.edge.cn.example" in txt and "resolver4="+peer in txt and "selected4="+peer in txt):raise RuntimeError("original Go physical TC TCP selected4 absent")
-  report["plan029_physical_bootstrap_tc"]={"status":"PASS_REAL_WINDOWS_NPCAP_LINUX_KERNEL_UDP_TC_TCP53","linux_dns":proof,"tls_sni_unchanged":"wbd-v4.example.test","reconnect":"NOT_RUN","no_cross_dns":True}
-  print("PLAN029_REAL_PHYSICAL_BOOTSTRAP_UDP_TC_TCP53_SAME_ENDPOINT_PASS",flush=True)
+  if p029_boot_tc_guest.wait(timeout=8)!=0:
+   raise RuntimeError("physical same endpoint bootstrap failed: "+(out/"plan029-bootstrap-tc-guest.log").read_text(errors="replace")[-900:])
+  recs=[json.loads(v.split(" ",1)[1]) for v in (out/"plan029-bootstrap-tc-guest.log").read_text().splitlines()
+        if v.startswith("PLAN029_BOOTSTRAP_TC_GUEST_RECEIPT ")]
+  expected=2 if p029_boot_reconnect else 1
+  txt=(out/"client.log").read_text(errors="replace")
+  if (len(recs)!=expected or not all(
+       p["udp_tc"]==1 and p["tcp_a"]==1 and p["physical_host"]==host4
+       and p["guest"]==peer and p["ordinal"]==i+1 for i,p in enumerate(recs)) or
+      txt.count("WBD_PLAN029_BOOTSTRAP_DNS_SELECTED")<expected or
+      txt.count("host=vpn.edge.cn.example")<expected or
+      txt.count("resolver4="+peer)<expected or
+      txt.count("selected4="+peer)<expected):
+   raise RuntimeError("Go physical TC/TCP selected4 in each true cold generation missing")
+  report["plan029_physical_bootstrap_tc"]={
+   "status":"PASS_REAL_WINDOWS_NPCAP_LINUX_KERNEL_UDP_TC_TCP53",
+   "linux_dns":recs[0] if expected==1 else recs,
+   "generation_count":expected,"product_binary_source":report["product_binary_source"],
+   "tls_sni_unchanged":"wbd-v4.example.test",
+   "reconnect":"PASS_TWO_TRUE_COLD_GENERATIONS" if expected==2 else "NOT_RUN",
+   "no_cross_dns":True}
+  print("PLAN029_REAL_PHYSICAL_BOOTSTRAP_UDP_TC_TCP53_SAME_ENDPOINT_PASS generations="+str(expected),flush=True)
+ if p029_dns_ttl:
+  if p029_ttl_guest.wait(timeout=8)!=0:
+   raise RuntimeError("H2063 real physical TTL DNS guest failed: "+
+       (out/"plan029-h2063-ttl-guest.log").read_text(errors="replace")[-900:])
+  receipts=[json.loads(v.split(" ",1)[1]) for v in
+       (out/"plan029-h2063-ttl-guest.log").read_text().splitlines()
+       if v.startswith("PLAN029_H2063_TTL_GUEST_RECEIPT ")]
+  phases=re.findall(r"^PLAN029_H2063_TTL_APP_REPLY phase=(\d+) fake4=(198\.18\.\d+\.\d+) txid=(\w+)$",
+       (out/"client.log").read_text(errors="replace"),re.MULTILINE)
+  if (len(receipts)!=1 or receipts[0].get("count")!=3 or
+      receipts[0].get("ttl_s")!=2 or
+      [int(v[0]) for v in phases]!=[1,2,3] or
+      [v[2] for v in phases]!=["2961","2962","2963"]):
+   raise RuntimeError("H2063 real TTL expiration/normal GUI reconnect DNS app/physical three-phase mismatch")
+  if [q["id"] for q in receipts[0]["queries"]]!=["2961","2962","2963"]:
+   raise RuntimeError("H2063 physical DNS three distinct transaction identities not observed")
+  report["plan029_dns_ttl_restart"]={
+   "source_sha":os.environ["GITHUB_SHA"],
+   "product_binary_source":report["product_binary_source"],
+   "status":"PENDING_POST_RECONNECT_DIRECT_BUSINESS_AND_STOP",
+   "physical_queries":receipts[0],"app_fakeip_phases":phases,
+   "ttl_expiration":"PASS_SECOND_TRUE_PHYSICAL_DNS_QUERY_AFTER_2800MS",
+   "normal_restart":"PASS_THIRD_TRUE_PHYSICAL_DNS_QUERY_AFTER_SECOND_OS_APPLIED",
+   "post_restart_direct_business":"PENDING","stop":"NOT_RUN"}
+  print("PLAN029_H2063_REAL_CN_TTL_EXPIRE_THEN_GUI_RECONNECT_THREE_DNS_PASSES",flush=True)
  if p029_ipv6:
   # Only after the REAL original owner has emitted READY/Applied,
   # and while it is live; no fake receipt supplied by this fixture.
@@ -2492,6 +2552,15 @@ print(json.dumps(result),flush=True)
   prod=report["plan029_real_product_normal_cn"]
   prod["direct_tunnel_business"]="PASS_SIGNED_PHYSICAL_DIRECT_DNS_TCP_UDP_AND_TUNNEL"
   prod["owned_stop"]="PASS_BOTH_OWNED"
+  if p029_dns_ttl:
+   proof=report.get("plan029_dns_ttl_restart")
+   if proof is None or report.get("plan029_private_v3_cn_direct_udp",{}).get(
+       "stop")!="PASS_NO_WFP_V2_WAL_ABSENT":
+    raise RuntimeError("H2063 post-restart CN Direct physical/Stop not proven")
+   proof["post_restart_direct_business"]="PASS_REAL_FAKEIP_UDP_REPLY_AND_TCP_32768_AFTER_RESTART"
+   proof["stop"]="PASS_BOTH_OWNED"
+   proof["status"]="PASS_SCOPED_REAL_TTL_EXPIRE_FAKEIP_NORMAL_RESTART_AND_DIRECT_TUNNEL"
+   print("PLAN029_H2063_REAL_TTL_RESTART_FAKEIP_DIRECT_TWO_OS_OWNED_STOP_PASS",flush=True)
   if p029_gui:
    from m0_plan029_gui_real_bridge import receipt_and_cleanup
    report["plan029_gui_live"]=receipt_and_cleanup(gui_root)
@@ -3071,10 +3140,11 @@ finally:
     wsl("ip","addr","del",p029_tunnel_alias+"/32","dev","wbdwl4",timeout=8)
   except Exception:pass
  stop_windows(w);stop_linux()
- if p029_boot_tc and p029_boot_tc_guest is not None and p029_boot_tc_guest.poll() is None:
-  p029_boot_tc_guest.terminate()
-  try:p029_boot_tc_guest.wait(timeout=4)
-  except subprocess.TimeoutExpired:p029_boot_tc_guest.kill()
+ for guest in (p029_boot_tc_guest,p029_ttl_guest):
+  if guest is not None and guest.poll() is None:
+   guest.terminate()
+   try:guest.wait(timeout=4)
+   except subprocess.TimeoutExpired:guest.kill()
  if p029_ipv6:
   try:
    from m0_plan029_d4_ipv6_route_probe import evaluate as ipv6_evaluate
