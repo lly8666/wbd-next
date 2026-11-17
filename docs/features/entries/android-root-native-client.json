@@ -173,6 +173,20 @@
       "status": "NOT_RUN",
       "source_sha": "14290758ee93535e6bf87de76a1feaffc8852ab5",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44019938479"
+    },
+    {
+      "platform": "Android ARM64-v8a / Bionic NDK",
+      "scope": "A2 sole-target arm64: original-Go source lock, NDK ifreq/TUN/raw static C ABI, shared Rust original AEAD M1/M3 + Android RAW/TUN/leased /32 source compiled, cold FFI exports and AArch64 ELF e_machine183/PT_LOAD16KiB; runtime NOT_RUN",
+      "status": "BUILD_PASS",
+      "source_sha": "2951cda2e99150e5f0126cbd44b80f5009146d3a",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44021966186"
+    },
+    {
+      "platform": "Android ARM64-v8a original-Go client",
+      "scope": "A2 real CGo complete link to original Rust Normal/off M4/Health/MTU/FEC/Game symbols; unresolved native product interfaces, no executable; not a real WBD connection",
+      "status": "FAIL",
+      "source_sha": "2951cda2e99150e5f0126cbd44b80f5009146d3a",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/44021966186"
     }
   ],
   "limitations": [
@@ -194,7 +208,8 @@
     "A2 FD在同一 Rust Entry 上引入原 wbd-platform::r1::BorrowFence：每次Bionic RAW/TUN真实syscall CAS借用、begin_stop阻止新借用、Stop检查零inflight并在未排空时STOP_INCOMPLETE；仍未运行原M4线程、尚无真WBD连接。",
     "新增原Go SYN/ClientHello之前 Android 物理 Network Handle raw发送FD绑定（android_setsocknetwork+SO_BINDTODEVICE），AF_PACKET收端继续采用原donor内核接口+端口过滤；需 Android Controller 提供真实 handle，交叉编译≠设备权限、实际TLS或完整M4 PASS。",
     "A2 SOURCE 14290758 Action44019938479 overall FAIL: NDK arm64/x86_64 cold ABI + actual Android Go pre-TLS bind source CGo compiled to final link, 16KiB ELF, source-locked raw/owner C ABI BUILD_PASS; whole ARM64 Go M4 link FAIL missing real Normal/off/FEC/Game/loop; x86 full link NOT_RUN; no real TLS or Android socket runtime executed.",
-    "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。"
+    "用户仅授权 Android arm64-v8a 后续适配/构建/验收，旧 x86 Android 行仅保留历史证据；Linux/Windows x86 不受影响。跨层批次以更少CI集中验证，可并行独立代码但不跳过完整链接/真机验收。",
+    "ARM64 ONLY SOURCE 2951cda2 Action44021966186 overall FAIL at original Go ld.lld missing Fixed/FEC/Game/native continuous M4 interfaces; Rust original M1/M3 and Bionic compile PASS, stage ZIP14300864286 SHA256 90cfb9be158c6c30e9043e89749f2075d74e7a9129cb8dc79fe53aa11a5aa00c. ARM64 .so sha256 76816bd9ffd851974563656ef2e31041e0904cec34db938fd590844e4eff3ad3 e_machine183 PT_LOAD16384, manifest matched; x86 no artifacts; real KSU/WBD/TCP/UDP NOT_RUN."
   ],
   "promotion": null
 }
