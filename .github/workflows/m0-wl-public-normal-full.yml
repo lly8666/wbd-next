@@ -275,6 +275,11 @@ on:
         type: choice
         default: none
         options: [none, gui_reconnect, domain_reconnect, dns_ttl_restart]
+      plan029_server_rx_diag:
+        description: "H2070 only: read-only existing Rust 500ms per-port server RAW RX observer; one GUI scene"
+        required: false
+        type: boolean
+        default: false
       public_mode:
         description: "One real public mode for scoped scenario or all seven functional modes"
         required: true
@@ -361,7 +366,7 @@ jobs:
           CHANGE_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
-          if [[ "$CHANGE_EVENT" == 'push' && ( "$CHANGE_MESSAGE" == *'[plan029-h2062-three-normal-reuse]'* || "$CHANGE_MESSAGE" == *'[plan029-h2066-server-accept]'* ) ]]; then
+          if [[ "$CHANGE_EVENT" == 'push' && ( "$CHANGE_MESSAGE" == *'[plan029-h2062-three-normal-reuse]'* || "$CHANGE_MESSAGE" == *'[plan029-h2066-server-accept]'* || "$CHANGE_MESSAGE" == *'[plan029-h2070-single-raw-rx]'* ) ]]; then
             # This push dispatches three distinct real-native Actions; do
             # not run a fourth normal network scenario on the coordinator.
             echo native_smoke=false >> "$GITHUB_OUTPUT"
@@ -420,6 +425,36 @@ jobs:
               -f "perf_binary_source_sha=$source"
             echo "H2062_QUEUED_NOT_PASS case=$scene product_source=$source fixture_source=$GITHUB_SHA"
           done
+      - name: H2070 dispatch only one genuine GUI + server B kernel RAW RX diagnosis
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[plan029-h2070-single-raw-rx]')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = main
+          if test "$GITHUB_RUN_ATTEMPT" != 1; then
+            echo H2070_NO_DUPLICATE_RUN_ATTEMPT
+            exit 0
+          fi
+          source=2fca1a93b4f9f7d3e7c5985adc356ade13332e86
+          reused=44022456867
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq '.object.sha')" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$reused" --jq '.head_sha')" = "$source"
+          artifacts="$(gh api "repos/$GH_REPO/actions/runs/$reused/artifacts?per_page=100" --jq '.artifacts[].name')"
+          grep -Fxq "m0-wl-windows-product-binaries-$source" <<<"$artifacts"
+          grep -Fxq m0-plan024-linux-product <<<"$artifacts"
+          existing="$(gh run list --repo "$GH_REPO" --workflow m0-wl-public-normal-full.yml --limit 70 --json headSha,event,displayTitle --jq             ".[] | select(.headSha==\"$GITHUB_SHA\" and .event==\"workflow_dispatch\" and (.displayTitle|contains(\"case=gui_reconnect\"))) | .displayTitle")"
+          if test -n "$existing"; then
+            echo H2070_SINGLE_SCENE_ALREADY_DISPATCHED
+            exit 0
+          fi
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            -f public_mode=normal -f native_outer_mtu=default1460 \
+            -f plan029_case=gui_reconnect -f plan029_server_rx_diag=true \
+            -f "perf_reuse_run_id=$reused" -f "perf_binary_source_sha=$source"
+          echo "H2070_ONE_READ_ONLY_SERVER_RX_DIAG_DISPATCHED_NOT_PASS product_source=$source"
       # Opt-in, once per source-tagged commit; no unattended native matrix.
       # Manual workflow_dispatch produces its own independent native deadline
       # watcher. This job owns only dispatch, never manufactures test PASS.
@@ -1090,6 +1125,7 @@ jobs:
       WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE: ${{ (inputs.plan029_case == 'gui_reconnect' || inputs.plan029_case == 'domain_reconnect' || inputs.plan029_case == 'dns_ttl_restart') && '1' || (github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-gui-cn]') && contains(github.event.head_commit.message, '[plan029-h2061-normal-reconnect]') && '1' || '0') }}
       WBD_PLAN029_BOOTSTRAP_TC_SCENE: ${{ inputs.plan029_case == 'domain_reconnect' && '1' || (github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-real-dns-tc]') && '1' || '0') }}
       WBD_PLAN029_DNS_TTL_RESTART_SCENE: ${{ inputs.plan029_case == 'dns_ttl_restart' && '1' || '0' }}
+      WBD_PLAN029_SERVER_RX_DIAG: ${{ inputs.plan029_server_rx_diag && '1' || '0' }}
       WBD_PLAN029_THREE_CASE: ${{ inputs.plan029_case || 'none' }}
       # D4 read-only real Windows IPv6 route/Stop policy witness, same
       # explicit CN product as the existing signed Normal scene.

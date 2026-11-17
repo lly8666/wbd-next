@@ -43,6 +43,9 @@ if p029_three_case not in ("none","gui_reconnect","domain_reconnect","dns_ttl_re
  raise RuntimeError("unknown bounded PLAN029 ordinary scene")
 p029_boot_reconnect=p029_three_case=="domain_reconnect"
 p029_dns_ttl=p029_three_case=="dns_ttl_restart"
+p029_server_rx_diag=os.environ.get("WBD_PLAN029_SERVER_RX_DIAG")=="1"
+if p029_server_rx_diag and not (p029_gui_reconnect and p029_three_case=="gui_reconnect"):
+ raise RuntimeError("H2070 raw server observer only on one real GUI reconnect scene")
 if p029_boot_tc and not (p029_product and p029_direct and (not p029_gui or p029_boot_reconnect) and mode=="normal" and native_outer=="default1460"):
  raise RuntimeError("real same-endpoint bootstrap requires original Normal CN default1460")
 if p029_gui and not (p029_product and p029_direct and mode=="normal" and native_outer=="default1460"):
@@ -456,7 +459,11 @@ try:
  egress_diag=(" WBD_FEC_EGRESS_DIAG=1"
     if mode=="auto" and os.environ.get("WBD_WL_V2_SCENARIO","").endswith(
         "scenarios/plan027-h461-auto-egress-10m-25ms-loss0-60s.json") else "")
- linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+ # H2070 single-run, existing read-only native Rust M4 observer. It emits
+ # per *actual* source port, before tuple/AEAD. No unfiltered RX fallback,
+ # no debug packet capture or new product thread in release defaults.
+ server_rx_diag=" WBD_PLAN028_EXTERNAL_STAGE_DIAG=1" if p029_server_rx_diag else ""
+ linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  if p029_direct or p029_p1_policy or p029_game4_cn:
