@@ -246,6 +246,10 @@ public final class RootClientService extends Service {
             "--tun-fq-maxrate-mbps","0",
             "--tun-txqlen-packets","500",
             "--outer-repair","off",
+            // Verified CN8503 source is a cold-only admission prerequisite.
+            // DNS packets are NOT yet intercepted or forwarded from this
+            // Android Root process; this is not a DNS availability flag.
+            "--android-cn-geosite-file",nativeCode.cnGeosite.getAbsolutePath(),
         };
         for(String a:fixed)args.add(q(a));
         if(targetUids.length==1){

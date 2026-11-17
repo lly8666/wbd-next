@@ -42,6 +42,23 @@ go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").rea
 assert 'rootjournal.NewGroup(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=' in go
 j=Path("r0/go_overlay/internal/v4productcli/rootjournal/group.go").read_text()
 assert 'func NewGroup(' in j and 'readOwnedJournalVersion(' in j and 'groupRuleState(' in j
+# B2b source-lock: an actual signed asset is verified and handed as an
+# app-private path to the ORIGINAL Go cold parser, not a Java fake packet
+# handler or claimed Android DNS network state.
+payload=Path("android/root-app/src/org/wbdnext/rootclient/NativePayload.java").read_text()
+assert 'PINNED_CN_SHA256' in payload and 'cn-geosite-provenance.json' in payload
+assert '"wbd-cn-geosite.txt",PINNED_CN_SHA256,6000000' in payload
+assert 'new NativePayload(go,rust,cn,source)' in payload
+assert '"--android-cn-geosite-file",nativeCode.cnGeosite.getAbsolutePath()' in s
+cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+assert 'cnGeositeFile:=flags.String("android-cn-geosite-file"' in cold
+assert 'dnsnative.ReadPinnedCNFile(*cnGeositeFile)' in cold
+assert 'dns_capture=NOT_CONNECTED' in cold
+typed=Path("r0/go_overlay/internal/v4productcli/dnsnative/cn_rules.go").read_text()
+assert 'syscall.O_NOFOLLOW|syscall.O_NONBLOCK' in typed
+assert 'st.Mode().Perm()!=0600' in typed
+assert 'return ReadPinnedCN(f)' in typed
+print("ANDROID_B2B_SIGNED_GEOSITE_TO_ORIGINAL_GO_COLD_SOURCE_GATE_PASS")
 m=Path("android/root-app/AndroidManifest.xml").read_text()
 assert '<queries>' in m and '<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"' not in m, "narrow package visibility"
 # The exact POSIX read arity must preserve kernel starttime for both

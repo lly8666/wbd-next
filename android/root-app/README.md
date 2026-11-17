@@ -151,3 +151,36 @@ can be recovered with strict matching ownership.
 Current CI software proof is **NOT** actual Android ARM64 root / netd
 routing / KSU E2E. DNS, split/direct modes, live multi-App packets and
 physical switching remain NOT_RUN pending P2/P3/P5. 
+
+## B2b source-locked CN geosite asset admission (not DNS takeover)
+
+The Root APK build is now **dependent on two independently-qualified
+jobs of the same Actions SOURCE**: the original ARM64 Go/Rust ELF and
+the immutable authentic B2a v2fly geolocation-cn importer. The latter
+must produce the exact 8,503-entry TXT, SHA256
+`45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6`,
+upstream provenance and MIT license. The signed no-VpnService APK
+includes all three assets under `assets/native-arm64/`, and the
+APK build opens its completed signed ZIP to verify those very bytes.
+
+Android `NativePayload.stage()` checks signed provenance/source
+commit/type counts, MIT license, streaming TXT SHA and exact size,
+copies the TXT to private app-owned storage with mode 0600, then
+passes its absolute pathname to the original Go
+`--android-cn-geosite-file` cold-control argument. The original-Go
+process itself opens the file with `O_NOFOLLOW`, rechecks 0600/regular
+file/size, SHA and all four rule type counts, and logs only a
+`CN8503_COLD_FILE_VERIFIED` receipt with
+`dns_capture=NOT_CONNECTED`. Invalid/missing/mutated TXT fails before
+the original protected TLS or UID route. The Go CLI flag is Android
+client-only; existing Linux/Windows server and client mode defaults
+do not change.
+
+**Evidence boundary:** an APK build verifies real signed ZIP assets,
+but Android16 ARM64 PackageManager access, SELinux/KSU access to
+app-private 0600 and Go runtime cold receipt are NOT_RUN on a real
+Android guest/phone. The Go cold verified list is currently **not
+consumed by a DNS packet handler**. The system Resolver, physical
+`android_setsocknetwork` DNS fd binding, inner Rust M4/TUN UDP/TCP53
+capture/response and per-App actual data split remain NOT_CONNECTED.
+No Java packet path, background downloads, VPN or FakeIP was added.

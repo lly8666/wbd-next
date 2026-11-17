@@ -36,6 +36,7 @@ import (
     "time"
     "unsafe"
 
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -124,6 +125,8 @@ type config struct{
     androidPhysicalMTU uint32 // same interface cold readback
     androidRouteUID int // legacy single ordinary App UID; never root/global
     androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
+    // Signed APK's verified offline CN list only, not live DNS capture.
+    androidCNSnapshot *dnsnative.CNRules
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
@@ -214,6 +217,8 @@ func parse(role string,args []string)(config,error){
         "Android ARM64 Root ONLY: one app UID (>=10000) routed after original TLS/lease/M4, 0 disables routing")
     androidRouteGroup:=flags.String("android-route-uids","",
         "Android ARM64 Root ONLY: canonical 2..8 ascending, distinct ordinary App UIDs; mutually exclusive with --android-route-uid")
+    cnGeositeFile:=flags.String("android-cn-geosite-file","",
+        "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
     ip:=flags.String("local-ip","","underlay local IPv4")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     defaultPort:=uint(0)
@@ -274,7 +279,14 @@ func parse(role string,args []string)(config,error){
         var e error
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
-    }else if *androidNet!=0||*androidRouteUID!=0||*androidRouteGroup!=""{
+        if *cnGeositeFile!=""{
+            c.androidCNSnapshot,e=dnsnative.ReadPinnedCNFile(*cnGeositeFile)
+            if e!=nil{
+                return c,fmt.Errorf("signed Android CN8503 cold source rejected: %w",e)
+            }
+        }
+    }else if *androidNet!=0||*androidRouteUID!=0||
+             *androidRouteGroup!=""||*cnGeositeFile!=""{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -817,6 +829,11 @@ func Run(role string,args []string)(retErr error){
  }
  cfg,err:=parse(role,args)
     if err!=nil{return err}
+    if runtime.GOOS=="android"&&cfg.androidCNSnapshot!=nil{
+        // Verified file/typed rules only; NOT real Android system DNS.
+        stats:=cfg.androidCNSnapshot.Stats()
+        log.Printf("V4_PUBLIC_ANDROID_CN8503_COLD_FILE_VERIFIED count=%d sha256=%s dns_capture=NOT_CONNECTED",stats.Total,stats.SHA256)
+    }
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
     if runtime.GOOS=="android"{

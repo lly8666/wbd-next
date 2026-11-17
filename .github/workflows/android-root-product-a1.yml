@@ -113,7 +113,9 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
   root-arm64-app:
-    needs: [arm64-native]
+    # A signed APK must contain B2 source-locked CN TXT+MIT provenance from
+    # the SAME workflow SHA, not a fixture or stale AVD/probe asset.
+    needs: [arm64-native, b2-authentic-cn-geosite-host]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -134,6 +136,18 @@ jobs:
             --dir out/android-root-app-native
           test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
           (cd out/android-root-app-native && sha256sum -c SHA256SUMS)
+      - name: Fetch authenticated pinned CN8503/MIT assets from SAME SOURCE run
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/android-root-app-cn
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "android-b2-pinned-cn-geosite-$GITHUB_SHA" \
+            --dir out/android-root-app-cn
+          test -s out/android-root-app-cn/wbd-cn-geosite.txt
+          test -s out/android-root-app-cn/wbd-cn-geosite-license.txt
+          test -s out/android-root-app-cn/cn-geosite-provenance.json
+          test -s out/android-root-app-cn/receipt.json
       - name: Test exact selected Network event gate (pure Java)
         shell: bash
         run: bash android/root-app/ci/test-network-scope-gate.sh

@@ -231,3 +231,25 @@ client. CN DNS is still NOT_CONNECTED to Android netd Resolver,
 physical ConnectivityManager network-bound DNS sockets, Rust M4/TUN
 capture or the installed APK; the Android16 ARM64 P2/P3 KVM guest is
 still blocked. Do not equate B2 host proof with device DNS routing.
+
+## B2b signed Geosite to original Go cold-control chain
+
+The signed Root APK only builds after B2's independent immutable
+geolocation-cn importer job and the pinned original Go/Rust ARM64
+native job both succeed for the identical source SHA. The first job
+creates TXT+MIT license+provenance and a JSON receipt; the APK
+build verifies its source/run and all hashes, then signs the TXT in
+`assets/native-arm64/`. The Android App rehashes TXT before copying
+it to 0600 private app data; the REAL original-Go CLI now accepts
+`--android-cn-geosite-file` **only on Android**, and its pure-Go
+`dnsnative.ReadPinnedCNFile` checks owner-only regular mode,
+`O_NOFOLLOW`, bounded size, exact v2fly pinned SHA and 8,503
+typed rules. Host Go tests exercise valid copy, world readable,
+symlink, modified bytes and directory rejection. Go emits a
+distinct cold file checksum receipt, expressly marked
+`dns_capture=NOT_CONNECTED`.
+
+This is not a system DNS listener, Android system resolver rewrite,
+tunnel DNS socket routing, or P2/P3 native Root execution proof.
+All direct/tunnel DNS packet capture, KernelSU runtime and physical
+network bind gates remain separate and NOT_RUN.

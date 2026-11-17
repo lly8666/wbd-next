@@ -14,9 +14,14 @@ import java.security.MessageDigest;
 final class NativePayload {
     final File client;
     final File engine;
+    final File cnGeosite;
     final String source;
-    private NativePayload(File c,File e,String s){
-        client=c;engine=e;source=s;
+    private static final String PINNED_CN_SHA256=
+        "45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6";
+    private static final String PINNED_CN_SOURCE=
+        "41504eae2a11f305fe88cfc605cf6c105a80bf5a";
+    private NativePayload(File c,File e,File g,String s){
+        client=c;engine=e;cnGeosite=g;source=s;
     }
     private static byte[] load(Context ctx,String path,int maximum)throws Exception{
         try(InputStream in=ctx.getAssets().open(path);
@@ -42,7 +47,7 @@ final class NativePayload {
         return new String(out);
     }
     private static File checkedCopy(Context ctx,String asset,File dir,
-                                     String fileName,String expected)throws Exception{
+                                     String fileName,String expected,int maxBytes)throws Exception{
         // Streaming one-pass SHA256 + fd sync: do NOT hold an additional
         // 11MiB original-Go ELF byte[] on the Android app Java heap.
         MessageDigest hash=MessageDigest.getInstance("SHA-256");
@@ -54,7 +59,7 @@ final class NativePayload {
             int n;
             while((n=in.read(buffer))!=-1){
                 total+=n;
-                if(total>40*1024*1024){
+                if(total>maxBytes){
                     throw new SecurityException("native source asset exceeds bound");
                 }
                 hash.update(buffer,0,n);
@@ -69,9 +74,14 @@ final class NativePayload {
             target.delete();
             throw new SecurityException("native SHA256 does not match signed APK manifest");
         }
+        // Enforce mode 0600 explicitly; Root Go opens the same regular fd
+        // using O_NOFOLLOW and verifies its complete pinned digest.
         target.setReadable(false,false);
-        if(!target.setReadable(true,true)){
-            throw new SecurityException("private native staging mode rejected");
+        target.setWritable(false,false);
+        target.setExecutable(false,false);
+        if(!target.setReadable(true,true)||!target.setWritable(true,true)){
+            target.delete();
+            throw new SecurityException("private signed asset staging mode rejected");
         }
         return target;
     }
@@ -102,10 +112,32 @@ final class NativePayload {
         if(!root.isDirectory()&&!root.mkdir()){
             throw new IllegalStateException("private native staging inaccessible");
         }
+        // The same signed APK must carry the source-locked MIT rules and
+        // import provenance. Check their identities BEFORE staging a Root
+        // process. This does NOT claim live CN DNS interception.
+        JSONObject provenance=new JSONObject(new String(load(ctx,
+            "native-arm64/cn-geosite-provenance.json",65536),
+            java.nio.charset.StandardCharsets.UTF_8));
+        if(!PINNED_CN_SOURCE.equals(provenance.getString("source_commit"))||
+           !PINNED_CN_SHA256.equals(provenance.getString("text_sha256"))||
+           provenance.getInt("output_distinct_rules")!=8503||
+           provenance.getJSONObject("kinds").getInt("domain")!=8431||
+           provenance.getJSONObject("kinds").getInt("full")!=69||
+           provenance.getJSONObject("kinds").getInt("regexp")!=3){
+            throw new SecurityException("signed CN8503 source provenance mismatch");
+        }
+        String license=new String(load(ctx,
+            "native-arm64/wbd-cn-geosite-license.txt",65536),
+            java.nio.charset.StandardCharsets.UTF_8);
+        if(!license.contains("MIT License")||!license.contains("V2Ray")){
+            throw new SecurityException("missing authentic signed CN geosite license");
+        }
         File go=checkedCopy(ctx,"wbd-v4-client-arm64",root,
-            "wbd-v4-client-arm64",goSha);
+            "wbd-v4-client-arm64",goSha,40*1024*1024);
         File rust=checkedCopy(ctx,"libwbd_engine-arm64.so",root,
-            "libwbd_engine.so",rustSha);
-        return new NativePayload(go,rust,source);
+            "libwbd_engine.so",rustSha,40*1024*1024);
+        File cn=checkedCopy(ctx,"wbd-cn-geosite.txt",root,
+            "wbd-cn-geosite.txt",PINNED_CN_SHA256,6000000);
+        return new NativePayload(go,rust,cn,source);
     }
 }

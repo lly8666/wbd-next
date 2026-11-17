@@ -37,6 +37,33 @@ print("ANDROID_ROOT_APP_NATIVE_SOURCE_AND_AARCH64_16K_PASS",m["source"])
 PY
 cp "$native/manifest.json" "$native/SOURCE" "$native/wbd-v4-client-arm64" \
    "$native/libwbd_engine-arm64.so" "$assets/"
+# The real original-Go cold loader requires the very same immutable B2
+# source and provenances. The CI artifact is a dependency, NEVER a runtime
+# phone download or a synthetic local rule list.
+cn="out/android-root-app-cn"
+python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,os
+cn=Path("out/android-root-app-cn")
+receipt=json.loads((cn/"receipt.json").read_text())
+meta=json.loads((cn/"cn-geosite-provenance.json").read_text())
+source=os.environ["GITHUB_SHA"]
+rev="41504eae2a11f305fe88cfc605cf6c105a80bf5a"
+expected="45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6"
+raw=(cn/"wbd-cn-geosite.txt").read_bytes()
+license=(cn/"wbd-cn-geosite-license.txt").read_text()
+assert receipt["schema"]=="wbd-android-b2-pinned-cn-geosite-go-loopback/v1"
+assert receipt["source"]==source and receipt["pinned_rules_sha256"]==expected
+assert meta["source_commit"]==rev and meta["source"]=="v2fly/domain-list-community"
+assert meta["output_distinct_rules"]==8503
+assert meta["text_sha256"]==expected==hashlib.sha256(raw).hexdigest()
+assert len(raw)>10000 and len(raw)<6000000 and raw.endswith(b"\n")
+assert meta["kinds"]=={"domain":8431,"full":69,"regexp":3}
+assert "MIT License" in license and "V2Ray" in license
+print("ANDROID_B2B_SIGNED_ROOT_APP_RULES_SOURCE_SHA_LICENSE_VERIFIED",source)
+PY
+cp "$cn/wbd-cn-geosite.txt" "$cn/wbd-cn-geosite-license.txt" \
+   "$cn/cn-geosite-provenance.json" "$assets/"
 sdk="$ANDROID_HOME"
 bt="$(find "$sdk/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
 for name in aapt2 d8 apksigner zipalign aapt; do test -x "$bt/$name"; done
@@ -104,13 +131,24 @@ with zipfile.ZipFile(apk) as z:
     expected=["classes.dex","assets/native-arm64/manifest.json",
         "assets/native-arm64/SOURCE",
         "assets/native-arm64/wbd-v4-client-arm64",
-        "assets/native-arm64/libwbd_engine-arm64.so"]
+        "assets/native-arm64/libwbd_engine-arm64.so",
+        "assets/native-arm64/wbd-cn-geosite.txt",
+        "assets/native-arm64/wbd-cn-geosite-license.txt",
+        "assets/native-arm64/cn-geosite-provenance.json"]
     for name in expected:assert name in z.namelist(),name
     assert z.read("assets/native-arm64/SOURCE").decode().strip()==os.environ["GITHUB_SHA"]
     m=json.loads(z.read("assets/native-arm64/manifest.json"))
     for name in ["wbd-v4-client-arm64","libwbd_engine-arm64.so"]:
         b=z.read("assets/native-arm64/"+name)
         assert hashlib.sha256(b).hexdigest()==m["artifacts"][name]["sha256"]
+    geosite=z.read("assets/native-arm64/wbd-cn-geosite.txt")
+    license=z.read("assets/native-arm64/wbd-cn-geosite-license.txt")
+    provenance=json.loads(z.read("assets/native-arm64/cn-geosite-provenance.json"))
+    assert hashlib.sha256(geosite).hexdigest()=="45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6"
+    assert provenance["source_commit"]=="41504eae2a11f305fe88cfc605cf6c105a80bf5a"
+    assert provenance["text_sha256"]==hashlib.sha256(geosite).hexdigest()
+    assert provenance["output_distinct_rules"]==8503
+    assert b"MIT License" in license and b"V2Ray" in license
     assert not any("x86" in name for name in z.namelist())
 summary={"schema":"wbd-android-arm64-root-app-source-locked/v1",
     "source":os.environ["GITHUB_SHA"],
@@ -119,6 +157,9 @@ summary={"schema":"wbd-android-arm64-root-app-source-locked/v1",
     "package":"org.wbdnext.rootclient",
     "target_sdk":35,"minimum_sdk":28,
     "go_rust_apk_assets_verified":True,
+    "pinned_cn_8503_in_signed_apk_verified":True,
+    "pinned_cn_original_go_cold_loader":"COMPILED_NOT_ANDROID_EXECUTED",
+    "android_system_dns_interception":"NOT_CONNECTED",
     "no_vpn_service_manifest_verified":True,
     "root_phone_installed":"NOT_RUN","real_tls_data_stop":"NOT_RUN",
     "apk_sha256":hashlib.sha256(apk.read_bytes()).hexdigest()}

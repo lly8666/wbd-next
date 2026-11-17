@@ -37,6 +37,8 @@ grep -Fq -- '--- PASS: TestPinnedCNGeosite8503FullTypedSnapshotAndNoSilentFallba
  out/android-b2-cn-geosite/go-matcher-wire.log
 grep -Fq -- '--- PASS: TestPinnedCNGeositeOnRealUDPAndTCPDNSLoopback' \
  out/android-b2-cn-geosite/go-matcher-wire.log
+grep -Fq -- '--- PASS: TestB2bSignedAPKRuleColdFileRequires0600NoSymlinkAndPinnedHash' \
+ out/android-b2-cn-geosite/go-matcher-wire.log
 python3 - <<'PY'
 import hashlib,json,os,pathlib
 out=pathlib.Path("out/android-b2-cn-geosite")
@@ -48,7 +50,7 @@ receipt={
  "rule_count":8503,"rule_types":{"domain":8431,"full":69,"regexp":3,"keyword":0},
  "real_go_matcher_full_typed_semantics":"PASS_FROM_GO_TEST",
  "real_dns_udp_tcp_loopback_with_pinned_cn_data":"PASS_FROM_GO_TEST",
- "android_production_cn_matcher_data_in_apk":"NOT_BUNDLED_YET",
+ "android_production_cn_matcher_data_in_apk":"B2_JOB_ARTIFACT_ONLY_APK_JOB_MUST_VERIFY",
  "android_physical_and_tunnel_dns_socket_bind":"NOT_CONNECTED",
  "android_system_dns_interception":"NOT_CONNECTED",
  "android_p2_p3":"ENV_BLOCKED_ARM64_KVM_NOT_AVAILABLE"}

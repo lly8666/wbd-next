@@ -11,6 +11,8 @@ import (
  "errors"
  "fmt"
  "io"
+ "os"
+ "syscall"
  "regexp"
  "strings"
 )
@@ -137,4 +139,25 @@ func ReadPinnedCN(reader io.Reader)(*CNRules,error){
  raw,err:=io.ReadAll(io.LimitReader(reader,MaxCNSnapshotBytes+1))
  if err!=nil{return nil,err}
  return LoadPinnedCN(raw)
+}
+
+// ReadPinnedCNFile loads one Android App-private, owner-only file from
+// the same O_NOFOLLOW fd whose actual bytes receive the upstream hash
+// check. No global resolver, path traversal or silent substitute source.
+// Files are copied from the signed APK by the ordinary Android App,
+// then opened by the original native Root Go cold-control process.
+func ReadPinnedCNFile(path string)(*CNRules,error){
+ if path==""{return nil,errors.New("missing pinned CN rule path")}
+ fd,err:=syscall.Open(path,syscall.O_RDONLY|syscall.O_CLOEXEC|
+  syscall.O_NOFOLLOW|syscall.O_NONBLOCK,0)
+ if err!=nil{return nil,err}
+ f:=os.NewFile(uintptr(fd),"pinned-cn-geosite")
+ defer f.Close()
+ st,err:=f.Stat()
+ if err!=nil{return nil,err}
+ if !st.Mode().IsRegular()||st.Mode().Perm()!=0600||
+  st.Size()<=10000||st.Size()>=MaxCNSnapshotBytes{
+  return nil,errors.New("pinned CN source must be a bounded private 0600 regular file")
+ }
+ return ReadPinnedCN(f)
 }

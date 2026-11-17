@@ -6,6 +6,7 @@ import (
  "errors"
  "net"
  "os"
+ "path/filepath"
  "regexp"
  "testing"
 )
@@ -99,5 +100,35 @@ func TestPinnedCNGeositeOnRealUDPAndTCPDNSLoopback(t *testing.T){
  if err!=nil||lastIP(t,bootstrap)!=cn.ip{t.Fatal("original Go bootstrap must use physical",err)}
  if tunnel.udpCalls.Load()!=1||cn.udpCalls.Load()!=2||cn.tcpCalls.Load()!=2{
   t.Fatal("unexpected cross-upstream retry or bootstrap leakage")
+ }
+}
+
+func TestB2bSignedAPKRuleColdFileRequires0600NoSymlinkAndPinnedHash(t *testing.T){
+ raw:=pinnedRules(t)
+ dir:=t.TempDir()
+ name:=filepath.Join(dir,"wbd-cn-geosite.txt")
+ if err:=os.WriteFile(name,raw,0600);err!=nil{t.Fatal(err)}
+ verified,err:=ReadPinnedCNFile(name)
+ if err!=nil||verified.Stats().Total!=PinnedCNRuleCount{
+  t.Fatal("cannot load exact signed-style private copy",err)
+ }
+ if err:=os.Chmod(name,0644);err!=nil{t.Fatal(err)}
+ if _,err=ReadPinnedCNFile(name);err==nil{
+  t.Fatal("world-readable CN asset unexpectedly admitted")
+ }
+ if err:=os.Chmod(name,0600);err!=nil{t.Fatal(err)}
+ link:=filepath.Join(dir,"symlink")
+ if err:=os.Symlink(name,link);err!=nil{t.Fatal(err)}
+ if _,err=ReadPinnedCNFile(link);err==nil{
+  t.Fatal("signed CN asset symlink followed by root cold parser")
+ }
+ corrupt:=append([]byte(nil),raw...)
+ corrupt[len(corrupt)/2]^=1
+ if err:=os.WriteFile(name,corrupt,0600);err!=nil{t.Fatal(err)}
+ if _,err=ReadPinnedCNFile(name);err==nil{
+  t.Fatal("modified signed-style CN content accepted")
+ }
+ if _,err=ReadPinnedCNFile(dir);err==nil{
+  t.Fatal("directory accepted instead of private CN asset")
  }
 }
