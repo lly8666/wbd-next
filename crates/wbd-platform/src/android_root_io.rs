@@ -577,8 +577,12 @@ impl AndroidBoundPhysicalDnsUdp {
         let rc=unsafe{getsockopt(fd.as_raw_fd(),SOL_SOCKET,SO_BINDTODEVICE,
             actual.as_mut_ptr().cast(),&mut name_len)};
         if rc!=0{return Err(io::Error::last_os_error())}
+        // Reject a longer device with the same prefix (e.g. wlan0x)
+        // rather than only checking matching leading bytes. Android's
+        // SO_BINDTODEVICE readback must identify the EXACT original Go NIC.
         if name_len==0||name_len>IFNAMSIZ as u32||
-           actual[..expected.as_bytes().len()]!=expected.as_bytes()[..]{
+           actual[..expected.as_bytes().len()]!=expected.as_bytes()[..]||
+           actual[expected.as_bytes().len()]!=0{
             return Err(io::Error::new(io::ErrorKind::InvalidData,
                 "physical DNS SO_BINDTODEVICE readback mismatch"))
         }

@@ -22,7 +22,9 @@ names=[
  "b2c2b3_physical_no_cross_flow_no_unowned_reply_after_stop"
 ]
 for test in names:
- assert f"test v4_android_dns_udp_flow::tests::{test} ... ok" in log,test
+ module=("v4_android_dns_physical_flow" if test.startswith("b2c2b3_")
+         else "v4_android_dns_udp_flow")
+ assert f"test {module}::tests::{test} ... ok" in log,test
 assert "test result: ok. 7 passed;" in log,log[-1500:]
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
 lib=Path("crates/wbd-engine/src/lib.rs").read_text()
@@ -70,6 +72,7 @@ assert 'tun.write_scoped_physical_dns_ip(' in m4
 assert 'pub struct AndroidBoundPhysicalDnsUdp' in platform
 assert 'bind_underlay_socket(fd.as_raw_fd(),network_handle,interface)?' in platform
 assert 'getsockopt(' in platform and 'getsockname(' in platform
+assert 'actual[expected.as_bytes().len()]!=0' in platform
 assert 'pub fn write_scoped_physical_dns_ip(' in platform
 assert "std::net::" not in wire and "read_ip_scatter" not in wire
 receipt={

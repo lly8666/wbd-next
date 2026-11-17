@@ -15,3 +15,21 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B2c2c原Android Rust M4唯一TX worker/TUN整合真实Bionic物理UDP DNS53 fd、同fd读回/64槽DNS逆IP/Stop和两个Host原包测试；DNS仍保持冷关闭。"}
 ```
+
+## 首次同SOURCE门失败记录与一次性修正
+
+原代码SOURCE `71565fd189b0cbff63358f480e1da14388a7af6f` [Android产品Action44107830995](https://github.com/lly8666/wbd-next/actions/runs/44107830995)：`cargo test --lib b2c2b` 实际 **7/7 PASS**（新增 `v4_android_dns_physical_flow::tests::b2c2b3_...` 两项也PASS），而Host Python枚举使用旧`v4_android_dns_udp_flow`固定模块路径错误，导致 **b2c2b Rust Host Job FAIL**；这是报告器定位错误，不是已观察到Rust报文校验和逻辑失败。ARM64原Go/Rust native构建PASS，其余Job以Actions最终状态为准。历史FAIL永久保留。
+
+本次仅根据测试真实路径将两项新模块列入报告器；原Rust M4、Bionic socket、TUN返回、原TLS/lease/AEAD/Stop产品代码一字不改，仍`hijack_enabled=0`和`android_dns_physical_ready=false`。新代码SHA全套产品与治理Actions必须独立通过，提交前为 **NOT_RUN**。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"记录B2c2c首轮Host收集器旧module路径错误FAIL（Rust真7项PASS），修复新物理DNS模块测试路径；不动原M4/NDK生产代码。"}
+```
+
+## 同源码物理socket精确设备名称绑定纠正
+
+在源码合并验收前将物理DNS新socket的`SO_BINDTODEVICE`同FD读回，从仅比较接口名称前缀改为完整名称加NUL终止校验（`wlan0`不能匹配`wlan0x`）。这属于Bionic真实物理作用域的必要产品正确性，不改通用M0或任何既有Go/TLS/M1/M3/健康协议。完整同SHA原Android ARM64构建负责验证ABI，设备实际内核readback仍为**NOT_RUN**；第一版`71565fd` Host误判仍保留。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"纠正B2c2c物理DNS的Android SO_BINDTODEVICE读回必须完整名称匹配；随Host新模块定位修复整包验证，旧FAIL保留。"}
+```
