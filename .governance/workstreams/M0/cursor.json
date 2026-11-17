@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2090,
-  "checkpoint_sha": "d0dd9f1bcd662360473a8269effa413369875fb7",
+  "sequence": 2091,
+  "checkpoint_sha": "63985588e613bda4c76c743b2b15a9a9e7aca263",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2090 source-locked 029B B2 ordinary CN signed native: H2089 source d0dd9f1b Action44056378053 confirmed genuine Windows2025 Wintun/Npcap↔WSL2 UDP/TCP53 A TTL2 and local AAAA NODATA, Linux A-only DNS sockets/zero AAAA leak, both kernel TCP/UDP and owned WAL Stop PASS_SCOPED. Start one NEW independent Normal/default1460 CN ordinary cn-domain-direct=false real A/CNAME/TTL from physical DNS while same overseas A nonCN resolved via TUN DNS and both real business flows Tunnel; no advanced FakeIP or second packet owner. Repair stale H2077 native log oracle, preserve old FAIL/NOT_RUN, shorten START_HERE fixed hot budget.",
-  "why_now": "H2089 signed Action44056378053 native-public-two-os job133949818062 SUCCESS, artifact14316613440 original Windows/WSL2 source d0dd9f1; B0 current-source original Windows Winsock UDP A, UDP AAAA, TCP AAAA, TCP A and genuine Linux TUN UDP/TCP53 A-only sockets with TTL2 and owned Stop all positive. H2089 governance Action44056377686 failed because fixed hot files total33141>32768, not cursor context_refs; update stale START_HERE without weakening policy. New B2 requires genuine physical-vs-TUN DNS and actual IP-only shared-CDN route, not merely Rust unit/GUI.",
+  "current_task": "H2091 unblock exact source-locked 029B B2 original Windows2025/WSL2 ordinary CN real-A signed network: H2090 Go/Windows Rust/Linux Rust/cheap preflights PASS, governance structure PASS, but native-public-two-os job SKIPPED because explicit [plan029b-b2-cn-ordinary-real] missing in tools/m0_native_ci_scope.py marker whitelist. Feature catalog structure PASS, 121 historical tests only H1934 source string check FAIL after B2 reuses same owned TUN alias. Add explicit scoped B2 marker and method-local unit, update old H1934 same alias expectation. Product code unchanged; H2090 B2 signed NOT_RUN preserved.",
+  "why_now": "H2090 source63985588 Action44059476705 cheap and both Go/Rust unit compile PASS but native SKIPPED by intended diff classification: selector had B0 but not B2 marker. Governance Action44059476683 structure PASS; Feature catalog check artifact status PASS but separate old test_h1934_policy_wiring asserts exact original 3-arm alias conditional, now B2 reuses same alias, so test FAIL. H2089 44056378053 true signed B0 DNS A/AAAA and Stop PASS_SCOPED independent. New SOURCE H2091 has no B2 signed yet.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect H2090 one signed original Normal 1460 Windows↔WSL2 ordinary CN real DNS/direct-resolver and same shared overseas IP Tunnel business/Stop, and preflight governance/WinForms/ABI. If first real failure, repair only that source/fixture while retaining FAIL. Then separate advanced CN and B3 IPv6 genuinely generated mixed IPv4, B4 on/off reconnect GUI, B5 one modest 10Mbps sequential same-VM comparator if supported. No 028 old stress or 030.",
+  "next_action": "Collect H2091 explicit native marker and genuine signed Normal outer1460 B2 original Windows CN physical DNS CNAME/real A, nonCN TUN DNS same A and both real overseas TUN business, both owned Stops; if first genuine failure fix only that and retain FAIL. Then advanced CN true physical and B3 genuine IPv6 entry, GUI lifecycle B4 and same-VM modest B5. No 028/030 old matrix.",
   "unverified": true,
-  "last_tested_source": "d0dd9f1bcd662360473a8269effa413369875fb7",
+  "last_tested_source": "63985588e613bda4c76c743b2b15a9a9e7aca263",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2090-SIGNED-B0-AND-ORDINARY-CN-REQUEST-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2091-H2090-B2-NATIVE-SCOPE-FIX-20261117.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029B-H2090-B0-SIGNED-ORDINARY-CN.md",
-    "docs/evidence/M0/PLAN029B-H2090-SIGNED-B0-AND-ORDINARY-CN-REQUEST-20261117.json",
+    "docs/devlog/M0/20261117-PLAN029B-H2091-B2-NATIVE-SCOPE-H1934-FIX.md",
+    "docs/evidence/M0/PLAN029B-H2091-H2090-B2-NATIVE-SCOPE-FIX-20261117.json",
     "docs/prompts/M0-PLAN029B.md"
   ],
   "open_requests": [],
-  "partial_summary": "029B B0 current source d0dd9f1 signed Windows+WSL2 true application UDP/TCP53 A TTL2 and local AAAA zero leak plus Tunnel/owned Stop PASS_SCOPED Action44056378053 artifact14316613440. H2090 new original Win physical CN DNS real CNAME/A vs nonCN same overseas A Tunnel+business signed request, NOT_RUN until Action. Original 029 H2077 3 scenarios PASS older SOURCE; H2083 V3 export FAIL retained. Governance fixed hot set fixed by shortened START_HERE, no weakening."
+  "partial_summary": "H2089 source d0dd9f true signed B0 UDP/TCP53 real A TTL2/AAAA local NODATA zero leak and Stop PASS_SCOPED. H2090 source63985588 Go/Rust/cheap PASS, governance PASS, new B2 native SKIPPED due unregistered scope marker; H1934 old text test FAIL. H2091 only scene marker plus old source-wiring check and evidence; signed new CN B2 remains NOT_RUN until actual job."
 }

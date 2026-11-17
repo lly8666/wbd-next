@@ -76,6 +76,10 @@ class NativeSmokeScopeTests(unittest.TestCase):
             "push",changed,"[plan029b-b0-unrequested]"))
         self.assertTrue(requires_native_smoke(
             "push",changed,"[plan029b-b0-dns-real]"))
+        # H2090 was skipped despite an explicit one-real-B2-scene marker
+        # because the central native-scope allowlist omitted it.
+        self.assertTrue(requires_native_smoke(
+            "push",changed,"[plan029b-b2-cn-ordinary-real]"))
 
     def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
         workflow = (Path(__file__).resolve().parents[1] /

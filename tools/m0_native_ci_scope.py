@@ -72,6 +72,9 @@ EXPLICIT_NATIVE_MARKERS = (
     # genuine signed Windows↔WSL2 OS/UDP/TCP/Stop evidence, not this flag.
     "[plan029b-normal-off-smoke]",
     "[plan029b-b0-dns-real]",
+    # PLAN029B H2091: one independent source-locked ordinary CN real-A
+    # original Windows2025/WSL2 Wintun vs physical and Tunnel DNS.
+    "[plan029b-b2-cn-ordinary-real]",
 )
 
 
