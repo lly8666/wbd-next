@@ -1,5 +1,7 @@
 # WBD Next｜main 最小接续
 
+**029B**：[方案](docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md) / [提示](docs/prompts/M0-PLAN029B.md)。设计定案、2026-11-17由用户授权实施；029日常真网络H2077已PASS_SCOPED、扩展保留NOT_RUN；产品029B未测，实时资格看cursor。
+
 **当前授权（2026-11-14）：PLAN029已启动并保持IN_PROGRESS**；PLAN028按用户限定范围收口，不重开旧矩阵，PLAN030尚未开工。先读[029接续提示](docs/prompts/M0-PLAN029.md)、[029计划§4A](docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)与[分流/DNS施工契约](docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md)。Normal真Direct/Tunnel业务和owned Stop已限域PASS，H1864 4MiB无pace物理32.155/Direct131.544ms，H1863 P1 CPU/GiB +7.01%仍OPEN；H1866真实Windows IPv6宿主无默认路由且应用发包NOT_RUN，产品IPv6阻断尚未合格；GUI/Game4等029仍OPEN。
 
 源码与进度在main。启动读[AGENTS](AGENTS.md)、[章程](PROJECT_CHARTER.md)、[M0长期提示](docs/prompts/M0.md)、[registry](.governance/registry.json)和[M0 cursor](.governance/workstreams/M0/cursor.json)；收在途结果、补中断，不重复派发。

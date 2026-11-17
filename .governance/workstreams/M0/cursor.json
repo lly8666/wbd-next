@@ -4,27 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2077,
-  "checkpoint_sha": "d7b3138c93897de7044aaa1ef1c8c70b9d53ba0e",
-  "progress": "partial",
-  "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2077 PLAN029 ordinary user-scope CLOSEOUT PASS_SCOPED: product SOURCE498a fixture d7b; 3 independent signed normal GUI/domain/TTL real Windows/WSL2 Actions all SUCCESS with second B AEAD Health/route, OS1460/inner1389, Direct/Tunnel TCP/UDP, DNS TC TCP53, TTL3 FakeIP, owned Stop. Extended original D1–D5/P1–P2/old IPv6/stress remains partial NOT_RUN.",
-  "why_now": "H2076 GUI44035518047 ZIP14306069256, domain44035523669 ZIP14306553979, TTL44035528778 ZIP14306902967 each Action and native job SUCCESS; read original ZIP manifest/report/server real B authenticated Health/OS/business and Stop. Existing Normal regression 44031316063 PASS. H2075 failures retained.",
+  "sequence": 2078,
+  "checkpoint_sha": "a2431abeeb22f7d556a7d03b6bd099f88ce1d838",
+  "progress": "in_progress",
+  "task_id": "PLAN029B-USER-20261117",
+  "current_task": "H2078 PLAN029B start as newly user-authorized M0 scope. PR#35 docs-only 12 files nonmergeable because stale base601d; graft all nonconflicting plan/prompt/architecture/3 feature cards into main with H2077 daily native proof preserved. Product 029B B0–B5 still NOT_RUN until new Go/Rust/GUI/effective and signed actual Windows+WSL2.",
+  "why_now": "User explicitly requested PR35 nonconflicting integration and implementation according to newest docs/prompts/M0-PLAN029B.md. Current H2077 daily PLAN029 scoped normal three native successes were after PR base; PR35 has NO product implementation and must not overwrite H2077 feature/card/cursor. Current main a2431ab; separate 029B implementation authorization overrides H2077 no-further-action for old PLAN029.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "STOP PLAN029 work within 2026-11-17 daily-user scope; deliver H2077 scoped report and evidence. No more Action dispatch, no old PLAN028 seven-mode matrix or PLAN030. Extended performance/stress/IPv6 D1–D5/P1–P2 requires explicit new scope if ever requested; preserve NOT_RUN.",
+  "next_action": "Implement 029B once on current main: B0 config split-enable/route-mode effective and cn-domain-direct new false vs old missing migration; B1 true optional Direct/FakeIP resources with shared DNS/bootstrap/padding; B2 normal CN real-A overseas Tunnel and advanced CN FakeIP Direct; B3 local all-AAAA UDP/TCP NOERROR NODATA and genuine IPv6 ingress; B4 GUI/ABI/CLI/cross-mode; B5 smallest signed physical + same-VM sequential performance protective A/B. Preserve original Normal/Stop regression and previous FAIL. Do not start 030/028 old matrix.",
   "unverified": true,
   "last_tested_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2078-PR35-DESIGN-IMPORT-PRODUCT-NOTRUN-20261117.json"
   ],
   "context_refs": [
+    "docs/prompts/M0-PLAN029B.md",
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
+    "docs/devlog/M0/20261117-PLAN029B-H2078-PR35-MAIN-REBASE.md",
     "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md",
     "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
     "docs/devlog/M0/20261117-PLAN029-H2076-REAL-MTU-RECEIPT-FIXTURE.md",
     "docs/evidence/M0/PLAN029-H2076-H2075-THREE-MTU-GATE-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2072-WINDOWS-LIVE-HEALTH-FIX.md",
-    "docs/evidence/M0/PLAN029-H2072-WINDOWS-LIVE-HEALTH-WIRE-NATIVE-NOTRUN-20261117.json"
+    "docs/devlog/M0/20261117-PLAN029-H2072-WINDOWS-LIVE-HEALTH-FIX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2077 USER DAILY PASS_SCOPED: H2076 GUI/domain/TTL three signed physical native SUCCESS, product binary source498a, fixture d7b; B Health route promotion and both OS, Direct/Tunnel TCP UDP, single DNS and TTL3, Stop. Old original Normal 44031316063 regression PASS; old one-row MTU tests PASS. Full D1-D5/P1-P2/IPv6/extreme metrics not qualified; stop without extra runs."
+  "partial_summary": "PR35 12 docs only; main H2077 daily signed native proof retained. H2078 cherry-picks PR35 nonconflicting decision/prompt/docs/card text into main; 029B actual product not yet modified/tested. Begin B0–B5, no old 028 or 030."
 }
