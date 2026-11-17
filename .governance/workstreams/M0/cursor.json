@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2078,
-  "checkpoint_sha": "a2431abeeb22f7d556a7d03b6bd099f88ce1d838",
+  "sequence": 2079,
+  "checkpoint_sha": "7d4f15810892e32159e33915d7e81c72bb4c18a5",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2078 PLAN029B start as newly user-authorized M0 scope. PR#35 docs-only 12 files nonmergeable because stale base601d; graft all nonconflicting plan/prompt/architecture/3 feature cards into main with H2077 daily native proof preserved. Product 029B B0–B5 still NOT_RUN until new Go/Rust/GUI/effective and signed actual Windows+WSL2.",
-  "why_now": "User explicitly requested PR35 nonconflicting integration and implementation according to newest docs/prompts/M0-PLAN029B.md. Current H2077 daily PLAN029 scoped normal three native successes were after PR base; PR35 has NO product implementation and must not overwrite H2077 feature/card/cursor. Current main a2431ab; separate 029B implementation authorization overrides H2077 no-further-action for old PLAN029.",
+  "current_task": "H2079 PLAN029B first uncompiled source candidate: Go/Rust version2 cold ABI advanced-CN flag, off/all no Direct UDP actor/OS CN bypass/Fake writer but retains original Rust V3 Tunnel/DNS/startup padding; ordinary CN DNS returns real CNAME/A, advanced CN journaled FakeIP; all managed UDP/TCP53 AAAA local NODATA. Pinned original Go CLI+GUI assembled manifest updated with exact SHA, missing old cn-domain-direct key migrates true/new false. Actual new product qualification NOT_RUN.",
+  "why_now": "H2078 PR35 design/governance PASS; original Go CLI/Portable/parameters/fields produced via exact manifest-plan020-m0.json. H2079 source changes the one real C ABI and assembly; no second packet pump or new WFP. H2077 old Normal real Win/Linux qualification preserved separate.",
   "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Implement 029B once on current main: B0 config split-enable/route-mode effective and cn-domain-direct new false vs old missing migration; B1 true optional Direct/FakeIP resources with shared DNS/bootstrap/padding; B2 normal CN real-A overseas Tunnel and advanced CN FakeIP Direct; B3 local all-AAAA UDP/TCP NOERROR NODATA and genuine IPv6 ingress; B4 GUI/ABI/CLI/cross-mode; B5 smallest signed physical + same-VM sequential performance protective A/B. Preserve original Normal/Stop regression and previous FAIL. Do not start 030/028 old matrix.",
+  "next_action": "Run H2079 Go+Windows Rust+Linux Rust native compile/ABI. Fix only first concrete failure. Still implement B0 DNS-only TCP53 without business Direct NAT, B3 genuine Wintun IPv6 source, B4 GUI/effective, B5 bounded physical same-VM comparison and old Normal regression. Keep new-source status NOT_RUN until actual evidence; no old 028 matrix/030.",
   "unverified": true,
   "last_tested_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2078-PR35-DESIGN-IMPORT-PRODUCT-NOTRUN-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2079-PRODUCT-CANDIDATE-NOTRUN-20261117.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261117-PLAN029B-H2079-PRODUCT-INITIAL-CANDIDATE.md",
+    "docs/evidence/M0/PLAN029B-H2079-PRODUCT-CANDIDATE-NOTRUN-20261117.json",
+    "docs/prompts/M0-PLAN029B.md",
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/prompts/M0-PLAN029B.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/devlog/M0/20261117-PLAN029B-H2078-PR35-MAIN-REBASE.md",
-    "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md",
-    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2076-REAL-MTU-RECEIPT-FIXTURE.md",
-    "docs/evidence/M0/PLAN029-H2076-H2075-THREE-MTU-GATE-20261117.json",
-    "docs/devlog/M0/20261117-PLAN029-H2072-WINDOWS-LIVE-HEALTH-FIX.md"
+    "docs/devlog/M0/20261117-PLAN029-H2077-ORDINARY-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR35 12 docs only; main H2077 daily signed native proof retained. H2078 cherry-picks PR35 nonconflicting decision/prompt/docs/card text into main; 029B actual product not yet modified/tested. Begin B0–B5, no old 028 or 030."
+  "partial_summary": "H2079 new product candidate SOURCE NOT_YET_COMPILED; B0–B3 Rust+Go code and C ABI/Go pinned assembly CLI/GUI selection wired, true physical tests NOT_RUN. Old H2077 source498a signed 029 daily PASS_SCOPED intact, B0 TCP53 IPv6 real entry and B5 performance pending."
 }

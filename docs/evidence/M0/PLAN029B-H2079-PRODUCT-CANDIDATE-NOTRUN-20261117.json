@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2079",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "new_source": "SELF_COMMIT_H2079_AWAIT_CI",
+  "scope": "real Go/Rust/GUI 029B cold ABI and native split candidate",
+  "static_assembly_old_result_blob_verified": true,
+  "manifest_result_blob_sha": {
+    "main_windows": "87c383f3c8a9b5e40fc0ce34668dfa8a08431af6",
+    "gui_portable": "7a5a9e4239bb6642baef63647fafb3f77404c4af",
+    "gui_fields": "81628c1490d25202ce24e20e22e332130893882c",
+    "parameters": "d74961a3fcc86b2e09198b47052d0465d1448cac"
+  },
+  "B0": "SOURCE_ONLY",
+  "B1": "SOURCE_ONLY",
+  "B2": "SOURCE_ONLY",
+  "B3": "SOURCE_ONLY",
+  "B4": "SOURCE_ONLY",
+  "B5": "NOT_RUN",
+  "known_gaps": [
+    "all/off public DNS-only TCP53 does not yet have independent minimal listener",
+    "IPv6 real Windows ingress frames not yet proven",
+    "new-source Windows/WSL2 signed full business/perf not run"
+  ],
+  "h2077_original_normal": "PASS_SCOPED_OLD_SOURCE_ONLY"
+}

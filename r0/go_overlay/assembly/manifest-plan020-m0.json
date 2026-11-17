@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "4ca2c5625e59987bf3659e4dc9a18227604a530d",
+      "result_blob": "87c383f3c8a9b5e40fc0ce34668dfa8a08431af6",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -292,6 +292,22 @@
         {
           "find": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}",
           "replace": "if *splitEnable && *lanes!=1 && *lanes!=4 {return errors.New(\"PLAN029 CN split Game2 not wired; select Normal or Game4 (four lanes)\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
+        },
+        {
+          "find": "\t\tcnRulesFile = flag.String(\"cn-rules-file\", \"\", \"absolute owned CN domain rules snapshot used only at split cold start\")",
+          "replace": "\t\tcnRulesFile = flag.String(\"cn-rules-file\", \"\", \"absolute owned CN domain rules snapshot used only at split cold start\")\n\t\tcnDomainDirect = flag.Bool(\"cn-domain-direct\", false, \"advanced CN domain FakeIP (fresh default false; legacy JSON without this key keeps old advanced behavior)\")"
+        },
+        {
+          "find": "\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {\n\t\treturn err\n\t}",
+          "replace": "\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {\n\t\treturn err\n\t}\n\t// 029B old saved JSON missing the new selector keeps its previous CN\n\t// FakeIP behavior. Fresh no-config CLI and new GUI profiles default false.\n\t// configfile.ApplyFile has already strictly validated the bounded JSON;\n\t// CLI explicit --cn-domain-direct=false always takes precedence.\n\tif *configPath!=\"\" {\n\t\traw,e:=os.ReadFile(*configPath);if e!=nil{return errors.New(\"config: cannot read selector migration\")}\n\t\tvar keys map[string]json.RawMessage\n\t\tif e=json.Unmarshal(raw,&keys);e!=nil{return errors.New(\"config: invalid selector migration\")}\n\t\t_,present:=keys[\"cn-domain-direct\"]\n\t\tif !present{\n\t\t\texplicit:=false\n\t\t\tflag.CommandLine.Visit(func(f *flag.Flag){if f.Name==\"cn-domain-direct\"{explicit=true}})\n\t\t\tif !explicit{*cnDomainDirect=true}\n\t\t}\n\t}"
+        },
+        {
+          "find": "\t\tout[\"cn-rules-file\"]=*cnRulesFile // single source path; not per-DATA",
+          "replace": "\t\tout[\"cn-domain-direct\"]=fmt.Sprint(*cnDomainDirect) // requested next cold generation, not OS Applied\n\t\tout[\"cn-rules-file\"]=*cnRulesFile // single source path; not per-DATA"
+        },
+        {
+          "find": "SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,",
+          "replace": "SplitEnable:*splitEnable,CNDomainDirect:*cnDomainDirect,CNRulesFile:*cnRulesFile,"
         }
       ]
     },
@@ -327,7 +343,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "78412d44272a2e94640700e32ffc8b6a6faa0303",
+      "result_blob": "81628c1490d25202ce24e20e22e332130893882c",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -448,6 +464,14 @@
         {
           "find": "  \"direct4\": [",
           "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2仍拒绝。保存后重新连接生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
+        },
+        {
+          "find": "  \"cn-rules-file\": [",
+          "replace": "  \"cn-domain-direct\": [\n    \"网络\",\n    \"高级CN域名分流（FakeIP）\",\n    \"默认关闭：CN域名真实A不造FakeIP，业务只按目的中国IPv4走Direct；开启后CN域名FakeIP可直连海外CDN。旧配置缺键保留开启，重连生效\"\n  ],\n  \"cn-rules-file\": ["
+        },
+        {
+          "find": "\"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2仍拒绝。保存后重新连接生效\"",
+          "replace": "\"关闭仍保留原Rust隧道和公共DNS及startup-padding，不分配Direct/FakeIP资源；开启后按route-mode作IP分流。CN域名默认仅选择直连DNS，高级FakeIP需另开；Game2仍拒绝。重连生效\""
         }
       ]
     },
@@ -795,7 +819,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "083ff3b6e255fd252a8b959a5517b3eda3afc32d",
+      "result_blob": "d74961a3fcc86b2e09198b47052d0465d1448cac",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -846,6 +870,10 @@
         {
           "find": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
           "replace": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"split-enable\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"explicit PLAN029 native Rust CN IP+domain split; default off; next connect; Game2/4 CN not wired\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"absolute owned CN domain rule snapshot for cold split startup; no hot update\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
+        },
+        {
+          "find": "      \"cn-rules-file\": {",
+          "replace": "      \"cn-domain-direct\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"advanced CN FakeIP; fresh profile false, existing saved JSON missing key migrates to true; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {"
         }
       ]
     },
@@ -1087,9 +1115,21 @@
         {
           "find": "                WriteAtomic(rel, text); p.Values[\"china-ip-file\"] = rel;\n            }\n        }\n        public void AppendLog",
           "replace": "                WriteAtomic(rel, text); p.Values[\"china-ip-file\"] = rel;\n            }\n            // Import external CN snapshots into an owned portable source;\n            // active readers use the original generation snapshot and\n            // will not hot-migrate existing flows on a later profile edit.\n            object cnRulesField;\n            string cnRules = p.Values.TryGetValue(\"cn-rules-file\", out cnRulesField)\n                ? Convert.ToString(cnRulesField) : \"\";\n            if (cnRules.Length > 0 && Path.IsPathRooted(cnRules)) {\n                CheckPath(cnRules);\n                string text = ReadBounded(cnRules);\n                string rel = \"data/cn-rules-\" + p.Id + \".txt\";\n                WriteAtomic(rel, text); p.Values[\"cn-rules-file\"] = rel;\n            }\n        }\n        public void AppendLog"
+        },
+        {
+          "find": "                MigrateStartupPadding(prev.Values);",
+          "replace": "                MigrateCNDomainDirect(prev.Values);\n                MigrateStartupPadding(prev.Values);"
+        },
+        {
+          "find": "        static void MigrateStartupPadding(Dictionary<string, object> values) {",
+          "replace": "        // Only pre-029B saved profiles and imported JSON without this key\n        // migrate to advanced CN. NewProfile populates canonical false.\n        // Never silently turn an explicit false into FakeIP.\n        static void MigrateCNDomainDirect(Dictionary<string, object> values) {\n            if (!values.ContainsKey(\"cn-domain-direct\")) values[\"cn-domain-direct\"]=true;\n        }\n        static void MigrateStartupPadding(Dictionary<string, object> values) {"
+        },
+        {
+          "find": "            MigrateStartupPadding(values);\n            object old;",
+          "replace": "            MigrateCNDomainDirect(values);\n            MigrateStartupPadding(values);\n            object old;"
         }
       ],
-      "result_blob": "ce874bf796317638d9c50143f9bba487b26b9206"
+      "result_blob": "7a5a9e4239bb6642baef63647fafb3f77404c4af"
     },
     {
       "kind": "create",

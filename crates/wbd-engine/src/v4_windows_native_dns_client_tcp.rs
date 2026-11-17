@@ -91,9 +91,11 @@ fn checked_client_reply(q:&TcpClientDnsQuestion,lane:DnsEgress,
     journal:Option<&mut FakeJournal>)->Option<Vec<u8>>{
     let resolved=extract_a(raw,q.original_id,&q.qname,q.qtype).ok()?;
     if resolved.status==DnsAnswerStatus::Truncated{return None}
-    if lane==DnsEgress::Tunnel || q.qtype!=1{
-        // Verified original DNS question and ID; retain normal non-CN
-        // answers verbatim (including any non-A records) on the chosen lane.
+    if lane==DnsEgress::Tunnel || q.qtype!=1 ||
+       (pool.is_none()&&journal.is_none()){
+        // Ordinary CN keeps its real A/CNAME/TTL even when DNS direction
+        // is physical Direct. Advanced CN alone synthesizes journaled FakeIP.
+        // The exact upstream question and original client ID were verified.
         return Some(raw.to_vec())
     }
     if resolved.status!=DnsAnswerStatus::Answered ||
@@ -163,7 +165,9 @@ impl ClientDnsTcp{
                     self.phase=Phase::Reading(parse);return Ok(result)
                 };
                 let Some(lane)=route(&q.qname)else{return Err(())};
-                if lane==DnsEgress::Direct&&matches!(q.qtype,28|64|65){
+                if q.qtype==28 ||
+                   (lane==DnsEgress::Direct&&pool.is_some()&&
+                       journal.is_some()&&matches!(q.qtype,64|65)){
                     self.response(synthesize_cn_nodata(q.original_id,
                         &q.qname,q.qtype,false).map_err(|_|())?)?;
                     return Ok(result)
@@ -203,6 +207,7 @@ impl ClientDnsTcp{
                         let resolved=extract_a(&reply,ticket.original_id,
                             &ticket.qname,ticket.qtype).ok();
                         if lane==DnsEgress::Direct && ticket.qtype==1 &&
+                            pool.is_some()&&journal.is_some()&&
                             resolved.as_ref().is_some_and(|a|
                                 a.status==DnsAnswerStatus::Answered &&
                                 !a.candidates.is_empty()){

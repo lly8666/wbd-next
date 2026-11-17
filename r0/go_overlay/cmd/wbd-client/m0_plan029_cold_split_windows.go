@@ -99,10 +99,13 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
  }
  cnRows,e:=m0Plan029Rows(cn);if e!=nil{return empty,e}
  lanRows,e:=m0Plan029Rows(lan);if e!=nil{return empty,e}
- directRows,e:=m0Plan029Rows(o.Direct4);if e!=nil{return empty,e}
+ var directRows []realityfront.V4WindowsColdCIDR
+ if mode!=0 {
+  directRows,e=m0Plan029Rows(o.Direct4);if e!=nil{return empty,e}
+ } // All/split-off has no business Direct table, even the custom list.
  var domains []byte
  var journalPath []byte
- if mode==2&&o.StatePath!=""{
+ if mode==2&&o.CNDomainDirect&&o.StatePath!=""{
   if !filepath.IsAbs(o.StatePath){return empty,errM0Plan029Cold}
   journalPath=[]byte(o.StatePath+".n4-fakeip-journal")
   if len(journalPath)>4096{return empty,errM0Plan029Cold}
@@ -111,8 +114,10 @@ func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
   domains,e=m0Plan029CanonicalDomains(domainRules)
   if e!=nil{return empty,e}
  }
+ var policyFlags uint32
+ if mode==2&&o.CNDomainDirect{policyFlags=1}
  return realityfront.V4WindowsColdSplitConfig{
-  RouteMode:mode,PhysicalIfIndex:physicalIndex,
+  RouteMode:mode,PolicyFlags:policyFlags,PhysicalIfIndex:physicalIndex,
   PhysicalSource:physical.As4(),Lease4:lease.As4(),
   DirectDNS:o.DirectDNS4.As4(),TunnelDNS:o.DNSServers4[0].As4(),
   FakeStart:[4]byte{198,18,0,1},FakeEnd:[4]byte{198,18,255,254},
@@ -136,20 +141,28 @@ func m0Plan029SyntheticForGeneration(install,epoch [16]byte)([4]byte,error){
  return [4]byte{198,19,h[0],1+h[1]%254},nil
 }
 
-// PLAN029 V3 selection is explicit by saved next-generation config, never
-// gated on the GITHUB_ACTIONS host variable in the real product. The old
-// source-locked signed CI trial remains available as a separate test input.
-// This is only cold source selection; Applied/Ready still require actual
-// authenticated owner + signed Wintun + four-stage owned OS receipts.
+// 029B: original Rust V3 owns public DNS/IPv6/padding even with business
+// split disabled. Only Direct/FakeIP resources are optional per generation.
+// The old source-locked signed advanced-CN CI trial remains a separate
+// explicit test input. No V2/Go packet-loop fallback is permitted.
 func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
  ifindex uint32,lease netip.Addr,innerMTU uint32,epoch [16]byte,
 )(*realityfront.V4WindowsColdSplitConfig,error){
  trial:=os.Getenv("GITHUB_ACTIONS")=="true"&&
   os.Getenv("WBD_PLAN029_NATIVE_V3_TRIAL")=="1"
- if !o.SplitEnable&&!trial{return nil,nil}
+ effective:=o
+ if !o.SplitEnable&&!trial{
+  effective.RouteMode="all" // never even parse disabled CN/Direct rules
+  effective.CNDomainDirect=false
+ }
+ if trial&&!o.SplitEnable{
+  // The original source-locked 029 test is an explicit old-CN semantic
+  // opt-in; new user profiles without a saved advanced key remain false.
+  effective.CNDomainDirect=true
+ }
  var domains []byte
- if o.RouteMode=="bypass-lan-cn"{
-  file:=o.CNRulesFile
+ if effective.RouteMode=="bypass-lan-cn"{
+  file:=effective.CNRulesFile
   if !o.SplitEnable{file=os.Getenv("WBD_PLAN029_CN_RULES_FILE")}
   if file==""||!filepath.IsAbs(file){return nil,errM0Plan029Cold}
   info,e:=os.Lstat(file)
@@ -159,13 +172,16 @@ func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
   }
   domains,e=os.ReadFile(file);if e!=nil{return nil,e}
  }
- c,e:=m0Plan029ColdSource(o,physical,ifindex,lease,innerMTU,domains)
+ c,e:=m0Plan029ColdSource(effective,physical,ifindex,lease,innerMTU,domains)
  if e!=nil{return nil,e}
- if o.RouteMode=="bypass-lan-cn"&&
-  (len(c.Domains)==0||len(c.FakeJournalPath)==0){
+ if effective.RouteMode=="bypass-lan-cn"&&
+  (len(c.Domains)==0||
+   (effective.CNDomainDirect&&len(c.FakeJournalPath)==0)){
   return nil,errM0Plan029Cold
  }
- // all stays Tunnel only, never preopens/records Direct TCP.
+ // All/off stays Tunnel-only; no business Direct TCP, UDP, FakeIP or trie.
+ // Existing public single DNS, bootstrap and Normal startup-padding remain
+ // attached to this same original authenticated Rust owner.
  if c.RouteMode!=0{
   synth,e:=m0Plan029SyntheticForGeneration(o.Installation,epoch)
   if e!=nil{return nil,e}

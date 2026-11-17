@@ -11,12 +11,13 @@ func TestPlan029V3ExactColdABIAndNegativeLimits(t *testing.T){
   t.Fatal("native post-Apply TCP control Go/Rust repr(C) layout drift")
  }
  if unsafe.Sizeof(V4WindowsColdCIDR{})!=8 ||
-  unsafe.Sizeof(v4WindowsColdSplitWireV1{})!=128 ||
+  unsafe.Sizeof(v4WindowsColdSplitWireV1{})!=136 ||
   unsafe.Offsetof(v4WindowsColdSplitWireV1{}.CN)!=64 ||
   unsafe.Offsetof(v4WindowsColdSplitWireV1{}.Domains)!=96 ||
   unsafe.Offsetof(v4WindowsColdSplitWireV1{}.JournalPath)!=112 ||
   unsafe.Offsetof(v4WindowsColdSplitWireV1{}.TCPSynthetic4)!=120 ||
-  unsafe.Offsetof(v4WindowsColdSplitWireV1{}.TCPOwned)!=124{
+  unsafe.Offsetof(v4WindowsColdSplitWireV1{}.TCPOwned)!=124||
+  unsafe.Offsetof(v4WindowsColdSplitWireV1{}.PolicyFlags)!=128{
   t.Fatalf("V3 ABI mismatch: row=%d split=%d",
    unsafe.Sizeof(V4WindowsColdCIDR{}),
    unsafe.Sizeof(v4WindowsColdSplitWireV1{}))
@@ -26,7 +27,7 @@ func TestPlan029V3ExactColdABIAndNegativeLimits(t *testing.T){
   CN:[]V4WindowsColdCIDR{{Network:[4]byte{203,0,113,0},Bits:24}},
   Domains:[]byte("cn.example\n")}
  w,e:=c.wire()
- if e!=nil||w.Size!=128||w.CNCount!=1||w.CN==0||
+ if e!=nil||w.Size!=136||w.Version!=2||w.CNCount!=1||w.CN==0||
   w.DomainsLength!=11||w.Domains==0{
   t.Fatalf("invalid C cold readback: %+v err=%v",w,e)
  }

@@ -28,7 +28,8 @@ func TestPlan029GoColdRustThreeModesDnsEqualAllowedNoBackup(t *testing.T){
   o:=plan029Options(mode)
   c,e:=m0Plan029ColdSource(o,netip.MustParseAddr("10.1.0.7"),
    14,netip.MustParseAddr("10.234.12.34"),1280,[]byte("CN.EXAMPLE.\n"))
-  if e!=nil||c.InnerMTU!=1280||c.DirectHard!=16384||len(c.Direct)!=1{
+  if e!=nil||c.InnerMTU!=1280||c.DirectHard!=16384||
+   (mode=="all"&&len(c.Direct)!=0)||(mode!="all"&&len(c.Direct)!=1){
    t.Fatalf("cold %s %v",mode,e)
   }
   if mode=="bypass-lan-cn"{
@@ -113,6 +114,7 @@ func TestPlan029GoV3TrialOnlyOwnedCIAndExplicitValidatedDomains(t *testing.T){
 func TestPlan029ExplicitProductSplitOutsideCIUsesOnlyConfiguredRules(t *testing.T){
  o:=plan029Options("bypass-lan-cn")
  o.SplitEnable=true
+ o.CNDomainDirect=true // earlier original FakeIP behavior is explicit
  o.StatePath=filepath.Join(t.TempDir(),"network-state")
  path:=filepath.Join(t.TempDir(),"cn-rule-source.txt")
  if err:=os.WriteFile(path,[]byte("cn.example\n=exact.cn\n"),0600);err!=nil{t.Fatal(err)}
@@ -134,8 +136,11 @@ func TestPlan029ExplicitProductSplitOutsideCIUsesOnlyConfiguredRules(t *testing.
  o.CNRulesFile=path
  o.SplitEnable=false
  if cold,err:=m0Plan029TrialCold(o,netip.MustParseAddr("10.1.0.7"),
-  14,netip.MustParseAddr("10.234.12.34"),1280,[16]byte{2});err!=nil||cold!=nil{
-  t.Fatal("disabled split activated or required CN rules",err)
+  14,netip.MustParseAddr("10.234.12.34"),1280,[16]byte{2});
+  err!=nil||cold==nil||cold.RouteMode!=0||cold.PolicyFlags!=0||
+  len(cold.CN)!=0||len(cold.Direct)!=0||len(cold.Domains)!=0||
+  len(cold.FakeJournalPath)!=0||cold.TCPSynthetic4!=[4]byte{}{
+  t.Fatal("disabled business still needs DNS/padding V3, not Direct or FakeIP",err)
  }
 }
 
@@ -197,5 +202,30 @@ func TestPlan029H1946Cold4096CNIndependentOfOSBypass(t *testing.T){
  if _,e:=m0Plan029ColdSource(o,netip.MustParseAddr("10.1.0.7"),
   14,netip.MustParseAddr("10.234.12.34"),1280,nil);e==nil{
   t.Fatal("explicit missing CN source silently fell back")
+ }
+}
+
+func TestPlan029BOrdinaryCNKeepsDnsTrieWithoutFakeIpJournal(t *testing.T){
+ o:=plan029Options("bypass-lan-cn")
+ o.SplitEnable=true
+ o.CNDomainDirect=false // fresh config ordinary, no FakeIP publication
+ o.StatePath=filepath.Join(t.TempDir(),"network-state")
+ path:=filepath.Join(t.TempDir(),"cn-rules.txt")
+ if e:=os.WriteFile(path,[]byte("www.cn.example\n"),0600);e!=nil{t.Fatal(e)}
+ o.CNRulesFile=path
+ t.Setenv("GITHUB_ACTIONS","false")
+ t.Setenv("WBD_PLAN029_NATIVE_V3_TRIAL","")
+ c,e:=m0Plan029TrialCold(o,netip.MustParseAddr("10.1.0.7"),
+  14,netip.MustParseAddr("10.234.12.34"),1389,[16]byte{2})
+ if e!=nil||c==nil||c.RouteMode!=2||c.PolicyFlags!=0||
+  string(c.Domains)!="www.cn.example\n"||len(c.FakeJournalPath)!=0||
+  c.TCPSynthetic4==[4]byte{}||len(c.CN)==0{
+  t.Fatalf("ordinary CN must retain direct DNS and CN IP, never FakeIP: %+v %v",c,e)
+ }
+ o.CNDomainDirect=true
+ c,e=m0Plan029TrialCold(o,netip.MustParseAddr("10.1.0.7"),
+  14,netip.MustParseAddr("10.234.12.34"),1389,[16]byte{2})
+ if e!=nil||c==nil||c.PolicyFlags!=1||len(c.FakeJournalPath)==0{
+  t.Fatalf("advanced CN does not own journal: %+v %v",c,e)
  }
 }

@@ -156,15 +156,20 @@ impl DirectDns{
         let key=QueryKey{name,qtype,lane:ResolverLane::Direct,
             resolver4:u32::from(self.endpoint),resolver_port:53,
             policy_revision:1};
-        if matches!(qtype,28|64|65){
+        // Local AAAA denial belongs to the shared managed DNS policy, not
+        // to CN, an upstream resolver or an enabled FakeIP allocator.
+        // HTTPS/SVCB remains transparent in ordinary (non-FakeIP) CN.
+        let advanced=fake.is_some()&&journal.is_some();
+        if qtype==28 || (advanced&&matches!(qtype,64|65)){
             if let Ok(wire)=synthesize_cn_nodata(id,&key.name,qtype,false){
                 self.enqueue(client,&wire)
             }
             return true
         }
-        // CN A without durable ownership is SERVFAIL; never return a
-        // real CDN address merely because it came from the DNS cache.
-        if qtype==1&&(fake.is_none()||journal.is_none()){
+        // One broken half-configured FakeIP writer is a genuine cold fault.
+        // Ordinary CN A without a writer is intentional and returns the
+        // actual validated upstream CNAME/multi-A/TTL, never a fake slot.
+        if fake.is_some()!=journal.is_some(){
             self.fail(&[client],&key,2);return true
         }
         // This is a real owner-fast DNS cache HIT, not a second resolver.
@@ -172,7 +177,7 @@ impl DirectDns{
         // cached positive answer, including TTL reduction. A cache miss or
         // full cache always continues to the one physical DNS endpoint.
         // No FakeIP entry is reclaimed just because its DNS cache evicted.
-        if qtype==1 {
+        if qtype==1 && advanced {
             if let Some(answer)=self.cache.get(&key,now_ms){
                 self.resolved(ValidatedReply{key,
                     waiters:vec![client],answer},&[],
@@ -226,9 +231,12 @@ impl DirectDns{
         fake:Option<&mut FakeAllocator>,journal:Option<&mut FakeJournal>,
         now_ms:u64){
         let key=&reply.key;
-        if key.qtype!=1{
-            // Same verified physical endpoint and DNS question, original
-            // transaction ID restored independently for every coalesced client.
+        if key.qtype!=1 || (fake.is_none()&&journal.is_none()){
+            // Ordinary CN is a DIRECT *DNS* choice, not Direct business.
+            // Preserve a validated upstream real A/CNAME/multi-A/TTL, or
+            // HTTPS/SVCB, without allocating FakeIP or changing the RCODE.
+            // The original DNS ticket and endpoint have already matched;
+            // every coalesced original application ID is restored.
             for client in reply.waiters{
                 if raw.len()<12{continue}
                 let mut bytes=raw.to_vec();
@@ -381,7 +389,7 @@ impl DirectDns{
                     // Only validated positive CN A replies enter this
                     // bounded direction/endpoint/policy-scoped cache.
                     // False=skip caching, never reject a successful DNS reply.
-                    if answer.key.qtype==1{
+                    if answer.key.qtype==1 && fake.is_some() && journal.is_some(){
                         let _=self.cache.insert(answer.key.clone(),
                             answer.answer.clone(),now_ms);
                     }

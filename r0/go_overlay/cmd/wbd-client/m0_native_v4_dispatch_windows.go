@@ -33,7 +33,8 @@ type m0NativeV4Options struct {
  DNSServers4 []netip.Addr
  DirectDNS4 netip.Addr // original physical cold bootstrap, single configured DNS
  DirectFlowHard uint32 // 0=16384 default; cold per-generation Direct-only hard cap, never Tunnel quota
- SplitEnable bool // explicit next-generation opt-in; not inherited from CI
+ SplitEnable bool // real optional business Direct/FakeIP resources; false remains Rust V3 DNS/padding
+ CNDomainDirect bool // 029B advanced CN FakeIP; false returns real A and IP-only business policy
  CNRulesFile string // single owned absolute source path for CN domain trie; not a hot source
  StartupPaddingMode string // canonical off/tls/flows; only original Normal M1 LINK
  Direct4,Bypass4 []netip.Prefix

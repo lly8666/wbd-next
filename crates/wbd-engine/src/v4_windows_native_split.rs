@@ -82,6 +82,9 @@ pub(crate) struct ColdSplitSourceV1 {
     pub domains_length:u32,pub domains:*const u8,
     pub journal_length:u32,pub journal_path:*const u8,
     pub tcp_synthetic4:[u8;4],pub tcp_owned:u32,
+    // PLAN029B V2 cold ABI: bit0 enables advanced CN FakeIP publication.
+    // Route-mode All is the business-off state; public DNS/padding survive.
+    pub policy_flags:u32,
 }
 #[derive(Clone,Copy,Debug,Eq,PartialEq)]
 pub(crate) enum NativeDecision {
@@ -115,7 +118,8 @@ struct PendingKernelTcp {
 }
 pub(crate) struct NativeSplitWorker {
     ingress:PacketIngress,
-    udp:DirectUdpActor,
+    // B1: no Direct socket actor for all/off, even before OS Apply.
+    udp:Option<DirectUdpActor>,
     fakes:Option<FakeAllocator>,
     // Exactly one generation-owned FakeIP reference per active actual
     // Direct 5tuple (TCP/UDP), independently of DNS TTL and DNS cache.
@@ -162,7 +166,8 @@ impl NativeSplitWorker {
     /// SAFETY: the original owner must keep these cold pointers alive only
     /// for this synchronous call. This does not acquire any Wintun ring.
     pub(crate) unsafe fn new(c:&ColdSplitSourceV1)->Result<Self,()>{
-        if c.version!=1 || c.size as usize!=
+        if c.version!=2 || c.policy_flags&!1!=0 ||
+           c.size as usize!=
             std::mem::size_of::<ColdSplitSourceV1>() ||
            c.physical_ifindex==0 || c.direct_hard==0 ||
            c.direct_hard as usize>MAX_HARD_FLOWS ||
@@ -222,11 +227,14 @@ impl NativeSplitWorker {
             }
         }
         let policy=Arc::new(SplitPolicy::new(mode,lan,cn,direct,fake_range));
-        let budget=NativeUdpBudget{hard_flows:c.direct_hard as usize,
-            rx_quantum:16,ttl_ms:120_000,inner_mtu:c.inner_mtu as usize};
-        let udp=DirectUdpActor::new(underlay,c.physical_ifindex,lease,
-            (start,end),budget).map_err(|_|())?;
-        let fakes=if mode==Mode::BypassLanCn{
+        let udp=if mode!=Mode::All{
+            let budget=NativeUdpBudget{hard_flows:c.direct_hard as usize,
+                rx_quantum:16,ttl_ms:120_000,inner_mtu:c.inner_mtu as usize};
+            Some(DirectUdpActor::new(underlay,c.physical_ifindex,lease,
+                (start,end),budget).map_err(|_|())?)
+        }else{None};
+        let advanced=mode==Mode::BypassLanCn && c.policy_flags&1!=0;
+        let fakes=if advanced{
             // An advanced smaller FakeIP pool is legitimate. Limit the
             // independent identity table by its exact inclusive width,
             // NOT the unrelated Direct socket/flow hard cap.
@@ -238,8 +246,7 @@ impl NativeSplitWorker {
                 max_identities,MAX_FAKE_BYTES)
                 .map_err(|_|())?)
         }else{None};
-        let (journal,fakes)=if mode==Mode::BypassLanCn &&
-            c.journal_length>0 {
+        let (journal,fakes)=if advanced && c.journal_length>0 {
             let raw=unsafe{std::slice::from_raw_parts(
                 c.journal_path,c.journal_length as usize)};
             let path=std::str::from_utf8(raw).map_err(|_|())?;
@@ -372,7 +379,8 @@ impl NativeSplitWorker {
         self.dns.fail_tunnel_query(packet)
     }
     pub(crate) fn has_udp_flows(&self)->bool{
-        self.udp.len()>0||self.dns.has_work()||
+        self.udp.as_ref().is_some_and(|u|u.len()>0)||
+            self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_work())
     }
     /// Only UDP flows above the 16-handle event budget, DNS and client
@@ -380,7 +388,8 @@ impl NativeSplitWorker {
     /// Direct UDP wakes from its own registered WinSock read event.
     /// TCP retains its existing 16 fixed event shards/deadlines.
     pub(crate) fn needs_10ms_poll(&self)->bool{
-        self.udp.has_unwatched_flows()||self.dns.has_work()||
+        self.udp.as_ref().is_some_and(|u|u.has_unwatched_flows())||
+            self.dns.has_work()||
             self.tcp.as_ref().is_some_and(|t|t.has_dns_sessions())
     }
     /// Signed original TX boundary-only map; no per-packet lookup in product.
@@ -392,10 +401,10 @@ impl NativeSplitWorker {
         self.tcp.as_ref().map(|tcp|tcp.socket_event_handles())
     }
     pub(crate) fn udp_socket_wait_handles(&self)->&[usize]{
-        self.udp.wake_handles()
+        self.udp.as_ref().map(|u|u.wake_handles()).unwrap_or(&[])
     }
     pub(crate) fn note_udp_socket_wake(&mut self,index:usize){
-        self.udp.note_socket_wake(index);
+        if let Some(udp)=self.udp.as_mut(){udp.note_socket_wake(index);}
     }
     pub(crate) fn note_tcp_socket_wake(&mut self,shard:usize){
         if self.tcp_enabled{
@@ -550,16 +559,20 @@ impl NativeSplitWorker {
                     }
                     return NativeDecision::LocalDrop
                 }
-                let result=self.udp.send_direct_datagram(packet,
-                    Ipv4Addr::from(presented_dst),
-                    Ipv4Addr::from(real_dst),now_ms);
+                let result=self.udp.as_mut().map(|udp|udp.send_direct_datagram(
+                    packet,Ipv4Addr::from(presented_dst),
+                    Ipv4Addr::from(real_dst),now_ms));
                 match result{
-                    Ok(())=>NativeDecision::DirectHandled,
-                    Err(NativeUdpFault::Capacity|
+                    None=>{
+                        if let Some(key)=newly_held{self.retire_flow(key);}
+                        NativeDecision::LocalDrop
+                    },
+                    Some(Ok(()))=>NativeDecision::DirectHandled,
+                    Some(Err(NativeUdpFault::Capacity|
                         NativeUdpFault::Socket(_)|
                         NativeUdpFault::InvalidOriginal|
                         NativeUdpFault::DatagramTooLarge|
-                        NativeUdpFault::BadUnderlay)=>{
+                        NativeUdpFault::BadUnderlay))=>{
                         if let Some(key)=newly_held{self.retire_flow(key);}
                         else if presented_dst==real_dst{
                             self.ingress.rollback_unserved_direct(packet);
@@ -568,10 +581,18 @@ impl NativeSplitWorker {
                     },
                     // A locally congested existing socket gets only a
                     // datagram drop; never forcibly move the pinned flow.
-                    Err(_)=>NativeDecision::LocalDrop,
+                    Some(Err(_))=>NativeDecision::LocalDrop,
                 }
             }
             Ok(IngressAction::DnsUdp{egress,name,qtype,id,..})=>{
+                // AAAA is local NODATA for *all* managed QNAMEs, including
+                // non-CN Tunnel DNS. No physical/TUN upstream query or
+                // DNS cache/pool/journal mutation is permitted.
+                if qtype==28{
+                    return if self.dns.submit(packet,name,qtype,id,now_ms,
+                        None,None){NativeDecision::DirectHandled}
+                        else{NativeDecision::LocalDrop}
+                }
                 match egress{
                     crate::v4_client_split::DnsEgress::Direct=>{
                         if self.dns.submit(packet,name,qtype,id,now_ms,
@@ -624,10 +645,11 @@ impl NativeSplitWorker {
                     Some(NativeReverse::Owned(l3))
                 }else{None}),
                 _=>{
-                    let live=self.udp.len();
+                    let live=self.udp.as_ref().map(|u|u.len()).unwrap_or(0);
                     if !self.udp_empty_poll.should_poll(live){None}else{
-                        let quantum=self.udp.poll_work_bound();
-                        let reply=self.udp.poll_reverse_ready(out,now_ms)
+                        let udp=self.udp.as_mut().expect("live UDP actor");
+                        let quantum=udp.poll_work_bound();
+                        let reply=udp.poll_reverse_ready(out,now_ms)
                             .ok().flatten();
                         // One full no-data socket sweep at most, even
                         // while 32 unrelated TCP returns are delivered.
@@ -697,7 +719,8 @@ impl NativeSplitWorker {
         // rather than accumulating 1s of high-rate short-lived UDP flows.
         // No Vec allocation on the ordinary Tunnel DATA path.
         for _ in 0..64{
-            let Some(tuple)=self.udp.pop_retired()else{break};
+            let Some(tuple)=self.udp.as_mut().and_then(|u|u.pop_retired())
+                else{break};
             self.retire_flow(FlowKey{
                 source:u32::from(tuple.client_ip),
                 destination:u32::from(tuple.presented_ip),
@@ -708,7 +731,7 @@ impl NativeSplitWorker {
         if now_ms.saturating_sub(self.last_tick_ms)<1_000{return progressed}
         if self.padding_enabled{self.startup_padding.expire_coarse(now_ms);}
         self.last_tick_ms=now_ms;
-        self.udp.expire_some(now_ms,64);
+        if let Some(udp)=self.udp.as_mut(){udp.expire_some(now_ms,64);}
         // FakeIP quarantine and address reuse use UNIX epoch ms, NOT
         // the monotonic Rust TLS health clock. Only this coarse tick
         // touches the bounded expiry wheel; never DATA or socket IO.
@@ -809,7 +832,7 @@ mod tests{
             direct:std::ptr::null(),domains_length:domains.len() as u32,
             domains:domains.as_ptr(),
             journal_length:0,journal_path:std::ptr::null(),
-            tcp_synthetic4:[0;4],tcp_owned:0,
+            tcp_synthetic4:[0;4],tcp_owned:0,policy_flags:1,
         }
     }
     fn packet(dst:[u8;4],port:u16,body:&[u8])->Vec<u8>{
@@ -1017,7 +1040,7 @@ mod tests{
             assert_eq!(fake.announced_real(slot.fake4),None);
         }
         assert_eq!(fake.counts().0,17);
-        assert_eq!(native.udp.max_flows(),1);
+        assert_eq!(native.udp.as_ref().unwrap().max_flows(),1);
     }
     #[test]
     fn plan029_native_cold_startup_padding_off_and_generation_seed_no_direct_side_effect(){
@@ -1039,6 +1062,62 @@ mod tests{
             "past 2..3s startup envelope, no periodic restart");
         s.set_startup_padding(StartupMode::Off,[3u8;16]);
         assert_eq!(s.propose_tunnel_padding(&probe,12,256),0);
+    }
+    #[test]
+    fn plan029b_all_has_no_direct_socket_actor_and_both_dns_names_get_local_aaaa(){
+        let mut cfg=config(&[],&[],b"cn.example\n");
+        cfg.route_mode=0;cfg.policy_flags=0;
+        let mut owner=unsafe{NativeSplitWorker::new(&cfg)}.unwrap();
+        assert!(owner.udp.is_none(),"split-off must not install Direct UDP");
+        assert!(owner.fakes.is_none());
+        assert!(owner.journal.is_none());
+        assert!(owner.tcp_plan.is_none());
+        assert!(!owner.has_udp_flows());
+        assert_eq!(owner.on_packet(&packet([8,8,8,8],443,b"old"),1),
+            NativeDecision::Tunnel);
+        for (i,name) in ["cn.example","global.example"].iter().enumerate(){
+            let mut dns=vec![0u8;12];
+            dns[..2].copy_from_slice(&(0x3100u16+i as u16).to_be_bytes());
+            dns[2..4].copy_from_slice(&0x0100u16.to_be_bytes());
+            dns[4..6].copy_from_slice(&1u16.to_be_bytes());
+            for label in name.split('.'){
+                dns.push(label.len() as u8);
+                dns.extend_from_slice(label.as_bytes());
+            }
+            dns.push(0);
+            dns.extend_from_slice(&28u16.to_be_bytes()); // AAAA
+            dns.extend_from_slice(&1u16.to_be_bytes()); // IN
+            assert_eq!(owner.on_packet(&packet([1,1,1,1],53,&dns),2+i as u64),
+                NativeDecision::DirectHandled);
+            assert_eq!(owner.dns.counts().0,0,"AAAA never contacts physical DNS");
+            let mut scratch=[0u8;2048];
+            let NativeReverse::Owned(reply)=owner.poll_udp_reverse(&mut scratch,3)
+                .expect("local AAAA reply") else {panic!("must be owned")}
+            assert_eq!(&reply[12..16],&[1,1,1,1]); // original DNS server
+            assert_eq!(reply[31]&15,0); // NOERROR, AD never set
+            assert_eq!(&reply[34..36],&[0,0]); // ANCOUNT=0
+            assert_eq!(&reply[28..30],&dns[..2]); // original id
+        }
+        assert!(!owner.has_udp_flows());
+    }
+    #[test]
+    fn plan029b_ordinary_cn_keeps_domain_dns_but_never_allocates_fake_writer(){
+        let mut config=config(&[],&[],b"cn.example\n");
+        config.policy_flags=0;
+        let owner=unsafe{NativeSplitWorker::new(&config)}.unwrap();
+        assert!(owner.fakes.is_none());
+        assert!(owner.journal.is_none());
+        assert!(owner.udp.is_some());
+        assert_eq!(owner.ingress.tcp_dns_egress("cn.example"),
+            Some(crate::v4_client_split::DnsEgress::Direct));
+        assert_eq!(owner.ingress.tcp_dns_egress("global.example"),
+            Some(crate::v4_client_split::DnsEgress::Tunnel));
+        config.policy_flags=1;
+        let advanced=unsafe{NativeSplitWorker::new(&config)}.unwrap();
+        assert!(advanced.fakes.is_some(),"explicit advanced CN only");
+        config.policy_flags=2;
+        assert!(unsafe{NativeSplitWorker::new(&config)}.is_err(),
+            "unknown versioned ABI policy bits must fail closed");
     }
     #[test]
     fn plan029_native_same_dns_ip_is_two_explicit_directions_not_a_rejection(){

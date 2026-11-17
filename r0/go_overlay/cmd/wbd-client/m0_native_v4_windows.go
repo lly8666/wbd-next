@@ -991,12 +991,21 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   physicalPath.NextHop4=o.ServerIP
   fmt.Printf("WBD_PLAN024_NATIVE_WSL_PUBLIC_OS_ROUTE_GUEST_NEXT_HOP scope=verified_guest_ethernet guest=%s ifindex=%d\\n",o.ServerIP,physicalPath.InterfaceIndex)
  }
+ // 029B business split-off owns no new Direct/bypass destinations.
+ // Keep only protected underlay/TLS and the original Tunnel/DNS/WAL.
+ // Old source-pinned 029 trial remains explicitly enabled in its scenario.
+ businessSplit:=o.SplitEnable||
+  (os.Getenv("GITHUB_ACTIONS")=="true"&&os.Getenv("WBD_PLAN029_NATIVE_V3_TRIAL")=="1")
+ var businessDirect,businessBypass []netip.Prefix
+ if businessSplit{
+  businessDirect=append([]netip.Prefix(nil),o.Direct4...)
+  businessBypass=append([]netip.Prefix(nil),o.Bypass4...)
+ }
  plan,e:=windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
   AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
   Lease4:o.Lease4,Server4:o.ServerIP,Physical:physicalPath,
   DNSServers4:append([]netip.Addr(nil),o.DNSServers4...),
-  Direct4:append([]netip.Prefix(nil),o.Direct4...),
-  Bypass4:append([]netip.Prefix(nil),o.Bypass4...),
+  Direct4:businessDirect,Bypass4:businessBypass,
   StatePath:o.StatePath,
  })
  if e!=nil{return e}
@@ -1041,9 +1050,9 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if trial!=nil{
    nativePeer.plan029Cold=trial
    if trial.TCPSynthetic4!=[4]byte{}{tcpSynthetic=netip.AddrFrom4(trial.TCPSynthetic4)}
-   fmt.Printf("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=%s direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 source=%s readiness=AWAIT_REAL_OS_RUST_RECEIPT\\n",
-    o.RouteMode,trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU,
-    map[bool]string{true:"explicit_config",false:"source_locked_CI_trial"}[o.SplitEnable])
+   fmt.Printf("WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=%d requested_route_mode=%s business_split=%t cn_domain_fakeip=%t direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 readiness=AWAIT_REAL_OS_RUST_RECEIPT\\n",
+    trial.RouteMode,o.RouteMode,trial.RouteMode!=0,trial.PolicyFlags&1!=0,
+    trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU)
   }
   transport=nativePeer
  }else{
