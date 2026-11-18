@@ -95,10 +95,43 @@ fi
 # Normal's standalone FEC mode. Both original TLS peers receive SAME flag.
 game_fec_args=()
 if [ -n "${WBD_ARM64_GAME_FEC_PROFILE:-}" ]; then
-  if [ "$mode" != game4 ] || [ "$WBD_ARM64_GAME_FEC_PROFILE" != 6 ]; then
-    echo 'ARM64_GAME_FEC_TEST_ONLY_FIXED6_GAME4' >&2; exit 2
+  if [ "$WBD_ARM64_GAME_FEC_PROFILE" != 6 ] || {
+    [ "$mode" != game4 ] && ! { [ "$mode" = game2 ] && [ "${WBD_PLAN029_LINUX_COVERAGE:-0}" = 1 ]; };
+  }; then
+    echo 'ARM64_GAME_FEC_TEST_ONLY_FIXED6_GAME4_OR_SCOPED_GAME2' >&2; exit 2
   fi
   game_fec_args=(--game-fec fixed6)
+fi
+# H2181: requested cross-platform Linux native capability supplement.
+# Existing H2177/archived frozen ARM64 paths are unchanged unless explicit.
+client_extra=();server_extra=()
+if [[ "${WBD_PLAN029_LINUX_COVERAGE:-0}" == 1 ]];then
+  case "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}" in
+    off|tls|flows) ;;
+    *) echo PLAN029_INVALID_LINUX_PAD_REQUEST >&2;exit 2 ;;
+  esac
+  if [[ "$game_lanes" -gt 0 ]];then
+    client_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
+    server_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
+  elif [[ "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}" != off ]];then
+    echo PLAN029_LINUX_NORMAL_PADDING_NOT_WIRED >&2;exit 2
+  fi
+  case "${WBD_PLAN029_LINUX_CLIENT_CIPHER:-chacha20-poly1305}" in
+    chacha20-poly1305|aes-128-gcm|aes-256-gcm)
+      client_extra+=(--record-cipher "${WBD_PLAN029_LINUX_CLIENT_CIPHER:-chacha20-poly1305}") ;;
+    *) echo PLAN029_INVALID_CIPHER_CASE >&2;exit 2 ;;
+  esac
+  case "${WBD_PLAN029_LINUX_OUTER_REPAIR:-on}" in
+    on|off)
+      client_extra+=(--outer-repair "${WBD_PLAN029_LINUX_OUTER_REPAIR:-on}")
+      server_extra+=(--outer-repair "${WBD_PLAN029_LINUX_OUTER_REPAIR:-on}") ;;
+    *) echo PLAN029_INVALID_REPAIR_CASE >&2;exit 2 ;;
+  esac
+  if [[ -n "${WBD_PLAN029_LINUX_GAME4_COPY:-}" ]];then
+    [[ "$mode" == game4 ]] || { echo PLAN029_GAME4_COPY_REQUIRES_GAME4 >&2;exit 2; }
+    client_extra+=(--game4-copy-schedule "$WBD_PLAN029_LINUX_GAME4_COPY")
+    server_extra+=(--game4-copy-schedule "$WBD_PLAN029_LINUX_GAME4_COPY")
+  fi
 fi
 export WBD_V4_GAME_LANES="$game_lanes"
 # Raw FakeTCP SYN/SYNACK uses no kernel TCP socket. The kernel otherwise emits
@@ -140,7 +173,7 @@ fi
 if [ -n "${WBD_ARM64_SERVER_OUTER_MTU+x}" ]; then
   server_mtu_args=(--outer-mtu "$WBD_ARM64_SERVER_OUTER_MTU")
 fi
-sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" "${game_fec_args[@]}" \
+sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" "${game_fec_args[@]}" "${server_extra[@]}" \
   --raw-interface v4as --local-ip 198.18.7.2 --local-port 443 \
   "${server_mtu_args[@]}" \
   --tun-name wbdsv --tun-ipv4 10.188.18.2/24 \
@@ -201,7 +234,7 @@ if [ "$game_lanes" -eq 0 ];then
 else
   echo ARM64_GAME_SERVER_KERNEL_AF_PACKET_LANES_BEFORE_SYN_PASS
 fi
-sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" SSL_CERT_FILE="$work/server.crt" "$bundle/wbd-v4-client" "$@" "${game_fec_args[@]}" \
+sudo -n ip netns exec "$client_ns" env LD_LIBRARY_PATH="$bundle" SSL_CERT_FILE="$work/server.crt" "$bundle/wbd-v4-client" "$@" "${game_fec_args[@]}" "${client_extra[@]}" \
   --raw-interface v4ac --local-ip 198.18.7.1 --peer-ip 198.18.7.2 \
   "${client_mtu_args[@]}" \
   --local-port 50001 --peer-port 443 --tun-name wbdcl --tun-ipv4 10.188.18.1/24 \
@@ -333,7 +366,7 @@ if [[ "${WBD_PLAN029_LINUX_DUAL_ISA:-0}" == 1 ]];then
       source_ip=10.188.18.2;dest_ip=10.188.18.1;app_port=47124
     fi
     app="$GITHUB_WORKSPACE/tools/m0_plan029_linux_native_app.py"
-    sudo -n ip netns exec "$dest_ns" python3 -u "$app" listener "$dest_ip" "$source_ip" "$app_port" "$direction" >"$out/app-$direction-listener.log" 2>&1 &
+    sudo -n ip netns exec "$dest_ns" env WBD_PLAN029_LINUX_TCP_TLS_SHAPE="${WBD_PLAN029_LINUX_TCP_TLS_SHAPE:-0}" python3 -u "$app" listener "$dest_ip" "$source_ip" "$app_port" "$direction" >"$out/app-$direction-listener.log" 2>&1 &
     listener_pid=$!
     app_ready=0
     for i in $(seq 1 70);do
@@ -349,7 +382,7 @@ if [[ "${WBD_PLAN029_LINUX_DUAL_ISA:-0}" == 1 ]];then
       echo "PLAN029_LINUX_APP_LISTENER_NOT_READY direction=$direction" >&2
       tail -n 25 "$out/app-$direction-listener.log" >&2;exit 1
     fi
-    if ! timeout 40s sudo -n ip netns exec "$source_ns" python3 -u "$app" sender "$source_ip" "$dest_ip" "$app_port" "$direction" >"$out/app-$direction-sender.log" 2>&1;then
+    if ! timeout 40s sudo -n ip netns exec "$source_ns" env WBD_PLAN029_LINUX_TCP_TLS_SHAPE="${WBD_PLAN029_LINUX_TCP_TLS_SHAPE:-0}" python3 -u "$app" sender "$source_ip" "$dest_ip" "$app_port" "$direction" >"$out/app-$direction-sender.log" 2>&1;then
       echo "PLAN029_LINUX_APP_REAL_KERNEL_SEND_FAIL direction=$direction" >&2
       tail -n 25 "$out/app-$direction-sender.log" >&2; exit 1
     fi
@@ -408,6 +441,33 @@ for i in $(seq 1 75); do
 done
 grep -q "$stop_marker" "$out/client.log"
 grep -q "$stop_marker" "$out/server.log"
+if [[ "${WBD_PLAN029_LINUX_COVERAGE:-0}" == 1 && "$game_lanes" -gt 0 ]];then
+  for side in client server;do
+    grep -Fq "V4_PUBLIC_GAME_PADDING_RAW_RECEIPT role=$side lanes=$game_lanes mode=${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}" "$out/$side.log" || {
+      echo "PLAN029_GAME_NATIVE_PADDING_READBACK_MISSING side=$side" >&2
+      tail -n 35 "$out/$side.log" >&2;exit 1
+    }
+  done
+  OUTPUT="$out" python3 - <<'PY'
+import os,pathlib,re
+out=pathlib.Path(os.environ["OUTPUT"]); mode=os.environ.get("WBD_PLAN029_LINUX_STARTUP_PADDING","off")
+for role in ("client","server"):
+    log=(out/(role+".log")).read_text(errors="replace")
+    hits=re.findall(r"V4_PUBLIC_GAME_PADDING_RAW_RECEIPT role="+role+
+        r" lanes=(2|4) mode=(off|tls|flows) padded_records=(\d+) padded_bytes=(\d+) original_TLS_Rust_M4=1 real_AF_PACKET_send=1",log)
+    assert len(hits)==1,(role,hits)
+    lanes,actual,records,bytes_=hits[0]
+    records=int(records);bytes_=int(bytes_)
+    assert mode==actual
+    assert (mode!="off" or records==bytes_==0)
+    assert bytes_<=500*records
+    if mode=="flows":
+        assert records>0 and bytes_>0,(role,records,bytes_)
+    if mode=="tls":
+        assert records>0 and bytes_>0,(role,records,bytes_)
+print("PLAN029_LINUX_ORIGINAL_GAME_PADDING_ACTUAL_RAW_COPY_PASS mode="+mode,flush=True)
+PY
+fi
 if [ "$game_lanes" -gt 0 ]; then
   # Game2/4 use authenticated GameAdapter grouped lanes, NOT Normal FEC2
   # operator policies. Demand real kernel input/output and no auth rejection.
@@ -471,7 +531,7 @@ if [ -n "${WBD_ARM64_GAME_FEC_PROFILE:-}" ]; then
   # Genuine Game FEC source/parity must have passed the actual kernel copy
   # before we can call this a protected-source native mode.
   for side in client server;do
-    grep -Eq "V4_PUBLIC_GAME_FEC_COUNTERS role=$side lanes=4 source_offered=[1-9][0-9]* parity_offered=[1-9][0-9]* parity_copied=[1-9][0-9]*" "$out/$side.log" || {
+    grep -Eq "V4_PUBLIC_GAME_FEC_COUNTERS role=$side lanes=$game_lanes source_offered=[1-9][0-9]* parity_offered=[1-9][0-9]* parity_copied=[1-9][0-9]*" "$out/$side.log" || {
       echo "ARM64_GAME4_FEC6_REAL_PARITY_MISSING role=$side" >&2;tail -n 18 "$out/$side.log" >&2;exit 1;
     }
   done

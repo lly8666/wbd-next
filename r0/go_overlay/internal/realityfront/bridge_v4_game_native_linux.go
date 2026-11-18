@@ -15,6 +15,9 @@ extern int32_t wbd_m0_embedded_go_game_group_m4_live(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_game_group_lane_replace(
     uint64_t,uint32_t,uint64_t,uint64_t);
 extern int32_t wbd_fec_network_game_group_fixed_configure(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_game_group_startup_padding_set(uint64_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_game_group_startup_padding_counters(
+    uint64_t,uint32_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_fec_network_game_group_outer_policy_set(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_game_group_peer_persona_set(uint64_t,uint32_t);
 extern int32_t wbd_fec_network_game4_copy_schedule_set(uint64_t,uint32_t);
@@ -152,6 +155,27 @@ func (g *v4NativeGameJoined) configureFixedFEC(profile uint8)error{
         C.uint64_t(g.handle),C.uint32_t(profile))
     if rc!=0{return fmt.Errorf("%w: Game fixed FEC setup=%d",errV4Embedded,int(rc))}
     return nil
+}
+// Linux original-Go authenticated Game group cold padding, not an
+// unauthenticated FakeTCP hint or a second mutable record owner.
+func (g *v4NativeGameJoined) configureStartupPadding(mode uint8,outerMTU int)error{
+    if g==nil||g.handle==0||g.stopped||mode>2||
+        outerMTU<576||outerMTU>1500{return ErrAdmissionParams}
+    rc:=C.wbd_m0_embedded_go_game_group_startup_padding_set(
+        C.uint64_t(g.handle),C.uint32_t(mode),C.uint32_t(outerMTU))
+    if rc!=0{return fmt.Errorf("%w: original native Game padding cold set=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (g *v4NativeGameJoined) originalStartupPaddingCounters()(string,uint64,uint64,error){
+    if g==nil||g.handle==0||g.stopped{return "",0,0,ErrAdmissionUnsupported}
+    var mode C.uint32_t
+    var records,bytes C.uint64_t
+    rc:=C.wbd_m0_embedded_go_game_group_startup_padding_counters(
+        C.uint64_t(g.handle),&mode,&records,&bytes)
+    if rc!=0{return "",0,0,fmt.Errorf("%w: native Game padding copy stats=%d",errV4Embedded,int(rc))}
+    names:=[]string{"off","tls","flows"}
+    if int(mode)>=len(names){return "",0,0,ErrAdmissionUnsupported}
+    return names[mode],uint64(records),uint64(bytes),nil
 }
 func (g *v4NativeGameJoined) configureGame4CopyStagger(mode uint32)error{
     if g==nil||g.handle==0||g.stopped||g.verified==nil||

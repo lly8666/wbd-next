@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2180,
-  "checkpoint_sha": "ffde74452491888cf45e080f8e347e82df8dd64e",
+  "sequence": 2181,
+  "checkpoint_sha": "bc8396449c4600c18f5a1a8eabf2097364e12fc9",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2180：H2177 Linux x86_64与ARM64双端五模式10/10原生PASS；为H2179治理SUCCESS补签名SOURCE/热读取预算回归测试。",
-  "why_now": "H2179 Action44261621654治理+功能目录均SUCCESS；旧维护回归在H2178因证据SOURCE契约FAIL，需在现行main重新实测。",
-  "done_when": "本次静态3项源锁/双ISA十场/热读取预算验证及全量maintenance回归PASS，Linux H2177 Action仍是唯一真网络SOURCE。",
-  "next_action": "检查H2180维护+governance Actions；没有必要重跑Linux已PASS的十场；未测物理ARM/跨ISA/Win专属及性能，029技术OPEN。",
+  "current_task": "H2181用户要求PLAN029所有可用非Win跨平台能力真实补测；核功能卡后确认Linux随机填充尚未接线，正接Game2/4原Rust M4并执行x86_64/ARM64各8互补原生短场。",
+  "why_now": "H2177 10/10只证Linux原Go TLS/Rust Normal/Fixed/Auto/Game2/Game4基础业务，不含off/tls/flows随机填充、AES套件、outer repair关闭、复制错峰、X25519及物理MTU切换。",
+  "done_when": "H2181 Linux两原生ISA各8当前SOURCE短场：Game2 off/tls/flows/FEC6 + Game4 fixed6/off flows与真实raw padded字节计数、AES128/256、X25519、outer repair off、MTU1280和动态收窄均独立收据；首错不掩。",
+  "next_action": "检查新H2181两架构真实原生CI，失败首错修复后功能卡仅按同SOURCE提升；Linux Normal/Fixed/Auto tls/flows未接线严格拒绝、不能称PASS。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029-H2180-LINUX-EVIDENCE-REGRESSION-TESTS.md",
-    "docs/devlog/M0/20261118-PLAN029-H2179-LINUX-EVIDENCE-SOURCE-KEY-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md"
+    "docs/devlog/M0/20261118-PLAN029-H2181-LINUX-CROSSPLATFORM-CAPABILITY-GAPS.md",
+    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md",
+    "docs/devlog/M0/20261118-PLAN029-H2180-LINUX-EVIDENCE-REGRESSION-TESTS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2177 original native Action44258876671 PASS (x86/ARM64各客户端+服务端五场，10/10真内核TCP/UDP/FEC6 parity/MTU1460/Stop)。H2179修治理热预算和source_sha后Action44261621654全部PASS；H2180增3个不联网的永久防回归单测，不改变产品或签名SOURCE。"
+  "partial_summary": "H2177 native Linux x86+ARM 10/10原Go TLS/Rust基础功能PASS_SCOPED，不覆盖随机填充。H2181新增Game Rust Linux native pad冷桥、原AF_PACKET copy后计数、互补8短场/ISA，其中Linux Normal/FEC padding尚不支持且明确拒绝。物理ARM、跨ISA、WinGUI/CN/FakeIP仍不在此批。"
 }

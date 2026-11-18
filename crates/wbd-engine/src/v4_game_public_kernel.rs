@@ -94,6 +94,7 @@ pub(crate) struct GameKernelOwner{
     tun:Arc<ScopedTunSink>,
     tx:Vec<Arc<ScopedRawIpv4Tx>>,rx:Vec<Arc<ScopedRawIpv4Rx>>,
     copied:Arc<AtomicU64>,delivered:Arc<AtomicU64>,rejected:Arc<AtomicU64>,
+    padded_copied_records:Arc<AtomicU64>,padded_copied_bytes:Arc<AtomicU64>,
     raw_received:Arc<AtomicU64>,rx_reject:Arc<RxRejectReasons>,
     rx_driver_timeout:Arc<AtomicU64>,rx_driver_other:Arc<AtomicU64>,
     rx_mutex_acquired:Arc<AtomicU64>,rx_authenticated_some:Arc<AtomicU64>,
@@ -168,6 +169,8 @@ impl GameKernelOwner{
         }
         let stop=Arc::new(AtomicBool::new(false));
         let copied=Arc::new(AtomicU64::new(0));
+        let padded_copied_records=Arc::new(AtomicU64::new(0));
+        let padded_copied_bytes=Arc::new(AtomicU64::new(0));
         let delivered=Arc::new(AtomicU64::new(0));
         let rejected=Arc::new(AtomicU64::new(0));
         let tx_reasons=Arc::new(TxRejectReasons::default());
@@ -216,6 +219,8 @@ impl GameKernelOwner{
         let tx_stop=Arc::clone(&stop);
         let tx_tun=Arc::clone(&tun);
         let tx_copy=Arc::clone(&copied);
+        let tx_pad_records=Arc::clone(&padded_copied_records);
+        let tx_pad_bytes=Arc::clone(&padded_copied_bytes);
         let tx_rejected=Arc::clone(&rejected);
         let tx_fail=Arc::clone(&tx_reasons);
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
@@ -507,7 +512,7 @@ impl GameKernelOwner{
                     // Single TX owner first drains source copies to M4 before
                     // any FEC parity quantum can enqueue additional work.
                     let mut flush=|game:&mut GameAdapter,due_now:MonoNs|{
-                        game.drain(due_now,|lane,id,pn,wire|{
+                        game.drain_for_linux_native(due_now,|lane,id,pn,wire,pad|{
                             // The genuine original TLS group builds
                             // physical lanes in slots 1..N. Avoid a
                             // linear scan on each Game4 × fixed6 copy,
@@ -564,6 +569,10 @@ impl GameKernelOwner{
                             let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
                             let ok=sent.is_ok();
                             if ok {
+                                if pad>0{
+                                    tx_pad_records.fetch_add(1,Ordering::Relaxed);
+                                    tx_pad_bytes.fetch_add(pad as u64,Ordering::Relaxed);
+                                }
                                 // Only the real raw first copied PN/SEQ is
                                 // eligible; most packets pay one mask test.
                                 if outer_repair_enabled{
@@ -1109,6 +1118,7 @@ impl GameKernelOwner{
             }
         }
         Ok(Self{stop,threads,tun,tx,rx,copied,delivered,rejected,
+            padded_copied_records,padded_copied_bytes,
             raw_received,rx_reject,
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
@@ -1171,6 +1181,10 @@ impl GameKernelOwner{
         (self.outer_repeated_copy_sent.load(Ordering::Relaxed),
          self.outer_blocked_duplicate.load(Ordering::Relaxed),
          self.copied.load(Ordering::Relaxed))
+    }
+    pub(crate) fn padding_copied_counters(&self)->(u64,u64){
+        (self.padded_copied_records.load(Ordering::Relaxed),
+         self.padded_copied_bytes.load(Ordering::Relaxed))
     }
     pub(crate) fn counters(&self)->(u64,u64,u64){
         (self.copied.load(Ordering::Relaxed),

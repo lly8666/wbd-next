@@ -6,6 +6,7 @@ Runs inside the ORIGINAL client/server network namespaces with their real
 no test-provided cipher, fake DATA, socket bypass, or root/global route.
 """
 import json
+import os
 import socket
 import sys
 import time
@@ -23,6 +24,15 @@ if (role not in ("listener", "sender")
     raise SystemExit("invalid source-locked Linux kernel app case")
 marker = ("PLAN029-LINUX-TUN-" + label + "-" + local).encode()
 reply = b"ORIGINAL-TUN-ACK/" + marker
+# Genuine Linux kernel TCP bytes with an application-defined TLS-record
+# shaped leading five octets (NOT a negotiated application TLS handshake).
+# Only this test-owned payload triggers the existing bounded tls selector.
+tls_shape = os.environ.get("WBD_PLAN029_LINUX_TCP_TLS_SHAPE") == "1"
+def tcp_shape(body):
+    if not tls_shape: return body
+    return bytes((22,3,3,len(body)>>8,len(body)&255)) + body
+tcp_marker = tcp_shape(marker)
+tcp_reply = tcp_shape(reply)
 proof = {"role": role, "source": local, "peer": remote,
          "port": port, "udp": "NOT_RUN", "tcp": "NOT_RUN"}
 if role == "listener":
@@ -45,13 +55,13 @@ if role == "listener":
             if peer[0] != remote:
                 raise RuntimeError("kernel TCP source did not match other Linux TUN")
             chunks = bytearray()
-            while len(chunks) < len(expected):
+            while len(chunks) < len(tcp_shape(expected)):
                 part = conn.recv(1024)
                 if not part: break
                 chunks.extend(part)
-            if bytes(chunks) != expected:
+            if bytes(chunks) != tcp_shape(expected):
                 raise RuntimeError("real Linux TCP payload did not arrive")
-            conn.sendall(b"ORIGINAL-TUN-ACK/" + bytes(chunks))
+            conn.sendall(tcp_shape(b"ORIGINAL-TUN-ACK/" + expected))
             conn.shutdown(socket.SHUT_WR)
             proof["tcp"] = "PASS_NATIVE_KERNEL_APP"
 else:
@@ -75,13 +85,13 @@ else:
         # getpeername() after the remote FIN even though bytes arrived.
         if tcp.getpeername()[0] != remote:
             raise RuntimeError("unexpected real Linux TCP peer")
-        tcp.sendall(marker); tcp.shutdown(socket.SHUT_WR)
+        tcp.sendall(tcp_marker); tcp.shutdown(socket.SHUT_WR)
         data = bytearray()
-        while len(data) < len(reply):
+        while len(data) < len(tcp_reply):
             chunk = tcp.recv(2048)
             if not chunk: break
             data.extend(chunk)
-        if bytes(data) != reply:
+        if bytes(data) != tcp_reply:
             raise RuntimeError("real Linux TCP app echo missing")
         proof["tcp"] = "PASS_NATIVE_KERNEL_APP"
 print("PLAN029_LINUX_APP_TRUE_KERNEL_PASS " + json.dumps(proof, sort_keys=True), flush=True)

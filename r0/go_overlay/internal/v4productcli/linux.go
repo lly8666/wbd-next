@@ -106,6 +106,7 @@ type config struct{
     mixedModes bool
     gameFecEnabled bool
     gameFecProfile uint8
+    startupPaddingMode uint8 // Game-only Linux cold: 0 off / 1 TLS / 2 flows
     game4CopyStagger bool
     game4CopyWideStagger bool
     outerMTU int
@@ -212,6 +213,7 @@ func parse(role string,args []string)(config,error){
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
+    startupPadding:=flags.String("startup-padding","off","Game2/4 authenticated Rust M4 original LINK startup padding: off, tls or flows; Normal/FEC Linux remain unsupported")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
@@ -295,6 +297,15 @@ func parse(role string,args []string)(config,error){
         return c,fmt.Errorf("record-cipher is per authenticated client; server cannot force a global V4 cipher")
     }
     c.recordCipher=selected
+    switch *startupPadding{
+    case "off":c.startupPaddingMode=0
+    case "tls":c.startupPaddingMode=1
+    case "flows":c.startupPaddingMode=2
+    default:return c,fmt.Errorf("startup-padding must be off, tls or flows")
+    }
+    if c.startupPaddingMode!=0&&c.gameLanes==0&&!c.mixedModes{
+        return c,fmt.Errorf("Linux startup-padding tls/flows is currently wired only for authenticated Game2/4; Normal/Fixed/Auto not supported")
+    }
     if *gameFec!="off"{
         if c.gameLanes==0||len(*gameFec)!=6||!strings.HasPrefix(*gameFec,"fixed")||
            (*gameFec)[5]<'0'||(*gameFec)[5]>'6'{

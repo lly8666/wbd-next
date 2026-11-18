@@ -30,6 +30,8 @@ type V4LinuxGameProductConfig struct {
     Epochs *V4EpochStore // mandatory only for actual server group
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
+    StartupPaddingMode uint8 // Game: 0 off, 1 TLS-shaped application, 2 TCP/UDP flows
+    OuterIPMTU int // original Go physical/budget upper bound for pad room
     DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
     Game4CopyStagger bool // pre-start 4-lane delayed physical copies
     Game4CopyWideStagger bool // longer opt-in T0+50ms/+140ms tail
@@ -49,6 +51,10 @@ type V4LinuxGameProduct struct{
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
     if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
+    if cfg.StartupPaddingMode>2||
+       (cfg.StartupPaddingMode!=0&&(cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
+        return nil,ErrAdmissionParams
+    }
     if cfg.Game4CopyWideStagger&&!cfg.Game4CopyStagger{return nil,ErrAdmissionParams}
     // Game4 fixed FEC is explicitly allowed with the default stagger;
     // native per-group profile and copy schedule are both installed before M4.
@@ -92,6 +98,15 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     if err!=nil{return err}
     if p.cfg.GameFecEnabled{
         if err=p.native.configureFixedFEC(p.cfg.GameFecProfile);err!=nil{return err}
+    }
+    if p.cfg.StartupPaddingMode!=0{
+        // This native readback is the physical interface itself, not the
+        // inner TUN; the authenticated Game seal cannot exceed either cap.
+        iface,err:=net.InterfaceByName(p.cfg.NetworkInterface)
+        if err!=nil||iface==nil||iface.MTU<576{return ErrAdmissionParams}
+        effective:=p.cfg.OuterIPMTU
+        if iface.MTU<effective{effective=iface.MTU}
+        if err=p.native.configureStartupPadding(p.cfg.StartupPaddingMode,effective);err!=nil{return err}
     }
     if p.cfg.Game4CopyStagger{
         if len(p.bridges)!=4{return ErrAdmissionUnsupported}
@@ -782,6 +797,16 @@ func (p *V4LinuxGameProduct) PromoteServerGameAfterAuthenticatedClientRx()error{
         return ErrAdmissionUnsupported
     }
     return p.native.promoteServerSharedTunAfterAuthenticatedClientHealth()
+}
+// Source-locked game actual AF_PACKET send receipts; no invented padded
+// byte count from ciphertext length or pending record proposals.
+func (p *V4LinuxGameProduct) StartupPaddingCounters()(string,uint64,uint64,error){
+    if p==nil{return "",0,0,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil{
+        return "",0,0,ErrAdmissionUnsupported
+    }
+    return p.native.originalStartupPaddingCounters()
 }
 func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
     if p==nil{return V4GameKernelCounters{},ErrAdmissionParams}

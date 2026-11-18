@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "Tunnel TCP/UDP record随机填充",
-  "summary": "H2031 Normal真密文填充/MTU、H2059真WinForms flows→Rust NPF/Stop分别SOURCE PASS。H2169 Game2/FEC off与Game4/FEC fixed各off/tls/flows六场 Win2025/WSL2真NPF+业务+Stop PASS_SCOPED，默认off。",
+  "summary": "Windows H2169 Game2/off-FEC与Game4/fixed-FEC各off/tls/flows六场真NPF PASS_SCOPED；Linux H2181新增Game2/4原Go TLS→Rust M4启动填充接线与raw copy计数，native x86/ARM64实网待验。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -17,7 +17,8 @@
   "usage": {
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
-    "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。"
+    "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
+    "linux_cli": "H2181候选: wbd-v4-client/server --mode game2|game4 --startup-padding off|tls|flows；default off；原Go受保护组进Rust M4一次冷配置，每个实际Linux AF_PACKET成功copy统计padded_records/bytes。Linux Normal/fec-fixed/fec-auto 非off严格拒绝而非静默忽略。Linux native动作完成之前不将此接线认定已验证。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -33,7 +34,15 @@
     "crates/wbd-engine/src/v4_game_lane.rs",
     "crates/wbd-engine/src/v4_windows_game_owner.rs",
     "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
-    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go"
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "crates/wbd-engine/src/v4_game_public_kernel.rs",
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/v4productcli/game_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go",
+    "tools/m0_plan029_linux_crossplatform_coverage.py",
+    ".github/workflows/m0-plan029-linux-crossplatform-capabilities.yml"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
@@ -124,6 +133,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "81998f91d183c722be932543be6434c1fd31be57",
       "evidence": "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "native Linux x86_64 and ARM64 original Go TLS client/server + Rust Game M4/raw AF_PACKET",
+      "scope": "H2181 candidate: Game2/4 original authenticated startup-padding off/tls/flows, real kernel copy counters, original app, Stop, GameFEC source-only + parity not padded; native action not completed yet.",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -134,7 +150,8 @@
     "H2031真实eth0 pcap仅能验证加密record尺寸多样性与MTU；逐record填充字节数和随机窗口分布不能从密文单独反推，依同源Rust单测，不能虚报直接抓到500B。",
     "H2031原密文尺寸物理证据分SOURCE保留；WinGUI三档Game按钮真网络、off/tls/flows同VM CPU/RSS/延迟与小TCP p99仍NOT_RUN，不能用CLI回执代替。",
     "H2169 Game route-mode=all（业务Direct关闭）仍原生填充已证实；Normal split-enable=false及其他Game政策组合不因本场自动PASS。",
-    "H2079旧SOURCE Normal split关闭维持padding当时未验；新Game route-mode=all真测不能替换旧Normal独立SOURCE。"
+    "H2079旧SOURCE Normal split关闭维持padding当时未验；新Game route-mode=all真测不能替换旧Normal独立SOURCE。",
+    "H2181 Linux Game padding source candidate pending two-ISA native Action, cannot claim Linux data-plane PASS before original authenticated Go TLS/Rust/AF_PACKET results. Linux Normal/Fixed/Auto tls/flows remains NOT_WIRED and reject nonoff."
   ],
   "promotion": null
 }

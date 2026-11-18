@@ -3039,6 +3039,59 @@ pub extern "C" fn wbd_fec_network_game_group_fixed_configure(
     OK
 }
 
+// PLAN029 Linux Game startup padding: only the already authenticated
+// original Go TLS group may configure this before the one Rust M4 begins.
+// Never take mode from FakeTCP/plaintext; no ABI change to Windows V5.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_game_group_startup_padding_set(
+    group:u64,mode:u32,outer_path_mtu:u32
+)->i32{
+    let mode=match mode{
+        0=>crate::v4_client_startup_padding::StartupMode::Off,
+        1=>crate::v4_client_startup_padding::StartupMode::Tls,
+        2=>crate::v4_client_startup_padding::StartupMode::Flows,
+        _=>return INVALID,
+    };
+    if !(576..=1500).contains(&outer_path_mtu){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
+    let Ok(mut adapter)=e.adapter.lock()else{return BAD_STAGE};
+    adapter.set_native_startup_padding(mode,
+        e.original_identity.logical_epoch,outer_path_mtu as usize);
+    OK
+}
+
+// These values reflect ONLY actually successful raw AF_PACKET copies, not
+// seal requests or rejected sends; zero for off and for FEC parity.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_startup_padding_counters(
+    group:u64,mode:*mut u32,records:*mut u64,bytes:*mut u64
+)->i32{
+    if mode.is_null()||records.is_null()||bytes.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
+    if e.stopped||e.stopping{return BAD_STAGE}
+    let Some(owner)=e.drivers.as_ref()else{return BAD_STAGE};
+    let Ok(game)=e.adapter.lock()else{return BAD_STAGE};
+    let selected=match game.native_startup_padding_mode(){
+        "off"=>0,"tls"=>1,"flows"=>2,_=>return INVALID
+    };
+    let (copied,padded)=owner.padding_copied_counters();
+    unsafe{
+        mode.write(selected);
+        records.write(copied);
+        bytes.write(padded);
+    }
+    OK
+}
+
 // Authenticated original-TLS Game4 ONLY, before driver start.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),

@@ -1,0 +1,111 @@
+# H2181: genuine Linux x86_64 + native ARM64 game padding and cross-OS
+# shared CLI capabilities. Not Windows WinGUI nor an ARM board or QEMU.
+# Build once per ISA, then run eight independent short original-TLS kernel
+# TCP/UDP dual-endpoint sessions. Explicit marker avoids accidental reruns.
+name: PLAN029 Linux crossplatform padding crypto route and MTU native
+run-name: "PLAN029 Linux capabilities two native ISA | ${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m0-plan029-linux-crossplatform-capabilities.yml'
+      - 'tools/m0_plan029_linux_crossplatform_coverage.py'
+      - 'tools/arm64_linux_netns_smoke.sh'
+      - 'tools/m0_plan029_linux_native_app.py'
+      - 'tests/test_m0_plan029_linux_capability_coverage.py'
+      - 'r0/go_overlay/internal/v4productcli/linux.go'
+      - 'r0/go_overlay/internal/v4productcli/game_linux.go'
+      - 'r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go'
+      - 'r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go'
+      - 'crates/wbd-engine/src/v4_game_lane.rs'
+      - 'crates/wbd-engine/src/v4_game_public_kernel.rs'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+permissions:
+  contents: read
+jobs:
+  original-native-linux:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[plan029-linux-capabilities]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 48
+    concurrency:
+      group: plan029-linux-capabilities-${{ github.sha }}-${{ matrix.arch }}
+      cancel-in-progress: false
+    env:
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Native ISA, source lock and cheap static capability regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          python3 -m py_compile tools/m0_plan029_linux_crossplatform_coverage.py \
+            tools/m0_plan029_linux_native_app.py
+          python3 -m unittest tests.test_m0_plan029_linux_capability_coverage -v
+          bash -n tools/arm64_linux_netns_smoke.sh tools/m0_plan029_linux_dual_native_build.sh
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc nasm python3 iproute2 \
+            iputils-ping iptables openssl
+          test -c /dev/net/tun
+          sudo -n true
+          echo "PLAN029_LINUX_CAPABILITY_NATIVE_PRECHECK_PASS arch=$(uname -m)"
+      - name: One original Go TLS client/server plus Rust native ISA-L build
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh \
+            >plan029-crossplatform-build.log 2>&1 || {
+              tail -n 140 plan029-crossplatform-build.log >&2
+              exit 1
+            }
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform
+          p=pathlib.Path("linux-plan029-public-bundle")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]==platform.machine()==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
+          for binary,sha in m["sha256"].items():
+              assert hashlib.sha256((p/binary).read_bytes()).hexdigest()==sha
+          print("PLAN029_LINUX_CAPABILITY_NATIVE_BINARIES_SOURCE_PASS")
+          PY
+      - name: Eight genuine native Linux original Go TLS/Rust functional add-on cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan029_linux_crossplatform_coverage.py
+          python3 - <<'PY'
+          import json,os,pathlib
+          d=json.loads(pathlib.Path("linux-plan029-crossplatform-result/summary.json").read_text())
+          assert d["source_sha"]==os.environ["GITHUB_SHA"]
+          assert d["native_isa"]==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
+          assert len(d["scenarios"])==8
+          assert d["qualification"]=="PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES"
+          assert all(x["status"]=="PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM" for x in d["scenarios"])
+          print("PLAN029_LINUX_CAPABILITY_NATIVE_EIGHT_SIGNED_PASS")
+          PY
+      - name: Retain bounded source-locked native logs and SHA (no secrets)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plan029-linux-capabilities-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            plan029-crossplatform-build.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/SHA256SUMS
+            linux-plan029-crossplatform-result/
+          if-no-files-found: warn
+          retention-days: 21

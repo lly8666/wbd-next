@@ -100,6 +100,20 @@ func logGameOuterRepair(role string,n int,p *realityfront.V4LinuxGameProduct,off
         proof.DataRetransmitted,proof.BlockedDuplicate,proof.FirstLaneCopied)
     return nil
 }
+// Per-original-M4-Linux owned raw send counters, NEVER padded intent.
+// This readback occurs before native Stop and cannot create a new record.
+func logGameStartupPadding(role string,n int,p *realityfront.V4LinuxGameProduct,want uint8)error{
+    mode,records,bytes,err:=p.StartupPaddingCounters()
+    if err!=nil{return err}
+    choices:=[]string{"off","tls","flows"}
+    if int(want)>=len(choices)||mode!=choices[want]{return realityfront.ErrAdmissionUnsupported}
+    if want==0&&(records!=0||bytes!=0){return realityfront.ErrAdmissionUnsupported}
+    if records==0&&bytes!=0{return realityfront.ErrAdmissionUnsupported}
+    if bytes>records*500{return realityfront.ErrAdmissionUnsupported}
+    log.Printf("V4_PUBLIC_GAME_PADDING_RAW_RECEIPT role=%s lanes=%d mode=%s padded_records=%d padded_bytes=%d original_TLS_Rust_M4=1 real_AF_PACKET_send=1",
+        role,n,mode,records,bytes)
+    return nil
+}
 func logGame4CopySchedule(role string,p *realityfront.V4LinuxGameProduct,enabled,wide bool)error{
     row,err:=p.CopyScheduleRead()
     if err!=nil{return err}
@@ -238,6 +252,7 @@ func runGameClient(
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             ConfigureLeaseIPv4:applyLease,
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
             Game4CopyWideStagger:c.game4CopyWideStagger,
@@ -471,6 +486,7 @@ func runGameClient(
         err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("client",n,native)}
+    err=errors.Join(err,logGameStartupPadding("client",n,native,c.startupPaddingMode))
     if n==4{
         if e:=logGame4CopySchedule("client",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{
             err=errors.Join(err,e)
@@ -503,6 +519,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
             CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
             Game4CopyWideStagger:c.game4CopyWideStagger,
@@ -668,6 +685,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
         err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("server",n,native)}
+    err=errors.Join(err,logGameStartupPadding("server",n,native,c.startupPaddingMode))
     if n==4{
         if e:=logGame4CopySchedule("server",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{return e}
     }
@@ -796,6 +814,7 @@ func runGameMultiServer(
         // another authenticated Game group is still using its old budget.
         ConfigureTunnelMTU:nil,
         GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+        StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
         DisableOuterRepair:c.disableOuterRepair,
         Game4CopyStagger:c.game4CopyStagger,
         Game4CopyWideStagger:c.game4CopyWideStagger,
@@ -914,6 +933,7 @@ func runGameMultiServer(
         // Cold readback of this exact authenticated group's real M4 FEC
         // counters precedes owned Stop; do not aggregate siblings.
         if rec.gameFec{logOriginalGameFec("server",int(rec.key.Lanes),rec.product)}
+        padErr:=logGameStartupPadding("server",int(rec.key.Lanes),rec.product,c.startupPaddingMode)
         if err:=rec.product.Close();err!=nil{
             return fmt.Errorf("Game group native Stop reason=%s: %w",reason,err)
         }
@@ -933,7 +953,7 @@ func runGameMultiServer(
         }
         log.Printf("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=%s remaining_flows=%d",
             reason,len(detached))
-        return nil
+        return padErr
     }
     retireNormal:=func(rec *originalV4MultiRecord,reason string)error{
         if rec==nil||rec.product==nil||!rec.ready||rec.stopping{return nil}
