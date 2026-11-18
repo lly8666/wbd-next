@@ -53,7 +53,7 @@ if (f.Key == "startup-padding") c.Items.AddRange(new[] { new Choice("off", "关�
                 if (f.Key == "fec.profile" || f.Key == "fec.auto_start_profile") c.Items.AddRange(new[] { new Choice("light","轻"),new Choice("mild","较轻"),new Choice("medium","中"),new Choice("balanced","平衡"),new Choice("high","较强"),new Choice("strong","强"),new Choice("maximum","最高") });
                 if (f.Key == "fec.auto_policy") c.Items.AddRange(new[] { new Choice("normal", "普通"), new Choice("aggressive", "激进") });
                 if (f.Key == "outer-repair") c.Items.AddRange(new[] { new Choice("on", "启用（默认）"), new Choice("off", "关闭") });
-                '@
+'@
 $sourceText=$sourceText.Replace($anchor,$insert+$anchor)
 [IO.File]::WriteAllText($derivedMain,$sourceText,[Text.UTF8Encoding]::new($false))
 # Run the source-donor GUI field-by-field / actual Go --check-config regression
