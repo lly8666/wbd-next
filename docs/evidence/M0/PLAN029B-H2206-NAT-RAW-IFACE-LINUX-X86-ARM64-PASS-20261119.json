@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2206-LINUX-NAT-INTERFACE-AUTO-BIND",
+  "result": "PASS_SCOPED",
+  "date_utc": "2026-11-19",
+  "source_sha": "039b88c4eda1edac24d4a9510373f4d127aea74d",
+  "action": 44353147584,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44353147584",
+  "native_matrix": [
+    {
+      "isa": "x86_64",
+      "runner": "ubuntu-24.04",
+      "job_id": 134973984321,
+      "status": "PASS_SCOPED",
+      "artifact_id": 14450550113,
+      "cases": [
+        "nat-interface-zero Normal startup=tls",
+        "nat-interface-omitted Game2 startup=flows"
+      ]
+    },
+    {
+      "isa": "aarch64",
+      "runner": "ubuntu-24.04-arm",
+      "job_id": 134973983996,
+      "status": "PASS_SCOPED",
+      "artifact_id": 14449242546,
+      "cases": [
+        "nat-interface-zero Normal startup=tls",
+        "nat-interface-omitted Game2 startup=flows"
+      ]
+    }
+  ],
+  "boundary": "AF_PACKET is bound to --raw-interface and still exact-local-dst-IPv4 filtered; 0.0.0.0 or absent server --local-ip is a cold config alias to that NIC's unique eligible concrete IPv4 before TUN and raw opening, never an unscoped wildcard packet receiver. Clients require concrete local IPv4.",
+  "validation": [
+    "Go table tests: RFC1918 private IPv4, IPv6 mix, no IPv4, two IPv4 ambiguity, duplicate IPv4, localhost/linklocal rejection, client 0.0.0.0 rejection",
+    "Real original Go native TLS1.3 V4 admission v2, Rust M4/ISA-L original AF_PACKET/TUN on both independent Linux x86_64 and ARM64",
+    "Kernel TCP/UDP both directions, source-pinned exact local IPv4 readback 198.18.7.2 from interface v4as, two-sided startup padding counters and owned Stop"
+  ],
+  "not_qualified": [
+    "Actual gateway DNAT/port-forward appliance and CGNAT external NAT NAT64/IPv6 not exercised",
+    "Physical Windows GUI to independent physical ARM64 machine still NOT_RUN",
+    "Multiple IPv4 on single NIC fails closed, must supply explicit --local-ip; no OS-level 0.0.0.0 socket listener",
+    "No live interface address change/HA dynamic-IP rebinding; changes require server restart",
+    "No change to 32-byte route-key format, HMAC classifier or TLS wire"
+  ],
+  "original_main_product_sha": "4fb7f67b73739a7799bdc5cde0c04716e46aaff4",
+  "regression_history": "first Action44351999455 failed standalone Go CGO linker scope after successful native build, fixed environment only, do not hide"
+}

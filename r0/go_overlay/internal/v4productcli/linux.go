@@ -180,7 +180,7 @@ func parse(role string,args []string)(config,error){
     if role!="client"&&role!="server"{return c,fmt.Errorf("unknown role")}
     flags:=flag.NewFlagSet("wbd-v4-"+role,flag.ContinueOnError)
     iface:=flags.String("raw-interface","","real Linux underlay device")
-    ip:=flags.String("local-ip","","underlay local IPv4")
+    ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     defaultPort:=uint(0)
     if role=="server"{defaultPort=443}
@@ -376,8 +376,16 @@ func parse(role string,args []string)(config,error){
        *port==0||*port>65535||(len(*route)>0&&len(*route)<32){
         return c,fmt.Errorf("missing/invalid real original V4 TLS/raw/TUN settings")
     }
+    // The raw AF_PACKET socket is always scoped to --raw-interface and
+    // validates destination IPv4. Server 0.0.0.0 is a CONFIGURATION ALIAS,
+    // not an unfiltered receive wildcard or a TCP listen(2) binding.
+    // The real interface IPv4 is resolved before any TUN/routing side effects.
+    if role=="server"&&*ip=="" {*ip="0.0.0.0"}
     parsed,err:=netip.ParseAddr(*ip)
-    if err!=nil||!parsed.Is4(){return c,fmt.Errorf("local-ip requires IPv4")}
+    if err!=nil||!parsed.Is4(){return c,fmt.Errorf("local-ip requires IPv4, or server 0.0.0.0/omitted for --raw-interface auto-selection")}
+    if role=="client"&&parsed.IsUnspecified(){
+        return c,fmt.Errorf("client local-ip must be a concrete IPv4")
+    }
     c.localIP=parsed
     c.rawInterface=*iface
     c.localPort=uint16(*port)
@@ -748,6 +756,29 @@ func initServerRouteKeyFile(path string)error{
  log.Print("V4_PUBLIC_ROUTE_KEY_GENERATED local_file_only=1 bytes=32 permissions=0600")
  return nil
 }
+// chooseUnderlayIPv4 chooses one exact AF_PACKET destination address of
+// the operator-selected Linux interface. It never changes the negotiated
+// peer endpoint or makes the socket receive arbitrary destination addresses.
+// Multiple eligible addresses are ambiguous and must be selected explicitly.
+func chooseUnderlayIPv4(addrs []net.Addr)(netip.Addr,error){
+    var found netip.Addr
+    for _,entry:=range addrs{
+        prefix,err:=netip.ParsePrefix(entry.String())
+        if err!=nil{continue}
+        addr:=prefix.Addr()
+        if !addr.Is4()||addr.IsUnspecified()||addr.IsMulticast()||
+           addr.IsLoopback()||addr.IsLinkLocalUnicast(){continue}
+        if found.IsValid()&&found!=addr{
+            return netip.Addr{},fmt.Errorf("raw-interface has multiple IPv4 addresses; specify one via --local-ip")
+        }
+        found=addr
+    }
+    if !found.IsValid(){
+        return netip.Addr{},fmt.Errorf("raw-interface has no usable non-loopback IPv4; specify --local-ip explicitly")
+    }
+    return found,nil
+}
+
 func Run(role string,args []string)(retErr error){
  if role=="server"&&len(args)==2&&args[0]=="--init-route-key-file"{
    return initServerRouteKeyFile(args[1])
@@ -756,6 +787,14 @@ func Run(role string,args []string)(retErr error){
     if err!=nil{return err}
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
+    if role=="server"&&cfg.localIP.IsUnspecified(){
+        addresses,e:=iface.Addrs()
+        if e!=nil{return fmt.Errorf("inspect server raw-interface IPv4: %w",e)}
+        cfg.localIP,e=chooseUnderlayIPv4(addresses)
+        if e!=nil{return e}
+        log.Printf("V4_PUBLIC_SERVER_UNDERLAY_BIND interface=%s local_ip=%s mode=auto_interface_ipv4 port=%d nat_port_forward_required_if_behind_gateway",
+                   cfg.rawInterface,cfg.localIP,cfg.localPort)
+    }
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
     // Pure Rust pre-TLS derives the advertised SYN ceiling from the same
