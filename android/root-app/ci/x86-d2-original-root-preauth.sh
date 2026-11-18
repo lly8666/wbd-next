@@ -46,6 +46,7 @@ tmp="$(mktemp -d "$RUNNER_TEMP/wbd-d2-original-XXXXXXXX")"
 chmod 700 "$tmp"
 server_pid=""
 activity_requested=0
+host_rst_scope=0
 phase=D2_S1_INIT
 adb(){ timeout --signal=TERM --kill-after=3s 35s "$ANDROID_HOME/platform-tools/adb" "$@"; }
 receipt(){
@@ -71,11 +72,13 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "exit_code":int(os.environ["WBD_D2_RC"]),
  "linux_real_original_server":"PASS" if (p/"server-started.txt").exists() else "NOT_PROVEN",
  "ephemeral_app_private_secrets":"PASS" if (p/"secret-stage-enum.txt").exists() else "NOT_PROVEN",
+ "host_loopback_port443_rst_quarantine":"SCOPED_ACTIVE" if (p/"host-rst-rule-enum.txt").exists() else "NOT_PROVEN",
  "signed_app_requested_original_root_service":"PASS" if has("ORIGINAL_ROOT_SERVICE_START_REQUESTED") else "NOT_PROVEN",
  "original_go_root_process_launched":"PASS" if has("ROOT_PROCESS_LAUNCHED") else "NOT_PROVEN",
  "original_android_tun_configured":"PASS" if has("ORIGINAL_GO_TUN_KERNEL_CONFIGURED") else "NOT_PROVEN",
  "original_android_raw_af_packet":"PASS" if has("ORIGINAL_GO_RAW_SOCKET_READY") else "NOT_PROVEN",
  "original_android_cold_syn_send":syn_result,
+ "original_android_unauth_rst_observed":"OBSERVED" if has("ORIGINAL_GO_COLD_UNAUTH_RST_RX") else "NOT_PROVEN",
  "real_peer_synack":"PASS" if has("ORIGINAL_GO_TCP_SYNACK_SEEN") else "NOT_PROVEN",
  "tls_authenticated_32_lease":"PASS" if has("AUTHENTICATED_LEASE_OS_READBACK") and
     "V4_ORIGINAL_GO_SERVER_NATIVE_READY" in server else "NOT_PROVEN",
@@ -109,6 +112,10 @@ cleanup(){
     kill -TERM "$server_pid" 2>/dev/null || true
     wait "$server_pid" 2>/dev/null || true
   fi
+  if [[ "$host_rst_scope" == 1 ]];then
+    # Remove only the exact CI-owned rule, never reset host firewall state.
+    sudo -n iptables -w -D OUTPUT -o lo -p tcp --sport 443 --tcp-flags RST RST -j DROP >/dev/null 2>&1 || true
+  fi
   # No default route/DNS/ip rule changes. Tear down only our own ephemeral
   # host TUN if original Go Stop failed; the CI host is disposable.
   sudo -n ip link del wbdvs4 >/dev/null 2>&1 || true
@@ -118,6 +125,17 @@ cleanup(){
 }
 trap cleanup EXIT
 umask 077
+# The proven original Linux netns FakeTCP oracle drops kernel-generated
+# TCP RST. In the new Android-emulator loopback transport apply ONLY an
+# exact short-lived OUTPUT/lo/443 RST rule, never a global default route,
+# DNS setting or general firewall reset. Restore it in the EXIT trap.
+if sudo -n iptables -w -C OUTPUT -o lo -p tcp --sport 443 --tcp-flags RST RST -j DROP >/dev/null 2>&1;then
+  echo "D2_S1_REFUSE_EXISTING_RST_SUPPRESSION_RULE" >&2
+  exit 26
+fi
+sudo -n iptables -w -I OUTPUT 1 -o lo -p tcp --sport 443 --tcp-flags RST RST -j DROP
+host_rst_scope=1
+echo D2_HOST_LOOPBACK_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
 # Original CLI generates its own genuine 32-byte route secret.
 env LD_LIBRARY_PATH="$GITHUB_WORKSPACE/$p" "$p/wbd-v4-server" \
   --init-route-key-file "$tmp/route.hex" \

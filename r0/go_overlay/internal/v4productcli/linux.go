@@ -1336,6 +1336,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     errs:=make(chan error,1)
     var handoffCommitted atomic.Bool
     var goPostHandoffDataCopies atomic.Uint64
+    var androidColdUntrustedRSTRecorded atomic.Bool
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()
@@ -1345,6 +1346,13 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 return
             }
             if !flow.MatchesInbound(seg){continue}
+            // Exact original AF_PACKET inbound RST before TLS. This proves
+            // only UNAUTHENTICATED wire failure, not server identity, M4
+            // or application data; payload/IP/UID are never logged.
+            if runtime.GOOS=="android" && seg.Flags&faketcp.FlagRST!=0 &&
+               androidColdUntrustedRSTRecorded.CompareAndSwap(false,true){
+                log.Printf("V4_PUBLIC_ANDROID_COLD_UNAUTH_RST_RX role=client source=original_filtered_af_packet")
+            }
             if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
                 if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
                     select{case errs<-fmt.Errorf("invalid current V4 peer SYNACK MSS %d",seg.MSS):default:}

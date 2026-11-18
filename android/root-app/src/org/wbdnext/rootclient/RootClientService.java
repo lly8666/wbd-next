@@ -330,7 +330,7 @@ public final class RootClientService extends Service {
                          int port,int[] targetUids,String[] targetPackages,boolean hasCA){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
-        boolean coldSynTxRecorded=false;
+        boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         try{
             NativePayload code=NativePayload.stage(this);
             ownerExecutable=code.executableName;
@@ -403,6 +403,11 @@ public final class RootClientService extends Service {
                             coldSynTxRecorded=true;
                             trace(synEvent);
                         }
+                    }
+                    if(!coldUntrustedRSTSeen&&OriginalGoMilestones.matches(
+                        line,"V4_PUBLIC_ANDROID_COLD_UNAUTH_RST_RX role=client")){
+                        coldUntrustedRSTSeen=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_UNAUTH_RST_RX);
                     }
                     if(!synackSeen&&OriginalGoMilestones.matches(
                         line,"V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS_V1 side=client")){

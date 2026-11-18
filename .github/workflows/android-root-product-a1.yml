@@ -391,6 +391,7 @@ jobs:
             out/android-x86-d2-root/android-source-sha.txt
             out/android-x86-d2-root/server-started.txt
             out/android-x86-d2-root/secret-stage-enum.txt
+            out/android-x86-d2-root/host-rst-rule-enum.txt
             out/android-x86-d2-root/server-stage-enums.txt
             out/android-x86-d2-root/app-diagnostic-enums.txt
             out/android-x86-ksu-native/receipt.json

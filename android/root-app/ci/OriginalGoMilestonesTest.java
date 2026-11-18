@@ -7,6 +7,7 @@ public final class OriginalGoMilestonesTest {
             "V4_PUBLIC_TUN_TXQLEN role=client",
             "V4_PUBLIC_RAW_AF_PACKET_READY role=client",
             "V4_PUBLIC_ANDROID_COLD_SYN_TX_OK role=client",
+            "V4_PUBLIC_ANDROID_COLD_UNAUTH_RST_RX role=client",
             "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=permission_denied",
             "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=network_unreachable",
             "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=invalid_argument",
