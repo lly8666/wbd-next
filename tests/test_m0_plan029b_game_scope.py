@@ -25,6 +25,8 @@ class GameModesScope(unittest.TestCase):
         ast.parse(e2e)
         self.assertIn('p029b_game2_cn=os.environ.get("WBD_PLAN029B_GAME2_CN_SCENE")=="1"',e2e)
         self.assertIn('PLAN029B_GAME2_ADVANCED_REAL_TWO_TLS_LANES_DIRECT_AND_TUNNEL_TCP_UDP_STOP_PASS',e2e)
+        self.assertIn('"mode":mode,"lanes":lanes,"fec":("fixed" if game_fixed else "off")',e2e)
+        self.assertIn('"single_wintun":"ORIGINAL_GAME2_OR_GAME4_SIGNED_RUST_NATIVE"',e2e)
         self.assertIn("WBD_PLAN029B_GAME2_CN_SCENE:",workflow)
         self.assertIn("PLAN029B_GAME2_ADVANCED_ORIGINAL_WINTUN_RUST_V4_NATIVE_PASS_SCOPED",workflow)
 

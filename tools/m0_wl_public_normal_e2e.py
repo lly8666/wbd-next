@@ -1567,11 +1567,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    raise RuntimeError("Game4 CN physical TCP original two kernel legs mismatch")
   report["plan029_game4_cn_real"]={
       "source_sha":os.environ["GITHUB_SHA"],
-      "mode":"game4","lanes":4,"fec":"off",
+      "mode":mode,"lanes":lanes,"fec":("fixed" if game_fixed else "off"),
       "normal_tunnel_udp":report["app_duplex"],
       "cn_real_direct_udp":{"windows":ww,"linux":ll},
       "cn_real_direct_tcp":{"windows":tw,"linux":tl},
-      "single_wintun":"ORIGINAL_GAME4_SIGNED_RUST_NATIVE",
+      "single_wintun":"ORIGINAL_GAME2_OR_GAME4_SIGNED_RUST_NATIVE",
       "tunnel_tcp":"NOT_RUN_UNTIL_ORIGINAL_TUN_TCP",
       "stop":"NOT_RUN_UNTIL_BOTH_OWNED_STOP"}
   print("PLAN029_H2017_GAME4_CN_REAL_DIRECT_TCP_UDP_AND_TUNNEL_UDP_PRE_STOP",flush=True)
