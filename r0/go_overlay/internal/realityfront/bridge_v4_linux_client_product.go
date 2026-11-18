@@ -100,6 +100,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     session,err:=EstablishClientV4(ctx,conn,cfg,V4ClientOptions{
         DataPlaneReady:true,fec2Product:v4ProductFecEnabled(mode),
         NormalFec:normalProfile,
+        ControlPadded:true,StartupPadding:p.cfg.StartupPaddingMode,
     })
     if err!=nil{return nil,err}
     cold,err:=session.ColdSnapshot()
@@ -160,7 +161,9 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
     if err==nil&&p.cfg.OuterIPMTU!=0{
-        err=bridge.configureNormalStartupPadding(p.cfg.StartupPaddingMode,p.cfg.OuterIPMTU)
+        // The original TLS reply echoed the selected mode; ColdSnapshot
+        // rejects any post-handshake edit before this native M4 cold call.
+        err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
     }
     if err==nil{err=bridge.armOriginalPublicM2Feedback(0)} // public Linux client always expects original Legacy peer
     if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}

@@ -286,9 +286,17 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
         if dead==0{dead=90}
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
+    // Authenticated client choice for THIS owner; the server's CLI
+    // startup-padding default cannot force or suppress another user's mode.
+    selectedPadding:=verified.StartupPaddingMode()
+    if err==nil&&selectedPadding!=0&&
+        (p.cfg.OuterIPMTU<576||p.cfg.OuterIPMTU>1500){
+        stage="normal_padding_mtu"
+        err=ErrAdmissionParams
+    }
     if err==nil&&p.cfg.OuterIPMTU!=0{
         stage="normal_padding"
-        err=bridge.configureNormalStartupPadding(p.cfg.StartupPaddingMode,p.cfg.OuterIPMTU)
+        err=bridge.configureNormalStartupPadding(selectedPadding,p.cfg.OuterIPMTU)
     }
     if err==nil&&mode==FecV2Auto{
         stage="auto_config"
