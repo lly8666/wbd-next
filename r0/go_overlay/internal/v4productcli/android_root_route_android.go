@@ -1,4 +1,4 @@
-//go:build android && arm64 && cgo && wbd_v4_embedded_go
+//go:build android && (arm64 || amd64) && cgo && wbd_v4_embedded_go
 
 package v4productcli
 
