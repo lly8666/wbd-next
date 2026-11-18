@@ -55,6 +55,10 @@ jobs:
         run: |
           set -euo pipefail
           bash tools/m0_plan029_linux_dual_native_build.sh > h2206-native-build.log 2>&1 || { tail -n 160 h2206-native-build.log; exit 1; }
+          # Reuse the exact native artifacts and linker path after the build
+          # (the build child shell cannot export CGO_LDFLAGS to its parent).
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli -run '^TestH2206')
       - name: Two true original Linux TLS V4 v2 kernel data-plane scenarios per ISA
         shell: bash
