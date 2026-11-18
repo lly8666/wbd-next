@@ -249,7 +249,7 @@ $driverNegatives=@'
                 catch(Exception){forgedWintunDenied=true;}
                 Assert(forgedWintunDenied,"Wintun missing/unpinned DLL rejects before driver PnP");
 '@
-$tests=$tests.Replace($testStart,$testStart+"\n"+$driverNegatives)
+$tests=$tests.Replace($testStart,$testStart+"`r`n"+$driverNegatives)
 $tabsAnchor='                    Assert(actualTabs != null,"native WinForms main tabs exist");'
 if(([regex]::Matches($tests,[regex]::Escape($tabsAnchor))).Count -ne 1){throw 'H2204 driver buttons test tab drift'}
 $testButtons=@'
@@ -267,7 +267,7 @@ $testButtons=@'
                     Assert(driverButtonNames.Contains("Wintun 驱动安装"),"visible native owned Wintun PnP bootstrap button");
                     Assert(driverButtonNames.Contains("重新检测"),"visible native driver readback button");
 '@
-$tests=$tests.Replace($tabsAnchor,$tabsAnchor+"\n"+$testButtons)
+$tests=$tests.Replace($tabsAnchor,$tabsAnchor+"`r`n"+$testButtons)
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests
