@@ -46,8 +46,28 @@ CASES=[
 # The original eight successful H2186 cases remain available, but not rerun.
 NORMAL_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_NORMAL_PAD_ONLY")=="1"
 FEC_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_FEC_PAD_ONLY")=="1"
-if NORMAL_PAD_ONLY and FEC_PAD_ONLY:raise SystemExit("one batch per Action")
-if FEC_PAD_ONLY:
+SERVER_PAD_ALL_MODES=os.environ.get("WBD_PLAN029_LINUX_SERVER_PAD_ALL_MODES")=="1"
+if sum((NORMAL_PAD_ONLY,FEC_PAD_ONLY,SERVER_PAD_ALL_MODES))>1:
+    raise SystemExit("one source-locked padding batch per native Action")
+if SERVER_PAD_ALL_MODES:
+    # H2197: both endpoints run the same selected random-padding policy.
+    # Server MUST show positive ORIGINAL kernel AF_PACKET copy in ALL five
+    # modes, including FEC source-only (parity/repair untouched) and Game.
+    # Include the opposite TLS/flows cases missing in H2193/H2195; new
+    # direction-separated seed requires fresh product build on both ISAs.
+    CASES=[
+        ("server-normal-tls","normal","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("server-normal-flows","normal","flows","",1460,"chacha20-poly1305","on","",False,False),
+        ("server-fixed-tls","fec-fixed","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("server-fixed-flows","fec-fixed","flows","",1460,"chacha20-poly1305","on","",False,False),
+        ("server-auto-tls","fec-auto","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("server-auto-flows","fec-auto","flows","",1460,"chacha20-poly1305","on","",False,False),
+        ("server-game2-tls","game2","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("server-game2-fixed6-flows","game2","flows","6",1460,"chacha20-poly1305","on","",False,False),
+        ("server-game4-fixed6-tls","game4","tls","6",1460,"chacha20-poly1305","on","",True,False),
+        ("server-game4-flows","game4","flows","",1460,"chacha20-poly1305","on","",False,False),
+    ]
+elif FEC_PAD_ONLY:
     CASES=[
         ("fec-fixed-tls","fec-fixed","tls","",1460,"chacha20-poly1305","on","",True,False),
         ("fec-auto-flows","fec-auto","flows","",1460,"chacha20-poly1305","on","",False,False),
@@ -167,8 +187,8 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
                     raise RuntimeError(side+" original AF_PACKET padding mismatch")
                 row[side+"_padding_records"]=count
                 row[side+"_padding_bytes"]=padded
-            elif NORMAL_PAD_ONLY or FEC_PAD_ONLY:
-                label=("V4_PUBLIC_FEC_SOURCE_PADDING" if FEC_PAD_ONLY else "V4_PUBLIC_NORMAL_PADDING")
+            elif NORMAL_PAD_ONLY or FEC_PAD_ONLY or SERVER_PAD_ALL_MODES:
+                label=("V4_PUBLIC_FEC_SOURCE_PADDING" if mode in ("fec-fixed","fec-auto") else "V4_PUBLIC_NORMAL_PADDING")
                 matches=re.findall(
                     label+r"_RAW_RECEIPT role="+side+
                     r" mode=(off|tls|flows) padded_records=(\d+) padded_bytes=(\d+) original_TLS_Rust_M4=1 real_AF_PACKET_send=1",raw)
@@ -182,6 +202,14 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
                 row[side+"_padding_bytes"]=padded
             if cipher!="chacha20-poly1305" and side=="client":
                 row["client_requested_record_cipher"]=cipher
+        if SERVER_PAD_ALL_MODES:
+            # Never allow client-only padding to masquerade as product parity;
+            # the current server must have its OWN authenticated original
+            # Rust M4 outgoing copy after the actual kernel send.
+            if row.get("server_padding_records",0)<1 or row.get("server_padding_bytes",0)<1:
+                raise RuntimeError("Linux "+mode+" server padding missing original M4 copy")
+            if row.get("client_padding_records",0)<1 or row.get("client_padding_bytes",0)<1:
+                raise RuntimeError("Linux "+mode+" client padding unexpectedly absent")
         for direction in ("c2s","s2c"):
             for side in ("sender","listener"):
                 raw=(case/("app-"+direction+"-"+side+".log")).read_text()
@@ -205,9 +233,10 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
         print("PLAN029_LINUX_CROSSPLATFORM_CASE_FAIL arch="+ARCH+" case="+name+
               " error="+str(exc),flush=True)
         raise SystemExit(1)
-results["qualification"]=("PASS_SCOPED_TWO_FEC_SOURCE_PADDING_NATIVE_LINUX_SCENES" if FEC_PAD_ONLY
+results["qualification"]=("PASS_SCOPED_TEN_BOTH_ENDPOINTS_ALL_FIVE_MODES_NATIVE_LINUX_SCENES" if SERVER_PAD_ALL_MODES
+                          else ("PASS_SCOPED_TWO_FEC_SOURCE_PADDING_NATIVE_LINUX_SCENES" if FEC_PAD_ONLY
                           else ("PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES" if NORMAL_PAD_ONLY
-                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES"))
+                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES")))
 persist()
 print("PLAN029_LINUX_CROSSPLATFORM_NATIVE_PASS arch="+ARCH+" source="+SOURCE+
       " cases="+str(len(CASES)),flush=True)

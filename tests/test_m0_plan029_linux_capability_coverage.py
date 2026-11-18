@@ -40,6 +40,32 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         self.assertIn("if body.first().copied()!=Some(2){return None}",game)
         self.assertIn("configureStartupPadding(p.cfg.StartupPaddingMode,effective)",go)
 
+    def test_linux_server_all_five_modes_role_separated_seed_and_real_native_receipts(self):
+        cli=read("r0/go_overlay/internal/v4productcli/linux.go")
+        server=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go")
+        game_server=read("r0/go_overlay/internal/v4productcli/game_linux.go")
+        game=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go")
+        rust=read("crates/wbd-engine/src/v4_embedded_go.rs")
+        padding=read("crates/wbd-engine/src/v4_client_startup_padding.rs")
+        cases=read("tools/m0_plan029_linux_crossplatform_coverage.py")
+        self.assertIn("StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,",cli)
+        self.assertIn("err=bridge.configureNormalStartupPadding(p.cfg.StartupPaddingMode,p.cfg.OuterIPMTU)",server)
+        self.assertIn('case FECOff: mode=FecV2Off',server)
+        self.assertIn('case FECFixed: mode=FecV2Fixed',server)
+        self.assertIn('case FECAuto: mode=FecV2Auto',server)
+        self.assertIn("StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,",game_server)
+        self.assertIn("configureStartupPadding(p.cfg.StartupPaddingMode,effective)",game)
+        self.assertIn("linux_tx_padding_epoch(",rust)
+        self.assertIn("epoch,e.server_side",rust)
+        self.assertIn("e.original_identity.logical_epoch,e.server",rust)
+        self.assertIn("CLIENT_TX_SALT",padding)
+        self.assertIn("SERVER_TX_SALT",padding)
+        self.assertIn("original_linux_client_server_same_epoch_have_independent_pad_lengths",padding)
+        self.assertIn("SERVER_PAD_ALL_MODES",cases)
+        self.assertIn("server_padding_records",cases)
+        for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
+            self.assertIn('"'+mode+'",',cases)
+
     def test_original_raw_kernel_copy_statistics_only_after_send_success(self):
         native=read("crates/wbd-engine/src/v4_game_public_kernel.rs")
         self.assertIn("game.drain_for_linux_native",native)
