@@ -4,7 +4,7 @@
 
 问题：旧 `docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md` 累加了 A3/0a/A15 多套互斥优先级，旧 `docs/prompts/ANDROID_TEMP_ROOT_PROBE.md` 最新下一步仍指向早已开发过的 B2c2b2，同时旧 Actions 列表掩盖当前 D2 网络预认证阻塞。
 
-处理：把计划改为一份唯一现行路线（ARM64-only 发行、x86 CI-only 同源原生验证、先 D2 FakeTCP/TLS/M4/Stop、SLIRP/NAT 双端 RAW 证据与隔离 TAP guest 候选、后续 DNS/A21 全 App/性能）；长期提示词改为启动校验+唯一真实阻塞+明确安全/权限边界+证据交付格式。历史方案保留 Git commit 快照与原 devlog 链接；更新产品功能卡的摘要、限制和当前阶段验证条目，不重写旧 FAIL。
+处理：把计划改为一份唯一现行路线（ARM64-only 发行、x86 CI-only 同源原生验证、先 D2 FakeTCP/TLS/M4/Stop、SLIRP/NAT 双端 RAW 证据与隔离 TAP guest 候选、后续 DNS/A21 全 App/性能）；长期提示词改为启动校验+唯一真实阻塞+明确安全/权限边界+证据交付格式。历史方案保留 Git commit 快照与原 devlog 链接；更新产品功能卡的摘要、限制和当前阶段验证条目。功能卡受仓库 16KiB 上限约束，将 A2 之前重复/旧阶段验证行归档到 [基线功能卡原文](https://github.com/lly8666/wbd-next/blob/b926881b59581c073066d42f315b176f95e23c0b/docs/features/entries/android-root-native-client.json)，保留 A2 后的 PASS/FAIL/NOT_RUN 及新 D2 行；这不是撤销旧失败证据。
 
 **本次不是新的网络/ARM64 真机/协议运行结果，不能以文档变更将 D2 或全 App E2E 标成 PASS。** 实验分支 + Draft PR #36，main/M0 与 Go/Rust 产品代码均未改动。
 
