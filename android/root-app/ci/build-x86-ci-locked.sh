@@ -56,7 +56,8 @@ find android/root-app/src -name '*.java' -print0 |
 # CI ONLY: a bounded app-UID KernelSU authorization test; never built into
 # the release ARM64 signed APK, never handles a WBD data packet.
 javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar:$out/classes" \
-  -d "$out/classes" android/root-app/ci/X86CiAppSuActivity.java
+  -d "$out/classes" android/root-app/ci/X86CiAppSuActivity.java \
+    android/root-app/ci/X86CiOriginalStartActivity.java
 python3 - <<'PYCI'
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -71,6 +72,9 @@ assert app is not None
 app.set("{"+ns+"}label","@string/wbd_x86_ci_label")
 ET.SubElement(app,"activity",{
     "{"+ns+"}name":".X86CiAppSuActivity",
+    "{"+ns+"}exported":"true"})
+ET.SubElement(app,"activity",{
+    "{"+ns+"}name":".X86CiOriginalStartActivity",
     "{"+ns+"}exported":"true"})
 tree.write(target,encoding="utf-8",xml_declaration=True)
 PYCI
@@ -108,6 +112,7 @@ grep -F "application-label:'WBD x86 CI Root'" "$out/badging.txt"
 "$bt/aapt" dump xmltree "$out/wbd-root-x86-ci-only.apk" AndroidManifest.xml \
   >"$out/manifest-tree.txt"
 grep -Fq "X86CiAppSuActivity" "$out/manifest-tree.txt"
+grep -Fq "X86CiOriginalStartActivity" "$out/manifest-tree.txt"
 if grep -Eq 'BIND_VPN_SERVICE|VpnService' "$out/manifest-tree.txt";then
  echo "X86_CI_MUST_NOT_CONTAIN_VPN_SERVICE" >&2;exit 1
 fi
@@ -127,6 +132,7 @@ with zipfile.ZipFile(apk) as z:
     assert all(x in names for x in required)
     assert not any("native-arm64/" in x for x in names)
     assert "X86CiAppSuActivity" in (o/"manifest-tree.txt").read_text()
+    assert "X86CiOriginalStartActivity" in (o/"manifest-tree.txt").read_text()
     assert "X86CiAppSuActivity.java" not in names
     m=json.loads(z.read("assets/native-amd64/manifest.json"))
     assert m["source"]==os.environ["GITHUB_SHA"]==z.read("assets/native-amd64/SOURCE").decode().strip()

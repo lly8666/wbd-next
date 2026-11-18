@@ -233,3 +233,9 @@ else
   echo ANDROID_X86_APP_PHYSICAL_NETWORK_NOT_PROVEN
 fi
 echo "D1_REAL_ORIGINAL_CLIENT_TLS_M4_NOT_RUN"
+if [[ "${WBD_D2_ORIGINAL:-0}" == 1 ]];then
+  # The separate D2-S1 job reuses this exact proven Android/KSU/App admission.
+  # Start the REAL Linux server and production Android RootClientService,
+  # never a second simulated data plane or root bypass.
+  bash android/root-app/ci/x86-d2-original-root-preauth.sh
+fi
