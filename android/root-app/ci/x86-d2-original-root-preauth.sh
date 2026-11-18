@@ -201,19 +201,45 @@ grep -q 'Starting: Intent' "$out/start-activity.txt"
 activity_requested=1
 # Only production RootClientService fixed enums count. Actual Go/Rust
 # may fail before TLS due emulator NAT; we record the exact reached stage.
-for i in $(seq 1 75);do
+# D2-S1 established real original TUN/AF_PACKET. Unlike a pure smoke
+# test, allow bounded original FakeTCP SYN/SYNACK and TLS/lease retries
+# BEFORE requesting Stop. A RAW-ready marker alone is never TLS PASS.
+raw_first=0
+for i in $(seq 1 80);do
   adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' \
     >"$out/app-diagnostic-enums.txt" 2>&1 || true
-  if grep -Fq 'ORIGINAL_GO_RAW_SOCKET_READY' "$out/app-diagnostic-enums.txt";then
+  if [[ "$raw_first" == 0 ]] &&
+     grep -Fq 'ORIGINAL_GO_RAW_SOCKET_READY' "$out/app-diagnostic-enums.txt";then
+    raw_first="$i"
     echo "D2_S1_REAL_ORIGINAL_ANDROID_TUN_RAW_CONFIGURED_PASS"
+  fi
+  if grep -Fq 'NATIVE_M4_AND_UID_READY' "$out/app-diagnostic-enums.txt";then
+    echo "D2_S1_AUTHENTICATED_ORIGINAL_RUST_M4_AND_UID_READY_OBSERVED"
     break
   fi
-  if grep -Eq 'ROOT_OR_NATIVE_(FAILURE|EXIT)|ROOT_LAUNCH_FAILED|START_REFUSED|ORIGINAL_ROOT_SERVICE_CI_START_BLOCKED' \
+  if grep -Eq 'ROOT_PROCESS_EXIT_(NONZERO|139|132)|ROOT_LAUNCH_FAILED|START_REFUSED|ORIGINAL_ROOT_SERVICE_CI_START_BLOCKED' \
       "$out/app-diagnostic-enums.txt";then
+    echo "D2_S1_ORIGINAL_GO_EARLY_EXIT_BEFORE_AUTH_HANDSHAKE"
+    break
+  fi
+  # 45s after first true RAW ready: original retries had meaningful time,
+  # but CI cannot silently hang indefinitely behind emulator NAT.
+  if [[ "$raw_first" != 0 ]] && (( i - raw_first >= 45 ));then
+    echo "D2_S1_BOUNDED_AUTH_OBSERVATION_DONE"
     break
   fi
   sleep 1
 done
+if grep -Fq 'ORIGINAL_GO_TCP_SYNACK_SEEN' "$out/app-diagnostic-enums.txt";then
+  echo "D2_S1_ANDROID_ORIGINAL_GO_REAL_PEER_SYNACK_OBSERVED"
+else
+  echo "D2_S1_ANDROID_SYNACK_NOT_PROVEN"
+fi
+if grep -Fq 'AUTHENTICATED_LEASE_OS_READBACK' "$out/app-diagnostic-enums.txt";then
+  echo "D2_S1_ANDROID_ORIGINAL_AUTH_LEASE_OS_READBACK_OBSERVED"
+else
+  echo "D2_S1_ANDROID_ORIGINAL_AUTH_LEASE_NOT_PROVEN"
+fi
 # Write only exact real original server milestone types. Do not upload
 # stdout/stderr, SNI, account, key, cert or traffic bytes.
 : >"$out/server-stage-enums.txt"
