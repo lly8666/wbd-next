@@ -232,7 +232,7 @@ class NativeDirectOrder(unittest.TestCase):
         # 4096-CIDR policy arm only in the isolated P1 ABBA. The genuine
         # H1775 DNS→CN-IP use case must retain its old one-/32 fallback.
         self.assertIn('"--china-ip-file",str(out/("plan029-h1934-cn4096.txt" if p029_p1_cn else "plan029-h1775-cn-one32.txt"))',S)
-        self.assertIn('if p029_direct or p029_p1_cn or p029_game4_cn:',S)
+        self.assertIn('if p029_direct or p029_p1_cn or (p029_game4_cn and not p029b_game_case):',S)
         # H2130 keeps the historical Game4 advanced FakeIP scene explicit.
         # 029B fresh default is ordinary CN; missing advanced flag is no
         # longer equivalent. Retain one original signed Direct/Tunnel case.
