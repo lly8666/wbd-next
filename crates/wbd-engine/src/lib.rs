@@ -47,16 +47,16 @@ mod v4_session_address;
 // B2c2a: no-copy IPv4 UDP/TCP53 observation at the existing single
 // Android original Rust TUN reader. Host parser tests are source-locked;
 // no DNS redirect, fake-IP, second TUN consumer or packet mutation.
-#[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_dns_ingress;
 // B2c2b1 bounded UDP DNS53 5-tuple transaction inverse NAT. Android ARM64
 // original Rust-only candidate; never arm before BOTH authenticated reply
 // and scoped physical/tunnel DNS lifecycle are independently proven.
-#[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_dns_udp_flow;
 // B2c2c: the original Android Rust M4-only physical socket's bounded
 // inverse IPv4 reply path; physical replies are not remote-AEAD payloads.
-#[cfg(any(test,all(target_os="android",target_arch="aarch64")))]
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_dns_physical_flow;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.

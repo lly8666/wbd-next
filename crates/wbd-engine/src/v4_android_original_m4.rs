@@ -7,7 +7,7 @@
 //! interrupted by two owned eventfds at Stop. Entry's original M1/M3 owner
 //! is synchronized for these small nonblocking turns; finer RX/TX ownership
 //! splitting and full M3 jumbo/FEC scheduling are separate product gates.
-#![cfg(all(target_os="android",target_arch="aarch64"))]
+#![cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 use super::{Entry,session,PH_ACTIVE,PH_STOPPING,OK,INVALID,UNKNOWN,BAD_STAGE,FULL};
 use crate::v4_native_health::{AuthenticatedActivity,HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::{TxDispatch,RxPacket};

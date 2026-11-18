@@ -54,7 +54,7 @@ use crate::runtime::TxDispatch;
 use wbd_platform::android_root_io::{AndroidOwnedTun,AndroidBoundRawRx,AndroidBoundRawTx};
 #[cfg(target_os="android")]
 use std::os::fd::BorrowedFd;
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 #[path="v4_android_original_m4.rs"]
 mod android_original_m4;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -821,26 +821,26 @@ struct Entry{
     android_raw_tx:Option<Arc<AndroidBoundRawTx>>,
     #[cfg(target_os="android")]
     android_tun:Option<Arc<AndroidOwnedTun>>,
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows,
     // Fail-closed until physical and Tunnel DNS, CN policy, TCP53 and
     // Android system Resolver ingress have one authenticated owned lifecycle.
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_dns_hijack_ready:bool,
     // The separate physical-DNS owner is NOT peer-AEAD-authenticated.
     // Do not arm before verified CN/Resolver/TCP53 generation admission.
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_dns_physical_ready:bool,
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_workers:Option<android_original_m4::AndroidOriginalWorkers>,
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_joining:bool,
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_seq_anchor:u64,
     // Authenticated original Go feature3 Normal/off revision, not FEC APPLIED.
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_off_applied_revision:u64,
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_metrics:Arc<android_original_m4::AndroidOriginalStats>,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
@@ -1180,21 +1180,21 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_raw_tx:None,
         #[cfg(target_os="android")]
         android_tun:None,
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::default(),
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_dns_hijack_ready:false,
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_dns_physical_ready:false,
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_workers:None,
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_joining:false,
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_seq_anchor:u64::from(handoff.rx_boundary),
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_off_applied_revision:0,
-        #[cfg(all(target_os="android",target_arch="aarch64"))]
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_metrics:Arc::new(android_original_m4::AndroidOriginalStats::default()),
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_firstsend_m2:None,
@@ -2792,7 +2792,7 @@ fn abort(handle:u64)->i32{
 fn stop(handle:u64)->i32{
     // Leave registry unlocked while joining. Driver handles and owner slabs
     // cannot be released while either Rust worker still references them.
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     {
         let Ok(cell)=session(handle)else{return UNKNOWN};
         let workers={
@@ -2889,7 +2889,7 @@ fn stop(handle:u64)->i32{
         if let Some(raw)=e.android_raw_tx.as_ref(){raw.begin_stop()}
         if let Some(tun)=e.android_tun.as_ref(){tun.begin_stop()}
     }
-    #[cfg(all(target_os="android",target_arch="aarch64"))]
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     {
         // Both M4 kernel threads are joined. Retire every outstanding DNS
         // reverse-map slot before crypto/TUN FD retirement of this generation.
@@ -4171,7 +4171,7 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
 }
 #[cfg(any(
     all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),
-    all(target_os="android",target_arch="aarch64")
+    all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))
 ))]
 // PLAN028: bind the original Go protected and credential-checked /32 before
 // any native M4 worker writes an inner IPv4 datagram to the server TUN.
@@ -9287,7 +9287,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
 // Android ARM64 same protected Go original client IPv4/32 and original
 // Rust peer-MSS/record/LINK FrameBudget. Recheck real bound RAW TX socket
 // ifindex+MTU before reporting the effective single-inner IPv4 budget.
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     h:u64,ifindex:u32,out:*mut u32

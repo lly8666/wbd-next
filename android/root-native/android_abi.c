@@ -1,8 +1,8 @@
-// NDK/Bionic source-locked layout gate; compile for Android ARM64 only.
+// Source-locked NDK/Bionic C ABI layout gate for Android ARM64 and x86_64.
 // This is NOT a Linux GNU/musl ABI assertion and does not touch device state.
 #include <stddef.h>
-#ifndef __aarch64__
-#error "Android ARM64 is the only active product ABI"
+#if !defined(__aarch64__) && !defined(__x86_64__)
+#error "Only Android ARM64 and x86_64 64-bit Bionic ABIs permitted"
 #endif
 #include <sys/ioctl.h>
 #include <linux/ioctl.h>

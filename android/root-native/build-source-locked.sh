@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ARM64-only original-Go + shared Rust M1/M3 and Bionic M4/Health/Stop source gate.
+# Same-source Android 64-bit Go/Rust native build. ARM64 release; x86_64 CI-only.
 # Real Go final link and phone traffic remain independent truthful gates.
 set -euo pipefail
 cd "${GITHUB_WORKSPACE:?Actions checkout required}"
@@ -10,12 +10,15 @@ ndk="$(find "$ANDROID_HOME/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail
 tool="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
 test -x "$tool/aarch64-linux-android28-clang"
 rustup toolchain install 1.85.1 --profile minimal
-rustup target add --toolchain 1.85.1 aarch64-linux-android
+rustup target add --toolchain 1.85.1 aarch64-linux-android x86_64-linux-android
 export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$tool/aarch64-linux-android28-clang"
+export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="$tool/x86_64-linux-android28-clang"
 # aws-lc-sys/cc-rs does NOT honor Cargo's linker setting for its C objects.
 # NDK has API-qualified clang wrappers, not aarch64-linux-android-clang.
 export CC_aarch64_linux_android="$tool/aarch64-linux-android28-clang"
 export AR_aarch64_linux_android="$tool/llvm-ar"
+export CC_x86_64_linux_android="$tool/x86_64-linux-android28-clang"
+export AR_x86_64_linux_android="$tool/llvm-ar"
 export RUSTFLAGS="-C link-arg=-Wl,-z,max-page-size=16384"
 mkdir -p out/android-product-a1
 # Exact public original-Go source-lock installation; do not duplicate legacy.
@@ -49,9 +52,7 @@ cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4produc
 # to Android system resolver/TUN capture or Network socket binding.
 mkdir -p legacy/internal/v4productcli/dnsnative
 cp r0/go_overlay/internal/v4productcli/dnsnative/*.go legacy/internal/v4productcli/dnsnative/
-# Portable kernel-policy state machine tests are host-Go pure stdlib:
-# NO Android x86/32-bit build/packaging/test target. The real Android
-# product is still only GOOS=android GOARCH=arm64 below.
+# Portable kernel-policy tests remain host-Go; x86_64 Android is CI-only, not a shipped ABI.
 (cd legacy && go test -count=1 ./internal/v4productcli/rootjournal)
 # Android ARM64 cross-compile only; test ELF is NOT executed or deployed.
 (cd legacy && GOOS=android GOARCH=arm64 CGO_ENABLED=0 GOTOOLCHAIN=local go test -c \
@@ -71,9 +72,9 @@ cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Keep original Rust Health/M1/M3 + future codec in this source stage.
 features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
 go_tags=wbd_v4_embedded_go
-for pair in "aarch64 arm64"; do
+for pair in "aarch64 arm64" "x86_64 amd64"; do
   read -r triple goarch <<< "$pair"
-  rust_target=aarch64-linux-android
+  rust_target="$triple-linux-android"
   cc="$tool/${rust_target}28-clang"
   test -x "$cc"
   "$cc" -c -std=c11 -Wall -Wextra -Werror android/root-native/android_abi.c -o "out/android-product-a1/abi-$goarch.o"
@@ -131,7 +132,7 @@ def inspect(path,expected_machine):
     entsize,phnum=struct.unpack_from(bo+"HH",b,54)
     aligns=[struct.unpack_from(bo+"Q",b,phoff+i*entsize+48)[0]
         for i in range(phnum) if struct.unpack_from(bo+"I",b,phoff+i*entsize)[0]==1]
-    assert aligns and min(aligns)>=16384,(path,aligns)
+    assert aligns and min(aligns)>=(16384 if expected_machine==183 else 4096),(path,aligns)
     return {"sha256":hashlib.sha256(b).hexdigest(),"machine":expected_machine,
             "min_pt_load_align":min(aligns)}
 d={"schema":"android-root-product-a1-rust-cold-build/v1",
@@ -142,7 +143,7 @@ d={"schema":"android-root-product-a1-rust-cold-build/v1",
    "original_rust_cold_prepare_stage_commit_stop_symbols":"PASS_IN_WORKFLOW",
    "android_original_owner_network_raw_tun_ffi_symbols":"PASS_IN_WORKFLOW",
    "native":{abi:inspect(p/("libwbd_engine-"+abi+".so"),mach)
-             for abi,mach in (("arm64",183),)},
+             for abi,mach in (("arm64",183),("amd64",62))},
    "original_go_full_link":"NOT_YET_RUN_AT_THIS_STAGE",
    "authenticated_product_M4_worker":"SOURCE_COMPILED_NOT_EXECUTED",
    "original_health_clock_control":"SOURCE_COMPILED_NOT_EXECUTED",
@@ -156,9 +157,9 @@ PY
 # links only mandatory native original M1/M3/M4/Health/Stop. Optional
 # Fixed/FEC/Game and Linux-only diagnostics fail closed in Go, not via
 # fabricated native ELF symbols or a suppressed linker error.
-for pair in "aarch64 arm64"; do
+for pair in "aarch64 arm64" "x86_64 amd64"; do
   read -r triple goarch <<< "$pair"
-  rust_target=aarch64-linux-android
+  rust_target="$triple-linux-android"
   cc="$tool/${rust_target}28-clang"
   export GOOS=android GOARCH="$goarch" CGO_ENABLED=1 GOTOOLCHAIN=local CC="$cc"
   # Android x86_64 KVM + NDK translation (and real ARM64 Bionic)
@@ -175,6 +176,8 @@ for pair in "aarch64 arm64"; do
   grep -Fq 'Shared library: [libwbd_engine.so]' "out/android-product-a1/linker-$goarch.txt"
   grep -Eq 'Library runpath: \[\$ORIGIN(:\$ORIGIN)*\]' "out/android-product-a1/linker-$goarch.txt"
   unset CGO_LDFLAGS
+  # Quarantined ARM64 NativeBridge diagnosis; x86 native product is built above.
+  if [[ "$goarch" == "arm64" ]]; then
   # Exact-SHA Android ARM64 diagnosis ONLY: distinguish Bionic/native
   # translator, pure-Go runtime, and real Rust dlopen from original WBD.
   # Not included in APK; no mock TLS/AEAD/client/server/data path.
@@ -247,6 +250,7 @@ for name in ("ksu-arm64-ndk-probe","ksu-arm64-go-probe","libksu-arm64-go-cshared
     assert raw[:5]==b"\x7fELF\x02" and struct.unpack_from("<H",raw,18)[0]==183,name
 print("ARM64_NATIVEBRIDGE_DIAGNOSTIC_PROBES_SOURCE_COMPILED_ONLY")
 PYARM64
+  fi
 done
 python3 - <<'PY'
 import json,os,hashlib,pathlib,struct
@@ -263,13 +267,14 @@ def elf(path):
     for i in range(phnum):
         t=struct.unpack_from(bo+"I",b,phoff+i*entsize)[0]
         if t==1:aligns.append(struct.unpack_from(bo+"Q",b,phoff+i*entsize+48)[0])
-    assert e_type in (2,3) and e_machine==183,(path,"not AArch64 ELF")
-    assert aligns and all(v>=16384 for v in aligns),(path,aligns)
+    expected=62 if path.name in ("wbd-v4-client-amd64","libwbd_engine-amd64.so") else 183
+    assert e_type in (2,3) and e_machine==expected,(path,"wrong ELF architecture",e_machine,expected)
+    assert aligns and all(v>=(16384 if expected==183 else 4096) for v in aligns),(path,aligns)
     return {"type":e_type,"machine":e_machine,"min_pt_load_align":min(aligns)}
 result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_SHA"],
 "donor_go":"a7a82db31fe736ffedee330795a3234d358f1984",
 "rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record","mode":"NORMAL_OFF_BUILD_ONLY",
-"android_abis":["arm64"],"go_os":"android","android_api":28,
+"android_abis":["arm64"],"ci_only_abis":["x86_64"],"go_os":"android","android_api":28,
 "go_build_tags":"wbd_v4_embedded_go","go_fec_game_native":"NOT_COMPILED_UNSUPPORTED",
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
 "elf":elf(x) if x.name.endswith(".so") or x.name=="wbd-v4-client-arm64" else None} for x in art},
@@ -277,6 +282,13 @@ result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_
 "android_root_app_install":"NOT_RUN","physical_acceleration":"NOT_RUN",
 "real_server_connection":"NOT_RUN"}
 (p/"manifest.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
+# The release manifest remains ARM64-only; CI-only x86 has a separate manifest.
+ci=dict(result)
+ci["android_abis"]=["x86_64"]
+ci["release"]=False
+ci["artifacts"]={name:result["artifacts"][name] for name in ("wbd-v4-client-amd64","libwbd_engine-amd64.so")}
+assert {ci["artifacts"][name]["elf"]["machine"] for name in ci["artifacts"]}=={62}
+(p/"manifest-ci-x86_64.json").write_text(json.dumps(ci,indent=2,sort_keys=True)+"\n")
 (p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\n")
 PY
 (cd out/android-product-a1 && sha256sum * >SHA256SUMS && sha256sum -c SHA256SUMS)
