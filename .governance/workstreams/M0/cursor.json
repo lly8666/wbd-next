@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2161,
-  "checkpoint_sha": "ba2fd09e179d97649368a85b8cdbd678204641d3",
+  "sequence": 2162,
+  "checkpoint_sha": "8f20670081d13ad94a48a21b4b88d84ab3eda0ca",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2161 audit-only correction: source1a66243 original 4 Game job first off failures retained exact evidence, H2160 candidate source508591f Action44235564493 cheap/WinGo/WinRust/LinuxRust/true Linux build PASS, 4 independent real Windows Game jobs IN_PROGRESS. Removed one redundant legacy H2154 context reference to enforce governance max8. 20 user policy cases not yet proven.",
-  "why_now": "Governance Action44236035249 rejects nine context_refs (maximum 8), not product: remove redundant H2154 devlog while retaining signed H2159/H2160 evidence, previous B4/Game4 contexts and exact last tested source.",
-  "done_when": "New signed Game2/Game4 FEC-off/fixed each verifies five actual cold user business settings (off/all/LAN/ordinaryCN/advancedCN), same exact go/rust source/hash, real TLS+Wintun OS+LAN/Direct/Tunnel DNS/TCP/UDP and owned Stop; reverse Linux initiated inbound TCP separately NOT_RUN; no claim full technical exit while any remain.",
-  "next_action": "Collect candidate signed Action44235564493 original four Windows Game jobs exact 5 policies with FEC off/fixed. Do not spawn duplicate native Action; if FAIL fix only first real error and preserve signed SHA/CRC, real TCP/UDP, owned Stop. Full Game matrix NOT_YET_PASS.",
+  "current_task": "H2162 Game2/4 × FEC off/fixed × 5 user business policies 20/20 original Windows2025/WSL2 native PASS_SCOPED, signed source508591f Action44235564493 all jobs SUCCESS, 290 original ZIP members CRC PASS, identical original binary hashes, true TLS/OS/UDP, kernel Windows-to-Linux Tunnel TCP echo, LAN physical Direct, ordinary CN real A, advanced CN FakeIP physical Direct TCP32768/UDP, 20 owned Stops. Independent Linux-initiated Windows inbound TCP NOT_RUN; full 029B/029 technical OPEN, 030 NOT_STARTED.",
+  "why_now": "All four new Game signed native jobs SUCCESS, exact source and 290 ZIP CRC verified. Previous 1a66243 RED source retained, latest original Game qualification 20/20 scoped PASS. No further native Game repeats.",
+  "done_when": "Authorized Game2/4 FEC off/fixed all five business policies verified with 20 authentic OS/network/Stop receipts and immutable SOURCE, satisfied scoped; full 029B technical exit not asserted.",
+  "next_action": "Do not rerun Game2/4 signed 20-case matrix. Only new user authorization or reproducible product fault should expand legacy Linux-initiated inbound TCP, Game startup padding, host-wide IPv6 and ARM; full 029B/029 technical contract OPEN, 030 NOT_STARTED.",
   "unverified": true,
-  "last_tested_source": "1a662439ade52233974e1a69c9db4f8c18300e6e",
+  "last_tested_source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2160-H2159-GAME-FOUR-TRUE-NATIVE-FIRST-TCP-INBOUND-FAIL-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
@@ -23,10 +23,10 @@
     "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
     "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
     "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json",
-    "docs/devlog/M0/20261118-PLAN029B-H2153-PARALLEL-FOUR-ORIGINAL-GAME-MATRIX-NATIVE.md",
     "docs/devlog/M0/20261118-PLAN029B-H2159-ORIGINAL-GAME-FIRST-REAL-TCP-BOUNDARY.md",
-    "docs/devlog/M0/20261118-PLAN029B-H2160-GAME-MATRIX-B4-SCOPE-TEST-ALIGN.md"
+    "docs/devlog/M0/20261118-PLAN029B-H2160-GAME-MATRIX-B4-SCOPE-TEST-ALIGN.md",
+    "docs/devlog/M0/20261118-PLAN029B-H2162-GAME2-GAME4-20-OF-20-REAL-SIGNED-PASS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2161 only cursor scope repair max8 context references after H2160 original signed four first-off failures. Candidate source508591f Action44235564493 cheap/WinGo/WinRust/LinuxRust and Linux source build PASS, 4 native Windows Game jobs in progress. Not a product pass. User normal prior scoped PASS retained."
+  "partial_summary": "H2162 SOURCE508591f Action44235564493 fully SUCCESS; four original Win2025/WSL2 Game2/Game4 FEC off/fixed suites × five cold policies 20/20 real business and owned Stops PASS_SCOPED; four ZIPs 290 CRC PASS; binary SHA matches. Historical reverse inbound TCP and Game startup padding excluded; B0-B5 previous Normal scoped PASS; full technical 029/029B still OPEN."
 }

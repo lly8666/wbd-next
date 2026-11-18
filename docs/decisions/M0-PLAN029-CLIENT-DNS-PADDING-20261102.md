@@ -133,3 +133,7 @@ H1832正式冷配置新增`split-enable`（默认false，显式开启下次连�
 [H2137签名029B/B5证据](../evidence/M0/PLAN029B-H2137-H2136-B5-SIGNED-10M-029B-029-NORMAL-SCOPED-CLOSEOUT-20261118.json)：B0–B3独立原真实DNS/CN/受管IPv6、B4三代原GUI与Stop、Game4四原TLS lane的源锁Action均 `PASS_SCOPED`；B5原[Action44201457211](https://github.com/lly8666/wbd-next/actions/runs/44201457211)同VM顺序双向10Mbps/60s原Rust V3 all两档通过，B CPU/实际GiB相对A +8.31%仅一次样本，不声称优化或因果退化，UDP p99和真实Stop通过，TCP小请求p99未测。旧[H2077日常范围](../evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json)继续有效。
 
 **029/029B仅用户日常范围PASS_SCOPED，完整D1–D5/P1–P2与029B§6–7仍OPEN**；Game2 CN分流不支持、Game4默认1460/Fixed-FEC、宿主所有IPv6、P-B2/小TCP p99、当前ARM原生/全部padding及极端矩阵不冒充验收。遵用户缩小测试范围，不继续派Action，不开030。
+
+## H2162 — Newly authorized Game2/4 split matrix scoped PASS
+
+[Action44235564493](https://github.com/lly8666/wbd-next/actions/runs/44235564493) original signed SOURCE 508591f93427ebdad4cf88ff625e03fc4d485aca fully SUCCESS for Game2/4 × FEC off/fixed × split off/all/LAN/ordinary CN/advanced CN: 20/20 genuine OS/kernel business and dual owned Stops, ZIP 290 CRC PASS; details in [H2162 evidence](../evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json). Supersedes historical Game2 not-wired only in this exact scope. Reverse Linux-initiated Windows inbound TCP, Game startup padding and full 029/029B technical exit remain OPEN/NOT_RUN; 030 not started.
