@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2205-H2204-GUI-DRIVER-RELEASE",
+  "result": "PASS_SCOPED",
+  "date_utc": "2026-11-18",
+  "product_main_sha": "c04d5eefd47b672b30e531b21da763bfcf7a91f9",
+  "candidate_qa_source_sha": "5ad409d1f5fe664a4030eec149a98882f88108f8",
+  "tested_action": {
+    "run_id": 44343862449,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44343862449",
+    "status": "success",
+    "windows_artifact_id": 14445671783,
+    "linux_arm64_artifact_id": 14445087673
+  },
+  "fast_gui": {
+    "run_id": 44343852130,
+    "status": "success",
+    "checks_passed": 409,
+    "exit_code": 0,
+    "scope": "WinForms source/native Go --check-config with signed original DLL and controls; installer actions NOT_RUN"
+  },
+  "windows_build": {
+    "status": "PASS_SCOPED",
+    "runner": "windows-2025/amd64",
+    "details": [
+      "original Go V4v2 and Rust ISA-L DLL",
+      "409 current WinForms checks",
+      "Npcap official direct download plus signed local interactive install controls",
+      "Wintun official pinned DLL and owned temporary PnP setup controls",
+      "allowlisted artifact excludes test profiles and retired shell scripts"
+    ],
+    "physical_install": "NOT_RUN"
+  },
+  "linux_arm64": {
+    "status": "PASS_SCOPED",
+    "runner": "ubuntu-24.04-arm/aarch64",
+    "network_scenarios": 12,
+    "details": [
+      "original Go TLS1.3 + Rust native AF_PACKET/TUN",
+      "authenticated V4 extension v2 off/tls/flows",
+      "genuine bidirectional kernel TCP/UDP",
+      "owned Stop"
+    ],
+    "cross_isa_physical": "NOT_RUN"
+  },
+  "other_native_vm_qualification": [
+    {
+      "run": 44334462936,
+      "source": "74343dff94bfef321eda84306ea35c98f264146e",
+      "scenario": "Windows GUI Normal reconnect ↔ WSL2 Linux, signed native Wintun/Npcap",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "run": 44334470304,
+      "source": "74343dff94bfef321eda84306ea35c98f264146e",
+      "scenario": "Windows Game2 ↔ WSL2 Linux, signed Npcap/Wintun, genuine bidirectional TCP/UDP",
+      "status": "PASS_SCOPED"
+    }
+  ],
+  "limits": [
+    "Cannot redistribute Npcap Free installer without OEM license; gui opens official source then executes user-selected authenticated signed vendor wizard",
+    "Wintun GUI temporary adapter install and real end-user Npcap installer execution were not exercised in CI",
+    "Windows physical PC ↔ physical Linux ARM64 server end-to-end NOT_RUN",
+    "No public WAN, DPI, p99, L3 endurance or Android/OpenWrt physical claims",
+    "Old failed GUI fixture/CI runs remain historical FAIL and must not be rewritten",
+    "Original product TLS/data protocol not changed by these UI/test changes"
+  ]
+}

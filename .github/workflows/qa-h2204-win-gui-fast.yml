@@ -1,0 +1,85 @@
+name: 'QA H2204 native Windows GUI fast self-test'
+run-name: 'QA H2204 GUI original Go source-locked real check-config'
+on:
+  push:
+    branches: [qa/h2204-current-win64-gui-arm64-v2-release-20261118]
+    paths:
+      - '.github/workflows/qa-h2204-win-gui-fast.yml'
+      - 'tools/m0_plan028_h1640_win_gui_compile.ps1'
+      - 'tools/m0_h2204_win_driver_setup.cs'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  real-gui:
+    runs-on: windows-2025
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12',cache: false}
+      - name: Only GUI/test code changes may reuse exact proven H2204 native EXE
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          git diff --exit-code 3f929a5d16a426f9f32a705b61814166b872176f $env:GITHUB_SHA -- crates Cargo.toml Cargo.lock r0/go_overlay/cmd r0/go_overlay/internal/realityfront/admission_v4.go r0/go_overlay/internal/v4productcli
+          if($LASTEXITCODE -ne 0){throw 'current Go Rust production source changed: refuse prebuilt GUI test'}
+      - name: Get original exact source-verified native Windows Go CLI from successful H2204 build
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference='Stop'
+          gh run download 44334052973 --repo $env:GITHUB_REPOSITORY --name h2204-v2-windows-amd64-gui-signed-wintun --dir frozen-original
+          if($LASTEXITCODE -ne 0){throw 'same-source frozen native original-Go product missing'}
+          $m=Get-Content frozen-original/windows-amd64/windows-provenance.json -Raw|ConvertFrom-Json
+          if($m.qa_source_sha -ne '3f929a5d16a426f9f32a705b61814166b872176f'){throw 'wrong frozen exact product SOURCE'}
+          $exe='frozen-original/windows-amd64/wbd-client.exe'
+          if((Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant() -ne $m.sha256.'wbd-client.exe'){throw 'wrong original Go executable sha'}
+          New-Item -ItemType Directory -Force delivery/windows-amd64 | Out-Null
+          Copy-Item $exe delivery/windows-amd64/wbd-client.exe
+          $dll='frozen-original/windows-amd64/wbd_engine.dll'
+          if((Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant() -ne $m.sha256.'wbd_engine.dll'){throw 'wrong native Rust DLL source SHA'}
+          Copy-Item $dll delivery/windows-amd64/wbd_engine.dll
+      - name: Reassemble actual current v2 CLI/GUI source schema and source-pinned WinForms
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'exact source GUI donor assembly failed'}
+          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory delivery/windows-amd64 -SourceSHA $env:GITHUB_SHA -Version H2204-v2-FAST
+          if($LASTEXITCODE -ne 0){throw 'WinForms compiler failed'}
+      - name: Wait actual native WinExe self-test and strictly inspect positive receipt
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $dir=(Resolve-Path delivery/windows-amd64).Path
+          $p=Start-Process -FilePath (Join-Path $dir 'WBD.exe') -ArgumentList '--self-test' -WorkingDirectory $dir -Wait -PassThru
+          $file=Join-Path $dir 'gui-test-result.json'
+          if(-not (Test-Path $file)){throw 'actual WinForms self-test receipt missing'}
+          $v=Get-Content $file -Raw|ConvertFrom-Json
+          Write-Output ('GUI_RECEIPT_STATUS='+$v.result+' checks='+@($v.checks).Count+' process_exit='+$p.ExitCode)
+          if($p.ExitCode -ne 0 -or $v.source_sha -ne $env:GITHUB_SHA -or $v.result -ne 'PASS' -or @($v.checks).Count -lt 20){
+            Write-Output ('H2204_FAST_GUI_SELFTEST_NOT_PASS '+($v|ConvertTo-Json -Compress -Depth 4))
+            throw 'GUI cannot be released until actual selftest PASS'
+          }
+          Write-Output 'H2204_FAST_GUI_TRUE_PASS'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2204-native-win-gui-fast-receipt
+          path: |
+            delivery/windows-amd64/gui-test-result.json
+            delivery/windows-amd64/gui-fields.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -27,15 +27,37 @@ func TestM0WindowsGameFecProtectedExtensionBounds(t *testing.T){
    t.Fatalf("untrusted Game2 FEC2 server profile=%d admitted: %v",invalid,err)
   }
  }
+ // H2202: the SECOND optional client byte is the *new* protected
+ // startup-padding selector, not another FEC2 profile. In particular,
+ // (GameFec=off, Padding=tls) is legal V2 configuration and must not be
+ // misclassified as conflicting FEC. Unknown padding is fail-closed.
  _,err:=V4WindowsEstablishOriginalGameClientGroup(
-  context.Background(),"",client,ClientAdmissionConfig{},0,1)
- if !errors.Is(err,ErrAdmissionParams){
-  t.Fatalf("multiple conflicting Game2 FEC profiles admitted: %v",err)
+  context.Background(),"",client,ClientAdmissionConfig{},0,3)
+ if !errors.Is(err,ErrAdmissionUnsupported){
+  t.Fatalf("unknown V2 Game2 startup padding accepted: %v",err)
  }
+ _,err=V4WindowsEstablishOriginalGameClientGroup(
+  context.Background(),"",client,ClientAdmissionConfig{},0,0,1)
+ if !errors.Is(err,ErrAdmissionParams){
+  t.Fatalf("extra V2 Game2 extension fields accepted: %v",err)
+ }
+ // With a valid original Game carrier policy, a valid padding value must
+ // reach the real-association guard and reject these nil associations.
+ policy,policyErr:=FixedPolicyForClient(2,4)
+ if policyErr!=nil{t.Fatalf("source Game2 carrier policy: %v",policyErr)}
+ cfg:=ClientAdmissionConfig{Policy:policy,DesiredLanes:2}
+ _,err=V4WindowsEstablishOriginalGameClientGroup(
+  context.Background(),"",client,cfg,0,1)
+ if !errors.Is(err,ErrAdmissionParams){
+  t.Fatalf("valid Game2 V2 tls padding did not reach association guard: %v",err)
+ }
+ // The server's optional argument is STILL only GameFec; the verified
+ // client padding comes from each TLS session and may never be forced by
+ // a second local server argument.
  _,err=V4WindowsEstablishOriginalGameServerGroup(
   context.Background(),"",server,ServerAdmissionConfig{},nil,0,1)
  if !errors.Is(err,ErrAdmissionParams){
-  t.Fatalf("multiple conflicting Game2 server FEC profiles admitted: %v",err)
+  t.Fatalf("untrusted server-side startup override accepted: %v",err)
  }
 }
 
