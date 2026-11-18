@@ -9,3 +9,5 @@
 ```
 
 首次SOURCE `a22ab7fd` [native Action44303725701](https://github.com/lly8666/wbd-next/actions/runs/44303725701) 双ISA预检 FAIL，停在老静态测试 `assertIn("server_padding_records",cases)`；H2200新增控制回归把server+client统一成 `row.get(role+"_padding_records")` 迭代，原字符串不再出现。维护回归 [44303725767](https://github.com/lly8666/wbd-next/actions/runs/44303725767) 同一个静态断言FAIL；治理/Feature [44303725803](https://github.com/lly8666/wbd-next/actions/runs/44303725803) SUCCESS。仅修测试断言匹配真实代码，不变协议/产品或伪造真网PASS；原失败保留，后续新SOURCE单次原生重测。
+
+H2200 SOURCE e36248f0 dual ISA [Action44304050978](https://github.com/lly8666/wbd-next/actions/runs/44304050978) in original rust+go build FAILED after Rust tests PASS: Go TEST TAG collision `bridge_v4_embedded_linux_test.go` imports out-of-scope raw helper `v4RawCheckSum` and `v4RawC2STestPacket`; this is not a new encrypted-protocol runtime failure. Only change new H2200 pure-Go TLS test invocation to default Go tag (same as existing standalone V4 TLS package test); original tagged native v4productcli test and tagged production binaries unchanged. First CI failure retained. Actual new source native status NOT_RUN.
