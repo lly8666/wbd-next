@@ -100,7 +100,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     session,err:=EstablishClientV4(ctx,conn,cfg,V4ClientOptions{
         DataPlaneReady:true,fec2Product:v4ProductFecEnabled(mode),
         NormalFec:normalProfile,
-        ControlPadded:true,StartupPadding:p.cfg.StartupPaddingMode,
+        StartupPadding:p.cfg.StartupPaddingMode,
     })
     if err!=nil{return nil,err}
     cold,err:=session.ColdSnapshot()

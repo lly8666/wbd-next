@@ -193,7 +193,7 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
         if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishClientV4(ctx,a.BootstrapConn(),cfg,V4ClientOptions{
             DataPlaneReady:true,Epoch:epoch,fec2Product:true,GameFec:gameFec,
-            ControlPadded:true,StartupPadding:p.cfg.StartupPaddingMode,
+            StartupPadding:p.cfg.StartupPaddingMode,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         if i==0{epoch=session.Epoch}
@@ -283,7 +283,7 @@ func (p *V4LinuxGameProduct) ReplaceClientGameLane(
     if p.cfg.GameFecEnabled{fec=p.cfg.GameFecProfile+1}
     next,e:=EstablishClientV4(ctx,a.BootstrapConn(),base,V4ClientOptions{
         DataPlaneReady:true,Epoch:previous.Epoch,fec2Product:true,GameFec:fec,
-        ControlPadded:true,StartupPadding:p.cfg.StartupPaddingMode,
+        StartupPadding:p.cfg.StartupPaddingMode,
     })
     if e!=nil{return fmt.Errorf("%w: %w",ErrV4GameLaneUncommittedCold,e)}
     cold,e:=next.ColdSnapshot()
