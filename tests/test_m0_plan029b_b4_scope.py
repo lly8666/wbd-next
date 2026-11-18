@@ -50,7 +50,8 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         # legacy PLAN028 Linux->Windows inbound TCP comparator failed after
         # the B4 business proof. Keep the real original Windows->Linux
         # Tunnel TCP test; do not skip TCP or promote the old 028 direction.
-        self.assertIn('if p029_direct or p029b_b4:', e2e)
+        self.assertIn('if p029_direct or p029b_b4 or p029b_game_case:', e2e)
+        self.assertIn('if p029_direct or p029b_b4 or p029b_game_case:\\n', e2e.replace('\n','\\n'))
         self.assertIn('m0_plan029_h1762_oneway_tunnel_tcp.py', e2e)
         self.assertIn('report["tcp_duplex"]="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"', e2e)
         self.assertIn('if wt.wait(timeout=36)!=0 or lt.wait(timeout=7)!=0:', e2e)
