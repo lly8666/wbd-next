@@ -138,6 +138,17 @@ if(([regex]::Matches($tests,[regex]::Escape($oldDnsNegative))).Count -ne 1){
 }
 $tests=$tests.Replace($oldDnsNegative,'{"dns.tunnel","::1"}')
 
+# A separate legacy checkbox was retired by the native V4v2 GUI.
+# Exercise the real canonical startup-padding ComboBox instead of trying
+# to set a hidden/nonexistent tls-startup-padding editor.
+$oldWidget='{"mtu",1280},{"tls-startup-padding",true}'
+$oldExpect='Convert.ToBoolean(p.Values["tls-startup-padding"])'
+if(([regex]::Matches($tests,[regex]::Escape($oldWidget))).Count -ne 1 -or
+   ([regex]::Matches($tests,[regex]::Escape($oldExpect))).Count -ne 1){
+ throw 'H2204 obsolete WinForms startup checkbox test donor drift'
+}
+$tests=$tests.Replace($oldWidget,'{"mtu",1280},{"startup-padding","tls"}')
+$tests=$tests.Replace($oldExpect,'Convert.ToString(p.Values["startup-padding"])=="tls"')
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests
