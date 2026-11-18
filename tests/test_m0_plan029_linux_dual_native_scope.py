@@ -36,6 +36,17 @@ class Plan029LinuxDualIsaTest(unittest.TestCase):
         self.assertIn('"$packet_sockets" -ge 1',netns)
         self.assertNotIn('"$packet_sockets" -ge "$game_lanes"',netns)
         self.assertIn('shared_port=443 lanes=$game_lanes',netns)
+        # H2176: Game's 'rejected' is source GameTx.lane_copy_drop,
+        # not AEAD rejected traffic. Keep genuine transport failures and
+        # authenticated rejections strictly zero and report copy skips.
+        self.assertIn('PLAN029_LINUX_NATIVE_GAME_KERNEL_RECEIPT_CHECKED',netns)
+        self.assertIn('auth_denied==0',netns)
+        self.assertIn('classification[8]==copy_skips',netns)
+        self.assertIn('all(v==0 for v in classification[:8])',netns)
+        self.assertIn('lane_copy_skips_observed',netns)
+        self.assertIn('rejected=0 raw_received=',netns) # old ARM64 gate unchanged
+        tx=(ROOT/"crates/wbd-engine/src/runtime/game_shared.rs").read_text()
+        self.assertIn('pub lane_copy_drop:u64',tx)
         game=(ROOT/"r0/go_overlay/internal/v4productcli/game_linux.go").read_text()
         self.assertIn("One real AF_PACKET listener per server port",game)
         self.assertIn('disable_ipv6',netns)

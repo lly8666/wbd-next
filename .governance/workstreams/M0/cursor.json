@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2175,
-  "checkpoint_sha": "03025191f46744bcbc90378440bd03973391cd3a",
+  "sequence": 2176,
+  "checkpoint_sha": "62431acb9c0ba40d913a7ce4546791d18e4e79dd",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2175修Linux两原生ISA Game2/4首SYN前夹具错误地以2/4条lane期待2/4个AF_PACKET FD；原Go manual runGameServer明文源码一服务端443端口共享恰一原AF_PACKET RAW socket。重新测试原Go/Rust双Linux真实Game2/Game4与Stop。",
-  "why_now": "H2174 Action44256427127两ISA Normal/Fixed/Auto各3/3真Linux客户端+服务端UDP/TCP/MTU1460/IPv6自有/Stop PASS，Game2两ISA共性夹具 preSYN socket>=game_lanes 卡死且client根本未启动；原product runGameServer单端口显式一socket。",
-  "done_when": "当前SOURCE两原生ISA Game2与Game4fixed实际TLS/raw/TUN双向UDP+TCP/FEC parity/Stop成功；必须真实service内仅一AF_PACKET port443预SYN就绪，未跑不升格。",
-  "next_action": "观测H2175受限双ISA原生Action；记录全5场真实PASS或首个FAIL，更新功能卡和证据，不启030。",
+  "current_task": "H2176 Linux双原生ISA Game2现已真实TLS两lane+内核TCP/UDP双向+Stop PASS，但旧历史arm64门禁误将Rust GameTx.lane_copy_drop冗余副本跳过计数rejected=4当作AEAD拒绝; 增严格分项零原生raw/slab/MTU/鉴权检查及copy_drop只读证据，不改产品。",
+  "why_now": "H2175 Action44257618077 x86/ARM各Normal/Fixed/Auto真网络PASS；Game2各source真实preSYN 1共享socket+两lane认证+双向真实TCP/UDP+Stop，但原Rust内核record反映lane_copy_drop=4, auth_rejected=0, raw/slab/record/policy/MTU分类错误全0；旧guard要求rejected=0导致误判。",
+  "done_when": "在原生x86_64+aarch64两个真实Linux服务端+客户端两架构各五模式完整按源锁验收：TLS/AES、IP/TCP/UDP/MTU FEC真实有效、Stop、Game有严格classified transport fault=0及可见副本drop数据。",
+  "next_action": "收H2176双ISA五模式原生Action；若Game4 FEC实际未通过保留首错、调查最小触发，不虚报全10场。",
   "unverified": true,
   "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2176-LINUX-GAME-COPY-DROP-CLASSIFICATION.md",
     "docs/devlog/M0/20261118-PLAN029-H2175-LINUX-GAME-ONE-SHARED-SOCKET-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2174-LINUX-DUAL-ISA-FEC-OFF-RECEIPT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2173-LINUX-DUAL-ISA-STATIC-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2172-LINUX-DUAL-ISA-FIRST-FAULT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2171-LINUX-DUAL-ISA-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md"
+    "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2174 SOURCE0302519 native x86/ARM各Normal Fixed Auto全真网络双向PASS，Game2 preSYN夹具要求AF_PACKET个数>=lanes(2/4)错误：原Go server manual Game一个ReceivePort443 socket供全组；原Go服务端启动但新script禁止client首SYN导致双ISA Game2 FAIL，Game4未跑。H2175只把门槛定为真实>=1，并保留lane authenticated/实际packet/FEC/Stop验证。"
+  "partial_summary": "H2175 source62431ac原生ARM/x86 Normal Fixed Auto 3/3每ISA 真app+TUN/Stop PASS，Game2真正Rust M4 2lane认证、双向TCP/UDP、双方Stop也通过，但旧fixture最后拒绝4次GameTx lane copy drop (非auth_rejected, 原因分类raw/slab/record/policy/MTU全0)。H2176源锁新scoped诊断保留旧legacy严格rejected=0，当前Linux PLAN029明确核分类错误全0并记录copy drop; Game4未测。"
 }

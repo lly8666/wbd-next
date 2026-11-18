@@ -119,6 +119,21 @@ for label,mode,fec,mtu_boundary in cases:
                      "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED" in raw)
                     and ("V4_ORIGINAL_GO_" in raw)):
                 raise RuntimeError("original Go TLS/Rust owned Stop missing: "+role)
+        if mode in ("game2","game4"):
+            diag=json.loads((case_dir/"game-kernel-copy-readback.json").read_text())
+            if (diag.get("verified_original_game_lanes")!=(2 if mode=="game2" else 4)
+                or diag.get("scope")!="ORIGINAL_AUTHENTICATED_GAME_M4_KERNEL_COPIES"):
+                raise RuntimeError("original Game kernel diagnostic scope mismatch")
+            for role in ("client","server"):
+                k=diag.get(role,{})
+                if (k.get("kernel_copied",0)<=0
+                    or k.get("first_delivered",0)<=0
+                    or k.get("raw_received",0)<=0
+                    or k.get("auth_rejected")!=0
+                    or k.get("lane_copy_skips_observed",-1)<0
+                    or k.get("classified_transport_faults")!=[0]*8):
+                    raise RuntimeError("Game M4 source, AEAD or raw/MTU fault detected: "+role)
+            row["game_m4_kernel_copy_readback"]=diag
         row.update(status="PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
                    real_both_way_tcp="PASS",real_both_way_udp="PASS",
                    ipv6_tun_owned="PASS",outer_mtu=1460,
