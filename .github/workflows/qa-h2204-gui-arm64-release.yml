@@ -171,8 +171,10 @@ jobs:
           & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory delivery/windows-amd64 -SourceSHA $env:GITHUB_SHA -Version 'H2204-v2-QA'
           if($LASTEXITCODE -ne 0){throw 'WinForms current V4v2 GUI build failed'}
           $gui=Join-Path (Resolve-Path delivery/windows-amd64).Path 'WBD.exe'
-          & $gui --self-test
-          if($LASTEXITCODE -ne 0){throw 'actual Windows GUI field save/load + Go config validation regression failed'}
+          # A /target:winexe GUI process is asynchronous to the PowerShell
+          # native invocation. Wait for the actual process and its receipt.
+          $proc=Start-Process -FilePath $gui -ArgumentList @('--self-test') -WorkingDirectory (Split-Path $gui -Parent) -Wait -PassThru
+          Write-Output ('H2204_GUI_PROCESS_EXIT='+$proc.ExitCode)
           # A WinForms /target:winexe process can return before PowerShell
           # observes the real child result. The source-locked GUI self-test
           # receipt is authoritative; never promote a failed fixture from
@@ -180,6 +182,7 @@ jobs:
           $report=Join-Path (Resolve-Path delivery/windows-amd64).Path 'gui-test-result.json'
           if(-not (Test-Path -LiteralPath $report)){throw 'GUI self-test receipt missing: NOT_RUN'}
           $self=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+          if($proc.ExitCode -ne 0){Write-Host (Get-Content $report -Raw);throw 'GUI self-test process returned failure'}
           if($self.source_sha -ne $env:GITHUB_SHA -or $self.result -ne 'PASS' -or @($self.checks).Count -lt 20){
             Write-Host ('H2204_GUI_SELFTEST_NOT_PASS '+($self | ConvertTo-Json -Depth 4 -Compress))
             throw 'GUI self-test report is not PASS, release forbidden'
