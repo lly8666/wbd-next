@@ -72,7 +72,12 @@ assert 'func NewGroup(' in j and 'readOwnedJournalVersion(' in j and 'groupRuleS
 payload=Path("android/root-app/src/org/wbdnext/rootclient/NativePayload.java").read_text()
 assert 'PINNED_CN_SHA256' in payload and 'cn-geosite-provenance.json' in payload
 assert '"wbd-cn-geosite.txt",PINNED_CN_SHA256,6000000' in payload
-assert 'new NativePayload(go,rust,cn,source)' in payload
+assert 'new NativePayload(go,rust,cn,source,executable)' in payload
+assert 'armAssets==x86Assets' in payload, 'only one signed ABI allowed'
+assert '(!armAssets&&m.optBoolean("release",true))' in payload, 'x86 must be CI-only'
+assert 'signed native ABI not supported by OS' in payload
+assert 'libwbd_engine-' in payload and 'wbd-v4-client-' in payload, 'one original ABI-selected Go/Rust'
+assert 'ownerExecutable=code.executableName' in s, 'exact original GO executable at Stop'
 assert '"--android-cn-geosite-file",nativeCode.cnGeosite.getAbsolutePath()' in s
 cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
 assert 'cnGeositeFile:=flags.String("android-cn-geosite-file"' in cold
