@@ -4,23 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2193,
-  "checkpoint_sha": "c7c5c4165d6e56cd412c18d65753e5de8d4bc39e",
+  "sequence": 2194,
+  "checkpoint_sha": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2193：Linux Normal/off原Go TLS/Rust真实M4随机startup-padding全链候选；x86/ARM双原生各2场待冻结测试。",
-  "why_now": "H2186 Game填充12/12已证实，但Normal tls/flows原CLI未接线；增量复用原Rust策略与kind1 seal，不改FEC source/parity。",
-  "done_when": "同SOURCE原Go/Rust+GUI无关双ISA Normal tls/flows各2真网、正数M4 copied、kernel TCP/UDP、双Stop签名；FIXED/AUTO冷拒绝保留。",
-  "next_action": "冻结源码触发原生Linux两ISA两场Action；仅核首个失败/真raw copied；原029技术仍OPEN。",
+  "current_task": "H2194：Linux Normal/off startup-padding tls/flows双ISA四场真网PASS_SCOPED，签名归档；继续029独立Linux缺口。",
+  "why_now": "SOURCE06bd63f5 Action44290120683双原生Linux x86/ARM各2场原Go TLS/Rust真kernel TCP/UDP/Stop成功，M4 copied padding双端非零。",
+  "done_when": "H2193 Normal填充两个ISA原件、SHA、功能卡及governance归档PASS；完整029技术仍OPEN。",
+  "next_action": "继续Linux auto-IP原路径的真实物理MTU缩窄/重认证资格；Fixed/Auto kind2/3不能误接Normal填充；030未启。",
   "unverified": true,
-  "last_tested_source": "e174235872d32cca69bf921fb59904f9bcaee889",
+  "last_tested_source": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029-H2193-LINUX-NORMAL-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029-H2188-CARD-AND-HOT-BUDGET-COMPAT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2187-LINUX-ALL-NONWIN-SCOPED-CAPABILITY-CLOSEOUT.md"
+    "docs/devlog/M0/20261118-PLAN029-H2194-LINUX-NORMAL-PADDING-FOUR-NATIVE-SIGNED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2193候选在原H2186 Linux Game填充SOURCE e1742358真PASS基础上补Normal/off，当前新产品SOURCE尚未冻结、真实测试NOT_RUN。FEC Fixed/Auto kind2/3不填；无key X25519协议禁线，manual动态MTU/实体ARM/性能OPEN，030未启动。"
+  "partial_summary": "H2193 SOURCE06bd63f5原生Linux x86/ARM Normal tls/flows各2场合计4/4真实Go TLS/Rust M4 raw已成功复制、kernel TCP/UDP双向/两端Stop。x86 tls2/487B、flows4/1300B；ARM tls2/385B、flows4/535B（每端）。固定/自动FEC填充、autoIP动态MTU、实体ARM/p99仍OPEN；029日常限域PASS，完整技术OPEN。"
 }

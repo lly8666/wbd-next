@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
-    "linux_cli": "Linux 原Go TLS client/server --mode normal|game2|game4 --startup-padding off|tls|flows，默认off；Normal仅业务kind1，Game每lane原M4；FEC Fixed/Auto kind2/3不支持并冷路径拒绝。H2193 Normal Rust/Go冷接线候选待两ISA真网签名；Game H2186真实PASS不变。"
+    "linux_cli": "Linux 原Go TLS client/server --mode normal|game2|game4 --startup-padding off|tls|flows，默认off；Normal仅业务kind1，Game每lane原M4；FEC Fixed/Auto kind2/3不支持并冷路径拒绝。H2193原生x86+ARM共4场真网络签名PASS_SCOPED；Game H2186真实PASS不变。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -146,10 +146,10 @@
     },
     {
       "platform": "Linux x86_64 and native ARM64 original client/server Normal/off",
-      "scope": "H2193 new original TLS/Rust Normal tls/flows cold ABI and real M4 post-kernel raw-copy receipts; candidate waiting actual two-ISA Action, no product PASS yet.",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "scope": "H2193 two native ISA each Normal tls/flows original protected Go TLS+Rust M4 with actual AF_PACKET copied padding positive, bidirectional kernel TCP/UDP, owned IPv6 interface and Stop: 4/4 PASS_SCOPED. Not Fixed/Auto or app TLS handshake.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
+      "evidence": "docs/evidence/M0/PLAN029-H2193-LINUX-NORMAL-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"
     }
   ],
   "limitations": [
