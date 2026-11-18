@@ -34,11 +34,18 @@ buildtool="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | 
 # Historical x86 KernelSU probe keeps its exact source-locked checks.
 # The new ARM64-product/native-bridge gate stages its OWN same-SHA Go/Rust
 # artifact and does NOT compile or reuse the historical x86 probe.
-if [[ "${WBD_KSU_PRODUCT_ARM64:-0}" == 1 ]]; then
+if [[ "${WBD_KSU_PRODUCT_ARM64:-0}" == 1 || "${WBD_KSU_PRODUCT_X86_CI:-0}" == 1 ]]; then
   test -s out/android-root-app-native/SOURCE
   test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
   (cd out/android-root-app-native && sha256sum -c SHA256SUMS) >out/ksu/native-checksums.txt
-  echo "KSU_NATIVE_PRODUCT_ARM64_SOURCE_LOCKED" >out/ksu/native-source-mode.txt
+  if [[ "${WBD_KSU_PRODUCT_X86_CI:-0}" == 1 ]]; then
+    test -s out/android-root-app-native/manifest-ci-x86_64.json
+    test -s out/android-root-app-native/wbd-v4-client-amd64
+    test -s out/android-root-app-native/libwbd_engine-amd64.so
+    echo "KSU_NATIVE_PRODUCT_X86_CI_SOURCE_LOCKED" >out/ksu/native-source-mode.txt
+  else
+    echo "KSU_NATIVE_PRODUCT_ARM64_SOURCE_LOCKED" >out/ksu/native-source-mode.txt
+  fi
 else
   (cd out/native && sha256sum -c SHA256SUMS) >out/ksu/native-checksums.txt
   test "$(cat out/native/SOURCE)" = "$GITHUB_SHA"

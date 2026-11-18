@@ -43,6 +43,7 @@ public final class RootClientService extends Service {
     private volatile Process root;
     private volatile PhysicalNetwork selection;
     private volatile String ownerToken;
+    private volatile String ownerExecutable="wbd-v4-client-arm64";
     private ConnectivityManager watchedManager;
     private ConnectivityManager.NetworkCallback watchedCallback;
     private NetworkScopeGate watchedGate;
@@ -313,7 +314,7 @@ public final class RootClientService extends Service {
         shell.append("cp ").append(q(nativeCode.engine.getAbsolutePath()))
             .append(" \"$p/.engine.tmp\"; ");
         shell.append("chmod 700 \"$p/.client.tmp\"; chmod 600 \"$p/.engine.tmp\"; ");
-        shell.append("mv -f \"$p/.client.tmp\" \"$p/wbd-v4-client-arm64\"; ");
+        shell.append("mv -f \"$p/.client.tmp\" \"$p/").append(nativeCode.executableName).append("\"; ");
         shell.append("mv -f \"$p/.engine.tmp\" \"$p/libwbd_engine.so\"; ");
         // Shell exec preserves $$ + proc stat starttime as real native
         // Go process PID; Stop checks the same exact process, not pkill -f.
@@ -321,7 +322,7 @@ public final class RootClientService extends Service {
         shell.append("printf '%s %s %s\\n' \"$$\" \"$native_start\" ").append(q(token)).append(" > \"$p/owner.pid\"; ");
         shell.append("chmod 600 \"$p/owner.pid\"; ");
         shell.append("LD_LIBRARY_PATH=\"$p\"; export LD_LIBRARY_PATH; ");
-        shell.append("exec \"$p/wbd-v4-client-arm64\" ");
+        shell.append("exec \"$p/").append(nativeCode.executableName).append("\" ");
         shell.append(String.join(" ",args));
         return shell.toString();
     }
@@ -331,6 +332,7 @@ public final class RootClientService extends Service {
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         try{
             NativePayload code=NativePayload.stage(this);
+            ownerExecutable=code.executableName;
             trace(RootDiagnosticReceipt.Event.NATIVE_SOURCE_VERIFIED);
             if(PhysicalNetwork.exact(this,net.handle,net.interfaceName,net.ifindex,
                   net.mtu,net.address)==null){
@@ -447,7 +449,7 @@ public final class RootClientService extends Service {
         trace(RootDiagnosticReceipt.Event.STOP_SIGNAL_STARTED);
         new Thread(()->{
             try{
-                Process p=new ProcessBuilder("su","-c",RootStopCommand.build(token))
+                Process p=new ProcessBuilder("su","-c",RootStopCommand.build(token,ownerExecutable))
                     .redirectErrorStream(true).start();
                 try(BufferedReader r=new BufferedReader(
                     new InputStreamReader(p.getInputStream()))){

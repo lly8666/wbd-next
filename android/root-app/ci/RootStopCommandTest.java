@@ -33,6 +33,17 @@ public final class RootStopCommandTest {
             catch(IllegalArgumentException expected){rejected=true;}
             check(rejected,"invalid generation refused");
         }
+        String x86=RootStopCommand.build(token,"wbd-v4-client-amd64");
+        check(x86.contains("$p/wbd-v4-client-amd64"),"CI x86 exact native image");
+        Process x86sh=new ProcessBuilder("sh","-n").start();
+        x86sh.getOutputStream().write(x86.getBytes(StandardCharsets.UTF_8));
+        x86sh.getOutputStream().close();
+        check(x86sh.waitFor(3,TimeUnit.SECONDS)&&x86sh.exitValue()==0,
+            "same POSIX Stop script supports x86 native ELF");
+        boolean refused=false;
+        try{RootStopCommand.build(token,"wbd-v4-client-arm");}
+        catch(IllegalArgumentException expected){refused=true;}
+        check(refused,"arbitrary executable path refused");
         System.out.println("ANDROID_ROOT_EXACT_STOP_POSIX_SYNTAX_PASS assertions="+assertions);
     }
 }

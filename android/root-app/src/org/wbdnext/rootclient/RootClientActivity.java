@@ -225,7 +225,8 @@ public final class RootClientActivity extends Activity {
         Button selfTestButton=new Button(this);
         selfTestButton.setText("A12 一键自检 ARM64/KSU/TUN/UID入TUN及分阶段路由诊断（免服务器）");
         selfTestButton.setOnClickListener(v->runDeviceSelfTest());
-        pane.addView(selfTestButton);
+        if(android.os.Build.SUPPORTED_ABIS.length>0&&
+           "arm64-v8a".equals(android.os.Build.SUPPORTED_ABIS[0]))pane.addView(selfTestButton);
         deviceSelfTestResult=new TextView(this);
         deviceSelfTestResult.setText("尚未测试。测试中会请求 KernelSU 授权；结果可长按复制。");
         deviceSelfTestResult.setTextIsSelectable(true);

@@ -225,6 +225,59 @@ jobs:
             out/android-root-app/badging.txt
           retention-days: 14
           if-no-files-found: warn
+  android-x86-kvm-ksu-original-native:
+    # D0 + D1 partial: actual native x86_64 Android Go/Rust signed CI APK
+    # in historical KSU 3.3.1 API36 AVD. Does NOT claim App->su or TLS/M4.
+    needs: [arm64-native, b2-authentic-cn-geosite-host]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 38
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+      - name: Test original Root Stop contract and Android app source (host JVM)
+        shell: bash
+        run: bash android/root-app/ci/test-network-scope-gate.sh
+      - name: Build same-Java original Go/Rust x86_64 signed CI-only APK
+        shell: bash
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: Verify pinned KernelSU 3.3.1 and prepare Android16 x86 KVM
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: D1 partial real KernelSU x86 native original Go ELF help and CI APK Activity
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 1020s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-x86-original-native-ksu-${{ github.sha }}
+          path: |
+            out/android-x86-ci-app/wbd-root-x86-ci-only.apk
+            out/android-x86-ci-app/manifest.json
+            out/android-x86-ci-app/SOURCE
+            out/android-x86-ci-app/SHA256SUMS
+            out/android-x86-ci-app/badging.txt
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/*.txt
+            out/ksu/sdk-install.txt
+            out/ksu/patch-log.txt
+            out/ksu/helper-sha.txt
+            out/ksu/manager-hash-verified.txt
+            out/ksu/native-source-mode.txt
+          retention-days: 14
+          if-no-files-found: warn
+
   linux-original-server-normal-off:
     # Genuine original Linux Go/Rust server + Linux peer: NOT Android E2E.
     needs: [arm64-native]

@@ -9,19 +9,25 @@ import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 
-// Native Go/Rust assets are source-locked to the SAME verified ARM64 CI.
+// Same original Go/Rust Bionic source: arm64 release or x86_64 CI-only APK.
 // APK never substitutes its own crypto/TLS, CGo ABI or synthetic traffic.
 final class NativePayload {
     final File client;
     final File engine;
     final File cnGeosite;
     final String source;
+    final String executableName;
     private static final String PINNED_CN_SHA256=
         "45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6";
     private static final String PINNED_CN_SOURCE=
         "41504eae2a11f305fe88cfc605cf6c105a80bf5a";
-    private NativePayload(File c,File e,File g,String s){
-        client=c;engine=e;cnGeosite=g;source=s;
+    private NativePayload(File c,File e,File g,String s,String binary){
+        client=c;engine=e;cnGeosite=g;source=s;executableName=binary;
+    }
+    private static boolean hasAsset(Context ctx,String path){
+        try(InputStream in=ctx.getAssets().open(path)){
+            return in.read()!=-1;
+        }catch(java.io.IOException absent){return false;}
     }
     private static byte[] load(Context ctx,String path,int maximum)throws Exception{
         try(InputStream in=ctx.getAssets().open(path);
@@ -46,14 +52,14 @@ final class NativePayload {
         }
         return new String(out);
     }
-    private static File checkedCopy(Context ctx,String asset,File dir,
+    private static File checkedCopy(Context ctx,String assetPrefix,String asset,File dir,
                                      String fileName,String expected,int maxBytes)throws Exception{
         // Streaming one-pass SHA256 + fd sync: do NOT hold an additional
         // 11MiB original-Go ELF byte[] on the Android app Java heap.
         MessageDigest hash=MessageDigest.getInstance("SHA-256");
         File target=new File(dir,fileName);
         int total=0;
-        try(InputStream in=ctx.getAssets().open("native-arm64/"+asset);
+        try(InputStream in=ctx.getAssets().open(assetPrefix+asset);
             FileOutputStream out=new FileOutputStream(target,false)){
             byte[] buffer=new byte[8192];
             int n;
@@ -97,42 +103,52 @@ final class NativePayload {
         File dir=new File(ctx.getNoBackupFilesDir(),"wbd-arm64-verified");
         if(!dir.isDirectory()&&!dir.mkdir())
             throw new IllegalStateException("device diagnostic staging inaccessible");
-        return checkedCopy(ctx,"device-selftest-arm64",dir,
+        return checkedCopy(ctx,"native-arm64/","device-selftest-arm64",dir,
             "device-selftest-arm64",hash,1024*1024);
     }
 
     static NativePayload stage(Context ctx)throws Exception{
-        boolean arm64=false;
-        for(String abi:Build.SUPPORTED_64_BIT_ABIS){
-            if("arm64-v8a".equals(abi)){arm64=true;break;}
-        }
-        if(!arm64)throw new IllegalStateException(
-            "only original WBD Android ARM64-v8a product accepted");
+        // Signed APK may contain one and ONLY one supported 64-bit Bionic ABI.
+        // Release bundles ARM64; CI-only test bundles x86_64. The same Java
+        // controller/Go/Rust source is used by both, never a native fallback.
+        boolean armAssets=hasAsset(ctx,"native-arm64/manifest.json");
+        boolean x86Assets=hasAsset(ctx,"native-amd64/manifest.json");
+        if(armAssets==x86Assets)throw new SecurityException(
+            "exactly one source-locked Android native ABI required");
+        String goArch=armAssets?"arm64":"amd64";
+        String abi=armAssets?"arm64-v8a":"x86_64";
+        String manifestAbi=armAssets?"arm64":"x86_64";
+        String prefix="native-"+goArch+"/";
+        boolean installedAbi=false;
+        for(String installed:Build.SUPPORTED_64_BIT_ABIS)
+            if(abi.equals(installed))installedAbi=true;
+        if(!installedAbi)throw new SecurityException("signed native ABI not supported by OS");
         JSONObject m=new JSONObject(new String(load(ctx,
-            "native-arm64/manifest.json",65536),java.nio.charset.StandardCharsets.UTF_8));
+            prefix+"manifest.json",65536),java.nio.charset.StandardCharsets.UTF_8));
         if(m.getJSONArray("android_abis").length()!=1||
-           !"arm64".equals(m.getJSONArray("android_abis").getString(0))||
-           !"android".equals(m.getString("go_os"))){
-            throw new SecurityException("wrong ABI or untrusted native manifest");
+           !manifestAbi.equals(m.getJSONArray("android_abis").getString(0))||
+           !"android".equals(m.getString("go_os"))||
+           (!armAssets&&m.optBoolean("release",true))){
+            throw new SecurityException("CI/release ABI or manifest mismatch");
         }
         String source=m.getString("source");
         if(!source.matches("[0-9a-f]{40}")||
-           !source.equals(new String(load(ctx,"native-arm64/SOURCE",128),
+           !source.equals(new String(load(ctx,prefix+"SOURCE",128),
                java.nio.charset.StandardCharsets.US_ASCII).trim())){
             throw new SecurityException("mixed Go/Rust source SHA");
         }
+        String executable="wbd-v4-client-"+goArch;
+        String rustFile="libwbd_engine-"+goArch+".so";
         JSONObject binary=m.getJSONObject("artifacts");
-        String goSha=binary.getJSONObject("wbd-v4-client-arm64").getString("sha256");
-        String rustSha=binary.getJSONObject("libwbd_engine-arm64.so").getString("sha256");
-        File root=new File(ctx.getNoBackupFilesDir(),"wbd-arm64-verified");
+        String goSha=binary.getJSONObject(executable).getString("sha256");
+        String rustSha=binary.getJSONObject(rustFile).getString("sha256");
+        File root=new File(ctx.getNoBackupFilesDir(),"wbd-"+goArch+"-verified");
         if(!root.isDirectory()&&!root.mkdir()){
             throw new IllegalStateException("private native staging inaccessible");
         }
-        // The same signed APK must carry the source-locked MIT rules and
-        // import provenance. Check their identities BEFORE staging a Root
-        // process. This does NOT claim live CN DNS interception.
+        // Unchanged pinned original geosite provenance; no system DNS takeover.
         JSONObject provenance=new JSONObject(new String(load(ctx,
-            "native-arm64/cn-geosite-provenance.json",65536),
+            prefix+"cn-geosite-provenance.json",65536),
             java.nio.charset.StandardCharsets.UTF_8));
         if(!PINNED_CN_SOURCE.equals(provenance.getString("source_commit"))||
            !PINNED_CN_SHA256.equals(provenance.getString("text_sha256"))||
@@ -143,17 +159,17 @@ final class NativePayload {
             throw new SecurityException("signed CN8503 source provenance mismatch");
         }
         String license=new String(load(ctx,
-            "native-arm64/wbd-cn-geosite-license.txt",65536),
+            prefix+"wbd-cn-geosite-license.txt",65536),
             java.nio.charset.StandardCharsets.UTF_8);
         if(!license.contains("MIT License")||!license.contains("V2Ray")){
             throw new SecurityException("missing authentic signed CN geosite license");
         }
-        File go=checkedCopy(ctx,"wbd-v4-client-arm64",root,
-            "wbd-v4-client-arm64",goSha,40*1024*1024);
-        File rust=checkedCopy(ctx,"libwbd_engine-arm64.so",root,
+        File go=checkedCopy(ctx,prefix,executable,root,
+            executable,goSha,40*1024*1024);
+        File rust=checkedCopy(ctx,prefix,rustFile,root,
             "libwbd_engine.so",rustSha,40*1024*1024);
-        File cn=checkedCopy(ctx,"wbd-cn-geosite.txt",root,
+        File cn=checkedCopy(ctx,prefix,"wbd-cn-geosite.txt",root,
             "wbd-cn-geosite.txt",PINNED_CN_SHA256,6000000);
-        return new NativePayload(go,rust,cn,source);
+        return new NativePayload(go,rust,cn,source,executable);
     }
 }

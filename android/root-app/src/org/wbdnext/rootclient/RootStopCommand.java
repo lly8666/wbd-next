@@ -4,7 +4,10 @@ package org.wbdnext.rootclient;
 // No PID/name wildcard, no broad routing, no shell data-plane loop.
 final class RootStopCommand {
     private RootStopCommand(){}
-    static String build(String token){
+    static String build(String token){return build(token,"wbd-v4-client-arm64");}
+    static String build(String token,String binary){
+        if(!"wbd-v4-client-arm64".equals(binary)&&!"wbd-v4-client-amd64".equals(binary))
+            throw new IllegalArgumentException("invalid exact native ABI executable");
         if(token==null||!token.matches("[0-9a-f]{32}"))
             throw new IllegalArgumentException("invalid exact root generation");
         return "set -eu; p='/data/local/tmp/wbd-next-root'; n=0; "+
@@ -17,7 +20,7 @@ final class RootStopCommand {
             "set -- $(cat \"/proc/$pid/stat\"); "+
             "if [ \"${22}\" = \"$expected\" ]; then "+
             "actual=$(readlink \"/proc/$pid/exe\"); "+
-            "if [ \"$actual\" = \"$p/wbd-v4-client-arm64\" ]; then "+
+            "if [ \"$actual\" = \"$p/"+binary+"\" ]; then "+
             "kill -TERM \"$pid\"; exit 0; "+
             "fi; fi; fi; fi; fi; "+
             "n=$((n+1)); sleep 0.2; "+
