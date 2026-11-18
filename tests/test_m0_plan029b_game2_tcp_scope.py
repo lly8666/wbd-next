@@ -27,7 +27,9 @@ class Game2TCPGate(unittest.TestCase):
   e=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
   self.assertIn('if p029_p1_policy or p029_game4_cn or p029b_b4 or p029b_game_case:',e)
   self.assertIn('if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 or p029b_game_case:',e)
-  self.assertIn('p029b_game_case in ("off","all","lan","ordinary","advanced","advanced_fixed")',e)
+  self.assertIn('p029b_game_policy in ("off","all","lan","ordinary","advanced")',e)
+  self.assertIn('p029b_game_policy=p029b_game_case.removesuffix("_fixed")',e)
+  self.assertIn('p029b_game_case==(p029b_game_policy+("_fixed" if game_fixed else ""))',e)
 
 if __name__=="__main__":
  unittest.main()
