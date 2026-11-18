@@ -23,6 +23,10 @@ class GameModesScope(unittest.TestCase):
         self.assertIn("tests.test_m0_plan029b_game_scope -v",workflow)
         self.assertNotIn('[plan029-game4-cn-real] [plan029b-b4-gui-three-real]',workflow)
         ast.parse(e2e)
+        self.assertIn('p029b_game2_cn=os.environ.get("WBD_PLAN029B_GAME2_CN_SCENE")=="1"',e2e)
+        self.assertIn('PLAN029B_GAME2_ADVANCED_REAL_TWO_TLS_LANES_DIRECT_AND_TUNNEL_TCP_UDP_STOP_PASS',e2e)
+        self.assertIn("WBD_PLAN029B_GAME2_CN_SCENE:",workflow)
+        self.assertIn("PLAN029B_GAME2_ADVANCED_ORIGINAL_WINTUN_RUST_V4_NATIVE_PASS_SCOPED",workflow)
 
     def test_game2_game4_shared_original_rust_v4_all_and_off(self):
         go=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go").read_text()

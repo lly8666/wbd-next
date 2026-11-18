@@ -239,6 +239,10 @@ func runM0NativeV4WindowsGame(
   count,o.RouteMode,gameSplit.RouteMode,o.SplitEnable,gameSplit.RouteMode!=0,
   gameSplit.PolicyFlags&1!=0,gameSplit.DirectDNS,gameSplit.TunnelDNS,
   len(gameSplit.CN),len(gameSplit.Domains))
+ if count==4&&gameSplit.RouteMode==2&&gameSplit.PolicyFlags&1!=0{
+  fmt.Printf("WBD_PLAN029_GAME4_CN_COLD_EFFECTIVE direct_dns=%v tunnel_dns=%v cn_rows=%d domains_bytes=%d fakeip=owned single_wintun=1\n",
+   o.DirectDNS4,o.DNSServers4[0],len(gameSplit.CN),len(gameSplit.Domains))
+ }
  fmt.Println("M0_GAME_COLD_STAGE WINTUN_OPEN_ENTER")
  tun,err:=windowsclient.OpenTUN(o.AdapterAlias)
  if err!=nil{return err}

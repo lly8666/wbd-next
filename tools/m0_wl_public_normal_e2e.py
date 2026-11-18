@@ -76,7 +76,8 @@ p029_converse_cn4="198.19.254.2"
 p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
 p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
-p029_game4_cn=os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1"
+p029b_game2_cn=os.environ.get("WBD_PLAN029B_GAME2_CN_SCENE")=="1"
+p029_game4_cn=os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1" or p029b_game2_cn
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
@@ -96,7 +97,7 @@ p029_longrate=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
 p029_smalltcp=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
 # H2030: all referenced p029_* flags must exist BEFORE evaluating Game4.
 # This scene is exclusive; it never silently admits Normal trial mode.
-if p029_game4_cn and not (mode=="game4" and not (
+if p029_game4_cn and not ((mode=="game2" if p029b_game2_cn else mode=="game4") and not (
     p029_direct or p029_padding or p029_product or p029_p2 or
     p029_p1_policy or p029_tcp53 or p029_cdn or p029_cache or
     p029_pressure)):
@@ -2911,13 +2912,27 @@ print(json.dumps(result),flush=True)
       report.get("tcp_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_TCP"):
    raise RuntimeError("Game4 CN direct and Tunnel kernel TCP not proven on same source")
   native=(out/"client.log").read_text(errors="replace")
-  if ("WBD_PLAN029_GAME4_CN_COLD_EFFECTIVE" not in native or
-      "WBD_PLAN029_GAME4_CN_NATIVE_TCP_ENABLED" not in native or
+  markers=(("WBD_PLAN029B_GAME_V3_COLD_EFFECTIVE lanes=2",
+            "WBD_PLAN029B_GAME_NATIVE_DNS_TCP_ENABLED lanes=2")
+           if p029b_game2_cn else
+           ("WBD_PLAN029_GAME4_CN_COLD_EFFECTIVE",
+            "WBD_PLAN029_GAME4_CN_NATIVE_TCP_ENABLED"))
+  if any(marker not in native for marker in markers) or (
       "WBD_WINDOWS_GAME_NATIVE_DISCONNECTED" not in native):
-   raise RuntimeError("Game4 CN Rust V4 cold attach, exact Defender or owned Stop absent")
+   raise RuntimeError("Game CN Rust V4 cold attach, exact Defender or owned Stop absent")
   g4["tunnel_tcp"]=report["tcp_duplex"]
   g4["stop"]="PASS_BOTH_OWNED"
-  print("PLAN029_H2017_GAME4_CN_DIRECT_TUNNEL_TCP_UDP_AND_OWNED_STOP_PASS_SCOPED",flush=True)
+  if p029b_game2_cn:
+   report["plan029b_game2_advanced_real"]={
+    "source_sha":os.environ["GITHUB_SHA"],"mode":"game2","lanes":2,
+    "original_go_rust_v4":True,
+    "cn_real_direct_udp":g4["cn_real_direct_udp"],
+    "cn_real_direct_tcp":g4["cn_real_direct_tcp"],
+    "tunnel_udp":report["app_duplex"],
+    "tunnel_tcp":report["tcp_duplex"],"owned_stop":"PASS_BOTH_OWNED"}
+   print("PLAN029B_GAME2_ADVANCED_REAL_TWO_TLS_LANES_DIRECT_AND_TUNNEL_TCP_UDP_STOP_PASS",flush=True)
+  else:
+   print("PLAN029_H2017_GAME4_CN_DIRECT_TUNNEL_TCP_UDP_AND_OWNED_STOP_PASS_SCOPED",flush=True)
  if p029_product:
   # Not a private trial: the same real original Go/Rust owner and OS WAL
   # must have independently shown Windows+Linux Stop and exact route/
