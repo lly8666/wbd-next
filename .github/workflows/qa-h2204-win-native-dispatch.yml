@@ -1,0 +1,36 @@
+name: 'QA H2204 original Windows full Wintun Npcap real OS dispatch'
+run-name: 'H2204 source scoped genuine WinForms NativeOwner native OS'
+on:
+  push:
+    branches: [qa/h2204-current-win64-gui-arm64-v2-release-20261118]
+    paths: [.github/workflows/qa-h2204-win-native-dispatch.yml]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch-two:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exact original V4 protocol source H2204 checked before new real OS trials
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor c04d5eefd47b672b30e531b21da763bfcf7a91f9 HEAD
+          git diff --exit-code c04d5eefd47b672b30e531b21da763bfcf7a91f9 HEAD -- crates Cargo.lock Cargo.toml r0/go_overlay/internal/realityfront/admission_v4.go r0/go_overlay/internal/realityfront/bridge_v4_windows_game_group.go r0/go_overlay/cmd tools/prepare_windows_wiring.py
+      - name: Schedule bounded original real Windows signed Npcap Wintun to Linux TLS TCP UDP GUI and Game2
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for choice in normal game2; do
+            extra=()
+            if [ "$choice" = normal ]; then extra+=(-f plan029_case=gui_reconnect); fi
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f "public_mode=$choice" -f native_outer_mtu=default1460 -f outer_repair=on "${extra[@]}"
+            echo "DISPATCHED_NOT_PASSED exact_source=$GITHUB_SHA choice=$choice"
+          done
