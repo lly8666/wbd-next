@@ -81,6 +81,7 @@ p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029b_game2_cn=os.environ.get("WBD_PLAN029B_GAME2_CN_SCENE")=="1"
 p029b_game_case=os.environ.get("WBD_PLAN029B_GAME_MATRIX_CASE","")
+p029b_game_padding=os.environ.get("WBD_PLAN029B_GAME_PADDING_MODE","")
 p029b_game_policy=p029b_game_case.removesuffix("_fixed")
 if p029b_game_case and not (
     p029b_game_policy in ("off","all","lan","ordinary","advanced") and
@@ -94,6 +95,13 @@ if p029b_game_case.endswith("_fixed") and not game_fixed:
  raise RuntimeError("PLAN029B Game fixed split arm lacks original FEC")
 if p029b_game_case and game_fixed and not p029b_game_case.endswith("_fixed"):
  raise RuntimeError("PLAN029B Game off-only arm must retain original FEC off")
+if p029b_game_padding and not (
+    p029b_game_padding in ("off","tls","flows") and
+    p029b_game_policy=="all" and
+    os.environ.get("WBD_PLAN029B_GAME_MATRIX_SCENE")=="1" and
+    os.environ.get("GITHUB_ACTIONS")=="true" and
+    mode in ("game2","game4-fec")):
+ raise RuntimeError("Game-padding source-locked all-Tunnel cold scene required")
 p029_game4_cn=(os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1" or p029b_game2_cn or
                p029b_game_policy=="advanced")
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
@@ -630,6 +638,9 @@ try:
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",(game_route if p029b_game_case else "bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 or p029b_b5 else "bypass-lan"),"--outer-repair",outer_repair]
+ if p029b_game_padding:
+  # Signed original Game V5 selector; never bypass Go saved cold config.
+  args.extend(["--startup-padding",p029b_game_padding])
  if p029_padding:
   # Same default Normal original Windows Wintun pipeline; no new test
   # sender or artificial packet shape. Only the selected mode changes.
@@ -1802,11 +1813,12 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
   app=root/"tools"/"m0_plan029_h1762_oneway_tunnel_tcp.py"
   ltlog=(out/"linux-tcp-app.log").open("w");logs.append(ltlog)
   wtlog=(out/"windows-tcp-app.log").open("w");logs.append(wtlog)
+  tls_prefix=["tls-startup"] if p029b_game_padding=="tls" else []
   lt=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
-      "python3","-u",unix(app),"server",linux_app4,"10.66.0.2"],
+      "python3","-u",unix(app),"server",linux_app4,"10.66.0.2",*tls_prefix],
       stdout=ltlog,stderr=subprocess.STDOUT)
   ready(out/"linux-tcp-app.log","PLAN029_H1762_REAL_LINUX_TUN_TCP_READY",lt,20)
-  wt=subprocess.Popen([sys.executable,str(app),"client","10.66.0.2",linux_app4],
+  wt=subprocess.Popen([sys.executable,str(app),"client","10.66.0.2",linux_app4,*tls_prefix],
       stdout=wtlog,stderr=subprocess.STDOUT)
   try:
    if wt.wait(timeout=36)!=0 or lt.wait(timeout=7)!=0:

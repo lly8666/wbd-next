@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2167,
-  "checkpoint_sha": "17c9377e49a144de72dbb66565137247e0f8aa99",
+  "sequence": 2168,
+  "checkpoint_sha": "2e169ead0189f253e465db20444d99202809d3e3",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2167 Game2/4 startup-padding原Go→Rust V5 M4、FEC source/Parity及WinGUI帮助接线，修H2166首错，原生SOURCE待验",
-  "why_now": "用户要求Game startup-padding接线并测试，维护WinGUI/功能卡；首个H2166 Actions暴露Rust cfg、assembly及feature-impact缺口",
-  "done_when": "Rust/Go编译、assembly与feature门禁通过，Game2及Game4代表off/tls/flows原生NPF/双OS/Stop签名PASS",
-  "next_action": "查H2167自动CI编译及WinGUI assembly；补最小Game2/Game4 3模式真Win2025/WSL2验收，不重跑20/20、不启030",
+  "current_task": "H2168 启动Game2(off FEC)/Game4(fixed FEC)三档startup-padding原Windows2025/WSL2签名原生NPF/UDP/TCP/双Stop最小试验",
+  "why_now": "H2167 source编译/WinGUI assembly/Rust 419定向单测、governance通过；还需Game2/Game4新padding真实OS NPF签名，旧H2162不覆盖tls/flows",
+  "done_when": "两原生作业各off/tls/flows同源原Go TLS原Rust M4真实复制，off=0,tls/flows>0，真OS UDP/TCP/Stop和WAL PASS；失败如实记录",
+  "next_action": "观测唯一H2168 Game Padding专属两原生作业，按真实日志/evidence更新SOURCE和卡片，不跑20全矩阵、030不启动",
   "unverified": true,
   "last_tested_source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md",
     "docs/evidence/M0/PLAN029-H2163-GUI-SETTINGS-AUDIT-20261118.json",
     "docs/devlog/M0/20261118-PLAN029-H2164-FIRST-CI-FORMAT-CORRECTION.md",
     "docs/devlog/M0/20261118-PLAN029-H2163-GUI-SETTINGS-AUDIT.md",
     "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
-    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
-    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2166初次CI FAIL历史保留。H2167修cfg/assembly、Game NPF真实回执、Game2/4 AEAD定向单测和WinGUI/功能卡；新Game pad原生仍NOT_RUN，H2162原Game20/20资格独立保留。"
+  "partial_summary": "H2167 static/Go/Rust/C ABI CI真实SUCCESS，419 Rust测试含2新Game padding PASS；另旧M4 ClientConfig.RootCAs测试FAIL保留。H2168 只补2×3真实Game原生代表，有源锁日志，不提前当物理PASS。"
 }
