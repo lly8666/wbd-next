@@ -122,7 +122,7 @@ def guest_pcap(path, destination):
     write_receipt(destination, "android_emulator_virtual_ethernet", counter, valid)
 
 
-def host_loopback(destination, max_seconds):
+def host_loopback(destination, max_seconds, interface="lo", expected_ip=HOST_LOOPBACK):
     counter = counts()
     terminated = False
 
@@ -135,7 +135,7 @@ def host_loopback(destination, max_seconds):
     try:
         sock = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
                              socket.htons(0x0003))
-        sock.bind(("lo", 0))
+        sock.bind((interface, 0))
         sock.settimeout(0.3)
         # Packet socket CAP_NET_RAW is needed only for socket creation.
         # Drop back to the Actions runner UID before writing the 0600
@@ -144,7 +144,7 @@ def host_loopback(destination, max_seconds):
             os.setgid(int(os.environ["SUDO_GID"]))
             os.setuid(int(os.environ["SUDO_UID"]))
     except (OSError, ValueError, KeyError):
-        write_receipt(destination, "linux_host_loopback", counter, False)
+        write_receipt(destination, "linux_host_tap" if interface=="wbdtapci0" else "linux_host_loopback", counter, False)
         return 1
     deadline = time.monotonic() + max_seconds
     try:
@@ -154,10 +154,10 @@ def host_loopback(destination, max_seconds):
             except socket.timeout:
                 continue
             counter["frames_examined"] += 1
-            classify(frame, counter, HOST_LOOPBACK, HOST_LOOPBACK)
+            classify(frame, counter, expected_ip, expected_ip)
     finally:
         sock.close()
-        write_receipt(destination, "linux_host_loopback", counter, True)
+        write_receipt(destination, "linux_host_tap" if interface=="wbdtapci0" else "linux_host_loopback", counter, True)
     return 0
 
 
@@ -198,6 +198,8 @@ def main():
     ap.add_argument("--output")
     ap.add_argument("--input")
     ap.add_argument("--max-seconds", type=int, default=115)
+    ap.add_argument("--interface", choices=("lo","wbdtapci0"), default="lo")
+    ap.add_argument("--expected-ip", choices=("127.0.0.1","10.0.2.2"), default="127.0.0.1")
     args = ap.parse_args()
     if args.mode == "selftest":
         return selftest()
@@ -206,7 +208,9 @@ def main():
     if args.mode == "host":
         if not 5 <= args.max_seconds <= 180:
             ap.error("bounded max-seconds required")
-        return host_loopback(args.output, args.max_seconds)
+        if (args.interface, args.expected_ip) not in (("lo","127.0.0.1"),("wbdtapci0","10.0.2.2")):
+            ap.error("host observer interface and address must match the fixed CI scope")
+        return host_loopback(args.output, args.max_seconds, args.interface, socket.inet_aton(args.expected_ip))
     if not args.input:
         ap.error("guest mode requires an input pcap")
     guest_pcap(args.input, args.output)

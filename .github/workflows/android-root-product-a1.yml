@@ -35,6 +35,11 @@ on:
         type: boolean
         required: false
         default: false
+      run_tap_guest_pilot:
+        description: 'One bounded original Android16/KSU TAP guest and raw FakeTCP diagnostic; no E2E claim'
+        type: boolean
+        required: false
+        default: false
 permissions: {contents: read}
 concurrency:
   group: android-product-a1-${{ github.ref }}
@@ -388,6 +393,86 @@ jobs:
         with:
           name: android-d2-s1-original-x86-root-${{ github.sha }}
           path: |
+            out/android-x86-d2-root/receipt.json
+            out/android-x86-d2-root/linux-source-sha.txt
+            out/android-x86-d2-root/android-source-sha.txt
+            out/android-x86-d2-root/server-started.txt
+            out/android-x86-d2-root/secret-stage-enum.txt
+            out/android-x86-d2-root/host-rst-rule-enum.txt
+            out/android-x86-d2-root/server-stage-enums.txt
+            out/android-x86-d2-root/app-diagnostic-enums.txt
+            out/android-x86-d2-root/host-wire-summary.json
+            out/android-x86-d2-root/guest-wire-summary.json
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/app-su-receipt.txt
+            out/android-x86-ksu-native/physical-network-receipt.txt
+            out/ksu/grant-ui-result.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  android-x86-kvm-ksu-original-d2-tap-guest-pilot:
+    # One source-locked experimental TAP guest scenario, never a release ABI.
+    # Run only with a one-time push marker or explicit manual request.
+    if: ${{ (github.event_name == 'push' && contains(github.event.head_commit.message, '[d2-tap-guest-pilot]')) || (github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true) }}
+    # Separate red/green gate: ORIGINAL Linux server runs on the same x86
+    # KVM host as the real Android16 KernelSU App. Run production Java
+    # RootClientService -> original Android Go/Rust, require authentic
+    # TUN + AF_PACKET readiness, report SYNACK/TLS/lease/M4 separately.
+    # This is NOT the D2 true TCP+UDP end-to-end gate yet.
+    needs: [arm64-native, b2-authentic-cn-geosite-host, linux-x86-original-server-d2-s0]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_D2_ORIGINAL: '1'
+      WBD_D2_TAP_GUEST_PILOT: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-d2-s0-original-linux-x86-server-${{ github.sha }}
+          path: out/android-x86-original-linux
+      - name: D2-TAP admit exact Java and safe Linux/Android script syntax
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/x86-kvm-ksu-native.sh
+          bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
+          bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
+          python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
+          python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
+          bash android/root-app/ci/test-network-scope-gate.sh
+      - name: D2-TAP build signed x86 CI-only APK using production Java + original Go/Rust
+        shell: bash
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: D2-TAP build an isolated ordinary App UID traffic target (never KernelSU Manager)
+        shell: bash
+        run: |
+          bash experiments/android-root-probe/ci/build-app.sh
+          test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
+          rm -f out/apk/host-tls.key
+      - name: D2-TAP prepare pinned x86 Android16 KSU3.3.1 emulator
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: D2-TAP real Linux original server and production Android KSU RootService TUN/RAW
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 1350s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-d2-tap-guest-original-x86-root-${{ github.sha }}
+          path: |
+            out/android-x86-tap-guest/receipt.json
             out/android-x86-d2-root/receipt.json
             out/android-x86-d2-root/linux-source-sha.txt
             out/android-x86-d2-root/android-source-sha.txt

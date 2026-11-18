@@ -49,6 +49,16 @@ host_observer_pid=""
 activity_requested=0
 host_rst_scope=0
 phase=D2_S1_INIT
+raw_iface=lo
+raw_ip=127.0.0.1
+if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+  raw_iface=wbdtapci0
+  raw_ip=10.0.2.2
+  ip -o -4 addr show dev "$raw_iface" | grep -Fq '10.0.2.2/24' || {
+    echo "D2_TAP_REFUSE_UNVERIFIED_HOST_TAP" >&2
+    exit 27
+  }
+fi
 adb(){ timeout --signal=TERM --kill-after=3s 35s "$ANDROID_HOME/platform-tools/adb" "$@"; }
 receipt(){
   export WBD_D2_PHASE="$phase" WBD_D2_RC="$1"
@@ -84,7 +94,10 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "exit_code":int(os.environ["WBD_D2_RC"]),
  "linux_real_original_server":"PASS" if (p/"server-started.txt").exists() else "NOT_PROVEN",
  "ephemeral_app_private_secrets":"PASS" if (p/"secret-stage-enum.txt").exists() else "NOT_PROVEN",
- "host_loopback_port443_rst_quarantine":"SCOPED_ACTIVE" if (p/"host-rst-rule-enum.txt").exists() else "NOT_PROVEN",
+ "host_loopback_port443_rst_quarantine":"SCOPED_ACTIVE" if
+   os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" and (p/"host-rst-rule-enum.txt").exists() else "NOT_RUN",
+ "host_tap_port443_rst_quarantine":"SCOPED_ACTIVE" if
+   os.environ.get("WBD_D2_TAP_GUEST_PILOT")=="1" and (p/"host-rst-rule-enum.txt").exists() else "NOT_RUN",
  "signed_app_requested_original_root_service":"PASS" if has("ORIGINAL_ROOT_SERVICE_START_REQUESTED") else "NOT_PROVEN",
  "original_go_root_process_launched":"PASS" if has("ROOT_PROCESS_LAUNCHED") else "NOT_PROVEN",
  "original_android_tun_configured":"PASS" if has("ORIGINAL_GO_TUN_KERNEL_CONFIGURED") else "NOT_PROVEN",
@@ -95,9 +108,11 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
   "guest_virtual_ethernet_syn_to_host":wire_status("guest-wire-summary.json","syn"),
   "guest_virtual_ethernet_synack_from_host":wire_status("guest-wire-summary.json","synack"),
   "guest_virtual_ethernet_rst_from_host":wire_status("guest-wire-summary.json","rst"),
-  "host_loopback_syn_to_original_server":wire_status("host-wire-summary.json","syn"),
-  "host_loopback_synack_from_server":wire_status("host-wire-summary.json","synack"),
-  "host_loopback_rst_from_server":wire_status("host-wire-summary.json","rst"),
+  "host_loopback_syn_to_original_server":wire_status("host-wire-summary.json","syn") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
+  "host_loopback_synack_from_server":wire_status("host-wire-summary.json","synack") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
+  "host_loopback_rst_from_server":wire_status("host-wire-summary.json","rst") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
+  "host_tap_syn_to_original_server":wire_status("host-wire-summary.json","syn") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")=="1" else "NOT_RUN",
+  "host_tap_synack_from_server":wire_status("host-wire-summary.json","synack") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")=="1" else "NOT_RUN",
  "original_android_unauth_rst_observed":"OBSERVED" if has("ORIGINAL_GO_COLD_UNAUTH_RST_RX") else "NOT_PROVEN",
  "real_peer_synack":"PASS" if has("ORIGINAL_GO_TCP_SYNACK_SEEN") else "NOT_PROVEN",
  "tls_authenticated_32_lease":"PASS" if has("AUTHENTICATED_LEASE_OS_READBACK") and
@@ -151,7 +166,7 @@ cleanup(){
   fi
   if [[ "$host_rst_scope" == 1 ]];then
     # Remove only the exact CI-owned rule, never reset host firewall state.
-    sudo -n iptables -w -D OUTPUT -o lo -p tcp --sport 443 --tcp-flags RST RST -j DROP >/dev/null 2>&1 || true
+    sudo -n iptables -w -D OUTPUT -o "$raw_iface" -p tcp --sport 443 --tcp-flags RST RST -j DROP >/dev/null 2>&1 || true
   fi
   # No default route/DNS/ip rule changes. Tear down only our own ephemeral
   # host TUN if original Go Stop failed; the CI host is disposable.
@@ -166,11 +181,11 @@ umask 077
 # TCP RST. In the new Android-emulator loopback transport apply ONLY an
 # exact short-lived OUTPUT/lo/443 RST rule, never a global default route,
 # DNS setting or general firewall reset. Restore it in the EXIT trap.
-if sudo -n iptables -w -C OUTPUT -o lo -p tcp --sport 443 --tcp-flags RST RST -j DROP >/dev/null 2>&1;then
+if sudo -n iptables -w -C OUTPUT -o "$raw_iface" -p tcp --sport 443 --tcp-flags RST RST -j DROP >/dev/null 2>&1;then
   echo "D2_S1_REFUSE_EXISTING_RST_SUPPRESSION_RULE" >&2
   exit 26
 fi
-sudo -n iptables -w -I OUTPUT 1 -o lo -p tcp --sport 443 --tcp-flags RST RST -j DROP
+sudo -n iptables -w -I OUTPUT 1 -o "$raw_iface" -p tcp --sport 443 --tcp-flags RST RST -j DROP
 host_rst_scope=1
 echo D2_HOST_LOOPBACK_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
 # A read-only native Linux AF_PACKET loopback counter. It makes zero
@@ -179,6 +194,7 @@ echo D2_HOST_LOOPBACK_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
 # (if SLIRP forwards it) and authentic server SYNACK (if any).
 sudo -n python3 android/root-app/ci/x86-d2-cold-wire-observer.py host \
   --output "$out/host-wire-summary.json" --max-seconds 150 \
+  --interface "$raw_iface" --expected-ip "$raw_ip" \
   >"$tmp/host-wire-observer.log" 2>&1 &
 host_observer_pid=$!
 sleep 0.2
@@ -212,7 +228,7 @@ phase=D2_S1_ORIGINAL_LINUX_SERVER
 # a TLS PASS until BOTH original server and Android receipts prove it.
 timeout --signal=TERM --kill-after=5s 180s sudo -n env \
   LD_LIBRARY_PATH="$GITHUB_WORKSPACE/$p" "$GITHUB_WORKSPACE/$p/wbd-v4-server" \
-  --raw-interface lo --local-ip 127.0.0.1 --local-port 443 \
+  --raw-interface "$raw_iface" --local-ip "$raw_ip" --local-port 443 \
   --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
   --server-name wbd-v4.example.test \
   --route-key-hex-file "$tmp/route.hex" --users-file "$tmp/users.json" \

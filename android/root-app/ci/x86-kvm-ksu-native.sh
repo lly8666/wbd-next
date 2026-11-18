@@ -10,6 +10,9 @@ out=out/android-x86-ksu-native
 mkdir -p "$out"
 phase=PREFLIGHT
 EMU_PID=""
+tap_owned=0
+tap_guest_boot=NOT_RUN
+tap_phase=NOT_RUN
 adb(){ timeout --signal=TERM --kill-after=3s 35s "$ANDROID_HOME/platform-tools/adb" "$@"; }
 receipt(){
   local rc="$1"
@@ -46,6 +49,47 @@ d={"schema":"wbd-android-x86-kvm-ksu-original-native-d1-admission/v1",
 print("ANDROID_X86_KSU_ORIGINAL_NATIVE_D1_ADMISSION",d["original_x86_go_help"],d["phase"])
 PY
 }
+
+tap_pilot_receipt(){
+  local rc="$1"
+  mkdir -p out/android-x86-tap-guest
+  WBD_TAP_GUEST_RC="$rc" WBD_TAP_GUEST_PHASE="$tap_phase" \
+  WBD_TAP_GUEST_OWNED="$tap_owned" WBD_TAP_GUEST_BOOT="$tap_guest_boot" \
+  python3 - <<'PY'
+import json,os,pathlib
+p=pathlib.Path("out/android-x86-tap-guest")
+r=pathlib.Path("out/android-x86-ksu-native/physical-network-receipt.txt")
+physical=r.read_text().strip() if r.exists() else "NOT_PROVEN"
+d={"schema":"wbd-d2-x86-original-tap-guest-pilot/v1",
+   "source":os.environ["GITHUB_SHA"],
+   "phase":os.environ["WBD_TAP_GUEST_PHASE"],
+   "exit_code":int(os.environ["WBD_TAP_GUEST_RC"]),
+   "host_tap_owned": "PASS" if os.environ["WBD_TAP_GUEST_OWNED"]=="1" else "NOT_PROVEN",
+   "host_tap_exact_cleanup": ("NOT_RUN" if os.environ["WBD_TAP_GUEST_OWNED"]!="1" else
+       ("PASS" if os.environ["WBD_TAP_GUEST_PHASE"]!="TAP_DELETE_FAILED" and
+         not pathlib.Path("/sys/class/net/wbdtapci0").exists() else "FAIL")),
+   "guest_tap_boot":os.environ["WBD_TAP_GUEST_BOOT"],
+   "android_real_physical_network":"PASS" if physical=="PHYSICAL_NETWORK_EXACT_READBACK_PASS" else
+      ("ENV_BLOCKED" if physical=="PHYSICAL_NETWORK_ENV_BLOCKED" else "NOT_PROVEN"),
+   "slirp_bypassed_not_fake_network": True,
+   "original_linux_raw_syn_rx":"NOT_PROVEN",
+   "original_linux_raw_synack_tx":"NOT_PROVEN",
+   "android_synack_tls_auth_lease_m4_stop":"NOT_PROVEN",
+   "whole_android_linux_e2e":"NOT_PROVEN"}
+d2=pathlib.Path("out/android-x86-d2-root/receipt.json")
+if d2.exists():
+    data=json.loads(d2.read_text())
+    for k,s in (("original_linux_server_untrusted_raw_initial_syn","original_linux_raw_syn_rx"),
+                ("original_linux_server_untrusted_raw_synack_tx","original_linux_raw_synack_tx")):
+        d[s]=data.get(k,"NOT_PROVEN")
+    d["android_synack_tls_auth_lease_m4_stop"]="PASS" if all(
+        data.get(k)=="PASS" for k in ("real_peer_synack","tls_authenticated_32_lease",
+                                     "original_rust_m4_and_uid_ready",
+                                     "owned_stop_verified")) else "NOT_PROVEN"
+(p/"receipt.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
+print("D2_TAP_GUEST_PILOT",d["phase"],d["guest_tap_boot"],d["android_real_physical_network"])
+PY
+}
 cleanup(){
   local rc=$?
   trap - EXIT
@@ -58,6 +102,16 @@ cleanup(){
       sleep 0.2
     done
     kill -KILL "$EMU_PID" 2>/dev/null || true
+  fi
+  if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+    if [[ "$tap_owned" == 1 ]];then
+      sudo -n ip link del wbdtapci0 >/dev/null 2>&1 || true
+      if ip link show wbdtapci0 >/dev/null 2>&1;then
+        tap_phase=TAP_DELETE_FAILED
+        rc=31
+      fi
+    fi
+    tap_pilot_receipt "$rc" || true
   fi
   exit "$rc"
 }
@@ -88,6 +142,10 @@ emulator="$ANDROID_HOME/emulator/emulator"
 start_guest(){
   local stage="$1"
   local -a cold_wire_capture=()
+  local -a tap_args=()
+  if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 && "$stage" == second ]];then
+    tap_args=(-net-tap wbdtapci0)
+  fi
   if [[ "${WBD_D2_ORIGINAL:-0}" == 1 && "$stage" == second ]];then
     # Official emulator virtual-LAN capture: private, ephemeral, never
     # uploaded. Only TCP SYN/SYNACK/RST enums are extracted at D2 cleanup.
@@ -96,7 +154,7 @@ start_guest(){
   fi
   "$emulator" -avd wbd_ksu36 -ramdisk "$GITHUB_WORKSPACE/out/ksu/patched-ramdisk.img" \
      -no-snapshot-load -no-snapshot-save -no-window -no-audio -no-boot-anim \
-     -gpu swiftshader_indirect -accel on -memory 3072 "${cold_wire_capture[@]}" \
+     -gpu swiftshader_indirect -accel on -memory 3072 "${tap_args[@]}" "${cold_wire_capture[@]}" \
      >"$out/emulator-$stage.log" 2>&1 &
   EMU_PID=$!
   local t
@@ -138,8 +196,40 @@ for t in $(seq 1 45);do
   if ! adb devices | grep -q 'emulator-.*device';then break;fi
   sleep 1
 done
+if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+  test "${WBD_D2_ORIGINAL:-0}" = 1 || { tap_phase=REFUSE_NON_ORIGINAL; exit 27; }
+  test -c /dev/net/tun || { tap_phase=ENV_BLOCKED_TUN_DEVICE; exit 27; }
+  if ip link show wbdtapci0 >/dev/null 2>&1;then
+    tap_phase=REFUSE_PREEXISTING_TAP
+    exit 27
+  fi
+  if ip -4 route show table main exact 10.0.2.0/24 | grep -q .;then
+    tap_phase=ENV_BLOCKED_TAP_SUBNET_CONFLICT
+    exit 27
+  fi
+  if ! timeout 15s "$emulator" -help-net-tap >"$out/tap-help-private.txt" 2>&1 ||
+     ! grep -Fq -- '-net-tap' "$out/tap-help-private.txt";then
+    rm -f "$out/tap-help-private.txt"
+    tap_phase=ENV_BLOCKED_EMULATOR_TAP_FLAG
+    exit 27
+  fi
+  rm -f "$out/tap-help-private.txt"
+  sudo -n ip tuntap add dev wbdtapci0 mode tap user "$(id -un)"
+  tap_owned=1
+  sudo -n ip addr add 10.0.2.2/24 dev wbdtapci0
+  sudo -n ip link set dev wbdtapci0 up
+  ip -o -4 addr show dev wbdtapci0 | grep -Fq '10.0.2.2/24' || {
+    tap_phase=ENV_BLOCKED_HOST_TAP_READBACK
+    exit 27
+  }
+  tap_phase=HOST_TAP_READY
+fi
 phase=SECOND_KSU_BOOT
 start_guest second
+if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+  tap_guest_boot=PASS
+  tap_phase=TAP_GUEST_BOOTED
+fi
 if ! adb shell pm path me.weishu.kernelsu | grep -q '^package:';then
   adb install -r out/ksu/manager.apk >"$out/reinstall-manager.txt"
 fi
@@ -238,6 +328,14 @@ elif grep -Fq 'PHYSICAL_NETWORK_ENV_BLOCKED' "$out/app-su-logcat-filtered.txt";t
 else
   echo PHYSICAL_NETWORK_NOT_PROVEN >"$out/physical-network-receipt.txt"
   echo ANDROID_X86_APP_PHYSICAL_NETWORK_NOT_PROVEN
+fi
+if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+  if ! grep -Fxq PHYSICAL_NETWORK_EXACT_READBACK_PASS "$out/physical-network-receipt.txt";then
+    tap_phase=ENV_BLOCKED_REAL_ANDROID_PHYSICAL_NETWORK
+    echo D2_TAP_GUEST_REAL_PHYSICAL_NETWORK_ENV_BLOCKED
+    exit 29
+  fi
+  tap_phase=TAP_GUEST_EXACT_PHYSICAL_NETWORK_PASS
 fi
 echo "D1_REAL_ORIGINAL_CLIENT_TLS_M4_NOT_RUN"
 if [[ "${WBD_D2_ORIGINAL:-0}" == 1 ]];then
