@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2194,
-  "checkpoint_sha": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
+  "sequence": 2195,
+  "checkpoint_sha": "4e3001403fd35b8ddff58008f26fb732deb6309a",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2194：Linux Normal/off startup-padding tls/flows双ISA四场真网PASS_SCOPED，签名归档；继续029独立Linux缺口。",
-  "why_now": "SOURCE06bd63f5 Action44290120683双原生Linux x86/ARM各2场原Go TLS/Rust真kernel TCP/UDP/Stop成功，M4 copied padding双端非零。",
-  "done_when": "H2193 Normal填充两个ISA原件、SHA、功能卡及governance归档PASS；完整029技术仍OPEN。",
-  "next_action": "继续Linux auto-IP原路径的真实物理MTU缩窄/重认证资格；Fixed/Auto kind2/3不能误接Normal填充；030未启。",
+  "current_task": "H2195：在Linux原Fixed/Auto FEC source kind2认证AEAD尾部增加有界startup-padding（parity kind3不动）；原生x86/ARM专项待验。",
+  "why_now": "H2193 Normal off双ISA4/4已签名，Fixed/Auto仍未接线；原record codec既有kind2尾零认证剥离能力，复用原FEC source不改原始FEC/repair。",
+  "done_when": "两ISA各Fixed tls、Auto flows真TCP/UDP、M4 source padding copied、原FEC传输/Stop、SHA签名PASS；坏输入/未启用无副作用。",
+  "next_action": "冻结SOURCE并收双原生两场，仅修最先失败；独立autoIP动态MTU及实体ARM/p99等仍OPEN。",
   "unverified": true,
   "last_tested_source": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
   "evidence_refs": [
@@ -21,5 +21,5 @@
     "docs/devlog/M0/20261118-PLAN029-H2194-LINUX-NORMAL-PADDING-FOUR-NATIVE-SIGNED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2193 SOURCE06bd63f5原生Linux x86/ARM Normal tls/flows各2场合计4/4真实Go TLS/Rust M4 raw已成功复制、kernel TCP/UDP双向/两端Stop。x86 tls2/487B、flows4/1300B；ARM tls2/385B、flows4/535B（每端）。固定/自动FEC填充、autoIP动态MTU、实体ARM/p99仍OPEN；029日常限域PASS，完整技术OPEN。"
+  "partial_summary": "H2193 PRODUCT SOURCE06bd63f5 Normal/off tls/flows双ISA4/4 PASS_SCOPED，H2194已归档；H2195 Fixed/Auto kind2-only pad候选NOT_RUN。X25519 pre-TLS禁止，无key本地拒绝；autoIP动态MTU/实体ARM/p99未证，029技术OPEN、030未启。"
 }
