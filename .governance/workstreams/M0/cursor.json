@@ -4,29 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2177,
-  "checkpoint_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+  "sequence": 2178,
+  "checkpoint_sha": "73a828e56494e05095f24defa1da931c74dbccd0",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2177 Linux非Win双原生ISA x86_64与ARM64双端五模式真实网络10/10 PASS_SCOPED后做证据、功能卡和START_HERE归档；保持PLAN029/029B技术出口OPEN。",
-  "why_now": "用户要求PLAN029非Win Linux客户端+服务端两架构高效实测；H2176 Action44258876671 完整SUCCESS，2独立原生ubuntu架构各同源Go TLS/Rust+ISA-L只构建一次、顺序五模式，10/10原内核双向TCP/UDP/MTU/Stop，FEC6 parity96/96 each。",
-  "done_when": "H2177只把所测原生Linux双端5×2最小场签名SOURCE归档，原生main CI特征目录与治理验证PASS；不把历史CI首FAIL、未测Windows专属/跨ISA/物理ARM/高压升格。",
-  "next_action": "本用户要求Linux双端x86/ARM原生各五场已PASS_SCOPED，后续如要求可最小追加不同架构互连或Linux IPv6/DNS正式能力，不重开已过测试；PLAN030保持NOT_STARTED。",
+  "current_task": "H2178：H2177原生Linux x86/ARM64各五模式10/10 PASS_SCOPED证据已归档；修治理热读取预算超限，不改产品。",
+  "why_now": "H2177 Action44260485192与维护门禁FAIL：M0 hot read=33430B>32768B，原因是游标交接内容累积；非原生网络FAIL。",
+  "done_when": "缩减重复热摘要后治理、功能目录及维护门禁PASS；H2177真网络SOURCE3cc095与十场原证据保留。",
+  "next_action": "核H2178治理/feature/maintenance结果；不重跑已PASS的Linux十场，完整029/029B技术OPEN、030未开始。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2178-LINUX-GOVERNANCE-BUDGET-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2176-LINUX-GAME-COPY-DROP-CLASSIFICATION.md",
-    "docs/devlog/M0/20261118-PLAN029-H2175-LINUX-GAME-ONE-SHARED-SOCKET-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2174-LINUX-DUAL-ISA-FEC-OFF-RECEIPT-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2173-LINUX-DUAL-ISA-STATIC-GATE-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2172-LINUX-DUAL-ISA-FIRST-FAULT-FIX.md",
-    "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json",
-    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
+    "docs/devlog/M0/20261118-PLAN029-H2176-LINUX-GAME-COPY-DROP-CLASSIFICATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2176 SOURCE3cc095... Action44258876671 COMPLETE SUCCESS，真实native Linux x86_64与aarch64两个独立runner，每ISA一次原Go TLS客户端+服务端/Rust/ISA-L build、五模式 Normal/Fixed/Auto/Game2/Game4 fixed6，共10个独立双netns真实TCP/UDP双向/ICMP/MTU1460/自有TUN IPv6-off/双owned Stop与cleanup PASS。Game4 FEC每端source52 parity offered/copied96; Game2 copy skips4，Game4 copy skips28/每端，auth_rejected与8类critical faults均0。旧H2171..H2175 FAIL保留；实体ARM/跨ISA/WinGUI CN/Direct/全宿主IPv6/perf仍NOT_RUN；全技术029/029B OPEN、030未启。"
+  "partial_summary": "H2177签名Action44258876671，native x86_64和aarch64各原Go TLS/Rust双端Normal/Fixed/Auto/Game2/Game4fixed6共10/10真TCP/UDP/TUN/MTU1460/Stop PASS_SCOPED；Game4每端parity96条，原lane副本跳过单列、鉴权与关键错误零。未测物理ARM/跨ISA/Windows专属。"
 }
