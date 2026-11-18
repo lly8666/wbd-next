@@ -365,6 +365,8 @@ jobs:
           bash -n android/root-app/ci/x86-kvm-ksu-native.sh
           bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
           bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
+          python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
+          python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
           bash android/root-app/ci/test-network-scope-gate.sh
       - name: D2-S1 build signed x86 CI-only APK using production Java + original Go/Rust
         shell: bash
@@ -394,6 +396,8 @@ jobs:
             out/android-x86-d2-root/host-rst-rule-enum.txt
             out/android-x86-d2-root/server-stage-enums.txt
             out/android-x86-d2-root/app-diagnostic-enums.txt
+            out/android-x86-d2-root/host-wire-summary.json
+            out/android-x86-d2-root/guest-wire-summary.json
             out/android-x86-ksu-native/receipt.json
             out/android-x86-ksu-native/app-su-receipt.txt
             out/android-x86-ksu-native/physical-network-receipt.txt

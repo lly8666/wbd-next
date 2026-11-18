@@ -87,9 +87,16 @@ adb start-server >"$out/adb-server.txt" 2>&1
 emulator="$ANDROID_HOME/emulator/emulator"
 start_guest(){
   local stage="$1"
+  local -a cold_wire_capture=()
+  if [[ "${WBD_D2_ORIGINAL:-0}" == 1 && "$stage" == second ]];then
+    # Official emulator virtual-LAN capture: private, ephemeral, never
+    # uploaded. Only TCP SYN/SYNACK/RST enums are extracted at D2 cleanup.
+    mkdir -p out/android-x86-d2-root
+    cold_wire_capture=(-tcpdump "$GITHUB_WORKSPACE/out/android-x86-d2-root/guest-ethernet.pcap")
+  fi
   "$emulator" -avd wbd_ksu36 -ramdisk "$GITHUB_WORKSPACE/out/ksu/patched-ramdisk.img" \
      -no-snapshot-load -no-snapshot-save -no-window -no-audio -no-boot-anim \
-     -gpu swiftshader_indirect -accel on -memory 3072 \
+     -gpu swiftshader_indirect -accel on -memory 3072 "${cold_wire_capture[@]}" \
      >"$out/emulator-$stage.log" 2>&1 &
   EMU_PID=$!
   local t

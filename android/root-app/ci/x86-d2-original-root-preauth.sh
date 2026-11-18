@@ -45,6 +45,7 @@ fi
 tmp="$(mktemp -d "$RUNNER_TEMP/wbd-d2-original-XXXXXXXX")"
 chmod 700 "$tmp"
 server_pid=""
+host_observer_pid=""
 activity_requested=0
 host_rst_scope=0
 phase=D2_S1_INIT
@@ -58,6 +59,15 @@ p=Path("out/android-x86-d2-root")
 data=(p/"app-diagnostic-enums.txt").read_text(errors="replace") if (p/"app-diagnostic-enums.txt").exists() else ""
 server=(p/"server-stage-enums.txt").read_text(errors="replace") if (p/"server-stage-enums.txt").exists() else ""
 def has(k):return k in data
+def wire_status(name,key):
+    try:
+        d=json.loads((p/name).read_text())
+        if d.get("schema")!="wbd-d2-s1-cold-wire-flags-only/v1" or not d.get("wire_capture_format_valid"):
+            return "NOT_PROVEN"
+        value=d.get(key)
+        return value if value in ("OBSERVED","NOT_OBSERVED") else "NOT_PROVEN"
+    except (OSError,ValueError):
+        return "NOT_PROVEN"
 syn_classes=(
  ("ORIGINAL_GO_COLD_SYN_TX_OK","SENDTO_PASS_NOT_PEER_AUTH"),
  ("ORIGINAL_GO_COLD_SYN_TX_PERMISSION_DENIED","OS_PERMISSION_DENIED"),
@@ -78,6 +88,12 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "original_android_tun_configured":"PASS" if has("ORIGINAL_GO_TUN_KERNEL_CONFIGURED") else "NOT_PROVEN",
  "original_android_raw_af_packet":"PASS" if has("ORIGINAL_GO_RAW_SOCKET_READY") else "NOT_PROVEN",
  "original_android_cold_syn_send":syn_result,
+  "guest_virtual_ethernet_syn_to_host":wire_status("guest-wire-summary.json","syn"),
+  "guest_virtual_ethernet_synack_from_host":wire_status("guest-wire-summary.json","synack"),
+  "guest_virtual_ethernet_rst_from_host":wire_status("guest-wire-summary.json","rst"),
+  "host_loopback_syn_to_original_server":wire_status("host-wire-summary.json","syn"),
+  "host_loopback_synack_from_server":wire_status("host-wire-summary.json","synack"),
+  "host_loopback_rst_from_server":wire_status("host-wire-summary.json","rst"),
  "original_android_unauth_rst_observed":"OBSERVED" if has("ORIGINAL_GO_COLD_UNAUTH_RST_RX") else "NOT_PROVEN",
  "real_peer_synack":"PASS" if has("ORIGINAL_GO_TCP_SYNACK_SEEN") else "NOT_PROVEN",
  "tls_authenticated_32_lease":"PASS" if has("AUTHENTICATED_LEASE_OS_READBACK") and
@@ -108,6 +124,23 @@ cleanup(){
     adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' \
       >"$out/app-diagnostic-enums.txt" 2>&1 || true
   fi
+  if [[ -n "$host_observer_pid" ]];then
+    kill -TERM "$host_observer_pid" 2>/dev/null || true
+    for _ in $(seq 1 18);do
+      if ! kill -0 "$host_observer_pid" 2>/dev/null;then break;fi
+      sleep 0.2
+    done
+    if kill -0 "$host_observer_pid" 2>/dev/null;then
+      kill -KILL "$host_observer_pid" 2>/dev/null || true
+    fi
+    wait "$host_observer_pid" 2>/dev/null || true
+  fi
+  # The guest PCAP is NEVER uploaded. Only fixed SYN/SYNACK/RST flags are
+  # extracted from the real emulator virtual Ethernet frames.
+  python3 android/root-app/ci/x86-d2-cold-wire-observer.py guest \
+    --input "$out/guest-ethernet.pcap" --output "$out/guest-wire-summary.json" \
+    >"$tmp/guest-capture-parse.log" 2>&1 || true
+  rm -f "$out/guest-ethernet.pcap"
   if [[ -n "$server_pid" ]];then
     kill -TERM "$server_pid" 2>/dev/null || true
     wait "$server_pid" 2>/dev/null || true
@@ -136,6 +169,19 @@ fi
 sudo -n iptables -w -I OUTPUT 1 -o lo -p tcp --sport 443 --tcp-flags RST RST -j DROP
 host_rst_scope=1
 echo D2_HOST_LOOPBACK_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
+# A read-only native Linux AF_PACKET loopback counter. It makes zero
+# firewall/route/packet modifications and NEVER logs captured packet bytes.
+# Starts before original Linux server to observe both the first guest SYN
+# (if SLIRP forwards it) and authentic server SYNACK (if any).
+sudo -n python3 android/root-app/ci/x86-d2-cold-wire-observer.py host \
+  --output "$out/host-wire-summary.json" --max-seconds 150 \
+  >"$tmp/host-wire-observer.log" 2>&1 &
+host_observer_pid=$!
+sleep 0.2
+if ! kill -0 "$host_observer_pid" 2>/dev/null;then
+  echo "D2_S1_READONLY_HOST_AF_PACKET_OBSERVER_UNAVAILABLE" >&2
+  exit 28
+fi
 # Original CLI generates its own genuine 32-byte route secret.
 env LD_LIBRARY_PATH="$GITHUB_WORKSPACE/$p" "$p/wbd-v4-server" \
   --init-route-key-file "$tmp/route.hex" \
