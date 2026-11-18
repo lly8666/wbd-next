@@ -8,15 +8,15 @@
 use crate::cold_v4::{ColdV4Error, ExpectedRustOwner, UntrustedColdV4};
 use crate::memory::UniqueBuffer;
 use crate::runtime::{QueueLimits, RxOwner, RxPacket, TxOwner,TxDispatch};
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 use wbd_platform::android_root_io::{AndroidBoundRawRx,AndroidBoundRawTx,AndroidOwnedTun};
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 use wbd_platform::ipv4_tcp::{Ipv4Tuple as AndroidTuple,PacketPersona as AndroidPersona,Presentation as AndroidPresentation};
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 use wbd_platform::rx_ipv4_tcp::extend_seq32 as android_extend_seq32;
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 use wbd_codec::path_budget::{FrameBudgetInput as AndroidFrameInput,FecReservation as AndroidFec};
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 use wbd_types::buffer_contract::FrozenRecordHandle;
 
 use crate::runtime::early_rx::{EarlyAccepted, EarlyError, EarlyLimits, EarlyRetirement, EarlyRxOwner};
@@ -595,7 +595,7 @@ impl ProtectedScopedOwner {
     /// The exact Normal/off first-send observer is allocated only after the
     /// original Go credential-checked TLS/Detach commit. This identity is
     /// NOT a client-supplied receipt, ACK or permission to enable FEC2.
-    #[cfg(any(target_os="windows",all(target_os="android",target_arch="aarch64"),all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))))]
+    #[cfg(any(target_os="windows",all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")),all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))))]
     pub(crate) fn normal_firstsend_identity(&self)->Option<(wbd_types::LaneKey,[u8;16])>{
         (self.state==OwnerPhase::Active && self.crypto.active
          && self.rx_tx.detached() && self.epoch!=[0u8;16])
@@ -1602,7 +1602,7 @@ impl ProtectedScopedOwner {
     /// This does NOT construct a second opener, take Go's TCP ACK as trust,
     /// or implement repair dispatch. The typed callback must be paired with
     /// the current tunnel epoch/directional M2 receipt scope by its caller.
-    #[cfg(any(target_os="windows",all(target_os="android",target_arch="aarch64")))]
+    #[cfg(any(target_os="windows",all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
     pub(crate) fn drain_windows_authenticated_kind1<F,G>(
         &mut self,now:MonoNs,storage:Vec<RxPacket>,
         mut accept_link:F,mut accept_kind1:G,
@@ -1837,7 +1837,7 @@ mod m0_fec2_full_mtu_repair_body_contract {
     }
 }
 
-#[cfg(all(target_os="android",target_arch="aarch64"))]
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 impl ProtectedScopedOwner{
     /// Same original M1/M3 Normal/off owner; Bionic supplies only I/O and
     /// the cold physical link ceiling. No second AEAD, replay or TCP stream.
