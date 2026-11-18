@@ -45,7 +45,14 @@ CASES=[
 # The new source runs only two previously UNWIRED Normal scenarios per ISA.
 # The original eight successful H2186 cases remain available, but not rerun.
 NORMAL_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_NORMAL_PAD_ONLY")=="1"
-if NORMAL_PAD_ONLY:
+FEC_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_FEC_PAD_ONLY")=="1"
+if NORMAL_PAD_ONLY and FEC_PAD_ONLY:raise SystemExit("one batch per Action")
+if FEC_PAD_ONLY:
+    CASES=[
+        ("fec-fixed-tls","fec-fixed","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("fec-auto-flows","fec-auto","flows","",1460,"chacha20-poly1305","on","",False,False),
+    ]
+elif NORMAL_PAD_ONLY:
     CASES=[
         ("normal-tls","normal","tls","",1460,"chacha20-poly1305","on","",True,False),
         ("normal-flows","normal","flows","",1460,"chacha20-poly1305","on","",False,False),
@@ -65,17 +72,15 @@ def persist():
     (OUT/"summary.json").write_text(json.dumps(results,indent=2,sort_keys=True)+"\n")
 persist()
 
-# A Linux public CLI must FAIL CLOSED rather than silently accept a Normal
-# flows selector that is only implemented for authenticated Game M4.
-for mode in ("fec-fixed","fec-auto"):
-    command=[str(BUNDLE/"wbd-v4-client"),"--mode",mode,
-             "--startup-padding","flows"]
-    env=os.environ.copy()
-    env["LD_LIBRARY_PATH"]=str(BUNDLE)
-    p=subprocess.run(command,env=env,capture_output=True,text=True,timeout=7)
-    if p.returncode==0 or "not supported" not in (p.stdout+p.stderr):
-        raise SystemExit("unsafe Linux Normal/FEC startup padding silently enabled: "+mode)
-print("PLAN029_LINUX_FEC_PADDING_UNWIRED_FAIL_CLOSED_PASS",flush=True)
+# An invalid selector cannot silently start any product even before TLS.
+command=[str(BUNDLE/"wbd-v4-client"),"--mode","fec-auto",
+         "--startup-padding","not-a-mode"]
+env=os.environ.copy()
+env["LD_LIBRARY_PATH"]=str(BUNDLE)
+p=subprocess.run(command,env=env,capture_output=True,text=True,timeout=7)
+if p.returncode==0 or "startup-padding must be off, tls or flows" not in (p.stdout+p.stderr):
+    raise SystemExit("unsafe invalid Linux FEC startup padding selector")
+print("PLAN029_LINUX_INVALID_PADDING_REJECT_PASS",flush=True)
 
 for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CASES:
     env=os.environ.copy()
@@ -162,9 +167,10 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
                     raise RuntimeError(side+" original AF_PACKET padding mismatch")
                 row[side+"_padding_records"]=count
                 row[side+"_padding_bytes"]=padded
-            elif NORMAL_PAD_ONLY:
+            elif NORMAL_PAD_ONLY or FEC_PAD_ONLY:
+                label=("V4_PUBLIC_FEC_SOURCE_PADDING" if FEC_PAD_ONLY else "V4_PUBLIC_NORMAL_PADDING")
                 matches=re.findall(
-                    r"V4_PUBLIC_NORMAL_PADDING_RAW_RECEIPT role="+side+
+                    label+r"_RAW_RECEIPT role="+side+
                     r" mode=(off|tls|flows) padded_records=(\d+) padded_bytes=(\d+) original_TLS_Rust_M4=1 real_AF_PACKET_send=1",raw)
                 if len(matches)!=1:
                     raise RuntimeError(side+" original Rust Normal padding post-kernel receipt absent")
@@ -199,8 +205,9 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
         print("PLAN029_LINUX_CROSSPLATFORM_CASE_FAIL arch="+ARCH+" case="+name+
               " error="+str(exc),flush=True)
         raise SystemExit(1)
-results["qualification"]=("PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES" if NORMAL_PAD_ONLY
-                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES")
+results["qualification"]=("PASS_SCOPED_TWO_FEC_SOURCE_PADDING_NATIVE_LINUX_SCENES" if FEC_PAD_ONLY
+                          else ("PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES" if NORMAL_PAD_ONLY
+                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES"))
 persist()
 print("PLAN029_LINUX_CROSSPLATFORM_NATIVE_PASS arch="+ARCH+" source="+SOURCE+
       " cases="+str(len(CASES)),flush=True)

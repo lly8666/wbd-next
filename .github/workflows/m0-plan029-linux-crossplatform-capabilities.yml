@@ -1,7 +1,7 @@
 # H2181: genuine Linux x86_64 + native ARM64 game padding and cross-OS
 # shared CLI capabilities. Not Windows WinGUI nor an ARM board or QEMU.
-# Build once per ISA; run two previously untested Normal-padding Linux
-# client/server scenarios per architecture. H2186's eight are not rerun.
+# Build once per ISA; run exactly two new protected Fixed/Auto FEC
+# SOURCE padding scenes per native ISA. H2186/H2193 are not rerun.
 name: PLAN029 Linux crossplatform padding crypto route and MTU native
 run-name: "PLAN029 Linux capabilities two native ISA | ${{ github.sha }}"
 on:
@@ -40,7 +40,7 @@ jobs:
       GOTOOLCHAIN: local
       WBD_PLAN029_LINUX_DUAL_ISA: '1'
       WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
-      WBD_PLAN029_LINUX_NORMAL_PAD_ONLY: '1'
+      WBD_PLAN029_LINUX_FEC_PAD_ONLY: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -83,7 +83,7 @@ jobs:
               assert hashlib.sha256((p/binary).read_bytes()).hexdigest()==sha
           print("PLAN029_LINUX_CAPABILITY_NATIVE_BINARIES_SOURCE_PASS")
           PY
-      - name: Two new Normal padding genuine native Linux original Go TLS/Rust scenes
+      - name: Two new Fixed and Auto FEC source-padding native Linux original Go TLS/Rust scenes
         shell: bash
         run: |
           set -euo pipefail
@@ -94,9 +94,9 @@ jobs:
           assert d["source_sha"]==os.environ["GITHUB_SHA"]
           assert d["native_isa"]==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
           assert len(d["scenarios"])==2
-          assert d["qualification"]=="PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES"
+          assert d["qualification"]=="PASS_SCOPED_TWO_FEC_SOURCE_PADDING_NATIVE_LINUX_SCENES"
           assert all(x["status"]=="PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM" for x in d["scenarios"])
-          print("PLAN029_LINUX_NORMAL_PADDING_NATIVE_TWO_SIGNED_PASS")
+          print("PLAN029_LINUX_FEC_SOURCE_PADDING_NATIVE_TWO_SIGNED_PASS")
           PY
       - name: Retain bounded source-locked native logs and SHA (no secrets)
         if: always()

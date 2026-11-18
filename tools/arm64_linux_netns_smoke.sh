@@ -110,7 +110,7 @@ if [[ "${WBD_PLAN029_LINUX_COVERAGE:-0}" == 1 ]];then
     off|tls|flows) ;;
     *) echo PLAN029_INVALID_LINUX_PAD_REQUEST >&2;exit 2 ;;
   esac
-  if [[ "$game_lanes" -gt 0 || "$mode" == normal ]];then
+  if [[ "$game_lanes" -gt 0 || "$mode" == normal || "$mode" == fec-fixed || "$mode" == fec-auto ]];then
     client_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
     server_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
   elif [[ "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}" != off ]];then
