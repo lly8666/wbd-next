@@ -21,3 +21,7 @@ PLAN027A（2026-11-02）：未来完成同源JWT/JNI原始Go凭据授权后，**
 外层完整IPv4 IP上限默认1460、不含L2（可显式最大1500）**，内层必须消费
 唯一Rust预算并经Android OS真实读回。本Android壳的 `setMtu(1200)` 是旧
 **内层TUN占位值**，不能当成用户外层默认，也不能据此声称Android已接通。
+
+## H2208 short RouteKey (settings-side only)
+
+`RouteKeyStore.kt` matches the Linux/Windows v2 PBKDF2-HMAC-SHA256 (4096 iterations) 8..32 ASCII alphanumeric input, persists the derived 32-byte key in private Android `noBackupFilesDir` with `AtomicFile`, and uses one HMAC to validate a cached key after restart. This helper must be invoked by a future trusted local settings/native admission bridge before launching the original Go TLS owner; NEVER by a per-packet handler, Intent extra or untrusted exported service. The current JNI/native login remains NOT_WIRED, and Android device execution is NOT_RUN. Short human passwords remain guessable; use random 24..32 characters.

@@ -31,3 +31,7 @@ PLAN027A（2026-11-02）：UCI唯一外层完整IPv4 IP MTU为 `outer_mtu`，
 默认1460（无L2，最大可显式1500）；init只透传 `--outer-mtu` 给同一
 Linux V4冷预算，绝不能把它作为TUN内层MTU。此包仍未通过OpenWrt设备原生
 认证/OS读回/Stop测试，默认配置 `enabled '0'` 不变。
+
+## H2208 short RouteKey caching (opt-in)
+
+In the disabled UCI client, `route_key_short_file` points to a **0600** local 8..32 ASCII-alphanumeric secret file; no secret bytes belong in UCI or procd argv. Linux Go resolves it once using v2 4096-iteration PBKDF2 and keeps the 32B key in `/etc/wbd-next/private/route-key-v2.json` (parent 0700, file 0600), reusing it on every restart. Key changes rotate the cache. Older 32B hex-file deployments set `route_key_short_file ''` and `route_key_file` to their original protected hex file. Actual OpenWrt device/JNI connection remains NOT_RUN; do not auto-enable the service.

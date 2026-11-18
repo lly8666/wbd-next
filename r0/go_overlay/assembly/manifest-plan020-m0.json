@@ -339,7 +339,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "e5e8a965d62ece18aadc613b008494808e24738f",
+      "result_blob": "64ffdd34832f9b8d5122bd03fcba50053f2da2a9",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -472,6 +472,10 @@
         {
           "find": "只对Normal原始隧道M1加密记录生效",
           "replace": "对Normal与Game2/4原始隧道加密记录生效（Fixed/Auto除外）"
+        },
+        {
+          "find": "  \"route-key-hex\": [",
+          "replace": "  \"route-key\": [\n    \"服务器\",\n    \"简化 RouteKey（推荐）\",\n    \"8–32位英数字；派生32字节后存储复用，建议随机24–32位。使用时旧十六进制Key保持空白\"\n  ],\n  \"route-key-hex\": ["
         }
       ]
     },
@@ -827,7 +831,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "b49a1c81fd9b123918ea06d8252bff0b0910892e",
+      "result_blob": "9be728d58361688340304b0793bdf79ff58d983f",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -890,6 +894,10 @@
         {
           "find": "Game startup padding not wired",
           "replace": "Game startup padding off/tls/flows uses authenticated Rust V5 cold attach"
+        },
+        {
+          "find": "      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n",
+          "replace": "      \"route-key\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"8..32 ASCII letters/digits, case-sensitive; mobile-friendly v2 derived once then cached; prefer 24..32 random\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n"
         }
       ]
     },
@@ -1143,9 +1151,13 @@
         {
           "find": "            MigrateStartupPadding(values);\n            object old;",
           "replace": "            MigrateCNDomainDirect(values);\n            MigrateStartupPadding(values);\n            object old;"
+        },
+        {
+          "find": "Key == \"password\" || Key == \"route-key-hex\"",
+          "replace": "Key == \"password\" || Key == \"route-key-hex\" || Key == \"route-key\""
         }
       ],
-      "result_blob": "7a5a9e4239bb6642baef63647fafb3f77404c4af"
+      "result_blob": "4fe6e212c5387a027f5165aa066aec4a64b08e59"
     },
     {
       "kind": "create",

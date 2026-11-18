@@ -11,7 +11,7 @@
 
 ## 2. 已选最小方案：预共享route-key，复用原SessionID识别
 
-1. 服务端生成并持久保存32字节随机key；客户端通过连接配置导入或显式填写。已有合法显式key兼容保留，生产不使用公开常量。无key时本地报配置缺失，**不打开连接做自动协商/隐式回退**。随机生成/导出/帮助与适用GUI/参数目录须同步落实；日志不输出key。
+1. 原32字节CSPRNG随机route-key/0600文件入口继续兼容；**2026-11-19用户追加允许**双方各输入相同8–32位ASCII英数字短Key，使用版本化PBKDF2-HMAC-SHA256 v2（4096次，固定域隔离盐）**在本地一次**派生原32字节HMAC入口key，0600/应用私有目录落盘，重连与程序重启直接读取、核验缓存，不重复跑KDF。无Key或安全落盘失败均拒绝、**无任何线上协商/隐式回退**。短密码的实际熵不随扩展长度增加，特别8位人为字符可被离线猜测；生产建议24–32位CSPRNG随机字符，不能承诺等同256-bit随机key；诊断/日志不输出明文或派生key。旧240000次H2207未验v1短密钥**不静默混作v2**，需两端同时采用v2或继续显式原32B hex/file。
 2. server级key可以由多个账号/设备/lane共用，它仅用于入口识别，不替代TLS服务器身份验证、TLS内用户名密码认证、会话/IP隔离。无需逐用户试key、额外key ID、线上密钥发现或新轮换协议。
 3. 直接复用旧`hello.go:markerFor`和`tls.go:newFirefox120Client`：CSPRNG生成ClientHello.random，既有HMAC-SHA256(label || random || normalized SNI)结果占用原本32B兼容SessionID。标签只是本地HMAC输入，不明文发送；不增加字段、扩展、record或往返。实际TLS库保持SessionID回显和HRR等合法状态；不得把同一个固定token作为每次SessionID。
 4. 这不是TLS `pre_shared_key` 扩展/PSK握手：保持真实完整证书握手，不因此省略Certificate/CertificateVerify，也不引入0-RTT。后续账号、安装标识、IP、模式、MTU等沿既有TLS保护的Admission交换；Rust稳态record/AEAD/PN/FEC/重传及generation不变。
