@@ -24,6 +24,7 @@ type V4WindowsAuthenticatedGameServerGroup struct{
  fecOpenProc,fecFinishProc *syscall.Proc
  fecParityProc,fecM4SendProc *syscall.Proc
  gameFec uint8 // protected client/server GameFec, same for all independent TLS lanes
+ paddingMode uint8 // exact per-cohort client selector across every TLS lane
  closed bool
 }
 func V4WindowsEstablishOriginalGameServerGroup(
@@ -84,8 +85,10 @@ func V4WindowsEstablishOriginalGameServerGroup(
    }
    return fail(errV4WindowsOwner)
   }
-  if i==0{g.epoch=session.Epoch}
-  if session.Epoch!=g.epoch||g.epoch==[16]byte{}{
+  mode,modeErr:=session.AuthenticatedStartupPaddingMode()
+  if modeErr!=nil{return fail(errors.Join(modeErr,owner.stopRustOwnerOnly()))}
+  if i==0{g.epoch=session.Epoch;g.paddingMode=mode}
+  if session.Epoch!=g.epoch||g.epoch==[16]byte{}||mode!=g.paddingMode{
    return fail(errors.Join(ErrAdmissionUnsupported,owner.stopRustOwnerOnly()))
   }
   g.owners=append(g.owners,&V4WindowsAuthenticatedServerOwner{bridge:owner})
