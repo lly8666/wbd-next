@@ -12,6 +12,7 @@ on:
     paths:
       - '.github/workflows/m0-plan029-linux-crossplatform-capabilities.yml'
       - 'tools/m0_plan029_linux_crossplatform_coverage.py'
+      - 'tools/m0_plan029_linux_dual_native_build.sh'
       - 'tools/arm64_linux_netns_smoke.sh'
       - 'tools/m0_plan029_linux_native_app.py'
       - 'tests/test_m0_plan029_linux_capability_coverage.py'
