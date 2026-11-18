@@ -25,6 +25,15 @@ final class RootDiagnosticReceipt {
         NATIVE_SOURCE_VERIFIED,
         ORIGINAL_GO_TUN_KERNEL_CONFIGURED,
         ORIGINAL_GO_RAW_SOCKET_READY,
+        // Exact original Go syscall result from ClientAssociation.Start();
+        // never peer authentication, TLS or data-plane success by itself.
+        ORIGINAL_GO_COLD_SYN_TX_OK,
+        ORIGINAL_GO_COLD_SYN_TX_PERMISSION_DENIED,
+        ORIGINAL_GO_COLD_SYN_TX_NETWORK_UNREACHABLE,
+        ORIGINAL_GO_COLD_SYN_TX_INVALID_ARGUMENT,
+        ORIGINAL_GO_COLD_SYN_TX_SOURCE_UNAVAILABLE,
+        ORIGINAL_GO_COLD_SYN_TX_BUFFER_PRESSURE,
+        ORIGINAL_GO_COLD_SYN_TX_OTHER_FAILURE,
         ORIGINAL_GO_TCP_SYNACK_SEEN,
         ROOT_GRANT_REQUESTED,
         ROOT_PROCESS_LAUNCHED,

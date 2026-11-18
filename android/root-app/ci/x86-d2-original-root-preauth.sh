@@ -57,6 +57,15 @@ p=Path("out/android-x86-d2-root")
 data=(p/"app-diagnostic-enums.txt").read_text(errors="replace") if (p/"app-diagnostic-enums.txt").exists() else ""
 server=(p/"server-stage-enums.txt").read_text(errors="replace") if (p/"server-stage-enums.txt").exists() else ""
 def has(k):return k in data
+syn_classes=(
+ ("ORIGINAL_GO_COLD_SYN_TX_OK","SENDTO_PASS_NOT_PEER_AUTH"),
+ ("ORIGINAL_GO_COLD_SYN_TX_PERMISSION_DENIED","OS_PERMISSION_DENIED"),
+ ("ORIGINAL_GO_COLD_SYN_TX_NETWORK_UNREACHABLE","OS_NETWORK_UNREACHABLE"),
+ ("ORIGINAL_GO_COLD_SYN_TX_INVALID_ARGUMENT","OS_INVALID_ARGUMENT"),
+ ("ORIGINAL_GO_COLD_SYN_TX_SOURCE_UNAVAILABLE","OS_SOURCE_UNAVAILABLE"),
+ ("ORIGINAL_GO_COLD_SYN_TX_BUFFER_PRESSURE","OS_BUFFER_PRESSURE"),
+ ("ORIGINAL_GO_COLD_SYN_TX_OTHER_FAILURE","OS_OTHER_FAILURE"))
+syn_result=next((v for key,v in syn_classes if has(key)),"NOT_PROVEN")
 d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "source":os.environ["GITHUB_SHA"],"phase":os.environ["WBD_D2_PHASE"],
  "exit_code":int(os.environ["WBD_D2_RC"]),
@@ -66,6 +75,7 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "original_go_root_process_launched":"PASS" if has("ROOT_PROCESS_LAUNCHED") else "NOT_PROVEN",
  "original_android_tun_configured":"PASS" if has("ORIGINAL_GO_TUN_KERNEL_CONFIGURED") else "NOT_PROVEN",
  "original_android_raw_af_packet":"PASS" if has("ORIGINAL_GO_RAW_SOCKET_READY") else "NOT_PROVEN",
+ "original_android_cold_syn_send":syn_result,
  "real_peer_synack":"PASS" if has("ORIGINAL_GO_TCP_SYNACK_SEEN") else "NOT_PROVEN",
  "tls_authenticated_32_lease":"PASS" if has("AUTHENTICATED_LEASE_OS_READBACK") and
     "V4_ORIGINAL_GO_SERVER_NATIVE_READY" in server else "NOT_PROVEN",
@@ -80,6 +90,7 @@ print("D2_S1_ORIGINAL_ROOT_STAGED",
  d["linux_real_original_server"],
  d["original_android_tun_configured"],
  d["original_android_raw_af_packet"],
+ "SYN_TX",d["original_android_cold_syn_send"],
  "TLS",d["tls_authenticated_32_lease"])
 PY
 }

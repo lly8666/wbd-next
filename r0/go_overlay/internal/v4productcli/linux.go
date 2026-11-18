@@ -1364,7 +1364,35 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }()
     coldSynStart:=time.Now()
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_start unix_ms=%d",coldSynStart.UnixMilli())}
-    if err:=assoc.Start(coldSynStart);err!=nil{return err}
+    if err:=assoc.Start(coldSynStart);err!=nil{
+        // ANDROID ONLY, OBSERVABILITY ONLY: classify the exact original
+        // syscall/client-association SYN send failure without logging IPv4,
+        // credentials, keys, network handle, syscall arguments or packet.
+        // Never transform the error, retry policy or original SYN bytes.
+        if runtime.GOOS=="android"{
+            category:="other"
+            switch {
+            case errors.Is(err,syscall.EPERM),errors.Is(err,syscall.EACCES):
+                category="permission_denied"
+            case errors.Is(err,syscall.ENETUNREACH),errors.Is(err,syscall.EHOSTUNREACH),
+                 errors.Is(err,syscall.ENETDOWN):
+                category="network_unreachable"
+            case errors.Is(err,syscall.EINVAL),errors.Is(err,syscall.EAFNOSUPPORT):
+                category="invalid_argument"
+            case errors.Is(err,syscall.EADDRNOTAVAIL):
+                category="source_unavailable"
+            case errors.Is(err,syscall.ENOBUFS):
+                category="buffer_pressure"
+            }
+            log.Printf("V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=%s",category)
+        }
+        return err
+    }
+    // Start() calls the ORIGINAL fake TCP raw segment writer synchronously.
+    // This means kernel Sendto returned success, NOT that a peer replied.
+    if runtime.GOOS=="android"{
+        log.Printf("V4_PUBLIC_ANDROID_COLD_SYN_TX_OK role=client source=original_go_raw")
+    }
     dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
     defer cancel()
     // A first SYN may precede server AF_PACKET bind just as a post-dead

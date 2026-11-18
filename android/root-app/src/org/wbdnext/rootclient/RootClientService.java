@@ -330,6 +330,7 @@ public final class RootClientService extends Service {
                          int port,int[] targetUids,String[] targetPackages,boolean hasCA){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
+        boolean coldSynTxRecorded=false;
         try{
             NativePayload code=NativePayload.stage(this);
             ownerExecutable=code.executableName;
@@ -370,6 +371,38 @@ public final class RootClientService extends Service {
                         line,"V4_PUBLIC_RAW_AF_PACKET_READY role=client")){
                         rawReady=true;
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RAW_SOCKET_READY);
+                    }
+                    // Fixed categories emitted from the unchanged original
+                    // ClientAssociation.Start()/Sendto path: NEVER raw stderr,
+                    // IP, UID, route key, TLS transcript or credential bytes.
+                    if(!coldSynTxRecorded){
+                        RootDiagnosticReceipt.Event synEvent=null;
+                        if(OriginalGoMilestones.matches(line,
+                            "V4_PUBLIC_ANDROID_COLD_SYN_TX_OK role=client")){
+                            synEvent=RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_OK;
+                        }else if(OriginalGoMilestones.matches(line,
+                            "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=permission_denied")){
+                            synEvent=RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_PERMISSION_DENIED;
+                        }else if(OriginalGoMilestones.matches(line,
+                            "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=network_unreachable")){
+                            synEvent=RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_NETWORK_UNREACHABLE;
+                        }else if(OriginalGoMilestones.matches(line,
+                            "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=invalid_argument")){
+                            synEvent=RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_INVALID_ARGUMENT;
+                        }else if(OriginalGoMilestones.matches(line,
+                            "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=source_unavailable")){
+                            synEvent=RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_SOURCE_UNAVAILABLE;
+                        }else if(OriginalGoMilestones.matches(line,
+                            "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=buffer_pressure")){
+                            synEvent=RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_BUFFER_PRESSURE;
+                        }else if(OriginalGoMilestones.matches(line,
+                            "V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=other")){
+                            synEvent=RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_OTHER_FAILURE;
+                        }
+                        if(synEvent!=null){
+                            coldSynTxRecorded=true;
+                            trace(synEvent);
+                        }
                     }
                     if(!synackSeen&&OriginalGoMilestones.matches(
                         line,"V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS_V1 side=client")){
