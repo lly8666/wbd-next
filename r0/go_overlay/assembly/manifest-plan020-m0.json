@@ -1268,7 +1268,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "de79506497ae0ea74bcf7ba29212f5e5fe27a2bf"
+      "result_blob": "9d550d238f5fb3d4d2ad4b865e01940a954e986b"
     },
     {
       "kind": "create",
@@ -1280,7 +1280,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "170d1f4fb9daf36313badd675070416b81a1fc01"
+      "result_blob": "7f83d2f81bc55d9ad5eed36638354f8244ae2ba2"
     },
     {
       "kind": "create",
@@ -1358,7 +1358,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "fbbaf5a5c5f1ef0507202dc67e8eb632cc007d73"
+      "result_blob": "1ca25c1795b0602e3bf28d64dccbeab8262f04aa"
     },
     {
       "kind": "create",
@@ -1612,7 +1612,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "c436d121579aa5201cce6218270228ff3a934f2f"
+      "result_blob": "36476750d0ad0c77fe491b320ce8f26f6153543a"
     },
     {
       "kind": "create",
