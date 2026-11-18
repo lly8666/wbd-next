@@ -346,17 +346,41 @@ if [ "${WBD_ARM64_LIVE_MTU_CYCLE:-0}" = 1 ]; then
   grep -q '0% packet loss' "$out/dynamic-restored.log"
   echo ARM64_LIVE_MTU_1460_1280_RECOVER_REAL_OS_PASS | tee -a "$out/dynamic-mtu.txt"
 fi
-# PLAN029 new Linux-only coverage: prove per-owned-TUN IPv6 isolation, and
-# genuine kernel UDP/TCP application bytes in BOTH directions, not just ICMP.
-# Do not modify host/global IPv6 settings; the original Linux owner set this.
+# PLAN029 Linux-only coverage: verify the ORIGINAL owned TUN never
+# exposes an IPv6 address/route. Linux kernels may omit /proc/sys/net/ipv6/
+# conf/<device> entirely if the kernel TUN MTU is below IPv6's 1280 minimum
+# (e.g. outer1280 -> inner1209). Absence is valid ONLY below that minimum;
+# at >=1280 the owned per-interface disable_ipv6 readback MUST equal 1.
+# Do not modify/read back host-global IPv6 as a surrogate.
 if [[ "${WBD_PLAN029_LINUX_DUAL_ISA:-0}" == 1 ]];then
   for role in client server;do
     ns="$client_ns"; device=wbdcl
     if [[ "$role" == server ]];then ns="$server_ns"; device=wbdsv; fi
-    applied=$(sudo -n ip netns exec "$ns" cat "/proc/sys/net/ipv6/conf/$device/disable_ipv6")
-    if [[ "$applied" != 1 ]];then
-      echo "PLAN029_LINUX_OWNED_IPV6_NOT_DISABLED role=$role got=$applied" >&2;exit 1
+    native_tun_mtu=$(sudo -n ip -j -n "$ns" link show "$device" |
+      python3 -c 'import json,sys;print(json.load(sys.stdin)[0]["mtu"])')
+    ipv6_conf="/proc/sys/net/ipv6/conf/$device/disable_ipv6"
+    if sudo -n ip netns exec "$ns" test -f "$ipv6_conf";then
+      applied=$(sudo -n ip netns exec "$ns" cat "$ipv6_conf")
+      if [[ "$applied" != 1 ]];then
+        echo "PLAN029_LINUX_OWNED_IPV6_NOT_DISABLED role=$role mtu=$native_tun_mtu got=$applied" >&2
+        exit 1
+      fi
+      ipv6_mode=owned_disable_ipv6_1
+    else
+      if [[ "$native_tun_mtu" -ge 1280 ]];then
+        echo "PLAN029_LINUX_OWNED_IPV6_SYSCTL_MISSING_ABOVE_MIN_MTU role=$role mtu=$native_tun_mtu" >&2
+        exit 1
+      fi
+      ipv6_mode=kernel_below_ipv6_min_mtu_no_interface_sysctl
     fi
+    owned_ipv6_addr=$(sudo -n ip -n "$ns" -6 -o addr show dev "$device")
+    owned_ipv6_route=$(sudo -n ip -n "$ns" -6 route show dev "$device")
+    if [[ -n "$owned_ipv6_addr" || -n "$owned_ipv6_route" ]];then
+      echo "PLAN029_LINUX_OWNED_TUN_LEAKED_IPV6_ADDRESS_OR_ROUTE role=$role mtu=$native_tun_mtu" >&2
+      exit 1
+    fi
+    echo "PLAN029_LINUX_OWNED_IPV6_BOUNDARY_PASS role=$role inner_mtu=$native_tun_mtu method=$ipv6_mode ipv6_addresses=0 ipv6_routes=0" |
+      tee -a "$out/owned-ipv6.txt"
   done
   for direction in c2s s2c;do
     source_ns="$client_ns"; dest_ns="$server_ns"

@@ -115,6 +115,29 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
             "owned_stop":"TWO_DRAINED","netns_cleanup":"PASS"
         }.items():
             if receipt.get(k)!=v:raise RuntimeError("missing true native result: "+k)
+        # Two actual namespace readbacks, in addition to the existing
+        # kernel TCP/UDP/MTU/Stop receipt. At inner MTU <1280 the Linux
+        # per-device IPv6 sysctl may not exist: this is safe ONLY with
+        # real MTU readback and zero IPv6 interface addresses/routes.
+        ipv6_rows=(case/"owned-ipv6.txt").read_text().splitlines()
+        if len(ipv6_rows)!=2:
+            raise RuntimeError("both owned TUN IPv6 readbacks missing")
+        for side in ("client","server"):
+            match=[re.fullmatch(
+                r"PLAN029_LINUX_OWNED_IPV6_BOUNDARY_PASS role="+side+
+                r" inner_mtu=(\d+) method=(owned_disable_ipv6_1|kernel_below_ipv6_min_mtu_no_interface_sysctl) ipv6_addresses=0 ipv6_routes=0",line
+            ) for line in ipv6_rows]
+            checked=[m for m in match if m is not None]
+            if len(checked)!=1:
+                raise RuntimeError(side+" original kernel owned IPv6 state not attested")
+            tun_mtu=int(checked[0].group(1))
+            strategy=checked[0].group(2)
+            if strategy=="kernel_below_ipv6_min_mtu_no_interface_sysctl" and tun_mtu>=1280:
+                raise RuntimeError(side+" missing sysctl not legal for inner MTU >= 1280")
+            if outer==1280 and tun_mtu>=1280:
+                raise RuntimeError(side+" outer1280 inner TUN MTU incorrectly widened")
+            row[side+"_owned_tun_mtu"]=tun_mtu
+            row[side+"_owned_ipv6_check"]=strategy
         for side in ("client","server"):
             raw=(case/(side+".log")).read_text(errors="replace")
             if mode.startswith("game"):

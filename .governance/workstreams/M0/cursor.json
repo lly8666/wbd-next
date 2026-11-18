@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2185,
-  "checkpoint_sha": "0650e6caf7e33b899fd3de91b45bcda4cbfb8ab8",
+  "sequence": 2186,
+  "checkpoint_sha": "17cbbd8712ca886fe2c0546ddcd9b1bdebd74227",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2185：H2184 x86/ARM各Game pad6场+AES128各7/8真网络PASS，第8 X25519无离线route-key两ISA服务端主动拒绝（按现Linux CLI契约正确）；拆为合法route-key AES256外层1280真业务测试。",
-  "why_now": "H2184 Action44268654320原生两ISA第8服务端在TUN初始化前报offline 32-byte route-key is required locally; no network key bootstrap。用户要求测可用非Win功能，不能把不支持的X25519在线引导当应测成功。",
-  "done_when": "8互补真实Linux双ISA各原Go TLS/Rust/AF_PACKET pad、AES128/256、FEC、MTU1280、外层repair off、Stop完整Action SUCCESS；不支持Linux X25519及manual动态MTU明示NOT_WIRED/NOT_RUN。",
-  "next_action": "收H2185 native CI、确认同SOURCE产品hash/8场/ISA原kernel padding计数，然后更新功能卡、签名证据、START_HERE；后续如需autoIP动态MTU单独fixture。",
+  "current_task": "H2186：收H2185 Linux x86/ARM两ISA各7/8真网PASS；第8 AES256/outer1280两端已真TLS/MTU1209/双向ICMP+owned Stop，失败原因为fixture假定内层MTU<IPv6最小1280仍存在interface disable_ipv6 proc节点；按OS实际MTU核IPv6无地址/路由改门并复测。",
+  "why_now": "Action44269773178两架构原始产物证实第8实网AES256 source17cbbd87 原Go TLS/Rust M4两端Ready、30/30密文交付、双向ICMP、MTU1209边界+DF超限拒绝、双Stop；原fixture裸cat /proc/sys/net/ipv6/conf/wbdcl/disable_ipv6在内层1209缺节点FAIL，后续真正kernel TCP/UDP验收尚未执行。",
+  "done_when": "H2186 native双架构同新SOURCE各8场完成且original raw copy padded计数、AES128/256、outer1280真实应用双向TCP/UDP与Stop全PASS；保留X25519无离线route-key及manual物理动态切换NOT_WIRED。",
+  "next_action": "等待本次native x86_64/ARM64原生Action，优先检查第8实际双向TCP/UDP；若全PASS下载同SHA原产物后更新功能卡+签名证据+START_HERE和cursor。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2186-LINUX-OWNED-IPV6-UNDER-MIN-MTU.md",
     "docs/devlog/M0/20261118-PLAN029-H2185-LINUX-OFFLINE-ROUTE-KEY-REQUIREMENT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2184-LINUX-MANUAL-MTU-SCOPE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2181-LINUX-CROSSPLATFORM-CAPABILITY-GAPS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2184 source0650e6 original Linux native两ISA各Game padding六场+AES128常规真网络7/8 PASS；X25519不带离线route-key被明确拒绝，原Go当前不实现在线密钥引导，与padding无关。H2185保持真实业务硬门，最后场改AES256+离线路由键+物理外MTU1280，并声明X25519和manual物理动态切换不可算PASS。"
+  "partial_summary": "H2185 Action44269773178两ISA均前7场PASS，最后AES256/outer1280实际双向ICMP与innerMTU1209+DF已PASS；原被旧fixture只认sysctl节点卡住，测试没有执行应用TCP/UDP故不可宣布完整8/8；H2186修fixture按innerMTU阈值/IPv6 sysctl或接口无IPv6地址路由核真实OS，不放松其他收据。"
 }

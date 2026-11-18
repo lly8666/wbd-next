@@ -48,6 +48,22 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         self.assertIn("bytes_<=500*records",netns)
         self.assertIn("WBD_PLAN029_LINUX_COVERAGE",netns)
 
+    def test_ipv6_owned_tun_boundary_is_verified_on_real_inner_mtu(self):
+        smoke=read("tools/arm64_linux_netns_smoke.sh")
+        coverage=read("tools/m0_plan029_linux_crossplatform_coverage.py")
+        self.assertIn('native_tun_mtu=$(sudo -n ip -j -n "$ns" link show "$device"',smoke)
+        self.assertIn('sudo -n ip netns exec "$ns" test -f "$ipv6_conf"',smoke)
+        self.assertIn('if [[ "$native_tun_mtu" -ge 1280 ]];then',smoke)
+        self.assertIn('owned_ipv6_addr=$(sudo -n ip -n "$ns" -6 -o addr show dev "$device")',smoke)
+        self.assertIn('owned_ipv6_route=$(sudo -n ip -n "$ns" -6 route show dev "$device")',smoke)
+        self.assertIn('PLAN029_LINUX_OWNED_IPV6_BOUNDARY_PASS role=$role',smoke)
+        self.assertIn('(case/"owned-ipv6.txt").read_text()',coverage)
+        self.assertIn("if len(ipv6_rows)!=2:",coverage)
+        self.assertIn('if outer==1280 and tun_mtu>=1280:',coverage)
+        self.assertNotIn('applied=$(sudo -n ip netns exec "$ns" cat "/proc/sys/net/ipv6/conf/$device/disable_ipv6")',smoke)
+        # Other sources cannot turn a missing sysctl at >=1280 into PASS.
+        self.assertIn("missing sysctl not legal for inner MTU >= 1280",coverage)
+
     def test_small_complementary_scope_not_original_matrix_or_windows_claim(self):
         script=read("tools/m0_plan029_linux_crossplatform_coverage.py")
         workflow=read(".github/workflows/m0-plan029-linux-crossplatform-capabilities.yml")
