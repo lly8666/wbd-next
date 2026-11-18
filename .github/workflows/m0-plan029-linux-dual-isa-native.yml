@@ -1,0 +1,108 @@
+# PLAN029 Linux-only current-source native qualification.
+# Each job runs its OWN original Go client + original Go server + Rust engine.
+# ubuntu-24.04-arm is a native aarch64 runner, NOT QEMU or a cross build.
+# One ISA-L / Rust / Go build PER ISA, then five short netns sessions on that
+# runner, same binary hashes. Not the Windows CN/FakeIP/GUI/WFP feature matrix.
+name: PLAN029 native Linux x86_64 and ARM64 dual-endpoint scoped
+run-name: "PLAN029 Linux native two ISA | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m0-plan029-linux-dual-isa-native.yml'
+      - 'tools/m0_plan029_linux_dual_native_build.sh'
+      - 'tools/m0_plan029_linux_dual_isa_suite.py'
+      - 'tools/m0_plan029_linux_native_app.py'
+      - 'tools/arm64_linux_netns_smoke.sh'
+permissions:
+  contents: read
+jobs:
+  native-linux-two-endpoints:
+    # An unrelated test-only push must not launch real namespace/driver tests.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[plan029-linux-dual-native]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 48
+    concurrency:
+      group: plan029-linux-native-${{ github.sha }}-${{ matrix.arch }}
+      cancel-in-progress: false
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exact SOURCE native ISA and compiler/prerequisite check
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc nasm python3 iproute2 \
+            iputils-ping iptables openssl
+          test -c /dev/net/tun
+          sudo -n true
+          python3 -m py_compile tools/m0_plan029_linux_dual_isa_suite.py \
+            tools/m0_plan029_linux_native_app.py
+          bash -n tools/m0_plan029_linux_dual_native_build.sh \
+            tools/arm64_linux_netns_smoke.sh
+          echo "PLAN029_LINUX_NATIVE_PRECONDITIONS_PASS isa=$(uname -m) source=$GITHUB_SHA"
+      - name: Single exact-SOURCE original Go TLS / Rust / ISA-L native build and targeted core tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh \
+            > plan029-linux-build.log 2>&1 || {
+              tail -n 125 plan029-linux-build.log >&2
+              exit 1
+            }
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,platform
+          b=pathlib.Path("linux-plan029-public-bundle")
+          m=json.loads((b/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]==platform.machine()==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
+          for n,digest in m["sha256"].items():
+              assert hashlib.sha256((b/n).read_bytes()).hexdigest()==digest
+          assert m["rust_native_fec_acceleration"] is True
+          print("PLAN029_LINUX_NATIVE_BINARIES_VERIFIED arch="+platform.machine(),flush=True)
+          PY
+      - name: Five original dual-endpoint Linux real kernel modes on this one ISA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan029_linux_dual_isa_suite.py
+          python3 - <<'PY'
+          import json,os,pathlib,platform
+          d=json.loads(pathlib.Path("linux-plan029-result/summary.json").read_text())
+          assert d["source_sha"]==os.environ["GITHUB_SHA"]
+          assert d["native_isa"]==platform.machine()
+          assert d["status"]=="PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES"
+          assert len(d["cases"])==5
+          assert all(c["status"]=="PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS" for c in d["cases"])
+          print("PLAN029_LINUX_NATIVE_FIVE_MODES_SIGNED_PASS arch="+platform.machine(),flush=True)
+          PY
+      - name: Upload same-SOURCE scoped native diagnostics (no secret files or raw captures)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plan029-linux-native-${{ matrix.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            plan029-linux-build.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/SHA256SUMS
+            linux-plan029-result/
+          retention-days: 21
+          if-no-files-found: warn

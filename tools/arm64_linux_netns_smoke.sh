@@ -1,19 +1,31 @@
 #!/usr/bin/env bash
 # Two isolated real Linux ARM64 V4 CLI endpoints, not an emulated packet fixture.
+# PLAN029 opt-in reuses the SAME ORIGINAL kernel/netns fixture on native x86_64
+# and native aarch64; all legacy ARM64 frozen-source calls are unchanged.
 set -euo pipefail
-test "$(uname -m)" = aarch64
+if [[ "${WBD_PLAN029_LINUX_DUAL_ISA:-0}" == 1 ]];then
+  case "$(uname -m)" in x86_64|aarch64) ;; *) echo PLAN029_WRONG_NATIVE_ISA; exit 2;; esac
+  test "$(uname -m)" = "${WBD_PLAN029_LINUX_EXPECTED_ARCH:?}"
+else
+  test "$(uname -m)" = aarch64
+fi
 : "$GITHUB_RUN_ID" "$GITHUB_SHA" "$GITHUB_WORKSPACE"
-bundle="$GITHUB_WORKSPACE/arm64-public-bundle"
-out="$GITHUB_WORKSPACE/arm64-netns-result"
+bundle="${WBD_PLAN029_LINUX_BUNDLE:-$GITHUB_WORKSPACE/arm64-public-bundle}"
+out="${WBD_PLAN029_LINUX_OUTPUT:-$GITHUB_WORKSPACE/arm64-netns-result}"
 mkdir -p "$out"
 (cd "$bundle" && sha256sum -c SHA256SUMS)
 # GitHub artifact ZIP extraction does not preserve executable mode.
 # chmod changes metadata only, leaving the source-checked binary SHA256 intact.
 chmod 0755 "$bundle/wbd-v4-client" "$bundle/wbd-v4-server"
 python3 - "$bundle/manifest.json" "${WBD_ARM64_FROZEN_SOURCE:-$GITHUB_SHA}" <<'PY'
-import json,sys
+import json,sys,os,platform
 m=json.load(open(sys.argv[1]))
-assert m["source"]==sys.argv[2] and m["architecture"]=="aarch64",m
+expected=(platform.machine() if os.environ.get("WBD_PLAN029_LINUX_DUAL_ISA")=="1"
+          else "aarch64")
+actual_source=(m.get("source_sha") if os.environ.get("WBD_PLAN029_LINUX_DUAL_ISA")=="1"
+               else m.get("source"))
+assert actual_source==sys.argv[2] and m["architecture"]==expected,m
+assert expected in ("x86_64","aarch64") and platform.machine()==expected
 PY
 # Exercise the real executable and dynamic loader, before privileged work.
 for cmd in wbd-v4-client wbd-v4-server; do
@@ -295,6 +307,54 @@ if [ "${WBD_ARM64_LIVE_MTU_CYCLE:-0}" = 1 ]; then
   grep -q '0% packet loss' "$out/dynamic-restored.log"
   echo ARM64_LIVE_MTU_1460_1280_RECOVER_REAL_OS_PASS | tee -a "$out/dynamic-mtu.txt"
 fi
+# PLAN029 new Linux-only coverage: prove per-owned-TUN IPv6 isolation, and
+# genuine kernel UDP/TCP application bytes in BOTH directions, not just ICMP.
+# Do not modify host/global IPv6 settings; the original Linux owner set this.
+if [[ "${WBD_PLAN029_LINUX_DUAL_ISA:-0}" == 1 ]];then
+  for role in client server;do
+    ns="$client_ns"; device=wbdcl
+    if [[ "$role" == server ]];then ns="$server_ns"; device=wbdsv; fi
+    applied=$(sudo -n ip netns exec "$ns" cat "/proc/sys/net/ipv6/conf/$device/disable_ipv6")
+    if [[ "$applied" != 1 ]];then
+      echo "PLAN029_LINUX_OWNED_IPV6_NOT_DISABLED role=$role got=$applied" >&2;exit 1
+    fi
+  done
+  for direction in c2s s2c;do
+    source_ns="$client_ns"; dest_ns="$server_ns"
+    source_ip=10.188.18.1;dest_ip=10.188.18.2;app_port=47123
+    if [[ "$direction" == s2c ]];then
+      source_ns="$server_ns";dest_ns="$client_ns"
+      source_ip=10.188.18.2;dest_ip=10.188.18.1;app_port=47124
+    fi
+    app="$GITHUB_WORKSPACE/tools/m0_plan029_linux_native_app.py"
+    sudo -n ip netns exec "$dest_ns" python3 -u "$app" listener "$dest_ip" "$source_ip" "$app_port" "$direction" >"$out/app-$direction-listener.log" 2>&1 &
+    listener_pid=$!
+    app_ready=0
+    for i in $(seq 1 70);do
+      if grep -q "PLAN029_LINUX_APP_SOCKET_READY $direction" "$out/app-$direction-listener.log";then
+        app_ready=1;break
+      fi
+      if ! kill -0 "$listener_pid" 2>/dev/null;then break;fi
+      sleep .1
+    done
+    if [[ "$app_ready" != 1 ]];then
+      echo "PLAN029_LINUX_APP_LISTENER_NOT_READY direction=$direction" >&2
+      tail -n 25 "$out/app-$direction-listener.log" >&2;exit 1
+    fi
+    if ! timeout 40s sudo -n ip netns exec "$source_ns" python3 -u "$app" sender "$source_ip" "$dest_ip" "$app_port" "$direction" >"$out/app-$direction-sender.log" 2>&1;then
+      echo "PLAN029_LINUX_APP_REAL_KERNEL_SEND_FAIL direction=$direction" >&2
+      tail -n 25 "$out/app-$direction-sender.log" >&2; exit 1
+    fi
+    if ! wait "$listener_pid";then
+      echo "PLAN029_LINUX_APP_REAL_KERNEL_RECEIVE_FAIL direction=$direction" >&2
+      tail -n 25 "$out/app-$direction-listener.log" >&2;exit 1
+    fi
+    for role in sender listener;do
+      grep -q "PLAN029_LINUX_APP_TRUE_KERNEL_PASS" "$out/app-$direction-$role.log"
+    done
+    echo "PLAN029_LINUX_REAL_KERNEL_TCP_UDP_BIDIRECTIONAL_PASS direction=$direction"
+  done
+fi
 export WBD_V4_EXPECTED_ICMP="$count"
 # One bounded, real-product capacity discovery; not codec A/B, first-arrival
 # p99, or a production rate guarantee. Do NOT repeat if capacity is insufficient.
@@ -379,13 +439,16 @@ if sudo -n ip netns list | grep -Eq "($client_ns|$server_ns)"; then
   echo 'ARM64_NETNS_CLEANUP_FAILED'; exit 1
 fi
 OUTPUT="$out" python3 - <<'PY'
-import pathlib,json,hashlib,os
+import pathlib,json,hashlib,os,platform
 p=pathlib.Path(os.environ["OUTPUT"])
 sha=lambda n:hashlib.sha256((p/n).read_bytes()).hexdigest()
 files=("client.log","server.log","c2s.log","s2c.log")
 d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "test_harness_source":os.environ["GITHUB_SHA"],"run":os.environ["GITHUB_RUN_ID"],
-"qualification":"PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN",
+"qualification":("PASS_SCOPED_TWO_LINUX_SAME_ISA_NETNS_ORIGINAL_GO_TLS_RUST_RAW_TUN"
+ if os.environ.get("WBD_PLAN029_LINUX_DUAL_ISA")=="1"
+ else "PASS_SCOPED_TWO_ARM64_NETNS_GENUINE_GO_TLS_RUST_RAW_TUN"),
+"actual_native_isa":platform.machine(),
 "mode":os.environ.get("WBD_V4_MODE","normal"),
 "game_fec_profile":os.environ.get("WBD_ARM64_GAME_FEC_PROFILE","off"),
 "dynamic_mtu_cycle":os.environ.get("WBD_ARM64_LIVE_MTU_CYCLE","NOT_RUN"),
@@ -396,5 +459,20 @@ d={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SHA"]),
 "capacity_trial":os.environ.get("WBD_ARM64_CAPACITY_TRIAL","NOT_RUN"),
 "logs_sha256":{f:sha(f) for f in files}}
 (p/"receipt.json").write_text(json.dumps(d,indent=2)+"\n")
-print("ARM64_NATIVE_OS_TWO_WAY_APP_STOP_PASS")
+if os.environ.get("WBD_PLAN029_LINUX_DUAL_ISA")=="1":
+    for direction in ("c2s","s2c"):
+        for role in ("sender","listener"):
+            proof=json.loads(next(x.split(" ",1)[1] for x in
+                (p/("app-"+direction+"-"+role+".log")).read_text().splitlines()
+                if x.startswith("PLAN029_LINUX_APP_TRUE_KERNEL_PASS ")))
+            assert proof["udp"]=="PASS_NATIVE_KERNEL_APP" and proof["tcp"]=="PASS_NATIVE_KERNEL_APP"
+    d["real_linux_kernel_udp_tcp_both_directions"]="PASS"
+    d["linux_owned_tun_ipv6_disable"]="PASS_BOTH_OWNED_TUN_ONLY"
+    d["requested_outer_mtu"]=int(os.environ["WBD_ARM64_OUTER_MTU"])
+    d["actual_client_server_isa"]=platform.machine()
+    d["source_binary_sha256_verified"]=True
+    (p/"receipt.json").write_text(json.dumps(d,indent=2)+"\n")
+    print("PLAN029_LINUX_NATIVE_TWO_END_REAL_UDP_TCP_IPV6_MTU_STOP_PASS arch="+platform.machine())
+else:
+    print("ARM64_NATIVE_OS_TWO_WAY_APP_STOP_PASS")
 PY

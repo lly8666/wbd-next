@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2170,
-  "checkpoint_sha": "81998f91d183c722be932543be6434c1fd31be57",
+  "sequence": 2171,
+  "checkpoint_sha": "addb8c78ee01dae55d529a4c8d3715553bd895b7",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2170 对H2169 Game2 FECoff/Game4 FECfixed × off/tls/flows 六场真实Win2025/WSL2 NPF/TCP/UDP/Stop PASS_SCOPED完成签名证据、功能卡和START_HERE收口。WinGUI原选择/保存/help装配PASS，Game WinForms亲自点击真网络仍NOT_RUN。",
-  "why_now": "H2168 marker漏中央native_smoke导致首次真实Action全跳过；H2169补门禁后Action44250162599实际SUCCESS：2个Windows原生job独立3档全部同一SOURCE和二进制SHA、Stop/OS/MTU1460验收。",
-  "done_when": "当前Game startup-padding scoped接线/原生两代表模式已达标并持久记录同源证据。完整029/029B技术出口及Game WinForms Game模式按钮另计，不因六场成为全矩阵PASS。",
-  "next_action": "审收H2170治理/feature自动CI；如用户后续要求Game真WinForms专场，单独选择最少一代SOURCE测试；不复跑Game20/20，030不启动。",
+  "current_task": "H2171 用户要求PLAN029非Windows Linux服务端与客户端在原生x86_64及ARM64分别相关实网测试；两个架构并行，各固定SOURCE一次构建、同架构双netns五个短业务模式顺序测。",
+  "why_now": "H2170 Game padding Win2025/WSL2 scoped收口后用户明确要求高效的Linux x86和ARM64双端原生覆盖；原历史ARM64 workflow使用旧冻结SOURCE、不可代替main。",
+  "done_when": "两个native ISA实际Action各原Go客户端/服务端+Rust M4 TLS、双向UDP/TCP内核业务、Normal/Fixed/Auto/Game2/Game4固定FEC、MTU1460、owned TUN IPv6仅本设备禁用及双Stop真实证据；失败单列。",
+  "next_action": "触发H2171新workflows两parallel native jobs；收首个失败或签名PASS，更新linux-raw-tun等功能卡和证据；不复跑Windows Game20/20/不启030。",
   "unverified": true,
   "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2171-LINUX-DUAL-ISA-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
     "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md",
     "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json",
     "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
-    "docs/evidence/M0/PLAN029-H2163-GUI-SETTINGS-AUDIT-20261118.json",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
+    "docs/evidence/M0/PLAN029-H2163-GUI-SETTINGS-AUDIT-20261118.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2169 signed SOURCE81998 Action44250162599 COMPLETE SUCCESS, Game2 FECoff pads off/tls/flows NPF0/837/7663B, Game4 fixed0/843/16391B, all real Wintun/NPF/WSL2 kernel UDP/Win→Linux TCP and both owned Stop, MTU1460; Rust Game unit419/419 H2167另SOURCE。Game WinForms真按钮、另两Game/FEC组合及029全技术OPEN，030未启动。"
+  "partial_summary": "H2171构建新Linux双架构native matrix：ubuntu-24.04 x86_64与ubuntu-24.04-arm aarch64；每ISA仅一次原Go TLS+Rust+ISA-L build，五原生产CLI模式独立双netns真实双向UDP/TCP+Stop/MTU，严格SOURCE/ELF哈希，非QEMU。当前Linux本SOURCE网络NOT_RUN。"
 }
