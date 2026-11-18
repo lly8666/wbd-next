@@ -554,6 +554,33 @@ func (s *V4EpochStore) prepare(
     return actual,nonce,finish,nil
 }
 
+// A single additional, strictly bounded random suffix inside each TLS
+// application request/reply. Reading it completely before Detach is required;
+// otherwise it could be misinterpreted as an early native Rust DATA record.
+func v4AppendEncryptedAdmissionPad(wire []byte,ext V4Extension,rng io.Reader)([]byte,error){
+    if !ext.ControlPadded{return wire,nil}
+    if rng==nil{return nil,ErrAdmissionParams}
+    n,err:=rand.Int(rng,big.NewInt(v4AdmissionPadMax-v4AdmissionPadMin+1))
+    if err!=nil{return nil,err}
+    length:=int(n.Int64())+v4AdmissionPadMin
+    var hdr [2]byte
+    binary.BigEndian.PutUint16(hdr[:],uint16(length))
+    wire=append(wire,hdr[:]...)
+    begin:=len(wire)
+    wire=append(wire,make([]byte,length)...)
+    if _,err=io.ReadFull(rng,wire[begin:]);err!=nil{return nil,err}
+    return wire,nil
+}
+func v4ConsumeEncryptedAdmissionPad(r io.Reader,ext V4Extension)error{
+    if !ext.ControlPadded{return nil}
+    var hdr [2]byte
+    if _,err:=io.ReadFull(r,hdr[:]);err!=nil{return err}
+    n:=int(binary.BigEndian.Uint16(hdr[:]))
+    if n<v4AdmissionPadMin||n>v4AdmissionPadMax{return ErrAdmissionParams}
+    var scratch [v4AdmissionPadMax]byte
+    _,err:=io.ReadFull(r,scratch[:n])
+    return err
+}
 func v4RequestWire(req AdmissionRequest,ext V4Extension)([]byte,error) {
     req.RecordVersion=RecordVersionV3
     raw,err:=marshalAdmissionRequest(req)
@@ -561,7 +588,7 @@ func v4RequestWire(req AdmissionRequest,ext V4Extension)([]byte,error) {
     block,err:=v4Encode(ext)
     if err!=nil{return nil,err}
     binary.BigEndian.PutUint16(raw[4:6],V4RecordVersion)
-    return append(raw,block[:]...),nil
+    return v4AppendEncryptedAdmissionPad(append(raw,block[:]...),ext,rand.Reader)
 }
 func v4ReadRequest(r io.Reader)(AdmissionRequest,V4Extension,error) {
     var zero V4Extension
@@ -584,6 +611,7 @@ func v4ReadRequest(r io.Reader)(AdmissionRequest,V4Extension,error) {
     if _,err:=io.ReadFull(r,suffix);err!=nil{return AdmissionRequest{},zero,err}
     ext,err:=v4Decode(suffix[len(suffix)-v4ExtensionLen:])
     if err!=nil{return AdmissionRequest{},zero,err}
+    if err=v4ConsumeEncryptedAdmissionPad(r,ext);err!=nil{return AdmissionRequest{},zero,err}
     base:=append(append([]byte{},hdr[:]...),suffix[:len(suffix)-v4ExtensionLen]...)
     binary.BigEndian.PutUint16(base[4:6],RecordVersionV3)
     req,err:=readAdmissionRequest(bytes.NewReader(base))
@@ -599,7 +627,7 @@ func v4ReplyWire(result AdmissionResult,ext V4Extension)([]byte,error) {
     block,err:=v4Encode(ext)
     if err!=nil{return nil,err}
     binary.BigEndian.PutUint16(raw[1:3],V4RecordVersion)
-    return append(raw,block[:]...),nil
+    return v4AppendEncryptedAdmissionPad(append(raw,block[:]...),ext,rand.Reader)
 }
 func v4ReadReply(r io.Reader,req AdmissionRequest)(AdmissionResult,V4Extension,error) {
     var zero V4Extension
@@ -622,6 +650,7 @@ func v4ReadReply(r io.Reader,req AdmissionRequest)(AdmissionResult,V4Extension,e
     if _,err:=io.ReadFull(r,tail);err!=nil{return AdmissionResult{},zero,err}
     ext,err:=v4Decode(tail[len(tail)-v4ExtensionLen:])
     if err!=nil{return AdmissionResult{},zero,err}
+    if err=v4ConsumeEncryptedAdmissionPad(r,ext);err!=nil{return AdmissionResult{},zero,err}
     original:=append(append([]byte{},header[:]...),tail[:len(tail)-v4ExtensionLen]...)
     binary.BigEndian.PutUint16(original[1:3],RecordVersionV3)
     expectedReq:=req
