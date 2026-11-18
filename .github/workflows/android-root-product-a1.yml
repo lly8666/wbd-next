@@ -29,6 +29,12 @@ on:
       - "tools/m0_install_public_faketcp.py"
       - "tools/m0_install_public_realityfront_tests.py"
   workflow_dispatch:
+    inputs:
+      run_legacy_nativebridge:
+        description: 'Run obsolete ARM64-ELF-on-x86-NativeBridge diagnostic (known SIGSEGV 139)'
+        type: boolean
+        required: false
+        default: false
 permissions: {contents: read}
 concurrency:
   group: android-product-a1-${{ github.ref }}
@@ -341,6 +347,10 @@ jobs:
           if-no-files-found: warn
 
   android-x86-kvm-ksu-arm64-nativebridge:
+    # Historical ARM64 translation experiment, not the A15 x86-native gate.
+    # Never silently re-run its unsupported ARM64 Go ELF on each product push.
+    # Explicit manual opt-in retains the real red failure when requested.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_legacy_nativebridge == true }}
     # The actual older KernelSU environment (x86_64 KVM Android16 API36)
     # is NOT equivalent to an ARM64 guest. This job must launch the exact
     # Android ARM64 signed APK and actually execve its original-Go AArch64

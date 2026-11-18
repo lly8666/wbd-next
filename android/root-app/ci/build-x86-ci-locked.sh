@@ -68,16 +68,26 @@ tree=ET.parse(path)
 root=tree.getroot()
 app=root.find("application")
 assert app is not None
-app.set("{"+ns+"}label","WBD x86 CI Root")
+app.set("{"+ns+"}label","@string/wbd_x86_ci_label")
 ET.SubElement(app,"activity",{
     "{"+ns+"}name":".X86CiAppSuActivity",
     "{"+ns+"}exported":"true"})
 tree.write(target,encoding="utf-8",xml_declaration=True)
 PYCI
+# AAPT2 must link a COMPILED string resource. A literal manifest label
+# is omitted by this no-resources aapt2 build (observed blank badging).
+# KSU Manager must display the exact CI-only label before UI authorization.
+mkdir -p "$out/res/values" "$out/res-compiled"
+printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' \
+ '<resources><string name="wbd_x86_ci_label">WBD x86 CI Root</string></resources>' \
+ >"$out/res/values/ci_label.xml"
+"$bt/aapt2" compile --dir "$out/res" -o "$out/res-compiled"
+mapfile -t ci_flats < <(find "$out/res-compiled" -type f -name '*.flat' | sort)
+test "${#ci_flats[@]}" -eq 1
 "$bt/d8" --min-api 28 --lib "$jar" --output "$out/dex" \
   $(find "$out/classes" -name '*.class' -print)
 "$bt/aapt2" link --manifest "$out/ci-only-AndroidManifest.xml" \
-  -I "$jar" -A "$out/assets" \
+  -I "$jar" -A "$out/assets" -R "${ci_flats[0]}" \
   --min-sdk-version 28 --target-sdk-version 35 \
   -o "$out/unsigned.apk"
 (cd "$out/dex" && zip -q -j ../unsigned.apk classes.dex)
