@@ -328,6 +328,7 @@ public final class RootClientService extends Service {
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
                          int port,int[] targetUids,String[] targetPackages,boolean hasCA){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
+        boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         try{
             NativePayload code=NativePayload.stage(this);
             trace(RootDiagnosticReceipt.Event.NATIVE_SOURCE_VERIFIED);
@@ -358,19 +359,37 @@ public final class RootClientService extends Service {
                     // ORIGINAL-Go emits these only AFTER true TLS lease
                     // kernel readback, Rust M4 handoff or successful joined
                     // cleanup. We record no variable part of native stdout.
-                    if(line.contains("V4_PUBLIC_LEASE_APPLIED role=client"))
+                    if(!tunConfigured&&OriginalGoMilestones.matches(
+                        line,"V4_PUBLIC_TUN_TXQLEN role=client")){
+                        tunConfigured=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_KERNEL_CONFIGURED);
+                    }
+                    if(!rawReady&&OriginalGoMilestones.matches(
+                        line,"V4_PUBLIC_RAW_AF_PACKET_READY role=client")){
+                        rawReady=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RAW_SOCKET_READY);
+                    }
+                    if(!synackSeen&&OriginalGoMilestones.matches(
+                        line,"V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS_V1 side=client")){
+                        synackSeen=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TCP_SYNACK_SEEN);
+                    }
+                    if(!leaseReadback&&OriginalGoMilestones.matches(
+                        line,"V4_PUBLIC_LEASE_APPLIED role=client")){
+                        leaseReadback=true;
                         trace(RootDiagnosticReceipt.Event.AUTHENTICATED_LEASE_OS_READBACK);
-                    if(line.contains("V4_PUBLIC_GO_RX_HANDOFF role=client"))
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_GO_RX_HANDOFF role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_HANDOFF);
-                    if(line.contains("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client"))
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_STOP_DRAINED);
-                    if(line.contains("V4_PUBLIC_NATIVE_STOP_DRAINED role=client"))
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_NATIVE_STOP_DRAINED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_STOP_JOINED);
-                    if(!uidReady&&line.contains("V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED")){
+                    if(!uidReady&&OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED")){
                         uidReady=true;
                         trace(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT);
                     }
-                    if(!nativeReady&&line.contains("V4_ORIGINAL_GO_CLIENT_NATIVE_READY")){
+                    if(!nativeReady&&OriginalGoMilestones.matches(line,"V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")){
                         nativeReady=true;
                         trace(RootDiagnosticReceipt.Event.NATIVE_M4_RECEIPT);
                     }
@@ -388,9 +407,17 @@ public final class RootClientService extends Service {
                 RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
             if(exit==139)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_139);
             if(exit==132)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_132);
+            // Only the LAST observed genuine original-Go stage. Never
+            // imply that missing TLS, app packets or joined Stop passed.
+            String lastStage=readyRecorded?"NATIVE_UID_READY":
+                leaseReadback?"LEASE_OS_READBACK":
+                synackSeen?"SYNACK_PRE_AUTH":
+                rawReady?"RAW_PRE_SYNACK":
+                tunConfigured?"TUN_PRE_RAW":"PRE_TUN";
             status=exit==0
                 ?"ORIGINAL_NATIVE_EXITED_ZERO — phone data not independently verified"
-                :"ROOT_OR_NATIVE_EXIT_"+exit+" — route/journal and Stop need inspection";
+                :"ROOT_OR_NATIVE_EXIT_"+exit+" after "+lastStage+
+                 " — inspect fixed receipt; Android data unverified";
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.ROOT_LAUNCH_FAILED);
             status="ROOT_OR_NATIVE_FAILURE: "+e.getClass().getSimpleName()+

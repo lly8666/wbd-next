@@ -74,6 +74,11 @@ public final class RootUidTunPacketScriptTest {
             throw new AssertionError("diagnostic packet identity changed");
         int guard=s.indexOf("if ! ip -4 route get 192.0.2.1 uid");
         int emit=s.indexOf("echo WBD_A11_UID_TUN_SEND_READY");
+        int arm=s.indexOf(": > \"$p/.uidarmed\"");
+        if(arm<=guard||arm>=emit)
+            throw new AssertionError("native FD must arm only after UID lookup");
+        if(s.split("\\.uidarmed",-1).length!=4)
+            throw new AssertionError("arming must have start/final cleanup");
         int join=s.indexOf("if wait \"$cap_pid\"");
         if(guard<0||emit<guard||join<emit)
             throw new AssertionError("flow must be gated by exact UID kernel route");

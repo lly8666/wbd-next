@@ -79,11 +79,17 @@ for token in ("new DatagramSocket()",
               "REAL_APP_UID_TO_TEMP_TUN_PACKET=PASS"):
     assert token in selftest,token
 assert selftest.index("nativeCaptureConfirmed&&sendAttempted&&cleanupConfirmed")>0
-for token in ("--uid-tun-capture", "poll(&pfd, 1, 9500)",
+for token in ("--uid-tun-capture", "poll(&pfd, 1, remaining)",
               "192 && packet[17] == 0", "packet[ihl+3]) == 43999",
               "memcmp(packet + ihl + 8, payload, sizeof(payload)-1)",
               "close(fd)", "O_EXCL", "O_NOFOLLOW"):
     assert token in native,token
+assert "const int64_t arm_deadline = before + 20000;" in native
+assert "const int64_t capture_deadline = capture_start + 9500;" in native
+assert "O_RDONLY | O_NONBLOCK" in native and "S_ISREG(st.st_mode)" in native
+assert native.index("open(armed_file,") < native.index("poll(&pfd, 1, remaining)")
+assert packet.index("ip -4 route get 192.0.2.1 uid ") < packet.index(': > \\"$p/.uidarmed\\"') < packet.index("WBD_A11_UID_TUN_SEND_READY")
+assert packet.count('.uidarmed') == 3, "two cleanups plus one arm marker"
 assert 'sendto(' not in native and 'TUNSETPERSIST, &ifr' not in native
 assert 'device-selftest-arm64.c' in build
 # A12: disaggregate the real device's A11_UID_TUN_ROUTE_FAIL into

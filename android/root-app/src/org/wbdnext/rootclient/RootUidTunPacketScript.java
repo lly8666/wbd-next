@@ -53,7 +53,7 @@ final class RootUidTunPacketScript {
         sh.append("ip link show dev wbdst11 >/dev/null 2>&1; then ");
         sh.append("echo WBD_A11_UID_TUN_ROLLBACK_FAIL; ");
         sh.append("else echo WBD_A11_UID_TUN_ROLLBACK_PASS; fi; ");
-        sh.append("rm -f \"$p/.uidready\" \"$p/.uidcapture\" ");
+        sh.append("rm -f \"$p/.uidready\" \"$p/.uidarmed\" \"$p/.uidcapture\" ");
         sh.append("\"$p/.a12.err\" \"$p/.a12.rules\" \"$p/.a12.routes\"; ");
         sh.append("rmdir \"$p/.uidpacket.lock\" 2>/dev/null || :; }; ");
         sh.append("trap cleanup EXIT; trap 'exit 79' HUP INT TERM; ");
@@ -62,7 +62,7 @@ final class RootUidTunPacketScript {
         sh.append("ip -4 route show table 19843 2>/dev/null | grep -q '[^[:space:]]' || ");
         sh.append("ip link show dev wbdst11 >/dev/null 2>&1; then ");
         sh.append("echo WBD_A11_UID_TUN_COLLISION; exit 75; fi; ");
-        sh.append("rm -f \"$p/.uidready\" \"$p/.uidcapture\" ");
+        sh.append("rm -f \"$p/.uidready\" \"$p/.uidarmed\" \"$p/.uidcapture\" ");
         sh.append("\"$p/.a12.err\" \"$p/.a12.rules\" \"$p/.a12.routes\"; ");
         sh.append("if ! cp ").append(quote(sourceLockedHelper.getAbsolutePath()));
         sh.append(" \"$p/.uidcapture\"; then echo WBD_A11_REFUSED; exit 76; fi; ");
@@ -129,10 +129,14 @@ final class RootUidTunPacketScript {
         sh.append("if ! ip -4 route get 192.0.2.1 uid ").append(ownUid);
         sh.append(" 2>/dev/null | grep -Eq 'dev wbdst11( |$)'; then ");
         sh.append("echo WBD_A11_UID_ROUTE_LOOKUP_FAIL; exit 78; fi; ");
+        // Arm capture only after the kernel selects the exact owned UID route.
+        sh.append("if ! : > \"$p/.uidarmed\"; then ");
+        sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
         sh.append("echo WBD_A11_UID_TUN_SEND_READY; ");
         // The original APK UID sends exactly one 15-byte test UDP packet.
-        // Native helper validates byte-level TUN ingress, exits within
-        // 9.5sec; root shell synchronously joins before exact cleanup.
+        // Native helper begins bounded 9.5s capture only after the
+        // kernel UID route readback and 0600 arming marker. Shell
+        // synchronously joins before exact cleanup.
         sh.append("if wait \"$cap_pid\"; then ");
         sh.append("cap_pid=0; echo WBD_A11_UID_TUN_PACKET_PASS; ");
         sh.append("else cap_pid=0; echo WBD_A11_UID_TUN_PACKET_FAIL; fi; ");

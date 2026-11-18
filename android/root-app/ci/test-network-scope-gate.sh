@@ -31,6 +31,10 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java \
   android/root-app/ci/RootDiagnosticReceiptTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReceiptTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
+  android/root-app/ci/OriginalGoMilestonesTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoMilestonesTest
 PYTHONPATH=android/root-app/ci python3 -m unittest -v device_first_run_test
 python3 android/root-app/ci/test-device-selftest-source.py
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
@@ -98,6 +102,11 @@ with tempfile.TemporaryDirectory() as td:
 print("ANDROID_ROOT_OWNED_PID_2_AND_3_FIELD_PARSE_PASS")
 # Same-source fixed-enum, credential-free diagnostic receipts; never
 # echo arbitrary native stdout and never count a Stop TERM as joined Stop.
+assert 'OriginalGoMilestones.matches(' in s
+assert 'ROOT_OR_NATIVE_EXIT_' in s and 'SYNACK_PRE_AUTH' in s
+assert 'RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_KERNEL_CONFIGURED' in s
+assert 'RootDiagnosticReceipt.Event.ORIGINAL_GO_RAW_SOCKET_READY' in s
+assert 'RootDiagnosticReceipt.Event.ORIGINAL_GO_TCP_SYNACK_SEEN' in s
 assert 'WBD_ROOT_DIAG' in s
 assert 'RootDiagnosticReceipt.Event.NATIVE_M4_AND_UID_READY' in s
 assert 'RootDiagnosticReceipt.Event.STOP_SIGNAL_ACCEPTED' in s

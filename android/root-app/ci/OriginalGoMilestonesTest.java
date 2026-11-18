@@ -1,0 +1,36 @@
+package org.wbdnext.rootclient;
+
+/** Host-only genuine Go log formats; does not mock TLS or native execution. */
+public final class OriginalGoMilestonesTest {
+    public static void main(String[] args) {
+        for(String marker:new String[]{
+            "V4_PUBLIC_TUN_TXQLEN role=client",
+            "V4_PUBLIC_RAW_AF_PACKET_READY role=client",
+            "V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS_V1 side=client",
+            "V4_PUBLIC_LEASE_APPLIED role=client",
+            "V4_PUBLIC_GO_RX_HANDOFF role=client",
+            "V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED",
+            "V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",
+            "V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client",
+            "V4_PUBLIC_NATIVE_STOP_DRAINED role=client"
+        }){
+            if(!OriginalGoMilestones.matches(marker+" readback=1",marker)||
+               !OriginalGoMilestones.matches(
+                    "2026/11/18 09:10:11 "+marker+" readback=1",marker))
+                throw new AssertionError("original Go marker unavailable: "+marker);
+            for(String foreign:new String[]{
+                "user-controlled "+marker,
+                "2026/11/18 09:10:11 another "+marker,
+                "2026/11/18 09:10:11"+marker,
+                "2026/11/18 09:10:11 "+marker+"_spoof readback=1",
+                marker+"X",
+                marker+"\npassword"
+            })if(OriginalGoMilestones.matches(foreign,marker))
+                throw new AssertionError("substring spoof accepted");
+        }
+        if(OriginalGoMilestones.matches(null,"marker")||
+           OriginalGoMilestones.matches("marker",null))
+            throw new AssertionError("null accepted");
+        System.out.println("ANDROID_ARM64_ORIGINAL_GO_ANCHORED_COLD_STAGE_HOST_PASS");
+    }
+}

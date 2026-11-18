@@ -18,6 +18,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 
 #ifndef __aarch64__
@@ -95,12 +97,18 @@ static int underlay_check(const char *interface) {
  * bounded helper owns only its nonpersistent TUN FD, never TUNSETPERSIST.
  * Only a trusted 0700 root-owned directory receives the ready marker.
  */
+static int64_t monotonic_millis(void) {
+    struct timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return -1;
+    return (int64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+
 static int uid_tun_capture(const char *ready_file) {
     const char name[] = "wbdst11";
     const char payload[] = "WBD_A11_TUN_UID";
-    if (!ready_file || strlen(ready_file) >= 256 ||
-        strncmp(ready_file, "/data/local/tmp/wbd-next-selftest/",
-                sizeof("/data/local/tmp/wbd-next-selftest/")-1) != 0)
+    /* Accept only the exact root-owned test directory marker. */
+    if (!ready_file ||
+        strcmp(ready_file, "/data/local/tmp/wbd-next-selftest/.uidready") != 0)
         return 40;
     if (if_nametoindex(name) != 0) return 41;
     int fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
@@ -120,16 +128,56 @@ static int uid_tun_capture(const char *ready_file) {
         return 44;
     }
     close(marker);
+    /*
+     * A12 physical failure: an unarmed 9500ms poll may retire this
+     * nonpersistent TUN before the shell finishes route setup. Keep its
+     * sole owning FD open throughout route, rule and UID lookup readback.
+     * Only the trusted 0700 root shell can arm capture with a fresh
+     * root-owned 0600 regular file AFTER exact kernel UID route lookup.
+     */
+    const char armed_file[] = "/data/local/tmp/wbd-next-selftest/.uidarmed";
+    int64_t before = monotonic_millis();
+    if (before < 0) { close(fd); return 46; }
+    const int64_t arm_deadline = before + 20000;
+    const struct timespec nap = { .tv_sec = 0, .tv_nsec = 20000000L };
+    int armed = 0;
+    for (;;) {
+        int64_t now = monotonic_millis();
+        if (now < 0 || now >= arm_deadline) break;
+        int arm = open(armed_file, O_RDONLY | O_NONBLOCK |
+                       O_CLOEXEC | O_NOFOLLOW);
+        if (arm >= 0) {
+            struct stat st;
+            armed = fstat(arm, &st) == 0 && S_ISREG(st.st_mode) &&
+                    st.st_uid == 0 && (st.st_mode & 0777) == 0600 &&
+                    st.st_nlink == 1;
+            close(arm);
+            break;
+        }
+        if (errno != ENOENT) break;
+        nanosleep(&nap, NULL);
+    }
+    if (!armed) { close(fd); return 46; }
+
+    /* The 9.5-second capture window starts AFTER kernel route admission.
+     * Spurious/unrelated packets cannot prematurely destroy the owner FD. */
+    int64_t capture_start = monotonic_millis();
+    if (capture_start < 0) { close(fd); return 45; }
+    const int64_t capture_deadline = capture_start + 9500;
     int found = 0;
-    struct pollfd pfd;
-    pfd.fd = fd;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-    /* hard bounded: test-only, never a packet-processing service */
-    int rv = poll(&pfd, 1, 9500);
-    if (rv > 0 && (pfd.revents & POLLIN)) {
+    for (;;) {
+        int64_t now = monotonic_millis();
+        if (now < 0 || now >= capture_deadline) break;
+        int remaining = (int)(capture_deadline - now);
+        struct pollfd pfd = { .fd = fd, .events = POLLIN, .revents = 0 };
+        int rv = poll(&pfd, 1, remaining);
+        if (rv < 0 && errno == EINTR) continue;
+        if (rv <= 0 || (pfd.revents & (POLLERR | POLLHUP | POLLNVAL))) break;
+        if ((pfd.revents & POLLIN) == 0) continue;
         uint8_t packet[2048];
         ssize_t n = read(fd, packet, sizeof(packet));
+        if (n < 0 && (errno == EINTR || errno == EAGAIN)) continue;
+        if (n <= 0) break;
         if (n >= 20 && (packet[0] >> 4) == 4) {
             size_t ihl = (size_t)(packet[0] & 15) * 4;
             if (ihl >= 20 && (size_t)n >= ihl + 8 + sizeof(payload)-1 &&
@@ -141,10 +189,11 @@ static int uid_tun_capture(const char *ready_file) {
                 (size_t)packet[ihl+5] >= 8 + sizeof(payload)-1 &&
                 memcmp(packet + ihl + 8, payload, sizeof(payload)-1) == 0) {
                 found = 1;
+                break;
             }
         }
     }
-    close(fd); /* kernel frees the test TUN; no persistence */
+    close(fd); /* last FD auto-deletes test TUN, never TUNSETPERSIST */
     return found ? 0 : 45;
 }
 
