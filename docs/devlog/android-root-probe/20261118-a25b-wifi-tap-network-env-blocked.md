@@ -4,6 +4,9 @@
 
 **判定**：当前 hosted x86 Emulator 的普通 `-net-tap` 和 Virtio-WiFi `-wifi-tap` 均未拿到可证明的原业务 TAP 物理出站，按 `ENV_BLOCKED_NETWORK_PATH` 止损；这**不证明**原 TLS、证书或 AEAD 有错，也不证明 TAP 在任何设备均不可用。原 SLIRP host lo SYN 亦非原 Linux RAW RX。保留所有旧 SOURCE/Action 原状态，不重复 dispatch 相同重型 CI。唯一网络关键路径移至获用户另行授权的真实 ARM64 或实际可用的自管 ARM64 KVM/隔离物理网络，再按双端 SYN→SYNACK→TLS租约→Rust M4/Stop 分级验；无授权只做离线收据方案。不动 ARM64 生产协议、Windows/Linux 共享逻辑、DNS 冷门、实体设备、`main` / M0；PR #36 继续 Draft。
 
+
+**治理字段修复（不更改实际验收）**：[首轮 docs Action #44288017283](https://github.com/lly8666/wbd-next/actions/runs/44288017283) 的 Feature catalog FAIL 原因为 `verification.status=ENV_BLOCKED` 不属于现行 schema 枚举，Governance SKIPPED；[治理维护 #44288017457](https://github.com/lly8666/wbd-next/actions/runs/44288017457) regression SUCCESS。本提交仅将功能卡 A25 验证行字段定为 `BUILD_PASS`，明确限定于同 SOURCE 构建与 Linux oracle，环境阻塞保留在 scope/summary/limitations/现行计划和本记录为 `ENV_BLOCKED_NETWORK_PATH`。不把构建 PASS 扩张为 Android 真业务 PASS，旧 FAIL 不覆盖。
+
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A25官方同源真实收据表明Wi-Fi TAP宿主RX为零、DHCP未租约，原Linux RAW SYN/SYNACK及TLS/M4仍未证；将hosted x86网络门定为ENV_BLOCKED并收敛唯一方案、长期提示词与功能卡，防止重复重型QEMU与假E2E。"}
 ```
