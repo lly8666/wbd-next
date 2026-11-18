@@ -285,6 +285,51 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  linux-x86-original-server-d2-s0:
+    # D2-S0: original Linux server + shared Rust, built for the SAME ISA as
+    # the x86 Android16 KSU guest host. This tests server CLI startup only.
+    # It is NOT an Android TLS/auth/M4/TCP/UDP or route-Stop test.
+    needs: [arm64-native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - name: D2-S0 build exact pinned Linux original x86_64 server and run real CLI help
+        shell: bash
+        run: bash android/root-app/ci/x86-original-linux-server-prep.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-d2-s0-original-linux-x86-server-${{ github.sha }}
+          path: |
+            out/android-x86-original-linux/wbd-v4-server
+            out/android-x86-original-linux/wbd-v4-client
+            out/android-x86-original-linux/libwbd_engine.so
+            out/android-x86-original-linux/SOURCE
+            out/android-x86-original-linux/manifest.json
+            out/android-x86-original-linux/SHA256SUMS
+            out/android-x86-original-linux/elf-*.txt
+            out/android-x86-original-linux/linker-*.txt
+            out/android-x86-original-linux/help-*-rc.txt
+          retention-days: 7
+          if-no-files-found: warn
+
   linux-original-server-normal-off:
     # Genuine original Linux Go/Rust server + Linux peer: NOT Android E2E.
     needs: [arm64-native]
