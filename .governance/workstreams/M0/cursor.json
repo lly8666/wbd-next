@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2178,
-  "checkpoint_sha": "73a828e56494e05095f24defa1da931c74dbccd0",
+  "sequence": 2179,
+  "checkpoint_sha": "4fc484c864742c96b4de07e1c15cfc242d793c98",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2178：H2177原生Linux x86/ARM64各五模式10/10 PASS_SCOPED证据已归档；修治理热读取预算超限，不改产品。",
-  "why_now": "H2177 Action44260485192与维护门禁FAIL：M0 hot read=33430B>32768B，原因是游标交接内容累积；非原生网络FAIL。",
-  "done_when": "缩减重复热摘要后治理、功能目录及维护门禁PASS；H2177真网络SOURCE3cc095与十场原证据保留。",
-  "next_action": "核H2178治理/feature/maintenance结果；不重跑已PASS的Linux十场，完整029/029B技术OPEN、030未开始。",
+  "current_task": "H2179：H2177 Linux双原生ISA 10/10真业务已签名；证据顶层SOURCE字段补契约并复核治理，不变更产品。",
+  "why_now": "H2178已修hot read 33430→32099B；但Action44261125004仍因H2177 evidence只含same_exact_source_sha、不含顶层source_sha而结构FAIL。",
+  "done_when": "治理/功能卡/维护门禁SUCCESS；本H2179仅同值证据结构修复，原生SOURCE3cc095十场PASS_SCOPED不重跑。",
+  "next_action": "核H2179 CI，完成则报告Linux真网络10/10、未覆盖项与证据；029/029B完整技术OPEN、030未开始。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2179-LINUX-EVIDENCE-SOURCE-KEY-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2178-LINUX-GOVERNANCE-BUDGET-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2176-LINUX-GAME-COPY-DROP-CLASSIFICATION.md"
+    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2177签名Action44258876671，native x86_64和aarch64各原Go TLS/Rust双端Normal/Fixed/Auto/Game2/Game4fixed6共10/10真TCP/UDP/TUN/MTU1460/Stop PASS_SCOPED；Game4每端parity96条，原lane副本跳过单列、鉴权与关键错误零。未测物理ARM/跨ISA/Windows专属。"
+  "partial_summary": "H2177原生Linux x86_64+aarch64各双端5场10/10真TCP/UDP/TUN/MTU/Stop PASS；Action44258876671同SOURCE3cc095。H2178归档治理先因hot字节超限FAIL，收缩到32099B后第二门因证据缺顶层source_sha FAIL；H2179填真实同值字段。"
 }

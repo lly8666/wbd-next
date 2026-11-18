@@ -5,6 +5,7 @@
   "scope": "non-Windows original Linux Go TLS client + Linux Go TLS server, both genuine Rust M4/raw AF_PACKET/TUN on each native host ISA",
   "qualification": "PASS_SCOPED_TEN_ACTUAL_LINUX_NATIVE_TCP_UDP_TWO_ENDPOINTS",
   "same_exact_source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+  "source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "original_go_pinned_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
   "original_isa_l_pinned_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
   "action": {
