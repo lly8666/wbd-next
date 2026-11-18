@@ -1,4 +1,4 @@
-name: Delivery: H2169 same-source native Linux ARM64 server bundle
+name: 'Delivery H2169 same-source native Linux ARM64 server bundle'
 run-name: H2169 compatible Linux ARM64 server native release
 on:
   push:
