@@ -25,3 +25,24 @@ A12 真实 ARM64 KernelSU 同一 APK 的脱敏回执包括 `NATIVE_ARM64_KERNEL=
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A12 用户真实 ARM64 回执表明测试 TUN 路由前已消失，真实 WBD仍 NOT_RUN；A13 收紧正式原 Go rootjournal 单/多 UID owned readback 与Stop，不允许删除带额外选择器的外来规则，新增 host 回归。"}
 ```
+
+## A13 同源 Actions 实际结果更新（2026-11-18）
+
+冻结的 **代码 SOURCE `466b641527f61ac64cc4f9c7c813835dc477b50c`**；
+[Android ARM64 root 产品 Action #44215447605](https://github.com/lly8666/wbd-next/actions/runs/44215447605)。
+当前已直接核验 `arm64-native` **SUCCESS**，其原 donor 装配后的
+`go test -count=1 ./internal/v4productcli/rootjournal` 实际输出
+`ok github.com/lly8666/wobuzhidao/internal/v4productcli/rootjournal 0.037s`；
+`root-arm64-app`、`linux-original-server-normal-off`、DNS/codec host 和
+`arm64-cuttlefish-host-admission` **SUCCESS**。最后的 x86 NativeBridge
+任务核对时仍 `in_progress`，整条 Action 结论**尚未结束 / NOT_RUN 不可改 PASS**。
+host-only Cuttlefish admission 不是 Android16 ARM64 真机业务。手机 TLS/M4 仍 NOT_RUN。
+
+原 SOURCE 的治理 Action #44215447468 **FAIL** 是本轮卡片超过
+16 KiB 的仓库格式限制，而不是原生回归 FAIL；后续仅 docs commit
+`809b0ed8ef99448d0d4d0b1ecd01e26af84cc9e3` 已将卡片收敛到
+16,338 UTF-8 bytes（不删除历史 verification），但独立提交未同步修改
+devlog 而触发第二次 feature-impact 声明门 FAIL。本次进一步同时修改功能卡和
+本 devlog，保留相同 feature-impact，按真实最新 governance Action 再确认结果。
+原生产品构建仍严格指向上述冻结代码 SOURCE，不拿 docs-only HEAD
+伪装成已重编的 APK。
