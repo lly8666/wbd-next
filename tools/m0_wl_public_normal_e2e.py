@@ -1790,7 +1790,12 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  # Windows->Linux Tunnel TCP with a source-locked Linux listener/echo.
  # The historical PLAN028 Linux->Windows inbound comparator is not a B4
  # requirement; never disguise its known independent FAIL as B4 product FAIL.
- if p029_direct or p029b_b4:
+ if p029_direct or p029b_b4 or p029b_game_case:
+  # H2159: Game2/4 original kernel Windows->Linux TCP+echo is REQUIRED
+  # for all five source-locked business policies. The old Linux-initiated
+  # Windows inbound TCP comparator is a separate PLAN028 capability;
+  # it is not evidence of the Game2/4 cold split data plane. Do NOT
+  # replace the genuine two-ended socket echo with a synthetic receipt.
   # Same genuine one-way TCP test already required for PLAN029 Direct.
   # Normal B4 has three actual GUI generations; the final all generation
   # remains OS Applied until external Stop after this TCP proof.
@@ -3003,9 +3008,16 @@ print(json.dumps(result),flush=True)
   print("PLAN029B_B3_SIGNED_REAL_AF_INET6_WINTUN_SKIP_IPV4_PROGRESS_BOTH_STOP_PASS_SCOPED",flush=True)
  if p029_game4_cn:
   g4=report.get("plan029_game4_cn_real",{})
+  expected_tcp=("PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"
+                if p029b_game_case else "PASS_ACTUAL_TWO_OS_KERNEL_TCP")
+  tcp=report.get("actual_kernel_tcp",{})
   if (g4.get("source_sha")!=os.environ["GITHUB_SHA"] or
-      report.get("tcp_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_TCP"):
-   raise RuntimeError("Game4 CN direct and Tunnel kernel TCP not proven on same source")
+      report.get("tcp_duplex")!=expected_tcp or
+      (p029b_game_case and not (
+       tcp.get("windows",{}).get("client_echo") is True and
+       tcp.get("linux",{}).get("received_bytes",0)>0 and
+       tcp.get("linux",{}).get("client_ip")=="10.66.0.2"))):
+   raise RuntimeError("Game CN real physical Direct and actual two-kernel Tunnel TCP echo missing")
   native=(out/"client.log").read_text(errors="replace")
   markers=(("WBD_PLAN029B_GAME_V3_COLD_EFFECTIVE lanes=2",
             "WBD_PLAN029B_GAME_NATIVE_DNS_TCP_ENABLED lanes=2")

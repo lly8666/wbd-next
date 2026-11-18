@@ -20,6 +20,16 @@ class MatrixScope(unittest.TestCase):
   self.assertIn('PLAN029B_GAME_REAL_FIVE_POLICY_PASS',runner)
   self.assertIn('plan029b-game-lan-guest.log',runner)
   self.assertIn('plan029b-game-lan-windows.log',runner)
+  # H2159 old universal duplex comparator failed before any real
+  # Game split policies, although Windows->Linux kernel TCP echo and
+  # two-OS UDP, authenticated TLS and three Stop witnesses succeeded.
+  # Preserve actual client->Linux TCP socket+echo and never count the
+  # separate PLAN028 inbound direction as tested.
+  self.assertIn('PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP',runner)
+  self.assertIn('report.get("actual_kernel_tcp",{}).get("windows",{}).get("client_echo")',runner)
+  self.assertIn('report.get("actual_kernel_tcp",{}).get("linux",{}).get("received_bytes",0)<=0',runner)
+  self.assertIn('legacy_028_linux_initiated_windows_tcp',runner)
+  self.assertIn('if p029_direct or p029b_b4 or p029b_game_case:',(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text())
  def test_original_kernel_and_no_synthetic_lan(self):
   fixture=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
   helper=ROOT/"tools/m0_plan029b_game_lan_probe.py"
@@ -53,3 +63,9 @@ class MatrixWorkflowScope(unittest.TestCase):
   self.assertIn('tools/m0_plan029b_game_matrix_native.py result/wl-public/direct-full.log',w)
   self.assertIn('PASS_SCOPED_FIVE_ORIGINAL_GAME_SPLIT_CASES_BOTH_OS',w)
   self.assertIn('plan029b-game-matrix/',w)
+  self.assertIn("elseif($env:WBD_PLAN029B_GAME_MATRIX_SCENE -eq '1')",w)
+  self.assertIn("$result.tcp_duplex -ne 'PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP'",w)
+  self.assertIn("PLAN029B_GAME2_GAME4_REAL_TWO_KERNEL_TUNNEL_TCP_UDP_OWNED_STOP_PASS_SCOPED",w)
+  self.assertIn("$result.tcp_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_TCP'",w)
+  self.assertLess(w.index("elseif($env:WBD_PLAN029B_GAME_MATRIX_SCENE -eq '1')"),
+                  w.index("selected same-SOURCE native public mode lacks actual two-OS UDP/TCP/Stop proof"))

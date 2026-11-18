@@ -3302,6 +3302,29 @@ jobs:
               Write-Output 'PLAN029_H1794_REAL_APP_TCP53_DIRECT_AND_TUNNEL_TWO_OS_OWNED_STOP_PASS_SCOPED'
             }
             Write-Output 'PLAN029_H1766_OUTER_SOURCE_LOCKED_DIRECT_TUNNEL_DNS_TCP_UDP_AND_STOP_PASS_SCOPED'
+          } elseif($env:WBD_PLAN029B_GAME_MATRIX_SCENE -eq '1') {
+            # H2159: one genuinely authenticated Windows Game2/4 2/4-lane
+            # Rust V4 owner with real two-OS UDP, Windows-initiated kernel
+            # Tunnel TCP and Linux native echo, then Windows+Linux owned
+            # Stop. The historic PLAN028 Linux-initiated Windows inbound
+            # TCP comparator remains STRICT for every other eligible mode.
+            $tcp=$result.actual_kernel_tcp
+            if($result.source -ne $env:GITHUB_SHA -or
+               $result.fixture_source -ne $env:GITHUB_SHA -or
+               $result.product_binary_source -ne $env:GITHUB_SHA -or
+               $result.linux_binary_source -ne $env:GITHUB_SHA -or
+               $result.mode -ne $env:WBD_WL_PUBLIC_MODES -or
+               $result.mode_public -ne ('PASS_ACTUAL_WINDOWS_LINUX_NATIVE_'+$env:WBD_WL_PUBLIC_MODES) -or
+               $result.app_duplex -ne 'PASS_ACTUAL_TWO_OS_KERNEL_UDP' -or
+               $result.tcp_duplex -ne 'PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP' -or
+               $tcp.windows.client_echo -ne $true -or
+               [int]$tcp.linux.received_bytes -le 0 -or
+               $tcp.linux.client_ip -ne '10.66.0.2' -or
+               $result.stop -ne 'PASS_BOTH_OWNED' -or
+               [int]$result.requested_original_win_mtu -ne 1460){
+              throw 'Game2/4 signed original native TLS/UDP+actual 2-kernel Tunnel TCP echo/owned Stop source proof missing'
+            }
+            Write-Output 'PLAN029B_GAME2_GAME4_REAL_TWO_KERNEL_TUNNEL_TCP_UDP_OWNED_STOP_PASS_SCOPED'
           } elseif($env:WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE -eq '1') {
             # The original B4 signed Normal scene uses the existing genuine
             # Windows->Linux Tunnel TCP application test. The unrelated

@@ -101,7 +101,10 @@ for name in CASES:
             report.get("mode")!=MODE or
             report.get("mode_public")!="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_"+MODE or
             report.get("app_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_UDP" or
-            report.get("tcp_duplex")!="PASS_ACTUAL_TWO_OS_KERNEL_TCP" or
+            report.get("tcp_duplex")!="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP" or
+            report.get("actual_kernel_tcp",{}).get("windows",{}).get("client_echo") is not True or
+            report.get("actual_kernel_tcp",{}).get("linux",{}).get("received_bytes",0)<=0 or
+            report.get("actual_kernel_tcp",{}).get("linux",{}).get("client_ip")!="10.66.0.2" or
             report.get("stop")!="PASS_BOTH_OWNED" or
             report.get("requested_original_win_mtu")!=1460):
             raise ValueError("actual original two-OS TLS/TUN UDP/TCP/Stop/source mismatch")
@@ -150,7 +153,7 @@ for name in CASES:
             if (p.get("source_sha")!=SOURCE or p.get("mode")!=MODE or
                 p.get("lanes")!=LANES or p.get("fec")!=result["fec"] or
                 p.get("stop")!="PASS_BOTH_OWNED" or
-                p.get("tunnel_tcp")!="PASS_ACTUAL_TWO_OS_KERNEL_TCP" or
+                p.get("tunnel_tcp")!="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP" or
                 p.get("cn_real_direct_tcp",{}).get("windows",{}).get("app_bytes_echoed")!=32768 or
                 not p.get("cn_real_direct_tcp",{}).get("windows",{}).get("tcp_half_close") or
                 not p.get("cn_real_direct_udp",{}).get("windows",{}).get("fake4","").startswith("198.18.")):
@@ -163,6 +166,8 @@ for name in CASES:
             raise ValueError("original source-locked Game VM binary changed between policies")
         if not result["windows_cli_sha256"] or not result["linux_server_sha256"]:
             raise ValueError("Game original binary SHA absent")
+        item["legacy_028_linux_initiated_windows_tcp"]="NOT_RUN_SCOPE_SEPARATE"
+        item["tunnel_tcp"]="PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP"
         item["result"]="PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
         print("PLAN029B_GAME_REAL_CASE_PASS "+json.dumps(
               {"side":SIDE,"case":tag,"source":SOURCE},sort_keys=True),flush=True)
