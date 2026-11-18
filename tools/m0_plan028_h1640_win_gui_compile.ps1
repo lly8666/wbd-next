@@ -129,6 +129,15 @@ $nativePadTests=@'
                     p.Values["fec.mode"]="off";p.Values["lanes"]=1;p.Values["startup-padding"]="off";
 '@
 $tests=$tests.Replace($nativePadAnchor,$nativePadTests+$nativePadAnchor)
+# The original GUI no longer persists the retired dns4 key after native
+# single-DNS migration. Keep the malformed IPv6 DNS negative test but send
+# it through the actual new dns.tunnel key, not a nonexistent dictionary key.
+$oldDnsNegative='{"dns4","::1"}'
+if(([regex]::Matches($tests,[regex]::Escape($oldDnsNegative))).Count -ne 1){
+ throw 'H2204 GUI obsolete DNS negative test donor drift'
+}
+$tests=$tests.Replace($oldDnsNegative,'{"dns.tunnel","::1"}')
+
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests
