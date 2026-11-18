@@ -58,7 +58,8 @@ func TestH2206ServerNATCLIUnspecifiedIsDeferredOnlyForServer(t *testing.T){
    if !cfg.localIP.IsUnspecified(){t.Fatalf("server raw=%q must defer exact interface IP, got %v",raw,cfg.localIP)}
   }else if cfg.localIP.String()!=raw{t.Fatalf("server explicit private changed to %v",cfg.localIP)}
  }
- cfg,err:=parse("client",append([]string(nil),append(base,"--local-ip","0.0.0.0")...))
+ clientArgs:=[]string{"--raw-interface","eth0","--local-ip","0.0.0.0","--server-name","wbd.test", "--route-key-hex",key,"--username","alice","--password","test-secret","--local-port","45000","--peer-ip","192.168.50.1","--peer-port","443"}
+ cfg,err:=parse("client",clientArgs)
  if err==nil||!strings.Contains(err.Error(),"server-only") && !strings.Contains(err.Error(),"client local-ip"){
   t.Fatalf("client wildcard must reject; cfg=%v err=%v",cfg.localIP,err)
  }
