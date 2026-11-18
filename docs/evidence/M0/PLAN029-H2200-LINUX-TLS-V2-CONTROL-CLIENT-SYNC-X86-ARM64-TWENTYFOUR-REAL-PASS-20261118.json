@@ -1,0 +1,574 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2200/H2201",
+  "date_utc": "2026-11-18",
+  "source_sha": "ee69bc68127af725f642520108664af6bba31f7f",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "action": {
+    "id": 44304946337,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44304946337",
+    "status": "completed",
+    "conclusion": "success",
+    "native_jobs": [
+      "original-native-linux (x86_64)",
+      "original-native-linux (aarch64)"
+    ],
+    "total_native_scenarios": 24
+  },
+  "original_go_pinned_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "isa_l_pinned_source": "c387163fcbca62701d646149564c550c78a4f985",
+  "compiler_versions": {
+    "go": "1.23.12",
+    "rust": "1.85.1"
+  },
+  "artifacts": {
+    "x86_64": {
+      "artifact_id": 14428385766,
+      "zip_sha256": "7ff6d38e17d28bfe13b5ad8f074d06fc5a6f136b0a94431f5cfd91ecbf22e8c9",
+      "member_count": 234,
+      "crc": "PASS",
+      "summary_sha256": "4b6f8277c15902ba36355beebd0fa3b33b28fede0543b6592cb07d30e4e6c6a2",
+      "manifest_sha256": "187846554e4a99a11e08004c0596eeb8f0d8bc130391dac29fbb72f2bb4cc6d2",
+      "binary_sha256": {
+        "wbd-v4-client": "d000c59aa0e5a128fbbf2e7ce4d1d2222cf63dcaf7815b0884d471bf19f5ba8b",
+        "wbd-v4-server": "233c899d59715c96bcfae8a56db46f23d1ad61c50f7763c53a28df5cfdb2da61",
+        "libwbd_engine.so": "50b4e8eb925ad3002e28edb10ce55f1fba9292c1005377170ce1e4c6d46cea27"
+      },
+      "scenarios": [
+        {
+          "name": "control-normal-off",
+          "mode": "normal",
+          "client_requested_padding": "off",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "server": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-normal-tls",
+          "mode": "normal",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 425
+          },
+          "server": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 101
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-normal-flows",
+          "mode": "normal",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 1452
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 818
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-fixed-tls",
+          "mode": "fec-fixed",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 718
+          },
+          "server": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 296
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-fixed-flows",
+          "mode": "fec-fixed",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 1217
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 665
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-auto-tls",
+          "mode": "fec-auto",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 413
+          },
+          "server": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 695
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-auto-flows",
+          "mode": "fec-auto",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 1036
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 807
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game2-tls",
+          "mode": "game2",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 397
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 779
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game2-fixed6-flows",
+          "mode": "game2",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 8,
+            "kernel_copied_padded_bytes": 1380
+          },
+          "server": {
+            "kernel_copied_padded_records": 8,
+            "kernel_copied_padded_bytes": 1733
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game4-fixed6-tls",
+          "mode": "game4",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 6,
+            "kernel_copied_padded_bytes": 1886
+          },
+          "server": {
+            "kernel_copied_padded_records": 6,
+            "kernel_copied_padded_bytes": 556
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game4-flows",
+          "mode": "game4",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 12,
+            "kernel_copied_padded_bytes": 2825
+          },
+          "server": {
+            "kernel_copied_padded_records": 12,
+            "kernel_copied_padded_bytes": 2958
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game4-off",
+          "mode": "game4",
+          "client_requested_padding": "off",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "server": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        }
+      ]
+    },
+    "aarch64": {
+      "artifact_id": 14427977024,
+      "zip_sha256": "69878fcb48682a706f0229afa2ce6e53d89c5abd00fa5d08b20278b22eca54a1",
+      "member_count": 234,
+      "crc": "PASS",
+      "summary_sha256": "20229c69e47d088af3863d522f79e294b1d7b69c55c36b953273070bbe25ec31",
+      "manifest_sha256": "e932dccfcacde7727ef8c2cdb05a280dc26f3e3b39cb8b889727bf66a850b889",
+      "binary_sha256": {
+        "wbd-v4-client": "147463cdeb893757e02f79469ad709a77100cc6bc9998f518e4d68d96f469a4a",
+        "wbd-v4-server": "db20f58530aabbf219583d9510f0dc3844a1e239aa987e8cd9f801b8ac353635",
+        "libwbd_engine.so": "280332c041b1bc995d5356fba896c9ba47f11a20ec619ff1a9461ef5cd72c755"
+      },
+      "scenarios": [
+        {
+          "name": "control-normal-off",
+          "mode": "normal",
+          "client_requested_padding": "off",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "server": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-normal-tls",
+          "mode": "normal",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 566
+          },
+          "server": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 918
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-normal-flows",
+          "mode": "normal",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 810
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 953
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-fixed-tls",
+          "mode": "fec-fixed",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 330
+          },
+          "server": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 230
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-fixed-flows",
+          "mode": "fec-fixed",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 1272
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 1607
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-auto-tls",
+          "mode": "fec-auto",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 730
+          },
+          "server": {
+            "kernel_copied_padded_records": 2,
+            "kernel_copied_padded_bytes": 777
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-auto-flows",
+          "mode": "fec-auto",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 1522
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 736
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game2-tls",
+          "mode": "game2",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 514
+          },
+          "server": {
+            "kernel_copied_padded_records": 4,
+            "kernel_copied_padded_bytes": 514
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game2-fixed6-flows",
+          "mode": "game2",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 8,
+            "kernel_copied_padded_bytes": 1726
+          },
+          "server": {
+            "kernel_copied_padded_records": 8,
+            "kernel_copied_padded_bytes": 2789
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game4-fixed6-tls",
+          "mode": "game4",
+          "client_requested_padding": "tls",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 6,
+            "kernel_copied_padded_bytes": 1316
+          },
+          "server": {
+            "kernel_copied_padded_records": 6,
+            "kernel_copied_padded_bytes": 2042
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game4-flows",
+          "mode": "game4",
+          "client_requested_padding": "flows",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 12,
+            "kernel_copied_padded_bytes": 2471
+          },
+          "server": {
+            "kernel_copied_padded_records": 12,
+            "kernel_copied_padded_bytes": 3225
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        },
+        {
+          "name": "control-game4-off",
+          "mode": "game4",
+          "client_requested_padding": "off",
+          "server_local_CLI_opposes_client": true,
+          "client": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "server": {
+            "kernel_copied_padded_records": 0,
+            "kernel_copied_padded_bytes": 0
+          },
+          "kernel_tcp_udp_both_directions": "PASS",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED",
+          "mtu_and_df": "PASS",
+          "owned_stop": "TWO_DRAINED",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED"
+        }
+      ]
+    }
+  },
+  "verified_conditions": [
+    "Go V4 extension version1 exact legacy byte semantics retained and version2 strict only off/tls/flows with full 24B exporter-context cryptographic binding",
+    "V2 protected request and successful reply each independently random crypto/rand uniform 32..500B suffix with BE16 length; original Go unit coverage tests malformed low/high lengths, truncation, entropy failure, real TLS credentials and cold snapshot immutable verified mode",
+    "Exactly one original TLS request and one reply application exchange, no TLS before-ClientHello private prelude and no added application RTT; suffix read before native Detach",
+    "On each ISA 12 independently authenticated original Go TLS + Rust M4 real native kernel TCP/UDP bidirectional and owned TUN/IPv6/MTU/Stop, same 3-binary bundle checked against SOURCE",
+    "All scenes intentionally set server process CLI to opposite of client-selected setting; actual Rust AF_PACKET post-success counters on both peers obey client settings: two off cases 0B, ten tls/flows cases >0B each role per ISA, every padded record <=500B",
+    "Game2/4 per-lane authenticated selector consistency and FEC kind2-only source pad code guarded; repair/parity kind3 unchanged; original cryptographic PN and epoch not touched",
+    "Both original Action artifact ZIPs 234 members CRC PASS and SHA matches; raw per-scene client/server logs and summary available within signed artifact"
+  ],
+  "exclusions": [
+    "No packet-level capture of Internet DPI, TLS record fingerprint or ciphertext traffic analysis; control serialization variation tested in Go, true TLS V2 exchange and business proven on original native OS",
+    "Old V1 exact syntax and no-tail checked by Go unit, but no independently built old-V1 binary to new-V2 server interoperability native scene",
+    "V2 client -> V1 old server deliberately fails closed without silent fallback, cross-version native deployment NOT_RUN",
+    "Default shared 443 simultaneous multi-user mixed Normal/Game plus per-account negotiation and auto-IP physical NIC MTU 1500->1280 reauthentication NOT_RUN",
+    "Physical consumer ARM board, cross-ISA networking, Windows GUI cross-platform selection, real application TLS, packet loss FEC recovery, CPU/GiB and small TCP p99 NOT_RUN",
+    "PLAN029/029B daily PASS_SCOPED and full technical exit OPEN; PLAN030 not started"
+  ],
+  "failure_history_preserved": [
+    {
+      "source": "a22ab7fd09f582adec6af75987314548a2978151",
+      "run": 44303725701,
+      "classification": "FAIL_STATIC_OLD_TEST_LITERAL",
+      "network_stage": "NOT_RUN"
+    },
+    {
+      "source": "e36248f0c64427a0a9738e55d9327c896bb757b6",
+      "run": 44304050978,
+      "classification": "FAIL_TAGGED_GO_RAW_FIXTURE_SYMBOLS",
+      "network_stage": "NOT_RUN"
+    },
+    {
+      "source": "ee69bc68127af725f642520108664af6bba31f7f",
+      "run": 44304946337,
+      "classification": "PASS_SCOPED_NATIVE_24_OF_24"
+    }
+  ]
+}

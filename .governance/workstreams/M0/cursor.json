@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2200,
-  "checkpoint_sha": "d4516ca977464dfcebee7fe62e3add29dc6ec3f1",
+  "sequence": 2201,
+  "checkpoint_sha": "ee69bc68127af725f642520108664af6bba31f7f",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2200：原TLS1.3 V4 Admission V2加密客户端startup-padding off/tls/flows设定、服务端确认与按会话接Rust；加密请求/回包各随机32..500B完整可解析；双ISA12场待验。",
-  "why_now": "既有H2197服务端用CLI同档，未由客户端TLS传入；Admission旧V4保留位和固定24B，需版本化自描述尾部避免Rust Detach残留。",
-  "done_when": "同SOURCE真Go TLSV2双端、旧V1、坏长度/误配/回显与5模式×off/tls/flows真实Linux两ISA两端业务Stop验证并归档；完整029仍OPEN。",
-  "next_action": "冻结产品SOURCE触发短Go负面测试+Linux双ISA新12场，修首个失败，签名治理；不重复老20场。",
+  "current_task": "H2201：Linux V4原TLS1.3受保护 Admission V2客户端填充协商＋请求确认各32..500B随机尾部，x86/ARM各12真内核场24/24 PASS_SCOPED并签名。",
+  "why_now": "SOURCEee69bc68 Action44304946337双原生ISA jobs SUCCESS，24场服务器CLI故意与客户端相反，实际Rust M4按客户端off/tls/flows，内核TCP/UDP和Stop真PASS。",
+  "done_when": "H2201逐ISA原ZIP CRC/summary+三binary SHA、24场真实客户端/服务端独立计数、原Go TLS负面/V1兼容和治理PASS，完整029技术仍OPEN。",
+  "next_action": "独立Linux shared 443多用户跨模式同时协商及auto-IP物理MTU重认证；旧V1实际跨版本升级路径、真实TLS流量捕获、实体ARM与p99仍NOT_RUN。",
   "unverified": true,
-  "last_tested_source": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
+  "last_tested_source": "ee69bc68127af725f642520108664af6bba31f7f",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2197-LINUX-SERVER-FIVE-MODES-X86-ARM64-TWENTY-REAL-NATIVE-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029-H2200-LINUX-TLS-V2-CONTROL-CLIENT-SYNC-X86-ARM64-TWENTYFOUR-REAL-PASS-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029-H2198-LINUX-SERVER-FIVE-MODES-NATIVE-SIGNED.md"
+    "docs/devlog/M0/20261118-PLAN029-H2201-LINUX-TLS-V2-CONTROL-BOTH-ISA-SIGNED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2197旧SOURCE e82ba704 五模式两ISA20/20 PASS_SCOPED维持。H2200候选TLS加密控制扩展V2+变长尾、客户选择回显至Rust，旧V1关填充；新产品尚NOT_RUN。其它autoIP动态MTU/实体ARM/p99仍OPEN，030未开。"
+  "partial_summary": "H2200/2201 SOURCEee69bc68 Linux x86+ARM 5模式、tls/flows+off、共24场原Go TLS1.3 V4 encrypted Admission V2两向变长＋客户端模式回显驱动服务端真实Rust M4，kernel TCP/UDP/Stop PASS_SCOPED。旧V1协议单测兼容；混合shared live、autoIP MTU、物理ARM、DPI/p99和Windows GUI未验，029技术OPEN，030未启。"
 }

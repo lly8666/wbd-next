@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
-    "linux_cli": "Linux五模式 Normal/Fixed/Auto/Game2/4，客户端 --startup-padding off|tls|flows（默认off）经原TLS1.3 Admission V2 加密发送、服务端按该已验证会话档位配置Rust，回包确认；服务端本地CLI值不覆盖客户端。V2每向独立CSPRNG随机加密控制尾部32..500B，单次TLS应用写/原一往返；旧V1只按off兼容。H2200新SOURCE候选待双ISA原生验；旧H2197 20/20为独立SOURCE真PASS_SCOPED。"
+    "linux_cli": "Linux 5 模式 Normal/Fixed/Auto/Game2/4：客户端 --startup-padding off|tls|flows，经真实 TLS1.3 加密 V4 Admission v2 发送，服务器每个认证用户独立确认并同步 Rust M4；服务器 CLI 不覆盖客户端。加密请求/确认各带 BE16 长度+32..500B CSPRNG 随机尾，旧v1只按off、v2不静默降级。H2200/2201 SOURCE ee69bc68 x86+ARM各12场共24/24真内核双端PASS_SCOPED，非完整DPI/物理资格。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -170,10 +170,10 @@
     },
     {
       "platform": "Linux native x86_64/aarch64 original TLS1.3 Go and Rust five-mode two endpoints",
-      "scope": "H2200 proposed protected V2 24B control ext byte23 client-select mode echoed by server + each direction bounded random 32..500B suffix before native Detach; server CLI deliberately opposite client, 12 independent scenarios/ISA including off; SOURCE not yet built/tested.",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "scope": "H2200/2201 SOURCE ee69bc68 native Linux x86_64/aarch64 V4 TLS1.3 protected Admission V2 request+reply bounded CSPRNG random 32..500B tail, server exact client off/tls/flows authenticated echo and same Rust M4 setting despite contradictory server CLI. 12 per ISA=24/24 real Go TLS/Rust AF_PACKET/TUN both-direction kernel TCP+UDP, owned Stop, zero off, nonzero tls/flows. V1 grammar/unit compat only, no real DPI/physical cross-version qualification.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ee69bc68127af725f642520108664af6bba31f7f",
+      "evidence": "docs/evidence/M0/PLAN029-H2200-LINUX-TLS-V2-CONTROL-CLIENT-SYNC-X86-ARM64-TWENTYFOUR-REAL-PASS-20261118.json"
     }
   ],
   "limitations": [
