@@ -34,6 +34,46 @@ if(([regex]::Matches($originalMain,[regex]::Escape($oldChoice))).Count -ne 1){
 $derivedMain=Join-Path $out 'MainForm-plan029-cn-domain.cs'
 [IO.File]::WriteAllText($derivedMain,$originalMain.Replace($oldChoice,$newChoice),[Text.UTF8Encoding]::new($false))
 $source[1]=$derivedMain
+# H2204 GUI: the immutable donor predates encrypted V4 control v2.
+# Derive a standalone presentation file; do not edit the pinned Go donor.
+$sourceText=[IO.File]::ReadAllText($derivedMain,[Text.Encoding]::UTF8)
+$originalCombo='f.Key == "record-cipher" || f.Key == "lanes"'
+if(([regex]::Matches($sourceText,[regex]::Escape($originalCombo))).Count -ne 1){
+  throw 'H2204 WinForms selector donor drift'
+}
+$sourceText=$sourceText.Replace($originalCombo,
+ 'f.Key == "record-cipher" || f.Key == "startup-padding" || f.Key == "fec.mode" || f.Key == "fec.profile" || f.Key == "fec.auto_policy" || f.Key == "fec.auto_start_profile" || f.Key == "outer-repair" || f.Key == "lanes"')
+$anchor='if (f.Key == "record-cipher") c.Items.AddRange'
+if(([regex]::Matches($sourceText,[regex]::Escape($anchor))).Count -ne 1){
+  throw 'H2204 WinForms choice injection donor drift'
+}
+$insert=@'
+if (f.Key == "startup-padding") c.Items.AddRange(new[] { new Choice("off", "关闭（默认）"), new Choice("tls", "TLS 业务启动双端填充"), new Choice("flows", "TCP/UDP 启动双端填充") });
+                if (f.Key == "fec.mode") c.Items.AddRange(new[] { new Choice("off", "关闭"), new Choice("fixed", "固定"), new Choice("auto", "Normal 自动") });
+                if (f.Key == "fec.profile" || f.Key == "fec.auto_start_profile") c.Items.AddRange(new[] { new Choice("light","轻"),new Choice("mild","较轻"),new Choice("medium","中"),new Choice("balanced","平衡"),new Choice("high","较强"),new Choice("strong","强"),new Choice("maximum","最高") });
+                if (f.Key == "fec.auto_policy") c.Items.AddRange(new[] { new Choice("normal", "普通"), new Choice("aggressive", "激进") });
+                if (f.Key == "outer-repair") c.Items.AddRange(new[] { new Choice("on", "启用（默认）"), new Choice("off", "关闭") });
+                '@
+$sourceText=$sourceText.Replace($anchor,$insert+$anchor)
+[IO.File]::WriteAllText($derivedMain,$sourceText,[Text.UTF8Encoding]::new($false))
+# Run the source-donor GUI field-by-field / actual Go --check-config regression
+# with the 029B/H2202 additions: stale test fixture must not be mistaken for
+# a native product failure or be silently skipped.
+$tests=[IO.File]::ReadAllText($source[2],[Text.Encoding]::UTF8)
+$mutator='{"diagnostic-interval","2s"}'
+if(([regex]::Matches($tests,[regex]::Escape($mutator))).Count -ne 1){throw 'H2204 GUI test mutator donor drift'}
+$mutatorNew=@'
+{"diagnostic-interval","2s"},{"startup-padding","flows"},{"fec.mode","off"},{"fec.profile","strong"},
+                        {"fec.auto_policy","normal"},{"fec.auto_start_profile","strong"},{"outer-repair","on"},
+                        {"dns.direct","223.5.5.5"},{"dns.tunnel","1.1.1.1"},{"direct-flow-hard",16384},
+                        {"split-enable",false},{"cn-domain-direct",false},{"cn-rules-file",""},
+                        {"health.keepalive_seconds",15},{"health.dead_after_seconds",90},{"health.idle_dormant_seconds",0},
+                        {"tls-ca-pem",""}
+'@
+$tests=$tests.Replace($mutator,$mutatorNew.Trim())
+$derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
+[IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
+$source[2]=$derivedTests
 $originalFields=[IO.File]::ReadAllText((Join-Path $root 'windows/gui/fields.json'),[Text.Encoding]::UTF8)
 $labelOld='"IPv4 分流"'
 $labelNew='"中国 IP＋域名分流"'
@@ -45,9 +85,34 @@ foreach($old in @($labelOld,$hintOld)){
  }
 }
 $derivedFields=Join-Path $out 'gui-fields.json'
-[IO.File]::WriteAllText($derivedFields,
-  $originalFields.Replace($labelOld,$labelNew).Replace($hintOld,$hintNew),
-  [Text.UTF8Encoding]::new($false))
+# The old donor's 44-name catalogue is not the current original-Go native V4
+# product. Every exposed GUI key MUST exist in actual --check-config; keep
+# original legacy keys for safe migration and give new ones explicit defaults.
+$fields=ConvertFrom-Json -InputObject ($originalFields.Replace($labelOld,$labelNew).Replace($hintOld,$hintNew)) -AsHashtable
+$add=[ordered]@{
+ 'startup-padding'=@('传输','启动随机填充','off / tls / flows；客户端加密提出，服务端逐会话同步；与旧版 TLS 填充不要同时启用','String','"off"')
+ 'fec.mode'=@('传输','原生 FEC2 模式','off / fixed / auto（auto 只支持 Normal）','String','"off"')
+ 'fec.profile'=@('传输','原生固定 FEC2 档位','固定档：light、mild、medium、balanced、high、strong、maximum','String','"strong"')
+ 'fec.auto_policy'=@('传输','原生自动 FEC2 策略','normal 或 aggressive；仅 Normal','String','"normal"')
+ 'fec.auto_start_profile'=@('传输','原生自动起始 FEC2','默认 strong；重连才生效','String','"strong"')
+ 'outer-repair'=@('传输','外层重传','on / off；不改 FEC 与 Health','String','"on"')
+ 'dns.direct'=@('网络','物理网卡 DNS','一个 IPv4；仅物理侧冷启动解析','String','"223.5.5.5"')
+ 'dns.tunnel'=@('网络','隧道 DNS','一个 IPv4；DNS4 旧主备字段已退役','String','"1.1.1.1"')
+ 'direct-flow-hard'=@('网络','直连流数上限','直连独立保护阈值；默认 16384','Int','16384')
+ 'split-enable'=@('网络','高级分流开关','关闭时没有业务 Direct/FakeIP，基础 DNS/启动填充仍保留','Bool','false')
+ 'cn-domain-direct'=@('网络','CN 域名高级分流','仅与高级分流开启同时使用；需要可信域名规则','Bool','false')
+ 'cn-rules-file'=@('网络','CN 域名规则路径','填本地绝对路径；关闭高级分流时留空','String','""')
+ 'health.keepalive_seconds'=@('生命周期','原生 Health 心跳秒','默认 15，受保护的原生 Rust 计时','Uint','15')
+ 'health.dead_after_seconds'=@('生命周期','原生 Health 失活秒','默认 90；不得小于三倍心跳','Uint','90')
+ 'health.idle_dormant_seconds'=@('生命周期','原生 Health 闲置秒','默认 0 禁用；原生业务闲置','Uint','0')
+ 'tls-ca-pem'=@('服务器','TLS 服务端证书/CA','可选本地 PEM 绝对路径；未配置时使用系统可信根','String','""')
+}
+foreach($key in $add.Keys){
+  if($fields.Contains($key)){throw "H2204 unexpected source GUI duplicate $key"}
+  $fields[$key]=@($add[$key][0],$add[$key][1],$add[$key][2])
+}
+$fieldsJson=ConvertTo-Json -InputObject $fields -Depth 6
+[IO.File]::WriteAllText($derivedFields,$fieldsJson,[Text.UTF8Encoding]::new($false))
 $srcHash=(Get-FileHash $derivedMain -Algorithm SHA256).Hash.ToLowerInvariant()
 $fieldsHash=(Get-FileHash $derivedFields -Algorithm SHA256).Hash.ToLowerInvariant()
 [ordered]@{schema_version=1;source_sha=$SourceSHA;mode='PLAN029_CN_IP_DOMAIN_DISPLAY_ONLY';
@@ -63,6 +128,20 @@ Copy-Item -LiteralPath (Join-Path $root 'windows/gui/WBD.exe.config') -Destinati
 # Exact derived field catalog has already been written with the immutable
 # source fingerprint; do NOT copy donor fields back over the 029 hints.
 if(-not(Test-Path $derivedFields)){throw 'PLAN029 derived GUI fields absent'}
-Copy-Item -LiteralPath (Join-Path $root 'docs/PARAMETERS.json') -Destination $out
+$catalog=Get-Content -LiteralPath (Join-Path $root 'docs/PARAMETERS.json') -Raw | ConvertFrom-Json -AsHashtable
+$cli=$catalog['targets']['client-windows']
+# Real Go --check-config is authoritative; this catalogue extends only the
+# independent WinForms UI to the currently installed native V4 flags.
+$cli['dns4']['default_expression']='""'
+$cli['mtu']['default_expression']='1460'
+foreach($key in $add.Keys){
+  if($cli.Contains($key)){throw "H2204 unexpected original catalogue duplicate $key"}
+  $cli[$key]=[ordered]@{
+    type=$add[$key][3];default_expression=$add[$key][4];help=$add[$key][2];
+    source='H2204 original-Go native V4 overlay';json=$true
+  }
+}
+[IO.File]::WriteAllText((Join-Path $out 'PARAMETERS.json'),
+  (ConvertTo-Json -InputObject $catalog -Depth 12),[Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $out 'roslyn-path.txt'),$csc,[Text.UTF8Encoding]::new($false))
 Write-Output "H1640_WIN_GUI_REAL_COMPILED_VS_DISCOVERED exact_source=$SourceSHA"
