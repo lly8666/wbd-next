@@ -1264,7 +1264,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "b2bdd3da0edda50d6fb2cb509896a6461ece9db9"
+      "result_blob": "170d1f4fb9daf36313badd675070416b81a1fc01"
     },
     {
       "kind": "create",
@@ -1342,7 +1342,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "bae8d0f6a6fe695b8a631afabd306ad04eb683fa"
+      "result_blob": "b3bc8857b945197f0943ee6e7efa3bc729b865aa"
     },
     {
       "kind": "create",
@@ -1474,7 +1474,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
-      "result_blob": "b3c1382d7138b8ce612eb79037876502639278ad"
+      "result_blob": "8dbeaf11d6abad6d071657b186a84cc1c37ca138"
     },
     {
       "kind": "create",

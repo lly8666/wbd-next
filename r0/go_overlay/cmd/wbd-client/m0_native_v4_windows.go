@@ -490,12 +490,11 @@ func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error)
  return h,nil
 }
 func runM0NativeV4Windows(o m0NativeV4Options)error{
- // Game4 CN is wired through its actual 4-lane Rust GameAdapter TX/RX
- // and one shared NativeSplitWorker. Game2 remains explicitly unsupported
- // rather than silently using Normal or bypassing user split settings.
- if o.SplitEnable&&o.Mode==m0WinModeGame2{
-  return fmt.Errorf("PLAN029 CN split Game2 not wired; no OS Apply attempted")
- }
+ // 029B Game2 and Game4 share one cold Rust NativeSplitWorker, and
+ // each keeps its original 2/4 independent authenticated TLS lanes.
+ // No silent Normal fallback or pre-OS "not wired" rejection.
+ // The per-Game policy is prepared once after real TLS authentication,
+ // before the one owned Wintun/OS Apply.
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
@@ -732,12 +731,20 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    physical,e:=underlay.PhysicalPath()
    if e!=nil{return windowsclient.NetworkPlan{},e}
    if guestMAC!=""&&(physical.NextHop4==underlay.Source4||ownedGuestOnLink){physical.NextHop4=o.ServerIP}
+   // H2139: ALL and disabled business split carry no Direct/Bypass
+   // business destinations into the real Windows owned OS plan.
+   // Protected TLS underlay, the one Tunnel DNS and WAL remain.
+   var businessDirect,businessBypass []netip.Prefix
+   if m0GameBusinessSplit(o){
+    businessDirect=append([]netip.Prefix(nil),o.Direct4...)
+    businessBypass=append([]netip.Prefix(nil),o.Bypass4...)
+   }
    return windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
     AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
     Lease4:verifiedLease,Server4:o.ServerIP,Physical:physical,
     DNSServers4:append([]netip.Addr(nil),o.DNSServers4...),
-    Direct4:append([]netip.Prefix(nil),o.Direct4...),
-    Bypass4:append([]netip.Prefix(nil),o.Bypass4...),
+    Direct4:businessDirect,
+    Bypass4:businessBypass,
     StatePath:o.StatePath,
    })
   }
