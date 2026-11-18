@@ -4,15 +4,15 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2189,
-  "checkpoint_sha": "7157d60170df9b084a1eff264651a4c1f9855371",
+  "sequence": 2190,
+  "checkpoint_sha": "73dcb2ea04a695514bc308e0f94bfb53fc2e2dc5",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2189：回收H2188治理/maintenance实际CI结果；029B与029日常范围已PASS_SCOPED，完整029技术出口仍OPEN，030未启动。",
-  "why_now": "HEAD7157d601仅功能卡/交接压缩；同HEAD治理Action44281530635 Governance+Feature catalog均SUCCESS，maintenance Action44281530588 regression SUCCESS；原H2187失败和H2186原native SOURCE不变。",
-  "done_when": "H2188单卡16KiB与M0热读取32768B治理门实际CI通过，且不重跑H2186真实网络：已满足；后续029仅针对现存独立技术缺口。",
-  "next_action": "029技术OPEN：保留D1–D5/P1–P2与小TCP p99、P-B2同出口CPU、实体IPv6 on-link/绑定绕行、Linux主动入站Windows TCP等未验证；先按真实资源/用户范围选择最小必要场景，不重派已PASS矩阵。",
-  "unverified": false,
+  "current_task": "H2190：回收H2188治理成功；修H2189热读取预算。",
+  "why_now": "H2188 SOURCE7157d601治理Action44281530635、maintenance44281530588均SUCCESS；H2189 Action44284948709 FAIL：hot 32942B>32768B。",
+  "done_when": "M0 hot≤32768B且治理CI通过；029技术仍OPEN。",
+  "next_action": "核H2190治理；029保留D1–D5/P1–P2和p99/P-B2等NOT_RUN；不重跑已PASS矩阵。",
+  "unverified": true,
   "last_tested_source": "e174235872d32cca69bf921fb59904f9bcaee889",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
@@ -22,5 +22,5 @@
     "docs/devlog/M0/20261118-PLAN029-H2187-LINUX-ALL-NONWIN-SCOPED-CAPABILITY-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2188 HEAD7157d601治理Action44281530635与maintenance44281530588两者completed SUCCESS；上轮4455578的对应FAIL原样保留。H2186产品SOURCE e1742358 Action44278039887双原生Linux ISA各8场16/16真kernel TCP/UDP/Stop PASS_SCOPED、未重跑；029B/029日常范围已限域PASS，完整技术出口OPEN。Linux非Game填充/无route-key X25519 NOT_WIRED、manual动态MTU/实体ARM/性能p99 NOT_RUN；030未启动。"
+  "partial_summary": "H2186产品SOURCE e1742358 Linux双原生ISA各8场真TCP/UDP/Stop PASS_SCOPED（Action44278039887）；H2188治理/maintenance成功，H2189 cursor热预算失败需复核。029B/029日常限域PASS，完整技术OPEN，030未启动。"
 }
