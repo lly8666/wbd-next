@@ -928,7 +928,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "stop":"NOT_RUN_UNTIL_BOTH_OWNED"}
   print("PLAN029B_B0_REAL_WINDOWS_WSL2_UDP_TCP53_A_FROM_TUN_AAAA_LOCAL_PASS_PRE_STOP",
         flush=True)
- if p029b_b2:
+ if p029b_b2 or p029b_game_case=="ordinary":
   if p029_alias_proc is None or p029_alias_proc.wait(timeout=6)!=0 or not (
       out/"plan029-h1745-owned-tun-alias.txt").exists():
    raise RuntimeError("B2 real original Linux TUN overseas public /32 not owned")
@@ -969,10 +969,13 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
                           "P29B-GLOBAL-TUNNEL"}):
    raise RuntimeError("B2 actual ordinary CN vs same overseas global dual DNS/TUN mismatch")
   cold=(out/"client.log").read_text(errors="replace")
-  if ("WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=2" not in cold or
+  marker=("WBD_PLAN029B_GAME_V3_COLD_EFFECTIVE lanes="+str(lanes) if
+          p029b_game_case=="ordinary" else
+          "WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=2")
+  if (marker not in cold or
       "business_split=true cn_domain_fakeip=false" not in cold or
       "WBD_WINDOWS_OS_APPLIED" not in cold):
-   raise RuntimeError("B2 actual original Go/Rust ordinary CN effective/OS missing")
+   raise RuntimeError("B2/Game original Go/Rust ordinary CN effective/OS missing")
   report["plan029b_b2_ordinary_cn_real"]={
    "status":"PENDING_GENUINE_BOTH_OWNED_STOP",
    "source_sha":os.environ["GITHUB_SHA"],
@@ -2903,13 +2906,17 @@ print(json.dumps(result),flush=True)
   b0["stop"]="PASS_BOTH_OWNED"
   print("PLAN029B_B0_SIGNED_REAL_DNS_A_AAAA_UDP_TCP53_AND_OWNED_STOP_PASS_SCOPED",
         flush=True)
- if p029b_b2:
+ if p029b_b2 or p029b_game_case=="ordinary":
   proof=report.get("plan029b_b2_ordinary_cn_real",{})
   text=(out/"client.log").read_text(errors="replace")
+  markers=(("M0_PLAN027_GAME_STOP_RESULT stage=product_stop result=PASS",
+            "WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes="+str(lanes))
+           if p029b_game_case=="ordinary" else
+           ("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
+            "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"))
   if (proof.get("source_sha")!=os.environ["GITHUB_SHA"] or
       proof.get("status")!="PENDING_GENUINE_BOTH_OWNED_STOP" or
-      "M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS" not in text or
-      "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1" not in text or
+      any(mark not in text for mark in markers) or
       (out/"owned-wal.json.n4-owned-wal").exists() or
       (out/"owned-wal.json.n4-owned-wal.routes").exists() or
       (out/"owned-wal.json.plan029-defender-tcp").exists()):
@@ -2943,7 +2950,7 @@ print(json.dumps(result),flush=True)
   native=(out/"client.log").read_text(errors="replace")
   markers=(("WBD_PLAN029B_GAME_V3_COLD_EFFECTIVE lanes=2",
             "WBD_PLAN029B_GAME_NATIVE_DNS_TCP_ENABLED lanes=2")
-           if p029b_game2_cn else
+           if (p029b_game2_cn or (p029b_game_case and game_mode=="game2")) else
            ("WBD_PLAN029_GAME4_CN_COLD_EFFECTIVE",
             "WBD_PLAN029_GAME4_CN_NATIVE_TCP_ENABLED"))
   if any(marker not in native for marker in markers) or (
@@ -2951,7 +2958,7 @@ print(json.dumps(result),flush=True)
    raise RuntimeError("Game CN Rust V4 cold attach, exact Defender or owned Stop absent")
   g4["tunnel_tcp"]=report["tcp_duplex"]
   g4["stop"]="PASS_BOTH_OWNED"
-  if p029b_game2_cn:
+  if p029b_game2_cn or (p029b_game_case and game_mode=="game2"):
    report["plan029b_game2_advanced_real"]={
     "source_sha":os.environ["GITHUB_SHA"],"mode":"game2","lanes":2,
     "original_go_rust_v4":True,
