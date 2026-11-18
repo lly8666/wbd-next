@@ -3080,8 +3080,14 @@ pub extern "C" fn wbd_m0_embedded_go_normal_startup_padding_set(
         return BAD_STAGE
     }
     let Some((_,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
-    let seed=u64::from_be_bytes(epoch[..8].try_into().unwrap_or([0;8]))
-        ^u64::from_be_bytes(epoch[8..].try_into().unwrap_or([0;8]));
+    // Same Go TLS epoch and flow can exist on both peers. Separate the
+    // client->server and server->client random padding streams without
+    // modifying the authenticated wire epoch or the record key schedule.
+    let directional=crate::v4_client_startup_padding::linux_tx_padding_epoch(
+        epoch,e.server_side
+    );
+    let seed=u64::from_be_bytes(directional[..8].try_into().unwrap_or([0;8]))
+        ^u64::from_be_bytes(directional[8..].try_into().unwrap_or([0;8]));
     e.normal_startup_padding=if selected==StartupMode::Off{None}else{
         Some(TunnelStartupPadding::new(selected,seed))
     };
@@ -3135,8 +3141,14 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_startup_padding_set(
     let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
     if e.stopped||e.stopping||e.drivers.is_some(){return BAD_STAGE}
     let Ok(mut adapter)=e.adapter.lock()else{return BAD_STAGE};
+    // Game 2/4 use the same endpoint-separated random length policy as
+    // Normal and FEC. This is only the policy's seed; authenticated epoch,
+    // lane keys, source/parity bytes and ciphertext PN are not altered.
+    let directional=crate::v4_client_startup_padding::linux_tx_padding_epoch(
+        e.original_identity.logical_epoch,e.server
+    );
     adapter.set_native_startup_padding(mode,
-        e.original_identity.logical_epoch,outer_path_mtu as usize);
+        directional,outer_path_mtu as usize);
     OK
 }
 

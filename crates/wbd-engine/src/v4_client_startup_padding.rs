@@ -112,9 +112,48 @@ impl TunnelStartupPadding {
         }
     }
 }
+// The two original Go TLS peers share the authenticated logical epoch, but
+// their startup-pad length streams MUST NOT share a PRNG seed. Domain-split
+// only the non-cryptographic padding policy (not KDF, AEAD, PN or on-wire
+// epoch). This is invoked cold once by each Linux Rust original TX owner.
+#[cfg(any(target_os="linux",test))]
+pub(crate) fn linux_tx_padding_epoch(epoch:[u8;16],server_side:bool)->[u8;16]{
+    const CLIENT_TX_SALT:[u8;8]=*b"WBCLPAD1";
+    const SERVER_TX_SALT:[u8;8]=*b"WBSVPAD1";
+    let salt=if server_side{SERVER_TX_SALT}else{CLIENT_TX_SALT};
+    let mut tx_epoch=epoch;
+    for i in 0..8{tx_epoch[i]^=salt[i];}
+    tx_epoch
+}
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn original_linux_client_server_same_epoch_have_independent_pad_lengths(){
+        let epoch=[31u8;16];
+        let client=linux_tx_padding_epoch(epoch,false);
+        let server=linux_tx_padding_epoch(epoch,true);
+        assert_ne!(client,server);
+        assert_eq!(epoch,[31u8;16]); // negotiated epoch and wire unchanged
+        let seed=|v:[u8;16]|u64::from_be_bytes(v[..8].try_into().unwrap())
+            ^u64::from_be_bytes(v[8..].try_into().unwrap());
+        assert_ne!(seed(client),seed(server));
+        for mode in [StartupMode::Tls,StartupMode::Flows]{
+            let mut c=TunnelStartupPadding::new(mode,seed(client));
+            let mut s=TunnelStartupPadding::new(mode,seed(server));
+            // Identical eligible IPv4 UDP flows prove independent RNG for
+            // flows. TLS independently accepts only TCP+record-shape; the
+            // seed independence is already checked for both selector modes.
+            if mode==StartupMode::Flows{
+                let p=udp(1500);
+                let a=(0..12).map(|_|c.propose(&p,1000,500)).collect::<Vec<_>>();
+                let b=(0..12).map(|_|s.propose(&p,1000,500)).collect::<Vec<_>>();
+                assert_ne!(a,b);
+                assert!(a.iter().all(|v|*v<=500));
+                assert!(b.iter().all(|v|*v<=500));
+            }
+        }
+    }
     fn udp(port:u16)->Vec<u8>{
         let mut p=vec![0u8;44];p[0]=0x45;
         p[2..4].copy_from_slice(&44u16.to_be_bytes());
