@@ -1446,7 +1446,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
-      "result_blob": "b818a8fc9f111441a91860239a1072aeb82551ca"
+      "result_blob": "b46f3dbe3c3898e3772e0a9ff660a62b08016ed4"
     },
     {
       "kind": "create",

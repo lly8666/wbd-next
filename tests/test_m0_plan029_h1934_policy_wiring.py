@@ -18,7 +18,7 @@ class P1OriginalWiring(unittest.TestCase):
   # 029B ordinary CN needs the same original owned Linux TUN public
   # alias as H1934, never a new /32 writer or second packet worker.
   # Preserve the original one TUN-alias owner; 029B B4 only reuses it.
-  self.assertIn('if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4:',s)
+  self.assertIn('if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 or p029b_game_case:',s)
   self.assertIn('if p029_direct or p029_p1_cn or p029_game4_cn:',s)
   self.assertIn('range(4096)',s)
   self.assertIn('"11.42."+str(i//128)',s)

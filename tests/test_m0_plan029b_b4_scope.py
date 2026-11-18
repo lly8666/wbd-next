@@ -124,7 +124,7 @@ class B4TrueGUIOriginalScope(unittest.TestCase):
         # this exact source must re-use the protected Tunnel public /32.
         e2e = (ROOT / "tools/m0_wl_public_normal_e2e.py").read_text()
         self.assertIn('linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4', e2e)
-        self.assertIn('if p029_p1_policy or p029_game4_cn or p029b_b4:', e2e)
+        self.assertIn('if p029_p1_policy or p029_game4_cn or p029b_b4 or p029b_game_case:', e2e)
         self.assertIn('PLAN029B_B4_FIRST_DNS_REPLY_FAILURE', (ROOT / "tools/m0_plan029b_b4_real_gui.cs").read_text())
 
     def test_exact_source_one_action_and_no_prior_matrices(self):

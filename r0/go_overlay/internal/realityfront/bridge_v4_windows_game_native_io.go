@@ -166,7 +166,8 @@ func(g *V4WindowsAuthenticatedGameGroup) NativeGameOuterRepairEffective(
 }
 
 // After four-stage OS Apply and actual original owner liveness, ask
-// the SAME Game4 Rust TX to prepare a kernel TCP listener. Caller MUST
+// the SAME Game2/4 Rust TX to prepare a kernel TCP listener.
+ // Both independent TLS group sizes share ONE original TCP controller; Caller MUST
 // install an exact owned Defender rule before enabling it.
 func(g *V4WindowsAuthenticatedGameGroup) plan029GameTCPControl(
  ctx context.Context,operation,port uint16,
@@ -177,7 +178,7 @@ func(g *V4WindowsAuthenticatedGameGroup) plan029GameTCPControl(
  }
  if err:=ctx.Err();err!=nil{return 0,err}
  g.mu.Lock()
- if g.closed||g.joined==0||len(g.members)!=4||g.members[0]==nil{
+ if g.closed||g.joined==0||(len(g.members)!=2&&len(g.members)!=4)||g.members[0]==nil{
   g.mu.Unlock();return 0,errV4WindowsOwner
  }
  first:=g.members[0];g.mu.Unlock()
