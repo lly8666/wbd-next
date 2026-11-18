@@ -96,6 +96,39 @@ if($additions.Count -gt 0){
  $tests=$tests.Replace($mutator,$mutator+','+[string]::Join(',', $additions))
 }
 
+# GUI's deliberately retired legacy fields live in a hidden Compat
+# section (no WinForms tab). Test only visible fields in the editor loop;
+# admission compatibility and negative cases are exercised separately.
+$visibleTest='foreach (Field f in store.Fields.Where(f => !f.Managed && !PortableStore.IsNativeCarrierField(f.Key)))'
+if(([regex]::Matches($tests,[regex]::Escape($visibleTest))).Count -ne 1){throw 'H2204 actual GUI visible field fixture drift'}
+$tests=$tests.Replace($visibleTest,
+ 'foreach (Field f in store.Fields.Where(f => !f.Managed && !PortableStore.IsNativeCarrierField(f.Key) && f.Section!="兼容"))')
+# Regression: Normal FEC2 Fixed/Auto + Game2/4 must accept the authenticated
+# v2 selector through the ACTUAL GUI portable config and original Go CLI.
+# Source/current CLI admission is tested, never a fabricated OS Applied.
+$nativePadAnchor='                    // Every 028 native supported GUI mode is checked by the'
+if(([regex]::Matches($tests,[regex]::Escape($nativePadAnchor))).Count -ne 1){throw 'H2204 GUI native pad positive-test anchor drift'}
+$nativePadTests=@'
+                    foreach (var pad in new[] {
+                        new object[]{"fixed",1,"tls"},
+                        new object[]{"auto",1,"flows"},
+                        new object[]{"off",2,"flows"},
+                        new object[]{"fixed",4,"tls"}
+                    }) {
+                        p.Values["fec.mode"]=(string)pad[0];
+                        p.Values["lanes"]=(int)pad[1];
+                        p.Values["startup-padding"]=(string)pad[2];
+                        var legal=store.Effective(p);
+                        store.WriteAtomic("data/v2-padding.json",store.Json.Serialize(legal));
+                        var checkedV2=Wait(real.ValidateAsync(store.InRoot("data/v2-padding.json")));
+                        Assert(Convert.ToString(checkedV2["startup-padding"])==(string)pad[2] &&
+                               Convert.ToInt32(checkedV2["lanes"])==(int)pad[1] &&
+                               Convert.ToString(checkedV2["fec.mode"])==(string)pad[0],
+                               "strict V4v2 GUI/Go startup padding cross-mode admissible");
+                    }
+                    p.Values["fec.mode"]="off";p.Values["lanes"]=1;p.Values["startup-padding"]="off";
+'@
+$tests=$tests.Replace($nativePadAnchor,$nativePadTests+$nativePadAnchor)
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests
