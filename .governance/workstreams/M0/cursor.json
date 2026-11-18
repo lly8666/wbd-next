@@ -4,23 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2204,
-  "checkpoint_sha": "3f28e330edc4561837ade02d81c625917bd32977",
+  "sequence": 2205,
+  "checkpoint_sha": "5ad409d1f5fe664a4030eec149a98882f88108f8",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2204：H2202单一加密V4扩展v2，Linux双ISA24/24真网签名，三OS GoTLS及Win编译PASS，Android/OpenWrt仅BUILD_PASS。",
-  "why_now": "H2202 SOURCE2ca956b9 native Linux、Win/Linux/ARM TLS、Android/OpenWrt原Action成功；H2203 3f28e3 Windows清单/GoTLS/cold库测试修复成功。",
-  "done_when": "签名同源原ZIP/二进制SHA，功能卡/治理绿；实体设备与029完整技术出口保留OPEN。",
-  "next_action": "Windows Wintun/Npcap真GUI、多用户shared443和autoIP动态MTU；实体Android/OpenWrt、跨ISA、DPI/p99待验。",
+  "current_task": "H2205：H2204 V4v2 Windows 64位WinForms/Npcap官网下载签名交互安装/Wintun pinned owned临时PnP控件，Linux ARM64真OS 12/12场同版，原生双平台Action44343862449 SUCCESS；用户要求主线集成与route-key短输入、NAT友好监听，后两项需独立设计/验证。",
+  "why_now": "用户要求把已完成原Windows GUI驱动控制与ARM64 release同步main；实际win GUI 409 tests PASS+两端native构建成功，保留独立物理环境与驱动真实安装NOT_RUN。",
+  "done_when": "完成H2205主线源码、功能卡/证据/短devlog治理；后续route-key与NAT双端配置不破坏TLS/认证和owned Stop；物理验收仍OPEN。",
+  "next_action": "在不降低32字节随机route-key安全条件下选纯显示短别名方案，Linux NAT优先按--raw-interface确定本地IPv4和网关端口转发；如实现0.0.0.0语义须原生Linux x86/ARM双端与负例验收，不能直接宣称通用wildcard。",
   "unverified": true,
-  "last_tested_source": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+  "last_tested_source": "5ad409d1f5fe664a4030eec149a98882f88108f8",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json",
     "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029-H2203-ONE-VERSION-CROSSPLATFORM-FAILURE-TRIAGE.md",
+    "docs/devlog/M0/20261119-PLAN029B-H2205-H2204-RELEASE-MAIN-INTEGRATION.md",
     "docs/decisions/M0-PLAN029-H2204-UNIFIED-TLS-ADMISSION-V2-20261118.md"
   ],
   "open_requests": [],
-  "partial_summary": "单一V4TLS扩展v2已按用户要求仅接受新版。SOURCE2ca956b9 Linux x86/ARM24/24真网、Win/Linux/ARM GoTLS native PASS、安卓APK/NDK/OpenWrt构建PASS；3f28e3 Windows编译和GoTLS/cold PASS。硬件/DPI/CPU/p99未验，029技术OPEN。"
+  "partial_summary": "H2205 UI/原生源码测试均 scoped PASS：Win2025 409实际GUI+Go校验，Linux ARM64 12 native TLSv2 kernel/Stop；Npcap真实安装、Wintun按钮PnP点击及实体Win↔ARM64 NOT_RUN。H2202 strict V2旧版本拒绝不回退。新增密钥简化/NAT能力未合入未验。"
 }
