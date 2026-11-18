@@ -48,7 +48,7 @@ func TestH2206ServerNATCLIUnspecifiedIsDeferredOnlyForServer(t *testing.T){
  key:=strings.Repeat("ab",32)
  base:=[]string{"--raw-interface","eth0","--server-name","wbd.test",
   "--route-key-hex",key,"--username","alice","--password","test-secret",
-  "--lease-pool","10.66.0.0/24"}
+  "--lease-pool","10.66.1.0/24", "--tun-ipv4","10.66.0.1/16", "--tls-cert","server.crt", "--tls-key","server.key"}
  for _,raw:=range []string{"","0.0.0.0","192.168.50.15"}{
   args:=append([]string(nil),base...)
   if raw!=""{args=append(args,"--local-ip",raw)}
@@ -58,7 +58,7 @@ func TestH2206ServerNATCLIUnspecifiedIsDeferredOnlyForServer(t *testing.T){
    if !cfg.localIP.IsUnspecified(){t.Fatalf("server raw=%q must defer exact interface IP, got %v",raw,cfg.localIP)}
   }else if cfg.localIP.String()!=raw{t.Fatalf("server explicit private changed to %v",cfg.localIP)}
  }
- clientArgs:=[]string{"--raw-interface","eth0","--local-ip","0.0.0.0","--server-name","wbd.test", "--route-key-hex",key,"--username","alice","--password","test-secret","--local-port","45000","--peer-ip","192.168.50.1","--peer-port","443"}
+ clientArgs:=[]string{"--raw-interface","eth0","--local-ip","0.0.0.0","--server-name","wbd.test", "--route-key-hex",key,"--username","alice","--password","test-secret","--local-port","45000","--peer-ip","192.168.50.1","--peer-port","443","--tun-ipv4","10.66.0.4/16","--tunnel-id","00112233445566778899aabbccddeeff"}
  cfg,err:=parse("client",clientArgs)
  if err==nil||!strings.Contains(err.Error(),"server-only") && !strings.Contains(err.Error(),"client local-ip"){
   t.Fatalf("client wildcard must reject; cfg=%v err=%v",cfg.localIP,err)
