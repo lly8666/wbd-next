@@ -946,6 +946,33 @@ impl ProtectedScopedOwner {
             buffer,payload_len,snapshot.frame,carrier_snapshot,now
         )
     }
+    /// The real Linux Normal business LINK may carry an AEAD-authenticated,
+    /// bounded tail. This reuses the exact generation/owner/path/MSS check;
+    /// FEC source/parity, control and LINK fragments never call this method.
+    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    pub(crate) fn seal_normal_off_padded_with_worker_snapshot(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,
+        snapshot:&ScopedLinuxBudget,expected_ifindex:u32,
+        expected_destination:Ipv4Addr,carrier_snapshot:u64,now:MonoNs,
+        pad:usize,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if pad==0{return self.seal_normal_off_with_worker_snapshot(
+            buffer,payload_len,snapshot,expected_ifindex,
+            expected_destination,carrier_snapshot,now
+        )}
+        if pad>500 || self.state!=OwnerPhase::Active || !self.rx_tx.detached()
+            || self.generation!=snapshot.generation || self.epoch!=snapshot.epoch
+            || self.token.owner_id()!=snapshot.owner_id
+            || snapshot.observed_ifindex!=expected_ifindex
+            || snapshot.route_destination!=Some(expected_destination)
+            || snapshot.observed_route_mtu.is_none()
+            || payload_len>snapshot.frame.single_business_payload_mtu {
+            return Err(ProtectedCryptoError::Inactive);
+        }
+        self.seal_normal_off_one_padded(
+            buffer,payload_len,snapshot.frame,carrier_snapshot,now,pad
+        )
+    }
     /// The original worker retains an owner-created path snapshot for one
     /// bounded TX turn. A fragment requires precisely the same generation,
     /// epoch, owner and original SYN MSS as an ordinary packet. The kernel
