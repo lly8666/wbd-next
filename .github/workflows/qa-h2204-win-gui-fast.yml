@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/qa-h2204-win-gui-fast.yml'
       - 'tools/m0_plan028_h1640_win_gui_compile.ps1'
+      - 'tools/m0_h2204_win_driver_setup.cs'
 permissions:
   contents: read
   actions: read
