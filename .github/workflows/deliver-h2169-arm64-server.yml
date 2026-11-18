@@ -1,0 +1,83 @@
+name: Delivery: H2169 same-source native Linux ARM64 server bundle
+run-name: H2169 compatible Linux ARM64 server native release
+on:
+  push:
+    branches: [deliver/h2169-win-amd64-linux-arm64-pair-20261118]
+    paths: [.github/workflows/deliver-h2169-arm64-server.yml]
+permissions: {contents: read}
+jobs:
+  native-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 52
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Prove product source is byte-identical to passed Windows H2169 SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD^)" = '81998f91d183c722be932543be6434c1fd31be57'
+          test "$(git diff --name-only HEAD^ HEAD)" = '.github/workflows/deliver-h2169-arm64-server.yml'
+          echo PRODUCT_BASELINE_IDENTICAL_H2169_WIN_TEST_SOURCE
+      - name: Compile original ARM64 server using frozen Go Rust ISA-L production recipe
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc
+          bash tools/arm64_public_go_rust_bundle.sh > arm64-delivery-build.log 2>&1 || { tail -n 160 arm64-delivery-build.log; exit 1; }
+      - name: ELF ARM64, source lock, Go Rust module load, SHA and help smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,struct,hashlib,json,os
+          root=pathlib.Path('arm64-public-bundle')
+          manifest=json.loads((root/'manifest.json').read_text())
+          assert manifest['source_sha']==os.environ['GITHUB_SHA']
+          assert manifest['architecture']=='aarch64'
+          assert manifest['rust_native_fec_acceleration'] is True
+          for filename in ('wbd-v4-server','libwbd_engine.so'):
+              b=(root/filename).read_bytes()
+              assert b[:4]==b'\x7fELF'
+              assert struct.unpack_from('<H',b,18)[0]==183
+              assert hashlib.sha256(b).hexdigest()==manifest['sha256'][filename]
+          print('H2169_SAME_PRODUCT_SOURCE_NATIVE_ARM64_ELF_SHA_PASS')
+          PY
+          (cd arm64-public-bundle && sha256sum -c SHA256SUMS)
+          set +e
+          LD_LIBRARY_PATH="$PWD/arm64-public-bundle" timeout 7s ./arm64-public-bundle/wbd-v4-server --help > arm64-help.log 2>&1
+          rc=$?
+          set -e
+          test "$rc" != 124
+          grep -q 'Usage of' arm64-help.log
+      - name: Publish ARM64 server and owned Rust library from checked native Action
+        shell: bash
+        if: success()
+        run: |
+          set -euo pipefail
+          mkdir -p delivery/server
+          cp arm64-public-bundle/wbd-v4-server arm64-public-bundle/libwbd_engine.so arm64-public-bundle/manifest.json delivery/server/
+          (cd delivery/server && sha256sum wbd-v4-server libwbd_engine.so manifest.json > SHA256SUMS)
+          printf 'H2169 product code source SHA: 81998f91d183c722be932543be6434c1fd31be57\nARM64 packaging workflow SHA: %s\nCompatible Windows Action: 44250162599\nNative build, unit tests and loader smoke: PASS; Windows to physical ARM64 cross-device: NOT_RUN\n' "$GITHUB_SHA" > delivery/server/BUILD_INFO.txt
+          tar -czf delivery/wbd-h2169-linux-arm64-server.tar.gz -C delivery server
+          sha256sum delivery/wbd-h2169-linux-arm64-server.tar.gz > delivery/ARCHIVE-SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2169-compatible-linux-arm64-server-native
+          path: |
+            delivery/
+            arm64-delivery-build.log
+            arm64-help.log
+          if-no-files-found: warn
+          retention-days: 30
