@@ -21,7 +21,8 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         game=read("crates/wbd-engine/src/v4_game_lane.rs")
         go=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go")
         self.assertIn('flags.String("startup-padding","off"',cli)
-        self.assertIn("Normal/FEC Fixed/Auto original source",cli)
+        self.assertIn("Client requests off|tls|flows inside protected TLS admission",cli)
+        self.assertIn("V4Extension",read("r0/go_overlay/internal/realityfront/admission_v4.go"))
         self.assertIn("seal_fec2_product_one_padded",rust)
         self.assertIn("policy.propose(source,now_ms,room)",rust)
         self.assertIn("wbd_m0_embedded_go_normal_startup_padding_set",rust)
@@ -65,6 +66,27 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         self.assertIn("server_padding_records",cases)
         for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
             self.assertIn('"'+mode+'",',cases)
+
+    def test_control_sync_v2_is_tls_encrypted_and_server_is_not_cli_authority(self):
+        admission=read("r0/go_overlay/internal/realityfront/admission_v4.go")
+        normal=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go")
+        game=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go")
+        coverage=read("tools/m0_plan029_linux_crossplatform_coverage.py")
+        netns=read("tools/arm64_linux_netns_smoke.sh")
+        self.assertIn("v4ControlPaddedVersion uint16 = 2",admission)
+        self.assertIn("v4AdmissionPadMax = 500",admission)
+        self.assertIn("v4ConsumeEncryptedAdmissionPad(r,ext)",admission)
+        self.assertIn("extension.StartupPadding!=opt.StartupPadding",admission)
+        self.assertIn("StartupPadding:offered.StartupPadding",admission)
+        self.assertIn("ControlPadded:offered.ControlPadded",admission)
+        self.assertIn("selectedPadding:=verified.StartupPaddingMode()",normal)
+        self.assertIn("selectedPadding,err:=p.selectedGamePaddingLocked()",game)
+        self.assertIn("member.session.verifiedStartupPadding!=oldSession.verifiedStartupPadding",game)
+        self.assertIn("WBD_PLAN029_LINUX_SERVER_CONTROL_MODE",netns)
+        self.assertIn("PASS_SCOPED_TWELVE_ENCRYPTED_CONTROL_SYNC_NATIVE_LINUX_SCENES",coverage)
+        self.assertIn('("control-normal-off","normal","off"',coverage)
+        self.assertIn('("control-game4-off","game4","off"',coverage)
+        self.assertIn('WBD_PLAN029_LINUX_CONTROL_SYNC: \'1\'',read(".github/workflows/m0-plan029-linux-crossplatform-capabilities.yml"))
 
     def test_original_raw_kernel_copy_statistics_only_after_send_success(self):
         native=read("crates/wbd-engine/src/v4_game_public_kernel.rs")

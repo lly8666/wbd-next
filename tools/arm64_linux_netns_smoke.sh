@@ -112,7 +112,9 @@ if [[ "${WBD_PLAN029_LINUX_COVERAGE:-0}" == 1 ]];then
   esac
   if [[ "$game_lanes" -gt 0 || "$mode" == normal || "$mode" == fec-fixed || "$mode" == fec-auto ]];then
     client_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
-    server_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
+    # The deliberate mismatch in H2200 proves server follows the
+    # authenticated V2 client selector, not its own process-wide CLI value.
+    server_extra+=(--startup-padding "${WBD_PLAN029_LINUX_SERVER_CONTROL_MODE:-${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}}")
   elif [[ "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}" != off ]];then
     echo PLAN029_LINUX_FEC_PADDING_NOT_WIRED >&2;exit 2
   fi

@@ -47,9 +47,28 @@ CASES=[
 NORMAL_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_NORMAL_PAD_ONLY")=="1"
 FEC_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_FEC_PAD_ONLY")=="1"
 SERVER_PAD_ALL_MODES=os.environ.get("WBD_PLAN029_LINUX_SERVER_PAD_ALL_MODES")=="1"
-if sum((NORMAL_PAD_ONLY,FEC_PAD_ONLY,SERVER_PAD_ALL_MODES))>1:
+CONTROL_SYNC=os.environ.get("WBD_PLAN029_LINUX_CONTROL_SYNC")=="1"
+if sum((NORMAL_PAD_ONLY,FEC_PAD_ONLY,SERVER_PAD_ALL_MODES,CONTROL_SYNC))>1:
     raise SystemExit("one source-locked padding batch per native Action")
-if SERVER_PAD_ALL_MODES:
+if CONTROL_SYNC:
+    # H2200: original Go TLS protected V2 request / reply with independent
+    # randomized suffixes. Server CLI intentionally contradicts client.
+    # Each new true kernel session must obey client's verified selector.
+    CASES=[
+        ("control-normal-off","normal","off","",1460,"chacha20-poly1305","on","",False,False),
+        ("control-normal-tls","normal","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("control-normal-flows","normal","flows","",1460,"chacha20-poly1305","on","",False,False),
+        ("control-fixed-tls","fec-fixed","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("control-fixed-flows","fec-fixed","flows","",1460,"chacha20-poly1305","on","",False,False),
+        ("control-auto-tls","fec-auto","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("control-auto-flows","fec-auto","flows","",1460,"chacha20-poly1305","on","",False,False),
+        ("control-game2-tls","game2","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("control-game2-fixed6-flows","game2","flows","6",1460,"chacha20-poly1305","on","",False,False),
+        ("control-game4-fixed6-tls","game4","tls","6",1460,"chacha20-poly1305","on","",True,False),
+        ("control-game4-flows","game4","flows","",1460,"chacha20-poly1305","on","",False,False),
+        ("control-game4-off","game4","off","",1460,"chacha20-poly1305","on","",False,False),
+    ]
+elif SERVER_PAD_ALL_MODES:
     # H2197: both endpoints run the same selected random-padding policy.
     # Server MUST show positive ORIGINAL kernel AF_PACKET copy in ALL five
     # modes, including FEC source-only (parity/repair untouched) and Game.
@@ -108,6 +127,7 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
         WBD_PLAN029_LINUX_COVERAGE="1",
         WBD_V4_MODE=mode,
         WBD_PLAN029_LINUX_STARTUP_PADDING=padding,
+        WBD_PLAN029_LINUX_SERVER_CONTROL_MODE=("flows" if padding=="off" else "off") if CONTROL_SYNC else padding,
         WBD_PLAN029_LINUX_CLIENT_CIPHER=cipher,
         WBD_PLAN029_LINUX_OUTER_REPAIR=repair,
         WBD_PLAN029_LINUX_GAME4_COPY=copy,
@@ -187,7 +207,7 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
                     raise RuntimeError(side+" original AF_PACKET padding mismatch")
                 row[side+"_padding_records"]=count
                 row[side+"_padding_bytes"]=padded
-            elif NORMAL_PAD_ONLY or FEC_PAD_ONLY or SERVER_PAD_ALL_MODES:
+            elif NORMAL_PAD_ONLY or FEC_PAD_ONLY or SERVER_PAD_ALL_MODES or CONTROL_SYNC:
                 label=("V4_PUBLIC_FEC_SOURCE_PADDING" if mode in ("fec-fixed","fec-auto") else "V4_PUBLIC_NORMAL_PADDING")
                 matches=re.findall(
                     label+r"_RAW_RECEIPT role="+side+
@@ -196,20 +216,26 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
                     raise RuntimeError(side+" original Rust Normal padding post-kernel receipt absent")
                 actual,count,padded=matches[0]
                 count=int(count);padded=int(padded)
-                if actual!=padding or padded>count*500 or count==0 or padded==0:
-                    raise RuntimeError(side+" original M4 Normal padded LINK kernel counter mismatch")
+                if actual!=padding or padded>count*500 or (
+                    padding=="off" and (count!=0 or padded!=0)) or (
+                    padding!="off" and (count==0 or padded==0)):
+                    raise RuntimeError(side+" original M4 Normal padding kernel counter mismatch")
                 row[side+"_padding_records"]=count
                 row[side+"_padding_bytes"]=padded
             if cipher!="chacha20-poly1305" and side=="client":
                 row["client_requested_record_cipher"]=cipher
-        if SERVER_PAD_ALL_MODES:
+        if SERVER_PAD_ALL_MODES or CONTROL_SYNC:
             # Never allow client-only padding to masquerade as product parity;
             # the current server must have its OWN authenticated original
             # Rust M4 outgoing copy after the actual kernel send.
-            if row.get("server_padding_records",0)<1 or row.get("server_padding_bytes",0)<1:
-                raise RuntimeError("Linux "+mode+" server padding missing original M4 copy")
-            if row.get("client_padding_records",0)<1 or row.get("client_padding_bytes",0)<1:
-                raise RuntimeError("Linux "+mode+" client padding unexpectedly absent")
+            for role in ("server","client"):
+                records=row.get(role+"_padding_records",-1)
+                padded=row.get(role+"_padding_bytes",-1)
+                if padding=="off":
+                    if records!=0 or padded!=0:
+                        raise RuntimeError(role+" ignored client off selector")
+                elif records<1 or padded<1:
+                    raise RuntimeError(role+" ignored client "+padding+" selector")
         for direction in ("c2s","s2c"):
             for side in ("sender","listener"):
                 raw=(case/("app-"+direction+"-"+side+".log")).read_text()
@@ -233,10 +259,11 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
         print("PLAN029_LINUX_CROSSPLATFORM_CASE_FAIL arch="+ARCH+" case="+name+
               " error="+str(exc),flush=True)
         raise SystemExit(1)
-results["qualification"]=("PASS_SCOPED_TEN_BOTH_ENDPOINTS_ALL_FIVE_MODES_NATIVE_LINUX_SCENES" if SERVER_PAD_ALL_MODES
+results["qualification"]=("PASS_SCOPED_TWELVE_ENCRYPTED_CONTROL_SYNC_NATIVE_LINUX_SCENES" if CONTROL_SYNC
+                          else ("PASS_SCOPED_TEN_BOTH_ENDPOINTS_ALL_FIVE_MODES_NATIVE_LINUX_SCENES" if SERVER_PAD_ALL_MODES
                           else ("PASS_SCOPED_TWO_FEC_SOURCE_PADDING_NATIVE_LINUX_SCENES" if FEC_PAD_ONLY
                           else ("PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES" if NORMAL_PAD_ONLY
-                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES")))
+                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES"))))
 persist()
 print("PLAN029_LINUX_CROSSPLATFORM_NATIVE_PASS arch="+ARCH+" source="+SOURCE+
       " cases="+str(len(CASES)),flush=True)

@@ -1,9 +1,9 @@
 # H2181: genuine Linux x86_64 + native ARM64 game padding and cross-OS
 # shared CLI capabilities. Not Windows WinGUI nor an ARM board or QEMU.
-# H2197. Build once per ISA; ten new dual-endpoint source-locked Linux
-# startup-pad scenes per native ISA. Every original Go TLS/Rust server MUST
-# show successful raw AF_PACKET copied bytes for Normal, FEC Fixed, Auto,
-# Game2 and Game4 with both tls/flows; previous source cases not reused.
+# H2200: original protected Go TLS V2 configuration request/reply use
+# independent bounded random suffixes. One source-locked native Go/Rust bundle
+# per ISA; 12 new sessions each. Server CLI deliberately contradicts client,
+# and only the credential-verified client off/tls/flows selection may win.
 name: PLAN029 Linux crossplatform padding crypto route and MTU native
 run-name: "PLAN029 Linux capabilities two native ISA | ${{ github.sha }}"
 on:
@@ -24,6 +24,9 @@ on:
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
       - 'crates/wbd-engine/src/v4_client_startup_padding.rs'
       - 'crates/wbd-engine/src/v4_owner_crypto.rs'
+      - 'r0/go_overlay/internal/realityfront/admission_v4.go'
+      - 'r0/go_overlay/internal/realityfront/admission_v4_control_padding_test.go'
+      - 'r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go'
@@ -47,7 +50,7 @@ jobs:
       GOTOOLCHAIN: local
       WBD_PLAN029_LINUX_DUAL_ISA: '1'
       WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
-      WBD_PLAN029_LINUX_SERVER_PAD_ALL_MODES: '1'
+      WBD_PLAN029_LINUX_CONTROL_SYNC: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -90,7 +93,7 @@ jobs:
               assert hashlib.sha256((p/binary).read_bytes()).hexdigest()==sha
           print("PLAN029_LINUX_CAPABILITY_NATIVE_BINARIES_SOURCE_PASS")
           PY
-      - name: Ten original TLS/Rust both endpoints Linux startup padding scenes across all five modes
+      - name: Twelve original TLS V2 control random-suffix client-driven Linux native scenes
         shell: bash
         run: |
           set -euo pipefail
@@ -100,15 +103,16 @@ jobs:
           d=json.loads(pathlib.Path("linux-plan029-crossplatform-result/summary.json").read_text())
           assert d["source_sha"]==os.environ["GITHUB_SHA"]
           assert d["native_isa"]==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
-          assert len(d["scenarios"])==10
-          assert d["qualification"]=="PASS_SCOPED_TEN_BOTH_ENDPOINTS_ALL_FIVE_MODES_NATIVE_LINUX_SCENES"
+          assert len(d["scenarios"])==12
+          assert d["qualification"]=="PASS_SCOPED_TWELVE_ENCRYPTED_CONTROL_SYNC_NATIVE_LINUX_SCENES"
           assert {x["mode"] for x in d["scenarios"]}=={"normal","fec-fixed","fec-auto","game2","game4"}
           assert {x["padding"] for x in d["scenarios"]}=={"tls","flows"}
-          assert all(x.get("server_padding_records",0)>0 and x.get("server_padding_bytes",0)>0
-                     and x.get("client_padding_records",0)>0 and x.get("client_padding_bytes",0)>0
-                     for x in d["scenarios"])
+          assert all(
+              (x["padding"]=="off" and x.get("server_padding_bytes",-1)==0 and x.get("client_padding_bytes",-1)==0)
+              or (x["padding"]!="off" and x.get("server_padding_bytes",0)>0 and x.get("client_padding_bytes",0)>0)
+              for x in d["scenarios"])
           assert all(x["status"]=="PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM" for x in d["scenarios"])
-          print("PLAN029_LINUX_ALL_FIVE_MODES_BOTH_ENDPOINTS_TEN_SIGNED_PASS")
+          print("PLAN029_LINUX_AUTHENTICATED_CONTROL_PAD_TWELVE_SIGNED_PASS")
           PY
       - name: Retain bounded source-locked native logs and SHA (no secrets)
         if: always()
