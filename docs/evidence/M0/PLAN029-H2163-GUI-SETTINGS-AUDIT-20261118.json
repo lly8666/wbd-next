@@ -45,5 +45,19 @@
     "plan030": "NOT_STARTED"
   },
   "historic_fail_preserved": true,
-  "actions_dispatched": false
+  "actions_dispatched": false,
+  "ci_first_failure": {
+    "source": "cb8d81b7338d4d46ebe24dcead86b2a2bbe1877c",
+    "action": 44241101644,
+    "feature_catalog": "FAIL_card_utf8_16778_gt_16384",
+    "governance": "FAIL_cursor_context_refs_9_gt_8",
+    "status": "HISTORICAL_FAIL_PRESERVED",
+    "product_runtime": "NOT_RUN"
+  },
+  "ci_correction": {
+    "task": "H2164",
+    "feature_card_shortened_utf8_bytes": 16369,
+    "cursor_context_refs": 8,
+    "new_ci": "NOT_RUN"
+  }
 }
