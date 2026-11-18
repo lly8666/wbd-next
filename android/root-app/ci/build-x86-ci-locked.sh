@@ -86,7 +86,9 @@ mapfile -t ci_flats < <(find "$out/res-compiled" -type f -name '*.flat' | sort)
 test "${#ci_flats[@]}" -eq 1
 "$bt/d8" --min-api 28 --lib "$jar" --output "$out/dex" \
   $(find "$out/classes" -name '*.class' -print)
-"$bt/aapt2" link --manifest "$out/ci-only-AndroidManifest.xml" \
+# This is an app-local new resource over android.jar imported via -I.
+# AAPT2 explicitly requires auto-add-overlay for a new compiled -R entry.
+"$bt/aapt2" link --auto-add-overlay --manifest "$out/ci-only-AndroidManifest.xml" \
   -I "$jar" -A "$out/assets" -R "${ci_flats[0]}" \
   --min-sdk-version 28 --target-sdk-version 35 \
   -o "$out/unsigned.apk"

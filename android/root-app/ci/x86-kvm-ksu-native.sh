@@ -37,7 +37,8 @@ d={"schema":"wbd-android-x86-kvm-ksu-original-native-d1-admission/v1",
  "app_to_ksu_root":"PASS" if "APP_UID_SU_PASS" in read("app-su-receipt.txt") and
    "ORIGINAL_SIGNED_NATIVE_ASSETS_VERIFIED" in read("app-su-receipt.txt")
    else ("NOT_PROVEN" if read("grant-ui.txt") else "NOT_RUN"),
- "physical_network_app_readback":"NOT_RUN",
+ "physical_network_app_readback":("PASS" if "PHYSICAL_NETWORK_EXACT_READBACK_PASS" in read("physical-network-receipt.txt") else
+    ("ENV_BLOCKED" if "PHYSICAL_NETWORK_ENV_BLOCKED" in read("physical-network-receipt.txt") else "NOT_PROVEN")),
  "original_tls_auth_lease":"NOT_RUN","real_m3_m4_tcp_udp":"NOT_RUN",
  "owned_stop_route_rollback":"NOT_RUN",
  "system_dns_takeover":"NOT_RUN"}
@@ -219,4 +220,16 @@ if [[ ! -s "$out/app-su-receipt.txt" ]];then
   exit 21
 fi
 echo "ANDROID_X86_CI_APP_UID_KSU_SU_PASS"
-echo "D1_PHYSICAL_NETWORK_AND_TLS_M4_NOT_RUN"
+# Re-run the original PhysicalNetwork.available/exact under the same signed
+# ordinary App UID, never from adb shell root or assumed emulator interface.
+if grep -Fq 'PHYSICAL_NETWORK_EXACT_READBACK_PASS' "$out/app-su-logcat-filtered.txt";then
+  echo PHYSICAL_NETWORK_EXACT_READBACK_PASS >"$out/physical-network-receipt.txt"
+  echo ANDROID_X86_APP_PHYSICAL_NETWORK_EXACT_READBACK_PASS
+elif grep -Fq 'PHYSICAL_NETWORK_ENV_BLOCKED' "$out/app-su-logcat-filtered.txt";then
+  echo PHYSICAL_NETWORK_ENV_BLOCKED >"$out/physical-network-receipt.txt"
+  echo ANDROID_X86_APP_PHYSICAL_NETWORK_ENV_BLOCKED
+else
+  echo PHYSICAL_NETWORK_NOT_PROVEN >"$out/physical-network-receipt.txt"
+  echo ANDROID_X86_APP_PHYSICAL_NETWORK_NOT_PROVEN
+fi
+echo "D1_REAL_ORIGINAL_CLIENT_TLS_M4_NOT_RUN"
