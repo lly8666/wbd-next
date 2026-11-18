@@ -39,7 +39,7 @@ CASES=[
  ("game2-fec6-flows","game2","flows","6",1460,"chacha20-poly1305","on","",False,False),
  ("game4-fec6-flows","game4","flows","6",1460,"chacha20-poly1305","on","",False,False),
  ("game4-off-immediate-flows","game4","flows","",1460,"chacha20-poly1305","off","immediate",False,False),
- ("normal-aes128-live-mtu","normal","off","",1460,"aes-128-gcm","on","",False,True),
+ ("normal-aes128","normal","off","",1460,"aes-128-gcm","on","",False,False),
  ("normal-aes256-x25519-mtu1280","normal","off","",1280,"aes-256-gcm","on","",False,False),
 ]
 OUT.mkdir(exist_ok=False)
@@ -50,6 +50,7 @@ results={"schema_version":1,"source_sha":SOURCE,"native_isa":ARCH,
          "excluded":["Linux Normal/Fixed/Auto startup-padding tls/flows NOT_WIRED",
              "Windows Direct/CN/FakeIP/WFP/WinGUI/OS-WAL",
              "ARM physical board, cross-ISA link, long stress and CPU/p99",
+             "Live 1500-to-1280 route reauthentication in manual-IP mode not supported; requires auto-ip server lease + client path-supervisor fixture",
              "Linux host-global IPv6/AAAA and encrypted app TLS handshake"]}
 def persist():
     (OUT/"summary.json").write_text(json.dumps(results,indent=2,sort_keys=True)+"\n")

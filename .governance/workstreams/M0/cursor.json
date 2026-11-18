@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2183,
-  "checkpoint_sha": "f8b38d88fdce0935e17ef62f2b619b8e60ead888",
+  "sequence": 2184,
+  "checkpoint_sha": "c4675f5a85e2e275480719bfa076201c1fcb4915",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2183 修Linux Rust Game padding原生编译第二源头：FlowKey仍在windows/test模块；加Linux编译选项、功能卡同步，保持H2181/H2182原FAIL与实际网络待验。",
-  "why_now": "H2182 Action44266740093两ISA original Go/Rust build E0432: v4_client_startup_padding用到crate::v4_client_split::FlowKey，但该纯逻辑模块依旧windows/test cfg；Native functional独立FAIL，feature catalog未同批改卡。",
-  "done_when": "两native Linux ISA当前SOURCE真实原Go TLS/Rust构建，8互补模式实际网络及原AF_PACKET pad count/MTU/Stop PASS，保留未实现Normal/FEC pad明确拒绝。",
-  "next_action": "收H2183 native x86/aarch64编译第一故障，按日志精确修补，不刷H2177 10/10；产品并非全部技术完成。",
+  "current_task": "H2184：H2183 native x86/ARM各Game2/4六互补填充场PASS，正常模式物理MTU动态场FAIL因手动IP不启动auto-IP路径监督；保留失败，拆独立AES128与AES256+X25519固定1280。",
+  "why_now": "H2183 Action44267345357原生两ISA build PASS、Game2 off/tls/flows + Game2 fixed6 flows + Game4 fixed6/off-immediate flows六场每ISA PASS；第七场错误把auto-ip专属物理MTU切换用于手动IPv4，切换后小ICMP中断，非padding bug。",
+  "done_when": "同源新Action两ISA8互补场真网络8/8 PASS，明确将manual-IP物理MTU动态切换排除且保留旧FAIL，并验证AES128及AES256/X25519/固定1280。",
+  "next_action": "收新H2184 native作业和原内核padding成功计数，原生Green后更新card与签名证据；若X25519/1280真失败保留首错。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2184-LINUX-MANUAL-MTU-SCOPE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2183-LINUX-GAME-FLOWKEY-CFG-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2182-LINUX-PADDING-MODULE-CFG-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2181-LINUX-CROSSPLATFORM-CAPABILITY-GAPS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2177 linux x86/ARM双端基础10/10签名PASS不含填充。H2181/H2182 Game padding原Go/Rust可选模式及raw成功复制计数施工，先因padding模块cfg及FlowKey模块cfg阻断两ISA编译，真Game填充网络NOT_RUN。H2183加入Linux pure FlowKey模块并卡片同步，严格首错验收。"
+  "partial_summary": "H2183 Action44267345357两ISA原Go/Rust构建及每ISA六场Game padding真实双向TCP/UDP/TUN/FEC/Stop均PASS，off0B；各端tls约1KiB、flows多KiB；手动IP模式的动态物理MTU场两个ISA都失败并保存回执，需auto-IP独立控制器；H2184仅拆为AES128常规和AES256/X25519/1280，原功能不改。"
 }
