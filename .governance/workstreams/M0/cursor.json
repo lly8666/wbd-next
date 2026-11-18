@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2171,
-  "checkpoint_sha": "addb8c78ee01dae55d529a4c8d3715553bd895b7",
+  "sequence": 2172,
+  "checkpoint_sha": "c3fba1ed215a4191e2244621adeeb195303542df",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2171 用户要求PLAN029非Windows Linux服务端与客户端在原生x86_64及ARM64分别相关实网测试；两个架构并行，各固定SOURCE一次构建、同架构双netns五个短业务模式顺序测。",
-  "why_now": "H2170 Game padding Win2025/WSL2 scoped收口后用户明确要求高效的Linux x86和ARM64双端原生覆盖；原历史ARM64 workflow使用旧冻结SOURCE、不可代替main。",
-  "done_when": "两个native ISA实际Action各原Go客户端/服务端+Rust M4 TLS、双向UDP/TCP内核业务、Normal/Fixed/Auto/Game2/Game4固定FEC、MTU1460、owned TUN IPv6仅本设备禁用及双Stop真实证据；失败单列。",
-  "next_action": "触发H2171新workflows两parallel native jobs；收首个失败或签名PASS，更新linux-raw-tun等功能卡和证据；不复跑Windows Game20/20/不启030。",
+  "current_task": "H2172 修Linux双ISA原生Normal首个夹具假阴性：x86 TCP FIN后getpeername ENOTCONN；ARM64 netns sudo包装进程提早退出但真实Python listener READY；不降低真kernel app/TUN/Stop硬门。",
+  "why_now": "H2171 native workflow44254638755两ISA build/Go/Rust单测均PASS；x86已见真实UDP/TCP echo但CI探针FIN后getpeername失败，ARM64 listener READY日志与快速PID guard矛盾；五模式后4项未跑。",
+  "done_when": "H2172两个原生作业分别五模式全通过：真实同ISA双Linux原Go TLS+Rust/TUN内核UDP/TCP两向/MTU1460/FEC/Stop及自有IPv6禁用；首错如实记录。",
+  "next_action": "收H2172重新执行的双ISA native workflow；只有同SOURCE原生真实证明才补 evidence/feature；不重复Windows/028/030。",
   "unverified": true,
   "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2172-LINUX-DUAL-ISA-FIRST-FAULT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2171-LINUX-DUAL-ISA-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
     "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md",
     "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json",
-    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
-    "docs/evidence/M0/PLAN029-H2163-GUI-SETTINGS-AUDIT-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2171构建新Linux双架构native matrix：ubuntu-24.04 x86_64与ubuntu-24.04-arm aarch64；每ISA仅一次原Go TLS+Rust+ISA-L build，五原生产CLI模式独立双netns真实双向UDP/TCP+Stop/MTU，严格SOURCE/ELF哈希，非QEMU。当前Linux本SOURCE网络NOT_RUN。"
+  "partial_summary": "H2171 SOURCEc3fba1e x86+ARM原Go/Rust/ISA-L两架构构建和定向单测PASS，Normal首轮双FAIL均测试夹具误判：x86真实listener UDP+TCP PASS、sender echo完成后FIN调用getpeername异常；ARM listener READY但sudo wrapper PID早退导致假未就绪。H2172仅修两个fixture并加回归测试。"
 }

@@ -334,7 +334,9 @@ if [[ "${WBD_PLAN029_LINUX_DUAL_ISA:-0}" == 1 ]];then
       if grep -q "PLAN029_LINUX_APP_SOCKET_READY $direction" "$out/app-$direction-listener.log";then
         app_ready=1;break
       fi
-      if ! kill -0 "$listener_pid" 2>/dev/null;then break;fi
+      # Do not infer readiness from the short-lived sudo/ip-netns launcher
+      # PID. On native ARM it may exit before the Python listener prints
+      # READY while the real socket is already bound. Poll the marker.
       sleep .1
     done
     if [[ "$app_ready" != 1 ]];then

@@ -71,13 +71,17 @@ else:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp:
         tcp.bind((local, 0)); tcp.settimeout(12)
         tcp.connect((remote, port))
+        # Verify real kernel peer while CONNECTED: Linux may clear
+        # getpeername() after the remote FIN even though bytes arrived.
+        if tcp.getpeername()[0] != remote:
+            raise RuntimeError("unexpected real Linux TCP peer")
         tcp.sendall(marker); tcp.shutdown(socket.SHUT_WR)
         data = bytearray()
         while len(data) < len(reply):
             chunk = tcp.recv(2048)
             if not chunk: break
             data.extend(chunk)
-        if bytes(data) != reply or tcp.getpeername()[0] != remote:
+        if bytes(data) != reply:
             raise RuntimeError("real Linux TCP app echo missing")
         proof["tcp"] = "PASS_NATIVE_KERNEL_APP"
 print("PLAN029_LINUX_APP_TRUE_KERNEL_PASS " + json.dumps(proof, sort_keys=True), flush=True)
