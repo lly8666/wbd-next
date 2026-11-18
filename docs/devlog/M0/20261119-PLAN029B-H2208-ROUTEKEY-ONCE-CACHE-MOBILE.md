@@ -18,3 +18,7 @@
 ## 2026-11-19 本批真实来源与状态补记
 
 H2208 产品/GUI/Android/OpenWrt本批源码 `15573bbbbf4c6d51d582e23989d795667ae5c7a1`：Windows source-locked原Go Native build [44368144935](https://github.com/lly8666/wbd-next/actions/runs/44368144935) SUCCESS (BUILD_ONLY)；[44368145278](https://github.com/lly8666/wbd-next/actions/runs/44368145278) cheap assembly、Windows Go与Linux Rust各相应job SUCCESS，但Windows Rust旧DNS Direct单测419/420 FAIL，保留原范围。后续source `c92f6a795d8e152b0939e5c6a60a492babedb14e` 只增Go短Key专用单测，治理[44369630706](https://github.com/lly8666/wbd-next/actions/runs/44369630706) SUCCESS；其[Go单测 Action44369630615](https://github.com/lly8666/wbd-next/actions/runs/44369630615) 在本记录时仍在跑，不能先作PASS。见H2208 evidence；服务端NAT原H2206旧SOURCE也不推作新H2208实网PASS。
+
+## H2208 v2 源锁专用Go校验完成
+
+本批Go测试源码 `c92f6a795d8e152b0939e5c6a60a492babedb14e`，原Windows Go固定模块的同算法专项三项测试（8/16/32向量、非法输入、首次落盘/重启缓存命中/换短Key重算/损坏拒绝）均 `PASS`，原生 Windows2025 [Action44369630615](https://github.com/lly8666/wbd-next/actions/runs/44369630615) 整个windows-source-compile Job SUCCESS。完整证据 `docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-WINDOWS-GO-CACHE-UNIT-PASS-20261119.json`，这是 Go 编译/单测范围合格，不是 WinForms真实连接，也不是 Android JNI/ARM客户端双端真实业务。原Windows Rust DNS Direct独立旧FAIL不因本次Go测试抹除。

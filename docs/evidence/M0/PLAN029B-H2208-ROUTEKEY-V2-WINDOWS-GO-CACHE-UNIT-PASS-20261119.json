@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2208-SHORT-ROUTEKEY-V2-OFFLINE-CACHE",
+  "date_utc": "2026-11-19",
+  "result": "PASS_SCOPED",
+  "source_sha": "c92f6a795d8e152b0939e5c6a60a492babedb14e",
+  "source_url": "https://github.com/lly8666/wbd-next/commit/c92f6a795d8e152b0939e5c6a60a492babedb14e",
+  "action": 44369630615,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/44369630615",
+  "job": "windows-source-compile",
+  "conclusion": "SUCCESS",
+  "native_os": "windows-2025",
+  "tested": [
+    {
+      "test": "TestH2207MobileFriendlyV2Vectors",
+      "result": "PASS",
+      "scope": "v2 4096-iteration PBKDF2-HMAC-SHA256 8/16/32 ASCII 32B deterministic vectors"
+    },
+    {
+      "test": "TestH2207RejectInvalidShortKey",
+      "result": "PASS",
+      "scope": "invalid short key and mixed-case inequality"
+    },
+    {
+      "test": "TestH2208PersistentOncePerKeyAndFastRestarts",
+      "result": "PASS",
+      "scope": "first 0600 write, fast cached restart, explicit short key change and persisted rotate, corrupted cache fail closed"
+    }
+  ],
+  "go_package": "github.com/lly8666/wobuzhidao/internal/v4routekey",
+  "output": "go test -tags wbd_v4_embedded_go -count=1 -run '^TestH220[78]' -v ./internal/v4routekey -> ok 0.060s",
+  "same_source_checks": [
+    "original Windows Go product compiled",
+    "source-locked original-Go assembly succeeded",
+    "PLAN029 Windows source tests succeeded",
+    "Defender COM exact one-rule scope succeeded (not TLS end-to-end)"
+  ],
+  "prior_source_context_ref": "docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-ONCE-PERSIST-MOBILE-SCOPED-20261119.json",
+  "known_fail_not_overwritten": {
+    "action": 44368145278,
+    "source_sha": "15573bbbbf4c6d51d582e23989d795667ae5c7a1",
+    "first_failure": "v4_windows_native_dns_direct::tests::plan029_direct_dns_one_socket_endpoint_bounded_no_journal_leak",
+    "note": "Separate Windows Rust DNS Direct unit failed 419/420, not fixed by Go RouteKey test; full source scoped workflow FAIL"
+  },
+  "not_run": [
+    "true Linux x86/ARM client/server 8..32 short-key original TLS and Rust TUN traffic/Stop",
+    "real signed Windows WinForms 8..32 field launch against physical Wintun/Npcap",
+    "Android Kotlin SDK unit, JNI/Go admission and VPN real device (main Android only shell)",
+    "OpenWrt real ARM64 router procd/TLS/Stop",
+    "external NAT gateway TCP443 DNAT and physical Windows-ARM64 end to end",
+    "PLAN029/029B full technical exit and 030 not started"
+  ],
+  "security": "4096 PBKDF2 is deliberately inexpensive and done only on enrollment/short-key change; fast local HMAC comparison on reload. 8-character secrets lack 256-bit entropy. Recommend 24..32 random alphanumerics and protected original 32B file for strong production deployment. TLS on-wire, Rust hot path and original H2206 NAT interface unchanged."
+}
