@@ -53,7 +53,8 @@ final class RootUidTunPacketScript {
         sh.append("ip link show dev wbdst11 >/dev/null 2>&1; then ");
         sh.append("echo WBD_A11_UID_TUN_ROLLBACK_FAIL; ");
         sh.append("else echo WBD_A11_UID_TUN_ROLLBACK_PASS; fi; ");
-        sh.append("rm -f \"$p/.uidready\" \"$p/.uidcapture\"; ");
+        sh.append("rm -f \"$p/.uidready\" \"$p/.uidcapture\" ");
+        sh.append("\"$p/.a12.err\" \"$p/.a12.rules\" \"$p/.a12.routes\"; ");
         sh.append("rmdir \"$p/.uidpacket.lock\" 2>/dev/null || :; }; ");
         sh.append("trap cleanup EXIT; trap 'exit 79' HUP INT TERM; ");
         // No operation can clobber a rule/table/interface from another owner.
@@ -61,7 +62,8 @@ final class RootUidTunPacketScript {
         sh.append("ip -4 route show table 19843 2>/dev/null | grep -q '[^[:space:]]' || ");
         sh.append("ip link show dev wbdst11 >/dev/null 2>&1; then ");
         sh.append("echo WBD_A11_UID_TUN_COLLISION; exit 75; fi; ");
-        sh.append("rm -f \"$p/.uidready\" \"$p/.uidcapture\"; ");
+        sh.append("rm -f \"$p/.uidready\" \"$p/.uidcapture\" ");
+        sh.append("\"$p/.a12.err\" \"$p/.a12.rules\" \"$p/.a12.routes\"; ");
         sh.append("if ! cp ").append(quote(sourceLockedHelper.getAbsolutePath()));
         sh.append(" \"$p/.uidcapture\"; then echo WBD_A11_REFUSED; exit 76; fi; ");
         sh.append("chmod 700 \"$p/.uidcapture\" || exit 76; ");
@@ -79,15 +81,48 @@ final class RootUidTunPacketScript {
         sh.append("if ! ip -4 addr add 198.18.0.1/30 dev wbdst11 >/dev/null 2>&1 || ");
         sh.append("! ip link set dev wbdst11 up >/dev/null 2>&1; then ");
         sh.append("echo WBD_A11_UID_TUN_SETUP_FAIL; exit 77; fi; ");
+        // A12: separate failing stage and fixed errno category; never emit
+        // raw Android ip stderr, UID ranges or network endpoints.
+        sh.append("if ! ip link show dev wbdst11 >/dev/null 2>&1; then ");
+        sh.append("echo WBD_A12_TUN_INTERFACE_DISAPPEARED; ");
+        sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
         sh.append("if ! ip -4 route add 192.0.2.1/32 dev wbdst11 table 19843 ");
-        sh.append(">/dev/null 2>&1; then echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
+        sh.append(">/dev/null 2>\"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_TUN_ROUTE_ADD_FAIL; ");
+        sh.append("if grep -Eqi 'Invalid argument|Numerical result out of range' \"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_TUN_ROUTE_ERR_EINVAL; ");
+        sh.append("elif grep -Eqi 'Operation not permitted|Permission denied' \"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_TUN_ROUTE_ERR_EPERM; ");
+        sh.append("elif grep -Eqi 'No such device|Cannot find device|Network is down' \"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_TUN_ROUTE_ERR_DEVICE; ");
+        sh.append("elif grep -Eqi 'File exists' \"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_TUN_ROUTE_ERR_EXISTS; ");
+        sh.append("else echo WBD_A12_TUN_ROUTE_ERR_OTHER; fi; ");
+        sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
         sh.append("route=1; ");
         sh.append("if ! ip -4 rule add pref 9699 uidrange ").append(ownUid).append("-");
-        sh.append(ownUid).append(" lookup 19843 >/dev/null 2>&1; then ");
+        sh.append(ownUid).append(" lookup 19843 >/dev/null 2>\"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_UID_RULE_ADD_FAIL; ");
+        sh.append("if grep -Eqi 'Invalid argument' \"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_UID_RULE_ERR_EINVAL; ");
+        sh.append("elif grep -Eqi 'Operation not permitted|Permission denied' \"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_UID_RULE_ERR_EPERM; ");
+        sh.append("elif grep -Eqi 'File exists' \"$p/.a12.err\"; then ");
+        sh.append("echo WBD_A12_UID_RULE_ERR_EXISTS; ");
+        sh.append("else echo WBD_A12_UID_RULE_ERR_OTHER; fi; ");
         sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
         sh.append("rule=1; ");
-        sh.append("if ! ip -4 rule show | grep -Eq '^ *9699:' || ");
-        sh.append("! ip -4 route show table 19843 | grep -q '192.0.2.1'; then ");
+        sh.append("if ! ip -4 rule show >\"$p/.a12.rules\" 2>/dev/null; then ");
+        sh.append("echo WBD_A12_UID_RULE_SHOW_UNAVAILABLE; ");
+        sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
+        sh.append("if ! grep -Eq '^ *9699:' \"$p/.a12.rules\"; then ");
+        sh.append("echo WBD_A12_UID_RULE_READBACK_FAIL; ");
+        sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
+        sh.append("if ! ip -4 route show table 19843 >\"$p/.a12.routes\" 2>/dev/null; then ");
+        sh.append("echo WBD_A12_TUN_ROUTE_SHOW_UNAVAILABLE; ");
+        sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
+        sh.append("if ! grep -q '192.0.2.1' \"$p/.a12.routes\"; then ");
+        sh.append("echo WBD_A12_TUN_ROUTE_READBACK_FAIL; ");
         sh.append("echo WBD_A11_UID_TUN_ROUTE_FAIL; exit 77; fi; ");
         // No packet is emitted unless kernel UID lookup actually selects
         // THIS ephemeral TUN. Unsupported 'uid' arg -> fail closed.

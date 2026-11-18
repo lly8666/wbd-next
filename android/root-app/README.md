@@ -341,3 +341,25 @@ pref9699/table19843/wbdst11。系统DNS双门仍关闭、原WBD
 此自检使用单独的测试VIP、测试UID和权限，**绝不**使用
 用户填写的WBD服务器地址或密码；升级 Actions 一次性签名
 调试APK如果报签名冲突，用户须备份且确认WBD已停止后手动卸旧版。
+
+## A12: 真机 A11 路由阶段失败的分层回执
+
+A11 用户真机重复得到 A10 原 Go ELF / TUN / RAW / 物理网络 / UID
+loopback规则+rollback PASS；但 `A11_UID_TUN_ROUTE_FAIL`
+和 `A11_UID_TUN_ROLLBACK_PASS`同时出现，表示隔离 TUN 路由流程
+**未完成**、已清理、Java没有发 UDP 测试包。
+`A11_ROOT_CHILD_EXIT_NONZERO`是root测试Shell按设计退场，
+不是原Go ELF139、也不是原Rust M4崩溃。
+
+A12 在同一个一键按钮后增加固定的 `A12_*` 失败收据，
+严格区分 TUN 网卡消失、路由添加、UID rule添加、rule读回、
+路由表读回。路由/规则添加失败时输出固定
+`ERR_EINVAL`、`ERR_EPERM`、`ERR_DEVICE`、`ERR_EXISTS`
+或`ERR_OTHER`。只在root专用0700目录临时读取错误，
+从不向Java/ADB显示 IP、UID、原始stderr、账号或原生包。
+保留 A11 旧失败码、精确 `pref 9699/table19843` + `wbdst11`
+回滚、未验证真实kernel UID选路绝不发包，**不自动尝试危险替代路由**。
+
+安装 A12 后点同一个按钮，把 **A12_* + A11_* + rollback**
+原样复制回来即可定位下一步。此版本仍不做无服务器原 WBD
+TLS/租约/Rust M4数据E2E或系统DNS接管。

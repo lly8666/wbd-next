@@ -22,6 +22,42 @@ public final class RootUidTunPacketScriptTest {
             "ip link show dev wbdst11",
             "192.0.2.1/32 dev wbdst11 table 19843"
         })if(!s.contains(required))throw new AssertionError("missing: "+required);
+        // A12: keep A11 route error explicit AND distinguish all four real
+        // kernel stages. Never carry raw dynamic ip stderr into Java/logcat.
+        for(String stage:new String[]{
+            "WBD_A12_TUN_ROUTE_ADD_FAIL",
+            "WBD_A12_TUN_ROUTE_ERR_EINVAL",
+            "WBD_A12_TUN_ROUTE_ERR_EPERM",
+            "WBD_A12_TUN_ROUTE_ERR_DEVICE",
+            "WBD_A12_TUN_ROUTE_ERR_EXISTS",
+            "WBD_A12_TUN_ROUTE_ERR_OTHER",
+            "WBD_A12_UID_RULE_ADD_FAIL",
+            "WBD_A12_UID_RULE_ERR_EINVAL",
+            "WBD_A12_UID_RULE_ERR_EPERM",
+            "WBD_A12_UID_RULE_ERR_EXISTS",
+            "WBD_A12_UID_RULE_ERR_OTHER",
+            "WBD_A12_UID_RULE_SHOW_UNAVAILABLE",
+            "WBD_A12_UID_RULE_READBACK_FAIL",
+            "WBD_A12_TUN_ROUTE_SHOW_UNAVAILABLE",
+            "WBD_A12_TUN_ROUTE_READBACK_FAIL",
+            "WBD_A12_TUN_INTERFACE_DISAPPEARED"
+        })if(!s.contains(stage))throw new AssertionError("missing fixed A12 stage "+stage);
+        int routeAdd=s.indexOf("if ! ip -4 route add 192.0.2.1/32");
+        int ruleAdd=s.indexOf("if ! ip -4 rule add pref 9699");
+        int ruleRead=s.indexOf("if ! ip -4 rule show >");
+        int routeRead=s.indexOf("if ! ip -4 route show table 19843 >");
+        int kernelLookup=s.indexOf("if ! ip -4 route get 192.0.2.1 uid");
+        if(routeAdd<0||ruleAdd<routeAdd||ruleRead<ruleAdd||
+           routeRead<ruleRead||kernelLookup<routeRead)
+            throw new AssertionError("incorrect gated kernel stage order");
+        if(s.indexOf("WBD_A12_TUN_ROUTE_ADD_FAIL")>s.indexOf("route=1;")||
+           s.indexOf("WBD_A12_UID_RULE_ADD_FAIL")>s.indexOf("rule=1;"))
+            throw new AssertionError("ownership tracking must follow success");
+        if(!s.contains("rm -f")||
+           !s.contains(".a12.err")||
+           !s.contains(".a12.rules")||
+           !s.contains(".a12.routes"))
+            throw new AssertionError("temporary errno/output buffers not cleaned");
         if(s.contains("ip -4 route add default")||
            s.contains("ip route replace default")||
            s.contains("ip -4 rule flush")||

@@ -50,6 +50,7 @@ public final class RootClientActivity extends Activity {
                 "仅短暂改本 APK UID 的 table19843/pref9699，立即尝试撤销。" +
                 "不会修改默认路由、其他 App UID、原 WBD table19842、" +
                 "系统 DNS 或任何 TLS/AEAD 数据面。\n\n" +
+                "若路由阶段失败，A12 仅输出固定阶段和内核错误类别，不读取或显示隐私日志。\n\n" +
                 "异常被强行杀进程时无法绝对保证回滚；若结果显示回滚失败，请停止后检查。")
             .setNegativeButton("取消",null)
             .setPositiveButton("允许本机测试",(dialog,which)->{
@@ -222,7 +223,7 @@ public final class RootClientActivity extends Activity {
         refresh.setOnClickListener(v->chooseNetworks());
         pane.addView(refresh);
         Button selfTestButton=new Button(this);
-        selfTestButton.setText("一键自检 ARM64 / KSU / TUN / RAW / 真实UID入TUN及回滚（免服务器）");
+        selfTestButton.setText("A12 一键自检 ARM64/KSU/TUN/UID入TUN及分阶段路由诊断（免服务器）");
         selfTestButton.setOnClickListener(v->runDeviceSelfTest());
         pane.addView(selfTestButton);
         deviceSelfTestResult=new TextView(this);

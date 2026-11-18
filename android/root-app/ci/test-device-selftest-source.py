@@ -86,5 +86,26 @@ for token in ("--uid-tun-capture", "poll(&pfd, 1, 9500)",
     assert token in native,token
 assert 'sendto(' not in native and 'TUNSETPERSIST, &ifr' not in native
 assert 'device-selftest-arm64.c' in build
+# A12: disaggregate the real device's A11_UID_TUN_ROUTE_FAIL into
+# exact stage and bounded errno categories, retaining the original
+# fail-closed no-send guard and exact owned-resource cleanup.
+for token in (
+    "WBD_A12_TUN_ROUTE_ADD_FAIL", "WBD_A12_TUN_ROUTE_ERR_EINVAL",
+    "WBD_A12_TUN_ROUTE_ERR_EPERM", "WBD_A12_TUN_ROUTE_ERR_DEVICE",
+    "WBD_A12_TUN_ROUTE_ERR_EXISTS", "WBD_A12_TUN_ROUTE_ERR_OTHER",
+    "WBD_A12_UID_RULE_ADD_FAIL", "WBD_A12_UID_RULE_ERR_EINVAL",
+    "WBD_A12_UID_RULE_ERR_EPERM", "WBD_A12_UID_RULE_ERR_OTHER",
+    "WBD_A12_UID_RULE_READBACK_FAIL",
+    "WBD_A12_TUN_ROUTE_READBACK_FAIL",
+    "WBD_A12_TUN_INTERFACE_DISAPPEARED",
+    '.a12.err', "rm -f", '.a12.rules', '.a12.routes'
+):
+    assert token in packet, token
+for token in ("UID_PACKET_DIAG_EVENTS", 'line.startsWith("WBD_A12_")',
+              "allowedUidPacketDiag(diagnostic)", 'events.add("A12_"+diagnostic)'):
+    assert token in selftest, token
+assert 'echo "$p/.a12.err"' not in packet
+assert "WBD_A11_UID_TUN_SEND_READY" in packet
+print("ANDROID_ARM64_A12_GRANULAR_ROUTE_FAILURE_DIAG_AUDIT_PASS")
 print("ANDROID_ARM64_A11_ACTUAL_UID_TO_TUN_PACKET_SCOPE_AUDIT_PASS")
 print("ANDROID_ARM64_ONE_TAP_SELFTEST_STATIC_SCOPE_AND_SHA_AUDIT_PASS")

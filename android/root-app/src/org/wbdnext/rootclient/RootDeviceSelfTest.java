@@ -28,6 +28,22 @@ final class RootDeviceSelfTest {
         for(String allowed:UID_PACKET_EVENTS)if(allowed.equals(code))return true;
         return false;
     }
+    // A12 exclusively emits fixed, credential-free kernel stage/errno classes.
+    private static final String[] UID_PACKET_DIAG_EVENTS={
+        "TUN_INTERFACE_DISAPPEARED",
+        "TUN_ROUTE_ADD_FAIL","TUN_ROUTE_ERR_EINVAL",
+        "TUN_ROUTE_ERR_EPERM","TUN_ROUTE_ERR_DEVICE",
+        "TUN_ROUTE_ERR_EXISTS","TUN_ROUTE_ERR_OTHER",
+        "UID_RULE_ADD_FAIL","UID_RULE_ERR_EINVAL",
+        "UID_RULE_ERR_EPERM","UID_RULE_ERR_EXISTS",
+        "UID_RULE_ERR_OTHER","UID_RULE_SHOW_UNAVAILABLE",
+        "UID_RULE_READBACK_FAIL","TUN_ROUTE_SHOW_UNAVAILABLE",
+        "TUN_ROUTE_READBACK_FAIL"
+    };
+    private static boolean allowedUidPacketDiag(String value){
+        for(String code:UID_PACKET_DIAG_EVENTS)if(code.equals(value))return true;
+        return false;
+    }
     private static final String[] UID_PACKET_EVENTS={
         "ROOT_FAIL","REFUSED","UID_TUN_COLLISION",
         "UID_TUN_CREATE_FAIL","UID_TUN_SETUP_FAIL","UID_TUN_ROUTE_FAIL",
@@ -56,6 +72,13 @@ final class RootDeviceSelfTest {
                 new InputStreamReader(shell.getInputStream(),StandardCharsets.UTF_8))){
                 String line;
                 while((line=reader.readLine())!=null){
+                    if(line.startsWith("WBD_A12_")){
+                        String diagnostic=line.substring("WBD_A12_".length()).trim();
+                        if(allowedUidPacketDiag(diagnostic)&&
+                           !events.contains("A12_"+diagnostic))
+                            events.add("A12_"+diagnostic);
+                        continue;
+                    }
                     if(!line.startsWith("WBD_A11_"))continue;
                     String event=line.substring("WBD_A11_".length()).trim();
                     if(!uidPacketEvent(event))continue;
