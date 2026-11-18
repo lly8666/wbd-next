@@ -4,25 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2136,
-  "checkpoint_sha": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
+  "sequence": 2137,
+  "checkpoint_sha": "dda46b1ba3370d4e71757cdd764610239234cf43",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2136 B5 single signed exact source d4ddd74 Action44201457211 one Windows2025/WSL2 same-VM normal original Rust V3 public both legs 10Mbps each direction 60s A split-off/all then B split-requested/all source-exact identical binaries, CPU/actual first-delivered GiB, process user/kernel RSS and true UDP p99+longest gap, original TCP functional+Stop. At collection cheap PASS, Linux Rust PASS, WinGo/WinRust IN_PROGRESS, native NOT_RUN. B4 H2135 sourceec494 original 3 GUI/Stop full Action SUCCESS, Game4 H2134 source5fc four lanes FEC off MTU1400 full Action SUCCESS. Game2 advanced split unsupported source fail-closed. B5 tcp small-p99 NOT_RUN.",
-  "why_now": "B0–B4 normal/GUI and Game4 signed source-qualified now complete; P-B1 sameVM 10Mbps real throughput CPU/actualGiB with p99 is the sole newly issued bounded performance scene. Do not compare V2 against V3 or claim p99 from functional echo; no old 028 workload matrices.",
+  "current_task": "H2137 029B/029 user-normal scoped closeout; B5 exact source d4ddd74 Action44201457211 full original signed native SUCCESS same VM 60s each-direction10Mbps split-off/all vs split-on/all, 48 zip CRC, both Rust V3 business_split=false with DNS, OS TCP/UDP and Stop, Win CPU/actualGiB 43.0673 vs46.6465 (+8.31% single ordered sample, not causal), peakRSS 46.26MB vs45.45MB, Win UDP p99 47/47ms, Linux 51.315/51.207ms. B4 three GUI Action44198794225 and Game4 four lanes Action44197717052 SUCCESS scoped. Full technical 029B/029 exits OPEN; user-normal limited scope PASS_SCOPED; Game2 split not supported, small TCP p99/PB2/host IPv6 NOT_RUN, 030 NOT_STARTED.",
+  "why_now": "Signed B5 artifact14383100380 SHA256 7dc060... ZIP48 CRC PASS plus original A/B reports exact binary hashes, 100% first delivery, both Stops and Windows+Linux UDP RTT p99. User2026-11-17 forbids needless extreme matrices, scoped closeout documented not full qualification.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect Action44201457211 original SOURCEd4ddd74 all cheap/WinGo/WinRust/LinuxRust/Win2025 native results, two sequential 60s sameVM arms source+binary sha, actual 10Mbps offered/first delivered GiB, CPU per GiB/RSS and 200+ real UDP RTT p99/gap, original TCP functional and both owned Stops; check zip SHA256/CRC. Preserve any true FAIL and TCP small-request p99 NOT_RUN. Then user-normal-scope 029B/029 closeout per plan 20261117, no 030/028 matrix.",
+  "next_action": "No more Actions in user-normal scoped 029/029B. Only user expansion or reproducible issue may reopen: Game2 CN split unsupported; B5 small TCP p99/P-B2 same-exit CN cost; host bound/onlink IPv6; complete off padding/ARM/old029 full contract. Do not initiate 030 or rerun 028/old 029 matrices.",
   "unverified": true,
-  "last_tested_source": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+  "last_tested_source": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2137-H2136-B5-SIGNED-10M-029B-029-NORMAL-SCOPED-CLOSEOUT-20261118.json",
+    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
+    "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029B-H2136-SAMEVM-B5-10MBPS-BOUNDED-TWO-ARM.md",
-    "docs/devlog/M0/20261118-PLAN029B-H2135-THREE-GUI-PARENT-OWNED-STOP-TRUE-PASS.md",
-    "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
+    "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
+    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2135 B4 full signed Normal 3 GUI + actual parent exit/Stop PASS sourceec494 Action44198794225; H2134 Game4 four real Game FEC off advanced CN PASS source5fc Action44197717052. H2136 source d4d bounded sameVM Normal 2x10Mbps no private CI V3 trial one Action44201457211 cheap PASS/Linux Rust PASS/WinGo+Rust still in progress, original native pending. Game2 split:true explicitly rejects before OS Apply source, executed NOT_RUN. B5 TCP small p99 NOT_RUN."
+  "partial_summary": "H2137 user-normal 029B/029 PASS_SCOPED; B5 original Action44201457211 source d4ddd full SUCCESS, 48 CRC, 10Mbps sameVM dual60s A off/all B on/all, CPU/GiB 43.0673/46.6465 (+8.31% one sample, no stable claim), win UDP p99 47/47 Linux 51.315/51.207, Stop both. B4 sourceec494 real3GUI native PASS, Game4 source5fc four lanes FECoff MTU1400 PASS. Full 029/029B technical exit open and untested scopes preserved, 030 not started; no new Actions."
 }

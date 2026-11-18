@@ -1,6 +1,6 @@
 # PLAN029B｜分流按需加载、普通/高级 CN、统一 IPv4 业务政策
 
-状态：**DESIGN_APPROVED / IMPLEMENTATION_NOT_STARTED / PRODUCT_TESTS_NOT_RUN**。2026-11-16 用户授权将本轮讨论整理入库；本次只交付方案，不声明产品已改。实施者 M0，产品仍在 `main` 单写。
+状态：**IMPLEMENTED / USER_NORMAL_SCOPE_PASS_SCOPED / FULL_TECHNICAL_EXIT_OPEN**（2026-11-18 H2137）。2026-11-16原版只交付设计；现已有多份各自SOURCE的签名代表实网回执，不能据此宣称完整§6–7或旧D1–D5/P1–P2合格。M0仍单写`main`。
 
 入口：[029](M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)、[分流/DNS契约](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md)、[029B接续提示词](../prompts/M0-PLAN029B.md)。本方案是029的增量工作包，**在当前已冻结的优化/验收批次安全收尾后接续，纳入029最终收口，030之前完成**；不取消在途Action、不等整个029先关闭，也不借此重开028/弱网全矩阵。
 
@@ -175,3 +175,11 @@ canonical配置/CLI键定为 **`cn-domain-direct`**（boolean）；GUI显示“�
 029B完成需要：§2停用资源真实退出而DNS/padding不丢、§3开关/旧配置迁移与双出口生效、§4所有受管AAAA及真实IPv6入口覆盖、配置/GUI/所有活动模式接线、必要同VM性能保护与owned Stop均有对应证据。未具备的范围明确保留，不以单个绿色Action收口。达到后更新029剩余清单，后续重复提示只恢复新事实，不再自创调优。
 
 参考：[RFC2308 NODATA](https://www.rfc-editor.org/rfc/rfc2308.html)、[RFC9460 HTTPS/SVCB](https://www.rfc-editor.org/rfc/rfc9460.html)、[Linux接口IPv6设置](https://docs.kernel.org/networking/ip-sysctl.html)。引用用于固定语义，不据此宣称当前产品已通过。
+
+## 8. 2026-11-18 H2137｜029B日常范围签名收口
+
+[H2137原始B5与029B限域清单](../evidence/M0/PLAN029B-H2137-H2136-B5-SIGNED-10M-029B-029-NORMAL-SCOPED-CLOSEOUT-20261118.json)记录[Action44201457211](https://github.com/lly8666/wbd-next/actions/runs/44201457211)同VM顺序两档各60秒/双向10Mbps真实源锁A/B：CPU/实际交付GiB 43.0673→46.6465（+8.31%仅一次A→B，不作稳定因果判断），RSS 46,264,320→45,449,216B，Windows UDP p99 47→47ms、Linux 51.315→51.207ms，两档原Rust V3公共DNS/双端真实业务与Stop均PASS。原ZIP48CRC PASS，TCP小请求p99/P-B2 CN同出口CPU比较仍NOT_RUN。
+
+B0–B3组件及签名普通/高级CN、受管AAAA与真实Wintun IPv6/IPv4证据保留；[B4 Action44198794225](https://github.com/lly8666/wbd-next/actions/runs/44198794225)三代真WinForms与Stop及父进程退出SUCCESS；[Game4 Action44197717052](https://github.com/lly8666/wbd-next/actions/runs/44197717052)四lane高级CN、FEC-off、**外层1400非默认1460**SUCCESS。Game2高级split仍明确拒绝，非支持证据；全宿主onlink/绑定IPv6不作阻断保证，P-B2、全部padding组合、当前ARM实网、小TCP p99等仍NOT_RUN。
+
+按2026-11-17用户日常范围修订，**029B与029日常典型使用PASS_SCOPED，停止新Actions**；完整本页§6–7及旧029 D1–D5/P1–P2仍OPEN，历史FAIL/NOT_RUN保留，不启动030。
