@@ -106,7 +106,7 @@ type config struct{
     mixedModes bool
     gameFecEnabled bool
     gameFecProfile uint8
-    startupPaddingMode uint8 // Normal/off + Game cold: 0 off / 1 TLS / 2 flows
+    startupPaddingMode uint8 // client V2 Normal/FEC/Game cold: 0 off, 1 TLS, 2 flows; server CLI not authority
     game4CopyStagger bool
     game4CopyWideStagger bool
     outerMTU int

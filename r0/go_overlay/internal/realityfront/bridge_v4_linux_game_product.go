@@ -30,7 +30,7 @@ type V4LinuxGameProductConfig struct {
     Epochs *V4EpochStore // mandatory only for actual server group
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
-    StartupPaddingMode uint8 // Game: 0 off, 1 TLS-shaped application, 2 TCP/UDP flows
+    StartupPaddingMode uint8 // client V2 choice; server follows authenticated Game lane group, not its CLI default
     OuterIPMTU int // original Go physical/budget upper bound for pad room
     DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
     Game4CopyStagger bool // pre-start 4-lane delayed physical copies

@@ -56,7 +56,7 @@ type V4LinuxServerProductConfig struct {
     // owner is instantiated once per authenticated TLS association.
     PerClientNormalFEC bool
     DisableOuterRepair bool
-    StartupPaddingMode uint8 // selected only for protected Normal kind1
+    StartupPaddingMode uint8 // legacy server CLI default; protected client V2 chooses actual mode
     OuterIPMTU int
     // Zero interval/dead keeps original product defaults 15s/90s.
     // Dormant 0 means no automatic sleep; nonzero policy must have real

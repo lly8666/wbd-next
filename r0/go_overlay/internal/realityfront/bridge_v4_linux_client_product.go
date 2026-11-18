@@ -33,7 +33,7 @@ type V4LinuxClientProductConfig struct {
     FECMode FecV2Mode
     FECProfile FecV2Profile
     DisableOuterRepair bool
-    StartupPaddingMode uint8 // Normal kind1 off/tls/flows
+    StartupPaddingMode uint8 // client protected V2: Normal kind1 or FEC kind2 source off/tls/flows
     OuterIPMTU int // cold original Go complete IPv4 budget
     // Zero interval/dead keeps original product defaults 15s/90s.
     // Dormant 0 means no automatic sleep; nonzero policy must have real
