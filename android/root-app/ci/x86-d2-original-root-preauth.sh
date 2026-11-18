@@ -21,7 +21,7 @@ import json,os
 l=json.loads(Path("out/android-x86-original-linux/manifest.json").read_text())
 a=json.loads(Path("out/android-root-app-native/manifest-ci-x86_64.json").read_text())
 assert l["source"]==a["source"]==os.environ["GITHUB_SHA"]
-assert l["go_donor"]==a["donor_go"]=="a7a82db31fe736ffedee330795a3234d358f1984"
+assert l["donor_go"]==a["donor_go"]=="a7a82db31fe736ffedee330795a3234d358f1984"
 assert l["android_ci_abi"]=="x86_64" and l["linux_arch"]=="amd64"
 assert l["android_go_sha256"]==a["artifacts"]["wbd-v4-client-amd64"]["sha256"]
 assert l["android_rust_sha256"]==a["artifacts"]["libwbd_engine-amd64.so"]["sha256"]
