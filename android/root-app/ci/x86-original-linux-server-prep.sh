@@ -60,6 +60,13 @@ for role in client server;do
   cp "r0/go_overlay/cmd/wbd-v4-$role/main.go" "legacy/cmd/wbd-v4-$role/main.go"
 done
 test ! -e legacy/internal/realityfront/v4_route_prelude.go
+# Exercise exact root-owned all-app kernel UID range commit/readback/Stop
+# against a hostile fake ip(8) runner. Never require Android device root.
+(cd legacy && go test -count=1 ./internal/v4productcli/rootjournal) >"$p/rootjournal-all-app-unit.txt" 2>&1 || {
+  tail -80 "$p/rootjournal-all-app-unit.txt" >&2
+  exit 1
+}
+echo ANDROID_ALL_APP_ROOTJOURNAL_EXACT_ROLLBACK_HOST_PASS
 rustup toolchain install 1.85.1 --profile minimal
 cargo +1.85.1 build --locked --release -p wbd-engine \
   --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record \

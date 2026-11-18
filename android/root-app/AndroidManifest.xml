@@ -10,6 +10,11 @@
     <!-- Android11+ package visibility: only launchable user apps, not
          QUERY_ALL_PACKAGES or raw enumeration of private packages. -->
     <queries>
+        <!-- Narrow visibility for root manager bypass: the app MUST NOT
+             capture KernelSU Manager traffic in all-app route mode. -->
+        <package android:name="me.weishu.kernelsu"/>
+        <package android:name="com.rifsxd.ksunext"/>
+        <package android:name="com.sukisu.ultra"/>
         <intent>
             <action android:name="android.intent.action.MAIN"/>
             <category android:name="android.intent.category.LAUNCHER"/>

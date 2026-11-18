@@ -205,28 +205,36 @@ public final class RootClientService extends Service {
             String sni=intent.getStringExtra("sni");
             String user=intent.getStringExtra("user");
             int port=intent.getIntExtra("port",0);
+            boolean allApps=intent.getBooleanExtra("all_apps",false);
             int[] targetUids=intent.getIntArrayExtra("target_uids");
             String[] targetPackages=intent.getStringArrayExtra("target_packages");
+            int[] excludedAppIDs=intent.getIntArrayExtra("exclude_appids");
+            String[] managerPackages=intent.getStringArrayExtra("manager_packages");
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
+            boolean validatedScope=allApps
+                ? targetUids==null&&targetPackages==null&&
+                  AllAppRouteScope.same(this,excludedAppIDs,managerPackages)
+                : excludedAppIDs==null&&managerPackages==null&&
+                  InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids);
             if(peer==null||sni==null||user==null||
                 !ServerAddress.valid(peer)||
                 sni.length()==0||user.length()==0||
-                port<1||port>65535||
-               !InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)){
-                throw new IllegalArgumentException("Selected installed package/UID group changed or invalid");
+                port<1||port>65535||!validatedScope){
+                throw new IllegalArgumentException("Verified full-app or selected-app scope changed");
             }
             trace(RootDiagnosticReceipt.Event.APP_UID_GROUP_VERIFIED);
             selection=chosen;
             ownerToken=newOwnerToken();
             watchPhysicalNetwork(chosen);
-            watchSelectedPackages(targetPackages);
+            watchSelectedPackages(allApps?managerPackages:targetPackages);
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                 chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("Physical Network changed during callback registration");
             trace(RootDiagnosticReceipt.Event.ROOT_STAGE_REQUESTED);
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
-                port,targetUids,targetPackages,hasCA),"wbd-native-root-owner");
+                port,targetUids,targetPackages,allApps,excludedAppIDs,
+                managerPackages,hasCA),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.START_REFUSED);
@@ -246,6 +254,7 @@ public final class RootClientService extends Service {
     private String launchCommand(NativePayload nativeCode,
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int[] targetUids,
+                                 boolean allApps,int[] excludedAppIDs,
                                  boolean hasCA,String token){
         List<String> args=new ArrayList<>();
         String serverAddressFlag=ServerAddress.isIPv4Literal(peer)?"--peer-ip":"--peer-host";
@@ -272,7 +281,11 @@ public final class RootClientService extends Service {
             "--android-cn-geosite-file",nativeCode.cnGeosite.getAbsolutePath(),
         };
         for(String a:fixed)args.add(q(a));
-        if(targetUids.length==1){
+        if(allApps){
+            args.add(q("--android-route-all-apps"));
+            args.add(q("--android-route-exclude-appids"));
+            args.add(q(AllAppUIDPolicy.csv(excludedAppIDs)));
+        }else if(targetUids.length==1){
             args.add(q("--android-route-uid"));
             args.add(q(Integer.toString(targetUids[0])));
         }else{
@@ -327,7 +340,9 @@ public final class RootClientService extends Service {
         return shell.toString();
     }
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
-                         int port,int[] targetUids,String[] targetPackages,boolean hasCA){
+                         int port,int[] targetUids,String[] targetPackages,
+                         boolean allApps,int[] excludedAppIDs,String[] managerPackages,
+                         boolean hasCA){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
@@ -344,11 +359,13 @@ public final class RootClientService extends Service {
             synchronized(ownerLaunchLock){
                 if(stopping.get())
                     throw new IllegalStateException("Root launch withdrawn before native start");
-                if(!InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids))
-                    throw new IllegalStateException("Selected UID group changed before Root grant");
+                if(!(allApps
+                   ? AllAppRouteScope.same(this,excludedAppIDs,managerPackages)
+                   : InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)))
+                    throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,targetUids,hasCA,ownerToken))
+                    launchCommand(code,net,peer,sni,user,port,targetUids,allApps,excludedAppIDs,hasCA,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);
@@ -436,7 +453,7 @@ public final class RootClientService extends Service {
                     if(uidReady&&nativeReady&&!stopping.get()&&!readyRecorded){
                         readyRecorded=true;
                         trace(RootDiagnosticReceipt.Event.NATIVE_M4_AND_UID_READY);
-                        status="NATIVE_M4_READY + OWNED_UID_GROUP_READBACK; real Android traffic unverified";
+                        status="NATIVE_M4_READY + VERIFIED_UID_ROUTE_READBACK; real Android traffic unverified";
                     }
                     // Deliberately don't echo username, auth errors, route
                     // key, password, TLS transcript or full native stdout.

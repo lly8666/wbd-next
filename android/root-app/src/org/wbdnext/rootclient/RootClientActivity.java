@@ -36,6 +36,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort;
     private Spinner networks;
+    private CheckBox allAppsDefault;
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult;
     private final AtomicBoolean deviceSelfTestActive=new AtomicBoolean(false);
@@ -144,17 +145,30 @@ public final class RootClientActivity extends Activity {
             String secret=password.getText().toString();
             String key=routeKey.getText().toString().trim();
             String pem=caPEM.getText().toString().trim();
-            ArrayList<InstalledAppTarget> chosenApps=new ArrayList<>();
-            for(InstalledAppTarget app:installedApps){
-                CheckBox cb=checkedApps.get(app.packageName);
-                if(cb!=null&&cb.isChecked())chosenApps.add(app);
+            // Default is full ordinary App UID takeover AFTER true WBD
+            // TLS/authenticated /32 and Rust M4. No pre-auth route mutation,
+            // no Android system/root UID, VPN, fake-IP or system DNS.
+            boolean allApps=allAppsDefault.isChecked();
+            SelectedAppGroup chosen=null;
+            AllAppRouteScope entire=null;
+            if(allApps){
+                entire=AllAppRouteScope.snapshot(this);
+                if(!AllAppRouteScope.same(this,entire.excludedAppIDs,
+                    entire.managerPackages))
+                    throw new IllegalArgumentException("Root Manager app identity changed");
+            }else{
+                ArrayList<InstalledAppTarget> chosenApps=new ArrayList<>();
+                for(InstalledAppTarget app:installedApps){
+                    CheckBox cb=checkedApps.get(app.packageName);
+                    if(cb!=null&&cb.isChecked())chosenApps.add(app);
+                }
+                if(chosenApps.isEmpty())
+                    throw new IllegalArgumentException("Select an installed App or restore all-app mode");
+                chosen=SelectedAppGroup.from(chosenApps,
+                    android.os.Process.myUid(),getPackageName());
+                if(!InstalledAppCatalog.stillSameGroup(this,chosen.packages,chosen.uids))
+                    throw new IllegalArgumentException("Selected package/UID changed; refresh");
             }
-            if(chosenApps.isEmpty())
-                throw new IllegalArgumentException("Select one installed App first; use One-Tap Self-Test without server settings");
-            SelectedAppGroup chosen=SelectedAppGroup.from(
-                chosenApps,android.os.Process.myUid(),getPackageName());
-            if(!InstalledAppCatalog.stillSameGroup(this,chosen.packages,chosen.uids))
-                throw new IllegalArgumentException("Selected package/UID changed; refresh");
             int port=Integer.parseInt(serverPort.getText().toString().trim());
             if(!ServerAddress.valid(peer))
                 throw new IllegalArgumentException("Invalid real WBD server IPv4/DNS name; use One-Tap Self-Test if no server");
@@ -188,8 +202,14 @@ public final class RootClientActivity extends Activity {
             request.putExtra("port",port);
             request.putExtra("sni",sni);
             request.putExtra("user",account);
-            request.putExtra("target_uids",chosen.uids);
-            request.putExtra("target_packages",chosen.packages);
+            request.putExtra("all_apps",allApps);
+            if(allApps){
+                request.putExtra("exclude_appids",entire.excludedAppIDs);
+                request.putExtra("manager_packages",entire.managerPackages);
+            }else{
+                request.putExtra("target_uids",chosen.uids);
+                request.putExtra("target_packages",chosen.packages);
+            }
             request.putExtra("has_ca",!pem.isEmpty());
             startForegroundService(request);
             status.setText("Root start requested; awaiting actual native Go proof");
@@ -252,15 +272,22 @@ public final class RootClientActivity extends Activity {
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
         TextView targetHelp=new TextView(this);
-        targetHelp.setText("Select up to 16 visible installed packages with at most 8 "
-            +"distinct kernel UIDs for this ONE authenticated WBD session. "
-            +"Packages sharing one UID are inseparable: selecting one UID routes ALL "
-            +"packages using that UID. System/root and this controller are excluded. "
-            +"Normal/off only; DNS and split/direct modes are NOT YET implemented.");
+        targetHelp.setText("默认代理所有普通 Android App（20 个 Android 用户空间的应用 UID 段）。"
+            +"仅在原 Go TLS/认证 /32、原 Rust M4 就绪后设置 KernelSU UID 路由。"
+            +"系统/root/隔离 UID、WBD 自身及已识别 KernelSU Manager 绕过，"
+            +"物理网络出口不经隧道。系统 DNS、系统进程全局接管尚未验证，当前不启用。"
+            +"取消全应用模式后，可选择最多 8 个实际 App UID。");
         pane.addView(targetHelp);
+        allAppsDefault=new CheckBox(this);
+        allAppsDefault.setText("默认：代理所有普通应用（排除 WBD/KernelSU/系统 UID）");
+        allAppsDefault.setChecked(true);
+        pane.addView(allAppsDefault);
         appChoices=new LinearLayout(this);
         appChoices.setOrientation(LinearLayout.VERTICAL);
         pane.addView(appChoices);
+        allAppsDefault.setOnCheckedChangeListener((button,checked)->
+            appChoices.setVisibility(checked?View.GONE:View.VISIBLE));
+        appChoices.setVisibility(View.GONE);
         Button refreshApps=new Button(this);
         refreshApps.setText("Refresh installed applications");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());

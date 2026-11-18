@@ -22,13 +22,18 @@ import (
 func androidRootRouteAfterNative(
     c config,tun *ownedTun,authenticatedLease string,
 )(func()error,error){
-    if c.androidRouteUID==0&&len(c.androidRouteUIDs)==0{return nil,nil}
+    if !c.androidRouteAllApps&&c.androidRouteUID==0&&len(c.androidRouteUIDs)==0{return nil,nil}
     if os.Geteuid()!=0{return nil,fmt.Errorf("Android root route requires effective uid 0")}
     if tun==nil||tun.f==nil||c.androidNetworkHandle==0||
        c.androidPhysicalMTU<576{
         return nil,fmt.Errorf("Android root route needs a real authenticated session/Network")
     }
-    if len(c.androidRouteUIDs)>0{
+    if c.androidRouteAllApps{
+        if c.androidRouteUID!=0||len(c.androidRouteUIDs)!=0||
+            !rootjournal.ValidAllAppExclusions(c.androidRouteExcludeAppIDs){
+            return nil,fmt.Errorf("Android all-app routing requires canonical own+manager app IDs")
+        }
+    }else if len(c.androidRouteUIDs)>0{
         if c.androidRouteUID!=0||!rootjournal.ValidGroupUIDs(c.androidRouteUIDs){
             return nil,fmt.Errorf("Android group route must contain 2..8 distinct sorted ordinary App UIDs")
         }
@@ -71,6 +76,22 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
+    if c.androidRouteAllApps{
+        full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
+            ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
+            Tun:tun.name,Lease:lease.String(),Underlay:c.rawInterface,
+            NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
+        })
+        if e!=nil{return nil,e}
+        // Published only AFTER all bounded kernel uidrange rules (every
+        // ordinary App UID in the 20 supported profiles, excluding owner
+        // and KSU Manager IDs) have exact OS readback.
+        fmt.Fprintf(os.Stderr,
+            "V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED mode=all_apps table=%d lease=%s physical_ifindex=%d network_handle=%s\n",
+            rootjournal.Table,lease,physical.Index,
+            strconv.FormatUint(c.androidNetworkHandle,10))
+        return full.Stop,nil
+    }
     if len(c.androidRouteUIDs)>0{
         group,e:=rootjournal.NewGroup(runner,rootOnlyJournal,rootjournal.GroupPlan{
             UIDs:append([]int(nil),c.androidRouteUIDs...),

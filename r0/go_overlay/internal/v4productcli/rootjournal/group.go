@@ -206,7 +206,7 @@ func readOwnedJournalVersion(path string)(int,bool,error){
  raw,err:=io.ReadAll(io.LimitReader(f,maxJournalBytes+1))
  if err!=nil{return 0,false,err}
  if err=json.Unmarshal(raw,&envelope);err!=nil{return 0,false,err}
- if envelope.Version!=version&&envelope.Version!=groupVersion{
+ if envelope.Version!=version&&envelope.Version!=groupVersion&&envelope.Version!=allAppsVersion{
   return 0,false,fmt.Errorf("foreign root journal version")}
  return envelope.Version,true,nil
 }

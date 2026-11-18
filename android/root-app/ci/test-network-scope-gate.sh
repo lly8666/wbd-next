@@ -21,6 +21,10 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/ci/SelectedAppGroupTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.SelectedAppGroupTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/ci/AllAppUIDPolicyTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.AllAppUIDPolicyTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/ci/ServerAddressTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.ServerAddressTest
@@ -52,7 +56,11 @@ assert "postDelayed(" not in s, "no 1-second steady Network watcher"
 assert "getNetworkCapabilities(" not in s and "getLinkProperties(" not in s, "no synchronous ConnectivityManager lookup inside callback"
 assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; never fold generation into oldstart"
 assert s.count('InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)')>=2, "multi UID identity rechecked on Service and pre-su"
-assert 'watchSelectedPackages(targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw group on package events"
+assert 'watchSelectedPackages(allApps?managerPackages:targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw selected group or manager exclusions on package events"
+assert 'AllAppRouteScope.same(this,excludedAppIDs,managerPackages)' in s, "verify full-app owner+manager UID exclusions before su"
+assert '"--android-route-all-apps"' in s and '"--android-route-exclude-appids"' in s, "production source-locked Go full-app routing"
+assert 'AllAppUIDPolicy.csv(excludedAppIDs)' in s, "only canonical app ID exclusions"
+
 assert '"--android-route-uids"' in s and '"--android-route-uid"' in s, "real original Go CLI group and one-UID flags"
 assert 'ServerAddress.isIPv4Literal(peer)?"--peer-ip":"--peer-host"' in s
 assert 'ServerAddress.valid(peer)' in s
@@ -61,9 +69,19 @@ assert 'target_packages' in a and 'target_uids' in a
 assert 'SelectedAppGroup.from(' in a and 'InstalledAppCatalog.stillSameGroup(' in a
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
 assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
+assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android applications are the product UI default"
+assert 'AllAppRouteScope.snapshot(this)' in a and 'all_apps' in a, "default mode must pass verified scopes not fake overlay"
+
 assert 'ServerAddress.valid(peer)' in a and 'Server underlay IPv4 or DNS name' in a
 go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
 assert 'rootjournal.NewGroup(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=' in go
+assert 'rootjournal.NewAllApps(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED mode=all_apps' in go
+assert 'androidRouteAllApps' in cold and 'android-route-all-apps' in cold
+allapp=Path("r0/go_overlay/internal/v4productcli/rootjournal/allapps.go").read_text()
+assert 'func NewAllApps(' in allapp and 'requireReady(original)' in allapp and 'readOwnedJournalVersion(' in allapp
+assert 'AllAppIDMin = 10000' in allapp and 'AllAppIDMax = 19999' in allapp
+assert 'allMaxUserProfiles = 20' in allapp and 'ExcludedAppIDs' in allapp
+
 j=Path("r0/go_overlay/internal/v4productcli/rootjournal/group.go").read_text()
 assert 'func NewGroup(' in j and 'readOwnedJournalVersion(' in j and 'groupRuleState(' in j
 # B2b source-lock: an actual signed asset is verified and handed as an

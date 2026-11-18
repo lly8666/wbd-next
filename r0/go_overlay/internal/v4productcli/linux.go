@@ -126,6 +126,8 @@ type config struct{
     androidPhysicalMTU uint32 // same interface cold readback
     androidRouteUID int // legacy single ordinary App UID; never root/global
     androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
+    androidRouteAllApps bool // ordinary app UID ranges, no root/system/main FIB
+    androidRouteExcludeAppIDs []int // own + KernelSU manager per-user app ID exclusions
     // Signed APK's verified offline CN list only, not live DNS capture.
     androidCNSnapshot *dnsnative.CNRules
     // Constructed from selected kernel interface and Android Network netId
@@ -210,6 +212,25 @@ func parseAndroidRouteGroupArg(s string)([]int,error){
     }
     return uids,nil
 }
+// Canonical per-user application IDs, never arbitrary system/root UID ranges.
+func parseAndroidExcludedAppIDsArg(text string)([]int,error){
+    if text==""{return nil,fmt.Errorf("all-app routing needs owner+root-manager exclusions")}
+    parts:=strings.Split(text,",")
+    if len(parts)<2||len(parts)>8{return nil,fmt.Errorf("bounded exclusions require 2..8 app IDs")}
+    result:=make([]int,0,len(parts))
+    previous:=0
+    for _,token:=range parts{
+        if token==""||strings.TrimSpace(token)!=token{
+            return nil,fmt.Errorf("invalid excluded app ID token")
+        }
+        v,e:=strconv.Atoi(token)
+        if e!=nil||v<10000||v>19999||v<=previous{
+            return nil,fmt.Errorf("excluded app IDs must be unique sorted 10000..19999")
+        }
+        result=append(result,v);previous=v
+    }
+    return result,nil
+}
 
 func parse(role string,args []string)(config,error){
     var c config
@@ -221,7 +242,11 @@ func parse(role string,args []string)(config,error){
     androidRouteUID:=flags.Int("android-route-uid",0,
         "Android ARM64 Root ONLY: one app UID (>=10000) routed after original TLS/lease/M4, 0 disables routing")
     androidRouteGroup:=flags.String("android-route-uids","",
-        "Android ARM64 Root ONLY: canonical 2..8 ascending, distinct ordinary App UIDs; mutually exclusive with --android-route-uid")
+        "Android Root: canonical 2..8 ordinary App UIDs; mutually exclusive with single and all-apps")
+    androidRouteAll:=flags.Bool("android-route-all-apps",false,
+        "Android Root after authenticated lease/M4: route ordinary App UIDs in 20 profiles, never system/root")
+    androidRouteExclude:=flags.String("android-route-exclude-appids","",
+        "Android all-apps: mandatory canonical excluded controller+root-manager app IDs (10000..19999)")
     cnGeositeFile:=flags.String("android-cn-geosite-file","",
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
     ip:=flags.String("local-ip","","underlay local IPv4")
@@ -285,9 +310,20 @@ func parse(role string,args []string)(config,error){
         if *androidRouteUID!=0&&*androidRouteGroup!=""{
             return c,fmt.Errorf("Android single and group UID route flags are mutually exclusive")
         }
+        if *androidRouteAll&&(*androidRouteUID!=0||*androidRouteGroup!=""){
+            return c,fmt.Errorf("Android all-app and selected-app routing are mutually exclusive")
+        }
+        if !*androidRouteAll&&*androidRouteExclude!=""{
+            return c,fmt.Errorf("Android exclude IDs require all-app mode")
+        }
         var e error
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
+        if *androidRouteAll{
+            c.androidRouteExcludeAppIDs,e=parseAndroidExcludedAppIDsArg(*androidRouteExclude)
+            if e!=nil{return c,e}
+            c.androidRouteAllApps=true
+        }
         if *cnGeositeFile!=""{
             c.androidCNSnapshot,e=dnsnative.ReadPinnedCNFile(*cnGeositeFile)
             if e!=nil{
@@ -295,7 +331,7 @@ func parse(role string,args []string)(config,error){
             }
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
-             *androidRouteGroup!=""||*cnGeositeFile!=""||*peerHost!=""{
+             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1495,7 +1531,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // Android grant ONE app UID a dedicated private route. Never a global
     // default/main-table route, VpnService, FakeIP or early pre-auth grant.
     var undoRootRoute func()error
-    if runtime.GOOS=="android"&&(c.androidRouteUID!=0||len(c.androidRouteUIDs)>0){
+    if runtime.GOOS=="android"&&(c.androidRouteAllApps||c.androidRouteUID!=0||len(c.androidRouteUIDs)>0){
         var authorizedLease string
         if authenticated==nil{
             return errors.Join(fmt.Errorf("missing real authenticated lease session"),native.Close())
