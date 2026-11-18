@@ -72,10 +72,30 @@ fi
 test -c /dev/net/tun || { phase=ENV_BLOCKED_DEV_NET_TUN;exit 12; }
 command -v ip >/dev/null || { phase=ENV_BLOCKED_IPROUTE2;exit 13; }
 command -v sudo >/dev/null || { phase=ENV_BLOCKED_SUDO;exit 14; }
-test -n "$ANDROID_HOME" && test -x "$ANDROID_HOME/emulator/emulator" || {
- phase=ENV_BLOCKED_EMULATOR_BINARY
+# A fresh hosted Ubuntu runner can have cmdline-tools but not yet the
+# emulator package. The proven KSU job installs an Android system image
+# (which pulls the emulator); this host-only admission installs ONLY the
+# emulator binary, not an AVD, manager, phone image or guest network.
+if [[ -z "$ANDROID_HOME" ]];then
+ phase=ENV_BLOCKED_SDK_HOME
  exit 15
-}
+fi
+if [[ ! -x "$ANDROID_HOME/emulator/emulator" ]];then
+  sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+  if [[ ! -x "$sdkmanager" ]];then
+    phase=ENV_BLOCKED_SDKMANAGER
+    exit 15
+  fi
+  if ! printf 'y\n' | "$sdkmanager" "emulator" >"$out/emulator-install-private.txt" 2>&1;then
+    phase=ENV_BLOCKED_EMULATOR_INSTALL
+    exit 15
+  fi
+  rm -f "$out/emulator-install-private.txt"
+fi
+if [[ ! -x "$ANDROID_HOME/emulator/emulator" ]];then
+  phase=ENV_BLOCKED_EMULATOR_BINARY
+  exit 15
+fi
 # Advertised API support only, NOT a proven guest TAP boot.
 if timeout 20s "$ANDROID_HOME/emulator/emulator" -help-net-tap >"$out/tap-help-private.txt" 2>&1 &&
    grep -Fq -- '-net-tap' "$out/tap-help-private.txt";then
