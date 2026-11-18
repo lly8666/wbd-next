@@ -337,6 +337,8 @@ pub struct GameAdapter{
     startup_padding:Option<TunnelStartupPadding>,
     #[cfg(any(target_os="windows",test))]
     startup_pad_wire_limit:usize,
+    #[cfg(any(target_os="windows",test))]
+    startup_pad_last_gc_ms:u64,
     health_origin:Instant,health:Arc<AuthenticatedActivity>,
     #[cfg(feature="fec2_product_record")]
     fec:Option<GameFecTx>,
@@ -407,7 +409,11 @@ impl GameAdapter{
             original_suite:suite,
             wire_scratch:[0u8;2048],
             #[cfg(any(target_os="windows",test))]
-            startup_padding:None,startup_pad_wire_limit:0,
+            startup_padding:None,
+            #[cfg(any(target_os="windows",test))]
+            startup_pad_wire_limit:0,
+            #[cfg(any(target_os="windows",test))]
+            startup_pad_last_gc_ms:0,
             health_origin,health,
             #[cfg(feature="fec2_product_record")]
             fec:None})
@@ -555,12 +561,14 @@ impl GameAdapter{
     pub(crate) fn set_native_startup_padding(&mut self,mode:StartupMode,
         epoch:[u8;16],outer_path_mtu:usize){
         if mode==StartupMode::Off{
-            self.startup_padding=None;self.startup_pad_wire_limit=0;return
+            self.startup_padding=None;self.startup_pad_wire_limit=0;
+            self.startup_pad_last_gc_ms=0;return
         }
         let a=u64::from_be_bytes(epoch[..8].try_into().unwrap());
         let b=u64::from_be_bytes(epoch[8..].try_into().unwrap());
         self.startup_padding=Some(TunnelStartupPadding::new(
             mode,a^b^0x574244_47414d45));
+        self.startup_pad_last_gc_ms=0;
         // The original Game per-lane AEAD limit and physical 40B TCP/IP
         // frame bound every extra encrypted byte (FEC and Game headers stay).
         self.startup_pad_wire_limit=outer_path_mtu.saturating_sub(40)
@@ -713,13 +721,14 @@ impl GameAdapter{
     /// Real Linux M4 kernel copy reports directly through drain().
     /// Windows original Go must FIRST stage immutable ciphertext, then
     /// report the actual Npcap syscall result by scoped Game logical ID.
-    pub fn drain<F>(&mut self,now:MonoNs,kernel_copy:F)->usize
+    pub fn drain<F>(&mut self,now:MonoNs,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
-        self.drain_dispatch(now,true,kernel_copy)
+        self.drain_dispatch(now,true,|lane,id,pn,wire,_pad|
+            kernel_copy(lane,id,pn,wire))
     }
     #[cfg(feature="fec2_product_record")]
     pub(crate) fn stage_for_windows_native<F>(&mut self,now:MonoNs,stage:F)->usize
-    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
+    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8],usize)->bool{
         self.drain_dispatch(now,false,stage)
     }
     // Game logical sources carry a 16B envelope. FEC wraps the original
@@ -735,8 +744,16 @@ impl GameAdapter{
     }
     fn drain_dispatch<F>(&mut self,now:MonoNs,
         copied_by_native_kernel:bool,mut kernel_copy:F)->usize
-    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
+    where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8],usize)->bool{
         if self.stopped{return 0}
+        #[cfg(any(target_os="windows",test))]
+        if let Some(p)=self.startup_padding.as_mut(){
+            let ms=now.0/1_000_000;
+            if ms.saturating_sub(self.startup_pad_last_gc_ms)>=1000{
+                self.startup_pad_last_gc_ms=ms;
+                p.expire_coarse(ms); // existing TX tick, no new timer
+            }
+        }
         let lanes=&mut self.lanes;
         let scratch=&mut self.wire_scratch;
         #[cfg(any(target_os="windows",test))]
@@ -775,7 +792,7 @@ impl GameAdapter{
             wire[14..14+len].copy_from_slice(view.common_payload);
             let Ok((pn,n))=lane.tx.seal_in_place(1,wire,len,pad)
             else{return DispatchOutcome::PressureDrop};
-            if kernel_copy(view.lane,id,pn,&wire[..n]){
+            if kernel_copy(view.lane,id,pn,&wire[..n],pad){
                 #[cfg(feature="fec2_product_record")]
                 if copied_by_native_kernel {
                     if let Some(f)=fec.as_mut(){f.copied(id);}
@@ -817,6 +834,8 @@ impl GameAdapter{
         #[cfg(feature="fec2_product_record")]
         if let Some(f)=self.fec.as_mut(){f.stop()}
         self.tx.stop();self.arena.stop();self.arena.drain_returns();
+        #[cfg(any(target_os="windows",test))]
+        {self.startup_padding=None;self.startup_pad_wire_limit=0;}
         if let Ok(mut receiver)=self.rx_owner.lock(){receiver.stop();}
     }
 }
@@ -835,6 +854,81 @@ mod tests{
                 generation:7},mss:1400},
             tx:keys((i+1) as u8),rx:keys((i+1) as u8)
         }).collect(),RecordSuite::ChaCha20Poly1305).unwrap()
+    }
+    fn game_padding_udp()->Vec<u8>{
+        let mut p=vec![0u8;44];p[0]=0x45;
+        p[2..4].copy_from_slice(&44u16.to_be_bytes());p[8]=64;p[9]=17;
+        p[12..16].copy_from_slice(&[10,66,0,2]);
+        p[16..20].copy_from_slice(&[198,51,100,33]);
+        p[20..22].copy_from_slice(&40555u16.to_be_bytes());
+        p[22..24].copy_from_slice(&443u16.to_be_bytes());
+        p[24..26].copy_from_slice(&24u16.to_be_bytes());p
+    }
+    fn game_padding_tls()->Vec<u8>{
+        let mut p=vec![0u8;50];p[0]=0x45;
+        p[2..4].copy_from_slice(&50u16.to_be_bytes());p[8]=64;p[9]=6;
+        p[12..16].copy_from_slice(&[10,66,0,2]);
+        p[16..20].copy_from_slice(&[198,51,100,33]);
+        p[20..22].copy_from_slice(&40555u16.to_be_bytes());
+        p[22..24].copy_from_slice(&443u16.to_be_bytes());
+        p[32]=0x50;p[40..45].copy_from_slice(&[22,3,3,0,5]);p
+    }
+    #[test]
+    fn game2_original_aead_startup_padding_off_tls_flows_and_mtu(){
+        let udp=game_padding_udp();let tcp=game_padding_tls();
+        for (mode,pkt,expect_pad) in [
+            (StartupMode::Off,&udp,false),
+            (StartupMode::Tls,&udp,false),
+            (StartupMode::Tls,&tcp,true),
+            (StartupMode::Flows,&udp,true),
+        ]{
+            let mut game=build(2);
+            game.set_native_startup_padding(mode,[7;16],1460);
+            let base=31+16+pkt.len();let mut oversized=false;
+            let mut delivered=0usize;
+            for i in 0..8{
+                let now=MonoNs(100_000_000+i*10_000_000);
+                game.offer(pkt,now).unwrap();
+                let mut wires=Vec::new();
+                game.drain(now,|lane,_,_,wire|{
+                    wires.push((lane,wire.to_vec()));true
+                });
+                assert!(!wires.is_empty());
+                for (lane,wire) in wires{
+                    assert!(wire.len()<=1400);
+                    oversized|=wire.len()>base;
+                    let received=game.receive(lane,wire).unwrap();
+                    if let Some(bytes)=received{
+                        assert_eq!(bytes,pkt.as_slice());delivered+=1;
+                    }
+                }
+            }
+            assert_eq!(oversized,expect_pad,"mode={mode:?}");
+            assert_eq!(delivered,8,"original authenticated first delivery");
+            game.stop();
+        }
+    }
+    #[cfg(feature="fec2_product_record")]
+    #[test]
+    fn game4_fixed_fec_source_padding_not_parity_original_aead_mtu(){
+        let udp=game_padding_udp();
+        let mut game=build(4);
+        game.configure_game4_stagger().unwrap();
+        game.enable_game_fec(3,false).unwrap();
+        game.set_native_startup_padding(StartupMode::Flows,[8;16],1460);
+        let base=31+16+1+10+udp.len();
+        let mut padded_source=false;
+        for i in 0..8{
+            let now=MonoNs(100_000_000+i*10_000_000);
+            game.offer(&udp,now).unwrap();
+            game.drain(now,|_,_,_,wire|{
+                assert!(wire.len()<=1400);
+                padded_source|=wire.len()>base;
+                true
+            });
+        }
+        assert!(padded_source,"Game4 FEC typed source stayed unpadded");
+        game.stop();
     }
     #[test]
     fn game_health_kind0_has_authenticated_PN_but_no_game_delivery(){

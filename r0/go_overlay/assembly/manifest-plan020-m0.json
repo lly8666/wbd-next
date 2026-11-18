@@ -339,7 +339,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "e7afe322bfd5c7b1d77308caab04706e82891ec3",
+      "result_blob": "e5e8a965d62ece18aadc613b008494808e24738f",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -468,6 +468,10 @@
         {
           "find": "\"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2/4在FEC关闭或固定档已验CN分流。保存后重新连接生效\"",
           "replace": "\"关闭仍保留原Rust隧道和公共DNS及startup-padding，不分配Direct/FakeIP资源；开启后按route-mode作IP分流。CN域名默认仅选择直连DNS，高级FakeIP需另开；Game2/4在FEC关闭或固定档已验CN分流。重连生效\""
+        },
+        {
+          "find": "只对Normal原始隧道M1加密记录生效",
+          "replace": "对Normal与Game2/4原始隧道加密记录生效（Fixed/Auto除外）"
         }
       ]
     },
@@ -475,7 +479,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "e27cba4496e4c687f1029247ac9400f33a3aea6c",
+      "result_blob": "f7cc085145f5ad479ce1e88b8c1d5597faeb2384",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -648,6 +652,14 @@
         {
           "find": "else if (c is ComboBox) { var box = (ComboBox)c; box.SelectedItem = box.Items.Cast<Choice>().FirstOrDefault(x => x.Value == Convert.ToString(value)); }",
           "replace": "else if (c is ComboBox) { var box = (ComboBox)c; string choice=Convert.ToString(value); if (key==\"startup-padding\" && choice==\"\") choice=\"off\"; box.SelectedItem = box.Items.Cast<Choice>().FirstOrDefault(x => x.Value == choice); }"
+        },
+        {
+          "find": "仅TLS启动 · Normal",
+          "replace": "仅TLS启动 · Normal/Game2/4"
+        },
+        {
+          "find": "所有TCP/UDP新流 · Normal",
+          "replace": "所有TCP/UDP新流 · Normal/Game2/4"
         }
       ]
     },
@@ -815,7 +827,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "4aa96a983817595e1a7409c95754651bf67ce4d6",
+      "result_blob": "b49a1c81fd9b123918ea06d8252bff0b0910892e",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -870,6 +882,14 @@
         {
           "find": "      \"cn-rules-file\": {",
           "replace": "      \"cn-domain-direct\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"advanced CN FakeIP; fresh profile false, existing saved JSON missing key migrates to true; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {"
+        },
+        {
+          "find": "canonical Normal original Rust M1 Tunnel-only startup padding",
+          "replace": "canonical Normal/Game2/4 original Rust M1 Tunnel-only startup padding"
+        },
+        {
+          "find": "Game startup padding not wired",
+          "replace": "Game startup padding off/tls/flows uses authenticated Rust V5 cold attach"
         }
       ]
     },
@@ -1248,7 +1268,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "cff8876190a92effb7bb4d9366569e74b4e56be1"
+      "result_blob": "de79506497ae0ea74bcf7ba29212f5e5fe27a2bf"
     },
     {
       "kind": "create",
@@ -1338,7 +1358,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "1265dc61ad43da814374165d0bed8c2d7bbcb2a2"
+      "result_blob": "fbbaf5a5c5f1ef0507202dc67e8eb632cc007d73"
     },
     {
       "kind": "create",
@@ -1446,7 +1466,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
-      "result_blob": "b46f3dbe3c3898e3772e0a9ff660a62b08016ed4"
+      "result_blob": "6a206036ccbfedb8423cffdc981fb63b9b33148b"
     },
     {
       "kind": "create",

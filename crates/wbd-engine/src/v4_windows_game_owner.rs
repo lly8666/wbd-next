@@ -10,7 +10,7 @@ use wbd_types::{MonoNs,LaneKey,TunnelKey};
 
 #[cfg(feature="fec2_product_record")]
 #[derive(Clone,Copy)]
-struct WinGameStagedRecord{lane:u32,id:u64,pn:u64}
+struct WinGameStagedRecord{lane:u32,id:u64,pn:u64,pad:u16}
 #[cfg(feature="fec2_product_record")]
 pub(super) fn native_game_health_context(
     group:&WinGameGroup
@@ -39,6 +39,8 @@ pub(super) struct WinGameGroup {
     fec_pending:Vec<Option<crate::v4_game_lane::PreparedGameFecBatch>>,
     #[cfg(feature="fec2_product_record")]
     staged:Vec<WinGameStagedRecord>,
+    #[cfg(feature="fec2_product_record")]
+    pad_npf_records:u64,pad_npf_bytes:u64,
 }
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -109,6 +111,8 @@ pub(super) fn join(
         fec_pending:(0..handles.len()).map(|_|None).collect(),
         #[cfg(feature="fec2_product_record")]
         staged:Vec::with_capacity(16),
+        #[cfg(feature="fec2_product_record")]
+        pad_npf_records:0,pad_npf_bytes:0,
     })));
     Ok(group)
 }
@@ -140,6 +144,10 @@ fn stopped_group(r:&mut Registry,h:u64)->i32{
             tx.tx_native_quanta,tx.tx_scalar_quanta,
             rx.rx_native_decodes,rx.rx_scalar_decodes);
     }
+    #[cfg(feature="fec2_product_record")]
+    eprintln!("WBD_PLAN029_GAME_PADDING_NPF_RECEIPT mode={} lanes={} copied_records={} copied_bytes={} source=original_Game_M4_authenticated_NPF_accepted",
+        game.adapter.native_startup_padding_mode(),game.lanes.len(),
+        game.pad_npf_records,game.pad_npf_bytes);
     game.adapter.stop();
     for lane in &game.lanes{
         let Ok(mut e)=lane.lock()else{return STOP_INCOMPLETE};
@@ -312,10 +320,12 @@ fn offer_group(
     game.adapter.offer(payload,now).map_err(|_|INVALID)?;
     let mut out=Vec::with_capacity(game.handles.len());
     #[cfg(feature="fec2_product_record")]
+    let mut pads=Vec::with_capacity(game.handles.len());
+    #[cfg(feature="fec2_product_record")]
     let sent=game.adapter.stage_for_windows_native(
-        MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire|{
+        MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire,pad|{
             if let Some(record)=game_record(lane,id,pn,wire){
-                out.push(record);true
+                out.push(record);pads.push(pad as u16);true
             }else{false}
         });
     #[cfg(not(feature="fec2_product_record"))]
@@ -330,8 +340,8 @@ fn offer_group(
     // requiring all lanes here creates a false group-level HOL failure.
     if sent>game.handles.len()||out.len()!=sent{return Err(BAD_STAGE)}
     #[cfg(feature="fec2_product_record")]
-    game.staged.extend(out.iter().map(|r|WinGameStagedRecord{
-        lane:r.lane,id:r.logical_id,pn:r.pn,
+    game.staged.extend(out.iter().zip(pads).map(|(r,pad)|WinGameStagedRecord{
+        lane:r.lane,id:r.logical_id,pn:r.pn,pad,
     }));
     Ok(out)
 }
@@ -353,15 +363,16 @@ pub(super) fn game_fec_poll_group(
         game.adapter.poll_game_fec(now).map_err(|_|BAD_STAGE)?;
     }
     let mut out=Vec::with_capacity(capacity);
+    let mut pads=Vec::with_capacity(capacity);
     let _=game.adapter.stage_for_windows_native(
-        MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire|{
+        MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire,pad|{
             if out.len()>=capacity{return false}
             if let Some(record)=game_record(lane,id,pn,wire){
-                out.push(record);true
+                out.push(record);pads.push(pad as u16);true
             }else{false}
         });
-    game.staged.extend(out.iter().map(|r|WinGameStagedRecord{
-        lane:r.lane,id:r.logical_id,pn:r.pn,
+    game.staged.extend(out.iter().zip(pads).map(|(r,pad)|WinGameStagedRecord{
+        lane:r.lane,id:r.logical_id,pn:r.pn,pad,
     }));
     Ok(out)
 }
@@ -373,7 +384,11 @@ pub(super) fn game_m4_result_group(game:&mut WinGameGroup,h:u64,lane:u32,
         !e.device.is_some_and(|d|!d.quiesced))){return BAD_STAGE}
     let Some(pos)=game.staged.iter().position(|r|
         r.lane==lane&&r.id==logical_id&&r.pn==pn)else{return BAD_STAGE};
-    game.staged.swap_remove(pos);
+    let staged=game.staged.swap_remove(pos);
+    if sent && staged.pad>0{
+        game.pad_npf_records=game.pad_npf_records.saturating_add(1);
+        game.pad_npf_bytes=game.pad_npf_bytes.saturating_add(u64::from(staged.pad));
+    }
     if sent && game.adapter.has_game_fec() {
         game.adapter.note_windows_native_m4_copy(
             wbd_types::LogicalPacketId(logical_id));
