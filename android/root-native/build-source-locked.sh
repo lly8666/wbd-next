@@ -277,7 +277,7 @@ result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_
 "android_abis":["arm64"],"ci_only_abis":["x86_64"],"go_os":"android","android_api":28,
 "go_build_tags":"wbd_v4_embedded_go","go_fec_game_native":"NOT_COMPILED_UNSUPPORTED",
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
-"elf":elf(x) if x.name.endswith(".so") or x.name=="wbd-v4-client-arm64" else None} for x in art},
+"elf":elf(x) if x.name.endswith(".so") or x.name in ("wbd-v4-client-arm64","wbd-v4-client-amd64") else None} for x in art},
 "production_tls_auth_lease":"NOT_RUN","actual_tun_data":"NOT_RUN",
 "android_root_app_install":"NOT_RUN","physical_acceleration":"NOT_RUN",
 "real_server_connection":"NOT_RUN"}
