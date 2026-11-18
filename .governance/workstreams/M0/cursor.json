@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2138,
-  "checkpoint_sha": "d9e62a6a7be62f3fc9a9e78d96af2c6e8c5c135c",
+  "sequence": 2155,
+  "checkpoint_sha": "5b2ace1e0d6fc13d5f0c481bf53e1917d0efb830",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2138 governance-only repair: keep H2137 029B/029 user-normal PASS_SCOPED B5 exact source d4ddd74 Action44201457211 successful, original 48 zip CRC and two real sameVM 10Mbps arms. Original H2137 docs Action44212060190 feature card failed UTF8 16KiB limit, governance failed cursor mixed SOURCE refs. No product/native test FAIL; preserve historical B4/Game4 cross-source proofs as context_refs, keep source-exact B5 evidence_refs, mark evidence root SOURCE. Full technical 029B/029 OPEN; 030 not started.",
-  "why_now": "Correct audit record and feature card hard 16384-byte limit without deleting any historical 56 verification rows, and ensure cursor evidence_refs contains only last tested exact SOURCE d4ddd74. Same-source product proof H2137 original SUCCESS unaffected.",
+  "current_task": "H2155 user newly authorized full Game2/Game4 × FECoff/fixed × split-off/all/LAN/ordinaryCN/advancedCN original native wiring+verification, superseding previous limited-scope no further testing instruction for GAME only. H2139 original Go/Rust common cold split source wired, H2150–H2152 static and LAN test owner, H2153 sourcec491 four parallel native job dispatch plus real LAN Windows Wintun->Linux eth0 kernel UDP with original source+Stop, H2154 source878 stale static selectors fixed; H2155 source5b2ace Action44230873009 cheap PASS, WinGo/WinRust/LinuxRust IN_PROGRESS, FOUR Win2025/WSL2 native jobs NOT_YET_STARTED. Earlier Normal/B4/B5 and legacy Game4 scope remain signed PASS but cannot qualify current 20 Game cases. Full tech Game remains OPEN.",
+  "why_now": "User explicitly broadened Game2/Game4 split support beyond H2138 daily closeout. Four independent native runners now dispatched from exactly one source marker, each five sequential cold policies, avoids same-VM Wintun/WAL concurrency. Fixed policy tag normalization and physical LAN Win32->Linux socket observer are test-only. No FEC/wire/Rust hotpath changes.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect doc-only H2138 feature catalog/governance pass; do not trigger new native Actions. 029B/029 user-normal PASS_SCOPED, full technical OPEN until explicit request or reproducible issue; 030 NOT_STARTED.",
+  "next_action": "Collect Action44230873009 exact SOURCE 5b2ace cheap plus true four independent Win2025 native jobs (game2off/game2fixed/game4off/game4fixed). For each verify all five real UDP/TCP/DNS/Direct/Tunnel and original WAL Stop, same EXE/Linux sha, physical LAN kernel source and old FakeIP selective; download ZIP/CRC/manifest. If failures investigate only first actual policy and preserve results/NOT_RUN; do not rerun Normal/B0–B5 or unrelated 028. Only promote 20 scenarios when original native receipts and whole 4 jobs PASS.",
   "unverified": true,
   "last_tested_source": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
   "evidence_refs": [
@@ -22,8 +22,10 @@
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
     "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
-    "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json",
+    "docs/devlog/M0/20261118-PLAN029B-H2153-PARALLEL-FOUR-ORIGINAL-GAME-MATRIX-NATIVE.md",
+    "docs/devlog/M0/20261118-PLAN029B-H2154-MATRIX-CHEAP-GATE-SYNC.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2138 resolves doc-only UTF8 feature-card size and cursor historical cross-SOURCE refs. B5 exact SOURCEd4ddd Action44201457211 all real tests PASS, A/B CPU per actualGiB43.0673/46.6465 (+8.31% one order), UDP p99 win47/47 Linux51.315/51.207, Stop PASS. B4 Action44198794225 and Game4 Action44197717052 separately signed PASS_SCOPED; 029/029B user-normal scoped complete but full OPEN; no new native."
+  "partial_summary": "H2155 user expanded Game support: Game2 and Game4 common cold Rust V4 wired, four parallel original Windows2025/WSL2 lanes×FEC off/fixed each sequential off/all/LAN/ordinary/advanced test, source5b2ace Action44230873009 cheap PASS, compile in progress, native NOT_YET_RUN. H2138 daily normal scoped PASS unaffected; full Game matrix OPEN; no 030."
 }
