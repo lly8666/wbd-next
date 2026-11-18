@@ -53,7 +53,7 @@ type m0NativeV4Options struct {
 // Canonical GUI/CLI mode is transported inside mandatory TLS Admission.
 func m0WindowsProtectedStartupPaddingValue(mode string)(uint8,error){
  switch mode {
- case "off":return 0,nil
+ case "","off":return 0,nil
  case "tls":return 1,nil
  case "flows":return 2,nil
  default:return 0,errors.New("invalid protected startup-padding mode")
