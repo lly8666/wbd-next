@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2160,
-  "checkpoint_sha": "508591f93427ebdad4cf88ff625e03fc4d485aca",
+  "sequence": 2161,
+  "checkpoint_sha": "ba2fd09e179d97649368a85b8cdbd678204641d3",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2160 exact original SOURCE1a66243 Action44232480332 four signed original Windows2025/WSL2 Game2/4 FEC off/fixed jobs FAILED first off only due generic PLAN028 Linux-to-Windows inbound TCP comparator; real TLS/OS Applied 2/4 lanes, both-OS kernel UDP and Windows-to-Linux TCP client echo+Linux receipt, original native Rust WAL Stop PASS_ON_FAILURE. Remaining all/LAN/ordinary/advanced NOT_RUN. H2159 source86db correct Game2/4 scoped genuine Win-to-Linux TCP and preserve generic strict, cheap failed stale B4 source-string test. H2160 candidate SOURCE508591f action44235564493 cheap and LinuxRust PASS, WinGo/Rust/native pending; 029/029B previous normal scoped PASS remains.",
-  "why_now": "4 original native artifact ZIPs SOURCE1a66243 SHA256+CRC verified, each first off with same Linux-initiated inbound Windows TCP failure while true original Win-to-Linux kernel TCP and UDP product Stop succeeded. Do not call full matrix PASS, and do not drop original TCP or relax other-mode generic duplex verifier.",
+  "current_task": "H2161 audit-only correction: source1a66243 original 4 Game job first off failures retained exact evidence, H2160 candidate source508591f Action44235564493 cheap/WinGo/WinRust/LinuxRust/true Linux build PASS, 4 independent real Windows Game jobs IN_PROGRESS. Removed one redundant legacy H2154 context reference to enforce governance max8. 20 user policy cases not yet proven.",
+  "why_now": "Governance Action44236035249 rejects nine context_refs (maximum 8), not product: remove redundant H2154 devlog while retaining signed H2159/H2160 evidence, previous B4/Game4 contexts and exact last tested source.",
   "done_when": "New signed Game2/Game4 FEC-off/fixed each verifies five actual cold user business settings (off/all/LAN/ordinaryCN/advancedCN), same exact go/rust source/hash, real TLS+Wintun OS+LAN/Direct/Tunnel DNS/TCP/UDP and owned Stop; reverse Linux initiated inbound TCP separately NOT_RUN; no claim full technical exit while any remain.",
-  "next_action": "Collect Action44235564493 exact SOURCE508591f cheap, WinGo/WinRust, Linux Rust, original Linux build and four independent Windows Game native 5 sequential policies. Verify real two-ended Windows->Linux TCP+reply, CN/Direct TCP/UDP, kernel LAN source, FEC and all owned Stops, source/binary hashes per VM and ZIP CRC. First true remaining error only if FAIL. Do not rerun historical Normal/B4/B5 or 028/030.",
+  "next_action": "Collect candidate signed Action44235564493 original four Windows Game jobs exact 5 policies with FEC off/fixed. Do not spawn duplicate native Action; if FAIL fix only first real error and preserve signed SHA/CRC, real TCP/UDP, owned Stop. Full Game matrix NOT_YET_PASS.",
   "unverified": true,
   "last_tested_source": "1a662439ade52233974e1a69c9db4f8c18300e6e",
   "evidence_refs": [
@@ -24,10 +24,9 @@
     "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
     "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json",
     "docs/devlog/M0/20261118-PLAN029B-H2153-PARALLEL-FOUR-ORIGINAL-GAME-MATRIX-NATIVE.md",
-    "docs/devlog/M0/20261118-PLAN029B-H2154-MATRIX-CHEAP-GATE-SYNC.md",
     "docs/devlog/M0/20261118-PLAN029B-H2159-ORIGINAL-GAME-FIRST-REAL-TCP-BOUNDARY.md",
     "docs/devlog/M0/20261118-PLAN029B-H2160-GAME-MATRIX-B4-SCOPE-TEST-ALIGN.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2160 SOURCE1a662 Action44232480332 4 real native Game2/4 FEC off/fixed jobs FAIL_FIRST_OFF generic Linux-initiated Windows inbound TCP (old 028): Win original TLS 2/4, OS Applied, 2-OS UDP, real Windows->Linux TCP and original Stop logged PASS; 20 matrix cases not qualified. H2159 scoped real Win->Linux TCP branch source86db failed cheap stale B4 test; H2160 source508 static fixed, Action44235564493 cheap+LinuxRust PASS, remaining in progress. Historical 029B Normal/B4/B5 and Game4 legacy FECoff outer1400 remain scoped PASS."
+  "partial_summary": "H2161 only cursor scope repair max8 context references after H2160 original signed four first-off failures. Candidate source508591f Action44235564493 cheap/WinGo/WinRust/LinuxRust and Linux source build PASS, 4 native Windows Game jobs in progress. Not a product pass. User normal prior scoped PASS retained."
 }
