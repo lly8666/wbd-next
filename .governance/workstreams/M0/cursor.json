@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2174,
-  "checkpoint_sha": "8442d1c7253d235549f6f0f706346f839594edf9",
+  "sequence": 2175,
+  "checkpoint_sha": "03025191f46744bcbc90378440bd03973391cd3a",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2174 修Linux双ISA真实Normal已全OS成功、仅suite Game FEC-off字段空字符串与误期待off不一致；保持严格原Go/Rust业务/Stop验证后继续其他4模式。",
-  "why_now": "H2173 Action44255699692原native x86+ARM Normal脚本均exit0，Artifact记录实际两方向UDP/TCP/ICMP、MTU1460、自有TUN IPv6禁用及双Stop和netns清理均PASS；Python summary仅将fec off真实\"\"误读\"off\"使两个ISA整体FAIL。",
-  "done_when": "新H2174真实两个native ISA job各五模式全部证明原Linux Go/Rust UDP/TCP双向/MTU/Stop/FEC真应用，源锁结果JSON并功能卡归档；失败第一条保留。",
-  "next_action": "运行H2174一次新SOURCE原生两作业，先收Normal，然后Fixed/Auto/Game2/Game4 FEC6；不扩大Windows/028矩阵。",
+  "current_task": "H2175修Linux两原生ISA Game2/4首SYN前夹具错误地以2/4条lane期待2/4个AF_PACKET FD；原Go manual runGameServer明文源码一服务端443端口共享恰一原AF_PACKET RAW socket。重新测试原Go/Rust双Linux真实Game2/Game4与Stop。",
+  "why_now": "H2174 Action44256427127两ISA Normal/Fixed/Auto各3/3真Linux客户端+服务端UDP/TCP/MTU1460/IPv6自有/Stop PASS，Game2两ISA共性夹具 preSYN socket>=game_lanes 卡死且client根本未启动；原product runGameServer单端口显式一socket。",
+  "done_when": "当前SOURCE两原生ISA Game2与Game4fixed实际TLS/raw/TUN双向UDP+TCP/FEC parity/Stop成功；必须真实service内仅一AF_PACKET port443预SYN就绪，未跑不升格。",
+  "next_action": "观测H2175受限双ISA原生Action；记录全5场真实PASS或首个FAIL，更新功能卡和证据，不启030。",
   "unverified": true,
   "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2175-LINUX-GAME-ONE-SHARED-SOCKET-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2174-LINUX-DUAL-ISA-FEC-OFF-RECEIPT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2173-LINUX-DUAL-ISA-STATIC-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2172-LINUX-DUAL-ISA-FIRST-FAULT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2171-LINUX-DUAL-ISA-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
     "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
-    "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md"
+    "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2173 source8442d1c Action44255699692的Normal原Linux x86及ARM各两个真实netns TCP+UDP双向应用echo、ICMP、MTU边界、IPv6 TUN-only、Stop/清理全部PASS，二ISA building PASS；suite校验 game_fec_profile真实\"\"但期待\"off\"导致作业FAIL，其他4场未运行。H2174仅修summary严格值比较且新增测试。"
+  "partial_summary": "H2174 SOURCE0302519 native x86/ARM各Normal Fixed Auto全真网络双向PASS，Game2 preSYN夹具要求AF_PACKET个数>=lanes(2/4)错误：原Go server manual Game一个ReceivePort443 socket供全组；原Go服务端启动但新script禁止client首SYN导致双ISA Game2 FAIL，Game4未跑。H2175只把门槛定为真实>=1，并保留lane authenticated/实际packet/FEC/Stop验证。"
 }

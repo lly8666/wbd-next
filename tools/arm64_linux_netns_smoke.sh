@@ -162,10 +162,13 @@ fi
 # The first source-locked SYN MUST start only after the REAL server raw
 # endpoint has bound its exact port; do not silently paper over cold loss.
 raw_listen=0
-# Normal emits an explicit raw-listener log; Game4's actual Go source does
-# NOT emit that Normal-only log. For Game, count real AF_PACKET sockets in
-# the server NETNS before allowing the client's original SYN. Requiring a
-# nonexistent Normal log was H995's test-only false negative.
+# Normal emits an explicit raw-listener log; manual Game2/4's
+# original runGameServer opens ONE shared AF_PACKET ReceivePort=443 socket
+# for ALL game lanes before the first SYN (game_linux.go), not one per lane.
+# Check the genuine socket in this dedicated server netns before SYN:
+# zero is a hard failure, but requiring n=2/4 falsely deadlocks cold join.
+# This is only startup readiness; after TLS each n-lane protected group
+# must still qualify real per-lane kernel copies, FEC and exact Stop.
 raw_deadline_loops=100
 if [ "$game_lanes" -gt 0 ];then raw_deadline_loops=300;fi
 for i in $(seq 1 "$raw_deadline_loops"); do
@@ -175,8 +178,10 @@ for i in $(seq 1 "$raw_deadline_loops"); do
     fi
   else
     packet_sockets=$(sudo -n ip netns exec "$server_ns" sh -c "tail -n +2 /proc/net/packet | wc -l" 2>/dev/null | tr -d '[:space:]' || true)
-    if [[ "$packet_sockets" =~ ^[0-9]+$ ]] && [ "$packet_sockets" -ge "$game_lanes" ];then
-      echo "ARM64_GAME_SERVER_TRUE_AF_PACKET_SOCKET_PRE_SYN_READY sockets=$packet_sockets lanes=$game_lanes"
+    # The original Game manual server has ONE receive-port-443 socket;
+    # additional lane sockets belong to clients or post-auth Rust M4 only.
+    if [[ "$packet_sockets" =~ ^[0-9]+$ ]] && [ "$packet_sockets" -ge 1 ];then
+      echo "ARM64_GAME_SERVER_TRUE_AF_PACKET_SOCKET_PRE_SYN_READY sockets=$packet_sockets required=1 shared_port=443 lanes=$game_lanes"
       raw_listen=1;break
     fi
   fi
@@ -185,6 +190,7 @@ for i in $(seq 1 "$raw_deadline_loops"); do
 done
 if [ "$raw_listen" -ne 1 ];then
   echo "ARM64_OS_SERVER_RAW_LISTENER_NOT_READY_BEFORE_CLIENT_SYN mode=$mode loops=$raw_deadline_loops"
+  echo "ARM64_GAME_ORIGINAL_SHARED_AF_PACKET_OBSERVED sockets=${packet_sockets:-NONE} required=1 lanes=$game_lanes"
   ps -eo pid,stat,wchan:28,comm | grep -E 'wbd-v4|sudo|ip netns' | tail -n 16 || true
   sudo -n ip netns pids "$server_ns" || true
   tail -n 40 "$out/server.log" || true

@@ -30,6 +30,14 @@ class Plan029LinuxDualIsaTest(unittest.TestCase):
         self.assertIn('proof.get("game_fec_profile")!=(fec or "")',suite)
         self.assertIn('WBD_PLAN029_LINUX_DUAL_ISA',netns)
         self.assertIn('PLAN029_LINUX_APP_TRUE_KERNEL_PASS',netns)
+        # The genuine manual Game server (one 443 port) has ONE pre-SYN
+        # AF_PACKET listener shared by 2/4 lanes. The old >=game_lanes
+        # readiness gate prevented all actual Game joins on both ISAs.
+        self.assertIn('"$packet_sockets" -ge 1',netns)
+        self.assertNotIn('"$packet_sockets" -ge "$game_lanes"',netns)
+        self.assertIn('shared_port=443 lanes=$game_lanes',netns)
+        game=(ROOT/"r0/go_overlay/internal/v4productcli/game_linux.go").read_text()
+        self.assertIn("One real AF_PACKET listener per server port",game)
         self.assertIn('disable_ipv6',netns)
         self.assertIn('owned_stop',suite)
         self.assertNotIn('WINDOWS_GAME_PADDING',netns)
