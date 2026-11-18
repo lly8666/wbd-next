@@ -712,6 +712,7 @@ func v4DeriveRecordKeys(exporter keyingMaterialExporter,result AdmissionResult,e
 // additional RTT. This opt-in API is fail-closed until caller proves readiness.
 func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConfig,opt V4ClientOptions)(*V4ClientSession,error) {
     if !opt.DataPlaneReady||opt.GameFec>7||opt.NormalFec>7||
+       opt.StartupPadding>2||(!opt.ControlPadded&&opt.StartupPadding!=0)||
        (opt.GameFec!=0&&opt.NormalFec!=0)||
        (opt.GameFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportGame))||
        (opt.NormalFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportNormal||
@@ -730,7 +731,11 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if cfg.Policy.Schema!=PolicySchemaV3 || cfg.Policy.SupportedNow()!=nil {return nil,ErrAdmissionUnsupported}
     offeredFeatures:=v4RequiredFeatures
     if opt.fec2ProbeOnly||opt.fec2Product {offeredFeatures |= v4FeatureFEC2}
-    wire,err:=v4RequestWire(req,V4Extension{Features:offeredFeatures,Epoch:opt.Epoch,GameFec:opt.GameFec,NormalFec:opt.NormalFec})
+    wire,err:=v4RequestWire(req,V4Extension{
+        Features:offeredFeatures,Epoch:opt.Epoch,GameFec:opt.GameFec,
+        NormalFec:opt.NormalFec,StartupPadding:opt.StartupPadding,
+        ControlPadded:opt.ControlPadded,
+    })
     if err!=nil{return nil,err}
     // The route classifier secret must be provisioned BEFORE opening
     // transport. A missing key is an ordinary local config failure: no
@@ -753,7 +758,10 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if err!=nil{return nil,candidateError(ctx,err)}
     // No protected reply feature downgrade/upgrade is admissible.
     if extension.Features!=offeredFeatures || extension.GameFec!=opt.GameFec ||
-       extension.NormalFec!=opt.NormalFec || extension.Epoch==[16]byte{} ||
+       extension.NormalFec!=opt.NormalFec ||
+       extension.ControlPadded!=opt.ControlPadded ||
+       extension.StartupPadding!=opt.StartupPadding ||
+       extension.Epoch==[16]byte{} ||
        (opt.Epoch!=[16]byte{} && opt.Epoch!=extension.Epoch) {
         return nil,ErrAdmissionParams
     }
@@ -762,14 +770,15 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if err!=nil{return nil,err}
     result.Keys=keys
     result.TLSCipherSuite=state.CipherSuite
-    frozen,err:=v4ColdSnapshot(result,extension.Epoch,cfg.Username,false,extension.Features)
+    frozen,err:=v4ColdSnapshot(result,extension.Epoch,cfg.Username,false,extension.Features,extension.StartupPadding)
     if err!=nil{return nil,err}
     success=true
     return &V4ClientSession{
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
         Epoch:extension.Epoch,verifiedLease4:result.Lease4,
         coldAuthenticated:true, authenticatedPrincipal:cfg.Username,
-        verifiedNormalFec:extension.NormalFec,verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:extension.Features,
+        verifiedNormalFec:extension.NormalFec,verifiedStartupPadding:extension.StartupPadding,
+        verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:extension.Features,
     },nil
 }
 
@@ -985,14 +994,19 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
         ClientLimit:req.ClientLimit,ServerLimit:cfg.ServerLimit,
     }
-    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,GameFec:selectedGameFec,NormalFec:selectedNormalFec}
+    // Credentials and policy have already been verified. Only this owner
+    // inherits the client's protected V2 startup-pad selector; the process
+    // server default cannot silently override it. V1 stays strictly off.
+    ext:=V4Extension{Features:serverFeatures,Epoch:epoch,
+        GameFec:selectedGameFec,NormalFec:selectedNormalFec,
+        StartupPadding:offered.StartupPadding,ControlPadded:offered.ControlPadded}
     state:=tlsConn.ConnectionState()
     keys,err:=v4DeriveRecordKeys(&state,result,ext)
     if err!=nil{return nil,err}
     result.Keys=keys
     result.TLSCipherSuite=state.CipherSuite
     // Prepare the immutable copy; publish only after protected reply+detach.
-    frozen,err:=v4ColdSnapshot(result,epoch,req.Username,true,ext.Features)
+    frozen,err:=v4ColdSnapshot(result,epoch,req.Username,true,ext.Features,ext.StartupPadding)
     if err!=nil{return nil,err}
     boundary,err:=assoc.PrepareTransition(int(cfg.ServerLimit))
     if err!=nil{return nil,err}
@@ -1048,7 +1062,9 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             Negotiated:result,Boundary:boundary,EarlyRecords:early,
         },Epoch:epoch,verifiedLease4:lease,serverOwnedManualLease4:manualLease,
         coldAuthenticated:true, authenticatedPrincipal:req.Username,
-        verifiedNormalFec:selectedNormalFec,verifiedGameFec:selectedGameFec,verifiedCold:frozen,verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
+        verifiedNormalFec:selectedNormalFec,verifiedGameFec:selectedGameFec,
+        verifiedStartupPadding:ext.StartupPadding,verifiedCold:frozen,
+        verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
         verifiedRequestedFreshEpoch:offered.Epoch==[16]byte{},
     },nil
 }
@@ -1074,6 +1090,7 @@ type V4ColdSessionSnapshot struct {
     clientLimit uint16
     serverLimit uint16
     keys tlsrecord.KeyPair
+    startupPadding uint8 // authenticated extension; NOT a changed native C ABI
 }
 
 // ColdSnapshot is copy-only. It never calls engine_create, activates FEC,
@@ -1085,7 +1102,7 @@ func (s *V4ClientSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
        s.ClientAdmissionSession.TLS==nil {
         return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
     }
-    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,false,s.negotiatedFeatures)
+    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,false,s.negotiatedFeatures,s.verifiedStartupPadding)
     if err!=nil{return V4ColdSessionSnapshot{},err}
     // An apparently valid post-TLS edit to cipher, limits or key material
     // must not yield a fresh "authenticated" authority.
@@ -1100,7 +1117,7 @@ func (s *V4ServerSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
        s.ServerAdmissionSession.TLS==nil {
         return V4ColdSessionSnapshot{},ErrAdmissionUnsupported
     }
-    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true,s.negotiatedFeatures)
+    current,err:=v4ColdSnapshot(s.Negotiated,s.Epoch,s.authenticatedPrincipal,true,s.negotiatedFeatures,s.verifiedStartupPadding)
     if err!=nil{return V4ColdSessionSnapshot{},err}
     if current!=s.verifiedCold || s.ServerAdmissionSession.TLS.Keys!=s.verifiedCold.keys ||
        s.Negotiated.Policy!=s.verifiedPolicy {
@@ -1108,9 +1125,9 @@ func (s *V4ServerSession) ColdSnapshot() (V4ColdSessionSnapshot,error) {
     }
     return s.verifiedCold,nil
 }
-func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,server bool,features uint16)(V4ColdSessionSnapshot,error){
+func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,server bool,features uint16,startupPadding uint8)(V4ColdSessionSnapshot,error){
     var out V4ColdSessionSnapshot
-    if !v4KnownFeatureSet(features) || principal=="" || epoch==[16]byte{} || result.RecordVersion!=V4RecordVersion ||
+    if startupPadding>2 || !v4KnownFeatureSet(features) || principal=="" || epoch==[16]byte{} || result.RecordVersion!=V4RecordVersion ||
        len(result.TunnelID)!=16 || !validAdmissionLaneID(result.LaneID) ||
        result.ClientLimit==0 || result.ServerLimit==0 ||
        result.Policy.Schema!=PolicySchemaV3 || result.Policy.SupportedNow()!=nil {
@@ -1126,6 +1143,7 @@ func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,serve
     copy(out.tunnelID[:],result.TunnelID)
     out.server=server
     out.features=features
+    out.startupPadding=startupPadding
     out.principal=principal
     out.epoch=epoch
     out.incarnation=result.IncarnationNonce
@@ -1140,6 +1158,19 @@ func v4ColdSnapshot(result AdmissionResult,epoch [16]byte,principal string,serve
 // Getters return copies. No serialization, public constructor or engine
 // command is exposed before the authenticated Go→Rust C ABI review.
 func (s V4ColdSessionSnapshot) Principal()string{return s.principal}
+func (s V4ColdSessionSnapshot) StartupPaddingMode()uint8{return s.startupPadding}
+// Only an authenticated, immutable original Go TLS owner snapshot may
+// authorize native Rust startup pad. Caller-mutable Negotiated cannot.
+func (s *V4ClientSession) AuthenticatedStartupPaddingMode()(uint8,error){
+    cold,err:=s.ColdSnapshot()
+    if err!=nil{return 0,err}
+    return cold.StartupPaddingMode(),nil
+}
+func (s *V4ServerSession) AuthenticatedStartupPaddingMode()(uint8,error){
+    cold,err:=s.ColdSnapshot()
+    if err!=nil{return 0,err}
+    return cold.StartupPaddingMode(),nil
+}
 func (s V4ColdSessionSnapshot) ServerSide()bool{return s.server}
 func (s V4ColdSessionSnapshot) TunnelID()[16]byte{return s.tunnelID}
 func (s V4ColdSessionSnapshot) Epoch()[16]byte{return s.epoch}
