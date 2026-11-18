@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2160",
+  "date": "2026-11-18",
+  "source_sha": "1a662439ade52233974e1a69c9db4f8c18300e6e",
+  "result": "FAIL_FOUR_NATIVE_JOBS_FIRST_OFF_ONLY",
+  "artifact_verified": true,
+  "action": {
+    "id": 44232480332,
+    "conclusion": "failure",
+    "source_sha": "1a662439ade52233974e1a69c9db4f8c18300e6e",
+    "cheap": "PASS",
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "original_linux_go_rust_release": "PASS",
+    "four_native_jobs": "FAIL"
+  },
+  "four_original_windows_vm": [
+    {
+      "side": "game2off",
+      "lanes": 2,
+      "fec": "off",
+      "job_id": 134562700030,
+      "artifact_id": 14395544607,
+      "zip_sha256": "aebc0faeaf8fbb047d902d00590b70fb77a39a5899c0c4939f9efa69e0aa855d",
+      "members": 33,
+      "crc": "PASS",
+      "first_case": "off",
+      "next_4": "NOT_RUN"
+    },
+    {
+      "side": "game2fixed",
+      "lanes": 2,
+      "fec": "fixed",
+      "job_id": 134562700097,
+      "artifact_id": 14396995122,
+      "zip_sha256": "d0a0637b55f86d4880b715e53dc3b70c9f9fa93db692b7a741ebdd203a1fcca4",
+      "members": 41,
+      "crc": "PASS",
+      "first_case": "off",
+      "next_4": "NOT_RUN"
+    },
+    {
+      "side": "game4off",
+      "lanes": 4,
+      "fec": "off",
+      "job_id": 134562700161,
+      "artifact_id": 14396871155,
+      "zip_sha256": "0112a83f2dbaab24a5c006f44bed84693c5bd0a6c70a9714c39dbcf662cfad1c",
+      "members": 33,
+      "crc": "PASS",
+      "first_case": "off",
+      "next_4": "NOT_RUN"
+    },
+    {
+      "side": "game4fixed",
+      "lanes": 4,
+      "fec": "fixed",
+      "job_id": 134562700041,
+      "artifact_id": 14396531585,
+      "zip_sha256": "6594c881726b554ea98edcfbd49cb35204632d66779f3b9f4c27ef63bfa0daec",
+      "members": 41,
+      "crc": "PASS",
+      "first_case": "off",
+      "next_4": "NOT_RUN"
+    }
+  ],
+  "exact_original_failure": {
+    "stage": "GENUINE_PUBLIC_KERNEL_TCP_GENERIC_BIDIRECTIONAL_EXPECTATION",
+    "original_mode_public": "FAIL_TRUE_PUBLIC_EXECUTION",
+    "original_tls_and_os_applied": "PASS_ALL_FOUR",
+    "original_windows_linux_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP_ALL_FOUR",
+    "real_windows_to_linux_tcp": "PASS_CLIENT_ECHO_AND_LINUX_SOCKET_RECEIVED_40_BYTES_ALL_FOUR",
+    "linux_initiated_windows_tcp": "FAIL_WINDOWS_SERVER_RECEIVED_0_LINUX_CLIENT_ECHO_FALSE_ALL_FOUR",
+    "independent_windows_native_stop_log": "PASS_ORIGINAL_WAL_AND_RUST_JOIN_ALL_FOUR_ON_FAILURE",
+    "python_report_stop": "NOT_RUN_FAILURE_BEFORE_COMPLETE",
+    "conclusion": "NOT_PROOF_OF_GAME_SPLIT_FAILURE_BUT_NOT_BIDIRECTIONAL_TCP_PASS",
+    "first_name": "actual original two-OS TLS/TUN UDP/TCP/Stop/source mismatch",
+    "scope": "PREEXISTING_PLAN028_LINUX_TO_WINDOWS_INBOUND_COMPARATOR_IN_GAME_MATRIX"
+  },
+  "new_candidate": {
+    "source_sha": "86db23b3c53541407fb3f7d69ea2274aabd33c96",
+    "preflight_action": 44235378758,
+    "preflight": "FAIL_STALE_B4_STATIC_SOURCE_EXPECTATION_BEFORE_NATIVE",
+    "native": "NOT_RUN_FOR_THIS_SOURCE",
+    "last_candidate_source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
+    "action_id": 44235564493,
+    "at_collection": "IN_PROGRESS",
+    "cheap": "PASS",
+    "linux_rust": "PASS",
+    "real_native": "NOT_YET_FINAL",
+    "method": "real original kernel Windows-to-Linux Tunnel TCP socket+Linux echo, real 2-OS UDP, 5 business policies, 4 FEC cohorts, original Stop unchanged; retain strict legacy reverse inbound tests for other modes"
+  },
+  "qualification": {
+    "game2_off_fixed_all_lan_ordinary_advanced": "NOT_YET_PASS",
+    "game4_off_fixed_all_lan_ordinary_advanced": "NOT_YET_PASS",
+    "game2_game4_runtime_implementation": "PRESENT_NEW_CODE",
+    "historical_game4_fecoff_outer1400": "OLD_SIGNED_PASS_OTHER_SOURCE_ONLY",
+    "normal_b0_b5": "HISTORICAL_SIGNED_PASS_SCOPED",
+    "plan029b_full": "OPEN",
+    "plan030": "NOT_STARTED"
+  }
+}

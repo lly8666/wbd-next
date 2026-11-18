@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2157,
-  "checkpoint_sha": "88d8c6bd9df03b3a9d90370dd4e66aeae00309c9",
+  "sequence": 2160,
+  "checkpoint_sha": "508591f93427ebdad4cf88ff625e03fc4d485aca",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2157 Game2/4 × FEC off/fixed × five business policies newly authorized. H2155 original SOURCE5b2ace1 Action44230873009: cheap/WinGo/WinRust/LinuxRust PASS; source-locked Linux build then four native Windows jobs pending. All 20 Game policy outcomes NOT_YET_QUALIFIED. Original Normal/B4/B5 historical scoped PASS retained.",
-  "why_now": "Source5b2 original four parallel Win2025 VMs each five sequential cold policies, after Fixed tag/LAN real UDP wiring. H2156 legacy PLAN028 static selector repaired; governance H2155 blocked on 32768-byte combined hot text, not network.",
-  "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect Action44230873009 four native Game jobs and source/binary SHA, true kernel LAN, CN physical DNS/Direct, Tunnel and five per-job owned Stop. On failure fix the first real case only; never borrow historical PASS. Keep unrelated 028/030 off.",
+  "current_task": "H2160 exact original SOURCE1a66243 Action44232480332 four signed original Windows2025/WSL2 Game2/4 FEC off/fixed jobs FAILED first off only due generic PLAN028 Linux-to-Windows inbound TCP comparator; real TLS/OS Applied 2/4 lanes, both-OS kernel UDP and Windows-to-Linux TCP client echo+Linux receipt, original native Rust WAL Stop PASS_ON_FAILURE. Remaining all/LAN/ordinary/advanced NOT_RUN. H2159 source86db correct Game2/4 scoped genuine Win-to-Linux TCP and preserve generic strict, cheap failed stale B4 source-string test. H2160 candidate SOURCE508591f action44235564493 cheap and LinuxRust PASS, WinGo/Rust/native pending; 029/029B previous normal scoped PASS remains.",
+  "why_now": "4 original native artifact ZIPs SOURCE1a66243 SHA256+CRC verified, each first off with same Linux-initiated inbound Windows TCP failure while true original Win-to-Linux kernel TCP and UDP product Stop succeeded. Do not call full matrix PASS, and do not drop original TCP or relax other-mode generic duplex verifier.",
+  "done_when": "New signed Game2/Game4 FEC-off/fixed each verifies five actual cold user business settings (off/all/LAN/ordinaryCN/advancedCN), same exact go/rust source/hash, real TLS+Wintun OS+LAN/Direct/Tunnel DNS/TCP/UDP and owned Stop; reverse Linux initiated inbound TCP separately NOT_RUN; no claim full technical exit while any remain.",
+  "next_action": "Collect Action44235564493 exact SOURCE508591f cheap, WinGo/WinRust, Linux Rust, original Linux build and four independent Windows Game native 5 sequential policies. Verify real two-ended Windows->Linux TCP+reply, CN/Direct TCP/UDP, kernel LAN source, FEC and all owned Stops, source/binary hashes per VM and ZIP CRC. First true remaining error only if FAIL. Do not rerun historical Normal/B4/B5 or 028/030.",
   "unverified": true,
-  "last_tested_source": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
+  "last_tested_source": "1a662439ade52233974e1a69c9db4f8c18300e6e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2137-H2136-B5-SIGNED-10M-029B-029-NORMAL-SCOPED-CLOSEOUT-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2160-H2159-GAME-FOUR-TRUE-NATIVE-FIRST-TCP-INBOUND-FAIL-20261118.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
@@ -24,8 +24,10 @@
     "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
     "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json",
     "docs/devlog/M0/20261118-PLAN029B-H2153-PARALLEL-FOUR-ORIGINAL-GAME-MATRIX-NATIVE.md",
-    "docs/devlog/M0/20261118-PLAN029B-H2154-MATRIX-CHEAP-GATE-SYNC.md"
+    "docs/devlog/M0/20261118-PLAN029B-H2154-MATRIX-CHEAP-GATE-SYNC.md",
+    "docs/devlog/M0/20261118-PLAN029B-H2159-ORIGINAL-GAME-FIRST-REAL-TCP-BOUNDARY.md",
+    "docs/devlog/M0/20261118-PLAN029B-H2160-GAME-MATRIX-B4-SCOPE-TEST-ALIGN.md"
   ],
   "open_requests": [],
-  "partial_summary": "Game2/4 Rust V4 cold shared owner wired; four × five Game matrix original SOURCE5b2ace1 Action44230873009 cheap+WinGo+WinRust+LinuxRust PASS, Linux original build in progress, real native pending. No game full PASS claim. 029B daily H2138 remains scoped, 030 not started."
+  "partial_summary": "H2160 SOURCE1a662 Action44232480332 4 real native Game2/4 FEC off/fixed jobs FAIL_FIRST_OFF generic Linux-initiated Windows inbound TCP (old 028): Win original TLS 2/4, OS Applied, 2-OS UDP, real Windows->Linux TCP and original Stop logged PASS; 20 matrix cases not qualified. H2159 scoped real Win->Linux TCP branch source86db failed cheap stale B4 test; H2160 source508 static fixed, Action44235564493 cheap+LinuxRust PASS, remaining in progress. Historical 029B Normal/B4/B5 and Game4 legacy FECoff outer1400 remain scoped PASS."
 }
