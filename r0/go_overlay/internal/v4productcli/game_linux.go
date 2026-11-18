@@ -102,7 +102,11 @@ func logGameOuterRepair(role string,n int,p *realityfront.V4LinuxGameProduct,off
 }
 // Per-original-M4-Linux owned raw send counters, NEVER padded intent.
 // This readback occurs before native Stop and cannot create a new record.
-func logGameStartupPadding(role string,n int,p *realityfront.V4LinuxGameProduct,want uint8)error{
+func logGameStartupPadding(role string,n int,p *realityfront.V4LinuxGameProduct)error{
+    // The Game group is already authenticated. Read the actual client's
+    // chosen per-cohort selector, never the server process's CLI default.
+    want,err:=p.AuthenticatedStartupPaddingMode()
+    if err!=nil{return err}
     mode,records,bytes,err:=p.StartupPaddingCounters()
     if err!=nil{return err}
     choices:=[]string{"off","tls","flows"}
@@ -486,7 +490,7 @@ func runGameClient(
         err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("client",n,native)}
-    err=errors.Join(err,logGameStartupPadding("client",n,native,c.startupPaddingMode))
+    err=errors.Join(err,logGameStartupPadding("client",n,native))
     if n==4{
         if e:=logGame4CopySchedule("client",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{
             err=errors.Join(err,e)
@@ -685,7 +689,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
         err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("server",n,native)}
-    err=errors.Join(err,logGameStartupPadding("server",n,native,c.startupPaddingMode))
+    err=errors.Join(err,logGameStartupPadding("server",n,native))
     if n==4{
         if e:=logGame4CopySchedule("server",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{return e}
     }
@@ -933,7 +937,7 @@ func runGameMultiServer(
         // Cold readback of this exact authenticated group's real M4 FEC
         // counters precedes owned Stop; do not aggregate siblings.
         if rec.gameFec{logOriginalGameFec("server",int(rec.key.Lanes),rec.product)}
-        padErr:=logGameStartupPadding("server",int(rec.key.Lanes),rec.product,c.startupPaddingMode)
+        padErr:=logGameStartupPadding("server",int(rec.key.Lanes),rec.product)
         if err:=rec.product.Close();err!=nil{
             return fmt.Errorf("Game group native Stop reason=%s: %w",reason,err)
         }

@@ -213,7 +213,7 @@ func parse(role string,args []string)(config,error){
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
-    startupPadding:=flags.String("startup-padding","off","Normal/FEC Fixed/Auto original source and Game2/4 Rust M4 startup padding: off|tls|flows; FEC parity is never padded")
+    startupPadding:=flags.String("startup-padding","off","Client requests off|tls|flows inside protected TLS admission; server follows verified per-session choice; fixed parity never padded")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
