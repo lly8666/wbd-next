@@ -95,7 +95,7 @@ for label,mode,fec,mtu_boundary in cases:
             proof.get("actual_native_isa")!=ARCH or
             proof.get("actual_client_server_isa")!=ARCH or
             proof.get("mode")!=mode or
-            proof.get("game_fec_profile")!=(fec or "off") or
+            proof.get("game_fec_profile")!=(fec or "") or
             proof.get("owned_stop")!="TWO_DRAINED" or
             proof.get("netns_cleanup")!="PASS" or
             proof.get("real_linux_kernel_udp_tcp_both_directions")!="PASS" or

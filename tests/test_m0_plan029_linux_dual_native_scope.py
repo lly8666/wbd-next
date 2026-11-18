@@ -25,6 +25,9 @@ class Plan029LinuxDualIsaTest(unittest.TestCase):
         self.assertIn('("auto","fec-auto",None,False)',suite)
         self.assertIn('("game2","game2",None,False)',suite)
         self.assertIn('("game4-fixed6","game4","6",False)',suite)
+        # A non-Game-FEC original Linux run emits empty selector rather
+        # than string "off"; keep mode equality exact, never bypass FEC6.
+        self.assertIn('proof.get("game_fec_profile")!=(fec or "")',suite)
         self.assertIn('WBD_PLAN029_LINUX_DUAL_ISA',netns)
         self.assertIn('PLAN029_LINUX_APP_TRUE_KERNEL_PASS',netns)
         self.assertIn('disable_ipv6',netns)

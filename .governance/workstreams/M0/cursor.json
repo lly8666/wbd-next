@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2173,
-  "checkpoint_sha": "68ae68073786506d888787dfbed89369691155e8",
+  "sequence": 2174,
+  "checkpoint_sha": "8442d1c7253d235549f6f0f706346f839594edf9",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2173 修新增Linux双ISA静态回归测试文本比较顺序错：H2172真网络未执行；重派同一最小两native ISA×五Linux原双端模式以验真实TCP/UDP/Stop。",
-  "why_now": "H2172 Action44255354198两ISA在cheap前置单测失败，原因TestPlan029LinuxDualIsa硬要求 test uname=env，但builder真实安全检查是等价的test env=uname；网络未跑，首错不是产品。",
-  "done_when": "当前SOURCE下 native x86_64、aarch64两真实原Go/TLS/Rust服务端+客户端、五原生短模式、原内核TCP/UDP双向、MTU1460/IPv6 owned、Stop实际通过；如未通过保留首错。",
-  "next_action": "核H2173 CI前置单测三项PASS，再核两端Go/Rust编译及五个真实netns；不得拿此前失败或旧Win SHA升格。",
+  "current_task": "H2174 修Linux双ISA真实Normal已全OS成功、仅suite Game FEC-off字段空字符串与误期待off不一致；保持严格原Go/Rust业务/Stop验证后继续其他4模式。",
+  "why_now": "H2173 Action44255699692原native x86+ARM Normal脚本均exit0，Artifact记录实际两方向UDP/TCP/ICMP、MTU1460、自有TUN IPv6禁用及双Stop和netns清理均PASS；Python summary仅将fec off真实\"\"误读\"off\"使两个ISA整体FAIL。",
+  "done_when": "新H2174真实两个native ISA job各五模式全部证明原Linux Go/Rust UDP/TCP双向/MTU/Stop/FEC真应用，源锁结果JSON并功能卡归档；失败第一条保留。",
+  "next_action": "运行H2174一次新SOURCE原生两作业，先收Normal，然后Fixed/Auto/Game2/Game4 FEC6；不扩大Windows/028矩阵。",
   "unverified": true,
   "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2174-LINUX-DUAL-ISA-FEC-OFF-RECEIPT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2173-LINUX-DUAL-ISA-STATIC-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2172-LINUX-DUAL-ISA-FIRST-FAULT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2171-LINUX-DUAL-ISA-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
     "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
-    "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md",
-    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
+    "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2171 native两ISA build PASS，Normal应用夹具假阴性有x86回包证据；H2172改代码后新静态测试assert字符串顺序写反，两个ISA preflight FAIL且未编译网络；H2173修测试对应实际严守架构比对，并将测试加入workflow路径，功能仍未进行本源验收。"
+  "partial_summary": "H2173 source8442d1c Action44255699692的Normal原Linux x86及ARM各两个真实netns TCP+UDP双向应用echo、ICMP、MTU边界、IPv6 TUN-only、Stop/清理全部PASS，二ISA building PASS；suite校验 game_fec_profile真实\"\"但期待\"off\"导致作业FAIL，其他4场未运行。H2174仅修summary严格值比较且新增测试。"
 }
