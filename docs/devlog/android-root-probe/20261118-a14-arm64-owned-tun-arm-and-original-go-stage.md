@@ -14,6 +14,17 @@
 - **正式 APK 冷路径改进**：新 `OriginalGoMilestones` 只接受原 Go 行首或默认 `yyyy/mm/dd hh:mm:ss` 日志前缀后的完整固定标志，不再在任意 stderr 中用 `contains` 误认 TLS/UID/Stop。实际原 Go kernel TUN 配置、RAW socket、收到 SYNACK 分别记录非认证的固定枚举；非零退出显示最后已观察的 `PRE_TUN/TUN_PRE_RAW/RAW_PRE_SYNACK/SYNACK_PRE_AUTH/LEASE_OS_READBACK/NATIVE_UID_READY` 阶段。保持真实原 Go TLS/auth/lease、Rust M4、Go rootjournal owned Stop、不伪造业务 PASS。
 - **生产 TUN ownership 审查**：正式 `linux.go` 的 `ownedTun.f` 持有 FD，`AndroidOwnedTun` 接受 FD 并通过 Rust Arc/BorrowFence 保持生命期，不采用 helper 未经路由准备直接 `poll(9500)` 的模式；因此没有凭此单条 A12 失败盲改原生产 Rust M4。
 
+## A14b 脱敏收据下游同步
+
+审查发现正式 Service 的新增原 Go 冷阶段虽然会写入 App 固定事件日志，
+但 `android/root-app/ci/device_first_run.py` 使用独立固定 `EVENTS` 白名单，
+若不更新，脱敏真实设备报告会无声遗漏三条新枚举。已同 SOURCE 增补白名单和
+Host Python 正/负例：`ORIGINAL_GO_TUN_KERNEL_CONFIGURED`、
+`ORIGINAL_GO_RAW_SOCKET_READY`、`ORIGINAL_GO_TCP_SYNACK_SEEN` 可导出；
+未知动态字串拒绝，以上阶段不能替代 TLS 租约、Android TCP/UDP 或原生 Stop。
+A14 首次源码 `e8b0d472` 只有部分施工，**最终可上机 APK 请以包含本修正的
+新 SOURCE 和其 Actions artifact 为准**，不能混用两个 APK 的收据。
+
 ## 证据门
 
 本 SOURCE 自动跑 `.github/workflows/android-root-product-a1.yml`：原 Go/Rust ARM64 Bionic ELF、source-locked signed APK、原 Linux Normal/off server oracle、Java/Python 审计、独立 x86 KSU NativeBridge 任务；**写入时新 SOURCE CI 结果待核验**。此前 SOURCE `466b6415` 的 10/11 不是本 SOURCE PASS。原真实 Android TLS/auth/lease、App 双向 TCP/UDP、原 Go/Rust joined Stop、系统 DNS 安全开关均保持 `NOT_RUN`；A12 UID 实包仍 `NOT_PROVEN`。

@@ -36,6 +36,20 @@ class FirstRunTests(unittest.TestCase):
                "11-18 09:00:01.999 W unrelated: user=alice@example.com\n")
         self.assertEqual(d.parse_events(raw),
                          ["START_REQUESTED", "NATIVE_M4_AND_UID_READY"])
+        cold = ("WBD_ROOT_DIAG: ORIGINAL_GO_TUN_KERNEL_CONFIGURED\n"
+                "WBD_ROOT_DIAG: ORIGINAL_GO_RAW_SOCKET_READY\n"
+                "WBD_ROOT_DIAG: ORIGINAL_GO_TCP_SYNACK_SEEN\n"
+                "WBD_ROOT_DIAG: MALICIOUS_TLS_READY\n")
+        self.assertEqual(d.parse_events(cold),
+                         ["ORIGINAL_GO_TUN_KERNEL_CONFIGURED",
+                          "ORIGINAL_GO_RAW_SOCKET_READY",
+                          "ORIGINAL_GO_TCP_SYNACK_SEEN"])
+        # Cold SYNACK/readiness must never assert TLS, real data or Stop.
+        cold_receipt = d.summarize([], d.parse_events(cold),
+                                   d.parse_events(cold), [], [], True)
+        self.assertEqual(cold_receipt["real_android_linux_tls_and_data_e2e"], "NOT_RUN")
+        self.assertEqual(cold_receipt["original_tls_authenticated_lease_os_readback"], "NOT_RUN")
+        self.assertEqual(cold_receipt["original_go_rust_joined_stop"], "NOT_RUN")
         self.assertEqual(d.new_events(["A", "B"], ["B", "C"]), ["C"])
         self.assertEqual(d.new_events(["A", "B"], ["Q", "R"]), [])
         self.assertEqual(d.new_events([], ["START_REQUESTED"]), ["START_REQUESTED"])

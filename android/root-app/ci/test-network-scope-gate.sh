@@ -118,6 +118,10 @@ accept=Path("android/root-app/ci/device_first_run.py").read_text()
 assert '"real_android_linux_tls_and_data_e2e": "NOT_RUN"' in accept
 assert '"original_go_rust_joined_stop":' in accept
 assert '"ORIGINAL_GO_RUST_STOP_JOINED"' in accept
+for cold_stage in ("ORIGINAL_GO_TUN_KERNEL_CONFIGURED",
+                   "ORIGINAL_GO_RAW_SOCKET_READY",
+                   "ORIGINAL_GO_TCP_SYNACK_SEEN"):
+    assert cold_stage in accept, "first-run receipt must retain native cold-stage codes"
 assert '"AUTHENTICATED_LEASE_OS_READBACK"' in accept
 assert 'FIB table does not exist' in accept
 assert '"wbdv40"' in accept
