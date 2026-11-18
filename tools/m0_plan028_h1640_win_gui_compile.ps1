@@ -108,7 +108,7 @@ $add=[ordered]@{
  'tls-ca-pem'=@('服务器','TLS 服务端证书/CA','可选本地 PEM 绝对路径；未配置时使用系统可信根','String','""')
 }
 foreach($key in $add.Keys){
-  if($fields.Contains($key)){throw "H2204 unexpected source GUI duplicate $key"}
+  if($fields.Contains($key) -and @($fields[$key]).Count -ne 3){throw "H2204 current GUI field metadata malformed: $key"}
   $fields[$key]=@($add[$key][0],$add[$key][1],$add[$key][2])
 }
 $fieldsJson=ConvertTo-Json -InputObject $fields -Depth 6
@@ -135,7 +135,7 @@ $cli=$catalog['targets']['client-windows']
 $cli['dns4']['default_expression']='""'
 $cli['mtu']['default_expression']='1460'
 foreach($key in $add.Keys){
-  if($cli.Contains($key)){throw "H2204 unexpected original catalogue duplicate $key"}
+  if($cli.Contains($key) -and [string]$cli[$key]["type"] -ne [string]$add[$key][3]){throw "H2204 original catalogue key type drift: $key"}
   $cli[$key]=[ordered]@{
     type=$add[$key][3];default_expression=$add[$key][4];help=$add[$key][2];
     source='H2204 original-Go native V4 overlay';json=$true
