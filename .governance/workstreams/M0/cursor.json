@@ -4,22 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2195,
-  "checkpoint_sha": "4e3001403fd35b8ddff58008f26fb732deb6309a",
+  "sequence": 2196,
+  "checkpoint_sha": "f7aa63a10c254b3a1f785a85c234f3392c283eb3",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2195：在Linux原Fixed/Auto FEC source kind2认证AEAD尾部增加有界startup-padding（parity kind3不动）；原生x86/ARM专项待验。",
-  "why_now": "H2193 Normal off双ISA4/4已签名，Fixed/Auto仍未接线；原record codec既有kind2尾零认证剥离能力，复用原FEC source不改原始FEC/repair。",
-  "done_when": "两ISA各Fixed tls、Auto flows真TCP/UDP、M4 source padding copied、原FEC传输/Stop、SHA签名PASS；坏输入/未启用无副作用。",
-  "next_action": "冻结SOURCE并收双原生两场，仅修最先失败；独立autoIP动态MTU及实体ARM/p99等仍OPEN。",
+  "current_task": "H2196：Linux Fixed/Auto FEC kind2 source padding双ISA4/4原生PASS_SCOPED；收签名归档与治理。",
+  "why_now": "SOURCE8a404a4f Action44292569034两native ISA各Fixed tls、Auto flows，真Go TLS/Rust M4 padded kernel TCP/UDP双向与owned Stop SUCCESS。",
+  "done_when": "本次四卡/ZIP SHA机读证据与治理PASS；历史FAIL及完整029 OPEN保留。",
+  "next_action": "先收H2196 governance；再优先验证Linux auto-IP原路径动态物理MTU（需独立受控自动租约夹具），不重跑已PASS。",
   "unverified": true,
-  "last_tested_source": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
+  "last_tested_source": "8a404a4f79227fde41286056f0c62c4d406f210a",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2193-LINUX-NORMAL-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029-H2195-LINUX-FEC-SOURCE-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029-H2194-LINUX-NORMAL-PADDING-FOUR-NATIVE-SIGNED.md"
+    "docs/devlog/M0/20261118-PLAN029-H2196-LINUX-FEC-PADDING-FOUR-NATIVE-SIGNED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2193 PRODUCT SOURCE06bd63f5 Normal/off tls/flows双ISA4/4 PASS_SCOPED，H2194已归档；H2195 Fixed/Auto kind2-only pad候选NOT_RUN。X25519 pre-TLS禁止，无key本地拒绝；autoIP动态MTU/实体ARM/p99未证，029技术OPEN、030未启。"
+  "partial_summary": "H2193 SOURCE06bd63f5 Linux Normal tls/flows双native ISA4/4; H2195 SOURCE8a404a4f Fixed tls/Auto flows各ISA2场共4/4真实原Go TLS/Rust M4 copied+TCP/UDP+Stop签名PASS_SCOPED。旧16/16 Game独立SOURCE保留。auto-IP动态物理MTU、实体ARM、p99、跨ISA仍NOT_RUN，完整029技术OPEN，030未启。"
 }
