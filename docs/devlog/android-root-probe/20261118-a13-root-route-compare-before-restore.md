@@ -46,3 +46,24 @@ devlog 而触发第二次 feature-impact 声明门 FAIL。本次进一步同时�
 本 devlog，保留相同 feature-impact，按真实最新 governance Action 再确认结果。
 原生产品构建仍严格指向上述冻结代码 SOURCE，不拿 docs-only HEAD
 伪装成已重编的 APK。
+
+## A13 SOURCE 最终冻结 / red gate 与治理收据
+
+同源码 [Action #44215447605](https://github.com/lly8666/wbd-next/actions/runs/44215447605)
+**最终 10/11 Jobs SUCCESS，overall FAIL**。成功的是原 Go rootjournal host Go tests、
+NDK ARM64 Go/Rust/source-locked signed APK、Linux 原 WBD 真实服务端 Normal/off oracle、
+DNS/M3 host 与 Cuttlefish host-admission；唯一 FAIL：
+`android-x86-kvm-ksu-arm64-nativebridge`。该 job 官方原 Go ELF
+`ORIGINAL_WBD_ARM64_EXIT=139`、纯 Go ELF 139，
+`ORIGINAL_GO_CSHARED_HELP_EXIT=0`，退出码10；
+这是 x86 KVM NativeBridge 限制，不否定用户真实 ARM64 手机已给的 Go help PASS。
+**实体 Android16 原 WBD TLS/租约、双向 App TCP/UDP 和 Rust owned Stop 仍 NOT_RUN。**
+
+文档 HEAD 与冻源分开：`466b641527f61ac64cc4f9c7c813835dc477b50c`
+是所有这些新原生构建和测试的 SOURCE；后续两次文档更正未重编 APK。
+最新卡片现保留所有 64 项历史 verification，并追加带冻结 SOURCE 的 A13
+`BUILD_PASS` 记录。此前 #44215447468 因卡片字节超限 FAIL、
+#44215876974 因 docs-only 未同期声明 feature-impact FAIL，
+不能删去失败历史；本轮以卡片和 devlog 同 commit 修正并由最新治理门确认。
+唯一下一步仍是真 ARM64 授权条件下原 WBD Normal/off TLS→租约→TCP/UDP→joined Stop，
+没有凭据/实机执行则 NOT_RUN。
