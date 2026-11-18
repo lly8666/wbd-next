@@ -36,7 +36,12 @@ on:
         required: false
         default: false
       run_tap_guest_pilot:
-        description: 'One bounded original Android16/KSU TAP guest and raw FakeTCP diagnostic; no E2E claim'
+        description: 'Explicit opt-in for historical TAP guest diagnostic; not run during APK wiring work'
+        type: boolean
+        required: false
+        default: false
+      run_x86_guest:
+        description: 'Explicit opt-in for x86 Android16/KSU guest diagnostics; host-only APK wiring does not run guests'
         type: boolean
         required: false
         default: false
@@ -223,6 +228,9 @@ jobs:
       - name: Build independent no-VpnService Root ARM64 APK
         shell: bash
         run: bash android/root-app/ci/build-source-locked.sh
+      - name: Verify signed APK original Go/Rust CLI and loader wiring (host-only; no emulator)
+        shell: bash
+        run: python3 android/root-app/ci/test-apk-native-wiring.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -232,12 +240,13 @@ jobs:
             out/android-root-app/SOURCE
             out/android-root-app/SHA256SUMS
             out/android-root-app/manifest.json
+            out/android-root-app/wiring-receipt.json
             out/android-root-app/manifest-tree.txt
             out/android-root-app/badging.txt
           retention-days: 14
           if-no-files-found: warn
   android-x86-kvm-ksu-original-native:
-    if: ${{ !(github.event_name == 'push' && contains(github.event.head_commit.message, '[d2-tap-guest-pilot]')) && !(github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true }}
     # D0 + D1: actual signed original x86 Go/Rust + ordinary CI app UID
     # authorized via real KSU Manager. This is NOT authenticated TLS/M4.
     needs: [arm64-native, b2-authentic-cn-geosite-host]
@@ -337,7 +346,7 @@ jobs:
           if-no-files-found: warn
 
   android-x86-kvm-ksu-original-d2-s1:
-    if: ${{ !(github.event_name == 'push' && contains(github.event.head_commit.message, '[d2-tap-guest-pilot]')) && !(github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true }}
     # Separate red/green gate: ORIGINAL Linux server runs on the same x86
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic
@@ -415,7 +424,7 @@ jobs:
   android-x86-kvm-ksu-original-d2-tap-guest-pilot:
     # One source-locked experimental TAP guest scenario, never a release ABI.
     # Run only with a one-time push marker or explicit manual request.
-    if: ${{ (github.event_name == 'push' && contains(github.event.head_commit.message, '[d2-tap-guest-pilot]')) || (github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true) }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true }}
     # Separate red/green gate: ORIGINAL Linux server runs on the same x86
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic

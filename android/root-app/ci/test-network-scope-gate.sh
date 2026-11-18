@@ -28,6 +28,14 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/ci/ServerAddressTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.ServerAddressTest
+# Execute the EXACT production RootService original Go argv builder on the
+# host JVM. No Android guest, fake Network, Root permission or packet I/O.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
+  android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
+  android/root-app/ci/OriginalGoCommandArgsTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoCommandArgsTest
 # Exact production Root Service diagnostic writer, not a fabricated
 # Android guest or Go/TLS success. Verify fixed enums, bounded retention,
 # no untrusted metadata and Device acceptance report semantics.
@@ -58,11 +66,13 @@ assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; nev
 assert s.count('InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)')>=2, "multi UID identity rechecked on Service and pre-su"
 assert 'watchSelectedPackages(allApps?managerPackages:targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw selected group or manager exclusions on package events"
 assert 'AllAppRouteScope.same(this,excludedAppIDs,managerPackages)' in s, "verify full-app owner+manager UID exclusions before su"
-assert '"--android-route-all-apps"' in s and '"--android-route-exclude-appids"' in s, "production source-locked Go full-app routing"
-assert 'AllAppUIDPolicy.csv(excludedAppIDs)' in s, "only canonical app ID exclusions"
-
-assert '"--android-route-uids"' in s and '"--android-route-uid"' in s, "real original Go CLI group and one-UID flags"
-assert 'ServerAddress.isIPv4Literal(peer)?"--peer-ip":"--peer-host"' in s
+argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
+assert 'OriginalGoCommandArgs.build(' in s, "production RootService must use host-tested original Go argv"
+assert 'for(String a:args)quotedArgs.add(q(a))' in s, "every native argv token is shell quoted"
+assert '"--android-route-all-apps"' in argv and '"--android-route-exclude-appids"' in argv, "original Go full-app CLI"
+assert 'AllAppUIDPolicy.csv(excludedAppIDs)' in argv, "canonical app ID exclusions"
+assert '"--android-route-uids"' in argv and '"--android-route-uid"' in argv, "original Go single and group UID flags"
+assert 'ServerAddress.isIPv4Literal(peer)?"--peer-ip":"--peer-host"' in argv
 assert 'ServerAddress.valid(peer)' in s
 a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert 'target_packages' in a and 'target_uids' in a
@@ -97,7 +107,7 @@ assert '(!armAssets&&m.optBoolean("release",true))' in payload, 'x86 must be CI-
 assert 'signed native ABI not supported by OS' in payload
 assert 'libwbd_engine-' in payload and 'wbd-v4-client-' in payload, 'one original ABI-selected Go/Rust'
 assert 'ownerExecutable=code.executableName' in s, 'exact original GO executable at Stop'
-assert '"--android-cn-geosite-file",nativeCode.cnGeosite.getAbsolutePath()' in s
+assert 'nativeCode.cnGeosite.getAbsolutePath()' in s and '"--android-cn-geosite-file"' in argv
 cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
 assert 'cnGeositeFile:=flags.String("android-cn-geosite-file"' in cold
 assert 'dnsnative.ReadPinnedCNFile(*cnGeositeFile)' in cold

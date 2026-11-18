@@ -50,6 +50,14 @@
 
 **唯一后续网络资格关键路径**：在先获得用户对真实 ARM64 设备或自管 ARM64 KVM runner 的单独明确授权、或已实际可用的获授权隔离环境后，再用同原 Go/Rust/签名 ARM64 APK + 原 Linux server，先取得客观 guest 物理接口 SYN → host SYN → 原 Linux RAW 初始 SYN RX → 原 Linux RAW SYNACK TX → Android ClientAssociation SYNACK RX；通过后依序继续 D2b 真 TLS/身份/32租约、D2c Rust M4 双向真 App TCP/UDP/单测试 UID 内核路由/owned Stop。**当前无此授权或环境时停止真实网络部署，只准备离线最小验收和错误枚举，不做实体手机/个人服务器操作。** GitHub hosted ARM64 `/dev/kvm` 缺失是另一环境门，装 udev 不解决。
 
+### A26｜依用户新指令：只做正式 APK ↔ 原 Go/Rust 接线与 Actions Host 验证
+
+2026-11-18 用户明确要求**不做模拟网卡绑定测试、不做真机测试**；优先把签名 ARM64 APK 与原 Go/Rust 主程序、RootService 生命周期的接线完成，并在 Actions 进行可信源码/编译/签名/资产/接口验证。这是当前唯一主动施工切片，**不改变**前述 hosted x86 网络环境 `ENV_BLOCKED_NETWORK_PATH` 的事实。不启动 x86 KVM/KSU/TAP guest、不操作实体 Android 或用户服务器、不构造伪 SYNACK/TLS 代替真联机。
+
+生产 RootService 的原 Go argv 由**同一个**无 Android/网络运行依赖的纯 Java 类装配，Host JVM 执行真实生产代码的 IPv4/域名、CA、Normal/off、protected auto-IP、外层1460B、单/多/全 App UID、secret-file paths 和拒绝错误输入等用例；逐一对应原 Go CLI 注册 flags。官方签名 APK 构建后，对真实 `classes.dex`、同 SOURCE 的 arm64 Go ELF / Rust `.so` SHA256、Bionic ABI、原生动态链接和源锁做验证，上传限定枚举的 `wiring-receipt.json`。保留现有 RootService→su→root-only ELF stage/真实 owner token/原 Go exec/Rust M4/原 Stop/标准 TLS，不以 Host 工具替代数据面。
+
+Actions **默认**执行 Host、源锁原生双 ABI 构建、ARM64 APK 签名和独立 Linux oracle；x86 KSU Native、D2-S1、TAP guest 必须显式手工 `workflow_dispatch` 才运行，本次不选择。任何 BUILD/WIRING PASS 都不等于 Android ROOT、物理网络、FakeTCP SYNACK、TLS认证/32租约、Rust M4 真 TCP/UDP 或 owned Stop 的设备执行；本批上述运行项记 `NOT_RUN`，A25 的历史实测状态仍保持。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

@@ -16,6 +16,8 @@
 
 **下一步唯一网络资格门**：当前 hosted x86 TAP 试验记 `ENV_BLOCKED_NETWORK_PATH`，不得重刷相同 QEMU/KSU Job 或改 TLS/AEAD、伪造 Network/默认路由/DNS。只有获取用户单独授权的真实 ARM64 设备，或实际可用且获授权的自管 ARM64 KVM/隔离真实接口，才继续原 Go/Rust ↔ 原 Linux RAW SYN RX→SYNACK TX→Android SYNACK RX→标准 TLS/认证/租约→Rust M4 真双向 TCP/UDP/owned Stop；无环境/授权时只准备离线最小验收收据，不动手机/服务器。
 
+**本轮最新用户优先指令（A26）**：明确**不做模拟网卡绑定或真机测试**。可在实验分支直接施工签名 ARM64 APK ↔ 原 Go/Rust 的生产 CLI argv/RootService/Stop 接线，GitHub Actions 做同源双 ABI 编译、实签 APK 资产 DEX+原Go/Rust ELF SHA/DT_NEEDED + Go flags 对照、Host JVM 正反用例与原 Linux oracle。x86 KSU/TAP guest 默认仅显式手工 dispatch，不做本轮测试。Host BUILD/WIRING PASS 不升级 A25 的 ENV_BLOCKED_NETWORK_PATH 或 Android↔Linux 真业务资格。
+
 ## 3. 两个 ABI 的角色不可偷换
 
 - **ARM64 为唯一发布目标**：原 Go `android/arm64` + 原 Rust `aarch64-linux-android`、16KiB、签名 arm64-v8a APK，必须最终在真正 ARM64 Android 验收。已有用户短时真机诊断不能代替正式 WBD 实连。

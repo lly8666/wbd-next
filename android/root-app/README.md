@@ -363,3 +363,25 @@ A12 在同一个一键按钮后增加固定的 `A12_*` 失败收据，
 安装 A12 后点同一个按钮，把 **A12_* + A11_* + rollback**
 原样复制回来即可定位下一步。此版本仍不做无服务器原 WBD
 TLS/租约/Rust M4数据E2E或系统DNS接管。
+
+## A26: original ARM64 APK ↔ Go/Rust wiring, Actions-only
+
+The production `RootClientService` now obtains original Go Normal/off
+argv from `OriginalGoCommandArgs.build(...)`, a pure Java implementation
+also executed in Host JVM tests (not a duplicate mock). Tests cover exact
+Network handle/IP/interface flags, IPv4 vs DNS bootstrap, SNI/optional CA,
+app-private password/route-key *file paths*, one/many/all verified App UID
+routes, protected auto-/32, outer MTU 1460, no outer repair and invalid
+inputs. No alternative TLS or Rust M4 implementation is introduced.
+
+After building the **actual signed ARM64 APK**, Actions confirms
+`classes.dex` includes the production argv builder, RootService and exact
+Stop class; signed Go/Rust ELF SHA/source manifests, ABI and original Go
+`libwbd_engine.so` dynamic dependency agree. The `wiring-receipt.json`
+is uploaded with the disposable-debug-signed APK.
+
+x86 KSU/TAP guest jobs are now **manual workflow_dispatch opt-in only**,
+not part of automatic APK wiring checks. Host and APK build gates are not
+a device launch, real FakeTCP/TLS/lease, kernel UID routing, data or Stop
+test. These all remain NOT_RUN on this new SOURCE; historical A25 evidence
+is retained separately.

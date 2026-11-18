@@ -162,8 +162,8 @@ public final class RootClientService extends Service {
     }
     @Override public IBinder onBind(Intent i){return null;}
     private static String q(String s){
-        // One POSIX shell token, including otherwise untrusted CLI labels.
-        return "'"+s.replace("'","'\\''")+"'";
+        // The host JVM tests this exact POSIX escaping implementation.
+        return OriginalGoCommandArgs.shellQuote(s);
     }
     private void notification(){
         NotificationManager nm=getSystemService(NotificationManager.class);
@@ -256,51 +256,19 @@ public final class RootClientService extends Service {
                                  String user,int peerPort,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
                                  boolean hasCA,String token){
-        List<String> args=new ArrayList<>();
-        String serverAddressFlag=ServerAddress.isIPv4Literal(peer)?"--peer-ip":"--peer-host";
-        String[] fixed={
-            "--mode","normal","--auto-ip",
-            "--raw-interface",net.interfaceName,
-            "--android-network-handle",Long.toUnsignedString(net.handle),
-            "--local-ip",net.address,
-            serverAddressFlag,peer,
-            "--peer-port",Integer.toString(peerPort),
-            "--local-port",Integer.toString(40000+new SecureRandom().nextInt(20000)),
-            "--tun-name","wbdv40",
-            "--server-name",sni,
-            "--username",user,
-            "--password-file",new File(getFilesDir(),"wbd-pass.secret").getAbsolutePath(),
-            "--route-key-hex-file",new File(getFilesDir(),"wbd-route.secret").getAbsolutePath(),
-            "--installation-id-file",new File(getFilesDir(),"wbd-installation-id").getAbsolutePath(),
-            "--tun-fq-maxrate-mbps","0",
-            "--tun-txqlen-packets","500",
-            "--outer-repair","off",
-            // Verified CN8503 source is a cold-only admission prerequisite.
-            // DNS packets are NOT yet intercepted or forwarded from this
-            // Android Root process; this is not a DNS availability flag.
-            "--android-cn-geosite-file",nativeCode.cnGeosite.getAbsolutePath(),
-        };
-        for(String a:fixed)args.add(q(a));
-        if(allApps){
-            args.add(q("--android-route-all-apps"));
-            args.add(q("--android-route-exclude-appids"));
-            args.add(q(AllAppUIDPolicy.csv(excludedAppIDs)));
-        }else if(targetUids.length==1){
-            args.add(q("--android-route-uid"));
-            args.add(q(Integer.toString(targetUids[0])));
-        }else{
-            args.add(q("--android-route-uids"));
-            StringBuilder group=new StringBuilder();
-            for(int uid:targetUids){
-                if(group.length()>0)group.append(',');
-                group.append(uid);
-            }
-            args.add(q(group.toString()));
-        }
-        if(hasCA){
-            args.add(q("--tls-ca-pem"));
-            args.add(q(new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath()));
-        }
+        // The host-tested argv is also the exact argv passed to original Go.
+        // Secret *values* never appear here, only app-private file paths.
+        List<String> args=OriginalGoCommandArgs.build(
+            net.interfaceName,net.handle,net.address,peer,peerPort,
+            40000+new SecureRandom().nextInt(20000),sni,user,
+            new File(getFilesDir(),"wbd-pass.secret").getAbsolutePath(),
+            new File(getFilesDir(),"wbd-route.secret").getAbsolutePath(),
+            new File(getFilesDir(),"wbd-installation-id").getAbsolutePath(),
+            nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
+            excludedAppIDs,
+            hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null);
+        List<String> quotedArgs=new ArrayList<>();
+        for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
         shell.append("p=").append(q(ROOT)).append("; ");
         // /data/local/tmp may be writable to shell/other actors.
@@ -336,7 +304,7 @@ public final class RootClientService extends Service {
         shell.append("chmod 600 \"$p/owner.pid\"; ");
         shell.append("LD_LIBRARY_PATH=\"$p\"; export LD_LIBRARY_PATH; ");
         shell.append("exec \"$p/").append(nativeCode.executableName).append("\" ");
-        shell.append(String.join(" ",args));
+        shell.append(String.join(" ",quotedArgs));
         return shell.toString();
     }
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
