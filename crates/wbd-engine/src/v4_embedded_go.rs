@@ -6782,6 +6782,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             });
             e.counters.route_refresh.fetch_add(1,Ordering::Relaxed);
         }
+        #[cfg(target_os="linux")]
         e.normal_pad_staged.clear();
         let mut accepted=0usize;
         let mut failed=ingress_error;
@@ -6842,26 +6843,39 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                 // Stage-success does not claim a kernel copy or delivery.
                 #[cfg(feature="fec2_product_record")]
                 let proto=slab.writable().get(14+9).copied();
-                let now=loop_now();
-                let room=e.tx_route.as_ref().ok_or(BAD_STAGE)?
-                    .scoped.frame.record_wire_mtu
-                    .min(e.normal_pad_wire_limit)
-                    .min(slab.writable().len())
-                    .saturating_sub(n.saturating_add(31));
-                let now_ms=now.0/1_000_000;
-                let pad=if let Some(policy)=e.normal_startup_padding.as_mut(){
-                    if now_ms.saturating_sub(e.normal_pad_gc_ms)>=30_000{
-                        policy.expire_coarse(now_ms);
-                        e.normal_pad_gc_ms=now_ms;
+                #[cfg(target_os="linux")]
+                let result={
+                    let now=loop_now();
+                    let room=e.tx_route.as_ref().ok_or(BAD_STAGE)?
+                        .scoped.frame.record_wire_mtu
+                        .min(e.normal_pad_wire_limit)
+                        .min(slab.writable().len())
+                        .saturating_sub(n.saturating_add(31));
+                    let now_ms=now.0/1_000_000;
+                    let pad=if let Some(policy)=e.normal_startup_padding.as_mut(){
+                        if now_ms.saturating_sub(e.normal_pad_gc_ms)>=30_000{
+                            policy.expire_coarse(now_ms);
+                            e.normal_pad_gc_ms=now_ms;
+                        }
+                        policy.propose(&slab.writable()[14..14+n],now_ms,room)
+                    }else{0};
+                    let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
+                    let result=e.owner.seal_normal_off_padded_with_worker_snapshot(
+                        slab,n,scoped,ifindex,destination,15,now,pad
+                    );
+                    if let Ok((pn,_,_))=result{
+                        if pad>0{e.normal_pad_staged.push((pn,pad as u16));}
                     }
-                    policy.propose(&slab.writable()[14..14+n],now_ms,room)
-                }else{0};
-                let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
-                let result=e.owner.seal_normal_off_padded_with_worker_snapshot(
-                    slab,n,scoped,ifindex,destination,15,now,pad
-                );
-                if let Ok((pn,_,_))=result{
-                    if pad>0{e.normal_pad_staged.push((pn,pad as u16));}
+                    result
+                };
+                #[cfg(not(target_os="linux"))]
+                let result={
+                    let scoped=&e.tx_route.as_ref().ok_or(BAD_STAGE)?.scoped;
+                    e.owner.seal_normal_off_with_worker_snapshot(
+                        slab,n,scoped,ifindex,destination,15,loop_now()
+                    )
+                };
+                if result.is_ok(){
                     accepted+=1;
                     #[cfg(feature="fec2_product_record")]
                     match proto{
@@ -7055,6 +7069,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         return Err(BAD_STAGE)
     }
     let finish=classify_tx_turn(report.as_ref(),admitted,seal_failed);
+    #[cfg(target_os="linux")]
     for (pn,pad) in e.normal_pad_staged.drain(..){
         if actual_firstsend.iter().take(finish.copied as usize)
             .any(|(copied,_)|copied.0==pn){
