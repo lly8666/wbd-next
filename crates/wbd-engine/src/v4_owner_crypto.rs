@@ -1123,9 +1123,36 @@ impl ProtectedScopedOwner {
     /// publishes immutable M1 records. Queue success is NOT kernel APPLIED.
     #[cfg(feature="fec2_product_record")]
     pub(crate) fn seal_fec2_product_one(
-        &mut self,mut buffer:UniqueBuffer,payload_len:usize,kind:u8,
+        &mut self,buffer:UniqueBuffer,payload_len:usize,kind:u8,
         budget:FrameBudget,carrier_snapshot:u64,epoch:[u8;16],now:MonoNs,
     )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        self.seal_fec2_product_one_inner(
+            buffer,payload_len,kind,budget,carrier_snapshot,epoch,now,0
+        )
+    }
+    // Source kind2 only: authentication envelope trailing zeros, no changes
+    // to FEC source bytes, block index, parity, revision or frozen repair.
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+        any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")))]
+    pub(crate) fn seal_fec2_product_one_padded(
+        &mut self,buffer:UniqueBuffer,payload_len:usize,kind:u8,
+        budget:FrameBudget,carrier_snapshot:u64,epoch:[u8;16],now:MonoNs,
+        padding_bytes:usize,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        self.seal_fec2_product_one_inner(
+            buffer,payload_len,kind,budget,carrier_snapshot,epoch,now,padding_bytes
+        )
+    }
+    #[cfg(feature="fec2_product_record")]
+    fn seal_fec2_product_one_inner(
+        &mut self,mut buffer:UniqueBuffer,payload_len:usize,kind:u8,
+        budget:FrameBudget,carrier_snapshot:u64,epoch:[u8;16],now:MonoNs,
+        padding_bytes:usize,
+    )->Result<(u64,u32,usize),ProtectedCryptoError>{
+        if padding_bytes>500 || (padding_bytes!=0&&kind!=2){
+            return Err(ProtectedCryptoError::Tx)
+        }
         if epoch==[0;16]||epoch!=self.epoch||
             self.state!=OwnerPhase::Active||!self.rx_tx.detached(){
             return Err(ProtectedCryptoError::Inactive)
@@ -1156,8 +1183,8 @@ impl ProtectedScopedOwner {
             }
             _=>return Err(ProtectedCryptoError::Tx)
         }
-        self.seal_scoped_authenticated_one(
-            buffer,payload_len,budget,carrier_snapshot,now,false,kind)
+        self.seal_scoped_authenticated_one_padded(
+            buffer,payload_len,budget,carrier_snapshot,now,false,kind,padding_bytes)
     }
 
     fn seal_normal_off_validated_link(
@@ -1204,7 +1231,7 @@ impl ProtectedScopedOwner {
             return Err(ProtectedCryptoError::Tx)
         }
         if padding_bytes>500||
-            (padding_bytes!=0&&kind!=AUTHENTICATED_LINK_KIND){
+            (padding_bytes!=0&&kind!=AUTHENTICATED_LINK_KIND&&kind!=2){
             return Err(ProtectedCryptoError::Tx)
         }
         let used=payload_len.checked_add(FIXED_WIRE_OVERHEAD)
@@ -1236,7 +1263,7 @@ impl ProtectedScopedOwner {
         }else{
             #[cfg(any(feature="m0_fec2_owner_probe",feature="fec2_product_record"))]
             {self.crypto.tx.seal_fec2_after_admission_in_place(
-                kind,buffer.writable(),payload_len,0
+                kind,buffer.writable(),payload_len,padding_bytes
             )}
             #[cfg(not(any(feature="m0_fec2_owner_probe",feature="fec2_product_record")))]
             {return Err(ProtectedCryptoError::Tx)}
