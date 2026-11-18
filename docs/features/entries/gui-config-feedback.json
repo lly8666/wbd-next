@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "gui-config-feedback",
   "name": "配置/CLI/WinForms状态回执",
-  "summary": "H2135 真WinForms高级CN→普通CN→all三次 OS Applied/DNS/TCP/UDP、Rust Stop/WAL和末次窗口关闭/父进程exit0签名PASS；旧键迁移配置H2105独立PASS。",
+  "summary": "H2205 H2204 V4v2原WinForms/Go/Rust，新增Npcap官网下载/官方签名交互安装与Wintun pinned SHA临时PNP按钮；409项GUI/Go配置自检 PASS_SCOPED；历史H2135三代真网/Stop证据保留。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
   "development_branch": "work/m4-r1-platform",
@@ -20,7 +20,7 @@
   "usage": {
     "cli": "Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）",
     "config": "H2105旧CN缺键true、新false、显式false和off/all冷校验PASS；H2135 GUI三代网络/Stop独立PASS。",
-    "gui": "WinForms 服务器/网络/传输/状态含DNS/CN/FEC/MTU/startup-padding off|tls|flows、连接/断开、OS Applied。H2059 Normal flows、H2135 Normal三代真网络分源PASS。H2167 Game2/4 GUI选项/V5冷接，新Game GUI真NPF仍NOT_RUN。"
+    "gui": "WinForms 服务器/网络/传输/状态含DNS/CN/FEC/MTU/startup-padding off|tls|flows、连接/断开、OS Applied。H2059 Normal flows、H2135 Normal三代真网络分源PASS。H2167 Game2/4 GUI选项/V5冷接，新Game GUI真NPF仍NOT_RUN。 H2205“便携与驱动”新增Npcap官网与本地原厂签名交互安装、Wintun固定SHA官方0.14.1独占临时驱动初始化；用户物理机的真实安装 NOT_RUN。"
   },
   "code_refs": [
     "r0/go_overlay/assembly/manifest.json",
@@ -32,7 +32,10 @@
     ".github/workflows/m0-plan028-h1638-windows-gui-all-controls-vm.yml",
     "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go",
     "tools/m0_plan028_h1640_win_gui_compile.ps1",
-    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "tools/m0_h2204_win_driver_setup.cs",
+    ".github/workflows/qa-h2204-gui-arm64-release.yml",
+    ".github/workflows/qa-h2204-win-gui-fast.yml"
   ],
   "doc_refs": [
     "docs/evidence/M0/PLAN020-source-locked-native-WinForms-V4-Go-Rust-M3-signed-Wintun-portable-S636-20261021.json",
@@ -42,7 +45,9 @@
     "docs/testing/PLAN028_M0_ACCEPTANCE_COVERAGE.md",
     "docs/devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md",
     "docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
+    "docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json",
+    "docs/devlog/M0/20261119-PLAN029B-H2205-H2204-RELEASE-MAIN-INTEGRATION.md"
   ],
   "verification": [
     {
@@ -163,6 +168,20 @@
       "status": "PHYSICAL_PASS",
       "source_sha": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
       "evidence": "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json"
+    },
+    {
+      "platform": "windows/amd64 Windows2025 hosted GUI",
+      "scope": "H2205 native Windows WinForms exact Go--check-config and Rust DLL: actual process exit0 and 409 GUI/driver-control negative+visible checks; source pin/official Wintun DLL release build; installer and Wintun PnP installation not clicked",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "5ad409d1f5fe664a4030eec149a98882f88108f8",
+      "evidence": "docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json"
+    },
+    {
+      "platform": "windows/amd64 physical",
+      "scope": "Npcap signed installer actually executed from GUI; Wintun temporary PnP setup; physical Windows↔ARM64 Linux",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
@@ -193,7 +212,8 @@
     "H2079 CN新键初次实网NOT_RUN，后续H2105/H2135有签名。",
     "H2082 Game4 all候选待CI；后续H2162 20/20真测。",
     "H2135只证明所测Normal三代GUI真网络/Stop，非全部Game或平台组合；完整029B技术出口仍OPEN。",
-    "H2167 Game2/4 GUI padding帮助与V5冷接，真NPF新SOURCE NOT_RUN。"
+    "H2167 Game2/4 GUI padding帮助与V5冷接，真NPF新SOURCE NOT_RUN。",
+    "H2205: Npcap Free二进制未随包分发，需用户自行从npcap.com官方下载、通过签名+发布者校验并确认交互向导；CI未执行系统安装。Wintun官方固定SHA DLL随包提供，按钮临时建/撤适配器设计已通过负例自检，物理PnP效果NOT_RUN。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
