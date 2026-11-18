@@ -73,6 +73,7 @@ assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android application
 assert 'AllAppRouteScope.snapshot(this)' in a and 'all_apps' in a, "default mode must pass verified scopes not fake overlay"
 
 assert 'ServerAddress.valid(peer)' in a and 'Server underlay IPv4 or DNS name' in a
+cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
 go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
 assert 'rootjournal.NewGroup(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=' in go
 assert 'rootjournal.NewAllApps(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED mode=all_apps' in go

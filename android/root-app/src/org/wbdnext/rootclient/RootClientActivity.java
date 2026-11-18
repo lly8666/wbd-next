@@ -272,14 +272,14 @@ public final class RootClientActivity extends Activity {
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
         TextView targetHelp=new TextView(this);
-        targetHelp.setText("默认代理所有普通 Android App（20 个 Android 用户空间的应用 UID 段）。"
+        targetHelp.setText("默认接管普通 Android 应用的 IPv4 流量（20 个 Android 用户空间的应用 UID 段）。"
             +"仅在原 Go TLS/认证 /32、原 Rust M4 就绪后设置 KernelSU UID 路由。"
             +"系统/root/隔离 UID、WBD 自身及已识别 KernelSU Manager 绕过，"
-            +"物理网络出口不经隧道。系统 DNS、系统进程全局接管尚未验证，当前不启用。"
+            +"物理网络出口不经隧道。IPv6、系统 DNS、系统进程全局接管尚未验证，当前不启用。"
             +"取消全应用模式后，可选择最多 8 个实际 App UID。");
         pane.addView(targetHelp);
         allAppsDefault=new CheckBox(this);
-        allAppsDefault.setText("默认：代理所有普通应用（排除 WBD/KernelSU/系统 UID）");
+        allAppsDefault.setText("默认：普通 App IPv4 走 WBD（排除 WBD/KernelSU/系统 UID）");
         allAppsDefault.setChecked(true);
         pane.addView(allAppsDefault);
         appChoices=new LinearLayout(this);
