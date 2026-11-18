@@ -175,8 +175,18 @@ fi
 if [ -n "${WBD_ARM64_SERVER_OUTER_MTU+x}" ]; then
   server_mtu_args=(--outer-mtu "$WBD_ARM64_SERVER_OUTER_MTU")
 fi
+# NAT-friendly server-only CLI underlay auto-bind verification. Empty
+# and 0.0.0.0 must resolve to the SAME concrete interface IPv4 and preserve
+# the AF_PACKET exact-IP BPF/userspace filtering after startup.
+server_bind_args=(--local-ip 198.18.7.2)
+case "${WBD_PLAN029_SERVER_NAT_IP_STYLE:-explicit}" in
+  explicit) ;;
+  zero) server_bind_args=(--local-ip 0.0.0.0) ;;
+  omitted) server_bind_args=() ;;
+  *) echo 'H2206_INVALID_SERVER_NAT_BIND_TEST_STYLE' >&2; exit 2 ;;
+esac
 sudo -n ip netns exec "$server_ns" env LD_LIBRARY_PATH="$bundle" "$bundle/wbd-v4-server" "$@" "${game_fec_args[@]}" "${server_extra[@]}" \
-  --raw-interface v4as --local-ip 198.18.7.2 --local-port 443 \
+  --raw-interface v4as "${server_bind_args[@]}" --local-port 443 \
   "${server_mtu_args[@]}" \
   --tun-name wbdsv --tun-ipv4 10.188.18.2/24 \
   --tls-cert "$work/server.crt" --tls-key "$work/server.key" \
