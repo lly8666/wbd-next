@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "linux-raw-tun",
   "name": "Linux Raw IPv4/TUN产品驱动",
-  "summary": "原Go TLS/Rust Linux raw/TUN自有队列/FQ。H2177原生x86_64及ARM64客户端+服务端各五模式，双向真实TCP/UDP/MTU/Stop PASS_SCOPED；只对自有TUN禁IPv6。",
+  "summary": "原Go TLS/Rust Linux AF_PACKET/raw与真实owned TUN；H2177原生x86_64/ARM64双端五基础模式10/10真TCP/UDP/Stop；H2186同双ISA再16/16互补原生Game随机填充/AES128/256/外层MTU1280，TUN禁IPv6的正确OS边界PASS_SCOPED。",
   "owner": "M4/M0 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -127,6 +127,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
       "evidence": "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "native Ubuntu 24.04 x86_64 and aarch64 original Linux Go TLS/Rust AF_PACKET + owned TUN, client/server",
+      "scope": "H2186 x86 and ARM each 8 original SOURCE-locked native real TCP/UDP/Stop, 16/16 SUCCESS; original Game M4 padding has real raw copied receipts, AES128/256 Normal, outer1460/1280. For inner MTU>=1280 exact owned disable_ipv6=1 plus zero IPv6 routes/address; for actual outer1280->inner1209 kernel may not expose per-device sysctl and readback verifies no IPv6 addresses/routes. No host-global IPv6/physical ARM performance claim.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+      "evidence": "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
     }
   ],
   "limitations": [
@@ -156,7 +163,8 @@
     "H1298 candidate after H1297 SOURCEe410 Action42332967232 Erin DL2160ms/EAGAIN1047/M4 plateau: after eight consecutive genuine FEC2 Backpressure increase that one RAW SO_SNDBUF to 1MiB (effective<=2MiB). H1267 all-socket AB failed universal downlink; no global default; causal native proof required.",
     "H1298 ARM64 SOURCE1729010e Action42334170992 five-client 180s PASS0 alerts/5 TLS rotations/Stop/overflow0, Erin max UL250ms/DL120ms, adaptive SO_SNDBUF NOT_TRIGGERED; H1295 and H1297 FAIL remain, H1299 separate.",
     "H2177 native x86_64/ARM64 current-SOURCE 5-mode short functional PASS_SCOPED. ARM physical board, stress/perf/long capacity, host-wide IPv6 and p99 NOT_RUN; older H1355 source-specific L1 remains.",
-    "PLAN028 H1461 SOURCE66fb6b44 bounded Rust per-lease 8pkts/64KiB/100ms FIFO repair candidate; 600/1800 native five-client Action42578056120 in_progress. Historical SOURCE548 Normal75 28 UDP missing/5 overflow FAIL_SCOPED retained; Windows-hosted official 1800 NOT_QUALIFIED."
+    "PLAN028 H1461 SOURCE66fb6b44 bounded Rust per-lease 8pkts/64KiB/100ms FIFO repair candidate; 600/1800 native five-client Action42578056120 in_progress. Historical SOURCE548 Normal75 28 UDP missing/5 overflow FAIL_SCOPED retained; Windows-hosted official 1800 NOT_QUALIFIED.",
+    "H2186 H2185 earlier outer1280 case failed because fixture unconditionally read per-interface IPv6 sysctl even though inner1209 < IPv6 min1280; true new source each native ISA verifies missing sysctl only under inner<1280 AND zero IPv6 addr/routes. Host global IPv6 remains NOT_RUN."
   ],
   "promotion": null
 }

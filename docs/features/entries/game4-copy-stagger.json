@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "game4-copy-stagger",
   "name": "Game4 四副本错峰",
-  "summary": "可选即时/短/宽错峰，默认四lane的stagger-4-50-140；Game2不使用。",
+  "summary": "可选即时/短/宽错峰，默认Game4宽错峰 stagger-4-50-140；H2186 Linux x86_64与ARM64真实Game4即时模式0和默认宽模式2各双端网络+Stop限域PASS。Game2不使用。",
   "owner": "M0/M1 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -48,6 +48,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "native Linux x86_64 and aarch64, original TLS/Rust Game4 with original kernel AF_PACKET",
+      "scope": "H2186 Game4 FEC off original immediate copy mode=0 readback and actual M4 first lane copies with startup flows/outer repair off; separate Game4 fixed6 default wide stagger mode=2 actual schedule readback/copy, true bidirectional TCP/UDP and double Stop. Does not qualify physical route diversity or latency wins.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+      "evidence": "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
     }
   ],
   "limitations": [

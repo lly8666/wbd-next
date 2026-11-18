@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "Tunnel TCP/UDP record随机填充",
-  "summary": "Windows H2169 Game2/4 off/tls/flows六场真NPF PASS_SCOPED。Linux H2181/H2183 原Go TLS→Rust Game M4填充候选尚在编译与原生验证中；不能称Linux PASS。",
+  "summary": "H2169 Windows Game原生限定6场PASS；H2186 Linux x86_64和ARM64原生客户端+服务端各8场完整SUCCESS（含Game2/4原Rust Game startup-padding off/tls/flows实际AF_PACKET复制），只对Game2/4及所测FEC组合限域PASS；默认off。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
-    "linux_cli": "Game2/4已有 --startup-padding off|tls|flows 冷配置（默认off），由已认证Go组在真实Rust M4启动前设置，原AF_PACKET成功copy后计数；Linux Normal/fec-fixed/fec-auto tls/flows明确拒绝。H2181 E0432/E0433与H2182 E0432编译FAIL保留，H2183修纯FlowKey模块Linux cfg、实际 native网络NOT_RUN直至新Action。"
+    "linux_cli": "Linux 原Go TLS客户端/服务端 --mode game2|game4 --startup-padding off|tls|flows，默认off；已验证同源Rust M4每lane原密文、真实AF_PACKET成功copy后才记录 padded_records/bytes；GameFEC fixed6只提取实际IPv4 source、parity/health不添加填充。Linux Normal/fec-fixed/fec-auto tls/flows 未接线且严格拒绝；改值下次冷重连生效。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -136,10 +136,10 @@
     },
     {
       "platform": "native Linux x86_64 and ARM64 original Go TLS client/server + Rust Game M4/raw AF_PACKET",
-      "scope": "H2181 candidate: Game2/4 original authenticated startup-padding off/tls/flows, real kernel copy counters, original app, Stop, GameFEC source-only + parity not padded; native action not completed yet.",
-      "status": "IMPLEMENTED_NOT_TESTED",
-      "source_sha": null,
-      "evidence": null
+      "scope": "H2186 exact native SOURCE e1742358: two original Linux Go TLS client+server on each native x86_64/aarch64 runner, per ISA 6 authenticated Game scenes: Game2/FEC off with padding off(0)/tls(>0)/flows(>0), Game2 fixed6+flows, Game4 fixed6+flows, Game4 FEC off+immediate+flows. Real original Rust per-lane AEAD/PN, successful kernel AF_PACKET padded records/bytes off zero and tls/flows nonzero and <=500B each, typed FEC source/parity nonzero, real two-way TCP/UDP application, original MTU/Stop/netns cleanup. 12 original Game network sessions total; other two per ISA Normal AES tests do not imply Normal padding.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+      "evidence": "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
     }
   ],
   "limitations": [
@@ -152,7 +152,8 @@
     "H2169 Game route-mode=all（业务Direct关闭）仍原生填充已证实；Normal split-enable=false及其他Game政策组合不因本场自动PASS。",
     "H2079旧SOURCE Normal split关闭维持padding当时未验；新Game route-mode=all真测不能替换旧Normal独立SOURCE。",
     "H2181 Linux Game padding source candidate pending two-ISA native Action, cannot claim Linux data-plane PASS before original authenticated Go TLS/Rust/AF_PACKET results. Linux Normal/Fixed/Auto tls/flows remains NOT_WIRED and reject nonoff.",
-    "H2182 native SOURCE f8b38d8 original Linux compiler FAILED E0432 (portable FlowKey module still Windows/test cfg); H2183 only adds Linux to pure split-key module root, followup native build pending."
+    "Historical H2181/H2182 native Rust cfg build failures preserved; H2186 new SOURCE actual Linux original Go TLS/Rust Game native x86/ARM 12/12 scoped Game scenes PASS. No full Windows Game WinForms network button proof or Linux Normal/FEC startup padding.",
+    "H2186 only startup envelope policy proved by same-Rust component tests and genuine raw copied byte receipts; encrypted ciphertext cannot itself disclose exact per-record random pad bytes. TLS selector used TLS-record-shaped application prefix on real kernel TCP, not full application TLS handshake; no DPI-evasion guarantee or CPU/p99/long loss claim."
   ],
   "promotion": null
 }
