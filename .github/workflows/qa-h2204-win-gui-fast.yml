@@ -46,6 +46,9 @@ jobs:
           if((Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant() -ne $m.sha256.'wbd-client.exe'){throw 'wrong original Go executable sha'}
           New-Item -ItemType Directory -Force delivery/windows-amd64 | Out-Null
           Copy-Item $exe delivery/windows-amd64/wbd-client.exe
+          $dll='frozen-original/windows-amd64/wbd_engine.dll'
+          if((Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant() -ne $m.sha256.'wbd_engine.dll'){throw 'wrong native Rust DLL source SHA'}
+          Copy-Item $dll delivery/windows-amd64/wbd_engine.dll
       - name: Reassemble actual current v2 CLI/GUI source schema and source-pinned WinForms
         shell: pwsh
         run: |
