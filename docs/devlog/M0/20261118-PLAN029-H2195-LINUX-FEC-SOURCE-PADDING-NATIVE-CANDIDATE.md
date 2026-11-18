@@ -7,3 +7,5 @@
 ```feature-impact
 {"kind":"updated","ids":["startup-flow-padding","linux-raw-tun","fec-fixed","fec-auto"],"reason":"H2195 source-only AEAD-tail FEC Fixed/Auto original Linux padding opt-in and 2/ISA native fixture; all updated verification records marked NOT_RUN until SOURCE-locked original kernel evidence."}
 ```
+
+H2195 first governance [Action44292569134](https://github.com/lly8666/wbd-next/actions/runs/44292569134) Feature catalog FAIL: original `linux-raw-tun.json` card 16,499 UTF-8 bytes exceeded hard 16,384B although character count was 15,436; Governance job PASS and maintenance [44292569346](https://github.com/lly8666/wbd-next/actions/runs/44292569346) SUCCESS. Doc-only fix keeps H2195 candidate as feature summary and in startup/fec-fixed/fec-auto verification, omits only the duplicate new pending linux-raw verification, preserves all historic entries. Original product SOURCE `8a404a4f` and native Action unchanged.
