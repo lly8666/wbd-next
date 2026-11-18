@@ -54,10 +54,17 @@ public final class X86CiOriginalStartActivity extends Activity {
                  chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("physical Network changed");
             List<InstalledAppTarget> applications=InstalledAppCatalog.launchable(this);
-            if(applications.isEmpty())
-                throw new IllegalStateException("no separate installed user App UID");
+            InstalledAppTarget ciTarget=null;
+            for(InstalledAppTarget app:applications){
+                if("org.wbdnext.rootprobe".equals(app.packageName)){
+                    ciTarget=app;
+                    break;
+                }
+            }
+            // The KernelSU Manager itself must NEVER become a tunnel UID.
+            if(ciTarget==null)throw new IllegalStateException("CI target probe App not installed");
             SelectedAppGroup uidGroup=SelectedAppGroup.from(
-                Collections.singletonList(applications.get(0)),
+                Collections.singletonList(ciTarget),
                 android.os.Process.myUid(),getPackageName());
             if(!InstalledAppCatalog.stillSameGroup(this,uidGroup.packages,uidGroup.uids))
                 throw new IllegalStateException("target app UID changed");

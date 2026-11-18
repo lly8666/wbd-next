@@ -15,6 +15,15 @@ test -s "$p/manifest.json" && test "$(cat "$p/SOURCE")" = "$GITHUB_SHA"
 test -s "$n/manifest-ci-x86_64.json" && test "$(cat "$n/SOURCE")" = "$GITHUB_SHA"
 (cd "$p" && sha256sum -c SHA256SUMS) >"$out/linux-source-sha.txt"
 (cd "$n" && sha256sum -c SHA256SUMS) >"$out/android-source-sha.txt"
+# actions/download-artifact extracts uploaded ELF bytes without executable mode.
+# Restore executable permission ONLY after exact SHA checks; mode does not
+# change content hash. Exit 126 in Action44246119539 occurred before server
+# initialization, with guest and app source checks already PASS.
+for binary in wbd-v4-server wbd-v4-client;do
+  test -f "$p/$binary" && test ! -L "$p/$binary"
+  chmod 0700 "$p/$binary"
+  test -x "$p/$binary" || { echo "D2_S1_ORIGINAL_LINUX_ELF_NOT_EXECUTABLE" >&2; exit 126; }
+done
 python3 - <<'PY'
 from pathlib import Path
 import json,os
@@ -146,6 +155,14 @@ echo REAL_ORIGINAL_LINUX_SERVER_TUN_PASS >"$out/server-started.txt"
 # The CI test App has no secret-bearing Intent or command-line parameters.
 # Inject secrets as 0600 only to this disposable Android app UID sandbox.
 phase=D2_S1_APP_PRIVATE_SECRETS
+# The separate CI-only Root Probe App is the ONLY permitted UID route target.
+# NEVER select KernelSU Manager or another installed application implicitly.
+test -s out/apk/app-su.apk
+test "$(cat out/apk/SOURCE)" = "$GITHUB_SHA"
+(cd out/apk && sha256sum -c SHA256SUMS) >"$out/target-app-source-sha.txt"
+adb install -r out/apk/app-su.apk >"$out/target-app-install.txt" 2>&1
+adb shell pm path org.wbdnext.rootprobe >"$out/target-app-installed.txt" 2>&1
+grep -q "^package:" "$out/target-app-installed.txt"
 adb push "$tmp/password" /data/local/tmp/wbd-d2-pass.tmp \
   >"$out/push-password.txt" 2>&1
 adb push "$tmp/route.hex" /data/local/tmp/wbd-d2-route.tmp \

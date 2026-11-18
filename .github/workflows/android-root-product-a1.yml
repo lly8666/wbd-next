@@ -368,6 +368,12 @@ jobs:
       - name: D2-S1 build signed x86 CI-only APK using production Java + original Go/Rust
         shell: bash
         run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: D2-S1 build an isolated ordinary App UID traffic target (never KernelSU Manager)
+        shell: bash
+        run: |
+          bash experiments/android-root-probe/ci/build-app.sh
+          test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
+          rm -f out/apk/host-tls.key
       - name: D2-S1 prepare pinned x86 Android16 KSU3.3.1 emulator
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
