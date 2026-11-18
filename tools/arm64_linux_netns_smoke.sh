@@ -110,11 +110,11 @@ if [[ "${WBD_PLAN029_LINUX_COVERAGE:-0}" == 1 ]];then
     off|tls|flows) ;;
     *) echo PLAN029_INVALID_LINUX_PAD_REQUEST >&2;exit 2 ;;
   esac
-  if [[ "$game_lanes" -gt 0 ]];then
+  if [[ "$game_lanes" -gt 0 || "$mode" == normal ]];then
     client_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
     server_extra+=(--startup-padding "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}")
   elif [[ "${WBD_PLAN029_LINUX_STARTUP_PADDING:-off}" != off ]];then
-    echo PLAN029_LINUX_NORMAL_PADDING_NOT_WIRED >&2;exit 2
+    echo PLAN029_LINUX_FEC_PADDING_NOT_WIRED >&2;exit 2
   fi
   case "${WBD_PLAN029_LINUX_CLIENT_CIPHER:-chacha20-poly1305}" in
     chacha20-poly1305|aes-128-gcm|aes-256-gcm)

@@ -12,7 +12,7 @@ def read(path):
     return (ROOT/path).read_text(encoding="utf-8")
 
 class LinuxNonWindowsCapabilities(unittest.TestCase):
-    def test_padding_is_explicit_authenticated_game_only_and_default_off(self):
+    def test_padding_is_explicit_authenticated_normal_and_game_default_off(self):
         cli=read("r0/go_overlay/internal/v4productcli/linux.go")
         rust=read("crates/wbd-engine/src/v4_embedded_go.rs")
         crate_root=read("crates/wbd-engine/src/lib.rs")
@@ -21,7 +21,11 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         game=read("crates/wbd-engine/src/v4_game_lane.rs")
         go=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go")
         self.assertIn('flags.String("startup-padding","off"',cli)
-        self.assertIn("Linux startup-padding tls/flows is currently wired only",cli)
+        self.assertIn("Linux FEC Fixed/Auto startup-padding not supported",cli)
+        self.assertIn("wbd_m0_embedded_go_normal_startup_padding_set",rust)
+        self.assertIn("e.normal_pad_copied.0",rust)
+        normal=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go")
+        self.assertIn("configureNormalStartupPadding",normal)
         self.assertIn('case "off":c.startupPaddingMode=0',cli)
         self.assertIn('case "tls":c.startupPaddingMode=1',cli)
         self.assertIn('case "flows":c.startupPaddingMode=2',cli)
@@ -77,7 +81,10 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         self.assertIn("Linux original Go CLI mandates offline 32B route-key",script)
         self.assertIn('WBD_ARM64_USE_AUTO_ROUTE="0"',script)
         self.assertNotIn("normal-aes256-x25519-mtu1280",script)
-        self.assertIn("NORMAL_FEC_PADDING_UNWIRED_FAIL_CLOSED_PASS",script)
+        self.assertIn("FEC_PADDING_UNWIRED_FAIL_CLOSED_PASS",script)
+        self.assertIn('("normal-tls","normal","tls"',script)
+        self.assertIn('("normal-flows","normal","flows"',script)
+        self.assertIn("PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES",script)
         self.assertIn("arch: [x86_64, aarch64]",workflow)
         self.assertIn("ubuntu-24.04-arm",workflow)
         self.assertIn("[plan029-linux-capabilities]",workflow)

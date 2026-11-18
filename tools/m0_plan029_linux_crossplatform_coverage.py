@@ -42,12 +42,20 @@ CASES=[
  ("normal-aes128","normal","off","",1460,"aes-128-gcm","on","",False,False),
  ("normal-aes256-mtu1280","normal","off","",1280,"aes-256-gcm","on","",False,False),
 ]
+# The new source runs only two previously UNWIRED Normal scenarios per ISA.
+# The original eight successful H2186 cases remain available, but not rerun.
+NORMAL_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_NORMAL_PAD_ONLY")=="1"
+if NORMAL_PAD_ONLY:
+    CASES=[
+        ("normal-tls","normal","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("normal-flows","normal","flows","",1460,"chacha20-poly1305","on","",False,False),
+    ]
 OUT.mkdir(exist_ok=False)
 results={"schema_version":1,"source_sha":SOURCE,"native_isa":ARCH,
          "original_go_source_sha":manifest["original_go_sha"],
          "binary_sha256":manifest["sha256"],"same_original_bundle_all_cases":True,
          "scenarios":[],"qualification":"IN_PROGRESS",
-         "excluded":["Linux Normal/Fixed/Auto startup-padding tls/flows NOT_WIRED",
+         "excluded":["Linux FEC Fixed/Auto startup-padding tls/flows NOT_WIRED",
              "Windows Direct/CN/FakeIP/WFP/WinGUI/OS-WAL",
              "ARM physical board, cross-ISA link, long stress and CPU/p99",
              "Live 1500-to-1280 route reauthentication in manual-IP mode not supported; requires auto-ip server lease + client path-supervisor fixture",
@@ -59,7 +67,7 @@ persist()
 
 # A Linux public CLI must FAIL CLOSED rather than silently accept a Normal
 # flows selector that is only implemented for authenticated Game M4.
-for mode in ("normal","fec-fixed","fec-auto"):
+for mode in ("fec-fixed","fec-auto"):
     command=[str(BUNDLE/"wbd-v4-client"),"--mode",mode,
              "--startup-padding","flows"]
     env=os.environ.copy()
@@ -67,7 +75,7 @@ for mode in ("normal","fec-fixed","fec-auto"):
     p=subprocess.run(command,env=env,capture_output=True,text=True,timeout=7)
     if p.returncode==0 or "not supported" not in (p.stdout+p.stderr):
         raise SystemExit("unsafe Linux Normal/FEC startup padding silently enabled: "+mode)
-print("PLAN029_LINUX_NORMAL_FEC_PADDING_UNWIRED_FAIL_CLOSED_PASS",flush=True)
+print("PLAN029_LINUX_FEC_PADDING_UNWIRED_FAIL_CLOSED_PASS",flush=True)
 
 for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CASES:
     env=os.environ.copy()
@@ -154,6 +162,18 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
                     raise RuntimeError(side+" original AF_PACKET padding mismatch")
                 row[side+"_padding_records"]=count
                 row[side+"_padding_bytes"]=padded
+            elif NORMAL_PAD_ONLY:
+                matches=re.findall(
+                    r"V4_PUBLIC_NORMAL_PADDING_RAW_RECEIPT role="+side+
+                    r" mode=(off|tls|flows) padded_records=(\d+) padded_bytes=(\d+) original_TLS_Rust_M4=1 real_AF_PACKET_send=1",raw)
+                if len(matches)!=1:
+                    raise RuntimeError(side+" original Rust Normal padding post-kernel receipt absent")
+                actual,count,padded=matches[0]
+                count=int(count);padded=int(padded)
+                if actual!=padding or padded>count*500 or count==0 or padded==0:
+                    raise RuntimeError(side+" original M4 Normal padded LINK kernel counter mismatch")
+                row[side+"_padding_records"]=count
+                row[side+"_padding_bytes"]=padded
             if cipher!="chacha20-poly1305" and side=="client":
                 row["client_requested_record_cipher"]=cipher
         for direction in ("c2s","s2c"):
@@ -179,6 +199,8 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
         print("PLAN029_LINUX_CROSSPLATFORM_CASE_FAIL arch="+ARCH+" case="+name+
               " error="+str(exc),flush=True)
         raise SystemExit(1)
-results["qualification"]="PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES"
+results["qualification"]=("PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES" if NORMAL_PAD_ONLY
+                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES")
 persist()
-print("PLAN029_LINUX_CROSSPLATFORM_EIGHT_NATIVE_PASS arch="+ARCH+" source="+SOURCE,flush=True)
+print("PLAN029_LINUX_CROSSPLATFORM_NATIVE_PASS arch="+ARCH+" source="+SOURCE+
+      " cases="+str(len(CASES)),flush=True)
