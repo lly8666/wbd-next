@@ -15,6 +15,7 @@ import (
     "errors"
     "fmt"
     "io"
+    "math/big"
     "net"
     "net/netip"
     "sync"
@@ -33,6 +34,10 @@ const (
     v4FeatureFEC2 = uint16(4) // reserved: no production FEC2 yet
     v4RequiredFeatures = v4FeatureReceipt | v4FeatureSharedGame
     v4FeedbackPages = byte(8)
+    // V2 is only TLS application data; no private pre-ClientHello bytes.
+    v4ControlPaddedVersion uint16 = 2
+    v4AdmissionPadMin = 32
+    v4AdmissionPadMax = 500
 )
 
 type V4Extension struct {
@@ -44,6 +49,8 @@ type V4Extension struct {
     // Normal fixed profile+1; zero for off/auto/Game/legacy V4.
     // Reuses previously reserved byte 22 of the existing protected record.
     NormalFec uint8
+    StartupPadding uint8 // protected client selected off/tls/flows: 0..2
+    ControlPadded bool // explicit V2: random request AND reply suffix
 }
 // Exactly 3(default) or 7(private test), rejecting all unknown/partial sets.
 func v4KnownFeatureSet(f uint16)bool{return f==v4RequiredFeatures||f==(v4RequiredFeatures|v4FeatureFEC2)}
@@ -51,24 +58,32 @@ func v4KnownFeatureSet(f uint16)bool{return f==v4RequiredFeatures||f==(v4Require
 func v4Encode(e V4Extension) ([24]byte, error) {
     var buf [24]byte
     if !v4KnownFeatureSet(e.Features)||e.GameFec>7||e.NormalFec>7||
+        e.StartupPadding>2||(!e.ControlPadded&&e.StartupPadding!=0)||
         (e.GameFec!=0&&e.NormalFec!=0)||
         ((e.GameFec!=0||e.NormalFec!=0)&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
         return buf,ErrAdmissionUnsupported
     }
-    binary.BigEndian.PutUint16(buf[0:2], 1)
+    version:=uint16(1)
+    if e.ControlPadded{version=v4ControlPaddedVersion}
+    binary.BigEndian.PutUint16(buf[0:2], version)
     binary.BigEndian.PutUint16(buf[2:4], e.Features)
     copy(buf[4:20], e.Epoch[:])
     buf[20] = v4FeedbackPages
     buf[21] = e.GameFec
     buf[22] = e.NormalFec
+    if e.ControlPadded{buf[23]=e.StartupPadding}
     return buf, nil
 }
 
 func v4Decode(raw []byte) (V4Extension,error) {
     var e V4Extension
     if len(raw)!=v4ExtensionLen { return e,ErrAdmissionParams }
-    if binary.BigEndian.Uint16(raw[:2])!=1 || raw[20]!=v4FeedbackPages ||
-       raw[22]>7 || raw[23]!=0 || raw[21]>7 { return e,ErrAdmissionParams }
+    version:=binary.BigEndian.Uint16(raw[:2])
+    if (version!=1&&version!=v4ControlPaddedVersion) ||
+       raw[20]!=v4FeedbackPages || raw[22]>7 || raw[21]>7 ||
+       (version==1&&raw[23]!=0) || (version==v4ControlPaddedVersion&&raw[23]>2) {
+       return e,ErrAdmissionParams
+    }
     e.Features=binary.BigEndian.Uint16(raw[2:4])
     if !v4KnownFeatureSet(e.Features) ||
        (raw[21]!=0&&raw[22]!=0)||
@@ -77,6 +92,8 @@ func v4Decode(raw []byte) (V4Extension,error) {
     }
     e.GameFec=raw[21]
     e.NormalFec=raw[22]
+    e.ControlPadded=version==v4ControlPaddedVersion
+    if e.ControlPadded{e.StartupPadding=raw[23]}
     copy(e.Epoch[:],raw[4:20])
     return e,nil
 }
@@ -90,6 +107,8 @@ type V4ClientOptions struct {
     fec2Product bool // original-Go TLS + true native Linux feature7 owner only
     GameFec uint8 // 0=off; 1..7 = fixed profile 0..6; TLS-protected
     NormalFec uint8 // 0=off/auto/old V4, 1..7=authenticated Normal fixed profile0..6
+    ControlPadded bool // V2 control suffix both ways; product must opt in
+    StartupPadding uint8 // only under V2: client off/tls/flows
 }
 // The backend is deliberately package-private: a caller cannot provide an
 // arbitrary 248-byte cold grammar and ask the engine to call it authenticated.
@@ -293,6 +312,7 @@ type V4ClientSession struct {
     coldAuthenticated bool
     authenticatedPrincipal string
     verifiedNormalFec uint8 // copied from authenticated reply; not user mutable
+    verifiedStartupPadding uint8 // protected echo after real TLS and KDF
     // Freeze once, so caller-mutable Negotiated fields never mint new authority.
     verifiedCold V4ColdSessionSnapshot
     verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
@@ -311,6 +331,7 @@ type V4ServerSession struct {
     authenticatedPrincipal string
     verifiedNormalFec uint8 // original credential-checked protected request
     verifiedGameFec uint8 // independent protected Game profile byte21
+    verifiedStartupPadding uint8 // credential-checked V2 request; immutable
     // AUTHENTICATED ORIGINAL REQUEST only. The server-selected Epoch
     // differs from the client's requested zero Epoch on fresh whole-group
     // admission; single-lane Game4 reauth explicitly offers its old Epoch.
