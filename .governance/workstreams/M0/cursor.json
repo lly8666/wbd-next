@@ -15,12 +15,12 @@
   "unverified": true,
   "last_tested_source": "5ad409d1f5fe664a4030eec149a98882f88108f8",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json",
-    "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261119-PLAN029B-H2205-H2204-RELEASE-MAIN-INTEGRATION.md",
-    "docs/decisions/M0-PLAN029-H2204-UNIFIED-TLS-ADMISSION-V2-20261118.md"
+    "docs/decisions/M0-PLAN029-H2204-UNIFIED-TLS-ADMISSION-V2-20261118.md",
+    "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
   ],
   "open_requests": [],
   "partial_summary": "H2205 UI/原生源码测试均 scoped PASS：Win2025 409实际GUI+Go校验，Linux ARM64 12 native TLSv2 kernel/Stop；Npcap真实安装、Wintun按钮PnP点击及实体Win↔ARM64 NOT_RUN。H2202 strict V2旧版本拒绝不回退。新增密钥简化/NAT能力未合入未验。"
