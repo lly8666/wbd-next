@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2199,
-  "checkpoint_sha": "83e8959adcfac9be347ecec861b2194ec8e80b37",
+  "sequence": 2200,
+  "checkpoint_sha": "d4516ca977464dfcebee7fe62e3add29dc6ec3f1",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2199：H2197 Linux服务端五模式双ISA20/20原生PASS，修治理热预算首次FAIL44297823817。",
-  "why_now": "本次原生业务SUCCESS；证据归档后治理combined hot 32805B超限37B，需仅压缩M0热cursor。",
-  "done_when": "M0热文件预算与Feature/Governance CI PASS，保留实际SOURCE与029未验边界。",
-  "next_action": "Linux shared服务器跨模式/auto-IP真实动态MTU独立测试；实体ARM、跨ISA及p99仍OPEN。",
+  "current_task": "H2200：原TLS1.3 V4 Admission V2加密客户端startup-padding off/tls/flows设定、服务端确认与按会话接Rust；加密请求/回包各随机32..500B完整可解析；双ISA12场待验。",
+  "why_now": "既有H2197服务端用CLI同档，未由客户端TLS传入；Admission旧V4保留位和固定24B，需版本化自描述尾部避免Rust Detach残留。",
+  "done_when": "同SOURCE真Go TLSV2双端、旧V1、坏长度/误配/回显与5模式×off/tls/flows真实Linux两ISA两端业务Stop验证并归档；完整029仍OPEN。",
+  "next_action": "冻结产品SOURCE触发短Go负面测试+Linux双ISA新12场，修首个失败，签名治理；不重复老20场。",
   "unverified": true,
   "last_tested_source": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
   "evidence_refs": [
@@ -21,5 +21,5 @@
     "docs/devlog/M0/20261118-PLAN029-H2198-LINUX-SERVER-FIVE-MODES-NATIVE-SIGNED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2197 SOURCE e82ba704 Action44296499335：Linux x86/ARM 五模式×tls/flows双端20/20原Rust M4真实填充复制、双向TCP/UDP、owned Stop PASS；client/server随机序列独立。shared全混合/autoIP动态MTU、物理ARM及p99未验；029技术OPEN，030未开。"
+  "partial_summary": "H2197旧SOURCE e82ba704 五模式两ISA20/20 PASS_SCOPED维持。H2200候选TLS加密控制扩展V2+变长尾、客户选择回显至Rust，旧V1关填充；新产品尚NOT_RUN。其它autoIP动态MTU/实体ARM/p99仍OPEN，030未开。"
 }

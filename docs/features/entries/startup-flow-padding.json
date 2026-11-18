@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
-    "linux_cli": "Linux原Go TLS客户端＋服务端五模式 Normal、Fixed、Auto、Game2、Game4 各支持 --startup-padding off|tls|flows（默认off，冷重连生效），各自拥有Rust发送方向独立随机长度流。H2197 SOURCE e82ba704原生x86_64/ARM64五模式×两档全20/20双端真网PASS_SCOPED。FEC只填kind2 source AEAD尾部，parity/repair kind3不填；完整029及弱网/性能资格另计。"
+    "linux_cli": "Linux五模式 Normal/Fixed/Auto/Game2/4，客户端 --startup-padding off|tls|flows（默认off）经原TLS1.3 Admission V2 加密发送、服务端按该已验证会话档位配置Rust，回包确认；服务端本地CLI值不覆盖客户端。V2每向独立CSPRNG随机加密控制尾部32..500B，单次TLS应用写/原一往返；旧V1只按off兼容。H2200新SOURCE候选待双ISA原生验；旧H2197 20/20为独立SOURCE真PASS_SCOPED。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -45,12 +45,15 @@
     ".github/workflows/m0-plan029-linux-crossplatform-capabilities.yml",
     "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
-    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/admission_v4_control_padding_test.go"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
+    "docs/decisions/M0-PLAN029-H2200-PROTECTED-ADMISSION-PADDING-V2-20261118.md"
   ],
   "verification": [
     {
@@ -164,6 +167,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
       "evidence": "docs/evidence/M0/PLAN029-H2197-LINUX-SERVER-FIVE-MODES-X86-ARM64-TWENTY-REAL-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "Linux native x86_64/aarch64 original TLS1.3 Go and Rust five-mode two endpoints",
+      "scope": "H2200 proposed protected V2 24B control ext byte23 client-select mode echoed by server + each direction bounded random 32..500B suffix before native Detach; server CLI deliberately opposite client, 12 independent scenarios/ISA including off; SOURCE not yet built/tested.",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
