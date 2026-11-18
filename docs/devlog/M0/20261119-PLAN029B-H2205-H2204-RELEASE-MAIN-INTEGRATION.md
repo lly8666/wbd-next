@@ -13,3 +13,7 @@
 ```feature-impact
 {"kind":"updated","ids":["gui-config-feedback"],"reason":"H2205 WinForms新增Npcap官方下载+校验签名交互安装、Wintun固定哈希owned临时PNP按钮、v2 fill全模式UI修复；H2204 x64 GUI 409真实检查与ARM64 native 12场各自独立验收，安装执行和实体跨ISA未验。"}
 ```
+
+## H2205 main合并后治理修复（不伪装初次PASS）
+
+[#38](https://github.com/lly8666/wbd-next/pull/38)原合并提交 `fbfe825b6ba3f0d3a57cbec49a8444b450eb0e6f` 已真实写入main，但首次main [治理44350413489](https://github.com/lly8666/wbd-next/actions/runs/44350413489) 和[维护44350413683](https://github.com/lly8666/wbd-next/actions/runs/44350413683) **FAIL**：本次更新后的功能卡被排版放大超过16KiB；M0热启动文件合计33892B超过32768B；新增同源证据未提供机器校验的顶层source_sha。当前独立hotfix把卡片压缩至<=16384B、缩去START_HERE的重复历史内容但保留永久证据索引、补齐证据source_sha；所有原始FAIL保留，修复后治理CI结果单独记录。仅文档格式与治理，不调整原始Rust/Go/GUI产品功能和验收范围。
