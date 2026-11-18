@@ -1,0 +1,402 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2202/H2204",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "date_utc": "2026-11-18",
+  "source_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+  "contract": "only original Go TLS1.3 V4 Admission extension=2, mandatory crypto/rand 32..500B request/success/reject; client off/tls/flows confirmed to native Rust; no legacy version1 compatibility and no private pre-ClientHello exchange",
+  "native_linux": {
+    "action": 44311389695,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44311389695",
+    "result": "PASS_SCOPED_24_OF_24_ORIGINAL_OS_KERNEL",
+    "x86_64": {
+      "artifact_id": 14430692862,
+      "zip_sha256": "18420c3effcda2d55678b08874707de29c885f460b35dd30abc102d76cb64924",
+      "summary_sha256": "b2d1caa011b40dd029c8e7f287a08e0e4f1f2538e33d0c4eb490806af158a8f2",
+      "zip_entries": 234,
+      "zip_crc": "PASS",
+      "binary_sha256": {
+        "client": "78773733f273a0041fa76e6552f2e2ad81bd4fe550d687b8f942c2f391888cec",
+        "server": "312a5f54a0a0be6d0c8a260440f901c36523c126fea99b5e2c31ae5a4e611ed2",
+        "rust": "50b4e8eb925ad3002e28edb10ce55f1fba9292c1005377170ce1e4c6d46cea27"
+      },
+      "scenarios": [
+        {
+          "name": "control-normal-off",
+          "padding": "off",
+          "client_and_server_copied_records_bytes": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-normal-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            2,
+            902,
+            2,
+            219
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-normal-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            4,
+            633,
+            4,
+            881
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-fixed-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            2,
+            517,
+            2,
+            387
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-fixed-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            4,
+            1186,
+            4,
+            1282
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-auto-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            2,
+            752,
+            2,
+            672
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-auto-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            4,
+            604,
+            4,
+            889
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game2-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            4,
+            1386,
+            4,
+            803
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game2-fixed6-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            8,
+            2130,
+            8,
+            1972
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game4-fixed6-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            6,
+            1105,
+            6,
+            1092
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game4-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            12,
+            4346,
+            12,
+            3531
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game4-off",
+          "padding": "off",
+          "client_and_server_copied_records_bytes": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        }
+      ]
+    },
+    "aarch64": {
+      "artifact_id": 14431535538,
+      "zip_sha256": "c2974a13a5023f963428cfad49cee78aaac3afae1ad2d18b563d0df040d2f099",
+      "summary_sha256": "3b86af1ebc4f2a6fa37780ae8283aa40dcd0f7d784b6c35d0d96a63f0f39db95",
+      "zip_entries": 234,
+      "zip_crc": "PASS",
+      "binary_sha256": {
+        "client": "af77e8b9518f53df41a8ae36123c046181228b9691f15295ae37f1aafa0ec8b3",
+        "server": "c013e51bee10d7cdb6da9dab0ef1e41a4be52b34871d0267d314343cb21139c2",
+        "rust": "280332c041b1bc995d5356fba896c9ba47f11a20ec619ff1a9461ef5cd72c755"
+      },
+      "scenarios": [
+        {
+          "name": "control-normal-off",
+          "padding": "off",
+          "client_and_server_copied_records_bytes": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-normal-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            2,
+            752,
+            2,
+            919
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-normal-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            4,
+            779,
+            4,
+            881
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-fixed-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            2,
+            327,
+            2,
+            391
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-fixed-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            4,
+            759,
+            4,
+            647
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-auto-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            2,
+            146,
+            2,
+            546
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-auto-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            4,
+            946,
+            4,
+            836
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game2-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            4,
+            866,
+            4,
+            184
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game2-fixed6-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            8,
+            2111,
+            8,
+            1738
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game4-fixed6-tls",
+          "padding": "tls",
+          "client_and_server_copied_records_bytes": [
+            6,
+            2132,
+            6,
+            1220
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game4-flows",
+          "padding": "flows",
+          "client_and_server_copied_records_bytes": [
+            12,
+            2731,
+            12,
+            3079
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        },
+        {
+          "name": "control-game4-off",
+          "padding": "off",
+          "client_and_server_copied_records_bytes": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "server_local_setting": "contradicts_client",
+          "kernel_tcp_udp_both": "PASS",
+          "owned_stop": "TWO_DRAINED"
+        }
+      ]
+    }
+  },
+  "go_native_tls": {
+    "action": 44311389786,
+    "source_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+    "conclusion": "success",
+    "platforms": [
+      "Windows Server2025 amd64",
+      "Ubuntu24.04 amd64",
+      "Ubuntu24.04 ARM64"
+    ],
+    "scope": "REAL_ORIGINAL_GO_TLS_ONLY_NO_WINDOWS_DRIVER"
+  },
+  "android_openwrt": {
+    "action": 44311389808,
+    "source_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+    "conclusion": "success",
+    "scopes": [
+      "Android VpnService APK BUILD_ONLY",
+      "Android ARM64 NDK BUILD_ONLY",
+      "OpenWrt ARM64 musl BUILD_ONLY"
+    ],
+    "openwrt_artifact_id": 14431200424,
+    "openwrt_zip_sha256": "18ffd6af4d52324e8e69c2565ec355b2565b9c92a7a2ea80eef2abe4dd06074a"
+  },
+  "h2203_followup": {
+    "source_sha": "3f28e330edc4561837ade02d81c625917bd32977",
+    "actions": {
+      "real_go_tls": 44316261405,
+      "cold": 44316261208,
+      "windows_go_rust_linux_rust": 44316261253,
+      "windows_source_compile": 44316261198,
+      "three_os_go_tls": 44316261332
+    },
+    "scope": "TEST_AND_ASSEMBLY_SUCCESS_NO_NEW_LINUX_TRUE_NETWORK_REQUALIFICATION"
+  },
+  "exclusions": [
+    "Windows real WinForms/Wintun/Npcap packets and OS Stop",
+    "Android device VpnService/JNI/OS routing and physical OpenWrt router",
+    "physical ARM board, cross-ISA and shared443 multiusers, dynamic autoIP MTU",
+    "DPI packet capture, full application TLS, CPU/GiB, p99, long loss stress",
+    "complete PLAN029 technical exit remains OPEN"
+  ],
+  "first_failed_actions_preserved": [
+    44311390284,
+    44311389952,
+    44311389970,
+    44316261365
+  ]
+}

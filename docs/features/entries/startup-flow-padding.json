@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "Windows WinForms/CLI原有 off/tls/flows 冷配置及保存路径，H2202已把Normal/FEC Fixed/Auto/Game2/Game4选择接入V4原Go TLS加密请求/确认与Windows Game多lane验证；当前SOURCE Windows Native GoTLS/WinForms/原RustDLL待Action确认，不能用Linux原生PASS代替Windows真实NPF/Wintun包的签名。",
-    "linux_cli": "H2202新控制仅V4 TLS Admission版本2：客户端 off/tls/flows 认证回显并驱动Normal/Fixed/Auto/Game2/Game4真实Rust M4，off同样在配置请求/确认各随机32..500B；错误确认同样变长；删除V1协议互通和ControlPadded，旧GUI本地bool迁移不等于旧线格式。新SOURCE待测；H2201旧ee69bc68 Linux x86/ARM 24/24仅为历史PASS_SCOPED。"
+    "linux_cli": "H2202 唯一TLS Admission v2；加密请求/确认/拒绝回复各CSPRNG尾部32–500B，客户端off/tls/flows驱动Linux/Windows Rust。Linux真网24/24，Win/Linux/ARM GoTLS通过；Android/OpenWrt仅构建，物理设备/DPI未验。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -180,8 +180,22 @@
       "evidence": "docs/evidence/M0/PLAN029-H2200-LINUX-TLS-V2-CONTROL-CLIENT-SYNC-X86-ARM64-TWENTYFOUR-REAL-PASS-20261118.json"
     },
     {
-      "platform": "H2202 new mandatory TLS control Windows2025 native Go/WinForms, Linux x86/arm real two-endpoint, OpenWrt/Android build",
-      "scope": "New source single strict v2 control, no legacy V1, randomized success and rejection; Windows Normal/FEC/Game encrypted mode projection; native Linux 12 scenes each ISA and native Windows Go TLS+GUI, Android/NDK/APK and OpenWrt-musl build-only qualification pending",
+      "platform": "Linux原生x86/ARM, Windows2025/Linux x86/ARM GoTLS",
+      "scope": "H2202 SOURCE2ca956b9 Linux双ISA原Go TLS/Rust AF_PACKET真网各12场共24/24、两端真实TCP/UDP/TUN/Stop PASS_SCOPED，服务器CLI反向仍随客户端off/tls/flows；三OS原Go TLS原生PASS，不等于Win驱动。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+      "evidence": "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
+    },
+    {
+      "platform": "Android ARM64、OpenWrt ARM64",
+      "scope": "H2202 APK VpnService、Android NDK及OpenWrt musl编译PASS；实体设备NOT_RUN。",
+      "status": "BUILD_PASS",
+      "source_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+      "evidence": "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
+    },
+    {
+      "platform": "Windows真Wintun/Npcap,Android/OpenWrt实体",
+      "scope": "H2202物理驱动/跨ISA/完整公网DPI/CPU/p99未测。",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null

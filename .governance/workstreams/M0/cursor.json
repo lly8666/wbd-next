@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2203,
-  "checkpoint_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+  "sequence": 2204,
+  "checkpoint_sha": "3f28e330edc4561837ade02d81c625917bd32977",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2203：H2202唯一TLS V2跨平台收敛，修原Go旧V3拒绝断言/Windows 3 blob清单/治理热预算；收录CI证据。",
-  "why_now": "新H2202 Linux x86/ARM真网及Win/Linux/ARM TLS、Android APK/NDK/OpenWrt构建成功；治理热预算超23B、Win manifest 3个blob旧、原V3错误码假设过时。",
-  "done_when": "本SOURCE exact Windows清单、go TLS拒绝、治理/feature过关；Linux双ISA和多平台原件签名；无设备不冒称物理PASS。",
-  "next_action": "原生SOURCE再次收验，并区分旧028失败与新协议问题；安卓/路由器实体、Win真NIC/DPI/p99未验。",
+  "current_task": "H2204：H2202单一加密V4扩展v2，Linux双ISA24/24真网签名，三OS GoTLS及Win编译PASS，Android/OpenWrt仅BUILD_PASS。",
+  "why_now": "H2202 SOURCE2ca956b9 native Linux、Win/Linux/ARM TLS、Android/OpenWrt原Action成功；H2203 3f28e3 Windows清单/GoTLS/cold库测试修复成功。",
+  "done_when": "签名同源原ZIP/二进制SHA，功能卡/治理绿；实体设备与029完整技术出口保留OPEN。",
+  "next_action": "Windows Wintun/Npcap真GUI、多用户shared443和autoIP动态MTU；实体Android/OpenWrt、跨ISA、DPI/p99待验。",
   "unverified": true,
-  "last_tested_source": "ee69bc68127af725f642520108664af6bba31f7f",
+  "last_tested_source": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2200-LINUX-TLS-V2-CONTROL-CLIENT-SYNC-X86-ARM64-TWENTYFOUR-REAL-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029-H2201-LINUX-TLS-V2-CONTROL-BOTH-ISA-SIGNED.md",
-    "docs/devlog/M0/20261118-PLAN029-H2202-ONE-PROTOCOL-ALL-CLIENTS-CANDIDATE.md"
+    "docs/devlog/M0/20261118-PLAN029-H2203-ONE-VERSION-CROSSPLATFORM-FAILURE-TRIAGE.md",
+    "docs/decisions/M0-PLAN029-H2204-UNIFIED-TLS-ADMISSION-V2-20261118.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2202源2ca956：Linux两ISA真网、三OS Go TLS及Android APK+NDK/OpenWrt构建已由Action报告SUCCESS；治理23B、Win 3 blobs、退役V3客户端回包旧错误假设待修。物理设备、跨ISA/CPU/DPI未验；029技术OPEN。"
+  "partial_summary": "单一V4TLS扩展v2已按用户要求仅接受新版。SOURCE2ca956b9 Linux x86/ARM24/24真网、Win/Linux/ARM GoTLS native PASS、安卓APK/NDK/OpenWrt构建PASS；3f28e3 Windows编译和GoTLS/cold PASS。硬件/DPI/CPU/p99未验，029技术OPEN。"
 }
