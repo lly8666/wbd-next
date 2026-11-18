@@ -64,7 +64,7 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
     if cfg.FECMode!=""&&cfg.FECMode!=FecV2Off&&
         !v4ProductFecEnabled(cfg.FECMode){return nil,ErrAdmissionUnsupported}
     if cfg.FECMode==FecV2Fixed&&!cfg.FECProfile.Valid(){return nil,ErrAdmissionParams}
-    if cfg.StartupPaddingMode>2||(cfg.StartupPaddingMode!=0&&cfg.FECMode!=FecV2Off)||
+    if cfg.StartupPaddingMode>2||
        (cfg.StartupPaddingMode!=0&&(cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
         return nil,ErrAdmissionParams
     }
@@ -159,7 +159,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
-    if err==nil&&mode==FecV2Off&&p.cfg.OuterIPMTU!=0{
+    if err==nil&&p.cfg.OuterIPMTU!=0{
         err=bridge.configureNormalStartupPadding(p.cfg.StartupPaddingMode,p.cfg.OuterIPMTU)
     }
     if err==nil{err=bridge.armOriginalPublicM2Feedback(0)} // public Linux client always expects original Legacy peer

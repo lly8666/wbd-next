@@ -213,7 +213,7 @@ func parse(role string,args []string)(config,error){
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
-    startupPadding:=flags.String("startup-padding","off","Normal/off and Game2/4 original Rust M4 padding: off, tls or flows; FEC Fixed/Auto kind2/3 unsupported")
+    startupPadding:=flags.String("startup-padding","off","Normal/FEC Fixed/Auto original source and Game2/4 Rust M4 startup padding: off|tls|flows; FEC parity is never padded")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
@@ -302,9 +302,6 @@ func parse(role string,args []string)(config,error){
     case "tls":c.startupPaddingMode=1
     case "flows":c.startupPaddingMode=2
     default:return c,fmt.Errorf("startup-padding must be off, tls or flows")
-    }
-    if c.startupPaddingMode!=0&&c.gameLanes==0&&!c.mixedModes&&c.fecMode!=realityfront.FecV2Off{
-        return c,fmt.Errorf("Linux FEC Fixed/Auto startup-padding not supported on authenticated kind2/3 source/parity")
     }
     if *gameFec!="off"{
         if c.gameLanes==0||len(*gameFec)!=6||!strings.HasPrefix(*gameFec,"fixed")||
@@ -952,13 +949,15 @@ func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err erro
         v.BlockedBurst,v.BlockedQuota,v.BlockedCapacity,v.BlockedStale,
         v.BlockedLocalOther,v.BlockedGlobalOther,v.BlockedInvariant)
 }
-func logNormalStartupPadding(role,mode string,records,bytes uint64,err error){
+func logNormalStartupPadding(role string,fec bool,mode string,records,bytes uint64,err error){
+    label:="V4_PUBLIC_NORMAL_PADDING"
+    if fec{label="V4_PUBLIC_FEC_SOURCE_PADDING"}
     if err!=nil{
-        log.Printf("V4_PUBLIC_NORMAL_PADDING_UNAVAILABLE role=%s error=%v",role,err)
+        log.Printf("%s_UNAVAILABLE role=%s error=%v",label,role,err)
         return
     }
-    log.Printf("V4_PUBLIC_NORMAL_PADDING_RAW_RECEIPT role=%s mode=%s padded_records=%d padded_bytes=%d original_TLS_Rust_M4=1 real_AF_PACKET_send=1",
-        role,mode,records,bytes)
+    log.Printf("%s_RAW_RECEIPT role=%s mode=%s padded_records=%d padded_bytes=%d original_TLS_Rust_M4=1 real_AF_PACKET_send=1",
+        label,role,mode,records,bytes)
 }
 func logAuthenticFecTx(role string,v realityfront.V4PublicFecTxSnapshot,err error){
     if err!=nil{
@@ -1336,10 +1335,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         func()bool{return handoffCommitted.Load()},
         native.OriginalLoopPulse,notifyPreDead)
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
-    if c.fecMode==realityfront.FecV2Off{
-        m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
-        logNormalStartupPadding("client",m,n,b,e)
-    }
+    m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
+    logNormalStartupPadding("client",c.fecMode!=realityfront.FecV2Off,m,n,b,e)
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
     cpu,cpuErr:=native.OriginalWorkerCPU()
@@ -1532,10 +1529,8 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     *connected=handoffCommitted.Load()
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=server mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     if *connected{
-        if c.fecMode==realityfront.FecV2Off{
-            m,n,b,e:=product.OriginalNormalStartupPaddingCounters()
-            logNormalStartupPadding("server",m,n,b,e)
-        }
+        m,n,b,e:=product.OriginalNormalStartupPaddingCounters()
+        logNormalStartupPadding("server",c.fecMode!=realityfront.FecV2Off,m,n,b,e)
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
         cpu,cpuErr:=product.OriginalWorkerCPU()
@@ -1700,6 +1695,13 @@ func runSharedMultiServer(
         // the shared manual server has no singleton process-wide counters.
         // This is cold Stop only, never a packet path and never CLI intent.
         outer,outerErr:=rec.product.OriginalOuterCounters()
+        // Read original per-session M4 padding before generation Stop,
+        // not a process-wide counter or unauthenticated CLI preference.
+        if mode,count,padded,e:=rec.product.OriginalNormalStartupPaddingCounters();e==nil{
+            if effective,e:=rec.product.OriginalFECReadback();e==nil{
+                logNormalStartupPadding("server",effective.Mode!="off",mode,count,padded,nil)
+            }
+        }
         // Read the REAL per-session Rust FEC applied strength before
         // generation-owned Stop; not the server's global CLI default.
         if effective,e:=rec.product.OriginalFECReadback();e==nil{

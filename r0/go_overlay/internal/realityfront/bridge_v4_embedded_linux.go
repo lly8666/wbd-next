@@ -617,7 +617,7 @@ func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)
 }
 // Authenticated Go cold product alone may configure normal LINK pad.
 func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(mode uint8,outerMTU int)error{
-    if b==nil||!b.committed||b.stopped||b.handle==0||b.protectedFeatures!=3||
+    if b==nil||!b.committed||b.stopped||b.handle==0||(b.protectedFeatures!=3&&b.protectedFeatures!=7)||
        mode>2||outerMTU<576||outerMTU>1500{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_normal_startup_padding_set(
         C.uint64_t(b.handle),C.uint32_t(mode),C.uint32_t(outerMTU))

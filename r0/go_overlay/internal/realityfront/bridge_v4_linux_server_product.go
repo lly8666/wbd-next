@@ -286,7 +286,7 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
         if dead==0{dead=90}
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
-    if err==nil&&mode==FecV2Off&&p.cfg.OuterIPMTU!=0{
+    if err==nil&&p.cfg.OuterIPMTU!=0{
         stage="normal_padding"
         err=bridge.configureNormalStartupPadding(p.cfg.StartupPaddingMode,p.cfg.OuterIPMTU)
     }
