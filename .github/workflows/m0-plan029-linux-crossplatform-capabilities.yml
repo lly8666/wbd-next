@@ -106,7 +106,7 @@ jobs:
           assert len(d["scenarios"])==12
           assert d["qualification"]=="PASS_SCOPED_TWELVE_ENCRYPTED_CONTROL_SYNC_NATIVE_LINUX_SCENES"
           assert {x["mode"] for x in d["scenarios"]}=={"normal","fec-fixed","fec-auto","game2","game4"}
-          assert {x["padding"] for x in d["scenarios"]}=={"tls","flows"}
+          assert {x["padding"] for x in d["scenarios"]}=={"off","tls","flows"}
           assert all(
               (x["padding"]=="off" and x.get("server_padding_bytes",-1)==0 and x.get("client_padding_bytes",-1)==0)
               or (x["padding"]!="off" and x.get("server_padding_bytes",0)>0 and x.get("client_padding_bytes",0)>0)

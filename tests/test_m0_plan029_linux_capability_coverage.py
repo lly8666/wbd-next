@@ -39,7 +39,7 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         self.assertIn('#[cfg(any(target_os="windows",target_os="linux",test))]',game)
         self.assertIn("drain_for_linux_native",game)
         self.assertIn("if body.first().copied()!=Some(2){return None}",game)
-        self.assertIn("configureStartupPadding(p.cfg.StartupPaddingMode,effective)",go)
+        self.assertIn("configureStartupPadding(selectedPadding,effective)",go)
 
     def test_linux_server_all_five_modes_role_separated_seed_and_real_native_receipts(self):
         cli=read("r0/go_overlay/internal/v4productcli/linux.go")
@@ -50,12 +50,12 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         padding=read("crates/wbd-engine/src/v4_client_startup_padding.rs")
         cases=read("tools/m0_plan029_linux_crossplatform_coverage.py")
         self.assertIn("StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,",cli)
-        self.assertIn("err=bridge.configureNormalStartupPadding(p.cfg.StartupPaddingMode,p.cfg.OuterIPMTU)",server)
+        self.assertIn("err=bridge.configureNormalStartupPadding(selectedPadding,p.cfg.OuterIPMTU)",server)
         self.assertIn('case FECOff: mode=FecV2Off',server)
         self.assertIn('case FECFixed: mode=FecV2Fixed',server)
         self.assertIn('case FECAuto: mode=FecV2Auto',server)
         self.assertIn("StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,",game_server)
-        self.assertIn("configureStartupPadding(p.cfg.StartupPaddingMode,effective)",game)
+        self.assertIn("configureStartupPadding(selectedPadding,effective)",game)
         self.assertIn("linux_tx_padding_epoch(",rust)
         self.assertIn("epoch,e.server_side",rust)
         self.assertIn("e.original_identity.logical_epoch,e.server",rust)
