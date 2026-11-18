@@ -198,6 +198,7 @@ jobs:
           Expand-Archive -Path $zip -DestinationPath wintun-extracted -Force
           $dll='wintun-extracted/wintun/bin/amd64/wintun.dll'
           if(-not (Test-Path $dll) -or (Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun driver missing or unsigned'}
+          if((Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce'){throw 'Wintun runtime pinned DLL SHA mismatch'}
           Copy-Item $dll delivery/windows-amd64/wintun.dll
           $license='wintun-extracted/wintun/LICENSE'
           if(Test-Path $license){Copy-Item $license delivery/windows-amd64/WINTUN-LICENSE.txt}
@@ -209,13 +210,20 @@ jobs:
           Check usermode DLL: Test-Path "$env:WINDIR\System32\Npcap\wpcap.dll"
           No unattended install and no driver bypass are implemented here.
           '@ | Set-Content -Encoding utf8 delivery/windows-amd64/INSTALL-NPCAP-DRIVER.txt
-          Copy-Item legacy/scripts/windows_client_network.ps1 delivery/windows-amd64/windows_client_network.ps1
+          # The original native V4 GUI no longer runs PowerShell route/DNS scripts.
+          # Never ship the retired legacy network script or test profile data.
           @'
           H2204 V4 extension v2. Windows amd64 native product + WinForms.
           GUI: WBD.exe (run as Administrator).
           Native client: wbd-client.exe. Rust native driver: wbd_engine.dll.
           Wintun DLL: official 0.14.1 Microsoft-signed.
-          Npcap: install separately from official website, license not transferable.
+          Npcap: open the GUI "便携与驱动" tab; click "Npcap 官方下载",
+          download directly from npcap.com, then click "Npcap 安装（本地官方包）"
+          to verify Microsoft Authenticode + official publisher and launch its
+          interactive install wizard. No OEM/silent installer is distributed.
+          Wintun: click "Wintun 驱动安装" to verify pinned SHA256 and perform
+          a temporary owned PnP adapter create+close. No foreign adapter
+          or route/DNS changes are allowed by this setup button.
           Exact product source: c04d5eefd47b672b30e531b21da763bfcf7a91f9
           New QA source: see windows-provenance.json.
           Windows GUI and signed drivers loaded: test evidence scoped; Windows to physical ARM64: NOT_RUN.
@@ -226,7 +234,7 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $p='delivery/windows-amd64'
-          $files=@('WBD.exe','WBD.exe.config','gui-fields.json','PARAMETERS.json','wbd-client.exe','wbd_engine.dll','wintun.dll','windows_client_network.ps1')
+          $files=@('WBD.exe','WBD.exe.config','gui-fields.json','PARAMETERS.json','wbd-client.exe','wbd_engine.dll','wintun.dll')
           foreach($f in $files){if(-not (Test-Path (Join-Path $p $f))){throw "missing Windows full delivery file: $f"}}
           $sha=[ordered]@{}
           foreach($f in $files){$sha[$f]=(Get-FileHash (Join-Path $p $f) -Algorithm SHA256).Hash.ToLowerInvariant()}
@@ -236,12 +244,28 @@ jobs:
             windows_native_owner_build='PASS';gui_v2_build='PASS';
             gui_self_tests='PASS';wintun_authenticode='VALID';
             npcap_bundled=$false;npcap_reason='OEM redistribution license required';
+            gui_npcap_official_download_and_signed_interactive_install='PASS_SOURCE_AND_GUI_SELFTEST_ONLY';
+            gui_wintun_pinned_owned_bootstrap='PASS_SOURCE_AND_GUI_SELFTEST_ONLY';
             physical_windows_linux_arm64_pair='NOT_RUN';sha256=$sha
           } | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $p 'windows-provenance.json')
-          (Get-ChildItem $p -File|Sort-Object Name|ForEach-Object {
+          # GUI self-tests intentionally write fake profiles and active
+          # configurations under $p. NEVER publish that directory wholesale.
+          # The release ZIP is a sealed allowlist assembled after test PASS.
+          $stage='delivery/wbd-h2204-v2-windows-amd64-GUI'
+          if(Test-Path $stage){throw 'release staging directory unexpectedly already exists'}
+          New-Item -ItemType Directory $stage | Out-Null
+          $allow=@($files)+@('README_FIRST.txt','INSTALL-NPCAP-DRIVER.txt','windows-provenance.json')
+          if(Test-Path (Join-Path $p 'WINTUN-LICENSE.txt')){$allow+= 'WINTUN-LICENSE.txt'}
+          foreach($f in $allow){
+            if(-not (Test-Path (Join-Path $p $f))){throw "missing publish allowlist file: $f"}
+            Copy-Item -LiteralPath (Join-Path $p $f) -Destination (Join-Path $stage $f)
+          }
+          (Get-ChildItem $stage -File|Sort-Object Name|ForEach-Object {
             (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_.Name
-          }) | Set-Content -Encoding utf8 (Join-Path $p 'SHA256SUMS')
-          Compress-Archive -Path $p -DestinationPath delivery/wbd-h2204-v2-windows-amd64-GUI.zip -CompressionLevel Optimal
+          }) | Set-Content -Encoding utf8 (Join-Path $stage 'SHA256SUMS')
+          Compress-Archive -Path $stage -DestinationPath delivery/wbd-h2204-v2-windows-amd64-GUI.zip -CompressionLevel Optimal
+          python -c 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); names=[s.filename.lower() for s in z.infolist()]; assert len(names)==len(set(names)); assert not any("/data/" in v or "profiles.json" in v or "gui-test-result.json" in v or "windows_client_network.ps1" in v for v in names); assert any(s.endswith("/wbd.exe") for s in names); assert any(s.endswith("/wintun.dll") for s in names); print("H2204_WINDOWS_RELEASE_ALLOWLIST_NO_TEST_SECRETS_PASS")' delivery/wbd-h2204-v2-windows-amd64-GUI.zip
+          if($LASTEXITCODE -ne 0){throw 'release zip contains self-test/private data or missing GUI/driver'}
           (Get-FileHash delivery/wbd-h2204-v2-windows-amd64-GUI.zip -Algorithm SHA256).Hash.ToLowerInvariant() | Set-Content delivery/WINDOWS-ZIP-SHA256.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
