@@ -1,0 +1,9 @@
+# A25b｜同 SOURCE Wi-Fi TAP 无真实 RX，Hosted 环境止损（证据非协议 FAIL）
+
+**SOURCE** `731ea034ce527ef2bf5a214d9a7431c96cb205dc`，[Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998) 总体 SUCCESS（12 个成功 Job：原 Go/Rust 双 ABI/ARM64 签名 APK/原 Linux oracle、D2-S0、x86 TAP guest 等；3 个 SKIPPED：普通 D1、普通 SLIRP D2-S1、旧 NativeBridge）。官方 [Artifact #14420055907](https://github.com/lly8666/wbd-next/actions/runs/44285914998/artifacts/14420055907)：`guest_boot_with_wifi_tap_argument=PASS`、`emulator_wifi_tap_flag=ADVERTISED_NOT_GUEST_EGRESS_VERIFIED`、`isolated_tap_dhcp_process=PASS`、`isolated_tap_dhcp_lease=NOT_PROVEN`、`android_original_selected_interface=WLAN0`、`android_real_physical_network=PASS`、`guest_to_host_tap_l2_during_boot=NOT_OBSERVED`、`guest_to_host_tap_l2_during_d2_session=NOT_OBSERVED`、`host_tap_syn_to_original_server=NOT_OBSERVED`。原 Go TUN/RAW/SYN `sendto` PASS，但 `original_android_unauth_rst_observed=OBSERVED`，`original_linux_raw_syn_rx/original_linux_raw_synack_tx=NOT_PROVEN`、`real_peer_synack/tls_authenticated_32_lease/original_rust_m4_and_uid_ready=NOT_PROVEN`，真 App 双向 TCP/UDP `NOT_RUN`、Stop `NOT_PROVEN`。`host_tap_exact_cleanup=PASS`、`owned_dhcp_process_cleanup=PASS`；未上传 MAC/lease/PCAP/凭据。
+
+**判定**：当前 hosted x86 Emulator 的普通 `-net-tap` 和 Virtio-WiFi `-wifi-tap` 均未拿到可证明的原业务 TAP 物理出站，按 `ENV_BLOCKED_NETWORK_PATH` 止损；这**不证明**原 TLS、证书或 AEAD 有错，也不证明 TAP 在任何设备均不可用。原 SLIRP host lo SYN 亦非原 Linux RAW RX。保留所有旧 SOURCE/Action 原状态，不重复 dispatch 相同重型 CI。唯一网络关键路径移至获用户另行授权的真实 ARM64 或实际可用的自管 ARM64 KVM/隔离物理网络，再按双端 SYN→SYNACK→TLS租约→Rust M4/Stop 分级验；无授权只做离线收据方案。不动 ARM64 生产协议、Windows/Linux 共享逻辑、DNS 冷门、实体设备、`main` / M0；PR #36 继续 Draft。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A25官方同源真实收据表明Wi-Fi TAP宿主RX为零、DHCP未租约，原Linux RAW SYN/SYNACK及TLS/M4仍未证；将hosted x86网络门定为ENV_BLOCKED并收敛唯一方案、长期提示词与功能卡，防止重复重型QEMU与假E2E。"}
+```

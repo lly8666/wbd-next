@@ -1,6 +1,6 @@
 # Android Root 原生 WBD 客户端｜长期接续提示词（现行单一版）
 
-> 这是 **agent 每次接续时的操作入口**，不是历史 Actions 年表。权威执行方案：[`ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md`](../plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md)；当前基线为 2026-11-18 `b926881b` 的 [Action #44269992127](https://github.com/lly8666/wbd-next/actions/runs/44269992127)。**开工必须重新核远端 HEAD、PR 和 Actions，不能永久复述这个 SHA 或阶段状态。**
+> 这是 **agent 每次接续时的操作入口**，不是历史 Actions 年表。权威执行方案：[`ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md`](../plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md)；最近已核验业务诊断为 SOURCE `731ea034` [A25 Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998)。**开工必须重新核远端 HEAD、PR 和 Actions，不能永久复述这个 SHA 或阶段状态。**
 
 ## 1. 开始前必须做
 
@@ -12,9 +12,9 @@
 
 **优先完成原 WBD Normal/off 从 Android 原 Go/Rust 到 Linux 原 Go/Rust 的真实 FakeTCP SYN/SYNACK、标准 TLS、身份认证、/32 租约、Rust M4 双向应用 TCP/UDP、owned Stop；不要在它前面插入 DNS、全局默认路由、UI、Fixed/Auto/Game 等新功能。**
 
-已核验 SOURCE `b926881b`：Android16 x86_64 KVM/KernelSU 原生 Go `--help`、普通 App→su、原 TUN/RAW/PhysicalNetwork 读回、SYN `sendto` 和原 Linux server 启动通过；**服务端原 RAW SYN RX、原 SYNACK TX、Android SYNACK RX、TLS/认证/租约及 DATA 未证明，客户端在认证前退出**。[D2-S1 Action #44269992127](https://github.com/lly8666/wbd-next/actions/runs/44269992127) 整体 SUCCESS 为分层诊断，不是端到端 PASS。A21 默认普通 App IPv4 UID range/owned Stop 仅 host/构建通过，尚无全 App Android 内核真验证。
+已核验 SOURCE `731ea034`：Android16 x86_64/KVM/KSU 真普通 App→su、原 Go/Rust 资产、真实 WLAN0 `ConnectivityManager.Network`、原 TUN/RAW、FakeTCP SYN `sendto` 和原 Linux server 启动已 PASS；原 Go 未认证 RST RX OBSERVED。针对 `-net-tap` 与 `-wifi-tap`+短隔离 DHCP 两轮 guest 试验，宿主 TAP kernel RX 在启动/D2 均 `NOT_OBSERVED`、真实 DHCP lease `NOT_PROVEN`；原 Linux RAW SYN RX、SYNACK TX、Android SYNACK RX、TLS认证/32租约、Rust M4 真业务和 Stop 均未证明。A25 [Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998) **12 SUCCESS+3 SKIPPED 是按阶段完成的诊断，不是端到端 PASS**。A21 全 App 仅 Host/构建通过，系统 DNS 冷门仍 false。
 
-**立刻的诊断顺序：** 以同一 SOURCE 分离 guest 网卡 SYN → host SYN → **原服务端 RAW 初始 SYN 接收** → **原服务端 RAW SYNACK 发送** → Android 原 `ClientAssociation` 收 SYNACK → 真 TLS 认证租约。各节点提供来源和固定枚举。若现有 QEMU SLIRP/用户态 NAT 不保真，优先在独立 Actions Job 试**真实 TAP guest**（现有 host `-net-tap` 准入 PASS 不是 guest PASS），必须保持真实 `ConnectivityManager.Network` 与原 PhysicalNetwork socket 绑定，且有界回收，不制造伪网络。TAP 不可行则记录环境阻塞、考虑单独获授权的真实 ARM64 手机或有 ARM64 KVM 的自托管环境。**不要先修改 TLS/AEAD 抵消网络异常。**
+**下一步唯一网络资格门**：当前 hosted x86 TAP 试验记 `ENV_BLOCKED_NETWORK_PATH`，不得重刷相同 QEMU/KSU Job 或改 TLS/AEAD、伪造 Network/默认路由/DNS。只有获取用户单独授权的真实 ARM64 设备，或实际可用且获授权的自管 ARM64 KVM/隔离真实接口，才继续原 Go/Rust ↔ 原 Linux RAW SYN RX→SYNACK TX→Android SYNACK RX→标准 TLS/认证/租约→Rust M4 真双向 TCP/UDP/owned Stop；无环境/授权时只准备离线最小验收收据，不动手机/服务器。
 
 ## 3. 两个 ABI 的角色不可偷换
 

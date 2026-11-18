@@ -1,6 +1,6 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
-> 更新：2026-11-18，基线 SOURCE `b926881b59581c073066d42f315b176f95e23c0b`。**本文件是当前执行口径，不是历史阶段流水账。** 每次施工先核远端 HEAD、PR、正在运行的 Actions 再更新事实；以下 SOURCE/Action 仅是本次编辑时已核验证据，不能被下一会话当作永远最新。
+> 更新：2026-11-18，已核验业务诊断 SOURCE `731ea034ce527ef2bf5a214d9a7431c96cb205dc`（[A25 Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998)）。**本文件是当前执行口径，不是历史阶段流水账。** 每次施工先核远端 HEAD、PR、正在运行的 Actions 再更新事实；以下 SOURCE/Action 仅是本次编辑时已核验证据，不能被下一会话当作永远最新。
 >
 > 原路径 `ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md` 为保持引用稳定而保留；任务已经从“短时能力探针”升级为正式 Android Root 原生客户端。旧 A3/A6/B2/A9/A15 分阶段方案及其原文，可从 [本次整理前的 Git 历史快照](https://github.com/lly8666/wbd-next/blob/b926881b59581c073066d42f315b176f95e23c0b/docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md) 和 `docs/devlog/android-root-probe/` 查阅，**不再具有并列执行优先权**。
 
@@ -15,18 +15,18 @@
 
 ## 2. 当前真实进度（以各自被测环境为范围）
 
-[同源 Android dual64 Action #44269992127](https://github.com/lly8666/wbd-next/actions/runs/44269992127) 对应 SOURCE `b926881b`：工作流整体 SUCCESS，**13 个成功 Job + 1 个按条件跳过的历史 NativeBridge Job**，不能说 14 项均执行 PASS。
+[同源 Android dual64 Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998) 对应 SOURCE `731ea034`：工作流整体 SUCCESS，**12 Job SUCCESS + 3 Job SKIPPED**（普通 x86 D1、普通 SLIRP D2-S1 与历史 NativeBridge）。独立 Wi-Fi TAP guest Job SUCCESS 只表示预认证脚本正常收据、清理和源锁，并不证明 TAP 出站或端到端业务。
 
 | 阶段 | 已验证 | 不得推断 |
 | --- | --- | --- |
 | D0 同源原 Go/Rust 生产源码双 Bionic ABI | ARM64 ELF/签名 APK、x86 CI-only 原生 ELF 与诊断 APK 构建，独立 Linux 原服务端 oracle 和基础 DNS/M3 Host 门通过 | 不代表 Android↔Linux 真实连接 |
 | D1 x86 Android16/KVM/KernelSU | 原 Go ELF `--help`、原 Java APK、普通 App UID→真实 KSU `su`、选定 PhysicalNetwork handle/ifindex/IPv4/MTU 读回真实执行 | 不代表 ARM64 真机，也不是 adb-root 与 KSU 全面等价 |
-| D2-S1 原协议预认证 | 同源原 Linux server 确实启动；原 Android RootService 原生 TUN/RAW 初始化；原 Go FakeTCP SYN `sendto` 系统调用成功；测试内隔离 Linux loopback 观察到 TCP SYN | **尚未确认服务端原 RAW 代码读到合格 SYN、原服务端发 SYNACK、Android 收到有效 SYNACK**；客户端在认证前退出 |
+| D2-S1 原协议预认证 | 原 Linux server/TUN 启动，Android16/KSU 普通 App→su、真实 WLAN0 PhysicalNetwork、原 TUN/RAW 与原 Go SYN `sendto` PASS；原 Go 未认证 RST RX OBSERVED；旧 SLIRP host lo SYN OBSERVED | **A25 Wi-Fi TAP guest 实际 RX=NOT_OBSERVED（boot 与 D2），DHCP lease=NOT_PROVEN；原 Linux RAW 有效 SYN RX、SYNACK TX、Android SYNACK RX 均 NOT_PROVEN**；客户端认证前退出 |
 | D2 完整 Android↔Linux | **NOT_PROVEN / 尚未达标** | TLS/认证、/32 租约、Rust M4、真实应用 TCP/UDP、认证后 UID 路由与 Stop 不能凭 D2-S1 绿色 Job 宣称 PASS |
 | A21 默认普通 App IPv4 UID 范围 | Java/Go Host 测试、带回滚 journal、同源正式 ARM64 APK 构建通过 | **真 Android 全应用内核 E2E 未测试**；不代表系统 DNS、IPv6、root/system/isolated UID 也被接管 |
 | 原生 ARM64 Android | ARM64 正式 APK 构建通过；用户早前提供过短时 Root/TUN/UID 诊断证据，按其各自范围保存 | 同一正式 ARM64 原 Go/Rust 对原 Linux server 的完整 WBD 业务 **NOT_PROVEN** |
 
-关键日志：[D2-S1 #44269992127](https://github.com/lly8666/wbd-next/actions/runs/44269992127) 出现 `D2_S1_REAL_ORIGINAL_ANDROID_TUN_RAW_CONFIGURED_PASS`、`D2_S1_ORIGINAL_GO_EARLY_EXIT_BEFORE_AUTH_HANDSHAKE`、`D2_S1_ANDROID_SYNACK_NOT_PROVEN`、`D2_S1_ANDROID_ORIGINAL_AUTH_LEASE_NOT_PROVEN`。先前宿主 Linux loopback SYN 证据 **不是** 服务端原 `raw.ReadSegment` 收包证据。
+关键固定收据：[A25 Artifact #14420055907](https://github.com/lly8666/wbd-next/actions/runs/44285914998/artifacts/14420055907) 的 `android_original_selected_interface=WLAN0`、`guest_to_host_tap_l2_during_boot=NOT_OBSERVED`、`guest_to_host_tap_l2_during_d2_session=NOT_OBSERVED`、`isolated_tap_dhcp_lease=NOT_PROVEN`、`original_android_unauth_rst_observed=OBSERVED`，原 Linux 双 RAW marker 缺失；`host_tap_exact_cleanup=PASS`、`owned_dhcp_process_cleanup=PASS`。宿主上任何 SYN 或原 Go `sendto` 成功均不是服务端原 `raw.ReadSegment` 收到合法 SYN 的证据。
 
 环境历史：macOS ARM64/ReactiveCircus Android Emulator QEMU 挂起 ADB 未上线（[Action #44042235770](https://github.com/lly8666/wbd-next/actions/runs/44042235770)）；GitHub hosted `ubuntu-24.04-arm` 上 `/dev/kvm` 不可用；x86 guest 的 ARM64 NativeBridge 原 Go **独立 ELF 139**，隔离 c-shared 诊断成功不等于原 ARM64 产品正常运行。NativeBridge 仅保留手动历史诊断，不再作为日常关键阻塞。
 
@@ -44,15 +44,13 @@
 
 **根因尚未最终归因**。当前主要假设是 Android Emulator 的用户态 NAT/SLIRP 不能保持 FakeTCP/RAW 语义；这需要上述双端原生 socket 证据确认，不提前把它写成定论，也不能默认是程序安全检查太严。
 
-### D2b｜仅当网络路径确认阻塞时，优先隔离 TAP guest 实测
+### 网络环境资格门｜Hosted x86 TAP 两种后端均未承载原业务
 
-[独立 TAP host 准入 #44264710804](https://github.com/lly8666/wbd-next/actions/runs/44264710804) 只证明 KVM 权限、Emulator `-net-tap` 参数展示和宿主 `/dev/net/tun` /隔离 TAP 接口读回；**并未启动真实 TAP Android guest**。
+[旧宿主 TAP 准入 #44264710804](https://github.com/lly8666/wbd-next/actions/runs/44264710804) 只证明宿主接口可创建。新实测分别尝试了 `-net-tap`（[A24 #44282946884](https://github.com/lly8666/wbd-next/actions/runs/44282946884)）和针对 Android 原 `wlan0` 的 `-wifi-tap` + 隔离短 DHCP（[A25 #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998)）。A25 真 guest 启动、真实 `ConnectivityManager.Network`、App→KSU 与原 Go SYN sendto 皆已执行，但 TAP kernel RX 两个时段均 `NOT_OBSERVED`，真实 DHCP lease `NOT_PROVEN`；原 Go 收到未认证 RST。不能称原业务已经走 TAP，也不能将该行为归为 TLS/证书/AEAD BUG。测试域名/路由无任何权限绕过；现有 `-net-tap`、`-wifi-tap` hosted 配置在当前 SOURCE 应按 **ENV_BLOCKED_NETWORK_PATH** 退出本轮，不重复 dispatch 相同 QEMU/KSU 重型任务，不通过关闭 SELinux、强加 Android 默认路由/DNS 或伪网络来凑 PASS。
 
-下一切片：单独有界 Job 中启动 x86_64 Android16/KSU guest 的实际 TAP 网络，以不影响 Actions runner 默认路由/DNS 的隔离 host TAP/桥接或受控网络命名空间承载原协议。必须逐项实查 guest boot/ADB、普通 App KSU `su`、`ConnectivityManager` 中真实 Network handle/源 IPv4/ifindex/MTU、原 `android_setsocknetwork`、原 Go/原 Rust/原 Linux server 双端 RAW 收发和反向路由。**不能为了 TAP 绕过产品的 PhysicalNetwork 绑定校验、伪造系统 Network 或无差别关闭整机安全策略。** 如果官方模拟器 TAP 后端与 KSU 镜像不能组成可用 guest，则留下 `ENV_BLOCKED` 和具体原因，及时止损；不得无限重试。
+**唯一后续网络资格关键路径**：在先获得用户对真实 ARM64 设备或自管 ARM64 KVM runner 的单独明确授权、或已实际可用的获授权隔离环境后，再用同原 Go/Rust/签名 ARM64 APK + 原 Linux server，先取得客观 guest 物理接口 SYN → host SYN → 原 Linux RAW 初始 SYN RX → 原 Linux RAW SYNACK TX → Android ClientAssociation SYNACK RX；通过后依序继续 D2b 真 TLS/身份/32租约、D2c Rust M4 双向真 App TCP/UDP/单测试 UID 内核路由/owned Stop。**当前无此授权或环境时停止真实网络部署，只准备离线最小验收和错误枚举，不做实体手机/个人服务器操作。** GitHub hosted ARM64 `/dev/kvm` 缺失是另一环境门，装 udev 不解决。
 
-若 TAP 仍不可行：可考虑已有用户授权范围内的自愿、手动 ARM64 真机最小诊断，或在单独获得授权后使用具 KVM 的 ARM64 自管 runner/隔离实验网络。不要把 hosted ARM64 缺 KVM 归咎于一段 udev 权限配置。
-
-### D2c｜将预认证真正升级为业务 PASS
+### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：
 
