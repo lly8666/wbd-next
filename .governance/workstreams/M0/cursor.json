@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2187,
-  "checkpoint_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+  "sequence": 2188,
+  "checkpoint_sha": "44555786294a09c3353c99344308de09dd879da1",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2187：正式归档H2186 SOURCE e1742358 双native Linux x86_64/aarch64各8互补随机填充/AEAD/MTU功能共16/16真TCP/UDP/Stop SUCCESS；维护八功能卡、START_HERE和同SOURCE签名证据。",
-  "why_now": "Action44278039887两原生ISA完整SUCCESS，原产物14415547592(x86)和14414634232(ARM64)单一Go/Rust/ISA-L源锁三binary SHA256、8/8每ISA真实kernel应用TCP/UDP/MTU/Stop和成功AF_PACKET Game padded copy均已下载校验。维护Action44278040054亦SUCCESS。",
-  "done_when": "H2187文档+8张受影响功能卡+签名事实/原始Action链接入main，同SHA/canonical source写回，完成governance+maintenance回归且不重跑16个已PASS场；029技术仍OPEN。",
-  "next_action": "收H2187治理/maintenance Actions；后续仅增量补证Linux Normal/Fixed/Auto随机padding、autoIP动态MTU冷路径、原生应用完全TLS与轮换/性能等独立OPEN，不将Window专属功能误当Linux。",
+  "current_task": "H2188：H2186 Linux x86/ARM原生各8场、16/16 PASS；压缩签名功能卡及M0热读取，仅文档治理。",
+  "why_now": "H2187功能卡4份超16KiB、M0热读取33771>32768使governance/maintenance失败；原native Action44278039887成功不变。",
+  "done_when": "四张卡各≤16KiB、combined hot≤32768、治理/maintenance PASS；源锁e1742358真网不重跑。",
+  "next_action": "核H2188治理回归；029技术OPEN，Linux Normal/FEC填充及无密钥X25519未接线、manual动态MTU未验。",
   "unverified": true,
   "last_tested_source": "e174235872d32cca69bf921fb59904f9bcaee889",
   "evidence_refs": [
@@ -19,9 +19,8 @@
   ],
   "context_refs": [
     "docs/devlog/M0/20261118-PLAN029-H2187-LINUX-ALL-NONWIN-SCOPED-CAPABILITY-CLOSEOUT.md",
-    "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json",
-    "docs/devlog/M0/20261118-PLAN029-H2186-LINUX-OWNED-IPV6-UNDER-MIN-MTU.md"
+    "docs/devlog/M0/20261118-PLAN029-H2188-CARD-AND-HOT-BUDGET-COMPAT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2186 native SOURCE e174235872d32cca69bf921fb59904f9bcaee889 [Action44278039887] two native jobs completed SUCCESS 16/16: Linux x86/ARM original Go TLS/Rust M4 client+server, 6 each Game2/4 off/tls/flows/FEC6/outer-off/immediate pad kernel RAW copies and 2 Normal AES128/AES256 MTU1280/DF + real TCP/UDP + owned IPv6/Stop/cleanup. Game2 off raw pads0, tls/flows real >0, parity copied >=96; two SHA-locked product bundles/ISA. Linux Normal/Fixed/Auto padding and no-key X25519 NOT_WIRED; manual live physical MTU, physical ARM, cross-ISA and p99 NOT_RUN. PLAN029/029B overall OPEN,030 not started."
+  "partial_summary": "H2186 SOURCE e1742358 Action44278039887：Linux原生x86+ARM各8独立原Go TLS/Rust双端真kernel TCP/UDP/Stop成功，Game2/4 off/tls/flows实raw填充、FEC6、Game4副本、outer-off；Normal AES128/256、外1280内1209 DF+IPv6边界。原产物14415547592/14414634232各有SHA锁。未测实体ARM/跨ISA/性能；029仍OPEN、030未启。"
 }
