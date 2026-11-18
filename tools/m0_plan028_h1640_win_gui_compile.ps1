@@ -21,6 +21,9 @@ $info='namespace Wbd.Gui {{ static class SourceInfo {{ public const string SHA =
 [IO.File]::WriteAllText($gen,$info,[Text.UTF8Encoding]::new($false))
 $refs=@('mscorlib','System','System.Core','System.Drawing','System.Windows.Forms','System.Web.Extensions','System.ServiceProcess')|ForEach-Object {'/reference:'+(Join-Path $fx ($_.ToString()+'.dll'))}
 $source=@('Portable.cs','MainForm.cs','GuiTests.cs')|ForEach-Object {Join-Path $root ('windows/gui/'+$_)}
+$driverSetup=Join-Path $PSScriptRoot 'm0_h2204_win_driver_setup.cs'
+if(-not(Test-Path $driverSetup)){throw 'H2204 driver source missing; no stub'}
+$source+= $driverSetup
 foreach($f in $source){if(-not(Test-Path $f)){throw "GUI source missing $f"}}
 # PLAN029 own-source deterministic GUI presentation overlay. Never
 # mutate the pinned original donor. Derived source is compiled once from
@@ -59,6 +62,77 @@ foreach($key in @('startup-padding','fec.mode','fec.profile','fec.auto_policy','
  }
 }
 $sourceText=$sourceText.Replace('仅TLS启动 · Normal','仅TLS启动 · 双端').Replace('所有TCP/UDP新流 · Normal','所有TCP/UDP新流 · 双端')
+
+# Wire explicit user-requested driver controls into the SOURCE-DERIVED
+# original WinForms tab. No post-build patch, no duplicate GUI class.
+$driverBarAnchor='driverBar.Controls.Add(Button("Npcap 官方下载", () => Try(Dependencies.OpenDownload)));'
+if(([regex]::Matches($sourceText,[regex]::Escape($driverBarAnchor))).Count -ne 1){
+ throw 'H2204 driver toolbar source drift'
+}
+$driverButtons=@'
+driverBar.Controls.Add(Button("Npcap 官方下载", () => Try(Dependencies.OpenDownload)));
+            driverBar.Controls.Add(Button("Npcap 安装（本地官方包）", async () => await RunAsync(InstallNpcapOfficialAsync)));
+            driverBar.Controls.Add(Button("Wintun 驱动安装", async () => await RunAsync(InstallWintunOwnedAsync)));
+'@
+$sourceText=$sourceText.Replace($driverBarAnchor,$driverButtons.Trim())
+$methodAnchor='        void RefreshDependencies() { dependencies.Text = detect().Description; }'
+if(([regex]::Matches($sourceText,[regex]::Escape($methodAnchor))).Count -ne 1){
+ throw 'H2204 driver action methods source drift'
+}
+$driverMethods=@'
+        // Only the user who clicked the driver button starts this action.
+        // Npcap Free is never embedded, proxied, mirrored or silently installed.
+        async Task InstallNpcapOfficialAsync() {
+            var d = detect();
+            DriverSetup.RequireIdleAdmin(d.Admin, session.Active, d.ClientBusy);
+            string path;
+            using (var picker = new OpenFileDialog {
+                Title = "选择刚从 npcap.com 官网下载的 Npcap 安装包",
+                Filter = "Npcap 官方签名安装程序 (npcap-*.exe)|npcap-*.exe",
+                CheckFileExists = true, Multiselect = false
+            }) {
+                if (picker.ShowDialog(this) != DialogResult.OK) return;
+                path = picker.FileName;
+            }
+            await Task.Run(() => DriverSetup.VerifyOfficialNpcapInstaller(path));
+            if (MessageBox.Show(this,
+                "已通过 Npcap Windows 数字签名和官方发布者检查。现在打开官方图形安装向导吗？\n"+
+                "安装程序由你从 npcap.com 下载，不包含在 WBD 分发包中；不会进行静默安装。"+
+                "安装完成可能需要重启 Windows。",
+                "Npcap 官方驱动安装", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+            string message = await Task.Run(() => DriverSetup.RunInteractiveNpcapInstaller(path));
+            RefreshDependencies();
+            Enqueue(message);
+        }
+        async Task InstallWintunOwnedAsync() {
+            var d = detect();
+            DriverSetup.RequireIdleAdmin(d.Admin, session.Active, d.ClientBusy);
+            string dll = store.InRoot("wintun.dll");
+            await Task.Run(() => DriverSetup.VerifyPinnedWintunDll(dll));
+            if (MessageBox.Show(this,
+                "即将用随包的官方签名 Wintun 0.14.1 创建临时 WBD-Setup 网卡，以便注册驱动。"+
+                "操作后仅撤销这张临时网卡，不使用或删除现有网卡，不更改 DNS 和路由。\n"+
+                "正常业务的 WBD 网卡仍只在你点击“连接”后由原生客户端创建。",
+                "Wintun 驱动安装", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+            // Recheck ownership after human approval; never race another
+            // original native owner/cleanup while doing PnP work.
+            d = detect();
+            DriverSetup.RequireIdleAdmin(d.Admin, session.Active, d.ClientBusy);
+            string message = await Task.Run(() => DriverSetup.InstallWintunWithTemporaryAdapter(dll));
+            RefreshDependencies();
+            Enqueue(message);
+        }
+'@
+$sourceText=$sourceText.Replace($methodAnchor,$driverMethods+$methodAnchor)
+$oldDriverNote='Npcap 需用户从官网安装，免费版不能随包分发或静默安装。'
+$newDriverNote='Npcap：点击官方下载，再点击本页安装并选择已下载的官方签名安装包（不支持静默安装）。'
+if(([regex]::Matches($sourceText,[regex]::Escape($oldDriverNote))).Count -ne 1){
+ throw 'H2204 original driver help note drift'
+}
+$sourceText=$sourceText.Replace($oldDriverNote,$newDriverNote)
+
 [IO.File]::WriteAllText($derivedMain,$sourceText,[Text.UTF8Encoding]::new($false))
 # Run the source-donor GUI field-by-field / actual Go --check-config regression
 # with the 029B/H2202 additions: stale test fixture must not be mistaken for
@@ -149,6 +223,51 @@ if(([regex]::Matches($tests,[regex]::Escape($oldWidget))).Count -ne 1 -or
 }
 $tests=$tests.Replace($oldWidget,'{"mtu",1280},{"startup-padding","tls"}')
 $tests=$tests.Replace($oldExpect,'Convert.ToString(p.Values["startup-padding"])=="tls"')
+
+# No automatic driver install in CI. Exercise the real toolbar and dangerous
+# boundary decisions through in-memory WinForms tests + negative signatures.
+$testStart='                var store = new PortableStore(root);'
+if(([regex]::Matches($tests,[regex]::Escape($testStart))).Count -ne 1){throw 'H2204 driver test setup drift'}
+$driverNegatives=@'
+                Assert(DriverSetup.NpcapDownloadURL=="https://npcap.com/#download",
+                       "GUI Npcap downloads from official HTTPS origin only");
+                foreach (var state in new[] {
+                    new [] {false,false,false}, new [] {true,true,false}, new [] {true,false,true}
+                }) {
+                    bool rejected=false;
+                    try { DriverSetup.RequireIdleAdmin(state[0],state[1],state[2]); }
+                    catch(InvalidOperationException){rejected=true;}
+                    Assert(rejected, "driver install denies non-admin or active native owner");
+                }
+                DriverSetup.RequireIdleAdmin(true,false,false);
+                bool unsignedDenied=false;
+                try {DriverSetup.VerifyOfficialNpcapInstaller(Path.Combine(root,"npcap-1.0.exe"));}
+                catch(Exception){unsignedDenied=true;}
+                Assert(unsignedDenied,"Npcap installer missing/unsigned rejects before execution");
+                bool forgedWintunDenied=false;
+                try {DriverSetup.VerifyPinnedWintunDll(Path.Combine(root,"wintun-forged.dll"));}
+                catch(Exception){forgedWintunDenied=true;}
+                Assert(forgedWintunDenied,"Wintun missing/unpinned DLL rejects before driver PnP");
+'@
+$tests=$tests.Replace($testStart,$testStart+"\n"+$driverNegatives)
+$tabsAnchor='                    Assert(actualTabs != null,"native WinForms main tabs exist");'
+if(([regex]::Matches($tests,[regex]::Escape($tabsAnchor))).Count -ne 1){throw 'H2204 driver buttons test tab drift'}
+$testButtons=@'
+                    var driverPage=actualTabs.TabPages.Cast<TabPage>().FirstOrDefault(x=>x.Text=="便携与驱动");
+                    Assert(driverPage!=null,"WinForms has dedicated driver setup page");
+                    var driverButtonNames=new List<string>();
+                    Action<Control> inspectDriverButtons=null;
+                    inspectDriverButtons=c=>{
+                        if(c is Button)driverButtonNames.Add(c.Text);
+                        foreach(Control child in c.Controls)inspectDriverButtons(child);
+                    };
+                    inspectDriverButtons(driverPage);
+                    Assert(driverButtonNames.Contains("Npcap 官方下载"),"visible native Npcap official download button");
+                    Assert(driverButtonNames.Contains("Npcap 安装（本地官方包）"),"visible native signed Npcap interactive install button");
+                    Assert(driverButtonNames.Contains("Wintun 驱动安装"),"visible native owned Wintun PnP bootstrap button");
+                    Assert(driverButtonNames.Contains("重新检测"),"visible native driver readback button");
+'@
+$tests=$tests.Replace($tabsAnchor,$tabsAnchor+"\n"+$testButtons)
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests
