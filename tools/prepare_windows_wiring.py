@@ -175,7 +175,7 @@ def prepare(root, legacy, output, source, spec):
     src = "r0/go_overlay/internal/v4routekey/"
     dest = legacy / "internal" / "v4routekey"
     dest.mkdir(parents=True, exist_ok=True)
-    for name in ("short.go", "short_test.go"):
+    for name in ("short.go", "short_test.go", "cache.go"):
         target = dest / name
         need(not target.exists() and not target.is_symlink(),
              "competing native route-key KDF owner: " + name)
@@ -187,13 +187,15 @@ def prepare(root, legacy, output, source, spec):
        '\t"github.com/lly8666/wobuzhidao/internal/realityfront"\n\t"github.com/lly8666/wobuzhidao/internal/v4routekey"\n'),
       ('\t\trouteKeyHex        = flag.String("route-key-hex", "", "32B pre-shared TLS entry route key in hex")',
        '\t\trouteKeyHex        = flag.String("route-key-hex", "", "32B pre-shared TLS entry route key in hex")\n'
-       '\t\trouteKeyShort = flag.String("route-key", "", "8..32 ASCII letters/digits, offline PBKDF2 to same 32-byte route key")'),
+       '\t\trouteKeyShort = flag.String("route-key", "", "8..32 ASCII letters/digits, offline v2 once with persistent 32-byte cache")'),
       ('\tif handleVersion() {\n',
        '\tif *routeKeyShort != "" {\n'
        '\t\tif *routeKeyHex != "" || *routeKeyHexFile != "" {\n'
        '\t\t\treturn errors.New("route-key and route-key-hex/-file are mutually exclusive")\n'
        '\t\t}\n'
-       '\t\tderived, e := v4routekey.Derive(*routeKeyShort)\n'
+       '\t\tcachePath, e := v4routekey.DefaultCachePath("client", *serverName)\n'
+       '\t\tif e != nil {return e}\n'
+       '\t\tderived, _, e := v4routekey.Resolve(*routeKeyShort, cachePath)\n'
        '\t\tif e != nil {return e}\n'
        '\t\t*routeKeyHex = hex.EncodeToString(derived)\n'
        '\t}\n'

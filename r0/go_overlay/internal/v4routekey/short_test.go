@@ -1,36 +1,46 @@
 package v4routekey
 
 import (
- "encoding/hex"
- "strings"
- "testing"
+    "encoding/hex"
+    "os"
+    "path/filepath"
+    "strings"
+    "testing"
 )
 
-func TestH2207ShortRouteKeyIndependentPBKDF2Vectors(t *testing.T) {
-  for _,tc:=range []struct{input,want string}{
-    {"Abc12345","9cafa60c5da912db6a526c4e211ed402052a1684edee82bab8aea14a8be54e0d"},
-    {"A1b2C3d4E5f6G7h8","72043e311dfcfa69188bebe3b1ffde70c5b548c43c5abdaeadaf31c788f20646"},
-    {"ABCdef0123456789ABCdef0123456789","063e483cfd4433157aec7d1d6cb062f22317c4122b66131c8aef5d5aaa88159c"},
-  } {
-    key,err:=Derive(tc.input)
-    if err!=nil||len(key)!=32||hex.EncodeToString(key)!=tc.want {
-      t.Fatalf("offline SHA256 PBKDF2 vector mismatch length=%d err=%v",len(key),err)
+func TestH2207MobileFriendlyV2Vectors(t *testing.T) {
+    if Iterations != 4096 || Version != 2 { t.Fatal("unexpected KDF version/cost") }
+    for _, tc := range []struct { input, want string }{
+        {"Abc12345", "b3745a18edd59a1ce6aa2586ae5d90c3ec2eee3fbfafa059783e4492e2bc0539"},
+        {"A1b2C3d4E5f6G7h8", "68ef025a9224cafa38c55e4fad14eec0fece1642c8679a41368fee0f5702033e"},
+        {"ABCdef0123456789ABCdef0123456789", "fcb0fd63fb6e807da50afc7d1c39a9df68b7c39ae67ed2cc2db76ebe9127054e"},
+    } {
+        got, err := Derive(tc.input)
+        if err != nil || hex.EncodeToString(got) != tc.want { t.Fatalf("v2 vector %d %v", len(got), err) }
     }
-    again,_:=Derive(tc.input)
-    if !strings.EqualFold(hex.EncodeToString(again),tc.want){
-      t.Fatalf("same client/server input diverges")
-    }
-  }
 }
-func TestH2207ShortRouteKeyRejectsAmbiguousOrLowLength(t *testing.T) {
- for _,input:=range []string{
-  "", "1234567", strings.Repeat("x",33), "ABC 12345", "ABC-12345",
-  "ABC_12345","ABC\n12345","abcdefgh\x00","中文密钥A1", "ＡＢＣ１２３４５",
- } {
-   key,err:=Derive(input)
-   if err==nil||key!=nil{t.Fatalf("accepted invalid 8..32 ASCII route-key (length=%d)",len(input))}
- }
- a,_:=Derive("Abc12345")
- b,_:=Derive("abc12345")
- if hex.EncodeToString(a)==hex.EncodeToString(b){t.Fatal("short key lost case-sensitivity")}
+
+func TestH2207RejectInvalidShortKey(t *testing.T) {
+    for _, input := range []string{"", "1234567", strings.Repeat("x", 33), "ABC 12345", "ABC-12345", "ABC_12345", "ABC\n12345", "abcdefgh\x00", "中文密钥A1", "ＡＢＣ１２３４５"} {
+        if got, err := Derive(input); err == nil || got != nil { t.Fatal("accepted invalid input") }
+    }
+    a, _ := Derive("Abc12345"); b, _ := Derive("abc12345")
+    if hex.EncodeToString(a) == hex.EncodeToString(b) { t.Fatal("key lost case sensitivity") }
+}
+
+func TestH2208PersistentOncePerKeyAndFastRestarts(t *testing.T) {
+    dir := t.TempDir()
+    path := filepath.Join(dir, "owned-route-key.json")
+    first, hit, err := Resolve("Abc12345", path)
+    if err != nil || hit || len(first) != 32 { t.Fatalf("initial derive: hit=%v err=%v", hit, err) }
+    st, err := os.Stat(path)
+    if err != nil || st.Mode().Perm() != 0600 { t.Fatal("cache file must be 0600") }
+    second, hit, err := Resolve("Abc12345", path)
+    if err != nil || !hit || !strings.EqualFold(hex.EncodeToString(first), hex.EncodeToString(second)) { t.Fatal("restart must use persisted 32B key") }
+    rotated, hit, err := Resolve("Abc12346", path)
+    if err != nil || hit || hex.EncodeToString(rotated) == hex.EncodeToString(first) { t.Fatal("changed short key must rotate persistent key") }
+    _, hit, err = Resolve("Abc12346", path)
+    if err != nil || !hit { t.Fatal("rotated key not reused") }
+    if err := os.WriteFile(path, []byte("{bad"), 0600); err != nil { t.Fatal(err) }
+    if _, _, err := Resolve("Abc12346", path); err == nil { t.Fatal("corrupt cache must fail closed") }
 }

@@ -193,7 +193,9 @@ func parse(role string,args []string)(config,error){
     tunCIDR:=flags.String("tun-ipv4",defaultTun,"owned real TUN IPv4 CIDR (server default 10.66.0.1/24)")
     name:=flags.String("server-name","","original TLS recognized SNI")
     route:=flags.String("route-key-hex","","legacy/expert pre-shared 32-byte route key hex (64 characters)")
-    routeShort:=flags.String("route-key","","8..32 case-sensitive ASCII letters/digits; locally PBKDF2-SHA256 into existing 32B route key, no on-wire changes (8/16 human passwords weak)")
+    routeShort:=flags.String("route-key","","8..32 ASCII letters/digits; v2 4096-iteration mobile-friendly PBKDF2 once then persistent 32B cache (prefer 24..32 random)")
+    routeShortFile:=flags.String("route-key-file","","owner-only file with 8..32 short route-key; avoids argv disclosure")
+    routeCache:=flags.String("route-key-cache-file","","persistent owner-only derived key cache; default user config directory")
     caPEM:=flags.String("tls-ca-pem","","client application-scoped trusted server CA/certificate PEM (default OS trust)")
     cert:=flags.String("tls-cert","","original server TLS PEM")
     key:=flags.String("tls-key","","original server private PEM")
@@ -233,6 +235,12 @@ func parse(role string,args []string)(config,error){
         value,e:=readPrivateArgFile(*passFile)
         if e!=nil{return c,fmt.Errorf("invalid password-file: %w",e)}
         *pass=value
+    }
+    if *routeShortFile!="" {
+        if *routeShort!="" {return c,fmt.Errorf("route-key and route-key-file are mutually exclusive")}
+        short,e:=readPrivateArgFile(*routeShortFile)
+        if e!=nil{return c,fmt.Errorf("invalid route-key-file: %w",e)}
+        *routeShort=short
     }
     if *routeFile!="" {
         if *route!=""||*routeShort!="" {return c,fmt.Errorf("route-key, route-key-hex and route-key-hex-file are mutually exclusive")}
@@ -398,9 +406,12 @@ func parse(role string,args []string)(config,error){
     c.password=*pass
     if *routeShort!="" {
         if *route!=""||*routeFile!="" {return c,fmt.Errorf("route-key, route-key-hex and route-key-hex-file are mutually exclusive")}
-        c.routeKey,err=v4routekey.Derive(*routeShort)
-        if err!=nil{return c,fmt.Errorf("invalid 8..32 character route-key: %w",err)}
+        cachePath:=*routeCache
+        if cachePath=="" {cachePath,err=v4routekey.DefaultCachePath(role,*name);if err!=nil{return c,err}}
+        c.routeKey,_,err=v4routekey.Resolve(*routeShort,cachePath)
+        if err!=nil{return c,fmt.Errorf("invalid/persisted route-key: %w",err)}
     }else{
+        if *routeCache!="" {return c,fmt.Errorf("route-key-cache-file requires short route-key")}
         c.routeKey,err=hex.DecodeString(*route)
         if err!=nil||len(c.routeKey)!=32{
             return c,fmt.Errorf("route-key (8..32 alphanumeric) or legacy 32-byte route-key-hex required; no online bootstrap")
