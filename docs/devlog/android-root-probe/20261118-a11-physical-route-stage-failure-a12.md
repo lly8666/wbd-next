@@ -47,3 +47,24 @@ A12 新源码的 Host Java脚本测试、静态隐私/安全策略、同SOURCE N
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"封存用户真 ARM64 A11 route阶段失败+rollback PASS、没有实际发包的准确红门；A12仅加固定分层ip/UID路由errno收据、私有临时错误文件清理、安全同源码signed APK，不修改正式Go/Rust和系统DNS。"}
 ```
+
+## A12 签名 APK 构建实绩（尚无新设备回执）
+
+同源码 `e1e085ed722121f83d1a48e906824bfe49ff3b45`
+[Android ARM64 Actions #44213162334](https://github.com/lly8666/wbd-next/actions/runs/44213162334)
+的 `root-arm64-app` job **SUCCESS**；记录
+`ANDROID_ARM64_A12_GRANULAR_ROUTE_FAILURE_DIAG_AUDIT_PASS`、
+`ANDROID_ARM64_A11_REAL_UID_TUN_PACKET_SCRIPT_HOST_PASS`、
+`ANDROID_ARM64_ROOT_DEBUG_ONLY_TUN_RAW_SELFTEST_ABI_SHA_PASS`、
+`ANDROID_ROOT_ARM64_APP_AND_NATIVE_ASSETS_SOURCE_LOCKED_BUILD_PASS sdk=36`。
+原 Go/Rust ARM64 原生源锁构建、CN8503、Rust DNS/M3 和 Linux 原服务端 oracle 同源 Job SUCCESS，产品协议与 DNS 双冷门均未改。
+
+签名 A12 APK artifact ID `14386339734`，实际完整 APK SHA256
+`24d4d84c6713bbe8616205f622bc0db5560918069597a5b8922a4b2275bf74e3`，
+自 `android-root-original-arm64-app-e1e085ed722121f83d1a48e906824bfe49ff3b45`
+提取后验证 ZIP 中 `SOURCE`、内部原Go/Rust、NDK AArch64 helper SHA256 与新固定枚举字节。
+[完整 Action44213162334](https://github.com/lly8666/wbd-next/actions/runs/44213162334) **10/11 Jobs SUCCESS，整体FAIL**；唯一红门仍是 x86_64 KVM KSU NativeBridge 正式原Go ELF `ORIGINAL_WBD_ARM64_EXIT=139`，隔离真实Go CLI cshared测试 `ORIGINAL_GO_CSHARED_HELP_EXIT=0`。用户真ARM64手机已于A10真实报告 `GO_ELF_HELP_PASS`，两种不同执行环境不可混淆，未作跳过/绿化。当前能声称的是 **A12 BUILD_PASS**，用户 A12 真机新事件与 UID→TUN 包仍 **NOT_RUN**，不得把 Host/Cuttlefish Admission 成功写成实体机包已到达。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"将用户A11实体失败保留红门，同时冻结A12同源Java/NDK正式签名APK构建PASS、artifact/SHA与实机NOT_RUN。"}
+```
