@@ -1,4 +1,4 @@
-"""029B B5 modes: independent original Game4 advanced CN and Game2 explicit refusal.
+"""029B Game2/Game4 original shared Rust cold split qualification.
 
 The actual signed Game4 result is authoritative; this test only prevents
 the historical FakeIP oracle from accidentally receiving fresh ordinary
@@ -14,7 +14,7 @@ class GameModesScope(unittest.TestCase):
     def test_original_game4_explicit_advanced_cn_one_scene(self):
         e2e=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
         workflow=(ROOT/".github/workflows/m0-wl-public-normal-full.yml").read_text()
-        self.assertIn('if p029_game4_cn:\n  # 029B fresh profiles default ordinary CN',e2e)
+        self.assertIn('if p029_game4_cn and not p029b_game_case:\n  # 029B fresh profiles default ordinary CN',e2e)
         self.assertIn('args.extend(["--split-enable","--cn-domain-direct=true",',e2e)
         self.assertIn('"--cn-rules-file",str(rules)])',e2e)
         self.assertIn('WBD_PLAN029_GAME4_CN_SCENE:',workflow)

@@ -685,7 +685,7 @@ jobs:
       - run: python -m unittest tests.test_m0_plan029b_b4_scope -v
       - run: python -m unittest tests.test_m0_plan029b_b5_scope -v
       - run: python -m py_compile tools/m0_plan029b_b5_samevm.py
-      - run: python -m unittest tests.test_m0_plan029b_game_scope -v
+      - run: python -m unittest tests.test_m0_plan029b_game_scope tests.test_m0_plan029b_game2_tcp_scope -v
       - run: python -m py_compile tools/m0_plan029b_b4_guest.py tools/m0_plan029_gui_real_bridge.py tools/m0_wl_public_mss_contract.py
       - run: python -m py_compile tools/m0_plan029b_b0_dns_guest.py tools/m0_plan029b_b0_dns_windows.py tools/m0_plan029b_b2_cn_windows.py tools/m0_plan029b_b2_cn_guest.py tools/m0_plan029b_b3_ipv6_windows.py tools/m0_plan029b_b3_ipv4_guest.py tools/m0_wl_public_normal_e2e.py
       - run: python -m unittest tests.test_m0_plan029_ipv6_route_probe -v
