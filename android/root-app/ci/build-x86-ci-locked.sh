@@ -53,9 +53,30 @@ fi
 find android/root-app/src -name '*.java' -print0 |
   xargs -0 javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar" \
     -d "$out/classes"
+# CI ONLY: a bounded app-UID KernelSU authorization test; never built into
+# the release ARM64 signed APK, never handles a WBD data packet.
+javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar:$out/classes" \
+  -d "$out/classes" android/root-app/ci/X86CiAppSuActivity.java
+python3 - <<'PYCI'
+import xml.etree.ElementTree as ET
+from pathlib import Path
+path=Path("android/root-app/AndroidManifest.xml")
+target=Path("out/android-x86-ci-app/ci-only-AndroidManifest.xml")
+ns="http://schemas.android.com/apk/res/android"
+ET.register_namespace("android",ns)
+tree=ET.parse(path)
+root=tree.getroot()
+app=root.find("application")
+assert app is not None
+app.set("{"+ns+"}label","WBD x86 CI Root")
+ET.SubElement(app,"activity",{
+    "{"+ns+"}name":".X86CiAppSuActivity",
+    "{"+ns+"}exported":"true"})
+tree.write(target,encoding="utf-8",xml_declaration=True)
+PYCI
 "$bt/d8" --min-api 28 --lib "$jar" --output "$out/dex" \
   $(find "$out/classes" -name '*.class' -print)
-"$bt/aapt2" link --manifest android/root-app/AndroidManifest.xml \
+"$bt/aapt2" link --manifest "$out/ci-only-AndroidManifest.xml" \
   -I "$jar" -A "$out/assets" \
   --min-sdk-version 28 --target-sdk-version 35 \
   -o "$out/unsigned.apk"
@@ -71,8 +92,10 @@ keytool -genkeypair -alias wbdroot -keystore "$out/ci-disposable.jks" \
 "$bt/apksigner" verify "$out/wbd-root-x86-ci-only.apk"
 "$bt/aapt" dump badging "$out/wbd-root-x86-ci-only.apk" >"$out/badging.txt"
 grep -F "package: name='org.wbdnext.rootclient'" "$out/badging.txt"
+grep -F "application-label:'WBD x86 CI Root'" "$out/badging.txt"
 "$bt/aapt" dump xmltree "$out/wbd-root-x86-ci-only.apk" AndroidManifest.xml \
   >"$out/manifest-tree.txt"
+grep -Fq "X86CiAppSuActivity" "$out/manifest-tree.txt"
 if grep -Eq 'BIND_VPN_SERVICE|VpnService' "$out/manifest-tree.txt";then
  echo "X86_CI_MUST_NOT_CONTAIN_VPN_SERVICE" >&2;exit 1
 fi
@@ -91,6 +114,8 @@ with zipfile.ZipFile(apk) as z:
       "assets/native-amd64/cn-geosite-provenance.json"]
     assert all(x in names for x in required)
     assert not any("native-arm64/" in x for x in names)
+    assert "X86CiAppSuActivity" in (o/"manifest-tree.txt").read_text()
+    assert "X86CiAppSuActivity.java" not in names
     m=json.loads(z.read("assets/native-amd64/manifest.json"))
     assert m["source"]==os.environ["GITHUB_SHA"]==z.read("assets/native-amd64/SOURCE").decode().strip()
     assert m["release"] is False and m["android_abis"]==["x86_64"]

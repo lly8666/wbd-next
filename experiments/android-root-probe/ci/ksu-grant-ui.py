@@ -3,11 +3,18 @@
 No ksud/kernel allowlist writes, patched su binary, fake service, or adb UID impersonation.
 Fail closed and preserve UI XML/screenshot for API differences.
 """
-import json, re, subprocess, time, xml.etree.ElementTree as ET
+import json, os, re, subprocess, time, xml.etree.ElementTree as ET
 from pathlib import Path
 OUT=Path("out/ksu")
-PKG="org.wbdnext.rootprobe"
-APP_LABEL="WBD app su probe"
+PKG=os.environ.get("WBD_KSU_TARGET_PACKAGE","org.wbdnext.rootprobe")
+APP_LABEL=os.environ.get("WBD_KSU_TARGET_LABEL","WBD app su probe")
+# Only these two controlled test packages can be granted: the historical
+# diagnostic probe or the signed original Go/Rust CI-only app. Never an
+# arbitrary App or an operator device package supplied from environment.
+if PKG not in ("org.wbdnext.rootprobe","org.wbdnext.rootclient"):
+    raise SystemExit("unsupported isolated CI KernelSU target package")
+if PKG=="org.wbdnext.rootclient" and APP_LABEL!="WBD x86 CI Root":
+    raise SystemExit("unsigned or unexpected x86 CI-only app label")
 
 def adb(*args, check=True, timeout=35):
     p=subprocess.run(["adb",*args],capture_output=True,text=True,timeout=timeout)

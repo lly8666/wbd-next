@@ -34,7 +34,10 @@ d={"schema":"wbd-android-x86-kvm-ksu-original-native-d1-admission/v1",
    "panic:" not in read("go-help.txt") and
    "fatal error:" not in read("go-help.txt") else "NOT_PROVEN",
  "signed_ci_apk_activity":"PASS" if "Starting: Intent" in read("activity.txt") else "NOT_PROVEN",
- "app_to_ksu_root":"NOT_RUN","physical_network_app_readback":"NOT_RUN",
+ "app_to_ksu_root":"PASS" if "APP_UID_SU_PASS" in read("app-su-receipt.txt") and
+   "ORIGINAL_SIGNED_NATIVE_ASSETS_VERIFIED" in read("app-su-receipt.txt")
+   else ("NOT_PROVEN" if read("grant-ui.txt") else "NOT_RUN"),
+ "physical_network_app_readback":"NOT_RUN",
  "original_tls_auth_lease":"NOT_RUN","real_m3_m4_tcp_udp":"NOT_RUN",
  "owned_stop_route_rollback":"NOT_RUN",
  "system_dns_takeover":"NOT_RUN"}
@@ -181,4 +184,39 @@ if [[ "$code" != 1 ]] ||
   exit 17
 fi
 echo "ANDROID_X86_ORIGINAL_GO_ELF_HELP_PASS"
-echo "D1_APP_SU_AND_TLS_M4_NOT_RUN"
+# D1 phase 2: the SAME signed CI-only original controller PACKAGE must
+# request su from its own ordinary untrusted_app UID. ADB shell su/root
+# above is NOT acceptable proof. A CI-only activity (not shipped on ARM64)
+# first verifies the exact product NativePayload and then requests real su.
+phase=CI_APP_UID_KSU_GRANT
+adb logcat -c >"$out/logcat-clear.txt" 2>&1 || true
+adb shell am start -n org.wbdnext.rootclient/.X86CiAppSuActivity \
+  >"$out/app-su-first-request.txt" 2>&1
+grep -q 'Starting: Intent' "$out/app-su-first-request.txt"
+sleep 4
+# Reuse historical KSU Manager UI grant, but pin exactly our signed package
+# and its CI-only label. No direct ksud allowlist writes or fake su.
+WBD_KSU_TARGET_PACKAGE=org.wbdnext.rootclient \
+WBD_KSU_TARGET_LABEL='WBD x86 CI Root' \
+  python3 experiments/android-root-probe/ci/ksu-grant-ui.py \
+  >"$out/grant-ui.txt" 2>&1
+adb shell am start -n org.wbdnext.rootclient/.X86CiAppSuActivity \
+  >"$out/app-su-second-request.txt" 2>&1
+grep -q 'Starting: Intent' "$out/app-su-second-request.txt"
+for i in $(seq 1 55);do
+  adb shell logcat -d -s WBD_X86_CI_APP_SU:I '*:S' \
+    >"$out/app-su-logcat-filtered.txt" 2>&1 || true
+  if grep -Fq 'APP_UID_SU_PASS' "$out/app-su-logcat-filtered.txt" &&
+     grep -Fq 'ORIGINAL_SIGNED_NATIVE_ASSETS_VERIFIED' "$out/app-su-logcat-filtered.txt";then
+    printf 'ORIGINAL_SIGNED_NATIVE_ASSETS_VERIFIED\nAPP_UID_SU_PASS\n' \
+      >"$out/app-su-receipt.txt"
+    break
+  fi
+  sleep 2
+done
+if [[ ! -s "$out/app-su-receipt.txt" ]];then
+  echo "ANDROID_X86_CI_APP_UID_KSU_SU_NOT_PROVEN" >&2
+  exit 21
+fi
+echo "ANDROID_X86_CI_APP_UID_KSU_SU_PASS"
+echo "D1_PHYSICAL_NETWORK_AND_TLS_M4_NOT_RUN"
