@@ -34,27 +34,31 @@ if(([regex]::Matches($originalMain,[regex]::Escape($oldChoice))).Count -ne 1){
 $derivedMain=Join-Path $out 'MainForm-plan029-cn-domain.cs'
 [IO.File]::WriteAllText($derivedMain,$originalMain.Replace($oldChoice,$newChoice),[Text.UTF8Encoding]::new($false))
 $source[1]=$derivedMain
+# The original GUI cold eligibility guard was correct before PLAN029 H2202
+# but is stale: the authenticated v2 extension now supports Normal Fixed/
+# Auto and Game2/Game4 as well as Normal/off. Retain strict mode grammar and
+# all other per-mode validation; remove ONLY this obsolete extra prohibition.
+$portableText=[IO.File]::ReadAllText($source[0],[Text.Encoding]::UTF8)
+$legacyPadGuard='(?m)^\s*if\(mode!=""&&mode!="off"&&\(nativeMode!="off"\|\|lanes!=1\)\)\r?\n\s*throw new InvalidDataException\("新流启动填充当前仅支持 Normal \+ FEC关闭。"\);'
+if(([regex]::Matches($portableText,$legacyPadGuard)).Count -ne 1){
+ throw 'H2204 GUI obsolete single-mode padding gate donor drift'
+}
+$portableText=[regex]::Replace($portableText,$legacyPadGuard,
+ '                // H2202 strict TLS v2: the authenticated session owns padding mode.')
+$portableDerived=Join-Path $out 'Portable-h2204-control-v2.cs'
+[IO.File]::WriteAllText($portableDerived,$portableText,[Text.UTF8Encoding]::new($false))
+$source[0]=$portableDerived
 # H2204 GUI: the immutable donor predates encrypted V4 control v2.
 # Derive a standalone presentation file; do not edit the pinned Go donor.
+# Current original-Go assembly already registers these native V4v2
+# selectors; adding another ComboBox list creates duplicate user choices.
 $sourceText=[IO.File]::ReadAllText($derivedMain,[Text.Encoding]::UTF8)
-$originalCombo='f.Key == "record-cipher" || f.Key == "lanes"'
-if(([regex]::Matches($sourceText,[regex]::Escape($originalCombo))).Count -ne 1){
-  throw 'H2204 WinForms selector donor drift'
+foreach($key in @('startup-padding','fec.mode','fec.profile','fec.auto_policy','fec.auto_start_profile','outer-repair')){
+ if(-not $sourceText.Contains('f.Key == "'+$key+'"')){
+  throw "H2204 assembled WinForms selector missing: $key"
+ }
 }
-$sourceText=$sourceText.Replace($originalCombo,
- 'f.Key == "record-cipher" || f.Key == "startup-padding" || f.Key == "fec.mode" || f.Key == "fec.profile" || f.Key == "fec.auto_policy" || f.Key == "fec.auto_start_profile" || f.Key == "outer-repair" || f.Key == "lanes"')
-$anchor='if (f.Key == "record-cipher") c.Items.AddRange'
-if(([regex]::Matches($sourceText,[regex]::Escape($anchor))).Count -ne 1){
-  throw 'H2204 WinForms choice injection donor drift'
-}
-$insert=@'
-if (f.Key == "startup-padding") c.Items.AddRange(new[] { new Choice("off", "关闭（默认）"), new Choice("tls", "TLS 业务启动双端填充"), new Choice("flows", "TCP/UDP 启动双端填充") });
-                if (f.Key == "fec.mode") c.Items.AddRange(new[] { new Choice("off", "关闭"), new Choice("fixed", "固定"), new Choice("auto", "Normal 自动") });
-                if (f.Key == "fec.profile" || f.Key == "fec.auto_start_profile") c.Items.AddRange(new[] { new Choice("light","轻"),new Choice("mild","较轻"),new Choice("medium","中"),new Choice("balanced","平衡"),new Choice("high","较强"),new Choice("strong","强"),new Choice("maximum","最高") });
-                if (f.Key == "fec.auto_policy") c.Items.AddRange(new[] { new Choice("normal", "普通"), new Choice("aggressive", "激进") });
-                if (f.Key == "outer-repair") c.Items.AddRange(new[] { new Choice("on", "启用（默认）"), new Choice("off", "关闭") });
-'@
-$sourceText=$sourceText.Replace($anchor,$insert+$anchor)
+$sourceText=$sourceText.Replace('仅TLS启动 · Normal','仅TLS启动 · 双端').Replace('所有TCP/UDP新流 · Normal','所有TCP/UDP新流 · 双端')
 [IO.File]::WriteAllText($derivedMain,$sourceText,[Text.UTF8Encoding]::new($false))
 # Run the source-donor GUI field-by-field / actual Go --check-config regression
 # with the 029B/H2202 additions: stale test fixture must not be mistaken for
