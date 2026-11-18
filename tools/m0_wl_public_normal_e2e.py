@@ -78,8 +78,10 @@ p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029b_game2_cn=os.environ.get("WBD_PLAN029B_GAME2_CN_SCENE")=="1"
 p029b_game_case=os.environ.get("WBD_PLAN029B_GAME_MATRIX_CASE","")
+p029b_game_policy=p029b_game_case.removesuffix("_fixed")
 if p029b_game_case and not (
-    p029b_game_case in ("off","all","lan","ordinary","advanced","advanced_fixed") and
+    p029b_game_policy in ("off","all","lan","ordinary","advanced") and
+    p029b_game_case==(p029b_game_policy+("_fixed" if game_fixed else "")) and
     os.environ.get("WBD_PLAN029B_GAME_MATRIX_SCENE")=="1" and
     mode in ("game2","game4","game2-fec","game4-fec") and
     os.environ.get("GITHUB_ACTIONS")=="true" and
@@ -90,7 +92,7 @@ if p029b_game_case.endswith("_fixed") and not game_fixed:
 if p029b_game_case and game_fixed and not p029b_game_case.endswith("_fixed"):
  raise RuntimeError("PLAN029B Game off-only arm must retain original FEC off")
 p029_game4_cn=(os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1" or p029b_game2_cn or
-               p029b_game_case in ("advanced","advanced_fixed"))
+               p029b_game_policy=="advanced")
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
@@ -621,8 +623,7 @@ try:
  if p029_v3 and os.environ.get("GITHUB_ACTIONS")!="true":
   raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
  game_route={"off":"bypass-lan-cn","all":"all","lan":"bypass-lan",
-             "ordinary":"bypass-lan-cn","advanced":"bypass-lan-cn",
-             "advanced_fixed":"bypass-lan-cn"}.get(p029b_game_case)
+             "ordinary":"bypass-lan-cn","advanced":"bypass-lan-cn"}.get(p029b_game_policy)
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
   "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",(game_route if p029b_game_case else "bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 or p029b_b5 else "bypass-lan"),"--outer-repair",outer_repair]
@@ -634,10 +635,10 @@ try:
   # Real original Go 2/4 TLS -> Rust V4 cold; all/off keeps public DNS,
   # but must not allocate any business Direct/FakeIP or stale route.
   args.extend(["--dns.direct",peer,"--dns.tunnel","10.66.0.1"])
-  if p029b_game_case!="off":
+  if p029b_game_policy!="off":
    args.append("--split-enable")
-  if p029b_game_case in ("ordinary","advanced","advanced_fixed"):
-   args.extend(["--cn-domain-direct="+("false" if p029b_game_case=="ordinary" else "true"),
+  if p029b_game_policy in ("ordinary","advanced"):
+   args.extend(["--cn-domain-direct="+("false" if p029b_game_policy=="ordinary" else "true"),
                 "--cn-rules-file",str(rules),
                 "--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")])
  if p029b_b5:
@@ -928,7 +929,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "stop":"NOT_RUN_UNTIL_BOTH_OWNED"}
   print("PLAN029B_B0_REAL_WINDOWS_WSL2_UDP_TCP53_A_FROM_TUN_AAAA_LOCAL_PASS_PRE_STOP",
         flush=True)
- if p029b_b2 or p029b_game_case=="ordinary":
+ if p029b_b2 or p029b_game_policy=="ordinary":
   if p029_alias_proc is None or p029_alias_proc.wait(timeout=6)!=0 or not (
       out/"plan029-h1745-owned-tun-alias.txt").exists():
    raise RuntimeError("B2 real original Linux TUN overseas public /32 not owned")
@@ -970,7 +971,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
    raise RuntimeError("B2 actual ordinary CN vs same overseas global dual DNS/TUN mismatch")
   cold=(out/"client.log").read_text(errors="replace")
   marker=("WBD_PLAN029B_GAME_V3_COLD_EFFECTIVE lanes="+str(lanes) if
-          p029b_game_case=="ordinary" else
+          p029b_game_policy=="ordinary" else
           "WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=2")
   if (marker not in cold or
       "business_split=true cn_domain_fakeip=false" not in cold or
@@ -1493,6 +1494,51 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  report["actual_kernel_udp"]=real
  report["app_duplex"]="PASS_ACTUAL_TWO_OS_KERNEL_UDP"
  report["initial_smoke"]="PASS_REAL_TWO_OS_UDP_BEFORE_MEASUREMENT"
+
+ if p029b_game_policy=="lan":
+  # Original Windows Wintun sends an ACTUAL IPv4 UDP socket to Linux
+  # eth0/46117. Rust Direct NAT must produce the real original Windows
+  # physical-source address, not only a parsed CIDR or synthetic receipt.
+  host_source=os.environ.get("WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4","")
+  if not host_source:raise RuntimeError("Game LAN real original host physical source missing")
+  name="plan029b-game-lan-guest.log"
+  win_name="plan029b-game-lan-windows.log"
+  g=(out/name).open("w");logs.append(g)
+  proc=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+      "python3","-u",unix(root/"tools"/"m0_plan029b_game_lan_probe.py"),
+      "guest",peer,host_source,os.environ["GITHUB_SHA"][:16]],
+      stdout=g,stderr=subprocess.STDOUT)
+  try:
+   ready(out/name,"PLAN029B_GAME_REAL_LINUX_PHYSICAL_LAN_READY",proc,15)
+   with (out/win_name).open("w") as win_log:
+    result=subprocess.run([sys.executable,
+      str(root/"tools"/"m0_plan029b_game_lan_probe.py"),
+      "windows","10.66.0.2",peer,os.environ["GITHUB_SHA"][:16]],
+      stdout=win_log,stderr=subprocess.STDOUT,timeout=38,check=False)
+   if result.returncode or proc.wait(timeout=8):
+    raise RuntimeError("Game LAN true physical Wintun/eth0 UDP failure "+
+      (out/win_name).read_text(errors="replace")[-550:]+" "+
+      (out/name).read_text(errors="replace")[-550:])
+  finally:
+   if proc.poll() is None:proc.terminate()
+  def lan_receipt(file,mark):
+   events=[json.loads(line.split(" ",1)[1]) for line in
+     (out/file).read_text(errors="replace").splitlines()
+     if line.startswith(mark+" ")]
+   if len(events)!=1:raise RuntimeError("Game LAN missing exact original kernel "+mark)
+   return events[0]
+  win=lan_receipt(win_name,"PLAN029B_GAME_REAL_WINDOWS_LAN_DIRECT_UDP")
+  linux=lan_receipt(name,"PLAN029B_GAME_REAL_LINUX_LAN_DIRECT_UDP")
+  if (win.get("result")!="PASS_ORIGINAL_WINTUN_PHYSICAL_LAN_UDP" or
+      win.get("src")!="10.66.0.2" or win.get("physical_guest")!=peer or
+      linux.get("result")!="PASS_ORIGINAL_LINUX_KERNEL_PHYSICAL_LAN_UDP" or
+      linux.get("original_windows_physical")!=host_source or
+      linux.get("guest")!=peer):
+   raise RuntimeError("Game LAN wrong physical kernel source or peer")
+  report["plan029b_game_lan_real"]={
+   "source_sha":os.environ["GITHUB_SHA"],"windows":win,"linux":linux,
+   "status":"PENDING_GENUINE_BOTH_OWNED_STOP"}
+  print("PLAN029B_GAME_REAL_LAN_KERNEL_DIRECT_PRE_STOP",flush=True)
 
  if p029_game4_cn:
   # H2017: one original four-lane Game4/Go TLS group; Rust GameAdapter
@@ -2906,12 +2952,22 @@ print(json.dumps(result),flush=True)
   b0["stop"]="PASS_BOTH_OWNED"
   print("PLAN029B_B0_SIGNED_REAL_DNS_A_AAAA_UDP_TCP53_AND_OWNED_STOP_PASS_SCOPED",
         flush=True)
- if p029b_b2 or p029b_game_case=="ordinary":
+ if p029b_game_policy=="lan":
+  proof=report.get("plan029b_game_lan_real",{})
+  if (proof.get("source_sha")!=os.environ["GITHUB_SHA"] or
+      proof.get("status")!="PENDING_GENUINE_BOTH_OWNED_STOP" or
+      report.get("stop")!="PASS_BOTH_OWNED" or
+      proof.get("windows",{}).get("result")!="PASS_ORIGINAL_WINTUN_PHYSICAL_LAN_UDP" or
+      proof.get("linux",{}).get("result")!="PASS_ORIGINAL_LINUX_KERNEL_PHYSICAL_LAN_UDP"):
+   raise RuntimeError("Game LAN true physical source and original Stop not qualified")
+  proof["status"]="PASS_SCOPED_REAL_PHYSICAL_LAN_UDP_AND_BOTH_OWNED_STOP"
+  print("PLAN029B_GAME_REAL_PHYSICAL_LAN_DIRECT_AND_BOTH_OWNED_STOP_PASS",flush=True)
+ if p029b_b2 or p029b_game_policy=="ordinary":
   proof=report.get("plan029b_b2_ordinary_cn_real",{})
   text=(out/"client.log").read_text(errors="replace")
   markers=(("M0_PLAN027_GAME_STOP_RESULT stage=product_stop result=PASS",
             "WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes="+str(lanes))
-           if p029b_game_case=="ordinary" else
+           if p029b_game_policy=="ordinary" else
            ("M0_PLAN027_NATIVE_STOP_RESULT stage=wal_kernel_crypto result=PASS",
             "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"))
   if (proof.get("source_sha")!=os.environ["GITHUB_SHA"] or

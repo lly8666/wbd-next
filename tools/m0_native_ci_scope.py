@@ -79,6 +79,7 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029b-b4-gui-three-real]",
     "[plan029b-b5-samevm-10m]",
     "[plan029b-game2-cn-real]",
+    "[plan029b-game-matrix-real]",
 )
 
 

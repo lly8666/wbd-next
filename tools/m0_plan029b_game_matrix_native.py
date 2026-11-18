@@ -80,7 +80,12 @@ for name in CASES:
     report_path=OUT/(MODE+"-report.json")
     if report_path.exists():shutil.copy2(report_path,folder/"report.json")
     for filename in ("client.log","server.log","windows-app.log","linux-app.log",
-         "plan029b-game-lan-windows.log","plan029b-game-lan-guest.log"):
+         "plan029b-game-lan-windows.log","plan029b-game-lan-guest.log",
+         "plan029b-b2-ordinary-windows.log","plan029b-b2-ordinary-guest.log",
+         "plan029-h2017-game4-physical-udp-dns.log",
+         "plan029-h2017-game4-app-dns-udp.log",
+         "plan029-h2017-game4-physical-tcp.log",
+         "plan029-h2017-game4-windows-tcp.log"):
         f=OUT/filename
         if f.is_file():shutil.copy2(f,folder/filename)
     report=json.loads(report_path.read_text()) if report_path.exists() else {}
@@ -113,6 +118,8 @@ for name in CASES:
                 "advanced":("bypass-lan-cn","2","true","true","true")}[name]
         if len(candidates)!=1 or candidates[0]!=(str(LANES),)+wanted:
             raise ValueError("original authenticated Game policy/flags mismatch")
+        if name=="off" and "business_split=true" in cold:
+            raise ValueError("Game split-off unexpectedly attached Direct")
         if any(mark not in cold for mark in (
             "WBD_WINDOWS_GAME_COLD_TLS_JOINED lanes="+str(LANES),
             "WBD_WINDOWS_OS_APPLIED",
