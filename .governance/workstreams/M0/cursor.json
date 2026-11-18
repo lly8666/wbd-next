@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2155,
-  "checkpoint_sha": "5b2ace1e0d6fc13d5f0c481bf53e1917d0efb830",
+  "sequence": 2157,
+  "checkpoint_sha": "88d8c6bd9df03b3a9d90370dd4e66aeae00309c9",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2155 user newly authorized full Game2/Game4 × FECoff/fixed × split-off/all/LAN/ordinaryCN/advancedCN original native wiring+verification, superseding previous limited-scope no further testing instruction for GAME only. H2139 original Go/Rust common cold split source wired, H2150–H2152 static and LAN test owner, H2153 sourcec491 four parallel native job dispatch plus real LAN Windows Wintun->Linux eth0 kernel UDP with original source+Stop, H2154 source878 stale static selectors fixed; H2155 source5b2ace Action44230873009 cheap PASS, WinGo/WinRust/LinuxRust IN_PROGRESS, FOUR Win2025/WSL2 native jobs NOT_YET_STARTED. Earlier Normal/B4/B5 and legacy Game4 scope remain signed PASS but cannot qualify current 20 Game cases. Full tech Game remains OPEN.",
-  "why_now": "User explicitly broadened Game2/Game4 split support beyond H2138 daily closeout. Four independent native runners now dispatched from exactly one source marker, each five sequential cold policies, avoids same-VM Wintun/WAL concurrency. Fixed policy tag normalization and physical LAN Win32->Linux socket observer are test-only. No FEC/wire/Rust hotpath changes.",
+  "current_task": "H2157 Game2/4 × FEC off/fixed × five business policies newly authorized. H2155 original SOURCE5b2ace1 Action44230873009: cheap/WinGo/WinRust/LinuxRust PASS; source-locked Linux build then four native Windows jobs pending. All 20 Game policy outcomes NOT_YET_QUALIFIED. Original Normal/B4/B5 historical scoped PASS retained.",
+  "why_now": "Source5b2 original four parallel Win2025 VMs each five sequential cold policies, after Fixed tag/LAN real UDP wiring. H2156 legacy PLAN028 static selector repaired; governance H2155 blocked on 32768-byte combined hot text, not network.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "Collect Action44230873009 exact SOURCE 5b2ace cheap plus true four independent Win2025 native jobs (game2off/game2fixed/game4off/game4fixed). For each verify all five real UDP/TCP/DNS/Direct/Tunnel and original WAL Stop, same EXE/Linux sha, physical LAN kernel source and old FakeIP selective; download ZIP/CRC/manifest. If failures investigate only first actual policy and preserve results/NOT_RUN; do not rerun Normal/B0–B5 or unrelated 028. Only promote 20 scenarios when original native receipts and whole 4 jobs PASS.",
+  "next_action": "Collect Action44230873009 four native Game jobs and source/binary SHA, true kernel LAN, CN physical DNS/Direct, Tunnel and five per-job owned Stop. On failure fix the first real case only; never borrow historical PASS. Keep unrelated 028/030 off.",
   "unverified": true,
   "last_tested_source": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
   "evidence_refs": [
@@ -27,5 +27,5 @@
     "docs/devlog/M0/20261118-PLAN029B-H2154-MATRIX-CHEAP-GATE-SYNC.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2155 user expanded Game support: Game2 and Game4 common cold Rust V4 wired, four parallel original Windows2025/WSL2 lanes×FEC off/fixed each sequential off/all/LAN/ordinary/advanced test, source5b2ace Action44230873009 cheap PASS, compile in progress, native NOT_YET_RUN. H2138 daily normal scoped PASS unaffected; full Game matrix OPEN; no 030."
+  "partial_summary": "Game2/4 Rust V4 cold shared owner wired; four × five Game matrix original SOURCE5b2ace1 Action44230873009 cheap+WinGo+WinRust+LinuxRust PASS, Linux original build in progress, real native pending. No game full PASS claim. 029B daily H2138 remains scoped, 030 not started."
 }
