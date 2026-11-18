@@ -1,0 +1,457 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "tasks": [
+    "H2197",
+    "H2198"
+  ],
+  "date_utc": "2026-11-18",
+  "result": "PASS_SCOPED",
+  "source_sha": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
+  "action": {
+    "run_id": 44296499335,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44296499335",
+    "status": "completed",
+    "conclusion": "success",
+    "matrix_jobs": [
+      "original-native-linux (x86_64)",
+      "original-native-linux (aarch64)"
+    ],
+    "same_source_native_cases": 20
+  },
+  "pinned_original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_runtime": "authenticated Go TLS + Rust M1/M3/M4, AF_PACKET, OS TUN, real TCP/UDP, ISA-L native",
+  "artifacts": {
+    "x86_64": {
+      "id": 14424835842,
+      "zip_sha256": "fea099591ab6a59b33d88df44f8711edcd6c3eac58ee8a350ae4839cb8cd8a88",
+      "zip_members": 190,
+      "crc": "PASS",
+      "summary_sha256": "747eae10d0f5ef9d0aaece76becdd6aa7c47383a497585ef0887e664d94a4a86",
+      "native_binary_sha256": {
+        "wbd-v4-client": "954cf005f7c9f349f67077f03c7d10ff7d78ca99a6bd5edba1d6cb99b88c4012",
+        "wbd-v4-server": "a0dcc3369d4a096db422c0f20417e301829451b356c6eb229a06213bbe7aa153",
+        "libwbd_engine.so": "50b4e8eb925ad3002e28edb10ce55f1fba9292c1005377170ce1e4c6d46cea27"
+      },
+      "scenarios": [
+        {
+          "name": "server-normal-tls",
+          "mode": "normal",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 2,
+            "padded_bytes": 209
+          },
+          "server": {
+            "padded_records": 2,
+            "padded_bytes": 739
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-normal-flows",
+          "mode": "normal",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 907
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 1184
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-fixed-tls",
+          "mode": "fec-fixed",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 2,
+            "padded_bytes": 147
+          },
+          "server": {
+            "padded_records": 2,
+            "padded_bytes": 481
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-fixed-flows",
+          "mode": "fec-fixed",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 1039
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 498
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-auto-tls",
+          "mode": "fec-auto",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 2,
+            "padded_bytes": 176
+          },
+          "server": {
+            "padded_records": 2,
+            "padded_bytes": 447
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-auto-flows",
+          "mode": "fec-auto",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 991
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 985
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game2-tls",
+          "mode": "game2",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 776
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 1470
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game2-fixed6-flows",
+          "mode": "game2",
+          "padding": "flows",
+          "game_fixed6": true,
+          "client": {
+            "padded_records": 8,
+            "padded_bytes": 1704
+          },
+          "server": {
+            "padded_records": 8,
+            "padded_bytes": 2411
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game4-fixed6-tls",
+          "mode": "game4",
+          "padding": "tls",
+          "game_fixed6": true,
+          "client": {
+            "padded_records": 6,
+            "padded_bytes": 1304
+          },
+          "server": {
+            "padded_records": 6,
+            "padded_bytes": 1086
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game4-flows",
+          "mode": "game4",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 12,
+            "padded_bytes": 2408
+          },
+          "server": {
+            "padded_records": 12,
+            "padded_bytes": 3637
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        }
+      ]
+    },
+    "aarch64": {
+      "id": 14423473406,
+      "zip_sha256": "fa64414750352fd14359e75e7380efea8d43747f0d16c7ee98b8b94b91603f91",
+      "zip_members": 190,
+      "crc": "PASS",
+      "summary_sha256": "98d8224594649dbeb10b4c460a71e0335e03891aa40b72bb3ead359e90fa21e5",
+      "native_binary_sha256": {
+        "wbd-v4-client": "2e2b972afae54e34956656e7806e6ba1d80ef55790e1cda4e8cb83baec37217b",
+        "wbd-v4-server": "0e2c20653b0fd9a98ad38585c54b49c9326b95eabd1a274318f1267206dd5473",
+        "libwbd_engine.so": "280332c041b1bc995d5356fba896c9ba47f11a20ec619ff1a9461ef5cd72c755"
+      },
+      "scenarios": [
+        {
+          "name": "server-normal-tls",
+          "mode": "normal",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 2,
+            "padded_bytes": 271
+          },
+          "server": {
+            "padded_records": 2,
+            "padded_bytes": 709
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-normal-flows",
+          "mode": "normal",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 1165
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 1265
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-fixed-tls",
+          "mode": "fec-fixed",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 2,
+            "padded_bytes": 455
+          },
+          "server": {
+            "padded_records": 2,
+            "padded_bytes": 431
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-fixed-flows",
+          "mode": "fec-fixed",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 1519
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 1042
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-auto-tls",
+          "mode": "fec-auto",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 2,
+            "padded_bytes": 807
+          },
+          "server": {
+            "padded_records": 2,
+            "padded_bytes": 861
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-auto-flows",
+          "mode": "fec-auto",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 783
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 808
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game2-tls",
+          "mode": "game2",
+          "padding": "tls",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 4,
+            "padded_bytes": 1316
+          },
+          "server": {
+            "padded_records": 4,
+            "padded_bytes": 341
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game2-fixed6-flows",
+          "mode": "game2",
+          "padding": "flows",
+          "game_fixed6": true,
+          "client": {
+            "padded_records": 8,
+            "padded_bytes": 2273
+          },
+          "server": {
+            "padded_records": 8,
+            "padded_bytes": 1306
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game4-fixed6-tls",
+          "mode": "game4",
+          "padding": "tls",
+          "game_fixed6": true,
+          "client": {
+            "padded_records": 6,
+            "padded_bytes": 671
+          },
+          "server": {
+            "padded_records": 7,
+            "padded_bytes": 1063
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        },
+        {
+          "name": "server-game4-flows",
+          "mode": "game4",
+          "padding": "flows",
+          "game_fixed6": false,
+          "client": {
+            "padded_records": 12,
+            "padded_bytes": 4298
+          },
+          "server": {
+            "padded_records": 12,
+            "padded_bytes": 2138
+          },
+          "kernel_ip_tcp_udp": "PASS_BOTH_DIRECTIONS",
+          "native_owned_stop": "TWO_DRAINED",
+          "owned_tun_ipv6": "PASS_BOTH_OWNED_TUN_ONLY",
+          "netns_cleanup": "PASS",
+          "status": "PASS_SCOPED_ORIGINAL_NATIVE"
+        }
+      ]
+    }
+  },
+  "verified_conditions": [
+    "Both separate native runner ISAs built real original binary bundle once per ISA and source matched full SHA; original Go pinned source per manifest",
+    "Five product modes Normal/FEC Fixed/FEC Auto/Game2/Game4 each tested with tls and flows in new source-locked independent cold sessions",
+    "Both endpoints in each scene have original Rust M4 kernel AF_PACKET send-copied positive padded records/bytes, <=500B per record; all 20 server totals differ from client totals",
+    "Rust role-separated pad seed only, authenticated TLS epoch/record KDF/AEAD/PN/inner IPv4/FEC source/parity unchanged",
+    "Game2 fixed6 flows and Game4 fixed6 tls source classification; source and parity are not conflated",
+    "Each independent scene has original two-way Linux kernel TCP/UDP application echo, actual OS TUN owned IPv6 disabled, MTU/DF readback, TWO_DRAINED original Stop and netns cleanup",
+    "Each native ZIP CRC checked across 190 archive members; original signed Action and binary digest retained",
+    "Invalid off/tls/flows selector still rejected; off has no tracking table; no padding on FEC repair/parity kind3 or control"
+  ],
+  "exclusions": [
+    "Native aarch64 hosted runner is not a physical customer ARM board, QEMU, or cross-ISA end-to-end link",
+    "No claim for full application TLS handshake; tls selector fixture uses app-controlled TLS-record-shaped prefix",
+    "No packet-loss FEC recovery, CPU/GiB, small-TCP-p99, stress, DOS/adversarial or complete PLAN029 technical closure",
+    "Shared default port443 with mixed simultaneous authenticated five client modes/auto-IP dynamic NIC 1500-to-1280 reauthentication is not this single-mode harness and remains NOT_RUN",
+    "No online X25519 before ClientHello; offline 0600 route-key required by current TLS contract",
+    "Windows WinGUI/Direct/CN/FakeIP/WFP and host-global IPv6/AAAA not qualified by these Linux results"
+  ],
+  "prior_scoped_results": {
+    "H2186": "Game 16/16 signed different SOURCE",
+    "H2193": "Normal 4/4 signed different SOURCE",
+    "H2195": "FEC Fixed/Auto 4/4 signed different SOURCE"
+  }
+}

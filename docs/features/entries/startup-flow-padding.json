@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
-    "linux_cli": "Linux原Go TLS 客户端与服务端同时支持 --mode normal|fec-fixed|fec-auto|game2|game4 的 --startup-padding off|tls|flows（默认off，冷重连接线）。Normal kind1 / FEC kind2 source / Game lane原Rust AEAD+M4随机尾部填充，FEC parity/repair kind3不填。H2186/H2193/H2195不同SOURCE限域PASS；H2197独立client/server PRNG seed + 全5模式两档两ISA新原生回归待验。"
+    "linux_cli": "Linux原Go TLS客户端＋服务端五模式 Normal、Fixed、Auto、Game2、Game4 各支持 --startup-padding off|tls|flows（默认off，冷重连生效），各自拥有Rust发送方向独立随机长度流。H2197 SOURCE e82ba704原生x86_64/ARM64五模式×两档全20/20双端真网PASS_SCOPED。FEC只填kind2 source AEAD尾部，parity/repair kind3不填；完整029及弱网/性能资格另计。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -160,10 +160,10 @@
     },
     {
       "platform": "native Linux x86_64/aarch64 original Go TLS/Rust client and server",
-      "scope": "H2197 new independent client/server random startup padding seed. Ten scenarios per ISA: every Normal, FEC Fixed, FEC Auto, Game2, Game4 runs tls and flows on both ends, original M4 actually copied AF_PACKET, bidirectional kernel app, owned Stop; SOURCE pending Action.",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "scope": "H2197 source e82ba704 genuine x86_64/aarch64 original Go TLS/Rust five-mode tls/flows 10×2=20/20. Each scene server AND client true AF_PACKET M4 copied positive padding bytes, different total length streams; both-direction kernel TCP/UDP, owned IPv6/TUN/MTU, two native Stop. Game2 fixed6 flows and Game4 fixed6 tls included; independent RNG seed (not AEAD/KDF).",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
+      "evidence": "docs/evidence/M0/PLAN029-H2197-LINUX-SERVER-FIVE-MODES-X86-ARM64-TWENTY-REAL-NATIVE-PASS-20261118.json"
     }
   ],
   "limitations": [
