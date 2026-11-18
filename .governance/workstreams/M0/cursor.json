@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2198,
-  "checkpoint_sha": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
+  "sequence": 2199,
+  "checkpoint_sha": "83e8959adcfac9be347ecec861b2194ec8e80b37",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2198：Linux 服务端/客户端独立随机流 Normal/Fixed/Auto/Game2/Game4×tls/flows，x86_64/ARM64原生20/20真M4/copy/TCP/UDP/owned Stop PASS_SCOPED；归档与治理。",
-  "why_now": "SOURCE e82ba704 Action44296499335独立原生ISA两Job SUCCESS，20场每端真实M4 copied pad>0，服务端不再继承客户端相同随机序列。",
-  "done_when": "双ISA各10场source/二进制SHA/原ZIP CRC、服务端与客户端M4真实复制、双向TCP/UDP与Stop机读证据归档，Feature/Governance CI PASS，不虚称029完整技术收口。",
-  "next_action": "优先Linux默认shared服务器跨模式+autoIP真实物理MTU变更专用夹具；保留离线route-key TLS红线及实体ARM/跨ISA/p99 NOT_RUN；030不启动。",
+  "current_task": "H2199：H2197 Linux服务端五模式双ISA20/20原生PASS，修治理热预算首次FAIL44297823817。",
+  "why_now": "本次原生业务SUCCESS；证据归档后治理combined hot 32805B超限37B，需仅压缩M0热cursor。",
+  "done_when": "M0热文件预算与Feature/Governance CI PASS，保留实际SOURCE与029未验边界。",
+  "next_action": "Linux shared服务器跨模式/auto-IP真实动态MTU独立测试；实体ARM、跨ISA及p99仍OPEN。",
   "unverified": true,
   "last_tested_source": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
   "evidence_refs": [
@@ -21,5 +21,5 @@
     "docs/devlog/M0/20261118-PLAN029-H2198-LINUX-SERVER-FIVE-MODES-NATIVE-SIGNED.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2197 SOURCE e82ba704 Action44296499335 Linux x86/ARM各10真 Go TLS/Rust双端场=20/20原AF_PACKET copied>0、不同方向随机填充总字节不相等、kernel TCP/UDP/owned Stop成功。Game2/Game4含fixed6组合；早期H2186/2193/2195不同SOURCE历史仍保留。shared默认服务器跨模式及auto-IP真实MTU变更、实体ARM/跨ISA、真实app TLS与CPU/p99未本次验。029技术OPEN、030未开。"
+  "partial_summary": "H2197 SOURCE e82ba704 Action44296499335：Linux x86/ARM 五模式×tls/flows双端20/20原Rust M4真实填充复制、双向TCP/UDP、owned Stop PASS；client/server随机序列独立。shared全混合/autoIP动态MTU、物理ARM及p99未验；029技术OPEN，030未开。"
 }
