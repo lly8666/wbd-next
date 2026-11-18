@@ -229,6 +229,16 @@ pub(super) fn native_game_wait_deadline(group:&WinGameGroup)->(u64,Option<u64>){
 pub(super) fn native_game_has_fec(group:&WinGameGroup)->bool{
     group.adapter.has_game_fec()
 }
+#[cfg(all(feature="fec2_product_record",target_os="windows"))]
+pub(super) fn native_game_set_padding(group:&mut WinGameGroup,
+    mode:crate::v4_client_startup_padding::StartupMode,
+    epoch:[u8;16],path_mtu:usize){
+    group.adapter.set_native_startup_padding(mode,epoch,path_mtu);
+}
+#[cfg(all(feature="fec2_product_record",target_os="windows"))]
+pub(super) fn native_game_padding_mode(group:&WinGameGroup)->&'static str{
+    group.adapter.native_startup_padding_mode()
+}
 pub(super) fn offer_records(
     r:&Registry,h:u64,payload:&[u8],max:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{

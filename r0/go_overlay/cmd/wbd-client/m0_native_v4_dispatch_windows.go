@@ -36,7 +36,7 @@ type m0NativeV4Options struct {
  SplitEnable bool // real optional business Direct/FakeIP resources; false remains Rust V3 DNS/padding
  CNDomainDirect bool // 029B advanced CN FakeIP; false returns real A and IP-only business policy
  CNRulesFile string // single owned absolute source path for CN domain trie; not a hot source
- StartupPaddingMode string // canonical off/tls/flows; only original Normal M1 LINK
+ StartupPaddingMode string // canonical off/tls/flows; original Normal/Game per-lane M1
  Direct4,Bypass4 []netip.Prefix
  TunnelMTU uint32 // derived inner Wintun IPv4 MTU
  ConnectionMTU uint32 // exact original --mtu outer NPF IPv4/TCP MTU

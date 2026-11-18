@@ -30,6 +30,14 @@ type v4WindowsGameNativeIOV4 struct{
  Game V4WindowsGameNativeIOV3
  Split v4WindowsColdSplitWireV1
 }
+// No modification to the V3/V4 ABI: V5 carries the explicit canonical
+// Game startup-padding selector through the one authenticated cold handoff.
+type v4WindowsGameNativeIOV5 struct{
+ Version,Size uint32
+ Game V4WindowsGameNativeIOV3
+ Split v4WindowsColdSplitWireV1
+ StartupPaddingMode uint32 // off=0, tls=1, flows=2
+}
 // Only the protected 2/4 independent Go TLS owners can authorize a native
 // group handoff; this C layout does not mint a fresh TLS epoch.
 func(g *V4WindowsAuthenticatedGameGroup) StartNativeGameIO(
@@ -80,13 +88,21 @@ func(g *V4WindowsAuthenticatedGameGroup) startNativeGameIO(
  }
  if cold!=nil{
   split,err:=cold.wire();if err!=nil{return err}
-  v4:=v4WindowsGameNativeIOV4{Version:4,Game:cfg,Split:split}
-  v4.Size=uint32(unsafe.Sizeof(v4))
-  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v4_start")
+  var padding uint32
+  switch cold.StartupPaddingMode{
+  case "","off":padding=0
+  case "tls":padding=1
+  case "flows":padding=2
+  default:return errV4WindowsOwner
+  }
+  v5:=v4WindowsGameNativeIOV5{Version:5,Game:cfg,
+   Split:split,StartupPaddingMode:padding}
+  v5.Size=uint32(unsafe.Sizeof(v5))
+  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v5_start")
   if err!=nil{return err}
-  err=winOwnerCall(p,uintptr(unsafe.Pointer(&v4)))
+  err=winOwnerCall(p,uintptr(unsafe.Pointer(&v5)))
   runtime.KeepAlive(cold)
-  runtime.KeepAlive(v4)
+  runtime.KeepAlive(v5)
   return err
  }
  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v3_start")

@@ -22,6 +22,8 @@ use wbd_types::buffer_contract::UniqueSealable;
 use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite};
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
 use wbd_codec::record_crypto::CryptoError;
+#[cfg(any(target_os="windows",test))]
+use crate::v4_client_startup_padding::{StartupMode,TunnelStartupPadding};
 pub struct ScopedKeys{pub lane:QualifiedLane,pub tx:DirectionKeys,pub rx:DirectionKeys}
 struct TxLane{key:LaneKey,tx:LaneTxCrypto}
 struct RxLane{key:LaneKey,rx:ReplayProtectedLaneRx}
@@ -330,6 +332,11 @@ pub struct GameAdapter{
     lanes:Vec<TxLane>,arena:Arena,stopped:bool,inner_mtu:usize,
     original_suite:RecordSuite,
     wire_scratch:[u8;2048],
+    // Windows original Game native only: no table or parsing when OFF.
+    #[cfg(any(target_os="windows",test))]
+    startup_padding:Option<TunnelStartupPadding>,
+    #[cfg(any(target_os="windows",test))]
+    startup_pad_wire_limit:usize,
     health_origin:Instant,health:Arc<AuthenticatedActivity>,
     #[cfg(feature="fec2_product_record")]
     fec:Option<GameFecTx>,
@@ -399,6 +406,8 @@ impl GameAdapter{
         Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu,
             original_suite:suite,
             wire_scratch:[0u8;2048],
+            #[cfg(any(target_os="windows",test))]
+            startup_padding:None,startup_pad_wire_limit:0,
             health_origin,health,
             #[cfg(feature="fec2_product_record")]
             fec:None})
@@ -540,6 +549,27 @@ impl GameAdapter{
     }
     pub fn counters(&self)->GameCounters{self.tx.counters()}
     pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}
+    // Only the already authenticated Windows Game native attach calls this
+    // once before starting either kernel worker. No extra lane crypto/PN.
+    #[cfg(any(target_os="windows",test))]
+    pub(crate) fn set_native_startup_padding(&mut self,mode:StartupMode,
+        epoch:[u8;16],outer_path_mtu:usize){
+        if mode==StartupMode::Off{
+            self.startup_padding=None;self.startup_pad_wire_limit=0;return
+        }
+        let a=u64::from_be_bytes(epoch[..8].try_into().unwrap());
+        let b=u64::from_be_bytes(epoch[8..].try_into().unwrap());
+        self.startup_padding=Some(TunnelStartupPadding::new(
+            mode,a^b^0x574244_47414d45));
+        // The original Game per-lane AEAD limit and physical 40B TCP/IP
+        // frame bound every extra encrypted byte (FEC and Game headers stay).
+        self.startup_pad_wire_limit=outer_path_mtu.saturating_sub(40)
+            .min(self.inner_mtu+31+16).min(1536);
+    }
+    #[cfg(any(target_os="windows",test))]
+    pub(crate) fn native_startup_padding_mode(&self)->&'static str{
+        self.startup_padding.as_ref().map_or("off",|p|p.mode_name())
+    }
     pub(crate) fn health_context(&self)->(Instant,Arc<AuthenticatedActivity>){
         (self.health_origin,Arc::clone(&self.health))
     }
@@ -692,12 +722,33 @@ impl GameAdapter{
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
         self.drain_dispatch(now,false,stage)
     }
+    // Game logical sources carry a 16B envelope. FEC wraps the original
+    // IPv4 within a typed source symbol; parity has no business flow key.
+    #[cfg(any(target_os="windows",test))]
+    fn startup_source<'a>(game_payload:&'a [u8],inner_mtu:usize,
+        fec_enabled:bool)->Option<&'a [u8]>{
+        let (_,body)=wbd_codec::decode_game(game_payload,inner_mtu+16).ok()?;
+        if !fec_enabled{return Some(body)}
+        if body.first().copied()!=Some(2){return None}
+        wbd_codec::fec_v2::parse_source(&body[1..],inner_mtu-1)
+            .ok().map(|source|source.frame)
+    }
     fn drain_dispatch<F>(&mut self,now:MonoNs,
         copied_by_native_kernel:bool,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8])->bool{
         if self.stopped{return 0}
         let lanes=&mut self.lanes;
         let scratch=&mut self.wire_scratch;
+        #[cfg(any(target_os="windows",test))]
+        let (padding,pad_wire_limit,inner_mtu)=(&mut self.startup_padding,
+            self.startup_pad_wire_limit,self.inner_mtu);
+        #[cfg(any(target_os="windows",test))]
+        let fec_enabled={
+            #[cfg(feature="fec2_product_record")]
+            {self.fec.is_some()}
+            #[cfg(not(feature="fec2_product_record"))]
+            {false}
+        };
         #[cfg(feature="fec2_product_record")]
         let fec=&mut self.fec;
         let processed=self.tx.drain_ready(now,32,|view|{
@@ -709,9 +760,20 @@ impl GameAdapter{
                 return DispatchOutcome::PressureDrop
             };
             if end>scratch.len(){return DispatchOutcome::PressureDrop}
-            let wire=&mut scratch[..end];
+            // Only TUNNEL Game DATA may consume flow startup slots. Game4
+            // copies count as genuine lane records; parity/health never do.
+            // The 0-room proposal still advances the existing finite window.
+            #[cfg(any(target_os="windows",test))]
+            let pad=if let Some(state)=padding.as_mut(){
+                let room=pad_wire_limit.saturating_sub(end).min(scratch.len()-end);
+                Self::startup_source(view.common_payload,inner_mtu,fec_enabled)
+                    .map_or(0,|ipv4|state.propose(ipv4,now.0/1_000_000,room))
+            }else{0};
+            #[cfg(not(any(target_os="windows",test)))]
+            let pad=0usize;
+            let wire=&mut scratch[..end+pad];
             wire[14..14+len].copy_from_slice(view.common_payload);
-            let Ok((pn,n))=lane.tx.seal_in_place(1,wire,len,0)
+            let Ok((pn,n))=lane.tx.seal_in_place(1,wire,len,pad)
             else{return DispatchOutcome::PressureDrop};
             if kernel_copy(view.lane,id,pn,&wire[..n]){
                 #[cfg(feature="fec2_product_record")]

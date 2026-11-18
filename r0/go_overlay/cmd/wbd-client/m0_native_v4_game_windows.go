@@ -212,11 +212,8 @@ func runM0NativeV4WindowsGame(
  // snapshot as Normal. Even split-off/all retains one original Rust V4
  // DNS owner, with NO business Direct table/FakeIP writer.
  // No Go packet hot pump, separate Wintun, DNS fallback or Game FEC rewrite.
- if o.StartupPaddingMode!=""&&o.StartupPaddingMode!="off"{
-  // Original Game TLS has no Normal's startup padding M1 link.
-  // Never silently accept a requested but unavailable capability.
-  return fmt.Errorf("PLAN029B Game startup padding tls/flows not wired")
- }
+ // Game2/Game4 padding now uses the V5 authenticated cold selector and
+ // original per-lane M1 AEAD, with the same bounded source flow policy.
  gameSplit,err:=m0Plan029TrialCold(o,netip.AddrFrom4(localIP),
    physicalIfIndex,o.Lease4.Addr(),o.TunnelMTU,group.Epoch())
  if err!=nil||gameSplit==nil{
