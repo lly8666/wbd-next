@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2184,
-  "checkpoint_sha": "c4675f5a85e2e275480719bfa076201c1fcb4915",
+  "sequence": 2185,
+  "checkpoint_sha": "0650e6caf7e33b899fd3de91b45bcda4cbfb8ab8",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2184：H2183 native x86/ARM各Game2/4六互补填充场PASS，正常模式物理MTU动态场FAIL因手动IP不启动auto-IP路径监督；保留失败，拆独立AES128与AES256+X25519固定1280。",
-  "why_now": "H2183 Action44267345357原生两ISA build PASS、Game2 off/tls/flows + Game2 fixed6 flows + Game4 fixed6/off-immediate flows六场每ISA PASS；第七场错误把auto-ip专属物理MTU切换用于手动IPv4，切换后小ICMP中断，非padding bug。",
-  "done_when": "同源新Action两ISA8互补场真网络8/8 PASS，明确将manual-IP物理MTU动态切换排除且保留旧FAIL，并验证AES128及AES256/X25519/固定1280。",
-  "next_action": "收新H2184 native作业和原内核padding成功计数，原生Green后更新card与签名证据；若X25519/1280真失败保留首错。",
+  "current_task": "H2185：H2184 x86/ARM各Game pad6场+AES128各7/8真网络PASS，第8 X25519无离线route-key两ISA服务端主动拒绝（按现Linux CLI契约正确）；拆为合法route-key AES256外层1280真业务测试。",
+  "why_now": "H2184 Action44268654320原生两ISA第8服务端在TUN初始化前报offline 32-byte route-key is required locally; no network key bootstrap。用户要求测可用非Win功能，不能把不支持的X25519在线引导当应测成功。",
+  "done_when": "8互补真实Linux双ISA各原Go TLS/Rust/AF_PACKET pad、AES128/256、FEC、MTU1280、外层repair off、Stop完整Action SUCCESS；不支持Linux X25519及manual动态MTU明示NOT_WIRED/NOT_RUN。",
+  "next_action": "收H2185 native CI、确认同SOURCE产品hash/8场/ISA原kernel padding计数，然后更新功能卡、签名证据、START_HERE；后续如需autoIP动态MTU单独fixture。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2185-LINUX-OFFLINE-ROUTE-KEY-REQUIREMENT.md",
     "docs/devlog/M0/20261118-PLAN029-H2184-LINUX-MANUAL-MTU-SCOPE-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2183-LINUX-GAME-FLOWKEY-CFG-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2181-LINUX-CROSSPLATFORM-CAPABILITY-GAPS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2183 Action44267345357两ISA原Go/Rust构建及每ISA六场Game padding真实双向TCP/UDP/TUN/FEC/Stop均PASS，off0B；各端tls约1KiB、flows多KiB；手动IP模式的动态物理MTU场两个ISA都失败并保存回执，需auto-IP独立控制器；H2184仅拆为AES128常规和AES256/X25519/1280，原功能不改。"
+  "partial_summary": "H2184 source0650e6 original Linux native两ISA各Game padding六场+AES128常规真网络7/8 PASS；X25519不带离线route-key被明确拒绝，原Go当前不实现在线密钥引导，与padding无关。H2185保持真实业务硬门，最后场改AES256+离线路由键+物理外MTU1280，并声明X25519和manual物理动态切换不可算PASS。"
 }
