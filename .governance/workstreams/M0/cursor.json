@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2176,
-  "checkpoint_sha": "62431acb9c0ba40d913a7ce4546791d18e4e79dd",
+  "sequence": 2177,
+  "checkpoint_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2176 Linux双原生ISA Game2现已真实TLS两lane+内核TCP/UDP双向+Stop PASS，但旧历史arm64门禁误将Rust GameTx.lane_copy_drop冗余副本跳过计数rejected=4当作AEAD拒绝; 增严格分项零原生raw/slab/MTU/鉴权检查及copy_drop只读证据，不改产品。",
-  "why_now": "H2175 Action44257618077 x86/ARM各Normal/Fixed/Auto真网络PASS；Game2各source真实preSYN 1共享socket+两lane认证+双向真实TCP/UDP+Stop，但原Rust内核record反映lane_copy_drop=4, auth_rejected=0, raw/slab/record/policy/MTU分类错误全0；旧guard要求rejected=0导致误判。",
-  "done_when": "在原生x86_64+aarch64两个真实Linux服务端+客户端两架构各五模式完整按源锁验收：TLS/AES、IP/TCP/UDP/MTU FEC真实有效、Stop、Game有严格classified transport fault=0及可见副本drop数据。",
-  "next_action": "收H2176双ISA五模式原生Action；若Game4 FEC实际未通过保留首错、调查最小触发，不虚报全10场。",
+  "current_task": "H2177 Linux非Win双原生ISA x86_64与ARM64双端五模式真实网络10/10 PASS_SCOPED后做证据、功能卡和START_HERE归档；保持PLAN029/029B技术出口OPEN。",
+  "why_now": "用户要求PLAN029非Win Linux客户端+服务端两架构高效实测；H2176 Action44258876671 完整SUCCESS，2独立原生ubuntu架构各同源Go TLS/Rust+ISA-L只构建一次、顺序五模式，10/10原内核双向TCP/UDP/MTU/Stop，FEC6 parity96/96 each。",
+  "done_when": "H2177只把所测原生Linux双端5×2最小场签名SOURCE归档，原生main CI特征目录与治理验证PASS；不把历史CI首FAIL、未测Windows专属/跨ISA/物理ARM/高压升格。",
+  "next_action": "本用户要求Linux双端x86/ARM原生各五场已PASS_SCOPED，后续如要求可最小追加不同架构互连或Linux IPv6/DNS正式能力，不重开已过测试；PLAN030保持NOT_STARTED。",
   "unverified": true,
-  "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
+  "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md",
     "docs/devlog/M0/20261118-PLAN029-H2176-LINUX-GAME-COPY-DROP-CLASSIFICATION.md",
     "docs/devlog/M0/20261118-PLAN029-H2175-LINUX-GAME-ONE-SHARED-SOCKET-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2174-LINUX-DUAL-ISA-FEC-OFF-RECEIPT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2173-LINUX-DUAL-ISA-STATIC-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2172-LINUX-DUAL-ISA-FIRST-FAULT-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2171-LINUX-DUAL-ISA-TRIAL.md",
-    "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md"
+    "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json",
+    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2175 source62431ac原生ARM/x86 Normal Fixed Auto 3/3每ISA 真app+TUN/Stop PASS，Game2真正Rust M4 2lane认证、双向TCP/UDP、双方Stop也通过，但旧fixture最后拒绝4次GameTx lane copy drop (非auth_rejected, 原因分类raw/slab/record/policy/MTU全0)。H2176源锁新scoped诊断保留旧legacy严格rejected=0，当前Linux PLAN029明确核分类错误全0并记录copy drop; Game4未测。"
+  "partial_summary": "H2176 SOURCE3cc095... Action44258876671 COMPLETE SUCCESS，真实native Linux x86_64与aarch64两个独立runner，每ISA一次原Go TLS客户端+服务端/Rust/ISA-L build、五模式 Normal/Fixed/Auto/Game2/Game4 fixed6，共10个独立双netns真实TCP/UDP双向/ICMP/MTU1460/自有TUN IPv6-off/双owned Stop与cleanup PASS。Game4 FEC每端source52 parity offered/copied96; Game2 copy skips4，Game4 copy skips28/每端，auth_rejected与8类critical faults均0。旧H2171..H2175 FAIL保留；实体ARM/跨ISA/WinGUI CN/Direct/全宿主IPv6/perf仍NOT_RUN；全技术029/029B OPEN、030未启。"
 }
