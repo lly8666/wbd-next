@@ -62,15 +62,36 @@ $sourceText=$sourceText.Replace($anchor,$insert+$anchor)
 $tests=[IO.File]::ReadAllText($source[2],[Text.Encoding]::UTF8)
 $mutator='{"diagnostic-interval","2s"}'
 if(([regex]::Matches($tests,[regex]::Escape($mutator))).Count -ne 1){throw 'H2204 GUI test mutator donor drift'}
-$mutatorNew=@'
-{"diagnostic-interval","2s"},{"startup-padding","flows"},{"fec.mode","off"},{"fec.profile","strong"},
-                        {"fec.auto_policy","normal"},{"fec.auto_start_profile","strong"},{"outer-repair","on"},
-                        {"dns.direct","223.5.5.5"},{"dns.tunnel","1.1.1.1"},{"direct-flow-hard",16384},
-                        {"split-enable",false},{"cn-domain-direct",false},{"cn-rules-file",""},
-                        {"health.keepalive_seconds",15},{"health.dead_after_seconds",90},{"health.idle_dormant_seconds",0},
-                        {"tls-ca-pem",""}
-'@
-$tests=$tests.Replace($mutator,$mutatorNew.Trim())
+# The assembled H2204 donor already has FEC2, outer-repair and TLS CA
+# fields. The original GUI fixture should be enriched ONLY with absent
+# parameters: duplicating a key in Dictionary<> is a real GUI self-test FAIL.
+$mutStart=$tests.IndexOf('var mutations = new Dictionary<string, object> {')
+if($mutStart -lt 0){throw 'H2204 GUI mutation dictionary donor drift'}
+$mutEnd=$tests.IndexOf('};',$mutStart)
+if($mutEnd -lt 0){throw 'H2204 GUI mutation dictionary terminator missing'}
+$existingMutations=$tests.Substring($mutStart,$mutEnd-$mutStart)
+$additional=@(
+ @('startup-padding','"flows"'),@('fec.mode','"off"'),
+ @('fec.profile','"strong"'),@('fec.auto_policy','"normal"'),
+ @('fec.auto_start_profile','"strong"'),@('outer-repair','"on"'),
+ @('dns.direct','"223.5.5.5"'),@('dns.tunnel','"1.1.1.1"'),
+ @('direct-flow-hard','16384'),@('split-enable','false'),
+ @('cn-domain-direct','false'),@('cn-rules-file','""'),
+ @('health.keepalive_seconds','15'),@('health.dead_after_seconds','90'),
+ @('health.idle_dormant_seconds','0'),@('tls-ca-pem','""')
+)
+$additions=@()
+foreach($entry in $additional){
+ $key=[string]$entry[0]
+ $signature='{"'+$key+'",'
+ if(-not $existingMutations.Contains($signature)){
+  $additions+=('{"'+$key+'",'+[string]$entry[1]+'}')
+ }
+}
+if($additions.Count -gt 0){
+ $tests=$tests.Replace($mutator,$mutator+','+[string]::Join(',', $additions))
+}
+
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests
