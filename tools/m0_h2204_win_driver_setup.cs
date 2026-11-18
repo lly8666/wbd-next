@@ -67,7 +67,7 @@ namespace Wbd.Gui {
                 var data = new WinTrustData {
                     cbStruct = (uint)Marshal.SizeOf(typeof(WinTrustData)),
                     dwUIChoice = 2, // WTD_UI_NONE
-                    dwRevocationChecks = 0,
+                    fdwRevocationChecks = 0,
                     dwUnionChoice = 1, // WTD_CHOICE_FILE
                     pFile = fileMemory, dwStateAction = 0,
                     dwProvFlags = 0, dwUIContext = 0
