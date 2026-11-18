@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2169,
-  "checkpoint_sha": "65a49d29fa7f484a1a8cbb9d9e6fd709aedc1bcd",
+  "sequence": 2170,
+  "checkpoint_sha": "81998f91d183c722be932543be6434c1fd31be57",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2169 修 H2168 中央 native_smoke marker漏列：Game2/off FEC与Game4/fixed FEC × off/tls/flows 两台原生作业真正运行，源码/GUI既有H2167守卫保持",
-  "why_now": "H2168 Action44248395979 cheap PASS但源锁原生Windows/WSL2 job全SKIPPED；缺tools/m0_native_ci_scope.py的显式[plan029-game-padding-real]，不等于原生测试PASS",
-  "done_when": "两个source-locked真实原生Game2/Game4作业各三代off/tls/flows NPF拷贝+TCP/UDP/双方Stop+MTU1460 PASS且同一SOURCE",
-  "next_action": "观察 H2169 新 GitHub Action: native_smoke=true、Linux build、2个Windows2025实际jobs；失败保留首错并修同scope，不卡旧矩阵或030",
+  "current_task": "H2170 对H2169 Game2 FECoff/Game4 FECfixed × off/tls/flows 六场真实Win2025/WSL2 NPF/TCP/UDP/Stop PASS_SCOPED完成签名证据、功能卡和START_HERE收口。WinGUI原选择/保存/help装配PASS，Game WinForms亲自点击真网络仍NOT_RUN。",
+  "why_now": "H2168 marker漏中央native_smoke导致首次真实Action全跳过；H2169补门禁后Action44250162599实际SUCCESS：2个Windows原生job独立3档全部同一SOURCE和二进制SHA、Stop/OS/MTU1460验收。",
+  "done_when": "当前Game startup-padding scoped接线/原生两代表模式已达标并持久记录同源证据。完整029/029B技术出口及Game WinForms Game模式按钮另计，不因六场成为全矩阵PASS。",
+  "next_action": "审收H2170治理/feature自动CI；如用户后续要求Game真WinForms专场，单独选择最少一代SOURCE测试；不复跑Game20/20，030不启动。",
   "unverified": true,
-  "last_tested_source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
+  "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
     "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md",
+    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json",
+    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
     "docs/evidence/M0/PLAN029-H2163-GUI-SETTINGS-AUDIT-20261118.json",
-    "docs/devlog/M0/20261118-PLAN029-H2164-FIRST-CI-FORMAT-CORRECTION.md",
-    "docs/devlog/M0/20261118-PLAN029-H2163-GUI-SETTINGS-AUDIT.md",
-    "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2167 Windows Rust419/419+Go/assembly/feature/governance编译PASS；H2168 Action44248395979 cheap PASS但实际原生SKIP，不能授予Game padding PASS；H2169增加中央marker及单测，源锁2x3限定原生验证。"
+  "partial_summary": "H2169 signed SOURCE81998 Action44250162599 COMPLETE SUCCESS, Game2 FECoff pads off/tls/flows NPF0/837/7663B, Game4 fixed0/843/16391B, all real Wintun/NPF/WSL2 kernel UDP/Win→Linux TCP and both owned Stop, MTU1460; Rust Game unit419/419 H2167另SOURCE。Game WinForms真按钮、另两Game/FEC组合及029全技术OPEN，030未启动。"
 }

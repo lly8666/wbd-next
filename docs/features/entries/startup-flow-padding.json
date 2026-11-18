@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "Tunnel TCP/UDP record随机填充",
-  "summary": "H2031 Normal真实密文填充/MTU PASS；H2059真WinForms flows→原Rust NPF 41条/11466B与Stop PASS。H2167 Game2/4原M4 AEAD源封包填充接线待原生签名测试，默认off。",
+  "summary": "H2031 Normal真密文填充/MTU、H2059真WinForms flows→Rust NPF/Stop分别SOURCE PASS。H2169 Game2/FEC off与Game4/FEC fixed各off/tls/flows六场 Win2025/WSL2真NPF+业务+Stop PASS_SCOPED，默认off。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -16,8 +16,8 @@
   },
   "usage": {
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
-    "config": "Game2/4原Go TLS认证组→Win native V5冷ABI模式→原Rust GameAdapter每lane AEAD；FEC source解析真实IPv4、奇偶校验/Health排除；仅原NPF accepted回执计填充记录与字节；新SOURCE签名待验。",
-    "gui": "WinForms 传输页保存off/tls/flows，旧TLS bool迁移，保存后重连才应用；H2167更新选项文案包含Game2/4，原生WinGUI有效值与NPF新SOURCE真测未验证。"
+    "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
+    "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -119,22 +119,22 @@
       "evidence": "docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json"
     },
     {
-      "platform": "Win2025 original Game2/4 TLS/Rust M4 cold V5 H2167",
-      "scope": "startup-padding off/tls/flows, original AEAD/PN/FEC source & parity exclusion, actual NPF and both owned Stop",
-      "status": "IMPLEMENTED_NOT_TESTED",
-      "source_sha": null,
-      "evidence": null
+      "platform": "Windows 2025 Game2 FEC off + Game4 FEC fixed original Go TLS/Rust M4/Npcap/Wintun + WSL2 Linux kernel",
+      "scope": "H2169 two independent native jobs, each three original cold off/tls/flows, Game2 NPF pads 0/837/7663B (0/2/34 records); Game4 fixed FEC 0/843/16391B (0/4/70 records); real kernel UDP, Windows-initiated Tunnel TCP echo, MTU1460, same-binary SHA256 and both OS owned Stop PASS_SCOPED. No Game WinForms button run, other Game/FEC permutations not claimed.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "81998f91d183c722be932543be6434c1fd31be57",
+      "evidence": "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
     }
   ],
   "limitations": [
     "H1799 NORMAL Tunnel flows physical PASS is one scoped real 10s scene at legacy1400; not default1460 GUI effective readback, tls-vs-flows A/B or CPU/p99 proof.",
-    "Game2/4 Game/FEC startup-padding H2167源已接线、原生网络NPF仍待签名；Fixed/Auto仍不启用，无新wire/FEC/线程。",
+    "H2169仅Game2 FEC off与Game4 FEC fixed各三档真网络PASS；Game2 fixed与Game4 off padding同SOURCE未测。Normal Fixed/Auto无此能力，不改FEC/wire/线程。",
     "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
     "Padding is not a guarantee against DPI recognition.",
     "H2031真实eth0 pcap仅能验证加密record尺寸多样性与MTU；逐record填充字节数和随机窗口分布不能从密文单独反推，依同源Rust单测，不能虚报直接抓到500B。",
-    "User 2026-11-17 narrowed 029 closeout; H2031 physical padded encrypted record evidence retained one source, while GUI actual effective off/tls/flows and same VM off/on CPU/RSS/latency remain NOT_RUN, never promoted from config readback.",
-    "029B计划：业务分流关闭仍保留padding；产品B1未验。",
-    "H2079 029B split关闭保持公共Normal填充候选，真OS未验。"
+    "H2031原密文尺寸物理证据分SOURCE保留；WinGUI三档Game按钮真网络、off/tls/flows同VM CPU/RSS/延迟与小TCP p99仍NOT_RUN，不能用CLI回执代替。",
+    "H2169 Game route-mode=all（业务Direct关闭）仍原生填充已证实；Normal split-enable=false及其他Game政策组合不因本场自动PASS。",
+    "H2079旧SOURCE Normal split关闭维持padding当时未验；新Game route-mode=all真测不能替换旧Normal独立SOURCE。"
   ],
   "promotion": null
 }

@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029 / PLAN029B",
+  "milestone": "H2169",
+  "scope": "Game startup-padding original Go TLS authenticated cold V5 → original Rust Game M4 per-lane AEAD, true NPF successful-copy, Wintun/WSL2 Linux TUN business and owned Stop",
+  "source_sha": "81998f91d183c722be932543be6434c1fd31be57",
+  "verification": "PASS_SCOPED_SIX_GENUINE_WIN2025_WSL2_GAME_PADDING_NATIVE",
+  "action_id": 44250162599,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/44250162599",
+  "action_status": "completed",
+  "action_conclusion": "success",
+  "built_artifacts_all_source_sha": "81998f91d183c722be932543be6434c1fd31be57",
+  "original_windows_client_sha256": "69e9d3bcc2f4c741af28adb09a031ded5917503aef171bc126fb87924ffe0a75",
+  "original_linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+  "same_binary_sha256_across_all_six_real_arms": true,
+  "test_order": "two independent Windows2025/WSL2 jobs in parallel; each same-source and same-binary cold off→tls→flows",
+  "qualifying_sources": [
+    "GITHUB_SHA",
+    "fixture_source",
+    "product_binary_source",
+    "linux_binary_source"
+  ],
+  "exact_source_all_six": true,
+  "windows_actual_npf_receipt": "WBD_PLAN029_GAME_PADDING_NPF_RECEIPT mode=... lanes=... copied_records=... copied_bytes=... source=original_Game_M4_authenticated_NPF_accepted",
+  "sides": [
+    {
+      "side": "game2off",
+      "mode": "game2",
+      "fec": "off",
+      "job_id": 134621109973,
+      "artifact_id": 14403424471,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/44250162599/artifacts/14403424471",
+      "status": "PASS_SCOPED_GAME_PADDING_OFF_TLS_FLOWS_REAL_NPF_TWO_OS",
+      "arms": [
+        {
+          "startup_padding_mode": "off",
+          "npf_copied_records": 0,
+          "npf_copied_bytes": 0,
+          "child_exit": 0,
+          "result": "PASS_SCOPED_ACTUAL_ORIGINAL_GAME_PADDING_NPF_TCP_UDP_STOP",
+          "real_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "real_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "requested_original_win_mtu": 1460,
+          "tls_record_prefix_app_test_only": false
+        },
+        {
+          "startup_padding_mode": "tls",
+          "npf_copied_records": 2,
+          "npf_copied_bytes": 837,
+          "child_exit": 0,
+          "result": "PASS_SCOPED_ACTUAL_ORIGINAL_GAME_PADDING_NPF_TCP_UDP_STOP",
+          "real_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "real_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "requested_original_win_mtu": 1460,
+          "tls_record_prefix_app_test_only": true
+        },
+        {
+          "startup_padding_mode": "flows",
+          "npf_copied_records": 34,
+          "npf_copied_bytes": 7663,
+          "child_exit": 0,
+          "result": "PASS_SCOPED_ACTUAL_ORIGINAL_GAME_PADDING_NPF_TCP_UDP_STOP",
+          "real_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "real_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "requested_original_win_mtu": 1460,
+          "tls_record_prefix_app_test_only": false
+        }
+      ]
+    },
+    {
+      "side": "game4fixed",
+      "mode": "game4-fec",
+      "fec": "fixed",
+      "job_id": 134621109899,
+      "artifact_id": 14404530810,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/44250162599/artifacts/14404530810",
+      "status": "PASS_SCOPED_GAME_PADDING_OFF_TLS_FLOWS_REAL_NPF_TWO_OS",
+      "arms": [
+        {
+          "startup_padding_mode": "off",
+          "npf_copied_records": 0,
+          "npf_copied_bytes": 0,
+          "child_exit": 0,
+          "result": "PASS_SCOPED_ACTUAL_ORIGINAL_GAME_PADDING_NPF_TCP_UDP_STOP",
+          "real_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "real_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "requested_original_win_mtu": 1460,
+          "tls_record_prefix_app_test_only": false
+        },
+        {
+          "startup_padding_mode": "tls",
+          "npf_copied_records": 4,
+          "npf_copied_bytes": 843,
+          "child_exit": 0,
+          "result": "PASS_SCOPED_ACTUAL_ORIGINAL_GAME_PADDING_NPF_TCP_UDP_STOP",
+          "real_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "real_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "requested_original_win_mtu": 1460,
+          "tls_record_prefix_app_test_only": true
+        },
+        {
+          "startup_padding_mode": "flows",
+          "npf_copied_records": 70,
+          "npf_copied_bytes": 16391,
+          "child_exit": 0,
+          "result": "PASS_SCOPED_ACTUAL_ORIGINAL_GAME_PADDING_NPF_TCP_UDP_STOP",
+          "real_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "real_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "requested_original_win_mtu": 1460,
+          "tls_record_prefix_app_test_only": false
+        }
+      ]
+    }
+  ],
+  "negative_gate": "off actual NPF copied padding records AND bytes exactly 0; tls & flows >0 and no record >500B appended",
+  "original_fec_scope": "Game4 fixed FEC source only; parity/health excluded by Rust unit/source policy, no new crypto/FEC/record format",
+  "scope_note": "tls test sends a TLS-record-shaped prefix through genuine Windows kernel TCP; not a complete application TLS negotiation",
+  "gui_scope": "H2167 original WinForms off/tls/flows selector/help/assembly static compile PASS; no new Game WinForms button/OS Applied session in H2169",
+  "historical_source_separation": {
+    "prior_normal_gui_flows": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+    "prior_game20_policy": "508591f93427ebdad4cf88ff625e03fc4d485aca",
+    "old_h2168_network": "SKIPPED_ACTION_44248395979",
+    "old_h2166_first_ci_fail": "PRESERVED"
+  },
+  "explicit_not_run": [
+    "Game2 FEC fixed and Game4 FEC off padded variants on H2169 exact source",
+    "Game WinForms GUI-driven physical network and every GUI switch in Game mode",
+    "Linux-initiated Windows inbound kernel TCP comparator",
+    "all-host IPv6 reachability",
+    "same-VM CPU/RSS/latency A/B and small TCP p99",
+    "complete PLAN029 D1-D5/P1-P2 and PLAN029B §6–7"
+  ],
+  "plan029_full_technical": "OPEN",
+  "plan029b_full_technical": "OPEN",
+  "plan030": "NOT_STARTED"
+}
