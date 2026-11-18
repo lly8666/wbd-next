@@ -26,8 +26,13 @@ d={"schema":"wbd-android-x86-kvm-ksu-original-native-d1-admission/v1",
  "guest_kernel_x86_64":"PASS" if read("uname.txt").strip()=="x86_64" else "NOT_PROVEN",
  "android_api36":"PASS" if read("sdk.txt").strip()=="36" else "NOT_PROVEN",
  "ksu_shell_root":"PASS" if "uid=0(" in read("ksu-id.txt") else "NOT_PROVEN",
- "original_x86_go_help":"PASS" if read("go-help-code.txt").strip()=="0" and
-   "android-network-handle" in read("go-help.txt") else "NOT_PROVEN",
+ "original_x86_go_help":"PASS" if read("go-help-code.txt").strip()=="1" and
+   "Usage of wbd-v4-client:" in read("go-help.txt") and
+   "flag: help requested" in read("go-help.txt") and
+   all(flag in read("go-help.txt") for flag in
+       ("-android-network-handle","-raw-interface","-tun-name","-username")) and
+   "panic:" not in read("go-help.txt") and
+   "fatal error:" not in read("go-help.txt") else "NOT_PROVEN",
  "signed_ci_apk_activity":"PASS" if "Starting: Intent" in read("activity.txt") else "NOT_PROVEN",
  "app_to_ksu_root":"NOT_RUN","physical_network_app_readback":"NOT_RUN",
  "original_tls_auth_lease":"NOT_RUN","real_m3_m4_tcp_udp":"NOT_RUN",
@@ -161,7 +166,17 @@ adb shell su -c '/data/local/tmp/wbd-x86-ci/wbd-v4-client-amd64 --help' \
 code=$?
 set -e
 echo "$code" >"$out/go-help-code.txt"
-if [[ "$code" != 0 ]] || ! grep -Fq 'android-network-handle' "$out/go-help.txt";then
+# The ORIGINAL pinned Go CLI returns flag.ErrHelp to main, which calls
+# log.Fatal and exits 1 after printing its complete real flag set.
+# Only admit this exact help receipt, not an arbitrary exec error with rc 1.
+if [[ "$code" != 1 ]] ||
+   ! grep -Fq 'Usage of wbd-v4-client:' "$out/go-help.txt" ||
+   ! grep -Fq 'flag: help requested' "$out/go-help.txt" ||
+   ! grep -Fq 'android-network-handle' "$out/go-help.txt" ||
+   ! grep -Fq 'raw-interface' "$out/go-help.txt" ||
+   ! grep -Fq 'tun-name' "$out/go-help.txt" ||
+   ! grep -Fq 'username' "$out/go-help.txt" ||
+   grep -Eq 'panic:|fatal error:' "$out/go-help.txt";then
   echo "ANDROID_X86_ORIGINAL_GO_ELF_HELP_FAIL rc=$code" >&2
   exit 17
 fi
