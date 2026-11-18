@@ -52,10 +52,21 @@ cleanup(){
 }
 trap cleanup EXIT
 test "$(uname -m)" = x86_64
-if [[ -c /dev/kvm ]] && [[ -r /dev/kvm ]] && [[ -w /dev/kvm ]];then
+# Reuse the exact proven Android16 KernelSU KVM permission admission.
+# A fresh GitHub runner exposes /dev/kvm but not with user write permission
+# until this workflow explicitly grants the ephemeral runner access.
+if [[ ! -c /dev/kvm ]];then
+ phase=ENV_BLOCKED_KVM_DEVICE
+ exit 11
+fi
+if ! sudo -n chmod a+rw /dev/kvm;then
+ phase=ENV_BLOCKED_KVM_PERMISSION_GRANT
+ exit 11
+fi
+if [[ -r /dev/kvm && -w /dev/kvm ]];then
  kvm=PASS
 else
- phase=ENV_BLOCKED_KVM
+ phase=ENV_BLOCKED_KVM_ACCESS
  exit 11
 fi
 test -c /dev/net/tun || { phase=ENV_BLOCKED_DEV_NET_TUN;exit 12; }
