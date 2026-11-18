@@ -65,5 +65,6 @@
     "No public WAN, DPI, p99, L3 endurance or Android/OpenWrt physical claims",
     "Old failed GUI fixture/CI runs remain historical FAIL and must not be rewritten",
     "Original product TLS/data protocol not changed by these UI/test changes"
-  ]
+  ],
+  "source_sha": "5ad409d1f5fe664a4030eec149a98882f88108f8"
 }
