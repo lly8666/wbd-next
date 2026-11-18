@@ -106,7 +106,7 @@ type config struct{
     mixedModes bool
     gameFecEnabled bool
     gameFecProfile uint8
-    startupPaddingMode uint8 // Game-only Linux cold: 0 off / 1 TLS / 2 flows
+    startupPaddingMode uint8 // Normal/off + Game cold: 0 off / 1 TLS / 2 flows
     game4CopyStagger bool
     game4CopyWideStagger bool
     outerMTU int
@@ -213,7 +213,7 @@ func parse(role string,args []string)(config,error){
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
-    startupPadding:=flags.String("startup-padding","off","Game2/4 authenticated Rust M4 original LINK startup padding: off, tls or flows; Normal/FEC Linux remain unsupported")
+    startupPadding:=flags.String("startup-padding","off","Normal/off and Game2/4 original Rust M4 padding: off, tls or flows; FEC Fixed/Auto kind2/3 unsupported")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
@@ -303,8 +303,8 @@ func parse(role string,args []string)(config,error){
     case "flows":c.startupPaddingMode=2
     default:return c,fmt.Errorf("startup-padding must be off, tls or flows")
     }
-    if c.startupPaddingMode!=0&&c.gameLanes==0&&!c.mixedModes{
-        return c,fmt.Errorf("Linux startup-padding tls/flows is currently wired only for authenticated Game2/4; Normal/Fixed/Auto not supported")
+    if c.startupPaddingMode!=0&&c.gameLanes==0&&!c.mixedModes&&c.fecMode!=realityfront.FecV2Off{
+        return c,fmt.Errorf("Linux FEC Fixed/Auto startup-padding not supported on authenticated kind2/3 source/parity")
     }
     if *gameFec!="off"{
         if c.gameLanes==0||len(*gameFec)!=6||!strings.HasPrefix(*gameFec,"fixed")||
@@ -952,6 +952,14 @@ func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err erro
         v.BlockedBurst,v.BlockedQuota,v.BlockedCapacity,v.BlockedStale,
         v.BlockedLocalOther,v.BlockedGlobalOther,v.BlockedInvariant)
 }
+func logNormalStartupPadding(role,mode string,records,bytes uint64,err error){
+    if err!=nil{
+        log.Printf("V4_PUBLIC_NORMAL_PADDING_UNAVAILABLE role=%s error=%v",role,err)
+        return
+    }
+    log.Printf("V4_PUBLIC_NORMAL_PADDING_RAW_RECEIPT role=%s mode=%s padded_records=%d padded_bytes=%d original_TLS_Rust_M4=1 real_AF_PACKET_send=1",
+        role,mode,records,bytes)
+}
 func logAuthenticFecTx(role string,v realityfront.V4PublicFecTxSnapshot,err error){
     if err!=nil{
         log.Printf("V4_PUBLIC_FEC2_TX_NOT_AVAILABLE role=%s error=%v",role,err)
@@ -1261,6 +1269,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             ConfigureLeaseIPv4:applyLease,
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -1327,6 +1336,10 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         func()bool{return handoffCommitted.Load()},
         native.OriginalLoopPulse,notifyPreDead)
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
+    if c.fecMode==realityfront.FecV2Off{
+        m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
+        logNormalStartupPadding("client",m,n,b,e)
+    }
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
     cpu,cpuErr:=native.OriginalWorkerCPU()
@@ -1400,6 +1413,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })
     if err!=nil{return err}
@@ -1518,6 +1532,10 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     *connected=handoffCommitted.Load()
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=server mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     if *connected{
+        if c.fecMode==realityfront.FecV2Off{
+            m,n,b,e:=product.OriginalNormalStartupPaddingCounters()
+            logNormalStartupPadding("server",m,n,b,e)
+        }
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
         cpu,cpuErr:=product.OriginalWorkerCPU()
@@ -1766,6 +1784,7 @@ func runSharedMultiServer(
             // The original TLS policy is this client's owner configuration;
             // server process --mode is not a global FEC admission filter.
             PerClientNormalFEC:true,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             DisableOuterRepair:c.disableOuterRepair,PeerPersona:nativePersona,
             Authenticate:originalV4CredentialCheck(c),
         }
