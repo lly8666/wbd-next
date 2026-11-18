@@ -7,3 +7,5 @@
 ```feature-impact
 {"kind":"updated","ids":["startup-flow-padding"],"reason":"H2200 new encrypted protected V4 TLS Admission V2 per-client off/tls/flows echo and bounded independent random suffix in both request/reply, old V1 off preserved, 12-case dual native fixture candidate NOT_RUN"}
 ```
+
+首次SOURCE `a22ab7fd` [native Action44303725701](https://github.com/lly8666/wbd-next/actions/runs/44303725701) 双ISA预检 FAIL，停在老静态测试 `assertIn("server_padding_records",cases)`；H2200新增控制回归把server+client统一成 `row.get(role+"_padding_records")` 迭代，原字符串不再出现。维护回归 [44303725767](https://github.com/lly8666/wbd-next/actions/runs/44303725767) 同一个静态断言FAIL；治理/Feature [44303725803](https://github.com/lly8666/wbd-next/actions/runs/44303725803) SUCCESS。仅修测试断言匹配真实代码，不变协议/产品或伪造真网PASS；原失败保留，后续新SOURCE单次原生重测。

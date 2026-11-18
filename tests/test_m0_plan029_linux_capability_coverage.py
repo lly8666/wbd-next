@@ -63,7 +63,7 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         self.assertIn("SERVER_TX_SALT",padding)
         self.assertIn("original_linux_client_server_same_epoch_have_independent_pad_lengths",padding)
         self.assertIn("SERVER_PAD_ALL_MODES",cases)
-        self.assertIn("server_padding_records",cases)
+        self.assertIn('role+"_padding_records"',cases)
         for mode in ("normal","fec-fixed","fec-auto","game2","game4"):
             self.assertIn('"'+mode+'",',cases)
 
