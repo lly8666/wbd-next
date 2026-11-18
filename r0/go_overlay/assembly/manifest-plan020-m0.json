@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "58790a397dfa529600721b140847ef7118b242d0",
+      "result_blob": "e9478ad94fff3942155c20795bc2636dd9e233f7",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -288,10 +288,6 @@
         {
           "find": "StartupPaddingMode:startupPaddingMode,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),",
           "replace": "StartupPaddingMode:startupPaddingMode,SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,ChinaIPFile:*chinaIPFile,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
-        },
-        {
-          "find": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}",
-          "replace": "if *splitEnable && *lanes!=1 && *lanes!=4 {return errors.New(\"PLAN029 CN split Game2 not wired; select Normal or Game4 (four lanes)\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
         },
         {
           "find": "\t\tcnRulesFile = flag.String(\"cn-rules-file\", \"\", \"absolute owned CN domain rules snapshot used only at split cold start\")",

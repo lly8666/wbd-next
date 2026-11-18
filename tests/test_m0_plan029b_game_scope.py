@@ -34,6 +34,12 @@ class GameModesScope(unittest.TestCase):
         bridge=(ROOT/"r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go").read_text()
         source=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go").read_text()
         self.assertNotIn('PLAN029 CN split Game2 not wired; no OS Apply attempted',go)
+        import json
+        manifest=json.loads((ROOT/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())
+        entry=[p for p in manifest["operations"] if p.get("path")=="cmd/wbd-client/main_windows.go"]
+        self.assertEqual(len(entry),1)
+        self.assertFalse(any("Game2 not wired" in str(p) for p in entry[0]["patches"]))
+        self.assertEqual(len(entry[0]["result_blob"]),40)
         self.assertIn('if m0GameBusinessSplit(o){',go)
         self.assertIn('Direct4:businessDirect,',go)
         self.assertIn('Bypass4:businessBypass,',go)
