@@ -4,20 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2162,
-  "checkpoint_sha": "8f20670081d13ad94a48a21b4b88d84ab3eda0ca",
+  "sequence": 2163,
+  "checkpoint_sha": "4abc23a1d3bdfe1136634de61aac58c73c47d495",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2162 Game2/4 × FEC off/fixed × 5 user business policies 20/20 original Windows2025/WSL2 native PASS_SCOPED, signed source508591f Action44235564493 all jobs SUCCESS, 290 original ZIP members CRC PASS, identical original binary hashes, true TLS/OS/UDP, kernel Windows-to-Linux Tunnel TCP echo, LAN physical Direct, ordinary CN real A, advanced CN FakeIP physical Direct TCP32768/UDP, 20 owned Stops. Independent Linux-initiated Windows inbound TCP NOT_RUN; full 029B/029 technical OPEN, 030 NOT_STARTED.",
-  "why_now": "All four new Game signed native jobs SUCCESS, exact source and 290 ZIP CRC verified. Previous 1a66243 RED source retained, latest original Game qualification 20/20 scoped PASS. No further native Game repeats.",
-  "done_when": "Authorized Game2/4 FEC off/fixed all five business policies verified with 20 authentic OS/network/Stop receipts and immutable SOURCE, satisfied scoped; full 029B technical exit not asserted.",
-  "next_action": "Do not rerun Game2/4 signed 20-case matrix. Only new user authorization or reproducible product fault should expand legacy Linux-initiated inbound TCP, Game startup padding, host-wide IPv6 and ARM; full 029B/029 technical contract OPEN, 030 NOT_STARTED.",
+  "current_task": "H2163 WinGUI 029配置覆盖静态审计；修正Game2/4过时正式装配help，功能卡对齐。H2162 20/20与H2135三代原GUI历史真验保留各自SOURCE；本轮新UI文字SOURCE未跑原生。",
+  "why_now": "当前用户特别询问029全部WinGUI设置是否存在及功能有无实测；两处Game2过时帮助与H2162冲突。",
+  "done_when": "正式manifest原Git blob逐patch replay及新blob SHA静态PASS；本轮新WinForms编译/实际网络NOT_RUN，完整技术出口仍未满足。",
+  "next_action": "不重复H2162 Game矩阵；先看已有签名收口。若新增充分技术出口资格只针对实际未验的P-B2、小TCP p99、Game填充、Linux主动入站Windows TCP和D1–D5/P1–P2等收敛；030 NOT_STARTED。",
   "unverified": true,
   "last_tested_source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
   "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H2163-GUI-SETTINGS-AUDIT-20261118.json",
     "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2163-GUI-SETTINGS-AUDIT.md",
     "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
@@ -28,5 +30,5 @@
     "docs/devlog/M0/20261118-PLAN029B-H2162-GAME2-GAME4-20-OF-20-REAL-SIGNED-PASS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2162 SOURCE508591f Action44235564493 fully SUCCESS; four original Win2025/WSL2 Game2/Game4 FEC off/fixed suites × five cold policies 20/20 real business and owned Stops PASS_SCOPED; four ZIPs 290 CRC PASS; binary SHA matches. Historical reverse inbound TCP and Game startup padding excluded; B0-B5 previous Normal scoped PASS; full technical 029/029B still OPEN."
+  "partial_summary": "H2163 GUI全配置入口静态审计、两处过时Game提示最小修正；Manifest blob SHA回放PASS；新GUI Windows NOT_RUN。029/029B用户日常PASS_SCOPED，完整技术OPEN，030不启动。"
 }

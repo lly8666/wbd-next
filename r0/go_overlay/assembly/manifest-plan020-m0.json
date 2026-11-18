@@ -339,7 +339,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "81628c1490d25202ce24e20e22e332130893882c",
+      "result_blob": "e7afe322bfd5c7b1d77308caab04706e82891ec3",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -459,15 +459,15 @@
         },
         {
           "find": "  \"direct4\": [",
-          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2仍拒绝。保存后重新连接生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
+          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2/4在FEC关闭或固定档已验CN分流。保存后重新连接生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
         },
         {
           "find": "  \"cn-rules-file\": [",
           "replace": "  \"cn-domain-direct\": [\n    \"网络\",\n    \"高级CN域名分流（FakeIP）\",\n    \"默认关闭：CN域名真实A不造FakeIP，业务只按目的中国IPv4走Direct；开启后CN域名FakeIP可直连海外CDN。旧配置缺键保留开启，重连生效\"\n  ],\n  \"cn-rules-file\": ["
         },
         {
-          "find": "\"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2仍拒绝。保存后重新连接生效\"",
-          "replace": "\"关闭仍保留原Rust隧道和公共DNS及startup-padding，不分配Direct/FakeIP资源；开启后按route-mode作IP分流。CN域名默认仅选择直连DNS，高级FakeIP需另开；Game2仍拒绝。重连生效\""
+          "find": "\"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2/4在FEC关闭或固定档已验CN分流。保存后重新连接生效\"",
+          "replace": "\"关闭仍保留原Rust隧道和公共DNS及startup-padding，不分配Direct/FakeIP资源；开启后按route-mode作IP分流。CN域名默认仅选择直连DNS，高级FakeIP需另开；Game2/4在FEC关闭或固定档已验CN分流。重连生效\""
         }
       ]
     },
@@ -815,7 +815,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "d74961a3fcc86b2e09198b47052d0465d1448cac",
+      "result_blob": "4aa96a983817595e1a7409c95754651bf67ce4d6",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -865,7 +865,7 @@
         },
         {
           "find": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
-          "replace": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"split-enable\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"explicit PLAN029 native Rust CN IP+domain split; default off; next connect; Game2/4 CN not wired\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"absolute owned CN domain rule snapshot for cold split startup; no hot update\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
+          "replace": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"split-enable\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"explicit PLAN029 native Rust CN IP+domain split; default off; next connect; Game2/4 CN split scoped native PASS with FEC off/fixed; Game startup padding not wired\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"absolute owned CN domain rule snapshot for cold split startup; no hot update\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
         },
         {
           "find": "      \"cn-rules-file\": {",

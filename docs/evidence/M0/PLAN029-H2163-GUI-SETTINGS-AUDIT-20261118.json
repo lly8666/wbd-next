@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task": "H2163",
+  "plan": "PLAN029/PLAN029B",
+  "date": "2026-11-18",
+  "baseline_main": "4abc23a1d3bdfe1136634de61aac58c73c47d495",
+  "result": "STATIC_GUI_HELP_ALIGNMENT_ONLY",
+  "static": {
+    "old_manifest_exact_blob_replay": "PASS_32_GUI_13_PARAMETERS",
+    "new_gui_blob": "e7afe322bfd5c7b1d77308caab04706e82891ec3",
+    "new_parameters_blob": "4aa96a983817595e1a7409c95754651bf67ce4d6",
+    "change": "correct Game2/4 unsupported help after scoped H2162; no native Go/Rust/wire/ABI change"
+  },
+  "prior_source_locked": {
+    "gui49": {
+      "source": "52767d183b61eaf2621d967b16e85e644b1de428",
+      "action": 43161652534,
+      "scope": "GUI_354_CONFIG_ONLY"
+    },
+    "gui_flows": {
+      "source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+      "scope": "REAL_GUI_RUST_M1_NPF"
+    },
+    "gui_three": {
+      "source": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+      "action": 44198794225,
+      "scope": "REAL_GUI_3_APPLIED_STOP"
+    },
+    "game20": {
+      "source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
+      "action": 44235564493,
+      "scope": "GAME2_GAME4_OFF_FIXED_20_REAL"
+    }
+  },
+  "new_source_gui_build": "NOT_RUN",
+  "new_source_native": "NOT_RUN",
+  "remaining": {
+    "technical_029_and_029B": "OPEN",
+    "game_startup_padding": "NOT_WIRED",
+    "reverse_windows_inbound_tcp": "NOT_RUN",
+    "full_host_ipv6": "NOT_GUARANTEED",
+    "P_B2": "NOT_RUN",
+    "small_tcp_p99": "NOT_RUN",
+    "plan030": "NOT_STARTED"
+  },
+  "historic_fail_preserved": true,
+  "actions_dispatched": false
+}
