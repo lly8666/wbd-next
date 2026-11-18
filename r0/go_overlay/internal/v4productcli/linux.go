@@ -38,6 +38,7 @@ import (
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
+    "github.com/lly8666/wobuzhidao/internal/v4routekey"
 )
 
 const tunSetIFF=0x400454ca
@@ -191,7 +192,8 @@ func parse(role string,args []string)(config,error){
     if role=="server"{defaultTun="10.66.0.1/24"}
     tunCIDR:=flags.String("tun-ipv4",defaultTun,"owned real TUN IPv4 CIDR (server default 10.66.0.1/24)")
     name:=flags.String("server-name","","original TLS recognized SNI")
-    route:=flags.String("route-key-hex","","pre-shared 32-byte route key hex (64 characters); no on-wire key exchange")
+    route:=flags.String("route-key-hex","","legacy/expert pre-shared 32-byte route key hex (64 characters)")
+    routeShort:=flags.String("route-key","","8..32 case-sensitive ASCII letters/digits; locally PBKDF2-SHA256 into existing 32B route key, no on-wire changes (8/16 human passwords weak)")
     caPEM:=flags.String("tls-ca-pem","","client application-scoped trusted server CA/certificate PEM (default OS trust)")
     cert:=flags.String("tls-cert","","original server TLS PEM")
     key:=flags.String("tls-key","","original server private PEM")
@@ -233,7 +235,7 @@ func parse(role string,args []string)(config,error){
         *pass=value
     }
     if *routeFile!="" {
-        if *route!="" {return c,fmt.Errorf("route-key-hex and route-key-hex-file are mutually exclusive")}
+        if *route!=""||*routeShort!="" {return c,fmt.Errorf("route-key, route-key-hex and route-key-hex-file are mutually exclusive")}
         value,e:=readPrivateArgFile(*routeFile)
         if e!=nil{return c,fmt.Errorf("invalid route-key-hex-file: %w",e)}
         *route=value
@@ -394,9 +396,15 @@ func parse(role string,args []string)(config,error){
     c.serverName=*name
     c.username=*user
     c.password=*pass
-    c.routeKey,err=hex.DecodeString(*route)
-    if err!=nil||len(c.routeKey)!=32{
-        return c,fmt.Errorf("offline 32-byte route-key is required locally (64 hex characters); no network key bootstrap")
+    if *routeShort!="" {
+        if *route!=""||*routeFile!="" {return c,fmt.Errorf("route-key, route-key-hex and route-key-hex-file are mutually exclusive")}
+        c.routeKey,err=v4routekey.Derive(*routeShort)
+        if err!=nil{return c,fmt.Errorf("invalid 8..32 character route-key: %w",err)}
+    }else{
+        c.routeKey,err=hex.DecodeString(*route)
+        if err!=nil||len(c.routeKey)!=32{
+            return c,fmt.Errorf("route-key (8..32 alphanumeric) or legacy 32-byte route-key-hex required; no online bootstrap")
+        }
     }
     if role=="server"&&*caPEM!=""{
         return c,fmt.Errorf("tls-ca-pem is a client-only setting; server uses tls-cert and tls-key")
