@@ -14,7 +14,7 @@ class Plan029LinuxDualIsaTest(unittest.TestCase):
         self.assertIn("Single exact-SOURCE original Go TLS / Rust / ISA-L native build",wf)
         self.assertIn("WBD_PLAN029_LINUX_DUAL_ISA: \"1\"",wf)
         self.assertIn("[plan029-linux-dual-native]",wf)
-        self.assertIn("test \"$(uname -m)\" = \"${WBD_PLAN029_LINUX_EXPECTED_ARCH:?}\"",builder)
+        self.assertIn("test \"${WBD_PLAN029_LINUX_EXPECTED_ARCH:?}\" = \"$(uname -m)\"",builder)
         self.assertNotIn("qemu-aarch64-static",wf+builder)
 
     def test_exact_five_short_modes_and_real_linux_kernel_app(self):

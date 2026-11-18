@@ -15,6 +15,7 @@ on:
       - 'tools/m0_plan029_linux_dual_isa_suite.py'
       - 'tools/m0_plan029_linux_native_app.py'
       - 'tools/arm64_linux_netns_smoke.sh'
+      - 'tests/test_m0_plan029_linux_dual_native_scope.py'
 permissions:
   contents: read
 jobs:

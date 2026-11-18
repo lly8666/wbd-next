@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2172,
-  "checkpoint_sha": "c3fba1ed215a4191e2244621adeeb195303542df",
+  "sequence": 2173,
+  "checkpoint_sha": "68ae68073786506d888787dfbed89369691155e8",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2172 修Linux双ISA原生Normal首个夹具假阴性：x86 TCP FIN后getpeername ENOTCONN；ARM64 netns sudo包装进程提早退出但真实Python listener READY；不降低真kernel app/TUN/Stop硬门。",
-  "why_now": "H2171 native workflow44254638755两ISA build/Go/Rust单测均PASS；x86已见真实UDP/TCP echo但CI探针FIN后getpeername失败，ARM64 listener READY日志与快速PID guard矛盾；五模式后4项未跑。",
-  "done_when": "H2172两个原生作业分别五模式全通过：真实同ISA双Linux原Go TLS+Rust/TUN内核UDP/TCP两向/MTU1460/FEC/Stop及自有IPv6禁用；首错如实记录。",
-  "next_action": "收H2172重新执行的双ISA native workflow；只有同SOURCE原生真实证明才补 evidence/feature；不重复Windows/028/030。",
+  "current_task": "H2173 修新增Linux双ISA静态回归测试文本比较顺序错：H2172真网络未执行；重派同一最小两native ISA×五Linux原双端模式以验真实TCP/UDP/Stop。",
+  "why_now": "H2172 Action44255354198两ISA在cheap前置单测失败，原因TestPlan029LinuxDualIsa硬要求 test uname=env，但builder真实安全检查是等价的test env=uname；网络未跑，首错不是产品。",
+  "done_when": "当前SOURCE下 native x86_64、aarch64两真实原Go/TLS/Rust服务端+客户端、五原生短模式、原内核TCP/UDP双向、MTU1460/IPv6 owned、Stop实际通过；如未通过保留首错。",
+  "next_action": "核H2173 CI前置单测三项PASS，再核两端Go/Rust编译及五个真实netns；不得拿此前失败或旧Win SHA升格。",
   "unverified": true,
   "last_tested_source": "81998f91d183c722be932543be6434c1fd31be57",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2173-LINUX-DUAL-ISA-STATIC-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2172-LINUX-DUAL-ISA-FIRST-FAULT-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2171-LINUX-DUAL-ISA-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2170-GAME-PADDING-SCOPED-CLOSEOUT.md",
     "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md",
-    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json",
-    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2171 SOURCEc3fba1e x86+ARM原Go/Rust/ISA-L两架构构建和定向单测PASS，Normal首轮双FAIL均测试夹具误判：x86真实listener UDP+TCP PASS、sender echo完成后FIN调用getpeername异常；ARM listener READY但sudo wrapper PID早退导致假未就绪。H2172仅修两个fixture并加回归测试。"
+  "partial_summary": "H2171 native两ISA build PASS，Normal应用夹具假阴性有x86回包证据；H2172改代码后新静态测试assert字符串顺序写反，两个ISA preflight FAIL且未编译网络；H2173修测试对应实际严守架构比对，并将测试加入workflow路径，功能仍未进行本源验收。"
 }
