@@ -62,7 +62,9 @@ def has(k):return k in data
 def wire_status(name,key):
     try:
         d=json.loads((p/name).read_text())
-        if d.get("schema")!="wbd-d2-s1-cold-wire-flags-only/v1" or not d.get("wire_capture_format_valid"):
+        if (d.get("schema")!="wbd-d2-s1-cold-wire-flags-only/v1" or
+            not d.get("wire_capture_format_valid") or
+            d.get("tcp_frames_examined",0)<=0):
             return "NOT_PROVEN"
         value=d.get(key)
         return value if value in ("OBSERVED","NOT_OBSERVED") else "NOT_PROVEN"
@@ -87,6 +89,8 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "original_go_root_process_launched":"PASS" if has("ROOT_PROCESS_LAUNCHED") else "NOT_PROVEN",
  "original_android_tun_configured":"PASS" if has("ORIGINAL_GO_TUN_KERNEL_CONFIGURED") else "NOT_PROVEN",
  "original_android_raw_af_packet":"PASS" if has("ORIGINAL_GO_RAW_SOCKET_READY") else "NOT_PROVEN",
+  "original_linux_server_untrusted_raw_initial_syn":"OBSERVED" if "V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX" in server else "NOT_PROVEN",
+  "original_linux_server_untrusted_raw_synack_tx":"OBSERVED" if "V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK" in server else "NOT_PROVEN",
  "original_android_cold_syn_send":syn_result,
   "guest_virtual_ethernet_syn_to_host":wire_status("guest-wire-summary.json","syn"),
   "guest_virtual_ethernet_synack_from_host":wire_status("guest-wire-summary.json","synack"),
@@ -318,7 +322,7 @@ fi
 # Write only exact real original server milestone types. Do not upload
 # stdout/stderr, SNI, account, key, cert or traffic bytes.
 : >"$out/server-stage-enums.txt"
-for marker in V4_ORIGINAL_GO_SERVER_NATIVE_READY V4_PUBLIC_MULTI_SESSION_READY V4_PUBLIC_SHARED_TUN_STOP_DRAINED;do
+for marker in V4_ORIGINAL_GO_SERVER_NATIVE_READY V4_PUBLIC_MULTI_SESSION_READY V4_PUBLIC_SHARED_TUN_STOP_DRAINED V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK;do
   if grep -Fq "$marker" "$tmp/server.log";then
     echo "$marker" >>"$out/server-stage-enums.txt"
   fi

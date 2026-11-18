@@ -2093,6 +2093,8 @@ func runSharedMultiServer(
     // Truthful readiness avoids advertising unqualified 32-live capacity.
     log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1",
         c.localPort)
+    var rawInitialSYNSeen atomic.Bool
+    var rawInitialSYNACKSent atomic.Bool
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()
@@ -2104,6 +2106,12 @@ func runSharedMultiServer(
             if seg.DstPort!=c.localPort{continue}
             if faketcp.IsInitialSYN(seg){
                 if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{continue}
+                // Observability ONLY: actual original AF_PACKET receiver,
+                // syntactic untrusted SYN and MSS, NOT authenticated identity.
+                // No packet bytes, addresses or credential material logged.
+                if rawInitialSYNSeen.CompareAndSwap(false,true){
+                    log.Printf("V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX source=original_af_packet untrusted=1")
+                }
                 isn,e:=originalRandomISN()
                 if e!=nil{
                     select{case transportErr<-e:default:}
@@ -2121,6 +2129,9 @@ func runSharedMultiServer(
                 if e!=nil{
                     select{case transportErr<-e:default:}
                     return
+                }
+                if rawInitialSYNACKSent.CompareAndSwap(false,true){
+                    log.Printf("V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK source=original_af_packet untrusted=1")
                 }
                 continue
             }
