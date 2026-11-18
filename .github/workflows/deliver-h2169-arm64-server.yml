@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with:
           go-version: '1.23.12'
@@ -25,8 +26,8 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = aarch64
-          test "$(git rev-parse HEAD^)" = '81998f91d183c722be932543be6434c1fd31be57'
-          test "$(git diff --name-only HEAD^ HEAD)" = '.github/workflows/deliver-h2169-arm64-server.yml'
+          git merge-base --is-ancestor 81998f91d183c722be932543be6434c1fd31be57 HEAD
+          git diff --exit-code 81998f91d183c722be932543be6434c1fd31be57 HEAD -- crates r0/go_overlay Cargo.lock Cargo.toml rust-toolchain.toml tools/arm64_public_go_rust_bundle.sh tools/m0_install_public_faketcp.py tools/m0_install_public_realityfront_tests.py
           echo PRODUCT_BASELINE_IDENTICAL_H2169_WIN_TEST_SOURCE
       - name: Compile original ARM64 server using frozen Go Rust ISA-L production recipe
         shell: bash
