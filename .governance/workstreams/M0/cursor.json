@@ -4,15 +4,15 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2191,
-  "checkpoint_sha": "1b26f2e87f6aa148e97e3b897cea78e6488daeb9",
+  "sequence": 2192,
+  "checkpoint_sha": "ada3da86bb7a0a5cc8dba37bebb1ea78c000edf0",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2191：H2188/H2190治理已PASS；保持029剩余技术出口OPEN。",
-  "why_now": "Action44285388183（SOURCE1b26f2e8）Governance/Feature catalog均SUCCESS；H2189热预算FAIL保留，H2186网络SOURCE不变。",
-  "done_when": "H2188压缩、H2190热预算治理复核完成；已PASS。",
-  "next_action": "029完整D1–D5/P1–P2与P-B2/小TCP p99等仍OPEN/NOT_RUN；遵守当前日常限域收口，不重复已PASS场；030未启。",
-  "unverified": false,
+  "current_task": "H2192：H2190治理已PASS；修H2191对029限定证据误标verified。",
+  "why_now": "H2191 Action44285633983结构FAIL：verified cursor lacks reviewed PASS evidence；029产品仅PASS_SCOPED，完整技术出口OPEN。",
+  "done_when": "保留准确的unverified=true，治理CI通过；不伪造PASS。",
+  "next_action": "029完整D1–D5/P1–P2及p99/P-B2仍OPEN；不重跑已PASS场；030未启。",
+  "unverified": true,
   "last_tested_source": "e174235872d32cca69bf921fb59904f9bcaee889",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
@@ -22,5 +22,5 @@
     "docs/devlog/M0/20261118-PLAN029-H2187-LINUX-ALL-NONWIN-SCOPED-CAPABILITY-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2188 SOURCE7157d601治理/maintenance成功；H2189 SOURCE73dcb2ea热读取32942>32768 FAIL；H2190 SOURCE1b26f2e8治理Action44285388183 SUCCESS。H2186 native Linux x86/ARM 16/16产品SOURCE e1742358 PASS_SCOPED不重跑。029/029B日常限域PASS，完整技术OPEN，030未启。"
+  "partial_summary": "H2190 Action44285388183 governance/feature SUCCESS；H2189 32942B热预算FAIL与H2191 verified-evidence FAIL留痕。H2186 Linux原生x86/ARM 16/16真网络SOURCE e1742358仅PASS_SCOPED；029/029B日常限域PASS、完整技术OPEN，故cursor unverified=true。"
 }
