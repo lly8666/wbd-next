@@ -18,6 +18,13 @@ tap_rx_boot=0
 tap_rx_original_start=""
 tap_guest_l2_at_boot=NOT_RUN
 tap_guest_l2_during_original=NOT_RUN
+tap_wifi_flag=NOT_PROVEN
+tap_dhcp_process=NOT_RUN
+tap_dhcp_lease=NOT_PROVEN
+tap_dhcp_cleanup=NOT_RUN
+tap_dhcp_pidfile=""
+tap_dhcp_leasefile=""
+tap_dhcp_wrapper_pid=""
 adb(){ timeout --signal=TERM --kill-after=3s 35s "$ANDROID_HOME/platform-tools/adb" "$@"; }
 receipt(){
   local rc="$1"
@@ -62,6 +69,9 @@ tap_pilot_receipt(){
   WBD_TAP_GUEST_OWNED="$tap_owned" WBD_TAP_GUEST_BOOT="$tap_guest_boot" \
   WBD_TAP_L2_BOOT="$tap_guest_l2_at_boot" \
   WBD_TAP_L2_D2="$tap_guest_l2_during_original" \
+  WBD_TAP_WIFI_FLAG="$tap_wifi_flag" \
+  WBD_TAP_DHCP="$tap_dhcp_process" WBD_TAP_DHCP_LEASE="$tap_dhcp_lease" \
+  WBD_TAP_DHCP_CLEANUP="$tap_dhcp_cleanup" \
   python3 - <<'PY'
 import json,os,pathlib
 p=pathlib.Path("out/android-x86-tap-guest")
@@ -75,14 +85,18 @@ d={"schema":"wbd-d2-x86-original-tap-guest-pilot/v1",
    "host_tap_exact_cleanup": ("NOT_RUN" if os.environ["WBD_TAP_GUEST_OWNED"]!="1" else
        ("PASS" if os.environ["WBD_TAP_GUEST_PHASE"]!="TAP_DELETE_FAILED" and
          not pathlib.Path("/sys/class/net/wbdtapci0").exists() else "FAIL")),
-   "guest_boot_with_tap_argument":os.environ["WBD_TAP_GUEST_BOOT"],
+   "guest_boot_with_wifi_tap_argument":os.environ["WBD_TAP_GUEST_BOOT"],
+   "emulator_wifi_tap_flag":os.environ["WBD_TAP_WIFI_FLAG"],
+   "isolated_tap_dhcp_process":os.environ["WBD_TAP_DHCP"],
+   "isolated_tap_dhcp_lease":os.environ["WBD_TAP_DHCP_LEASE"],
+   "owned_dhcp_process_cleanup":os.environ["WBD_TAP_DHCP_CLEANUP"],
    "guest_to_host_tap_l2_during_boot":os.environ["WBD_TAP_L2_BOOT"],
    "guest_to_host_tap_l2_during_d2_session":os.environ["WBD_TAP_L2_D2"],
    "android_real_physical_network":"PASS" if physical=="PHYSICAL_NETWORK_EXACT_READBACK_PASS" else
       ("ENV_BLOCKED" if physical=="PHYSICAL_NETWORK_ENV_BLOCKED" else "NOT_PROVEN"),
    "slirp_bypass_for_original_syn":"NOT_PROVEN",
    "android_original_selected_interface":"NOT_PROVEN",
-   "guest_ethernet_tcpdump_with_net_tap":"UNSUPPORTED_BY_EMULATOR",
+   "guest_ethernet_tcpdump_with_tap":"NOT_USED",
    "original_linux_raw_syn_rx":"NOT_PROVEN",
    "original_linux_raw_synack_tx":"NOT_PROVEN",
    "android_synack_tls_auth_lease_m4_stop":"NOT_PROVEN",
@@ -110,7 +124,8 @@ if d2.exists():
                                      "original_rust_m4_and_uid_ready",
                                      "owned_stop_verified")) else "NOT_PROVEN"
 (p/"receipt.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
-print("D2_TAP_GUEST_PILOT",d["phase"],d["guest_boot_with_tap_argument"],d["android_real_physical_network"],d["slirp_bypass_for_original_syn"])
+print("D2_TAP_GUEST_PILOT",d["phase"],d["guest_boot_with_wifi_tap_argument"],
+      d["android_real_physical_network"],d["slirp_bypass_for_original_syn"])
 PY
 }
 cleanup(){
@@ -142,6 +157,37 @@ cleanup(){
     kill -KILL "$EMU_PID" 2>/dev/null || true
   fi
   if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+    # Stop the single DHCP process owned by this job, never any system daemon.
+    if [[ -n "$tap_dhcp_pidfile" && -s "$tap_dhcp_pidfile" ]];then
+      own_dhcp_pid="$(cat "$tap_dhcp_pidfile")"
+      if [[ "$own_dhcp_pid" =~ ^[0-9]+$ && "$own_dhcp_pid" -gt 1 ]] &&
+         [[ -r "/proc/$own_dhcp_pid/cmdline" ]] &&
+         tr '\0' ' ' <"/proc/$own_dhcp_pid/cmdline" |
+           grep -Fq -- '--interface=wbdtapci0';then
+        sudo -n kill -TERM "$own_dhcp_pid" >/dev/null 2>&1 || true
+        for i in $(seq 1 25);do
+          if ! sudo -n kill -0 "$own_dhcp_pid" 2>/dev/null ||
+             [[ "$(ps -o stat= -p "$own_dhcp_pid" 2>/dev/null)" == Z* ]];then
+            break
+          fi
+          sleep 0.1
+        done
+        if sudo -n kill -0 "$own_dhcp_pid" 2>/dev/null &&
+           [[ "$(ps -o stat= -p "$own_dhcp_pid" 2>/dev/null)" != Z* ]];then
+          tap_dhcp_cleanup=FAIL
+          tap_phase=DHCP_CLEANUP_FAILED
+          rc=32
+        else
+          tap_dhcp_cleanup=PASS
+        fi
+      elif [[ ! -d "/proc/${own_dhcp_pid:-invalid}" ]];then
+        tap_dhcp_cleanup=PASS
+      else
+        tap_dhcp_cleanup=FAIL
+        tap_phase=DHCP_PID_OWNERSHIP_UNPROVEN
+        rc=32
+      fi
+    fi
     if [[ "$tap_owned" == 1 ]];then
       sudo -n ip link del wbdtapci0 >/dev/null 2>&1 || true
       if ip link show wbdtapci0 >/dev/null 2>&1;then
@@ -182,7 +228,7 @@ start_guest(){
   local -a cold_wire_capture=()
   local -a tap_args=()
   if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 && "$stage" == second ]];then
-    tap_args=(-net-tap wbdtapci0)
+    tap_args=(-wifi-tap wbdtapci0)
   fi
   if [[ "${WBD_D2_ORIGINAL:-0}" == 1 && "$stage" == second &&
         "${WBD_D2_TAP_GUEST_PILOT:-0}" != 1 ]];then
@@ -246,13 +292,14 @@ if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
     tap_phase=ENV_BLOCKED_TAP_SUBNET_CONFLICT
     exit 27
   fi
-  if ! timeout 15s "$emulator" -help-net-tap >"$out/tap-help-private.txt" 2>&1 ||
-     ! grep -Fq -- '-net-tap' "$out/tap-help-private.txt";then
-    rm -f "$out/tap-help-private.txt"
-    tap_phase=ENV_BLOCKED_EMULATOR_TAP_FLAG
+  if ! timeout 15s "$emulator" -help-all >"$out/wifi-tap-help-private.txt" 2>&1 ||
+     ! grep -Eq -- '(^|[[:space:]])-wifi-tap([[:space:]]|$)' "$out/wifi-tap-help-private.txt";then
+    rm -f "$out/wifi-tap-help-private.txt"
+    tap_phase=ENV_BLOCKED_EMULATOR_WIFI_TAP_FLAG
     exit 27
   fi
-  rm -f "$out/tap-help-private.txt"
+  tap_wifi_flag=ADVERTISED_NOT_GUEST_EGRESS_VERIFIED
+  rm -f "$out/wifi-tap-help-private.txt"
   sudo -n ip tuntap add dev wbdtapci0 mode tap user "$(id -un)"
   tap_owned=1
   sudo -n ip addr add 10.0.2.2/24 dev wbdtapci0
@@ -265,11 +312,56 @@ if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
   [[ "$tap_rx_base" =~ ^[0-9]+$ ]] || { tap_phase=ENV_BLOCKED_HOST_TAP_RX_COUNTER; exit 27; }
   tap_rx_boot="$tap_rx_base"
   tap_phase=HOST_TAP_READY
+  # Real, isolated DHCP for the genuine Android virtio Wi-Fi interface.
+  # Offer only a short on-link IPv4 lease. No default gateway, DNS server,
+  # NAT, forwarding or changes to host/system network policy.
+  dnsmasq=/usr/sbin/dnsmasq
+  if [[ ! -x "$dnsmasq" ]];then
+    if ! timeout 100s sudo -n env DEBIAN_FRONTEND=noninteractive \
+       apt-get install -y -qq dnsmasq-base >"$out/dhcp-package-private.txt" 2>&1;then
+      rm -f "$out/dhcp-package-private.txt"
+      tap_phase=ENV_BLOCKED_ISOLATED_DHCP_PACKAGE
+      exit 33
+    fi
+    rm -f "$out/dhcp-package-private.txt"
+  fi
+  test -x "$dnsmasq" || { tap_phase=ENV_BLOCKED_ISOLATED_DHCP_BINARY; exit 33; }
+  mkdir -p out/android-x86-tap-guest
+  tap_dhcp_pidfile="$GITHUB_WORKSPACE/out/android-x86-tap-guest/dhcp-root.pid"
+  tap_dhcp_leasefile="$GITHUB_WORKSPACE/out/android-x86-tap-guest/dhcp-leases-private.txt"
+  test ! -e "$tap_dhcp_pidfile" || { tap_phase=REFUSE_PREEXISTING_DHCP_PID;exit 33; }
+  sudo -n sh -c 'echo "$$" > "$1"; shift; exec "$@"' sh \
+    "$tap_dhcp_pidfile" "$dnsmasq" --keep-in-foreground --conf-file=/dev/null \
+    --port=0 --no-resolv --no-hosts --interface=wbdtapci0 --bind-interfaces \
+    --user=root --group=root \
+    --dhcp-range=10.0.2.16,10.0.2.19,255.255.255.0,5m \
+    --dhcp-option=option:router --dhcp-option=option:dns-server \
+    --dhcp-leasefile="$tap_dhcp_leasefile" \
+    >"$out/dhcp-private.log" 2>&1 &
+  tap_dhcp_wrapper_pid=$!
+  for i in $(seq 1 60);do
+    if [[ -s "$tap_dhcp_pidfile" ]];then
+      own_dhcp_pid="$(cat "$tap_dhcp_pidfile")"
+      if [[ "$own_dhcp_pid" =~ ^[0-9]+$ ]] &&
+         sudo -n kill -0 "$own_dhcp_pid" 2>/dev/null;then break;fi
+    fi
+    sleep 0.1
+  done
+  if [[ ! -s "$tap_dhcp_pidfile" ]] ||
+     ! sudo -n kill -0 "$(cat "$tap_dhcp_pidfile")" 2>/dev/null;then
+    tap_phase=ENV_BLOCKED_ISOLATED_DHCP_START
+    exit 33
+  fi
+  tap_dhcp_process=PASS
+  tap_phase=WIFI_TAP_DHCP_READY
 fi
 phase=SECOND_KSU_BOOT
 start_guest second
 if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
   tap_guest_boot=PASS
+  if [[ -s "$tap_dhcp_leasefile" ]];then
+    tap_dhcp_lease=OBSERVED
+  fi
   tap_rx_boot="$(cat /sys/class/net/wbdtapci0/statistics/rx_packets)"
   if [[ "$tap_rx_boot" =~ ^[0-9]+$ ]] && (( tap_rx_boot > tap_rx_base ));then
     tap_guest_l2_at_boot=OBSERVED
@@ -393,6 +485,7 @@ if [[ "${WBD_D2_ORIGINAL:-0}" == 1 ]];then
   # Start the REAL Linux server and production Android RootClientService,
   # never a second simulated data plane or root bypass.
   if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+    if [[ -s "$tap_dhcp_leasefile" ]];then tap_dhcp_lease=OBSERVED;fi
     tap_rx_original_start="$(cat /sys/class/net/wbdtapci0/statistics/rx_packets)"
     if [[ ! "$tap_rx_original_start" =~ ^[0-9]+$ ]];then
       tap_phase=ENV_BLOCKED_HOST_TAP_D2_RX_COUNTER
