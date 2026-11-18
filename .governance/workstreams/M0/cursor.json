@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2179,
-  "checkpoint_sha": "4fc484c864742c96b4de07e1c15cfc242d793c98",
+  "sequence": 2180,
+  "checkpoint_sha": "ffde74452491888cf45e080f8e347e82df8dd64e",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2179：H2177 Linux双原生ISA 10/10真业务已签名；证据顶层SOURCE字段补契约并复核治理，不变更产品。",
-  "why_now": "H2178已修hot read 33430→32099B；但Action44261125004仍因H2177 evidence只含same_exact_source_sha、不含顶层source_sha而结构FAIL。",
-  "done_when": "治理/功能卡/维护门禁SUCCESS；本H2179仅同值证据结构修复，原生SOURCE3cc095十场PASS_SCOPED不重跑。",
-  "next_action": "核H2179 CI，完成则报告Linux真网络10/10、未覆盖项与证据；029/029B完整技术OPEN、030未开始。",
+  "current_task": "H2180：H2177 Linux x86_64与ARM64双端五模式10/10原生PASS；为H2179治理SUCCESS补签名SOURCE/热读取预算回归测试。",
+  "why_now": "H2179 Action44261621654治理+功能目录均SUCCESS；旧维护回归在H2178因证据SOURCE契约FAIL，需在现行main重新实测。",
+  "done_when": "本次静态3项源锁/双ISA十场/热读取预算验证及全量maintenance回归PASS，Linux H2177 Action仍是唯一真网络SOURCE。",
+  "next_action": "检查H2180维护+governance Actions；没有必要重跑Linux已PASS的十场；未测物理ARM/跨ISA/Win专属及性能，029技术OPEN。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2180-LINUX-EVIDENCE-REGRESSION-TESTS.md",
     "docs/devlog/M0/20261118-PLAN029-H2179-LINUX-EVIDENCE-SOURCE-KEY-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2178-LINUX-GOVERNANCE-BUDGET-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2177原生Linux x86_64+aarch64各双端5场10/10真TCP/UDP/TUN/MTU/Stop PASS；Action44258876671同SOURCE3cc095。H2178归档治理先因hot字节超限FAIL，收缩到32099B后第二门因证据缺顶层source_sha FAIL；H2179填真实同值字段。"
+  "partial_summary": "H2177 original native Action44258876671 PASS (x86/ARM64各客户端+服务端五场，10/10真内核TCP/UDP/FEC6 parity/MTU1460/Stop)。H2179修治理热预算和source_sha后Action44261621654全部PASS；H2180增3个不联网的永久防回归单测，不改变产品或签名SOURCE。"
 }
