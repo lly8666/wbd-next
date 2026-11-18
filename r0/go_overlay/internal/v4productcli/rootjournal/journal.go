@@ -107,7 +107,42 @@ func routeState(out,tun string)(present bool,err error){
         fields[1]!="dev"||fields[2]!=tun{
         return false,fmt.Errorf("WBD route differs from owned TUN")
     }
+    // The exact route was created without metrics, gateway, source, mtu
+    // overrides or other selectors. Never delete a modified/foreign route
+    // merely because its destination and device still match.
+    seenScope,seenProto:=false,false
+    for i:=3;i<len(fields);i+=2{
+        if i+1>=len(fields){return false,fmt.Errorf("incomplete owned WBD route attribute")}
+        switch {
+        case fields[i]=="scope"&&fields[i+1]=="link"&&!seenScope:
+            seenScope=true
+        case fields[i]=="proto"&&fields[i+1]=="boot"&&!seenProto:
+            seenProto=true
+        default:
+            return false,fmt.Errorf("foreign WBD route attributes")
+        }
+    }
     return true,nil
+}
+// Strictly match the ordinary uidrange-only rule emitted by our own ip rule
+// add. Extra selectors (fwmark, iif, oif, not, ipproto, etc.) narrow the
+// kernel match and make this a different rule, which Stop must not delete.
+// Both the legacy single and multi-UID journal use this ONE parser.
+func strictOwnedUIDRule(fields []string,priority,uid int)bool{
+    if len(fields)<7||fields[0]!=strconv.Itoa(priority)+":"{return false}
+    i:=1
+    if fields[i]!="from"||fields[i+1]!="all"{return false}
+    i+=2
+    if i<len(fields)&&fields[i]=="to"{
+        if i+1>=len(fields)||fields[i+1]!="all"{return false}
+        i+=2
+    }
+    if i+3>=len(fields)||fields[i]!="uidrange"||
+       fields[i+1]!=strconv.Itoa(uid)+"-"+strconv.Itoa(uid){return false}
+    i+=2
+    if (fields[i]!="lookup"&&fields[i]!="table")||
+        fields[i+1]!=strconv.Itoa(Table){return false}
+    return i+2==len(fields)
 }
 func ruleState(out string,uid int)(present bool,err error){
     u:=strconv.Itoa(uid)+"-"+strconv.Itoa(uid)
@@ -125,7 +160,8 @@ func ruleState(out string,uid int)(present bool,err error){
             if fields[i]=="uidrange"&&fields[i+1]==u{hasUID=true}
         }
         if fields[0]!=pref && !hasTable{continue}
-        if fields[0]!=pref||!hasTable||!hasUID||present{
+        if fields[0]!=pref||!hasTable||!hasUID||present||
+           !strictOwnedUIDRule(fields,Priority,uid){
             return false,fmt.Errorf("foreign uidrange rule intersects dedicated WBD rule/table")
         }
         present=true

@@ -93,7 +93,8 @@ func groupRuleState(out string,p GroupPlan)([]bool,error){
   if !reserved&&!hasTable{continue}
   offset:=pref-Priority
   if !reserved||offset<0||offset>=len(p.UIDs)||
-    !hasTable||!hasUID||uid!=p.UIDs[offset]||present[offset]{
+    !hasTable||!hasUID||uid!=p.UIDs[offset]||present[offset]||
+    !strictOwnedUIDRule(words,pref,p.UIDs[offset]){
    return nil,fmt.Errorf("foreign or duplicate Android group rule: priority %d",pref)
   }
   present[offset]=true
