@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2181,
-  "checkpoint_sha": "bc8396449c4600c18f5a1a8eabf2097364e12fc9",
+  "sequence": 2182,
+  "checkpoint_sha": "c3e8f59755c6e3431dcac8298d636b502124eac2",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2181用户要求PLAN029所有可用非Win跨平台能力真实补测；核功能卡后确认Linux随机填充尚未接线，正接Game2/4原Rust M4并执行x86_64/ARM64各8互补原生短场。",
-  "why_now": "H2177 10/10只证Linux原Go TLS/Rust Normal/Fixed/Auto/Game2/Game4基础业务，不含off/tls/flows随机填充、AES套件、outer repair关闭、复制错峰、X25519及物理MTU切换。",
-  "done_when": "H2181 Linux两原生ISA各8当前SOURCE短场：Game2 off/tls/flows/FEC6 + Game4 fixed6/off flows与真实raw padded字节计数、AES128/256、X25519、outer repair off、MTU1280和动态收窄均独立收据；首错不掩。",
-  "next_action": "检查新H2181两架构真实原生CI，失败首错修复后功能卡仅按同SOURCE提升；Linux Normal/Fixed/Auto tls/flows未接线严格拒绝、不能称PASS。",
+  "current_task": "H2182 修H2181 Linux双ISA真实Rust编译首错：v4_client_startup_padding模块根cfg原仍windows/test，Linux Game引用未解析；仅补Linux编译门并复跑受限互补native。",
+  "why_now": "H2181 Action44266160914 aarch64 native Rust build E0432/E0433: lib.rs #[cfg(any(windows,test))] 未包含Linux；测试尚未进入网络，不可称填充PASS。",
+  "done_when": "新SOURCE两ISA原Go TLS/Rust构建及8互补真实Linux客户端+服务端功能场PASS；含Game pad raw成功统计。失败保留诊断。",
+  "next_action": "收H2182 native工作流的首个编译或真业务FAIL；功能卡尚仅IMPLEMENTED_NOT_TESTED，保留H2177 10/10基本功能SOURCE。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2182-LINUX-PADDING-MODULE-CFG-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2181-LINUX-CROSSPLATFORM-CAPABILITY-GAPS.md",
-    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2180-LINUX-EVIDENCE-REGRESSION-TESTS.md"
+    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2177 native Linux x86+ARM 10/10原Go TLS/Rust基础功能PASS_SCOPED，不覆盖随机填充。H2181新增Game Rust Linux native pad冷桥、原AF_PACKET copy后计数、互补8短场/ISA，其中Linux Normal/FEC padding尚不支持且明确拒绝。物理ARM、跨ISA、WinGUI/CN/FakeIP仍不在此批。"
+  "partial_summary": "H2181 Linux Game2/4随机填充COLD+Rust M4/raw收据和8场/ISA测试已提交；ARM原编译FAIL仅根模块cfg漏Linux，x86状态独立；H2182只开Linux模块编译并加回归门，不变算法、AEAD、Go业务、已证H2177源。"
 }
