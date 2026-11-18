@@ -30,6 +30,9 @@ class MatrixScope(unittest.TestCase):
    self.assertIn("PLAN029B_GAME_REAL_LINUX_LAN_DIRECT_UDP",p)
   self.assertIn('WBD_PLAN029B_GAME_MATRIX_CASE',fixture)
   self.assertIn('p029b_game_policy=p029b_game_case.removesuffix("_fixed")',fixture)
+  self.assertLess(fixture.index('game_fixed=mode.endswith("-fec")'),
+                  fixture.index('p029b_game_case==(p029b_game_policy+'))
+  self.assertEqual(fixture.count('game_fixed=mode.endswith("-fec")'),1)
   self.assertIn('p029b_game_policy in ("off","all","lan","ordinary","advanced")',fixture)
   self.assertIn('if p029b_game_policy=="lan":',fixture)
   self.assertIn('"PLAN029B_GAME_REAL_LINUX_LAN_DIRECT_UDP"',fixture)

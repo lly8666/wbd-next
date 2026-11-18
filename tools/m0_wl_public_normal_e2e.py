@@ -12,6 +12,9 @@ from m0_wl_plan027_linux_tun_fq import fq_delta
 from m0_wl_plan027_linux_tun_link import link_delta,tun_queue_identity
 root=pathlib.Path.cwd();out=root/"result"/"wl-public";out.mkdir(parents=True,exist_ok=True)
 mode=os.environ.get("WBD_WL_PUBLIC_MODE","normal")
+# The signed 4×5 Game matrix validates its FEC suffix before booting WSL2;
+# derive this from the selected original mode BEFORE parsing the case.
+game_fixed=mode.endswith("-fec")
 configured_mtu=configured_native_test_mtu()
 native_outer=native_outer_choice(os.environ.get('WBD_WL_NATIVE_OUTER_MTU_REQUEST','legacy1400'))
 plan028_owned_switch=os.environ.get('WBD_PLAN028_WSL_OWNED_SWITCH','0')=='1'
@@ -250,7 +253,7 @@ if mode not in ("normal","fixed","auto","game2","game4","game2-fec","game4-fec",
  raise RuntimeError("unknown exact native Windows public mode "+mode)
 fixed6=mode=="fixed"
 is_game=mode.startswith("game")
-game_fixed=mode.endswith("-fec")
+# The early game_fixed binding remains unchanged through the cold mode.
 # One exact SOURCE-selected cold policy for both ORIGINAL endpoints.
 outer_repair=os.environ.get("WBD_WL_OUTER_REPAIR","on")
 if outer_repair not in ("on","off"):
