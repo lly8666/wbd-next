@@ -1,171 +1,97 @@
-# Android Root 原生客户端适配｜授权施工方案（2026-11-17；A15 双 ABI CI 更新）
+# Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> 更新：2026-11-18，基线 SOURCE `b926881b59581c073066d42f315b176f95e23c0b`。**本文件是当前执行口径，不是历史阶段流水账。** 每次施工先核远端 HEAD、PR、正在运行的 Actions 再更新事实；以下 SOURCE/Action 仅是本次编辑时已核验证据，不能被下一会话当作永远最新。
+>
+> 原路径 `ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md` 为保持引用稳定而保留；任务已经从“短时能力探针”升级为正式 Android Root 原生客户端。旧 A3/A6/B2/A9/A15 分阶段方案及其原文，可从 [本次整理前的 Git 历史快照](https://github.com/lly8666/wbd-next/blob/b926881b59581c073066d42f315b176f95e23c0b/docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md) 和 `docs/devlog/android-root-probe/` 查阅，**不再具有并列执行优先权**。
 
-## A15 最新执行决议（2026-11-18）：ARM64 发行、x86_64 Android 同源 Actions 真业务门
+## 1. 单一目标、权限与平台边界
 
-**此节优先覆盖下面 0/0a/§8.0 中“禁止 Android x86 编译/测试”“必须先有 ARM64 KVM”的旧执行选择；不改历史 Actions 结论。** 手机正式发行仍是 arm64-v8a ONLY，新增 Android x86_64 **仅 CI 专用原生 Bionic 架构**，不发行 x86 APK，不支持 32 位。目的是利用已成功运行的 Ubuntu x86_64 KVM/Android16 API36/KernelSU3.3.1，为同一份原 Go TLS/认证/租约和原 Rust M1/M3/M4/Stop 建立**必须实际通过**的自动化客户端集成门；这是开发目标而非已 PASS 的声明。
+**第一优先：使用真正原 Go + 原 Rust，把 Android Normal/off 原始 WBD 客户端与同源 Linux 原服务端的 FakeTCP SYN/SYNACK → 标准 TLS ClientHello → 身份认证 → 自动 /32 租约 → Rust M4 双向应用 TCP/UDP → owned Stop 跑通。** 第一条真实业务链闭环高于 DNS、全应用默认范围、UI、美化、Fixed/Auto/Game、热点或性能调参。
 
-**当前证据**：历史 [KSU Action43986417528](https://github.com/lly8666/wbd-next/actions/runs/43986417528) 已通过真 x86 Android su/TUN/RAW/UID 能力探针，**不是 WBD 产品**。[A14 Action44222441113](https://github.com/lly8666/wbd-next/actions/runs/44222441113) 的原 ARM64 Bionic ELF/签名 APK/原 Linux oracle 部分 PASS，x86 NativeBridge 执行原 ARM64 Go ELF 退出 139 的失败继续独立保留。用户新提供的真 ARM64 日志有 NATIVE_ARM64_KERNEL=PASS、GO_ELF_HELP_PASS、A11_UID_TUN_PACKET_PASS、REAL_APP_UID_TO_TEMP_TUN_PACKET=PASS 和 rollback PASS，**只证明用户报告的本 APK UID→临时 TUN 真包能力**；该消息未附足以独立校验的 SOURCE SHA，也未运行正式 TLS/M4。双 ABI 原产品与 x86 真业务当前都 NOT_RUN。
+- **正式产品仅发布 ARM64**：`arm64-v8a`，Go `GOOS=android GOARCH=arm64 CGO_ENABLED=1`、Rust `aarch64-linux-android`、Bionic NDK，签名 APK 内不混入 x86 诊断 ELF，ARM64 16KiB ELF 门独立保留。**x86_64 是 CI-only 的原生 Android16/KVM/KernelSU 集成后端**：同一 Go donor/overlay、原 Rust M1/M3/M4、原 App Service、Root/TUN/RAW/路由/Stop，只允许必要 ABI/汇编条件编译差异；不实现独立 x86 协议或发布 x86 安装包。
+- 施工只在 `experiment/android-temp-root-probe`；[Draft PR #36](https://github.com/lly8666/wbd-next/pull/36) 保持 Draft。`main`、M0 registry/cursor、已有 Linux/Windows 行为不直接改、不 force/reset、不自行合并。共享 Go/Rust 改动必须具备原 Linux oracle 与平台编译回归，跨平台未经测试的功能明示 NOT_PROVEN。
+- 用户已授权在仓库实验分支进行软件施工与 Actions。**不因本计划而获得操作用户实体手机、部署个人服务器、购买 ARM64 云主机、刷写 boot、调整用户网络配置的授权**；真机动作需用户明确授权。允许准备供用户自行执行的只读收据脚本；主动连接/安装/Root START 前需另行确认适用范围。
+- 复用 `AGENTS.md`、`PROJECT_CHARTER.md`、`docs/architecture/TLS_HANDSHAKE_CONTRACT.md`、`docs/architecture/MTU_CONTRACT.md`。标准 TLS 首载荷、真实认证/完整性、/32 租约、原 Rust PN/AEAD/replay/M3、generation、MTU/BorrowFence、owned Stop 不可妥协。没有 VpnService、FakeIP、伪 TLS、独立数据协议、Go/Java/JNI/shell 逐包转发、第二 TUN reader。
 
-### 同源码约束：x86 不能另写一个“跑得通”的客户端
+## 2. 当前真实进度（以各自被测环境为范围）
 
-1. **Go/Rust 原核心不分叉**：相同 pinned Go donor/overlay、TLS/auth/自动 /32、Rust ProtectedScopedOwner/唯一 AEAD+PN/replay/M3 LINK、v4_android_original_m4.rs、android_root_io.rs、原 route journal 和 eventfd/BorrowFence Stop。把现有仅 aarch64 的 Android Rust cfg 逐项提升为 android+64位 x86_64/aarch64；允许最小可审计 CPU/ABI 适配，不准 NoOp native、模拟 TLS、独立 x86 packet pump、第二 TUN reader、Java/JNI/Go 逐包路径、FakeIP/VpnService。
-2. **同一 SOURCE 两个 Android 原生 ABI**：Rust aarch64-linux-android 与 x86_64-linux-android；Go GOOS=android、GOARCH=arm64/amd64、CGO_ENABLED=1；NDK aarch64-linux-android28-clang 与 x86_64-linux-android28-clang。分别核验 Bionic ifreq/sockaddr/BPF/FFI C 静态布局、ELF machine183/62、DT_NEEDED libwbd_engine.so、RUNPATH=$ORIGIN、导出符号、manifest/SOURCE/SHA256。ARM64 ELF PT_LOAD 16KiB 与正式签名 APK 仍是不可降低的独立门。
-3. **同一 App 控制链**：CI x86 APK 共用 RootClientService、PhysicalNetwork、NativePayload、普通 App→真实 KernelSU su、原 Go ELF/原 Rust so、目标 App UID 和 owned Stop；只有签名 ABI 资产按严格 manifest 分别装载。正式 ARM64 APK 不带 x86。不能用 adb root、私有探针或跳过精确 Network/ifindex/MTU/IPv4 读回冒充原产品。AVD 无符合现有 Wi-Fi/Cellular Network 安全条件时必须 ENV_BLOCKED，不能为求绿回退系统默认网络或改正式逻辑。
+[同源 Android dual64 Action #44269992127](https://github.com/lly8666/wbd-next/actions/runs/44269992127) 对应 SOURCE `b926881b`：工作流整体 SUCCESS，**13 个成功 Job + 1 个按条件跳过的历史 NativeBridge Job**，不能说 14 项均执行 PASS。
 
-### 必须绿的 Actions 分层门，不能靠“编译 PASS”代替真数据
+| 阶段 | 已验证 | 不得推断 |
+| --- | --- | --- |
+| D0 同源原 Go/Rust 生产源码双 Bionic ABI | ARM64 ELF/签名 APK、x86 CI-only 原生 ELF 与诊断 APK 构建，独立 Linux 原服务端 oracle 和基础 DNS/M3 Host 门通过 | 不代表 Android↔Linux 真实连接 |
+| D1 x86 Android16/KVM/KernelSU | 原 Go ELF `--help`、原 Java APK、普通 App UID→真实 KSU `su`、选定 PhysicalNetwork handle/ifindex/IPv4/MTU 读回真实执行 | 不代表 ARM64 真机，也不是 adb-root 与 KSU 全面等价 |
+| D2-S1 原协议预认证 | 同源原 Linux server 确实启动；原 Android RootService 原生 TUN/RAW 初始化；原 Go FakeTCP SYN `sendto` 系统调用成功；测试内隔离 Linux loopback 观察到 TCP SYN | **尚未确认服务端原 RAW 代码读到合格 SYN、原服务端发 SYNACK、Android 收到有效 SYNACK**；客户端在认证前退出 |
+| D2 完整 Android↔Linux | **NOT_PROVEN / 尚未达标** | TLS/认证、/32 租约、Rust M4、真实应用 TCP/UDP、认证后 UID 路由与 Stop 不能凭 D2-S1 绿色 Job 宣称 PASS |
+| A21 默认普通 App IPv4 UID 范围 | Java/Go Host 测试、带回滚 journal、同源正式 ARM64 APK 构建通过 | **真 Android 全应用内核 E2E 未测试**；不代表系统 DNS、IPv6、root/system/isolated UID 也被接管 |
+| 原生 ARM64 Android | ARM64 正式 APK 构建通过；用户早前提供过短时 Root/TUN/UID 诊断证据，按其各自范围保存 | 同一正式 ARM64 原 Go/Rust 对原 Linux server 的完整 WBD 业务 **NOT_PROVEN** |
 
-| 门 | 环境及执行 | 真 PASS 条件 |
-|---|---|---|
-| **D0 双 ABI 同源** | 同源码编译 Android ARM64/x86_64 原 Go + 原 Rust + NDK ABI；x86 APK 仅 CI 内部 | ELF/FFI/16KiB(ARM64)/source SHA/真实 native 依赖两路 PASS；尚不构成业务 |
-| **D1 x86 原生 Root 运行** | 历史成功的 Android16 API36 x86 KVM+KernelSU 双启动、原生 x86 Go ELF、原 Java App | 普通 App→su 真实授权、原 ELF/so 可运行、签名资产核验、真实 Network/ifindex/IP/MTU、启动 PID/Stop identity 读回；不用 NativeBridge |
-| **D2 x86 原协议 App E2E** | 同 job 原 Linux WBD server、作业内私有临时凭据、原 Go FakeTCP+合法 TLS ClientHello/认证/32 租约、原 Rust M4、真实测试 App UID | 原 Android 与原 Linux server 双侧确认 **TCP 和 UDP 双向真实应用数据**，内核 TUN/RAW/绑定物理 Network/精确 UID route readback；单包或日志阶段码不算通过 |
-| **D3 x86 Stop/故障** | 真业务中 Stop、无流量 Stop、启动中撤销、异常退出、Network loss、重复 Start | 原 Rust 两 worker join、BorrowFence/FD 关闭、Go route journal 恢复、真实内核规则/TUN 无残留；失败绝不绿化 |
-| **A0 每批 ARM64 护栏** | 与 D0 同 SOURCE 的 ARM64 Go/Rust Bionic 构建/ABI、16KiB ELF、原 APK 签名、原 Linux server oracle | 独立 BUILD_PASS/LINUX_ORACLE_PASS；x86 通过不得升级 ARM64 真运行 |
-| **A1 ARM64 真机终验** | 用户单独授权的 ARM64 Android16 KernelSU、正式 ARM64 APK 与同源 Linux WBD server | 原 ARM64 Go TLS/auth/lease→Rust M4 真 TCP/UDP→App UID Stop；SELinux/实体网络/16KiB/蜂窝/热点/功耗按实际环境分别证明，否则 NOT_RUN |
+关键日志：[D2-S1 #44269992127](https://github.com/lly8666/wbd-next/actions/runs/44269992127) 出现 `D2_S1_REAL_ORIGINAL_ANDROID_TUN_RAW_CONFIGURED_PASS`、`D2_S1_ORIGINAL_GO_EARLY_EXIT_BEFORE_AUTH_HANDSHAKE`、`D2_S1_ANDROID_SYNACK_NOT_PROVEN`、`D2_S1_ANDROID_ORIGINAL_AUTH_LEASE_NOT_PROVEN`。先前宿主 Linux loopback SYN 证据 **不是** 服务端原 `raw.ReadSegment` 收包证据。
 
-**唯一施工优先顺序**：D0 → D1 → D2 → D3，期间每批保留 A0；D0-D3 真 PASS 后，再请用户集中做 A1。缺 KSU/Network/KVM 时记 ENV_BLOCKED，真正协议或 Stop 不通记 FAIL；保留 NativeBridge ELF139 旧红门、不依赖 macOS ARM64 HVF 或托管 ARM64 无 KVM。独立 CI server 凭据临时创建、0600、不上传日志/PCAP/密码。原 DNS 系统接管的两道冷许可继续 false，Normal/off 不授权 Fixed/Auto/Game/热点/USB。
+环境历史：macOS ARM64/ReactiveCircus Android Emulator QEMU 挂起 ADB 未上线（[Action #44042235770](https://github.com/lly8666/wbd-next/actions/runs/44042235770)）；GitHub hosted `ubuntu-24.04-arm` 上 `/dev/kvm` 不可用；x86 guest 的 ARM64 NativeBridge 原 Go **独立 ELF 139**，隔离 c-shared 诊断成功不等于原 ARM64 产品正常运行。NativeBridge 仅保留手动历史诊断，不再作为日常关键阻塞。
 
-### 每次源码改动必须对照的 ARM64 vs x86 差异
+## 3. 目前唯一关键路径：D2 真实握手，不再扩展附带功能
 
-- **CPU/并发**：x86 较强内存序不能证明 ARM64 弱内存序安全；Atomics、BorrowFence/Stop/join、交叉线程 FD 生命周期保留专门 race/异常清理测试。x86 AES-NI/SSE 与 ARM AES/NEON 路径用同一 M3/AEAD fixture 保持完全一致的密文格式，禁止按架构分叉协议。
-- **ABI/加载**：CGo/Go runtime、Bionic ifreq/ioctl/socket/BPF、Rust FFI 指针及 alignment、动态库 loader 与 ELF machine 均双目标审查；x86 Android 不能验 ARM64 16KiB 设备页和 ARM64 原生 ELF 运行。
-- **Android 系统**：真实手机和模拟器的 KSU/SELinux/netd、Network handle、ifindex、物理 RAW、TUN、UID rule、Wi-Fi↔蜂窝、厂商内核不同，x86 PASS 只证明被测环境等价部分。禁止 adb-root 替代 App→su，禁止全局路由/DNS 或假物理网络。最终 ARM64 原生手机仍不可省略。
-- **范围**：仅 experiment/android-temp-root-probe 与 Draft PR #36，main/M0 registry/cursor/原 Linux/Windows 产品保持原样。
+### D2a｜先定位原始报文断点
 
-**状态（2026-11-18）：Android16 API36 x86_64 KVM/KernelSU3.3.1/ARM64 NativeBridge 已实际执行原 Go CLI；SOURCE `eb278a02ee11442521b54288ae9c50bc6fd1d795` [Action44138382581](https://github.com/lly8666/wbd-next/actions/runs/44138382581) 10/11 Jobs SUCCESS、overall FAIL。**原Go `v4productcli.Run(client,--help)`通过测试专用 NDK→c-shared(隔离MIDR/noasm)+真Rust共享库在Android guest exit0、原CLI参数及函数标记PASS；**正式签名APK的原ARM64 Go ELF直接执行SIGSEGV139**，真Android↔Linux TLS/租约、RAW/TUN、App DNS/Stop仍NOT_RUN；B2c2c DNS劫持冷门false，实体KSU未授权。旧证据不覆盖。** 用户已明确授权从临时 Root 探测转为 Android 原生 WBD 客户端开发；本文件覆盖旧“只探测、不开发完整客户端”的工作边界。唯一施工分支 `experiment/android-temp-root-probe`，最终 PR → main，不直接提交 main/M0 registry/cursor。长期入口：[ANDROID_TEMP_ROOT_PROBE](../prompts/ANDROID_TEMP_ROOT_PROBE.md)；产品卡：[android-root-native-client](../features/entries/android-root-native-client.json)；探针历史卡：[android-temp-root-probe](../features/entries/android-temp-root-probe.json)。历史探针方案保留在 Git 历史和本文件末尾的链接，不再占用产品开发优先级。
+采用**同 SOURCE** 的原 Android Go/Rust + 原 Linux Go/Rust server，复用现有 `android/root-app/ci/x86-kvm-ksu-native.sh`、`x86-d2-original-root-preauth.sh`、`x86-d2-cold-wire-observer.py`。分层记录下列有来源的事实，不能仅靠 `sendto=0` 或 guest/host 代理 TCP 结果推断对端认证：
 
-## A9. 真实ARM64 KSU第一次集中联调准备（2026-11-18）
+1. Android 原 Go 成功创建 TUN/AF_PACKET、选定真实 `PhysicalNetwork`，发送初始 FakeTCP SYN：记录 syscall 结果、原 socket 出口与限定错误类别。
+2. Guest 虚拟物理网卡是否看到 SYN；Linux host 入口/loopback 是否看到 SYN，QEMU SLIRP/NAT 有没有将原始报文转换为普通 TCP socket。抓包只在 CI 临时分析，工件只留下固定 SYN/SYNACK/RST 计数/阶段码，不上传私密流量。
+3. **Linux 原服务端** 是否通过原 RAW reader 收到并验证初始 SYN（`V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX`），是否通过原 RAW emit 发出 SYNACK（`V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK`）。
+4. Android 原 `ClientAssociation` 是否真收到并接受 SYNACK（`ORIGINAL_GO_TCP_SYNACK_SEEN`）。若未到达此处，不先改 TLS、证书、AEAD 或全 App 路由。
+5. 精确定位原 Go 认证前退出的原始 errno/阶段，不增加伪成功标记；错误栈仅在 CI 私密日志排查，公开工件去凭据化。
 
-当前仍是 source `eb278a02ee11442521b54288ae9c50bc6fd1d795` [Action44138382581](https://github.com/lly8666/wbd-next/actions/runs/44138382581) **10/11 PASS、overall FAIL**：原Go完整client CLI通过隔离测试库NDK/c-shared运行exit0，但正式ARM64 ELF直接启动在 x86 NativeBridge `SIGSEGV139`。真实ARM64 KSU设备上的原Go ELF、TLS/租约、Rust M4 RAW/TUN、DNS、Stop**均NOT_RUN**。
+**根因尚未最终归因**。当前主要假设是 Android Emulator 的用户态 NAT/SLIRP 不能保持 FakeTCP/RAW 语义；这需要上述双端原生 socket 证据确认，不提前把它写成定论，也不能默认是程序安全检查太严。
 
-优先构建的是**正式ARM64 APK可诊断+用户自主Start/Stop+只读ADB一键采集**，不继续扩展NativeBridge小探针：`RootDiagnosticReceipt`用固定enum记录源SHA校验、真实物理Network/包UID、original-Go native M4/UID就绪、精确Stop信号/owner退出阶段，禁止自由文本/凭据/密钥/源stdout；PC脚本先验真`uname -m=aarch64`/API36/正式APK源锁及16KiB ELF、检查私人route表19842/pref9600..9607是否有残留，再由用户在原Root APK中手动Start/Stop，生成仅含事件码+路由哈希的脱敏ZIP。脚本默认仅只读，不执行su/kill/netd/route修改，只有用户带`--install`显式选择安装；不碰未经用户授权的实体机。保留原Go/Rust Stop和双DNS关闭。A9第一批同SOURCE `8435b0e29669375a5eb43b48dfb9d4e9ffb74b97` [Action44145241110](https://github.com/lly8666/wbd-next/actions/runs/44145241110) 10/11 Jobs PASS（正式签名APK、Java/Python主机A9、同源Linux真TLS/租约/M4/Stop），但总Action FAIL仍是x86 NativeBridge原Go ELF139；真ARM64设备业务NOT_RUN。A9b正式诊断APK已在同SOURCE `d73d9b713d4fb71fb0ff00ae8177c916ede46f84` [Action44148161549](https://github.com/lly8666/wbd-next/actions/runs/44148161549) **10/11 Jobs PASS**（Java固定事件轮转、7项Python只读ADB验收、同SOURCE签名APK、原Go/Rust ELF及Linux真正TLS/Stop oracle），第11项x86_64 NativeBridge真实Android guest因原官方Go ELF exit139独立FAIL，overall Action FAIL；实体ARM64 KernelSU设备未测。首次人工验收脚本：`android/root-app/ci/device_first_run.py`（--install才安装，Start/Stop均由用户在原APK执行，ZIP脱敏）和签名APK来自该SOURCE，DNS双冷门false。
+### D2b｜仅当网络路径确认阻塞时，优先隔离 TAP guest 实测
 
-```feature-impact
-{"kind":"updated","ids":["android-root-native-client"],"reason":"A9真实ARM64 KSU第一次集中验收：原APK固定无凭据阶段码、用户手动Start/Stop、只读ADB/Source/ELF/路由回滚证据，保留正式ELF139和实际Android业务NOT_RUN。"}
-```
+[独立 TAP host 准入 #44264710804](https://github.com/lly8666/wbd-next/actions/runs/44264710804) 只证明 KVM 权限、Emulator `-net-tap` 参数展示和宿主 `/dev/net/tun` /隔离 TAP 接口读回；**并未启动真实 TAP Android guest**。
 
-## 0a. 当前最高优先：复用 x86_64 KVM + KernelSU 3.3.1、核验 ARM64 Native Bridge（用户最新指示）
+下一切片：单独有界 Job 中启动 x86_64 Android16/KSU guest 的实际 TAP 网络，以不影响 Actions runner 默认路由/DNS 的隔离 host TAP/桥接或受控网络命名空间承载原协议。必须逐项实查 guest boot/ADB、普通 App KSU `su`、`ConnectivityManager` 中真实 Network handle/源 IPv4/ifindex/MTU、原 `android_setsocknetwork`、原 Go/原 Rust/原 Linux server 双端 RAW 收发和反向路由。**不能为了 TAP 绕过产品的 PhysicalNetwork 绑定校验、伪造系统 Network 或无差别关闭整机安全策略。** 如果官方模拟器 TAP 后端与 KSU 镜像不能组成可用 guest，则留下 `ENV_BLOCKED` 和具体原因，及时止损；不得无限重试。
 
-2026-11-17 用户明确要求先恢复过去成功的 x86_64 KVM / Android16 API36 / KernelSU 环境，再验证当前正式 ARM64 Native Bridge Go/Rust + Root APK 所有可能的业务，之后才继续增加产品功能。**该段是 A15 之前的历史限制；最新执行改为 x86_64 Android 同源码 CI-only 编译与测试，仍仅发布 arm64-v8a**。此条更新覆盖早期“只优先ARM64 KVM/Cuttlefish”的试验环境选择，但不解除应用权限、TLS、AEAD、NativeBridge真实执行和源码锁红线。
+若 TAP 仍不可行：可考虑已有用户授权范围内的自愿、手动 ARM64 真机最小诊断，或在单独获得授权后使用具 KVM 的 ARM64 自管 runner/隔离实验网络。不要把 hosted ARM64 缺 KVM 归咎于一段 udev 权限配置。
 
-已证实旧 [KSU Action43986417528](https://github.com/lly8666/wbd-next/actions/runs/43986417528) ：API36 x86_64 Android16 x86`probe-x86_64-linux-android` + 真实KSU3.3.1普通 App授权/Root/TUN/RAW/UID和私有DNS有界用例 PASS；**同次不曾执行Arm64正式WBD ELF**。新增产品同SOURCE CI job `android-x86-kvm-ksu-arm64-nativebridge` 必须使用原已证实的 Google Play API36系统镜像/补丁ramdisk/两次冷启动，下载同一workflow `arm64-native`和签名`root-arm64-app`的原Go/共享Rust ARM64产物，检查真实guest`ro.product.cpu.abilist`/NativeBridge及`execve`原ARM64 ELF `--help`，正式APK真实安装+Activity实际启动。单纯 `ro.dalvik.vm.native.bridge`/ABI声明或旧x86探针不能等于原ARM64 ELF执行。无权限不得静默回退另一ABI、不建模拟TLS或伪WBD成功。
+### D2c｜将预认证真正升级为业务 PASS
 
-若NativeBridge对独立AArch64程序`execve`返回`ENOEXEC`，原WBD APK现用`ProcessBuilder("su","-c",...)`也无理由按JNI NativeBridge自动执行原ARM64 Go主程序；应保留 Actions FAIL + 具体guest/内核/应用日志并寻找真正支持Android ARM64内核ABI的可行执行后端，而非标注Android业务PASS。KSU Shell UID0与普通App UID→KernelSU授权是两项证据，前者不可充当后者。真服务器TLS/lease/App DNS/Stop只在真实原ARM64进程确认可执行后实际执行。实体手机 P5 仍需单独授权。
+网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：
 
-## 0. 用户更新：Android 仅 ARM64、较大跨层批次和合理并行
+- 原 Go 发合法 FakeTCP SYN/SYNACK 及标准 TLS ClientHello；原 Linux server 真实读取和认可，不能用自建简化协议/假的服务端回应。
+- 真 TLS 证书/身份验证、原认证、自动 /32 租约的**双端一致**证据，非仅一条客户端“Ready”日志。
+- 原 Rust M1/M3/M4 唯一 DATA path 双向 UDP 与 TCP 的真实测试 App 业务，有实际收发内容与有界超时、原始路由/物理出站和唯一 TUN reader；Normal/off 先闭环。
+- 正式 App UID→KSU `su`→原生 worker，认证之后才安装被测的**一个**真实测试 App UID 路由，真内核规则/表/MTU 读回；按 owned generation/owner.pid starttime/Stop 顺序准确清理，再检验**相同**规则不残留。
+- D2 E2E 绿色只能由这些真实条件联合门决定。预认证测试 Job 可以成功结束并产出阶段收据，但必须明确写 `D2_PREAUTH_ONLY; TLS/LEASE/M4 NOT_PROVEN`，不能冒称全链通过。
 
-**A15 后只有 arm64-v8a 是正式发行 ABI**（Rust aarch64-linux-android / Go GOARCH=arm64）；新允许 x86_64 Android 同源 CI 专用编译和业务验收（Rust x86_64-linux-android / Go GOARCH=amd64），但不得公开发行 x86 APK 或支持 32 位。Linux/Windows x86 产品、回归和保护区完全不受影响。首个 Actions 真业务目标是 Android16 ARM64 userdebug/Cuttlefish P2 原生及 P3 普通 App→受控 su；Android16 ARM64 实体 KernelSU 仅最后专项终验；Android9–17 仅按可用 ARM64 镜像/真机选择后续覆盖，无 ARM64 镜像记 NOT_RUN，不补 x86 平台测试。真机操作仍需用户明确授权。
+## 4. 现有功能暂缓扩展，不丢失已做成果
 
-**工作节奏**：以一次可审计的大批次推进同一功能纵切面，Go 原 TLS/租约冷控制、Rust 既有 PN/AEAD/M3/M4、Bionic RAW/TUN/物理Network、owned Stop、Android 构建和文档同时推进。互不相依的代码研读、平台接口、纯协议、Go CLI/UI 和文档尽量并行；合并时统一检查 source-lock、generation/lease、MTU、BorrowFence/Stop，一次 SOURCE 集中跑 ARM64 Actions，避免为孤立小改动重复触发较重构建。真正 Go→Rust 链接及真设备验收仍有顺序依赖，禁止 fake stub / 合成 PASS。更大批次也不以跳过安全、测试或日志为代价。
+- **A21 全普通 App IPv4 默认路由**：正式 UI 已默认 all-apps；通过 20 个 Android user 段的普通 AppID 10000–19999 `uidrange` 构成私有 table 19842，排除 WBD 与已安装 Root Manager AppID，采用版本 3 journal/flock/fsync/原规则精确回读/Stop。**已完成的是源码与 host 假 ip Runner 回归，不是设备内核行为**。D2 联调使用**一个有界测试 UID**，禁止提前启动全应用系统路由。之后再真实设备验证多 UID、所有普通 App、工作资料/共享 UID 与失败清理。
+- **DNS / CN**：固定 CN 物理 DNS `223.5.5.5`、隧道 DNS `1.1.1.1`，服务器域名 bootstrap 物理先解析；原始 8503 条 geosite、Host UDP/TCP、Rust DNS53 映射已有源码/Host 证据。但系统 Resolver/内层真 DNS interception 和 TCP53 尚未完整验证，`hijack_enabled=false` / `android_dns_physical_ready=false` 等实际冷安全门未通过前不启用；无跨上游兜底、FakeIP 或 per-App 假 DNS UID。
+- **产品功能顺序**：Normal/off 真实连接 → App/Root/TUN/UID/Stop 安全闭环 → DNS/规则分流/全隧道/直连/按包选择及全应用范围 → Fixed/Auto/Game/FEC、切网/Health/CPU/延迟/低唤醒 → 热点/USB/CLAT/物理功耗。既有完成模块不必重做，但每一步区分 Host 与 Android 真实验收。
+- **网络与资源**：原手机选定 Network handle、ifindex、IP、MTU 不可悄然改用默认 Network；切网采用低频 callback 与会话 Stop，外层用户完整 IPv4 MTU 默认 1460B（不含 L2）、1500 仅显式最大，内层 Rust 预算及 OS 读回。停止只撤销自己精确增量，不 `ip rule flush`，不重置系统全局路由/防火墙或关闭 SELinux。
 
-**A3 Android guest真业务验收入口（未通过；非本批代码待办）**：已通过 [Action44041601960](https://github.com/lly8666/wbd-next/actions/runs/44041601960) 同源原 Android ARM64 Bionic client/Root APK `BUILD_PASS`、原 Linux server+Linux peer 真 TLS/认证/租约/Rust M4双向 UDP/Stop `LINUX_ORACLE_PASS`（SOURCE `bb30ed3d864460dc22af67aaade1d17c47182c58`）。[Action44042235770](https://github.com/lly8666/wbd-next/actions/runs/44042235770) ARM64 macOS Android16 AOSP emulator QEMU挂死/ADB未上线，`ENV_BLOCKED`，**Android业务仍NOT_RUN**。优先 P2 在真实 ARM64 KVM/Cuttlefish userdebug Actions 跑原 Bionic→同源Linux 真业务，P3 用正式普通App→受控 `su` 真实授权做原WBD/Stop；最后实体 KSU 终验。旧KSU x86探针不是 Android ARM64 E2E，也从未与 `adb root` 配对证明等价。
+## 5. “快速跑通”的允许与禁止
 
-## 1. 事实基线（不得将能力探测当产品链路）
+**允许加速的，是测试路径与排程**：临时直接通过受控 Root shell 运行**同一原始 ELF** 做预认证诊断、在隔离 CI 中短时针对 host loopback 443 RST 建精确规则且退出恢复、使用临时账号/证书、只跑 Normal/off 和单 UID、分阶段标记“可执行/可通信”而不要求每一步都达到整机产品 PASS；有上限、有日志、能复原。
 
-- 2026-11-17 Android 分支由旧 HEAD `1f77125bc175d3d9fd55c93f6c371e6b20dc7a16` 正常 merge main `0e57cab2d53e2c95962eb673050fa54695fd3665`，得到 `d5126fcd4cc7c848b62181ebddf8dadcb4225397`；两个分支相对共同祖先修改路径无重叠冲突，保留双方历史。后续每次恢复重新核对远端HEAD/main与Actions。
-- 源码 `09a6a7e5f8aef5c3b38abb262655561ca89e5f9a` 的 [KSU Action43986417528](https://github.com/lly8666/wbd-next/actions/runs/43986417528) **PASS**：普通 targetSdk37 App→KernelSU UID0、真实私有 namespace UDP53 6/6（Direct4/Tunnel2）、CN geosite 8503 / APNIC CN5500（合并4119）、内核 UID 选路 10/10、策略18/18、TUN/RAW/合成 NAT/恢复。私有合成 DNS/路由不是实际系统Resolver或 WBD TLS/认证/租约。
-- 用户提供 Android16 真机 ARM64 KSU 报告，Root、TUN、RAW、IPv6、SO_MARK、策略18/18、UID选路10/10和合成NAT均 PASS；分流设置截图显示 CN8503、区间4119、`dns_udp_gate=SUPPORTED_IN_SCOPE`，但未导出该手机 DNS 六条子用例 JSON，因此不将截图写成逐项6/6独立证据。当前真机 Wi-Fi 下的物理 WBD、热点/USB、CLAT、切网、能耗依旧 NOT_RUN。
-- Go 产品现有 `r0/go_overlay` 是针对 pinned `lly8666/wobuzhidao` 原始 Go 源 `a7a82db31fe736ffedee330795a3234d358f1984` 的 source-locked 装配，并非可直接作为单独 go.mod 构建的完整产品。正常 Linux 客户端 `V4LinuxClientProduct` 在 `bridge_v4_linux_client_product.go` 内进行 Go TLS/authenticated handoff→Rust owner；`crates/wbd-engine/src/v4_embedded_go.rs` 的真实 Linux raw/TUN worker与 `wbd-platform` 驱动明确限制 GNU/musl。Android Bionic/NDK 链接、行为和16KiB页必须另证，不得泛化 Linux ARM64 结论。
+**不可用来造绿灯**：关闭 TLS 认证/证书校验/真实 lease、伪造 SYNACK、假 AEAD、去掉 Rust 原数据面、伪装 Android 物理 Network、使用 host Linux 成功代替 Android、把 x86 结果写作原生 ARM64、强制放开 SELinux 或破坏用户主网络、为快速修模拟器而重写公共 Linux/Windows 协议。
 
-## 2. 核心边界与性能目标
+## 6. 分层验收与失败定性
 
-一套共享 Go 冷控制/TLS身份/租约、Rust AEAD/FEC/重传/稳态/MTU/Stop；Android仅做 App Java 原生控件+root工作进程的薄系统适配。不要分叉整套 Linux 客户端，也不为平台迁移重构通用引擎。TLS 首个载荷严格合法 ClientHello；无 TLS 前私有交换，不改 [TLS_HANDSHAKE_CONTRACT](../architecture/TLS_HANDSHAKE_CONTRACT.md) 和已有认证、地址隔离、generation、AEAD、fixed-cipher retransmission、lane 边界、owned Stop。不同流/lane 无 HOL，内层 TCP 有序。FEC/ARM加速沿实际原生后端证据判断，不阻塞 Normal/off 闭环。
+| 名称 | 最低证据 |
+| --- | --- |
+| `BUILD_PASS` | 同 SOURCE 原 Go/Rust 及签名 ARM64 APK 源锁、ELF/FFI、Host 测试；不包含真设备 |
+| `ANDROID_X86_ROOT_RUNTIME_PASS` | 真 x86 KSU App `su`、原 Go ELF/原 Rust、TUN/RAW/Network 读回 |
+| `D2_PREAUTH_PARTIAL` | 标注 SYN 发送、Linux RAW RX、SYNACK TX/RX 各自的 `OBSERVED/NOT_PROVEN`；无 TLS/lease 冒名 |
+| `ANDROID_X86_E2E_PASS` | 原双端 TLS/认证租约、Rust M4、真实 app TCP/UDP 双向、内核 UID 路由与 owned Stop |
+| `ANDROID_ARM64_NATIVE_PASS` | 原生 ARM64 Android（非 x86 NativeBridge）同一原 ARM64 ELF/签名 APK 的实际 Go/Rust 与系统路径 |
+| `ANDROID_ARM64_E2E_PASS` | 经单独授权的 ARM64 真机或合格原生 ARM64 guest 上原双端完整业务、Root/路由/Stop；真机特有 KSU/SELinux/netd/热点另列范围 |
 
-优先 **首次真实业务可达 > p99/无跨流HOL > CPU/唤醒 > 有界内存 > 可维护性**。可合理用内存换CPU，避免稳态逐包JNI/Java、shell、PackageManager、日志全表、轮询；TUN和物理socket由同一root原生工作进程持有，App只传低频控制消息。直连业务保留原应用 TCP 内核连接；不复制 Windows Direct TCP 双连接relay。无VpnService；前台通知与 root 授权可以显示。已具 Root 是先决条件，不开发提权/刷机/常驻系统模块、不改boot/system、不关闭SELinux；操作真机要明确授权。
+记录 `FAIL`、`ENV_BLOCKED`、`NOT_RUN`、`NOT_PROVEN`、`SKIPPED` 必须不同列；单纯 Actions SUCCESS 仅代表 job 自己的准入范围。CI 收据用固定枚举、源 SHA/manifest/hash、关键读回，不上传密码、route-key、私有证书、应用通信正文或全 PCAP。真实物理设备观察与用户自述证据必须单列，不冒充 Actions 可复验。
 
-## 3. 四个工作包及单一实际下一步
+## 7. 开发执行节奏与文档治理
 
-| 包 | 实施范围 | 本次状态 | 验收 |
-|---|---|---|---|
-| **A 产品装配与首次 Normal/off 真连接** | 固定原Go/共享Rust源码；Android NDK/Bionic ABI/链接/16KiB页；平台物理绑定、root TUN ownership、启动停止；复用Go TLS/认证/租约/原Rust steady path | **BUILD_PASS + LINUX_ORACLE_PASS；Android业务NOT_RUN** | 同SOURCE P2 真实 ARM64 Android Cuttlefish 原Bionic→原Linux server 真协议/数据，再 P3 普通签名 APK→受控 su 真实双向 TCP/UDP 与 Stop；实体 KernelSU 兼容性最后终验 |
-| **B 路由、统一 DNS、App 选择** | A8多UID原Go/Java、B1普通双DNS Host、B2a真实8503 CN geosite、B2b同SHA签名APK+Go冷规则、B2c1 NDK物理socket冷绑定、B2c2a原Rust唯一TUN DNS53透明识别均已源码和Host门验。**B2c2b1新增同原Rust引擎纯Rust UDP53 Tunnel交易（1.1.1.1:53）64槽/12秒，原UDP source端口+DNS ID/QNAME与原目的DNS双向映射及IPv4/UDP校验和、恶意响应/容量/Stop Host4测试，同源ARM64 ELF/签名APK/原Linux oracle 10/10 PASS**；**B2c2b2已将映射接入同原Rust M4 TX（小包+jumbo）、原AEAD/M3认证RX→TUN与Stop，`hijack_enabled=0`冷许可不打开**，DNS仍未接管；**B2c3已把服务器FQDN原Go冷物理223.5.5.5:53 DNS查询接到真实FakeTCP/TLS之前，APP支持域名输入，同源10/10 PASS，但Android设备实际执行仍NOT_RUN**；**B2c2c原Rust同TUN worker已接真实Bionic物理UDP53 send/recv并验证源/ID/QNAME后构造真实IPv4 UDP回包，源码SOURCE 10/10 PASS，冷许可仍未启用** | **B2C2B2_ORIGINAL_RUST_M4_HOOK_BUILD_PASS；ANDROID_DNS_HIJACK_DISABLED** | 后续须完成物理223.5.5.5 NDK双协议出站与Tunnel1.1.1.1实际联通、TCP53有界流、netd Resolver导入/CN IPv4-owned Stop；Android P2/P3仍NOT_RUN |
-| **C 产品模式与生命周期** | Normal/off、fixed/auto、Game原有lane；低频状态、前台Service、网络callback、重认证/轮换/切网、资源观测 | PLANNED | 同源模式及Stop；一次实际网络切换；有限业务 p99/CPU/RSS/idle 唤醒 |
-| **D 条件热点USB与PR整合** | 手机/热点/USB独立开关、系统共享SNAT/conntrack、真实offload/CLAT边界、回归/PR | PLANNED | 已授权真机专项结果 + 清晰NOT_RUN 清单 + PR；未经验收不得自合 main |
+每次启动先读 [长期接续提示词](../prompts/ANDROID_TEMP_ROOT_PROBE.md)、`AGENTS.md`、`PROJECT_CHARTER.md`、当前分支/main HEAD、[Draft PR #36](https://github.com/lly8666/wbd-next/pull/36)、最近 Actions（含 SKIPPED/失败）、本文件、[产品功能卡](../features/entries/android-root-native-client.json) 和新 devlog；实际最新提交与现存工作树优先，不能把本次基线 SOURCE 强行当最新。若上一 Agent 已触发 CI，在途先收据，不重复 dispatch。
 
-**历史早期A1记录（不代表现行待办；后续ARM64原Go/Rust完整链接已PASS）：A1 ARM64+X86_64 Bionic ABI + 同一共享 Rust Go↔Rust 认证冷所有权真实C ABI导出、双64位 ELF 16KiB对齐（SOURCE `c385502ab12a4e42c26e7a8beb57ec4aa68eb2f5`，Action44015392698，阶段清单/ZIP14298207771）；但原Go完整产品连接器在ARM64因 Android M4 RAW/TUN/Health/MTU 产品符号未移植而链接FAIL，x86完整链接NOT_RUN。**彼时历史下一步（现已完成 ARM64 原生链接，不再作为当前待办）**：A2 抽出经核验的共享 M4 owner 驱动接口，把 Android Root TUN/物理RAW、网络绑定接到原 Rust PN/AEAD/Stop；A3 再验真实 Android 与同源 Linux 服务端 TLS/认证/租约及 TCP/UDP 收发（现行准入以 §8.0 P2/P3 为准，实体 KSU 最后终验）。** A1 的构建或符号检查不能宣称 A2/A3 成功；不要重新扩张短时探针按钮。
+一轮集中解决**一个真实阻塞的纵向切片**；可并行研读互不依赖的东西，但同批冻结 SOURCE 后原双 ABI 编译、原 Linux server、KSU guest 及同一场景收据用同一来源，避免针对琐碎日志发多轮重型 CI。修复需附实际失败点和验证；改功能时同步更新功能卡/短 devlog，不重写旧 Actions 的 FAIL 史。新功能未有运行价值前不抢 D2 最短路径。
 
-### A2 ARM64 原 M4 施工切片：就绪线程/Health/Stop
-
-本批沿同一冷 Go 已认证 generation 复用原 Rust `ProtectedScopedOwner`，在 ARM64-only `v4_android_original_m4.rs` 中把 Bionic RAW/TUN 接成最多 8 个包/次的双原生就绪线程：沿既有 M1 FrozenRecord、原 PN/AEAD/唯一重放、M3 LINK 及认证 /32 TUN gating；原 `HealthClock` 发送/解析真实加密 kind0，原 `BorrowFence` 持有每次 syscall，同一原 Owner 的 Stop 先 eventfd 唤醒两个线程并 join，再停止密码状态和关闭 FD。切网 ifindex/物理MTU通过原已绑定 RAW FD 定期读回，不回退默认网络。Android 仅编译 ARM64。**此处均是代码施工，不等于编译、链接或设备运行通过。** 大包/fragment/真实FEC/Game/完整原Go产品符号和 Root控制器仍属真实未解决项。
-
-## 4. 真正的 Android 产品架构
-
-Java 原生 Activity → 配置/应用列表/授权/Start/Stop/状态 controller → 低频进程IPC → UID0 native worker（Go cold TLS/auth/lease、Rust稳态、TUN、raw/physical socket）→ owned内核路由/网络绑定。Android连接遵循系统当前 Network/ifindex/源地址/MTU；bootstrap域名DNS必须物理直连且在建链前完成。root UID不是万能出口放行，不能覆写 netd fwmark；隔离表夹具与生产净增量行为分离。Linux现有入口/默认值不得改变。Android app/NDK ELF 采用真实 Bionic 构建，检查 syscall/struct布局/链接/arm64 4KiB与16KiB；cross-build 不等于设备装载，不等于 ARM crypto/FEC ISA 实际选择。
-
-## 5. 中国 IP / per-App 策略
-
-业务 egress：规则分流 = LAN/CN IPv4/自定义直连→内核实际物理出口，其余→WBD TUN；全隧道 = 普通Internet全部WBD，LAN/系统/控制例外明确列举；直连 = 普通业务内核直连；跟随默认 = 用户默认模式。按实际目标 IPv4/UID 一次内核分类，不对 DATA 检测域名、不建立域名→真实IP强制直连映射。中国域名海外A仍可WBD、外国域名中国A仍可直连。CN IP 复用APNIC转换/区间，CN域名复用 geolocation-cn include/attrs/类型，内置离线规则。内核共享同一地址集合和少量路由，设备不支持时只实现一种有证据的兼容后端，不能每App复制5500条CIDR。
-
-v2rayNG仅作为选择列表交互参考，不引入其VpnService/代理核心。Java原生 ListView/Adapter，真实安装App图标、名称、包名、搜索/已选过滤、系统App默认折叠、批量设置；按包名+必要用户标识持久化，启动/变更时解析UID，共享UID展示组绑定，不在数据面查询。普通主用户优先，多用户/工作资料列限制。诊断文本UID表单保留在工具入口，不能冒充正式产品列表。
-
-## 6. 统一普通 DNS（用户明确取消 FakeIP）
-
-只提供 **国内DNS 223.5.5.5** 和 **隧道DNS 1.1.1.1** 两个 IPv4 单endpoint（如现有配置可设置端口则沿用），无备用/竞速/跨方向回退。全局“CN域名DNS分流”在规则分流模式默认开、全隧道默认关；开时按原查询QNAME命中CN→国内DNS物理发，其他→WBD隧道DNS；关时被接管的普通DNS统一隧道DNS。WBD服务器域名bootstrap无论模式都单独由国内DNS物理发，服务器IP不用查DNS，不能递归回环。
-
-per-App 仅改变业务 IP 出口，不重建 netd 每UID DNS、不恢复共享系统Resolver的原始App UID；选择“全隧道/直连”不保证系统DNS相同出口，UI必须注明。支持 UDP/TCP53，同一endpoint的 UDP TC 回退TCP，TTL与 bounded cache/in-flight/coalescing、CNAME原查询一次选出口；失败返回错误，绝不暗用其他DNS或系统DNS。自有DNS socket标记防重定向循环，不给普通应用的DNS IP全局豁免。AAAA可按 Android 内层IPv6禁用策略空答；仅拒绝接管内层IPv6，绝不关物理IPv6/CLAT。Private DNS/DoH/DoT/DoQ不解密，不保证域名分类生效，只按可见IP出网并标注用户设置限制。
-
-手动「更新中国IP和域名规则」：CI把固定上游转换为轻量规则包；Android一次从可信 HTTPS 下载，核版本/格式/条数/大小/hash，后台处理并原子替换，失败保留已加载旧版；不定期轮询、不逐个抓域名、不清空全机conntrack。新连接切新规则，既有flow尽量pin原出口。版本与来源日期条数可见，不能宣传APNIC为准确geoIP。
-
-## 7. 生命周期/路由安全/能耗
-
-采用 ConnectivityManager callback 低频送消息到 native，与已有rotation/reauth/health/idle/keepalive/dead和MTU预算复用；无第二协议计时器。可重叠切网 A→A+B→B，断网直接重建，不承诺旧五元组迁移；payload idle与keepalive独立。UI visible时低频读取缓存状态，隐藏后停UI刷新；前台service可用但数据进程不依赖Activity，不持有默认永久wake lock。手机/热点/USB独立开关，先做手机，后做物理共享：采用Android原生系统热点/DHCP与内核SNAT/conntrack，沿服务端原 /32 租约验证，不自写DHCP。offload/eBPF/CLAT/AP+STA必须真机证实。
-
-生产路由/DNS修改以 **owned journal / 可重放撤销** 为准：只增加精确规则/表/链、应用现有状态改变时compare-before-restore，正常Stop/异常退出回收；禁止 `ip rule flush`、全机规则快照整体恢复、向所有root UID放行、隐式默认直连泄漏。若root失权/进程双死不能撤销则明确报告，避免在正常路径叠极端恢复框架。
-
-## 8.0 用户确认：Actions-first 功能等价而非 KernelSU 品牌锁定（2026-11-17）
-
-### 历史证据及 Root 等价结论
-- [KSU Action43986417528](https://github.com/lly8666/wbd-next/actions/runs/43986417528)，SOURCE `09a6a7e5f8aef5c3b38abb262655561ca89e5f9a`：Android16 **x86_64** AVD 普通 App `org.wbdnext.rootprobe`（targetSdk37）真实通过 KSU3.3.1 Manager 的 `su`，Root UID0、NET_ADMIN/NET_RAW CapEff、`u:r:ksu:s0`，SELinux Enforcing，内核 TUN/RAW/UID路由、App UDP/TCP及隔离 DNS和回收均有证据。`ksu-boot-and-test.sh` 明言**不执行 `adb root`**，ADB 仅运送/读取指令，`adb shell su` 也不等于 `adb root`。**已证明 KSU 单侧功能，完全没有同机 adb-root 配对试验，`ADB_ROOT_VS_KSU_EQUIVALENCE=NOT_PROVEN`**；旧 x86 不能代替新 ARM64 正式 WBD。
-- [Action44041601960](https://github.com/lly8666/wbd-next/actions/runs/44041601960) Android ELF/APK `BUILD_PASS` + 同 SOURCE 原 Linux server↔Linux peer 标准TLS/租约/M4双向UDP/Stop `LINUX_ORACLE_PASS`，并非 Android 真连接。[Action44042235770](https://github.com/lly8666/wbd-next/actions/runs/44042235770) 其后的 ARM64 macOS Android16 AOSP emulator QEMU 主循环/CPU 线程卡住，ADB 不上线约10分钟，guest `ENV_BLOCKED`/`NOT_RUN`，不能误判 WBD 应用失败。
-- `adb root` 只证明 adbd/shell 可获得调试 Root，不授予普通 App `su`。KSU Root Profile 可限制 `su` 的 UID/GID、groups、capabilities、SELinux；**`uid=0` 或 `getenforce=Enforcing` 均不足以证明权限或网络行为等价**。只能对同一程序/同操作/相同 Android 系统网络语义/可观测结果在指定范围内认定行为等价，不能宣布 Root 提供者全面等价。
-
-- [A6 Action44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256)，SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`：**5/5 Jobs SUCCESS**，原M3、ARM64 Bionic原Go/Rust、签名Root APK、原Linux WBD server oracle；Java事件Network门16断言、生成的Root Stop脚本 `sh -n` 11断言、`owner.pid`旧2/新3字段POSIX解析PASS。`ubuntu-24.04-arm`实测 `aarch64` 但 `/dev/kvm` 不可访问，**ARM64 Android P2/P3 环境 `ENV_BLOCKED`，不是正式Root App联网通过**；不再尝试已有hang的macOS AVD。需可信有KVM的ARM64 Actions runner及固定Cuttlefish镜像/host工具，否则保持NOT_RUN。
-
-- [A7 Action44060369629](https://github.com/lly8666/wbd-next/actions/runs/44060369629)，SOURCE `170ed6e47b0878d470cc83ef3cdebe9e781cfe7b`：**5/5 Jobs SUCCESS**，原Go/Rust ARM64 Bionic+签名无VpnService APK BUILD_PASS、原Linux WBD server oracle PASS；A7 `InstalledAppTarget` JVM真实包名/UID 17断言 PASS、最小Launcher `<queries>` Manifest PASS、A6网络回调16/Stop语法11及owner PID兼容回归PASS。**真正 Android16 PackageManager/卸载广播/Root UID路由及 Android↔Linux业务依然NOT_RUN**；aarch64托管runner `/dev/kvm` 不可用、Cuttlefish P2/P3 `ENV_BLOCKED`。共享UID不能逐包分开；不得把编译的包选择器冒称真实Android per-app功能完成。
-
-- [A8同源 Action44063911490](https://github.com/lly8666/wbd-next/actions/runs/44063911490)，SOURCE `c76215d1ea4a215560b401c47ef5d1342ef70bf2`，**5/5 Jobs SUCCESS**：v2多UID rootjournal Go测试（部分失败回滚、跨版本崩溃恢复、活Owner锁、外国priority/table拒绝）、Java多包UID组19断言、原M3、Android ARM64真实原Go/Rust ELF与签名Root APK、Linux原server标准TLS/租约/M4双向UDP/Stop oracle均PASS；A6/A7 Host回归保留。首轮[Action44063385632](https://github.com/lly8666/wbd-next/actions/runs/44063385632) Java非法系统UID构造器负例测试夹具FAIL已按实际修复，不能改写旧FAIL。修复SOURCE治理[Action44063911524](https://github.com/lly8666/wbd-next/actions/runs/44063911524)因只改测试/devlog而未同改功能卡FAIL，当前最终证据提交补齐卡片；不把治理失败写成软件失败。**真 Android16 ARM64 PackageManager、内核多UID rule、App→su/与Linux双向WBD仍NOT_RUN**：Actions ARM64 runner`/dev/kvm`不可用，Cuttlefish P2/P3`ENV_BLOCKED`。DNS/分流尚未开发实际系统E2E，实体KSU最后。
-
-- [B1 同源 Action44069144804](https://github.com/lly8666/wbd-next/actions/runs/44069144804)，SOURCE `8534a9182475a07072a4ae0e77807e23e6a3261f`，**6/6 Jobs SUCCESS**：原Go独立DNS模块 Host **真实UDP/TCP loopback7组**（原始QNAME分流、bootstrap物理、split关闭、TC→同DNS同Path TCP、无跨上游回退、坏ID/畸形包拒绝、TTL缓存/并发合并）PASS；同源原Go/Rust ARM64 Native、Root签名APK、原M3、Linux标准TLS/租约/M4 UDP/Stop oracle PASS；DNS包另交叉编译Android ARM64 test ELF但**并未接入运行中原Go CLI或Android system Resolver/原Rust M4 TUN**。ARM64 host仍`KVM_NOT_ACCESSIBLE`，P2/P3 `ENV_BLOCKED`，不能宣称 Android DNS 可用。下一步优先 B2 同源CN Geosite真实规则数据/真实Path绑定/系统DNS拦截和IP分流，实体KSU最后。
-
-- [B2a 修复版 Action44073025085](https://github.com/lly8666/wbd-next/actions/runs/44073025085)，SOURCE `6dc6e9f0fc51ac885ba4c8832be0c63789d44f49`，**7/7 Jobs SUCCESS**：老诊断v2fly固定提交`41504eae2a11f305fe88cfc605cf6c105a80bf5a` 导入8,503条规则，真实SHA `45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6`，domain8431/full69/regexp3/keyword0，MIT LICENSE；原Go B2a CNRules四语义、坏SHA/截断拒绝和实际host UDP/TCP53格式/同endpoint TC loopback PASS，B1普通DNS回归、原M3、ARM64 Go/Rust Native+Go B2交叉编译、签名无VPN Root APK、原Linux服务器真TLS/租约/Rust M4/UDP/Stop oracle均PASS。**首轮 [Action44072465559](https://github.com/lly8666/wbd-next/actions/runs/44072465559) B2测试夹具FAIL**：误将`foo.example.cn`认为固定Geosite应命中；真实规则不覆盖所有`.cn`，改为负例且源规则未变，旧FAIL保留。Android物理/隧道DNS socket未接、真系统Resolver未接、CN数据仍仅Action工件，P2/P3受host KVM缺失ENV_BLOCKED、实体KSU最后。
-
-- [B2b 修复版 Action44077291894](https://github.com/lly8666/wbd-next/actions/runs/44077291894)，SOURCE `26dc7ea1cf550b57c11103ea5b7ae2e103854699`，**7/7 Jobs SUCCESS**：原v2fly固定提交真实CN8503及MIT/SHA、Go 0600/NoFollow/symlink+篡改拒绝Host测试、B1 UDP/TCP DNS及原M3、Go/Rust ARM64原Native、独立签名Root APK内的真实规则TXT/许可证/provenance逐字节验证及原Go `--android-cn-geosite-file`冷装载源码门、Linux原WBD server真实TLS/授权/租约/Rust M4/UDP/Stop oracle均PASS。旧 [Action44076363045](https://github.com/lly8666/wbd-next/actions/runs/44076363045) 仅Linux oracle Job FAIL：独立donor拼装缺复制Go新`dnsnative`包，Go编译依赖未找到，**未执行真Linux业务**；修复代码 `linux-original-oracle.sh` 同源复制该包、不改变原协议，故旧FAIL保留、新SOURCE全重跑。正负证据均是软件；Android普通App→KSU su、原Go Root实际0600文件读取、系统Resolver及物理/WBD TUN真实DNS仍NOT_RUN/NOT_CONNECTED。Cuttlefish ARM64准入 `KVM_NOT_ACCESSIBLE`，P2/P3 `ENV_BLOCKED`，实体P5最后另授权。
-
-- [B2c1修复版 Action44081252165](https://github.com/lly8666/wbd-next/actions/runs/44081252165) SOURCE `abec46f78515a86228f7e29b2ada069545278f5e`，**8/8 Jobs SUCCESS**：新独立Host真实Linux lo套接字测试四项，含原Go UDP DNS与TC→同Path TCP的两个socket `ControlContext`预连接fd回调、IPv4源接口核对、Tunnel/外国上游及错ifindex/MTU/IPv4拒绝、模拟netd标记失败保证零UDP发包；同源原Go ARM64 Bionic CGo中的NDK `android_setsocknetwork`及有界Bionic `getsockopt(SO_BINDTODEVICE)`代码真实编译链接，原Rust M4 ELF、B1/B2 CN8503 host真DNS、原M3、无VPN正式签名Root APK及原Linux server真TLS/租约/M4/UDP/Stop oracle均PASS。旧首轮 [Action44080505516](https://github.com/lly8666/wbd-next/actions/runs/44080505516) host测试PASS但ARM64原Go编译报Android `syscall.GetsockoptString`未定义，APK/Linux oracle skipped；修复保留设备回读、改NDK有界 `getsockopt`，旧FAIL/skip永久保留。**原Go仅在冷阶段构造物理DNS绑定器（`socket_opened=0 dns_capture=NOT_CONNECTED`），尚无实际Android DNS发包、系统Resolver或隧道DNS包接管**；ARM64 runner KVM不可访问，P2/P3 ENV_BLOCKED，实体KSU P5不碰。
-
-- [B2c2a原Rust唯一TUN DNS53观察同源Action44085089405](https://github.com/lly8666/wbd-next/actions/runs/44085089405)，源码 `e22b456155ca30e75d5c86c9c29b903d7ea351c9`，**9/9 Jobs SUCCESS**：Rust Host5项真实格式IPv4 UDP DNS53、TCP53流候选、QNAME/EDNS/畸形QR/压缩域名/分片与散布首段长度、原IP包字节不变 PASS；CI静态核实原Rust `v4_android_original_m4::tun_worker` **唯一一次**真实TUN `read_ip_scatter`、先认证租约/IPv4再透明识别再原M1/M3 `seal_android_read_normal_ip`；新Bionic readonly C ABI `wbd_m0_embedded_go_loop_dns_ingress_observed`导出并强制 `hijack_enabled=0`；原M3、B1 DNS host、B2 CN8503、B2c1真实Host socket、原ARM64 Go/Rust ELF、CN8503独立签名Root APK、原Linux服务端 TLS/租约/M4 UDP/Stop oracle全部PASS。Android host准入仍 `KVM_NOT_ACCESSIBLE`，**这不是实际Android TUN包观察、DNS抢答、Tunnel DNS1.1.1.1出口或系统Resolver接管**；无第二TUN reader/Go Java逐包/新协议/FakeIP/VpnService。下一B2c2b只有完整有界 DNS backend +回复映射/精确 Stop +Android guest验收后才可启接管。
-
-- [B2c2b1修复版同源Action44091367458](https://github.com/lly8666/wbd-next/actions/runs/44091367458)，SOURCE `17a5322e39893ceac567f461a8a345c25d17305b`，**10/10 Jobs SUCCESS**：新原Rust UDP DNS53完整IPv4 packet双向Tunnel1.1.1.1 NAT原上游反映射+IPv4/UDP伪头校验和、source端口唯一映射、DNS ID/QNAME验证、容量64/12秒/Stop、畸形/分片不改字节Host Rust4项PASS；B2c2a原M4 TUN入口/原M3、B1真DNS UDP/TCP Host、B2a真实CN8503、B2c1物理socket scoped Host、原Go/Rust Android ARM64 Native、签名无VPN Root APK内的CN8503 TXT+MIT、原Linux WBD server真TLS认证/租约/原Rust M4双向UDP/Stop oracle全部PASS。**首轮 [Action44090496300](https://github.com/lly8666/wbd-next/actions/runs/44090496300) B2c2b1 3/4 PASS且坏包夹具FAIL**：误写已为0的UDP长度高字节而非低字节，源解析器正确接受合法包；修复仅改坏长度低字节。中间SOURCE `fb2f1ca`只触发governance未触发产品workflow（新增Rust模块路径未列入），故最终修复SOURCE通过修改`android/root-native/ci`源锁脚本强制同源全跑。**Rust mapping仍未接入原TUN与认证RX hook，hijack_enabled=0；Android系统DNS/E2E/真实KSU不算成功**。ARM64 runner `KVM_NOT_ACCESSIBLE`，P2/P3 `ENV_BLOCKED`、P5实体最后另授权。
-
-### Actions 准入、各层真实验收及最后实体终验
-
-| 门 | 执行环境与实际证明 | 正确等级 | 严禁扩大 |
-|---|---|---|---|
-| P0 | 同SOURCE arm64-v8a Go/Rust Bionic/独立APK/16KiB/M3 oracle | `BUILD_PASS` | 不能证明 Android 运行 |
-| P1 | 同SOURCE 原 Linux client↔原 Linux server 真 TLS/租约/Rust M4/数据/Stop | `LINUX_ORACLE_PASS` | 不能算 Android E2E |
-| P2 | **真正 Android16 ARM64 userdebug guest**；允许 `adb root` 仅启动**正式 Bionic native ELF**，在 Android RAW/TUN/`ConnectivityManager` Network handle/`android_setsocknetwork`/netd 与同源 Linux server 真 TLS/认证/租约/TCP+UDP、MTU、Stop | `ANDROID_NATIVE_RUNTIME_PASS`，按子项真实结果 | **不证明 App→su** |
-| P3 | 同guest **正式签名APK**、普通原 App UID/`untrusted_app`，必须自己 `ProcessBuilder("su","-c",...)` 经受控 CI Root provider 获授权，并实际验证 Root 权限、netd/UID路由、WBD双向TCP/UDP和Stop/崩溃恢复 | `ANDROID_APP_ROOT_E2E_PASS` / `ANDROID_LINUX_E2E_PASS` | Root provider 可非KSU，但不能称 KSU 已兼容；`adb root` 不可冒充 App→su |
-| P4 | A/B/C/D全部可重现的软件功能逐场景Actions；B真实App选择/普通双DNS/分流/内核owned；C模式/切网/MTU/CPU/idle；D软件共享 | `ACTIONS_SOFTWARE_COMPLETE_FOR_SCOPE` | 合成namespace只是组件证据，未测不升级 |
-| P5 | 软件 Actions 完成后**单独申请实体 Android16 ARM64 KernelSU 授权**，正式 App Manager授权、物理网络/热点USB/offload/CLAT/切网/功耗 | `PHYSICAL_KSU_FINAL_PASS`（按实测范围） | 未测硬件继续 `NOT_RUN_PHYSICAL_FINAL` |
-
-P2 可以先解除 Bionic 运行/内核协议风险，但**A 包产品完成必须 P3**。KSU 和 CI Root provider 不同只可获得“所测系统调用和功能的行为等价”结论，KernelSU Profile、厂商内核/SELinux/热点USB/真实功耗都在 P5 重新确认。没 P3 环境可以做 B/C 纯逻辑单元/原 Linux组件，但正式 Android App 功能不可升格。
-
-**ARM64 环境路线**：先单独轻量验证 Actions runner 真 `uname -m=aarch64`、`/dev/kvm`、隔离、清理；首选候选 Android16 **ARM64 Cuttlefish userdebug** + 固定配套镜像与 host tools。Cuttlefish、ARM64 KVM 云/自管 runner 目前都**没有本项目可用的已证实环境**；不假设 GitHub Hosted/macOS ARM64 有 KVM，不靠无限延长 emulator timeout。拿到实际 guest 后必须读回 API36、ABI arm64-v8a、`sys.boot_completed`、PackageManager、SELinux Enforcing、Net handle、TUN/RAW；无条件标 `ENV_BLOCKED`，需外部 runner/云成本须另行授权，不碰用户实体手机。
-
-**权限/业务对照合同**：若将来比较 `adb root` 与 KSU/CI `su`，每条路径必须固定相同程序/SOURCE/测试输入，记录原App `uid`/SELinux/targetSdk、Root worker `uid/euid/gid/groups`、`/proc/self/status` 的 `CapEff/CapPrm/CapBnd/NoNewPrivs`、`id -Z`、`getenforce`、net namespace，真的打开 `/dev/net/tun`、AF_PACKET/RAW/`SO_MARK`/`android_setsocknetwork`，验证 Android netd/UID FIB、原 Go 标准ClientHello→认证/32租约→Rust M4的 TCP+UDP双向及owned Stop、崩溃恢复。缺少配对结果为 `NOT_PROVEN`；权限或结果不一致是 `NOT_EQUIVALENT_FOR_SCOPE`，不许把 UID0 假设为全面等价。
-
-保持 **Actions-first、P0→P5，实体测试最后**、main/M0不改、PR #36 Draft；一场景一独立 job/Action、同一SOURCE/manifest/SHA，保留真实 FAIL/ENV_BLOCKED/NOT_RUN、镜像/runner/权限/网络脱敏证据，不上传凭据或原始pcap。**A15 当前唯一优先：已验证的 x86 KVM/KernelSU 上实现同源码 D0-D3 原生 Android 真业务，保留 ARM64 A0 每批护栏；ARM64 KVM/Cuttlefish 可用后仍可独立做 P2/P3，实体 ARM64 最后终验。**
-
-## 8. Action 分层验收和边界
-
-- A：同一SOURCE/manifest/hash复用原Go donor/Rust/Android与原Linux服务端；现有Linux-only真实协议oracle PASS。按§8.0 P2§真实ARM64 Android userdebug原Bionic→Linux真 TLS/认证/租约/双向TCP/UDP/Stop，再按§8.0 P3§普通App→受控su同源闭环；不能用合成DNS/loopback TCP或adb root代替P3。Android硬件ISA加速须最终实体机确认。
-- B：两真实App（跟随/直连/规则分流/全隧道），受控解析CN、非CN、CN→海外A、UDP/TCP53/截断、bootstrap与不回环、手动规则成功/失败保旧、主网络Apply/Stop；少量公网解析，勿把某域名公网A写死。
-- C：fixed/auto/Game原档位与lanes、重认证/切网、idle/wake、异常退出、普通/近MTU；低负载10–20Mbps、30–60秒先读CPU/RSS/p99和空闲唤醒，性能容量不足便停止，不刷500Mbps，不拿AVD代表手机耗电。
-- D：实际ARM64手机Root授权、真实热点/USB、offload、CLAT/蜂窝切换/功耗专项另列授权与NOT_RUN。Android9–17只看可运行 ARM64 镜像或已授权真机，缺 ARM64 镜像记 NOT_RUN，只运行 A15 x86_64 Android 同源 Normal/off CI 专项，不新增无关 x86 多 API 矩阵；adb-root不代表App su全版本。旧Windows/Linux产品不许回归。
-
-一组相关代码/UI/配置/夹具完成后才跑较重Action。失败定位产品/权限/VM/夹具；复习原实现，做最小有证据修复。每完整包写 `docs/devlog/android-root-probe/` 短文，精确SOURCE+Action+失败+NOT_RUN+唯一下一步，同步功能卡/配置帮助。同步main仅在开工（已做）、首次最小真实链路后、最终验收前及确需共享接口变化时。完成功能和合理验收后提PR，交代真机待验清单并收工，不自行制造后续优化任务。
-
-## 历史探针方案
-
-旧 `ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md` 内容在 Git `1f77125bc175d3d9fd55c93f6c371e6b20dc7a16` 同路径版本中完整保留；2026-11-17 以后以本授权适配计划为准。探针记录索引：[20261117 最终 KSU 日志](../devlog/android-root-probe/20261117-android-cn-geosite-dns6-kernel-final.md)。
+历史入口：[实验能力探针卡](../features/entries/android-temp-root-probe.json)、[Android Root App 说明](../../android/root-app/README.md) 和 [2026-11-18 D2/TAP/A21 阶段记录](../devlog/android-root-probe/)。这些是证据库，**不是与本方案竞争的下一步任务清单**。
