@@ -1,3 +1,8 @@
+# H2155: one exact-SOURCE Windows2025/WSL2 Game2/4 FEC off/fixed
+# 4 parallel Windows matrix jobs, 5 sequential real DNS/Direct/Tunnel/Stop
+# policies each. H2154 static-only source did not match workflow on.push.paths.
+# This workflow-path change triggers [plan029b-game-matrix-real] exactly once;
+# do not mistake cheap CI or a historical Game4 receipt for 20 native PASS.
 # H2084 PLAN029B default All/Normal now requires the V3 DLL export as a production invariant, not only explicitly flagged scenes.
 # H2076: only fixture MTU double-generation receipt fix, reuse frozen product SOURCE498a in three independent normal scenes; do not rebuild product.
 # H2075 PLAN029 original-source one-build three ordinary GUI/domain/TTL real Actions: workflow path must match on.push.paths; no new task/test or legacy matrix.
