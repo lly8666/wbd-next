@@ -24,17 +24,23 @@ class GameModesScope(unittest.TestCase):
         self.assertNotIn('[plan029-game4-cn-real] [plan029b-b4-gui-three-real]',workflow)
         ast.parse(e2e)
 
-    def test_game2_split_not_wired_rejects_before_real_apply(self):
+    def test_game2_game4_shared_original_rust_v4_all_and_off(self):
         go=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go").read_text()
-        test=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go").read_text()
-        self.assertIn('if o.SplitEnable&&o.Mode==m0WinModeGame2{',go)
-        self.assertIn('PLAN029 CN split Game2 not wired; no OS Apply attempted',go)
-        # The frozen original Go overlay and its assembly blob MUST
-        # remain bit-identical; runtime guard is tested as a source contract.
-        # A new build-dependent Go test requires an assembly manifest
-        # re-sign and is outside this small Game4 representative scene.
-        self.assertIn('func runM0NativeV4Windows(o m0NativeV4Options)error{',go)
-        self.assertIn('if o.SplitEnable&&o.Mode==m0WinModeGame2{',go)
+        game=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go").read_text()
+        bridge=(ROOT/"r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go").read_text()
+        source=(ROOT/"r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go").read_text()
+        self.assertNotIn('PLAN029 CN split Game2 not wired; no OS Apply attempted',go)
+        self.assertIn('if m0GameBusinessSplit(o){',go)
+        self.assertIn('Direct4:businessDirect,',go)
+        self.assertIn('Bypass4:businessBypass,',go)
+        self.assertIn('func m0GameBusinessSplit(o m0NativeV4Options) bool {',game)
+        self.assertIn('return o.SplitEnable && o.RouteMode!="all"',game)
+        self.assertIn('gameSplit,err:=m0Plan029TrialCold(o,',game)
+        self.assertIn('plan029Cold:gameSplit,',game)
+        self.assertIn('synthetic:=netip.AddrFrom4(gameSplit.TCPSynthetic4)',game)
+        self.assertIn('StartNativeGameIOWithColdSplit(',bridge)
+        self.assertIn('TestM0PLAN029BGame2Game4BusinessSplitAllOffNoOSRows',source)
+        self.assertIn('TestM0PLAN029BGame2Game4ThreeRouteModesColdV4',source)
 
 if __name__=="__main__":
     unittest.main()
