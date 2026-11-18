@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2206,
-  "checkpoint_sha": "0c36dc4f25792ab582207fc9c6714dd3e16e6ecc",
+  "sequence": 2208,
+  "checkpoint_sha": "15573bbbbf4c6d51d582e23989d795667ae5c7a1",
   "progress": "in_progress",
-  "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2206 NAT友好Linux server raw-interface IPv4自动选择：server local-ip省略/0.0.0.0会冷选唯一网卡IPv4；native x86/ARM64每ISA两场TLSv2/kernel TCP UDP Stop，Action44353147584 PASS_SCOPED；H2205 WinGUI通过功能已合主线。",
-  "why_now": "用户要求服务端NAT后不填公网IP、route-key输入便捷且不降低32字节密钥熵。原生H2206接口已分支通过并合入主线，保留真实网关NAT与实体跨ISA未验。",
-  "done_when": "原生x86/ARM64 scoped测试通过并将代码/功能卡/证据/开发日志/游标合main；真实NAT网关及Win实体到ARM64实体保持未验，029整体仍OPEN。",
-  "next_action": "实际NAT路由器将公网TCP443映射至Linux物理网卡内网TCP443验证；多IP网卡要求显式--local-ip；route-key维持32随机字节，短标签只映射离线0600密钥文件。029其他技术退出门独立续验。",
+  "task_id": "PLAN029B-USER-20261119-ROUTEKEY-V2",
+  "current_task": "H2208 user short route-key 8..32 mobile-friendly PBKDF2 v2 4096 only once + private persisted 32B cache: Linux client/server, original Windows CLI/GUI source-locked, Android settings-only helper, OpenWrt opt-in short-file. Windows Go source build PASS_SCOPED, mobile/physical E2E NOT_RUN.",
+  "why_now": "用户明确要求直接由M0继续开发、降低昂贵KDF、计算一次持久复用、覆盖移动平台，同时保留H2206 NAT单网卡单IP已通过事实。",
+  "done_when": "冻结的同SOURCE双端短密钥端到端及缓存安全/重启/变更、Windows实际GUI、Android可达能力边界、Linux受影响平台验证和唯一准确证据；旧029/029B完整退出门仍需单独关闭。",
+  "next_action": "先收Action44369630615 新H2208 Windows Go v2向量/持久缓存单测；如FAIL只修首个问题，再验Linux x86/ARM短Key原Go TLS两端和owned Stop。真实Android JNI/物理OpenWrt/公网NAT仍NOT_RUN。Windows Rust Direct DNS单测独立FAIL按029再诊断，不碰FEC/packet热路径。",
   "unverified": true,
-  "last_tested_source": "039b88c4eda1edac24d4a9510373f4d127aea74d",
+  "last_tested_source": "15573bbbbf4c6d51d582e23989d795667ae5c7a1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-ONCE-PERSIST-MOBILE-SCOPED-20261119.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-PLAN029B-H2206-NAT-IFACE-ROUTEKEY-20261119.md",
-    "docs/devlog/M0/20261119-PLAN029B-H2206-LINUX-NAT-IFACE-AND-ROUTEKEY-UX.md",
-    "docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json"
+    "docs/devlog/M0/20261119-PLAN029B-H2208-ROUTEKEY-ONCE-CACHE-MOBILE.md",
+    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json",
+    "docs/decisions/M0-PLAN029B-H2206-NAT-IFACE-ROUTEKEY-20261119.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2206 SRC039b88 native x86/ARM64各2场原TLS V4v2 Rust AF_PACKET/TUN Normal+Game2 NAT 0.0.0.0/omitted 到真实私网NIC IPv4、kernel双向TCP/UDP Stop PASS_SCOPED；外部NAT网关/CGNAT/实体Win↔ARM NOT_RUN。H2205 GUI 409自检/ARM64 12 case历史PASS。路由密钥仍为独立32字节随机串，未弱化或改变协议。"
+  "partial_summary": "H2208 v2 one-time 4096 PBKDF2 32B persistent routekey; Go original Windows compile and assembly PASS_SCOPED Action44368144935/44368145278, cheap Go cache test Action44369630615 pending; unrelated Win Rust DNS Direct unit FAIL. Android helper/OpenWrt UCI present but physical and JNI NOT_RUN. H2206 NAT bind old PASS; PLAN029 total OPEN."
 }

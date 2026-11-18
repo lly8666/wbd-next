@@ -14,3 +14,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient","windows-portable","android-vpn-shell","openwrt-package"],"reason":"H2208本地短RouteKey v2轻量一次派生私有持久缓存、源锁GUI字段、Android未接通设置辅助和OpenWrt受保护短Key文件；保持原TLS和移动设备NOT_RUN。"}
 ```
+
+## 2026-11-19 本批真实来源与状态补记
+
+H2208 产品/GUI/Android/OpenWrt本批源码 `15573bbbbf4c6d51d582e23989d795667ae5c7a1`：Windows source-locked原Go Native build [44368144935](https://github.com/lly8666/wbd-next/actions/runs/44368144935) SUCCESS (BUILD_ONLY)；[44368145278](https://github.com/lly8666/wbd-next/actions/runs/44368145278) cheap assembly、Windows Go与Linux Rust各相应job SUCCESS，但Windows Rust旧DNS Direct单测419/420 FAIL，保留原范围。后续source `c92f6a795d8e152b0939e5c6a60a492babedb14e` 只增Go短Key专用单测，治理[44369630706](https://github.com/lly8666/wbd-next/actions/runs/44369630706) SUCCESS；其[Go单测 Action44369630615](https://github.com/lly8666/wbd-next/actions/runs/44369630615) 在本记录时仍在跑，不能先作PASS。见H2208 evidence；服务端NAT原H2206旧SOURCE也不推作新H2208实网PASS。
