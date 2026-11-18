@@ -48,6 +48,7 @@ NORMAL_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_NORMAL_PAD_ONLY")=="1"
 FEC_PAD_ONLY=os.environ.get("WBD_PLAN029_LINUX_FEC_PAD_ONLY")=="1"
 SERVER_PAD_ALL_MODES=os.environ.get("WBD_PLAN029_LINUX_SERVER_PAD_ALL_MODES")=="1"
 CONTROL_SYNC=os.environ.get("WBD_PLAN029_LINUX_CONTROL_SYNC")=="1"
+NAT_BIND_ONLY=os.environ.get("WBD_PLAN029_LINUX_NAT_BIND_ONLY")=="1"
 if sum((NORMAL_PAD_ONLY,FEC_PAD_ONLY,SERVER_PAD_ALL_MODES,CONTROL_SYNC))>1:
     raise SystemExit("one source-locked padding batch per native Action")
 if CONTROL_SYNC:
@@ -96,6 +97,14 @@ elif NORMAL_PAD_ONLY:
         ("normal-tls","normal","tls","",1460,"chacha20-poly1305","on","",True,False),
         ("normal-flows","normal","flows","",1460,"chacha20-poly1305","on","",False,False),
     ]
+if NAT_BIND_ONLY:
+    # Two genuinely independent raw/TUN+TLS kernel sessions. The server has
+    # one NIC-local address and no public address; 0.0.0.0 is a config alias
+    # rather than the AF_PACKET receive destination wildcard.
+    CASES=[
+        ("nat-interface-zero","normal","tls","",1460,"chacha20-poly1305","on","",True,False),
+        ("nat-interface-omitted","game2","flows","",1460,"chacha20-poly1305","on","",False,False),
+    ]
 OUT.mkdir(exist_ok=False)
 results={"schema_version":1,"source_sha":SOURCE,"native_isa":ARCH,
          "original_go_source_sha":manifest["original_go_sha"],
@@ -141,6 +150,7 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
         WBD_ARM64_FROZEN_SOURCE=SOURCE,
         WBD_PLAN029_LINUX_BUNDLE=str(BUNDLE),
         WBD_PLAN029_LINUX_OUTPUT=str(OUT/name),
+        WBD_PLAN029_SERVER_NAT_IP_STYLE=("zero" if "zero" in name else "omitted") if NAT_BIND_ONLY else "explicit",
     )
     row={"name":name,"mode":mode,"padding":padding,"fec":game_fec or "off",
          "outer_mtu":outer,"cipher":cipher,"repair":repair,
@@ -191,6 +201,12 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
                 raise RuntimeError(side+" outer1280 inner TUN MTU incorrectly widened")
             row[side+"_owned_tun_mtu"]=tun_mtu
             row[side+"_owned_ipv6_check"]=strategy
+        if NAT_BIND_ONLY:
+            server_log=(case/"server.log").read_text(errors="replace")
+            if "V4_PUBLIC_SERVER_UNDERLAY_BIND interface=v4as local_ip=198.18.7.2 mode=auto_interface_ipv4 port=443" not in server_log:
+                raise RuntimeError("server NIC-owned exact IPv4 not selected from wildcard/omitted config")
+            row["server_interface_bound_ip"]="198.18.7.2"
+            row["original_server_local_ip_input"]="0.0.0.0" if "zero" in name else "omitted"
         for side in ("client","server"):
             raw=(case/(side+".log")).read_text(errors="replace")
             if mode.startswith("game"):
@@ -259,11 +275,12 @@ for name,mode,padding,game_fec,outer,cipher,repair,copy,tls_shape,live_mtu in CA
         print("PLAN029_LINUX_CROSSPLATFORM_CASE_FAIL arch="+ARCH+" case="+name+
               " error="+str(exc),flush=True)
         raise SystemExit(1)
-results["qualification"]=("PASS_SCOPED_TWELVE_ENCRYPTED_CONTROL_SYNC_NATIVE_LINUX_SCENES" if CONTROL_SYNC
+results["qualification"]=("PASS_SCOPED_TWO_NAT_FRIENDLY_LINUX_NATIVE_INTERFACE_BIND_SCENES" if NAT_BIND_ONLY
+                          else ("PASS_SCOPED_TWELVE_ENCRYPTED_CONTROL_SYNC_NATIVE_LINUX_SCENES" if CONTROL_SYNC
                           else ("PASS_SCOPED_TEN_BOTH_ENDPOINTS_ALL_FIVE_MODES_NATIVE_LINUX_SCENES" if SERVER_PAD_ALL_MODES
                           else ("PASS_SCOPED_TWO_FEC_SOURCE_PADDING_NATIVE_LINUX_SCENES" if FEC_PAD_ONLY
                           else ("PASS_SCOPED_TWO_NORMAL_PADDING_NATIVE_LINUX_SCENES" if NORMAL_PAD_ONLY
-                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES"))))
+                          else "PASS_SCOPED_EIGHT_COMPLEMENTARY_NATIVE_LINUX_SCENES")))))
 persist()
 print("PLAN029_LINUX_CROSSPLATFORM_NATIVE_PASS arch="+ARCH+" source="+SOURCE+
       " cases="+str(len(CASES)),flush=True)
