@@ -141,17 +141,21 @@ func (b *v4WindowsNativeOwnerBridge) prepare(
 // kernel/WFP activation. A bad/unsupported policy never touches the DLL.
 func (b *v4WindowsNativeOwnerBridge) connectVerifiedClient(
     ctx context.Context, assoc *faketcp.ClientAssociation, cfg ClientAdmissionConfig,
+    startupPadding ...uint8,
 )(*V4ClientSession,error){
     if b==nil||b.dll==nil||b.handle!=0||b.committed||b.stopped||
-        ctx==nil||assoc==nil||assoc.BootstrapConn()==nil{
+        ctx==nil||assoc==nil||assoc.BootstrapConn()==nil||len(startupPadding)>1{
         return nil,errV4WindowsOwner
     }
+    mode:=uint8(0)
+    if len(startupPadding)==1{mode=startupPadding[0]}
+    if mode>2{return nil,ErrAdmissionUnsupported}
     if cfg.Policy.Transport!=TransportNormal||cfg.Policy.FECMode!=FECOff||
         cfg.Policy.DesiredLanes!=1||cfg.DesiredLanes!=1{
         return nil,ErrAdmissionUnsupported
     }
     session,err:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
-        V4ClientOptions{DataPlaneReady:true})
+        V4ClientOptions{DataPlaneReady:true,StartupPadding:mode})
     if err!=nil{return nil,err}
     // No access to Rust owner on a rejected/modified post-TLS snapshot.
     if _,err=session.ColdSnapshot();err!=nil{return nil,err}

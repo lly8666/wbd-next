@@ -188,8 +188,10 @@ func runM0NativeV4WindowsGame(
   if e!=nil{return e}
   fecMode=uint8(profile)+1 // Linux GameFec=profile+1, TLS protected
  }
+ paddingMode,paddingErr:=m0WindowsProtectedStartupPaddingValue(o.StartupPaddingMode)
+ if paddingErr!=nil{return paddingErr}
  group,err:=realityfront.V4WindowsEstablishOriginalGameClientGroup(
-  ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode)
+  ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode,paddingMode)
  if err!=nil{return err}
  trustedLease,appliedCipher,selectionErr:=group.AuthenticatedNetworkSelection()
  if selectionErr!=nil||appliedCipher!=o.RecordCipher{

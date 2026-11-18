@@ -923,14 +923,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if profileErr!=nil{return profileErr}
   fixedProfilePlusOne=uint8(selected)+1
  }
+ paddingMode,paddingErr:=m0WindowsProtectedStartupPaddingValue(o.StartupPaddingMode)
+ if paddingErr!=nil{return paddingErr}
  var owner *realityfront.V4WindowsAuthenticatedClientOwner
  var session *realityfront.V4ClientSession
  if o.Mode==m0WinModeNormal{
-  owner,session,err=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth)
+  owner,session,err=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth,paddingMode)
  }else{
   // Protected feature7 and the server's exact authenticated profile are
   // unchanged; this worker only retransmits original Go bootstrap segments.
-  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth,fixedProfilePlusOne)
+  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth,fixedProfilePlusOne,paddingMode)
  }
  stopColdPump()
  fmt.Printf("WBD_WINDOWS_ORIGINAL_TLS_COLD_FAKETCP_RETRANSMIT copied=%d joined_before_Rust_M3=1 source=original_Go_Sender_RTO\n",coldRetransmits)

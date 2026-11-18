@@ -42,6 +42,7 @@ type V4WindowsAuthenticatedGameGroup struct{
  fecOpenProc,fecFinishProc *syscall.Proc
  fecParityProc,fecM4SendProc *syscall.Proc
  gameFec uint8 // authenticated TLS GameFec=1..7 -> shared fixed profile0..6
+ paddingMode uint8 // one client-selected protected value on every Game lane
  closed bool
 }
 // Epoch exposes only the negotiated original-Go TLS generation marker,
@@ -60,14 +61,16 @@ func V4WindowsEstablishOriginalGameClientGroup(
  base ClientAdmissionConfig,gameFec ...uint8,
 )(*V4WindowsAuthenticatedGameGroup,error){
  n:=len(associations)
- if len(gameFec)>1{return nil,ErrAdmissionParams}
+ if len(gameFec)>2{return nil,ErrAdmissionParams}
  var negotiatedFec uint8
- if len(gameFec)==1{negotiatedFec=gameFec[0]}
- if negotiatedFec>7{return nil,ErrAdmissionUnsupported}
+ if len(gameFec)>0{negotiatedFec=gameFec[0]}
+ var startupPadding uint8
+ if len(gameFec)==2{startupPadding=gameFec[1]}
+ if negotiatedFec>7||startupPadding>2{return nil,ErrAdmissionUnsupported}
  if ctx==nil||(n!=2&&n!=4)||base.Policy.Transport!=TransportGame||
   int(base.Policy.DesiredLanes)!=n||int(base.DesiredLanes)!=n||
   base.Policy.SupportedNow()!=nil{return nil,ErrAdmissionUnsupported}
- g:=&V4WindowsAuthenticatedGameGroup{gameFec:negotiatedFec}
+ g:=&V4WindowsAuthenticatedGameGroup{gameFec:negotiatedFec,paddingMode:startupPadding}
  // Mirror Linux's abortLocked and the Windows server group's rollback:
  // a late lane TLS failure cannot strand previously authenticated Rust
  // owners or leave their exporter-derived keys live across reconnect.
@@ -89,13 +92,14 @@ func V4WindowsEstablishOriginalGameClientGroup(
   cfg.LaneID=uint8(i+1)
   session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
    V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,
-    fec2Product:true,GameFec:g.gameFec})
+    fec2Product:true,GameFec:g.gameFec,StartupPadding:g.paddingMode})
   if e!=nil{return fail(e)}
   if i==0{g.epoch=session.Epoch}
   if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return fail(ErrAdmissionUnsupported)}
   lease,leaseErr:=session.AuthenticatedLeaseIPv4()
   snap,snapErr:=session.ColdSnapshot()
-  if leaseErr!=nil||snapErr!=nil||snap.Cipher()!=base.Policy.Cipher{
+  if leaseErr!=nil||snapErr!=nil||snap.Cipher()!=base.Policy.Cipher||
+     snap.StartupPaddingMode()!=g.paddingMode{
    return fail(fmt.Errorf("Game protected per-lane network selection mismatch: %w",ErrAdmissionUnsupported))
   }
   if i==0{g.authenticatedLease=lease;g.authenticatedCipher=snap.Cipher()
