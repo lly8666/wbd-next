@@ -139,5 +139,7 @@
     "old_029_full_contract": "OPEN",
     "plan030": "NOT_STARTED"
   },
-  "decision": "USER_NORMAL_SCOPE_CLOSED_PASS_SCOPED_ONLY; FULL_TECHNICAL_CONTRACT_OPEN; NO_NEW_ACTIONS"
+  "decision": "USER_NORMAL_SCOPE_CLOSED_PASS_SCOPED_ONLY; FULL_TECHNICAL_CONTRACT_OPEN; NO_NEW_ACTIONS",
+  "source_sha": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
+  "artifact_verified": true
 }

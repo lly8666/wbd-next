@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2137,
-  "checkpoint_sha": "dda46b1ba3370d4e71757cdd764610239234cf43",
+  "sequence": 2138,
+  "checkpoint_sha": "d9e62a6a7be62f3fc9a9e78d96af2c6e8c5c135c",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2137 029B/029 user-normal scoped closeout; B5 exact source d4ddd74 Action44201457211 full original signed native SUCCESS same VM 60s each-direction10Mbps split-off/all vs split-on/all, 48 zip CRC, both Rust V3 business_split=false with DNS, OS TCP/UDP and Stop, Win CPU/actualGiB 43.0673 vs46.6465 (+8.31% single ordered sample, not causal), peakRSS 46.26MB vs45.45MB, Win UDP p99 47/47ms, Linux 51.315/51.207ms. B4 three GUI Action44198794225 and Game4 four lanes Action44197717052 SUCCESS scoped. Full technical 029B/029 exits OPEN; user-normal limited scope PASS_SCOPED; Game2 split not supported, small TCP p99/PB2/host IPv6 NOT_RUN, 030 NOT_STARTED.",
-  "why_now": "Signed B5 artifact14383100380 SHA256 7dc060... ZIP48 CRC PASS plus original A/B reports exact binary hashes, 100% first delivery, both Stops and Windows+Linux UDP RTT p99. User2026-11-17 forbids needless extreme matrices, scoped closeout documented not full qualification.",
+  "current_task": "H2138 governance-only repair: keep H2137 029B/029 user-normal PASS_SCOPED B5 exact source d4ddd74 Action44201457211 successful, original 48 zip CRC and two real sameVM 10Mbps arms. Original H2137 docs Action44212060190 feature card failed UTF8 16KiB limit, governance failed cursor mixed SOURCE refs. No product/native test FAIL; preserve historical B4/Game4 cross-source proofs as context_refs, keep source-exact B5 evidence_refs, mark evidence root SOURCE. Full technical 029B/029 OPEN; 030 not started.",
+  "why_now": "Correct audit record and feature card hard 16384-byte limit without deleting any historical 56 verification rows, and ensure cursor evidence_refs contains only last tested exact SOURCE d4ddd74. Same-source product proof H2137 original SUCCESS unaffected.",
   "done_when": "029B scoped B0–B5 original signed current-source: actual off/all no business Direct/NAT/Fake writer while original Rust V3 public DNS A/AAAA UDP/TCP, bootstrap and supported Normal padding; regular CN validated real A/CNAME/TTL and IP exit vs opted advanced FakeIP, all managed AAAA local NOERROR/NODATA and genuine IPv6 Wintun ingress no IPv4 starvation; legacy GUI missing-key migration true/fresh false and real effective/Stop; bounded same-VM 10Mbps fair A/B CPU per GiB/p99 and owned OS/WAL clean Stop. No 028/030 matrix; unproven Game modes NOT_RUN.",
-  "next_action": "No more Actions in user-normal scoped 029/029B. Only user expansion or reproducible issue may reopen: Game2 CN split unsupported; B5 small TCP p99/P-B2 same-exit CN cost; host bound/onlink IPv6; complete off padding/ARM/old029 full contract. Do not initiate 030 or rerun 028/old 029 matrices.",
+  "next_action": "Collect doc-only H2138 feature catalog/governance pass; do not trigger new native Actions. 029B/029 user-normal PASS_SCOPED, full technical OPEN until explicit request or reproducible issue; 030 NOT_STARTED.",
   "unverified": true,
   "last_tested_source": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2137-H2136-B5-SIGNED-10M-029B-029-NORMAL-SCOPED-CLOSEOUT-20261118.json",
-    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
-    "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json"
+    "docs/evidence/M0/PLAN029B-H2137-H2136-B5-SIGNED-10M-029B-029-NORMAL-SCOPED-CLOSEOUT-20261118.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
-    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json"
+    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
+    "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
+    "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2137 user-normal 029B/029 PASS_SCOPED; B5 original Action44201457211 source d4ddd full SUCCESS, 48 CRC, 10Mbps sameVM dual60s A off/all B on/all, CPU/GiB 43.0673/46.6465 (+8.31% one sample, no stable claim), win UDP p99 47/47 Linux 51.315/51.207, Stop both. B4 sourceec494 real3GUI native PASS, Game4 source5fc four lanes FECoff MTU1400 PASS. Full 029/029B technical exit open and untested scopes preserved, 030 not started; no new Actions."
+  "partial_summary": "H2138 resolves doc-only UTF8 feature-card size and cursor historical cross-SOURCE refs. B5 exact SOURCEd4ddd Action44201457211 all real tests PASS, A/B CPU per actualGiB43.0673/46.6465 (+8.31% one order), UDP p99 win47/47 Linux51.315/51.207, Stop PASS. B4 Action44198794225 and Game4 Action44197717052 separately signed PASS_SCOPED; 029/029B user-normal scoped complete but full OPEN; no new native."
 }
