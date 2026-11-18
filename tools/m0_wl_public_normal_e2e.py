@@ -77,7 +77,20 @@ p029_tcp53=os.environ.get("WBD_PLAN029_APP_TCP53_SCENE")=="1"
 p029_cdn=os.environ.get("WBD_PLAN029_SHARED_CDN_SCENE")=="1"
 p029_padding=os.environ.get("WBD_PLAN029_STARTUP_PADDING_SCENE")=="1"
 p029b_game2_cn=os.environ.get("WBD_PLAN029B_GAME2_CN_SCENE")=="1"
-p029_game4_cn=os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1" or p029b_game2_cn
+p029b_game_case=os.environ.get("WBD_PLAN029B_GAME_MATRIX_CASE","")
+if p029b_game_case and not (
+    p029b_game_case in ("off","all","lan","ordinary","advanced","advanced_fixed") and
+    os.environ.get("WBD_PLAN029B_GAME_MATRIX_SCENE")=="1" and
+    mode in ("game2","game4","game2-fec","game4-fec") and
+    os.environ.get("GITHUB_ACTIONS")=="true" and
+    not p029b_game2_cn):
+ raise RuntimeError("PLAN029B Game matrix exact signed source/mode/case required")
+if p029b_game_case.endswith("_fixed") and not game_fixed:
+ raise RuntimeError("PLAN029B Game fixed split arm lacks original FEC")
+if p029b_game_case and game_fixed and not p029b_game_case.endswith("_fixed"):
+ raise RuntimeError("PLAN029B Game off-only arm must retain original FEC off")
+p029_game4_cn=(os.environ.get("WBD_PLAN029_GAME4_CN_SCENE")=="1" or p029b_game2_cn or
+               p029b_game_case in ("advanced","advanced_fixed"))
 p029_outer1460=os.environ.get("WBD_PLAN029_REAL_DEFAULT_OUTER1460")=="1"
 p029_cache=os.environ.get("WBD_PLAN029_DNS_CACHE_SCENE")=="1"
 p029_pressure=os.environ.get("WBD_PLAN029_DIRECT_PRESSURE")=="1"
@@ -97,7 +110,10 @@ p029_longrate=os.environ.get("WBD_PLAN029_P2_LONG_RATE_SCENE")=="1"
 p029_smalltcp=os.environ.get("WBD_PLAN029_P2_SMALL_TCP_SCENE")=="1"
 # H2030: all referenced p029_* flags must exist BEFORE evaluating Game4.
 # This scene is exclusive; it never silently admits Normal trial mode.
-if p029_game4_cn and not ((mode=="game2" if p029b_game2_cn else mode=="game4") and not (
+if p029_game4_cn and not ((
+    mode in ("game2","game4","game2-fec","game4-fec")
+    if p029b_game_case else
+    (mode=="game2" if p029b_game2_cn else mode=="game4")) and not (
     p029_direct or p029_padding or p029_product or p029_p2 or
     p029_p1_policy or p029_tcp53 or p029_cdn or p029_cache or
     p029_pressure)):
@@ -518,7 +534,7 @@ try:
  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
- if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4:
+ if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 or p029b_game_case:
   # The existing Linux kernel TUN must have a test-owned PUBLIC /32 alias
   # for protected Tunnel business. Its ordinary 10.66.0.1 RFC1918 address
   # would be Direct by policy and could fake a successful split test.
@@ -604,13 +620,26 @@ try:
   raise RuntimeError("PLAN029 one real signed V3 probe must run Normal only")
  if p029_v3 and os.environ.get("GITHUB_ACTIONS")!="true":
   raise RuntimeError("PLAN029 native V3 smoke requires real source-locked CI")
+ game_route={"off":"bypass-lan-cn","all":"all","lan":"bypass-lan",
+             "ordinary":"bypass-lan-cn","advanced":"bypass-lan-cn",
+             "advanced_fixed":"bypass-lan-cn"}.get(p029b_game_case)
  args=[str(cli),"--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",str(route_local),"--tls-ca-pem",str(out/"cert.pem"),"--username",user,"--password",password,"--tunnel-id",tunnel,"--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",str(out/"owned-wal.json"),"--mtu",str(configured_mtu),"--lanes",str(lanes),"--fec-mode",("fixed" if fixed6 else "off"),
   "--fec-parity",("4" if fixed6 else "0"),"--fec.mode",client_fec,
-  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",("bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 or p029b_b5 else "bypass-lan"),"--outer-repair",outer_repair]
+  "--fec.profile",("maximum" if fixed6 or game_fixed else "strong"),"--route-mode",(game_route if p029b_game_case else "bypass-lan-cn" if p029_direct or p029_p1_cn or p029_game4_cn or p029b_b2 or p029b_b4 else "all" if p029_v3 or p029b_b5 else "bypass-lan"),"--outer-repair",outer_repair]
  if p029_padding:
   # Same default Normal original Windows Wintun pipeline; no new test
   # sender or artificial packet shape. Only the selected mode changes.
   args.extend(["--startup-padding","flows"])
+ if p029b_game_case:
+  # Real original Go 2/4 TLS -> Rust V4 cold; all/off keeps public DNS,
+  # but must not allocate any business Direct/FakeIP or stale route.
+  args.extend(["--dns.direct",peer,"--dns.tunnel","10.66.0.1"])
+  if p029b_game_case!="off":
+   args.append("--split-enable")
+  if p029b_game_case in ("ordinary","advanced","advanced_fixed"):
+   args.extend(["--cn-domain-direct="+("false" if p029b_game_case=="ordinary" else "true"),
+                "--cn-rules-file",str(rules),
+                "--china-ip-file",str(out/"plan029-h1775-cn-one32.txt")])
  if p029b_b5:
   # User-facing V3 cold config on BOTH legs. No private CI trial bit.
   # The only requested difference is split=false vs split=true while
@@ -634,12 +663,12 @@ try:
   # The actual Linux original server TUN address is the sole dns.tunnel
   # endpoint; no CN/direct resolver or system fallback is added.
   args.extend(["--dns.tunnel","10.66.0.1"])
- if p029_direct or p029_p1_cn or p029_game4_cn:
+ if p029_direct or p029_p1_cn or (p029_game4_cn and not p029b_game_case):
   # The exact Linux guest is the ONLY direct resolver for this controlled
   # scene; it also hosts an independent real physical business UDP socket.
   args.extend(["--dns.direct",peer,"--dns.tunnel","1.1.1.1",
                "--china-ip-file",str(out/("plan029-h1934-cn4096.txt" if p029_p1_cn else "plan029-h1775-cn-one32.txt"))])
- if p029_game4_cn:
+ if p029_game4_cn and not p029b_game_case:
   # 029B fresh profiles default ordinary CN (real A). This original
   # Game4 signed FakeIP test intentionally selects the ONE advanced
   # cn-domain-direct option, exactly as its physical Direct oracle needs.
@@ -802,11 +831,11 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
  if done.exists():done.unlink()
  llog=(out/"linux-app.log").open("w");logs.append(llog)
  wlog=(out/"windows-app.log").open("w");logs.append(wlog)
- if p029_p1_policy or p029_game4_cn or p029b_b4:
+ if p029_p1_policy or p029_game4_cn or p029b_b4 or p029b_game_case:
   if p029_alias_proc is None or p029_alias_proc.wait(timeout=25)!=0 or not (
       out/"plan029-h1745-owned-tun-alias.txt").is_file():
    raise RuntimeError("H1934 Linux original public TUN alias never applied")
- linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 else "10.66.0.1"
+ linux_app4=p029_tunnel_alias if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 or p029b_game_case else "10.66.0.1"
  # Keep the same two real kernel app generators alive while the human GUI
  # performs its ordinary first Disconnect / second Connect. The second
  # generation is separately proved by later CN Direct and Tunnel apps.
@@ -3577,7 +3606,7 @@ finally:
     raise RuntimeError("foreign Tunnel DNS alias receipt; preserve OS address")
   except Exception as exc:
    print("PLAN029_H1765_TUNNEL_DNS_ALIAS_CLEANUP_FAILED "+str(exc)[-250:],flush=True)
- if (p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
+ if (p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 or p029b_game_case) and (out/"plan029-h1745-owned-tun-alias.txt").exists():
   # Exact ephemeral TUN alias only: cleanup is idempotent even after the
   # server has already removed its own interface on normal Stop.
   try:
