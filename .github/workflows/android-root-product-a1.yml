@@ -237,6 +237,7 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
   android-x86-kvm-ksu-original-native:
+    if: ${{ !(github.event_name == 'push' && contains(github.event.head_commit.message, '[d2-tap-guest-pilot]')) && !(github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true) }}
     # D0 + D1: actual signed original x86 Go/Rust + ordinary CI app UID
     # authorized via real KSU Manager. This is NOT authenticated TLS/M4.
     needs: [arm64-native, b2-authentic-cn-geosite-host]
@@ -336,6 +337,7 @@ jobs:
           if-no-files-found: warn
 
   android-x86-kvm-ksu-original-d2-s1:
+    if: ${{ !(github.event_name == 'push' && contains(github.event.head_commit.message, '[d2-tap-guest-pilot]')) && !(github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true) }}
     # Separate red/green gate: ORIGINAL Linux server runs on the same x86
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic

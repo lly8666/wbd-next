@@ -105,9 +105,9 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
   "original_linux_server_untrusted_raw_initial_syn":"OBSERVED" if "V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX" in server else "NOT_PROVEN",
   "original_linux_server_untrusted_raw_synack_tx":"OBSERVED" if "V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK" in server else "NOT_PROVEN",
  "original_android_cold_syn_send":syn_result,
-  "guest_virtual_ethernet_syn_to_host":wire_status("guest-wire-summary.json","syn"),
-  "guest_virtual_ethernet_synack_from_host":wire_status("guest-wire-summary.json","synack"),
-  "guest_virtual_ethernet_rst_from_host":wire_status("guest-wire-summary.json","rst"),
+  "guest_virtual_ethernet_syn_to_host":wire_status("guest-wire-summary.json","syn") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
+  "guest_virtual_ethernet_synack_from_host":wire_status("guest-wire-summary.json","synack") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
+  "guest_virtual_ethernet_rst_from_host":wire_status("guest-wire-summary.json","rst") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
   "host_loopback_syn_to_original_server":wire_status("host-wire-summary.json","syn") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
   "host_loopback_synack_from_server":wire_status("host-wire-summary.json","synack") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
   "host_loopback_rst_from_server":wire_status("host-wire-summary.json","rst") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" else "NOT_RUN",
@@ -156,10 +156,12 @@ cleanup(){
   fi
   # The guest PCAP is NEVER uploaded. Only fixed SYN/SYNACK/RST flags are
   # extracted from the real emulator virtual Ethernet frames.
-  python3 android/root-app/ci/x86-d2-cold-wire-observer.py guest \
-    --input "$out/guest-ethernet.pcap" --output "$out/guest-wire-summary.json" \
-    >"$tmp/guest-capture-parse.log" 2>&1 || true
-  rm -f "$out/guest-ethernet.pcap"
+  if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" != 1 ]];then
+    python3 android/root-app/ci/x86-d2-cold-wire-observer.py guest \
+      --input "$out/guest-ethernet.pcap" --output "$out/guest-wire-summary.json" \
+      >"$tmp/guest-capture-parse.log" 2>&1 || true
+    rm -f "$out/guest-ethernet.pcap"
+  fi
   if [[ -n "$server_pid" ]];then
     kill -TERM "$server_pid" 2>/dev/null || true
     wait "$server_pid" 2>/dev/null || true
@@ -187,7 +189,11 @@ if sudo -n iptables -w -C OUTPUT -o "$raw_iface" -p tcp --sport 443 --tcp-flags 
 fi
 sudo -n iptables -w -I OUTPUT 1 -o "$raw_iface" -p tcp --sport 443 --tcp-flags RST RST -j DROP
 host_rst_scope=1
-echo D2_HOST_LOOPBACK_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
+if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+  echo D2_HOST_TAP_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
+else
+  echo D2_HOST_LOOPBACK_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
+fi
 # A read-only native Linux AF_PACKET loopback counter. It makes zero
 # firewall/route/packet modifications and NEVER logs captured packet bytes.
 # Starts before original Linux server to observe both the first guest SYN

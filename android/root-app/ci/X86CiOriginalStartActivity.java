@@ -53,6 +53,13 @@ public final class X86CiOriginalStartActivity extends Activity {
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                  chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("physical Network changed");
+            // CI-only fixed enum: this is the actually selected
+            // ConnectivityManager Network interface, not a guessed TAP link.
+            if("wlan0".equals(chosen.interfaceName))
+                event("CI_SELECTED_PHYSICAL_IFACE_WLAN0");
+            else if("eth0".equals(chosen.interfaceName))
+                event("CI_SELECTED_PHYSICAL_IFACE_ETH0");
+            else event("CI_SELECTED_PHYSICAL_IFACE_OTHER");
             List<InstalledAppTarget> applications=InstalledAppCatalog.launchable(this);
             InstalledAppTarget ciTarget=null;
             for(InstalledAppTarget app:applications){

@@ -13,6 +13,11 @@ EMU_PID=""
 tap_owned=0
 tap_guest_boot=NOT_RUN
 tap_phase=NOT_RUN
+tap_rx_base=0
+tap_rx_boot=0
+tap_rx_original_start=""
+tap_guest_l2_at_boot=NOT_RUN
+tap_guest_l2_during_original=NOT_RUN
 adb(){ timeout --signal=TERM --kill-after=3s 35s "$ANDROID_HOME/platform-tools/adb" "$@"; }
 receipt(){
   local rc="$1"
@@ -55,6 +60,8 @@ tap_pilot_receipt(){
   mkdir -p out/android-x86-tap-guest
   WBD_TAP_GUEST_RC="$rc" WBD_TAP_GUEST_PHASE="$tap_phase" \
   WBD_TAP_GUEST_OWNED="$tap_owned" WBD_TAP_GUEST_BOOT="$tap_guest_boot" \
+  WBD_TAP_L2_BOOT="$tap_guest_l2_at_boot" \
+  WBD_TAP_L2_D2="$tap_guest_l2_during_original" \
   python3 - <<'PY'
 import json,os,pathlib
 p=pathlib.Path("out/android-x86-tap-guest")
@@ -68,32 +75,63 @@ d={"schema":"wbd-d2-x86-original-tap-guest-pilot/v1",
    "host_tap_exact_cleanup": ("NOT_RUN" if os.environ["WBD_TAP_GUEST_OWNED"]!="1" else
        ("PASS" if os.environ["WBD_TAP_GUEST_PHASE"]!="TAP_DELETE_FAILED" and
          not pathlib.Path("/sys/class/net/wbdtapci0").exists() else "FAIL")),
-   "guest_tap_boot":os.environ["WBD_TAP_GUEST_BOOT"],
+   "guest_boot_with_tap_argument":os.environ["WBD_TAP_GUEST_BOOT"],
+   "guest_to_host_tap_l2_during_boot":os.environ["WBD_TAP_L2_BOOT"],
+   "guest_to_host_tap_l2_during_d2_session":os.environ["WBD_TAP_L2_D2"],
    "android_real_physical_network":"PASS" if physical=="PHYSICAL_NETWORK_EXACT_READBACK_PASS" else
       ("ENV_BLOCKED" if physical=="PHYSICAL_NETWORK_ENV_BLOCKED" else "NOT_PROVEN"),
-   "slirp_bypassed_not_fake_network": True,
+   "slirp_bypass_for_original_syn":"NOT_PROVEN",
+   "android_original_selected_interface":"NOT_PROVEN",
+   "guest_ethernet_tcpdump_with_net_tap":"UNSUPPORTED_BY_EMULATOR",
    "original_linux_raw_syn_rx":"NOT_PROVEN",
    "original_linux_raw_synack_tx":"NOT_PROVEN",
    "android_synack_tls_auth_lease_m4_stop":"NOT_PROVEN",
    "whole_android_linux_e2e":"NOT_PROVEN"}
 d2=pathlib.Path("out/android-x86-d2-root/receipt.json")
+diagnostic=pathlib.Path("out/android-x86-d2-root/app-diagnostic-enums.txt")
+if diagnostic.exists():
+    wire=diagnostic.read_text(errors="replace")
+    for marker,label in (("CI_SELECTED_PHYSICAL_IFACE_WLAN0","WLAN0"),
+                         ("CI_SELECTED_PHYSICAL_IFACE_ETH0","ETH0"),
+                         ("CI_SELECTED_PHYSICAL_IFACE_OTHER","OTHER")):
+        if marker in wire:
+            d["android_original_selected_interface"]=label
+            break
 if d2.exists():
     data=json.loads(d2.read_text())
     for k,s in (("original_linux_server_untrusted_raw_initial_syn","original_linux_raw_syn_rx"),
                 ("original_linux_server_untrusted_raw_synack_tx","original_linux_raw_synack_tx")):
         d[s]=data.get(k,"NOT_PROVEN")
+    if (data.get("host_tap_syn_to_original_server")=="OBSERVED" and
+        d["original_linux_raw_syn_rx"]=="OBSERVED"):
+        d["slirp_bypass_for_original_syn"]="OBSERVED"
     d["android_synack_tls_auth_lease_m4_stop"]="PASS" if all(
         data.get(k)=="PASS" for k in ("real_peer_synack","tls_authenticated_32_lease",
                                      "original_rust_m4_and_uid_ready",
                                      "owned_stop_verified")) else "NOT_PROVEN"
 (p/"receipt.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
-print("D2_TAP_GUEST_PILOT",d["phase"],d["guest_tap_boot"],d["android_real_physical_network"])
+print("D2_TAP_GUEST_PILOT",d["phase"],d["guest_boot_with_tap_argument"],d["android_real_physical_network"],d["slirp_bypass_for_original_syn"])
 PY
 }
 cleanup(){
   local rc=$?
   trap - EXIT
   receipt "$rc" || true
+  # Snapshot the kernel TAP RX BEFORE killing the guest. Shutdown traffic
+  # cannot be credited to the original Go D2 session.
+  if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 && "$tap_owned" == 1 &&
+        -n "$tap_rx_original_start" &&
+        -r /sys/class/net/wbdtapci0/statistics/rx_packets ]];then
+    tap_rx_final="$(cat /sys/class/net/wbdtapci0/statistics/rx_packets)"
+    if [[ "$tap_rx_final" =~ ^[0-9]+$ ]] &&
+       (( tap_rx_final > tap_rx_original_start ));then
+      tap_guest_l2_during_original=OBSERVED
+    elif [[ "$tap_rx_final" =~ ^[0-9]+$ ]];then
+      tap_guest_l2_during_original=NOT_OBSERVED
+    else
+      tap_guest_l2_during_original=NOT_PROVEN
+    fi
+  fi
   if test -n "$EMU_PID";then
     timeout 10s "$ANDROID_HOME/platform-tools/adb" emu kill >"$out/guest-cleanup.txt" 2>&1 || true
     kill -TERM "$EMU_PID" 2>/dev/null || true
@@ -146,7 +184,8 @@ start_guest(){
   if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 && "$stage" == second ]];then
     tap_args=(-net-tap wbdtapci0)
   fi
-  if [[ "${WBD_D2_ORIGINAL:-0}" == 1 && "$stage" == second ]];then
+  if [[ "${WBD_D2_ORIGINAL:-0}" == 1 && "$stage" == second &&
+        "${WBD_D2_TAP_GUEST_PILOT:-0}" != 1 ]];then
     # Official emulator virtual-LAN capture: private, ephemeral, never
     # uploaded. Only TCP SYN/SYNACK/RST enums are extracted at D2 cleanup.
     mkdir -p out/android-x86-d2-root
@@ -222,12 +261,23 @@ if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
     tap_phase=ENV_BLOCKED_HOST_TAP_READBACK
     exit 27
   }
+  tap_rx_base="$(cat /sys/class/net/wbdtapci0/statistics/rx_packets)"
+  [[ "$tap_rx_base" =~ ^[0-9]+$ ]] || { tap_phase=ENV_BLOCKED_HOST_TAP_RX_COUNTER; exit 27; }
+  tap_rx_boot="$tap_rx_base"
   tap_phase=HOST_TAP_READY
 fi
 phase=SECOND_KSU_BOOT
 start_guest second
 if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
   tap_guest_boot=PASS
+  tap_rx_boot="$(cat /sys/class/net/wbdtapci0/statistics/rx_packets)"
+  if [[ "$tap_rx_boot" =~ ^[0-9]+$ ]] && (( tap_rx_boot > tap_rx_base ));then
+    tap_guest_l2_at_boot=OBSERVED
+  elif [[ "$tap_rx_boot" =~ ^[0-9]+$ ]];then
+    tap_guest_l2_at_boot=NOT_OBSERVED
+  else
+    tap_guest_l2_at_boot=NOT_PROVEN
+  fi
   tap_phase=TAP_GUEST_BOOTED
 fi
 if ! adb shell pm path me.weishu.kernelsu | grep -q '^package:';then
@@ -335,12 +385,19 @@ if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
     echo D2_TAP_GUEST_REAL_PHYSICAL_NETWORK_ENV_BLOCKED
     exit 29
   fi
-  tap_phase=TAP_GUEST_EXACT_PHYSICAL_NETWORK_PASS
+  tap_phase=TAP_GUEST_REAL_NETWORK_EXACT_EGRESS_NOT_PROVEN
 fi
 echo "D1_REAL_ORIGINAL_CLIENT_TLS_M4_NOT_RUN"
 if [[ "${WBD_D2_ORIGINAL:-0}" == 1 ]];then
   # The separate D2-S1 job reuses this exact proven Android/KSU/App admission.
   # Start the REAL Linux server and production Android RootClientService,
   # never a second simulated data plane or root bypass.
+  if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
+    tap_rx_original_start="$(cat /sys/class/net/wbdtapci0/statistics/rx_packets)"
+    if [[ ! "$tap_rx_original_start" =~ ^[0-9]+$ ]];then
+      tap_phase=ENV_BLOCKED_HOST_TAP_D2_RX_COUNTER
+      exit 30
+    fi
+  fi
   bash android/root-app/ci/x86-d2-original-root-preauth.sh
 fi
