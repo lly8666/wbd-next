@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
-    "linux_cli": "Linux 原Go TLS客户端/服务端 --mode game2|game4 --startup-padding off|tls|flows，默认off；已验证同源Rust M4每lane原密文、真实AF_PACKET成功copy后才记录 padded_records/bytes；GameFEC fixed6只提取实际IPv4 source、parity/health不添加填充。Linux Normal/fec-fixed/fec-auto tls/flows 未接线且严格拒绝；改值下次冷重连生效。"
+    "linux_cli": "Linux 原Go TLS client/server --mode normal|game2|game4 --startup-padding off|tls|flows，默认off；Normal仅业务kind1，Game每lane原M4；FEC Fixed/Auto kind2/3不支持并冷路径拒绝。H2193 Normal Rust/Go冷接线候选待两ISA真网签名；Game H2186真实PASS不变。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -42,7 +42,10 @@
     "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
     "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go",
     "tools/m0_plan029_linux_crossplatform_coverage.py",
-    ".github/workflows/m0-plan029-linux-crossplatform-capabilities.yml"
+    ".github/workflows/m0-plan029-linux-crossplatform-capabilities.yml",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
@@ -140,6 +143,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
       "evidence": "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "Linux x86_64 and native ARM64 original client/server Normal/off",
+      "scope": "H2193 new original TLS/Rust Normal tls/flows cold ABI and real M4 post-kernel raw-copy receipts; candidate waiting actual two-ISA Action, no product PASS yet.",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [

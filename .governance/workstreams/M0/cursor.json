@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2192,
-  "checkpoint_sha": "ada3da86bb7a0a5cc8dba37bebb1ea78c000edf0",
+  "sequence": 2193,
+  "checkpoint_sha": "c7c5c4165d6e56cd412c18d65753e5de8d4bc39e",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2192：H2190治理已PASS；修H2191对029限定证据误标verified。",
-  "why_now": "H2191 Action44285633983结构FAIL：verified cursor lacks reviewed PASS evidence；029产品仅PASS_SCOPED，完整技术出口OPEN。",
-  "done_when": "保留准确的unverified=true，治理CI通过；不伪造PASS。",
-  "next_action": "029完整D1–D5/P1–P2及p99/P-B2仍OPEN；不重跑已PASS场；030未启。",
+  "current_task": "H2193：Linux Normal/off原Go TLS/Rust真实M4随机startup-padding全链候选；x86/ARM双原生各2场待冻结测试。",
+  "why_now": "H2186 Game填充12/12已证实，但Normal tls/flows原CLI未接线；增量复用原Rust策略与kind1 seal，不改FEC source/parity。",
+  "done_when": "同SOURCE原Go/Rust+GUI无关双ISA Normal tls/flows各2真网、正数M4 copied、kernel TCP/UDP、双Stop签名；FIXED/AUTO冷拒绝保留。",
+  "next_action": "冻结源码触发原生Linux两ISA两场Action；仅核首个失败/真raw copied；原029技术仍OPEN。",
   "unverified": true,
   "last_tested_source": "e174235872d32cca69bf921fb59904f9bcaee889",
   "evidence_refs": [
@@ -22,5 +22,5 @@
     "docs/devlog/M0/20261118-PLAN029-H2187-LINUX-ALL-NONWIN-SCOPED-CAPABILITY-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2190 Action44285388183 governance/feature SUCCESS；H2189 32942B热预算FAIL与H2191 verified-evidence FAIL留痕。H2186 Linux原生x86/ARM 16/16真网络SOURCE e1742358仅PASS_SCOPED；029/029B日常限域PASS、完整技术OPEN，故cursor unverified=true。"
+  "partial_summary": "H2193候选在原H2186 Linux Game填充SOURCE e1742358真PASS基础上补Normal/off，当前新产品SOURCE尚未冻结、真实测试NOT_RUN。FEC Fixed/Auto kind2/3不填；无key X25519协议禁线，manual动态MTU/实体ARM/性能OPEN，030未启动。"
 }
