@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2182,
-  "checkpoint_sha": "c3e8f59755c6e3431dcac8298d636b502124eac2",
+  "sequence": 2183,
+  "checkpoint_sha": "f8b38d88fdce0935e17ef62f2b619b8e60ead888",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2182 修H2181 Linux双ISA真实Rust编译首错：v4_client_startup_padding模块根cfg原仍windows/test，Linux Game引用未解析；仅补Linux编译门并复跑受限互补native。",
-  "why_now": "H2181 Action44266160914 aarch64 native Rust build E0432/E0433: lib.rs #[cfg(any(windows,test))] 未包含Linux；测试尚未进入网络，不可称填充PASS。",
-  "done_when": "新SOURCE两ISA原Go TLS/Rust构建及8互补真实Linux客户端+服务端功能场PASS；含Game pad raw成功统计。失败保留诊断。",
-  "next_action": "收H2182 native工作流的首个编译或真业务FAIL；功能卡尚仅IMPLEMENTED_NOT_TESTED，保留H2177 10/10基本功能SOURCE。",
+  "current_task": "H2183 修Linux Rust Game padding原生编译第二源头：FlowKey仍在windows/test模块；加Linux编译选项、功能卡同步，保持H2181/H2182原FAIL与实际网络待验。",
+  "why_now": "H2182 Action44266740093两ISA original Go/Rust build E0432: v4_client_startup_padding用到crate::v4_client_split::FlowKey，但该纯逻辑模块依旧windows/test cfg；Native functional独立FAIL，feature catalog未同批改卡。",
+  "done_when": "两native Linux ISA当前SOURCE真实原Go TLS/Rust构建，8互补模式实际网络及原AF_PACKET pad count/MTU/Stop PASS，保留未实现Normal/FEC pad明确拒绝。",
+  "next_action": "收H2183 native x86/aarch64编译第一故障，按日志精确修补，不刷H2177 10/10；产品并非全部技术完成。",
   "unverified": true,
   "last_tested_source": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2183-LINUX-GAME-FLOWKEY-CFG-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2182-LINUX-PADDING-MODULE-CFG-FIX.md",
-    "docs/devlog/M0/20261118-PLAN029-H2181-LINUX-CROSSPLATFORM-CAPABILITY-GAPS.md",
-    "docs/devlog/M0/20261118-PLAN029-H2177-LINUX-DUAL-ISA-SCOPED-CLOSEOUT.md"
+    "docs/devlog/M0/20261118-PLAN029-H2181-LINUX-CROSSPLATFORM-CAPABILITY-GAPS.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2181 Linux Game2/4随机填充COLD+Rust M4/raw收据和8场/ISA测试已提交；ARM原编译FAIL仅根模块cfg漏Linux，x86状态独立；H2182只开Linux模块编译并加回归门，不变算法、AEAD、Go业务、已证H2177源。"
+  "partial_summary": "H2177 linux x86/ARM双端基础10/10签名PASS不含填充。H2181/H2182 Game padding原Go/Rust可选模式及raw成功复制计数施工，先因padding模块cfg及FlowKey模块cfg阻断两ISA编译，真Game填充网络NOT_RUN。H2183加入Linux pure FlowKey模块并卡片同步，严格首错验收。"
 }

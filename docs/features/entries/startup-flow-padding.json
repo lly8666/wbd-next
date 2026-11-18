@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "startup-flow-padding",
   "name": "Tunnel TCP/UDP record随机填充",
-  "summary": "Windows H2169 Game2/off-FEC与Game4/fixed-FEC各off/tls/flows六场真NPF PASS_SCOPED；Linux H2181新增Game2/4原Go TLS→Rust M4启动填充接线与raw copy计数，native x86/ARM64实网待验。",
+  "summary": "Windows H2169 Game2/4 off/tls/flows六场真NPF PASS_SCOPED。Linux H2181/H2183 原Go TLS→Rust Game M4填充候选尚在编译与原生验证中；不能称Linux PASS。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -18,7 +18,7 @@
     "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
     "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
     "gui": "正式WinForms传输页off/tls/flows下拉、旧TLS bool配置迁移、保存及重连原路径；H2167原GUI/PARAMETERS帮助明确Normal/Game2/4且assembly、Go/Rust编译检查PASS。H2169 Game由真实CLI冷路径验收；Game WinForms按钮/三档当前SOURCE原生仍NOT_RUN。",
-    "linux_cli": "H2181候选: wbd-v4-client/server --mode game2|game4 --startup-padding off|tls|flows；default off；原Go受保护组进Rust M4一次冷配置，每个实际Linux AF_PACKET成功copy统计padded_records/bytes。Linux Normal/fec-fixed/fec-auto 非off严格拒绝而非静默忽略。Linux native动作完成之前不将此接线认定已验证。"
+    "linux_cli": "Game2/4已有 --startup-padding off|tls|flows 冷配置（默认off），由已认证Go组在真实Rust M4启动前设置，原AF_PACKET成功copy后计数；Linux Normal/fec-fixed/fec-auto tls/flows明确拒绝。H2181 E0432/E0433与H2182 E0432编译FAIL保留，H2183修纯FlowKey模块Linux cfg、实际 native网络NOT_RUN直至新Action。"
   },
   "code_refs": [
     "crates/wbd-engine/src/v4_client_startup_padding.rs",
@@ -151,7 +151,8 @@
     "H2031原密文尺寸物理证据分SOURCE保留；WinGUI三档Game按钮真网络、off/tls/flows同VM CPU/RSS/延迟与小TCP p99仍NOT_RUN，不能用CLI回执代替。",
     "H2169 Game route-mode=all（业务Direct关闭）仍原生填充已证实；Normal split-enable=false及其他Game政策组合不因本场自动PASS。",
     "H2079旧SOURCE Normal split关闭维持padding当时未验；新Game route-mode=all真测不能替换旧Normal独立SOURCE。",
-    "H2181 Linux Game padding source candidate pending two-ISA native Action, cannot claim Linux data-plane PASS before original authenticated Go TLS/Rust/AF_PACKET results. Linux Normal/Fixed/Auto tls/flows remains NOT_WIRED and reject nonoff."
+    "H2181 Linux Game padding source candidate pending two-ISA native Action, cannot claim Linux data-plane PASS before original authenticated Go TLS/Rust/AF_PACKET results. Linux Normal/Fixed/Auto tls/flows remains NOT_WIRED and reject nonoff.",
+    "H2182 native SOURCE f8b38d8 original Linux compiler FAILED E0432 (portable FlowKey module still Windows/test cfg); H2183 only adds Linux to pure split-key module root, followup native build pending."
   ],
   "promotion": null
 }

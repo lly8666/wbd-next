@@ -55,7 +55,7 @@ mod v4_mtu_budget_ffi;
 mod windows_lane_lifecycle;
 // PLAN029 bounded cold-compiled IPv4/CN-domain split decisions shared by
 // Normal and Game; product Wintun/direct binding is qualified separately.
-#[cfg(any(target_os="windows", test))]
+#[cfg(any(target_os="windows",target_os="linux",test))]
 mod v4_client_split;
 // PLAN029: typed wire/query decision, owned by the ONE Rust Wintun ingress.
 // Does not create a second packet reader or authorize a Direct backend.

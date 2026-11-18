@@ -17,6 +17,7 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         rust=read("crates/wbd-engine/src/v4_embedded_go.rs")
         crate_root=read("crates/wbd-engine/src/lib.rs")
         self.assertIn('#[cfg(any(target_os="windows",target_os="linux",test))]\nmod v4_client_startup_padding;',crate_root)
+        self.assertIn('#[cfg(any(target_os="windows",target_os="linux",test))]\nmod v4_client_split;',crate_root)
         game=read("crates/wbd-engine/src/v4_game_lane.rs")
         go=read("r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go")
         self.assertIn('flags.String("startup-padding","off"',cli)
