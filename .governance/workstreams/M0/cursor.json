@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2188,
-  "checkpoint_sha": "44555786294a09c3353c99344308de09dd879da1",
+  "sequence": 2189,
+  "checkpoint_sha": "7157d60170df9b084a1eff264651a4c1f9855371",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2188：H2186 Linux x86/ARM原生各8场、16/16 PASS；压缩签名功能卡及M0热读取，仅文档治理。",
-  "why_now": "H2187功能卡4份超16KiB、M0热读取33771>32768使governance/maintenance失败；原native Action44278039887成功不变。",
-  "done_when": "四张卡各≤16KiB、combined hot≤32768、治理/maintenance PASS；源锁e1742358真网不重跑。",
-  "next_action": "核H2188治理回归；029技术OPEN，Linux Normal/FEC填充及无密钥X25519未接线、manual动态MTU未验。",
-  "unverified": true,
+  "current_task": "H2189：回收H2188治理/maintenance实际CI结果；029B与029日常范围已PASS_SCOPED，完整029技术出口仍OPEN，030未启动。",
+  "why_now": "HEAD7157d601仅功能卡/交接压缩；同HEAD治理Action44281530635 Governance+Feature catalog均SUCCESS，maintenance Action44281530588 regression SUCCESS；原H2187失败和H2186原native SOURCE不变。",
+  "done_when": "H2188单卡16KiB与M0热读取32768B治理门实际CI通过，且不重跑H2186真实网络：已满足；后续029仅针对现存独立技术缺口。",
+  "next_action": "029技术OPEN：保留D1–D5/P1–P2与小TCP p99、P-B2同出口CPU、实体IPv6 on-link/绑定绕行、Linux主动入站Windows TCP等未验证；先按真实资源/用户范围选择最小必要场景，不重派已PASS矩阵。",
+  "unverified": false,
   "last_tested_source": "e174235872d32cca69bf921fb59904f9bcaee889",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261118-PLAN029-H2187-LINUX-ALL-NONWIN-SCOPED-CAPABILITY-CLOSEOUT.md",
-    "docs/devlog/M0/20261118-PLAN029-H2188-CARD-AND-HOT-BUDGET-COMPAT.md"
+    "docs/devlog/M0/20261118-PLAN029-H2188-CARD-AND-HOT-BUDGET-COMPAT.md",
+    "docs/devlog/M0/20261118-PLAN029-H2187-LINUX-ALL-NONWIN-SCOPED-CAPABILITY-CLOSEOUT.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2186 SOURCE e1742358 Action44278039887：Linux原生x86+ARM各8独立原Go TLS/Rust双端真kernel TCP/UDP/Stop成功，Game2/4 off/tls/flows实raw填充、FEC6、Game4副本、outer-off；Normal AES128/256、外1280内1209 DF+IPv6边界。原产物14415547592/14414634232各有SHA锁。未测实体ARM/跨ISA/性能；029仍OPEN、030未启。"
+  "partial_summary": "H2188 HEAD7157d601治理Action44281530635与maintenance44281530588两者completed SUCCESS；上轮4455578的对应FAIL原样保留。H2186产品SOURCE e1742358 Action44278039887双原生Linux ISA各8场16/16真kernel TCP/UDP/Stop PASS_SCOPED、未重跑；029B/029日常范围已限域PASS，完整技术出口OPEN。Linux非Game填充/无route-key X25519 NOT_WIRED、manual动态MTU/实体ARM/性能p99 NOT_RUN；030未启动。"
 }
