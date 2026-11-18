@@ -31,6 +31,41 @@ A14 首次源码 `e8b0d472` 只有部分施工，**最终可上机 APK 请以包
 
 后续实体操作需要用户在自己设备上明确安装/启动及真实同源 Linux 服务端、有效凭据后回传不含敏感内容的固定事件码；Root 域任何内核所有权更改不得绕过 readback 或默认接管系统 DNS。
 
+## A14 最终同源 Actions、实际 APK SHA、独立红门（已结束）
+
+**真正构建 SOURCE：** `0d79fa8966b2fb53d03101179d6fe4b18c3e7936`
+（A14b 含完整原 Go 阶段脱敏报告导出；A14 首次 `e8b0d472` 不是最终交付）。
+[完整同源码 Action #44222441113](https://github.com/lly8666/wbd-next/actions/runs/44222441113)
+**10/11 jobs SUCCESS，整体 FAIL**。`arm64-native`、`root-arm64-app`、
+`linux-original-server-normal-off`、M3/DNS/B2 Host 和 Cuttlefish **host-admission** 都
+SUCCESS；`root-arm64-app` 源码级测试实际有
+`ANDROID_ARM64_ORIGINAL_GO_ANCHORED_COLD_STAGE_HOST_PASS`、
+`ANDROID_ARM64_A11_REAL_UID_TUN_PACKET_SCRIPT_HOST_PASS`、
+`ANDROID_ARM64_ROOT_DEBUG_ONLY_TUN_RAW_SELFTEST_ABI_SHA_PASS`、
+`ANDROID_ROOT_ARM64_APP_AND_NATIVE_ASSETS_SOURCE_LOCKED_BUILD_PASS sdk=36`；
+Python `device_first_run_test` Host 通过，**不是实体手机业务**。
+
+签名 Android ARM64 APK 在官方 artifact
+`android-root-original-arm64-app-0d79fa8966b2fb53d03101179d6fe4b18c3e7936`
+（artifact ID `14390539070`）；已重新下载实际 ZIP，解压核对 APK 的外部 SHA256、
+内部 `assets/native-arm64/SOURCE` 与 APK 元数据一致：
+`39ec9061265653e61e64d21f360fb17f320e89df7c7e64cff1ea37005b97487b`。
+Debug `keytool` 每次 Actions 生成新的临时签名，**不能假设 A12 旧 APK 可直接
+覆盖安装 A14**：用户必须先安全 Stop、核验 owned Route 清理；如签名不同，
+经用户确认卸载旧应用（会清除 App 私人数据），再装 A14。
+
+独立 x86_64 KVM/KernelSU ARM64 NativeBridge job 保留真实红门：
+`ORIGINAL_WBD_ARM64_EXIT=139`、`PURE_GO_ARM64_EXIT=139`、
+`ORIGINAL_GO_CSHARED_HELP_EXIT=0`，overall FAIL；不因真 ARM64
+`GO_ELF_HELP_PASS` 擅自跳过或绿化该 job。
+真实 Android16 ARM64 核心服务端 Normal/off TLS→授权租约→App 双向 TCP/UDP→
+原 Rust joined Stop `NOT_RUN`；A14 的 UID→TUN packet 亦需新真机回执，
+`NOT_PROVEN`。DNS 系统接管继续禁用。未远程安装任何用户手机或上传凭据。
+
+**SOURCE 与文档 HEAD 区分**：签名 APK 和上述原生/Host Action 只对应
+`0d79fa8966b2fb53d03101179d6fe4b18c3e7936`。随后仅本 devlog/功能卡
+追加收据时不重编 APK，不将 docs-only HEAD 称为新的原生 SOURCE。
+
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"修正 A12 既有 Android ARM64 测试 TUN FD 与 UID 内核路由准备间的竞态；正式 Go Root APK 原生日志阶段只认完整固定行首、记录 TUN/RAW/SYNACK 非认证里程碑；Host/NDK/签名 APK 源锁回归；真机 TLS/M4/Stop/DNS 仍 NOT_RUN。"}
 ```
