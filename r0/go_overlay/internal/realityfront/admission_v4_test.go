@@ -496,6 +496,9 @@ func TestR0V4FeatureGateAndBoundedStore(t *testing.T) {
     if _,err:=v4Decode(wire[:]);!errors.Is(err,ErrAdmissionParams){t.Fatalf("invalid padding choice accepted: %v",err)}
 }
 
+// Retired pre-V4 clients may time out parsing the new authenticated,
+// random-length reject. The server MUST reject, and the old peer MUST
+// fail to establish: old typed error decoding is no longer supported.
 func TestR0V4OldGoV3RejectsActualTLSUpgrade(t *testing.T) {
     cert:=makeServerCert(t)
     key:=[]byte("0123456789abcdef0123456789abcdef")
@@ -519,8 +522,8 @@ func TestR0V4OldGoV3RejectsActualTLSUpgrade(t *testing.T) {
     },V4ClientOptions{DataPlaneReady:true})
     select{
     case response:= <-ch:
-        if !errors.Is(clientErr,ErrAdmissionVersion)||!errors.Is(response.err,ErrAdmissionVersion) {
-            t.Fatalf("old V3 side did not reject V4: client=%v server=%v",clientErr,response.err)
+        if clientErr==nil||!errors.Is(response.err,ErrAdmissionVersion) {
+            t.Fatalf("retired V3 was not rejected: client=%v server=%v",clientErr,response.err)
         }
     case <-time.After(5*time.Second):t.Fatal("legacy TLS rejection timeout")
     }

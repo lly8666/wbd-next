@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2202,
-  "checkpoint_sha": "ee69bc68127af725f642520108664af6bba31f7f",
+  "sequence": 2203,
+  "checkpoint_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2202：只保留V4 TLS加密控制版本2，off也强制随机请求/确认/拒绝回包，Windows Normal/FEC/Game模式进TLS，Linux/Windows/ARM/OpenWrt/Android验证。",
-  "why_now": "用户明确不兼容旧协议并要求全客户端/平台系统综合测试。H2201 SOURCEee69bc68 24/24仅旧源历史；Windows exact-blob manifest需同源更新。",
-  "done_when": "冻结新SOURCE：Linux双真ISA各12原生；Windows真Go TLS+WinForms/Rust装配；Android NDK/VpnService构建和OpenWrt musl；保留未有物理设备的NOT_RUN，不做绝对DPI不可检测承诺。",
-  "next_action": "冻结H2202新SOURCE触发一批跨平台CI，收Go V1 fail-closed/拒绝随机回包、原Linux内核双端、Windows GUI/CLI和Android/OpenWrt构建。按首失败修复，签名归档。",
+  "current_task": "H2203：H2202唯一TLS V2跨平台收敛，修原Go旧V3拒绝断言/Windows 3 blob清单/治理热预算；收录CI证据。",
+  "why_now": "新H2202 Linux x86/ARM真网及Win/Linux/ARM TLS、Android APK/NDK/OpenWrt构建成功；治理热预算超23B、Win manifest 3个blob旧、原V3错误码假设过时。",
+  "done_when": "本SOURCE exact Windows清单、go TLS拒绝、治理/feature过关；Linux双ISA和多平台原件签名；无设备不冒称物理PASS。",
+  "next_action": "原生SOURCE再次收验，并区分旧028失败与新协议问题；安卓/路由器实体、Win真NIC/DPI/p99未验。",
   "unverified": true,
   "last_tested_source": "ee69bc68127af725f642520108664af6bba31f7f",
   "evidence_refs": [
@@ -22,5 +22,5 @@
     "docs/devlog/M0/20261118-PLAN029-H2202-ONE-PROTOCOL-ALL-CLIENTS-CANDIDATE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2202代码候选仅V4控制版本2+随机成功/失败两向、新Windows模式同步及跨平台CI脚本未真验；H2201 Linux ee69bc68真24/24限域PASS保留。Windows真实设备/安卓和OpenWrt实体、DPI/p99/物理ARM依旧NOT_RUN，029完整OPEN。"
+  "partial_summary": "H2202源2ca956：Linux两ISA真网、三OS Go TLS及Android APK+NDK/OpenWrt构建已由Action报告SUCCESS；治理23B、Win 3 blobs、退役V3客户端回包旧错误假设待修。物理设备、跨ISA/CPU/DPI未验；029技术OPEN。"
 }
