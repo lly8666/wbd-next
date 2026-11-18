@@ -49,6 +49,11 @@ public final class X86CiAppSuActivity extends Activity {
                 // This is EXACTLY the production native source/SHA/provenance
                 // checker, not a test-only hash bypass or independent payload.
                 NativePayload.stage(this);
+                // Real unprivileged App UID creates its own SELinux-labelled
+                // private files directory before KSU CI stages ephemeral
+                // credentials. Root must not create the App sandbox.
+                if(!getFilesDir().isDirectory())
+                    throw new IllegalStateException("private App files unavailable");
                 Log.i(TAG,"ORIGINAL_SIGNED_NATIVE_ASSETS_VERIFIED");
                 // Record fixed enum only: no interface, UID, IP, handle or
                 // credential leaves this private signed CI App.

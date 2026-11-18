@@ -364,6 +364,7 @@ jobs:
         run: |
           bash -n android/root-app/ci/x86-kvm-ksu-native.sh
           bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
+          bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
           bash android/root-app/ci/test-network-scope-gate.sh
       - name: D2-S1 build signed x86 CI-only APK using production Java + original Go/Rust
         shell: bash
@@ -389,6 +390,7 @@ jobs:
             out/android-x86-d2-root/linux-source-sha.txt
             out/android-x86-d2-root/android-source-sha.txt
             out/android-x86-d2-root/server-started.txt
+            out/android-x86-d2-root/secret-stage-enum.txt
             out/android-x86-d2-root/server-stage-enums.txt
             out/android-x86-d2-root/app-diagnostic-enums.txt
             out/android-x86-ksu-native/receipt.json

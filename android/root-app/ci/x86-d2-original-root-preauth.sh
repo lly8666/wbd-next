@@ -61,6 +61,7 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "source":os.environ["GITHUB_SHA"],"phase":os.environ["WBD_D2_PHASE"],
  "exit_code":int(os.environ["WBD_D2_RC"]),
  "linux_real_original_server":"PASS" if (p/"server-started.txt").exists() else "NOT_PROVEN",
+ "ephemeral_app_private_secrets":"PASS" if (p/"secret-stage-enum.txt").exists() else "NOT_PROVEN",
  "signed_app_requested_original_root_service":"PASS" if has("ORIGINAL_ROOT_SERVICE_START_REQUESTED") else "NOT_PROVEN",
  "original_go_root_process_launched":"PASS" if has("ROOT_PROCESS_LAUNCHED") else "NOT_PROVEN",
  "original_android_tun_configured":"PASS" if has("ORIGINAL_GO_TUN_KERNEL_CONFIGURED") else "NOT_PROVEN",
@@ -169,8 +170,29 @@ adb push "$tmp/route.hex" /data/local/tmp/wbd-d2-route.tmp \
   >"$out/push-route.txt" 2>&1
 adb push "$tmp/server-cert.pem" /data/local/tmp/wbd-d2-ca.tmp \
   >"$out/push-ca.txt" 2>&1
-adb shell su -c 'set -eu; umask 077; d=/data/user/0/org.wbdnext.rootclient/files; test -d "$d"; test ! -L "$d"; u=$(stat -c %u "$d"); case "$u" in ""|*[!0-9]*) exit 31;; esac; test "$u" -ge 10000; for f in wbd-pass.secret wbd-route.secret wbd-server-ca.pem; do test ! -L "$d/$f"; done; cp /data/local/tmp/wbd-d2-pass.tmp "$d/wbd-pass.secret"; cp /data/local/tmp/wbd-d2-route.tmp "$d/wbd-route.secret"; cp /data/local/tmp/wbd-d2-ca.tmp "$d/wbd-server-ca.pem"; chown "$u:$u" "$d/wbd-pass.secret" "$d/wbd-route.secret" "$d/wbd-server-ca.pem"; chmod 600 "$d/wbd-pass.secret" "$d/wbd-route.secret" "$d/wbd-server-ca.pem"; rm -f /data/local/tmp/wbd-d2-pass.tmp /data/local/tmp/wbd-d2-route.tmp /data/local/tmp/wbd-d2-ca.tmp' \
- >"$out/android-private-credential-stage.txt" 2>&1
+# Avoid nested adb->su->sh expansion of App-UID/ownership checks. Check
+# exact CI source before pushing, then run from original D1 root-owned stage.
+# The script contains only fixed paths/permission rules, never credentials.
+script=android/root-app/ci/x86-d2-install-credentials-android.sh
+test -s "$script"
+bash -n "$script"
+adb push "$script" /data/local/tmp/wbd-d2-cred-stage.sh >"$out/push-stage-script.txt" 2>&1
+script_sha="$(sha256sum "$script" | cut -d ' ' -f1)"
+adb shell su -c 'sha256sum /data/local/tmp/wbd-d2-cred-stage.sh' >"$out/android-stage-script-sha.txt"
+grep -Fq "$script_sha" "$out/android-stage-script-sha.txt"
+adb shell su -c 'test -d /data/local/tmp/wbd-x86-ci'
+adb shell su -c 'cp /data/local/tmp/wbd-d2-cred-stage.sh /data/local/tmp/wbd-x86-ci/wbd-d2-cred-stage.sh'
+adb shell su -c 'chmod 700 /data/local/tmp/wbd-x86-ci/wbd-d2-cred-stage.sh'
+adb shell su -c '/system/bin/sh /data/local/tmp/wbd-x86-ci/wbd-d2-cred-stage.sh' \
+  >"$out/android-private-credential-stage.txt" 2>&1 || {
+    echo "D2_S1_ANDROID_PRIVATE_CREDENTIAL_STAGE_FAIL" >&2
+    # Output only fixed enums, never shell stderr that could leak metadata.
+    grep -E '^D2_CI_(ROOT_|APP_|EPHEMERAL_)' "$out/android-private-credential-stage.txt" >&2 || true
+    exit 43
+  }
+grep -Fxq 'D2_CI_APP_PRIVATE_SECRET_STAGING_PASS' "$out/android-private-credential-stage.txt"
+echo D2_CI_APP_PRIVATE_SECRET_STAGING_PASS >"$out/secret-stage-enum.txt"
+echo D2_S1_CI_EPHEMERAL_APP_SECRET_STAGE_PASS
 phase=D2_S1_PRODUCTION_ROOT_SERVICE
 adb shell logcat -c >"$out/logcat-reset.txt" 2>&1 || true
 adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity \
