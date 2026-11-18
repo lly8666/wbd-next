@@ -199,7 +199,10 @@ public final class RootClientService extends Service {
             String local=intent.getStringExtra("local");
             if(iface==null||local==null)throw new IllegalStateException("Missing actual Network");
             PhysicalNetwork chosen=PhysicalNetwork.exact(this,handle,iface,index,mtu,local);
-            if(chosen==null)throw new IllegalStateException("ConnectivityManager Network changed");
+            if(chosen==null){
+                trace(RootDiagnosticReceipt.Event.START_FAILED_EXACT_NETWORK);
+                throw new IllegalStateException("ConnectivityManager Network changed");
+            }
             trace(RootDiagnosticReceipt.Event.NETWORK_SCOPE_VERIFIED);
             String peer=intent.getStringExtra("peer");
             String sni=intent.getStringExtra("sni");
@@ -216,6 +219,7 @@ public final class RootClientService extends Service {
                   AllAppRouteScope.same(this,excludedAppIDs,managerPackages)
                 : excludedAppIDs==null&&managerPackages==null&&
                   InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids);
+            if(!validatedScope)trace(RootDiagnosticReceipt.Event.START_FAILED_UID_SCOPE);
             if(peer==null||sni==null||user==null||
                 !ServerAddress.valid(peer)||
                 sni.length()==0||user.length()==0||
@@ -223,6 +227,8 @@ public final class RootClientService extends Service {
                 throw new IllegalArgumentException("Verified full-app or selected-app scope changed");
             }
             trace(RootDiagnosticReceipt.Event.APP_UID_GROUP_VERIFIED);
+            trace(allApps?RootDiagnosticReceipt.Event.ROUTE_SCOPE_ALL_ORDINARY_APPS_IPV4:
+                RootDiagnosticReceipt.Event.ROUTE_SCOPE_SELECTED_APPS_IPV4);
             selection=chosen;
             ownerToken=newOwnerToken();
             watchPhysicalNetwork(chosen);
@@ -410,6 +416,10 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_STOP_DRAINED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_NATIVE_STOP_DRAINED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_STOP_JOINED);
+                    if(OriginalGoMilestones.matches(line,
+                        "V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client")){
+                        trace(RootDiagnosticReceipt.Event.SERVER_PEER_THROW_PRIVATE_FIB_READBACK);
+                    }
                     if(!uidReady&&OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED")){
                         uidReady=true;
                         trace(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT);
@@ -432,6 +442,10 @@ public final class RootClientService extends Service {
                 RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
             if(exit==139)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_139);
             if(exit==132)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_132);
+            if(exit!=0&&!rawReady)
+                trace(RootDiagnosticReceipt.Event.ROOT_EXIT_BEFORE_GO_RAW);
+            if(exit!=0&&coldSynTxRecorded&&!synackSeen)
+                trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_EXIT_BEFORE_PEER_SYNACK);
             // Only the LAST observed genuine original-Go stage. Never
             // imply that missing TLS, app packets or joined Stop passed.
             String lastStage=readyRecorded?"NATIVE_UID_READY":

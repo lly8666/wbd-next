@@ -1,3 +1,16 @@
+A27 latest user scope: Audit default ordinary-App IPv4 whole-app
+UID range, make original-server resolved IPv4 a private-table
+/32 THROW exception before any all-app UID grant with exact readback,
+owned Stop, v3 owner-journal migration and Host Go tests. Add one-click
+APK offline SAFE TXT export through Android system file chooser: only
+allowlisted Root stages/timestamps/SOURCE/API and private-FIB status;
+never raw native stdout, logcat, server IP, password, route-key or
+UID/package names. Current whole-phone promise must remain narrow:
+system/root, IPv6, Android DNS/CLAT/hotspot and actual netd
+egress NOT_CONNECTED/NOT_RUN. User does not authorize emulator NIC
+binding or physical phone/server tests. Do source-locked Host tests
+and ARM64 APK build only; no KSU/TAP guests.
+ 
 # Android Root 原生 WBD 客户端｜长期接续提示词（现行单一版）
 
 > 这是 **agent 每次接续时的操作入口**，不是历史 Actions 年表。权威执行方案：[`ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md`](../plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md)；最近已核验业务诊断为 SOURCE `731ea034` [A25 Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998)。**开工必须重新核远端 HEAD、PR 和 Actions，不能永久复述这个 SHA 或阶段状态。**

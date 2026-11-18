@@ -14,6 +14,8 @@ import (
 type allFakeIP struct{
  tun string
  route bool
+ peerThrow string
+ failPeerAdd bool
  rules map[int]allRange
  failAddAt int
  addCount int
@@ -26,8 +28,10 @@ func(f *allFakeIP)run(args ...string)(string,error){
  f.calls=append(f.calls,text)
  switch{
  case reflect.DeepEqual(args,routeShow()):
-  if f.route{return "default dev "+f.tun+" scope link\n",nil}
-  return "",nil
+  out:=""
+  if f.route{out+="default dev "+f.tun+" scope link\n"}
+  if f.peerThrow!=""{out+="throw "+f.peerThrow+"\n"}
+  return out,nil
  case reflect.DeepEqual(args,ruleShow()):
   lines:=[]string{"0: from all lookup local","32766: from all lookup main"}
   prefs:=make([]int,0,len(f.rules))
@@ -41,12 +45,20 @@ func(f *allFakeIP)run(args ...string)(string,error){
    lines=append(lines,fmt.Sprintf("%d: from all uidrange 10001-10002 lookup 99999",Priority))
   }
   return strings.Join(lines,"\n")+"\n",nil
- case len(args)>2&&args[0]=="-4"&&args[1]=="route"&&args[2]=="add":
-  if f.route{return "",errors.New("route occupied")}
-  f.route=true;return "",nil
- case len(args)>2&&args[0]=="-4"&&args[1]=="route"&&args[2]=="del":
+ case len(args)==7&&args[0]=="-4"&&args[1]=="route"&&args[2]=="add"&&args[3]=="throw":
+  if f.failPeerAdd{return "",errors.New("injected peer exception failure")}
+  if f.peerThrow!=""||!f.route{return "",errors.New("throw occupied")}
+  f.peerThrow=strings.TrimSuffix(args[4],"/32");return "",nil
+ case len(args)==7&&args[0]=="-4"&&args[1]=="route"&&args[2]=="del"&&args[3]=="throw":
   if f.failDelete{return "",errors.New("delete denied")}
-  if !f.route{return "",errors.New("missing route")}
+  if f.peerThrow!=strings.TrimSuffix(args[4],"/32"){return "",errors.New("foreign throw")}
+  f.peerThrow="";return "",nil
+ case reflect.DeepEqual(args,routeAdd(f.tun)):
+  if f.route{return "",errors.New("default occupied")}
+  f.route=true;return "",nil
+ case reflect.DeepEqual(args,routeDel(f.tun)):
+  if f.failDelete{return "",errors.New("delete denied")}
+  if !f.route||f.peerThrow!=""{return "",errors.New("active peer exception")}
   f.route=false;return "",nil
  case len(args)>6&&args[0]=="-4"&&args[1]=="rule"&&args[2]=="add":
   f.addCount++
@@ -71,7 +83,8 @@ func allFixture(t *testing.T)(*allFakeIP,string,AllAppPlan){
  t.Helper()
  path:=filepath.Join(t.TempDir(),"root","route-journal.json")
  p:=AllAppPlan{ExcludedAppIDs:[]int{10111,10222},Tun:"wbdv40",
-  Underlay:"wlan0",Lease:"10.66.0.8/32",NetworkHandle:154,IfIndex:13}
+  Underlay:"wlan0",Lease:"10.66.0.8/32",ServerIP:"203.0.113.9",
+  NetworkHandle:154,IfIndex:13}
  return &allFakeIP{tun:p.Tun,rules:make(map[int]allRange)},path,p
 }
 func containsAllAppUID(rs []allRange,uid int)bool{
@@ -93,13 +106,17 @@ func TestAllAppRangeDoesNotCaptureRootOrSystemAcrossProfiles(t *testing.T){
 func TestAllAppDurableKernelReadbackAndExactStop(t *testing.T){
  f,path,p:=allFixture(t)
  s,err:=NewAllApps(f.run,path,p);if err!=nil{t.Fatal(err)}
- if !f.route||len(f.rules)!=len(p.ranges()){t.Fatal("kernel UID range incomplete")}
+ if !f.route||f.peerThrow!=p.ServerIP||len(f.rules)!=len(p.ranges()){
+  t.Fatal("server bypass / app UID range incomplete")
+ }
  raw,e:=os.ReadFile(path);if e!=nil{t.Fatal(e)}
- if !strings.Contains(string(raw),"\"version\":3")||!strings.Contains(string(raw),"\"excluded_app_ids\""){
+ if !strings.Contains(string(raw),"\"version\":4")||
+  !strings.Contains(string(raw),"\"server_ip\":\"203.0.113.9\"")||
+  !strings.Contains(string(raw),"\"excluded_app_ids\""){
   t.Fatal("missing durable exclusions or version")
  }
  if err=s.Stop();err!=nil{t.Fatal(err)}
- if f.route||len(f.rules)!=0{t.Fatal("kernel route/rules leaked on Stop")}
+ if f.route||f.peerThrow!=""||len(f.rules)!=0{t.Fatal("route/throw/UID leak after Stop")}
  if err=s.Stop();err!=nil{t.Fatal("Stop not idempotent")}
  if _,e=os.Stat(path);!os.IsNotExist(e){t.Fatal("journal not removed after readback")}
  for _,command:=range f.calls{
@@ -113,7 +130,7 @@ func TestAllAppFailureAtomicRollback(t *testing.T){
  f,path,p:=allFixture(t)
  f.failAddAt=3
  if _,err:=NewAllApps(f.run,path,p);err==nil{t.Fatal("claimed readiness after failure")}
- if f.route||len(f.rules)!=0{t.Fatal("partial kernel rules leaked")}
+ if f.route||f.peerThrow!=""||len(f.rules)!=0{t.Fatal("partial kernel route/throw/rules leaked")}
  if _,err:=os.Stat(path);!os.IsNotExist(err){t.Fatal("journal retained after successful rollback")}
 }
 func TestAllAppCrashRecoveryOwnerExclusionAndForeignScope(t *testing.T){
@@ -124,7 +141,9 @@ func TestAllAppCrashRecoveryOwnerExclusionAndForeignScope(t *testing.T){
  s.lock=nil;s.active=false
  delete(f.rules,Priority+len(p.ranges())-1)
  resumed,err:=NewAllApps(f.run,path,p);if err!=nil{t.Fatal("crash recovery",err)}
- if !f.route||len(f.rules)!=len(p.ranges()){t.Fatal("incomplete restored kernel state")}
+ if !f.route||f.peerThrow!=p.ServerIP||len(f.rules)!=len(p.ranges()){
+  t.Fatal("incomplete recovered server bypass/UID policy")
+ }
  if err=resumed.Stop();err!=nil{t.Fatal(err)}
 }
 func TestAllAppRejectChangedExclusionsAndForeignPriority(t *testing.T){
@@ -147,4 +166,49 @@ func TestAllAppInvalidExclusionsAndLeaseFailClosed(t *testing.T){
  }
  f,path,p:=allFixture(t);p.Lease="10.66.0.0/24"
  if _,err:=NewAllApps(f.run,path,p);err==nil{t.Fatal("accepted unauthenticated /24")}
+}
+
+func TestAllAppsServerIPExclusionBeforeUIDsAndRollback(t *testing.T){
+ f,path,p:=allFixture(t);f.failPeerAdd=true
+ if _,err:=NewAllApps(f.run,path,p);err==nil{t.Fatal("must reject unavailable peer bypass")}
+ if f.route||f.peerThrow!=""||len(f.rules)!=0{t.Fatal("failed bypass leaked a rule/route")}
+ for _,call:=range f.calls{if strings.Contains(call," rule add "){t.Fatal("UID routed before peer exception")}}
+ for _,invalid:=range []string{"","0.0.0.0","127.0.0.1","169.254.1.2","224.0.0.1","203.0.113.09","10.66.0.8"}{
+  n,q,v:=allFixture(t);v.ServerIP=invalid
+  if _,err:=NewAllApps(n.run,q,v);err==nil{t.Fatalf("invalid server exclusion admitted: %q",invalid)}
+ }
+}
+func TestAllAppsServerThrowRejectsForeignRoute(t *testing.T){
+ good:="default dev wbdv40 scope link\nthrow 203.0.113.9\n"
+ a,b,e:=allAppRouteState(good,"wbdv40","203.0.113.9")
+ if e!=nil||!a||!b{t.Fatalf("exact exception rejected: %v",e)}
+ for _,bad:=range []string{
+  "default dev wbdv40\nthrow 203.0.113.10\n",
+  "default dev wbdv40\nthrow 203.0.113.9 metric 1\n",
+  "default dev wbdv40\nthrow 203.0.113.9\nthrow 203.0.113.9\n",
+  "default dev wlan0\nthrow 203.0.113.9\n",
+ }{
+  a,b,e:=allAppRouteState(bad,"wbdv40","203.0.113.9")
+  if e==nil&&a&&b{t.Fatalf("foreign exception accepted: %q",bad)}
+ }
+}
+
+func TestAllAppsPreviousV3OwnedJournalExactRecoveryToV4(t *testing.T){
+ f,path,p:=allFixture(t)
+ old:=p
+ old.Version=legacyAllAppsVersion
+ old.ServerIP=""
+ old.Nonce="0123456789abcdef0123456789abcdef"
+ if e:=ownedDirectory(path);e!=nil{t.Fatal(e)}
+ if e:=writeAllAppJournal(path,old);e!=nil{t.Fatal(e)}
+ f.route=true
+ s,e:=NewAllApps(f.run,path,p)
+ if e!=nil{t.Fatalf("v3 exact recovery to v4 failed: %v",e)}
+ if f.peerThrow!=p.ServerIP||!f.route||len(f.rules)!=len(p.ranges()){
+  t.Fatal("v3 migration did not install v4 peer exception")
+ }
+ if e=s.Stop();e!=nil{t.Fatal(e)}
+ if f.route||f.peerThrow!=""||len(f.rules)!=0{
+  t.Fatal("v3->v4 cleanup left any owner state")
+ }
 }

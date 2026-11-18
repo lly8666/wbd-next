@@ -51,6 +51,15 @@ final class RootDiagnosticReceipt {
         ROOT_PROCESS_EXIT_NONZERO,
         ROOT_LAUNCH_FAILED,
         START_REFUSED,
+        START_FAILED_EXACT_NETWORK,
+        START_FAILED_UID_SCOPE,
+        ROUTE_SCOPE_ALL_ORDINARY_APPS_IPV4,
+        ROUTE_SCOPE_SELECTED_APPS_IPV4,
+        // The kernel private-table /32 throw was read back. This is NOT
+        // proof that later Android netd routed packets to physical Wi-Fi.
+        SERVER_PEER_THROW_PRIVATE_FIB_READBACK,
+        ROOT_EXIT_BEFORE_GO_RAW,
+        ORIGINAL_GO_EXIT_BEFORE_PEER_SYNACK,
         STOP_REQUESTED,
         STOP_SIGNAL_STARTED,
         STOP_SIGNAL_ACCEPTED,

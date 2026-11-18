@@ -18,6 +18,7 @@ public final class OriginalGoMilestonesTest {
             "V4_PUBLIC_LEASE_APPLIED role=client",
             "V4_PUBLIC_GO_RX_HANDOFF role=client",
             "V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED",
+            "V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client",
             "V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",
             "V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client",
             "V4_PUBLIC_NATIVE_STOP_DRAINED role=client"

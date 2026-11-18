@@ -10,6 +10,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import java.io.InputStream;
+import java.io.OutputStream;
 import android.text.InputType;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -38,7 +42,49 @@ public final class RootClientActivity extends Activity {
     private Spinner networks;
     private CheckBox allAppsDefault;
     private LinearLayout appChoices;
-    private TextView status,deviceSelfTestResult;
+    private TextView status,deviceSelfTestResult,diagnosticExportResult;
+    private static final int SAFE_DIAGNOSTIC_SAVE=2042;
+    private String signedSource(){
+        try(InputStream in=getAssets().open("native-arm64/SOURCE")){
+            byte[] data=new byte[128];
+            int n=in.read(data);
+            return n>0?new String(data,0,n,StandardCharsets.US_ASCII).trim():"";
+        }catch(Exception unavailable){return "";}
+    }
+    private void exportSafeDiagnostic(){
+        // SAF lets the user choose where to save a bounded, allowlisted TXT.
+        // Never open logcat, root journals, network sockets or native stdout.
+        try{
+            Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            i.addCategory(Intent.CATEGORY_OPENABLE);
+            i.setType("text/plain");
+            i.putExtra(Intent.EXTRA_TITLE,"wbd-root-safe-diagnostic.txt");
+            startActivityForResult(i,SAFE_DIAGNOSTIC_SAVE);
+        }catch(Exception ignored){
+            diagnosticExportResult.setText("无法打开系统文件保存器；未请求 Root 或读取原始日志");
+        }
+    }
+    @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
+        super.onActivityResult(requestCode,resultCode,data);
+        if(requestCode!=SAFE_DIAGNOSTIC_SAVE||diagnosticExportResult==null)return;
+        if(resultCode!=RESULT_OK||data==null||data.getData()==null){
+            diagnosticExportResult.setText("未导出诊断（用户取消或位置不可用）");
+            return;
+        }
+        Uri target=data.getData();
+        try{
+            String report=RootDiagnosticReport.build(getFilesDir(),
+                signedSource(),Build.VERSION.SDK_INT);
+            try(OutputStream out=getContentResolver().openOutputStream(target,"wt")){
+                if(out==null)throw new java.io.IOException("no output stream");
+                out.write(report.getBytes(StandardCharsets.UTF_8));
+                out.flush();
+            }
+            diagnosticExportResult.setText("脱敏诊断 TXT 已保存；可直接分享文件排障，不包含 IP/账号/密钥/日志正文");
+        }catch(Exception ignored){
+            diagnosticExportResult.setText("导出失败：无法写入所选位置；原生会话与路由不受影响");
+        }
+    }
     private final AtomicBoolean deviceSelfTestActive=new AtomicBoolean(false);
     private void runDeviceSelfTest(){
         if(deviceSelfTestActive.get())return;
@@ -272,14 +318,16 @@ public final class RootClientActivity extends Activity {
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
         TextView targetHelp=new TextView(this);
-        targetHelp.setText("默认接管普通 Android 应用的 IPv4 流量（20 个 Android 用户空间的应用 UID 段）。"
+        targetHelp.setText("默认仅接管普通 Android 应用的 IPv4 流量（最多20个用户空间），不是系统全流量。"
             +"仅在原 Go TLS/认证 /32、原 Rust M4 就绪后设置 KernelSU UID 路由。"
             +"系统/root/隔离 UID、WBD 自身及已识别 KernelSU Manager 绕过，"
-            +"物理网络出口不经隧道。IPv6、系统 DNS、系统进程全局接管尚未验证，当前不启用。"
+            +"原服务器IPv4在私有路由表设置/32 throw排除，必须内核读回才放行UID路由；" 
+            +"其后Android netd是否真实走物理出口尚未真机验。"
+            +"IPv6、系统DNS、系统进程不接管。"
             +"取消全应用模式后，可选择最多 8 个实际 App UID。");
         pane.addView(targetHelp);
         allAppsDefault=new CheckBox(this);
-        allAppsDefault.setText("默认：普通 App IPv4 走 WBD（排除 WBD/KernelSU/系统 UID）");
+        allAppsDefault.setText("默认：普通 App IPv4 走 WBD（服务器/本App/KernelSU排除，非全系统）");
         allAppsDefault.setChecked(true);
         pane.addView(allAppsDefault);
         appChoices=new LinearLayout(this);
@@ -302,6 +350,14 @@ public final class RootClientActivity extends Activity {
             startService(i);
         });
         pane.addView(stop);
+        Button exportDiagnostic=new Button(this);
+        exportDiagnostic.setText("导出脱敏排障 TXT（无 Root／无需联网）");
+        exportDiagnostic.setOnClickListener(v->exportSafeDiagnostic());
+        pane.addView(exportDiagnostic);
+        diagnosticExportResult=new TextView(this);
+        diagnosticExportResult.setText("首次使用后或连接失败后点击导出。仅固定阶段码与时间、APK SOURCE/API；不含服务器IP、账号、密钥和原生日志。");
+        diagnosticExportResult.setTextIsSelectable(true);
+        pane.addView(diagnosticExportResult);
         status=new TextView(this);
         status.setText("NOT_RUNNING");
         status.setTextIsSelectable(true);

@@ -87,11 +87,19 @@ cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
 go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
 assert 'rootjournal.NewGroup(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=' in go
 assert 'rootjournal.NewAllApps(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED mode=all_apps' in go
+assert 'ServerIP:c.peerIP.String()' in go
+assert 'V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client' in go
+assert 'SERVER_PEER_THROW_PRIVATE_FIB_READBACK' in s
 assert 'androidRouteAllApps' in cold and 'android-route-all-apps' in cold
 allapp=Path("r0/go_overlay/internal/v4productcli/rootjournal/allapps.go").read_text()
 assert 'func NewAllApps(' in allapp and 'requireReady(original)' in allapp and 'readOwnedJournalVersion(' in allapp
 assert 'AllAppIDMin = 10000' in allapp and 'AllAppIDMax = 19999' in allapp
 assert 'allMaxUserProfiles = 20' in allapp and 'ExcludedAppIDs' in allapp
+assert 'peerThrowArgs("add",original.ServerIP)' in allapp
+assert 'peerThrowArgs("del",p.ServerIP)' in allapp
+assert 'legacyAllAppsVersion = 3' in allapp
+assert 'Intent.ACTION_CREATE_DOCUMENT' in a, "system SAF safe-report export"
+assert 'RootDiagnosticReport.build(getFilesDir()' in a
 
 j=Path("r0/go_overlay/internal/v4productcli/rootjournal/group.go").read_text()
 assert 'func NewGroup(' in j and 'readOwnedJournalVersion(' in j and 'groupRuleState(' in j

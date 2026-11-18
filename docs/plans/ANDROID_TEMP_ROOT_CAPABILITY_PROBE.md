@@ -58,6 +58,34 @@
 
 Actions **默认**执行 Host、源锁原生双 ABI 构建、ARM64 APK 签名和独立 Linux oracle；x86 KSU Native、D2-S1、TAP guest 必须显式手工 `workflow_dispatch` 才运行，本次不选择。任何 BUILD/WIRING PASS 都不等于 Android ROOT、物理网络、FakeTCP SYNACK、TLS认证/32租约、Rust M4 真 TCP/UDP 或 owned Stop 的设备执行；本批上述运行项记 `NOT_RUN`，A25 的历史实测状态仍保持。
 
+### A27 — App IPv4 default, server IPv4 exemption and bounded diagnostics
+
+User requested an honest check of default whole-phone routing, explicit
+server-IP bypass, and efficient log export for future phone debugging,
+without simulated NIC binding or real phone testing. The default
+currently captures only ordinary App IPv4 UIDs in 20 user profiles,
+excluding controller/KSU Manager; it is not full system, IPv6, DNS,
+CLAT or hotspot coverage. Updated Android UI reports exact limits.
+
+Original Android Go now supplies its real server IPv4 (post-physical
+DNS bootstrap where applicable) to the all-app route journal. The
+owned private table 19842 adds a host /32 THROW exception with strict
+readback BEFORE any App UID routing rule; failures roll back precisely
+and never touch the system default route. The v4 journal supports
+exact-owner recovery from older v3. Throw means private WBD TUN bypass,
+not a verified later Android netd physical route. Optional handpicked
+App UID modes are NOT yet destination-exception-qualified.
+
+APK includes user-initiated Android system document export of an
+allowlisted, bounded original-Root stage report (source/API, time, fixed
+enum, last stage, private FIB bypass stage). No raw native stdout,
+logcat, server IP, account, credentials, UID list, payload or root
+journal goes into that file. The exporter needs no Root or network.
+Go Host FIB fake runner checks bypass before UID, invalid server,
+foreign modifications, exact Stop and v3 recovery; Host Java tests
+production export behavior and signed APK DEX. All new-source genuine
+Android network, TLS, data and physical exception status NOT_RUN.
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

@@ -385,3 +385,53 @@ not part of automatic APK wiring checks. Host and APK build gates are not
 a device launch, real FakeTCP/TLS/lease, kernel UID routing, data or Stop
 test. These all remain NOT_RUN on this new SOURCE; historical A25 evidence
 is retained separately.
+
+## A27 — Default app IPv4 scope, server /32 bypass and phone-safe diagnostics
+
+The default UI ON covers ONLY ordinary Android App IPv4 UID ranges:
+AppID 10000–19999 in 20 supported Android users, excluding the WBD
+controller and recognized KernelSU Manager AppIDs. Root, Android system
+services/isolated UIDs, IPv6, system DNS, hotspot, USB, CLAT and all-device
+kill-switch semantics are NOT covered. No VpnService is used.
+
+For the default all-app mode the original Go cold controller now includes
+the actual resolved original server IPv4 in a private-table root journal.
+After genuine authentication/lease/M4, it adds a server-host /32 THROW
+route in the same owned routing table 19842, reads it back, and ONLY THEN
+installs ordinary App UID rules. This prevents that destination from
+re-entering the WBD TUN. Owned Stop reverses exact UID, THROW, default and
+journal; old v3 app route journal is exact-owner recoverable to v4.
+No global default routing, system DNS or SELinux is modified. The next
+Android netd routing rule and true physical egress are NOT device-qualified,
+so a THROW readback is NOT proof of direct server traffic. The new
+destination exception applies to default all-app, not optional one/multi
+UID policies.
+
+First genuine phone failures are most likely staged:
+(1) KSU Manager detection, permissions, FGS/API35, selected physical
+Network handle/ifindex/MTU; (2) su denial, SELinux, root 0700 staging,
+original Bionic Go ELF/Rust shared library; (3) TUN/RAW socket privileges,
+bound physical egress, original FakeTCP SYN sendto but no genuine SYNACK
+or an untrusted RST; (4) real server raw socket, route key, TLS certificate
+trust/SNI/password, protected /32 lease; (5) Rust M4 readiness; (6) ip tool
+support for THROW /32 and uidrange, Android netd precedence, table19842
+conflicts and route journal; (7) exact-owned PID/generation Stop and any
+stale rules after abrupt process death. These are hypotheses to classify,
+not claimed Android failures or passed device checks.
+
+The new APK button 导出脱敏排障 TXT opens Android's standard
+ACTION_CREATE_DOCUMENT file picker. It saves a bounded plain text report
+containing ONLY allowlisted 13-digit time+fixed original-Go/Root stage
+enums, the signed APK SOURCE SHA and Android API level, plus a
+last-session category and private-FIB server-THROW observed/not-observed.
+It NEVER reads logcat, raw native stdout, root journals, TLS transcript,
+app names, UID ranges, passwords, keys, server IP or user secrets. It
+does not request Root, send data or modify routes. After a failure or
+Stop, choose this button, save the TXT, and share it explicitly.
+
+Actions run host original-Go route policy tests including THROW ordering,
+fail-closed rollback, foreign FIB rejection, v3→v4 recovery and owned
+Stop, and host JVM tests for the SAME production diagnostic exporter
+including injected secret-line filtering and bounded rollover. The signed
+APK DEX must contain the exporter. This scope excludes emulator network
+binding, phone installation, actual netd/TLS/M4/data and device Stop.

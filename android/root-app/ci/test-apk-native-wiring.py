@@ -27,6 +27,18 @@ assert 'LD_LIBRARY_PATH=' in service_src and 'exec ' in service_src
 assert 'RootStopCommand.build(token,ownerExecutable)' in service_src
 assert 'NATIVE_M4_AND_UID_READY' in service_src
 assert 'hasCA?' in service_src
+route_go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
+allapp_go=Path("r0/go_overlay/internal/v4productcli/rootjournal/allapps.go").read_text()
+assert "ServerIP:c.peerIP.String()" in route_go
+assert "V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client" in route_go
+assert 'peerThrowArgs("add",original.ServerIP)' in allapp_go
+assert 'peerThrowArgs("del",p.ServerIP)' in allapp_go
+assert "legacyAllAppsVersion = 3" in allapp_go
+ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+assert "allAppsDefault.setChecked(true)" in ui
+assert "Intent.ACTION_CREATE_DOCUMENT" in ui
+assert "RootDiagnosticReport.build(getFilesDir()" in ui
+assert 'SERVER_PEER_THROW_PRIVATE_FIB_READBACK' in service_src
 with zipfile.ZipFile(apk) as z:
     members = set(z.namelist())
     prefix = "assets/native-arm64/"
@@ -48,6 +60,8 @@ with zipfile.ZipFile(apk) as z:
     assert b"Lorg/wbdnext/rootclient/OriginalGoCommandArgs;" in dex
     assert b"Lorg/wbdnext/rootclient/RootClientService;" in dex
     assert b"Lorg/wbdnext/rootclient/RootStopCommand;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootDiagnosticReport;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootDiagnosticReceipt;" in dex
 client=Path("out/android-root-app-native/wbd-v4-client-arm64")
 dyn=subprocess.run(["readelf","-d",str(client)],check=True,capture_output=True,text=True).stdout
 assert "Shared library: [libwbd_engine.so]" in dyn
@@ -60,6 +74,10 @@ report={
   "registered_original_go_cli_flags":"PASS",
   "production_root_exec_and_owned_stop_source_gate":"PASS",
   "original_go_requires_rust_dynamic_library":"PASS",
+  "default_ordinary_app_ipv4_all_apps_source_contract":"PASS",
+  "original_go_server_ip_private_fib_throw_and_exact_cleanup_source_contract":"PASS",
+  "safe_allowlisted_android_diagnostic_export_in_signed_dex":"PASS",
+  "server_ip_actual_physical_bypass_on_android":"NOT_RUN",
   "original_go_rust_android_runtime":"NOT_RUN",
   "physical_network_binding":"NOT_RUN",
   "real_android_linux_synack_tls_lease_m4_and_app_data":"NOT_RUN",

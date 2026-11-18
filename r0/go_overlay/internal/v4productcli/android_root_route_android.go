@@ -79,10 +79,14 @@ func androidRootRouteAfterNative(
     if c.androidRouteAllApps{
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
             ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
-            Tun:tun.name,Lease:lease.String(),Underlay:c.rawInterface,
+            Tun:tun.name,Lease:lease.String(),ServerIP:c.peerIP.String(),
+            Underlay:c.rawInterface,
             NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         })
         if e!=nil{return nil,e}
+        // Exact server-IP exclusion in the private FIB is verified,
+        // but the next Android netd physical route is not yet qualified.
+        fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client")
         // Published only AFTER all bounded kernel uidrange rules (every
         // ordinary App UID in the 20 supported profiles, excluding owner
         // and KSU Manager IDs) have exact OS readback.
