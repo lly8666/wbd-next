@@ -6,11 +6,16 @@ on:
       - ".github/workflows/m0-plan029-h1663-gui-domain-mtu-vm.yml"
       - "tools/m0_plan029_gui_address_mtu_harness.cs"
       - "r0/go_overlay/cmd/wbd-client/m0_plan029_*.go"
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/admission_v4_control_padding_test.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_*.go"
+      - "r0/go_overlay/internal/realityfront/bridge_v4_windows_*.go"
       - "tools/m0_plan028_h1640_win_gui_compile.ps1"
   workflow_dispatch:
 permissions: {contents: read, actions: read}
 jobs:
   current-windows-gui-profile:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[plan029-all-platforms]')
     runs-on: windows-2025
     timeout-minutes: 35
     env:

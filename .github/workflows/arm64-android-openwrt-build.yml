@@ -1,11 +1,19 @@
 name: ARM64 OpenWrt musl and Android development builds
 run-name: ARM64 targets ${{ github.sha }}
-# Deferred Android/OpenWrt builds, manually runnable only; Linux ARM64 focus.
+# H2202 builds client-target code on Android and OpenWrt as a scoped
+# compile check; neither has a signed live native TUN/VpnService device.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/arm64-android-openwrt-build.yml'
+      - 'r0/go_overlay/internal/realityfront/admission_v4.go'
+      - 'r0/go_overlay/internal/realityfront/admission_v4_control_padding_test.go'
 permissions: {contents: read}
 jobs:
   openwrt-aarch64-musl:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[plan029-all-platforms]')
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 32
     steps:
@@ -39,6 +47,7 @@ jobs:
           retention-days: 14
 
   android-arm64-ndk:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[plan029-all-platforms]')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -66,6 +75,7 @@ jobs:
           echo ANDROID_ARM64_RUST_CORE_CROSS_BUILD_ONLY_PASS
 
   android-vpnservice-apk:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[plan029-all-platforms]')
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
