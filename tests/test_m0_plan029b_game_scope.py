@@ -20,7 +20,7 @@ class GameModesScope(unittest.TestCase):
         self.assertIn('WBD_PLAN029_GAME4_CN_SCENE:',workflow)
         self.assertIn("'[plan029-game4-cn-real]'",workflow)
         self.assertIn("WBD_WL_PUBLIC_MODES:",workflow)
-        self.assertIn("tests.test_m0_plan029b_game_scope -v",workflow)
+        self.assertIn("tests.test_m0_plan029b_game_scope tests.test_m0_plan029b_game2_tcp_scope -v",workflow)
         self.assertNotIn('[plan029-game4-cn-real] [plan029b-b4-gui-three-real]',workflow)
         ast.parse(e2e)
         self.assertIn('p029b_game2_cn=os.environ.get("WBD_PLAN029B_GAME2_CN_SCENE")=="1"',e2e)
