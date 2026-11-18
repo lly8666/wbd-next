@@ -16,7 +16,7 @@ class MatrixScope(unittest.TestCase):
       "PASS_SCOPED_FIVE_ORIGINAL_GAME_SPLIT_CASES_BOTH_OS",
       "windows_cli_sha256","linux_server_sha256"):
    self.assertIn(text,runner)
-  self.assertIn('if p.poll() is None',runner.replace('child.poll()','p.poll()'))
+  self.assertIn('if proc.poll() is None',runner)
  def test_original_kernel_and_no_synthetic_lan(self):
   fixture=(ROOT/"tools/m0_wl_public_normal_e2e.py").read_text()
   helper=ROOT/"tools/m0_plan029b_game_lan_probe.py"
