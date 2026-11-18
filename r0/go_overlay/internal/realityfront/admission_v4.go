@@ -35,7 +35,8 @@ const (
     v4RequiredFeatures = v4FeatureReceipt | v4FeatureSharedGame
     v4FeedbackPages = byte(8)
     // V2 is only TLS application data; no private pre-ClientHello bytes.
-    v4ControlPaddedVersion uint16 = 2
+    // Single mandatory TLS-protected Admission extension wire grammar.
+    v4ControlVersion uint16 = 2
     v4AdmissionPadMin = 32
     v4AdmissionPadMax = 500
 )
@@ -49,8 +50,7 @@ type V4Extension struct {
     // Normal fixed profile+1; zero for off/auto/Game/legacy V4.
     // Reuses previously reserved byte 22 of the existing protected record.
     NormalFec uint8
-    StartupPadding uint8 // protected client selected off/tls/flows: 0..2
-    ControlPadded bool // explicit V2: random request AND reply suffix
+    StartupPadding uint8 // mandatory protected V2 client-selected off/tls/flows
 }
 // Exactly 3(default) or 7(private test), rejecting all unknown/partial sets.
 func v4KnownFeatureSet(f uint16)bool{return f==v4RequiredFeatures||f==(v4RequiredFeatures|v4FeatureFEC2)}
@@ -58,32 +58,27 @@ func v4KnownFeatureSet(f uint16)bool{return f==v4RequiredFeatures||f==(v4Require
 func v4Encode(e V4Extension) ([24]byte, error) {
     var buf [24]byte
     if !v4KnownFeatureSet(e.Features)||e.GameFec>7||e.NormalFec>7||
-        e.StartupPadding>2||(!e.ControlPadded&&e.StartupPadding!=0)||
+        e.StartupPadding>2||
         (e.GameFec!=0&&e.NormalFec!=0)||
         ((e.GameFec!=0||e.NormalFec!=0)&&e.Features!=v4RequiredFeatures|v4FeatureFEC2){
         return buf,ErrAdmissionUnsupported
     }
-    version:=uint16(1)
-    if e.ControlPadded{version=v4ControlPaddedVersion}
-    binary.BigEndian.PutUint16(buf[0:2], version)
+    binary.BigEndian.PutUint16(buf[0:2], v4ControlVersion)
     binary.BigEndian.PutUint16(buf[2:4], e.Features)
     copy(buf[4:20], e.Epoch[:])
     buf[20] = v4FeedbackPages
     buf[21] = e.GameFec
     buf[22] = e.NormalFec
-    if e.ControlPadded{buf[23]=e.StartupPadding}
+    buf[23]=e.StartupPadding
     return buf, nil
 }
 
 func v4Decode(raw []byte) (V4Extension,error) {
     var e V4Extension
     if len(raw)!=v4ExtensionLen { return e,ErrAdmissionParams }
-    version:=binary.BigEndian.Uint16(raw[:2])
-    if (version!=1&&version!=v4ControlPaddedVersion) ||
+    if binary.BigEndian.Uint16(raw[:2])!=v4ControlVersion ||
        raw[20]!=v4FeedbackPages || raw[22]>7 || raw[21]>7 ||
-       (version==1&&raw[23]!=0) || (version==v4ControlPaddedVersion&&raw[23]>2) {
-       return e,ErrAdmissionParams
-    }
+       raw[23]>2 {return e,ErrAdmissionParams}
     e.Features=binary.BigEndian.Uint16(raw[2:4])
     if !v4KnownFeatureSet(e.Features) ||
        (raw[21]!=0&&raw[22]!=0)||
@@ -92,8 +87,7 @@ func v4Decode(raw []byte) (V4Extension,error) {
     }
     e.GameFec=raw[21]
     e.NormalFec=raw[22]
-    e.ControlPadded=version==v4ControlPaddedVersion
-    if e.ControlPadded{e.StartupPadding=raw[23]}
+    e.StartupPadding=raw[23]
     copy(e.Epoch[:],raw[4:20])
     return e,nil
 }
@@ -106,9 +100,8 @@ type V4ClientOptions struct {
     fec2ProbeOnly bool // unexported and default false: no product authority
     fec2Product bool // original-Go TLS + true native Linux feature7 owner only
     GameFec uint8 // 0=off; 1..7 = fixed profile 0..6; TLS-protected
-    NormalFec uint8 // 0=off/auto/old V4, 1..7=authenticated Normal fixed profile0..6
-    ControlPadded bool // V2 control suffix both ways; product must opt in
-    StartupPadding uint8 // only under V2: client off/tls/flows
+    NormalFec uint8 // 0=off/auto, 1..7=authenticated Normal fixed profile0..6
+    StartupPadding uint8 // mandatory V2 client off/tls/flows
 }
 // The backend is deliberately package-private: a caller cannot provide an
 // arbitrary 248-byte cold grammar and ask the engine to call it authenticated.
@@ -557,8 +550,7 @@ func (s *V4EpochStore) prepare(
 // A single additional, strictly bounded random suffix inside each TLS
 // application request/reply. Reading it completely before Detach is required;
 // otherwise it could be misinterpreted as an early native Rust DATA record.
-func v4AppendEncryptedAdmissionPad(wire []byte,ext V4Extension,rng io.Reader)([]byte,error){
-    if !ext.ControlPadded{return wire,nil}
+func v4AppendEncryptedAdmissionPad(wire []byte,rng io.Reader)([]byte,error){
     if rng==nil{return nil,ErrAdmissionParams}
     n,err:=rand.Int(rng,big.NewInt(v4AdmissionPadMax-v4AdmissionPadMin+1))
     if err!=nil{return nil,err}
@@ -571,8 +563,7 @@ func v4AppendEncryptedAdmissionPad(wire []byte,ext V4Extension,rng io.Reader)([]
     if _,err=io.ReadFull(rng,wire[begin:]);err!=nil{return nil,err}
     return wire,nil
 }
-func v4ConsumeEncryptedAdmissionPad(r io.Reader,ext V4Extension)error{
-    if !ext.ControlPadded{return nil}
+func v4ConsumeEncryptedAdmissionPad(r io.Reader)error{
     var hdr [2]byte
     if _,err:=io.ReadFull(r,hdr[:]);err!=nil{return err}
     n:=int(binary.BigEndian.Uint16(hdr[:]))
@@ -588,7 +579,7 @@ func v4RequestWire(req AdmissionRequest,ext V4Extension)([]byte,error) {
     block,err:=v4Encode(ext)
     if err!=nil{return nil,err}
     binary.BigEndian.PutUint16(raw[4:6],V4RecordVersion)
-    return v4AppendEncryptedAdmissionPad(append(raw,block[:]...),ext,rand.Reader)
+    return v4AppendEncryptedAdmissionPad(append(raw,block[:]...),rand.Reader)
 }
 func v4ReadRequest(r io.Reader)(AdmissionRequest,V4Extension,error) {
     var zero V4Extension
@@ -611,7 +602,7 @@ func v4ReadRequest(r io.Reader)(AdmissionRequest,V4Extension,error) {
     if _,err:=io.ReadFull(r,suffix);err!=nil{return AdmissionRequest{},zero,err}
     ext,err:=v4Decode(suffix[len(suffix)-v4ExtensionLen:])
     if err!=nil{return AdmissionRequest{},zero,err}
-    if err=v4ConsumeEncryptedAdmissionPad(r,ext);err!=nil{return AdmissionRequest{},zero,err}
+    if err=v4ConsumeEncryptedAdmissionPad(r);err!=nil{return AdmissionRequest{},zero,err}
     base:=append(append([]byte{},hdr[:]...),suffix[:len(suffix)-v4ExtensionLen]...)
     binary.BigEndian.PutUint16(base[4:6],RecordVersionV3)
     req,err:=readAdmissionRequest(bytes.NewReader(base))
@@ -620,6 +611,14 @@ func v4ReadRequest(r io.Reader)(AdmissionRequest,V4Extension,error) {
     return req,ext,nil
 }
 
+// V4 failures use the same bounded randomized TLS ApplicationData framing;
+// no extra RTT, no recognizable fixed one-byte error response.
+func v4WriteFailure(w io.Writer,status byte)error{
+    if status==admissionOK{return ErrAdmissionParams}
+    wire,err:=v4AppendEncryptedAdmissionPad([]byte{status},rand.Reader)
+    if err!=nil{return err}
+    return writeFull(w,wire)
+}
 func v4ReplyWire(result AdmissionResult,ext V4Extension)([]byte,error) {
     result.RecordVersion=RecordVersionV3
     raw,err:=marshalAdmissionReply(result)
@@ -627,13 +626,15 @@ func v4ReplyWire(result AdmissionResult,ext V4Extension)([]byte,error) {
     block,err:=v4Encode(ext)
     if err!=nil{return nil,err}
     binary.BigEndian.PutUint16(raw[1:3],V4RecordVersion)
-    return v4AppendEncryptedAdmissionPad(append(raw,block[:]...),ext,rand.Reader)
+    return v4AppendEncryptedAdmissionPad(append(raw,block[:]...),rand.Reader)
 }
 func v4ReadReply(r io.Reader,req AdmissionRequest)(AdmissionResult,V4Extension,error) {
     var zero V4Extension
     var header [admissionReplyLen]byte
     if _,err:=io.ReadFull(r,header[:1]);err!=nil{return AdmissionResult{},zero,err}
     if header[0]!=admissionOK {
+        // Rejections are encrypted and randomized too; reject short errors.
+        if err:=v4ConsumeEncryptedAdmissionPad(r);err!=nil{return AdmissionResult{},zero,err}
         switch header[0] {
         case admissionAuthFail:return AdmissionResult{},zero,ErrAdmissionAuth
         case admissionVersionFail:return AdmissionResult{},zero,ErrAdmissionVersion
@@ -650,7 +651,7 @@ func v4ReadReply(r io.Reader,req AdmissionRequest)(AdmissionResult,V4Extension,e
     if _,err:=io.ReadFull(r,tail);err!=nil{return AdmissionResult{},zero,err}
     ext,err:=v4Decode(tail[len(tail)-v4ExtensionLen:])
     if err!=nil{return AdmissionResult{},zero,err}
-    if err=v4ConsumeEncryptedAdmissionPad(r,ext);err!=nil{return AdmissionResult{},zero,err}
+    if err=v4ConsumeEncryptedAdmissionPad(r);err!=nil{return AdmissionResult{},zero,err}
     original:=append(append([]byte{},header[:]...),tail[:len(tail)-v4ExtensionLen]...)
     binary.BigEndian.PutUint16(original[1:3],RecordVersionV3)
     expectedReq:=req
@@ -712,7 +713,7 @@ func v4DeriveRecordKeys(exporter keyingMaterialExporter,result AdmissionResult,e
 // additional RTT. This opt-in API is fail-closed until caller proves readiness.
 func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConfig,opt V4ClientOptions)(*V4ClientSession,error) {
     if !opt.DataPlaneReady||opt.GameFec>7||opt.NormalFec>7||
-       opt.StartupPadding>2||(!opt.ControlPadded&&opt.StartupPadding!=0)||
+       opt.StartupPadding>2||
        (opt.GameFec!=0&&opt.NormalFec!=0)||
        (opt.GameFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportGame))||
        (opt.NormalFec!=0&&(!opt.fec2Product||cfg.Policy.Transport!=TransportNormal||
@@ -734,7 +735,6 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     wire,err:=v4RequestWire(req,V4Extension{
         Features:offeredFeatures,Epoch:opt.Epoch,GameFec:opt.GameFec,
         NormalFec:opt.NormalFec,StartupPadding:opt.StartupPadding,
-        ControlPadded:opt.ControlPadded,
     })
     if err!=nil{return nil,err}
     // The route classifier secret must be provisioned BEFORE opening
@@ -759,7 +759,6 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     // No protected reply feature downgrade/upgrade is admissible.
     if extension.Features!=offeredFeatures || extension.GameFec!=opt.GameFec ||
        extension.NormalFec!=opt.NormalFec ||
-       extension.ControlPadded!=opt.ControlPadded ||
        extension.StartupPadding!=opt.StartupPadding ||
        extension.Epoch==[16]byte{} ||
        (opt.Epoch!=[16]byte{} && opt.Epoch!=extension.Epoch) {
@@ -858,7 +857,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err!=nil{return nil,candidateError(ctx,err)}
     if err:=guard.Rearm();err!=nil{return nil,err}
     req,offered,err:=v4ReadRequest(tlsConn)
-    if err!=nil{_ = writeAdmissionFailure(tlsConn,admissionStatus(err));return nil,candidateError(ctx,err)}
+    if err!=nil{_ = v4WriteFailure(tlsConn,admissionStatus(err));return nil,candidateError(ctx,err)}
     authenticated:=false
     if opt.Authenticate!=nil {
         authenticated=opt.Authenticate(req.Username,req.Password)
@@ -866,7 +865,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         authenticated=credentialsMatch(req.Username,req.Password,cfg.ExpectedUsername,cfg.ExpectedPassword)
     }
     if !authenticated {
-        _=writeAdmissionFailure(tlsConn,admissionAuthFail)
+        _=v4WriteFailure(tlsConn,admissionAuthFail)
         return nil,ErrAdmissionAuth
     }
     serverFeatures:=v4RequiredFeatures
@@ -880,7 +879,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         case TransportNormal:
             if req.DesiredLanes!=1||req.LaneID!=1||
                 req.Policy.DesiredLanes!=1||offered.GameFec!=0 {
-                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                _=v4WriteFailure(tlsConn,admissionParamFail)
                 return nil,ErrAdmissionUnsupported
             }
             serverFeatures,err=v4ProtectedNormalFECFeatures(req.Policy)
@@ -888,7 +887,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
                 _,err=v4ProtectedNormalFECProfile(req.Policy,offered.NormalFec,true)
             }
             if err!=nil{
-                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                _=v4WriteFailure(tlsConn,admissionParamFail)
                 return nil,err
             }
             selectedNormalFec=offered.NormalFec
@@ -898,7 +897,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
                 req.Policy.DesiredLanes!=req.DesiredLanes||
                 req.LaneID<1||req.LaneID>req.DesiredLanes||
                 offered.NormalFec!=0 {
-                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                _=v4WriteFailure(tlsConn,admissionParamFail)
                 return nil,ErrAdmissionUnsupported
             }
             // The existing Game client always advertises FEC2 capability
@@ -907,25 +906,25 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             serverFeatures=v4RequiredFeatures|v4FeatureFEC2
             selectedGameFec=offered.GameFec
         default:
-            _=writeAdmissionFailure(tlsConn,admissionParamFail)
+            _=v4WriteFailure(tlsConn,admissionParamFail)
             return nil,ErrAdmissionUnsupported
         }
     }else {
         if opt.perClientNormalFEC {
             serverFeatures,err=v4ProtectedNormalFECFeatures(req.Policy)
             if err!=nil{
-                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                _=v4WriteFailure(tlsConn,admissionParamFail)
                 return nil,err
             }
             if _,err=v4ProtectedNormalFECProfile(req.Policy,offered.NormalFec,true);err!=nil{
-                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                _=v4WriteFailure(tlsConn,admissionParamFail)
                 return nil,err
             }
             selectedNormalFec=offered.NormalFec
         }else{
             // Preserve existing old standalone server fixed-strength rules.
             if offered.NormalFec!=0&&offered.NormalFec!=opt.NormalFec{
-                _=writeAdmissionFailure(tlsConn,admissionParamFail)
+                _=v4WriteFailure(tlsConn,admissionParamFail)
                 return nil,ErrAdmissionUnsupported
             }
             selectedNormalFec=offered.NormalFec
@@ -933,22 +932,22 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     if offered.Features!=serverFeatures||offered.GameFec!=selectedGameFec||
        (selectedGameFec!=0&&req.Policy.Transport!=TransportGame){
-        _=writeAdmissionFailure(tlsConn,admissionParamFail)
+        _=v4WriteFailure(tlsConn,admissionParamFail)
         return nil,ErrAdmissionUnsupported
     }
     if err:=req.Policy.SupportedNow();err!=nil{
-        _=writeAdmissionFailure(tlsConn,admissionParamFail)
+        _=v4WriteFailure(tlsConn,admissionParamFail)
         return nil,err
     }
     if cfg.PolicyAllow!=nil {
         if err:=cfg.PolicyAllow(req.Policy);err!=nil {
-            _=writeAdmissionFailure(tlsConn,admissionParamFail)
+            _=v4WriteFailure(tlsConn,admissionParamFail)
             return nil,errors.Join(ErrAdmissionUnsupported,err)
         }
     }
     if cfg.ValidateRequest!=nil {
         if err:=cfg.ValidateRequest(req);err!=nil {
-            _=writeAdmissionFailure(tlsConn,admissionParamFail)
+            _=v4WriteFailure(tlsConn,admissionParamFail)
             return nil,errors.Join(ErrAdmissionParams,err)
         }
     }
@@ -956,7 +955,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if source==nil {source=rand.Reader}
     epoch,nonce,finish,err:=opt.Epochs.prepare(req.Username,req.TunnelID,req.LaneID,offered.Epoch,source,opt.AllowLaneReplacement)
     if err!=nil {
-        _=writeAdmissionFailure(tlsConn,admissionParamFail)
+        _=v4WriteFailure(tlsConn,admissionParamFail)
         return nil,fmt.Errorf("%w: %w",ErrV4ServerEpochReserve,err)
     }
     // Every unsuccessful pre-detach path MUST roll back the reserved epoch.
@@ -966,7 +965,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     lease:=""
     manualLease,manualErr:=v4ServerSelectedAdmissionLease4(opt.ManualLease4,opt.ManualLeases4,req.Username,req.AutoLease,cfg.AllocateLease!=nil)
     if manualErr!=nil{
-        _=writeAdmissionFailure(tlsConn,admissionParamFail)
+        _=v4WriteFailure(tlsConn,admissionParamFail)
         return nil,manualErr
     }
     if req.AutoLease {
@@ -979,11 +978,11 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             manualLease=""
         }else{
             if cfg.AllocateLease==nil {
-                _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,ErrAdmissionParams
+                _=v4WriteFailure(tlsConn,admissionParamFail);return nil,ErrAdmissionParams
             }
             lease,err=cfg.AllocateLease(req)
             if err!=nil || lease=="" {
-                _=writeAdmissionFailure(tlsConn,admissionParamFail);return nil,errors.Join(ErrAdmissionParams,err)
+                _=v4WriteFailure(tlsConn,admissionParamFail);return nil,errors.Join(ErrAdmissionParams,err)
             }
         }
     }
@@ -994,12 +993,12 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         LaneID:req.LaneID,IncarnationNonce:nonce,TunnelID:append([]byte(nil),req.TunnelID...),
         ClientLimit:req.ClientLimit,ServerLimit:cfg.ServerLimit,
     }
-    // Credentials and policy have already been verified. Only this owner
-    // inherits the client's protected V2 startup-pad selector; the process
-    // server default cannot silently override it. V1 stays strictly off.
+    // Credentials and policy have already been verified. This owner
+    // inherits only the client's mandatory V2 startup-pad selector;
+    // the server process default cannot override it.
     ext:=V4Extension{Features:serverFeatures,Epoch:epoch,
         GameFec:selectedGameFec,NormalFec:selectedNormalFec,
-        StartupPadding:offered.StartupPadding,ControlPadded:offered.ControlPadded}
+        StartupPadding:offered.StartupPadding}
     state:=tlsConn.ConnectionState()
     keys,err:=v4DeriveRecordKeys(&state,result,ext)
     if err!=nil{return nil,err}
