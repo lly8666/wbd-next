@@ -43,6 +43,13 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java \
   android/root-app/ci/RootDiagnosticReceiptTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReceiptTest
+# Actual production report filtering and last-stage derivation; NEVER fake
+# a Root device, fetch logcat, reveal source raw stdout or touch network.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java \
+  android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java \
+  android/root-app/ci/RootDiagnosticReportTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReportTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
   android/root-app/ci/OriginalGoMilestonesTest.java
