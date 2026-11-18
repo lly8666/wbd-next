@@ -81,6 +81,22 @@ class NativeSmokeScopeTests(unittest.TestCase):
         self.assertTrue(requires_native_smoke(
             "push",changed,"[plan029b-b2-cn-ordinary-real]"))
 
+    def test_h2169_game_padding_exact_marker_dispatches_only_requested_native_scope(self):
+        # The H2168 2x3 source-locked Windows/WSL2 scene was falsely
+        # skipped despite a valid workflow trigger: this central list
+        # did not admit its explicit marker. No implicit full matrix.
+        fixture=["tools/m0_plan029b_game_padding_native.py"]
+        self.assertFalse(requires_native_smoke("push",fixture,"Game padding docs only"))
+        self.assertTrue(requires_native_smoke(
+            "push",fixture,"PLAN029 H2169 [plan029-game-padding-real]"))
+        self.assertFalse(requires_native_smoke(
+            "push",fixture,"[plan029b-game-matrix-untested]"))
+        workflow=(Path(__file__).resolve().parents[1]/
+                  ".github/workflows/m0-wl-public-normal-full.yml").read_text()
+        self.assertIn("'[\"game2off\",\"game4fixed\"]'",workflow)
+        self.assertIn("WBD_PLAN029B_GAME_PADDING_SCENE:",workflow)
+        self.assertIn("tools/m0_plan029b_game_padding_native.py",workflow)
+
     def test_workflow_gates_expensive_jobs_but_keeps_fast_push_checks(self):
         workflow = (Path(__file__).resolve().parents[1] /
                     ".github/workflows/m0-wl-public-normal-full.yml").read_text(encoding="utf-8")

@@ -4,29 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2168,
-  "checkpoint_sha": "2e169ead0189f253e465db20444d99202809d3e3",
+  "sequence": 2169,
+  "checkpoint_sha": "65a49d29fa7f484a1a8cbb9d9e6fd709aedc1bcd",
   "progress": "in_progress",
   "task_id": "PLAN029B-USER-20261117",
-  "current_task": "H2168 启动Game2(off FEC)/Game4(fixed FEC)三档startup-padding原Windows2025/WSL2签名原生NPF/UDP/TCP/双Stop最小试验",
-  "why_now": "H2167 source编译/WinGUI assembly/Rust 419定向单测、governance通过；还需Game2/Game4新padding真实OS NPF签名，旧H2162不覆盖tls/flows",
-  "done_when": "两原生作业各off/tls/flows同源原Go TLS原Rust M4真实复制，off=0,tls/flows>0，真OS UDP/TCP/Stop和WAL PASS；失败如实记录",
-  "next_action": "观测唯一H2168 Game Padding专属两原生作业，按真实日志/evidence更新SOURCE和卡片，不跑20全矩阵、030不启动",
+  "current_task": "H2169 修 H2168 中央 native_smoke marker漏列：Game2/off FEC与Game4/fixed FEC × off/tls/flows 两台原生作业真正运行，源码/GUI既有H2167守卫保持",
+  "why_now": "H2168 Action44248395979 cheap PASS但源锁原生Windows/WSL2 job全SKIPPED；缺tools/m0_native_ci_scope.py的显式[plan029-game-padding-real]，不等于原生测试PASS",
+  "done_when": "两个source-locked真实原生Game2/Game4作业各三代off/tls/flows NPF拷贝+TCP/UDP/双方Stop+MTU1460 PASS且同一SOURCE",
+  "next_action": "观察 H2169 新 GitHub Action: native_smoke=true、Linux build、2个Windows2025实际jobs；失败保留首错并修同scope，不卡旧矩阵或030",
   "unverified": true,
   "last_tested_source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
   "evidence_refs": [
     "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
   ],
   "context_refs": [
+    "docs/devlog/M0/20261118-PLAN029-H2169-GAME-PADDING-NATIVE-GATE-FIX.md",
     "docs/devlog/M0/20261118-PLAN029-H2168-GAME-PADDING-NATIVE-TRIAL.md",
     "docs/devlog/M0/20261118-PLAN029-H2167-GAME-STARTUP-PADDING-SOURCE.md",
     "docs/evidence/M0/PLAN029-H2163-GUI-SETTINGS-AUDIT-20261118.json",
     "docs/devlog/M0/20261118-PLAN029-H2164-FIRST-CI-FORMAT-CORRECTION.md",
     "docs/devlog/M0/20261118-PLAN029-H2163-GUI-SETTINGS-AUDIT.md",
     "docs/devlog/M0/20261118-PLAN029B-H2137-B5-CLOSEOUT.md",
-    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
-    "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json"
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2167 static/Go/Rust/C ABI CI真实SUCCESS，419 Rust测试含2新Game padding PASS；另旧M4 ClientConfig.RootCAs测试FAIL保留。H2168 只补2×3真实Game原生代表，有源锁日志，不提前当物理PASS。"
+  "partial_summary": "H2167 Windows Rust419/419+Go/assembly/feature/governance编译PASS；H2168 Action44248395979 cheap PASS但实际原生SKIP，不能授予Game padding PASS；H2169增加中央marker及单测，源锁2x3限定原生验证。"
 }

@@ -80,6 +80,9 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029b-b5-samevm-10m]",
     "[plan029b-game2-cn-real]",
     "[plan029b-game-matrix-real]",
+    # H2168 explicit 2x3 original Game startup-padding native scenes. A
+    # workflow/path-only edit must not be silently reduced to cheap checks.
+    "[plan029-game-padding-real]",
 )
 
 
