@@ -3075,7 +3075,8 @@ pub extern "C" fn wbd_m0_embedded_go_normal_startup_padding_set(
     if !(576..=1500).contains(&outer_path_mtu){return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
-    if e.phase!=PH_ACTIVE||e.workers.is_some()||e.protected_features!=3{
+    if e.phase!=PH_ACTIVE||e.workers.is_some()||
+        !matches!(e.protected_features,3|7){
         return BAD_STAGE
     }
     let Some((_,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
@@ -3101,7 +3102,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_startup_padding_counters(
     if mode.is_null()||records.is_null()||bytes.is_null(){return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
-    if e.phase!=PH_ACTIVE||e.workers.is_none()||e.protected_features!=3{
+    if e.phase!=PH_ACTIVE||e.workers.is_none()||
+        !matches!(e.protected_features,3|7){
         return BAD_STAGE
     }
     let m=match e.normal_startup_padding.as_ref().map(|p|p.mode_name()){
@@ -6429,12 +6431,29 @@ fn original_fixed_stage_source(e:&mut Entry,
                 Ok(n) if n==payload_len=>n,
                 _=>{e.fec2_fail_reasons[0]+=1;return Err(INVALID)}
             };
-            let (pn,_,_)=match e.owner.seal_fec2_product_one(
-                sealed,written,2,budget,15,epoch,now
-            ){
+            // Original IPv4 source is immutable in FixedStream; only AEAD
+            // trailer zeros are optional, never part of FEC source/index or
+            // parity. The original owner still burns PN and TCP seq.
+            let room=budget.record_wire_mtu
+                .min(e.normal_pad_wire_limit)
+                .min(sealed.writable().len())
+                .saturating_sub(written.saturating_add(31));
+            let now_ms=now.0/1_000_000;
+            let pad=if let Some(policy)=e.normal_startup_padding.as_mut(){
+                if now_ms.saturating_sub(e.normal_pad_gc_ms)>=30_000{
+                    policy.expire_coarse(now_ms);
+                    e.normal_pad_gc_ms=now_ms;
+                }
+                policy.propose(source,now_ms,room)
+            }else{0};
+            let result=e.owner.seal_fec2_product_one_padded(
+                sealed,written,2,budget,15,epoch,now,pad
+            );
+            let (pn,_,_)=match result{
                 Ok(x)=>x,
                 Err(_)=>{e.fec2_fail_reasons[2]+=1;return Err(BAD_STAGE)}
             };
+            if pad>0{e.normal_pad_staged.push((pn,pad as u16));}
             e.fec2_staged_pns.push((pn,2,rev));
             Ok(())
         })();
