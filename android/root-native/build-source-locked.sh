@@ -45,6 +45,16 @@ for file in r0/go_overlay/internal/realityfront/*.go; do
   test ! -e "legacy/internal/realityfront/$name" || { echo "overlay collision: $name" >&2; exit 1; }
   cp "$file" "legacy/internal/realityfront/$name"
 done
+# A28 main brought the original offline v2 short-route-key package.
+# The fixed donor lacks this package: assemble the EXACT public overlay
+# for original Go's shared client/server parser (not a second KDF stack).
+test -d r0/go_overlay/internal/v4routekey
+test ! -e legacy/internal/v4routekey || {
+  echo "source-locked original Go v4routekey donor collision" >&2
+  exit 1
+}
+mkdir -p legacy/internal/v4routekey
+cp r0/go_overlay/internal/v4routekey/*.go legacy/internal/v4routekey/
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 mkdir -p legacy/internal/v4productcli/rootjournal
 cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
@@ -54,6 +64,7 @@ mkdir -p legacy/internal/v4productcli/dnsnative
 cp r0/go_overlay/internal/v4productcli/dnsnative/*.go legacy/internal/v4productcli/dnsnative/
 # Portable kernel-policy tests remain host-Go; x86_64 Android is CI-only, not a shipped ABI.
 (cd legacy && go test -count=1 ./internal/v4productcli/rootjournal)
+(cd legacy && go test -count=1 ./internal/v4routekey)
 # Android ARM64 cross-compile only; test ELF is NOT executed or deployed.
 (cd legacy && GOOS=android GOARCH=arm64 CGO_ENABLED=0 GOTOOLCHAIN=local go test -c \
   -o "$GITHUB_WORKSPACE/out/android-product-a1/dnsnative-arm64.test" \

@@ -51,6 +51,16 @@ for file in r0/go_overlay/internal/realityfront/*.go;do
   }
   cp "$file" "legacy/internal/realityfront/$name"
 done
+# A28 main brought the original offline v2 short-route-key package.
+# The fixed donor lacks this package: assemble the EXACT public overlay
+# for original Go's shared client/server parser (not a second KDF stack).
+test -d r0/go_overlay/internal/v4routekey
+test ! -e legacy/internal/v4routekey || {
+  echo "source-locked original Go v4routekey donor collision" >&2
+  exit 1
+}
+mkdir -p legacy/internal/v4routekey
+cp r0/go_overlay/internal/v4routekey/*.go legacy/internal/v4routekey/
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 mkdir -p legacy/internal/v4productcli/rootjournal
 cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
