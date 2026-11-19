@@ -171,11 +171,11 @@
       "evidence": "docs/evidence/M0/H2214-CLIENT-TLS-VERIFY-SWITCH-SOURCE-ED1370-ACTIONS-20261119.json"
     },
     {
-      "platform": "GitHub Actions real Linux ARM64 routed double NAT and Windows x64 native Rust GUI paired field-trial",
-      "scope": "H2216 NAT TTL regression: packet-forwarding 128→116/64→52, three real Linux SNAT clients and one server DNAT:443 with original Go TLS, Rust native TUN UDP, correct owned Stop. Real Windows↔physical ARM64 WAN still NOT_RUN.",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": "docs/devlog/M0/20261119-H2216-ROUTED-TTL-NAT-NATIVE-FIX.md"
+      "platform": "Native Linux ARM64 3-client routed double NAT plus Windows AMD64 original-Go/Rust GUI",
+      "scope": "H2216 shared client/server Rust DATA/ACK RX no persona TTL gate; nonzero TTL only, valid IPv4/TCP checksums and authenticated owner unchanged. Linux ARM64 independent SNAT×3/DNAT:443 genuine 48 UDP echoes, Normal/Game2/Game4 and Stop; 12 native real TLS/TUN scenes and Windows native GUI build PASS. Physical Windows↔public ARM64 WAN still NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "91b9d521ce1451300533d078844340add4820c29",
+      "evidence": "docs/evidence/M0/PLAN029-H2216-TTL-PERSONA-NAT-SOURCE-91B9-SCOPED-PASS-20261119.json"
     }
   ],
   "limitations": [
@@ -186,7 +186,7 @@
     "H1506 Win5 FAIL; H1514 WSL GUI lock; 600s NOT_RUN.",
     "H1555 lease TLS unchanged; Win600s NOT_RUN.",
     "H2214 user-requested insecure-by-default TLS peer verification: attacker-controlled active endpoints can impersonate server and obtain protected admission credentials; opt in tls-verify-server=true to authenticate server. This intentionally reverses H2213 default.",
-    "H2216: Routed double-NAT public IPv4 TCP native RX now accepts ordinary router-decremented TTL in (0, persona initial TTL]; DATA and ACK still require exact trusted TCP tuple, independent IPv4/TCP checksums and subsequent AEAD+PN replay authentication. Pinned original Go FakeTCP did not enforce received exact TTL. Captured physical Windows128→116 and server64→52 show the previous regression."
+    "H2216: Native DATA/ACK accepts any received TTL 1..255 independent of sender persona, still checks IPv4/TCP checksums, trusted tuple, MTU and downstream AEAD/replay. Original Go parser has no received-TTL persona check. Physical Windows128→116/Linux64→52 captures are historical failure evidence, not post-fix physical WAN qualification; external physical WAN still NOT_RUN."
   ],
   "promotion": null,
   "legacy_branch_reason": "Pre-2026-10-27 integrated feature registry; not new experiment authorization."
