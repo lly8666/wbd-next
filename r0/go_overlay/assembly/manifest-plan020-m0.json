@@ -1715,7 +1715,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "9bcdb1c9dd6d8b509a99cee6d6ad3b92d4455c15"
+      "result_blob": "01a54690c7e8c5954d498f5f2db13f35d1d1a2bd"
     },
     {
       "kind": "create",
