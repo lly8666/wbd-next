@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2224",
+  "date": "2026-11-19",
+  "source_sha": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
+  "code_source_sha": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
+  "result": "PASS_SCOPED_LINUX_ARM64_NATIVE_NAT_STOP_WINDOWS_GUI_SOURCE_LOCKED_NOT_FULL_PHYSICAL",
+  "qualification": "PASS_SCOPED",
+  "workflow_run_id": 44564552571,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44564552571",
+  "jobs": [
+    {
+      "name": "windows-real-original-tls",
+      "status": "SUCCESS",
+      "scope": "Original Go Windows CLI + exact ISA-L Rust M3 DLL & 3-cipher integration + original WinForms real self-test 426 checks",
+      "gui_checks": 426
+    },
+    {
+      "name": "linux-arm64-native-original-tls-nat",
+      "status": "SUCCESS",
+      "scope": "Original Go TLS/Rust M4 release, Linux server owned MASQUERADE Go tests, 2 cold Health RNG Rust tests, 3 SNAT/1 DNAT kernel TUN UDP + owned Stop",
+      "randomized_cold_health_tests": 2
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14551074321,
+      "name": "h2224-windows-simple-ready-go-rust",
+      "archive_digest": "sha256:105c0574b732140a5f2000270c78aedc6f49af48b78359128ad7fd965910f543"
+    },
+    {
+      "id": 14549674041,
+      "name": "h2224-linux-arm64-double-nat-proof",
+      "archive_digest": "sha256:7333e82f8d039a6b9e5a45bc3f1e78bc2eed2d24d6f5f48804a219213dd4c162"
+    }
+  ],
+  "semantic_verdict": {
+    "linux_client_initial_ready": "ALREADY_LOCAL_TLS_RUST_OS_NO_REVERSE_APP_GATE_UNCHANGED",
+    "windows_gui_activation": "BOTH_GENUINE_OS_APPLIED_AND_NATIVE_READY_ANY_ORDER_AFTER_CURRENT_CLIENT_CONNECTION",
+    "windows_gui_quality": "NATIVE_C2S_APPLIED_AND_S2C_NEGOTIATED_ONLY_OR_UNKNOWN_NO_FABRICATED_RTT_LOSS",
+    "linux_server_nat": "SERVER_ONLY_OWNED_IPV4_MASQUERADE_TUN_SUBNET_AND_UNDERLAY_EXACT_TAG_KERNEL_READBACK_CLEAN_STOP",
+    "health": "SERVER_RANDOM_3_TO_5_CLIENT_RANDOM_4_TO_7_COLD_HEALTHS_NEXT_INTERVAL_225_TO_575_MS_FIRST_IMMEDIATE",
+    "tls_protocol": "ORIGINAL_GO_TLS13_UNCHANGED_NO_PRIVATE_PRELUDE_NO_RESEAL_ON_REPEAT"
+  },
+  "not_run": [
+    "New H2224 Windows physical WAN/long-term p99 and RSS",
+    "Real public server external exit under host IPv4 forwarding disabled",
+    "Actual physical capture of randomized cold Health schedule",
+    "Authenticated peer reverse Auto S2C applied profile (only negotiated/unknown visible)"
+  ],
+  "user_statement": "User reports H2223 actual business traffic working; exact binary/source hashes and long-run stability not supplied in this turn, so this is not H2224 physical PASS.",
+  "previous_failures_preserved": [
+    "H2220 R3/FEC6 real physical RX0",
+    "H2219 earlier cold Health packet loss",
+    "H2222 latest expanded nonce branch CI FAIL"
+  ],
+  "followup": "Merge source-locked code only after matching CI result, then keep PLAN029/029B full technical and long-term physical stability OPEN."
+}

@@ -184,6 +184,13 @@
       "status": "FAIL",
       "source_sha": "91b9d521ce1451300533d078844340add4820c29",
       "evidence": "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
+    },
+    {
+      "platform": "Linux ARM64 / Windows2025 original TLS 1.3 and Rust native Health",
+      "scope": "H2224 Rust cold Health server 3..5 client 4..7, 225..575ms sent-copy cadence randomized after original TLS; existing AEAD kind/PN and shared native Stop retain baseline; 2 Rust randomized unit tests SUCCESS",
+      "status": "BUILD_PASS",
+      "source_sha": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
+      "evidence": "docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json"
     }
   ],
   "limitations": [
@@ -195,7 +202,8 @@
     "H1555 lease TLS unchanged; Win600s NOT_RUN.",
     "H2214 user-requested insecure-by-default TLS peer verification: attacker-controlled active endpoints can impersonate server and obtain protected admission credentials; opt in tls-verify-server=true to authenticate server. This intentionally reverses H2213 default.",
     "H2216: Native DATA/ACK accepts any received TTL 1..255 independent of sender persona, still checks IPv4/TCP checksums, trusted tuple, MTU and downstream AEAD/replay. Original Go parser has no received-TTL persona check. Physical Windows128→116/Linux64→52 captures are historical failure evidence, not post-fix physical WAN qualification; external physical WAN still NOT_RUN.",
-    "H2217 user-provided physical Windows H2216v2 attempt failed first+reverse on public IPv4; earlier H2216 native CI PASS_SCOPED does not qualify WAN. No binary SHA or full TCP payload in capture; next task first-stage Go→Rust NPF and server actual reverse TX counters."
+    "H2217 user-provided physical Windows H2216v2 attempt failed first+reverse on public IPv4; earlier H2216 native CI PASS_SCOPED does not qualify WAN. No binary SHA or full TCP payload in capture; next task first-stage Go→Rust NPF and server actual reverse TX counters.",
+    "H2224 random control timing does not imply undetectable traffic. Public-WAN packet timing capture and long-run loss behavior NOT_RUN; no TLS wire-format changes."
   ],
   "promotion": null,
   "legacy_branch_reason": "Pre-2026-10-27 integrated feature registry; not new experiment authorization."
