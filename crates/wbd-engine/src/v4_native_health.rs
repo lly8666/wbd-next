@@ -539,6 +539,7 @@ impl ColdReadyClient {
         Some(Self{nonce,due_at:at,accepted_copies:0,confirmed:false})
     }
     pub(crate) fn due(&self,at:u64)->bool{!self.confirmed&&at>=self.due_at}
+    pub(crate) fn next_deadline(&self)->Option<u64>{(!self.confirmed).then_some(self.due_at)}
     pub(crate) fn nonce(&self)->u64{self.nonce}
     pub(crate) fn attempts(&self)->u32{self.accepted_copies}
     pub(crate) fn confirmed(&self)->bool{self.confirmed}
