@@ -101,6 +101,13 @@ Android network, TLS, data and physical exception status NOT_RUN.
 不开放 main Linux Decoy/NAT/padding、Windows GUI、Game2/4、Fixed/Auto。先做 Host KDF主线同源3向量/缓存负例与原Go CLI 32B file、同 SOURCE Rust Bionic/Go ABI/原Linux oracle、签名 APK 生产 DEX/原ELF/SHAs + feature catalog。CI 的原 APK 同内容增加直观 Lite 文件别名，每次随机 debug 签名同包名不能覆盖旧版，先Stop+路由检查再卸载。未单独授权的实体 Android、个人服务器和网络设备与重复 KSU/TAP guest 继续不运行；真正 SYNACK/TLS/32租约/M4/双向业务/owned Stop仍NOT_RUN。任何新 CI 失败不隐瞒。
 
 
+
+### A30｜API36 用户真实 EXIT_1/PRE_TUN 的 Root/原 Go 早期启动诊断
+
+用户自行运行签名 Root Lite v2 SOURCE `6bcdbc6c7c27b71a8ea47c25f8385cd177daa985`，上传的 V1 允许列表报告：Android API36，Root su 子进程 1795106883788ms 启动，1795106884129ms 非零退出，约 **341ms**；记录了 `NATIVE_SOURCE_VERIFIED` / `ROOT_GRANT_REQUESTED` / `ROOT_PROCESS_LAUNCHED` / `ROOT_EXIT_BEFORE_GO_RAW`，没有 TUN/RAW 里程碑。界面退出码 **1**。**ProcessBuilder.start 成功不等于 su 授 root、shell 真执行、原 Go ELF 被加载；`OWNER_CLEANUP_FINISHED` 仅 Java finally 清除暂存文件，不等同原内核 route/Stop 已清理。** 全普通 App IPv4 只是启动选项；此时未得到 UID 安装证据，server /32 throw NOT_OBSERVED 不表明排除规则异常。真实故障原因尚未分类，不推定 TLS/key/服务器故障。
+
+A30 唯一范围：保持 Root 原私有目录/owner PID/执行/Stop 与原 Go/Rust 协议不变，在真正的 root `su -c` shell 打印严格常量阶段：进入、EUID0校验、0700根目录、旧owner PID守卫、原始Go/Rust文件复制、owner PID写入、Go exec请求。原 Bionic Go `Run` 仅在Android client 打印固定入口、参数解析被拒或通过、物理接口存在及 TUN open前/后阶段（均非TLS/业务资格）。Android Service 只对白名单精确锚点记录 enum+毫秒，SAF TXT继续过滤一切 stdout原文、errno/IP/用户名/账号/密码/密钥/PID；正常里程碑仍以原 TUN TxQLen 和真实 SYNACK/TLS/lease/M4/Stop 为准。报告只有在同一session有 `START_DIAGNOSTIC_STAGES_V2` 才对非零退出按最后观察阶段分类；历史V1仍保留 `ROOT_PROCESS_BEFORE_RAW_OR_GRANT_UNPROVEN`。Host 复现用户V1与14类V2固定阶段，实际源锁ARM64构建和Linux oracle/功能卡门验证。不得在聊天中擅自运行个人手机/服务器或KSU/TAP guest。新debug签名需用户自行保存旧TXT、确认无原生会话/UID路由遗留后再安装；不要无证明地删除 owner.pid 或 flush ip rules。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

@@ -76,6 +76,24 @@ for method in ("registerNetworkCallback(", "unregisterNetworkCallback(",
 assert "postDelayed(" not in s, "no 1-second steady Network watcher"
 assert "getNetworkCapabilities(" not in s and "getLinkProperties(" not in s, "no synchronous ConnectivityManager lookup inside callback"
 assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; never fold generation into oldstart"
+# A30: user's real Android API36 EXIT_1 PRE_TUN receipt must be
+# classifiable only by actual fixed markers from the ROOT shell and
+# original Go Bionic entry. Never capture native raw stdout in reports.
+go_src=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+receipt=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
+report=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+for marker in ["WBD_PUBLIC_ROOT_SHELL_ENTERED","WBD_PUBLIC_ROOT_UID_VERIFIED","WBD_PUBLIC_ROOT_PRIVATE_DIR_VERIFIED","WBD_PUBLIC_ROOT_OWNER_GUARD_PASSED","WBD_PUBLIC_ROOT_NATIVE_FILES_STAGED","WBD_PUBLIC_ROOT_OWNER_PID_WRITTEN","WBD_PUBLIC_ROOT_EXEC_ATTEMPTED"]:
+ assert marker in s, "fixed Root shell stage missing: "+marker
+for marker in ["V4_PUBLIC_ANDROID_GO_ENTRY role=client","V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client","V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client","V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client","V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client","V4_PUBLIC_ANDROID_GO_TUN_OPENED role=client"]:
+ assert marker in go_src and marker in s, "original Go stage not connected: "+marker
+for event in ["START_DIAGNOSTIC_STAGES_V2","ROOT_PROCESS_EXIT_1","ROOT_SHELL_EXEC_ATTEMPTED","ORIGINAL_GO_ENTRY","ORIGINAL_GO_ARGS_REJECTED","ORIGINAL_GO_TUN_OPEN_ATTEMPTED"]:
+ assert event in receipt, "diagnostic enum missing: "+event
+assert 'if(has(session,"START_DIAGNOSTIC_STAGES_V2")' in report, "legacy receipts must not be misdiagnosed"
+assert 'last_session_stage=' in report
+assert 'OriginalGoMilestones.matches(line,' in s
+assert 'echo WBD_PUBLIC_ROOT_EXEC_ATTEMPTED' in s
+assert 'log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")' in go_src
+
 assert s.count('InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)')>=2, "multi UID identity rechecked on Service and pre-su"
 assert 'watchSelectedPackages(allApps?managerPackages:targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw selected group or manager exclusions on package events"
 assert 'AllAppRouteScope.same(this,excludedAppIDs,managerPackages)' in s, "verify full-app owner+manager UID exclusions before su"

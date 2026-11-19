@@ -190,6 +190,7 @@ public final class RootClientService extends Service {
         stopping.set(false);
         stopSignalDispatched.set(false);
         trace(RootDiagnosticReceipt.Event.START_REQUESTED);
+        trace(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
         try{
             notification();
             long handle=intent.getLongExtra("handle",0);
@@ -276,6 +277,11 @@ public final class RootClientService extends Service {
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
+        shell.append("echo WBD_PUBLIC_ROOT_SHELL_ENTERED; ");
+        // Fail closed even if a su provider returned an unprivileged shell:
+        // this is a stage check, NOT proof of Root Manager identity.
+        shell.append("test \"$(id -u)\" = 0; ");
+        shell.append("echo WBD_PUBLIC_ROOT_UID_VERIFIED; ");
         shell.append("p=").append(q(ROOT)).append("; ");
         // /data/local/tmp may be writable to shell/other actors.
         // A pre-existing symlink or non-root directory must NEVER be
@@ -285,6 +291,7 @@ public final class RootClientService extends Service {
         shell.append("test -d \"$p\" && test ! -L \"$p\"; ");
         shell.append("test \"$(stat -c %u \"$p\")\" = 0; ");
         shell.append("test \"$(stat -c %a \"$p\")\" = 700; ");
+        shell.append("echo WBD_PUBLIC_ROOT_PRIVATE_DIR_VERIFIED; ");
         // Verify prior root PID is not still live BEFORE replacing a
         // previous owner's lockless cold stage or installing a second TUN.
         shell.append("if [ -f \"$p/owner.pid\" ]; then ");
@@ -294,6 +301,7 @@ public final class RootClientService extends Service {
         shell.append("set -- $(cat \"/proc/$oldpid/stat\"); ");
         shell.append("if [ \"${22}\" = \"$oldstart\" ]; then exit 44; fi; ");
         shell.append("fi; fi; ");
+        shell.append("echo WBD_PUBLIC_ROOT_OWNER_GUARD_PASSED; ");
         // Every verified asset goes via a root-owned private directory:
         // Android 10+ disallows execution from writable app-private data.
         shell.append("cp ").append(q(nativeCode.client.getAbsolutePath()))
@@ -303,12 +311,15 @@ public final class RootClientService extends Service {
         shell.append("chmod 700 \"$p/.client.tmp\"; chmod 600 \"$p/.engine.tmp\"; ");
         shell.append("mv -f \"$p/.client.tmp\" \"$p/").append(nativeCode.executableName).append("\"; ");
         shell.append("mv -f \"$p/.engine.tmp\" \"$p/libwbd_engine.so\"; ");
+        shell.append("echo WBD_PUBLIC_ROOT_NATIVE_FILES_STAGED; ");
         // Shell exec preserves $$ + proc stat starttime as real native
         // Go process PID; Stop checks the same exact process, not pkill -f.
         shell.append("set -- $(cat /proc/$$/stat); native_start=${22}; ");
         shell.append("printf '%s %s %s\\n' \"$$\" \"$native_start\" ").append(q(token)).append(" > \"$p/owner.pid\"; ");
         shell.append("chmod 600 \"$p/owner.pid\"; ");
+        shell.append("echo WBD_PUBLIC_ROOT_OWNER_PID_WRITTEN; ");
         shell.append("LD_LIBRARY_PATH=\"$p\"; export LD_LIBRARY_PATH; ");
+        shell.append("echo WBD_PUBLIC_ROOT_EXEC_ATTEMPTED; ");
         shell.append("exec \"$p/").append(nativeCode.executableName).append("\" ");
         shell.append(String.join(" ",quotedArgs));
         return shell.toString();
@@ -350,6 +361,34 @@ public final class RootClientService extends Service {
                 String line;
                 while((line=lines.readLine())!=null){
                     if(line.length()>4096)line=line.substring(0,4096);
+                    // Fixed allowlisted shell/Go entry markers expose only
+                    // proven pre-TUN boundaries, never stderr, argv or keys.
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_SHELL_ENTERED"))
+                        trace(RootDiagnosticReceipt.Event.ROOT_SHELL_ENTERED);
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_UID_VERIFIED"))
+                        trace(RootDiagnosticReceipt.Event.ROOT_SHELL_ROOT_UID_VERIFIED);
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_PRIVATE_DIR_VERIFIED"))
+                        trace(RootDiagnosticReceipt.Event.ROOT_SHELL_PRIVATE_DIR_VERIFIED);
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_OWNER_GUARD_PASSED"))
+                        trace(RootDiagnosticReceipt.Event.ROOT_SHELL_OWNER_GUARD_PASSED);
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_NATIVE_FILES_STAGED"))
+                        trace(RootDiagnosticReceipt.Event.ROOT_SHELL_NATIVE_FILES_STAGED);
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_OWNER_PID_WRITTEN"))
+                        trace(RootDiagnosticReceipt.Event.ROOT_SHELL_OWNER_PID_WRITTEN);
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_EXEC_ATTEMPTED"))
+                        trace(RootDiagnosticReceipt.Event.ROOT_SHELL_EXEC_ATTEMPTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ENTRY role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_ACCEPTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_INTERFACE_FOUND);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPEN_ATTEMPTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_TUN_OPENED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPENED);
                     // ORIGINAL-Go emits these only AFTER true TLS lease
                     // kernel readback, Rust M4 handoff or successful joined
                     // cleanup. We record no variable part of native stdout.
@@ -440,6 +479,7 @@ public final class RootClientService extends Service {
             int exit=p.waitFor();
             trace(exit==0?RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_ZERO:
                 RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            if(exit==1)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_1);
             if(exit==139)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_139);
             if(exit==132)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_132);
             if(exit!=0&&!rawReady)

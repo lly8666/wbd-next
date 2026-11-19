@@ -46,6 +46,78 @@ public final class RootDiagnosticReportTest {
         report=RootDiagnosticReport.build(dir,source,35);
         contains(report,"STOP_JOIN_NOT_PROVEN");
         if(report.length()>24000)throw new AssertionError("export unbounded");
+        // The user's real A29 first-device failure was 11 V1 events:
+        // Native SOURCE verified, su subprocess started, exit1 before TUN.
+        // It does NOT prove Go entry or TUN failure and must stay V1 unknown.
+        File oldDir=Files.createTempDirectory("wbd-v1-stage").toFile();
+        RootDiagnosticReceipt old=new RootDiagnosticReceipt(
+            new File(oldDir,"wbd-root-diagnostic.txt"));
+        for(RootDiagnosticReceipt.Event event:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.START_REQUESTED,
+            RootDiagnosticReceipt.Event.NETWORK_SCOPE_VERIFIED,
+            RootDiagnosticReceipt.Event.APP_UID_GROUP_VERIFIED,
+            RootDiagnosticReceipt.Event.ROUTE_SCOPE_ALL_ORDINARY_APPS_IPV4,
+            RootDiagnosticReceipt.Event.ROOT_STAGE_REQUESTED,
+            RootDiagnosticReceipt.Event.NATIVE_SOURCE_VERIFIED,
+            RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED,
+            RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED,
+            RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO,
+            RootDiagnosticReceipt.Event.ROOT_EXIT_BEFORE_GO_RAW,
+            RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED}){
+            old.record(event);
+        }
+        contains(RootDiagnosticReport.build(oldDir,source,36),
+            "last_session_stage=ROOT_PROCESS_BEFORE_RAW_OR_GRANT_UNPROVEN");
+        // For a new-source failure, classify EXACT last witnessed boundary,
+        // not an inferred raw stdout error or a fictitious TLS/Root success.
+        RootDiagnosticReceipt.Event[] reached={
+            null,
+            RootDiagnosticReceipt.Event.ROOT_SHELL_ENTERED,
+            RootDiagnosticReceipt.Event.ROOT_SHELL_ROOT_UID_VERIFIED,
+            RootDiagnosticReceipt.Event.ROOT_SHELL_PRIVATE_DIR_VERIFIED,
+            RootDiagnosticReceipt.Event.ROOT_SHELL_OWNER_GUARD_PASSED,
+            RootDiagnosticReceipt.Event.ROOT_SHELL_NATIVE_FILES_STAGED,
+            RootDiagnosticReceipt.Event.ROOT_SHELL_OWNER_PID_WRITTEN,
+            RootDiagnosticReceipt.Event.ROOT_SHELL_EXEC_ATTEMPTED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_ACCEPTED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_INTERFACE_FOUND,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPEN_ATTEMPTED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPENED
+        };
+        String[] expected={
+            "SU_SUBPROCESS_STARTED_COMMAND_NOT_REACHED",
+            "SU_ENTERED_BUT_ROOT_UID_UNVERIFIED",
+            "ROOT_PRIVATE_DIRECTORY_VERIFICATION_FAILED_OR_UNCONFIRMED",
+            "ROOT_PREVIOUS_OWNER_GUARD_UNVERIFIED",
+            "ROOT_NATIVE_BINARY_STAGE_UNVERIFIED",
+            "ROOT_NATIVE_STAGED_OWNER_RECORD_UNVERIFIED",
+            "ROOT_OWNER_RECORD_WRITTEN_PRE_EXEC",
+            "ROOT_EXEC_ATTEMPTED_NO_GO_ENTRY_OR_LOADER",
+            "ORIGINAL_GO_ENTRY_PRE_ARGS_ACCEPTANCE",
+            "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED",
+            "ORIGINAL_GO_ARGS_ACCEPTED_PRE_INTERFACE",
+            "ORIGINAL_GO_INTERFACE_FOUND_PRE_BUDGET_OR_DNS",
+            "ORIGINAL_GO_TUN_OPEN_FAILED_OR_UNCONFIRMED",
+            "ORIGINAL_GO_TUN_OPENED_CONFIG_BEFORE_RAW"
+        };
+        for(int i=0;i<reached.length;i++){
+            File stageDir=Files.createTempDirectory("wbd-stage-fixture").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(stageDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);
+            if(reached[i]!=null)w.record(reached[i]);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_1);
+            String classified=RootDiagnosticReport.build(stageDir,source,36);
+            contains(classified,"last_session_stage="+expected[i]);
+            if(classified.contains("password")||classified.contains("route-key")||
+               classified.contains("203.0.113.9")||classified.contains("username"))
+                throw new AssertionError("secret leaked in fixed stage report");
+        }
         System.out.println("ANDROID_ROOT_SAFE_DIAGNOSTIC_EXPORT_HOST_PASS");
     }
 }

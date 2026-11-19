@@ -4,6 +4,19 @@ package org.wbdnext.rootclient;
 public final class OriginalGoMilestonesTest {
     public static void main(String[] args) {
         for(String marker:new String[]{
+            "WBD_PUBLIC_ROOT_SHELL_ENTERED",
+            "WBD_PUBLIC_ROOT_UID_VERIFIED",
+            "WBD_PUBLIC_ROOT_PRIVATE_DIR_VERIFIED",
+            "WBD_PUBLIC_ROOT_OWNER_GUARD_PASSED",
+            "WBD_PUBLIC_ROOT_NATIVE_FILES_STAGED",
+            "WBD_PUBLIC_ROOT_OWNER_PID_WRITTEN",
+            "WBD_PUBLIC_ROOT_EXEC_ATTEMPTED",
+            "V4_PUBLIC_ANDROID_GO_ENTRY role=client",
+            "V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client",
+            "V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client",
+            "V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client",
+            "V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client",
+            "V4_PUBLIC_ANDROID_GO_TUN_OPENED role=client",
             "V4_PUBLIC_TUN_TXQLEN role=client",
             "V4_PUBLIC_RAW_AF_PACKET_READY role=client",
             "V4_PUBLIC_ANDROID_COLD_SYN_TX_OK role=client",

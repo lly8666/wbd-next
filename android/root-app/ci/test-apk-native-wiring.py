@@ -22,6 +22,12 @@ registered = set(re.findall(r'flags\.(?:String|Bool|Int|Uint|Uint64|Duration)\("
 required = set(re.findall(r'"(--[a-z][a-z0-9-]*)"', java_src))
 assert required and all(f[2:] in registered for f in required), sorted(f for f in required if f[2:] not in registered)
 assert 'OriginalGoCommandArgs.build(' in service_src
+assert 'WBD_PUBLIC_ROOT_SHELL_ENTERED' in service_src
+assert 'WBD_PUBLIC_ROOT_EXEC_ATTEMPTED' in service_src
+assert 'V4_PUBLIC_ANDROID_GO_ENTRY role=client' in go_src
+assert 'V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client' in go_src
+assert 'V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client' in go_src
+assert 'ROOT_PROCESS_EXIT_1' in service_src
 assert 'new ProcessBuilder("su","-c",' in service_src
 assert 'LD_LIBRARY_PATH=' in service_src and 'exec ' in service_src
 assert 'RootStopCommand.build(token,ownerExecutable)' in service_src
@@ -99,6 +105,9 @@ report={
   "short_key_android_device_runtime":"NOT_RUN",
   "registered_original_go_cli_flags":"PASS",
   "production_root_exec_and_owned_stop_source_gate":"PASS",
+  "api36_real_receipt_early_exit_fixed_stage_diagnostic_host":"PASS",
+  "root_shell_and_original_go_entry_markers_source_locked":"PASS",
+  "root_shell_api36_device_runtime":"NOT_RUN",
   "original_go_requires_rust_dynamic_library":"PASS",
   "default_ordinary_app_ipv4_all_apps_source_contract":"PASS",
   "original_go_server_ip_private_fib_throw_and_exact_cleanup_source_contract":"PASS",

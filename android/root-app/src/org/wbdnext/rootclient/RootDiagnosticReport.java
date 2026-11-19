@@ -51,6 +51,39 @@ final class RootDiagnosticReport {
     }
     private static String stage(List<String> session){
         if(session.isEmpty())return "NOT_STARTED";
+        // This is a last-proven-boundary classification, not an assumed
+        // errno or a promise of physical network/TLS success.
+        if(has(session,"START_DIAGNOSTIC_STAGES_V2")&&
+           has(session,"ROOT_PROCESS_EXIT_NONZERO")){
+            if(has(session,"ORIGINAL_GO_ARGS_REJECTED"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED";
+            if(has(session,"ORIGINAL_GO_TUN_OPENED"))
+                return "ORIGINAL_GO_TUN_OPENED_CONFIG_BEFORE_RAW";
+            if(has(session,"ORIGINAL_GO_TUN_OPEN_ATTEMPTED"))
+                return "ORIGINAL_GO_TUN_OPEN_FAILED_OR_UNCONFIRMED";
+            if(has(session,"ORIGINAL_GO_INTERFACE_FOUND"))
+                return "ORIGINAL_GO_INTERFACE_FOUND_PRE_BUDGET_OR_DNS";
+            if(has(session,"ORIGINAL_GO_ARGS_ACCEPTED"))
+                return "ORIGINAL_GO_ARGS_ACCEPTED_PRE_INTERFACE";
+            if(has(session,"ORIGINAL_GO_ENTRY"))
+                return "ORIGINAL_GO_ENTRY_PRE_ARGS_ACCEPTANCE";
+            if(has(session,"ROOT_SHELL_EXEC_ATTEMPTED"))
+                return "ROOT_EXEC_ATTEMPTED_NO_GO_ENTRY_OR_LOADER";
+            if(has(session,"ROOT_SHELL_OWNER_PID_WRITTEN"))
+                return "ROOT_OWNER_RECORD_WRITTEN_PRE_EXEC";
+            if(has(session,"ROOT_SHELL_NATIVE_FILES_STAGED"))
+                return "ROOT_NATIVE_STAGED_OWNER_RECORD_UNVERIFIED";
+            if(has(session,"ROOT_SHELL_OWNER_GUARD_PASSED"))
+                return "ROOT_NATIVE_BINARY_STAGE_UNVERIFIED";
+            if(has(session,"ROOT_SHELL_PRIVATE_DIR_VERIFIED"))
+                return "ROOT_PREVIOUS_OWNER_GUARD_UNVERIFIED";
+            if(has(session,"ROOT_SHELL_ROOT_UID_VERIFIED"))
+                return "ROOT_PRIVATE_DIRECTORY_VERIFICATION_FAILED_OR_UNCONFIRMED";
+            if(has(session,"ROOT_SHELL_ENTERED"))
+                return "SU_ENTERED_BUT_ROOT_UID_UNVERIFIED";
+            if(has(session,"ROOT_PROCESS_LAUNCHED"))
+                return "SU_SUBPROCESS_STARTED_COMMAND_NOT_REACHED";
+        }
         if(has(session,"STOP_REQUESTED")&&!has(session,"ORIGINAL_GO_RUST_STOP_JOINED"))
             return "STOP_JOIN_NOT_PROVEN";
         if(has(session,"NATIVE_M4_AND_UID_READY"))

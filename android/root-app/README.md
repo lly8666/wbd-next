@@ -450,3 +450,12 @@ Stop, and host JVM tests for the SAME production diagnostic exporter
 including injected secret-line filtering and bounded rollover. The signed
 APK DEX must contain the exporter. This scope excludes emulator network
 binding, phone installation, actual netd/TLS/M4/data and device Stop.
+
+## A30 · 真实 Android API36 PRE_TUN / EXIT_1 安全分段诊断
+
+用户用 A29 `6bcdbc6c...` 的测试版在 API36 获得 **`ROOT_OR_NATIVE_EXIT_1 after PRE_TUN`**，并主动上传固定阶段报告。 `ROOT_PROCESS_LAUNCHED`→`ROOT_PROCESS_EXIT_NONZERO` 间隔 **341ms**；有真实APK SOURCE验签、网络和UID配置检查、Java创建 `su` 子进程的证据，**但不证明 Root 授权、su shell 实际执行、ELF 链接、原 Go 解析、TUN 或原 Linux 联机**。 `OWNER_CLEANUP_FINISHED` 为Java清理，不代表内核 owned Stop；`server_ip_exclusion_readback=NOT_OBSERVED` 也是 pre-TUN 阶段的预期未观察项，而不是服务器/32旁路本身损坏的证据。
+
+A30 在**同一**真实 root shell 和原 Bionic Go `Run` 入口中添加仅常量的阶段标记，顺序区分 `su` 是否实际进入，EUID0，私有目录/旧PID，真实 Go+Rust staging，owner pid 写入，`exec` 请求，原 Go 入口/参数拒绝/成功/实际物理接口/TUN open前后。生产 RootService 只读取完整固定标记并写到 app-private 原 `RootDiagnosticReceipt.Event`（13位毫秒），不保存原生输出、错误正文、PID、UID、IP、密码或密钥。报告对新V2 session按最后真观察到的阶段解释早退；对旧V1报告**不会倒推成 su 或 Go 失败**。此诊断本身不是设备的Root/TUN、内核路由、真正TLS/M4/应用TCP UDP或Stop的PASS。
+
+完成同源 Actions、签名APK、原Linux Host oracle之后，用户可选择自行安装新调试版，失败一次通过原有“导出脱敏排障 TXT”发送新阶段报告。由于每批debug签名不同，升级前保存旧报告、检查旧Root进程和私有路由确实已停止；不要直接删除 `owner.pid`、不要 `ip rule flush`、不反复点击START。未经授权本任务不操作实体手机或服务器，也不运行 hosted TAP/KSU模拟器。
+

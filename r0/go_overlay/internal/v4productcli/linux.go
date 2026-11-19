@@ -946,11 +946,23 @@ func chooseUnderlayIPv4(addrs []net.Addr)(netip.Addr,error){
 }
 
 func Run(role string,args []string)(retErr error){
+ if runtime.GOOS=="android"&&role=="client"{
+  // Actual original Go Bionic ELF entry, NOT an emulated TLS/Root stage.
+  log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")
+ }
  if role=="server"&&len(args)==2&&args[0]=="--init-route-key-file"{
    return initServerRouteKeyFile(args[1])
  }
  cfg,err:=parse(role,args)
-    if err!=nil{return err}
+    if err!=nil{
+        if runtime.GOOS=="android"&&role=="client"{
+            log.Print("V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client")
+        }
+        return err
+    }
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client")
+    }
     if runtime.GOOS=="android"&&cfg.androidCNSnapshot!=nil{
         // Verified file/typed rules only; NOT real Android system DNS.
         stats:=cfg.androidCNSnapshot.Stats()
@@ -958,6 +970,9 @@ func Run(role string,args []string)(retErr error){
     }
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client")
+    }
     if runtime.GOOS=="android"{
         if role!="client"||cfg.androidNetworkHandle==0||iface.MTU<68||iface.MTU>65535{
             return fmt.Errorf("Android physical Network/MTU unavailable")
@@ -1024,8 +1039,14 @@ func Run(role string,args []string)(retErr error){
         uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0,cfg.gameFecEnabled)
     if err!=nil{return err}
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client")
+    }
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
     if err!=nil{return err}
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_TUN_OPENED role=client")
+    }
     // The Go cold lifetime owns TUN; each Rust generation Stop joins and
     // releases kernel loans before the FINAL Go close or a fresh TLS generation.
     connected:=false
