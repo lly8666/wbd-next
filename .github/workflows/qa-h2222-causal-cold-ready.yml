@@ -11,6 +11,7 @@ on:
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
       - 'r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_windows_native_io.go'
+      - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
       - '.github/workflows/qa-h2222-causal-cold-ready.yml'
   workflow_dispatch:
 permissions: {contents: read}
@@ -39,6 +40,8 @@ jobs:
         run: |
           set -euo pipefail
           bash tools/m0_plan029_linux_dual_native_build.sh > h2222-linux-build.log 2>&1 || { tail -n 180 h2222-linux-build.log; exit 1; }
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-plan029-$(uname -m)"
+          export WBD_ISAL_SOURCE_SHA=c387163fcbca62701d646149564c550c78a4f985
           cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration h2222 -- --nocapture
       - name: Double-NAT original protected TLS genuine kernel DATA and Stop
         run: |
