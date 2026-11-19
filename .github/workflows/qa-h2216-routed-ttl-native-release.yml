@@ -66,7 +66,7 @@ jobs:
           set -euo pipefail
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product,wbd_v4_native_probe -run '^TestH2216RealV4TLSCertificateVerifySwitch
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product,wbd_v4_native_probe -run TestH2216RealV4TLSCertificateVerifySwitch ./internal/realityfront)
       - name: Stage ARM64 field-trial binaries after exact-source native build and TTL unit PASS
         shell: bash
         run: |
