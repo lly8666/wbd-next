@@ -177,6 +177,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "91b9d521ce1451300533d078844340add4820c29",
       "evidence": "docs/evidence/M0/PLAN029-H2216-TTL-PERSONA-NAT-SOURCE-91B9-SCOPED-PASS-20261119.json"
+    },
+    {
+      "platform": "Windows physical NIC/Npcap to public IPv4 endpoint (user field capture, server ISA not independently pinned)",
+      "scope": "H2217 real H2216v2 91b9d52: Go TLS succeeded, Windows TXCopied=32 but RXDelivered=0/WorkerError=0, PktMon physical/Npcap layer saw server TTL52 and late 87B after client exit; 23 rejects equal skipped TUN IPv6. Packet headers truncated at 54B; Rust RX handoff/AEAD unproven. Earlier scoped CI PASS retained.",
+      "status": "FAIL",
+      "source_sha": "91b9d521ce1451300533d078844340add4820c29",
+      "evidence": "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
     }
   ],
   "limitations": [
@@ -187,7 +194,8 @@
     "H1506 Win5 FAIL; H1514 WSL GUI lock; 600s NOT_RUN.",
     "H1555 lease TLS unchanged; Win600s NOT_RUN.",
     "H2214 user-requested insecure-by-default TLS peer verification: attacker-controlled active endpoints can impersonate server and obtain protected admission credentials; opt in tls-verify-server=true to authenticate server. This intentionally reverses H2213 default.",
-    "H2216: Native DATA/ACK accepts any received TTL 1..255 independent of sender persona, still checks IPv4/TCP checksums, trusted tuple, MTU and downstream AEAD/replay. Original Go parser has no received-TTL persona check. Physical Windows128→116/Linux64→52 captures are historical failure evidence, not post-fix physical WAN qualification; external physical WAN still NOT_RUN."
+    "H2216: Native DATA/ACK accepts any received TTL 1..255 independent of sender persona, still checks IPv4/TCP checksums, trusted tuple, MTU and downstream AEAD/replay. Original Go parser has no received-TTL persona check. Physical Windows128→116/Linux64→52 captures are historical failure evidence, not post-fix physical WAN qualification; external physical WAN still NOT_RUN.",
+    "H2217 user-provided physical Windows H2216v2 attempt failed first+reverse on public IPv4; earlier H2216 native CI PASS_SCOPED does not qualify WAN. No binary SHA or full TCP payload in capture; next task first-stage Go→Rust NPF and server actual reverse TX counters."
   ],
   "promotion": null,
   "legacy_branch_reason": "Pre-2026-10-27 integrated feature registry; not new experiment authorization."

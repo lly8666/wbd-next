@@ -4,24 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2216,
-  "checkpoint_sha": "517d786c4f5b7d1393d87b15c8d6b68f32ff1d90",
+  "sequence": 2217,
+  "checkpoint_sha": "df0f9be9ce8a284e5eebffe9369e922d9177f951",
   "progress": "in_progress",
-  "task_id": "PLAN029-H2216-ROUTED-TTL-PERSONA-REMOVAL",
-  "current_task": "H2216 原 Go 双端+Rust Native 共同 RX 的 TTL persona 身份判定已删除：DATA/ACK 仅 TTL=0 按非法IPv4头拒绝；Linux ARM64 三客户端独立 SNAT + 服务端 DNAT 真 TLS/Rust TUN/48 UDP echo/Stop 与 12 场真实 TLS PASS_SCOPED，Windows native Rust/GUI 构建/测试 PASS。旧 FAIL 保留。",
-  "why_now": "用户接管 M0 并要求核实客户端与服务端 TTL 检测是否都已取消；补 H2216 后验收成功未归档的 cursor/功能卡，避免误把上界首修或旧 NOT_RUN 当最新事实。",
-  "done_when": "客户端/服务端 DATA/ACK 共同 RX 不以 TTL=64/128 身份判定；零TTL与校验和检查保留；H2216 同源 CI 有真实双端 NAT/UDP/Stop 与 Windows 构建成功回执。物理 Windows↔公网 ARM64另证。",
-  "next_action": "H2216 PASS_SCOPED，不重复派跑已合格 3 SNAT/1 DNAT；物理 Windows↔公网 ARM64 NAT/DPI/p99/32 实体长稳仍 NOT_RUN。PLAN029/029B 日常范围已 PASS_SCOPED，完整技术出口 OPEN，030 未开。仅在用户另授权的真实需求/代表实机资格就绪时处理未测；不覆盖其他活动作者。",
+  "task_id": "PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-REVERSE-FAIL",
+  "current_task": "H2217 用户实机 H2216v2(报告91b9d52)失败：原Go TLS完成，Win Rust TXCopied32/RXDelivered0/WorkerError0，Rejected23恰与Wintun IPv6 skip23相等；物理PktMon见TTL52入站与Native期出站，客户端退出后6秒有87B迟到包。54B截头不能断言Rust确收/AEAD；不同场景Linux NAT CI PASS_SCOPED不覆盖此FAIL。",
+  "why_now": "用户提供真实Win PktMon all组件抓包明确否定H2216v2公网能用；M0必须把实机FAIL入账并缩小首个异常，不能以TTL修复/Action成功复述已通。",
+  "done_when": "定位首个可重复缺口：同一SOURCE/物理TCP443，Go→Rust读权交接、NPF event/pcap_next_ex、Rust DATA/ACK/AEAD和服务端实发对应的时间/总量及owned Stop。现在不宣称修复。",
+  "next_action": "H2217 首做一轮有界现场TX/RX阶段计数或同一包头时序：Go->Rust捕获交接时刻、服务端真native反向发送、Windows物理收包、Npcap驱动event/用户态read、Rust解析和认证。缺服务端运行日志与完整TCP payload；不新跑Linux NAT/弱网全矩阵，不取消校验/AEAD/TTL=0规则。",
   "unverified": true,
   "last_tested_source": "91b9d521ce1451300533d078844340add4820c29",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2216-TTL-PERSONA-NAT-SOURCE-91B9-SCOPED-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261119-H2216-ACTIONS-ROOT-CAUSE-TTL-HOP-ONLY.md",
-    "docs/devlog/M0/20261119-H2216-ROUTED-TTL-NAT-NATIVE-FIX.md",
-    "docs/evidence/M0/PLAN029B-H2213-RUST32-DECOY-RANDOM-15-45-LINUX-WINDOWS-SCOPED-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029-H2216-TTL-PERSONA-NAT-SOURCE-91B9-SCOPED-PASS-20261119.json",
+    "docs/devlog/M0/20261119-H2216-ACTIONS-ROOT-CAUSE-TTL-HOP-ONLY.md"
   ],
   "open_requests": [],
-  "partial_summary": "当前 main 517d786c；H2216 Native RX DATA/ACK 双端不再核 persona TTL=64/128 或上界，仅 TTL=0 无效头和 IP/TCP checksum 保留。源 91b9d521 H2216 Action44495120323 Windows+ARM64双job SUCCESS；main 517 native 95/95 SUCCESS。物理 WAN、32 客户端、DPI/p99 NOT_RUN；029/029B 技术出口仍 OPEN。"
+  "partial_summary": "H2216共同TTL-persona身份检查已取消，但用户报告其91b9d52 H2216v2物理Windows到公网仍FAIL。18:14:57–18:15:23真实Win TXCopied32/RXDelivered0，18:15:29迟到服务端报文；PktMon 54B截头+Npcap组件观察不能证明Rust拿到密文；Rejected23恰等于IPv6 skip23。现需定界服务端真回包/Windows物理入口/NPF handoff；不改公网失败为PASS。029/029B完整出口OPEN。"
 }
