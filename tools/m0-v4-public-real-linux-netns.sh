@@ -77,6 +77,18 @@ cleanup(){
       wait "$pid" 2>/dev/null || true
     fi
   done
+  if [[ "$exit_code" -ne 0 && "${H2212:-0}" == 1 ]];then
+    echo "H2212_NATIVE_DIAGNOSTIC_BEGIN" >&2
+    for file in ordinary.log decoy.log echo.log;do
+      if [[ -f "$TMP/$file" ]];then
+        echo "H2212_DIAGNOSTIC_FILE=$file" >&2
+        grep -E 'Traceback|Error|error|OSError|SSLError|FileNotFound|Connection|Assertion|timed out|H2212|^  File ' "$TMP/$file" |
+          tail -25 >&2 || true
+      else
+        echo "H2212_DIAGNOSTIC_MISSING=$file" >&2
+      fi
+    done
+  fi
   if [[ "$exit_code" -ne 0 && "$AUTO_IP" == 1 ]];then
     # Save only original native owner/readback diagnostics; no secrets,
     # command line, packet body, TLS transcript or certificates.
@@ -299,6 +311,7 @@ if [[ "$ready" != 1 ]];then
   exit 1
 fi
 if [[ "$H2212" == 1 ]];then
+  echo H2212_STAGE_PROTECTED_WBD_READY
   # A real unrelated TLS client MUST succeed while authenticated WBD/Rust
   # is already live. No SessionID marker, no WBD credentials or extra epoch.
   test "$(grep -c 'V4_PUBLIC_MULTI_SESSION_READY role=server' "$TMP/server.log")" = 1
@@ -320,6 +333,7 @@ with socket.create_connection(("10.25.0.1",443),timeout=12) as sock:
         except (ssl.SSLError,ConnectionError,OSError):pass
 print("H2212_REAL_STDLIB_TLS_NON_WBD_DECOY_PING_PONG_PASS",flush=True)
 PY
+  echo H2212_STAGE_ORDINARY_TLS_APP_RETURNED
   wait "$DECOY_PID"
   DECOY_PID=''
   grep -Fq H2212_REAL_STDLIB_TLS_NON_WBD_DECOY_PING_PONG_PASS "$TMP/ordinary.log"
