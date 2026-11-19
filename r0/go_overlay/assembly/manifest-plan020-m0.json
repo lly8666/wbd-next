@@ -1470,13 +1470,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
-      "result_blob": "1ef52e196b17f0997ed83e84a7618de1ab2cccef"
+      "result_blob": "b33540099489e8bc3da0044d223c41904800b55d"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "3bf67f48bf47b08486e51df4723c34423a54b411"
+      "result_blob": "388f739fdabd71fcd4e7d16170af22412a5f8365"
     },
     {
       "kind": "create",
