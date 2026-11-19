@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'crates/wbd-platform/src/rx_ipv4_tcp.rs'
+      - 'crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
+      - 'r0/go_overlay/internal/v4productcli/game_linux.go'
       - 'tools/h2216-routed-double-nat-native.sh'
       - 'docs/features/entries/tls-auth-multiclient.json'
       - '.github/workflows/qa-h2216-routed-ttl-native-release.yml'
@@ -47,6 +49,8 @@ jobs:
         run: |
           set -euo pipefail
           bash tools/m0_plan029_linux_dual_native_build.sh > h2216-arm64-build.log 2>&1 || { tail -n 140 h2216-arm64-build.log; exit 1; }
+          grep -Fq 'VerifyServer:c.tlsVerifyServer' r0/go_overlay/internal/v4productcli/linux.go
+          grep -Fq 'VerifyServer:c.tlsVerifyServer' r0/go_overlay/internal/v4productcli/game_linux.go
       - name: H2216 Rust native parser routed TTL 128-to-116 and 64-to-52 regression
         shell: bash
         run: |
