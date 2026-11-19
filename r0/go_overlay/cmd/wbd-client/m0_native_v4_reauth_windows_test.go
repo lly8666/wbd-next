@@ -442,3 +442,43 @@ func TestH2223WindowsIdleAuthenticatedRustNativeStartupDoesNotRequireApplication
   }
  }
 }
+
+
+func TestH2223InitialColdRetryOnlyBeforeRustM4ForTransientOriginalTransport(t *testing.T){
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto}{
+  for _,timeout:=range []error{context.DeadlineExceeded,syscall.ETIMEDOUT,faketcp.ErrBootstrapTimeout}{
+   tagged:=m0WindowsTagOriginalColdTransport(timeout)
+   if !errors.Is(tagged,errM0OriginalColdTransportTimeout){t.Fatalf("not tagged: %v",tagged)}
+   for n:=0;n<2;n++{
+    if !m0WindowsInitialTransportRetryAllowed(mode,false,n,tagged){
+     t.Fatalf("valid original TLS transport retry mode=%v count=%d",mode,n)
+    }
+   }
+   if m0WindowsInitialTransportRetryAllowed(mode,false,2,tagged)||
+      m0WindowsInitialTransportRetryAllowed(mode,true,0,tagged){
+    t.Fatal("original TLS retries must be bounded and never after OS Applied")
+   }
+  }
+ }
+ for _,err:=range []error{
+  realityfront.ErrAdmissionAuth,context.Canceled,
+  errors.New("TLS certificate rejected"),errors.New("Npcap driver error"),
+ }{
+  if m0WindowsInitialTransportRetryAllowed(m0WinModeNormal,false,0,
+    m0WindowsTagOriginalColdTransport(err)){
+   t.Fatalf("permanent, auth, or Stop failure retried: %v",err)
+  }
+ }
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeGame2,m0WinModeGame4}{
+  if m0WindowsInitialTransportRetryAllowed(mode,false,0,
+    m0WindowsTagOriginalColdTransport(context.DeadlineExceeded)){
+   t.Fatalf("Game multi-lane cold state machine widened: %v",mode)
+  }
+ }
+ // Even a 45s post-TLS M4/OS deadline cannot restart a new TLS session
+ // unless the source of its error was explicitly original cold transport.
+ if m0WindowsInitialTransportRetryAllowed(m0WinModeNormal,false,0,
+  context.DeadlineExceeded){
+  t.Fatal("untagged post-TLS timeout must not be retried")
+ }
+}
