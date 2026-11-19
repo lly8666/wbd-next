@@ -167,19 +167,17 @@ def prepare(root, legacy, output, source, spec):
                     "--legacy-root", str(legacy), "--overlay-root", str(root),
                     "--manifest", str(root / MANIFEST), "--receipt", str(output / "assembly.json")], check=True)
     install_pinned_npcap_kernel_capture_buffer(root, legacy, output, source)
-    # H2207: the only authoritative short-key KDF is Go shared code, copied
-    # byte-for-byte into the pinned original-Go Windows module. No new
-    # ClientHello field, TLS prelude, on-wire version or Rust hot path.
-    # Original Windows build uses source-locked assembly prior to this cold
-    # CLI option patch, so this is applied AFTER manifest blob validation.
+    # H2210: the single manifest now installs the H2208 KDF into both
+    # original-Go Windows and Linux checkouts. Verify rather than copying
+    # a second, source-unlocked KDF or shadowing the assembled package.
     src = "r0/go_overlay/internal/v4routekey/"
     dest = legacy / "internal" / "v4routekey"
-    dest.mkdir(parents=True, exist_ok=True)
     for name in ("short.go", "short_test.go", "cache.go"):
         target = dest / name
-        need(not target.exists() and not target.is_symlink(),
-             "competing native route-key KDF owner: " + name)
-        target.write_bytes(git(root, "show", source + ":" + src + name))
+        expected = git(root, "show", source + ":" + src + name)
+        need(target.is_file() and not target.is_symlink() and
+             target.read_bytes() == expected,
+             "H2210 original Go route-key assembled source mismatch: " + name)
     cli = legacy / "cmd" / "wbd-client" / "main_windows.go"
     original = cli.read_text(encoding="utf-8")
     substitutions = [

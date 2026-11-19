@@ -1868,6 +1868,24 @@
       "path": "internal/v4productcli/server_decoy_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/server_decoy_linux_test.go",
       "result_blob": "e506c5badd7660e5c8e72a885f468a72c35069bd"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4routekey/short.go",
+      "overlay_path": "r0/go_overlay/internal/v4routekey/short.go",
+      "result_blob": "7cbc0e682abfe0c830c26b0be7d6c53854f8140a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4routekey/short_test.go",
+      "overlay_path": "r0/go_overlay/internal/v4routekey/short_test.go",
+      "result_blob": "8658f27d81edb3f9f81fa5d24941a108b1aba7d1"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4routekey/cache.go",
+      "overlay_path": "r0/go_overlay/internal/v4routekey/cache.go",
+      "result_blob": "ac1d12a86efff19427e38974bb4f214bb6e8d70d"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
