@@ -118,6 +118,7 @@ jobs:
           $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
           cargo +1.85.1 build --locked --release -p wbd-engine --features $features
           if($LASTEXITCODE -ne 0){throw 'same-source Rust DLL failed'}
+          New-Item -ItemType Directory -Force delivery/windows-amd64 | Out-Null
           Copy-Item target/release/wbd_engine.dll delivery/windows-amd64/wbd_engine.dll
           python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("delivery/windows-amd64/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start");print("H2214_SAME_SOURCE_WIN_NATIVE_DLL_EXPORT_PASS")'
           if($LASTEXITCODE -ne 0){throw 'same-source Rust DLL export missing'}
