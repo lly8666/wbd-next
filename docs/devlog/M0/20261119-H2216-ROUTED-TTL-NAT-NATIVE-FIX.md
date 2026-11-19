@@ -1,5 +1,7 @@
 # H2216 — routed TTL Native RX mismatch after double NAT (2026-11-19)
 
+> **Superseded behavior (main 5774edc8, H2216):** The first fix described below allowed a TTL only up to the sender's persona. This was an incomplete solution, because network middleboxes can also rewrite TTL upward. The current native DATA/ACK parser checks only received TTL != 0 and never compares TTL against the persona, retaining all checksums, tuple, AEAD and replay checks. The current test accepts TTL=255 with a valid header checksum. The original 'above-origin invalid' expectation below is historical, not current behavior.
+
 ## Physical evidence (user-supplied header-only capture; raw captures NOT committed)
 - Original Windows11 FakeTCP sender TTL=128, received on Linux at TTL=116; Linux original Rust Legacy sender TTL=64, received at Windows at TTL=52. Both directions traverse ~12 routed hops.
 - Under the same TCP443 association, original Go TLS+credentials succeeded; server native reported authenticated and Windows TXCopied>0 but RXDelivered=0; client timed out first+reverse; server Health90 followed.

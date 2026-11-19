@@ -35,3 +35,7 @@ ciphertext/ACK metadata, never an authenticated payload.
    Windows↔ARM64 ISP/public Internet passes on physical hardware.
 
 No success is claimed from this documentation or a pending Action.
+
+```feature-impact
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H2216 Rust native IPv4 DATA/ACK no longer interpret routed TTL as origin persona; unchanged AEAD/replay authentication; native Go probe tests now compile against current PublicV4AdvertisedMSS; scoped CI root-cause triage and concurrency policy."}
+```
