@@ -79,33 +79,83 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: '1.23.12', cache: false}
-      - name: Compile actual original Go Windows client using current overlay
+      - name: Build pinned ISA-L native Windows MSVC dependency
         shell: pwsh
+        timeout-minutes: 15
         run: |
-          $ErrorActionPreference = 'Stop'
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'NASM install failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin')|Where-Object {Test-Path (Join-Path $_ 'nasm.exe')}|Select-Object -First 1
+          if(-not $nasm){throw 'NASM missing'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'ISA-L clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if($LASTEXITCODE -ne 0){throw 'pinned ISA-L source missing'}
+          $pfx86=[Environment]::GetFolderPath('ProgramFilesX86')
+          $vswhere=Join-Path $pfx86 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath|Select-Object -First 1
+          if(-not $vsroot){throw 'Windows MSVC x64 tools missing'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if(-not (Test-Path $vcvars)){throw 'MSVC vcvars64 missing'}
+          $cmd='call "'+$vcvars+'" && cd isa-l && nmake /f Makefile.nmake'
+          cmd.exe /d /s /c $cmd
+          if($LASTEXITCODE -ne 0){throw 'pinned ISA-L compilation failed'}
+      - name: Build SAME SOURCE actual Rust Windows native DLL and verify causal FFI
+        shell: pwsh
+        timeout-minutes: 24
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust 1.85.1 toolchain unavailable'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'Windows MSVC Rust target unavailable'}
+          $lib=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File|Select-Object -First 1
+          if(-not $lib){throw 'pinned ISA-L native library missing'}
+          $env:WBD_ISAL_PREFIX=$lib.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'Windows Rust real release DLL failed'}
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib h2222 -- --nocapture
+          if($LASTEXITCODE -ne 0){throw 'Windows H2222 cold nonce tests failed'}
+          python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("target/release/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v1_cold_ready");print("H2222_SAME_SOURCE_CAUSAL_FFI_DLL_EXPORT_PASS")'
+          if($LASTEXITCODE -ne 0){throw 'H2222 Windows DLL cold ready ABI missing'}
+      - name: Assemble original Go Windows product, run tests WITH exact Rust DLL, build CLI
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
           if((git rev-parse HEAD) -ne $env:GITHUB_SHA){throw 'SOURCE mismatch'}
-          python tools/prepare_windows_wiring.py
+          python tools/prepare_windows_wiring.py > h2222-windows-assemble.log
           if($LASTEXITCODE -ne 0){throw 'signed donor wiring failed'}
+          $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path target/release/wbd_engine.dll).Path
           Push-Location legacy
           try{
-            go test -count=1 -tags wbd_v4_embedded_go ./cmd/wbd-client ./internal/realityfront
-            if($LASTEXITCODE -ne 0){throw 'Go Windows original TLS+ready tests failed'}
+            go test -count=1 -tags wbd_v4_embedded_go -run 'TestH2222|TestM0PLAN028NativeWindowsIPv4CallbackCoalescer' ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'H2222 original Go retry tests failed'}
+            go test -count=1 -tags wbd_v4_embedded_go -run 'TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers|TestM0WindowsOriginalGoRealCredentialTLSProtectedRustOwnerStopOnly' ./internal/realityfront
+            if($LASTEXITCODE -ne 0){throw 'Original Go TLS paired Rust owner tests failed'}
             go build -trimpath -tags wbd_v4_embedded_go -o ../h2222-wbd-client.exe ./cmd/wbd-client
-            if($LASTEXITCODE -ne 0){throw 'Windows original Go client build failed'}
+            if($LASTEXITCODE -ne 0){throw 'Windows exact-source original Go client build failed'}
           } finally {Pop-Location}
-      - name: Compile Windows Rust production-authenticated control modules
+      - name: Package matched Windows client and Rust DLL field trial with source SHA
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
-          rustup toolchain install 1.85.1 --profile minimal --no-self-update
-          if($LASTEXITCODE -ne 0){throw 'rust toolchain missing'}
-          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record'
-          cargo +1.85.1 check --locked -p wbd-engine --features $features
-          if($LASTEXITCODE -ne 0){throw 'Windows H2222 Rust M3/AEAD cold check failed'}
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force delivery/h2222-windows-client|Out-Null
+          Copy-Item h2222-wbd-client.exe delivery/h2222-windows-client/wbd-client.exe
+          Copy-Item target/release/wbd_engine.dll delivery/h2222-windows-client/wbd_engine.dll
+          $env:DELIVERY_SOURCE=$env:GITHUB_SHA
+          python -c 'import hashlib,json,os,pathlib; d=pathlib.Path("delivery/h2222-windows-client"); hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in d.iterdir() if p.is_file()};(d/"manifest.json").write_text(json.dumps({"source_sha":os.environ["DELIVERY_SOURCE"],"scope":"WINDOWS_COLD_H2222_TRIAL_ONLY","physical_nic_nat":"NOT_RUN","business_e2e":"NOT_RUN","sha256":hashes},indent=2)+"\n");print("H2222_WINDOWS_SAME_SOURCE_MANIFEST_PASS")'
+          if($LASTEXITCODE -ne 0){throw 'Windows original Go Rust bundle manifest failed'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: h2222-windows-legacy-go-build-only
-          path: h2222-wbd-client.exe
+          path: |
+            delivery/h2222-windows-client/
+            h2222-windows-assemble.log
           if-no-files-found: warn
           retention-days: 14
