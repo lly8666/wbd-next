@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2212,
-  "checkpoint_sha": "5255d934cc317d26b476cfc2ba96fd947844f989",
+  "sequence": 2213,
+  "checkpoint_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
   "progress": "in_progress",
-  "task_id": "PLAN029B-H2212-REAL-LINUX-CLIENT-SHORT-KEY-DECOY",
-  "current_task": "H2212同SOURCE525 x86/ARM Linux原Go客户端/服务端各2次短Key TLS/Rust M4、真实TUN UDP、0600缓存重启不重写、非WBD TLS443→Decoy、Stop PASS_SCOPED Action44442624569；Rust16 lane/普通Decoy8/Go冷32隔离。",
-  "why_now": "用户要求真正验证Linux客户端短RouteKey与非WBD TLS混流，并让普通访客不占WBD原生会话名额。",
-  "done_when": "x86/ARM两次真网络场景限域PASS；公网NAT、16WBD+8普通访客长时性能/内层TCP/移动端实体另证。",
-  "next_action": "旧H2212已PASS无需重测；029择一真实公网NAT/16会话容量压力和内层TCP代表。Android JNI/OpenWrt实机未做，029整体OPEN，030未开。",
+  "task_id": "PLAN029B-H2213-RUST32-ORDINARY-TLS-RANDOM-CUTOFF",
+  "current_task": "H2213 Rust Linux/Windows 16→32 native lane slots（Windows实际32 prepared，33rd FULL）；Go FakeTCP cold32→64；普通TLS独立Decoy8、每条随机15–45s断开。Rust Action44446847868、Go Action44446847713、Linux双ISA2×2真TLS/UDP/Stop Action44446847738 PASS_SCOPED。",
+  "why_now": "用户要求服务端Rust 16槽升32且简单测试，普通非WBD TLS→Decoy随机到时主动关闭并释放资源。",
+  "done_when": "Rust32/33边界、Windows32真实prepared owners、Go普通TLS强制超时、Linux x86/ARM业务/Stop限域PASS；32在线设备压力和公网实机另证。",
+  "next_action": "H2213小任务限域PASS不重测；下一个独立H只测32真实客户端负载/CPU延迟或外网NAT代表，严格不要把32注册槽误报32设备稳定容量。Android JNI/OpenWrt实机NOT_RUN，029/029B总出口OPEN，030未开。",
   "unverified": true,
-  "last_tested_source": "5255d934cc317d26b476cfc2ba96fd947844f989",
+  "last_tested_source": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2212-LINUX-X86-ARM64-REAL-SHORTKEY-DECOY-CACHE-STOP-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029B-H2213-RUST32-DECOY-RANDOM-15-45-LINUX-WINDOWS-SCOPED-PASS-20261119.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN029B-H2211-ARM64-GO-RUST-ROUTEKEY-MANIFEST-BUILD-PASS-20261119.json",
+    "docs/evidence/M0/PLAN029B-H2212-LINUX-X86-ARM64-REAL-SHORTKEY-DECOY-CACHE-STOP-PASS-20261119.json",
     "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2212 Linux x86/ARM各2真实TCP443 TLS/Rust M4、短Key缓存重启mtime不变、TUN UDP/Stop、同端口普通TLS→Decoy PASS_SCOPED Action44442624569。静态Rust16 lane/Decoy8/Go cold32，非WBD不耗Rust owner，公网NAT/16满载/移动实机NOT_RUN。"
+  "partial_summary": "H2213：Rust32 native lanes、Go64 cold associations、普通TLS8条独立Decoy转发随机15–45s强制断开；Windows实际32 prepared/33rd FULL，Linux Rust32/33边界，Go真实TLS600ms限域强制断开，Linux原生x86/ARM各2真TLS/UDP/Stop成功。32业务客户端同时满载与公网物理NOT_RUN，029OPEN。"
 }

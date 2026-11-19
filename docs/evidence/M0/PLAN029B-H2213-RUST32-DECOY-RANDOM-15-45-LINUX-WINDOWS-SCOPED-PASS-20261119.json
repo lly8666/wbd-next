@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "workstream": "M0",
+  "plan": "PLAN029B",
+  "task": "H2213-RUST32-DECOY-PER-CONNECTION-RANDOM-CUTOFF",
+  "date": "2026-11-19",
+  "qualification": "PASS_SCOPED",
+  "product_source_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
+  "fixture_compatibility_commit": "6ba04041e8f0ab1a7a5f0e27e654d556a9812e87",
+  "implementation": {
+    "native_rust_lane_slots": {
+      "before": 16,
+      "after": 32,
+      "linux_file": "crates/wbd-engine/src/v4_embedded_go.rs",
+      "windows_file": "crates/wbd-engine/src/v4_windows_owner.rs",
+      "meaning": "One native M1/M4 lane/owner; Game2 uses 2 and Game4 uses 4. Candidate/replacement generations can occupy seats."
+    },
+    "linux_faketcp_cold_table": {
+      "before": 32,
+      "after": 64,
+      "meaning": "Pre-auth associations and held detached authenticated associations; bounded; not 64 WBD clients."
+    },
+    "ordinary_tls_decoy": {
+      "concurrent_splice_limit": 8,
+      "per_connection_random_min_seconds": 15,
+      "per_connection_random_max_seconds": 45,
+      "random": "crypto/rand Int 0..30 inclusive, independent draw per unrecognized ClientHello",
+      "fallback": "original pinned P2 FallbackFromHello with identical FakeTCP stream and fixed target",
+      "abort": "context.WithTimeout plus P2 SessionTimeout socket deadlines; closes source association; releases 8-slot token",
+      "byte_limit_per_direction": 67108864,
+      "authenticated_wbd_bypasses_quota": true,
+      "owner_rust_allocation": false
+    }
+  },
+  "test_results": [
+    {
+      "scope": "LINUX_NATIVE_RUST_32_33_COLD_BOUNDARY",
+      "action_id": 44446847868,
+      "job_id": 135300954144,
+      "architecture": "linux-x86_64",
+      "conclusion": "SUCCESS",
+      "claim": "Real Linux native Rust 1.85.1 test compiles with MAX_SESSIONS=32 and asserts all occupied=0..31 allow and 32/33 deny; game-group cap 16. No real 32 simultaneous M4 business."
+    },
+    {
+      "scope": "WINDOWS_NATIVE_RUST_ACTUAL_32_PREPARED_OWNER_ALLOCATIONS",
+      "action_id": 44446847868,
+      "job_id": 135300953635,
+      "architecture": "windows-x86_64",
+      "conclusion": "SUCCESS",
+      "claim": "Real Windows native Rust allocates 32 original prepared M1 owners in one Registry and 33rd returns FULL. No 32 live Wintun M4 business."
+    },
+    {
+      "scope": "GO_REAL_STDLIB_TLS_RANDOM_BOUNDARY_AND_ACTIVE_CUTOFF",
+      "action_id": 44446847713,
+      "job_id": 135300953163,
+      "conclusion": "SUCCESS",
+      "claim": "TestH2213OrdinaryTLSDurationHasRandomBoundaries checks 15s/45s endpoints, 64 CSPRNG samples within bounds. TestH2213OrdinaryTLSDecoyHardCloseReleasesQuota uses real stdlib TLS1.3 client and P2 TLS origin ping/pong; origin deliberately keeps socket open; a test-configured shorter 600ms session deadline forces close and token return with zero Rust transition; also H2209/H2212 regression tests pass."
+    },
+    {
+      "scope": "GO_REAL_NATIVE_RUST_LINK_AND_COLD_32_64_8",
+      "action_id": 44446847713,
+      "job_id": 135300953407,
+      "conclusion": "SUCCESS",
+      "claim": "Linux real Rust engine and Go cold parser tests verify native32/cold64/ordinary8, 45s max config, single NIC and decoy target constraints."
+    },
+    {
+      "scope": "LINUX_X86_64_REAL_ORIGINAL_GO_RUST_TWO_ENDPOINT",
+      "action_id": 44446847738,
+      "job_id": 135300953403,
+      "conclusion": "SUCCESS",
+      "claim": "Real original Go client/server + native Rust ISA-L, 2 independent Linux netns/TUN/AF_PACKET boots; v2 short-key cached/reused, TLS443 Rust M4, UDP echo and Stop, non-WBD stdlib TLS1.3 same 443 to origin TLS8443 ping/pong, reports new native32/cold64."
+    },
+    {
+      "scope": "LINUX_ARM64_REAL_ORIGINAL_GO_RUST_TWO_ENDPOINT",
+      "action_id": 44446847738,
+      "job_id": 135300953816,
+      "conclusion": "SUCCESS",
+      "claim": "Same real Linux netns true two-endpoint matrix on native aarch64, 2 independent boots; same protected WBD/ordinary TLS and UDP/Stop and cache checks."
+    },
+    {
+      "scope": "FROZEN_OLD_SOURCE_COMPATIBLE_FIXTURE",
+      "action_id": 44447691338,
+      "source_sha": "6ba04041e8f0ab1a7a5f0e27e654d556a9812e87",
+      "conclusion": "SUCCESS",
+      "claim": "Historical d7bd355 frozen original Go/Rust binary (Rust16/cold32) retained old log invariant, raw TLS443/TUN/UDP and wire test successful after fixture chooses exact allowed capacity pair. Does not imply old binary gained Rust32."
+    }
+  ],
+  "workflows": [
+    {
+      "action_id": 44446847868,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44446847868",
+      "status": "completed",
+      "conclusion": "success",
+      "test_source_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2"
+    },
+    {
+      "action_id": 44446847713,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44446847713",
+      "status": "completed",
+      "conclusion": "success",
+      "test_source_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2"
+    },
+    {
+      "action_id": 44446847738,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44446847738",
+      "status": "completed",
+      "conclusion": "success",
+      "test_source_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2"
+    },
+    {
+      "action_id": 44447691338,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44447691338",
+      "status": "completed",
+      "conclusion": "success",
+      "test_source_sha": "6ba04041e8f0ab1a7a5f0e27e654d556a9812e87"
+    }
+  ],
+  "artifacts": [
+    "h2212-native-x86_64-38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
+    "h2212-native-aarch64-38e92ad9bc532f7bda0f6ffb084c3b600c528ba2"
+  ],
+  "historical_failure_preserved": {
+    "action_id": 44446847591,
+    "source_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
+    "reason": "Historical d7bd355 frozen binary expected 16/32 logs, modified shared harness only accepted 32/64; verified restored without binary change in 44447691338"
+  },
+  "limits_and_not_run": [
+    "32 simultaneously running authenticated WBD clients on real NIC/Windows Wintun/real traffic, 8 concurrent long-running ordinary TLS clients and combined load not benchmarked",
+    "Random production 15–45s wallclock dwell not exercised at full 45s in this bounded simple test; the code's min/max and real 600ms forced-cutoff path were tested",
+    "No claim of throughput, CPU, p95/p99 latency or mobile Android/OpenWrt real device",
+    "Other unrelated legacy PLAN028 workflows on changed source may fail due separately frozen constraints; only listed Actions are PASS_SCOPED",
+    "Real public internet NAT DNAT and physical Windows ↔ ARM64 traffic NOT_RUN; PLAN029/029B full technical exit OPEN; PLAN030 NOT_STARTED"
+  ]
+}

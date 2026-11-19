@@ -1,6 +1,6 @@
 # M0 H2213｜Rust native槽16→32＋普通非WBD TLS/Decoy独立随机超时
 
-**2026-11-19；当前代码阶段 IMPLEMENTED_TEST_PENDING，未拿到新SOURCE原生CI结果前不写PASS。**
+**2026-11-19；H2213 本次小任务 IMPLEMENTED / PASS_SCOPED。产品SOURCE见下方同源四组Action；PLAN029/029B整体技术出口仍OPEN。**
 
 用户明确小任务：（1）Rust承载槽从16调整至32并简单测试。（2）非WBD普通客户端通过WBD服务端的Decoy回落，增加随机连接存活时间，期限到主动结束，不能长时间消耗系统资源。
 
@@ -20,3 +20,9 @@
 SOURCE `38e92ad9bc532f7bda0f6ffb084c3b600c528ba2`：Rust Linux+Windows[Action44446847868](https://github.com/lly8666/wbd-next/actions/runs/44446847868) **2/2 SUCCESS**，Windows确实依次实际allocate32个原Rust prepared owner并验证第33个FULL（未实际启动32个kernel M4/业务）；Linux真实编译并测32/33 cold限额。原Go Decoy和Linux Rust动态链接[Action44446847713](https://github.com/lly8666/wbd-next/actions/runs/44446847713) **2/2 SUCCESS**，`TestH2213OrdinaryTLSDecoyHardCloseReleasesQuota`用真实普通stdlib TLS1.3→老P2目标完成ping/pong后故意保持TLS打开，在缩短到600ms的fixture限制下服务器主动断开并归还8槽中的1槽；独立15/45秒端点和64次随机范围测试PASS。该短测只验证真实超时路径，不假称线上随机15–45秒已在物理公网长跑。
 
 历史固定二进制兼容性：旧PLAN028 H1072 [Action44446847591](https://github.com/lly8666/wbd-next/actions/runs/44446847591) 原二进制源`d7bd355...`经原TLS/TUN/UDP 5包成功，却因主线公用脚本唯一检查了新日志cold64/native32而在Stop后错误FAIL。只改这个**共享fixture**：H2212开启时严格要求新Rust32/cold64；其他原冻结路径仅接受已知的旧16/32或新32/64这一对互斥合法日志，不把旧冻源宣告Rust32。二客户端旧脚本同样仅接受这两种固定组合，恢复冻结证据独立性，不修改任何Go/Rust产品代码或线上随机期限。
+
+## 最终验收 / H2213 证据
+
+产品同一SOURCE `38e92ad9bc532f7bda0f6ffb084c3b600c528ba2`：Linux与Windows Rust32边界/Windows真实32个prepared owner并拒绝33rd [Action44446847868](https://github.com/lly8666/wbd-next/actions/runs/44446847868) **SUCCESS**；Go原本的P2同端口Decoy真实TLS测试[Action44446847713](https://github.com/lly8666/wbd-next/actions/runs/44446847713) **SUCCESS**，包括普通TLS1.3真实app ping/pong后源站刻意不关连接、采用fixture短600ms期限服务器主动终止并归还普通TLS并发槽；随机15与45s边界和多次抽样PASS，真实生产15–45秒没有等待45秒公网长测。真实Linux原Go双端/内核veth/TUN/AF_PACKET + Rust ISA-L、短RouteKey cache重新启动、443普通TLS decoy、TUN UDP Echo/Stop [Action44446847738](https://github.com/lly8666/wbd-next/actions/runs/44446847738) x86_64和ARM64两个原生作业均**SUCCESS**（各2次完整启动）。冻结旧编译H1072因公用测试脚本日志预期误FAIL后，仅修测试fixture提交`6ba04041e8f0ab1a7a5f0e27e654d556a9812e87`，[Action44447691338](https://github.com/lly8666/wbd-next/actions/runs/44447691338) **SUCCESS**，源码冻源仍为旧Rust16/Go32，不改历史事实。
+
+**未测边界**：32个真实WBD同时在线及混合8个普通TLS长时压力、p99与内存峰值/公网NAT、Android JNI/OpenWrt实体。Rust Windows32个prepared owner验证不等于32个Wintun业务实例；Linux32槽/33rd边界是源码锁条件测试，不冒充32真实联网会话。详见[独立同SOURCE证据](../../evidence/M0/PLAN029B-H2213-RUST32-DECOY-RANDOM-15-45-LINUX-WINDOWS-SCOPED-PASS-20261119.json)。
