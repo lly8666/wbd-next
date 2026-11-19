@@ -163,3 +163,7 @@ A32 **直接修 App 写方**而非放宽原Go：3种固定私有文件（密码�
 一轮集中解决**一个真实阻塞的纵向切片**；可并行研读互不依赖的东西，但同批冻结 SOURCE 后原双 ABI 编译、原 Linux server、KSU guest 及同一场景收据用同一来源，避免针对琐碎日志发多轮重型 CI。修复需附实际失败点和验证；改功能时同步更新功能卡/短 devlog，不重写旧 Actions 的 FAIL 史。新功能未有运行价值前不抢 D2 最短路径。
 
 历史入口：[实验能力探针卡](../features/entries/android-temp-root-probe.json)、[Android Root App 说明](../../android/root-app/README.md) 和 [2026-11-18 D2/TAP/A21 阶段记录](../devlog/android-root-probe/)。这些是证据库，**不是与本方案竞争的下一步任务清单**。
+
+### A32 source-locked验收收尾（仅功能卡/文档，不改变APK）
+
+`3e2c0cfd7a9dff5598f1c7a33ab6eaaff9e3d67b` [Actions #44587763808](https://github.com/lly8666/wbd-next/actions/runs/44587763808) **11 SUCCESS/4 SKIPPED**，同SOURCE ARM64原Go/Rust ELF、Linux原Go server、真实签名APK、POSIX 0600/0660权限反例以及保护型诊断Host PASS；工件[#14563460168](https://github.com/lly8666/wbd-next/actions/runs/44587763808/artifacts/14563460168) SHA256 `5a211659dfe2341d4bc5a2b44ddfcf148386104f023ba8317bf58e81729deb95`。之前第1次Native Build Host断言变量NameError FAIL、第2次CI-only提交缺功能卡导致治理FAIL，都在同一A32 devlog保留；最后纯文档功能卡提交修治理，不重跑产品构建。Android真机权限/解析/TUN/业务/Stop仍NOT_RUN。
