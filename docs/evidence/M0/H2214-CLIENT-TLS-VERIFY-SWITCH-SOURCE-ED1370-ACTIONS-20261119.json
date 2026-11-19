@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "H2214_CLIENT_TLS_VERIFY_SWITCH_CI",
+  "recorded_at_utc": "2026-11-19",
+  "project": "lly8666/wbd-next",
+  "qa_branch": "qa/h2214-client-tls-verify-switch-20261119",
+  "exact_source_sha": "ed1370ac35bb49aa03d21ba57033e5c3393af7fb",
+  "baseline_main_sha": "46a756df1114aecda8dc2d5d259a5cbb4c9a909f",
+  "ci": {
+    "workflow_path": ".github/workflows/qa-h2214-client-tls-verify.yml",
+    "run_id": 44470462032,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44470462032",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Native aarch64 Linux Go TLS policy and production build",
+        "job_id": 135378371497,
+        "conclusion": "success",
+        "evidence": "Native ARM64 Go+Rust production source build, --tls-verify-server default false/explicit true CLI tests and actual TLS certificate handshake tests"
+      },
+      {
+        "name": "Native x86_64 Linux Go TLS policy and production build",
+        "job_id": 135378371891,
+        "conclusion": "success",
+        "evidence": "Native x86_64 Go+Rust production source build, --tls-verify-server default false/explicit true CLI tests and actual TLS certificate handshake tests"
+      },
+      {
+        "name": "Windows original Go CLI and real WinForms GUI self-test",
+        "job_id": 135378371783,
+        "conclusion": "success",
+        "evidence": "Original Go Windows client built; explicit TLS policy tests and original TLS handshake tests passed; same-source Rust DLL compiled; 419 WinForms GUI checks PASS"
+      }
+    ]
+  },
+  "tls_verify": {
+    "linux_default": false,
+    "windows_default": false,
+    "explicit_opt_in": true,
+    "windows_native_modes": [
+      "Normal",
+      "Game2",
+      "Game4"
+    ],
+    "test_cert_scenarios": [
+      "self-signed server accepted with validation OFF",
+      "untrusted self-signed server rejected with validation ON",
+      "trusted server certificate accepted with validation ON"
+    ]
+  },
+  "exclusions": [
+    "No physical Windows to public ARM64 WAN test",
+    "No 32 simultaneous physical clients stress",
+    "No DPI or production p99 qualification",
+    "No official release, package signing, Windows driver installation or system configuration in QA"
+  ],
+  "risk": "User-requested client identity verification OFF by default leaves active man-in-the-middle/credential theft risk despite encrypted TLS",
+  "stage": "SCOPED_CI_PASS_NOT_PRODUCTION"
+}

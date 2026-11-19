@@ -149,14 +149,15 @@ $mutEnd=$tests.IndexOf('};',$mutStart)
 if($mutEnd -lt 0){throw 'H2204 GUI mutation dictionary terminator missing'}
 $existingMutations=$tests.Substring($mutStart,$mutEnd-$mutStart)
 $additional=@(
- @('startup-padding','"flows"'),@('fec.mode','"off"'),
+ @('route-key','"Abcde12345RandomRouteKey2026"'),@('startup-padding','"flows"'),@('fec.mode','"off"'),
  @('fec.profile','"strong"'),@('fec.auto_policy','"normal"'),
  @('fec.auto_start_profile','"strong"'),@('outer-repair','"on"'),
  @('dns.direct','"223.5.5.5"'),@('dns.tunnel','"1.1.1.1"'),
  @('direct-flow-hard','16384'),@('split-enable','false'),
  @('cn-domain-direct','false'),@('cn-rules-file','""'),
  @('health.keepalive_seconds','15'),@('health.dead_after_seconds','90'),
- @('health.idle_dormant_seconds','0'),@('tls-ca-pem','""')
+ @('health.idle_dormant_seconds','0'),@('tls-ca-pem','""'),
+  @('tls-verify-server','true')
 )
 $additions=@()
 foreach($entry in $additional){
@@ -177,6 +178,19 @@ $visibleTest='foreach (Field f in store.Fields.Where(f => !f.Managed && !Portabl
 if(([regex]::Matches($tests,[regex]::Escape($visibleTest))).Count -ne 1){throw 'H2204 actual GUI visible field fixture drift'}
 $tests=$tests.Replace($visibleTest,
  'foreach (Field f in store.Fields.Where(f => !f.Managed && !PortableStore.IsNativeCarrierField(f.Key) && f.Section!="兼容"))')
+# H2213 donor now exposes an independent short route-key field. The QA
+# field-by-field mutation must choose short OR legacy hex, never both.
+# This only enriches the derived GUI TEST fixture; original donor and
+# production Windows GUI/Go/Rust sources remain untouched.
+$shortMutation='var saved = new Dictionary<string, object>(p.Values); p.Values[f.Key] = mutations[f.Key];'
+if(([regex]::Matches($tests,[regex]::Escape($shortMutation))).Count -ne 1){throw 'H2213 short route-key GUI mutation source drift'}
+$tests=$tests.Replace($shortMutation,
+ 'var saved = new Dictionary<string, object>(p.Values); p.Values[f.Key] = mutations[f.Key]; if(f.Key=="route-key") p.Values["route-key-hex"]="";')
+$oldSecret='Assert(Convert.ToString(actual["password"])=="configured" && Convert.ToString(actual["route-key-hex"])=="configured", "validator credentials redacted: " + f.Key);'
+if(([regex]::Matches($tests,[regex]::Escape($oldSecret))).Count -ne 1){throw 'H2213 GUI credential assertion donor drift'}
+$tests=$tests.Replace($oldSecret,
+ 'Assert(Convert.ToString(actual["password"])=="configured" && actual.ContainsKey(f.Key=="route-key" ? "route-key" : "route-key-hex") && Convert.ToString(actual[f.Key=="route-key" ? "route-key" : "route-key-hex"])=="configured", "validator credentials redacted: " + f.Key);')
+
 # Regression: Normal FEC2 Fixed/Auto + Game2/4 must accept the authenticated
 # v2 selector through the ACTUAL GUI portable config and original Go CLI.
 # Source/current CLI admission is tested, never a fabricated OS Applied.
@@ -302,7 +316,8 @@ $add=[ordered]@{
  'health.keepalive_seconds'=@('生命周期','原生 Health 心跳秒','默认 15，受保护的原生 Rust 计时','Uint','15')
  'health.dead_after_seconds'=@('生命周期','原生 Health 失活秒','默认 90；不得小于三倍心跳','Uint','90')
  'health.idle_dormant_seconds'=@('生命周期','原生 Health 闲置秒','默认 0 禁用；原生业务闲置','Uint','0')
- 'tls-ca-pem'=@('服务器','TLS 服务端证书/CA','可选本地 PEM 绝对路径；未配置时使用系统可信根','String','""')
+ 'tls-ca-pem'=@('服务器','TLS 服务端证书/CA','启用验证时可选本地 PEM 绝对路径；未配置时使用系统可信根','String','""')
+  'tls-verify-server'=@('服务器','验证服务器证书','默认不校验（不安全；兼容旧版）；勾选后校验证书信任链、域名和有效期','Bool','false')
 }
 foreach($key in $add.Keys){
   if($fields.Contains($key) -and @($fields[$key]).Count -ne 3){throw "H2204 current GUI field metadata malformed: $key"}

@@ -204,6 +204,16 @@ def prepare(root, legacy, output, source, spec):
     for before, after in substitutions:
         need(original.count(before) == 1, "H2207 Windows short-key original-Go source drift: " + before[:50])
         original = original.replace(before, after)
+    # H2214: user-requested insecure-by-default TLS server verification flag.
+    flag_anchor = '\t\tserverName         = flag.String("server-name", "", "recognized TLS server name")'
+    need(original.count(flag_anchor) == 1, "H2214 Windows TLS flag source drift")
+    original = original.replace(flag_anchor,
+        flag_anchor + '\n\t\ttlsVerifyServer = flag.Bool("tls-verify-server", false, "verify server certificate and hostname; off by default for old client compatibility")')
+    cfg_anchor = 'ServerName: *serverName, RouteKey: routeKey, Timeout: 15 * time.Second,'
+    need(original.count(cfg_anchor) == 1, "H2214 original Windows TLS config source drift")
+    original = original.replace(cfg_anchor,
+        'ServerName: *serverName, RouteKey: routeKey, VerifyServer: *tlsVerifyServer, Timeout: 15 * time.Second,')
+
     cli.write_text(original, encoding="utf-8", newline="\n")
     receipt = {"source_sha": source, "key_source": src,
                "windows_cli": "derived_before_TLS_no_wire_modification",
