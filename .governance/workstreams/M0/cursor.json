@@ -22,5 +22,5 @@
     "docs/devlog/M0/20261119-H2216-ACTIONS-ROOT-CAUSE-TTL-HOP-ONLY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2216共同TTL-persona身份检查已取消，但用户报告其91b9d52 H2216v2物理Windows到公网仍FAIL。18:14:57–18:15:23真实Win TXCopied32/RXDelivered0，18:15:29迟到服务端报文；PktMon 54B截头+Npcap组件观察不能证明Rust拿到密文；Rejected23恰等于IPv6 skip23。现需定界服务端真回包/Windows物理入口/NPF handoff；不改公网失败为PASS。029/029B完整出口OPEN。"
+  "partial_summary": "H2217: 用户实机H2216v2报FAIL；TXCopied32/RXDelivered0，Rejected23=IPv6 skip23。PktMon见TTL52及超时6秒后迟到包，54B截头无法判断Rust RX或AEAD。CI NAT仅PASS_SCOPED，不抵消公网失败。029/029B技术出口OPEN。"
 }
