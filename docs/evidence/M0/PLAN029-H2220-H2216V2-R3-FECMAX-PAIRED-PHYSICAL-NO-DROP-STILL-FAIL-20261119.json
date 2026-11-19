@@ -154,5 +154,6 @@
     "physical gateway hop responsible for missing 100/109 B",
     "full physical product PASS"
   ],
-  "next": "Instrument existing Go/Rust server and Windows owner with bounded per-stage counters in same real session. First Linux AF_PACKET/raw RX -> parser/checksum -> M3 authenticated -> TUN write -> application reply -> TUN read -> M4 raw DATA TX; then Windows NPF wake/pcap_next_ex -> parser -> M3 control vs business -> Wintun delivery. Confirm actual one reversing IPv4 business before modifying reliability. Preserve prior H2219 capture as evidence of intermittent packet loss, but explicitly supersede its implication of sole causal third-cold Health gap."
+  "next": "Instrument existing Go/Rust server and Windows owner with bounded per-stage counters in same real session. First Linux AF_PACKET/raw RX -> parser/checksum -> M3 authenticated -> TUN write -> application reply -> TUN read -> M4 raw DATA TX; then Windows NPF wake/pcap_next_ex -> parser -> M3 control vs business -> Wintun delivery. Confirm actual one reversing IPv4 business before modifying reliability. Preserve prior H2219 capture as evidence of intermittent packet loss, but explicitly supersede its implication of sole causal third-cold Health gap.",
+  "source_sha": "91b9d521ce1451300533d078844340add4820c29"
 }
