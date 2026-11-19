@@ -81,7 +81,7 @@ jobs:
               grep -Fq H2212_NATIVE_ROUTEKEY_CACHE_RESTART_REUSED_PASS "$log"
             fi
           done
-          printf '%s\n' "H2212_NATIVE_$WBD_PLAN029_LINUX_EXPECTED_ARCH_TWO_REAL_CLIENT_SERVER_TLS_UDP_STOP_DECOY_RESTART_CACHE_PASS" > fixed-kernel-result/h2212-summary.txt
+          printf '%s\n' "H2212_NATIVE_${WBD_PLAN029_LINUX_EXPECTED_ARCH}_TWO_REAL_CLIENT_SERVER_TLS_UDP_STOP_DECOY_RESTART_CACHE_PASS" > fixed-kernel-result/h2212-summary.txt
           # Never upload original TLS private keys, short secret, raw packets,
           # derived cache, full CLI argv or credential-bearing process logs.
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
