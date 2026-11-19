@@ -159,15 +159,36 @@ func(p *m0WinRustNativePeer) VerifyPeerFirstAndReverse(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
  tun *windowsclient.TUN,id windowsclient.N4UnifiedIdentity)error{
  if p.owner!=owner||!p.active{return windowsclient.ErrN4NativeGuard}
- timeout,cancel:=context.WithTimeout(ctx,20*time.Second);defer cancel()
+ // A locally authenticated OS/WAL owner plus the *causal* Rust M3
+ // server reply to this native incarnation's nonce is enough for READY.
+ // This is not a business IPv4, ping or iperf3 acceptance test. No fake
+ // RXDelivered or TXAfterRX counts are minted for an idle tunnel.
+ timeout,cancel:=context.WithTimeout(ctx,45*time.Second);defer cancel()
  tick:=time.NewTicker(25*time.Millisecond);defer tick.Stop()
  for{
   state,err:=owner.NativeIOStats(timeout);if err!=nil{return err}
   p.last=state
   if state.WorkerError!=0{return fmt.Errorf("native Rust owner rc=%d",state.WorkerError)}
-  if state.TXCopied>=2&&state.RXDelivered>=1&&state.TXAfterRX>=1{return nil}
+  proof,err:=owner.ReadNativeColdReady(timeout)
+  if err!=nil{return fmt.Errorf("original native cold ACK readback: %w",err)}
+  if proof.Matched==1{
+   fmt.Printf("WBD_WINDOWS_NATIVE_COLD_READY_PROVEN mode=causal_rust_AEAD_nonce_ack attempts=%d tx_copied=%d business_rx=%d tx_after_rx=%d local_NPF_Wintun_bound=1\n",
+    proof.ProbesCopied,state.TXCopied,state.RXDelivered,state.TXAfterRX)
+   return nil
+  }
+  // Explicit old-server interoperability: older credential-Go/Rust Linux
+  // versions do not recognize the H2222 nonce echo. Their EXISTING
+  // strictly authenticated bidirectional IPv4 proof remains acceptable;
+  // never fall back merely to TLS, local TX or generic Health.
+  if state.TXCopied>=2&&state.RXDelivered>=1&&state.TXAfterRX>=1{
+   fmt.Printf("WBD_WINDOWS_NATIVE_COLD_READY_PROVEN mode=legacy_authenticated_business_fallback tx_copied=%d business_rx=%d tx_after_rx=%d\n",
+    state.TXCopied,state.RXDelivered,state.TXAfterRX)
+   return nil
+  }
   select{
-  case <-timeout.Done():return fmt.Errorf("real Rust native first+reverse: %w %+v",timeout.Err(),state)
+  case <-timeout.Done():
+   return fmt.Errorf("original native cold M3 ACK unproven after 45s: %w attempts=%d %+v",
+    timeout.Err(),proof.ProbesCopied,state)
   case <-tick.C:
   }
  }
