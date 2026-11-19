@@ -110,6 +110,8 @@ final class RootDiagnosticReport {
             if(has(session,"ROOT_PROCESS_LAUNCHED"))
                 return "SU_SUBPROCESS_STARTED_COMMAND_NOT_REACHED";
         }
+        if(has(session,"APP_PRIVATE_CREDENTIALS_UNSAFE"))
+            return "APP_PRIVATE_CREDENTIAL_FILE_0600_OR_SOURCE_REJECTED";
         if(has(session,"STOP_REQUESTED")&&!has(session,"ORIGINAL_GO_RUST_STOP_JOINED"))
             return "STOP_JOIN_NOT_PROVEN";
         if(has(session,"NATIVE_M4_AND_UID_READY"))

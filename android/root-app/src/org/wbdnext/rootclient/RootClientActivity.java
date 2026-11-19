@@ -170,10 +170,11 @@ public final class RootClientActivity extends Activity {
         }
     }
     private void privateText(String file,String text)throws Exception{
-        try(FileOutputStream out=openFileOutput(file,Context.MODE_PRIVATE)){
-            out.write(text.getBytes(StandardCharsets.UTF_8));
-            out.getFD().sync();
-        }
+        // A32: Android's MODE_PRIVATE can produce 0660 (group read/write).
+        // Original Go deliberately accepts only exactly 0600 on an opened fd.
+        // The same bounded O_NOFOLLOW, owner-only writer is used for
+        // password, the 32B route key and optional TLS CA.
+        RootPrivateCredentialFiles.write(this,file,text);
     }
     private void start(){
         try{

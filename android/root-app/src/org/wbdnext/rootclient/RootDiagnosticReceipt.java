@@ -46,6 +46,10 @@ final class RootDiagnosticReceipt {
         ORIGINAL_GO_INTERFACE_FOUND,
         ORIGINAL_GO_TUN_OPEN_ATTEMPTED,
         ORIGINAL_GO_TUN_OPENED,
+        // Actual app-owned secret file lstat readback before su, never
+        // credential text, path, mode value, uid, PID or SELinux label.
+        APP_PRIVATE_CREDENTIALS_0600_VERIFIED,
+        APP_PRIVATE_CREDENTIALS_UNSAFE,
         NETWORK_SCOPE_VERIFIED,
         APP_UID_GROUP_VERIFIED,
         ROOT_STAGE_REQUESTED,

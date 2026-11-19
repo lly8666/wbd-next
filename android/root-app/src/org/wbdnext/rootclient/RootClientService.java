@@ -332,6 +332,15 @@ public final class RootClientService extends Service {
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         try{
+            // The app-private Android file mode is checked BEFORE asking su
+            // to exec the real Go ELF. No secret bytes enter receipts.
+            try{
+                RootPrivateCredentialFiles.verifyAtStart(this,hasCA);
+                trace(RootDiagnosticReceipt.Event.APP_PRIVATE_CREDENTIALS_0600_VERIFIED);
+            }catch(Exception privateFileFailure){
+                trace(RootDiagnosticReceipt.Event.APP_PRIVATE_CREDENTIALS_UNSAFE);
+                throw privateFileFailure;
+            }
             NativePayload code=NativePayload.stage(this);
             ownerExecutable=code.executableName;
             trace(RootDiagnosticReceipt.Event.NATIVE_SOURCE_VERIFIED);

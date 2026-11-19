@@ -36,6 +36,12 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
   android/root-app/ci/OriginalGoCommandArgsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoCommandArgsTest
+# A32 real Host POSIX filesystem metadata test of the EXACT production
+# Android pre-su 0600 credential policy (no guest, NIC, Root or fake TLS).
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootPrivateCredentialContract.java \
+  android/root-app/ci/RootPrivateCredentialContractTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPrivateCredentialContractTest
 # Actual Lite v2 Java KDF + immutable cache HMAC, matched to main Go
 # short_test.go vectors. Pure local JVM, no Root, server, network or fake TLS.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
@@ -116,6 +122,22 @@ assert 'AllAppRouteScope.snapshot(this)' in a and 'all_apps' in a, "default mode
 assert 'ServerAddress.valid(peer)' in a and 'Server underlay IPv4 or DNS name' in a
 assert 'RootRouteKeyCache.resolve(this,sni,keyInput)' in a
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
+# Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
+# original Go readPrivateArgFile intentionally rejects any group bits.
+writer=Path("android/root-app/src/org/wbdnext/rootclient/RootPrivateCredentialFiles.java").read_text()
+contract=Path("android/root-app/src/org/wbdnext/rootclient/RootPrivateCredentialContract.java").read_text()
+assert 'RootPrivateCredentialFiles.write(this,file,text);' in a
+assert 'openFileOutput(file,Context.MODE_PRIVATE)' not in a
+for required in ('Os.open(path.getAbsolutePath()', 'OsConstants.O_NOFOLLOW',
+  'OsConstants.O_CLOEXEC', 'Os.fchmod(fd,RootPrivateCredentialContract.OWNER_ONLY)',
+  'verifyStat(Os.fstat(fd)', 'Os.lstat(', 'verifyAtStart(Context ctx,boolean hasCA)'):
+ assert required in writer, required
+assert '(mode&0777)==OWNER_ONLY' in contract and 'st.st_nlink' in writer
+assert 'RootPrivateCredentialFiles.verifyAtStart(this,hasCA)' in s
+assert 'APP_PRIVATE_CREDENTIALS_UNSAFE' in s
+assert 'APP_PRIVATE_CREDENTIALS_0600_VERIFIED' in s
+assert 'st.Mode().Perm()&0077!=0' in cold, "never relax original Go private read check"
+
 assert 'String key=RootRouteKeyCache.resolve(this,sni,keyInput);' in a
 assert 'RootRouteKeyV2.legacyHex(supplied)' in Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()
 assert 'file.readFully()' in Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()

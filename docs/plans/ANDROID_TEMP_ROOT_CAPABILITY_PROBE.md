@@ -114,6 +114,12 @@ A30 唯一范围：保持 Root 原私有目录/owner PID/执行/Stop 与原 Go/R
 
 A31保持原 Go`parse`返回值/文件权限/安全拒绝、TLS/证书/路由/Stop和所有原协议**不变**，只在实际原 Go Android client `parse` 非零返回点用固定分类函数将错误归于13类并输出 `V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=ENUM`，不输出raw err/文件路径/用户名/密码/IP/密钥。原 RootService严格锚定映射封闭事件枚举和时间戳，SAF TXT在泛拒绝之后标最后已证原因。Host原Go类别+敏感内容反例、Java13类/旧A30报告、ARM64签名原Go/Rust、原Linux oracle及feature catalog负责验收；不模拟网卡、不运行KSU/TAP guest或私有手机服务器。Android真机测试仍是用户自主操作，拿到下一份固定TXT才做针对性修正。之前真正客户端的TUN函数没有被删除，不能凭parse失败调整MTU/TLS或内核路由。
 
+### A32｜API36 PASSWORD_FILE：Android MODE_PRIVATE 权限与原 Go 0600 不兼容
+
+用户自己安装 A31 SOURCE `ec9d40fab0442fa6e5efaf38adc2ded2649913ff`，23条固定事件证明 KernelSU EUID0、原Bionic Go启动，`ORIGINAL_GO_PARSE_PASSWORD_FILE` 导致 exit1，尚未到物理网卡/TUN/RAW/原TLS。深入审查发现客户端高概率真实 BUG：Android旧 `RootClientActivity.privateText` 用 `openFileOutput(name,Context.MODE_PRIVATE)`，未复核文件权限；AOSP `ContextImpl.setFilePermissionsFromMode` 在默认路径包含 `S_IRGRP|S_IWGRP`，即可能生成 0660。原 Go `readPrivateArgFile` 绝不接受组/其他权限 `st.Mode().Perm()&0077!=0`，0660 会拒绝为 `PASSWORD_FILE`。同样写入口用于下一关 RouteKey hex，因此不只修密码。手机没有上传实际 stat，故源码不兼容可确认、设备具体 mode 仍待复测。
+
+A32 **直接修 App 写方**而非放宽原Go：3种固定私有文件（密码、派生32B route-key hex、可选TLS CA）改为 `Os.open(...O_NOFOLLOW|O_CLOEXEC|O_CREAT|O_TRUNC,0600)`、对同fd `fchmod(0600)` / sync / `fstat` 检查普通文件、App UID、单一硬链接、精确0600、合法大小。生产 `RootClientService` 在执行任何 `su` 前 `lstat` 二次核验，固定 `APP_PRIVATE_CREDENTIALS_0600_VERIFIED/UNSAFE` 事件只记录时间/枚举，不泄露密码/IP/UID/路径。原 Go O_NOFOLLOW/0600拒绝与标准TLS/认证/Rust M4/服务器/32私表、精确owned Stop仍原样。已签名CN文件原本 chmod0600，安装ID由原Go负责0600，不引入root长期秘密拷贝。新宿主正反例覆盖真实POSIX 0660/0640/0604、错owner、符/硬链接、坏长度和RouteKey/CA，并在原Go回归中加入两种0660拒绝。只按新SOURCE Actions签名APK/Go Rust/Linux oracle/Feature catalog验Host，不运行KSU guest/模拟NIC或用户真机；**BUILD_PASS绝不等于用户手机已修复**。请用户自行保全旧TXT/安全Stop后安装新测试版，单次Start导出新TXT验证。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

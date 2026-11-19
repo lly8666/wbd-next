@@ -463,3 +463,9 @@ A30 在**同一**真实 root shell 和原 Bionic Go `Run` 入口中添加仅常�
 ## A31 API36 原 Go 参数解析拒绝：固定分类诊断
 
 用户 A30 真机收据已经证明 KernelSU EUID0 与原 ARM64 Go 入口真正执行，却在原 Go `parse(role,args)` 中返回拒绝；尚未调用TUN/RAW。A31不放宽安全校验，而在真正 Go 失败点输出13种脱敏固定类别（CLI标志、密码文件、RouteKey文件/内容、安装ID、CN规则、TLS CA、全App排除、Android Network scope、服务器地址、冷必填参数、模式策略及OTHER）。Android SAF TXT仍只收枚举，不保存原始Go错误正文或私人内容。旧版泛拒绝报告保持正确。新签名版 Host/构建通过不意味着真机parse问题已修复；用户可在确认旧 Root 会话/UID 路由安全停止并保留旧报告后，自行安装并保留原设置尝试一次，导出脱敏TXT。不清所有系统路由，不重设服务器/密钥。
+
+## A32 · 修复真实 API36 PASSWORD_FILE 冷启动
+
+用户提供的 A31 真机固定收据已证明 Root/原 Go 可运行，原 Go `parse` 在 `--password-file` 失败，未触碰TUN/TLS。Android `Context.MODE_PRIVATE` 并不保证原 Go 要求的 0600：AOSP默认文件权限可能是0660，而原Go O_NOFOLLOW/fstat明确拒绝所有组读写位。旧版密码和RouteKey使用同一Android写法；如果只修密码，将很可能马上卡到RouteKey。
+
+A32将密码、RouteKey及可选CA统一使用 Android `Os.open(O_NOFOLLOW|O_CLOEXEC|O_CREAT|O_TRUNC,0600)`，同一fd强制 `fchmod(0600)`、同步并 `fstat` 读回，校验App所有者、唯一硬链、文件类型与大小；RootService请求 `su` 前再次 `lstat` 检查。仅新固定枚举 `APP_PRIVATE_CREDENTIALS_0600_VERIFIED`/ `APP_PRIVATE_CREDENTIALS_UNSAFE` 进入原SAF脱敏TXT。Linux原Go严格校验/标准TLS/UID路由/Stop均未放宽。宿主使用真实POSIX文件的0660/0640/0644/错UID/symlink/hardlink/64hex回归，签名APK内生产类/原ELF须同SOURCE核验。用户实机st_mode及后续解析结果待新TXT确认，不运行用户设备/模拟NIC。

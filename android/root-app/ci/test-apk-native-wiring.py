@@ -60,6 +60,15 @@ assert android_bridge.count('return ErrAdmissionUnsupported')>=5
 ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert "allAppsDefault.setChecked(true)" in ui
 assert "RootRouteKeyCache.resolve(this,sni,keyInput)" in ui
+# A32: actual DEX must contain the secure Android cold-file writer.
+writer=Path("android/root-app/src/org/wbdnext/rootclient/RootPrivateCredentialFiles.java").read_text()
+assert "Os.fchmod(fd,RootPrivateCredentialContract.OWNER_ONLY)" in writer
+assert "OsConstants.O_NOFOLLOW" in writer and "Os.fstat(fd)" in writer
+assert "RootPrivateCredentialFiles.write(this,file,text)" in ui
+assert "RootPrivateCredentialFiles.verifyAtStart(this,hasCA)" in service_src
+assert "APP_PRIVATE_CREDENTIALS_0600_VERIFIED" in service_src
+assert 'st.Mode().Perm()&0077!=0' in go_src
+
 assert "WBD Root Lite v2" in ui
 assert 'String key=RootRouteKeyCache.resolve(this,sni,keyInput)' in ui
 v2=Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyV2.java").read_text()
@@ -92,6 +101,8 @@ with zipfile.ZipFile(apk) as z:
     assert b"Lorg/wbdnext/rootclient/OriginalGoCommandArgs;" in dex
     assert b"Lorg/wbdnext/rootclient/RootRouteKeyV2;" in dex
     assert b"Lorg/wbdnext/rootclient/RootRouteKeyCache;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootPrivateCredentialFiles;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootPrivateCredentialContract;" in dex
     assert b"Lorg/wbdnext/rootclient/RootClientService;" in dex
     assert b"Lorg/wbdnext/rootclient/RootStopCommand;" in dex
     assert b"Lorg/wbdnext/rootclient/RootDiagnosticReport;" in dex
@@ -114,6 +125,8 @@ report={
   "production_root_exec_and_owned_stop_source_gate":"PASS",
   "api36_real_receipt_early_exit_fixed_stage_diagnostic_host":"PASS",
   "api36_original_go_parse_rejection_fixed_reason_host":"PASS",
+  "api36_app_private_credentials_exact_0600_host_posix":"PASS",
+  "api36_app_private_credentials_device_permission_readback":"NOT_RUN",
   "api36_original_go_parse_rejection_device_retest":"NOT_RUN",
   "root_shell_and_original_go_entry_markers_source_locked":"PASS",
   "root_shell_api36_device_runtime":"NOT_RUN",

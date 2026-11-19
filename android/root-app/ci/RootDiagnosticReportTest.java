@@ -368,6 +368,21 @@ public final class RootDiagnosticReportTest {
             contains(RootDiagnosticReport.build(dir3,source,36),
                 "last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED");
         }
+        // The Android API36 A31 original Go password-file rejection
+        // now has a pre-su app fd + lstat 0600 safety gate.
+        {
+            File denied=Files.createTempDirectory("wbd-a32-unsafe").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(denied,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.APP_PRIVATE_CREDENTIALS_UNSAFE);
+            w.record(RootDiagnosticReceipt.Event.ROOT_LAUNCH_FAILED);
+            contains(RootDiagnosticReport.build(denied,source,36),
+                "last_session_stage=APP_PRIVATE_CREDENTIAL_FILE_0600_OR_SOURCE_REJECTED");
+            if(RootDiagnosticReport.build(denied,source,36).contains("wbd-pass.secret"))
+                throw new AssertionError("secret file name leaked by rejection");
+        }
+        System.out.println("ANDROID_A32_PRE_SU_CREDENTIAL_0600_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_ROOT_A31_PARSE_REASON_SAFE_HOST_PASS");
         System.out.println("ANDROID_ROOT_SAFE_DIAGNOSTIC_EXPORT_HOST_PASS");
     }
