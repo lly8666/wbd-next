@@ -487,7 +487,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "f7cc085145f5ad479ce1e88b8c1d5597faeb2384",
+      "result_blob": "de90802463f282fa7230f3bc0a194b8e1164b456",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -668,6 +668,50 @@
         {
           "find": "所有TCP/UDP新流 · Normal",
           "replace": "所有TCP/UDP新流 · Normal/Game2/4"
+        },
+        {
+          "find": "        DateTime lastQuality = DateTime.MinValue;\n        readonly Button",
+          "replace": "        DateTime lastQuality = DateTime.MinValue;\n        bool osAppliedReceipt, clientReadyReceipt;\n        readonly Button"
+        },
+        {
+          "find": "                    quality.Text = \"运行质量（当前连接）  ·  RTT：未知  ·  首发损失上界：未知  ·  实际发送 FEC：未知\";",
+          "replace": "                    quality.Text = \"运行质量（当前连接）  ·  RTT：未知  ·  首发损失上界：未知  ·  FEC 上行：未知  ·  FEC 下行：未知\";"
+        },
+        {
+          "find": "            quality.Text = \"运行质量（当前连接）  ·  RTT：未知  ·  首发损失上界：未知  ·  实际发送 FEC：未知\";",
+          "replace": "            quality.Text = \"运行质量（当前连接）  ·  RTT：未知  ·  首发损失上界：未知  ·  FEC 上行：未知  ·  FEC 下行：未知\";"
+        },
+        {
+          "find": "仅当前 Normal 单 lane 显示实际发送档位；Game 无自动FEC。",
+          "replace": "FEC 上行显示本端原生应用档位，下行仅显示已协商档位或未知；协商不代表实时收包实测。"
+        },
+        {
+          "find": "        public string QualityText { get { return quality.Text; } }",
+          "replace": "        public string QualityText { get { return quality.Text; } }\n        public string StateText { get { return state.Text; } }"
+        },
+        {
+          "find": "        public bool ApplyQualityLine(string line) {\n            const string prefix = \"WBD_CLIENT_QUALITY_V1 \";",
+          "replace": "        static string QualityFecText(string value) {\n            if (value == \"off\") return \"关闭\";\n            if (value == \"pending\") return \"待原生应用\";\n            if (value == \"unknown\") return \"未知\";\n            if (value != null && value.StartsWith(\"applied-\", StringComparison.Ordinal))\n                return \"已应用 · \" + value.Substring(8);\n            if (value != null && value.StartsWith(\"negotiated-\", StringComparison.Ordinal))\n                return \"已协商 · \" + value.Substring(11) + \"（非实时实收档位）\";\n            return \"未知\";\n        }\n        public bool ApplyQualityLine(string line) {\n            const string prefix2 = \"WBD_CLIENT_QUALITY_V2 \";\n            if (line != null && line.StartsWith(prefix2, StringComparison.Ordinal)) {\n                var kv2 = new Dictionary<string,string>();\n                foreach (string item in line.Substring(prefix2.Length).Split(' ')) {\n                    var pair = item.Split(new[] {'='}, 2);\n                    if (pair.Length != 2 || kv2.ContainsKey(pair[0])) return true;\n                    kv2[pair[0]] = pair[1];\n                }\n                if (!kv2.ContainsKey(\"fec_c2s\") || !kv2.ContainsKey(\"fec_s2c\") ||\n                    !kv2.ContainsKey(\"tx_ipv4\") || !kv2.ContainsKey(\"rx_ipv4\")) return true;\n                ulong tx, rx;\n                if (!ulong.TryParse(kv2[\"tx_ipv4\"], NumberStyles.None, CultureInfo.InvariantCulture, out tx) ||\n                    !ulong.TryParse(kv2[\"rx_ipv4\"], NumberStyles.None, CultureInfo.InvariantCulture, out rx)) return true;\n                quality.Text = \"运行质量（原生统计）  ·  FEC 上行(C→S)：\" + QualityFecText(kv2[\"fec_c2s\"]) +\n                    \"  ·  FEC 下行(S→C)：\" + QualityFecText(kv2[\"fec_s2c\"]) +\n                    \"  ·  原生发送：\" + tx.ToString(CultureInfo.InvariantCulture) +\n                    \"  ·  回注：\" + rx.ToString(CultureInfo.InvariantCulture) +\n                    \"  ·  RTT：未知  ·  首发损失上界：未知\";\n                lastQuality = DateTime.UtcNow;\n                return true;\n            }\n            const string prefix = \"WBD_CLIENT_QUALITY_V1 \";"
+        },
+        {
+          "find": "        void Enqueue(string line) { lock (messages) { if (messages.Count >= 256) messages.Dequeue(); messages.Enqueue(line); } }",
+          "replace": "        // Neither READY alone nor OS Applied alone can claim connected.\n        // Both receipts are tied to the current GUI process/session lifetime.\n        public bool ApplyActivationReceiptLine(string line) {\n            if (line != \"WBD_WINDOWS_OS_APPLIED\" && line != \"WBD_WINDOWS_CLIENT_READY\") return false;\n            if (connectedId == null || !session.Active) return true;\n            if (line == \"WBD_WINDOWS_OS_APPLIED\") osAppliedReceipt = true;\n            else clientReadyReceipt = true;\n            if (osAppliedReceipt && clientReadyReceipt)\n                ShowState(\"已连接 · 系统 Applied · \" +\n                    (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\"));\n            else ShowState(osAppliedReceipt ? \"待验证 · 等待原生客户端 READY\" :\n                \"待验证 · 原生系统 Applied 未确认\");\n            return true;\n        }\n        void Enqueue(string line) { lock (messages) { if (messages.Count >= 256) messages.Dequeue(); messages.Enqueue(line); } }"
+        },
+        {
+          "find": "            connectedId = editing.Id;\n            object typedHost;",
+          "replace": "            connectedId = editing.Id; osAppliedReceipt = false; clientReadyReceipt = false;\n            object typedHost;"
+        },
+        {
+          "find": "leaseRestart = false; connectedId = null; ClearQuality();",
+          "replace": "leaseRestart = false; connectedId = null; osAppliedReceipt=false; clientReadyReceipt=false; ClearQuality();"
+        },
+        {
+          "find": "ShowState(\"服务端地址已更新 · 正在重新连接\"); connectedId=id;",
+          "replace": "ShowState(\"服务端地址已更新 · 正在重新连接\"); connectedId=id;\n            osAppliedReceipt=false; clientReadyReceipt=false;"
+        },
+        {
+          "find": "                // A live client process or a READY log line is not Windows\n                // Applied: only the independently verified four-stage no-old-WFP OS\n                // receipt AND same-generation authenticated Rust owner may\n                // cause the product to emit WBD_WINDOWS_OS_APPLIED.\n                if (line == \"WBD_WINDOWS_CLIENT_READY\") {\n                    if (connectedId != null && session.Active) ShowState(\"待验证 · 原生系统 Applied 未确认\");\n                    line = \"进程已启动，但不能代替 路由/DNS/MTU 原生内核回读。\";\n                }\n                if (line == \"WBD_WINDOWS_OS_APPLIED\") {\n                    // The Go producer must first verify real no-old-WFP four-stage\n                    // state and authenticated Rust/kernel first delivery.\n                    if (connectedId != null && session.Active)\n                        ShowState(\"已连接 · 系统 Applied · \" +\n                            (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\"));\n                    line = \"客户端报告系统 Applied；停止时还必须验证 WAL/CAS 全部清理。\";\n                }",
+          "replace": "                // Original Go prints OS Applied first and READY second;\n                // accept either sequence without downgrading a valid pair.\n                if (ApplyActivationReceiptLine(line)) {\n                    line = osAppliedReceipt && clientReadyReceipt ?\n                        \"原生 TLS/Rust READY 且 OS/WAL Applied 已验。\" :\n                        \"已收到部分启动回执；等待另一项同代回执。\";\n                }"
         }
       ]
     },
@@ -675,7 +719,7 @@
       "kind": "replace",
       "path": "windows/gui/GuiTests.cs",
       "original_blob": "d0e4f6d003a9381738d959fff6b7aa1e00517957",
-      "result_blob": "ae536fe95ef7f1003127f933063fff4691b03eec",
+      "result_blob": "255300726c60a3ea7624600f2622b480228b84d3",
       "patches": [
         {
           "find": "{\"fec-mode\",\"legacy\"}",
@@ -828,6 +872,26 @@
         {
           "find": "                        p.Values = saved;\n                    }\n                    // Every 028 native supported GUI mode",
           "replace": "                        p.Values = saved;\n                    }\n                    }\n                    // Every 028 native supported GUI mode"
+        },
+        {
+          "find": "Assert(form.QualityText.Contains(\"RTT：未知\") && form.QualityText.Contains(\"实际发送 FEC：未知\"),\n                           \"GUI quality must be UNKNOWN by default\");",
+          "replace": "Assert(form.QualityText.Contains(\"RTT：未知\") && form.QualityText.Contains(\"FEC 上行：未知\") && form.QualityText.Contains(\"FEC 下行：未知\"),\n                           \"GUI quality must be UNKNOWN by default\");"
+        },
+        {
+          "find": "Assert(form.QualityText.Contains(\"实际发送 FEC：未知\"),\"disconnected Transport quality is UNKNOWN\");",
+          "replace": "Assert(form.QualityText.Contains(\"FEC 下行：未知\"),\"disconnected Transport quality is UNKNOWN\");"
+        },
+        {
+          "find": "                    Assert(form.ApplyQualityLine(\"WBD_CLIENT_QUALITY_V1 rtt_ms=83 loss_pct=1.26 fec_tx=8\"),\n                           \"GUI structured quality status consumed\");\n                    Assert(form.QualityText.Contains(\"83ms\") && form.QualityText.Contains(\"1.3%\") && form.QualityText.Contains(\"R8\"),\n                           \"GUI shows source-qualified RTT, upper loss and actual TX FEC\");\n                    form.ApplyQualityLine(\"WBD_CLIENT_QUALITY_V1 rtt_ms=UNKNOWN loss_pct=UNKNOWN fec_tx=UNKNOWN\");\n                    Assert(form.QualityText.Contains(\"RTT：未知\") && form.QualityText.Contains(\"实际发送 FEC：未知\"),\n                           \"GUI never treats absent/stale signal as zero quality\");",
+          "replace": "                    Assert(form.ApplyQualityLine(\"WBD_CLIENT_QUALITY_V1 rtt_ms=83 loss_pct=1.26 fec_tx=8\"),\n                           \"GUI backward-compatible V1 status consumed\");\n                    Assert(form.QualityText.Contains(\"83ms\") && form.QualityText.Contains(\"1.3%\") && form.QualityText.Contains(\"R8\"),\n                           \"GUI V1 qualified RTT and TX FEC\");\n                    Assert(form.ApplyQualityLine(\"WBD_CLIENT_QUALITY_V2 rtt_ms=unknown loss_pct=unknown tx_ipv4=27 rx_ipv4=8 fec_c2s=applied-strong fec_s2c=negotiated-mild\"),\n                           \"actual original Rust status V2 consumed\");\n                    Assert(form.QualityText.Contains(\"上行(C→S)：已应用 · strong\") &&\n                           form.QualityText.Contains(\"下行(S→C)：已协商 · mild\") &&\n                           form.QualityText.Contains(\"非实时实收档位\") &&\n                           form.QualityText.Contains(\"原生发送：27\") && form.QualityText.Contains(\"回注：8\"),\n                           \"C2S applied and S2C negotiated labels stay distinct\");\n                    form.ApplyQualityLine(\"WBD_CLIENT_QUALITY_V2 rtt_ms=unknown loss_pct=unknown tx_ipv4=27 rx_ipv4=0 fec_c2s=pending fec_s2c=unknown\");\n                    Assert(form.QualityText.Contains(\"上行(C→S)：待原生应用\") &&\n                           form.QualityText.Contains(\"下行(S→C)：未知\") &&\n                           form.QualityText.Contains(\"RTT：未知\"),\n                           \"no fake zero RTT or peer FEC grade\");"
+        },
+        {
+          "find": "Wait(form.ConnectSelectedAsync()); Assert(fake.Active, \"GUI connect starts client\");",
+          "replace": "Wait(form.ConnectSelectedAsync()); Assert(fake.Active, \"GUI connect starts client\");\n                    Assert(form.ApplyActivationReceiptLine(\"WBD_WINDOWS_OS_APPLIED\") &&\n                           !form.StateText.StartsWith(\"已连接\"),\"Applied alone cannot claim connected\");\n                    Assert(form.ApplyActivationReceiptLine(\"WBD_WINDOWS_CLIENT_READY\") &&\n                           form.StateText.StartsWith(\"已连接\"),\"READY after Applied connects\");\n                    form.ApplyActivationReceiptLine(\"WBD_WINDOWS_CLIENT_READY\");\n                    Assert(form.StateText.StartsWith(\"已连接\"),\"duplicate READY cannot downgrade\");"
+        },
+        {
+          "find": "int before = fake.Events.Count; Wait(form.ConnectSelectedAsync());",
+          "replace": "int before = fake.Events.Count; Wait(form.ConnectSelectedAsync());\n                    Assert(form.ApplyActivationReceiptLine(\"WBD_WINDOWS_CLIENT_READY\") &&\n                           !form.StateText.StartsWith(\"已连接\"),\"READY alone cannot claim connected\");\n                    Assert(form.ApplyActivationReceiptLine(\"WBD_WINDOWS_OS_APPLIED\") &&\n                           form.StateText.StartsWith(\"已连接\"),\"OS Applied after READY connects\");"
         }
       ]
     },
