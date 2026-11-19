@@ -79,6 +79,12 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
        (cfg.StartupPaddingMode!=0&&(cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
         return nil,ErrAdmissionParams
     }
+    // Go's android target also satisfies the linux build constraint.
+    // The Android native owner does NOT support main's Linux protected
+    // startup-padding API. Only true off is admissible on Android.
+    if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0{
+        return nil,ErrAdmissionUnsupported
+    }
     return &V4LinuxClientProduct{cfg:cfg},nil
 }
 // ConnectAuthenticatedPeer is the real TLS client public product half:
@@ -199,9 +205,10 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
-    if err==nil&&p.cfg.OuterIPMTU!=0{
+    if err==nil&&runtime.GOOS!="android"&&p.cfg.OuterIPMTU!=0{
         // The original TLS reply echoed the selected mode; ColdSnapshot
         // rejects any post-handshake edit before this native M4 cold call.
+        // Android feature3/off has NO native padding implementation.
         err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
     }
     // Source-locked Android feature3/off does not advertise the unported

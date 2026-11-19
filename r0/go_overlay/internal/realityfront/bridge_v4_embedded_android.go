@@ -403,6 +403,15 @@ type V4PublicFecTxFailures struct{
 func (b *v4EmbeddedNativeBridge) originalPublicFecTxFailures()(V4PublicFecTxFailures,error){return V4PublicFecTxFailures{},ErrAdmissionUnsupported}
 // Strict post-auth, pre-worker native policy; a Go-only toggle is invalid.
 func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(_ bool)error{return ErrAdmissionUnsupported}
+// Main's Linux authenticated startup-padding API is deliberately unavailable
+// to Android feature3 Normal/off. The shared Go product code must explicitly
+// branch on runtime.GOOS before invoking it; NEVER record a fake native ACK.
+func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(_ uint8,_ int)error{
+    return ErrAdmissionUnsupported
+}
+func (b *v4EmbeddedNativeBridge) normalStartupPaddingCounters()(string,uint64,uint64,error){
+    return "",0,0,ErrAdmissionUnsupported
+}
 // 3x-dead redundancy and the actual owner-only Rust effective readback.
 // This is a cold post-TLS/pre-worker call shared by Linux client and server.
 func (b *v4EmbeddedNativeBridge) configureOriginalNativeHealth(

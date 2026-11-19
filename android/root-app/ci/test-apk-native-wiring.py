@@ -34,6 +34,16 @@ assert "V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client" in route_go
 assert 'peerThrowArgs("add",original.ServerIP)' in allapp_go
 assert 'peerThrowArgs("del",p.ServerIP)' in allapp_go
 assert "legacyAllAppsVersion = 3" in allapp_go
+# The 2026-11 main Linux protected padding source is imported in the
+# shared Go product file. Android must NOT call it or claim no-op success:
+# Go's android target satisfies the linux build tag on common Go files.
+shared_client=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
+android_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+assert 'if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0' in shared_client
+assert 'runtime.GOOS!="android"&&p.cfg.OuterIPMTU!=0' in shared_client
+assert 'configureNormalStartupPadding(_ uint8,_ int)error' in android_bridge
+assert 'normalStartupPaddingCounters()(string,uint64,uint64,error)' in android_bridge
+assert android_bridge.count('return ErrAdmissionUnsupported')>=5
 ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert "allAppsDefault.setChecked(true)" in ui
 assert "Intent.ACTION_CREATE_DOCUMENT" in ui
