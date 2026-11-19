@@ -418,3 +418,52 @@ func TestM0PLAN028OwnedWSLNextHopOnlyForExactNativeAlias(t *testing.T){
   })
  }
 }
+
+
+func TestH2222InitialOriginalTCPAndTLSTimeoutRetriesOnlyTwice(t *testing.T){
+ for _,mode:=range []m0WindowsV4Mode{
+  m0WinModeNormal,m0WinModeFixed,m0WinModeAuto,
+ }{
+  for _,timeout:=range []error{faketcp.ErrBootstrapTimeout,context.DeadlineExceeded,syscall.ETIMEDOUT}{
+   tagged:=m0WindowsTagInitialTransportTimeout(timeout)
+   if !errors.Is(tagged,errM0WindowsInitialOriginalTransportTimeout){
+    t.Fatalf("original TCP/TLS timeout not tagged %v",tagged)
+   }
+   for retry:=0;retry<2;retry++{
+    if !m0WindowsInitialColdRetryAllowed(mode,false,retry,tagged){
+     t.Fatalf("mode %v retry %d denied legitimate original transport timeout",mode,retry)
+    }
+   }
+   if m0WindowsInitialColdRetryAllowed(mode,false,2,tagged)||
+      m0WindowsInitialColdRetryAllowed(mode,true,0,tagged){
+    t.Fatal("three-attempt budget or post-WAL gate bypassed")
+   }
+  }
+ }
+ for _,err:=range []error{
+  realityfront.ErrAdmissionAuth,errors.New("bad TLS certificate"),
+  context.Canceled,errors.New("Npcap kernel driver missing"),
+ }{
+  tagged:=m0WindowsTagInitialTransportTimeout(err)
+  if errors.Is(tagged,errM0WindowsInitialOriginalTransportTimeout)||
+     m0WindowsInitialColdRetryAllowed(m0WinModeNormal,false,0,tagged){
+   t.Fatalf("permanent/auth/cancel failure incorrectly reopened original cold TLS: %v",err)
+  }
+ }
+ for _,row:=range []struct{
+  mode m0WindowsV4Mode
+  err error
+ }{
+  {m0WinModeGame2,m0WindowsTagInitialTransportTimeout(context.DeadlineExceeded)},
+  {m0WinModeGame4,m0WindowsTagInitialTransportTimeout(context.DeadlineExceeded)},
+  {m0WinModeNormal,context.DeadlineExceeded}, // M4 cold ACK timeout: not tagged
+  {m0WinModeNormal,fmt.Errorf("%w: %w",
+   errM0WindowsInitialOriginalTransportTimeout,realityfront.ErrAdmissionAuth)},
+  {m0WinModeNormal,fmt.Errorf("%w: %w",
+   errM0WindowsInitialOriginalTransportTimeout,context.Canceled)},
+ }{
+  if m0WindowsInitialColdRetryAllowed(row.mode,false,0,row.err){
+   t.Fatalf("not original TCP/TLS retry scope: %v",row)
+  }
+ }
+}
