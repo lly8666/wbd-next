@@ -1870,7 +1870,8 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      if out.is_null(){return INVALID}
      let g=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
      let Some(s)=g.get(&h)else{return UNKNOWN};
-     let e=match s.lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+     let lane=match lookup(h){Ok(v)=>v,Err(code)=>return code};
+     let e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
      let (confirmed,attempts)=match m2_cold_ready_readback(
          &e,s.epoch,s.luid,s.ifindex
      ){Ok(v)=>v,Err(code)=>return code};
