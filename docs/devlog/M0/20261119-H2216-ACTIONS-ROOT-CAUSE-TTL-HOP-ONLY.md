@@ -27,6 +27,10 @@
 - These statements do **not** claim a successful UDP tunnel / Stop;
   those must be verified by the new post-fix Action.
 
+## Post-fix source-locked H2216 scoped outcome
+
+Following the historical fixture failures above, [Action 44495120323](https://github.com/lly8666/wbd-next/actions/runs/44495120323) completed **both jobs SUCCESS** at exact production SOURCE `91b9d521ce1451300533d078844340add4820c29`: Windows original-Go/native Rust/GUI build and self-tests, ARM64 three-client independent SNAT plus server DNAT:443, real Rust TUN 48 UDP echoes, protected Normal/Game2/Game4 and owned Stop, plus twelve original-Go TLS/native Linux network scenes. Main `517d786c4f5b7d1393d87b15c8d6b68f32ff1d90` subsequently passed native-functional 95/95 after correcting the required test-name inventory; intervening changes were docs/test inventory only, not parser behavior. This corrects the feature card's pre-run `NOT_RUN` record, without rewriting old failed Actions. Physical Windows-to-public-ARM64 WAN, DPI, true 32-client sustained load and latency p99 remain **NOT_RUN**; H2216 is **PASS_SCOPED**, not full PLAN029/029B exit.
+
 ## TTL inbound policy
 
 The original Go packet parser does not use TTL as peer identity. The Rust
@@ -52,5 +56,5 @@ ciphertext/ACK metadata, never an authenticated payload.
 No success is claimed from this documentation or a pending Action.
 
 ```feature-impact
-{"kind":"none","ids":[],"reason":"This follow-up changes only Rust test expectations, NAT fixture output-directory creation, and QA diagnostic documentation; no new product feature or protocol capability is introduced by the follow-up itself. Runtime TTL policy was changed in the prior H2216 source commit."}
+{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"Record verified H2216 native source-locked QA and correct stale feature-card TTL range/verification status for the already-merged runtime fix. This follow-up modifies documentation and catalog evidence only, not product runtime behavior."}
 ```

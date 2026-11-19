@@ -59,7 +59,8 @@
     ".github/workflows/qa-h2214-client-tls-verify.yml",
     "crates/wbd-platform/src/rx_ipv4_tcp.rs",
     "tools/h2216-routed-double-nat-native.sh",
-    ".github/workflows/qa-h2216-routed-ttl-native-release.yml"
+    ".github/workflows/qa-h2216-routed-ttl-native-release.yml",
+    "crates/wbd-platform/src/linux_raw_carrier.rs"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
