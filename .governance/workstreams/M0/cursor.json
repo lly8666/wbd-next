@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2217,
-  "checkpoint_sha": "df0f9be9ce8a284e5eebffe9369e922d9177f951",
+  "sequence": 2218,
+  "checkpoint_sha": "07ebb05b4e3cc4faccc01c9349373f91b945fc44",
   "progress": "in_progress",
-  "task_id": "PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-REVERSE-FAIL",
-  "current_task": "H2217 用户实机 H2216v2(报告91b9d52)失败：原Go TLS完成，Win Rust TXCopied32/RXDelivered0/WorkerError0，Rejected23恰与Wintun IPv6 skip23相等；物理PktMon见TTL52入站与Native期出站，客户端退出后6秒有87B迟到包。54B截头不能断言Rust确收/AEAD；不同场景Linux NAT CI PASS_SCOPED不覆盖此FAIL。",
-  "why_now": "用户提供真实Win PktMon all组件抓包明确否定H2216v2公网能用；M0必须把实机FAIL入账并缩小首个异常，不能以TTL修复/Action成功复述已通。",
-  "done_when": "定位首个可重复缺口：同一SOURCE/物理TCP443，Go→Rust读权交接、NPF event/pcap_next_ex、Rust DATA/ACK/AEAD和服务端实发对应的时间/总量及owned Stop。现在不宣称修复。",
-  "next_action": "H2217 首做一轮有界现场TX/RX阶段计数或同一包头时序：Go->Rust捕获交接时刻、服务端真native反向发送、Windows物理收包、Npcap驱动event/用户态read、Rust解析和认证。缺服务端运行日志与完整TCP payload；不新跑Linux NAT/弱网全矩阵，不取消校验/AEAD/TTL=0规则。",
+  "task_id": "PLAN029-H2218-DISTINCT-RUNNER-NAT-GATE",
+  "current_task": "H2218 两个真实托管runner：ARM64服务器私网10.249.20.2+DNAT:443本机PASS，x86客户端私网10.249.21.2+SNAT规则命中4包/240B，但公网TCP443挑战4次超时，服务端DNAT计数0；网络前提未达，原Go/Rust NOT_RUN。不能用云入口故障替代H2217物理TLS通但RXDelivered0失败。",
+  "why_now": "用户要求客户端/服务端各位于NAT后的多runner Actions组网。先清楚验证不同Azure托管VM公网入站，再避免将不可达的云runner判断成WBD缺陷。",
+  "done_when": "当前H2218仅能证明双runner网络入口受阻：真实客户端SNAT 4次外发而服务器DNAT零命中。需要可公网443映射到私网server的自有runner/授权真实L3互连，才能跑原Go/Rust DATA/ACK/UDP/Stop并追H2217实际接收缺口。",
+  "next_action": "不重复刷同一个Azure托管入口测试。优先用户实际环境服务端原Go/Rust TX和路由器DNAT/Npcap交接阶段有界计数；若有可达双独立runner/真实端口映射再运行同SOURCE原Go TLS/Rust应用层TUN UDP/TCP反向和Stop。现未证明产品修复。",
   "unverified": true,
-  "last_tested_source": "91b9d521ce1451300533d078844340add4820c29",
+  "last_tested_source": "07ebb05b4e3cc4faccc01c9349373f91b945fc44",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
+    "docs/evidence/M0/PLAN029-H2218-TWO-RUNNER-NAT-PREREQUISITE-FAILED-20261119.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN029-H2216-TTL-PERSONA-NAT-SOURCE-91B9-SCOPED-PASS-20261119.json",
-    "docs/devlog/M0/20261119-H2216-ACTIONS-ROOT-CAUSE-TTL-HOP-ONLY.md"
+    "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json",
+    "docs/evidence/M0/PLAN029-H2216-TTL-PERSONA-NAT-SOURCE-91B9-SCOPED-PASS-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2217: 用户实机H2216v2报FAIL；TXCopied32/RXDelivered0，Rejected23=IPv6 skip23。PktMon见TTL52及超时6秒后迟到包，54B截头无法判断Rust RX或AEAD。CI NAT仅PASS_SCOPED，不抵消公网失败。029/029B技术出口OPEN。"
+  "partial_summary": "H2218 two hosted runners NAT preflight BLOCKED: x86 SNAT 4 pkts/240B, ARM64 DNAT 0 pkts, 4 public TCP443 timeouts. Same-runner H2216 CI only PASS_SCOPED; real Windows H2217 TLS-ok/RXDelivered0 FAIL remains. Product Go/Rust NOT_RUN; 029/029B tech exit OPEN."
 }
