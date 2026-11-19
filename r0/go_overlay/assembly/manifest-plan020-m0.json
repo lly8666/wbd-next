@@ -1861,7 +1861,7 @@
       "kind": "create",
       "path": "internal/realityfront/v4_fallback_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/v4_fallback_test.go",
-      "result_blob": "0a1a6ee6d98a06b3f79edc0ec6efd2d558773db6"
+      "result_blob": "cd00368c19a9b7397e848b7e4b31a35450d55abb"
     },
     {
       "kind": "create",

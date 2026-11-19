@@ -14,10 +14,9 @@ import (
 
 // Exact V4 proof using the old pinned project's real P2 TLS decoy fixture.
 // No second ClientHello parse in product, no fake/unauthenticated Rust epoch.
-func TestH2209V4OrdinaryBrowserFallbackSameAssociation(t *testing.T) {
+func TestH2209V4OrdinaryStdlibTLSFallbackSameAssociation(t *testing.T) {
 	cert := makeServerCert(t)
 	serverRouteKey := []byte("0123456789abcdef0123456789abcdef")
-	clientRouteKey := []byte("fedcba9876543210fedcba9876543210")
 	assoc, peer := newAssociationPeer(t)
 	defer assoc.Close()
 	defer peer.Close()
@@ -86,14 +85,12 @@ func TestH2209V4OrdinaryBrowserFallbackSameAssociation(t *testing.T) {
         serverDone<-serverResult{err:err}
     }()
 
-	clientTLS, err := newFirefox120Client(peer, ClientConfig{
-		ServerName: "target.test",
-		RouteKey:   clientRouteKey,
-		Timeout:    3 * time.Second,
+	// This is an ordinary Go standard-library TLS client, NOT a WBD uTLS
+	// client with an intentionally wrong private HMAC SessionID.
+	clientTLS := tls.Client(peer, &tls.Config{
+		ServerName: "target.test", RootCAs: v4TestRoots(cert),
+		MinVersion: tls.VersionTLS13, MaxVersion: tls.VersionTLS13,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
 	if err := clientTLS.HandshakeContext(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -142,9 +139,8 @@ func TestH2209V4OrdinaryBrowserFallbackSameAssociation(t *testing.T) {
 		t.Fatalf("dial calls=%d want=1", dialCalls.Load())
 	}
 	gotTargetHello := <-capturedHello
-	if len(gotTargetHello)<32 || !recognized(gotTargetHello,clientRouteKey,"target.test") ||
-       recognized(gotTargetHello,serverRouteKey,"target.test") {
-        t.Fatal("decoy ClientHello was not the byte-exact non-WBD real TLS original")
+	if len(gotTargetHello)<32 || recognized(gotTargetHello,serverRouteKey,"target.test") {
+        t.Fatal("ordinary stdlib TLS ClientHello was incorrectly marked WBD")
     }
 	if _, ok := assoc.TransitionState(); ok {
 		t.Fatal("fallback path prepared a record transition")
