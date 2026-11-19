@@ -95,6 +95,27 @@ func m0WindowsColdPathRetryAllowed(
   authenticatedDead||pathChanged,applied,retries,err)
 }
 
+// H2223: a first-time original FakeTCP/TLS transport timeout may retry
+// without inventing a new handshake. Each attempt owns a fresh source-port
+// ordinal and new original Go association. This tag is assigned ONLY inside
+// the pre-M4 SYN/TLS phase, not for OS, route, driver or business failures.
+var errM0OriginalColdTransportTimeout=errors.New("original FakeTCP/TLS cold transport timeout")
+func m0WindowsTagOriginalColdTransport(err error)error{
+ if err==nil||errors.Is(err,context.Canceled)||
+  errors.Is(err,realityfront.ErrAdmissionAuth){return err}
+ if m0WindowsOriginalColdRetryAllowed(true,false,0,err){
+  return fmt.Errorf("%w: %w",errM0OriginalColdTransportTimeout,err)
+ }
+ return err
+}
+func m0WindowsInitialTransportRetryAllowed(
+ mode m0WindowsV4Mode,applied bool,failedAttempts int,err error,
+)bool{
+ if applied||failedAttempts>=2||err==nil||
+  errors.Is(err,context.Canceled)||errors.Is(err,realityfront.ErrAdmissionAuth)||
+  !errors.Is(err,errM0OriginalColdTransportTimeout){return false}
+ return mode==m0WinModeNormal||mode==m0WinModeFixed||mode==m0WinModeAuto
+}
 // Cold record offer is resolved by Rust's versioned full-IP budget ABI.
 // No separate Windows 1400 cap or Go framing arithmetic is authoritative.
 
@@ -563,13 +584,20 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // After genuine dead90, a new FakeTCP SYN can precede recovery of a
   // 105s one-way outage. Keep GUI alive and retry only cold timeouts,
   // never bypass TLS authentication or reuse the old Rust generation.
-  if ctx.Err()==nil && m0WindowsColdPathRetryAllowed(
-   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err){
+  initialRetry:=m0WindowsInitialTransportRetryAllowed(
+   o.Mode,applied,coldRetries,err)
+  recoveryRetry:=m0WindowsColdPathRetryAllowed(
+   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err)
+  if ctx.Err()==nil&&(initialRetry||recoveryRetry){
    coldRetries++
    authority:="authenticated_health90"
    if pathRecoveryAuthorized{authority="native_physical_ipv4_path"}
+   if initialRetry&&!reauthAuthorized&&!pathRecoveryAuthorized{
+    authority="initial_original_tls_transport_only"
+   }
    fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_COLD_RETRY generation=%d attempt=%d class=timeout authority=%s previous_owner_drained=1\n",generation,coldRetries,authority)
-   timer:=time.NewTimer(2*time.Second)
+   // 1-second and 2-second bounded initial backoff (3 total attempts).
+   timer:=time.NewTimer(time.Duration(coldRetries)*time.Second)
    select{
    case <-ctx.Done():timer.Stop();return nil
    case <-timer.C:
@@ -833,7 +861,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   case <-ctx.Done():return ctx.Err()
   case e:=<-failure:return fmt.Errorf("original V4 TCP bootstrap failed: %w",e)
   case e:=<-handshaked:
-   if e!=nil{return e}
+   if e!=nil{return m0WindowsTagOriginalColdTransport(e)}
    break waitHandshake
   case <-ticker.C:
    if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return e}
@@ -947,7 +975,8 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   return errors.Join(err,fmt.Errorf("original Windows cold TLS FakeTCP retransmit kernel failure: %w",retryErr),stopErr)
  default:
  }
- if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
+ if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",
+  m0WindowsTagOriginalColdTransport(err))}
  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED mode=%v requested_tun_mtu=%d client_record_offer=%d original_tls=1\n",o.Mode,o.TunnelMTU,auth.ClientLimit)
  // After TLS+Rust, either the same native product service assumes
  // full ownership or we retire Rust FIRST; never return GUI Applied
