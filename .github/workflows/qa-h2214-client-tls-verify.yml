@@ -52,7 +52,7 @@ jobs:
   windows:
     name: Windows original Go CLI and real WinForms GUI self-test
     runs-on: windows-2025
-    timeout-minutes: 37
+    timeout-minutes: 58
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false, fetch-depth: 0}
@@ -80,6 +80,47 @@ jobs:
             go build -trimpath -tags wbd_v4_embedded_go -o ../wbd-client.exe ./cmd/wbd-client
             if($LASTEXITCODE -ne 0){throw 'Windows client compile failed'}
           }finally{Pop-Location}
+      - name: Build pinned ISA-L Windows native dependency
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'NASM install failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin')|Where-Object {Test-Path (Join-Path $_ 'nasm.exe')}|Select-Object -First 1
+          if(-not $nasm){throw 'NASM missing'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'ISA-L clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if($LASTEXITCODE -ne 0){throw 'ISA-L pinned source missing'}
+          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath|Select-Object -First 1
+          if(-not $vsroot){throw 'Windows MSVC x64 tools missing'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if(-not (Test-Path $vcvars)){throw 'MSVC vcvars64 missing'}
+          $cmd='call "'+$vcvars+'" && cd isa-l && nmake /f Makefile.nmake'
+          cmd.exe /d /s /c $cmd
+          if($LASTEXITCODE -ne 0){throw 'pinned ISA-L compilation failed'}
+      - name: Build actual same-source Rust Windows DLL for GUI check-config
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust 1.85.1 unavailable'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'Rust Windows MSVC target unavailable'}
+          $lib=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File|Select-Object -First 1
+          if(-not $lib){throw 'pinned ISA-L static library missing'}
+          $env:WBD_ISAL_PREFIX=$lib.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'same-source Rust DLL failed'}
+          Copy-Item target/release/wbd_engine.dll delivery/windows-amd64/wbd_engine.dll
+          python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("delivery/windows-amd64/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start");print("H2214_SAME_SOURCE_WIN_NATIVE_DLL_EXPORT_PASS")'
+          if($LASTEXITCODE -ne 0){throw 'same-source Rust DLL export missing'}
       - name: WinForms GUI compile and source-matched self-test
         shell: pwsh
         timeout-minutes: 17
