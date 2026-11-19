@@ -171,7 +171,7 @@ func(p *m0WinRustNativePeer) VerifyPeerFirstAndReverse(ctx context.Context,
  state,err:=owner.NativeIOStats(ctx)
  if err!=nil{return err}
  p.last=state
- if state.WorkerError!=0{return m0WindowsRustNativeWorkerError(state.WorkerError)}
+ if err=m0WindowsRustNativeStartupVerdict(state);err!=nil{return err}
  // Snapshot reports precisely the two Rust native worker owners, not
  // real kernel traffic, and the readback validates its C ABI separately.
  fmt.Printf("WBD_WINDOWS_NATIVE_STARTUP_READY source=original_go_tls_rust_native workers=%d tx_copied=%d rx_delivered=%d tx_after_rx=%d application_reverse_required=0\n",
@@ -197,6 +197,14 @@ func(p *m0WinRustNativePeer) DrainPeerAndKernelLoans(ctx context.Context,
  if p.rx!=nil{err=errors.Join(err,p.rx.CloseAfterRustJoin());p.rx=nil}
  if p.tx!=nil{err=errors.Join(err,p.tx.CloseAfterRustJoin());p.tx=nil}
  return err
+}
+// Distinct from application success: RXDelivered and TXAfterRX are
+// real Wintun business counters and are deliberately NOT READY gates.
+func m0WindowsRustNativeStartupVerdict(
+ state realityfront.V4WindowsNativeWorkerStatsV1,
+)error{
+ if state.WorkerError!=0{return m0WindowsRustNativeWorkerError(state.WorkerError)}
+ return nil
 }
 // Only the native Rust HealthClock's authenticated 90s verdict may
 // reauthorize. All ordinary kernel/crypto/driver errors remain fatal.
