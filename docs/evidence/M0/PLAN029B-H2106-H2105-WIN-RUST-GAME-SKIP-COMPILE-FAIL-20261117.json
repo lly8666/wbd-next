@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2106",
+  "source_sha": "71f6756a6c04adf1ad0f7334b11d1be3d77be1b8",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action_id": 44095335952,
+  "job_id": 134081225073,
+  "scope": "H2105 source-frozen Windows Rust full library compile before any B3 kernel test",
+  "cheap_workflow": "PASS",
+  "windows_go_compile": "PASS",
+  "linux_rust_unit": "PASS",
+  "windows_rust_unit": "FAIL_E0004",
+  "first_error": {
+    "code": "E0004",
+    "message": "non-exhaustive patterns Ok(ReadResult::SkippedIpv6) not covered",
+    "file": "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
+    "locations": [
+      397,
+      914
+    ],
+    "cause": "H2105 internal Wintun ReadResult discriminant added without matching Game-owned Wintun and NPF reader matches",
+    "correction": "Add SkippedIpv6 to the existing Game Skipped rejection/continue branches, preserving original fairness and no new decoder, then repeat same source B3 at most once after prior Action resolves"
+  },
+  "original_action_overall_at_capture": "COMPLETED_FAILURE_44095335952",
+  "actual_win_ipv6_packet": "NOT_RUN_AT_FIRST_COMPILATION_FAILURE",
+  "full_b3_native_outcome": "NOT_RUN_COMPILE_FAIL_BEFORE_WINDOWS_DRIVER_OR_APP",
+  "stop": "NOT_RUN_B3",
+  "historical_results": "H2103 Normal/off true signed PASS older SOURCE; H2104 config GUI PASS older SOURCE",
+  "artifact_scope": "ORIGINAL_JOBS_LOGS_REVIEWED_NO_NATIVE_PRODUCT_ZIP_BECAUSE_RUST_COMPILE_FAILED"
+}

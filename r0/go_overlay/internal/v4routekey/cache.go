@@ -1,0 +1,102 @@
+package v4routekey
+
+import (
+    "crypto/hmac"
+    "crypto/sha256"
+    "encoding/hex"
+    "encoding/json"
+    "errors"
+    "fmt"
+    "os"
+    "path/filepath"
+    "runtime"
+)
+
+const cacheDomain = "WBD-V4-ROUTE-KEY-CACHE-v2\x00"
+type cacheRecord struct {
+    Version int `json:"version"`
+    KeyHex string `json:"key_hex"`
+    CheckHex string `json:"check_hex"`
+}
+
+// DefaultCachePath is stable per role and TLS server identity, including mobile
+// Go clients. Persistent OS user config is used; it is never a working directory.
+func DefaultCachePath(role, serverName string) (string, error) {
+    if role != "server" && role != "client" { return "", fmt.Errorf("invalid route-key role") }
+    if serverName == "" { return "", fmt.Errorf("server name required for route-key cache") }
+    base, err := os.UserConfigDir()
+    if err != nil { return "", fmt.Errorf("route-key config directory: %w", err) }
+    sum := sha256.Sum256([]byte(role + "\x00" + serverName))
+    return filepath.Join(base, "wbd-next", "route-key-v2-"+hex.EncodeToString(sum[:12])+".json"), nil
+}
+
+func cacheCheck(key []byte, pass string) []byte {
+    mac := hmac.New(sha256.New, key)
+    mac.Write([]byte(cacheDomain))
+    mac.Write([]byte(pass))
+    return mac.Sum(nil)
+}
+
+func readCache(path string, pass string) ([]byte, bool, error) {
+    st, err := os.Lstat(path)
+    if errors.Is(err, os.ErrNotExist) { return nil, false, nil }
+    if err != nil { return nil, false, err }
+    if !st.Mode().IsRegular() || st.Size() > 512 {
+        return nil, false, fmt.Errorf("route-key cache must be a bounded regular file")
+    }
+    if runtime.GOOS != "windows" && st.Mode().Perm()&0077 != 0 {
+        return nil, false, fmt.Errorf("route-key cache must be owner-only (0600)")
+    }
+    raw, err := os.ReadFile(path)
+    if err != nil { return nil, false, err }
+    var record cacheRecord
+    if err = json.Unmarshal(raw, &record); err != nil || record.Version != Version {
+        return nil, false, fmt.Errorf("unsupported/corrupt route-key cache version; do not silently use an older KDF")
+    }
+    key, keyErr := hex.DecodeString(record.KeyHex)
+    chk, chkErr := hex.DecodeString(record.CheckHex)
+    if keyErr != nil || chkErr != nil || len(key) != 32 || len(chk) != 32 {
+        return nil, false, fmt.Errorf("corrupt route-key cache")
+    }
+    if hmac.Equal(cacheCheck(key, pass), chk) {
+        return key, true, nil // fast cache hit: zero PBKDF2 work
+    }
+    return nil, false, nil // input changed: recompute and atomically replace
+}
+
+func writeCache(path string, pass string, key []byte) error {
+    dir := filepath.Dir(path)
+    if err := os.MkdirAll(dir, 0700); err != nil { return err }
+    st, err := os.Lstat(dir)
+    if err != nil { return err }
+    if !st.IsDir() || (runtime.GOOS != "windows" && st.Mode().Perm()&0077 != 0) {
+        return fmt.Errorf("route-key cache directory must be private (0700)")
+    }
+    record := cacheRecord{Version: Version,
+        KeyHex: hex.EncodeToString(key), CheckHex: hex.EncodeToString(cacheCheck(key, pass))}
+    raw, err := json.Marshal(record)
+    if err != nil { return err }
+    f, err := os.CreateTemp(dir, ".route-key-*")
+    if err != nil { return err }
+    defer os.Remove(f.Name())
+    if err = f.Chmod(0600); err != nil { f.Close(); return err }
+    if _, err = f.Write(append(raw, '\n')); err != nil { f.Close(); return err }
+    if err = f.Sync(); err != nil { f.Close(); return err }
+    if err = f.Close(); err != nil { return err }
+    return os.Rename(f.Name(), path)
+}
+
+// Resolve checks the input against the protected persisted key with one HMAC,
+// so restart/reconnect never repeats PBKDF2. Initial enrollment and key change
+// derive exactly once. No plaintext short key is written into the cache.
+func Resolve(passphrase, cachePath string) ([]byte, bool, error) {
+    if err := validate(passphrase); err != nil { return nil, false, err }
+    if cachePath == "" { return nil, false, errors.New("route-key cache path required") }
+    key, hit, err := readCache(cachePath, passphrase)
+    if err != nil { return nil, false, err }
+    if hit { return key, true, nil }
+    key, err = Derive(passphrase)
+    if err != nil { return nil, false, err }
+    if err = writeCache(cachePath, passphrase, key); err != nil { return nil, false, fmt.Errorf("persist derived route-key: %w", err) }
+    return key, false, nil
+}

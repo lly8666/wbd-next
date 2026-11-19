@@ -39,6 +39,8 @@ type V4LinuxClientProductConfig struct {
     FECMode FecV2Mode
     FECProfile FecV2Profile
     DisableOuterRepair bool
+    StartupPaddingMode uint8 // client protected V2: Normal kind1 or FEC kind2 source off/tls/flows
+    OuterIPMTU int // cold original Go complete IPv4 budget
     // Zero interval/dead keeps original product defaults 15s/90s.
     // Dormant 0 means no automatic sleep; nonzero policy must have real
     // authenticated FIN and independently proven peer idle before use.
@@ -73,6 +75,10 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
     if cfg.FECMode!=""&&cfg.FECMode!=FecV2Off&&
         !v4ProductFecEnabled(cfg.FECMode){return nil,ErrAdmissionUnsupported}
     if cfg.FECMode==FecV2Fixed&&!cfg.FECProfile.Valid(){return nil,ErrAdmissionParams}
+    if cfg.StartupPaddingMode>2||
+       (cfg.StartupPaddingMode!=0&&(cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
+        return nil,ErrAdmissionParams
+    }
     return &V4LinuxClientProduct{cfg:cfg},nil
 }
 // ConnectAuthenticatedPeer is the real TLS client public product half:
@@ -114,6 +120,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     session,err:=EstablishClientV4(ctx,conn,cfg,V4ClientOptions{
         DataPlaneReady:true,fec2Product:v4ProductFecEnabled(mode),
         NormalFec:normalProfile,
+        StartupPadding:p.cfg.StartupPaddingMode,
     })
     if err!=nil{return nil,err}
     cold,err:=session.ColdSnapshot()
@@ -192,6 +199,11 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
+    if err==nil&&p.cfg.OuterIPMTU!=0{
+        // The original TLS reply echoed the selected mode; ColdSnapshot
+        // rejects any post-handshake edit before this native M4 cold call.
+        err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
+    }
     // Source-locked Android feature3/off does not advertise the unported
     // original mature firstsend M2 receipt/outer repair capability.
     // The original TLS/AEAD/replay and canonical encrypted Health stay live.
@@ -211,6 +223,12 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
 }
 // Only numeric true original M2 counters, once before Stop; never changes
 // TLS, ACK, FEC policy, mode revision or owner state.
+func (p *V4LinuxClientProduct) OriginalNormalStartupPaddingCounters()(string,uint64,uint64,error){
+    if p==nil{return "",0,0,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return "",0,0,ErrAdmissionUnsupported}
+    return p.owner.normalStartupPaddingCounters()
+}
 func (p *V4LinuxClientProduct) OriginalFecM2Proof()(V4PublicFecM2Proof,error){
     if p==nil{return V4PublicFecM2Proof{},ErrAdmissionParams}
     p.mu.Lock()

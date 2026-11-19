@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2193/H2194",
+  "date_utc": "2026-11-18",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "source_sha": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
+  "action": {
+    "id": 44290120683,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44290120683",
+    "status": "completed",
+    "conclusion": "success",
+    "run_attempt": 1,
+    "jobs": 2,
+    "native_cases": 4,
+    "mode": "normal",
+    "staged_mode": "original authenticated Go TLS/Rust M4 kernel AF_PACKET/TUN"
+  },
+  "build": {
+    "original_go_pinned_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "isa_l_pinned_sha": "c387163fcbca62701d646149564c550c78a4f985",
+    "original_rust": "1.85.1",
+    "original_go": "1.23.12"
+  },
+  "artifacts": [
+    {
+      "arch": "x86_64",
+      "id": 14420553454,
+      "zip_sha256": "b854036464cfed8e9844c7aabaacebc87f0ca84ff1bbd14f37e52f4d7bcedbb1",
+      "entries": 58,
+      "crc": "PASS",
+      "binary_sha256": {
+        "wbd-v4-client": "b566ac91b08b7891cf3b88f6de4b8564706c8a6620acf67c5500022d8796fd3c",
+        "wbd-v4-server": "3819cb292c05e113669cd7d4a9995fff6034e6088ea23b23b640c7fb1d90f40d",
+        "libwbd_engine.so": "372b5e2f6f73dc9224a74866ce2e6f718bdfbc0cbe8d4b862be71ccc9b650654"
+      },
+      "normal_tls": {
+        "client_copied": {
+          "records": 2,
+          "bytes": 487
+        },
+        "server_copied": {
+          "records": 2,
+          "bytes": 487
+        }
+      },
+      "normal_flows": {
+        "client_copied": {
+          "records": 4,
+          "bytes": 1300
+        },
+        "server_copied": {
+          "records": 4,
+          "bytes": 1300
+        }
+      }
+    },
+    {
+      "arch": "aarch64",
+      "id": 14420449610,
+      "zip_sha256": "8c1f4907e66b037057aed67a839a02fef81822074f1669db5bdd4ce2861ec3a8",
+      "entries": 58,
+      "crc": "PASS",
+      "binary_sha256": {
+        "wbd-v4-client": "faa04b5ab173c8d1148e992c7f778820d6e168a335d7d4f0f059c38e445a97d5",
+        "wbd-v4-server": "35272292cde361ebc054267cff29454a060b1f7864f7ad963f07f26795b8e423",
+        "libwbd_engine.so": "768b9dc3929867301aeb01fe9a0dc289fc17b348ca9972ac387f80401062ed9a"
+      },
+      "normal_tls": {
+        "client_copied": {
+          "records": 2,
+          "bytes": 385
+        },
+        "server_copied": {
+          "records": 2,
+          "bytes": 385
+        }
+      },
+      "normal_flows": {
+        "client_copied": {
+          "records": 4,
+          "bytes": 535
+        },
+        "server_copied": {
+          "records": 4,
+          "bytes": 535
+        }
+      }
+    }
+  ],
+  "checks": [
+    "Each ISA rebuilt once and reused exact original three-binary bundle for two independent original TLS/OS client+server scenes",
+    "Every true source and test harness HEAD SHA equals 06bd63f5",
+    "Every client/server actual AF_PACKET kernel send-copy post-success only counts nonzero padded records and <=500 bytes per record",
+    "Both endpoints actual kernel IPv4 TCP and UDP application echo both directions PASS in each of four scenes",
+    "Every scene OS TUN owned IPv6 disable_ipv6=1, outer1460 inner1389, DF+1 kernel rejection both directions",
+    "Original Rust double owned Stop and namespace cleanup PASS in every scene",
+    "CLI Fixed and Auto padding explicitly rejected before starting TUN, no FEC kinds 2/3 modified"
+  ],
+  "scope_exclusions": [
+    "Historical H2186 Game2/Game4 original 16/16 scenes are a DIFFERENT SOURCE and not retested",
+    "Linux Normal/TLS-shaped prefix is not full application TLS handshake",
+    "Linux FEC Fixed/Auto nonoff startup-padding remain NOT_WIRED and rejected, no FEC wire/source/parity changed",
+    "Linux manual-IP dynamic physical MTU live 1500->1280 not a supported reauth product path; auto-IP lease supervisor independent NOT_RUN",
+    "Host-global IPv6, physical ARM board, cross-ISA, Windows GUI/DNS/CN/Direct and small request p99, CPU/GiB not qualified",
+    "No online no-offline-route-key X25519 pre-ClientHello bootstrap; TLS contract prohibits private prelude"
+  ],
+  "historical_action_44278039887": {
+    "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+    "result": "PASS_SCOPED_SIXTEEN_LINUX_NATIVE_SCENES",
+    "reused_not_rerun": true
+  }
+}

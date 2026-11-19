@@ -47,6 +47,11 @@ jobs:
           $ErrorActionPreference='Stop'
           Push-Location legacy
           try {
+            # H2208: test mobile-friendly v2 8/16/32 vectors and once-only persistent cache.
+            & go test -tags wbd_v4_embedded_go -count=1 -run '^TestH2209' -v ./internal/realityfront
+            if($LASTEXITCODE -ne 0){throw 'H2209 original P2 non-WBD V4 fallback real TLS test FAILED'}
+            & go test -tags wbd_v4_embedded_go -count=1 -run '^TestH220[78]' -v ./internal/v4routekey
+            if($LASTEXITCODE -ne 0){throw 'H2208 route-key v2 cache regression FAILED'}
             & go test -tags wbd_v4_embedded_go -count=1 -run '^TestPlan029' -v ./internal/faketcp ./internal/windowsclient ./cmd/wbd-client
             if($LASTEXITCODE -ne 0){throw 'PLAN029 source-only tests failed'}
             & go test -tags wbd_v4_embedded_go -count=1 -run '^TestPLAN010NativeReadOnlyDiskStatusAndConflict$' -v ./internal/windowsclient

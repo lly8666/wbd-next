@@ -23,5 +23,35 @@ class CurrentMssWire(unittest.TestCase):
    verified_current_v4_mss(w.replace("local_advertised_mss=1240","local_advertised_mss=1420"),l,1280)
   with self.assertRaises(ValueError):
    verified_current_v4_mss(w,l,1500)
+
+from tools.m0_wl_public_mss_contract import verified_plan029_gui_two_child_shared_manual_mss
+
+class Plan029TwoTrueGuiChildrenMss(unittest.TestCase):
+ def test_real_source_shape_strict_reject_second_missing(self):
+  cold=("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=1 mode=normal configured_outer_mtu=1460 physical_outer_mtu=1500 effective_outer_mtu=1460 local_advertised_mss=1420 inner_mtu_planned=1389 limiting_reason=configured_outer_ipv4 source=RUST_V1_REAL_OS\n")
+  syn="WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=1 local_advertised_mss=1420 tcp_option_bytes=0204058c\n"
+  peer="WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=1 peer_advertised_mss=1420 local_advertised_mss=1420\n"
+  def w(port,truth):
+   return cold+f"WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=1 configured_port=41031 source_port={port} original_peer_port=443 same_ip_reauth_safe_tuple={truth}\n"+syn+peer
+  win=w(41031,"false")+w(41032,"true")
+  linux=("2026 V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=3 outer_config=1460 interface=1500 advertised_mss=1420 record_offer=1420 tun_planned=1389\n"
+   +"2026 V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=server generation=1 kind=SYNACK local_advertised_mss=1420 tcp_option_bytes=0204058c\n"
+   +"2026 V4_PUBLIC_MULTI_SESSION_READY role=server one_port=443 active_detached_flows=1 auto_lease=0 original_TLS=1 Rust_M4=1\n"
+   +"2026 V4_PUBLIC_ACTUAL_HANDSHAKE_MSS_V1 side=server generation=1 kind=SYNACK local_advertised_mss=1420 tcp_option_bytes=0204058c\n"
+   +"2026 V4_PUBLIC_MULTI_SESSION_READY role=server one_port=443 active_detached_flows=2 auto_lease=0 original_TLS=1 Rust_M4=1\n")
+  proof=verified_plan029_gui_two_child_shared_manual_mss(win,linux,1460)
+  self.assertEqual([v["source_port"] for v in proof["generations"]],[41031,41032])
+  self.assertEqual(proof["real_server_m4_ready_count"],2)
+  for invalid in (win.replace("source_port=41032","source_port=41031"),
+                  win.replace("peer_advertised_mss=1420","peer_advertised_mss=1360",1),
+                  win.replace("generation=1 mode=normal","generation=2 mode=normal",1)):
+   with self.assertRaises(ValueError):
+    verified_plan029_gui_two_child_shared_manual_mss(invalid,linux,1460)
+  for invalid in (linux.replace("active_detached_flows=2","active_detached_flows=1"),
+                  linux.replace("tcp_option_bytes=0204058c","tcp_option_bytes=02040550",1),
+                  linux.replace("Rust_M4=1","Rust_M4=0",1)):
+   with self.assertRaises(ValueError):
+    verified_plan029_gui_two_child_shared_manual_mss(win,invalid,1460)
+
 from tests.test_m0_plan028_shared_manual_mss import SharedMssTest
 if __name__=="__main__":unittest.main()

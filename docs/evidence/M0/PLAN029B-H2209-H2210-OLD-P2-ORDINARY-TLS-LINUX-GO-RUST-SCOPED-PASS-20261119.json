@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "task": "H2209-OLD-P2-NON-WBD-TLS-DECOY-H2210-SOURCE-LOCKED-LINUX",
+  "plan": "PLAN029B-before-PLAN029-exit",
+  "status": "PASS_SCOPED",
+  "test_date_utc": "2026-11-19",
+  "source_sha": "574cf32b2227fd9f0d8608a94764fe3f6011ad42",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "source_link": "https://github.com/lly8666/wbd-next/commit/574cf32b2227fd9f0d8608a94764fe3f6011ad42",
+  "scope": "Source-locked original Go TLS/FakeTCP admission decoy unit and Linux Go/Rust real native ABI compilation; no external Ethernet or router NAT claims.",
+  "action": 44430144025,
+  "action_link": "https://github.com/lly8666/wbd-next/actions/runs/44430144025",
+  "action_conclusion": "SUCCESS",
+  "jobs": [
+    {
+      "name": "original-go-fallback",
+      "conclusion": "SUCCESS",
+      "tests": [
+        "TestH2209V4OrdinaryStdlibTLSFallbackSameAssociation: PASS, genuine crypto/tls.Client TLS1.3 with SNI target.test -> old P2 exact same-association decoy and ping/pong/close_notify",
+        "TestH2209V4RecognizedNeverDialsDecoy: PASS, original WBD protected TLS/epoch, decoy dial=0",
+        "TestH2209V4WrongSNIRefusesToDialDecoy: PASS, no decoy dial, no owner transition"
+      ]
+    },
+    {
+      "name": "h2210-linux-go-rust-cold-parser",
+      "conclusion": "SUCCESS",
+      "tests": [
+        "TestH2207MobileFriendlyV2Vectors: PASS, 8/16/32 v2 PBKDF2 offline output",
+        "TestH2207RejectInvalidShortKey: PASS",
+        "TestH2208PersistentOncePerKeyAndFastRestarts: PASS, first 0600, restart cache, rotation and corrupt-cache fail-close with test-owned dir 0700",
+        "TestH2209ServerDecoyColdValidation: PASS, server-only fixed host:port, malformed/bad self/legacy Game negatives",
+        "TestH2206ServerNATExactInterfaceIPv4Selection: PASS, 8 subcases including multiple IPv4 rejection",
+        "TestH2206ServerNATCLIUnspecifiedIsDeferredOnlyForServer: PASS",
+        "Rust wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record: BUILD_SUCCESS",
+        "Original Linux Go wbd-v4-server linked to real same-source Rust engine: BUILD_SUCCESS"
+      ]
+    }
+  ],
+  "other_same_source_success": [
+    {
+      "action": 44430144046,
+      "scope": "Windows original Go native CLI source-only build",
+      "result": "SUCCESS",
+      "link": "https://github.com/lly8666/wbd-next/actions/runs/44430144046"
+    },
+    {
+      "action": 44430143721,
+      "scope": "M0-WIN-LINUX source-locked cheap assembly, Windows Go build, Linux Rust units, Windows Rust units",
+      "result": "SUCCESS",
+      "link": "https://github.com/lly8666/wbd-next/actions/runs/44430143721"
+    },
+    {
+      "action": 44430143745,
+      "scope": "main governance + feature catalog",
+      "result": "SUCCESS",
+      "link": "https://github.com/lly8666/wbd-next/actions/runs/44430143745"
+    }
+  ],
+  "prior_fail_preserved": [
+    {
+      "action": 44429183683,
+      "first_failure": "Go testing.T.TempDir on Linux not 0700, private cache correctly rejects; fixture chmod corrected only",
+      "result": "FAIL_SOURCE_PRIOR"
+    },
+    {
+      "action": 44429623025,
+      "first_failure": "additional Linux real-product bridge sources missing from new test assembly, corrected by copying existing pinned native-scope sources",
+      "result": "FAIL_SOURCE_PRIOR"
+    },
+    {
+      "action": 44430144037,
+      "first_failure": "ARM64 native build-only old direct-copy bundle omitted H2208 v4routekey Go sources, separate H2211 patch pending test",
+      "result": "FAIL_SCOPE_ARM64"
+    }
+  ],
+  "new_arm64_pending": {
+    "source_sha": "21acc95b5469e72872096f52702d1b62e128a25e",
+    "action": 44430856253,
+    "status": "DONE_BUILD_ONLY_SEPARATE_SOURCE_EVIDENCE",
+    "evidence": "docs/evidence/M0/PLAN029B-H2211-ARM64-GO-RUST-ROUTEKEY-MANIFEST-BUILD-PASS-20261119.json"
+  },
+  "remaining_not_run": [
+    "External public network ordinary Chrome/Firefox TLS -> gateway DNAT -> physical Linux NIC -> decoy origin and controlled Stop",
+    "H2209 simultaneous authenticated WBD + ordinary TLS browser flows on real same-port NIC / p99 load",
+    "Android real JNI/Go admission/VpnService traffic and OpenWrt actual device session",
+    "Windows original WinForms short RouteKey field physical driver operation",
+    "H2211 ARM64 corrected SOURCE build not yet concluded, cannot use old source result",
+    "PLAN029/029B full technical acceptance and 030 remain OPEN/NOT_STARTED"
+  ],
+  "behavior_boundaries": "Linux server only optional --decoy host:port; default off. SNI must equal configured original server-name. WBD original TLS/password/epoch/Rust never forwarded to decoy, non-WBD no lease/Rust owner. Old P2 fallback bounded 5s dial,2min,64MiB. Legacy dedicated Game mode rejects decoy (default shared supports protected Normal/Game2/Game4). No TLS wire/FEC changes; H2206 single NIC single real IPv4 unchanged."
+}

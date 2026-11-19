@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2066",
+  "date": "2026-11-17",
+  "source_sha": "fb24fe784d960e3e8bf4ca63cc2a22332247e1dd",
+  "original_builder_run": 44017075750,
+  "run_44018142299": {
+    "scene": "domain_reconnect",
+    "artifact_id": 14299493168,
+    "windows_first_source_port": 41031,
+    "windows_second_source_port": 41032,
+    "raw_wsl_eth0_tcp443_first_syn": 1,
+    "raw_wsl_eth0_tcp443_second_syn_count": 6,
+    "second_server_synack_count": 0,
+    "original_server_logged_first_syn": 1,
+    "original_server_logged_first_synack": 1,
+    "original_server_native_ready_count": 1,
+    "original_server_owned_stop_count": 1,
+    "second_gui_ready": "FAIL"
+  },
+  "run_44018147925": {
+    "scene": "dns_ttl_restart",
+    "artifact_id": 14300340478,
+    "real_physical_cn_resolver_queries": 2,
+    "physical_source_dns_ids": [
+      "0001",
+      "0002"
+    ],
+    "app_cn_first_and_after_ttl_fakeip": "198.18.0.1",
+    "original_second_gui_ready": "FAIL",
+    "new_first_boundary": "server_singleton_drop_second_SYN_before_SynAck"
+  },
+  "source_verified_findings": {
+    "linux_server_path": "r0/go_overlay/internal/v4productcli/linux.go::runServer",
+    "singleton_drop_condition": "if IsInitialSYN(seg) && handoffCommitted.Load() { continue }",
+    "linux_old_session_stops_listener": false,
+    "tcp_filter_new_peer_port_test": "r0/go_overlay/internal/faketcp/raw_detached_data_linux_test.go::TestDetachedDataKernelFilterPreservesHandshakeAndControl",
+    "supported_multi_session_path": "runSharedMultiServer selected by server verified manual-client-lease4 /32 or lease-pool",
+    "supported_manual_static_lease": "10.66.0.2/32",
+    "underlay_binary_drift": false
+  },
+  "qualification": "SOURCE_PROVEN_SERVER_SINGLETON_FIRST_HANDOFF_DROPS_FRESH_SOURCES; NEW_SHARED_SERVER_RUNTIME_TEST_NOT_RUN",
+  "acceptance_gates": [
+    "2 kernel physical SYN plus 2 original server SYNACK",
+    "2 authenticated M4 sessions on one server listener pid",
+    "2 per-session Rust native stop then shared tun Stop",
+    "Windows GUI second OS applied and physical Direct/Tunnel",
+    "DNS second cold bootstrap TC same UDP/TCP53 and TTL2 FakeIP after GUI restart",
+    "source-sha per binary plus fixture sha separately"
+  ],
+  "scope": "ONLY_NORMAL_GUI_RECONNECT_AND_DNS_RECONNECT_AND_TTL_FAKEMAP"
+}

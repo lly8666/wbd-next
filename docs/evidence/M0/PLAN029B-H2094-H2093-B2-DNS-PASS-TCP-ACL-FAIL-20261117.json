@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2094",
+  "date": "2026-11-17",
+  "previous_source_sha": "5327acf268f49c6edc860400bfab2e12d381fbfc",
+  "previous_result": "FAIL_TRUE_PUBLIC_EXECUTION",
+  "artifact_verified": true,
+  "previous_action": {
+    "run_id": 44068272525,
+    "job_id": 133990330687,
+    "artifact_id": 14321499645,
+    "artifact_sha256": "b07f419975a6a3df60a7c53b3300d8b65011aa7275c0fb86c35252b8c59d87bc",
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "signed_windows_wintun_npcap": "PASS",
+    "actual_wsl2": "PASS"
+  },
+  "previous_b2_scope": {
+    "status": "PASS_PRE_STOP_ONLY_NOT_FULL_B2",
+    "ordinary_cn_effective": "business_split=true cn_domain_fakeip=false",
+    "physical_cn_dns": "PASS_1_REAL_A_CNAME_TTL2_DIRECT_DNS",
+    "noncn_tunnel_dns": "PASS_1_REAL_A_TTL2_TUNNEL_DNS",
+    "cn_and_noncn_same_overseas_ip": "203.0.113.77",
+    "ordinary_cn_overseas_business": "PASS_TUNNEL_UDP",
+    "noncn_shared_ip_business": "PASS_TUNNEL_UDP",
+    "physical_business_packets": 0,
+    "windows_to_linux_generic_tcp": "PASS_ONE_DIRECTION",
+    "linux_to_windows_generic_tcp": "FAIL_TIMEOUT",
+    "original_tcp_duplex": "FAIL",
+    "owned_product_stop": "NOT_RUN",
+    "fakeip_writer": "NO_NEW_WRITER_OBSERVED_IN_B2_ORDINARY_TEST"
+  },
+  "root_cause": {
+    "domain": "TEST_ONLY_SCOPED_WINDOWS_FUNCTIONAL_TCP_FIREWALL_ACL",
+    "original_guest_tcp_source": "203.0.113.77",
+    "actual_workflow_b2_selected_allowed_remote": "10.66.0.1",
+    "required_exact_allowed_remote": "203.0.113.77",
+    "local_ip": "10.66.0.2",
+    "port": 45902,
+    "basis": "m0_wl_public_normal_e2e.py source-bound client; workflow $tcpRemote B2 selector absent; both valid B2 DNS/UDP and Windows->Linux TCP receipts",
+    "no_product_tcp_or_windows_defender_change": true
+  },
+  "change": "Add B2 scene branch to existing single exact test-owned TCP45902 remote ACL; maintain readback/finally removal and original native bidirectional TCP/Stop oracle",
+  "next_signed_source_sha": "CURRENT_H2094_COMMIT_REQUEST_NOT_RUN",
+  "next_signed_result": "NOT_RUN",
+  "other_scopes": {
+    "advanced_cn": "NOT_RUN",
+    "real_ipv6": "NOT_RUN",
+    "gui_lifecycle": "NOT_RUN",
+    "same_vm_10mbps_ab": "NOT_RUN",
+    "game_modes": "NOT_RUN"
+  },
+  "retained_failures": [
+    "H2091 source071dde",
+    "H2092 sourcea73d",
+    "H2093 source5327"
+  ],
+  "source_sha": "5327acf268f49c6edc860400bfab2e12d381fbfc",
+  "result": "FAIL"
+}

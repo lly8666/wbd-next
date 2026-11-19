@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2212-LINUX-CLIENT-KEY-DECOY-CAPACITY",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "date_utc": "2026-11-19",
+  "source_sha": "5255d934cc317d26b476cfc2ba96fd947844f989",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action_id": 44442624569,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/44442624569",
+  "action_conclusion": "SUCCESS",
+  "runner_scope": "Native ubuntu-24.04 x86_64 + native ubuntu-24.04-arm aarch64, exact original-Go and real Rust ISA-L library, kernel netns/veth/AF_PACKET TCP443, TUN inner UDP and native Stop; 2 independent process starts each ISA.",
+  "jobs": [
+    {
+      "id": 135286958641,
+      "isa": "x86_64",
+      "conclusion": "SUCCESS",
+      "restart_scenes": 2,
+      "artifact": "h2212-native-x86_64-5255d934cc317d26b476cfc2ba96fd947844f989"
+    },
+    {
+      "id": 135286957458,
+      "isa": "aarch64",
+      "conclusion": "SUCCESS",
+      "restart_scenes": 2,
+      "artifact": "h2212-native-aarch64-5255d934cc317d26b476cfc2ba96fd947844f989"
+    }
+  ],
+  "positive": [
+    "Per ISA 2 full original-Go Linux client+server new processes; same random 32-char ASCII RouteKey input, each side v2 4096 PBKDF2-HMAC-SHA256 into 32B, protected 0600 short key and separate derived key caches",
+    "Both sides protected TLS over real FakeTCP AF_PACKET TCP443, authenticated auto IPv4/32, real Rust M4 generation and Linux TUN",
+    "Per scene real inner TUN UDP echo and native owned Stop/drained, required by previous production harness assertions; 4 total scene passes",
+    "During each authenticated WBD Rust Ready=1, independent non-WBD Python stdlib TLS1.3 client accesses same server443 and is spliced to fixed 127.0.0.1:8443 actual TLS origin; ping/pong verified at client and origin; WBD native ready count stays 1",
+    "Second full independent process restart verifies owner-only caches are unchanged by comparing each cache mtime_ns to first round; zero rewrite after initial KDF enrollment",
+    "Product native capacity remains Rust 16 lane/owner slots, FakeTCP pre-auth 32 cold associations, max 8 concurrent ordinary Decoy splices independent of WBD Rust slots"
+  ],
+  "independent_gate_test": {
+    "source_sha": "9ffec3de81a3375d5088d1a546a3c994b7b483cc",
+    "action": 44440706793,
+    "result": "SUCCESS",
+    "tests": [
+      "TestH2212OrdinaryDecoyCapFailFastNoRustOwner: 8 occupied slots reject ninth ordinary TLS without target dial/native transition",
+      "TestH2209V4RecognizedNeverDialsDecoy: authenticated WBD succeeds despite full decoy quota"
+    ],
+    "note": "No subsequent runtime limiter semantic changes; later commits only native test-harness fixes"
+  },
+  "preserved_prior_failures": [
+    {
+      "source": "9ffec3de",
+      "action": 44440706601,
+      "reason": "initial native new harness failed after WBD Ready, before end-to-end pass"
+    },
+    {
+      "source": "f5c7d95f",
+      "action": 44441506563,
+      "reason": "real ordinary TLS to decoy succeeded, but runner lacked access to root-only 0600 key cache"
+    },
+    {
+      "source": "605c2b57",
+      "action": 44442145055,
+      "reason": "all scene assertions passed on both ISA but final bash receipt variable had missing braces; overall Action FAIL"
+    }
+  ],
+  "limitations": [
+    "Rust native 16 lanes is a resource cap, not tested 16 long-lived WBD users or capacity throughput/p99; Game2/4 consume 2/4 lanes",
+    "Ordinary TLS holds one of 32 shared cold FakeTCP slots while splicing and up to eight Decoy transfers; SYN flood resource exhaustion not qualified",
+    "External public gateway NAT DNAT / physical internet clients NOT_RUN",
+    "Peak 8 plain TLS + 16 live Rust-owner stress, inner application TCP on H2212 matrix, p99/load NOT_RUN",
+    "Android JNI/VpnService and physical OpenWrt NOT_RUN; PLAN029/029B full technical exit OPEN; PLAN030 NOT_STARTED"
+  ]
+}

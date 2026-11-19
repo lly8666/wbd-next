@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "4ca2c5625e59987bf3659e4dc9a18227604a530d",
+      "result_blob": "e9478ad94fff3942155c20795bc2636dd9e233f7",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -279,7 +279,7 @@
         },
         {
           "find": "if *directFlowHard<1 || *directFlowHard>16384 {return errors.New(\"direct-flow-hard requires 1..16384; new Direct only\")}",
-          "replace": "if *directFlowHard<1 || *directFlowHard>16384 {return errors.New(\"direct-flow-hard requires 1..16384; new Direct only\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
+          "replace": "if *splitEnable && *routeMode!=\"all\" && (*directFlowHard<1 || *directFlowHard>16384) {return errors.New(\"direct-flow-hard requires 1..16384 while business Direct is enabled\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
         },
         {
           "find": "out[\"startup-padding\"]=startupPaddingMode // selected next-generation intent, not physical effect",
@@ -290,8 +290,20 @@
           "replace": "StartupPaddingMode:startupPaddingMode,SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,ChinaIPFile:*chinaIPFile,Direct4:direct,Bypass4:bypass,RouteMode:*routeMode,TunnelMTU:uint32(tunMTU),"
         },
         {
-          "find": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}",
-          "replace": "if *splitEnable && *lanes!=1 && *lanes!=4 {return errors.New(\"PLAN029 CN split Game2 not wired; select Normal or Game4 (four lanes)\")}\n\tif *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}"
+          "find": "\t\tcnRulesFile = flag.String(\"cn-rules-file\", \"\", \"absolute owned CN domain rules snapshot used only at split cold start\")",
+          "replace": "\t\tcnRulesFile = flag.String(\"cn-rules-file\", \"\", \"absolute owned CN domain rules snapshot used only at split cold start\")\n\t\tcnDomainDirect = flag.Bool(\"cn-domain-direct\", false, \"advanced CN domain FakeIP (fresh default false; legacy JSON without this key keeps old advanced behavior)\")"
+        },
+        {
+          "find": "\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {\n\t\treturn err\n\t}",
+          "replace": "\tif err := configfile.ApplyFile(flag.CommandLine, *configPath); err != nil {\n\t\treturn err\n\t}\n\t// 029B old saved JSON missing the new selector keeps its previous CN\n\t// FakeIP behavior. Fresh no-config CLI and new GUI profiles default false.\n\t// configfile.ApplyFile has already strictly validated the bounded JSON;\n\t// CLI explicit --cn-domain-direct=false always takes precedence.\n\tif *configPath!=\"\" {\n\t\traw,e:=os.ReadFile(*configPath);if e!=nil{return errors.New(\"config: cannot read selector migration\")}\n\t\tvar keys map[string]json.RawMessage\n\t\tif e=json.Unmarshal(raw,&keys);e!=nil{return errors.New(\"config: invalid selector migration\")}\n\t\t_,present:=keys[\"cn-domain-direct\"]\n\t\tif !present{\n\t\t\texplicit:=false\n\t\t\tflag.CommandLine.Visit(func(f *flag.Flag){if f.Name==\"cn-domain-direct\"{explicit=true}})\n\t\t\tif !explicit{*cnDomainDirect=true}\n\t\t}\n\t}"
+        },
+        {
+          "find": "\t\tout[\"cn-rules-file\"]=*cnRulesFile // single source path; not per-DATA",
+          "replace": "\t\tout[\"cn-domain-direct\"]=fmt.Sprint(*cnDomainDirect) // requested next cold generation, not OS Applied\n\t\tout[\"cn-rules-file\"]=*cnRulesFile // single source path; not per-DATA"
+        },
+        {
+          "find": "SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,",
+          "replace": "SplitEnable:*splitEnable,CNDomainDirect:*cnDomainDirect,CNRulesFile:*cnRulesFile,"
         }
       ]
     },
@@ -327,7 +339,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "78412d44272a2e94640700e32ffc8b6a6faa0303",
+      "result_blob": "64ffdd34832f9b8d5122bd03fcba50053f2da2a9",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -447,7 +459,23 @@
         },
         {
           "find": "  \"direct4\": [",
-          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2仍拒绝。保存后重新连接生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
+          "replace": "  \"split-enable\": [\n    \"网络\",\n    \"启用 Rust CN 双出口分流\",\n    \"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2/4在FEC关闭或固定档已验CN分流。保存后重新连接生效\"\n  ],\n  \"cn-rules-file\": [\n    \"网络\",\n    \"CN 域名规则（便携相对文件）\",\n    \"CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替\"\n  ],\n  \"direct4\": ["
+        },
+        {
+          "find": "  \"cn-rules-file\": [",
+          "replace": "  \"cn-domain-direct\": [\n    \"网络\",\n    \"高级CN域名分流（FakeIP）\",\n    \"默认关闭：CN域名真实A不造FakeIP，业务只按目的中国IPv4走Direct；开启后CN域名FakeIP可直连海外CDN。旧配置缺键保留开启，重连生效\"\n  ],\n  \"cn-rules-file\": ["
+        },
+        {
+          "find": "\"关闭为原有路径；开启后按中国IP＋域名并集Direct，其他Tunnel。支持Normal/Fixed/Auto；Game4四lane已有CN接线（原生业务待验）；Game2/4在FEC关闭或固定档已验CN分流。保存后重新连接生效\"",
+          "replace": "\"关闭仍保留原Rust隧道和公共DNS及startup-padding，不分配Direct/FakeIP资源；开启后按route-mode作IP分流。CN域名默认仅选择直连DNS，高级FakeIP需另开；Game2/4在FEC关闭或固定档已验CN分流。重连生效\""
+        },
+        {
+          "find": "只对Normal原始隧道M1加密记录生效",
+          "replace": "对Normal与Game2/4原始隧道加密记录生效（Fixed/Auto除外）"
+        },
+        {
+          "find": "  \"route-key-hex\": [",
+          "replace": "  \"route-key\": [\n    \"服务器\",\n    \"简化 RouteKey（推荐）\",\n    \"8–32位英数字；派生32字节后存储复用，建议随机24–32位。使用时旧十六进制Key保持空白\"\n  ],\n  \"route-key-hex\": ["
         }
       ]
     },
@@ -455,7 +483,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "e27cba4496e4c687f1029247ac9400f33a3aea6c",
+      "result_blob": "f7cc085145f5ad479ce1e88b8c1d5597faeb2384",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -628,6 +656,14 @@
         {
           "find": "else if (c is ComboBox) { var box = (ComboBox)c; box.SelectedItem = box.Items.Cast<Choice>().FirstOrDefault(x => x.Value == Convert.ToString(value)); }",
           "replace": "else if (c is ComboBox) { var box = (ComboBox)c; string choice=Convert.ToString(value); if (key==\"startup-padding\" && choice==\"\") choice=\"off\"; box.SelectedItem = box.Items.Cast<Choice>().FirstOrDefault(x => x.Value == choice); }"
+        },
+        {
+          "find": "仅TLS启动 · Normal",
+          "replace": "仅TLS启动 · Normal/Game2/4"
+        },
+        {
+          "find": "所有TCP/UDP新流 · Normal",
+          "replace": "所有TCP/UDP新流 · Normal/Game2/4"
         }
       ]
     },
@@ -795,7 +831,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "083ff3b6e255fd252a8b959a5517b3eda3afc32d",
+      "result_blob": "9be728d58361688340304b0793bdf79ff58d983f",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -845,7 +881,23 @@
         },
         {
           "find": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },",
-          "replace": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"split-enable\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"explicit PLAN029 native Rust CN IP+domain split; default off; next connect; Game2/4 CN not wired\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"absolute owned CN domain rule snapshot for cold split startup; no hot update\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
+          "replace": "      \"direct-flow-hard\": {\n        \"type\": \"Int\",\n        \"default_expression\": \"16384\",\n        \"help\": \"cold Direct flow hard cap 1..16384, not Tunnel; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"split-enable\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"explicit PLAN029 native Rust CN IP+domain split; default off; next connect; Game2/4 CN split scoped native PASS with FEC off/fixed; Game startup padding not wired\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"absolute owned CN domain rule snapshot for cold split startup; no hot update\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },"
+        },
+        {
+          "find": "      \"cn-rules-file\": {",
+          "replace": "      \"cn-domain-direct\": {\n        \"type\": \"Bool\",\n        \"default_expression\": \"false\",\n        \"help\": \"advanced CN FakeIP; fresh profile false, existing saved JSON missing key migrates to true; reconnect to apply\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"cn-rules-file\": {"
+        },
+        {
+          "find": "canonical Normal original Rust M1 Tunnel-only startup padding",
+          "replace": "canonical Normal/Game2/4 original Rust M1 Tunnel-only startup padding"
+        },
+        {
+          "find": "Game startup padding not wired",
+          "replace": "Game startup padding off/tls/flows uses authenticated Rust V5 cold attach"
+        },
+        {
+          "find": "      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n",
+          "replace": "      \"route-key\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"8..32 ASCII letters/digits, case-sensitive; mobile-friendly v2 derived once then cached; prefer 24..32 random\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n"
         }
       ]
     },
@@ -1087,9 +1139,25 @@
         {
           "find": "                WriteAtomic(rel, text); p.Values[\"china-ip-file\"] = rel;\n            }\n        }\n        public void AppendLog",
           "replace": "                WriteAtomic(rel, text); p.Values[\"china-ip-file\"] = rel;\n            }\n            // Import external CN snapshots into an owned portable source;\n            // active readers use the original generation snapshot and\n            // will not hot-migrate existing flows on a later profile edit.\n            object cnRulesField;\n            string cnRules = p.Values.TryGetValue(\"cn-rules-file\", out cnRulesField)\n                ? Convert.ToString(cnRulesField) : \"\";\n            if (cnRules.Length > 0 && Path.IsPathRooted(cnRules)) {\n                CheckPath(cnRules);\n                string text = ReadBounded(cnRules);\n                string rel = \"data/cn-rules-\" + p.Id + \".txt\";\n                WriteAtomic(rel, text); p.Values[\"cn-rules-file\"] = rel;\n            }\n        }\n        public void AppendLog"
+        },
+        {
+          "find": "                MigrateStartupPadding(prev.Values);",
+          "replace": "                MigrateCNDomainDirect(prev.Values);\n                MigrateStartupPadding(prev.Values);"
+        },
+        {
+          "find": "        static void MigrateStartupPadding(Dictionary<string, object> values) {",
+          "replace": "        // Only pre-029B saved profiles and imported JSON without this key\n        // migrate to advanced CN. NewProfile populates canonical false.\n        // Never silently turn an explicit false into FakeIP.\n        static void MigrateCNDomainDirect(Dictionary<string, object> values) {\n            if (!values.ContainsKey(\"cn-domain-direct\")) values[\"cn-domain-direct\"]=true;\n        }\n        static void MigrateStartupPadding(Dictionary<string, object> values) {"
+        },
+        {
+          "find": "            MigrateStartupPadding(values);\n            object old;",
+          "replace": "            MigrateCNDomainDirect(values);\n            MigrateStartupPadding(values);\n            object old;"
+        },
+        {
+          "find": "Key == \"password\" || Key == \"route-key-hex\"",
+          "replace": "Key == \"password\" || Key == \"route-key-hex\" || Key == \"route-key\""
         }
       ],
-      "result_blob": "ce874bf796317638d9c50143f9bba487b26b9206"
+      "result_blob": "4fe6e212c5387a027f5165aa066aec4a64b08e59"
     },
     {
       "kind": "create",
@@ -1212,7 +1280,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "ad750606e992fdafd0aee2a5aff5f2dd60ea4ed0"
+      "result_blob": "9d550d238f5fb3d4d2ad4b865e01940a954e986b"
     },
     {
       "kind": "create",
@@ -1224,7 +1292,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "1bb7ee87ec5d9d3b09e7037d16a8e7f356c8ab54"
+      "result_blob": "7f83d2f81bc55d9ad5eed36638354f8244ae2ba2"
     },
     {
       "kind": "create",
@@ -1302,7 +1370,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "bae8d0f6a6fe695b8a631afabd306ad04eb683fa"
+      "result_blob": "1ca25c1795b0602e3bf28d64dccbeab8262f04aa"
     },
     {
       "kind": "create",
@@ -1398,7 +1466,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
-      "result_blob": "ffffb71816764d282c8eb1f976ba7cd241a887d2"
+      "result_blob": "a76678c513fd7b9af95f0f79bf3c52385771ae52"
     },
     {
       "kind": "create",
@@ -1410,7 +1478,7 @@
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_game_native_io.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
-      "result_blob": "b818a8fc9f111441a91860239a1072aeb82551ca"
+      "result_blob": "6a206036ccbfedb8423cffdc981fb63b9b33148b"
     },
     {
       "kind": "create",
@@ -1434,7 +1502,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
-      "result_blob": "b3c1382d7138b8ce612eb79037876502639278ad"
+      "result_blob": "8dbeaf11d6abad6d071657b186a84cc1c37ca138"
     },
     {
       "kind": "create",
@@ -1556,13 +1624,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "c436d121579aa5201cce6218270228ff3a934f2f"
+      "result_blob": "5932fa59807fd6d4e337f44cb078bb6e822c1fe2"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "6bc76d5ccc58ac0022bfcdc48054527b2bea88a2"
+      "result_blob": "e4d8c58ead37a3f34d22aead4b4d5e51f60b015f"
     },
     {
       "kind": "replace",
@@ -1575,7 +1643,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
-      "result_blob": "6877c35477b066c873625b1d12347ccee0b5fbec"
+      "result_blob": "d531e1e3b4217c3e377da5fc3633c9f91c26ca10"
     },
     {
       "kind": "create",
@@ -1643,7 +1711,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "4935a31ba4f98ee136f7a56f9d61ff597375764b"
+      "result_blob": "7f2889ca40c094689b72f1391490b7ac67201ac6"
     },
     {
       "kind": "create",
@@ -1751,25 +1819,25 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "b05ec84ae51db7d7928a9209740065d8f3015652"
+      "result_blob": "42131ff2855556c6c01a27a42dd5863848d51b2e"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "563fe7aefd8a70e444b3a941661daadabfb38a83"
+      "result_blob": "4097f533b7c88e8a2389edacae1a96e1e8a2fc56"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
-      "result_blob": "d845b2e69a67a7e2ff0fa9d6394b926aa64c152e"
+      "result_blob": "6ebc92b6dd93348ac168e647b9c605e659acd0ef"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe_test.go",
-      "result_blob": "8341e161faacacdfd25d70f9553c73f3559b50b5"
+      "result_blob": "873cbd30b81dca4cdf4ef4b79ce8b3cecee80f30"
     },
     {
       "kind": "create",
@@ -1788,6 +1856,36 @@
       "path": "internal/windowsclient/native_plan029_defender_lease_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
       "result_blob": "68ade031e7ece9b36a0cad572d9fb4035247c7fb"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_fallback_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_fallback_test.go",
+      "result_blob": "38b9ca871f172dd7ea634deb047d75345ccb4c16"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/server_decoy_linux_test.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/server_decoy_linux_test.go",
+      "result_blob": "d020941a2c9c33cbef602b32d9a24d544ba8defd"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4routekey/short.go",
+      "overlay_path": "r0/go_overlay/internal/v4routekey/short.go",
+      "result_blob": "7cbc0e682abfe0c830c26b0be7d6c53854f8140a"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4routekey/short_test.go",
+      "overlay_path": "r0/go_overlay/internal/v4routekey/short_test.go",
+      "result_blob": "28f75e3778637ce217478eaf5ef7b2d43668ed0f"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4routekey/cache.go",
+      "overlay_path": "r0/go_overlay/internal/v4routekey/cache.go",
+      "result_blob": "ac1d12a86efff19427e38974bb4f214bb6e8d70d"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

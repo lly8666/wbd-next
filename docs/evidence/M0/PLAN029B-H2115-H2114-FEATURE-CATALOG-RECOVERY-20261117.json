@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2115",
+  "date": "2026-11-17",
+  "source_sha": "bd12a57d78ea7bcc6055f71ef1fedfe123ac6914",
+  "result": "PASS",
+  "artifact_verified": false,
+  "scope": "GOVERNANCE_FEATURE_CATALOG_ONLY_NO_NETWORK",
+  "action": {
+    "id": 44118837452,
+    "conclusion": "success",
+    "governance": "PASS",
+    "feature_catalog": "PASS"
+  },
+  "catalog": {
+    "id": "dns-split-ipv6",
+    "card_bytes": 16382,
+    "max_bytes": 16384,
+    "verification_rows": 56,
+    "history_status_sha_evidence_unchanged": true
+  },
+  "history": {
+    "feature_catalog_fail_run": 44117607469,
+    "result": "FAIL_OLD_SOURCE_PRESERVED"
+  },
+  "B3": {
+    "original_signed_run": 44108913670,
+    "original_zip_sha256": "a0ffa8b899dea3e55bb06a599ba110c5e56e30d3ea8adeb20ee3d75c872f5619",
+    "result": "PASS_SCOPED_REAL_128_NOT_GLOBAL_IPV6"
+  },
+  "B4": {
+    "pure_test_changes": "H2115_SOURCE_NOT_RUN_AT_RECORDING",
+    "original_multigeneration_GUI": "NOT_RUN",
+    "game2_game4": "NOT_RUN"
+  },
+  "B5": "NOT_RUN_SAME_VM_10Mbps_CPU_PER_GIB_P99"
+}

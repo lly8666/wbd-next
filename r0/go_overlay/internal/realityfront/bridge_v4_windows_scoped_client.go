@@ -30,12 +30,12 @@ type V4WindowsAuthenticatedClientOwner struct{
 // the private bridge token: no struct with caller supplied cold/WBGH fields.
 func V4WindowsEstablishOriginalClientOwner(
     ctx context.Context,library string,assoc *faketcp.ClientAssociation,
-    cfg ClientAdmissionConfig,
+    cfg ClientAdmissionConfig,startupPadding ...uint8,
 )(*V4WindowsAuthenticatedClientOwner,*V4ClientSession,error){
     if ctx==nil||assoc==nil{return nil,nil,ErrAdmissionParams}
     native,err:=newV4WindowsPrivateOwnerBridge(library)
     if err!=nil{return nil,nil,err}
-    result,err:=native.connectVerifiedClient(ctx,assoc,cfg)
+    result,err:=native.connectVerifiedClient(ctx,assoc,cfg,startupPadding...)
     if err!=nil{return nil,nil,err}
     state,err:=native.state()
     if err!=nil||state.phase!=2||state.applied!=0||

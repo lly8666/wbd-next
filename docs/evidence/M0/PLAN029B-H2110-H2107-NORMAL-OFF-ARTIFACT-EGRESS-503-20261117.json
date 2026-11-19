@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2110",
+  "date": "2026-11-17",
+  "source_sha": "5a80e0ea8e027f5b7649042ef988ef9bb2c51838",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action": {
+    "id": 44101072122,
+    "attempt": 1,
+    "conclusion": "failure",
+    "job_id": 134104539391,
+    "job_conclusion": "failure",
+    "failing_step": "Restore SAME-RUN new original Go Linux Rust binary with exact SHA checks"
+  },
+  "verified_logs": {
+    "source_locked_linux_build": "PASS",
+    "windows_rust_full_features": "PASS",
+    "windows_lib_416_plus_R2_11": "PASS",
+    "linux_build_artifact_exists": true,
+    "linux_artifact_id": 14336691628,
+    "transport_error": "HTTP_503_EGRESS_OVER_ACCOUNT_LIMIT",
+    "download_tool": "gh run download --name m0-plan024-linux-product",
+    "fail_phase": "WINDOWS_NATIVE_PRE_ORIGINAL_LINUX_ARTIFACT_RESTORE"
+  },
+  "real_network": {
+    "windows_business": "NOT_RUN_BEFORE_ARTIFACT_DOWNLOAD",
+    "linux_guest": "NOT_RUN",
+    "ipv6_AF_INET6": "NOT_RUN",
+    "both_owned_stop": "NOT_RUN"
+  },
+  "limitations": "No cross SOURCE reuse or bypass SHA, original GitHub Actions blob egress quota is external service fault. Do not mistake it for Rust regression or a scoped original functional PASS.",
+  "other": {
+    "H2108_signed_B3_action_id": 44102947133,
+    "status_at_capture": "IN_PROGRESS_SEPARATE_SAME_SCENARIO_NOT_DUPLICATED",
+    "H2109_governance_action_id": 44103692387,
+    "result": "SUCCESS"
+  },
+  "release_claim": "FAIL_TRANSPORT_ONLY_NOT_PRODUCT_BUG"
+}

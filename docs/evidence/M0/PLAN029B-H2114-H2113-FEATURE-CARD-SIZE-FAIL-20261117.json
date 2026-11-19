@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2114",
+  "date": "2026-11-17",
+  "source_sha": "d5461c23b3a2551fa2f10e222667221f030bd50f",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "run": {
+    "id": 44117607469,
+    "conclusion": "failure",
+    "feature_catalog_job_id": 134159884017,
+    "feature_catalog_conclusion": "failure",
+    "governance_job_id": 134159883819,
+    "governance_conclusion": "success",
+    "original_catalog_artifact_id": 14344565548
+  },
+  "first_error": "Feature catalog FAIL: feature card must be bounded regular JSON",
+  "scope": "docs/features/entries/dns-split-ipv6.json grew above 16*1024 bytes after H2113 scoped real B3 report",
+  "corrective_action": "Shorten repetitive platform/scope labels and summary, preserve all 56 historic verification rows/statuses/SOURCE/evidence and B3 real entry. No state promotion, no product or packet changes.",
+  "result_next_source": "NOT_RUN_AT_RECORDING",
+  "b3_original_action": {
+    "id": 44108913670,
+    "conclusion": "success",
+    "qualification": "PASS_SCOPED_INDEPENDENT_OF_FEATURE_CARD_SIZE"
+  },
+  "b4": "NOT_RUN",
+  "b5": "NOT_RUN"
+}

@@ -67,6 +67,22 @@ EXPLICIT_NATIVE_MARKERS = (
     "[plan029-real-gui-cn]",
     "[plan029-real-dns-tc]",
     "[plan029-game4-cn-real]",
+    # 029B H2088: one user-authorized signed default Normal/off smoke,
+    # no implicit old P1/P2 or 028 stress scene. Product PASS needs the
+    # genuine signed Windows↔WSL2 OS/UDP/TCP/Stop evidence, not this flag.
+    "[plan029b-normal-off-smoke]",
+    "[plan029b-b0-dns-real]",
+    # PLAN029B H2091: one independent source-locked ordinary CN real-A
+    # original Windows2025/WSL2 Wintun vs physical and Tunnel DNS.
+    "[plan029b-b2-cn-ordinary-real]",
+    "[plan029b-b3-ipv6-real]",
+    "[plan029b-b4-gui-three-real]",
+    "[plan029b-b5-samevm-10m]",
+    "[plan029b-game2-cn-real]",
+    "[plan029b-game-matrix-real]",
+    # H2168 explicit 2x3 original Game startup-padding native scenes. A
+    # workflow/path-only edit must not be silently reduced to cheap checks.
+    "[plan029-game-padding-real]",
 )
 
 

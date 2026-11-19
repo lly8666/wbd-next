@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2126",
+  "date": "2026-11-18",
+  "source_sha": "cb40f28ea70789baaab6549ea3cf084f22f2decc",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "original_action": {
+    "id": 44147461765,
+    "attempt": 1,
+    "conclusion": "failure",
+    "native_job_id": 134269976351,
+    "mode": "normal",
+    "artifact_id": 14357279016,
+    "zip_sha256": "f0ed08fd8a862b2030722881d2712703bb330a51304e8263d380c934aee91c6a",
+    "members": 28,
+    "crc": "PASS",
+    "product_source": "cb40f28ea70789baaab6549ea3cf084f22f2decc",
+    "linux_source": "cb40f28ea70789baaab6549ea3cf084f22f2decc",
+    "fixture_source": "cb40f28ea70789baaab6549ea3cf084f22f2decc"
+  },
+  "component_jobs": {
+    "cheap": "SUCCESS",
+    "windows_go": "SUCCESS",
+    "windows_rust": "SUCCESS",
+    "linux_rust": "SUCCESS",
+    "linux_original_go_rust_build": "SUCCESS",
+    "windows_original_release_build": "SUCCESS"
+  },
+  "scoped_b4_proofs": {
+    "original_windows_winforms_applied": 3,
+    "original_winforms_dns_applied": [
+      {
+        "ordinal": 1,
+        "route_mode": "bypass-lan-cn",
+        "cn_domain_fakeip": true,
+        "original_windows_app_dns": "FakeIP",
+        "dns_upstream": "physical"
+      },
+      {
+        "ordinal": 2,
+        "route_mode": "bypass-lan-cn",
+        "cn_domain_fakeip": false,
+        "original_windows_app_dns": "real_A_203.0.113.77",
+        "dns_upstream": "physical"
+      },
+      {
+        "ordinal": 3,
+        "route_mode": "all",
+        "cn_domain_fakeip": false,
+        "business_split": false,
+        "original_windows_app_dns": "real_A_203.0.113.77",
+        "dns_upstream": "tunnel"
+      }
+    ],
+    "original_windows_os_inner_mtu_each": 1389,
+    "original_user_outer_mtu_each": 1460,
+    "original_windows_os_wal_owned_stops": 3,
+    "original_linux_m4_sessions": 3,
+    "actual_tls_source_ports": [
+      41031,
+      41032,
+      41033
+    ],
+    "original_windows_syn_mss_each": 1420,
+    "original_linux_synack_mss_each": 1420,
+    "guest_dns_upstream_ids": [
+      "0001",
+      "0001",
+      "2963"
+    ],
+    "guest_dns_app_expected_ids": [
+      "2961",
+      "2962",
+      "2963"
+    ],
+    "guest_physical_vs_tun_kernel_dns_and_udp": "PASS_THREE_REAL_GUI_GENERATION_EGRESS",
+    "actual_original_gui_generation_udp_echo_each": 3,
+    "original_linux_guest_real_a": "203.0.113.77",
+    "original_linux_guest_old_fake_ipv4_egress": 0,
+    "original_linux_guest_stale_fake_business": 0,
+    "original_windows_stale_fake_app_reply": 0,
+    "original_linux_guest_unrelated_os_tunnel_dns": 6,
+    "original_linux_guest_dns_retransmissions": {
+      "advanced": 1,
+      "ordinary": 1,
+      "all": 1
+    },
+    "original_two_os_continuous_kernel_udp": {
+      "windows": {
+        "sent": 64,
+        "received": 67
+      },
+      "linux": {
+        "sent": 315,
+        "received": 63
+      }
+    },
+    "original_gui_receipt": "PLAN029B_B4_THREE_REAL_GUI_GENERATIONS_AND_STOPS_COMPLETE",
+    "scoped_status": "PASS_SCOPED_B4_CORE_ORIGINAL_REAL_GUI_DNS_UDP_AND_OWNED_STOPS_UNDER_RED_ACTION"
+  },
+  "failure": {
+    "stage": "AFTER_THIRD_GUI_APPLIED_BEFORE_SUPERVISOR_FINAL_STOP_GENERIC_TCP",
+    "original_error": "real public TCP apps failed",
+    "legacy_bidirectional_windows": {
+      "client_echo": true,
+      "server_received": 0
+    },
+    "legacy_bidirectional_linux": {
+      "client_echo": false,
+      "server_received": 40
+    },
+    "direction_proven": "Windows_to_Linux_real_TCP",
+    "direction_failing": "Linux_to_Windows_legacy_PLAN028_inbound",
+    "scope": "OUTSIDE_PLAN029B_B4_REQUIRED_DIRECTION_AND_PREEXISTING_028_FAIL",
+    "action_result": "FAIL_NOT_OVERRIDDEN"
+  },
+  "scoped_fix": {
+    "source_sha": "534b7ba84af901492f571334a76ed510dad093da",
+    "action_id": 44150334492,
+    "action_status_at_recording": "IN_PROGRESS_OR_PENDING",
+    "method": "reuse exact original real H1762 Windows_to_Linux kernel TCP and WSL2 TUN listener+echo, keep real TCP rather than skip, do not use 028 inbound comparator"
+  },
+  "not_qualified": {
+    "full_original_action": "FAIL",
+    "game2_game4": "NOT_RUN",
+    "b5_same_vm_10mbps_p99_cpu_gib_rss": "NOT_RUN",
+    "plan029b": "OPEN",
+    "plan029": "OPEN"
+  }
+}

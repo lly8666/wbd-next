@@ -2,10 +2,17 @@
 """H1762: real non-CN Windows -> Linux TUN TCP, scoped separately from 028 inbound."""
 import json,socket,sys,time
 role,local,remote=sys.argv[1:4]
+# Only the explicit Game-padding signed native scene adds a TLS-record-shaped
+# application prefix. This is real kernel TCP, not a claimed TLS handshake.
+extra=sys.argv[4:]
+if extra not in ([],["tls-startup"]):
+    raise RuntimeError("invalid signed TCP scenario selector")
 if role not in ("server","client") or local==remote:
     raise RuntimeError("invalid physical TUN TCP role")
 marker=b"WBD-PLAN029-H1762-WINDOWS-TUNNEL-TCP"
-proof={"role":role,"local":local,"remote":remote}
+if extra:
+    marker=bytes([22,3,3,0,len(marker)])+marker
+proof={"role":role,"local":local,"remote":remote,"tls_record_prefix":bool(extra)}
 if role=="server":
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as listener:
         listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)

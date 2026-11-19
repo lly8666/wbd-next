@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2087",
+  "date": "2026-11-17",
+  "source_sha": "69cdf7efc45425114e7d692f4598427cda74bac2",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "prior_h2086_ci": {
+    "run_id": 44051188600,
+    "job_id": 133929124591,
+    "scope": "native cheap source gate",
+    "result": "FAIL",
+    "first_new_test": "test_h1820_real_source_built_v3_export_before_signed_native_driver",
+    "reason": "obsolete `$features+=',m0_v4_probe'` and old export marker; default V3 feature and new gate are mandatory"
+  },
+  "now_scoped_correction": "test enforces one unconditional release V3 Rust feature and actual default PE export before signed Windows Wintun/NPF, while P1/P2 selectors retained",
+  "source_regression_qualification": {
+    "h1843": "PASS_H2086",
+    "h1859": "PASS_H2086",
+    "h1820": "FIXED_SOURCE_PENDING_TEST"
+  },
+  "scanned_remaining_cheap_tests": 28,
+  "stale_v3_marker_hits": 0,
+  "real_windows_source": "NOT_RUN_H2087",
+  "previous_physical": {
+    "run_id": 44045024679,
+    "status": "FAIL_MISSING_V3_EXPORT_BEFORE_READY"
+  },
+  "prior_h2077": "PASS_SCOPED_DIFFERENT_SOURCE"
+}

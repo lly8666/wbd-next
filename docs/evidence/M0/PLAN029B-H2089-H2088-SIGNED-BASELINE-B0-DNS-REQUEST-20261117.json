@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2089",
+  "date": "2026-11-17",
+  "source_sha": "9f70c7e6a306602dde39bbcdbaa09130cc8fd254",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "prior_genuine_signed_b0_tunnel_baseline": {
+    "source_sha": "9f70c7e6a306602dde39bbcdbaa09130cc8fd254",
+    "action": 44053399548,
+    "job": 133939242421,
+    "artifact": 14315905972,
+    "artifact_download_name": "m0-wl-full-public-normal-direct-h1506-legacy-44053399548",
+    "result": "PASS_SCOPED_SIGNED_TRUE_NORMAL_BUSINESS_SPLIT_OFF",
+    "artifact_verified": true,
+    "all_binary_sources_match": true,
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "windows_inner_mtu": 1329,
+    "outer_config": 1400,
+    "mode": "normal",
+    "business_split": false,
+    "route_mode": 0,
+    "cn_rows": 0,
+    "domain_bytes": 0,
+    "advanced_fakeip": false,
+    "dns_tcp_only": true,
+    "direct_business_nat": false,
+    "kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "kernel_tcp": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "owned_windows_stop": "PASS_WAL_KERNEL_CRYPTO_AND_DISCONNECTED",
+    "owned_linux_stop": "PASS_NATIVE_STOP_DRAINED",
+    "owned_cleanup": "PASS_BOTH_OWNED"
+  },
+  "prior_governance": {
+    "action": 44053399498,
+    "result": "FAIL",
+    "reason": "combined hot byte budget 32904>32768, no product impact"
+  },
+  "new_b0_physical_test": {
+    "source_sha": "H2089_COMMIT_PENDING_SOURCE_BUILD",
+    "result": "NOT_RUN",
+    "marker": "[plan029b-b0-dns-real]",
+    "native_workflow": ".github/workflows/m0-wl-public-normal-full.yml",
+    "fixture_files": [
+      "tools/m0_plan029b_b0_dns_guest.py",
+      "tools/m0_plan029b_b0_dns_windows.py",
+      "tools/m0_wl_public_normal_e2e.py"
+    ],
+    "conditions": [
+      "real signed original Win Winsock app leased 10.66.0.2",
+      "Linux kernel TUN resolver 10.66.0.1 one actual UDP A and TCP A reply TTL2",
+      "original app UDP/TCP AAAA each local NOERROR NODATA no WSL upstream AAAA",
+      "no business Direct NAT/FakeIP/unknown fallback",
+      "original twoOS UDP/TCP and both owned Stops; exact OS WAL cleanup"
+    ]
+  },
+  "not_qualified": [
+    "B0 public DNS on H2089 until signed app receipts",
+    "B1 padding variants",
+    "B2 normal+advanced CN",
+    "B3 genuine physical IPv6 packets",
+    "B4 GUI signed modes",
+    "B5 same VM fair CPU/latency"
+  ],
+  "historic_signed_h2083": {
+    "action": 44045024679,
+    "status": "FAIL_DEFAULT_DLL_NO_V3_EXPORT_BEFORE_READY"
+  },
+  "historic_h2077": "PASS_SCOPED_DIFFERENT_SOURCE"
+}

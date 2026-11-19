@@ -86,6 +86,14 @@ foreign modifications, exact Stop and v3 recovery; Host Java tests
 production export behavior and signed APK DEX. All new-source genuine
 Android network, TLS, data and physical exception status NOT_RUN.
 
+### A28｜2026-11-19 按用户要求把 main 最新代码、功能卡及历史整合进独立实验分支
+
+基线：实验分支 `cd6207bab1eb624f8f5b51bdec06854fbee77076`、`main` `46a756df1114aecda8dc2d5d259a5cbb4c9a909f`、共同祖先 `0e57cab2d53e2c95962eb673050fa54695fd3665`。main 独立266个提交、实验独立244个提交。用**双父非强推** merge commit 完整纳入 main Git DAG；保留 main 功能源码及 `docs/devlog/M0/`、`docs/evidence/M0/`、全部更新的功能卡、TLS 规范、decisions/prompts、main Actions/工具/构建工作流以及 Android 实验独有历史，不截断原有旧 FAIL/NOT_RUN。
+
+按共同祖先逐文件审计，交叉改动恰有7个：`crates/wbd-engine/src/{lib.rs,v4_embedded_go.rs,v4_owner_crypto.rs}`、`r0/go_overlay/internal/realityfront/{bridge_v4_embedded_linux.go,bridge_v4_linux_client_product.go}`、`r0/go_overlay/internal/v4productcli/linux.go` 与 `android/README.md`。三方行级合并同时保留 main 的 Rust 32 owner/lane 上限、Linux 原Go服务器 64 冷关联/8 有限 Decoy、短 routeKey v2 KDF/0600 cache、Linux NAT interface local IPv4 自动识别、受认证 Normal 启动 padding 和安全 TLS 契约，以及实验 Android 的真正物理 Network handle、原始 FakeTCP、Bionic TUN/RAW、UID 私有表 `throw server/32`、Rust M4/Stop、限枚举导出。main 新功能在 Linux/Windows 的 PASS **不向 Android 继承资质**；Android 依然 Normal/off、密钥 UI 仅原 64hex，短 Key Android helper 仍 `NOT_WIRED`，无 Fixed/Game、系统 DNS/IPv6 的新许可。若代码合并与现有原生编译互斥，不通过改文件名/偷换入口/虚构 E2E 绿灯解决。
+
+在**同一合并 SOURCE** 的 CI 需至少检查 rust/cargo、原Go Host 和原 Linux server、signed ARM64 APK 与 Bionic ELF/DEX/接口/脱敏导出、main feature catalog、main 治理回归。x86 Android KSU/TAP guest 均显式手工 opt-in，本轮不跑模拟网卡/真机；用户设备/服务器不动，PR #36 保持 Draft 不合 main。合并后所有旧SOURCE证据保留，新增 SOURCE 的真机联网/M4/应用TCP UDP/Stop 始终 `NOT_RUN`。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

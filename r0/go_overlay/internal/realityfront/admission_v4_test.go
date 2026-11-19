@@ -436,7 +436,7 @@ func TestFECGameProtectedV4ProfileWireOffAndFailClosed(t *testing.T){
     wire,err:=v4Encode(off)
     if err!=nil{t.Fatal(err)}
     if wire[21]!=0||wire[22]!=0||wire[23]!=0{
-        t.Fatal("off-mode must remain byte-for-byte old V4 extension")
+        t.Fatal("mandatory V2 off mode extension must preserve zero pad choice")
     }
     for profile:=uint8(1);profile<=7;profile++{
         choice:=V4Extension{Features:v4RequiredFeatures|v4FeatureFEC2,
@@ -492,10 +492,13 @@ func TestR0V4FeatureGateAndBoundedStore(t *testing.T) {
     if _,err:=v4Encode(V4Extension{Features:1,Epoch:zero});!errors.Is(err,ErrAdmissionUnsupported){t.Fatalf("partial feature accepted: %v",err)}
     wire,err:=v4Encode(V4Extension{Features:3,Epoch:zero})
     if err!=nil{t.Fatal(err)}
-    wire[23]=1
-    if _,err:=v4Decode(wire[:]);!errors.Is(err,ErrAdmissionParams){t.Fatalf("invalid reserved accepted: %v",err)}
+    wire[23]=3
+    if _,err:=v4Decode(wire[:]);!errors.Is(err,ErrAdmissionParams){t.Fatalf("invalid padding choice accepted: %v",err)}
 }
 
+// Retired pre-V4 clients may time out parsing the new authenticated,
+// random-length reject. The server MUST reject, and the old peer MUST
+// fail to establish: old typed error decoding is no longer supported.
 func TestR0V4OldGoV3RejectsActualTLSUpgrade(t *testing.T) {
     cert:=makeServerCert(t)
     key:=[]byte("0123456789abcdef0123456789abcdef")
@@ -519,8 +522,8 @@ func TestR0V4OldGoV3RejectsActualTLSUpgrade(t *testing.T) {
     },V4ClientOptions{DataPlaneReady:true})
     select{
     case response:= <-ch:
-        if !errors.Is(clientErr,ErrAdmissionVersion)||!errors.Is(response.err,ErrAdmissionVersion) {
-            t.Fatalf("old V3 side did not reject V4: client=%v server=%v",clientErr,response.err)
+        if clientErr==nil||!errors.Is(response.err,ErrAdmissionVersion) {
+            t.Fatalf("retired V3 was not rejected: client=%v server=%v",clientErr,response.err)
         }
     case <-time.After(5*time.Second):t.Fatal("legacy TLS rejection timeout")
     }

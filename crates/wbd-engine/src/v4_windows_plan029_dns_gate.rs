@@ -67,7 +67,7 @@ fn wait_for_udp<'a>(
                     }
                 }
             }
-            Ok(ReadResult::Skipped|ReadResult::NoPacket|ReadResult::EndOfStream)=>{
+            Ok(ReadResult::Skipped|ReadResult::SkippedIpv6|ReadResult::NoPacket|ReadResult::EndOfStream)=>{
                 match wait_ready(&[rx.event()],10){
                     Ok(WaitResult::Timeout|WaitResult::Ready(_))=>{}
                     Err(e)=>{eprintln!("PLAN029_H1713_FIRST_ERROR stage=wintun_wait {e:?}");return Err(3)}

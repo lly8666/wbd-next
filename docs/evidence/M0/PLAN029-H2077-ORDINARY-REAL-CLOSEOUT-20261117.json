@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2077",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "fixture_source_sha": "d7b3138c93897de7044aaa1ef1c8c70b9d53ba0e",
+  "result": "PASS",
+  "artifact_verified": true,
+  "qualification": "PASS_SCOPED_USER_2026_11_17_NORMAL_USAGE",
+  "evidence_readback": "Downloaded and inspected each original Action ZIP report.json, artifact-manifest.json and server.log; product binary source498a and fixture d7b separated, no product recompilation",
+  "runs": [
+    {
+      "product_binary_source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+      "fixture_sha": "d7b3138c93897de7044aaa1ef1c8c70b9d53ba0e",
+      "original_native_mode": "normal",
+      "actual_two_os_signed": true,
+      "win_os_applied_generations": 2,
+      "outer_mtu": 1460,
+      "inner_mtu": [
+        1389,
+        1389
+      ],
+      "server_single_listener": true,
+      "physical_tls_synack": 2,
+      "server_authenticated_native_sessions": 2,
+      "server_b_canonical_aead_health": true,
+      "server_shared_32_promoted": true,
+      "server_exact_owner_stop": 2,
+      "shared_tun_stop": true,
+      "actual_direct_tcp_32768_half_close": true,
+      "actual_direct_udp_reply": true,
+      "actual_tunnel_udp": true,
+      "actual_tunnel_tcp": true,
+      "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+      "stop": "PASS_BOTH_OWNED",
+      "scene": "gui_reconnect",
+      "run_id": 44035518047,
+      "artifact_id": 14306069256,
+      "case_status": "PASS_SCOPED_REAL_WINFORMS_NORMAL_DISCONNECT_RECONNECT",
+      "github_action_conclusion": "success",
+      "native_job_conclusion": "success"
+    },
+    {
+      "product_binary_source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+      "fixture_sha": "d7b3138c93897de7044aaa1ef1c8c70b9d53ba0e",
+      "original_native_mode": "normal",
+      "actual_two_os_signed": true,
+      "win_os_applied_generations": 2,
+      "outer_mtu": 1460,
+      "inner_mtu": [
+        1389,
+        1389
+      ],
+      "server_single_listener": true,
+      "physical_tls_synack": 2,
+      "server_authenticated_native_sessions": 2,
+      "server_b_canonical_aead_health": true,
+      "server_shared_32_promoted": true,
+      "server_exact_owner_stop": 2,
+      "shared_tun_stop": true,
+      "actual_direct_tcp_32768_half_close": true,
+      "actual_direct_udp_reply": true,
+      "actual_tunnel_udp": true,
+      "actual_tunnel_tcp": true,
+      "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+      "stop": "PASS_BOTH_OWNED",
+      "scene": "domain_reconnect",
+      "run_id": 44035523669,
+      "artifact_id": 14306553979,
+      "case_status": "PASS_REAL_WINDOWS_NPCAP_LINUX_KERNEL_UDP_TC_TCP53",
+      "physical_dns_two_generations": {
+        "udp_tc_each": 1,
+        "tcp53_same_endpoint_each": 1,
+        "unchanged_tls_sni": true
+      },
+      "github_action_conclusion": "success",
+      "native_job_conclusion": "success"
+    },
+    {
+      "product_binary_source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+      "fixture_sha": "d7b3138c93897de7044aaa1ef1c8c70b9d53ba0e",
+      "original_native_mode": "normal",
+      "actual_two_os_signed": true,
+      "win_os_applied_generations": 2,
+      "outer_mtu": 1460,
+      "inner_mtu": [
+        1389,
+        1389
+      ],
+      "server_single_listener": true,
+      "physical_tls_synack": 2,
+      "server_authenticated_native_sessions": 2,
+      "server_b_canonical_aead_health": true,
+      "server_shared_32_promoted": true,
+      "server_exact_owner_stop": 2,
+      "shared_tun_stop": true,
+      "actual_direct_tcp_32768_half_close": true,
+      "actual_direct_udp_reply": true,
+      "actual_tunnel_udp": true,
+      "actual_tunnel_tcp": true,
+      "mode_public": "PASS_ACTUAL_WINDOWS_LINUX_NATIVE_normal",
+      "stop": "PASS_BOTH_OWNED",
+      "scene": "dns_ttl_restart",
+      "run_id": 44035528778,
+      "artifact_id": 14306902967,
+      "case_status": "PASS_SCOPED_REAL_TTL_EXPIRE_FAKEIP_NORMAL_RESTART_AND_DIRECT_TUNNEL",
+      "physical_cn_queries": 3,
+      "ttl_s": 2,
+      "expired_query_after_ms": 2800,
+      "third_query_after_second_os_applied": true,
+      "fakeip_three_phases": [
+        "198.18.0.1",
+        "198.18.0.1",
+        "198.18.0.1"
+      ],
+      "post_restart_direct_tcp_echo_bytes": 32768,
+      "github_action_conclusion": "success",
+      "native_job_conclusion": "success"
+    }
+  ],
+  "real_dns_and_route_proofs": {
+    "noncn_dns_tunnel_one_endpoint": true,
+    "blackhole_no_cross_direction_fallback": true,
+    "noncn_dns_to_cn_ip_direct": true,
+    "cn_domain_fakeip_direct": true,
+    "physical_direct_udp_and_tcp_32768": true
+  },
+  "existing_function_regression": [
+    {
+      "run_id": 44031316063,
+      "scope": "H2072 impacted original native Normal/off Windows/Linux physical UDP/TCP and Stop",
+      "result": "PASS"
+    },
+    {
+      "scope": "Windows Go/Rust and Linux Rust normal/FEC library + ABI/cross ABI compile tests",
+      "result": "PASS"
+    },
+    {
+      "run_id": 44035518047,
+      "scope": "H2076 old exact-one-Windows-MTU-helper regression + new strict two-generation mismatch/duplicate/CRLF tests",
+      "result": "PASS"
+    }
+  ],
+  "history_kept_fail": [
+    {
+      "run_id": 44025145100,
+      "reason": "pre-H2072 real B Health missing"
+    },
+    {
+      "run_id": 44032936928,
+      "reason": "H2075 2 OS receipts rejected by obsolete 1-row fixture"
+    },
+    {
+      "run_id": 44034346200,
+      "reason": "H2075 same fixture error"
+    },
+    {
+      "run_id": 44034352986,
+      "reason": "H2075 same fixture error"
+    }
+  ],
+  "extended_scope_not_run": [
+    "P1 current-SOURCE complete CPU/GiB, P99 A/B",
+    "P2 sustained throughput, queue age/RSS/current-SOURCE stress",
+    "forced abort and slow disk stress",
+    "old IPv6 full matrix",
+    "all modes/Game4 full new-SOURCE matrix"
+  ],
+  "all_original_plan029_D1_D5_P1_P2_exit_met": false,
+  "user_limited_normal_scope_met": true,
+  "no_more_actions": true
+}

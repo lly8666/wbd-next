@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2085",
+  "date": "2026-11-17",
+  "source_sha": "45fc57cfd9985ce79e437205c2a17062dd6b08ec",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "h2084_observed": {
+    "gov": {
+      "run_id": 44047000928,
+      "result": "FAIL",
+      "reason": "combined hot byte budget exceeded: 32893 vs cap 32768; feature catalog standalone PASS"
+    },
+    "cheap": {
+      "run_id": 44047001012,
+      "result": "FAIL",
+      "reason": "Python scope test still expected obsolete feature string and conditional PE check, IndexError"
+    },
+    "rust_win": {
+      "run_id": 44047000813,
+      "result": "FAIL",
+      "reason": "new ordinary CN UDP Windows Rust test missing fully qualified DnsAResolution E0422"
+    },
+    "winsource_gui": {
+      "run_id": 44047000912,
+      "result": "PASS",
+      "kind": "NO_SIGNED_NETWORK"
+    },
+    "native_abi": {
+      "run_id": 44047000808,
+      "result": "PASS"
+    },
+    "cross_abi": {
+      "run_id": 44047000811,
+      "result": "PASS"
+    },
+    "native_functional": {
+      "run_id": 44047000779,
+      "result": "PASS"
+    }
+  },
+  "repaired": [
+    "Rust test fully qualified DnsAResolution type (no production DNS change)",
+    "scope test requires unconditional release V3 feature + exact PE export before driver; keeps separate selective runtime checks",
+    "governance hot context_refs now five paths within 32768 char budget"
+  ],
+  "previous_real_windows": {
+    "source_sha": "12db9e2464c52e149b94701ac258d4b1a2f1fa34",
+    "run_id": 44045024679,
+    "status": "FAIL",
+    "first_error": "V3 start export unavailable, before OS Applied, retained"
+  },
+  "h2085_current_signed_b0_b5": "NOT_RUN",
+  "original_h2077_signed": "PASS_SCOPED_DIFFERENT_SOURCE"
+}

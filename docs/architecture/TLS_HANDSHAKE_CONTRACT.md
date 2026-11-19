@@ -11,7 +11,7 @@
 
 ## 2. 已选最小方案：预共享route-key，复用原SessionID识别
 
-1. 服务端生成并持久保存32字节随机key；客户端通过连接配置导入或显式填写。已有合法显式key兼容保留，生产不使用公开常量。无key时本地报配置缺失，**不打开连接做自动协商/隐式回退**。随机生成/导出/帮助与适用GUI/参数目录须同步落实；日志不输出key。
+1. 原32字节CSPRNG随机route-key/0600文件入口继续兼容；**2026-11-19用户追加允许**双方各输入相同8–32位ASCII英数字短Key，使用版本化PBKDF2-HMAC-SHA256 v2（4096次，固定域隔离盐）**在本地一次**派生原32字节HMAC入口key，0600/应用私有目录落盘，重连与程序重启直接读取、核验缓存，不重复跑KDF。无Key或安全落盘失败均拒绝、**无任何线上协商/隐式回退**。短密码的实际熵不随扩展长度增加，特别8位人为字符可被离线猜测；生产建议24–32位CSPRNG随机字符，不能承诺等同256-bit随机key；诊断/日志不输出明文或派生key。旧240000次H2207未验v1短密钥**不静默混作v2**，需两端同时采用v2或继续显式原32B hex/file。
 2. server级key可以由多个账号/设备/lane共用，它仅用于入口识别，不替代TLS服务器身份验证、TLS内用户名密码认证、会话/IP隔离。无需逐用户试key、额外key ID、线上密钥发现或新轮换协议。
 3. 直接复用旧`hello.go:markerFor`和`tls.go:newFirefox120Client`：CSPRNG生成ClientHello.random，既有HMAC-SHA256(label || random || normalized SNI)结果占用原本32B兼容SessionID。标签只是本地HMAC输入，不明文发送；不增加字段、扩展、record或往返。实际TLS库保持SessionID回显和HRR等合法状态；不得把同一个固定token作为每次SessionID。
 4. 这不是TLS `pre_shared_key` 扩展/PSK握手：保持真实完整证书握手，不因此省略Certificate/CertificateVerify，也不引入0-RTT。后续账号、安装标识、IP、模式、MTU等沿既有TLS保护的Admission交换；Rust稳态record/AEAD/PN/FEC/重传及generation不变。
@@ -35,3 +35,23 @@
 3. **模式和平台**：复用既有7模式短功能夹具，验证真实TLS→认证→Rust业务/Stop；Game每条lane及一次轮换/重连都检查相同契约。Windows实际入口补同源代表；Linux按当前用户约定整任务x86/x86、下一个ARM/ARM轮换，真实ARM运行不可由交叉编译/QEMU替代。可复用同源码二进制，不为此重刷全部弱网/长测矩阵；未覆盖平台或模式明确NOT_RUN。
 4. **效率**：一Action一场景/一个测试控制进程，场景所需双端/多client不算并行压测；独立Actions可并行。一次构建按SOURCE/平台/manifest/hash复用。报告冷握手耗时、方向/record长度摘要、真实业务和Stop；不存在热路径变更时不强制全吞吐A/B。
 5. **退出**：被修正入口无前导、标准TLS握手与服务器验证成功、必要反面用例和平台/模式证据齐、配置/帮助/功能卡一致。旧自动路径不再可达，不保留隐式降级。然后续PLAN028 cursor中原切网/交接任务；未完成不能因一条Action绿灯宣称完成。
+
+## H2209｜旧P2普通TLS访客复用（2026-11-19）
+
+Linux原Go V4服务端冷入口（默认shared，兼容Normal与Game2/4 protected policy）新增可选 `--decoy host:port`，只由**服务端固定配置**指定真实TLS目标。复用老项目固定SOURCE `lly8666/wobuzhidao/internal/realityfront/fallback.go` 的 `FallbackFromHello`：原FakeTCP同一连接只解析一次ClientHello，匹配route-key才进入原V4账号/证书/Rust epoch/Detach；不匹配则核验ClientHello SNI同`--server-name`，完整重放原始ClientHello、双向字节splice、保持原CloseWrite/EOF，限制目标拨号5秒、会话2分钟、单向64MiB。目标固定不可从外部TLS/请求获取；错SNI不拨号、损坏TLS直接拒绝。无`--decoy`时保留本地拒绝，**没有公开ClientHello前新前导/认证降级/Go逐包数据面**。
+
+仅Linux服务端的原生shared/Normal有独立逐连接冷分类；旧单组专用Game2/4服务器对`--decoy`明确配置拒绝，应使用默认shared统一入口。Stop关闭原入站连接，使旧fallback双向copy同步退出，不创建Rust generation/租约。不得把浏览器成功回落当WBD已认证/Ready，或把普通DNS/TLS扫描当业务会话。目标证书由**真实目标**在其TLS握手中提供，服务端本机无法代替目标证书私钥。已有Linux NAT网卡/IP精确绑定不变。H2209当前源码及真实测试按精确SOURCE证据单独留痕，物理公网访问/实体跨ISA继续NOT_RUN。
+
+## H2212｜非WBD访客与WBD原生容量独立限制
+
+真实代码容量：原Rust native `MAX_SESSIONS=16`为每端的owner/lane槽，FakeTCP cold table为32个预认证关联，**都不是已证明16/32台客户端可稳定满载**；Game2/4每端消耗2/4 lane。旧P2普通TLS Decoy只用Go冷关联＋固定origin splice，**不分配WBD Rust epoch/租约**。新增每服务端单独8槽`FallbackSlots`，只有未被RouteKey识别的普通TLS会占用其中1槽，满时普通TLS快速失败、不拨origin、不阻塞合法WBD；识别的WBD根本不获取Decoy额度。shared Normal+Game混合入口仅在decoy开启时将冷候选暂存上限16→24，Rust 16槽与FakeTCP 32冷表不变；未分类SYN仍可能占用共享表，不能作为抗DoS保证。
+
+H2212测试采用原生Linux x86_64/ARM64原Go+Rust双端，真实隔离网卡、TCP443 TLS、Rust M4/TUN/UDP Echo/Stop，短RouteKey 32位随机英数字双方离线派生及0600缓存、完全独立重启二次校验mtime；与此同时普通Python标准TLS客户端经同一raw443端口访问127.0.0.1:8443固定origin TLS并完成ping/pong，原已认证WBD Ready数量不变。Go源锁负例覆盖8额度满下普通客户端不拨origin、WBD原认证不受限。公网DNAT、16 WBD实际满负载、移动JNI/OpenWrt实机仍NOT_RUN，所有PASS必须绑定相同SOURCE与Action。
+
+## H2213｜Rust32 owner容量与普通TLS随机有界Decoy
+
+原始Go protected V4 Rust Linux `v4_embedded_go.rs`和Windows `v4_windows_owner.rs`的`MAX_SESSIONS`统一从16改为**32**；这是native **lane/owner注册槽**上限，不是实际跑完32个稳定客户端或吞吐性能基准。Normal通常占1条lane、Game2占2、Game4占4，替换/Stop期间候选generation也可能占槽。所有真实Rust M4/M1/PN owner分离、TLS/记录wire不变。Linux原Go服务端FakeTCP**预认证关联表从32扩为64**，保留32已认证WBD和8个独立普通访客Decoy的冷启动/接续余量；不代表64个已认证客户端，恶意扫描仍可占满表。混合Normal/Game冷候选总量最多32 Rust+8 Decoy，仍小于64冷表；Windows Rust上限同步32。
+
+旧P2`FallbackFromHello`是实际普通TLS连接的唯一流转发，非WBD无原生Rust owner、仅使用最多8条Decoy传输额度。**每个普通ClientHello独立随机抽取15–45秒（含端点）**；服务器把这个期限同时用于`context.WithTimeout`和旧P2既有`SessionTimeout`的双向socket deadline，计时到点主动关闭该同一FakeTCP关联并释放Decoy传输名额。若调用方显式设置更短期限则按短期限；生成随机数失败时保守15秒。只作用于`!hello.Recognized`，正确WBD认证链/原生Rust/数据热路径不受随机断连。普通访客可能体验到15–45秒突然中断，这是用户明确要求的资源保护策略；不承诺能承受无限制SYN洪泛。
+
+H2213验证范围是Rust两端native32/33边界、Go单个普通TLS1.3到真实P2 decoy后超时强制关闭、额度归还/无Rust owner，以及原Linux真双端回归。不要将编译、单元边界等同于32个真实业务用户的同时满载；32人稳定压力/延迟留单独验收。

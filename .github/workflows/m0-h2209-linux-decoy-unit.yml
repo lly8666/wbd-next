@@ -1,0 +1,116 @@
+name: 'M0 H2209 pinned original-Go ordinary TLS fallback Ubuntu'
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m0-h2209-linux-decoy-unit.yml'
+      - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
+      - 'r0/go_overlay/internal/realityfront/admission_v4.go'
+      - 'r0/go_overlay/internal/realityfront/v4_fallback_test.go'
+      - 'r0/go_overlay/internal/v4productcli/linux.go'
+permissions: {contents: read}
+jobs:
+  original-go-fallback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Attest exact SOURCE and assemble once
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/prepare_windows_wiring.py --legacy-root legacy --output result
+      - name: Original real TLS/FakeTCP same-association fallback and negative cases
+        working-directory: legacy
+        run: |
+          set -euo pipefail
+          go test -tags wbd_v4_embedded_go -count=1 -timeout 90s -run '^TestH22(09|12|13)' -v ./internal/realityfront
+          echo H2209_LINUX_ORIGINAL_GO_FALLBACK_SCOPED_PASS
+
+
+  h2210-linux-go-rust-cold-parser:
+    # Scope: compile the current original-Go Linux product against the actual
+    # SOURCE Rust ABI; run cold decoy and NAT CLI tests. NOT a raw NIC E2E.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Verify one immutable Linux Go source and KDF package in manifest
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/h2210-linux-assembly.json
+          test -s legacy/internal/v4routekey/short.go
+          test -s legacy/internal/v4routekey/cache.go
+          # Reuse the exact legacy Linux original-Go bridge assembly scope from
+          # m0-plan028-tls-wire-original-x86: the plan020 manifest owns only
+          # its frozen core, while Linux real product needs current bridge,
+          # raw detached types and its one source-locked server command.
+          python3 - <<'PY'
+          import pathlib
+          root=pathlib.Path.cwd(); legacy=root/"legacy"
+          for part in ("internal/realityfront","internal/v4productcli"):
+              for src in (root/"r0/go_overlay"/part).glob("*.go"):
+                  if src.name.endswith("_test.go") and (
+                      part!="internal/v4productcli" or
+                      src.name!="server_nat_bind_linux_test.go"):
+                      continue
+                  dest=legacy/part/src.name
+                  if dest.exists():
+                      assert dest.is_file() and not dest.is_symlink() and dest.read_bytes()==src.read_bytes(),str(src)
+                  else:
+                      dest.parent.mkdir(parents=True,exist_ok=True)
+                      dest.write_bytes(src.read_bytes())
+          for name in ("raw_detached_data_linux.go","raw_detached_data_linux_test.go"):
+              src=root/"r0/go_overlay/internal/faketcp"/name
+              dest=legacy/"internal/faketcp"/name
+              assert not dest.exists() and not dest.is_symlink()
+              dest.write_bytes(src.read_bytes())
+          cmd=root/"r0/go_overlay/cmd/wbd-v4-server/main.go"
+          dest=legacy/"cmd/wbd-v4-server/main.go"
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          assert not dest.exists() and cmd.is_file()
+          dest.write_bytes(cmd.read_bytes())
+          print("H2210_EXACT_LINUX_NATIVE_BRIDGES_INSTALLED",flush=True)
+          PY
+          (cd legacy && go test -count=1 -run '^TestH220[78]' -v ./internal/v4routekey)
+      - name: Link actual native Rust engine and test Linux server decoy/unique NIC cold parser
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 build --release --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (
+            cd legacy
+            go test -count=1 -timeout 90s -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
+              -run '^(TestH2209ServerDecoyColdValidation|TestH2212DecoyQuotaOnlyWhenEnabled|TestH2213Rust32Cold64Ordinary8SeparateResources|TestH2206ServerNAT)' -v ./internal/v4productcli | tee "$RUNNER_TEMP/h2210-native-parser.txt"
+            grep -Fq -- '--- PASS: TestH2209ServerDecoyColdValidation' "$RUNNER_TEMP/h2210-native-parser.txt"
+            grep -Fq -- '--- PASS: TestH2206ServerNAT' "$RUNNER_TEMP/h2210-native-parser.txt"
+            go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$RUNNER_TEMP/wbd-v4-server" ./cmd/wbd-v4-server
+          )
+          echo H2210_LINUX_NATIVE_GO_RUST_LINK_AND_DECOY_PARSE_PASS_SCOPE_ONLY_NOT_REAL_NIC

@@ -30,6 +30,8 @@ const (
     V4PeerWindows11
 )
 type V4LinuxServerProductConfig struct {
+    Fallback *FallbackConfig // same-server cold TLS decoy; never a Rust lane
+    FallbackSlots chan struct{} // shared decoy-only concurrency gate
     PeerPersona V4PublicNativePeerPersona
     Epochs *V4EpochStore
     Authenticate func(username,password string)bool // protected multi-account cold auth only
@@ -56,6 +58,8 @@ type V4LinuxServerProductConfig struct {
     // owner is instantiated once per authenticated TLS association.
     PerClientNormalFEC bool
     DisableOuterRepair bool
+    StartupPaddingMode uint8 // legacy server CLI default; protected client V2 chooses actual mode
+    OuterIPMTU int
     // Zero interval/dead keeps original product defaults 15s/90s.
     // Dormant 0 means no automatic sleep; nonzero policy must have real
     // authenticated FIN and independently proven peer idle before use.
@@ -98,6 +102,10 @@ func NewV4LinuxServerProduct(cfg V4LinuxServerProductConfig)(*V4LinuxServerProdu
     if cfg.PerClientNormalFEC&&(cfg.SharedTun==nil||!cfg.FECProfile.Valid()){
         return nil,ErrAdmissionParams
     }
+    if cfg.StartupPaddingMode>2||(cfg.StartupPaddingMode!=0&&
+        (cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
+        return nil,ErrAdmissionParams
+    }
     return &V4LinuxServerProduct{cfg:cfg},nil
 }
 
@@ -136,6 +144,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
+        Fallback:p.cfg.Fallback,FallbackSlots:p.cfg.FallbackSlots,
         Authenticate:p.cfg.Authenticate,
         AllowLaneReplacement:p.cfg.AllowLaneReplacement,
         ManualLease4:p.cfg.ManualLease4,ManualLeases4:p.cfg.ManualLeases4,
@@ -280,6 +289,18 @@ func (p *V4LinuxServerProduct) startAuthenticatedNormalLocked(
         if dead==0{dead=90}
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
     }
+    // Authenticated client choice for THIS owner; the server's CLI
+    // startup-padding default cannot force or suppress another user's mode.
+    selectedPadding:=verified.StartupPaddingMode()
+    if err==nil&&selectedPadding!=0&&
+        (p.cfg.OuterIPMTU<576||p.cfg.OuterIPMTU>1500){
+        stage="normal_padding_mtu"
+        err=ErrAdmissionParams
+    }
+    if err==nil&&p.cfg.OuterIPMTU!=0{
+        stage="normal_padding"
+        err=bridge.configureNormalStartupPadding(selectedPadding,p.cfg.OuterIPMTU)
+    }
     if err==nil&&mode==FecV2Auto{
         stage="auto_config"
         err=bridge.enableOriginalLowRateAuto()
@@ -357,6 +378,12 @@ func (p *V4LinuxServerProduct) OriginalFECReadback()(V4PublicFecReadback,error){
 // Go logical lane epoch may be reused. Errors remain retryable.
 // Real original Go TLS owner M2 wire counters before Stop. No GUI/CLI
 // operator can forge these numbers; every metric comes from original Rust.
+func (p *V4LinuxServerProduct) OriginalNormalStartupPaddingCounters()(string,uint64,uint64,error){
+    if p==nil{return "",0,0,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if p.owner==nil||p.stopped{return "",0,0,ErrAdmissionUnsupported}
+    return p.owner.normalStartupPaddingCounters()
+}
 func (p *V4LinuxServerProduct) OriginalFecTxFailures()(V4PublicFecTxFailures,error){
     if p==nil{return V4PublicFecTxFailures{},ErrAdmissionParams}
     p.mu.Lock()

@@ -51,19 +51,44 @@ test -s "$ROOT/libwbd_engine.so" && test -c /dev/net/tun
 ART="${GITHUB_WORKSPACE:?}/fixed-kernel-result"
 TMP="${RUNNER_TEMP:?}/wbd-v4-public-${GITHUB_RUN_ID}"
 mkdir -m 0700 -p "$TMP"
+# H2212: opt-in two-run real Linux client+server v2 KDF/cache + same-port
+# standard TLS decoy. Reuse this proven OS-netns/TUN/AF_PACKET/UDP/Stop
+# harness rather than adding a fake socket-only positive fixture.
+H2212="${WBD_H2212_NATIVE_SHORT_DECOY:-0}"
+if [[ "$H2212" == 1 ]];then
+  [[ "$MODE" == normal && "$AUTO_IP" == 1 && "$PATH_SWITCH" == 0 ]] || {
+    echo "H2212 requires normal shared auto-IP server" >&2;exit 2;
+  }
+  CACHE_ROOT="${WBD_H2212_CACHE_ROOT:?missing protected persistent cache directory}"
+  mkdir -p -m 0700 "$CACHE_ROOT"
+  chmod 0700 "$CACHE_ROOT"
+  [[ "$(stat -c %a "$CACHE_ROOT")" == 700 ]] || exit 2
+fi
 NSC="v4cl_${GITHUB_RUN_ID}" NSS="v4sv_${GITHUB_RUN_ID}"
-PIDC='' PIDS='' APPS=''
+PIDC='' PIDS='' APPS='' DECOY_PID=''
 cleanup(){
   local exit_code=$?
   set +e
   # A failed admission or packet assertion must not leak passive observers.
   # Both captures remain private and ephemeral, including early exits.
-  for pid in "${WIRE_SERVER_PID:-}" "${WIRE_CLIENT_PID:-}";do
+  for pid in "${WIRE_SERVER_PID:-}" "${WIRE_CLIENT_PID:-}" "${DECOY_PID:-}";do
     if [[ -n "$pid" ]];then
       sudo -n kill -INT "$pid" 2>/dev/null || true
       wait "$pid" 2>/dev/null || true
     fi
   done
+  if [[ "$exit_code" -ne 0 && "${H2212:-0}" == 1 ]];then
+    echo "H2212_NATIVE_DIAGNOSTIC_BEGIN" >&2
+    for file in ordinary.log decoy.log echo.log;do
+      if [[ -f "$TMP/$file" ]];then
+        echo "H2212_DIAGNOSTIC_FILE=$file" >&2
+        grep -E 'Traceback|Error|error|OSError|SSLError|FileNotFound|Connection|Assertion|timed out|H2212|^  File ' "$TMP/$file" |
+          tail -25 >&2 || true
+      else
+        echo "H2212_DIAGNOSTIC_MISSING=$file" >&2
+      fi
+    done
+  fi
   if [[ "$exit_code" -ne 0 && "$AUTO_IP" == 1 ]];then
     # Save only original native owner/readback diagnostics; no secrets,
     # command line, packet body, TLS transcript or certificates.
@@ -116,8 +141,22 @@ openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
   -subj '/CN=wbd-v4.example.test' -addext 'subjectAltName=DNS:wbd-v4.example.test' \
   >"$TMP/certificate-create.log" 2>&1
 chmod 0600 "$TMP/server-key.pem"
-env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --init-route-key-file "$TMP/route-key.hex"
-test "$(stat -c %a "$TMP/route-key.hex")" = 600
+ROUTE_SERVER_OPT="--route-key-hex-file '$TMP/route-key.hex'"
+ROUTE_CLIENT_OPT="$ROUTE_SERVER_OPT"
+DECOY_OPT=''
+if [[ "$H2212" == 1 ]];then
+  SHORT_FILE="$CACHE_ROOT/short.key"
+  if [[ ! -f "$SHORT_FILE" ]];then
+    (umask 077; openssl rand -hex 16 >"$SHORT_FILE")
+  fi
+  test "$(stat -c %a "$SHORT_FILE")" = 600
+  ROUTE_SERVER_OPT="--route-key-file '$SHORT_FILE' --route-key-cache-file '$CACHE_ROOT/server-v2.json'"
+  ROUTE_CLIENT_OPT="--route-key-file '$SHORT_FILE' --route-key-cache-file '$CACHE_ROOT/client-v2.json'"
+  DECOY_OPT='--decoy 127.0.0.1:8443'
+else
+  env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --init-route-key-file "$TMP/route-key.hex"
+  test "$(stat -c %a "$TMP/route-key.hex")" = 600
+fi
 TUNNEL='102030405060708090a0b0c0d0e0f001'
 USER='v4qualified'
 PASS='v4-real-original-tls-credential-20261020'
@@ -160,12 +199,42 @@ if [[ "${WBD_V4_PUBLIC_WIRE_AUDIT:-0}" == 1 ]];then
 fi
 # Startup uses exactly the production binaries and unmodified original Go
 # TLS/FakeTCP code. PID belongs to the exec'd process in each netns.
+if [[ "$H2212" == 1 ]];then
+  # The real decoy is an actual TLS1.3 origin on a separate loopback port.
+  # The unmodified Linux kernel TCP client reaches ONLY raw :443 first.
+  sudo -n ip netns exec "$NSS" python3 -u - "$TMP/server-cert.pem" "$TMP/server-key.pem" <<'PY' >"$TMP/decoy.log" 2>&1 &
+import socket,ssl,sys
+ctx=ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+ctx.minimum_version=ssl.TLSVersion.TLSv1_3
+ctx.load_cert_chain(sys.argv[1],sys.argv[2])
+with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as srv:
+    srv.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+    srv.bind(("127.0.0.1",8443))
+    srv.listen(1)
+    srv.settimeout(20)
+    sock,_=srv.accept()
+    sock.settimeout(12)
+    with ctx.wrap_socket(sock,server_side=True) as conn:
+        data=b""
+        while len(data)<4:
+            part=conn.recv(4-len(data))
+            if not part:break
+            data+=part
+        assert data==b"ping",("decoy application mismatch",data)
+        conn.sendall(b"pong")
+        try:conn.unwrap()
+        except (ssl.SSLError,ConnectionError,OSError):pass
+print("H2212_REAL_LOOPBACK_TLS_ORIGIN_PING_PONG_PASS",flush=True)
+PY
+  DECOY_PID=$!
+  sleep .5
+fi
 sudo -n ip netns exec "$NSS" bash -c "
   echo \$\$ > '$TMP/server.pid'
   exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
     --raw-interface wbdvs0 --local-ip 10.25.0.1 --local-port 443 \
     --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
-    --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' \
+    --server-name wbd-v4.example.test $ROUTE_SERVER_OPT $DECOY_OPT \
     --username '$USER' --password '$PASS' $SERVER_ID_ARG $SERVER_LEASE_ARG \
     --tls-cert '$TMP/server-cert.pem' --tls-key '$TMP/server-key.pem' \
     --mode "$MODE" --fec-profile 1 $GAME_FEC_ARG" >"$TMP/server.log" 2>&1 &
@@ -177,7 +246,7 @@ sudo -n ip netns exec "$NSC" bash -c "
     --raw-interface wbdvc0 --local-ip 10.25.0.2 --local-port 41031 \
     --peer-ip 10.25.0.1 --peer-port 443 \
     --tun-name wbdvc4 $CLIENT_TUN_ARG \
-    --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' --tls-ca-pem '$TMP/server-cert.pem' \
+    --server-name wbd-v4.example.test $ROUTE_CLIENT_OPT --tls-ca-pem '$TMP/server-cert.pem' \
     --username '$USER' --password '$PASS' $CLIENT_ID_ARG \
     --mode "$MODE" --fec-profile 1 $GAME_FEC_ARG" >"$TMP/client.log" 2>&1 &
 PIDC=$!
@@ -240,6 +309,59 @@ if [[ "$ready" != 1 ]];then
   echo 'M0_V4_PUBLIC_REAL_CLIENT_SERVER_NOT_READY' >&2
   sed -E 's/(credential|password|secret|token|key)[=:][^ ]+/\1=[REDACTED]/Ig' "$TMP/client.log" "$TMP/server.log" | tail -65 >&2
   exit 1
+fi
+if [[ "$H2212" == 1 ]];then
+  echo H2212_STAGE_PROTECTED_WBD_READY
+  # A real unrelated TLS client MUST succeed while authenticated WBD/Rust
+  # is already live. No SessionID marker, no WBD credentials or extra epoch.
+  test "$(grep -c 'V4_PUBLIC_MULTI_SESSION_READY role=server' "$TMP/server.log")" = 1
+  sudo -n ip netns exec "$NSC" python3 -u - "$TMP/server-cert.pem" <<'PY' >"$TMP/ordinary.log" 2>&1
+import socket,ssl,sys
+ctx=ssl.create_default_context(cafile=sys.argv[1])
+ctx.minimum_version=ssl.TLSVersion.TLSv1_3
+with socket.create_connection(("10.25.0.1",443),timeout=12) as sock:
+    with ctx.wrap_socket(sock,server_hostname="wbd-v4.example.test") as conn:
+        conn.settimeout(12)
+        conn.sendall(b"ping")
+        data=b""
+        while len(data)<4:
+            part=conn.recv(4-len(data))
+            if not part:break
+            data+=part
+        assert data==b"pong",("ordinary TLS was not decoy-spliced",data)
+        try:conn.unwrap()
+        except (ssl.SSLError,ConnectionError,OSError):pass
+print("H2212_REAL_STDLIB_TLS_NON_WBD_DECOY_PING_PONG_PASS",flush=True)
+PY
+  echo H2212_STAGE_ORDINARY_TLS_APP_RETURNED
+  wait "$DECOY_PID"
+  DECOY_PID=''
+  grep -Fq H2212_REAL_STDLIB_TLS_NON_WBD_DECOY_PING_PONG_PASS "$TMP/ordinary.log"
+  grep -Fq H2212_REAL_LOOPBACK_TLS_ORIGIN_PING_PONG_PASS "$TMP/decoy.log"
+  test "$(grep -c 'V4_PUBLIC_MULTI_SESSION_READY role=server' "$TMP/server.log")" = 1
+  grep -Fq 'decoy_max_splices=8' "$TMP/server.log"
+  # POSIX store: reuse the same key bytes, check files are owner-only and
+  # their nanosecond mtime is unchanged on second independent process run.
+  sudo -n python3 - "$CACHE_ROOT" "${WBD_H2212_REPEAT_INDEX:-1}" <<'PY'
+import json,os,pathlib,stat,sys
+base=pathlib.Path(sys.argv[1]);index=int(sys.argv[2])
+record={}
+for role in ("server","client"):
+    p=base/(role+"-v2.json")
+    st=p.stat()
+    assert stat.S_IMODE(st.st_mode)==0o600,(role,"permissions")
+    data=json.loads(p.read_text())
+    assert data["version"]==2 and len(data["key_hex"])==64
+    record[role]=st.st_mtime_ns
+marker=base/"baseline-mtime.json"
+if index==1:
+    assert not marker.exists()
+    marker.write_text(json.dumps(record))
+else:
+    assert index==2 and json.loads(marker.read_text())==record,"PBKDF2 cache rewritten on restart"
+print("H2212_NATIVE_ROUTEKEY_CACHE_"+("FIRST_WRITE" if index==1 else "RESTART_REUSED")+"_PASS",flush=True)
+PY
+  echo H2212_REAL_LINUX_AUTHENTICATED_WBD_PLUS_NON_WBD_SAME_PORT_DECOY_NO_RUST_SLOT_PASS
 fi
 # PLAN028 source-locked native per-device IP witness. A protected TLS
 # reply installed a /32 and Rust bound it to THIS generation before M4.
@@ -593,8 +715,16 @@ if [[ "$AUTO_IP" == 1 && "$GAME" == 0 ]];then
   # its own readiness proves original Rust shared_tun was opened before
   # the per-session first authenticated M4 worker, not the old singleton
   # V4_PUBLIC_SHARED_TUN_READER_READY marker that it no longer emits.
-  # 32 Go cold association slots are NOT 32 Rust native owners (hard cap 16).
-  grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1' "$TMP/server.log"
+  # 64 Go cold association slots are NOT 64 Rust native owners (hard cap 32).
+  if [[ "$H2212" == 1 ]];then
+    # H2213 current exact-source native product must have the 32/64 pair.
+    grep -Fq 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=64 native_owner_slots=32 shared_rust_tun=1' "$TMP/server.log"
+  else
+    # Historical source-locked binaries still carry the former 16/32
+    # resources. Retain both *known exact pairs*, not arbitrary capacities.
+    grep -Fq 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1' "$TMP/server.log" ||
+      grep -Fq 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=64 native_owner_slots=32 shared_rust_tun=1' "$TMP/server.log"
+  fi
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
   # The client NOW also has exactly one original Rust TUN kernel reader,
   # independently of its server process, so a future new authenticated

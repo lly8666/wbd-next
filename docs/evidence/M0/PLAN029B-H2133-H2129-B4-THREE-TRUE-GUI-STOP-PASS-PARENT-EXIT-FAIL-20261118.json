@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2133",
+  "date": "2026-11-18",
+  "source_sha": "43f988d37edcb54e537b14d2f5a73aab4d6609fd",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "source_locked_original_action": {
+    "id": 44195727026,
+    "conclusion": "failure",
+    "native_job_id": 134439663612,
+    "artifact_id": 14379488033,
+    "zip_sha256": "c9fc9d6fa4a44151ad57c76d5336bcf994ccf87c150c8e2aee5dfc6ec688cc53",
+    "entries": 28,
+    "all_crc": "PASS",
+    "source_from_original_manifest": "43f988d37edcb54e537b14d2f5a73aab4d6609fd",
+    "cheap": "PASS",
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "linux_original_go_rust_build": "PASS",
+    "windows_original_release": "PASS"
+  },
+  "actual_product_scoped": {
+    "original_winforms_real_gui_applied": 3,
+    "original_gui_dns": [
+      {
+        "ordinal": 1,
+        "lane": "physical",
+        "cn_a": "FAKEIP"
+      },
+      {
+        "ordinal": 2,
+        "lane": "physical",
+        "cn_a": "REAL_A_203.0.113.77"
+      },
+      {
+        "ordinal": 3,
+        "lane": "tun",
+        "cn_a": "REAL_A_203.0.113.77"
+      }
+    ],
+    "original_winforms_real_kernel_udp_echo": 3,
+    "old_fakeip_no_app_response": 2,
+    "original_windows_rust_owned_wal_stop_clean": 3,
+    "linux_guest_dns_and_data": "PASS_THREE_REAL_GUI_GENERATION_EGRESS",
+    "linux_real_old_fake_egress": 0,
+    "linux_guest_stale_fake_business": 0,
+    "original_tls_m4_children": 3,
+    "tcp_source_ports": [
+      41031,
+      41032,
+      41033
+    ],
+    "windows_real_inner_os_mtu_each": 1389,
+    "original_outer_mtu_each": 1460,
+    "native_windows_linux_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "native_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+    "original_client_receipt": "PLAN029B_B4_THREE_REAL_GUI_GENERATIONS_AND_STOPS_COMPLETE",
+    "actual_linux_server_final_stop": "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server",
+    "scope": "PASS_SCOPED_REAL_WINDOWS_GUI_THREE_GENERATIONS_AND_THREE_OWNED_STOP_MARKERS"
+  },
+  "whole_action_first_error": {
+    "message": "Windows native owned WAL Stop missing",
+    "classification": "POST_THIRD_REAL_STOP_GUI_PARENT_EXIT_OR_WAIT_EXIT_NOT_QUALIFIED",
+    "original_client_log_has_three_owned_wal_stops": true,
+    "original_client_log_has_final_success_receipt": true,
+    "outer_e2e_stop": "NOT_RUN_OR_NOT_QUALIFIED",
+    "mode_public": "FAIL_TRUE_PUBLIC_EXECUTION",
+    "inference_limit": "Current original artifact does not distinguish GUI parent exit nonzero from timeout/termination; do not assert exact underlying exception without process exit witness.",
+    "full_b4": "FAIL_STILL_OPEN"
+  },
+  "candidate": {
+    "source_sha": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+    "action_id": 44198794225,
+    "action_status_at_collection": "IN_PROGRESS",
+    "changed": [
+      "tools/m0_plan029b_b4_real_gui.cs",
+      "tests/test_m0_plan029b_b4_scope.py"
+    ],
+    "method": "After all three original GUI Stop/WAL and client.Active=false original state 未连接, drain queued BeginInvoke and close genuine MainForm; require IsDisposed BEFORE emitting final B4 success receipt. No fake process exit and no data-plane change."
+  },
+  "parallel_game4": {
+    "source_sha": "5fc22aef30aa4440e81257e67fded501fece3080",
+    "action_id": 44197717052,
+    "native_at_collection": "IN_PROGRESS"
+  },
+  "limits": {
+    "b4_full_native_action": "FAIL_PRESERVED",
+    "game4_current": "NOT_YET_FINAL",
+    "game2_split": true,
+    "game2_status": "UNSUPPORTED_ACTUAL_EXECUTION_NOT_RUN",
+    "b5_samevm_10mbps_cpu_gib_rss_p99": "NOT_RUN",
+    "plan029b": "OPEN",
+    "plan029": "OPEN"
+  }
+}

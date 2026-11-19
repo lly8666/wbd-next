@@ -21,6 +21,8 @@ type V4WindowsColdSplitConfig struct{
  // the listener any ingress permission before exact Defender receipt.
  TCPSynthetic4 [4]byte
  TCPOwned bool
+ // 029B frozen V2 cold ABI, bit0: advanced CN FakeIP.
+ PolicyFlags uint32
 }
 type v4WindowsColdSplitWireV1 struct{
  Version,Size uint32
@@ -35,6 +37,7 @@ type v4WindowsColdSplitWireV1 struct{
  JournalPath uintptr
  TCPSynthetic4 [4]byte
  TCPOwned uint32
+ PolicyFlags uint32
 }
 type v4WindowsNativeIOV3Probe struct{
  Version,Size uint32
@@ -59,12 +62,12 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
   c.InnerMTU<576||c.InnerMTU>1500||c.DirectHard==0||
   c.DirectHard>16384||len(c.CN)>32768||len(c.LAN)>32768||
   len(c.Direct)>32768||len(c.Domains)>1<<20||
-  len(c.FakeJournalPath)>4096||
+  len(c.FakeJournalPath)>4096||c.PolicyFlags&^uint32(1)!=0||
   c.TCPOwned{ // NEVER arm before OS Apply and exact Defender proof.
   return w,errV4WindowsOwner
  }
  w=v4WindowsColdSplitWireV1{
-  Version:1,Size:uint32(unsafe.Sizeof(w)),
+  Version:2,Size:uint32(unsafe.Sizeof(w)),
   RouteMode:c.RouteMode,PhysicalIfIndex:c.PhysicalIfIndex,
   PhysicalSource:c.PhysicalSource,Lease4:c.Lease4,
   DirectDNS:c.DirectDNS,TunnelDNS:c.TunnelDNS,
@@ -73,7 +76,7 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
   CNCount:uint32(len(c.CN)),LANCount:uint32(len(c.LAN)),
   DirectCount:uint32(len(c.Direct)),DomainsLength:uint32(len(c.Domains)),
   JournalLength:uint32(len(c.FakeJournalPath)),
-  TCPSynthetic4:c.TCPSynthetic4,
+  TCPSynthetic4:c.TCPSynthetic4,PolicyFlags:c.PolicyFlags,
  }
  if c.TCPOwned{w.TCPOwned=1}
  if len(c.CN)>0{w.CN=uintptr(unsafe.Pointer(&c.CN[0]))}

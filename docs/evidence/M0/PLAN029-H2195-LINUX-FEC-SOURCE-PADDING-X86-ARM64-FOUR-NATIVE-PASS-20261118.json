@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2195/H2196",
+  "date_utc": "2026-11-18",
+  "source_sha": "8a404a4f79227fde41286056f0c62c4d406f210a",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "full_technical_exit_met": false,
+  "action": {
+    "id": 44292569034,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44292569034",
+    "attempt": 1,
+    "original_native_jobs": 2,
+    "real_kernel_scenes": 4
+  },
+  "build": {
+    "original_go_pinned_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "original_isa_l_pinned_sha": "c387163fcbca62701d646149564c550c78a4f985",
+    "rust": "1.85.1",
+    "go": "1.23.12",
+    "once_per_native_isa": true
+  },
+  "original_artifacts": [
+    {
+      "architecture": "x86_64",
+      "artifact_id": 14422137104,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/44292569034/artifacts/14422137104",
+      "artifact_zip_sha256": "481b1c0feabfffe7008fd7d7dc2f1caea6f6fd2dd8093172cc73b21e55d24792",
+      "original_zip_members": 36,
+      "zip_crc": "PASS",
+      "binary_sha256": {
+        "wbd-v4-client": "954cf005f7c9f349f67077f03c7d10ff7d78ca99a6bd5edba1d6cb99b88c4012",
+        "wbd-v4-server": "a0dcc3369d4a096db422c0f20417e301829451b356c6eb229a06213bbe7aa153",
+        "libwbd_engine.so": "377394301846052e134bfcb80c80b4bcc22616673210d89cb24ccf8b6187657c"
+      },
+      "fixed_tls": {
+        "each_endpoint_kernel_copied_records": 2,
+        "each_endpoint_padded_bytes": 417
+      },
+      "auto_flows": {
+        "each_endpoint_kernel_copied_records": 4,
+        "each_endpoint_padded_bytes": 1372
+      },
+      "real_original_go_tls_rust_m4": true,
+      "real_linux_kernel_udp_tcp_both_directions": "PASS",
+      "owned_stop": "PASS_BOTH",
+      "netns_cleanup": "PASS",
+      "owned_tun_ipv6": "disable_ipv6=1",
+      "outer_ip_mtu": 1460,
+      "inner_tun_mtu": 1375
+    },
+    {
+      "architecture": "aarch64",
+      "artifact_id": 14421308109,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/44292569034/artifacts/14421308109",
+      "artifact_zip_sha256": "81ac2dea11db8bdfaabcbc7946b648b13656fa34e80cd5c4dea166a085390933",
+      "original_zip_members": 36,
+      "zip_crc": "PASS",
+      "binary_sha256": {
+        "wbd-v4-client": "2e2b972afae54e34956656e7806e6ba1d80ef55790e1cda4e8cb83baec37217b",
+        "wbd-v4-server": "0e2c20653b0fd9a98ad38585c54b49c9326b95eabd1a274318f1267206dd5473",
+        "libwbd_engine.so": "f40633f3918ed26c1b5e7900c80a467c8aae9d8c62728ffe4473921c28c7283d"
+      },
+      "fixed_tls": {
+        "each_endpoint_kernel_copied_records": 2,
+        "each_endpoint_padded_bytes": 85
+      },
+      "auto_flows": {
+        "each_endpoint_kernel_copied_records": 4,
+        "each_endpoint_padded_bytes": 713
+      },
+      "real_original_go_tls_rust_m4": true,
+      "real_linux_kernel_udp_tcp_both_directions": "PASS",
+      "owned_stop": "PASS_BOTH",
+      "netns_cleanup": "PASS",
+      "owned_tun_ipv6": "disable_ipv6=1",
+      "outer_ip_mtu": 1460,
+      "inner_tun_mtu": 1375
+    }
+  ],
+  "qualification": [
+    "Each original native Linux x86_64 and aarch64 has exactly Fixed tls + Auto flows original Go TLS/Rust M4 client/server authenticated sessions and actual kernel TCP+UDP both directions",
+    "Only original FEC source kind2 AEAD marker-trailing padding; parity kind3 unchanged; original FEC source block/index/revision and repair unchanged",
+    "Both original M4 kernel AF_PACKET copies confirmed after send success; per record bounded <=500 bytes",
+    "Each case owned Stop both and network namespace cleanup, OS owned TUN disable_ipv6 1, outer MTU1460 inner1375",
+    "Distinct source H2186 Game and H2193 Normal scenes not rerun"
+  ],
+  "scope_exclusions": [
+    "No real FEC recovery during loss, no 30min stress, no CPU/GiB or p99",
+    "Physical ARM, cross ISA physical DUT, full negotiated application TLS not established",
+    "Live physical auto-IP 1500->1280 reauthentication NOT_RUN, manual-IP old failure preserved",
+    "No pre-TLS on-wire X25519 without offline route-key per TLS contract",
+    "Original H2195 governance 44292569134 failure: 16499 bytes linux-raw-tun card; doc-only 44293349881 failure: mismatched feature-impact declaration; both preserved",
+    "No Windows CN/Direct/GUI/host-global IPv6 qualification"
+  ]
+}

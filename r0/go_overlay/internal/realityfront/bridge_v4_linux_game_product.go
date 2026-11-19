@@ -16,6 +16,8 @@ import (
 )
 
 type V4LinuxGameProductConfig struct {
+    Fallback *FallbackConfig // per-association decoy before protected Game/Normal policy
+    FallbackSlots chan struct{} // shared service-wide bound
     NetworkInterface string
     NetworkIfIndex uint32
     Tun *os.File
@@ -30,6 +32,8 @@ type V4LinuxGameProductConfig struct {
     Epochs *V4EpochStore // mandatory only for actual server group
     GameFecEnabled bool // explicit BOTH-endpoint fixed FEC, never Auto
     GameFecProfile uint8 // 0..6; only used when GameFecEnabled
+    StartupPaddingMode uint8 // client V2 choice; server follows authenticated Game lane group, not its CLI default
+    OuterIPMTU int // original Go physical/budget upper bound for pad room
     DisableOuterRepair bool // Game M4 first copy only, no Normal M2 DATA repair
     Game4CopyStagger bool // pre-start 4-lane delayed physical copies
     Game4CopyWideStagger bool // longer opt-in T0+50ms/+140ms tail
@@ -46,9 +50,14 @@ type V4LinuxGameProduct struct{
     game *V4LinuxGameVerifiedGroup
     stopped bool
     connected bool
+    verifiedStartupPadding uint8 // authenticated, same in EVERY Game lane
 }
 func newV4LinuxGameProduct(cfg V4LinuxGameProductConfig,server bool)(*V4LinuxGameProduct,error){
     if cfg.GameFecEnabled&&cfg.GameFecProfile>6{return nil,ErrAdmissionParams}
+    if cfg.StartupPaddingMode>2||
+       (cfg.StartupPaddingMode!=0&&(cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
+        return nil,ErrAdmissionParams
+    }
     if cfg.Game4CopyWideStagger&&!cfg.Game4CopyStagger{return nil,ErrAdmissionParams}
     // Game4 fixed FEC is explicitly allowed with the default stagger;
     // native per-group profile and copy schedule are both installed before M4.
@@ -80,6 +89,37 @@ func validGameGroupPolicy(p AdmissionPolicy,n int)bool{
         p.Transport==TransportGame&&p.DesiredLanes==uint8(n)&&
         p.SupportedNow()==nil
 }
+// No Game lane can choose its own different padding mode: the client
+// selects once, each original protected TLS lane must commit the same value.
+// Server local CLI defaults never override authenticated client policy.
+func (p *V4LinuxGameProduct) selectedGamePaddingLocked()(uint8,error){
+    var selected uint8
+    if p.server{
+        if !matchesOriginalGameLaneCount(len(p.serverSessions)){return 0,ErrAdmissionUnsupported}
+        for i,s:=range p.serverSessions{
+            mode,err:=s.AuthenticatedStartupPaddingMode()
+            if err!=nil{return 0,err}
+            if i>0&&mode!=selected{return 0,ErrAdmissionUnsupported}
+            selected=mode
+        }
+    }else{
+        if !matchesOriginalGameLaneCount(len(p.clientSessions)){return 0,ErrAdmissionUnsupported}
+        for i,s:=range p.clientSessions{
+            mode,err:=s.AuthenticatedStartupPaddingMode()
+            if err!=nil||mode!=p.cfg.StartupPaddingMode{return 0,ErrAdmissionUnsupported}
+            if i>0&&mode!=selected{return 0,ErrAdmissionUnsupported}
+            selected=mode
+        }
+    }
+    return selected,nil
+}
+func matchesOriginalGameLaneCount(n int)bool{return n==2||n==4}
+func (p *V4LinuxGameProduct) AuthenticatedStartupPaddingMode()(uint8,error){
+    if p==nil{return 0,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if p.stopped||!p.connected||p.native==nil{return 0,ErrAdmissionUnsupported}
+    return p.verifiedStartupPadding,nil
+}
 func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
     var err error
     if p.server{
@@ -88,11 +128,24 @@ func (p *V4LinuxGameProduct) commitGroupedOwnerLocked()error{
         p.game,err=V4LinuxGameClientVerifiedGroup(p.clientSessions...)
     }
     if err!=nil{return err}
+    selectedPadding,err:=p.selectedGamePaddingLocked()
+    if err!=nil{return err}
     p.native,err=p.game.joinAuthenticatedOriginalRust(p.bridges...)
     if err!=nil{return err}
     if p.cfg.GameFecEnabled{
         if err=p.native.configureFixedFEC(p.cfg.GameFecProfile);err!=nil{return err}
     }
+    if selectedPadding!=0{
+        // This native readback is the physical interface itself, not the
+        // inner TUN; the authenticated Game seal cannot exceed either cap.
+        iface,err:=net.InterfaceByName(p.cfg.NetworkInterface)
+        if err!=nil||iface==nil||iface.MTU<576{return ErrAdmissionParams}
+        effective:=p.cfg.OuterIPMTU
+        if effective<576||effective>1500{return ErrAdmissionParams}
+        if iface.MTU<effective{effective=iface.MTU}
+        if err=p.native.configureStartupPadding(selectedPadding,effective);err!=nil{return err}
+    }
+    p.verifiedStartupPadding=selectedPadding
     if p.cfg.Game4CopyStagger{
         if len(p.bridges)!=4{return ErrAdmissionUnsupported}
         mode:=uint32(1)
@@ -142,6 +195,7 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
         if p.cfg.GameFecEnabled{gameFec=p.cfg.GameFecProfile+1}
         session,e:=EstablishClientV4(ctx,a.BootstrapConn(),cfg,V4ClientOptions{
             DataPlaneReady:true,Epoch:epoch,fec2Product:true,GameFec:gameFec,
+            StartupPadding:p.cfg.StartupPaddingMode,
         })
         if e!=nil{return errors.Join(e,p.abortLocked())}
         if i==0{epoch=session.Epoch}
@@ -231,6 +285,7 @@ func (p *V4LinuxGameProduct) ReplaceClientGameLane(
     if p.cfg.GameFecEnabled{fec=p.cfg.GameFecProfile+1}
     next,e:=EstablishClientV4(ctx,a.BootstrapConn(),base,V4ClientOptions{
         DataPlaneReady:true,Epoch:previous.Epoch,fec2Product:true,GameFec:fec,
+        StartupPadding:p.cfg.StartupPaddingMode,
     })
     if e!=nil{return fmt.Errorf("%w: %w",ErrV4GameLaneUncommittedCold,e)}
     cold,e:=next.ColdSnapshot()
@@ -400,7 +455,7 @@ func V4AuthenticateLinuxMixedServerLane(
     }
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,base,V4ServerOptions{
-        DataPlaneReady:true,Epochs:cfg.Epochs,ownerBridge:bridge,
+        DataPlaneReady:true,Epochs:cfg.Epochs,Fallback:cfg.Fallback,FallbackSlots:cfg.FallbackSlots,ownerBridge:bridge,
         fec2Product:true,perClientMixedMode:true,
         Authenticate:cfg.Authenticate,AllowLaneReplacement:true,
         ManualLeases4:cfg.ServerManualLeases4,
@@ -488,7 +543,7 @@ func V4AuthenticateLinuxGameServerLane(
     if cfg.GameFecEnabled{gameFec=cfg.GameFecProfile+1}
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,base,V4ServerOptions{
-        DataPlaneReady:true,Epochs:cfg.Epochs,
+        DataPlaneReady:true,Epochs:cfg.Epochs,Fallback:cfg.Fallback,FallbackSlots:cfg.FallbackSlots,
         ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
         Authenticate:cfg.Authenticate,AllowLaneReplacement:cfg.SharedTun!=nil,
         ManualLease4:cfg.ServerManualLease4,
@@ -592,6 +647,7 @@ func (p *V4LinuxGameProduct) ReplaceServerGameLane(
     cold,e:=member.session.ColdSnapshot()
     if e!=nil||!sameOriginalGameLaneHotIdentity(old,cold,lane)||
         member.session.verifiedGameFec!=oldSession.verifiedGameFec||
+        member.session.verifiedStartupPadding!=oldSession.verifiedStartupPadding||
         !validGameGroupPolicy(member.session.verifiedPolicy,4){
         return errors.Join(ErrAdmissionParams,e)
     }
@@ -782,6 +838,16 @@ func (p *V4LinuxGameProduct) PromoteServerGameAfterAuthenticatedClientRx()error{
         return ErrAdmissionUnsupported
     }
     return p.native.promoteServerSharedTunAfterAuthenticatedClientHealth()
+}
+// Source-locked game actual AF_PACKET send receipts; no invented padded
+// byte count from ciphertext length or pending record proposals.
+func (p *V4LinuxGameProduct) StartupPaddingCounters()(string,uint64,uint64,error){
+    if p==nil{return "",0,0,ErrAdmissionParams}
+    p.mu.Lock();defer p.mu.Unlock()
+    if !p.connected||p.stopped||p.native==nil{
+        return "",0,0,ErrAdmissionUnsupported
+    }
+    return p.native.originalStartupPaddingCounters()
 }
 func (p *V4LinuxGameProduct) KernelCounters()(V4GameKernelCounters,error){
     if p==nil{return V4GameKernelCounters{},ErrAdmissionParams}

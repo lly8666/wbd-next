@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2081",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "original_failures": [
+    {
+      "run_id": 44042418488,
+      "detail": "Existing original Go unit expected nil for disabled split, now 029B must keep original Rust V3 public DNS/padding"
+    },
+    {
+      "run_id": 44042418360,
+      "detail": "Existing Rust unit test helper cold version1 rejected by deliberately versioned ABI2"
+    }
+  ],
+  "repairs": [
+    "updated Rust source fixture version2, product immutable",
+    "updated Go source fixture business off V3/no Direct and exact assembly result hash"
+  ],
+  "original_normal_h2077_status": "PASS_SCOPED_OLD_SOURCE_ONLY",
+  "next": "Wait H2081 new-source compile/network, no B0-B5 PASS"
+}

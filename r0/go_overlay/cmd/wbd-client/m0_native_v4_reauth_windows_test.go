@@ -1,6 +1,6 @@
 //go:build windows && wbd_v4_embedded_go
 package main
-import("net/netip";"time";"context";"errors";"fmt";"syscall";"testing";"unsafe";"github.com/lly8666/wobuzhidao/internal/faketcp";"github.com/lly8666/wobuzhidao/internal/realityfront")
+import("net/netip";"time";"context";"errors";"fmt";"syscall";"testing";"unsafe";"os";"path/filepath";"github.com/lly8666/wobuzhidao/internal/faketcp";"github.com/lly8666/wobuzhidao/internal/realityfront")
 func TestM0PLAN027WindowsColdRetryRequiresAuthenticatedDeadAndNoAppliedOS(t *testing.T){
  timeout:=fmt.Errorf("original cold FakeTCP: %w",faketcp.ErrBootstrapTimeout)
  for _,e:=range []error{timeout,fmt.Errorf("network timed out: %w",context.DeadlineExceeded),syscall.ETIMEDOUT}{
@@ -120,6 +120,31 @@ func TestM0PLAN028WindowsColdNewGenerationNeverReusesOriginalClientTCPPort(t *te
   if _,err:=m0WindowsOriginalColdClientPort(row.port,row.generation);err==nil{
    t.Fatal("invalid source port or generation must fail closed")
   }
+ }
+}
+
+// H2065: a complete WinForms Stop is an entirely NEW Go process.
+// The old server can retain the previous FakeTCP 4-tuple despite a
+// correctly restored Windows owned WAL. Persist only cold port ordinal.
+func TestM0PLAN029GuiNormalStopReconnectUsesDifferentOriginalTCPPort(t *testing.T){
+ path:=filepath.Join(t.TempDir(),"network-state.json")
+ for i,want:=range []uint16{41031,41032,41033}{
+  ordinal,err:=m0WindowsReserveColdTupleOrdinal(path)
+  if err!=nil||ordinal!=uint64(i+1){
+   t.Fatalf("portable cold ordinal=%d want=%d err=%v",ordinal,i+1,err)
+  }
+  port,err:=m0WindowsOriginalColdClientPort(41031,ordinal)
+  if err!=nil||port!=want{
+   t.Fatalf("new Go process TCP port=%d want=%d err=%v",port,want,err)
+  }
+ }
+ tupleState:=filepath.Join(filepath.Dir(path),".wbd-next-cold-tuple-ordinal.json")
+ if err:=os.WriteFile(tupleState,[]byte("{bad-json"),0600);err!=nil{t.Fatal(err)}
+ if _,err:=m0WindowsReserveColdTupleOrdinal(path);err==nil{
+  t.Fatal("damaged cold port state must fail closed instead of reusing tuple")
+ }
+ if _,err:=m0WindowsReserveColdTupleOrdinal("");err==nil{
+  t.Fatal("empty WAL locator cannot place persisted cold tuple state")
  }
 }
 

@@ -1,0 +1,9 @@
+# PLAN029B H2111｜B3实网首错：不靠Get-NetAdapter显示名判断原Wintun
+
+H2108 SOURCE `5bb367e86c81cb61b68be7c9772c0ea866f69fde` [Action44102947133](https://github.com/lly8666/wbd-next/actions/runs/44102947133) 终结 **FAIL**。原Windows2025 signed Win/WSL2产物 artifact14338805926 ZIP SHA256 `8bc06f68ff7d66b2f9a72c09a4e923acc39d6abe9d6b9dc3e9f0142244bd65e1`，所有成员CRC PASS，report四个SOURCE都等于5bb，Win Go SHA `a66d9b96...`、Rust DLL SHA `829e5f8e...`、Linux server SHA `9188f394...`。原Go TLS/签名Wintun/OS Applied真实，Rust V3 Normal/off `business_split=false direct_business_nat=0`，原Rust Stop输出 `PLAN029B_WINTUN_IPV6_SKIPPED_STOP packets=17`、`M0_PLAN027_NATIVE_STOP_RESULT ... PASS`、`WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1`；WSL2原Rust server Stop DRAINED。**这17个是系统背景IPv6，不是B3脚本的16个内核测试包**。该script在建测试 /128 之前因旧判定`Get-NetAdapter -IncludeHidden`恰好1个且`InterfaceDescription`含“Wintun”不满足而FAIL；该 OR 断言不能分辨计数不唯一或显示名不同。B3自有IPv6/IPv4交错12次均NOT_RUN，不把原产品Stop PASS改写为整场PASS。
+
+H2111测试专属修正：先以原Go产品当前代**四阶段v2 checksum WAL** `owned-wal.json.n4-owned-wal`原字节`data`的SHA256验签，要求`phase=active`、4个阶段owner、16-byte installation/generation、Wintun LUID/index、原`WBDWLMAIN` alias、GUID和Pin PnP SHA256；再用真实`Get-NetIPAddress(10.66.0.2)`唯一租约的ifIndex/Alias和`Get-NetIPInterface -AddressFamily IPv6`唯一ifIndex与WAL对证。Windows有可列举`Get-NetAdapter`时再严格对照GUID、明确IPv6绑定为Enabled；若其隐藏/无友好描述，不把描述当原Go PnP已验证身份的替代。不会写WAL、关闭IPv6、解绑设备、自动创建物理路由、安装WFP、屏蔽外部IPv6。只有所有读回证据成功才写SOURCE/index测试owned intent，并在唯一原Wintun安装有限 /128，按旧16 AF_INET6+12 IPv4混跑、Rust真正skip和双方Stop验收。纯单元模拟原Go WAL正反样本覆盖伪SHA/旧代/外来alias；廉价动作先过再只派发**一场**新SOURCE B3真实Win2025。B4 Game GUI多代和B5<=10Mbps CPU/GiB/p99均未验。
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"H2111 original source test-only B3 Wintun owner identity verification changed from display name to source-pinned Go WAL checksum + real OS IPv4/IPv6 ifIndex, no shipping product behavior or readiness promotion"}
+```

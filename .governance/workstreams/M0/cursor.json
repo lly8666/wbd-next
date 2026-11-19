@@ -4,25 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2061,
-  "checkpoint_sha": "ddfbcae5a788f94a83e906fa5535707907da5d30",
+  "sequence": 2213,
+  "checkpoint_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
   "progress": "in_progress",
-  "task_id": "PLAN029-H1658-USER-ACTIVATED",
-  "current_task": "H2061 user narrowed to ordinary operation only. H2059 original GUI flows selector/Go effective/Rust M1 NPF copied41 records 11466B with 1460/1389 CN Direct+Tunnel TCP UDP/Stop is original signed WIN/WSL2 PASS. New one-scene ordinary GUI user Disconnect -> second Connect with second real OS Applied and real business/Stop, not crash/reconnect stress, in implementation pending native.",
-  "why_now": "User explicitly declines extreme stress/testing and asks fast normal use closeout. H2059 Action44005631732 is now completed SUCCESS source ccf0... and real artifact14295665084 proved exact GUI effective flows+NPF+Stop; the one remaining common user-visible flow is ordinary GUI disconnect->reconnect with same config. Avoid resource exhaustion, artificial crash, slow disk, long CPU A/B, IPv6 and other excluded scopes.",
-  "done_when": "PLAN029 + docs/architecture/CLIENT_SPLIT_DNS_CONTRACT.md D1–D5/P1–P2: actual Windows native Rust Wintun ingress CN IP+domain selective FakeIP Direct TCP/UDP vs Tunnel, exactly one DNS per direction and no fallback, bootstrap direct, no new legacy WFP guard, real CLI/GUI/OS MTU1460, bounded startup-padding and owned WAL Stop. Preserve PLAN028 scoped gaps.",
-  "next_action": "Collect only one H2061 signed normal GUI restart Action; if success archive user-normal exit and stop. Historical H2041 Game4/H2031 Padding/H2056 first cold physical DNS and H2057 component retained independently. Don't launch extreme saturation or perf matrix.",
+  "task_id": "PLAN029B-H2213-RUST32-ORDINARY-TLS-RANDOM-CUTOFF",
+  "current_task": "H2213 Rust Linux/Windows 16→32 native lane slots（Windows实际32 prepared，33rd FULL）；Go FakeTCP cold32→64；普通TLS独立Decoy8、每条随机15–45s断开。Rust Action44446847868、Go Action44446847713、Linux双ISA2×2真TLS/UDP/Stop Action44446847738 PASS_SCOPED。",
+  "why_now": "用户要求服务端Rust 16槽升32且简单测试，普通非WBD TLS→Decoy随机到时主动关闭并释放资源。",
+  "done_when": "Rust32/33边界、Windows32真实prepared owners、Go普通TLS强制超时、Linux x86/ARM业务/Stop限域PASS；32在线设备压力和公网实机另证。",
+  "next_action": "H2213小任务限域PASS不重测；下一个独立H只测32真实客户端负载/CPU延迟或外网NAT代表，严格不要把32注册槽误报32设备稳定容量。Android JNI/OpenWrt实机NOT_RUN，029/029B总出口OPEN，030未开。",
   "unverified": true,
-  "last_tested_source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+  "last_tested_source": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2213-RUST32-DECOY-RANDOM-15-45-LINUX-WINDOWS-SCOPED-PASS-20261119.json"
   ],
   "context_refs": [
-    "docs/devlog/M0/20261117-PLAN029-H2061-ORDINARY-USE-FOCUS.md",
-    "docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json",
-    "docs/evidence/M0/PLAN029-H2058-GUI-DNS-TC-REAL-FAKEABORT-20261117.json",
-    "docs/evidence/M0/PLAN029-H2041-H2038-GAME4-CN-FOUR-LANE-REAL-20261117.json"
+    "docs/evidence/M0/PLAN029B-H2212-LINUX-X86-ARM64-REAL-SHORTKEY-DECOY-CACHE-STOP-PASS-20261119.json",
+    "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "Past agents H1988/H1991 reduced repeated empty WSAPoll not physical UDP event; H1989 TCP shards. H2000 Direct UDP 96/512/1200B p99 21.725/25.684/24.974ms vs physical .347/.282/.350. H2002 event wake original 720/720 p99 .492/.561/.530 (ACK-after-recv prototype). Final H2005 recv-before-ACK, Windows real two-queued datagram unit and original signed Action43871804786 SUCCESS: Direct p99 .771/.427/.451ms vs physical .312/.302/.292, max 4.457/.457/.490, zero >=8ms, 720/720, Stop PASS. Stop UDP tuning; historical TCP/bulk OPEN."
+  "partial_summary": "H2213：Rust32 native lanes、Go64 cold associations、普通TLS8条独立Decoy转发随机15–45s强制断开；Windows实际32 prepared/33rd FULL，Linux Rust32/33边界，Go真实TLS600ms限域强制断开，Linux原生x86/ARM各2真TLS/UDP/Stop成功。32业务客户端同时满载与公网物理NOT_RUN，029OPEN。"
 }

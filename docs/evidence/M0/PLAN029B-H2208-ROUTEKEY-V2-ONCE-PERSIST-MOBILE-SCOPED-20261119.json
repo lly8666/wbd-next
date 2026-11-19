@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2208-SHORT-ROUTEKEY-V2-PERSISTENT-MOBILE-SCOPED",
+  "result": "PARTIAL_BUILD_PASS_TECHNICAL_OPEN",
+  "date_utc": "2026-11-19",
+  "source_sha": "15573bbbbf4c6d51d582e23989d795667ae5c7a1",
+  "followup_test_commit": "c92f6a795d8e152b0939e5c6a60a492babedb14e",
+  "implementation": "8..32 ASCII case sensitive -> PBKDF2-HMAC-SHA256 v2 4096 iterations fixed domain salt -> 32 bytes; initial/settings-changed only, app-private/0600 cached key with HMAC validation on restart",
+  "scoped_pass": [
+    {
+      "name": "source-locked exact original Windows Go client/native source build and pure tests",
+      "action": 44368144935,
+      "result": "PASS_BUILD_ONLY",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44368144935"
+    },
+    {
+      "name": "source-locked Windows Go production and tests plus cheap assembly",
+      "action": 44368145278,
+      "result": "PASS_BUILD_ONLY",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44368145278"
+    },
+    {
+      "name": "Linux Rust eligible library pure unit tests; RouteKey not in Rust hot path",
+      "action": 44368145278,
+      "result": "PASS_SCOPED",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44368145278"
+    },
+    {
+      "name": "M0 main governance for workflow/test-only source",
+      "action": 44369630706,
+      "result": "PASS",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44369630706"
+    }
+  ],
+  "history_fail": [
+    {
+      "name": "initial H2208 Go source literal NUL/newline first Windows compile",
+      "action": 44366213787,
+      "result": "FAIL_FIXED_IN_7dc0e6a"
+    },
+    {
+      "name": "H2208 Windows Rust existing DNS Direct unit 419/420",
+      "action": 44368145278,
+      "result": "FAIL_INDEPENDENT",
+      "first_test": "v4_windows_native_dns_direct::tests::plan029_direct_dns_one_socket_endpoint_bounded_no_journal_leak"
+    },
+    {
+      "name": "H2208 initial feature-impact absent / TLS feature card >16KiB / card-only-commit lacked changed devlog",
+      "actions": [
+        44366213924,
+        44368145081,
+        44368456417
+      ],
+      "result": "FAIL_HISTORY",
+      "repair": "final main workflow-only governance 44369630706 success"
+    }
+  ],
+  "pending_or_not_run": [
+    "new H2208 explicit Go KDF/cache test Action44369630615 in progress at evidence write, NOT_PASS_YET",
+    "actual original client/server native TLS 8/16/32 short-key x86/ARM cross-peer and owned Stop NOT_RUN",
+    "Windows WinForms real GUI short-key interaction and driver-installed physical traffic NOT_RUN",
+    "Android Kotlin unit tests on SDK and actual JNI/Go admission/OS VPN NOT_RUN (main only shell)",
+    "OpenWrt actual aarch64-musl device package + procd + TLS/TUN NOT_RUN",
+    "external router NAT TCP port forwarding / physical Windows-to-ARM64 still NOT_RUN",
+    "PLAN029/029B full exit NOT_CLOSED"
+  ],
+  "security": "PBKDF2 down from 240000 to 4096 is user-requested mobile-friendly performance tradeoff; 8-char human-chosen short key has low entropy, derived 32B is not 256-bit random; recommend 24..32 CSPRNG random; original 32B hex/private file retained, no on-wire change or online bootstrap."
+}

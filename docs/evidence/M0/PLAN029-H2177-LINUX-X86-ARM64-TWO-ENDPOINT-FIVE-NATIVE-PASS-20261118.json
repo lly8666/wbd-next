@@ -1,0 +1,410 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029/PLAN029B",
+  "milestone": "H2177",
+  "scope": "non-Windows original Linux Go TLS client + Linux Go TLS server, both genuine Rust M4/raw AF_PACKET/TUN on each native host ISA",
+  "qualification": "PASS_SCOPED_TEN_ACTUAL_LINUX_NATIVE_TCP_UDP_TWO_ENDPOINTS",
+  "same_exact_source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+  "source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+  "original_go_pinned_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_isa_l_pinned_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+  "action": {
+    "id": 44258876671,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44258876671",
+    "status": "completed",
+    "conclusion": "success",
+    "exact_source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+    "independent_native_jobs": 2,
+    "original_native_sessions": 10,
+    "successful_native_sessions": 10
+  },
+  "execution": "Parallel two native CPU architecture runners, one same-SOURCE original Go/Rust/ISA-L build per ISA; sequential five independent original-client/server network namespaces and owned cleanup per ISA, 10 seconds or fewer each functional mode",
+  "architectures": [
+    {
+      "architecture": "aarch64",
+      "runner": "ubuntu-24.04-arm native",
+      "kernel": "7.0.0-1017-azure",
+      "workflow_job_id": 134647080386,
+      "artifact_id": 14407256901,
+      "build_source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+      "original_linux_client_and_server_product_sha256": {
+        "wbd-v4-client": "4d59a0fe3e7bf7a651b120c577938878683600d62b043e4e3f43fbfaaeb0f38f",
+        "wbd-v4-server": "a347a445174233e25a2d895ba3add181d72cb01b3b9c40d9a4ff83912b9c0890",
+        "libwbd_engine.so": "f6ba9dc9f3c9e37b031feef97c2bcc6991110978fc840a52fee0923769875ccb"
+      },
+      "original_binary_set_verified": true,
+      "one_build_reused_for_five_independent_sessions": true,
+      "total_native_session_elapsed_s": 43.1,
+      "case_results": [
+        {
+          "name": "normal",
+          "elapsed_s": 10.38,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "fixed",
+          "elapsed_s": 9.58,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "auto",
+          "elapsed_s": 9.63,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "game2",
+          "elapsed_s": 6.68,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "game4-fixed6",
+          "elapsed_s": 6.83,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        }
+      ],
+      "game": {
+        "game2": {
+          "lanes": 2,
+          "original_game_fec": "off",
+          "client": {
+            "kernel_copied": 107,
+            "first_delivered": 52,
+            "raw_received": 111,
+            "lane_copy_skips_observed": 4,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "server": {
+            "kernel_copied": 107,
+            "first_delivered": 52,
+            "raw_received": 111,
+            "lane_copy_skips_observed": 4,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "game4_fixed6": {
+          "lanes": 4,
+          "original_game_fec": "fixed6",
+          "original_source_offered_each_end": 52,
+          "original_parity_offered_each_end": 96,
+          "original_parity_kernel_copied_each_end": 96,
+          "invalid_conflict_capacity_codec_state_frame_all_zero": true,
+          "client": {
+            "kernel_copied": 571,
+            "first_delivered": 52,
+            "raw_received": 591,
+            "lane_copy_skips_observed": 28,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "server": {
+            "kernel_copied": 563,
+            "first_delivered": 52,
+            "raw_received": 599,
+            "lane_copy_skips_observed": 28,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      "architecture": "x86_64",
+      "runner": "ubuntu-24.04 native",
+      "kernel": "7.0.0-1017-azure",
+      "workflow_job_id": 134647080671,
+      "artifact_id": 14407112219,
+      "build_source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+      "original_linux_client_and_server_product_sha256": {
+        "wbd-v4-client": "7f347ae9dc878edf508aa5fdeb8668ccae653682d01898435b69d42c94a555d1",
+        "wbd-v4-server": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+        "libwbd_engine.so": "730844708eb38558157002680d1d83c931549f5087aed46ea6cd6358372a9ba3"
+      },
+      "original_binary_set_verified": true,
+      "one_build_reused_for_five_independent_sessions": true,
+      "total_native_session_elapsed_s": 42.75,
+      "case_results": [
+        {
+          "name": "normal",
+          "elapsed_s": 10.28,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "fixed",
+          "elapsed_s": 9.13,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "auto",
+          "elapsed_s": 9.33,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "game2",
+          "elapsed_s": 6.93,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        },
+        {
+          "name": "game4-fixed6",
+          "elapsed_s": 7.08,
+          "result": "PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS",
+          "original_go_tls_authenticated": true,
+          "rust_original_m4": true,
+          "real_linux_kernel_udp_two_directions": "PASS",
+          "real_linux_kernel_tcp_two_directions": "PASS",
+          "actual_os_tun_icmp_bidirectional": "PASS",
+          "outer_mtu_requested": 1460,
+          "owned_tun_disable_ipv6": "PASS",
+          "original_both_owned_stop": "PASS_BOTH",
+          "namespaces_removed": "PASS"
+        }
+      ],
+      "game": {
+        "game2": {
+          "lanes": 2,
+          "original_game_fec": "off",
+          "client": {
+            "kernel_copied": 107,
+            "first_delivered": 52,
+            "raw_received": 111,
+            "lane_copy_skips_observed": 4,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "server": {
+            "kernel_copied": 107,
+            "first_delivered": 52,
+            "raw_received": 111,
+            "lane_copy_skips_observed": 4,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "game4_fixed6": {
+          "lanes": 4,
+          "original_game_fec": "fixed6",
+          "original_source_offered_each_end": 52,
+          "original_parity_offered_each_end": 96,
+          "original_parity_kernel_copied_each_end": 96,
+          "invalid_conflict_capacity_codec_state_frame_all_zero": true,
+          "client": {
+            "kernel_copied": 571,
+            "first_delivered": 52,
+            "raw_received": 591,
+            "lane_copy_skips_observed": 28,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "server": {
+            "kernel_copied": 563,
+            "first_delivered": 52,
+            "raw_received": 599,
+            "lane_copy_skips_observed": 28,
+            "auth_rejected": 0,
+            "critical_tx_raw_mtu_faults": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "source_readback_requirements": [
+    "Five exact original Linux Go TLS client+server modes per native ISA, each case action exit 0",
+    "Real Wintun is not part of this Linux-only case; Linux original TUN + AF_PACKET protected fakeTCP",
+    "BOTH Linux kernel UDP app echo directions and BOTH TCP app echo directions, no synthetic/codec-only business",
+    "Normal/Fixed/Auto per-peer profile applied readback; Game4 FEC fixed6 source/parity physically copied",
+    "Normal inner MTU DF boundaries, outer default 1460 for every scene",
+    "Each new owned TUN disable_ipv6=1 before use, no host-global sysctl",
+    "game M4 first-delivery>0 with auth_rejected=0 and all eight classified original transmission fault categories zero; retain lane copy skips nonzero not silently zeroed",
+    "Original client and server owned Stop and complete netns cleanup with SHA-locked binary identity"
+  ],
+  "existing_failed_actions_preserved": [
+    {
+      "source_sha": "c3fba1ed215a4191e2244621adeeb195303542df",
+      "action_id": 44254638755,
+      "issue": "new app TCP FIN and sudo wrapper readiness fixture false negatives"
+    },
+    {
+      "source_sha": "68ae68073786506d888787dfbed89369691155e8",
+      "action_id": 44255354198,
+      "issue": "new static native ISA string order assertion error"
+    },
+    {
+      "source_sha": "8442d1c7253d235549f6f0f706346f839594edf9",
+      "action_id": 44255699692,
+      "issue": "new JSON Game FEC off selector was empty string not off"
+    },
+    {
+      "source_sha": "03025191f46744bcbc90378440bd03973391cd3a",
+      "action_id": 44256427127,
+      "issue": "Game2 one shared preSYN AF_PACKET listener, not one per lane"
+    },
+    {
+      "source_sha": "62431acb9c0ba40d913a7ce4546791d18e4e79dd",
+      "action_id": 44257618077,
+      "issue": "old Game M4 rejected=0 asserted against noncritical 4 redundant lane copy skips; authenticated and eight classified critical faults were zero"
+    }
+  ],
+  "scope_exclusions": [
+    "WinGUI/WFP/Windows Npcap/Wintun/advanced CN/Direct/FakeIP not available or proved by Linux test",
+    "PLAN029 original Windows startup-padding off/tls/flows Game V5 not implemented/qualified for Linux separately",
+    "host-wide Linux IPv6, end-to-end global AAAA/DNS resolution and all host IPv6 not proved (only owned TUN IPv6-off)",
+    "X86↔ARM64 cross-machine interoperability not tested (each native ISA has same-ISA client and server in separate netns)",
+    "ARM64 hosted native CPU test is NOT physical ARM board or physical router",
+    "more Game FEC profiles/revisions, loss/latency/perf, CPU/RSS/p99, long-stress and physical NIC tests not run",
+    "PLAN029/029B full technical exit remains OPEN, PLAN030 NOT_STARTED"
+  ]
+}

@@ -365,6 +365,37 @@ mod tests {
         }
     }
     #[test]
+    fn plan029b_b4_fresh_generations_drop_stale_fake_even_when_all_tunnels(){
+        // Simulate three independent Rust policy generations. The first
+        // advanced CN table may have published a FakeIP for an overseas A.
+        let fake=ip(198,18,7,9);
+        let overseas=ip(198,51,100,77);
+        let cn=ip(203,0,113,8);
+        let mut advanced=make(Mode::BypassLanCn);
+        advanced.remember_announced_fake(fake,overseas).unwrap();
+        assert_eq!(advanced.destination(fake),Egress::Direct{
+            real_dst:overseas,presented_dst:fake});
+        assert_eq!(advanced.destination(overseas),Egress::Tunnel);
+        // A reconnect always constructs a new generation: ordinary CN
+        // still sends CN-domain DNS direct, but no old FakeIP lookup survives.
+        let ordinary=make(Mode::BypassLanCn);
+        assert_eq!(ordinary.dns_egress(DnsUse::Ordinary{china_domain:true}),
+            DnsEgress::Direct);
+        assert_eq!(ordinary.destination(fake),Egress::RejectUnknownFakeIP);
+        assert_eq!(ordinary.destination(overseas),Egress::Tunnel);
+        assert_eq!(ordinary.destination(cn),Egress::Direct{
+            real_dst:cn,presented_dst:cn});
+        drop(advanced);
+        // Split-off/All keeps the Rust data-plane/Tunnel, but must reject
+        // 198.18/16 even in its fast all-tunnel branch, never leak it.
+        let all=make(Mode::All);
+        assert!(all.plain_all_tunnel(overseas));
+        assert!(!all.plain_all_tunnel(fake));
+        assert_eq!(all.destination(fake),Egress::RejectUnknownFakeIP);
+        assert_eq!(all.destination(overseas),Egress::Tunnel);
+        assert_eq!(all.destination(cn),Egress::Tunnel);
+    }
+    #[test]
     fn plan029_split_domain_trie_exact_and_boundary_no_guess_sni(){
         let mut rules=DomainIndex::default();
         rules.insert("EXAMPLE.CN.",DomainRuleType::Suffix).unwrap();

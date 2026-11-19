@@ -42,6 +42,8 @@ extern int32_t wbd_m0_embedded_go_raw_to_tun(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_tun_to_raw(uint64_t,uint32_t,
     uint64_t *,uint32_t *,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_normal_startup_padding_set(uint64_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_normal_startup_padding_counters(uint64_t,uint32_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_arm_public_original_m2_feedback(uint64_t,const unsigned char *,size_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_public_auto_low_rate_config(uint64_t,const unsigned char *,size_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_public_auto_low_rate_effective(uint64_t,const unsigned char *,size_t,uint32_t *);
@@ -612,6 +614,25 @@ func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(peerPersona uint32)
         (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16),C.uint32_t(peerPersona))
     if rc!=0{return fmt.Errorf("%w: original public M2 feedback bind=%d",errV4Embedded,int(rc))}
     return nil
+}
+// Authenticated Go cold product alone may configure normal LINK pad.
+func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(mode uint8,outerMTU int)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||(b.protectedFeatures!=3&&b.protectedFeatures!=7)||
+       mode>2||outerMTU<576||outerMTU>1500{return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_normal_startup_padding_set(
+        C.uint64_t(b.handle),C.uint32_t(mode),C.uint32_t(outerMTU))
+    if rc!=0{return fmt.Errorf("%w: Normal padding cold=%d",errV4Embedded,int(rc))}
+    return nil
+}
+func (b *v4EmbeddedNativeBridge) normalStartupPaddingCounters()(string,uint64,uint64,error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return "",0,0,errV4Embedded}
+    var mode C.uint32_t
+    var records,bytes C.uint64_t
+    rc:=C.wbd_m0_embedded_go_normal_startup_padding_counters(
+        C.uint64_t(b.handle),&mode,&records,&bytes)
+    if rc!=0{return "",0,0,fmt.Errorf("%w: Normal padding readback=%d",errV4Embedded,int(rc))}
+    if mode>2{return "",0,0,errV4Embedded}
+    return []string{"off","tls","flows"}[int(mode)],uint64(records),uint64(bytes),nil
 }
 func (b *v4EmbeddedNativeBridge) startRustOwnerLoop(ifindex uint32)error{
     if !b.committed||b.handle==0{return errV4Embedded}

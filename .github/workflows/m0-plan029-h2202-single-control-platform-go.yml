@@ -1,0 +1,61 @@
+# One frozen SOURCE per native OS, only the original Go TLS1.3 V4
+# protocol request/reply and its unchanged authenticated Rust boundary.
+# This is NOT a signed Windows NPF/Wintun or Android/OpenWrt device test.
+name: PLAN029 H2202 mandatory protected TLS control native Go platforms
+run-name: "H2202 V4 one-control TLS Go native platforms | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m0-plan029-h2202-single-control-platform-go.yml'
+      - 'r0/go_overlay/internal/realityfront/admission_v4.go'
+      - 'r0/go_overlay/internal/realityfront/admission_v4_test.go'
+      - 'r0/go_overlay/internal/realityfront/admission_v4_control_padding_test.go'
+permissions: {contents: read}
+jobs:
+  original-tls-native:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[plan029-all-platforms]')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux-amd64
+          - os: ubuntu-24.04-arm
+            target: linux-arm64
+          - os: windows-2025
+            target: windows-amd64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Same-SOURCE original-Go V4 protocol unit plus real TLS credentials and negative framing
+        shell: bash
+        env: {GOTOOLCHAIN: local}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          for f in admission_v4.go tls.go admission_v4_test.go admission_v4_control_padding_test.go; do
+            cp "r0/go_overlay/internal/realityfront/$f" "legacy/internal/realityfront/$f"
+          done
+          (cd legacy && go test -count=1 -timeout 6m ./internal/realityfront -run 'TestH2202|TestFECGameProtectedV4ProfileWireOffAndFailClosed|TestR0V4ColdSnapshotActualAuthenticatedTLSAllCiphers|TestR0V4RealTLSMultiDeviceAutoIPIdentityAndLeaseIsolation')
+          mkdir -p result
+          printf 'SOURCE=%s TARGET=%s GO=%s SCOPE=REAL_NATIVE_GO_TLS_V4_PROTOCOL_ONLY DEVICE_M4=NOT_RUN\n' "$GITHUB_SHA" '${{ matrix.target }}' "$(go version)" > result/qualification.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2202-go-tls-${{ matrix.target }}-${{ github.run_id }}
+          path: result/qualification.txt
+          retention-days: 14
+          if-no-files-found: warn

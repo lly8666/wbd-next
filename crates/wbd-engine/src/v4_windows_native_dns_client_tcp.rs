@@ -91,9 +91,11 @@ fn checked_client_reply(q:&TcpClientDnsQuestion,lane:DnsEgress,
     journal:Option<&mut FakeJournal>)->Option<Vec<u8>>{
     let resolved=extract_a(raw,q.original_id,&q.qname,q.qtype).ok()?;
     if resolved.status==DnsAnswerStatus::Truncated{return None}
-    if lane==DnsEgress::Tunnel || q.qtype!=1{
-        // Verified original DNS question and ID; retain normal non-CN
-        // answers verbatim (including any non-A records) on the chosen lane.
+    if lane==DnsEgress::Tunnel || q.qtype!=1 ||
+       (pool.is_none()&&journal.is_none()){
+        // Ordinary CN keeps its real A/CNAME/TTL even when DNS direction
+        // is physical Direct. Advanced CN alone synthesizes journaled FakeIP.
+        // The exact upstream question and original client ID were verified.
         return Some(raw.to_vec())
     }
     if resolved.status!=DnsAnswerStatus::Answered ||
@@ -163,7 +165,9 @@ impl ClientDnsTcp{
                     self.phase=Phase::Reading(parse);return Ok(result)
                 };
                 let Some(lane)=route(&q.qname)else{return Err(())};
-                if lane==DnsEgress::Direct&&matches!(q.qtype,28|64|65){
+                if q.qtype==28 ||
+                   (lane==DnsEgress::Direct&&pool.is_some()&&
+                       journal.is_some()&&matches!(q.qtype,64|65)){
                     self.response(synthesize_cn_nodata(q.original_id,
                         &q.qname,q.qtype,false).map_err(|_|())?)?;
                     return Ok(result)
@@ -203,6 +207,7 @@ impl ClientDnsTcp{
                         let resolved=extract_a(&reply,ticket.original_id,
                             &ticket.qname,ticket.qtype).ok();
                         if lane==DnsEgress::Direct && ticket.qtype==1 &&
+                            pool.is_some()&&journal.is_some()&&
                             resolved.as_ref().is_some_and(|a|
                                 a.status==DnsAnswerStatus::Answered &&
                                 !a.candidates.is_empty()){
@@ -320,6 +325,28 @@ mod tests{
             lease:Ipv4Addr::new(10,66,0,2),wintun_ifindex:25,
             direct:Ipv4Addr::new(1,1,1,1),
             tunnel:Ipv4Addr::new(1,1,1,1)}.valid());
+    }
+    #[test]
+    fn plan029b_ordinary_cn_tcp53_keeps_validated_real_a_and_ttl(){
+        let question=TcpClientDnsQuestion{wire:vec![],
+            original_id:0x6601,qname:"cn.example".into(),qtype:1};
+        let mut raw=vec![0u8;12];
+        raw[..2].copy_from_slice(&0x6601u16.to_be_bytes());
+        raw[2..4].copy_from_slice(&0x8180u16.to_be_bytes());
+        raw[4..6].copy_from_slice(&1u16.to_be_bytes());
+        raw[6..8].copy_from_slice(&1u16.to_be_bytes());
+        raw.extend_from_slice(&[2,b'c',b'n',7,b'e',b'x',b'a',b'm',
+                                b'p',b'l',b'e',0,0,1,0,1]);
+        raw.extend_from_slice(&[0xc0,0x0c,0,1,0,1,0,0,0,2,0,4,
+                                198,51,100,23]);
+        let reply=checked_client_reply(&question,DnsEgress::Direct,
+            &raw,None,None).expect("real CN A preserved on original TCP53");
+        assert_eq!(reply,raw,"no FakeIP, CNAME/TTL/flags unchanged");
+        // An upstream answer for a different original transaction may not
+        // be admitted as a local A merely because qname matches.
+        raw[1]=0x02;
+        assert!(checked_client_reply(&question,DnsEgress::Direct,
+            &raw,None,None).is_none());
     }
     #[test]
     fn plan029_app_cn_tcp53_only_durable_fake_never_shared_cdn_real(){

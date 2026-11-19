@@ -4,6 +4,8 @@
 
 **本次关键设计唯一入口：[CLIENT_SPLIT_DNS_CONTRACT](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md)。** 它取代旧主备DNS、NIC多DNS轮询、普通DNS一律Tunnel、中国IP单独分流条款；历史源码/日志只作证据。保留原Rust隧道/FEC/Game，新增客户端分流执行层，不改服务端协议、不恢复Go逐包热泵。
 
+**2026-11-16 增量：[PLAN029B](M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md) / [029B提示词](../prompts/M0-PLAN029B.md)。** 当前优化批次安全收尾后，完成分流关闭不实例化业务Direct/FakeIP、普通/高级CN可选、所有受管AAAA本地空答与原IPv6入口政策；纳入029最终收口，不先关闭029也不启动030。以下CN域名并集/FakeIP条款适用于**高级CN开启**；普通CN仍按域名选择DNS、业务按真实IP判断，CN→海外走Tunnel。新配置高级默认off，旧配置保语义迁移。详细边界以029B为准，当前产品资格不因此改变。
+
 ## 1. 地址字段与解析职责
 
 MTU与padding余量统一消费先行[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-20261102.md)落实的[MTU_CONTRACT](../architecture/MTU_CONTRACT.md)。内层IPv4后续片没有TCP/UDP端口，不得当新流重领填充；无需为识别填充重组所有IP分片。
@@ -17,7 +19,7 @@ MTU与padding余量统一消费先行[PLAN027A](M0-PLAN027A-MTU-UNIFICATION-2026
 
 只保留 `dns.direct`（默认223.5.5.5）和 `dns.tunnel`（默认1.1.1.1）两个单endpoint设置，普通界面各一个输入框。所有route-mode/Normal/Game都不使用备份DNS、系统DNS自动回退或跨方向竞速；UDP截断可对同endpoint做TCP回退。旧列表第一项迁移、剩余项明确停用，具体兼容见契约§6。
 
-CN分流模式下：中国域名查询只走直连DNS，其他查询只走隧道DNS；中国域名、LAN/显式direct4、中国IP业务并集直连。其他两route-mode保持其语义，不强行开启中国规则。resolver出口由内部用途固定，优先于普通IP分类；即使隧道DNS地址位于CN网段，也不能被直连。
+CN分流模式下：中国域名查询只走直连DNS，其他查询只走隧道DNS；高级CN开启时中国域名、LAN/显式direct4、中国IP业务并集直连；普通CN仅按LAN/direct4/中国IP决定业务出口。其他两route-mode保持其语义，不强行开启中国规则。resolver出口由内部用途固定，优先于普通IP分类；即使隧道DNS地址位于CN网段，也不能被直连。所有受管AAAA按029B统一本地空答。
 
 服务器地址解析是唯一必要cold例外，始终复用同一个 `dns.direct` 从物理出口查询，不依赖隧道先建好；复用H1659/H1665 Npcap/CNAME与小包修复，取消原bootstrap/NIC备用链。初建/已接管后重连/休眠唤醒均真实验证，服务器地址不改SNI，多A/TTL失败不先杀健康lane。新查询合并、缓存、deadline及DNS回包分流见契约§4。
 
@@ -107,3 +109,31 @@ H1832正式冷配置新增`split-enable`（默认false，显式开启下次连�
 此修订仅改变**本轮开发/测试预算**，不改变既有产品功能的安全边界、资源限额或历史证据事实。用户明确“不再搞特别极端工况测试和适配”，要求以最短路径完成普通 WinForms 保存→有效配置→Connect/正常 Disconnect→重新 Connect、默认1460/自动内层、CN IP＋域名/单DNS、真实Direct/Tunnel TCP/UDP及Normal Padding生效。已证H2055/2056/2059不同SOURCE原生结果保留；H2031密文Padding、H2041 Game4不重跑。
 
 本轮**不再补测/扩展**极端五类同时满额、慢磁盘人为阻塞、强制杀进程/整机、长时间高负载或大规模CPU/RSS A/B、IPv6旧矩阵、同海外CDN双域名相反出口。其证据范围保持`NOT_RUN`/历史组件限定，不得标`PASS`或因未跑就误判日常使用失败。保留旧契约整体D1–D5/P1–P2尚未全部达标的事实：仅按用户新限定口径进行**日常使用范围的 scoped closeout**，不要把它提升为全场景的完结。
+
+## 2026-11-17 H2062｜三个日常小场景独立 Action、同一已编译产品
+
+用户明确授权把 H2061 普通 WinForms Disconnect→Connect、服务器域名在首次 DNS 接管后再 Connect、CN DNS TTL 过期与 FakeIP 正常 Stop/重启恢复 **一口气分为三个独立 Windows2025/WSL2 Action**。极端资源满、慢盘、强制崩溃、高吞吐矩阵继续 `NOT_REQUIRED_FOR_USER_NORMAL_SCOPE`；历史 `NOT_RUN` 和 FAIL 不改。
+
+复用 H2061 Action `44007996775` 在 WSL2 环境启动之前已上传、但**尚未获得原生业务资格**的 Windows EXE/Rust DLL 与 Linux Go/Rust SO；产品 SOURCE 固定 `0e57cab2d53e2c95962eb673050fa54695fd3665`，每份归档的 `manifest source_sha`、各文件 SHA256、ABI 和当前产品路径不变证明后，才用新 fixture SOURCE 的测试代码。不同 SOURCE 绝不合并为一个新产品 SOURCE 合格。每 Action 一 VM/一网络场景，正常 Stop/owned journal/finally 清理；协调 push 只 dispatch，不再创建第 4 个原生场。
+
+- `gui_reconnect`：原 H2061 两次 WinForms Connect 与 OS 1460/1389、两次 WAL Stop、第二代真实 Direct/Tunnel TCP/UDP。
+- `domain_reconnect`：同 GUI 两代，服务器设为 `vpn.edge.cn.example`，Linux eth0 原生 UDP TC1/同 endpoint TCP53 分别收到两次查询与回答，原 TLS SNI 不变，两代 OS Applied 与第二代双出口。
+- `dns_ttl_restart`：真实 WinForms/Wintun 应用对 `www.cn.example` 三次 CN DNS：首次、等待 2s TTL 过期后的再次查询、普通断开/重连后再次查询；Linux eth0 对三个唯一 DNS ID 都给出真实物理 A/CNAME、有效 FakeIP 回包。随后复用原完整 Direct 32KiB TCP/UDP、Tunnel TCP/UDP 与 owned Stop。不可将缓存单测或 GUI 标记冒充原生验收。
+
+上述均为 `IMPLEMENTED_TEST_FIXTURE_PENDING_NATIVE`，只有 ZIP 源锁与实际应用/物理端口/Stop 回执齐全后可标 `PASS_SCOPED`；若 WSL2 启动失败仅记 `ENVIRONMENT_BLOCKED`，不是产品业务 FAIL。除首次编译 Source 的旧 Action 外不重复其仍在途的 dispatch；新 Action 只为三个不同网络场景。
+
+## 2026-11-17 H2065｜正常 Stop → 新 Go 进程源端口持久轮换
+
+最新真实 H2064 同 SOURCE 三 Action 已通过首次 Windows GUI/OS1460/1389、物理双 DNS／CN FakeIP TTL2 过期、owned Stop；但第二次 WinForms 正常 Connect 确实创建了新 Go 进程，其 FakeTCP TLS SYN 沿用物理源端口41031、没有 SYNACK。旧 `m0WindowsOriginalColdClientPort` 只按**进程内** generation 递增，因此正常 GUI 子进程重启重复旧 4tuple，不能靠重跑 Runner 或改测试标 PASS。
+
+本轮新增轻量客户端 Go **冷代际 port ordinal 的非敏感 portable 文件**：每次真正进入 TCP cold TLS 前持久更新，下一 Connect 选不同 TCP 4tuple，目录与现有 owned state 同一便携程序数据目录；该文件是下一次启动必需的非secret配置状态，不是 WFP/OS 活租约，正常 Stop 清理仍只恢复本项目 live OS 资源。缺损记录 fail-closed，不重用旧端口。Game/FEC/标准 TLS/认证/wire 不变。纯单元/旧 SOURCE PASS 不升级新产品：新增 SHA 真 Windows 双代和第二 DNS/TTL 三独立场验收 PASS 才能结束日常用户范围。
+
+## 2026-11-18 H2137｜029B并入029日常范围限域收口
+
+[H2137签名029B/B5证据](../evidence/M0/PLAN029B-H2137-H2136-B5-SIGNED-10M-029B-029-NORMAL-SCOPED-CLOSEOUT-20261118.json)：B0–B3独立原真实DNS/CN/受管IPv6、B4三代原GUI与Stop、Game4四原TLS lane的源锁Action均 `PASS_SCOPED`；B5原[Action44201457211](https://github.com/lly8666/wbd-next/actions/runs/44201457211)同VM顺序双向10Mbps/60s原Rust V3 all两档通过，B CPU/实际GiB相对A +8.31%仅一次样本，不声称优化或因果退化，UDP p99和真实Stop通过，TCP小请求p99未测。旧[H2077日常范围](../evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json)继续有效。
+
+**029/029B仅用户日常范围PASS_SCOPED，完整D1–D5/P1–P2与029B§6–7仍OPEN**；Game2 CN分流不支持、Game4默认1460/Fixed-FEC、宿主所有IPv6、P-B2/小TCP p99、当前ARM原生/全部padding及极端矩阵不冒充验收。遵用户缩小测试范围，不继续派Action，不开030。
+
+## H2162 — Newly authorized Game2/4 split matrix scoped PASS
+
+[Action44235564493](https://github.com/lly8666/wbd-next/actions/runs/44235564493) original signed SOURCE 508591f93427ebdad4cf88ff625e03fc4d485aca fully SUCCESS for Game2/4 × FEC off/fixed × split off/all/LAN/ordinary CN/advanced CN: 20/20 genuine OS/kernel business and dual owned Stops, ZIP 290 CRC PASS; details in [H2162 evidence](../evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json). Supersedes historical Game2 not-wired only in this exact scope. Reverse Linux-initiated Windows inbound TCP, Game startup padding and full 029/029B technical exit remain OPEN/NOT_RUN; 030 not started.

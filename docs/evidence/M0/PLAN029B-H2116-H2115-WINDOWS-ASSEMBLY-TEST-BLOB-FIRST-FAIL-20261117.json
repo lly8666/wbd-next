@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2116",
+  "date": "2026-11-17",
+  "source_sha": "11596bbb17e08a667f4f838080e7c2c09635e3f9",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "scope": "H2115_GITHUB_ACTIONS_CHEAP_ORIGINAL_GO_ASSEMBLY_CHECK_ONLY_NO_REAL_B4",
+  "action": {
+    "run_id": 44119996395,
+    "conclusion": "failure",
+    "cheap_job_id": 134168406022,
+    "cheap_job_conclusion": "failure",
+    "failing_step": "Run python tools/prepare_windows_wiring.py --check-only",
+    "native_jobs": "SKIPPED_AFTER_CHEAP_FAILURE"
+  },
+  "first_error": {
+    "type": "TEST_OVERLAY_BLOB_PIN_DRIFT",
+    "exact": "ValueError: assembly blob mismatch: r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
+    "manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    "old_result_blob": "0c51df873d1adc6d975f7c684934c6347f0218fc",
+    "actual_test_blob": "4097f533b7c88e8a2389edacae1a96e1e8a2fc56",
+    "first_actual_product_packet": "NOT_RUN"
+  },
+  "other_source_checks": {
+    "governance_action_44119996108": "PASS",
+    "native_rust_linux_action_44119996148": "PASS",
+    "native_rust_windows_action_44119996148": "IN_PROGRESS_AT_CAPTURE",
+    "current_windows_gui_config_action_44119996208": "IN_PROGRESS_AT_CAPTURE"
+  },
+  "correction": "H2116 update exactly one assembly result_blob for newly added Go test; original Go source and all 138 other assembly operations remain pinned unchanged, no product data path changes",
+  "qualifications": {
+    "H2115_B4_pure_go_three_generations": "NOT_RUN_IN_MAIN_NATIVE_GO_AFTER_CHEAP_BLOCK",
+    "H2115_B4_rust_policy_three_generations": "SEE_OTHER_SOURCE_QUALIFICATION",
+    "B4_original_GUI_multigeneration": "NOT_RUN",
+    "B5_sameVM10Mbps_CPU_p99": "NOT_RUN",
+    "H2112_B3_original_signed": "PASS_SCOPED_OLD_SOURCE_PRESERVED"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2091",
+  "date": "2026-11-17",
+  "source_sha": "63985588e613bda4c76c743b2b15a9a9e7aca263",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "previous_h2090": {
+    "source_sha": "63985588e613bda4c76c743b2b15a9a9e7aca263",
+    "run_id": 44059476705,
+    "cheap": "PASS",
+    "windows_go": "PASS",
+    "rust_windows": "PASS",
+    "rust_linux": "PASS",
+    "native_public": "SKIPPED",
+    "reason": "B2 source-locked marker missing from explicit native scope selection"
+  },
+  "governance_h2090": {
+    "run_id": 44059476683,
+    "governance_structure": "PASS",
+    "feature_catalog_structure": "PASS",
+    "feature_job": "FAIL",
+    "reason": "old tests/test_m0_plan029_h1934_policy_wiring.py exact alias conditional rejected new B2 reuse"
+  },
+  "h2091_fix": [
+    "tools/m0_native_ci_scope.py one explicit B2 marker",
+    "tests/test_m0_native_ci_scope.py marker false/true gating",
+    "tests/test_m0_plan029_h1934_policy_wiring.py unchanged original three arms plus new same TUN alias arm"
+  ],
+  "real_B2": "NOT_RUN",
+  "original_signed_B0": {
+    "source": "d0dd9f1bcd662360473a8269effa413369875fb7",
+    "action": 44056378053,
+    "artifact": 14316613440,
+    "result": "PASS_SCOPED_B0_UDP_TCP_A_AAAA_AND_STOP"
+  },
+  "legacy_H2083": "FAIL_TRUE_PE_DLL_EXPORT_BEFORE_READY_RETAINED"
+}

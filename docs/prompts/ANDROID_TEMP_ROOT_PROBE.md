@@ -1,3 +1,5 @@
+A28 latest user directive (2026-11-19): sync latest main code, full client feature cards and all main development archives into experiment/android-temp-root-probe WITHOUT touching main. Use a real two-parent merge of source-locked main SHA 46a756df1114aecda8dc2d5d259a5cbb4c9a909f and prior experiment cd6207bab1eb624f8f5b51bdec06854fbee77076, preserve all history and inspect actual overlapping source paths. Crucial cross-platform merge: main 32 Rust slots, server short-key v2/decoy/NAT/padding MUST NOT silently enable Android Fixed/Game, short-key UI or different TLS. Keep Android original Go/Rust Normal/off Root UID route + exact server /32 exception + Stop + safe diagnostic. Verify merged SOURCE via Actions Host/signed ARM64 APK; do not auto-run KSU/TAP or touch a phone/server. See A28 in sole authoritative plan. If main HEAD moved, report frozen SHA explicitly and plan a follow-up sync; never reset/force or merge Draft PR into main.
+
 A27 latest user scope: Audit default ordinary-App IPv4 whole-app
 UID range, make original-server resolved IPv4 a private-table
 /32 THROW exception before any all-app UID grant with exact readback,

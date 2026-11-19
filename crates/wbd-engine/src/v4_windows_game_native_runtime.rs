@@ -12,6 +12,7 @@ use std::sync::mpsc::{sync_channel,SyncSender,Receiver,TryRecvError,TrySendError
 use std::time::{Instant,Duration};
 use crate::v4_windows_native_split::{NativeSplitWorker,NativeDecision,NativeReverse,ColdSplitSourceV1};
 use crate::v4_windows_native_dns_tunnel::TunnelDnsMap;
+use crate::v4_client_startup_padding::StartupMode;
 use std::thread::{self,JoinHandle};
 use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use wbd_platform::windows_native_io::{
@@ -63,6 +64,17 @@ pub struct WbdWinGameNativeAttachV4 {
     pub version:u32,pub size:u32,
     pub game:WbdWinGameNativeAttachV3,
     pub split:ColdSplitSourceV1,
+}
+// V5 extends the authenticated cold-only Game V4; older V3/V4 retain
+// exact ABI and OFF semantics. Mode 0=off, 1=tls, 2=flows.
+#[cfg(feature="m0_v4_probe")]
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct WbdWinGameNativeAttachV5 {
+    pub version:u32,pub size:u32,
+    pub game:WbdWinGameNativeAttachV3,
+    pub split:ColdSplitSourceV1,
+    pub startup_padding_mode:u32,
 }
 #[derive(Clone,Copy)]
 struct LaneConfig{
@@ -426,7 +438,10 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     did_work=true;
                 }
                 Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
-                Ok(ReadResult::Skipped)=>{
+                Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>{
+                    // Original Game Wintun loan already released and
+                    // consumed this bounded read turn. Never enter Game
+                    // FEC/Direct/Tunnel, continue fair next packet.
                     c.rejected.fetch_add(1,Ordering::Relaxed);
                 }
                 Err(err)=>{
@@ -913,7 +928,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 }
                 let n=match rx.read(&mut frame){
                     Ok(ReadResult::Frame(n))=>n,
-                    Ok(ReadResult::Skipped)=>continue,
+                    Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,
                     Ok(ReadResult::NoPacket)=>break,
                     Ok(ReadResult::EndOfStream)=>{
                         eprintln!("M0_PLAN026_GAME_NATIVE_RX_LANE_RETIRED lane={} stage=npcap_read reason=EndOfStream",i+1);
@@ -978,7 +993,7 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v3_start(
     ptr:*const WbdWinGameNativeAttachV3,
 )->i32{
     if ptr.is_null(){return INVALID}
-    start_game_native(unsafe{*ptr},None)
+    start_game_native(unsafe{*ptr},None,StartupMode::Off)
 }
 #[cfg(feature="m0_v4_probe")]
 #[no_mangle]
@@ -995,18 +1010,43 @@ pub unsafe extern "C" fn wbd_m0_win_game_native_v4_start(
         Ok(v)=>v,Err(())=>return INVALID,
     };
     if split.set_wintun_ifindex(v4.game.first.ifindex).is_err(){return INVALID}
-    start_game_native(v4.game,Some(split))
+    start_game_native(v4.game,Some(split),StartupMode::Off)
+}
+#[cfg(feature="m0_v4_probe")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_win_game_native_v5_start(
+    ptr:*const WbdWinGameNativeAttachV5,
+)->i32{
+    if ptr.is_null(){return INVALID}
+    let v5=unsafe{*ptr};
+    if v5.version!=5||
+        v5.size as usize!=std::mem::size_of::<WbdWinGameNativeAttachV5>(){
+        return INVALID
+    }
+    let mode=match v5.startup_padding_mode{
+        0=>StartupMode::Off,1=>StartupMode::Tls,
+        2=>StartupMode::Flows,_=>return INVALID,
+    };
+    let mut split=match unsafe{NativeSplitWorker::new(&v5.split)}{
+        Ok(v)=>v,Err(())=>return INVALID,
+    };
+    if split.set_wintun_ifindex(v5.game.first.ifindex).is_err(){return INVALID}
+    start_game_native(v5.game,Some(split),mode)
 }
 fn start_game_native(cfg:WbdWinGameNativeAttachV3,
-    split:Option<NativeSplitWorker>)->i32{
+    split:Option<NativeSplitWorker>,padding_mode:StartupMode)->i32{
     let lanes=match configs(&cfg){Ok(v)=>v,Err(e)=>return e};
     let group=match game::native_game_group(cfg.group,cfg.first.epoch,
         cfg.first.luid,cfg.first.ifindex,lanes.len(),&lanes.iter().map(|x|x.owner).collect::<Vec<_>>()){
         Ok(v)=>v,Err(e)=>return e,
     };
     {
-        let g=match group.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+        let mut g=match group.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
         if game::native_game_has_fec(&g)!=(cfg.fec==1){return INVALID}
+        game::native_game_set_padding(&mut g,padding_mode,
+            cfg.first.epoch,cfg.first.path_mtu as usize);
+        eprintln!("WBD_PLAN029_GAME_PADDING_COLD_EFFECTIVE mode={} lanes={} fec={} original_authenticated_game_owner=1",
+            game::native_game_padding_mode(&g),lanes.len(),cfg.fec);
     }
     let (tun_rx,tun_tx)=match unsafe{io::split_borrowed_wintun(
         cfg.first.wintun_session,cfg.first.wintun_read_event,cfg.first.wintun)}{

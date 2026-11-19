@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2078",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "pr": 35,
+  "pr_head_sha": "ce3c6c53f9e0fce1a23d3749c84ef2454a417722",
+  "prior_main_sha": "a2431abeeb22f7d556a7d03b6bd099f88ce1d838",
+  "kind": "docs_only_pr35_three_way_nonconflicting_import",
+  "product_changed": false,
+  "phase": "DESIGN_APPROVED_IMPLEMENTATION_PENDING",
+  "current_original_029_ordinary_qualification": {
+    "evidence": "docs/evidence/M0/PLAN029-H2077-ORDINARY-REAL-CLOSEOUT-20261117.json",
+    "result": "PASS_SCOPED"
+  },
+  "b0": "NOT_RUN",
+  "b1": "NOT_RUN",
+  "b2": "NOT_RUN",
+  "b3": "NOT_RUN",
+  "b4": "NOT_RUN",
+  "b5": "NOT_RUN",
+  "history": "H2077 feature card and current M0 cursor preserved, no blanket PR merge"
+}

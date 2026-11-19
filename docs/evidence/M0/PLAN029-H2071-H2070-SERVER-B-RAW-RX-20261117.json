@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2071",
+  "date": "2026-11-17",
+  "source_sha": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
+  "fixture_source_sha": "195a93aa09e877ed8ee31c7c32516773bb38f01e",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "product_scope": "H2070 real native Windows WinForms/WSL2 Linux original Go TLS Rust M4",
+  "run_id": 44025145100,
+  "artifact_id": 14303017093,
+  "artifact_name": "m0-wl-full-public-normal-direct-h1506-legacy-44025145100",
+  "source_integrity": "EXACT_PREBUILT_WINDOWS_AND_LINUX_PRODUCT_2fca_VERIFIED",
+  "original_server_one_listener": {
+    "port": 443,
+    "count": 1,
+    "shared_tun": true,
+    "closed_before_second_SYN": false
+  },
+  "new_client": {
+    "first_port": 41031,
+    "second_port": 41032,
+    "second_real_SynAck": true,
+    "second_original_TLS": true,
+    "second_original_Winforms_button_clicked": true,
+    "original_second_go_native_control_wire_bytes": 320,
+    "original_second_rust_source_wire_bytes": 34448,
+    "second_authenticated_os_applied": false,
+    "second_true_direct_tunnel_business": "NOT_RUN"
+  },
+  "server_B_native_per_port": {
+    "port": 41032,
+    "generation": 2,
+    "monotonic_ns": 75065347804,
+    "kernel_raw_observed": 13,
+    "exact_tuple_candidates": 10,
+    "tun_delivered": 10,
+    "rx_error": 0,
+    "raw_socket_readable_last_sample": false,
+    "physical_eth0_second_tcp_psh_observed": true,
+    "first_sample_kernel_raw_observed": 2,
+    "first_positive_tuple_and_tun_delivered": 3,
+    "previous_old_A_kernel_raw_observed": 37,
+    "previous_old_A_tun_delivered": 8
+  },
+  "server_B_route": {
+    "candidate_deferred": true,
+    "real_second_native_rust_m4_started": true,
+    "client_B_authenticated_health_within_bounded_5s": false,
+    "server_error": "V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN port=41032 old_route_preserved=1",
+    "authenticated_route_promotion": false,
+    "old_A_route_preserved": true,
+    "server_shared_tun_stop": true,
+    "server_native_stop_drained": true
+  },
+  "diagnosis": {
+    "ruled_out": [
+      "single_session_Syn_after_handoff_drop_on_this_shared_server",
+      "Linux_server_listener_exited_after_A",
+      "all_B_raw_TCP_absent_from_kernel",
+      "all_B_packets_removed_by_exact_tuple_kernel_BPF",
+      "all_B_auth_and_TUN_completely_blocked"
+    ],
+    "remains_open": [
+      "which_B_kind0_Health_frames_reached_this_second_RAW_socket",
+      "whether_B_M3_authenticated_kind0_opened",
+      "whether_canonical_Health_TLV_was_parsed_and_authenticated_health_hint_written",
+      "why_B_normally_authenticated_TUN_business_did_not_establish_peer_Health_proof"
+    ],
+    "source_code_check": {
+      "windows": "v4_windows_owner.rs::m2_next_feedback_entry uses encode_authenticated_health_live and seal_original_authenticated_receipt(kind15); v4_windows_native_runtime.rs::send_control records NPF sent",
+      "linux": "v4_owner_crypto.rs::consume_original sets authenticated_health_hint after M3 AEAD/replay and canonical parse; v4_embedded_go.rs::background_raw_once records hint in AuthenticatedActivity, and server promotion requires has_verified_peer_health()",
+      "security_invariant": "Do not promote B from packet count, SYNACK, TLS, raw 4tuple, plain IP or TUN count; preserve AEAD/PN verified Health requirement."
+    }
+  },
+  "accepted_as_product_pass": false,
+  "next_small_diagnostic": "If new test desired, measure source-locked per-B counts for M3 kind0 opened, canonical TLV parse OK/fail, and actual NPF copied Health attempts; avoid logging payload/keys or changing authorization."
+}

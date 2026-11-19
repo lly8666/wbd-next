@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2099",
+  "date": "2026-11-17",
+  "source_sha": "d9435610939774e601895d9dd998ec828174ef0f",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action": {
+    "id": 44078530417,
+    "attempt": 1,
+    "conclusion": "success",
+    "job_id": null,
+    "original_signed_windows2025_npcap_wintun_wsl2": "PASS"
+  },
+  "original_artifact": {
+    "id": 14327500131,
+    "zip_sha256": "13a6340f2da28d3e1113bc784711a515c62190e4755829a33633d7729d4b1c1e",
+    "manifest": {
+      "source": "d9435610939774e601895d9dd998ec828174ef0f",
+      "mode": "normal",
+      "exit_code": 0,
+      "product_pass": true
+    },
+    "windows_binary_manifest": {
+      "source_sha": "d9435610939774e601895d9dd998ec828174ef0f",
+      "exe_sha256": "bc1f6ee5c446b7de91de386ea2f881e11541f2bec3fb6d8c65b8e3c29e86d236",
+      "dll_sha256": "c4657a10d32be7a49ad6515aa71f3e3f1f68b9a681b332f777f76535279ac097",
+      "features": "m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration"
+    },
+    "linux_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71"
+  },
+  "actual_effective": {
+    "mode": "normal",
+    "route_mode": 2,
+    "requested_route_mode": "bypass-lan-cn",
+    "business_split": true,
+    "cn_domain_fakeip": false,
+    "inner_mtu": 1389,
+    "outer_mtu": 1460,
+    "single_original_owner": true,
+    "windows_os_applied": true
+  },
+  "b2_ordinary_cn_real": {
+    "cn_real_dns": {
+      "requested": "8.8.8.8",
+      "physical_upstream": "172.21.167.240",
+      "real_guest_physical_peer": "172.21.160.1",
+      "qname": "www.cn.example",
+      "real_A": "203.0.113.77",
+      "cname": true,
+      "ttl_seconds": 2,
+      "valid_upstream_attempts": 1
+    },
+    "noncn_real_dns": {
+      "requested": "10.66.0.1",
+      "tun_upstream": "10.66.0.1",
+      "qname": "www.globalx.example",
+      "real_A": "203.0.113.77",
+      "cname": false,
+      "ttl_seconds": 2,
+      "valid_upstream_attempts": 1
+    },
+    "windows_original_kernel_udp": {
+      "cn_to_shared_overseas": "PASS_TUNNEL",
+      "noncn_to_shared_overseas": "PASS_TUNNEL",
+      "app_lease": "10.66.0.2"
+    },
+    "linux_original_tun_business": {
+      "cn_marker": "P29B-CN-TUNNEL",
+      "noncn_marker": "P29B-GLOBAL-TUNNEL",
+      "overseas": "203.0.113.77",
+      "physical_business_packets": 0
+    },
+    "unrelated_windows_system_dns": {
+      "qname": "www.msftconnecttest.com",
+      "original_tunnel_lane": true,
+      "count": 1,
+      "not_counted_as_test_ticket": true
+    },
+    "ordinary_fakeip": "NO_FAKE_WRITER_ON_ORDINARY_SOURCE",
+    "status": "PASS_SCOPED_GENUINE_CN_REAL_A_AND_SHARED_OVERSEAS_TUNNEL"
+  },
+  "native_baseline": {
+    "windows_ready": "PASS_TRUE_TLS_RUST_WINTUN_NPCAP_OS_WAL",
+    "linux_ready": "PASS_REAL_AFTER_ORIGINAL_TLS",
+    "kernel_udp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+    "kernel_tcp_duplex": "PASS_ACTUAL_TWO_OS_KERNEL_TCP",
+    "owned_stop": "PASS_BOTH_OWNED",
+    "kernel_tcp_windows": {
+      "source": "10.66.0.2",
+      "destination": "203.0.113.77",
+      "client_echo": true,
+      "server_received_bytes": 40
+    },
+    "kernel_tcp_linux": {
+      "source": "203.0.113.77",
+      "destination": "10.66.0.2",
+      "client_echo": true,
+      "server_received_bytes": 40
+    },
+    "cleanup_npcap": "WBD_NPCAP_DRIVER_CI_CLEANUP_PASS"
+  },
+  "performance": {
+    "status": "NOT_RUN",
+    "scope": "NO_SAME_VM_AB_CPU_PER_DELIVERED_GIB_OR_SMALL_TCP_UDP_P99",
+    "observed_whole_windows_exe_cpu_seconds": 0.75,
+    "observed_peak_windows_working_set_bytes": 44982272,
+    "comparative_cpu_gain_claim": false
+  },
+  "not_covered": {
+    "b2_advanced_cn_fakeip": "NOT_RUN",
+    "b3_actual_ipv6_packet": "NOT_RUN",
+    "b4_gui_multi_generation_and_game": "NOT_RUN",
+    "b5_same_vm_10mbps_p99_cpu": "NOT_RUN",
+    "b1_resource_idle_cost_comparison": "NOT_RUN"
+  },
+  "historical_failures_retained": [
+    "H2093 genuine reverse TCP 45902 FAIL prior exact owned ACL selector",
+    "H2094 unrelated NCSI DNS fixture FAIL",
+    "H2095 double-escaped DNS flag fixture FAIL",
+    "H2097 doc-only native NOT_RUN"
+  ]
+}

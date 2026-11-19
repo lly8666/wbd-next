@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2076",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "source_locked_product_binary_run": 44032936928,
+  "failed_fixtures": [
+    {
+      "scene": "gui_reconnect",
+      "run_id": 44032936928,
+      "artifact_id": 14306122644,
+      "original_result": "FAIL",
+      "first_error": "missing/duplicate live Windows numeric OS MTU receipt",
+      "win_os_applied_count": 2,
+      "win_inner_os_mtu": [
+        1389,
+        1389
+      ],
+      "outer_config": [
+        1460,
+        1460
+      ],
+      "server_b_authenticated_health": true,
+      "server_b_route_promoted": true,
+      "original_two_native_owner_stop": true,
+      "shared_tun_stop": true,
+      "post_mtu_business": "NOT_RUN"
+    },
+    {
+      "scene": "domain_reconnect",
+      "run_id": 44034346200,
+      "artifact_id": 14307200911,
+      "original_result": "FAIL",
+      "first_error": "missing/duplicate live Windows numeric OS MTU receipt",
+      "win_os_applied_count": 2,
+      "win_inner_os_mtu": [
+        1389,
+        1389
+      ],
+      "outer_config": [
+        1460,
+        1460
+      ],
+      "server_b_authenticated_health": true,
+      "server_b_route_promoted": true,
+      "post_mtu_business": "NOT_RUN"
+    },
+    {
+      "scene": "dns_ttl_restart",
+      "run_id": 44034352986,
+      "artifact_id": 14306961543,
+      "original_result": "FAIL",
+      "first_error": "missing/duplicate live Windows numeric OS MTU receipt",
+      "win_os_applied_count": 2,
+      "win_inner_os_mtu": [
+        1389,
+        1389
+      ],
+      "outer_config": [
+        1460,
+        1460
+      ],
+      "server_b_authenticated_health": true,
+      "server_b_route_promoted": true,
+      "physical_cn_fakeip_replies": [
+        "phase1 198.18.0.1",
+        "phase2 198.18.0.1",
+        "phase3 198.18.0.1"
+      ],
+      "post_mtu_business": "NOT_RUN"
+    }
+  ],
+  "root_cause": "m0_wl_public_normal_e2e.py called verified_native_windows_inner_mtu(winlog,1460) for p029_gui_reconnect; helper intentionally requires one regex receipt. WinForms normal reconnect is two real Go children and yields two numeric OS receipts; existing PLAN028 special case was not reused for PLAN029.",
+  "fix": {
+    "scope": "test fixture only",
+    "paths": [
+      "tools/m0_wl_native_mtu_contract.py",
+      "tests/test_m0_wl_native_mtu_contract.py",
+      "tools/m0_wl_public_normal_e2e.py",
+      ".github/workflows/m0-wl-public-normal-full.yml"
+    ],
+    "single_generation_verifier_preserved": true,
+    "new_two_generation_exact_count": 2,
+    "each_mtu_readback_strict": true,
+    "reuses_product_source": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+    "rebuild_product": false
+  },
+  "qualification": "H2075 real native proof of B auth/OS/stop scoped ONLY; no Direct+Tunnel business pass yet",
+  "next_verification": "H2076 three actual source-locked archived-binary fixture reuses PENDING"
+}

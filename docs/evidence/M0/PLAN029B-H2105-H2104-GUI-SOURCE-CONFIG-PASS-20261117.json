@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2105",
+  "source_sha": "969ce2b1a321e3a122c7cc235db7da45a7f13a17",
+  "result": "PASS",
+  "artifact_verified": true,
+  "action_id": 44091381879,
+  "job_id": 134067061653,
+  "attempt": 1,
+  "conclusion": "success",
+  "scope": "REAL_COMPILED_WINFORMS_GO_CLI_SOURCE_RUST_DLL_READ_ONLY_NO_DRIVER",
+  "artifact_id": 14331293478,
+  "zip_sha256": "0c102af7ca7eac545fb9550c719dfab1981e6ee102bfbd4e16656153507f8f5e",
+  "zip_crc": "PASS_9_MEMBERS",
+  "go_exe_sha256": "a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46",
+  "rust_dll_sha256": "aa8579739a253677d06089abcd4465c4543e7f072fe210969890f92fcde154df",
+  "tested": {
+    "new_cn_fakeip_false": "PASS",
+    "legacy_missing_key_true_saved_reopened": "PASS",
+    "explicit_false_saved_reopened": "PASS",
+    "all_split_true_inactive_cap16385": "PASS",
+    "split_false_cn_saved_inactive_cap16385": "PASS",
+    "active_bad_cap_and_missing_rules_rejected": "PASS",
+    "dual_single_dns_mtu1460": "PASS"
+  },
+  "other_actions": {
+    "go_source_compile": {
+      "id": 44091382013,
+      "result": "PASS"
+    },
+    "windows_linux_cheap": {
+      "id": 44091381897,
+      "result": "PASS_NATIVE_SKIPPED"
+    }
+  },
+  "not_run": {
+    "actual_gui_OS_applied": true,
+    "actual_ipv6_AF_INET6": true,
+    "Game_or_multi_generation": true,
+    "same_vm_10mbps_cpu_p99": true
+  }
+}

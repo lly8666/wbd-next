@@ -1,1 +1,218 @@
-{"schema_version":1,"id":"startup-flow-padding","name":"Tunnel TCP/UDP record随机填充","summary":"H2031原Normal密文Padding实测PASS；H2059真实WinForms flows→Go有效值→原Rust M1 NPF拷贝41条/11466B、业务/Stop PASS；off默认/flows日常可用。","owner":"M0","stage":"experimental","development_branch":"main","main_development_reason":"用户2026-11-02授权规划后续PLAN028–030；当前不切换PLAN027，仅预登记。","available_on":["main"],"defaults":{"planned_mode":"off；旧TLS bool映射tls，显式flows启用新增行为","planned_bounds":"随机20..30条/2..3秒（先到为止，0-room有效record也计数和开窗）；每条0..min(500B,真实MTU余量)；无累计填充字节或10%比例预算；256个有界流跟踪槽"},"usage":{"cli":"STAGED: --startup-padding off|tls|flows; empty inherits legacy tls-startup-padding=true to tls, default off. Conflicts fail before network.","config":"Original pinned Go CLI/config -> V3 cold canonical off|tls|flows -> original Rust M1 Tunnel LINK. H1799 physical flows accepted after NPF prefix (16 records, 50 B); live GUI effective readback and A/B CPU/p99 remain NOT_RUN.","gui":"H1798 source-compiled real Windows WinForms portable off/tls/flows choice, old TLS bool profiles/import migrated. Saved user mode is not applied until reconnect and Rust authenticated native owner; current live GUI effective display still OPEN."},"code_refs":["crates/wbd-engine/src/v4_client_startup_padding.rs","crates/wbd-engine/src/v4_owner_crypto.rs","crates/wbd-engine/src/v4_windows_owner.rs","crates/wbd-engine/src/v4_windows_native_split.rs","crates/wbd-engine/src/v4_windows_native_runtime.rs","r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go","r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go","r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go","tools/m0_wl_public_normal_e2e.py",".github/workflows/m0-wl-public-normal-full.yml"],"doc_refs":["docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md","docs/decisions/M0-LEGACY-ROLLOUT-20261102.md"],"verification":[{"platform":"windows/amd64 client + linux/amd64 or arm64 server","scope":"新流识别/预算/MTU/原密文重传/全模式无等待及CPU开销","status":"PLANNED","source_sha":null,"evidence":null},{"platform":"portable Rust owner component","scope":"H1766 bounded 256-flow/12-record/2KiB/≤10% source policy with tests; not connected to real encrypted records","status":"IMPLEMENTED_NOT_TESTED","source_sha":null,"evidence":null},{"platform":"Rust same-original-M1 LINK AEAD/PN/SEQ component","scope":"H1767 optional authenticated 0..256B padding seal API and FrozenRecord contiguous PN/Seq test staged; real product cold integration and Windows signed effect not verified.","status":"IMPLEMENTED_NOT_TESTED","source_sha":null,"evidence":null},{"platform":"Windows native V3 Normal source","scope":"H1797 canonical off/tls/flows cold to original M1 padded seal, native PN/SEQ and Tunnel-only cap; physical off/on pending","status":"IMPLEMENTED_NOT_TESTED","source_sha":null,"evidence":null},{"platform":"Windows original WinForms assembly source H1798","scope":"One startup-padding off/tls/flows ComboBox + legacy profile/import migration; exact original pinned Go PARAMETER/GUI schema and code build will be checked by automatic workflow, real effective not yet run","status":"IMPLEMENTED_NOT_TESTED","source_sha":null,"evidence":null},{"platform":"Windows 2025 original Go/Rust + Linux WSL2 TUN","scope":"H1797 default startup-padding off source 36b9 original Normal signed real TCP/UDP two-OS native and Stop on Action 43559122020; not a flows measurement","status":"FUNCTIONAL_PASS","source_sha":"30f234900f0d83007df975dfa071339ab4b9a7fe","evidence":"https://github.com/lly8666/wbd-next/actions/runs/43559122020"},{"platform":"Original Windows Rust M1/Npcap signed native Normal + Linux TUN","scope":"H1799 narrowly scoped original Normal flows native NPF accepted 16 records/50B; Windows/WSL2 TCP/UDP duplex and both owned Stop. Not product-wide padding A/B or P1/P2.","status":"FUNCTIONAL_PASS","source_sha":"6a77d23d54847aacc8ef99bba1104cf1758ca02d","evidence":"docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"},{"platform":"Original Windows Npcap + Linux WSL2 eth0 tcpdump","scope":"H2021 original full Normal unrestricted 0..500B no-flow-quota physical pcap, original M1 copied padding, kernel TCP/UDP duplex and both owned Stop; HISTORICAL policy, not H2025 20..30 record/2..3s envelope","status":"FUNCTIONAL_PASS","source_sha":"076a227d9360b8a6025ff6901d02aca350035aff","evidence":"https://github.com/lly8666/wbd-next/actions/runs/43893558571"},{"platform":"Windows 2025 original M1 owner + Linux TUN","scope":"H2025 user revised first 20–30/2–3s randomized per-flow startup envelope; physical NPF/eth0 encrypted packet capture, MTU, business and owned Stop","status":"PLANNED","source_sha":null,"evidence":null},{"platform":"Original Windows 2025 Go TLS/Rust M1/Npcap + WSL2 Linux eth0 tcpdump","scope":"H2031 signed 20–30-record / 2–3s first-limit startup padding; 0..500B and actual MTU with no cumulative-byte cap. Real NPF accepted 31 records/6579B, physical eth0 41 exact-looking encrypted records length71..589B, max IPv4 707<1400, two real kernel TCP/UDP business receipts and both owned Stop PASS. Per-record actual padding bytes/time window cannot be decrypted from ciphertext and are unit-tested source policy.","status":"FUNCTIONAL_PASS","source_sha":"b76240bedb04237780bd13377bfe7aae38785018","evidence":"docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"},{"platform":"Win2025 original GUI+Rust/WSL2","scope":"H2059 GUI flows effective/NPF 41条11466B/真实Direct+Tunnel TCP UDP与双Stop；CPU未验","status":"FUNCTIONAL_PASS","source_sha":"ccf0cb22d469bd4fd2fc07234d87ff5c339321df","evidence":"docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json"}],"limitations":["H1799 NORMAL Tunnel flows physical PASS is one scoped real 10s scene at legacy1400; not default1460 GUI effective readback, tls-vs-flows A/B or CPU/p99 proof.","Normal V3 only. Fixed/Game do not enable padding; no plaintext footer, extra TCP stack, per-flow worker, sleep or new crypto/wire format.","D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.","Padding is not a guarantee against DPI recognition.","H2031真实eth0 pcap仅能验证加密record尺寸多样性与MTU；逐record填充字节数和随机窗口分布不能从密文单独反推，依同源Rust单测，不能虚报直接抓到500B。","User 2026-11-17 narrowed 029 closeout; H2031 physical padded encrypted record evidence retained one source, while GUI actual effective off/tls/flows and same VM off/on CPU/RSS/latency remain NOT_RUN, never promoted from config readback."],"promotion":null}
+{
+  "schema_version": 1,
+  "id": "startup-flow-padding",
+  "name": "Tunnel TCP/UDP record随机填充",
+  "summary": "H2201 Linux x86/ARM原V4 V2客户端模式同步24/24真业务PASS_SCOPED；H2202用户令只保留强制新版V4加密控制并给失败回包变长，补Windows CLI/GUI TLS传参，当前SOURCE需重测。完整029技术OPEN。",
+  "owner": "M0",
+  "stage": "experimental",
+  "development_branch": "main",
+  "main_development_reason": "用户2026-11-02授权规划后续PLAN028–030；当前不切换PLAN027，仅预登记。",
+  "available_on": [
+    "main"
+  ],
+  "defaults": {
+    "planned_mode": "off；旧TLS bool映射tls，显式flows启用新增行为",
+    "planned_bounds": "随机20..30条/2..3秒（先到为止，0-room有效record也计数和开窗）；每条0..min(500B,真实MTU余量)；无累计填充字节或10%比例预算；256个有界流跟踪槽"
+  },
+  "usage": {
+    "cli": "--startup-padding off|tls|flows；空值继承旧 tls-startup-padding=true→tls，否则默认off；Normal及Game2/4重连生效，Fixed/Auto仍未扩展。",
+    "config": "Game2/4原Go保护TLS组→native V5冷ABI off/tls/flows→原Rust GameAdapter每lane AEAD真实补零填充。FEC只按source真实IPv4分类、Parity/Health不填。H2169 off零、tls/flows真NPF成功发送后统计，Game2 0/837/7663B、Game4 fixed 0/843/16391B；同源二进制/Stop实测PASS_SCOPED。",
+    "gui": "Windows WinForms/CLI原有 off/tls/flows 冷配置及保存路径，H2202已把Normal/FEC Fixed/Auto/Game2/Game4选择接入V4原Go TLS加密请求/确认与Windows Game多lane验证；当前SOURCE Windows Native GoTLS/WinForms/原RustDLL待Action确认，不能用Linux原生PASS代替Windows真实NPF/Wintun包的签名。",
+    "linux_cli": "H2202 唯一TLS Admission v2；加密请求/确认/拒绝回复各CSPRNG尾部32–500B，客户端off/tls/flows驱动Linux/Windows Rust。Linux真网24/24，Win/Linux/ARM GoTLS通过；Android/OpenWrt仅构建，物理设备/DPI未验。"
+  },
+  "code_refs": [
+    "crates/wbd-engine/src/v4_client_startup_padding.rs",
+    "crates/wbd-engine/src/v4_owner_crypto.rs",
+    "crates/wbd-engine/src/v4_windows_owner.rs",
+    "crates/wbd-engine/src/v4_windows_native_split.rs",
+    "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
+    "tools/m0_wl_public_normal_e2e.py",
+    ".github/workflows/m0-wl-public-normal-full.yml",
+    "crates/wbd-engine/src/v4_game_lane.rs",
+    "crates/wbd-engine/src/v4_windows_game_owner.rs",
+    "crates/wbd-engine/src/v4_windows_game_native_runtime.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_game_native_io.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "crates/wbd-engine/src/v4_game_public_kernel.rs",
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "r0/go_overlay/internal/v4productcli/game_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go",
+    "tools/m0_plan029_linux_crossplatform_coverage.py",
+    ".github/workflows/m0-plan029-linux-crossplatform-capabilities.yml",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+    "r0/go_overlay/internal/realityfront/admission_v4.go",
+    "r0/go_overlay/internal/realityfront/admission_v4_control_padding_test.go",
+    "r0/go_overlay/assembly/manifest-plan020-m0.json",
+    ".github/workflows/m0-plan029-h2202-single-control-platform-go.yml",
+    "r0/go_overlay/internal/realityfront/bridge_v4_windows_fec2_owner.go"
+  ],
+  "doc_refs": [
+    "docs/decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md",
+    "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
+    "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
+    "docs/decisions/M0-PLAN029-H2200-PROTECTED-ADMISSION-PADDING-V2-20261118.md",
+    "docs/decisions/M0-PLAN029-H2202-SINGLE-PROTECTED-CONTROL-20261118.md"
+  ],
+  "verification": [
+    {
+      "platform": "windows/amd64 client + linux/amd64 or arm64 server",
+      "scope": "新流识别/预算/MTU/原密文重传/全模式无等待及CPU开销",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "portable Rust owner component",
+      "scope": "H1766 bounded 256-flow/12-record/2KiB/≤10% source policy with tests; not connected to real encrypted records",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Rust same-original-M1 LINK AEAD/PN/SEQ component",
+      "scope": "H1767 optional authenticated 0..256B padding seal API and FrozenRecord contiguous PN/Seq test staged; real product cold integration and Windows signed effect not verified.",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Windows native V3 Normal source",
+      "scope": "H1797 canonical off/tls/flows cold to original M1 padded seal, native PN/SEQ and Tunnel-only cap; physical off/on pending",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Windows original WinForms assembly source H1798",
+      "scope": "One startup-padding off/tls/flows ComboBox + legacy profile/import migration; exact original pinned Go PARAMETER/GUI schema and code build will be checked by automatic workflow, real effective not yet run",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Windows 2025 original Go/Rust + Linux WSL2 TUN",
+      "scope": "H1797 default startup-padding off source 36b9 original Normal signed real TCP/UDP two-OS native and Stop on Action 43559122020; not a flows measurement",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "30f234900f0d83007df975dfa071339ab4b9a7fe",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43559122020"
+    },
+    {
+      "platform": "Original Windows Rust M1/Npcap signed native Normal + Linux TUN",
+      "scope": "H1799 narrowly scoped original Normal flows native NPF accepted 16 records/50B; Windows/WSL2 TCP/UDP duplex and both owned Stop. Not product-wide padding A/B or P1/P2.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6a77d23d54847aacc8ef99bba1104cf1758ca02d",
+      "evidence": "docs/evidence/M0/PLAN029-H1799-FIRST-TRUE-NPF-COPIED-FLOWS-M1-20261114.json"
+    },
+    {
+      "platform": "Original Windows Npcap + Linux WSL2 eth0 tcpdump",
+      "scope": "H2021 original full Normal unrestricted 0..500B no-flow-quota physical pcap, original M1 copied padding, kernel TCP/UDP duplex and both owned Stop; HISTORICAL policy, not H2025 20..30 record/2..3s envelope",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "076a227d9360b8a6025ff6901d02aca350035aff",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/43893558571"
+    },
+    {
+      "platform": "Windows 2025 original M1 owner + Linux TUN",
+      "scope": "H2025 user revised first 20–30/2–3s randomized per-flow startup envelope; physical NPF/eth0 encrypted packet capture, MTU, business and owned Stop",
+      "status": "PLANNED",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "Original Windows 2025 Go TLS/Rust M1/Npcap + WSL2 Linux eth0 tcpdump",
+      "scope": "H2031 signed 20–30-record / 2–3s first-limit startup padding; 0..500B and actual MTU with no cumulative-byte cap. Real NPF accepted 31 records/6579B, physical eth0 41 exact-looking encrypted records length71..589B, max IPv4 707<1400, two real kernel TCP/UDP business receipts and both owned Stop PASS. Per-record actual padding bytes/time window cannot be decrypted from ciphertext and are unit-tested source policy.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b76240bedb04237780bd13377bfe7aae38785018",
+      "evidence": "docs/evidence/M0/PLAN029-H2036-H2031-REAL-STARTUP-PADDING-MTU-20261117.json"
+    },
+    {
+      "platform": "Win2025 original GUI+Rust/WSL2",
+      "scope": "H2059 GUI flows effective/NPF 41条11466B/真实Direct+Tunnel TCP UDP与双Stop；CPU未验",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+      "evidence": "docs/evidence/M0/PLAN029-H2061-H2059-GUI-FLOWS-REAL-20261117.json"
+    },
+    {
+      "platform": "Windows 2025 Game2 FEC off + Game4 FEC fixed original Go TLS/Rust M4/Npcap/Wintun + WSL2 Linux kernel",
+      "scope": "H2169 two independent native jobs, each three original cold off/tls/flows, Game2 NPF pads 0/837/7663B (0/2/34 records); Game4 fixed FEC 0/843/16391B (0/4/70 records); real kernel UDP, Windows-initiated Tunnel TCP echo, MTU1460, same-binary SHA256 and both OS owned Stop PASS_SCOPED. No Game WinForms button run, other Game/FEC permutations not claimed.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "81998f91d183c722be932543be6434c1fd31be57",
+      "evidence": "docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "native Linux x86_64 and ARM64 original Go TLS client/server + Rust Game M4/raw AF_PACKET",
+      "scope": "H2186 exact native SOURCE e1742358: two original Linux Go TLS client+server on each native x86_64/aarch64 runner, per ISA 6 authenticated Game scenes: Game2/FEC off with padding off(0)/tls(>0)/flows(>0), Game2 fixed6+flows, Game4 fixed6+flows, Game4 FEC off+immediate+flows. Real original Rust per-lane AEAD/PN, successful kernel AF_PACKET padded records/bytes off zero and tls/flows nonzero and <=500B each, typed FEC source/parity nonzero, real two-way TCP/UDP application, original MTU/Stop/netns cleanup. 12 original Game network sessions total; other two per ISA Normal AES tests do not imply Normal padding.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+      "evidence": "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "Linux x86_64 and native ARM64 original client/server Normal/off",
+      "scope": "H2193 two native ISA each Normal tls/flows original protected Go TLS+Rust M4 with actual AF_PACKET copied padding positive, bidirectional kernel TCP/UDP, owned IPv6 interface and Stop: 4/4 PASS_SCOPED. Not Fixed/Auto or app TLS handshake.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
+      "evidence": "docs/evidence/M0/PLAN029-H2193-LINUX-NORMAL-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "native Linux x86_64/aarch64 Fixed and Auto original Go TLS/Rust M4",
+      "scope": "H2195 original Go TLS/Rust native Linux x86/ARM Fixed tls + Auto flows FEC kind2 source pad, real M4 AF_PACKET copied/TCP/UDP/Stop 4/4 PASS_SCOPED, parity kind3 unchanged.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "8a404a4f79227fde41286056f0c62c4d406f210a",
+      "evidence": "docs/evidence/M0/PLAN029-H2195-LINUX-FEC-SOURCE-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "native Linux x86_64/aarch64 original Go TLS/Rust client and server",
+      "scope": "H2197 source e82ba704 genuine x86_64/aarch64 original Go TLS/Rust five-mode tls/flows 10×2=20/20. Each scene server AND client true AF_PACKET M4 copied positive padding bytes, different total length streams; both-direction kernel TCP/UDP, owned IPv6/TUN/MTU, two native Stop. Game2 fixed6 flows and Game4 fixed6 tls included; independent RNG seed (not AEAD/KDF).",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e82ba704dd3c36941cc21e7e3fcd85e1a2ab7be6",
+      "evidence": "docs/evidence/M0/PLAN029-H2197-LINUX-SERVER-FIVE-MODES-X86-ARM64-TWENTY-REAL-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "Linux native x86_64/aarch64 original TLS1.3 Go and Rust five-mode two endpoints",
+      "scope": "H2200/2201 SOURCE ee69bc68 native Linux x86_64/aarch64 V4 TLS1.3 protected Admission V2 request+reply bounded CSPRNG random 32..500B tail, server exact client off/tls/flows authenticated echo and same Rust M4 setting despite contradictory server CLI. 12 per ISA=24/24 real Go TLS/Rust AF_PACKET/TUN both-direction kernel TCP+UDP, owned Stop, zero off, nonzero tls/flows. V1 grammar/unit compat only, no real DPI/physical cross-version qualification.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ee69bc68127af725f642520108664af6bba31f7f",
+      "evidence": "docs/evidence/M0/PLAN029-H2200-LINUX-TLS-V2-CONTROL-CLIENT-SYNC-X86-ARM64-TWENTYFOUR-REAL-PASS-20261118.json"
+    },
+    {
+      "platform": "Linux原生x86/ARM, Windows2025/Linux x86/ARM GoTLS",
+      "scope": "H2202 SOURCE2ca956b9 Linux双ISA原Go TLS/Rust AF_PACKET真网各12场共24/24、两端真实TCP/UDP/TUN/Stop PASS_SCOPED，服务器CLI反向仍随客户端off/tls/flows；三OS原Go TLS原生PASS，不等于Win驱动。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+      "evidence": "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
+    },
+    {
+      "platform": "Android ARM64、OpenWrt ARM64",
+      "scope": "H2202 APK VpnService、Android NDK及OpenWrt musl编译PASS；实体设备NOT_RUN。",
+      "status": "BUILD_PASS",
+      "source_sha": "2ca956b9bffdb4d8712de2a8e5d2f18e12fcc244",
+      "evidence": "docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json"
+    },
+    {
+      "platform": "Windows真Wintun/Npcap,Android/OpenWrt实体",
+      "scope": "H2202物理驱动/跨ISA/完整公网DPI/CPU/p99未测。",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "H1799 NORMAL Tunnel flows physical PASS is one scoped real 10s scene at legacy1400; not default1460 GUI effective readback, tls-vs-flows A/B or CPU/p99 proof.",
+    "H2169仅Game2 FEC off与Game4 FEC fixed各三档真网络PASS；Game2 fixed与Game4 off padding同SOURCE未测。Normal Fixed/Auto无此能力，不改FEC/wire/线程。",
+    "D3/D4/D5 and P1/P2 remain OPEN; H1795 actual app TCP53 and H1791 default1460 are separate older-source PASS with distinct evidence.",
+    "Padding is not a guarantee against DPI recognition.",
+    "H2031真实eth0 pcap仅能验证加密record尺寸多样性与MTU；逐record填充字节数和随机窗口分布不能从密文单独反推，依同源Rust单测，不能虚报直接抓到500B。",
+    "H2031原密文尺寸物理证据分SOURCE保留；WinGUI三档Game按钮真网络、off/tls/flows同VM CPU/RSS/延迟与小TCP p99仍NOT_RUN，不能用CLI回执代替。",
+    "H2169 Game route-mode=all（业务Direct关闭）仍原生填充已证实；Normal split-enable=false及其他Game政策组合不因本场自动PASS。",
+    "H2079旧SOURCE Normal split关闭维持padding当时未验；新Game route-mode=all真测不能替换旧Normal独立SOURCE。",
+    "H2181 Linux Game padding source candidate pending two-ISA native Action, cannot claim Linux data-plane PASS before original authenticated Go TLS/Rust/AF_PACKET results. Linux Normal/Fixed/Auto tls/flows remains NOT_WIRED and reject nonoff.",
+    "Historical H2181/H2182 native Rust cfg build failures preserved; H2186 new SOURCE actual Linux original Go TLS/Rust Game native x86/ARM 12/12 scoped Game scenes PASS. No full Windows Game WinForms network button proof or Linux Normal/FEC startup padding.",
+    "H2186 only startup envelope policy proved by same-Rust component tests and genuine raw copied byte receipts; encrypted ciphertext cannot itself disclose exact per-record random pad bytes. TLS selector used TLS-record-shaped application prefix on real kernel TCP, not full application TLS handshake; no DPI-evasion guarantee or CPU/p99/long loss claim."
+  ],
+  "promotion": null
+}

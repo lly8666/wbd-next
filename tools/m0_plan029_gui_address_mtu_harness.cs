@@ -55,6 +55,10 @@ public static class M0Plan029GUIAddressMTUVMHarness {
      "H1835_actual_GUI_CN_split_toggle_source");
    Need(store.Fields.Single(f=>f.Key=="cn-rules-file").Section=="网络",
      "H1835_actual_GUI_CN_domain_rule_source");
+   Need(store.Fields.Single(f=>f.Key=="cn-domain-direct").Section=="网络" &&
+     store.Fields.Single(f=>f.Key=="cn-domain-direct").Kind=="Bool" &&
+     !Convert.ToBoolean(store.Fields.Single(f=>f.Key=="cn-domain-direct").Default),
+     "H2082_new_029B_advanced_CN_Bool_off_by_default");
    Need(!Convert.ToBoolean(store.Fields.Single(f=>f.Key=="split-enable").Default),
      "H1835_split_off_by_default");
    Need(store.Fields.Single(f=>f.Key=="route-mode").Label.Contains("域名"),"CN_route_mode_label_shows_domain_union");
@@ -98,6 +102,7 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("direct-flow-hard","2");
     store.WriteAtomic("data/h1835-cn-domains.txt","cn.example\n=exact.cn\n");
     form.SetEditor("split-enable",true);
+    form.SetEditor("cn-domain-direct",false);
     form.SetEditor("cn-rules-file","data/h1835-cn-domains.txt");
     form.SaveEditor();
     Correct(Check(store,p,"data/h1663-normal.json",cli),"server-ip","EDGE.Example.Test.");
@@ -108,11 +113,33 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     Correct(Check(store,p,"data/h1663-normal.json",cli),"route-mode","bypass-lan-cn");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"direct-flow-hard","2");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"split-enable","true");
+    Correct(Check(store,p,"data/h1663-normal.json",cli),"cn-domain-direct","false");
     Correct(Check(store,p,"data/h1663-normal.json",cli),"cn-rules-file",
       store.InRoot("data/h1835-cn-domains.txt"));
     Need(Convert.ToBoolean(p.Values["split-enable"]) &&
       Convert.ToString(p.Values["cn-rules-file"])=="data/h1835-cn-domains.txt",
       "H1835_real_assembled_GUI_saved_cn_effective_portable");
+    // Old saved profiles/imported JSON missing the new field must retain
+    // pre-029B advanced FakeIP. New values false remain explicit.
+    var fresh029B=new Dictionary<string,object>(p.Values);
+    Need(!Convert.ToBoolean(fresh029B["cn-domain-direct"]),
+      "H2084_new_profile_advanced_CN_defaults_false");
+    var legacy029=new Dictionary<string,object>(fresh029B);
+    legacy029.Remove("cn-domain-direct");
+    store.ImportValues(p,legacy029);
+    Need(Convert.ToBoolean(p.Values["cn-domain-direct"]),
+      "H2084_legacy_missing_selector_migrates_advanced_true");
+    store.Save();
+    var importedLegacy=new PortableStore(root);
+    Need(Convert.ToBoolean(importedLegacy.Book.Profiles.Single(x=>x.Id==p.Id).Values["cn-domain-direct"]),
+      "H2104_legacy_missing_key_persisted_true_through_real_GUI_reopen");
+    store.ImportValues(p,fresh029B);
+    Need(!Convert.ToBoolean(p.Values["cn-domain-direct"]),
+      "H2084_explicit_false_survives_legacy_migration");
+    store.Save();
+    var importedExplicitOff=new PortableStore(root);
+    Need(!Convert.ToBoolean(importedExplicitOff.Book.Profiles.Single(x=>x.Id==p.Id).Values["cn-domain-direct"]),
+      "H2104_explicit_false_persisted_through_reopen");
     // A real Go parser must reject missing CN domain rules with explicit
     // split enabled. GUI cannot silently fall back to the old tunnel path.
     form.SetEditor("cn-rules-file","");
@@ -141,10 +168,38 @@ public static class M0Plan029GUIAddressMTUVMHarness {
     form.SetEditor("lanes","4");
     form.SetEditor("fec.mode","off");
     form.SaveEditor();
-    bool rejectedGameSplit=false;
-    try{Check(store,p,"data/h1835-game4-split-invalid.json",cli);}
-    catch(Exception){rejectedGameSplit=true;}
-    Need(rejectedGameSplit,"H1835_real_Go_CLI_rejects_unwired_Game4_CN_before_OS");
+    // 029B: mode=all is business split OFF even when the toggle is saved
+    // true. Game4+all must keep its old Rust/Go path, not be rejected as
+    // an unsupported CN/FakeIP activation. Real Game4 network is separate.
+    var gameAll=Check(store,p,"data/h2082-game4-split-all.json",cli);
+    Correct(gameAll,"route-mode","all");
+    Correct(gameAll,"split-enable","true");
+    Correct(gameAll,"cn-domain-direct","false");
+    // H2104: saved stale Direct cap and inactive CN rule source must not
+    // prevent ordinary all/off Rust DNS/Tunnel construction. This is a
+    // real WinForms→original Go CLI cold gate, NOT an OS Applied receipt.
+    form.SetEditor("direct-flow-hard","16385");
+    form.SetEditor("cn-rules-file","");
+    form.SetEditor("cn-domain-direct",true);
+    form.SaveEditor();
+    var allDormant=Check(store,p,"data/h2104-all-dormant-direct.json",cli);
+    Correct(allDormant,"split-enable","true");
+    Correct(allDormant,"route-mode","all");
+    Correct(allDormant,"direct-flow-hard","16385");
+    Correct(allDormant,"cn-domain-direct","true");
+    form.SetEditor("split-enable",false);
+    form.SetEditor("route-mode","bypass-lan-cn");
+    form.SaveEditor();
+    var offDormant=Check(store,p,"data/h2104-off-dormant-direct.json",cli);
+    Correct(offDormant,"split-enable","false");
+    Correct(offDormant,"route-mode","bypass-lan-cn");
+    Correct(offDormant,"direct-flow-hard","16385");
+    form.SetEditor("route-mode","all");
+    form.SetEditor("cn-rules-file","data/h1835-cn-domains.txt");
+    form.SetEditor("direct-flow-hard","2");
+    form.SetEditor("cn-domain-direct",false);
+    form.SetEditor("split-enable",true);
+    form.SaveEditor();
     form.SetEditor("split-enable",false);form.SaveEditor();
     var game=Check(store,p,"data/h1663-game4.json",cli);
     Correct(game,"server-ip","EDGE.Example.Test.");

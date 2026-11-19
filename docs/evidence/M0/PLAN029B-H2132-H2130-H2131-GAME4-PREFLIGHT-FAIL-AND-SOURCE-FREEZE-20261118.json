@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2132",
+  "date": "2026-11-18",
+  "source_sha": "2aa28ab92bf5ac324b556d65ab9b39801f6d49c6",
+  "result": "FAIL_CHEAP_PRE_NATIVE",
+  "artifact_verified": false,
+  "failed_predecessors": [
+    {
+      "source_sha": "5e2cefce8da72c90975911dbe87a1646e4151589",
+      "action_id": 44197234669,
+      "result": "FAIL_CHEAP_BEFORE_NATIVE",
+      "first_test_failure": "legacy H1775 exact Python static expected Game4 --split-enable without explicit cn-domain-direct",
+      "feature_catalog": "FAIL_MISSING_FEATURE_IMPACT_BLOCK",
+      "game4_native": "NOT_RUN"
+    },
+    {
+      "source_sha": "2aa28ab92bf5ac324b556d65ab9b39801f6d49c6",
+      "action_id": 44197448012,
+      "result": "FAIL_CHEAP_BEFORE_NATIVE",
+      "first_error": "prepare_windows_wiring.py --check-only ValueError: assembly blob mismatch r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
+      "game4_native": "NOT_RUN",
+      "other_static_scope_tests": "PASS"
+    }
+  ],
+  "candidate": {
+    "source_sha": "5fc22aef30aa4440e81257e67fded501fece3080",
+    "action_id": 44197717052,
+    "cheap": "PASS",
+    "windows_go": "IN_PROGRESS",
+    "windows_rust": "IN_PROGRESS",
+    "linux_rust": "IN_PROGRESS",
+    "signed_native": "NOT_RUN_AT_COLLECTION",
+    "original_go_overlay_test_blob_sha": "b3c1382d7138b8ce612eb79037876502639278ad",
+    "same_as_frozen_baseline": true,
+    "game4_signed_fixture": "--split-enable --cn-domain-direct=true --cn-rules-file (real advanced FakeIP)",
+    "game2_split_true": "SOURCE_CODE_REJECTS_BEFORE_OS_APPLY;_EXECUTABLE_PRODUCT_EVIDENCE_NOT_RUN",
+    "additional_source_impact": "NO_GO_RUST_RUNTIME_CHANGE; ONLY_PYTHON_NATIVE_FIXTURE/TESTS"
+  },
+  "parallel_b4": {
+    "source_sha": "43f988d37edcb54e537b14d2f5a73aab4d6609fd",
+    "action_id": 44195727026,
+    "job": "native-public-two-os",
+    "status_at_collection": "IN_PROGRESS",
+    "original_result": "NOT_YET_FINAL"
+  },
+  "limits": {
+    "game4_current_source": "NOT_RUN_TO_COMPLETION",
+    "game2_active_split": "UNSUPPORTED_COLD_REJECT_EXECUTABLE_NOT_RUN",
+    "b4_final": "NOT_YET_FINAL",
+    "b5_samevm_10mbps_cpu_gib_p99": "NOT_RUN",
+    "plan029b": "OPEN",
+    "plan029": "OPEN",
+    "plan030": "NOT_STARTED"
+  }
+}

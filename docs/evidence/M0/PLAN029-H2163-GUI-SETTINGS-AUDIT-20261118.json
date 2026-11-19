@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task": "H2163",
+  "plan": "PLAN029/PLAN029B",
+  "date": "2026-11-18",
+  "baseline_main": "4abc23a1d3bdfe1136634de61aac58c73c47d495",
+  "result": "STATIC_GUI_HELP_ALIGNMENT_ONLY",
+  "static": {
+    "old_manifest_exact_blob_replay": "PASS_32_GUI_13_PARAMETERS",
+    "new_gui_blob": "e7afe322bfd5c7b1d77308caab04706e82891ec3",
+    "new_parameters_blob": "4aa96a983817595e1a7409c95754651bf67ce4d6",
+    "change": "correct Game2/4 unsupported help after scoped H2162; no native Go/Rust/wire/ABI change"
+  },
+  "prior_source_locked": {
+    "gui49": {
+      "source": "52767d183b61eaf2621d967b16e85e644b1de428",
+      "action": 43161652534,
+      "scope": "GUI_354_CONFIG_ONLY"
+    },
+    "gui_flows": {
+      "source": "ccf0cb22d469bd4fd2fc07234d87ff5c339321df",
+      "scope": "REAL_GUI_RUST_M1_NPF"
+    },
+    "gui_three": {
+      "source": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+      "action": 44198794225,
+      "scope": "REAL_GUI_3_APPLIED_STOP"
+    },
+    "game20": {
+      "source": "508591f93427ebdad4cf88ff625e03fc4d485aca",
+      "action": 44235564493,
+      "scope": "GAME2_GAME4_OFF_FIXED_20_REAL"
+    }
+  },
+  "new_source_gui_build": "NOT_RUN",
+  "new_source_native": "NOT_RUN",
+  "remaining": {
+    "technical_029_and_029B": "OPEN",
+    "game_startup_padding": "NOT_WIRED",
+    "reverse_windows_inbound_tcp": "NOT_RUN",
+    "full_host_ipv6": "NOT_GUARANTEED",
+    "P_B2": "NOT_RUN",
+    "small_tcp_p99": "NOT_RUN",
+    "plan030": "NOT_STARTED"
+  },
+  "historic_fail_preserved": true,
+  "actions_dispatched": false,
+  "ci_first_failure": {
+    "source": "cb8d81b7338d4d46ebe24dcead86b2a2bbe1877c",
+    "action": 44241101644,
+    "feature_catalog": "FAIL_card_utf8_16778_gt_16384",
+    "governance": "FAIL_cursor_context_refs_9_gt_8",
+    "status": "HISTORICAL_FAIL_PRESERVED",
+    "product_runtime": "NOT_RUN"
+  },
+  "ci_correction": {
+    "task": "H2164",
+    "feature_card_shortened_utf8_bytes": 16369,
+    "cursor_context_refs": 8,
+    "new_ci": "NOT_RUN"
+  },
+  "ci_second_failure": {
+    "source": "2ff83d1fb96c08312ec3d79b842557382304c27e",
+    "action": 44241716159,
+    "governance": "FAIL_validate_repo_evidence_different_SOURCE",
+    "feature_gate": "FAIL_dependent_governance_validation",
+    "cause": "H2163 static audit file was incorrectly registered under signed evidence_refs",
+    "status": "HISTORICAL_FAIL_PRESERVED"
+  },
+  "ci_third_correction": {
+    "task": "H2165",
+    "signature_evidence_refs_only": [
+      "docs/evidence/M0/PLAN029B-H2162-GAME2-GAME4-FEC-OFF-FIXED-FIVE-POLICIES-20-REAL-PASS-20261118.json"
+    ],
+    "static_audit_in_context_refs": true,
+    "original_signed_source_unchanged": true,
+    "new_ci": "NOT_RUN"
+  }
+}

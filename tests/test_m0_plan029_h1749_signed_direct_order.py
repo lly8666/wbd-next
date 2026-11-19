@@ -232,8 +232,12 @@ class NativeDirectOrder(unittest.TestCase):
         # 4096-CIDR policy arm only in the isolated P1 ABBA. The genuine
         # H1775 DNS→CN-IP use case must retain its old one-/32 fallback.
         self.assertIn('"--china-ip-file",str(out/("plan029-h1934-cn4096.txt" if p029_p1_cn else "plan029-h1775-cn-one32.txt"))',S)
-        self.assertIn('if p029_direct or p029_p1_cn or p029_game4_cn:',S)
-        self.assertIn('args.extend(["--split-enable","--cn-rules-file",str(rules)])',S)
+        self.assertIn('if p029_direct or p029_p1_cn or (p029_game4_cn and not p029b_game_case):',S)
+        # H2130 keeps the historical Game4 advanced FakeIP scene explicit.
+        # 029B fresh default is ordinary CN; missing advanced flag is no
+        # longer equivalent. Retain one original signed Direct/Tunnel case.
+        self.assertIn('args.extend(["--split-enable","--cn-domain-direct=true",',S)
+        self.assertIn('"--cn-rules-file",str(rules)])',S)
         self.assertIn('if p029_p1_cn and not p029_p1_policy:',S)
         self.assertLess(S.index("PLAN029_H1770_SIGNED_NONCN_DNS_REAL_A_FOLLOWED_BY_TRUE_TUNNEL_UDP_PASS_SCOPED"),
                         S.index("PLAN029_H1775_REAL_NONCN_TUNNEL_DNS_CN_IP_PHYSICAL_DIRECT_UDP_PASS_PRE_CLEANUP"))
@@ -262,7 +266,9 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('report["plan029_d3_direct_hard_pressure"]["stop"]="PASS_BOTH_OWNED"',S)
         self.assertIn('p029_pressure_guest,p029_pressure_win,p029_tcp53_guest,p029_tcp53_win,p029_cdn_guest,p029_cdn_win):',S)
         self.assertIn('p029_cdn_guest=p029_cdn_win=None',S)
-        self.assertIn('if p029_cdn and (out/"plan029-h2010-owned-route-alias.json").exists():',S)
+        # The old CDN route owner remains exact-CAS; B4 may only reuse
+        # that test-owned route during its first advanced generation.
+        self.assertIn('if (p029_cdn or p029b_b4) and (out/"plan029-h2010-owned-route-alias.json").exists():',S)
         W=(Path(__file__).resolve().parents[1]/".github"/"workflows"/"m0-wl-public-normal-full.yml").read_text()
         M=(Path(__file__).resolve().parents[1]/"tools"/"m0_wl_mode_evidence.py").read_text()
         self.assertIn("WBD_PLAN029_DIRECT_PRESSURE:",W)
@@ -447,16 +453,20 @@ class NativeDirectOrder(unittest.TestCase):
         self.assertIn('pub unsafe extern "C" fn wbd_m0_win_native_v3_start(',rust)
         self.assertIn('#[cfg(feature="m0_v4_probe")]',rust)
         self.assertIn("[plan029-v3-real-p2-rebuild]",w)
-        # Explicit real product also requires the very same exact V3 ABI.
-        # Old test assumed it was private-trial-only and prevented build.
+        # PLAN029B: real Normal/off uses the V3 public DNS/padding owner.
+        # Legacy P1/P2 still select their own bounded runtime scenes, but
+        # the Windows release DLL exports the V3 entry unconditionally.
+        release="$features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'"
+        self.assertIn(release,w)
+        self.assertNotIn("$features+=',m0_v4_probe'",w)
         self.assertIn("if($env:WBD_PLAN029_NATIVE_V3_TRIAL -eq '1' -or",w)
         self.assertIn("$env:WBD_PLAN029_PRODUCT_SPLIT_SCENE -eq '1' -or",w)
         self.assertIn("$env:WBD_PLAN029_GAME4_CN_SCENE -eq '1'){",w)
         self.assertIn("wbd_m0_win_game_native_v4_tcp_control",w)
-        self.assertIn("$features+=',m0_v4_probe'",w)
         self.assertIn('getattr(d,"wbd_m0_win_native_v3_start")',w)
-        self.assertIn("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS",w)
-        self.assertLess(w.index("PLAN029_H1820_ACTUAL_WINDOWS_DLL_V3_START_EXPORT_AND_LOAD_PASS"),
+        gate="PLAN029B_H2084_ACTUAL_WINDOWS_DEFAULT_V3_DLL_EXPORT_PASS"
+        self.assertIn(gate,w)
+        self.assertLess(w.index(gate),
                         w.index("Full public-run signed original Npcap and Wintun driver install"))
     def test_h1849_p2_identical_app_nagle_and_failed_scene_udp_progress(self):
         import ast

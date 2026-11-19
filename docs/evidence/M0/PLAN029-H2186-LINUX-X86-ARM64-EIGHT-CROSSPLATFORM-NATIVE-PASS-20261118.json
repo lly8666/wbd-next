@@ -1,0 +1,438 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029/PLAN029B",
+  "milestone": "H2186",
+  "date_utc": "2026-11-18",
+  "scope": "Non-Windows original Linux x86_64 and ARM64 each separate genuine original Go TLS Linux client + Linux server using authentic Rust M4 per-lane AEAD/PN and Linux raw AF_PACKET/TUN and kernel TCP/UDP, explicit Game startup-padding and independent Linux record cipher/MTU/outer policy functionality.",
+  "qualification": "PASS_SCOPED_SIXTEEN_ACTUAL_LINUX_NATIVE_NONWINDOWS_CAPABILITY_SCENES",
+  "same_exact_source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+  "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+  "original_go_pinned_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "original_isa_l_pinned_source_sha": "c387163fcbca62701d646149564c550c78a4f985",
+  "action": {
+    "id": 44278039887,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44278039887",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+    "run_attempt": 1,
+    "native_isa_jobs": 2,
+    "passed_original_kernel_scenes": 16,
+    "total_original_kernel_scenes": 16
+  },
+  "maintenance": {
+    "id": 44278040054,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44278040054",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "e174235872d32cca69bf921fb59904f9bcaee889"
+  },
+  "execution": "x86_64 ubuntu-24.04 and native aarch64 ubuntu-24.04-arm two parallel independent ISA jobs; each compiled one source-locked original Go TLS client+server/Rust/native ISA-L set and reused it for eight fresh serial two-kernel-netns sessions; per-case private 0600 original offline route-key, original authenticated TLS, independent native raw AF_PACKET TUN and bidirectional TCP/UDP app echo and double owned Stop and netns cleanup.",
+  "architecture_evidence": [
+    {
+      "architecture": "x86_64",
+      "runner": "ubuntu-24.04 native",
+      "original_native_job_id": 134711109425,
+      "artifact_id": 14415547592,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/44278039887/artifacts/14415547592",
+      "original_artifact_zip_sha256": "0e4eee542817d808e361fbb86719bda94bf43fad9a0cb9352fe6a7239dc87734",
+      "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+      "original_product_binary_sha256": {
+        "libwbd_engine.so": "a21e0a02ff97bbe345a3ed60474f4aeafd635c1740abd15fb4ba8304018e4e74",
+        "wbd-v4-client": "6c8b2f82ef6a18ca6a32e9a7871135c3a656a2854cf576face2cdd1334d6d2e5",
+        "wbd-v4-server": "a4af9062ac75df4d100f891a04d0ad2a1e5b9dcfb9076fd4cfa511ee5ef467b4"
+      },
+      "one_native_original_bundle_reused_for_eight_cases": true,
+      "manifest_source_and_binary_hashes_verified": true,
+      "case_results": [
+        {
+          "name": "game2-off",
+          "mode": "game2",
+          "fec": "off",
+          "padding": "off",
+          "outer_mtu": 1460,
+          "elapsed_s": 7.029,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 0,
+            "bytes": 0
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 0,
+            "bytes": 0
+          }
+        },
+        {
+          "name": "game2-tls",
+          "mode": "game2",
+          "fec": "off",
+          "padding": "tls",
+          "outer_mtu": 1460,
+          "tls_record_shaped_app_bytes": true,
+          "elapsed_s": 7.028,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 4,
+            "bytes": 842
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 4,
+            "bytes": 842
+          }
+        },
+        {
+          "name": "game2-flows-outer-off",
+          "mode": "game2",
+          "fec": "off",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "outer_repair": "off",
+          "elapsed_s": 6.778,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 8,
+            "bytes": 1971
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 8,
+            "bytes": 1971
+          }
+        },
+        {
+          "name": "game2-fec6-flows",
+          "mode": "game2",
+          "fec": "fixed6",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "parity_raw_copied": 96,
+          "elapsed_s": 6.93,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 8,
+            "bytes": 1058
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 8,
+            "bytes": 1058
+          }
+        },
+        {
+          "name": "game4-fec6-flows",
+          "mode": "game4",
+          "fec": "fixed6",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "parity_raw_copied": "96_or_97_per_endpoint",
+          "elapsed_s": 6.981,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 12,
+            "bytes": 2996
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 12,
+            "bytes": 2996
+          }
+        },
+        {
+          "name": "game4-off-immediate-flows",
+          "mode": "game4",
+          "fec": "off",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "game4_copy_schedule": "immediate",
+          "outer_repair": "off",
+          "elapsed_s": 6.879,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 16,
+            "bytes": 3030
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 16,
+            "bytes": 3030
+          }
+        },
+        {
+          "name": "normal-aes128",
+          "mode": "normal",
+          "record_cipher": "aes-128-gcm",
+          "outer_mtu": 1460,
+          "elapsed_s": 10.136,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS"
+        },
+        {
+          "name": "normal-aes256-mtu1280",
+          "mode": "normal",
+          "record_cipher": "aes-256-gcm",
+          "outer_mtu": 1280,
+          "actual_kernel_tun_mtu": 1209,
+          "df_plus_one": "rejected_both_directions",
+          "ipv6_no_addresses_or_routes": "both_owned_tun",
+          "elapsed_s": 10.287,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_inner_tun_mtu_client": 1209,
+          "actual_inner_tun_mtu_server": 1209,
+          "owned_ipv6": "per-interface_sysctl_absent_below_ipv6_min_mtu_and_no_ipv6_addresses_or_routes",
+          "real_tcp_udp_rust_records_delivered_each_end": 42
+        }
+      ]
+    },
+    {
+      "architecture": "aarch64",
+      "runner": "ubuntu-24.04-arm native",
+      "original_native_job_id": 134711110000,
+      "artifact_id": 14414634232,
+      "artifact_url": "https://github.com/lly8666/wbd-next/actions/runs/44278039887/artifacts/14414634232",
+      "original_artifact_zip_sha256": "daa973fae747b13fbfd5f628ad35b49f5b3114591558063b82dd37a6cac3a62f",
+      "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+      "original_product_binary_sha256": {
+        "libwbd_engine.so": "a2043d95bff4d28685021294898c28fafb95a5032baa9e48f8f7e8bc8dacb1e2",
+        "wbd-v4-client": "a120bc57449db90a4bba3ce1f7107e72af0aa1f1f1b6c42162687fdd743f5f1b",
+        "wbd-v4-server": "90a49fa537dcb8364e44f0c9e7b449d605125d7b9d9f3680fc7c7706b74b1676"
+      },
+      "one_native_original_bundle_reused_for_eight_cases": true,
+      "manifest_source_and_binary_hashes_verified": true,
+      "case_results": [
+        {
+          "name": "game2-off",
+          "mode": "game2",
+          "fec": "off",
+          "padding": "off",
+          "outer_mtu": 1460,
+          "elapsed_s": 7.438,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 0,
+            "bytes": 0
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 0,
+            "bytes": 0
+          }
+        },
+        {
+          "name": "game2-tls",
+          "mode": "game2",
+          "fec": "off",
+          "padding": "tls",
+          "outer_mtu": 1460,
+          "tls_record_shaped_app_bytes": true,
+          "elapsed_s": 6.826,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 4,
+            "bytes": 503
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 4,
+            "bytes": 503
+          }
+        },
+        {
+          "name": "game2-flows-outer-off",
+          "mode": "game2",
+          "fec": "off",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "outer_repair": "off",
+          "elapsed_s": 7.182,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 8,
+            "bytes": 2494
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 8,
+            "bytes": 2494
+          }
+        },
+        {
+          "name": "game2-fec6-flows",
+          "mode": "game2",
+          "fec": "fixed6",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "parity_raw_copied": 96,
+          "elapsed_s": 7.182,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 8,
+            "bytes": 2750
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 8,
+            "bytes": 2750
+          }
+        },
+        {
+          "name": "game4-fec6-flows",
+          "mode": "game4",
+          "fec": "fixed6",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "parity_raw_copied": "96_or_97_per_endpoint",
+          "elapsed_s": 7.185,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 12,
+            "bytes": 2954
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 12,
+            "bytes": 2954
+          }
+        },
+        {
+          "name": "game4-off-immediate-flows",
+          "mode": "game4",
+          "fec": "off",
+          "padding": "flows",
+          "outer_mtu": 1460,
+          "game4_copy_schedule": "immediate",
+          "outer_repair": "off",
+          "elapsed_s": 6.831,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_original_raw_game_padding_copied_client": {
+            "records": 16,
+            "bytes": 4133
+          },
+          "actual_original_raw_game_padding_copied_server": {
+            "records": 16,
+            "bytes": 4133
+          }
+        },
+        {
+          "name": "normal-aes128",
+          "mode": "normal",
+          "record_cipher": "aes-128-gcm",
+          "outer_mtu": 1460,
+          "elapsed_s": 10.49,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS"
+        },
+        {
+          "name": "normal-aes256-mtu1280",
+          "mode": "normal",
+          "record_cipher": "aes-256-gcm",
+          "outer_mtu": 1280,
+          "actual_kernel_tun_mtu": 1209,
+          "df_plus_one": "rejected_both_directions",
+          "ipv6_no_addresses_or_routes": "both_owned_tun",
+          "elapsed_s": 10.034,
+          "result": "PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM",
+          "true_go_tls_rust_m4_and_real_linux_af_packet_tun": true,
+          "true_linux_kernel_udp_and_tcp_application_both_directions": "PASS",
+          "tun_owned_stop_both": "PASS",
+          "netns_cleanup": "PASS",
+          "actual_inner_tun_mtu_client": 1209,
+          "actual_inner_tun_mtu_server": 1209,
+          "owned_ipv6": "per-interface_sysctl_absent_below_ipv6_min_mtu_and_no_ipv6_addresses_or_routes",
+          "real_tcp_udp_rust_records_delivered_each_end": 42
+        }
+      ]
+    }
+  ],
+  "verified_scope_conditions": [
+    "Original Rust Game TunnelStartupPadding cold startup mode passed from authenticated Go TLS Game group before M4 driver start: off=zero bytes, tls/flows nonzero actual raw AF_PACKET successful copy records and bytes each direction; max padded <=500 bytes per copied padded record, bounded 20..30 records /2..3s per flow policy independently Rust unit-tested.",
+    "Original Game2/FEC off, Game2/Fixed6 and Game4/Fixed6 plus Game4/off immediate: per-lane AEAD+PN and actual source-copied FEC parity under tested cases, true native kernel TCP/UDP and both own Stop.",
+    "Original GameFEC fixed6 source 52 each end, parity offered and real kernel copied >=96 each on Game2 and Game4 tests; test authenticated FEC source recognition and true nonzero pad; no claim measured parity frame padding independently decrypted from ciphertext.",
+    "Game2/Game4 --outer-repair off: real original M4 readback repair_enabled=0 and outer_data_retransmitted=0; not a loss-recovery-rate comparison.",
+    "Game4 immediate original native schedule mode=0 and kernel copies >0; Game4 fixed6 default stagger schedule mode=2 positive readback.",
+    "Normal AES-128-GCM under original selected-client cipher plus native Go TLS/Rust two-way TCP/UDP/Stop at outer1460; Normal AES-256-GCM same at outer1280 with derived inner1209, real two-way IPv4 DF boundaries and +1 DF kernel rejection.",
+    "Original Linux owned TUN IPv6 absence policy: for kernel TUN >=1280 original disable_ipv6 must read1; at inner1209 per-device proc may be absent, but real OS kernel inner MTU <1280 and zero per-interface IPv6 addresses and routes independently verified for each endpoint.",
+    "Normal, FEC Fixed and FEC Auto nonoff startup-padding must fail closed with explicit unsupported reason; these are NOT claimed as implemented padding."
+  ],
+  "scope_exclusions": [
+    "Linux Normal/fec-fixed/fec-auto startup-padding tls/flows NOT_WIRED (CLI rejected); Linux Game2/4 only.",
+    "Linux original CLI with missing offline route-key does not provide on-wire X25519 bootstrap: NOT_WIRED, recorded rejected in earlier H2184. Do not describe as PASS of no-key exchange.",
+    "Linux manual-IP live physical MTU 1500->1280 reauthentication is NOT_RUN / older case failed; dedicated autoIP/lease-pool/path-supervisor test fixture required.",
+    "No full application TLS handshake in the tls-shaped TCP test fixture: only 5-byte TLS-record-shaped TCP application prefix classification.",
+    "Two namespaces on the SAME runner host per native architecture, not cross-ISA physical networking nor external DUT; native ARM runner, not physical ARM board.",
+    "No physical IPv6 host-global checks, no Windows-specific WinForms/Wintun/Npcap/CN/Direct/DNS/FakeIP, no full PLAN029/029B D1-D5/P1-P2 closure.",
+    "Load/loss/p99/CPU/GiB, 30-minute stresses, every Game+FEC/cipher/route policy and hardware SIMD instruction dispatch not measured in these eight short per-ISA functional cases."
+  ],
+  "historical_failed_actions_preserved": [
+    {
+      "id": 44266160914,
+      "cause": "original ARM Linux crate-root padding cfg omitted; build FAIL"
+    },
+    {
+      "id": 44266740093,
+      "cause": "both native Linux Rust FlowKey cfg omitted; build FAIL"
+    },
+    {
+      "id": 44268654320,
+      "cause": "both ISA X25519 missing offline route-key deliberately rejected before TUN, original 7/8 network PASS"
+    },
+    {
+      "id": 44269773178,
+      "cause": "both ISA original 7/8 network PASS; outer1280 inner1209 IPv6 procfs readback fixture checked missing node before application TCP/UDP"
+    }
+  ],
+  "cross_reference_previous_native_base": {
+    "source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+    "action": 44258876671,
+    "status": "PASS_SCOPED_TEN_BASIC_NATIVE_SCENES",
+    "meaning": "Historical independent SOURCE: Normal/Fixed/Auto/Game2/Game4 two native ISA 10/10; not proof of Game random startup pad and not same new source."
+  }
+}

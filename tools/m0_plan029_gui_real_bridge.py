@@ -20,7 +20,7 @@ def prepare(root,out,client,rust,original_args,rules):
    "/langversion:latest","/target:exe","/platform:x64","/utf8output",
    "/codepage:65001","/out:"+str(gui/"GuiReal.exe"),
    "/reference:"+str(gui/"WBD.exe"),*refs,
-   str(root/"tools"/"m0_plan029_gui_real_network_harness.cs")],
+   str(root/"tools"/("m0_plan029b_b4_real_gui.cs" if os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1" else "m0_plan029_gui_real_network_harness.cs"))],
    cwd=root,check=True,timeout=60)
  # The real legacy Npcap loader resolves wpcap.dll relative to the ORIGINAL
  # Go child EXE. GUI has a distinct portable working directory; never borrow
@@ -48,7 +48,14 @@ def prepare(root,out,client,rust,original_args,rules):
   k=flags[j]
   if not k.startswith("--"):raise RuntimeError("unpaired original CLI argument")
   name=k[2:]
-  if name in ("native-v4-product","control-stdin","split-enable"):
+  if name.startswith("cn-domain-direct="):
+   # The original Go Bool flag accepts =true/=false, not a separate
+   # positional boolean argument. Preserve the exact real user flag.
+   key,encoded=name.split("=",1)
+   if encoded not in ("true","false"):
+    raise RuntimeError("invalid original advanced CN Bool")
+   name=key;value=(encoded=="true");j+=1
+  elif name in ("native-v4-product","control-stdin","split-enable"):
    value=True;j+=1
   else:
    if j+1>=len(flags):raise RuntimeError("missing original CLI value")
@@ -60,7 +67,7 @@ def prepare(root,out,client,rust,original_args,rules):
   if name in ("server-port","source-port","lanes","direct-flow-hard"):
    value=int(value)
   seed[name]=value
- if seed.get("split-enable") is not True or seed.get("route-mode")!="bypass-lan-cn":
+ if seed.get("split-enable") is not True or seed.get("route-mode")!="bypass-lan-cn" or seed.get("cn-domain-direct") is not True:
   raise RuntimeError("no explicit GUI CN union")
  data=gui/"data";data.mkdir(parents=True,exist_ok=True)
  owned={"route-key-hex-file":"route-key.hex","tls-ca-pem":"server-ca.pem",
@@ -85,6 +92,29 @@ def prepare(root,out,client,rust,original_args,rules):
  return [str(gui/"GuiReal.exe"),str(gui),str(data/"gui-seed.json")],gui
 
 def receipt_and_cleanup(gui):
+ if os.environ.get("WBD_PLAN029B_B4_GUI_THREE_GEN_SCENE")=="1":
+  receipt=gui/"data/plan029b-b4-three-real-receipt.json"
+  if not receipt.is_file():raise RuntimeError("B4 genuine three-generation WinForms receipt absent")
+  state=json.loads(receipt.read_text())
+  if not(state.get("original_gui") is True and
+         state.get("generations")==3 and state.get("real_applied")==3 and
+         state.get("owned_stop")==3 and state.get("mtu")==1460 and
+         state.get("inner")==1389 and
+         state.get("cn_dns_physical")==2 and state.get("all_dns_tunnel")==1 and
+         state.get("advanced_fakeip") is True and
+         state.get("ordinary_real_a") is True and
+         state.get("all_real_a") is True and
+         state.get("stale_fake_app_attempts")==2 and
+         state.get("stale_fake_journal_unchanged") is True):
+   raise RuntimeError("B4 signed WinForms three-generation state mismatched")
+  for secret in ("route-key.hex","gui-seed.json","server-ca.pem",
+                 "profiles.json","active.json","pending.json"):
+   (gui/"data"/secret).unlink(missing_ok=True)
+  return {"status":"PASS_ORIGINAL_GUI_THREE_GENERATIONS_AFTER_NATIVE_VERIFICATION",
+          "real_applied":3,"owned_stop":3,
+          "physical_cn_dns":2,"tunnel_all_dns":1,
+          "retired_fake_attempts":2,
+          "source":os.environ["GITHUB_SHA"]}
  receipt=gui/"data/plan029-gui-real-receipt.json"
  if not receipt.is_file():raise RuntimeError("original WinForms signed Stop receipt absent")
  status=json.loads(receipt.read_text())
@@ -102,6 +132,9 @@ def receipt_and_cleanup(gui):
  reconnect=os.environ.get("WBD_PLAN029_GUI_NORMAL_RECONNECT_SCENE")=="1"
  if bool(status.get("normal_reconnect_completed"))!=reconnect:
   raise RuntimeError("real original second GUI Connect receipt missing")
+ ttl=os.environ.get("WBD_PLAN029_DNS_TTL_RESTART_SCENE")=="1"
+ if bool(status.get("dns_ttl_restart_completed"))!=ttl:
+  raise RuntimeError("real physical TTL+reconnect GUI receipt absent or unexpected")
  for secret in ("route-key.hex","gui-seed.json","server-ca.pem",
                 "profiles.json","active.json","pending.json"):
   (gui/"data"/secret).unlink(missing_ok=True)
@@ -110,5 +143,8 @@ def receipt_and_cleanup(gui):
    "cpu_scope":"GUI_PARENT_ONLY_GO_RUST_NOT_SAMPLED",
    "startup_padding_mode":expected,
    "normal_reconnect_completed":reconnect,
+   "dns_ttl_restart_completed":ttl,
+   "product_binary_source":os.environ.get("WBD_WL_BINARY_SOURCE",os.environ["GITHUB_SHA"]),
+   "fixture_source":os.environ["GITHUB_SHA"],
    "npf_copied_records":status.get("padding_npf_copied_records",0),
    "npf_copied_bytes":status.get("padding_npf_copied_bytes",0)}

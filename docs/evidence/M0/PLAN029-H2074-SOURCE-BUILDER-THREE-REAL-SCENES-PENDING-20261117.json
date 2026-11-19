@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "task": "H2074",
+  "date": "2026-11-17",
+  "source_sha": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
+  "last_tested_source": "2fca1a93b4f9f7d3e7c5985adc356ade13332e86",
+  "new_source": "COMMIT_SELF_ON_PUSH",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "completed_build_gates": [
+    {
+      "run_id": 44031316173,
+      "scope": "native-functional pure",
+      "result": "PASS"
+    },
+    {
+      "run_id": 44031316195,
+      "scope": "native ABI",
+      "result": "PASS"
+    },
+    {
+      "run_id": 44031316149,
+      "scope": "cross ABI",
+      "result": "PASS"
+    },
+    {
+      "run_id": 44031316187,
+      "scope": "Direct pressure ingress pure",
+      "result": "PASS"
+    },
+    {
+      "run_id": 44031795000,
+      "scope": "H2073 governance",
+      "result": "PASS"
+    }
+  ],
+  "requested_scenes": [
+    {
+      "scene": "gui_reconnect",
+      "action": "existing push builder original GUI",
+      "result": "NOT_RUN"
+    },
+    {
+      "scene": "domain_reconnect",
+      "action": "existing H2065 single-SOURCE reused native",
+      "result": "NOT_RUN"
+    },
+    {
+      "scene": "dns_ttl_restart",
+      "action": "existing H2065 single-SOURCE reused native",
+      "result": "NOT_RUN"
+    }
+  ],
+  "requirements": "Two real TLS/M4 generations, verified B AEAD Health/shared /32 route, 2nd OS Applied, Direct+Tunnel TCP UDP, exact owned Stop; DNS physical TC/TCP53 and 3 TTL queries per case. Normal scope no legacy matrix.",
+  "workflow_dispatch_count_planned": 2,
+  "push_builder_count_planned": 1,
+  "run_id": null,
+  "legacy_fail_reference": "docs/evidence/M0/PLAN029-H2071-H2070-SERVER-B-RAW-RX-20261117.json",
+  "status": "H2074_NO_NATIVE_RUN",
+  "note": "Commit 13b9295 doc-only change did not match native workflow on.push.paths; no Windows native Action was dispatched. H2075 existing workflow file inert comment is needed to trigger it.",
+  "workflow_dispatch_count_observed": 0
+}

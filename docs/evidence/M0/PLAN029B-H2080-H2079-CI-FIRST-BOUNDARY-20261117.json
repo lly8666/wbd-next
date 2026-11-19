@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2080",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "failed_h2079_actions": [
+    {
+      "run_id": 44041865897,
+      "reason": "Go source-locked assembly missing updated result_blob for six new overlays",
+      "result": "FAIL"
+    },
+    {
+      "run_id": 44041865875,
+      "reason": "new Rust AAAA test missing terminator in let else",
+      "result": "FAIL"
+    },
+    {
+      "run_id": 44041866046,
+      "reason": "cursor duplicate context_refs, feature catalog structural check PASS",
+      "result": "FAIL"
+    }
+  ],
+  "repair_only": [
+    "recomputed six overlay result_blob SHA in active manifest",
+    "semicolon Rust local AAAA test",
+    "unique cursor context_refs"
+  ],
+  "actual_product_b0_b5": "NOT_RUN"
+}

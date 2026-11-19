@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2124",
+  "date": "2026-11-18",
+  "result": "NOT_RUN_AT_COLLECTION",
+  "artifact_verified": false,
+  "failed_predecessor": {
+    "source_sha": "7269b71ec2421868b5a45c0af4f1d1475a262c04",
+    "action_id": 44138696793,
+    "conclusion": "failure",
+    "artifact_id": 14354147838,
+    "zip_sha256": "8b9dea0dcaf736deab8c81c527a57fb5c743f1e0acf7596e35851b18c1f7793e",
+    "original_winforms_generation1": "PASS_REAL_OS_APPLIED_READY",
+    "first_dns_reply": {
+      "rcode": 2,
+      "answers": 0,
+      "length": 32,
+      "lane": "physical"
+    },
+    "real_linux_kernel_first_error": "B4 unexpected DNS ticket or physical fallback",
+    "original_windows_wal_stop": "PASS_ON_FAILURE",
+    "linux_stop": "PASS",
+    "original_three_generation_b4": "FAIL_GEN1_DNS"
+  },
+  "candidate": {
+    "source_sha": "c0f5cdf2610cbfb6c103bc1cf51bf1c949f47314",
+    "action_id": 44144504089,
+    "action_status_at_collection": "IN_PROGRESS",
+    "cheap": "PASS",
+    "windows_go": "IN_PROGRESS",
+    "windows_rust": "IN_PROGRESS",
+    "linux_rust": "IN_PROGRESS",
+    "native_signed_original": "NOT_RUN_AT_COLLECTION",
+    "changed": [
+      "tools/m0_plan029b_b4_guest.py",
+      "tests/test_m0_plan029b_b4_scope.py"
+    ],
+    "new_first_fault_receipt": "PLAN029B_B4_FIRST_UNEXPECTED_DNS",
+    "bound_fields": [
+      "lane",
+      "source_ipv4",
+      "expected_source_ipv4",
+      "source_port",
+      "wire_id",
+      "flags",
+      "qdcount",
+      "wire_bytes",
+      "question_sha256_24",
+      "qname_matches_cn_ticket",
+      "tail_qtype",
+      "expected_ids"
+    ],
+    "behavior": "FAIL_CLOSED_ON_UNKNOWN_PHYSICAL_OR_REWRITTEN_TICKET",
+    "no_raw_qname_or_pcap": true,
+    "no_product_runtime_change": true
+  },
+  "limits": {
+    "b4_three_real_gui": "NOT_RUN_TO_COMPLETION",
+    "game2_game4": "NOT_RUN",
+    "b5_same_vm_10mbps_cpu_gib_p99": "NOT_RUN",
+    "plan029b": "OPEN",
+    "plan029": "OPEN"
+  },
+  "source_sha": "7269b71ec2421868b5a45c0af4f1d1475a262c04"
+}

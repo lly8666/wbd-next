@@ -258,6 +258,44 @@ func m0WindowsOriginalColdClientPort(configured uint16,generation uint64)(uint16
  if candidate==uint64(configured){return 0,windowsclient.ErrN4NativeGuard}
  return uint16(candidate),nil
 }
+// PLAN029 H2065: A normal WinForms Disconnect destroys the original Go
+// process after owned WAL Stop. The original Linux FakeTCP server may still
+// retain its old 4-tuple. The next process must use a NEW cold source port.
+// Persist a bounded non-secret ordinal in this portable client's data
+// directory; it is cold configuration metadata, not a live OS resource.
+// Sync it BEFORE sending SYN so an abort skips rather than reuses a tuple.
+type m0WindowsColdTupleOrdinal struct{
+ Schema uint32 `json:"schema"`
+ Next uint64 `json:"next"`
+}
+func m0WindowsReserveColdTupleOrdinal(statePath string)(uint64,error){
+ if statePath==""{return 0,windowsclient.ErrN4NativeGuard}
+ dir:=filepath.Dir(filepath.Clean(statePath))
+ name:=filepath.Join(dir,".wbd-next-cold-tuple-ordinal.json")
+ current:=uint64(1)
+ raw,err:=os.ReadFile(name)
+ if err==nil{
+  if len(raw)>128{return 0,errors.New("cold tuple state exceeds bound")}
+  var state m0WindowsColdTupleOrdinal
+  if json.Unmarshal(raw,&state)!=nil||state.Schema!=1||
+   state.Next==0||state.Next>65535{
+   return 0,errors.New("invalid cold tuple state; refusing source port reuse")
+  }
+  current=state.Next
+ }else if !errors.Is(err,os.ErrNotExist){return 0,err}
+ next:=current+1
+ if next>65535{next=1}
+ payload,err:=json.Marshal(m0WindowsColdTupleOrdinal{Schema:1,Next:next})
+ if err!=nil{return 0,err}
+ tmp,err:=os.CreateTemp(dir,".wbd-next-cold-tuple-*.tmp")
+ if err!=nil{return 0,err}
+ defer os.Remove(tmp.Name())
+ if _,err=tmp.Write(payload);err!=nil{tmp.Close();return 0,err}
+ if err=tmp.Sync();err!=nil{tmp.Close();return 0,err}
+ if err=tmp.Close();err!=nil{return 0,err}
+ if err=os.Rename(tmp.Name(),name);err!=nil{return 0,err}
+ return current,nil
+}
 func m0WindowsPhysicalPathLivenessChanged(current,next m0WindowsPhysicalPath,err error)bool{
  return err==nil&&next.ifindex!=0&&next.source4.Is4()&&
   next.physicalMTU>=576&&next!=current
@@ -452,12 +490,11 @@ func m0Plan028WindowsNativeClientSlot(o m0NativeV4Options)(windows.Handle,error)
  return h,nil
 }
 func runM0NativeV4Windows(o m0NativeV4Options)error{
- // Game4 CN is wired through its actual 4-lane Rust GameAdapter TX/RX
- // and one shared NativeSplitWorker. Game2 remains explicitly unsupported
- // rather than silently using Normal or bypassing user split settings.
- if o.SplitEnable&&o.Mode==m0WinModeGame2{
-  return fmt.Errorf("PLAN029 CN split Game2 not wired; no OS Apply attempted")
- }
+ // 029B Game2 and Game4 share one cold Rust NativeSplitWorker, and
+ // each keeps its original 2/4 independent authenticated TLS lanes.
+ // No silent Normal fallback or pre-OS "not wired" rejection.
+ // The per-Game policy is prepared once after real TLS authentication,
+ // before the one owned Wintun/OS Apply.
  // Mode-specific original Rust capability is queried before Npcap,
  // FakeTCP, signed Wintun or host-global mutations. Game MUST have its
  // own 2/4-lane original TLS socket group; do not run Normal by mistake.
@@ -590,8 +627,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  // local tuple set, so only Normal/Fixed/Auto use this cold port.
  coldSourcePort:=o.SourcePort
  if o.Mode!=m0WinModeGame2&&o.Mode!=m0WinModeGame4{
-  coldSourcePort,err=m0WindowsOriginalColdClientPort(o.SourcePort,generation)
+  // Every *actual* cold original TLS start reserves one new tuple,
+  // including same-process cold reauth and new GUI Go child processes.
+  // A failed pre-TLS attempt consumes one ordinal; it cannot revive an
+  // old authenticated server-side 4-tuple from the previous session.
+  ordinal,portErr:=m0WindowsReserveColdTupleOrdinal(o.StatePath)
+  if portErr!=nil{return fmt.Errorf("PLAN029 cold tuple ordinal: %w",portErr)}
+  coldSourcePort,err=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal)
   if err!=nil{return err}
+  fmt.Printf("WBD_PLAN029_COLD_TLS_PROCESS_PORT_ORDINAL ordinal=%d configured_port=%d source=portable_cold_state\n",
+   ordinal,o.SourcePort)
   fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=%t\n",
    generation,o.SourcePort,coldSourcePort,o.ServerPort,coldSourcePort!=o.SourcePort)
  }
@@ -686,12 +731,20 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    physical,e:=underlay.PhysicalPath()
    if e!=nil{return windowsclient.NetworkPlan{},e}
    if guestMAC!=""&&(physical.NextHop4==underlay.Source4||ownedGuestOnLink){physical.NextHop4=o.ServerIP}
+   // H2139: ALL and disabled business split carry no Direct/Bypass
+   // business destinations into the real Windows owned OS plan.
+   // Protected TLS underlay, the one Tunnel DNS and WAL remain.
+   var businessDirect,businessBypass []netip.Prefix
+   if m0GameBusinessSplit(o){
+    businessDirect=append([]netip.Prefix(nil),o.Direct4...)
+    businessBypass=append([]netip.Prefix(nil),o.Bypass4...)
+   }
    return windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
     AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
     Lease4:verifiedLease,Server4:o.ServerIP,Physical:physical,
     DNSServers4:append([]netip.Addr(nil),o.DNSServers4...),
-    Direct4:append([]netip.Prefix(nil),o.Direct4...),
-    Bypass4:append([]netip.Prefix(nil),o.Bypass4...),
+    Direct4:businessDirect,
+    Bypass4:businessBypass,
     StatePath:o.StatePath,
    })
   }
@@ -870,14 +923,16 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if profileErr!=nil{return profileErr}
   fixedProfilePlusOne=uint8(selected)+1
  }
+ paddingMode,paddingErr:=m0WindowsProtectedStartupPaddingValue(o.StartupPaddingMode)
+ if paddingErr!=nil{return paddingErr}
  var owner *realityfront.V4WindowsAuthenticatedClientOwner
  var session *realityfront.V4ClientSession
  if o.Mode==m0WinModeNormal{
-  owner,session,err=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth)
+  owner,session,err=realityfront.V4WindowsEstablishOriginalClientOwner(ctx,dll,assoc,auth,paddingMode)
  }else{
   // Protected feature7 and the server's exact authenticated profile are
   // unchanged; this worker only retransmits original Go bootstrap segments.
-  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth,fixedProfilePlusOne)
+  owner,session,err=realityfront.V4WindowsEstablishOriginalFEC2ClientOwner(ctx,dll,assoc,auth,fixedProfilePlusOne,paddingMode)
  }
  stopColdPump()
  fmt.Printf("WBD_WINDOWS_ORIGINAL_TLS_COLD_FAKETCP_RETRANSMIT copied=%d joined_before_Rust_M3=1 source=original_Go_Sender_RTO\n",coldRetransmits)
@@ -945,18 +1000,28 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   physicalPath.NextHop4=o.ServerIP
   fmt.Printf("WBD_PLAN024_NATIVE_WSL_PUBLIC_OS_ROUTE_GUEST_NEXT_HOP scope=verified_guest_ethernet guest=%s ifindex=%d\\n",o.ServerIP,physicalPath.InterfaceIndex)
  }
+ // 029B business split-off owns no new Direct/bypass destinations.
+ // Keep only protected underlay/TLS and the original Tunnel/DNS/WAL.
+ // Old source-pinned 029 trial remains explicitly enabled in its scenario.
+ businessSplit:=o.SplitEnable||
+  (os.Getenv("GITHUB_ACTIONS")=="true"&&os.Getenv("WBD_PLAN029_NATIVE_V3_TRIAL")=="1")
+ var businessDirect,businessBypass []netip.Prefix
+ if businessSplit{
+  businessDirect=append([]netip.Prefix(nil),o.Direct4...)
+  businessBypass=append([]netip.Prefix(nil),o.Bypass4...)
+ }
  plan,e:=windowsclient.BuildCompactNetworkPlan(windowsclient.Config{
   AdapterAlias:o.AdapterAlias,TunnelMTU:o.TunnelMTU,
   Lease4:o.Lease4,Server4:o.ServerIP,Physical:physicalPath,
   DNSServers4:append([]netip.Addr(nil),o.DNSServers4...),
-  Direct4:append([]netip.Prefix(nil),o.Direct4...),
-  Bypass4:append([]netip.Prefix(nil),o.Bypass4...),
+  Direct4:businessDirect,Bypass4:businessBypass,
   StatePath:o.StatePath,
  })
  if e!=nil{return e}
  if plan.StatePath==""{return windowsclient.ErrN4NativeGuard}
  var transport m0NativeV4ProductPeer
  var tcpSynthetic netip.Addr
+ var tcpDNSOnly bool
  // Only explicit CI measurement chooses the retained original Go packet pump.
  // The product default remains the Rust-only Wintun/Npcap NativeOwner; the
  // override does not change original credential TLS, OS WAL or session scope.
@@ -994,10 +1059,11 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if e!=nil{return fmt.Errorf("PLAN029 original Go cold V3 rejected: %w",e)}
   if trial!=nil{
    nativePeer.plan029Cold=trial
+   tcpDNSOnly=trial.RouteMode==0
    if trial.TCPSynthetic4!=[4]byte{}{tcpSynthetic=netip.AddrFrom4(trial.TCPSynthetic4)}
-   fmt.Printf("WBD_PLAN029_V3_TRIAL_COLD_EFFECTIVE route_mode=%s direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 source=%s readiness=AWAIT_REAL_OS_RUST_RECEIPT\\n",
-    o.RouteMode,trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU,
-    map[bool]string{true:"explicit_config",false:"source_locked_CI_trial"}[o.SplitEnable])
+   fmt.Printf("WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=%d requested_route_mode=%s business_split=%t cn_domain_fakeip=%t direct_dns=%v tunnel_dns=%v cn_rows=%d domain_bytes=%d inner_mtu=%d single_original_owner=1 readiness=AWAIT_REAL_OS_RUST_RECEIPT\\n",
+    trial.RouteMode,o.RouteMode,trial.RouteMode!=0,trial.PolicyFlags&1!=0,
+    trial.DirectDNS,trial.TunnelDNS,len(trial.CN),len(trial.Domains),trial.InnerMTU)
   }
   transport=nativePeer
  }else{
@@ -1067,7 +1133,11 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   if tcpErr=owner.Plan029EnableNativeTCPAfterDefender(ctx,port);tcpErr!=nil{
    return errors.Join(fmt.Errorf("PLAN029 Rust TCP ENABLE: %w",tcpErr),cleanup())
   }
-  fmt.Printf("WBD_PLAN029_NATIVE_DIRECT_TCP_ENABLED_COLD port=%d synthetic=%s exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
+  if tcpDNSOnly{
+   fmt.Printf("WBD_PLAN029B_PUBLIC_DNS_TCP_ONLY_ENABLED_COLD port=%d synthetic=%s direct_business_nat=0 exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
+  }else{
+   fmt.Printf("WBD_PLAN029_NATIVE_DIRECT_TCP_ENABLED_COLD port=%d synthetic=%s exact_owned_allow=1 product_e2e=NOT_RUN\n",port,tcpSynthetic)
+  }
   select{
   case <-pathChanged:return errors.Join(errM0WindowsPhysicalPathChanged,cleanup())
   default:

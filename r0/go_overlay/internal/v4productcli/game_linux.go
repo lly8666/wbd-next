@@ -100,6 +100,24 @@ func logGameOuterRepair(role string,n int,p *realityfront.V4LinuxGameProduct,off
         proof.DataRetransmitted,proof.BlockedDuplicate,proof.FirstLaneCopied)
     return nil
 }
+// Per-original-M4-Linux owned raw send counters, NEVER padded intent.
+// This readback occurs before native Stop and cannot create a new record.
+func logGameStartupPadding(role string,n int,p *realityfront.V4LinuxGameProduct)error{
+    // The Game group is already authenticated. Read the actual client's
+    // chosen per-cohort selector, never the server process's CLI default.
+    want,err:=p.AuthenticatedStartupPaddingMode()
+    if err!=nil{return err}
+    mode,records,bytes,err:=p.StartupPaddingCounters()
+    if err!=nil{return err}
+    choices:=[]string{"off","tls","flows"}
+    if int(want)>=len(choices)||mode!=choices[want]{return realityfront.ErrAdmissionUnsupported}
+    if want==0&&(records!=0||bytes!=0){return realityfront.ErrAdmissionUnsupported}
+    if records==0&&bytes!=0{return realityfront.ErrAdmissionUnsupported}
+    if bytes>records*500{return realityfront.ErrAdmissionUnsupported}
+    log.Printf("V4_PUBLIC_GAME_PADDING_RAW_RECEIPT role=%s lanes=%d mode=%s padded_records=%d padded_bytes=%d original_TLS_Rust_M4=1 real_AF_PACKET_send=1",
+        role,n,mode,records,bytes)
+    return nil
+}
 func logGame4CopySchedule(role string,p *realityfront.V4LinuxGameProduct,enabled,wide bool)error{
     row,err:=p.CopyScheduleRead()
     if err!=nil{return err}
@@ -238,6 +256,7 @@ func runGameClient(
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             ConfigureLeaseIPv4:applyLease,
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
             Game4CopyWideStagger:c.game4CopyWideStagger,
@@ -471,6 +490,7 @@ func runGameClient(
         err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("client",n,native)}
+    err=errors.Join(err,logGameStartupPadding("client",n,native))
     if n==4{
         if e:=logGame4CopySchedule("client",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{
             err=errors.Join(err,e)
@@ -503,6 +523,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
             CleanupOwnedNetwork:tun.Close,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             DisableOuterRepair:c.disableOuterRepair,
             Game4CopyStagger:c.game4CopyStagger,
             Game4CopyWideStagger:c.game4CopyWideStagger,
@@ -523,7 +544,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
     if err!=nil{return err}
     defer raw.Close()
     emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{return err}
     assocs:=make([]*faketcp.ServerAssociation,n)
     var handoffCommitted atomic.Bool
@@ -668,6 +689,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
         err=errors.Join(err,errOuter)
     }
     if c.gameFecEnabled{logOriginalGameFec("server",n,native)}
+    err=errors.Join(err,logGameStartupPadding("server",n,native))
     if n==4{
         if e:=logGame4CopySchedule("server",native,c.game4CopyStagger,c.game4CopyWideStagger);e!=nil{return e}
     }
@@ -767,7 +789,7 @@ func runGameMultiServer(
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
     connected *bool,cert tls.Certificate,
 )(retErr error){
-    const maxLiveRustLanes=16 // Rust MAX_SESSIONS, includes candidates and successors
+    // Rust MAX_SESSIONS=32; keep a separate cold-admission headroom for Decoy.
     const cohortTimeout=45*time.Second
     n:=int(c.gameLanes)
     autoPool:=c.leasePool.IsValid()
@@ -789,6 +811,7 @@ func runGameMultiServer(
     // Game group Stop and this one reader have both joined.
     defer func(){retErr=errors.Join(retErr,shared.Close())}()
     cfg:=realityfront.V4LinuxGameProductConfig{
+        Fallback:originalV4ServerDecoy(c),FallbackSlots:originalV4DecoySlots(c),
         NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
         Tun:tun.f,TunName:c.tunName,SharedTun:shared,
         CleanupOwnedNetwork:func()error{return nil},
@@ -796,6 +819,7 @@ func runGameMultiServer(
         // another authenticated Game group is still using its old budget.
         ConfigureTunnelMTU:nil,
         GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+        StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
         DisableOuterRepair:c.disableOuterRepair,
         Game4CopyStagger:c.game4CopyStagger,
         Game4CopyWideStagger:c.game4CopyWideStagger,
@@ -815,7 +839,7 @@ func runGameMultiServer(
     if err!=nil{return err}
     defer raw.Close()
     emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{return err}
     defer table.Close()
     runCtx,cancel:=context.WithCancel(ctx)
@@ -843,8 +867,8 @@ func runGameMultiServer(
         lane *realityfront.V4LinuxGameAuthenticatedLane
         err error
     }
-    established:=make(chan *faketcp.ServerAssociation,32)
-    authenticated:=make(chan authResult,32)
+    established:=make(chan *faketcp.ServerAssociation,originalV4ColdAssociationSlots)
+    authenticated:=make(chan authResult,originalV4ColdAssociationSlots)
     failed:=make(chan error,1)
     var mu sync.Mutex
     seen:=make(map[*faketcp.ServerAssociation]bool,32)
@@ -863,7 +887,7 @@ func runGameMultiServer(
         err error
     }
     normalPending:=make(map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord)
-    normalProofReady:=make(chan normalProofResult,32)
+    normalProofReady:=make(chan normalProofResult,originalV4ColdAssociationSlots)
     // Same cold-only readiness fence for Game2/4 whole-group replacement.
     // Hot Game4 single-lane swap never uses this group-level route.
     type gameProofResult struct{
@@ -872,7 +896,7 @@ func runGameMultiServer(
         err error
     }
     gameProofPending:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
-    gameProofReady:=make(chan gameProofResult,32)
+    gameProofReady:=make(chan gameProofResult,originalV4ColdAssociationSlots)
     detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer)
     // Already switched Game4 slots keep the old cold association/port
     // excluded from Go DATA until its bounded random retirement deadline.
@@ -914,6 +938,7 @@ func runGameMultiServer(
         // Cold readback of this exact authenticated group's real M4 FEC
         // counters precedes owned Stop; do not aggregate siblings.
         if rec.gameFec{logOriginalGameFec("server",int(rec.key.Lanes),rec.product)}
+        padErr:=logGameStartupPadding("server",int(rec.key.Lanes),rec.product)
         if err:=rec.product.Close();err!=nil{
             return fmt.Errorf("Game group native Stop reason=%s: %w",reason,err)
         }
@@ -933,7 +958,7 @@ func runGameMultiServer(
         }
         log.Printf("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=%s remaining_flows=%d",
             reason,len(detached))
-        return nil
+        return padErr
     }
     retireNormal:=func(rec *originalV4MultiRecord,reason string)error{
         if rec==nil||rec.product==nil||!rec.ready||rec.stopping{return nil}
@@ -1052,7 +1077,7 @@ func runGameMultiServer(
             }
             if a.State()!=faketcp.ServerAssociationEstablished{continue}
             mu.Lock()
-            if !stopping.Load()&&!seen[a]&&len(seen)<maxLiveRustLanes{
+            if !stopping.Load()&&!seen[a]&&len(seen)<originalV4NativeLaneSlots+cap(cfg.FallbackSlots){
                 seen[a]=true
                 select{case established<-a:default:delete(seen,a)}
             }
@@ -1060,10 +1085,10 @@ func runGameMultiServer(
         }
     }()
     if c.mixedModes{
-        log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=32 rust_native_slots=16 shared_rust_tun=1",c.localPort)
+        log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=%d rust_native_slots=%d shared_rust_tun=1 decoy_max_splices=%d",c.localPort,originalV4ColdAssociationSlots,originalV4NativeLaneSlots,cap(cfg.FallbackSlots))
     }else{
-        log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=32 rust_native_total_lane_slots=16 shared_rust_tun=1",
-            c.localPort,n)
+        log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=%d rust_native_total_lane_slots=%d shared_rust_tun=1",
+            c.localPort,n,originalV4ColdAssociationSlots,originalV4NativeLaneSlots)
     }
     ticker:=time.NewTicker(time.Second)
     defer ticker.Stop()
@@ -1092,6 +1117,12 @@ func runGameMultiServer(
                 }
             }(a)
         case result:=<-authenticated:
+            if errors.Is(result.err,realityfront.ErrV4FallbackHandled){
+                // Ordinary TLS completed on its own FakeTCP flow; no cohort,
+                // authenticated lane or Rust epoch may be allocated.
+                forget(result.assoc)
+                continue
+            }
             if result.err!=nil{
                 // The old generic REJECT hid the difference between a
                 // 15s TLS timeout, a protected-policy refusal, and a native

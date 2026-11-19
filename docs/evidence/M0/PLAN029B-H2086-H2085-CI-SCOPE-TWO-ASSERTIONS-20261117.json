@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2086",
+  "date": "2026-11-17",
+  "source_sha": "1a9459285cbeab48e6db5f40953a9789cedf1b99",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "h2085_ci_first_boundary": {
+    "action": 44050649777,
+    "status": "FAIL",
+    "stage": "cheap native scope unittest",
+    "failures": [
+      {
+        "test": "test_h1859_p1_and_p2_bulk_both_build_exact_v3_before_native",
+        "reason": "NameError abi_section borrowed from separate H1843 method"
+      },
+      {
+        "test": "test_h1843_real_product_v3_abi_built_and_checked_before_driver",
+        "reason": "overescaped literal PE export missing in actual YAML"
+      }
+    ]
+  },
+  "h2085_passes": [
+    {
+      "action": 44050649785,
+      "area": "governance"
+    },
+    {
+      "action": 44050649812,
+      "area": "static"
+    },
+    {
+      "action": 44050649718,
+      "area": "native ABI"
+    },
+    {
+      "action": 44050649746,
+      "area": "cross ABI"
+    },
+    {
+      "action": 44050650335,
+      "area": "native functional"
+    },
+    {
+      "action": 44050649813,
+      "area": "Windows Linux Rust Direct pressure"
+    }
+  ],
+  "h2086_changes": "only two test assertions: check original two P1/P2 markers and default release V3 feature; validate actual unconditional PE export and no legacy conditional guard",
+  "new_windows_signed": "NOT_RUN",
+  "previous_signed_failure": {
+    "source": "12db9e2464c52e149b94701ac258d4b1a2f1fa34",
+    "action": 44045024679,
+    "result": "FAIL_MISSING_V3_EXPORT"
+  },
+  "original_029_signed": "H2077_PASS_SCOPED_DISTINCT_SOURCE"
+}

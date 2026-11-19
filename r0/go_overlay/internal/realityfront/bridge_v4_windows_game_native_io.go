@@ -30,6 +30,14 @@ type v4WindowsGameNativeIOV4 struct{
  Game V4WindowsGameNativeIOV3
  Split v4WindowsColdSplitWireV1
 }
+// No modification to the V3/V4 ABI: V5 carries the explicit canonical
+// Game startup-padding selector through the one authenticated cold handoff.
+type v4WindowsGameNativeIOV5 struct{
+ Version,Size uint32
+ Game V4WindowsGameNativeIOV3
+ Split v4WindowsColdSplitWireV1
+ StartupPaddingMode uint32 // off=0, tls=1, flows=2
+}
 // Only the protected 2/4 independent Go TLS owners can authorize a native
 // group handoff; this C layout does not mint a fresh TLS epoch.
 func(g *V4WindowsAuthenticatedGameGroup) StartNativeGameIO(
@@ -80,13 +88,21 @@ func(g *V4WindowsAuthenticatedGameGroup) startNativeGameIO(
  }
  if cold!=nil{
   split,err:=cold.wire();if err!=nil{return err}
-  v4:=v4WindowsGameNativeIOV4{Version:4,Game:cfg,Split:split}
-  v4.Size=uint32(unsafe.Sizeof(v4))
-  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v4_start")
+  var padding uint32
+  switch cold.StartupPaddingMode{
+  case "","off":padding=0
+  case "tls":padding=1
+  case "flows":padding=2
+  default:return errV4WindowsOwner
+  }
+  v5:=v4WindowsGameNativeIOV5{Version:5,Game:cfg,
+   Split:split,StartupPaddingMode:padding}
+  v5.Size=uint32(unsafe.Sizeof(v5))
+  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v5_start")
   if err!=nil{return err}
-  err=winOwnerCall(p,uintptr(unsafe.Pointer(&v4)))
+  err=winOwnerCall(p,uintptr(unsafe.Pointer(&v5)))
   runtime.KeepAlive(cold)
-  runtime.KeepAlive(v4)
+  runtime.KeepAlive(v5)
   return err
  }
  p,err:=first.bridge.fixedProc("wbd_m0_win_game_native_v3_start")
@@ -166,7 +182,8 @@ func(g *V4WindowsAuthenticatedGameGroup) NativeGameOuterRepairEffective(
 }
 
 // After four-stage OS Apply and actual original owner liveness, ask
-// the SAME Game4 Rust TX to prepare a kernel TCP listener. Caller MUST
+// the SAME Game2/4 Rust TX to prepare a kernel TCP listener.
+ // Both independent TLS group sizes share ONE original TCP controller; Caller MUST
 // install an exact owned Defender rule before enabling it.
 func(g *V4WindowsAuthenticatedGameGroup) plan029GameTCPControl(
  ctx context.Context,operation,port uint16,
@@ -177,7 +194,7 @@ func(g *V4WindowsAuthenticatedGameGroup) plan029GameTCPControl(
  }
  if err:=ctx.Err();err!=nil{return 0,err}
  g.mu.Lock()
- if g.closed||g.joined==0||len(g.members)!=4||g.members[0]==nil{
+ if g.closed||g.joined==0||(len(g.members)!=2&&len(g.members)!=4)||g.members[0]==nil{
   g.mu.Unlock();return 0,errV4WindowsOwner
  }
  first:=g.members[0];g.mu.Unlock()

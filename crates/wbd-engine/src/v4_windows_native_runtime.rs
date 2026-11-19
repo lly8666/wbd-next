@@ -238,6 +238,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      post_ingress_direct_to_rx:AtomicU64,
      tx_after_rx:AtomicU64,
      rejected:AtomicU64,
+     skipped_ipv6:AtomicU64, // only Wintun first-byte v6; Stop-only readback
      fresh_outer_bytes:AtomicU64,
      // Accepted by the genuine Npcap driver prefix, not just proposed
      // by the pre-seal policy. No public ABI change or per-DATA log.
@@ -265,6 +266,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              rx_tx_notify_attempts:AtomicU64::new(0),
              post_ingress_direct_to_rx:AtomicU64::new(0),
              tx_after_rx:AtomicU64::new(0),rejected:AtomicU64::new(0),
+             skipped_ipv6:AtomicU64::new(0),
              fresh_outer_bytes:AtomicU64::new(0),
              startup_pad_npf_bytes:AtomicU64::new(0),
              startup_pad_npf_records:AtomicU64::new(0),
@@ -529,6 +531,15 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              },
              Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
              Ok(ReadResult::Skipped)=>{
+                 // Even invalid Wintun loans were consumed/released; fair quantum.
+                 captured+=1;
+                 counters.rejected.fetch_add(1,Ordering::Relaxed);
+             },
+             Ok(ReadResult::SkippedIpv6)=>{
+                 // Same existing first-byte branch. No copy, Tunnel, Direct
+                 // classification, AEAD, FEC or per-packet log.
+                 captured+=1;
+                 counters.skipped_ipv6.fetch_add(1,Ordering::Relaxed);
                  counters.rejected.fetch_add(1,Ordering::Relaxed);
              },
              Err(_)=>return Err(BAD_STAGE),
@@ -1466,7 +1477,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              let n=match npf.read(&mut frame){
                  Ok(ReadResult::Frame(n))=>n,
                  Ok(ReadResult::NoPacket)=>break,
-                 Ok(ReadResult::Skipped)=>continue,
+                 Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,
                  Ok(ReadResult::EndOfStream)=>return BAD_STAGE,
                  Err(_)=>return BAD_STAGE,
              };
@@ -1582,16 +1593,17 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  fn plan029_rust_native_v3_cold_abi_exact_amd64_layout(){
      use std::mem::{size_of,offset_of};
      assert_eq!(size_of::<crate::v4_windows_native_split::ColdCidrV1>(),8);
-     assert_eq!(size_of::<ColdSplitSourceV1>(),128);
+     assert_eq!(size_of::<ColdSplitSourceV1>(),136);
      assert_eq!(offset_of!(ColdSplitSourceV1,cn),64);
      assert_eq!(offset_of!(ColdSplitSourceV1,domains),96);
      assert_eq!(size_of::<WbdWinNativeAttachV1>(),192);
      assert_eq!(size_of::<WbdWinNativeAttachV2>(),208);
      assert_eq!(offset_of!(WbdWinNativeAttachV3,split),216);
-     assert_eq!(size_of::<WbdWinNativeAttachV3>(),344);
+     assert_eq!(size_of::<WbdWinNativeAttachV3>(),352);
      assert_eq!(offset_of!(ColdSplitSourceV1,tcp_synthetic4),120);
      assert_eq!(offset_of!(ColdSplitSourceV1,tcp_owned),124);
      assert_eq!(offset_of!(ColdSplitSourceV1,journal_path),112);
+     assert_eq!(offset_of!(ColdSplitSourceV1,policy_flags),128);
  }
  #[cfg(feature="m0_v4_probe")]
  #[no_mangle]
@@ -1708,6 +1720,17 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
 
      let mut guard=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
      if guard.contains_key(&config.owner){return BAD_STAGE}
+     // H2072: H2067 tested only a stand-alone clock, not the live Entry.
+     // Arm existing five AEAD/PN Health controls after genuine Wintun/NPF
+     // validation and before the first native TX turn; the server still
+     // requires an authenticated peer Health to promote its shared /32.
+     {
+         let mut e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+         if !v3_ready(&e,config.epoch,config.luid,config.ifindex)
+             ||e.role_server{return BAD_STAGE}
+         let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
+         m.health.arm_client_cold_ready(m2_clock().0);
+     }
      let tx_lane=Arc::clone(&lane);let tx_stop=Arc::clone(&stop);
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
      let rx_notify_for_tx=Arc::clone(&rx_notify);
@@ -1862,6 +1885,8 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      };
      let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
      let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
+     eprintln!("PLAN029B_WINTUN_IPV6_SKIPPED_STOP packets={} joined=true original_wintun_owner=1",
+         session.counters.skipped_ipv6.load(Ordering::Relaxed));
      eprintln!("WBD_WINDOWS_RUST_NATIVE_WAKE_BATCH max_verified_per_wake={} tx_wake_attempts={} rx_data_delivered={} joined=true",
          RX_WAKE_BATCH,
          session.counters.rx_tx_notify_attempts.load(Ordering::Relaxed),
@@ -1908,6 +1933,24 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
  #[cfg(test)]
  mod tests {
      use super::*;
+     #[test]
+     fn plan029_h2067_native_cold_m4_sends_existing_health_before_5s_server_gate(){
+         use crate::v4_native_health::{HealthClock,HealthPolicy};
+         let at=100_000_000_000u64;
+         let mut clock=HealthClock::new(HealthPolicy::default_connected(),at);
+         assert!(!clock.tx_due(at)); // prior Windows default: 15s, misses B
+         clock.arm_client_cold_ready(at); // isolated cadence; production arms live Entry in start_native
+         assert!(clock.tx_due(at));
+         let mut now=at;
+         for n in 0..5 {
+             assert!(clock.tx_due(now),"bounded native cold Health copy {n}");
+             clock.on_health_send_result(now,true);
+             if n<4 {now+=400_000_000;assert!(clock.tx_due(now));}
+         }
+         assert!(!clock.tx_due(now+1_000_000_000));
+         assert!(clock.next_tx_deadline().is_some_and(|d|
+             d>at+5_000_000_000)); // restored ordinary 15s health
+     }
      #[test]
      fn plan029_h1977_only_valid_1024_tcp_data_sequenced_for_boundaries(){
          let mut packet=[0u8;1064]; // 20 IPv4 + 20 TCP + 1024 bytes
@@ -2117,6 +2160,17 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          assert!(full.quantum_full());
          assert!(!StageWork{tunnel:0,captured:BATCH-1,direct:BATCH-1}.quantum_full());
          assert!(StageWork{tunnel:BATCH,captured:BATCH,direct:0}.quantum_full());
+     }
+     #[test]
+     fn plan029b_ipv6_skipped_rx_consumes_quantum_and_keeps_next_ipv4_ready(){
+         // Original WintunRx::read already skips/releases IPv6; the
+         // scheduler's consumed-slot quantum must still be complete.
+         let all_skipped=StageWork{tunnel:0,captured:BATCH,direct:0};
+         assert!(all_skipped.quantum_full());
+         assert_ne!(ReadResult::SkippedIpv6, ReadResult::Skipped);
+         let mixed=StageWork{tunnel:1,captured:BATCH,direct:0};
+         assert!(mixed.quantum_full());
+         assert!(!StageWork{tunnel:1,captured:BATCH-1,direct:0}.quantum_full());
      }
      #[test]
      fn plan029_closed_nat_owner_wakes_at_due_not_10ms_busy_tick(){

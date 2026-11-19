@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2083",
+  "date": "2026-11-17",
+  "source_sha": "498a5a61a8e8eff1d8263529457f1523f3b21ff7",
+  "result": "NOT_RUN",
+  "artifact_verified": false,
+  "first_h2082_failures": [
+    {
+      "run": 44044462149,
+      "kind": "GO_COMPILER",
+      "error": "undefined: trial at m0_native_v4_windows.go:1125"
+    },
+    {
+      "run": 44044462119,
+      "kind": "GO_COMPILER",
+      "error": "same undefined trial at original Go linked WAL"
+    },
+    {
+      "run": 44044462367,
+      "kind": "GOVERNANCE_HOT",
+      "error": "combined hot byte budget exceeded: 32803, limit32768"
+    }
+  ],
+  "repair": [
+    "same-generation bool tcpDNSOnly declared outer Go scope and set from cold trial",
+    "manifest exact overlay result SHA",
+    "cursor context_refs lowered to seven"
+  ],
+  "new_signed_product": "NOT_RUN",
+  "h2082_passing_preflight": [
+    44044462134,
+    44044462254,
+    44044462361,
+    44044462219
+  ],
+  "existing_old_h2077_normal": "PASS_SCOPED_ONLY"
+}

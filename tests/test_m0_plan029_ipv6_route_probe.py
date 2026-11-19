@@ -18,6 +18,18 @@ class IPv6RouteTests(unittest.TestCase):
     def test_stop_exact_owned_wintun_prefix_stays_is_failure(self):
         result=evaluate(rows(),rows(("::/1",17),("8000::/1",17),leases=(17,)),rows(("::/1",17)))
         self.assertEqual(result["stop_route_baseline_readback"],"FAIL_NEW_WINTUN_PREFIX_REMAINED")
+    def test_029b_wintun_skipped_ipv6_spends_rx_quantum(self):
+        from pathlib import Path
+        source=(Path(__file__).resolve().parents[1] /
+                "crates/wbd-engine/src/v4_windows_native_runtime.rs").read_text(
+                    encoding="utf-8")
+        stage=source.split(" fn stage_sources(",1)[1].split(" fn send_control(",1)[0]
+        branch=stage.split("Ok(ReadResult::Skipped)=>{",1)[1].split("},",1)[0]
+        self.assertIn("captured+=1;",branch)
+        self.assertIn("counters.rejected.fetch_add(1,Ordering::Relaxed)",branch)
+        self.assertIn("still_ready|=staged.quantum_full()",source)
+        self.assertIn("plan029b_ipv6_skipped_rx_consumes_quantum_and_keeps_next_ipv4_ready",source)
+
     def test_no_signed_lease_or_unknown_route_fails_closed(self):
         with self.assertRaises(ValueError):evaluate(rows(),rows(("::/0",3)),rows())
         with self.assertRaises(ValueError):normalize({"routes":"invalid","wintun_ipv4_lease_indexes":[]})

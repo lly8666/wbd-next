@@ -40,6 +40,7 @@ import (
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
+    "github.com/lly8666/wobuzhidao/internal/v4routekey"
 )
 
 const tunSetIFF=0x400454ca
@@ -84,6 +85,7 @@ type config struct{
     tunName string
     tunCIDR string
     serverName string
+    decoyTarget string // server-only fixed ordinary-TLS target
     routeKey []byte
     tlsRoots *x509.CertPool
     tlsCert string
@@ -109,6 +111,7 @@ type config struct{
     mixedModes bool
     gameFecEnabled bool
     gameFecProfile uint8
+    startupPaddingMode uint8 // client V2 Normal/FEC/Game cold: 0 off, 1 TLS, 2 flows; server CLI not authority
     game4CopyStagger bool
     game4CopyWideStagger bool
     outerMTU int
@@ -249,7 +252,7 @@ func parse(role string,args []string)(config,error){
         "Android all-apps: mandatory canonical excluded controller+root-manager app IDs (10000..19999)")
     cnGeositeFile:=flags.String("android-cn-geosite-file","",
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
-    ip:=flags.String("local-ip","","underlay local IPv4")
+    ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     peerHost:=flags.String("peer-host","","Android Root client only: physical 223.5.5.5 DNS server name bootstrap before FakeTCP SYN")
     defaultPort:=uint(0)
@@ -261,7 +264,11 @@ func parse(role string,args []string)(config,error){
     if role=="server"{defaultTun="10.66.0.1/24"}
     tunCIDR:=flags.String("tun-ipv4",defaultTun,"owned real TUN IPv4 CIDR (server default 10.66.0.1/24)")
     name:=flags.String("server-name","","original TLS recognized SNI")
-    route:=flags.String("route-key-hex","","pre-shared 32-byte route key hex (64 characters); no on-wire key exchange")
+    decoy:=flags.String("decoy","","server-only ordinary TLS target host:port; per-visitor random 15..45s cutoff, max8 concurrent splices")
+    route:=flags.String("route-key-hex","","legacy/expert pre-shared 32-byte route key hex (64 characters)")
+    routeShort:=flags.String("route-key","","8..32 ASCII letters/digits; v2 4096-iteration mobile-friendly PBKDF2 once then persistent 32B cache (prefer 24..32 random)")
+    routeShortFile:=flags.String("route-key-file","","owner-only file with 8..32 short route-key; avoids argv disclosure")
+    routeCache:=flags.String("route-key-cache-file","","persistent owner-only derived key cache; default user config directory")
     caPEM:=flags.String("tls-ca-pem","","client application-scoped trusted server CA/certificate PEM (default OS trust)")
     cert:=flags.String("tls-cert","","original server TLS PEM")
     key:=flags.String("tls-key","","original server private PEM")
@@ -283,6 +290,7 @@ func parse(role string,args []string)(config,error){
     profile:=flags.Uint("fec-profile",1,"FEC2 profile 0..6 for normal fixed; auto uses strong startup")
     cipherName:=flags.String("record-cipher","chacha20-poly1305","client authenticated V4 record AEAD: chacha20-poly1305, aes-128-gcm or aes-256-gcm")
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
+    startupPadding:=flags.String("startup-padding","off","Client requests off|tls|flows inside protected TLS admission; server follows verified per-session choice; fixed parity never padded")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
     outerDefault:="on"
     if runtime.GOOS=="android"{outerDefault="off"}
@@ -346,8 +354,14 @@ func parse(role string,args []string)(config,error){
         if e!=nil{return c,fmt.Errorf("invalid password-file: %w",e)}
         *pass=value
     }
+    if *routeShortFile!="" {
+        if *routeShort!="" {return c,fmt.Errorf("route-key and route-key-file are mutually exclusive")}
+        short,e:=readPrivateArgFile(*routeShortFile)
+        if e!=nil{return c,fmt.Errorf("invalid route-key-file: %w",e)}
+        *routeShort=short
+    }
     if *routeFile!="" {
-        if *route!="" {return c,fmt.Errorf("route-key-hex and route-key-hex-file are mutually exclusive")}
+        if *route!=""||*routeShort!="" {return c,fmt.Errorf("route-key, route-key-hex and route-key-hex-file are mutually exclusive")}
         value,e:=readPrivateArgFile(*routeFile)
         if e!=nil{return c,fmt.Errorf("invalid route-key-hex-file: %w",e)}
         *route=value
@@ -411,6 +425,12 @@ func parse(role string,args []string)(config,error){
         return c,fmt.Errorf("record-cipher is per authenticated client; server cannot force a global V4 cipher")
     }
     c.recordCipher=selected
+    switch *startupPadding{
+    case "off":c.startupPaddingMode=0
+    case "tls":c.startupPaddingMode=1
+    case "flows":c.startupPaddingMode=2
+    default:return c,fmt.Errorf("startup-padding must be off, tls or flows")
+    }
     if *gameFec!="off"{
         if c.gameLanes==0||len(*gameFec)!=6||!strings.HasPrefix(*gameFec,"fixed")||
            (*gameFec)[5]<'0'||(*gameFec)[5]>'6'{
@@ -484,19 +504,46 @@ func parse(role string,args []string)(config,error){
        *port==0||*port>65535||(len(*route)>0&&len(*route)<32){
         return c,fmt.Errorf("missing/invalid real original V4 TLS/raw/TUN settings")
     }
+    // The raw AF_PACKET socket is always scoped to --raw-interface and
+    // validates destination IPv4. Server 0.0.0.0 is a CONFIGURATION ALIAS,
+    // not an unfiltered receive wildcard or a TCP listen(2) binding.
+    // The real interface IPv4 is resolved before any TUN/routing side effects.
+    if role=="server"&&*ip=="" {*ip="0.0.0.0"}
     parsed,err:=netip.ParseAddr(*ip)
-    if err!=nil||!parsed.Is4(){return c,fmt.Errorf("local-ip requires IPv4")}
+    if err!=nil||!parsed.Is4(){return c,fmt.Errorf("local-ip requires IPv4, or server 0.0.0.0/omitted for --raw-interface auto-selection")}
+    if role=="client"&&parsed.IsUnspecified(){
+        return c,fmt.Errorf("client local-ip must be a concrete IPv4")
+    }
     c.localIP=parsed
     c.rawInterface=*iface
     c.localPort=uint16(*port)
     c.tunName=*tunName
     c.tunCIDR=*tunCIDR
     c.serverName=*name
+    if *decoy!="" {
+        if role!="server"{return c,fmt.Errorf("decoy is server-only")}
+        host,portText,e:=net.SplitHostPort(*decoy)
+        if e!=nil||host==""||strings.TrimSpace(host)!=host{return c,fmt.Errorf("decoy needs fixed host:port")}
+        targetPort,e:=strconv.Atoi(portText)
+        if e!=nil||targetPort<1||targetPort>65535{return c,fmt.Errorf("decoy port invalid")}
+        if host==c.localIP.String()&&uint16(targetPort)==c.localPort{return c,fmt.Errorf("decoy cannot target own raw listener")}
+        if c.gameLanes>0{return c,fmt.Errorf("decoy requires shared/normal server entry; legacy fixed Game listener has no ordinary TLS dispatch")}
+        c.decoyTarget=*decoy
+    }
     c.username=*user
     c.password=*pass
-    c.routeKey,err=hex.DecodeString(*route)
-    if err!=nil||len(c.routeKey)!=32{
-        return c,fmt.Errorf("offline 32-byte route-key is required locally (64 hex characters); no network key bootstrap")
+    if *routeShort!="" {
+        if *route!=""||*routeFile!="" {return c,fmt.Errorf("route-key, route-key-hex and route-key-hex-file are mutually exclusive")}
+        cachePath:=*routeCache
+        if cachePath=="" {cachePath,err=v4routekey.DefaultCachePath(role,*name);if err!=nil{return c,err}}
+        c.routeKey,_,err=v4routekey.Resolve(*routeShort,cachePath)
+        if err!=nil{return c,fmt.Errorf("invalid/persisted route-key: %w",err)}
+    }else{
+        if *routeCache!="" {return c,fmt.Errorf("route-key-cache-file requires short route-key")}
+        c.routeKey,err=hex.DecodeString(*route)
+        if err!=nil||len(c.routeKey)!=32{
+            return c,fmt.Errorf("route-key (8..32 alphanumeric) or legacy 32-byte route-key-hex required; no online bootstrap")
+        }
     }
     if role=="server"&&*caPEM!=""{
         return c,fmt.Errorf("tls-ca-pem is a client-only setting; server uses tls-cert and tls-key")
@@ -875,6 +922,29 @@ func initServerRouteKeyFile(path string)error{
  log.Print("V4_PUBLIC_ROUTE_KEY_GENERATED local_file_only=1 bytes=32 permissions=0600")
  return nil
 }
+// chooseUnderlayIPv4 chooses one exact AF_PACKET destination address of
+// the operator-selected Linux interface. It never changes the negotiated
+// peer endpoint or makes the socket receive arbitrary destination addresses.
+// Multiple eligible addresses are ambiguous and must be selected explicitly.
+func chooseUnderlayIPv4(addrs []net.Addr)(netip.Addr,error){
+    var found netip.Addr
+    for _,entry:=range addrs{
+        prefix,err:=netip.ParsePrefix(entry.String())
+        if err!=nil{continue}
+        addr:=prefix.Addr()
+        if !addr.Is4()||addr.IsUnspecified()||addr.IsMulticast()||
+           addr.IsLoopback()||addr.IsLinkLocalUnicast(){continue}
+        if found.IsValid()&&found!=addr{
+            return netip.Addr{},fmt.Errorf("raw-interface has multiple IPv4 addresses; specify one via --local-ip")
+        }
+        found=addr
+    }
+    if !found.IsValid(){
+        return netip.Addr{},fmt.Errorf("raw-interface has no usable non-loopback IPv4; specify --local-ip explicitly")
+    }
+    return found,nil
+}
+
 func Run(role string,args []string)(retErr error){
  if role=="server"&&len(args)==2&&args[0]=="--init-route-key-file"{
    return initServerRouteKeyFile(args[1])
@@ -929,6 +999,14 @@ func Run(role string,args []string)(retErr error){
             cfg.peerIP=resolved
             log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=223.5.5.5 udp_tcp53_original_go=1",cfg.peerHost)
         }
+    }
+    if role=="server"&&cfg.localIP.IsUnspecified(){
+        addresses,e:=iface.Addrs()
+        if e!=nil{return fmt.Errorf("inspect server raw-interface IPv4: %w",e)}
+        cfg.localIP,e=chooseUnderlayIPv4(addresses)
+        if e!=nil{return e}
+        log.Printf("V4_PUBLIC_SERVER_UNDERLAY_BIND interface=%s local_ip=%s mode=auto_interface_ipv4 port=%d nat_port_forward_required_if_behind_gateway",
+                   cfg.rawInterface,cfg.localIP,cfg.localPort)
     }
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
@@ -1130,6 +1208,16 @@ func logAuthenticOuter(role string,v realityfront.V4PublicOuterCounters,err erro
         v.BlockedFreshGlobal,v.BlockedFreshShadow,v.BlockedGrant,
         v.BlockedBurst,v.BlockedQuota,v.BlockedCapacity,v.BlockedStale,
         v.BlockedLocalOther,v.BlockedGlobalOther,v.BlockedInvariant)
+}
+func logNormalStartupPadding(role string,fec bool,mode string,records,bytes uint64,err error){
+    label:="V4_PUBLIC_NORMAL_PADDING"
+    if fec{label="V4_PUBLIC_FEC_SOURCE_PADDING"}
+    if err!=nil{
+        log.Printf("%s_UNAVAILABLE role=%s error=%v",label,role,err)
+        return
+    }
+    log.Printf("%s_RAW_RECEIPT role=%s mode=%s padded_records=%d padded_bytes=%d original_TLS_Rust_M4=1 real_AF_PACKET_send=1",
+        label,role,mode,records,bytes)
 }
 func logAuthenticFecTx(role string,v realityfront.V4PublicFecTxSnapshot,err error){
     if err!=nil{
@@ -1478,6 +1566,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             ConfigureLeaseIPv4:applyLease,
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
@@ -1563,6 +1652,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         func()bool{return handoffCommitted.Load()},
         native.OriginalLoopPulse,notifyPreDead)
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
+    m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
+    logNormalStartupPadding("client",c.fecMode!=realityfront.FecV2Off,m,n,b,e)
     counters,countErr:=native.OriginalOuterCounters()
     logAuthenticOuter("client",counters,countErr)
     cpu,cpuErr:=native.OriginalWorkerCPU()
@@ -1632,6 +1723,27 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr
 }
+// Rust native owners have their own 32-lane cap; fake TCP association
+// lifetime remains bounded and does not pre-allocate 64 native owners.
+// 64 cold slots leave headroom for 32 established WBD lanes, reconnections,
+// and up to 8 independently bounded ordinary TLS decoy splices.
+const (
+    originalV4NativeLaneSlots=32
+    originalV4ColdAssociationSlots=64
+    originalV4MaxDecoySplices=8
+)
+func originalV4DecoySlots(c config)chan struct{}{
+    if c.decoyTarget==""{return nil}
+    return make(chan struct{},originalV4MaxDecoySplices)
+}
+func originalV4ServerDecoy(c config)*realityfront.FallbackConfig{
+    if c.decoyTarget==""{return nil}
+    return &realityfront.FallbackConfig{
+        Target:c.decoyTarget,ServerName:c.serverName,
+        DialTimeout:5*time.Second,SessionTimeout:45*time.Second,MaxBytes:64<<20,
+    }
+}
+
 func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
@@ -1644,15 +1756,17 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return err}
     product,err:=realityfront.NewV4LinuxServerProduct(
         realityfront.V4LinuxServerProductConfig{
+            Fallback:originalV4ServerDecoy(c),FallbackSlots:originalV4DecoySlots(c),
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })
     if err!=nil{return err}
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{return err}
     reply:=realityfront.ServerAdmissionConfig{
         TLS:realityfront.ServerConfig{ServerName:c.serverName,RouteKey:c.routeKey,
@@ -1733,6 +1847,17 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                     go func(){
                         nativeAcceptStart:=time.Now()
                         _,e:=product.AcceptAuthenticatedPeer(ctx,assoc,reply)
+                        if errors.Is(e,realityfront.ErrV4FallbackHandled)||
+                           (c.decoyTarget!=""&&(
+                            errors.Is(e,realityfront.ErrNotClientHello)||
+                            errors.Is(e,realityfront.ErrMalformedHello)||
+                            errors.Is(e,realityfront.ErrUnsupportedHello)||
+                            errors.Is(e,io.EOF)||errors.Is(e,io.ErrUnexpectedEOF))) {
+                            // One ordinary visitor must not exhaust the singleton
+                            // cold candidate slot before a real WBD arrival.
+                            select{case <-admitted:default:}
+                            return
+                        }
                         if e==nil&&ctx.Err()!=nil{e=errors.Join(ctx.Err(),product.Close())}
                         if e==nil{
                             state,exists:=assoc.TransitionState()
@@ -1767,6 +1892,8 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     *connected=handoffCommitted.Load()
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=server mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     if *connected{
+        m,n,b,e:=product.OriginalNormalStartupPaddingCounters()
+        logNormalStartupPadding("server",c.fecMode!=realityfront.FecV2Off,m,n,b,e)
         counters,countErr:=product.OriginalOuterCounters()
         logAuthenticOuter("server",counters,countErr)
         cpu,cpuErr:=product.OriginalWorkerCPU()
@@ -1891,7 +2018,8 @@ func runSharedMultiServer(
     if err!=nil{return err}
     shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
     if err!=nil{return err}
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    decoySlots:=originalV4DecoySlots(c)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{
         _=shared.Close()
         return err
@@ -1931,6 +2059,13 @@ func runSharedMultiServer(
         // the shared manual server has no singleton process-wide counters.
         // This is cold Stop only, never a packet path and never CLI intent.
         outer,outerErr:=rec.product.OriginalOuterCounters()
+        // Read original per-session M4 padding before generation Stop,
+        // not a process-wide counter or unauthenticated CLI preference.
+        if mode,count,padded,e:=rec.product.OriginalNormalStartupPaddingCounters();e==nil{
+            if effective,e:=rec.product.OriginalFECReadback();e==nil{
+                logNormalStartupPadding("server",effective.Mode!="off",mode,count,padded,nil)
+            }
+        }
         // Read the REAL per-session Rust FEC applied strength before
         // generation-owned Stop; not the server's global CLI default.
         if effective,e:=rec.product.OriginalFECReadback();e==nil{
@@ -2001,6 +2136,7 @@ func runSharedMultiServer(
         // every Rust RX owner. Unknown SYN remains the explicit CLI default.
         nativePersona,personaKnown:=originalV4ColdAssocPeerPersona(rec.assoc,c.peerPersona)
         cfg:=realityfront.V4LinuxServerProductConfig{
+            Fallback:originalV4ServerDecoy(c),FallbackSlots:decoySlots,
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,SharedTun:shared,
             // Only real authenticated auto-lease server sessions reach
@@ -2015,6 +2151,7 @@ func runSharedMultiServer(
             // The original TLS policy is this client's owner configuration;
             // server process --mode is not a global FEC admission filter.
             PerClientNormalFEC:true,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             DisableOuterRepair:c.disableOuterRepair,PeerPersona:nativePersona,
             Authenticate:originalV4CredentialCheck(c),
         }
@@ -2025,6 +2162,7 @@ func runSharedMultiServer(
         }
         mu.Lock();rec.product=p;mu.Unlock()
         sess,err:=p.AcceptAuthenticatedPeer(runCtx,rec.assoc,reply)
+        if errors.Is(err,realityfront.ErrV4FallbackHandled){return}
         if err!=nil{
             log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=original_tls_or_owner")
             return
@@ -2124,11 +2262,10 @@ func runSharedMultiServer(
             }
         }
     }
-    // 32 is the FakeTCP *cold association* table, not the number of
-    // authenticated Rust native owners. prepare_side has MAX_SESSIONS=16.
-    // Truthful readiness avoids advertising unqualified 32-live capacity.
-    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1",
-        c.localPort)
+    // Cold FakeTCP slots and Rust native lane slots are separate and bounded.
+    // A 32-slot cap is not a claim of 32 long-lived qualified users.
+    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=%d native_owner_slots=%d shared_rust_tun=1 decoy_max_splices=%d",
+        c.localPort,originalV4ColdAssociationSlots,originalV4NativeLaneSlots,cap(decoySlots))
     var rawInitialSYNSeen atomic.Bool
     var rawInitialSYNACKSent atomic.Bool
     go func(){

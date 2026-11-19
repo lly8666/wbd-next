@@ -156,15 +156,20 @@ impl DirectDns{
         let key=QueryKey{name,qtype,lane:ResolverLane::Direct,
             resolver4:u32::from(self.endpoint),resolver_port:53,
             policy_revision:1};
-        if matches!(qtype,28|64|65){
+        // Local AAAA denial belongs to the shared managed DNS policy, not
+        // to CN, an upstream resolver or an enabled FakeIP allocator.
+        // HTTPS/SVCB remains transparent in ordinary (non-FakeIP) CN.
+        let advanced=fake.is_some()&&journal.is_some();
+        if qtype==28 || (advanced&&matches!(qtype,64|65)){
             if let Ok(wire)=synthesize_cn_nodata(id,&key.name,qtype,false){
                 self.enqueue(client,&wire)
             }
             return true
         }
-        // CN A without durable ownership is SERVFAIL; never return a
-        // real CDN address merely because it came from the DNS cache.
-        if qtype==1&&(fake.is_none()||journal.is_none()){
+        // One broken half-configured FakeIP writer is a genuine cold fault.
+        // Ordinary CN A without a writer is intentional and returns the
+        // actual validated upstream CNAME/multi-A/TTL, never a fake slot.
+        if fake.is_some()!=journal.is_some(){
             self.fail(&[client],&key,2);return true
         }
         // This is a real owner-fast DNS cache HIT, not a second resolver.
@@ -172,7 +177,7 @@ impl DirectDns{
         // cached positive answer, including TTL reduction. A cache miss or
         // full cache always continues to the one physical DNS endpoint.
         // No FakeIP entry is reclaimed just because its DNS cache evicted.
-        if qtype==1 {
+        if qtype==1 && advanced {
             if let Some(answer)=self.cache.get(&key,now_ms){
                 self.resolved(ValidatedReply{key,
                     waiters:vec![client],answer},&[],
@@ -226,9 +231,12 @@ impl DirectDns{
         fake:Option<&mut FakeAllocator>,journal:Option<&mut FakeJournal>,
         now_ms:u64){
         let key=&reply.key;
-        if key.qtype!=1{
-            // Same verified physical endpoint and DNS question, original
-            // transaction ID restored independently for every coalesced client.
+        if key.qtype!=1 || (fake.is_none()&&journal.is_none()){
+            // Ordinary CN is a DIRECT *DNS* choice, not Direct business.
+            // Preserve a validated upstream real A/CNAME/multi-A/TTL, or
+            // HTTPS/SVCB, without allocating FakeIP or changing the RCODE.
+            // The original DNS ticket and endpoint have already matched;
+            // every coalesced original application ID is restored.
             for client in reply.waiters{
                 if raw.len()<12{continue}
                 let mut bytes=raw.to_vec();
@@ -381,7 +389,7 @@ impl DirectDns{
                     // Only validated positive CN A replies enter this
                     // bounded direction/endpoint/policy-scoped cache.
                     // False=skip caching, never reject a successful DNS reply.
-                    if answer.key.qtype==1{
+                    if answer.key.qtype==1 && fake.is_some() && journal.is_some(){
                         let _=self.cache.insert(answer.key.clone(),
                             answer.answer.clone(),now_ms);
                     }
@@ -512,6 +520,42 @@ mod tests{
         assert_eq!(dns.cache.get(&key,61_000),None); // TTL, no stale reuse
         drop(journal);
         std::fs::remove_file(path).unwrap();
+    }
+    #[test]
+    fn plan029b_ordinary_cn_udp_preserves_real_a_ttl_no_fake_writer(){
+        let mut dns=DirectDns::new(Ipv4Addr::new(10,1,0,7),14,
+            Ipv4Addr::new(10,234,12,34),Ipv4Addr::new(223,5,5,5),1280);
+        let key=QueryKey{name:"cn.example".into(),qtype:1,
+            lane:ResolverLane::Direct,resolver4:0xdf050505,
+            resolver_port:53,policy_revision:1};
+        let client=DnsClient{src4:0x0aea0c22,src_port:42053,
+            requested_dns4:0x08080808,original_id:0x6601};
+        let answer=crate::v4_client_dns_answer::DnsAResolution{status:DnsAnswerStatus::Answered,
+            canonical:"cn.example".into(),cname_chain:vec![],
+            candidates:vec![crate::v4_client_dns_answer::ResolvedA{
+                address:0xc6336417,ttl:2}]};
+        let mut wire=vec![0u8;12];
+        wire[..2].copy_from_slice(&0x8111u16.to_be_bytes());
+        wire[2..4].copy_from_slice(&0x8180u16.to_be_bytes());
+        wire[4..6].copy_from_slice(&1u16.to_be_bytes());
+        wire[6..8].copy_from_slice(&1u16.to_be_bytes());
+        wire.extend_from_slice(&[2,b'c',b'n',7,b'e',b'x',b'a',b'm',
+                                b'p',b'l',b'e',0,0,1,0,1]);
+        wire.extend_from_slice(&[0xc0,0x0c,0,1,0,1,0,0,0,2,0,4,
+                                 198,51,100,23]);
+        dns.resolved(ValidatedReply{key,waiters:vec![client],answer},
+            &wire,None,None,10);
+        let response=dns.pop().expect("ordinary CN response after validated A");
+        let mut expected=wire.clone();
+        expected[..2].copy_from_slice(&0x6601u16.to_be_bytes());
+        assert_eq!(&response[28..],&expected);
+        assert_eq!(&response[12..16],&[8,8,8,8]);
+        assert_eq!(&response[16..20],&[10,234,12,34]);
+        assert_eq!(&response[20..22],&53u16.to_be_bytes());
+        assert_eq!(&response[22..24],&42053u16.to_be_bytes());
+        assert_eq!(dns.cache_counts(),(0,0),
+            "ordinary CN never allocates FakeIP DNS cache");
+        assert_eq!(dns.counts(),(0,0,0));
     }
     #[test]
     fn plan029_direct_dns_one_socket_endpoint_bounded_no_journal_leak(){

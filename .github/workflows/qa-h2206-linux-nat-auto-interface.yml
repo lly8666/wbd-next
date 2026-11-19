@@ -1,0 +1,91 @@
+name: 'QA H2206 Linux native server NAT interface auto-bind'
+run-name: 'H2206 native Linux x86 ARM64 interface 0.0.0.0/omitted two-endpoint scoped'
+on:
+  push:
+    branches: [qa/h2206-linux-server-nat-interface-auto-bind-20261119]
+    paths:
+      - '.github/workflows/qa-h2206-linux-nat-auto-interface.yml'
+      - 'r0/go_overlay/internal/v4productcli/linux.go'
+      - 'r0/go_overlay/internal/v4productcli/server_nat_bind_linux_test.go'
+      - 'tools/arm64_linux_netns_smoke.sh'
+      - 'tools/m0_plan029_linux_crossplatform_coverage.py'
+permissions:
+  contents: read
+jobs:
+  native-linux:
+    name: Native ${{ matrix.isa }} 2 true TLS+Rust TUN/AF_PACKET NAT bind scenes
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {isa: x86_64, runner: ubuntu-24.04}
+          - {isa: aarch64, runner: ubuntu-24.04-arm}
+    env:
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.isa }}
+      WBD_PLAN029_LINUX_CONTROL_SYNC: '1'
+      WBD_PLAN029_LINUX_NAT_BIND_ONLY: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Native OS exact source and AF_PACKET NAT prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${WBD_PLAN029_LINUX_EXPECTED_ARCH}"
+          git merge-base --is-ancestor fbfe825b6ba3f0d3a57cbec49a8444b450eb0e6f HEAD
+          git diff --exit-code fbfe825b6ba3f0d3a57cbec49a8444b450eb0e6f HEAD -- Cargo.toml Cargo.lock crates r0/go_overlay/internal/realityfront/admission_v4.go r0/go_overlay/internal/faketcp
+          python3 -m py_compile tools/m0_plan029_linux_crossplatform_coverage.py
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm python3 iproute2 iputils-ping iptables openssl
+          test -c /dev/net/tun
+          sudo -n true
+      - name: Build genuine original Go and Rust native Linux release and run interface parser negative tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh > h2206-native-build.log 2>&1 || { tail -n 160 h2206-native-build.log; exit 1; }
+          # Reuse the exact native artifacts and linker path after the build
+          # (the build child shell cannot export CGO_LDFLAGS to its parent).
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli -run '^TestH2206')
+      - name: Two true original Linux TLS V4 v2 kernel data-plane scenarios per ISA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan029_linux_crossplatform_coverage.py > h2206-nat-network.log 2>&1 || { tail -n 150 h2206-nat-network.log; exit 1; }
+          python3 - <<'PY'
+          import json,os,pathlib
+          d=json.loads(pathlib.Path('linux-plan029-crossplatform-result/summary.json').read_text())
+          assert d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['native_isa']==os.environ['WBD_PLAN029_LINUX_EXPECTED_ARCH']
+          assert d['qualification']=='PASS_SCOPED_TWO_NAT_FRIENDLY_LINUX_NATIVE_INTERFACE_BIND_SCENES'
+          s=d['scenarios']
+          assert len(s)==2 and [x['name'] for x in s]==['nat-interface-zero','nat-interface-omitted']
+          assert [x['original_server_local_ip_input'] for x in s]==['0.0.0.0','omitted']
+          assert all(x['server_interface_bound_ip']=='198.18.7.2' for x in s)
+          assert all(x['status']=='PASS_SCOPED_REAL_LINUX_NATIVE_CROSSPLATFORM' for x in s)
+          assert all(x['server_padding_bytes']>0 and x['client_padding_bytes']>0 for x in s)
+          print('H2206_TWO_NATIVE_NAT_LOCAL_IP_AUTO_BIND_TLS_KERNEL_TCP_UDP_STOP_PASS')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2206-native-${{ matrix.isa }}-nat-v4v2
+          path: |
+            h2206-native-build.log
+            h2206-nat-network.log
+            linux-plan029-crossplatform-result/summary.json
+          if-no-files-found: warn
+          retention-days: 30

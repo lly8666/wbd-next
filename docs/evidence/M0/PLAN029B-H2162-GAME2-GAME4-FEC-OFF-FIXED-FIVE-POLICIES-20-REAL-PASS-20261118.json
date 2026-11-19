@@ -1,0 +1,292 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2162",
+  "date": "2026-11-18",
+  "source_sha": "508591f93427ebdad4cf88ff625e03fc4d485aca",
+  "result": "PASS_SCOPED",
+  "artifact_verified": true,
+  "action": {
+    "id": 44235564493,
+    "conclusion": "success",
+    "cheap": "success",
+    "windows_go": "success",
+    "windows_rust": "success",
+    "linux_rust": "success",
+    "original_linux_build": "success",
+    "native_jobs": 4,
+    "native_jobs_success": 4,
+    "total_genuine_case_count": 20
+  },
+  "all_290_zip_members_crc": "PASS",
+  "same_original_binary_hashes_for_all_cases": true,
+  "original_windows_cli_sha256": "112ff8748e07560839dfe3b198ef499c946e150412ab9448f579973436113820",
+  "original_linux_rust_server_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71",
+  "suites": [
+    {
+      "side": "game2off",
+      "game": "game2",
+      "lanes": 2,
+      "fec": "off",
+      "inner_os_mtu": 1373,
+      "job": 134572631750,
+      "artifact": 14397358848,
+      "sha256": "ad29a5883438bd1a8ae8b5b86163fd6bc846206c38f81ef470aac8365a3df9b4",
+      "files": 69,
+      "result": "PASS_SCOPED_FIVE_ORIGINAL_GAME_SPLIT_CASES_BOTH_OS",
+      "job_conclusion": "success",
+      "artifact_crc": "PASS",
+      "original_cases": [
+        {
+          "policy": "off",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "all",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "lan",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "ordinary",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "advanced",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        }
+      ]
+    },
+    {
+      "side": "game2fixed",
+      "game": "game2",
+      "lanes": 2,
+      "fec": "fixed",
+      "inner_os_mtu": 1358,
+      "job": 134572631781,
+      "artifact": 14398176092,
+      "sha256": "f558c8a911d50fdbcb63802305f7d82e3054501d7f723f7bc304b3a75a8c8329",
+      "files": 76,
+      "result": "PASS_SCOPED_FIVE_ORIGINAL_GAME_SPLIT_CASES_BOTH_OS",
+      "job_conclusion": "success",
+      "artifact_crc": "PASS",
+      "original_cases": [
+        {
+          "policy": "off",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "all",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "lan",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "ordinary",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "advanced",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        }
+      ]
+    },
+    {
+      "side": "game4off",
+      "game": "game4",
+      "lanes": 4,
+      "fec": "off",
+      "inner_os_mtu": 1373,
+      "job": 134572631773,
+      "artifact": 14397597698,
+      "sha256": "6d456013c1a26ace2ba67e96e093452128a7ef381e736ced8f3acf6207970496",
+      "files": 69,
+      "result": "PASS_SCOPED_FIVE_ORIGINAL_GAME_SPLIT_CASES_BOTH_OS",
+      "job_conclusion": "success",
+      "artifact_crc": "PASS",
+      "original_cases": [
+        {
+          "policy": "off",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "all",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "lan",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "ordinary",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "advanced",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        }
+      ]
+    },
+    {
+      "side": "game4fixed",
+      "game": "game4",
+      "lanes": 4,
+      "fec": "fixed",
+      "inner_os_mtu": 1358,
+      "job": 134572631932,
+      "artifact": 14398350146,
+      "sha256": "38d7675e51b37e180979ed06ccc6284122e989b1c8c39e9e9b6245fc1eefdd12",
+      "files": 76,
+      "result": "PASS_SCOPED_FIVE_ORIGINAL_GAME_SPLIT_CASES_BOTH_OS",
+      "job_conclusion": "success",
+      "artifact_crc": "PASS",
+      "original_cases": [
+        {
+          "policy": "off",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "all",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "lan",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "ordinary",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        },
+        {
+          "policy": "advanced",
+          "original_process_exit": 0,
+          "actual_kernel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+          "actual_original_windows_to_linux_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+          "owned_stop": "PASS_BOTH_OWNED",
+          "legacy_linux_initiated_windows_tcp": "NOT_RUN_SCOPE_SEPARATE",
+          "status": "PASS_ACTUAL_ORIGINAL_GAME_NATIVE_POLICY_AND_STOP"
+        }
+      ]
+    }
+  ],
+  "verified_policies": {
+    "off": "Rust V3 public DNS/Tunnel, no business Direct/FakeIP",
+    "all": "explicit split-enable plus route=all, no business Direct/FakeIP",
+    "lan": "original Wintun kernel LAN UDP to Linux eth0 physical Direct and source verified",
+    "ordinary": "CN physical DNS real A, shared overseas real-IP business Tunnel",
+    "advanced": "CN physical DNS FakeIP, real Direct UDP and 32768B TCP with half-close, overseas Tunnel"
+  },
+  "requested_outer_mtu": 1460,
+  "rust_split_owner": "ONE_PER_GAME_2_OR_4_AUTHENTICATED_LANES",
+  "explicit_exclusions": {
+    "linux_initiated_windows_inbound_tcp": "NOT_RUN_SCOPE_SEPARATE_PREEXISTING_PLAN028",
+    "game_startup_padding_tls_flows": "NOT_WIRED_FAIL_CLOSED",
+    "all_host_ipv6_linux_arm64": "NOT_RUN",
+    "full_029B_029_technical_contract": "OPEN",
+    "plan030": "NOT_STARTED"
+  },
+  "prior_first_failure_preserved": {
+    "action": 44232480332,
+    "source": "1a662439ade52233974e1a69c9db4f8c18300e6e",
+    "result": "FAIL_HISTORICAL_LINUX_INITIATED_WINDOWS_TCP_COMPARATOR"
+  }
+}

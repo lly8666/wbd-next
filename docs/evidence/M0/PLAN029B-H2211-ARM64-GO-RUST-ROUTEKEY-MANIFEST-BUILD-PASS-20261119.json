@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "task": "H2211-ARM64-ORIGINAL-GO-ROUTEKEY-MANIFEST-SAME-SOURCE-BUILD",
+  "date_utc": "2026-11-19",
+  "status": "BUILD_PASS",
+  "source_sha": "21acc95b5469e72872096f52702d1b62e128a25e",
+  "source_link": "https://github.com/lly8666/wbd-next/commit/21acc95b5469e72872096f52702d1b62e128a25e",
+  "original_go_source_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "action": 44430856253,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/44430856253",
+  "job": "current-native-arm64-compile",
+  "job_conclusion": "SUCCESS",
+  "runner_arch": "linux/aarch64",
+  "exact_proofs": [
+    "H1546_ARM64_CURRENT_SAME_DEFAULT_SOURCE_CHECKS_PASS",
+    "H2211_ARM64_ORIGINAL_GO_ROUTEKEY_SAME_MANIFEST_3_FILES_PASS",
+    "Rust wbd-engine native ISA-L test selected set: 24 passed, 0 failed",
+    "Rust wbd-engine native ISA-L selected set: 7 passed, 0 failed",
+    "ARM64_PUBLIC_GO_RUST_SOURCE_LOCKED_BUILD_ONLY_PASS",
+    "H1546_CURRENT_ARM64_REAL_ORIGINAL_GO_X2_AND_RUST_NATIVE_ISAL_BUILD_PASS_NO_IO"
+  ],
+  "scope": "Current pinned original-Go Linux ARM64 client and server binary compile and Rust native ISA-L library build with common verified route-key source code; source lock checks and bounded Rust tests.",
+  "expected_artifacts": [
+    "arm64-public-bundle/wbd-v4-client",
+    "arm64-public-bundle/wbd-v4-server",
+    "arm64-public-bundle/libwbd_engine.so",
+    "arm64-public-bundle/manifest.json",
+    "arm64-public-bundle/SHA256SUMS"
+  ],
+  "source_lock": "tools/arm64_public_go_rust_bundle.sh verified internal/v4routekey/{short.go,short_test.go,cache.go} Git blob object hashes against same plan020 manifest before original Go compilation",
+  "prior_fail_preserved": {
+    "action": 44430144037,
+    "source_sha": "574cf32b2227fd9f0d8608a94764fe3f6011ad42",
+    "first_failure": "no required module provides package github.com/lly8666/wobuzhidao/internal/v4routekey",
+    "status": "HISTORICAL_FAIL_NOT_OVERWRITTEN"
+  },
+  "not_run": [
+    "ARM64 actual native TUN/AF_PACKET TCP/UDP traffic/Stop",
+    "H2209 ordinary TLS decoy over physical ARM64 NIC and external public NAT DNAT",
+    "Android native JNI authenticated client/VpnService and actual phone",
+    "OpenWrt real ARM64 router with procd and owned Stop",
+    "PLAN029/029B full technical exit"
+  ],
+  "context_same_scope_source": "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json",
+  "context_original_go_tests_source": "574cf32b2227fd9f0d8608a94764fe3f6011ad42",
+  "boundaries": "KDF v2 4096 iterations and private cache algorithm unchanged; H2211 only installs same authoritative Go package into original ARM64 bundle assembly; no TLS/FEC/Rust datapath/wire changes."
+}

@@ -69,7 +69,7 @@ mod v4_mtu_budget_ffi;
 mod windows_lane_lifecycle;
 // PLAN029 bounded cold-compiled IPv4/CN-domain split decisions shared by
 // Normal and Game; product Wintun/direct binding is qualified separately.
-#[cfg(any(target_os="windows", test))]
+#[cfg(any(target_os="windows",target_os="linux",test))]
 mod v4_client_split;
 // PLAN029: typed wire/query decision, owned by the ONE Rust Wintun ingress.
 // Does not create a second packet reader or authorize a Direct backend.
@@ -78,7 +78,7 @@ mod v4_client_split_wire;
 // PLAN029: bounded startup padding budget source in Rust, not yet a
 // product effect until cold CLI/GUI and authenticated original LINK seal
 // wire it. Off has no newly allocated tracking table.
-#[cfg(any(target_os="windows", test))]
+#[cfg(any(target_os="windows",target_os="linux",test))]
 mod v4_client_startup_padding;
 // PLAN029 sparse DNS-only answer parsing and bounded query coalescing;
 // no second Wintun reader, no Go per-query pump or product owner claim.

@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2137",
+  "date": "2026-11-18",
+  "result": "PASS_SCOPED_USER_NORMAL_USAGE",
+  "full_plan029b_exit_met": false,
+  "full_plan029_d1_d5_p1_p2_met": false,
+  "b5_action": {
+    "id": 44201457211,
+    "source_sha": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
+    "conclusion": "success",
+    "native_job_id": 134458988379,
+    "native_conclusion": "success",
+    "component_checks": "ALL_PASS",
+    "same_source_windows_linux_builds": "PASS",
+    "artifact_id": 14383100380,
+    "artifact_sha256": "7dc06079fef3cf99b434993a25fd362fcabe280823f33ddd1c3c82d713333a9e",
+    "members": 48,
+    "crc": "PASS",
+    "windows_exe_sha256": "a66d9b965636d6642875321e34ab854b24a2232581896d89063fd36636bd3d46",
+    "windows_dll_sha256": "2bfc53d5a41bbcb3de9d2ae4c296391b71b446c1a0d6586923cefcbe4fedb85a",
+    "linux_rust_sha256": "9188f3941eba3dfd48831f779e0d8b73d3b31deda4c1978a1f270e11d75dcc71"
+  },
+  "b5_scope": {
+    "order": "A_OFF_ALL_THEN_B_SPLIT_REQUESTED_ALL",
+    "same_vm": true,
+    "binary_sha_equal": true,
+    "mode": "Normal Rust V3 public DNS",
+    "A_business_split": false,
+    "B_business_split": false,
+    "both_cn_domain_fakeip": false,
+    "both_route_mode": 0,
+    "both_dns_endpoints_same": true,
+    "each_direction_mbps": 10,
+    "seconds": 60,
+    "delay_ms": 25,
+    "loss_pct": 0,
+    "outer_mtu": 1460,
+    "inner_mtu": 1389,
+    "real_os_tcp_udp": "PASS_BOTH_ARMS",
+    "real_first_delivery_windows_linux": [
+      1,
+      1
+    ],
+    "original_owned_stop": "PASS_BOTH_ARMS"
+  },
+  "A": {
+    "actual_gib": 0.139679,
+    "win_cpu_s": 6.0156,
+    "win_kernel_cpu_s": 4.8438,
+    "win_user_cpu_s": 1.1719,
+    "win_cpu_s_per_gib": 43.0673,
+    "win_peak_rss_bytes": 46264320,
+    "win_udp_p99_ms": 47,
+    "linux_udp_p99_ms": 51.315,
+    "win_udp_replies": 549,
+    "linux_udp_replies": 600,
+    "win_max_gap_ms": 31,
+    "linux_max_gap_ms": 34
+  },
+  "B": {
+    "actual_gib": 0.13968,
+    "win_cpu_s": 6.5156,
+    "win_kernel_cpu_s": 5.2344,
+    "win_user_cpu_s": 1.2812,
+    "win_cpu_s_per_gib": 46.6465,
+    "win_peak_rss_bytes": 45449216,
+    "win_udp_p99_ms": 47,
+    "linux_udp_p99_ms": 51.207,
+    "win_udp_replies": 549,
+    "linux_udp_replies": 600,
+    "win_max_gap_ms": 16,
+    "linux_max_gap_ms": 18
+  },
+  "comparison": {
+    "B_over_A_cpu_per_gib": 1.0831,
+    "B_CPU_per_gib_increase_pct": 8.31,
+    "single_fixed_order_AB": true,
+    "stable_or_causal_regression": "NOT_ESTABLISHED",
+    "investigate_only_if_reproduced": true,
+    "win_driver_cpu": "NOT_ATTRIBUTED",
+    "linux_cpu": "NOT_RUN",
+    "small_tcp_p50_p95_p99": "NOT_RUN",
+    "CN_true_false_same_exit_PB2_cost": "NOT_RUN"
+  },
+  "earlier_signed_scopes": [
+    {
+      "stage": "B0",
+      "source": "969ce2b1a321e3a122c7cc235db7da45a7f13a17",
+      "evidence": "docs/evidence/M0/PLAN029B-H2105-H2104-GUI-SOURCE-CONFIG-PASS-20261117.json",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "stage": "B1_Normal_off",
+      "evidence": "docs/evidence/M0/PLAN029B-H2104-H2103-SIGNED-NORMAL-OFF-PASS-20261117.json",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "stage": "B2_ordinary",
+      "evidence": "docs/evidence/M0/PLAN029B-H2099-H2098-B2-ORDINARY-SIGNED-REAL-PASS-20261117.json",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "stage": "B2_advanced",
+      "evidence": "docs/evidence/M0/PLAN029B-H2103-B2-ADVANCED-20261117.json",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "stage": "B3_managed_ipv6",
+      "evidence": "docs/evidence/M0/PLAN029B-H2113-H2112-B3-REAL-SIGNED-IPV6-MIX-PASS-20261117.json",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "stage": "B4_real_original_three_gui",
+      "source": "ec49461fc40fd2816ef90ee04c6060ea41c9c984",
+      "action_id": 44198794225,
+      "evidence": "docs/evidence/M0/PLAN029B-H2135-H2133-THREE-GUI-CLEAN-PARENT-NATIVE-ACTION-PASS-20261118.json",
+      "status": "PASS_SCOPED"
+    },
+    {
+      "stage": "B5_Game4",
+      "source": "5fc22aef30aa4440e81257e67fded501fece3080",
+      "action_id": 44197717052,
+      "evidence": "docs/evidence/M0/PLAN029B-H2134-H2132-GAME4-ADVANCED-REAL-FOUR-LANES-SIGNED-PASS-20261118.json",
+      "status": "PASS_SCOPED_FEC_OFF_MTU1400"
+    }
+  ],
+  "limits": {
+    "current_source_all_matrix": "NOT_RUN_DIFFERENT_SIGNED_SCOPES",
+    "game2_split_true": "UNSUPPORTED_REJECT_BEFORE_OS_APPLY",
+    "game4_default1460_and_fixed_fec": "NOT_RUN",
+    "physical_host_all_ipv6_onlink_bound": "NOT_RUN_NO_GLOBAL_GUARANTEE",
+    "p_b2_cn_true_false_same_exit_cpu": "NOT_RUN",
+    "all_padding_tls_flows_off_real": "NOT_RUN",
+    "current_ARM64_product": "NOT_RUN",
+    "small_tcp_p99": "NOT_RUN",
+    "extreme_disk_crash_load": "NOT_REQUIRED_2026_11_17_USER_SCOPE",
+    "old_029_full_contract": "OPEN",
+    "plan030": "NOT_STARTED"
+  },
+  "decision": "USER_NORMAL_SCOPE_CLOSED_PASS_SCOPED_ONLY; FULL_TECHNICAL_CONTRACT_OPEN; NO_NEW_ACTIONS",
+  "source_sha": "d4ddd7424319be7b232d8997833dbd33212fa5fc",
+  "artifact_verified": true
+}

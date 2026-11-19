@@ -1,0 +1,43 @@
+name: "M0 H2213 bounded Rust32 registry and Windows/Linux native cold admission"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-h2213-rust32-decoy-deadline.yml"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "crates/wbd-engine/src/v4_windows_owner.rs"
+permissions: {contents: read}
+jobs:
+  native-rust32:
+    name: "Real Rust ${{ matrix.isa }} native 32-owner-cap test"
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {isa: linux-x86_64, runner: ubuntu-24.04}
+          - {isa: windows-x86_64, runner: windows-2022}
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact source and native Rust 1.85.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+      - name: Exercise real Rust native 32-slot registry boundary
+        shell: bash
+        env:
+          WBD_H2213_ISA: ${{ matrix.isa }}
+        run: |
+          set -euo pipefail
+          if [ "$WBD_H2213_ISA" = linux-x86_64 ];then
+            cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_h2213_linux_native_32_lane_limit_33rd_denied -- --nocapture --test-threads=1
+          else
+            cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record --lib m0_h2213_windows_real_32_prepared_owners_then_33rd_full -- --nocapture --test-threads=1
+          fi
+          echo "H2213_NATIVE_${WBD_H2213_ISA}_RUST32_BOUNDARY_PASS"

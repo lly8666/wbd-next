@@ -27,8 +27,12 @@ type winFec2RawDelivery struct{
 }
 func V4WindowsEstablishOriginalFEC2ClientOwner(
  ctx context.Context,library string,assoc *faketcp.ClientAssociation,
- cfg ClientAdmissionConfig,normalFixedProfilePlusOne uint8,
+ cfg ClientAdmissionConfig,normalFixedProfilePlusOne uint8,startupPadding ...uint8,
 )(*V4WindowsAuthenticatedClientOwner,*V4ClientSession,error){
+ if len(startupPadding)>1{return nil,nil,ErrAdmissionUnsupported}
+ mode:=uint8(0)
+ if len(startupPadding)==1{mode=startupPadding[0]}
+ if mode>2{return nil,nil,ErrAdmissionUnsupported}
  if ctx==nil||assoc==nil||assoc.BootstrapConn()==nil||
   cfg.Policy.Transport!=TransportNormal||
   cfg.Policy.FECMode==FECOff||
@@ -40,7 +44,7 @@ func V4WindowsEstablishOriginalFEC2ClientOwner(
  native,err:=newV4WindowsPrivateOwnerBridge(library)
  if err!=nil{return nil,nil,err}
  session,err:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
-  V4ClientOptions{DataPlaneReady:true,fec2Product:true,NormalFec:normalFixedProfilePlusOne})
+  V4ClientOptions{DataPlaneReady:true,fec2Product:true,NormalFec:normalFixedProfilePlusOne,StartupPadding:mode})
  if err!=nil{return nil,nil,err}
  handoff,err:=assoc.Detach()
  if err!=nil{return nil,nil,err}

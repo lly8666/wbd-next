@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_sha": "0e57cab2d53e2c95962eb673050fa54695fd3665",
+  "fixture_source_sha": "b06e982341bf81df14523e900f3b8379a2d5e856",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "plan": "PLAN029",
+  "task": "H2065",
+  "date": "2026-11-17",
+  "qualifier": "THREE_ORIGINAL_NATIVE_SCENES_FIRST_GENERATION_PASS_SECOND_GENERATION_SAME_TCP_4TUPLE_FAIL",
+  "runs": [
+    {
+      "scenario": "H2061_gui_reconnect",
+      "run_id": 44015496947,
+      "artifact_id": 14298916464,
+      "first": "REAL_OS_APPLIED_1460_1389_AND_OWNED_STOP_PASS",
+      "second": "REAL_GUI_ENABLED_CLICK_AND_GO_SYN_41031_NO_SYNACK",
+      "second_result": "FAIL_SECOND_COLD_TLS_HANDSHAKE",
+      "second_direct_tunnel": "NOT_RUN"
+    },
+    {
+      "scenario": "H2062_domain_reconnect",
+      "run_id": 44015501963,
+      "artifact_id": 14299480286,
+      "first": "REAL_PHYSICAL_UDP_TC1_SAME_ENDPOINT_TCP53_ORIGINAL_TLS_OS_OWNED_STOP_PASS",
+      "second": "ORIGINAL_DOMAIN_AGAIN_SELECTED_REAL_PHYSICAL_UDP_TC1_TCP53_BUT_GO_COLD_TLS_SYN_41031_NO_SYNACK",
+      "second_result": "FAIL_SECOND_COLD_TLS_HANDSHAKE",
+      "second_business": "NOT_RUN"
+    },
+    {
+      "scenario": "H2063_ttl_restart",
+      "run_id": 44015506886,
+      "artifact_id": 14298508264,
+      "first": "REAL_APP_CN_FAKEIP_198_18_0_1",
+      "ttl_expiry_second": "REAL_APP_FAKEIP_198_18_0_1_AND_TWO_DISTINCT_GUEST_PHYSICAL_DNS_TRANSACTIONS_IDS_0001_0002_TTL2",
+      "third_after_restart": "NOT_RUN_FAILED_SECOND_COLD_TLS_HANDSHAKE",
+      "second_business": "NOT_RUN"
+    }
+  ],
+  "root_cause": "Original Go m0WindowsOriginalColdClientPort(configured,generation) rotates source port for generation>1 in SAME process. Original WinForms normal Disconnect fully Stop and starts a fresh Go process, resetting generation=1; new SYN repeats original physical source port41031. Signed Npcap captured second SYN with no corresponding SYNACK; original server still owns old authenticated 4tuple despite native clean Stop.",
+  "not_root_cause": "GUI disabled-button race was repaired before this third wave, actual enabled click and second Go child confirmed. Real WSL2 boot and exact reused binary SHA PASS.",
+  "planned_fix": "Original Go reserve a strictly bounded nonsecret durable cold port ordinal per actual TLS generation in portable state before SYN; choose distinct cold port across normal Go child restart. No wire change, Go hot data path or server change. New product SHA must be rebuilt and truly retested.",
+  "no_promotion": "H2065 new source modification not yet compiled or physically tested; old fails remain FAIL, original first gen PASS only, TTL after restart NOT_RUN."
+}

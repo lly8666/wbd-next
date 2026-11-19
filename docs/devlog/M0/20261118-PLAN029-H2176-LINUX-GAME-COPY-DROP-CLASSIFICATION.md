@@ -1,0 +1,9 @@
+# PLAN029 H2176｜原Linux Game2真实内核业务已到达，区分冗余副本丢弃与真正业务拒绝
+
+H2175 [Action44257618077](https://github.com/lly8666/wbd-next/actions/runs/44257618077) 的x86_64/ARM64各Normal、Fixed、Auto三个真实客户端/服务端网络场景PASS_SCOPED；原Game2服务端单共享端口443 AF_PACKET、2条独立TLS lane 已认证，Rust M4复制，Linux客户端↔服务端双向UDP和TCP内核socket业务应用echo、双方Rust Stop全部有真日志。原ARM64 [artifact14407380582](https://github.com/lly8666/wbd-next/actions/runs/44257618077/artifacts/14407380582) 行为：client `copied=109 delivered=52 raw_received=111 auth_rejected=0 rejected=4`，server `copied=107 delivered=53 raw_received=113 auth_rejected=0 rejected=4`，两边都`V4_PUBLIC_GAME_NATIVE_STOP_DRAINED`；`M0_GAME_M4_TX_REJECT_BREAKDOWN` 的 offer/slab/record/policy/raw/raw_backpressure/raw_route/raw_mtu **均0**，total_rejected=4。x86执行同一受限条件。旧冻结ARM64夹具以`rejected=0`作为强制条件，忽略GameTx定义 `rejected`实际为 `GameCounters.lane_copy_drop`、即被调度器放弃的冗余lane副本；其定义可由 `crates/wbd-engine/src/runtime/game_shared.rs` 中capacity/deadline/dispatch分支确认，**不能把lane副本拒绝当作AEAD authenticator失败/整个IP逻辑包丢失**。H2175最终job FAIL仍保留，Game4当时未运行。
+
+H2176不修改原Go/Rust正式产品和不取消旧ARM64冻结模式严格`rejected=0`门；仅在本PLAN029源锁Linux双ISA测试上下文，要求真两lane或四lane的 original Game Kernel copied/delivered/raw_received都>0、`auth_rejected=0`，M4 TX reject Breakdown中 offer/slab/record/policy/raw/raw_backpressure/raw_route/raw_mtu **严格全0**，`total_rejected==lane_copy_drop`，并将非零冗余副本跳过数及原始分类保留到JSON。仍要求原内核双向TCP+UDP echo、原TLS/GameFEC确实Applied、FEC6 kernel parity copied、outer MTU1460、双方owned Stop和namespace完全清理；不认无日志/伪packet/单端PASS。新增单测防止把所有拒绝都无条件忽略。即使原Game2业务已经通，完整5场同源业务资格仍需新原生Action才认定，Game4未验保持NOT_RUN。所有旧FAIL保留、030不启。
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Distinguish original GameTx redundant lane_copy_drop from genuine raw/slab/record/policy/MTU and auth rejection in Linux-only scoped native qualification; enforce zero classified critical faults, preserve legacy stricter frozen ARM64 gate and user-visible counters, no product changes."}
+```

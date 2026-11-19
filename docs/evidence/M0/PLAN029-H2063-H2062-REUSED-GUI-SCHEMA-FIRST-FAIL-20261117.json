@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029",
+  "scope": "H2062_FIRST_THREE_NATIVE_FIXTURE_FAIL",
+  "date": "2026-11-17",
+  "fixture_source_sha": "31a9d2a82b7b64bc963e7befb78bcdd5a96c7c45",
+  "prebuilt_product_source_sha": "0e57cab2d53e2c95962eb673050fa54695fd3665",
+  "binary_reuse_manifest_SHA256": "PASS_WINDOWS_AND_LINUX_ON_ALL_THREE",
+  "wsl2_real_boot": "PASS_ALL_THREE",
+  "runs": [
+    {
+      "scene": "gui_reconnect",
+      "run": 44013733723,
+      "artifact_id": 14297727935,
+      "original_report_exit_code": 1
+    },
+    {
+      "scene": "domain_reconnect",
+      "run": 44013739000,
+      "artifact_id": 14298585486,
+      "original_report_exit_code": 1
+    },
+    {
+      "scene": "dns_ttl_restart",
+      "run": 44013744250,
+      "artifact_id": 14297977678,
+      "original_report_exit_code": 1
+    }
+  ],
+  "first_error": "tools/m0_plan029_gui_real_bridge.py:59 original Go client flag absent from real GUI schema route-key-hex-file",
+  "root_cause": "WBD_WL_REUSE_RUN_ID skips prepare_windows_wiring.py and so builds original WinForms from donor legacy/windows/gui/fields.json rather than assembled current original-Go GUI field schema.",
+  "status": "FAIL_FIXTURE_PRESTART",
+  "real_GUI_Connect": "NOT_RUN",
+  "real_direct_tunnel_business": "NOT_RUN",
+  "real_dns": "NOT_RUN",
+  "owned_Stop_product": "NOT_RUN",
+  "cleanup": "CI_EXISTING_FINALLY_RAN_CHECK_JOB_LOGS",
+  "fix": "On frozen binary reuse assemble source-locked original Go GUI donor schema in runner without rebuilding or mutating archived product EXE/DLL/SO; only then run the three distinct tests.",
+  "invariant": "Workflow failure is retained; no product failure inference and no source/manifest promotion."
+}

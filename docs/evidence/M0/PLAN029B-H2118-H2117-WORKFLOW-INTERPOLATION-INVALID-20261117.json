@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2118",
+  "date": "2026-11-17",
+  "source_sha": "0efa73336f04eb0fbb8e5ef7469f64a6a48fa2c5",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "action": {
+    "workflow_run_id": 44122245145,
+    "event": "push",
+    "conclusion": "failure",
+    "jobs": 0,
+    "governance_run_id": 44122249660,
+    "governance_job": "success",
+    "feature_catalog_job": "failure",
+    "governance_maintenance_run_id": 44122249770,
+    "maintenance_conclusion": "failure"
+  },
+  "first_error": {
+    "type": "MALFORMED_WORKFLOW_AND_PYTHON_TEST_SOURCE",
+    "workflow_path": ".github/workflows/m0-wl-public-normal-full.yml",
+    "broken_fragment": "-test.run=^TestPlan029BThreeGenerationsAdvancedOrdinaryAllNoStaleWriter followed immediately by old next command (no closing shell quote)",
+    "static_test_path": "tests/test_m0_native_ci_scope.py",
+    "static_test_break": "unterminated assertIn string after +exact+",
+    "root_cause": "During H2117 source construction JS String.replace replacement text containing dollar-apostrophe was interpreted as special suffix substitution; not Go/Rust runtime fault."
+  },
+  "fix": "H2118 reconstruct both files from exact pre-H2117 H2116 source a560d351..., insert by JS callback to avoid replacement $ special expansion, GitHub blob full readback exact, use one source-locked cheap Go preflight to execute B4 three-generation actual unit. No native marker.",
+  "original_product": {
+    "H2116_assembly_go_rust_compile": "PASS_SOURCE_a560",
+    "H2117_go_B4_three_generation_execution": "NOT_RUN_WORKFLOW_INVALID",
+    "original_B4_three_generation_GUI": "NOT_RUN",
+    "B3_original_ipv6_128": "PASS_SCOPED_OLD_SOURCE",
+    "B5_sameVM10Mbps": "NOT_RUN"
+  }
+}

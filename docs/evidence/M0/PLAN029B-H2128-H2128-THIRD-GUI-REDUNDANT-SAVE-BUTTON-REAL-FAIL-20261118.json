@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2128",
+  "date": "2026-11-18",
+  "source_sha": "cde9e7921737aad6f332a10fb738e2a4d764e9dd",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "native_original_action": {
+    "id": 44153223434,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "native_job_id": 134290380134,
+    "artifact_id": 14359994122,
+    "zip_sha256": "b3062c96d61b154c36f111fa06db8246988ad5879e688bbb0f84cd1362b0fc64",
+    "zip_entries": 26,
+    "zip_crc": "PASS",
+    "source_from_manifest": "cde9e7921737aad6f332a10fb738e2a4d764e9dd",
+    "same_source_windows_gui_go_rust": true,
+    "cheap": "PASS",
+    "windows_go": "PASS",
+    "windows_rust": "PASS",
+    "linux_rust": "PASS",
+    "original_linux_build": "PASS",
+    "original_windows_release_build": "PASS"
+  },
+  "original_first_failure": {
+    "stage": "REAL_GUI_GENERATION_3_PRE_CONNECT_AFTER_EXISTING_SAVE_AND_GO_EFFECTIVE",
+    "message": "PLAN029B_B4_FIRST_FAILURE IOException PLAN029B B4 real WinForms button unavailable 保存配置",
+    "original_gui_generation_1": {
+      "windows_os_applied": true,
+      "original_dns": "physical_and_fakeip",
+      "real_kernel_udp_echo": true,
+      "owned_stop_wal_clean": true
+    },
+    "original_gui_generation_2": {
+      "windows_os_applied": true,
+      "original_dns": "physical_real_A",
+      "real_kernel_udp_echo": true,
+      "old_fakeip_no_app_reply": true,
+      "owned_stop_wal_clean": true
+    },
+    "generation_3": "FAIL_BEFORE_REAL_CONNECT",
+    "reason": "Harness calls original form.SaveEditor() and Go ValidateAsync/effective then independently clicks disabled Save button again in Connect(); duplicate is invalid when already clean/inactive all-mode editor. Not a Rust data-plane fault.",
+    "original_native_wal_on_exception": "PASS_AFTER_GENERATION_2",
+    "original_full_b4": "FAIL_NOT_A_THREE_GENERATION_PASS",
+    "game2_game4": "NOT_RUN",
+    "b5_performance": "NOT_RUN"
+  },
+  "bounded_fix": {
+    "candidate_source_sha": "43f988d37edcb54e537b14d2f5a73aab4d6609fd",
+    "action_id": 44195727026,
+    "status_at_collection": "IN_PROGRESS",
+    "cheap": "PASS",
+    "changed": [
+      "tools/m0_plan029b_b4_real_gui.cs",
+      "tests/test_m0_plan029b_b4_scope.py"
+    ],
+    "behavior": "Keep authentic Save button on ordinal1, real SaveEditor+persist+original Go effective verification on ordinal2/3; all three original Connect/Disconnect buttons and actual DNS, kernel business, owned Stop required. Wait <=2.2s for actual controls to enable; no bypass of Connect/Disconnect.",
+    "no_go_rust_wire_tcp_fec_change": true
+  },
+  "limits": {
+    "b4_native_source_current": "NOT_RUN_TO_COMPLETION",
+    "game2_game4": "NOT_RUN",
+    "b5_same_vm_10mbps": "NOT_RUN",
+    "plan029b": "OPEN",
+    "plan029": "OPEN",
+    "plan030": "NOT_STARTED"
+  }
+}

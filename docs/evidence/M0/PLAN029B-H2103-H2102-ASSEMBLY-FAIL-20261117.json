@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2103",
+  "date": "2026-11-17",
+  "source_sha": "dae37c6fa6438d158c9e89bd3731143a307181ea",
+  "result": "FAIL",
+  "artifact_verified": false,
+  "original_signed_network": "NOT_RUN",
+  "actions": [
+    {
+      "id": 44084190869,
+      "scope": "Cheap original source/assembly",
+      "result": "FAIL"
+    },
+    {
+      "id": 44084191001,
+      "scope": "Windows native CLI source build",
+      "result": "FAIL"
+    },
+    {
+      "id": 44084190889,
+      "scope": "GUI Go/Rust assembly",
+      "result": "FAIL"
+    }
+  ],
+  "first_error": "tools/prepare_windows_wiring.py --check-only ValueError: assembly blob mismatch: r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
+  "manifest": "r0/go_overlay/assembly/manifest-plan020-m0.json",
+  "old_go_blob": "e567aff2bea808d2fe7e6ef9703b3d8ebc076f8c",
+  "actual_go_blob": "42131ff2855556c6c01a27a42dd5863848d51b2e",
+  "old_test_blob": "39d1d2d5de1077cee506df34b42fd859005efb2a",
+  "actual_test_blob": "0c51df873d1adc6d975f7c684934c6347f0218fc",
+  "correction": "Only two original pinned assembly operation result_blob hashes changed; same product Rust RX/cold Go code and tests retained",
+  "physical_ipv6_packet": "NOT_RUN"
+}

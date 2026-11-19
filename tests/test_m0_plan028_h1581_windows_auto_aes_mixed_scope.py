@@ -15,7 +15,12 @@ class Plan028H1581AutoAESNativeSource(unittest.TestCase):
         w=WORKFLOW.read_text()
         h=HARNESS.read_text()
         marker="[plan028-h1581-win-auto-aes-mixed-150s]"
-        self.assertIn("win5_scene: ${{ fromJSON(contains(github.event.head_commit.message, '"+marker+"') && '[\"mixed-loss0\"]'",w)
+        # H2156: the four independent Game split matrix jobs now sit
+        # before this *unchanged* PLAN028 H1581 mixed-loss0 selector.
+        # Check both independent branches, not their old adjacency.
+        self.assertIn("win5_scene: ${{ fromJSON(",w)
+        self.assertIn("contains(github.event.head_commit.message, '"+marker+"') && '[\"mixed-loss0\"]'",w)
+        self.assertIn('["game2off","game2fixed","game4off","game4fixed"]',w)
         self.assertIn("WBD_PLAN028_WIN_AUTO_AES_MIXED_150:",w)
         self.assertIn("WBD_WL_PUBLIC_MODES: ${{",w)
         self.assertIn("contains(github.event.head_commit.message, '"+marker+"') && 'normal'",w)

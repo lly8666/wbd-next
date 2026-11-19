@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "date": "2026-11-17",
+  "plan": "PLAN029",
+  "task": "H2067",
+  "failed_fixture_source": "4633f9e8c1da206401ee8952db07e2e65c83fb8d",
+  "frozen_product_source": "fb24fe784d960e3e8bf4ca63cc2a22332247e1dd",
+  "runs": [
+    {
+      "scene": "gui_reconnect",
+      "run_id": 44020809932,
+      "artifact_id": 14301231995,
+      "real_first_gui_ready": true,
+      "real_first_owned_stop": true,
+      "real_second_phys_synack": true,
+      "real_second_tls": true,
+      "real_second_os_applied": false,
+      "after": "FAIL_2ND_CLIENT_M4_RX=0"
+    },
+    {
+      "scene": "domain_reconnect",
+      "run_id": 44020814338,
+      "artifact_id": 14300937695,
+      "real_second_domain_udp_TC_tcp53": true,
+      "real_first_gui_ready": true,
+      "real_first_owned_stop": true,
+      "real_second_phys_synack": true,
+      "real_second_tls": true,
+      "real_second_os_applied": false,
+      "after": "FAIL_2ND_CLIENT_M4_RX=0"
+    },
+    {
+      "scene": "dns_ttl_restart",
+      "run_id": 44020818591,
+      "artifact_id": 14300698642,
+      "real_first_cn_fakeip": "198.18.0.1",
+      "real_after_ttl2_cn_fakeip": "198.18.0.1",
+      "original_physical_source_dns_queries": 2,
+      "post_restart_cn_query": "NOT_RUN",
+      "real_second_phys_synack": true,
+      "real_second_tls": true,
+      "after": "FAIL_2ND_CLIENT_M4_RX=0"
+    }
+  ],
+  "server_events": {
+    "first_manual32_authenticated_m4_ready": true,
+    "second_actual_phys_SYNACK": true,
+    "second_authenticated_TLS": true,
+    "second_rust_M4_local_candidate": true,
+    "held_old_route": "V4_PUBLIC_NORMAL_TUN_CANDIDATE_DEFERRED role=server generation=2 old_route_preserved=1",
+    "second_peer_health_within_5s": false,
+    "failed_guard": "V4_PUBLIC_MULTI_SERVER_B_CLIENT_UNPROVEN port=41032 old_route_preserved=1",
+    "final_original_shared_TUN_stop": true,
+    "final_server_rust_owner_stop": true,
+    "production_security_gate_intact": true
+  },
+  "first_error": "CLIENT_B_AUTHENTICATED_NATIVE_M4_RECEIVER_UNPROVEN_5S",
+  "source_timing_contrast": {
+    "linux_real_client": "crates/wbd-engine/src/v4_embedded_go.rs start_loop arms HealthClock.arm_client_cold_ready immediately after native workers start",
+    "windows_real_client": "crates/wbd-engine/src/v4_windows_native_runtime.rs start_native only health's default 15s periodic cadence; second client awaits M4 reverse 5s gate",
+    "health_policy": "15s keepalive, 90s dead; canonical 5-copy AEAD/PN kind0 cold receipt exists and has Rust tests",
+    "root_cause_confidence": "HIGH_SOURCE_AND_TIMING_MATCH_NOT_YET_NEW_PRODUCTION_RUNTIME_VERIFIED"
+  },
+  "proposed_change": "Only native Windows start_native after validated Wintun/NPF and M4 owner guards, before native TX/RX workers start, arm existing five-copy HealthClock.arm_client_cold_ready; preserve authenticated server 5s gate and zero wire/ABI changes",
+  "outcome": "H2066_FAILED_EVIDENCE_SAVED_H2067_FIX_SOURCE_ONLY_NATIVE_NOT_RUN"
+}

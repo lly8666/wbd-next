@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "plan": "PLAN029B",
+  "task": "H2092",
+  "date": "2026-11-17",
+  "source_sha": "071dde382a314d52fa2959201317b166b3f08677",
+  "result": "FAIL",
+  "artifact_verified": true,
+  "actual_h2091": {
+    "run_id": 44060263345,
+    "job_id": 133962868439,
+    "artifact_id": 14318238283,
+    "product_source_sha": "071dde382a314d52fa2959201317b166b3f08677",
+    "fixture_source_sha": "071dde382a314d52fa2959201317b166b3f08677",
+    "original_runner": "signed Windows2025 Wintun/Npcap + WSL2 Linux real original Go/Rust",
+    "source_compile": {
+      "cheap": "PASS",
+      "windows_go": "PASS",
+      "windows_rust": "PASS",
+      "linux_rust": "PASS",
+      "linux_peer": "PASS"
+    },
+    "native_result": "FAIL_TRUE_PUBLIC_EXECUTION",
+    "first_error": "B2 two upstream queries for one real app DNS ticket (Linux guest line56)",
+    "original_client_log": "WBD_WINDOWS_CLIENT_READY + WBD_PLAN029B_V3_COLD_EFFECTIVE route_mode=2 business_split=true cn_domain_fakeip=false",
+    "original_windows_app": {
+      "result": "PASS_ORIGINAL_WIN_WINTUN_REAL_A_CNAME_TTL2_AND_TUNNEL",
+      "cn_upstream": "physical chosen CN dns.direct, CNAME then 203.0.113.77 TTL2",
+      "global_upstream": "Tunnel chosen dns.tunnel, same 203.0.113.77 TTL2",
+      "cn_business": "real Windows AF_INET 10.66.0.2 -> overseas 203.0.113.77:46113 over Tunnel, UDP reply",
+      "global_business": "same overseas IP via original Tunnel, UDP reply",
+      "fakeip": false
+    },
+    "linux_guest_result": "FAIL strict one-query oracle after observed repeat; no final expected 4-event signed witness",
+    "final_os_wal_stop": "NOT_RUN_FULL_B2_WITNESS"
+  },
+  "contract": "029 DNS §4 allows at most two same-endpoint UDP attempts, never DNS cross-lane fallback or unlimited retry",
+  "fixture_repair": {
+    "product_code_changed": false,
+    "changed_file": "tools/m0_plan029b_b2_cn_guest.py",
+    "qname_type_and_peer_validation_before_retry": true,
+    "physical_udp_attempts_per_lane_max": 2,
+    "reports_attempts_and_upstream_transaction_ids": true,
+    "still_rejects_wrong_dns_peer_qtype_question": true,
+    "still_rejects_excess_attempts_and_duplicate_business": true,
+    "new_signed_run": "NOT_RUN"
+  },
+  "earlier_real_b0": {
+    "run_id": 44056378053,
+    "result": "PASS_SCOPED",
+    "source_sha": "d0dd9f1bcd662360473a8269effa413369875fb7"
+  },
+  "full_plan029b_B0_B5_qualification": false,
+  "legacy_failures_retained": true
+}

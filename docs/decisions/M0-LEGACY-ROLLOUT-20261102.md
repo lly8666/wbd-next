@@ -14,6 +14,7 @@
 |---|---|---|
 | [PLAN028](M0-PLAN028-SESSION-CONFIG-20261102.md) | 简化认证、自动IP、多客户端单端口/独立配置；各模式换lane；公共切网恢复与Windows/Linux通知接线 | [M0-PLAN028](../prompts/M0-PLAN028.md) |
 | [PLAN029](M0-PLAN029-CLIENT-DNS-PADDING-20261102.md) | 中国IP＋域名并集分流、双方向单DNS/服务器bootstrap、Windows配置/UI、有限新流填充 | [M0-PLAN029](../prompts/M0-PLAN029.md) |
+| [PLAN029B](M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md) | 当前029优化批次后：分流按需加载、普通/高级CN开关、统一AAAA与IPv6入口；纳入029收口、030前，设计已定案/产品未测 | [M0-PLAN029B](../prompts/M0-PLAN029B.md) |
 | [PLAN030](M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md) | 最小服务端配置、中文wbd-next管理CLI、持久服务化/完整卸载、组合交付 | [M0-PLAN030](../prompts/M0-PLAN030.md) |
 
 **历史2026-11-07为028冻结验收；当前以H1657限定收口及H1658启动029为准。**以下是既定分包关系；029/030独立部分只有已有明确授权时才并行，不能把本轮028收尾授权扩大为新功能开工。集成与正式客户端测试依赖028实际接通。生命周期、FEC、重传、加密数学不分别重新实现。总入口只管范围，进度只写既有cursor/devlog/evidence；每次接手读总入口+当前一包，不先读三包全部历史。
