@@ -7,7 +7,8 @@
   "stage": "experimental",
   "development_branch": "integration/w168-freeze-windows-adapter-20261026",
   "available_on": [
-    "integration/w168-freeze-windows-adapter-20261026"
+    "integration/w168-freeze-windows-adapter-20261026",
+    "qa/h2214-client-tls-verify-switch-20261119"
   ],
   "defaults": {
     "auth": "H2208 v2 short route-key or legacy random 32B. H2214: client TLS server certificate verification disabled by default (insecure legacy compatibility), opt-in tls-verify-server=true.",
@@ -48,13 +49,22 @@
     ".github/workflows/m0-plan028-x86-same-path-timed-rotation.yml",
     "r0/go_overlay/internal/faketcp/association.go",
     "r0/go_overlay/internal/faketcp/packet.go",
-    "r0/go_overlay/internal/v4routekey/cache.go"
+    "r0/go_overlay/internal/v4routekey/cache.go",
+    "r0/go_overlay/internal/v4productcli/tls_verify_linux_test.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
+    "r0/go_overlay/cmd/wbd-client/m0_native_v4_tls_verify_windows_test.go",
+    "r0/go_overlay/internal/realityfront/tls_verify_h2214_test.go",
+    ".github/workflows/qa-h2214-client-tls-verify.yml"
   ],
   "doc_refs": [
     "docs/decisions/M0-PLAN028-SESSION-CONFIG-20261102.md",
     "docs/architecture/MTU_CONTRACT.md",
     "docs/architecture/TLS_HANDSHAKE_CONTRACT.md",
-    "docs/decisions/M0-PLAN028-PRESHARED-TLS-ROUTEKEY-OPERATIONS-20261104.md"
+    "docs/decisions/M0-PLAN028-PRESHARED-TLS-ROUTEKEY-OPERATIONS-20261104.md",
+    "docs/evidence/M0/H2214-CLIENT-TLS-VERIFY-SWITCH-SOURCE-ED1370-ACTIONS-20261119.json",
+    "docs/devlog/M0/20261119-H2214-CLIENT-TLS-VERIFY-SWITCH-QA.md"
   ],
   "verification": [
     {
@@ -394,11 +404,11 @@
       "evidence": "docs/evidence/M0/PLAN028-H1575-WIN-150S-ECHO-LIFETIME-STOP-20261111.json"
     },
     {
-      "platform": "Linux x86_64/arm64 client and Windows x64 original Go/WinForms",
-      "scope": "H2214 default false, explicitly true, Go CLI and GUI config, native Normal/Game TLS configuration; exact-source Actions pending",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "platform": "Linux x86_64/ARM64 native original Go+Rust; Windows amd64 original Go/WinForms",
+      "scope": "H2214 --tls-verify-server default false, explicit true; actual TLS self-signed/untrusted/trusted certificate tests; native Normal/Game2/Game4 config; Windows original Go compile + 419 GUI self-checks. Physical WAN/32-user/DPI/p99 NOT_RUN.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "ed1370ac35bb49aa03d21ba57033e5c3393af7fb",
+      "evidence": "docs/evidence/M0/H2214-CLIENT-TLS-VERIFY-SWITCH-SOURCE-ED1370-ACTIONS-20261119.json"
     }
   ],
   "limitations": [
