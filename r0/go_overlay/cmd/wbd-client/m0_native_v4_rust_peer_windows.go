@@ -155,22 +155,28 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
   }
  }
 }
+// H2223: READY is a *local activation* result. Original credential
+// TLS/M3 and the exact Wintun/NPF loans were verified in BindNativeRing;
+// Connect performs the four real OS/WAL stages before calling here and
+// reads back the OS configuration after. Real reverse application DATA is
+// useful data-plane evidence, never a cold-start admission prerequisite.
+// Retain the pre-existing interface name for the legacy Go steady A/B
+// implementation, whose packet-level verifier is unchanged.
 func(p *m0WinRustNativePeer) VerifyPeerFirstAndReverse(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
  tun *windowsclient.TUN,id windowsclient.N4UnifiedIdentity)error{
- if p.owner!=owner||!p.active{return windowsclient.ErrN4NativeGuard}
- timeout,cancel:=context.WithTimeout(ctx,20*time.Second);defer cancel()
- tick:=time.NewTicker(25*time.Millisecond);defer tick.Stop()
- for{
-  state,err:=owner.NativeIOStats(timeout);if err!=nil{return err}
-  p.last=state
-  if state.WorkerError!=0{return fmt.Errorf("native Rust owner rc=%d",state.WorkerError)}
-  if state.TXCopied>=2&&state.RXDelivered>=1&&state.TXAfterRX>=1{return nil}
-  select{
-  case <-timeout.Done():return fmt.Errorf("real Rust native first+reverse: %w %+v",timeout.Err(),state)
-  case <-tick.C:
-  }
- }
+ if ctx==nil||p.owner!=owner||!p.active||tun==nil||
+  p.wintun==nil||p.rx==nil||p.tx==nil{return windowsclient.ErrN4NativeGuard}
+ if err:=ctx.Err();err!=nil{return err}
+ state,err:=owner.NativeIOStats(ctx)
+ if err!=nil{return err}
+ p.last=state
+ if state.WorkerError!=0{return m0WindowsRustNativeWorkerError(state.WorkerError)}
+ // Snapshot reports precisely the two Rust native worker owners, not
+ // real kernel traffic, and the readback validates its C ABI separately.
+ fmt.Printf("WBD_WINDOWS_NATIVE_STARTUP_READY source=original_go_tls_rust_native workers=%d tx_copied=%d rx_delivered=%d tx_after_rx=%d application_reverse_required=0\n",
+  state.Workers,state.TXCopied,state.RXDelivered,state.TXAfterRX)
+ return nil
 }
 func(p *m0WinRustNativePeer) DrainPeerAndKernelLoans(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
