@@ -1,4 +1,4 @@
-name: 'H2224 full Windows Rust owner Health regression after random cold M4'
+name: 'H2224 Windows Rust native-owner and Health regressions after random cold M4'
 on:
   push:
     branches: ['fix/h2224-native-cold-random-regression-test', main]
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
-  windows-rust-complete-lib:
+  windows-native-owner-health:
     runs-on: windows-2025
     timeout-minutes: 45
     steps:
@@ -34,7 +34,7 @@ jobs:
           $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
           cmd.exe /d /s /c ('call "'+$vcvars+'" && cd isa-l && nmake /f Makefile.nmake')
           if($LASTEXITCODE -ne 0){throw 'MSVC ISA-L build failed'}
-      - name: Full original Rust Windows owner lib + randomized cold compatibility test
+      - name: Windows Rust native-owner and authenticated Health unit matrix
         shell: pwsh
         timeout-minutes: 22
         run: |
@@ -48,6 +48,8 @@ jobs:
           $env:WBD_ISAL_PREFIX=$lib.Directory.FullName
           $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
           $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
-          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib -- --test-threads=1
-          if($LASTEXITCODE -ne 0){throw 'Full Rust lib regression not PASS'}
-          Write-Host 'H2224_WINDOWS_RUST_FULL_LIBRARY_PASS'
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_windows_owner -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'Windows authenticated owner regression failed'}
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_native_health::tests -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'Native authenticated Health policy regression failed'}
+          Write-Host 'H2224_WINDOWS_OWNER_AND_HEALTH_FULL_SCOPED_PASS'
