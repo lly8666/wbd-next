@@ -133,9 +133,9 @@ start_client(){
  PIDS+=("$!")
 }
 # Interleave 2+4+1 raw source TCP ports to expose first-flight mux errors.
-start_client "$NSA" mxa0 10.25.0.2 mxa4 41031 alice alice-mixed-protected game2 '--record-cipher chacha20-poly1305 --tls-verify-server=true --tls-ca-pem "$TMP/cert.pem"'
+start_client "$NSA" mxa0 10.25.0.2 mxa4 41031 alice alice-mixed-protected game2 "--record-cipher chacha20-poly1305 --tls-verify-server=true --tls-ca-pem '$TMP/cert.pem'"
 start_client "$NSB" mxb0 10.25.0.3 mxb4 42031 bob bob-mixed-protected game4 '--game-fec fixed6 --record-cipher aes-256-gcm'
-start_client "$NSC" mxc0 10.25.0.4 mxc4 43031 carol carol-mixed-protected fec-auto '--record-cipher aes-128-gcm --tls-verify-server=true --tls-ca-pem "$TMP/cert.pem"'
+start_client "$NSC" mxc0 10.25.0.4 mxc4 43031 carol carol-mixed-protected fec-auto "--record-cipher aes-128-gcm --tls-verify-server=true --tls-ca-pem '$TMP/cert.pem'"
 for i in {1..140};do
  if grep -Fq "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=2" "$TMP/alice.log" &&
     grep -Fq "V4_ORIGINAL_GO_GAME_NATIVE_READY role=client lanes=4" "$TMP/bob.log" &&
