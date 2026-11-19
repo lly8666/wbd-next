@@ -8,10 +8,10 @@
   "checkpoint_sha": "c21cea4560037c471676c7f49f200503739824cd",
   "progress": "in_progress",
   "task_id": "PLAN029-H2220-R3-FEC6-PAIRED-PHYSICAL-RX0",
-  "current_task": "H2220两轮补证：Normal源端口40017认证后4个服务端69/69/108/90B在超时前均被Windows NIC及独立Npcap接收且ACK前进，但RXDelivered0；Fixed maximum profile6源40018第3个111B到达，第1个100B及后续109B在Win未见，ACK跨100B可能只是SACK下250ms外观ACK abandon，RXDelivered仍0。丢第3 Health非故障必要条件。",
-  "why_now": "用户新上传r3+FECmax实际双端抓包推翻H2219第三冷Health单因假设；M0要收回因果归结，保留前2次真实丢包事实，并将主线转到服务器反向业务数据与Win原生control/data分类。",
-  "done_when": "可实证客户端与服务端相同SOURCE的服务端 raw RX、AEAD/FEC、TUN写、业务回包、TUN读、raw DATA发及Windows NPF读、parse、M3 control/data、Wintun写；真正业务RXDelivered>0和owned Stop才通过。",
-  "next_action": "先核服务端收包→AEAD→TunWrite→应用回包→TunRead→Native TX DATA计数，补客户端NPF pcap_next_ex/parse/M3 kind1 vs control/Wintun写的有界收口；先不要加更高FEC、补第三Health重放当作产品根因修复、重复云runner入口。",
+  "current_task": "H2220物理双复测：R3 Normal 40017认证后4个下行69/69/108/90B均达Win、ACK推进，但RXDelivered0；Fixed6 40018第三111B达、首100B与后109B未达，客户端ACK越过100B可能是250ms外观ACK abandon，RX仍0。第三冷Health丢失并非超时必要条件。",
+  "why_now": "新R3与Fixed6双端原始抓包推翻H2219单因假设；保留真实丢包事实，主攻实际反向业务链。",
+  "done_when": "同SOURCE证实Linux raw RX→AEAD/FEC→TUN→业务回包→raw DATA TX，Windows NPF→M3 business→Wintun，RXDelivered>0及Stop。",
+  "next_action": "先测服务端原生raw_RX/M3/TUN写/业务回包/TUN读/raw_DATA发计数，再测客户端NPF读/parse/control对DATA/Wintun写；不先加FEC或把Health重传当主修复。",
   "unverified": true,
   "last_tested_source": "91b9d521ce1451300533d078844340add4820c29",
   "evidence_refs": [
@@ -23,5 +23,5 @@
     "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2220: 第三轮R3 Normal 40017冷3包全达、原生ACK推进且超时前4个下行段全达，Win RXDelivered0，故H2219第三包丢失不是超时必要条件。Fixed6 40018仍丢100+109B且RX0，ACK跨缺口可由cosmetic abandon解释而非FEC恢复证据。主因收敛服务端反向应用业务TX是否实际产生以及Windows Rust control/data分流；PLAN029技术出口仍OPEN。"
+  "partial_summary": "H2220：Normal R3第三冷包不丢且4段全达仍RX0；Fixed6也RX0且另丢100/109B，ACK跳缺口可由cosmetic abandon解释。R3 ACK与源码提示Win至少能认证control，实际server reverse business TX未证；物理FAIL持续，029未退出。"
 }
