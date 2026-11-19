@@ -4,24 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2211,
-  "checkpoint_sha": "21acc95b5469e72872096f52702d1b62e128a25e",
+  "sequence": 2212,
+  "checkpoint_sha": "5255d934cc317d26b476cfc2ba96fd947844f989",
   "progress": "in_progress",
-  "task_id": "PLAN029B-H2209-H2211-OLD-P2-DECOY-AND-ROUTEKEY-ARM-BUNDLE",
-  "current_task": "H2209旧P2非WBD标准TLS回落三场＋H2210 Linux真实Go/Rust服务端构建/RouteKey/NIC/decoy冷测 PASS_SCOPED Action44430144025（SOURCE574）；H2211 ARM64 Go双端+Rust ISA-L BUILD_PASS Action44430856253（SOURCE21acc）。实体公网/NAT/移动端NOT_RUN。",
-  "why_now": "用户要求M0在H2208短RouteKey后直接复用老Go非WBD访客处理，并保留原TLS与单网卡语义。",
-  "done_when": "H2209/H2210源锁限域验收已通过；029完整技术出口仍需真实NIC公网普通TLS/WBD混流和Stop等独立场景。",
-  "next_action": "不重刷PASS旧矩阵；按029容量只做一个真实NIC的非WBD TLS/WBD同端口混流、Stop及公网NAT代表，证据不足则NOT_RUN。Android JNI/OpenWrt实机与029总出口仍OPEN，030未开。",
+  "task_id": "PLAN029B-H2212-REAL-LINUX-CLIENT-SHORT-KEY-DECOY",
+  "current_task": "H2212同SOURCE525 x86/ARM Linux原Go客户端/服务端各2次短Key TLS/Rust M4、真实TUN UDP、0600缓存重启不重写、非WBD TLS443→Decoy、Stop PASS_SCOPED Action44442624569；Rust16 lane/普通Decoy8/Go冷32隔离。",
+  "why_now": "用户要求真正验证Linux客户端短RouteKey与非WBD TLS混流，并让普通访客不占WBD原生会话名额。",
+  "done_when": "x86/ARM两次真网络场景限域PASS；公网NAT、16WBD+8普通访客长时性能/内层TCP/移动端实体另证。",
+  "next_action": "旧H2212已PASS无需重测；029择一真实公网NAT/16会话容量压力和内层TCP代表。Android JNI/OpenWrt实机未做，029整体OPEN，030未开。",
   "unverified": true,
-  "last_tested_source": "21acc95b5469e72872096f52702d1b62e128a25e",
+  "last_tested_source": "5255d934cc317d26b476cfc2ba96fd947844f989",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2211-ARM64-GO-RUST-ROUTEKEY-MANIFEST-BUILD-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029B-H2212-LINUX-X86-ARM64-REAL-SHORTKEY-DECOY-CACHE-STOP-PASS-20261119.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json",
-    "docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-WINDOWS-GO-CACHE-UNIT-PASS-20261119.json",
-    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029B-H2211-ARM64-GO-RUST-ROUTEKEY-MANIFEST-BUILD-PASS-20261119.json",
+    "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2209标准TLS非WBD→旧P2 decoy、有效WBD、错SNI 3/3 PASS；H2210 Linux Go/Rust构建及Key/NIC/decoy单测PASS（SOURCE574）；H2211 ARM64 Go双端/Rust ISA-L BUILD_PASS（SOURCE21acc）。真网卡公网/Android JNI/OpenWrt NOT_RUN；029/029B OPEN。"
+  "partial_summary": "H2212 Linux x86/ARM各2真实TCP443 TLS/Rust M4、短Key缓存重启mtime不变、TUN UDP/Stop、同端口普通TLS→Decoy PASS_SCOPED Action44442624569。静态Rust16 lane/Decoy8/Go cold32，非WBD不耗Rust owner，公网NAT/16满载/移动实机NOT_RUN。"
 }

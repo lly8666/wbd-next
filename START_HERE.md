@@ -4,7 +4,7 @@
 
 **H2205–H2208（2026-11-19）**：Win2025原WinForms 409项GUI/Go与Linux ARM64原TLS 12/12 [H2205证据](docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json) **PASS_SCOPED**；H2206服务端指定网卡唯一IPv4已实现；H2208短RouteKey改轻量v2离线计算一次、私有缓存复用，Win/Linux Go单测限域通过。Android仍仅设置组件、OpenWrt仅试验配置，真实JNI/路由器联网NOT_RUN。
 
-**H2209–H2211（2026-11-19）**：Linux服务端可选`--decoy host:port`复用老Go P2非WBD TLS回落；标准TLS、有效WBD、错SNI三场与原Linux Go/Rust编译及短Key/NIC冷测 [Action44430144025](https://github.com/lly8666/wbd-next/actions/runs/44430144025) **PASS_SCOPED**；ARM64 Go双端＋Rust ISA-L [Action44430856253](https://github.com/lly8666/wbd-next/actions/runs/44430856253) **BUILD_PASS**。实体公网/NAT/Android/OpenWrt NOT_RUN，029整体OPEN；最新证据以[M0 cursor](.governance/workstreams/M0/cursor.json)为准。
+**H2209–H2212（2026-11-19）**：Linux服务端复用旧Go P2非WBD TLS Decoy，普通TLS并行最多8、WBD Rust原生16 lane、Go冷表32。[H2212 x86/ARM双ISA真客户端验收](https://github.com/lly8666/wbd-next/actions/runs/44442624569)：每ISA两次短RouteKey缓存重启、443同端口普通TLS、真实TUN UDP和Stop **PASS_SCOPED**。公网NAT/16设备压力/Android JNI/OpenWrt实机 NOT_RUN，029总出口OPEN；见[M0 cursor](.governance/workstreams/M0/cursor.json)。
 
 **接续路径**：先读[AGENTS](AGENTS.md)、[章程](PROJECT_CHARTER.md)、[M0 cursor](.governance/workstreams/M0/cursor.json)、[registry](.governance/registry.json)及在途Actions，唯一真状态以同SOURCE验收记录为准。历史限域证据：[H2169](docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json)、[H2177](docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json)、[H2186](docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json)、[H2202](docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json)。旧028/029失败不销账，PLAN029技术出口与实体跨ISA/DPI/p99仍OPEN；主线单写者，不重复已经PASS的旧矩阵。
 
