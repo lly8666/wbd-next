@@ -12,6 +12,21 @@
 | Earlier governance | Feature card exceeded 16 KiB after verification additions | Historical evidence archived; latest governance at 71c4fd3 PASS |
 | Repeated full runs from tiny changes | Workflow itself was in push paths, no same-branch cancellation | Add concurrency cancellation and remove purely documentary feature-card trigger |
 
+## Further complete-suite findings (after 5774edc8)
+
+- Native `platform` functional suite failed one legacy assertion expecting
+  `WrongPersona` for a TTL byte mutation; because that mutation also breaks
+  the IPv4 header checksum and TTL is no longer an identity gate, the correct
+  result is `IpChecksum`. Updated the test without weakening checksum logic.
+- H2216 real Linux V4 verification-switch test **PASS** (2026-11-19,
+  #44494160039). Normal, Game2 and Game4 all reached authenticated real
+  Go TLS + Rust native READY behind independent SNAT/DNAT gateways.
+- The NAT script then failed **before its UDP echo phase** solely because
+  `fixed-kernel-result/` was not created. Create the directory at fixture
+  start; repair cleanup's stale A/B/C PID names to alice/bob/carol.
+- These statements do **not** claim a successful UDP tunnel / Stop;
+  those must be verified by the new post-fix Action.
+
 ## TTL inbound policy
 
 The original Go packet parser does not use TTL as peer identity. The Rust

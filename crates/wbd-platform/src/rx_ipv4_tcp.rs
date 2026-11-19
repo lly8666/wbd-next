@@ -447,14 +447,14 @@ mod tests {
         assert_eq!(parse_data_packet(&empty,trusted(None,1500)),Err(RxError::EmptyData));
     }
     #[test]
-    fn r1_rx_ipv4_tcp_wrong_ip_port_ttl_and_independent_checksums() {
+    fn r1_rx_ipv4_tcp_wrong_ip_port_mutated_ttl_checksum_fails_closed() {
         let original=wire(b"record!",100,None);
         let cases=[
             (12,0u8,RxError::WrongTuple),
             (16,0u8,RxError::WrongTuple),
             (20,0u8,RxError::WrongTuple),
             (22,0u8,RxError::WrongTuple),
-            (8,128u8,RxError::WrongPersona),
+            (8,128u8,RxError::IpChecksum),
             (10,0u8,RxError::IpChecksum),
             (36,0u8,RxError::TcpChecksum),
             (40,0u8,RxError::TcpChecksum),

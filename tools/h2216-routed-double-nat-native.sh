@@ -12,7 +12,7 @@ NSS="mxs$TAG"; NSA="mxa$TAG"; NSB="mxb$TAG"; NSC="mxc$TAG"
 R0="mxr0$TAG"; R1="mxr1$TAG"; R2="mxr2$TAG"; R3="mxr3$TAG"
 BR="mxx$TAG"
 TMP="$RUNNER_TEMP/plan028-mixed-443-$TAG"
-mkdir -p "$TMP"
+mkdir -p "$TMP" fixed-kernel-result
 declare -a PIDS=()
 cleanup(){
   code=$?
@@ -23,7 +23,7 @@ cleanup(){
       if test -f "$TMP/$f";then echo "== $f ==" >&2;tail -65 "$TMP/$f" >&2;fi
     done
   fi
-  for f in server.pid A.pid B.pid C.pid echo.pid;do
+  for f in server.pid alice.pid bob.pid carol.pid echo.pid;do
     if test -f "$TMP/$f";then sudo -n kill -TERM "$(cat "$TMP/$f")" 2>/dev/null || true;fi
   done
   for p in "$NSS" "$NSA" "$NSB" "$NSC" "$R0" "$R1" "$R2" "$R3";do sudo -n ip netns del "$p" 2>/dev/null || true;done
