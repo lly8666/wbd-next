@@ -118,6 +118,257 @@ public final class RootDiagnosticReportTest {
                classified.contains("203.0.113.9")||classified.contains("username"))
                 throw new AssertionError("secret leaked in fixed stage report");
         }
+        // A31: API36 verified genuine Root and original Go ELF entry,
+        // then actual original parse rejected. The next app receives one
+        // of these controlled, non-secret error classes, never raw errors.
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_FLAG_SYNTAX);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_FLAG_SYNTAX");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_PASSWORD_FILE);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_PASSWORD_FILE");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ROUTE_KEY_FILE);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ROUTE_KEY_FILE");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ROUTE_KEY_VALUE);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ROUTE_KEY_VALUE");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_INSTALLATION_ID);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_INSTALLATION_ID");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_CN_GEOSITE_FILE);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_CN_GEOSITE_FILE");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_TLS_CA_FILE);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_TLS_CA_FILE");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ALL_APP_EXCLUSIONS);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ALL_APP_EXCLUSIONS");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ANDROID_NETWORK_SCOPE);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ANDROID_NETWORK_SCOPE");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_PEER_ADDRESS);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_PEER_ADDRESS");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_REQUIRED_COLD_SETTINGS);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_REQUIRED_COLD_SETTINGS");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_POLICY);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_POLICY");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+
+        {
+            File reasonDir=Files.createTempDirectory("wbd-a31-reason").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(reasonDir,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_OTHER);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String classified=RootDiagnosticReport.build(reasonDir,source,36);
+            contains(classified,"last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_OTHER");
+            if(classified.contains("203.0.113")||
+               classified.contains("password=")||
+               classified.contains("/data/user/"))
+                throw new AssertionError("diagnostics leaked raw user input");
+        }
+        // This SOURCE adds classification, not a new retroactive verdict:
+        // existing V2 generic events must keep their old generic label.
+        {
+            File dir3=Files.createTempDirectory("wbd-a30-generic").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(dir3,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            contains(RootDiagnosticReport.build(dir3,source,36),
+                "last_session_stage=ORIGINAL_GO_ARGUMENT_PARSE_REJECTED");
+        }
+        System.out.println("ANDROID_ROOT_A31_PARSE_REASON_SAFE_HOST_PASS");
         System.out.println("ANDROID_ROOT_SAFE_DIAGNOSTIC_EXPORT_HOST_PASS");
     }
 }

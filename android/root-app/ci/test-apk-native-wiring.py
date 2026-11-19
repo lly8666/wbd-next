@@ -26,6 +26,13 @@ assert 'WBD_PUBLIC_ROOT_SHELL_ENTERED' in service_src
 assert 'WBD_PUBLIC_ROOT_EXEC_ATTEMPTED' in service_src
 assert 'V4_PUBLIC_ANDROID_GO_ENTRY role=client' in go_src
 assert 'V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client' in go_src
+assert 'originalAndroidColdParseClass(err)' in go_src
+assert 'V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=%s' in go_src
+assert 'ORIGINAL_GO_PARSE_PASSWORD_FILE' in service_src
+assert 'ORIGINAL_GO_PARSE_ROUTE_KEY_FILE' in service_src
+assert 'ORIGINAL_GO_PARSE_INSTALLATION_ID' in service_src
+assert 'ORIGINAL_GO_PARSE_ALL_APP_EXCLUSIONS' in service_src
+assert 'ORIGINAL_GO_PARSE_OTHER' in service_src
 assert 'V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client' in go_src
 assert 'ROOT_PROCESS_EXIT_1' in service_src
 assert 'new ProcessBuilder("su","-c",' in service_src
@@ -106,6 +113,8 @@ report={
   "registered_original_go_cli_flags":"PASS",
   "production_root_exec_and_owned_stop_source_gate":"PASS",
   "api36_real_receipt_early_exit_fixed_stage_diagnostic_host":"PASS",
+  "api36_original_go_parse_rejection_fixed_reason_host":"PASS",
+  "api36_original_go_parse_rejection_device_retest":"NOT_RUN",
   "root_shell_and_original_go_entry_markers_source_locked":"PASS",
   "root_shell_api36_device_runtime":"NOT_RUN",
   "original_go_requires_rust_dynamic_library":"PASS",

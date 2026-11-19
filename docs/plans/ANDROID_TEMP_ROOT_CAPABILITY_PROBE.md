@@ -108,6 +108,12 @@ Android network, TLS, data and physical exception status NOT_RUN.
 
 A30 唯一范围：保持 Root 原私有目录/owner PID/执行/Stop 与原 Go/Rust 协议不变，在真正的 root `su -c` shell 打印严格常量阶段：进入、EUID0校验、0700根目录、旧owner PID守卫、原始Go/Rust文件复制、owner PID写入、Go exec请求。原 Bionic Go `Run` 仅在Android client 打印固定入口、参数解析被拒或通过、物理接口存在及 TUN open前/后阶段（均非TLS/业务资格）。Android Service 只对白名单精确锚点记录 enum+毫秒，SAF TXT继续过滤一切 stdout原文、errno/IP/用户名/账号/密码/密钥/PID；正常里程碑仍以原 TUN TxQLen 和真实 SYNACK/TLS/lease/M4/Stop 为准。报告只有在同一session有 `START_DIAGNOSTIC_STAGES_V2` 才对非零退出按最后观察阶段分类；历史V1仍保留 `ROOT_PROCESS_BEFORE_RAW_OR_GRANT_UNPROVEN`。Host 复现用户V1与14类V2固定阶段，实际源锁ARM64构建和Linux oracle/功能卡门验证。不得在聊天中擅自运行个人手机/服务器或KSU/TAP guest。新debug签名需用户自行保存旧TXT、确认无原生会话/UID路由遗留后再安装；不要无证明地删除 owner.pid 或 flush ip rules。
 
+### A31｜API36 原 Go 冷参数 parse 真拒绝：13类脱敏细分
+
+用户自行运行签名 A30 SOURCE `e85a19883151a101f9dbc12848a6ab6dec3e0780`，22项固定事件已证明 `ROOT_SHELL_ROOT_UID_VERIFIED`、root私有目录/owner检查/原生文件stage、`ORIGINAL_GO_ENTRY`(1795109008277ms) 后2ms `ORIGINAL_GO_ARGS_REJECTED`，随即 `ROOT_PROCESS_EXIT_1`。**真实Root与原 ARM64 Go ELF均已执行，Go `parse(role,args)` 拒绝，网卡/TUN/RAW均未到达**。全普通App与服务器/32 readback只是输入范围、并非内核代理已经生效。旧数据不足以分辨密码/routeKey私有文件、身份ID、CN8503规则、全App排除ID、peer/CA/策略等哪项实际失败。
+
+A31保持原 Go`parse`返回值/文件权限/安全拒绝、TLS/证书/路由/Stop和所有原协议**不变**，只在实际原 Go Android client `parse` 非零返回点用固定分类函数将错误归于13类并输出 `V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=ENUM`，不输出raw err/文件路径/用户名/密码/IP/密钥。原 RootService严格锚定映射封闭事件枚举和时间戳，SAF TXT在泛拒绝之后标最后已证原因。Host原Go类别+敏感内容反例、Java13类/旧A30报告、ARM64签名原Go/Rust、原Linux oracle及feature catalog负责验收；不模拟网卡、不运行KSU/TAP guest或私有手机服务器。Android真机测试仍是用户自主操作，拿到下一份固定TXT才做针对性修正。之前真正客户端的TUN函数没有被删除，不能凭parse失败调整MTU/TLS或内核路由。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

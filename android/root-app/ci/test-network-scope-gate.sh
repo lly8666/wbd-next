@@ -130,6 +130,22 @@ assert 'ServerIP:c.peerIP.String()' in go
 assert 'V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client' in go
 assert 'SERVER_PEER_THROW_PRIVATE_FIB_READBACK' in s
 assert 'androidRouteAllApps' in cold and 'android-route-all-apps' in cold
+# A31: original Go Run's parse rejection must emit only the fixed
+# allowlisted category and never return dynamic error strings to the report.
+assert 'originalAndroidColdParseClass(err)' in cold
+assert 'V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=%s' in cold
+assert 'log.Printf("V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=%s"' in cold
+report=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+receipt=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
+for field in (
+  "FLAG_SYNTAX", "PASSWORD_FILE", "ROUTE_KEY_FILE", "ROUTE_KEY_VALUE",
+  "INSTALLATION_ID", "CN_GEOSITE_FILE", "TLS_CA_FILE",
+  "ALL_APP_EXCLUSIONS", "ANDROID_NETWORK_SCOPE", "PEER_ADDRESS",
+  "REQUIRED_COLD_SETTINGS", "POLICY", "OTHER"):
+ assert ("ORIGINAL_GO_PARSE_"+field) in s and ("ORIGINAL_GO_PARSE_"+field) in receipt
+ assert ("ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_"+field) in report
+assert "return \"ORIGINAL_GO_ARGUMENT_PARSE_REJECTED\";" in report
+
 allapp=Path("r0/go_overlay/internal/v4productcli/rootjournal/allapps.go").read_text()
 assert 'func NewAllApps(' in allapp and 'requireReady(original)' in allapp and 'readOwnedJournalVersion(' in allapp
 assert 'AllAppIDMin = 10000' in allapp and 'AllAppIDMax = 19999' in allapp

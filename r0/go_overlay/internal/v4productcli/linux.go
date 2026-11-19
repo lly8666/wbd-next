@@ -945,6 +945,65 @@ func chooseUnderlayIPv4(addrs []net.Addr)(netip.Addr,error){
     return found,nil
 }
 
+// Android-only privacy-preserving cold parse diagnosis. Never log
+// err.Error(), raw argv, private paths, SNI, UID, route keys or passwords.
+// Categories are stable; every original parse failure still fails closed.
+func originalAndroidColdParseClass(err error)string{
+ if err==nil{return "OTHER"}
+ s:=err.Error()
+ switch{
+ case strings.HasPrefix(s,"flag provided but not defined:")||
+      strings.HasPrefix(s,"invalid value ")||
+      strings.HasPrefix(s,"flag needs an argument:"):
+  return "FLAG_SYNTAX"
+ case strings.HasPrefix(s,"invalid password-file:"):
+  return "PASSWORD_FILE"
+ case strings.HasPrefix(s,"invalid route-key-hex-file:")||
+      strings.HasPrefix(s,"invalid route-key-file:"):
+  return "ROUTE_KEY_FILE"
+ case strings.Contains(s,"route-key")||
+      strings.HasPrefix(s,"invalid/persisted route-key"):
+  return "ROUTE_KEY_VALUE"
+ case strings.HasPrefix(s,"installation-id-file:"):
+  return "INSTALLATION_ID"
+ case strings.HasPrefix(s,"signed Android CN8503 cold source rejected:"):
+  return "CN_GEOSITE_FILE"
+ case strings.HasPrefix(s,"load server TLS trust PEM:")||
+      strings.HasPrefix(s,"invalid TLS trust PEM")||
+      strings.HasPrefix(s,"trusted server TLS PEM"):
+  return "TLS_CA_FILE"
+ case strings.Contains(s,"excluded app ID")||
+      strings.Contains(s,"Android UID group")||
+      strings.Contains(s,"Android route UID")||
+      strings.Contains(s,"all-app routing")||
+      strings.Contains(s,"all-app mode")||
+      strings.Contains(s,"bounded exclusions")||
+      strings.Contains(s,"Android all-app")||
+      strings.Contains(s,"Android single and group UID")||
+      strings.Contains(s,"Android exclude IDs"):
+  return "ALL_APP_EXCLUSIONS"
+ case strings.Contains(s,"Android root client needs explicit physical Network handle")||
+      strings.Contains(s,"Android Network/routing parameters"):
+  return "ANDROID_NETWORK_SCOPE"
+ case strings.HasPrefix(s,"peer-ip")||
+      strings.HasPrefix(s,"peer-host")||
+      strings.HasPrefix(s,"Android peer-host and peer-ip"):
+  return "PEER_ADDRESS"
+ case strings.HasPrefix(s,"missing/invalid real original V4 TLS/raw/TUN settings"):
+  return "REQUIRED_COLD_SETTINGS"
+ case strings.Contains(s,"outer-mtu")||
+      strings.Contains(s,"tun-txqlen")||
+      strings.Contains(s,"tun-fq-")||
+      strings.Contains(s,"outer-repair")||
+      strings.Contains(s,"auto-ip")||
+      strings.Contains(s,"rotation")||
+      strings.Contains(s,"mode")||
+      strings.Contains(s,"startup-padding"):
+  return "POLICY"
+ default:return "OTHER"
+ }
+}
+
 func Run(role string,args []string)(retErr error){
  if runtime.GOOS=="android"&&role=="client"{
   // Actual original Go Bionic ELF entry, NOT an emulated TLS/Root stage.
@@ -956,7 +1015,10 @@ func Run(role string,args []string)(retErr error){
  cfg,err:=parse(role,args)
     if err!=nil{
         if runtime.GOOS=="android"&&role=="client"{
-            log.Print("V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client")
+            // Emit only a source-locked category, not the original error
+            // which may contain sensitive user-supplied file paths.
+            log.Printf("V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=%s",
+                originalAndroidColdParseClass(err))
         }
         return err
     }

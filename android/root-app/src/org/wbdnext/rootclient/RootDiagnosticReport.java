@@ -55,6 +55,32 @@ final class RootDiagnosticReport {
         // errno or a promise of physical network/TLS success.
         if(has(session,"START_DIAGNOSTIC_STAGES_V2")&&
            has(session,"ROOT_PROCESS_EXIT_NONZERO")){
+            if(has(session,"ORIGINAL_GO_PARSE_FLAG_SYNTAX"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_FLAG_SYNTAX";
+            if(has(session,"ORIGINAL_GO_PARSE_PASSWORD_FILE"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_PASSWORD_FILE";
+            if(has(session,"ORIGINAL_GO_PARSE_ROUTE_KEY_FILE"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ROUTE_KEY_FILE";
+            if(has(session,"ORIGINAL_GO_PARSE_ROUTE_KEY_VALUE"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ROUTE_KEY_VALUE";
+            if(has(session,"ORIGINAL_GO_PARSE_INSTALLATION_ID"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_INSTALLATION_ID";
+            if(has(session,"ORIGINAL_GO_PARSE_CN_GEOSITE_FILE"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_CN_GEOSITE_FILE";
+            if(has(session,"ORIGINAL_GO_PARSE_TLS_CA_FILE"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_TLS_CA_FILE";
+            if(has(session,"ORIGINAL_GO_PARSE_ALL_APP_EXCLUSIONS"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ALL_APP_EXCLUSIONS";
+            if(has(session,"ORIGINAL_GO_PARSE_ANDROID_NETWORK_SCOPE"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_ANDROID_NETWORK_SCOPE";
+            if(has(session,"ORIGINAL_GO_PARSE_PEER_ADDRESS"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_PEER_ADDRESS";
+            if(has(session,"ORIGINAL_GO_PARSE_REQUIRED_COLD_SETTINGS"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_REQUIRED_COLD_SETTINGS";
+            if(has(session,"ORIGINAL_GO_PARSE_POLICY"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_POLICY";
+            if(has(session,"ORIGINAL_GO_PARSE_OTHER"))
+                return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_OTHER";
             if(has(session,"ORIGINAL_GO_ARGS_REJECTED"))
                 return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED";
             if(has(session,"ORIGINAL_GO_TUN_OPENED"))

@@ -381,6 +381,32 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ENTRY);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_REJECTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=FLAG_SYNTAX"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_FLAG_SYNTAX);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=PASSWORD_FILE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_PASSWORD_FILE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=ROUTE_KEY_FILE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ROUTE_KEY_FILE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=ROUTE_KEY_VALUE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ROUTE_KEY_VALUE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=INSTALLATION_ID"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_INSTALLATION_ID);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=CN_GEOSITE_FILE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_CN_GEOSITE_FILE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=TLS_CA_FILE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_TLS_CA_FILE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=ALL_APP_EXCLUSIONS"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ALL_APP_EXCLUSIONS);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=ANDROID_NETWORK_SCOPE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_ANDROID_NETWORK_SCOPE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=PEER_ADDRESS"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_PEER_ADDRESS);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=REQUIRED_COLD_SETTINGS"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_REQUIRED_COLD_SETTINGS);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=POLICY"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_POLICY);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=OTHER"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_OTHER);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_ACCEPTED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client"))
