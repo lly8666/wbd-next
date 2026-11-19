@@ -1463,7 +1463,13 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr
 }
-// Legacy P2 fallback is intentionally independent of protected V4 admission.
+// Legacy P2 fallback is independent of the 16 authenticated Rust owner slots.
+// 8 bounded decoy transfers share the 32-slot cold table; WBD native slots stay unchanged.
+const originalV4MaxDecoySplices=8
+func originalV4DecoySlots(c config)chan struct{}{
+    if c.decoyTarget==""{return nil}
+    return make(chan struct{},originalV4MaxDecoySplices)
+}
 func originalV4ServerDecoy(c config)*realityfront.FallbackConfig{
     if c.decoyTarget==""{return nil}
     return &realityfront.FallbackConfig{
@@ -1484,7 +1490,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return err}
     product,err:=realityfront.NewV4LinuxServerProduct(
         realityfront.V4LinuxServerProductConfig{
-            Fallback:originalV4ServerDecoy(c),
+            Fallback:originalV4ServerDecoy(c),FallbackSlots:originalV4DecoySlots(c),
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
@@ -1746,6 +1752,7 @@ func runSharedMultiServer(
     if err!=nil{return err}
     shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
     if err!=nil{return err}
+    decoySlots:=originalV4DecoySlots(c)
     table,err:=faketcp.NewServerAssociationTable(32,emit)
     if err!=nil{
         _=shared.Close()
@@ -1863,7 +1870,7 @@ func runSharedMultiServer(
         // every Rust RX owner. Unknown SYN remains the explicit CLI default.
         nativePersona,personaKnown:=originalV4ColdAssocPeerPersona(rec.assoc,c.peerPersona)
         cfg:=realityfront.V4LinuxServerProductConfig{
-            Fallback:originalV4ServerDecoy(c),
+            Fallback:originalV4ServerDecoy(c),FallbackSlots:decoySlots,
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,SharedTun:shared,
             // Only real authenticated auto-lease server sessions reach
@@ -1992,8 +1999,8 @@ func runSharedMultiServer(
     // 32 is the FakeTCP *cold association* table, not the number of
     // authenticated Rust native owners. prepare_side has MAX_SESSIONS=16.
     // Truthful readiness avoids advertising unqualified 32-live capacity.
-    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1",
-        c.localPort)
+    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1 decoy_max_splices=%d",
+        c.localPort,cap(decoySlots))
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()

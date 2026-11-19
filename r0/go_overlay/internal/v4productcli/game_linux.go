@@ -811,7 +811,7 @@ func runGameMultiServer(
     // Game group Stop and this one reader have both joined.
     defer func(){retErr=errors.Join(retErr,shared.Close())}()
     cfg:=realityfront.V4LinuxGameProductConfig{
-        Fallback:originalV4ServerDecoy(c),
+        Fallback:originalV4ServerDecoy(c),FallbackSlots:originalV4DecoySlots(c),
         NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
         Tun:tun.f,TunName:c.tunName,SharedTun:shared,
         CleanupOwnedNetwork:func()error{return nil},
@@ -1077,7 +1077,7 @@ func runGameMultiServer(
             }
             if a.State()!=faketcp.ServerAssociationEstablished{continue}
             mu.Lock()
-            if !stopping.Load()&&!seen[a]&&len(seen)<maxLiveRustLanes{
+            if !stopping.Load()&&!seen[a]&&len(seen)<maxLiveRustLanes+cap(cfg.FallbackSlots){
                 seen[a]=true
                 select{case established<-a:default:delete(seen,a)}
             }
@@ -1085,7 +1085,7 @@ func runGameMultiServer(
         }
     }()
     if c.mixedModes{
-        log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=32 rust_native_slots=16 shared_rust_tun=1",c.localPort)
+        log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=32 rust_native_slots=16 shared_rust_tun=1 decoy_max_splices=%d",c.localPort,cap(cfg.FallbackSlots))
     }else{
         log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=32 rust_native_total_lane_slots=16 shared_rust_tun=1",
             c.localPort,n)

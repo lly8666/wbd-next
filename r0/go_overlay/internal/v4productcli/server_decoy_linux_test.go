@@ -35,3 +35,9 @@ func TestH2209ServerDecoyColdValidation(t *testing.T) {
      "--decoy","192.168.1.10:443")
  if _,err=parse("server",self);err==nil{t.Fatal("same raw listener decoy loop accepted")}
  }
+
+func TestH2212DecoyQuotaOnlyWhenEnabled(t *testing.T){
+  if originalV4DecoySlots(config{})!=nil {t.Fatal("disabled decoy allocated quota")}
+  slots:=originalV4DecoySlots(config{decoyTarget:"127.0.0.1:8443"})
+  if slots==nil||cap(slots)!=8||len(slots)!=0{t.Fatal("decoy should have exactly eight independent transfer slots")}
+}

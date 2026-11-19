@@ -1,0 +1,92 @@
+name: "M0 H2212 true Linux original client short RouteKey plus ordinary TLS decoy"
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/m0-h2212-linux-client-shortkey-decoy-native.yml"
+      - "tools/m0-v4-public-real-linux-netns.sh"
+      - "tools/m0_plan029_linux_dual_native_build.sh"
+      - "r0/go_overlay/internal/realityfront/admission_v4.go"
+      - "r0/go_overlay/internal/realityfront/v4_fallback_test.go"
+      - "r0/go_overlay/internal/v4productcli/linux.go"
+      - "r0/go_overlay/internal/v4productcli/game_linux.go"
+      - "r0/go_overlay/internal/v4routekey/*.go"
+permissions: {contents: read}
+jobs:
+  h2212-real-linux-client:
+    name: "Native ${{ matrix.isa }} WBD shortKey+cache+decoy+UDP+Stop"
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {isa: x86_64, runner: ubuntu-24.04}
+          - {isa: aarch64, runner: ubuntu-24.04-arm}
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: "1"
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.isa }}
+      WBD_H2212_NATIVE_SHORT_DECOY: "1"
+      WBD_V4_PUBLIC_MODE: normal
+      WBD_V4_PUBLIC_AUTO_IP: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Exact-source native kernel/ABI prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -c /dev/net/tun
+          sudo -n true
+          bash -n tools/m0-v4-public-real-linux-netns.sh tools/m0_plan029_linux_dual_native_build.sh
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm python3 iproute2 iputils-ping iptables openssl
+      - name: One same-source Go client/server plus real Rust ISA-L native bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh > h2212-native-build.log 2>&1 || { tail -100 h2212-native-build.log; exit 1; }
+          test -s linux-plan029-public-bundle/wbd-v4-client
+          test -s linux-plan029-public-bundle/wbd-v4-server
+          test -s linux-plan029-public-bundle/libwbd_engine.so
+          grep -Fq H2212_ORIGINAL_GO_ROUTEKEY_SAME_MANIFEST_3_FILES_PASS h2212-native-build.log
+      - name: Real Linux client+server cold RouteKey 1st start and reused second start, plus same-port ordinary TLS
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p -m 0700 fixed-kernel-result
+          export WBD_H2212_CACHE_ROOT="$RUNNER_TEMP/h2212-private-cache-$GITHUB_RUN_ID"
+          mkdir -m 0700 "$WBD_H2212_CACHE_ROOT"
+          chmod 0700 "$WBD_H2212_CACHE_ROOT"
+          for index in 1 2; do
+            export WBD_H2212_REPEAT_INDEX="$index"
+            log="h2212-netns-$index.log"
+            bash tools/m0-v4-public-real-linux-netns.sh "$GITHUB_WORKSPACE/linux-plan029-public-bundle" > "$log" 2>&1 || {
+              grep -E 'H2212_|M0_V4_|V4_PUBLIC_|not ready|error|fail' "$log" | tail -85 || true
+              exit 1
+            }
+            grep -Fq H2212_REAL_LINUX_AUTHENTICATED_WBD_PLUS_NON_WBD_SAME_PORT_DECOY_NO_RUST_SLOT_PASS "$log"
+            grep -Fq M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS "$log"
+            if [ "$index" = 1 ]; then
+              grep -Fq H2212_NATIVE_ROUTEKEY_CACHE_FIRST_WRITE_PASS "$log"
+            else
+              grep -Fq H2212_NATIVE_ROUTEKEY_CACHE_RESTART_REUSED_PASS "$log"
+            fi
+          done
+          printf '%s\n' "H2212_NATIVE_$WBD_PLAN029_LINUX_EXPECTED_ARCH_TWO_REAL_CLIENT_SERVER_TLS_UDP_STOP_DECOY_RESTART_CACHE_PASS" > fixed-kernel-result/h2212-summary.txt
+          # Never upload original TLS private keys, short secret, raw packets,
+          # derived cache, full CLI argv or credential-bearing process logs.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: "h2212-native-${{ matrix.isa }}-${{ github.sha }}"
+          path: fixed-kernel-result/h2212-summary.txt
+          retention-days: 7
+          if-no-files-found: warn

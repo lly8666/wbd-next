@@ -7,6 +7,7 @@ import (
  "io"
  "net"
  "sync/atomic"
+ "strings"
  "testing"
  "time"
  "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -155,6 +156,9 @@ func TestH2209V4RecognizedNeverDialsDecoy(t *testing.T) {
  assoc,peer:=newAssociationPeer(t)
  defer assoc.Close();defer peer.Close()
  store,_:=NewV4EpochStore(4)
+ // Fill every ordinary TLS slot: WBD must still authenticate normally.
+ decoySlots:=make(chan struct{},8)
+ for i:=0;i<cap(decoySlots);i++{decoySlots<-struct{}{}}
  var dialCalls atomic.Int32
  done:=make(chan error,1)
  go func(){
@@ -162,7 +166,7 @@ func TestH2209V4RecognizedNeverDialsDecoy(t *testing.T) {
         TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
             TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:3*time.Second},
         ExpectedUsername:"solo",ExpectedPassword:"secret",ServerLimit:1400,
-    },V4ServerOptions{DataPlaneReady:true,Epochs:store,Fallback:&FallbackConfig{
+    },V4ServerOptions{DataPlaneReady:true,Epochs:store,FallbackSlots:decoySlots,Fallback:&FallbackConfig{
         Target:"decoy.invalid:443",ServerName:"target.test",
         DialContext:func(context.Context,string,string)(net.Conn,error){
             dialCalls.Add(1);return nil,errors.New("recognized WBD must never dial decoy")
@@ -222,4 +226,47 @@ func TestH2209V4WrongSNIRefusesToDialDecoy(t *testing.T){
  select{case <-handshake:case <-time.After(3*time.Second):t.Fatal("wrong SNI client did not terminate")}
  if dials.Load()!=0{t.Fatal("wrong-SNI client dialed decoy")}
  if _,ok:=assoc.TransitionState();ok{t.Fatal("wrong SNI allocated protected transition")}
+}
+
+
+// A ninth ordinary TLS visitor must not exhaust a protected Rust WBD slot,
+// open a decoy socket, or wait on a queued semaphore.
+func TestH2212OrdinaryDecoyCapFailFastNoRustOwner(t *testing.T){
+    assoc,peer:=newAssociationPeer(t)
+    defer assoc.Close();defer peer.Close()
+    slots:=make(chan struct{},8)
+    for i:=0;i<cap(slots);i++{slots<-struct{}{}}
+    store,_:=NewV4EpochStore(4)
+    var dialCalls atomic.Int32
+    done:=make(chan error,1)
+    key:=[]byte("0123456789abcdef0123456789abcdef")
+    go func(){
+        _,err:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
+            TLS:ServerConfig{ServerName:"target.test",RouteKey:key,Timeout:3*time.Second},
+            ExpectedUsername:"solo",ExpectedPassword:"secret",ServerLimit:1400,
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,FallbackSlots:slots,Fallback:&FallbackConfig{
+            Target:"decoy.invalid:443",ServerName:"target.test",
+            DialContext:func(context.Context,string,string)(net.Conn,error){
+                dialCalls.Add(1);return nil,errors.New("decoy should be capped")
+            },
+        }})
+        done<-err
+    }()
+    // Real ordinary crypto/tls client; no WBD marker/username.
+    client:=tls.Client(peer,&tls.Config{ServerName:"target.test",MinVersion:tls.VersionTLS13})
+    ctx,cancel:=context.WithTimeout(context.Background(),4*time.Second)
+    defer cancel()
+    handshakeDone:=make(chan error,1)
+    go func(){handshakeDone<-client.HandshakeContext(ctx)}()
+    select {
+    case err:=<-done:
+        if !errors.Is(err,ErrV4FallbackHandled) || !strings.Contains(err.Error(),"decoy busy"){
+            t.Fatalf("ninth ordinary visitor did not fail fast: %v",err)
+        }
+    case <-ctx.Done():t.Fatal("busy decoy visitor stalled admission")
+    }
+    _=peer.Close()
+    select{case <-handshakeDone:case <-ctx.Done():t.Fatal("TLS visitor did not exit")}
+    if dialCalls.Load()!=0 || len(slots)!=8 {t.Fatal("decoy slot leak or unauthorized dial")}
+    if _,ok:=assoc.TransitionState();ok{t.Fatal("decoy allocated WBD transition")}
 }

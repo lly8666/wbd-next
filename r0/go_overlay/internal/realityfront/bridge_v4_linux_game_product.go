@@ -17,6 +17,7 @@ import (
 
 type V4LinuxGameProductConfig struct {
     Fallback *FallbackConfig // per-association decoy before protected Game/Normal policy
+    FallbackSlots chan struct{} // shared service-wide bound
     NetworkInterface string
     NetworkIfIndex uint32
     Tun *os.File
@@ -454,7 +455,7 @@ func V4AuthenticateLinuxMixedServerLane(
     }
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,base,V4ServerOptions{
-        DataPlaneReady:true,Epochs:cfg.Epochs,Fallback:cfg.Fallback,ownerBridge:bridge,
+        DataPlaneReady:true,Epochs:cfg.Epochs,Fallback:cfg.Fallback,FallbackSlots:cfg.FallbackSlots,ownerBridge:bridge,
         fec2Product:true,perClientMixedMode:true,
         Authenticate:cfg.Authenticate,AllowLaneReplacement:true,
         ManualLeases4:cfg.ServerManualLeases4,
@@ -542,7 +543,7 @@ func V4AuthenticateLinuxGameServerLane(
     if cfg.GameFecEnabled{gameFec=cfg.GameFecProfile+1}
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,base,V4ServerOptions{
-        DataPlaneReady:true,Epochs:cfg.Epochs,Fallback:cfg.Fallback,
+        DataPlaneReady:true,Epochs:cfg.Epochs,Fallback:cfg.Fallback,FallbackSlots:cfg.FallbackSlots,
         ownerBridge:bridge,fec2Product:true,GameFec:gameFec,
         Authenticate:cfg.Authenticate,AllowLaneReplacement:cfg.SharedTun!=nil,
         ManualLease4:cfg.ServerManualLease4,

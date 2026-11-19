@@ -31,6 +31,7 @@ const (
 )
 type V4LinuxServerProductConfig struct {
     Fallback *FallbackConfig // same-server cold TLS decoy; never a Rust lane
+    FallbackSlots chan struct{} // shared decoy-only concurrency gate
     PeerPersona V4PublicNativePeerPersona
     Epochs *V4EpochStore
     Authenticate func(username,password string)bool // protected multi-account cold auth only
@@ -143,7 +144,7 @@ func (p *V4LinuxServerProduct) AcceptAuthenticatedPeer(
     bridge:=&v4EmbeddedNativeBridge{}
     session,err:=EstablishServerV4(ctx,assoc,cfg,V4ServerOptions{
         DataPlaneReady:true,Epochs:p.cfg.Epochs,ownerBridge:bridge,
-        Fallback:p.cfg.Fallback,
+        Fallback:p.cfg.Fallback,FallbackSlots:p.cfg.FallbackSlots,
         Authenticate:p.cfg.Authenticate,
         AllowLaneReplacement:p.cfg.AllowLaneReplacement,
         ManualLease4:p.cfg.ManualLease4,ManualLeases4:p.cfg.ManualLeases4,

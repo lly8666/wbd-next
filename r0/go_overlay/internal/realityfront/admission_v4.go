@@ -234,6 +234,8 @@ type V4ServerOptions struct {
     // Optional immutable server-side legacy decoy; nil preserves rejection.
     // Ordinary TLS never grants an epoch, lease or Rust native owner.
     Fallback *FallbackConfig
+    // Shared decoy-only gate. Recognized WBD never takes these slots.
+    FallbackSlots chan struct{}
     fec2ProbeOnly bool // package-private, no production caller switch
     fec2Product bool // package-private genuine Linux fixed/auto owner
     // Shared Normal server only: select EXISTING FEC2 capability per
@@ -859,6 +861,14 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     if err:=guard.Rearm();err!=nil{return nil,err}
     if !hello.Recognized {
         if opt.Fallback==nil{return nil,ErrMarker}
+        if opt.FallbackSlots!=nil {
+            select{
+            case opt.FallbackSlots<-struct{}{}:
+                defer func(){<-opt.FallbackSlots}()
+            default:
+                return nil,fmt.Errorf("%w: ordinary TLS decoy busy",ErrV4FallbackHandled)
+            }
+        }
         // The old P2 fallback owns this SAME pre-auth FakeTCP association.
         // Stop the candidate deadline before a bounded decoy session; never
         // create an epoch or ask Rust to take ownership on this branch.

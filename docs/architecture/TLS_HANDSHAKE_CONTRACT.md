@@ -41,3 +41,9 @@
 Linux原Go V4服务端冷入口（默认shared，兼容Normal与Game2/4 protected policy）新增可选 `--decoy host:port`，只由**服务端固定配置**指定真实TLS目标。复用老项目固定SOURCE `lly8666/wobuzhidao/internal/realityfront/fallback.go` 的 `FallbackFromHello`：原FakeTCP同一连接只解析一次ClientHello，匹配route-key才进入原V4账号/证书/Rust epoch/Detach；不匹配则核验ClientHello SNI同`--server-name`，完整重放原始ClientHello、双向字节splice、保持原CloseWrite/EOF，限制目标拨号5秒、会话2分钟、单向64MiB。目标固定不可从外部TLS/请求获取；错SNI不拨号、损坏TLS直接拒绝。无`--decoy`时保留本地拒绝，**没有公开ClientHello前新前导/认证降级/Go逐包数据面**。
 
 仅Linux服务端的原生shared/Normal有独立逐连接冷分类；旧单组专用Game2/4服务器对`--decoy`明确配置拒绝，应使用默认shared统一入口。Stop关闭原入站连接，使旧fallback双向copy同步退出，不创建Rust generation/租约。不得把浏览器成功回落当WBD已认证/Ready，或把普通DNS/TLS扫描当业务会话。目标证书由**真实目标**在其TLS握手中提供，服务端本机无法代替目标证书私钥。已有Linux NAT网卡/IP精确绑定不变。H2209当前源码及真实测试按精确SOURCE证据单独留痕，物理公网访问/实体跨ISA继续NOT_RUN。
+
+## H2212｜非WBD访客与WBD原生容量独立限制
+
+真实代码容量：原Rust native `MAX_SESSIONS=16`为每端的owner/lane槽，FakeTCP cold table为32个预认证关联，**都不是已证明16/32台客户端可稳定满载**；Game2/4每端消耗2/4 lane。旧P2普通TLS Decoy只用Go冷关联＋固定origin splice，**不分配WBD Rust epoch/租约**。新增每服务端单独8槽`FallbackSlots`，只有未被RouteKey识别的普通TLS会占用其中1槽，满时普通TLS快速失败、不拨origin、不阻塞合法WBD；识别的WBD根本不获取Decoy额度。shared Normal+Game混合入口仅在decoy开启时将冷候选暂存上限16→24，Rust 16槽与FakeTCP 32冷表不变；未分类SYN仍可能占用共享表，不能作为抗DoS保证。
+
+H2212测试采用原生Linux x86_64/ARM64原Go+Rust双端，真实隔离网卡、TCP443 TLS、Rust M4/TUN/UDP Echo/Stop，短RouteKey 32位随机英数字双方离线派生及0600缓存、完全独立重启二次校验mtime；与此同时普通Python标准TLS客户端经同一raw443端口访问127.0.0.1:8443固定origin TLS并完成ping/pong，原已认证WBD Ready数量不变。Go源锁负例覆盖8额度满下普通客户端不拨origin、WBD原认证不受限。公网DNAT、16 WBD实际满负载、移动JNI/OpenWrt实机仍NOT_RUN，所有PASS必须绑定相同SOURCE与Action。

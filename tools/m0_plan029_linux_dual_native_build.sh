@@ -49,6 +49,29 @@ for f in r0/go_overlay/internal/realityfront/*.go; do
   cp "$f" "$dst"
 done
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
+# H2212: the original x86/ARM direct-copy product path predates H2208.
+# Install the SAME three v4routekey Go blobs as the canonical plan020 manifest;
+# a standalone ARM bundle must not omit an imported production Go package.
+python3 - <<'PY'
+import hashlib,json,pathlib
+root=pathlib.Path.cwd()
+ops=json.loads((root/"r0/go_overlay/assembly/manifest-plan020-m0.json").read_text())["operations"]
+destdir=root/"legacy/internal/v4routekey"
+destdir.mkdir(parents=True,exist_ok=True)
+for name in ("short.go","short_test.go","cache.go"):
+    path="internal/v4routekey/"+name
+    row=[o for o in ops if o.get("path")==path]
+    assert len(row)==1 and row[0].get("kind")=="create",path
+    assert row[0].get("overlay_path")=="r0/go_overlay/"+path,path
+    data=(root/row[0]["overlay_path"]).read_bytes()
+    actual=hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest()
+    assert actual==row[0]["result_blob"],path
+    dest=destdir/name
+    assert not dest.is_symlink(),path
+    if dest.exists(): assert dest.read_bytes()==data,path
+    else: dest.write_bytes(data)
+print("H2212_ORIGINAL_GO_ROUTEKEY_SAME_MANIFEST_3_FILES_PASS",flush=True)
+PY
 cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Original native Go 64/65 transition boundary, malformed hard-denials and
