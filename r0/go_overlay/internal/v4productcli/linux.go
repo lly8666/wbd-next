@@ -82,6 +82,7 @@ type config struct{
     tunName string
     tunCIDR string
     serverName string
+    decoyTarget string // server-only fixed ordinary-TLS target
     routeKey []byte
     tlsRoots *x509.CertPool
     tlsCert string
@@ -192,6 +193,7 @@ func parse(role string,args []string)(config,error){
     if role=="server"{defaultTun="10.66.0.1/24"}
     tunCIDR:=flags.String("tun-ipv4",defaultTun,"owned real TUN IPv4 CIDR (server default 10.66.0.1/24)")
     name:=flags.String("server-name","","original TLS recognized SNI")
+    decoy:=flags.String("decoy","","server-only legacy ordinary-TLS fallback target host:port; same SNI, bounded and opt-in")
     route:=flags.String("route-key-hex","","legacy/expert pre-shared 32-byte route key hex (64 characters)")
     routeShort:=flags.String("route-key","","8..32 ASCII letters/digits; v2 4096-iteration mobile-friendly PBKDF2 once then persistent 32B cache (prefer 24..32 random)")
     routeShortFile:=flags.String("route-key-file","","owner-only file with 8..32 short route-key; avoids argv disclosure")
@@ -402,6 +404,16 @@ func parse(role string,args []string)(config,error){
     c.tunName=*tunName
     c.tunCIDR=*tunCIDR
     c.serverName=*name
+    if *decoy!="" {
+        if role!="server"{return c,fmt.Errorf("decoy is server-only")}
+        host,portText,e:=net.SplitHostPort(*decoy)
+        if e!=nil||host==""||strings.TrimSpace(host)!=host{return c,fmt.Errorf("decoy needs fixed host:port")}
+        targetPort,e:=strconv.Atoi(portText)
+        if e!=nil||targetPort<1||targetPort>65535{return c,fmt.Errorf("decoy port invalid")}
+        if host==c.localIP.String()&&uint16(targetPort)==c.localPort{return c,fmt.Errorf("decoy cannot target own raw listener")}
+        if c.gameLanes>0{return c,fmt.Errorf("decoy requires shared/normal server entry; legacy fixed Game listener has no ordinary TLS dispatch")}
+        c.decoyTarget=*decoy
+    }
     c.username=*user
     c.password=*pass
     if *routeShort!="" {
@@ -1451,6 +1463,15 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr
 }
+// Legacy P2 fallback is intentionally independent of protected V4 admission.
+func originalV4ServerDecoy(c config)*realityfront.FallbackConfig{
+    if c.decoyTarget==""{return nil}
+    return &realityfront.FallbackConfig{
+        Target:c.decoyTarget,ServerName:c.serverName,
+        DialTimeout:5*time.Second,SessionTimeout:2*time.Minute,MaxBytes:64<<20,
+    }
+}
+
 func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     raw *faketcp.RawIPv4Endpoint,emit faketcp.SegmentEmitter,
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
@@ -1463,6 +1484,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return err}
     product,err:=realityfront.NewV4LinuxServerProduct(
         realityfront.V4LinuxServerProductConfig{
+            Fallback:originalV4ServerDecoy(c),
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
@@ -1553,6 +1575,17 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                     go func(){
                         nativeAcceptStart:=time.Now()
                         _,e:=product.AcceptAuthenticatedPeer(ctx,assoc,reply)
+                        if errors.Is(e,realityfront.ErrV4FallbackHandled)||
+                           (c.decoyTarget!=""&&(
+                            errors.Is(e,realityfront.ErrNotClientHello)||
+                            errors.Is(e,realityfront.ErrMalformedHello)||
+                            errors.Is(e,realityfront.ErrUnsupportedHello)||
+                            errors.Is(e,io.EOF)||errors.Is(e,io.ErrUnexpectedEOF))) {
+                            // One ordinary visitor must not exhaust the singleton
+                            // cold candidate slot before a real WBD arrival.
+                            select{case <-admitted:default:}
+                            return
+                        }
                         if e==nil&&ctx.Err()!=nil{e=errors.Join(ctx.Err(),product.Close())}
                         if e==nil{
                             state,exists:=assoc.TransitionState()
@@ -1830,6 +1863,7 @@ func runSharedMultiServer(
         // every Rust RX owner. Unknown SYN remains the explicit CLI default.
         nativePersona,personaKnown:=originalV4ColdAssocPeerPersona(rec.assoc,c.peerPersona)
         cfg:=realityfront.V4LinuxServerProductConfig{
+            Fallback:originalV4ServerDecoy(c),
             Epochs:epochs,NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             Tun:tun.f,TunName:c.tunName,SharedTun:shared,
             // Only real authenticated auto-lease server sessions reach
@@ -1855,6 +1889,7 @@ func runSharedMultiServer(
         }
         mu.Lock();rec.product=p;mu.Unlock()
         sess,err:=p.AcceptAuthenticatedPeer(runCtx,rec.assoc,reply)
+        if errors.Is(err,realityfront.ErrV4FallbackHandled){return}
         if err!=nil{
             log.Printf("V4_PUBLIC_MULTI_ADMISSION_REJECT stage=original_tls_or_owner")
             return

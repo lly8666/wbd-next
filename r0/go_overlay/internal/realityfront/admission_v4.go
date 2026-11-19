@@ -231,6 +231,9 @@ func V4StopThenCleanupNetwork(
 }
 type V4ServerOptions struct {
     DataPlaneReady bool
+    // Optional immutable server-side legacy decoy; nil preserves rejection.
+    // Ordinary TLS never grants an epoch, lease or Rust native owner.
+    Fallback *FallbackConfig
     fec2ProbeOnly bool // package-private, no production caller switch
     fec2Product bool // package-private genuine Linux fixed/auto owner
     // Shared Normal server only: select EXISTING FEC2 capability per
@@ -832,7 +835,10 @@ var ErrV4ServerNativeCommit=errors.New("original native M4 owner commit")
 // EstablishServerV4 uses original recognized TLS and Prepare/Detach handoff.
 // Epoch becomes active only after successful authenticated reply and detach.
 // Caller must ReleaseLane on tunnel teardown. Legacy EstablishServer is intact.
+var ErrV4FallbackHandled=errors.New("realityfront: ordinary TLS decoy branch handled")
+
 func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg ServerAdmissionConfig,opt V4ServerOptions)(*V4ServerSession,error) {
+    if ctx==nil{ctx=context.Background()}
     if !opt.DataPlaneReady||opt.Epochs==nil||opt.GameFec>7||
        (opt.GameFec!=0&&!opt.fec2Product){return nil,ErrAdmissionUnsupported}
     if assoc==nil || (opt.Authenticate==nil&&(cfg.ExpectedUsername==""||cfg.ExpectedPassword=="")) ||
@@ -851,7 +857,25 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     hello,err:=ReadHello(conn,tlsCfg.ServerName,tlsCfg.RouteKey,guard.Remaining())
     if err!=nil{return nil,candidateError(ctx,err)}
     if err:=guard.Rearm();err!=nil{return nil,err}
-    if !hello.Recognized {return nil,ErrMarker}
+    if !hello.Recognized {
+        if opt.Fallback==nil{return nil,ErrMarker}
+        // The old P2 fallback owns this SAME pre-auth FakeTCP association.
+        // Stop the candidate deadline before a bounded decoy session; never
+        // create an epoch or ask Rust to take ownership on this branch.
+        guard.Finish(true)
+        stopped:=make(chan struct{})
+        go func(){
+            select{
+            case <-ctx.Done(): assoc.Close() // owned Stop must unblock copies
+            case <-stopped:
+            }
+        }()
+        _,fallbackErr:=FallbackFromHello(ctx,conn,hello,*opt.Fallback)
+        close(stopped)
+        assoc.Close()
+        if fallbackErr!=nil{return nil,fmt.Errorf("%w: %w",ErrV4FallbackHandled,fallbackErr)}
+        return nil,ErrV4FallbackHandled
+    }
     tlsCfg.Timeout=guard.Remaining()
     tlsConn,err:=handshakeServerRecognizedConn(ctx,conn,hello,tlsCfg)
     if err!=nil{return nil,candidateError(ctx,err)}

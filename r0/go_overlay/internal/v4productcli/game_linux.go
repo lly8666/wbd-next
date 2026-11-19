@@ -811,6 +811,7 @@ func runGameMultiServer(
     // Game group Stop and this one reader have both joined.
     defer func(){retErr=errors.Join(retErr,shared.Close())}()
     cfg:=realityfront.V4LinuxGameProductConfig{
+        Fallback:originalV4ServerDecoy(c),
         NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
         Tun:tun.f,TunName:c.tunName,SharedTun:shared,
         CleanupOwnedNetwork:func()error{return nil},
@@ -1116,6 +1117,12 @@ func runGameMultiServer(
                 }
             }(a)
         case result:=<-authenticated:
+            if errors.Is(result.err,realityfront.ErrV4FallbackHandled){
+                // Ordinary TLS completed on its own FakeTCP flow; no cohort,
+                // authenticated lane or Rust epoch may be allocated.
+                forget(result.assoc)
+                continue
+            }
             if result.err!=nil{
                 // The old generic REJECT hid the difference between a
                 // 15s TLS timeout, a protected-policy refusal, and a native

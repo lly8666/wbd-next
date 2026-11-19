@@ -1624,13 +1624,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "36476750d0ad0c77fe491b320ce8f26f6153543a"
+      "result_blob": "4bd041db406d87b05f1ad5f7afb19618ff00cf1a"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "e4147a03e3f51f976e93679f0c3eb4be3d67fcba"
+      "result_blob": "9427a2cdec2a1f44e72b9afd6e6dc0f369788b03"
     },
     {
       "kind": "replace",
@@ -1711,7 +1711,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "be3a75fa99e1cf7c79cd3f7806568cb39301b2e1"
+      "result_blob": "7b5b23c33fe80bf27d846179cea0d7d927dc891d"
     },
     {
       "kind": "create",
@@ -1856,6 +1856,18 @@
       "path": "internal/windowsclient/native_plan029_defender_lease_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_defender_lease_windows_test.go",
       "result_blob": "68ade031e7ece9b36a0cad572d9fb4035247c7fb"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/v4_fallback_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/v4_fallback_test.go",
+      "result_blob": "0a1a6ee6d98a06b3f79edc0ec6efd2d558773db6"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/server_decoy_linux_test.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/server_decoy_linux_test.go",
+      "result_blob": "e506c5badd7660e5c8e72a885f468a72c35069bd"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

@@ -35,3 +35,9 @@
 3. **模式和平台**：复用既有7模式短功能夹具，验证真实TLS→认证→Rust业务/Stop；Game每条lane及一次轮换/重连都检查相同契约。Windows实际入口补同源代表；Linux按当前用户约定整任务x86/x86、下一个ARM/ARM轮换，真实ARM运行不可由交叉编译/QEMU替代。可复用同源码二进制，不为此重刷全部弱网/长测矩阵；未覆盖平台或模式明确NOT_RUN。
 4. **效率**：一Action一场景/一个测试控制进程，场景所需双端/多client不算并行压测；独立Actions可并行。一次构建按SOURCE/平台/manifest/hash复用。报告冷握手耗时、方向/record长度摘要、真实业务和Stop；不存在热路径变更时不强制全吞吐A/B。
 5. **退出**：被修正入口无前导、标准TLS握手与服务器验证成功、必要反面用例和平台/模式证据齐、配置/帮助/功能卡一致。旧自动路径不再可达，不保留隐式降级。然后续PLAN028 cursor中原切网/交接任务；未完成不能因一条Action绿灯宣称完成。
+
+## H2209｜旧P2普通TLS访客复用（2026-11-19）
+
+Linux原Go V4服务端冷入口（默认shared，兼容Normal与Game2/4 protected policy）新增可选 `--decoy host:port`，只由**服务端固定配置**指定真实TLS目标。复用老项目固定SOURCE `lly8666/wobuzhidao/internal/realityfront/fallback.go` 的 `FallbackFromHello`：原FakeTCP同一连接只解析一次ClientHello，匹配route-key才进入原V4账号/证书/Rust epoch/Detach；不匹配则核验ClientHello SNI同`--server-name`，完整重放原始ClientHello、双向字节splice、保持原CloseWrite/EOF，限制目标拨号5秒、会话2分钟、单向64MiB。目标固定不可从外部TLS/请求获取；错SNI不拨号、损坏TLS直接拒绝。无`--decoy`时保留本地拒绝，**没有公开ClientHello前新前导/认证降级/Go逐包数据面**。
+
+仅Linux服务端的原生shared/Normal有独立逐连接冷分类；旧单组专用Game2/4服务器对`--decoy`明确配置拒绝，应使用默认shared统一入口。Stop关闭原入站连接，使旧fallback双向copy同步退出，不创建Rust generation/租约。不得把浏览器成功回落当WBD已认证/Ready，或把普通DNS/TLS扫描当业务会话。目标证书由**真实目标**在其TLS握手中提供，服务端本机无法代替目标证书私钥。已有Linux NAT网卡/IP精确绑定不变。H2209当前源码及真实测试按精确SOURCE证据单独留痕，物理公网访问/实体跨ISA继续NOT_RUN。

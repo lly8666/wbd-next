@@ -1,0 +1,38 @@
+name: 'M0 H2209 pinned original-Go ordinary TLS fallback Ubuntu'
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m0-h2209-linux-decoy-unit.yml'
+      - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
+      - 'r0/go_overlay/internal/realityfront/admission_v4.go'
+      - 'r0/go_overlay/internal/realityfront/v4_fallback_test.go'
+      - 'r0/go_overlay/internal/v4productcli/linux.go'
+permissions: {contents: read}
+jobs:
+  original-go-fallback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Attest exact SOURCE and assemble once
+        run: |
+          set -euo pipefail
+          test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/prepare_windows_wiring.py --legacy-root legacy --output result
+      - name: Original real TLS/FakeTCP same-association fallback and negative cases
+        working-directory: legacy
+        run: |
+          set -euo pipefail
+          go test -tags wbd_v4_embedded_go -count=1 -timeout 90s -run '^TestH2209' -v ./internal/realityfront
+          echo H2209_LINUX_ORIGINAL_GO_FALLBACK_SCOPED_PASS
