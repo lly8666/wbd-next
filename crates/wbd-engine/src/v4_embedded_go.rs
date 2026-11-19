@@ -6119,7 +6119,14 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
         e.native_health.as_mut(),e.native_health_evidence.as_ref()
     ){evidence.absorb(clock)}
     let retire=e.native_retire_notice_due;
-    let cold_reply=if e.server_side&&!retire{
+    // Server candidate B must NOT emit a causal READY_ACK while the
+    // shared TUN /32 still routes to old A. The server Go supervisor
+    // promotes B only after a genuine replay-unique client Health; this
+    // same Entry mutex serializes that promotion with this TX decision.
+    // Initial server sessions publish immediately and retain this path.
+    let route_committed=!e.shared_tun.as_ref()
+        .is_some_and(|sh|sh.publish_pending);
+    let cold_reply=if e.server_side&&!retire&&route_committed{
         e.cold_ready_probe.as_ref().map(|slot|slot.load(Ordering::Acquire))
             .filter(|nonce|*nonce!=0)
     }else{None};
