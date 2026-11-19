@@ -467,3 +467,35 @@ func TestH2222InitialOriginalTCPAndTLSTimeoutRetriesOnlyTwice(t *testing.T){
   }
  }
 }
+
+
+func TestH2222IdleCausalReadyGateDoesNotRequireFakeBusiness(t *testing.T){
+  for _,row:=range []struct{
+    name string
+    match uint32
+    tx,rx,after uint64
+    workerError int32
+    want bool
+    mode string
+  }{
+    {"idle_causal_after_m3",1,0,0,0,0,true,"causal_rust_AEAD_nonce_ack"},
+    {"no_probe_no_data",0,0,0,0,0,false,""},
+    {"local_tx_not_credential_proof",0,100,0,0,0,false,""},
+    {"server_health_only",0,4,0,0,0,false,""},
+    {"business_rx_without_tx_after",0,2,8,0,0,false,""},
+    {"legacy_real_2way_data",0,2,1,1,0,true,"legacy_authenticated_business_fallback"},
+    {"worker_error_deny_even_if_nonce_matched",1,2,1,1,3,false,""},
+  }{
+    t.Run(row.name,func(t *testing.T){
+      proof:=realityfront.V4WindowsColdReadyV1{Matched:row.match}
+      stats:=realityfront.V4WindowsNativeWorkerStatsV1{
+        TXCopied:row.tx,RXDelivered:row.rx,TXAfterRX:row.after,WorkerError:row.workerError,
+      }
+      yes,mode:=m0WindowsCausalNativeReady(proof,stats)
+      if yes!=row.want||mode!=row.mode{
+        t.Fatalf("H2222 control/data fail-closed gate got=(%t,%s) expected=(%t,%s)",
+          yes,mode,row.want,row.mode)
+      }
+    })
+  }
+}
