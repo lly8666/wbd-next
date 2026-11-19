@@ -8,3 +8,9 @@ Source-locked code **26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2**; [CI 44564552571
 - Original Rust Health cold commit stays the same authenticated existing control kind/PN/identity. Only first cold M4 post-TLS sequence repeat count (server 3–5/client 4–7) and subsequent successful-copy spacing (225–575ms) vary, drawn once per accepted control. First copy immediate, original bounded retry and 15s ±10% steady interval unchanged. No change to business timing/TLS framing.
 
 Full Windows public WAN physical, packet capture distribution, bidirectional Auto received-grade readback, long-run CPU/p99 and live service NAT on the operator's physical host **NOT_RUN**. H2220 physical FAIL retained. Do not claim long-term stability or protocol indistinguishability.
+
+## Feature-impact (H2224)
+
+```feature-impact
+{"kind":"updated","reason":"H2224 changes WinGUI live native readiness and directional FEC quality, Linux server owned IPv4 NAT and original authenticated cold Health timing without protocol changes.","ids":["gui-config-feedback","linux-raw-tun","tls-auth-multiclient"]}
+```
