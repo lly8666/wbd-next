@@ -14,3 +14,14 @@ Full Windows public WAN physical, packet capture distribution, bidirectional Aut
 ```feature-impact
 {"kind":"updated","reason":"H2224 changes WinGUI live native readiness and directional FEC quality, Linux server owned IPv4 NAT and original authenticated cold Health timing without protocol changes.","ids":["gui-config-feedback","linux-raw-tun","tls-auth-multiclient"]}
 ```
+
+## H2224 H2067 legacy cold regression closure
+
+- [PR49](https://github.com/lly8666/wbd-next/pull/49) repairs only the historical Rust **test** that assumed five cold controls at exactly 400ms; H2224 production requires four to seven authenticated Health controls and 225–575ms random delays with first copy immediate, still before server 5s proof boundary. No executable protocol or product source changed by the test fix.
+- Source-locked [Windows owner+Health Action 44574263649](https://github.com/lly8666/wbd-next/actions/runs/44574263649) SUCCESS: 89 Windows original-owner + 14 native Health unit tests, H2067 PASS.
+- Broader [Rust library Action 44573389406](https://github.com/lly8666/wbd-next/actions/runs/44573389406) reported 423 PASS / two unrelated R1 standalone fixture/provenance FAIL; no full-library PASS claim. This is separate from H2224 package Action 44571858954 two-job SUCCESS.
+- H2224 same product binaries remain the validated Windows GUI ZIP and Linux ARM64 server tar; newest main contains only this #49 test-source change plus documentation relative to those binaries. Physical long-run, full R1 fixture corpus and previous unrelated historical suites remain OPEN/NOT_RUN.
+
+```feature-impact
+{"kind":"none","reason":"PR49 adjusts only a historical cfg(test) Windows Rust cold Health timing assertion; no new product, native protocol, user-facing feature or runtime control change.","ids":[]}
+```
