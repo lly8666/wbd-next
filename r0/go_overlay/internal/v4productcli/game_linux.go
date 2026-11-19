@@ -544,7 +544,7 @@ func runGameServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,lea
     if err!=nil{return err}
     defer raw.Close()
     emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{return err}
     assocs:=make([]*faketcp.ServerAssociation,n)
     var handoffCommitted atomic.Bool
@@ -789,7 +789,7 @@ func runGameMultiServer(
     leases *logicaltunnel.LeaseRegistry,epochs *realityfront.V4EpochStore,
     connected *bool,cert tls.Certificate,
 )(retErr error){
-    const maxLiveRustLanes=16 // Rust MAX_SESSIONS, includes candidates and successors
+    // Rust MAX_SESSIONS=32; keep a separate cold-admission headroom for Decoy.
     const cohortTimeout=45*time.Second
     n:=int(c.gameLanes)
     autoPool:=c.leasePool.IsValid()
@@ -839,7 +839,7 @@ func runGameMultiServer(
     if err!=nil{return err}
     defer raw.Close()
     emit:=func(seg faketcp.Segment)error{_,e:=raw.WriteSegment(seg);return e}
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{return err}
     defer table.Close()
     runCtx,cancel:=context.WithCancel(ctx)
@@ -867,8 +867,8 @@ func runGameMultiServer(
         lane *realityfront.V4LinuxGameAuthenticatedLane
         err error
     }
-    established:=make(chan *faketcp.ServerAssociation,32)
-    authenticated:=make(chan authResult,32)
+    established:=make(chan *faketcp.ServerAssociation,originalV4ColdAssociationSlots)
+    authenticated:=make(chan authResult,originalV4ColdAssociationSlots)
     failed:=make(chan error,1)
     var mu sync.Mutex
     seen:=make(map[*faketcp.ServerAssociation]bool,32)
@@ -887,7 +887,7 @@ func runGameMultiServer(
         err error
     }
     normalPending:=make(map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord)
-    normalProofReady:=make(chan normalProofResult,32)
+    normalProofReady:=make(chan normalProofResult,originalV4ColdAssociationSlots)
     // Same cold-only readiness fence for Game2/4 whole-group replacement.
     // Hot Game4 single-lane swap never uses this group-level route.
     type gameProofResult struct{
@@ -896,7 +896,7 @@ func runGameMultiServer(
         err error
     }
     gameProofPending:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
-    gameProofReady:=make(chan gameProofResult,32)
+    gameProofReady:=make(chan gameProofResult,originalV4ColdAssociationSlots)
     detached:=make(map[*faketcp.ServerAssociation]faketcp.DetachedPeer)
     // Already switched Game4 slots keep the old cold association/port
     // excluded from Go DATA until its bounded random retirement deadline.
@@ -1077,7 +1077,7 @@ func runGameMultiServer(
             }
             if a.State()!=faketcp.ServerAssociationEstablished{continue}
             mu.Lock()
-            if !stopping.Load()&&!seen[a]&&len(seen)<maxLiveRustLanes+cap(cfg.FallbackSlots){
+            if !stopping.Load()&&!seen[a]&&len(seen)<originalV4NativeLaneSlots+cap(cfg.FallbackSlots){
                 seen[a]=true
                 select{case established<-a:default:delete(seen,a)}
             }
@@ -1085,10 +1085,10 @@ func runGameMultiServer(
         }
     }()
     if c.mixedModes{
-        log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=32 rust_native_slots=16 shared_rust_tun=1 decoy_max_splices=%d",c.localPort,cap(cfg.FallbackSlots))
+        log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=%d rust_native_slots=%d shared_rust_tun=1 decoy_max_splices=%d",c.localPort,originalV4ColdAssociationSlots,originalV4NativeLaneSlots,cap(cfg.FallbackSlots))
     }else{
-        log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=32 rust_native_total_lane_slots=16 shared_rust_tun=1",
-            c.localPort,n)
+        log.Printf("V4_PUBLIC_GAME_MULTI_SERVER_READY role=server port=%d lanes_per_group=%d cold_association_slots=%d rust_native_total_lane_slots=%d shared_rust_tun=1",
+            c.localPort,n,originalV4ColdAssociationSlots,originalV4NativeLaneSlots)
     }
     ticker:=time.NewTicker(time.Second)
     defer ticker.Stop()

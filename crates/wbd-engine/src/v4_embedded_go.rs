@@ -58,7 +58,9 @@ const UNKNOWN:i32=2;
 const BAD_STAGE:i32=3;
 const FULL:i32=4;
 const STOP_INCOMPLETE:i32=5;
-const MAX_SESSIONS:usize=16;
+const MAX_SESSIONS:usize=32;
+// Cold authenticated owner/lane registry bound; not pre-auth FakeTCP or decoy quota.
+fn native_session_room(occupied:usize)->bool{occupied<MAX_SESSIONS}
 // Same 64-slot native pre-detach reservation as ProtectedScopedOwner and
 // the original Go FakeTCP StageTransition. No arbitrary buffer expansion.
 const MAX_EARLY:u32=ORIGINAL_PROTECTED_EARLY_RECORDS as u32;
@@ -998,7 +1000,7 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         {return Err(INVALID)}
     }
     let mut r=registry().lock().map_err(|_|BAD_STAGE)?;
-    if r.entries.len()>=MAX_SESSIONS{return Err(FULL)}
+    if !native_session_room(r.entries.len()){return Err(FULL)}
     let generation=r.generation;
     r.generation=generation.checked_add(1).ok_or(FULL)?;
     let handle=(u64::from(generation)<<32)|0x5742;
@@ -1607,7 +1609,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_release_client_fec2_prepare(
         send,usize::from(id.server_limit),suite,
     ){Ok(tx)=>tx,Err(_)=>return INVALID};
     let mut r=match release_clients().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
-    if r.clients.len()>=MAX_SESSIONS||r.next==u32::MAX{return FULL}
+    if !native_session_room(r.clients.len())||r.next==u32::MAX{return FULL}
     let generation=r.next;r.next+=1;
     let Some(handle)=(u64::from(generation)<<32).checked_add(0x434Cu64)
         else{return FULL};
@@ -9239,6 +9241,18 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn m0_h2213_linux_native_32_lane_limit_33rd_denied(){
+        assert_eq!(MAX_SESSIONS,32);
+        for occupied in 0..MAX_SESSIONS{
+            assert!(native_session_room(occupied),"slot {occupied} should admit");
+        }
+        assert!(!native_session_room(32),"33rd lane must be rejected");
+        assert!(!native_session_room(33),"overflow must stay closed");
+        // Game2 consumes two native lanes; this upper group bound stays
+        // subordinate to the same verified 32-lane registry.
+        assert_eq!(MAX_SESSIONS/2,16);
+    }
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     #[test]
     fn m0_original_wbc4_authenticated_kind1_m2_covered_vs_uncovered_and_replay_boundary(){

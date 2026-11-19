@@ -270,3 +270,91 @@ func TestH2212OrdinaryDecoyCapFailFastNoRustOwner(t *testing.T){
     if dialCalls.Load()!=0 || len(slots)!=8 {t.Fatal("decoy slot leak or unauthorized dial")}
     if _,ok:=assoc.TransitionState();ok{t.Fatal("decoy allocated WBD transition")}
 }
+
+
+func TestH2213OrdinaryTLSDurationHasRandomBoundaries(t *testing.T){
+    if v4DecoyDurationFromOffset(0)!=15*time.Second ||
+        v4DecoyDurationFromOffset(30)!=45*time.Second {
+        t.Fatal("ordinary TLS random duration must remain 15..45s")
+    }
+    for i:=0;i<64;i++{
+        d:=v4RandomDecoyLifetime()
+        if d<15*time.Second||d>45*time.Second||d%time.Second!=0{
+            t.Fatalf("unbounded/non-integral ordinary TLS lifetime %v",d)
+        }
+    }
+}
+
+// Actual stdlib TLS1.3 ordinary visitor gets a real decoy TLS handshake,
+// an application ping/pong, then the pre-auth FakeTCP splice is forcibly
+// terminated on the test-only smaller per-session maximum. This does not
+// consume a protected WBD native owner or leak the eight-slot quota.
+func TestH2213OrdinaryTLSDecoyHardCloseReleasesQuota(t *testing.T){
+    cert:=makeServerCert(t)
+    assoc,peer:=newAssociationPeer(t)
+    defer assoc.Close();defer peer.Close()
+    target,origin:=net.Pipe()
+    slots:=make(chan struct{},8)
+    serverDone:=make(chan error,1)
+    originDone:=make(chan error,1)
+    go func(){
+        defer origin.Close()
+        info,raw,err:=readClientHello(origin,64<<10,3*time.Second)
+        if err!=nil{originDone<-err;return}
+        if info.ServerName!="target.test"{originDone<-errors.New("wrong origin SNI");return}
+        tlsOrigin:=tls.Server(replay(origin,raw),&tls.Config{
+            Certificates:[]tls.Certificate{cert},MinVersion:tls.VersionTLS13,
+        })
+        if err=tlsOrigin.Handshake();err!=nil{originDone<-err;return}
+        var request [4]byte
+        if _,err=io.ReadFull(tlsOrigin,request[:]);err!=nil{originDone<-err;return}
+        if string(request[:])!="ping"{originDone<-errors.New("wrong ordinary payload");return}
+        if _,err=tlsOrigin.Write([]byte("pong"));err!=nil{originDone<-err;return}
+        // Keep ordinary TLS alive without closing either end; the server
+        // must own the random-cap timeout rather than relying on origin EOF.
+        var blocked [1]byte
+        _,err=tlsOrigin.Read(blocked[:])
+        if err==nil{originDone<-errors.New("ordinary TLS survived forced close");return}
+        originDone<-nil
+    }()
+    go func(){
+        store,_:=NewV4EpochStore(4)
+        _,err:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
+            TLS:ServerConfig{ServerName:"target.test",
+                RouteKey:[]byte("0123456789abcdef0123456789abcdef"),
+                Timeout:3*time.Second},
+            ExpectedUsername:"solo",ExpectedPassword:"secret",ServerLimit:1400,
+        },V4ServerOptions{DataPlaneReady:true,Epochs:store,FallbackSlots:slots,
+            Fallback:&FallbackConfig{Target:"decoy.invalid:443",
+                ServerName:"target.test",SessionTimeout:600*time.Millisecond,
+                DialContext:func(context.Context,string,string)(net.Conn,error){
+                    return target,nil
+                }},
+        })
+        serverDone<-err
+    }()
+    start:=time.Now()
+    visitor:=tls.Client(peer,&tls.Config{ServerName:"target.test",
+        RootCAs:v4TestRoots(cert),MinVersion:tls.VersionTLS13})
+    ctx,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+    defer cancel()
+    if err:=visitor.HandshakeContext(ctx);err!=nil{t.Fatalf("real ordinary TLS handshake: %v",err)}
+    if _,err:=visitor.Write([]byte("ping"));err!=nil{t.Fatalf("ordinary send: %v",err)}
+    var response [4]byte
+    if _,err:=io.ReadFull(visitor,response[:]);err!=nil||string(response[:])!="pong"{
+        t.Fatalf("ordinary TLS origin response %q: %v",response,err)
+    }
+    select{
+    case err:=<-serverDone:
+        if !errors.Is(err,ErrV4FallbackHandled){t.Fatalf("ordinary branch %v",err)}
+    case <-ctx.Done():t.Fatal("ordinary TLS was not capped/closed")
+    }
+    if time.Since(start)>2*time.Second{t.Fatal("ordinary TLS exceeded bounded test timeout")}
+    select{
+    case err:=<-originDone:if err!=nil{t.Fatalf("origin not closed by decoy: %v",err)}
+    case <-ctx.Done():t.Fatal("origin TLS lingered after server cutoff")
+    }
+    if len(slots)!=0{t.Fatal("ordinary Decoy quota slot leaked after deadline")}
+    if _,ok:=assoc.TransitionState();ok{t.Fatal("ordinary TLS acquired Rust WBD transition")}
+    _=visitor.Close()
+}

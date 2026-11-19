@@ -42,7 +42,9 @@ const UNKNOWN:i32=2;
 const BAD_STAGE:i32=3;
 const FULL:i32=4;
 const STOP_INCOMPLETE:i32=5;
-const MAX_SESSIONS:usize=16;
+const MAX_SESSIONS:usize=32;
+// Cold authenticated owner/lane registry bound; not pre-auth FakeTCP or decoy quota.
+fn native_session_room(occupied:usize)->bool{occupied<MAX_SESSIONS}
 // Genuine AEAD+unique-PN kind1 receives pending exact M2 route binding.
 const MAX_AUTHENTICATED_KIND1:usize=32;
 // Original M1 arena has 64 slots: hold at most 48 DATA shadows + one
@@ -976,7 +978,7 @@ fn registry()->&'static Mutex<Registry>{
     REGISTRY.get_or_init(||Mutex::new(Registry{generation:1,entries:BTreeMap::new(),game_groups:BTreeMap::new()}))
 }
 fn allocate(r:&mut Registry, cold:&[u8],command:&[u8],server:bool)->Result<u64,i32>{
-    if r.entries.len()>=MAX_SESSIONS{return Err(FULL)}
+    if !native_session_room(r.entries.len()){return Err(FULL)}
     let handoff=PrivateGoV4Handoff::decode(command).map_err(|_|INVALID)?;
     // Feature7 is admitted only by explicit Rust FEC2 test-channel build.
     // This is a cryptographic lane candidate, never a WFP/OS Applied grant.
@@ -2169,6 +2171,19 @@ pub unsafe extern "C" fn wbd_m0_win_owner_v5_open_data_or_kind1(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn m0_h2213_windows_real_32_prepared_owners_then_33rd_full(){
+        let mut r=Registry{generation:2200,entries:BTreeMap::new(),game_groups:BTreeMap::new()};
+        let cold=cold(false);
+        let command=cmd();
+        for i in 0..MAX_SESSIONS{
+            assert!(native_session_room(i));
+            assert!(allocate(&mut r,&cold,&command,false).is_ok(),"owner {i}");
+        }
+        assert_eq!(r.entries.len(),32);
+        assert!(!native_session_room(r.entries.len()));
+        assert!(matches!(allocate(&mut r,&cold,&command,false),Err(FULL)));
+    }
     fn cold(server:bool)->[u8;COLD_V4_LEN]{
         let mut a=[0;COLD_V4_LEN];
         a[..4].copy_from_slice(b"WBCO");

@@ -41,3 +41,19 @@ func TestH2212DecoyQuotaOnlyWhenEnabled(t *testing.T){
   slots:=originalV4DecoySlots(config{decoyTarget:"127.0.0.1:8443"})
   if slots==nil||cap(slots)!=8||len(slots)!=0{t.Fatal("decoy should have exactly eight independent transfer slots")}
 }
+
+func TestH2213Rust32Cold64Ordinary8SeparateResources(t *testing.T){
+    if originalV4NativeLaneSlots!=32 {t.Fatal("Rust authenticated native lane cap drifted")}
+    if originalV4ColdAssociationSlots!=64 {t.Fatal("FakeTCP cold table must leave onboarding/Decoy headroom")}
+    if originalV4MaxDecoySplices!=8{t.Fatal("ordinary TLS transfer quota drifted")}
+    if originalV4ColdAssociationSlots<
+        originalV4NativeLaneSlots+originalV4MaxDecoySplices {
+        t.Fatal("new WBD lanes could exhaust all ordinary TLS cold associations")
+    }
+    decoy:=originalV4ServerDecoy(config{
+        decoyTarget:"127.0.0.1:8443",serverName:"target.test"})
+    if decoy==nil||decoy.SessionTimeout.Seconds()!=45||decoy.MaxBytes!=64<<20 {
+        t.Fatal("ordinary TLS must be time and byte bounded")
+    }
+    if originalV4ServerDecoy(config{})!=nil{t.Fatal("disabled decoy allocated resources")}
+}

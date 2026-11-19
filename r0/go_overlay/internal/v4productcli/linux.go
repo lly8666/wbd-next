@@ -193,7 +193,7 @@ func parse(role string,args []string)(config,error){
     if role=="server"{defaultTun="10.66.0.1/24"}
     tunCIDR:=flags.String("tun-ipv4",defaultTun,"owned real TUN IPv4 CIDR (server default 10.66.0.1/24)")
     name:=flags.String("server-name","","original TLS recognized SNI")
-    decoy:=flags.String("decoy","","server-only legacy ordinary-TLS fallback target host:port; same SNI, bounded and opt-in")
+    decoy:=flags.String("decoy","","server-only ordinary TLS target host:port; per-visitor random 15..45s cutoff, max8 concurrent splices")
     route:=flags.String("route-key-hex","","legacy/expert pre-shared 32-byte route key hex (64 characters)")
     routeShort:=flags.String("route-key","","8..32 ASCII letters/digits; v2 4096-iteration mobile-friendly PBKDF2 once then persistent 32B cache (prefer 24..32 random)")
     routeShortFile:=flags.String("route-key-file","","owner-only file with 8..32 short route-key; avoids argv disclosure")
@@ -1463,9 +1463,15 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr
 }
-// Legacy P2 fallback is independent of the 16 authenticated Rust owner slots.
-// 8 bounded decoy transfers share the 32-slot cold table; WBD native slots stay unchanged.
-const originalV4MaxDecoySplices=8
+// Rust native owners have their own 32-lane cap; fake TCP association
+// lifetime remains bounded and does not pre-allocate 64 native owners.
+// 64 cold slots leave headroom for 32 established WBD lanes, reconnections,
+// and up to 8 independently bounded ordinary TLS decoy splices.
+const (
+    originalV4NativeLaneSlots=32
+    originalV4ColdAssociationSlots=64
+    originalV4MaxDecoySplices=8
+)
 func originalV4DecoySlots(c config)chan struct{}{
     if c.decoyTarget==""{return nil}
     return make(chan struct{},originalV4MaxDecoySplices)
@@ -1474,7 +1480,7 @@ func originalV4ServerDecoy(c config)*realityfront.FallbackConfig{
     if c.decoyTarget==""{return nil}
     return &realityfront.FallbackConfig{
         Target:c.decoyTarget,ServerName:c.serverName,
-        DialTimeout:5*time.Second,SessionTimeout:2*time.Minute,MaxBytes:64<<20,
+        DialTimeout:5*time.Second,SessionTimeout:45*time.Second,MaxBytes:64<<20,
     }
 }
 
@@ -1500,7 +1506,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             PeerPersona:c.peerPersona,Authenticate:originalV4CredentialCheck(c),
         })
     if err!=nil{return err}
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{return err}
     reply:=realityfront.ServerAdmissionConfig{
         TLS:realityfront.ServerConfig{ServerName:c.serverName,RouteKey:c.routeKey,
@@ -1753,7 +1759,7 @@ func runSharedMultiServer(
     shared,err:=realityfront.NewV4LinuxSharedTun(tun.f,c.tunName)
     if err!=nil{return err}
     decoySlots:=originalV4DecoySlots(c)
-    table,err:=faketcp.NewServerAssociationTable(32,emit)
+    table,err:=faketcp.NewServerAssociationTable(originalV4ColdAssociationSlots,emit)
     if err!=nil{
         _=shared.Close()
         return err
@@ -1996,11 +2002,10 @@ func runSharedMultiServer(
             }
         }
     }
-    // 32 is the FakeTCP *cold association* table, not the number of
-    // authenticated Rust native owners. prepare_side has MAX_SESSIONS=16.
-    // Truthful readiness avoids advertising unqualified 32-live capacity.
-    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1 decoy_max_splices=%d",
-        c.localPort,cap(decoySlots))
+    // Cold FakeTCP slots and Rust native lane slots are separate and bounded.
+    // A 32-slot cap is not a claim of 32 long-lived qualified users.
+    log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=%d native_owner_slots=%d shared_rust_tun=1 decoy_max_splices=%d",
+        c.localPort,originalV4ColdAssociationSlots,originalV4NativeLaneSlots,cap(decoySlots))
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()

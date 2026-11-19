@@ -47,3 +47,11 @@ Linux原Go V4服务端冷入口（默认shared，兼容Normal与Game2/4 protecte
 真实代码容量：原Rust native `MAX_SESSIONS=16`为每端的owner/lane槽，FakeTCP cold table为32个预认证关联，**都不是已证明16/32台客户端可稳定满载**；Game2/4每端消耗2/4 lane。旧P2普通TLS Decoy只用Go冷关联＋固定origin splice，**不分配WBD Rust epoch/租约**。新增每服务端单独8槽`FallbackSlots`，只有未被RouteKey识别的普通TLS会占用其中1槽，满时普通TLS快速失败、不拨origin、不阻塞合法WBD；识别的WBD根本不获取Decoy额度。shared Normal+Game混合入口仅在decoy开启时将冷候选暂存上限16→24，Rust 16槽与FakeTCP 32冷表不变；未分类SYN仍可能占用共享表，不能作为抗DoS保证。
 
 H2212测试采用原生Linux x86_64/ARM64原Go+Rust双端，真实隔离网卡、TCP443 TLS、Rust M4/TUN/UDP Echo/Stop，短RouteKey 32位随机英数字双方离线派生及0600缓存、完全独立重启二次校验mtime；与此同时普通Python标准TLS客户端经同一raw443端口访问127.0.0.1:8443固定origin TLS并完成ping/pong，原已认证WBD Ready数量不变。Go源锁负例覆盖8额度满下普通客户端不拨origin、WBD原认证不受限。公网DNAT、16 WBD实际满负载、移动JNI/OpenWrt实机仍NOT_RUN，所有PASS必须绑定相同SOURCE与Action。
+
+## H2213｜Rust32 owner容量与普通TLS随机有界Decoy
+
+原始Go protected V4 Rust Linux `v4_embedded_go.rs`和Windows `v4_windows_owner.rs`的`MAX_SESSIONS`统一从16改为**32**；这是native **lane/owner注册槽**上限，不是实际跑完32个稳定客户端或吞吐性能基准。Normal通常占1条lane、Game2占2、Game4占4，替换/Stop期间候选generation也可能占槽。所有真实Rust M4/M1/PN owner分离、TLS/记录wire不变。Linux原Go服务端FakeTCP**预认证关联表从32扩为64**，保留32已认证WBD和8个独立普通访客Decoy的冷启动/接续余量；不代表64个已认证客户端，恶意扫描仍可占满表。混合Normal/Game冷候选总量最多32 Rust+8 Decoy，仍小于64冷表；Windows Rust上限同步32。
+
+旧P2`FallbackFromHello`是实际普通TLS连接的唯一流转发，非WBD无原生Rust owner、仅使用最多8条Decoy传输额度。**每个普通ClientHello独立随机抽取15–45秒（含端点）**；服务器把这个期限同时用于`context.WithTimeout`和旧P2既有`SessionTimeout`的双向socket deadline，计时到点主动关闭该同一FakeTCP关联并释放Decoy传输名额。若调用方显式设置更短期限则按短期限；生成随机数失败时保守15秒。只作用于`!hello.Recognized`，正确WBD认证链/原生Rust/数据热路径不受随机断连。普通访客可能体验到15–45秒突然中断，这是用户明确要求的资源保护策略；不承诺能承受无限制SYN洪泛。
+
+H2213验证范围是Rust两端native32/33边界、Go单个普通TLS1.3到真实P2 decoy后超时强制关闭、额度归还/无Rust owner，以及原Linux真双端回归。不要将编译、单元边界等同于32个真实业务用户的同时满载；32人稳定压力/延迟留单独验收。

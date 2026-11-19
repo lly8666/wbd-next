@@ -19,6 +19,7 @@ import (
     "net"
     "net/netip"
     "sync"
+    "time"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
@@ -839,6 +840,21 @@ var ErrV4ServerNativeCommit=errors.New("original native M4 owner commit")
 // Caller must ReleaseLane on tunnel teardown. Legacy EstablishServer is intact.
 var ErrV4FallbackHandled=errors.New("realityfront: ordinary TLS decoy branch handled")
 
+// Only the unrecognized ordinary TLS branch gets this randomly bounded
+// lifetime. No WBD epoch/lease/handshake and no Rust owner is affected.
+const (
+    v4DecoyMinSeconds int64=15
+    v4DecoyRandomRangeSeconds int64=31 // inclusive 15..45 seconds
+)
+func v4DecoyDurationFromOffset(offset int64)time.Duration{
+    return time.Duration(v4DecoyMinSeconds+offset)*time.Second
+}
+func v4RandomDecoyLifetime()time.Duration{
+    draw,err:=rand.Int(rand.Reader,big.NewInt(v4DecoyRandomRangeSeconds))
+    if err!=nil{return v4DecoyDurationFromOffset(0)} // fail closed: shortest bound
+    return v4DecoyDurationFromOffset(draw.Int64())
+}
+
 func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg ServerAdmissionConfig,opt V4ServerOptions)(*V4ServerSession,error) {
     if ctx==nil{ctx=context.Background()}
     if !opt.DataPlaneReady||opt.Epochs==nil||opt.GameFec>7||
@@ -870,17 +886,27 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
             }
         }
         // The old P2 fallback owns this SAME pre-auth FakeTCP association.
-        // Stop the candidate deadline before a bounded decoy session; never
-        // create an epoch or ask Rust to take ownership on this branch.
+        // Each ordinary visitor is capped at a separately sampled 15..45s,
+        // including dial; an explicit shorter fixture/session limit wins.
+        // Both the session socket deadlines and owned context close prevent
+        // lingering duplex copies. Authenticated WBD never touches this path.
+        lifetime:=v4RandomDecoyLifetime()
+        fallback:=*opt.Fallback
+        if fallback.SessionTimeout>0&&fallback.SessionTimeout<lifetime {
+            lifetime=fallback.SessionTimeout
+        }
+        fallback.SessionTimeout=lifetime
+        decoyCtx,stopDecoy:=context.WithTimeout(ctx,lifetime)
+        defer stopDecoy()
         guard.Finish(true)
         stopped:=make(chan struct{})
         go func(){
             select{
-            case <-ctx.Done(): assoc.Close() // owned Stop must unblock copies
+            case <-decoyCtx.Done(): assoc.Close()
             case <-stopped:
             }
         }()
-        _,fallbackErr:=FallbackFromHello(ctx,conn,hello,*opt.Fallback)
+        _,fallbackErr:=FallbackFromHello(decoyCtx,conn,hello,fallback)
         close(stopped)
         assoc.Close()
         if fallbackErr!=nil{return nil,fmt.Errorf("%w: %w",ErrV4FallbackHandled,fallbackErr)}

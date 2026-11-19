@@ -1624,13 +1624,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "e5f164aa0b1c359e017404dcd2ef1f0816d88007"
+      "result_blob": "5932fa59807fd6d4e337f44cb078bb6e822c1fe2"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "2d996f4a90698cf9822404fde62bb309c1da6714"
+      "result_blob": "e4d8c58ead37a3f34d22aead4b4d5e51f60b015f"
     },
     {
       "kind": "replace",
@@ -1711,7 +1711,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "dadd07897ea570d37353dec989905022ebb27f86"
+      "result_blob": "7f2889ca40c094689b72f1391490b7ac67201ac6"
     },
     {
       "kind": "create",
@@ -1861,13 +1861,13 @@
       "kind": "create",
       "path": "internal/realityfront/v4_fallback_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/v4_fallback_test.go",
-      "result_blob": "4911a8933f110638cb45f0fb4699d0736d6f818c"
+      "result_blob": "38b9ca871f172dd7ea634deb047d75345ccb4c16"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/server_decoy_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/server_decoy_linux_test.go",
-      "result_blob": "38cc1e261df4a9cccdc8febb755d7497e4e41d81"
+      "result_blob": "d020941a2c9c33cbef602b32d9a24d544ba8defd"
     },
     {
       "kind": "create",

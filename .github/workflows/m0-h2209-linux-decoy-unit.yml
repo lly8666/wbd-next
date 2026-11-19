@@ -34,7 +34,7 @@ jobs:
         working-directory: legacy
         run: |
           set -euo pipefail
-          go test -tags wbd_v4_embedded_go -count=1 -timeout 90s -run '^TestH22(09|12)' -v ./internal/realityfront
+          go test -tags wbd_v4_embedded_go -count=1 -timeout 90s -run '^TestH22(09|12|13)' -v ./internal/realityfront
           echo H2209_LINUX_ORIGINAL_GO_FALLBACK_SCOPED_PASS
 
 
@@ -108,7 +108,7 @@ jobs:
           (
             cd legacy
             go test -count=1 -timeout 90s -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
-              -run '^(TestH2209ServerDecoyColdValidation|TestH2212DecoyQuotaOnlyWhenEnabled|TestH2206ServerNAT)' -v ./internal/v4productcli | tee "$RUNNER_TEMP/h2210-native-parser.txt"
+              -run '^(TestH2209ServerDecoyColdValidation|TestH2212DecoyQuotaOnlyWhenEnabled|TestH2213Rust32Cold64Ordinary8SeparateResources|TestH2206ServerNAT)' -v ./internal/v4productcli | tee "$RUNNER_TEMP/h2210-native-parser.txt"
             grep -Fq -- '--- PASS: TestH2209ServerDecoyColdValidation' "$RUNNER_TEMP/h2210-native-parser.txt"
             grep -Fq -- '--- PASS: TestH2206ServerNAT' "$RUNNER_TEMP/h2210-native-parser.txt"
             go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$RUNNER_TEMP/wbd-v4-server" ./cmd/wbd-v4-server
