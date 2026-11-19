@@ -17,7 +17,8 @@ def valid(b):
 
 def listen():
     packet = socket.socket(socket.AF_PACKET, socket.SOCK_DGRAM, socket.htons(0x0800))
-    packet.bind((SI, socket.htons(0x0800)))
+    # Python bind() expects ETH_P_IP in host order; the socket() syscall does not.
+    packet.bind((SI, 0x0800))
     raw = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
     raw.bind((DST, 0))
     packet.setblocking(False)
