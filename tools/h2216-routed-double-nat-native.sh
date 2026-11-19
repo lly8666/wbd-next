@@ -88,7 +88,7 @@ chmod 0600 "$TMP/users.json" "$TMP/key.pem"
 env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --init-route-key-file "$TMP/route-key.hex"
 sudo -n ip netns exec "$NSS" bash -c "
  echo \$\$ > '$TMP/server.pid'
- exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
+ exec env WBD_H2216_NAT_DEBUG=1 LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
    --raw-interface mxs0 --local-ip 10.25.0.1 --local-port 443 \
    --tun-name mxs4 --tun-ipv4 10.66.0.1/24 \
    --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' \
@@ -123,7 +123,7 @@ start_client(){
  local ns="$1" guest="$2" ip="$3" tun="$4" port="$5" who="$6" secret="$7" mode="$8" extra="$9"
  sudo -n ip netns exec "$ns" bash -c "
  echo \$\$ > '$TMP/$who.pid'
- exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-client' \
+ exec env WBD_H2216_NAT_DEBUG=1 LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-client' \
   --raw-interface '$guest' --local-ip '$ip' --local-port '$port' \
   --peer-ip 198.18.0.100 --peer-port 443 --tun-name '$tun' \
   --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' \
