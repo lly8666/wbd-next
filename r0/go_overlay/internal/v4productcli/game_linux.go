@@ -11,6 +11,7 @@ import (
     "errors"
     "fmt"
     "log"
+    "os"
     "sync"
     "sync/atomic"
     "time"
@@ -1147,6 +1148,9 @@ func runGameMultiServer(
                     stage,nativeColdFailureClass(result.err),
                     realityfront.V4OriginalNativeM4FailureStage(result.err),
                     realityfront.V4NormalM4NativeCode(result.err),port)
+                if os.Getenv("WBD_H2216_NAT_DEBUG")=="1" {
+                    log.Printf("H2216_NAT_SERVER_COLD_DIAGNOSTIC client_port=%d type=%T error=%v",port,result.err,result.err)
+                }
                 forget(result.assoc)
                 continue
             }
