@@ -149,7 +149,7 @@ $mutEnd=$tests.IndexOf('};',$mutStart)
 if($mutEnd -lt 0){throw 'H2204 GUI mutation dictionary terminator missing'}
 $existingMutations=$tests.Substring($mutStart,$mutEnd-$mutStart)
 $additional=@(
- @('startup-padding','"flows"'),@('fec.mode','"off"'),
+ @('route-key','"Abcde12345RandomRouteKey2026"'),@('startup-padding','"flows"'),@('fec.mode','"off"'),
  @('fec.profile','"strong"'),@('fec.auto_policy','"normal"'),
  @('fec.auto_start_profile','"strong"'),@('outer-repair','"on"'),
  @('dns.direct','"223.5.5.5"'),@('dns.tunnel','"1.1.1.1"'),
