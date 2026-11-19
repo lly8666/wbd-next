@@ -23,6 +23,17 @@ fn next_health_delay(interval:u64)->u64{
     if delta==0{return interval}
     interval-delta+control_random_below(delta.saturating_mul(2)+1).unwrap_or(delta)
 }
+// Cold-only RNG: draw only on armed/accepted Health, never per DATA frame.
+// If the OS entropy provider temporarily fails, the monotonic time provides
+// bounded (non-security) variability; wire AEAD/PN always use their own RNG.
+fn cold_group_random(range:u64,at:u64)->u64{
+    control_random_below(range).unwrap_or_else(||{
+        let mut v=at^0x9e3779b97f4a7c15;
+        v^=v>>30;v=v.wrapping_mul(0xbf58476d1ce4e5b9);
+        v^=v>>27;v=v.wrapping_mul(0x94d049bb133111eb);
+        (v^(v>>31))%range
+    })
+}
 fn padding_max()->usize{
     static MAX:OnceLock<usize>=OnceLock::new();
     *MAX.get_or_init(||std::env::var("WBD_NATIVE_HEALTH_PADDING_MAX_BYTES")
@@ -73,7 +84,7 @@ pub(crate) struct HealthClock {
     last_business:u64,
     next_health:u64,
     retry_not_before:u64,
-    // At most 3 server or 5 client existing AEAD Health kind0 receipts,
+    // A bounded random number of existing AEAD Health kind0 receipts,
     // armed ONLY after completed original Normal/Game cold M4. Never
     // business DATA, a new wire kind, or a periodic extra sender.
     cold_group_receipts_left:u8,
@@ -130,20 +141,21 @@ impl HealthClock {
     // of reverse application IPv4 being available.
     pub(crate) fn arm_server_cold_commit(&mut self,at:u64){
         if self.cold_group_receipts_left==0{
-            self.cold_group_receipts_left=3;
+            // First commit remains immediate; only the additional number varies.
+            self.cold_group_receipts_left=3+cold_group_random(3,at) as u8;
             self.next_health=at;
             self.retry_not_before=at;
         }
     }
     /// An overlapping client B has installed its original authenticated
     /// M4 RAW RX socket and worker. Re-send only the SAME authenticated
-    /// Health KIND (fresh AEAD PN per accepted copy), at most five times
-    /// over 1.6s. A 30% lossy underlay must not turn one dropped kind0
+    /// Health KIND (fresh AEAD PN per accepted copy), four to seven copies
+    /// within 3.5s. A 30% lossy underlay must not turn one dropped kind0
     /// into a silent 5s server B proof timeout after client B promotes.
     /// This never extends or changes the steady 15s Health period.
     pub(crate) fn arm_client_cold_ready(&mut self,at:u64){
         if self.cold_group_receipts_left==0{
-            self.cold_group_receipts_left=5;
+            self.cold_group_receipts_left=4+cold_group_random(4,at) as u8;
             self.next_health=at;
             self.retry_not_before=at;
         }
@@ -154,7 +166,7 @@ impl HealthClock {
                 self.cold_group_receipts_left-=1;
             }
             self.next_health=if self.cold_group_receipts_left>0{
-                at.saturating_add(400_000_000)
+                at.saturating_add(225_000_000+cold_group_random(350_000_001,at))
             }else{
                 at.saturating_add(next_health_delay(self.policy.interval_ns))
             };
@@ -599,63 +611,76 @@ mod wire_tests{
 mod tests {
     use super::*;
     #[test]
-    fn game_server_cold_commit_health_is_bounded_and_never_fake_business(){
-        let mut health=HealthClock::new(HealthPolicy::default_connected(),10_000_000);
-        assert!(!health.tx_due(10_000_000));
-        health.arm_server_cold_commit(10_001_000);
-        assert!(health.tx_due(10_001_000));
-        // A failed driver copy must NOT count as a peer receipt, and
-        // must retry the same existing sealed kind0 via original TX.
-        health.on_health_send_result(10_001_000,false);
-        assert!(!health.tx_due(10_001_000));
-        assert!(health.tx_due(10_001_000+MIN_RETRY_NS));
-        let mut now=10_001_000+MIN_RETRY_NS;
-        for index in 0..3{
-            assert!(health.tx_due(now));
-            health.on_health_send_result(now,true);
-            if index<2{
-                assert!(!health.tx_due(now+399_999_999));
-                now=now+400_000_000;
-            }else{
-                assert!(!health.tx_due(now+1_000_000_000));
+    fn cold_server_commit_random_count_spacing_and_failed_copy(){
+        let mut counts=std::collections::BTreeSet::new();
+        let mut gaps=std::collections::BTreeSet::new();
+        for _ in 0..128 {
+            let at=10_001_000;
+            let mut h=HealthClock::new(HealthPolicy::default_connected(),at);
+            h.arm_server_cold_commit(at);
+            let count=h.cold_group_receipts_left;
+            assert!((3..=5).contains(&count));
+            counts.insert(count);
+            assert!(h.tx_due(at));
+            h.on_health_send_result(at,false);
+            assert!(!h.tx_due(at+MIN_RETRY_NS-1));
+            let mut now=at+MIN_RETRY_NS;
+            for index in 0..count {
+                assert_eq!(h.control_due(now),ControlDue::Health);
+                h.on_health_send_result(now,true);
+                if index+1<count {
+                    let next=h.next_tx_deadline().unwrap();
+                    let gap=next-now;
+                    assert!((225_000_000..=575_000_000).contains(&gap));
+                    gaps.insert(gap);
+                    assert!(!h.tx_due(next-1));
+                    now=next;
+                }
             }
+            assert_eq!(h.cold_group_receipts_left,0);
+            assert!(!h.tx_due(now+SECOND_NS));
+            assert_eq!(h.local_idle_ns(now),now-at);
         }
-        // Cold receipt never advances application payload idle.
-        assert_eq!(health.local_idle_ns(now),now-10_000_000);
-        assert_eq!(health.cold_group_receipts_left,0);
+        assert!(counts.len()>1,"server cold packet count not randomized");
+        assert!(gaps.len()>1,"server cold interpacket delay not randomized");
     }
     #[test]
-    fn client_cold_m4_receiver_proof_is_bounded_five_existing_kind0(){
-        let at=5_000_000_000;
-        let mut h=HealthClock::new(HealthPolicy::default_connected(),at);
-        assert!(!h.tx_due(at));
-        h.arm_client_cold_ready(at);
-        assert_eq!(h.cold_group_receipts_left,5);
-        assert_eq!(h.control_due(at),ControlDue::Health);
-        // Native TX rejection is never counted as a remotely received
-        // readiness proof, and does not silently enter a 15s idle phase.
-        h.on_health_send_result(at,false);
-        assert!(!h.tx_due(at+MIN_RETRY_NS-1));
-        assert_eq!(h.control_due(at+MIN_RETRY_NS),ControlDue::Health);
-        let mut now=at+MIN_RETRY_NS;
-        for sent in 0..5 {
-            assert_eq!(h.control_due(now),ControlDue::Health);
-            h.on_health_send_result(now,true);
-            assert_eq!(h.cold_group_receipts_left,4-sent);
-            if sent<4 {
-                assert!(!h.tx_due(now+399_999_999));
-                now+=400_000_000;
+    fn cold_client_receiver_proof_randomized_bounded_and_no_fake_business(){
+        let mut counts=std::collections::BTreeSet::new();
+        let mut gaps=std::collections::BTreeSet::new();
+        for _ in 0..128 {
+            let at=5_000_000_000;
+            let mut h=HealthClock::new(HealthPolicy::default_connected(),at);
+            h.arm_client_cold_ready(at);
+            let count=h.cold_group_receipts_left;
+            assert!((4..=7).contains(&count));
+            counts.insert(count);
+            assert_eq!(h.control_due(at),ControlDue::Health);
+            h.on_health_send_result(at,false);
+            assert_eq!(h.control_due(at+MIN_RETRY_NS),ControlDue::Health);
+            let mut now=at+MIN_RETRY_NS;
+            for index in 0..count {
+                assert_eq!(h.control_due(now),ControlDue::Health);
+                h.on_health_send_result(now,true);
+                if index+1<count{
+                    let next=h.next_tx_deadline().unwrap();
+                    let gap=next-now;
+                    assert!((225_000_000..=575_000_000).contains(&gap));
+                    gaps.insert(gap);
+                    assert!(!h.tx_due(next-1));
+                    now=next;
+                }
             }
+            assert!(now-(at+MIN_RETRY_NS)<=3_450_000_000);
+            assert_eq!(h.cold_group_receipts_left,0);
+            assert!(!h.tx_due(now+SECOND_NS));
+            assert!(h.next_tx_deadline().is_some_and(|due|
+                due>=now+13_500_000_000 && due<=now+16_500_000_000));
+            assert_eq!(h.local_idle_ns(now),now-at);
+            assert_eq!(h.policy().interval_ns(),15*SECOND_NS);
         }
-        assert_eq!(now-(at+MIN_RETRY_NS),1_600_000_000);
-        assert_eq!(h.cold_group_receipts_left,0);
-        assert!(!h.tx_due(now+1_000_000_000));
-        assert!(h.next_tx_deadline().is_some_and(|due|
-            due>=now+13_500_000_000 && due<=now+16_500_000_000));
-        assert_eq!(h.local_idle_ns(now),now-at);
-        // Re-arm is not a recurring tick: only a brand-new authenticated
-        // group calls the cold arming point. A late app frame cannot do it.
-        assert_eq!(h.policy().interval_ns(),15_000_000_000);
+        assert!(counts.len()>1,"client cold packet count not randomized");
+        assert!(gaps.len()>1,"client cold interpacket delay not randomized");
     }
     #[test]
     fn only_canonical_game_health_hint_is_cold_peer_proof(){

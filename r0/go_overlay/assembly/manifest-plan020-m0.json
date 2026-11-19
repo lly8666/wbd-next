@@ -1634,7 +1634,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "827a7824b0a1f32182fd88226eb8c735fb7e7eda"
+      "result_blob": "a10244cb22cc7063bfa61c006544aaf3d3a3a7ca"
     },
     {
       "kind": "replace",
@@ -1902,6 +1902,12 @@
       "path": "internal/realityfront/tls_verify_h2214_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/tls_verify_h2214_test.go",
       "result_blob": "aff3e097cc3943c49eb1e1326664a1bb3786a944"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/server_nat_bind_linux_test.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/server_nat_bind_linux_test.go",
+      "result_blob": "a8892e9d0576a51c15548258763324fadc050271"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

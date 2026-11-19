@@ -632,6 +632,64 @@ func (d *ownedTun)Close()error{
     d.cleaned=true
     return nil // ephemeral TUN auto-deletes on last kernel FD close
 }
+
+type ownedServerMasquerade struct{
+    rule []string
+    command func(...string)([]byte,error)
+    active bool
+}
+// Each server process installs exactly one uniquely tagged POSTROUTING rule
+// scoped to its own TUN IPv4 subnet and the explicitly selected underlay.
+// Never flush chains, edit other services' rules or touch host sysctls.
+func linuxMasqueradeRule(c config,tag string)([]string,error){
+    if c.role!="server"||tag==""||strings.IndexFunc(tag,func(r rune)bool{
+        return !(r>='a'&&r<='z'||r>='0'&&r<='9'||r=='-')
+    })>=0{return nil,fmt.Errorf("invalid server NAT owner tag")}
+    prefix,e:=netip.ParsePrefix(c.tunCIDR)
+    if e!=nil||!prefix.Addr().Is4()||prefix.Bits()>30||
+       c.rawInterface==""||c.rawInterface==c.tunName{
+        return nil,fmt.Errorf("invalid server TUN/underlay MASQUERADE scope")
+    }
+    return []string{"-s",prefix.Masked().String(),"-o",c.rawInterface,
+        "-m","comment","--comment",tag,"-j","MASQUERADE"},nil
+}
+func linuxMasqueradeCommand(args ...string)([]byte,error){
+    return exec.Command("iptables",append([]string{"-w","3"},args...)...).CombinedOutput()
+}
+func installOwnedServerMasquerade(c config,
+    command func(...string)([]byte,error))(*ownedServerMasquerade,error){
+    if c.role!="server"||command==nil{return nil,fmt.Errorf("server NAT requires owned command")}
+    var token [8]byte
+    if _,e:=rand.Read(token[:]);e!=nil{return nil,fmt.Errorf("server NAT owner ID: %w",e)}
+    rule,e:=linuxMasqueradeRule(c,"wbd-v4-"+hex.EncodeToString(token[:]))
+    if e!=nil{return nil,e}
+    obj:=&ownedServerMasquerade{rule:rule,command:command}
+    args:=append([]string{"-t","nat","-I","POSTROUTING","1"},rule...)
+    if out,e:=command(args...);e!=nil{return nil,fmt.Errorf("add owned IPv4 MASQUERADE: %w: %s",e,out)}
+    obj.active=true
+    check:=append([]string{"-t","nat","-C","POSTROUTING"},rule...)
+    if out,e:=command(check...);e!=nil{
+        return nil,errors.Join(fmt.Errorf("MASQUERADE kernel readback: %w: %s",e,out),obj.Close())
+    }
+    // IPv4 forwarding is a global security policy, not owned by this TUN.
+    // Tell the operator if it is disabled; never silently claim internet egress.
+    if b,e:=os.ReadFile("/proc/sys/net/ipv4/ip_forward");e==nil&&strings.TrimSpace(string(b))!="1"{
+        log.Printf("V4_PUBLIC_SERVER_NAT_WARNING ip_forward=0 owner_rule_applied=1 external_forwarding_not_ready=1")
+    }
+    log.Printf("V4_PUBLIC_SERVER_MASQUERADE_APPLIED tun_subnet=%s underlay=%s tag=%s kernel_readback=1",
+        rule[1],c.rawInterface,rule[7])
+    return obj,nil
+}
+func(n *ownedServerMasquerade)Close()error{
+    if n==nil||!n.active{return nil}
+    args:=append([]string{"-t","nat","-D","POSTROUTING"},n.rule...)
+    out,e:=n.command(args...)
+    if e!=nil{return fmt.Errorf("owned MASQUERADE delete failed, rule preserved: %w: %s",e,out)}
+    n.active=false
+    log.Printf("V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED owned_rule_deleted=1")
+    return nil
+}
+
 func originalRandomISN()(uint32,error){
     var b [4]byte
     if _,err:=rand.Read(b[:]);err!=nil{return 0,err}
@@ -851,7 +909,14 @@ func Run(role string,args []string)(retErr error){
     // The Go cold lifetime owns TUN; each Rust generation Stop joins and
     // releases kernel loans before the FINAL Go close or a fresh TLS generation.
     connected:=false
-    defer func(){_ = tun.Close()}()
+    defer func(){retErr=errors.Join(retErr,tun.Close())}()
+    // Server-only owned NAT rule; cleanup is deferred AFTER TUN so it
+    // runs first, with the original Rust Stop/driver loan lifecycle intact.
+    if role=="server"{
+        nat,e:=installOwnedServerMasquerade(cfg,linuxMasqueradeCommand)
+        if e!=nil{return e}
+        defer func(){retErr=errors.Join(retErr,nat.Close())}()
+    }
     if err=setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets);err!=nil{return err}
     log.Printf("V4_PUBLIC_TUN_TXQLEN role=%s interface=%s packets=%d readback=REAL_ORIGINAL_LINUX_TUN",cfg.role,tun.name,cfg.tunTxQLenPackets)
     if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
