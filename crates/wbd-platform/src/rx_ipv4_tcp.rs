@@ -18,17 +18,10 @@ const MAX_PACKET_LEN: usize = u16::MAX as usize;
 const TCP_PROTO: u8 = 6;
 const DF_ONLY: u16 = 0x4000;
  
-// An IPv4 router MUST decrement the sender's initial TTL before a received
-// packet reaches a remote host. Persona is an origin *upper bound*, never
-// an exact on-wire equality after a routed/NAT path. The original Go
-// FakeTCP parser did not demand TTL equality. The tuple, IP/TCP checksums,
-// verified M3 AEAD/replay and generation gates remain unchanged.
-#[inline]
-fn routed_persona_ttl(observed: u8, origin: PacketPersona) -> bool {
-    observed != 0 && observed <= origin.ttl()
-}
-
-
+// TTL is a hop-local IPv4 lifetime value, NOT a reliable persona marker.
+// All reachable positive TTL values are allowed; the unchanged tuple, both
+// checksums, protected TLS association, AEAD and PN replay gates enforce
+// authenticity. Routers/NAT can change TTL after the sender wrote its header.
 #[derive(Clone, Copy, Debug)]
 pub struct TrustedRx<'a> {
     pub tuple: Ipv4Tuple<'a>,
@@ -180,7 +173,7 @@ pub fn parse_data_packet<'a>(
         return Err(RxError::FragmentedOrUnexpectedFlags);
     }
     if packet[9] != TCP_PROTO { return Err(RxError::WrongProtocol); }
-    if !routed_persona_ttl(packet[8], trusted.persona) { return Err(RxError::WrongPersona); }
+    if packet[8] == 0 { return Err(RxError::WrongIpHeader); }
     if &packet[12..16] != tuple.src_ip || &packet[16..20] != tuple.dst_ip {
         return Err(RxError::WrongTuple);
     }
@@ -262,7 +255,7 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
         return Err(RxError::FragmentedOrUnexpectedFlags)
     }
     if packet[9]!=TCP_PROTO{return Err(RxError::WrongProtocol)}
-    if !routed_persona_ttl(packet[8],trusted.persona){return Err(RxError::WrongPersona)}
+    if packet[8]==0{return Err(RxError::WrongIpHeader)}
     if &packet[12..16]!=tuple.src_ip||&packet[16..20]!=tuple.dst_ip{
         return Err(RxError::WrongTuple)
     }
@@ -630,15 +623,20 @@ mod h2216_public_nat_ttl_tests {
             let ack = build_presentation_ack(
                 tuple, 101, 201, 8, persona, 1400, &mut ack_storage
             ).unwrap().to_vec();
-            assert!(parse_ack_packet(&routed(ack, routed_ttl), trusted, false).is_ok());
-            // The parser is only an untrusted ciphertext boundary. Neither
-            // a crafted higher-than-sender TTL nor zero can pass persona.
-            for bad in [0, persona.ttl().saturating_add(1)] {
-                assert_eq!(
-                    parse_data_packet(&routed(wire.clone(), bad), trusted),
-                    Err(RxError::WrongPersona)
-                );
-            }
+            assert!(parse_ack_packet(&routed(ack.clone(), routed_ttl), trusted, false).is_ok());
+            // A router can deliver an on-wire TTL larger than the chosen
+            // sender persona's initial TTL, e.g. after middlebox rewriting.
+            // Reject only the impossible zero-TTL header, never persona.
+            assert!(parse_data_packet(&routed(wire.clone(), 255), trusted).is_ok());
+            assert!(parse_ack_packet(&routed(ack.clone(), 255), trusted, false).is_ok());
+            assert_eq!(
+                parse_data_packet(&routed(wire.clone(), 0), trusted),
+                Err(RxError::WrongIpHeader)
+            );
+            assert_eq!(
+                parse_ack_packet(&routed(ack, 0), trusted, false),
+                Err(RxError::WrongIpHeader)
+            );
             let bad_ip_checksum = {
                 let mut changed = routed_data.clone();
                 changed[10] ^= 0x01;

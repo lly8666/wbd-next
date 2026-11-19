@@ -1,5 +1,8 @@
 name: 'QA H2216 routed TTL fix double-NAT real Linux plus Windows amd64 GUI ARM64 trial bundles'
 run-name: 'QA H2216 main same-source routed TTL and NAT regression'
+concurrency:
+  group: h2216-main-${{ github.ref }}
+  cancel-in-progress: true
 on:
   push:
     branches: [main]
@@ -12,7 +15,6 @@ on:
       - 'r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go'
       - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
       - 'tools/h2216-routed-double-nat-native.sh'
-      - 'docs/features/entries/tls-auth-multiclient.json'
       - '.github/workflows/qa-h2216-routed-ttl-native-release.yml'
   workflow_dispatch:
 permissions:
@@ -55,7 +57,7 @@ jobs:
           bash tools/m0_plan029_linux_dual_native_build.sh > h2216-arm64-build.log 2>&1 || { tail -n 140 h2216-arm64-build.log; exit 1; }
           grep -Fq 'VerifyServer:c.tlsVerifyServer' r0/go_overlay/internal/v4productcli/linux.go
           grep -Fq 'VerifyServer:c.tlsVerifyServer' r0/go_overlay/internal/v4productcli/game_linux.go
-      - name: H2216 Rust native parser routed TTL 128-to-116 and 64-to-52 regression
+      - name: H2216 Rust parser ignores TTL persona; preserves checksum and AEAD boundaries
         shell: bash
         run: |
           set -euo pipefail
