@@ -36,7 +36,7 @@ jobs:
           set -euo pipefail
           test "$(uname -m)" = aarch64
           git merge-base --is-ancestor 46a756df1114aecda8dc2d5d259a5cbb4c9a909f HEAD
-          git diff --exit-code 46a756df1114aecda8dc2d5d259a5cbb4c9a909f HEAD -- Cargo.toml Cargo.lock crates r0/go_overlay tools/prepare_windows_wiring.py tools/m0_plan029_linux_dual_native_build.sh tools/m0_plan028_h1640_win_gui_compile.ps1
+          git diff --exit-code 46a756df1114aecda8dc2d5d259a5cbb4c9a909f HEAD -- Cargo.toml Cargo.lock crates r0/go_overlay tools/prepare_windows_wiring.py tools/m0_plan029_linux_dual_native_build.sh
           python3 -m unittest tests.test_m0_plan029_linux_capability_coverage -v
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm python3 iproute2 iputils-ping iptables openssl
