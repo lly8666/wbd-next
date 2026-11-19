@@ -716,7 +716,15 @@ if [[ "$AUTO_IP" == 1 && "$GAME" == 0 ]];then
   # the per-session first authenticated M4 worker, not the old singleton
   # V4_PUBLIC_SHARED_TUN_READER_READY marker that it no longer emits.
   # 64 Go cold association slots are NOT 64 Rust native owners (hard cap 32).
-  grep -q 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=64 native_owner_slots=32 shared_rust_tun=1' "$TMP/server.log"
+  if [[ "$H2212" == 1 ]];then
+    # H2213 current exact-source native product must have the 32/64 pair.
+    grep -Fq 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=64 native_owner_slots=32 shared_rust_tun=1' "$TMP/server.log"
+  else
+    # Historical source-locked binaries still carry the former 16/32
+    # resources. Retain both *known exact pairs*, not arbitrary capacities.
+    grep -Fq 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=32 native_owner_slots=16 shared_rust_tun=1' "$TMP/server.log" ||
+      grep -Fq 'V4_PUBLIC_MULTI_SERVER_READY role=server port=443 cold_association_slots=64 native_owner_slots=32 shared_rust_tun=1' "$TMP/server.log"
+  fi
   grep -q 'V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server' "$TMP/server.log"
   # The client NOW also has exactly one original Rust TUN kernel reader,
   # independently of its server process, so a future new authenticated

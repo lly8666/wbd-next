@@ -14,3 +14,9 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H2213 increases Linux and Windows original Rust native owner capacity from 16 to 32, expands bounded Linux cold FakeTCP association table to 64, and imposes independently randomized 15-45s hard cutoff on ordinary TLS Decoy splices only."}
 ```
+
+## H2213 第一轮新源CI与冻结旧场景测试夹具隔离
+
+SOURCE `38e92ad9bc532f7bda0f6ffb084c3b600c528ba2`：Rust Linux+Windows[Action44446847868](https://github.com/lly8666/wbd-next/actions/runs/44446847868) **2/2 SUCCESS**，Windows确实依次实际allocate32个原Rust prepared owner并验证第33个FULL（未实际启动32个kernel M4/业务）；Linux真实编译并测32/33 cold限额。原Go Decoy和Linux Rust动态链接[Action44446847713](https://github.com/lly8666/wbd-next/actions/runs/44446847713) **2/2 SUCCESS**，`TestH2213OrdinaryTLSDecoyHardCloseReleasesQuota`用真实普通stdlib TLS1.3→老P2目标完成ping/pong后故意保持TLS打开，在缩短到600ms的fixture限制下服务器主动断开并归还8槽中的1槽；独立15/45秒端点和64次随机范围测试PASS。该短测只验证真实超时路径，不假称线上随机15–45秒已在物理公网长跑。
+
+历史固定二进制兼容性：旧PLAN028 H1072 [Action44446847591](https://github.com/lly8666/wbd-next/actions/runs/44446847591) 原二进制源`d7bd355...`经原TLS/TUN/UDP 5包成功，却因主线公用脚本唯一检查了新日志cold64/native32而在Stop后错误FAIL。只改这个**共享fixture**：H2212开启时严格要求新Rust32/cold64；其他原冻结路径仅接受已知的旧16/32或新32/64这一对互斥合法日志，不把旧冻源宣告Rust32。二客户端旧脚本同样仅接受这两种固定组合，恢复冻结证据独立性，不修改任何Go/Rust产品代码或线上随机期限。
