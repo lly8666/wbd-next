@@ -19,7 +19,7 @@ cleanup(){
   set +e
   if ((code));then
     echo "M0_PLAN028_MIXED_NATIVE_FAIL code=$code" >&2
-    for f in server.log A.log B.log C.log echo.log A-udp.log B-udp.log C-udp.log B-after.log C-after.log;do
+    for f in server.log alice.log bob.log carol.log echo.log A-udp.log B-udp.log C-udp.log B-after.log C-after.log;do
       if test -f "$TMP/$f";then echo "== $f ==" >&2;tail -65 "$TMP/$f" >&2;fi
     done
   fi
