@@ -7,6 +7,7 @@ on:
       - 'crates/wbd-platform/src/rx_ipv4_tcp.rs'
       - 'crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
       - 'r0/go_overlay/internal/v4productcli/game_linux.go'
+      - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
       - 'tools/h2216-routed-double-nat-native.sh'
       - 'docs/features/entries/tls-auth-multiclient.json'
       - '.github/workflows/qa-h2216-routed-ttl-native-release.yml'
