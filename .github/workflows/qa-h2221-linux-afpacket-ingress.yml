@@ -1,0 +1,37 @@
+name: QA H2221 Linux AF_PACKET M4 netfilter contract
+run-name: H2221 source ${{ github.sha }} native Rust plus kernel filter
+on:
+  push:
+    branches: ['fix/plan029-linux-m4-afpacket-rx']
+    paths:
+      - 'crates/wbd-platform/src/linux_raw_carrier.rs'
+      - 'tools/m0_h2221_linux_packet_before_netfilter.py'
+      - '.github/workflows/qa-h2221-linux-afpacket-ingress.yml'
+permissions: {contents: read}
+jobs:
+  linux-native-rust:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Platform Rust compile and unit contracts for exact SOURCE
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-platform --lib
+  isolated-linux-netfilter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Compare AF_PACKET and IPPROTO_TCP with raw PREROUTING DROP
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo -n true
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables
+          sudo -n python3 -u tools/m0_h2221_linux_packet_before_netfilter.py
