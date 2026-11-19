@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2218,
-  "checkpoint_sha": "07ebb05b4e3cc4faccc01c9349373f91b945fc44",
+  "sequence": 2219,
+  "checkpoint_sha": "5c360ab4cb2afe884b071a9c4f091fb5dd6bd582",
   "progress": "in_progress",
-  "task_id": "PLAN029-H2218-DISTINCT-RUNNER-NAT-GATE",
-  "current_task": "H2218 两个真实托管runner：ARM64服务器私网10.249.20.2+DNAT:443本机PASS，x86客户端私网10.249.21.2+SNAT规则命中4包/240B，但公网TCP443挑战4次超时，服务端DNAT计数0；网络前提未达，原Go/Rust NOT_RUN。不能用云入口故障替代H2217物理TLS通但RXDelivered0失败。",
-  "why_now": "用户要求客户端/服务端各位于NAT后的多runner Actions组网。先清楚验证不同Azure托管VM公网入站，再避免将不可达的云runner判断成WBD缺陷。",
-  "done_when": "当前H2218仅能证明双runner网络入口受阻：真实客户端SNAT 4次外发而服务器DNAT零命中。需要可公网443映射到私网server的自有runner/授权真实L3互连，才能跑原Go/Rust DATA/ACK/UDP/Stop并追H2217实际接收缺口。",
-  "next_action": "不重复刷同一个Azure托管入口测试。优先用户实际环境服务端原Go/Rust TX和路由器DNAT/Npcap交接阶段有界计数；若有可达双独立runner/真实端口映射再运行同SOURCE原Go TLS/Rust应用层TUN UDP/TCP反向和Stop。现未证明产品修复。",
+  "task_id": "PLAN029-H2219-PHYSICAL-THIRD-COLD-CONTROL-LOSS",
+  "current_task": "H2219新双端独立抓包两轮：Linux enp0s3 第3个400ms冷启动回执65B/66B出站，Windows网卡与独立Npcap均未见；前2个ACK成功，14.31/16.47秒后新序号Health到达，客户端ACK分别4016913564/1909226536持续39/40次，服务端没按原序补发，Win RXDelivered0。公网丢失具体跳点不明，54B截头不验TCP校验和/AEAD。",
+  "why_now": "用户中断多runner任务并给了同SOURCE双端真实物理复测；两轮相同第三冷控制包丢失模式，比单runner NAT及云runner失败更直接，应优先分析内核原序重发缺口。",
+  "done_when": "仍未实证解决：精确判定第三冷Health上游丢失或校验错误；同源码内核双NAT强制丢第3回执并验证有限同序原密文重放、累计ACK前移、实际业务RXDelivered>0与Owned Stop。",
+  "next_action": "停止刷Azure托管runner入口（H2218 BLOCKED）；优先源码级cold Health回执是否有缺口可重放及与真实数据M2修复互斥的测试。必须区分TCP cosmetic ACK进展与真实TUN reverse，不能只修外观ACK就称产品可用。实际丢包点需完整测试载荷/两端NAT外侧抓包。",
   "unverified": true,
-  "last_tested_source": "07ebb05b4e3cc4faccc01c9349373f91b945fc44",
+  "last_tested_source": "91b9d521ce1451300533d078844340add4820c29",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2218-TWO-RUNNER-NAT-PREREQUISITE-FAILED-20261119.json"
+    "docs/evidence/M0/PLAN029-H2219-H2216V2-PAIRED-PHYSICAL-THIRD-COLD-HEALTH-LOSS-20261119.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json",
-    "docs/evidence/M0/PLAN029-H2216-TTL-PERSONA-NAT-SOURCE-91B9-SCOPED-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029-H2218-TWO-RUNNER-NAT-PREREQUISITE-FAILED-20261119.json",
+    "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2218 two hosted runners NAT preflight BLOCKED: x86 SNAT 4 pkts/240B, ARM64 DNAT 0 pkts, 4 public TCP443 timeouts. Same-runner H2216 CI only PASS_SCOPED; real Windows H2217 TLS-ok/RXDelivered0 FAIL remains. Product Go/Rust NOT_RUN; 029/029B tech exit OPEN."
+  "partial_summary": "H2219: 两次公网H2216v2物理FAIL；M4后3×400ms cold Health的第3包65/66B在Linux出口见而Win网卡/Npcap未见，39/40次重复ACK，无原序重发；后续新序Health不填洞。Normal外修仅抽样DATA，control不缓存。具体丢失点/业务RX0根因仍OPEN，不把此解读为产品修复。"
 }
