@@ -9,6 +9,7 @@ import (
     "crypto/tls"
     "crypto/x509"
     "errors"
+    "fmt"
     "io"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
@@ -64,7 +65,7 @@ func v4PairFeatureProbe(t *testing.T,store *V4EpochStore,user string,tunnel []by
     fixedProfile:=uint8(0)
     if nativeFixed{fixedProfile=2} // original default fixed profile1
     client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,VerifyServer:true,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:user,Password:"secret",TunnelID:bytes.Clone(tunnel),
         ClientLimit:1400,DesiredLanes:policy.DesiredLanes,LaneID:lane,Policy:policy,
     },V4ClientOptions{DataPlaneReady:true,Epoch:epoch,fec2ProbeOnly:clientFec2,
@@ -127,7 +128,7 @@ func TestR0V4RealTLSMultiDeviceAutoIPIdentityAndLeaseIsolation(t *testing.T){
             ch<-answer{server,serverErr}
         }()
         client,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-            TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
+            TLS:ClientConfig{ServerName:"target.test",RouteKey:key,VerifyServer:true,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
             AutoLease:true,InstallationID:append([]byte(nil),install[:]...),
             Username:username,Password:password,TunnelID:id.Bytes(),
             ClientLimit:1400,DesiredLanes:1,LaneID:1,
@@ -412,7 +413,7 @@ func TestFECGameProtectedTLSRejectsDifferentFixedProfilesBeforeOwner(t *testing.
             }()
             policy:=v4TestPolicy(2,CipherChaCha)
             _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-                TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
+                TLS:ClientConfig{ServerName:"target.test",RouteKey:key,VerifyServer:true,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
                 Username:"game-fec",Password:"secret",
                 TunnelID:[]byte("gamefec012345678"),ClientLimit:1400,
                 LaneID:1,DesiredLanes:2,Policy:policy,
@@ -516,7 +517,7 @@ func TestR0V4OldGoV3RejectsActualTLSUpgrade(t *testing.T) {
         ch<-serverAnswer{err}
     }()
     _,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,VerifyServer:true,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:"solo",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
         ClientLimit:1400,Policy:v4TestPolicy(1,CipherChaCha),
     },V4ClientOptions{DataPlaneReady:true})
@@ -746,7 +747,7 @@ func TestR0V4AdmissionCommitOnlyAfterProtectedDetachAndRollback(t *testing.T) {
         ch<-se
     }()
     _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,VerifyServer:true,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:"rollback",Password:"secret",TunnelID:bytes.Clone(tunnel),
         ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
     },V4ClientOptions{DataPlaneReady:true})
@@ -867,7 +868,7 @@ func v4PairWithPrivateBridgeCipher(t *testing.T,b v4OwnerBridge,store *V4EpochSt
         ch<-result{s,e}
     }()
     c,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
+        TLS:ClientConfig{ServerName:"target.test",RouteKey:key,VerifyServer:true,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
         Username:"protected-owner",Password:"secret",TunnelID:[]byte("0123456789abcdef"),
         ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,cipher),
     },V4ClientOptions{DataPlaneReady:true,fec2ProbeOnly:f2})
@@ -1287,4 +1288,56 @@ func TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy(t *testin
         false,true,false,true,true)
     if ce==nil&&se==nil{t.Fatal("Game2 missing protected capability accepted")}
     if c!=nil||s!=nil{t.Fatal("Game2 unsupported data feature published session")}
+}
+
+ 
+// H2216: exercise the real V4 admission handshake, not just the raw uTLS
+// helper. Previously EstablishClientV4 silently forced VerifyServer=true
+// after the H2214 client flag said false. Both Normal and Game lanes use
+// this same protected original-Go TLS path.
+func TestH2216RealV4TLSCertificateVerifySwitch(t *testing.T) {
+    for _,lanes:=range []uint8{1,4} {
+        for _,tc:=range []struct{name string;verify bool;trust bool;want bool}{
+            {"default-off-self-signed",false,false,true},
+            {"explicit-on-reject-untrusted",true,false,false},
+            {"explicit-on-accept-private-trust",true,true,true},
+        } {
+            t.Run(fmt.Sprintf("lanes%d/%s",lanes,tc.name),func(t *testing.T){
+                cert:=makeServerCert(t)
+                key:=[]byte("0123456789abcdef0123456789abcdef")
+                assoc,peer:=newAssociationPeer(t)
+                defer assoc.Close();defer peer.Close()
+                store,err:=NewV4EpochStore(8)
+                if err!=nil{t.Fatal(err)}
+                srv:=make(chan error,1)
+                go func(){
+                    _,e:=EstablishServerV4(context.Background(),assoc,ServerAdmissionConfig{
+                        TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
+                           TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},
+                           Timeout:3*time.Second},
+                        ExpectedUsername:"tls-switch",ExpectedPassword:"secret",
+                        ServerLimit:1400,
+                    },V4ServerOptions{DataPlaneReady:true,Epochs:store})
+                    srv<-e
+                }()
+                var trust *x509.CertPool
+                if tc.trust{trust=v4TestRoots(cert)}
+                _,clientErr:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
+                    TLS:ClientConfig{ServerName:"target.test",RouteKey:key,
+                        VerifyServer:tc.verify,RootCAs:trust,Timeout:3*time.Second},
+                    Username:"tls-switch",Password:"secret",TunnelID:[]byte("same-install-001"),
+                    ClientLimit:1400,DesiredLanes:lanes,LaneID:1,
+                    Policy:v4TestPolicy(lanes,CipherChaCha),
+                },V4ClientOptions{DataPlaneReady:true})
+                select{
+                case serverErr:=<-srv:
+                    if tc.want&&(clientErr!=nil||serverErr!=nil){
+                        t.Fatalf("real V4 expected authenticated connection: client=%v server=%v",clientErr,serverErr)
+                    }
+                    if !tc.want&&clientErr==nil{t.Fatal("untrusted certificate admitted with VerifyServer=true")}
+                case <-time.After(5*time.Second): t.Fatal("real V4 admission handshake timed out")
+                }
+            })
+        }
+    }
 }
