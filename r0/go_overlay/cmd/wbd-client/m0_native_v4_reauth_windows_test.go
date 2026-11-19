@@ -418,3 +418,27 @@ func TestM0PLAN028OwnedWSLNextHopOnlyForExactNativeAlias(t *testing.T){
   })
  }
 }
+
+
+func TestH2223WindowsIdleAuthenticatedRustNativeStartupDoesNotRequireApplicationReply(t *testing.T){
+ for _,row:=range []struct{tx,rx,after uint64}{
+  {0,0,0}, // original TLS + native workers, completely idle Wintun
+  {2,0,0}, // real prior physical case: uplink without reverse app DATA
+  {27,0,0},
+  {10,8,4}, // actual bidirectional DATA stays independent of READY
+ }{
+  state:=realityfront.V4WindowsNativeWorkerStatsV1{
+   Version:1,Workers:2,TXCopied:row.tx,RXDelivered:row.rx,
+   TXAfterRX:row.after,
+  }
+  if err:=m0WindowsRustNativeStartupVerdict(state);err!=nil{
+   t.Fatalf("idle authenticated Rust workers must READY without business: %+v %v",row,err)
+  }
+ }
+ for _,workerCode:=range []int32{1,3,6}{
+  state:=realityfront.V4WindowsNativeWorkerStatsV1{Version:1,Workers:2,WorkerError:workerCode}
+  if err:=m0WindowsRustNativeStartupVerdict(state);err==nil{
+   t.Fatalf("fatal or verified dead native worker rc=%d must not READY",workerCode)
+  }
+ }
+}
