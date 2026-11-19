@@ -1343,14 +1343,22 @@ mod tests{
         assert_eq!(parse_data_packet(&data,TrustedRx{
             persona:PacketPersona::Legacy,..trusted
         }),Err(RxError::WrongPersona));
-        // Do not widen parser to accept any unauthenticated carrier persona.
+        // A received TTL64 cannot prove Legacy origin: an authentic
+        // Windows11 packet may have traversed 64 routers from TTL128.
+        // Carrier parsing is deliberately UNAUTHENTICATED. The real native
+        // M3 AEAD and replay gate, not TTL, decides whether a packet is ours.
         let mut other=[0u8;256];
         let legacy=build_bytes(tuple,Presentation{
             ack32:991,advertised_window:4096,ip_id:75,
             persona:PacketPersona::Legacy,
         },u64::from(1234u32),&[8,7,6,5,4],None,1400,&mut other)
             .unwrap().to_vec();
-        assert_eq!(parse_data_packet(&legacy,trusted),Err(RxError::WrongPersona));
+        assert_eq!(parse_data_packet(&legacy,trusted).unwrap().ciphertext,
+            &[8,7,6,5,4]);
+        // Origin upper bound still prevents impossible TTL enlargement.
+        assert_eq!(parse_data_packet(&data,TrustedRx{
+            persona:PacketPersona::Legacy,..trusted
+        }),Err(RxError::WrongPersona));
     }
     #[test]
     fn game_presentation_ack_is_real_empty_payload_tcp_control_not_empty_data(){
