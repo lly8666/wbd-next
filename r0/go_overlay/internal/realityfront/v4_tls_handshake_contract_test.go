@@ -38,7 +38,7 @@ func TestPLAN028V4NoPreludeOriginalClientHelloFullCertificateAndSessionIDEpoch(t
    done<-result{se}
   }()
   _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-   TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
+   TLS:ClientConfig{ServerName:"target.test",RouteKey:key,VerifyServer:true,RootCAs:v4TestRoots(cert),Timeout:3*time.Second},
    Username:"alice",Password:"password-only-inside-TLS",TunnelID:[]byte("same-install-001"),
    ClientLimit:1400,LaneID:lane,Policy:v4TestPolicy(4,CipherChaCha),
   },V4ClientOptions{DataPlaneReady:true})
@@ -131,7 +131,7 @@ func TestPLAN028V4WrongRouteKeyWrongCertAndWrongPasswordNoAdmission(t *testing.T
    if tc.wrongKey{key=wrongKey}
    password:="correct";if tc.wrongPassword{password="incorrect"}
    _,ce:=EstablishClientV4(context.Background(),peer,ClientAdmissionConfig{
-    TLS:ClientConfig{ServerName:"target.test",RouteKey:key,RootCAs:roots,Timeout:2*time.Second},
+    TLS:ClientConfig{ServerName:"target.test",RouteKey:key,VerifyServer:true,RootCAs:roots,Timeout:2*time.Second},
     Username:"alice",Password:password,TunnelID:[]byte("same-install-001"),
     ClientLimit:1400,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
    },V4ClientOptions{DataPlaneReady:true})
