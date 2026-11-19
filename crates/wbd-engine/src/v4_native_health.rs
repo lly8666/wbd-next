@@ -415,6 +415,10 @@ pub(crate) fn apply_authenticated_quality_signal(
 /// WBC4 kind1; no additional keys, replay bitmap or application ACK.
 #[derive(Clone,Debug,PartialEq,Eq)]
 pub(crate) struct AuthenticatedControl {
+    // H2222: only after the existing M3 AEAD + unique PN gate.
+    // Nonce proves *causal* C2S reception; blind server Health does not.
+    pub(crate) cold_probe:Option<u64>,
+    pub(crate) cold_ack:Option<u64>,
     pub(crate) receipt:Option<wbd_codec::Receipt>,
     pub(crate) peer_retire:bool,
     pub(crate) peer_idle_ns:Option<u64>,
@@ -429,7 +433,7 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
     use wbd_codec::{ControlTlv,CodecError};
     let items=wbd_codec::decode_control(wire,512)?;
     if items.is_empty(){return Err(CodecError::InvalidLength)}
-    let mut out=AuthenticatedControl{receipt:None,peer_retire:false,peer_idle_ns:None,quality:false,low_rate_quality:None,low_rate_signal:None};
+    let mut out=AuthenticatedControl{cold_probe:None,cold_ack:None,receipt:None,peer_retire:false,peer_idle_ns:None,quality:false,low_rate_quality:None,low_rate_signal:None};
     for item in items{
         match item{
             ControlTlv::Receipt(r)=>{
@@ -459,6 +463,15 @@ pub(crate) fn parse_authenticated_control(wire:&[u8])
                 }else if bytes[0]==4 {
                     if bytes.as_slice()!=[4,1,0,0]{return Err(CodecError::InvalidLength)}
                     out.peer_retire=true;
+                }else if bytes[0]==5||bytes[0]==6 {
+                    // Authenticated cold probe/ack is NOT an Auto quality
+                    // sample, a new wire kind or a fake business delivery.
+                    if bytes.len()!=9{return Err(CodecError::InvalidLength)}
+                    let mut id=[0u8;8];id.copy_from_slice(&bytes[1..]);
+                    let nonce=u64::from_be_bytes(id);
+                    if nonce==0{return Err(CodecError::InvalidLength)}
+                    if bytes[0]==5{out.cold_probe=Some(nonce)}
+                    else{out.cold_ack=Some(nonce)}
                 }
                 out.quality=true;
             },
@@ -506,6 +519,57 @@ pub(crate) fn encode_authenticated_health_budgeted(idle_ns:u64,
 }
 /// Send a PLAN027 quality summary with the SAME encrypted Health idle hint.
 /// Caller chooses the low-rate schedule and passes genuine matched counts.
+
+/// PLAN029 H2222: a single per-authenticated-incarnation nonce. Repeated
+/// attempts use the SAME nonce, but seal distinct original M3 AEAD record PNs.
+/// Ready is NEVER inferred from pcap/TCP ACK, local TX or generic Health.
+#[derive(Clone,Copy,Debug)]
+pub(crate) struct ColdReadyClient {
+    nonce:u64,
+    due_at:u64,
+    accepted_copies:u32,
+    confirmed:bool,
+}
+impl ColdReadyClient {
+    pub(crate) fn new(at:u64)->Option<Self>{
+        let mut entropy=[0u8;8];
+        if !wbd_codec::fill_control_entropy(&mut entropy){return None}
+        let nonce=u64::from_be_bytes(entropy);
+        if nonce==0{return None}
+        Some(Self{nonce,due_at:at,accepted_copies:0,confirmed:false})
+    }
+    pub(crate) fn due(&self,at:u64)->bool{!self.confirmed&&at>=self.due_at}
+    pub(crate) fn nonce(&self)->u64{self.nonce}
+    pub(crate) fn attempts(&self)->u32{self.accepted_copies}
+    pub(crate) fn confirmed(&self)->bool{self.confirmed}
+    pub(crate) fn accept_ack(&mut self,nonce:u64)->bool{
+        if nonce==self.nonce && nonce!=0{self.confirmed=true}
+        self.confirmed
+    }
+    pub(crate) fn send_result(&mut self,at:u64,copied:bool){
+        if self.confirmed{return}
+        if copied{self.accepted_copies=self.accepted_copies.saturating_add(1)}
+        let delay=match self.accepted_copies{
+            0|1=>500_000_000,2=>1_000_000_000,3=>2_000_000_000,
+            _=>4_000_000_000,
+        };
+        self.due_at=at.saturating_add(delay);
+    }
+}
+
+/// One existing WBC4 legacy-Quality TLV within an original AEAD
+/// Health record: 5|nonce(8) probe and 6|nonce(8) acknowledgement.
+/// A server MUST echo only a replay-unique M3-opened probe from an
+/// installed authenticated M4 owner. Neither value has app-ACK authority.
+pub(crate) fn encode_authenticated_cold_ready_live(
+    idle_ns:u64,nonce:u64,ack:bool,payload_budget:usize,
+)->Result<Vec<u8>,wbd_codec::CodecError>{
+    if nonce==0{return Err(wbd_codec::CodecError::InvalidLength)}
+    let mut body=[0u8;9];
+    body[0]=if ack{6}else{5};
+    body[1..].copy_from_slice(&nonce.to_be_bytes());
+    encode_authenticated_health_live(idle_ns,None,Some(&body),payload_budget)
+}
 pub(crate) fn encode_authenticated_low_rate_quality_live(idle_ns:u64,
     report:&wbd_recovery::LowRateQualityWire,payload_budget:usize,
 )->Result<Vec<u8>,wbd_codec::CodecError>{
@@ -898,5 +962,58 @@ mod m0_plan028_client_ready_cold_tests{
         clock.on_health_send_result(201_000_000,true);
         assert!(!clock.tx_due(202_000_000),"only one cold readiness receipt");
         assert!(clock.next_tx_deadline().unwrap()>202_000_000);
+    }
+}
+
+
+#[cfg(test)]
+mod h2222_cold_ready_tests {
+    use super::*;
+    #[test]
+    fn unique_same_nonce_retries_and_causal_auth_ack_only(){
+        let mut client=ColdReadyClient::new(1_000_000_000).unwrap();
+        assert!(client.due(1_000_000_000));
+        let id=client.nonce();
+        assert!(!client.accept_ack(id^1));
+        client.send_result(1_000_000_000,true);
+        assert_eq!(client.attempts(),1);
+        assert!(!client.due(1_499_999_999));
+        assert!(client.due(1_500_000_000));
+        client.send_result(1_500_000_000,true);
+        assert!(!client.due(2_499_999_999));
+        assert!(client.due(2_500_000_000));
+        client.send_result(2_500_000_000,true);
+        assert!(!client.due(4_499_999_999));
+        assert!(client.due(4_500_000_000));
+        client.send_result(4_500_000_000,true);
+        assert!(!client.due(8_499_999_999));
+        assert!(client.due(8_500_000_000));
+        assert!(client.accept_ack(id));
+        assert!(client.confirmed());
+        assert!(!client.due(u64::MAX));
+    }
+    #[test]
+    fn exact_authenticated_wire_probe_and_ack_not_auto_quality(){
+        let nonce=0x2435_7887_1234_abcd;
+        for ack in [false,true] {
+            let wire=encode_authenticated_cold_ready_live(44,nonce,ack,128).unwrap();
+            let parsed=parse_authenticated_control(&wire).unwrap();
+            assert_eq!(parsed.cold_probe,(!ack).then_some(nonce));
+            assert_eq!(parsed.cold_ack,ack.then_some(nonce));
+            assert_eq!(parsed.peer_idle_ns,Some(44));
+            assert!(parsed.low_rate_quality.is_none());
+            assert!(parsed.low_rate_signal.is_none());
+            assert!(parsed.receipt.is_none());
+        }
+        assert!(encode_authenticated_cold_ready_live(0,0,false,128).is_err());
+        for malformed in [vec![5],vec![6,0,0,0,0,0,0,0,0]] {
+            let data=wbd_codec::encode_control(
+                &[wbd_codec::ControlTlv::LegacyQuality(malformed)],128).unwrap();
+            assert!(parse_authenticated_control(&data).is_err());
+        }
+        let plain=encode_authenticated_health(3,None,None).unwrap();
+        let parsed=parse_authenticated_control(&plain).unwrap();
+        assert_eq!(parsed.cold_probe,None);
+        assert_eq!(parsed.cold_ack,None);
     }
 }
