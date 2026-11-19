@@ -52,5 +52,5 @@ ciphertext/ACK metadata, never an authenticated payload.
 No success is claimed from this documentation or a pending Action.
 
 ```feature-impact
-{"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H2216 Rust native IPv4 DATA/ACK no longer interpret routed TTL as origin persona; unchanged AEAD/replay authentication; native Go probe tests now compile against current PublicV4AdvertisedMSS; scoped CI root-cause triage and concurrency policy."}
+{"kind":"none","ids":[],"reason":"This follow-up changes only Rust test expectations, NAT fixture output-directory creation, and QA diagnostic documentation; no new product feature or protocol capability is introduced by the follow-up itself. Runtime TTL policy was changed in the prior H2216 source commit."}
 ```
