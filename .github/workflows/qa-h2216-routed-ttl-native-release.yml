@@ -6,6 +6,7 @@ on:
     paths:
       - 'crates/wbd-platform/src/rx_ipv4_tcp.rs'
       - 'tools/h2216-routed-double-nat-native.sh'
+      - 'docs/features/entries/tls-auth-multiclient.json'
       - '.github/workflows/qa-h2216-routed-ttl-native-release.yml'
   workflow_dispatch:
 permissions:
