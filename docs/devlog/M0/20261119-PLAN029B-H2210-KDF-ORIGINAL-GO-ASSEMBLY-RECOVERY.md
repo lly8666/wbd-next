@@ -21,3 +21,13 @@ H2209尚未验：实体NIC、公网NAT/浏览器外网TLS、ARM跨机真实专�
 [Action 44429623025](https://github.com/lly8666/wbd-next/actions/runs/44429623025) 在修复私有测试目录权限后，原Go短Key v2 3项已真正PASS；Rust源码编译也走到Go链接阶段，但`v4productcli`编译`undefined: realityfront.V4LinuxGameCohortID`等。首因不是业务接口缺失，而是本次新测试作业只调用`assemble.py`，漏掉**旧冻结Linux真实原生脚本**固定的`realityfront`、`v4productcli`附加Go bridge、`faketcp/raw_detached_data_linux.go`、原server cmd; 已按既有`m0-plan028-tls-wire-original-x86.yml`源锁复制规则在新工作流组装，严格对已有文件逐字节比较，不重新造业务类。
 
 与此同时，H2209第一正例从“故意错RouteKey的WBD uTLS”替换为**标准Go `crypto/tls.Client` 普通非WBD TLS**，真实TLS1.3握手、SNI、ping/pong、close_notify、回放原始Hello；原WBD正确key、错SNI两场独立留存，避免以错Key客户端冒称浏览器验收。更新原V4 Go夹具与精确manifest，等待同SOURCE Ubuntu测试；公网实体仍NOT_RUN。新parser测试强制grep出现`TestH2209ServerDecoyColdValidation`与`TestH2206ServerNAT`真实PASS，不允许空匹配冒充验收。
+
+## H2210 最终同SOURCE限定编译与测试
+
+SOURCE `574cf32b2227fd9f0d8608a94764fe3f6011ad42` [Action44430144025](https://github.com/lly8666/wbd-next/actions/runs/44430144025) 二作业均SUCCESS。真实Linux主机编译本SOURCE Rust `wbd-engine` 并与原Go `wbd-v4-server` 动态链接，普通`--decoy`冷配置正反例、H2206 NAT单网卡唯一IPv4、H2208 v2短Key 3项真实POSIX目录0600/0700缓存测试均 **PASS_SCOPED**。同SOURCE [Action44430143721](https://github.com/lly8666/wbd-next/actions/runs/44430143721) cheap装配、Win Go/Linux Rust/Win Rust相应job PASS。历史Linux H2210第一FAIL因测试目录0755，第二FAIL因新测试漏装原Go bridge，均原始失败留存；未声称x86/ARM真实NIC业务或公网回落已验证。
+
+H2211 ARM64旧手工Go bundle [Action44430144037](https://github.com/lly8666/wbd-next/actions/runs/44430144037) 的首FAIL仍是缺`v4routekey`，该脚本未用主manifest直接装配。仅在`tools/arm64_public_go_rust_bundle.sh`增同manifest验证3 Go文件，SOURCE `21acc95b5469e72872096f52702d1b62e128a25e` 的 [Action44430856253](https://github.com/lly8666/wbd-next/actions/runs/44430856253) 在写日志时未结束，后续以自己的SOURCE标记PASS/FAIL，不跨源搬用。
+
+## H2211 ARM64 build-only 结论
+
+SOURCE `21acc95b5469e72872096f52702d1b62e128a25e`：[Action44430856253](https://github.com/lly8666/wbd-next/actions/runs/44430856253) **SUCCESS (BUILD_PASS only)**。从同一冻结manifest读取并校验`internal/v4routekey/{short.go,short_test.go,cache.go}` Git blob，ARM64原Go双端CLI真实构建与Rust ISA-L加速`libwbd_engine.so`真实编译，Rust定向24/24+7/7；生成原有`manifest.json`/`SHA256SUMS`，不假称Android JNI/OpenWrt物理产品联网。旧SOURCE `574cf32b2227fd9f0d8608a94764fe3f6011ad42` [Action44430144037](https://github.com/lly8666/wbd-next/actions/runs/44430144037) 编译缺包FAIL历史仍保留。详见同SOURCE [H2211证据](../../evidence/M0/PLAN029B-H2211-ARM64-GO-RUST-ROUTEKEY-MANIFEST-BUILD-PASS-20261119.json)。

@@ -4,24 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2208,
-  "checkpoint_sha": "c92f6a795d8e152b0939e5c6a60a492babedb14e",
+  "sequence": 2211,
+  "checkpoint_sha": "21acc95b5469e72872096f52702d1b62e128a25e",
   "progress": "in_progress",
-  "task_id": "PLAN029B-USER-20261119-ROUTEKEY-V2",
-  "current_task": "H2208短RouteKey v2 4096次仅首次或变更计算、保密持久复用，源锁Windows原Go短Key Go专项3/3 PASS_SCOPED Action44369630615，Windows CLI产品构建也PASS_SCOPE。Android私有缓存组件/OpenWrt冷设置源已纳入，但真移动产品/跨ISA/外部NAT NOT_RUN；Win Rust DNS Direct旧单测FAIL独立保留。",
-  "why_now": "用户明确要求直接由M0继续开发、降低昂贵KDF、计算一次持久复用、覆盖移动平台，同时保留H2206 NAT单网卡单IP已通过事实。",
-  "done_when": "冻结的同SOURCE双端短密钥端到端及缓存安全/重启/变更、Windows实际GUI、Android可达能力边界、Linux受影响平台验证和唯一准确证据；旧029/029B完整退出门仍需单独关闭。",
-  "next_action": "H2208 Go Windows专项已PASS不用重复派发；继续在可用原生环境有限验证Linux x86/ARM客户端服务端新短Key双端 TLS/数据/Stop、Windows WinForms真实简化Key配置、Android/ OpenWrt只测已接线范围。独立处理Windows Rust DNS Direct测试历史首异常，不把测试未跑冒充成功；029剩余技术出口仍OPEN。",
+  "task_id": "PLAN029B-H2209-H2211-OLD-P2-DECOY-AND-ROUTEKEY-ARM-BUNDLE",
+  "current_task": "H2209旧项目P2非WBD标准TLS→Decoy三场同SOURCE 574 PASS_SCOPED；H2210 Linux原Go/Rust产品链接、RouteKey缓存、--decoy/H2206 NIC真实冷配置 PASS_SCOPED Action44430144025；H2211原ARM64 Rust/ISA-L+Go client/server当前SOURCE21acc build-only Action44430856253 SUCCESS，旧缺包失败留存。真实网卡/外网NAT和移动实体NOT_RUN，029/029B退出仍OPEN。",
+  "why_now": "用户要求M0接续短RouteKey完成后，直接复用老项目服务端非WBD普通TLS访问处理并测试；避免重复实现代理协议及退化原WBD会话。",
+  "done_when": "H2209旧P2分类/原Hello回放/双向Stop负例本机源锁验收完成；ARM64同源码真实打包通过后独立留痕；实体网卡/NAT普通浏览器与WBD并发及移动真实连通按029出口再验证，不混用旧SOURCE PASS。",
+  "next_action": "H2211 ARM64 build-only已PASS不重刷；下一步依029容量选一个独立真实Linux NIC/外网NAT或有界同端口普通TLS与WBD混流/Stop测量，验证decoy真正接受公网浏览器，不与其他VM的CPU/延迟混算。Android JNI与OpenWrt实体、WinForms实机、029全面技术出口NOT_RUN/OPEN；030未开。",
   "unverified": true,
-  "last_tested_source": "c92f6a795d8e152b0939e5c6a60a492babedb14e",
+  "last_tested_source": "21acc95b5469e72872096f52702d1b62e128a25e",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-WINDOWS-GO-CACHE-UNIT-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029B-H2211-ARM64-GO-RUST-ROUTEKEY-MANIFEST-BUILD-PASS-20261119.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-ONCE-PERSIST-MOBILE-SCOPED-20261119.json",
-    "docs/devlog/M0/20261119-PLAN029B-H2208-ROUTEKEY-ONCE-CACHE-MOBILE.md",
-    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json",
+    "docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-WINDOWS-GO-CACHE-UNIT-PASS-20261119.json",
+    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json",
+    "docs/devlog/M0/20261119-PLAN029B-H2209-OLD-P2-ORDINARY-TLS-FALLBACK.md",
+    "docs/devlog/M0/20261119-PLAN029B-H2210-KDF-ORIGINAL-GO-ASSEMBLY-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2208 v2离线密钥一次派生及0600/应用私有缓存；Win原Go exact-source c92专项3/3与产品编译 PASS_SCOPED 44369630615；Linux受影响双端实网/Windows GUI实体/Android JNI/设备/OpenWrt物理 NOT_RUN。H2206单网卡NAT旧源 scoped PASS；Windows Rust DNS Direct旧测试FAIL；PLAN029技术退出 OPEN。"
+  "partial_summary": "H2209同源Go P2标准TLS浏览器TLS1.3→Decoy、正确WBD和错SNI 3/3 PASS_SCOPED source574 Action44430144025；H2210同SOURCE v2 RouteKey Linux cached 3/3、server --decoy冷解析、单NIC NAT选择、Rust+Go native server BUILD_PASS；Windows原Go Action44430144046和4个M0 WIN/LINUX fast jobs PASS；H2211 ARM64原Go双端+Rust ISA-L build-only PASS source21acc Action44430856253。Linux实体公网浏览器/NAT/混流/Stop、Android JNI/OpenWrt NOT_RUN，029/029B OPEN,030未开。"
 }

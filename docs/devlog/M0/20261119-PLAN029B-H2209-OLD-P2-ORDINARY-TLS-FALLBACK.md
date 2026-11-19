@@ -11,3 +11,7 @@
 ```feature-impact
 {"kind":"updated","ids":["tls-auth-multiclient"],"reason":"H2209 reuse pinned original Go P2 FallbackFromHello in V4 server cold classifier for non-WBD same-SNI TLS; optional fixed decoy bounded splice, old protected WBD/Rust path unchanged."}
 ```
+
+## H2209 新精确SOURCE 限域验收结果
+
+SOURCE `574cf32b2227fd9f0d8608a94764fe3f6011ad42` 原Go固定旧仓库source `a7a82db31fe736ffedee330795a3234d358f1984`：[Ubuntu Action44430144025](https://github.com/lly8666/wbd-next/actions/runs/44430144025) 中3项 **PASS_SCOPED**：真实非WBD Go `crypto/tls.Client` TLS1.3正常握手、Decoy TLS证书与SNI、ping/pong和close_notify；正确RouteKey的WBD原受保护认证不拨Decoy；错SNI普通流不拨Decoy、无Rust transition。Windows源锁原Go build及原有受影响测试 [Action44430144046](https://github.com/lly8666/wbd-next/actions/runs/44430144046) SUCCESS。细节见[证据](../../evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json)。这不是公网上的物理网关或实体客户端验收；H2209初版wrong-key uTLS夹具已由真正标准Go TLS访客替换，旧FAIL不删除。
