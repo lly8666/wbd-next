@@ -11,3 +11,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"API36实机原Go PASSWORD_FILE拒绝；查明MODE_PRIVATE默认可能0660与Go严格0600不兼容，同批修密码RouteKey可选CA的NoFollow/fchmod/fstat及su前lstat，不放宽Go。"}
 ```
+
+## A32a 首次CI失败保留（Host静态检查变量作用域）
+
+[Action #44586845085](https://github.com/lly8666/wbd-next/actions/runs/44586845085) 首轮 `root-arm64-app` 在生产 Host Java真实 POSIX元数据测试 `ANDROID_ORIGINAL_GO_COLD_SECRET_0600_POSIX_HOST_PASS`、脱敏收据和原 Go/Rust ARM64原生构建之后，于Python静态源检查 `NameError: name 'cold' is not defined` **FAIL**。代码原来在第147行才定义 `cold`，A32源门第139行先用了变量；这不是设备的密码/TUN新失败，旧原生/Host结果原样保留。这次小修在最早 `go_src` 加载后立即令 `cold=go_src`，不改变任何Android生产路径、原Go/Rust或安全检查，必须新SOURCE再次验证签名APK/原Linux Oracle。治理 `Feature catalog` 在原SOURCE已经 SUCCESS，不要把失败job改口称PASS。

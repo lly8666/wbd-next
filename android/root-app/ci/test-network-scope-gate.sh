@@ -86,6 +86,9 @@ assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; nev
 # classifiable only by actual fixed markers from the ROOT shell and
 # original Go Bionic entry. Never capture native raw stdout in reports.
 go_src=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+# A32 fixed-string checks use the same original Go parser source. Keep
+# this alias before all credential gates, not below their first use.
+cold=go_src
 receipt=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
 report=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
 for marker in ["WBD_PUBLIC_ROOT_SHELL_ENTERED","WBD_PUBLIC_ROOT_UID_VERIFIED","WBD_PUBLIC_ROOT_PRIVATE_DIR_VERIFIED","WBD_PUBLIC_ROOT_OWNER_GUARD_PASSED","WBD_PUBLIC_ROOT_NATIVE_FILES_STAGED","WBD_PUBLIC_ROOT_OWNER_PID_WRITTEN","WBD_PUBLIC_ROOT_EXEC_ATTEMPTED"]:
