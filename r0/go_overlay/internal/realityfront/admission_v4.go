@@ -752,9 +752,11 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     success:=false
     defer func(){ guard.Finish(success);if !success {_=conn.Close()} }()
     tlsCfg:=cfg.TLS
-    // Certificate verification is mandatory even for an explicit route-key;
-    // key possession is NOT a server identity proof.
-    tlsCfg.VerifyServer=true
+    // H2214/H2216: the client TLS verification policy is an explicit
+    // per-connection choice at the product CLI / WinForms cold boundary.
+    // Never silently force verification ON after the caller opted out.
+    // This intentionally exposes an active-MITM impersonation risk when
+    // VerifyServer=false; encrypted TLS is NOT server authentication.
     tlsCfg.Timeout=guard.Remaining()
     client,err:=handshakeClientConn(ctx,conn,tlsCfg)
     if err!=nil{return nil,candidateError(ctx,err)}
