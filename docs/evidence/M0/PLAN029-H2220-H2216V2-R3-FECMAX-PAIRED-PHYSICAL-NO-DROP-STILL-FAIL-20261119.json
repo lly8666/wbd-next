@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2220",
+  "date": "2026-11-19",
+  "result": "FAIL_PHYSICAL_PUBLIC_NORMAL_AND_FIXED6_NOT_CAUSED_SOLELY_BY_THIRD_COLD_PACKET_LOSS",
+  "source": "H2216v2 91b9d52 user-reported; exact installed Windows binary hash NOT_VERIFIED",
+  "source_file_provenance": "Two new user-uploaded archives, directly parsed by M0. Raw pcaps and payloads not committed.",
+  "captures": [
+    {
+      "variant": "normal/off",
+      "client_source_port": 40017,
+      "archive": "wbd-paired-r3-20261119.zip",
+      "archive_sha256": "c98ddc65db6076cce4c3ce9de9268f6a85782157f0ce00b2815ad6da2de71f32",
+      "linux_pcap_sha256": "59de74bee1c1c7dac2fe01db30b83a80c89045fa0b1cd1340ea6242cf005dbc5",
+      "windows_independent_npcap_sha256": "2de2b45b648ea2561beb805fd0c69618ceca3f95e613bca7d2b0568f1532b068",
+      "windows_pktmon_nic_sha256": "94422f6dbc56462e44c49bc3d0a02c0cba3309fec4009fd55a49de7f8f34308d",
+      "linux_tcpdump_packets": 69,
+      "linux_kernel_drop": 0,
+      "original_tls": "PASS",
+      "linux_native_m4": "READY",
+      "windows_worker_error": 0,
+      "post_auth_server_segments_visible_before_client_exit": [
+        {
+          "seq_start": 2486842205,
+          "seq_end": 2486842274,
+          "bytes": 69,
+          "linux_time": "19:17:26.458200",
+          "windows_npcap_time": "19:17:32.143939",
+          "windows_seen": true
+        },
+        {
+          "seq_start": 2486842274,
+          "seq_end": 2486842343,
+          "bytes": 69,
+          "linux_time": "19:17:26.858330",
+          "windows_npcap_time": "19:17:32.544026",
+          "windows_seen": true
+        },
+        {
+          "seq_start": 2486842343,
+          "seq_end": 2486842451,
+          "bytes": 108,
+          "linux_time": "19:17:27.258453",
+          "windows_npcap_time": "19:17:32.944142",
+          "windows_seen": true
+        },
+        {
+          "seq_start": 2486842451,
+          "seq_end": 2486842541,
+          "bytes": 90,
+          "linux_time": "19:17:41.179391",
+          "windows_npcap_time": "19:17:46.865479",
+          "windows_seen": true
+        }
+      ],
+      "final_client_ack_before_exit": 2486842541,
+      "client_exit_local": "19:17:56.2913018+08:00",
+      "client_exit_code": 1,
+      "rx_data_delivered": 0,
+      "authenticated_reverse_reports": 0,
+      "note": "Two later server payloads beyond the client exit also appeared in captures; not part of before-timeout denominator.",
+      "verdict": "NO_POSTAUTH_DOWNLINK_LOSS_BEFORE_TIMEOUT_AND_STILL_FAIL"
+    },
+    {
+      "variant": "fec-fixed maximum profile=6",
+      "client_source_port": 40018,
+      "archive": "wbd-paired-fec-max-20261119.zip",
+      "archive_sha256": "1dec7f4ecd5ffbc32725df050543c473dc1d3b99465d821b6b196b96214ea69a",
+      "linux_pcap_sha256": "917b0852e2d668c44a540d56fba3ea2fc6698dc30c4e4980df5cd4d32a20a86d",
+      "windows_independent_npcap_sha256": "f71f818aacb1bb30c9f89a91ffe5bbd24018108a237bc865eea52f8e81e9449b",
+      "windows_pktmon_nic_sha256": "67808c51493db48c48c82a0b3bf17d732b676a451304762eac0b7d01a07ff8c9",
+      "linux_tcpdump_packets": 103,
+      "linux_kernel_drop": 0,
+      "client_only_fec_config": true,
+      "server_per_client_negotiated": "mode=fixed profile=6 cipher=1",
+      "first_client_config_attempt": "FAIL admission missing fec-parity=4; corrected retry passed original TLS",
+      "original_tls": "PASS",
+      "linux_native_m4": "READY",
+      "windows_worker_error": 0,
+      "client_tx_copied": 72,
+      "post_auth_server_segments": [
+        {
+          "seq_start": 1506918262,
+          "seq_end": 1506918362,
+          "bytes": 100,
+          "linux_time": "19:21:26.177158",
+          "windows_nic_seen": false,
+          "windows_npcap_seen": false
+        },
+        {
+          "seq_start": 1506918362,
+          "seq_end": 1506918438,
+          "bytes": 76,
+          "linux_time": "19:21:26.577356",
+          "windows_npcap_time": "19:21:32.267718",
+          "windows_seen": true
+        },
+        {
+          "seq_start": 1506918438,
+          "seq_end": 1506918549,
+          "bytes": 111,
+          "linux_time": "19:21:26.977538",
+          "windows_npcap_time": "19:21:32.667951",
+          "windows_seen": true
+        },
+        {
+          "seq_start": 1506918549,
+          "seq_end": 1506918658,
+          "bytes": 109,
+          "linux_time": "19:21:42.124298",
+          "windows_nic_seen": false,
+          "windows_npcap_seen": false
+        }
+      ],
+      "final_client_ack_before_exit": 1506918549,
+      "client_exit_local": "19:21:55.7192186+08:00",
+      "client_exit_code": 1,
+      "rx_data_delivered": 0,
+      "authenticated_reverse_reports": 0,
+      "note": "ACK skipped the missing 100 B, but source includes optional authenticated 250ms cosmetic ACK abandon; ACK is not proof FEC reconstructed missing ciphertext. FEC decoder recovery counts not provided.",
+      "verdict": "PARTIAL_DOWNLINK_LOSS_AND_STILL_FAIL"
+    }
+  ],
+  "source_correlation": [
+    {
+      "path": "crates/wbd-engine/src/v4_windows_native_runtime.rs",
+      "function": "rx_loop;open_and_deliver;PresentationAck::abandon_stalled",
+      "observed": "NPF pcap_next_ex -> strict packet gate -> Rust M3 AEAD+unique replay -> kind1 business adds rx_delivered; kind2 authenticated Health/control only updates presentation ACK. Optional SACK 250ms cosmetic ACK gap abandonment can advance ACK without missing packet recovery."
+    },
+    {
+      "path": "crates/wbd-engine/src/v4_windows_owner.rs",
+      "function": "v5_open_record_entry;m2_authenticated_kind1_entry",
+      "observed": "Normal authenticated control returns kind=2, n=0, and refreshes Health; not a Wintun IPv4 delivery nor necessarily authenticated reverse data-report count."
+    },
+    {
+      "path": "crates/wbd-engine/src/v4_windows_fec2_owner.rs",
+      "function": "open_symbol_entry",
+      "observed": "Fixed/FEC2 authenticated source/parity/control can return empty delivery list; RX ACK may progress with no application IPv4 delivery."
+    }
+  ],
+  "conclusions": [
+    "H2219 third cold Health missing is REAL in prior two runs, but NOT a necessary cause of failure. R3 delivers every post-auth S>C frame before client timeout yet RXDelivered=0.",
+    "Windows NIC+independent Npcap receipt and native ACK advances strongly support at least some post-M4 authenticated RX/control processing. No evidence of generic TTL rejection or all NPF packet starvation.",
+    "Actual reverse business DATA generation on Linux remains UNPROVEN. Linux journal reports ready only, not raw_rx, AEAD/FEC, TUN write, application reply, server TUN read and server raw DATA send.",
+    "Fixed6 negotiated and still failed; do not mislabel cosmetic ACK jump as FEC recovery. One-way loss persists independently in FEC round."
+  ],
+  "not_measured": [
+    "Full TCP checksum since link captures are 54 B only",
+    "Direct AEAD plaintext kind classification from captures",
+    "Linux RX-to-TUN business counters and server app echo receipt",
+    "Actual Windows native NPF gate breakdown (NPF read/parse/M3 open/control/data/TUN send)",
+    "physical gateway hop responsible for missing 100/109 B",
+    "full physical product PASS"
+  ],
+  "next": "Instrument existing Go/Rust server and Windows owner with bounded per-stage counters in same real session. First Linux AF_PACKET/raw RX -> parser/checksum -> M3 authenticated -> TUN write -> application reply -> TUN read -> M4 raw DATA TX; then Windows NPF wake/pcap_next_ex -> parser -> M3 control vs business -> Wintun delivery. Confirm actual one reversing IPv4 business before modifying reliability. Preserve prior H2219 capture as evidence of intermittent packet loss, but explicitly supersede its implication of sole causal third-cold Health gap."
+}

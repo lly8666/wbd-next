@@ -4,23 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2219,
-  "checkpoint_sha": "5c360ab4cb2afe884b071a9c4f091fb5dd6bd582",
+  "sequence": 2220,
+  "checkpoint_sha": "c21cea4560037c471676c7f49f200503739824cd",
   "progress": "in_progress",
-  "task_id": "PLAN029-H2219-PHYSICAL-THIRD-COLD-CONTROL-LOSS",
-  "current_task": "H2219新双端独立抓包两轮：Linux enp0s3 第3个400ms冷启动回执65B/66B出站，Windows网卡与独立Npcap均未见；前2个ACK成功，14.31/16.47秒后新序号Health到达，客户端ACK分别4016913564/1909226536持续39/40次，服务端没按原序补发，Win RXDelivered0。公网丢失具体跳点不明，54B截头不验TCP校验和/AEAD。",
-  "why_now": "用户中断多runner任务并给了同SOURCE双端真实物理复测；两轮相同第三冷控制包丢失模式，比单runner NAT及云runner失败更直接，应优先分析内核原序重发缺口。",
-  "done_when": "仍未实证解决：精确判定第三冷Health上游丢失或校验错误；同源码内核双NAT强制丢第3回执并验证有限同序原密文重放、累计ACK前移、实际业务RXDelivered>0与Owned Stop。",
-  "next_action": "停止刷Azure托管runner入口（H2218 BLOCKED）；优先源码级cold Health回执是否有缺口可重放及与真实数据M2修复互斥的测试。必须区分TCP cosmetic ACK进展与真实TUN reverse，不能只修外观ACK就称产品可用。实际丢包点需完整测试载荷/两端NAT外侧抓包。",
+  "task_id": "PLAN029-H2220-R3-FEC6-PAIRED-PHYSICAL-RX0",
+  "current_task": "H2220两轮补证：Normal源端口40017认证后4个服务端69/69/108/90B在超时前均被Windows NIC及独立Npcap接收且ACK前进，但RXDelivered0；Fixed maximum profile6源40018第3个111B到达，第1个100B及后续109B在Win未见，ACK跨100B可能只是SACK下250ms外观ACK abandon，RXDelivered仍0。丢第3 Health非故障必要条件。",
+  "why_now": "用户新上传r3+FECmax实际双端抓包推翻H2219第三冷Health单因假设；M0要收回因果归结，保留前2次真实丢包事实，并将主线转到服务器反向业务数据与Win原生control/data分类。",
+  "done_when": "可实证客户端与服务端相同SOURCE的服务端 raw RX、AEAD/FEC、TUN写、业务回包、TUN读、raw DATA发及Windows NPF读、parse、M3 control/data、Wintun写；真正业务RXDelivered>0和owned Stop才通过。",
+  "next_action": "先核服务端收包→AEAD→TunWrite→应用回包→TunRead→Native TX DATA计数，补客户端NPF pcap_next_ex/parse/M3 kind1 vs control/Wintun写的有界收口；先不要加更高FEC、补第三Health重放当作产品根因修复、重复云runner入口。",
   "unverified": true,
   "last_tested_source": "91b9d521ce1451300533d078844340add4820c29",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2219-H2216V2-PAIRED-PHYSICAL-THIRD-COLD-HEALTH-LOSS-20261119.json"
+    "docs/evidence/M0/PLAN029-H2220-H2216V2-R3-FECMAX-PAIRED-PHYSICAL-NO-DROP-STILL-FAIL-20261119.json"
   ],
   "context_refs": [
+    "docs/evidence/M0/PLAN029-H2219-H2216V2-PAIRED-PHYSICAL-THIRD-COLD-HEALTH-LOSS-20261119.json",
     "docs/evidence/M0/PLAN029-H2218-TWO-RUNNER-NAT-PREREQUISITE-FAILED-20261119.json",
     "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2219: 两次公网H2216v2物理FAIL；M4后3×400ms cold Health的第3包65/66B在Linux出口见而Win网卡/Npcap未见，39/40次重复ACK，无原序重发；后续新序Health不填洞。Normal外修仅抽样DATA，control不缓存。具体丢失点/业务RX0根因仍OPEN，不把此解读为产品修复。"
+  "partial_summary": "H2220: 第三轮R3 Normal 40017冷3包全达、原生ACK推进且超时前4个下行段全达，Win RXDelivered0，故H2219第三包丢失不是超时必要条件。Fixed6 40018仍丢100+109B且RX0，ACK跨缺口可由cosmetic abandon解释而非FEC恢复证据。主因收敛服务端反向应用业务TX是否实际产生以及Windows Rust control/data分流；PLAN029技术出口仍OPEN。"
 }
