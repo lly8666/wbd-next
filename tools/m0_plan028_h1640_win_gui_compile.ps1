@@ -178,6 +178,19 @@ $visibleTest='foreach (Field f in store.Fields.Where(f => !f.Managed && !Portabl
 if(([regex]::Matches($tests,[regex]::Escape($visibleTest))).Count -ne 1){throw 'H2204 actual GUI visible field fixture drift'}
 $tests=$tests.Replace($visibleTest,
  'foreach (Field f in store.Fields.Where(f => !f.Managed && !PortableStore.IsNativeCarrierField(f.Key) && f.Section!="兼容"))')
+# H2213 donor now exposes an independent short route-key field. The QA
+# field-by-field mutation must choose short OR legacy hex, never both.
+# This only enriches the derived GUI TEST fixture; original donor and
+# production Windows GUI/Go/Rust sources remain untouched.
+$shortMutation='var saved = new Dictionary<string, object>(p.Values); p.Values[f.Key] = mutations[f.Key];'
+if(([regex]::Matches($tests,[regex]::Escape($shortMutation))).Count -ne 1){throw 'H2213 short route-key GUI mutation source drift'}
+$tests=$tests.Replace($shortMutation,
+ 'var saved = new Dictionary<string, object>(p.Values); p.Values[f.Key] = mutations[f.Key]; if(f.Key=="route-key") p.Values["route-key-hex"]="";')
+$oldSecret='Assert(Convert.ToString(actual["password"])=="configured" && Convert.ToString(actual["route-key-hex"])=="configured", "validator credentials redacted: " + f.Key);'
+if(([regex]::Matches($tests,[regex]::Escape($oldSecret))).Count -ne 1){throw 'H2213 GUI credential assertion donor drift'}
+$tests=$tests.Replace($oldSecret,
+ 'Assert(Convert.ToString(actual["password"])=="configured" && actual.ContainsKey(f.Key=="route-key" ? "route-key" : "route-key-hex") && Convert.ToString(actual[f.Key=="route-key" ? "route-key" : "route-key-hex"])=="configured", "validator credentials redacted: " + f.Key);')
+
 # Regression: Normal FEC2 Fixed/Auto + Game2/4 must accept the authenticated
 # v2 selector through the ACTUAL GUI portable config and original Go CLI.
 # Source/current CLI admission is tested, never a fabricated OS Applied.
