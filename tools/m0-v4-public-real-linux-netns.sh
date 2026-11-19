@@ -342,7 +342,7 @@ PY
   grep -Fq 'decoy_max_splices=8' "$TMP/server.log"
   # POSIX store: reuse the same key bytes, check files are owner-only and
   # their nanosecond mtime is unchanged on second independent process run.
-  python3 - "$CACHE_ROOT" "${WBD_H2212_REPEAT_INDEX:-1}" <<'PY'
+  sudo -n python3 - "$CACHE_ROOT" "${WBD_H2212_REPEAT_INDEX:-1}" <<'PY'
 import json,os,pathlib,stat,sys
 base=pathlib.Path(sys.argv[1]);index=int(sys.argv[2])
 record={}

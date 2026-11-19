@@ -15,3 +15,7 @@
 ## H2212 首次 x86/ARM 真实测试事实（失败不抹除）
 
 SOURCE `9ffec3de81a3375d5088d1a546a3c994b7b483cc` 的 [Action44440706601](https://github.com/lly8666/wbd-next/actions/runs/44440706601) x86_64、ARM64两个真实原Go＋Rust ISA-L双端构建均完成，两个受限 netns Linux客户端服务端实际短RouteKey v2 TLS握手、WBD Rust M4和/32租约READY均发生。新业务测试在随后的普通TLS/缓存断言脚本报错，两个矩阵任务**FAIL**，不是业务收发和Stop PASS，不能跨源归纳成功。首轮工作流错误过滤遗失了独立普通TLS/python文件的traceback首因；本次只给H2212 opt-in脚本补脱敏普通TLS/loopback端点错误输出和阶段标记，**不改原握手、Rust、信令和容量限额代码**。后续按同SOURCE新Action修正唯一首异常并重跑2启动，不重派原旧矩阵。
+
+## H2212 真实混流已通过、0600权限校验夹具修正
+
+SOURCE `f5c7d95f2a002e5570f6e72dfcbde9d0e6c8b821` [Action44441506563](https://github.com/lly8666/wbd-next/actions/runs/44441506563) **两个ISA完整Action仍FAIL**，但脱敏阶段证据一致：Linux原Go短Key TLS+Rust M4客户端与服务器READY、正常Rust owner保留；另一**真正Python标准库TLS1.3访客**通过同一raw443经Decoy TLS源站8443 ping/pong成功，源站侧也确认成功。首异常是在**后续缓存测试夹具由普通runner用户读取Go root进程写出的0600缓存**时遭到权限拒绝（Python pathlib.read_text），安全权限本身正确，不应改成可被runner读取。只在受限Linux测试脚本把缓存stat/JSON内容+mtime检查改为`sudo -n python3`，不记录明文或派生key；workflow退出时由root删除private cache。新SOURCE两次重新启动和Stop未通过前绝不宣称端到端PASS。

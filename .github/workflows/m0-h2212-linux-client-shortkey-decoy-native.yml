@@ -65,6 +65,7 @@ jobs:
           export WBD_H2212_CACHE_ROOT="$RUNNER_TEMP/h2212-private-cache-$GITHUB_RUN_ID"
           mkdir -m 0700 "$WBD_H2212_CACHE_ROOT"
           chmod 0700 "$WBD_H2212_CACHE_ROOT"
+          trap 'sudo -n rm -rf "$WBD_H2212_CACHE_ROOT"' EXIT
           for index in 1 2; do
             export WBD_H2212_REPEAT_INDEX="$index"
             log="h2212-netns-$index.log"
