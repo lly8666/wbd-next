@@ -8,6 +8,8 @@
 
 **H2216**：双端 TTL-persona 检测已取消，TTL=0 拒绝；限域PASS，物理未测。
 
+**H2224（2026-11-19）**：[PR48](https://github.com/lly8666/wbd-next/pull/48)原生 WinForms 修复 OS Applied 后 READY 覆盖「待验证」，新 C2S 已应用／S2C 仅协商或未知 FEC 分列及真实 TX/RX 运行信息；Linux 服务端按独立 owner 自动管理 VPN 子网 MASQUERADE，原 Rust TLS 后冷 Health 次数 3–5/4–7、间隔225–575ms随机。Linux 客户端首次 READY 原本不要求业务反向回包，保留不改。H2224同源码[Action 44564552571](https://github.com/lly8666/wbd-next/actions/runs/44564552571) Win GUI **426项**与 Linux ARM64真 NAT/TUN/Stop **2/2 PASS_SCOPED**；用户报告 H2223 业务通，实体长稳/真实接收 Auto FEC/最新跨公网 Windows H2224 **NOT_RUN**。029仍OPEN、030未开。
+
 **接续路径**：先读[AGENTS](AGENTS.md)、[章程](PROJECT_CHARTER.md)、[M0 cursor](.governance/workstreams/M0/cursor.json)、[registry](.governance/registry.json)及在途Actions，唯一真状态以同SOURCE验收记录为准。历史限域证据：[H2169](docs/evidence/M0/PLAN029-H2169-GAME2-GAME4-STARTUP-PADDING-SIX-NATIVE-PASS-20261118.json)、[H2177](docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json)、[H2186](docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json)、[H2202](docs/evidence/M0/PLAN029-H2202-ONE-V2-LINUX-WINDOWS-ANDROID-OPENWRT-SCOPED-20261118.json)。旧028/029失败不销账，PLAN029技术出口与实体跨ISA/DPI/p99仍OPEN；主线单写者，不重复已经PASS的旧矩阵。
 
 **硬门：**[TLS](docs/architecture/TLS_HANDSHAKE_CONTRACT.md) ClientHello前无私有前导；[MTU](docs/architecture/MTU_CONTRACT.md)用户外层默认**1460B**，1500仅显式，内层Rust预算+OS读回。029B业务Direct关闭不影响原Rust V3公共DNS/Tunnel/padding；新CN默认真实A，显式高级才FakeIP，旧缺键保留语义。未测不作PASS。历史：[027](docs/evidence/M0/PLAN027-H920-SCOPED-CLOSEOUT-20261102.json)/[027A](docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json)/[028](docs/testing/PLAN028_INTEGRATION_ACCEPTANCE.md)，[功能卡](docs/features/README.md)。

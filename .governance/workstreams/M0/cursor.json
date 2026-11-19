@@ -4,24 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2220,
-  "checkpoint_sha": "c21cea4560037c471676c7f49f200503739824cd",
+  "sequence": 2224,
+  "checkpoint_sha": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
   "progress": "in_progress",
-  "task_id": "PLAN029-H2220-R3-FEC6-PAIRED-PHYSICAL-RX0",
-  "current_task": "H2220物理双复测：R3 Normal 40017认证后4个下行69/69/108/90B均达Win、ACK推进，但RXDelivered0；Fixed6 40018第三111B达、首100B与后109B未达，客户端ACK越过100B可能是250ms外观ACK abandon，RX仍0。第三冷Health丢失并非超时必要条件。",
-  "why_now": "新R3与Fixed6双端原始抓包推翻H2219单因假设；保留真实丢包事实，主攻实际反向业务链。",
-  "done_when": "同SOURCE证实Linux raw RX→AEAD/FEC→TUN→业务回包→raw DATA TX，Windows NPF→M3 business→Wintun，RXDelivered>0及Stop。",
-  "next_action": "先测服务端原生raw_RX/M3/TUN写/业务回包/TUN读/raw_DATA发计数，再测客户端NPF读/parse/control对DATA/Wintun写；不先加FEC或把Health重传当主修复。",
+  "task_id": "PLAN029-H2224-WIN-GUI-LINUX-NAT-HEALTH-SCOPED",
+  "current_task": "H2224原Go/Rust Linux服务端owned MASQUERADE + WinForms READY/质量双向FEC显示 + Rust冷Health随机2/2 Actions成功；Windows实机长期稳态与S2C真实Auto生效档位仍未验证。",
+  "why_now": "用户报告H2223实体业务已通，要求Linux判定不比Windows严格、GUI修复、Linux NAT及TLS后固定包节奏随机，集中验收再合主线。",
+  "done_when": "H2224同源码Windows原Go/Rust及WinForms GUI、Linux ARM64原TLS/Rust NAT/Stop和随机Health测试PASS；真实Windows/物理公网长稳、全部GUI实时质量和Auto双向FEC等级另留NOT_RUN。",
+  "next_action": "合入H2221/H2223/H2224同源码限域成果；仅对真实长期质量和S2C实际档位有证据时跟进，不重做028/029B旧矩阵。",
   "unverified": true,
-  "last_tested_source": "91b9d521ce1451300533d078844340add4820c29",
+  "last_tested_source": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2220-H2216V2-R3-FECMAX-PAIRED-PHYSICAL-NO-DROP-STILL-FAIL-20261119.json"
+    "docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN029-H2219-H2216V2-PAIRED-PHYSICAL-THIRD-COLD-HEALTH-LOSS-20261119.json",
-    "docs/evidence/M0/PLAN029-H2218-TWO-RUNNER-NAT-PREREQUISITE-FAILED-20261119.json",
-    "docs/evidence/M0/PLAN029-H2217-H2216V2-WINDOWS-PHYSICAL-PKTMON-FIRST-REVERSE-FAIL-20261119.json"
+    "docs/evidence/M0/PLAN029-H2220-H2216V2-R3-FECMAX-PAIRED-PHYSICAL-NO-DROP-STILL-FAIL-20261119.json",
+    "docs/devlog/M0/20261119-H2223-READY-IS-ACTIVATION-NOT-BUSINESS-DELIVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2220：Normal R3第三冷包不丢且4段全达仍RX0；Fixed6也RX0且另丢100/109B，ACK跳缺口可由cosmetic abandon解释。R3 ACK与源码提示Win至少能认证control，实际server reverse business TX未证；物理FAIL持续，029未退出。"
+  "partial_summary": "H2224 SOURCE26fd4 2/2 Actions native PASS_SCOPED；H2223用户报告业务通（无本轮SHA/长稳证据）；S2C仅已协商/未知，实体WAN/实机长期稳定与p99 NOT_RUN；029与029B完整技术出口OPEN，030未开。"
 }
