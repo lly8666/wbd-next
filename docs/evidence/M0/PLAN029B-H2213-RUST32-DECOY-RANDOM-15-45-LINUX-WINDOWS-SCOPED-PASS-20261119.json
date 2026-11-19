@@ -130,5 +130,7 @@
     "No claim of throughput, CPU, p95/p99 latency or mobile Android/OpenWrt real device",
     "Other unrelated legacy PLAN028 workflows on changed source may fail due separately frozen constraints; only listed Actions are PASS_SCOPED",
     "Real public internet NAT DNAT and physical Windows ↔ ARM64 traffic NOT_RUN; PLAN029/029B full technical exit OPEN; PLAN030 NOT_STARTED"
-  ]
+  ],
+  "source_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
+  "result": "PASS_SCOPED"
 }
