@@ -1280,7 +1280,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_dispatch_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_dispatch_windows.go",
-      "result_blob": "9d550d238f5fb3d4d2ad4b865e01940a954e986b"
+      "result_blob": "b8caf7ede88c87dde4c30400f9e48f04241b7f3e"
     },
     {
       "kind": "create",
@@ -1292,7 +1292,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "7f83d2f81bc55d9ad5eed36638354f8244ae2ba2"
+      "result_blob": "daec113ed2d49d4bfc45eaec79d3c4b6c40c78db"
     },
     {
       "kind": "create",
@@ -1370,7 +1370,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "1ca25c1795b0602e3bf28d64dccbeab8262f04aa"
+      "result_blob": "7c5c7d258e6eb0d573ef538eb1e86d0e9eee241c"
     },
     {
       "kind": "create",
@@ -1630,7 +1630,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "e4d8c58ead37a3f34d22aead4b4d5e51f60b015f"
+      "result_blob": "827a7824b0a1f32182fd88226eb8c735fb7e7eda"
     },
     {
       "kind": "replace",
@@ -1886,6 +1886,18 @@
       "path": "internal/v4routekey/cache.go",
       "overlay_path": "r0/go_overlay/internal/v4routekey/cache.go",
       "result_blob": "ac1d12a86efff19427e38974bb4f214bb6e8d70d"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_native_v4_tls_verify_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_tls_verify_windows_test.go",
+      "result_blob": "055e122889cded81d808d3e2390ee338e37c0e5c"
+    },
+    {
+      "kind": "create",
+      "path": "internal/realityfront/tls_verify_h2214_test.go",
+      "overlay_path": "r0/go_overlay/internal/realityfront/tls_verify_h2214_test.go",
+      "result_blob": "aff3e097cc3943c49eb1e1326664a1bb3786a944"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
