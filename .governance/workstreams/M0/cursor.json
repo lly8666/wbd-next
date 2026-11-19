@@ -8,10 +8,10 @@
   "checkpoint_sha": "21acc95b5469e72872096f52702d1b62e128a25e",
   "progress": "in_progress",
   "task_id": "PLAN029B-H2209-H2211-OLD-P2-DECOY-AND-ROUTEKEY-ARM-BUNDLE",
-  "current_task": "H2209旧项目P2非WBD标准TLS→Decoy三场同SOURCE 574 PASS_SCOPED；H2210 Linux原Go/Rust产品链接、RouteKey缓存、--decoy/H2206 NIC真实冷配置 PASS_SCOPED Action44430144025；H2211原ARM64 Rust/ISA-L+Go client/server当前SOURCE21acc build-only Action44430856253 SUCCESS，旧缺包失败留存。真实网卡/外网NAT和移动实体NOT_RUN，029/029B退出仍OPEN。",
-  "why_now": "用户要求M0接续短RouteKey完成后，直接复用老项目服务端非WBD普通TLS访问处理并测试；避免重复实现代理协议及退化原WBD会话。",
-  "done_when": "H2209旧P2分类/原Hello回放/双向Stop负例本机源锁验收完成；ARM64同源码真实打包通过后独立留痕；实体网卡/NAT普通浏览器与WBD并发及移动真实连通按029出口再验证，不混用旧SOURCE PASS。",
-  "next_action": "H2211 ARM64 build-only已PASS不重刷；下一步依029容量选一个独立真实Linux NIC/外网NAT或有界同端口普通TLS与WBD混流/Stop测量，验证decoy真正接受公网浏览器，不与其他VM的CPU/延迟混算。Android JNI与OpenWrt实体、WinForms实机、029全面技术出口NOT_RUN/OPEN；030未开。",
+  "current_task": "H2209旧P2非WBD标准TLS回落三场＋H2210 Linux真实Go/Rust服务端构建/RouteKey/NIC/decoy冷测 PASS_SCOPED Action44430144025（SOURCE574）；H2211 ARM64 Go双端+Rust ISA-L BUILD_PASS Action44430856253（SOURCE21acc）。实体公网/NAT/移动端NOT_RUN。",
+  "why_now": "用户要求M0在H2208短RouteKey后直接复用老Go非WBD访客处理，并保留原TLS与单网卡语义。",
+  "done_when": "H2209/H2210源锁限域验收已通过；029完整技术出口仍需真实NIC公网普通TLS/WBD混流和Stop等独立场景。",
+  "next_action": "不重刷PASS旧矩阵；按029容量只做一个真实NIC的非WBD TLS/WBD同端口混流、Stop及公网NAT代表，证据不足则NOT_RUN。Android JNI/OpenWrt实机与029总出口仍OPEN，030未开。",
   "unverified": true,
   "last_tested_source": "21acc95b5469e72872096f52702d1b62e128a25e",
   "evidence_refs": [
@@ -20,10 +20,8 @@
   "context_refs": [
     "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json",
     "docs/evidence/M0/PLAN029B-H2208-ROUTEKEY-V2-WINDOWS-GO-CACHE-UNIT-PASS-20261119.json",
-    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json",
-    "docs/devlog/M0/20261119-PLAN029B-H2209-OLD-P2-ORDINARY-TLS-FALLBACK.md",
-    "docs/devlog/M0/20261119-PLAN029B-H2210-KDF-ORIGINAL-GO-ASSEMBLY-RECOVERY.md"
+    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2209同源Go P2标准TLS浏览器TLS1.3→Decoy、正确WBD和错SNI 3/3 PASS_SCOPED source574 Action44430144025；H2210同SOURCE v2 RouteKey Linux cached 3/3、server --decoy冷解析、单NIC NAT选择、Rust+Go native server BUILD_PASS；Windows原Go Action44430144046和4个M0 WIN/LINUX fast jobs PASS；H2211 ARM64原Go双端+Rust ISA-L build-only PASS source21acc Action44430856253。Linux实体公网浏览器/NAT/混流/Stop、Android JNI/OpenWrt NOT_RUN，029/029B OPEN,030未开。"
+  "partial_summary": "H2209标准TLS非WBD→旧P2 decoy、有效WBD、错SNI 3/3 PASS；H2210 Linux Go/Rust构建及Key/NIC/decoy单测PASS（SOURCE574）；H2211 ARM64 Go双端/Rust ISA-L BUILD_PASS（SOURCE21acc）。真网卡公网/Android JNI/OpenWrt NOT_RUN；029/029B OPEN。"
 }

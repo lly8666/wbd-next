@@ -31,3 +31,7 @@ H2211 ARM64旧手工Go bundle [Action44430144037](https://github.com/lly8666/wbd
 ## H2211 ARM64 build-only 结论
 
 SOURCE `21acc95b5469e72872096f52702d1b62e128a25e`：[Action44430856253](https://github.com/lly8666/wbd-next/actions/runs/44430856253) **SUCCESS (BUILD_PASS only)**。从同一冻结manifest读取并校验`internal/v4routekey/{short.go,short_test.go,cache.go}` Git blob，ARM64原Go双端CLI真实构建与Rust ISA-L加速`libwbd_engine.so`真实编译，Rust定向24/24+7/7；生成原有`manifest.json`/`SHA256SUMS`，不假称Android JNI/OpenWrt物理产品联网。旧SOURCE `574cf32b2227fd9f0d8608a94764fe3f6011ad42` [Action44430144037](https://github.com/lly8666/wbd-next/actions/runs/44430144037) 编译缺包FAIL历史仍保留。详见同SOURCE [H2211证据](../../evidence/M0/PLAN029B-H2211-ARM64-GO-RUST-ROUTEKEY-MANIFEST-BUILD-PASS-20261119.json)。
+
+## H2212 只修治理热预算，不重算源码产品验收
+
+H2209/H2210/H2211证据和cursor首次同批 [Action44431729729](https://github.com/lly8666/wbd-next/actions/runs/44431729729) **FAIL_GOVERNANCE**：`START_HERE`及M0 cursor扩张使原hot-read总量约33920B，大于固定32768B；这是治理结构失败，非Go/Rust/TLS回归。下一批仅压缩热入口重复历史段及cursor摘要（完整原H2205/H2208/H2209/H2210/H2211证据、SOURCE/旧FAIL保持冷devlog和evidence），热总量约32149B，不更改产品/测试或旧验收结论；按新SOURCE重新治理，不复用旧FAIL为PASS。
