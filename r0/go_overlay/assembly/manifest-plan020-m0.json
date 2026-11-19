@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "e9478ad94fff3942155c20795bc2636dd9e233f7",
+      "result_blob": "28a46730b5455bf18bbcbb61e1cdadf2691b1663",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -304,6 +304,10 @@
         {
           "find": "SplitEnable:*splitEnable,CNRulesFile:*cnRulesFile,",
           "replace": "SplitEnable:*splitEnable,CNDomainDirect:*cnDomainDirect,CNRulesFile:*cnRulesFile,"
+        },
+        {
+          "find": "ServerName:*serverName,RouteKey:routeKey,TrustedServerRoots:trustedRoots,Username:*username,Password:*password,",
+          "replace": "ServerName:*serverName,RouteKey:routeKey,TrustedServerRoots:trustedRoots,TLSVerifyServer:*tlsVerifyServer,Username:*username,Password:*password,"
         }
       ]
     },
