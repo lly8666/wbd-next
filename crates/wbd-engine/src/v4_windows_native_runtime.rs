@@ -1942,14 +1942,28 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          clock.arm_client_cold_ready(at); // isolated cadence; production arms live Entry in start_native
          assert!(clock.tx_due(at));
          let mut now=at;
-         for n in 0..5 {
-             assert!(clock.tx_due(now),"bounded native cold Health copy {n}");
+         let mut copies=0u8;
+         // H2224 replaces 5 x 400ms with 4..=7 real authenticated
+         // kind0 copies separated by 225..=575ms. A time/packet fixed
+         // oracle would now silently reject the intentionally random policy.
+         loop {
+             assert!(clock.tx_due(now),"cold Health copy {copies}");
+             copies+=1;
+             assert!(copies<=7,"cold Health proof must remain bounded");
              clock.on_health_send_result(now,true);
-             if n<4 {now+=400_000_000;assert!(clock.tx_due(now));}
+             let due=clock.next_tx_deadline().expect("live native Health deadline");
+             let gap=due-now;
+             if gap>575_000_000 {
+                 assert!(due>at+5_000_000_000,"restored steady Health");
+                 break
+             }
+             assert!((225_000_000..=575_000_000).contains(&gap));
+             assert!(!clock.tx_due(due-1),"must not early-send a repeat");
+             now=due;
          }
+         assert!((4..=7).contains(&copies));
+         assert!(now-at<=3_450_000_000,"cold proof before server 5s gate");
          assert!(!clock.tx_due(now+1_000_000_000));
-         assert!(clock.next_tx_deadline().is_some_and(|d|
-             d>at+5_000_000_000)); // restored ordinary 15s health
      }
      #[test]
      fn plan029_h1977_only_valid_1024_tcp_data_sequenced_for_boundaries(){
