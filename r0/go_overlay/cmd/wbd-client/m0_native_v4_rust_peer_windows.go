@@ -155,6 +155,19 @@ func(p *m0WinRustNativePeer) BindNativeRing(ctx context.Context,
   }
  }
 }
+// H2222: Ready is a causal authenticated control receipt, not arbitrary
+// business timing or a local TCP ACK. Retain strict DATA proof for older peers.
+func m0WindowsCausalNativeReady(
+ proof realityfront.V4WindowsColdReadyV1,
+ state realityfront.V4WindowsNativeWorkerStatsV1,
+)(bool,string){
+ if state.WorkerError!=0{return false,""}
+ if proof.Matched==1{return true,"causal_rust_AEAD_nonce_ack"}
+ if state.TXCopied>=2&&state.RXDelivered>=1&&state.TXAfterRX>=1{
+  return true,"legacy_authenticated_business_fallback"
+ }
+ return false,""
+}
 func(p *m0WinRustNativePeer) VerifyPeerFirstAndReverse(ctx context.Context,
  owner *realityfront.V4WindowsAuthenticatedClientOwner,
  tun *windowsclient.TUN,id windowsclient.N4UnifiedIdentity)error{
@@ -171,18 +184,9 @@ func(p *m0WinRustNativePeer) VerifyPeerFirstAndReverse(ctx context.Context,
   if state.WorkerError!=0{return fmt.Errorf("native Rust owner rc=%d",state.WorkerError)}
   proof,err:=owner.ReadNativeColdReady(timeout)
   if err!=nil{return fmt.Errorf("original native cold ACK readback: %w",err)}
-  if proof.Matched==1{
-   fmt.Printf("WBD_WINDOWS_NATIVE_COLD_READY_PROVEN mode=causal_rust_AEAD_nonce_ack attempts=%d tx_copied=%d business_rx=%d tx_after_rx=%d local_NPF_Wintun_bound=1\n",
-    proof.ProbesCopied,state.TXCopied,state.RXDelivered,state.TXAfterRX)
-   return nil
-  }
-  // Explicit old-server interoperability: older credential-Go/Rust Linux
-  // versions do not recognize the H2222 nonce echo. Their EXISTING
-  // strictly authenticated bidirectional IPv4 proof remains acceptable;
-  // never fall back merely to TLS, local TX or generic Health.
-  if state.TXCopied>=2&&state.RXDelivered>=1&&state.TXAfterRX>=1{
-   fmt.Printf("WBD_WINDOWS_NATIVE_COLD_READY_PROVEN mode=legacy_authenticated_business_fallback tx_copied=%d business_rx=%d tx_after_rx=%d\n",
-    state.TXCopied,state.RXDelivered,state.TXAfterRX)
+  if ready,mode:=m0WindowsCausalNativeReady(proof,state);ready{
+   fmt.Printf("WBD_WINDOWS_NATIVE_COLD_READY_PROVEN mode=%s attempts=%d tx_copied=%d business_rx=%d tx_after_rx=%d local_NPF_Wintun_bound=1\n",
+    mode,proof.ProbesCopied,state.TXCopied,state.RXDelivered,state.TXAfterRX)
    return nil
   }
   select{
