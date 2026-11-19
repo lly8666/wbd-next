@@ -36,6 +36,12 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
   android/root-app/ci/OriginalGoCommandArgsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoCommandArgsTest
+# Actual Lite v2 Java KDF + immutable cache HMAC, matched to main Go
+# short_test.go vectors. Pure local JVM, no Root, server, network or fake TLS.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootRouteKeyV2.java \
+  android/root-app/ci/RootRouteKeyV2Test.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootRouteKeyV2Test
 # Exact production Root Service diagnostic writer, not a fabricated
 # Android guest or Go/TLS success. Verify fixed enums, bounded retention,
 # no untrusted metadata and Device acceptance report semantics.
@@ -90,6 +96,14 @@ assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android application
 assert 'AllAppRouteScope.snapshot(this)' in a and 'all_apps' in a, "default mode must pass verified scopes not fake overlay"
 
 assert 'ServerAddress.valid(peer)' in a and 'Server underlay IPv4 or DNS name' in a
+assert 'RootRouteKeyCache.resolve(this,sni,keyInput)' in a
+assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
+assert 'String key=RootRouteKeyCache.resolve(this,sni,keyInput);' in a
+assert 'RootRouteKeyV2.legacyHex(supplied)' in Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()
+assert 'file.readFully()' in Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()
+assert 'Os.chmod(destination.getAbsolutePath(),0600)' in Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()
+assert 'AtomicFile' in Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()
+assert 'PBKDF2WithHmacSHA256' in Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyV2.java").read_text()
 cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
 go=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
 assert 'rootjournal.NewGroup(' in go and 'V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uids=' in go

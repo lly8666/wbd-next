@@ -5,6 +5,21 @@ historical `android/app` VpnService shell and not a KernelSU/Magisk installer.
 It requests the user's **existing** su manager to launch the exact original
 Go Android ARM64 client and the SAME source-locked Rust `libwbd_engine.so`.
 
+## A29 · Root Lite v2 简版测试 APK
+
+本实验 APK 沿用 \`org.wbdnext.rootclient\` 和**原 Go + 原 Rust Normal/off**，桌面名称 \`WBD Root Lite v2 (TEST)\`。由同一个签名 APK 生成兼容旧 CI 名称 \`wbd-root-arm64-debug.apk\` 与直观的 \`wbd-root-lite-arm64-debug.apk\`，不是第二套模拟协议或 VPN。
+
+本版把 main H2208 的 **RouteKey v2** 接到实际 Root Activity：输入 8–32 位 ASCII 英文字母/数字，离线 PBKDF2-HMAC-SHA256（4096 次、固定 v2 域盐）派生原 32 字节 route-key，**只**将派生 hex 写入现有 App 私有 \`wbd-route.secret\`，原 Go 仍使用 \`--route-key-hex-file\`/标准 TLS ClientHello/证书/用户名密码认证、原 Rust M4。另继续支持旧 64hex route-key，且不把它默默变成短口令。双方须显式采用同一个 v2 短 Key 或其派生 32B hex，旧 v1 240000 次无回落；8 位自选口令的真实安全性低于 256 位随机密钥，建议随机 24–32 位。
+
+与 main Android Kotlin 已有辅助实现相同：应用 \`noBackupFilesDir\` 下以 \`SHA256(client\\0+SNI)\` 前12字节命名独立私有缓存，内容只有派生 32B hex 和 HMAC 校验值，不是明文短 Key 或账户密码；Mode 0600、AtomicFile，重复输入时先核对缓存而非重新 KDF。更换有效短 Key 明确轮换，格式坏则本地拒绝；原 Go 进程退出仍删除临时 \`wbd-route.secret\`，派生缓存直到清除 App 数据才删除。无在线 Key 协商/Go 逐包 Java 回调/隐式权限放宽。
+
+UI 把进阶 KernelSU/TUN 一键自检放到默认折叠的“高级选项”，直观引导实体 Network → WBD server + SNI + 账户 → Key → START/STOP，并保留服务器/32 私有表 THROW 排除、默认普通App IPv4与可选单App、原 UID journal exact Stop、SAF脱敏TXT。**首次首选手动取消“默认普通App”并只选择一个实验 App**，该建议不改变现有默认路由行为。系统 DNS/IPv6/Root/system UID、Fixed/Game、Decoy server、Linux padding、VpnService 继续不支持。
+
+同 SOURCE Host JVM 校验主线原 Go 的三个 v2 golden vectors、非法/轮换/损坏缓存与 hex 兼容；正式 APK DEX 需包含实际生产 KDF/缓存、源锁 Go/Rust ARM64 ELF/签名/SHA，独立原 Linux oracle。所有签名APK/Host PASS 不等于真机 FakeTCP SYNACK/TLS/32租约/M4/真实App UDP/TCP/Stop 已通过。本轮没有获授权连接个人手机/服务端或跑 KSU/TAP guest。
+
+**测试版安装注意**：GitHub Actions 的调试签名证书每次生成，且 APK 包名相同，无法直接 \`adb install -r\` 覆盖上次版本。请自行先在旧版按 STOP，检查没有残留 KernelSU UID 私有路由，再卸载旧调试包并安装新的 Lite APK；卸载会清除派生缓存。
+
+
 ## Honest build and device boundary
 
 - `.github/workflows/android-root-product-a1.yml` builds Rust/Go AArch64

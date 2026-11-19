@@ -237,6 +237,7 @@ jobs:
           name: android-root-original-arm64-app-${{ github.sha }}
           path: |
             out/android-root-app/wbd-root-arm64-debug.apk
+            out/android-root-app/wbd-root-lite-arm64-debug.apk
             out/android-root-app/SOURCE
             out/android-root-app/SHA256SUMS
             out/android-root-app/manifest.json

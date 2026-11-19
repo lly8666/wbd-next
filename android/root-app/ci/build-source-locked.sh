@@ -126,6 +126,10 @@ keytool -genkeypair -alias wbdroot \
     --out out/android-root-app/wbd-root-arm64-debug.apk \
     out/android-root-app/aligned.apk
 "$bt/apksigner" verify out/android-root-app/wbd-root-arm64-debug.apk
+# Exact same signed original Go/Rust product APK, with a readable Lite
+# beta filename in the GitHub artifact. No second or mock WBD binary.
+cp out/android-root-app/wbd-root-arm64-debug.apk \
+   out/android-root-app/wbd-root-lite-arm64-debug.apk
 "$bt/aapt" dump badging out/android-root-app/wbd-root-arm64-debug.apk \
     >out/android-root-app/badging.txt
 grep -F "package: name='org.wbdnext.rootclient'" out/android-root-app/badging.txt
@@ -188,6 +192,8 @@ summary={"schema":"wbd-android-arm64-root-app-source-locked/v1",
     "arm64_native_source":os.environ["GITHUB_SHA"],
     "platform":"Android ARM64-v8a ONLY","mode":"original Go Normal/off",
     "package":"org.wbdnext.rootclient",
+    "edition":"Root Lite v2 short-key offline beta",
+    "short_key_v2_java_and_cache":"COMPILED_HOST_TESTED_DEVICE_NOT_RUN",
     "target_sdk":35,"minimum_sdk":28,
     "go_rust_apk_assets_verified":True,
     "pinned_cn_8503_in_signed_apk_verified":True,
@@ -202,6 +208,7 @@ summary={"schema":"wbd-android-arm64-root-app-source-locked/v1",
 (out/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\n")
 PY
 (cd out/android-root-app && sha256sum wbd-root-arm64-debug.apk \
+    wbd-root-lite-arm64-debug.apk \
     SOURCE manifest.json badging.txt manifest-tree.txt >SHA256SUMS &&
     sha256sum -c SHA256SUMS)
 rm -f out/android-root-app/disposable-debug.jks \

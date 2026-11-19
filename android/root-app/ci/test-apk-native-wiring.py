@@ -46,6 +46,15 @@ assert 'normalStartupPaddingCounters()(string,uint64,uint64,error)' in android_b
 assert android_bridge.count('return ErrAdmissionUnsupported')>=5
 ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert "allAppsDefault.setChecked(true)" in ui
+assert "RootRouteKeyCache.resolve(this,sni,keyInput)" in ui
+assert "WBD Root Lite v2" in ui
+assert 'String key=RootRouteKeyCache.resolve(this,sni,keyInput)' in ui
+v2=Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyV2.java").read_text()
+cache=Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()
+assert "PBKDF2WithHmacSHA256" in v2 and "4096" in v2
+assert "WBD-V4-ROUTE-KEY-PBKDF2-SHA256-v2" in v2
+assert "new AtomicFile(destination)" in cache and "Os.chmod(destination.getAbsolutePath(),0600)" in cache
+assert 'pair(args,"--route-key-hex-file",routeKeyFile)' in java_src
 assert "Intent.ACTION_CREATE_DOCUMENT" in ui
 assert "RootDiagnosticReport.build(getFilesDir()" in ui
 assert 'SERVER_PEER_THROW_PRIVATE_FIB_READBACK' in service_src
@@ -68,10 +77,14 @@ with zipfile.ZipFile(apk) as z:
         checked[name]=digest
     dex=z.read("classes.dex")
     assert b"Lorg/wbdnext/rootclient/OriginalGoCommandArgs;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootRouteKeyV2;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootRouteKeyCache;" in dex
     assert b"Lorg/wbdnext/rootclient/RootClientService;" in dex
     assert b"Lorg/wbdnext/rootclient/RootStopCommand;" in dex
     assert b"Lorg/wbdnext/rootclient/RootDiagnosticReport;" in dex
     assert b"Lorg/wbdnext/rootclient/RootDiagnosticReceipt;" in dex
+lite=Path("out/android-root-app/wbd-root-lite-arm64-debug.apk")
+assert lite.read_bytes()==apk.read_bytes(), "Lite test APK must be the verified signed original Go/Rust build"
 client=Path("out/android-root-app-native/wbd-v4-client-arm64")
 dyn=subprocess.run(["readelf","-d",str(client)],check=True,capture_output=True,text=True).stdout
 assert "Shared library: [libwbd_engine.so]" in dyn
@@ -81,6 +94,9 @@ report={
   "abi":"arm64-v8a",
   "signed_apk_original_go_and_rust_sha256":"PASS",
   "production_java_go_cli_arguments_host_test":"PASS",
+  "main_v2_short_route_key_kdf_vectors":"PASS_HOST_JVM",
+  "android_lite_v2_cache_and_original_hex_file_source":"COMPILED_HOST_CONTRACT",
+  "short_key_android_device_runtime":"NOT_RUN",
   "registered_original_go_cli_flags":"PASS",
   "production_root_exec_and_owned_stop_source_gate":"PASS",
   "original_go_requires_rust_dynamic_library":"PASS",

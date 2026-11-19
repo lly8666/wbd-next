@@ -94,6 +94,13 @@ Android network, TLS, data and physical exception status NOT_RUN.
 
 在**同一合并 SOURCE** 的 CI 需至少检查 rust/cargo、原Go Host 和原 Linux server、signed ARM64 APK 与 Bionic ELF/DEX/接口/脱敏导出、main feature catalog、main 治理回归。x86 Android KSU/TAP guest 均显式手工 opt-in，本轮不跑模拟网卡/真机；用户设备/服务器不动，PR #36 保持 Draft 不合 main。合并后所有旧SOURCE证据保留，新增 SOURCE 的真机联网/M4/应用TCP UDP/Stop 始终 `NOT_RUN`。
 
+### A29｜2026-11-19 新版 Android Root Lite v2（用户授权做简版安装测试 APK）
+
+从已真实双父同步 main 的实验分支 \`6de1d62aecd31c1c78f23577819cc9549754fe00\` 出发，原 [Actions #44466332473](https://github.com/lly8666/wbd-next/actions/runs/44466332473) 11 SUCCESS + 4 SKIPPED（Host 原 Linux oracle、Bionic Go/Rust、签名 ARM64 Root APK）；真机网络/M4/Stop仍未执行。新版只将适合 Android 冷层的 main H2208 **8..32 ASCII 英数字 short RouteKey v2** 引入 Root Activity，沿 main Go/Kotlin相同 PBKDF2-HMAC-SHA256 4096/domain salt 派生原 32B、持久私有 noBackup AtomicFile/HMAC 0600 缓存，复用老64hex输入及原 Go \`--route-key-hex-file\`，不增线上 wire/协议/认证轮次或明文密钥 Intent/argv。新UI标 Lite，进阶 Root自检折叠，保留普通App默认IPv4、单App可选、服务器/32 THROW/UID precise recovery/SAF脱敏导出、Normal/off原Go/Rust、原Linux server。全 App 权限不自动放大；用户首次测试建议手动只选一个 App。
+
+不开放 main Linux Decoy/NAT/padding、Windows GUI、Game2/4、Fixed/Auto。先做 Host KDF主线同源3向量/缓存负例与原Go CLI 32B file、同 SOURCE Rust Bionic/Go ABI/原Linux oracle、签名 APK 生产 DEX/原ELF/SHAs + feature catalog。CI 的原 APK 同内容增加直观 Lite 文件别名，每次随机 debug 签名同包名不能覆盖旧版，先Stop+路由检查再卸载。未单独授权的实体 Android、个人服务器和网络设备与重复 KSU/TAP guest 继续不运行；真正 SYNACK/TLS/32租约/M4/双向业务/owned Stop仍NOT_RUN。任何新 CI 失败不隐瞒。
+
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

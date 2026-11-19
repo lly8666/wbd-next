@@ -189,7 +189,7 @@ public final class RootClientActivity extends Activity {
             String sni=serverName.getText().toString().trim();
             String account=user.getText().toString().trim();
             String secret=password.getText().toString();
-            String key=routeKey.getText().toString().trim();
+            String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
             // Default is full ordinary App UID takeover AFTER true WBD
             // TLS/authenticated /32 and Rust M4. No pre-auth route mutation,
@@ -224,16 +224,16 @@ public final class RootClientActivity extends Activity {
                 throw new IllegalArgumentException("Invalid original WBD username");
             if(secret.isEmpty()||secret.length()>512)
                 throw new IllegalArgumentException("Invalid password: real WBD server credentials required");
-            if(!key.matches("[0-9a-fA-F]{64}"))
-                throw new IllegalArgumentException("Invalid offline route key: need exactly 64 hexadecimal characters (32 bytes)");
             if(port<1||port>65535)
                 throw new IllegalArgumentException("Invalid real server port: 1..65535");
             if(!pem.isEmpty()&&!pem.startsWith("-----BEGIN CERTIFICATE-----")){
                 throw new IllegalArgumentException("TLS CA must be a PEM certificate");
             }
-            // Secrets never enter process arguments, Android Intent extras,
-            // command logs or system properties. Go opens exact 0600 files
-            // with O_NOFOLLOW using the already-authenticated cold source.
+            // Lite v2: EXACT main offline v2 KDF or 64hex legacy. Only a
+            // derived 32B key is handed to original Go's private hex file;
+            // never the human short key, Intent extra or Go argv.
+            String key=RootRouteKeyCache.resolve(this,sni,keyInput);
+            // Go owns the same standard TLS/auth, Rust M4 and UID Stop.
             privateText("wbd-pass.secret",secret+"\n");
             privateText("wbd-route.secret",key+"\n");
             if(!pem.isEmpty())privateText("wbd-server-ca.pem",pem+"\n");
@@ -274,14 +274,28 @@ public final class RootClientActivity extends Activity {
         pane.setPadding(pad,pad,pad,pad);
         scroll.addView(pane);
         TextView intro=new TextView(this);
-        intro.setText("WBD original Go + Rust — Android ARM64 Root\n"+
-            "No VpnService or FakeIP. Normal/off only. Real traffic NOT YET DEVICE-QUALIFIED.");
+        intro.setText("WBD Root Lite v2 · ARM64 简版测试\n"+
+            "原 Go FakeTCP/TLS + 原 Rust M4；仅 Normal/off，非 VPN/FakeIP。\n"+
+            "① 选择实体 Wi-Fi/移动网络  ② 输入 WBD 服务器/账户/Key\n"+
+            "③ START 后查看固定阶段码，STOP 精确撤销 UID/清理。\n"+
+            "首次测试建议取消下面的「默认全部普通App」，只勾选一个测试App。\n"+
+            "注意：真实 Android↔Linux 业务尚未通过实机验收。");
         pane.addView(intro);
+        // Keep advanced Root-only selftest but collapse it in Lite.
+        CheckBox advanced=new CheckBox(this);
+        advanced.setText("显示高级选项：真实 Root/TUN 自检（可选）");
+        advanced.setChecked(false);
+        pane.addView(advanced);
+        LinearLayout advancedPanel=new LinearLayout(this);
+        advancedPanel.setOrientation(LinearLayout.VERTICAL);
+        advancedPanel.setVisibility(View.GONE);
+        advanced.setOnCheckedChangeListener((button,checked)->
+            advancedPanel.setVisibility(checked?View.VISIBLE:View.GONE));
         TextView diagHint=new TextView(this);
         diagHint.setText("真 ARM64 KernelSU 手机可直接一键测真实 App UID→内核路由→临时 TUN 的固定 UDP 包，" +
             "不需要服务器参数；这并不等于原 Rust M4 或生产目标 App 转发验收。" +
             " 真实 WBD 服务器与密钥只用于下面单独的 START。");
-        pane.addView(diagHint);
+        advancedPanel.addView(diagHint);
         networks=new Spinner(this);
         pane.addView(networks);
         Button refresh=new Button(this);
@@ -292,11 +306,11 @@ public final class RootClientActivity extends Activity {
         selfTestButton.setText("A12 一键自检 ARM64/KSU/TUN/UID入TUN及分阶段路由诊断（免服务器）");
         selfTestButton.setOnClickListener(v->runDeviceSelfTest());
         if(android.os.Build.SUPPORTED_ABIS.length>0&&
-           "arm64-v8a".equals(android.os.Build.SUPPORTED_ABIS[0]))pane.addView(selfTestButton);
+           "arm64-v8a".equals(android.os.Build.SUPPORTED_ABIS[0]))advancedPanel.addView(selfTestButton);
         deviceSelfTestResult=new TextView(this);
         deviceSelfTestResult.setText("尚未测试。测试中会请求 KernelSU 授权；结果可长按复制。");
         deviceSelfTestResult.setTextIsSelectable(true);
-        pane.addView(deviceSelfTestResult);
+        advancedPanel.addView(deviceSelfTestResult);
         Button copySelfTest=new Button(this);
         copySelfTest.setText("复制一键自检结果");
         copySelfTest.setOnClickListener(v->{
@@ -304,7 +318,8 @@ public final class RootClientActivity extends Activity {
             if(cb!=null)cb.setPrimaryClip(ClipData.newPlainText("WBD ARM64 诊断结果",
                 deviceSelfTestResult.getText()));
         });
-        pane.addView(copySelfTest);
+        advancedPanel.addView(copySelfTest);
+        pane.addView(advancedPanel);
         serverAddress=input(pane,"Server underlay IPv4 or DNS name (physical DNS bootstrap)",InputType.TYPE_CLASS_TEXT);
         serverName=input(pane,"Standard TLS server name / SNI",InputType.TYPE_CLASS_TEXT);
         serverPort=input(pane,"Original FakeTCP peer port",InputType.TYPE_CLASS_NUMBER);
@@ -312,8 +327,14 @@ public final class RootClientActivity extends Activity {
         user=input(pane,"Authenticated account",InputType.TYPE_CLASS_TEXT);
         password=input(pane,"Password (app-private file, not argv)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        routeKey=input(pane,"Offline original 32-byte route key hex",
+        routeKey=input(pane,"Route Key：主线 v2 短 Key（8–32 位英文/数字）或传统 64 位 Hex",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        TextView keyHelp=new TextView(this);
+        keyHelp.setText("新功能：短 Key 采用与 Linux/Windows 一样的离线 PBKDF2-HMAC-SHA256 v2；"+
+            "只有派生后的 32 字节 Hex 交给原 Go。缓存只保存派生密钥，不保存短口令，"+
+            "放在 App 私有不备份目录。服务端须配置同一 v2 短 Key；"+
+            "8 位人工口令强度较弱，建议随机 24–32 位。没有任何线上协商或隐式回退。");
+        pane.addView(keyHelp);
         caPEM=input(pane,"Optional server TLS CA certificate PEM",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);

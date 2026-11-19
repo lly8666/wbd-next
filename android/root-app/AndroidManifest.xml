@@ -20,7 +20,7 @@
             <category android:name="android.intent.category.LAUNCHER"/>
         </intent>
     </queries>
-    <application android:label="WBD ARM64 Root (experimental)"
+    <application android:label="WBD Root Lite v2 (TEST)"
                  android:usesCleartextTraffic="false"
                  android:allowBackup="false">
         <activity android:name=".RootClientActivity"

@@ -13,6 +13,8 @@ egress NOT_CONNECTED/NOT_RUN. User does not authorize emulator NIC
 binding or physical phone/server tests. Do source-locked Host tests
 and ARM64 APK build only; no KSU/TAP guests.
  
+A29 user request (2026-11-19): Build one Android Root Lite v2 signed ARM64 TEST APK from the already-merged experiment branch. Only Android-appropriate new main feature: v2 8..32 ASCII alphanumeric short route-key, PBKDF2-HMAC-SHA256 4096 domain salt, HMAC-verified derived 32B cache in private 0600 noBackup AtomicFile, or original 64hex route-key. Both paths feed the same 0600 --route-key-hex-file, never the short secret/argv/Intent/log or a new TLS roundtrip. Preserve original Normal/off Go FakeTCP+TLS/Rust M4, physical Network, all ordinary App IPv4/server /32 private-FIB THROW, exact Stop and safe TXT. Lite UI collapses optional Root selftest. Host golden vectors, signed APK DEX/native SHA and original Linux oracle required; Android physical end-to-end remains NOT_RUN and must not be inferred from build. No phone/server/KSU/TAP guest use without explicit authorization. Same app package with disposable debug CI signing cert: STOP+route cleanup then uninstall old debug version before installing new. Do not alter main or close Draft PR.
+
 # Android Root 原生 WBD 客户端｜长期接续提示词（现行单一版）
 
 > 这是 **agent 每次接续时的操作入口**，不是历史 Actions 年表。权威执行方案：[`ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md`](../plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md)；最近已核验业务诊断为 SOURCE `731ea034` [A25 Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998)。**开工必须重新核远端 HEAD、PR 和 Actions，不能永久复述这个 SHA 或阶段状态。**
