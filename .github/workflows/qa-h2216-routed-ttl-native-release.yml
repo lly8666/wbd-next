@@ -57,6 +57,16 @@ jobs:
         run: |
           set -euo pipefail
           cargo +1.85.1 test --locked -p wbd-platform --lib h2216_public_nat_ttl_tests -- --nocapture
+      - name: Stage ARM64 field-trial binaries after exact-source native build and TTL unit PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p delivery/linux-arm64-server
+          cp linux-plan029-public-bundle/wbd-v4-server linux-plan029-public-bundle/wbd-v4-client linux-plan029-public-bundle/libwbd_engine.so linux-plan029-public-bundle/manifest.json delivery/linux-arm64-server/
+          (cd delivery/linux-arm64-server && sha256sum wbd-v4-server wbd-v4-client libwbd_engine.so manifest.json > SHA256SUMS)
+          printf 'H2216 exact source: %s\nQUALIFICATION: FIELD_TRIAL_ONLY. Native ARM64 build and routed-TTL parser unit PASS; full double-NAT/Game4/12 native scenes may be FAIL/NOT_RUN.\nPhysical Windows-to-ARM64 and cleanup: NOT_RUN.\nRun client and server only in controlled test environment; do not treat as production.\n' "$GITHUB_SHA" > delivery/linux-arm64-server/BUILD_INFO.txt
+          tar -czf delivery/wbd-h2216-v2-linux-arm64-server.tar.gz -C delivery linux-arm64-server
+          sha256sum delivery/wbd-h2216-v2-linux-arm64-server.tar.gz > delivery/SHA256SUMS
       - name: H2216 three independent SNAT clients behind server DNAT TCP443
         shell: bash
         timeout-minutes: 15
