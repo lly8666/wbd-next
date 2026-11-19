@@ -129,6 +129,19 @@ impl HealthClock {
         if at>=self.attached_at{self.on_authenticated_control(at);self.peer_retired=true}
     }
     pub(crate) fn peer_retired(&self)->bool{self.peer_retired}
+    /// H2225 read-only terminal diagnostics, sampled under the EXISTING
+    /// authenticated Rust owner lock. None means no admitted inbound
+    /// AEAD/unique-PN DATA/Health since attach; outbound TCP ACKs and
+    /// untrusted carrier bytes never advance this clock.
+    pub(crate) fn last_authenticated_age_ns(&self,now:u64)->Option<u64>{
+        self.last_authenticated.map(|at|now.saturating_sub(at))
+    }
+    pub(crate) fn attached_age_ns(&self,now:u64)->u64{
+        now.saturating_sub(self.attached_at)
+    }
+    pub(crate) fn local_business_age_ns(&self,now:u64)->u64{
+        now.saturating_sub(self.last_business)
+    }
     pub(crate) fn clear_on_new_incarnation(&mut self,now:u64){
         *self=Self::new(self.policy,now);
     }
@@ -690,6 +703,29 @@ mod tests {
         assert!(!activity.has_verified_peer_health());
         activity.record_batch(101,0,Some((101,0)));
         assert!(activity.has_verified_peer_health());
+    }
+
+    #[test]
+    fn h2225_authenticated_inbound_age_distinguishes_upload_from_verified_retire(){
+        let s=SECOND_NS;
+        let mut h=HealthClock::new(HealthPolicy::default_connected(),10*s);
+        assert_eq!(h.last_authenticated_age_ns(21*s),None);
+        assert_eq!(h.attached_age_ns(21*s),11*s);
+        h.on_authenticated_control(20*s);
+        h.on_local_business(99*s); // local outgoing upload cannot refresh peer
+        assert_eq!(h.last_authenticated_age_ns(110*s),Some(90*s));
+        assert_eq!(h.local_business_age_ns(110*s),11*s);
+        assert!(h.unhealthy(110*s));
+        assert!(!h.peer_retired());
+        // A replay-unique explicit retired peer is a DIFFERENT cause,
+        // even when the last valid inbound DATA was just received.
+        h.clear_on_new_incarnation(112*s);
+        h.on_authenticated_control(113*s);
+        h.on_authenticated_peer_retire(114*s);
+        assert!(h.peer_retired());
+        assert_eq!(h.last_authenticated_age_ns(114*s),Some(0));
+        assert!(h.unhealthy(114*s));
+        assert_eq!(h.attached_age_ns(114*s),2*s);
     }
 
     const S:u64=SECOND_NS;

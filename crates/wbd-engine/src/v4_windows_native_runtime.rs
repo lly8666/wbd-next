@@ -958,10 +958,26 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  // old-generation retirement notice BEFORE owned Stop.
                  // No new timer/control carrier or untrusted NPF trigger.
                  let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
-                 if m.health.unhealthy(m2_clock().0){
+                 let now=m2_clock().0;
+                 if m.health.unhealthy(now){
                      if m.health.peer_retired() || m.retire_notice_sent ||
                          m.retire_notice_attempts>=3{
-                         eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT reason=authenticated_dead_or_peer_retired");
+                         // This line executes only at real owned terminal
+                         // transition. Do not emit per packet/tick, infer
+                         // network loss or change dead90/reset semantics.
+                         let cause=if m.health.peer_retired(){
+                             "authenticated_peer_retire"
+                         }else{
+                             "no_authenticated_inbound_90s"
+                         };
+                         let last_auth_age=m.health.last_authenticated_age_ns(now)
+                             .map(|ns|(ns/1_000_000).to_string())
+                             .unwrap_or_else(||"never".into());
+                         eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT cause={} last_authenticated_rx_age_ms={} attached_age_ms={} local_business_age_ms={} peer_retired={} retire_notice_sent={} retire_notice_attempts={} source=rust_aead_unique_pn_health_clock",
+                             cause,last_auth_age,m.health.attached_age_ns(now)/1_000_000,
+                             m.health.local_business_age_ns(now)/1_000_000,
+                             u8::from(m.health.peer_retired()),u8::from(m.retire_notice_sent),
+                             m.retire_notice_attempts);
                          return Err(AUTHENTICATED_PEER_DEAD)
                      }
                      m.retire_notice_due=true;
