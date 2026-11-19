@@ -11,3 +11,7 @@ H2209尚未验：实体NIC、公网NAT/浏览器外网TLS、ARM跨机真实专�
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Repair source-locked original Go assembly of already-implemented H2208 v4routekey package shared by Linux and Windows; no new product runtime semantics beyond H2209 code already recorded in previous changed feature card."}
 ```
+
+## H2210 首个 Linux 独立单测失败与最小修正
+
+在新增 exact-source 原Go Linux Go/Rust parser 验证 [Action 44429183683](https://github.com/lly8666/wbd-next/actions/runs/44429183683) 中，第一阶段已通过源锁装配，Go v2 KDF 8/16/32向量与拒绝输入通过；第3项缓存首写 **FAIL**：`route-key cache directory must be private (0700)`。这是 Go `testing.T.TempDir()` 在Linux实际可为`0755`，而产品真实缓存目录严格要求0700，之前 Windows 测试未触及POSIX目录权限边界。原 Go 测试夹具在首次`Resolve`前显式`os.Chmod(testDir,0700)`，**不改产品代码、不放松cache目录0700/密钥文件0600**；Linux实际产品Rust编译/CLI解析在这次 Action 还没跑，正确标识 NOT_RUN。重新按冻结 manifest hash 验，不能把原FAIL冒称通过。

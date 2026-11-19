@@ -1879,7 +1879,7 @@
       "kind": "create",
       "path": "internal/v4routekey/short_test.go",
       "overlay_path": "r0/go_overlay/internal/v4routekey/short_test.go",
-      "result_blob": "8658f27d81edb3f9f81fa5d24941a108b1aba7d1"
+      "result_blob": "28f75e3778637ce217478eaf5ef7b2d43668ed0f"
     },
     {
       "kind": "create",

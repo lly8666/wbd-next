@@ -30,6 +30,10 @@ func TestH2207RejectInvalidShortKey(t *testing.T) {
 
 func TestH2208PersistentOncePerKeyAndFastRestarts(t *testing.T) {
     dir := t.TempDir()
+    // testing.T.TempDir may be mode 0755 on Linux; an actual cache owner
+    // MUST have private 0700. Make only the test fixture private, not the
+    // production permission guard, before enrolling the first short key.
+    if err := os.Chmod(dir, 0700); err != nil { t.Fatal(err) }
     path := filepath.Join(dir, "owned-route-key.json")
     first, hit, err := Resolve("Abc12345", path)
     if err != nil || hit || len(first) != 32 { t.Fatalf("initial derive: hit=%v err=%v", hit, err) }
