@@ -8337,8 +8337,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         // for strictly one-way data with an idle local TUN.
                         let fb=e.feedback_queued.is_none() && (
                             e.native_retire_notice_due||
+                            (!e.shared_tun.as_ref().is_some_and(|sh|
+                                sh.publish_pending)&&
                             e.cold_ready_probe.as_ref().is_some_and(|slot|
-                                slot.load(Ordering::Acquire)!=0)||
+                                slot.load(Ordering::Acquire)!=0))||
                             e.quality_tx.as_ref().is_some_and(|tx|tx.due(now))||
                             e.quality_rx.as_ref().is_some_and(|q|
                                 q.lock().ok().is_some_and(|rx|rx.has_report()))||
