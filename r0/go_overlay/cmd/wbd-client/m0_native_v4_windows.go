@@ -868,7 +868,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if err!=nil{return err}
  auth:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{ServerName:o.ServerName,
-    RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:true,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second},
+    RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:o.TLSVerifyServer,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second},
   AutoLease:o.AutoLease,DesiredLanes:1,InstallationID:o.Installation[:],
   Username:o.Username,Password:o.Password,
   TunnelID:o.TunnelID[:],ClientLimit:recordOffer,

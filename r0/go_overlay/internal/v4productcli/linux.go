@@ -85,6 +85,7 @@ type config struct{
     decoyTarget string // server-only fixed ordinary-TLS target
     routeKey []byte
     tlsRoots *x509.CertPool
+    tlsVerifyServer bool // client-only: default OFF (insecure legacy compatibility)
     tlsCert string
     tlsKey string
     username string
@@ -198,7 +199,8 @@ func parse(role string,args []string)(config,error){
     routeShort:=flags.String("route-key","","8..32 ASCII letters/digits; v2 4096-iteration mobile-friendly PBKDF2 once then persistent 32B cache (prefer 24..32 random)")
     routeShortFile:=flags.String("route-key-file","","owner-only file with 8..32 short route-key; avoids argv disclosure")
     routeCache:=flags.String("route-key-cache-file","","persistent owner-only derived key cache; default user config directory")
-    caPEM:=flags.String("tls-ca-pem","","client application-scoped trusted server CA/certificate PEM (default OS trust)")
+    caPEM:=flags.String("tls-ca-pem","","client application-scoped trusted server CA/certificate PEM (used with TLS verification)")
+    verifyTLS:=flags.Bool("tls-verify-server",false,"verify TLS certificate chain and server-name; default false (insecure legacy compatibility)")
     cert:=flags.String("tls-cert","","original server TLS PEM")
     key:=flags.String("tls-key","","original server private PEM")
     user:=flags.String("username","","original protected admission user")
@@ -429,6 +431,8 @@ func parse(role string,args []string)(config,error){
             return c,fmt.Errorf("route-key (8..32 alphanumeric) or legacy 32-byte route-key-hex required; no online bootstrap")
         }
     }
+    if role=="server"&&*verifyTLS{return c,fmt.Errorf("tls-verify-server is client-only")}
+    c.tlsVerifyServer=role=="client"&&*verifyTLS
     if role=="server"&&*caPEM!=""{
         return c,fmt.Errorf("tls-ca-pem is a client-only setting; server uses tls-cert and tls-key")
     }
@@ -1342,7 +1346,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         })
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
-        TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:true,RootCAs:c.tlsRoots,Timeout:15*time.Second},
+        TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:c.tlsVerifyServer,RootCAs:c.tlsRoots,Timeout:15*time.Second},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
         AutoLease:c.autoIP,InstallationID:c.installation[:],
         ClientLimit:c.recordLimit,DesiredLanes:1,LaneID:1,Policy:policy,

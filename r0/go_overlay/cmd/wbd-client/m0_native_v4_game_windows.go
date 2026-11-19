@@ -176,7 +176,7 @@ func runM0NativeV4WindowsGame(
  if err!=nil{return err}
  cfg:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{
-   ServerName:o.ServerName,RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:true,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second,
+   ServerName:o.ServerName,RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:o.TLSVerifyServer,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second,
   },
   AutoLease:o.AutoLease,DesiredLanes:uint8(count),
   InstallationID:o.Installation[:],Username:o.Username,Password:o.Password,

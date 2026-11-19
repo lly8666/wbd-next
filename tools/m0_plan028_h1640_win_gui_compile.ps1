@@ -156,7 +156,8 @@ $additional=@(
  @('direct-flow-hard','16384'),@('split-enable','false'),
  @('cn-domain-direct','false'),@('cn-rules-file','""'),
  @('health.keepalive_seconds','15'),@('health.dead_after_seconds','90'),
- @('health.idle_dormant_seconds','0'),@('tls-ca-pem','""')
+ @('health.idle_dormant_seconds','0'),@('tls-ca-pem','""'),
+  @('tls-verify-server','true')
 )
 $additions=@()
 foreach($entry in $additional){
@@ -302,7 +303,8 @@ $add=[ordered]@{
  'health.keepalive_seconds'=@('生命周期','原生 Health 心跳秒','默认 15，受保护的原生 Rust 计时','Uint','15')
  'health.dead_after_seconds'=@('生命周期','原生 Health 失活秒','默认 90；不得小于三倍心跳','Uint','90')
  'health.idle_dormant_seconds'=@('生命周期','原生 Health 闲置秒','默认 0 禁用；原生业务闲置','Uint','0')
- 'tls-ca-pem'=@('服务器','TLS 服务端证书/CA','可选本地 PEM 绝对路径；未配置时使用系统可信根','String','""')
+ 'tls-ca-pem'=@('服务器','TLS 服务端证书/CA','启用验证时可选本地 PEM 绝对路径；未配置时使用系统可信根','String','""')
+  'tls-verify-server'=@('服务器','验证服务器证书','默认不校验（不安全；兼容旧版）；勾选后校验证书信任链、域名和有效期','Bool','false')
 }
 foreach($key in $add.Keys){
   if($fields.Contains($key) -and @($fields[$key]).Count -ne 3){throw "H2204 current GUI field metadata malformed: $key"}
