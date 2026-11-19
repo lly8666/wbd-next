@@ -122,6 +122,30 @@ func(s *V4WindowsAuthenticatedClientOwner) NativeIOStats(
        state.Workers!=2{return state,errV4WindowsOwner}
     return state,nil
 }
+// H2222: separate cold authenticated two-way proof from application IPv4
+// delivery. This optional V1 C symbol is required for a paired-H2222 build;
+// old Linux servers can still establish using the explicit legacy DATA
+// fallback, but cannot forge a nonce match.
+type V4WindowsColdReadyV1 struct{
+    Version,Size uint32
+    Matched,ProbesCopied uint32
+}
+func(s *V4WindowsAuthenticatedClientOwner) ReadNativeColdReady(
+    ctx context.Context,
+)(V4WindowsColdReadyV1,error){
+    var proof V4WindowsColdReadyV1
+    if s==nil||s.bridge==nil||ctx==nil{return proof,errV4WindowsOwner}
+    if err:=ctx.Err();err!=nil{return proof,err}
+    proc,err:=s.bridge.fixedProc("wbd_m0_win_native_v1_cold_ready")
+    if err!=nil{return proof,err}
+    err=winOwnerCall(proc,uintptr(s.bridge.handle),
+        uintptr(unsafe.Pointer(&proof)))
+    runtime.KeepAlive(&proof)
+    if err!=nil{return proof,err}
+    if proof.Version!=1||proof.Size!=uint32(unsafe.Sizeof(proof))||
+       proof.Matched>1{return proof,errV4WindowsOwner}
+    return proof,nil
+}
 // The active original M1/Rust Auto actor is the sole grade authority.
 // This read-only C ABI returns requested and truly source/M2 Applied values.
 type V4WindowsRustAutoStateV1 struct {

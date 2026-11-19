@@ -1185,6 +1185,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                   let next=repair_due.into_iter().chain(quality_due)
                       .chain(receive_due).chain(fec_due)
                       .chain(m.health.next_tx_deadline().map(MonoNs))
+                      .chain(m.cold_ready.as_ref().and_then(|p|p.next_deadline()).map(MonoNs))
                       .chain(auto_due).min_by_key(|d|d.0);
                   let receipt_due=None; // PLAN027 no per-record M2 timer
                   m2_wake_timeout_ms(now,receipt_due,next)
@@ -1729,7 +1730,14 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          if !v3_ready(&e,config.epoch,config.luid,config.ifindex)
              ||e.role_server{return BAD_STAGE}
          let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
-         m.health.arm_client_cold_ready(m2_clock().0);
+         let now=m2_clock().0;
+         // An original protected TLS epoch gets a cryptographic random
+         // one-shot challenge only after NPF and Wintun were validated.
+         let Some(challenge)=crate::v4_native_health::ColdReadyClient::new(now)
+             else{return BAD_STAGE};
+         m.cold_ready=Some(challenge);
+         m.cold_probe_pending=None;
+         m.health.arm_client_cold_ready(now);
      }
      let tx_lane=Arc::clone(&lane);let tx_stop=Arc::clone(&stop);
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
@@ -1842,6 +1850,36 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      let guard=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
      let Some(session)=guard.get(&h)else{return UNKNOWN};
      unsafe{out.write(session.counters.snapshot())};
+     OK
+ }
+
+ #[repr(C)]
+ #[derive(Clone,Copy,Default)]
+ pub struct WbdWinNativeColdReadyV1 {
+     pub version:u32,
+     pub size:u32,
+     pub matched:u32,
+     pub probes_copied:u32,
+ }
+ /// A bounded cold-only readback of the SAME authenticated Rust M3 owner.
+ /// It is NOT a Wintun DATA metric, TLS-only proof, or outer TCP ACK.
+ /// The caller separately verifies the OS/WAL applied receipt and MTU.
+ #[no_mangle]
+ pub unsafe extern "C" fn wbd_m0_win_native_v1_cold_ready(
+     h:u64,out:*mut WbdWinNativeColdReadyV1
+ )->i32{
+     if out.is_null(){return INVALID}
+     let g=match active().lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+     let Some(s)=g.get(&h)else{return UNKNOWN};
+     let lane=match lookup(h){Ok(v)=>v,Err(code)=>return code};
+     let e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
+     let (confirmed,attempts)=match m2_cold_ready_readback(
+         &e,s.epoch,s.luid,s.ifindex
+     ){Ok(v)=>v,Err(code)=>return code};
+     unsafe{out.write(WbdWinNativeColdReadyV1{
+         version:1,size:std::mem::size_of::<WbdWinNativeColdReadyV1>() as u32,
+         matched:u32::from(confirmed),probes_copied:attempts,
+     })};
      OK
  }
  // Stop belongs to the original Win32 native owner, not the Go timeout.

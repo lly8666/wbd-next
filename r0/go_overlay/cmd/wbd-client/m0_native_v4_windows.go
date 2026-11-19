@@ -95,6 +95,28 @@ func m0WindowsColdPathRetryAllowed(
   authenticatedDead||pathChanged,applied,retries,err)
 }
 
+// H2222: Only a failure proven to occur in ORIGINAL TCP/TLS transport is
+// eligible for two extra INITIAL cold attempts. Once Rust M4 is attached,
+// a missing causal ACK must not be recategorized as TCP/TLS timeout,
+// because that would rotate a genuine authenticated owner blindly.
+var errM0WindowsInitialOriginalTransportTimeout=errors.New("original TCP/TLS cold transport timed out")
+func m0WindowsTagInitialTransportTimeout(err error)error{
+ if err==nil||errors.Is(err,context.Canceled)||
+  errors.Is(err,realityfront.ErrAdmissionAuth){return err}
+ if m0WindowsOriginalColdRetryAllowed(true,false,0,err){
+  return fmt.Errorf("%w: %w",errM0WindowsInitialOriginalTransportTimeout,err)
+ }
+ return err
+}
+func m0WindowsInitialColdRetryAllowed(
+ mode m0WindowsV4Mode,applied bool,retries int,err error,
+)bool{
+ if applied||retries>=2||err==nil||errors.Is(err,context.Canceled)||
+  errors.Is(err,realityfront.ErrAdmissionAuth)||
+  !errors.Is(err,errM0WindowsInitialOriginalTransportTimeout){return false}
+ // Original Game keeps its separate multi-lane authenticated cold owner.
+ return mode==m0WinModeNormal||mode==m0WinModeFixed||mode==m0WinModeAuto
+}
 // Cold record offer is resolved by Rust's versioned full-IP budget ABI.
 // No separate Windows 1400 cap or Go framing arithmetic is authoritative.
 
@@ -563,13 +585,20 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // After genuine dead90, a new FakeTCP SYN can precede recovery of a
   // 105s one-way outage. Keep GUI alive and retry only cold timeouts,
   // never bypass TLS authentication or reuse the old Rust generation.
-  if ctx.Err()==nil && m0WindowsColdPathRetryAllowed(
-   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err){
+  initialRetry:=m0WindowsInitialColdRetryAllowed(o.Mode,applied,coldRetries,err)
+  existingRetry:=m0WindowsColdPathRetryAllowed(
+   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err)
+  if ctx.Err()==nil&&(initialRetry||existingRetry){
    coldRetries++
    authority:="authenticated_health90"
    if pathRecoveryAuthorized{authority="native_physical_ipv4_path"}
+   if initialRetry&&!reauthAuthorized&&!pathRecoveryAuthorized{
+    authority="initial_original_go_tcp_tls_only"
+   }
    fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_COLD_RETRY generation=%d attempt=%d class=timeout authority=%s previous_owner_drained=1\n",generation,coldRetries,authority)
-   timer:=time.NewTimer(2*time.Second)
+   // Initial attempt 1+2s bounded backoff. A new persistent port
+   // ordinal and genuine SYN/ClientHello are allocated per attempt.
+   timer:=time.NewTimer(time.Duration(coldRetries)*time.Second)
    select{
    case <-ctx.Done():timer.Stop();return nil
    case <-timer.C:
@@ -833,7 +862,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   case <-ctx.Done():return ctx.Err()
   case e:=<-failure:return fmt.Errorf("original V4 TCP bootstrap failed: %w",e)
   case e:=<-handshaked:
-   if e!=nil{return e}
+   if e!=nil{return m0WindowsTagInitialTransportTimeout(e)}
    break waitHandshake
   case <-ticker.C:
    if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return e}
@@ -947,7 +976,8 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   return errors.Join(err,fmt.Errorf("original Windows cold TLS FakeTCP retransmit kernel failure: %w",retryErr),stopErr)
  default:
  }
- if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
+ if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",
+  m0WindowsTagInitialTransportTimeout(err))}
  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED mode=%v requested_tun_mtu=%d client_record_offer=%d original_tls=1\n",o.Mode,o.TunnelMTU,auth.ClientLimit)
  // After TLS+Rust, either the same native product service assumes
  // full ownership or we retire Rust FIRST; never return GUI Applied

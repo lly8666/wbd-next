@@ -113,6 +113,10 @@ struct WindowsOriginalM2 {
     quality_slow_due:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
     // Per-lane state, no thread/timer; TX Health deadline not yet activated.
     health:crate::v4_native_health::HealthClock,
+    // Exactly one original-M3 authenticated cold probe per generation.
+    // No Go sender or Wintun business dependency; reset on new native M4.
+    cold_ready:Option<crate::v4_native_health::ColdReadyClient>,
+    cold_probe_pending:Option<u64>,
     retire_notice_due:bool,retire_notice_inflight:bool,
     retire_notice_sent:bool,retire_notice_attempts:u8,
     // Same W168 mature source-only denominator as Linux Fixed; never a
@@ -385,6 +389,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         quality_slow_due:VecDeque::with_capacity(16),
         health:crate::v4_native_health::HealthClock::new(
             crate::v4_native_health::HealthPolicy::default_connected(),now.0),
+        cold_ready:None,cold_probe_pending:None,
         retire_notice_due:false,retire_notice_inflight:false,
         retire_notice_sent:false,retire_notice_attempts:0,
         #[cfg(feature="fec2_product_record")]
@@ -449,11 +454,14 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let auto=e.feature7&&e.m2.as_ref().is_some_and(|m|m.auto_low_rate_mode)
         &&e.game_group.is_none();
     let next_pn=e.owner.next_original_record_pn().ok_or(BAD_STAGE)?;
-    let (draft,health_due,quality,signal,retire)={
+    let (draft,health_due,quality,signal,retire,cold_probe)={
         let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
         if m.feedback_pending.is_some(){return Ok(None)}
         let retire=m.retire_notice_due;
-        let signal=if retire{None}else if auto{
+        let cold_probe=if !retire {m.cold_ready.as_ref()
+            .filter(|p|p.due(now.0)).map(|p|p.nonce())}else{None};
+        // Cold handshake must not be starved by Auto quality sampling.
+        let signal=if retire||cold_probe.is_some(){None}else if auto{
             if let Some(window)=m.quality_close_waiting {
                 Some(crate::v4_native_health::QualityWindowSignal{
                     kind:crate::v4_native_health::QualitySignalKind::Close,
@@ -495,15 +503,15 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
                 })
             }else{None}
         }else{None};
-        let quality=if retire||signal.is_some(){None}else{win_mature_quality_due(m,now)};
+        let quality=if retire||cold_probe.is_some()||signal.is_some(){None}else{win_mature_quality_due(m,now)};
         // Auto explicitly disables old bitmap draft generation; other
         // modes temporarily retain their existing unmodified repair path.
         let draft:Option<FeedbackDraft>=None;
         let health_due=m.health.tx_due(now.0);
-        if !retire&&draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
+        if !retire&&draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none()&&cold_probe.is_none(){
             return Ok(None)
         }
-        (draft,health_due,quality,signal,retire)
+        (draft,health_due,quality,signal,retire,cold_probe)
     };
     let prepared=(||->Result<(usize,u32,u64),i32>{
         // PLAN027: only sparse Quality or authenticated Health controls.
@@ -513,6 +521,12 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
             let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
             crate::v4_native_health::encode_authenticated_retire_live(
                 m.health.local_idle_ns(now.0),budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
+        }else if let Some(nonce)=cold_probe{
+            let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+            crate::v4_native_health::encode_authenticated_cold_ready_live(
+                m.health.local_idle_ns(now.0),nonce,false,
+                budget.record_payload_mtu
             ).map_err(|_|INVALID)?
         }else if let Some(signal)=signal{
             let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
@@ -575,8 +589,9 @@ fn m2_next_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
             if retire{m.retire_notice_inflight=true;m.retire_notice_due=false;}
             m.quality_awaiting=quality.map(|(key,_)|key);
             m.quality_signal_awaiting=signal;
+            m.cold_probe_pending=cold_probe;
             m.feedback_pending=Some((draft,pn,retire||health_due||
-                m.quality_awaiting.is_some()||signal.is_some()));
+                m.quality_awaiting.is_some()||signal.is_some()||cold_probe.is_some()));
             Ok(Some((n,seq,pn)))
         },
         Err(err)=>{
@@ -642,6 +657,11 @@ fn m2_finish_feedback_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
         m.feedback.on_send_result(draft,if npcap_sent==1{
             FeedbackSendResult::Accepted
         }else{FeedbackSendResult::NotSent},now).map_err(|_|BAD_STAGE)?;
+    }
+    if let Some(probe)=m.cold_probe_pending.take(){
+        let Some(cold)=m.cold_ready.as_mut()else{return Err(BAD_STAGE)};
+        if cold.nonce()!=probe{return Err(INVALID)}
+        cold.send_result(now.0,npcap_sent==1);
     }
     if has_health{m.health.on_health_send_result(now.0,npcap_sent==1)}
     Ok(())
@@ -852,7 +872,7 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     // Fail atomically: even a valid replay-unique legacy Receipt mixed
     // with Health or Quality must not refresh peer liveness, grade a
     // window, or retire a ciphertext shadow before being rejected.
-    if control.receipt.is_some(){return Err(INVALID)}
+    if control.receipt.is_some()||control.cold_probe.is_some(){return Err(INVALID)}
     let now=m2_clock();
     // Never grant Fixed/off/Game an Auto-quality control side effect,
     // even when the encrypted control also contains a valid idle hint.
@@ -863,6 +883,13 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     // This exact old-generation retirement is admitted only by M3 AEAD
     // + replay-unique PN on the current bound epoch (never raw NPF ACK).
     // It is not an Auto quality sample or receipt bitmap.
+    if let Some(nonce)=control.cold_ack{
+        if let Some(cold)=m.cold_ready.as_mut(){
+            if !cold.confirmed()&&cold.accept_ack(nonce){
+                eprintln!("WBD_WINDOWS_COLD_READY_ACK_VERIFIED source=original_m3_unique_aeAD current_nonce_match=1 attempts={}",cold.attempts());
+            }
+        }
+    }
     if control.peer_retire{
         m.health.on_authenticated_peer_retire(now.0);
     }else if let Some(idle)=control.peer_idle_ns{
@@ -921,6 +948,14 @@ fn m2_authenticated_kind1_entry(e:&mut Entry,reverse_pn:u64,
     }
     // No legacy Receipt enters this authenticated control path.
     Ok(0)
+}
+
+pub(super) fn m2_cold_ready_readback(e:&Entry,epoch:[u8;16],luid:u64,
+    ifindex:u32)->Result<(bool,u32),i32>{
+    if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
+    let m=e.m2.as_ref().ok_or(BAD_STAGE)?;
+    let c=m.cold_ready.as_ref().ok_or(BAD_STAGE)?;
+    Ok((c.confirmed(),c.attempts()))
 }
 struct Entry {
     generation:u32,

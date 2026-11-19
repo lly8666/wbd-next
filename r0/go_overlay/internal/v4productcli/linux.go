@@ -1199,6 +1199,12 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
 // READY, Go packet pump or new steady-state control wire is evidence.
 // A failed server M4 leaves A intact; no Go DATA copies, new control wire,
 // unauthenticated timer ownership or unbounded overlap is authorized.
+// H2222: the original TLS/Rust peer may need a 45s bounded cold
+// challenge/response opportunity through several seconds of real loss.
+// Keep candidate A's already authenticated TUN route until B completes.
+// Never equate waiting longer with remote M4 proof or local TLS ready.
+const originalNativeM4ColdProofBudget=45*time.Second
+
 func waitOriginalNativeM4PeerProof(
     ctx context.Context,pulse func()(realityfront.V4PublicLoopPulse,error),
     promote func()error,max time.Duration,
@@ -1382,7 +1388,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         // forwarding until native B proves the peer actually committed B.
         // A timeout closes only B and preserves A's exact old mapping.
         err=waitOriginalNativeM4PeerProof(ctx,native.OriginalLoopPulse,
-            native.PromoteNormalAfterAuthenticatedPeerRx,5*time.Second)
+            native.PromoteNormalAfterAuthenticatedPeerRx,originalNativeM4ColdProofBudget)
         if err!=nil{
             log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_UNPROVEN role=client generation=%d client_port=%d old_tun_route_preserved=1",
                 c.rotationGeneration,c.localPort)
@@ -1949,7 +1955,7 @@ func runSharedMultiServer(
         if proofErr:=p.PromoteNormalServerAfterAuthenticatedPeerRx();proofErr!=nil{
             proofErr=waitOriginalNativeServerClientM4Ready(runCtx,
                 p.OriginalLoopPulse,p.PromoteNormalServerAfterAuthenticatedPeerRx,
-                5*time.Second)
+                originalNativeM4ColdProofBudget)
             if proofErr!=nil{
                 mu.Lock()
                 delete(detached,rec.assoc)

@@ -418,3 +418,84 @@ func TestM0PLAN028OwnedWSLNextHopOnlyForExactNativeAlias(t *testing.T){
   })
  }
 }
+
+
+func TestH2222InitialOriginalTCPAndTLSTimeoutRetriesOnlyTwice(t *testing.T){
+ for _,mode:=range []m0WindowsV4Mode{
+  m0WinModeNormal,m0WinModeFixed,m0WinModeAuto,
+ }{
+  for _,timeout:=range []error{faketcp.ErrBootstrapTimeout,context.DeadlineExceeded,syscall.ETIMEDOUT}{
+   tagged:=m0WindowsTagInitialTransportTimeout(timeout)
+   if !errors.Is(tagged,errM0WindowsInitialOriginalTransportTimeout){
+    t.Fatalf("original TCP/TLS timeout not tagged %v",tagged)
+   }
+   for retry:=0;retry<2;retry++{
+    if !m0WindowsInitialColdRetryAllowed(mode,false,retry,tagged){
+     t.Fatalf("mode %v retry %d denied legitimate original transport timeout",mode,retry)
+    }
+   }
+   if m0WindowsInitialColdRetryAllowed(mode,false,2,tagged)||
+      m0WindowsInitialColdRetryAllowed(mode,true,0,tagged){
+    t.Fatal("three-attempt budget or post-WAL gate bypassed")
+   }
+  }
+ }
+ for _,err:=range []error{
+  realityfront.ErrAdmissionAuth,errors.New("bad TLS certificate"),
+  context.Canceled,errors.New("Npcap kernel driver missing"),
+ }{
+  tagged:=m0WindowsTagInitialTransportTimeout(err)
+  if errors.Is(tagged,errM0WindowsInitialOriginalTransportTimeout)||
+     m0WindowsInitialColdRetryAllowed(m0WinModeNormal,false,0,tagged){
+   t.Fatalf("permanent/auth/cancel failure incorrectly reopened original cold TLS: %v",err)
+  }
+ }
+ for _,row:=range []struct{
+  mode m0WindowsV4Mode
+  err error
+ }{
+  {m0WinModeGame2,m0WindowsTagInitialTransportTimeout(context.DeadlineExceeded)},
+  {m0WinModeGame4,m0WindowsTagInitialTransportTimeout(context.DeadlineExceeded)},
+  {m0WinModeNormal,context.DeadlineExceeded}, // M4 cold ACK timeout: not tagged
+  {m0WinModeNormal,fmt.Errorf("%w: %w",
+   errM0WindowsInitialOriginalTransportTimeout,realityfront.ErrAdmissionAuth)},
+  {m0WinModeNormal,fmt.Errorf("%w: %w",
+   errM0WindowsInitialOriginalTransportTimeout,context.Canceled)},
+ }{
+  if m0WindowsInitialColdRetryAllowed(row.mode,false,0,row.err){
+   t.Fatalf("not original TCP/TLS retry scope: %v",row)
+  }
+ }
+}
+
+
+func TestH2222IdleCausalReadyGateDoesNotRequireFakeBusiness(t *testing.T){
+  for _,row:=range []struct{
+    name string
+    match uint32
+    tx,rx,after uint64
+    workerError int32
+    want bool
+    mode string
+  }{
+    {"idle_causal_after_m3",1,0,0,0,0,true,"causal_rust_AEAD_nonce_ack"},
+    {"no_probe_no_data",0,0,0,0,0,false,""},
+    {"local_tx_not_credential_proof",0,100,0,0,0,false,""},
+    {"server_health_only",0,4,0,0,0,false,""},
+    {"business_rx_without_tx_after",0,2,8,0,0,false,""},
+    {"legacy_real_2way_data",0,2,1,1,0,true,"legacy_authenticated_business_fallback"},
+    {"worker_error_deny_even_if_nonce_matched",1,2,1,1,3,false,""},
+  }{
+    t.Run(row.name,func(t *testing.T){
+      proof:=realityfront.V4WindowsColdReadyV1{Matched:row.match}
+      stats:=realityfront.V4WindowsNativeWorkerStatsV1{
+        TXCopied:row.tx,RXDelivered:row.rx,TXAfterRX:row.after,WorkerError:row.workerError,
+      }
+      yes,mode:=m0WindowsCausalNativeReady(proof,stats)
+      if yes!=row.want||mode!=row.mode{
+        t.Fatalf("H2222 control/data fail-closed gate got=(%t,%s) expected=(%t,%s)",
+          yes,mode,row.want,row.mode)
+      }
+    })
+  }
+}

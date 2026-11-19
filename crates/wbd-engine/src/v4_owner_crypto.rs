@@ -343,6 +343,9 @@ pub(crate) struct BackgroundRxReceipt{
     pub(crate) authenticated_control:bool,
     pub(crate) authenticated_health_hint:Option<u64>,
     pub(crate) authenticated_peer_retire:bool,
+    // Replayed/invalid raw packets NEVER expose a cold nonce. Consumed only
+    // after the moved original TLS-bound AEAD/PN opener.
+    pub(crate) cold_ready_probe:Option<u64>,
     #[cfg(feature="fec2_product_record")]
     pub(crate) quality_signal:Option<crate::v4_native_health::QualityWindowSignal>,
     #[cfg(feature="fec2_product_record")]
@@ -516,6 +519,7 @@ impl ProtectedBackgroundRx{
                     receipt.authenticated_control=true;
                     receipt.authenticated_health_hint=control.peer_idle_ns;
                     receipt.authenticated_peer_retire=control.peer_retire;
+                    receipt.cold_ready_probe=control.cold_probe;
                     #[cfg(feature="fec2_product_record")]
                     {receipt.quality_signal=control.low_rate_signal;
                      receipt.quality_report=control.low_rate_quality;}

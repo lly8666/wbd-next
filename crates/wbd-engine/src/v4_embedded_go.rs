@@ -849,6 +849,10 @@ struct Entry{
     #[cfg(feature="fec2_product_record")]
     native_health_evidence:Option<Arc<crate::v4_native_health::AuthenticatedActivity>>,
     #[cfg(feature="fec2_product_record")]
+    cold_ready_probe:Option<Arc<AtomicU64>>,
+    #[cfg(feature="fec2_product_record")]
+    cold_ready_reply_queued:Option<u64>,
+    #[cfg(feature="fec2_product_record")]
     native_retire_notice_due:bool,
     #[cfg(feature="fec2_product_record")]
     native_retire_notice_inflight:bool,
@@ -1182,6 +1186,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         native_health_policy:crate::v4_native_health::HealthPolicy::default_connected(),
         #[cfg(feature="fec2_product_record")]
         native_health_evidence:None,
+        #[cfg(feature="fec2_product_record")]
+        cold_ready_probe:None,
+        #[cfg(feature="fec2_product_record")]
+        cold_ready_reply_queued:None,
         #[cfg(feature="fec2_product_record")]
         native_retire_notice_due:false,
         #[cfg(feature="fec2_product_record")]
@@ -5801,6 +5809,8 @@ fn background_raw_once(
     outer:Option<&Arc<Mutex<OriginalOuterRepair>>>,
     #[cfg(feature="fec2_product_record")]
     activity:Option<&Arc<crate::v4_native_health::AuthenticatedActivity>>,
+    #[cfg(feature="fec2_product_record")]
+    cold_ready_probe:Option<&Arc<AtomicU64>>,
 )->Result<u32,i32>{
     // The SAME original Go credential-derived AEAD+PN opener and M3 LINK
     // table are now owned by RX, not re-initialized or cloned. RX never
@@ -5955,6 +5965,15 @@ fn background_raw_once(
                 peer_retire_at=peer_retire_at.max(when.0);
             }
         }
+        #[cfg(feature="fec2_product_record")]
+        if server_side {
+            if let (Some(probe),Some(slot))=(receipt.cold_ready_probe,cold_ready_probe){
+                // Exactly one Linux original credential-Go TLS-bound M3
+                // record has passed replay; no raw packet or quality grade
+                // can publish a probe into the native TX owner.
+                slot.store(probe,Ordering::Release);
+            }
+        }
         pending_valid |=receipt.pending>0;
         invalid_seen |=receipt.invalid>0 || receipt.failed>0;
         // The one unique authenticated M3 opener is the ONLY input to
@@ -6100,20 +6119,31 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
         e.native_health.as_mut(),e.native_health_evidence.as_ref()
     ){evidence.absorb(clock)}
     let retire=e.native_retire_notice_due;
+    // Server candidate B must NOT emit a causal READY_ACK while the
+    // shared TUN /32 still routes to old A. The server Go supervisor
+    // promotes B only after a genuine replay-unique client Health; this
+    // same Entry mutex serializes that promotion with this TX decision.
+    // Initial server sessions publish immediately and retain this path.
+    let route_committed=!e.shared_tun.as_ref()
+        .is_some_and(|sh|sh.publish_pending);
+    let cold_reply=if e.server_side&&!retire&&route_committed{
+        e.cold_ready_probe.as_ref().map(|slot|slot.load(Ordering::Acquire))
+            .filter(|nonce|*nonce!=0)
+    }else{None};
     let next=if e.quality_tx.is_some(){
         Some(e.owner.next_original_record_pn().ok_or(BAD_STAGE)?)
     }else{None};
-    let signal=if retire{None}else if let Some(tx)=e.quality_tx.as_mut(){
+    let signal=if retire||cold_reply.is_some(){None}else if let Some(tx)=e.quality_tx.as_mut(){
         tx.next_signal(next.ok_or(BAD_STAGE)?,now)?
     }else{None};
-    let quality=if !retire&&signal.is_none(){
+    let quality=if !retire&&cold_reply.is_none()&&signal.is_none(){
         e.quality_rx.as_ref().and_then(|q|
             q.lock().ok().and_then(|mut rx|rx.mature_due(now)))
     }else{None};
     // All live modes retire old per-record M2 drafts.
     let draft:Option<wbd_recovery::FeedbackDraft>=None;
     let health_due=e.native_health.as_ref().is_some_and(|h|h.tx_due(now.0));
-    if !retire&&draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none(){
+    if !retire&&draft.is_none()&&!health_due&&quality.is_none()&&signal.is_none()&&cold_reply.is_none(){
         return Ok(false)
     }
     let attempt=(||->Result<u64,i32>{
@@ -6123,6 +6153,10 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
         let tlv=if retire{
             crate::v4_native_health::encode_authenticated_retire_live(
                 idle,budget.record_payload_mtu).map_err(|_|INVALID)?
+        }else if let Some(nonce)=cold_reply{
+            crate::v4_native_health::encode_authenticated_cold_ready_live(
+                idle,nonce,true,budget.record_payload_mtu
+            ).map_err(|_|INVALID)?
         }else if let Some(signal)=signal{
             crate::v4_native_health::encode_authenticated_low_rate_signal_live(
                 idle,signal,budget.record_payload_mtu
@@ -6149,8 +6183,9 @@ fn stage_original_reverse_feedback(e:&mut Entry,now:MonoNs)->Result<bool,i32>{
             if retire{e.native_retire_notice_inflight=true;e.native_retire_notice_due=false;}
             e.quality_report_queued=quality.map(|(key,_)|key);
             e.quality_signal_queued=signal;
+            e.cold_ready_reply_queued=cold_reply;
             e.feedback_queued=Some((draft,pn,health_due||
-                quality.is_some()||signal.is_some()));
+                quality.is_some()||signal.is_some()||cold_reply.is_some()));
             Ok(true)
         },
         Err(err)=>{
@@ -7208,6 +7243,16 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             // M1 age eviction or no driver: no authenticated peer receipt.
             wbd_recovery::FeedbackSendResult::NotSent
         };
+        if let Some(nonce)=e.cold_ready_reply_queued.take(){
+            if matches!(status,wbd_recovery::FeedbackSendResult::Accepted){
+                if let Some(slot)=e.cold_ready_probe.as_ref(){
+                    // Never erase a newer, different authenticated probe.
+                    let _=slot.compare_exchange(nonce,0,
+                        Ordering::AcqRel,Ordering::Acquire);
+                }
+                eprintln!("WBD_LINUX_COLD_READY_ACK_COPIED source=original_m3_unique_probe original_m4_cipher=1");
+            }
+        }
         if e.native_retire_notice_inflight{
             e.native_retire_notice_inflight=false;
             e.native_retire_notice_attempts=e.native_retire_notice_attempts.saturating_add(1);
@@ -7849,6 +7894,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             e.native_health_policy,loop_now().0));
         e.native_health_evidence=Some(Arc::new(
             crate::v4_native_health::AuthenticatedActivity::default()));
+        // One generation-scoped atomic mailbox. RX only stores after
+        // authentic/unique M3 open; TX seals with the existing PN allocator.
+        e.cold_ready_probe=Some(Arc::new(AtomicU64::new(0)));
     }
     let normal=match e.normal.take(){Some(n)=>n,None=>return BAD_STAGE};
     let mut original_rx=match e.owner.detach_background_rx(normal){
@@ -7891,6 +7939,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let raw_sack_tx=Arc::clone(e.raw_tx.as_ref().expect("original raw tx opened"));
     #[cfg(feature="fec2_product_record")]
     let rx_health_evidence=e.native_health_evidence.as_ref().map(Arc::clone);
+    #[cfg(feature="fec2_product_record")]
+    let rx_cold_ready=e.cold_ready_probe.as_ref().map(Arc::clone);
     let generation=e.generation;
     // Diagnostic-only, opt-in, at most 2 timestamps/sec per worker.
     // No new per-packet atomics, locks, blocking IO or production behavior.
@@ -8004,7 +8054,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     #[cfg(feature="fec2_product_record")]
                     original_outer_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]
-                    rx_health_evidence.as_ref()
+                    rx_health_evidence.as_ref(),
+                    #[cfg(feature="fec2_product_record")]
+                    rx_cold_ready.as_ref()
                 );
                 #[cfg(feature="fec2_product_record")]
                 if let Some(t)=processing_started{
@@ -8285,6 +8337,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         // for strictly one-way data with an idle local TUN.
                         let fb=e.feedback_queued.is_none() && (
                             e.native_retire_notice_due||
+                            (!e.shared_tun.as_ref().is_some_and(|sh|
+                                sh.publish_pending)&&
+                            e.cold_ready_probe.as_ref().is_some_and(|slot|
+                                slot.load(Ordering::Acquire)!=0))||
                             e.quality_tx.as_ref().is_some_and(|tx|tx.due(now))||
                             e.quality_rx.as_ref().is_some_and(|q|
                                 q.lock().ok().is_some_and(|rx|rx.has_report()))||
