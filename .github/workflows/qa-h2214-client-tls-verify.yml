@@ -35,6 +35,9 @@ jobs:
         run: |
           set -euo pipefail
           bash tools/m0_plan029_linux_dual_native_build.sh > h2214-linux-build.log 2>&1 || { tail -n 150 h2214-linux-build.log; exit 1; }
+          # The full native build script owns its exported CGO flags; restore them for the separate H2214 Go tests.
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
           (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestH2214' ./internal/v4productcli)
           (cd legacy && go test -count=1 -run '^TestH2214ClientTLSCertificateValidationPolicy$' ./internal/realityfront)
           test -s linux-plan029-public-bundle/wbd-v4-client
@@ -89,7 +92,11 @@ jobs:
           $dir=(Resolve-Path delivery/windows-amd64).Path
           $p=Start-Process -FilePath (Join-Path $dir 'WBD.exe') -ArgumentList '--self-test' -WorkingDirectory $dir -Wait -PassThru
           $receipt=Get-Content (Join-Path $dir 'gui-test-result.json') -Raw|ConvertFrom-Json
-          if($p.ExitCode -ne 0 -or $receipt.result -ne 'PASS' -or $receipt.source_sha -ne $env:GITHUB_SHA){throw 'real GUI self-test FAIL'}
+          if($p.ExitCode -ne 0 -or $receipt.result -ne 'PASS' -or $receipt.source_sha -ne $env:GITHUB_SHA){
+            Write-Host ('H2214_GUI_SELFTEST_FAILURE: '+$receipt.error)
+            Write-Host ('H2214_GUI_PASS_CHECKS_COUNT: '+@($receipt.checks).Count)
+            throw 'real GUI self-test FAIL'
+          }
           $catalog=Get-Content (Join-Path $dir 'PARAMETERS.json') -Raw|ConvertFrom-Json
           if($catalog.targets.'client-windows'.'tls-verify-server'.default_expression -ne 'false'){throw 'GUI default not OFF'}
           Write-Host ('H2214_GUI_REAL_SELFTEST_PASS '+@($receipt.checks).Count)
