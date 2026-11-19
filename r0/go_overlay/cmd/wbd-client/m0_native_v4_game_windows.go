@@ -9,6 +9,7 @@ import(
  "context"
  "crypto/rand"
  "encoding/binary"
+ "encoding/json"
  "errors"
  "fmt"
  "net/netip"
@@ -24,6 +25,22 @@ import(
 // race the same second as the 1Hz M4 MTU/Health ticker. A canceled OS
 // LiveReceipt returns (0,context.Canceled), not a real native MTU drift.
 // Keep the original 1Hz fail-closed check when the owner remains live.
+
+func m0WindowsGameQualitySnapshot(grade uint8,data string){
+ var snapshot struct{
+  Tx uint64 `json:"tx_records"`
+  Rx uint64 `json:"rx_first_delivered_ipv4"`
+ }
+ if json.Unmarshal([]byte(data),&snapshot)!=nil{return}
+ if grade==0{
+  m0WindowsPrintQualityV2("off","off",snapshot.Tx,snapshot.Rx)
+ }else if grade<=7{
+  profile:=m0WindowsQualityProfileName(int(grade)-1)
+  m0WindowsPrintQualityV2("applied-"+profile,"negotiated-"+profile,
+   snapshot.Tx,snapshot.Rx)
+ }
+}
+
 func m0WindowsGameRuntimeMTUDrift(ctx context.Context,expected,actual uint32,readErr error)error{
  if ctx.Err()!=nil{return nil}
  if readErr==nil&&actual==expected{return nil}
@@ -358,7 +375,9 @@ outer:
     runtimeErr=drift
     break outer
    }
-   fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+packet.Stats())
+   snapshot:=packet.Stats()
+   m0WindowsGameQualitySnapshot(fecMode,snapshot)
+   fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+snapshot)
   }
  }
  stopErr:=stop()

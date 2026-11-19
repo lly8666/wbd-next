@@ -482,3 +482,23 @@ func TestH2223InitialColdRetryOnlyBeforeRustM4ForTransientOriginalTransport(t *t
   t.Fatal("untagged post-TLS timeout must not be retried")
  }
 }
+
+func TestH2224ActualNativeQualityFecDirectionsAndUnknownNotZero(t *testing.T){
+ // Normal is truly off in both directions, no fake quality.
+ if tx,rx:=m0WindowsQualityStatuses(m0WinModeNormal,"",false,m0NativeV4PacketStats{});tx!="off"||rx!="off"{
+  t.Fatalf("off mismatched TX/RX %s %s",tx,rx)
+ }
+ sample:=m0NativeV4PacketStats{}
+ tx,rx:=m0WindowsQualityStatuses(m0WinModeFixed,"strong",false,sample)
+ if tx!="pending"||rx!="negotiated-strong"{t.Fatalf("cold fixed status %s %s",tx,rx)}
+ tx,rx=m0WindowsQualityStatuses(m0WinModeFixed,"strong",true,sample)
+ if tx!="applied-strong"||rx!="negotiated-strong"{t.Fatalf("verified fixed TX %s RX %s",tx,rx)}
+ sample.AutoPending=true
+ tx,rx=m0WindowsQualityStatuses(m0WinModeAuto,"",false,sample)
+ if tx!="pending"||rx!="unknown"{t.Fatalf("pending auto %s %s",tx,rx)}
+ sample.AutoPending=false
+ sample.AutoAppliedRevision=2
+ sample.AutoDesiredProfile=realityfront.FecV2High
+ tx,rx=m0WindowsQualityStatuses(m0WinModeAuto,"",false,sample)
+ if tx!="applied-high"||rx!="unknown"{t.Fatalf("applied C2S auto cannot invent S2C %s %s",tx,rx)}
+}

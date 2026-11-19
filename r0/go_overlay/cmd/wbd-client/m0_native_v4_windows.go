@@ -1189,6 +1189,10 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if diagnostic{interval=time.Second}
  metricsTicker:=time.NewTicker(interval)
  defer metricsTicker.Stop()
+ // Low-frequency live GUI status, independent of optional heavy debug JSON.
+ // This invokes the existing Rust readback (not a DATA packet callback).
+ qualityTicker:=time.NewTicker(2*time.Second)
+ defer qualityTicker.Stop()
  var runtimeErr error
 waitNative:
  for{
@@ -1207,6 +1211,16 @@ waitNative:
     fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=%d profile=%d\n",
      state.RequestedRevision,state.Desired)
    }
+  case <-qualityTicker.C:
+   if e:=transport.RefreshEffective(ctx);e!=nil{
+    runtimeErr=fmt.Errorf("native GUI quality owner readback: %w",e)
+    break waitNative
+   }
+   sample:=transport.Stats()
+   installed:=false
+   if p,ok:=transport.(*m0WinRustNativePeer);ok{installed=p.fixedInstalledReported}
+   tx,rx:=m0WindowsQualityStatuses(o.Mode,o.FEC2Profile,installed,sample)
+   m0WindowsPrintQualityV2(tx,rx,sample.TxPackets,sample.RxFirstDelivered)
   case <-metricsTicker.C:
    actualMTU,mtuErr:=product.RuntimeMTU(ctx)
    if mtuErr!=nil||actualMTU!=o.TunnelMTU{
@@ -1249,6 +1263,48 @@ waitNative:
  }
  fmt.Println("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
  return runtimeErr
+}
+
+
+// H2224: the GUI receives a bounded read-only STATUS from the SAME Rust owner.
+// It never infers S2C adaptive FEC from C2S, or absence of a sample as zero loss.
+func m0WindowsQualityProfileName(n int)string{
+ switch n{
+ case 0:return "light"
+ case 1:return "mild"
+ case 2:return "medium"
+ case 3:return "balanced"
+ case 4:return "high"
+ case 5:return "strong"
+ case 6:return "maximum"
+ }
+ return "unknown"
+}
+func m0WindowsQualityStatuses(mode m0WindowsV4Mode,
+ selected string,installed bool,s m0NativeV4PacketStats)(tx,rx string){
+ switch mode {
+ case m0WinModeNormal:
+  return "off","off"
+ case m0WinModeFixed:
+  switch selected {
+  case "light","mild","medium","balanced","high","strong","maximum":
+   if installed{return "applied-"+selected,"negotiated-"+selected}
+   return "pending","negotiated-"+selected
+  }
+  return "unknown","unknown"
+ case m0WinModeAuto:
+  if s.AutoPending{return "pending","unknown"}
+  if s.AutoAppliedRevision==0||s.AutoPolicyError!=""{
+   return "unknown","unknown"
+  }
+  return "applied-"+m0WindowsQualityProfileName(int(s.AutoDesiredProfile)),"unknown"
+ default:
+  return "unknown","unknown"
+ }
+}
+func m0WindowsPrintQualityV2(tx,rx string,txCopied,rxDelivered uint64){
+ fmt.Printf("WBD_CLIENT_QUALITY_V2 rtt_ms=unknown loss_pct=unknown tx_ipv4=%d rx_ipv4=%d fec_c2s=%s fec_s2c=%s\n",
+  txCopied,rxDelivered,tx,rx)
 }
 
 func m0WindowsV4Profile(name string)(realityfront.FecV2Profile,error){
