@@ -7,6 +7,9 @@ on:
       - 'crates/wbd-platform/src/rx_ipv4_tcp.rs'
       - 'crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
       - 'r0/go_overlay/internal/v4productcli/game_linux.go'
+      - 'r0/go_overlay/internal/realityfront/admission_v4.go'
+      - 'r0/go_overlay/internal/realityfront/admission_v4_test.go'
+      - 'r0/go_overlay/internal/realityfront/v4_tls_handshake_contract_test.go'
       - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
       - 'tools/h2216-routed-double-nat-native.sh'
       - 'docs/features/entries/tls-auth-multiclient.json'
@@ -57,6 +60,13 @@ jobs:
         run: |
           set -euo pipefail
           cargo +1.85.1 test --locked -p wbd-platform --lib h2216_public_nat_ttl_tests -- --nocapture
+      - name: Verify actual Linux V4 Normal/Game protected TLS certificate switch
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestH2216RealV4TLSCertificateVerifySwitch$' ./internal/realityfront)
       - name: Stage ARM64 field-trial binaries after exact-source native build and TTL unit PASS
         shell: bash
         run: |
@@ -149,6 +159,9 @@ jobs:
             go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0WindowsGameFecProtectedExtensionBounds$' ./internal/realityfront
             if($LASTEXITCODE -ne 0){throw 'H2216 strict V2 FEC/padding negative regression failed'}
             go test -count=1 -tags wbd_v4_embedded_go -run '^TestH2202' ./internal/realityfront
+          if($LASTEXITCODE -ne 0){throw 'H2202 original encrypted wire tests failed'}
+          go test -count=1 -tags wbd_v4_embedded_go -run '^TestH2216RealV4TLSCertificateVerifySwitch$' ./internal/realityfront
+          if($LASTEXITCODE -ne 0){throw 'H2216 actual Windows V4 TLS policy OFF/ON failed'}
             if($LASTEXITCODE -ne 0){throw 'H2202 encrypted control version and crypto-padding tests failed'}
           } finally {Pop-Location}
       - name: Build official pinned ISA-L MSVC native static dependency
