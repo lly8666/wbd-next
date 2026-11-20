@@ -133,5 +133,33 @@
   "test_fixture_corrections": "Corrected netns BBR readback; reused Tailnet TCP18727; final Tailscale ping (not early DERP); never short-circuit cold handshake solely due sudo launcher process PID (use root-owned actual native PID). Requires another run.",
   "physical_windows_npcap_xray_1gbps": "NOT_RUN",
   "physical_3s_upstream_crash": "NOT_RUN",
-  "same_source_product_code_changed": false
+  "same_source_product_code_changed": false,
+  "post_h2229_ack_compatible": {
+    "current_main_source": "975c8f5ea5278af4a1b56649be8cda9b6eb16f69",
+    "h2229_4_native_jobs_action": 44727976115,
+    "status": "H2228_THREE_RUNNER_RETEST_ON_NEW_ACK_SOURCE_NOT_YET_PERFORMED",
+    "old_h2228_results_must_not_be_claimed_new_ack": true,
+    "second_real_three_runner_old_source": {
+      "run_id": 44708081108,
+      "source_sha": "f696bf938262bf6da75213f78811c8b61030a710",
+      "network": "TRUE_3_INDEPENDENT_LINUX_GH_RUNNERS_ARM64_KERNEL_L3_ROUTE_BUT_BOTH_TAIL_PATHS_DERP",
+      "clear_0pct_0ms_direct_8flow_upload_mbps": 19.572,
+      "clear_0pct_0ms_direct_8flow_download_mbps": 19.836,
+      "case_count": 27,
+      "iperf_success_count": 24,
+      "tcp_errors": 3,
+      "failed_cases": [
+        "10pct_WBD_tcp_3s_one_stream_upload",
+        "20pct_direct_kernel_tcp_20s_four_stream_upload",
+        "20pct_WBD_tcp_20s_four_stream_upload"
+      ],
+      "capacity_comparison": "INFRA_UNQUALIFIED_BECAUSE_DERP_AND_CLEAR_BASELINE_BELOW_800",
+      "artifacts": {
+        "summary": 14617351515,
+        "client": 14616647584,
+        "arm_relay": 14617191402
+      }
+    },
+    "next": "H2228 source merge main H2229 ACK10 then launch real 3-runner, preserve direct/DERP and success/failure truth."
+  }
 }

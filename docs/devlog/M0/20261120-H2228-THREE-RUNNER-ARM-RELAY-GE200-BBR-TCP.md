@@ -49,3 +49,11 @@ Actions → `H2228 Three distinct runners routed ARM relay 200ms one-way 1-20% r
 - ARM 到服务端 `tailscale ping` 第一条经 `DERP(dfw)` 101ms，随后打洞成功 direct `20.221.60.81:14344` 8ms；ARM到客户端direct24ms。第一版夹具只要在**任何**历史pong里看见DERP就将当前基线错误标成INFRA_UNQUALIFIED。已修复为**最后一条真实pong**判断direct候选，再结合双向848/862Mbps基线验证中继并非固定80Mbps瓶颈；direct候选不是未来每一秒物理路径都被保证。
 - 1%/20% WBD早退客户端原始日志只有 `PATH_CANDIDATE` 然后在同一秒 `Stop`，服务器也未见相应认证会话。夹具旧版检查的是 `sudo` 启动器后台pid而非root-owned原生WBD pid，可能让冷认证被误判死亡并主动SIGTERM；已修为独立 PID文件的**真实 root-owned native 进程**读回 `sudo kill -0`，并保持完整40+秒冷建链等待，再跑后续的真实实验。不能把这两次误断直接认定产品本身的20%不可建链，也不能保证改夹具就解决用户的Windows实体断链。
 - 在真实三机全流量已经测到的情况下，仍应区分“正常 WBD RTT/损失对应业务上限低于同条件标准 BBR TCP”与“原用户实体80Mbps固定限速”，前者真实在这次发生，后者尚无实体复现或唯一根因。机读源锁定证据 `docs/evidence/M0/PLAN029-H2228-THREE-ARM-RELAY-GE200-REAL-TCP-20261120.json`。
+
+## H2230 追测最新 H2229 ACK — 从主线源锁定合入（先证据后判定）
+
+- H2229 10ms 双向 authenticated presentation ACK/Windows SACK 与 Linux 稳态窗口65535 已在 main `975c8f5ea5278af4a1b56649be8cda9b6eb16f69`，Source-locked Action `44727976115` Windows MSVC DLL、Linux x86_64/ARM64 原 Go TLS+Rust M4 4/4 PASS。无需也不得再次修改原产品 ACK、业务乱序交付、Health90、FEC、外层重传或恢复逐包 M2。
+- H2228 本分支之前仍是 H2229 **之前**的源码，早期 200ms/丢包结果仅证明旧 ACK；将本分支通过真实双亲 merge 合到当前 main 树（保留本分支7个夹具/文档文件，别名不改产品文件），H2228 static 同时执行 `tests.test_m0_h2229_native_ack_unified`，再由 3 Runner 构建**真正新的源码 SHA**测 H2229 语义。不能将历史测速自动升级为“已用 ACK10”。
+- [Action 44708081108](https://github.com/lly8666/wbd-next/actions/runs/44708081108) 旧 ACK 分支源码 `f696bf938262bf6da75213f78811c8b61030a710`：ARM64 真 Linux 3层路由、两 x86 Go TLS Rust、真实 BBR/iperf，12/12 direct、15/15 WBD case均有原始 JSON，**24/27 iperf 成功、3 条 TCP ERROR**（10% WBD 3秒、20% direct 20秒上行、20% WBD 20秒上行）。
+- 同次配置0ms/0% 8流 direct 双向仅 **19.572/19.836 Mbps**，ARM tail ping 两段最终仍 DERP，明确 INFRA_UNQUALIFIED，**任何低速不能用于断言 WBD 80Mbps 硬上限**。但全部真实应用连接/失败和 200ms 线路的真实性保留，不能误写纯夹具PASS。原 artifact `h2228-client-result` ID `14617351515`、client-diag `14616647584`、ARM-relay `14617191402`。
+- 本次 H2230 后续动作：在真正新产品 ACK10 源码上重跑真实3 Runner，必须检查0ms直连能力和尾网是否direct，若DERP仍标基础设施不合格；高损伤TCP错误按 native worker/Go TLS/iperf 原始 stderr 分类，严禁自动说明程序崩溃。Windows Npcap实体3秒故障仍 OPEN。

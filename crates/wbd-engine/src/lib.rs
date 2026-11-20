@@ -16,6 +16,10 @@ mod v4_native_health;
 /// M0 one-owner adapter around frozen M1 GameTx/Rx with per-lane AEAD/PN.
 /// Not a public Go product grant until real lanes are bound.
 mod v4_game_lane;
+// H2229 authenticated cosmetic Game ACK parity across native Windows/Linux.
+// No per-record receipt and no modification to original outer repair policy.
+#[cfg(feature="fec2_product_record")]
+mod v4_presentation_ack;
 #[cfg(feature="fec2_product_record")]
 mod v4_game_fec;
 // Sparse immutable outer TCP appearance only; shared by original Game FEC

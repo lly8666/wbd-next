@@ -29,3 +29,7 @@ Client GitHub Ubuntu x86_64：owned `h228node/wan0=10.248.81.2/24` → 同 Sourc
 - 完整通过 `PASS_REAL_THREE_RUNNER_TCP_MATRIX` 表示所述业务样本全部跑完，**不代表业务达到1Gbps**；`FAIL_INCOMPLETE_THREE_RUNNER_TCP_MATRIX` 列出具体缺失case且保留有效样本；`FAIL_REAL_THREE_RUNNER_TCP_OR_WBD_COLD` 表示真实上行、认证或Tcp报错。若拿不到 summary，必须先排除授权、Netns、Control、调度、构建或其他夹具故障，不能冒充产品测速。
 
 **当前物理缺口：Windows Npcap 对 Linux 服务器的早期崩溃和同线路 xray 1Gbps 是用户实体观察；本实验只涉及三个Linux GH Runner、Tailscale/VXLAN、真实原始Go TLS/Rust M4，无法直接证实其Windows特有根因。**
+
+## ACK10 最新主线复测门槛
+
+H2229 main ACK10/65535 真实原产品 Windows/Linux Native 测试已完成。H2228 早期测速都来自其之前的源码，不可冒充已测试新版 ACK。H2228 最新源码在每次静态检查中同时跑 `tests.test_m0_h2229_native_ack_unified`，手动/开发分支真实三机都各自按新 `GITHUB_SHA` 构建原始 Go TLS/Rust M4；把三机新实验与旧 ACK/旧 DERP 数据分开保存。真实跨机环境可能因 Tailscale DERP 从800Mbps下降到20Mbps，必须优先看两段 direct 和0ms双向基线，再看200ms GE1/5/10/20% WBD/直连数据，且真实 TCP 测试错误不等于进程崩溃。

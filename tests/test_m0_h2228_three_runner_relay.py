@@ -162,6 +162,16 @@ class H2228ThreeGenuineMachines(unittest.TestCase):
             self.assertTrue(result["relay_capacity_qualification"].startswith("INFRA_"))
             self.assertEqual(result["status"],"PASS_REAL_THREE_RUNNER_TCP_MATRIX")
 
+    def test_ack10ms_h2229_is_current_source_not_stale_pre_ack(self):
+        ack=ROOT/'crates/wbd-engine/src/v4_presentation_ack.rs'
+        self.assertTrue(ack.exists(),'H2229 common presentation ACK missing: stale product branch')
+        src=ack.read_text()
+        self.assertIn('ACK_ONLY_MIN_INTERVAL_NS:u64=10_000_000',src)
+        self.assertIn('STEADY_TCP_WINDOW:u16=65_535',src)
+        self.assertIn('real_out_of_order',src)
+        wf=(ROOT/'.github/workflows/qa-h2228-three-runner-arm-relay-ge200.yml').read_text()
+        self.assertIn('tests.test_m0_h2229_native_ack_unified -v',wf)
+
     def test_relay_snapshots_cannot_masquerade_as_iperf_cases(self):
         shell=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
         self.assertIn('if [[ "$label" == case-* ]];then label="relay-receipt-$label";fi',shell)
