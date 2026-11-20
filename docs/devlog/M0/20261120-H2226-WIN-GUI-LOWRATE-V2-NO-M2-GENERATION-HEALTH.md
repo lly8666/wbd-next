@@ -15,12 +15,12 @@
 ## H2226 变更范围与验证边界
 
 - Go：`m0_native_v4_rust_peer_windows.go` 仅运行时 GUI 粗粒度 readback，读取已认证质量累积计数，无 M2 per-record、无热路径回调；`m0_native_v4_peer_windows.go` 扩展只读 stats；`m0_native_v4_windows.go` 输出版本化 Quality V2 的数值或 unknown。
-- WinForms：`tools/m0_plan028_h1640_win_gui_compile.ps1` 对锁定 donor MainForm 加版本V2导入和真实GUI自检用例，旧V1保留；Windows原生 GUI 仍由同源构建与 self-test 检查。
+- WinForms：`tools/m0_plan028_h1640_win_gui_compile.ps1` 保留既有 manifest 装配 V2 的双向 FEC/发送/回注和旧 V1，只将认证低频 Quality 估算值填入原 V2 质量栏并增加真实 GUI 自检；不新增第二套解析。
 - `r0/go_overlay/assembly/manifest-plan020-m0.json` 只对四个受影响 Go overlay/result blob SHA 做精确更新；原 Go/TLS/密钥/驱动资产不改变。
 - 这不是断链修复。没有服务端代码更新或新网络协议；H2225 终止 cause 及 Linux 服务端同期记录仍是区分异常代际的必要证据。H2220旧物理FAIL不改写。PLAN029正式出口 OPEN。
 - 迭代证据：Action [44668277001](https://github.com/lly8666/wbd-next/actions/runs/44668277001) Windows Go 编译因未保留 Game 旧函数签名 FAIL；[44668644829](https://github.com/lly8666/wbd-next/actions/runs/44668644829) Windows Rust/Go PASS 后 GUI 新解析变量作用域编译 FAIL；[44669369282](https://github.com/lly8666/wbd-next/actions/runs/44669369282) Windows GUI 可编译，实测 self-test 388 项后因新 parser 覆盖已有 V2 双向语义 FAIL。三个行动的 Linux ARM64 同源码 NAT/TUN/Stop 分支均 SUCCESS。最新代码仅在已有 V2 分支内接低频数据，后继 Actions 44671258239 验证中。**这些 FAIL 保留，不假称全绿。**
-- 本记录在CI前写入：**Windows真GUI/Go/Rust 运行测试 PENDING、物理双端长稳 NOT_RUN**。验证结果应在正式 Actions 完成后单独追加证据，不凭代码更改宣布 PASS。
+- 同源码 [H2226 Action 44671258239](https://github.com/lly8666/wbd-next/actions/runs/44671258239) **2/2 SUCCESS**：Windows 原 Go CLI + Rust DLL/ISA-L 及三套 TLS、真 WinForms GUI **432/432**；Linux ARM64 原 Go TLS/Rust M4、双 NAT/TUN 三客户端/Stop PASS。源码 `7c01f30196c69f94b7ca19aed6035f82f5d191f7`，后续 `2666db...` 仅修文档；此 CI 不代表真正 Windows↔Linux WAN 长期稳定或 Auto S2C 实收档位。H2226 经 PR #51 合入主线 `88b49211d9a48b96774a8d616d2626166b031c48`，feature card 压缩后 UTF8 16,310B，不改业务源码。
 
 ```feature-impact
-{"kind":"updated","reason":"H2226 fixes native WinForms V2 quality parsing and adds approximate Auto low-frequency authenticated quality readback without restoring per-record M2 or changing protocol/Health.","ids":["gui-config-feedback"]}
+{"kind":"updated","reason":"H2226 extends the existing manifest-assembled WinForms V2 quality display with mature authenticated low-rate estimate; no per-record M2, protocol or Health policy changes.","ids":["gui-config-feedback"]}
 ```
