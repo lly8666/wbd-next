@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2228",
+  "date": "2026-11-20",
+  "source_sha": "2a2f809592856411daa70b3c043b2f6430774ce8",
+  "run_id": 44705243325,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44705243325",
+  "result": "ACTUAL_THREE_DISTINCT_NATIVE_RUNNERS_AND_REAL_TCP_SAMPLES; FULL_MATRIX_FAIL",
+  "topology": {
+    "client": "independent_ubuntu24_x86_64",
+    "middle": "independent_ubuntu24_arm64_2x_vxlan_kernel_L3_router",
+    "server": "independent_ubuntu24_x86_64",
+    "vxlan_client_id": 2281,
+    "vxlan_server_id": 2282,
+    "ipv4_forwarding": true,
+    "nat": false,
+    "actual_end_to_end_ping_ttl": 63,
+    "owner": "original Go TLS Rust M4 kernel TUN AF_PACKET",
+    "tailscale": "Authenticated_3_ephemeral_tag_ci_GH_OIDC",
+    "initial_tail_peer_ping": "server first DERP then DIRECT via 20.221.60.81:14344 in 8ms; client direct via 51.8.190.56:51336 in 24ms",
+    "model_initial_qualification": "incorrectly conservative because parser searched ANY DERP instead of FINAL pong; corrected in H2228 follow-up"
+  },
+  "original_artifacts": {
+    "client_result": {
+      "id": 14614499675,
+      "name": "h2228-client-result"
+    },
+    "client_evidence": {
+      "id": 14615222767,
+      "name": "h2228-x86-client-evidence"
+    },
+    "relay_evidence": {
+      "id": 14614898374,
+      "name": "h2228-arm-relay-evidence"
+    },
+    "server_evidence": {
+      "id": 14615232364,
+      "name": "h2228-x86-server-evidence"
+    }
+  },
+  "netem": {
+    "host": "ARM64_router_only",
+    "egress": [
+      "rcli0",
+      "rsrv0"
+    ],
+    "added_one_way_delay_ms": 200,
+    "normal_jitter_ms": 15,
+    "correlation": 0.25,
+    "tc_loss_model": "gemodel",
+    "mean_bad_state_burst_packets": 4,
+    "good_state_drop_probability": 0.001,
+    "bad_state_drop_probability": 0.9,
+    "target_packet_loss_pct": [
+      0,
+      1,
+      5,
+      10,
+      20
+    ],
+    "qdisc_limit_packets": 65536,
+    "rate_cap": "NONE",
+    "sample_final_20pct_client_egress_drops_cumulative": 41838,
+    "sample_final_20pct_server_egress_drops_cumulative": 44607,
+    "note": "cumulative end drops span all phase shapes and must NOT be read as 20pct actual"
+  },
+  "baseline_0ms_zero_loss_direct_8parallel_mbps": {
+    "upload": 848.551,
+    "download": 861.757
+  },
+  "business_200ms_added_one_way_20sec_4parallel_mbps": [
+    {
+      "loss_pct": 0,
+      "observed_ping_rtt_ms": 443.032,
+      "direct_up": 501.313,
+      "wbd_up": 305.804,
+      "direct_down": 403.283,
+      "wbd_down": 258.27,
+      "three_sec_wbd_uplink": 188.737
+    },
+    {
+      "loss_pct": 1,
+      "observed_ping_rtt_ms": 439.856,
+      "direct_up": 181.347,
+      "wbd_up": null,
+      "direct_down": 123.785,
+      "wbd_down": null,
+      "three_sec_wbd_uplink": null
+    },
+    {
+      "loss_pct": 5,
+      "observed_ping_rtt_ms": 421.246,
+      "direct_up": 92.955,
+      "wbd_up": 73.82,
+      "direct_down": 71.253,
+      "wbd_down": 23.069,
+      "three_sec_wbd_uplink": null
+    },
+    {
+      "loss_pct": 10,
+      "observed_ping_rtt_ms": 414.987,
+      "direct_up": 43.726,
+      "wbd_up": 7.812,
+      "direct_down": 15.257,
+      "wbd_down": 12.845,
+      "three_sec_wbd_uplink": 5.593
+    },
+    {
+      "loss_pct": 20,
+      "observed_ping_rtt_ms": 426.66,
+      "direct_up": 1.94,
+      "wbd_up": null,
+      "direct_down": 2.864,
+      "wbd_down": null,
+      "three_sec_wbd_uplink": null
+    }
+  ],
+  "exact_failed_business_cases": [
+    "WBD at 1pct and20pct source cold client not READY; no valid business TCP samples for these phases",
+    "WBD at 5pct real 3sec single stream iperf control socket closed unexpectedly",
+    "12 direct cases captured, expected15 WBD business cases 6 missing; 23 case result files including 2 cold error cases"
+  ],
+  "original_client_0pct_native_stop": {
+    "raw_tun_delivered": 1269839,
+    "original_outer_first_wire_bytes": 945961869,
+    "original_outer_repair_accepted_bytes": 13859200,
+    "real_first_copies": 1250111,
+    "outer_policy": "UNCHANGED_ENABLED",
+    "tun_queue_full_drops": 10110
+  },
+  "test_fixture_corrections": "Corrected netns BBR readback; reused Tailnet TCP18727; final Tailscale ping (not early DERP); never short-circuit cold handshake solely due sudo launcher process PID (use root-owned actual native PID). Requires another run.",
+  "physical_windows_npcap_xray_1gbps": "NOT_RUN",
+  "physical_3s_upstream_crash": "NOT_RUN",
+  "same_source_product_code_changed": false
+}

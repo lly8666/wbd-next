@@ -65,6 +65,21 @@ class H2228ThreeGenuineMachines(unittest.TestCase):
         self.assertIn("H2228_RELAY_CONTROL_NOT_REACHABLE_REAL_NOT_RUN",shell)
         self.assertIn("relay_http_ready=0",shell)
 
+    def test_first_derp_then_direct_is_not_mislabeled_a_permanent_relay(self):
+        ping=("pong from h228-peer (100.99.1.8) via DERP(dfw) in 101ms\n"
+              "pong from h228-peer (100.99.1.8) via 20.221.60.81:14344 in 8ms\n")
+        self.assertEqual(H.classify_final_tail_ping(ping,0),"DIRECT_CANDIDATE")
+        self.assertEqual(H.classify_final_tail_ping(ping.splitlines()[0],0),
+                         "DERP_OR_RELAY_INFRA_LIMIT")
+        self.assertEqual(H.classify_final_tail_ping(ping,1),"UNKNOWN_NOT_QUALIFIED")
+
+    def test_cold_ready_wait_must_check_real_root_worker_pid_not_sudo_parent(self):
+        shell=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
+        self.assertIn('sudo -n kill -0 "$owned_pid"',shell)
+        self.assertNotIn('if ! kill -0 "$parent" 2>/dev/null;then break',shell)
+        self.assertIn('rm -f "$pidfile"',shell)
+        self.assertIn('H2228_NATIVE_WORKER_EXIT_BEFORE_COLD_READY',shell)
+
     def test_stationary_mean_and_ge_real_burst_sensitivity(self):
         for loss in (1.0,5.0,10.0,20.0):
             ge=H.ge_params(loss)

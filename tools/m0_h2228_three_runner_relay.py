@@ -392,6 +392,20 @@ def iperf(kind,duration,streams,direction,out):
     return record
 
 
+
+def classify_final_tail_ping(raw,rc):
+    """DERP can be used for the FIRST ping while NAT hole punching resolves.
+    Use last actual reply, never 'DERP appeared anywhere' as false cap proof.
+    A direct last reply is a candidate only; compare clean BBR throughput.
+    """
+    lines=[x.strip() for x in raw.splitlines() if x.strip().startswith("pong from ")]
+    if not lines or rc!=0:return "UNKNOWN_NOT_QUALIFIED"
+    last=lines[-1]
+    if "via DERP" in last:return "DERP_OR_RELAY_INFRA_LIMIT"
+    if re.search(r"via (?:[0-9]{1,3}\.){3}[0-9]{1,3}:[0-9]+",last):
+        return "DIRECT_CANDIDATE"
+    return "UNKNOWN_NOT_QUALIFIED"
+
 def expected_cases(model):
     guard(model in ("iid","burst"),"CASE_MODEL")
     exp={

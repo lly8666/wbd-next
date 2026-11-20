@@ -41,14 +41,14 @@ relay_start(){
   python3 "$TOOL" relay-snapshot cold "$OUT/relay-cold.json"
   python3 - "$OUT" <<'PY'
 import json,pathlib,subprocess,sys
+from tools.m0_h2228_three_runner_relay import classify_final_tail_ping
 out=pathlib.Path(sys.argv[1])
 for role in ("client","server"):
  p=json.load(open("h2228-peer/"+role+".json"))
  result=subprocess.run(["tailscale","ping","--c","4",p["tail_ip"]],
                        capture_output=True,text=True,timeout=30)
  raw=result.stdout+result.stderr
- label="DERP_OR_RELAY_INFRA_LIMIT" if "derp" in raw.lower() else (
-    "DIRECT_CANDIDATE" if result.returncode==0 else "UNKNOWN_NOT_QUALIFIED")
+ label=classify_final_tail_ping(raw,result.returncode)
  (out/("tail-to-"+role+".json")).write_text(json.dumps({
  "role":role,"tail_path":label,"raw_tail_ping":raw[-700:],"rc":result.returncode},indent=2)+"\n")
 PY
@@ -190,6 +190,7 @@ client_run(){
     local pidfile="$TMP/client.pid"
     local localport="$((44100+2*scenario_index))"
     scenario_index=$((scenario_index+1))
+    rm -f "$pidfile"
     spawn "$pidfile" env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-client" \
       --raw-interface wan0 --local-ip 10.248.81.2 \
       --local-port "$localport" --peer-ip 10.248.82.2 --peer-port 443 \
@@ -208,7 +209,16 @@ client_run(){
         if [[ "$lease" == 10.66.0.* ]] &&
            sudo -n ip netns exec "$NS" ip link show wbdc0 >/dev/null 2>&1;then ready=1;break;fi
       fi
-      if ! kill -0 "$parent" 2>/dev/null;then break;fi
+      # sudo's launcher PID is not the real Go/Rust worker: it can
+      # exit/reparent while its root-owned child continues cold TLS.
+      # Never send SIGTERM solely because the parent shell job exited.
+      if [[ -s "$pidfile" ]];then
+        owned_pid="$(cat "$pidfile")"
+        if ! sudo -n kill -0 "$owned_pid" 2>/dev/null;then
+          echo "H2228_NATIVE_WORKER_EXIT_BEFORE_COLD_READY $label" |tee -a "$OUT/failures.log"
+          break
+        fi
+      fi
       sleep .25
     done
     if [[ "$ready" == 1 ]];then
@@ -238,7 +248,7 @@ PY
     fi
     if [[ -s "$pidfile" ]];then sudo -n kill -TERM "$(cat "$pidfile")" 2>/dev/null || true;fi
     for i in $(seq 1 80);do
-      if ! kill -0 "$parent" 2>/dev/null;then break;fi
+      if [[ -s "$pidfile" ]] && ! sudo -n kill -0 "$(cat "$pidfile")" 2>/dev/null;then break;fi
       sleep .1
     done
     # Rust FEC actual grade is ONLY emitted on Stop; not before first TCP.
