@@ -20,3 +20,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A32用户API36真机已到原TUN/RAW/SYNACK候选、约15秒退出；修V2报告阶段优先级并在原Go真实Association/TLS/保护Admission多节点增加固定脱敏错误类别，保留原协议与业务资格边界。"}
 ```
+
+## A33a 首轮源锁CI失败及最小修复（保留历史）
+
+- [首次产品Action #44673857808](https://github.com/lly8666/wbd-next/actions/runs/44673857808) SOURCE `917f0282d7d4a3226db1b9c0657322a974e677c2`：原 Go/Rust ARM64 native 与初始Host门 PASS；Root APK job 在 Host Java `RootDiagnosticReportTest` 编译时报局部变量 `expected` 重名 FAIL，故该SOURCE尚无签名APK，不是实机/TLS bug。原Linux oracle以该Action自身最终Jobs结论为准，不提前绿灯。
+- [首次治理 #44673857761](https://github.com/lly8666/wbd-next/actions/runs/44673857761) 因卡片超过16KiB FAIL；[修小卡 #44674142485](https://github.com/lly8666/wbd-next/actions/runs/44674142485) 因纯功能卡修改漏**本提交**devlog feature-impact FAIL。保留两次失败，不复活旧SOURCE。
+- 修复仅将本次新Java阶段矩阵局部变量重命名为 `wantA33`，同一提交更新本devlog+小于16KiB功能卡；不改变原Go/Rust/TLS/RAW/Android生产逻辑，需用新SOURCE全部自动门证明，禁止把前述CI失败冒作实际设备FAIL。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A33新增Java Host阶段矩阵重复局部变量导致真实root-arm64-app CI失败；只修测试变量并同步本批真实旧失败、短功能卡和governance。"}
+```
