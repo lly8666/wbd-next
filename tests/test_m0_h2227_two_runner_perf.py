@@ -1,0 +1,96 @@
+"""H2227 fixture safeguards; NEVER a substitute for two real Actions VMs."""
+import importlib.util
+import json
+import pathlib
+import subprocess
+import tempfile
+import unittest
+from unittest.mock import patch
+
+ROOT=pathlib.Path(__file__).resolve().parents[1]
+FILE=ROOT/"tools/m0_h2227_dual_runner_perf.py"
+SPEC=importlib.util.spec_from_file_location("h2227",FILE)
+MOD=importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MOD)
+
+class TwoRunnerH2227(unittest.TestCase):
+    def setUp(self):
+        self.local={"source_sha":"a"*40,"run_id":"123456",
+                    "tail_ip":"100.92.7.8"}
+        self.peer={"schema_version":1,"role":"server","arch":"aarch64",
+                   "source_sha":"a"*40,"run_id":"123456",
+                   "tail_ip":"100.92.7.9",
+                   "underlay_ip":"10.247.27.1",
+                   "topology":"TS-VXLAN-L2-NATIVE-AF_PACKET",
+                   "control_token":"d"*64}
+    def test_truly_distinct_source_locked_peers(self):
+        self.assertEqual(MOD.validate_peer(self.peer,"server",self.local),"100.92.7.9")
+        for field,value in [("role","client"),("arch","x86_64"),
+                            ("source_sha","b"*40),("run_id","999999"),
+                            ("tail_ip","100.92.7.8"),
+                            ("tail_ip","8.8.8.8"),
+                            ("underlay_ip","10.247.27.2"),
+                            ("topology","SINGLE-VM"),
+                            ("control_token","public-run-id-is-not-a-secret")]:
+            bad=dict(self.peer,**{field:value})
+            with self.subTest(field=field,value=value):
+                with self.assertRaises(RuntimeError):
+                    MOD.validate_peer(bad,"server",self.local)
+    def test_bbr_token_binds_run(self):
+        a=MOD.token_for_run("a"*40,"123456")
+        self.assertNotEqual(a,MOD.token_for_run("a"*40,"123457"))
+        self.assertNotEqual(a,MOD.token_for_run("b"*40,"123456"))
+        self.assertEqual(len(a),64)
+    def test_netem_allowlist_never_shapes_management_interface(self):
+        invoked=[]
+        def fake_native(*cmd,**kwargs):
+            invoked.append(cmd)
+            return subprocess.CompletedProcess(cmd,0,
+                json.dumps([{"kind":"netem","packets":300,"drops":4}]),"")
+        with patch.object(MOD,"native",fake_native):
+            q=MOD.set_netem(0.1,5)
+            self.assertEqual(q["loss_pct"],0.1)
+            self.assertEqual(q["only_owned_veth"],"wan0")
+            self.assertTrue(q["tailscale_untouched"])
+            with self.assertRaises(RuntimeError):MOD.set_netem(80,5)
+            with self.assertRaises(RuntimeError):MOD.set_netem(1,900)
+        self.assertEqual(len(invoked),2)
+        self.assertTrue(all("wan0" in v for v in invoked))
+        self.assertTrue(all("tailscale0" not in v for v in invoked))
+    def test_unqualified_iperf_must_be_error_not_zero_mbps(self):
+        fake=subprocess.CompletedProcess(["iperf3"],1,'{"error":"connection reset"}',"")
+        with tempfile.TemporaryDirectory() as d,patch.object(MOD.subprocess,"run",return_value=fake):
+            p=pathlib.Path(d)/"case-001.json"
+            out=MOD.iperf_case("10.66.0.1",5201,3,1,False,p)
+            self.assertEqual(out["status"],"ERROR")
+            self.assertIsNone(out["business_mbps"])
+            self.assertEqual(out["direction"],"upload")
+            self.assertFalse(out["raw_baseline"])
+    def test_exact_source_report_and_full_matrix_required(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d)
+            for i in range(62):
+                MOD.write_json(root/("case-%03d.json"%i),{
+                    "status":"PASS_OBSERVED_TCP_APPLICATION",
+                    "business_mbps":100.0,
+                    "raw_baseline":i<12,
+                    "direction":"upload" if i%2 else "download"})
+            s=MOD.summary(root)
+            self.assertEqual(len(s["baseline_mbps"]),12)
+            self.assertEqual(len(s["business_mbps"]),50)
+            self.assertEqual(s["classification"],"REAL_TWO_RUNNER_APPPATH_SCOPED")
+            self.assertEqual(s["capacity_reference"],
+                "INFRA_OR_TS_LIMITED_BELOW_800MBPS_DO_NOT_ATTRIBUTE_80MBPS_TO_WBD")
+            f=root/"case-012.json"
+            r=json.loads(f.read_text());r["status"]="ERROR";r["business_mbps"]=None
+            MOD.write_json(f,r)
+            bad=MOD.summary(root)
+            self.assertEqual(bad["classification"],"FAIL_REAL_TWO_RUNNER_APPLICATION_OR_WORKER")
+            f.unlink()
+            with self.assertRaises(RuntimeError):MOD.summary(root)
+    def test_arbitrary_targets_denied_before_running_iperf(self):
+        for host,port in [("8.8.8.8",5201),("10.247.27.1",5201),
+                          ("10.66.0.1",5202)]:
+            with self.assertRaises(RuntimeError):
+                MOD.iperf_case(host,port,3,1,False,"/dev/null")
+if __name__=="__main__":unittest.main()

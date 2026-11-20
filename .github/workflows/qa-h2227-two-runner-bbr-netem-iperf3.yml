@@ -1,0 +1,290 @@
+name: 'H2227 genuine two-runner TCP business: BBR VXLAN/TS netem iperf3 upload crash and FEC-Off-v6'
+on:
+  push:
+    branches: ['fix/h2227-two-runner-bbr-netem-iperf3-uptx-fixture']
+    paths:
+      - '.github/workflows/qa-h2227-two-runner-bbr-netem-iperf3.yml'
+      - 'tools/m0_h2227_*'
+      - 'tests/test_m0_h2227_two_runner_perf.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+concurrency:
+  group: h2227-two-runner-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fixture-static:
+    name: 'H2227 fixture-only source/grammar/negative safeguards, NOT a performance result'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Python owner syntax, Bash owner syntax, peer/source fail-closed negative tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2227_dual_runner_perf.py
+          bash -n tools/m0_h2227_dual_runner_case.sh
+          python3 tools/m0_h2227_dual_runner_perf.py selftest
+          python3 -m unittest tests.test_m0_h2227_two_runner_perf -v
+          python3 - <<'PY'
+          import ast,pathlib
+          s=pathlib.Path('tools/m0_h2227_dual_runner_perf.py').read_text()
+          assert 'raw-AF_PACKET' in s and 'no fake' not in s.lower()
+          assert 'net.ipv4.tcp_congestion_control=bbr' in s
+          assert 'tailscale0' in s and 'VXLAN' in s
+          assert 'ALLOWED_LOSS=(0.0,0.1,1.0,3.0)' in s
+          assert 'client_worker_alive_after' in s
+          c=pathlib.Path('tools/m0_h2227_dual_runner_case.sh').read_text()
+          assert '--outer-repair on' in c
+          assert "3 1 upload" in c and "12 4 upload" in c
+          assert '--mode "$local_mode"' in c
+          assert 'FEC_MAX' not in c
+          print('H2227_FIXTURE_STATIC_PASS_NOT_NETWORK_NOT_PRODUCT')
+          PY
+  arm64-real-server:
+    name: 'ARM64 original TLS + Rust M4 raw-AF_PACKET genuine private WAN + netem'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Require real enrolled Tailscale OIDC, not fake single-VM peers
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD" || {
+            echo 'H2227_BLOCKED_TAILSCALE_OIDC_MISSING: configure TS_OAUTH_CLIENT_ID and TS_AUDIENCE repo secrets; tag:ci + Auth Keys Write + tailnet ACL UDP4789/TCP18727. No two-runner TCP test was run.'
+            exit 2
+          }
+      - name: Authenticated ephemeral peer in the SAME Tailscale tailnet
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h227-arm64-${{ github.run_id }}
+      - name: Publish real ARM64 Tailscale IPv4 and immutable source/run identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          mkdir -p h2227-meta
+          python3 tools/m0_h2227_dual_runner_perf.py metadata server h2227-meta/server.json
+          tailscale status --json > h2227-meta/server-tailscale.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2227-server-peer
+          path: h2227-meta/server.json
+          if-no-files-found: error
+          retention-days: 5
+      - name: Wait for DISTINCT x86 native runner metadata, never self-pair
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2227-peer
+          found=0
+          for i in $(seq 1 90);do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+              -n h2227-client-peer -D h2227-peer >/dev/null 2>&1;then found=1;break;fi
+            sleep 5
+          done
+          test "$found" = 1 && test -s h2227-peer/client.json || {
+            echo 'H2227_NO_DISTINCT_RUNNER_PEER';exit 2;
+          }
+      - name: Build SAME native original Go TLS Rust M4 ARM64 source, no stub
+        shell: bash
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 tcpdump conntrack python3 \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh > h2227-arm64-build.log 2>&1 || {
+            tail -n 180 h2227-arm64-build.log;exit 2;
+          }
+      - name: Start real native server behind isolated L2 WAN over Tailscale/VXLAN
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2227_dual_runner_case.sh server-start
+          python3 - <<'PY'
+          import json,os,pathlib
+          d=json.loads(pathlib.Path('h2227-out/topology-server.json').read_text())
+          assert d['role']=='server' and d['bbr']=='bbr'
+          pathlib.Path('h2227-out/ready.json').write_text(json.dumps({
+            'source_sha':os.environ['GITHUB_SHA'],
+            'run_id':os.environ['GITHUB_RUN_ID'],
+            'server_ready':True,'native_original_go_rust':True,
+            'real_af_packet':True,'real_tun':True,
+            'not_physical_windows':True})+'\n')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2227-server-ready
+          path: h2227-out/ready.json
+          if-no-files-found: error
+          retention-days: 5
+      - name: Hold real server and fail closed on remote x86 business result
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2227_dual_runner_case.sh server-wait
+      - name: Tear down only own tests, never tailnet/runner management
+        if: always()
+        shell: bash
+        run: |
+          if test -s linux-plan029-public-bundle/wbd-v4-server; then
+            bash tools/m0_h2227_dual_runner_case.sh cleanup || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2227-arm64-server-diag
+          path: |
+            h2227-out/
+            h2227-arm64-build.log
+            h2227-meta/server-tailscale.json
+          if-no-files-found: warn
+          retention-days: 14
+  x64-real-client:
+    name: 'x86 native original TLS Rust client: 0/0.1/1/3% loss, 3s TX crash, both directions, 4-stream fast-like'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Require real Tailscale auth and prevent silent single-runner fallback
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD" || {
+            echo 'H2227_BLOCKED_TAILSCALE_OIDC_MISSING: no dual-runner throughput or crash result.'
+            exit 2
+          }
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h227-x86-${{ github.run_id }}
+      - name: Wait for original ARM64 runner and publish different VM identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p h2227-meta h2227-peer
+          found=0
+          for i in $(seq 1 90);do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+              -n h2227-server-peer -D h2227-peer >/dev/null 2>&1;then found=1;break;fi
+            sleep 5
+          done
+          test "$found" = 1 && test -s h2227-peer/server.json || {
+            echo 'H2227_REMOTE_ARM64_PEER_NOT_AVAILABLE';exit 2;
+          }
+          python3 tools/m0_h2227_dual_runner_perf.py metadata client h2227-meta/client.json
+          tailscale status --json >h2227-meta/client-tailscale.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2227-client-peer
+          path: h2227-meta/client.json
+          if-no-files-found: error
+          retention-days: 5
+      - name: Build same original-Go TLS Rust native x86_64 client source
+        shell: bash
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 tcpdump conntrack python3 \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2227-x86-build.log 2>&1 || {
+            tail -n 180 h2227-x86-build.log;exit 2;
+          }
+      - name: Block until real ARM64 native TLS/Rust server, TUN and iperf are ready
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2227-ready
+          found=0
+          for i in $(seq 1 120);do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+              -n h2227-server-ready -D h2227-ready >/dev/null 2>&1;then found=1;break;fi
+            sleep 5
+          done
+          test "$found" = 1 && test -s h2227-ready/ready.json || { echo 'H2227_ARM64_PRODUCT_SERVER_NOT_READY';exit 2; }
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2227-ready/ready.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['server_ready'] and d['real_af_packet'] and d['real_tun']
+          PY
+      - name: REAL BBR baseline vs WBD real user TCP up/down at each loss and mode
+        shell: bash
+        timeout-minutes: 22
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2227_dual_runner_case.sh client-run
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2227-client-result
+          path: h2227-out/summary.json
+          if-no-files-found: warn
+          retention-days: 5
+      - name: Fail if TCP in three seconds died or any real business run failed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2227-out/summary.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['server_pair_required'] and d['client_arch']=='x86_64' and d['server_arch']=='aarch64'
+          assert len(d['baseline_mbps'])>=12 and len(d['business_mbps'])>=50
+          assert d['classification']=='REAL_TWO_RUNNER_APPPATH_SCOPED',d['fails']
+          print('H2227_REAL_TWO_RUNNER_BUSINESS_TCP_NO_3S_CRASH_PASS_NOT_WINDOWS_ISP')
+          PY
+      - name: Cleanup owned veth netns even on crash
+        if: always()
+        shell: bash
+        run: |
+          if test -s linux-plan029-public-bundle/wbd-v4-client;then
+            bash tools/m0_h2227_dual_runner_case.sh cleanup || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2227-x86-client-diag
+          path: |
+            h2227-out/
+            h2227-x86-build.log
+            h2227-meta/client-tailscale.json
+          if-no-files-found: warn
+          retention-days: 14
