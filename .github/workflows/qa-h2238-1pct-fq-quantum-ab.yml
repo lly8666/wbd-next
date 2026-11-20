@@ -1,0 +1,107 @@
+name: 'H2238 1pct native TUN fq600 burst-quantum A/B/A no rate reduction'
+run-name: 'H2238 fq600 default-small-default quantum; SOURCE ${{ github.sha }}'
+on:
+  push:
+    branches: ['feat/h2237-low-loss-ingress-pressure']
+    paths:
+      - '.github/workflows/qa-h2238-1pct-fq-quantum-ab.yml'
+      - 'tools/m0_h2237_fq_pressure_ab.py'
+      - 'tests/test_m0_h2237_fq_pressure_ab.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: h2238-fq-quantum-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    name: 'Original owner, exact source and no-HOL negative guards'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Ingress readback identity and no wire changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2237_fq_pressure_ab.py tools/m0_h2234_local_netns.py
+          python3 -m unittest tests.test_m0_h2237_fq_pressure_ab tests.test_m0_h2234_local_netns tests.test_m0_h2229_native_ack_unified -v
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('tools/m0_h2237_fq_pressure_ab.py').read_text()
+          assert 'H2238_KERNEL_FQ_QUANTUM_AB' in s
+          assert 'qdisc_short_quantum_is_BENCH_ONLY_NOT_PRODUCT_CONFIG' in s
+          assert '600mbit' in s and 'initial_quantum' in s
+          assert 'node.stop_client(1)' in s
+          print('H2238_STATIC_ONLY_NATIVE_PRODUCT_DEFAULT_UNCHANGED')
+          PY
+  native-true-linux:
+    name: 'True original Go TLS/Rust 1pct fq600 burst-quantum A/B/A'
+    needs: static
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: ubuntu-24.04
+            arch: x86_64
+          - host: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 39
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2238_KERNEL_FQ_QUANTUM_AB: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Genuine kernel TUN/netem, BBR and original Go TLS Rust native build
+        shell: bash
+        timeout-minutes: 23
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2238-build.log 2>&1 ||
+            { tail -n 120 h2238-build.log; exit 2; }
+      - name: Real same-VM 1pct Direct and fq600 default-small-default 4-stream A/B/A
+        shell: bash
+        timeout-minutes: 14
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/m0_h2237_fq_pressure_ab.py
+          python3 - <<'PY'
+          import os,json
+          d=json.load(open('h2238-fq-quantum/summary.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['status']=='PASS_GENUINE_ABA_DATA_ONLY_NO_PRODUCT_CHANGE',d['status']
+          assert d['quantum_experiment']
+          assert d['arch']==os.uname().machine
+          assert d['server_owned_stop_verified']
+          assert [p['name'] for p in d['phases']]==[
+              'original_burst_before','fq600_short_quantum_probe','original_burst_after']
+          assert [p['test_only_tun_qdisc_rate_mbps'] for p in d['phases']]==[600,600,600]
+          assert sum('quantum_probe' in p for p in d['phases'])==1
+          assert all(p.get('case',{}).get('status')=='PASS_REAL_KERNEL_IPERF3_TCP' for p in d['phases'])
+          assert all(p.get('owned_stop',{}).get('status')=='REAL_RUST_OWNED_STOP' for p in d['phases'])
+          assert len(d['direct_before_after'])==2
+          print('H2238_GENUINE_NATIVE_OS_FQ_QUANTUM_ABA_COMPLETE_NOT_PRODUCT_GAIN')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2238-fq-quantum-${{ matrix.arch }}-original-source-locked
+          path: |
+            h2238-fq-quantum/
+            h2238-build.log
+          retention-days: 10
+          if-no-files-found: warn

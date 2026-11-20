@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2237_TRUE_1PCT_FQ_INGRESS_ABA",
+  "source_sha": "454f33f8afb12fe8abb3081b4ffbabfcb887f9bf",
+  "run_id": 44790734647,
+  "artifact_id": 14656073336,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44790734647",
+  "status": "PASS_REAL_NATIVE_GO_TLS_RUST_ONE_X86_VM_THREE_NETNS_SOURCE_LOCKED_NOT_PRODUCT_IMPROVEMENT",
+  "scenario": {
+    "oneway_extra_delay_ms": 200,
+    "loss_target_pct": 1,
+    "jitter_extra_ms": 0,
+    "real_socket_mss_all_streams": 1025,
+    "stream_count": 4,
+    "iperf_duration_s": 20,
+    "native_arch": "x86_64",
+    "same_vm_pairing": true,
+    "original_product_qdisc_maxrate_mbps": 600,
+    "test_only_override_250_mbps": true
+  },
+  "direct_receiver_mbps": {
+    "before": 927.49,
+    "after": 979.39
+  },
+  "variants": [
+    {
+      "label": "normal600_before",
+      "maxrate_mbps": 600,
+      "receiver_goodput_mbps": 242.59,
+      "tcp_retransmits": 117558,
+      "tcp_retransmits_per_receiver_GiB": 204033,
+      "native_shared_tun_queue_full": 118281,
+      "native_shared_tun_backpressure": 170663,
+      "native_shared_tun_routed": 691585,
+      "m4_tx_cpu_seconds": 10.753,
+      "m4_tx_runnable_wait_seconds": 0.359
+    },
+    {
+      "label": "kernel_fq250_probe",
+      "maxrate_mbps": 250,
+      "receiver_goodput_mbps": 253.75,
+      "tcp_retransmits": 51284,
+      "tcp_retransmits_per_receiver_GiB": 85096,
+      "native_shared_tun_queue_full": 52138,
+      "native_shared_tun_backpressure": 85353,
+      "native_shared_tun_routed": 713562,
+      "m4_tx_cpu_seconds": 11.304,
+      "m4_tx_runnable_wait_seconds": 0.469
+    },
+    {
+      "label": "normal600_after",
+      "maxrate_mbps": 600,
+      "receiver_goodput_mbps": 268.23,
+      "tcp_retransmits": 94912,
+      "tcp_retransmits_per_receiver_GiB": 148979,
+      "native_shared_tun_queue_full": 118167,
+      "native_shared_tun_backpressure": 174757,
+      "native_shared_tun_routed": 755499,
+      "m4_tx_cpu_seconds": 11.227,
+      "m4_tx_runnable_wait_seconds": 0.385
+    }
+  ],
+  "linux_owned_tun_kernel_fq": {
+    "qdisc_drop_packets_all_variants": 0,
+    "full_recovery_of_baseline_queue_full_on_return_to_600": true,
+    "qdisc_rate_readback_matched_all_variants": true,
+    "interface_queue_and_link_actual_source": "same case tc -s -j qdisc/ip -s -j link"
+  },
+  "stops": {
+    "each_client_generation_ended": true,
+    "original_server_owned_stop": true
+  },
+  "conclusion": "250Mbps per-flow fq reduces Rust local queue-full by about 56% and inner TCP retrans/GiB, but receiver goodput 253.75 lies between 600Mbps baselines 242.59 and 268.23; no throughput advantage proven; reject hard-coded 250 product default",
+  "no_hol_outer_repair_original_ciphertext_unchanged": true,
+  "product_change": "NOT_IMPLEMENTED",
+  "next": "Test 600Mbps original ceiling retained while reducing Linux kernel fq start quantum under same per-source A/B/A; then decide whether dynamic fair native backpressure is justified; independently investigate 5% loss with nearly zero local queue drops."
+}
