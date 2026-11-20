@@ -24,7 +24,7 @@ class H2233LowLossAnalysis(unittest.TestCase):
         self.assertEqual(delta["client_to_server"]["netem_emitted_skb"],100)
         self.assertEqual(delta["client_to_server"]["netem_dropped_skb"],5)
         self.assertEqual(delta["client_to_server"]["netem_emitted_over_link_tx_ratio"],5)
-        self.assertIn("not IP packet loss",delta["client_to_server"]["accounting_warning"].lower())
+        self.assertIn("not ip packet loss",delta["client_to_server"]["accounting_warning"].lower())
         broken=receipt(200,9,40)
         broken["server"]["qdisc"][0]["handle"]="2:"
         self.assertEqual(H.delta_qdisc(receipt(100,4,20),broken)["client_to_server"]["status"],

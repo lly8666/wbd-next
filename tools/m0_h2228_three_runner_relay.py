@@ -421,11 +421,12 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
     send_end=parsed.get("end",{}).get("sum_sent",{}) if isinstance(parsed,dict) else {}
     def delivered_rate(row):
         bps=row.get("bits_per_second")
-        return round(bps/1e6,3) if returncode==0 and not (
+        valid=(returncode==0 and not (
             isinstance(parsed,dict) and parsed.get("error")) and
             isinstance(bps,(float,int)) and bps>0 and
             isinstance(row.get("seconds"),(float,int)) and
-            row["seconds"]>=duration*.6 else None
+            row["seconds"]>=duration*.6)
+        return round(bps/1e6,3) if valid else None
     observed_mss=[]
     for stream in (parsed.get("start",{}).get("connected",[]) if isinstance(parsed,dict) else []):
         if isinstance(stream,dict) and isinstance(stream.get("mss"),int) and stream["mss"]>0:
