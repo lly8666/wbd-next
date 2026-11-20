@@ -25,6 +25,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import java.io.FileOutputStream;
+import java.io.File;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -46,6 +47,12 @@ public final class RootClientActivity extends Activity {
     private TextView status,deviceSelfTestResult,diagnosticExportResult;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
     private static final int LOCAL_TLS_CA_IMPORT=2043;
+    // START can fail before any Service exists. Persist fixed app-only
+    // stages so a 0-event TXT is no longer the only device-side evidence.
+    private void traceUi(RootDiagnosticReceipt.Event event){
+        new RootDiagnosticReceipt(new File(getFilesDir(),
+            "wbd-root-diagnostic.txt")).record(event);
+    }
     private String signedSource(){
         try(InputStream in=getAssets().open("native-arm64/SOURCE")){
             byte[] data=new byte[128];
@@ -217,6 +224,8 @@ public final class RootClientActivity extends Activity {
         RootPrivateCredentialFiles.write(this,file,text);
     }
     private void start(){
+        traceUi(RootDiagnosticReceipt.Event.UI_START_TAPPED);
+        boolean dispatchRequested=false;
         try{
             if(physical.isEmpty())throw new IllegalArgumentException("No real physical Android Network");
             int pos=networks.getSelectedItemPosition();
@@ -277,7 +286,10 @@ public final class RootClientActivity extends Activity {
             String key=RootRouteKeyCache.resolve(this,sni,keyInput);
             // A38: save only original UI input, never the 32-byte derived
             // route key, native argv or unencrypted SharedPreferences.
-            RootEncryptedCredentialStore.save(this,secret,keyInput);
+            boolean saved=RootStartCredentialSave.attempt(
+                ()->RootEncryptedCredentialStore.save(this,secret,keyInput));
+            if(!saved)
+                traceUi(RootDiagnosticReceipt.Event.UI_CREDENTIAL_SAVE_FAILED);
             // Go owns the same standard TLS/auth, Rust M4 and UID Stop.
             privateText("wbd-pass.secret",secret+"\n");
             privateText("wbd-route.secret",key+"\n");
@@ -303,18 +315,31 @@ public final class RootClientActivity extends Activity {
             }
             request.putExtra("has_ca",verifyTLS&&!pem.isEmpty());
             request.putExtra("tls_verify_server",verifyTLS);
+            dispatchRequested=true;
+            traceUi(RootDiagnosticReceipt.Event.UI_START_DISPATCH_REQUESTED);
             startForegroundService(request);
-            status.setText(verifyTLS
+            traceUi(RootDiagnosticReceipt.Event.UI_START_DISPATCHED);
+            String notice=saved?"":"；设备密码自动保存失败（不影响本次连接）";
+            RootClientService.status=(verifyTLS
                 ?"Root start — strict TLS server certificate validation ON"
-                :"Root start — TLS certificate validation OFF (main default)");
+                :"Root start — TLS certificate validation OFF (main default)")+notice;
+            status.setText(RootClientService.status);
             // Preserve on-screen values for another Start in this Activity.
             // The keystore-backed snapshot also restores them after restart.
         }catch(Exception e){
-            status.setText("START REJECTED: "+e.getMessage());
+            traceUi(dispatchRequested
+                ?RootDiagnosticReceipt.Event.UI_START_DISPATCH_FAILED
+                :RootDiagnosticReceipt.Event.UI_START_VALIDATION_REJECTED);
+            String detail=e.getMessage();
+            if(detail==null||detail.length()>200)detail="查看设置后重试";
+            RootClientService.status="UI START REJECTED: "+detail+
+                "；可导出安全 TXT 查看固定失败阶段";
+            status.setText(RootClientService.status);
         }
     }
     @Override public void onCreate(Bundle state){
         super.onCreate(state);
+        traceUi(RootDiagnosticReceipt.Event.UI_OPENED);
         ScrollView scroll=new ScrollView(this);
         LinearLayout pane=new LinearLayout(this);
         pane.setOrientation(LinearLayout.VERTICAL);
@@ -506,7 +531,9 @@ public final class RootClientActivity extends Activity {
                 routeKey.setText(saved.routeKey);
             }
         }catch(Exception failure){
-            status.setText("已保存凭据无法读取：设备密钥不可用或加密记录损坏；请手动重新保存");
+            traceUi(RootDiagnosticReceipt.Event.UI_CREDENTIAL_LOAD_FAILED);
+            RootClientService.status="加密凭据不可读取，请手动输入后重新保存；仍可以尝试连接";
+            status.setText(RootClientService.status);
         }
     }
     @Override protected void onResume(){

@@ -64,6 +64,11 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootSavedCredentialRecord.java \
   android/root-app/ci/RootSavedCredentialRecordTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootSavedCredentialRecordTest
+# The same production optional save wrapper used by the on-device START.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootStartCredentialSave.java \
+  android/root-app/ci/RootStartCredentialSaveTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootStartCredentialSaveTest
 # Exact production Root Service diagnostic writer, not a fabricated
 # Android guest or Go/TLS success. Verify fixed enums, bounded retention,
 # no untrusted metadata and Device acceptance report semantics.
@@ -348,10 +353,18 @@ for token in ('AndroidKeyStore','KeyGenParameterSpec','KeyProperties.BLOCK_MODE_
 for token in ('AES/GCM/NoPadding','updateAAD(AAD)','cipher.doFinal','Arrays.fill'):
  assert token in codec
 assert 'RootEncryptedCredentialStore.save(this,secret,keyInput)' in a
+assert 'RootStartCredentialSave.attempt(' in a
+assert 'UI_START_TAPPED' in a and 'UI_START_DISPATCHED' in a
+assert 'UI_START_VALIDATION_REJECTED' in a and 'UI_START_DISPATCH_FAILED' in a
+assert 'UI_CREDENTIAL_SAVE_FAILED' in a
 assert 'RootEncryptedCredentialStore.load(this)' in a
 assert 'RootEncryptedCredentialStore.clear(this)' in a
 assert 'password.setText("")' in a and 'routeKey.setText("")' in a
 assert 'request.putExtra("password"' not in a and 'request.putExtra("route_key"' not in a
+assert 'cipher.init(Cipher.ENCRYPT_MODE,key);' in codec
+assert 'cipher.getIV()' in codec
+assert 'cipher.init(Cipher.ENCRYPT_MODE,key,new GCMParameterSpec' not in codec
+print("ANDROID_A39_ANDROID_KEYSTORE_PROVIDER_IV_AND_START_NONBLOCKING_SOURCE_PASS")
 print("ANDROID_A38_KEYSTORE_ENCRYPTED_SECRET_AUTOFILL_SOURCE_GATE_PASS")
 assert 'v4AndroidCertFailureReason(err)' in go_admission
 for e in ("ROOT_RESTORE_COMPLETE","ROOT_RESTORE_FAILED"):

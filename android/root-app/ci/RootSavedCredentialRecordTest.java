@@ -1,7 +1,6 @@
 package org.wbdnext.rootclient;
 
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -20,6 +19,12 @@ public final class RootSavedCredentialRecordTest{
           "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}){
             String password="test-password-测试-🚀-not-for-logs";
             byte[] sealed=RootSavedCredentialRecord.encrypt(key,password,route);
+            byte[] sealedAgain=RootSavedCredentialRecord.encrypt(key,password,route);
+            // The provider (not app code) must generate a fresh GCM IV.
+            if(Arrays.equals(sealed,sealedAgain))
+                throw new AssertionError("GCM IV/ciphertext repeated");
+            if(!route.equals(RootSavedCredentialRecord.decrypt(key,sealedAgain).routeKey))
+                throw new AssertionError("second provider IV was not readable");
             String printable=new String(sealed,StandardCharsets.ISO_8859_1);
             if(printable.contains(password)||printable.contains(route))
                 throw new AssertionError("persisted plaintext credential");
@@ -54,6 +59,7 @@ public final class RootSavedCredentialRecordTest{
             try{RootSavedCredentialRecord.encrypt(key,"","Abc12345");}
             catch(Exception e){throw new IllegalStateException(e);}
         });
+        System.out.println("ANDROID_A39_PROVIDER_GENERATED_GCM_IV_REAL_JVM_HOST_PASS");
         System.out.println("ANDROID_A38_SAVED_CREDENTIAL_AES_GCM_REAL_JVM_ROUNDTRIP_TAMPER_HOST_PASS");
     }
 }

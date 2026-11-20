@@ -6,7 +6,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -55,10 +54,15 @@ final class RootSavedCredentialRecord {
             out.writeShort(pw.length);out.write(pw);
             out.writeShort(rk.length);out.write(rk);out.flush();
             clear=raw.toByteArray();
-            byte[] iv=new byte[IV];
-            new SecureRandom().nextBytes(iv);
+            // AndroidKeyStore with randomized encryption REQUIRED refuses
+            // caller-supplied GCM IVs. The provider must generate its own IV
+            // during init; persist that IV next to the authenticated ciphertext.
+            // This also works with standard JDK AES/GCM on the Host.
             Cipher cipher=Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE,key,new GCMParameterSpec(128,iv));
+            cipher.init(Cipher.ENCRYPT_MODE,key);
+            byte[] iv=cipher.getIV();
+            if(iv==null||iv.length!=IV)
+                throw new GeneralSecurityException("provider generated nonstandard GCM IV");
             cipher.updateAAD(AAD);
             byte[] sealed=cipher.doFinal(clear);
             byte[] result=new byte[MAGIC.length+IV+sealed.length];

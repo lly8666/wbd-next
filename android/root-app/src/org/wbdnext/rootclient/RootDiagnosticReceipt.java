@@ -18,6 +18,15 @@ import java.nio.charset.StandardCharsets;
  */
 final class RootDiagnosticReceipt {
     enum Event {
+        // UI-side V1: captures START failures before RootClientService exists.
+        UI_OPENED,
+        UI_CREDENTIAL_LOAD_FAILED,
+        UI_START_TAPPED,
+        UI_CREDENTIAL_SAVE_FAILED,
+        UI_START_VALIDATION_REJECTED,
+        UI_START_DISPATCH_REQUESTED,
+        UI_START_DISPATCHED,
+        UI_START_DISPATCH_FAILED,
         START_REQUESTED,
         START_DIAGNOSTIC_STAGES_V2,
         ROOT_SHELL_ENTERED,

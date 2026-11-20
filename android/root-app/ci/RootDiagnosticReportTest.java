@@ -584,6 +584,44 @@ public final class RootDiagnosticReportTest {
         contains(effective,"ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_DISABLED");
         if(effective.contains("ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_ENABLED"))
             throw new AssertionError("admission TLS override falsely reported");
+        // A39: distinguish "APK opened but nobody started" from a tap
+        // rejected before the Service, and a Start dispatch with no native
+        // event. A new UI tap must not inherit an earlier TLS error.
+        File openedDir=Files.createTempDirectory("wbd-a39-opened").toFile();
+        RootDiagnosticReceipt opened=new RootDiagnosticReceipt(
+            new File(openedDir,"wbd-root-diagnostic.txt"));
+        opened.record(RootDiagnosticReceipt.Event.UI_OPENED);
+        contains(RootDiagnosticReport.build(openedDir,source,36),
+            "last_session_stage=UI_OPEN_NO_START");
+        opened.record(RootDiagnosticReceipt.Event.UI_CREDENTIAL_LOAD_FAILED);
+        opened.record(RootDiagnosticReceipt.Event.UI_START_TAPPED);
+        opened.record(RootDiagnosticReceipt.Event.UI_START_VALIDATION_REJECTED);
+        contains(RootDiagnosticReport.build(openedDir,source,36),
+            "last_session_stage=UI_START_PRE_SERVICE_REJECTED");
+
+        File dispatchDir=Files.createTempDirectory("wbd-a39-dispatch").toFile();
+        RootDiagnosticReceipt dispatch=new RootDiagnosticReceipt(
+            new File(dispatchDir,"wbd-root-diagnostic.txt"));
+        dispatch.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        dispatch.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE);
+        dispatch.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+        dispatch.record(RootDiagnosticReceipt.Event.UI_START_TAPPED);
+        dispatch.record(RootDiagnosticReceipt.Event.UI_CREDENTIAL_SAVE_FAILED);
+        dispatch.record(RootDiagnosticReceipt.Event.UI_START_DISPATCH_REQUESTED);
+        dispatch.record(RootDiagnosticReceipt.Event.UI_START_DISPATCHED);
+        String noService=RootDiagnosticReport.build(dispatchDir,source,36);
+        contains(noService,"last_session_stage=UI_START_DISPATCHED_SERVICE_NOT_OBSERVED");
+        contains(noService,"UI_CREDENTIAL_SAVE_FAILED");
+        dispatch.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        dispatch.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        dispatch.record(RootDiagnosticReceipt.Event.NETWORK_SCOPE_VERIFIED);
+        String nowService=RootDiagnosticReport.build(dispatchDir,source,36);
+        contains(nowService,"last_session_stage=APP_PRE_NATIVE");
+        dispatch.record(RootDiagnosticReceipt.Event.UI_START_TAPPED);
+        dispatch.record(RootDiagnosticReceipt.Event.UI_START_DISPATCH_FAILED);
+        contains(RootDiagnosticReport.build(dispatchDir,source,36),
+            "last_session_stage=UI_START_SERVICE_DISPATCH_FAILED");
+        System.out.println("ANDROID_A39_ZERO_EVENT_APP_PREFLIGHT_FIXED_DIAGNOSTIC_HOST_PASS");
         System.out.println("ANDROID_A38_ORIGINAL_ADMISSION_TLS_EFFECTIVE_OFF_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_FIXED_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A36_CERT_REASON_RESTORE_REPORT_HOST_PASS");

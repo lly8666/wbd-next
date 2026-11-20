@@ -51,6 +51,19 @@ final class RootDiagnosticReport {
     }
     private static String stage(List<String> session){
         if(session.isEmpty())return "NOT_STARTED";
+        // A39: old 0-event reports gave no clue when on-device START was
+        // rejected before Service. A UI tap is a real session boundary.
+        if(has(session,"UI_START_DISPATCH_FAILED"))
+            return "UI_START_SERVICE_DISPATCH_FAILED";
+        if(has(session,"UI_START_VALIDATION_REJECTED"))
+            return "UI_START_PRE_SERVICE_REJECTED";
+        if(has(session,"UI_START_TAPPED")&&!has(session,"START_REQUESTED")){
+            if(has(session,"UI_START_DISPATCHED"))
+                return "UI_START_DISPATCHED_SERVICE_NOT_OBSERVED";
+            return "UI_START_TAPPED_BEFORE_SERVICE";
+        }
+        if(has(session,"UI_OPENED")&&!has(session,"START_REQUESTED"))
+            return "UI_OPEN_NO_START";
         if(has(session,"ROOT_RESTORE_COMPLETE"))return "ROOT_RESTORE_VERIFIED_OWNED_KERNEL_CLEAR";
         if(has(session,"ROOT_RESTORE_FAILED"))return "ROOT_RESTORE_FAILED_NO_GLOBAL_MUTATION";
         if(has(session,"ROOT_RESTORE_REFUSED_LIVE_OWNER"))return "ROOT_RESTORE_REFUSED_LIVE_OWNER";
@@ -203,7 +216,8 @@ final class RootDiagnosticReport {
         appendSafe(new File(appFilesDir,"wbd-root-diagnostic.txt"),events);
         int start=0;
         for(int i=0;i<events.size();i++){
-            if(events.get(i).endsWith("|START_REQUESTED"))start=i;
+            if(events.get(i).endsWith("|START_REQUESTED")||
+               events.get(i).endsWith("|UI_START_TAPPED"))start=i;
         }
         List<String> session=events.subList(start,events.size());
         boolean peer=has(session,"SERVER_PEER_THROW_PRIVATE_FIB_READBACK");
