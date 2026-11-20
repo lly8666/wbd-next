@@ -64,6 +64,12 @@ cp r0/go_overlay/internal/v4routekey/*.go legacy/internal/v4routekey/
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 mkdir -p legacy/internal/v4productcli/rootjournal
 cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
+# Source-locked same original-Go root-only scoped RST owner, even though
+# the x86 server never activates Android-only firewall control.
+mkdir -p legacy/internal/v4productcli/rstguard
+cp r0/go_overlay/internal/v4productcli/rstguard/*.go legacy/internal/v4productcli/rstguard/
+(cd legacy && go test -count=1 ./internal/v4productcli/rstguard)
+echo ANDROID_A35_X86_ORIGINAL_SERVER_RSTGUARD_HOST_PASS
 mkdir -p legacy/internal/v4productcli/dnsnative
 cp r0/go_overlay/internal/v4productcli/dnsnative/*.go legacy/internal/v4productcli/dnsnative/
 for role in client server;do

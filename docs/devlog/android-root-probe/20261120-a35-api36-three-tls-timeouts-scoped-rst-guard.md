@@ -23,3 +23,11 @@ SOURCE `6b735df99af838c88a9c4f6cbf069b58eed1f66b` [Action #44705679914](https://
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A35首CI快速捕获模拟Go TempDir 0755误触真实0700安全门，修Host夹具与只读计数解析，生产RST安全边界不变。"}
 ```
+
+## A35b 同源真实CI第二次：双接线FAIL与完整修复
+
+SOURCE `006be26102dc24175dc062c7228556d9704c8cbb` [Action #44706323960](https://github.com/lly8666/wbd-next/actions/runs/44706323960)：原ARM64 Go/Rust Bionic构建、原Linux Normal/off Oracle、六个Host/M3/DNS Job SUCCESS；真实Go模拟iptables + 0600/O_NOFOLLOW/flock/journal/重启/回滚Host负例已通过。`root-arm64-app` Host Java新报告测试在 `RootDiagnosticReport.stage` 的 `START_DIAGNOSTIC_STAGES_V2 && ROOT_PROCESS_EXIT_NONZERO` 前置事件缺一，仅夹具遗失（用户实际三次报告都有V2）；在A35夹具中补真实V2，并增加READY→MATCHED_RST_DROP→STOP_CLEARED正向组合，明确不冒作TLS成功。`linux-x86-original-server-d2-s0` 源锁Go build缺 `internal/v4productcli/rstguard`（第三套x86服务端装配未copy新包），仅补同原Go包的拷贝、Go Host test与三套装配源静态锚门；绝不改x86产品协议或运行KSU/TAP。两项旧FAIL如实保留，下一SOURCE重新构建签名APK与真Linux Oracle。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A35b把API36真V2安全日志的Java报告夹具及第三套Linux x86原Go源码装配完整接线，保留先前CI红门，不改TLS/内核Root权限。"}
+```

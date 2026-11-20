@@ -489,6 +489,7 @@ public final class RootDiagnosticReportTest {
             File a35=Files.createTempDirectory("wbd-a35-kernel-rst").toFile();
             RootDiagnosticReceipt w=new RootDiagnosticReceipt(new File(a35,"wbd-root-diagnostic.txt"));
             w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
             w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_ACCEPTED);
             w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPENED);
             w.record(result);
@@ -500,6 +501,32 @@ public final class RootDiagnosticReportTest {
             if(actual.contains("198.51.100.")||actual.contains("password="))
                 throw new AssertionError("A35 root-only rule private data exposed");
         }
+        // A35 positive source-locked receipt: verified exact root rule,
+        // an observed matched RST drop and exact Stop all survive export.
+        // They NEVER turn a TLS failure into authentication success.
+        File verified35=Files.createTempDirectory("wbd-a35-verified").toFile();
+        RootDiagnosticReceipt w35=new RootDiagnosticReceipt(
+            new File(verified35,"wbd-root-diagnostic.txt"));
+        for(RootDiagnosticReceipt.Event e:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.START_REQUESTED,
+            RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_READY,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_OK,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_ASSOC_ESTABLISHED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPTED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_OK,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_TIMEOUT,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_MATCHED_RST_DROP,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_STOP_CLEARED,
+            RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO
+        })w35.record(e);
+        String verifiedTxt=RootDiagnosticReport.build(verified35,source,36);
+        contains(verifiedTxt,"last_session_stage=TLS_HANDSHAKE_FAILED_TIMEOUT");
+        contains(verifiedTxt,"ORIGINAL_GO_COLD_RST_GUARD_READY");
+        contains(verifiedTxt,"ORIGINAL_GO_COLD_RST_GUARD_MATCHED_RST_DROP");
+        contains(verifiedTxt,"ORIGINAL_GO_COLD_RST_GUARD_STOP_CLEARED");
+        if(verifiedTxt.contains("198.51.100.")||verifiedTxt.contains("password="))
+            throw new AssertionError("A35 positive TXT leaked private text");
         System.out.println("ANDROID_A35_ORIGINAL_ROOT_RST_GUARD_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A34_TLS_ORIGINAL_WIRE_AND_DEADLINE_HOST_PASS");
         System.out.println("ANDROID_A33_SYNACK_TLS_ADMISSION_STAGE_PRIORITY_HOST_PASS");

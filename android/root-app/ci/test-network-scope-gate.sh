@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$GITHUB_WORKSPACE"
 # A34a: parse exact original Linux Oracle shell before expensive native builds.
 bash -n android/root-native/ci/linux-original-oracle.sh
+bash -n android/root-app/ci/x86-original-linux-server-prep.sh
 mkdir -p out/android-root-app/network-scope-test
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/NetworkScopeGate.java \
@@ -293,6 +294,15 @@ for marker in ("ORIGINAL_GO_COLD_RST_GUARD_READY",
                "ORIGINAL_GO_COLD_RST_GUARD_STOP_UNVERIFIED",
                "ORIGINAL_GO_COLD_RST_GUARD_FAILED_IPTABLES_UNAVAILABLE"):
  assert marker in s and marker in receipt and marker in report or marker.endswith("READY")
+# Every original Android/Linux server assembly must copy the same pure-Go
+# guard package. Missing x86 D2-S0 donor copy caused first A35 D2-S0 FAIL.
+for assembler in ("android/root-native/build-source-locked.sh",
+                  "android/root-native/ci/linux-original-oracle.sh",
+                  "android/root-app/ci/x86-original-linux-server-prep.sh"):
+    text=Path(assembler).read_text()
+    assert 'cp r0/go_overlay/internal/v4productcli/rstguard/*.go legacy/internal/v4productcli/rstguard/' in text
+    assert 'go test -count=1 ./internal/v4productcli/rstguard' in text
+print("ANDROID_A35_THREE_ORIGINAL_GO_DONOR_ASSEMBLIES_SOURCE_LOCKED_PASS")
 print("ANDROID_A35_SCOPED_RST_GUARD_NO_GLOBAL_FIREWALL_SOURCE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY
