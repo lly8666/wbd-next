@@ -22,7 +22,7 @@ class SegmentationNetemRules(unittest.TestCase):
         self.assertIn("node.iperf_case(idx*2+2,LOSS",s)
         self.assertIn("server_owned_stop_verified",s)
         self.assertIn('"product_improvement":"NOT_IMPLEMENTED_NOT_VERIFIED"',s)
-        self.assertIn('"seed_controls_prng_not_identical_packet_stream":True',s)
+        self.assertIn('"seed_qualification":"SEE_EACH_CASE_SEED_STATUS_NOT_ASSUMED"',s)
         self.assertNotIn("WBD_H2239_PRODUCT_ENABLE",s)
         self.assertNotIn("queue_cap_expand",s)
 
