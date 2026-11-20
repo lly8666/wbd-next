@@ -130,6 +130,9 @@ client_run(){
   }
   relay_read(){
     local label="$1"
+    # Keep relay receipt outside case-*.json glob: only genuine iperf
+    # case files may count as measurements. Snapshot cannot fake TCP success.
+    if [[ "$label" == case-* ]];then label="relay-receipt-$label";fi
     python3 "$TOOL" remote h2228-peer/relay.json snapshot "$OUT/$label-relay.json" || true
   }
   measure(){

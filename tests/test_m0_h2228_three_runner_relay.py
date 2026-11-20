@@ -121,6 +121,18 @@ class H2228ThreeGenuineMachines(unittest.TestCase):
             self.assertTrue(result["relay_capacity_qualification"].startswith("INFRA_"))
             self.assertEqual(result["status"],"PASS_REAL_THREE_RUNNER_TCP_MATRIX")
 
+    def test_relay_snapshots_cannot_masquerade_as_iperf_cases(self):
+        shell=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
+        self.assertIn('if [[ "$label" == case-* ]];then label="relay-receipt-$label";fi',shell)
+        with tempfile.TemporaryDirectory() as d:
+            path=pathlib.Path(d)
+            self.fill_cases(path,"burst")
+            H.save(path/"relay-receipt-case-000-clear-zero-direct-12s-8p-upload-relay.json",{
+                "qdisc":{"kind":"netem"},"not_iperf":True})
+            result=H.result_summary("normal","burst",path)
+            self.assertEqual(result["status"],"PASS_REAL_THREE_RUNNER_TCP_MATRIX")
+            self.assertEqual(result["observed_qualified_cases"],27)
+
     def test_exact_model_modes_and_role_specific_m0_contract(self):
         shell=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
         for line in ('--outer-repair on','for loss in 0 1 5 10 20',
