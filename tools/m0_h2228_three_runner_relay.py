@@ -558,9 +558,51 @@ def result_summary(mode,model,directory):
                 else:resource={"status":"INVALID_RESOURCE_SAMPLE_SOURCE"}
             except (OSError,ValueError,TypeError,AttributeError):
                 resource={"status":"INVALID_RESOURCE_SAMPLE_JSON"}
+        # H2232 genuine kernel TCP handshake connect() measurements are
+        # separately source/run/kind+origin validated. Missing samples do
+        # not become 0ms P99 or a passed TCP business test.
+        connect={"status":"UNKNOWN_NO_REAL_TCP_CONNECT_PROBE"}
+        connect_file=rootpath/("connect-"+p.name)
+        if connect_file.is_file():
+            try:
+                candidate=json.loads(connect_file.read_text())
+                expected_origin=("REAL_LINUX_KERNEL_TCP_CONNECT_DIRECT_ARM_RELAY" if
+                    record.get("kind")=="direct" else
+                    "REAL_LINUX_KERNEL_TCP_CONNECT_OVER_AUTHENTICATED_WBD_TUN")
+                if (isinstance(candidate,dict) and
+                    candidate.get("kind")==record.get("kind") and
+                    candidate.get("origin")==expected_origin and
+                    candidate.get("schema")=="H2232_REAL_TCP_CONNECT_P99_V1" and
+                    candidate.get("source_sha")==os.environ.get("GITHUB_SHA") and
+                    candidate.get("run_id")==os.environ.get("GITHUB_RUN_ID") and
+                    candidate.get("failed_or_unfinished_connects",0)>=0 and
+                    candidate.get("succeeded_connects",0)>=0 and
+                    candidate.get("attempted_independent_connections",0)==
+                    candidate.get("failed_or_unfinished_connects",0)+
+                    candidate.get("succeeded_connects",0)):
+                    sample=candidate.get("kernel_tcp_connect_elapsed_ms",{})
+                    needed=(candidate.get("succeeded_connects",0)>=50)
+                    p99=sample.get("p99") if isinstance(sample,dict) else None
+                    valid_claim=candidate.get("valid_connect_p99") is needed
+                    qualified=(type(p99) in (int,float) and
+                        math.isfinite(p99) and 0<=p99<=candidate.get("deadline_s",0)*1000)
+                    if (isinstance(sample,dict) and
+                        sample.get("sample_count")==candidate.get("succeeded_connects") and
+                        valid_claim and (qualified if needed else p99 is None)):
+                        connect=candidate
+                    else:
+                        connect={"status":"INVALID_TCP_CONNECT_P99_SAMPLE_COUNT",
+                                 "valid_connect_p99":False}
+                else:
+                    connect={"status":"INVALID_TCP_CONNECT_PROBE_ORIGIN",
+                             "valid_connect_p99":False}
+            except (OSError,ValueError,TypeError,AttributeError):
+                connect={"status":"INVALID_OR_UNPARSEABLE_TCP_CONNECT_PROBE",
+                         "valid_connect_p99":False}
         rows.append({"file":p.name,"case":suffix,**record,
                      "h2231_app_udp_probe":probe,
-                     "h2231_native_resource":resource})
+                     "h2231_native_resource":resource,
+                     "h2232_real_tcp_connect_probe":connect})
     missing=sorted(required-set(actual))
     duplicates=sorted(x for x in set(actual) if actual.count(x)>1)
     failures=[x for x in rows if x["status"]!="PASS_REAL_KERNEL_IPERF3_TCP"]
@@ -606,6 +648,10 @@ def result_summary(mode,model,directory):
         x.get("h2231_tcp_tail",{}).get("schema")=="H2231_TCP_SAMPLE_TAIL_V1")
     observed_resource=sum(1 for x in rows if
         x.get("h2231_native_resource",{}).get("schema")=="H2231_REAL_NATIVE_PROCESS_RESOURCE_SAMPLE_V1")
+    observed_connect=sum(1 for x in rows if
+        x.get("h2232_real_tcp_connect_probe",{}).get("schema")=="H2232_REAL_TCP_CONNECT_P99_V1")
+    qualified_connect=sum(1 for x in rows if
+        x.get("h2232_real_tcp_connect_probe",{}).get("valid_connect_p99") is True)
     per_loss=[]
     for loss in (0,1,5,10,20):
         prefix=f"delay200-loss{loss}-{model}"
@@ -629,6 +675,8 @@ def result_summary(mode,model,directory):
                 case=source_rows.get(f"{prefix}-{kind}-20s-4p-{direction}",{})
                 probe=case.get("h2231_app_udp_probe",{})
                 tcp=case.get("h2231_tcp_tail",{})
+                conn=case.get("h2232_real_tcp_connect_probe",{})
+                conn_dist=conn.get("kernel_tcp_connect_elapsed_ms",{})
                 app_rtt=probe.get("roundtrip_rtt_ms",{})
                 variation=probe.get("adjacent_sequence_rtt_abs_variation_ms",{})
                 sender_rtt=tcp.get("kernel_tcp_sender_rtt_ms",{})
@@ -642,6 +690,13 @@ def result_summary(mode,model,directory):
                 row[stem+"_app_udp_max_consecutive_missing"]=probe.get(
                     "max_consecutive_missing_requests")
                 row[stem+"_app_udp_rtt_variation_p99_ms"]=variation.get("p99")
+                row[stem+"_tcp_connect_handshake_p50_ms"]=conn_dist.get("p50")
+                row[stem+"_tcp_connect_handshake_p95_ms"]=conn_dist.get("p95")
+                row[stem+"_tcp_connect_handshake_p99_ms"]=conn_dist.get("p99")
+                row[stem+"_tcp_connect_attempted"]=conn.get("attempted_independent_connections")
+                row[stem+"_tcp_connect_completed"]=conn.get("succeeded_connects")
+                row[stem+"_tcp_connect_failure_pct"]=conn.get("connect_failure_pct")
+                row[stem+"_tcp_connect_p99_quality"]=conn.get("connect_p99_status")
                 row[stem+"_tcp_sender_rtt_p99_ms"]=sender_rtt.get("p99")
                 row[stem+"_tcp_goodput_1s_p01_mbps"]=goodput.get("p01")
                 row[stem+"_tcp_goodput_1s_p50_mbps"]=goodput.get("p50")
@@ -694,6 +749,11 @@ def result_summary(mode,model,directory):
       "h2231_real_udp_p99_cases_with_at_least_50_echoes":p99_reports,
       "h2231_tcp_tail_cases_observed":observed_tcp_tail,
       "h2231_native_resource_case_samples_observed":observed_resource,
+      "h2232_real_tcp_connect_cases_observed":observed_connect,
+      "h2232_real_tcp_connect_p99_cases_with_at_least_50_successes":qualified_connect,
+      "h2232_tcp_connect_metrics_are_not_a_product_pass":True,
+      "h2232_tcp_connect_qualification":("ALL_27_SOURCE_BOUND_TRUE_KERNEL_TCP_CONNECT_PROBES" if
+          observed_connect==27 else "PARTIAL_OR_MISSING_TRUE_TCP_CONNECT_RECEIPTS"),
       "h2231_tail_metrics_are_not_new_product_pass":True,
       "h2231_tail_metrics_qualification":(
           "ALL_27_SOURCE_BOUND_METRIC_FILES_PRESENT_P99_STILL_PER_CASE_SAMPLE_GATED" if

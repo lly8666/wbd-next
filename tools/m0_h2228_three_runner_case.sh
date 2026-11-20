@@ -6,6 +6,7 @@ ROOT="$GITHUB_WORKSPACE/linux-plan029-public-bundle"
 OUT="$GITHUB_WORKSPACE/h2228-out"
 TOOL="$GITHUB_WORKSPACE/tools/m0_h2228_three_runner_relay.py"
 METRICS="$GITHUB_WORKSPACE/tools/m0_h2231_three_runner_metrics.py"
+TCPMETRICS="$GITHUB_WORKSPACE/tools/m0_h2232_tcp_connect_p99.py"
 NS=h228node
 RT=h228rt
 TMP="$RUNNER_TEMP/h2228-$GITHUB_RUN_ID"
@@ -31,6 +32,9 @@ await_artifact(){
   for i in $(seq 1 380);do
     if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
       -n "$name" -D "$out" >/dev/null 2>&1;then ok=1;break;fi
+    if ((i % 6 == 0));then
+      echo "H2232_SERVER_OR_RELAY_WAIT result_artifact=$name elapsed_s=$((i*5)) max_s=1900 still_running_real_tcp_matrix=UNKNOWN" >&2
+    fi
     sleep 5
   done
   test "$ok" == 1 || { echo "H2228_MISSING_PEER_RECEIPT $name" >&2;return 2; }
@@ -134,6 +138,19 @@ PY
     grep -Fq "H2231_REAL_NATIVE_UDP_APP_SERVER_READY kind=$kind" \
         "$OUT/udp-$kind-server.log"
   done
+  # Real TCP connect() listener on direct WAN and WBD inner TUN. This
+  # is NOT iperf's own control socket and does not fake application bytes.
+  for kind in direct wbd;do
+    spawn "$TMP/tcp-$kind.pid" python3 "$TCPMETRICS" tcp-serve "$kind"       >"$OUT/tcp-$kind-server.log" 2>&1 &
+    echo "$!" >"$TMP/tcp-$kind-launcher.pid"
+  done
+  for kind in direct wbd;do
+    for i in $(seq 1 40);do
+      if grep -Fq "H2232_ORIGINAL_KERNEL_TCP_CONNECT_SERVER_READY kind=$kind"           "$OUT/tcp-$kind-server.log";then break;fi
+      sleep .2
+    done
+    grep -Fq "H2232_ORIGINAL_KERNEL_TCP_CONNECT_SERVER_READY kind=$kind"         "$OUT/tcp-$kind-server.log"
+  done
   python3 "$TOOL" node-snapshot server startup "$OUT/server-startup.json"
   python3 - <<'PY'
 import json,os,pathlib
@@ -197,6 +214,7 @@ client_run(){
     if [[ "$duration" == 12 ]];then replies=80;deadline=11;fi
     if [[ "$duration" == 3 ]];then replies=16;deadline=2.7;fi
     local probe_file="$OUT/probe-$(basename "$casefile")"
+    local tcp_file="$OUT/connect-$(basename "$casefile")"
     local sampler_pid=""
     if [[ "$kind" == "wbd" ]];then
       local resource_file="$OUT/resource-$(basename "$casefile")"
@@ -211,6 +229,12 @@ client_run(){
       "$probe_file" --count "$replies" --interval-ms 100 --deadline "$deadline" \
       >"$probe_file.log" 2>&1 &
     local probe_pid=$!
+    # Kernel SYN->connect() wall-time on the same direct vs WBD TUN route,
+    # concurrently with actual iperf TCP. >=50 independent completed
+    # connects required for P99; 3s case is P99 UNKNOWN.
+    sudo -n ip netns exec "$NS" env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID"       python3 "$TCPMETRICS" tcp-probe "$kind" "$tcp_file"         --count "$replies" --interval-ms 100 --deadline "$deadline"       >"$tcp_file.log" 2>&1 &
+    local tcp_probe_pid=$!
+    echo "H2232_CASE_START case=$(basename "$casefile") kind=$kind direction=$direction duration_s=$duration streams=$streams ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     python3 "$TOOL" iperf "$kind" "$duration" "$streams" "$direction" "$casefile" "${owner_check[@]}" \
       >"$casefile.txt" 2>&1 ||
       echo "H2228_OBSERVED_TCP_ERROR $label $kind $direction" |tee -a "$OUT/failures.log"
@@ -220,12 +244,32 @@ client_run(){
         >"$casefile.p99.log" 2>&1 ||
         echo "H2231_TCP_METRIC_ENRICH_FAILED $casefile" |tee -a "$OUT/failures.log"
     fi
+    if ! wait "$tcp_probe_pid";then
+      echo "H2232_REAL_TCP_CONNECT_P99_PROBE_FAILED $tcp_file" |tee -a "$OUT/failures.log"
+    fi
     if ! wait "$probe_pid";then
       echo "H2231_REAL_APP_UDP_P99_PROBE_FAILED $probe_file" |tee -a "$OUT/failures.log"
     fi
     if [[ -n "$sampler_pid" ]] && ! wait "$sampler_pid";then
       echo "H2231_NATIVE_P99_SAMPLER_FAILED $casefile" |tee -a "$OUT/failures.log"
     fi
+    python3 - "$casefile" "$probe_file" "$tcp_file" <<'PY_CASE_PROGRESS'
+import json,pathlib,sys
+rows=[]
+for file in sys.argv[1:]:
+ try:
+  d=json.loads(pathlib.Path(file).read_text())
+  rows.append({"file":pathlib.Path(file).name,
+    "status":d.get("status",d.get("connect_p99_status",d.get("rtt_p99_status"))),
+    "business_mbps":d.get("mbps"),
+    "tcp_connect_count":d.get("succeeded_connects"),
+    "tcp_connect_fail":d.get("failed_or_unfinished_connects"),
+    "tcp_connect_p99_ms":d.get("kernel_tcp_connect_elapsed_ms",{}).get("p99"),
+    "udp_rtt_p99_ms":d.get("roundtrip_rtt_ms",{}).get("p99")})
+ except (OSError,ValueError,TypeError) as exc:
+  rows.append({"file":pathlib.Path(file).name,"status":"NO_VALID_RECEIPT","why":type(exc).__name__})
+print("H2232_CASE_COMPLETED "+json.dumps(rows,separators=(",",":")),flush=True)
+PY_CASE_PROGRESS
     relay_read "$(basename "$casefile" .json)"
   }
   # The relay has NO rate cap. Require a real unshaped two-hop reference
@@ -239,6 +283,7 @@ client_run(){
   local scenario_index=0
   for loss in 0 1 5 10 20;do
     local label="delay200-loss${loss}-${MODEL}"
+    echo "H2232_LOSS_PHASE_START $label ts=$(date -u +%Y-%m-%dT%H:%M:%SZ) model=$MODEL"
     shape "$label" "$loss" 200
     relay_read "$label-before"
     # Actual end-to-end RTT; no unsupported '200ms precise wire RTT' claims.
@@ -277,6 +322,9 @@ client_run(){
           echo "H2228_NATIVE_WORKER_EXIT_BEFORE_COLD_READY $label" |tee -a "$OUT/failures.log"
           break
         fi
+      fi
+      if ((i % 40 == 0));then
+        echo "H2232_COLD_READY_WAIT $label elapsed_s=$((i/4)) native_pid_known=$([[ -s "$pidfile" ]] && echo 1 || echo 0)"
       fi
       sleep .25
     done
@@ -350,7 +398,7 @@ print("H2228_THREE_NODE_PAIRED_RECEIPT_REAL_NOT_PERFORMANCE_PASS")
 PY
 }
 cleanup(){
-  for f in control.pid client.pid server.pid iperf-direct.pid iperf-wbd.pid udp-direct.pid udp-wbd.pid;do
+  for f in control.pid client.pid server.pid iperf-direct.pid iperf-wbd.pid udp-direct.pid udp-wbd.pid tcp-direct.pid tcp-wbd.pid;do
     test ! -s "$TMP/$f" || sudo -n kill -TERM "$(cat "$TMP/$f")" 2>/dev/null || true
   done
   python3 "$TOOL" clean "${WBD_H2228_ROLE:?}" || true
