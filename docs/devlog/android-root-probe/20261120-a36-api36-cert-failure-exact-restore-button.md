@@ -27,3 +27,13 @@ SOURCE `3bb2b18bcbe76da5bf14c42bea26915a6ebe62c4` [Android Action #44718751028](
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A36e Java生产恢复shell和安全TXT测试已真实通过，修正过度要求报告器硬编码证书原因的Host源静态检查，仍严格限定Event白名单。"}
 ```
+
+## A36 最终产品SOURCE与同源证据锁定
+
+用户A35 `4975c1ab` Android API36两次证书校验FAIL是**真机观察**；本A36 **尚未在用户Android真机安装/触发恢复按钮/测试受信任CA握手**。冻结产品SOURCE `09910ee1d94c6ad514b8ac78ed927a30c799644c` [Android dual64 Action #44719396739](https://github.com/lly8666/wbd-next/actions/runs/44719396739) completed **11 SUCCESS / 4 SKIPPED / 0 FAIL**；[正式签名ARM64 APK #14621715928](https://github.com/lly8666/wbd-next/actions/runs/44719396739/artifacts/14621715928)、[原Linux真实Oracle工件 #14621900324](https://github.com/lly8666/wbd-next/actions/runs/44719396739/artifacts/14621900324)。四项旧KernelSU native/NativeBridge/D2-S1/TAP guest skipped，ARM64 Cuttlefish仅Host admission，绝不是guest E2E。原Linux真实Normal/off Oracle的同源Job明确含 `ANDROID_A35_FAKE_RUNNER_RST_GUARD_JOURNAL_HOST_PASS`、`ANDROID_A34_ORIGINAL_GO_TLS_CLASSIFIER_HOST_PASS`、`ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN`。原Go新rootjournal恢复单UID/group/allapp跨进程flock拒绝/外国状态fail-closed、RST恢复及原Java Shell `sh -n`、安全TXT正反例已在Host实际执行；x509新证书细分单测包含源并通过Go测试包编译，**没有证据表明独立新增此一单测在CI单独执行**，不夸大。
+
+A36历史SOURCE `6e521f8` 真Go编译未用import FAIL、`47a521e` 治理/产品FAIL、`a1f4928` Java重复局部变量FAIL、`3bb2b18` 源静态门过度要求报告器硬编码枚举 FAIL；各自历史CI结论均保留，只有 `09910ee1` 作为对外推荐APK SOURCE。恢复按钮在源码由APP调用原Go `--android-recover-owned-root` 而非全局iptables flush，先停精确owner后回滚持久journal；两项清理及root shell最终成功收据必需。证书错误继续保持Firefox120 uTLS TLS1.3完整 `VerifyServer:true`，本地导入信任PEM不关闭验证。下次用户自行使用A36 APK：先核实并导入自己Linux WBD原服务端实际CA PEM，SNI与DNS SAN匹配；选择单测试App UID Normal/off启动一次，安全TXT查看 `TLS_TRUST_SOURCE_*`、`TLS_CERT_REASON_*`；失败或Stop后按「恢复网络」，安全TXT必须 `ROOT_RESTORE_ROUTE_CLEARED`、`ROOT_RESTORE_RST_CLEARED`、`ROOT_RESTORE_COMPLETE`，否则不报系统恢复成功。Android净路由、真保护认证、租约、M4、App TCP/UDP和joined Stop仍没有真机证明。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A36冻结11 SUCCESS/4 SKIPPED同源签名ARM64恢复按钮与CA导入APK，原Linux Oracle Host PASS但Android真机恢复/认证/M4仍NOT_PROVEN。"}
+```
