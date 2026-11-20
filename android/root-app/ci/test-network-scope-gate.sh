@@ -15,6 +15,13 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/ci/RootStopCommandTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootStopCommandTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
+  android/root-app/src/org/wbdnext/rootclient/RootRecoveryCommand.java \
+  android/root-app/ci/RootRecoveryCommandTest.java \
+  android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/src/org/wbdnext/rootclient/ServerAddress.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootRecoveryCommandTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
   android/root-app/ci/InstalledAppTargetTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.InstalledAppTargetTest
@@ -304,5 +311,14 @@ for assembler in ("android/root-native/build-source-locked.sh",
     assert 'go test -count=1 ./internal/v4productcli/rstguard' in text
 print("ANDROID_A35_THREE_ORIGINAL_GO_DONOR_ASSEMBLIES_SOURCE_LOCKED_PASS")
 print("ANDROID_A35_SCOPED_RST_GUARD_NO_GLOBAL_FIREWALL_SOURCE_PASS")
+# A36 Restore only runs source-locked original-Go exact journal cleanup.
+assert 'RootClientService.RESTORE' in Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+assert '--android-recover-owned-root' in Path("android/root-app/src/org/wbdnext/rootclient/RootRecoveryCommand.java").read_text()
+assert 'rootjournal.RecoverOwned(' in go_product and 'rstguard.RecoverOwned(' in go_product
+assert 'VerifyServer:true' in go_product
+assert 'v4AndroidCertFailureReason(err)' in go_admission
+for e in ("ROOT_RESTORE_COMPLETE","ROOT_RESTORE_FAILED","ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH"):
+ assert e in s and e in receipt and e in report
+print("ANDROID_A36_APP_RESTORE_CERT_TRUST_SOURCE_GATE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY

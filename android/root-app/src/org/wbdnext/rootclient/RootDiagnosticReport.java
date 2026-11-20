@@ -51,6 +51,10 @@ final class RootDiagnosticReport {
     }
     private static String stage(List<String> session){
         if(session.isEmpty())return "NOT_STARTED";
+        if(has(session,"ROOT_RESTORE_COMPLETE"))return "ROOT_RESTORE_VERIFIED_OWNED_KERNEL_CLEAR";
+        if(has(session,"ROOT_RESTORE_FAILED"))return "ROOT_RESTORE_FAILED_NO_GLOBAL_MUTATION";
+        if(has(session,"ROOT_RESTORE_REFUSED_LIVE_OWNER"))return "ROOT_RESTORE_REFUSED_LIVE_OWNER";
+        if(has(session,"ROOT_RESTORE_REQUESTED"))return "ROOT_RESTORE_REQUESTED_NOT_VERIFIED";
         // This is a last-proven-boundary classification, not an assumed
         // errno or a promise of physical network/TLS success.
         if(has(session,"START_DIAGNOSTIC_STAGES_V2")&&

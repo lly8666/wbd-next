@@ -32,12 +32,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class RootClientService extends Service {
     static final String START="org.wbdnext.rootclient.START";
     static final String STOP="org.wbdnext.rootclient.STOP";
+    static final String RESTORE="org.wbdnext.rootclient.RESTORE";
     private static final String ROOT="/data/local/tmp/wbd-next-root";
     private static final String CHANNEL="wbd-root-native";
     public static volatile String status="NOT_RUNNING (actual device NOT_QUALIFIED)";
     private final AtomicBoolean running=new AtomicBoolean(false);
     private final AtomicBoolean stopping=new AtomicBoolean(false);
     private final AtomicBoolean stopSignalDispatched=new AtomicBoolean(false);
+    private final AtomicBoolean restoring=new AtomicBoolean(false);
     private final Object ownerLaunchLock=new Object();
     private final Handler networkEvents=new Handler(Looper.getMainLooper());
     private volatile Process root;
@@ -184,7 +186,17 @@ public final class RootClientService extends Service {
             if(!running.get())stopSelf(startId);
             return START_NOT_STICKY;
         }
-        if(!START.equals(intent.getAction())||!running.compareAndSet(false,true)){
+        if(RESTORE.equals(intent.getAction())){
+            if(restoring.compareAndSet(false,true)){
+                notification();
+                trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_REQUESTED);
+                requestStop("USER_RESTORE_OWNED_KERNEL");
+                new Thread(this::restoreOwnedRootNetwork,"wbd-root-restore").start();
+            }
+            return START_NOT_STICKY;
+        }
+        if(!START.equals(intent.getAction())||restoring.get()||
+           !running.compareAndSet(false,true)){
             return START_NOT_STICKY;
         }
         stopping.set(false);
@@ -493,6 +505,24 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_TIMEOUT);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=CERTIFICATE"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=UNKNOWN_AUTHORITY"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_UNKNOWN_AUTHORITY);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=HOSTNAME_MISMATCH"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=EXPIRED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_EXPIRED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=NOT_YET_VALID"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_NOT_YET_VALID);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=INCOMPATIBLE_USAGE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_INCOMPATIBLE_USAGE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=INVALID_CERTIFICATE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_INVALID_CERTIFICATE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=OTHER_CERTIFICATE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_OTHER_CERTIFICATE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=OS_STORE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_TRUST_SOURCE_OS_STORE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=APP_PEM"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_TRUST_SOURCE_APP_PEM);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=PEER_CLOSED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_PEER_CLOSED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=OTHER"))
@@ -632,6 +662,63 @@ public final class RootClientService extends Service {
             stopWatchingPhysicalNetwork();
             stopWatchingSelectedPackage();
             trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED);
+            if(!restoring.get()){
+                stopForeground(true);
+                stopSelf();
+            }
+        }
+    }
+    // The Restore button never changes the firewall in Java. It stops
+    // the exact old owner, then executes the same signed original-Go ELF
+    // with a dedicated recovery-only CLI, no server credentials or SYN.
+    private void restoreOwnedRootNetwork(){
+        try{
+            long until=android.os.SystemClock.elapsedRealtime()+25000;
+            while(running.get()&&android.os.SystemClock.elapsedRealtime()<until)
+                Thread.sleep(100);
+            if(running.get()){
+                trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_REFUSED_LIVE_OWNER);
+                status="RESTORE REFUSED: original native owner still stopping";
+                return;
+            }
+            NativePayload signed=NativePayload.stage(this);
+            String cmd=RootRecoveryCommand.build(signed.executableName,
+                signed.client.getAbsolutePath(),signed.engine.getAbsolutePath());
+            Process p=new ProcessBuilder("su","-c",cmd)
+                .redirectErrorStream(true).start();
+            boolean route=false,rst=false,complete=false;
+            try(BufferedReader reader=new BufferedReader(
+                    new InputStreamReader(p.getInputStream()))){
+                String line;
+                while((line=reader.readLine())!=null){
+                    if(line.length()>4096)line=line.substring(0,4096);
+                    if(OriginalGoMilestones.matches(line,
+                        "V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")){
+                        route=true;
+                        trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_ROUTE_CLEARED);
+                    }
+                    if(OriginalGoMilestones.matches(line,
+                        "V4_PUBLIC_ANDROID_RESTORE_RST_CLEARED role=client")){
+                        rst=true;
+                        trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_RST_CLEARED);
+                    }
+                    if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_RESTORE_COMPLETE"))
+                        complete=true;
+                }
+            }
+            int exit=p.waitFor();
+            if(exit==0&&route&&rst&&complete){
+                trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_COMPLETE);
+                status="RESTORE VERIFIED: WBD-only firewall/UID/private table cleared";
+            }else{
+                trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_FAILED);
+                status="RESTORE NOT VERIFIED — no broad flush; inspect safe TXT";
+            }
+        }catch(Exception failure){
+            trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_FAILED);
+            status="RESTORE NOT VERIFIED — exact root owner/journal check failed";
+        }finally{
+            restoring.set(false);
             stopForeground(true);
             stopSelf();
         }

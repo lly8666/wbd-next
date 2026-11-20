@@ -25,6 +25,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ public final class RootClientActivity extends Activity {
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult,diagnosticExportResult;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
+    private static final int LOCAL_TLS_CA_IMPORT=2043;
     private String signedSource(){
         try(InputStream in=getAssets().open("native-arm64/SOURCE")){
             byte[] data=new byte[128];
@@ -64,8 +66,46 @@ public final class RootClientActivity extends Activity {
             diagnosticExportResult.setText("无法打开系统文件保存器；未请求 Root 或读取原始日志");
         }
     }
+    private void importTLSCA(){
+        Intent choose=new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        choose.addCategory(Intent.CATEGORY_OPENABLE);
+        choose.setType("*/*");
+        try{startActivityForResult(choose,LOCAL_TLS_CA_IMPORT);}
+        catch(Exception unavailable){status.setText("本地CA文件选择器不可用，可直接粘贴PEM");}
+    }
+    private void acceptTLSCA(Intent data){
+        if(data==null||data.getData()==null)return;
+        try(InputStream in=getContentResolver().openInputStream(data.getData());
+            ByteArrayOutputStream out=new ByteArrayOutputStream()){
+            if(in==null)throw new IllegalArgumentException("unreadable CA");
+            byte[] chunk=new byte[4096];
+            int n;
+            while((n=in.read(chunk))!=-1){
+                if(out.size()+n>=RootPrivateCredentialContract.maxBytes(RootPrivateCredentialContract.CA))
+                    throw new IllegalArgumentException("CA input too large");
+                out.write(chunk,0,n);
+            }
+            String pem=new String(out.toByteArray(),StandardCharsets.UTF_8).trim();
+            if(!pem.startsWith("-----BEGIN CERTIFICATE-----")||
+               !pem.contains("-----END CERTIFICATE-----"))
+                throw new IllegalArgumentException("not PEM");
+            java.util.Collection<? extends java.security.cert.Certificate> certs=
+                java.security.cert.CertificateFactory.getInstance("X.509")
+                .generateCertificates(new java.io.ByteArrayInputStream(
+                    pem.getBytes(StandardCharsets.UTF_8)));
+            if(certs.isEmpty())throw new IllegalArgumentException("empty trust set");
+            caPEM.setText(pem);
+            status.setText("已导入 "+certs.size()+" 张本地TLS证书；将使用原Go验证SNI和链，不关闭校验");
+        }catch(Exception failure){
+            status.setText("CA导入未成功：请选择有效的受限大小PEM文件，原有配置未更改");
+        }
+    }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
+        if(requestCode==LOCAL_TLS_CA_IMPORT){
+            if(resultCode==RESULT_OK)acceptTLSCA(data);
+            return;
+        }
         if(requestCode!=SAFE_DIAGNOSTIC_SAVE||diagnosticExportResult==null)return;
         if(resultCode!=RESULT_OK||data==null||data.getData()==null){
             diagnosticExportResult.setText("未导出诊断（用户取消或位置不可用）");
@@ -339,6 +379,15 @@ public final class RootClientActivity extends Activity {
         caPEM=input(pane,"Optional server TLS CA certificate PEM",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
+        Button importCa=new Button(this);
+        importCa.setText("从本机文件导入 WBD 服务端 TLS CA PEM");
+        importCa.setOnClickListener(v->importTLSCA());
+        pane.addView(importCa);
+        TextView caHelp=new TextView(this);
+        caHelp.setText("证书失败：UNKNOWN_AUTHORITY请导入服务器签发CA；"+
+            "HOSTNAME_MISMATCH请将TLS SNI改为证书DNS SAN。"+
+            "不自动信任对端证书，也不关闭TLS验证。");
+        pane.addView(caHelp);
         TextView targetHelp=new TextView(this);
         targetHelp.setText("默认仅接管普通 Android 应用的 IPv4 流量（最多20个用户空间），不是系统全流量。"
             +"仅在原 Go TLS/认证 /32、原 Rust M4 就绪后设置 KernelSU UID 路由。"
@@ -372,6 +421,22 @@ public final class RootClientActivity extends Activity {
             startService(i);
         });
         pane.addView(stop);
+        Button restore=new Button(this);
+        restore.setText("恢复网络（WBD临时Root防火墙/UID路由）");
+        restore.setOnClickListener(v->new AlertDialog.Builder(this)
+            .setTitle("恢复 WBD 临时Root网络")
+            .setMessage("将停止当前原 Go/Rust owner，并只按私有root journal"+
+                "回滚WBD拥有的精确 OUTPUT RST防火墙规则、UID路由及私有表。"+
+                "不会全局flush、清理其他客户端/系统规则或改变DNS。"+
+                "若仍有其他owner或外国规则，直接拒绝清理。")
+            .setNegativeButton("取消",null)
+            .setPositiveButton("停止并恢复",(dialog,which)->{
+                Intent i=new Intent(this,RootClientService.class);
+                i.setAction(RootClientService.RESTORE);
+                startForegroundService(i);
+                status.setText("已请求恢复；等待原Go精确内核读回");
+            }).show());
+        pane.addView(restore);
         Button exportDiagnostic=new Button(this);
         exportDiagnostic.setText("导出脱敏排障 TXT（无 Root／无需联网）");
         exportDiagnostic.setOnClickListener(v->exportSafeDiagnostic());

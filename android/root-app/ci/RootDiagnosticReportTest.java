@@ -527,6 +527,46 @@ public final class RootDiagnosticReportTest {
         contains(verifiedTxt,"ORIGINAL_GO_COLD_RST_GUARD_STOP_CLEARED");
         if(verifiedTxt.contains("198.51.100.")||verifiedTxt.contains("password="))
             throw new AssertionError("A35 positive TXT leaked private text");
+        // A36: Restore overrides the previous TLS failure only with a new
+        // verified journal receipt; rejected/partial recovery stays red.
+        for(RootDiagnosticReceipt.Event end:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.ROOT_RESTORE_COMPLETE,
+            RootDiagnosticReceipt.Event.ROOT_RESTORE_FAILED,
+            RootDiagnosticReceipt.Event.ROOT_RESTORE_REFUSED_LIVE_OWNER
+        }){
+            File restore=Files.createTempDirectory("wbd-a36-restore").toFile();
+            RootDiagnosticReceipt wr=new RootDiagnosticReceipt(new File(restore,"wbd-root-diagnostic.txt"));
+            wr.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            wr.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            wr.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE);
+            wr.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            wr.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_REQUESTED);
+            if(end==RootDiagnosticReceipt.Event.ROOT_RESTORE_COMPLETE){
+                wr.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_ROUTE_CLEARED);
+                wr.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_RST_CLEARED);
+            }
+            wr.record(end);
+            String result=RootDiagnosticReport.build(restore,source,36);
+            String want=end==RootDiagnosticReceipt.Event.ROOT_RESTORE_COMPLETE
+                ?"ROOT_RESTORE_VERIFIED_OWNED_KERNEL_CLEAR":
+                end==RootDiagnosticReceipt.Event.ROOT_RESTORE_FAILED
+                ?"ROOT_RESTORE_FAILED_NO_GLOBAL_MUTATION":"ROOT_RESTORE_REFUSED_LIVE_OWNER";
+            contains(result,"last_session_stage="+want);
+        }
+        File certDir=Files.createTempDirectory("wbd-a36-cert").toFile();
+        RootDiagnosticReceipt certWriter=new RootDiagnosticReceipt(new File(certDir,"wbd-root-diagnostic.txt"));
+        for(RootDiagnosticReceipt.Event e:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.START_REQUESTED,
+            RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_TRUST_SOURCE_APP_PEM,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE,
+            RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO
+        })certWriter.record(e);
+        String certReport=RootDiagnosticReport.build(certDir,source,36);
+        contains(certReport,"last_session_stage=TLS_HANDSHAKE_FAILED_CERTIFICATE");
+        contains(certReport,"ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH");
+        System.out.println("ANDROID_A36_CERT_REASON_RESTORE_REPORT_HOST_PASS");
         System.out.println("ANDROID_A35_ORIGINAL_ROOT_RST_GUARD_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A34_TLS_ORIGINAL_WIRE_AND_DEADLINE_HOST_PASS");
         System.out.println("ANDROID_A33_SYNACK_TLS_ADMISSION_STAGE_PRIORITY_HOST_PASS");
