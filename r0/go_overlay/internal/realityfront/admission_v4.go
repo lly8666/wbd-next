@@ -747,6 +747,29 @@ func v4AndroidColdFailureClass(err error)string{
     return "OTHER"
 }
 
+// A36: split an already VERIFIED x509 verification failure into fixed
+// diagnostic classes. No certificate, hostname, issuer or PEM bytes leave
+// Go. This never changes uTLS RootCAs, SNI or InsecureSkipVerify.
+func v4AndroidCertFailureReason(err error)string{
+    var unknown x509.UnknownAuthorityError
+    if errors.As(err,&unknown){return "UNKNOWN_AUTHORITY"}
+    var hostname x509.HostnameError
+    if errors.As(err,&hostname){return "HOSTNAME_MISMATCH"}
+    var invalid x509.CertificateInvalidError
+    if errors.As(err,&invalid){
+        switch invalid.Reason{
+        case x509.Expired:
+            if invalid.Cert!=nil&&time.Now().Before(invalid.Cert.NotBefore){
+                return "NOT_YET_VALID"
+            }
+            return "EXPIRED"
+        case x509.IncompatibleUsage:return "INCOMPATIBLE_USAGE"
+        }
+        return "INVALID_CERTIFICATE"
+    }
+    return "OTHER_CERTIFICATE"
+}
+
 // A34 only observes an elapsed original TLS candidate deadline. An opaque
 // error at that boundary is not necessarily a timeout or server rejection.
 func v4AndroidClassAtDeadline(err error,remaining time.Duration)string{
@@ -800,6 +823,9 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     if err!=nil{
         if runtime.GOOS=="android"{
             log.Printf("V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=%s",v4AndroidClassAtDeadline(err,guard.Remaining()))
+            if v4AndroidColdFailureClass(err)=="CERTIFICATE"{
+                log.Printf("V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=%s",v4AndroidCertFailureReason(err))
+            }
         }
         return nil,candidateError(ctx,err)
     }

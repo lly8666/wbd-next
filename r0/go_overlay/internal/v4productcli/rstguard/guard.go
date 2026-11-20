@@ -202,6 +202,26 @@ func (g *Guard) remove(p Plan) error {
     return nil
 }
 
+// RecoverOwned is the recovery-only cold path. Exact journal + flock owns
+// cleanup; without a journal, any foreign marker is a hard conflict, not
+// permission to flush or delete a kernel firewall rule.
+func RecoverOwned(run Runner,path string)(recovered bool,retErr error){
+    if run==nil{return false,ErrBackend}
+    lock,e:=ownerLock(path)
+    if e!=nil{return false,e}
+    defer func(){if lock.Close()!=nil{retErr=errors.Join(retErr,ErrCleanup)}}()
+    g:=&Guard{run:run,journal:path,lock:lock}
+    prior,exists,e:=read(path)
+    if e!=nil{return false,e}
+    if exists{
+        if e=g.remove(prior);e!=nil{return false,e}
+        recovered=true
+    }
+    present,e:=g.status(Plan{})
+    if e!=nil||present{return recovered,errors.Join(ErrScope,e)}
+    return recovered,nil
+}
+
 // New first recovers only a fully validated, stale, owned journal while
 // holding flock. A foreign marker without a journal is NEVER deleted.
 func New(run Runner,path string,p Plan) (_ *Guard,recovered bool,retErr error) {

@@ -133,6 +133,25 @@ func TestScopedRSTGuardConcurrentLockAndUncertainStop(t *testing.T){
     if e!=nil||!yes{t.Fatalf("subsequent exact recovery: %v",e)}
     if e=recovered.Close();e!=nil{t.Fatal(e)}
 }
+func TestScopedRSTGuardRecoveryOnlyAndForeignRefusal(t *testing.T){
+    f:=&fakeIPTables{}
+    path:=filepath.Join(privateTempDir(t),"rst-guard.json")
+    g,_,e:=New(f.run,path,basePlan())
+    if e!=nil{t.Fatal(e)}
+    if _,e=RecoverOwned(f.run,path);!errors.Is(e,ErrLocked){
+        t.Fatalf("active owner recovered: %v",e)
+    }
+    g.lock.Close() // fake process died; owned durable journal remains
+    recovered,e:=RecoverOwned(f.run,path)
+    if e!=nil||!recovered||f.present{t.Fatalf("failed exact recovery %v",e)}
+    recovered,e=RecoverOwned(f.run,path)
+    if e!=nil||recovered{t.Fatalf("clean no-op %v",e)}
+    f.present=true;f.plan=basePlan()
+    if _,e=RecoverOwned(f.run,path);!errors.Is(e,ErrScope){
+        t.Fatalf("foreign marker without journal deleted/accepted %v",e)
+    }
+    if !f.present{t.Fatal("deleted foreign firewall rule")}
+}
 func TestScopedRSTGuardRejectNonPhysicalScope(t *testing.T){
     for _,p:=range []Plan{
         {Version:1,Interface:"wlan0",SourceIP:"127.0.0.1",PeerIP:"198.51.100.2",SourcePort:45444,PeerPort:443},

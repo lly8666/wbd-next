@@ -1329,3 +1329,30 @@ func TestV4AndroidColdDeadlineUnknownIsNotMisreported(t *testing.T){
   if got:=v4AndroidClassAtDeadline(c.err,c.remaining);got!=c.want{t.Fatalf("%s != %s",got,c.want)}
  }
 }
+
+
+// A36 exact typed x509 reasons; deliberately no certificate bytes/SNI in
+// public messages. The real original Go/uTLS handshake still verifies all.
+func TestV4AndroidCertificateReasonTypedNoBypass(t *testing.T){
+    now:=time.Now()
+    cert:=&x509.Certificate{NotBefore:now.Add(-2*time.Hour),NotAfter:now.Add(time.Hour)}
+    cases:=[]struct{name string;err error;want string}{
+        {"untrusted",x509.UnknownAuthorityError{Cert:cert},"UNKNOWN_AUTHORITY"},
+        {"name",x509.HostnameError{Certificate:cert,Host:"wrong.test"},"HOSTNAME_MISMATCH"},
+        {"expired",x509.CertificateInvalidError{Cert:&x509.Certificate{NotBefore:now.Add(-3*time.Hour),NotAfter:now.Add(-time.Hour)},Reason:x509.Expired},"EXPIRED"},
+        {"not_yet",x509.CertificateInvalidError{Cert:&x509.Certificate{NotBefore:now.Add(time.Hour),NotAfter:now.Add(2*time.Hour)},Reason:x509.Expired},"NOT_YET_VALID"},
+        {"usage",x509.CertificateInvalidError{Cert:cert,Reason:x509.IncompatibleUsage},"INCOMPATIBLE_USAGE"},
+        {"invalid",x509.CertificateInvalidError{Cert:cert,Reason:x509.TooManyIntermediates},"INVALID_CERTIFICATE"},
+    }
+    for _,tc:=range cases{
+        t.Run(tc.name,func(t *testing.T){
+            wrapped:=fmt.Errorf("original protected handshake: %w",tc.err)
+            if got:=v4AndroidColdFailureClass(wrapped);got!="CERTIFICATE"{
+                t.Fatalf("old cert classification drifted: %s",got)
+            }
+            if got:=v4AndroidCertFailureReason(wrapped);got!=tc.want{
+                t.Fatalf("reason got %s want %s",got,tc.want)
+            }
+        })
+    }
+}

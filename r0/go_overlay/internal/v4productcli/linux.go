@@ -38,6 +38,7 @@ import (
 
     "github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative"
     "github.com/lly8666/wobuzhidao/internal/v4productcli/rstguard"
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/rootjournal"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -557,6 +558,13 @@ func parse(role string,args []string)(config,error){
         if !roots.AppendCertsFromPEM(pem){return c,fmt.Errorf("trusted server TLS PEM contains no certificate")}
         c.tlsRoots=roots
     }
+    if runtime.GOOS=="android"&&role=="client"{
+        if c.tlsRoots==nil{
+            log.Print("V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=OS_STORE")
+        }else{
+            log.Print("V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=APP_PEM")
+        }
+    }
     if role=="client"&&c.autoIP{
         if *tunnel!=""||*installPath==""{return c,fmt.Errorf("auto-ip derives tunnel ID, do not pass manual ID")}
         installation,e:=logicaltunnel.ResolveInstallation("",*installPath,false)
@@ -1005,10 +1013,58 @@ func originalAndroidColdParseClass(err error)string{
  }
 }
 
+// A36: invoked by the APK Restore button as the SAME signed original-Go
+// Bionic native ELF, without credentials, server details or any FakeTCP SYN.
+// Call only after the exact previous Go/Rust owner has stopped/joined.
+// This deliberately does NOT flush system firewall, routes, DNS or VPN.
+func recoverOriginalAndroidRootOwned()error{
+    if runtime.GOOS!="android"||os.Geteuid()!=0{
+        return fmt.Errorf("exact Android root Restore requires euid 0")
+    }
+    runIP:=func(args ...string)(string,error){
+        c,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+        defer cancel()
+        b,e:=exec.CommandContext(c,"ip",args...).CombinedOutput()
+        if len(b)>256<<10{return "",fmt.Errorf("owned ip readback oversized")}
+        if e!=nil{return "",fmt.Errorf("owned ip mutation/readback failed")}
+        return string(b),nil
+    }
+    firewall,err:=exec.LookPath("iptables")
+    if err!=nil{
+        log.Print("V4_PUBLIC_ANDROID_RESTORE_RST_FAILED role=client")
+        return fmt.Errorf("original Root Restore missing scoped firewall")
+    }
+    runFirewall:=func(args ...string)(string,error){
+        c,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+        defer cancel()
+        b,e:=exec.CommandContext(c,firewall,args...).CombinedOutput()
+        if len(b)>256<<10{return "",fmt.Errorf("scoped firewall readback oversized")}
+        if e!=nil{return "",fmt.Errorf("scoped firewall command failed")}
+        return string(b),nil
+    }
+    const root="/data/local/tmp/wbd-next-root/"
+    _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
+    if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
+        log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")
+    }
+    _,rstErr:=rstguard.RecoverOwned(runFirewall,root+"rst-guard.json")
+    if rstErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_RST_FAILED role=client")}else{
+        log.Print("V4_PUBLIC_ANDROID_RESTORE_RST_CLEARED role=client")
+    }
+    if routeErr!=nil||rstErr!=nil{
+        return fmt.Errorf("original Root Restore not fully verified; owned journal retained on uncertain state")
+    }
+    log.Print("V4_PUBLIC_ANDROID_RESTORE_NATIVE_KERNEL_CLEARED role=client")
+    return nil
+}
+
 func Run(role string,args []string)(retErr error){
  if runtime.GOOS=="android"&&role=="client"{
   // Actual original Go Bionic ELF entry, NOT an emulated TLS/Root stage.
   log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")
+ }
+ if runtime.GOOS=="android"&&role=="client"&&len(args)==1&&args[0]=="--android-recover-owned-root"{
+     return recoverOriginalAndroidRootOwned()
  }
  if role=="server"&&len(args)==2&&args[0]=="--init-route-key-file"{
    return initServerRouteKeyFile(args[1])
