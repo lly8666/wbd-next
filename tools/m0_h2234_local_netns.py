@@ -58,6 +58,24 @@ def ready(log,needle,seconds=65):
         time.sleep(0.2)
     return False
 
+def original_m4_batch_stage_receipt(log):
+    """Exactly one genuine per-client Rust M4 Stop; missing isn't zero."""
+    matches=re.findall(r"V4_PUBLIC_M4_BATCH_STAGE_STOP role=client[^\n]*",log)
+    if len(matches)!=1:
+        raise RuntimeError("H2235_CLIENT_M4_STAGE_RECEIPT_MISSING_OR_DUPLICATED")
+    result={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",matches[0])}
+    required=("generation","batches","copied","collect_turns","collect_ns",
+              "prepare_ns","seal_ns","sendmmsg_ns","settle_ns",
+              "max_collect_ns","max_prepare_ns","max_seal_ns",
+              "max_sendmmsg_ns","max_settle_ns","original_owner",
+              "no_wire_or_queue_change")
+    if not all(k in result for k in required):
+        raise RuntimeError("H2235_M4_STAGE_INCOMPLETE_OR_TRUNCATED")
+    if (result["batches"]<1 or result["copied"]<1 or
+        result["original_owner"]!=1 or result["no_wire_or_queue_change"]!=1):
+        raise RuntimeError("H2235_M4_STAGE_NOT_REAL_OWNER_BATCH")
+    return result
+
 class OwnedLocal:
     def __init__(self,build,out,tmp):
         self.build=build;self.out=out;self.tmp=tmp
@@ -183,6 +201,7 @@ class OwnedLocal:
         save(users,{USER:PASS});users.chmod(0o600)
         self.spawn("server",self.server,[
             "env","LD_LIBRARY_PATH="+str(self.build),
+            "WBD_H2235_M4_STAGE_DIAG=1",
             str(self.build/"wbd-v4-server"),
             "--raw-interface","wan0","--local-ip",IP_S,"--local-port","443",
             "--tun-name","wbds0","--tun-ipv4","10.66.0.1/24",
@@ -209,6 +228,7 @@ class OwnedLocal:
         self.clientlog=self.spawn("client",self.client,[
             "env","LD_LIBRARY_PATH="+str(self.build),
             "WBD_M0_RAW_TX_SOCKET_DIAG=1",
+            "WBD_H2235_M4_STAGE_DIAG=1",
             str(self.build/"wbd-v4-client"),
             "--raw-interface","wan0","--local-ip",IP_C,
             "--local-port",str(port),"--peer-ip",IP_S,"--peer-port","443",
@@ -251,11 +271,13 @@ class OwnedLocal:
         if not markers:raise RuntimeError("H2234_NO_ORIGINAL_RUST_QUEUE_READBACK")
         if "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client" not in text:
             raise RuntimeError("H2234_CLIENT_OWNER_STOP_NOT_DRAINED")
+        stage_values=original_m4_batch_stage_receipt(text)
         routed,unrouted,backpressure,full,retired,byte,age=map(int,markers[-1])
         return {"status":"REAL_RUST_OWNED_STOP","routed":routed,"unrouted":unrouted,
                 "backpressure":backpressure,"queue_full_drops":full,
                 "retired":retired,"queue_byte_drops":byte,"queue_age_drops":age,
-                "scope":"ONE_GENERATION_PER_LOSS_UP_AND_DOWN_20S"}
+                "scope":"ONE_GENERATION_PER_LOSS_UP_AND_DOWN_20S",
+                "m4_original_tx_batch_stages":stage_values}
 
     def iperf_case(self,index,loss,kind,direction,duration,streams):
         label=("clear-zero" if loss==0 else "delay200-loss"+str(loss)+"-burst")

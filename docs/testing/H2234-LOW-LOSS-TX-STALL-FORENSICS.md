@@ -69,3 +69,27 @@ SOURCE `7084b2e8ec32295ee58ad937abcdec191e12844a`，原始artifact 14650594764�
 真实接收Mbps：1% Direct上1072.342/下1109.121，WBD上273.831/下268.228；5% Direct上683.481/下521.719，WBD上111.999/下143.868。1% 原生客户端连接 `SharedTunReader queue_full_drops=105610 backpressure=157522 routed=868367`；5%分别663/1440/439700；服务端跨工况累计 `queue_full_drops=112836`。1%客户端raw `eagain_turns=0`，原M4 TX线程26–28s约11.523s CPU /0.429s可运行等待，原M4 RX为1.958s CPU /0.291s可运行等待，原读TUN为2.057s CPU/0.450s可运行等待；不是简单的CPU调度饥饿或内核raw发送缓存满。该线程统计不区分逐包AES/锁/其他代码；同源显著本地Shared TUN溢出，已把首个候选收紧到本地TX数据处理效率。
 
 **下一源码**在同样local三netns中先加入真实0% WBD原生两向20秒4流基线，独立客户端generation/Stop，再跑1%/5%；新增 x86_64和原生aarch64两个**不同Runner的单机三netns**任务，只对各自平台的内层Direct与WBD同源同机比较，严禁直接比较跨架构绝对CPU或将ARM看成NAT穿透保证。两种架构都保持原Go TLS/Rust owner、真实Stop、同形损伤；最后确定优化有效才推广到Windows以及Game/Fixed/Auto。
+
+## H2234 SOURCE 2f62f983：同源x86与ARM原生0/1/5真实结果
+
+[Action 44782492146](https://github.com/lly8666/wbd-next/actions/runs/44782492146)，同源码 `2f62f983a5f970ea2bfc236ac0804f4cd6271322`，但x86和ARM为**独立不同VM**。各自是实际Go TLS/Rust单机三Linux netns/真TUN/AF_PACKET/veth L3 router/GE200ms 1%或5%。两者不是同 VM AB，绝不可用绝对Mbps/CPU差值称产品优化。
+
+x86原生 12/12 TCP应用PASS，服务端真实Rust reader加入+masquerade清理+generation全部Stop均PASS；0% Direct接收上/下 59.117/60.866Gbps（本机虚拟veth，不是WAN），0% WBD接收1243.940/1262.757Mbps、1% Direct1022.444/1045.247 WBD318.160/390.649、5% Direct695.628/515.724 WBD194.443/218.730Mbps。0%客户端整个会话 Shared TUN `queue_full_drops=1040343`，1%=25528，5%=447；raw eagain依旧为0。0% WBD上传约20秒，M4 TX线程 `cpu_run_ns≈19.98e9`，`runnable_wait_ns≈0.31e9`，即**单个TX owner单核计算已饱和、非主要runqueue饥饿**；RX下载在同档需16.25 CPU-s，也要防止上传加速仅转移瓶颈。
+
+ARM64原生12个TCP中11个成功，唯一FAIL是5% **Direct** 下行iperf3控制连接因 `Connection reset by peer`，分类 `DIRECT_KERNEL_TCP_IPERF_ERROR_NOT_WBD`；不得归咎WBD或把整轮改成成功。0% Direct上/下99.035/98.792Gbps，WBD965.246/977.186Mbps，1% Direct1057.633/1054.031 WBD331.836/352.595Mbps，5% Direct上传703.597（下载FAIL） WBD上150.439/下163.422Mbps。ARM客户端 Shared TUN 0% queue-full=849572、1%=36990、5%=538；0% WBD TX约20秒 CPU20.21秒/runqueue wait0.37秒，raw eagain0。这证明本地瓶颈存在于两种原生架构，但不能以此计算架构性能提升。
+
+**关键定案**：0%最严重的本地queue-full/内层TCP重传发生在TX线程连续单核忙时，应优先分解原single-owner M4 CPU耗时，不能靠调线程优先级/无限队列/外层按序重传修。0% WBD高吞吐不能冒充“无本地丢包”；应用好吞吐不是无损或p99好。
+
+## H2235 批次级耗时探针（仅开发冷开关）
+
+在现有原Rust M4 TX线程内，用一个栈本地有界计数器汇总已真实完成的M4 batch；仅 `WBD_H2235_M4_STAGE_DIAG=1` 读取少量 `Instant`（**每批**，不逐包、不持锁做系统调用），Stop时打印一次 `V4_PUBLIC_M4_BATCH_STAGE_STOP`：
+
+- collect：现有64 inbox取包、原M1 loan/copy所有同turn工作耗时（每轮累计，不产生额外消息）
+- prepare：原 `background_tun_once` 开始至准备进入M1/AEAD owner（TUN路由/来源检查）
+- seal：原Entry锁内M1/AEAD/PN/FEC冷/热逻辑至FrozenRecord真实ready
+- sendmmsg：原Entry锁外Linux内核同步`send_kernel_multimsg`完成
+- settle：原copy prefix回执/feedback/候选shadow/borrow归还的owner结算
+
+只算返回至末尾的batch（早退场景仍另以原error/Stop和H2234外部线程统计看，不以该计数覆盖总CPU）。资料包括批次数、真实copied条数、各段总ns/max ns。独立的原外部/proc TID统计为总CPU与调度等待上限，**两者不要求数值相等**。被打开的观测可能改变调度，不能拿新instrumented SOURCE vs旧未instrumented SOURCE跑分当真实收益。
+
+分析后才能对**确定的具体CPU主导阶段**做成组完备优化；每项持续保留single-owner、fresh-first、no HOL、Go cold TLS、机会式原PN原密文最多一次repair、ACK10/FEC/Stop，以及跨平台的受影响调用链/模式/文档。Windows Npcap和Linux TUN并非同一个driver，先复制经证明的架构原则，再分别实测；Game2/4和Normal Fixed/Auto需要各自原生验收，不能因为Normal off过关就宣布全部过关。
