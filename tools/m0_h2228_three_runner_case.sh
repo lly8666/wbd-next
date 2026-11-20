@@ -173,9 +173,27 @@ client_run(){
       }
       owner_check=(--pidfile "$TMP/client.pid")
     fi
+    if [[ "${WBD_H2233_FOCUS:-0}" == 1 ]];then
+      relay_read "before-$(basename "$casefile" .json)"
+    fi
+    local tcp_info_pid=""
+    if [[ "${WBD_H2233_FOCUS:-0}" == 1 && "$duration" == 20 ]];then
+      # Read actual kernel TCP_INFO once while the identical inner TCP
+      # test is running; never infer negotiated MSS from iperf -M alone.
+      (
+        sleep 4
+        sudo -n ip netns exec "$NS" ss -tinm state established \
+          >"$casefile.tcp-info.txt" 2>&1 || true
+      ) &
+      tcp_info_pid="$!"
+    fi
     python3 "$TOOL" iperf "$kind" "$duration" "$streams" "$direction" "$casefile" "${owner_check[@]}" \
       > "$casefile.txt" 2>&1 ||
       echo "H2228_OBSERVED_TCP_ERROR $label $kind $direction" |tee -a "$OUT/failures.log"
+    if [[ -n "$tcp_info_pid" ]];then wait "$tcp_info_pid" || true;fi
+    if [[ "${WBD_H2233_FOCUS:-0}" == 1 ]];then
+      relay_read "after-$(basename "$casefile" .json)"
+    fi
     relay_read "$(basename "$casefile" .json)"
   }
   # The relay has NO rate cap. Require a real unshaped two-hop reference
@@ -188,6 +206,9 @@ client_run(){
   relay_read clear-after
   local scenario_index=0
   for loss in 0 1 5 10 20;do
+    # Exactly two low-loss phases per focused source; leave legacy full
+    # matrix unchanged for normal main/manual executions.
+    if [[ "${WBD_H2233_FOCUS:-0}" == 1 && "$loss" != 1 && "$loss" != 5 ]];then continue;fi
     local label="delay200-loss${loss}-${MODEL}"
     shape "$label" "$loss" 200
     relay_read "$label-before"

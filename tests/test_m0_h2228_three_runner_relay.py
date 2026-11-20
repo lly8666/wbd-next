@@ -254,7 +254,7 @@ class H2228ThreeGenuineMachines(unittest.TestCase):
         self.assertIn("runs-on: ubuntu-24.04-arm",workflow)
         self.assertEqual(workflow.count("uses: tailscale/github-action@v4"),3)
         self.assertIn("workflow_dispatch:",workflow)
-        self.assertIn("branches: ['main', 'test/h2228-three-runner-arm-relay-bbr-ge200']",workflow)
+        self.assertIn("branches: ['main', 'test/h2228-three-runner-arm-relay-bbr-ge200'",workflow)
         self.assertIn("H2228_THREE_RUNNER_FIXTURE_STATIC_PASS_NOT_PRODUCT_PASS",workflow)
 
 if __name__=="__main__":
