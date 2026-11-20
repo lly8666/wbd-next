@@ -5,7 +5,6 @@ package rootjournal
 // It never flushes the global firewall, main table, netd or other VPN rules.
 import (
  "fmt"
- "os"
  "strconv"
  "strings"
 )

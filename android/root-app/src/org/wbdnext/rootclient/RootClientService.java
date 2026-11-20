@@ -183,7 +183,7 @@ public final class RootClientService extends Service {
         if(intent==null){requestStop("Android restarted without original cold authorization");return START_NOT_STICKY;}
         if(STOP.equals(intent.getAction())){
             requestStop("USER_REQUESTED");
-            if(!running.get())stopSelf(startId);
+            if(!running.get()&&!restoring.get())stopSelf(startId);
             return START_NOT_STICKY;
         }
         if(RESTORE.equals(intent.getAction())){

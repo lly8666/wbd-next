@@ -130,6 +130,10 @@ A33仅在原Go Android冷路径增加真实Association Established、原Rust产�
 
 用户自行提供 A33 SOURCE `f8031ef1cf2f15e2769208d76bf2b072275b6084` 真机 33事件：原Go/0600/TUN/RAW/SYNACK候选、原Association Established与TLS Attempted OBSERVED，14,997ms后 OTHER/exit1。原Linux服务端身份、原ClientHello对端实际接收、真TLS/认证/租约、M4/Stop仍未证。A34仅观察原ClientAssociation原sendto成功后的首非空Bootstrap TX、严格4元组的AF_PACKET peer payload RX及失败时对应本会话未观察到的方向/已有RTO。补明确的原BootstrapTimeout/OS timeout/cancelled/closed；未知错误恰逢预算耗尽只记DEADLINE_ELAPSED_OTHER，不冒称根因。无新传输/伪ClientHello/密钥或错误正文入TXT，不放宽标准TLS/认证、原Network/路由/Stop。先以用户自主真机安全TXT判TX/RX，再取得同SOURCE原Linux服务端RAW/TLS收据，不先扩DNS/全App。
 
+### A36｜A35 Android真机证书校验阻塞和临时Root网络恢复
+
+用户A35签名SOURCE `4975c1abf4bc64357f3da246c85dcc15e84d9824` 两次真实API36收据：原FakeTCP Established、真正TLS ClientHello TX/RAW peer payload RX、RST guard真实命中，最终均原TLS证书校验失败；守卫精确Stop_CLEARED。原15秒发包无回包瓶颈已跨越，TLS信任/名称校验还未通过。新增原Go typed x509固定类别、OS_STORE/APP_PEM信任来源；APK通过本地SAF安全导入服务器CA PEM，不关闭任何TLS验证、不自动信任网络证书。新增APK「恢复网络」按钮：精确Stop原Go/Rust owner后，当前APK哈希验证同源Go ELF独立运行 `--android-recover-owned-root`，经root-only journal/flock精确回滚单UID/多UID/全App私有table、peer throw /32及同一连接RST iptables规则；无journal只readback检查专用表/优先级/marker为空，不删除任何外国规则或全局flush。验收必须为原Go route和RST双读回、root shell completion、退出0；失败保留恢复状态/原journal。严格禁止修改系统DNS、主路由、其他客户端规则与绕开TLS认证。下次用户自行验证单App UID，导入匹配服务器真实CA/SNI后Start→Stop/恢复→安全TXT，真实TLS/租约/原Rust M4/应用TCP UDP仍未证。
+
 ### A35｜2026-11-20 API36 三次原TLS超时：补原RAW FakeTCP精确RST守卫并分层收据
 
 用户自行使用签名SOURCE `c010f7357d0334c48c479012011b6cdb7dad1e4f` 导出同一台API36手机三次独立有界启动108个固定事件：单UID一次、all ordinary apps两次，都在原Go Args/TUN/RAW → SYN/SYNACK → 真Association Established → 原TLS payload TX sendto → 原始15秒Bootstrap TIMEOUT；原RAW peer payload **三次均NOT_OBSERVED**，原RTO **三次均OBSERVED**，owner清理结束。认证、/32租约、M4、真实业务没有达到。更换预认证App UID范围没有改变此网络瓶颈，下一轮仅单UID。
