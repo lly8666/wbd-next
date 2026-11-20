@@ -57,7 +57,7 @@ class H2234LocalRealNative(unittest.TestCase):
         receipt=L.original_m4_batch_stage_receipt(line)
         self.assertEqual((receipt["batches"],receipt["copied"]),(1500,18000))
         self.assertEqual(receipt["seal_ns"],450)
-        for bad in ("",line+"\\n"+line,
+        for bad in ("",line+"\n"+line,
                     line.replace("original_owner=1","original_owner=0"),
                     line.replace("sendmmsg_ns=300","missing_send_ns=300"),
                     line.replace("copied=18000","copied=0")):
