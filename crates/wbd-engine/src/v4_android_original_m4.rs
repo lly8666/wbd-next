@@ -180,11 +180,10 @@ fn raw_worker(
             continue
         };
         stats.raw_poll_ready.fetch_add(1,Ordering::Relaxed);
-        for turn in 0..8 {
+        // The RAW FD is nonblocking; one wake drains up to eight packets.
+        // No extra two-FD poll(0) syscall before each subsequent recvfrom.
+        for _ in 0..8 {
             if shutdown.load(Ordering::Acquire){break}
-            if turn>0&&!wake.wait_readable(raw.readiness_fd(),0).unwrap_or(false){
-                break
-            }
             let (auth_ns,business_ns,hint,retired,healthy)={
                 let Ok(mut e)=cell.lock()else{
                     shutdown.store(true,Ordering::Release);break
@@ -203,6 +202,10 @@ fn raw_worker(
                 );
                 let (wire_len,absolute)=match read{
                     Ok(v)=>v,
+                    Err((crate::v4_owner_crypto::ProtectedCryptoError::AndroidWouldBlock,_))=>{
+                        e.arena.drain_returns();
+                        break
+                    },
                     Err(_)=>{
                         stats.raw_parse_failed.fetch_add(1,Ordering::Relaxed);
                         stats.rx_error.fetch_add(1,Ordering::Relaxed);
@@ -524,10 +527,10 @@ fn tun_worker(
         if !tun_ready{continue}
         // One sparse normal packet is sent immediately, never held waiting
         // for batch fill. Eight bounded source turns before Health/Stop.
-        for turn in 0..8{
+        // TUN adopt() sets O_NONBLOCK. Drain a short bounded burst with
+        // readv directly, not a duplicate poll(0) on every packet.
+        for _ in 0..8{
             if shutdown.load(Ordering::Acquire){break}
-            if turn>0&&!wake.wait_readable(tun.readiness_fd(),0)
-                .unwrap_or(false){break}
             let Ok(mut e)=cell.lock()else{
                 shutdown.store(true,Ordering::Release);break
             };
@@ -564,6 +567,10 @@ fn tun_worker(
             );
             let n=match read{
                 Ok(x)=>x,
+                Err(err) if err.kind()==std::io::ErrorKind::WouldBlock=>{
+                    e.arena.drain_returns();
+                    break
+                },
                 Err(_)=>{
                     stats.tx_error.fetch_add(1,Ordering::Relaxed);
                     e.arena.drain_returns();

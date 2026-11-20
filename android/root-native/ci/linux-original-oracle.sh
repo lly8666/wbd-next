@@ -103,6 +103,8 @@ echo ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS
 # The existing strict Linux/Windows DATA parser and M3 AEAD/PN are unchanged.
 cargo +1.85.1 test --locked -p wbd-platform --lib a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted
 echo ANDROID_A48_ANDROID_BIONIC_TCP_CHECKSUM_ONLY_M3_PENDING_HOST_PASS
+cargo +1.85.1 test --locked -p wbd-platform --lib a49_single_pass_matches_a48_two_pass_android_admission
+echo ANDROID_A49_ANDROID_SINGLE_PASS_PARSER_EQUIVALENCE_HOST_PASS
 cargo +1.85.1 build --locked --release -p wbd-engine \
   --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record \
   >out/android-a3-linux/rust-build.log 2>&1 || {

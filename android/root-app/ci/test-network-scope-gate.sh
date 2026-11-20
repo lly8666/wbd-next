@@ -520,16 +520,24 @@ assert '#[cfg(any(target_os="android",test))]' in parser
 assert 'parse_data_packet_checked(packet,trusted,false)' in parser
 assert 'if require_tcp_checksum && !checksum_is_valid(sum)' in parser
 assert 'a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted' in parser
-assert 'Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)=>{' in android_io
-assert 'parse_data_packet_android_m3_pending(' in android_io
+assert 'let parsed=match crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(' in android_io
+assert 'if (observed&127)==0' in android_io
 assert 'self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1' in android_io
 assert 'self.debug[RX_DATA_OK].fetch_add(1' in android_io
+assert 'Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)=>{' not in android_io
+assert 'a49_single_pass_matches_a48_two_pass_android_admission' in parser
+assert 'ProtectedCryptoError::AndroidWouldBlock' in nativeworker
+assert 'Err(err) if err.kind()==std::io::ErrorKind::WouldBlock' in owner
+assert 'if error.kind()!=io::ErrorKind::WouldBlock' in android_io
+assert 'wait_readable(raw.readiness_fd(),0)' not in nativeworker
+assert 'wait_readable(tun.readiness_fd(),0)' not in nativeworker
 assert 'parse_data_packet_android_m3_pending' not in linux_io
 assert 'parse_data_packet(&slot[..n],trusted)' in linux_io
 assert 'parse_data_packet(&slot[..len],TrustedRx{' in linux_io
 assert 'self.offer_after_active(slab,0..len,absolute,now)' in owner
 assert 'ANDROID_A48_ANDROID_BIONIC_TCP_CHECKSUM_ONLY_M3_PENDING_HOST_PASS' in Path(
     "android/root-native/ci/linux-original-oracle.sh").read_text()
+print("ANDROID_A49_SINGLE_PASS_AND_BOUNDED_NONBLOCKING_DRAIN_SOURCE_PASS")
 print("ANDROID_A48_EXACT_ANDROID_ONLY_CHECKSUM_GATE_M3_AUTH_STILL_REQUIRED_SOURCE_PASS")
 print("ANDROID_A47_ORIGINAL_RUST_RAW_NUMERIC_AND_GO_JAVA_FORENSICS_SOURCE_PASS")
 print("ANDROID_A46_EXACT_MAIN_WINDOWS_H2216_TTL_ANDROID_LINUX_SOURCE_GATE_PASS")

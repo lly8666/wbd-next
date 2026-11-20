@@ -422,9 +422,13 @@ impl AndroidBoundRawRx {
             MSG_DONTWAIT | MSG_TRUNC, std::ptr::null_mut(), std::ptr::null_mut()) };
         if n < 0 {
             let error=io::Error::last_os_error();
-            self.debug[RX_RECV_ERROR].fetch_add(1,Ordering::Relaxed);
-            self.debug[RX_LAST_ERRNO].store(
-                error.raw_os_error().unwrap_or(0).max(0) as u64,Ordering::Relaxed);
+            // A49: a nonblocking drain ending in EAGAIN is normal, not a
+            // failed kernel RAW packet or an error in the M3 owner.
+            if error.kind()!=io::ErrorKind::WouldBlock{
+                self.debug[RX_RECV_ERROR].fetch_add(1,Ordering::Relaxed);
+                self.debug[RX_LAST_ERRNO].store(
+                    error.raw_os_error().unwrap_or(0).max(0) as u64,Ordering::Relaxed);
+            }
             return Err(error);
         }
         if n as usize > cap {
@@ -463,25 +467,23 @@ impl AndroidBoundRawRx {
         let trusted=crate::rx_ipv4_tcp::TrustedRx{
             tuple,persona,mtu:self.mtu as usize,authenticated_options:None,
         };
-        let parsed=match crate::rx_ipv4_tcp::parse_data_packet(&slab[..total],trusted){
+        // A49: A48 accepted the union of the strict parser and the
+        // TCP-checksum-only fallback. The same Android-only parser accepts
+        // that exact set in ONE pass. Original M3 AEAD/PN remains mandatory.
+        // Sample strict TCP checks only once per 128 DATA candidates for
+        // forensic continuity; tcpck is now a SAMPLE count, not a total.
+        let parsed=match crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(
+            &slab[..total],trusted
+        ){
             Ok(data)=>{
-                self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
+                let observed=self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
+                if (observed&127)==0 &&
+                   matches!(crate::rx_ipv4_tcp::parse_data_packet(
+                       &slab[..total],trusted),
+                       Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)){
+                    self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1,Ordering::Relaxed);
+                }
                 data
-            },
-            // A48: real Android API36 physical RAW RX reports only bad TCP
-            // checksum after the complete strict header/tuple/IP checks.
-            // This is NOT authenticated, READY, Health or delivered data.
-            // The original M1 seq extension + M3 AEAD/unique PN still gate
-            // every byte, and the standard Linux/Windows strict parser is
-            // unchanged. The re-parse changes only the checksum policy.
-            Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)=>{
-                self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1,Ordering::Relaxed);
-                let provisional=crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(
-                    &slab[..total],trusted
-                ).map_err(|_|io::Error::new(io::ErrorKind::InvalidData,
-                    "Android M3-pending TCP checksum-only reparse rejected"))?;
-                self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
-                provisional
             },
             Err(reason)=>{
                 use crate::rx_ipv4_tcp::RxError;

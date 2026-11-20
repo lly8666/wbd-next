@@ -67,6 +67,9 @@ pub(crate) enum ProtectedCryptoError {
     Rx(ReplayConfigError),
     Inactive,
     Owner,
+    // A49: no packet was read; an opportunistic nonblocking drain is done.
+    #[cfg(target_os="android")]
+    AndroidWouldBlock,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     Tun(TunError),
     Early(EarlyError),
@@ -1959,6 +1962,8 @@ impl ProtectedScopedOwner{
             self.generation,slab.writable(),tuple,persona
         ){
             Ok(value)=>value,
+            Err(err) if err.kind()==std::io::ErrorKind::WouldBlock=>
+                return Err((ProtectedCryptoError::AndroidWouldBlock,slab)),
             Err(_)=>return Err((ProtectedCryptoError::Owner,slab)),
         };
         if len<FIXED_WIRE_OVERHEAD{

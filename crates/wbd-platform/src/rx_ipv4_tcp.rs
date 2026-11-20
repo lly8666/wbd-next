@@ -465,6 +465,31 @@ mod tests {
     }
 
     #[test]
+    fn a49_single_pass_matches_a48_two_pass_android_admission(){
+        let original=wire(b"original sealed M3 bytes",0x1_0000_000a,None);
+        let mut bad_tcp=original.clone();bad_tcp[36]^=0x40;
+        let mut bad_tuple=original.clone();bad_tuple[12]^=1;
+        let mut bad_ip=original.clone();bad_ip[10]^=1;
+        let mut bad_flags=original.clone();bad_flags[33]^=1;
+        for packet in [&original[..],&bad_tcp[..],&bad_tuple[..],
+                       &bad_ip[..],&bad_flags[..]]{
+            let old=match parse_data_packet(packet,trusted(None,1500)){
+                Ok(data)=>Ok(data),
+                Err(RxError::TcpChecksum)=>
+                    parse_data_packet_android_m3_pending(packet,trusted(None,1500)),
+                Err(other)=>Err(other),
+            };
+            // The M3-pending result stays UNAUTHENTICATED in BOTH cases.
+            let fast=parse_data_packet_android_m3_pending(
+                packet,trusted(None,1500));
+            assert_eq!(fast,old);
+        }
+        // Original Linux/Windows public strict parser still rejects checksum drift.
+        assert_eq!(parse_data_packet(&bad_tcp,trusted(None,1500)),
+                   Err(RxError::TcpChecksum));
+    }
+
+    #[test]
     fn r1_rx_ipv4_tcp_pinned_old_go_packet_golden() {
         // Go packet.go pinned 6ac1f9...: fixed legacy IPID21/ACK200/TCP window1024.
         let golden=raw_hex("4500002e0015400040064e31c0000228c6336428a7f801bb00000064000000c850180400cc2900007265636f7264");
