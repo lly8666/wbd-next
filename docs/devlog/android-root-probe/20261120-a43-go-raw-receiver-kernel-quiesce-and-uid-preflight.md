@@ -21,3 +21,11 @@ A43 SOURCE `ea1713a190d30392f799423faf1c41cb29f5fe73` 自动Action [#44751133369
 ## A43c 同SOURCE治理文件同步
 
 A43b 仅修复真实Kernel Host Oracle测试命令的shell引号错误，不改原生产Go/Rust；因该次提交修改了包含`feature-impact`的devlog却未同步更新功能卡，[#44751911977](https://github.com/lly8666/wbd-next/actions/runs/44751911977) Feature Catalog真实FAIL。本次同步最小功能卡与本节明确实际范围。相同原生执行SOURCE仍为`d4ab1a3d08b519726c55e87fef6f71afa0060587`；这次纯文档提交不触发重型Android dual64工作流，不借文档绿灯宣称手机PASS。
+
+## A43d 同SOURCE整份脚本修正
+
+A43/A43b实际CI红证据保留：新Oracle命令首次出现未闭合引号；A43b仅修好命令本身，但同次插入遗留复制的最后约60行仍位于第一个最终`PY`之后，引发 [#44751911992](https://github.com/lly8666/wbd-next/actions/runs/44751911992) root-arm64-app `syntax error near unexpected token ')'`。本提交按整份文件移除**重复的末尾构建+heredoc**，保留原有两处合法`for role`（donor装配和原双端Go编译）、唯一A43真实内核Test及四组完整Python heredoc。未改 A43 生产Go/Rust及原协议；本Source需自己CI证明签名APK和Kernel Test，不能覆盖旧FAIL。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A43d修复新Oracle脚本尾部重复造成的真实CI脚本FAIL，保留原Go RX production修复与真实Linux kernel test；同提交同步产品功能卡。"}
+```
