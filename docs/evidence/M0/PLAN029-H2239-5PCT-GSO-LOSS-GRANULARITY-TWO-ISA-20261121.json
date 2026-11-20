@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2239_GSO_NETEM_REAL_FIVE_PERCENT_ABA",
+  "source_sha": "9eb676f220b75863ce69a2f7435c29377b4f4f1d",
+  "run_id": 44838335306,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44838335306",
+  "status": "PASS_REAL_NATIVE_X86_AND_AARCH64_ORIGINAL_GO_TLS_RUST_3_NETNS_GSO_ABA_TEST_NOT_PRODUCT_OPTIMIZATION",
+  "artifacts": {
+    "x86_64": 14679114479,
+    "aarch64": 14679084613
+  },
+  "topology": "Each separate x86_64/aarch64 GitHub Runner: same-VM three isolated Linux netns (client/router/server), genuine Go TLS1.3 and Rust single original TUN/AF_PACKET owner, real TCP BBR four iperf3 flows, not independent WAN/Windows",
+  "condition": {
+    "loss_model": "Gilbert-Elliott GE",
+    "target_loss_pct": 5,
+    "oneway_added_delay_ms": 200,
+    "jitter_extra_ms": 0,
+    "duration_per_case_s": 20,
+    "iperf_streams": 4,
+    "requested_mss": 1037,
+    "actual_mss_when_all_four_sampled": 1025
+  },
+  "offloads": "A native veth TSO/GSO/GRO, B disable TSO/GSO/GRO on 4 namespace veth interfaces only, A prime restore baseline; no host/global or WBD product default changes",
+  "netem_seed": {
+    "requested": 22390517,
+    "applied": null,
+    "reason": "Ubuntu24.04 iproute2 tc does not support netem seed, real same-GE fallback clearly source-qualified UNSEEDED",
+    "same_random_packets_across_arms": false
+  },
+  "actual_client_to_server_router_netem_basis": "tc qdisc emitted/dropped are skb accounting, not per inner-TCP segment, not per delivered byte; link TX packet counter is separate",
+  "x86_64": {
+    "status": "PASS_ALL_APPLICATION_CASES_AND_TRUE_OWNED_STOP",
+    "phases": [
+      {
+        "name": "native_before",
+        "receiver_goodput_mbps": {
+          "direct": 617.092,
+          "wbd": 131.786
+        },
+        "wbd_percent_of_direct": 21.36,
+        "router_ge_data_egress_qdisc_drop_pct_skb": {
+          "direct": 0.116,
+          "wbd": 4.9402
+        },
+        "router_ge_data_egress_qdisc_emitted_per_link_tx": {
+          "direct": 44.7137,
+          "wbd": 1
+        },
+        "tcp_retransmits_per_delivered_GiB": {
+          "direct": 54855,
+          "wbd": 70450
+        },
+        "wbd_shared_tun_queue_full_drops": 1386,
+        "mss_status": {
+          "direct": "4/4 1025",
+          "wbd": "3/4 1025; 1 UNKNOWN"
+        }
+      },
+      {
+        "name": "offloads_disabled",
+        "receiver_goodput_mbps": {
+          "direct": 241.833,
+          "wbd": 191.87
+        },
+        "wbd_percent_of_direct": 79.34,
+        "router_ge_data_egress_qdisc_drop_pct_skb": {
+          "direct": 4.9938,
+          "wbd": 4.9538
+        },
+        "router_ge_data_egress_qdisc_emitted_per_link_tx": {
+          "direct": 1,
+          "wbd": 1
+        },
+        "tcp_retransmits_per_delivered_GiB": {
+          "direct": 61443,
+          "wbd": 64915
+        },
+        "wbd_shared_tun_queue_full_drops": 508,
+        "mss_status": {
+          "direct": "4/4 1025",
+          "wbd": "4/4 1025"
+        }
+      },
+      {
+        "name": "native_restored",
+        "receiver_goodput_mbps": {
+          "direct": 704.979,
+          "wbd": 145.203
+        },
+        "wbd_percent_of_direct": 20.6,
+        "router_ge_data_egress_qdisc_drop_pct_skb": {
+          "direct": 0.1203,
+          "wbd": 5.0286
+        },
+        "router_ge_data_egress_qdisc_emitted_per_link_tx": {
+          "direct": 45.6785,
+          "wbd": 0.9997
+        },
+        "tcp_retransmits_per_delivered_GiB": {
+          "direct": 57205,
+          "wbd": 63379
+        },
+        "wbd_shared_tun_queue_full_drops": 131,
+        "mss_status": {
+          "direct": "4/4 1025",
+          "wbd": "4/4 1025"
+        }
+      }
+    ]
+  },
+  "aarch64": {
+    "status": "PASS_ALL_APPLICATION_CASES_AND_TRUE_OWNED_STOP",
+    "phases": [
+      {
+        "name": "native_before",
+        "receiver_goodput_mbps": {
+          "direct": 516.26,
+          "wbd": 123.466
+        },
+        "wbd_percent_of_direct": 23.92,
+        "router_ge_data_egress_qdisc_drop_pct_skb": {
+          "direct": 0.1882,
+          "wbd": 5.0245
+        },
+        "router_ge_data_egress_qdisc_emitted_per_link_tx": {
+          "direct": 27.6326,
+          "wbd": 1
+        },
+        "tcp_retransmits_per_delivered_GiB": {
+          "direct": 52315,
+          "wbd": 63977
+        },
+        "wbd_shared_tun_queue_full_drops": 48,
+        "mss_status": {
+          "direct": "4/4 1025",
+          "wbd": "4/4 1025"
+        }
+      },
+      {
+        "name": "offloads_disabled",
+        "receiver_goodput_mbps": {
+          "direct": 211.883,
+          "wbd": 178.466
+        },
+        "wbd_percent_of_direct": 84.23,
+        "router_ge_data_egress_qdisc_drop_pct_skb": {
+          "direct": 4.9821,
+          "wbd": 4.9389
+        },
+        "router_ge_data_egress_qdisc_emitted_per_link_tx": {
+          "direct": 1,
+          "wbd": 1
+        },
+        "tcp_retransmits_per_delivered_GiB": {
+          "direct": 65924,
+          "wbd": 67291
+        },
+        "wbd_shared_tun_queue_full_drops": 594,
+        "mss_status": {
+          "direct": "4/4 1025",
+          "wbd": "4/4 1025"
+        }
+      },
+      {
+        "name": "native_restored",
+        "receiver_goodput_mbps": {
+          "direct": 622.346,
+          "wbd": 88.201
+        },
+        "wbd_percent_of_direct": 14.17,
+        "router_ge_data_egress_qdisc_drop_pct_skb": {
+          "direct": 0.1501,
+          "wbd": 5.0033
+        },
+        "router_ge_data_egress_qdisc_emitted_per_link_tx": {
+          "direct": 34.5145,
+          "wbd": 1
+        },
+        "tcp_retransmits_per_delivered_GiB": {
+          "direct": 56292,
+          "wbd": 61201
+        },
+        "wbd_shared_tun_queue_full_drops": 0,
+        "mss_status": {
+          "direct": "1/4 1025; 3 UNKNOWN",
+          "wbd": "4/4 1025"
+        }
+      }
+    ]
+  },
+  "interpretation": {
+    "proven": "Real Direct GSO/TSO native skb-to-link packet granularity 28x-46x vs WBD near1x; when TSO/GSO/GRO off all paths near1x with measured skb qdisc GE drops near5%; dramatic change in relative WBD/direct is partly unfair original netem layer and inner TCP retransmitted segment shape.",
+    "not_proven": "No WBD product speed gain: B phase lowers Direct goodput 58%-61%; actual delivered TCP byte loss not equal to qdisc drop percentage; GE PRNG seed unsupported; matched packet bytes/time differences remain; residual 16%-21% gap still possible.",
+    "local_queue": "At GE5% only 0-1386 source queue full drops across real independent generations, so unlike GE1% local burst overload cannot alone explain all GE5% WBD vs Direct difference.",
+    "product_code_change": "NONE",
+    "scope_not_run": [
+      "independent multi-VM physical WAN",
+      "physical Windows Npcap/Wintun",
+      "Normal FEC fixed or auto",
+      "Game2/Game4",
+      "mode-compatible product backend changes",
+      "same exact-GE packet stream across arms"
+    ],
+    "next": "First update fairness methodology: control actual at-kernel packet/segment granularity and compare remaining TCP sender cwnd/recovery gaps, optional low-profile original FEC while maintaining first arrival/no HOL. Do not degrade Direct just to inflate WBD ratio or rewrite performative outer repair."
+  },
+  "immutable": "Genuine Go TLS, Rust unique data-plane owner, immediate out-of-order DATA/no cross-flow HOL, TCP-like ACK10/window, original ciphertext at-most-once opportunistic performative repair, AEAD/PN, MTU/generation/replay, original FEC and owned Stop unchanged"
+}
