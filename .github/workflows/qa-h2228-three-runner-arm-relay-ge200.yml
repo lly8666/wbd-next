@@ -29,7 +29,7 @@ on:
         default: normal
 env:
   WBD_H2233_FOCUS: ${{ github.ref_name == 'feat/h2233-low-loss-forensics' && '1' || '0' }}
-  WBD_H2233_JITTER: ${{ inputs.jitter || 'fixed' }}
+  WBD_H2233_JITTER: ${{ inputs.jitter || 'normal' }}
   WBD_H2233_MSS: '1037'
 permissions:
   contents: read

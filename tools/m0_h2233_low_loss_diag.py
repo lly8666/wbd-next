@@ -56,6 +56,39 @@ def delta_qdisc(before,after):
             result[direction]={"status":"UNKNOWN_MISSING_OR_CHANGED_KERNEL_QDISC"}
     return result
 
+def socket_mss_readback(case_file,kind):
+    """An in-flight genuine Linux ss TCP_INFO MSS joined to iperf local ports.
+
+    Iperf start.tcp_mss is a CLI echo; it is NOT negotiated socket MSS.
+    Partial, absent or different-source-port snapshots remain UNKNOWN.
+    """
+    raw=pathlib.Path(str(case_file)+".stdout.txt")
+    snapshot=pathlib.Path(str(case_file)+".tcp-info.txt")
+    if not raw.is_file() or not snapshot.is_file():
+        return {"status":"UNKNOWN_NOT_SAMPLED","mss":[]}
+    try:
+        rows=json.loads(raw.read_text())["start"]["connected"]
+        ports={int(x["local_port"]) for x in rows}
+        if not rows or len(ports)!=len(rows):
+            raise ValueError("ports")
+        peer="10.248.82.2:5202" if kind=="direct" else "10.66.0.1:5201"
+        lines=snapshot.read_text().splitlines()
+        found={}
+        for n,line in enumerate(lines):
+            if peer not in line:continue
+            m=re.search(r"\\bmss:(\\d+)\\b"," ".join(lines[n:n+3]))
+            if m is None:continue
+            for port in ports:
+                if re.search(r"(?<!\\d):"+str(port)+r"(?!\\d)",line):
+                    found[port]=int(m.group(1))
+        return {"status":"REAL_TCP_INFO_ALL_STREAMS" if len(found)==len(ports)
+                    else "UNKNOWN_PARTIAL_TCP_INFO",
+                "expected_streams":len(ports),"observed_streams":len(found),
+                "mss":[found[p] for p in sorted(found)],
+                "source":"ss_tinm_real_kernel_socket_by_iperf_local_port"}
+    except (OSError,ValueError,TypeError,KeyError):
+        return {"status":"UNKNOWN_INVALID_TCP_INFO","mss":[]}
+
 def focused_summary(mode,model,directory):
     path=pathlib.Path(directory)
     expected={"clear-zero-direct-12s-8p-"+d for d in DIRECTIONS}
@@ -80,7 +113,9 @@ def focused_summary(mode,model,directory):
             try: qdisc=delta_qdisc(load(before),load(after))
             except (OSError,ValueError,TypeError):qdisc={"status":"UNKNOWN_INVALID_CASE_RECEIPT"}
         else:qdisc={"status":"UNKNOWN_MISSING_CASE_QDISC_SNAPSHOTS"}
-        rows[match.group(2)]={**record,"file":file.name,"router_case_qdisc":qdisc}
+        tcp_info=socket_mss_readback(file,record.get("kind",""))
+        rows[match.group(2)]={**record,"file":file.name,"router_case_qdisc":qdisc,
+            "tcp_mss_observed":tcp_info["mss"],"tcp_info_readback":tcp_info}
     missing=sorted(expected-set(rows))
     failures=sorted(k for k,v in rows.items() if v.get("status")!="PASS_REAL_KERNEL_IPERF3_TCP"
                     or v.get("receiver_goodput_mbps") is None)
@@ -109,6 +144,8 @@ def focused_summary(mode,model,directory):
             requested_a=direct.get("tcp_mss_requested")
             requested_b=wbd.get("tcp_mss_requested")
             comparable=(bool(mss_a and mss_b) and
+                        direct.get("tcp_info_readback",{}).get("status")=="REAL_TCP_INFO_ALL_STREAMS" and
+                        wbd.get("tcp_info_readback",{}).get("status")=="REAL_TCP_INFO_ALL_STREAMS" and
                         set(mss_a)==set(mss_b)=={1037} and
                         requested_a==requested_b==1037)
             comparisons.append({
@@ -119,6 +156,8 @@ def focused_summary(mode,model,directory):
                 "direct_sender_mbps":direct.get("sender_mbps"),
                 "wbd_sender_mbps":wbd.get("sender_mbps"),
                 "direct_mss_observed":mss_a,"wbd_mss_observed":mss_b,
+                "direct_mss_source":direct.get("tcp_info_readback"),
+                "wbd_mss_source":wbd.get("tcp_info_readback"),
                 "mss_requested":1037,
                 "actual_mss_readback":"MATCHED" if comparable else "UNKNOWN_OR_MISMATCH",
                 "direct_router_qdisc":direct.get("router_case_qdisc"),

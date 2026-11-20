@@ -176,9 +176,21 @@ client_run(){
     if [[ "${WBD_H2233_FOCUS:-0}" == 1 ]];then
       relay_read "before-$(basename "$casefile" .json)"
     fi
+    local tcp_info_pid=""
+    if [[ "${WBD_H2233_FOCUS:-0}" == 1 && "$duration" == 20 ]];then
+      # Read actual kernel TCP_INFO once while the identical inner TCP
+      # test is running; never infer negotiated MSS from iperf -M alone.
+      (
+        sleep 4
+        sudo -n ip netns exec "$NS" ss -tinm state established \
+          >"$casefile.tcp-info.txt" 2>&1 || true
+      ) &
+      tcp_info_pid="$!"
+    fi
     python3 "$TOOL" iperf "$kind" "$duration" "$streams" "$direction" "$casefile" "${owner_check[@]}" \
       > "$casefile.txt" 2>&1 ||
       echo "H2228_OBSERVED_TCP_ERROR $label $kind $direction" |tee -a "$OUT/failures.log"
+    if [[ -n "$tcp_info_pid" ]];then wait "$tcp_info_pid" || true;fi
     if [[ "${WBD_H2233_FOCUS:-0}" == 1 ]];then
       relay_read "after-$(basename "$casefile" .json)"
     fi

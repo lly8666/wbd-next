@@ -22,3 +22,15 @@
 ```feature-impact
 {"kind":"none","reason":"H2233 only adjusts opt-in real three-runner Linux benchmark tooling, actual receiver iperf accounting and qdisc/MSS diagnostics. No runtime product feature or protocol modification."}
 ```
+
+## H2233 固定200ms无抖动源锁真实结果
+
+[Action 44764736732](https://github.com/lly8666/wbd-next/actions/runs/44764736732)，产品/夹具 SOURCE `6c1996ca21df742bde30f647513a037985cb64fa`，三台独立 Linux x86/ARM64/x86 Runner，原 Go TLS＋Rust native TUN，静态/ARM relay/server jobs SUCCESS；真实 TCP **12/12 完成**，但无损直连接收端 upload612.631 / download805.920 Mbps，**上行低于预定 800Mbps**，整轮 Action FAIL_CAPACITY。Tailnet flags DIRECT_CANDIDATE 不足以取代真实容量门。
+
+1% GE burst + 每方向额外固定200ms、无15ms附加jitter：接收端直连 vs WBD 上行338.939/233.146Mbps、下行361.145/240.597Mbps（WBD 分别为68.8%/66.6%）。5% 上行243.588/130.708、下行178.258/81.684（53.7%/45.8%）。这是 **本轮测量事实**，不能同另一VM的旧15ms jitter Action相除称为产品收益或确证 jitter 因果。
+
+单TCP case 前后真实 ARM qdisc：1% Direct 上/下 qdisc dropped/(emitted+dropped) 为0.1522%/0.1197%，但 netem emitted 与 link TX packet 比6.51/8.87；WBD约1.01%/0.98%且计数比接近1。5% Direct 上/下0.8678%/0.818%，相应比6.18/6.12；WBD 5.05%/5.09%，比约1。**qdisc skb 计数非 on-wire TCP segment计数**，历史“Direct实际仅丢0.2%”应保留为未证明的说法。原始 pcap/内核 segment 级擦除、RTO分解仍OPEN。
+
+每条真实20s业务 iperf3 本轮请求 `-M 1037`，原 stdout `start.tcp_mss=1037` 只回显测试参数，不是已实测协商 MSS。第一个SOURCE在 `start.connected[*].mss` 寻找不存在的字段，故 `actual_mss_readback=UNKNOWN_OR_MISMATCH` 是正确的诚实资格。下一SOURCE使用测试中一次 `ss -tinm`，按原 iperf `start.connected[].local_port` 精确对齐，缺失不冒充MATCHED。
+
+归档回执：[evidence JSON](../../evidence/M0/PLAN029-H2233-FIXED-LOW-LOSS-RECEIVER-SKB-20261120.json)；Action artifacts：summary 14646525298、x86 client 14646080452、ARM router 14645400731、x86 server 14646100470。原始 iperf/ethtool/qdisc 与真实Stop在本 SOURCE artifacts，不从下一 SOURCE 倒填。

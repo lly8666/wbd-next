@@ -54,13 +54,34 @@ class H2233LowLossAnalysis(unittest.TestCase):
             self.assertEqual(r["status"],"PASS_FOCUSED_LOW_LOSS_TCP_MATRIX")
             self.assertEqual(len(r["comparisons"]),4)
             self.assertEqual(r["comparisons"][0]["direct_receiver_goodput_mbps"],100)
-            self.assertEqual(r["comparisons"][0]["actual_mss_readback"],"MATCHED")
+            self.assertEqual(r["comparisons"][0]["actual_mss_readback"],"UNKNOWN_OR_MISMATCH")
             self.assertEqual(r["direct_clear_receiver_goodput_mbps"]["upload"],850)
             self.assertEqual(r["relay_capacity_qualification"],">=800Mbps_BOTH_DIRECTIONS_DIRECT_TAILSCALE")
             cases[2]
             (path/f"case-002-{cases[2]}.json").unlink()
             r2=H.focused_summary("normal","burst",path)
             self.assertEqual(r2["status"],"FAIL_FOCUSED_MISSING_OR_DUPLICATED_CASE")
+
+    def test_actual_tcp_info_requires_original_iperf_ports(self):
+        with tempfile.TemporaryDirectory() as d:
+            f=pathlib.Path(d)/"case-000-real.json"
+            pathlib.Path(str(f)+".stdout.txt").write_text(json.dumps({
+                "start":{"connected":[{"local_port":41920},{"local_port":41921}]}}))
+            info=pathlib.Path(str(f)+".tcp-info.txt")
+            info.write_text(
+                "ESTAB 0 0 10.248.81.2:41920 10.248.82.2:5202\\n"
+                "bbr rtt:460/5 mss:1037 pmtu:1200\\n"
+                "ESTAB 0 0 10.248.81.2:41921 10.248.82.2:5202\\n"
+                "bbr rtt:458/5 mss:1037 pmtu:1200\\n")
+            ok=H.socket_mss_readback(f,"direct")
+            self.assertEqual(ok["status"],"REAL_TCP_INFO_ALL_STREAMS")
+            self.assertEqual(ok["mss"],[1037,1037])
+            info.write_text(
+                "ESTAB 0 0 10.248.81.2:41920 10.248.82.2:5202\\n"
+                "bbr mss:1037\\n")
+            self.assertEqual(H.socket_mss_readback(f,"direct")["status"],
+                             "UNKNOWN_PARTIAL_TCP_INFO")
+            self.assertEqual(H.socket_mss_readback(f,"wbd")["mss"],[])
 
     def test_branch_only_activation_and_unmodified_cold_tls(self):
         sh=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()

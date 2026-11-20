@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2233_FIXED",
+  "date": "2026-11-20",
+  "source_sha": "6c1996ca21df742bde30f647513a037985cb64fa",
+  "run_id": 44764736732,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44764736732",
+  "result": "12_OF_12_REAL_TCP_CASES_PASS_STATIC_RELAY_SERVER_PASS_OVERALL_ACTION_FAIL_CAPACITY",
+  "qualification": "INFRA_UNQUALIFIED_DIRECT_CLEAN_UP_612P631_BELOW_800_PRODUCT_THROUGHPUT_CAUSALITY_NOT_PROVEN",
+  "artifacts": {
+    "summary": 14646525298,
+    "client": 14646080452,
+    "arm_router": 14645400731,
+    "server": 14646100470
+  },
+  "topology": "independent Linux x86 original Go TLS Rust client -> ARM64 kernel L3 no NAT router -> independent Linux x86 original Go TLS Rust server",
+  "configuration": {
+    "outer_retransmission": "UNCHANGED_ON",
+    "mode": "normal",
+    "loss_model": "GE",
+    "loss_target_pct": [
+      1,
+      5
+    ],
+    "one_way_added_delay_ms": 200,
+    "added_jitter_ms": 0,
+    "mss_iperf_requested": 1037,
+    "actual_socket_mss": "UNKNOWN_NOT_SAMPLED"
+  },
+  "jobs": {
+    "static": "SUCCESS",
+    "client": "FAIL_CAPACITY_QUALIFICATION_ONLY",
+    "server": "SUCCESS",
+    "router": "SUCCESS"
+  },
+  "clean_direct_receiver_mbps": {
+    "upload": 612.631,
+    "download": 805.92
+  },
+  "per_case_receiver_goodput_mbps": [
+    {
+      "loss": 1,
+      "side": "upload",
+      "direct": 338.939,
+      "wbd": 233.146,
+      "wbd_over_direct": 0.6879
+    },
+    {
+      "loss": 1,
+      "side": "download",
+      "direct": 361.145,
+      "wbd": 240.597,
+      "wbd_over_direct": 0.6662
+    },
+    {
+      "loss": 5,
+      "side": "upload",
+      "direct": 243.588,
+      "wbd": 130.708,
+      "wbd_over_direct": 0.5366
+    },
+    {
+      "loss": 5,
+      "side": "download",
+      "direct": 178.258,
+      "wbd": 81.684,
+      "wbd_over_direct": 0.4582
+    }
+  ],
+  "router_skb": {
+    "scope": "per-case qdisc netem emitted/drops counters and link TX different counting units; NOT actual independent TCP segment loss",
+    "data": [
+      {
+        "loss": 1,
+        "side": "upload",
+        "direct_qdisc_drop_pct": 0.1522,
+        "wbd_qdisc_drop_pct": 1.0094,
+        "direct_emitted_over_link_tx": 6.5131
+      },
+      {
+        "loss": 1,
+        "side": "download",
+        "direct_qdisc_drop_pct": 0.1197,
+        "wbd_qdisc_drop_pct": 0.9811,
+        "direct_emitted_over_link_tx": 8.8721
+      },
+      {
+        "loss": 5,
+        "side": "upload",
+        "direct_qdisc_drop_pct": 0.8678,
+        "wbd_qdisc_drop_pct": 5.0491,
+        "direct_emitted_over_link_tx": 6.1812
+      },
+      {
+        "loss": 5,
+        "side": "download",
+        "direct_qdisc_drop_pct": 0.818,
+        "wbd_qdisc_drop_pct": 5.0936,
+        "direct_emitted_over_link_tx": 6.1178
+      }
+    ]
+  },
+  "unchanged_product": "original TLS, Rust no-HOL native data, ACK10, FEC, AEAD/PN, bounded outer repair, owned Stop",
+  "not_proven": [
+    "both directions >=800Mbps baseline",
+    "actual kernel MSS negotiated for all streams",
+    "jitter causal contribution (different Actions/VM)",
+    "physical Windows Npcap source of sporadic 3s TCP fail",
+    "product change causal gain"
+  ],
+  "next": "Repeat only focused jitter-on with source-locked per-socket TCP_INFO; do not retroactively upgrade fixed test MSS or capacity."
+}
