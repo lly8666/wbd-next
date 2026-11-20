@@ -162,10 +162,16 @@ final class RootDiagnosticReport {
                 "ORIGINAL_GO_POSTAUTH_HEALTH_FAILED",
                 "ORIGINAL_GO_POSTAUTH_M4_START_FAILED",
                 "ORIGINAL_GO_POSTAUTH_UID_ROUTE_FAILED",
+                "ORIGINAL_GO_POSTAUTH_COLD_RTO_STOP_FAILED",
+                "ORIGINAL_GO_POSTAUTH_DETACH_STATE_FAILED",
+                "ORIGINAL_GO_POSTAUTH_GO_RX_FILTER_FAILED",
             }){
                 if(has(session,failure))return failure;
             }
             for(String done:new String[]{
+                "ORIGINAL_GO_POSTAUTH_UID_ROUTE_ENTERED",
+                "ORIGINAL_GO_POSTAUTH_GO_RX_HANDOFF_OK",
+                "ORIGINAL_GO_POSTAUTH_GO_RX_FILTER_OK",
                 "ORIGINAL_GO_POSTAUTH_M4_STARTED",
                 "ORIGINAL_GO_POSTAUTH_TUN_ATTACHED",
                 "ORIGINAL_GO_POSTAUTH_RAW_ATTACHED",

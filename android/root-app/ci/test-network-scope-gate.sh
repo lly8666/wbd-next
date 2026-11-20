@@ -384,6 +384,14 @@ assert 'return originalV4OwnedTunIPv4FromNativeAddrs(addrs)' in go_product
 assert 'func originalV4OwnedTunIPv4FromNativeAddrs(addrs []net.Addr)' in go_product
 assert 'TestA41AndroidOriginalOwnedTunIPv4NativeGetifaddrs' in Path("r0/go_overlay/internal/v4productcli/android_native_tun_lease_readback_linux_test.go").read_text()
 assert 'ANDROID_A41_ORIGINAL_ANDROID_GETIFADDRS_LEASE32_REAL_GO_HOST_PASS' in Path("android/root-native/ci/linux-original-oracle.sh").read_text()
+# A42 original-Go Android post-M4 branches; no wire or sender change.
+for stage in ("COLD_RTO_STOP_FAILED","DETACH_STATE_FAILED","GO_RX_FILTER_FAILED",
+              "GO_RX_FILTER_OK","GO_RX_HANDOFF_OK","UID_ROUTE_ENTERED"):
+ assert f'originalAndroidPostauthGo("{stage}")' in go_product
+ assert f'ORIGINAL_GO_POSTAUTH_{stage}' in s
+ assert f'ORIGINAL_GO_POSTAUTH_{stage}' in receipt
+ assert f'ORIGINAL_GO_POSTAUTH_{stage}' in report
+print("ANDROID_A42_ORIGINAL_M4_POST_START_HANDOFF_SOURCE_GATE_PASS")
 print("ANDROID_A41_ANDROID_TUN_LEASE32_NATIVE_GETIFADDRS_SOURCE_PASS")
 print("ANDROID_A40_ORIGINAL_GO_RUST_POSTAUTH_STAGE_HOST_SOURCE_PASS")
 print("ANDROID_A39_ANDROID_KEYSTORE_PROVIDER_IV_AND_START_NONBLOCKING_SOURCE_PASS")

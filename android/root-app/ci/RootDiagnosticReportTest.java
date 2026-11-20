@@ -643,6 +643,9 @@ public final class RootDiagnosticReportTest {
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_HEALTH_FAILED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_START_FAILED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UID_ROUTE_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_COLD_RTO_STOP_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DETACH_STATE_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_FILTER_FAILED,
         }){
             File stageDir=Files.createTempDirectory("wbd-a40-postauth").toFile();
             RootDiagnosticReceipt writer=new RootDiagnosticReceipt(
@@ -659,7 +662,10 @@ public final class RootDiagnosticReportTest {
         for(RootDiagnosticReceipt.Event success:new RootDiagnosticReceipt.Event[]{
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_OK,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_OS_OK,
-            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_FILTER_OK,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_HANDOFF_OK,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UID_ROUTE_ENTERED
         }){
             File stageDir=Files.createTempDirectory("wbd-a40-positive").toFile();
             RootDiagnosticReceipt writer=new RootDiagnosticReceipt(

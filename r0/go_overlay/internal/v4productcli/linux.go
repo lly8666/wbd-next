@@ -1868,6 +1868,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         if !firstPeerPayloadRX.Load(){log.Print("V4_PUBLIC_ANDROID_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED role=client")}
         if resent>0{log.Print("V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_RTO_OBSERVED role=client")}
     }
+    if retryErr!=nil{originalAndroidPostauthGo("COLD_RTO_STOP_FAILED")}
     if err!=nil||retryErr!=nil{
         // Failed cold admission still owns a constructed native product.
         // It must release its loans/socket/generation before a new attempt.
@@ -1876,14 +1877,18 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // Existing client product returns only after authenticated TLS detach,
     // exact Rust M4 RX attachment and native loop start.
     if assoc.State()!=faketcp.ClientAssociationDetached{
+        originalAndroidPostauthGo("DETACH_STATE_FAILED")
         _=native.Close()
         return fmt.Errorf("Normal client Rust M4 started without FakeTCP detach")
     }
     if e:=raw.ExcludeDetachedData(flow.PeerIP,flow.PeerPort);e!=nil{
+        originalAndroidPostauthGo("GO_RX_FILTER_FAILED")
         _=native.Close()
         return fmt.Errorf("Normal client receive ownership handoff: %w",e)
     }
+    originalAndroidPostauthGo("GO_RX_FILTER_OK")
     handoffCommitted.Store(true)
+    originalAndroidPostauthGo("GO_RX_HANDOFF_OK")
     repeatOriginalDetachedTLSFinalACK(ctx,assoc)
     if c.rotationGeneration>1&&c.sharedTun!=nil{
         // The Rust candidate is ready to receive real M4 data but does
@@ -1906,6 +1911,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // default/main-table route, VpnService, FakeIP or early pre-auth grant.
     var undoRootRoute func()error
     if runtime.GOOS=="android"&&(c.androidRouteAllApps||c.androidRouteUID!=0||len(c.androidRouteUIDs)>0){
+        originalAndroidPostauthGo("UID_ROUTE_ENTERED")
         var authorizedLease string
         if authenticated==nil{
             return errors.Join(fmt.Errorf("missing real authenticated lease session"),native.Close())

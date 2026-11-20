@@ -622,6 +622,18 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUN_ATTACHED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=M4_STARTED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=COLD_RTO_STOP_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_COLD_RTO_STOP_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=DETACH_STATE_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DETACH_STATE_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=GO_RX_FILTER_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_FILTER_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=GO_RX_FILTER_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_FILTER_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=GO_RX_HANDOFF_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_HANDOFF_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=UID_ROUTE_ENTERED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UID_ROUTE_ENTERED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=COLD_FAILED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_COLD_FAILED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=DETACH_FAILED"))
