@@ -249,6 +249,8 @@ class OwnedLocal:
         (self.out/("loss"+str(loss)+"-client.log")).write_text(text[-350000:])
         markers=re.findall(r"V4_PUBLIC_SHARED_TUN_STOP generation=\d+ routed=(\d+) unrouted=(\d+) backpressure=(\d+) reader_joined=1 queue_full_drops=(\d+) retired_drops=(\d+) queue_byte_drops=(\d+) queue_age_drops=(\d+)",text)
         if not markers:raise RuntimeError("H2234_NO_ORIGINAL_RUST_QUEUE_READBACK")
+        if "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client" not in text:
+            raise RuntimeError("H2234_CLIENT_OWNER_STOP_NOT_DRAINED")
         routed,unrouted,backpressure,full,retired,byte,age=map(int,markers[-1])
         return {"status":"REAL_RUST_OWNED_STOP","routed":routed,"unrouted":unrouted,
                 "backpressure":backpressure,"queue_full_drops":full,
@@ -301,8 +303,15 @@ class OwnedLocal:
         root("kill","-TERM",str(pid),allow_fail=True)
         if not ready(self.serverlog,"V4_PUBLIC_SHARED_TUN_STOP generation=",30):
             raise RuntimeError("H2234_SERVER_ORIGINAL_RUST_OWNED_STOP_UNPROVEN")
-        if "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" not in self.serverlog.read_text(errors="replace"):
-            raise RuntimeError("H2234_SERVER_RUST_STOP_NOT_DRAINED")
+        log=self.serverlog.read_text(errors="replace")
+        # Original server emits the joined Rust reader and owned OS cleanup
+        # receipts, not the client-only role=server marker.
+        if not re.search(r"V4_PUBLIC_SHARED_TUN_STOP generation=\d+ .*reader_joined=1 ",log):
+            raise RuntimeError("H2234_SERVER_SHARED_TUN_READER_NOT_JOINED")
+        if "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED owned_rule_deleted=1" not in log:
+            raise RuntimeError("H2234_SERVER_OS_RESOURCE_STOP_NOT_DRAINED")
+        if "V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason=server-close remaining_flows=0" not in log:
+            raise RuntimeError("H2234_SERVER_GENERATIONS_NOT_ALL_RETIRED")
         return True
 
     def cleanup(self):
@@ -353,6 +362,12 @@ def main():
             status="NOT_RUN_LOW_LOSS_SAME_VM_INSUFFICIENT_CAPACITY"
         else:
             i=2
+            # Baseline the same real WBD owner before assigning any loss
+            # amplification; cold generation and Stop remain independent.
+            node.start_client(0)
+            for direction in ("upload","download"):
+                cases.append(node.iperf_case(i,0,"wbd",direction,20,4));i+=1
+            readbacks["0"]=node.stop_client(0)
             for loss in (1,5):
                 node.impairment(loss)
                 for direction in ("upload","download"):
@@ -380,10 +395,12 @@ def main():
             "not_a_physical_windows_result":True,
             "not_a_cross_vm_cpu_gain":True,
             "product_causal_speed_qualified":False,
+            "per_mode_scope":"NORMAL_FEC_OFF_ONLY",
+            "target_architecture":os.uname().machine,
             "original_outer_repair_and_no_hol_unchanged":True,
             "mode":"normal_fec_off","router_netem":"real_kernel_l3_no_nat_ge_1_5pct_fixed200ms",
             "num_real_tcp_cases":len(cases),
-            "all_expected_cases_completed":len(cases)==10,
+            "all_expected_cases_completed":len(cases)==12,
             "server_owned_stop_verified":server_stop_verified,
             "cases":cases,"rust_shared_tun_per_loss_stop":readbacks}
         save(out/"summary.json",result)

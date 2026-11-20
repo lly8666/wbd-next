@@ -61,3 +61,11 @@ E. **网络/测试对照本身不足**：先修真实segmentation/MSS与容量�
 - 此阶段**只能**证明同VM的原生本地TX消费/内核损伤/时延机制，不包含真实跨VM公网RTT争用、Windows Npcap或host CPU的独立容量结论。正式性能收益仍须把修前修后产品在同组/同source网络下按接收端GiB、低速P99与资源完成A/B；最后才用高容量真实跨机、实体Windows验证。
 
 任何失败应根据「首个异常」收紧真实内核建链、原应用socket、TUN/Stop或监控，不引入伪网络控制器或扩大公有通用防御框架。
+
+## H2234 第一次真正本机高吞吐 SOURCE（Action 44779139886）
+
+SOURCE `7084b2e8ec32295ee58ad937abcdec191e12844a`，原始artifact 14650594764；独立三 Linux netns，x86 Go TLS+Rust native/TUN/AF_PACKET、内核GE1/5%，**10/10真TCP iperf业务成功**，真实本机Direct无损 receiver 50.989/51.321Gbps，不是物理WAN。整体FAIL只因验收脚本错误要求客户端才有的 `V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server`；原server日志实际有 `V4_PUBLIC_SHARED_TUN_STOP generation=1 ... reader_joined=1`、`V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED owned_rule_deleted=1`，且 `V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason=server-close remaining_flows=0`。后续仅使用真实这三类共同证据，不把原Action改写为PASS。
+
+真实接收Mbps：1% Direct上1072.342/下1109.121，WBD上273.831/下268.228；5% Direct上683.481/下521.719，WBD上111.999/下143.868。1% 原生客户端连接 `SharedTunReader queue_full_drops=105610 backpressure=157522 routed=868367`；5%分别663/1440/439700；服务端跨工况累计 `queue_full_drops=112836`。1%客户端raw `eagain_turns=0`，原M4 TX线程26–28s约11.523s CPU /0.429s可运行等待，原M4 RX为1.958s CPU /0.291s可运行等待，原读TUN为2.057s CPU/0.450s可运行等待；不是简单的CPU调度饥饿或内核raw发送缓存满。该线程统计不区分逐包AES/锁/其他代码；同源显著本地Shared TUN溢出，已把首个候选收紧到本地TX数据处理效率。
+
+**下一源码**在同样local三netns中先加入真实0% WBD原生两向20秒4流基线，独立客户端generation/Stop，再跑1%/5%；新增 x86_64和原生aarch64两个**不同Runner的单机三netns**任务，只对各自平台的内层Direct与WBD同源同机比较，严禁直接比较跨架构绝对CPU或将ARM看成NAT穿透保证。两种架构都保持原Go TLS/Rust owner、真实Stop、同形损伤；最后确定优化有效才推广到Windows以及Game/Fixed/Auto。

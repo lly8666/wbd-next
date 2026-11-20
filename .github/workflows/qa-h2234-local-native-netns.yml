@@ -49,10 +49,18 @@ jobs:
   genuine-local-x86:
     needs: static
     name: 'Real x86 single-VM three netns: genuine TLS/Rust TUN/AF_PACKET + kernel BBR + GE1/5'
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: ubuntu-24.04
+            arch: x86_64
+          - host: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.host }}
     timeout-minutes: 47
     env:
-      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
       GOTOOLCHAIN: local
       CGO_ENABLED: '1'
     steps:
@@ -63,7 +71,7 @@ jobs:
         timeout-minutes: 24
         run: |
           set -euo pipefail
-          test "$(uname -m)" = x86_64
+          test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
@@ -86,14 +94,16 @@ jobs:
           assert d['network_scope']=='SAME_VM_CLIENT_ROUTER_SERVER_THREE_REAL_LINUX_NETNS'
           assert not d['real_independent_three_runner_wan']
           assert d['status']=='PASS_REAL_LOCAL_NETNS_TCP_CASES',d['status']
-          assert d['all_expected_cases_completed'] and d['num_real_tcp_cases']==10
-          assert set(d['rust_shared_tun_per_loss_stop'])=={'1','5'}
+          assert d['all_expected_cases_completed'] and d['num_real_tcp_cases']==12
+          assert d['target_architecture']==os.uname().machine
+          assert d['server_owned_stop_verified'],d['status']
+          assert set(d['rust_shared_tun_per_loss_stop'])=={'0','1','5'}
           print('H2234_TRUE_NATIVE_LOCAL_ONLY_PASS_NOT_WAN_OR_PRODUCT_OPTIMIZATION')
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: h2234-local-source-locked-real-evidence
+          name: h2234-local-${{ matrix.arch }}-source-locked-real-evidence
           path: |
             h2234-local-result/
             h2234-local-build.log
