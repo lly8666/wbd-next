@@ -28,6 +28,12 @@
 - `tailscale/github-action@v4` 的临时节点在 Actions 作业结束后自动退出；不在日志泄露任何生产 route key 或账号。CI 使用仅本轮 run ID+SHA 的测试密钥、测试用户，不复用实体服务端密码。
 - 先运行 `fixture-static` Python/Bash/负例和多 Runner 安全/矩阵校验，再按通过的真实 x86/ARM 接口与 iperf 原始日志确认造成 3 秒崩溃的首次状态转移。**本阶段仅测试夹具，不修任何 WBD 热路径、Health90、重传、缓冲、pacing 或拥塞控制策略。**
 
+## 初次 Actions 状态：真实双 Runner 被认证门槛阻止，不是产品故障
+
+- [H2227 Action 44681556694](https://github.com/lly8666/wbd-next/actions/runs/44681556694)：Python/Bash 夹具静态与负例检查 **SUCCESS**；两个实体跨 Runner 任务都在源码构建/网络连接**之前**由缺失 `TS_OAUTH_CLIENT_ID` / `TS_AUDIENCE` 停止，结论 `BLOCKED_TAILSCALE_OIDC_MISSING`，绝无可报的 TCP 测速、产品崩溃或 netem 结果。
+- 追加基础设施完整性检查：服务端每次唯一随机控制令牌，按原始 Source SHA + Run ID + 成员真实架构验证；真实 Tailscale direct/DERP 路径记录；原始 iperf JSON、每秒速度斜率、TCP retrans、1Hz CPU/RSS/qdisc；3秒测试必须跑满请求时长的一定比例才算 PASS，进程存活而连接代际重新 READY 也算失败。FEC 最高档必须看见真实 Rust `profile=6 pending=false`，否则拒绝当成“最高 FEC 测试”。
+- 全面夹具验证需由有授权的仓库管理者配置 Tailscale OIDC/tailnet ACL 后重跑。现阶段无法从本工具自行伪造 OAuth 身份或证明外部 runner 联通，**先保留草稿 PR，不合并冒充通过**。
+
 ## 后续根因路线（待实际故障日志）
 
 按源锁定案例逐层区分：1）同链路直连 BBR TCP 能否达参考容量、是否 DERP 中继；2）业务 TCP `ss` 拥塞窗口、RTT、kernel retrans、iperf 每秒爬升曲线；3）TUN fq/queue 与 0 vs 600 A/B；4）Rust M3 AF_PACKET 原始 TCP 发送/接收、Go TLS/背压和内存/CPU；5）异常代际 3秒首次 Health/remote retire 与同会话服务器时间线。用日志证明具体一处错误以后再单独修 TCP，其余参数不漂移。

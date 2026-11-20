@@ -153,6 +153,21 @@ run_client(){
         if ! kill -0 "$pid" 2>/dev/null;then break;fi
         sleep .25
       done
+      # Highest FEC means proven Rust-applied profile 6, not just
+      # requested flags or a GUI label. Never compare a silently Off lane.
+      if [[ "$ready" == 1 && "$local_mode" == "fec-fixed" ]];then
+        applied=0
+        for j in $(seq 1 30);do
+          if grep -Eq 'V4_PUBLIC_FEC2_READBACK role=client mode=fixed requested=[1-9][0-9]* applied=[1-9][0-9]* profile=6 pending=false' "$OUT/client-$name.log";then
+            applied=1;break
+          fi
+          sleep .2
+        done
+        if [[ "$applied" != 1 ]];then
+          ready=0
+          echo "H2227_FEC6_NOT_RUST_APPLIED $name" |tee -a "$OUT/failures.log"
+        fi
+      fi
       if [[ "$ready" != 1 ]];then
         echo "H2227_REAL_NATIVE_COLD_OR_CRASH_FAIL $name" | tee -a "$OUT/failures.log"
         python3 - "$OUT/case-$(printf '%03d' "$idx")-$name-cold.json" "$name" <<'PY'
@@ -163,6 +178,19 @@ PY
       else
         sudo -n ip netns exec "$NS" ip route replace 10.66.0.1/32 dev wbdc0
         python3 "$TOOL" snapshot client "$name-before" "$OUT/$name-before.json"
+        ready_count_start="$(grep -c -F 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client' "$OUT/client-$name.log" || true)"
+        # 1Hz real process CPU/RSS and owned qdisc live telemetry. No args,
+        # secret values, packet payloads, or speculative throughput numbers.
+        (
+          while kill -0 "$pid" 2>/dev/null;do
+            date -u +%Y-%m-%dT%H:%M:%SZ
+            sudo -n ip netns exec "$NS" ps -eo pid,ppid,pcpu,rss,stat,comm |
+              grep -E '(^[[:space:]]*PID|wbd-v4-|iperf3)' || true
+            sudo -n ip netns exec "$NS" tc -s qdisc show dev wan0 || true
+            sleep 1
+          done
+        ) >"$OUT/$name-cpu-rss-qdisc-1hz.log" 2>&1 &
+        sampler_pid=$!
         for spec in '3 1 upload' '12 1 upload' '12 1 download' '12 4 upload' '12 4 download';do
           read -r seconds streams direction <<<"$spec"
           path="$OUT/case-$(printf '%03d' "$idx")-$name-${seconds}s-${streams}p-$direction.json"
@@ -176,7 +204,20 @@ PY
             break
           fi
         done
+        kill "$sampler_pid" 2>/dev/null || true
+        wait "$sampler_pid" 2>/dev/null || true
         python3 "$TOOL" snapshot client "$name-after" "$OUT/$name-after.json" || true
+        ready_count_end="$(grep -c -F 'V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client' "$OUT/client-$name.log" || true)"
+        if [[ "$ready_count_start" != "$ready_count_end" ]];then
+          echo "H2227_SAME_PID_REAUTH_DURING_TCP $name" |tee -a "$OUT/failures.log"
+          python3 - "$OUT/case-$(printf '%03d' "$idx")-$name-reauth.json" <<'PY'
+import json,sys
+json.dump({"status":"ERROR","business_mbps":None,"raw_baseline":False,
+           "error":"SAME_PROCESS_AUTHENTICATED_GENERATION_CHANGED_DURING_TCP"},
+          open(sys.argv[1],"w"))
+PY
+          idx=$((idx+1))
+        fi
       fi
       sudo -n kill -TERM "$(cat "$TMP/client.pid")" 2>/dev/null || true
       for i in $(seq 1 45);do

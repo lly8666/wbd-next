@@ -121,6 +121,17 @@ def setup_net(role,peer_tail,local_tail):
     sudo("sysctl","-q","-w","net.ipv4.tcp_congestion_control=bbr")
     check(run("sysctl","-n","net.ipv4.tcp_congestion_control").stdout.strip()=="bbr",
           "BBR_NOT_ACTIVE")
+    # Record whether the authenticated VM-to-VM overlay traverses a
+    # Tailscale relay; DERP speed is an infrastructure ceiling, not WBD.
+    tailscale_probe=run("tailscale","ping","--c","3",str(peer),
+                       timeout=24,check_result=False)
+    path_text=(tailscale_probe.stdout+" "+tailscale_probe.stderr).lower()
+    if "derp" in path_text:
+        tail_path="RELAY_OR_DERP_NOT_PRODUCT_CAPACITY"
+    elif tailscale_probe.returncode==0:
+        tail_path="DIRECT_CANDIDATE_BUT_VERIFY_RUNNER_CAPACITY"
+    else:
+        tail_path="UNVERIFIED_TAILSCALE_PATH"
     sudo("ip","netns","add",NS)
     try:
         native("ip","link","set","lo","up")
@@ -140,6 +151,8 @@ def setup_net(role,peer_tail,local_tail):
         native("ip","addr","add",expected(role)+"/24","dev",WAN)
         native("ip","link","set",WAN,"mtu","1200")
         native("ip","link","set",WAN,"up")
+        check(native("sysctl","-n","net.ipv4.tcp_congestion_control").stdout.strip()=="bbr",
+              "NETNS_REAL_INNER_TCP_BBR_NOT_ACTIVE")
         native("sysctl","-q","-w","net.ipv4.conf.all.rp_filter=0")
         # Raw FakeTCP SYN uses our own userspace TCP stream/reply, not a
         # kernel-owned listener: suppress only OUTER wan0 RST, never TUN TCP.
@@ -152,6 +165,8 @@ def setup_net(role,peer_tail,local_tail):
         return {"role":role,"ns":NS,"wan":WAN,"vxlan":VX,
                 "tail":str(own),"other_tail":str(peer),
                 "bbr":"bbr","inner_tcp_only":True,
+                "tailscale_path":tail_path,
+                "tailscale_ping_evidence":tailscale_probe.stdout[-600:],
                 "underlay":expected(role),"route":chk.strip()}
     except BaseException:
         teardown()
@@ -182,9 +197,13 @@ def snapshot(role,phase,full=False):
     check(NS in before,"SOURCE_NETNS_MISSING")
     q=json.loads(native("tc","-s","-j","qdisc","show","dev",WAN).stdout)
     sock=native("ss","-tinm",timeout=10).stdout[:20000]
+    processes=native("ps","-eo","pid,ppid,pcpu,rss,stat,comm").stdout.splitlines()
+    owned=[line.strip() for line in processes if
+           "wbd-v4-" in line or "iperf3" in line][:80]
     stats=native("ip","-s","-j","link","show","dev",WAN).stdout
     return {"role":role,"phase":phase,"ns":NS,"wan":WAN,
         "qdisc":q,"link":json.loads(stats),"tcp":sock if full else sock[:6000],
+        "wbd_native_cpu_rss_processes":owned,
         "timestamp_ns":time.monotonic_ns(),
         "tcp_cc":native("sysctl","-n","net.ipv4.tcp_congestion_control").stdout.strip()}
 
@@ -250,7 +269,7 @@ def iperf_case(address,port,duration,streams,reverse,output,peer_pid=None):
           "BUSINESS_ADDR_MISMATCH")
     command=["sudo","-n","ip","netns","exec",NS,"iperf3","-J",
              "-c",address,"-p",str(port),"-t",str(duration),
-             "-P",str(streams),"-O","1"]
+             "-P",str(streams),"-O","1","-C","bbr"]
     if reverse:command.append("-R")
     t0=time.monotonic()
     p=None;timeout=False
@@ -259,10 +278,14 @@ def iperf_case(address,port,duration,streams,reverse,output,peer_pid=None):
     except subprocess.TimeoutExpired as exc:
         timeout=True
         p=subprocess.CompletedProcess(command,124,exc.stdout or "",exc.stderr or "")
+    stdout=p.stdout.decode("utf-8","replace") if isinstance(p.stdout,bytes) else str(p.stdout or "")
+    stderr=p.stderr.decode("utf-8","replace") if isinstance(p.stderr,bytes) else str(p.stderr or "")
+    pathlib.Path(str(output)+".iperf.txt").write_text(stdout[:500000])
+    pathlib.Path(str(output)+".stderr.txt").write_text(stderr[-4000:])
     status="ERROR"
     mbps=None
     iperf=None
-    try:iperf=json.loads(p.stdout)
+    try:iperf=json.loads(stdout)
     except (ValueError,TypeError):pass
     if p.returncode==0 and isinstance(iperf,dict) and "end" in iperf and \
          not iperf.get("error"):
@@ -270,7 +293,7 @@ def iperf_case(address,port,duration,streams,reverse,output,peer_pid=None):
         summary=end.get("sum_received" if reverse else "sum_sent",{})
         bps=summary.get("bits_per_second")
         seconds=summary.get("seconds",0)
-        if isinstance(bps,(float,int)) and bps>0 and seconds>0:
+        if isinstance(bps,(float,int)) and bps>0 and seconds>=duration*0.6:
             mbps=round(bps/1e6,3)
             status="PASS_OBSERVED_TCP_APPLICATION"
     alive=None
@@ -301,7 +324,7 @@ def iperf_case(address,port,duration,streams,reverse,output,peer_pid=None):
         "port":port,"raw_baseline":port==5202,
         "rc":p.returncode,"timed_out":timeout,
         "client_worker_alive_after":alive,
-        "error":str(iperf.get("error",""))[:250] if isinstance(iperf,dict) else p.stderr[-250:],
+        "error":str(iperf.get("error",""))[:250] if isinstance(iperf,dict) else stderr[-250:],
         "source_sha":os.environ.get("GITHUB_SHA","unknown"),
         "run_id":os.environ.get("GITHUB_RUN_ID","unknown")}
     write_json(output,rec)
@@ -328,10 +351,17 @@ def summary(directory):
         ("raw-0-fq600" in x["file"] or "raw-0-upload" in x["file"] or
          "raw-0-download" in x["file"])]
     clean_peak=max(clean_baseline,default=0.0)
+    topology=root/"topology-client.json"
+    tail_path="UNKNOWN_NO_PAIR_TOPOLOGY"
+    if topology.is_file():
+        tail_path=json.loads(topology.read_text()).get("tailscale_path",tail_path)
+    compare=(clean_peak>=800 and
+             tail_path=="DIRECT_CANDIDATE_BUT_VERIFY_RUNNER_CAPACITY")
     return {"classification":"REAL_TWO_RUNNER_APPPATH_SCOPED" if not failures else
                  "FAIL_REAL_TWO_RUNNER_APPLICATION_OR_WORKER",
-        "capacity_reference":"COMPARABLE_800MBPS_BASELINE" if clean_peak>=800 else
+        "capacity_reference":"COMPARABLE_800MBPS_BASELINE" if compare else
             "INFRA_OR_TS_LIMITED_BELOW_800MBPS_DO_NOT_ATTRIBUTE_80MBPS_TO_WBD",
+        "tailscale_path":tail_path,
         "clean_direct_baseline_peak_mbps":clean_peak,
         "cases":recs,"fails":failures,
         "baseline_mbps":[x["business_mbps"] for x in baselines],

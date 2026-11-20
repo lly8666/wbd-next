@@ -66,6 +66,26 @@ class TwoRunnerH2227(unittest.TestCase):
             self.assertIsNone(out["business_mbps"])
             self.assertEqual(out["direction"],"upload")
             self.assertFalse(out["raw_baseline"])
+            self.assertTrue(pathlib.Path(str(p)+".iperf.txt").is_file())
+    def test_three_second_early_tcp_close_is_not_pass_or_zero(self):
+        with tempfile.TemporaryDirectory() as d:
+            path=pathlib.Path(d)/"case-010.json"
+            record={"end":{"sum_sent":{"bits_per_second":160_000_000,
+                                        "seconds":0.7}},
+                    "intervals":[{"sum":{"bits_per_second":20_000_000}}]}
+            with patch.object(MOD.subprocess,"run",return_value=subprocess.CompletedProcess(
+                    ["iperf3"],0,json.dumps(record),"")):
+                got=MOD.iperf_case("10.66.0.1",5201,3,1,False,path)
+                self.assertEqual(got["status"],"ERROR")
+                self.assertIsNone(got["business_mbps"])
+            record["end"]["sum_sent"]["seconds"]=3.0
+            with patch.object(MOD.subprocess,"run",return_value=subprocess.CompletedProcess(
+                    ["iperf3"],0,json.dumps(record),"")):
+                got=MOD.iperf_case("10.66.0.1",5201,3,1,False,path)
+                self.assertEqual(got["status"],"PASS_OBSERVED_TCP_APPLICATION")
+                self.assertEqual(got["business_mbps"],160.0)
+                self.assertEqual(got["interval_mbps"],[20.0])
+
     def test_exact_source_report_and_full_matrix_required(self):
         with tempfile.TemporaryDirectory() as d:
             root=pathlib.Path(d)
@@ -88,6 +108,24 @@ class TwoRunnerH2227(unittest.TestCase):
             self.assertEqual(bad["classification"],"FAIL_REAL_TWO_RUNNER_APPLICATION_OR_WORKER")
             f.unlink()
             with self.assertRaises(RuntimeError):MOD.summary(root)
+    def test_derp_and_unqualified_capacity_never_implicate_wbd(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=pathlib.Path(d)
+            for i in range(62):
+                name=("case-%03d-raw-0-fq600.json"%i if i==0 else
+                      "case-%03d.json"%i)
+                MOD.write_json(root/name,{
+                    "status":"PASS_OBSERVED_TCP_APPLICATION",
+                    "business_mbps":900.0 if i==0 else 80.0,
+                    "raw_baseline":i<12})
+            topo=root/"topology-client.json"
+            MOD.write_json(topo,{"tailscale_path":"RELAY_OR_DERP_NOT_PRODUCT_CAPACITY"})
+            relay=MOD.summary(root)
+            self.assertTrue(relay["capacity_reference"].startswith("INFRA_OR_TS"))
+            MOD.write_json(topo,{"tailscale_path":"DIRECT_CANDIDATE_BUT_VERIFY_RUNNER_CAPACITY"})
+            direct=MOD.summary(root)
+            self.assertEqual(direct["capacity_reference"],"COMPARABLE_800MBPS_BASELINE")
+
     def test_arbitrary_targets_denied_before_running_iperf(self):
         for host,port in [("8.8.8.8",5201),("10.247.27.1",5201),
                           ("10.66.0.1",5202)]:
