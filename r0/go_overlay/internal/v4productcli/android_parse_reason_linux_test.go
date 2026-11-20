@@ -38,3 +38,20 @@ func TestAndroidA31OriginalGoColdParseFixedReasons(t *testing.T){
   t.Fatalf("nil rejected as %s",got)
  }
 }
+
+func TestAndroidA37OriginalGoCertMainDefaultAndStrictOptIn(t *testing.T){
+ args:=[]string{
+  "--raw-interface","eth0","--local-ip","192.0.2.10","--local-port","43900",
+  "--peer-ip","198.51.100.7","--peer-port","443","--tun-name","wbdv40",
+  "--tun-ipv4","10.66.0.8/32","--server-name","wbd.example.test",
+  "--mode","normal","--username","user","--password","secret",
+  "--route-key-hex",strings.Repeat("a",64),
+  "--tunnel-id","0123456789abcdef0123456789abcdef",
+ }
+ plain,e:=parse("client",args)
+ if e!=nil{t.Fatalf("original-Go main default parse: %v",e)}
+ if plain.tlsVerifyServer{t.Fatal("default must be main compatible: off")}
+ strict,e:=parse("client",append(append([]string{},args...),"--tls-verify-server"))
+ if e!=nil{t.Fatalf("original-Go strict parse: %v",e)}
+ if !strict.tlsVerifyServer{t.Fatal("strict opt-in ignored")}
+}

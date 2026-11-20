@@ -28,6 +28,7 @@ public final class OriginalGoCommandArgsTest {
     }
     public static void main(String[] args){
         List<String> one=build("198.51.100.7",new int[]{10123},false,null,null);
+        absent(one,"--tls-verify-server");
         value(one,"--mode","normal");
         if(!one.contains("--auto-ip"))throw new AssertionError("no protected /32");
         value(one,"--peer-ip","198.51.100.7");
@@ -56,11 +57,21 @@ public final class OriginalGoCommandArgsTest {
         value(host,"--peer-host","server.example.test");
         absent(host,"--peer-ip");
         value(host,"--android-route-uids","10123,110123");
-        value(host,"--tls-ca-pem",CA);
+        absent(host,"--tls-ca-pem");
+        absent(host,"--tls-verify-server");
+        List<String> strict=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","server.example.test",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,CA,true);
+        if(!strict.contains("--tls-verify-server"))
+            throw new AssertionError("strict TLS flag not sent");
+        value(strict,"--tls-ca-pem",CA);
         List<String> all=build("203.0.113.10",null,true,new int[]{10111,10112},CA);
         if(!all.contains("--android-route-all-apps"))
             throw new AssertionError("no all-app route policy");
         value(all,"--android-route-exclude-appids","10111,10112");
+        absent(all,"--tls-verify-server");
+        absent(all,"--tls-ca-pem");
         absent(all,"--android-route-uids");
         absent(all,"--android-route-uid");
         rejected(()->build("198.51.100.7",null,false,null,null));
@@ -96,6 +107,7 @@ public final class OriginalGoCommandArgsTest {
         rejected(()->OriginalGoCommandArgs.shellQuote(null));
         try{one.add("injected");throw new AssertionError("mutable production argv");}
         catch(UnsupportedOperationException expected){}
+        System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_OPT_IN_HOST_PASS");
         System.out.println("ANDROID_ORIGINAL_APK_GO_CLI_ARGV_HOST_CONTRACT_PASS");
     }
 }

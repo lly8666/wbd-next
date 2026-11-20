@@ -566,6 +566,20 @@ public final class RootDiagnosticReportTest {
         String certReport=RootDiagnosticReport.build(certDir,source,36);
         contains(certReport,"last_session_stage=TLS_HANDSHAKE_FAILED_CERTIFICATE");
         contains(certReport,"ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH");
+        File a37=Files.createTempDirectory("wbd-a37-default-policy").toFile();
+        RootDiagnosticReceipt a37w=new RootDiagnosticReceipt(new File(a37,"wbd-root-diagnostic.txt"));
+        a37w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        a37w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        a37w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_ACCEPTED);
+        a37w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED);
+        a37w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED);
+        a37w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+        String a37txt=RootDiagnosticReport.build(a37,source,36);
+        contains(a37txt,"ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED");
+        contains(a37txt,"last_session_stage=TLS_VERIFIED_ADMISSION_UNPROVEN");
+        if(a37txt.contains("ORIGINAL_GO_TLS_CERT_VERIFY_ENABLED"))
+            throw new AssertionError("reported strict verification in default mode");
+        System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_FIXED_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A36_CERT_REASON_RESTORE_REPORT_HOST_PASS");
         System.out.println("ANDROID_A35_ORIGINAL_ROOT_RST_GUARD_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A34_TLS_ORIGINAL_WIRE_AND_DEADLINE_HOST_PASS");

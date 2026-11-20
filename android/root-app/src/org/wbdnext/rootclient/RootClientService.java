@@ -227,6 +227,8 @@ public final class RootClientService extends Service {
             int[] excludedAppIDs=intent.getIntArrayExtra("exclude_appids");
             String[] managerPackages=intent.getStringArrayExtra("manager_packages");
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
+            boolean verifyTLS=intent.getBooleanExtra("tls_verify_server",false);
+            if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&
                   AllAppRouteScope.same(this,excludedAppIDs,managerPackages)
@@ -253,7 +255,7 @@ public final class RootClientService extends Service {
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,targetUids,targetPackages,allApps,excludedAppIDs,
-                managerPackages,hasCA),"wbd-native-root-owner");
+                managerPackages,hasCA,verifyTLS),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.START_REFUSED);
@@ -274,7 +276,7 @@ public final class RootClientService extends Service {
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
-                                 boolean hasCA,String token){
+                                 boolean hasCA,boolean verifyTLS,String token){
         // The host-tested argv is also the exact argv passed to original Go.
         // Secret *values* never appear here, only app-private file paths.
         List<String> args=OriginalGoCommandArgs.build(
@@ -285,7 +287,8 @@ public final class RootClientService extends Service {
             new File(getFilesDir(),"wbd-installation-id").getAbsolutePath(),
             nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
             excludedAppIDs,
-            hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null);
+            hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null,
+            verifyTLS);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
@@ -339,7 +342,7 @@ public final class RootClientService extends Service {
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
                          int port,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
-                         boolean hasCA){
+                         boolean hasCA,boolean verifyTLS){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
@@ -371,7 +374,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,targetUids,allApps,excludedAppIDs,hasCA,ownerToken))
+                    launchCommand(code,net,peer,sni,user,port,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);
@@ -519,6 +522,10 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_INVALID_CERTIFICATE);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=OTHER_CERTIFICATE"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_REASON_OTHER_CERTIFICATE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_MODE role=client class=DISABLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_MODE role=client class=ENABLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_ENABLED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=OS_STORE"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_TRUST_SOURCE_OS_STORE);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=APP_PEM"))

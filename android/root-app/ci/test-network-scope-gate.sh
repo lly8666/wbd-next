@@ -315,7 +315,15 @@ print("ANDROID_A35_SCOPED_RST_GUARD_NO_GLOBAL_FIREWALL_SOURCE_PASS")
 assert 'RootClientService.RESTORE' in Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert '--android-recover-owned-root' in Path("android/root-app/src/org/wbdnext/rootclient/RootRecoveryCommand.java").read_text()
 assert 'rootjournal.RecoverOwned(' in go_product and 'rstguard.RecoverOwned(' in go_product
-assert 'VerifyServer:true' in go_product
+assert 'flags.Bool("tls-verify-server",false' in go_product
+assert 'VerifyServer:c.tlsVerifyServer' in go_product
+assert 'c.tlsVerifyServer=role=="client"&&*verifyTLS' in go_product
+assert 'tlsVerifyServer.setChecked(false)' in Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+assert 'request.putExtra("tls_verify_server",verifyTLS)' in Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+assert 'args.add("--tls-verify-server")' in argv
+for ev in ("ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED","ORIGINAL_GO_TLS_CERT_VERIFY_ENABLED"):
+ assert ev in s and ev in receipt
+print("ANDROID_A37_MAIN_DEFAULT_TLS_CERT_VERIFY_OFF_SOURCE_PASS")
 assert 'v4AndroidCertFailureReason(err)' in go_admission
 for e in ("ROOT_RESTORE_COMPLETE","ROOT_RESTORE_FAILED"):
  assert e in s and e in receipt and e in report

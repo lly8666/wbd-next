@@ -41,7 +41,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort;
     private Spinner networks;
-    private CheckBox allAppsDefault;
+    private CheckBox allAppsDefault,tlsVerifyServer;
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult,diagnosticExportResult;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
@@ -95,7 +95,7 @@ public final class RootClientActivity extends Activity {
                     pem.getBytes(StandardCharsets.UTF_8)));
             if(certs.isEmpty())throw new IllegalArgumentException("empty trust set");
             caPEM.setText(pem);
-            status.setText("已导入 "+certs.size()+" 张本地TLS证书；将使用原Go验证SNI和链，不关闭校验");
+            status.setText("已导入 "+certs.size()+" 张本地TLS证书；勾选严格校验后原Go才使用");
         }catch(Exception failure){
             status.setText("CA导入未成功：请选择有效的受限大小PEM文件，原有配置未更改");
         }
@@ -232,6 +232,7 @@ public final class RootClientActivity extends Activity {
             String secret=password.getText().toString();
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
+            boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
             // TLS/authenticated /32 and Rust M4. No pre-auth route mutation,
             // no Android system/root UID, VPN, fake-IP or system DNS.
@@ -277,7 +278,7 @@ public final class RootClientActivity extends Activity {
             // Go owns the same standard TLS/auth, Rust M4 and UID Stop.
             privateText("wbd-pass.secret",secret+"\n");
             privateText("wbd-route.secret",key+"\n");
-            if(!pem.isEmpty())privateText("wbd-server-ca.pem",pem+"\n");
+            if(verifyTLS&&!pem.isEmpty())privateText("wbd-server-ca.pem",pem+"\n");
             Intent request=new Intent(this,RootClientService.class);
             request.setAction(RootClientService.START);
             request.putExtra("handle",scope.handle);
@@ -297,9 +298,12 @@ public final class RootClientActivity extends Activity {
                 request.putExtra("target_uids",chosen.uids);
                 request.putExtra("target_packages",chosen.packages);
             }
-            request.putExtra("has_ca",!pem.isEmpty());
+            request.putExtra("has_ca",verifyTLS&&!pem.isEmpty());
+            request.putExtra("tls_verify_server",verifyTLS);
             startForegroundService(request);
-            status.setText("Root start requested; awaiting actual native Go proof");
+            status.setText(verifyTLS
+                ?"Root start — strict TLS server certificate validation ON"
+                :"Root start — TLS certificate validation OFF (main default)");
             password.setText("");
             routeKey.setText("");
         }catch(Exception e){
@@ -320,6 +324,7 @@ public final class RootClientActivity extends Activity {
             "① 选择实体 Wi-Fi/移动网络  ② 输入 WBD 服务器/账户/Key\n"+
             "③ START 后查看固定阶段码，STOP 精确撤销 UID/清理。\n"+
             "首次测试建议取消下面的「默认全部普通App」，只勾选一个测试App。\n"+
+            "TLS默认不检验证书（与主线一致），不验证服务器身份；严格模式可手动开启。\n"+
             "注意：真实 Android↔Linux 业务尚未通过实机验收。");
         pane.addView(intro);
         // Keep advanced Root-only selftest but collapse it in Lite.
@@ -376,7 +381,15 @@ public final class RootClientActivity extends Activity {
             "放在 App 私有不备份目录。服务端须配置同一 v2 短 Key；"+
             "8 位人工口令强度较弱，建议随机 24–32 位。没有任何线上协商或隐式回退。");
         pane.addView(keyHelp);
-        caPEM=input(pane,"Optional server TLS CA certificate PEM",
+        tlsVerifyServer=new CheckBox(this);
+        tlsVerifyServer.setText("严格验证TLS服务器证书和SNI（默认关闭，主线兼容）");
+        tlsVerifyServer.setChecked(false);
+        pane.addView(tlsVerifyServer);
+        TextView verifyWarning=new TextView(this);
+        verifyWarning.setText("默认仍使用原TLS加密/受保护认证，但不验证服务端证书身份，有中间人风险。"+
+            "勾选后才验证证书与SNI，并可使用下方本地CA。");
+        pane.addView(verifyWarning);
+        caPEM=input(pane,"Optional server TLS CA PEM (only for strict verification)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
         Button importCa=new Button(this);
@@ -384,9 +397,8 @@ public final class RootClientActivity extends Activity {
         importCa.setOnClickListener(v->importTLSCA());
         pane.addView(importCa);
         TextView caHelp=new TextView(this);
-        caHelp.setText("证书失败：UNKNOWN_AUTHORITY请导入服务器签发CA；"+
-            "HOSTNAME_MISMATCH请将TLS SNI改为证书DNS SAN。"+
-            "不自动信任对端证书，也不关闭TLS验证。");
+        caHelp.setText("只有勾选严格验证时才使用CA；否则默认不做证书身份校验。"+
+            "严格模式下UNKNOWN_AUTHORITY请导入CA；HOSTNAME_MISMATCH请核对证书DNS SAN与SNI。");
         pane.addView(caHelp);
         TextView targetHelp=new TextView(this);
         targetHelp.setText("默认仅接管普通 Android 应用的 IPv4 流量（最多20个用户空间），不是系统全流量。"

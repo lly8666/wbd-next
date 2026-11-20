@@ -54,6 +54,8 @@ public final class OriginalGoMilestonesTest {
             "V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=INCOMPATIBLE_USAGE",
             "V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=INVALID_CERTIFICATE",
             "V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=OTHER_CERTIFICATE",
+            "V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_MODE role=client class=DISABLED",
+            "V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_MODE role=client class=ENABLED",
             "V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=OS_STORE",
             "V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=APP_PEM",
             "V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client",

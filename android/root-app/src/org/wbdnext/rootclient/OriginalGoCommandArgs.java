@@ -34,6 +34,18 @@ final class OriginalGoCommandArgs {
                               String cnFile,int[] targetUids,
                               boolean allApps,int[] excludedAppIDs,
                               String tlsCaFile){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,false);
+    }
+    // Default matches main: the flag only opts into strict verification.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS){
         if(iface==null||!iface.matches("[A-Za-z0-9_.-]{1,32}")||
            handle==0||!ServerAddress.isIPv4Literal(localIPv4)||
            !ServerAddress.valid(peer)||peerPort<1||peerPort>65535||
@@ -92,7 +104,10 @@ final class OriginalGoCommandArgs {
                 pair(args,"--android-route-uids",group.toString());
             }
         }
-        if(tlsCaFile!=null)pair(args,"--tls-ca-pem",tlsCaFile);
+        if(verifyTLS){
+            args.add("--tls-verify-server");
+            if(tlsCaFile!=null)pair(args,"--tls-ca-pem",tlsCaFile);
+        }
         return Collections.unmodifiableList(args);
     }
 }
