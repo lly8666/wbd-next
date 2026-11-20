@@ -17,3 +17,7 @@
 ## A43b 当前CI真实失败的修复（保留红证据）
 
 A43 SOURCE `ea1713a190d30392f799423faf1c41cb29f5fe73` 自动Action [#44751133369](https://github.com/lly8666/wbd-next/actions/runs/44751133369) 的`root-arm64-app`真实FAIL：`test-network-scope-gate.sh`在`bash -n`阶段发现新Oracle脚本缺闭合单引号，尚未构建APK/运行新真内核Go测试。本提交只将该Go test命令改为无需shell引号的单行调用，并恢复真实PASS marker；原生产Go/Rust和本机Android观察均未改变。旧FAIL保留，下一SOURCE CI需真实证明完整门通过，不能把源锁成功当手机PASS。
+
+## A43c 同SOURCE治理文件同步
+
+A43b 仅修复真实Kernel Host Oracle测试命令的shell引号错误，不改原生产Go/Rust；因该次提交修改了包含`feature-impact`的devlog却未同步更新功能卡，[#44751911977](https://github.com/lly8666/wbd-next/actions/runs/44751911977) Feature Catalog真实FAIL。本次同步最小功能卡与本节明确实际范围。相同原生执行SOURCE仍为`d4ab1a3d08b519726c55e87fef6f71afa0060587`；这次纯文档提交不触发重型Android dual64工作流，不借文档绿灯宣称手机PASS。
