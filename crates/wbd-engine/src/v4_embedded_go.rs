@@ -5318,8 +5318,42 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     let lease_diag_enabled=std::env::var("WBD_SHARED_TUN_ROUTE_DIAG")
         .ok().as_deref()==Some("1");
     let mut lease_diag=BTreeMap::<[u8;4],SharedTunLeaseQueueDiag>::new();
+    // H2240: optional 200ms ORIGINAL-reader timeline only; all hot packet
+    // counters already exist. No new thread, queue, lock, packet timestamp,
+    // outer ACK/FEC wait, read suppression, or Go per-packet callback.
+    #[cfg(feature="fec2_product_record")]
+    let pressure_timeline=std::env::var("WBD_H2240_TUN_TIMELINE")
+        .ok().as_deref()==Some("1");
+    #[cfg(feature="fec2_product_record")]
+    let mut pressure_last=Instant::now();
+    #[cfg(feature="fec2_product_record")]
+    let mut pressure_ticks=0u32;
+    #[cfg(feature="fec2_product_record")]
+    let mut pressure_tun_batches=0u64;
+    #[cfg(feature="fec2_product_record")]
+    let mut pressure_tun_observed=0u64;
     let fd=router.tun.readiness_fd();
     while !router.stop.load(Ordering::Acquire){
+        #[cfg(feature="fec2_product_record")]
+        if pressure_timeline && pressure_ticks<240 &&
+            pressure_last.elapsed()>=Duration::from_millis(200){
+            pressure_last=Instant::now();
+            pressure_ticks=pressure_ticks.saturating_add(1);
+            let pending_packets=pending.values().map(|q|q.packets.len()).sum::<usize>();
+            let oldest_wait_ns=pending.values().filter_map(|q|
+                q.packets.front().map(|p|p.queued_at.elapsed().as_nanos()
+                    .min(u64::MAX as u128) as u64)).max().unwrap_or(0);
+            eprintln!("V4_PUBLIC_H2240_TUN_WINDOW mono_ns={} generation={} tun_batches={} tun_observed={} delivered={} backpressure={} queue_full={} queue_age={} queue_bytes={} retired={} pending_packets={} oldest_pending_ns={} reader_single=1 no_hol=1",
+                original_kernel_monotonic_ns(),router.generation,
+                pressure_tun_batches,pressure_tun_observed,
+                router.delivered.load(Ordering::Relaxed),
+                router.backpressure.load(Ordering::Relaxed),
+                router.queue_full_drops.load(Ordering::Relaxed),
+                router.queue_age_drops.load(Ordering::Relaxed),
+                router.queue_byte_drops.load(Ordering::Relaxed),
+                router.retired_drops.load(Ordering::Relaxed),
+                pending_packets,oldest_wait_ns);
+        }
         if router.routes.lock().map_or(true,|routes|routes.is_empty()){
             let old=std::mem::take(&mut pending);
             router.retired_drops.fetch_add(
@@ -5342,6 +5376,11 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             Err(TunError::Stopped)=>break,
             Err(_)=>continue,
         };
+        #[cfg(feature="fec2_product_record")]
+        if pressure_timeline{
+            pressure_tun_batches=pressure_tun_batches.saturating_add(1);
+            pressure_tun_observed=pressure_tun_observed.saturating_add(batch.observed as u64);
+        }
         for i in 0..batch.observed{
             let len=match batch.entry(i){
                 Some(TunReadyEntry::UntrustedIpv4{len}) if len>=20=>len,
@@ -5380,6 +5419,11 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             }
             router.note_dispatch(delta);
         }
+    }
+    #[cfg(feature="fec2_product_record")]
+    if pressure_timeline{
+        eprintln!("V4_PUBLIC_H2240_TUN_TIMELINE_STOP generation={} windows={} tun_batches={} tun_observed={} max_windows=240 no_packet_log=1 no_queue_change=1",
+            router.generation,pressure_ticks,pressure_tun_batches,pressure_tun_observed);
     }
     if lease_diag_enabled{
         for (ip,st) in lease_diag{

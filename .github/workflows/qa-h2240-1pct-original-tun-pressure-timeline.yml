@@ -1,0 +1,100 @@
+name: 'H2240 original Rust TUN200ms versus M4TX500ms GE1pct causal timeline'
+run-name: 'H2240 original native 1flow-4flow-1flow SOURCE ${{ github.sha }}'
+on:
+  push:
+    branches: ['feat/h2240-low-loss-tun-pressure-timeline']
+    paths:
+      - '.github/workflows/qa-h2240-1pct-original-tun-pressure-timeline.yml'
+      - 'tools/m0_h2240_low_loss_timeline.py'
+      - 'tools/m0_h2234_local_netns.py'
+      - 'tests/test_m0_h2240_low_loss_timeline.py'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: h2240-original-tun-timeline-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    name: 'H2240 exact source/no-HOL/one owner/bounded real timeline'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: H2240 source-locked duration counters and existing owner verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2240_low_loss_timeline.py tools/m0_h2234_local_netns.py
+          python3 -m unittest tests.test_m0_h2240_low_loss_timeline tests.test_m0_h2234_local_netns tests.test_m0_h2229_native_ack_unified -v
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('crates/wbd-engine/src/v4_embedded_go.rs').read_text()
+          assert 'V4_PUBLIC_H2240_TUN_WINDOW' in s
+          assert 'pressure_ticks<240' in s
+          assert 'WBD_H2240_TUN_TIMELINE' in s
+          assert 'read_ready_batch(router.generation' in s
+          assert 'flush_shared_tun(&mut pending)' in s
+          assert 'original_kernel_monotonic_ns()' in s
+          print('H2240_STATIC_TRUE_READER_ONE_OWNER_NO_HOL_ONLY')
+          PY
+  genuine-x86:
+    needs: static
+    name: 'Original Go TLS/Rust single owner, GE1pct 200ms 1-4-1 flows, TUN and M4 time buckets'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 41
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: True kernel TUN/veth/router/BBR and exact original Go TLS/Rust build once
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2240-build.log 2>&1 ||
+            { tail -n 140 h2240-build.log;exit 2; }
+      - name: Source-locked native GE1pct actual TCP and TUN/TX monotonic timeline
+        shell: bash
+        timeout-minutes: 14
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/m0_h2240_low_loss_timeline.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2240-tun-pressure/summary.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['status']=='PASS_GENUINE_ORIGINAL_M4_200MS_TIMELINE_NOT_OPTIMIZED',d['status']
+          assert d['server_owned_stop_verified']
+          assert [p['true_tcp_streams'] for p in d['phases']]==[1,4,1]
+          assert len(d['direct_real_before_after'])==2
+          assert all(p['case']['status']=='PASS_REAL_KERNEL_IPERF3_TCP'
+                     and p['client_owned_stop']['status']=='REAL_RUST_OWNED_STOP'
+                     and p['temporal_cause_receipt']['status']=='REAL_ORIGINAL_TUN200MS_AND_TX500MS_MONO_TICKS'
+                     for p in d['phases'])
+          assert d['not_product_optimization'] and d['immutable_no_hol_out_of_order_delivery']
+          print('H2240_REAL_SOURCE_TIME_BUCKETS_COMPLETE_NOT_PRODUCT_GAIN')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2240-ge1-original-tun-pressure-source-locked
+          path: |
+            h2240-tun-pressure/
+            h2240-build.log
+          retention-days: 10
+          if-no-files-found: warn
