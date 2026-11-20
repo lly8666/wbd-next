@@ -118,8 +118,8 @@ echo ANDROID_A38_ORIGINAL_PROTECTED_TLS_CERT_POLICY_REAL_GO_HOST_PASS
 echo ANDROID_A41_ORIGINAL_ANDROID_GETIFADDRS_LEASE32_REAL_GO_HOST_PASS
 # A43: execute real kernel BPF attach/replacement with and without
 # donor initial Ethernet port filter, not just Go BPF VM.
-(cd legacy && timeout 180s go test -count=1 \
-  -run '^TestA43OriginalAndroidDetachedClientRXKernelQuiesce
+(cd legacy && timeout 180s go test -count=1 -run TestA43OriginalAndroidDetachedClientRXKernelQuiesce ./internal/faketcp)
+echo ANDROID_A43_ORIGINAL_GO_CLIENT_RX_REAL_KERNEL_QUIESCE_HOST_PASS
 for role in client server;do
   (cd legacy && go build -trimpath -buildvcs=false \
     -tags wbd_v4_embedded_go,wbd_v4_fec2_product \

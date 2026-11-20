@@ -13,3 +13,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A42真机两次原Rust M4后旧Go RX filter失败；A43直接修原Go旧客户端接收FD的内核过滤器，并以前瞻UID私表/owned Stop审查和真实内核Host收据锁定。"}
 ```
+
+## A43b 当前CI真实失败的修复（保留红证据）
+
+A43 SOURCE `ea1713a190d30392f799423faf1c41cb29f5fe73` 自动Action [#44751133369](https://github.com/lly8666/wbd-next/actions/runs/44751133369) 的`root-arm64-app`真实FAIL：`test-network-scope-gate.sh`在`bash -n`阶段发现新Oracle脚本缺闭合单引号，尚未构建APK/运行新真内核Go测试。本提交只将该Go test命令改为无需shell引号的单行调用，并恢复真实PASS marker；原生产Go/Rust和本机Android观察均未改变。旧FAIL保留，下一SOURCE CI需真实证明完整门通过，不能把源锁成功当手机PASS。
