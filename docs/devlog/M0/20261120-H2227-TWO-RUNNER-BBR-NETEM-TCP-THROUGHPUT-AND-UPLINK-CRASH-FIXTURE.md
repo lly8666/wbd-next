@@ -31,6 +31,7 @@
 ## 初次 Actions 状态：真实双 Runner 被认证门槛阻止，不是产品故障
 
 - [H2227 Action 44681556694](https://github.com/lly8666/wbd-next/actions/runs/44681556694)：Python/Bash 夹具静态与负例检查 **SUCCESS**；两个实体跨 Runner 任务都在源码构建/网络连接**之前**由缺失 `TS_OAUTH_CLIENT_ID` / `TS_AUDIENCE` 停止，结论 `BLOCKED_TAILSCALE_OIDC_MISSING`，绝无可报的 TCP 测速、产品崩溃或 netem 结果。
+- [H2227 Action 44682549769](https://github.com/lly8666/wbd-next/actions/runs/44682549769) 在补齐 3秒过早终止/DERP 限速/FEC6 applied/低频CPU-RSS 证据后：`fixture-static` **8/8 tests SUCCESS**；两真实 Runner 仍严格 `BLOCKED_TAILSCALE_OIDC_MISSING`，无已运行 iperf3 业务样本。此项不能报告产品 FAIL、80Mbps 重现或已解决。
 - 追加基础设施完整性检查：服务端每次唯一随机控制令牌，按原始 Source SHA + Run ID + 成员真实架构验证；真实 Tailscale direct/DERP 路径记录；原始 iperf JSON、每秒速度斜率、TCP retrans、1Hz CPU/RSS/qdisc；3秒测试必须跑满请求时长的一定比例才算 PASS，进程存活而连接代际重新 READY 也算失败。FEC 最高档必须看见真实 Rust `profile=6 pending=false`，否则拒绝当成“最高 FEC 测试”。
 - 全面夹具验证需由有授权的仓库管理者配置 Tailscale OIDC/tailnet ACL 后重跑。现阶段无法从本工具自行伪造 OAuth 身份或证明外部 runner 联通，**先保留草稿 PR，不合并冒充通过**。
 
