@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2231",
+  "date": "2026-11-20",
+  "source_sha": "4cf12a42b7f85112022ca7f3359d051d9ecdf608",
+  "run_id": 44745602996,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44745602996",
+  "qualification": "SCOPED_REAL_3_RUNNER_TCP_MATRIX_AND_APP_UDP_P99_BUT_DERP_INFRA_CAPACITY_UNQUALIFIED_STATIC_OLD_BRANCH_ASSERTION_FAIL",
+  "result": "PARTIAL_REAL_APP_TCP_27_OF_27_P99_VALID_22_OF_27_ACTION_FAILURE_DO_NOT_CLAIM_FULL_CI_PASS",
+  "jobs": {
+    "static": "FAIL_1_OLD_TEST_HARDCODED_BRANCH_LIST_22_OF_23_TESTS_PASSED",
+    "client": "FAIL_CAPACITY_QUALIFICATION_BUT_ALL_27_TCP_IPERF_COMPLETED",
+    "relay": "SUCCESS_AUTHENTIC_THIRD_ARM64_KERNEL_L3_ROUTER",
+    "server": "SUCCESS_AUTHENTIC_ORIGINAL_GO_RUST_X86_NATIVE_TUN_UDP_TCP"
+  },
+  "artifacts": {
+    "client_summary": {
+      "id": 14633357999,
+      "name": "h2228-client-result"
+    },
+    "client_evidence": {
+      "id": 14632993956,
+      "name": "h2228-x86-client-evidence"
+    },
+    "relay_evidence": {
+      "id": 14632934833,
+      "name": "h2228-arm-relay-evidence"
+    },
+    "server_evidence": {
+      "id": 14633847258,
+      "name": "h2228-x86-server-evidence"
+    }
+  },
+  "topology": {
+    "client": "independent_x86_64",
+    "middle": "independent_aarch64_Linux_L3_router_200ms_oneway_GE_both_directions_no_rate_cap",
+    "server": "independent_x86_64_original_Go_TLS_Rust_native",
+    "mode": "normal_off",
+    "outer_performative_retransmission": "UNCHANGED_ON",
+    "loss_target_percent": [
+      0,
+      1,
+      5,
+      10,
+      20
+    ],
+    "jitter_stddev_ms": 15,
+    "burst_model": "gilbert_elliott",
+    "clear_0delay_0loss_direct_tcp_8stream_mbps": {
+      "upload": 21.058,
+      "download": 21.146
+    },
+    "capacity": "INFRA_RELAY_OR_DERP_UNQUALIFIED_DO_NOT_ATTRIBUTE_TO_WBD",
+    "tailnet_flags": [
+      "DIRECT_CANDIDATE",
+      "UNKNOWN_NOT_QUALIFIED"
+    ]
+  },
+  "cases": {
+    "expected_iperf3": 27,
+    "actual_iperf3": 27,
+    "iperf3_valid": 27,
+    "iperf3_failures": 0,
+    "app_udp_echo_probe_receipts": 27,
+    "app_udp_p99_qualified_at_least_50_replies": 22,
+    "app_udp_p99_unknown_or_insufficient": 5,
+    "tcp_interval_tail_receipts": 27,
+    "native_resource_p99": "NOT_IN_FIRST_RUN_ADDED_IN_LATER_SOURCE"
+  },
+  "per_phase_20s_4stream_udp_application_rtt_p99_ms": [
+    {
+      "loss_target_pct": 0,
+      "direct_up": 1337.304,
+      "wbd_up": 1557.104,
+      "direct_down": 878.343,
+      "wbd_down": 1286.776
+    },
+    {
+      "loss_target_pct": 1,
+      "direct_up": 1460.558,
+      "wbd_up": 1265.79,
+      "direct_down": 1270.687,
+      "wbd_down": 1305.85
+    },
+    {
+      "loss_target_pct": 5,
+      "direct_up": 595.665,
+      "wbd_up": 540.923,
+      "direct_down": 774.208,
+      "wbd_down": 651.993
+    },
+    {
+      "loss_target_pct": 10,
+      "direct_up": 679.042,
+      "wbd_up": 596.571,
+      "direct_down": 537.433,
+      "wbd_down": 526.253
+    },
+    {
+      "loss_target_pct": 20,
+      "direct_up": 531.038,
+      "wbd_up": 530.059,
+      "direct_down": 543.337,
+      "wbd_down": 550.163
+    }
+  ],
+  "per_phase_20s_4stream_udp_echo_missing_percent": [
+    {
+      "loss_target_pct": 0,
+      "direct_up": 0,
+      "wbd_up": 0,
+      "direct_down": 5,
+      "wbd_down": 0
+    },
+    {
+      "loss_target_pct": 1,
+      "direct_up": 0.833,
+      "wbd_up": 0.833,
+      "direct_down": 3.333,
+      "wbd_down": 1.667
+    },
+    {
+      "loss_target_pct": 5,
+      "direct_up": 7.5,
+      "wbd_up": 6.667,
+      "direct_down": 10,
+      "wbd_down": 7.5
+    },
+    {
+      "loss_target_pct": 10,
+      "direct_up": 16.667,
+      "wbd_up": 17.5,
+      "direct_down": 9.167,
+      "wbd_down": 21.667
+    },
+    {
+      "loss_target_pct": 20,
+      "direct_up": 32.5,
+      "wbd_up": 40.833,
+      "direct_down": 30.833,
+      "wbd_down": 38.333
+    }
+  ],
+  "per_phase_wbd_vs_direct_tcp_20s_4stream_mbps": [
+    {
+      "loss_target_pct": 0,
+      "direct_up": 26.476,
+      "wbd_up": 25.48,
+      "direct_down": 19.032,
+      "wbd_down": 16.043
+    },
+    {
+      "loss_target_pct": 1,
+      "direct_up": 23.016,
+      "wbd_up": 21.967,
+      "direct_down": 14.628,
+      "wbd_down": 14.628
+    },
+    {
+      "loss_target_pct": 5,
+      "direct_up": 14.051,
+      "wbd_up": 18.979,
+      "direct_down": 12.53,
+      "wbd_down": 10.643
+    },
+    {
+      "loss_target_pct": 10,
+      "direct_up": 18.874,
+      "wbd_up": 14.208,
+      "direct_down": 6.292,
+      "wbd_down": 3.408
+    },
+    {
+      "loss_target_pct": 20,
+      "direct_up": 3.618,
+      "wbd_up": 1.101,
+      "direct_down": 0.944,
+      "wbd_down": 2.492
+    }
+  ],
+  "analysis_constraints": [
+    "200ms only added one-way in each direction; measured application RTT contains DERP, queue, echo scheduling and successful-response selection",
+    "GE loss configured independently on both relay egress, so round-trip UDP missing can exceed nominal per-direction configured loss",
+    "Higher loss may preferentially lose delayed replies; a decreasing conditional P99 is NOT evidence that high loss improves tail latency",
+    "20s load iperf P99 Mbps is a high throughput time-bin percentile, use P01 for stall detection, do not treat as a latency percentile",
+    "Existing original client 3s physical Windows sporadic death, 80-200Mbps limit and native ACK high-speed cause remain OPEN",
+    "First run source payload of app UDP lacked inside probe SHA/run metadata; artifact itself bound to exact workflow run. Next revision binds each individual probe and resource file SHA/run.",
+    "Action full conclusion FAILURE due static test contract literal and below-800Mbps DERP capacity, not 27 TCP application case failures"
+  ],
+  "not_run": [
+    "Physical Windows Npcap same ISP xray 1Gbps comparison",
+    "Windows occasional uplink iperf3 early crash root cause",
+    "Matched real 800Mbps+ CLEAR baseline for this source",
+    "CPU/RSS p99 in first source"
+  ],
+  "next": "H2231 next commit fixes old fixture branch assertion, source-locks all UDP probes through sudo netns and 500ms native CPU/RSS P99; run same three separate runners again; do not alter packet retransmission."
+}
