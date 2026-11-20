@@ -37,3 +37,13 @@ A34a SOURCE `1658573124a5f91e8ba400422208d2f85dfe432b` [Action #44697865675](htt
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A34c实测历史embedded_go测试标签会缺少native_probe helper，仅将独立Go分类测试恢复公共无标签入口，Linux真实产品构建/协议不改。"}
 ```
+
+## A34d 终局同源验收锁定
+
+产品SOURCE `c010f7357d0334c48c479012011b6cdb7dad1e4f` 的 [Android dual64 Action #44699225975](https://github.com/lly8666/wbd-next/actions/runs/44699225975) **completed SUCCESS：11 SUCCESS / 4 SKIPPED / 0 FAIL**。`arm64-native` 双Bionic ABI原Go/Rust与ARM64 16KiB门、`root-arm64-app` signed APK及Java safe TXT负例、`linux-x86-original-server-d2-s0`、`linux-original-server-normal-off` 原Linux Go/Rust真实TLS/自动32租约/UDP M4/Stop/wire Oracle，连同M3/DNS Host门均成功；后者真实日志：`ANDROID_A34_ORIGINAL_GO_TLS_CLASSIFIER_HOST_PASS`、`ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN`。四个SKIPPED：x86 KSU Native、NativeBridge、D2-S1、TAP guest；ARM64 Cuttlefish仅host admission SUCCESS，不代表guest。
+
+[源锁签名ARM64 APK工件 #14611433699](https://github.com/lly8666/wbd-next/actions/runs/44699225975/artifacts/14611433699)，[Linux原Oracle工件 #14612830235](https://github.com/lly8666/wbd-next/actions/runs/44699225975/artifacts/14612830235)。原始手机 **仍仅为A33 SOURCE `f8031ef1`** 已证FakeTCP Established→TLS Attempted→14,997ms OTHER；A34新功能的真实手机TX/RX/timeout类别、服务端原RAW来源、TLS认证/32租约/原Rust M4双向App TCP UDP/内核UID与joined Stop均 **NOT_RUN/NOT_PROVEN**，不因Host oracle PASS升级。历史A34 `a64f68f`、A34a `1658573`、A34b `b45df05` 产品Action的脚本/测试标签FAIL均保留原结论；本资料提交不重新构建新的APK SOURCE。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A34完成同源构建和原Go TLS错误分类/LINUX Oracle 11 SUCCESS 4 SKIPPED收据，保持Android真业务NOT_PROVEN。"}
+```
