@@ -26,3 +26,7 @@ A46b 已逐字节同步main已通过的H2216 DATA/ACK TTL修复。本次在Andro
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A46b真机Go到Rust真实TUN/RAW发送已证但无反向数据；A47在原Rust同一RAW FD和M3 seq/offer位置增加22项真实数值分段诊断，经原Go低频状态和App有界数字收据导出，不放松AEAD/PN/Stop。"}
 ```
+
+## A47b｜修复被截断、重复拼接的真实 Linux Oracle 脚本
+
+A47 SOURCE `1b0c2ace5cb0a7ab204ebd515c932cc9dcd4eb3a` 原 ARM64 Go/Rust native SUCCESS，但正式 APK Job 的 `bash -n` 报 unmatched single quote，因此无APK。审计发现新增 A47 Host Go 测试行被截断，且其后重复拼接完整旧 Linux Oracle 尾段。A47b从已实测Linux Oracle通过的 SOURCE `1b20ab1d36cf1bf6c79c564e9b6340118ec9c33c` **全文件恢复**，在原A45 Host测试之后仅插入一条简洁 `go test -run TestA47OriginalNumericNativeM4Snapshots` 及对应成功标记。源码锁核对严格要求原有双端测试循环数量未变、A47测试和标记各一次、所有heredoc平衡、结尾仍为`PY`；原 Go/Rust M4、TLS、AEAD、真实收包数值诊断不作改动。此版必须重新以正式CI结果认定。

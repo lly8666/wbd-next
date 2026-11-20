@@ -133,68 +133,8 @@ echo ANDROID_A44_ORIGINAL_RUST_BUSINESS_WITNESS_CLASSIFIER_REAL_GO_HOST_PASS
 # Real Rust ARM64 code is built, linked and symbol-checked by the same workflow.
 (cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run TestA45OriginalAndroidReturnPathReceiptClasses ./internal/v4productcli)
 echo ANDROID_A45_ORIGINAL_RETURN_PATH_AND_ICMP_CLASSIFIER_GO_HOST_PASS
-# A47: run the genuine original-Go native-product Go renderer; zero
-# counters never mean ACK, M3 AEAD or TUN delivery without real observations.
-(cd legacy && timeout 180s go test -count=1 \
-  -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
-  -run '^TestA47OriginalNumericNativeM4Snapshots
-for role in client server;do
-  (cd legacy && go build -trimpath -buildvcs=false \
-    -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
-    -o "$GITHUB_WORKSPACE/out/android-a3-linux/wbd-v4-$role" \
-    "./cmd/wbd-v4-$role")
-done
-python3 - <<'PY'
-import hashlib,json,os,pathlib,struct
-p=pathlib.Path("out/android-a3-linux")
-sha={}
-for name in ("wbd-v4-client","wbd-v4-server","libwbd_engine.so"):
-    b=(p/name).read_bytes()
-    assert b[:5]==b"\x7fELF\x02" and struct.unpack_from("<H",b,18)[0]==183,name
-    sha[name]=hashlib.sha256(b).hexdigest()
-a=json.loads((p/"validated-native/manifest.json").read_text())
-m={"schema":"android-root-a3-original-linux-oracle/v1","source":os.environ["GITHUB_SHA"],
-   "go_donor":a["donor_go"],"linux_native_sha256":sha,
-   "android_bionic_go_sha256":a["artifacts"]["wbd-v4-client-arm64"]["sha256"],
-   "android_bionic_rust_sha256":a["artifacts"]["libwbd_engine-arm64.so"]["sha256"],
-   "linux_real_protocol":"NOT_RUN","android16_ksu_runtime":"NOT_RUN",
-   "android_to_linux_live_protocol":"NOT_RUN",
-   "physical_device":"DEFERRED_ACTIONS_FIRST"}
-(p/"manifest.json").write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
-PY
-sudo apt-get update -qq
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl tcpdump
-test -c /dev/net/tun
-bash -n tools/m0-v4-public-real-linux-netns.sh
-WBD_V4_PUBLIC_MODE=normal WBD_V4_PUBLIC_AUTO_IP=1 WBD_V4_PUBLIC_WIRE_AUDIT=1 \
-  bash tools/m0-v4-public-real-linux-netns.sh out/android-a3-linux \
-  >out/android-a3-linux/live-original-linux.log 2>&1 || {
-    tail -120 out/android-a3-linux/live-original-linux.log >&2
-    exit 1
-  }
-grep -Fq 'M0_PUBLIC_ORIGINAL_GO_V4_NORMAL_OFF_TWO_REAL_CLI_TLS_RUST_M4_TUN_UDP_STOP_PASS' out/android-a3-linux/live-original-linux.log
-grep -Fq 'M0_PLAN028_REAL_AUTO_LEASE_NATIVE_IP_BOUND_PASS' out/android-a3-linux/live-original-linux.log
-grep -Fq 'M0_PLAN028_TLS_REAL_TCP_REASSEMBLED_CLIENTHELLO_NO_PRELUDE_PASS' out/android-a3-linux/live-original-linux.log
-python3 - <<'PY'
-import json,os,pathlib
-p=pathlib.Path("out/android-a3-linux")
-r=json.loads(pathlib.Path("fixed-kernel-result/plan028-tls-wire-audit.json").read_text())
-assert r["result"]=="REAL_TCP_STREAM_TLS_FIRST_FLIGHT_PASS"
-assert r["client_first_payload"]=="TLS_Handshake_ClientHello"
-assert r["server_first_payload"]=="TLS_Handshake_ServerHello"
-assert r["server_early_application_bytes"]==0
-assert r["session_id_length"]==32
-assert 43 in map(int,r["extension_types"]) and 51 in map(int,r["extension_types"])
-m=json.loads((p/"manifest.json").read_text())
-assert m["source"]==os.environ["GITHUB_SHA"]
-m["linux_real_protocol"]="PASS_ORIGINAL_LINUX_CLIENT_SERVER_NORMAL_OFF_TLS_LEASE_UDP_STOP"
-m["linux_wire"]="PASS_STANDARD_TLS_CLIENTHELLO_NO_PRELUDE"
-m["android16_ksu_runtime"]="NOT_RUN"
-m["android_to_linux_live_protocol"]="NOT_RUN"
-(p/"manifest.json").write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
-print("ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN")
-PY
- ./internal/v4productcli)
+# A47 original Go renderer against real compiled original Rust bridge.
+(cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run TestA47OriginalNumericNativeM4Snapshots ./internal/v4productcli)
 echo ANDROID_A47_REAL_ORIGINAL_GO_NUMERIC_M4_SNAPSHOT_HOST_PASS
 for role in client server;do
   (cd legacy && go build -trimpath -buildvcs=false \
