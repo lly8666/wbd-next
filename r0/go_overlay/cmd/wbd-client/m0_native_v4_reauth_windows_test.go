@@ -502,3 +502,43 @@ func TestH2224ActualNativeQualityFecDirectionsAndUnknownNotZero(t *testing.T){
  tx,rx=m0WindowsQualityStatuses(m0WinModeAuto,"",false,sample)
  if tx!="applied-high"||rx!="unknown"{t.Fatalf("applied C2S auto cannot invent S2C %s %s",tx,rx)}
 }
+
+
+// H2226: only already-AEAD-authenticated, mature low-frequency Quality
+// START/CLOSE summaries can show a coarse GUI loss upper and feedback delay.
+// No per-record M2 feedback, underlay-packet inference or age-as-zero.
+func TestH2226LowRateQualityGuiUsesOnlyMatchedMatureSummary(t *testing.T){
+ before:=realityfront.V4WindowsAutoQuality{Version:1,Size:256,Revision:7}
+ after:=before
+ after.Counters[0]=100
+ after.Counters[1]=90
+ after.Counters[2]=7
+ after.Counters[3]=3
+ after.Counters[10]=1
+ after.Counters[12]=3_120_000_000
+ after.Counters[13]=1
+ ms,loss,ok:=m0WindowsLowRateGuiEstimate(before,after)
+ if !ok||ms!=120||loss!=100{
+  t.Fatalf("mature low-rate estimate got ok=%t ms=%d upper_tenths=%d",ok,ms,loss)
+ }
+ noReport:=after;noReport.Counters[10]=0
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,noReport);ok{
+  t.Fatal("no authenticated Quality report displayed fake sample")
+ }
+ censored:=after;censored.Counters[11]=1
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,censored);ok{
+  t.Fatal("host-capacity censored report displayed as link quality")
+ }
+ otherEpoch:=after;otherEpoch.Revision=8
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,otherEpoch);ok{
+  t.Fatal("cross-revision low-rate history accepted")
+ }
+ incomplete:=after;incomplete.Counters[0]=101
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,incomplete);ok{
+  t.Fatal("missing/ambiguous first-send denominator treated as measured")
+ }
+ old:=after;old.Counters[12]=2_999_999_999
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,old);ok{
+  t.Fatal("sub-three-second immature quality was treated as RTT")
+ }
+}

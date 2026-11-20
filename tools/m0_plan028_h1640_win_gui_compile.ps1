@@ -133,6 +133,52 @@ if(([regex]::Matches($sourceText,[regex]::Escape($oldDriverNote))).Count -ne 1){
 }
 $sourceText=$sourceText.Replace($oldDriverNote,$newDriverNote)
 
+
+# H2226: donor MainForm still parses V1 only, while native Go emits V2.
+# Assemble source-owned V2 parsing and preserve donor V1 compatibility.
+$qualityAnchor='        public bool ApplyQualityLine(string line) {'
+if(([regex]::Matches($sourceText,[regex]::Escape($qualityAnchor))).Count -ne 1){
+ throw 'H2226 authenticated V2 GUI quality donor parser drift'
+}
+$qualityV2=@'
+        static string NativeV2FecStatus(string code) {
+            if (code=="off") return "关闭";
+            if (code=="pending") return "待生效";
+            if (code=="unknown") return "未知（无对端实际档位）";
+            if (code.StartsWith("applied-",StringComparison.Ordinal))
+                return code.Substring(8)+"（本端已生效）";
+            if (code.StartsWith("negotiated-",StringComparison.Ordinal))
+                return code.Substring(11)+"（仅协商，未实测）";
+            return "未知";
+        }
+        public bool ApplyQualityLine(string line) {
+            const string v2 = "WBD_CLIENT_QUALITY_V2 ";
+            if (line != null && line.StartsWith(v2,StringComparison.Ordinal)) {
+                var fields = new Dictionary<string,string>();
+                foreach (string item in line.Substring(v2.Length).Split(' ')) {
+                    var pair = item.Split(new[] {'='},2);
+                    if (pair.Length != 2 || fields.ContainsKey(pair[0])) return true;
+                    fields[pair[0]]=pair[1];
+                }
+                if (!fields.ContainsKey("rtt_ms") || !fields.ContainsKey("loss_pct") ||
+                    !fields.ContainsKey("fec_c2s") || !fields.ContainsKey("fec_s2c")) return true;
+                int ms;
+                double loss;
+                string latency = int.TryParse(fields["rtt_ms"],NumberStyles.None,CultureInfo.InvariantCulture,out ms) &&
+                    ms>0 && ms<=60000 ? "约"+ms.ToString(CultureInfo.InvariantCulture)+"ms（低频反馈估算）" : "未知";
+                string upper = double.TryParse(fields["loss_pct"],NumberStyles.Float,CultureInfo.InvariantCulture,out loss) &&
+                    !double.IsNaN(loss) && !double.IsInfinity(loss) && loss>=0 && loss<=100 ?
+                    loss.ToString("F1",CultureInfo.InvariantCulture)+"%（低频首发上界）" : "未知";
+                quality.Text = "运行质量（当前连接）  ·  RTT：" + latency +
+                    "  ·  首发损失上界：" + upper +
+                    "  ·  上行 FEC：" + NativeV2FecStatus(fields["fec_c2s"]) +
+                    "  ·  下行 FEC：" + NativeV2FecStatus(fields["fec_s2c"]);
+                lastQuality=DateTime.UtcNow;
+                return true;
+            }
+'@
+$sourceText=$sourceText.Replace($qualityAnchor,$qualityV2)
+
 [IO.File]::WriteAllText($derivedMain,$sourceText,[Text.UTF8Encoding]::new($false))
 # Run the source-donor GUI field-by-field / actual Go --check-config regression
 # with the 029B/H2202 additions: stale test fixture must not be mistaken for
@@ -282,6 +328,24 @@ $testButtons=@'
                     Assert(driverButtonNames.Contains("重新检测"),"visible native driver readback button");
 '@
 $tests=$tests.Replace($tabsAnchor,$tabsAnchor+"`r`n"+$testButtons)
+
+# Actual source-derived native WinForms V2 parsing, not donor V1-only tests.
+$h2226QualityTestAnchor='Assert(!form.ApplyQualityLine("not a quality control event"),"GUI ignores unrelated logs");'
+if(([regex]::Matches($tests,[regex]::Escape($h2226QualityTestAnchor))).Count -ne 1){
+ throw 'H2226 WinForms genuine V1 quality test source drift'
+}
+$h2226QualityTests=@'
+                    Assert(form.ApplyQualityLine("WBD_CLIENT_QUALITY_V2 rtt_ms=120 loss_pct=10.0 tx_ipv4=200 rx_ipv4=300 fec_c2s=applied-strong fec_s2c=unknown quality_source=authenticated-lowrate-quality"),"H2226 genuine native V2 quality consumed");
+                    Assert(form.QualityText.Contains("约120ms") && form.QualityText.Contains("10.0%") &&
+                           form.QualityText.Contains("上行 FEC：strong（本端已生效）") &&
+                           form.QualityText.Contains("下行 FEC：未知"),
+                           "H2226 GUI low-rate display and no fabricated S2C Auto applied profile");
+                    Assert(form.ApplyQualityLine("WBD_CLIENT_QUALITY_V2 rtt_ms=unknown loss_pct=unknown tx_ipv4=200 rx_ipv4=300 fec_c2s=pending fec_s2c=negotiated-strong"),"H2226 unknown and negotiated V2 consumed");
+                    Assert(form.QualityText.Contains("RTT：未知") && form.QualityText.Contains("首发损失上界：未知") &&
+                           form.QualityText.Contains("仅协商，未实测"),"H2226 unknown isn't zero, negotiated isn't applied");
+'@
+$tests=$tests.Replace($h2226QualityTestAnchor,$h2226QualityTestAnchor+[Environment]::NewLine+$h2226QualityTests)
+
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests

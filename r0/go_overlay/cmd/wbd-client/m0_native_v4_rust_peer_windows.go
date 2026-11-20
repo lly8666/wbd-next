@@ -38,6 +38,13 @@ type m0WinRustNativePeer struct{
  fixedMatureReported bool
  fixedInstalledReported bool
  autoController *realityfront.V4WindowsOriginalFEC2AutoController
+ // The existing Auto low-frequency Quality snapshots are read at the
+ // original 2s GUI status cadence, not from a data/packet callback.
+ lowRatePrev realityfront.V4WindowsAutoQuality
+ lowRateHavePrev bool
+ lowRateLastGood time.Time
+ lowRateApproxRTTMS uint32
+ lowRateLossUpperTenthsPct uint32
 }
 func newM0WinRustNativePeer(owner *realityfront.V4WindowsAuthenticatedClientOwner,
  endpoint *faketcp.NpcapEndpoint,cfg faketcp.NpcapConfig,flow faketcp.ClientFlow,
@@ -252,6 +259,42 @@ func m0WindowsFixedMatureVerified(m realityfront.V4WindowsFixedMatureReadback)bo
   m.CopiedSource>0&&m.CopiedParity>0&&m.ReverseReports>0&&
   m.Positive2s>0&&m.Covered2s>0
 }
+// H2226: coarse GUI-only estimate from the EXISTING low-frequency
+// authenticated Quality close + mature report; no per-record M2 bitmap,
+// new wire packet, QoS controller or Rust hot-path read.
+// The mature receiver deliberately waits three seconds after CLOSE;
+// subtract that fixed wait before exposing a rough round-trip feedback
+// excess, which still INCLUDES native scheduling/queuing. GUI labels it
+// as an estimate, never a latency SLA or precise TCP-style RTT.
+func m0WindowsLowRateGuiEstimate(
+ before,after realityfront.V4WindowsAutoQuality,
+)(rttMS,lossUpperTenthsPct uint32,valid bool){
+ if before.Revision==0||after.Revision!=before.Revision||
+  before.Version!=1||after.Version!=1||before.Size!=after.Size{
+  return 0,0,false
+ }
+ var d [14]uint64
+ for i:=range d{
+  if after.Counters[i]<before.Counters[i]{return 0,0,false}
+  d[i]=after.Counters[i]-before.Counters[i]
+ }
+ first,positive,missing,ambiguous,censored:=d[0],d[1],d[2],d[3],d[4]
+ if first<64||first!=positive+missing+ambiguous+censored||
+  d[11]!=0||d[10]==0||d[13]==0||d[12]/d[13]>30_000_000_000{
+  return 0,0,false
+ }
+ ageNS:=d[12]/d[13]
+ if ageNS<3_000_000_000{return 0,0,false}
+ upper:=missing+ambiguous+censored
+ if upper>first{return 0,0,false}
+ approx:=(ageNS-3_000_000_000+999_999)/1_000_000
+ if approx<1{approx=1}
+ if approx>60_000{return 0,0,false}
+ // Ceil only: GUI upper bound must not round DOWN and claim better loss.
+ upperTenths:=(upper*1000+first-1)/first
+ if upperTenths>1000{return 0,0,false}
+ return uint32(approx),uint32(upperTenths),true
+}
 func(p *m0WinRustNativePeer) Stats()m0NativeV4PacketStats{
  result:=m0NativeV4PacketStats{Mode:p.mode,TxPackets:p.last.TXCopied,
   RxFirstDelivered:p.last.RXDelivered,RejectedAuth:p.last.Rejected,
@@ -266,6 +309,29 @@ func(p *m0WinRustNativePeer) Stats()m0NativeV4PacketStats{
    result.AutoDesiredProfile=realityfront.FecV2Profile(state.Profile)
    result.AutoPending=state.RequestedRevision!=state.AppliedRevision
   }else{result.AutoPolicyError=err.Error()}
+  // Rust native Auto owns policy decisions on TX; this is only an
+  // already-produced bounded Quality readback at the Go GUI 2s cadence.
+  ctxQuality,cancelQuality:=context.WithTimeout(context.Background(),2*time.Second)
+  q,qErr:=p.owner.ReadBoundOriginalAutoQuality(ctxQuality)
+  cancelQuality()
+  if qErr==nil{
+   if p.lowRateHavePrev{
+    if q.Revision!=p.lowRatePrev.Revision{
+     p.lowRateLastGood=time.Time{} // no cross-revision cached reading
+    }else if ms,loss,ok:=m0WindowsLowRateGuiEstimate(p.lowRatePrev,q);ok{
+     p.lowRateApproxRTTMS=ms
+     p.lowRateLossUpperTenthsPct=loss
+     p.lowRateLastGood=time.Now()
+    }
+   }
+   p.lowRatePrev=q;p.lowRateHavePrev=true
+  }
+  if !p.lowRateLastGood.IsZero() &&
+   time.Since(p.lowRateLastGood)<=20*time.Second{
+   result.LowRateQualityValid=true
+   result.LowRateApproxRTTMS=p.lowRateApproxRTTMS
+   result.LowRateLossUpperTenthsPct=p.lowRateLossUpperTenthsPct
+  }
  }
  return result
 }
