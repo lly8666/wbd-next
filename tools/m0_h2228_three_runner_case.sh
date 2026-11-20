@@ -204,6 +204,53 @@ client_run(){
   measure clear-zero direct 12 8 upload
   measure clear-zero direct 12 8 download
   relay_read clear-after
+  # H2234: a fast, truthful, one-shot capacity preflight avoids burning
+  # another set of three ephemeral VMs on a 20Mbps DERP/replay run.
+  # 500Mbps is ONLY the minimum to learn about a high-PPS local TUN stall;
+  # the existing independent >=800Mbps both-direction PRODUCT attribution
+  # gate remains fully intact later in result_summary.
+  if [[ "${WBD_H2234_TRACE:-0}" == 1 ]];then
+    if ! python3 - "$OUT" <<'PY'
+import glob,json,os,pathlib,sys
+root=pathlib.Path(sys.argv[1])
+rows={}
+for name in ("upload","download"):
+    pattern="case-*-clear-zero-direct-12s-8p-"+name+".json"
+    files=list(root.glob(pattern))
+    if len(files)!=1:raise SystemExit("H2234_UNQUALIFIED_NO_CLEAN_DIRECT_"+name)
+    rec=json.loads(files[0].read_text())
+    rows[name]=rec.get("receiver_goodput_mbps")
+source=os.environ.get("GITHUB_SHA")
+data={"schema_version":1,"source_sha":source,"run_id":os.environ.get("GITHUB_RUN_ID"),
+      "clean_direct_received_mbps":rows,
+      "product_causality_requires_mbps_both_directions":800,
+      "diagnostic_probe_minimum_both_directions_mbps":500,
+      "diagnostic_not_product_speed_pass":True}
+ok=all(isinstance(v,(int,float)) and v>=500 for v in rows.values())
+data["status"]="DIAGNOSTIC_CAPACITY_PROBE_PROCEED_NOT_PRODUCT_PASS" if ok else "NOT_RUN_LOW_LOSS_DERP_OR_CAPACITY_BELOW_500"
+(root/"h2234-capacity-preflight.json").write_text(json.dumps(data,indent=2)+"\n")
+if not ok:raise SystemExit("H2234_INFRA_BELOW_DIAGNOSTIC_CAPACITY_STOP_BEFORE_WBD")
+PY
+    then
+      # Preserve a source-locked receipt for otherwise intentionally NOT_RUN
+      # low-loss cases; fail the existing full-matrix gate as expected.
+      python3 - "$OUT" <<'PY'
+import json,os,pathlib,sys
+root=pathlib.Path(sys.argv[1])
+pre=json.loads((root/"h2234-capacity-preflight.json").read_text())
+pre.update({"expected_cases":12,"actual_cases":2,
+            "real_three_runner_l3_relay":True,
+            "all_three_distinct_native_machines":True,
+            "actual_kernel_forwarding":True,
+            "client_native_arch":"x86_64","relay_native_arch":"aarch64",
+            "server_native_arch":"x86_64",
+            "relay_capacity_qualification":"INFRA_UNQUALIFIED",
+            "low_loss_product_cases":"NOT_RUN_CAPACITY_GUARD"})
+(root/"summary.json").write_text(json.dumps(pre,indent=2)+"\n")
+PY
+      return 0
+    fi
+  fi
   local scenario_index=0
   for loss in 0 1 5 10 20;do
     # Exactly two low-loss phases per focused source; leave legacy full

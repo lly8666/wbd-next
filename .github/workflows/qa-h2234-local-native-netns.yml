@@ -1,0 +1,111 @@
+name: 'H2234 genuine original-Go TLS Rust local 3-netns low-loss TX stall forensics'
+run-name: 'H2234 LOCAL-NETNS SOURCE ${{ github.sha }}'
+on:
+  push:
+    branches: ['feat/h2234-tx-stall-forensics']
+    paths:
+      - '.github/workflows/qa-h2234-local-native-netns.yml'
+      - 'tools/m0_h2234_*'
+      - 'tools/m0_h2228_three_runner_relay.py'
+      - 'tests/test_m0_h2234_local_netns.py'
+      - 'tests/test_m0_h2234_stage_sampler.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: h2234-local-native-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    name: 'H2234 exact source and genuine/Linux product guard tests, NOT real bandwidth'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Source-locked syntax + negative forensics / no-HOL guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2234_stage_sampler.py tools/m0_h2234_local_netns.py tools/m0_h2228_three_runner_relay.py
+          python3 -m unittest tests.test_m0_h2234_stage_sampler tests.test_m0_h2234_local_netns tests.test_m0_h2233_low_loss_diag tests.test_m0_h2229_native_ack_unified -v
+          python3 - <<'PY'
+          from pathlib import Path
+          sh=Path('tools/m0_h2234_local_netns.py').read_text()
+          rust=Path('crates/wbd-engine/src/v4_embedded_go.rs').read_text()
+          assert 'SAME_VM_THREE_DISTINCT_NETNS_L3_ROUTER_NO_NAT' in sh
+          assert 'not_a_physical_windows_result' in sh and 'not_a_cross_vm_cpu_gain' in sh
+          assert 'V4_PUBLIC_SHARED_TUN_STOP generation=' in sh
+          assert 'WBD_H2234_TRACE' in sh and 'libwbd_engine.so' in sh
+          assert 'ip_forward=1' in sh and 'netem' in sh
+          assert 'wbd-m4-tx' in rust and 'wbd-m4-rx' in rust
+          assert 'send_kernel_multimsg(' in rust
+          assert '"--mode","normal"' in sh and '"--outer-repair","on"' in sh
+          assert '"queue_full_drops"' in sh
+          assert 'SAME_VM_CLIENT_ROUTER_SERVER_THREE_REAL_LINUX_NETNS' in sh
+          print('H2234_LOCAL_NETNS_STATIC_ONLY_SOURCE_GUARDS_PASS')
+          PY
+  genuine-local-x86:
+    needs: static
+    name: 'Real x86 single-VM three netns: genuine TLS/Rust TUN/AF_PACKET + kernel BBR + GE1/5'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: ubuntu-24.04
+            arch: x86_64
+          - host: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 47
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Install genuine kernel TUN/iperf3 and build original Go TLS/Rust one time
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2234-local-build.log 2>&1 ||
+            { tail -n 140 h2234-local-build.log;exit 2; }
+      - name: Real product/OS local 3-netns direct vs WBD 1% and 5%
+        shell: bash
+        timeout-minutes: 17
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/m0_h2234_local_netns.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2234-local-result/summary.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['network_scope']=='SAME_VM_CLIENT_ROUTER_SERVER_THREE_REAL_LINUX_NETNS'
+          assert not d['real_independent_three_runner_wan']
+          assert d['status']=='PASS_REAL_LOCAL_NETNS_TCP_CASES',d['status']
+          assert d['all_expected_cases_completed'] and d['num_real_tcp_cases']==12
+          assert d['target_architecture']==os.uname().machine
+          assert d['server_owned_stop_verified'],d['status']
+          assert set(d['rust_shared_tun_per_loss_stop'])=={'0','1','5'}
+          print('H2234_TRUE_NATIVE_LOCAL_ONLY_PASS_NOT_WAN_OR_PRODUCT_OPTIMIZATION')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2234-local-${{ matrix.arch }}-source-locked-real-evidence
+          path: |
+            h2234-local-result/
+            h2234-local-build.log
+          if-no-files-found: warn
+          retention-days: 10

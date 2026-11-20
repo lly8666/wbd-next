@@ -4275,6 +4275,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 }
 
 
+// Linux task comm is limited to 15 bytes. H2234 uses unique bounded
+// observability names for existing RX, TX, TUN reader and cold observer;
+// this is only OS-level role attribution, not an extra worker or data path.
 // Development-only perpetual owner processing, never a parallel crypto
 // implementation. Two independent Rust kernel-readiness threads; Go app
 // sender and receiver do not call per-packet RX/TX helpers. The READY poll
@@ -5423,7 +5426,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_shared_tun_open(
         recycle_send,
     });
     let worker_router=Arc::clone(&router);
-    let Ok(worker)=thread::Builder::new().name("wbd-v4-shared-tun-reader".into())
+    let Ok(worker)=thread::Builder::new().name("wbd-tun-reader".into())
         .spawn(move||run_shared_tun_reader(worker_router,recycle_recv))
     else{return INVALID};
     let Ok(mut slot)=router.worker.lock()else{
@@ -6524,6 +6527,67 @@ fn original_fixed_stage_due(e:&mut Entry,
     if let Some(err)=failed{return Err(err)}
     Ok(result.map_err(|_|BAD_STAGE)?.0)
 }
+// H2235: optional per-batch observation owned by the existing M4 TX.
+// Strictly no packet contents, PN, new queue, retry, mutex, or second actor.
+#[cfg(feature="fec2_product_record")]
+#[derive(Default)]
+struct OriginalM4BatchStageProfile {
+    batches:u64, copied:u64, collect_turns:u64,
+    collect_ns:u64, prepare_ns:u64, seal_ns:u64,
+    kernel_ns:u64, settle_ns:u64,
+    max_collect_ns:u64, max_prepare_ns:u64,max_seal_ns:u64,
+    max_kernel_ns:u64,max_settle_ns:u64,
+    driver_route_ns:u64,driver_header_ns:u64,driver_iovec_ns:u64,
+    driver_syscall_ns:u64,driver_classify_ns:u64,
+}
+#[cfg(feature="fec2_product_record")]
+impl OriginalM4BatchStageProfile {
+    fn ns(a:Instant,b:Instant)->u64{
+        b.saturating_duration_since(a).as_nanos().min(u64::MAX as u128) as u64
+    }
+    fn note_raw_driver(&mut self,
+        phases:&wbd_platform::linux_batch::KernelSendStages
+    ){
+        self.driver_route_ns=self.driver_route_ns.saturating_add(phases.route_ns);
+        self.driver_header_ns=self.driver_header_ns.saturating_add(phases.header_ns);
+        self.driver_iovec_ns=self.driver_iovec_ns.saturating_add(phases.iovec_ns);
+        self.driver_syscall_ns=self.driver_syscall_ns.saturating_add(phases.syscall_ns);
+        self.driver_classify_ns=self.driver_classify_ns.saturating_add(phases.classify_ns);
+    }
+    fn note_collect(&mut self,ns:u64){
+        self.collect_turns=self.collect_turns.saturating_add(1);
+        self.collect_ns=self.collect_ns.saturating_add(ns);
+        self.max_collect_ns=self.max_collect_ns.max(ns);
+    }
+    fn note_batch(&mut self,copied:u32,start:Instant,prepared:Instant,
+        sealed:Instant,kernel:Instant,end:Instant
+    ){
+        let durations=[Self::ns(start,prepared),Self::ns(prepared,sealed),
+            Self::ns(sealed,kernel),Self::ns(kernel,end)];
+        self.batches=self.batches.saturating_add(1);
+        self.copied=self.copied.saturating_add(u64::from(copied));
+        self.prepare_ns=self.prepare_ns.saturating_add(durations[0]);
+        self.seal_ns=self.seal_ns.saturating_add(durations[1]);
+        self.kernel_ns=self.kernel_ns.saturating_add(durations[2]);
+        self.settle_ns=self.settle_ns.saturating_add(durations[3]);
+        self.max_prepare_ns=self.max_prepare_ns.max(durations[0]);
+        self.max_seal_ns=self.max_seal_ns.max(durations[1]);
+        self.max_kernel_ns=self.max_kernel_ns.max(durations[2]);
+        self.max_settle_ns=self.max_settle_ns.max(durations[3]);
+    }
+}
+#[cfg(all(test,feature="fec2_product_record"))]
+#[test]
+fn m0_h2235_batch_profile_is_only_bounded_aggregate_metadata(){
+    let mut s=OriginalM4BatchStageProfile::default();
+    let t=Instant::now();
+    s.note_collect(91);
+    s.note_batch(7,t,t,t,t,t);
+    s.note_batch(3,t,t,t,t,t);
+    assert_eq!((s.batches,s.copied,s.collect_turns),(2,10,1));
+    assert_eq!((s.collect_ns,s.max_collect_ns),(91,91));
+    assert_eq!((s.kernel_ns,s.max_seal_ns),(0,0));
+}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     stop:&AtomicBool,ifindex:u32,ifname:&str,tx_storage:&mut Vec<TxDispatch>,
@@ -6539,8 +6603,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     #[cfg(feature="fec2_product_record")]
     ingress:&LoopCounts,
     #[cfg(feature="fec2_product_record")]
-    fec_ingress_on:bool
+    fec_ingress_on:bool,
+    #[cfg(feature="fec2_product_record")]
+    mut stage:Option<&mut OriginalM4BatchStageProfile>,
 )->Result<TxTurnCompletion,i32>{
+    #[cfg(feature="fec2_product_record")]
+    let stage_start=stage.is_some().then(Instant::now);
     // The caller has ALREADY polled the first TUN packet. Never wait for
     // batch fill: one sparse packet is sealed/submitted immediately.
     // The stack-owned vectors are reserved once per worker (not per DATA).
@@ -6746,6 +6814,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     // Route validation and original M1/M3 AEAD/PN/queue admission occur
     // under the current generation's owner. M4's real sendmmsg follows
     // OUTSIDE Entry lock with an immutable original LoanBatch.
+    #[cfg(feature="fec2_product_record")]
+    let stage_prepared=stage_start.map(|_|Instant::now());
     let (batch,raw,flow,server_side,generation,admitted,seal_failed,jumbo_staged)={
         let mut guard=cell.lock().map_err(|_|BAD_STAGE)?;
         let e:&mut Entry=&mut guard;
@@ -7068,6 +7138,8 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         }
         (batch,raw,flow,e.server_side,e.generation,ready_records.len(),failed,jumbo_staged)
     };
+    #[cfg(feature="fec2_product_record")]
+    let stage_sealed=stage_start.map(|_|Instant::now());
     let report=if stop.load(Ordering::Acquire)||admitted==0{None}else{
         let tuple=if server_side{Ipv4Tuple{
             src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
@@ -7076,10 +7148,26 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
             src_port:flow.client_port,dst_port:flow.server_port,
         }};
-        Some(raw.send_kernel_multimsg(
-            generation,ready_records.as_slice(),tuple,presentations.as_slice()
-        ))
+        #[cfg(feature="fec2_product_record")]
+        {
+            if let Some(ref mut owner_profile)=stage{
+                let mut phases=wbd_platform::linux_batch::KernelSendStages::default();
+                let report=raw.send_kernel_multimsg_with_stages(
+                    generation,ready_records.as_slice(),tuple,presentations.as_slice(),
+                    Some(&mut phases));
+                owner_profile.note_raw_driver(&phases);
+                Some(report)
+            }else{
+                Some(raw.send_kernel_multimsg(
+                    generation,ready_records.as_slice(),tuple,presentations.as_slice()))
+            }
+        }
+        #[cfg(not(feature="fec2_product_record"))]
+        {Some(raw.send_kernel_multimsg(
+            generation,ready_records.as_slice(),tuple,presentations.as_slice()))}
     };
+    #[cfg(feature="fec2_product_record")]
+    let stage_kernel=stage_start.map(|_|Instant::now());
     // Hold only immutable Arc frozen records until the actual synchronous
     // M4 syscall returns. No reserve/ACK is inferred from queue acceptance.
     #[cfg(feature="fec2_product_record")]
@@ -7354,6 +7442,12 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
     // Even when the tail failed, the definite prefix remains copied and
     // accounted. Dropped/uncertain immutable records are only released
     // after synchronous M4 sendmmsg completes; never reseal/reuse PN.
+    #[cfg(feature="fec2_product_record")]
+    if let (Some(ref mut diag),Some(start),Some(prepared),Some(sealed),Some(kernel))=
+        (&mut stage,stage_start,stage_prepared,stage_sealed,stage_kernel)
+    {
+        diag.note_batch(finish.copied,start,prepared,sealed,kernel,Instant::now());
+    }
     Ok(finish)
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -7898,7 +7992,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let stats_rx=Arc::clone(&stats);
     let raw_for_rx=Arc::clone(&raw);
     let tun_for_rx=Arc::clone(&tun);
-    let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
+    let Ok(rx)=thread::Builder::new().name("wbd-m4-rx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
@@ -8074,6 +8168,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(feature="fec2_product_record")]
     let raw_socket_diag_generation=e.generation;
     #[cfg(feature="fec2_product_record")]
+    let m4_stage_diag_enabled=std::env::var("WBD_H2235_M4_STAGE_DIAG")
+        .ok().as_deref()==Some("1");
+    #[cfg(feature="fec2_product_record")]
     let raw_socket_diag_enabled=std::env::var("WBD_M0_RAW_TX_SOCKET_DIAG")
         .ok().as_deref()==Some("1");
     #[cfg(feature="fec2_product_record")]
@@ -8087,7 +8184,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(feature="fec2_product_record")]
     let diag_ifname=ifname.clone();
     let tx_ifname=ifname;
-    let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
+    let Ok(tx)=thread::Builder::new().name("wbd-m4-tx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
@@ -8113,6 +8210,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut socket_outq_high_water=0i32;
             #[cfg(feature="fec2_product_record")]
             let mut socket_snapshot_errors=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut m4_stage=OriginalM4BatchStageProfile::default();
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
             let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
@@ -8160,6 +8259,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             reasons,next_due,diag_turn_err,chain);
                     }
                 }
+                #[cfg(feature="fec2_product_record")]
+                let collect_start=m4_stage_diag_enabled.then(Instant::now);
                 if split_ingress {
                     // The per-client TX remains the SOLE consumer of its
                     // source ingress; shared packets take original M1 loans.
@@ -8209,6 +8310,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     stats.tx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
                     last_cpu_sample=Instant::now();
+                }
+                #[cfg(feature="fec2_product_record")]
+                if let Some(begin)=collect_start{
+                    m4_stage.note_collect(
+                        begin.elapsed().as_nanos().min(u64::MAX as u128) as u64);
                 }
                 // Snapshot actual FEC close / pending parity and authentic
                 // M2 deadlines BEFORE sleeping for TUN. Never hold Entry
@@ -8358,7 +8464,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     #[cfg(feature="fec2_product_record")]
                     &stats,
                     #[cfg(feature="fec2_product_record")]
-                    fec_ingress_on
+                    fec_ingress_on,
+                    #[cfg(feature="fec2_product_record")]
+                    if m4_stage_diag_enabled{Some(&mut m4_stage)}else{None}
                 ){
                     Ok(done)=>{
                         #[cfg(feature="fec2_product_record")]
@@ -8454,6 +8562,20 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             active_jumbo.take();
             jumbo_queue.clear();
             #[cfg(feature="fec2_product_record")]
+            if m4_stage_diag_enabled{
+                eprintln!("V4_PUBLIC_M4_BATCH_STAGE_STOP role={} generation={} batches={} copied={} collect_turns={} collect_ns={} prepare_ns={} seal_ns={} sendmmsg_ns={} settle_ns={} driver_route_ns={} driver_header_ns={} driver_iovec_ns={} driver_syscall_ns={} driver_classify_ns={} max_collect_ns={} max_prepare_ns={} max_seal_ns={} max_sendmmsg_ns={} max_settle_ns={} original_owner=1 no_wire_or_queue_change=1",
+                    raw_socket_diag_role,raw_socket_diag_generation,
+                    m4_stage.batches,m4_stage.copied,m4_stage.collect_turns,
+                    m4_stage.collect_ns,m4_stage.prepare_ns,
+                    m4_stage.seal_ns,m4_stage.kernel_ns,m4_stage.settle_ns,
+                    m4_stage.driver_route_ns,m4_stage.driver_header_ns,
+                    m4_stage.driver_iovec_ns,
+                    m4_stage.driver_syscall_ns,m4_stage.driver_classify_ns,
+                    m4_stage.max_collect_ns,m4_stage.max_prepare_ns,
+                    m4_stage.max_seal_ns,m4_stage.max_kernel_ns,
+                    m4_stage.max_settle_ns);
+            }
+            #[cfg(feature="fec2_product_record")]
             if raw_socket_diag_enabled{
                 let final_buffer=raw_socket_diag.diagnostic_tx_socket()
                     .ok().map(|v|v.sndbuf_effective_bytes).unwrap_or(0);
@@ -8479,7 +8601,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let stop_ingress=Arc::clone(&shutdown);
         let ingress_cell=Arc::clone(&cell);
         let ingress_tun=Arc::clone(&tun_for_ingress);
-        let Some(worker)=thread::Builder::new().name("wbd-original-tun-ingress".into())
+        let Some(worker)=thread::Builder::new().name("wbd-tun-ingress".into())
             .spawn(move||original_tun_ingress_worker(
                 ingress_cell,ingress_tun,stop_ingress,generation,
                 ingress_send,tun_fd
@@ -8511,7 +8633,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let diag_port=e.flow.client_port;
         let diag_generation=e.generation;
         let diag_role=if e.server_side{"server"}else{"client"};
-        thread::Builder::new().name("wbd-original-m4-observe".into())
+        thread::Builder::new().name("wbd-m4-observe".into())
             .spawn(move||{
                 let mut last=Instant::now();
                 while !diag_stop.load(Ordering::Acquire){

@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "checkpoint": "H2234_LOCAL_FIRST",
+  "source_sha": "7084b2e8ec32295ee58ad937abcdec191e12844a",
+  "run_id": 44779139886,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44779139886",
+  "artifact_id": 14650594764,
+  "result": "10_OF_10_GENUINE_LOCAL_TCP_CASES_PASS_ACTION_FAIL_SERVER_STOP_FIXTURE",
+  "topology": "ONE_X86_VM_THREE_NATIVE_LINUX_NETNS_TWO_REAL_L2_SEGMENTS_KERNEL_L3_ROUTER_NO_NAT",
+  "clean_direct_receiver_mbps": {
+    "up": 50989.07,
+    "down": 51320.956
+  },
+  "results_receiver_mbps": [
+    {
+      "loss_pct": 1,
+      "dir": "up",
+      "direct": 1072.342,
+      "wbd": 273.831
+    },
+    {
+      "loss_pct": 1,
+      "dir": "down",
+      "direct": 1109.121,
+      "wbd": 268.228
+    },
+    {
+      "loss_pct": 5,
+      "dir": "up",
+      "direct": 683.481,
+      "wbd": 111.999
+    },
+    {
+      "loss_pct": 5,
+      "dir": "down",
+      "direct": 521.719,
+      "wbd": 143.868
+    }
+  ],
+  "original_rust_client_stop": [
+    {
+      "loss_pct": 1,
+      "routed": 868367,
+      "backpressure": 157522,
+      "queue_full_drops": 105610,
+      "queue_age_drops": 0,
+      "queue_byte_drops": 0,
+      "raw_socket_eagain_turns": 0
+    },
+    {
+      "loss_pct": 5,
+      "routed": 439700,
+      "backpressure": 1440,
+      "queue_full_drops": 663,
+      "queue_age_drops": 0,
+      "queue_byte_drops": 0,
+      "raw_socket_eagain_turns": 0
+    }
+  ],
+  "client_loss1_upload_thread_schedstat": {
+    "scope": "~27s single source case",
+    "m4_tx": {
+      "cpu_run_ns": 11522842913,
+      "runnable_wait_ns": 429488345
+    },
+    "m4_rx": {
+      "cpu_run_ns": 1958332654,
+      "runnable_wait_ns": 291326409
+    },
+    "shared_tun_reader": {
+      "cpu_run_ns": 2057130778,
+      "runnable_wait_ns": 449716560
+    }
+  },
+  "original_server_stop": {
+    "shared_tun_reader_joined": true,
+    "masquerade_owned_rule_deleted": true,
+    "mixed_normal_remaining_flows": 0,
+    "missing_expected_noncanonical_fixture_marker": "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server"
+  },
+  "qualification": {
+    "application_cases": "PASS_10_OF_10",
+    "original_ci_result": "FAIL_STOP_ASSERTION_NOT_PRODUCT_TCP",
+    "server_stop_patch": "NOT_RUN_IN_THIS_SOURCE",
+    "actual_0pct_wbd_reference": "NOT_RUN",
+    "physical_windows": "NOT_RUN",
+    "independent_three_runners": "NOT_RUN",
+    "product_optimized": "NOT_RUN"
+  },
+  "next": "Use 0pct WBD same-VM direct comparison and on-native CPU/scheduler timing, identify M4 compute/lock/crypto stage first, patch native owner with bounded fair wake and preserve no-HOL/outer original ciphertext repair, validate before cross-mode replication."
+}

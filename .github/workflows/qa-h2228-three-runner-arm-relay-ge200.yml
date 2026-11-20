@@ -2,13 +2,15 @@ name: 'H2228 Three distinct runners routed ARM relay 200ms one-way 1-20% real TC
 run-name: "H2228 ${{ github.event_name == 'workflow_dispatch' && 'MANUAL' || 'BRANCH' }} ARM64 relay 200ms BBR ${{ github.sha }}"
 on:
   push:
-    branches: ['main', 'test/h2228-three-runner-arm-relay-bbr-ge200', 'feat/h2233-low-loss-forensics']
+    branches: ['main', 'test/h2228-three-runner-arm-relay-bbr-ge200', 'feat/h2233-low-loss-forensics', 'feat/h2234-tx-stall-forensics']
     paths:
       - '.github/workflows/qa-h2228-three-runner-arm-relay-ge200.yml'
       - 'tools/m0_h2228_three_runner_*'
       - 'tests/test_m0_h2228_three_runner_relay.py'
       - 'tests/test_m0_h2233_low_loss_diag.py'
       - 'tools/m0_h2233_low_loss_diag.py'
+      - 'tools/m0_h2234_stage_sampler.py'
+      - 'tests/test_m0_h2234_stage_sampler.py'
   workflow_dispatch:
     inputs:
       model:
@@ -30,8 +32,9 @@ on:
         options: [normal, fec-fixed]
         default: normal
 env:
-  WBD_H2233_FOCUS: ${{ github.ref_name == 'feat/h2233-low-loss-forensics' && '1' || '0' }}
-  WBD_H2233_JITTER: ${{ inputs.jitter || 'normal' }}
+  WBD_H2233_FOCUS: ${{ (github.ref_name == 'feat/h2233-low-loss-forensics' || github.ref_name == 'feat/h2234-tx-stall-forensics') && '1' || '0' }}
+  WBD_H2233_JITTER: ${{ github.ref_name == 'feat/h2234-tx-stall-forensics' && 'fixed' || inputs.jitter || 'normal' }}
+  WBD_H2234_TRACE: ${{ github.ref_name == 'feat/h2234-tx-stall-forensics' && '1' || '0' }}
   WBD_H2233_MSS: '1037'
 permissions:
   contents: read
@@ -58,6 +61,7 @@ jobs:
           # Historical full-matrix negative tests must not inherit H2233's opt-in focus.
           env -u WBD_H2233_FOCUS -u WBD_H2233_JITTER python3 -m unittest tests.test_m0_h2228_three_runner_relay -v
           python3 -m unittest tests.test_m0_h2233_low_loss_diag -v
+          python3 -m unittest tests.test_m0_h2234_stage_sampler -v
           # Assert current merged H2229 cross-platform 10ms/65535 ACK
           # and independent out-of-order TUN delivery before any H2228 run.
           python3 -m unittest tests.test_m0_h2229_native_ack_unified -v

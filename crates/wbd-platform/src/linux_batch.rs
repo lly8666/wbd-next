@@ -17,6 +17,7 @@ use std::io;
 use std::net::UdpSocket;
 use std::os::fd::{AsRawFd, RawFd};
 use std::ptr;
+use std::time::Instant;
 use wbd_types::buffer_contract::{driver_read, FrozenRecordHandle};
 
 const MSG_DONTWAIT: c_int = 0x40;
@@ -261,6 +262,19 @@ fn classify_report(sent: c_int, errno: Option<i32>, submitted: usize,
 }
 
 
+/// Optional, single-synchronous-batch Linux raw-scatter timing. This is
+/// only wall-clock characterization; zero if not explicitly requested.
+#[derive(Default,Debug,Clone,Copy)]
+pub struct KernelSendStages {
+    pub route_ns:u64,
+    pub header_ns:u64,
+    pub iovec_ns:u64,
+    pub syscall_ns:u64,
+    pub classify_ns:u64,
+}
+fn stage_elapsed(start:Instant,end:Instant)->u64 {
+    end.saturating_duration_since(start).as_nanos().min(u64::MAX as u128) as u64
+}
 /// Raw scatter backend only: the caller holds a single generation/Stop
 /// BorrowFence guard and lock before preparing the header and calling this.
 /// This function borrows the EXACT frozen ciphertext for iovec[1] and does
@@ -270,6 +284,14 @@ pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
     headers:&[[u8;80];MAX_READY_TX],header_lens:&[usize;MAX_READY_TX],
     records:&[H],
 )->KernelSendReport{
+    submit_scatter_fd_with_stages(fd,destination,headers,header_lens,records,None)
+}
+pub(crate) fn submit_scatter_fd_with_stages<H:FrozenRecordHandle>(
+    fd:RawFd,destination:std::net::SocketAddrV4,
+    headers:&[[u8;80];MAX_READY_TX],header_lens:&[usize;MAX_READY_TX],
+    records:&[H],mut stages:Option<&mut KernelSendStages>,
+)->KernelSendReport{
+    let stage_prepare=stages.as_ref().map(|_|Instant::now());
     let submitted=records.len().min(MAX_READY_TX);
     if submitted==0{return KernelSendReport{
         outcome:TxBatchOutcome::copied_all(0),signal:KernelSendSignal::None
@@ -305,11 +327,21 @@ pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
     // call, frozen records stay immutably borrowed and alive, two repr(C)
     // iovecs per packet, valid native sockaddr_in per message, vlen<=32,
     // nonblocking kernel copy. No kernel references escape on return.
+    let stage_syscall=stage_prepare.map(|_|Instant::now());
     let sent=unsafe{sendmmsg(fd,messages.as_mut_ptr(),
         submitted as c_uint,MSG_DONTWAIT)};
     let errno=if sent<0{io::Error::last_os_error().raw_os_error()}else{None};
+    let stage_classify=stage_prepare.map(|_|Instant::now());
     let reported:[u32;MAX_READY_TX]=std::array::from_fn(|i|messages[i].msg_len);
-    classify_report(sent,errno,submitted,records.len(),&reported,&expected)
+    let result=classify_report(sent,errno,submitted,records.len(),&reported,&expected);
+    if let (Some(out),Some(start),Some(kernel),Some(classify))=
+        (stages.as_mut(),stage_prepare,stage_syscall,stage_classify) {
+        let end=Instant::now();
+        out.iovec_ns=stage_elapsed(start,kernel);
+        out.syscall_ns=stage_elapsed(kernel,classify);
+        out.classify_ns=stage_elapsed(classify,end);
+    }
+    result
 }
 
 #[cfg(test)]

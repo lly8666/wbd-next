@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2234_LOCAL_TWO_ISA_REAL",
+  "source_sha": "2f62f983a5f970ea2bfc236ac0804f4cd6271322",
+  "run_id": 44782492146,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44782492146",
+  "scope": "SAME_SOURCE_DIFFERENT_VM_NATIVE_X86_64_AND_AARCH64_EACH_THREE_LINUX_NETNS",
+  "warning": "same source does not mean same VM for architecture performance comparisons; 0% Direct veth is memory-bound not physical WAN",
+  "application": {
+    "x86_64": {
+      "status": "PASS_12_OF_12_SERVER_OWNED_STOP_PROVEN",
+      "artifact_id": 14652064912,
+      "clear_direct_receiver_mbps": {
+        "up": 59117.168,
+        "down": 60865.689
+      },
+      "wbd_received_mbps": {
+        "zero_up": 1243.94,
+        "zero_down": 1262.757,
+        "loss1_up": 318.16,
+        "loss1_down": 390.649,
+        "loss5_up": 194.443,
+        "loss5_down": 218.73
+      },
+      "direct_received_mbps": {
+        "loss1_up": 1022.444,
+        "loss1_down": 1045.247,
+        "loss5_up": 695.628,
+        "loss5_down": 515.724
+      },
+      "shared_tun_client_generation_queue_full_drops": {
+        "zero": 1040343,
+        "loss1": 25528,
+        "loss5": 447
+      },
+      "zero_loss_upload_m4_tx_cpu_s": 19.98,
+      "zero_loss_upload_m4_tx_wait_s": 0.31,
+      "raw_socket_eagain_turns": 0
+    },
+    "aarch64": {
+      "status": "FAIL_ONE_REAL_DIRECT_KERNEL_IPERF_DOWNLOAD_CONNECTION_RESET_WBD_CASES_6_OF_6_PASS",
+      "artifact_id": 14653480681,
+      "clear_direct_receiver_mbps": {
+        "up": 99035.39,
+        "down": 98791.814
+      },
+      "wbd_received_mbps": {
+        "zero_up": 965.246,
+        "zero_down": 977.186,
+        "loss1_up": 331.836,
+        "loss1_down": 352.595,
+        "loss5_up": 150.439,
+        "loss5_down": 163.422
+      },
+      "direct_received_mbps": {
+        "loss1_up": 1057.633,
+        "loss1_down": 1054.031,
+        "loss5_up": 703.597,
+        "loss5_down": null
+      },
+      "shared_tun_client_generation_queue_full_drops": {
+        "zero": 849572,
+        "loss1": 36990,
+        "loss5": 538
+      },
+      "zero_loss_upload_m4_tx_cpu_s": 20.21,
+      "zero_loss_upload_m4_tx_wait_s": 0.37,
+      "raw_socket_eagain_turns": 0
+    }
+  },
+  "conclusion": "both architecture original single M4 TX owner CPU saturated during zero-loss WBD upload, shared-tun local drop and kernel inner TCP retransmissions; no basis to raise bounded queue or create second reliable outer transport",
+  "product_optimization": "NOT_RUN",
+  "cross_platform_modes_qualification": "NOT_RUN",
+  "physical_windows": "NOT_RUN",
+  "next": "on-source opt-in per-completed M4 batch CPU stage breakdown then scoped data path efficiency and same-VM baseline vs optimized A/B, preserve no HOL/fairness/stop."
+}

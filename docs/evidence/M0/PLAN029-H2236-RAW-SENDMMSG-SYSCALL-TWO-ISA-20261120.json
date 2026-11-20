@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2236_LINUX_RAW_SENDMMSG_SUBPHASES",
+  "date": "2026-11-20",
+  "source_sha": "c2ea61f25d7736f19d34ec319500b24cc6cb03c4",
+  "run_id": 44787582885,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44787582885",
+  "topology": "real original Go TLS1.3/Rust AF_INET SOCK_RAW(IPPROTO_RAW,IP_HDRINCL) + Linux BBR/TUN + 3 kernel isolated netns; separate native x86_64 and aarch64 Github runners (not public WAN)",
+  "passed": {
+    "source_static": true,
+    "native_x86_64": "12/12 TCP CASES PASS owned Stop PASS",
+    "native_aarch64": "12/12 TCP CASES PASS owned Stop PASS"
+  },
+  "artifacts": {
+    "x86_64": 14654264879,
+    "aarch64": 14654479755
+  },
+  "stages": "1 Stop-source per original M4 TX generation, per-batch aggregate elapsed WALL time, not thread CPU percentage; diagnostic-only no wire changes",
+  "profile": {
+    "x86_64": [
+      {
+        "loss_pct": 0,
+        "batches": 272386,
+        "kernel_copied_records": 2435925,
+        "shared_tun_queue_full": 656708,
+        "send_chain_ns": 25217284596,
+        "route_ns": 121885108,
+        "ipv4_tcp_checksum_header_ns": 526205915,
+        "iovec_ns": 57572408,
+        "syscall_ns": 24377482778,
+        "classify_ns": 39739018
+      },
+      {
+        "loss_pct": 1,
+        "batches": 109913,
+        "kernel_copied_records": 915418,
+        "shared_tun_queue_full": 65760,
+        "send_chain_ns": 5673776586,
+        "route_ns": 41267147,
+        "ipv4_tcp_checksum_header_ns": 290578273,
+        "iovec_ns": 29551788,
+        "syscall_ns": 5253851531,
+        "classify_ns": 18792229
+      },
+      {
+        "loss_pct": 5,
+        "batches": 100132,
+        "kernel_copied_records": 406604,
+        "shared_tun_queue_full": 263,
+        "send_chain_ns": 2151627770,
+        "route_ns": 36572729,
+        "ipv4_tcp_checksum_header_ns": 100803965,
+        "iovec_ns": 18853117,
+        "syscall_ns": 1955434095,
+        "classify_ns": 12642770
+      }
+    ],
+    "aarch64": [
+      {
+        "loss_pct": 0,
+        "batches": 246171,
+        "kernel_copied_records": 3277564,
+        "shared_tun_queue_full": 824735,
+        "send_chain_ns": 23944367037,
+        "route_pct": 1,
+        "header_pct": 2.5,
+        "iovec_pct": 0.2,
+        "actual_sync_kernel_syscall_pct": 95.6,
+        "classify_pct": 0.2
+      },
+      {
+        "loss_pct": 1,
+        "batches": 103217,
+        "kernel_copied_records": 1015510,
+        "shared_tun_queue_full": 40392,
+        "send_chain_ns": 3927431383,
+        "route_pct": 1.6,
+        "header_pct": 6.4,
+        "iovec_pct": 0.6,
+        "actual_sync_kernel_syscall_pct": 89.9,
+        "classify_pct": 0.5
+      },
+      {
+        "loss_pct": 5,
+        "batches": 102410,
+        "kernel_copied_records": 522653,
+        "shared_tun_queue_full": 326,
+        "send_chain_ns": 2490700635,
+        "route_pct": 2.1,
+        "header_pct": 5.3,
+        "iovec_pct": 0.9,
+        "actual_sync_kernel_syscall_pct": 89.8,
+        "classify_pct": 0.6
+      }
+    ]
+  },
+  "interpretation": [
+    "Both hosts actual synchronous Linux sendmmsg syscall dominates raw send chain for high-PPS 0% source (x86 96.7%; aarch64 95.6%).",
+    "This is wall-clock within synchronous Linux syscall and may include kernel scheduling, skb allocation, routing/qdisc; not a pure kernel CPU profiler.",
+    "Kernel checksum/header and iovec overhead are each <3% in 0% source. Rewriting header checksum alone cannot deliver major raw chain throughput improvement.",
+    "Single owner M4 TX is CPU saturated under high-PPS localhost zero-loss and SharedTunReader overflow is real but not necessarily a fair WAN offered rate; do not hide queue loss by enlarging queue.",
+    "Client x86 & aarch64 are different GitHub runner VM hardware; no cross-architecture causal speed ratio.",
+    "Real wire remains standard Go TLS cold, FakeTCP TCP-like authentic encrypted DATA and original-PN single opportunistic repair; profiling only."
+  ],
+  "product_speed_optimization_proven": false,
+  "physical_windows_not_run": true,
+  "fixed_auto_game_scope": "NOT_RUN",
+  "next": "Before switching raw transport, run an isolated same-VM same-wire kernel primitive comparison of current AF_INET raw IP_HDRINCL sendmmsg versus original-like AF_PACKET SOCK_DGRAM sendmmsg, with real kernel RX counters/one-to-one IPv4 bytes/owned route-MAC and Stop. Only if large advantage, design optional single-owner cold backend with route/generation/MTU/ARP safety and full multi-mode cross-platform receipts; otherwise investigate kernel per-packet costs without changing TLS-like protocol."
+}
