@@ -64,6 +64,11 @@ cp r0/go_overlay/internal/v4routekey/*.go legacy/internal/v4routekey/
 cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
 mkdir -p legacy/internal/v4productcli/rootjournal
 cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4productcli/rootjournal/
+# Source-locked Android root cold RST owner; host Go tests use only a fake iptables runner.
+mkdir -p legacy/internal/v4productcli/rstguard
+cp r0/go_overlay/internal/v4productcli/rstguard/*.go legacy/internal/v4productcli/rstguard/
+(cd legacy && go test -count=1 ./internal/v4productcli/rstguard)
+echo ANDROID_A35_FAKE_RUNNER_RST_GUARD_JOURNAL_HOST_PASS
 # linux.go now names the same pure-Go pinned CN8503 cold parser package.
 # The Linux oracle donor overlay must assemble that library too, even
 # though the Android-only CLI flag is rejected and no Linux DNS path runs.

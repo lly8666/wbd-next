@@ -513,6 +513,32 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CANCELLED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=BOOTSTRAP_CLOSED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_BOOTSTRAP_CLOSED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_READY role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_READY);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_RECOVERED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_RECOVERED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_MATCHED_RST_DROP role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_MATCHED_RST_DROP);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_NO_RST_DROP role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_NO_RST_DROP);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_COUNTER_UNAVAILABLE role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_COUNTER_UNAVAILABLE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_STOP_CLEARED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_STOP_CLEARED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_STOP_UNVERIFIED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_STOP_UNVERIFIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=SCOPE_CONFLICT"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_SCOPE_CONFLICT);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=OWNER_LOCKED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_OWNER_LOCKED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=JOURNAL_UNSAFE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_JOURNAL_UNSAFE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=READBACK_MISMATCH"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_READBACK_MISMATCH);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=CLEANUP_UNVERIFIED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_CLEANUP_UNVERIFIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=IPTABLES_UNAVAILABLE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_IPTABLES_UNAVAILABLE);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_VERIFIED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REQUEST_WRITE_FAILED role=client"))

@@ -279,5 +279,20 @@ for ev in ("ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_OK",
            "ORIGINAL_GO_TLS_HANDSHAKE_FAILED_DEADLINE_ELAPSED_OTHER"):
  assert ev in s and ev in receipt
 print("ANDROID_A34_ORIGINAL_TLS_WIRE_SOURCE_GATE_PASS")
+# A35 exact 4-tuple RST suppression MUST only run on actual Android root,
+# before the original SYN, with durable journal and exact Stop readback.
+rst=Path("r0/go_overlay/internal/v4productcli/rstguard/guard.go").read_text()
+test=Path("r0/go_overlay/internal/v4productcli/rstguard/guard_test.go").read_text()
+assert go_product.index('V4_PUBLIC_ANDROID_COLD_RST_GUARD_READY role=client') < go_product.index('reauthAuthorized:=false')
+assert go_product.index('reauthAuthorized:=false') < go_product.index('runClient(ctx,cfg,')
+for required in ('--sport','--dport','--tcp-flags','--comment','-o','-s','-d',
+                 'O_NOFOLLOW','O_EXCL','LOCK_NB','ErrCleanup','DropCounter'):
+ assert required in rst
+assert 'FakeTCP' in test or 'TestScopedRSTGuard' in test
+for marker in ("ORIGINAL_GO_COLD_RST_GUARD_READY",
+               "ORIGINAL_GO_COLD_RST_GUARD_STOP_UNVERIFIED",
+               "ORIGINAL_GO_COLD_RST_GUARD_FAILED_IPTABLES_UNAVAILABLE"):
+ assert marker in s and marker in receipt and marker in report or marker.endswith("READY")
+print("ANDROID_A35_SCOPED_RST_GUARD_NO_GLOBAL_FIREWALL_SOURCE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY

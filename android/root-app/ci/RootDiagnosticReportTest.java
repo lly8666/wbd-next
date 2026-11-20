@@ -477,6 +477,30 @@ public final class RootDiagnosticReportTest {
             contains(txt,"ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_OK");
             contains(txt,"ORIGINAL_GO_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED");
         }
+        // A35: reproducible API36 three times: real original FakeTCP
+        // Established, bootstrap TX, no peer payload, original RTO.
+        // A scoped rooted kernel RST guard either verifies exact install
+        // and Stop or fails before any new SYN. Never count Linux as phone.
+        for(RootDiagnosticReceipt.Event result:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_IPTABLES_UNAVAILABLE,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_FAILED_READBACK_MISMATCH,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_STOP_UNVERIFIED
+        }){
+            File a35=Files.createTempDirectory("wbd-a35-kernel-rst").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(new File(a35,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_ACCEPTED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPENED);
+            w.record(result);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String actual=RootDiagnosticReport.build(a35,source,36);
+            contains(actual,"last_session_stage="+(result==
+                RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_STOP_UNVERIFIED
+                ?"COLD_RST_GUARD_STOP_UNVERIFIED":result.name()));
+            if(actual.contains("198.51.100.")||actual.contains("password="))
+                throw new AssertionError("A35 root-only rule private data exposed");
+        }
+        System.out.println("ANDROID_A35_ORIGINAL_ROOT_RST_GUARD_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A34_TLS_ORIGINAL_WIRE_AND_DEADLINE_HOST_PASS");
         System.out.println("ANDROID_A33_SYNACK_TLS_ADMISSION_STAGE_PRIORITY_HOST_PASS");
         System.out.println("ANDROID_A32_PRE_SU_CREDENTIAL_0600_RECEIPT_HOST_PASS");

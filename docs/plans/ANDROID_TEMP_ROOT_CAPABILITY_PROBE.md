@@ -130,6 +130,16 @@ A33仅在原Go Android冷路径增加真实Association Established、原Rust产�
 
 用户自行提供 A33 SOURCE `f8031ef1cf2f15e2769208d76bf2b072275b6084` 真机 33事件：原Go/0600/TUN/RAW/SYNACK候选、原Association Established与TLS Attempted OBSERVED，14,997ms后 OTHER/exit1。原Linux服务端身份、原ClientHello对端实际接收、真TLS/认证/租约、M4/Stop仍未证。A34仅观察原ClientAssociation原sendto成功后的首非空Bootstrap TX、严格4元组的AF_PACKET peer payload RX及失败时对应本会话未观察到的方向/已有RTO。补明确的原BootstrapTimeout/OS timeout/cancelled/closed；未知错误恰逢预算耗尽只记DEADLINE_ELAPSED_OTHER，不冒称根因。无新传输/伪ClientHello/密钥或错误正文入TXT，不放宽标准TLS/认证、原Network/路由/Stop。先以用户自主真机安全TXT判TX/RX，再取得同SOURCE原Linux服务端RAW/TLS收据，不先扩DNS/全App。
 
+### A35｜2026-11-20 API36 三次原TLS超时：补原RAW FakeTCP精确RST守卫并分层收据
+
+用户自行使用签名SOURCE `c010f7357d0334c48c479012011b6cdb7dad1e4f` 导出同一台API36手机三次独立有界启动108个固定事件：单UID一次、all ordinary apps两次，都在原Go Args/TUN/RAW → SYN/SYNACK → 真Association Established → 原TLS payload TX sendto → 原始15秒Bootstrap TIMEOUT；原RAW peer payload **三次均NOT_OBSERVED**，原RTO **三次均OBSERVED**，owner清理结束。认证、/32租约、M4、真实业务没有达到。更换预认证App UID范围没有改变此网络瓶颈，下一轮仅单UID。
+
+根因优先候选：原真正Linux netns成功例在客户端和服务端都安装 OUTPUT TCP RST DROP，然而真实Android Root Go原来没有对应内核RST隔离。FakeTCP SYNACK到达无内核socket时Android kernel可能发送RST终止对端，导致原Go ClientHello虽然真实RAW发送却无peer载荷。**尚未经真机验证，不据此宣称修好**。
+
+A35：新增Android Root原Go启动前独立root-only精确iptables OUTPUT过滤 **只匹配选定物理接口、原手机IPv4、对端IPv4、该次随机本地源端口、原服务端目标端口、TCP RST**；禁止全局RST flush、默认路由或系统DNS修改。强制root UID、0600 O_NOFOLLOW/O_EXCL durable journal、flock owner、精确规则 `-C` 和 comment单实例读回；异常重启可按完全验证的旧journal精准恢复；失败则禁止发SYN；Stop验证精准删除，失败保留journal并报告。无密码/路由密钥/ClientHello内容/地址入safe TXT。额外固定收据：守卫_READY/FAILED类、实际该规则命中RST数量是否大于零/计数不可得、STOP_CLEARED/UNVERIFIED；同源 Host fake iptables前向/冲突/重启/Stop负例 + ARM64原Go/Rust签名APK + 原Linux Oracle。真实Android设备网络变化由用户自主测试，不能自动部署。
+
+若下次TLS仍超时：有命中RST则证明至少该规则拦截了匹配RST（不自动证明RST来自内核）；无命中RST应直接转向原Linux服务器RAW/TLS双向证据，严禁继续调密码/证书。Linux原服务器是否也需要等价守卫另行比对现有部署，不自动改变用户服务器。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

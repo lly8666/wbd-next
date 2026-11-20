@@ -37,6 +37,7 @@ import (
     "unsafe"
 
     "github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative"
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/rstguard"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -1172,6 +1173,60 @@ func Run(role string,args []string)(retErr error){
         // remains owned across simultaneous A+B TLS/native generations.
         return runOriginalLinuxClientPaths(ctx,cfg,tun)
     }
+    // A35: The real Linux netns oracle drops kernel-generated TCP RST on
+        // BOTH FakeTCP endpoints. Android root must own a narrower single-flow
+        // equivalent before initial SYN; otherwise SYNACK can trigger a native
+        // kernel RST that kills a valid server session before ClientHello.
+        // All operations are cold/root-only, with an exact durable owner journal.
+        if runtime.GOOS=="android"&&role=="client"{
+            if os.Geteuid()!=0{
+                log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=IPTABLES_UNAVAILABLE")
+                return fmt.Errorf("Android root FakeTCP RST guard requires effective uid 0")
+            }
+            iptables,findErr:=exec.LookPath("iptables")
+            if findErr!=nil{
+                log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=IPTABLES_UNAVAILABLE")
+                return fmt.Errorf("Android rooted iptables binary not available")
+            }
+            runFirewall:=func(args ...string)(string,error){
+                limited,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+                defer cancel()
+                cmd:=exec.CommandContext(limited,iptables,args...)
+                out,e:=cmd.CombinedOutput()
+                if len(out)>256<<10{return "",fmt.Errorf("bounded iptables diagnostic output exceeded")}
+                if e!=nil{return "",fmt.Errorf("scoped iptables call failed")}
+                return string(out),nil
+            }
+            const journal="/data/local/tmp/wbd-next-root/rst-guard.json"
+            guard,recovered,guardErr:=rstguard.New(runFirewall,journal,rstguard.Plan{
+                Version:1,Interface:cfg.rawInterface,SourceIP:cfg.localIP.String(),
+                PeerIP:cfg.peerIP.String(),SourcePort:int(cfg.localPort),
+                PeerPort:int(cfg.peerPort),
+            })
+            if guardErr!=nil{
+                log.Printf("V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=%s",rstguard.Class(guardErr))
+                return fmt.Errorf("Android original FakeTCP exact RST guard refused")
+            }
+            if recovered{log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_RECOVERED role=client")}
+            log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_READY role=client")
+            defer func(){
+                if dropped,known:=guard.DropCounter();known{
+                    if dropped>0{
+                        log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_MATCHED_RST_DROP role=client")
+                    }else{
+                        log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_NO_RST_DROP role=client")
+                    }
+                }else{
+                    log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_COUNTER_UNAVAILABLE role=client")
+                }
+                if closeErr:=guard.Close();closeErr!=nil{
+                    log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_STOP_UNVERIFIED role=client")
+                    retErr=errors.Join(retErr,fmt.Errorf("Android exact RST guard Stop did not verify"))
+                }else{
+                    log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_STOP_CLEARED role=client")
+                }
+            }()
+        }
     reauthAuthorized:=false
     coldRetries:=0
     for attempt:=uint64(1);;attempt++{

@@ -83,6 +83,18 @@ final class RootDiagnosticReport {
                 return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_OTHER";
             if(has(session,"ORIGINAL_GO_ARGS_REJECTED"))
                 return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED";
+            if(has(session,"ORIGINAL_GO_COLD_RST_GUARD_STOP_UNVERIFIED"))
+                return "COLD_RST_GUARD_STOP_UNVERIFIED";
+            for(String failure:new String[]{
+                "ORIGINAL_GO_COLD_RST_GUARD_FAILED_SCOPE_CONFLICT",
+                "ORIGINAL_GO_COLD_RST_GUARD_FAILED_OWNER_LOCKED",
+                "ORIGINAL_GO_COLD_RST_GUARD_FAILED_JOURNAL_UNSAFE",
+                "ORIGINAL_GO_COLD_RST_GUARD_FAILED_READBACK_MISMATCH",
+                "ORIGINAL_GO_COLD_RST_GUARD_FAILED_CLEANUP_UNVERIFIED",
+                "ORIGINAL_GO_COLD_RST_GUARD_FAILED_IPTABLES_UNAVAILABLE"
+            }){
+                if(has(session,failure))return failure;
+            }
             if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_TIMEOUT"))
                 return "TLS_HANDSHAKE_FAILED_TIMEOUT";
             if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE"))
