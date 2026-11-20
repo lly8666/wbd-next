@@ -79,7 +79,7 @@ def socket_mss_readback(case_file,kind):
             m=re.search(r"\bmss:(\d+)\b"," ".join(lines[n:n+3]))
             if m is None:continue
             for port in ports:
-                if re.search(r"(?<!\d):"+str(port)+r"(?!\d)",line):
+                if re.search(r"\b10\.248\.81\.2:"+str(port)+r"\b",line):
                     found[port]=int(m.group(1))
         return {"status":"REAL_TCP_INFO_ALL_STREAMS" if len(found)==len(ports)
                     else "UNKNOWN_PARTIAL_TCP_INFO",
