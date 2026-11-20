@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2238_1PCT_FQ_QUANTUM_ABA",
+  "source_sha": "f17ba6a333db31dd130cb2860531ddeb5b25f84f",
+  "run_id": 44793241507,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44793241507",
+  "result": "STATIC_AND_TWO_REAL_NATIVE_SINGLE_VM_GO_TLS_RUST_TCP_ABA_PASS_NOT_PRODUCT_IMPROVEMENT",
+  "topology": "each native x86_64 and aarch64 runner independently has 3 original Linux netns; not a real multi-host WAN",
+  "artifacts": {
+    "x86_64": 14658910335,
+    "aarch64": 14658570670
+  },
+  "netem": {
+    "model": "GE",
+    "target_pct": 1,
+    "oneway_add_delay_ms": 200,
+    "jitter_ms": 0,
+    "warning": "per case random damage realization not yet aligned with explicit netem seed; A/B/A has genuine source/VM but non-identical random loss events"
+  },
+  "variant": "peak fq maxrate600mbit and flow_limit256 all phases; test-only initial_quantum 2*TUN_MTU and quantum TUN_MTU; original was initial10*TUN_MTU and quantum2*TUN_MTU",
+  "x86_64": {
+    "direct_receiver_mbps_before_after": [
+      928.3,
+      1027.17
+    ],
+    "stages": [
+      {
+        "name": "original_before",
+        "receiver_goodput_mbps": 389.44,
+        "queue_full_drops": 57578,
+        "tcp_retransmits_per_receiver_GiB": 64376,
+        "tx_cpu_s": 6.83
+      },
+      {
+        "name": "test_short_quantum",
+        "receiver_goodput_mbps": 374.14,
+        "queue_full_drops": 39506,
+        "tcp_retransmits_per_receiver_GiB": 55484,
+        "tx_cpu_s": 6.28,
+        "actual_quantum_bytes": 1089,
+        "actual_initial_quantum_bytes": 2178
+      },
+      {
+        "name": "original_after",
+        "receiver_goodput_mbps": 362.42,
+        "queue_full_drops": 32922,
+        "tcp_retransmits_per_receiver_GiB": 45425,
+        "tx_cpu_s": 6.39
+      }
+    ]
+  },
+  "aarch64": {
+    "direct_receiver_mbps_before_after": [
+      1061.43,
+      746.37
+    ],
+    "stages": [
+      {
+        "name": "original_before",
+        "receiver_goodput_mbps": 287.78,
+        "queue_full_drops": 9352,
+        "tcp_retransmits_per_receiver_GiB": 23635,
+        "tx_cpu_s": 7.61
+      },
+      {
+        "name": "test_short_quantum",
+        "receiver_goodput_mbps": 330.94,
+        "queue_full_drops": 67824,
+        "tcp_retransmits_per_receiver_GiB": 97504,
+        "tx_cpu_s": 2.56,
+        "actual_quantum_bytes": 1089,
+        "actual_initial_quantum_bytes": 2178
+      },
+      {
+        "name": "original_after",
+        "receiver_goodput_mbps": 326.79,
+        "queue_full_drops": 25060,
+        "tcp_retransmits_per_receiver_GiB": 42976,
+        "tx_cpu_s": 8.21
+      }
+    ]
+  },
+  "conclusion": "No stable source-VM improvement of product receiver goodput or local queue drops across architectures. ARM test variant actually shows worse local drop than both baseline phases. Do not change product CLI fq maxrate/initial quantum/GUI; do not claim optimization.",
+  "product_code_change": "NONE",
+  "immutable_contracts": "original Go TLS; Rust single M4 owner; first-arrived delivery no HOL; opportunistic original PN ciphertext repair; FEC; MTU; owned Stop",
+  "next": "Keep original product. Add a source-scoped single fixed netem seed plus time-correlated Shared TUN pressure buckets and compare 1 vs4 inner TCP flows; independently classify 5% packetization/loss and optional FEC before making any hot-path changes."
+}
