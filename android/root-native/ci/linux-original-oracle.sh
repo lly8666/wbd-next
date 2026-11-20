@@ -98,7 +98,7 @@ cp target/release/libwbd_engine.so out/android-a3-linux/
 export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
 export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
 # A34 source-locked original-Go TLS cold error/deadline classifier regression.
-(cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestV4AndroidCold(FixedFailureClasses|DeadlineUnknownIsNotMisreported)$' ./internal/realityfront)
+(cd legacy && timeout 180s go test -count=1 -run '^TestV4AndroidCold(FixedFailureClasses|DeadlineUnknownIsNotMisreported)$' ./internal/realityfront)
 echo ANDROID_A34_ORIGINAL_GO_TLS_CLASSIFIER_HOST_PASS
 for role in client server;do
   (cd legacy && go build -trimpath -buildvcs=false \

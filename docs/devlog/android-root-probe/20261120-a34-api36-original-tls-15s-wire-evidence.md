@@ -29,3 +29,11 @@ A34a SOURCE `1658573124a5f91e8ba400422208d2f85dfe432b` [Action #44697865675](htt
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A34b清理历史patch污染的Linux Oracle残尾，直接恢复已通过完整脚本并仅接入一次原Go固定分类测试。"}
 ```
+
+## A34c 纠正 Go 分类测试标签（保留首次真实编译失败）
+
+源锁 `b45df05805eb54b9c20059baa21365299c2d8793` 的 [Action #44698536941](https://github.com/lly8666/wbd-next/actions/runs/44698536941)：10 SUCCESS、4 SKIPPED、1 FAIL（`linux-original-server-normal-off`）。原Go/Rust ARM64、签名APK、Java Host、Linux D2-S0及其他Host成功。Linux Oracle修复的完整shell已通过 `bash -n`，但新增 `go test -tags wbd_v4_embedded_go,wbd_v4_fec2_product` 编译时，历史`bridge_v4_embedded_linux_test.go`引用只在`wbd_v4_native_probe`标签下定义的`v4RawCheckSum`/`v4RawC2STestPacket`，在测试执行前FAIL。**不补假的helper、不改变原生产代码或原Linux真实Oracle**。A34固定分类仅依赖公共Go `admission_v4.go`/标准包/原 `faketcp`，故本次将该独立Go unit test改为默认无嵌入标签执行，避免牵连不匹配的Linux native probe测试编译；原有带标签的Linux client/server `go build`、netns真实TLS/租约/M4/wire验收仍保留并后置。新SOURCE必须分别记录Go单元测试与真实Linux oracle结果。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A34c实测历史embedded_go测试标签会缺少native_probe helper，仅将独立Go分类测试恢复公共无标签入口，Linux真实产品构建/协议不改。"}
+```
