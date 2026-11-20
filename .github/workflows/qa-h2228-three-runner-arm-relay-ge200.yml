@@ -24,7 +24,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: h2228-three-runner-${{ github.ref }}
+  group: h2228-three-runner-bbr-netns-v2-${{ github.ref }}
   # During fixture development, replace stale runs holding three ephemeral VMs.
   # Production main manual runs stay non-cancelling to preserve evidence.
   cancel-in-progress: ${{ github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' }}
