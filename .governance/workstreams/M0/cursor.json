@@ -4,23 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2224,
-  "checkpoint_sha": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
+  "sequence": 2226,
+  "checkpoint_sha": "7c01f30196c69f94b7ca19aed6035f82f5d191f7",
   "progress": "in_progress",
-  "task_id": "PLAN029-H2224-WIN-GUI-LINUX-NAT-HEALTH-SCOPED",
-  "current_task": "H2224原Go/Rust Linux服务端owned MASQUERADE + WinForms READY/质量双向FEC显示 + Rust冷Health随机2/2 Actions成功；Windows实机长期稳态与S2C真实Auto生效档位仍未验证。",
-  "why_now": "用户报告H2223实体业务已通，要求Linux判定不比Windows严格、GUI修复、Linux NAT及TLS后固定包节奏随机，集中验收再合主线。",
-  "done_when": "H2224同源码Windows原Go/Rust及WinForms GUI、Linux ARM64原TLS/Rust NAT/Stop和随机Health测试PASS；真实Windows/物理公网长稳、全部GUI实时质量和Auto双向FEC等级另留NOT_RUN。",
-  "next_action": "合入H2221/H2223/H2224同源码限域成果；仅对真实长期质量和S2C实际档位有证据时跟进，不重做028/029B旧矩阵。",
+  "task_id": "PLAN029-H2226-WIN-GUI-LOWRATE-QUALITY-NO-M2-SCOPED",
+  "current_task": "H2226既有WinGUI正式V2双向FEC/原生TXRX展示下，Auto仅复用已认证低频Quality START/CLOSE成熟摘要生成粗略反馈时延与首发损失上界；不恢复逐包M2；Windows真GUI432/432及原Go/Rust、Linux ARM64 M4/NAT/Stop Action 44671258239 2/2 SUCCESS，Windows/Linux完整包Action44672421936 2/2 SUCCESS。",
+  "why_now": "用户更正fast.com并非断链原因：部分新代际早退、成功越过初段者长稳测速不掉；同时要求质量只读现有低频包、不恢复每包M2，GUI需要可信的Auto/下行FEC与粗略链路状态。",
+  "done_when": "H2226源锁定Windows原Go/Rust+WinForms GUI432及Linux ARM64原Go/Rust NAT/Stop同源码PASS，两个完整下载包checksum与Wintun/ARM64验证；实体代际Health/服务端同Lease因果、Auto S2C真实应用档位以及全Normal/Fixed质量仍NOT_RUN。",
+  "next_action": "复现 H2226 Windows 精确source+Linux ARM64 同lease，在早退连接采H2225 cause/last_authenticated_rx_age_ms/attached_age_ms、服务端Health TX/RX/peer-retire与/32；用10组空闲>=4min与测速无关试验区分冷启动/90秒认证沉默。若设计Auto S2C档位只准已认证低频回报，禁止恢复逐包M2或猜C2S；完整PLAN029/029B出口仍OPEN。",
   "unverified": true,
-  "last_tested_source": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
+  "last_tested_source": "7c01f30196c69f94b7ca19aed6035f82f5d191f7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json"
+    "docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json",
+    "docs/evidence/M0/PLAN029-H2226-WIN432-LOWRATE-NO-M2-ARM64-FULL-PACK-20261120.json"
   ],
   "context_refs": [
     "docs/evidence/M0/PLAN029-H2220-H2216V2-R3-FECMAX-PAIRED-PHYSICAL-NO-DROP-STILL-FAIL-20261119.json",
-    "docs/devlog/M0/20261119-H2223-READY-IS-ACTIVATION-NOT-BUSINESS-DELIVERY.md"
+    "docs/devlog/M0/20261119-H2223-READY-IS-ACTIVATION-NOT-BUSINESS-DELIVERY.md",
+    "docs/devlog/M0/20261120-H2225-FASTCOM-UPLINK-DEAD90-DIAGNOSTIC.md",
+    "docs/devlog/M0/20261120-H2226-WIN-GUI-LOWRATE-V2-NO-M2-GENERATION-HEALTH.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2224 SOURCE26fd4 2/2 Actions native PASS_SCOPED；H2223用户报告业务通（无本轮SHA/长稳证据）；S2C仅已协商/未知，实体WAN/实机长期稳定与p99 NOT_RUN；029与029B完整技术出口OPEN，030未开。"
+  "partial_summary": "H2226源 7c01f/PR51 merge88b4 完成WinGUI V2低频认证Quality估算、双向FEC状态不冒充、原生TXRX；Windows GUI432+ARM64 M4/NAT Action44671258239 2/2、完整打包44672421936 2/2 PASS_SCOPED。用户说fast.com无因果；异常部分代际早退原因需实体双端Health证据；Auto S2C生效档位未知，Normal/Fixed无样本未知。长期稳定/完整029、029B仍OPEN。"
 }

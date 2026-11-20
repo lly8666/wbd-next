@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2226",
+  "date": "2026-11-20",
+  "source_sha": "7c01f30196c69f94b7ca19aed6035f82f5d191f7",
+  "code_source_sha": "7c01f30196c69f94b7ca19aed6035f82f5d191f7",
+  "result": "PASS_SCOPED_WIN_GUI_432_ORIGINAL_GO_RUST_ARM64_M4_NAT_NO_M2",
+  "qualification": "PASS_SCOPED",
+  "workflow_run_id": 44671258239,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44671258239",
+  "jobs": [
+    {
+      "name": "windows-real-original-tls",
+      "status": "SUCCESS",
+      "scope": "Windows source-locked original Go CLI, ISA-L Rust original M3 DLL ABI/TLS 3 cipher and real WinForms V2 432 checks (including low-rate qualified values and existing C2S/S2C direction authority)",
+      "gui_checks": 432
+    },
+    {
+      "name": "linux-arm64-native-original-tls-nat",
+      "status": "SUCCESS",
+      "scope": "Original Go TLS Rust M4 ARM64 source build plus actual netns three-client double NAT TUN echo, owner NAT clean Stop and randomized cold Health"
+    }
+  ],
+  "release": {
+    "main_merge_sha": "88b49211d9a48b96774a8d616d2626166b031c48",
+    "main_governance_source": "60d11088b996a1a47c2b64e36339a11d09cfbc0a",
+    "main_governance_action_id": 44672326799,
+    "release_workflow_sha": "4fa2ef5b12acd9dc7fa5777f16ba42d4e369a1de",
+    "release_workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44672421936",
+    "jobs_status": "2_OF_2_SUCCESS",
+    "code_difference_from_main": "ONLY_RELEASE_WORKFLOW",
+    "artifacts": [
+      {
+        "id": 14600368450,
+        "name": "h2226-validated-windows-amd64-lowrate",
+        "archive_digest": "sha256:5cc5ecbf7a1e686eaad5593709080c9a75656165f86cf2bc299972d354412692",
+        "inner_zip_sha256": "6c01bbd23b323ae5fd4e719700b1be456a19bf74f92287878f464f6faa52c563",
+        "gui_checks": 432,
+        "wintun_signed_official": true,
+        "npcap_free_bundled": false
+      },
+      {
+        "id": 14600902525,
+        "name": "h2226-validated-linux-arm64-server",
+        "archive_digest": "sha256:19186f1586c7f193e05a315fc45bdbed187a633df034eea5128b90e4b858bb0a",
+        "inner_tar_sha256": "88473a40b1189ac7ef8211655d85118922092cb5131e479a240c4e5656d94940",
+        "binary_e_machine": 183
+      }
+    ]
+  },
+  "semantics": {
+    "quality_wire": "EXISTING_AEAD_UNIQUE_PN_LOW_RATE_QUALITY_START_CLOSE_MATURE_REPORT_ONLY",
+    "per_record_m2": "NOT_REINSTATED",
+    "windows_gui": "ALREADY_SOURCE_ASSEMBLED_V2_C2S_APPLIED_S2C_NEGOTIATED_OR_UNKNOWN_AND_REAL_TX_RX",
+    "auto_quality_display": "GUI_ONLY_FIRSTSEND_UPPER_PERCENT_AND_APPROX_CLOSE_TO_MATURE_FEEDBACK_DELAY_MINUS_3S_MATURITY_ONLY_WHEN_QUALIFIED;UNKNOWN_OTHERWISE",
+    "normal_fixed_quality": "UNKNOWN_WHEN_NO_AUTHENTICATED_LOW_RATE_SAMPLES",
+    "auto_s2c_actual_profile": "UNKNOWN_NO_SERVER_AUTHENTICATED_APPLIED_PROFILE_READBACK",
+    "authenticated_health": "UNCHANGED_15S_90S_H2225_WINDOWS_TERMINAL_CAUSE_DIAGNOSTIC",
+    "user_physical_observation": "FAST_COM_NOT_CAUSAL;SOME_AUTHENTICATED_GENERATIONS_EARLY_TERMINATE_OTHERS_SURVIVE_INDEFINITELY"
+  },
+  "physical_NOT_RUN": [
+    "H2226 complete real physical Windows Linux ARM64 long-run/reconnect 10x",
+    "Causal two-sided H2225 Windows cause plus same-generation server Health send/retire",
+    "WAN p99 capacity and CPU/RSS under sustained load",
+    "Server-origin Auto S2C actual applied grade and continuous Normal/Fixed quality"
+  ],
+  "previous_failures_preserved": [
+    "H2220 actual physical R3/FECmax source-locked FAIL",
+    "H2226 first Windows Actions 44668277001 legacy Game call compile failure",
+    "H2226 second Windows Actions 44668644829 C# variable scope failure",
+    "H2226 third Windows Actions 44669369282 duplicate V2 parser selftest failure",
+    "Historical unrelated whole Rust/R1 fixture failing suite not claimed all PASS"
+  ],
+  "next_action": "Physical paired generation-lifetime trial on exact H2226 binaries, read cause from H2225 and Linux lease lifecycle; do not attribute fast.com or relax Health90, do not reintroduce per-record M2."
+}
