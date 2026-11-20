@@ -71,6 +71,11 @@ def socket_mss_readback(case_file,kind):
         ports={int(x["local_port"]):x for x in rows}
         if not rows or len(ports)!=len(rows):
             raise ValueError("ports")
+        expected_peer=(("10.248.82.2",5202) if kind=="direct" else
+                       ("10.66.0.1",5201) if kind=="wbd" else None)
+        if expected_peer is None or any(
+            (x["remote_host"],int(x["remote_port"]))!=expected_peer for x in rows):
+            return {"status":"UNKNOWN_PATH_MISMATCH","mss":[]}
         lines=snapshot.read_text().splitlines()
         found={}
         for port,stream in ports.items():
