@@ -518,7 +518,9 @@ assert 'parse_data_packet_checked(packet,trusted,true)' in parser
 assert 'fn parse_data_packet_android_m3_pending' in parser
 assert '#[cfg(any(target_os="android",test))]' in parser
 assert 'parse_data_packet_checked(packet,trusted,false)' in parser
-assert 'if require_tcp_checksum && !checksum_is_valid(sum)' in parser
+assert 'if require_tcp_checksum {' in parser
+assert 'if require_tcp_checksum && !checksum_is_valid(sum)' not in parser
+assert 'sum = add_bytes(sum, tcp);' in parser
 assert 'a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted' in parser
 assert 'let parsed=match crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(' in android_io
 assert 'if (observed&127)==0' in android_io

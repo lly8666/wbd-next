@@ -9,6 +9,10 @@
 1. 原 `AndroidBoundRawRx::read_original_record` 的 A48 逻辑对几乎所有真实DATA先遍历 TCP payload算 checksum（本机全数不匹配），再从头解析第二遍进入原M3。A48严格成功与checksum-only失败后宽松成功的**接受集合**恰等于既有 `parse_data_packet_android_m3_pending`；Android直接单遍调用它，全部 IPv4/IP-checksum/tuple/flags/MTU/分片/选项门不变。保留原 M1 seq 和 M3 AEAD/unique PN/replay决定最终认证。仅1/128已接受DATA在诊断侧抽样调用严格parser，因此 `tcpck` 为抽验中的失败**样本数**，不可与A48旧版逐包完整统计相除当“修好checksum”。Linux/Windows正式 strict parser不改。
 2. Android真实 TUN fd在 `adopt` 已明确设为 O_NONBLOCK，RAW RX socket也为 SOCK_NONBLOCK。原两个M4 worker 在一次 poll 叫醒后，每个后续包额外 `poll(0)`；改为最多8次直接 `readv/recvfrom`，EAGAIN正常结束当前批次、无额外error计数。其它IO错误仍原 fail路径；不改 AEAD密文、wire、租约/Scope读回、generation、Health或Stop和线程数量。
 
+## A49b｜单遍解析还必须跳过真实O(n)校验和扫描
+
+复核A48原 `parse_data_packet_checked` 发现 `require_tcp_checksum=false` 只跳过判断，仍先用 `add_bytes(sum,tcp)` 线性扫描整包。A49首批只删除双遍parse，仍浪费一遍扫描，因此本批把伪头+TCP整包checksum计算整体移入 `if require_tcp_checksum`，Android普通DATA直接跳过；每128包抽样和原Linux/Windows strict仍执行完整校验和。A49原接受集合测试不变，真实减CPU仍待相同手机实测速率/线程CPU。
+
 ## 验证与下一步唯一门
 
 加入真实Rust Host测试 `a49_single_pass_matches_a48_two_pass_android_admission` 对原写包的合法、仅TCP checksum损坏、IP checksum损坏、四元组、flags负例逐项核A48旧接受集合和A49单遍结果相等；A48老测试及main H2216 TTL保持。Android ARM64/x86 CI-only原Go+Rust、正式签名ARM64 APK、原Linux Go/Rust Normal/off Oracle与源锁检查只须同 SOURCE 一次。Host/构建 PASS 仅能证明代码边界，不产生CPU/吞吐PASS。

@@ -223,14 +223,16 @@ fn parse_data_packet_checked<'a>(
         return Err(RxError::UnsupportedOptions);
     }
     if hdr_len == tcp.len() { return Err(RxError::EmptyData); }
-    // TCP pseudoheader: src/dst, zero, protocol=6, 16-bit TCP byte length.
-    // A single add_bytes() per independent even-length segment preserves the
-    // odd-tail alignment inside the TCP segment, even with odd ciphertext.
-    let mut sum = add_bytes(0, &packet[12..20]);
-    sum += u64::from(TCP_PROTO) + tcp.len() as u64;
-    sum = add_bytes(sum, tcp);
-    if require_tcp_checksum && !checksum_is_valid(sum) {
-        return Err(RxError::TcpChecksum);
+    // Strict Linux/Windows must verify the full TCP pseudoheader checksum.
+    // A49 Android M3-pending skips the O(ciphertext length) scan entirely;
+    // the ORIGINAL M3 AEAD/PN/replay must still authenticate every record.
+    if require_tcp_checksum {
+        let mut sum = add_bytes(0, &packet[12..20]);
+        sum += u64::from(TCP_PROTO) + tcp.len() as u64;
+        sum = add_bytes(sum, tcp);
+        if !checksum_is_valid(sum) {
+            return Err(RxError::TcpChecksum);
+        }
     }
     Ok(UnauthenticatedData {
         ciphertext: &tcp[hdr_len..],
