@@ -24,3 +24,11 @@ SOURCE `a2c7b33a2fadd57dcbd89bca1163b4fb14f6d691` 的 [治理 #44726819409](http
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A38b按治理same-commit要求实际同步feature card到已提交的有效TLS校验修复与Keystore UI持久化，保留52条历史。"}
 ```
+
+## A38c 真实Linux原协议Go编译失败：单测试Close签名修正
+
+源码 `a2c7b33a2fadd57dcbd89bca1163b4fb14f6d691` [产品Action #44726819434](https://github.com/lly8666/wbd-next/actions/runs/44726819434) ：原ARM64双ABI、签名APK、真实JVM AES-GCM加密/篡改拒绝、固定事件和原Go/Java源码均PASS；但 `linux-original-server-normal-off` 在新增真实 TLS policy Go测试包编译时FAIL：`admission_v4_test.go:1405:15: serverConn.Close() (no value) used as value`。原 `faketcp.ServerAssociation.Close` 返回void，`net.Conn clientConn.Close`返回error；只去掉 `serverConn.Close()` 前的 `_= `，不改真实Go TLS、保护认证、RST、RouteKey或加密UI。原FAIL保留，后续SOURCE必须重新验证真实自签名TLS三态与原Linux Normal/off Oracle，才称产品同源通过。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A38c真Go测试编译发现ServerAssociation.Close无返回值，修正测试调用并同步卡片；不放宽受保护TLS/认证条件。"}
+```

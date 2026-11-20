@@ -1402,7 +1402,7 @@ func TestA38OriginalProtectedAdmissionCertVerifyPolicy(t *testing.T){
                 }
             }
             _=clientConn.Close()
-            _=serverConn.Close()
+            serverConn.Close()
             select{
             case <-serverResult:
             case <-time.After(6*time.Second):t.Fatal("real original server handshake did not stop")
