@@ -163,12 +163,12 @@ $qualityV2=@'
                 if (!fields.ContainsKey("rtt_ms") || !fields.ContainsKey("loss_pct") ||
                     !fields.ContainsKey("fec_c2s") || !fields.ContainsKey("fec_s2c")) return true;
                 int ms;
-                double loss;
+                double v2Loss;
                 string latency = int.TryParse(fields["rtt_ms"],NumberStyles.None,CultureInfo.InvariantCulture,out ms) &&
                     ms>0 && ms<=60000 ? "约"+ms.ToString(CultureInfo.InvariantCulture)+"ms（低频反馈估算）" : "未知";
-                string upper = double.TryParse(fields["loss_pct"],NumberStyles.Float,CultureInfo.InvariantCulture,out loss) &&
-                    !double.IsNaN(loss) && !double.IsInfinity(loss) && loss>=0 && loss<=100 ?
-                    loss.ToString("F1",CultureInfo.InvariantCulture)+"%（低频首发上界）" : "未知";
+                string upper = double.TryParse(fields["loss_pct"],NumberStyles.Float,CultureInfo.InvariantCulture,out v2Loss) &&
+                    !double.IsNaN(v2Loss) && !double.IsInfinity(v2Loss) && v2Loss>=0 && v2Loss<=100 ?
+                    v2Loss.ToString("F1",CultureInfo.InvariantCulture)+"%（低频首发上界）" : "未知";
                 quality.Text = "运行质量（当前连接）  ·  RTT：" + latency +
                     "  ·  首发损失上界：" + upper +
                     "  ·  上行 FEC：" + NativeV2FecStatus(fields["fec_c2s"]) +
