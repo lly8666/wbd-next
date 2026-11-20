@@ -11,3 +11,11 @@ APK「恢复网络」按钮先触发原有精确owner Stop，等待真实Go/Rust
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A36真机RST命中并进入TLS证书错误，新增不降级CA证书细分类、本地PEM导入及严格原Go rootjournal/RST一键恢复，原App真实业务仍NOT_PROVEN。"}
 ```
+
+## A36d Java源码真实构建拦截局部变量名，保留失败
+
+产品SOURCE `a1f4928b705c870fd07c5b78a60919257e734cff` [Action #44718069403](https://github.com/lly8666/wbd-next/actions/runs/44718069403)：原Go/Rust ARM64已通过；`root-arm64-app` 真Java Host `RootDiagnosticReportTest.java:538` FAIL，新增恢复负例循环误重复声明早已在main外层定义的 `wr`。修复为局部唯一 `wr36` 并逐项引用，保持测试所有原收据和V2排序条件，无业务逻辑改动；若新SRC成功才产生可测试签名APK。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A36d 修复真实CI发现的Java恢复收据测试变量名遮蔽，保留原Go恢复/严格TLS与历史FAIL。"}
+```

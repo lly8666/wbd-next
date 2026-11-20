@@ -535,17 +535,17 @@ public final class RootDiagnosticReportTest {
             RootDiagnosticReceipt.Event.ROOT_RESTORE_REFUSED_LIVE_OWNER
         }){
             File restore=Files.createTempDirectory("wbd-a36-restore").toFile();
-            RootDiagnosticReceipt wr=new RootDiagnosticReceipt(new File(restore,"wbd-root-diagnostic.txt"));
-            wr.record(RootDiagnosticReceipt.Event.START_REQUESTED);
-            wr.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
-            wr.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE);
-            wr.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
-            wr.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_REQUESTED);
+            RootDiagnosticReceipt wr36=new RootDiagnosticReceipt(new File(restore,"wbd-root-diagnostic.txt"));
+            wr36.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            wr36.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            wr36.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE);
+            wr36.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            wr36.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_REQUESTED);
             if(end==RootDiagnosticReceipt.Event.ROOT_RESTORE_COMPLETE){
-                wr.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_ROUTE_CLEARED);
-                wr.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_RST_CLEARED);
+                wr36.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_ROUTE_CLEARED);
+                wr36.record(RootDiagnosticReceipt.Event.ROOT_RESTORE_RST_CLEARED);
             }
-            wr.record(end);
+            wr36.record(end);
             String result=RootDiagnosticReport.build(restore,source,36);
             String want=end==RootDiagnosticReceipt.Event.ROOT_RESTORE_COMPLETE
                 ?"ROOT_RESTORE_VERIFIED_OWNED_KERNEL_CLEAR":
