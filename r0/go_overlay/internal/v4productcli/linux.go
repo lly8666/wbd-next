@@ -1607,6 +1607,15 @@ func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]st
  if p.BusinessReverseTun>0{stages=append(stages,"APP_REVERSE_TUN_WRITTEN")}
  if p.DnsUDP53Seen>0{stages=append(stages,"DNS_UDP53_TUN_SEEN")}
  if p.DnsTCP53Seen>0{stages=append(stages,"DNS_TCP53_TUN_SEEN")}
+ if p.RawPollReady>0{stages=append(stages,"RAW_SOCKET_READABLE")}
+ if p.RawParseFailed>0{stages=append(stages,"RAW_PARSE_FAILED")}
+ if p.RawParsed>0{stages=append(stages,"RAW_PARSED")}
+ if p.RawAuthenticated>0{stages=append(stages,"RAW_AUTHENTICATED")}
+ if p.RawAuthRejected>0{stages=append(stages,"RAW_AUTH_REJECTED")}
+ if p.ReverseTunWriteFailed>0{stages=append(stages,"REVERSE_TUN_WRITE_FAILED")}
+ if p.TunICMPSeen>0{stages=append(stages,"TUN_ICMP_SEEN")}
+ if p.TunTCPSeen>0{stages=append(stages,"TUN_TCP_SEEN")}
+ if p.TunUDPSeen>0{stages=append(stages,"TUN_UDP_SEEN")}
  return stages
 }
 func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{

@@ -1,5 +1,7 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> 2026-11-20 A45 新实机接续（不替代本计划唯一优先级）：A44 SOURCE `8da73ff0428291b006b28f762cf18ea9122d4784` 真实 API36 selected UID两次`ORIGINAL_GO_UID_ROUTE_GET_MATCHED_TUN`、原Rust `TUN_IPV4_SEEN`/真正`APP_RAW_TX_COPIED`，但没看到`APP_REVERSE_TUN_WRITTEN`；这仅证明手机向外做了业务内核复制，非对端收包。用户另一个 Ping 应用不一定属于选定UID，不能将其不通冒充完整ICMP隧道失败。继续选定应用组（Chrome+Ping APP），先查原Rust RAW RX可读/解析/认证/反向TUN与Linux服务端入站和本机TUN应答，再研究公网forward/NAT/DNS；**不为此切换全局代理**。A45 同源 HOST/ARM64 构建和新 SOURCE 真机结果分别记录，不造PASS。后续仅以最新SOURCE/真实Actions/devlog定论。
+
 > 更新：2026-11-18，已核验业务诊断 SOURCE `731ea034ce527ef2bf5a214d9a7431c96cb205dc`（[A25 Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998)）。**本文件是当前执行口径，不是历史阶段流水账。** 每次施工先核远端 HEAD、PR、正在运行的 Actions 再更新事实；以下 SOURCE/Action 仅是本次编辑时已核验证据，不能被下一会话当作永远最新。
 >
 > 原路径 `ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md` 为保持引用稳定而保留；任务已经从“短时能力探针”升级为正式 Android Root 原生客户端。旧 A3/A6/B2/A9/A15 分阶段方案及其原文，可从 [本次整理前的 Git 历史快照](https://github.com/lly8666/wbd-next/blob/b926881b59581c073066d42f315b176f95e23c0b/docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md) 和 `docs/devlog/android-root-probe/` 查阅，**不再具有并列执行优先权**。

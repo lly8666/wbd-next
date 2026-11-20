@@ -705,6 +705,24 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_GET_MISMATCH);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=UNAVAILABLE"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_GET_UNAVAILABLE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=RAW_SOCKET_READABLE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_RAW_SOCKET_READABLE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=RAW_PARSE_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_RAW_PARSE_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=RAW_PARSED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_RAW_PARSED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=RAW_AUTHENTICATED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_RAW_AUTHENTICATED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=RAW_AUTH_REJECTED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_RAW_AUTH_REJECTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=REVERSE_TUN_WRITE_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_REVERSE_TUN_WRITE_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=TUN_ICMP_SEEN"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_TUN_ICMP_SEEN);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=TUN_TCP_SEEN"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_TUN_TCP_SEEN);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=TUN_UDP_SEEN"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_TUN_UDP_SEEN);
                     if(!uidReady&&OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED")){
                         uidReady=true;
                         trace(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT);

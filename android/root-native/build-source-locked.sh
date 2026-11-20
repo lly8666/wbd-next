@@ -116,6 +116,7 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
       wbd_m0_embedded_go_attach_tun \
       wbd_m0_embedded_go_loop_start wbd_m0_embedded_go_loop_stats \
       wbd_m0_embedded_go_loop_business_receipts \
+      wbd_m0_embedded_go_loop_return_path_receipts \
        wbd_m0_embedded_go_loop_dns_ingress_observed \
        wbd_m0_embedded_go_loop_thread_cpu \
        wbd_m0_embedded_go_loop_physical_scope_invalid \

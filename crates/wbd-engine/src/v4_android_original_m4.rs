@@ -33,6 +33,11 @@ pub(super) struct AndroidOriginalStats{
     // Genuine authenticated M4 business path observations (not browser PASS).
     tun_ipv4_admitted:AtomicU64,tun_ipv4_rejected:AtomicU64,
     business_raw_copied:AtomicU64,business_reverse_tun:AtomicU64,
+    // A45 genuine one-reader ingress and return-path classification.
+    raw_poll_ready:AtomicU64,raw_parse_failed:AtomicU64,
+    raw_authenticated:AtomicU64,raw_auth_rejected:AtomicU64,
+    reverse_tun_write_failed:AtomicU64,
+    tun_icmp:AtomicU64,tun_tcp:AtomicU64,tun_udp:AtomicU64,
     pub(super) authenticated_peer_dead:AtomicBool,
     pub(super) peer_preauth_due:AtomicBool,
     pub(super) peer_verified_health:AtomicBool,
@@ -174,6 +179,7 @@ fn raw_worker(
             }
             continue
         };
+        stats.raw_poll_ready.fetch_add(1,Ordering::Relaxed);
         for turn in 0..8 {
             if shutdown.load(Ordering::Acquire){break}
             if turn>0&&!wake.wait_readable(raw.readiness_fd(),0).unwrap_or(false){
@@ -198,6 +204,7 @@ fn raw_worker(
                 let (wire_len,absolute)=match read{
                     Ok(v)=>v,
                     Err(_)=>{
+                        stats.raw_parse_failed.fetch_add(1,Ordering::Relaxed);
                         stats.rx_error.fetch_add(1,Ordering::Relaxed);
                         e.arena.drain_returns();
                         break
@@ -229,6 +236,11 @@ fn raw_worker(
                 e.arena.drain_returns();
                 stats.rx.fetch_add(u64::from(delivered),Ordering::Relaxed);
                 stats.business_reverse_tun.fetch_add(u64::from(delivered),Ordering::Relaxed);
+                stats.reverse_tun_write_failed.fetch_add(u64::from(failed),Ordering::Relaxed);
+                stats.raw_auth_rejected.fetch_add(
+                    u64::from(report.authenticated.rejected)+
+                    u64::from(report.malformed)+u64::from(report.discarded),
+                    Ordering::Relaxed);
                 stats.rx_error.fetch_add(
                     u64::from(failed)+u64::from(report.malformed)+
                     u64::from(report.discarded)+u64::from(report.authenticated.rejected),
@@ -236,6 +248,7 @@ fn raw_worker(
                 );
                 let authenticated=report.authenticated.link_ready!=0||healthy;
                 if authenticated{
+                    stats.raw_authenticated.fetch_add(1,Ordering::Relaxed);
                     e.android_seq_anchor=e.android_seq_anchor.max(
                         absolute.saturating_add(wire_len as u64));
                 }
@@ -567,6 +580,14 @@ fn tun_worker(
                 break
             }
             stats.tun_ipv4_admitted.fetch_add(1,Ordering::Relaxed);
+            // Protocol comes from the SAME complete, /32-qualified kernel IP.
+            // ICMP proves selected-App inner ping ingress, not echo reply.
+            match head[9] {
+                1=>{stats.tun_icmp.fetch_add(1,Ordering::Relaxed);},
+                6=>{stats.tun_tcp.fetch_add(1,Ordering::Relaxed);},
+                17=>{stats.tun_udp.fetch_add(1,Ordering::Relaxed);},
+                _=>{},
+            }
             // Observe each authentic TUN datagram exactly at the EXISTING
             // one-syscall Rust M4 ingress, only after the original /32
             // lease/IPv4 gate and before M1 seal. This NEVER consumes,
@@ -903,6 +924,36 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_business_receipts(
         tun_rejected.write(c.tun_ipv4_rejected.load(Ordering::Relaxed));
         raw_copied.write(c.business_raw_copied.load(Ordering::Relaxed));
         reverse_tun.write(c.business_reverse_tun.load(Ordering::Relaxed));
+    }
+    OK
+}
+
+// A45: classify actual original Android M4 return-path ownership.
+// Poll readiness is NOT a parsed peer packet; authenticated is NOT
+// business delivery; each source remains an original worker-only counter.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_return_path_receipts(
+    h:u64,poll:*mut u64,parse_failed:*mut u64,parsed:*mut u64,
+    auth:*mut u64,rejected:*mut u64,write_failed:*mut u64,
+    icmp:*mut u64,tcp:*mut u64,udp:*mut u64
+)->i32{
+    if poll.is_null()||parse_failed.is_null()||parsed.is_null()||
+       auth.is_null()||rejected.is_null()||write_failed.is_null()||
+       icmp.is_null()||tcp.is_null()||udp.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_workers.is_none(){return BAD_STAGE}
+    let c=&e.android_metrics;
+    unsafe{
+        poll.write(c.raw_poll_ready.load(Ordering::Relaxed));
+        parse_failed.write(c.raw_parse_failed.load(Ordering::Relaxed));
+        parsed.write(c.raw_candidates.load(Ordering::Relaxed));
+        auth.write(c.raw_authenticated.load(Ordering::Relaxed));
+        rejected.write(c.raw_auth_rejected.load(Ordering::Relaxed));
+        write_failed.write(c.reverse_tun_write_failed.load(Ordering::Relaxed));
+        icmp.write(c.tun_icmp.load(Ordering::Relaxed));
+        tcp.write(c.tun_tcp.load(Ordering::Relaxed));
+        udp.write(c.tun_udp.load(Ordering::Relaxed));
     }
     OK
 }

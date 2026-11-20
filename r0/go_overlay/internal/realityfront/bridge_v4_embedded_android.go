@@ -55,6 +55,7 @@ extern int32_t wbd_m0_embedded_go_public_native_health_effective(uint64_t,const 
 
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_business_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_return_path_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_dns_ingress_observed(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_predead(uint64_t,uint32_t *);
@@ -390,6 +391,17 @@ type V4PublicOuterCounters struct{
     FirstWireBytes,RepairAcceptedWireBytes,RepairUncertainWireBytes uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){return V4PublicOuterCounters{},ErrAdmissionUnsupported}
+
+func (b *v4EmbeddedNativeBridge) originalAndroidReturnPathReceipts()(result [9]uint64,err error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return result,errV4Embedded}
+    var fields [9]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_loop_return_path_receipts(
+        C.uint64_t(b.handle),&fields[0],&fields[1],&fields[2],
+        &fields[3],&fields[4],&fields[5],&fields[6],&fields[7],&fields[8])
+    if rc!=0{return result,fmt.Errorf("%w: real original M4 return-path counters=%d",errV4Embedded,int(rc))}
+    for i:=range fields{result[i]=uint64(fields[i])}
+    return result,nil
+}
 // Only original Rust M4 worker-owned counters. Unavailable is not PASS.
 func (b *v4EmbeddedNativeBridge) originalAndroidBusinessReceipts()(tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP uint64,err error){
     if b==nil||!b.committed||b.stopped||b.handle==0{return 0,0,0,0,0,0,errV4Embedded}
@@ -513,6 +525,10 @@ type V4PublicLoopPulse struct{
     // Android: real original Rust M4 business path; Linux leaves these zero.
     TunIPv4Admitted,TunIPv4Rejected,BusinessRawCopied,BusinessReverseTun uint64
     DnsUDP53Seen,DnsTCP53Seen uint64
+    // A45 Android real RAW RX and selected-App inner protocol evidence.
+    RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
+    RawAuthRejected,ReverseTunWriteFailed uint64
+    TunICMPSeen,TunTCPSeen,TunUDPSeen uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
     // Before Native Health terminal: trigger ORIGINAL Go cold B while A
@@ -559,7 +575,13 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
         "%w: real Bionic underlay scope readback=%d",errV4Embedded,int(rc))}
     tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP,businessErr:=b.originalAndroidBusinessReceipts()
     if businessErr!=nil{return V4PublicLoopPulse{},businessErr}
+    r,returnErr:=b.originalAndroidReturnPathReceipts()
+    if returnErr!=nil{return V4PublicLoopPulse{},returnErr}
     return V4PublicLoopPulse{
+        RawPollReady:r[0],RawParseFailed:r[1],RawParsed:r[2],
+        RawAuthenticated:r[3],RawAuthRejected:r[4],
+        ReverseTunWriteFailed:r[5],TunICMPSeen:r[6],
+        TunTCPSeen:r[7],TunUDPSeen:r[8],
         TunIPv4Admitted:tunSeen,TunIPv4Rejected:tunRejected,
         BusinessRawCopied:rawCopied,BusinessReverseTun:reverseTun,
         DnsUDP53Seen:dnsUDP,DnsTCP53Seen:dnsTCP,

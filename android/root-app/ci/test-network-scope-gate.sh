@@ -426,6 +426,34 @@ assert 'TestA44OriginalUIDEffectiveRouteGetParser' in Path("r0/go_overlay/intern
 assert 'TestA44OriginalAndroidBusinessReceiptClasses' in Path("r0/go_overlay/internal/v4productcli/android_business_witness_linux_test.go").read_text()
 assert 'ANDROID_A44_ORIGINAL_RUST_BUSINESS_WITNESS_CLASSIFIER_REAL_GO_HOST_PASS' in Path("android/root-native/ci/linux-original-oracle.sh").read_text()
 assert 'wbd_m0_embedded_go_loop_business_receipts' in Path("android/root-native/build-source-locked.sh").read_text()
+# A45: do not mistake second-app ICMP outside selected UIDs for data-plane FAIL.
+# Android original Rust callback is an actual read-only M4 worker counter,
+# never shell ping, Go per-packet processing, fabricated server or UI READY.
+native=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+adapter=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+builder=Path("android/root-native/build-source-locked.sh").read_text()
+goproduct=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+gotest=Path("r0/go_overlay/internal/v4productcli/android_business_witness_linux_test.go").read_text()
+assert 'fn wbd_m0_embedded_go_loop_return_path_receipts(' in native
+assert 'originalAndroidReturnPathReceipts()' in adapter
+assert 'wbd_m0_embedded_go_loop_return_path_receipts' in builder
+assert 'stats.raw_poll_ready.fetch_add(1' in native
+assert 'stats.raw_parse_failed.fetch_add(1' in native
+assert 'stats.raw_authenticated.fetch_add(1' in native
+assert 'stats.raw_auth_rejected.fetch_add(' in native
+assert 'stats.reverse_tun_write_failed.fetch_add(' in native
+assert 'match head[9]' in native
+for field in ('tun_icmp.fetch_add(1','tun_tcp.fetch_add(1','tun_udp.fetch_add(1'):
+ assert field in native,field
+assert 'TestA45OriginalAndroidReturnPathReceiptClasses' in gotest
+assert 'ANDROID_A45_ORIGINAL_RETURN_PATH_AND_ICMP_CLASSIFIER_GO_HOST_PASS' in Path('android/root-native/ci/linux-original-oracle.sh').read_text()
+for name in ("RAW_SOCKET_READABLE","RAW_PARSE_FAILED","RAW_PARSED",
+             "RAW_AUTHENTICATED","RAW_AUTH_REJECTED","REVERSE_TUN_WRITE_FAILED",
+             "TUN_ICMP_SEEN","TUN_TCP_SEEN","TUN_UDP_SEEN"):
+ assert f'ORIGINAL_RUST_{name}' in s and f'ORIGINAL_RUST_{name}' in receipt
+ assert f'V4_PUBLIC_ANDROID_BUSINESS role=client class={name}' in s
+ assert f'"{name}"' in goproduct
+print("ANDROID_A45_ORIGINAL_M4_RETURN_PATH_ICMP_SOURCE_GATE_PASS")
 print("ANDROID_A44_ORIGINAL_M4_APP_BUSINESS_AND_UID_ROUTE_GET_SOURCE_PASS")
 print("ANDROID_A43_ORIGINAL_GO_CLIENT_RX_QUIESCE_SOURCE_GATE_PASS")
 print("ANDROID_A42_ORIGINAL_M4_POST_START_HANDOFF_SOURCE_GATE_PASS")
