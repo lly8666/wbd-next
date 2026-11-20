@@ -4275,6 +4275,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 }
 
 
+// Linux task comm is limited to 15 bytes. H2234 uses unique bounded
+// observability names for existing RX, TX, TUN reader and cold observer;
+// this is only OS-level role attribution, not an extra worker or data path.
 // Development-only perpetual owner processing, never a parallel crypto
 // implementation. Two independent Rust kernel-readiness threads; Go app
 // sender and receiver do not call per-packet RX/TX helpers. The READY poll
@@ -5423,7 +5426,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_shared_tun_open(
         recycle_send,
     });
     let worker_router=Arc::clone(&router);
-    let Ok(worker)=thread::Builder::new().name("wbd-v4-shared-tun-reader".into())
+    let Ok(worker)=thread::Builder::new().name("wbd-tun-reader".into())
         .spawn(move||run_shared_tun_reader(worker_router,recycle_recv))
     else{return INVALID};
     let Ok(mut slot)=router.worker.lock()else{
@@ -7898,7 +7901,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let stats_rx=Arc::clone(&stats);
     let raw_for_rx=Arc::clone(&raw);
     let tun_for_rx=Arc::clone(&tun);
-    let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
+    let Ok(rx)=thread::Builder::new().name("wbd-m4-rx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
@@ -8087,7 +8090,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(feature="fec2_product_record")]
     let diag_ifname=ifname.clone();
     let tx_ifname=ifname;
-    let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
+    let Ok(tx)=thread::Builder::new().name("wbd-m4-tx".into())
         .spawn(move||{
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
@@ -8479,7 +8482,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let stop_ingress=Arc::clone(&shutdown);
         let ingress_cell=Arc::clone(&cell);
         let ingress_tun=Arc::clone(&tun_for_ingress);
-        let Some(worker)=thread::Builder::new().name("wbd-original-tun-ingress".into())
+        let Some(worker)=thread::Builder::new().name("wbd-tun-ingress".into())
             .spawn(move||original_tun_ingress_worker(
                 ingress_cell,ingress_tun,stop_ingress,generation,
                 ingress_send,tun_fd
@@ -8511,7 +8514,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         let diag_port=e.flow.client_port;
         let diag_generation=e.generation;
         let diag_role=if e.server_side{"server"}else{"client"};
-        thread::Builder::new().name("wbd-original-m4-observe".into())
+        thread::Builder::new().name("wbd-m4-observe".into())
             .spawn(move||{
                 let mut last=Instant::now();
                 while !diag_stop.load(Ordering::Acquire){

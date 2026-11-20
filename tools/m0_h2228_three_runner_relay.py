@@ -391,7 +391,30 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
         # iperf3 asks both genuine kernel TCP peers for a common maximum
         # segment size; record actual negotiated MSS rather than assuming.
         args.extend(["-M",str(requested_mss)])
+    # H2234: independent, bounded /proc scheduler sampler for the exact
+    # original-Go/Rust native worker only. No WBD packet/data/owner callback.
+    # Start before iperf, stop using an owned sentinel even on iperf failure.
+    stage_probe={"status":"NOT_REQUESTED"}
+    stage_process=None
+    stop_file=pathlib.Path(str(out)+".stage.stop")
+    output_file=pathlib.Path(str(out)+".stage.jsonl")
+    if os.environ.get("WBD_H2234_TRACE")=="1" and kind=="wbd" and pidfile and duration==20:
+        stop_file.unlink(missing_ok=True)
+        script=pathlib.Path(__file__).with_name("m0_h2234_stage_sampler.py")
+        argv=["sudo","-n","python3",str(script),
+              "--pidfile",str(pidfile),"--output",str(output_file),
+              "--stop-file",str(stop_file),
+              "--source-sha",os.environ.get("GITHUB_SHA",""),
+              "--run-id",os.environ.get("GITHUB_RUN_ID",""),
+              "--interval-ms","200","--max-seconds",str(duration+12)]
+        try:
+            stage_process=subprocess.Popen(argv,stdout=subprocess.DEVNULL,
+                                           stderr=subprocess.DEVNULL)
+            stage_probe={"status":"STARTED_OUTSIDE_WBD_OWNER"}
+        except OSError as error:
+            stage_probe={"status":"NOT_RUN_SAMPLER_LAUNCH_"+type(error).__name__}
     t=time.monotonic()
+    iperf_start_mono_ns=time.monotonic_ns()
     try:
         p=subprocess.run(args,capture_output=True,text=True,timeout=duration+40)
         stdout=p.stdout;stderr=p.stderr;returncode=p.returncode
@@ -399,6 +422,30 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
         stdout=e.stdout or b"";stderr=e.stderr or b"";returncode=124
         if isinstance(stdout,bytes):stdout=stdout.decode(errors="replace")
         if isinstance(stderr,bytes):stderr=stderr.decode(errors="replace")
+    iperf_end_mono_ns=time.monotonic_ns()
+    if stage_process is not None:
+        stop_file.touch()
+        try:
+            code=stage_process.wait(timeout=4)
+            if code==0 and output_file.is_file():
+                try:
+                    footer=json.loads(output_file.read_text().splitlines()[-1])
+                    stage_probe={"status":footer.get("status","UNKNOWN_SCHEDSTAT"),
+                        "stop_reason":footer.get("stop_reason"),
+                        "sampled_intervals":footer.get("sampled_intervals",0),
+                        "threads":footer.get("threads",{}),
+                        "source":"EXTERNAL_PROC_SCHEDSTAT_NO_PACKET_CONTENTS"}
+                except (OSError,ValueError,IndexError,TypeError):
+                    stage_probe={"status":"UNKNOWN_INVALID_SCHEDSTAT_FOOTER"}
+            else:
+                stage_probe={"status":"NOT_RUN_SCHEDSTAT_PROCESS_EXIT",
+                             "returncode":code}
+        except subprocess.TimeoutExpired:
+            stage_process.terminate()
+            try:stage_process.wait(timeout=2)
+            except subprocess.TimeoutExpired:stage_process.kill()
+            stage_probe={"status":"UNKNOWN_SAMPLER_TIMEOUT_NO_ASSUMED_METRICS"}
+        stop_file.unlink(missing_ok=True)
     pathlib.Path(str(out)+".stdout.txt").write_text(stdout[-350000:])
     pathlib.Path(str(out)+".stderr.txt").write_text(stderr[-6000:])
     parsed=None;speed=None;interval=[];retransmits=None;secs=0
@@ -469,6 +516,10 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
             "tcp_mss_requested":requested_mss,
             "tcp_mss_observed":observed_mss,
             "receiver_goodput_is_actual_delivered_tcp_not_sender_bits":True,
+            "iperf_start_monotonic_ns":iperf_start_mono_ns,
+            "iperf_end_monotonic_ns":iperf_end_mono_ns,
+            "stage_sampler":stage_probe,
+            "stage_sampler_file":output_file.name if output_file.is_file() else None,
             "ramp_interval_mbps":interval,"parse_error":parsed.get("error","") if isinstance(parsed,dict) else
              stderr[-250:],"source_sha":os.environ.get("GITHUB_SHA"),
             "run_id":os.environ.get("GITHUB_RUN_ID")}
