@@ -1,0 +1,206 @@
+name: 'H2229 original Windows/Linux Normal+Game authenticated outer ACK 10ms window65535 no HOL'
+on:
+  push:
+    branches: ['fix/h2229-unified-windows-style-outer-ack-linux-window65535']
+    paths:
+      - 'crates/wbd-engine/src/v4_outer_ack_ledger.rs'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - 'crates/wbd-engine/src/v4_game_public_kernel.rs'
+      - 'crates/wbd-engine/src/v4_windows_native_runtime.rs'
+      - 'crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
+      - 'crates/wbd-engine/src/lib.rs'
+      - 'tests/test_m0_h2229_outer_ack_source.py'
+      - '.github/workflows/qa-h2229-unified-outer-ack-65535.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  static-outer-ack-source:
+    name: 'No-HOL/auth-ACK source contracts and no outer retransmission change'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Exact source guard plus six independent ACK/window assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m unittest tests.test_m0_h2229_outer_ack_source -v
+          echo H2229_STATIC_ACK_SOURCE_ONLY_PASS_NOT_WAN
+  windows-real-original-tls:
+    runs-on: windows-2025
+    timeout-minutes: 55
+    env: {GOTOOLCHAIN: local}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Source-locked overlay, Go native client, idle READY and TLS retries
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if((git rev-parse HEAD) -ne $env:GITHUB_SHA){throw 'source mismatch'}
+          python tools/prepare_windows_wiring.py > h2226-assembly.log
+          if($LASTEXITCODE -ne 0){Get-Content h2226-assembly.log -Tail 40;throw 'assembly mismatch'}
+          Push-Location legacy
+          try{
+            go test -count=1 -tags wbd_v4_embedded_go -run '^TestH222[346]' ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'H2224 idle and original TLS tests failed'}
+            go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0PLAN027WindowsColdRetryRequiresAuthenticatedDeadAndNoAppliedOS$' ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'legacy cold retry regression'}
+            go build -trimpath -tags wbd_v4_embedded_go -o ../wbd-client.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'real original-Go Windows binary failed'}
+          }finally{Pop-Location}
+      - name: Build pinned ISA-L MSVC x64 static dependency
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'NASM install failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin')|Where-Object {Test-Path (Join-Path $_ 'nasm.exe')}|Select-Object -First 1
+          if(-not $nasm){throw 'NASM missing'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'ISA-L clone failed'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if($LASTEXITCODE -ne 0){throw 'ISA-L SHA missing'}
+          $vswhere='C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath|Select-Object -First 1
+          if(-not $vsroot){throw 'MSVC tools missing'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          cmd.exe /d /s /c ('call "'+$vcvars+'" && cd isa-l && nmake /f Makefile.nmake')
+          if($LASTEXITCODE -ne 0){throw 'ISA-L MSVC compilation failed'}
+      - name: Build real original M3 Rust DLL and Go credential TLS integration
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'Rust toolchain failed'}
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          if($LASTEXITCODE -ne 0){throw 'Windows target absent'}
+          $lib=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File|Select-Object -First 1
+          if(-not $lib){throw 'ISA-L static missing'}
+          $env:WBD_ISAL_PREFIX=$lib.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_outer_ack_ledger
+          if($LASTEXITCODE -ne 0){throw 'Windows shared ACK ledger test failed'}
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_windows_owner
+          if($LASTEXITCODE -ne 0){throw 'Windows original owner regression failed'}
+          cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'Rust Windows DLL build failed'}
+          python -c 'import ctypes,os;d=ctypes.WinDLL(os.path.abspath("target/release/wbd_engine.dll"));getattr(d,"wbd_m0_win_native_v2_start");getattr(d,"wbd_m0_win_native_v1_stats");print("H2224_NATIVE_ABI_PASS")'
+          if($LASTEXITCODE -ne 0){throw 'native ABI failed'}
+          $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path target/release/wbd_engine.dll).Path
+          Push-Location legacy
+          try{
+            go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers$' ./internal/realityfront
+            if($LASTEXITCODE -ne 0){throw 'real Go TLS 3 ciphers Rust M3 integration failed'}
+          }finally{Pop-Location}
+      - name: Real compiled WinForms with same-source original Go and Rust + actual self-tests
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force delivery/h2226-windows | Out-Null
+          Copy-Item wbd-client.exe delivery/h2226-windows/wbd-client.exe
+          Copy-Item target/release/wbd_engine.dll delivery/h2226-windows/wbd_engine.dll
+          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory delivery/h2226-windows -SourceSHA $env:GITHUB_SHA -Version H2226-LOWRATE
+          if($LASTEXITCODE -ne 0){throw 'H2224 real WinForms source compile FAIL'}
+          $dir=(Resolve-Path delivery/h2226-windows).Path
+          $p=Start-Process -FilePath (Join-Path $dir 'WBD.exe') -ArgumentList '--self-test' -WorkingDirectory $dir -Wait -PassThru
+          $file=Join-Path $dir 'gui-test-result.json'
+          if(-not (Test-Path $file)){throw 'H2224 native GUI receipt NOT_RUN'}
+          $v=Get-Content $file -Raw|ConvertFrom-Json
+          Write-Output ('H2224_GUI_TEST_STATUS='+$v.result+' checks='+@($v.checks).Count)
+          if($p.ExitCode -ne 0 -or $v.source_sha -ne $env:GITHUB_SHA -or $v.result -ne 'PASS'){
+            Write-Output ('H2224_GUI_FAIL '+($v|ConvertTo-Json -Compress -Depth 4))
+            throw 'H2224 native GUI self-test FAIL'
+          }
+          Write-Output 'H2224_WIN_GUI_ACTUAL_PASS'
+      - name: Checksummed trial Windows original Go and Rust DLL
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force delivery/h2226-windows | Out-Null
+          Copy-Item wbd-client.exe delivery/h2226-windows/wbd-client.exe
+          Copy-Item target/release/wbd_engine.dll delivery/h2226-windows/wbd_engine.dll
+          @("SOURCE=$env:GITHUB_SHA","SCOPE=ORIGINAL_GO_TLS_PLUS_NATIVE_OS_READY",
+            "PHYSICAL_WINDOWS_TO_LINUX=NOT_RUN","PRODUCT_PASS=NO") |
+            Set-Content delivery/h2226-windows/BUILD_INFO.txt
+          Get-ChildItem delivery/h2226-windows -File |
+            ForEach-Object {('{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(),$_.Name)} |
+            Set-Content delivery/h2226-windows/SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2226-windows-simple-ready-go-rust
+          path: |
+            delivery/
+            h2226-assembly.log
+          if-no-files-found: warn
+          retention-days: 30
+  linux-arm64-native-original-tls-nat:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build H2221 original Go and Rust server
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm python3 iproute2 iputils-ping iptables conntrack openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh > h2226-arm64.log 2>&1 || { tail -n 150 h2226-arm64.log; exit 1; }
+      - name: Exact-source Linux NAT tests and randomized cold Health Rust tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
+          (cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestH2224' ./internal/v4productcli)
+          export WBD_ISAL_PREFIX="$RUNNER_TEMP/wbd-isal-plan029-$(uname -m)"
+          export WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib v4_native_health::tests::cold_
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib v4_outer_ack_ledger
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib original_presentation_ack_tests
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration --lib v4_game_public_kernel
+          echo H2224_LINUX_NAT_RUST_COLD_HEALTH_SOURCE_LOCKED_PASS
+      - name: Authentic original TLS M4 three-client double NAT TUN and Stop
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          bash tools/h2216-routed-double-nat-native.sh linux-plan029-public-bundle > h2226-nat.log 2>&1 || { tail -n 170 h2226-nat.log; exit 1; }
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('fixed-kernel-result/h2216-double-nat-proof.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['qualification']=='REAL_LINUX_NATIVE_NETNS_DOUBLE_NAT',d
+          print('H2224_LINUX_REAL_GO_RUST_DOUBLE_NAT_PASS_NOT_PHYSICAL_WINDOWS')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2226-linux-arm64-double-nat-proof
+          path: |
+            h2226-arm64.log
+            h2226-nat.log
+            fixed-kernel-result/h2216-double-nat-proof.json
+          if-no-files-found: warn
+          retention-days: 14

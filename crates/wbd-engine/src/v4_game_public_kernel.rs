@@ -27,6 +27,9 @@ use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx,RawTxError};
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
+use crate::v4_outer_ack_ledger::{
+    CosmeticAckLedger,ack_only_due,STEADY_TCP_WINDOW,
+};
 use wbd_platform::r1::StopResult;
 #[repr(C)]
 struct GamePollFd {fd:i32,events:i16,revents:i16}
@@ -43,6 +46,7 @@ struct TxLaneSwitch{
 }
 struct RxLaneSwitch{
     flow:GoFlow,raw:Arc<ScopedRawIpv4Rx>,opener:GameLaneOpener,
+    rx_seq:u32, // from EXACT new protected Go per-lane handoff
     ready:SyncSender<Arc<ScopedRawIpv4Rx>>,
 }
 #[derive(Default)]
@@ -89,6 +93,40 @@ struct RxRejectReasons {
     stale:AtomicU64,capacity:AtomicU64,scope:AtomicU64,
     stopped:AtomicU64,game:AtomicU64,
 }
+// One ACK-only IPv4/TCP control after real Game M3 AEAD/PN+TUN commit.
+// This is NOT a delivery FIFO, TCP congestion controller, M2 ACK or
+// retransmission signal. A failed optional raw send never stops the lane.
+fn original_game_ack_after_commit(
+    ledger:&mut CosmeticAckLedger,seq32:u32,wire_len:usize,now_ns:u64,
+    last_sent_ns:&mut Option<u64>,last_sent_ack:&mut u32,
+    shared_ack:&std::sync::atomic::AtomicU32,
+    shared_tx_seq:&std::sync::atomic::AtomicU32,
+    raw:&ScopedRawIpv4Tx,flow:GoFlow,generation:u32,server:bool,
+){
+    let ack=ledger.verified(seq32,wire_len);
+    // A 250ms authentic new positive span may abandon an old *appearance*
+    // hole like Windows Normal, but no received IPv4 source is withheld.
+    let expired=ledger.abandon_stalled(now_ns);
+    let next=if expired{ledger.next as u32}else{ack};
+    shared_ack.store(next,Ordering::Release);
+    if !ack_only_due(*last_sent_ns,now_ns,
+        next!=*last_sent_ack || expired || ledger.future.len()>0){return}
+    let reverse=if server{Ipv4Tuple{
+        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+        src_port:flow.server_port,dst_port:flow.client_port,
+    }}else{Ipv4Tuple{
+        src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+        src_port:flow.client_port,dst_port:flow.server_port,
+    }};
+    // No unconditional SACK: this legacy Game attach does not yet carry
+    // the original-Go SACK-negotiated bit. A pure cumulative ACK mirrors
+    // the existing Windows Game wire without spoofing a SYN capability.
+    if raw.send_presentation_ack_sack(generation,reverse,
+        shared_tx_seq.load(Ordering::Acquire),next,&[]).is_ok(){
+        *last_sent_ns=Some(now_ns);
+        *last_sent_ack=next;
+    }
+}
 pub(crate) struct GameKernelOwner{
     stop:Arc<AtomicBool>,threads:Vec<JoinHandle<()>>,
     tun:Arc<ScopedTunSink>,
@@ -134,7 +172,7 @@ fn w103_game_outer_off_blocks_reused_logical_ids_but_keeps_new_parity(){
 impl GameKernelOwner{
     pub(crate) fn start(
         adapter:Arc<Mutex<GameAdapter>>,flows:Vec<GoFlow>,seqs:Vec<u64>,
-        server:bool,ifname:&str,ifindex:u32,fd:OwnedFd,tun_name:&str,
+        rx_seqs:Vec<u32>,server:bool,ifname:&str,ifindex:u32,fd:OwnedFd,tun_name:&str,
         generation:u32,outer_repair_enabled:bool,
         peer_persona:PacketPersona,authenticated_client_ip:Option<[u8;4]>,
         shared_ingress:Option<Receiver<OriginalTunIngress>>,
@@ -142,7 +180,7 @@ impl GameKernelOwner{
     )->Result<Self,()>{
         if shared_ingress.is_some()!=shared_alive.is_some(){return Err(())}
         let n=flows.len();
-        if !matches!(n,2|4)||seqs.len()!=n||generation==0||
+        if !matches!(n,2|4)||seqs.len()!=n||rx_seqs.len()!=n||generation==0||
             ifindex==0||ifname.is_empty()||tun_name.is_empty()||
             tun_name.len()>15||seqs.contains(&0){return Err(())}
         let tun=Arc::new(ScopedTunSink::from_owned_fd(fd,generation,tun_name)
@@ -203,6 +241,18 @@ impl GameKernelOwner{
                 last_initial_id:None
             });
         }
+        // Per-lane owned sender sequence and authenticated cumulative ACK
+        // are cosmetic TCP presentation only; never M3 delivery authority.
+        let outer_tx_seq=Arc::new(seqs.iter()
+            .map(|seq|std::sync::atomic::AtomicU32::new(*seq as u32))
+            .collect::<Vec<_>>());
+        let tx_outer_seq=Arc::clone(&outer_tx_seq);
+        let rx_outer_seq=Arc::clone(&outer_tx_seq);
+        let outer_ack_next=Arc::new(rx_seqs.iter()
+            .map(|seq|std::sync::atomic::AtomicU32::new(*seq))
+            .collect::<Vec<_>>());
+        let tx_outer_ack=Arc::clone(&outer_ack_next);
+        let rx_outer_ack=Arc::clone(&outer_ack_next);
         // Per-lane original outer ACK observed only AFTER real AEAD opened
         // a reverse DATA record. Atomics replace per-packet queues/locks;
         // each receiver owns one index, existing TX processes batched hints.
@@ -296,6 +346,7 @@ impl GameKernelOwner{
                                         Ok((actual,opener)) if actual==slot=>{
                                             lanes[slot].flow=change.flow;
                                             lanes[slot].seq=change.seq;
+                                            tx_outer_seq[slot].store(change.seq as u32,Ordering::Release);
                                             lanes[slot].last_initial_id=None;
                                             observed_hints[slot]=tx_hints[slot]
                                                 .load(Ordering::Acquire);
@@ -563,7 +614,7 @@ impl GameKernelOwner{
                                 src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
                             };
                             let presentation=Presentation{
-                                ack32:1,advertised_window:4096,ip_id:(pn as u16).wrapping_add(75),
+                                ack32:tx_outer_ack[index].load(Ordering::Acquire),advertised_window:STEADY_TCP_WINDOW,ip_id:(pn as u16).wrapping_add(75),
                                 persona:peer_persona
                             };
                             let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
@@ -586,6 +637,7 @@ impl GameKernelOwner{
                                     }
                                 }
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
+                                tx_outer_seq[index].store(item.seq as u32,Ordering::Release);
                                 // Count ACTUAL successful same-lane repeat
                                 // sends, not a fake zero returned by FFI.
                                 // OFF rejects this situation before send_one;
@@ -710,7 +762,7 @@ impl GameKernelOwner{
                                                     src_port:sp,dst_port:dp,
                                                 };
                                                 let presentation=Presentation{
-                                                    ack32:1,advertised_window:4096,
+                                                    ack32:tx_outer_ack[0].load(Ordering::Acquire),advertised_window:STEADY_TCP_WINDOW,
                                                     ip_id:(pn as u16).wrapping_add(75),
                                                     persona:peer_persona,
                                                 };
@@ -722,6 +774,7 @@ impl GameKernelOwner{
                                                         eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane=1 reason=health_seq");
                                                     }
                                                     lane.seq=lane.seq.saturating_add(n as u64);
+                                                    tx_outer_seq[0].store(lane.seq as u32,Ordering::Release);
                                                     tx_copy.fetch_add(1,Ordering::Relaxed);
                                                 }
                                             }
@@ -772,7 +825,7 @@ impl GameKernelOwner{
                                 };
                                 let view=copy.frozen(item.key);
                                 item.raw.send_one(generation,&view,tuple,Presentation{
-                                    ack32:1,advertised_window:4096,
+                                    ack32:tx_outer_ack[copy.lane].load(Ordering::Acquire),advertised_window:STEADY_TCP_WINDOW,
                                     ip_id:(copy.pn as u16).wrapping_add(76),
                                     persona:peer_persona
                                 }).is_ok()
@@ -847,6 +900,12 @@ impl GameKernelOwner{
             let mut lane_opener=lane_openers.next().ok_or(())?;
             let mut flow=flows[i];
             let mut raw=Arc::clone(&rx[i]);
+            let raw_for_ack=Arc::clone(&tx[i]);
+            let rx_presentation_seq=Arc::clone(&rx_outer_seq);
+            let rx_presentation_ack=Arc::clone(&rx_outer_ack);
+            let mut ack_ledger=CosmeticAckLedger::new(rx_seqs[i]);
+            let mut ack_last_sent=rx_seqs[i];
+            let mut ack_last_ns=None::<u64>;
             let (rx_sender,rx_commands)=mpsc::sync_channel::<RxLaneSwitch>(1);
             rx_lane_switch.push(rx_sender);
             let receiver_owner=Arc::clone(&rx_owner);
@@ -880,6 +939,10 @@ impl GameKernelOwner{
                         let old=std::mem::replace(&mut raw,change.raw);
                         flow=change.flow;
                         lane_opener=change.opener;
+                        ack_ledger=CosmeticAckLedger::new(change.rx_seq);
+                        ack_last_sent=change.rx_seq;
+                        ack_last_ns=None;
+                        rx_presentation_ack[i].store(change.rx_seq,Ordering::Release);
                         let _=change.ready.send(old);
                     }
                     let (src,dst,sp,dp)=if server{
@@ -888,7 +951,7 @@ impl GameKernelOwner{
                         (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
                     };
                     let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
-                    let (len,_,ack32)=match raw.recv_one_with_ack_into(
+                    let (len,seq32,ack32)=match raw.recv_one_with_ack_into(
                         generation,&mut wire,tuple,peer_persona
                     ){
                         Ok(data)=>data,
@@ -936,6 +999,10 @@ impl GameKernelOwner{
                             ((last>>32).wrapping_add(1)<<32)|u64::from(ack32),
                             Ordering::Release);
                     }
+                    // Like the Windows native client, cumulative ACK is
+                    // accounted only after genuine AEAD/PN + successful
+                    // Game/FEC TUN commit. This local closure never waits for
+                    // an older source or controls logical first-delivery.
                     let before_lock=timing.then(Instant::now);
                     #[cfg(feature="fec2_product_record")]
                     if fec_enabled{
@@ -1004,6 +1071,13 @@ impl GameKernelOwner{
                                 };
                                 if all_written&&committed.is_ok(){
                                     recv_count.fetch_add(wrote_count,Ordering::Relaxed);
+                                    original_game_ack_after_commit(
+                                        &mut ack_ledger,seq32,len,
+                                        rx_start.elapsed().as_nanos().min(u64::MAX as u128) as u64,
+                                        &mut ack_last_ns,&mut ack_last_sent,
+                                        &rx_presentation_ack[i],&rx_presentation_seq[i],
+                                        &raw_for_ack,flow,generation,server
+                                    );
                                 }else if committed.is_err()||wrote_count>0{
                                     // Partial batch cannot be rolled back after
                                     // a TUN syscall: fail closed, no false success.
@@ -1073,6 +1147,13 @@ impl GameKernelOwner{
                                 recv_rejected.fetch_add(1,Ordering::Relaxed);
                             }else if finished.is_ok(){
                                 recv_count.fetch_add(1,Ordering::Relaxed);
+                                original_game_ack_after_commit(
+                                    &mut ack_ledger,seq32,len,
+                                    rx_start.elapsed().as_nanos().min(u64::MAX as u128) as u64,
+                                    &mut ack_last_ns,&mut ack_last_sent,
+                                    &rx_presentation_ack[i],&rx_presentation_seq[i],
+                                    &raw_for_ack,flow,generation,server
+                                );
                             }else{
                                 // A committed-to-TUN but stale/invalid receive
                                 // cannot safely be reported as delivered once.
@@ -1134,7 +1215,7 @@ impl GameKernelOwner{
     /// TX/RX threads; only the selected RX raw socket and lane AEAD/PN
     /// owner are switched. This never touches shared TUN/FEC/dedup ownership.
     pub(crate) fn replace_one_authenticated_lane(
-        &mut self,slot:usize,flow:GoFlow,seq:u64,
+        &mut self,slot:usize,flow:GoFlow,seq:u64,rx_seq:u32,
         prepared:OriginalGameLaneRekey,
     )->Result<(),()>{
         if self.stop.load(Ordering::Acquire)||slot>=self.rx.len()||
@@ -1157,7 +1238,7 @@ impl GameKernelOwner{
             .map_err(|_|())??;
         let (rx_ack,rx_done)=mpsc::sync_channel(1);
         self.rx_lane_switch[slot].try_send(RxLaneSwitch{
-            flow,raw:Arc::clone(&new_raw),opener,ready:rx_ack
+            flow,raw:Arc::clone(&new_raw),opener,rx_seq,ready:rx_ack
         }).map_err(|_|())?;
         let retired=rx_done.recv_timeout(Duration::from_secs(2))
             .map_err(|_|())?;

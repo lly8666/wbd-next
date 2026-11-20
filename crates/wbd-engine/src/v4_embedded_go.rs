@@ -961,6 +961,10 @@ struct GameGroupNative{
     flows:Vec<crate::v4_protected_handoff::GoFlow>,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     tx_seqs:Vec<u64>,
+    // Exact originally authenticated Go per-lane reverse TCP receive anchor.
+    // Game pure ACK must reset this boundary on every single-lane rekey.
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    rx_seqs:Vec<u32>,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     drivers:Option<crate::v4_game_public_kernel::GameKernelOwner>,
 }
@@ -1351,7 +1355,7 @@ fn fec2_probe_real_kernel_raw_once(
         src_port:flow.server_port,dst_port:flow.client_port,
     };
     let presentation=Presentation{
-        ack32:1,advertised_window:4096,ip_id:43,
+        ack32:1,advertised_window:crate::v4_outer_ack_ledger::STEADY_TCP_WINDOW,ip_id:43,
         persona:PacketPersona::Legacy,
     };
     let raw=Arc::clone(e.raw_tx.as_ref().ok_or(BAD_STAGE)?);
@@ -2081,7 +2085,7 @@ fn fec2_probe_real_frozen_repair_one(
         src_port:flow.server_port,dst_port:flow.client_port,
     };
     let presentation=Presentation{
-        ack32:1,advertised_window:4096,ip_id:43,
+        ack32:1,advertised_window:crate::v4_outer_ack_ledger::STEADY_TCP_WINDOW,ip_id:43,
         persona:PacketPersona::Legacy,
     };
     let sender=e.fec2_receipt_sender.as_mut().ok_or(BAD_STAGE)?;
@@ -2286,7 +2290,7 @@ fn fec2_probe_real_frozen_repair_prefix_two(
         src_port:flow.server_port,dst_port:flow.client_port,
     };
     let presentation=Presentation{
-        ack32:1,advertised_window:4096,ip_id:43,
+        ack32:1,advertised_window:crate::v4_outer_ack_ledger::STEADY_TCP_WINDOW,ip_id:43,
         persona:PacketPersona::Legacy,
     };
     let sender=e.fec2_receipt_sender.as_mut().ok_or(BAD_STAGE)?;
@@ -2936,18 +2940,19 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         cold,server,wbd_types::TunnelKey{slot:14,generation},generation
     ).map_err(|_|INVALID)?;
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-    let (flows,tx_seqs)={
+    let (flows,tx_seqs,rx_seqs)={
         let mut ordered=locks.iter().map(|e|{
             let lane=e.owner.normal_firstsend_identity()
                 .map(|(k,_)|k.slot).unwrap_or(0);
-            (lane,e.flow,u64::from(e.game_tx_boundary))
+            (lane,e.flow,u64::from(e.game_tx_boundary),e.rx_boundary)
         }).collect::<Vec<_>>();
         ordered.sort_by_key(|v|v.0);
         if ordered.iter().enumerate().any(|(i,x)|x.0!=i as u32+1||x.2==0){
             return Err(INVALID)
         }
         (ordered.iter().map(|v|v.1).collect::<Vec<_>>(),
-         ordered.iter().map(|v|v.2).collect::<Vec<_>>())
+         ordered.iter().map(|v|v.2).collect::<Vec<_>>(),
+         ordered.iter().map(|v|v.3).collect::<Vec<_>>())
     };
     r.game_groups.insert(group_handle,GameGroupNative{
         adapter:Arc::new(Mutex::new(adapter)),handles:ordered_handles,
@@ -2966,6 +2971,8 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         flows,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         tx_seqs,
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        rx_seqs,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         drivers:None,
     });
@@ -3382,7 +3389,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
         let Some(c)=r.entries.get(&new_handle)else{return UNKNOWN};
         Arc::clone(c)
     };
-    let (cold,new_flow,new_seq,lease)={
+    let (cold,new_flow,new_seq,new_rx,lease)={
         let Ok(mut e)=cell.lock()else{return BAD_STAGE};
         if e.phase!=PH_ACTIVE||e.game_joined||e.protected_features!=7||
             e.game_pending_cold.is_none()||
@@ -3395,7 +3402,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
         // original M1 handle. No independent unprotected grant exists.
         e.game_joined=true;
         (e.game_pending_cold.take().expect("cold above"),e.flow,
-         u64::from(e.game_tx_boundary),e.client_lease_ipv4)
+         u64::from(e.game_tx_boundary),e.rx_boundary,e.client_lease_ipv4)
     };
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
@@ -3426,13 +3433,14 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
         }
     };
     let Some(driver)=g.drivers.as_mut()else{return BAD_STAGE};
-    if driver.replace_one_authenticated_lane(slot,new_flow,new_seq,prepared).is_err(){
+    if driver.replace_one_authenticated_lane(slot,new_flow,new_seq,new_rx,prepared).is_err(){
         driver.fail_closed_after_hot_rekey();
         return BAD_STAGE
     }
     g.handles[slot]=new_handle;
     g.flows[slot]=new_flow;
     g.tx_seqs[slot]=new_seq;
+    g.rx_seqs[slot]=new_rx;
     OK
 }
 
@@ -3484,7 +3492,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
     #[cfg(not(target_os="linux"))]
     let (ingress,alive)=(None,None);
     let owner=crate::v4_game_public_kernel::GameKernelOwner::start(
-        Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),e.server,
+        Arc::clone(&e.adapter),e.flows.clone(),e.tx_seqs.clone(),
+        e.rx_seqs.clone(),e.server,
         ifname,ifindex,dup,tunname,(group>>32) as u32,
         e.outer_repair_enabled,e.peer_persona,
         // Client verified /32 is the shared TUN *outbound* authority; it
@@ -4241,7 +4250,7 @@ fn tun_to_raw(handle:u64,ifindex:u32)->Result<(u64,u32,u32,u32),i32>{
         src_port:flow.client_port,dst_port:flow.server_port,
     }};
     let presentation=Presentation{
-        ack32:1,advertised_window:4096,ip_id:43,
+        ack32:1,advertised_window:crate::v4_outer_ack_ledger::STEADY_TCP_WINDOW,ip_id:43,
         persona:PacketPersona::Legacy,
     };
     let full=e.owner.submit_scoped_raw_tx(raw,tuple,presentation,MonoNs(0))
@@ -5794,6 +5803,8 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     last_sack_tx_ns:&mut u64,
     #[cfg(feature="fec2_product_record")]
+    last_ack_sent:&mut u32,
+    #[cfg(feature="fec2_product_record")]
     feedback:Option<&Arc<Mutex<wbd_recovery::RxFeedbackState>>>,
     #[cfg(feature="fec2_product_record")]
     quality:Option<&Arc<Mutex<LinuxQualityRx>>>,
@@ -6021,29 +6032,32 @@ fn background_raw_once(
         }
     }
     #[cfg(feature="fec2_product_record")]
-    if sack_negotiated && outer.is_some(){
+    if authenticated_at!=0 && outer.is_some(){
+        // H2229: Windows-style authenticated cumulative ACK and optional
+        // negotiated future-range SACK in BOTH directions, including one-way
+        // lossless TCP business. Never require outer repair, M2 feedback
+        // maturity, packet reordering or any TUN-delivery ACK to send.
         let now=loop_now().0;
-        // One optional ACK-only packet per >=20ms real RX activity, only
-        // while authenticated future bytes prove an actual outer hole.
-        // No empty ACK traffic or extra TLS/AEAD exchange on a lossless link.
-        if abandoned||now.saturating_sub(*last_sack_tx_ns)>=20_000_000 {
-            let sacks=presentation_ack.sacks();
-            // Existing builder sends plain ACK if the old SACKs are all
-            // abandoned: no new wire control type or crypto record.
-            if !sacks.is_empty()||abandoned{
-                let seq=outer.and_then(|own|own.lock().ok().map(|o|
-                    o.outer_ack.highest_sent_end() as u32));
-                if let Some(seq32)=seq{
-                    let reverse=if server_side{Ipv4Tuple{
-                        src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
-                        src_port:flow.server_port,dst_port:flow.client_port,
-                    }}else{Ipv4Tuple{
-                        src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
-                        src_port:flow.client_port,dst_port:flow.server_port,
-                    }};
-                    if sack_tx.send_presentation_ack_sack(
-                        generation,reverse,seq32,presentation_ack.next as u32,&sacks
-                    ).is_ok(){*last_sack_tx_ns=now;}
+        let sacks=if sack_negotiated{presentation_ack.sacks()}else{Vec::new()};
+        let next=presentation_ack.next as u32;
+        let changed=next!=*last_ack_sent||!sacks.is_empty()||abandoned;
+        let prior=(*last_sack_tx_ns!=0).then_some(*last_sack_tx_ns);
+        if crate::v4_outer_ack_ledger::ack_only_due(prior,now,changed){
+            let seq=outer.and_then(|own|own.lock().ok().map(|o|
+                o.outer_ack.highest_sent_end() as u32));
+            if let Some(seq32)=seq{
+                let reverse=if server_side{Ipv4Tuple{
+                    src_ip:&flow.server_ip,dst_ip:&flow.client_ip,
+                    src_port:flow.server_port,dst_port:flow.client_port,
+                }}else{Ipv4Tuple{
+                    src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
+                    src_port:flow.client_port,dst_port:flow.server_port,
+                }};
+                if sack_tx.send_presentation_ack_sack(
+                    generation,reverse,seq32,next,&sacks
+                ).is_ok(){
+                    *last_sack_tx_ns=now;
+                    *last_ack_sent=next;
                 }
             }
         }
@@ -7070,7 +7084,7 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
                     {e.counters.outer_presentation_ack.load(Ordering::Acquire)}
                     #[cfg(not(feature="fec2_product_record"))]
                     {1}
-                },advertised_window:4096,ip_id:43,
+                },advertised_window:crate::v4_outer_ack_ledger::STEADY_TCP_WINDOW,ip_id:43,
                 persona:PacketPersona::Legacy,
             });
         }
@@ -7555,7 +7569,7 @@ fn background_original_repair_once(
         src_port:flow.client_port,dst_port:flow.server_port,
     }};
     let presentation=Presentation{
-        ack32,advertised_window:4096,ip_id:43,
+        ack32,advertised_window:crate::v4_outer_ack_ledger::STEADY_TCP_WINDOW,ip_id:43,
         persona:PacketPersona::Legacy,
     };
     let mut repaired=0;
@@ -7931,6 +7945,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut rx_presentation_ack=OriginalPresentationAck::new(rx_anchor);
             #[cfg(feature="fec2_product_record")]
             let mut last_sack_tx_ns=0u64;
+            #[cfg(feature="fec2_product_record")]
+            let mut last_ack_sent=rx_anchor as u32;
             while !stop_rx.load(Ordering::Acquire){
                 #[cfg(feature="fec2_product_record")]
                 if egress_diag{
@@ -7997,6 +8013,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     &raw_sack_tx,
                     #[cfg(feature="fec2_product_record")]
                     &mut last_sack_tx_ns,
+                    #[cfg(feature="fec2_product_record")]
+                    &mut last_ack_sent,
                     #[cfg(feature="fec2_product_record")]
                     feedback_rx.as_ref(),
                     #[cfg(feature="fec2_product_record")]

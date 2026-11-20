@@ -110,30 +110,9 @@ impl GameCounters{
         }
     }
 }
-// Pure TCP ACK ledger, NOT M2 applied/retransmit and NOT authentication.
-// Only the genuine Rust game opener, after Wintun copy, may call verified.
-struct AckLedger{next:u64,holes:Vec<(u64,u64)>}
-impl AckLedger{
-    fn new(start:u32)->Self{Self{next:u64::from(start),holes:Vec::with_capacity(256)}}
-    fn verified(&mut self,seq:u32,len:usize)->u32{
-        let base=self.next as u32;
-        let diff=i64::from(i32::from_ne_bytes(seq.wrapping_sub(base).to_ne_bytes()));
-        if diff < 0{return base}
-        let begin=self.next.saturating_add(diff as u64);
-        let end=begin.saturating_add(len as u64);
-        if end<=self.next{return base}
-        if begin<=self.next{self.next=end}
-        else if self.holes.len()<256{
-            let i=self.holes.partition_point(|(b,_)|*b<=begin);
-            self.holes.insert(i,(begin,end));
-        }
-        while self.holes.first().is_some_and(|(b,_)|*b<=self.next){
-            let (_,end)=self.holes.remove(0);
-            self.next=self.next.max(end);
-        }
-        self.next as u32
-    }
-}
+// Exactly the same authenticated, bounded contiguous/SACK span book as
+// Linux Game; only the presentation differs. Delivery remains independent.
+use crate::v4_outer_ack_ledger::CosmeticAckLedger as AckLedger;
 enum GameTcpColdCommand{
     Prepare(SyncSender<Result<u16,i32>>),
     Enable(u16,SyncSender<Result<u16,i32>>),

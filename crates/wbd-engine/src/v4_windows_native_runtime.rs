@@ -899,7 +899,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      e.auto_actor=Some(actor);
      Ok(())
  }
- // Only the once-per-new-RX SACK revision can justify an ACK-only
+ // Only the once-per-new-RX (now 10ms) SACK revision can justify an ACK-only
  // frame in a continuously backlogged DATA sender; otherwise do not
  // interfere with original M1 definite-copy readiness and DATA piggyback.
  fn native_ack_only_due(sack_negotiated:bool,pending_sack:bool,
@@ -1547,10 +1547,10 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
               let _=m2_outer_ack_hint_entry(&mut e,cfg.epoch,
                   cfg.luid,cfg.ifindex,ack32,&sacks[..n]);
           }
-          // RX publishes <=50 authenticated SACK snapshots per second,
+          // RX publishes <=100 authenticated SACK snapshots per second,
           // never one Go call or global lock per inner business packet.
           if sack_negotiated&&verified_batch&&
-              last_sack_publish.elapsed()>=Duration::from_millis(20){
+              last_sack_publish.elapsed()>=Duration::from_millis(10){
               last_sack_publish=Instant::now();
               let snapshot=ack.sacks();
               let mut current=match counters.sack_frame.lock(){
