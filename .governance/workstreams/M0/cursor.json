@@ -8,22 +8,18 @@
   "checkpoint_sha": "7c01f30196c69f94b7ca19aed6035f82f5d191f7",
   "progress": "in_progress",
   "task_id": "PLAN029-H2226-WIN-GUI-LOWRATE-QUALITY-NO-M2-SCOPED",
-  "current_task": "H2226既有WinGUI正式V2双向FEC/原生TXRX展示下，Auto仅复用已认证低频Quality START/CLOSE成熟摘要生成粗略反馈时延与首发损失上界；不恢复逐包M2；Windows真GUI432/432及原Go/Rust、Linux ARM64 M4/NAT/Stop Action 44671258239 2/2 SUCCESS，Windows/Linux完整包Action44672421936 2/2 SUCCESS。",
-  "why_now": "用户更正fast.com并非断链原因：部分新代际早退、成功越过初段者长稳测速不掉；同时要求质量只读现有低频包、不恢复每包M2，GUI需要可信的Auto/下行FEC与粗略链路状态。",
-  "done_when": "H2226源锁定Windows原Go/Rust+WinForms GUI432及Linux ARM64原Go/Rust NAT/Stop同源码PASS，两个完整下载包checksum与Wintun/ARM64验证；实体代际Health/服务端同Lease因果、Auto S2C真实应用档位以及全Normal/Fixed质量仍NOT_RUN。",
-  "next_action": "复现 H2226 Windows 精确source+Linux ARM64 同lease，在早退连接采H2225 cause/last_authenticated_rx_age_ms/attached_age_ms、服务端Health TX/RX/peer-retire与/32；用10组空闲>=4min与测速无关试验区分冷启动/90秒认证沉默。若设计Auto S2C档位只准已认证低频回报，禁止恢复逐包M2或猜C2S；完整PLAN029/029B出口仍OPEN。",
+  "current_task": "H2226 WinGUI低频Quality、432项及ARM64双NAT/完整包2/2 PASS_SCOPED。",
+  "why_now": "部分代际早退与fast.com无关；禁恢复逐包M2。",
+  "done_when": "CI/打包已通过；物理稳态与S2C实档NOT_RUN。",
+  "next_action": "实体采H2225 cause和Linux同lease Health/retire定位代际失联；禁逐包M2。",
   "unverified": true,
   "last_tested_source": "7c01f30196c69f94b7ca19aed6035f82f5d191f7",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json",
     "docs/evidence/M0/PLAN029-H2226-WIN432-LOWRATE-NO-M2-ARM64-FULL-PACK-20261120.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/PLAN029-H2220-H2216V2-R3-FECMAX-PAIRED-PHYSICAL-NO-DROP-STILL-FAIL-20261119.json",
-    "docs/devlog/M0/20261119-H2223-READY-IS-ACTIVATION-NOT-BUSINESS-DELIVERY.md",
-    "docs/devlog/M0/20261120-H2225-FASTCOM-UPLINK-DEAD90-DIAGNOSTIC.md",
     "docs/devlog/M0/20261120-H2226-WIN-GUI-LOWRATE-V2-NO-M2-GENERATION-HEALTH.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2226源 7c01f/PR51 merge88b4 完成WinGUI V2低频认证Quality估算、双向FEC状态不冒充、原生TXRX；Windows GUI432+ARM64 M4/NAT Action44671258239 2/2、完整打包44672421936 2/2 PASS_SCOPED。用户说fast.com无因果；异常部分代际早退原因需实体双端Health证据；Auto S2C生效档位未知，Normal/Fixed无样本未知。长期稳定/完整029、029B仍OPEN。"
+  "partial_summary": "Action44671258239/44672421936 2/2 PASS；GUI432；实体长稳、Auto S2C及Normal/Fixed质量仍OPEN。"
 }
