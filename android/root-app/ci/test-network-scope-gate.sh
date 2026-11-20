@@ -58,6 +58,12 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootRouteKeyV2.java \
   android/root-app/ci/RootRouteKeyV2Test.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootRouteKeyV2Test
+# A38 actual production AES-GCM record codec with standard JVM cipher;
+# AndroidKeyStore adapter source is separately compiled by signed SDK36 APK.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootSavedCredentialRecord.java \
+  android/root-app/ci/RootSavedCredentialRecordTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootSavedCredentialRecordTest
 # Exact production Root Service diagnostic writer, not a fabricated
 # Android guest or Go/TLS success. Verify fixed enums, bounded retention,
 # no untrusted metadata and Device acceptance report semantics.
@@ -324,6 +330,29 @@ assert 'args.add("--tls-verify-server")' in argv
 for ev in ("ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED","ORIGINAL_GO_TLS_CERT_VERIFY_ENABLED"):
  assert ev in s and ev in receipt
 print("ANDROID_A37_MAIN_DEFAULT_TLS_CERT_VERIFY_OFF_SOURCE_PASS")
+# A38: prove no second forced verify in the REAL protected admission;
+# the user's A37 device showed disabled at parse but unknown CA at TLS.
+assert 'tlsCfg.VerifyServer=true' not in go_admission
+assert 'tlsCfg:=cfg.TLS' in go_admission
+assert 'V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_EFFECTIVE role=client class=DISABLED' in go_admission
+for ev in ('ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_DISABLED',
+           'ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_ENABLED'):
+ assert ev in s and ev in receipt
+print("ANDROID_A38_NO_ORIGINAL_ADMISSION_CERT_OVERRIDE_SOURCE_GATE_PASS")
+# UI plaintext secrets never go to SharedPreferences, Intent or logging.
+store=Path("android/root-app/src/org/wbdnext/rootclient/RootEncryptedCredentialStore.java").read_text()
+codec=Path("android/root-app/src/org/wbdnext/rootclient/RootSavedCredentialRecord.java").read_text()
+for token in ('AndroidKeyStore','KeyGenParameterSpec','KeyProperties.BLOCK_MODE_GCM',
+              'getNoBackupFilesDir()','AtomicFile','Os.fchmod','0600'):
+ assert token in store
+for token in ('AES/GCM/NoPadding','updateAAD(AAD)','cipher.doFinal','Arrays.fill'):
+ assert token in codec
+assert 'RootEncryptedCredentialStore.save(this,secret,keyInput)' in a
+assert 'RootEncryptedCredentialStore.load(this)' in a
+assert 'RootEncryptedCredentialStore.clear(this)' in a
+assert 'password.setText("")' in a and 'routeKey.setText("")' in a
+assert 'request.putExtra("password"' not in a and 'request.putExtra("route_key"' not in a
+print("ANDROID_A38_KEYSTORE_ENCRYPTED_SECRET_AUTOFILL_SOURCE_GATE_PASS")
 assert 'v4AndroidCertFailureReason(err)' in go_admission
 for e in ("ROOT_RESTORE_COMPLETE","ROOT_RESTORE_FAILED"):
  assert e in s and e in receipt and e in report

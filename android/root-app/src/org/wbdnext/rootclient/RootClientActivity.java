@@ -275,6 +275,9 @@ public final class RootClientActivity extends Activity {
             // derived 32B key is handed to original Go's private hex file;
             // never the human short key, Intent extra or Go argv.
             String key=RootRouteKeyCache.resolve(this,sni,keyInput);
+            // A38: save only original UI input, never the 32-byte derived
+            // route key, native argv or unencrypted SharedPreferences.
+            RootEncryptedCredentialStore.save(this,secret,keyInput);
             // Go owns the same standard TLS/auth, Rust M4 and UID Stop.
             privateText("wbd-pass.secret",secret+"\n");
             privateText("wbd-route.secret",key+"\n");
@@ -304,8 +307,8 @@ public final class RootClientActivity extends Activity {
             status.setText(verifyTLS
                 ?"Root start — strict TLS server certificate validation ON"
                 :"Root start — TLS certificate validation OFF (main default)");
-            password.setText("");
-            routeKey.setText("");
+            // Preserve on-screen values for another Start in this Activity.
+            // The keystore-backed snapshot also restores them after restart.
         }catch(Exception e){
             status.setText("START REJECTED: "+e.getMessage());
         }
@@ -376,11 +379,42 @@ public final class RootClientActivity extends Activity {
         routeKey=input(pane,"Route Key：主线 v2 短 Key（8–32 位英文/数字）或传统 64 位 Hex",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
         TextView keyHelp=new TextView(this);
-        keyHelp.setText("新功能：短 Key 采用与 Linux/Windows 一样的离线 PBKDF2-HMAC-SHA256 v2；"+
-            "只有派生后的 32 字节 Hex 交给原 Go。缓存只保存派生密钥，不保存短口令，"+
-            "放在 App 私有不备份目录。服务端须配置同一 v2 短 Key；"+
-            "8 位人工口令强度较弱，建议随机 24–32 位。没有任何线上协商或隐式回退。");
+        keyHelp.setText("短 Key 使用与 Linux/Windows 一样的离线 PBKDF2-HMAC-SHA256 v2；"+
+            "原Go只接收派生后的32字节Hex。派生缓存不存明文口令；若选择保存，"+
+            "原始短Key单独由Android Keystore AES-GCM加密后存在不备份目录。"+
+            "服务端须使用同一Key；建议随机24–32位。没有线上协商或隐式回退。");
         pane.addView(keyHelp);
+        TextView rememberHint=new TextView(this);
+        rememberHint.setText("密码与原始简版RouteKey可保存在本机Android Keystore加密记录中，"+
+            "下次打开APK自动填入；默认不随Android备份迁移。");
+        pane.addView(rememberHint);
+        Button saveSecrets=new Button(this);
+        saveSecrets.setText("保存密码 / RouteKey（设备加密，重开自动填入）");
+        saveSecrets.setOnClickListener(v->{
+            try{
+                RootEncryptedCredentialStore.save(this,password.getText().toString(),
+                    routeKey.getText().toString());
+                status.setText("密码和RouteKey已在本机加密保存");
+            }catch(Exception failure){
+                status.setText("保存失败：请检查密码/RouteKey格式或系统Keystore");
+            }
+        });
+        pane.addView(saveSecrets);
+        Button clearSecrets=new Button(this);
+        clearSecrets.setText("清除已保存密码 / RouteKey");
+        clearSecrets.setOnClickListener(v->new AlertDialog.Builder(this)
+            .setTitle("清除保存的登录凭据")
+            .setMessage("仅删除本APK加密保存的密码/原始RouteKey和Keystore密钥，不影响当前Root网络会话或其他客户端。")
+            .setNegativeButton("取消",null)
+            .setPositiveButton("清除",(dialog,which)->{
+                try{
+                    RootEncryptedCredentialStore.clear(this);
+                    password.setText("");
+                    routeKey.setText("");
+                    status.setText("本机保存的密码和RouteKey已清除");
+                }catch(Exception failure){status.setText("清除失败：请检查设备加密存储");}
+            }).show());
+        pane.addView(clearSecrets);
         tlsVerifyServer=new CheckBox(this);
         tlsVerifyServer.setText("严格验证TLS服务器证书和SNI（默认关闭，主线兼容）");
         tlsVerifyServer.setChecked(false);
@@ -464,6 +498,16 @@ public final class RootClientActivity extends Activity {
         setContentView(scroll);
         chooseNetworks();
         chooseInstalledApplications();
+        try{
+            RootSavedCredentialRecord.Secrets saved=
+                RootEncryptedCredentialStore.load(this);
+            if(saved!=null){
+                password.setText(saved.password);
+                routeKey.setText(saved.routeKey);
+            }
+        }catch(Exception failure){
+            status.setText("已保存凭据无法读取：设备密钥不可用或加密记录损坏；请手动重新保存");
+        }
     }
     @Override protected void onResume(){
         super.onResume();

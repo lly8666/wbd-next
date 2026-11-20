@@ -105,6 +105,10 @@ export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
 # A34 source-locked original-Go TLS cold error/deadline classifier regression.
 (cd legacy && timeout 180s go test -count=1 -run '^TestV4AndroidCold(FixedFailureClasses|DeadlineUnknownIsNotMisreported)$' ./internal/realityfront)
 echo ANDROID_A34_ORIGINAL_GO_TLS_CLASSIFIER_HOST_PASS
+# A38: actually run the genuine original protected admission 3-way
+# self-signed TLS policy test (not a fake TLS verdict or source grep).
+(cd legacy && timeout 180s go test -count=1 -run '^TestA38OriginalProtectedAdmissionCertVerifyPolicy$' ./internal/realityfront)
+echo ANDROID_A38_ORIGINAL_PROTECTED_TLS_CERT_POLICY_REAL_GO_HOST_PASS
 for role in client server;do
   (cd legacy && go build -trimpath -buildvcs=false \
     -tags wbd_v4_embedded_go,wbd_v4_fec2_product \

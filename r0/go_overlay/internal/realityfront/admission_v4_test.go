@@ -1356,3 +1356,55 @@ func TestV4AndroidCertificateReasonTypedNoBypass(t *testing.T){
         })
     }
 }
+
+
+// A38 real original protected admission, not a mocked x509 classifier:
+// self-signed server cert, no trust roots: mainline default OFF must
+// genuinely complete uTLS+protected auth; opt-in strict must reject; and
+// strict with a matching trust root must still succeed.
+func TestA38OriginalProtectedAdmissionCertVerifyPolicy(t *testing.T){
+    cases:=[]struct{name string;verify bool;trusted bool;wantSuccess bool}{
+        {"main_default_no_cert_verify",false,false,true},
+        {"strict_unknown_authority",true,false,false},
+        {"strict_trusted_ca",true,true,true},
+    }
+    for _,tc:=range cases{
+        t.Run(tc.name,func(t *testing.T){
+            cert:=makeServerCert(t)
+            key:=[]byte("0123456789abcdef0123456789abcdef")
+            serverConn,clientConn:=newAssociationPeer(t)
+            defer serverConn.Close()
+            defer clientConn.Close()
+            serverResult:=make(chan error,1)
+            go func(){
+                _,e:=EstablishServerV4(context.Background(),serverConn,ServerAdmissionConfig{
+                    TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
+                        TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:4*time.Second},
+                    ExpectedUsername:"a38user",ExpectedPassword:"a38password",ServerLimit:1400,
+                },V4ServerOptions{DataPlaneReady:true})
+                serverResult<-e
+            }()
+            clientTLS:=ClientConfig{ServerName:"target.test",RouteKey:key,
+                VerifyServer:tc.verify,Timeout:4*time.Second}
+            if tc.trusted{clientTLS.RootCAs=v4TestRoots(cert)}
+            client,err:=EstablishClientV4(context.Background(),clientConn,ClientAdmissionConfig{
+                TLS:clientTLS,Username:"a38user",Password:"a38password",
+                TunnelID:[]byte("a38-stable-tunnel"),ClientLimit:1400,
+                DesiredLanes:1,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
+            },V4ClientOptions{DataPlaneReady:true})
+            if tc.wantSuccess{
+                if err!=nil||client==nil{t.Fatalf("original protected admission rejected: %v",err)}
+            }else{
+                if err==nil||v4AndroidColdFailureClass(err)!="CERTIFICATE"{
+                    t.Fatalf("strict untrusted cert not rejected as certificate: %v",err)
+                }
+            }
+            _=clientConn.Close()
+            _=serverConn.Close()
+            select{
+            case <-serverResult:
+            case <-time.After(6*time.Second):t.Fatal("real original server handshake did not stop")
+            }
+        })
+    }
+}

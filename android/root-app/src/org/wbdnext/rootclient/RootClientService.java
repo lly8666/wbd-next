@@ -526,6 +526,10 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_MODE role=client class=ENABLED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_ENABLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_EFFECTIVE role=client class=DISABLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_DISABLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_EFFECTIVE role=client class=ENABLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_ENABLED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=OS_STORE"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_TRUST_SOURCE_OS_STORE);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=APP_PEM"))

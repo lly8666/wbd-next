@@ -130,6 +130,12 @@ A33仅在原Go Android冷路径增加真实Association Established、原Rust产�
 
 用户自行提供 A33 SOURCE `f8031ef1cf2f15e2769208d76bf2b072275b6084` 真机 33事件：原Go/0600/TUN/RAW/SYNACK候选、原Association Established与TLS Attempted OBSERVED，14,997ms后 OTHER/exit1。原Linux服务端身份、原ClientHello对端实际接收、真TLS/认证/租约、M4/Stop仍未证。A34仅观察原ClientAssociation原sendto成功后的首非空Bootstrap TX、严格4元组的AF_PACKET peer payload RX及失败时对应本会话未观察到的方向/已有RTO。补明确的原BootstrapTimeout/OS timeout/cancelled/closed；未知错误恰逢预算耗尽只记DEADLINE_ELAPSED_OTHER，不冒称根因。无新传输/伪ClientHello/密钥或错误正文入TXT，不放宽标准TLS/认证、原Network/路由/Stop。先以用户自主真机安全TXT判TX/RX，再取得同SOURCE原Linux服务端RAW/TLS收据，不先扩DNS/全App。
 
+### A38｜2026-11-20 A37实机“已关闭证书校验”仍UNKNOWN_AUTHORITY及登录凭据持久化
+
+用户API36 A37产品SOURCE `033d96f81535a5a1c5a7ffe3b6075eb82b1e3227` 两次真实日志，均 `ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED`、TUN/真实RAW SYN+SYNACK/Association、原TLS payload TX+RAW peer payload RX，最终 `TLS_HANDSHAKE_FAILED_CERTIFICATE` + `TLS_CERT_REASON_UNKNOWN_AUTHORITY`，RST guard命中并STOP_CLEARED。复核 `r0/go_overlay/internal/realityfront/admission_v4.go` 真正握手前无条件 `tlsCfg.VerifyServer=true` 覆盖A37 Go解析出的false，根因已经源码确认。A38移除该覆盖，直接保留原ClientAdmissionConfig.VerifyServer，真正握手前从同一tlsCfg记录 `TLS_CERT_VERIFY_EFFECTIVE_DISABLED/ENABLED`，新增真实自签名 TLS1.3 + Original Protected admission 三模式 Host测试：默认false无CA必须成功，严格true无CA必须拒绝，严格true信任该CA必须通过。不要再将“flag disabled”误判为实际uTLS未校验。
+
+用户另要求Settings里密码与简版原始RouteKey持久化：新增AndroidKeystore AES-256-GCM加密独立本机不备份存储（固定版本/随机IV/AAD/防篡改），只保存原始UI密码/短Key以便重开APP自动回填；原来的路线Key派生缓存仍只存派生结果，Go入口仍只读取临时app私有0600秘密文件，不进Intent/argv/SAFE TXT/backup。提供明确手动保存与清除按钮；在合法START前自动更新本机快照，不再每次点击START清空输入框。Host JDK真实AES-GCM round-trip/伪造/错误Key/非法短Key负例、Android build Keystore adapter、新版签名ARM64 APK与Linux真实Oracle同源验收。Root临时防火墙、/32/UID路由与精确恢复未改变。默认无TLS证书身份验证虽与main一致，但存在MITM风险；真正保护认证、租约、Rust M4业务及手机一键恢复仍未证。
+
 ### A37｜恢复主线原Go默认不校验TLS证书
 
 核对 `main@2e615b90` 原Go已有 `--tls-verify-server` Bool默认false，TLS.ClientConfig.VerifyServer来自此布尔值。实验A36硬编码true，用户明确请求APK恢复主线默认。A37在实验原Go恢复Bool默认false、Android APK UI未勾选严格验证、Service/真实Go argv仅勾选时传 `--tls-verify-server` 与私有0600 CA。提供固定脱敏收据DISABLED/ENABLED区分验证策略，真实标准TLS、路由Key的先验识别、保护认证、/32租约、原Rust M4、Root网络恢复等不改。默认非严格模式加密但不验证服务端证书身份，有中间人风险。需同源签名APK/Host Go Java双态/原Linux Oracle及手机用户自测。

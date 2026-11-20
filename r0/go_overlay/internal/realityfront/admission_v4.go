@@ -812,10 +812,18 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     success:=false
     defer func(){ guard.Finish(success);if !success {_=conn.Close()} }()
     tlsCfg:=cfg.TLS
-    // Certificate verification is mandatory even for an explicit route-key;
-    // key possession is NOT a server identity proof.
-    tlsCfg.VerifyServer=true
+    // Main-compatible TLS policy belongs to the original CLI opt-in.
+    // Never override it here: the Android A37 device actually showed
+    // DISABLED at parse yet UnknownAuthority at this admission boundary.
+    // A route key does not establish certificate identity when disabled.
     tlsCfg.Timeout=guard.Remaining()
+    if runtime.GOOS=="android"{
+        if tlsCfg.VerifyServer{
+            log.Print("V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_EFFECTIVE role=client class=ENABLED")
+        }else{
+            log.Print("V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_EFFECTIVE role=client class=DISABLED")
+        }
+    }
     // These are cold-path stage receipts only; the real uTLS and protected
     // admission wire remain byte-for-byte owned by their original callers.
     if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_TLS_HANDSHAKE_ATTEMPTED role=client")}

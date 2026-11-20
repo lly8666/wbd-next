@@ -579,6 +579,12 @@ public final class RootDiagnosticReportTest {
         contains(a37txt,"last_session_stage=TLS_VERIFIED_ADMISSION_UNPROVEN");
         if(a37txt.contains("ORIGINAL_GO_TLS_CERT_VERIFY_ENABLED"))
             throw new AssertionError("reported strict verification in default mode");
+        a37w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_DISABLED);
+        String effective=RootDiagnosticReport.build(a37,source,36);
+        contains(effective,"ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_DISABLED");
+        if(effective.contains("ORIGINAL_GO_TLS_CERT_VERIFY_EFFECTIVE_ENABLED"))
+            throw new AssertionError("admission TLS override falsely reported");
+        System.out.println("ANDROID_A38_ORIGINAL_ADMISSION_TLS_EFFECTIVE_OFF_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_FIXED_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A36_CERT_REASON_RESTORE_REPORT_HOST_PASS");
         System.out.println("ANDROID_A35_ORIGINAL_ROOT_RST_GUARD_RECEIPT_HOST_PASS");
