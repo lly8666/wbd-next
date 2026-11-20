@@ -7,6 +7,8 @@ on:
       - '.github/workflows/qa-h2228-three-runner-arm-relay-ge200.yml'
       - 'tools/m0_h2228_three_runner_*'
       - 'tests/test_m0_h2228_three_runner_relay.py'
+      - 'tests/test_m0_h2233_low_loss_diag.py'
+      - 'tools/m0_h2233_low_loss_diag.py'
   workflow_dispatch:
     inputs:
       model:
