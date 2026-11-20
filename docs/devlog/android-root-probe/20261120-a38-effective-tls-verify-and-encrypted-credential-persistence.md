@@ -12,3 +12,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A38真实A37 API36日志证实证书禁用但握手仍UNKNOWN_AUTHORITY；删除admission_v4隐含true覆盖、原TLS三态Host测试，新增AndroidKeystore加密持久保存密码/简版RouteKey。"}
 ```
+
+## A38a 同源测试预审发现必需参数，提前修复而不放宽原保护Admission
+
+A38新增真实Original Go Protected TLS三模式测试在编写后自检发现测试构造应和现有 `v4Pair` 一样：原 `EstablishServerV4` 必须传入合法 `NewV4EpochStore`，而受保护的 `TunnelID` 必须精确16B。首个A38测试fixture原本遗漏 `V4ServerOptions.Epochs`，并使用17B示例tunnel id。这些都只能在真实Go保护认证中直接FAIL，并非 TLS 开关回归。现把同一个真实原测试配成合法真实EpochStore及16B tunnelID，**保留原协议的所有严格长度和epoch条件**；再独立复跑同源码CI。此前产品SOURCE `81649ee12b8fb9fa9ba048c0fe355e85a292ff26` 的历史结果照实记录，不冒称测试成功。

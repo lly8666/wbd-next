@@ -1372,6 +1372,8 @@ func TestA38OriginalProtectedAdmissionCertVerifyPolicy(t *testing.T){
         t.Run(tc.name,func(t *testing.T){
             cert:=makeServerCert(t)
             key:=[]byte("0123456789abcdef0123456789abcdef")
+            store,e:=NewV4EpochStore(4)
+            if e!=nil{t.Fatal(e)}
             serverConn,clientConn:=newAssociationPeer(t)
             defer serverConn.Close()
             defer clientConn.Close()
@@ -1381,7 +1383,7 @@ func TestA38OriginalProtectedAdmissionCertVerifyPolicy(t *testing.T){
                     TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
                         TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:4*time.Second},
                     ExpectedUsername:"a38user",ExpectedPassword:"a38password",ServerLimit:1400,
-                },V4ServerOptions{DataPlaneReady:true})
+                },V4ServerOptions{DataPlaneReady:true,Epochs:store})
                 serverResult<-e
             }()
             clientTLS:=ClientConfig{ServerName:"target.test",RouteKey:key,
@@ -1389,7 +1391,7 @@ func TestA38OriginalProtectedAdmissionCertVerifyPolicy(t *testing.T){
             if tc.trusted{clientTLS.RootCAs=v4TestRoots(cert)}
             client,err:=EstablishClientV4(context.Background(),clientConn,ClientAdmissionConfig{
                 TLS:clientTLS,Username:"a38user",Password:"a38password",
-                TunnelID:[]byte("a38-stable-tunnel"),ClientLimit:1400,
+                TunnelID:[]byte("a38-stable-tun01"),ClientLimit:1400,
                 DesiredLanes:1,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
             },V4ClientOptions{DataPlaneReady:true})
             if tc.wantSuccess{
