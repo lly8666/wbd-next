@@ -721,6 +721,8 @@ type V4PublicLoopPulse struct{
     RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
     RawAuthRejected,ReverseTunWriteFailed uint64
     TunICMPSeen,TunTCPSeen,TunUDPSeen uint64
+    // Original Android native RAW RX counters / latest observed IPv4 header.
+    RawDebug [22]uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
     // Before Native Health terminal: trigger ORIGINAL Go cold B while A

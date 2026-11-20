@@ -958,6 +958,22 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_return_path_receipts(
     OK
 }
 
+// A47: read the original Android bound RAW TCP socket evidence. No new
+// datapath, no M3/replay bypass; the actual original RX FD owns every count.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_raw_rx_debug(
+    h:u64,out:*mut u64,count:usize
+)->i32{
+    if out.is_null()||count!=22{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_workers.is_none(){return BAD_STAGE}
+    let Some(rx)=e.android_raw_rx.as_ref()else{return BAD_STAGE};
+    let snap=rx.raw_diagnostic_snapshot();
+    unsafe{std::ptr::copy_nonoverlapping(snap.as_ptr(),out,count);}
+    OK
+}
+
 /// B2c2a readonly diagnostics for packets *seen* by the ONE real Rust
 /// M4 TUN worker. No answer counts, endpoint validation or delivery claims:
 /// hijack_enabled=0 until physical + tunnel DNS backend, reply inversion

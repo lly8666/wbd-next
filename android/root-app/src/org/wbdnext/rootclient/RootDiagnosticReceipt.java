@@ -8,9 +8,10 @@ import java.nio.charset.StandardCharsets;
 /**
  * App-private, bounded, credential-free native Root acceptance evidence.
  *
- * The only serializable values are fixed enum constants and a millisecond
- * timestamp. In particular: never write root generation tokens, usernames,
- * IPs, app package names, route keys, TLS errors or raw native stdout.
+ * V1 stages remain fixed enum constants. A47 additionally allows only
+ * explicitly ordered numeric original-Rust RAW IPv4 header diagnostics.
+ * These may include numeric IPv4 endpoints and ports at user request:
+ * never write credentials, tokens, TLS payload or unfiltered native stdout.
  * Diagnostics are advisory; IO errors must NOT affect original Go/Rust Stop.
  *
  * No Android framework dependency: the exact writer is host-unit-tested
@@ -225,6 +226,81 @@ final class RootDiagnosticReceipt {
         OWNER_CLEANUP_FINISHED
     }
 
+    // A47: numeric-only forensic snapshots from the original native M4;
+    // exhaustive field/order allowlist blocks native stderr/credentials.
+    private static final String[] RAW_KEYS={
+        "read",
+        "data",
+        "ack",
+        "tuple",
+        "ipck",
+        "tcpck",
+        "flags",
+        "len",
+        "opts",
+        "ttl0",
+        "other",
+        "seq",
+        "offer",
+        "recv_err",
+        "lastlen",
+        "lastttl",
+        "lastflags",
+        "src",
+        "dst",
+        "sport",
+        "dport",
+        "errno"
+    };
+    private static final String[] M4_KEYS={
+        "poll",
+        "parse_fail",
+        "parsed",
+        "auth",
+        "rejected",
+        "writefail",
+        "tun",
+        "trej",
+        "rawtx",
+        "rtun",
+        "tcp",
+        "udp",
+        "icmp",
+        "dnsudp",
+        "dnstcp",
+        "rxerr",
+        "txerr",
+        "health"
+    };
+    static boolean safeNativeSnapshot(String raw){
+        if(raw==null||raw.length()>370||
+           !raw.startsWith("V4_PUBLIC_ANDROID_M4_DIAG role=client kind="))return false;
+        String body=raw.substring("V4_PUBLIC_ANDROID_M4_DIAG role=client ".length());
+        String[] parts=body.split(" ",-1);
+        if(parts.length==0)return false;
+        String[] keys;
+        if(parts[0].equals("kind=rx"))keys=RAW_KEYS;
+        else if(parts[0].equals("kind=m4"))keys=M4_KEYS;
+        else return false;
+        if(parts.length!=keys.length+1)return false;
+        for(int i=0;i<keys.length;i++){
+            String prefix=keys[i]+"=";
+            if(!parts[i+1].startsWith(prefix))return false;
+            String digits=parts[i+1].substring(prefix.length());
+            if(digits.length()==0||digits.length()>20)return false;
+            for(int j=0;j<digits.length();j++){
+                char c=digits.charAt(j);
+                if(c<'0'||c>'9')return false;
+            }
+        }
+        return true;
+    }
+    synchronized boolean recordNativeSnapshot(String raw){
+        if(!safeNativeSnapshot(raw))return false;
+        final String body=raw.substring("V4_PUBLIC_ANDROID_M4_DIAG role=client ".length());
+        return appendReceipt((Long.toString(System.currentTimeMillis())+
+            "|NATIVE_M4_DIAG "+body+"\n").getBytes(StandardCharsets.US_ASCII),450);
+    }
     private static final int MAX_BYTES=16384;
     private final File current;
 
@@ -237,7 +313,10 @@ final class RootDiagnosticReceipt {
         if(event==null)throw new IllegalArgumentException("missing event");
         final byte[] line=(Long.toString(System.currentTimeMillis())+
             "|" + event.name() + "\n").getBytes(StandardCharsets.US_ASCII);
-        if(line.length>128)return false;
+        return appendReceipt(line,128);
+    }
+    private boolean appendReceipt(byte[] line,int maxLine){
+        if(line.length>maxLine)return false;
         File parent=current.getParentFile();
         if(parent==null||!parent.isDirectory())return false;
         try{

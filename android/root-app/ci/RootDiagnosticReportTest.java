@@ -678,6 +678,24 @@ public final class RootDiagnosticReportTest {
             contains(RootDiagnosticReport.build(stageDir,source,36),
                 "last_session_stage="+success.name()+"_NEXT_STAGE_UNPROVEN");
         }
+        // A47 exact shipped writer/report positive numeric and negative
+        // native stderr / credential-injection tests. No Android device fake.
+        File a47dir=Files.createTempDirectory("wbd-a47-real-raw-debug").toFile();
+        RootDiagnosticReceipt a47=new RootDiagnosticReceipt(
+            new File(a47dir,"wbd-root-diagnostic.txt"));
+        a47.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        String nativeRaw="V4_PUBLIC_ANDROID_M4_DIAG role=client kind=rx read=1 data=2 ack=3 tuple=4 ipck=5 tcpck=6 flags=7 len=8 opts=9 ttl0=10 other=11 seq=12 offer=13 recv_err=14 lastlen=15 lastttl=16 lastflags=17 src=18 dst=19 sport=20 dport=21 errno=22";
+        if(!a47.recordNativeSnapshot(nativeRaw))
+            throw new AssertionError("real raw numeric debug snapshot rejected");
+        String gotA47=RootDiagnosticReport.build(a47dir,source,36);
+        contains(gotA47,"native_m4_numeric_debug_count=1");
+        contains(gotA47,"NATIVE_M4_DIAG kind=rx read=1 data=2 ack=3");
+        if(a47.recordNativeSnapshot(nativeRaw+" secret=private"))
+            throw new AssertionError("unexpected native log credential accepted");
+        if(a47.recordNativeSnapshot(
+            "V4_PUBLIC_ANDROID_M4_DIAG role=client kind=rx password=123"))
+            throw new AssertionError("untrusted stderr accepted");
+        System.out.println("ANDROID_A47_NATIVE_NUMERIC_M4_REAL_APK_REPORT_HOST_PASS");
         System.out.println("ANDROID_A40_PROTECTED_POSTAUTH_REAL_NATIVE_OS_M4_STAGE_HOST_PASS");
         System.out.println("ANDROID_A39_ZERO_EVENT_APP_PREFLIGHT_FIXED_DIAGNOSTIC_HOST_PASS");
         System.out.println("ANDROID_A38_ORIGINAL_ADMISSION_TLS_EFFECTIVE_OFF_RECEIPT_HOST_PASS");

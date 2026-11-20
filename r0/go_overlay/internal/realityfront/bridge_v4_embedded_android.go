@@ -55,6 +55,7 @@ extern int32_t wbd_m0_embedded_go_public_native_health_effective(uint64_t,const 
 
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_business_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_raw_rx_debug(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_return_path_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_dns_ingress_observed(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
@@ -392,6 +393,16 @@ type V4PublicOuterCounters struct{
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){return V4PublicOuterCounters{},ErrAdmissionUnsupported}
 
+func (b *v4EmbeddedNativeBridge) originalAndroidRawRxDebug()(result [22]uint64,err error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return result,errV4Embedded}
+    var values [22]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_loop_raw_rx_debug(
+        C.uint64_t(b.handle),&values[0],C.size_t(len(values)))
+    if rc!=0{return result,fmt.Errorf("%w: original Android raw RX debug=%d",
+        errV4Embedded,int(rc))}
+    for i:=range values{result[i]=uint64(values[i])}
+    return result,nil
+}
 func (b *v4EmbeddedNativeBridge) originalAndroidReturnPathReceipts()(result [9]uint64,err error){
     if b==nil||!b.committed||b.stopped||b.handle==0{return result,errV4Embedded}
     var fields [9]C.uint64_t
@@ -529,6 +540,8 @@ type V4PublicLoopPulse struct{
     RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
     RawAuthRejected,ReverseTunWriteFailed uint64
     TunICMPSeen,TunTCPSeen,TunUDPSeen uint64
+    // Original Android native RAW RX counters / latest observed IPv4 header.
+    RawDebug [22]uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
     // Before Native Health terminal: trigger ORIGINAL Go cold B while A
@@ -577,7 +590,10 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
     if businessErr!=nil{return V4PublicLoopPulse{},businessErr}
     r,returnErr:=b.originalAndroidReturnPathReceipts()
     if returnErr!=nil{return V4PublicLoopPulse{},returnErr}
+    rawDebug,debugErr:=b.originalAndroidRawRxDebug()
+    if debugErr!=nil{return V4PublicLoopPulse{},debugErr}
     return V4PublicLoopPulse{
+        RawDebug:rawDebug,
         RawPollReady:r[0],RawParseFailed:r[1],RawParsed:r[2],
         RawAuthenticated:r[3],RawAuthRejected:r[4],
         ReverseTunWriteFailed:r[5],TunICMPSeen:r[6],

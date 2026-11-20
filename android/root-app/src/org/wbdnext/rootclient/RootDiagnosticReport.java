@@ -10,13 +10,16 @@ import java.util.List;
 
 /**
  * Production safe diagnostic export, NOT raw Android logcat/native stdout.
- * Every event is exactly RootDiagnosticReceipt.Event; all other lines are
- * dropped before serialization. Host JVM tests run this SAME report builder.
+ * Each stage is exactly RootDiagnosticReceipt.Event. A47 additionally
+ * exports strictly allowlisted original-Rust numeric RAW diagnostic frames,
+ * including numeric IP/ports; arbitrary native stderr is still rejected.
+ * Host JVM tests run this SAME report builder.
  */
 final class RootDiagnosticReport {
     private RootDiagnosticReport(){}
     private static final int FILE_BOUND=16384;
     private static final int MAX_LINES=180;
+    private static final int MAX_NATIVE_DEBUG=44;
     private static boolean validSource(String s){
         if(s==null||s.length()!=40)return false;
         for(int i=0;i<s.length();i++){
@@ -25,14 +28,14 @@ final class RootDiagnosticReport {
         }
         return true;
     }
-    private static void appendSafe(File f,List<String> into){
+    private static void appendSafe(File f,List<String> into,List<String> debug){
         if(!f.isFile()||f.length()<0||f.length()>FILE_BOUND)return;
         try(BufferedReader input=new BufferedReader(new InputStreamReader(
                 new FileInputStream(f),StandardCharsets.US_ASCII))){
             String line;
             int count=0;
             while((line=input.readLine())!=null&&count++<800){
-                if(line.length()<15||line.length()>128||line.charAt(13)!='|')continue;
+                if(line.length()<15||line.length()>450||line.charAt(13)!='|')continue;
                 boolean stamp=true;
                 for(int j=0;j<13;j++){
                     if(line.charAt(j)<'0'||line.charAt(j)>'9'){stamp=false;break;}
@@ -40,6 +43,11 @@ final class RootDiagnosticReport {
                 String event=line.substring(14);
                 if(stamp&&RootDiagnosticReceipt.safeEventToken(event))
                     into.add(line);
+                else if(stamp&&event.startsWith("NATIVE_M4_DIAG ")){
+                    String prefix="V4_PUBLIC_ANDROID_M4_DIAG role=client ";
+                    String original=prefix+event.substring("NATIVE_M4_DIAG ".length());
+                    if(RootDiagnosticReceipt.safeNativeSnapshot(original))debug.add(line);
+                }
             }
         }catch(Exception ignored){
             // Read-only diagnostic export must never affect live Root.
@@ -255,8 +263,9 @@ final class RootDiagnosticReport {
     static String build(File appFilesDir,String source,int sdk){
         if(appFilesDir==null)throw new IllegalArgumentException("missing app files");
         ArrayList<String> events=new ArrayList<>();
-        appendSafe(new File(appFilesDir,"wbd-root-diagnostic.txt.previous"),events);
-        appendSafe(new File(appFilesDir,"wbd-root-diagnostic.txt"),events);
+        ArrayList<String> rawDebug=new ArrayList<>();
+        appendSafe(new File(appFilesDir,"wbd-root-diagnostic.txt.previous"),events,rawDebug);
+        appendSafe(new File(appFilesDir,"wbd-root-diagnostic.txt"),events,rawDebug);
         int start=0;
         for(int i=0;i<events.size();i++){
             if(events.get(i).endsWith("|START_REQUESTED")||
@@ -278,6 +287,11 @@ final class RootDiagnosticReport {
         out.append("events_timestamp_ms_and_fixed_stage_only:\n");
         int from=Math.max(0,events.size()-MAX_LINES);
         for(int i=from;i<events.size();i++)out.append(events.get(i)).append('\n');
+        out.append("native_m4_numeric_debug_count=").append(rawDebug.size()).append('\n');
+        out.append("native_m4_numeric_debug_samples:\n");
+        int debugStart=Math.max(0,rawDebug.size()-MAX_NATIVE_DEBUG);
+        for(int i=debugStart;i<rawDebug.size();i++)
+            out.append(rawDebug.get(i)).append('\n');
         out.append("END_OF_SAFE_DIAGNOSTIC\n");
         return out.toString();
     }

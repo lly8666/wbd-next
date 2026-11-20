@@ -1966,10 +1966,16 @@ impl ProtectedScopedOwner{
         }
         let absolute=match android_extend_seq32(trusted_anchor,seq){
             Ok(v)=>v,
-            Err(_)=>return Err((ProtectedCryptoError::Owner,slab)),
+            Err(_)=>{
+                driver.record_seq_reject();
+                return Err((ProtectedCryptoError::Owner,slab));
+            },
         };
         self.offer_after_active(slab,0..len,absolute,now)
-            .map_err(|(_,buf)|(ProtectedCryptoError::Owner,buf))?;
+            .map_err(|(_,buf)|{
+                driver.record_owner_offer_reject();
+                (ProtectedCryptoError::Owner,buf)
+            })?;
         Ok((len,absolute))
     }
 

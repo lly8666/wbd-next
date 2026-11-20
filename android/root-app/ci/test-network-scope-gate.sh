@@ -474,6 +474,38 @@ assert 'parse_ack_packet(&slot[..n],trusted,false)' in linux_io
 assert 'parse_data_packet(&slot[..len],TrustedRx{' in linux_io
 assert 'parse_ack_packet(&slot[..len],TrustedRx{' in linux_io
 assert 'ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS' in Path('android/root-native/ci/linux-original-oracle.sh').read_text()
+# A47 actual same-socket RAW recv metadata, precise rejection buckets,
+# seq/owner handoff outcomes; 4-second cumulative Go snapshots survive
+# the Java APK file/report boundary via a strict numeric-only allowlist.
+nativeio=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
+nativeworker=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+gobridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+appwrite=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
+appreport=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+for name in ("RX_DATA_OK","RX_PURE_ACK","RX_TUPLE_BAD","RX_IP_CHECKSUM_BAD",
+             "RX_TCP_CHECKSUM_BAD","RX_FLAGS_BAD","RX_LENGTH_BAD",
+             "RX_OPTIONS_BAD","RX_SEQ_BAD","RX_OWNER_OFFER_BAD",
+             "RX_LAST_SRC_IP","RX_LAST_DST_IP","RX_LAST_FLAGS"):
+ assert name in nativeio,name
+assert 'read_original_record(' in nativeio
+assert 'parse_ack_packet(' in nativeio
+assert 'driver.record_seq_reject()' in owner
+assert 'driver.record_owner_offer_reject()' in owner
+assert 'fn wbd_m0_embedded_go_loop_raw_rx_debug(' in nativeworker
+assert 'C.wbd_m0_embedded_go_loop_raw_rx_debug(' in gobridge
+assert 'wbd_m0_embedded_go_loop_raw_rx_debug' in Path("android/root-native/build-source-locked.sh").read_text()
+assert 'originalAndroidM4RxSnapshot(' in go_product
+assert 'originalAndroidM4OwnerSnapshot(' in go_product
+assert 'TestA47OriginalNumericNativeM4Snapshots' in Path(
+ "r0/go_overlay/internal/v4productcli/android_business_witness_linux_test.go").read_text()
+assert 'ANDROID_A47_REAL_ORIGINAL_GO_NUMERIC_M4_SNAPSHOT_HOST_PASS' in Path("android/root-native/ci/linux-original-oracle.sh").read_text()
+assert 'diagnostics.recordNativeSnapshot(line.substring(forensic))' in s
+assert 'static boolean safeNativeSnapshot(String raw)' in appwrite
+assert 'native_m4_numeric_debug_samples:' in appreport
+assert 'ANDROID_A47_NATIVE_NUMERIC_M4_REAL_APK_REPORT_HOST_PASS' in Path(
+ "android/root-app/ci/RootDiagnosticReportTest.java").read_text()
+print("ANDROID_A47_ORIGINAL_RUST_RAW_NUMERIC_AND_GO_JAVA_FORENSICS_SOURCE_PASS")
 print("ANDROID_A46_EXACT_MAIN_WINDOWS_H2216_TTL_ANDROID_LINUX_SOURCE_GATE_PASS")
 print("ANDROID_A45_ORIGINAL_M4_RETURN_PATH_ICMP_SOURCE_GATE_PASS")
 print("ANDROID_A44_ORIGINAL_M4_APP_BUSINESS_AND_UID_ROUTE_GET_SOURCE_PASS")

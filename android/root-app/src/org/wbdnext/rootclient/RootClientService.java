@@ -50,8 +50,9 @@ public final class RootClientService extends Service {
     private ConnectivityManager.NetworkCallback watchedCallback;
     private NetworkScopeGate watchedGate;
     private BroadcastReceiver installedPackageWatch;
-    // Fixed-enum events only. No network endpoint, package name, password,
-    // generation token, route key, TLS transcript or raw native stdout.
+    // Fixed-enum stage events plus A47 strictly typed numeric original
+    // Rust RAW header snapshots (numeric IP/ports permitted by user).
+    // Never persist credentials, TLS transcript, or arbitrary native stdout.
     private RootDiagnosticReceipt diagnostics;
     @Override public void onCreate(){
         super.onCreate();
@@ -385,6 +386,9 @@ public final class RootClientService extends Service {
                 String line;
                 while((line=lines.readLine())!=null){
                     if(line.length()>4096)line=line.substring(0,4096);
+                    int forensic=line.indexOf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=");
+                    if(forensic>=0&&diagnostics!=null)
+                        diagnostics.recordNativeSnapshot(line.substring(forensic));
                     // Fixed allowlisted shell/Go entry markers expose only
                     // proven pre-TUN boundaries, never stderr, argv or keys.
                     if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_SHELL_ENTERED"))

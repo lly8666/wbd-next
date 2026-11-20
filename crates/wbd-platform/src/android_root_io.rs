@@ -7,7 +7,7 @@
 use std::ffi::{c_int, c_uint, c_void, CString};
 use std::io;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd, RawFd};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Instant;
 use crate::r1::{BorrowFence,BorrowError,StopResult};
 
@@ -323,6 +323,31 @@ fn exact_raw_tcp_filter(
     ])
 }
 
+// A47: 22 read-only measurements from the genuine Rust-owned RAW TCP FD.
+const RX_DIAG_LEN:usize=22;
+const RX_READ_OK:usize=0;
+const RX_DATA_OK:usize=1;
+const RX_PURE_ACK:usize=2;
+const RX_TUPLE_BAD:usize=3;
+const RX_IP_CHECKSUM_BAD:usize=4;
+const RX_TCP_CHECKSUM_BAD:usize=5;
+const RX_FLAGS_BAD:usize=6;
+const RX_LENGTH_BAD:usize=7;
+const RX_OPTIONS_BAD:usize=8;
+const RX_ZERO_TTL:usize=9;
+const RX_OTHER_BAD:usize=10;
+const RX_SEQ_BAD:usize=11;
+const RX_OWNER_OFFER_BAD:usize=12;
+const RX_RECV_ERROR:usize=13;
+const RX_LAST_LENGTH:usize=14;
+const RX_LAST_TTL:usize=15;
+const RX_LAST_FLAGS:usize=16;
+const RX_LAST_SRC_IP:usize=17;
+const RX_LAST_DST_IP:usize=18;
+const RX_LAST_SRC_PORT:usize=19;
+const RX_LAST_DST_PORT:usize=20;
+const RX_LAST_ERRNO:usize=21;
+
 /// Kernel-only raw RX descriptor, with NO unfiltered fallback. A packet
 /// remains unauthenticated until the existing Rust M3 opener validates it.
 pub struct AndroidBoundRawRx {
@@ -331,6 +356,7 @@ pub struct AndroidBoundRawRx {
     mtu: u32,
     stopping: AtomicBool,
     borrow: BorrowFence,
+    debug:[AtomicU64;RX_DIAG_LEN],
 }
 impl AndroidBoundRawRx {
     pub fn open_exact(
@@ -355,11 +381,21 @@ impl AndroidBoundRawRx {
             std::mem::size_of::<AndroidSockFprog>() as u32) };
         if rc != 0 { return Err(io::Error::last_os_error()); }
         Ok(Self { fd, generation, mtu: expected_mtu,
-            stopping: AtomicBool::new(false), borrow: BorrowFence::default() })
+            stopping: AtomicBool::new(false), borrow: BorrowFence::default(),
+            debug:std::array::from_fn(|_|AtomicU64::new(0)) })
     }
     pub fn generation(&self) -> u32 { self.generation }
     pub fn is_stopping(&self) -> bool { self.stopping.load(Ordering::Acquire) }
     pub fn readiness_fd(&self) -> RawFd { self.fd.as_raw_fd() }
+    pub fn raw_diagnostic_snapshot(&self)->[u64;RX_DIAG_LEN]{
+        std::array::from_fn(|i|self.debug[i].load(Ordering::Relaxed))
+    }
+    pub fn record_seq_reject(&self){
+        self.debug[RX_SEQ_BAD].fetch_add(1,Ordering::Relaxed);
+    }
+    pub fn record_owner_offer_reject(&self){
+        self.debug[RX_OWNER_OFFER_BAD].fetch_add(1,Ordering::Relaxed);
+    }
     pub fn begin_stop(&self) {
         self.stopping.store(true, Ordering::Release);
         self.borrow.begin_stop();
@@ -384,8 +420,15 @@ impl AndroidBoundRawRx {
         let cap = buffer.len().min(self.mtu as usize);
         let n = unsafe { recvfrom(self.fd.as_raw_fd(), buffer.as_mut_ptr().cast(), cap,
             MSG_DONTWAIT | MSG_TRUNC, std::ptr::null_mut(), std::ptr::null_mut()) };
-        if n < 0 { return Err(io::Error::last_os_error()); }
+        if n < 0 {
+            let error=io::Error::last_os_error();
+            self.debug[RX_RECV_ERROR].fetch_add(1,Ordering::Relaxed);
+            self.debug[RX_LAST_ERRNO].store(
+                error.raw_os_error().unwrap_or(0).max(0) as u64,Ordering::Relaxed);
+            return Err(error);
+        }
         if n as usize > cap {
+            self.debug[RX_LENGTH_BAD].fetch_add(1,Ordering::Relaxed);
             return Err(io::Error::new(io::ErrorKind::InvalidData, "truncated raw RX"));
         }
         Ok(n as usize)
@@ -399,13 +442,58 @@ impl AndroidBoundRawRx {
         persona:crate::ipv4_tcp::PacketPersona,
     )->io::Result<(usize,u32)>{
         let total=self.read_untrusted(generation,slab)?;
-        let parsed=crate::rx_ipv4_tcp::parse_data_packet(
-            &slab[..total],crate::rx_ipv4_tcp::TrustedRx{
-                tuple,persona,mtu:self.mtu as usize,
-                authenticated_options:None,
-            }
-        ).map_err(|_|io::Error::new(io::ErrorKind::InvalidData,
-            "invalid original M4 IPv4/TCP candidate"))?;
+        self.debug[RX_READ_OK].fetch_add(1,Ordering::Relaxed);
+        self.debug[RX_LAST_LENGTH].store(total as u64,Ordering::Relaxed);
+        if total>=40{
+            self.debug[RX_LAST_TTL].store(u64::from(slab[8]),Ordering::Relaxed);
+            self.debug[RX_LAST_FLAGS].store(u64::from(slab[33]),Ordering::Relaxed);
+            self.debug[RX_LAST_SRC_IP].store(
+                u64::from(u32::from_be_bytes(slab[12..16].try_into().unwrap())),
+                Ordering::Relaxed);
+            self.debug[RX_LAST_DST_IP].store(
+                u64::from(u32::from_be_bytes(slab[16..20].try_into().unwrap())),
+                Ordering::Relaxed);
+            self.debug[RX_LAST_SRC_PORT].store(
+                u64::from(u16::from_be_bytes(slab[20..22].try_into().unwrap())),
+                Ordering::Relaxed);
+            self.debug[RX_LAST_DST_PORT].store(
+                u64::from(u16::from_be_bytes(slab[22..24].try_into().unwrap())),
+                Ordering::Relaxed);
+        }
+        let trusted=crate::rx_ipv4_tcp::TrustedRx{
+            tuple,persona,mtu:self.mtu as usize,authenticated_options:None,
+        };
+        let parsed=match crate::rx_ipv4_tcp::parse_data_packet(&slab[..total],trusted){
+            Ok(data)=>{
+                self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
+                data
+            },
+            Err(reason)=>{
+                use crate::rx_ipv4_tcp::RxError;
+                if crate::rx_ipv4_tcp::parse_ack_packet(
+                    &slab[..total],trusted,false).is_ok(){
+                    self.debug[RX_PURE_ACK].fetch_add(1,Ordering::Relaxed);
+                }else{
+                    let key=match reason{
+                        RxError::WrongTuple|RxError::InvalidTrustedTuple=>RX_TUPLE_BAD,
+                        RxError::IpChecksum=>RX_IP_CHECKSUM_BAD,
+                        RxError::TcpChecksum=>RX_TCP_CHECKSUM_BAD,
+                        RxError::InvalidDataFlags=>RX_FLAGS_BAD,
+                        RxError::TooShort|RxError::TooLong|RxError::ExceedsMtu{..}|
+                        RxError::TotalLengthMismatch|RxError::WrongVersionOrIhl|
+                        RxError::FragmentedOrUnexpectedFlags|
+                        RxError::InvalidTcpHeader=>RX_LENGTH_BAD,
+                        RxError::UnsupportedOptions|RxError::InvalidTrustedOptions=>
+                            RX_OPTIONS_BAD,
+                        RxError::WrongIpHeader if total>8&&slab[8]==0=>RX_ZERO_TTL,
+                        _=>RX_OTHER_BAD,
+                    };
+                    self.debug[key].fetch_add(1,Ordering::Relaxed);
+                }
+                return Err(io::Error::new(io::ErrorKind::InvalidData,
+                    "original M4 IPv4/TCP candidate rejected before M3"));
+            },
+        };
         let seq=parsed.seq32;
         let wire=parsed.ciphertext.len();
         // No unrelated packets or malformed flags/checksums reach M1.

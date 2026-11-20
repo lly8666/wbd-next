@@ -1598,6 +1598,23 @@ func originalAndroidPostauthGo(stage string){
         log.Printf("V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s",stage)
     }
 }
+// A47: printable snapshots originate in the ONE real Rust RX FD and
+// native worker; these are cumulative numeric observations, NOT app PASS.
+func originalAndroidM4RxSnapshot(p realityfront.V4PublicLoopPulse)string{
+ d:=p.RawDebug
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=rx read=%d data=%d ack=%d tuple=%d ipck=%d tcpck=%d flags=%d len=%d opts=%d ttl0=%d other=%d seq=%d offer=%d recv_err=%d lastlen=%d lastttl=%d lastflags=%d src=%d dst=%d sport=%d dport=%d errno=%d",
+ d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],d[13],d[14],d[15],d[16],d[17],d[18],d[19],d[20],d[21])
+}
+func originalAndroidM4OwnerSnapshot(p realityfront.V4PublicLoopPulse)string{
+ health:=0
+ if p.AuthenticatedPeerControl{health=1}
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=%d parse_fail=%d parsed=%d auth=%d rejected=%d writefail=%d tun=%d trej=%d rawtx=%d rtun=%d tcp=%d udp=%d icmp=%d dnsudp=%d dnstcp=%d rxerr=%d txerr=%d health=%d",
+ p.RawPollReady,p.RawParseFailed,p.RawParsed,p.RawAuthenticated,
+ p.RawAuthRejected,p.ReverseTunWriteFailed,p.TunIPv4Admitted,
+ p.TunIPv4Rejected,p.BusinessRawCopied,p.BusinessReverseTun,
+ p.TunTCPSeen,p.TunUDPSeen,p.TunICMPSeen,p.DnsUDP53Seen,
+ p.DnsTCP53Seen,p.RxErrors,p.TxErrors,health)
+}
 // Real original Rust M4 state, not Ready and never a guessed Chrome PASS.
 func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]string{
  var stages []string
@@ -1972,9 +1989,15 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if len(ready)>1{notifyPreDead=ready[1]}
     // Reuse the original one-second Health poll, no new worker or hot-path Go.
     businessLogged:=make(map[string]bool,6)
+    var lastNumericM4 time.Time
     businessPulse:=func()(realityfront.V4PublicLoopPulse,error){
         p,e:=native.OriginalLoopPulse()
         if e==nil&&runtime.GOOS=="android"{
+            if lastNumericM4.IsZero()||time.Since(lastNumericM4)>=4*time.Second{
+                lastNumericM4=time.Now()
+                log.Print(originalAndroidM4RxSnapshot(p))
+                log.Print(originalAndroidM4OwnerSnapshot(p))
+            }
             for _,stage:=range originalAndroidBusinessReceiptClasses(p){
                 if !businessLogged[stage]{
                     businessLogged[stage]=true
@@ -1987,7 +2010,12 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     err=monitorPublicNativePeer(ctx,errs,
         func()bool{return handoffCommitted.Load()},
         businessPulse,notifyPreDead)
-    if runtime.GOOS=="android"{_,_=businessPulse()}
+    if runtime.GOOS=="android"{
+        if final,e:=native.OriginalLoopPulse();e==nil{
+            log.Print(originalAndroidM4RxSnapshot(final))
+            log.Print(originalAndroidM4OwnerSnapshot(final))
+        }
+    }
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
     logNormalStartupPadding("client",c.fecMode!=realityfront.FecV2Off,m,n,b,e)
