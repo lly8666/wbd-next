@@ -317,8 +317,14 @@ assert '--android-recover-owned-root' in Path("android/root-app/src/org/wbdnext/
 assert 'rootjournal.RecoverOwned(' in go_product and 'rstguard.RecoverOwned(' in go_product
 assert 'VerifyServer:true' in go_product
 assert 'v4AndroidCertFailureReason(err)' in go_admission
-for e in ("ROOT_RESTORE_COMPLETE","ROOT_RESTORE_FAILED","ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH"):
+for e in ("ROOT_RESTORE_COMPLETE","ROOT_RESTORE_FAILED"):
  assert e in s and e in receipt and e in report
+# Certificate subtypes need to be recognized in the native stdout parser
+# and the fixed Event enum. The existing report emits validated events
+# generically; it correctly does NOT hardcode every certificate subtype.
+assert "ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH" in s
+assert "ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH" in receipt
+assert "RootDiagnosticReceipt.safeEventToken(event)" in report
 print("ANDROID_A36_APP_RESTORE_CERT_TRUST_SOURCE_GATE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY

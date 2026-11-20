@@ -19,3 +19,11 @@ APK「恢复网络」按钮先触发原有精确owner Stop，等待真实Go/Rust
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A36d 修复真实CI发现的Java恢复收据测试变量名遮蔽，保留原Go恢复/严格TLS与历史FAIL。"}
 ```
+
+## A36e 新SRC真实Java整体PASS；A36源门多断言失败
+
+SOURCE `3bb2b18bcbe76da5bf14c42bea26915a6ebe62c4` [Android Action #44718751028](https://github.com/lly8666/wbd-next/actions/runs/44718751028)：原Go/Rust ARM64编译及Go root-owned route/RST恢复单测 PASS，Java `RootRecoveryCommandTest` 双ABI POSIX脚本、`RootDiagnosticReportTest` 恢复正反例和证书类别真实JVM全部 PASS。随后A36新 Python source gate错误断言 `ORIGINAL_GO_TLS_CERT_REASON_HOSTNAME_MISMATCH` 必须**字面出现**在 `RootDiagnosticReport.java`；实际设计报告器统一通过 `RootDiagnosticReceipt.safeEventToken(event)` 的固定枚举白名单输出，不会逐项hardcode。故源门这一行 FAIL、签名APK未构建。仅将source gate改为「原Go被Java parser固定锚定、Event枚举存在、报告器使用固定Enum安全序列化」，保护不变。旧CI FAIL保留；再跑完整新SOURCE验签及原Linux Oracle。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A36e Java生产恢复shell和安全TXT测试已真实通过，修正过度要求报告器硬编码证书原因的Host源静态检查，仍严格限定Event白名单。"}
+```
