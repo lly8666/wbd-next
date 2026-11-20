@@ -69,16 +69,16 @@ class H2233LowLossAnalysis(unittest.TestCase):
                 "start":{"connected":[{"local_port":41920},{"local_port":41921}]}}))
             info=pathlib.Path(str(f)+".tcp-info.txt")
             info.write_text(
-                "ESTAB 0 0 10.248.81.2:41920 10.248.82.2:5202\\n"
-                "bbr rtt:460/5 mss:1037 pmtu:1200\\n"
-                "ESTAB 0 0 10.248.81.2:41921 10.248.82.2:5202\\n"
-                "bbr rtt:458/5 mss:1037 pmtu:1200\\n")
+                "ESTAB 0 0 10.248.81.2:41920 10.248.82.2:5202\n"
+                "bbr rtt:460/5 mss:1037 pmtu:1200\n"
+                "ESTAB 0 0 10.248.81.2:41921 10.248.82.2:5202\n"
+                "bbr rtt:458/5 mss:1037 pmtu:1200\n")
             ok=H.socket_mss_readback(f,"direct")
             self.assertEqual(ok["status"],"REAL_TCP_INFO_ALL_STREAMS")
             self.assertEqual(ok["mss"],[1037,1037])
             info.write_text(
-                "ESTAB 0 0 10.248.81.2:41920 10.248.82.2:5202\\n"
-                "bbr mss:1037\\n")
+                "ESTAB 0 0 10.248.81.2:41920 10.248.82.2:5202\n"
+                "bbr mss:1037\n")
             self.assertEqual(H.socket_mss_readback(f,"direct")["status"],
                              "UNKNOWN_PARTIAL_TCP_INFO")
             self.assertEqual(H.socket_mss_readback(f,"wbd")["mss"],[])
