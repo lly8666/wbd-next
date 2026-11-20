@@ -5,6 +5,7 @@ ROLE="${1:?relay-start|relay-wait|server-start|server-wait|client-run|cleanup}"
 ROOT="$GITHUB_WORKSPACE/linux-plan029-public-bundle"
 OUT="$GITHUB_WORKSPACE/h2228-out"
 TOOL="$GITHUB_WORKSPACE/tools/m0_h2228_three_runner_relay.py"
+METRICS="$GITHUB_WORKSPACE/tools/m0_h2231_three_runner_metrics.py"
 NS=h228node
 RT=h228rt
 TMP="$RUNNER_TEMP/h2228-$GITHUB_RUN_ID"
@@ -117,6 +118,22 @@ PY
   sudo -n ip netns exec "$NS" ss -ltn >"$OUT/listeners.txt"
   grep -q ':5201 ' "$OUT/listeners.txt"
   grep -q ':5202 ' "$OUT/listeners.txt"
+  # H2231 low-rate REAL UDP echo servers: direct routed underlay and
+  # independent authenticated WBD inner-TUN path. Never mock an ACK.
+  for kind in direct wbd;do
+    spawn "$TMP/udp-$kind.pid" python3 "$METRICS" echo-server "$kind" \
+      >"$OUT/udp-$kind-server.log" 2>&1 &
+    echo "$!" >"$TMP/udp-$kind-launcher.pid"
+  done
+  for kind in direct wbd;do
+    for i in $(seq 1 40);do
+      if grep -Fq "H2231_REAL_NATIVE_UDP_APP_SERVER_READY kind=$kind" \
+          "$OUT/udp-$kind-server.log";then break;fi
+      sleep .2
+    done
+    grep -Fq "H2231_REAL_NATIVE_UDP_APP_SERVER_READY kind=$kind" \
+        "$OUT/udp-$kind-server.log"
+  done
   python3 "$TOOL" node-snapshot server startup "$OUT/server-startup.json"
   python3 - <<'PY'
 import json,os,pathlib
@@ -173,9 +190,29 @@ client_run(){
       }
       owner_check=(--pidfile "$TMP/client.pid")
     fi
+    # Parallel 100ms spaced app-UDP requests on the same physical
+    # routed path as iperf3. Real response p99 is never an inferred TCP RTT.
+    # P99 needs >=50 actual replies, so the 3s TCP gate records UNKNOWN.
+    local replies=120 deadline=15
+    if [[ "$duration" == 12 ]];then replies=80;deadline=11;fi
+    if [[ "$duration" == 3 ]];then replies=16;deadline=2.7;fi
+    local probe_file="$OUT/probe-$(basename "$casefile")"
+    sudo -n ip netns exec "$NS" python3 "$METRICS" udp-probe "$kind" \
+      "$probe_file" --count "$replies" --interval-ms 100 --deadline "$deadline" \
+      >"$probe_file.log" 2>&1 &
+    local probe_pid=$!
     python3 "$TOOL" iperf "$kind" "$duration" "$streams" "$direction" "$casefile" "${owner_check[@]}" \
-      > "$casefile.txt" 2>&1 ||
+      >"$casefile.txt" 2>&1 ||
       echo "H2228_OBSERVED_TCP_ERROR $label $kind $direction" |tee -a "$OUT/failures.log"
+    # The iperf case remains FAIL when TCP fails, even if ping/UDP succeeds.
+    if [[ -s "$casefile" ]];then
+      python3 "$METRICS" iperf-enrich "$casefile" "$casefile.stdout.txt" \
+        >"$casefile.p99.log" 2>&1 ||
+        echo "H2231_TCP_METRIC_ENRICH_FAILED $casefile" |tee -a "$OUT/failures.log"
+    fi
+    if ! wait "$probe_pid";then
+      echo "H2231_REAL_APP_UDP_P99_PROBE_FAILED $probe_file" |tee -a "$OUT/failures.log"
+    fi
     relay_read "$(basename "$casefile" .json)"
   }
   # The relay has NO rate cap. Require a real unshaped two-hop reference
@@ -300,7 +337,7 @@ print("H2228_THREE_NODE_PAIRED_RECEIPT_REAL_NOT_PERFORMANCE_PASS")
 PY
 }
 cleanup(){
-  for f in control.pid client.pid server.pid iperf-direct.pid iperf-wbd.pid;do
+  for f in control.pid client.pid server.pid iperf-direct.pid iperf-wbd.pid udp-direct.pid udp-wbd.pid;do
     test ! -s "$TMP/$f" || sudo -n kill -TERM "$(cat "$TMP/$f")" 2>/dev/null || true
   done
   python3 "$TOOL" clean "${WBD_H2228_ROLE:?}" || true

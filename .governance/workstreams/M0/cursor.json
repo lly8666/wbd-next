@@ -4,23 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2230,
-  "checkpoint_sha": "19c8fa069bbf19d0256e3a2fbe8aa2b761d2ab47",
+  "sequence": 2231,
+  "checkpoint_sha": "ad6bef638faf0075e1923d2a97849dc255e6877a",
   "progress": "in_progress",
-  "task_id": "PLAN029-H2230-3RUNNER-ACK10-TCP-DERP-TRIAGE",
-  "current_task": "H2229 ACK10/65535/no-HOL已原生Win/x86/ARM 4/4；H2230三独立Runner经ARM中继200ms/0-20% ACK10真TCP 27/27完成，DERP容量不合格；夹具已进main。",
-  "why_now": "实体Windows上行3秒偶断和80-200Mbps仍OPEN；区分内层TCP失败与原生worker退出，保护外层表演重传。",
-  "done_when": "main 3Runner原生夹具可复用；后续同源双向>=800Mbps无损基线才可归因；物理Windows异常复验和TCP根因仍OPEN。",
-  "next_action": "手动main 3Runner复跑争取双段DIRECT，保存实际tc丢包/Go PID；同代Linux server/client Health与Windows实体3秒上行逐时对照；不改外层重传与M2。",
+  "task_id": "PLAN029-H2231-3RUNNER-P99-TAIL-METRICS",
+  "current_task": "H2229 ACK10/65535无HOL已原生4/4；H2230真实三Runner TCP27/27，DERP容量不合格；H2231补真实应用UDP/P99和TCP长尾。",
+  "why_now": "实体Win上行偶断及80–200Mbps未定位；需200ms/1–20%网络下原生真实尾延迟样本。",
+  "done_when": "三Runner独立链路提供有样本数的UDP RTT P99与TCP逐秒长尾；物理Win仍OPEN。",
+  "next_action": "修复主线证据SHA一致性；H2231跨Runner实测/保留DERP容量门槛；回查Windows客户端真实同代Health，禁改外层重传。",
   "unverified": true,
   "last_tested_source": "8f6054e7d6851f6fa58afdfb5a63f7e4ec504bc1",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2229-AUTHENTICATED-ACK10-WINDOW65535-NOHOL-20261120.json",
-    "docs/evidence/M0/PLAN029-H2228-THREE-ARM-RELAY-GE200-REAL-TCP-20261120.json"
+    "docs/evidence/M0/PLAN029-H2230-ACK10-ARM-3RUNNER-REAL-TCP-20261120.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261120-H2228-THREE-RUNNER-ARM-RELAY-GE200-BBR-TCP.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2229 Action44727976115 4/4；H2230 Action44733044743真3Runner业务27/27、参考19.310/19.836Mbps受DERP限制，CI因容量门槛FAIL；main 19c8fa静态/治理PASS；物理根因未证实。"
+  "partial_summary": "H2230 run44733044743 ACK10三VM真实TCP27/27；基线19/20Mbps DERP非产品容量。H2231 P99新增尚未WAN验；实体Win仍OPEN。"
 }

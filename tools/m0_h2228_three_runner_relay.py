@@ -523,7 +523,28 @@ def result_summary(mode,model,directory):
         except (ValueError,OSError,RuntimeError) as exc:
             record={"status":"ERROR_TCP_CRASH_ABORT_OR_UNREACHABLE",
                     "mbps":None,"error":"UNPARSABLE_"+type(exc).__name__}
-        rows.append({"file":p.name,"case":suffix,**record})
+        # H2231 real app UDP echo is a *separate* origin from real iperf3.
+        # The original business TCP verdict NEVER becomes PASS due to UDP.
+        probe_file=rootpath/("probe-"+p.name)
+        probe={"status":"UNKNOWN_NO_REAL_APP_UDP_PROBE"}
+        if probe_file.is_file():
+            try:
+                candidate=json.loads(probe_file.read_text())
+                expected_origin=("REAL_APP_UDP_ECHO_DIRECT_ARM_RELAY_ONLY"
+                    if record.get("kind")=="direct" else
+                    "REAL_APP_UDP_ECHO_WITHIN_WBD_INNER_TUN")
+                if (candidate.get("kind")==record.get("kind") and
+                    candidate.get("origin")==expected_origin and
+                    candidate.get("schema")=="H2231_TRUE_APP_UDP_RTT_V1"):
+                    probe=candidate
+                else:
+                    probe={"status":"INVALID_UDP_PROBE_ORIGIN",
+                           "qualified_for_lowrate_udp_p99":False}
+            except (OSError,ValueError,TypeError,AttributeError):
+                probe={"status":"INVALID_OR_UNPARSEABLE_UDP_PROBE",
+                       "qualified_for_lowrate_udp_p99":False}
+        rows.append({"file":p.name,"case":suffix,**record,
+                     "h2231_app_udp_probe":probe})
     missing=sorted(required-set(actual))
     duplicates=sorted(x for x in set(actual) if actual.count(x)>1)
     failures=[x for x in rows if x["status"]!="PASS_REAL_KERNEL_IPERF3_TCP"]
@@ -560,6 +581,13 @@ def result_summary(mode,model,directory):
         snapshots_rtt.append({"loss_target_pct":loss,
              "observed_rtt_avg_ms":float(value.group(2)) if value else None,
              "ping_excerpt":f.read_text()[-600:]})
+    source_rows={x["case"]:x for x in rows}
+    p99_reports=sum(1 for x in rows if
+        x.get("h2231_app_udp_probe",{}).get("qualified_for_lowrate_udp_p99") is True)
+    observed_probes=sum(1 for x in rows if
+        x.get("h2231_app_udp_probe",{}).get("schema")=="H2231_TRUE_APP_UDP_RTT_V1")
+    observed_tcp_tail=sum(1 for x in rows if
+        x.get("h2231_tcp_tail",{}).get("schema")=="H2231_TCP_SAMPLE_TAIL_V1")
     per_loss=[]
     for loss in (0,1,5,10,20):
         prefix=f"delay200-loss{loss}-{model}"
@@ -576,6 +604,31 @@ def result_summary(mode,model,directory):
             row["wbd_over_direct_"+direction+"_ratio"]=(
                 round(b/a,4) if isinstance(a,(int,float)) and a>0
                 and isinstance(b,(int,float)) else None)
+        # Per-phase app UDP P99 is only populated with >=50 real echo
+        # replies. Sender TCP RTT and 1s goodput P99 are distinct sources.
+        for kind in ("direct","wbd"):
+            for direction in ("upload","download"):
+                case=source_rows.get(f"{prefix}-{kind}-20s-4p-{direction}",{})
+                probe=case.get("h2231_app_udp_probe",{})
+                tcp=case.get("h2231_tcp_tail",{})
+                app_rtt=probe.get("roundtrip_rtt_ms",{})
+                variation=probe.get("adjacent_sequence_rtt_abs_variation_ms",{})
+                sender_rtt=tcp.get("kernel_tcp_sender_rtt_ms",{})
+                goodput=tcp.get("business_goodput_per_interval_mbps",{})
+                stem=f"{kind}_{direction}"
+                row[stem+"_app_udp_rtt_p50_ms"]=app_rtt.get("p50")
+                row[stem+"_app_udp_rtt_p95_ms"]=app_rtt.get("p95")
+                row[stem+"_app_udp_rtt_p99_ms"]=app_rtt.get("p99")
+                row[stem+"_app_udp_rtt_samples"]=app_rtt.get("sample_count")
+                row[stem+"_app_udp_missing_pct"]=probe.get("missing_unique_reply_pct")
+                row[stem+"_app_udp_max_consecutive_missing"]=probe.get(
+                    "max_consecutive_missing_requests")
+                row[stem+"_app_udp_rtt_variation_p99_ms"]=variation.get("p99")
+                row[stem+"_tcp_sender_rtt_p99_ms"]=sender_rtt.get("p99")
+                row[stem+"_tcp_goodput_1s_p01_mbps"]=goodput.get("p01")
+                row[stem+"_tcp_goodput_1s_p50_mbps"]=goodput.get("p50")
+                row[stem+"_tcp_goodput_1s_p95_mbps"]=goodput.get("p95")
+                row[stem+"_tcp_goodput_1s_p99_mbps"]=goodput.get("p99")
         row["wbd_tcp_uplink_3sec_mbps"]=app.get(f"{prefix}-wbd-3s-1p-upload")
         per_loss.append(row)
     if missing or duplicates:
@@ -610,6 +663,15 @@ def result_summary(mode,model,directory):
       "observed_rtt":snapshots_rtt,
       "loss_scenarios":per_loss,
       "raw_cases":rows,
+      "h2231_tail_metric_schema":"REAL_APP_UDP_RTT_V1_PLUS_REAL_IPERF_KERNEL_TCP_TAIL_V1",
+      "h2231_real_udp_probe_cases_observed":observed_probes,
+      "h2231_real_udp_p99_cases_with_at_least_50_echoes":p99_reports,
+      "h2231_tcp_tail_cases_observed":observed_tcp_tail,
+      "h2231_tail_metrics_are_not_new_product_pass":True,
+      "h2231_tail_metrics_qualification":(
+          "ALL_27_METRIC_RECEIPTS_PRESENT" if
+          observed_probes==27 and observed_tcp_tail==27 else
+          "PARTIAL_OR_NOT_RUN_OR_MISSING_REAL_METRIC_RECEIPTS"),
       "relay_snapshot_files":len(snapshots),
       "genuine_user_windows_isp_xray_reference":"NOT_RUN",
       "physical_client_uplink_3sec_crash":"NOT_RUN",

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2230",
+  "source_sha": "8f6054e7d6851f6fa58afdfb5a63f7e4ec504bc1",
+  "date": "2026-11-20",
+  "run_id": 44733044743,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44733044743",
+  "result": "REAL_THREE_RUNNER_ACK10_TCP_27_OF_27_PASS_CAPACITY_UNQUALIFIED_DERP",
+  "qualification": "REAL_GITHUB_3_VM_ORIGINAL_GO_RUST_LINUX_TCP_APP_MATRIX_PASS_NOT_SAME_SOURCE_WINDOWS_PHYSICAL",
+  "source_contract": {
+    "client": "independent x86_64 native original Go credential TLS+Rust M4",
+    "relay": "independent ARM64 L3 IPv4 kernel forwarding of two separate VXLAN Ethernet segments",
+    "server": "independent x86_64 native original Go credential TLS+Rust M4",
+    "ack": "H2229 10ms authenticated ACK-only / Linux steady window65535 no HOL already merged in source SHA",
+    "outer_repeat": "UNCHANGED_NO_PER_RECORD_M2",
+    "direct_baseline": "Tailscale DERP/relay limited, not a qualifying WAN capacity comparison"
+  },
+  "app_matrix": {
+    "expected": 27,
+    "actual": 27,
+    "iperf3_tcp_completed": 27,
+    "failed": 0,
+    "modes": [
+      "Normal Off"
+    ],
+    "loss_target_pct": [
+      0,
+      1,
+      5,
+      10,
+      20
+    ],
+    "extra_one_way_delay_ms": 200,
+    "ge_jitter_sigma_ms": 15,
+    "ge_jitter_corr_pct": 25,
+    "clean_0pct_direct_8stream_mbps": {
+      "up": 19.31,
+      "down": 19.836
+    },
+    "qualification": "FAIL_CAPACITY_QUALIFICATION_BELOW_800_MBIT_EACH_DIRECTION_AND_DERP"
+  },
+  "source_evidence_origin": {
+    "older_H2228_file": "docs/evidence/M0/PLAN029-H2228-THREE-ARM-RELAY-GE200-REAL-TCP-20261120.json",
+    "older_H2228_file_original_source": "2a2f809592856411daa70b3c043b2f6430774ce8",
+    "older_H2229_file": "docs/evidence/M0/PLAN029-H2229-AUTHENTICATED-ACK10-WINDOW65535-NOHOL-20261120.json",
+    "older_H2229_file_source": "09654a4e366041f2329bb08b6b8deec109433392",
+    "qualification": "Do not rewrite historic source_sha to this newer ACK10 three-runner run; this is its independently source-bound evidence"
+  },
+  "not_run": [
+    "Physical Windows Npcap 3s sporadic disconnect",
+    "Windows xray same-path 1Gbps compare",
+    "Known independent high-throughput relay reference >=800Mbps",
+    "Genuine application UDP RTT P99 during 200ms high-loss iperf3"
+  ],
+  "next": "Build H2231 tail performance metrics on the exact independent ARM L3 relay; 200ms high loss 1/5/10/20%, with always source-qualified UDP/TCP P99; keep Windows physical and WBD TCP root-cause OPEN"
+}
