@@ -602,6 +602,64 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_PARSED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_ADMISSION_VERIFIED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=COLD_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_COLD_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=DETACH_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DETACH_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=NATIVE_COMMIT_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_FIELD_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_FIELD_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_OS_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_OS_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=NATIVE_IP_BOUND"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_IP_BOUND);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=UNDERLAY_OK"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UNDERLAY_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=RAW_ATTACHED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_RAW_ATTACHED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUN_ATTACHED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUN_ATTACHED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=M4_STARTED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=COLD_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_COLD_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=DETACH_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DETACH_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=NATIVE_PREPARE_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_PREPARE_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=NATIVE_COMMIT_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=NATIVE_OTHER_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_OTHER_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_FIELD_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_FIELD_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_ADD_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_ADD_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_DEL_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_DEL_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_READBACK_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_READBACK_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_MISMATCH"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_MISMATCH);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=LEASE_OS_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_OS_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=NATIVE_IP_BIND_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_IP_BIND_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=MTU_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_MTU_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=UNDERLAY_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UNDERLAY_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=RAW_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_RAW_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUN_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUN_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=HEALTH_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_HEALTH_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=M4_START_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_START_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=UID_ROUTE_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UID_ROUTE_FAILED);
                     if(!leaseReadback&&OriginalGoMilestones.matches(
                         line,"V4_PUBLIC_LEASE_APPLIED role=client")){
                         leaseReadback=true;

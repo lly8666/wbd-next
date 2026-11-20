@@ -364,6 +364,18 @@ assert 'request.putExtra("password"' not in a and 'request.putExtra("route_key"'
 assert 'cipher.init(Cipher.ENCRYPT_MODE,key);' in codec
 assert 'cipher.getIV()' in codec
 assert 'cipher.init(Cipher.ENCRYPT_MODE,key,new GCMParameterSpec' not in codec
+# A40 real original post-auth transitions, not a synthetic lease.
+postauth=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
+androidbridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+for stage in ("COLD_OK","DETACH_OK","NATIVE_COMMIT_OK","LEASE_FIELD_OK","LEASE_OS_OK","NATIVE_IP_BOUND","UNDERLAY_OK","RAW_ATTACHED","TUN_ATTACHED","M4_STARTED","COLD_FAILED","DETACH_FAILED","NATIVE_PREPARE_FAILED","NATIVE_COMMIT_FAILED","NATIVE_OTHER_FAILED","LEASE_FIELD_FAILED","LEASE_ADD_FAILED","LEASE_DEL_FAILED","LEASE_READBACK_FAILED","LEASE_MISMATCH","LEASE_OS_FAILED","NATIVE_IP_BIND_FAILED","MTU_FAILED","UNDERLAY_FAILED","RAW_FAILED","TUN_FAILED","HEALTH_FAILED","M4_START_FAILED","UID_ROUTE_FAILED"):
+ assert f'ORIGINAL_GO_POSTAUTH_{stage}' in s
+ assert f'ORIGINAL_GO_POSTAUTH_{stage}' in receipt
+ assert f'"{stage}"' in (postauth+go_product)
+assert 'Operation:"original_native_prepare"' in androidbridge
+assert 'Operation:"original_native_commit"' in androidbridge
+assert 'V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s' in postauth
+assert 'V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s' in go_product
+print("ANDROID_A40_ORIGINAL_GO_RUST_POSTAUTH_STAGE_HOST_SOURCE_PASS")
 print("ANDROID_A39_ANDROID_KEYSTORE_PROVIDER_IV_AND_START_NONBLOCKING_SOURCE_PASS")
 print("ANDROID_A38_KEYSTORE_ENCRYPTED_SECRET_AUTOFILL_SOURCE_GATE_PASS")
 assert 'v4AndroidCertFailureReason(err)' in go_admission

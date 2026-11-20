@@ -142,6 +142,43 @@ final class RootDiagnosticReport {
                 return "PROTECTED_REQUEST_WRITE_FAILED";
             if(has(session,"ORIGINAL_GO_COLD_PRODUCT_FAILED"))
                 return "COLD_PRODUCT_PRE_TLS_FAILED";
+            for(String failure:new String[]{
+                "ORIGINAL_GO_POSTAUTH_COLD_FAILED",
+                "ORIGINAL_GO_POSTAUTH_DETACH_FAILED",
+                "ORIGINAL_GO_POSTAUTH_NATIVE_PREPARE_FAILED",
+                "ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_FAILED",
+                "ORIGINAL_GO_POSTAUTH_NATIVE_OTHER_FAILED",
+                "ORIGINAL_GO_POSTAUTH_LEASE_FIELD_FAILED",
+                "ORIGINAL_GO_POSTAUTH_LEASE_ADD_FAILED",
+                "ORIGINAL_GO_POSTAUTH_LEASE_DEL_FAILED",
+                "ORIGINAL_GO_POSTAUTH_LEASE_READBACK_FAILED",
+                "ORIGINAL_GO_POSTAUTH_LEASE_MISMATCH",
+                "ORIGINAL_GO_POSTAUTH_LEASE_OS_FAILED",
+                "ORIGINAL_GO_POSTAUTH_NATIVE_IP_BIND_FAILED",
+                "ORIGINAL_GO_POSTAUTH_MTU_FAILED",
+                "ORIGINAL_GO_POSTAUTH_UNDERLAY_FAILED",
+                "ORIGINAL_GO_POSTAUTH_RAW_FAILED",
+                "ORIGINAL_GO_POSTAUTH_TUN_FAILED",
+                "ORIGINAL_GO_POSTAUTH_HEALTH_FAILED",
+                "ORIGINAL_GO_POSTAUTH_M4_START_FAILED",
+                "ORIGINAL_GO_POSTAUTH_UID_ROUTE_FAILED",
+            }){
+                if(has(session,failure))return failure;
+            }
+            for(String done:new String[]{
+                "ORIGINAL_GO_POSTAUTH_M4_STARTED",
+                "ORIGINAL_GO_POSTAUTH_TUN_ATTACHED",
+                "ORIGINAL_GO_POSTAUTH_RAW_ATTACHED",
+                "ORIGINAL_GO_POSTAUTH_UNDERLAY_OK",
+                "ORIGINAL_GO_POSTAUTH_NATIVE_IP_BOUND",
+                "ORIGINAL_GO_POSTAUTH_LEASE_OS_OK",
+                "ORIGINAL_GO_POSTAUTH_LEASE_FIELD_OK",
+                "ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_OK",
+                "ORIGINAL_GO_POSTAUTH_DETACH_OK",
+                "ORIGINAL_GO_POSTAUTH_COLD_OK",
+            }){
+                if(has(session,done))return done+"_NEXT_STAGE_UNPROVEN";
+            }
             if(has(session,"ORIGINAL_GO_ADMISSION_VERIFIED"))
                 return "PROTECTED_ADMISSION_VERIFIED_LEASE_UNPROVEN";
             if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_PARSED"))

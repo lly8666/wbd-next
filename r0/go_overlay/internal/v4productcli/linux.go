@@ -1556,6 +1556,12 @@ func readOwnedTunIPv4(name string)(netip.Prefix,error){
     if !address.IsValid(){return netip.Prefix{},fmt.Errorf("owned TUN lacks IPv4")}
     return address,nil
 }
+// Only the original OS address mutation/readback may emit these outcomes.
+func originalAndroidPostauthGo(stage string){
+    if runtime.GOOS=="android"{
+        log.Printf("V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s",stage)
+    }
+}
 func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
     return func(lease string)error{
         prefix,err:=netip.ParsePrefix(lease)
@@ -1565,12 +1571,24 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
         }
         desired:=prefix.String()
         if tun.cidr!=desired{
-            if err:=runIP("addr","add",desired,"dev",tun.name);err!=nil{return err}
-            if err:=runIP("addr","del",tun.cidr,"dev",tun.name);err!=nil{return err}
+            if err:=runIP("addr","add",desired,"dev",tun.name);err!=nil{
+                originalAndroidPostauthGo("LEASE_ADD_FAILED")
+                return err
+            }
+            if err:=runIP("addr","del",tun.cidr,"dev",tun.name);err!=nil{
+                originalAndroidPostauthGo("LEASE_DEL_FAILED")
+                return err
+            }
         }
         actual,err:=readOwnedTunIPv4(tun.name)
-        if err!=nil{return err}
-        if actual!=prefix{return fmt.Errorf("client authenticated IPv4 OS readback mismatch")}
+        if err!=nil{
+            originalAndroidPostauthGo("LEASE_READBACK_FAILED")
+            return err
+        }
+        if actual!=prefix{
+            originalAndroidPostauthGo("LEASE_MISMATCH")
+            return fmt.Errorf("client authenticated IPv4 OS readback mismatch")
+        }
         tun.cidr=desired
         log.Printf("V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=%s",desired)
         return nil
@@ -1860,7 +1878,9 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         if err==nil{
             undoRootRoute,err=androidRootRouteAfterNative(c,tun,authorizedLease)
         }
-        if err!=nil{return errors.Join(
+        if err!=nil{
+            originalAndroidPostauthGo("UID_ROUTE_FAILED")
+            return errors.Join(
             fmt.Errorf("Android exact original-Go authenticated routing denied: %w",err),
             native.Close(),
         )}

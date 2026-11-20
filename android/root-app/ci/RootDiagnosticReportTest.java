@@ -621,6 +621,58 @@ public final class RootDiagnosticReportTest {
         dispatch.record(RootDiagnosticReceipt.Event.UI_START_DISPATCH_FAILED);
         contains(RootDiagnosticReport.build(dispatchDir,source,36),
             "last_session_stage=UI_START_SERVICE_DISPATCH_FAILED");
+        // A40 real post-auth boundary must outrank legacy "admission
+        // verified, lease unproven", even if RST cleanup finished.
+        for(RootDiagnosticReceipt.Event failed:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_COLD_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DETACH_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_PREPARE_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_OTHER_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_FIELD_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_ADD_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_DEL_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_READBACK_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_MISMATCH,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_OS_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_IP_BIND_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_MTU_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UNDERLAY_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_RAW_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUN_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_HEALTH_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_START_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UID_ROUTE_FAILED,
+        }){
+            File stageDir=Files.createTempDirectory("wbd-a40-postauth").toFile();
+            RootDiagnosticReceipt writer=new RootDiagnosticReceipt(
+                new File(stageDir,"wbd-root-diagnostic.txt"));
+            writer.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            writer.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            writer.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED);
+            writer.record(failed);
+            writer.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RST_GUARD_STOP_CLEARED);
+            writer.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            contains(RootDiagnosticReport.build(stageDir,source,36),
+                "last_session_stage="+failed.name());
+        }
+        for(RootDiagnosticReceipt.Event success:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_OK,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_OS_OK,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED
+        }){
+            File stageDir=Files.createTempDirectory("wbd-a40-positive").toFile();
+            RootDiagnosticReceipt writer=new RootDiagnosticReceipt(
+                new File(stageDir,"wbd-root-diagnostic.txt"));
+            writer.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            writer.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            writer.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED);
+            writer.record(success);
+            writer.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            contains(RootDiagnosticReport.build(stageDir,source,36),
+                "last_session_stage="+success.name()+"_NEXT_STAGE_UNPROVEN");
+        }
+        System.out.println("ANDROID_A40_PROTECTED_POSTAUTH_REAL_NATIVE_OS_M4_STAGE_HOST_PASS");
         System.out.println("ANDROID_A39_ZERO_EVENT_APP_PREFLIGHT_FIXED_DIAGNOSTIC_HOST_PASS");
         System.out.println("ANDROID_A38_ORIGINAL_ADMISSION_TLS_EFFECTIVE_OFF_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_FIXED_RECEIPT_HOST_PASS");

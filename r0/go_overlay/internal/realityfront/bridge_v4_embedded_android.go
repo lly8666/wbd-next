@@ -173,7 +173,7 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
         (*C.uchar)(unsafe.Pointer(&snapshot[0])),C.size_t(len(snapshot)),
         (*C.uchar)(unsafe.Pointer(&cmd[0])),C.size_t(len(cmd)),&h)
     runtime.KeepAlive(snapshot);runtime.KeepAlive(cmd)
-    if rc!=0||h==0{return fmt.Errorf("%w: client prepare=%d",errV4Embedded,int(rc))}
+    if rc!=0||h==0{return fmt.Errorf("%w: client prepare=%d",&v4EmbeddedNativeStatus{Operation:"original_native_prepare",Code:int(rc)},int(rc))}
     b.handle=uint64(h)
     // The original Go association has already detached; there can be no
     // live Rust TUN/driver before exact commit of protected TLS seq limits.
@@ -181,7 +181,7 @@ func (b *v4EmbeddedNativeBridge) prepareAuthenticatedClient(
     if rc!=0{
         _=C.wbd_m0_embedded_go_abort(C.uint64_t(b.handle))
         b.handle=0
-        return fmt.Errorf("%w: client commit=%d",errV4Embedded,int(rc))
+        return fmt.Errorf("%w: client commit=%d",&v4EmbeddedNativeStatus{Operation:"original_native_commit",Code:int(rc)},int(rc))
     }
     b.originalFlow=peer.flow
     b.serverSide=false
