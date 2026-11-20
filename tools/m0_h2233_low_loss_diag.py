@@ -68,19 +68,19 @@ def socket_mss_readback(case_file,kind):
         return {"status":"UNKNOWN_NOT_SAMPLED","mss":[]}
     try:
         rows=json.loads(raw.read_text())["start"]["connected"]
-        ports={int(x["local_port"]) for x in rows}
+        ports={int(x["local_port"]):x for x in rows}
         if not rows or len(ports)!=len(rows):
             raise ValueError("ports")
-        peer="10.248.82.2:5202" if kind=="direct" else "10.66.0.1:5201"
         lines=snapshot.read_text().splitlines()
         found={}
-        for n,line in enumerate(lines):
-            if peer not in line:continue
-            m=re.search(r"\bmss:(\d+)\b"," ".join(lines[n:n+3]))
-            if m is None:continue
-            for port in ports:
-                if re.search(r"\b10\.248\.81\.2:"+str(port)+r"\b",line):
-                    found[port]=int(m.group(1))
+        for port,stream in ports.items():
+            src=stream["local_host"]+":"+str(port)
+            peer=stream["remote_host"]+":"+str(stream["remote_port"])
+            for n,line in enumerate(lines):
+                if src not in line or peer not in line:continue
+                m=re.search(r"\bmss:(\d+)\b"," ".join(lines[n:n+3]))
+                if m:found[port]=int(m.group(1))
+                break
         return {"status":"REAL_TCP_INFO_ALL_STREAMS" if len(found)==len(ports)
                     else "UNKNOWN_PARTIAL_TCP_INFO",
                 "expected_streams":len(ports),"observed_streams":len(found),
@@ -146,7 +146,7 @@ def focused_summary(mode,model,directory):
             comparable=(bool(mss_a and mss_b) and
                         direct.get("tcp_info_readback",{}).get("status")=="REAL_TCP_INFO_ALL_STREAMS" and
                         wbd.get("tcp_info_readback",{}).get("status")=="REAL_TCP_INFO_ALL_STREAMS" and
-                        set(mss_a)==set(mss_b)=={1037} and
+                        set(mss_a)==set(mss_b) and
                         requested_a==requested_b==1037)
             comparisons.append({
                 "target_loss_pct":loss,"direction":direction,

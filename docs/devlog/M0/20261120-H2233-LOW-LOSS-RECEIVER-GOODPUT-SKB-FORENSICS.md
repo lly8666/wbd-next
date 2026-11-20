@@ -34,3 +34,22 @@
 每条真实20s业务 iperf3 本轮请求 `-M 1037`，原 stdout `start.tcp_mss=1037` 只回显测试参数，不是已实测协商 MSS。第一个SOURCE在 `start.connected[*].mss` 寻找不存在的字段，故 `actual_mss_readback=UNKNOWN_OR_MISMATCH` 是正确的诚实资格。下一SOURCE使用测试中一次 `ss -tinm`，按原 iperf `start.connected[].local_port` 精确对齐，缺失不冒充MATCHED。
 
 归档回执：[evidence JSON](../../evidence/M0/PLAN029-H2233-FIXED-LOW-LOSS-RECEIVER-SKB-20261120.json)；Action artifacts：summary 14646525298、x86 client 14646080452、ARM router 14645400731、x86 server 14646100470。原始 iperf/ethtool/qdisc 与真实Stop在本 SOURCE artifacts，不从下一 SOURCE 倒填。
+
+## H2233 含抖动源锁真实结果（Action 44768861776）
+
+SOURCE `413c7ed20fc4fcafc15a087641ad4c479741d0bd`。独立三 Linux Runner ARM64 kernel L3 relay，原 Go TLS/Rust M4。静态、server、relay 全SUCCESS；12/12真实TCP用例完成，整体Action FAIL 的容量原因：0ms/0loss Direct接收端 **21.460 / 21.408 Mbps**，非高速合格基线。额外200ms单程、标准差15ms相关抖动与GE目标1%、5%：
+
+| GE目标 | Direct上/下接收Mbps | WBD上/下接收Mbps | WBD/Direct上/下 |
+|---|---|---|---|
+| 1% | 16.330 / 16.410 | 14.783 / 15.100 | 90.53% / 92.02% |
+| 5% | 13.593 / 14.575 | 12.371 / 13.946 | 91.01% / 95.68% |
+
+不可跨不同Runner的容量21Mbps对固定档SOURCE 6c199的613/806Mbps推断 jitter性能因果；不把Action FAIL掩盖为整轮成功。
+
+真正 `ss -tinm` 与 `iperf start.connected[]` 同本地IP+端口、远端IP+端口在应用运行中配对：原始签名产物离线核验，1% direct/WBD上/下4流均 `mss:1025`，5% direct/WBD上行四流均1025，5% WBD下行四流1025，5% direct下行缺在途socket，保留UNKNOWN。原测试汇总解析器误用固定物理源IP查WBD、并把requested1037误作actual要求，故原行动发布的MSS资格仍UNKNOWN，**单独离线复算不篡改旧SOURCE摘要**。新parser按真正IP/端口联合匹配，要求全量 socket，否则UNKNOWN；请求 `-M1037` 与实际内核MSS1025是不同概念。
+
+1%客户端真实Rust`V4_PUBLIC_SHARED_TUN_STOP`为 `routed=91650,backpressure=0,queue_full_drops=0`，且 `data_lagged32=64090/data_unique=90749`、`tun_failed=0`；5%同样无backpressure/满队列但`lagged32=61285/unique=88469`。服务端跨两损伤档累计 `routed=184899,queue_full_drops=0`。这与固定档高容量的真实本地队列满丢包形成**两种不同负载/网络状态**，不支持重加外层可靠性或跨流按序等待。
+
+当前主线原Rust SharedTunReader 路由每条pending 8项/64KiB/100ms，客户端每世代 TX inbox64项，消费轮≤32；已有可选 `WBD_SHARED_TUN_ROUTE_DIAG`、`WBD_PLAN028_EXTERNAL_STAGE_DIAG`、`WBD_M0_RAW_TX_SOCKET_DIAG`，不应再造一个默认持续逐包日志框架。只有高容量、同SOURCE/同VM定向场景才能定位TX停顿/Raw EAGAIN、改批量公平/唤醒并验证真实交付和低p99；单纯放大queue或调整表演式重传都不做。H2233两轮完成后取消专用分支push自动三Runner，后续只静态；需要真实新实验才显式手动启动，避免无效DERP重复耗时。
+
+证据见 [H2233 15ms jitter JSON](../../evidence/M0/PLAN029-H2233-JITTER-LOW-LOSS-TCPINFO-20261120.json)，原始 client artifact14646941497、summary14647350911、server14646871565、ARM14648035420。实体Windows吞吐80–200/3s abort仍OPEN。本次**无生产代码优化声明**。

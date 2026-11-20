@@ -66,7 +66,7 @@ class H2233LowLossAnalysis(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             f=pathlib.Path(d)/"case-000-real.json"
             pathlib.Path(str(f)+".stdout.txt").write_text(json.dumps({
-                "start":{"connected":[{"local_port":41920},{"local_port":41921}]}}))
+                "start":{"connected":[{"local_host":"10.248.81.2","local_port":41920,"remote_host":"10.248.82.2","remote_port":5202},{"local_host":"10.248.81.2","local_port":41921,"remote_host":"10.248.82.2","remote_port":5202}]}}))
             info=pathlib.Path(str(f)+".tcp-info.txt")
             info.write_text(
                 "ESTAB 0 0 10.248.81.2:41920 10.248.82.2:5202\n"
@@ -82,6 +82,17 @@ class H2233LowLossAnalysis(unittest.TestCase):
             self.assertEqual(H.socket_mss_readback(f,"direct")["status"],
                              "UNKNOWN_PARTIAL_TCP_INFO")
             self.assertEqual(H.socket_mss_readback(f,"wbd")["mss"],[])
+            # WBD's source is its authenticated tunnel lease, not the
+            # physical 10.248.81.2 that direct iperf3 uses.
+            pathlib.Path(str(f)+".stdout.txt").write_text(json.dumps({
+                "start":{"connected":[{"local_host":"10.66.0.175",
+                    "local_port":45810,"remote_host":"10.66.0.1","remote_port":5201}]}}))
+            info.write_text(
+                "ESTAB 0 0 10.66.0.175:45810 10.66.0.1:5201\\n"
+                "bbr rtt:450/50 mss:1025 pmtu:1089\\n")
+            got=H.socket_mss_readback(f,"wbd")
+            self.assertEqual(got["status"],"REAL_TCP_INFO_ALL_STREAMS")
+            self.assertEqual(got["mss"],[1025])
 
     def test_branch_only_activation_and_unmodified_cold_tls(self):
         sh=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()

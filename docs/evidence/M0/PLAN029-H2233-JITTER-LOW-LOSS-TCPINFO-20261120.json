@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2233_JITTER",
+  "date": "2026-11-20",
+  "source_sha": "413c7ed20fc4fcafc15a087641ad4c479741d0bd",
+  "run_id": 44768861776,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44768861776",
+  "result": "TRUE_THREE_RUNNER_ALL_12_REAL_TCP_CASES_COMPLETED_ACTION_FAIL_CAPACITY",
+  "qualification": "INFRA_RELAY_OR_DERP_UNQUALIFIED_DIRECT_CLEAR_21MBPS_NOT_PRODUCT_PERFORMANCE_CEILING",
+  "artifacts": {
+    "summary": 14647350911,
+    "client": 14646941497,
+    "server": 14646871565,
+    "arm_router": 14648035420
+  },
+  "jobs": {
+    "static": "SUCCESS",
+    "server": "SUCCESS",
+    "router": "SUCCESS",
+    "client": "FAIL_CAPACITY_GATE_ONLY"
+  },
+  "condition": {
+    "mode": "normal",
+    "FEC": "off",
+    "outer_retrans": "unchanged on",
+    "loss": "GE 1/5 percent",
+    "one_way_extra_delay_ms": 200,
+    "additional_jitter_ms": 15,
+    "correlation_pct": 25,
+    "mss_requested_iperf3": 1037
+  },
+  "clear_direct_receiver_mbps": {
+    "up": 21.46,
+    "down": 21.408
+  },
+  "tcp_cases": {
+    "expected": 12,
+    "completed": 12,
+    "failed": 0
+  },
+  "receiver_goodput_mbps": [
+    {
+      "loss": 1,
+      "direction": "up",
+      "direct": 16.33,
+      "wbd": 14.783,
+      "ratio": 0.9053
+    },
+    {
+      "loss": 1,
+      "direction": "down",
+      "direct": 16.41,
+      "wbd": 15.1,
+      "ratio": 0.9202
+    },
+    {
+      "loss": 5,
+      "direction": "up",
+      "direct": 13.593,
+      "wbd": 12.371,
+      "ratio": 0.9101
+    },
+    {
+      "loss": 5,
+      "direction": "down",
+      "direct": 14.575,
+      "wbd": 13.946,
+      "ratio": 0.9568
+    }
+  ],
+  "mss": {
+    "source": "same source raw case iperf start.connected local_host/local_port/remote_host/remote_port paired to ss -tinm during cases",
+    "original_source_summary": "UNKNOWN_OR_MISMATCH_IN_EMITTED_SUMMARY_DUE_DIAGNOSTIC_PARSER_LOCAL_PHYSICAL_IP_ONLY_AND_REQUEST1037_VS_ACTUAL1025",
+    "separate_raw_artifact_offline_readback": [
+      {
+        "loss": 1,
+        "direction": "up",
+        "direct": "4/4 actual 1025",
+        "wbd": "4/4 actual 1025"
+      },
+      {
+        "loss": 1,
+        "direction": "down",
+        "direct": "4/4 actual 1025",
+        "wbd": "4/4 actual 1025"
+      },
+      {
+        "loss": 5,
+        "direction": "up",
+        "direct": "4/4 actual 1025",
+        "wbd": "4/4 actual 1025"
+      },
+      {
+        "loss": 5,
+        "direction": "down",
+        "direct": "0/4 unknown (not captured)",
+        "wbd": "4/4 actual 1025"
+      }
+    ],
+    "note": "Do not promote invalid original summary MSS status; raw artifact offline analysis is separately stated, no retrospective source change."
+  },
+  "client_native_stop": [
+    {
+      "loss": 1,
+      "shared_tun_routed": 91650,
+      "shared_tun_backpressure": 0,
+      "queue_full_drops": 0,
+      "data_unique": 90749,
+      "lagged_32_unique": 64090,
+      "tun_delivered": 90749,
+      "tun_failed": 0,
+      "outer_repair_accepted_wire_bytes": 0
+    },
+    {
+      "loss": 5,
+      "shared_tun_routed": 92134,
+      "shared_tun_backpressure": 0,
+      "queue_full_drops": 0,
+      "data_unique": 88469,
+      "lagged_32_unique": 61285,
+      "tun_delivered": 88469,
+      "tun_failed": 0,
+      "outer_repair_accepted_wire_bytes": 0
+    }
+  ],
+  "server_native_stop": {
+    "shared_tun_routed": 184899,
+    "shared_tun_backpressure": 0,
+    "queue_full_drops": 0,
+    "scope": "combined loss1 + loss5"
+  },
+  "comparison_boundary": "Fixed action 44764736732 SOURCE 6c1996c has clean reference 613/806Mbps and has client queue-full drops 49529 at1pct, 9209 at5pct; different VM/Source, not same-VM fixed-vs-jitter causal proof.",
+  "unchanged_protocol": "Original Go TLS, Rust native no HOL, ACK10/window65535, source M3 AEAD/PN, FEC/outer repair, Stop untouched",
+  "not_run": [
+    "qualified >=800Mbps clean reference",
+    "physical Windows fast.com 3s sporadic abort source-level proof",
+    "same VM jitter vs fixed true causal A/B",
+    "proven first product change benefit"
+  ],
+  "next": "Do not rerun low-throughput DERP peer for a product ceiling. Target original SharedTunReader 64-slot inbox / 8-slot pending with bounded opt-in stage diagnostics in a capacity-qualified paired comparison before optimizing producer/consumer fairness."
+}
