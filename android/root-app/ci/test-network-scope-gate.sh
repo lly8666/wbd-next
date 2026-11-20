@@ -249,5 +249,22 @@ assert 'FIB table does not exist' in accept
 assert '"wbdv40"' in accept
 assert 'sudo' not in accept and 'pkill' not in accept
 print("ANDROID_ROOT_DEVICE_DIAGNOSTIC_AND_OPERATOR_BUNDLE_HOST_PASS")
+
+# A33 cold diagnostics must observe original stage sites, never fabricate TLS
+# or promote a candidate SYNACK into an accepted FakeTCP association.
+go_product=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+go_admission=Path("r0/go_overlay/internal/realityfront/admission_v4.go").read_text()
+assert go_product.index('V4_PUBLIC_ANDROID_ORIGINAL_ASSOC_ESTABLISHED role=client') > go_product.index('waitForOriginalColdSYN(dialCtx,assoc)')
+assert 'V4_PUBLIC_ANDROID_TLS_HANDSHAKE_ATTEMPTED role=client' in go_admission
+assert go_admission.index('V4_PUBLIC_ANDROID_TLS_HANDSHAKE_VERIFIED role=client') > go_admission.index('handshakeClientConn(ctx,conn,tlsCfg)')
+assert go_admission.index('V4_PUBLIC_ANDROID_PROTECTED_REPLY_PARSED role=client') > go_admission.index('v4ReadReply(client,req)')
+assert go_admission.index('V4_PUBLIC_ANDROID_ADMISSION_VERIFIED role=client') > go_admission.index('v4ColdSnapshot(result,extension.Epoch')
+assert 'v4AndroidColdFailureClass(err)' in go_admission
+for event in ("ORIGINAL_GO_ASSOC_ESTABLISHED","ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPTED",
+              "ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED","ORIGINAL_GO_ADMISSION_VERIFIED",
+              "ORIGINAL_GO_PROTECTED_REPLY_FAILED_AUTH_REJECTED"):
+ assert event in s and event in receipt and event in report
+assert 'SYNACK_CANDIDATE_ASSOC_NOT_PROVEN' in report
+print("ANDROID_A33_ORIGINAL_COLD_TLS_NO_FAKE_WIRE_SOURCE_GATE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY

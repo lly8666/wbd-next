@@ -1616,6 +1616,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // creation; retries cannot change SYN TCP options or skip TLS admission.
     err=waitForOriginalColdSYN(dialCtx,assoc)
     if err!=nil{return err}
+    if runtime.GOOS=="android"{
+        // Unlike a raw SYNACK candidate this proves the ORIGINAL client
+        // Association accepted its sequence/flow and reached Established.
+        log.Print("V4_PUBLIC_ANDROID_ORIGINAL_ASSOC_ESTABLISHED role=client")
+    }
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_established unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(coldSynStart).Milliseconds())}
     var policy realityfront.AdmissionPolicy
     switch c.fecMode{
@@ -1651,7 +1656,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
             StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
         })
-    if err!=nil{return err}
+    if err!=nil{
+        if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_COLD_PRODUCT_FAILED role=client")}
+        return err
+    }
+    if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_COLD_PRODUCT_PREPARED role=client")}
     cfg:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:true,RootCAs:c.tlsRoots,Timeout:15*time.Second},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],

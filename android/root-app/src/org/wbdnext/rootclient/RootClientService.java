@@ -479,6 +479,46 @@ public final class RootClientService extends Service {
                         synackSeen=true;
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TCP_SYNACK_SEEN);
                     }
+                    // A33: ORIGINAL Go emits each marker at its actual cold
+                    // boundary. The Java Service never performs TLS itself.
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_ORIGINAL_ASSOC_ESTABLISHED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ASSOC_ESTABLISHED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_PRODUCT_FAILED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_PRODUCT_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_PRODUCT_PREPARED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_PRODUCT_PREPARED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_ATTEMPTED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=TIMEOUT"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_TIMEOUT);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=CERTIFICATE"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=PEER_CLOSED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_PEER_CLOSED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=OTHER"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_OTHER);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_VERIFIED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REQUEST_WRITE_FAILED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REQUEST_WRITE_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REQUEST_WRITE_OK role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REQUEST_WRITE_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REPLY_FAILED role=client class=TIMEOUT"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_TIMEOUT);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REPLY_FAILED role=client class=AUTH_REJECTED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_AUTH_REJECTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REPLY_FAILED role=client class=VERSION_REJECTED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_VERSION_REJECTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REPLY_FAILED role=client class=PEER_CLOSED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_PEER_CLOSED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REPLY_FAILED role=client class=POLICY_REJECTED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_POLICY_REJECTED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REPLY_FAILED role=client class=OTHER"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_OTHER);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REPLY_PARSED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_PARSED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_ADMISSION_VERIFIED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED);
                     if(!leaseReadback&&OriginalGoMilestones.matches(
                         line,"V4_PUBLIC_LEASE_APPLIED role=client")){
                         leaseReadback=true;

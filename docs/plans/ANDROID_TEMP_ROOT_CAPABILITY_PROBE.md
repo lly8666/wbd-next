@@ -120,6 +120,12 @@ A31保持原 Go`parse`返回值/文件权限/安全拒绝、TLS/证书/路由/St
 
 A32 **直接修 App 写方**而非放宽原Go：3种固定私有文件（密码、派生32B route-key hex、可选TLS CA）改为 `Os.open(...O_NOFOLLOW|O_CLOEXEC|O_CREAT|O_TRUNC,0600)`、对同fd `fchmod(0600)` / sync / `fstat` 检查普通文件、App UID、单一硬链接、精确0600、合法大小。生产 `RootClientService` 在执行任何 `su` 前 `lstat` 二次核验，固定 `APP_PRIVATE_CREDENTIALS_0600_VERIFIED/UNSAFE` 事件只记录时间/枚举，不泄露密码/IP/UID/路径。原 Go O_NOFOLLOW/0600拒绝与标准TLS/认证/Rust M4/服务器/32私表、精确owned Stop仍原样。已签名CN文件原本 chmod0600，安装ID由原Go负责0600，不引入root长期秘密拷贝。新宿主正反例覆盖真实POSIX 0660/0640/0604、错owner、符/硬链接、坏长度和RouteKey/CA，并在原Go回归中加入两种0660拒绝。只按新SOURCE Actions签名APK/Go Rust/Linux oracle/Feature catalog验Host，不运行KSU guest/模拟NIC或用户真机；**BUILD_PASS绝不等于用户手机已修复**。请用户自行保全旧TXT/安全Stop后安装新测试版，单次Start导出新TXT验证。
 
+### A33｜API36 A32实机已达TUN/RAW/SYNACK候选，下一轮同时覆盖TLS及认证失败分段
+
+用户新提供SOURCE `3e2c0cfd7a9dff5598f1c7a33ab6eaaff9e3d67b` API36固定29事件：0600 readback、原Go ARGS_ACCEPTED、真TUN/RAW、SYN sendto、原raw reader SYNACK候选（MSS合法）均 OBSERVED；约15秒后exit1。V2报告误把TUN当最后阶段已由A33修正；SYNACK打印发生在原ClientAssociation.HandleSegment之前，不能冒充原Association Established，更不能冒称对端原Linux server RAW SYNACK、标准TLS/认证/32租约。15秒只与TLS候选超时预算吻合，根因仍 NOT_PROVEN。
+
+A33仅在原Go Android冷路径增加真实Association Established、原Rust产品构造、真TLS attempted/verified/固定失败类别、保护Admission request write/reply及verify等marker；Java只允许有界固定枚举，Host Go classifier/Java V2阶段优先级/锚定反例与同源正式ARM64 APK+原Linux oracle。Android实机、联网服务器、KSU/TAP不自动启动。下一份用户自测安全TXT在同一次有界启动中可定位多个临界点；没有合格环境/授权不得执行外部业务闭环。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：

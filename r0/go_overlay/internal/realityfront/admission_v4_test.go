@@ -1288,3 +1288,24 @@ func TestPLAN028MixedOne443OriginalProtectedNormalGame2Game4ColdPolicy(t *testin
     if ce==nil&&se==nil{t.Fatal("Game2 missing protected capability accepted")}
     if c!=nil||s!=nil{t.Fatal("Game2 unsupported data feature published session")}
 }
+
+
+// A33: pure host classifier, no simulated handshake, Root or device access.
+func TestV4AndroidColdFixedFailureClasses(t *testing.T){
+ cases:=[]struct{err error;want string}{
+  {nil,"NONE"},
+  {context.DeadlineExceeded,"TIMEOUT"},
+  {io.EOF,"PEER_CLOSED"},
+  {io.ErrUnexpectedEOF,"PEER_CLOSED"},
+  {x509.UnknownAuthorityError{},"CERTIFICATE"},
+  {ErrAdmissionAuth,"AUTH_REJECTED"},
+  {ErrAdmissionVersion,"VERSION_REJECTED"},
+  {ErrAdmissionParams,"POLICY_REJECTED"},
+  {errors.New("private hostname/password/path must not appear"),"OTHER"},
+ }
+ for _,test:=range cases{
+  if got:=v4AndroidColdFailureClass(test.err);got!=test.want{
+   t.Errorf("fixed cold class want %s got %s",test.want,got)
+  }
+ }
+}

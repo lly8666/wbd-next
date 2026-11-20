@@ -83,6 +83,50 @@ final class RootDiagnosticReport {
                 return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_OTHER";
             if(has(session,"ORIGINAL_GO_ARGS_REJECTED"))
                 return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_TIMEOUT"))
+                return "TLS_HANDSHAKE_FAILED_TIMEOUT";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE"))
+                return "TLS_HANDSHAKE_FAILED_CERTIFICATE";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_PEER_CLOSED"))
+                return "TLS_HANDSHAKE_FAILED_PEER_CLOSED";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_OTHER"))
+                return "TLS_HANDSHAKE_FAILED_OTHER";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_FAILED_AUTH_REJECTED"))
+                return "PROTECTED_REPLY_FAILED_AUTH_REJECTED";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_FAILED_VERSION_REJECTED"))
+                return "PROTECTED_REPLY_FAILED_VERSION_REJECTED";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_FAILED_TIMEOUT"))
+                return "PROTECTED_REPLY_FAILED_TIMEOUT";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_FAILED_PEER_CLOSED"))
+                return "PROTECTED_REPLY_FAILED_PEER_CLOSED";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_FAILED_POLICY_REJECTED"))
+                return "PROTECTED_REPLY_FAILED_POLICY_REJECTED";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_FAILED_OTHER"))
+                return "PROTECTED_REPLY_FAILED_OTHER";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REQUEST_WRITE_FAILED"))
+                return "PROTECTED_REQUEST_WRITE_FAILED";
+            if(has(session,"ORIGINAL_GO_COLD_PRODUCT_FAILED"))
+                return "COLD_PRODUCT_PRE_TLS_FAILED";
+            if(has(session,"ORIGINAL_GO_ADMISSION_VERIFIED"))
+                return "PROTECTED_ADMISSION_VERIFIED_LEASE_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_PARSED"))
+                return "PROTECTED_REPLY_PARSED_VERIFICATION_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_PROTECTED_REQUEST_WRITE_OK"))
+                return "PROTECTED_REQUEST_WRITTEN_REPLY_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED"))
+                return "TLS_VERIFIED_ADMISSION_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPTED"))
+                return "TLS_HANDSHAKE_ATTEMPTED_RESULT_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_COLD_PRODUCT_PREPARED"))
+                return "COLD_PRODUCT_PREPARED_TLS_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_ASSOC_ESTABLISHED"))
+                return "FAKETCP_ASSOC_ESTABLISHED_TLS_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_TCP_SYNACK_SEEN"))
+                return "SYNACK_CANDIDATE_ASSOC_NOT_PROVEN";
+            if(has(session,"ORIGINAL_GO_COLD_SYN_TX_OK"))
+                return "SYN_SENDTO_ONLY_PEER_SYNACK_UNPROVEN";
+            if(has(session,"ORIGINAL_GO_RAW_SOCKET_READY"))
+                return "ORIGINAL_GO_RAW_BEFORE_SYNACK";
             if(has(session,"ORIGINAL_GO_TUN_OPENED"))
                 return "ORIGINAL_GO_TUN_OPENED_CONFIG_BEFORE_RAW";
             if(has(session,"ORIGINAL_GO_TUN_OPEN_ATTEMPTED"))

@@ -382,6 +382,75 @@ public final class RootDiagnosticReportTest {
             if(RootDiagnosticReport.build(denied,source,36).contains("wbd-pass.secret"))
                 throw new AssertionError("secret file name leaked by rejection");
         }
+        // A33: reproduce the user's actual A32 sequence, including TUN,
+        // RAW, raw SYNACK candidate and nonzero exit. The former report
+        // incorrectly stopped at TUN because its V2 failure block won.
+        for(RootDiagnosticReceipt.Event[] diagnosticCase:new RootDiagnosticReceipt.Event[][]{
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_TCP_SYNACK_SEEN},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_ASSOC_ESTABLISHED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_PRODUCT_FAILED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_PRODUCT_PREPARED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPTED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_TIMEOUT},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_PEER_CLOSED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_OTHER},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REQUEST_WRITE_FAILED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REQUEST_WRITE_OK},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_TIMEOUT},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_AUTH_REJECTED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_VERSION_REJECTED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_PEER_CLOSED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_POLICY_REJECTED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_FAILED_OTHER},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_PROTECTED_REPLY_PARSED},
+            {RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED},
+        }){
+            RootDiagnosticReceipt.Event finalStage=diagnosticCase[0];
+            String expected=null;
+            switch(finalStage){
+            case ORIGINAL_GO_TCP_SYNACK_SEEN: expected="SYNACK_CANDIDATE_ASSOC_NOT_PROVEN"; break;
+            case ORIGINAL_GO_ASSOC_ESTABLISHED: expected="FAKETCP_ASSOC_ESTABLISHED_TLS_UNPROVEN"; break;
+            case ORIGINAL_GO_COLD_PRODUCT_FAILED: expected="COLD_PRODUCT_PRE_TLS_FAILED"; break;
+            case ORIGINAL_GO_COLD_PRODUCT_PREPARED: expected="COLD_PRODUCT_PREPARED_TLS_UNPROVEN"; break;
+            case ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPTED: expected="TLS_HANDSHAKE_ATTEMPTED_RESULT_UNPROVEN"; break;
+            case ORIGINAL_GO_TLS_HANDSHAKE_FAILED_TIMEOUT: expected="TLS_HANDSHAKE_FAILED_TIMEOUT"; break;
+            case ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CERTIFICATE: expected="TLS_HANDSHAKE_FAILED_CERTIFICATE"; break;
+            case ORIGINAL_GO_TLS_HANDSHAKE_FAILED_PEER_CLOSED: expected="TLS_HANDSHAKE_FAILED_PEER_CLOSED"; break;
+            case ORIGINAL_GO_TLS_HANDSHAKE_FAILED_OTHER: expected="TLS_HANDSHAKE_FAILED_OTHER"; break;
+            case ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED: expected="TLS_VERIFIED_ADMISSION_UNPROVEN"; break;
+            case ORIGINAL_GO_PROTECTED_REQUEST_WRITE_FAILED: expected="PROTECTED_REQUEST_WRITE_FAILED"; break;
+            case ORIGINAL_GO_PROTECTED_REQUEST_WRITE_OK: expected="PROTECTED_REQUEST_WRITTEN_REPLY_UNPROVEN"; break;
+            case ORIGINAL_GO_PROTECTED_REPLY_FAILED_TIMEOUT: expected="PROTECTED_REPLY_FAILED_TIMEOUT"; break;
+            case ORIGINAL_GO_PROTECTED_REPLY_FAILED_AUTH_REJECTED: expected="PROTECTED_REPLY_FAILED_AUTH_REJECTED"; break;
+            case ORIGINAL_GO_PROTECTED_REPLY_FAILED_VERSION_REJECTED: expected="PROTECTED_REPLY_FAILED_VERSION_REJECTED"; break;
+            case ORIGINAL_GO_PROTECTED_REPLY_FAILED_PEER_CLOSED: expected="PROTECTED_REPLY_FAILED_PEER_CLOSED"; break;
+            case ORIGINAL_GO_PROTECTED_REPLY_FAILED_POLICY_REJECTED: expected="PROTECTED_REPLY_FAILED_POLICY_REJECTED"; break;
+            case ORIGINAL_GO_PROTECTED_REPLY_FAILED_OTHER: expected="PROTECTED_REPLY_FAILED_OTHER"; break;
+            case ORIGINAL_GO_PROTECTED_REPLY_PARSED: expected="PROTECTED_REPLY_PARSED_VERIFICATION_UNPROVEN"; break;
+            case ORIGINAL_GO_ADMISSION_VERIFIED: expected="PROTECTED_ADMISSION_VERIFIED_LEASE_UNPROVEN"; break;
+            default:throw new AssertionError("missing A33 stage expectation");
+            }
+            File diag=Files.createTempDirectory("wbd-a33-cold").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(
+                new File(diag,"wbd-root-diagnostic.txt"));
+            w.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            w.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPENED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_KERNEL_CONFIGURED);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_RAW_SOCKET_READY);
+            w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_OK);
+            if(finalStage!=RootDiagnosticReceipt.Event.ORIGINAL_GO_TCP_SYNACK_SEEN)
+                w.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_TCP_SYNACK_SEEN);
+            w.record(finalStage);
+            w.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            String actual=RootDiagnosticReport.build(diag,source,36);
+            contains(actual,"last_session_stage="+expected);
+            if(actual.contains("ROOT_PRIVATE_SECRET")||actual.contains("/data/user/"))
+                throw new AssertionError("cold report exposed private input");
+        }
+        System.out.println("ANDROID_A33_SYNACK_TLS_ADMISSION_STAGE_PRIORITY_HOST_PASS");
         System.out.println("ANDROID_A32_PRE_SU_CREDENTIAL_0600_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_ROOT_A31_PARSE_REASON_SAFE_HOST_PASS");
         System.out.println("ANDROID_ROOT_SAFE_DIAGNOSTIC_EXPORT_HOST_PASS");
