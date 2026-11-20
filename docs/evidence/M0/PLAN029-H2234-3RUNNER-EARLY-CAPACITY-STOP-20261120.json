@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2234_EARLY_CAPACITY",
+  "source_sha": "85159d7130ec8462d55b1f20cb16ef26ef9bcf0f",
+  "run_id": 44775952603,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/44775952603",
+  "scope": "REAL_THREE_INDEPENDENT_RUNNERS_WITH_ARM64_KERNEL_L3_ROUTER_BUT_WBD_LOW_LOSS_NOT_RUN",
+  "static": "SUCCESS",
+  "native_x86_build": "SUCCESS",
+  "server": "SUCCESS",
+  "arm_router": "SUCCESS",
+  "client": "FAIL_CAPACITY_GUARD_AS_DESIGNED",
+  "clear_direct_receiver_mbps": {
+    "upload": 21.337,
+    "download": 21.496
+  },
+  "capacity_qualification": "INFRA_UNQUALIFIED_CLEAN_DIRECT_BELOW_500_DIAGNOSTIC_GATE_AND_800_PRODUCT_GATE",
+  "cases": {
+    "requested_total": 12,
+    "actually_run": 2,
+    "actually_completed": 2,
+    "low_loss_1pct": "NOT_RUN_CAPACITY_GUARD",
+    "low_loss_5pct": "NOT_RUN_CAPACITY_GUARD"
+  },
+  "artifacts": {
+    "summary": 14648888537,
+    "client": 14649138643,
+    "server": 14649842477,
+    "router": 14649462694
+  },
+  "source_validation": {
+    "unchanged_native_TLS_Rust_compiled": true,
+    "workflow_static_pass": true,
+    "new_thread_names_in_native_product_built": true,
+    "scheduler_probe_triggered": false,
+    "no_actual_20s_WBD_case": true
+  },
+  "product_throughput_improvement": "NOT_TESTED",
+  "physical_Windows": "NOT_RUN",
+  "next": "Use genuine single-VM three-netns no-DERP high-PPS route as diagnostic only. Preserve independent three-machine >=800 both directions and physical Windows before claiming a product throughput gain.",
+  "warning": "No result from this run can prove high-load M4 scheduling or new TUN queue behavior; observer correctly did not run because no 20s WBD case."
+}

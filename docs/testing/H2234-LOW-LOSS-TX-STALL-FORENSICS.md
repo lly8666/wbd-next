@@ -47,3 +47,17 @@ E. **网络/测试对照本身不足**：先修真实segmentation/MSS与容量�
 任何整改都要同时完成 Rust 双端受影响路径、caller/配置/夹具/旧功能卡、最小针对性单测与原反例；同VM冻结源码做前后 A/B，按 receiver GiB/CPU-s、小TCP/UDP实际p99、memory/wakeups/Stop和no-HOL通过。改善只转移到别处或拉长发送排队则判 FAIL。修完整原因而不是为了某条报错贴补丁。
 
 **当前实现边界**：此文对应线程可辨认＋外部只读诊断，不代表 A–D 中任何产品优化已经完成或真实高带宽复验PASS。
+
+## H2234 本地可重复因果诊断（一 Runner，禁止冒充 WAN）
+
+之前的三独立Runner测试即使SOURCE完全相同，也多次因 Tailscale DERP 把无损 Direct 限在21Mbps；H2234 Action44775952603 的两方向真实参考为21.337/21.496Mbps，故原生 Linux Go/Rust 构建及ARM路由成功，但 **1%/5% WBD 未运行（NOT_RUN）**。预检正确停止了更贵的弱网矩阵；继续刷同一类随机Runner会消耗资源且不能定位本机高PPS拥塞。
+
+复用已成熟的 H1267/H2228 原始 Go TLS、Rust kernel raw/TUN 与 netns/veth 启动约束，新增 `tools/m0_h2234_local_netns.py` + `qa-h2234-local-native-netns.yml`：
+
+- 真正的客户端／Linux IP router／服务端是同一台x86 Runner的**三个独立network namespaces**，两个彼此独立的veth L2，路由器唯一设置真实双向 `tc netem`，不经过Tailscale或DERP，不用Go/模拟通道充当数据包；反方向无NAT。所有原始Go产品与Rust库只构建一次。
+- 以原H2228真实四流iperf3路径测试：先0%无附加延迟Direct上传/下载12秒8流；仅两方向都>=500Mbps才做GE 1%/5%、各方向额外200ms固定延迟、无jitter、Direct/WBD顺序四流20秒。申请 `-M1037`，必须用运行中真正的 `ss -tinm` 核对内核MSS，存储逐case router qdisc skb/实际接口/原始iperf receiver bytes。500Mbps只是高PPS本地诊断最低负载，不改变真正跨机>=800Mbps产品因果准入。
+- 每个丢包档只启动**一个原始Go TLS/Rust客户端generation**；20秒上传与20秒下载之后真实SIGTERM并等待该generation的 SharedTunReader Stop，记录队列满和backpressure，绝不把两个方向的会话累计计数误写成独立case。真实server最终Stop也必须通过，未知/未关闭不能宣称Pass。
+- 在WBD每个20秒case由独立root Python进程以200ms采样原始TID的调度状态与netns `wan0/wbdc0`，同源monotonic_ns对齐每次iperf接收goodput和TUN/Socket读取；probe未捕到或 `schedstat` 不提供可靠数据时明确UNKNOWN，不能将0当没有调度问题。原始Go/Rust热路径无新增线程、无逐包日志、无重传和排队改变。
+- 此阶段**只能**证明同VM的原生本地TX消费/内核损伤/时延机制，不包含真实跨VM公网RTT争用、Windows Npcap或host CPU的独立容量结论。正式性能收益仍须把修前修后产品在同组/同source网络下按接收端GiB、低速P99与资源完成A/B；最后才用高容量真实跨机、实体Windows验证。
+
+任何失败应根据「首个异常」收紧真实内核建链、原应用socket、TUN/Stop或监控，不引入伪网络控制器或扩大公有通用防御框架。

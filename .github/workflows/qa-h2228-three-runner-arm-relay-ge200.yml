@@ -83,7 +83,7 @@ jobs:
   relay-arm64:
     needs: static
     name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
-    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' || github.ref_name == 'feat/h2234-tx-stall-forensics' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' }}
     permissions: {contents: read, actions: read, id-token: write}
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
@@ -176,7 +176,7 @@ jobs:
   server-x86:
     needs: static
     name: 'Independent genuine x86 original-Go TLS/Rust server and real iperf3'
-    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' || github.ref_name == 'feat/h2234-tx-stall-forensics' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' }}
     permissions: {contents: read, actions: read, id-token: write}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -282,7 +282,7 @@ jobs:
   client-x86:
     needs: static
     name: 'Distinct genuine x86 client BBR; routed direct vs WBD TCP 200ms x 0/1/5/10/20%'
-    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' || github.ref_name == 'feat/h2234-tx-stall-forensics' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' }}
     permissions: {contents: read, actions: read, id-token: write}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
