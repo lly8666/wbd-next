@@ -30,6 +30,9 @@ pub(super) struct AndroidOriginalStats{
     pub(super) rx:AtomicU64,pub(super) tx:AtomicU64,
     pub(super) rx_error:AtomicU64,pub(super) tx_error:AtomicU64,
     pub(super) raw_candidates:AtomicU64,pub(super) tx_dropped:AtomicU64,
+    // Genuine authenticated M4 business path observations (not browser PASS).
+    tun_ipv4_admitted:AtomicU64,tun_ipv4_rejected:AtomicU64,
+    business_raw_copied:AtomicU64,business_reverse_tun:AtomicU64,
     pub(super) authenticated_peer_dead:AtomicBool,
     pub(super) peer_preauth_due:AtomicBool,
     pub(super) peer_verified_health:AtomicBool,
@@ -225,6 +228,7 @@ fn raw_worker(
                 };
                 e.arena.drain_returns();
                 stats.rx.fetch_add(u64::from(delivered),Ordering::Relaxed);
+                stats.business_reverse_tun.fetch_add(u64::from(delivered),Ordering::Relaxed);
                 stats.rx_error.fetch_add(
                     u64::from(failed)+u64::from(report.malformed)+
                     u64::from(report.discarded)+u64::from(report.authenticated.rejected),
@@ -414,7 +418,10 @@ fn tun_worker(
                 match outcome{
                     JumboTurn::Copied{done}=>{
                         clock.on_local_business(at.0);
-                        if done{retire=true;break}
+                        if done{
+                            stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
+                            retire=true;break
+                        }
                     },
                     JumboTurn::Deferred=>{deferred=true;break},
                     JumboTurn::Abandoned=>{
@@ -553,11 +560,13 @@ fn tun_worker(
             let head_len=n.min(head_cap);
             let head=&slab.writable()[14..14+head_len];
             if !original_complete_ipv4_head(head,n,lease){
+                stats.tun_ipv4_rejected.fetch_add(1,Ordering::Relaxed);
                 e.arena.drain_returns();
                 stats.tx_error.fetch_add(1,Ordering::Relaxed);
                 stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                 break
             }
+            stats.tun_ipv4_admitted.fetch_add(1,Ordering::Relaxed);
             // Observe each authentic TUN datagram exactly at the EXISTING
             // one-syscall Rust M4 ingress, only after the original /32
             // lease/IPv4 gate and before M1 seal. This NEVER consumes,
@@ -636,6 +645,7 @@ fn tun_worker(
                             &mut e,&raw,&stats,&mut storage,
                             &mut wire_scratch,at
                         )==Some(pn){
+                            stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
                             clock.on_local_business(at.0);
                         }
                     },
@@ -875,6 +885,28 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_stats(
     }
     OK
 }
+// Read real post-Start original M4 worker counters; no packet body, UID,
+// destination or traffic bytes leave the native owner.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_business_receipts(
+    h:u64,tun_admitted:*mut u64,tun_rejected:*mut u64,
+    raw_copied:*mut u64,reverse_tun:*mut u64
+)->i32{
+    if tun_admitted.is_null()||tun_rejected.is_null()||
+       raw_copied.is_null()||reverse_tun.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_workers.is_none(){return BAD_STAGE}
+    let c=&e.android_metrics;
+    unsafe{
+        tun_admitted.write(c.tun_ipv4_admitted.load(Ordering::Relaxed));
+        tun_rejected.write(c.tun_ipv4_rejected.load(Ordering::Relaxed));
+        raw_copied.write(c.business_raw_copied.load(Ordering::Relaxed));
+        reverse_tun.write(c.business_reverse_tun.load(Ordering::Relaxed));
+    }
+    OK
+}
+
 /// B2c2a readonly diagnostics for packets *seen* by the ONE real Rust
 /// M4 TUN worker. No answer counts, endpoint validation or delivery claims:
 /// hijack_enabled=0 until physical + tunnel DNS backend, reply inversion

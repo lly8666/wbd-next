@@ -54,6 +54,8 @@ extern int32_t wbd_m0_embedded_go_public_native_health_effective(uint64_t,const 
 
 
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_business_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
+extern int32_t wbd_m0_embedded_go_loop_dns_ingress_observed(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_predead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_health(uint64_t,uint32_t *);
@@ -388,6 +390,20 @@ type V4PublicOuterCounters struct{
     FirstWireBytes,RepairAcceptedWireBytes,RepairUncertainWireBytes uint64
 }
 func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){return V4PublicOuterCounters{},ErrAdmissionUnsupported}
+// Only original Rust M4 worker-owned counters. Unavailable is not PASS.
+func (b *v4EmbeddedNativeBridge) originalAndroidBusinessReceipts()(tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP uint64,err error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return 0,0,0,0,0,0,errV4Embedded}
+    var a,r,tx,rx C.uint64_t
+    rc:=C.wbd_m0_embedded_go_loop_business_receipts(
+        C.uint64_t(b.handle),&a,&r,&tx,&rx)
+    if rc!=0{return 0,0,0,0,0,0,fmt.Errorf("%w: actual native business counters=%d",errV4Embedded,int(rc))}
+    var udp,tcp,unready C.uint64_t
+    var hijack C.uint32_t
+    rc=C.wbd_m0_embedded_go_loop_dns_ingress_observed(
+        C.uint64_t(b.handle),&udp,&tcp,&unready,&hijack)
+    if rc!=0{return 0,0,0,0,0,0,fmt.Errorf("%w: actual TUN DNS53 ingress=%d",errV4Embedded,int(rc))}
+    return uint64(a),uint64(r),uint64(tx),uint64(rx),uint64(udp),uint64(tcp),nil
+}
 // Read-only original Rust worker stats under the authenticated owner scope.
 type V4PublicFecTxSnapshot struct{
     Accepted,SourceNotReady,Full,Partial uint64
@@ -494,6 +510,9 @@ type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
 // authentication path is redirected to Go.
 type V4PublicLoopPulse struct{
     RxRecords,TxRecords,RxErrors,TxErrors uint64
+    // Android: real original Rust M4 business path; Linux leaves these zero.
+    TunIPv4Admitted,TunIPv4Rejected,BusinessRawCopied,BusinessReverseTun uint64
+    DnsUDP53Seen,DnsTCP53Seen uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
     // Before Native Health terminal: trigger ORIGINAL Go cold B while A
@@ -538,7 +557,12 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
         C.uint64_t(b.handle),&scopeInvalid)
     if rc!=0{return V4PublicLoopPulse{},fmt.Errorf(
         "%w: real Bionic underlay scope readback=%d",errV4Embedded,int(rc))}
+    tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP,businessErr:=b.originalAndroidBusinessReceipts()
+    if businessErr!=nil{return V4PublicLoopPulse{},businessErr}
     return V4PublicLoopPulse{
+        TunIPv4Admitted:tunSeen,TunIPv4Rejected:tunRejected,
+        BusinessRawCopied:rawCopied,BusinessReverseTun:reverseTun,
+        DnsUDP53Seen:dnsUDP,DnsTCP53Seen:dnsTCP,
         PhysicalScopeInvalid:scopeInvalid!=0,
         RxRecords:stats.RxOK,TxRecords:stats.TxOK,
         RxErrors:stats.RxErr,TxErrors:stats.TxErr,

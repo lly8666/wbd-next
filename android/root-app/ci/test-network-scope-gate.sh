@@ -401,6 +401,32 @@ assert 'raw.QuiesceDetachedClientReceive()' in go_product
 assert 'raw.ExcludeDetachedData(flow.PeerIP,flow.PeerPort)' in go_product
 assert 'TestA43OriginalAndroidDetachedClientRXKernelQuiesce' in raw_test
 assert 'ANDROID_A43_ORIGINAL_GO_CLIENT_RX_REAL_KERNEL_QUIESCE_HOST_PASS' in Path("android/root-native/ci/linux-original-oracle.sh").read_text()
+# A44 original real M4 worker business counters + non-mutating UID route-get.
+rust=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+aroute=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
+parser=Path("r0/go_overlay/internal/v4productcli/rootjournal/effective_route.go").read_text()
+assert 'pub unsafe extern "C" fn wbd_m0_embedded_go_loop_business_receipts(' in rust
+assert 'originalAndroidBusinessReceipts()' in bridge
+assert 'wbd_m0_embedded_go_loop_dns_ingress_observed' in bridge
+for x in ('tun_ipv4_admitted.fetch_add(1','tun_ipv4_rejected.fetch_add(1',
+          'business_raw_copied.fetch_add(1','business_reverse_tun.fetch_add(u64::from(delivered)'):
+ assert x in rust,x
+for x in ("TUN_IPV4_SEEN","TUN_IPV4_REJECTED","APP_RAW_TX_COPIED",
+          "APP_REVERSE_TUN_WRITTEN","DNS_UDP53_TUN_SEEN","DNS_TCP53_TUN_SEEN"):
+ assert f'ORIGINAL_RUST_{x}' in s and f'ORIGINAL_RUST_{x}' in receipt
+ assert f'V4_PUBLIC_ANDROID_BUSINESS role=client class={x}' in s
+for x in ("MATCHED_TUN","MISMATCH","UNAVAILABLE"):
+ assert f'ORIGINAL_GO_UID_ROUTE_GET_{x}' in s and f'ORIGINAL_GO_UID_ROUTE_GET_{x}' in receipt
+ assert f'V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class={x}' in s
+assert 'originalAndroidSelectedUIDRouteGet(runner,' in aroute
+assert 'SelectedUIDRouteGetUsesTun(out,tun)' in aroute
+assert 'func SelectedUIDRouteGetUsesTun(' in parser
+assert 'TestA44OriginalUIDEffectiveRouteGetParser' in Path("r0/go_overlay/internal/v4productcli/rootjournal/effective_route_test.go").read_text()
+assert 'TestA44OriginalAndroidBusinessReceiptClasses' in Path("r0/go_overlay/internal/v4productcli/android_business_witness_linux_test.go").read_text()
+assert 'ANDROID_A44_ORIGINAL_RUST_BUSINESS_WITNESS_CLASSIFIER_REAL_GO_HOST_PASS' in Path("android/root-native/ci/linux-original-oracle.sh").read_text()
+assert 'wbd_m0_embedded_go_loop_business_receipts' in Path("android/root-native/build-source-locked.sh").read_text()
+print("ANDROID_A44_ORIGINAL_M4_APP_BUSINESS_AND_UID_ROUTE_GET_SOURCE_PASS")
 print("ANDROID_A43_ORIGINAL_GO_CLIENT_RX_QUIESCE_SOURCE_GATE_PASS")
 print("ANDROID_A42_ORIGINAL_M4_POST_START_HANDOFF_SOURCE_GATE_PASS")
 print("ANDROID_A41_ANDROID_TUN_LEASE32_NATIVE_GETIFADDRS_SOURCE_PASS")

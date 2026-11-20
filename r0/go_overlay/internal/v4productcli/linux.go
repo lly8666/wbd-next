@@ -1598,6 +1598,17 @@ func originalAndroidPostauthGo(stage string){
         log.Printf("V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s",stage)
     }
 }
+// Real original Rust M4 state, not Ready and never a guessed Chrome PASS.
+func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]string{
+ var stages []string
+ if p.TunIPv4Admitted>0{stages=append(stages,"TUN_IPV4_SEEN")}
+ if p.TunIPv4Rejected>0{stages=append(stages,"TUN_IPV4_REJECTED")}
+ if p.BusinessRawCopied>0{stages=append(stages,"APP_RAW_TX_COPIED")}
+ if p.BusinessReverseTun>0{stages=append(stages,"APP_REVERSE_TUN_WRITTEN")}
+ if p.DnsUDP53Seen>0{stages=append(stages,"DNS_UDP53_TUN_SEEN")}
+ if p.DnsTCP53Seen>0{stages=append(stages,"DNS_TCP53_TUN_SEEN")}
+ return stages
+}
 func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
     return func(lease string)error{
         prefix,err:=netip.ParsePrefix(lease)
@@ -1950,9 +1961,24 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // ALL Normal modes; neither ACK nor local driver errors may reauthorize TLS.
     var notifyPreDead chan<- struct{}
     if len(ready)>1{notifyPreDead=ready[1]}
+    // Reuse the original one-second Health poll, no new worker or hot-path Go.
+    businessLogged:=make(map[string]bool,6)
+    businessPulse:=func()(realityfront.V4PublicLoopPulse,error){
+        p,e:=native.OriginalLoopPulse()
+        if e==nil&&runtime.GOOS=="android"{
+            for _,stage:=range originalAndroidBusinessReceiptClasses(p){
+                if !businessLogged[stage]{
+                    businessLogged[stage]=true
+                    log.Printf("V4_PUBLIC_ANDROID_BUSINESS role=client class=%s",stage)
+                }
+            }
+        }
+        return p,e
+    }
     err=monitorPublicNativePeer(ctx,errs,
         func()bool{return handoffCommitted.Load()},
-        native.OriginalLoopPulse,notifyPreDead)
+        businessPulse,notifyPreDead)
+    if runtime.GOOS=="android"{_,_=businessPulse()}
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
     logNormalStartupPadding("client",c.fecMode!=realityfront.FecV2Off,m,n,b,e)

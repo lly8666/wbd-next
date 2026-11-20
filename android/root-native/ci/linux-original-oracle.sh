@@ -120,6 +120,9 @@ echo ANDROID_A41_ORIGINAL_ANDROID_GETIFADDRS_LEASE32_REAL_GO_HOST_PASS
 # donor initial Ethernet port filter, not just Go BPF VM.
 (cd legacy && timeout 180s go test -count=1 -run TestA43OriginalAndroidDetachedClientRXKernelQuiesce ./internal/faketcp)
 echo ANDROID_A43_ORIGINAL_GO_CLIENT_RX_REAL_KERNEL_QUIESCE_HOST_PASS
+# A44 source-locked genuine Go business witness decision (no synthetic PASS).
+(cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run TestA44OriginalAndroidBusinessReceiptClasses ./internal/v4productcli)
+echo ANDROID_A44_ORIGINAL_RUST_BUSINESS_WITNESS_CLASSIFIER_REAL_GO_HOST_PASS
 for role in client server;do
   (cd legacy && go build -trimpath -buildvcs=false \
     -tags wbd_v4_embedded_go,wbd_v4_fec2_product \

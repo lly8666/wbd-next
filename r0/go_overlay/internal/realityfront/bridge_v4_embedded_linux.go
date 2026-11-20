@@ -714,6 +714,9 @@ type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
 // authentication path is redirected to Go.
 type V4PublicLoopPulse struct{
     RxRecords,TxRecords,RxErrors,TxErrors uint64
+    // Android: real original Rust M4 business path; Linux leaves these zero.
+    TunIPv4Admitted,TunIPv4Rejected,BusinessRawCopied,BusinessReverseTun uint64
+    DnsUDP53Seen,DnsTCP53Seen uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
     // Before Native Health terminal: trigger ORIGINAL Go cold B while A

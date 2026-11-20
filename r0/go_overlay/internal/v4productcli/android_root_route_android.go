@@ -14,6 +14,23 @@ import (
     "github.com/lly8666/wobuzhidao/internal/v4productcli/rootjournal"
 )
 
+// Read-only route-get for each selected App UID; never changes kernel state.
+// Mismatch is a diagnostic, not an authorization or a route mutation.
+func originalAndroidSelectedUIDRouteGet(runner rootjournal.Runner,uids []int,tun string){
+ for _,uid:=range uids{
+  out,err:=runner("-4","route","get","1.1.1.1","uid",strconv.Itoa(uid))
+  if err!=nil{
+   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=UNAVAILABLE")
+   return
+  }
+  if !rootjournal.SelectedUIDRouteGetUsesTun(out,tun){
+   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MISMATCH")
+   return
+  }
+ }
+ fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MATCHED_TUN")
+}
+
 // This runs only AFTER true standard Go TLS/credential/auto-/32,
  // exact OS lease readback, original Rust M4 loop start and FakeTCP DATA
 // ownership handoff. The Android APK supplies a ConnectivityManager handle
@@ -103,6 +120,7 @@ func androidRootRouteAfterNative(
             NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         })
         if e!=nil{return nil,e}
+        originalAndroidSelectedUIDRouteGet(runner,c.androidRouteUIDs,tun.name)
         // This receipt is printed only AFTER the entire owned kernel
         // group receives positive readback. Not a fake per-App ACK.
         var uidText []string
@@ -122,6 +140,7 @@ func androidRootRouteAfterNative(
         IfIndex:physical.Index,
     })
     if e!=nil{return nil,e}
+    originalAndroidSelectedUIDRouteGet(runner,[]int{c.androidRouteUID},tun.name)
     // This exact root-only rule is the sole route grant. The kernel
     // readback and fsync'd journal are complete before a positive log.
     fmt.Fprintf(os.Stderr,
