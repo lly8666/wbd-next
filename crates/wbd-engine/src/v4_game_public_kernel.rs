@@ -5,7 +5,7 @@
 //! end-to-end application/Stop Actions for both executable processes.
 #![allow(unsafe_code)]
 use std::os::fd::OwnedFd;
-use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
+use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::collections::VecDeque;
 use std::sync::mpsc::{self,Receiver,RecvTimeoutError,SyncSender};
