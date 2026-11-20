@@ -453,6 +453,23 @@ for name in ("RAW_SOCKET_READABLE","RAW_PARSE_FAILED","RAW_PARSED",
  assert f'ORIGINAL_RUST_{name}' in s and f'ORIGINAL_RUST_{name}' in receipt
  assert f'V4_PUBLIC_ANDROID_BUSINESS role=client class={name}' in s
  assert f'"{name}"' in goproduct
+# A46: copy EXACT main's already-landed Windows H2216 Linux/Android
+# shared Rust parser. No new TTL interpretation and no M3 bypass.
+main_ttl=Path("crates/wbd-platform/src/rx_ipv4_tcp.rs").read_text()
+android_io=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+linux_io=Path("crates/wbd-platform/src/linux_raw_carrier.rs").read_text()
+assert 'if packet[8] == 0 { return Err(RxError::WrongIpHeader); }' in main_ttl
+assert 'if packet[8]==0{return Err(RxError::WrongIpHeader)}' in main_ttl
+assert 'if packet[8] != trusted.persona.ttl()' not in main_ttl
+assert 'if packet[8]!=trusted.persona.ttl()' not in main_ttl
+assert 'fn h2216_original_windows_128_to_116_client_public_nat_data_and_ack()' in main_ttl
+assert 'PacketPersona::Windows11, 116u8' in main_ttl
+assert 'PacketPersona::Legacy, 52u8' in main_ttl
+assert 'RxError::IpChecksum' in main_ttl
+assert 'crate::rx_ipv4_tcp::parse_data_packet(' in android_io
+assert 'parse_data_packet(&slot[..len],trusted)' in linux_io
+assert 'ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS' in Path('android/root-native/ci/linux-original-oracle.sh').read_text()
+print("ANDROID_A46_EXACT_MAIN_WINDOWS_H2216_TTL_ANDROID_LINUX_SOURCE_GATE_PASS")
 print("ANDROID_A45_ORIGINAL_M4_RETURN_PATH_ICMP_SOURCE_GATE_PASS")
 print("ANDROID_A44_ORIGINAL_M4_APP_BUSINESS_AND_UID_ROUTE_GET_SOURCE_PASS")
 print("ANDROID_A43_ORIGINAL_GO_CLIENT_RX_QUIESCE_SOURCE_GATE_PASS")

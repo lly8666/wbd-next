@@ -17,7 +17,11 @@ const TCP_HEADER_LEN: usize = 20;
 const MAX_PACKET_LEN: usize = u16::MAX as usize;
 const TCP_PROTO: u8 = 6;
 const DF_ONLY: u16 = 0x4000;
-
+ 
+// TTL is a hop-local IPv4 lifetime value, NOT a reliable persona marker.
+// All reachable positive TTL values are allowed; the unchanged tuple, both
+// checksums, protected TLS association, AEAD and PN replay gates enforce
+// authenticity. Routers/NAT can change TTL after the sender wrote its header.
 #[derive(Clone, Copy, Debug)]
 pub struct TrustedRx<'a> {
     pub tuple: Ipv4Tuple<'a>,
@@ -169,7 +173,7 @@ pub fn parse_data_packet<'a>(
         return Err(RxError::FragmentedOrUnexpectedFlags);
     }
     if packet[9] != TCP_PROTO { return Err(RxError::WrongProtocol); }
-    if packet[8] != trusted.persona.ttl() { return Err(RxError::WrongPersona); }
+    if packet[8] == 0 { return Err(RxError::WrongIpHeader); }
     if &packet[12..16] != tuple.src_ip || &packet[16..20] != tuple.dst_ip {
         return Err(RxError::WrongTuple);
     }
@@ -251,7 +255,7 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
         return Err(RxError::FragmentedOrUnexpectedFlags)
     }
     if packet[9]!=TCP_PROTO{return Err(RxError::WrongProtocol)}
-    if packet[8]!=trusted.persona.ttl(){return Err(RxError::WrongPersona)}
+    if packet[8]==0{return Err(RxError::WrongIpHeader)}
     if &packet[12..16]!=tuple.src_ip||&packet[16..20]!=tuple.dst_ip{
         return Err(RxError::WrongTuple)
     }
@@ -443,14 +447,14 @@ mod tests {
         assert_eq!(parse_data_packet(&empty,trusted(None,1500)),Err(RxError::EmptyData));
     }
     #[test]
-    fn r1_rx_ipv4_tcp_wrong_ip_port_ttl_and_independent_checksums() {
+    fn r1_rx_ipv4_tcp_wrong_ip_port_mutated_ttl_checksum_fails_closed() {
         let original=wire(b"record!",100,None);
         let cases=[
             (12,0u8,RxError::WrongTuple),
             (16,0u8,RxError::WrongTuple),
             (20,0u8,RxError::WrongTuple),
             (22,0u8,RxError::WrongTuple),
-            (8,128u8,RxError::WrongPersona),
+            (8,128u8,RxError::IpChecksum),
             (10,0u8,RxError::IpChecksum),
             (36,0u8,RxError::TcpChecksum),
             (40,0u8,RxError::TcpChecksum),
@@ -559,5 +563,89 @@ mod plan027_ack_tests{
         let no_sack=build_presentation_ack_sack(t.tuple,10,20,1,
             PacketPersona::Legacy,1500,&[],&mut buf).unwrap();
         assert!(parse_ack_packet(no_sack,t,false).unwrap().sacks().is_empty());
+    }
+}
+
+ 
+#[cfg(test)]
+mod h2216_public_nat_ttl_tests {
+    use super::*;
+    use crate::ipv4_tcp::{build_bytes, build_presentation_ack, Presentation};
+
+    // Reproduce ordinary IPv4 router TTL decrements while keeping a genuine
+    // valid IPv4 checksum. TCP pseudoheader and opaque record do not change.
+    fn routed(mut packet: Vec<u8>, ttl: u8) -> Vec<u8> {
+        packet[8] = ttl;
+        packet[10] = 0;
+        packet[11] = 0;
+        let mut sum: u32 = packet[..20]
+            .chunks_exact(2)
+            .map(|w| u32::from(u16::from_be_bytes([w[0], w[1]])))
+            .sum();
+        while sum > 0xffff {
+            sum = (sum & 0xffff) + (sum >> 16);
+        }
+        packet[10..12].copy_from_slice(&(!(sum as u16)).to_be_bytes());
+        packet
+    }
+
+    #[test]
+    fn h2216_original_windows_128_to_116_client_public_nat_data_and_ack() {
+        // The observed client-to-server WAN TTL in the user's sanitized pcap
+        // was 116. The original Windows sender writes 128: two NATs plus WAN.
+        for (persona, routed_ttl) in [
+            (PacketPersona::Windows11, 116u8),
+            (PacketPersona::Legacy, 52u8),
+        ] {
+            // Representative post-NAT addresses are documentation networks,
+            // never the real subscriber's public/private IP from captures.
+            let src = [198, 51, 100, 47];
+            let dst = [192, 0, 2, 31];
+            let tuple = Ipv4Tuple {
+                src_ip: &src, dst_ip: &dst, src_port: 40005, dst_port: 443,
+            };
+            let trusted = TrustedRx {
+                tuple, persona, mtu: 1400, authenticated_options: None,
+            };
+            let mut raw = [0u8; 256];
+            let opaque = b"not-authenticated-until-M3-AEAD";
+            let wire = build_bytes(tuple, Presentation {
+                ack32: 200, advertised_window: 4096, ip_id: 7, persona,
+            }, 100, opaque, None, 1400, &mut raw).unwrap().to_vec();
+            assert_eq!(wire[8], persona.ttl());
+            let routed_data = routed(wire.clone(), routed_ttl);
+            assert_eq!(
+                parse_data_packet(&routed_data, trusted).unwrap().ciphertext,
+                opaque,
+                "routed TTL {routed_ttl} must reach the still-mandatory M3 AEAD"
+            );
+            let mut ack_storage = [0u8; 128];
+            let ack = build_presentation_ack(
+                tuple, 101, 201, 8, persona, 1400, &mut ack_storage
+            ).unwrap().to_vec();
+            assert!(parse_ack_packet(&routed(ack.clone(), routed_ttl), trusted, false).is_ok());
+            // A router can deliver an on-wire TTL larger than the chosen
+            // sender persona's initial TTL, e.g. after middlebox rewriting.
+            // Reject only the impossible zero-TTL header, never persona.
+            assert!(parse_data_packet(&routed(wire.clone(), 255), trusted).is_ok());
+            assert!(parse_ack_packet(&routed(ack.clone(), 255), trusted, false).is_ok());
+            assert_eq!(
+                parse_data_packet(&routed(wire.clone(), 0), trusted),
+                Err(RxError::WrongIpHeader)
+            );
+            assert_eq!(
+                parse_ack_packet(&routed(ack, 0), trusted, false),
+                Err(RxError::WrongIpHeader)
+            );
+            let bad_ip_checksum = {
+                let mut changed = routed_data.clone();
+                changed[10] ^= 0x01;
+                changed
+            };
+            assert_eq!(
+                parse_data_packet(&bad_ip_checksum, trusted),
+                Err(RxError::IpChecksum)
+            );
+        }
     }
 }

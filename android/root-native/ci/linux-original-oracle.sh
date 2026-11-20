@@ -93,6 +93,12 @@ assert m["donor_go"]=="a7a82db31fe736ffedee330795a3234d358f1984"
 print("ANDROID_A3_ORIGINAL_LINUX_SERVER_CURRENT_DONOR_OVERLAY_PASS")
 PY
 rustup toolchain install 1.85.1 --profile minimal
+# A46: run EXACT main/Windows H2216 IPv4 TTL NAT fixture against the
+# same Rust wbd-platform source used by Android and Linux. Public DATA and
+# pure ACK must pass; IP checksum corruption and zero TTL must still fail.
+cargo +1.85.1 test --locked -p wbd-platform --lib \
+  h2216_original_windows_128_to_116_client_public_nat_data_and_ack
+echo ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS
 cargo +1.85.1 build --locked --release -p wbd-engine \
   --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record \
   >out/android-a3-linux/rust-build.log 2>&1 || {
