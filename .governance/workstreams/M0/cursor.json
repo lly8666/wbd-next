@@ -11,7 +11,7 @@
   "current_task": "H2229 Linux双向Normal/Game ACK10ms、65535窗口、Windows SACK10ms；Win/x86/ARM原生4/4通过。",
   "why_now": "实体上行3秒偶断/业务80-200Mbps，ACK路径不对称；禁改外层表演重传。",
   "done_when": "同源Win/x86/ARM原生PASS；200ms单程1/5/10/20%三Runner和实体Windows均仍OPEN。",
-  "next_action": "H2228用ARM中继独立netem 200ms/向及1/5/10/20%验证真实TCP基线与WBD；追Health/队列和Windows实体上行。",
+  "next_action": "H2228 ARM中继独立netem 200ms/向1/5/10/20%对照真实TCP；实体Windows早退追根因，禁改外层重传。",
   "unverified": true,
   "last_tested_source": "09654a4e366041f2329bb08b6b8deec109433392",
   "evidence_refs": [
@@ -20,9 +20,6 @@
   "context_refs": [
     "docs/devlog/M0/20261120-H2229-CROSS-PLATFORM-ACK10MS-WIN-SEMANTICS-LINUX65535-NO-HOL.md"
   ],
-  "open_requests": [
-    "三Runner ARM中继现实抖动丢包与BBR/WBD双iperf3",
-    "实体Windows同源上行故障"
-  ],
+  "open_requests": [],
   "partial_summary": "Action44727976115四作业ALL_SUCCESS，测试不等于物理根因。H2227跨机可用；高延迟三Runner未测。"
 }
