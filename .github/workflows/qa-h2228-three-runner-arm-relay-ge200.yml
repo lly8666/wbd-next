@@ -25,7 +25,9 @@ permissions:
   contents: read
 concurrency:
   group: h2228-three-runner-${{ github.ref }}
-  cancel-in-progress: false
+  # During fixture development, replace stale runs holding three ephemeral VMs.
+  # Production main manual runs stay non-cancelling to preserve evidence.
+  cancel-in-progress: ${{ github.ref_name == 'test/h2228-three-runner-arm-relay-bbr-ge200' }}
 jobs:
   static:
     name: 'H2228 3-runner source grammar and topology/loss-model negative tests (NOT a speed result)'

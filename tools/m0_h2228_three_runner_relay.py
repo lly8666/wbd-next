@@ -101,7 +101,11 @@ def peer_file(path,our,role):
 
 def bbr(name):
     root("modprobe","tcp_bbr",allow_fail=True)
+    # Each new netns starts with its own TCP CC default (typically cubic),
+    # regardless of global host readback. Explicitly set BOTH. Do not
+    # misclassify an unconfigured netns as a missing BBR kernel module.
     root("sysctl","-q","-w","net.ipv4.tcp_congestion_control=bbr")
+    ns(name,"sysctl","-q","-w","net.ipv4.tcp_congestion_control=bbr")
     target=ns(name,"sysctl","-n","net.ipv4.tcp_congestion_control").stdout.strip()
     guard(target=="bbr","NAMESPACE_BBR_READBACK")
     # Real BBR long-fat path needs >50MiB receive/socket window to occupy

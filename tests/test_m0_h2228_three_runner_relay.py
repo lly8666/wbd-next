@@ -39,6 +39,25 @@ class H2228ThreeGenuineMachines(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     H.validate_pair(self.local,{**self.relay,field:value},"relay")
 
+    def test_bbr_must_be_set_inside_new_linux_namespace(self):
+        invocations=[]
+        def root(*args,**kwargs):
+            invocations.append(("root",args))
+            return subprocess.CompletedProcess(args,0,"","")
+        def ns(name,*args,**kwargs):
+            invocations.append((name,args))
+            value="bbr\n" if args==("sysctl","-n","net.ipv4.tcp_congestion_control") else (
+                "4096 87380 67108864\n")
+            return subprocess.CompletedProcess(args,0,value,"")
+        with patch.object(H,"root",root),patch.object(H,"ns",ns):
+            actual=H.bbr(H.NODE)
+        self.assertEqual(actual["tcp_cc"],"bbr")
+        self.assertIn((H.NODE,("sysctl","-q","-w",
+                      "net.ipv4.tcp_congestion_control=bbr")),invocations)
+        self.assertIn(("root",("sysctl","-q","-w",
+                      "net.ipv4.tcp_congestion_control=bbr")),invocations)
+        self.assertGreater(len([n for n,args in invocations if n==H.NODE]),6)
+
     def test_stationary_mean_and_ge_real_burst_sensitivity(self):
         for loss in (1.0,5.0,10.0,20.0):
             ge=H.ge_params(loss)
