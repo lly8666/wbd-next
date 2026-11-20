@@ -375,6 +375,16 @@ assert 'Operation:"original_native_prepare"' in androidbridge
 assert 'Operation:"original_native_commit"' in androidbridge
 assert 'V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s' in postauth
 assert 'V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s' in go_product
+# A41 Android native kernel lease readback uses the same getifaddrs
+# interface API already proven on real device physical Network. This
+# avoids Android-only external ip JSON "addr" parsing after successful add/del.
+assert 'if runtime.GOOS=="android"{\n        iface,err:=net.InterfaceByName(name)' in go_product
+assert 'addrs,err:=iface.Addrs()' in go_product
+assert 'return originalV4OwnedTunIPv4FromNativeAddrs(addrs)' in go_product
+assert 'func originalV4OwnedTunIPv4FromNativeAddrs(addrs []net.Addr)' in go_product
+assert 'TestA41AndroidOriginalOwnedTunIPv4NativeGetifaddrs' in Path("r0/go_overlay/internal/v4productcli/android_native_tun_lease_readback_linux_test.go").read_text()
+assert 'ANDROID_A41_ORIGINAL_ANDROID_GETIFADDRS_LEASE32_REAL_GO_HOST_PASS' in Path("android/root-native/ci/linux-original-oracle.sh").read_text()
+print("ANDROID_A41_ANDROID_TUN_LEASE32_NATIVE_GETIFADDRS_SOURCE_PASS")
 print("ANDROID_A40_ORIGINAL_GO_RUST_POSTAUTH_STAGE_HOST_SOURCE_PASS")
 print("ANDROID_A39_ANDROID_KEYSTORE_PROVIDER_IV_AND_START_NONBLOCKING_SOURCE_PASS")
 print("ANDROID_A38_KEYSTORE_ENCRYPTED_SECRET_AUTOFILL_SOURCE_GATE_PASS")

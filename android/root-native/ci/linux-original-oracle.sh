@@ -109,6 +109,13 @@ echo ANDROID_A34_ORIGINAL_GO_TLS_CLASSIFIER_HOST_PASS
 # self-signed TLS policy test (not a fake TLS verdict or source grep).
 (cd legacy && timeout 180s go test -count=1 -run '^TestA38OriginalProtectedAdmissionCertVerifyPolicy$' ./internal/realityfront)
 echo ANDROID_A38_ORIGINAL_PROTECTED_TLS_CERT_POLICY_REAL_GO_HOST_PASS
+# A41 actual original-Go Native Address parser, built with the native
+# product tags (no fake Android guest, no fabricated lease OS receipt).
+(cd legacy && timeout 180s go test -count=1 \
+  -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
+  -run '^TestA41AndroidOriginalOwnedTunIPv4NativeGetifaddrs$' \
+  ./internal/v4productcli)
+echo ANDROID_A41_ORIGINAL_ANDROID_GETIFADDRS_LEASE32_REAL_GO_HOST_PASS
 for role in client server;do
   (cd legacy && go build -trimpath -buildvcs=false \
     -tags wbd_v4_embedded_go,wbd_v4_fec2_product \

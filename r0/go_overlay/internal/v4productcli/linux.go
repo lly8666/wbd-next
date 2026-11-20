@@ -1528,7 +1528,43 @@ func originalV4AutomaticLease(reg *logicaltunnel.LeaseRegistry)func(realityfront
 }
 // The Linux kernel must confirm the exact authenticated /32 before Rust can
 // read or write the TUN. No user-controlled inner-MTU setting is introduced.
+// A41: Android's real kernel interface/address enumeration is already used
+// for the physical Network in the original Root client. Reuse that *same*
+// native getifaddrs path for the newly-owned TUN after protected /32 has
+// been applied. Android's external "ip -j addr" can reject JSON output or
+// have a different shape even when "ip -j link" worked earlier.
+// Linux's existing JSON path stays unchanged.
+func originalV4OwnedTunIPv4FromNativeAddrs(addrs []net.Addr)(netip.Prefix,error){
+    var owned netip.Prefix
+    for _,a:=range addrs{
+        ipNet,ok:=a.(*net.IPNet)
+        if !ok{return netip.Prefix{},fmt.Errorf("non-IP native TUN address")}
+        raw4:=ipNet.IP.To4()
+        if raw4==nil{continue} // IPv6 never becomes an IPv4 lease
+        ones,bits:=ipNet.Mask.Size()
+        if bits!=32||ones!=32||owned.IsValid(){
+            return netip.Prefix{},fmt.Errorf("native TUN has non-/32 or multiple IPv4 addresses")
+        }
+        ip,ok:=netip.AddrFromSlice(raw4)
+        if !ok||!ip.Is4()||ip.IsUnspecified()||ip.IsMulticast(){
+            return netip.Prefix{},fmt.Errorf("native TUN has invalid IPv4")
+        }
+        owned=netip.PrefixFrom(ip,32)
+    }
+    if !owned.IsValid(){return netip.Prefix{},fmt.Errorf("native TUN has no IPv4")}
+    return owned,nil
+}
 func readOwnedTunIPv4(name string)(netip.Prefix,error){
+    if runtime.GOOS=="android"{
+        iface,err:=net.InterfaceByName(name)
+        if err!=nil{return netip.Prefix{},fmt.Errorf("native Android owned TUN lookup: %w",err)}
+        if iface==nil||iface.Index<=0||iface.Name!=name{
+            return netip.Prefix{},fmt.Errorf("native Android owned TUN identity mismatch")
+        }
+        addrs,err:=iface.Addrs()
+        if err!=nil{return netip.Prefix{},fmt.Errorf("native Android TUN getifaddrs: %w",err)}
+        return originalV4OwnedTunIPv4FromNativeAddrs(addrs)
+    }
     data,err:=exec.Command("ip","-j","addr","show","dev",name).CombinedOutput()
     if err!=nil{return netip.Prefix{},fmt.Errorf("owned TUN IP readback: %w %s",err,data)}
     var links []struct{
