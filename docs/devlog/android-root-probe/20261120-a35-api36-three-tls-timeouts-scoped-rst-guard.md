@@ -31,3 +31,17 @@ SOURCE `006be26102dc24175dc062c7228556d9704c8cbb` [Action #44706323960](https://
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A35b把API36真V2安全日志的Java报告夹具及第三套Linux x86原Go源码装配完整接线，保留先前CI红门，不改TLS/内核Root权限。"}
 ```
+
+## A35 完整新SOURCE产品验收（仅完成证据同步）
+
+真实产品SOURCE `4975c1abf4bc64357f3da246c85dcc15e84d9824` 的 [Android dual64 Action #44707167439](https://github.com/lly8666/wbd-next/actions/runs/44707167439) completed **SUCCESS：11 SUCCESS / 4 SKIPPED / 0 FAIL**。原ARM64双Bionic Go/Rust（x86_64 CI-only）、正式调试签名ARM64 APK、原Java可导出固定脱敏安全TXT/新RST正反例、Linux x86原服务端源锁装配、原Linux Normal/off TLS→真实保护Admission/自动/32租约→Rust M4→真实内核UDP/Stop与标准ClientHello wire审计同SOURCE完成相应CI资格。
+
+原 `linux-original-server-normal-off` Job实际日志含 `ANDROID_A35_FAKE_RUNNER_RST_GUARD_JOURNAL_HOST_PASS`、`ANDROID_A34_ORIGINAL_GO_TLS_CLASSIFIER_HOST_PASS`、`ANDROID_A3_LINUX_SERVER_ORACLE_PASS_ANDROID_RUNTIME_NOT_RUN`；前者是安全的Host假iptables Runner +真实Go journal/权限/Stop逻辑回归，**不等于Android内核真实iptables已安装**。四个SKIPPED依次是旧x86 KSU native、ARM64 NativeBridge、D2-S1、TAP guest；Cuttlefish只有host admission，不等于guest Android业务。
+
+[同源签名ARM64 APK #14614874457](https://github.com/lly8666/wbd-next/actions/runs/44707167439/artifacts/14614874457)，[同源原Linux Oracle工件 #14615856933](https://github.com/lly8666/wbd-next/actions/runs/44707167439/artifacts/14615856933)。当下唯一最新真实用户手机证据依然是旧 `c010f735` API36三次：原Association Established→真实Bootstrap payload TX→peer payload NOT_OBSERVED/RTO→15s TLS Timeout。**A35 root iptables可用性/规则精准读回与计数/内核回程、TLS/认证/lease/M4/应用业务、Android完整joined Stop全是 NOT_RUN/NOT_PROVEN**。无法仅因CI 11绿称真机解决；也不把历史 [#44705679914](https://github.com/lly8666/wbd-next/actions/runs/44705679914)、[#44706323960](https://github.com/lly8666/wbd-next/actions/runs/44706323960) 的 FAIL 改写。本次资料专用SHA并非APK产品SOURCE。
+
+下一次由用户自主仅选择单个测试App UID、Normal/off，先确保旧owner/rules无残留并Stop；使用SOURCE `4975c1ab` 的签名工件进行**一次有界运行**。如果 `ORIGINAL_GO_COLD_RST_GUARD_FAILED_*`，必须保持fail-closed/不继续发SYN；若 `_READY` 且匹配_RST_DROP，判断原内核确匹配到抑制规则，但对端身份仍未知；随后看标准TLS/认证/lease/M4/真实业务和 `_STOP_CLEARED`。若 `_STOP_UNVERIFIED`，不得连续重试或手动flush全局表，优先原owner精准恢复。运行期间有额外**极窄OUTPUT RST DROP**，属于实验性root内核改动，不宣称普通手机无风险。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A35产品同SOURCE 11 SUCCESS/4 SKIPPED：原Go RST守卫Host、签名ARM64 APK、Linux真实TLS/lease/M4/Stop Oracle，真实Android安全/业务仍NOT_PROVEN。"}
+```
