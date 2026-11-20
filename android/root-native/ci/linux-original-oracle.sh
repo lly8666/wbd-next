@@ -99,6 +99,10 @@ rustup toolchain install 1.85.1 --profile minimal
 cargo +1.85.1 test --locked -p wbd-platform --lib \
   h2216_original_windows_128_to_116_client_public_nat_data_and_ack
 echo ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS
+# A48: real Rust parser executes a checksum-only Android M3-pending fixture.
+# The existing strict Linux/Windows DATA parser and M3 AEAD/PN are unchanged.
+cargo +1.85.1 test --locked -p wbd-platform --lib a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted
+echo ANDROID_A48_ANDROID_BIONIC_TCP_CHECKSUM_ONLY_M3_PENDING_HOST_PASS
 cargo +1.85.1 build --locked --release -p wbd-engine \
   --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record \
   >out/android-a3-linux/rust-build.log 2>&1 || {

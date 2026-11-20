@@ -5,7 +5,9 @@
 //! assigns PN, acknowledges a record, nor delivers business payload. M0/M3
 //! must authenticate/replay-check it before exposing any bytes to the app.
 //! There is no TCP stream reconstruction, raw OS socket, packet coalescing,
-//! kernel checksum-offload accommodation, malloc or unsafe code in this module.
+//! kernel checksum-offload accommodation in the default public parser, malloc
+//! or unsafe code. A48 adds a separate *Android-only* untrusted M3-pending
+//! entrypoint for a real RAW TCP checksum incompatibility.
 //!
 //! Outbound compatibility: crate::ipv4_tcp, pinned historical Go packet.go
 //! wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984.
@@ -147,6 +149,29 @@ pub fn parse_data_packet<'a>(
     packet: &'a [u8],
     trusted: TrustedRx<'_>,
 ) -> Result<UnauthenticatedData<'a>, RxError> {
+    parse_data_packet_checked(packet,trusted,true)
+}
+
+/// A48: Android's real Bionic RAW TCP FD returned 113/114 packets with
+/// valid destination tuple, IPv4 checksum, flags and lengths, but invalid
+/// TCP checksums after the physical network path. The cold original-Go
+/// FakeTCP path accepts these bytes, and only the original M3 can actually
+/// authenticate a DATA record. This narrowly scoped second entrypoint
+/// still enforces ALL other IPv4/TCP checks; its result is *untrusted*.
+/// Linux and Windows builds cannot call it outside tests.
+#[cfg(any(target_os="android",test))]
+pub(crate) fn parse_data_packet_android_m3_pending<'a>(
+    packet: &'a [u8],
+    trusted: TrustedRx<'_>,
+) -> Result<UnauthenticatedData<'a>, RxError> {
+    parse_data_packet_checked(packet,trusted,false)
+}
+
+fn parse_data_packet_checked<'a>(
+    packet: &'a [u8],
+    trusted: TrustedRx<'_>,
+    require_tcp_checksum:bool,
+) -> Result<UnauthenticatedData<'a>, RxError> {
     let tuple = trusted.tuple;
     if !plausible_unicast(tuple.src_ip) || !plausible_unicast(tuple.dst_ip)
         || tuple.src_port == 0 || tuple.dst_port == 0 {
@@ -204,7 +229,9 @@ pub fn parse_data_packet<'a>(
     let mut sum = add_bytes(0, &packet[12..20]);
     sum += u64::from(TCP_PROTO) + tcp.len() as u64;
     sum = add_bytes(sum, tcp);
-    if !checksum_is_valid(sum) { return Err(RxError::TcpChecksum); }
+    if require_tcp_checksum && !checksum_is_valid(sum) {
+        return Err(RxError::TcpChecksum);
+    }
     Ok(UnauthenticatedData {
         ciphertext: &tcp[hdr_len..],
         seq32: be32(&tcp[4..8]),
@@ -306,7 +333,7 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ipv4_tcp::{build, Presentation};
+    use crate::ipv4_tcp::{build,build_presentation_ack,Presentation};
     use wbd_types::{BufferKey,LaneKey,RecordPn,SeqOffset,TunnelKey};
     use wbd_types::buffer_contract::{BufferOrigin, FrozenMetadata, FrozenRecordHandle};
 
@@ -374,6 +401,69 @@ mod tests {
             assert_eq!(pkt,original);
         }
     }
+    #[test]
+    fn a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted(){
+        let original=wire(b"original sealed M3 bytes",0x1_0000_000a,None);
+        assert_eq!(
+            parse_data_packet_android_m3_pending(&original,trusted(None,1500))
+                .unwrap().ciphertext,
+            b"original sealed M3 bytes"
+        );
+        // Real Bionic returned the exact original outer tuple and IP
+        // checksum. Only the transport checksum was rejected 113 times.
+        let mut drift=original.clone();
+        drift[36]^=0x40;
+        assert_eq!(
+            parse_data_packet(&drift,trusted(None,1500)),
+            Err(RxError::TcpChecksum)
+        );
+        let provisional=parse_data_packet_android_m3_pending(
+            &drift,trusted(None,1500)).unwrap();
+        assert_eq!(provisional.ciphertext,b"original sealed M3 bytes");
+        assert_eq!(provisional.seq32,10); // wire wraps; M1 still extends
+
+        // A forged valid tuple is not an authenticated M3 record: even
+        // payload mutation is only returned as UNAUTHENTICATED bytes;
+        // original M3 AEAD+PN remains the sole final admission.
+        let mut altered=original.clone();
+        altered[40]^=1;
+        assert_eq!(parse_data_packet(&altered,trusted(None,1500)),
+            Err(RxError::TcpChecksum));
+        assert_ne!(
+            parse_data_packet_android_m3_pending(
+                &altered,trusted(None,1500)).unwrap().ciphertext,
+            b"original sealed M3 bytes"
+        );
+
+        // Every other original parser gate remains strictly enforced.
+        for (offset,mask,expected) in [
+            (12,1,RxError::WrongTuple),
+            (10,1,RxError::IpChecksum),
+            (33,1,RxError::InvalidDataFlags),
+            (2,1,RxError::TotalLengthMismatch),
+            (22,1,RxError::WrongTuple),
+        ] {
+            let mut bad=original.clone();
+            bad[offset]^=mask;
+            assert_eq!(
+                parse_data_packet_android_m3_pending(&bad,trusted(None,1500)),
+                Err(expected),"offset={offset}"
+            );
+        }
+        assert_eq!(
+            parse_data_packet_android_m3_pending(&original,trusted(None,39)),
+            Err(RxError::ExceedsMtu{actual:original.len(),mtu:39})
+        );
+        // A real checksum-validated pure ACK stays control, not M3 DATA.
+        let mut ack_buf=[0u8;64];
+        let ack=build_presentation_ack(
+            tuple(),13,25,2,PacketPersona::Legacy,1500,&mut ack_buf
+        ).unwrap();
+        assert!(parse_ack_packet(ack,trusted(None,1500),false).is_ok());
+        assert_eq!(parse_data_packet_android_m3_pending(
+            ack,trusted(None,1500)),Err(RxError::InvalidDataFlags));
+    }
+
     #[test]
     fn r1_rx_ipv4_tcp_pinned_old_go_packet_golden() {
         // Go packet.go pinned 6ac1f9...: fixed legacy IPID21/ACK200/TCP window1024.

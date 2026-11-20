@@ -468,6 +468,21 @@ impl AndroidBoundRawRx {
                 self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
                 data
             },
+            // A48: real Android API36 physical RAW RX reports only bad TCP
+            // checksum after the complete strict header/tuple/IP checks.
+            // This is NOT authenticated, READY, Health or delivered data.
+            // The original M1 seq extension + M3 AEAD/unique PN still gate
+            // every byte, and the standard Linux/Windows strict parser is
+            // unchanged. The re-parse changes only the checksum policy.
+            Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)=>{
+                self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1,Ordering::Relaxed);
+                let provisional=crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(
+                    &slab[..total],trusted
+                ).map_err(|_|io::Error::new(io::ErrorKind::InvalidData,
+                    "Android M3-pending TCP checksum-only reparse rejected"))?;
+                self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
+                provisional
+            },
             Err(reason)=>{
                 use crate::rx_ipv4_tcp::RxError;
                 if crate::rx_ipv4_tcp::parse_ack_packet(
@@ -496,7 +511,9 @@ impl AndroidBoundRawRx {
         };
         let seq=parsed.seq32;
         let wire=parsed.ciphertext.len();
-        // No unrelated packets or malformed flags/checksums reach M1.
+        // Only exact tuple, length, flags, options and IPv4 checksum reach
+        // original M1; a TCP-checksum-only mismatch is still UNAUTHENTICATED
+        // until the unchanged original M3 AEAD/PN/replay accepts its record.
         slab.copy_within(total-wire..total,0);
         Ok((wire,seq))
     }

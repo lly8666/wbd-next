@@ -505,6 +505,32 @@ assert 'static boolean safeNativeSnapshot(String raw)' in appwrite
 assert 'native_m4_numeric_debug_samples:' in appreport
 assert 'ANDROID_A47_NATIVE_NUMERIC_M4_REAL_APK_REPORT_HOST_PASS' in Path(
  "android/root-app/ci/RootDiagnosticReportTest.java").read_text()
+# A48: API36 source-locked physical handset actually returned 114
+# original Rust RAW RX packets: 113 strict TCP checksum mismatches, zero
+# tuple/IP/flags/length mismatches; normal M3 never saw them. Preserve
+# strict Windows/Linux parser; ONLY Android Bionic may supply an untrusted
+# candidate when every other original IPv4/TCP check has passed.
+parser=Path("crates/wbd-platform/src/rx_ipv4_tcp.rs").read_text()
+android_io=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+linux_io=Path("crates/wbd-platform/src/linux_raw_carrier.rs").read_text()
+owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
+assert 'parse_data_packet_checked(packet,trusted,true)' in parser
+assert 'fn parse_data_packet_android_m3_pending' in parser
+assert '#[cfg(any(target_os="android",test))]' in parser
+assert 'parse_data_packet_checked(packet,trusted,false)' in parser
+assert 'if require_tcp_checksum && !checksum_is_valid(sum)' in parser
+assert 'a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted' in parser
+assert 'Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)=>{' in android_io
+assert 'parse_data_packet_android_m3_pending(' in android_io
+assert 'self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1' in android_io
+assert 'self.debug[RX_DATA_OK].fetch_add(1' in android_io
+assert 'parse_data_packet_android_m3_pending' not in linux_io
+assert 'parse_data_packet(&slot[..n],trusted)' in linux_io
+assert 'parse_data_packet(&slot[..len],TrustedRx{' in linux_io
+assert 'self.offer_after_active(slab,0..len,absolute,now)' in owner
+assert 'ANDROID_A48_ANDROID_BIONIC_TCP_CHECKSUM_ONLY_M3_PENDING_HOST_PASS' in Path(
+    "android/root-native/ci/linux-original-oracle.sh").read_text()
+print("ANDROID_A48_EXACT_ANDROID_ONLY_CHECKSUM_GATE_M3_AUTH_STILL_REQUIRED_SOURCE_PASS")
 print("ANDROID_A47_ORIGINAL_RUST_RAW_NUMERIC_AND_GO_JAVA_FORENSICS_SOURCE_PASS")
 print("ANDROID_A46_EXACT_MAIN_WINDOWS_H2216_TTL_ANDROID_LINUX_SOURCE_GATE_PASS")
 print("ANDROID_A45_ORIGINAL_M4_RETURN_PATH_ICMP_SOURCE_GATE_PASS")

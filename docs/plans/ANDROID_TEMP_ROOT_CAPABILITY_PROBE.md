@@ -1,5 +1,7 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> 2026-11-21 A48 真机即时证据：A47b SOURCE `b34f8c3cff53bde49b80adf659b27bad0bdc25eb`、API36 selected UIDs/Normal-off，原 Rust RAW 内核`read=114`，`tcpck=113`，`ipck=tuple=flags=len=0`，源158.101.94.176:443→172.26.88.201:53367、TTL50、TCP 0x18，实际`rawtx=98`但`data=auth=rtun=0`。服务端与 Windows 真实双向已成功，优先解决 Android 原Rust在M3之前拒绝这些真实 TCP DATA：仅Android将**只因 TCP checksum 失败且其余原头门已过**的密文作为未认证候选继续交原M3；标准Linux/Windows parser和 AEAD/PN/replay不变。下一机测以 `data,parsed,auth,rtun` 和真实Chrome/ICMP证明，不把源码或Host成功视为实机PASS。
+
 > 2026-11-20 A45 新实机接续（不替代本计划唯一优先级）：A44 SOURCE `8da73ff0428291b006b28f762cf18ea9122d4784` 真实 API36 selected UID两次`ORIGINAL_GO_UID_ROUTE_GET_MATCHED_TUN`、原Rust `TUN_IPV4_SEEN`/真正`APP_RAW_TX_COPIED`，但没看到`APP_REVERSE_TUN_WRITTEN`；这仅证明手机向外做了业务内核复制，非对端收包。用户另一个 Ping 应用不一定属于选定UID，不能将其不通冒充完整ICMP隧道失败。继续选定应用组（Chrome+Ping APP），先查原Rust RAW RX可读/解析/认证/反向TUN与Linux服务端入站和本机TUN应答，再研究公网forward/NAT/DNS；**不为此切换全局代理**。A45 同源 HOST/ARM64 构建和新 SOURCE 真机结果分别记录，不造PASS。后续仅以最新SOURCE/真实Actions/devlog定论。
 
 > 更新：2026-11-18，已核验业务诊断 SOURCE `731ea034ce527ef2bf5a214d9a7431c96cb205dc`（[A25 Action #44285914998](https://github.com/lly8666/wbd-next/actions/runs/44285914998)）。**本文件是当前执行口径，不是历史阶段流水账。** 每次施工先核远端 HEAD、PR、正在运行的 Actions 再更新事实；以下 SOURCE/Action 仅是本次编辑时已核验证据，不能被下一会话当作永远最新。
