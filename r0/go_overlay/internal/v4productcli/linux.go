@@ -1881,10 +1881,19 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         _=native.Close()
         return fmt.Errorf("Normal client Rust M4 started without FakeTCP detach")
     }
-    if e:=raw.ExcludeDetachedData(flow.PeerIP,flow.PeerPort);e!=nil{
+    // Android owns one original TLS session per Go RAW FD. After true
+    // native M4 attach, completely quiesce ONLY that obsolete Go receiver.
+    // Linux's original exact-tuple filtering remains unchanged.
+    var rxHandoffErr error
+    if runtime.GOOS=="android" {
+        rxHandoffErr=raw.QuiesceDetachedClientReceive()
+    }else{
+        rxHandoffErr=raw.ExcludeDetachedData(flow.PeerIP,flow.PeerPort)
+    }
+    if rxHandoffErr!=nil{
         originalAndroidPostauthGo("GO_RX_FILTER_FAILED")
         _=native.Close()
-        return fmt.Errorf("Normal client receive ownership handoff: %w",e)
+        return fmt.Errorf("Normal client receive ownership handoff: %w",rxHandoffErr)
     }
     originalAndroidPostauthGo("GO_RX_FILTER_OK")
     handoffCommitted.Store(true)

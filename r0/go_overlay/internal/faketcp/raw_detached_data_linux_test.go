@@ -247,6 +247,61 @@ func TestPLAN028GameLastGroupRearmsOriginalTLSFourTuple(t *testing.T){
 }
 
 
+// Unlike the old pure BPF VM test, this exercises actual SO_ATTACH_FILTER
+// on a real Linux kernel UDP socket without CAP_NET_RAW. Android device
+// hardware is not represented by this host test.
+func TestA43OriginalAndroidDetachedClientRXKernelQuiesce(t *testing.T) {
+    for _,previous:=range []bool{false,true} {
+        name:="no_initial_filter"
+        if previous{name="replace_initial_filter"}
+        t.Run(name,func(t *testing.T){
+            recvFD,e:=unix.Socket(unix.AF_INET,unix.SOCK_DGRAM|unix.SOCK_CLOEXEC,0)
+            if e!=nil{t.Fatal(e)}
+            defer unix.Close(recvFD)
+            sendFD,e:=unix.Socket(unix.AF_INET,unix.SOCK_DGRAM|unix.SOCK_CLOEXEC,0)
+            if e!=nil{t.Fatal(e)}
+            defer unix.Close(sendFD)
+            if e=unix.Bind(recvFD,&unix.SockaddrInet4{
+                Addr:[4]byte{127,0,0,1},
+            });e!=nil{t.Fatal(e)}
+            to,e:=unix.Getsockname(recvFD)
+            if e!=nil{t.Fatal(e)}
+            receive:=func(timeout time.Duration)(int,error){
+                until:=time.Now().Add(timeout)
+                var data [32]byte
+                for time.Now().Before(until){
+                    n,_,err:=unix.Recvfrom(recvFD,data[:],unix.MSG_DONTWAIT)
+                    if err==nil{return n,nil}
+                    if err!=unix.EAGAIN&&err!=unix.EWOULDBLOCK{return 0,err}
+                    time.Sleep(time.Millisecond)
+                }
+                return 0,unix.EAGAIN
+            }
+            if e=unix.Sendto(sendFD,[]byte("before"),0,to);e!=nil{t.Fatal(e)}
+            if n,err:=receive(250*time.Millisecond);err!=nil||n!=6{
+                t.Fatalf("real kernel socket ingress unavailable n=%d err=%v",n,err)
+            }
+            if previous{
+                accept:=[1]unix.SockFilter{{Code:unix.BPF_RET|unix.BPF_K,K:^uint32(0)}}
+                p:=unix.SockFprog{Len:1,Filter:&accept[0]}
+                if e=unix.SetsockoptSockFprog(recvFD,unix.SOL_SOCKET,unix.SO_ATTACH_FILTER,&p);e!=nil{t.Fatal(e)}
+            }
+            // Non-Ethernet Android has kernelPortFilter=false; neither
+            // prior state nor packet link-header layout can block handoff.
+            endpoint:=&RawIPv4Endpoint{recvFD:recvFD,sendFD:sendFD,kernelPortFilter:previous}
+            if e=endpoint.QuiesceDetachedClientReceive();e!=nil{
+                t.Fatalf("true second-stage kernel attach failed: %v",e)
+            }
+            if e=unix.Sendto(sendFD,[]byte("after"),0,to);e!=nil{
+                t.Fatalf("detached Go RAW TX FD lost: %v",e)
+            }
+            if n,err:=receive(35*time.Millisecond);n!=0||err!=unix.EAGAIN{
+                t.Fatalf("old Go RX not quiesced: bytes=%d err=%v",n,err)
+            }
+        })
+    }
+}
+
 // A lost final TLS reply ACK must not strand the original server's
 // ACK-barrier after the client hands the DATA RX lane to native Rust M4.
 // No raw socket privileges required: this uses the actual FakeTCP Sender
