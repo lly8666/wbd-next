@@ -16,3 +16,11 @@
 ## A38a 同源测试预审发现必需参数，提前修复而不放宽原保护Admission
 
 A38新增真实Original Go Protected TLS三模式测试在编写后自检发现测试构造应和现有 `v4Pair` 一样：原 `EstablishServerV4` 必须传入合法 `NewV4EpochStore`，而受保护的 `TunnelID` 必须精确16B。首个A38测试fixture原本遗漏 `V4ServerOptions.Epochs`，并使用17B示例tunnel id。这些都只能在真实Go保护认证中直接FAIL，并非 TLS 开关回归。现把同一个真实原测试配成合法真实EpochStore及16B tunnelID，**保留原协议的所有严格长度和epoch条件**；再独立复跑同源码CI。此前产品SOURCE `81649ee12b8fb9fa9ba048c0fe355e85a292ff26` 的历史结果照实记录，不冒称测试成功。
+
+## A38b 功能卡闭环，不触发新产品构建
+
+SOURCE `a2c7b33a2fadd57dcbd89bca1163b4fb14f6d691` 的 [治理 #44726819409](https://github.com/lly8666/wbd-next/actions/runs/44726819409) FAIL：只更新devlog测试预审，附带原有feature-impact但没有同提交更新feature卡。此仅文档修订同步A38最终发现、主线证书默认风险和设备Keystore私有持久化范围，52条历史验证记录完整保留，卡小于16KiB。产品Go/Java不变，产品同源构建仍使用 `a2c7b33a`，真实用户Android根认证/业务/恢复均NOT_RUN。先前 `81649ee` 产品CI因新SOURCE替代而cancelled，不能当PASS。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A38b按治理same-commit要求实际同步feature card到已提交的有效TLS校验修复与Keystore UI持久化，保留52条历史。"}
+```
