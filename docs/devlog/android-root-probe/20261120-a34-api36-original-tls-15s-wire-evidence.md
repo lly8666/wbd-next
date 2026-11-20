@@ -19,3 +19,13 @@ SOURCE `a64f68f03467a1407629067b27c6ee02f802ef5b` [Android dual64 Action #446971
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A34实测发现新增Linux原Go分类单元测试的shell插入引号损坏；仅修测试命令及前置bash -n，保留首次红CI收据。"}
 ```
+
+## A34b 恢复原已验证Oracle为唯一基线
+
+A34a SOURCE `1658573124a5f91e8ba400422208d2f85dfe432b` [Action #44697865675](https://github.com/lly8666/wbd-next/actions/runs/44697865675) 的新 `bash -n` 正确拒绝Oracle文件末端遗留的重复Go/Python块（第157行）。ARM64原Go/Rust、其他Host已验证范围保持；root-arm64-app在Host便宜门 FAIL，Linux原Oracle不具业务资格。**不将历史失败写成成功**。
+
+本次彻底舍弃污染后的脚本，以历史完整真实通过的 `b629c850f17670a9a28fdf6e7a2f13660ed81990` 版本为原件（156行含结尾空行、4对Python heredoc、唯一Go编译循环），只在该 `go build` 循环之前插入3行源锁Go错误分类测试。预检确认更新后159行、原四段Python不重复、唯一Go build和新测试且尾部完整；原测试oracle全部保留。新SOURCE需前置bash -n、真Linux Oracle和签名APK全成功后才交给用户验证。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A34b清理历史patch污染的Linux Oracle残尾，直接恢复已通过完整脚本并仅接入一次原Go固定分类测试。"}
+```
