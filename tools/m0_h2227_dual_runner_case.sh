@@ -153,21 +153,10 @@ run_client(){
         if ! kill -0 "$pid" 2>/dev/null;then break;fi
         sleep .25
       done
-      # Highest FEC means proven Rust-applied profile 6, not just
-      # requested flags or a GUI label. Never compare a silently Off lane.
-      if [[ "$ready" == 1 && "$local_mode" == "fec-fixed" ]];then
-        applied=0
-        for j in $(seq 1 30);do
-          if grep -Eq 'V4_PUBLIC_FEC2_READBACK role=client mode=fixed requested=[1-9][0-9]* applied=[1-9][0-9]* profile=6 pending=false' "$OUT/client-$name.log";then
-            applied=1;break
-          fi
-          sleep .2
-        done
-        if [[ "$applied" != 1 ]];then
-          ready=0
-          echo "H2227_FEC6_NOT_RUST_APPLIED $name" |tee -a "$OUT/failures.log"
-        fi
-      fi
+      # H2227 correction: source owner prints FEC2_READBACK only AFTER
+      # monitorPublicNativePeer returns and authenticated Rust Stop drains.
+      # Starting/stopping before the first business packet was a fixture
+      # false-fail: DO NOT wait for readback before running iperf3.
       if [[ "$ready" != 1 ]];then
         echo "H2227_REAL_NATIVE_COLD_OR_CRASH_FAIL $name" | tee -a "$OUT/failures.log"
         python3 - "$OUT/case-$(printf '%03d' "$idx")-$name-cold.json" "$name" <<'PY'
@@ -224,6 +213,42 @@ PY
         if ! kill -0 "$pid" 2>/dev/null;then break;fi
         sleep .1
       done
+      # Require genuine post-Stop readback from the actual Rust FEC owner,
+      # NOT a request flag or a pre-business status. Review all captured
+      # iperf TCP results even when the final FEC grade is unproven.
+      if [[ "$ready" == 1 && "$local_mode" == "fec-fixed" ]];then
+        for j in $(seq 1 80);do
+          if grep -q 'V4_PUBLIC_FEC2_READBACK role=client' "$OUT/client-$name.log";then break;fi
+          sleep .1
+        done
+        python3 - "$OUT/client-$name.log" "$OUT/$name-fec6-proof.json" \
+          "$OUT/case-$(printf '%03d' "$idx")-$name-fec6-proof.json" <<'PY'
+import json,pathlib,re,sys
+log=pathlib.Path(sys.argv[1]).read_text(errors="replace")
+rows=re.findall(r"V4_PUBLIC_FEC2_READBACK role=client mode=(\w+) requested=(\d+) applied=(\d+) profile=(\d+) pending=(true|false)",log)
+# Source has monitor/Stop-only actual grade, so absent is UNKNOWN/FAIL,
+# never silently applied. No reconnect or requested grade substitution.
+valid=False
+if rows:
+ mode,req,applied,grade,pending=rows[-1]
+ valid=(mode=="fixed" and int(req)>0 and req==applied and
+        int(grade)==6 and pending=="false")
+result={"status":"PASS_REAL_AUTHENTICATED_RUST_FEC6_APPLIED" if valid
+        else "FAIL_NO_REAL_APPLIED_FEC6_READBACK",
+        "post_stop_readback":rows[-1] if rows else None,
+        "client_log_source":"real original Go TLS Rust native Stop"}
+pathlib.Path(sys.argv[2]).write_text(json.dumps(result,indent=2)+"\n")
+if not valid:
+ pathlib.Path(sys.argv[3]).write_text(json.dumps({
+  "status":"ERROR","business_mbps":None,"raw_baseline":False,
+  "error":"REAL_FEC6_APPLIED_PROOF_MISSING_AFTER_BUSINESS_AND_STOP"})+"\n")
+print("H2227_REAL_FEC6_POST_STOP_GRADE "+result["status"],flush=True)
+PY
+        if [[ -s "$OUT/case-$(printf '%03d' "$idx")-$name-fec6-proof.json" ]];then
+          idx=$((idx+1))
+          echo "H2227_REAL_FEC6_NOT_APPLIED_AFTER_BUSINESS $name" |tee -a "$OUT/failures.log"
+        fi
+      fi
       sudo -n kill -KILL "$(cat "$TMP/client.pid")" 2>/dev/null || true
       sudo -n ip netns exec "$NS" ip link show wbdc0 >"$OUT/$name-tun-after.txt" 2>&1 || true
     done

@@ -331,23 +331,61 @@ def iperf_case(address,port,duration,streams,reverse,output,peer_pid=None):
     # Source-qualified failure, never turn early TCP abort into 0Mbps.
     return rec
 
+def expected_matrix():
+    """Exact *names* for the cross-VM, 2-direction, 2-mode × loss × fq trial.
+
+    A cold failure must not count as five finished TCP flows. A repeated
+    workload cannot substitute for another loss or direction.
+    """
+    direct={"raw-0-upload","raw-0-download"}
+    app=set()
+    scenarios=((0,600),(0,0),(0.1,600),(1,600),(3,600))
+    for loss,fq in scenarios:
+        for direction in ("upload","download"):
+            direct.add(f"raw-{loss}-fq{fq}-{direction}")
+        for mode in ("normal","fec-fixed"):
+            for duration,streams,direction in (
+                (3,1,"upload"),(12,1,"upload"),(12,1,"download"),
+                (12,4,"upload"),(12,4,"download")):
+                app.add(f"{mode}-loss{loss}-fq{fq}-"
+                        f"{duration}s-{streams}p-{direction}")
+    check(len(direct)==12 and len(app)==50,"INVALID_FIXED_EXPECTED_MATRIX")
+    return direct,app
+
 def summary(directory):
     root=pathlib.Path(directory)
     recs=[]
+    suffixes=[]
     for p in sorted(root.glob("case-*.json")):
-        rec=json.loads(p.read_text())
-        check(rec.get("status") in ("PASS_OBSERVED_TCP_APPLICATION","ERROR"),
-              "CASE_MISSING_SOURCE_STATUS")
+        match=re.fullmatch(r"case-\d{3}-(.+)\.json",p.name)
+        check(match is not None,"CASE_FILENAME_NOT_SOURCE_OWNED")
+        suffixes.append(match.group(1))
+        try:
+            rec=json.loads(p.read_text())
+            check(isinstance(rec,dict),"CASE_NOT_JSON_OBJECT")
+            check(rec.get("status") in ("PASS_OBSERVED_TCP_APPLICATION","ERROR"),
+                  "CASE_MISSING_SOURCE_STATUS")
+        except (OSError,ValueError,RuntimeError) as exc:
+            rec={"status":"ERROR","business_mbps":None,"raw_baseline":False,
+                 "error":"CASE_RESULT_UNPARSABLE_"+type(exc).__name__}
         recs.append({"file":p.name,**rec})
     check(bool(recs),"NO_ACTUAL_TCP_CASES")
+    direct,app=expected_matrix()
+    observed=set(suffixes)
+    duplicates=sorted(x for x in observed if suffixes.count(x)>1)
+    missing_direct=sorted(direct-observed)
+    missing_app=sorted(app-observed)
     modes=[x for x in recs if not x.get("raw_baseline")]
     baselines=[x for x in recs if x.get("raw_baseline")]
-    check(len(baselines)>=12,"NO_SAME_PAIR_DIRECT_BASELINE")
-    check(len(modes)>=50,"MISSING_FEC_MODE_OR_LOSS_CASE")
     failures=[x for x in recs if x["status"]=="ERROR" or
         x.get("client_worker_alive_after") is False]
+    matrix_incomplete=bool(missing_direct or missing_app or duplicates)
+    if matrix_incomplete:
+        failures.append({"status":"ERROR","error":"INCOMPLETE_SOURCE_LOCKED_MATRIX",
+            "missing_direct":missing_direct,"missing_app":missing_app,
+            "duplicate_case_suffixes":duplicates})
     clean_baseline=[x["business_mbps"] for x in baselines
-        if x["business_mbps"] is not None and
+        if isinstance(x.get("business_mbps"),(float,int)) and
         ("raw-0-fq600" in x["file"] or "raw-0-upload" in x["file"] or
          "raw-0-download" in x["file"])]
     clean_peak=max(clean_baseline,default=0.0)
@@ -357,15 +395,34 @@ def summary(directory):
         tail_path=json.loads(topology.read_text()).get("tailscale_path",tail_path)
     compare=(clean_peak>=800 and
              tail_path=="DIRECT_CANDIDATE_BUT_VERIFY_RUNNER_CAPACITY")
-    return {"classification":"REAL_TWO_RUNNER_APPPATH_SCOPED" if not failures else
-                 "FAIL_REAL_TWO_RUNNER_APPLICATION_OR_WORKER",
+    grade_proofs=[]
+    for p in sorted(root.glob("*-fec6-proof.json")):
+        # Post Stop actual Rust readback; the similarly named case-ERROR
+        # is not permitted as a PASS proof of FEC6.
+        if p.name.startswith("case-"):continue
+        try:grade_proofs.append({"file":p.name,**json.loads(p.read_text())})
+        except (ValueError,OSError):
+            grade_proofs.append({"file":p.name,"status":"ERROR"})
+    if matrix_incomplete:
+        classification="FAIL_INCOMPLETE_TWO_RUNNER_APP_MATRIX"
+    elif failures:
+        classification="FAIL_REAL_TWO_RUNNER_APPLICATION_OR_WORKER"
+    else:
+        classification="REAL_TWO_RUNNER_APPPATH_SCOPED"
+    return {
+        "classification":classification,
+        "matrix_complete":not matrix_incomplete,
+        "expected_direct_cases":len(direct),"expected_business_cases":len(app),
+        "actual_direct_cases":len(baselines),"actual_business_cases":len(modes),
+        "missing_direct_case_suffixes":missing_direct,
+        "missing_business_case_suffixes":missing_app,
         "capacity_reference":"COMPARABLE_800MBPS_BASELINE" if compare else
             "INFRA_OR_TS_LIMITED_BELOW_800MBPS_DO_NOT_ATTRIBUTE_80MBPS_TO_WBD",
         "tailscale_path":tail_path,
         "clean_direct_baseline_peak_mbps":clean_peak,
-        "cases":recs,"fails":failures,
-        "baseline_mbps":[x["business_mbps"] for x in baselines],
-        "business_mbps":[x["business_mbps"] for x in modes],
+        "cases":recs,"fails":failures,"fec6_post_stop_proofs":grade_proofs,
+        "baseline_mbps":[x.get("business_mbps") for x in baselines],
+        "business_mbps":[x.get("business_mbps") for x in modes],
         "not_a_physical_windows_isp_test":True,
         "xray_same_host_comparison":"NOT_RUN",
         "exact_underlay_bbr":"NOT_APPLICABLE_RAW_AF_PACKET",

@@ -42,3 +42,13 @@
 ```feature-impact
 {"kind":"none","reason":"H2227 adds only source-locked two-runner authenticated Tailscale/VXLAN BBR+netem iperf3 fixture and tests, without touching product protocol, per-record M2, outer performative retransmission, Health or default parameters.","ids":[]}
 ```
+
+## H2227 run attempt 2 — 已真实联通、真实业务流、结果 FAIL（2026-11-20）
+
+- [Action 44682549769 attempt 2](https://github.com/lly8666/wbd-next/actions/runs/44682549769)（H2227 测试源码 `1e833b3bf27d6ca6acb5ad9a1610b98647d47306`）：新 Tailscale 授权生效；x86 + ARM64 真实 Runner 组网、VXLAN、真实原 Go TLS/Rust M4、BBR 与 iperf 均实际运行。**静态 8/8 PASS，产品矩阵 FAIL，绝不是虚构 WBD 性能 PASS。**
+- 0% 配置丢包 + 每侧5ms：同双机网络直连 BBR iperf3 4流上行 1,001.856 Mbps / 下行 844.284 Mbps；WBD Normal Off 1流上行 438.628 Mbps / 下行 414.164 Mbps、4流上行 650.781 Mbps / 下行 600.924 Mbps。3秒上行完整结束 454.057 Mbps，未重现实体 Windows 3秒崩溃。这一环境只有 Linux x86 原 Go/Rust 与 ARM64，而非 Windows Npcap；不能将其当作实体 80Mbps 病因已排除。
+- TUN owner 0% Normal Off 稳态后 `queue_full_drops=153453`（600Mb fq）及 `204168`（fq0），伴随百万级 TUN TCP packets/backpressure。0% A/B 在4流上行约651 vs646 Mbps，fq600不是这组多流的单一硬限速原因；需要进一步跟踪 TUN 队列、原始 Rust send/CPU、受控流负载及同路径吞吐比。
+- 当轮 FEC6 被夹具**错误提前停止**：源码 `r0/go_overlay/internal/v4productcli/linux.go` 的 `V4_PUBLIC_FEC2_READBACK` 是 `monitorPublicNativePeer` 退出以后、真实 Rust Stop 时才打印；夹具在首次业务前等待这一行，必然只看到 requested1/applied0/pendingtrue，导致“FEC6未生效”是假阴性，而非 WBD FEC6 真实性能证据。H2227 已修为先跑完整 iperf3，上行/下行结束后真实 Stop 读取 requested==applied 且 profile6/pendingfalse，不通过仍 ERROR。
+- 不同丢包下后续建链也出现早退/未READY（0.1%、1% Normal Off 等），3% Normal Off 又能连接并完整跑3秒上行 197.138Mbps 和4流上行 520.756Mbps；不符合简单单调丢包阈值。失败来源应区分原始 TLS冷建链/同一服务端持有旧 lease/空闲Health90/本地进程退出，**尚无已证实的唯一根因**。
+- 初次报告汇总器错误地规定必须有62个成功 `case` 才能产出任何 summary；这会把实测34个案例（27 PASS、7 ERROR）丢成 `FAIL_NO_REAL_MEASUREMENTS`。已修为按**精确12组直连 + 50组业务预期名称**计算缺失，保留所有真实 Mbps、错误、原始 JSON 与 FEC6 Stop 回读；结果 FAIL_INCOMPLETE 而不造假PASS。
+- Main 复用方式：合入后 Actions → `H2227 genuine two-runner TCP business` → **Run workflow** → branch main，采用手动 workflow_dispatch，不把需要真实 tailnet 凭证、可能因现存产品错误红灯的长程双 Runner 压测作为所有 main push 的常驻必需 CI。当前 `push` 仅针对 H2227 开发分支的夹具改动自动触发，便于修夹具时复验。

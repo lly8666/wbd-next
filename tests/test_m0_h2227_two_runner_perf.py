@@ -86,38 +86,45 @@ class TwoRunnerH2227(unittest.TestCase):
                 self.assertEqual(got["business_mbps"],160.0)
                 self.assertEqual(got["interval_mbps"],[20.0])
 
+    def source_locked_examples(self,root,high_direct=False):
+        direct,app=MOD.expected_matrix()
+        self.assertEqual((len(direct),len(app)),(12,50))
+        rows=sorted(direct)+sorted(app)
+        for i,suffix in enumerate(rows):
+            MOD.write_json(root/("case-%03d-%s.json"%(i,suffix)),{
+                "status":"PASS_OBSERVED_TCP_APPLICATION",
+                "business_mbps":900.0 if
+                    (high_direct and suffix=="raw-0-fq600-upload") else 80.0,
+                "raw_baseline":suffix in direct})
+        return sorted(root.glob("case-*.json")),direct,app
+
     def test_exact_source_report_and_full_matrix_required(self):
         with tempfile.TemporaryDirectory() as d:
             root=pathlib.Path(d)
-            for i in range(62):
-                MOD.write_json(root/("case-%03d.json"%i),{
-                    "status":"PASS_OBSERVED_TCP_APPLICATION",
-                    "business_mbps":100.0,
-                    "raw_baseline":i<12,
-                    "direction":"upload" if i%2 else "download"})
+            rows,direct,app=self.source_locked_examples(root)
             s=MOD.summary(root)
             self.assertEqual(len(s["baseline_mbps"]),12)
             self.assertEqual(len(s["business_mbps"]),50)
             self.assertEqual(s["classification"],"REAL_TWO_RUNNER_APPPATH_SCOPED")
+            self.assertTrue(s["matrix_complete"])
             self.assertEqual(s["capacity_reference"],
                 "INFRA_OR_TS_LIMITED_BELOW_800MBPS_DO_NOT_ATTRIBUTE_80MBPS_TO_WBD")
-            f=root/"case-012.json"
+            f=rows[12]
             r=json.loads(f.read_text());r["status"]="ERROR";r["business_mbps"]=None
             MOD.write_json(f,r)
             bad=MOD.summary(root)
             self.assertEqual(bad["classification"],"FAIL_REAL_TWO_RUNNER_APPLICATION_OR_WORKER")
             f.unlink()
-            with self.assertRaises(RuntimeError):MOD.summary(root)
+            incomplete=MOD.summary(root)
+            self.assertEqual(incomplete["classification"],"FAIL_INCOMPLETE_TWO_RUNNER_APP_MATRIX")
+            self.assertEqual(len(incomplete["cases"]),61)
+            self.assertGreaterEqual(len(incomplete["missing_business_case_suffixes"]),1)
+            self.assertTrue(incomplete["fails"])
+
     def test_derp_and_unqualified_capacity_never_implicate_wbd(self):
         with tempfile.TemporaryDirectory() as d:
             root=pathlib.Path(d)
-            for i in range(62):
-                name=("case-%03d-raw-0-fq600.json"%i if i==0 else
-                      "case-%03d.json"%i)
-                MOD.write_json(root/name,{
-                    "status":"PASS_OBSERVED_TCP_APPLICATION",
-                    "business_mbps":900.0 if i==0 else 80.0,
-                    "raw_baseline":i<12})
+            self.source_locked_examples(root,high_direct=True)
             topo=root/"topology-client.json"
             MOD.write_json(topo,{"tailscale_path":"RELAY_OR_DERP_NOT_PRODUCT_CAPACITY"})
             relay=MOD.summary(root)
@@ -125,6 +132,17 @@ class TwoRunnerH2227(unittest.TestCase):
             MOD.write_json(topo,{"tailscale_path":"DIRECT_CANDIDATE_BUT_VERIFY_RUNNER_CAPACITY"})
             direct=MOD.summary(root)
             self.assertEqual(direct["capacity_reference"],"COMPARABLE_800MBPS_BASELINE")
+
+    def test_original_fec_grade_only_after_business_and_native_stop(self):
+        shell=(ROOT/"tools/m0_h2227_dual_runner_case.sh").read_text()
+        self.assertNotIn("H2227_FEC6_NOT_RUST_APPLIED",shell)
+        src=shell.index("for spec in '3 1 upload'")
+        stop=shell.index('sudo -n kill -TERM "$(cat "$TMP/client.pid")"')
+        proof=shell.index("H2227_REAL_FEC6_POST_STOP_GRADE")
+        self.assertLess(src,stop)
+        self.assertLess(stop,proof)
+        self.assertIn("REAL_FEC6_APPLIED_PROOF_MISSING_AFTER_BUSINESS_AND_STOP",shell)
+        self.assertIn("--outer-repair on",shell)
 
     def test_arbitrary_targets_denied_before_running_iperf(self):
         for host,port in [("8.8.8.8",5201),("10.247.27.1",5201),
