@@ -68,16 +68,30 @@ def seeded_router_loss(node,loss=LOSS,seed=SEED):
     ge=L.H.ge_params(float(loss))
     records=[]
     for dev in ("rcli0","rsrv0"):
-        L.ns(node.router,"tc","qdisc","replace","dev",dev,"root",
+        prefix=("tc","qdisc","replace","dev",dev,"root",
              "netem","limit","65536","delay","200ms",
-             "loss","gemodel",
-             str(ge["transition_good_bad_pct"])+"%",
-             "25%","90%","0.1%","seed",str(seed))
+             "loss","gemodel",str(ge["transition_good_bad_pct"])+"%",
+             "25%","90%","0.1%")
+        # Ubuntu 24.04 iproute2 6.1 lacks the newer tc netem seed option.
+        # A single explicit compatibility fallback is allowed; never claim
+        # deterministic replay when the actual kernel/tool cannot set seed.
+        applied=False
+        try:
+            L.ns(node.router,*prefix,"seed",str(seed))
+            applied=True
+        except RuntimeError as error:
+            if "H2234_COMMAND_FAILED" not in str(error):raise
+            L.ns(node.router,*prefix)  # same GE/delay; seed=UNAVAILABLE
         q=L.ns(node.router,"tc","-d","qdisc","show","dev",dev).stdout
-        if not ("netem" in q and "200" in q and
-                "gemodel" in q and "seed "+str(seed) in q):
+        if not ("netem" in q and "200" in q and "gemodel" in q):
+            raise RuntimeError("H2239_NETEM_MODEL_READBACK_UNKNOWN")
+        if applied and "seed "+str(seed) not in q:
             raise RuntimeError("H2239_NETEM_FIXED_SEED_READBACK_UNKNOWN")
-        records.append({"device":dev,"seed":seed,
+        records.append({"device":dev,
+                        "seed_requested":seed,
+                        "seed_applied":seed if applied else None,
+                        "seed_status":"KERNEL_TOOL_SEEDED" if applied else
+                            "UNAVAILABLE_UBUNTU_TC_SEED_UNSEEDED_GE",
                         "verified_kernel_readback":q})
     return records
 
@@ -204,8 +218,9 @@ def main():
             "source_sha":source,"run_id":runid,"status":status,"error":error,
             "topology":"ONE_VM_THREE_KERNEL_LINUX_NETNS_ORIGINAL_GO_TLS_RUST",
             "physical_wan":False,"physical_windows":False,
-            "target_loss_pct":LOSS,"seed_per_router_direction_per_case":SEED,
-            "seed_controls_prng_not_identical_packet_stream":True,
+            "target_loss_pct":LOSS,"seed_requested_per_router_direction_per_case":SEED,
+            "seed_controls_prng_not_identical_packet_stream":False,
+            "seed_qualification":"SEE_EACH_CASE_SEED_STATUS_NOT_ASSUMED",
             "oneway_added_delay_ms":200,"jitter_added_ms":0,
             "native_arch":os.uname().machine,"reference":first,
             "offload_baseline":baseline,"phases":phases,

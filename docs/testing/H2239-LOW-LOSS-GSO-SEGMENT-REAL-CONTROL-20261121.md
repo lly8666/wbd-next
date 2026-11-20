@@ -17,3 +17,7 @@
 验收：显示原路网中实际 qdisc skb drop/(packet+drops)、网口 TX、业务实际交付Mbps、TCP 重传/GiB、Rust Shared TUN queue-full、CPU和rx Stop。绝不因关闭Direct offload造成Direct变慢就宣称 WBD 产品改好了。若两者包粒度更接近，下一步查剩余真同粒度差距与内层TCP恢复；另以项目既有低档FEC作独立对照。
 
 **边界**：不改Go用户配置、默认fq600、Rust生产代码、外层TCP-like ACK10/原密文机会repair、FEC、AEAD/PN/lease/MTU；不增加Go逐包回调、第二TX或按序等待，乱序首到直接交付/no HOL永远有效。H2239本身不算产品性能提升，Windows、ARM真实跨机、Fixed/Auto/Game验证待首次证明产品修复后单独进行。
+
+## Noble iproute2 控制能力降级（SOURCE 04718f0 的真实失败保留）
+
+Ubuntu 24.04 自带 iproute2 6.1，其 tc netem 没有 SEED 参数。H2239 第一次真实 ARM/x86 场景在进入应用低损测试前被原生 tc 参数解析阻止；这不构成WBD失败，严禁用未实际生效的固定seed标签描述结果。修正方式为：每个出口优先一次真实设置并读回指定seed；旧 tc 拒绝后只退回相同真实 GE5%/200ms 参数而不加seed。每个案例分别明确保存 seed_status=UNAVAILABLE_UBUNTU_TC_SEED_UNSEEDED_GE、真实 qdisc 和最终接收吞吐；不允许把不同流量的随机损伤说成相同事件。未增加第三套模拟控制器，不刷seed，不更换网络模型。若看到两个出口的有效损伤口径不等，仍按不等价报告而非产品优化。

@@ -72,8 +72,19 @@ class SegmentationNetemRules(unittest.TestCase):
         with patch.object(H.L,"ns",ok):
             result=H.seeded_router_loss(Owner())
             self.assertEqual([x["device"] for x in result],["rcli0","rsrv0"])
-            self.assertTrue(all(v["seed"]==H.SEED for v in result))
+            self.assertTrue(all(v["seed_applied"]==H.SEED for v in result))
             self.assertEqual(sum("seed" in args for args in seen),2)
+        def old_tc(n,*args,**kw):
+            if "seed" in args:
+                raise RuntimeError("H2234_COMMAND_FAILED old tc unsupported seed")
+            if args[0:2]==("tc","-d"):
+                return type("P",(),{"stdout":"qdisc netem root delay 200ms loss gemodel p 0.1"})()
+            return type("P",(),{"stdout":""})()
+        with patch.object(H.L,"ns",old_tc):
+            older=H.seeded_router_loss(Owner())
+            self.assertTrue(all(v["seed_applied"] is None and
+                v["seed_status"]=="UNAVAILABLE_UBUNTU_TC_SEED_UNSEEDED_GE"
+                for v in older))
         with patch.object(H.L,"ns",return_value=type("P",(),{
              "stdout":"qdisc netem root delay 200ms loss gemodel"})()):
             with self.assertRaisesRegex(RuntimeError,"FIXED_SEED"):

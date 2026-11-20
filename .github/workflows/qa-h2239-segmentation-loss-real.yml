@@ -92,7 +92,8 @@ jobs:
                      p.get('wbd',{}).get('status')=='PASS_REAL_KERNEL_IPERF3_TCP' and
                      p.get('client_owned_stop',{}).get('status')=='REAL_RUST_OWNED_STOP'
                      for p in d['phases'])
-          assert d['seed_per_router_direction_per_case']==22390517
+          assert d['seed_requested_per_router_direction_per_case']==22390517
+          assert d['seed_qualification']=='SEE_EACH_CASE_SEED_STATUS_NOT_ASSUMED'
           assert not d['physical_wan'] and d['production_config_unchanged']
           print('H2239_TRUE_NATIVE_SKB_SEGMENTATION_DIAG_PASS_NOT_PRODUCT_GAIN')
           PY
