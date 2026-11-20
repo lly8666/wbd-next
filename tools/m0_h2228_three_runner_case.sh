@@ -197,7 +197,17 @@ client_run(){
     if [[ "$duration" == 12 ]];then replies=80;deadline=11;fi
     if [[ "$duration" == 3 ]];then replies=16;deadline=2.7;fi
     local probe_file="$OUT/probe-$(basename "$casefile")"
-    sudo -n ip netns exec "$NS" python3 "$METRICS" udp-probe "$kind" \
+    local sampler_pid=""
+    if [[ "$kind" == "wbd" ]];then
+      local resource_file="$OUT/resource-$(basename "$casefile")"
+      sudo -n ip netns exec "$NS" env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" \
+        python3 "$METRICS" process-sample \
+        "$TMP/client.pid" "$resource_file" --duration "$duration" \
+        >"$resource_file.log" 2>&1 &
+      sampler_pid=$!
+    fi
+    sudo -n ip netns exec "$NS" env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" \
+      python3 "$METRICS" udp-probe "$kind" \
       "$probe_file" --count "$replies" --interval-ms 100 --deadline "$deadline" \
       >"$probe_file.log" 2>&1 &
     local probe_pid=$!
@@ -212,6 +222,9 @@ client_run(){
     fi
     if ! wait "$probe_pid";then
       echo "H2231_REAL_APP_UDP_P99_PROBE_FAILED $probe_file" |tee -a "$OUT/failures.log"
+    fi
+    if [[ -n "$sampler_pid" ]] && ! wait "$sampler_pid";then
+      echo "H2231_NATIVE_P99_SAMPLER_FAILED $casefile" |tee -a "$OUT/failures.log"
     fi
     relay_read "$(basename "$casefile" .json)"
   }

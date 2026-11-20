@@ -15,6 +15,7 @@ kernel sampled RTTs, and never substitute for real application UDP P99.
 import argparse
 import json
 import math
+import os
 import pathlib
 import re
 import secrets
@@ -76,6 +77,10 @@ def iperf_tail(original,case):
         if not isinstance(interval,dict):continue
         aggregate=interval.get("sum",{})
         if isinstance(aggregate,dict):
+            # iperf3 -O2 marks the warmup as omitted; do not blend
+            # the pre-measurement/slow-start bins into qualified P99.
+            if aggregate.get("omitted") is True or interval.get("omitted") is True:
+                continue
             bps=aggregate.get("bits_per_second")
             period=aggregate.get("seconds")
             if isinstance(bps,(int,float)) and math.isfinite(bps) and bps>=0 and \
@@ -214,7 +219,9 @@ def probe(kind,count,interval_ms,deadline_s,sock=None):
                     else:bad+=1
                 except OSError:bad+=1
                 index+=1
-                send_at=first+index*interval_ns
+                # A preempted CI process must not catch up by blasting
+                # dozens of requests at once and bias GE burst/jitter.
+                send_at=max(first+index*interval_ns,sent_ns+interval_ns)
             now=time.monotonic_ns()
             wait_s=min(.08,max(0,(end-now)/1e9))
             if index<count:
@@ -254,10 +261,13 @@ def probe(kind,count,interval_ms,deadline_s,sock=None):
         received=len(values)
         return {
             "schema":"H2231_TRUE_APP_UDP_RTT_V1",
+            "source_sha":os.environ.get("GITHUB_SHA"),
+            "run_id":os.environ.get("GITHUB_RUN_ID"),
             "origin":"REAL_APP_UDP_ECHO_WITHIN_WBD_INNER_TUN" if kind=="wbd"
               else "REAL_APP_UDP_ECHO_DIRECT_ARM_RELAY_ONLY",
             "kind":kind,"sent_requests":index,
             "valid_unique_reply_count":received,
+            "unsent_due_to_probe_deadline":count-index,
             "missing_unique_reply_count":index-received,
             "missing_unique_reply_pct":round(100*(index-received)/index,3) if index else None,
             "invalid_reply_count":bad,"duplicate_replies":duplicates,
@@ -277,6 +287,57 @@ def probe(kind,count,interval_ms,deadline_s,sock=None):
     finally:
         if owned:sock.close()
 
+def native_stat(pid):
+    """Observed Linux /proc stat. utime/stime are jiffies, RSS pages."""
+    need(1<=pid<=2**30,"BAD_NATIVE_PID")
+    raw=pathlib.Path(f"/proc/{pid}/stat").read_text()
+    left=raw.find("(");right=raw.rfind(")")
+    need(left>0 and right>left,"INVALID_NATIVE_PROC_STAT")
+    comm=raw[left+1:right]
+    need(comm=="wbd-v4-client","NOT_THE_ORIGINAL_GO_NATIVE_CLIENT")
+    rest=raw[right+2:].split()
+    need(len(rest)>=22,"TRUNCATED_PROC_STAT")
+    return {"pid":pid,"starttime_ticks":int(rest[19]),
+            "cpu_ticks":int(rest[11])+int(rest[12]),
+            "rss_mib":int(rest[21])*os.sysconf("SC_PAGE_SIZE")/(1024**2)}
+
+def resource_sample(pid_file,duration_s,interval_s=0.5):
+    need(2<=duration_s<=24 and interval_s==0.5,
+         "UNBOUNDED_NATIVE_RESOURCE_SAMPLING")
+    pid=int(pathlib.Path(pid_file).read_text().strip())
+    hz=os.sysconf("SC_CLK_TCK")
+    first=time.monotonic()
+    deadline=first+duration_s
+    original_start=None;previous=None;cpu=[];rss=[];exited=False
+    while time.monotonic()<deadline:
+        observed_time=time.monotonic()
+        try:row=native_stat(pid)
+        except (OSError,ValueError):
+            exited=True;break
+        if original_start is None:original_start=row["starttime_ticks"]
+        if row["starttime_ticks"]!=original_start:
+            exited=True;break
+        rss.append(row["rss_mib"])
+        if previous is not None:
+            prev_time,prev_cpu=previous
+            elapsed=observed_time-prev_time
+            ticks=row["cpu_ticks"]-prev_cpu
+            if elapsed>0 and ticks>=0:
+                cpu.append(100*ticks/hz/elapsed)
+        previous=(observed_time,row["cpu_ticks"])
+        time.sleep(min(interval_s,max(0,deadline-time.monotonic())))
+    return {
+        "schema":"H2231_REAL_NATIVE_PROCESS_RESOURCE_SAMPLE_V1",
+        "source_sha":os.environ.get("GITHUB_SHA"),
+        "run_id":os.environ.get("GITHUB_RUN_ID"),
+        "pid_source":"ROOT_OWNED_ORIGINAL_GO_CLIENT_PIDFILE",
+        "native_worker_exit_or_pid_reuse_observed":exited,
+        "interval_s":interval_s,
+        "cpu_pct_of_one_logical_core":distribution(cpu,10,"%_of_one_core"),
+        "rss_mib":distribution(rss,10,"MiB"),
+        "samples_observed":len(cpu),
+        "not_a_wbd_rust_thread_specific_cpu_measurement":True}
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     sub=parser.add_subparsers(dest="command",required=True)
@@ -286,6 +347,8 @@ def main():
     a.add_argument("--interval-ms",type=int,default=100)
     a.add_argument("--deadline",type=float,default=15.0)
     a=sub.add_parser("iperf-enrich");a.add_argument("case");a.add_argument("iperf_json")
+    a=sub.add_parser("process-sample");a.add_argument("pidfile");a.add_argument("output")
+    a.add_argument("--duration",type=int,required=True)
     a=sub.add_parser("smoke")
     args=parser.parse_args()
     if args.command=="echo-server":serve(args.kind)
@@ -295,6 +358,12 @@ def main():
         print("H2231_REAL_APP_UDP_RTT "+json.dumps({
             k:result[k] for k in ("kind","valid_unique_reply_count",
              "missing_unique_reply_count","rtt_p99_status")}),flush=True)
+    elif args.command=="process-sample":
+        result=resource_sample(args.pidfile,args.duration)
+        save(args.output,result)
+        print("H2231_REAL_NATIVE_RESOURCE_P99 "+json.dumps({
+            "samples_observed":result["samples_observed"],
+            "native_worker_exit_or_pid_reuse_observed":result["native_worker_exit_or_pid_reuse_observed"]}),flush=True)
     elif args.command=="iperf-enrich":
         sample=enrich_case(args.case,args.iperf_json)
         print("H2231_TCP_TAIL_METRIC "+json.dumps({

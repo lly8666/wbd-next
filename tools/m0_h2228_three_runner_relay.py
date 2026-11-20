@@ -535,7 +535,9 @@ def result_summary(mode,model,directory):
                     "REAL_APP_UDP_ECHO_WITHIN_WBD_INNER_TUN")
                 if (candidate.get("kind")==record.get("kind") and
                     candidate.get("origin")==expected_origin and
-                    candidate.get("schema")=="H2231_TRUE_APP_UDP_RTT_V1"):
+                    candidate.get("schema")=="H2231_TRUE_APP_UDP_RTT_V1" and
+                    candidate.get("source_sha")==os.environ.get("GITHUB_SHA") and
+                    candidate.get("run_id")==os.environ.get("GITHUB_RUN_ID")):
                     probe=candidate
                 else:
                     probe={"status":"INVALID_UDP_PROBE_ORIGIN",
@@ -543,8 +545,22 @@ def result_summary(mode,model,directory):
             except (OSError,ValueError,TypeError,AttributeError):
                 probe={"status":"INVALID_OR_UNPARSEABLE_UDP_PROBE",
                        "qualified_for_lowrate_udp_p99":False}
+        resource={"status":"NOT_APPLICABLE_DIRECT_TCP" if
+                  record.get("kind")=="direct" else "UNKNOWN_NO_REAL_NATIVE_RESOURCE_SAMPLES"}
+        resource_file=rootpath/("resource-"+p.name)
+        if record.get("kind")=="wbd" and resource_file.is_file():
+            try:
+                native=json.loads(resource_file.read_text())
+                if (native.get("schema")=="H2231_REAL_NATIVE_PROCESS_RESOURCE_SAMPLE_V1" and
+                    native.get("source_sha")==os.environ.get("GITHUB_SHA") and
+                    native.get("run_id")==os.environ.get("GITHUB_RUN_ID")):
+                    resource=native
+                else:resource={"status":"INVALID_RESOURCE_SAMPLE_SOURCE"}
+            except (OSError,ValueError,TypeError,AttributeError):
+                resource={"status":"INVALID_RESOURCE_SAMPLE_JSON"}
         rows.append({"file":p.name,"case":suffix,**record,
-                     "h2231_app_udp_probe":probe})
+                     "h2231_app_udp_probe":probe,
+                     "h2231_native_resource":resource})
     missing=sorted(required-set(actual))
     duplicates=sorted(x for x in set(actual) if actual.count(x)>1)
     failures=[x for x in rows if x["status"]!="PASS_REAL_KERNEL_IPERF3_TCP"]
@@ -588,6 +604,8 @@ def result_summary(mode,model,directory):
         x.get("h2231_app_udp_probe",{}).get("schema")=="H2231_TRUE_APP_UDP_RTT_V1")
     observed_tcp_tail=sum(1 for x in rows if
         x.get("h2231_tcp_tail",{}).get("schema")=="H2231_TCP_SAMPLE_TAIL_V1")
+    observed_resource=sum(1 for x in rows if
+        x.get("h2231_native_resource",{}).get("schema")=="H2231_REAL_NATIVE_PROCESS_RESOURCE_SAMPLE_V1")
     per_loss=[]
     for loss in (0,1,5,10,20):
         prefix=f"delay200-loss{loss}-{model}"
@@ -629,6 +647,14 @@ def result_summary(mode,model,directory):
                 row[stem+"_tcp_goodput_1s_p50_mbps"]=goodput.get("p50")
                 row[stem+"_tcp_goodput_1s_p95_mbps"]=goodput.get("p95")
                 row[stem+"_tcp_goodput_1s_p99_mbps"]=goodput.get("p99")
+                if kind=="wbd":
+                    resource=case.get("h2231_native_resource",{})
+                    row[stem+"_native_client_cpu_p99_pct_one_core"]=resource.get(
+                        "cpu_pct_of_one_logical_core",{}).get("p99")
+                    row[stem+"_native_client_rss_p99_mib"]=resource.get(
+                        "rss_mib",{}).get("p99")
+                    row[stem+"_native_client_worker_exit_during_sampling"]=resource.get(
+                        "native_worker_exit_or_pid_reuse_observed")
         row["wbd_tcp_uplink_3sec_mbps"]=app.get(f"{prefix}-wbd-3s-1p-upload")
         per_loss.append(row)
     if missing or duplicates:
@@ -667,9 +693,10 @@ def result_summary(mode,model,directory):
       "h2231_real_udp_probe_cases_observed":observed_probes,
       "h2231_real_udp_p99_cases_with_at_least_50_echoes":p99_reports,
       "h2231_tcp_tail_cases_observed":observed_tcp_tail,
+      "h2231_native_resource_case_samples_observed":observed_resource,
       "h2231_tail_metrics_are_not_new_product_pass":True,
       "h2231_tail_metrics_qualification":(
-          "ALL_27_METRIC_RECEIPTS_PRESENT" if
+          "ALL_27_SOURCE_BOUND_METRIC_FILES_PRESENT_P99_STILL_PER_CASE_SAMPLE_GATED" if
           observed_probes==27 and observed_tcp_tail==27 else
           "PARTIAL_OR_NOT_RUN_OR_MISSING_REAL_METRIC_RECEIPTS"),
       "relay_snapshot_files":len(snapshots),

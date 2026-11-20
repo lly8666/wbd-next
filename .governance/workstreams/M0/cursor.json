@@ -8,18 +8,18 @@
   "checkpoint_sha": "ad6bef638faf0075e1923d2a97849dc255e6877a",
   "progress": "in_progress",
   "task_id": "PLAN029-H2231-3RUNNER-P99-TAIL-METRICS",
-  "current_task": "H2229 ACK10/65535无HOL已原生4/4；H2230真实三Runner TCP27/27，DERP容量不合格；H2231补真实应用UDP/P99和TCP长尾。",
+  "current_task": "H2229 ACK10/65535无HOL原生4/4；H2231三Runner UDP业务RTT P99与TCP逐秒尾延迟已真测；修复source校验/CPU P99并跑同源验收。",
   "why_now": "实体Win上行偶断及80–200Mbps未定位；需200ms/1–20%网络下原生真实尾延迟样本。",
   "done_when": "三Runner独立链路提供有样本数的UDP RTT P99与TCP逐秒长尾；物理Win仍OPEN。",
-  "next_action": "修复主线证据SHA一致性；H2231跨Runner实测/保留DERP容量门槛；回查Windows客户端真实同代Health，禁改外层重传。",
+  "next_action": "H2231源码锁定静态/真三VM复跑，核验新CPU RSS P99和有效回包数；保留DERP容量门槛；实体Windows异常仍OPEN、禁改外层重传。",
   "unverified": true,
-  "last_tested_source": "8f6054e7d6851f6fa58afdfb5a63f7e4ec504bc1",
+  "last_tested_source": "4cf12a42b7f85112022ca7f3359d051d9ecdf608",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2230-ACK10-ARM-3RUNNER-REAL-TCP-20261120.json"
+    "docs/evidence/M0/PLAN029-H2231-THREE-RUNNER-REAL-UDP-TCP-P99-20261120.json"
   ],
   "context_refs": [
     "docs/devlog/M0/20261120-H2228-THREE-RUNNER-ARM-RELAY-GE200-BBR-TCP.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2230 run44733044743 ACK10三VM真实TCP27/27；基线19/20Mbps DERP非产品容量。H2231 P99新增尚未WAN验；实体Win仍OPEN。"
+  "partial_summary": "H2231 run44745602996 三VM真TCP27/27+UDP RTT P99样本22/27；基线21Mbps DERP不合格、旧分支列表单测FAIL；源码SHA证据已绑定。新CPU采样未WAN测，实体Win仍OPEN。"
 }

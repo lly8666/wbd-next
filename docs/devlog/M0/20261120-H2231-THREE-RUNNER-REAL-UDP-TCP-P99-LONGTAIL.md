@@ -27,3 +27,15 @@ H2231 仅修改测试夹具、指标分析、Actions 及 M0 证据/光标，不�
 ```feature-impact
 {"kind":"none","reason":"H2231 adds source-locked optional three-runner real UDP echo/tcp P99 performance harness, tests, evidence and cursor correction only. Existing Linux/Windows native data/ACK/FEC protocol and outer performative retransmission are unchanged.","ids":[]}
 ```
+
+## CPU/RSS P99/H2231 原始进程资源长尾
+
+仅实际 WBD iperf3 用例启动低开销 `process-sample`，读取原始Go客户端 root-owned pidfile 绑定的 `/proc/PID/stat`，强制进程 `comm=wbd-v4-client` 与启动 `starttime_ticks` 每次保持一致；500ms间隔测量 CPU utime+stime 相邻 ticks 差（`%_of_one_core`，可超过100%代表多核），RSS以实际内核 RSS页数转 MiB，不用 `ps` 自启动时均值冒充瞬时CPU。输出资源 P50/P95/P99、实采样数、worker中途退出/PID复用标志。3秒数据不足10次采样则 P99 unknown；没有 native pid时不伪造数字。资源文件 `resource-case-...json` 与 `probe-case-...json` 独立，不混入固定27个TCP源锁用例。
+
+源码绑定的 H2231 性能证据与主线治理：源 `GITHUB_SHA`/Run ID 还绑定真实UDP和资源样本，不能从其他Runner/旧源码回填；新的 `tools/governance.py validate` 负例加入夹具 static，实际 `perf` 红灯保留。如有 DERP、CPU/RSS/P99 样本不足或实体Windows未测，严格标识，不提高任何虚拟性能结论。
+
+## H2231 首次真正三 Runner P99 数据 — Action 44745602996（未全绿）
+
+- 原始证据 [Action 44745602996](https://github.com/lly8666/wbd-next/actions/runs/44745602996)，SOURCE `4cf12a42b7f85112022ca7f3359d051d9ecdf608`：独立 x86→ARM64真L3中继→x86 三 Runner，Go TLS/Rust原生和relay/server job成功。客户端 **真实TCP27/27 PASS**、27份TCP逐秒尾部记录、27份独立业务UDP回显，其中**22份>=50真实回包可报告P99**，另外5份P99 UNKNOWN。整体Action **FAIL**：静态23项中22项通过、旧H2228测试仅因硬编码分支列表报错；业务基线DERP受限，容量门槛判FAIL。绝不能把27/27业务PASS写为整轮Action全绿。
+- 原始完整 0ms/0损伤、8流直连基线仅上行21.058Mbps/下行21.146Mbps，因Tailnet/DERP而不具备判断实体80–200Mbps硬上限的资格。额外200ms单程下4并发上行同时真实业务UDP RTT P99：目标0% Direct1337.304/WBD1557.104ms；1% Direct1460.558/WBD1265.790ms；5% Direct595.665/WBD540.923ms；10% Direct679.042/WBD596.571ms；20% Direct531.038/WBD530.059ms。高丢包实际应用UDP缺失可达 Direct32.5%/WBD40.833%（因路由器向两个方向**分别**施加独立丢包），不能将配置20%简单等同于业务层20%。成功样本P99随负载/选择偏差变化，不可声称越丢越快。
+- 源锁定 JSON 位于 `docs/evidence/M0/PLAN029-H2231-THREE-RUNNER-REAL-UDP-TCP-P99-20261120.json`；三 Runner原始 x86客户端 artifact 14632993956、摘要14633357999、ARM路由器14632934833、x86服务端14633847258。报告 `h2231_*_samples`、TCP goodput P01/P99和 TCP sender RTT P99。此第一版**还不含**新的原生CPU/RSS P99和每单个探针嵌入的GitHub SHA/Run ID，后续源码修订补齐并真实重跑，不能倒填首轮。

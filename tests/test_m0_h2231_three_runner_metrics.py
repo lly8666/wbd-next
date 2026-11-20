@@ -1,5 +1,6 @@
 """H2231 P99 metrics safeguards. Static tests are NOT proof of real WAN p99."""
 import json
+import os
 import pathlib
 import socket
 import tempfile
@@ -51,6 +52,19 @@ class H2231RealMeasuredTails(unittest.TestCase):
         self.assertTrue(result["qualified_iperf3_completed"])
         self.assertNotEqual(result["kernel_tcp_sender_rtt_source"],
                             result["source"])
+
+    def test_iperf_omit_warmup_is_not_p99_and_sparse_rtt_unknown(self):
+        intervals=[{"sum":{"seconds":1,"bits_per_second":1e9,
+                             "omitted":True},"streams":[{"rtt":100}]}]
+        intervals += [{"sum":{"seconds":1,"bits_per_second":100e6},
+                       "streams":[{"rtt":400_000}]} for _ in range(12)]
+        x=M.iperf_tail({"intervals":intervals},{"status":"PASS_REAL_KERNEL_IPERF3_TCP"})
+        self.assertEqual(x["business_goodput_per_interval_mbps"]["sample_count"],12)
+        self.assertEqual(x["business_goodput_per_interval_mbps"]["max"],100.0)
+        self.assertEqual(x["business_goodput_per_interval_mbps"]["p99"],100.0)
+        self.assertIsNone(x["kernel_tcp_sender_rtt_ms"]["p99"])
+        self.assertEqual(x["rtt_p99_absent_reason"],
+                         "FEWER_THAN_50_SENDER_INTERVAL_RTT_SAMPLES")
 
     def test_failed_tcp_retains_telemetry_but_not_iperf_pass(self):
         raw={"intervals":[{"sum":{"seconds":1,"bits_per_second":1e6}}]*20}
@@ -113,10 +127,29 @@ class H2231RealMeasuredTails(unittest.TestCase):
             finally:
                 done.set();t.join(timeout=2)
 
+    def test_proc_cpu_rss_tail_requires_original_worker_and_real_pid_identity(self):
+        fields=["0"]*22
+        fields[11]="110";fields[12]="40";fields[19]="123456";fields[21]="101"
+        raw="1001 (wbd-v4-client) "+" ".join(fields)
+        with patch.object(pathlib.Path,"read_text",return_value=raw):
+            row=M.native_stat(1001)
+        self.assertEqual(row["cpu_ticks"],150)
+        self.assertEqual(row["starttime_ticks"],123456)
+        self.assertGreater(row["rss_mib"],0)
+        with patch.object(pathlib.Path,"read_text",return_value=raw.replace(
+                "wbd-v4-client","iperf3")):
+            with self.assertRaises(ValueError):
+                M.native_stat(1001)
+        with self.assertRaises(ValueError):
+            M.native_stat(-1)
+
     def test_original_three_runner_main_fixture_emits_both_authentic_paths(self):
         sh=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
         self.assertIn('spawn "$TMP/udp-$kind.pid" python3 "$METRICS" echo-server "$kind"',sh)
         self.assertIn('udp-probe "$kind"',sh)
+        self.assertIn('process-sample',sh)
+        self.assertEqual(sh.count('env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID"'),2)
+        self.assertIn('resource-$(basename "$casefile")',sh)
         self.assertIn('iperf-enrich "$casefile"',sh)
         self.assertIn('--outer-repair on',sh)
         self.assertLess(sh.index('udp-probe "$kind"'),sh.index('iperf "$kind"'))
@@ -141,6 +174,8 @@ class H2231RealMeasuredTails(unittest.TestCase):
             real=root/("probe-case-000-"+names[0]+".json")
             kind="direct" if "-direct-" in names[0] else "wbd"
             M.save(real,{"schema":"H2231_TRUE_APP_UDP_RTT_V1",
+                "source_sha":os.environ.get("GITHUB_SHA"),
+                "run_id":os.environ.get("GITHUB_RUN_ID"),
                 "kind":kind,"origin":"REAL_APP_UDP_ECHO_DIRECT_ARM_RELAY_ONLY"
                     if kind=="direct" else "REAL_APP_UDP_ECHO_WITHIN_WBD_INNER_TUN",
                 "qualified_for_lowrate_udp_p99":True,
@@ -150,5 +185,12 @@ class H2231RealMeasuredTails(unittest.TestCase):
             self.assertEqual(new["h2231_real_udp_p99_cases_with_at_least_50_echoes"],1)
             self.assertEqual(new["status"],"PASS_REAL_THREE_RUNNER_TCP_MATRIX")
             self.assertEqual(new["raw_cases"][0]["h2231_app_udp_probe"]["roundtrip_rtt_ms"]["p99"],400.0)
+            forged=json.loads(real.read_text())
+            forged["source_sha"]="not_the_actions_commit"
+            M.save(real,forged)
+            denied=H.result_summary("normal","burst",root)
+            self.assertEqual(denied["h2231_real_udp_probe_cases_observed"],0)
+            self.assertEqual(denied["raw_cases"][0]["h2231_app_udp_probe"]["status"],
+                             "INVALID_UDP_PROBE_ORIGIN")
 
 if __name__=="__main__":unittest.main()
