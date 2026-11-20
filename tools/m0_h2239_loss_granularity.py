@@ -93,16 +93,26 @@ def qdisc_actual(receipt):
         if len(netem)!=1:
             raise RuntimeError("H2239_QDISC_NOT_SINGLE_REAL_NETEM")
         q=netem[0]
-        stats=q.get("stats",{})
-        basic=stats.get("basic",{})
-        queue=stats.get("queue",{})
+        # iproute2 "tc -s -j qdisc" exposes flat top-level
+        # packets/bytes/drops. Nested stats appear on other tc objects;
+        # refuse absent counters instead of converting UNKNOWN into zero.
+        offered=q.get("packets")
+        bytes_sent=q.get("bytes")
+        discarded=q.get("drops")
+        if any(not isinstance(x,int) or x<0 for x in
+               (offered,bytes_sent,discarded)):
+            raise RuntimeError("H2239_KERNEL_TC_SKB_COUNTERS_UNKNOWN")
         link=item["link"]
         if len(link)!=1:raise RuntimeError("H2239_LINK_READBACK_NOT_EXACT")
+        real_link=link[0].get("stats64",link[0].get("stats",{})).get("tx",{})
+        link_packets=real_link.get("packets")
+        if not isinstance(link_packets,int) or link_packets<0:
+            raise RuntimeError("H2239_KERNEL_LINK_TX_PACKETS_UNKNOWN")
         output[side]={
-            "netem_qdisc_packets":basic.get("packets"),
-            "netem_qdisc_bytes":basic.get("bytes"),
-            "netem_qdisc_drops":queue.get("drops"),
-            "physical_link_tx_packets":link[0].get("stats64",link[0].get("stats",{})).get("tx",{}).get("packets"),
+            "netem_qdisc_packets":offered,
+            "netem_qdisc_bytes":bytes_sent,
+            "netem_qdisc_drops":discarded,
+            "physical_link_tx_packets":link_packets,
             "qdisc_drops_are_skb_not_tcp_segment_or_business_bytes":True,
         }
     return output
