@@ -450,6 +450,34 @@ public final class RootDiagnosticReportTest {
             if(actual.contains("ROOT_PRIVATE_SECRET")||actual.contains("/data/user/"))
                 throw new AssertionError("cold report exposed private input");
         }
+        // Real A33 phone sequence stopped at native TLS after 14.997s.
+        // A34 exports independent original payload TX/RX and deadline facts.
+        for(RootDiagnosticReceipt.Event failure:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_OTHER,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_DEADLINE_ELAPSED_OTHER,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CANCELLED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_BOOTSTRAP_CLOSED
+        }){
+            File dir34=Files.createTempDirectory("wbd-a34-receipt").toFile();
+            RootDiagnosticReceipt w=new RootDiagnosticReceipt(new File(dir34,"wbd-root-diagnostic.txt"));
+            for(RootDiagnosticReceipt.Event e:new RootDiagnosticReceipt.Event[]{
+                RootDiagnosticReceipt.Event.START_REQUESTED,
+                RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2,
+                RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPENED,
+                RootDiagnosticReceipt.Event.ORIGINAL_GO_RAW_SOCKET_READY,
+                RootDiagnosticReceipt.Event.ORIGINAL_GO_ASSOC_ESTABLISHED,
+                RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPTED,
+                RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_OK,
+                RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED,
+                failure,
+                RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO
+            })w.record(e);
+            String txt=RootDiagnosticReport.build(dir34,source,36);
+            contains(txt,"last_session_stage="+failure.name().replace("ORIGINAL_GO_",""));
+            contains(txt,"ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_OK");
+            contains(txt,"ORIGINAL_GO_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED");
+        }
+        System.out.println("ANDROID_A34_TLS_ORIGINAL_WIRE_AND_DEADLINE_HOST_PASS");
         System.out.println("ANDROID_A33_SYNACK_TLS_ADMISSION_STAGE_PRIORITY_HOST_PASS");
         System.out.println("ANDROID_A32_PRE_SU_CREDENTIAL_0600_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_ROOT_A31_PARSE_REASON_SAFE_HOST_PASS");

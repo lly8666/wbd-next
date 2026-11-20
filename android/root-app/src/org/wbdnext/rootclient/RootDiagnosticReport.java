@@ -89,6 +89,12 @@ final class RootDiagnosticReport {
                 return "TLS_HANDSHAKE_FAILED_CERTIFICATE";
             if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_PEER_CLOSED"))
                 return "TLS_HANDSHAKE_FAILED_PEER_CLOSED";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_DEADLINE_ELAPSED_OTHER"))
+                return "TLS_HANDSHAKE_FAILED_DEADLINE_ELAPSED_OTHER";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CANCELLED"))
+                return "TLS_HANDSHAKE_FAILED_CANCELLED";
+            if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_BOOTSTRAP_CLOSED"))
+                return "TLS_HANDSHAKE_FAILED_BOOTSTRAP_CLOSED";
             if(has(session,"ORIGINAL_GO_TLS_HANDSHAKE_FAILED_OTHER"))
                 return "TLS_HANDSHAKE_FAILED_OTHER";
             if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_FAILED_AUTH_REJECTED"))

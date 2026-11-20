@@ -1537,11 +1537,23 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         LocalPort:c.localPort,PeerPort:c.peerPort}
     isn,err:=originalRandomISN()
     if err!=nil{return err}
-    assoc,err:=faketcp.NewClientAssociation(flow,isn,time.Second,emit)
+    // Original emitter and matching original AF_PACKET reader only.
+    // This never creates an extra TCP sender or inspects payload content.
+    var handoffCommitted atomic.Bool
+    var firstPayloadTX atomic.Bool
+    var firstPeerPayloadRX atomic.Bool
+    observedEmit:=func(seg faketcp.Segment)error{
+        e:=emit(seg)
+        if e==nil&&runtime.GOOS=="android"&&len(seg.Payload)>0&&
+           !handoffCommitted.Load()&&firstPayloadTX.CompareAndSwap(false,true){
+            log.Print("V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_PAYLOAD_TX_OK role=client")
+        }
+        return e
+    }
+    assoc,err:=faketcp.NewClientAssociation(flow,isn,time.Second,observedEmit)
     if err!=nil{return err}
     defer assoc.Close()
     errs:=make(chan error,1)
-    var handoffCommitted atomic.Bool
     var goPostHandoffDataCopies atomic.Uint64
     var androidColdUntrustedRSTRecorded atomic.Bool
     go func(){
@@ -1553,6 +1565,10 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 return
             }
             if !flow.MatchesInbound(seg){continue}
+            if runtime.GOOS=="android"&&len(seg.Payload)>0&&
+               !handoffCommitted.Load()&&firstPeerPayloadRX.CompareAndSwap(false,true){
+                log.Print("V4_PUBLIC_ANDROID_COLD_RAW_PEER_PAYLOAD_RX role=client")
+            }
             // Exact original AF_PACKET inbound RST before TLS. This proves
             // only UNAUTHENTICATED wire failure, not server identity, M4
             // or application data; payload/IP/UID are never logged.
@@ -1674,6 +1690,12 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if resent>0{
         log.Printf("V4_PUBLIC_FAKETCP_CLIENT_COLD_DATA_RTO role=client mode=%s actual_original_retransmissions=%d post_detach=0",
             c.fecMode,resent)
+    }
+    if runtime.GOOS=="android"&&(err!=nil||retryErr!=nil){
+        // NOT_OBSERVED refers to this one bounded Go-owned association.
+        if !firstPayloadTX.Load(){log.Print("V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_PAYLOAD_TX_NOT_OBSERVED role=client")}
+        if !firstPeerPayloadRX.Load(){log.Print("V4_PUBLIC_ANDROID_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED role=client")}
+        if resent>0{log.Print("V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_RTO_OBSERVED role=client")}
     }
     if err!=nil||retryErr!=nil{
         // Failed cold admission still owns a constructed native product.

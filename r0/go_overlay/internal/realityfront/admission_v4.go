@@ -21,6 +21,8 @@ import (
     "net"
     "net/netip"
     "runtime"
+    "os"
+    "syscall"
     "sync"
     "time"
 
@@ -724,7 +726,12 @@ func v4DeriveRecordKeys(exporter keyingMaterialExporter,result AdmissionResult,e
 // error string: TLS errors may contain SNI, remote IP or certificate details.
 func v4AndroidColdFailureClass(err error)string{
     if err==nil{return "NONE"}
-    if errors.Is(err,context.DeadlineExceeded){return "TIMEOUT"}
+    if errors.Is(err,context.DeadlineExceeded)||
+       errors.Is(err,os.ErrDeadlineExceeded)||
+       errors.Is(err,syscall.ETIMEDOUT)||
+       errors.Is(err,faketcp.ErrBootstrapTimeout){return "TIMEOUT"}
+    if errors.Is(err,context.Canceled){return "CANCELLED"}
+    if errors.Is(err,faketcp.ErrBootstrapClosed){return "BOOTSTRAP_CLOSED"}
     var netErr net.Error
     if errors.As(err,&netErr)&&netErr.Timeout(){return "TIMEOUT"}
     var unknown x509.UnknownAuthorityError
@@ -740,6 +747,13 @@ func v4AndroidColdFailureClass(err error)string{
     return "OTHER"
 }
 
+// A34 only observes an elapsed original TLS candidate deadline. An opaque
+// error at that boundary is not necessarily a timeout or server rejection.
+func v4AndroidClassAtDeadline(err error,remaining time.Duration)string{
+    v:=v4AndroidColdFailureClass(err)
+    if v=="OTHER"&&remaining<=0{return "DEADLINE_ELAPSED_OTHER"}
+    return v
+}
 func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConfig,opt V4ClientOptions)(*V4ClientSession,error) {
     if !opt.DataPlaneReady||opt.GameFec>7||opt.NormalFec>7||
        opt.StartupPadding>2||
@@ -785,7 +799,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     client,err:=handshakeClientConn(ctx,conn,tlsCfg)
     if err!=nil{
         if runtime.GOOS=="android"{
-            log.Printf("V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=%s",v4AndroidColdFailureClass(err))
+            log.Printf("V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=%s",v4AndroidClassAtDeadline(err,guard.Remaining()))
         }
         return nil,candidateError(ctx,err)
     }

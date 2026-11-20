@@ -497,6 +497,22 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_PEER_CLOSED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=OTHER"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_OTHER);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_PAYLOAD_TX_OK role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_OK);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RAW_PEER_PAYLOAD_RX role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RAW_PEER_PAYLOAD_RX);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_PAYLOAD_TX_NOT_OBSERVED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_NOT_OBSERVED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_RTO_OBSERVED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_BOOTSTRAP_RTO_OBSERVED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=DEADLINE_ELAPSED_OTHER"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_DEADLINE_ELAPSED_OTHER);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=CANCELLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_CANCELLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=BOOTSTRAP_CLOSED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_FAILED_BOOTSTRAP_CLOSED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TLS_HANDSHAKE_VERIFIED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PROTECTED_REQUEST_WRITE_FAILED role=client"))

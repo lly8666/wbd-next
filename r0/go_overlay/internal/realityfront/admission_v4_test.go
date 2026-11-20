@@ -14,6 +14,8 @@ import (
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "net/netip"
     "testing"
+    "fmt"
+    "syscall"
     "time"
 )
 
@@ -1295,6 +1297,11 @@ func TestV4AndroidColdFixedFailureClasses(t *testing.T){
  cases:=[]struct{err error;want string}{
   {nil,"NONE"},
   {context.DeadlineExceeded,"TIMEOUT"},
+  {os.ErrDeadlineExceeded,"TIMEOUT"},
+  {syscall.ETIMEDOUT,"TIMEOUT"},
+  {fmt.Errorf("nested %w",faketcp.ErrBootstrapTimeout),"TIMEOUT"},
+  {context.Canceled,"CANCELLED"},
+  {faketcp.ErrBootstrapClosed,"BOOTSTRAP_CLOSED"},
   {io.EOF,"PEER_CLOSED"},
   {io.ErrUnexpectedEOF,"PEER_CLOSED"},
   {x509.UnknownAuthorityError{},"CERTIFICATE"},
@@ -1307,5 +1314,18 @@ func TestV4AndroidColdFixedFailureClasses(t *testing.T){
   if got:=v4AndroidColdFailureClass(test.err);got!=test.want{
    t.Errorf("fixed cold class want %s got %s",test.want,got)
   }
+ }
+}
+
+func TestV4AndroidColdDeadlineUnknownIsNotMisreported(t *testing.T){
+ cases:=[]struct{err error;remaining time.Duration;want string}{
+  {errors.New("private opaque error"),-time.Millisecond,"DEADLINE_ELAPSED_OTHER"},
+  {errors.New("private opaque error"),time.Second,"OTHER"},
+  {context.Canceled,-time.Millisecond,"CANCELLED"},
+  {faketcp.ErrBootstrapTimeout,-time.Millisecond,"TIMEOUT"},
+  {x509.UnknownAuthorityError{},-time.Millisecond,"CERTIFICATE"},
+ }
+ for _,c:=range cases{
+  if got:=v4AndroidClassAtDeadline(c.err,c.remaining);got!=c.want{t.Fatalf("%s != %s",got,c.want)}
  }
 }

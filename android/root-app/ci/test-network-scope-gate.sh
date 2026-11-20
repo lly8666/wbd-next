@@ -266,5 +266,16 @@ for event in ("ORIGINAL_GO_ASSOC_ESTABLISHED","ORIGINAL_GO_TLS_HANDSHAKE_ATTEMPT
  assert event in s and event in receipt and event in report
 assert 'SYNACK_CANDIDATE_ASSOC_NOT_PROVEN' in report
 print("ANDROID_A33_ORIGINAL_COLD_TLS_NO_FAKE_WIRE_SOURCE_GATE_PASS")
+# A34: actual original output/peer ingress, no fake ClientHello or no-TLS fallback.
+assert 'observedEmit:=func(seg faketcp.Segment)error' in go_product
+assert go_product.index('V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_PAYLOAD_TX_OK role=client') > go_product.index('e:=emit(seg)')
+assert 'firstPeerPayloadRX.CompareAndSwap(false,true)' in go_product
+assert 'v4AndroidClassAtDeadline(err,guard.Remaining())' in go_admission
+for ev in ("ORIGINAL_GO_COLD_BOOTSTRAP_PAYLOAD_TX_OK",
+           "ORIGINAL_GO_COLD_RAW_PEER_PAYLOAD_RX",
+           "ORIGINAL_GO_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED",
+           "ORIGINAL_GO_TLS_HANDSHAKE_FAILED_DEADLINE_ELAPSED_OTHER"):
+ assert ev in s and ev in receipt
+print("ANDROID_A34_ORIGINAL_TLS_WIRE_SOURCE_GATE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY

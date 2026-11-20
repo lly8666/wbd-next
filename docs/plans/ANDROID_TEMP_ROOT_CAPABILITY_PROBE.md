@@ -126,6 +126,10 @@ A32 **直接修 App 写方**而非放宽原Go：3种固定私有文件（密码�
 
 A33仅在原Go Android冷路径增加真实Association Established、原Rust产品构造、真TLS attempted/verified/固定失败类别、保护Admission request write/reply及verify等marker；Java只允许有界固定枚举，Host Go classifier/Java V2阶段优先级/锚定反例与同源正式ARM64 APK+原Linux oracle。Android实机、联网服务器、KSU/TAP不自动启动。下一份用户自测安全TXT在同一次有界启动中可定位多个临界点；没有合格环境/授权不得执行外部业务闭环。
 
+### A34｜API36真FakeTCP Established，TLS约15秒OTHER：原数据首收发诊断
+
+用户自行提供 A33 SOURCE `f8031ef1cf2f15e2769208d76bf2b072275b6084` 真机 33事件：原Go/0600/TUN/RAW/SYNACK候选、原Association Established与TLS Attempted OBSERVED，14,997ms后 OTHER/exit1。原Linux服务端身份、原ClientHello对端实际接收、真TLS/认证/租约、M4/Stop仍未证。A34仅观察原ClientAssociation原sendto成功后的首非空Bootstrap TX、严格4元组的AF_PACKET peer payload RX及失败时对应本会话未观察到的方向/已有RTO。补明确的原BootstrapTimeout/OS timeout/cancelled/closed；未知错误恰逢预算耗尽只记DEADLINE_ELAPSED_OTHER，不冒称根因。无新传输/伪ClientHello/密钥或错误正文入TXT，不放宽标准TLS/认证、原Network/路由/Stop。先以用户自主真机安全TXT判TX/RX，再取得同SOURCE原Linux服务端RAW/TLS收据，不先扩DNS/全App。
+
 ### D2b→D2c｜网络资格通过后的真 TLS/租约与业务闭环
 
 网络层可用后，固定一套临时证书/测试凭据和测试账号，逐一证明：
