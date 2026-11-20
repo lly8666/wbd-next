@@ -72,8 +72,7 @@ class SegmentationNetemRules(unittest.TestCase):
         with patch.object(H.L,"ns",ok):
             result=H.seeded_router_loss(Owner())
             self.assertEqual([x["device"] for x in result],["rcli0","rsrv0"])
-            self.assertTrue(all("seed" in x and str(H.SEED) in x for x in
-                                [dict(seed=str(v["seed"])) for v in result]))
+            self.assertTrue(all(v["seed"]==H.SEED for v in result))
             self.assertEqual(sum("seed" in args for args in seen),2)
         with patch.object(H.L,"ns",return_value=type("P",(),{
              "stdout":"qdisc netem root delay 200ms loss gemodel"})()):
