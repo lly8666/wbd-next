@@ -20,7 +20,9 @@ type fakeIPTables struct{
 }
 func (f *fakeIPTables) run(args ...string)(string,error){
     if len(args)<6 || args[0]!="-w" || args[2]!="-t" ||
-        args[3]!="filter" || args[5]!="OUTPUT"{return "",errors.New("not scoped")}
+        args[3]!="filter" || (args[4]!="-n"&&args[5]!="OUTPUT"){
+        return "",errors.New("not scoped")
+    }
     switch args[4]{
     case "-S":
         if f.failList{return "",errors.New("list unavailable")}
@@ -67,9 +69,17 @@ func parseTestPlan(args []string) Plan{
 }
 func basePlan()Plan{return Plan{Version:1,Interface:"wlan0",SourceIP:"192.0.2.5",
 PeerIP:"198.51.100.2",SourcePort:45821,PeerPort:443}}
+// testing.TempDir can be 0755. Host fixture must model the strict 0700
+// real RootService directory; do not weaken the production safety gate.
+func privateTempDir(t *testing.T)string{
+    t.Helper()
+    dir:=t.TempDir()
+    if e:=os.Chmod(dir,0700);e!=nil{t.Fatal(e)}
+    return dir
+}
 func TestScopedRSTGuardOwnedInstallCounterAndStop(t *testing.T){
     f:=&fakeIPTables{packets:3}
-    journal:=filepath.Join(t.TempDir(),"rst-guard.json")
+    journal:=filepath.Join(privateTempDir(t),"rst-guard.json")
     g,recovered,e:=New(f.run,journal,basePlan())
     if e!=nil||recovered||!f.present{t.Fatalf("install/lock: %v",e)}
     if n,ok:=g.DropCounter();!ok||n!=3{t.Fatalf("counter=%d known=%v",n,ok)}
@@ -78,7 +88,7 @@ func TestScopedRSTGuardOwnedInstallCounterAndStop(t *testing.T){
 }
 func TestScopedRSTGuardCrashRecoveryAcrossNewFlow(t *testing.T){
     f:=&fakeIPTables{}
-    path:=filepath.Join(t.TempDir(),"rst-guard.json")
+    path:=filepath.Join(privateTempDir(t),"rst-guard.json")
     g,_,e:=New(f.run,path,basePlan());if e!=nil{t.Fatal(e)}
     if e=g.lock.Close();e!=nil{t.Fatal(e)} // simulated process crash; no kernel mutation here
     next:=basePlan();next.SourcePort++
@@ -94,7 +104,7 @@ func TestScopedRSTGuardFailClosedForeignAndDuplicates(t *testing.T){
         t.Run(tc.name,func(t *testing.T){
             f:=&fakeIPTables{present:true,extra:tc.extra,plan:p}
             if tc.different{f.plan.SourcePort++}
-            path:=filepath.Join(t.TempDir(),"rst-guard.json")
+            path:=filepath.Join(privateTempDir(t),"rst-guard.json")
             if _,_,e:=New(f.run,path,p);!errors.Is(e,ErrScope){t.Fatalf("must refuse foreign %v",e)}
             if !f.present{t.Fatal("foreign rule wrongly deleted")}
         })
@@ -102,7 +112,7 @@ func TestScopedRSTGuardFailClosedForeignAndDuplicates(t *testing.T){
 }
 func TestScopedRSTGuardInstallFailureAndJournalSafety(t *testing.T){
     f:=&fakeIPTables{failInsert:true}
-    dir:=t.TempDir()
+    dir:=privateTempDir(t)
     path:=filepath.Join(dir,"rst-guard.json")
     if _,_,e:=New(f.run,path,basePlan());!errors.Is(e,ErrBackend){t.Fatalf("insert failure: %v",e)}
     if f.present{t.Fatal("fail closed no residual rule")}
@@ -112,7 +122,7 @@ func TestScopedRSTGuardInstallFailureAndJournalSafety(t *testing.T){
 }
 func TestScopedRSTGuardConcurrentLockAndUncertainStop(t *testing.T){
     f:=&fakeIPTables{}
-    path:=filepath.Join(t.TempDir(),"rst-guard.json")
+    path:=filepath.Join(privateTempDir(t),"rst-guard.json")
     g,_,e:=New(f.run,path,basePlan());if e!=nil{t.Fatal(e)}
     if _,_,e:=New(f.run,path,basePlan());!errors.Is(e,ErrLocked){t.Fatalf("lock bypass: %v",e)}
     f.failDelete=true

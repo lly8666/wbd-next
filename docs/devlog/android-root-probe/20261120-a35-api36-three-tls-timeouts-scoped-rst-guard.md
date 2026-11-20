@@ -15,3 +15,11 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A35用户c010f735真机三次Original TLS payload TX but no peer payload + timeout；原Linux真实netns依赖双端RST DROP，新增Android仅精确原carrier RST guard及root-only durable回滚与测试，保留真机M4未证。"}
 ```
+
+## A35a 首轮Host真实FAIL与夹具修复
+
+SOURCE `6b735df99af838c88a9c4f6cbf069b58eed1f66b` [Action #44705679914](https://github.com/lly8666/wbd-next/actions/runs/44705679914) 的 `arm64-native` 前置RST独立Go测试5项均在真正fake iptables执行前FAIL: `RST_GUARD_JOURNAL_UNSAFE`。Go `testing.TempDir()` 当前生成目录权限为0755，生产RootService实际严格0700正确拒绝，因此**仅修单元测试**：给 `privateTempDir` 执行 `chmod 0700`，不放宽真实root-only/0600/O_NOFOLLOW/flock。另修fake runner `-n -v -x -L OUTPUT` 只读计数的参数门，让命中RST证据测试能跑。旧CI失败保留。后续新SOURCE再跑同源Go/Rust、签名APK、独立Linux original Oracle；手机尚未用A35试验。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A35首CI快速捕获模拟Go TempDir 0755误触真实0700安全门，修Host夹具与只读计数解析，生产RST安全边界不变。"}
+```
