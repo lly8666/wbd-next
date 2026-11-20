@@ -1,0 +1,99 @@
+name: 'H2237 1pct true-native original WBD TUN ingress pressure A/B/A'
+run-name: 'H2237 fq600→fq250→fq600 source ${{ github.sha }}'
+on:
+  push:
+    branches: ['feat/h2237-low-loss-ingress-pressure']
+    paths:
+      - '.github/workflows/qa-h2237-low-loss-fq-pressure-ab.yml'
+      - 'tools/m0_h2237_fq_pressure_ab.py'
+      - 'tools/m0_h2234_local_netns.py'
+      - 'tests/test_m0_h2237_fq_pressure_ab.py'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: h2237-fq-pressure-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    name: 'Exact source; true TUN only; no new wire/no-HOL/protocol change'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Syntax, original source lock and native-owner negative tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2237_fq_pressure_ab.py tools/m0_h2234_local_netns.py
+          python3 -m unittest tests.test_m0_h2237_fq_pressure_ab tests.test_m0_h2234_local_netns tests.test_m0_h2229_native_ack_unified -v
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('tools/m0_h2237_fq_pressure_ab.py').read_text()
+          assert 'qdisc_250_is_BENCH_ONLY_NOT_PRODUCT_CONFIG' in s
+          assert 'H2237_UNOWNED_CLIENT_QDISC_REFUSED' in s
+          assert 'node.stop_client(1)' in s
+          assert 'node.start_client(1)' in s
+          assert 'original_product_fq_default_mbps' in s
+          print('H2237_STATIC_CONTRACT_PASS_ONLY_NO_PRODUCT_CHANGE')
+          PY
+  original-native-x86:
+    name: 'Real Linux original Go TLS Rust /32 + fq600/250/600 true kernel A/B/A'
+    needs: static
+    runs-on: ubuntu-24.04
+    timeout-minutes: 38
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Genuine Linux BBR/TUN/iptables and original Go TLS/Rust build
+        shell: bash
+        timeout-minutes: 22
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2237-build.log 2>&1 ||
+            { tail -n 120 h2237-build.log;exit 2; }
+      - name: Source-locked genuine 1pct 200ms four-stream A/B/A
+        shell: bash
+        timeout-minutes: 13
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/m0_h2237_fq_pressure_ab.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2237-fq-pressure/summary.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['status']=='PASS_GENUINE_ABA_DATA_ONLY_NO_PRODUCT_CHANGE',d['status']
+          assert d['server_owned_stop_verified']
+          assert len(d['phases'])==3
+          assert [r['test_only_tun_qdisc_rate_mbps'] for r in d['phases']]==[600,250,600]
+          assert all(p.get('owned_stop',{}).get('status')=='REAL_RUST_OWNED_STOP'
+                     for p in d['phases'])
+          assert all(p.get('case',{}).get('status')=='PASS_REAL_KERNEL_IPERF3_TCP'
+                     for p in d['phases'])
+          assert len(d['direct_before_after'])==2
+          print('H2237_REAL_NATIVE_1PCT_ABA_COMPLETE_DIAGNOSTIC_ONLY')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2237-1pct-fq-pressure-real-x86-source-locked
+          path: |
+            h2237-fq-pressure/
+            h2237-build.log
+          retention-days: 10
+          if-no-files-found: warn
