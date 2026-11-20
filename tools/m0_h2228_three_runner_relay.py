@@ -36,7 +36,8 @@ GW={"client":"10.248.81.1","server":"10.248.82.1"}
 RDEV={"client":"rcli0","server":"rsrv0"}
 CIDR={"client":"10.248.81.0/24","server":"10.248.82.0/24"}
 VXID={"client":"2281","server":"2282"}
-CONTROL_PORT=18728
+# Reuse the already-proven H2227 tailnet CI ACL control port.
+CONTROL_PORT=18727
 LOSSES=(0.0,1.0,5.0,10.0,20.0)
 ROLES={"client":"x86_64","server":"x86_64","relay":"aarch64"}
 TAILNET=ipaddress.ip_network("100.64.0.0/10")
@@ -310,18 +311,23 @@ def remote(peer,action,loss=0,delay=0,model="iid"):
     guard(host in [str(ipaddress.ip_address(host))] and
           ipaddress.ip_address(host) in TAILNET,"REMOTE_IP_NOT_TAILSCALE")
     guard(bool(re.fullmatch("[0-9a-f]{64}",token)),"CONTROL_TOKEN_INVALID")
-    conn=http.client.HTTPConnection(host,CONTROL_PORT,timeout=35)
+    conn=http.client.HTTPConnection(host,CONTROL_PORT,timeout=8)
     headers={"X-H2228-Token":token}
     if action in ("health","snapshot"):
-        conn.request("GET","/"+action,headers=headers)
+        try:conn.request("GET","/"+action,headers=headers)
+        except OSError as e:raise RuntimeError("RELAY_CONTROL_CONNECT_FAILED_18727_"+type(e).__name__) from e
     else:
         guard(action=="impair","REMOTE_CONTROL_ACTION")
         body=json.dumps({"loss_pct":float(loss),"delay_ms":int(delay),
                          "model":model})
-        conn.request("POST","/impair",body=body,
+        try:conn.request("POST","/impair",body=body,
             headers=dict(headers,**{"Content-Type":"application/json"}))
-    rsp=conn.getresponse()
-    raw=rsp.read(250000)
+        except OSError as e:raise RuntimeError("RELAY_CONTROL_POST_FAILED_18727_"+type(e).__name__) from e
+    try:
+        rsp=conn.getresponse()
+        raw=rsp.read(250000)
+    except (OSError,TimeoutError) as e:
+        raise RuntimeError("RELAY_CONTROL_TIMEOUT_OR_ACL_PORT_18727_"+type(e).__name__) from e
     conn.close()
     guard(rsp.status==200,"REMOTE_CONTROL_HTTP_"+str(rsp.status)+
           "_"+raw[:120].decode("utf-8","replace"))
@@ -583,6 +589,6 @@ def main():
 if __name__=="__main__":
     try:main()
     except (RuntimeError,KeyError,ValueError,subprocess.TimeoutExpired,
-            FileNotFoundError) as e:
+            FileNotFoundError,OSError,TimeoutError) as e:
         print("H2228_RELAY_FIXTURE_FAIL "+str(e),file=sys.stderr)
         sys.exit(2)

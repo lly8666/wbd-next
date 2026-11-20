@@ -54,6 +54,19 @@ for role in ("client","server"):
 PY
   python3 "$TOOL" control-serve h2228-peer/client.json h2228-peer/relay.json >"$OUT/control.log" 2>&1 &
   echo "$!" > "$TMP/control.pid"
+  # Ready means a genuinely bound HTTP control socket, not merely a
+  # daemon PID started in the background. Old H2228 action failed here.
+  control_ready=0
+  for i in $(seq 1 50);do
+    if kill -0 "$(cat "$TMP/control.pid")" 2>/dev/null &&
+       ss -ltn |grep -q ':18727 ';then control_ready=1;break;fi
+    sleep .15
+  done
+  if [[ "$control_ready" != 1 ]];then
+    echo "H2228_RELAY_CONTROL_BIND_FAILED tcp18727" >&2
+    tail -40 "$OUT/control.log" >&2
+    return 2
+  fi
   python3 - <<'PY'
 import json,os,pathlib
 d=json.load(open("h2228-out/relay-topology.json"))
@@ -119,7 +132,19 @@ client_run(){
   test -x "$ROOT/wbd-v4-client" && test -s "$ROOT/libwbd_engine.so"
   python3 "$TOOL" node-net client h2228-peer/relay.json "$OUT/client-topology.json"
   secret
-  python3 "$TOOL" remote h2228-peer/relay.json health "$OUT/relay-health.json"
+  # H2227 already permits tag:ci TCP18727. A new relay may still
+  # require a short bounded startup delay: strict HTTP source/token check
+  # remains mandatory. Never skip the control preflight.
+  relay_http_ready=0
+  for i in $(seq 1 5);do
+    if python3 "$TOOL" remote h2228-peer/relay.json health "$OUT/relay-health.json"         >"$OUT/relay-health-attempt.log" 2>&1;then relay_http_ready=1;break;fi
+    sleep 2
+  done
+  if [[ "$relay_http_ready" != 1 ]];then
+    echo H2228_RELAY_CONTROL_NOT_REACHABLE_REAL_NOT_RUN >&2
+    tail -20 "$OUT/relay-health-attempt.log" >&2
+    return 2
+  fi
   python3 "$TOOL" node-snapshot client startup "$OUT/client-startup.json"
   local count=0
   shape(){

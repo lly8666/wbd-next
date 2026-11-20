@@ -32,3 +32,9 @@ Actions → `H2228 Three distinct runners routed ARM relay 200ms one-way 1-20% r
 ```feature-impact
 {"kind":"none","reason":"H2228 adds three distinct runners / ARM64 routed kernel netem / BBR iperf3 benchmark tooling and documented evidence only; no WBD product protocol, retransmission, FEC, Health or runtime changes.","ids":[]}
 ```
+
+## 2026-11-20：初始 Actions 故障分型（不冒充测速结果）
+
+- [Run 44703215435](https://github.com/lly8666/wbd-next/actions/runs/44703215435)：真实三Runner登录及ARM64 Linux 两独立 VXLAN+内核转发成功，x86原始Go/Rust构建成功；服务端新 netns 只读取 BBR 未显式设 BBR 导致 `H2228_FAIL_CLOSED_NAMESPACE_BBR_READBACK`。这是夹具设置错误，无任何已测业务吞吐。改为每个 namespace 写入并读回 BBR；新增单测。
+- [Run 44704087379](https://github.com/lly8666/wbd-next/actions/runs/44704087379) 和 [Run 44704214589](https://github.com/lly8666/wbd-next/actions/runs/44704214589)：上述BBR改正后，3台独立Runner均实际在线、ARM中继和x86原 Go/Rust服务端启动；客户端开始前通过 `http.client` 连中继的 TCP18728 控制面超时。是 Tailnet ACL/控制端口基础设施问题，不是WBD TCP中途崩溃，**不能给这些动作报测速 Mbps**。初始版 H2227 已在用户 Tailnet 成功使用 TCP18727，本版修复成同一 proven `18727`、先验证 relay socket bind、客户端有界轮询健康探针、明确 FAIL 而非 Python traceback。
+- 后续只有出现真实 `h2228-client-result/summary.json` 且包含 `12` 组直接TCP与 `15` 组WBD TCP、对应每档实际 qdisc/RTT，才允许总结五个 loss 档速率。中继如果走DERP或无损直连8流低于800Mbps，还要单独标 INFRA_UNQUALIFIED，不允许诊断 WBD“只能80Mbps”。

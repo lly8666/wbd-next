@@ -58,6 +58,13 @@ class H2228ThreeGenuineMachines(unittest.TestCase):
                       "net.ipv4.tcp_congestion_control=bbr")),invocations)
         self.assertGreater(len([n for n,args in invocations if n==H.NODE]),6)
 
+    def test_tailnet_control_reuses_proven_tcp18727_and_waits_for_bind(self):
+        self.assertEqual(H.CONTROL_PORT,18727)
+        shell=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
+        self.assertIn("H2228_RELAY_CONTROL_BIND_FAILED tcp18727",shell)
+        self.assertIn("H2228_RELAY_CONTROL_NOT_REACHABLE_REAL_NOT_RUN",shell)
+        self.assertIn("relay_http_ready=0",shell)
+
     def test_stationary_mean_and_ge_real_burst_sensitivity(self):
         for loss in (1.0,5.0,10.0,20.0):
             ge=H.ge_params(loss)
