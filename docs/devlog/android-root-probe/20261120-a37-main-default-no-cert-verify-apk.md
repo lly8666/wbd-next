@@ -9,3 +9,10 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A37严格按main --tls-verify-server=false恢复APK默认不验服务器证书，保留严格opt-in与固定诊断，路由Key/保护认证/M4未改。"}
 ```
+
+## A37a Feature catalog 对同提交卡片的约束
+
+初次产品源码 `033d96f81535a5a1c5a7ffe3b6075eb82b1e3227` [治理 #44722429636](https://github.com/lly8666/wbd-next/actions/runs/44722429636) **FAIL**：devlog 的feature-impact声明了已更新android-root-native-client卡，但该提交实际未改卡。这里仅修改功能卡摘要/风险说明，并在同一提交更新该devlog，不改Go/Java/Bionic/APK产品文件；原52条历史verification全部保留，卡UTF-8字节数受16KiB限额。产品验收仍以独立触发的 `033d96f` 同源码Action为准，不能把这次治理结果冒作新版APK。
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A37a将此前declared的主线默认不验TLS证书事实、严格opt-in和MITM风险实际写入同提交卡片，保留52项历史。"}
+```
