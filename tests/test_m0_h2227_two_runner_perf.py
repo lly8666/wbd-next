@@ -144,6 +144,16 @@ class TwoRunnerH2227(unittest.TestCase):
         self.assertIn("REAL_FEC6_APPLIED_PROOF_MISSING_AFTER_BUSINESS_AND_STOP",shell)
         self.assertIn("--outer-repair on",shell)
 
+    def test_reusable_main_push_static_only_manual_real_auth(self):
+        yaml=(ROOT/".github/workflows/qa-h2227-two-runner-bbr-netem-iperf3.yml").read_text()
+        self.assertIn("branches: ['main', 'fix/h2227-two-runner-bbr-netem-iperf3-uptx-fixture']",yaml)
+        self.assertIn("workflow_dispatch:",yaml)
+        self.assertIn("permissions:\n  contents: read\n",yaml)
+        self.assertEqual(yaml.count("if: ${{ github.event_name == 'workflow_dispatch' }}"),2)
+        self.assertEqual(yaml.count("permissions: {contents: read, actions: read, id-token: write}"),2)
+        self.assertIn("H2227_FIXTURE_STATIC_PASS_NOT_NETWORK_NOT_PRODUCT",yaml)
+        self.assertIn("H2227_REAL_TWO_RUNNER_BUSINESS_TCP_NO_3S_CRASH_PASS_NOT_WINDOWS_ISP",yaml)
+
     def test_arbitrary_targets_denied_before_running_iperf(self):
         for host,port in [("8.8.8.8",5201),("10.247.27.1",5201),
                           ("10.66.0.1",5202)]:

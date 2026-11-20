@@ -52,3 +52,11 @@
 - 不同丢包下后续建链也出现早退/未READY（0.1%、1% Normal Off 等），3% Normal Off 又能连接并完整跑3秒上行 197.138Mbps 和4流上行 520.756Mbps；不符合简单单调丢包阈值。失败来源应区分原始 TLS冷建链/同一服务端持有旧 lease/空闲Health90/本地进程退出，**尚无已证实的唯一根因**。
 - 初次报告汇总器错误地规定必须有62个成功 `case` 才能产出任何 summary；这会把实测34个案例（27 PASS、7 ERROR）丢成 `FAIL_NO_REAL_MEASUREMENTS`。已修为按**精确12组直连 + 50组业务预期名称**计算缺失，保留所有真实 Mbps、错误、原始 JSON 与 FEC6 Stop 回读；结果 FAIL_INCOMPLETE 而不造假PASS。
 - Main 复用方式：合入后 Actions → `H2227 genuine two-runner TCP business` → **Run workflow** → branch main，采用手动 workflow_dispatch，不把需要真实 tailnet 凭证、可能因现存产品错误红灯的长程双 Runner 压测作为所有 main push 的常驻必需 CI。当前 `push` 仅针对 H2227 开发分支的夹具改动自动触发，便于修夹具时复验。
+
+## H2227 完整手动化推广与第二次跨机真实运行
+
+- [Action 44697076045](https://github.com/lly8666/wbd-next/actions/runs/44697076045)，修复 pre-Stop FEC 错误后的源码 `eb025b436cd519cae338bee6bd59550a28217a4d`：静态9/9通过，两个独立 Runner 的 OIDC/VXLAN/原 Go TLS/Rust M4/BBR、内层真正 iperf 均实际运行。两端 Tailscale 本轮走 DERP，0%直连4流基线 **仅21.670Mbps**，所以不得将本轮 WBD ~20Mbps 叫做产品硬上限。
+- 第二轮按来源锁定 **12组直连基线全部保留**、预期50个WBD案例实际观察30个（其中5个 FEC6 冷建链未READY，25个 iperf 成功），另缺失25个应有业务 case；摘要现为 `FAIL_INCOMPLETE_TWO_RUNNER_APP_MATRIX`，逐 case 状态、丢包、RSS、原始 iperf 数据均保留，不再误写 `FAIL_NO_REAL_MEASUREMENTS`。
+- FEC6 无业务出量仍**不能**认定原生 FEC6 已通过。去除 pre-Stop 假门槛以后，其在这次跨机/同用户名连续建链场景仍卡在`V4_PUBLIC_PATH_CANDIDATE` 后、没有客户端READY；服务端未见对应认证FEC会话。原因未定（可能为复用用户名/前代会话、冷认证、丢包/调度或其他），不可直接写成真实 FEC 编解码错误，也不能以此停止未来测试模式的可复用性。
+- 两次实验证明夹具本身可搭**真实不同 Runner**网络并测到真实内层 TCP；但产品高FEC及部分建链 FAIL。main 长期复用只开启 `push` 的 static 单测，**仅 workflow_dispatch 才连接 Tailscale / 启动两个独立 Runner / 做完整压测**。任何真实业务/认证失败保留红灯、归档原始证据，不设“让测试绿”的伪兜底。因主线无产品代码变动，主线治理与性能产品能力不可混为一谈。
+- 机读证据：`docs/evidence/M0/PLAN029-H2227-TWO-RUNNER-BBR-NETEM-REAL-TCP-20261120.json`；使用说明：`docs/testing/H2227-TWO-RUNNER-BBR-NETEM-TCP-RUNBOOK.md`。用户实体 Windows Npcap 的3秒上行崩溃尚未在此 Linux 夹具复现，原表演式外层重传未更改。

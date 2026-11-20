@@ -1,7 +1,11 @@
-name: 'H2227 genuine two-runner TCP business: BBR VXLAN/TS netem iperf3 upload crash and FEC-Off-v6'
+name: 'H2227 reusable two-runner BBR/netem original Go Rust TCP business diagnostics'
+run-name: "H2227 ${{ github.event_name == 'workflow_dispatch' && 'MANUAL REAL TWO-RUNNER BENCH' || 'STATIC ONLY' }} ${{ github.ref_name }} ${{ github.sha }}"
+# On main and feature-branch pushes: fast fixture checks ONLY.
+# Explicit Actions > Run workflow: genuine two-runner OIDC + VXLAN + iperf3.
+# Existing product bugs may make manual bench red; NEVER claim product PASS.
 on:
   push:
-    branches: ['fix/h2227-two-runner-bbr-netem-iperf3-uptx-fixture']
+    branches: ['main', 'fix/h2227-two-runner-bbr-netem-iperf3-uptx-fixture']
     paths:
       - '.github/workflows/qa-h2227-two-runner-bbr-netem-iperf3.yml'
       - 'tools/m0_h2227_*'
@@ -9,8 +13,6 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
-  id-token: write
 concurrency:
   group: h2227-two-runner-${{ github.ref }}
   cancel-in-progress: false
@@ -47,6 +49,8 @@ jobs:
           print('H2227_FIXTURE_STATIC_PASS_NOT_NETWORK_NOT_PRODUCT')
           PY
   arm64-real-server:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    permissions: {contents: read, actions: read, id-token: write}
     name: 'ARM64 original TLS + Rust M4 raw-AF_PACKET genuine private WAN + netem'
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 55
@@ -163,6 +167,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
   x64-real-client:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    permissions: {contents: read, actions: read, id-token: write}
     name: 'x86 native original TLS Rust client: 0/0.1/1/3% loss, 3s TX crash, both directions, 4-stream fast-like'
     runs-on: ubuntu-24.04
     timeout-minutes: 55
