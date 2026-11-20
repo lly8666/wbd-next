@@ -97,13 +97,11 @@ cargo +1.85.1 build --locked --release -p wbd-engine \
 cp target/release/libwbd_engine.so out/android-a3-linux/
 export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
 export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release"
-# Execute A34 strict typed error/deadline classes on the exact original Go overlay.
-(cd legacy && timeout 180s go test -count=1 \
-  -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
-  -run '^TestV4AndroidCold(FixedFailureClasses|DeadlineUnknownIsNotMisreported)
-    -tags wbd_v4_embedded_go,wbd_v4_fec2_product \
-    -o "$GITHUB_WORKSPACE/out/android-a3-linux/wbd-v4-$role" \
-    "./cmd/wbd-v4-$role")
+# A34: original donor typed error/deadline Go tests, not mocked network.
+(cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run '^TestV4AndroidCold(FixedFailureClasses|DeadlineUnknownIsNotMisreported)$' ./internal/realityfront)
+echo ANDROID_A34_ORIGINAL_GO_TLS_CLASSIFIER_HOST_PASS
+for role in client server; do
+  (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/out/android-a3-linux/wbd-v4-$role" "./cmd/wbd-v4-$role")
 done
 python3 - <<'PY'
 import hashlib,json,os,pathlib,struct

@@ -9,3 +9,13 @@ A34在原ClientAssociation emitter成功调用原raw.WriteSegment之后，首次
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A34基于真实API36原FakeTCP Established后TLS 15s OTHER，对原Bootstrap收发及TLS实际截止时间作无敏感分层诊断，原协议不变。"}
 ```
+
+## A34a 同源真实CI失败及最小语法修复
+
+SOURCE `a64f68f03467a1407629067b27c6ee02f802ef5b` [Android dual64 Action #44697153076](https://github.com/lly8666/wbd-next/actions/runs/44697153076)：原 ARM64 Go/Rust、A34 Java安全收据、签名APK、Linux x86 D2-S0、前置Host均SUCCESS；`linux-original-server-normal-off` 在刚新增的 Go分类测试shell `-run` 命令单引号截断时报 `unexpected EOF while looking for matching '\''`，**Linux真实oracle未执行，绝不可将其当产品协议 FAIL 或标全绿**。旧 FAIL 保存。
+
+本次仅替换整个损坏的固定Go测试与原build循环，保留原测试正则/Go标准TLS/原所有协议；用一行完整shell命令避免JS替换时 `$'` 被解释；并在便宜的 `root-arm64-app` Host前置检查对 `linux-original-oracle.sh` 执行 `bash -n`，防止以后编译后才发现类似错误。保持同SOURCE已构建过的APK产物不被本批充当新SOURCE产物，需重新完整执行新SOURCE Oracle和签名APK门。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A34实测发现新增Linux原Go分类单元测试的shell插入引号损坏；仅修测试命令及前置bash -n，保留首次红CI收据。"}
+```

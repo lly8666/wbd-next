@@ -2,6 +2,8 @@
 # Pure Java session-decision test, NOT an Android Framework runtime gate.
 set -euo pipefail
 cd "$GITHUB_WORKSPACE"
+# A34a: parse exact original Linux Oracle shell before expensive native builds.
+bash -n android/root-native/ci/linux-original-oracle.sh
 mkdir -p out/android-root-app/network-scope-test
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/NetworkScopeGate.java \
