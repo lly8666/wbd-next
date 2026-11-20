@@ -242,8 +242,15 @@ def impair(loss,delay,model):
         ge=ge_params(loss)
         extras=["loss","gemodel",str(ge["transition_good_bad_pct"])+"%",
                 "25%","90%","0.1%"]
-    delay_terms=["delay","0ms"] if delay==0 else [
-        "delay","200ms","15ms","25%","distribution","normal"]
+    # H2233: a separately source-qualified, 1/5%-only low-loss diagnosis.
+    # Fixed vs jittered 200ms are separate workflow runs, not a mixed phase.
+    focus=os.environ.get("WBD_H2233_FOCUS")=="1"
+    jitter=os.environ.get("WBD_H2233_JITTER","normal")
+    guard(not focus or jitter in ("fixed","normal"),"H2233_JITTER_VARIANT")
+    fixed=focus and jitter=="fixed" and delay==200
+    delay_terms=["delay","0ms"] if delay==0 else (
+        ["delay","200ms"] if fixed else
+        ["delay","200ms","15ms","25%","distribution","normal"])
     receipts={}
     for role in ("client","server"):
         device=RDEV[role]
@@ -254,7 +261,9 @@ def impair(loss,delay,model):
               "QDISC_READBACK_NOT_NETEM_"+device)
         receipts[device]=q
     return {"loss_target_pct":loss,"one_way_added_delay_ms":delay,
-        "jitter_ms":15 if delay else 0,"jitter_correlation_pct":25 if delay else 0,
+        "jitter_ms":0 if fixed else (15 if delay else 0),
+        "jitter_correlation_pct":0 if fixed else (25 if delay else 0),
+        "h2233_jitter_profile":jitter if focus else "historical_default",
         "loss_model":model,"gilbert":ge,"qdisc_packet_limit":65536,
         "bandwidth_rate_cap":"NONE","apply_to":"RELAY_ROUTER_ONLY_EGRESS_BOTH_DIRECTIONS",
         "qdiscs":receipts,"no_tailscale_or_endpoint_qdisc_changed":True}
@@ -265,7 +274,10 @@ def local_relay_snapshot(tag):
         d[role]={"qdisc":json.loads(ns(ROUTER,"tc","-s","-j","qdisc",
             "show","dev",dev).stdout),
             "link":json.loads(ns(ROUTER,"ip","-s","-j","link","show",
-                                "dev",dev).stdout)}
+                                "dev",dev).stdout),
+            # ethtool -k describes GRO/GSO/TSO capability at netem's device,
+            # NOT the number of on-wire TCP segments. Preserve raw readback.
+            "offload_features":ns(ROUTER,"ethtool","-k",dev,allow_fail=True).stdout[:5000]}
     d["tailscaled_ps"]=cmd("ps","-C","tailscaled","-o","pid,pcpu,rss,stat,comm",
                             allow_fail=True).stdout[-3000:]
     d["softnet_stat"]=pathlib.Path("/proc/net/softnet_stat").read_text()[:8000]
@@ -372,6 +384,13 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
           "-c",host,"-p",str(port),"-P",str(streams),"-t",str(duration),
           "-O","2"]
     if direction=="download":args.append("-R")
+    requested_mss=None
+    if os.environ.get("WBD_H2233_FOCUS")=="1" and duration==20:
+        requested_mss=int(os.environ.get("WBD_H2233_MSS","1037"))
+        guard(536<=requested_mss<=1150,"H2233_MSS_BOUNDS")
+        # iperf3 asks both genuine kernel TCP peers for a common maximum
+        # segment size; record actual negotiated MSS rather than assuming.
+        args.extend(["-M",str(requested_mss)])
     t=time.monotonic()
     try:
         p=subprocess.run(args,capture_output=True,text=True,timeout=duration+40)
@@ -398,6 +417,19 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
         if returncode==0 and not parsed.get("error") and isinstance(bps,(float,int)) and \
              bps>0 and secs>=duration*0.6:
             speed=round(bps/1e6,3)
+    receive_end=parsed.get("end",{}).get("sum_received",{}) if isinstance(parsed,dict) else {}
+    send_end=parsed.get("end",{}).get("sum_sent",{}) if isinstance(parsed,dict) else {}
+    def delivered_rate(row):
+        bps=row.get("bits_per_second")
+        return round(bps/1e6,3) if returncode==0 and not (
+            isinstance(parsed,dict) and parsed.get("error")) and
+            isinstance(bps,(float,int)) and bps>0 and
+            isinstance(row.get("seconds"),(float,int)) and
+            row["seconds"]>=duration*.6 else None
+    observed_mss=[]
+    for stream in (parsed.get("start",{}).get("connected",[]) if isinstance(parsed,dict) else []):
+        if isinstance(stream,dict) and isinstance(stream.get("mss"),int) and stream["mss"]>0:
+            observed_mss.append(stream["mss"])
     native_alive=real_native_worker_alive(pidfile) if kind=="wbd" else None
     # A completed iperf report does not grant WBD process-liveness success:
     # a dead/unknown original Go worker is a separate real crash gate.
@@ -429,6 +461,13 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
             "kind":kind,"direction":direction,"streams":streams,
             "tcp_cc_requested":"bbr","tcp_app_not_outer_bbr":True,
             "iperf3_rc":returncode,"tcp_retransmits":retransmits,
+            "receiver_goodput_mbps":delivered_rate(receive_end),
+            "sender_mbps":delivered_rate(send_end),
+            "receiver_bytes":receive_end.get("bytes"),
+            "sender_bytes":send_end.get("bytes"),
+            "tcp_mss_requested":requested_mss,
+            "tcp_mss_observed":observed_mss,
+            "receiver_goodput_is_actual_delivered_tcp_not_sender_bits":True,
             "ramp_interval_mbps":interval,"parse_error":parsed.get("error","") if isinstance(parsed,dict) else
              stderr[-250:],"source_sha":os.environ.get("GITHUB_SHA"),
             "run_id":os.environ.get("GITHUB_RUN_ID")}
@@ -506,6 +545,9 @@ def observed_relay_phase_loss(rootpath,label):
         return {"status":"UNKNOWN_INCONSISTENT_NETEM_SNAPSHOTS"}
 
 def result_summary(mode,model,directory):
+    if os.environ.get("WBD_H2233_FOCUS")=="1":
+        from m0_h2233_low_loss_diag import focused_summary
+        return focused_summary(mode,model,directory)
     rootpath=pathlib.Path(directory)
     required=expected_cases(model)
     rows=[];actual=[]
