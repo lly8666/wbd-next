@@ -1360,7 +1360,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "e15a0f405261db268dd8355537c45323bb51f071"
+      "result_blob": "79edb7742c02591ed598f0dd7bd389a778615fba"
     },
     {
       "kind": "create",
@@ -1372,7 +1372,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go",
-      "result_blob": "eea43af17133746d13278eaa2e51255b99c43256"
+      "result_blob": "744af8ff233f9862348d33698a863efe5e93e70d"
     },
     {
       "kind": "create",
@@ -1534,13 +1534,13 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_reauth_windows_test.go",
-      "result_blob": "172f1366fa8702900e7ea10f2894ca1df48f38d7"
+      "result_blob": "251c8322185037a9941ac63c52ea00977b269a59"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_rust_peer_windows.go",
-      "result_blob": "d983b57e8fe36387a3609456543567b8fc2c55f4"
+      "result_blob": "01a6dec4b1697fe2a440b5e382931c62c4f7c539"
     },
     {
       "kind": "create",

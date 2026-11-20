@@ -133,6 +133,48 @@ if(([regex]::Matches($sourceText,[regex]::Escape($oldDriverNote))).Count -ne 1){
 }
 $sourceText=$sourceText.Replace($oldDriverNote,$newDriverNote)
 
+
+
+# H2226: The original donor is V1, but the source-locked PLAN029 manifest
+# already injects V2 directional FEC and native TX/RX parsing. Reuse that
+# SAME V2 branch; do NOT shadow it with a second V2 parser. Only replace
+# its currently hardcoded UNKNOWN quality labels with qualified estimates.
+$qualityMethodAnchor='        public bool ApplyQualityLine(string line) {'
+if(([regex]::Matches($sourceText,[regex]::Escape($qualityMethodAnchor))).Count -ne 1){
+ throw 'H2226 source-locked assembled V2 parser method drift'
+}
+$qualityHelper=@'
+        // GUI-only qualified display: native already received authenticated
+        // low-frequency START/CLOSE mature reports. No M2 bitmap and no
+        // line-rate callbacks; absent/stale/unsupported samples are UNKNOWN.
+        static string QualityApproxRttText(Dictionary<string,string> fields) {
+            string source,raw; int ms;
+            if (!fields.TryGetValue("quality_source",out source) ||
+                source!="authenticated-lowrate-quality" ||
+                !fields.TryGetValue("rtt_ms",out raw) ||
+                !int.TryParse(raw,NumberStyles.None,CultureInfo.InvariantCulture,out ms) ||
+                ms<=0 || ms>60000) return "未知";
+            return "约"+ms.ToString(CultureInfo.InvariantCulture)+"ms（低频反馈估算）";
+        }
+        static string QualityLossUpperText(Dictionary<string,string> fields) {
+            string source,raw; double pct;
+            if (!fields.TryGetValue("quality_source",out source) ||
+                source!="authenticated-lowrate-quality" ||
+                !fields.TryGetValue("loss_pct",out raw) ||
+                !double.TryParse(raw,NumberStyles.Float,CultureInfo.InvariantCulture,out pct) ||
+                double.IsNaN(pct) || double.IsInfinity(pct) ||
+                pct<0 || pct>100) return "未知";
+            return pct.ToString("F1",CultureInfo.InvariantCulture)+"%（低频首发上界）";
+        }
+'@
+$sourceText=$sourceText.Replace($qualityMethodAnchor,$qualityHelper+$qualityMethodAnchor)
+$qualityStatusAnchor='"  ·  RTT：未知  ·  首发损失上界：未知";'
+$qualityStatusReplace='"  ·  RTT：" + QualityApproxRttText(kv2) + "  ·  首发损失上界：" + QualityLossUpperText(kv2);'
+if(([regex]::Matches($sourceText,[regex]::Escape($qualityStatusAnchor))).Count -ne 1){
+ throw 'H2226 previously assembled V2 status label drift'
+}
+$sourceText=$sourceText.Replace($qualityStatusAnchor,$qualityStatusReplace)
+
 [IO.File]::WriteAllText($derivedMain,$sourceText,[Text.UTF8Encoding]::new($false))
 # Run the source-donor GUI field-by-field / actual Go --check-config regression
 # with the 029B/H2202 additions: stale test fixture must not be mistaken for
@@ -282,6 +324,33 @@ $testButtons=@'
                     Assert(driverButtonNames.Contains("重新检测"),"visible native driver readback button");
 '@
 $tests=$tests.Replace($tabsAnchor,$tabsAnchor+"`r`n"+$testButtons)
+
+
+# Validate original assembled V2 directional FEC status with numeric low-rate
+# quality in the SAME code path. The authenticated source token gates quality.
+$h2226QualityTestAnchor='Assert(!form.ApplyQualityLine("not a quality control event"),"GUI ignores unrelated logs");'
+if(([regex]::Matches($tests,[regex]::Escape($h2226QualityTestAnchor))).Count -ne 1){
+ throw 'H2226 source-locked assembled V2 GUI test anchor drift'
+}
+$h2226QualityTests=@'
+                    Assert(form.ApplyQualityLine("WBD_CLIENT_QUALITY_V2 rtt_ms=120 loss_pct=10.0 tx_ipv4=200 rx_ipv4=300 fec_c2s=applied-strong fec_s2c=unknown quality_source=authenticated-lowrate-quality"),"H2226 low-rate V2 quality consumed by original assembled parser");
+                    Assert(form.QualityText.Contains("约120ms") && form.QualityText.Contains("10.0%") &&
+                           form.QualityText.Contains("上行(C→S)：已应用 · strong") &&
+                           form.QualityText.Contains("下行(S→C)：未知") &&
+                           form.QualityText.Contains("原生发送：200") && form.QualityText.Contains("回注：300"),
+                           "H2226 GUI low-rate estimates retain exact authenticated direction labels");
+                    Assert(form.ApplyQualityLine("WBD_CLIENT_QUALITY_V2 rtt_ms=120 loss_pct=10.0 tx_ipv4=200 rx_ipv4=300 fec_c2s=pending fec_s2c=negotiated-strong"),"H2226 unsigned numeric legacy V2 consumed");
+                    Assert(form.QualityText.Contains("RTT：未知") && form.QualityText.Contains("首发损失上界：未知") &&
+                           form.QualityText.Contains("上行(C→S)：待原生应用") &&
+                           form.QualityText.Contains("下行(S→C)：已协商 · strong") &&
+                           form.QualityText.Contains("非实时实收档位"),
+                           "H2226 quality requires authenticated low-rate source and S2C negotiated stays distinct");
+                    Assert(form.ApplyQualityLine("WBD_CLIENT_QUALITY_V2 rtt_ms=unknown loss_pct=unknown tx_ipv4=0 rx_ipv4=0 fec_c2s=pending fec_s2c=unknown quality_source=none"),"H2226 missing low-rate cohort consumed");
+                    Assert(form.QualityText.Contains("RTT：未知") && form.QualityText.Contains("首发损失上界：未知") &&
+                           form.QualityText.Contains("下行(S→C)：未知"),"H2226 never fabricates zero quality or server S2C Auto");
+'@
+$tests=$tests.Replace($h2226QualityTestAnchor,$h2226QualityTestAnchor+[Environment]::NewLine+$h2226QualityTests)
+
 $derivedTests=Join-Path $out 'GuiTests-h2204-control-v2.cs'
 [IO.File]::WriteAllText($derivedTests,$tests,[Text.UTF8Encoding]::new($false))
 $source[2]=$derivedTests

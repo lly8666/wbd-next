@@ -1220,7 +1220,7 @@ waitNative:
    installed:=false
    if p,ok:=transport.(*m0WinRustNativePeer);ok{installed=p.fixedInstalledReported}
    tx,rx:=m0WindowsQualityStatuses(o.Mode,o.FEC2Profile,installed,sample)
-   m0WindowsPrintQualityV2(tx,rx,sample.TxPackets,sample.RxFirstDelivered)
+   m0WindowsPrintQualityNativeV2(tx,rx,sample)
   case <-metricsTicker.C:
    actualMTU,mtuErr:=product.RuntimeMTU(ctx)
    if mtuErr!=nil||actualMTU!=o.TunnelMTU{
@@ -1302,9 +1302,23 @@ func m0WindowsQualityStatuses(mode m0WindowsV4Mode,
   return "unknown","unknown"
  }
 }
+// Preserve the existing Game and legacy call contract. Game never adopts
+// Normal/Auto's low-frequency Quality sampler or M2-derived liveness.
 func m0WindowsPrintQualityV2(tx,rx string,txCopied,rxDelivered uint64){
- fmt.Printf("WBD_CLIENT_QUALITY_V2 rtt_ms=unknown loss_pct=unknown tx_ipv4=%d rx_ipv4=%d fec_c2s=%s fec_s2c=%s\n",
-  txCopied,rxDelivered,tx,rx)
+ m0WindowsPrintQualityNativeV2(tx,rx,m0NativeV4PacketStats{
+  TxPackets:txCopied,RxFirstDelivered:rxDelivered,
+ })
+}
+func m0WindowsPrintQualityNativeV2(tx,rx string,s m0NativeV4PacketStats){
+ rtt,loss,source:="unknown","unknown","none"
+ if s.Mode==m0WinModeAuto&&s.LowRateQualityValid{
+  rtt=fmt.Sprintf("%d",s.LowRateApproxRTTMS)
+  loss=fmt.Sprintf("%d.%d",
+   s.LowRateLossUpperTenthsPct/10,s.LowRateLossUpperTenthsPct%10)
+  source="authenticated-lowrate-quality"
+ }
+ fmt.Printf("WBD_CLIENT_QUALITY_V2 rtt_ms=%s loss_pct=%s tx_ipv4=%d rx_ipv4=%d fec_c2s=%s fec_s2c=%s quality_source=%s\n",
+  rtt,loss,s.TxPackets,s.RxFirstDelivered,tx,rx,source)
 }
 
 func m0WindowsV4Profile(name string)(realityfront.FecV2Profile,error){
