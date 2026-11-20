@@ -467,7 +467,12 @@ assert 'PacketPersona::Windows11, 116u8' in main_ttl
 assert 'PacketPersona::Legacy, 52u8' in main_ttl
 assert 'RxError::IpChecksum' in main_ttl
 assert 'crate::rx_ipv4_tcp::parse_data_packet(' in android_io
-assert 'parse_data_packet(&slot[..len],trusted)' in linux_io
+# main Linux single kernel raw / multi-buffer receive both call the
+# H2216 shared parser; n and len are distinct source-local variable names.
+assert 'parse_data_packet(&slot[..n],trusted)' in linux_io
+assert 'parse_ack_packet(&slot[..n],trusted,false)' in linux_io
+assert 'parse_data_packet(&slot[..len],TrustedRx{' in linux_io
+assert 'parse_ack_packet(&slot[..len],TrustedRx{' in linux_io
 assert 'ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS' in Path('android/root-native/ci/linux-original-oracle.sh').read_text()
 print("ANDROID_A46_EXACT_MAIN_WINDOWS_H2216_TTL_ANDROID_LINUX_SOURCE_GATE_PASS")
 print("ANDROID_A45_ORIGINAL_M4_RETURN_PATH_ICMP_SOURCE_GATE_PASS")

@@ -21,3 +21,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A45真机RAW解析失败且没有反向M4；直接同步已落地main Windows H2216严格但路由兼容的DATA/ACK TTL修复与真实主线测试；main Linux已经复用同一parser故无需新PR。"}
 ```
+
+## A46b｜只修 Host 静态校验，不改协议
+
+同源产品 CI `417b82e4` 的原 ARM64 Go/Rust native SUCCESS，原 Linux Oracle 真正执行 `rx_ipv4_tcp::h2216_public_nat_ttl_tests::h2216_original_windows_128_to_116_client_public_nat_data_and_ack ... ok`，随后 `ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS` 以及真实 Linux Normal/off 双端 Oracle PASS。独立 Android APK Job 在 Python host source gate 的第374行失败，因为新写断言 `parse_data_packet(&slot[..len],trusted)` 并不是原 Linux 源码实际调用形式：单包使用 `slot[..n],trusted`，批量使用 `slot[..len],TrustedRx{...`。A46b 精确修复并同时检查两个原 DATA 入口和对应 ACK 入口，保证不放松检查。**不修改已与 main 完全相同的 H2216 parser、不改原 Rust M3、TLS 或 Linux 行为**。此时新安装包仍待本次 commit 的真实原生签名 CI。
