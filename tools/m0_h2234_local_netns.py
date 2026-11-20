@@ -66,6 +66,8 @@ def original_m4_batch_stage_receipt(log):
     result={k:int(v) for k,v in re.findall(r"(\w+)=(\d+)",matches[0])}
     required=("generation","batches","copied","collect_turns","collect_ns",
               "prepare_ns","seal_ns","sendmmsg_ns","settle_ns",
+              "driver_route_ns","driver_header_ns","driver_iovec_ns",
+              "driver_syscall_ns","driver_classify_ns",
               "max_collect_ns","max_prepare_ns","max_seal_ns",
               "max_sendmmsg_ns","max_settle_ns","original_owner",
               "no_wire_or_queue_change")

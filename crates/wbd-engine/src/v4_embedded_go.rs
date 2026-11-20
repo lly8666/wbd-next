@@ -6537,11 +6537,22 @@ struct OriginalM4BatchStageProfile {
     kernel_ns:u64, settle_ns:u64,
     max_collect_ns:u64, max_prepare_ns:u64,max_seal_ns:u64,
     max_kernel_ns:u64,max_settle_ns:u64,
+    driver_route_ns:u64,driver_header_ns:u64,driver_iovec_ns:u64,
+    driver_syscall_ns:u64,driver_classify_ns:u64,
 }
 #[cfg(feature="fec2_product_record")]
 impl OriginalM4BatchStageProfile {
     fn ns(a:Instant,b:Instant)->u64{
         b.saturating_duration_since(a).as_nanos().min(u64::MAX as u128) as u64
+    }
+    fn note_raw_driver(&mut self,
+        phases:&wbd_platform::linux_batch::KernelSendStages
+    ){
+        self.driver_route_ns=self.driver_route_ns.saturating_add(phases.route_ns);
+        self.driver_header_ns=self.driver_header_ns.saturating_add(phases.header_ns);
+        self.driver_iovec_ns=self.driver_iovec_ns.saturating_add(phases.iovec_ns);
+        self.driver_syscall_ns=self.driver_syscall_ns.saturating_add(phases.syscall_ns);
+        self.driver_classify_ns=self.driver_classify_ns.saturating_add(phases.classify_ns);
     }
     fn note_collect(&mut self,ns:u64){
         self.collect_turns=self.collect_turns.saturating_add(1);
@@ -7137,9 +7148,23 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
             src_ip:&flow.client_ip,dst_ip:&flow.server_ip,
             src_port:flow.client_port,dst_port:flow.server_port,
         }};
-        Some(raw.send_kernel_multimsg(
-            generation,ready_records.as_slice(),tuple,presentations.as_slice()
-        ))
+        #[cfg(feature="fec2_product_record")]
+        {
+            if let Some(ref mut owner_profile)=stage{
+                let mut phases=wbd_platform::linux_batch::KernelSendStages::default();
+                let report=raw.send_kernel_multimsg_with_stages(
+                    generation,ready_records.as_slice(),tuple,presentations.as_slice(),
+                    Some(&mut phases));
+                owner_profile.note_raw_driver(&phases);
+                Some(report)
+            }else{
+                Some(raw.send_kernel_multimsg(
+                    generation,ready_records.as_slice(),tuple,presentations.as_slice()))
+            }
+        }
+        #[cfg(not(feature="fec2_product_record"))]
+        {Some(raw.send_kernel_multimsg(
+            generation,ready_records.as_slice(),tuple,presentations.as_slice()))}
     };
     #[cfg(feature="fec2_product_record")]
     let stage_kernel=stage_start.map(|_|Instant::now());
@@ -8538,11 +8563,14 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             jumbo_queue.clear();
             #[cfg(feature="fec2_product_record")]
             if m4_stage_diag_enabled{
-                eprintln!("V4_PUBLIC_M4_BATCH_STAGE_STOP role={} generation={} batches={} copied={} collect_turns={} collect_ns={} prepare_ns={} seal_ns={} sendmmsg_ns={} settle_ns={} max_collect_ns={} max_prepare_ns={} max_seal_ns={} max_sendmmsg_ns={} max_settle_ns={} original_owner=1 no_wire_or_queue_change=1",
+                eprintln!("V4_PUBLIC_M4_BATCH_STAGE_STOP role={} generation={} batches={} copied={} collect_turns={} collect_ns={} prepare_ns={} seal_ns={} sendmmsg_ns={} settle_ns={} driver_route_ns={} driver_header_ns={} driver_iovec_ns={} driver_syscall_ns={} driver_classify_ns={} max_collect_ns={} max_prepare_ns={} max_seal_ns={} max_sendmmsg_ns={} max_settle_ns={} original_owner=1 no_wire_or_queue_change=1",
                     raw_socket_diag_role,raw_socket_diag_generation,
                     m4_stage.batches,m4_stage.copied,m4_stage.collect_turns,
                     m4_stage.collect_ns,m4_stage.prepare_ns,
                     m4_stage.seal_ns,m4_stage.kernel_ns,m4_stage.settle_ns,
+                    m4_stage.driver_route_ns,m4_stage.driver_header_ns,
+                    m4_stage.driver_iovec_ns,
+                    m4_stage.driver_syscall_ns,m4_stage.driver_classify_ns,
                     m4_stage.max_collect_ns,m4_stage.max_prepare_ns,
                     m4_stage.max_seal_ns,m4_stage.max_kernel_ns,
                     m4_stage.max_settle_ns);

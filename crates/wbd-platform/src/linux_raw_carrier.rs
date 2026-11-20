@@ -13,7 +13,7 @@ use std::sync::{Mutex,atomic::{AtomicBool,Ordering}};
 use std::time::{Instant,Duration};
 use crate::r1::{BorrowFence,BorrowError,StopResult};
 use crate::{TxBatchOutcome,TxError};
-use crate::linux_batch::{self,KernelSendReport,KernelSendSignal};
+use crate::linux_batch::{self,KernelSendReport,KernelSendSignal,KernelSendStages};
 use crate::linux_rx_batch::{self,RxEntry,RxStatus};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
 use crate::linux_mtu_scope::{ScopedRouteBudget,BudgetError};
@@ -863,6 +863,17 @@ impl ScopedRawIpv4Tx {
         &self,generation:u32,records:&[H],tuple:Ipv4Tuple<'_>,
         presentations:&[Presentation],
     )->KernelSendReport {
+        self.send_kernel_multimsg_with_stages(
+            generation,records,tuple,presentations,None)
+    }
+    /// A bounded developer diagnosis of the SAME original raw FD and
+    /// ciphertext sender, no alternative send mechanism or new owner.
+    pub fn send_kernel_multimsg_with_stages<H:FrozenRecordHandle>(
+        &self,generation:u32,records:&[H],tuple:Ipv4Tuple<'_>,
+        presentations:&[Presentation],
+        mut stages:Option<&mut KernelSendStages>,
+    )->KernelSendReport {
+        let stage_start=stages.as_ref().map(|_|Instant::now());
         if generation!=self.generation {
             return raw_batch_failure(0,RawTxError::InvalidScope)
         }
@@ -898,6 +909,12 @@ impl ScopedRawIpv4Tx {
         };
         let mut headers=[[0u8;80];MAX_READY_RAW];
         let mut sizes=[0usize;MAX_READY_RAW];
+        let header_start=stage_start.map(|_|Instant::now());
+        if let (Some(out),Some(start),Some(header))=
+            (stages.as_mut(),stage_start,header_start) {
+            out.route_ns=header.saturating_duration_since(start)
+                .as_nanos().min(u64::MAX as u128) as u64;
+        }
         // Validate ALL submitted frames before first possible kernel send.
         // The 33rd unsent record is not read, touched or resealed.
         for i in 0..limit{
@@ -909,9 +926,12 @@ impl ScopedRawIpv4Tx {
                 Err(_)=>return raw_batch_failure(0,RawTxError::InvalidPacket)
             };
         }
-        let result=linux_batch::submit_scatter_fd(
+        if let (Some(out),Some(begin))=(stages.as_mut(),header_start) {
+            out.header_ns=begin.elapsed().as_nanos().min(u64::MAX as u128) as u64;
+        }
+        let result=linux_batch::submit_scatter_fd_with_stages(
             self.fd.as_raw_fd(),std::net::SocketAddrV4::new(dest,0),
-            &headers,&sizes,records);
+            &headers,&sizes,records,stages);
         if result.signal.invalidates_path(){self.budget.invalidate()}
         result
     }

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "checkpoint": "H2235_REAL_M4_CPU_BATCH_STAGE",
+  "role_id": "M0",
+  "date": "2026-11-20",
+  "source_sha": "5608f77559b5586f9aea8979693ed6be1a4d7ef4",
+  "run_id": 44784884871,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44784884871",
+  "application": {
+    "x86_64": "PASS_12_OF_12_NATIVE_ORIGINAL_GO_TLS_RUST",
+    "aarch64": "PASS_12_OF_12_NATIVE_ORIGINAL_GO_TLS_RUST"
+  },
+  "topology": "separate x86 and aarch64 runners each has three real isolated Linux namespaces and original Go TLS/Rust raw/TUN, not public WAN",
+  "artifacts": {
+    "x86_64": 14653533094,
+    "aarch64": 14654297193
+  },
+  "instrumentation": "opt-in per-batch contiguous elapsed wall times, one Stop log per original TX owner; not CPU-time attribution, may perturb scheduling",
+  "stage_0pct": {
+    "x86_64": {
+      "batches": 243073,
+      "copied": 2635235,
+      "queue_full_drops": 726454,
+      "collect_ns": 936387074,
+      "prepare_ns": 54935430,
+      "seal_ns": 3448126062,
+      "sendmmsg_chain_ns": 21933239808,
+      "settle_ns": 2755860979
+    },
+    "aarch64": {
+      "batches": 224285,
+      "copied": 3143284,
+      "queue_full_drops": 804936,
+      "collect_ns": 1158452160,
+      "prepare_ns": 64658485,
+      "seal_ns": 5416135449,
+      "sendmmsg_chain_ns": 21949137145,
+      "settle_ns": 2354960521
+    }
+  },
+  "stage_loss_1pct": {
+    "x86_64": {
+      "batches": 101031,
+      "copied": 953676,
+      "queue_full_drops": 96736,
+      "collect_ns": 520844207,
+      "prepare_ns": 29664587,
+      "seal_ns": 1892798130,
+      "sendmmsg_chain_ns": 5053445523,
+      "settle_ns": 1735088603
+    },
+    "aarch64": {
+      "batches": 110280,
+      "copied": 981975,
+      "queue_full_drops": 32181,
+      "collect_ns": 570447555,
+      "prepare_ns": 38464788,
+      "seal_ns": 2488862273,
+      "sendmmsg_chain_ns": 4292068472,
+      "settle_ns": 1485765408
+    }
+  },
+  "stage_loss_5pct": {
+    "x86_64": {
+      "batches": 81814,
+      "copied": 394454,
+      "queue_full_drops": 21,
+      "collect_ns": 221480772,
+      "prepare_ns": 24163676,
+      "seal_ns": 820028211,
+      "sendmmsg_chain_ns": 1902835677,
+      "settle_ns": 864225857
+    },
+    "aarch64": {
+      "batches": 92265,
+      "copied": 458721,
+      "queue_full_drops": 557,
+      "collect_ns": 297389898,
+      "prepare_ns": 32919374,
+      "seal_ns": 1100871976,
+      "sendmmsg_chain_ns": 2303633358,
+      "settle_ns": 926933469
+    }
+  },
+  "qualification": {
+    "stage_call_chain_includes": "Linux ScopedRawIpv4Tx serialize/route, checksummed original immutable ciphertext header, scatter iovec, sendmmsg syscall, classification",
+    "does_not_prove": "70pct of CPU in kernel syscall; 70pct is elapsed per-batch full call-chain only",
+    "production_optimization_proven": false,
+    "physical_windows_qualification": "NOT_RUN",
+    "cross_mode_fixed_auto_game": "NOT_RUN",
+    "three_independent_wan": "NOT_RUN"
+  },
+  "next": "H2236 subdivide source-qualified same original-sendmmsg chain into route guard, header checksum, iovec preflight, actual kernel syscall, classification; then optimize verified dominant work without new outer ordered/reliable transport."
+}

@@ -93,3 +93,13 @@ ARM64原生12个TCP中11个成功，唯一FAIL是5% **Direct** 下行iperf3控�
 只算返回至末尾的batch（早退场景仍另以原error/Stop和H2234外部线程统计看，不以该计数覆盖总CPU）。资料包括批次数、真实copied条数、各段总ns/max ns。独立的原外部/proc TID统计为总CPU与调度等待上限，**两者不要求数值相等**。被打开的观测可能改变调度，不能拿新instrumented SOURCE vs旧未instrumented SOURCE跑分当真实收益。
 
 分析后才能对**确定的具体CPU主导阶段**做成组完备优化；每项持续保留single-owner、fresh-first、no HOL、Go cold TLS、机会式原PN原密文最多一次repair、ACK10/FEC/Stop，以及跨平台的受影响调用链/模式/文档。Windows Npcap和Linux TUN并非同一个driver，先复制经证明的架构原则，再分别实测；Game2/4和Normal Fixed/Auto需要各自原生验收，不能因为Normal off过关就宣布全部过关。
+
+## H2235 定案与 H2236 内核发送链细分
+
+[H2235 Action 44784884871](https://github.com/lly8666/wbd-next/actions/runs/44784884871)，SOURCE `5608f77559b5586f9aea8979693ed6be1a4d7ef4`，真原生x86/ARM同source但各自不同VM三netns；**两平台都12/12真实TCP应用和original owned Stop PASS**。0%原M4 TX一个generation的已完成batch累计：x86批243073/真实copied2635235，collect0.936s，prepare0.055s，seal3.448s，**raw发送整链21.933s**，settle2.756s；ARM批224285/copied3143284，collect1.158s，prepare0.065s，seal5.416s，**raw发送整链21.949s**，settle2.355s。原客户端Shared TUN 0%满队列各726454/804936。所有阶段是`Instant`计出的**分阶段墙钟合计，不是 CPU 归因，也不是独立网络丢失**；用户态 header checksum、原Raw FD路径/锁、iovec整理、原 syscall 都算在 raw 阶段。这已经足以排除“最该先重构M1/扩大队列”的没有数据之猜测。
+
+H2236 独立地只在原产品已经存在的 `send_kernel_multimsg` 同一路径拆分：route guard/MTU、原始不可变密文TCP/IP头及one's complement checksum、2个原有scatter iovec预检、**一个同步真实Linux`sendmmsg`系统调用**、kernel-prefix结果分类。通过 `WBD_H2235_M4_STAGE_DIAG=1` 传入同一原生 owner的可选栈内`KernelSendStages`，常规调用仍用不带诊断的原入口，仅同一 Stop 限量汇总。任何 rejected/partial/uncertain kernel copy都保持原标记，Stop borrowed原密文直到同步返回；不复制fresh PN、不重封密文、不加可靠有序外层队列、不等任何ACK或repair。不作跨CPU速率百分比声明。
+
+如果 header/checksum 主导：在wire bytes保持逐字节一致、IPv4/TCP双校验和正确、偶数字节/odd length/MTU/原密文/所有persona测试正确的前提下优化计算与重复状态。若内核 syscall 主导：先验证每原packet内核接受和Linux raw实际调用次数、批次 occupancy，研究如何减少已经ready的分批syscall开销，**决不等待补齐一个batch**，不超出现有32条、100us公平限界。若route/lock主导：确保原generation/Stop/真实路由范围完全一致后，重用短时间已验证的不可变冷数据而非并发新控制器。
+
+通过真正的分段归因确定优化对象后，用同VM原源码对照 vs candidate、两平台分别定点0/1/5%、receiver goodput/CPU/实际GiB、P99、Shared TUN full/age/Stop、受影响Windows raw/Wintun和Game2/4/Fixed/Auto旧功能卡/测试，再推广已实测的共享逻辑。**现阶段只有CPU根因定位，绝无产品收益宣称**。

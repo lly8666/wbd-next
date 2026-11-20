@@ -51,12 +51,15 @@ class H2234LocalRealNative(unittest.TestCase):
         line=("V4_PUBLIC_M4_BATCH_STAGE_STOP role=client generation=1 "
               "batches=1500 copied=18000 collect_turns=22000 collect_ns=100 "
               "prepare_ns=200 seal_ns=450 sendmmsg_ns=300 settle_ns=60 "
+              "driver_route_ns=10 driver_header_ns=80 driver_iovec_ns=45 "
+              "driver_syscall_ns=110 driver_classify_ns=20 "
               "max_collect_ns=20 max_prepare_ns=30 max_seal_ns=100 "
               "max_sendmmsg_ns=85 max_settle_ns=7 original_owner=1 "
               "no_wire_or_queue_change=1")
         receipt=L.original_m4_batch_stage_receipt(line)
         self.assertEqual((receipt["batches"],receipt["copied"]),(1500,18000))
         self.assertEqual(receipt["seal_ns"],450)
+        self.assertEqual(receipt["driver_syscall_ns"],110)
         for bad in ("",line+"\n"+line,
                     line.replace("original_owner=1","original_owner=0"),
                     line.replace("sendmmsg_ns=300","missing_send_ns=300"),
