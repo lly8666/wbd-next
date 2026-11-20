@@ -46,7 +46,7 @@ class H2237TuningReadOnlyContracts(unittest.TestCase):
             self.assertEqual(cmds[0][1][:7],
                 ("tc","qdisc","replace","dev","wbdc0","root","fq"))
             self.assertEqual(cmds[0][1][-4:],
-                ("250mbit","flow_limit","256")[-4:] if False else cmds[0][1][-4:])
+                ("maxrate","250mbit","flow_limit","256"))
             self.assertIn("250mbit",cmds[0][1])
             self.assertNotIn("sysctl",str(cmds))
             self.assertNotIn("wan0",str(cmds))
@@ -56,6 +56,43 @@ class H2237TuningReadOnlyContracts(unittest.TestCase):
         node.active=False
         with self.assertRaisesRegex(RuntimeError,"IDENTITY_MISSING"):
             H.change_only_owned_tun(node,250)
+
+    def test_quantum_a_b_a_preserves_600m_peak_and_owned_identity(self):
+        self.assertEqual(H.QUANTUM_PHASES,(
+            ("original_burst_before",600),
+            ("fq600_short_quantum_probe",600),
+            ("original_burst_after",600)))
+        class Owner:
+            client="h34c123456"
+            def __init__(self):self.alive=True
+            def owned_pid(self,role):
+                return 11123 if self.alive and role=="client" else None
+        o=Owner()
+        calls=[]
+        def stub_ns(name,*args,**kw):
+            calls.append((name,args))
+            if args[:2]==("ip","-j"):
+                return type("Res",(),{"stdout":'[{"ifname":"wbdc0","mtu":1089}]'})()
+            if args[:3]==("tc","-d","qdisc"):
+                return type("Res",(),{"stdout":
+                    "qdisc fq 801: root limit 10000p flow_limit 256 "
+                    "quantum 1089b initial_quantum 2178b maxrate 600Mbit"})()
+            return type("Res",(),{"stdout":""})()
+        with patch.object(H.L,"ns",stub_ns):
+            result=H.tune_only_owned_tun_fq_quantum(o)
+        self.assertEqual((result["maxrate_mbps"],result["quantum_bytes"],
+                          result["initial_quantum_bytes"]),(600,1089,2178))
+        self.assertEqual(len(calls),3)
+        self.assertTrue(all(name==o.client for name,_ in calls))
+        self.assertEqual(calls[1][1],(
+            "tc","qdisc","replace","dev","wbdc0","root","fq","maxrate",
+            "600mbit","flow_limit","256","quantum","1089",
+            "initial_quantum","2178"))
+        self.assertNotIn("sysctl",str(calls))
+        self.assertNotIn("wan0",str(calls))
+        o.alive=False
+        with self.assertRaisesRegex(RuntimeError,"UNOWNED"):
+            H.tune_only_owned_tun_fq_quantum(o)
 
     def test_bad_kernel_readback_is_fail_not_silent_success(self):
         class Fake:

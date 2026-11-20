@@ -27,3 +27,21 @@ Linux现行 Go cold配置 `tun-fq-maxrate-mbps` **只允许0或600**，自有TUN
 须在**不损害乱序首到即交付 / 无跨流HOL / 单个Rust owner / 机会式原PN原密文外层repair / 原Go TLS / FEC / Stop**前提下，消除已证实的首个本地异常。优先设计让内层TCP内核有稳定、低延迟、有界的反馈，配合原同owner调度公平，不靠加8→64堆积、更不让第二套外层可靠流给业务排序。逐阶段真实业务需要receiver goodput、重传/GiB、本地queue_full、Linux fq drop/backlog/年龄、原线程CPU/GiB、p99的配套证据；任何只改善一个计数的修改都不能升级为产品完成。1%确认修好后，以**独立5%**同等验收追剩余差距，再传播到受影响Windows/TUN等价机制与Normal/Fixed/Auto/Game2/4；不同平台及模式需真实夹具与Stop，不得复制不适用的Linux qdisc。
 
 0% WBD极限的sendmmsg/kernel耗时细分仍有价值，但不能取代先解决1%、5%现有非CPU异常。
+
+## 完整原生1% A/B/A回执（SOURCE 454f33f，Action44790734647）
+
+x86_64原生Go TLS/Rust、真正Linux kernel TUN / AF_PACKET、三netns不经DERP。静态、业务、每generation Rust Stop及server Stop全部SUCCESS；原始 [artifact14656073336](https://github.com/lly8666/wbd-next/actions/runs/44790734647/artifacts/14656073336)，源锁JSON见 `docs/evidence/M0/PLAN029-H2237-1PCT-FQ-600-250-600-20261120.json`。
+
+Direct 1%同VM前/后实际接收端927.49/979.39Mbps。WBD固定200ms+GE1%，全程一档独立connection generation、20秒上行4流：
+
+| 原生TUN fq设置 | 实际接收Mbps | Shared TUN queue-full | backpressure | 内层TCP重传/实际GiB | M4 TX CPU |
+|---|---:|---:|---:|---:|---:|
+| 产品原600 before |242.59|118281|170663|204033|10.753s|
+| **仅夹具试250** |253.75|52138|85353|85096|11.304s|
+| 产品原600 after |268.23|118167|174757|148979|11.227s|
+
+三档产品owned TUN内核fq qdisc `drops=0`，而Rust Shared TUN真实满队列丢包。实验fq250使Rust满队列丢包相对600下降约56%，重传/实际GiB也下降；返回600后Rust满队列丢包回到原水平。**但是250接收吞吐在两次600基线之间，不能声称提升**，不能改全局fq默认600或把250加入实际CLI/GUI；且250仍有52138真实满队列丢包。此实验指向**入包突发与单一M4消费的速率不匹配是本地放大器，但静态限速非完整修复**。本机0%CPU单核饱和与5% queue-full近零仍然是彼此独立的问题。
+
+## H2238 维持600Mbps峰值，仅测试内核TUN fq短突发
+
+Linux自有TUN的现行 `tc -d qdisc` 真读回是 `quantum 2178b initial_quantum 10890b maxrate 600Mbit flow_limit 256p`；原TUN MTU1089。下一Action在同VM相同GE1%/4流/20s，做**原600/短quantum同600/原600**，新实验仅在**已验证owned client namespace的wbdc0**替换外部qdisc（quantum=1个真实TUN MTU、initial_quantum=2MTU，maxrate仍600Mbit，flow_limit仍256）；源锁真实tc readback，独立owner Stop和app/CPU/本地队列指标齐全。这只控制启动突发，不降低四个TCP流的配置峰值，不改变产品Go配置/协议/密文，也不等于FEC/repair。若真实接收端goodput、局部队列满和小流p99不能共同获益，拒绝进一步产品改动并转向内核/原M4事件级短停顿原因。不同平台的Go冷配置及模式验收仅对**确证有益的正式修复**进行。

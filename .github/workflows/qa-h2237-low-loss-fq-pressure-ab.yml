@@ -1,14 +1,9 @@
 name: 'H2237 1pct true-native original WBD TUN ingress pressure A/B/A'
 run-name: 'H2237 fq600→fq250→fq600 source ${{ github.sha }}'
+# Preserve completed original fq600/250/600 source and real artifacts.
+# Additional experiment revisions do NOT automatically repeat this long
+# historical scene. H2238 runs its separate short-quantum A/B/A on push.
 on:
-  push:
-    branches: ['feat/h2237-low-loss-ingress-pressure']
-    paths:
-      - '.github/workflows/qa-h2237-low-loss-fq-pressure-ab.yml'
-      - 'tools/m0_h2237_fq_pressure_ab.py'
-      - 'tools/m0_h2234_local_netns.py'
-      - 'tests/test_m0_h2237_fq_pressure_ab.py'
-      - 'crates/wbd-engine/src/v4_embedded_go.rs'
   workflow_dispatch: {}
 permissions:
   contents: read

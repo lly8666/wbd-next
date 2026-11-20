@@ -21,6 +21,9 @@ from tools import m0_h2234_local_netns as L
 
 PHASES=(("normal600_before",600),("kernel_fq250_probe",250),
         ("normal600_after",600))
+QUANTUM_PHASES=(("original_burst_before",600),
+                ("fq600_short_quantum_probe",600),
+                ("original_burst_after",600))
 
 def observed_qdisc(node,expected_mbps):
     # The original client has already created and owns wbdc0. Bench-only:
@@ -43,6 +46,34 @@ def change_only_owned_tun(node,rate_mbps):
          "maxrate",str(rate_mbps)+"mbit","flow_limit","256")
     return observed_qdisc(node,rate_mbps)
 
+def tune_only_owned_tun_fq_quantum(node):
+    """Benchmark-only Linux fq scheduling variant, no peak-rate reduction.
+
+    Reduce the kernel fq burst/quantum for the SAME owned TUN while
+    preserving maxrate600, flow_limit256 and all source buffers.
+    This is a test candidate, NOT a product config or code-path change.
+    """
+    if not node.owned_pid("client"):
+        raise RuntimeError("H2238_UNOWNED_TUN_QDISC_CHANGE_REFUSED")
+    links=json.loads(L.ns(node.client,"ip","-j","link","show",
+                          "dev","wbdc0").stdout)
+    if len(links)!=1 or links[0].get("ifname")!="wbdc0":
+        raise RuntimeError("H2238_OWNED_TUN_IDENTITY_MISMATCH")
+    mtu=links[0].get("mtu")
+    if not isinstance(mtu,int) or not 576<=mtu<=1500:
+        raise RuntimeError("H2238_UNSUPPORTED_OWNED_TUN_MTU")
+    quantum=mtu
+    initial=2*mtu
+    L.ns(node.client,"tc","qdisc","replace","dev","wbdc0","root",
+         "fq","maxrate","600mbit","flow_limit","256",
+         "quantum",str(quantum),"initial_quantum",str(initial))
+    readback=observed_qdisc(node,600)
+    if ("quantum %db"%quantum not in readback or
+        "initial_quantum %db"%initial not in readback):
+        raise RuntimeError("H2238_KERNEL_FQ_QUANTUM_READBACK_MISMATCH")
+    return {"quantum_bytes":quantum,"initial_quantum_bytes":initial,
+            "maxrate_mbps":600,"exact_kernel_readback":readback}
+
 def tun_receipt(node):
     return {
         "source":"EXACT_ORIGINAL_CLIENT_LINUX_NETNS_TUN_ONLY",
@@ -64,9 +95,11 @@ def main():
         raise RuntimeError("H2237_ORIGINAL_GO_TLS_RUST_BUILD_MISSING")
     if not pathlib.Path("/dev/net/tun").is_char_device():
         raise RuntimeError("H2237_GENUINE_KERNEL_TUN_NOT_AVAILABLE")
-    output=workspace/"h2237-fq-pressure"
+    quantum_experiment=os.environ.get("H2238_KERNEL_FQ_QUANTUM_AB")=="1"
+    experiment_phases=QUANTUM_PHASES if quantum_experiment else PHASES
+    output=workspace/("h2238-fq-quantum" if quantum_experiment else "h2237-fq-pressure")
     output.mkdir(parents=True,exist_ok=True)
-    tmp=pathlib.Path(os.environ["RUNNER_TEMP"])/("h2237-"+runid)
+    tmp=pathlib.Path(os.environ["RUNNER_TEMP"])/(("h2238-" if quantum_experiment else "h2237-")+runid)
     tmp.mkdir(mode=0o700,parents=True,exist_ok=False)
     os.environ["WBD_H2233_FOCUS"]="1"
     os.environ["WBD_H2234_TRACE"]="1"
@@ -88,15 +121,20 @@ def main():
                 direct_cases[0].get("receiver_goodput_mbps") or 0)<250:
             status="NOT_RUN_UNQUALIFIED_DIRECT_REFERENCE"
         else:
-            for index,(label,rate) in enumerate(PHASES,1):
+            for index,(label,rate) in enumerate(experiment_phases,1):
                 phase={"name":label,"test_only_tun_qdisc_rate_mbps":rate,
-                       "genuine_original_product_default_rate_mbps":600}
+                       "genuine_original_product_default_rate_mbps":600,
+                       "experiment":"KERNEL_FQ_QUANTUM_NOT_PRODUCT_CHANGE"
+                         if quantum_experiment else "KERNEL_FQ_RATE_NOT_PRODUCT_CHANGE"}
                 phases.append(phase)
                 # Each A/B/A case gets an independent cold TLS + Rust lease
                 # generation, same install-ID/lease semantics and owned Stop.
                 node.start_client(1)
                 try:
-                    if rate==250:
+                    if quantum_experiment and label=="fq600_short_quantum_probe":
+                        phase["quantum_probe"]=tune_only_owned_tun_fq_quantum(node)
+                        phase["qdisc_before"]=phase["quantum_probe"]["exact_kernel_readback"]
+                    elif rate==250:
                         phase["qdisc_before"]=change_only_owned_tun(node,rate)
                     else:
                         phase["qdisc_before"]=observed_qdisc(node,600)
@@ -137,13 +175,17 @@ def main():
         if status=="PASS_GENUINE_ABA_DATA_ONLY_NO_PRODUCT_CHANGE" and not stop_server_verified:
             status="FAIL_ORIGINAL_SERVER_STOP"
         summary={
-            "schema_version":1,"checkpoint":"H2237_LOW_LOSS_TUN_FQ_CAUSAL_PROBE",
+            "schema_version":1,"checkpoint":(
+                "H2238_600M_LOW_LOSS_FQ_QUANTUM_PROBE" if quantum_experiment
+                else "H2237_LOW_LOSS_TUN_FQ_CAUSAL_PROBE"),
             "source_sha":source,"run_id":runid,"status":status,
             "error":error,"arch":os.uname().machine,
             "topology":"ONE_VM_THREE_LINUX_NETNS_ORIGINAL_GO_TLS_RUST_TRUE_TUN",
             "real_wan":False,"real_windows":False,
             "original_product_fq_default_mbps":600,
             "qdisc_250_is_BENCH_ONLY_NOT_PRODUCT_CONFIG":True,
+            "qdisc_short_quantum_is_BENCH_ONLY_NOT_PRODUCT_CONFIG":True,
+            "quantum_experiment":quantum_experiment,
             "no_protocol_or_source_queue_change":True,
             "target_loss_pct":1,"added_oneway_delay_ms":200,
             "jitter_ms":0,"direct_before_after":direct_cases,
@@ -156,7 +198,8 @@ def main():
         L.save(output/"summary.json",summary)
     if status!="PASS_GENUINE_ABA_DATA_ONLY_NO_PRODUCT_CHANGE":
         raise RuntimeError("H2237_FQ_ABA_"+status+" "+str(error or ""))
-    print("H2237_NATIVE_FQ_ABA_REAL_DATA_COMPLETED_NOT_PRODUCT_GAIN")
+    print("H2238" if quantum_experiment else "H2237",
+          "NATIVE_FQ_ABA_REAL_DATA_COMPLETED_NOT_PRODUCT_GAIN")
 
 if __name__=="__main__":
     main()
