@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2229",
+  "date": "2026-11-20",
+  "source_sha": "09654a4e366041f2329bb08b6b8deec109433392",
+  "code_source_sha": "09654a4e366041f2329bb08b6b8deec109433392",
+  "workflow_run_id": 44727976115,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44727976115",
+  "result": "PASS_SCOPED_ALL_4_JOBS_NATIVE_RUST_WIN_M3_GO_TLS_LINUX_X86_ARM64_ORIGINAL_M4_DOUBLE_NAT",
+  "qualification": "PASS_SCOPED_NOT_REAL_THREE_RUNNER_NOT_PHYSICAL_WINDOWS",
+  "jobs": [
+    {
+      "name": "scoped-protocol",
+      "conclusion": "SUCCESS",
+      "proof": "Python source-negative tests 5/5; Rust common Game ACK ledger 3/3; original Normal ACK 4/4; native ipv4_tcp byte builder 23/23."
+    },
+    {
+      "name": "arm64-original-product",
+      "conclusion": "SUCCESS",
+      "proof": "Source-locked original Go TLS+Rust M4 ISA-L aarch64 one443 real kernel TUN double NAT three peers Game2-off Game4-fixed6 Normal Auto + Stop."
+    },
+    {
+      "name": "x86-original-product",
+      "conclusion": "SUCCESS",
+      "proof": "Same source true x86_64 original Go TLS Rust M4 original native double NAT TUN Game2 Game4 Normal + Stop."
+    },
+    {
+      "name": "windows-native-owner",
+      "conclusion": "SUCCESS",
+      "proof": "Windows MSVC x64 ISA-L native Rust M3 genuine DLL build and pinned original Go credential TLS all cipher integration."
+    }
+  ],
+  "previous_failed_action_preserved": {
+    "id": 44727588061,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44727588061",
+    "issue": "Missing AtomicU32 use import for new Linux per-lane ACK; no product test claimed passed."
+  },
+  "changes": {
+    "LinuxNormalACK": "auth-only cumulative ACK-only added with 10ms coalescing; authentic SACK preserved and no outer repair or per-record M2 restored",
+    "LinuxGameACK": "2/4 lanes source-locked initial rx_boundary from authenticated original Go TLS; after successful TUN/FEC commit, atomic cumulative progression, <=100Hz pure ACK-only",
+    "WindowsGame": "existing immediate per TX turn sends, common ledger merges bounded future authenticated spans",
+    "WindowsNormal": "auth SACK snapshot publication changed 20ms to 10ms; ack-only still event driven",
+    "LinuxWindow": "steady DATA/Health/repaired same-existing-record TCP16 advertised window changed 4096 -> 65535, Go SYN/bootstrap untouched",
+    "out_of_order_business": "NO_NEW_HOL; original delivery stays independent of cosmetic contiguous TCP ACK",
+    "fake_outer_repeat": "UNCHANGED; no per-record-M2, no extra PN/AEAD record"
+  },
+  "not_verified": [
+    "Real Windows Npcap to Linux ARM64 WAN 3s TCP uplink crash and 80/200Mbps physical bottleneck",
+    "ACK frequency direct independent packet capture across Windows and Linux exact physical carrier",
+    "H2228 three-runner ARM relay 200ms one-way 1/5/10/20pct loss iperf3 baseline and WBD comparison"
+  ],
+  "next": "Merge only with current branch source-locked 4 job success. Then repeat genuine three-runner loss/latency and correlate first failure, not speculative TCP congestion algorithm bypass."
+}
