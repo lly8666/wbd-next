@@ -164,7 +164,16 @@ client_run(){
     local label="$1" kind="$2" duration="$3" streams="$4" direction="$5"
     local casefile="$OUT/case-$(printf '%03d' "$count")-$label-$kind-${duration}s-${streams}p-$direction.json"
     count=$((count+1))
-    python3 "$TOOL" iperf "$kind" "$duration" "$streams" "$direction" "$casefile" \
+    local -a owner_check=()
+    if [[ "$kind" == "wbd" ]];then
+      # Only the root-owned ORIGINAL Go worker PID (not sudo launcher).
+      # iperf3 control errors may occur while WBD remains completely alive.
+      test -s "$TMP/client.pid" || {
+        echo H2228_MISSING_REAL_NATIVE_PID_AT_WBD_MEASURE >&2; return 2;
+      }
+      owner_check=(--pidfile "$TMP/client.pid")
+    fi
+    python3 "$TOOL" iperf "$kind" "$duration" "$streams" "$direction" "$casefile" "${owner_check[@]}" \
       > "$casefile.txt" 2>&1 ||
       echo "H2228_OBSERVED_TCP_ERROR $label $kind $direction" |tee -a "$OUT/failures.log"
     relay_read "$(basename "$casefile" .json)"

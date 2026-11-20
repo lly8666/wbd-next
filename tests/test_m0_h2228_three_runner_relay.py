@@ -184,6 +184,64 @@ class H2228ThreeGenuineMachines(unittest.TestCase):
             self.assertEqual(result["status"],"PASS_REAL_THREE_RUNNER_TCP_MATRIX")
             self.assertEqual(result["observed_qualified_cases"],27)
 
+    def test_iperf_tcp_failure_not_same_as_native_client_process_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=pathlib.Path(tmp)
+            p=root/"real-root-owner.pid"
+            p.write_text("42424\n")
+            fail=subprocess.CompletedProcess(["iperf3"],1,
+                '{"error":"control socket has closed unexpectedly"}', "")
+            running=subprocess.CompletedProcess(["sudo","-n","ps"],0,"S wbd-v4-client\n","")
+            with patch.object(H.subprocess,"run",side_effect=[fail,running]) as proc:
+                result=H.iperf("wbd",3,1,"upload",root/"case-001.json",str(p))
+            self.assertEqual(result["status"],"ERROR_TCP_CRASH_ABORT_OR_UNREACHABLE")
+            self.assertTrue(result["native_worker_alive_after_iperf"])
+            self.assertEqual(result["tcp_failure_cause"],
+                "INNER_TCP_CONTROL_OR_RESULT_ERROR_NATIVE_WORKER_ALIVE")
+            self.assertEqual(len(proc.call_args_list),2)
+            self.assertEqual(proc.call_args_list[-1].args[0][-1],"42424")
+            # TCP can report real bits while the original native owner
+            # has exited: keep numeric observation but do NOT say PASS.
+            passed=subprocess.CompletedProcess(["iperf3"],0,
+                '{"end":{"sum_sent":{"bits_per_second":120000000,"seconds":3.0}}}',"")
+            gone=subprocess.CompletedProcess(["sudo","-n","ps"],1,"","")
+            with patch.object(H.subprocess,"run",side_effect=[passed,gone]):
+                observed=H.iperf("wbd",3,1,"upload",root/"case-002.json",str(p))
+            self.assertEqual(observed["mbps"],120.0)
+            self.assertEqual(observed["status"],"ERROR_TCP_CRASH_ABORT_OR_UNREACHABLE")
+            self.assertFalse(observed["native_worker_alive_after_iperf"])
+            self.assertEqual(observed["tcp_failure_cause"],
+                "NATIVE_WORKER_EXITED_AFTER_REPORTED_TCP_BITS")
+            with self.assertRaises(RuntimeError):
+                H.iperf("direct",12,8,"upload",root/"bad.json",str(p))
+            shell=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
+            self.assertIn('owner_check=(--pidfile "$TMP/client.pid")',shell)
+            self.assertIn('"${owner_check[@]}"',shell)
+
+    def test_kernel_qdisc_phase_drop_is_real_not_target_assumption(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=pathlib.Path(temp)
+            prefix="delay200-loss1-burst"
+            def snap(emitted,dropped):
+                return {role:{"qdisc":[{"kind":"netem",
+                    "handle":"8001:" if role=="client" else "8002:",
+                    "options":{"loss-gemodel":{"p":0.003,"r":0.25}},
+                    "packets":emitted,"drops":dropped}]}
+                    for role in ("client","server")}
+            H.save(root/f"{prefix}-before-relay.json",snap(0,0))
+            H.save(root/f"{prefix}-final-relay.json",snap(990,10))
+            result=H.observed_relay_phase_loss(root,prefix)
+            self.assertEqual(result["status"],"REAL_KERNEL_NETEM_PHASE_COUNTER_DIFFERENCE")
+            self.assertEqual(result["server_to_client"]["drop_pct_approx"],1.0)
+            self.assertEqual(result["client_to_server"]["drop_pct_approx"],1.0)
+            self.assertEqual(result["client_to_server"]["dropped_packets"],10)
+            H.save(root/f"{prefix}-final-relay.json",snap(700,0))
+            changed=H.observed_relay_phase_loss(root,prefix)
+            self.assertEqual(changed["client_to_server"]["drop_pct_approx"],0.0)
+            H.save(root/f"{prefix}-before-relay.json",snap(900,50))
+            invalid=H.observed_relay_phase_loss(root,prefix)
+            self.assertEqual(invalid["status"],"UNKNOWN_INCONSISTENT_NETEM_SNAPSHOTS")
+
     def test_exact_model_modes_and_role_specific_m0_contract(self):
         shell=(ROOT/"tools/m0_h2228_three_runner_case.sh").read_text()
         for line in ('--outer-repair on','for loss in 0 1 5 10 20',

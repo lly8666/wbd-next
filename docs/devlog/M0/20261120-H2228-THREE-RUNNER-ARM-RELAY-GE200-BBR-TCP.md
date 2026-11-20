@@ -57,3 +57,19 @@ Actions → `H2228 Three distinct runners routed ARM relay 200ms one-way 1-20% r
 - [Action 44708081108](https://github.com/lly8666/wbd-next/actions/runs/44708081108) 旧 ACK 分支源码 `f696bf938262bf6da75213f78811c8b61030a710`：ARM64 真 Linux 3层路由、两 x86 Go TLS Rust、真实 BBR/iperf，12/12 direct、15/15 WBD case均有原始 JSON，**24/27 iperf 成功、3 条 TCP ERROR**（10% WBD 3秒、20% direct 20秒上行、20% WBD 20秒上行）。
 - 同次配置0ms/0% 8流 direct 双向仅 **19.572/19.836 Mbps**，ARM tail ping 两段最终仍 DERP，明确 INFRA_UNQUALIFIED，**任何低速不能用于断言 WBD 80Mbps 硬上限**。但全部真实应用连接/失败和 200ms 线路的真实性保留，不能误写纯夹具PASS。原 artifact `h2228-client-result` ID `14617351515`、client-diag `14616647584`、ARM-relay `14617191402`。
 - 本次 H2230 后续动作：在真正新产品 ACK10 源码上重跑真实3 Runner，必须检查0ms直连能力和尾网是否direct，若DERP仍标基础设施不合格；高损伤TCP错误按 native worker/Go TLS/iperf 原始 stderr 分类，严禁自动说明程序崩溃。Windows Npcap实体3秒故障仍 OPEN。
+
+## H2230 二次故障归因夹具：内层TCP断流 ≠ 原生客户端崩溃
+
+- 在此前 Action `44708081108`，200ms RTT双向+10%突发损失下 `iperf3 -t3` 实际等到43s后timeout，20%损失的直接 kernel BBR TCP同样出现 `control socket has closed unexpectedly`，WBD四流的20%压测亦有 `unable to receive results`。**这些是应用TCP或控制通道失败，不是已证明Go/Rust进程崩溃**；已见到同一场景WBD原生进程能输出正确Stop与大量真实收发计数。
+- 后续夹具在每个WBD业务 iperf3 结束时，以本轮保存的**真实root-owned Go原生进程PID**执行`sudo ps -o stat=,comm= -p PID`，仅当非Z且进程确名为`wbd-v4-client`时标记`native_worker_alive_after_iperf=true`；即使iperf失败，只可分类 `INNER_TCP_CONTROL_OR_RESULT_ERROR_NATIVE_WORKER_ALIVE`／`IPERF_TIMEOUT_BUT_NATIVE_WORKER_ALIVE`／`NATIVE_WORKER_NOT_RUNNING_AFTER_TCP_ERROR`，不允许把控制socket错误默认为WBD崩溃。仅实验进程快照，既不改变WBD热路径也不增加用户包。
+- 同时对每档ARM路由 `tc netem` 两端 `before-relay`与`final-relay`原始快照计算真实出站相位统计：按`drop/(emitted+drop)`而非人工目标5%计数；保持明确“非真实内层独立包丢失率”限定，要求qdisc同handle、相同netem参数、计数单调。缺失时标UNKNOWN，不制造0。
+- 用旧 ACK + DERP Action `44708081108` 的真正 ARM内核计数可离线算出两出站方向的相位比例：target1% → 1.00/1.14%；5% → 5.02/4.79%；10% → 10.28/10.16%；20% → 20.16/19.97%。表明原ARM relay实际执行了丢包目标；**不证明H2229新版ACK吞吐提升，也不证明该DERP网络本身能跑1Gbps**。
+
+## H2230：真正 ACK10/65535 产品源码三 Runner 的 27/27 TCP 业务通过，但 DERP 容量不合格
+
+- [Action 44733044743](https://github.com/lly8666/wbd-next/actions/runs/44733044743) 使用**原始 Go TLS/Rust、已合并 H2229 ACK10 的实际 8f6054e7d6851f6fa58afdfb5a63f7e4ec504bc1**；source-locked static H2228 12/12、ACK H2229 5/5 SUCCESS；真实 ARM64 kernel router、x86_64 原Go/Rust Server、x86_64 原Go/Rust Client三独立 Runner 均工作。
+- 本轮**27/27 真实 iperf3 TCP case 完成（0 缺失、0 业务错误）**，200ms 附加单程延迟、高斯 jitter，原始GE 0/1/5/10/20%丢包场景中，WBD包括20%单流3秒上行全部按源数据结束；这是**Linux 真实场景的有限通过**，不证明用户Windows Npcap实体3秒上行或80Mbps异常已修复。
+- 但无损/无延迟的**同中继直接 kernel BBR P8 只有上19.310 Mbps/下19.836 Mbps**，尾网路径混有DERP/不合格。整个 Action `conclusion=failure` 因最后必须满足 `>=800Mbps_BOTH_DIRECTIONS_DIRECT_TAILSCALE` 的容量门槛，而**不是**因为27条业务样本失败。产品相对吞吐不可归因为WBD物理限速，且不能拿此低速跑批与旧网络1Gbps结果比较 ACK10 性能。
+- 最新原始 H2229 按loss档20s P4 `直连上/WBD上；直连下/WBD下`（单位 Mbps）：0% `23.068/21.653；17.092/15.676`，1% `20.342/18.140；13.894/13.212`，5% `18.559/16.987；12.373/10.433`，10% `13.055/16.988；2.989/9.909`，20% `7.183/3.355；3.198/1.783`。同档WBD3s P1上行 `33.552,12.234,4.544,4.194,0.699`；高丢包里WBD偶高于直连仅说明这批随机样本受基础网络/时序影响，不是反拥塞控制或稳定速率逆转的证明。
+- 原始CI artifacts：summary `14628207245`、x86客户端 `14627419399`、ARM中继 `14627772952`、x86服务端 `14627258751`；资料与完整两轮新/旧ACK边界保存在机读 `docs/evidence/M0/PLAN029-H2228-THREE-ARM-RELAY-GE200-REAL-TCP-20261120.json`。
+- 后续增强纯夹具：增加真实root-owned original Go PID identity/stats判别TCP control error与native进程死亡；增添每个loss场景两向ARM kernel qdisc真实前后差包丢比例；保留容量失败、不得静默宽容DERP假阳性，也不得动原WBD表演式重传及乱序业务交付。

@@ -33,3 +33,7 @@ Client GitHub Ubuntu x86_64：owned `h228node/wan0=10.248.81.2/24` → 同 Sourc
 ## ACK10 最新主线复测门槛
 
 H2229 main ACK10/65535 真实原产品 Windows/Linux Native 测试已完成。H2228 早期测速都来自其之前的源码，不可冒充已测试新版 ACK。H2228 最新源码在每次静态检查中同时跑 `tests.test_m0_h2229_native_ack_unified`，手动/开发分支真实三机都各自按新 `GITHUB_SHA` 构建原始 Go TLS/Rust M4；把三机新实验与旧 ACK/旧 DERP 数据分开保存。真实跨机环境可能因 Tailscale DERP 从800Mbps下降到20Mbps，必须优先看两段 direct 和0ms双向基线，再看200ms GE1/5/10/20% WBD/直连数据，且真实 TCP 测试错误不等于进程崩溃。
+
+## H2230 TCP控制异常与真实中继drop率核对
+
+`case-*.json`新增 `native_worker_alive_after_iperf` (true/false/null) 和 `tcp_failure_cause`。控制通道断开、`-t3` 超时本身不能声称WBD客户端panic/退出；只有原生Go PID验证失败时才表示在查询时进程确实不存在/不符合身份。业务数据真实 `MBps`/Mbps和原始stderr原样保留。`loss_scenarios[*].relay_kernel_observed_loss` 是ARM两个出站qdisc的 `packets/drops` 前后差计算出的实测样本比例，必须与配置百分比、尾网DERP风险分开解释，缺快照或qdisc变化则显示UNKNOWN。

@@ -342,10 +342,30 @@ def local_node_snapshot(role,tag):
        "wan_link":json.loads(ns(NODE,"ip","-s","-j","link","show","dev","wan0").stdout)}
     return d
 
-def iperf(kind,duration,streams,direction,out):
+def real_native_worker_alive(pidfile):
+    """Snapshot a proven local root-owned client PID after the user TCP test.
+    A failed iperf control socket is NOT itself a crashed WBD process.
+    Never use the background sudo launcher PID as the native worker.
+    """
+    if not pidfile:return None
+    p=pathlib.Path(pidfile)
+    if not p.is_file():return None
+    try:pid=int(p.read_text().strip())
+    except (OSError,ValueError):return None
+    if pid<=1 or pid>=4_194_304:return None
+    try:
+        proc=subprocess.run(["sudo","-n","ps","-o","stat=,comm=","-p",str(pid)],
+                            capture_output=True,text=True,timeout=4)
+    except (OSError,subprocess.TimeoutExpired):return None
+    parts=proc.stdout.strip().split(maxsplit=1)
+    return bool(proc.returncode==0 and len(parts)==2 and
+                not parts[0].startswith("Z") and parts[1]=="wbd-v4-client")
+
+def iperf(kind,duration,streams,direction,out,pidfile=None):
     guard(kind in ("direct","wbd") and
           duration in (3,12,18,20) and streams in (1,4,8) and
           direction in ("upload","download"),"BAD_IPERF_REQUEST")
+    guard(pidfile is None or kind=="wbd","PID_ONLY_SCOPED_TO_WBD")
     host=LAN["server"] if kind=="direct" else "10.66.0.1"
     port=5202 if kind=="direct" else 5201
     args=["sudo","-n","ip","netns","exec",NODE,"iperf3","-J","-C","bbr",
@@ -378,7 +398,31 @@ def iperf(kind,duration,streams,direction,out):
         if returncode==0 and not parsed.get("error") and isinstance(bps,(float,int)) and \
              bps>0 and secs>=duration*0.6:
             speed=round(bps/1e6,3)
-    record={"status":"PASS_REAL_KERNEL_IPERF3_TCP" if speed is not None else
+    native_alive=real_native_worker_alive(pidfile) if kind=="wbd" else None
+    # A completed iperf report does not grant WBD process-liveness success:
+    # a dead/unknown original Go worker is a separate real crash gate.
+    qualified=bool(speed is not None and
+                   (kind=="direct" or native_alive is True))
+    if speed is not None and kind=="wbd" and native_alive is False:
+        cause="NATIVE_WORKER_EXITED_AFTER_REPORTED_TCP_BITS"
+    elif speed is not None and kind=="wbd" and native_alive is None:
+        cause="MISSING_REAL_NATIVE_LIVENESS_AFTER_REPORTED_TCP_BITS"
+    elif qualified:
+        cause="NONE"
+    elif kind=="direct":
+        cause="DIRECT_KERNEL_TCP_IPERF_ERROR_NOT_WBD"
+    elif native_alive is False:
+        cause="NATIVE_WORKER_NOT_RUNNING_AFTER_TCP_ERROR"
+    elif native_alive is True and returncode==124:
+        cause="IPERF_TIMEOUT_BUT_NATIVE_WORKER_ALIVE"
+    elif native_alive is True:
+        cause="INNER_TCP_CONTROL_OR_RESULT_ERROR_NATIVE_WORKER_ALIVE"
+    else:
+        cause="INNER_TCP_ERROR_NATIVE_LIVENESS_UNKNOWN"
+    record={"native_worker_alive_after_iperf":native_alive,
+            "tcp_failure_cause":cause,
+            "native_pid_source":"root_owned_original_go_worker_pidfile" if pidfile else None,
+            "status":"PASS_REAL_KERNEL_IPERF3_TCP" if qualified else
               "ERROR_TCP_CRASH_ABORT_OR_UNREACHABLE",
             "mbps":speed,"elapsed_s":round(time.monotonic()-t,3),
             "seconds_requested":duration,"seconds_observed":secs,
@@ -420,6 +464,46 @@ def expected_cases(model):
         exp.add(f"{prefix}-wbd-3s-1p-upload")
     guard(len(exp)==27,"SOURCE_CASE_MATRIX_SIZE")
     return exp
+
+def observed_relay_phase_loss(rootpath,label):
+    """Actual bidirectional kernel netem packet accounting for this phase.
+
+    tc netem 'packets' is successfully emitted packets, 'drops' are
+    separately counted; drops/(packets+drops) is an empirical phase
+    egress ratio, NOT the true end-to-end independent user payload loss.
+    'client' refers to ARM rcli0 (server->client) and 'server' refers
+    to ARM rsrv0 (client->server).
+    """
+    files=(rootpath/f"{label}-before-relay.json",
+           rootpath/f"{label}-final-relay.json")
+    if not all(p.is_file() for p in files):
+        return {"status":"UNKNOWN_MISSING_RELAY_QDISC_SNAPSHOTS"}
+    try:
+        before,after=(json.loads(p.read_text()) for p in files)
+        rows={}
+        for endpoint,direction in (("client","server_to_client"),
+                                   ("server","client_to_server")):
+            old=next(q for q in before[endpoint]["qdisc"]
+                     if q.get("kind")=="netem")
+            new=next(q for q in after[endpoint]["qdisc"]
+                     if q.get("kind")=="netem")
+            guard(old.get("handle")==new.get("handle"),"NETEM_HANDLE_CHANGED")
+            guard(old.get("options")==new.get("options"),"NETEM_PARAMETERS_CHANGED_MID_PHASE")
+            emitted=new["packets"]-old["packets"]
+            dropped=new["drops"]-old["drops"]
+            guard(isinstance(emitted,int) and isinstance(dropped,int) and
+                  emitted>=0 and dropped>=0,"NETEM_NONMONOTONIC")
+            total=emitted+dropped
+            rows[direction]={"emitted_packets":emitted,
+                "dropped_packets":dropped,"drop_pct_approx":round(
+                    100*dropped/total,3) if total>0 else None,
+                "population_packets":total}
+        return {"status":"REAL_KERNEL_NETEM_PHASE_COUNTER_DIFFERENCE",
+                "scope":"BOTH_ARM_ROUTER_EGRESS_ONLY_TOTAL_PHASE_NOT_APP_UNIQUE",
+                **rows}
+    except (KeyError,StopIteration,ValueError,TypeError,RuntimeError,
+            OSError,ZeroDivisionError):
+        return {"status":"UNKNOWN_INCONSISTENT_NETEM_SNAPSHOTS"}
 
 def result_summary(mode,model,directory):
     rootpath=pathlib.Path(directory)
@@ -479,7 +563,9 @@ def result_summary(mode,model,directory):
     per_loss=[]
     for loss in (0,1,5,10,20):
         prefix=f"delay200-loss{loss}-{model}"
-        row={"loss_target_pct":loss,"delay_one_way_added_ms":200,
+        row={"relay_kernel_observed_loss":observed_relay_phase_loss(
+                 rootpath,prefix),
+             "loss_target_pct":loss,"delay_one_way_added_ms":200,
              "jitter_sigma_ms":15,"burst_model":model}
         for direction in ("upload","download"):
             row["direct_"+direction+"_mbps"]=direct.get(
@@ -560,6 +646,7 @@ def main():
     a=sub.add_parser("iperf");a.add_argument("kind",choices=("direct","wbd"))
     a.add_argument("duration",type=int);a.add_argument("streams",type=int)
     a.add_argument("direction",choices=("upload","download"));a.add_argument("out")
+    a.add_argument("--pidfile",default=None)
     a=sub.add_parser("result");a.add_argument("mode",choices=("normal","fec-fixed"))
     a.add_argument("model",choices=("iid","burst"));a.add_argument("directory")
     a.add_argument("out")
@@ -591,7 +678,7 @@ def main():
     elif args.act=="relay-snapshot":
         save(args.out,local_relay_snapshot(args.tag))
     elif args.act=="iperf":
-        row=iperf(args.kind,args.duration,args.streams,args.direction,args.out)
+        row=iperf(args.kind,args.duration,args.streams,args.direction,args.out,args.pidfile)
         print("H2228_REAL_IPERF "+json.dumps(row))
         if row["status"]!="PASS_REAL_KERNEL_IPERF3_TCP":sys.exit(2)
     elif args.act=="result":
