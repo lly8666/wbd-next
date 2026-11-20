@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2227",
+  "date": "2026-11-20",
+  "product_code_source": "cd130c4c6b1027bfe3df02a83721e3b9131212ff",
+  "result": "TWO_RUNNER_AUTHENTIC_LINUX_ENVIRONMENT_VERIFIED_REAL_TCP_MATRIX_FAIL_NOT_WINDOWS_PHYSICAL",
+  "qualification": "ENVIRONMENT_PASS_PRODUCT_FAIL",
+  "scope": "Two independent GitHub-hosted Linux native x86_64 and ARM64 machines connected via Tailscale ephemeral OIDC and VXLAN L2. Original Go TLS Rust native AF_PACKET/TUN underlay only. Kernel BBR for real inner TCP, not raw fake TCP.",
+  "source_sha_controls": [
+    "1e833b3bf27d6ca6acb5ad9a1610b98647d47306",
+    "eb025b436cd519cae338bee6bd59550a28217a4d"
+  ],
+  "first_real_attempt": {
+    "workflow_run_id": 44682549769,
+    "run_attempt": 2,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44682549769",
+    "net": "Tailscale eventually direct on x86, actual cross-runner BBR reference>=800 Mbps",
+    "original_client_arm64_server_compiled": true,
+    "status": "MATRIX_FAIL_AND_FEC6_EARLY_GATE_FIXTURE_FALSE_FAILURE",
+    "original_data_artifacts": [
+      {
+        "id": 14610691789,
+        "name": "h2227-x86-client-diag"
+      },
+      {
+        "id": 14610572222,
+        "name": "h2227-arm64-server-diag"
+      },
+      {
+        "id": 14610861395,
+        "name": "h2227-client-result"
+      }
+    ],
+    "direct_baseline_0pct_loss_mbps": {
+      "upload_4streams": 1001.856,
+      "download_4streams": 844.284
+    },
+    "wbd_normal_off_0pct_loss_mbps": {
+      "upload_3sec_1stream": 454.057,
+      "upload_12sec_1stream": 438.628,
+      "download_12sec_1stream": 414.164,
+      "upload_12sec_4streams": 650.781,
+      "download_12sec_4streams": 600.924,
+      "upload_12sec_4streams_fq0": 646.15
+    },
+    "observed_wbd_linux_client_post_stop": {
+      "normal_off_fq600_queue_full_drops": 153453,
+      "normal_off_fq0_queue_full_drops": 204168,
+      "client_process_average_cpu_pct_one_core": 57,
+      "peak_rss_mib_approx": 48.6,
+      "owned_netem_configured_0pct_loss_drops": 0
+    },
+    "real_3sec_uplink_did_not_crash": true,
+    "highest_fec_applied_grade": "NOT_TESTED_INVALID_INITIAL_FIXTURE_PRE_STOP_READBACK_GATE",
+    "original_matrix_cases_observed": 34,
+    "original_matrix_errors": 7,
+    "caveat": "Receiver bounded Health and stored server sessions across a single test username confound later cold generations; do not infer fixed WAN TTL or any exact physical Windows ceiling."
+  },
+  "second_real_attempt": {
+    "workflow_run_id": 44697076045,
+    "run_attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44697076045",
+    "source_sha": "eb025b436cd519cae338bee6bd59550a28217a4d",
+    "status": "FAIL_INCOMPLETE_TWO_RUNNER_APP_MATRIX",
+    "original_data_artifacts": [
+      {
+        "id": 14612041119,
+        "name": "h2227-x86-client-diag"
+      },
+      {
+        "id": 14611393127,
+        "name": "h2227-arm64-server-diag"
+      },
+      {
+        "id": 14612100920,
+        "name": "h2227-client-result"
+      }
+    ],
+    "real_environment": "BOTH_OS_ISA_AND_ORIGINAL_GO_RUST_BUILD_PASS_VXLAN_L2_BBR_AND_KERNEL_NETEM_REAL",
+    "client_tailscale_path": "RELAY_OR_DERP_NOT_PRODUCT_CAPACITY",
+    "four_stream_0pct_direct_mbps": 21.67,
+    "capacity_reference": "INFRA_OR_TS_LIMITED_BELOW_800MBPS_DO_NOT_ATTRIBUTE_80MBPS_TO_WBD",
+    "expected_direct_baseline_cases": 12,
+    "observed_direct_baseline_cases": 12,
+    "expected_real_business_cases": 50,
+    "observed_real_business_cases": 30,
+    "expected_real_business_case_names_missing": 25,
+    "real_business_cases_successful": 25,
+    "distinct_fec_fixed_cold_failures": 5,
+    "fec6_actual_applied_readback": "NOT_RUN_BECAUSE_COLD_SESSION_NOT_READY",
+    "full_case_results_preserved": true,
+    "physical_windows_3sec_crash": "NOT_TESTED"
+  },
+  "corrections": [
+    "V4_PUBLIC_FEC2_READBACK emitted only after monitor/Stop, never gate before first business DATA",
+    "After actual FEC business and Stop require requested==applied profile6 and pending=false",
+    "Source locked 12 direct + 50 business expected names, record missing and failures not lose measured existing cases",
+    "Never attribute CI speed to product when DERP baseline is below 800 Mbps"
+  ],
+  "not_done": [
+    "Actual Windows Npcap client to ARM64 server paired WAN 3-second crash",
+    "True FEC6 client applied and business throughput on current two-runner matrix",
+    "Proven explanation of 80/160-200Mbps physical ISP result",
+    "Proof that outer performative retry or inner BBR solely causes throughput",
+    "Bug fix of production TCP/Health/TUN queue"
+  ],
+  "user_constraint": "Preserve existing performative outer retransmission and never restore per-record M2.",
+  "next": "Merge as opt-in main workflow with push static-only, workflow_dispatch real paired benchmark; use main manual attempts to characterize cold/FEC6 and TUN queue pressure, then fix production only on source-locked paired evidence."
+}
