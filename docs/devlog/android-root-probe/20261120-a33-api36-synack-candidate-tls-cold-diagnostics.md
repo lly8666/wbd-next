@@ -30,3 +30,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A33新增Java Host阶段矩阵重复局部变量导致真实root-arm64-app CI失败；只修测试变量并同步本批真实旧失败、短功能卡和governance。"}
 ```
+
+## A33b 最终同源码产品验收（本批闭环）
+
+- 生产 SOURCE `f8031ef1cf2f15e2769208d76bf2b072275b6084`，[Android dual64 Action #44674351280](https://github.com/lly8666/wbd-next/actions/runs/44674351280) completed **SUCCESS：11 SUCCESS、4 SKIPPED**。真 ARM64原Go/Rust、16KiB source lock、签名ARM64 APK、Java anchored marker拒绝伪行与20类stage优先级、A33原Go冷source门、A32 0600回归、原Linux server normal/off Oracle、原Linux D2-S0 CLI、M3/DNS Host门均SUCCESS；旧x86-KSU、TAP、NativeBridge D2 guests均SKIPPED，没有新增设备/真实TLS证据。Go固定分类单元用例已写入源，是否作为单独目标执行不得凭构建成功推断。
+- [同源APK工件 #14602220760](https://github.com/lly8666/wbd-next/actions/runs/44674351280/artifacts/14602220760) 的产物按CI SHA/DEX/ELF核对；源锁签名已PASS，用户实际API36未运行。历史首轮Java变量重名FAIL [#44673857808](https://github.com/lly8666/wbd-next/actions/runs/44673857808)、首次治理16KiB/缺devlog两FAIL保留。
+- 最终修治理的独立资料提交只更新本devlog/功能卡；不把它当成重跑的产品SOURCE。下一次用户自行运行 `f8031ef1` APK 后的TXT才可提升：`ORIGINAL_GO_ASSOC_ESTABLISHED`、`ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED`、`ORIGINAL_GO_ADMISSION_VERIFIED` 等事件均需原机OBSERVED。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"记录A33最终source-locked 11 SUCCESS/4 SKIPPED签名APK与Linux oracle、保留旧失败及Android真实TLS未证范围；仅同步devlog/功能卡。"}
+```
