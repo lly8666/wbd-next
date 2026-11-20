@@ -1,0 +1,85 @@
+name: 'H2237 Linux raw IP vs AF_PACKET kernel primitive ABBA (TEST ONLY)'
+run-name: 'H2237 source ${{ github.sha }}'
+on:
+  push:
+    branches: ['feat/h2237-kernel-tx-primitive-ab']
+    paths:
+      - '.github/workflows/qa-h2237-kernel-tx-primitive-ab.yml'
+      - 'tools/m0_h2237_linux_tx_primitive.c'
+      - 'tools/m0_h2237_kernel_ab.py'
+      - 'tests/test_m0_h2237_kernel_ab.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: h2237-test-only-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    name: 'TEST ONLY — C sendmmsg source, checksum and source/route negative tests'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Compile native C and run pure source/pcap negative tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          gcc -std=c11 -O3 -Wall -Wextra -Werror -fsyntax-only tools/m0_h2237_linux_tx_primitive.c
+          python3 -m py_compile tools/m0_h2237_kernel_ab.py
+          python3 -m unittest tests.test_m0_h2237_kernel_ab -v
+  kernel-only:
+    needs: static
+    name: 'Real kernel test-only ABBA, same IPv4/TCP wire (not product), ${{ matrix.arch }}'
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: ubuntu-24.04
+            arch: x86_64
+          - host: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.host }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Install Linux kernel netns, tcpdump, GCC prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iputils-ping ethtool tcpdump gcc
+          test -c /dev/net/tun
+      - name: Same VM, real client-router-server netns, paced100k and unpaced ABBA
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2237_kernel_ab.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open("h2237-kernel-result/summary.json"))
+          assert d["source_sha"]==os.environ["GITHUB_SHA"]
+          assert d["run_id"]==os.environ["GITHUB_RUN_ID"]
+          assert d["host_arch"]==os.uname().machine
+          assert d["kind"]=="TEST_ONLY_SAME_VM_LINUX_KERNEL_PACKET_PRIMITIVE_BENCH"
+          assert d["not_product_go_tls_or_rust"] and d["no_wbd_packet_or_real_data"]
+          assert d["status"]=="PASS_GENUINE_KERNEL_TEST_ONLY",d["status"]
+          assert len(d["runs"])==8
+          assert d["verified_equal_IPv4_TCP_bytes"]
+          assert d["paced_100kpps_real_Rx_qualification"]
+          print("H2237_KERNEL_A_B_FEASIBILITY_ONLY_NOT_WBD_THROUGHPUT")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2237-primitive-${{ matrix.arch }}-test-only
+          path: h2237-kernel-result/
+          if-no-files-found: warn
+          retention-days: 10
