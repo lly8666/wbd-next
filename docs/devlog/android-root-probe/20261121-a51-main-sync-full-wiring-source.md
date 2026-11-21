@@ -8,7 +8,7 @@ Android源码门同步更新成主线parse_data_packet_fast，不再要求旧 st
 ## 全功能接线边界与实际开放项
 当前 Android原Go CLI 明确拒绝非Normal/off、Fixed/Auto/Game/切网 overlap；原Rust Android M4只实现Normal/off且DNS capture/physical System Resolver未通过冷资格门；Java界面用户可选择App和ROOT启动/Stop，但 UI 默认配置并不等于各功能真实来源。**本次主线合并不伪称 Android 所有模式已接线并运行**。后续最短产品切片是在新源码通过双ABI/签名APK+Linux原Oracle后，逐一打通普通App IPv4所有UID→DNS系统解析→分流/直连→Fixed/Auto/Game→切网恢复、真实Route/Stop。任何阶段失败保留FAIL或NOT_PROVEN，不能因main对应模式已有PASS继承Android。
 
-本批完成的是主线全部**源码同步**及共有生产入口的兼容接线。其余真实Android功能尚未实现/复核并明确 NOT_PROVEN；没有部署用户手机、个人服务端或额外dispatch重型诊断。新增功能接线必须在原生产Rust owner中完成，不为“全开关”建立模拟后端。
+合并后首次治理源码门发现功能卡 UTF-8 16423B 超过16KiB，A51a仅压缩卡片摘要/限制文字，全部52条历史 verification 保留，旧治理FAIL如实记录。本批完成的是主线全部**源码同步**及共有生产入口的兼容接线。其余真实Android功能尚未实现/复核并明确 NOT_PROVEN；没有部署用户手机、个人服务端或额外dispatch重型诊断。新增功能接线必须在原生产Rust owner中完成，不为“全开关”建立模拟后端。
 
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"按用户要求以main最新共享语义优先将main完整并入实验，Android Root/Go/Rust/UID和Stop保留，共享最小DATA parser统一main；全功能实机和性能资格未继承。"}
