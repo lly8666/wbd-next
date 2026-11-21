@@ -63,7 +63,8 @@ assert 'fn wbd_m0_embedded_go_fixed_stage_pending(' in android_rust
 assert 'fn wbd_m0_embedded_go_fixed_pending_readback(' in android_rust
 assert 'fn wbd_m0_embedded_go_fixed_m4_counters(' in android_rust
 assert 'if !fixed_pending.is_some_and(|(profile,rev)|' in android_rust
-assert 'control.low_rate_quality.is_some()' in android_rust
+assert 'if let Some(report)=control.low_rate_quality{' in android_rust
+assert 'q.accept_report(report,at);' in android_rust
 assert 'control.low_rate_signal.is_some()' in android_rust
 assert 'q.accept_report(report,at);' in android_rust
 assert 'fn send_android_fixed_quality_due(' in android_rust

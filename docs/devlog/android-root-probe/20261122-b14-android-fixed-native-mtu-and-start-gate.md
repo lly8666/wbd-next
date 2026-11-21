@@ -13,6 +13,10 @@
 
 B13修订 SOURCE `273ce9150debdd9a09c2f995fb941c5940574d01` 的 [dual64 #44926820734](https://github.com/lly8666/wbd-next/actions/runs/44926820734)：Rust/Go双ABI原生构建通过，但 Root App `test-network-scope-gate.sh` Python行124旧静态断言检查`control.low_rate_quality.is_some()`，而B13已改为`if let Some(report)=control.low_rate_quality`且传入真正M2 matcher，故Root APK在此源码门失败；B14将旧断言修正为验证新真实处理语句。不把该FAIL改写成通过。
 
+## B14b APK专门源码门同步
+
+除RootService根源码门外，`test-apk-native-wiring.py` 还有一个独立的B12d陈旧静态断言`control.low_rate_quality.is_some()`。真正B13已经取出`report`后调用原`q.accept_report(report,at)`，两份源码门都必须检查实际处理而不是旧观察表达式。本小修仅修断言，不改密码、wire、M4和APPLIED。保留首轮旧SOURCE结果，以本SOURCE完整Job为准。
+
 ## 真资格
 
 新SOURCE的 Host/双ABI/签名APK/Linux oracle单独看Action。Android实机、Linux服务端SYN/TLS/lease、Fixed业务和丢包恢复、内层超限大包拆分重组均 NOT_PROVEN。不得将编译PASS写作E2E通过。
