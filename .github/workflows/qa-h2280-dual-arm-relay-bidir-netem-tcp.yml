@@ -1,0 +1,260 @@
+# H2276: TWO simultaneous isolated triplets, same exact source/scenario.
+# This first run is real Windows Winsock -> Linux tc kernel relay -> ARM Linux
+# end-to-end TCP capacity/p99 preflight; WBD Npcap/Wintun is NOT measured here.
+name: H2280 two native ARM relay groups genuine bidirectional Linux netem TCP qualification
+run-name: "M0 H2280 bidirectional relay real TCP 0/1/5 percent × dual ARM triplets | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-h2280-dual-arm-relay-bidir-netem-tcp.yml'
+      - 'tools/m0_h2276_three_runner_tcp.py'
+      - 'tools/m0_wl_loss_tcp_probe.py'
+      - 'tests/test_m0_h2276_three_runner_tcp.py'
+      - 'tests/test_m0_h2280_bidir_netem_tcp.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  WBD_H2279_CAPACITY_AB: "0"
+concurrency:
+  group: h2280-dual-three-runner-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Exact source Python and original finite real-socket dual triplet contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py
+          python3 -m unittest tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp -v
+  relay:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2280-bidir-netem]')
+    name: "H2280 independent ARM64 kernel loss router ${{ matrix.group }}"
+    needs: static
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-relay-${{ matrix.group }}-${{ github.run_id }}
+      - name: Publish independently allocated Linux relay identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables
+          python3 tools/m0_h2276_three_runner_tcp.py meta "$GROUP" relay
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-relay-peer
+          path: h2276-out/relay-peer.json
+          retention-days: 3
+      - name: Await both SAME-GROUP actual Windows and ARM peers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-client-peer" h2276-peer/client
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-server-peer" h2276-peer/server
+          python3 tools/m0_h2276_three_runner_tcp.py relay "$GROUP" relay h2276-peer/server/server-peer.json h2276-peer/client/client-peer.json
+          nohup python3 -u tools/m0_h2276_three_runner_tcp.py serve "$GROUP" relay > h2276-out/relay-control.log 2>&1 < /dev/null &
+          echo $! > h2276-out/relay-control.pid
+          for i in $(seq 1 90); do
+            if grep -Fq H2276_RELAY_CONTROL_READY h2276-out/relay-control.log; then break; fi
+            if ! kill -0 "$(cat h2276-out/relay-control.pid)" 2>/dev/null; then cat h2276-out/relay-control.log; exit 2; fi
+            sleep .5
+          done
+          grep -Fq H2276_RELAY_CONTROL_READY h2276-out/relay-control.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-relay-ready
+          path: h2276-out/relay-ready.json
+          retention-days: 3
+      - name: Wait real Windows kernel TCP evidence; preserve unqualified DERP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-client-result" h2276-peer/client-result
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2276-peer/client-result/client-result.json'))
+          assert d['group']==os.environ['GROUP'] and d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['status']=='PASS_H2280_REAL_BIDIR_KERNEL_NETEM_TCP_SCOPED'
+          assert [x['stage_id'] for x in d['stages']]==[-1,0,1,5]
+          assert all(
+              stage['relay_kernel_loss_receipt']['status'] ==
+              'REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED'
+              for stage in d['stages']
+          )
+          assert all(
+              stage['relay_kernel_loss_receipt']['per_direction'][direction]['egress_packets'] > 0
+              for stage in d['stages'] for direction in ('win_to_arm','arm_to_win')
+          )
+          print('H2280_BIDIRECTIONAL_NETEM_KERNEL_COUNTERS_RECEIVED_NOT_WBD_PRODUCT')
+          PY
+      - name: Remove only relay owned tc and exact iptables rules
+        if: always()
+        shell: bash
+        run: |
+          if test -s h2276-peer/server/server-peer.json && test -s h2276-peer/client/client-peer.json; then
+            python3 tools/m0_h2276_three_runner_tcp.py cleanup "$GROUP" relay h2276-peer/server/server-peer.json h2276-peer/client/client-peer.json || true
+          fi
+          if test -s h2276-out/relay-control.pid; then
+            kill "$(cat h2276-out/relay-control.pid)" 2>/dev/null || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-relay-evidence
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14
+
+  server:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2280-bidir-netem]')
+    name: "H2280 genuine ARM64 Linux TCP server ${{ matrix.group }}"
+    needs: static
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-arm-${{ matrix.group }}-${{ github.run_id }}
+      - name: Native ARM64 peer identity
+        shell: bash
+        run: python3 tools/m0_h2276_three_runner_tcp.py meta "$GROUP" server
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-server-peer
+          path: h2276-out/server-peer.json
+          retention-days: 3
+      - name: Wait exact relay kernel route installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" server "h2276-$GROUP-relay-ready" h2276-peer/relay
+          nohup python3 -u tools/m0_h2276_three_runner_tcp.py server "$GROUP" server h2276-peer/relay/relay-ready.json > h2276-out/server.log 2>&1 < /dev/null &
+          echo $! > h2276-out/server.pid
+          for i in $(seq 1 80); do
+            if grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2276-out/server.log; then break; fi
+            if ! kill -0 "$(cat h2276-out/server.pid)" 2>/dev/null; then cat h2276-out/server.log; exit 2; fi
+            sleep .5
+          done
+          grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2276-out/server.log
+          cp h2276-out/server-peer.json h2276-out/server-ready.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-server-ready
+          path: h2276-out/server-ready.json
+          retention-days: 3
+      - name: Wait all four original ARM OS TCP receive stages
+        shell: bash
+        timeout-minutes: 40
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 2400); do
+            if grep -Fq H2276_SERVER_ALL_TCP_STAGES_PASS h2276-out/server.log; then break; fi
+            if ! kill -0 "$(cat h2276-out/server.pid)" 2>/dev/null; then tail -n 75 h2276-out/server.log; exit 2; fi
+            sleep 1
+          done
+          grep -Fq H2276_SERVER_ALL_TCP_STAGES_PASS h2276-out/server.log
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2276-out/server-result.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['group']==os.environ['GROUP']
+          assert [x['stage_id'] for x in d['stages']]==[-1,0,1,5]
+          assert d['stages'][0]['actual_peer'] != d['stages'][1]['actual_peer']
+          print('H2280_ARM_SERVER_REAL_4STAGES_SOURCE_LOCKED_PASS_SCOPED')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-arm-evidence
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14
+
+  client:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2280-bidir-netem]')
+    name: "H2280 genuine Windows2025 Winsock TCP client ${{ matrix.group }}"
+    needs: static
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: windows-2025
+    timeout-minutes: 55
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-win-${{ matrix.group }}-${{ github.run_id }}
+      - name: Publish real Windows VM identity and validate Python probe
+        shell: pwsh
+        run: |
+          python -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TEST_CODE_BAD' }
+          python tools/m0_h2276_three_runner_tcp.py meta $env:GROUP client
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TAIL_IDENTITY_BAD' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-client-peer
+          path: h2276-out/client-peer.json
+          retention-days: 3
+      - name: Source-locked actual Windows TCP 0ms clean / 2-way 200ms 0,1,5 percent with kernel counter proof
+        shell: pwsh
+        timeout-minutes: 43
+        run: |
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_REAL_RELAY_NOT_READY' }
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-server-ready" h2276-peer/server
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_REAL_ARM_NOT_READY' }
+          python -u tools/m0_h2276_three_runner_tcp.py client $env:GROUP client h2276-peer/relay/relay-ready.json h2276-peer/server/server-ready.json
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_REAL_WINDOWS_TO_ARM_TUNNEL_TCP_FAILURE' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-client-result
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14

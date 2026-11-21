@@ -113,6 +113,53 @@ class ExactDualTriplet(unittest.TestCase):
         self.assertIn("WBD_H2279_CAPACITY_AB: \"1\"",wf)
         self.assertEqual(wf.count("[m0-029-h2279-clean-path]"),3)
 
+    def test_h2280_nat_egress_reverse_must_match_relay_ip_not_arm(self):
+        own = {**identity("relay"), "control_token": "verify-real-tc"}
+        calls = []
+        with patch.object(h, "run", side_effect=lambda *a, **k: calls.append(a)), \
+             patch.object(h, "shaped", return_value={"stage_id": 0}), \
+             patch.object(h, "ping_class", return_value={"status":"DIRECT_CANDIDATE"}):
+            h.configure_relay(own, identity("server"), identity("client"))
+        tc_filter = [x for x in calls if x[:4] ==
+                     ("sudo","-n","tc","filter")]
+        self.assertEqual(len(tc_filter),2)
+        forward,reverse = tc_filter
+        self.assertIn("1:3",forward)
+        self.assertIn("1:4",reverse)
+        self.assertIn("100.101.0.2/32",reverse)  # post-NAT relay src
+        self.assertIn("100.101.0.1/32",reverse)  # return client dst
+        self.assertNotIn("100.101.0.3/32",reverse)  # wrong old pre-NAT src
+        qdiscs=[x for x in calls if x[:5] ==
+                ("sudo","-n","tc","qdisc","replace")]
+        self.assertEqual(len(qdiscs),1)  # shaped is mocked
+        self.assertIn("bands",qdiscs[0])
+        self.assertEqual(qdiscs[0][qdiscs[0].index("bands")+1],"4")
+
+    def test_h2280_true_two_direction_kernel_packet_loss_or_fail_closed(self):
+        def snap(forward,reverse,drop_f=0,drop_r=0):
+            return [
+                {"kind":"prio","handle":"1:","packets":forward+reverse},
+                {"kind":"netem","handle":"30:","parent":"1:3",
+                 "packets":forward,"drops":drop_f},
+                {"kind":"netem","handle":"40:","parent":"1:4",
+                 "packets":reverse,"drops":drop_r},
+            ]
+        old=snap(0,0)
+        passed=h.netem_phase_receipt(old,snap(900,120,10,2),1)
+        self.assertEqual(passed["status"],
+            "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED")
+        self.assertEqual(passed["per_direction"]["win_to_arm"]["intentional_netem_drops"],10)
+        self.assertEqual(passed["per_direction"]["arm_to_win"]["egress_packets"],120)
+        with self.assertRaisesRegex(RuntimeError,"ARM_TO_WIN_NO_REAL_TRAFFIC"):
+            h.netem_phase_receipt(old,snap(900,0,10,0),1)
+        with self.assertRaisesRegex(RuntimeError,"ARM_TO_WIN_LOSS_NO_ACTUAL_DROPS"):
+            h.netem_phase_receipt(old,snap(900,120,10,0),1)
+        with self.assertRaisesRegex(RuntimeError,"NETEM_TWO_DIRECTION_READBACK_ABSENT"):
+            h.netem_phase_receipt(old,snap(900,120,10,2)[:2],1)
+        with self.assertRaisesRegex(RuntimeError,"WIN_TO_ARM_NO_REAL_TRAFFIC"):
+            h.netem_phase_receipt(old,snap(0,120),0)
+
+
     def test_relay_source_and_group_pair_must_be_identical(self):
         a = identity("relay")
         self.assertEqual(h.verify(a, identity("client"), "client"), "100.101.0.1")
@@ -144,18 +191,23 @@ class ExactDualTriplet(unittest.TestCase):
     def test_limited_netem_zero_control_and_loss_tiers(self):
         calls = []
         with patch.object(h, "run", side_effect=lambda *x, **kw: calls.append(x)), \
-             patch.object(h, "tc_read", return_value=[{"kind": "netem"}]):
+             patch.object(h, "tc_read", return_value=[
+                 {"kind": "netem", "parent": "1:3", "handle": "30:"},
+                 {"kind": "netem", "parent": "1:4", "handle": "40:"}]):
             for tier in h.TIERS:
                 result = h.shaped(tier)
                 self.assertEqual(result["loss_pct"], max(tier, 0))
                 self.assertEqual(result["one_way_delay_ms"], 0 if tier == -1 else 200)
+                self.assertTrue(result["real_bidir_kernel_netem"])
             with self.assertRaises(RuntimeError):
                 h.shaped(20)
-        self.assertEqual(len(calls), 4)
-        self.assertIn("0ms", calls[0])
-        self.assertIn("200ms", calls[1])
-        self.assertIn("1%", calls[2])
-        self.assertIn("5%", calls[3])
+        self.assertEqual(len(calls), 8)
+        self.assertTrue(all("0ms" in c for c in calls[:2]))
+        self.assertTrue(all("200ms" in c for c in calls[2:4]))
+        self.assertTrue(all("1%" in c for c in calls[4:6]))
+        self.assertTrue(all("5%" in c for c in calls[6:8]))
+        self.assertEqual([c[c.index("parent")+1] for c in calls],
+                         ["1:3","1:4"] * 4)
 
     def test_workflow_never_calls_product_claim_without_original_owner(self):
         wf=(ROOT / ".github/workflows/qa-h2276-dual-win-relay-arm-tcp.yml").read_text()

@@ -198,10 +198,13 @@ def configure_relay(own, server, client):
     run("sudo", "-n", "sysctl", "-w", "net.ipv4.ip_forward=1")
     for row in command_plan(arm, win, relay):
         run("sudo", "-n", "iptables", *row)
-    # The default band is unshaped. Only the original forwarded TCP data
-    # and its reverse ACK are directed into band 3, not management/OIDC.
+    # H2280: the old reverse filter matched src=ARM AFTER conntrack
+    # reverse-SNAT, when the actual egress src is RELAY. It missed every
+    # reverse ACK/data packet; prior "200ms both ways" was ONE-WAY ONLY.
+    # Two isolated egress netem bands (3 & 4), verified by real counters.
+    # Default band 2 carries no impairment, including OIDC/control.
     run("sudo", "-n", "tc", "qdisc", "replace", "dev", "tailscale0",
-        "root", "handle", "1:", "prio", "bands", "3",
+        "root", "handle", "1:", "prio", "bands", "4",
         "priomap", *(["1"] * 16))
     run("sudo", "-n", "tc", "filter", "add", "dev", "tailscale0",
         "parent", "1:", "protocol", "ip", "prio", "1", "u32",
@@ -211,29 +214,80 @@ def configure_relay(own, server, client):
     run("sudo", "-n", "tc", "filter", "add", "dev", "tailscale0",
         "parent", "1:", "protocol", "ip", "prio", "2", "u32",
         "match", "ip", "protocol", "6", "0xff",
-        "match", "ip", "src", arm + "/32",
-        "match", "ip", "sport", str(PORT), "0xffff", "flowid", "1:3")
+        "match", "ip", "src", relay + "/32",
+        "match", "ip", "dst", win + "/32",
+        "match", "ip", "sport", str(PORT), "0xffff", "flowid", "1:4")
     shaped(0)
     return dict(**own, relay_ip=relay,
                 server_ip=arm, client_ip=win, tcp_port=PORT,
                 control_port=CONTROL_PORT,
                 forwarding="KERNEL_TCP_DNAT_SNAT_NOT_APP_TCP_PROXY",
-                netem_only="CLASSIFIED_FORWARDED_TCP_TAILSCALE0_BAND3",
+                netem_only="CLASSIFIED_TCP_BOTH_DIRECTIONS_TAILSCALE0_BANDS3_AND4",
                 other_traffic="UNSHAPED_DEFAULT_BAND2",
                 endpoint_transport="REAL_WIN_WINSOCK_TO_ARM_KERNEL_TCP",
                 same_source=True, direct_candidate=ping_class(arm))
+
+
+def netem_by_direction(qdiscs):
+    """One actual kernel netem per NAT-adjusted egress direction."""
+    require(isinstance(qdiscs, list), "KERNEL_QDISC_NOT_JSON_ARRAY")
+    expected = {"win_to_arm": ("1:3", "30:"),
+                "arm_to_win": ("1:4", "40:")}
+    result = {}
+    for direction, (parent, handle) in expected.items():
+        hits = [q for q in qdiscs if q.get("kind") == "netem" and
+                q.get("parent") == parent and q.get("handle") == handle]
+        if len(hits) == 1:
+            result[direction] = hits[0]
+    return result
+
+
+def netem_phase_receipt(before, after, stage):
+    """Fail closed if either REAL TCP direction bypassed qdisc.
+
+    These are Linux egress packet counts and netem losses, not distinct
+    app messages or an estimate of WBD internal packet loss.
+    """
+    a = netem_by_direction(before)
+    b = netem_by_direction(after)
+    require(set(a) == set(b) == {"win_to_arm", "arm_to_win"},
+            "NETEM_TWO_DIRECTION_READBACK_ABSENT")
+    result = {}
+    for direction in ("win_to_arm", "arm_to_win"):
+        old, new = a[direction], b[direction]
+        packets = new.get("packets", 0) - old.get("packets", 0)
+        drops = new.get("drops", 0) - old.get("drops", 0)
+        require(isinstance(packets, int) and isinstance(drops, int) and
+                packets > 0 and drops >= 0,
+                "NETEM_" + direction.upper() + "_NO_REAL_TRAFFIC")
+        # netem "packets" counts emitted packets; drops are separately tracked.
+        result[direction] = {"egress_packets": packets,
+                             "intentional_netem_drops": drops,
+                             "drop_percent_observed": round(
+                                 100 * drops / (packets + drops), 4)}
+        if stage in (1, 5):
+            require(drops > 0,
+                    "NETEM_" + direction.upper() + "_LOSS_NO_ACTUAL_DROPS")
+    return {"status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+            "stage_id": stage, "per_direction": result,
+            "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"}
 
 
 def shaped(loss):
     require(loss in TIERS, "LOSS_TIER_NOT_ALLOWED")
     delay = 0 if loss == -1 else 200
     pct = max(0, loss)
-    run("sudo", "-n", "tc", "qdisc", "replace", "dev", "tailscale0",
-        "parent", "1:3", "handle", "30:", "netem",
-        "delay", str(delay) + "ms", "loss", str(pct) + "%",
-        "limit", "65536")
+    for band, handle in (("1:3", "30:"), ("1:4", "40:")):
+        run("sudo", "-n", "tc", "qdisc", "replace", "dev", "tailscale0",
+            "parent", band, "handle", handle, "netem",
+            "delay", str(delay) + "ms", "loss", str(pct) + "%",
+            "limit", "65536")
+    readback = tc_read()
+    require(set(netem_by_direction(readback)) == {"win_to_arm", "arm_to_win"},
+            "NETEM_TWO_INDEPENDENT_KERNEL_DIRECTIONS_NOT_INSTALLED")
     return dict(loss_pct=pct, stage_id=loss, one_way_delay_ms=delay,
-                qdisc=tc_read(), ts=time.monotonic())
+                real_bidir_kernel_netem=True,
+                qdisc=readback, ts=time.monotonic())
 
 
 def observed_relay_counters(own):
@@ -408,7 +462,20 @@ def run_client(own, relay, server):
         require(len(rows) == 1 and rows[0]["sparse_echo_received"] == 160 and
                 rows[0]["bind"] == win and rows[0]["peer"] == target,
                 "MISSING_REAL_TCP_CLIENT_RESULT")
+        try:
+            receipt = None if tier == "direct" else netem_phase_receipt(
+                shape["netem"]["qdisc"], remote_diag(relay)["kernel_tc"], tier)
+            if tier in (0, 1, 5):
+                require(rows[0]["sparse_tcp_rtt_p50_ms"] >= 350,
+                        "BOTH_200MS_EGRESS_CLASSES_NOT_REFLECTED_IN_TCP_RTT")
+        except Exception as topology_exc:
+            observation["status"] = "INFRA_UNQUALIFIED_KERNEL_NETEM_DIRECTION"
+            observation["failed_stage"] = tier
+            observation["topology_error"] = str(topology_exc)
+            save(ROOT / "client-result.json", observation)
+            raise
         row = dict(stage_id=tier,
+                   relay_kernel_loss_receipt=receipt,
                    loss_pct=(0 if tier=="direct" else tier),
                    tcp_path=("DIRECT_OS_TAILNET_ARM" if tier=="direct" else
                              "OS_KERNEL_DNAT_SNAT_RELAY"),
@@ -446,7 +513,11 @@ def run_client(own, relay, server):
             "BOTH_DIRECT_AND_RELAY_AT_LEAST_800MBPS" if min(direct,relayed)>=800
             else "INFRA_UNQUALIFIED_NEEDS_NETWORK_ROUTE_CAPACITY")
     else:
-        observation["status"] = "PASS_THREE_RUNNER_TCP_INFRA_SCOPED"
+        require(all(row["relay_kernel_loss_receipt"]["status"] ==
+                    "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED"
+                    for row in observation["stages"]),
+                "WBD_TWO_NETEM_DIRECTIONS_SCOPE_INCOMPLETE")
+        observation["status"] = "PASS_H2280_REAL_BIDIR_KERNEL_NETEM_TCP_SCOPED"
         observation["capacity_qualification"] = (
             "INFRA_CAPACITY_BELOW_800MBPS_NOT_PRODUCT_FAIL"
             if observation["stages"][0]["delivered"]["bulk_receiver_goodput_mbps"] < 800
