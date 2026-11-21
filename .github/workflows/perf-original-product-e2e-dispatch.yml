@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
-      - name: Exact experiment branch not main, then launch 3 real product OS tests
+      - name: Exact experiment branch not main, then launch 4 real product OS tests
         shell: bash
         run: |
           set -euo pipefail
@@ -33,6 +33,11 @@ jobs:
             -f public_mode=normal -f run_n0=false -f outer_repair=off \
             -f perf_scenario_file=scenarios/plan027-h875-windows-normal-off-10m-25ms-loss0-60s.json
           echo "DISPATCHED Windows original client Linux WSL2 original server + duplex app; exact source=$EXPECTED_SOURCE"
+          # H2223 Game READY integration: additionally verify same-source
+          # signed Game4-FEC6 native end-to-end (not just unit READY).
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$BRANCH" \
+            -f public_mode=game4-fec -f run_n0=false -f outer_repair=on
+          echo "DISPATCHED signed Windows Game4 FEC6 native client ↔ Linux original server; exact source=$EXPECTED_SOURCE"
           # Both ARM64 original Go binary roles + Rust owner built fresh,
           # true separate Linux namespaces, authenticated TLS/TUN business.
           gh workflow run m0-plan028-tls-native-arm64.yml --repo "$GH_REPO" --ref "$BRANCH"
@@ -49,8 +54,8 @@ jobs:
             gh api "repos/$GH_REPO/actions/runs?branch=$BRANCH&per_page=60" \
               --jq '.workflow_runs[]|select(.event=="workflow_dispatch" and .head_sha=="'"${EXPECTED_SOURCE}"'")|[.name,.html_url,.status,.conclusion]|@tsv' \
               > /tmp/perf-e2e-runs.txt
-            if [ "$(wc -l < /tmp/perf-e2e-runs.txt)" -ge 3 ];then break;fi
+            if [ "$(wc -l < /tmp/perf-e2e-runs.txt)" -ge 4 ];then break;fi
             sleep 4
           done
           cat /tmp/perf-e2e-runs.txt
-          test "$(wc -l < /tmp/perf-e2e-runs.txt)" -ge 3
+          test "$(wc -l < /tmp/perf-e2e-runs.txt)" -ge 4

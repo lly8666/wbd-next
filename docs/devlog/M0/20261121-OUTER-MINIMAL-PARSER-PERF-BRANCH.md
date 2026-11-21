@@ -11,3 +11,11 @@ Linux AF_PACKET RAW batch/legacy reader和Windows Npcap正式DATA接收改为单
 ```feature-impact
 {"kind":"updated","ids":["linux-raw-tun","windows-native-transport"],"reason":"减少加密DATA在原M3前的外层重复校验/诊断/预解析；真实CPU、吞吐、兼容性仍需同源跑测。"}
 ```
+
+## 合并候选：与 H2223 Game READY 共存及同源重测
+
+2026-11-21：以主线 `5e2b083fc13391bf2d6ff3922d646abdc9c995f5` 为基底，将性能 PR #69 的 Rust Linux/Windows DATA 最小解析、单测和 ARM64 handover fixture 通过非强制双父 merge commit `459bba6aed013d03ef58ea63b5f1a4789e05eef6` 集成；Windows 原 H2223 Game2/4 idle READY 判定、Game original Go 汇编清单、主线 v4routekey 构建路径均保留。Windows/Linux feature-card 仍满足 16 KiB 上限。
+
+已单独实测成功：Windows+Linux Normal [44874693298](https://github.com/lly8666/wbd-next/actions/runs/44874693298)、ARM64 原生双端 [44874254895](https://github.com/lly8666/wbd-next/actions/runs/44874254895)、ARM64 Normal/off 物理切换与 Game4 [44874980855](https://github.com/lly8666/wbd-next/actions/runs/44874980855)；主线 H2223 Game2 [44876703877](https://github.com/lly8666/wbd-next/actions/runs/44876703877) 和 Game4-FEC6 [44876705732](https://github.com/lly8666/wbd-next/actions/runs/44876705732)。这些均是**各自分支的真实独立历史成品证据**，不能替代本次集成源码测试。
+
+本次以同一新来源重跑：Linux x86/ARM64、Windows Rust 原生编译与单测；Windows 真签名驱动+Linux WSL2 Normal 和 Game4-FEC6 双端业务，以及 ARM64 真 TLS/TUN 双端和 physical handover 的四组端到端场景。结果由实际 Actions 退出态决定，不伪报 PASS。Game2 代码路径不变，但可由合并前真机 Game2 证据补充。
