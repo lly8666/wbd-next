@@ -5725,6 +5725,35 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     drop(router);
     OK
 }
+// A single first-packet poll wake may correspond to an entire ready TUN
+// burst. TUN is already O_NONBLOCK and read_ready_batch(1) gives an exact
+// WouldBlock boundary; avoid repeating a poll syscall for each DATA packet.
+// Exactly one speculative nonblocking read after the final packet; then
+// return to bounded 10ms poll. Re-poll after 32 successful reads to bound
+// uninterrupted per-TUN dispatch without waiting for a full batch.
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+const M0_TUN_INGRESS_POLL_BATCH:u8=32;
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[inline]
+fn original_tun_next_poll_credit(prev:u8,consumed_kernel_packet:bool)->u8{
+    if consumed_kernel_packet {
+        (prev+1)%M0_TUN_INGRESS_POLL_BATCH
+    }else{0}
+}
+#[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_ingress_one_poll_per_ready_burst(){
+    let mut credit=0;
+    assert_eq!(credit,0); // first read MUST wait for readiness
+    for i in 1..32 {
+        credit=original_tun_next_poll_credit(credit,true);
+        assert_eq!(credit,i);
+    }
+    credit=original_tun_next_poll_credit(credit,true);
+    assert_eq!(credit,0); // forced bounded re-poll after 32 true reads
+    assert_eq!(original_tun_next_poll_credit(7,false),0); // EAGAIN resets
+    assert_eq!(original_tun_next_poll_credit(0,false),0); // idle never spins
+}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_tun_ingress_worker(
     cell:Arc<Mutex<Entry>>,tun:Arc<ScopedTunSink>,stop:Arc<AtomicBool>,
@@ -5733,8 +5762,12 @@ fn original_tun_ingress_worker(
 ){
     use std::sync::mpsc::TrySendError;
     let mut scratch=vec![0u8;M0_TUN_IPV4_MAX];
+    let mut ready_credit=0u8;
     while !stop.load(Ordering::Acquire){
-        if !loop_readiness(tun_fd,&stop,10){continue}
+        // At idle only the first packet blocks for readiness. A successful
+        // real kernel read grants up to 31 further nonblocking reads without
+        // an extra poll; EAGAIN resets immediately to original wait behavior.
+        if ready_credit==0 && !loop_readiness(tun_fd,&stop,10){continue}
         // A source M1 slab exists BEFORE any destructive TUN read. The
         // original sixteen authenticated receipt slots remain inaccessible.
         let loan={
@@ -5755,6 +5788,10 @@ fn original_tun_ingress_worker(
         };
         let batch={let mut slots=[&mut scratch[..]];
             tun.read_ready_batch(generation,&mut slots)};
+        // Includes invalid/unsupported IP packets genuinely removed from
+        // this FD; never infer consumed packet from an error or empty read.
+        ready_credit=original_tun_next_poll_credit(
+            ready_credit,matches!(&batch,Ok(receipt) if receipt.observed>0));
         let msg=match batch{
             Ok(batch)=>match batch.entry(0){
                 Some(TunReadyEntry::UntrustedIpv4{len}) if len<=M0_SMALL_ARENA_PAYLOAD=>{
@@ -5774,8 +5811,8 @@ fn original_tun_ingress_worker(
             Err(_)=>None,
         };
         let Some(mut msg)=msg else{continue};
-        // Exact finite backpressure: if 512-item inbox is full, RETAIN the
-        // already kernel-consumed packet rather than discarding identity.
+        // Exact finite backpressure: when the owned bounded inbox is full,
+        // RETAIN the already kernel-consumed packet rather than discarding identity.
         // Stop breaks the wait and drops every real owned M1 buffer.
         loop{
             if stop.load(Ordering::Acquire){return}
