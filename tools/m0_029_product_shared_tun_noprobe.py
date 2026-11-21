@@ -75,13 +75,22 @@ if MTU_TRIAL_LEG not in ("","A","B","A_prime") or (
     MTU_TRIAL_LEG and (FQ_TRIAL_LEG or PRIO_TRIAL_LEG or STAGE or SERVICE or
                        RAWCOST or RECOVERY or FIRSTDROP)):
     raise RuntimeError("M029_H2267_MTU_SINGLE_FACTOR_EXCLUSIVE_LEG")
+LOSS_REPAIR_LEG=os.environ.get("WBD_M0_029_LOSS_REPAIR_LEG","")
+LOSS_REPAIR_PCT=os.environ.get("WBD_M0_029_LOSS_REPAIR_PCT","")
+if LOSS_REPAIR_LEG not in ("","A","B","A_prime") or (
+    LOSS_REPAIR_LEG and (LOSS_REPAIR_PCT not in ("1","5") or MTU_TRIAL_LEG
+      or PRIO_TRIAL_LEG or FQ_TRIAL_LEG or STAGE or SERVICE or RAWCOST
+      or RECOVERY or FIRSTDROP)):
+    raise RuntimeError("M029_H2268_REAL_LOSS_1_5_REPAIR_SWITCH_INVALID")
+if not LOSS_REPAIR_LEG and LOSS_REPAIR_PCT:
+    raise RuntimeError("M029_H2268_LOSS_WITHOUT_ARM_INVALID")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
 SPARSEFLOW=SPARSEFLOW=="1"
 if SPARSEFLOW and dict(re.findall(r"([a-z_]+)=(\d+)","forward_offered=2 forward_dropped=1")) != {"forward_offered":"2","forward_dropped":"1"}:
     raise RuntimeError("M029_H2262_SPARSE_PARSE_SELF_CHECK_FAILED")
-if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG or MTU_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
+if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG or MTU_TRIAL_LEG or LOSS_REPAIR_LEG) and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
@@ -116,7 +125,7 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    suffix=("mtu-"+MTU_TRIAL_LEG.lower()) if MTU_TRIAL_LEG else (("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe")))
+    suffix=("loss"+LOSS_REPAIR_PCT+"-"+LOSS_REPAIR_LEG.lower()) if LOSS_REPAIR_LEG else ("mtu-"+MTU_TRIAL_LEG.lower()) if MTU_TRIAL_LEG else (("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe")))
     G["OUT"]=ROOT/("m029-product-shared-"+suffix)
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
         "m029-product-shared-"+RUN+"-"+ATTEMPT+"-"+suffix)
@@ -163,6 +172,7 @@ def main():
             # therefore tests the true existing Go product default 1460.
             # No product code, real kernel policy, or Rust fastpath change.
             mtu_args=[] if MTU_TRIAL_LEG=="B" else ["--outer-mtu","1160"]
+            repair_arg="on" if LOSS_REPAIR_LEG=="B" else "off"
             self.spawn("server",self.server,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
@@ -177,7 +187,7 @@ def main():
                 "--server-name","wbd-m029.example.test",
                 "--route-key-hex-file",str(route),"--users-file",str(users),
                 "--lease-pool","10.66.0.128/25","--tls-cert",str(cert),
-                "--tls-key",str(key),"--outer-repair","off",
+                "--tls-key",str(key),"--outer-repair",repair_arg,
                 *mtu_args,"--mode","shared"])
             if not ready(self.logs["server"],
                 "V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443",70):
@@ -209,7 +219,7 @@ def main():
                 "--username","bench0","--password","m029-scope-pass",
                 "--auto-ip","--installation-id-file",str(self.secret_dir/"install"),
                 "--mode","normal","--fec-profile","6",
-                "--outer-repair","off",*mtu_args])
+                "--outer-repair",repair_arg,*mtu_args])
             if not ready(self.logs["client"],
                 "V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",85):
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_CLIENT_NOT_READY")
@@ -243,11 +253,14 @@ def main():
             return readbacks
 
         def impair(self):
-            # Real unfaked zero-artificial-loss high-supply scenario; retain
-            # router qdisc and all original skb/drop receipts.
+            # H2268 uses two real Linux router qdiscs for symmetric iid loss
+            # with genuine one-way 200ms and retains intentional historic
+            # 1160 outer/1200 physical direct-comparison MTU.
+            delay="200ms" if LOSS_REPAIR_LEG else "0ms"
+            loss=LOSS_REPAIR_PCT+"%" if LOSS_REPAIR_LEG else "0%"
             for dev in ("rcli0","rsrv0"):
                 ns(self.router,"tc","qdisc","replace","dev",dev,"root",
-                   "netem","delay","0ms","loss","0%","limit","65536")
+                   "netem","delay",delay,"loss",loss,"limit","65536")
             return {dev:json.loads(ns(self.router,"tc","-s","-j","qdisc",
                     "show","dev",dev).stdout) for dev in ("rcli0","rsrv0")}
 
@@ -261,6 +274,8 @@ def main():
             "native_inner_tcp_info_readonly":TCP_INFO,
             "original_shared_tun_first_drop_window":FIRSTDROP,
             "outer_ip_mtu_explicit_bytes":(None if MTU_TRIAL_LEG=="B" else 1160),
+            "h2268_200ms_oneway_loss_pct":int(LOSS_REPAIR_PCT) if LOSS_REPAIR_LEG else None,
+            "h2268_true_outer_repair":("on" if LOSS_REPAIR_LEG=="B" else "off") if LOSS_REPAIR_LEG else None,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
             "probe_compiled":False,"status":"NOT_RUN",
@@ -412,6 +427,24 @@ def main():
                 "client_after_cold_qdisc":actual,"server_qdisc":server,
                 "not_a_product_flow_classifier":True}
         result["actual_router_netem"]=node.impair()
+        if LOSS_REPAIR_LEG:
+            actual={}
+            for place,dev in ((node.client,"wan0"),(node.server,"wan0"),
+                              (node.router,"rcli0"),(node.router,"rsrv0")):
+                links=json.loads(root("ip","-n",place,"-j","link","show",
+                                      "dev",dev).stdout)
+                if len(links)!=1 or links[0].get("mtu")!=1200:
+                    raise RuntimeError("M029_H2268_INTENTIONAL_DIRECT_MTU1200_MISSING")
+                actual[place+"/"+dev]=links[0]["mtu"]
+            result["h2268_control"]={
+                "leg":LOSS_REPAIR_LEG,"loss_percent":int(LOSS_REPAIR_PCT),
+                "one_way_delay_ms":200,"outer_ip_mtu":1160,
+                "physical_router_and_endpoint_mtu":actual,
+                "original_go_repair_on":LOSS_REPAIR_LEG=="B",
+                "original_history_low_MTU_is_intentional_direct_comparator":True,
+                "kernel_netem_real_bidirectional":True,
+                "same_released_original_Go_TLS_Rust_product":True}
+
         time.sleep(3)
         result["measurement"]=node.measure("product_no_probe128")
         if PRIO_TRIAL_LEG:
@@ -439,7 +472,8 @@ def main():
         server_ready=re.findall(
             r"V4_PUBLIC_MIXED_NORMAL_OUTER_READY role=server client_port=(\d+) repair_enabled=(\d+) proof=authenticated_original_rust_owner",
             server_log)
-        if len(server_ready)!=1 or server_ready[0][1]!="0" or int(server_ready[0][0])<=0:
+        expected_repair="1" if LOSS_REPAIR_LEG=="B" else "0"
+        if len(server_ready)!=1 or server_ready[0][1]!=expected_repair or int(server_ready[0][0])<=0:
             raise RuntimeError("M029_SERVER_AUTHENTICATED_RUST_OUTER_OFF_READY_MISSING")
         result["server_native_outer_ready_readback"]={
             "client_port":int(server_ready[0][0]),
@@ -451,7 +485,7 @@ def main():
             raw=node.logs[role].read_text(errors="replace")
             values=re.findall(r"V4_PUBLIC_M2_OUTER role="+role+
                               r"[^\n]*? repair_enabled=(\d+)",raw)
-            if any(value!="0" for value in values):
+            if any(value!=expected_repair for value in values):
                 raise RuntimeError("M029_TRUE_NORMAL_OFF_NATIVE_OUTER_ON_"+role)
             if role=="client" and not values:
                 raise RuntimeError("M029_CLIENT_NORMAL_OFF_NATIVE_READBACK_MISSING")
@@ -460,7 +494,36 @@ def main():
             # never invent a server Rust readback from the CLI string.
             result["outer_repair_native_stop_readback"][role]=[int(x) for x in values]
             result["outer_repair_native_stop_scope"][role]=(
-                "NATIVE_OFF_CONFIRMED" if values else "NOT_EMITTED_UNVERIFIED")
+                ("NATIVE_ON_CONFIRMED" if LOSS_REPAIR_LEG=="B" else "NATIVE_OFF_CONFIRMED") if values else "NOT_EMITTED_UNVERIFIED")
+        if LOSS_REPAIR_LEG:
+            # Source-locked original authenticated Rust M2/F/R and true
+            # ciphertext retransmission readback; OFF must have no repair.
+            result["h2268_original_outer_m2_real_wire"]={}
+            keys=("repair_enabled","first_wire_bytes",
+                  "repair_accepted_wire_bytes","repair_uncertain_wire_bytes",
+                  "original_frozen_retransmitted","authenticated_ack",
+                  "blocked_quota","repair_attempt_limit")
+            for role in ("client","server"):
+                log=node.logs[role].read_text(errors="replace")
+                matches=[{k:int(v) for k,v in re.findall(
+                    r"([a-z0-9_]+)=(\d+)",line)}
+                    for line in log.splitlines()
+                    if line.startswith("V4_PUBLIC_M2_OUTER role="+role+" ")]
+                if role=="client" and len(matches)!=1:
+                    raise RuntimeError("M029_H2268_CLIENT_EXACT_NATIVE_M2_WIRE_MISSING")
+                if any(not set(keys).issubset(m) for m in matches):
+                    raise RuntimeError("M029_H2268_M2_WIRE_COUNTER_FIELDS_MISSING")
+                if any(m["repair_enabled"]!=int(expected_repair) for m in matches):
+                    raise RuntimeError("M029_H2268_NOT_AUTHENTICATED_ORIGINAL_M2_POLICY")
+                if LOSS_REPAIR_LEG!="B" and any(
+                    m["repair_accepted_wire_bytes"] or m["repair_uncertain_wire_bytes"]
+                    or m["original_frozen_retransmitted"] for m in matches):
+                    raise RuntimeError("M029_H2268_OFF_HAS_TRUE_M2_REPAIR_COPIES")
+                result["h2268_original_outer_m2_real_wire"][role]=matches
+            result["h2268_original_outer_m2_scope"]=(
+                "original_ip_M4_F_R_not_L2; no control-C claim;"
+                "server may emit no M2 after authenticated teardown;"
+                "B requires real positive accepted frozen retrans only if observable")
         # Explicit source-only diagnostic: UDP/TCP entering the authenticated
         # /32 shared reader versus NEW pending drops. Neither a M4 copied
         # prefix nor AEAD/PN verification nor a timed delivery receipt.
