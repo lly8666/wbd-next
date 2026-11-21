@@ -149,6 +149,12 @@ assert q is not None,"package visibility must be scoped"
 assert any(e.find("action").get(ns+"name")=="android.intent.action.MAIN" and
            e.find("category").get(ns+"name")=="android.intent.category.LAUNCHER"
            for e in q.findall("intent")),"only explicitly query launchable packages"
+assert any(e.find("action").get(ns+"name")=="android.intent.action.SEND" and
+           e.find("data").get(ns+"mimeType")=="text/plain"
+           for e in q.findall("intent")),"allow text-sharing non-launcher packages"
+assert any(e.find("action").get(ns+"name")=="android.intent.action.VIEW" and
+           e.find("data").get(ns+"scheme")=="https"
+           for e in q.findall("intent")),"allow HTTPS-opening non-launcher packages"
 assert all(p.get(ns+"name")!="android.permission.QUERY_ALL_PACKAGES"
            for p in x.findall("uses-permission")),"no broad package visibility"
 print("ANDROID_ROOT_NARROW_INSTALLED_PACKAGE_VISIBILITY_MANIFEST_PASS")

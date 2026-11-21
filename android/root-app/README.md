@@ -32,6 +32,14 @@ Same-SOURCE signed APK and Host checks qualify only BUILD/Host, not physical Eth
 
 The original selected-App route already supports **up to 16 packages sharing at most 8 unique UIDs**. B22's optional saved connection preset incorrectly limited package entries to eight, dropping valid larger shared-UID selections after an Activity restart. B25 matches the original `SelectedAppGroup` limits in both the production preset writer and reader, validates package grammar via the existing `InstalledAppTarget`, and retains Android's exact cold PackageManager UID recheck before any new START. No new app routing permissions, network processing, Root action or automatic reconnect are introduced.
 
+## B26 · Export/import ordinary connection settings across debug APKs; selected App discovery
+
+The CI-signed debug APK uses a disposable signing key for each SOURCE. A fresh installation may require uninstalling the old package, which clears `noBackupFilesDir`. The Root Activity now offers **export and import through Android's document picker** for the actual production `RootConnectionSettings` (same B22/B25 codec), maximum 8KiB. This includes the server name, SNI, username, cipher, MTU, FEC/DNS modes and up to 16 selected package/UID identities. It deliberately **does not** export the password, RouteKey, TLS CA PEM, selected physical Network handle, native owner token or Root routing rule. Because exported settings include a username/server identity, choose the destination carefully. On import, only the cold form is restored and the selected App UIDs are rechecked against Android's currently visible installed packages; the user must re-enter credentials and explicitly START.
+
+Selected-App discovery also includes packages exposing Android's regular **plain-text share** or **HTTPS-link open** activities, including some non-launcher apps. Manifest `<queries>` is deliberately narrow: there is **no** `QUERY_ALL_PACKAGES` and the capability does not extend to every non-launcher/system-invisible installed app. Fresh package/UID resolution is performed in the cold Service path and cannot be bypassed by an imported file. Search/chooser changes never touch an active original-Go/Rust owner.
+
+Neither this work nor the prior DNS modes capture Android `netd` system resolver traffic. Existing UDP/53 logic only handles packets that actually enter the original Rust M4 TUN, and no root/system UID routes, new TLS layer or extra packet loop were added. All Android device E2E, system DNS interception and performance remain NOT_RUN without real evidence.
+
 ## Honest build and device boundary
 
 - `.github/workflows/android-root-product-a1.yml` builds Rust/Go AArch64

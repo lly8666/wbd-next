@@ -48,10 +48,13 @@ public final class RootClientActivity extends Activity {
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices,selectedAppControls;
     private EditText appSearch;
-    private TextView selectedAppsSummary;
+    private TextView selectedAppsSummary,presetResult;
+    private RootConnectionSettings pendingPresetExport;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText,m4TrafficBrief;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
     private static final int LOCAL_TLS_CA_IMPORT=2043;
+    private static final int CONNECTION_PRESET_EXPORT=2044;
+    private static final int CONNECTION_PRESET_IMPORT=2045;
     // START can fail before any Service exists. Persist fixed app-only
     // stages so a 0-event TXT is no longer the only device-side evidence.
     private void traceUi(RootDiagnosticReceipt.Event event){
@@ -145,10 +148,83 @@ public final class RootClientActivity extends Activity {
             status.setText("CA导入或本机保存失败；请核对PEM并重新导入");
         }
     }
+    private void exportConnectionPreset(){
+        try{
+            // Freeze the user's NONSECRET cold form before SAF takes focus.
+            pendingPresetExport=connectionSettingsFromUi();
+            Intent picker=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            picker.addCategory(Intent.CATEGORY_OPENABLE);
+            picker.setType("text/plain");
+            picker.putExtra(Intent.EXTRA_TITLE,"wbd-root-connection.properties");
+            startActivityForResult(picker,CONNECTION_PRESET_EXPORT);
+        }catch(Exception invalid){
+            pendingPresetExport=null;
+            presetResult.setText("导出设置失败：先填完整服务器、SNI、账户及合法模式；不会导出密码或RouteKey");
+        }
+    }
+    private void importConnectionPreset(){
+        Intent picker=new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        picker.addCategory(Intent.CATEGORY_OPENABLE);
+        // Some Android file pickers label .properties as octet-stream.
+        picker.setType("*/*");
+        try{startActivityForResult(picker,CONNECTION_PRESET_IMPORT);}
+        catch(Exception unavailable){presetResult.setText("系统文件选择器不可用，未修改现有设置");}
+    }
+    private void onConnectionPresetResult(int code,int resultCode,Intent data){
+        if(code==CONNECTION_PRESET_EXPORT){
+            RootConnectionSettings value=pendingPresetExport;
+            pendingPresetExport=null;
+            if(resultCode!=RESULT_OK||data==null||data.getData()==null||
+               value==null){
+                presetResult.setText("连接设置导出已取消");
+                return;
+            }
+            try(OutputStream out=getContentResolver().openOutputStream(
+                data.getData(),"wt")){
+                if(out==null)throw new java.io.IOException("no output");
+                // Exactly B22/B25 production serializer; no secrets or
+                // saved root route/Network handle in this exported file.
+                value.write(out);
+                out.flush();
+                presetResult.setText("连接设置已导出：含服务器/账号/模式/已选包名与UID，"+
+                    "不含密码、RouteKey、CA或物理网络。可用于重装后手动导入");
+            }catch(Exception failed){
+                presetResult.setText("导出失败：文件未成功写入；原Root连接不受影响");
+            }
+            return;
+        }
+        if(resultCode!=RESULT_OK||data==null||data.getData()==null){
+            presetResult.setText("连接设置导入已取消");
+            return;
+        }
+        try(InputStream in=getContentResolver().openInputStream(data.getData())){
+            RootConnectionSettings imported=RootConnectionSettingsTransfer.read(in);
+            if(imported==null)throw new IllegalArgumentException("bad settings");
+            // Replace only the COLD UI form. Re-enumerate installed apps,
+            // and restore a checked app only for the SAME package+current
+            // Android UID. Do not adopt an old physical Network handle.
+            // Persist first, then replace the form. Storage failure
+            // must not leave a half-imported selection in the UI.
+            RootConnectionSettingsStore.save(this,imported);
+            for(CheckBox cb:checkedApps.values())cb.setChecked(false);
+            restoreConnectionSettings(imported);
+            chooseInstalledApplications();
+            presetResult.setText("非密钥连接参数已导入并保存在本机；已选App仅在包名和UID"+
+                "仍一致时恢复。请重新填写密码/RouteKey，确认物理Network后手动START");
+        }catch(Exception rejected){
+            presetResult.setText("导入失败：不是有效的WBD连接预设、超过8KiB或无法保存；"+
+                "未触发Root/TLS/内核UID路由");
+        }
+    }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
         if(requestCode==LOCAL_TLS_CA_IMPORT){
             if(resultCode==RESULT_OK)acceptTLSCA(data);
+            return;
+        }
+        if(requestCode==CONNECTION_PRESET_EXPORT||
+           requestCode==CONNECTION_PRESET_IMPORT){
+            onConnectionPresetResult(requestCode,resultCode,data);
             return;
         }
         if(requestCode!=SAFE_DIAGNOSTIC_SAVE||diagnosticExportResult==null)return;
@@ -256,10 +332,10 @@ public final class RootClientActivity extends Activity {
         installedApps.clear();
         checkedApps.clear();
         appChoices.removeAllViews();
-        installedApps.addAll(InstalledAppCatalog.launchable(this));
+        installedApps.addAll(InstalledAppCatalog.discoverable(this));
         if(installedApps.isEmpty()){
             TextView message=new TextView(this);
-            message.setText("No visible installed launchable user app (fail closed)");
+            message.setText("当前无可见的桌面／HTTPS浏览器／文本分享应用");
             appChoices.addView(message);
             return;
         }
@@ -733,7 +809,7 @@ public final class RootClientActivity extends Activity {
         pane.addView(selectedAppControls);
         TextView searchHint=new TextView(this);
         searchHint.setText("应用选择：按名称、包名或UID过滤；隐藏不代表取消已勾选。"+
-            "只枚举Android当前可见、带启动入口的已安装App");
+            "只列出Android当前可见的桌面、HTTPS网页或文本分享处理App");
         selectedAppControls.addView(searchHint);
         appSearch=input(selectedAppControls,"过滤已安装应用（仅本地）",InputType.TYPE_CLASS_TEXT);
         appSearch.addTextChangedListener(new android.text.TextWatcher(){
@@ -777,6 +853,19 @@ public final class RootClientActivity extends Activity {
             }
         });
         pane.addView(rememberConnection);
+        Button exportPreset=new Button(this);
+        exportPreset.setText("导出普通连接设置（换调试版可恢复，不含密码/RouteKey/CA）");
+        exportPreset.setOnClickListener(v->exportConnectionPreset());
+        pane.addView(exportPreset);
+        Button importPreset=new Button(this);
+        importPreset.setText("导入普通连接设置（仅恢复表单，仍须手动START）");
+        importPreset.setOnClickListener(v->importConnectionPreset());
+        pane.addView(importPreset);
+        presetResult=new TextView(this);
+        presetResult.setText("可通过系统文件选择器保存/恢复普通连接参数；"+
+            "调试签名更换后需手动重填密码和RouteKey");
+        presetResult.setTextIsSelectable(true);
+        pane.addView(presetResult);
         Button connect=new Button(this);connect.setText("START — ROOT / ORIGINAL Go+Rust");
         connect.setOnClickListener(v->start());
         pane.addView(connect);

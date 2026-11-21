@@ -54,6 +54,16 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
   android/root-app/ci/RootConnectionSettingsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionSettingsTest
+# B26: same production SAF importer, accepts B25 16 package UID presets,
+# bounded to 8KiB and never carries native secrets or physical handles.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
+  android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
+  android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsTransfer.java \
+  android/root-app/ci/RootConnectionSettingsTransferTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionSettingsTransferTest
 # Execute the EXACT production RootService original Go argv builder on the
 # host JVM. No Android guest, fake Network, Root permission or packet I/O.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
@@ -209,6 +219,13 @@ assert 'selected.size()>SelectedAppGroup.MAX_PACKAGES' in settings
 assert 'uids.size()>SelectedAppGroup.MAX_UIDS' in settings
 assert 'count>SelectedAppGroup.MAX_PACKAGES' in settings
 print("ANDROID_B25_PRESET_NATIVE_UID_GROUP_RANGE_SOURCE_PASS")
+assert 'RootConnectionSettingsTransfer.read(in)' in a
+assert 'value.write(out)' in a
+assert 'restoreConnectionSettings(imported)' in a
+assert 'chooseInstalledApplications();' in a
+assert 'RootConnectionSettingsStore.save(this,imported)' in a
+assert 'CONNECTION_PRESET_EXPORT=2044' in a and 'CONNECTION_PRESET_IMPORT=2045' in a
+print("ANDROID_B26_SAF_PRESET_REAL_ACTIVITY_EXPORT_IMPORT_SOURCE_PASS")
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
 assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
 assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android applications are the product UI default"
@@ -469,6 +486,15 @@ assert 'return ReadPinnedCN(f)' in typed
 print("ANDROID_B2B_SIGNED_GEOSITE_TO_ORIGINAL_GO_COLD_SOURCE_GATE_PASS")
 m=Path("android/root-app/AndroidManifest.xml").read_text()
 assert '<queries>' in m and '<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"' not in m, "narrow package visibility"
+catalog=Path("android/root-app/src/org/wbdnext/rootclient/InstalledAppCatalog.java").read_text()
+assert 'Intent.ACTION_SEND' in catalog and 'share.setType("text/plain")' in catalog
+assert 'Intent.ACTION_VIEW' in catalog and 'Intent.CATEGORY_BROWSABLE' in catalog
+assert 'InstalledAppCatalog.discoverable(this)' in a
+assert 'TreeSet<String> available=visibleNames(pm)' in catalog
+assert 'ApplicationInfo app=pm.getApplicationInfo(name,0)' in catalog
+assert 'android.intent.action.SEND' in m and 'android.intent.action.VIEW' in m
+assert 'android:mimeType="text/plain"' in m and 'android:scheme="https"' in m
+print("ANDROID_B26_NARROW_NONLAUNCHER_SHARE_HTTPS_APP_UID_DISCOVERY_PASS")
 # The exact POSIX read arity must preserve kernel starttime for both
 # existing old 2-field receipts and current 3-field receipts.
 import subprocess,tempfile

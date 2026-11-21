@@ -19,6 +19,16 @@
             <action android:name="android.intent.action.MAIN"/>
             <category android:name="android.intent.category.LAUNCHER"/>
         </intent>
+        <!-- B26 narrowly include non-launcher apps that expose normal
+             text-sharing or HTTPS-opening entry points. No blanket scan. -->
+        <intent>
+            <action android:name="android.intent.action.SEND"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
     <application android:label="WBD Root Lite v2 (TEST)"
                  android:usesCleartextTraffic="false"

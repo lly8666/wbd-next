@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B26 日常使用接线（当前SOURCE的CI另验）**：在 B25 `776cec4f` 原Go/Rust双ABI、签名Root APK、Host原Linux Oracle `11 SUCCESS / 4 SKIPPED` 基线上，解决每次GitHub Actions调试签名变化卸载时 `noBackupFilesDir` 预设丢失：Root Activity 经 Android SAF 显式导出/导入正式B22/B25 `RootConnectionSettings` 非密钥设置，8192B上限；保留服务器、SNI、账户、MTU、AEAD、Fixed/Auto/DNS及包名+UID，不包含Keystore密码/RouteKey、PEM、物理Network handle或Root授权，不自动Start。导入冷表单并重新用当前 PackageManager检查包名+UID；签名升级后密码/RouteKey需要用户重新输入。进一步在原 `InstalledAppCatalog` 的launcher可见范围外**只增加 Android manifest `<queries>` 定向 text/plain `ACTION_SEND` 与HTTPS `ACTION_VIEW` 处理器**，供真实无Launcher但可见的App选择，Service仍使用同一冷PackageManager真实 UID 复核，不申请 QUERY_ALL_PACKAGES。此处**未接入全系统netd DNS或系统UID**；原M4只处理进入TUN的应用DNS。B26独立Action/Host/签名产物不是实体手机 E2E 或CPU结论。
+
+
 > **2026-11-22 B25 Android多包共享UID的连接设置回填修正**：原 `SelectedAppGroup` 的稳定权限范围为**16个包名、最多8个不同App UID**，B24新增批选也复用这一约束；旧B22 `RootConnectionSettings` 却在写/读本机预设时硬限8个包，导致9–16个**同UID**合法App组合丢失。B25本地保存及读取全部改用原 `SelectedAppGroup.MAX_PACKAGES/MAX_UIDS`，并沿用 `InstalledAppTarget.validPackage` 与UID有效范围；测试覆盖16个同UID包来回、9个独立UID拒绝和17包拒绝。并不放宽实际内核route UID、Root权限、Go TLS/AEAD、Android包可见性；仅修被打断的日常配置恢复。同源Host/签名APK结果须看B25 SOURCE，设备/服务器/性能NOT_RUN。
 
 
