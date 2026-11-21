@@ -85,6 +85,22 @@ final class OriginalGoCommandArgs {
                               boolean allApps,int[] excludedAppIDs,
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
                               boolean physicalDNS,boolean cnSplitDNS){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,
+            tunnelDNS,physicalDNS,cnSplitDNS,1460);
+    }
+    // Original Go MTU budget; no Java packet processing.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU){
+        if(requestedOuterMTU<576||requestedOuterMTU>1500)
+            throw new IllegalArgumentException("outer IPv4 IP MTU must be 576..1500");
         if(iface==null||!iface.matches("[A-Za-z0-9_.-]{1,32}")||
            handle==0||!ServerAddress.isIPv4Literal(localIPv4)||
            !ServerAddress.valid(peer)||peerPort<1||peerPort>65535||
@@ -112,7 +128,7 @@ final class OriginalGoCommandArgs {
         pair(args,"--password-file",passwordFile);
         pair(args,"--route-key-hex-file",routeKeyFile);
         pair(args,"--installation-id-file",installationFile);
-        pair(args,"--outer-mtu","1460");
+        pair(args,"--outer-mtu",Integer.toString(requestedOuterMTU));
         pair(args,"--tun-fq-maxrate-mbps","0");
         pair(args,"--tun-txqlen-packets","500");
         pair(args,"--outer-repair","off");

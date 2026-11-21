@@ -40,7 +40,7 @@ public final class RootClientActivity extends Activity {
     private final List<PhysicalNetwork> physical=new ArrayList<>();
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
-    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort;
+    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField;
     private Spinner networks;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices;
@@ -267,6 +267,9 @@ public final class RootClientActivity extends Activity {
                     throw new IllegalArgumentException("Selected package/UID changed; refresh");
             }
             int port=Integer.parseInt(serverPort.getText().toString().trim());
+            int requestedOuterMTU=Integer.parseInt(outerMTUField.getText().toString().trim());
+            if(requestedOuterMTU<576||requestedOuterMTU>1500)
+                throw new IllegalArgumentException("外层IPv4 IP MTU须为576..1500字节");
             if(!ServerAddress.valid(peer))
                 throw new IllegalArgumentException("Invalid real WBD server IPv4/DNS name; use One-Tap Self-Test if no server");
             if(sni.isEmpty()||sni.length()>253)
@@ -303,6 +306,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("local",scope.address);
             request.putExtra("peer",peer);
             request.putExtra("port",port);
+            request.putExtra("outer_mtu",requestedOuterMTU);
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
@@ -401,6 +405,9 @@ public final class RootClientActivity extends Activity {
         serverName=input(pane,"Standard TLS server name / SNI",InputType.TYPE_CLASS_TEXT);
         serverPort=input(pane,"Original FakeTCP peer port",InputType.TYPE_CLASS_NUMBER);
         serverPort.setText("443");
+        outerMTUField=input(pane,"外层完整 IPv4 IP MTU（576–1500 字节；默认1460，非TUN MTU）",
+            InputType.TYPE_CLASS_NUMBER);
+        outerMTUField.setText("1460");
         user=input(pane,"Authenticated account",InputType.TYPE_CLASS_TEXT);
         password=input(pane,"Password (app-private file, not argv)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
