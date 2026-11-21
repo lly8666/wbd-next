@@ -89,6 +89,135 @@ def wait_arm_stage(relay,tag):
 
 
 
+
+def owned_wsl_liveness_marker(group):
+    """One Windows-owned Ubuntu guest sleep, scoped to this exact CI run/group."""
+    require(group in ("a","b"),"GUEST_KEEPER_GROUP")
+    run=os.environ.get("GITHUB_RUN_ID","")
+    require(run.isdecimal() and 1<=len(run)<=20,"GUEST_KEEPER_RUN_ID")
+    return "/tmp/h2293-"+run+"-"+group+"-wsl-keeper.pid"
+
+
+def wsl_probe_keeper(marker):
+    from m0_h2285_windows_wsl_route import wsl
+    # A missing file/PID is evidence the guest may have been reset.
+    # Kernel boot ID is independent corroboration.
+    result=wsl("sh","-c",
+           "test -s "+marker+" && kill -0 $(cat "+marker+") && "
+           "cat /proc/sys/kernel/random/boot_id",timeout=18,tolerate=True)
+    if result.returncode:
+        return None
+    value=result.stdout.strip()
+    return value if len(value)==36 else None
+
+
+def start_owned_wsl_liveness(group):
+    require(os.name=="nt","ONLY_WINDOWS_ORIGINAL_GUEST_KEEPER")
+    marker=owned_wsl_liveness_marker(group)
+    # Original Windows Npcap emits L2 to Ubuntu eth0; the guest must
+    # survive even when all short WSL iptables command processes exit.
+    child=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--",
+        "sh","-c","umask 077; echo $$ > "+marker+"; exec sleep 1800"],
+        stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
+    boot=None
+    try:
+        for _ in range(30):
+            if child.poll() is not None:
+                raise RuntimeError("H2293_WSL_GUEST_KEEPER_EXITED_DURING_START")
+            boot=wsl_probe_keeper(marker)
+            if boot:
+                break
+            time.sleep(.4)
+        require(bool(boot),"WINDOWS_REAL_WSL_GUEST_RESIDENT_PID_NOT_APPLIED")
+        print("H2293_REAL_WSL_KERNEL_KEEPALIVE_STARTED "+
+              json.dumps({"group":group,"boot_id":boot,
+                          "pid_file":marker,"original_wbd_data":False}),
+              flush=True)
+        return child,marker,boot
+    except Exception:
+        if child.poll() is None:
+            child.terminate()
+        raise
+
+
+def require_owned_wsl_liveness(child,marker,boot,tag):
+    current=wsl_probe_keeper(marker)
+    require(child.poll() is None and current==boot,
+            "GUEST_WSL_KERNEL_LIVENESS_LOST_BEFORE_OR_DURING_"+tag)
+    return {"stage":tag,"guest_boot_id_unchanged":True,
+            "test_owned_resident_linux_pid_alive":True}
+
+
+def stop_owned_wsl_liveness(child,marker):
+    from m0_h2285_windows_wsl_route import wsl
+    # Terminate only marker's exact PID, never terminate the WSL distro.
+    try:
+        v=wsl("sh","-c",
+            "test -s "+marker+" && pid=$(cat "+marker+") && "
+            "kill \"$pid\" && rm -f "+marker,
+            timeout=18,tolerate=True)
+        require(v.returncode==0,"ORIGINAL_TEST_GUEST_KEEPER_PID_NOT_STOPPED")
+        child.wait(timeout=18)
+        v=wsl("sh","-c","test ! -e "+marker,timeout=18,tolerate=True)
+        require(v.returncode==0,"GUEST_KEEPER_PID_FILE_NOT_REMOVED")
+        print("H2293_REAL_WINDOWS_OWNED_GUEST_KEEPALIVE_STOP_VERIFIED",
+              flush=True)
+        return True
+    finally:
+        if child.poll() is None:
+            child.terminate()
+
+
+
+def native_underlay_preflight(group):
+    """Fail DERP before downloading Ubuntu WSL2 or installing signed drivers.
+
+    Exact Windows peer artifact is uploaded FIRST (H2292 existing fix), so
+    Linux relay and ARM server may publish their real tailnet identities.
+    Neither real Npcap nor GoTLS is started until the direct path qualifies.
+    """
+    own=core.load(core.ROOT/"client-peer.json")
+    relay=core.load(pathlib.Path("h2276-peer/relay/relay-ready.json"))
+    arm=core.load(pathlib.Path("h2276-peer/server/server-peer.json"))
+    require(own["role"]=="client" and own["group"]==group,
+            "EARLY_CLIENT_OWN_IDENTITY")
+    relay_ip=core.verify(own,relay,"relay")
+    arm_ip=core.verify(own,arm,"server")
+    observed={"status":"INFRA_DIRECT_UNQUALIFIED",
+              "source_sha":own["source_sha"],"run_id":own["run_id"],
+              "group":group,
+              "original_Windows_signed_Npcap_installed":False,
+              "wsl_booted":False,
+              "original_go_tls_rust_product_test":"NOT_RUN",
+              "direct_candidate_probes":[]}
+    good=False
+    for attempt in range(6):
+        relay_state=core.ping_class(relay_ip)
+        arm_state=core.ping_class(arm_ip)
+        observed["relay_path"]=relay_state
+        observed["arm_path"]=arm_state
+        observed["direct_candidate_probes"].append({
+            "attempt":attempt+1,
+            "relay":relay_state["status"],"arm":arm_state["status"]})
+        good=(relay_state["status"]=="DIRECT_CANDIDATE" and
+              arm_state["status"]=="DIRECT_CANDIDATE")
+        if good:
+            break
+        time.sleep(3)
+    observed["status"]=("H2293_DIRECT_TWO_PEERS_BEFORE_EXPENSIVE_DRIVERS"
+                         if good else
+                         "INFRA_DERP_BEFORE_EXPENSIVE_PRODUCT_START")
+    core.save(ROOT/"network-preflight.json",observed)
+    if not good:
+        core.save(core.ROOT/"client-result.json",observed)
+        raise RuntimeError("H2293_EARLY_DERP_NETWORK_NOT_PRODUCT_FAILURE")
+    print("H2293_DIRECT_TWO_PEERS_QUALIFIED_BEFORE_WSL_AND_NPCAP "+
+          json.dumps({"group":group,"source_sha":own["source_sha"]}),
+          flush=True)
+
+
+
 def verify_binary_archive():
     require(os.name=="nt","ONLY_REAL_WINDOWS2025")
     require(os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1" and
@@ -125,12 +254,20 @@ def verify_binary_archive():
 
 def win_trial(group,relay,arm,ready):
     from m0_h2286_full_windows_product import true_windows_product
+    preflight=json.loads((ROOT/"network-preflight.json").read_text())
+    require(preflight["status"]=="H2293_DIRECT_TWO_PEERS_BEFORE_EXPENSIVE_DRIVERS" and
+            preflight["group"]==group and
+            preflight["source_sha"]==os.environ["GITHUB_SHA"],
+            "REAL_DIRECT_UNDERLAY_EARLY_GATE_MISSING")
     old_sha,new_sha=verify_binary_archive()
     relay_ready=core.load(relay)
+    # Keep the actual Ubuntu kernel resident throughout 3 original sessions.
+    keeper,keeper_marker,keeper_boot=start_owned_wsl_liveness(group)
     results=[]
     original_candidate=os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")
     original_sha=os.environ.get("WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA")
     original_fec_stage=os.environ.get("WBD_H2293_FEC_STAGE")
+    kernel_liveness=[]
     try:
         for tag in LEGS:
             # H2292's genuine source-frozen TX16/NPF64KiB candidate
@@ -166,6 +303,8 @@ def win_trial(group,relay,arm,ready):
             require(not (H2286/"owned-wal.json.n4-owned-wal").exists(),
                     "ORIGINAL_GO_RUST_OWNED_STOP_BEFORE_NEXT_STAGE")
             wait_arm_stage(relay_ready,tag)
+            kernel_liveness.append(require_owned_wsl_liveness(
+                keeper,keeper_marker,keeper_boot,tag+"_pre_tls"))
             # Apply impairment BEFORE the genuine Windows cold Go
             # FakeTCP/TLS handshake; H2286 will also take fresh native
             # packet counters immediately before the original inner TCP.
@@ -177,6 +316,8 @@ def win_trial(group,relay,arm,ready):
                   json.dumps({"leg":tag,"group":group,
                               "exact_candidate":tuned}),flush=True)
             true_windows_product(group,relay,arm,ready)
+            kernel_liveness.append(require_owned_wsl_liveness(
+                keeper,keeper_marker,keeper_boot,tag+"_post_tcp"))
             receipt=json.loads((H2286/"client-result.json").read_text())
             log=(H2286/"original-win-client.log").read_text(errors="replace")
             has_profile="H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue=1 queue_bytes=65536 max_frames=16 ready_only=1" in log
@@ -250,6 +391,8 @@ def win_trial(group,relay,arm,ready):
                 "real_bidir_kernel_loss_pct":FEC_LOSS,
                 "fec2_fixed_profile":FEC_PROFILE,
                 "original_rust_binary_identical_all_legs":True,
+                "original_wsl_kernel_boot_id":keeper_boot,
+                "owned_wsl_residency_observed":kernel_liveness,
                 "stages":results,"comparison":{
                     "B_vs_same_vm_baseline_goodput_pct":round(
                         100*(b["tcp_mbps"]/baseline-1),3),
@@ -270,6 +413,27 @@ def win_trial(group,relay,arm,ready):
         core.save(H2286/"client-result.json",last)
         print("H2293_TWO_INDEPENDENT_TRIPLET_WINDOWS_FEC2_THREE_REAL_LEGS_COMPLETE",flush=True)
     finally:
+        primary_exc=sys.exc_info()[0]
+        keeper_stop_error=None
+        try:
+            core.save(ROOT/"guest-liveness-at-stop.json",{
+                "source_sha":os.environ.get("GITHUB_SHA",""),
+                "guest_boot_id_initial":keeper_boot,
+                "guest_boot_id_current":wsl_probe_keeper(keeper_marker),
+                "resident_while_testing":kernel_liveness,
+                "original_product_status":"MEASURED" if len(results)==3 else
+                    "NOT_VERIFIED_COMPLETE"})
+        except Exception:
+            pass
+        try:
+            stop_owned_wsl_liveness(keeper,keeper_marker)
+        except Exception as stop_error:
+            keeper_stop_error=stop_error
+            with contextlib.suppress(Exception):
+                core.save(ROOT/"guest-keeper-stop-error.json",{
+                    "status":"FAIL_TEST_OWNED_WSL_KEEPER_STOP",
+                    "error_type":type(stop_error).__name__,
+                    "error":str(stop_error)[-400:]})
         # Never leave candidate DLL installed in this test job after Stop.
         if ORIGINAL.exists():
             shutil.copy2(ORIGINAL,BINARY)
@@ -286,6 +450,8 @@ def win_trial(group,relay,arm,ready):
             os.environ.pop("WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA",None)
         else:
             os.environ["WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA"]=original_sha
+        if primary_exc is None and keeper_stop_error is not None:
+            raise keeper_stop_error
 
 
 def arm_restart_original_tun_udp(tag,own):
@@ -358,6 +524,9 @@ def main():
     if role=="arm":
         require(len(sys.argv)==3,"ARM_ARGS")
         arm_trial(group)
+    elif role=="preflight":
+        require(len(sys.argv)==3,"EARLY_CLIENT_UNDERLAY_ARGS")
+        native_underlay_preflight(group)
     elif role=="client":
         require(len(sys.argv)==6,"CLIENT_ARGS")
         win_trial(group,*sys.argv[3:])

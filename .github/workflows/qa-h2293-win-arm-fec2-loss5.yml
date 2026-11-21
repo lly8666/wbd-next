@@ -508,6 +508,17 @@ jobs:
           name: h2276-${{ matrix.group }}-client-peer
           path: h2276-out/client-peer.json
           retention-days: 3
+      - name: H2293 source-locked direct-peer preflight before slow Windows WSL2 and signed drivers
+        shell: pwsh
+        timeout-minutes: 11
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
+          if($LASTEXITCODE -ne 0){throw 'H2293_RELAY_READY_NOT_PUBLISHED'}
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-server-peer" h2276-peer/server
+          if($LASTEXITCODE -ne 0){throw 'H2293_ARM_PEER_NOT_PUBLISHED'}
+          python -u tools/m0_h2293_true_product_fec_loss.py preflight $env:GROUP
+          if($LASTEXITCODE -ne 0){throw 'H2293_UNQUALIFIED_DERP_NO_EXPENSIVE_WSL_OR_DRIVERS'}
       - name: Boot real Windows-owned Ubuntu WSL2 kernel with scoped iptables routing
         shell: pwsh
         timeout-minutes: 12
@@ -571,10 +582,10 @@ jobs:
         timeout-minutes: 53
         run: |
           $ErrorActionPreference='Stop'
-          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
-          if($LASTEXITCODE -ne 0){throw 'H2286_GENUINE_ARM_RELAY_NOT_READY'}
-          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-server-peer" h2276-peer/server
-          if($LASTEXITCODE -ne 0){throw 'H2286_GENUINE_ARM_SERVER_PEER_NOT_READY'}
+          if(-not (Test-Path "h2276-peer/relay/relay-ready.json") -or
+             -not (Test-Path "h2276-peer/server/server-peer.json")){
+             throw 'H2293_EARLY_SOURCE_PEER_PREFLIGHT_NOT_PRESENT'
+          }
           python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2286-$env:GROUP-original-arm-product-ready" h2286-peer/server
           if($LASTEXITCODE -ne 0){throw 'H2286_ORIGINAL_ARM64_PRODUCT_GO_TLS_RUST_NOT_READY'}
           & ./tools/m0_h2286_windows_npf_owner.ps1 -Action Install

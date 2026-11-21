@@ -128,6 +128,30 @@ def nat_packet_counters(win,guest,relay):
     return facts
 
 
+
+def h2293_owned_wsl_rule_cleanup(rule):
+    """Report true kernel rule disappearance, never hide TCP/root failure.
+
+    Only H2293 opts into this diagnostic. A guest reset can erase all
+    already-installed iptables rules; blindly executing -D would overwrite
+    the original TCP exception, leaving original WAL Stop=PENDING despite
+    a genuine original Go/Rust Stop.
+    """
+    delete=list(guestroute.reversible_rule(rule))
+    checked=list(delete)
+    checked[checked.index("-D")]="-C"
+    q=guestroute.wsl("iptables","-w",*checked,tolerate=True)
+    if q.returncode:
+        return {"matched_before_cleanup":False,
+                "deleted":False,"already_absent":True}
+    guestroute.wsl("iptables","-w",*delete)
+    after=guestroute.wsl("iptables","-w",*checked,tolerate=True)
+    require(after.returncode!=0,"H2293_OWNED_WSL_RULE_STILL_PRESENT_AFTER_DELETE")
+    return {"matched_before_cleanup":True,"deleted":True,
+            "already_absent":False}
+
+
+
 def original_win_client_args(exe,peer,server):
     root=pathlib.Path("result/wl-public")
     # H2293 only uses the already-supported original Windows FEC2 Fixed
@@ -224,6 +248,8 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
             output["client_arm_path"]["status"]=="DIRECT_CANDIDATE",
             "NETWORK_DERP_UNQUALIFIED_NOT_PRODUCT")
     orig_forward=guestroute.wsl("sysctl","-n","net.ipv4.ip_forward").stdout.strip()
+    guest_boot_id_before=(guestroute.wsl("cat","/proc/sys/kernel/random/boot_id").stdout.strip()
+                          if os.environ.get("WBD_H2293_FEC_ABA")=="1" else None)
     installed=[]
     proc=None
     udp=None
@@ -382,10 +408,37 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
             win32_cpu_sampler.join(timeout=8)
         if udp is not None and udp.poll() is None:
             with contextlib.suppress(OSError):udp.kill()
-        for rule in reversed(installed):
-            guestroute.wsl("iptables","-w",*guestroute.reversible_rule(rule))
-        guestroute.wsl("sysctl","-w","net.ipv4.ip_forward="+orig_forward)
-        output["guest_iptables_and_ip_forward_restored"]=True
+        guest_cleanup=[]
+        weak_fec_trial=os.environ.get("WBD_H2293_FEC_ABA")=="1"
+        try:
+            for rule in reversed(installed):
+                if weak_fec_trial:
+                    guest_cleanup.append(h2293_owned_wsl_rule_cleanup(rule))
+                else:
+                    guestroute.wsl("iptables","-w",*guestroute.reversible_rule(rule))
+        finally:
+            # Attempt original sysctl restoration even if a Linux guest
+            # rule vanished; never conceal an incomplete owned Stop.
+            guestroute.wsl("sysctl","-w","net.ipv4.ip_forward="+orig_forward)
+        if weak_fec_trial:
+            boot_after=guestroute.wsl(
+                "cat","/proc/sys/kernel/random/boot_id").stdout.strip()
+            absent=sum(1 for item in guest_cleanup if item["already_absent"])
+            output["h2293_original_wsl_kernel_boot_id_before"]=guest_boot_id_before
+            output["h2293_original_wsl_kernel_boot_id_after"]=boot_after
+            output["h2293_owned_wsl_rule_cleanup"]=guest_cleanup
+            output["h2293_owned_wsl_rule_disappeared_count"]=absent
+            output["h2293_wsl_boot_id_same_during_original_product"]=(guest_boot_id_before==boot_after)
+            if absent or guest_boot_id_before!=boot_after:
+                # This is not an original product PASS, even if the TCP
+                # stream happened to complete. Preserve first app error
+                # when already failed, never convert to false success.
+                if output["status"].startswith("PASS"):
+                    output["status"]="FAIL_H2293_WSL_KERNEL_FORWARD_RULES_DISAPPEARED"
+        output["guest_iptables_and_ip_forward_restored"]=(
+            not weak_fec_trial or
+            (len(guest_cleanup)==len(installed) and
+             all(x["deleted"] for x in guest_cleanup)))
         core.save(ROOT/"client-result.json",output)
         # H2276 cross-runner awaits exactly one top-level client-result.json
         # inside the h2276-out-only artifact. The prior multi-root ZIP broke
