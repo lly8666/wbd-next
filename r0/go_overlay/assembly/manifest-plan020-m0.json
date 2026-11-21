@@ -1552,7 +1552,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
-      "result_blob": "ad63c6b0dea06d8e971fb2e0cfe1a9460abab884"
+      "result_blob": "24444c3e293350dad37fe97f12da497673c57c4f"
     },
     {
       "kind": "create",
@@ -1570,7 +1570,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go",
-      "result_blob": "8dbeaf11d6abad6d071657b186a84cc1c37ca138"
+      "result_blob": "c812b4187548d120a6c620e261bcb00fb5606f04"
     },
     {
       "kind": "create",
