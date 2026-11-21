@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study_id": "H2254",
+  "disposition": "NO_PROMOTION_REJECT",
+  "source_sha": "9c483896b9774541ddf5b64b5b0504e9af357516",
+  "run_id": 44881985230,
+  "attempt": 1,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44881985230",
+  "source": "Each ISA same-native-VM original Go TLS and original Rust nonprobe release bundle, 4 TCP + 160 UDP/TCP echo, true TUN/RAW, A(default) B(cold-on strict bulk-only UDP pending slot) Aprime(default) serial, unchanged binaries per ISA. Both jobs and Stop completed.",
+  "config": {
+    "client_normal_off_native_readback": true,
+    "server_cli_off": true,
+    "server_native_off_readback": "NOT_EMITTED_UNVERIFIED",
+    "outer_mtu_explicit_bytes": 1160,
+    "artificial_loss": "0%",
+    "linux_normal_client_inbox_slots": 128,
+    "server_inbox_slots": 64,
+    "per_lease_pending_count": 8,
+    "per_lease_pending_max_bytes": 65536,
+    "per_lease_pending_max_age_ms": 100
+  },
+  "trial": "When eight pending unsealed packets full and no pending UDP, permit one <=512B validated unfragmented UDP to replace newest validated nonfragmented TCP with real payload >=512B and no SYN/FIN/RST, without M3/PN/driver retry or new queues; original FIFO for survivors.",
+  "measurements": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14698144375,
+      "artifact_name": "m0-029-normal-client128-product-aarch64-44881985230-1",
+      "libwbd_engine_sha256": "e14b49082d4edd9ca3f60f4016b8da6815b0486e46cc3330bc4a1638e69a06b3",
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1167.078417,
+          "client_cpu_s_per_gib": 11.34378,
+          "server_cpu_s_per_gib": 10.24364,
+          "udp_missing_of_160": 39,
+          "client_new_udp_rejected": 39,
+          "tcp_pending_displaced": 0,
+          "small_tcp_survivor_p99_ms": 293.4899,
+          "udp_survivor_p99_ms": 4.3533,
+          "small_tcp_missing_of_160": 0,
+          "client_queue_full_drops": 737638
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1184.21654,
+          "client_cpu_s_per_gib": 11.16177,
+          "server_cpu_s_per_gib": 10.16371,
+          "udp_missing_of_160": 0,
+          "client_new_udp_rejected": 0,
+          "tcp_pending_displaced": 30,
+          "small_tcp_survivor_p99_ms": 1699.4848,
+          "udp_survivor_p99_ms": 8.1758,
+          "small_tcp_missing_of_160": 0,
+          "client_queue_full_drops": 719824
+        },
+        {
+          "leg": "Aprime",
+          "receiver_mbps": 1183.912181,
+          "client_cpu_s_per_gib": 11.25879,
+          "server_cpu_s_per_gib": 10.26494,
+          "udp_missing_of_160": 27,
+          "client_new_udp_rejected": 26,
+          "tcp_pending_displaced": 0,
+          "small_tcp_survivor_p99_ms": 627.8947,
+          "udp_survivor_p99_ms": 4.0975,
+          "small_tcp_missing_of_160": 0,
+          "client_queue_full_drops": 757949
+        }
+      ]
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14698726234,
+      "artifact_name": "m0-029-normal-client128-product-x86_64-44881985230-1",
+      "libwbd_engine_sha256": "cc242f0eb8fc939aa24cdbc358eaf315df93aaf3ddcfb8e3987aa940a380ef7a",
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1479.353057,
+          "client_cpu_s_per_gib": 8.29199,
+          "server_cpu_s_per_gib": 8.06213,
+          "udp_missing_of_160": 27,
+          "client_new_udp_rejected": 26,
+          "tcp_pending_displaced": 0,
+          "small_tcp_survivor_p99_ms": 368.9348,
+          "udp_survivor_p99_ms": 3.712,
+          "small_tcp_missing_of_160": 0,
+          "client_queue_full_drops": 724241
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1501.719866,
+          "client_cpu_s_per_gib": 8.15973,
+          "server_cpu_s_per_gib": 7.59934,
+          "udp_missing_of_160": 0,
+          "client_new_udp_rejected": 0,
+          "tcp_pending_displaced": 26,
+          "small_tcp_survivor_p99_ms": 2960.9675,
+          "udp_survivor_p99_ms": 3.4836,
+          "small_tcp_missing_of_160": 0,
+          "client_queue_full_drops": 700096
+        },
+        {
+          "leg": "Aprime",
+          "receiver_mbps": 1492.325822,
+          "client_cpu_s_per_gib": 8.30509,
+          "server_cpu_s_per_gib": 8.07775,
+          "udp_missing_of_160": 29,
+          "client_new_udp_rejected": 29,
+          "tcp_pending_displaced": 0,
+          "small_tcp_survivor_p99_ms": 287.7531,
+          "udp_survivor_p99_ms": 2.3115,
+          "small_tcp_missing_of_160": 0,
+          "client_queue_full_drops": 724509
+        }
+      ]
+    }
+  ],
+  "critical_finding": "On both native ISAs, B all UDP echo returned and goodput comparable, but small TCP p99 degraded dramatically despite restricting victim to true bulk TCP. Do not promote, do not infer the specific causality of TCP latency without phase observations. CPU per received GiB is not a clear joint benefit.",
+  "limits": [
+    "One same-runner A/B/Aprime per ISA only; baseline drift A vs Aprime observable",
+    "Client actual Rust off only; server stop native effective off status was not emitted",
+    "Explicit outer MTU 1160, not default 1460",
+    "No WAN, physical ARM board, Windows WFP/Npcap, Game/Fixed/Auto full performance, or GE1% qualification",
+    "Diagnostic enabled for all three legs; no cross-SOURCE CPU causal inference"
+  ],
+  "decision": "Revert B data-path and A/B workflow; retain H2249 source-level ingress diagnostic, Linux Normal client128 candidate and all negative evidence. Next isolate M1/M4 service pressure and small TCP latency without modifying defaults.",
+  "rollback_verified": "PENDING new exact-SOURCE double-ISA native suite after rollback"
+}

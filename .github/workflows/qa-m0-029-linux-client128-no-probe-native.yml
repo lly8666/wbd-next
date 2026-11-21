@@ -171,60 +171,6 @@ jobs:
                      for role in ("client","server"))
           print("M029_REAL_NATIVE_NONPROBE_AUTHENTICATED_SHARED_TUN_CLIENT128_SERVER64_STOP_PASS",flush=True)
           PY
-      - name: Same-runner A -> B -> A-prime one-factor UDP pending slot trial, raw result only
-        if: contains(github.event.head_commit.message, '[m0-udp-fair-abca]')
-        shell: bash
-        timeout-minutes: 24
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          for leg in A B Aprime; do
-            WBD_M0_029_UDP_RESERVE_LEG="$leg" \
-              python3 -u tools/m0_029_product_shared_tun_noprobe.py
-          done
-          python3 - <<'PY'
-          import json,os,pathlib
-          d=[]
-          for leg in ("A","B","Aprime"):
-              p=pathlib.Path("m029-product-shared-noprobe-"+leg)/"summary.json"
-              row=json.loads(p.read_text())
-              assert row["source_sha"]==os.environ["GITHUB_SHA"]
-              assert row["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
-              assert row["trial_leg"]==leg and row["test_only_udp_reservation"]==(leg=="B")
-              assert row["probe_compiled"] is False
-              assert row["outer_repair_cli"]=="off_both_endpoints"
-              assert row["outer_repair_native_stop_readback"]["client"] and set(
-                  row["outer_repair_native_stop_readback"]["client"])=={0}
-              assert row["outer_repair_native_stop_scope"]["server"] in (
-                  "NATIVE_OFF_CONFIRMED","NOT_EMITTED_UNVERIFIED")
-              assert all(x["generation"]>0 for x in row["owned_stop"].values())
-              assert all(x["slots"]==(128 if role=="client" else 64)
-                         for role,x in row["cold_readbacks"].items())
-              assert row["measurement"]["smallflow"]["udp"]["requests_sent"]==160
-              d.append(row)
-          assert d[0]["same_release_binary_sha256"]==d[1]["same_release_binary_sha256"]==d[2]["same_release_binary_sha256"]
-          def read(x):
-              client=x["shared_tun_protocol_ingress"]["client"]
-              udp=x["measurement"]["smallflow"]["udp"]
-              tcp=x["measurement"]["smallflow"]["tcp"]
-              return {"receiver_mbps":x["measurement"]["original_product_tcp"]["receiver_bps"]/1e6,
-                      "client_cpu_s_per_gib":x["measurement"]["cpu_and_rss"]["client"]["cpu_seconds"]/(
-                          x["measurement"]["original_product_tcp"]["receiver_bytes"]/1073741824),
-                      "udp_missing_of160":udp["missing"],"udp_survivor_p99_ms":udp["latency_ms"]["p99"],
-                      "tcp_missing_of160":tcp["missing"],"tcp_survivor_p99_ms":tcp["latency_ms"]["p99"],
-                      "client_new_udp_dropped":sum(y["udp_new_dropped"] for y in client),
-                      "client_tcp_pending_displaced":sum(y["tcp_pending_displaced"] for y in client)}
-          out={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
-               "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"arch":os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"],
-               "same_native_binary_sha256":d[0]["same_release_binary_sha256"],
-               "legs":[dict(leg=tag,**read(x)) for tag,x in zip(("A","B","Aprime"),d)],
-               "outer_repair_scope":[x["outer_repair_native_stop_scope"] for x in d],
-               "conclusion":"MEASURED_ONLY_NOT_PRODUCT_QOS_PASS",
-               "limitation":"A/B/A-prime same-runner genuine Go TLS Rust product; diagnostic ON all legs; no source performance causal claim until original drift, dropped denominator and CPU assessed."}
-          pathlib.Path("m029-udp-slot-abca").mkdir(exist_ok=False)
-          pathlib.Path("m029-udp-slot-abca/summary.json").write_text(json.dumps(out,indent=2)+"\n")
-          print("M0_029_UDP_SINGLE_FACTOR_ABAPRIME_MEASURED_ONLY "+json.dumps(out["legs"]),flush=True)
-          PY
       - name: Upload same-SOURCE scoped native diagnostics (no secret files or raw captures)
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -236,9 +182,5 @@ jobs:
             linux-plan029-public-bundle/SHA256SUMS
             linux-plan029-result/
             m029-product-shared-noprobe/
-            m029-product-shared-noprobe-A/
-            m029-product-shared-noprobe-B/
-            m029-product-shared-noprobe-Aprime/
-            m029-udp-slot-abca/
           retention-days: 21
           if-no-files-found: warn
