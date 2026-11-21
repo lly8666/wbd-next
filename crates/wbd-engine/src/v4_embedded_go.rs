@@ -4671,11 +4671,13 @@ fn flush_shared_tun(
         let start=fair.last_route.map_or(0,|last|
             fair.scratch.partition_point(|ip|*ip<=last))%count;
         for offset in 0..count{
-            if attempts_left==0{break}
             let key=fair.scratch[(start+offset)%count];
             if let Some(q)=pending.get_mut(&key){
+                // Expiry applies to EVERY route even after the 64th
+                // send attempt. Only attempted service advances fairness.
+                let may_serve=attempts_left>0;
                 drain_one_shared_tun_route(q,now,&mut attempts_left,&mut d);
-                fair.last_route=Some(key);
+                if may_serve{fair.last_route=Some(key);}
             }
         }
     }
@@ -5401,6 +5403,45 @@ fn m0_plan029_shared_tun_fair_turn_rotates_twelve_pending_leases(){
             }
         }
     }
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_fair_turn_still_expires_routes_after_global_budget(){
+    let (recycle,_returned)=mpsc::sync_channel::<Vec<u8>>(128);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let mut pending=HashMap::new();
+    let mut receivers=Vec::new();
+    for n in 1u8..=12{
+        let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+        for _ in 0..8{tx.try_send(packet(0)).unwrap();}
+        let key=[10,66,2,n];
+        let route=SharedTunRoute{
+            generation:20,alive:Arc::new(AtomicBool::new(true)),send:tx,
+        };
+        for _ in 0..8{
+            assert_eq!(enqueue_shared_tun(&mut pending,key,route.clone(),1,
+                ||packet(n)).overflow,0);
+        }
+        if n>8{
+            let overdue=Instant::now()-SHARED_TUN_PENDING_MAX_AGE-
+                Duration::from_millis(1);
+            for item in pending.get_mut(&key).unwrap().packets.iter_mut(){
+                item.queued_at=overdue;
+            }
+        }
+        receivers.push(rx);
+    }
+    // Release the real owner inboxes. The first 64 fresh sends consume the
+    // whole budget; the remaining 32 older packets are already expired.
+    for rx in &receivers{
+        for _ in 0..8{drop(rx.try_recv().unwrap());}
+    }
+    let mut fair=SharedTunFairTurn::default();
+    let d=flush_shared_tun(&mut pending,&mut fair);
+    assert_eq!((d.delivered,d.expired,d.retired),(64,32,0));
+    assert!(pending.is_empty());
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Default)]
