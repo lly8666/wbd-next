@@ -53,4 +53,8 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --lib \
             --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record \
             shared_tun -- --nocapture
-          echo "M0_PLAN029_SHARED_TUN_NATIVE_UNIT_SCOPE_PASS source=$GITHUB_SHA isa=$(uname -m) attempt=$GITHUB_RUN_ATTEMPT"
+          # Separate filter: its exact name does not contain 'shared_tun'.
+          cargo +1.85.1 test --locked -p wbd-engine --lib \
+            --features m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record \
+            m0_plan029_fair_turn_still_expires_routes_after_global_budget -- --nocapture
+          echo "M0_PLAN029_SHARED_TUN_AND_EXPIRED_BUDGET_NATIVE_PASS source=$GITHUB_SHA isa=$(uname -m) attempt=$GITHUB_RUN_ATTEMPT"
