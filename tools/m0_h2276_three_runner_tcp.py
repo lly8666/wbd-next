@@ -32,6 +32,10 @@ tcp.PORT = PORT
 # Original Wintun/WSL product diagnostic keeps historical 24MiB/18s shape.
 SUSTAINED = os.environ.get("WBD_H2281_SUSTAINED_TCP") == "1"
 WINDOW_AB = os.environ.get("WBD_H2282_TCP_WINDOW_AB") == "1"
+# Distinguish 8MiB H2282 and 2MiB H2283 test-only AB sizes; no WBD change.
+WINDOW_B_BYTES = int(os.environ.get("WBD_H2283_B_BYTES", "8388608"))
+if WINDOW_B_BYTES not in (2*1024*1024, 8*1024*1024):
+    raise RuntimeError("H2283_INVALID_ONLY_TEST_BUFFER_SIZE")
 if SUSTAINED:
     tcp.BULK_MAX_BYTES = 512 * 1024 * 1024  # per flow, four independent real TCP sockets
     tcp.BULK_SEND_S = 25
@@ -53,7 +57,7 @@ def actual_loss_tier(stage):
 
 def prepare_tcp_sockbuf(stage):
     # Only the *test app* socket knobs; no WBD runtime/GoTLS changes.
-    tcp.WINDOW_TEST_BYTES = 8 * 1024 * 1024 if WINDOW_AB and stage=="tuned" else 0
+    tcp.WINDOW_TEST_BYTES = WINDOW_B_BYTES if WINDOW_AB and stage=="tuned" else 0
 
 
 
@@ -556,15 +560,16 @@ def run_client(own, relay, server):
         require((base["socket_buffer_requested_bytes"],
                  tuned["socket_buffer_requested_bytes"],
                  rebound["socket_buffer_requested_bytes"]) ==
-                (0,8*1024*1024,0),"SOCKET_BUFFER_AB_NOT_APPLIED")
+                (0,WINDOW_B_BYTES,0),"SOCKET_BUFFER_AB_NOT_APPLIED")
         default_mean=(base["delivered"]["bulk_receiver_goodput_mbps"]+
                       rebound["delivered"]["bulk_receiver_goodput_mbps"])/2
         require(default_mean>0,"SOCKET_AB_NO_VALID_DEFAULT_GOODPUT")
         os_bufs=tuned["delivered"].get("client_bulk_buffers_os",[])
-        require(len(os_bufs)==4 and all(x["requested_bytes"]==8*1024*1024
+        require(len(os_bufs)==4 and all(x["requested_bytes"]==WINDOW_B_BYTES
                     and x["sndbuf_os"]>0 and x["rcvbuf_os"]>0
                     for x in os_bufs), "WINDOW_AB_NO_REAL_WINSOCK_READBACK")
         observation["window_ab"] = {
+            "requested_tuned_buffer_bytes": WINDOW_B_BYTES,
             "normal_mbps":base["delivered"]["bulk_receiver_goodput_mbps"],
             "tuned_mbps":tuned["delivered"]["bulk_receiver_goodput_mbps"],
             "normal_prime_mbps":rebound["delivered"]["bulk_receiver_goodput_mbps"],
@@ -573,7 +578,10 @@ def run_client(own, relay, server):
             "p99_ms":[x["delivered"]["sparse_tcp_rtt_p99_ms"] for x in (base,tuned,rebound)],
             "cpu_windows_allcore_busy_pct":[x["windows_host_allcore_busy_pct"] for x in (base,tuned,rebound)],
             "no_product_default_change":True}
-        observation["status"]="PASS_H2282_REAL_NATIVE_WINSOCK_ARM_SOCKET_BUFFER_AB_SCOPED"
+        observation["status"]=(
+            "PASS_H2283_REAL_2MIB_SOCKBUF_NATIVE_A_B_A_PRIME_SCOPED"
+            if WINDOW_B_BYTES==2*1024*1024 else
+            "PASS_H2282_REAL_NATIVE_WINSOCK_ARM_SOCKET_BUFFER_AB_SCOPED")
         observation["capacity_qualification"]="WINDOW_TUNING_CANDIDATE_ONLY_NOT_WBD_PRODUCT"
     elif os.environ.get("WBD_H2279_CAPACITY_AB")=="1":
         direct = observation["stages"][0]["delivered"]["bulk_receiver_goodput_mbps"]

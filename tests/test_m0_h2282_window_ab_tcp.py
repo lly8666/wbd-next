@@ -31,7 +31,8 @@ class RealTCPWindowAB(unittest.TestCase):
     def test_real_local_os_socket_option_readback_for_tuned_leg(self):
         previous=h.tcp.WINDOW_TEST_BYTES
         try:
-            with patch.object(h,"WINDOW_AB",True):
+            with patch.object(h,"WINDOW_AB",True), \
+                 patch.object(h,"WINDOW_B_BYTES",8*1024*1024):
                 self._assert_native_os_buffers()
         finally:
             h.tcp.WINDOW_TEST_BYTES=previous
