@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2280,
-  "checkpoint_sha": "08443b324d0596b9f6acda9efd428969393d168a",
+  "sequence": 2283,
+  "checkpoint_sha": "65499d405a5c33bef4eca5914aed21b917d1e3a2",
   "progress": "partial",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 TCP吞吐/P99: 双组三Runner Windows→ARM独立中继已真正跑通；H2279双组真内核TCP证实原云/尾网中继显著降容量，H2280修正旧单向tc损伤并执行双向原生前置。PR#68 Draft，main产品未合。",
-  "why_now": "零损200ms单侧netem夹具旧回程按ARM原src匹配但实际经reverse NAT已是relay src；旧所谓双向200ms不能作WBD产品性能。H2279原生直连/relay A289.6/97.4、B108.1/60.1Mbps且CPU没爆，先判环境容量后做产品提速。",
-  "done_when": "保持两套同源独立Win/relay/ARM三VM，真实4TCP bulk+小TCP P99、两端CPU、真netem两向收发损伤与不超时；继而原Wintun/NPF/GoTLS/Rust双端、无本机M1/M4丢包/HOL和owned Stop，未验不晋级。",
-  "next_action": "核收H2280真实双组三机Action44928186966完整7jobs和两组tc两向pkts/drops、真实ARM收字节/P99；夹具欠配先修，合格后改20–25s持续bulk覆盖160小TCP而非旧96MiB短流冲刺，然后验证原产品FEC2弱网TCP收益。",
+  "current_task": "PLAN029 真实跨机TCP吞吐/P99: H2281两套Win+ARM独立relay+ARM server真持续25s流/双向netem门均PASS；H2282两套真实裸TCP Winsock/ARM buffer8MiB同机A/B/A′吞吐25.6–40.7倍但P99变坏。H2283在研2MiB折中。研发PR#68 Draft/main产品未合。",
+  "why_now": "双向各200ms无丢包、25s持续4TCP原Win/ARM裸TCP约8.4Mbps且Win/ARM两端CPU有余量；Win实际snd/rcv默认128KiB、ARM listener实际rcv默认128KiB。两端调8MiB后227.4/339.7Mbps但小TCP P99增加，需找最小可接受窗口并把裸OS和原GoTLS/Rust产品分开。",
+  "done_when": "原Win2025 Wintun/NPF+原Go TLS/Rust跨独立ARM relay/ARM server,两套独立3runner同SOURCE同case，真收端goodput、每段本机drop、双端CPU与p99、TCP重传/late与owned Stop共同有效；不得拿OS kernel TCP preflight作产品PASS。",
+  "next_action": "核收H2283双组H2283 Action44930676830 (2MiB两端socket A/B/A′，0%双向400ms) 的7jobs和两个原始客户端/ARM服务器ZIP，比较goodput/P99/CPU与H2282 8MiB，并定位单独Win发送/ARM接收窗口和ARM relay tailscaled热点；之后优先接原Go TLS/Rust Normal FEC2 1%/5%产品真路径。",
   "unverified": true,
-  "last_tested_source": "967c3294d319c9830327a791a59c6e0f0e66585a",
+  "last_tested_source": "cb09a27013e391b338a782b21ead9b82a8f3d675",
   "evidence_refs": [
-    "docs/evidence/M0/PLAN029-H2272-LINUX-TCP-ECHO-NAGLE-LOSS1-LOSS5-20261121.json"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2283-WINDOW-CAPACITY-RECOVERY.md"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -23,5 +23,5 @@
     "docs/evidence/M0/PLAN029-H2229-AUTHENTICATED-ACK10-WINDOW65535-NOHOL-20261120.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2279源967c329 Action44927070942真实双组direct/relay scoped SUCCESS但底层800Mbps门未达；H2276 x86 relay DERP、ARM relay直连后容量仍大波动，无法靠盲目扩大Rust本机queue解决。H2274 ARM原产品FEC2弱网候选改善强，但跨机Windows验证OPEN。H2280测试夹具修复SOURCE f4fcd233；尚在途/性能未验。"
+  "partial_summary": "H2282 7/7真实双组三Runner SUCCESS，A A/B8MiB/A′:8.829/227.397/8.909Mbps、P99453/984/454ms；B:8.095/339.676/8.605Mbps、P99469/594/469ms，8MiB全核CPUWin12.3/39.7% ARM8.7/17.6%。真产品跨机和 relay CPU仍OPEN、P99成本未过；原H2273 Windows Wintun/WSL2 TCP 1%/5%一阶段低速、ON配对失败未掩盖。"
 }
