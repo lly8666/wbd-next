@@ -341,11 +341,11 @@ func parse(role string,args []string)(config,error){
     }
     if *outerMTU<576||*outerMTU>1500{return c,fmt.Errorf("outer-mtu public IPv4 range is 576..1500; jumbo is experimental/unsupported")}
     if err:=validateOriginalRotationPolicy(role,*rotateInterval,*rotateJitter);err!=nil{return c,err}
-    // User authorized product-owned fq600 for ALL Linux public modes:
-    // Normal/off, FEC Fixed/Auto, Game2/Game4. It is applied only after
-    // creating our ephemeral TUN; explicit0 remains a safe rollback.
-    if *tunFqRate!=0 && *tunFqRate!=600 {
-        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0 or 600")
+    // Keep the existing all-mode fq600 default. A cold explicit 1500Mbit
+    // per-flow option tests whether that cap hurts fast single-TCP flows.
+    // Unlike 0 it retains identical fq scheduling and flow_limit=256.
+    if *tunFqRate!=0 && *tunFqRate!=600 && *tunFqRate!=1500 {
+        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0, 600 or 1500")
     }
     c.tunFqMaxrateMbps=*tunFqRate
     if *tunTxQLen!=500&&*tunTxQLen!=2048{return c,fmt.Errorf("tun-txqlen-packets must be 500 or 2048")}
@@ -548,7 +548,9 @@ func setOwnedTunTxQueue(name string,packets int)error{
 // fail closed instead of claiming protected startup traffic.
 func setOwnedTunFq(name string,rateMbps int)error{
     if rateMbps==0{return nil}
-    if rateMbps!=600{return fmt.Errorf("unsupported owned TUN fq rate")}
+    if rateMbps!=600&&rateMbps!=1500{
+        return fmt.Errorf("unsupported owned TUN fq rate")
+    }
     // The default kernel fq flow_limit=100 dropped two real warmup UDP
     // frames at 370Mbps despite a 500Mbps outer line (flows_plimit=2).
     // 256 near-MTU packets are at most ~384KiB per flow; global fq
@@ -563,7 +565,7 @@ func setOwnedTunFq(name string,rateMbps int)error{
     for _,line:=range strings.Split(string(b),"\n"){
         if strings.HasPrefix(line,"qdisc fq ") &&
             strings.Contains(line," root ") &&
-            strings.Contains(line," maxrate 600Mbit") &&
+            strings.Contains(line," maxrate "+strconv.Itoa(rateMbps)+"Mbit") &&
             strings.Contains(line," flow_limit 256"){
             return nil
         }
@@ -921,7 +923,7 @@ func Run(role string,args []string)(retErr error){
     log.Printf("V4_PUBLIC_TUN_TXQLEN role=%s interface=%s packets=%d readback=REAL_ORIGINAL_LINUX_TUN",cfg.role,tun.name,cfg.tunTxQLenPackets)
     if err=setOwnedTunFq(tun.name,cfg.tunFqMaxrateMbps);err!=nil{return err}
     if cfg.tunFqMaxrateMbps!=0 {
-        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=600 flow_limit_packets=256 readback=kernel_fq_600Mbit",cfg.role,tun.name)
+        log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=%d flow_limit_packets=256 readback=kernel_fq_%dMbit",cfg.role,tun.name,cfg.tunFqMaxrateMbps,cfg.tunFqMaxrateMbps)
     } else {
         log.Printf("V4_PUBLIC_TUN_FQ role=%s interface=%s maxrate_mbps=0 readback=kernel_default",cfg.role,tun.name)
     }
