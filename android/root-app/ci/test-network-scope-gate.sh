@@ -199,6 +199,22 @@ assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode)
 assert 'pair(args,"--startup-padding",paddingMode)' in argv
 assert 'startupPadding:=flags.String("startup-padding","off"' in cold
 print("ANDROID_B11B_APP_GO_M4_PROTECTED_STARTUP_PADDING_SOURCE_WIRING_PASS")
+# B12a: original M1 RX/moved M3 opener, no independent cipher or Go APPLIED.
+fec_entry=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+fec_owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
+fec_worker=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+fec_go=Path("r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_android.go").read_text()
+assert "Fec2LiveRx::from_authenticated_scope(" in fec_entry
+assert "Some((exact,blocks,0u64))" in fec_entry
+assert "*applied=0;blocks.stop();" in fec_entry
+assert "pub(crate) fn drain_windows_authenticated_fec2" in fec_owner
+assert "owner.drain_windows_authenticated_fec2(" in fec_worker
+assert "blocks.accept_authenticated(*exact,kind,payload,at)" in fec_worker
+assert "tun.write_authenticated_ip(ip).ok()==Some(ip.len())" in fec_worker
+assert "if *applied==0||exact.negotiated_features!=7" in fec_worker
+assert "e.protected_features!=3" in fec_worker
+assert "return prev,ack,ErrAdmissionUnsupported" in fec_go
+print("ANDROID_B12A_ORIGINAL_SINGLE_REPLAY_FEC2_RX_TUN_CLOSED_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

@@ -858,6 +858,13 @@ struct Entry{
     android_off_applied_revision:u64,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_metrics:Arc<android_original_m4::AndroidOriginalStats>,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_rx:Option<(
+        crate::v4_fec2_live_rx::VerifiedReceiveEpoch,
+        crate::v4_fec2_live_rx::Fec2LiveRx,
+        u64, // exact Go Fixed M4 APPLIED revision; zero forever in B12a
+    )>,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_startup_padding:Option<crate::v4_client_startup_padding::TunnelStartupPadding>,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -1135,6 +1142,22 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
     let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
         .map_err(|_|INVALID)?;
+    // Original Go TLS feature7 may prepare a BOUNDED FEC cache only.
+    // The ONLY AEAD/PN replay opener stays in owner.crypto.rx, and no
+    // Android Go/native APPLIED grant exists in B12a.
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    let android_fec2_rx=if !server_side&&handoff.negotiated_features==7{
+        let exact=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
+            generation,epoch:data.identity().logical_epoch,
+            negotiated_features:handoff.negotiated_features,
+            direction_s2c:true,
+        };
+        let blocks=crate::v4_fec2_live_rx::Fec2LiveRx::from_authenticated_scope(
+            exact,usize::from(data.identity().client_limit)
+        ).map_err(|_|INVALID)?;
+        Some((exact,blocks,0u64))
+    }else{None};
     // The genuine FEC2 owner keeps one original M1 plaintext loan until
     // its short parity job retires PLUS a separate immutable ciphertext loan
     // in the <=2s M2 receipt/repair shadow. At ~100+ actual outer first
@@ -1246,6 +1269,9 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_off_applied_revision:0,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_metrics:Arc::new(android_original_m4::AndroidOriginalStats::default()),
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+            any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_rx,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_startup_padding:None,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -2969,6 +2995,12 @@ fn stop(handle:u64)->i32{
         e.android_dns_physical_ready=false;
         e.android_cn_dns=None;
         e.android_dns_flows.stop();
+        #[cfg(feature="fec2_product_record")]
+        if let Some((_,blocks,applied))=e.android_fec2_rx.as_mut(){
+            *applied=0;blocks.stop();
+        }
+        #[cfg(feature="fec2_product_record")]
+        {e.android_fec2_rx=None;}
     }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
     let mut drained=retired.ready.batch_handles_released();

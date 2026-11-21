@@ -1,5 +1,7 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B12a 原 Android FEC2 RX 数据面软件切片（Fixed继续闭门）**：原 M1 RX worker 的 FEC kind2/3分支复用同一原 M3 AEAD/unique PN replay，送现有 `Fec2LiveRx` 首交付/RS16恢复，再经原客户端 /32、DNS逆映射和唯一 TUN writer；只有真实写入才累计systematic/recovered。该接收缓存仅由Go原受保护feature7 handoff预备，并在原Stop/join后退休。由于 TX/parity/M2/真实 APPLIED 尚未接，修订固定为0、Android loop_start仍仅接feature3、Go FixedPending继续unsupported：没有任何可由CLI/UI调用的FEC2启用路径。下一片补TX原FixedStream与M4 copied-prefix/M2，最后才可开放Fixed/Auto。
+
 > **2026-11-21 B11b App→Go 接线（真实原生数据路径）**：签名 Android App现提供 `startup-padding off|tls|flows`，默认off，Activity→Service→受保护Go `--startup-padding` → B11a原Rust M4 TX &真实RAW-copy计数；旧Intent和全部Java overload保留off。只影响进入Normal/off隧道的普通原LINK数据，不对DNS物理、Jumbo LINK、Health、FEC2 padding。尚未做Android实体业务及性能验收；不将它描述为FEC Fixed/Auto实现。
 
 

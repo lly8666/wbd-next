@@ -1705,7 +1705,11 @@ impl ProtectedScopedOwner {
     /// and SAME protected M3 replay/AEAD opener admit FEC2 kind2/3.
     /// No independent second PN bitmap is created; callbacks receive only
     /// authenticated payloads. This alone is NOT a verified Go M2 APPLIED.
-    #[cfg(all(target_os="windows",feature="fec2_product_record"))]
+    // B12a: the same M1 loan + original M3 AEAD/replay opener can also
+    // dispatch verified FEC2 kinds to the Android M4 RX worker.
+    #[cfg(all(feature="fec2_product_record",
+        any(target_os="windows",all(target_os="android",
+            any(target_arch="aarch64",target_arch="x86_64"))))]
     pub(crate) fn drain_windows_authenticated_fec2<F,G>(
         &mut self,now:MonoNs,storage:Vec<RxPacket>,mut accept:F,
         mut accept_kind1:G,

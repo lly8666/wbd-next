@@ -23,6 +23,8 @@ use wbd_platform::ipv4_tcp::{
     Ipv4Tuple,Presentation,PacketPersona,build_presentation_ack,
 };
 use crate::v4_presentation_ack::presentation_ack_only_due;
+#[cfg(feature="fec2_product_record")]
+use crate::v4_owner_crypto::NormalOffReport;
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 use wbd_types::MonoNs;
 use std::sync::{Arc,Mutex,OnceLock,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
@@ -65,6 +67,10 @@ pub(super) struct AndroidOriginalStats{
     dns_cn_physical_sent:AtomicU64,dns_noncn_tunnel_raw:AtomicU64,
     dns_tcp53_original_raw:AtomicU64,dns_physical_tc_tun:AtomicU64,
     startup_padding_copied_records:AtomicU64,startup_padding_copied_bytes:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_source_tun:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_recovered_tun:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -275,17 +281,124 @@ fn raw_worker(
                 };
                 stats.raw_candidates.fetch_add(1,Ordering::Relaxed);
                 let lease=e.client_lease_ipv4;
+                #[cfg(feature="fec2_product_record")]
+                let fixed_requested=e.protected_features==7;
                 let (report,delivered,failed,dns_written,healthy,hint,retired)={
                     let Entry{owner,normal,android_dns_flows,
-                        android_dns_hijack_ready,android_dns_physical_ready,android_cn_dns,..}=&mut *e;
-                    let Some(reassembly)=normal.as_mut()else{break};
-                    match owner.drain_android_normal_off_to_tun(
-                        reassembly,&tun,lease,at,
-                        std::mem::take(&mut rx_storage),
-                        android_dns_flows,*android_dns_hijack_ready &&
-                            (!*android_dns_physical_ready||android_cn_dns.is_some()),
-                        &mut dns_reply_scratch,
-                    ){
+                        android_dns_hijack_ready,android_dns_physical_ready,android_cn_dns,
+                        #[cfg(feature="fec2_product_record")]
+                        android_fec2_rx,
+                        ..}=&mut *e;
+                    let dns_capture=*android_dns_hijack_ready &&
+                        (!*android_dns_physical_ready||android_cn_dns.is_some());
+                    #[cfg(feature="fec2_product_record")]
+                    let result=if fixed_requested{
+                        let Some((exact,blocks,applied))=android_fec2_rx.as_mut()
+                            else{break};
+                        // The original Go verified TLS feature7 is NOT
+                        // proof of first-source kernel copy or reverse M2.
+                        // No API may change applied=0 until TX/M2 is wired.
+                        if *applied==0||exact.negotiated_features!=7||
+                           !exact.direction_s2c{break}
+                        let mut report=NormalOffReport::default();
+                        let mut delivered=0u32;
+                        let mut failed=0u32;
+                        let mut dns_written=0u32;
+                        let mut healthy=false;
+                        let mut hint=None;
+                        let mut retired=false;
+                        let (returned,auth)=owner.drain_windows_authenticated_fec2(
+                            at,std::mem::take(&mut rx_storage),
+                            |_pn,kind,payload|{
+                                match blocks.accept_authenticated(*exact,kind,payload,at){
+                                    Ok(firsts)=>{
+                                        if firsts.is_empty(){
+                                            report.pending=report.pending.saturating_add(1)
+                                        }
+                                        for first in firsts{
+                                            report.completed=report.completed.saturating_add(1);
+                                            let frame=first.frame.as_slice();
+                                            if !crate::v4_session_address::
+                                                admitted_client_destination(frame,lease){
+                                                failed=failed.saturating_add(1);
+                                                continue
+                                            }
+                                            let mut ip=frame;
+                                            let mut rewritten=false;
+                                            if dns_capture&&crate::v4_android_dns_udp_flow::
+                                                TunnelDnsUdpFlows::is_tunnel_reply_candidate(frame){
+                                                if frame.len()>crate::v4_android_dns_udp_flow::
+                                                    MAX_DNS_IPV4_PACKET{
+                                                    failed=failed.saturating_add(1);
+                                                    continue
+                                                }
+                                                dns_reply_scratch.clear();
+                                                dns_reply_scratch.extend_from_slice(frame);
+                                                if android_dns_flows.rewrite_reply(
+                                                    dns_reply_scratch.as_mut_slice(),
+                                                    at.0/1_000_000
+                                                ).is_err(){
+                                                    failed=failed.saturating_add(1);
+                                                    continue
+                                                }
+                                                ip=dns_reply_scratch.as_slice();
+                                                rewritten=true;
+                                            }
+                                            if tun.write_authenticated_ip(ip).ok()==Some(ip.len()){
+                                                delivered=delivered.saturating_add(1);
+                                                if first.recovered{
+                                                    stats.fec2_recovered_tun.fetch_add(
+                                                        1,Ordering::Relaxed
+                                                    );
+                                                }else{
+                                                    stats.fec2_source_tun.fetch_add(
+                                                        1,Ordering::Relaxed
+                                                    );
+                                                }
+                                                if rewritten{
+                                                    dns_written=dns_written.saturating_add(1)
+                                                }
+                                            }else{failed=failed.saturating_add(1)}
+                                        }
+                                    },
+                                    Err(reason)=>{
+                                        blocks.record_rejection(reason);
+                                        report.malformed=report.malformed.saturating_add(1);
+                                    },
+                                }
+                            },
+                            |_pn,control|{
+                                healthy=true;
+                                hint=control.peer_idle_ns;
+                                retired=control.peer_retire;
+                            },
+                        );
+                        match returned{
+                            Ok((back,authed))=>{
+                                report.authenticated=authed;
+                                Ok((back,report,delivered,failed,dns_written,
+                                    healthy,hint,retired))
+                            },
+                            Err(err)=>Err(err),
+                        }
+                    }else{
+                        let Some(reassembly)=normal.as_mut()else{break};
+                        owner.drain_android_normal_off_to_tun(
+                            reassembly,&tun,lease,at,
+                            std::mem::take(&mut rx_storage),
+                            android_dns_flows,dns_capture,&mut dns_reply_scratch,
+                        )
+                    };
+                    #[cfg(not(feature="fec2_product_record"))]
+                    let result={
+                        let Some(reassembly)=normal.as_mut()else{break};
+                        owner.drain_android_normal_off_to_tun(
+                            reassembly,&tun,lease,at,
+                            std::mem::take(&mut rx_storage),
+                            android_dns_flows,dns_capture,&mut dns_reply_scratch,
+                        )
+                    };
+                    match result{
                         Ok((returned,report,delivered,failed,dns_written,healthy,hint,retired))=>{
                             rx_storage=returned;
                             (report,delivered,failed,dns_written,healthy,hint,retired)
