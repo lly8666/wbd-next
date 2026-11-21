@@ -22,7 +22,7 @@
      build_bytes, build_presentation_ack, build_presentation_ack_sack,
      SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
  };
- use wbd_platform::rx_ipv4_tcp::{parse_data_packet,parse_ack_packet,extend_seq32,TrustedRx};
+ use wbd_platform::rx_ipv4_tcp::{parse_data_packet_fast,parse_ack_packet,extend_seq32,TrustedRx};
 
  // std::thread::Builder::name is only a Rust thread name on some
  // Windows runtimes. Expose the actual OS thread description once so that
@@ -1500,7 +1500,8 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              let Some(packet)=io::ethernet_ipv4(&frame[..n])else{continue};
              // Optional SACK only after actual original Go protected
              // FakeTCP SYN/SYN-ACK; packet checksum is NOT crypto proof.
-             if let Ok(outer)=parse_ack_packet(packet,trusted,sack_negotiated){
+             if packet.len()>=40 && packet[0]==0x45 && packet[33]==0x10 {
+               if let Ok(outer)=parse_ack_packet(packet,trusted,sack_negotiated){
                  let mut blocks=[WireSack{start:0,end:0};4];
                  blocks[..outer.sacks().len()].copy_from_slice(outer.sacks());
                  if !outer.sacks().is_empty()||
@@ -1508,8 +1509,9 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                      last_outer_ack=Some((outer.ack32,blocks,outer.sacks().len()));
                  }
                  continue
+               }
              }
-              let Ok(sealed)=parse_data_packet(packet,trusted)else{
+              let Ok(sealed)=parse_data_packet_fast(packet,trusted)else{
                  counters.rejected.fetch_add(1,Ordering::Relaxed);continue
              };
              let verified=match open_and_deliver(&cfg,&lane,&mut tun,

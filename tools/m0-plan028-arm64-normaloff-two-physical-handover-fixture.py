@@ -26,9 +26,26 @@ s=s.replace("plan028-h1192-normal-auto-two-source4.json","plan028-h1198-normalof
 one("M0_PLAN028_H1192_X86_NORMAL_OFF_REAL_PHYSICAL_TWO_REAUTH_PASS",
     "M0_PLAN028_H1198_ARM64_NORMAL_OFF_TWO_PHYSICAL_M4_GAME4_HEALTH_PASS")
 old='assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3'
-new='''assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3
+new='''# The first generation has the original READY marker; subsequent
+# authenticated replacements use B_CLIENT_READY after M3 ownership proof.
+# Require both replacements, while the physical handover receipt separately
+# confirms the exact generation sequence, UDP echo and owned Stop.
+assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==1
+assert server.count("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server")>=2
 assert server.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=off profile=0")==3
 assert "V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=auto" not in server'''
 one(old,new)
+# The original fixed 32-packet Game4 side stream can complete before
+# an actual kernel reauth is finished on a loaded ARM64 runner. Verify
+# an additional real answered UDP packet AFTER each replacement is READY
+# before recording the last timestamp; never fabricate successful receipt.
+one('wait "$game1_pid"\nsend_udp "$NSC"',
+    'wait "$game1_pid"\nsend_udp "$NSB" "$IPB" GAME4_ALIVE_AFTER_NORMAL_GEN2 1 "$TMP/B-game-postgen2.log"\ndate +%s%N >> "$TMP/B-game-live1-ns.txt"\nsend_udp "$NSC"')
+one('wait "$game2_pid"\nsend_udp "$NSC"',
+    'wait "$game2_pid"\nsend_udp "$NSB" "$IPB" GAME4_ALIVE_AFTER_NORMAL_GEN3 1 "$TMP/B-game-postgen3.log"\ndate +%s%N >> "$TMP/B-game-live2-ns.txt"\nsend_udp "$NSC"')
+one('assert len(t1)==32 and t1[0]<a<b<t1[-1]',
+    'assert len(t1)==33 and t1[0]<a<b<t1[-1]')
+one('assert len(t2)==32 and t2[0]<c<d<t2[-1]',
+    'assert len(t2)==33 and t2[0]<c<d<t2[-1]')
 out.write_text(s);out.chmod(0o700)
 print("M0_PLAN028_H1198_ARM_NORMAL_OFF_SOURCE_FIXTURE_READY",flush=True)

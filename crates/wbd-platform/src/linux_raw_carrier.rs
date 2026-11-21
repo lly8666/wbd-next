@@ -18,7 +18,7 @@ use crate::linux_rx_batch::{self,RxEntry,RxStatus};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
 use crate::linux_mtu_scope::{ScopedRouteBudget,BudgetError};
 use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona};
-use crate::rx_ipv4_tcp::{parse_data_packet,parse_ack_packet,TrustedRx,RxError};
+use crate::rx_ipv4_tcp::{parse_data_packet_fast,parse_ack_packet,TrustedRx,RxError};
 use wbd_types::buffer_contract::FrozenRecordHandle;
 
 const AF_INET:c_int=2;
@@ -499,7 +499,7 @@ impl ScopedRawIpv4Rx {
             }
             let n=n as usize;
             if n<40 {continue}
-            let parsed=match parse_data_packet(&buffer[..n],TrustedRx{
+            let parsed=match parse_data_packet_fast(&buffer[..n],TrustedRx{
                 tuple,persona,mtu:self.mtu,authenticated_options:None,
             }){
                 Ok(p)=>p,
@@ -707,14 +707,16 @@ impl ScopedRawIpv4Rx{
             if n<40{outcome.entries[i]=RawReadyEntry::Rejected;continue}
             let trusted=TrustedRx{
                 tuple,persona,mtu,authenticated_options:None};
-            let parsed=match parse_data_packet(&slot[..n],trusted){
+            let parsed=match parse_data_packet_fast(&slot[..n],trusted){
                 Ok(v)=>v,
                 Err(_)=>{
                     // The protected handshake has not negotiated SACK.
                     // Reject option-bearing pure ACKs, never reinterpret as DATA.
-                    outcome.entries[i]=parse_ack_packet(&slot[..n],trusted,false)
+                    outcome.entries[i]=if n>=40 && slot[0]==0x45 && slot[33]==0x10 {
+                    parse_ack_packet(&slot[..n],trusted,false)
                         .map(|ack|RawReadyEntry::PureAck{ack32:ack.ack32})
-                        .unwrap_or(RawReadyEntry::Rejected);
+                        .unwrap_or(RawReadyEntry::Rejected)
+                }else{RawReadyEntry::Rejected};
                     continue
                 }
             };
@@ -1006,7 +1008,7 @@ impl ScopedRawIpv4Rx {
                 Some(RxEntry::Complete{len})=>{
                     let slot=&mut buffers[i];
                     let parsed=if len<=mtu{
-                        parse_data_packet(&slot[..len],TrustedRx{
+                        parse_data_packet_fast(&slot[..len],TrustedRx{
                             tuple,persona,mtu,authenticated_options:None
                         })
                     }else{out.entries[i]=RawReadyEntry::Rejected;continue};
@@ -1022,7 +1024,8 @@ impl ScopedRawIpv4Rx {
                         Err(reason)=>{
                             // Pure carrier ACK is a scoped optional cache hint,
                             // NOT an authenticated business or quality receipt.
-                            if let Ok(ack)=parse_ack_packet(&slot[..len],TrustedRx{
+                            if len>=40 && slot[0]==0x45 && slot[33]==0x10 {
+                              if let Ok(ack)=parse_ack_packet(&slot[..len],TrustedRx{
                                 tuple,persona,mtu,authenticated_options:None
                             },sack_negotiated){
                                 if ack.sacks().is_empty(){
@@ -1035,6 +1038,7 @@ impl ScopedRawIpv4Rx {
                                         ack32:ack.ack32,sacks,count};
                                 }
                                 continue
+                              }
                             }
                             // TEST DIAGNOSTIC ONLY: bounded numeric/header-only
                             // evidence to distinguish W168 exact tuple/persona
