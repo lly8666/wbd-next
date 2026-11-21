@@ -401,6 +401,35 @@ mod tests {
         }
     }
     #[test]
+    fn fast_data_is_minimal_outer_framing_until_m3_authentication() {
+        let pkt=wire(b"sealed opaque ciphertext",100,None);
+        let mut bad_tcp=pkt.clone(); bad_tcp[36]^=0x80;
+        assert_eq!(parse_data_packet(&bad_tcp,trusted(None,1500)),
+            Err(RxError::TcpChecksum));
+        assert!(parse_data_packet_fast(&bad_tcp,trusted(None,1500)).is_ok());
+        let mut bad_ip=pkt.clone();bad_ip[10]^=1;
+        assert_eq!(parse_data_packet(&bad_ip,trusted(None,1500)),
+            Err(RxError::IpChecksum));
+        assert!(parse_data_packet_fast(&bad_ip,trusted(None,1500)).is_ok());
+        let mut changed_dscp=pkt.clone();changed_dscp[1]=3;
+        assert!(parse_data_packet_fast(&changed_dscp,trusted(None,1500)).is_ok());
+        let mut no_df=pkt.clone();no_df[6]=0;
+        assert!(parse_data_packet_fast(&no_df,trusted(None,1500)).is_ok());
+        let mut fragment=pkt.clone();fragment[6]=0x20;
+        assert_eq!(parse_data_packet_fast(&fragment,trusted(None,1500)),
+            Err(RxError::FragmentedOrUnexpectedFlags));
+        let mut bad_tuple=pkt.clone();bad_tuple[12]^=1;
+        assert_eq!(parse_data_packet_fast(&bad_tuple,trusted(None,1500)),
+            Err(RxError::WrongTuple));
+        let mut bad_length=pkt.clone();bad_length[2]=1;
+        assert_eq!(parse_data_packet_fast(&bad_length,trusted(None,1500)),
+            Err(RxError::TotalLengthMismatch));
+        let mut wrong_type=pkt.clone();wrong_type[33]=0x10;
+        assert_eq!(parse_data_packet_fast(&wrong_type,trusted(None,1500)),
+            Err(RxError::InvalidDataFlags));
+    }
+
+    #[test]
     fn r1_rx_ipv4_tcp_pinned_old_go_packet_golden() {
         // Go packet.go pinned 6ac1f9...: fixed legacy IPID21/ACK200/TCP window1024.
         let golden=raw_hex("4500002e0015400040064e31c0000228c6336428a7f801bb00000064000000c850180400cc2900007265636f7264");
