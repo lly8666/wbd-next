@@ -1100,6 +1100,18 @@ jobs:
             test ! -e "$dst" || { echo "refused overwrite of original Go: $dst" >&2; exit 1; }
             cp "$f" "$dst"
           done
+          # Current original-Go Linux peer imports the checked-in private
+          # v4routekey package; the immutable old donor does not contain it.
+          # Install exact current SOURCE into the Actions-only assembly.
+          mkdir -p legacy/internal/v4routekey
+          for f in r0/go_overlay/internal/v4routekey/*.go; do
+            name="$(basename "$f")"
+            test ! -e "legacy/internal/v4routekey/$name" || {
+              echo "refused overwrite original v4routekey donor: $name" >&2
+              exit 1
+            }
+            cp "$f" legacy/internal/v4routekey/
+          done
           cp r0/go_overlay/internal/v4productcli/*.go legacy/internal/v4productcli/
           cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
           cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
