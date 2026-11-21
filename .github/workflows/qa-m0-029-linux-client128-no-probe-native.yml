@@ -120,10 +120,22 @@ jobs:
           assert d["status"]=="PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES"
           assert len(d["cases"])==5
           assert all(c["status"]=="PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS" for c in d["cases"])
-          # This suite uses original dedicated TUN and cannot attest the
-          # authenticated shared /32 inbox. A separate genuine shared-mode
-          # real network scenario below proves client128/server64.
-          print("M029_TRUE_DEDICATED_NATIVE_FIVE_MODES_PASS arch="+platform.machine(),flush=True)
+          # Check actual Go+kernel FQ default unchanged for every affected
+          # dedicated mode/role after removing unsafe public fq1500. CLI
+          # opt-in 900 must not silently alter normal/fixed/auto/Game.
+          import re
+          for case in d["cases"]:
+              for role in ("client","server"):
+                  raw=(pathlib.Path("linux-plan029-result")/case["label"]/
+                       (role+".log")).read_text(errors="replace")
+                  receipt=re.findall(
+                      r"V4_PUBLIC_TUN_FQ role="+role+
+                      r" interface=\S+ maxrate_mbps=(\d+) flow_limit_packets=(\d+) "
+                      r"readback=kernel_fq_(\d+)Mbit",raw)
+                  assert receipt==[("600","256","600")],(case["label"],role,receipt)
+          # Dedicated native modes are not the shared M1 /32 case; that is
+          # proved independently below with true authenticated Go/Rust.
+          print("M029_TRUE_DEDICATED_NATIVE_FIVE_MODES_AND_FQ600_STOP_PASS arch="+platform.machine(),flush=True)
           PY
       - name: Original authenticated shared TUN Normal no-probe true four-flow plus small app
         shell: bash
