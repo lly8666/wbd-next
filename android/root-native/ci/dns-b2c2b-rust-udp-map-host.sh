@@ -65,7 +65,8 @@ assert '      - "crates/wbd-engine/src/v4_android_dns_*.rs"' in workflow
 
 assert 'hijack_enabled.write(0)' in m4
 assert m4.count("tun.read_ip_scatter(")==1
-assert m4.count("android_dns_flows.rewrite_query(")==2
+# B15 adds the real Fixed/DF0 jumbo DNS rewrite on the same M4 TX owner.
+assert m4.count("android_dns_flows.rewrite_query(")==3
 assert "android_dns_flows,*android_dns_hijack_ready" in m4
 owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
 entry=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
