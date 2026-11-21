@@ -28,6 +28,13 @@ import m0_wl_loss_tcp_probe as tcp
 # the actual Windows/WSL2 product test at TCP 45902 remains unchanged.
 PORT = 18727
 tcp.PORT = PORT
+# H2281: only on explicit 2x3 native sustained-capacity workflow.
+# Original Wintun/WSL product diagnostic keeps historical 24MiB/18s shape.
+SUSTAINED = os.environ.get("WBD_H2281_SUSTAINED_TCP") == "1"
+if SUSTAINED:
+    tcp.BULK_MAX_BYTES = 512 * 1024 * 1024  # per flow, four independent real TCP sockets
+    tcp.BULK_SEND_S = 25
+    tcp.TIMEOUT_S = 150
 CONTROL_PORT = 4789
 TIERS = (-1, 0, 1, 5)  # -1 = no-loss/no-added-delay infrastructure capacity reference
 
@@ -462,6 +469,10 @@ def run_client(own, relay, server):
         require(len(rows) == 1 and rows[0]["sparse_echo_received"] == 160 and
                 rows[0]["bind"] == win and rows[0]["peer"] == target,
                 "MISSING_REAL_TCP_CLIENT_RESULT")
+        if SUSTAINED:
+            require(rows[0]["bulk_wall_s"] >= 15.0 and
+                    rows[0]["bulk_remote_received_bytes"] > 0,
+                    "SUSTAINED_BULK_DID_NOT_OVERLAP_160_ECHO_WINDOW")
         try:
             receipt = None if tier == "direct" else netem_phase_receipt(
                 shape["netem"]["qdisc"], remote_diag(relay)["kernel_tc"], tier)
@@ -480,6 +491,10 @@ def run_client(own, relay, server):
                    tcp_path=("DIRECT_OS_TAILNET_ARM" if tier=="direct" else
                              "OS_KERNEL_DNAT_SNAT_RELAY"),
                    delivered=rows[0],
+                   native_tcp_bulk_timed_supply_s=(tcp.BULK_SEND_S if SUSTAINED else None),
+                   native_tcp_max_bytes_per_flow=tcp.BULK_MAX_BYTES,
+                   sparse_echo_inside_bulk_window=(
+                       rows[0]["bulk_wall_s"] >= 15.0 if SUSTAINED else None),
                    client_python_cpu_s=round(time.process_time()-cpu0, 4),
                    windows_host_allcore_busy_pct=cpu_busy_percent(
                        host_before, os_host_cpu()),
@@ -517,7 +532,9 @@ def run_client(own, relay, server):
                     "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED"
                     for row in observation["stages"]),
                 "WBD_TWO_NETEM_DIRECTIONS_SCOPE_INCOMPLETE")
-        observation["status"] = "PASS_H2280_REAL_BIDIR_KERNEL_NETEM_TCP_SCOPED"
+        observation["status"] = ("PASS_H2281_SUSTAINED_REAL_BIDIR_KERNEL_TCP_SCOPED"
+                                 if SUSTAINED else
+                                 "PASS_H2280_REAL_BIDIR_KERNEL_NETEM_TCP_SCOPED")
         observation["capacity_qualification"] = (
             "INFRA_CAPACITY_BELOW_800MBPS_NOT_PRODUCT_FAIL"
             if observation["stages"][0]["delivered"]["bulk_receiver_goodput_mbps"] < 800
