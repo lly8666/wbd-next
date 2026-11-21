@@ -49,6 +49,8 @@ java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.Serv
 # native TLS/Root, physical Network and UID route are never restored here.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
+  android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
+  android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
   android/root-app/ci/RootConnectionSettingsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionSettingsTest
@@ -202,6 +204,11 @@ assert 'RootConnectionSettings' in Path(
  "android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsStore.java"
 ).read_text()
 print("ANDROID_B22_PUBLIC_CONNECTION_SETTINGS_NO_BACKUP_REAL_APP_WIRING_PASS")
+settings=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java").read_text()
+assert 'selected.size()>SelectedAppGroup.MAX_PACKAGES' in settings
+assert 'uids.size()>SelectedAppGroup.MAX_UIDS' in settings
+assert 'count>SelectedAppGroup.MAX_PACKAGES' in settings
+print("ANDROID_B25_PRESET_NATIVE_UID_GROUP_RANGE_SOURCE_PASS")
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
 assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
 assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android applications are the product UI default"

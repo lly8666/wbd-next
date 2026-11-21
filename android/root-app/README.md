@@ -28,6 +28,10 @@ Selected-App mode now supports a local name/package/UID filter, preserves checke
 
 Same-SOURCE signed APK and Host checks qualify only BUILD/Host, not physical Ethernet, Android system DNS, actual App TCP/UDP delivery or performance.
 
+## B25 · Save all valid shared-UID package selections
+
+The original selected-App route already supports **up to 16 packages sharing at most 8 unique UIDs**. B22's optional saved connection preset incorrectly limited package entries to eight, dropping valid larger shared-UID selections after an Activity restart. B25 matches the original `SelectedAppGroup` limits in both the production preset writer and reader, validates package grammar via the existing `InstalledAppTarget`, and retains Android's exact cold PackageManager UID recheck before any new START. No new app routing permissions, network processing, Root action or automatic reconnect are introduced.
+
 ## Honest build and device boundary
 
 - `.github/workflows/android-root-product-a1.yml` builds Rust/Go AArch64

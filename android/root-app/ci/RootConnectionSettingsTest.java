@@ -45,6 +45,34 @@ public final class RootConnectionSettingsTest {
             b.selected.get("org.example.browser")==10123,"mode, DNS and exact installed app identity");
         RootConnectionSettings fixed=read(stored(sample(true,"fec-fixed")));
         check(fixed!=null&&fixed.allApps&&fixed.selected.isEmpty(),"all ordinary App scope");
+        // B25: 16 packages may legally share one original native UID.
+        // Previously the settings file silently truncated/rejected them.
+        Map<String,Integer> shared=new TreeMap<>();
+        for(int i=0;i<16;i++)shared.put("org.example.same"+i,10123);
+        RootConnectionSettings sixteen=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,true,false,false,false,shared);
+        RootConnectionSettings restored=read(stored(sixteen));
+        check(restored!=null&&restored.selected.equals(shared),
+            "round-trip all 16 packages sharing one original route UID");
+        Map<String,Integer> tooManyUids=new TreeMap<>();
+        for(int i=0;i<9;i++)tooManyUids.put("org.example.diff"+i,11010+i);
+        boolean rejected=false;
+        try{new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,true,false,false,false,tooManyUids);}
+        catch(IllegalArgumentException expected){rejected=true;}
+        check(rejected,"nine different UIDs are not a valid selected route");
+        shared.put("org.example.more17",10123);
+        rejected=false;
+        try{new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,true,false,false,false,shared);}
+        catch(IllegalArgumentException expected){rejected=true;}
+        check(rejected,"more than sixteen packages cannot be saved");
         String raw=new String(bytes,StandardCharsets.ISO_8859_1);
         check(!raw.contains("password=")&&!raw.contains("route_key=")&&
             !raw.contains("ca_pem=")&&!raw.contains("network_handle="),
@@ -66,5 +94,6 @@ public final class RootConnectionSettingsTest {
             throw new AssertionError("Auto startup padding accepted");
         }catch(IllegalArgumentException expected){}
         System.out.println("ANDROID_B22_LAST_CONNECTION_NO_BACKUP_PRESET_HOST_PASS");
+        System.out.println("ANDROID_B25_PRESET_SELECTED_16_PACKAGES_8_UNIQUE_UIDS_HOST_PASS");
     }
 }

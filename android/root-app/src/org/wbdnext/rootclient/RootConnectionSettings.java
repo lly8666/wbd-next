@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * B22: settings for the next manual original-Go START.
@@ -47,13 +48,19 @@ final class RootConnectionSettings {
            !oneOf(mode,"normal","fec-fixed","fec-auto")||
            (!"normal".equals(mode)&&!"off".equals(padding))||
            (tunnelDNS?1:0)+(physicalDNS?1:0)+(cnSplitDNS?1:0)>1||
-           selected.size()>8||(allApps&&!selected.isEmpty()))return false;
+           selected.size()>SelectedAppGroup.MAX_PACKAGES||
+           (allApps&&!selected.isEmpty()))return false;
+        // The route actually supports up to 16 package names sharing no
+        // more than 8 distinct UIDs. The B22 preset incorrectly capped
+        // PACKAGE count at 8, so a valid 9..16 package selection vanished
+        // on Activity restart. Match the original selected-App contract.
+        TreeSet<Integer> uids=new TreeSet<>();
         for(Map.Entry<String,Integer> x:selected.entrySet()){
-            String pkg=x.getKey();
             int uid=x.getValue()==null?-1:x.getValue();
-            if(pkg==null||pkg.length()<3||pkg.length()>255||
-               !pkg.matches("[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)+")||
-               uid<10000)return false;
+            if(!InstalledAppTarget.validPackage(x.getKey())||
+               uid<10000||uid>1999999)return false;
+            uids.add(uid);
+            if(uids.size()>SelectedAppGroup.MAX_UIDS)return false;
         }
         return true;
     }
@@ -96,7 +103,7 @@ final class RootConnectionSettings {
         if(!"1".equals(p.getProperty("version")))return null;
         try{
             int count=Integer.parseInt(p.getProperty("selected_count","-1"));
-            if(count<0||count>8)return null;
+            if(count<0||count>SelectedAppGroup.MAX_PACKAGES)return null;
             Map<String,Integer> selected=new TreeMap<>();
             for(int i=0;i<count;i++){
                 String pkg=p.getProperty("selected_"+i+"_package","");

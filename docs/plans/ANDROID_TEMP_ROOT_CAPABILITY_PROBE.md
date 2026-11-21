@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B25 Android多包共享UID的连接设置回填修正**：原 `SelectedAppGroup` 的稳定权限范围为**16个包名、最多8个不同App UID**，B24新增批选也复用这一约束；旧B22 `RootConnectionSettings` 却在写/读本机预设时硬限8个包，导致9–16个**同UID**合法App组合丢失。B25本地保存及读取全部改用原 `SelectedAppGroup.MAX_PACKAGES/MAX_UIDS`，并沿用 `InstalledAppTarget.validPackage` 与UID有效范围；测试覆盖16个同UID包来回、9个独立UID拒绝和17包拒绝。并不放宽实际内核route UID、Root权限、Go TLS/AEAD、Android包可见性；仅修被打断的日常配置恢复。同源Host/签名APK结果须看B25 SOURCE，设备/服务器/性能NOT_RUN。
+
+
 > **2026-11-22 B24 Ethernet + App列表日常功能软件切片**：基线 B23 `17a5343c` 的同源 ARM64签名APK、双ABI/Host/Linux Oracle 11 SUCCESS/4 SKIPPED。原Activity的物理Network筛选及Service回调只认Wi-Fi/蜂窝，现加入Android真实 `TRANSPORT_ETHERNET`，原RAW/TUN/标准TLS/UID路由未改；Activity刷新/恢复时保留handle、ifindex、IPv4、MTU**完全相同**的选定Network，不自动重启或切换root会话。Selected-App模式加入本地label/package/UID过滤与按匹配结果批选，保留隐藏已选、依旧由原 `SelectedAppGroup` 限8个不同UID/16包并经真实PackageManager重新核验。遵守既有狭窄Android包可见性：只展示launcher可见App，不请求QUERY_ALL_PACKAGES、不获取系统/Root UID。B24以其新SOURCE的实际Action为编译/Host判据，不擅自运行Android实体或Linux服务器；Ethernet物理联机/应用TCP UDP、netd系统DNS及性能仍NOT_RUN。
 
 

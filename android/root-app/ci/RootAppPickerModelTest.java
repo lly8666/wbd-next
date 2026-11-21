@@ -38,6 +38,12 @@ public final class RootAppPickerModelTest {
             10200,"org.wbdnext.rootclient");}
         catch(IllegalArgumentException expected){rejected=true;}
         check(rejected,"must not exceed original eight distinct UIDs");
+        // 16 packages with one shared UID must be selectable as one route.
+        List<InstalledAppTarget> shared=new ArrayList<>();
+        for(int i=0;i<16;i++)shared.add(app("org.example.shared"+i,"Shared",10145));
+        check(RootAppPickerModel.addMatching(shared,Collections.emptySet(),"Shared",
+            10200,"org.wbdnext.rootclient").size()==16,
+            "all sixteen packages sharing one UID selectable");
         rejected=false;
         try{RootAppPickerModel.addMatching(items,Collections.emptySet(),"absent",
             10200,"org.wbdnext.rootclient");}
