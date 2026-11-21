@@ -208,6 +208,8 @@ assert "Fec2LiveRx::from_authenticated_scope(" in fec_entry
 assert "Some((exact,blocks,0u64))" in fec_entry
 assert "*applied=0;blocks.stop();" in fec_entry
 assert "pub(crate) fn drain_windows_authenticated_fec2" in fec_owner
+assert ".open_unique_with_fec2_after_admission_in_place(" in fec_owner
+assert "Ok(record) if matches!(record.kind,2|3)" in fec_owner
 assert "owner.drain_windows_authenticated_fec2(" in fec_worker
 assert "blocks.accept_authenticated(*exact,kind,payload,at)" in fec_worker
 assert "tun.write_authenticated_ip(ip).ok()==Some(ip.len())" in fec_worker
