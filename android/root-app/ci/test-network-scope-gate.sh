@@ -30,6 +30,13 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
   android/root-app/ci/SelectedAppGroupTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.SelectedAppGroupTest
+# B24: production local App search and bounded multi-UID batch selection.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
+  android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
+  android/root-app/src/org/wbdnext/rootclient/RootAppPickerModel.java \
+  android/root-app/ci/RootAppPickerModelTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootAppPickerModelTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
   android/root-app/ci/AllAppUIDPolicyTest.java
@@ -155,6 +162,13 @@ assert 'log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")' in go_src
 assert s.count('InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)')>=2, "multi UID identity rechecked on Service and pre-su"
 assert 'watchSelectedPackages(allApps?managerPackages:targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw selected group or manager exclusions on package events"
 assert 'AllAppRouteScope.same(this,excludedAppIDs,managerPackages)' in s, "verify full-app owner+manager UID exclusions before su"
+# B24: Ethernet exact Android Network selected and watched by one
+# shared physical policy; refresh never silently changes valid selection.
+physical=Path("android/root-app/src/org/wbdnext/rootclient/PhysicalNetwork.java").read_text()
+assert 'NetworkCapabilities.TRANSPORT_ETHERNET' in physical
+assert 'if(!physicalInternet(caps))' in physical
+assert 'PhysicalNetwork.physicalInternet(caps)' in s
+print("ANDROID_B24_ETHERNET_ORIGINAL_PHYSICAL_UNDERLAY_SOURCE_PASS")
 argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
 assert 'OriginalGoCommandArgs.build(' in s, "production RootService must use host-tested original Go argv"
 assert 'for(String a:args)quotedArgs.add(q(a))' in s, "every native argv token is shell quoted"
@@ -167,6 +181,12 @@ a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").re
 assert 'target_packages' in a and 'target_uids' in a
 assert 'SelectedAppGroup.from(' in a and 'InstalledAppCatalog.stillSameGroup(' in a
 assert 'RootConnectionSettingsStore.save(this,connectionSettingsFromUi())' in a
+assert 'RootAppPickerModel.addMatching(' in a
+assert 'RootAppPickerModel.matches(app,text)' in a
+assert 'appSearch.addTextChangedListener(' in a
+assert 'chooseNetworks();\n        chooseInstalledApplications();\n        ui.post(refreshStatus);' in a
+assert 'physical.get(i).same(previouslySelected)' in a
+print("ANDROID_B24_APP_PICKER_FILTER_BATCH_AND_NETWORK_REFRESH_SOURCE_PASS")
 # B23: production Activity imports, recalls and clears ONE existing
 # original Go 0600 private CA file, never changes Android system trust.
 assert 'recallSavedTLSCA();' in a

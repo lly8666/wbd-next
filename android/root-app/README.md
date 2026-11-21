@@ -20,6 +20,14 @@ UI 把进阶 KernelSU/TUN 一键自检放到默认折叠的“高级选项”，
 **测试版安装注意**：GitHub Actions 的调试签名证书每次生成，且 APK 包名相同，无法直接 \`adb install -r\` 覆盖上次版本。请自行先在旧版按 STOP，检查没有残留 KernelSU UID 私有路由，再卸载旧调试包并安装新的 Lite APK；卸载会清除派生缓存。
 
 
+## B24 · Physical Ethernet + multi-App selection workflow
+
+A real Android Ethernet/USB Ethernet `ConnectivityManager.Network` with a matched interface, IPv4, ifindex and MTU can now be explicitly selected as an original-Go/Rust underlay, alongside Wi-Fi and cellular. The foreground Service uses the **same** transport rule; loss or a true physical-scope change still stops the exact owned generation. UI refresh retains a selection only while those original Network/OS attributes remain identical. There is no automatic roaming, re-auth, or extra packet thread.
+
+Selected-App mode now supports a local name/package/UID filter, preserves checked items hidden by filtering, and batch-selects matched visible Apps within the original 8-UID/16-package constraint. Search/selection only touches UI state; original-Go app routing remains a separate manual authenticated START with exact package/UID cold readback. Manifest still exposes only launcher-visible Apps, not `QUERY_ALL_PACKAGES`; invisible/nonlauncher applications are not claimed supported.
+
+Same-SOURCE signed APK and Host checks qualify only BUILD/Host, not physical Ethernet, Android system DNS, actual App TCP/UDP delivery or performance.
+
 ## Honest build and device boundary
 
 - `.github/workflows/android-root-product-a1.yml` builds Rust/Go AArch64

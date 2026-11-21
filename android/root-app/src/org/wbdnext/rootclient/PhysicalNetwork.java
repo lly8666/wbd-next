@@ -35,6 +35,16 @@ final class PhysicalNetwork {
             ifindex==other.ifindex&&mtu==other.mtu&&
             address.equals(other.address);
     }
+    // B24: USB/Ethernet uses the same real Network/ifindex/IPv4 owner
+    // and original RAW interface as Wi-Fi/cellular. No VPN or new route.
+    static boolean physicalInternet(NetworkCapabilities caps){
+        return caps!=null&&
+            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)&&
+            !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)&&
+            (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)||
+             caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)||
+             caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
+    }
     static List<PhysicalNetwork> available(Context context){
         ConnectivityManager cm=(ConnectivityManager)context.getSystemService(
             Context.CONNECTIVITY_SERVICE);
@@ -43,10 +53,7 @@ final class PhysicalNetwork {
         for(Network network:cm.getAllNetworks()){
             try{
                 NetworkCapabilities caps=cm.getNetworkCapabilities(network);
-                if(caps==null||!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)||
-                    caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)||
-                    !(caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)||
-                      caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))){
+                if(!physicalInternet(caps)){
                     continue;
                 }
                 LinkProperties link=cm.getLinkProperties(network);

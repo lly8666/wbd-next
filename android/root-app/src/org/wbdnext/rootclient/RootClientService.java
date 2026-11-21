@@ -88,11 +88,7 @@ public final class RootClientService extends Service {
                     requestStop("PHYSICAL_NETWORK_LOST — withdrawing UID policy");
             }
             @Override public void onCapabilitiesChanged(Network network,NetworkCapabilities caps){
-                boolean valid=caps!=null&&
-                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)&&
-                    !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)&&
-                    (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)||
-                     caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR));
+                boolean valid=PhysicalNetwork.physicalInternet(caps);
                 if(gate.changed(network.getNetworkHandle(),valid))
                     requestStop("PHYSICAL_NETWORK_CAPABILITIES_CHANGED");
             }

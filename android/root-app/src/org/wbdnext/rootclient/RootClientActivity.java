@@ -46,7 +46,9 @@ public final class RootClientActivity extends Activity {
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
-    private LinearLayout appChoices;
+    private LinearLayout appChoices,selectedAppControls;
+    private EditText appSearch;
+    private TextView selectedAppsSummary;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText,m4TrafficBrief;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
     private static final int LOCAL_TLS_CA_IMPORT=2043;
@@ -217,14 +219,30 @@ public final class RootClientActivity extends Activity {
         return field;
     }
     private void chooseNetworks(){
+        // B24: retain a genuinely unchanged Android Network while the UI
+        // refreshes, never replay a saved handle from a previous session.
+        PhysicalNetwork previouslySelected=null;
+        if(networks!=null){
+            int previous=networks.getSelectedItemPosition();
+            if(previous>=0&&previous<physical.size())
+                previouslySelected=physical.get(previous);
+        }
         physical.clear();
         physical.addAll(PhysicalNetwork.available(this));
         ArrayList<String> labels=new ArrayList<>();
         for(PhysicalNetwork n:physical)labels.add(n.title());
-        if(labels.isEmpty())labels.add("NO physical Wi-Fi/cellular IPv4 Network (fail closed)");
+        if(labels.isEmpty())labels.add("NO Wi-Fi/cellular/Ethernet IPv4 Network");
         ArrayAdapter<String> adapter=new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,labels);
         networks.setAdapter(adapter);
+        if(previouslySelected!=null){
+            for(int i=0;i<physical.size();i++){
+                if(physical.get(i).same(previouslySelected)){
+                    networks.setSelection(i);
+                    break;
+                }
+            }
+        }
     }
     private void chooseInstalledApplications(){
         // Keep only exact package+UID matches from the previous snapshot.
@@ -250,8 +268,51 @@ public final class RootClientActivity extends Activity {
             cb.setText(app.title());
             cb.setChecked(previous.containsKey(app.packageName)&&
                 previous.get(app.packageName)==app.uid);
+            cb.setOnCheckedChangeListener((button,checked)->updateAppSelectionCount());
             appChoices.addView(cb);
             checkedApps.put(app.packageName,cb);
+        }
+        applyAppSearch();
+        updateAppSelectionCount();
+    }
+    private void updateAppSelectionCount(){
+        if(selectedAppsSummary==null)return;
+        int count=0;
+        java.util.Set<Integer> uids=new java.util.TreeSet<>();
+        for(InstalledAppTarget app:installedApps){
+            CheckBox cb=checkedApps.get(app.packageName);
+            if(cb!=null&&cb.isChecked()){count++;uids.add(app.uid);}
+        }
+        selectedAppsSummary.setText(
+            "当前已勾选 "+count+" 个应用 / "+uids.size()+" 个UID（最多8个不同UID、16个包）。"+
+            "仅在手动START且成功认证后生效");
+    }
+    private void applyAppSearch(){
+        String text=appSearch==null?"":appSearch.getText().toString();
+        for(InstalledAppTarget app:installedApps){
+            CheckBox cb=checkedApps.get(app.packageName);
+            if(cb!=null)cb.setVisibility(RootAppPickerModel.matches(app,text)
+                ?View.VISIBLE:View.GONE);
+        }
+    }
+    private void selectMatchingApps(){
+        java.util.Set<String> previous=new java.util.TreeSet<>();
+        for(InstalledAppTarget app:installedApps){
+            CheckBox cb=checkedApps.get(app.packageName);
+            if(cb!=null&&cb.isChecked())previous.add(app.packageName);
+        }
+        try{
+            java.util.Set<String> chosen=RootAppPickerModel.addMatching(
+                installedApps,previous,appSearch.getText().toString(),
+                android.os.Process.myUid(),getPackageName());
+            for(InstalledAppTarget app:installedApps){
+                CheckBox cb=checkedApps.get(app.packageName);
+                if(cb!=null)cb.setChecked(chosen.contains(app.packageName));
+            }
+            updateAppSelectionCount();
+        }catch(IllegalArgumentException unsupported){
+            selectedAppsSummary.setText("当前筛选结果超过8个不同UID/16个包，或没有匹配；"+
+                "请缩小过滤条件，不会更改原选中列表");
         }
     }
     // B22 settings are strictly UI cold inputs. Actual Go TLS, /32,
@@ -667,12 +728,40 @@ public final class RootClientActivity extends Activity {
         cnSplitDNS.setOnCheckedChangeListener((button,checked)->{
             if(checked){tunnelDNS.setChecked(false);physicalDNS.setChecked(false);}
         });
+        selectedAppControls=new LinearLayout(this);
+        selectedAppControls.setOrientation(LinearLayout.VERTICAL);
+        pane.addView(selectedAppControls);
+        TextView searchHint=new TextView(this);
+        searchHint.setText("应用选择：按名称、包名或UID过滤；隐藏不代表取消已勾选。"+
+            "只枚举Android当前可见、带启动入口的已安装App");
+        selectedAppControls.addView(searchHint);
+        appSearch=input(selectedAppControls,"过滤已安装应用（仅本地）",InputType.TYPE_CLASS_TEXT);
+        appSearch.addTextChangedListener(new android.text.TextWatcher(){
+            @Override public void beforeTextChanged(CharSequence s,int start,int count,int after){}
+            @Override public void onTextChanged(CharSequence s,int start,int before,int count){
+                applyAppSearch();
+            }
+            @Override public void afterTextChanged(android.text.Editable s){}
+        });
+        Button selectFiltered=new Button(this);
+        selectFiltered.setText("勾选当前过滤的应用（保留其他已选，最多8个UID）");
+        selectFiltered.setOnClickListener(v->selectMatchingApps());
+        selectedAppControls.addView(selectFiltered);
+        Button clearSelected=new Button(this);
+        clearSelected.setText("清除当前所有应用勾选");
+        clearSelected.setOnClickListener(v->{
+            for(CheckBox check:checkedApps.values())check.setChecked(false);
+            updateAppSelectionCount();
+        });
+        selectedAppControls.addView(clearSelected);
+        selectedAppsSummary=new TextView(this);
+        selectedAppControls.addView(selectedAppsSummary);
         appChoices=new LinearLayout(this);
         appChoices.setOrientation(LinearLayout.VERTICAL);
-        pane.addView(appChoices);
+        selectedAppControls.addView(appChoices);
         allAppsDefault.setOnCheckedChangeListener((button,checked)->
-            appChoices.setVisibility(checked?View.GONE:View.VISIBLE));
-        appChoices.setVisibility(View.GONE);
+            selectedAppControls.setVisibility(checked?View.GONE:View.VISIBLE));
+        selectedAppControls.setVisibility(View.GONE);
         Button refreshApps=new Button(this);
         refreshApps.setText("Refresh installed applications");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());
@@ -784,6 +873,9 @@ public final class RootClientActivity extends Activity {
     }
     @Override protected void onResume(){
         super.onResume();
+        // UI-only snapshot refresh; Service's already-owned Network,
+        // route and generation are NEVER implicitly switched.
+        chooseNetworks();
         chooseInstalledApplications();
         ui.post(refreshStatus);
     }
