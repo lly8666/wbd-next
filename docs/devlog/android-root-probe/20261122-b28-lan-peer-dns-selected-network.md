@@ -16,3 +16,7 @@
 SOURCE `e2308014ec06e1a60902a01a7727667ab472ed23` 的 [CI #44959280494](https://github.com/lly8666/wbd-next/actions/runs/44959280494) 真实 `root-arm64-app` Host第60行失败：`assert 'hasInternetCapability?"":"  [仅本地链路' in physical` 要求 B27 旧同一行三元写法；B28 已把UI改成双标签（无INTERNET与有INTERNET但未VALIDATED），因此Host Python `AssertionError`，签名APK本Job未执行。B28正式生产 `ANDROID_B28_SELECTED_NETWORK_LAN_HOSTNAME_IPV4_HOST_PASS` 已在同Job真实执行成功，原生双ABI和先行M3/DNS Host成功不能替代失败的APK。B28a只把断言改为核对当前生产两类UI标签的实际文本及已存在的 Service 物理Network接线，**Go/Rust/Java产品业务代码零修改**，功能卡同批记实；以新SOURCE的签名APK/Host和Linux Oracle验收。
 
 附注：同一段旧式断言还残留了原 `LAN_SELECTED_NETWORK_DNS_UNAVAILABLE` 状态文字，产品现按真实物理scope失效显示 `LAN_SELECTED_NETWORK_CHANGED`；一起按生产现状更正。逐条抽查当前 B27/B28 源码段的 Host 文本锚点均匹配，**不等于真正重跑的Actions成功**。
+
+## B28b｜全面检查Host静态锚点后修订4条原Go启动调用断言
+
+在 B28a 源码门修补后对生产 Root Service/Activity/PhysicalNetwork 与 `test-network-scope-gate.sh` 的所有89+条直接源码包含断言进行同源比对，另发现4条历史 `launchCommand(code,net,peer,sni,...)` 断言仍固定旧调用变量，而 B28 的真实生产实现必须将所选Network冷解析出的 `peerForGo` 交给**同一**原Go `launchCommand`，原 `--peer-ip` / `--peer-host` 行为才有效。本批仅改4条断言去校验确切新参数 `peerForGo`，不改业务Java/Go/Rust或UI，保留此前 B28 App Job FAILED 及B28a的独立SOURCE/Actions；此批Host/签名APK是否通过要看新的冻结SOURCE而非自检。

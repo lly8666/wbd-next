@@ -273,7 +273,7 @@ assert 'RootRouteKeyCache.resolve(this,sni,keyInput)' in a
 assert 'outerMTUField.setText("1460")' in a
 assert 'request.putExtra("outer_mtu",requestedOuterMTU)' in a
 assert 'intent.getIntExtra("outer_mtu",1460)' in s
-assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU' in s
+assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU' in s
 assert 'cnSplitDNS,requestedOuterMTU' in s
 assert 'pair(args,"--outer-mtu",Integer.toString(requestedOuterMTU))' in argv
 assert 'outerMTU:=flags.Int("outer-mtu",1460' in cold
@@ -283,7 +283,7 @@ print("ANDROID_B8_ORIGINAL_GO_MTU_PRODUCTION_WIRING_SOURCE_PASS")
 assert 'recordCiphers.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("record_cipher",recordCipher)' in a
 assert 'intent.getStringExtra("record_cipher")' in s
-assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher' in s
+assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher' in s
 assert 'cnSplitDNS,requestedOuterMTU,recordCipher' in s
 assert 'pair(args,"--record-cipher",recordCipher)' in argv
 assert 'cipherName:=flags.String("record-cipher","chacha20-poly1305"' in cold
@@ -294,7 +294,7 @@ print("ANDROID_B9_EXISTING_GO_M3_RUST_AUTHENTICATED_CIPHER_SOURCE_PASS")
 assert 'tunQueueSizes.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("tun_txqlen",requestedTunQueue)' in a
 assert 'intent.getIntExtra("tun_txqlen",500)' in s
-assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue' in s
+assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue' in s
 assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue' in s
 assert 'pair(args,"--tun-txqlen-packets",Integer.toString(requestedTunQueue))' in argv
 assert 'tunTxQLen:=flags.Int("tun-txqlen-packets",2048' in cold
@@ -317,7 +317,7 @@ print("ANDROID_B11A_ORIGINAL_GO_RUST_M4_STARTUP_PADDING_NATIVE_SOURCE_WIRING_PAS
 assert 'startupPaddingModes.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("startup_padding",paddingMode)' in a
 assert 'intent.getStringExtra("startup_padding")' in s
-assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode' in s
+assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode' in s
 assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile);' in s
 assert 'pair(args,"--startup-padding",paddingMode)' in argv
 assert 'startupPadding:=flags.String("startup-padding","off"' in cold
