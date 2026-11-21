@@ -193,13 +193,21 @@ def main():
         # This is the actual protected original-Go -> Rust owner status,
         # not merely the CLI flag or an assumed default.
         result["outer_repair_native_stop_readback"]={}
+        result["outer_repair_native_stop_scope"]={}
         for role in ("client","server"):
             raw=node.logs[role].read_text(errors="replace")
             values=re.findall(r"V4_PUBLIC_M2_OUTER role="+role+
                               r"[^\n]*? repair_enabled=(\d+)",raw)
-            if not values or any(value!="0" for value in values):
-                raise RuntimeError("M029_TRUE_NORMAL_OFF_NATIVE_OUTER_READBACK_MISSING_"+role)
+            if any(value!="0" for value in values):
+                raise RuntimeError("M029_TRUE_NORMAL_OFF_NATIVE_OUTER_ON_"+role)
+            if role=="client" and not values:
+                raise RuntimeError("M029_CLIENT_NORMAL_OFF_NATIVE_READBACK_MISSING")
+            # Original shared multi-server may retire its session before
+            # emitting Go V4_PUBLIC_M2_OUTER on Stop. Keep this UNKNOWN,
+            # never invent a server Rust readback from the CLI string.
             result["outer_repair_native_stop_readback"][role]=[int(x) for x in values]
+            result["outer_repair_native_stop_scope"][role]=(
+                "NATIVE_OFF_CONFIRMED" if values else "NOT_EMITTED_UNVERIFIED")
         # Explicit source-only diagnostic: UDP/TCP entering the authenticated
         # /32 shared reader versus NEW pending drops. Neither a M4 copied
         # prefix nor AEAD/PN verification nor a timed delivery receipt.

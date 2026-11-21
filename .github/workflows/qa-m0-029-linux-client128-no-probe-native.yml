@@ -157,7 +157,8 @@ jobs:
           assert d["arch"]==platform.machine()
           assert d["probe_compiled"] is False
           assert d["outer_repair_cli"]=="off_both_endpoints"
-          assert all(v and set(v)=={0} for v in d["outer_repair_native_stop_readback"].values())
+          assert d["outer_repair_native_stop_readback"]["client"] and set(d["outer_repair_native_stop_readback"]["client"])=={0}
+          assert d["outer_repair_native_stop_scope"]["server"] in ("NATIVE_OFF_CONFIRMED","NOT_EMITTED_UNVERIFIED")
           assert d["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
           assert d["cold_readbacks"]["client"]["slots"]==128
           assert d["cold_readbacks"]["server"]["slots"]==64
@@ -192,8 +193,10 @@ jobs:
               assert row["trial_leg"]==leg and row["test_only_udp_reservation"]==(leg=="B")
               assert row["probe_compiled"] is False
               assert row["outer_repair_cli"]=="off_both_endpoints"
-              assert all(v and set(v)=={0}
-                         for v in row["outer_repair_native_stop_readback"].values())
+              assert row["outer_repair_native_stop_readback"]["client"] and set(
+                  row["outer_repair_native_stop_readback"]["client"])=={0}
+              assert row["outer_repair_native_stop_scope"]["server"] in (
+                  "NATIVE_OFF_CONFIRMED","NOT_EMITTED_UNVERIFIED")
               assert all(x["generation"]>0 for x in row["owned_stop"].values())
               assert all(x["slots"]==(128 if role=="client" else 64)
                          for role,x in row["cold_readbacks"].items())
@@ -215,6 +218,7 @@ jobs:
                "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"arch":os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"],
                "same_native_binary_sha256":d[0]["same_release_binary_sha256"],
                "legs":[dict(leg=tag,**read(x)) for tag,x in zip(("A","B","Aprime"),d)],
+               "outer_repair_scope":[x["outer_repair_native_stop_scope"] for x in d],
                "conclusion":"MEASURED_ONLY_NOT_PRODUCT_QOS_PASS",
                "limitation":"A/B/A-prime same-runner genuine Go TLS Rust product; diagnostic ON all legs; no source performance causal claim until original drift, dropped denominator and CPU assessed."}
           pathlib.Path("m029-udp-slot-abca").mkdir(exist_ok=False)
