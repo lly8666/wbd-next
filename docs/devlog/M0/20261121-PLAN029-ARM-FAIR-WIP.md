@@ -66,6 +66,8 @@
 
 - **H2262 初次运行事实（不能充作 PASS）**：SOURCE `b0754245c1e01b92935936c42587ca4c2f9bc85c` 的 feature catalog run44900489398 因 UTF-8 功能卡 16538B 超过16KiB FAIL；同 SOURCE 原生 run44900489439 因缺现有 `[m0-client128-product]` 标记 SKIPPED（不是产品FAIL/PASS）；维护 run44900489396 SUCCESS，双ISA单测结果仍须核 run44900489442。此修订恢复原卡简短限域说明并带精确既有原生工作流触发标记，不改变 Rust/Go 代码或测量工况，后续新 SOURCE 结果独立认领。
 
+- **H2262 解析缺陷预查**：新测试夹具正则错误地匹配反斜杠而不是数字，首次 SOURCE a1135cca 上的真实原生 run44900609061 已在途、不可冒充业务 FAIL。此提交只修正原数字解析并增加启动时合成标量自检；旧 run/attempt 将照实保留，下一真 SOURCE 独立核验。原 Rust/Go 和网络设置不变。
+
 ```feature-impact
 {"kind":"updated","ids":["linux-raw-tun"],"reason":"On this experimental branch change only the internal Linux authenticated Normal client shared-TUN M1 inbox default from 64 to bounded 128 (server and separate Game remain 64), after exact-source native ARM/x86 goodput evidence; no new public config/CLI/GUI, physical platform qualification or formal promotion. Updated stable Linux raw-TUN feature card in same product commit; main remains unchanged."}
 ```

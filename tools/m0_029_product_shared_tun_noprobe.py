@@ -59,6 +59,8 @@ SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
 SPARSEFLOW=SPARSEFLOW=="1"
+if SPARSEFLOW and dict(re.findall(r"([a-z_]+)=(\d+)","forward_offered=2 forward_dropped=1")) != {"forward_offered":"2","forward_dropped":"1"}:
+    raise RuntimeError("M029_H2262_SPARSE_PARSE_SELF_CHECK_FAILED")
 if SPARSEFLOW and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
@@ -322,7 +324,7 @@ def main():
                 for line in node.logs[role].read_text(errors="replace").splitlines():
                     if not line.startswith("M0_SHARED_TUN_SPARSE_TCP_DIAG "):
                         continue
-                    fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\\d+)",line)}
+                    fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\d+)",line)}
                     if not required.issubset(fields):
                         raise RuntimeError("M029_H2262_SPARSE_ORIGINAL_RUST_FIELDS_MISSING_"+role)
                     if fields["forward_dropped"]>fields["forward_offered"] or (
