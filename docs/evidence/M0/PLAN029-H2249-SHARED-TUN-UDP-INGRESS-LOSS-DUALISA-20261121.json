@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "disposition": "PASS_SCOPED_DIAGNOSTIC_SOURCE_AND_PRODUCT_SMOKE__TIMELY_DELIVERY_FAIL",
+  "source_sha": "2dee2837b544a8a319632d44fe54b73252bba343",
+  "run_id": 44879438301,
+  "attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44879438301",
+  "release_scope": "Linux original Go TLS + Rust, native kernel x86_64 and aarch64, nonprobe, authentic shared /32 Normal, zero injected loss, 4 TCP bulk plus 160 each UDP/TCP echoes; five separate dedicated-TUN modes and owned Stop, per-ISA source-locked binaries",
+  "diagnostic_scope": "WBD_SHARED_TUN_ROUTE_DIAG=1 fixture ONLY. New datagram protocol accounted at original SharedTunReader after physical TUN read; refused=only delta.overflow of NEW packet. delta.delivered can be old pending and is NEVER attributed to new proto. No AEAD/PN/M4 peer receipt inferred.",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "measurements": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14697114806,
+      "artifact_name": "m0-029-normal-client128-product-aarch64-44879438301-1",
+      "binaries_sha256": {
+        "wbd-v4-client": "4da45d8e9fe55d926badb87ce454a5a9111a2904b4dbe81bd3d1bdc1fe5d0e3c",
+        "wbd-v4-server": "28bdec30462b62681e151069a462628d7bd6ff24768b3a2c4f8c577c32c8729d",
+        "libwbd_engine.so": "59af206a017362cbb49fb0a8e6d1b4b888a2ffdf0c784e173529b78b876cbf1a"
+      },
+      "receiver_mbps": 1066.71855,
+      "receiver_bytes": 2667184128,
+      "client_cpu_s_per_received_gib": 12.34295,
+      "server_cpu_s_per_received_gib": 11.89207,
+      "client_packet_offered": {
+        "tcp": 3275753,
+        "udp": 160,
+        "other": 0
+      },
+      "client_new_pending_rejected": {
+        "tcp": 700875,
+        "udp": 29,
+        "other": 0
+      },
+      "server_packet_offered": {
+        "tcp": 586797,
+        "udp": 131,
+        "other": 0
+      },
+      "server_new_pending_rejected": {
+        "tcp": 3059,
+        "udp": 0,
+        "other": 0
+      },
+      "small_udp_requested": 160,
+      "small_udp_unique_replied": 131,
+      "small_udp_missing": 29,
+      "small_udp_survivor_p99_ms": 7.8671,
+      "small_tcp_requested": 160,
+      "small_tcp_missing": 0,
+      "small_tcp_survivor_p99_ms": 295.3418,
+      "original_client_stop_full_drops": 700904,
+      "client_stop_unrouted": 0,
+      "client_stop_age_drops": 0,
+      "client_stop_byte_drops": 0,
+      "owned_stop_both_reader_joined": true,
+      "probe_compiled": false,
+      "normal_client_slots": 128,
+      "server_slots": 64
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14696763784,
+      "artifact_name": "m0-029-normal-client128-product-x86_64-44879438301-1",
+      "binaries_sha256": {
+        "wbd-v4-client": "5f284c6486c110305481cbe7e47e8af974ee46864389d3d17c7c5edaa41884aa",
+        "wbd-v4-server": "dea3add9c3b2c93121aaebfa73b478f17c3fe687bbc299826b867e05651c87a7",
+        "libwbd_engine.so": "2b0768cb109989f11de2b83af35855373e3915354022f8ce27e918ff17ffbb3a"
+      },
+      "receiver_mbps": 1335.167296,
+      "receiver_bytes": 3372089344,
+      "client_cpu_s_per_received_gib": 9.10682,
+      "server_cpu_s_per_received_gib": 9.46664,
+      "client_packet_offered": {
+        "tcp": 3995418,
+        "udp": 160,
+        "other": 0
+      },
+      "client_new_pending_rejected": {
+        "tcp": 743023,
+        "udp": 23,
+        "other": 0
+      },
+      "server_packet_offered": {
+        "tcp": 890462,
+        "udp": 137,
+        "other": 0
+      },
+      "server_new_pending_rejected": {
+        "tcp": 3299,
+        "udp": 0,
+        "other": 0
+      },
+      "small_udp_requested": 160,
+      "small_udp_unique_replied": 137,
+      "small_udp_missing": 23,
+      "small_udp_survivor_p99_ms": 4.8465,
+      "small_tcp_requested": 160,
+      "small_tcp_missing": 0,
+      "small_tcp_survivor_p99_ms": 285.6422,
+      "original_client_stop_full_drops": 743046,
+      "client_stop_unrouted": 0,
+      "client_stop_age_drops": 0,
+      "client_stop_byte_drops": 0,
+      "owned_stop_both_reader_joined": true,
+      "probe_compiled": false,
+      "normal_client_slots": 128,
+      "server_slots": 64
+    }
+  ],
+  "finding": "In BOTH independent native ISAs UDP missing == client shared-TUN NEW UDP pending-rejected (ARM 29/160, x86 23/160), and server observed exactly replies received. This aggregate conservation is strong evidence local ingress pressure suffices to explain these missing UDP in THIS no-artificial-loss four-flow setting; it is not packet-by-packet attribution and no full SLA/CPU gain or public product promotion.",
+  "remaining": "CPU/receivedGiB measured with opt-in instrumentation; do not compare against no-diagnostic past SOURCE as causal. Sparse TCP p99 among survivors 285-295ms. TCP local full >700k. Higher-level RR/PN/auth, GE1%, physical Windows/ARM board/WAN/3s upstream outage, multi-lease and sustained physical capacity NOT_QUALIFIED. Need same VM A/B/A' single-factor source scheduling candidate, retain original Stop."
+}
