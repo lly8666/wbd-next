@@ -111,9 +111,6 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --lib \
             --features m0_v4_embedded_go \
             m0_plan029_shared_tun_ingress_one_poll_per_ready_burst -- --nocapture
-          cargo +1.85.1 test --locked -p wbd-engine --lib \
-            --features m0_v4_embedded_go \
-            m0_plan029_shared_tun_ready_burst_4x8_never_waits_to_fill -- --nocapture
           python3 -u tools/m0_plan029_linux_dual_isa_suite.py
           python3 - <<'PY'
           import json,os,pathlib,platform

@@ -5500,32 +5500,6 @@ struct SharedTunLeaseQueueDiag {
     pending_overflow:u64,pending_byte_limit:u64,
     pending_peak_packets:usize,pending_peak_bytes:usize,
 }
-// Reuse eight existing buffers and amortize one real readiness wake across
-// at most 4 already-ready 8-packet batches. No waiting to fill any batch.
-#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
-    any(target_env="gnu",target_env="musl")))]
-const M0_SHARED_TUN_FULL_BATCHES_PER_WAKE:u8=4;
-#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
-    any(target_env="gnu",target_env="musl")))]
-#[inline]
-fn shared_tun_next_ready_batch_credit(prev:u8,real_kernel_reads:usize)->u8{
-    if real_kernel_reads!=8 {0}
-    else {(prev+1)%M0_SHARED_TUN_FULL_BATCHES_PER_WAKE}
-}
-#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
-    any(target_env="gnu",target_env="musl")))]
-#[test]
-fn m0_plan029_shared_tun_ready_burst_4x8_never_waits_to_fill(){
-    let mut credit=0;
-    for want in 1..=3{
-        credit=shared_tun_next_ready_batch_credit(credit,8);
-        assert_eq!(credit,want);
-    }
-    assert_eq!(shared_tun_next_ready_batch_credit(credit,8),0); // bounded 32
-    assert_eq!(shared_tun_next_ready_batch_credit(3,7),0); // short
-    assert_eq!(shared_tun_next_ready_batch_credit(1,0),0); // EAGAIN
-    assert_eq!(shared_tun_next_ready_batch_credit(0,1),0); // sparse first
-}
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u8>>){
     // Existing native nonblocking TUN batch API: at most 8 ready frames,
@@ -5546,11 +5520,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
         .ok().as_deref()==Some("1");
     let mut lease_diag=BTreeMap::<[u8;4],SharedTunLeaseQueueDiag>::new();
     let fd=router.tun.readiness_fd();
-    let mut ready_batch_credit=0u8;
     while !router.stop.load(Ordering::Acquire){
         if router.routes.lock().map_or(true,|routes|routes.is_empty()){
-            // A new verified route must start with a genuine poll.
-            ready_batch_credit=0;
             let old=std::mem::take(&mut pending);
             router.retired_drops.fetch_add(
                 old.values().map(|q|q.packets.len() as u64).sum::<u64>(),Ordering::Relaxed);
@@ -5558,12 +5529,7 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             continue
         }
         router.note_dispatch(flush_shared_tun(&mut pending,&mut fair));
-        // Flush each per-route FIFO turn before the next full ready batch.
-        // The nonblocking FD terminates immediately on EAGAIN; no idle spin.
-        if ready_batch_credit==0 &&
-            !loop_readiness(fd,&router.stop,if pending.is_empty(){10}else{1}){
-            continue
-        }
+        if !loop_readiness(fd,&router.stop,if pending.is_empty(){10}else{1}){continue}
         let read={
             let [a,b,c,d,e,f,g,h]=&mut scratch;
             let mut slots=[
@@ -5575,10 +5541,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
         let batch=match read{
             Ok(batch)=>batch,
             Err(TunError::Stopped)=>break,
-            Err(_)=>{ready_batch_credit=0;continue},
+            Err(_)=>continue,
         };
-        ready_batch_credit=shared_tun_next_ready_batch_credit(
-            ready_batch_credit,batch.observed);
         for i in 0..batch.observed{
             let len=match batch.entry(i){
                 Some(TunReadyEntry::UntrustedIpv4{len}) if len>=20=>len,
