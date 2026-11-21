@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2292,
-  "checkpoint_sha": "c75fafc71f558593c319579f9fae3b34bcb29ca0",
+  "sequence": 2293,
+  "checkpoint_sha": "e465ab6621fdec973e6bc696142c8195f8786128",
   "progress": "partial",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "M0 PLAN029/H2292完整产品双组三Runner原Windows2025签名Npcap/Wintun GoTLS/Rust→独立ARM relay→独立ARM原AF_PACKET/TUN、同机A default/B TX16/NPF64KiB/A′default、25s四TCP+160小TCP 9/9 ACTION SUCCESS。A候选吞吐+48.7% Win CPU/GiB-37.8% P99 188vs原266/250；B+21.4% CPU/GiB-21.9% P99 313vs原297/375；真实ARM收到字节/Stop全PASS。下一任务H2293真1%/5% FEC2弱网原Windows产品。",
-  "why_now": "两组原真实Windows产品都在同一组三Runner旧→新→旧配对证明H2291 TX16+NPF16x64KiB原Rust feature opt-in减少CPU/GiB且提高吞吐，但尚未验证双向200ms loss1/5%及FEC2和其他模式。曾经8Mbps裸TCP是夹具窗口不足，勿反复复测。H2292测试准备WLS peer发布过晚已修，Windows Rust相同编译SRC经真实产品diff零差重复复用。",
-  "done_when": "原Win签名Npcap/Wintun GoTLS/Rust与独立ARM原GoTLS/Rust在两组三Runner持续4x25s真收端goodput、160次小TCP P99、Win原Go/Rust阶段CPU秒/GiB与各TX/RX热线程/relay tailscaled最热核/ARM原Rust和本机drop、原子Stop均来源真实证据；然后只修真实热点并同VM A/B/A′验证吞吐/P99/CPU与Stop。双向200ms0/1/5% FEC2等后续资格仍OPEN，不能拿OS基准或最优组冒充产品PASS。",
-  "next_action": "优先H2293真实两组独立3Runner原Windows2025签名Npcap/Wintun原GoTLS/Rust客户端，经ARM Linux relay双向实际tc 200ms/1%和5%分档，到独立ARM原GoTLS/Rust TUN服务端，同机FEC2 OFF→fixed0/light或fixed1/mild→OFF，验原FEC2 Applied、ARM接收、cpu/GiB、P99/late/Stop及Linux Rust稳态和本机drop；之后判TX16 default及affected modes资格。",
+  "current_task": "M0 PLAN029/H2293 两档真实完整Win2025签名Npcap/Wintun GoTLS/Rust→独立ARM relay→独立ARM原GoTLS/Rust/TUN双组三Runner。first SOURCE b7182af loss1 Action44960412167与loss5 Action44960412020均FAIL：原Win/ARM真实TLS和内层UDP成功、1%A/B及5%B第一腿A_off四条真TCP ~110s reset、WSL NAT/FORWARD规则失踪；5%A DERP环境失格。先测WSL2 guest保持活性与前置直连筛选，修正夹具不改产品。H2293第二版SOURCE4566239f loss1 Action44961559152/loss5 Action44961559233 in-flight，B fixed及A′未验，Draft PR68。",
+  "why_now": "原H2292完整产品零损同组A/B/A′已证明TX16吞吐、CPU/GiB收益；但弱网1%/5%无法产有效对照：原Windows Npcap中本机drop0、Rust首次交付IPv4曾达7007且netem两向实丢包，随后Wintun TCP收流停顿/重置与WSL2 guest netfilter规则全部消失同时出现。高价值可证伪假设是只有短wsl CLI而无Linux常驻进程使guest退出/重置；尚未验证bootID，不得把初次结果写为FEC2失败或产品P99胜利。",
+  "done_when": "独立两套相同3Runner真Windows2025签名Npcap/Wintun原GoTLS/Rust与ARM GoTLS/Rust AF_PACKET/TUN，在每一档对称200ms0/1/5%双向Linux真netem损伤时，同机原冷会话FEC2 OFF→fixed(light或mild)→OFF真4×25s TCP业务持续且160稀疏小TCP、真实ARM接收字节与P99/迟回、双端CPU/GiB+relay CPU、M1/M4/本机drop、Windows WAL/ARM owned Stop均有源锁证据。H2292无损TX16默认晋级或FEC2弱网收益只能待双组真实合格后再决定；不得拿裸TCP/DERP/失联数据冒充。",
+  "next_action": "核收H2293新source4566239f loss1 Action44961559152、loss5 Action44961559233（各2套真3Runner），先看Win前置DIRECT vs DERP、WSL Linux PID/bootID是否持久、实际kernel PREROUTING/FORWARD规则及TCP首到/ACK/RTO，FEC2 Installed仅B正且A/A′负、原GoTLS+Rust WAL Stop与ARM TUN。若仍~110s断链，优先根据WSL bootID+netfilter实际计数与ARM TCP服务端日志定位、再针对M1/M4和TCP_RTO小增量施工，不空跑同样12Runner。",
   "unverified": true,
   "last_tested_source": "13d391cbb64ef06c55b046c6d73a2d69e096c54d",
   "evidence_refs": [
-    "docs/devlog/M0/20261122-M0-PLAN029-H2292-DUAL-FULL-WINDOWS-TX16-QUALIFICATION.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2293-WEAKLOSS-WSL-LIFECYCLE-RECOVERY.md"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
-    "docs/devlog/M0/20261122-M0-PLAN029-H2292-WIN-TRUE-PRODUCT-RESTART.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2292-DUAL-FULL-WINDOWS-TX16-QUALIFICATION.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2292 SOURCE13d391cbb64ef06c55b046c6d73a2d69e096c54d Action44951274107 9/9 PASS。完整原Windows到ARM sameVM两组三段A/B/A': A129.189/189.617/125.835Mbps, Win CPU秒/GiB44.5287/28.1498/45.9966, P99266/188/250; B119.277/139.332/110.18, CPU48.7536/39.4356/52.1978, P99297/313/375。原本H2292 B manifest夹具FAIL和A WSL身份超时历史留存，现完全成功。feature默认OFF，产品FEC2弱网未做，不可收口。"
+  "partial_summary": "原Win/ARM完整产品无损最后QUALIFIED仍H2292 Source13d391c/Action44951274107 9/9: A129/190/126Mbps P99 266/188/250ms，B119/139/110Mbps P99 297/313/375ms，真GoTLS Rust Stop全PASS。首轮H2293 1% Action44960412167、5%44960412020整体失败于首次off弱网TCP Reset和WSL规则丢失，且5%A DERP invalid，fixed/FEC没有任何有效收字节/吞吐比较。源1469e7纯fixture WSL guest常驻+bootID+exact rules+早期direct门静态双PASS；Source4566239f真实双组三Runner两档正运行。原Go/Rust/默认OFF不变，PR68 Draft，029未完。"
 }
