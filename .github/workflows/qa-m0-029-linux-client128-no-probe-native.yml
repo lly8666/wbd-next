@@ -15,6 +15,7 @@ on:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
       - '.github/workflows/qa-m0-029-linux-client128-no-probe-native.yml'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
       - 'tools/m0_plan029_linux_dual_native_build.sh'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go'
       - 'tools/m0_plan029_linux_dual_isa_suite.py'
@@ -103,6 +104,11 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --lib \
             --features m0_v4_embedded_go \
             m0_plan029_linux_normal_client_default_128_server_64 -- --nocapture
+          # The original nonblocking TUN ingress must re-poll at most after
+          # 32 actually consumed kernel packets and immediately after EAGAIN.
+          cargo +1.85.1 test --locked -p wbd-engine --lib \
+            --features m0_v4_embedded_go \
+            m0_plan029_shared_tun_ingress_one_poll_per_ready_burst -- --nocapture
           python3 -u tools/m0_plan029_linux_dual_isa_suite.py
           python3 - <<'PY'
           import json,os,pathlib,platform
