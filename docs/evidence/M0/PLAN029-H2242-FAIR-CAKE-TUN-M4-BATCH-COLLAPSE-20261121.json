@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2242_FULL_CHAIN_FAIR_QDISC_REAL_1PCT_TWO_ISA_BUT_FINAL_DIRECT_FAIL",
+  "source_sha": "b6a64a19e4984b9ac3da701672063a4cb4d0b458",
+  "run_id": 44852383940,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44852383940",
+  "status": "FAIL_FINAL_DIRECT_IPERF_CONTROL_CLOSED_BOTH_ISA__ALL_FOUR_REAL_WBD_TCP_PASS_WITH_OWNED_STOP",
+  "not_a_product_optimization": true,
+  "artifacts": {
+    "x86_64": 14685254810,
+    "aarch64": 14686530957
+  },
+  "one_vm_three_netns_per_isa": true,
+  "physical_WAN_not_tested": true,
+  "network": {
+    "target_ge_pct": 1,
+    "added_oneway_ms": 200,
+    "jitter_ms": 0,
+    "random_seed": "UNSEEDED",
+    "real_TCP_streams": 4
+  },
+  "variants": [
+    {
+      "arch": "x86_64",
+      "direct_baseline_before_receiver_mbps": 1002.746,
+      "direct_after": "FAIL_CONTROL_SOCKET_CLOSED",
+      "phases": [
+        {
+          "name": "original_fq600",
+          "receiver_mbps": 278.533,
+          "rust_full": 81076,
+          "kernel_link_tx_dropped": 0,
+          "kernel_qdisc_dropped": 0,
+          "m4_copied": 784835,
+          "m4_batches": 54624,
+          "m4_average_copies_per_batch": 14.37,
+          "m4_cpu_seconds_per_delivered_gib": 12.3866,
+          "tcp_retransmits": 88826
+        },
+        {
+          "name": "cake450_fair_only",
+          "receiver_mbps": 242.346,
+          "rust_full": 29090,
+          "kernel_link_tx_dropped": 0,
+          "kernel_qdisc_dropped": 4,
+          "m4_copied": 680647,
+          "m4_batches": 235219,
+          "m4_average_copies_per_batch": 2.89,
+          "m4_cpu_seconds_per_delivered_gib": 21.1283,
+          "tcp_retransmits": 33353
+        },
+        {
+          "name": "cake450_fair_plus_gate",
+          "receiver_mbps": 271.219,
+          "rust_full": 1702,
+          "kernel_link_tx_dropped": 6,
+          "kernel_qdisc_dropped": 3,
+          "m4_copied": 737009,
+          "m4_batches": 202012,
+          "m4_average_copies_per_batch": 3.65,
+          "m4_cpu_seconds_per_delivered_gib": 20.0267,
+          "tcp_retransmits": 8679
+        },
+        {
+          "name": "original_fq600_restored",
+          "receiver_mbps": 320.045,
+          "rust_full": 72664,
+          "kernel_link_tx_dropped": 0,
+          "kernel_qdisc_dropped": 0,
+          "m4_copied": 878005,
+          "m4_batches": 64246,
+          "m4_average_copies_per_batch": 13.67,
+          "m4_cpu_seconds_per_delivered_gib": 12.3489,
+          "tcp_retransmits": 71176
+        }
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "direct_baseline_before_receiver_mbps": 1003.04,
+      "direct_after": "FAIL_CONTROL_SOCKET_CLOSED",
+      "phases": [
+        {
+          "name": "original_fq600",
+          "receiver_mbps": 357.698,
+          "rust_full": 25454,
+          "kernel_link_tx_dropped": 0,
+          "kernel_qdisc_dropped": 0,
+          "m4_copied": 976251,
+          "m4_batches": 60874,
+          "m4_average_copies_per_batch": 16.04,
+          "m4_cpu_seconds_per_delivered_gib": 9.7202,
+          "tcp_retransmits": 35045
+        },
+        {
+          "name": "cake450_fair_only",
+          "receiver_mbps": 296.769,
+          "rust_full": 910,
+          "kernel_link_tx_dropped": 0,
+          "kernel_qdisc_dropped": 41,
+          "m4_copied": 804092,
+          "m4_batches": 332764,
+          "m4_average_copies_per_batch": 2.42,
+          "m4_cpu_seconds_per_delivered_gib": 17.3843,
+          "tcp_retransmits": 8068
+        },
+        {
+          "name": "cake450_fair_plus_gate",
+          "receiver_mbps": 299.143,
+          "rust_full": 14,
+          "kernel_link_tx_dropped": 0,
+          "kernel_qdisc_dropped": 2,
+          "m4_copied": 832723,
+          "m4_batches": 352913,
+          "m4_average_copies_per_batch": 2.36,
+          "m4_cpu_seconds_per_delivered_gib": 18.0522,
+          "tcp_retransmits": 7873
+        },
+        {
+          "name": "original_fq600_restored",
+          "receiver_mbps": 364.403,
+          "rust_full": 61802,
+          "kernel_link_tx_dropped": 0,
+          "kernel_qdisc_dropped": 0,
+          "m4_copied": 1022209,
+          "m4_batches": 59563,
+          "m4_average_copies_per_batch": 17.16,
+          "m4_cpu_seconds_per_delivered_gib": 10.2397,
+          "tcp_retransmits": 67259
+        }
+      ]
+    }
+  ],
+  "proven": "Linux source TCP per-flow fq600 yields burst overflow in 1% with 4 flows; test-only CAKE450 aggregate flow AQM dramatically reduces Rust and TUN driver local drops (and inner TCP retransmissions) but also collapses original synchronous M4 batches from 14-17 copies to 2-4 copies, raises M4 CPU per delivered GiB ~70-100%, and reduces receiver goodput. The bottleneck is coupling of producer FAIR PACE GRANULARITY to original M4 batch service, not just average CPU.",
+  "qualification": "Four WBD stages each authentic TCP and Stop passed for each ISA, but both final Direct references returned ERROR_TCP_CRASH_ABORT_OR_UNREACHABLE with iperf control socket closed unexpectedly. Full Action fail; not approved product, no 0% speed or p99 full qualification.",
+  "not_proven": "No causal absolute speed/CPU gain across VM or ISA; CAKE450 is hard cap test, not dynamic adaptive product scheme; per-tuple cake fair doesn't prove per-lease fairness, and C gate may delay new route.",
+  "next": "Test an aggregate token-bucket allowing bounded native M4-sized packet bursts with fq_codel independent flow AQM. Must preserve first UDP response p99 and TCP goodput, no new outer reliability/HOL; full real two ISA Stop and three-layer losses."
+}
