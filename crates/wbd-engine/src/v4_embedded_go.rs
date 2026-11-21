@@ -5508,6 +5508,25 @@ struct SharedTunLeaseQueueDiag {
     pending_peak_packets:usize,pending_peak_bytes:usize,
     tcp_offered:u64,udp_offered:u64,other_offered:u64,
     tcp_new_dropped:u64,udp_new_dropped:u64,other_new_dropped:u64,
+    sparse_forward_offered:u64,sparse_forward_dropped:u64,
+    sparse_reverse_offered:u64,sparse_reverse_dropped:u64,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+// Only explicit H2262 diagnostics identify original inner TCP echo port.
+// No production payload, key, PN or per-packet logging is collected.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m0_029_sparse_tcp_echo_direction(ip:&[u8])->Option<bool>{
+    if ip.len()<24 || ip[0]>>4!=4 || ip[9]!=6{return None}
+    let header_len=usize::from(ip[0]&15)*4;
+    let total_len=usize::from(u16::from_be_bytes([ip[2],ip[3]]));
+    if header_len<20 || ip.len()<header_len+4 ||
+        total_len<header_len+4 || total_len>ip.len(){return None}
+    if u16::from_be_bytes([ip[6],ip[7]])&0x1fff!=0{return None}
+    let source=u16::from_be_bytes([ip[header_len],ip[header_len+1]]);
+    let target=u16::from_be_bytes([ip[header_len+2],ip[header_len+3]]);
+    if target==53222{Some(true)}
+    else if source==53222{Some(false)}
+    else{None}
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl SharedTunLeaseQueueDiag {
@@ -5522,6 +5541,46 @@ impl SharedTunLeaseQueueDiag {
         *offered=offered.saturating_add(1);
         *dropped=dropped.saturating_add(refused);
     }
+    fn note_sparse_tcp_echo(&mut self,ip:&[u8],refused:u64){
+        match m0_029_sparse_tcp_echo_direction(ip){
+            Some(true)=>{
+                self.sparse_forward_offered+=1;
+                self.sparse_forward_dropped+=refused;
+            },
+            Some(false)=>{
+                self.sparse_reverse_offered+=1;
+                self.sparse_reverse_dropped+=refused;
+            },
+            None=>{},
+        }
+    }
+}
+#[cfg(all(test,target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_sparse_echo_original_tun_diagnostic_is_bounded_and_header_only(){
+    let mut ip=[0u8;40];
+    ip[0]=0x45;ip[9]=6;ip[2..4].copy_from_slice(&40u16.to_be_bytes());
+    ip[20..22].copy_from_slice(&43210u16.to_be_bytes());
+    ip[22..24].copy_from_slice(&53222u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),Some(true));
+    let mut diag=SharedTunLeaseQueueDiag::default();
+    diag.note_sparse_tcp_echo(&ip,1);
+    ip[20..22].copy_from_slice(&53222u16.to_be_bytes());
+    ip[22..24].copy_from_slice(&43210u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),Some(false));
+    diag.note_sparse_tcp_echo(&ip,0);
+    assert_eq!((diag.sparse_forward_offered,diag.sparse_forward_dropped,
+        diag.sparse_reverse_offered,diag.sparse_reverse_dropped),(1,1,1,0));
+    ip[6..8].copy_from_slice(&1u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),None);
+    ip[6..8].copy_from_slice(&0u16.to_be_bytes());
+    ip[22..24].copy_from_slice(&5201u16.to_be_bytes());
+    ip[20..22].copy_from_slice(&40000u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),None);
+    ip[0]=0x44;assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),None);
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip[..19]),None);
 }
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
@@ -5551,6 +5610,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     // route table: no new per-packet Go bridge, timer, mutex, or unbounded
     // packet cache. All extra accounting is disabled in normal production.
     let lease_diag_enabled=std::env::var("WBD_SHARED_TUN_ROUTE_DIAG")
+        .ok().as_deref()==Some("1");
+    let sparse_echo_diag=lease_diag_enabled && std::env::var("WBD_M0_029_SPARSE_TCP_DIAG")
         .ok().as_deref()==Some("1");
     let mut lease_diag=BTreeMap::<[u8;4],SharedTunLeaseQueueDiag>::new();
     let fd=router.tun.readiness_fd();
@@ -5605,6 +5666,7 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 let stats=lease_diag.entry(key).or_default();
                 stats.offered+=1;
                 stats.note_new_packet(scratch[i][9],delta.overflow);
+                if sparse_echo_diag{stats.note_sparse_tcp_echo(&scratch[i][..len],delta.overflow);}
                 stats.direct_delivered+=delta.delivered;
                 stats.downstream_full+=delta.backpressure;
                 stats.pending_overflow+=delta.overflow;
@@ -5625,6 +5687,12 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 st.pending_peak_packets,st.pending_peak_bytes,
                 st.tcp_offered,st.udp_offered,st.other_offered,
                 st.tcp_new_dropped,st.udp_new_dropped,st.other_new_dropped);
+            if sparse_echo_diag{
+                eprintln!("M0_SHARED_TUN_SPARSE_TCP_DIAG ip={}.{}.{}.{} forward_offered={} forward_dropped={} reverse_offered={} reverse_dropped={} scope=original_inner_tcp_53222",
+                    ip[0],ip[1],ip[2],ip[3],
+                    st.sparse_forward_offered,st.sparse_forward_dropped,
+                    st.sparse_reverse_offered,st.sparse_reverse_dropped);
+            }
         }
     }
     let remaining:usize=pending.values().map(|q|q.packets.len()).sum();

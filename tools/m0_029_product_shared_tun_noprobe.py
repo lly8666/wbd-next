@@ -55,6 +55,12 @@ FIRSTDROP=os.environ.get("WBD_M0_029_FIRST_DROP_WINDOW","0")
 if FIRSTDROP not in ("0","1"):
     raise RuntimeError("M029_H2261_FIRST_DROP_WINDOW_INVALID")
 FIRSTDROP=(FIRSTDROP=="1")
+SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
+if SPARSEFLOW not in ("0","1"):
+    raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
+SPARSEFLOW=SPARSEFLOW=="1"
+if SPARSEFLOW and not (STAGE and TCP_TIMELINE and TCP_INFO):
+    raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
 
@@ -136,6 +142,7 @@ def main():
                 *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
                 *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
                 *(["WBD_M0_029_FIRST_DROP_WINDOW=1"] if FIRSTDROP else []),
+                *(["WBD_M0_029_SPARSE_TCP_DIAG=1"] if SPARSEFLOW else []),
                 str(BUNDLE/"wbd-v4-server"),"--raw-interface","wan0",
                 "--local-ip",G["SERVER_IP"],"--local-port","443",
                 "--tun-name",G["SERVER_TUN"],
@@ -165,6 +172,7 @@ def main():
                 *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
                 *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
                 *(["WBD_M0_029_FIRST_DROP_WINDOW=1"] if FIRSTDROP else []),
+                *(["WBD_M0_029_SPARSE_TCP_DIAG=1"] if SPARSEFLOW else []),
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -303,6 +311,32 @@ def main():
                     !=result["owned_stop"][role]["queue_full_drops"]):
                 raise RuntimeError("M029_NEW_SOURCE_DROP_ACCOUNTING_MISMATCH_"+role)
             result["shared_tun_protocol_ingress"][role]=rows
+        if SPARSEFLOW:
+            # B-only original TCP/53222 segments; zero refusals is a valid
+            # negative. No application sequence, ciphertext or PN identity.
+            result["h2262_sparse_tcp_ingress"]={}
+            required={"forward_offered","forward_dropped",
+                      "reverse_offered","reverse_dropped"}
+            for role in ("client","server"):
+                rows=[]
+                for line in node.logs[role].read_text(errors="replace").splitlines():
+                    if not line.startswith("M0_SHARED_TUN_SPARSE_TCP_DIAG "):
+                        continue
+                    fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\\d+)",line)}
+                    if not required.issubset(fields):
+                        raise RuntimeError("M029_H2262_SPARSE_ORIGINAL_RUST_FIELDS_MISSING_"+role)
+                    if fields["forward_dropped"]>fields["forward_offered"] or (
+                        fields["reverse_dropped"]>fields["reverse_offered"]):
+                        raise RuntimeError("M029_H2262_SPARSE_DENOMINATOR_INVALID_"+role)
+                    rows.append({k:fields[k] for k in sorted(required)})
+                if len(rows)!=1:
+                    raise RuntimeError("M029_H2262_EXACT_ONE_AUTHENTIC_SHARED_ROUTE_"+role)
+                item=rows[0]
+                if (role=="client" and item["forward_offered"]<=0) or (
+                    role=="server" and item["reverse_offered"]<=0):
+                    raise RuntimeError("M029_H2262_TRUE_53222_TCP_SEGMENTS_MISSING_"+role)
+                result["h2262_sparse_tcp_ingress"][role]=item
+            result["h2262_scope"]="original_test_TCP_53222_first_fragment_source_segments_no_app_seq_PN_causality"
         if STAGE:
             # Existing independent Rust observer: 500ms samples of original
             # atomic counters. Do not add locks/FFI/timers on packet paths.

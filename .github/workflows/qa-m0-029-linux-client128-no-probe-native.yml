@@ -187,7 +187,7 @@ jobs:
         timeout-minutes: 14
         run: |
           set -euo pipefail
-          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} WBD_M0_029_TCP_INFO=${{ contains(github.event.head_commit.message, '[m0-029-tcpinfo]') && '1' || '0' }} WBD_M0_029_FIRST_DROP_WINDOW=${{ contains(github.event.head_commit.message, '[m0-029-firstdrop]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} WBD_M0_029_TCP_INFO=${{ contains(github.event.head_commit.message, '[m0-029-tcpinfo]') && '1' || '0' }} WBD_M0_029_FIRST_DROP_WINDOW=${{ contains(github.event.head_commit.message, '[m0-029-firstdrop]') && '1' || '0' }} WBD_M0_029_SPARSE_TCP_DIAG=${{ contains(github.event.head_commit.message, '[m0-029-sparseflow]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib
           plain=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
@@ -252,6 +252,14 @@ jobs:
           assert not c["original_m4_raw_sendmmsg_sampled_timing"]
           assert c["same_source_recovery_leg"]
           assert not c["independent_m1_m4_stage_observer"]
+          if b.get("h2262_sparse_tcp_ingress"):
+              assert not a.get("h2262_sparse_tcp_ingress")
+              assert not c.get("h2262_sparse_tcp_ingress")
+              for role,side in (("client","forward"),("server","reverse")):
+                  row=b["h2262_sparse_tcp_ingress"][role]
+                  assert row[side+"_offered"]>0
+                  assert row[side+"_dropped"]<=row[side+"_offered"]
+              print("M029_H2262_TEST_ONLY_SPARSE_TCP_SOURCE_INTAKE_PASS_NOT_CAUSAL",flush=True)
           if b["original_shared_tun_first_drop_window"]:
               assert not a["original_shared_tun_first_drop_window"]
               assert not c["original_shared_tun_first_drop_window"]

@@ -62,6 +62,8 @@
 
 已有历史 SOURCE 的 scoped PASS 和否决结果不变，不能自动继承。
 
+- **H2262 v5.1 最小可辨别诊断（SOURCE 未验）**：H2261 30/30 窗全满包含四条 bulk，不足以定位原小 TCP 重传的首丢。跨租约公平转轮不能处理本次同一 /32 四流。仅在原共享 TUN 既有显式诊断内新增冷开关 `WBD_M0_029_SPARSE_TCP_DIAG=1`，读取真正 IPv4 首片原生 TCP 53222 端口、分类客户端正向和服务端反向 ingress offered/full refused；不触及 16B 业务明文、密钥、PN、重传或产品默认热路径。诊断只在同源 ARM64/x86 非 probe 真 Go TLS/Rust 五模式及共享 Normal/off 四流+各160 UDP/TCP 真实请求/Stop 的 A→B→A′ 中 B 显式启用；各腿原 TCP_INFO 同时读取，保留原反例。若 B 小 TCP 源拒绝 >0，只能证明 **这个内层 TCP 流原生入口确有拒绝**（非具体应用 seq 的首次丢），若为0则不应将 bulk 满丢归于小 TCP 源头，应继续下游 M1/Raw/RX/内核 TCP 定位。所有 SOURCE、性能、真实额外开销未验证，实验不自动晋级；H2254 被否决抢槽不复活。
+
 ```feature-impact
 {"kind":"updated","ids":["linux-raw-tun"],"reason":"On this experimental branch change only the internal Linux authenticated Normal client shared-TUN M1 inbox default from 64 to bounded 128 (server and separate Game remain 64), after exact-source native ARM/x86 goodput evidence; no new public config/CLI/GUI, physical platform qualification or formal promotion. Updated stable Linux raw-TUN feature card in same product commit; main remains unchanged."}
 ```
