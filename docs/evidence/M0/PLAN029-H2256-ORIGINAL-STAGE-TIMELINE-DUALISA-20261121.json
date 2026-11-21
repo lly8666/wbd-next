@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "task": "M0-PLAN029-THROUGHPUT",
+  "study": "H2256",
+  "disposition": "PASS_SCOPED_DIAG__NO_PRODUCT_QOS_OR_CPU_GAIN_PASS",
+  "source_sha": "751b72e3090e3c1549f9b12eaea154d9ae664e97",
+  "run": 44888008635,
+  "attempt": 1,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44888008635",
+  "previous_parser_invalid": {
+    "run": 44887532361,
+    "source": "b3736d50aaa8b76fb89f3c77f9a8929c93338a4f",
+    "reason": "[a-z_]+ lost the m4_copied numeric key; authentic five modes/shared passed but new observer receipt failed"
+  },
+  "scope": "Native Linux aarch64/x86_64, each same release Go TLS+Rust binaries across baseline and stage observer; genuine five dedicated modes, shared /32 Normal off, original RAW/TUN, 4 bulk TCP+160UDP/160TCP, owned Stop, outer IP MTU1160, zero injected netem loss. Diagnostic WBD_SHARED_TUN_ROUTE_DIAG=1 on both, and only second leg WBD_PLAN028_EXTERNAL_STAGE_DIAG=1 independent 500ms observer.",
+  "observations": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14700528650,
+      "manifest_sha256": {
+        "libwbd_engine.so": "553c356a2fcd06ff94e761957fa2a7ba5832b7604adb5836651751bb0ded3f0e",
+        "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+        "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+      },
+      "baseline": {
+        "goodput_mbps": 1147.28,
+        "client_cpu_s_per_gib": 11.59913,
+        "udp_missing_of160": 28,
+        "small_tcp_p99_ms": 643.9726
+      },
+      "observer": {
+        "goodput_mbps": 1136.26,
+        "client_cpu_s_per_gib": 11.62803,
+        "udp_missing_of160": 34,
+        "small_tcp_p99_ms": 641.7106,
+        "client_tcp_new_rejected": 678633,
+        "client_udp_new_rejected": 34
+      },
+      "timeline": {
+        "client_samples": 62,
+        "server_samples": 63,
+        "echo_samples_each": 31,
+        "client_tx_core_fraction_median": 0.9845,
+        "server_rx_core_fraction_median": 0.8023,
+        "client_m4_copied_per_sec_echo_median": 139951.84,
+        "server_m4_copied_per_sec_echo_median": 31049.78,
+        "client_copied_in_echo": 2074821,
+        "client_tx_backpressure_delta": 0,
+        "server_tx_backpressure_delta": 0
+      }
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14701375849,
+      "manifest_sha256": {
+        "libwbd_engine.so": "12e8d257532d4cb5fab12ad258c9ac5b2f4fa763dcb8ebeec060abe3a718ae20",
+        "wbd-v4-client": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+        "wbd-v4-server": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343"
+      },
+      "baseline": {
+        "goodput_mbps": 1474.78,
+        "client_cpu_s_per_gib": 8.39205,
+        "udp_missing_of160": 30,
+        "small_tcp_p99_ms": 613.7447
+      },
+      "observer": {
+        "goodput_mbps": 1455.73,
+        "client_cpu_s_per_gib": 8.4755,
+        "udp_missing_of160": 26,
+        "small_tcp_p99_ms": 617.8672,
+        "client_tcp_new_rejected": 697970,
+        "client_udp_new_rejected": 25
+      },
+      "timeline": {
+        "client_samples": 62,
+        "server_samples": 62,
+        "echo_samples_each": 31,
+        "client_tx_core_fraction_median": 0.9878,
+        "server_rx_core_fraction_median": 0.8693,
+        "client_m4_copied_per_sec_echo_median": 178039.28,
+        "server_m4_copied_per_sec_echo_median": 46484.65,
+        "client_copied_in_echo": 2643340,
+        "client_tx_backpressure_delta": 0,
+        "server_tx_backpressure_delta": 0
+      }
+    }
+  ],
+  "interpretation": "High supply likely presses BOTH native client TX and server RX CPU capacity; zero native TX EAGAIN observed, but not evidence kernel sending consumes zero CPU. Cannot separate user-space staging/AEAD from kernel syscall cost without per-thread user/system split and actual M4 batching.",
+  "limitations": [
+    "Observer is a separate 500ms thread with potential scheduling cost; A->B only, no A-prime, do not report causal performance gain or regression.",
+    "source_queued=0 is a FEC-specific M1 stage counter, NOT general Normal/off source ingress.",
+    "No packet-level mapping between 500ms windows and individual small TCP latency; full timestamp samples preserved in Actions ZIP artifact.",
+    "Different native VM/ISA runs are not a paired causal CPU comparison.",
+    "GE1%, default MTU1460, WAN, physical ARM, Windows 80–200Mbps and upstream3s failover remain NOT_RUN/OPEN."
+  ],
+  "next": "Measure original TX/RX thread user-vs-kernel CPU and true copied records per sendmmsg turn under same real workload, then choose a single service-cost optimization, rather than drop-priority or fixed fq/TBF sweeps."
+}
