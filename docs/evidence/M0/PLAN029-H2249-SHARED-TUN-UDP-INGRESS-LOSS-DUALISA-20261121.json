@@ -110,5 +110,12 @@
     }
   ],
   "finding": "In BOTH independent native ISAs UDP missing == client shared-TUN NEW UDP pending-rejected (ARM 29/160, x86 23/160), and server observed exactly replies received. This aggregate conservation is strong evidence local ingress pressure suffices to explain these missing UDP in THIS no-artificial-loss four-flow setting; it is not packet-by-packet attribution and no full SLA/CPU gain or public product promotion.",
-  "remaining": "CPU/receivedGiB measured with opt-in instrumentation; do not compare against no-diagnostic past SOURCE as causal. Sparse TCP p99 among survivors 285-295ms. TCP local full >700k. Higher-level RR/PN/auth, GE1%, physical Windows/ARM board/WAN/3s upstream outage, multi-lease and sustained physical capacity NOT_QUALIFIED. Need same VM A/B/A' single-factor source scheduling candidate, retain original Stop."
+  "remaining": "CPU/receivedGiB measured with opt-in instrumentation; do not compare against no-diagnostic past SOURCE as causal. Sparse TCP p99 among survivors 285-295ms. TCP local full >700k. Higher-level RR/PN/auth, GE1%, physical Windows/ARM board/WAN/3s upstream outage, multi-lease and sustained physical capacity NOT_QUALIFIED. Need same VM A/B/A' single-factor source scheduling candidate, retain original Stop. Exact historical H2249 client CLI --outer-repair on and server omitted flag (default on); outer MTU explicitly 1160, not user default 1460. Must not cite H2249 as Normal/off qualification. Follow-on candidate separate SOURCE tests both sides --outer-repair off with authentic owner Stop readback.",
+  "actual_cli_configuration_at_H2249": {
+    "client_mode": "normal",
+    "client_outer_repair": "on",
+    "server_outer_repair": "on_default",
+    "outer_ip_mtu_bytes": 1160,
+    "not_normal_off": true
+  }
 }

@@ -98,7 +98,8 @@ def main():
                 "--server-name","wbd-m029.example.test",
                 "--route-key-hex-file",str(route),"--users-file",str(users),
                 "--lease-pool","10.66.0.128/25","--tls-cert",str(cert),
-                "--tls-key",str(key),"--outer-mtu","1160","--mode","shared"])
+                "--tls-key",str(key),"--outer-repair","off",
+                "--outer-mtu","1160","--mode","shared"])
             if not ready(self.logs["server"],
                 "V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443",70):
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_SHARED_SERVER_NOT_READY")
@@ -124,7 +125,7 @@ def main():
                 "--username","bench0","--password","m029-scope-pass",
                 "--auto-ip","--installation-id-file",str(self.secret_dir/"install"),
                 "--mode","normal","--fec-profile","6",
-                "--outer-repair","on","--outer-mtu","1160"])
+                "--outer-repair","off","--outer-mtu","1160"])
             if not ready(self.logs["client"],
                 "V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",85):
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_CLIENT_NOT_READY")
@@ -169,6 +170,8 @@ def main():
     result={"source_sha":SHA,"run_id":RUN,"attempt":ATTEMPT,
             "trial_leg":LEG if LEG else "single",
             "test_only_udp_reservation":LEG=="B",
+            "outer_repair_cli":"off_both_endpoints",
+            "outer_ip_mtu_explicit_bytes":1160,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
             "probe_compiled":False,"status":"NOT_RUN",
@@ -187,6 +190,16 @@ def main():
         result["owned_stop"]={
             "client":node.stop("client","V4_PUBLIC_SHARED_TUN_STOP generation="),
             "server":node.stop("server","V4_PUBLIC_SHARED_TUN_STOP generation=")}
+        # This is the actual protected original-Go -> Rust owner status,
+        # not merely the CLI flag or an assumed default.
+        result["outer_repair_native_stop_readback"]={}
+        for role in ("client","server"):
+            raw=node.logs[role].read_text(errors="replace")
+            values=re.findall(r"V4_PUBLIC_M2_OUTER role="+role+
+                              r"[^\\n]*? repair_enabled=(\\d+)",raw)
+            if not values or any(value!="0" for value in values):
+                raise RuntimeError("M029_TRUE_NORMAL_OFF_NATIVE_OUTER_READBACK_MISSING_"+role)
+            result["outer_repair_native_stop_readback"][role]=[int(x) for x in values]
         # Explicit source-only diagnostic: UDP/TCP entering the authenticated
         # /32 shared reader versus NEW pending drops. Neither a M4 copied
         # prefix nor AEAD/PN verification nor a timed delivery receipt.
