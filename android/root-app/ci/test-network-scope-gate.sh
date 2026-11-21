@@ -248,6 +248,10 @@ assert "fn wbd_m0_embedded_go_fixed_m4_counters(" in fec_worker
 assert "if out.is_null()||len!=9{return INVALID}" in fec_worker
 assert "originalAndroidFixedM4Counters()([9]uint64,error)" in fec_go
 assert "fn send_android_fixed_quality_due(" in fec_worker
+assert "fn wbd_m0_embedded_go_public_fec2_mature_quality(" in fec_worker
+assert "super::original_fixed_mature_snapshot(q,stream)" in fec_worker
+assert "original_fixed_mature_snapshot(q,stream)" in fec_entry
+assert 'C.wbd_m0_embedded_go_public_fec2_mature_quality(' in go_bridge
 assert "q.settle_batch(&[(wbd_types::RecordPn(pn),0)]" in fec_worker
 assert "q.next_signal(next_pn,at)" in fec_worker
 assert "q.complete_signal(signal,sent,at)" in fec_worker

@@ -1948,6 +1948,27 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_m4_counters(
     OK
 }
 
+// B18 one native original Fixed/Auto Quality readback. Same M3/FEC2
+// sender and 30-slot source-k histogram as Linux; no Go packet pump.
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_mature_quality(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=30{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.protected_features!=7||
+       e.android_workers.is_none(){return BAD_STAGE}
+    let Some(q)=e.quality_tx.as_mut()else{return BAD_STAGE};
+    q.advance(now());
+    let Some(q)=e.quality_tx.as_ref()else{return BAD_STAGE};
+    let Some(stream)=e.android_fec2_tx.as_ref()else{return BAD_STAGE};
+    let v=super::original_fixed_mature_snapshot(q,stream);
+    unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,30)};
+    OK
+}
+
 // Same original-Go authenticated epoch/revision Normal/off approval used
 // by its existing Linux native control bridge, implemented on the original
 // Android Entry. This is NOT a missing-FEC/Game ABI stand-in: it strictly

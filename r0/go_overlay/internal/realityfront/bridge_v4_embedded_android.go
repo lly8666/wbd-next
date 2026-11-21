@@ -61,6 +61,7 @@ extern int32_t wbd_m0_embedded_go_public_native_health_effective(uint64_t,const 
 
 
 
+extern int32_t wbd_m0_embedded_go_public_fec2_mature_quality(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_business_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_raw_rx_debug(uint64_t,uint64_t *,size_t);
@@ -619,7 +620,20 @@ func (b *v4EmbeddedNativeBridge) rustOwnerNormalM2Firstsend()(v4NormalM2Firstsen
  func (b *v4EmbeddedNativeBridge) rustOwnerNormalM2Coverage()(v4NormalM2Coverage,error){return v4NormalM2Coverage{},ErrAdmissionUnsupported}
 // Full original native source-only quality readback. No copied parity,
 // repair-shadow RTT or inferred netem loss enters these 30 monotone counts.
-func (b *v4EmbeddedNativeBridge) rustOwnerFec2MatureQuality()([30]uint64,error){return [30]uint64{},ErrAdmissionUnsupported}
+func (b *v4EmbeddedNativeBridge) rustOwnerFec2MatureQuality()([30]uint64,error){
+    var values [30]uint64
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+       b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2){
+        return values,ErrAdmissionUnsupported
+    }
+    var raw [30]C.uint64_t
+    rc:=C.wbd_m0_embedded_go_public_fec2_mature_quality(
+        C.uint64_t(b.handle),&raw[0],C.size_t(len(raw)))
+    if rc!=0{return values,fmt.Errorf("%w: native Android FEC Quality=%d",
+        errV4Embedded,int(rc))}
+    for i,n:=range raw{values[i]=uint64(n)}
+    return values,nil
+}
 // Developer-only feature-gated barrier. This is not a product scheduler,
 // data-plane syscall, or authorization to enable FEC2.
 func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(_ bool)(bool,uint32,error){return false,0,ErrAdmissionUnsupported}

@@ -734,6 +734,38 @@ impl OriginalQualityTx{
         }
     }
 }
+// One original Rust PLAN027 30-slot observation for Linux and Android.
+// Index 0..13: matched SendWindow history; 14..29: actual FEC2 source k.
+#[cfg(feature="fec2_product_record")]
+fn original_fixed_mature_snapshot(
+    quality:&OriginalQualityTx,stream:&crate::v4_fixed_stream::FixedStream
+)->[u64;30]{
+    let mut v=[0u64;30];
+    v[..14].copy_from_slice(&quality.counters);
+    for cl in &stream.report().classes{
+        for k in 1..=16{
+            v[13+k]=v[13+k].saturating_add(cl.k_hist[k]);
+        }
+    }
+    v
+}
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn b18_original_linux_android_quality_30_field_mapping(){
+    let lane=wbd_types::LaneKey{
+        tunnel:wbd_types::TunnelKey{slot:1,generation:2},
+        slot:1,generation:2,
+    };
+    let mut q=OriginalQualityTx::new(
+        lane,[7u8;16],wbd_recovery::WireDirection::ClientToServer
+    );
+    for (i,n) in q.counters.iter_mut().enumerate(){*n=(i as u64)+1}
+    let stream=crate::v4_fixed_stream::FixedStream::new(1,1,1400).unwrap();
+    let got=original_fixed_mature_snapshot(&q,&stream);
+    assert_eq!(&got[..14],&(1u64..=14).collect::<Vec<_>>()[..]);
+    assert_eq!(&got[14..],[0u64;16]);
+}
 #[cfg(all(test,feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
@@ -9670,9 +9702,13 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_mature_quality(
             v[13]=b.positive_confirmation_samples;
         }
         let Some(stream)=e.fec2_live_tx.as_ref()else{return BAD_STAGE};
-        for cl in &stream.report().classes {
-            for k in 1..=16 {
-                v[13+k]=v[13+k].saturating_add(cl.k_hist[k]);
+        if let Some(q)=e.quality_tx.as_ref(){
+            v=original_fixed_mature_snapshot(q,stream);
+        }else{
+            for cl in &stream.report().classes{
+                for k in 1..=16{
+                    v[13+k]=v[13+k].saturating_add(cl.k_hist[k]);
+                }
             }
         }
         unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,30)}
