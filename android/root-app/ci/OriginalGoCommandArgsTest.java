@@ -28,10 +28,12 @@ public final class OriginalGoCommandArgsTest {
     }
     public static void main(String[] args){
         List<String> one=build("198.51.100.7",new int[]{10123},false,null,null);
-        absent(one,"--tls-verify-server");
+        if(!one.contains("--tls-verify-server"))
+            throw new AssertionError("Android default must verify server identity");
+        absent(one,"--android-tunnel-dns");
         value(one,"--mode","normal");
-        if(!one.contains("--android-tunnel-dns"))
-            throw new AssertionError("real Android M4 tunnel UDP53 policy missing");
+        if(one.contains("--android-tunnel-dns"))
+            throw new AssertionError("experimental DNS must not be auto-enabled");
         if(!one.contains("--auto-ip"))throw new AssertionError("no protected /32");
         value(one,"--peer-ip","198.51.100.7");
         absent(one,"--peer-host");
@@ -59,8 +61,9 @@ public final class OriginalGoCommandArgsTest {
         value(host,"--peer-host","server.example.test");
         absent(host,"--peer-ip");
         value(host,"--android-route-uids","10123,110123");
-        absent(host,"--tls-ca-pem");
-        absent(host,"--tls-verify-server");
+        value(host,"--tls-ca-pem",CA);
+        if(!host.contains("--tls-verify-server"))
+            throw new AssertionError("DNS hostname must still verify TLS server");
         List<String> strict=OriginalGoCommandArgs.build(
             "wlan0",43123456L,"192.0.2.10","server.example.test",443,43900,
             "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
@@ -73,13 +76,27 @@ public final class OriginalGoCommandArgsTest {
             "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
             new int[]{10123},false,null,null,false,false);
         absent(noDNS,"--android-tunnel-dns");
+        absent(noDNS,"--tls-verify-server"); // explicit legacy diagnostic mode is not secure E2E
         value(noDNS,"--mode","normal");
+        List<String> dnsOptIn=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,CA,true,true);
+        if(!dnsOptIn.contains("--android-tunnel-dns")||
+           !dnsOptIn.contains("--tls-verify-server"))
+            throw new AssertionError("opt-in DNS requires the original strict TLS flag");
+        value(dnsOptIn,"--tls-ca-pem",CA);
+        rejected(()->OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,false,true));
         List<String> all=build("203.0.113.10",null,true,new int[]{10111,10112},CA);
         if(!all.contains("--android-route-all-apps"))
             throw new AssertionError("no all-app route policy");
         value(all,"--android-route-exclude-appids","10111,10112");
-        absent(all,"--tls-verify-server");
-        absent(all,"--tls-ca-pem");
+        if(!all.contains("--tls-verify-server"))
+            throw new AssertionError("all-App route must not bypass TLS verify by default");
+        value(all,"--tls-ca-pem",CA);
         absent(all,"--android-route-uids");
         absent(all,"--android-route-uid");
         rejected(()->build("198.51.100.7",null,false,null,null));
@@ -115,7 +132,7 @@ public final class OriginalGoCommandArgsTest {
         rejected(()->OriginalGoCommandArgs.shellQuote(null));
         try{one.add("injected");throw new AssertionError("mutable production argv");}
         catch(UnsupportedOperationException expected){}
-        System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_OPT_IN_HOST_PASS");
+        System.out.println("ANDROID_A53_ANDROID_STRICT_TLS_DEFAULT_DNS_OPTIN_HOST_PASS");
         System.out.println("ANDROID_B3_TUNNEL_DNS_ON_OFF_REAL_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_ORIGINAL_APK_GO_CLI_ARGV_HOST_CONTRACT_PASS");
     }
