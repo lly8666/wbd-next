@@ -45,6 +45,12 @@ TCP_TIMELINE=os.environ.get("WBD_M0_029_ECHO_TIMELINE","0")
 if TCP_TIMELINE not in ("0","1"):
     raise RuntimeError("M029_TCP_DIRECTIONAL_TIMELINE_INVALID")
 TCP_TIMELINE=(TCP_TIMELINE=="1")
+TCP_INFO=os.environ.get("WBD_M0_029_TCP_INFO","0")
+if TCP_INFO not in ("0","1"):
+    raise RuntimeError("M029_H2260_TCP_INFO_INVALID")
+TCP_INFO=TCP_INFO=="1"
+if TCP_INFO and not TCP_TIMELINE:
+    raise RuntimeError("M029_H2260_TCP_INFO_NEEDS_APP_TRACE")
 
 def authenticate_source_and_bundle():
     if os.environ.get("GITHUB_ACTIONS")!="true" or platform.machine()!=ARCH or (
@@ -94,7 +100,9 @@ def main():
             if TCP_TIMELINE and role.startswith("small-"):
                 if not argv or argv[0]!="env":
                     raise RuntimeError("M029_ECHO_TCP_TIMELINE_NOT_ORIGINAL_APP")
-                argv=["env","WBD_M0_029_ECHO_TIMELINE=1",*argv[1:]]
+                env=["WBD_M0_029_ECHO_TIMELINE=1"]
+                if TCP_INFO:env.append("WBD_M0_029_TCP_INFO=1")
+                argv=["env",*env,*argv[1:]]
             return super().spawn(role,place,argv)
 
         def start_product(self):
@@ -207,6 +215,7 @@ def main():
             "original_m4_raw_sendmmsg_sampled_timing":RAWCOST,
             "same_source_recovery_leg":RECOVERY,
             "tcp_directional_application_timeline":TCP_TIMELINE,
+            "native_inner_tcp_info_readonly":TCP_INFO,
             "outer_ip_mtu_explicit_bytes":1160,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
@@ -447,6 +456,38 @@ def main():
                 "same_original_payload_and_real_160_sequences":True,
                 "samples":samples,"summaries_ms":summaries,
                 "caution":"server_recv is app-recv not inner M3, TCP sendall return is not peer ACK"}
+        if TCP_INFO:
+            # This sole original TCP application socket is already matched
+            # to 160 real nonce+seq app request/response timestamps.
+            native=small_raw.get("tcp_info_native",{})
+            fields=["mono_ns","rto_us","unacked","retrans","rtt_us",
+                    "snd_cwnd","total_retrans"]
+            samples=native.get("rows",[])
+            if (native.get("abi_bytes")!=104 or native.get("fields")!=fields or
+                native.get("errors") or not (30<=len(samples)<=160)):
+                raise RuntimeError("M029_H2260_NATIVE_TCP_INFO_NOT_AVAILABLE")
+            for row in samples:
+                if (len(row)!=7 or any(not isinstance(v,int) or v<0 for v in row)
+                    or row[1]<=0 or row[5]<=0):
+                    raise RuntimeError("M029_H2260_TCP_INFO_WRONG_NATIVE_FIELDS")
+            for old,new in zip(samples,samples[1:]):
+                if new[0]<=old[0] or new[6]<old[6]:
+                    raise RuntimeError("M029_H2260_TCP_INFO_NONMONOTONE_CLOCK_OR_RETRANS")
+            begin=result["measurement"]["smallflow"]["probe_start_monotonic_ns"]
+            end=result["measurement"]["smallflow"]["probe_end_monotonic_ns"]
+            during=[x for x in samples if begin<=x[0]<=end]
+            if len(during)<30:
+                raise RuntimeError("M029_H2260_TCP_INFO_NO_TRUE_ECHO_OVERLAP")
+            rtos=sorted(x[1] for x in during)
+            result["native_tcp_info_timeline"]={
+                "fields":fields,"samples":samples,
+                "echo_overlap_samples":len(during),
+                "retransmitted_tcp_segments_delta":during[-1][6]-during[0][6],
+                "rto_us_p95":rtos[max(0,(len(rtos)*95+99)//100-1)],
+                "max_unacked":max(x[2] for x in during),
+                "min_snd_cwnd":min(x[5] for x in during),
+                "source":"exact_original_test_inner_TCP_socket_linux_getsockopt_104B",
+                "caution":"retransmits are not proof of which Rust/underlay layer delayed the forward app receipt"}
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
         if traffic["receiver_bytes"]<=0 or traffic["tcp_streams"]!=4 or (

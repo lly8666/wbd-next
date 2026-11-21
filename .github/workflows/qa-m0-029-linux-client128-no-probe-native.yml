@@ -154,7 +154,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
-          WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} WBD_M0_029_TCP_INFO=${{ contains(github.event.head_commit.message, '[m0-029-tcpinfo]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib,platform
           d=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
@@ -187,7 +187,7 @@ jobs:
         timeout-minutes: 14
         run: |
           set -euo pipefail
-          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} WBD_M0_029_TCP_INFO=${{ contains(github.event.head_commit.message, '[m0-029-tcpinfo]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib
           plain=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
@@ -224,7 +224,7 @@ jobs:
         timeout-minutes: 9
         run: |
           set -euo pipefail
-          WBD_M0_029_RECOVERY=1 WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_RECOVERY=1 WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} WBD_M0_029_TCP_INFO=${{ contains(github.event.head_commit.message, '[m0-029-tcpinfo]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib
           paths=["m029-product-shared-noprobe/summary.json",
@@ -253,6 +253,14 @@ jobs:
                   for row in diag["samples"]:
                       assert row["end_to_end_ms"]>=0
                   assert diag["same_original_payload_and_real_160_sequences"]
+                  if leg["native_inner_tcp_info_readonly"]:
+                      info=leg["native_tcp_info_timeline"]
+                      assert info["echo_overlap_samples"]>=30
+                      assert len(info["samples"])>=30
+                      assert info["source"]=="exact_original_test_inner_TCP_socket_linux_getsockopt_104B"
+              if c["native_inner_tcp_info_readonly"]:
+                  assert all(x["native_inner_tcp_info_readonly"] for x in (a,b,c))
+                  print("M029_H2260_ORIGINAL_TCP_INFO_160_REAL_APP_SOURCE_SCOPED_PASS",flush=True)
               print("M029_H2259_ORIGINAL_TCP_DIRECTIONAL_160_APP_TIMESTAMPS_A_B_APRIME_PASS",flush=True)
           print("M029_H2258_SAME_RELEASE_NATIVE_A_B_APRIME_REAL_APP_STOP_PASS_NOT_QOS_PASS",flush=True)
           PY

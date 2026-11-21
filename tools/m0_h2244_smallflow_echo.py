@@ -29,6 +29,9 @@ START_DELAY_S=2.0
 # Diagnostic only: original kernel TCP echo payload/wire and cadence
 # never change. Same-host monotonic timestamps, no nonce or payload stored.
 TCP_TRACE=os.environ.get("WBD_M0_029_ECHO_TIMELINE")=="1"
+TCP_INFO_TRACE=os.environ.get("WBD_M0_029_TCP_INFO")=="1"
+if TCP_INFO_TRACE and not TCP_TRACE:
+    raise RuntimeError("M029_H2260_TCP_INFO_NEEDS_APP_TRACE")
 DRAIN_S=2.5
 
 def frame(nonce,seq):
@@ -125,6 +128,31 @@ def run_client(address,out,count,gap_ms,start_delay_s):
     duplicates={"udp":0,"tcp":0}
     start_mono=time.monotonic_ns()+int(start_delay_s*1e9)
     done=threading.Event()
+    info_done=threading.Event()
+    info_rows=[]
+    info_errors=[]
+    def monitor_original_tcp_info():
+        # One already-connected original test TCP socket, never WBD
+        # producer FD, setsockopt, payload or Go per-packet calls.
+        for _ in range(160):
+            if info_done.is_set():break
+            try:
+                buf=tcp.getsockopt(socket.IPPROTO_TCP,socket.TCP_INFO,104)
+                if len(buf)!=104:
+                    info_errors.append("TCP_INFO_PREFIX_NOT_104_BYTES");return
+                word=lambda offset:struct.unpack_from("=I",buf,offset)[0]
+                info_rows.append([
+                    time.monotonic_ns(),
+                    word(8),word(24),word(36),word(68),word(80),word(100)
+                ])
+            except (OSError,struct.error) as exc:
+                info_errors.append("TCP_INFO_NATIVE_"+type(exc).__name__)
+                return
+            if info_done.wait(0.15):break
+    info_thread=None
+    if TCP_INFO_TRACE:
+        info_thread=threading.Thread(target=monitor_original_tcp_info,daemon=True)
+        info_thread.start()
     def record(kind,payload,when):
         try: seq=parse_frame(payload,nonce)
         except ValueError as exc:
@@ -187,6 +215,12 @@ def run_client(address,out,count,gap_ms,start_delay_s):
     for t in threads[:2]:t.join(timeout=DRAIN_S+3)
     done.set()
     for t in threads[:2]:t.join(timeout=1)
+    info_done.set()
+    if info_thread is not None:
+        info_thread.join(timeout=2)
+        if info_thread.is_alive():info_errors.append("TCP_INFO_UNJOINED")
+        if info_errors:errors.extend(info_errors)
+        if len(info_rows)<30:errors.append("TCP_INFO_TOO_FEW_REAL_SAMPLES")
     tcp.close();udp.close()
     end_mono=time.monotonic_ns()
     receipt={}
@@ -220,6 +254,13 @@ def run_client(address,out,count,gap_ms,start_delay_s):
         "errors":errors,
         "sample_scope":"160 real requests/protocol, SCREEN not product p99 SLA"
     }
+    if TCP_INFO_TRACE:
+        data["tcp_info_native"]={
+            "abi_bytes":104,"sample_period_ms":150,
+            "fields":["mono_ns","rto_us","unacked","retrans","rtt_us",
+                      "snd_cwnd","total_retrans"],
+            "rows":info_rows,"errors":info_errors,
+            "scope":"real_original_inner_TCP_client_socket_readonly"}
     if TCP_TRACE:
         data["tcp_client_trace"]=[
             [seq,sent["tcp"][seq],tcp_send_done.get(seq),recv["tcp"].get(seq)]
