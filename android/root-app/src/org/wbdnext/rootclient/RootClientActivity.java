@@ -44,7 +44,7 @@ public final class RootClientActivity extends Activity {
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices;
-    private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief;
+    private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
     private static final int LOCAL_TLS_CA_IMPORT=2043;
     // START can fail before any Service exists. Persist fixed app-only
@@ -165,6 +165,7 @@ public final class RootClientActivity extends Activity {
     private final Runnable refreshStatus=new Runnable(){
         @Override public void run(){
             if(status!=null)status.setText(RootClientService.status);
+            if(fecStatusText!=null)fecStatusText.setText(RootClientService.fecStatus);
             ui.postDelayed(this,1000);
         }
     };
@@ -605,6 +606,11 @@ public final class RootClientActivity extends Activity {
         dnsStatusBrief.setText("点击上方按钮读取当前会话实际DNS路径收据");
         dnsStatusBrief.setTextIsSelectable(true);
         pane.addView(dnsStatusBrief);
+        fecStatusText=new TextView(this);
+        fecStatusText.setText(RootClientService.fecStatus);
+        fecStatusText.setTextIsSelectable(true);
+        // Actual authenticated original Rust revision, not an E2E claim.
+        pane.addView(fecStatusText);
         Button exportDiagnostic=new Button(this);
         exportDiagnostic.setText("导出脱敏排障 TXT（无 Root／无需联网）");
         exportDiagnostic.setOnClickListener(v->exportSafeDiagnostic());

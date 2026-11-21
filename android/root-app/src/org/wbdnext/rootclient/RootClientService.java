@@ -36,6 +36,9 @@ public final class RootClientService extends Service {
     private static final String ROOT="/data/local/tmp/wbd-next-root";
     private static final String CHANNEL="wbd-root-native";
     public static volatile String status="NOT_RUNNING (actual device NOT_QUALIFIED)";
+    // Actual original Go -> Rust M3/M4 mode revision; separate from
+    // generic Root/TUN readiness and never evidence of phone E2E.
+    public static volatile String fecStatus="FEC: 尚无本会话原生状态";
     private final AtomicBoolean running=new AtomicBoolean(false);
     private final AtomicBoolean stopping=new AtomicBoolean(false);
     private final AtomicBoolean stopSignalDispatched=new AtomicBoolean(false);
@@ -233,6 +236,9 @@ public final class RootClientService extends Service {
                fecProfile<0||fecProfile>6||
                (!"normal".equals(fecMode)&&!"off".equals(paddingMode)))
                 throw new IllegalArgumentException("unsupported Fixed/Normal selection");
+            fecStatus="normal".equals(fecMode)
+                ?"FEC: Normal/off（默认；无FEC修复）"
+                :"FEC: "+fecMode+" 已选择，等待原Go/Rust的真实版本读回";
             if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
                !"flows".equals(paddingMode))
                 throw new IllegalArgumentException("unsupported original Normal startup padding");
@@ -413,6 +419,10 @@ public final class RootClientService extends Service {
                     int dnsB6=line.indexOf("V4_PUBLIC_ANDROID_DNS_B6_DIAG role=client ");
                     if(dnsB6>=0&&diagnostics!=null)
                         diagnostics.recordDNSB6Snapshot(line.substring(dnsB6));
+                    // B20: native FEC revision is read from the same
+                    // original Go session, not the user's UI selection.
+                    String fecBrief=RootFecStateBrief.fromGoLine(line);
+                    if(fecBrief!=null)fecStatus=fecBrief;
                     // Fixed allowlisted shell/Go entry markers expose only
                     // proven pre-TUN boundaries, never stderr, argv or keys.
                     if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_SHELL_ENTERED"))
@@ -832,6 +842,7 @@ public final class RootClientService extends Service {
             root=null;
             selection=null;
             ownerToken=null;
+            fecStatus="会话已结束；"+fecStatus;
             running.set(false);
             stopping.set(false);
             stopWatchingPhysicalNetwork();

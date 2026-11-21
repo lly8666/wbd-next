@@ -88,6 +88,13 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
   android/root-app/ci/OriginalGoMilestonesTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoMilestonesTest
+# B20: execute the SAME immutable native FEC status decoder embedded in
+# the signed APK. No guest, test-only parser, network or forged APPLIED.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
+  android/root-app/src/org/wbdnext/rootclient/RootFecStateBrief.java \
+  android/root-app/ci/RootFecStateBriefTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootFecStateBriefTest
 PYTHONPATH=android/root-app/ci python3 -m unittest -v device_first_run_test
 python3 android/root-app/ci/test-device-selftest-source.py
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
@@ -122,6 +129,11 @@ for event in ["START_DIAGNOSTIC_STAGES_V2","ROOT_PROCESS_EXIT_1","ROOT_SHELL_EXE
 assert 'if(has(session,"START_DIAGNOSTIC_STAGES_V2")' in report, "legacy receipts must not be misdiagnosed"
 assert 'last_session_stage=' in report
 assert 'OriginalGoMilestones.matches(line,' in s
+assert 'RootFecStateBrief.fromGoLine(line)' in s
+assert 'fecStatusText.setText(RootClientService.fecStatus)' in a
+assert 'V4_PUBLIC_ANDROID_FEC_STATE role=client mode=%s' in go_src
+assert 'native.OriginalFECReadback()' in go_src
+assert 'state!=lastFecState' in go_src
 assert 'echo WBD_PUBLIC_ROOT_EXEC_ATTEMPTED' in s
 assert 'log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")' in go_src
 

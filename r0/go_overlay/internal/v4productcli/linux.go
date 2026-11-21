@@ -2100,6 +2100,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // Reuse the original one-second Health poll, no new worker or hot-path Go.
     businessLogged:=make(map[string]bool,6)
     var lastNumericM4 time.Time
+    // B20: genuine original TLS+Rust FEC state, reported only on change
+    // via the existing one-second native Health loop. No Go DATA callback,
+    // extra timer, synthetic APPLIED or peer-reported boolean.
+    var lastFecState realityfront.V4PublicFecReadback
+    var fecStateObserved bool
     businessPulse:=func()(realityfront.V4PublicLoopPulse,error){
         p,e:=native.OriginalLoopPulse()
         if e==nil&&runtime.GOOS=="android"{
@@ -2108,6 +2113,18 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 log.Print(originalAndroidM4RxSnapshot(p))
                 log.Print(originalAndroidM4OwnerSnapshot(p))
                 log.Print(originalAndroidDNSB6Snapshot(p))
+                if c.fecMode!=realityfront.FecV2Off{
+                    state,readErr:=native.OriginalFECReadback()
+                    if readErr==nil&&(!fecStateObserved||state!=lastFecState){
+                        // Fixed enum + five native numeric fields only.
+                        // Requested and PENDING are NOT business delivery.
+                        log.Printf("V4_PUBLIC_ANDROID_FEC_STATE role=client mode=%s requested=%d applied=%d profile=%d pending=%t",
+                            state.Mode,state.RequestedRevision,
+                            state.AppliedRevision,state.Profile,state.Pending)
+                        lastFecState=state
+                        fecStateObserved=true
+                    }
+                }
             }
             for _,stage:=range originalAndroidBusinessReceiptClasses(p){
                 if !businessLogged[stage]{
