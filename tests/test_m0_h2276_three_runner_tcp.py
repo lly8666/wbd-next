@@ -49,15 +49,20 @@ class ExactDualTriplet(unittest.TestCase):
         self.assertTrue(any("iptables" in args for args in calls))
         self.assertTrue(any("qdisc" in args for args in calls))
 
-    def test_real_relay_config_disables_only_ephemeral_stateful_forwarding(self):
+    def test_reuse_proven_tailnet_tcp_and_udp_ports(self):
+        self.assertEqual(h.PORT, 18727)
+        self.assertEqual(h.tcp.PORT, 18727)
+        self.assertEqual(h.CONTROL_PORT, 4789)
+
+    def test_relay_config_preserves_tailnet_firewall(self):
         own = {**identity("relay"), "control_token": "ephemeral"}
         commands = []
         with patch.object(h, "run", side_effect=lambda *a, **k: commands.append(a)), \
              patch.object(h, "shaped", return_value={"stage_id": 0}), \
              patch.object(h, "ping_class", return_value={"status": "DIRECT_CANDIDATE"}):
             h.configure_relay(own, identity("server"), identity("client"))
-        self.assertIn(("sudo", "-n", "tailscale", "set",
-                       "--stateful-filtering=false"), commands)
+        self.assertFalse(any("stateful-filtering" in str(a)
+                             for command in commands for a in command))
 
     def test_live_forwarding_counter_readback_is_scoped(self):
         from types import SimpleNamespace
@@ -66,7 +71,7 @@ class ExactDualTriplet(unittest.TestCase):
             return SimpleNamespace(stdout=(
                 " pkts bytes target prot opt in out source destination\n"
                 " 5 300 DNAT tcp -- tailscale0 * 100.101.0.1 100.101.0.2 "
-                "tcp dpt:45902 to:100.101.0.3:45902\n"
+                "tcp dpt:18727 to:100.101.0.3:18727\n"
             ), returncode=0)
         with patch.object(h, "run", side_effect=fake), \
              patch.object(h, "tc_read", return_value=[{"kind": "netem", "packets": 7}]):

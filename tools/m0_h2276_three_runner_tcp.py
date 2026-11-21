@@ -19,13 +19,16 @@ import secrets
 import subprocess
 import sys
 import time
-import urllib.request
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import socket
 
 import m0_wl_loss_tcp_probe as tcp
 
-PORT = tcp.PORT
-CONTROL_PORT = 18727
+# Historical H2228 tailnet CI routes proved TCP 18727 and VXLAN UDP 4789.
+# Override the *test-only* imported H2271 socket port in this Python process;
+# the actual Windows/WSL2 product test at TCP 45902 remains unchanged.
+PORT = 18727
+tcp.PORT = PORT
+CONTROL_PORT = 4789
 TIERS = (-1, 0, 1, 5)  # -1 = no-loss/no-added-delay infrastructure capacity reference
 ARM = "aarch64"
 ROLES = ("client", "relay", "server")
@@ -177,10 +180,6 @@ def configure_relay(own, server, client):
     relay = own["tail_ip"]
     require(os.name == "posix", "LINUX_RELAY_REQUIRED")
     run("sudo", "-n", "sysctl", "-w", "net.ipv4.ip_forward=1")
-    # Same-interface tailnet transit is blocked by Tailscale's stateful
-    # FORWARD policy for NEW connections. This runner is ephemeral and has
-    # exact port/source NAT+FORWARD rules only; leave peer ACL/OIDC intact.
-    run("sudo", "-n", "tailscale", "set", "--stateful-filtering=false")
     for row in command_plan(arm, win, relay):
         run("sudo", "-n", "iptables", *row)
     # The default band is unshaped. Only the original forwarded TCP data
@@ -248,71 +247,69 @@ def observed_relay_counters(own):
 
 
 def control_service(own):
-    """Single source-locked relay; control interface never enters netem band."""
+    """UDP 4789 Tailscale control, separate from ACL-proven TCP 18727 data.
+
+    The old H2228 bridge used UDP VXLAN 4789 and TCP control18727. This
+    diagnostic instead uses UDP for tiny phase/readback messages, keeping the
+    WBD-free end-to-end real TCP connection in native kernel DNAT/SNAT.
+    """
     token = own["control_token"]
-
-    class Handler(BaseHTTPRequestHandler):
-        def log_message(self, fmt, *args):
-            pass
-
-        def do_GET(self):
-            if self.path != "/diag" or self.headers.get("X-Run-Token") != token:
-                self.send_error(403)
-                return
-            output = observed_relay_counters(own)
-            raw = json.dumps(output).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(raw)))
-            self.end_headers()
-            self.wfile.write(raw)
-
-        def do_POST(self):
-            if self.path != "/loss" or self.headers.get("X-Run-Token") != token:
-                self.send_error(403)
-                return
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server:
+        server.bind((own["tail_ip"], CONTROL_PORT))
+        server.settimeout(600)
+        print("H2276_RELAY_CONTROL_READY", flush=True)
+        while True:
+            request, addr = server.recvfrom(1200)
             try:
-                body = self.rfile.read(min(1024, int(
-                    self.headers.get("Content-Length", "0"))))
-                tier = json.loads(body)["loss"]
-                require(type(tier) is int and tier in TIERS, "BAD_LOSS_REQUEST")
-                output = shaped(tier)
-                save(ROOT / ("relay-loss" + str(tier) + ".json"), output)
-                raw = json.dumps({"loss": tier, "configured": True,
-                                  "netem": output}).encode()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(raw)))
-                self.end_headers()
-                self.wfile.write(raw)
+                item = json.loads(request)
+                require(item.get("token") == token, "UNAUTHORIZED_CONTROL")
+                if item.get("op") == "loss":
+                    tier = item.get("loss")
+                    require(type(tier) is int and tier in TIERS,
+                            "BAD_LOSS_REQUEST")
+                    output = shaped(tier)
+                    save(ROOT / ("relay-loss" + str(tier) + ".json"), output)
+                    result = {"loss": tier, "configured": True,
+                              "netem": output}
+                elif item.get("op") == "diag":
+                    result = observed_relay_counters(own)
+                else:
+                    raise RuntimeError("H2276_UNKNOWN_CONTROL_COMMAND")
+                server.sendto(json.dumps(result).encode(), addr)
             except Exception as error:
-                self.send_error(422, type(error).__name__)
+                server.sendto(json.dumps(
+                    {"status": "FAIL_CONTROL", "type": type(error).__name__}
+                ).encode(), addr)
 
-    srv = ThreadingHTTPServer((own["tail_ip"], CONTROL_PORT), Handler)
-    srv.daemon_threads = True
-    print("H2276_RELAY_CONTROL_READY", flush=True)
-    srv.serve_forever(poll_interval=0.2)
+
+def remote_command(relay, op, tier=None):
+    payload = {"token": relay["control_token"], "op": op}
+    if tier is not None:
+        payload["loss"] = tier
+    target = (relay["relay_ip"], CONTROL_PORT)
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as client:
+        client.settimeout(5)
+        for _ in range(3):
+            client.sendto(json.dumps(payload).encode(), target)
+            try:
+                raw, sender = client.recvfrom(35000)
+            except socket.timeout:
+                continue
+            require(sender[0] == relay["relay_ip"] and
+                    sender[1] == CONTROL_PORT, "CONTROL_REPLY_SOURCE")
+            return json.loads(raw)
+    raise RuntimeError("H2276_RELAY_UDP_CONTROL_NOT_REACHABLE")
 
 
 def remote_shape(relay, tier):
-    request = urllib.request.Request(
-        "http://" + relay["relay_ip"] + ":" + str(CONTROL_PORT) + "/loss",
-        data=json.dumps({"loss": tier}).encode(),
-        headers={"X-Run-Token": relay["control_token"],
-                 "Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(request, timeout=25) as response:
-        body = json.loads(response.read(20000))
-    require(body["configured"] and body["loss"] == tier,
+    body = remote_command(relay, "loss", tier)
+    require(body.get("configured") and body.get("loss") == tier,
             "KERNEL_IMPAIRMENT_NO_READBACK")
     return body
 
 
 def remote_diag(relay):
-    req = urllib.request.Request(
-        "http://" + relay["relay_ip"] + ":" + str(CONTROL_PORT) + "/diag",
-        headers={"X-Run-Token": relay["control_token"]})
-    with urllib.request.urlopen(req, timeout=12) as response:
-        return json.loads(response.read(40000))
+    return remote_command(relay, "diag")
 
 
 def run_server(own, relay):
@@ -440,8 +437,6 @@ def cleanup_relay(own, server, client):
         run("sudo", "-n", "iptables", *r, tolerate=True)
     run("sudo", "-n", "tc", "qdisc", "del", "dev", "tailscale0",
         "root", tolerate=True)
-    run("sudo", "-n", "tailscale", "set", "--stateful-filtering=true",
-        tolerate=True)
     print("H2276_RELAY_OWNED_NETWORK_RULES_CLEANED", flush=True)
 
 
