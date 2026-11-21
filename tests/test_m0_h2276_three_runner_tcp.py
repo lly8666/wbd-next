@@ -194,6 +194,10 @@ class ExactDualTriplet(unittest.TestCase):
     def test_limited_netem_zero_control_and_loss_tiers(self):
         calls = []
         with patch.object(h, "run", side_effect=lambda *x, **kw: calls.append(x)), \
+             patch.object(h, "relay_resource_sample",
+                          return_value={"at_monotonic":1.0,"host_allcore":[0,0],
+                                        "cores":{"cpu0":[0,0]},
+                                        "tailscaled_cpu_s_by_pid":{"123":0.0}}), \
              patch.object(h, "tc_read", return_value=[
                  {"kind": "netem", "parent": "1:3", "handle": "30:"},
                  {"kind": "netem", "parent": "1:4", "handle": "40:"}]):

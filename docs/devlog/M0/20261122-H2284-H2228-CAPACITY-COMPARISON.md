@@ -20,3 +20,7 @@
 ```feature-impact
 {"kind":"none","reason":"H2284 adds only source-locked two independent native Win2025 ARM relay ARM TCP preflight with 8 real 25s streams and test-only buffers, precise relay CPU; old H2228 product/native results unchanged. WBD Go TLS/Rust/drivers/defaults/Stop unaffected."}
 ```
+
+## H2284 首轮静态真实性门：未浪费六机的测试隔离失败
+- 源 `4c918b6d0a7488b776acf80e80da95889aabe501` [Action44932299370](https://github.com/lly8666/wbd-next/actions/runs/44932299370) static失败（29项其他单测通过），六个真实Windows/ARM角色都按`needs:static` **SKIPPED**；所以该run**没有任何八流容量数据**。具体四个旧夹具单测不兼容显式新 H2284 模式：H2280曾假定始终4流、H2282/H2283原值准备判断没有隔离CAPACITY_H2284开关、H2276 tc qdisc mock未mock新relay_resource_sample而去真正读子进程ps。全部属于测试模式隔离，不是产品或真实网络吞吐失败。
+- 修复保持旧单测明确在旧H2280场景要求4流，在新H2284明确开关时接受8流；H2282/H2283原A/B′窗口单测各局部禁用八流profile，H2276 qdisc单测隔离真实 relay CPU sample（真实H2284必须校验procstat和tailscaled PID/CPU，未删任何性能断言）。新真实六机只由明确标记启动，不为静态FAIL声称业务PASS。

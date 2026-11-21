@@ -37,6 +37,7 @@ class NativeTwoMiBWindow(unittest.TestCase):
         prior=h.tcp.WINDOW_TEST_BYTES
         try:
             with patch.object(h,"WINDOW_AB",True), \
+                 patch.object(h,"CAPACITY_H2284",False), \
                  patch.object(h,"WINDOW_B_BYTES",2*1024*1024):
                 h.prepare_tcp_sockbuf("base")
                 self.assertEqual(h.tcp.WINDOW_TEST_BYTES,0)

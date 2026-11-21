@@ -33,6 +33,7 @@ class RealTCPWindowAB(unittest.TestCase):
         previous=h.tcp.WINDOW_TEST_BYTES
         try:
             with patch.object(h,"WINDOW_AB",True), \
+                 patch.object(h,"CAPACITY_H2284",False), \
                  patch.object(h,"WINDOW_B_BYTES",8*1024*1024):
                 self._assert_native_os_buffers()
         finally:

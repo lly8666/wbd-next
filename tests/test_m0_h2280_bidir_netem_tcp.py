@@ -14,7 +14,8 @@ import m0_h2276_three_runner_tcp as core
 class H2280BidirNetem(unittest.TestCase):
     def test_real_source_unchanged_original_tcp_probe(self):
         self.assertEqual(core.PORT,18727)
-        self.assertEqual(core.tcp.BULK_FLOWS,4)
+        # H2284 explicitly opts into 8 high-capacity sockets in the *wrapper*.
+        self.assertEqual(core.tcp.BULK_FLOWS,8 if core.CAPACITY_H2284 else 4)
         self.assertEqual(core.tcp.ECHO_COUNT,160)
         self.assertEqual(core.TIERS,(-1,0,1,5))
 
