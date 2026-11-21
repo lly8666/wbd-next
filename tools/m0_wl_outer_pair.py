@@ -23,6 +23,8 @@ scenario=os.environ.get("WBD_WL_V2_SCENARIO","")
 allowed=(
     "scenarios/plan027-h876-normal-pair-10m-250ms-0loss-60s.json",
     "scenarios/wl-outer-repair-10m-250ms-loss30-60s.json",
+    "scenarios/wl-outer-repair-10m-200ms-loss1-60s.json",
+    "scenarios/wl-outer-repair-10m-200ms-loss5-60s.json",
     "scenarios/plan027-h913-normal-pair-100m-25ms0-60s.json",
     "scenarios/plan027a-h996-normal-pair-1460-3m-25ms0-60s.json",
 )

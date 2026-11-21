@@ -1,0 +1,60 @@
+# H2269: Two explicitly scoped original real signed Windows NPF/Wintun and
+# Ubuntu-WSL2 native repair contrasts at one-way200ms, 1% and 5% actual netem.
+# Reuse original on-branch native workflow and source-frozen OFF/ON pair runner.
+# This is 10Mbps historical physical-matched mixed-UDP/TCP business smoke,
+# NOT a full Windows 4-bulk-TCP P99/SLA or all-mode 128 promotion.
+name: M0 PLAN029 signed Windows native 1 and 5pct 200ms outer repair source pairs
+run-name: "M0-029 WIN-LINUX signed 1pct/5pct 200ms pair DISPATCH | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-windows-loss1-loss5-200ms-real-outer-pair.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch-real-signed-windows-native:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-win-loss200-native]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Exact native physical-class scenarios, immutable seed/mix and authorized dispatch to Windows
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import json,pathlib
+          for loss in (1,5):
+              name=f"scenarios/wl-outer-repair-10m-200ms-loss{loss}-60s.json"
+              v=json.loads(pathlib.Path(name).read_text())
+              assert v["schema_version"]==1
+              assert v["scenario_id"]==pathlib.Path(name).stem
+              assert (v["public_mode"],v["duration_s"],v["warmup_s"],v["drain_s"],v["tun_mtu"],v["seed"])==(
+                  "normal",60,5,10,1400,20261030)
+              for direction in ("windows_to_linux","linux_to_windows"):
+                  a=v[direction]
+                  assert (a["offered_mbps"],a["delay_ms"],a["loss_pct"],a["tc_rate_mbps"])==(10,200,loss,None)
+                  assert [(k["udp_payload_bytes"],k["packets_weight"]) for k in a["packet_mix"]]==(
+                      [(64,10),(128,15),(512,25),(1200,50)])
+          source=pathlib.Path("tools/m0_wl_outer_pair.py").read_text()
+          assert all(f'"scenarios/wl-outer-repair-10m-200ms-loss{n}-60s.json"' in source for n in (1,5))
+          print("H2269_SIGNED_WINDOWS_NATIVE_PAIRED_1_5_SCENES_SOURCE_LOCKED_NOT_PERF_PASS",flush=True)
+          PY
+          for loss in 1 5; do
+            scenario="scenarios/wl-outer-repair-10m-200ms-loss${loss}-60s.json"
+            echo "H2269_DISPATCH_REAL_WIN_LOSS=${loss} ONE_WAY_MS=200 source=$GITHUB_SHA"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$GITHUB_REF_NAME" \
+              -f public_mode=normal -f run_n0=false \
+              -f outer_repair=off -f outer_pair=true \
+              -f native_outer_mtu=legacy1400 \
+              -f perf_scenario_file="$scenario"
+          done
+          echo H2269_TWO_REAL_SIGNED_WINDOWS_ACTIONS_DISPATCHED_NOT_A_RESULT
