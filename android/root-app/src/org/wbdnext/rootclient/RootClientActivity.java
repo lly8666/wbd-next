@@ -44,7 +44,7 @@ public final class RootClientActivity extends Activity {
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices;
-    private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText;
+    private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText,m4TrafficBrief;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
     private static final int LOCAL_TLS_CA_IMPORT=2043;
     // START can fail before any Service exists. Persist fixed app-only
@@ -606,6 +606,20 @@ public final class RootClientActivity extends Activity {
         dnsStatusBrief.setText("点击上方按钮读取当前会话实际DNS路径收据");
         dnsStatusBrief.setTextIsSelectable(true);
         pane.addView(dnsStatusBrief);
+        // B21: on-demand view of ALREADY collected original Rust M4
+        // RAW/TUN receipts; never call Root, netd or native DATA here.
+        Button inspectM4=new Button(this);
+        inspectM4.setText("查看最近原生 M4 TCP/UDP 内核收发（本机）");
+        inspectM4.setOnClickListener(v->{
+            String report=RootDiagnosticReport.build(
+                getFilesDir(),signedSource(),Build.VERSION.SDK_INT);
+            m4TrafficBrief.setText(RootM4TrafficBrief.fromReport(report));
+        });
+        pane.addView(inspectM4);
+        m4TrafficBrief=new TextView(this);
+        m4TrafficBrief.setText("点击查看最近 M4 真实内核收发；不是 App 端到端成功收据");
+        m4TrafficBrief.setTextIsSelectable(true);
+        pane.addView(m4TrafficBrief);
         fecStatusText=new TextView(this);
         fecStatusText.setText(RootClientService.fecStatus);
         fecStatusText.setTextIsSelectable(true);

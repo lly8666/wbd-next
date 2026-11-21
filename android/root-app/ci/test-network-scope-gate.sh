@@ -84,6 +84,12 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootDNSStatusBrief.java \
   android/root-app/ci/RootDiagnosticReportTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReportTest
+# B21: host-execute the production, on-demand Rust M4 real traffic brief.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java \
+  android/root-app/src/org/wbdnext/rootclient/RootM4TrafficBrief.java \
+  android/root-app/ci/RootM4TrafficBriefTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootM4TrafficBriefTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
   android/root-app/ci/OriginalGoMilestonesTest.java
