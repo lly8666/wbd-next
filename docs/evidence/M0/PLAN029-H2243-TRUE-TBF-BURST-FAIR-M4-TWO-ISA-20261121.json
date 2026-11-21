@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2243_TRUE_TUN_GLOBAL_TBF_BURST_FAIR_FQCODEL_NATIVE_TWO_ISA",
+  "source_sha": "30d7fff41be89aeeea240586e75e78947917f8f3",
+  "run_id": 44853457069,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44853457069",
+  "result": "PASS_ALL_STATIC_X86_ARM_ACTUAL_WBD_AND_DIRECT_TCP_WITH_ORIGINAL_OWNED_STOPS",
+  "artifacts": {
+    "aarch64": 14686996208,
+    "x86_64": 14686557851
+  },
+  "topology": "Separate x86_64/ARM64 GitHub Runner, each one VM with three native Linux netns (client/router/server), actual original Go TLS1.3 Rust TUN AF_PACKET, BBR 4-stream TCP iperf3 receiver bytes; not independent WAN or physical Windows",
+  "cases": {
+    "model": "GE",
+    "target_loss_pct": 1,
+    "one_way_added_ms": 200,
+    "added_jitter_ms": 0,
+    "random_seed": "UNSEEDED_UBUNTU_IPROUTE2",
+    "source_qualified_actual_inner_MSS": 1025,
+    "iperf_duration_s": 20,
+    "streams": 4
+  },
+  "unchanged": "original Go product CLI fq600 per TCP flow, original 2048 TUN tx ring, Rust per route 8/64K/100ms, one M4 Rust owner, original opportunistic performative ciphertext repair, no HOL/out-of-order immediate delivery, original TLS/FEC/PN/replay/generation/owned Stop",
+  "candidate": "benchmark only: root tc tbf global bandwidth450mbit bursts16KB/48KB latency15ms + child fq_codel limit256 target5ms interval100ms ecn; no Rust reader gate; original A before+after",
+  "aarch64": {
+    "direct_receiver_mbps_before_after": [
+      1009.182,
+      981.591
+    ],
+    "stages": [
+      {
+        "name": "original_A",
+        "burst_kib": null,
+        "receiver_goodput_mbps": 314.284,
+        "sharedtun_queue_full": 46911,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 0,
+        "m4_copied": 892033,
+        "m4_batches": 53490,
+        "m4_copied_per_batch": 16.68,
+        "m4_tx_cpu_s_per_delivered_GiB": 10.8602,
+        "inner_TCP_retrans": 42229,
+        "mss_all_4_streams": 1025
+      },
+      {
+        "name": "TBF16K_fq_codel",
+        "burst_kib": 16,
+        "receiver_goodput_mbps": 313.168,
+        "sharedtun_queue_full": 1018,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 19850,
+        "kernel_fq_codel_child_qdisc_drops": 19850,
+        "m4_copied": 845372,
+        "m4_batches": 305182,
+        "m4_copied_per_batch": 2.77,
+        "m4_tx_cpu_s_per_delivered_GiB": 16.2436,
+        "inner_TCP_retrans": 28818,
+        "mss_all_4_streams": 1025
+      },
+      {
+        "name": "TBF48K_fq_codel",
+        "burst_kib": 48,
+        "receiver_goodput_mbps": 315.227,
+        "sharedtun_queue_full": 255,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 9,
+        "kernel_fq_codel_child_qdisc_drops": 9,
+        "m4_copied": 840325,
+        "m4_batches": 82947,
+        "m4_copied_per_batch": 10.13,
+        "m4_tx_cpu_s_per_delivered_GiB": 10.767,
+        "inner_TCP_retrans": 8509,
+        "mss_all_4_streams": 1025
+      },
+      {
+        "name": "original_A_prime",
+        "burst_kib": null,
+        "receiver_goodput_mbps": 294.678,
+        "sharedtun_queue_full": 17039,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 0,
+        "m4_copied": 808777,
+        "m4_batches": 62229,
+        "m4_copied_per_batch": 13,
+        "m4_tx_cpu_s_per_delivered_GiB": 10.7061,
+        "inner_TCP_retrans": 23946,
+        "mss_all_4_streams": 1025
+      }
+    ],
+    "real_app_and_stops": "PASS_TRUE_ORIGINAL"
+  },
+  "x86_64": {
+    "direct_receiver_mbps_before_after": [
+      1012.392,
+      960.676
+    ],
+    "stages": [
+      {
+        "name": "original_A",
+        "burst_kib": null,
+        "receiver_goodput_mbps": 276.596,
+        "sharedtun_queue_full": 74931,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 0,
+        "m4_copied": 773505,
+        "m4_batches": 53081,
+        "m4_copied_per_batch": 14.57,
+        "m4_tx_cpu_s_per_delivered_GiB": 16.9781,
+        "inner_TCP_retrans": 80452,
+        "mss_all_4_streams": 1025
+      },
+      {
+        "name": "TBF16K_fq_codel",
+        "burst_kib": 16,
+        "receiver_goodput_mbps": 254.781,
+        "sharedtun_queue_full": 16688,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 769,
+        "kernel_fq_codel_child_qdisc_drops": 769,
+        "m4_copied": 713069,
+        "m4_batches": 70700,
+        "m4_copied_per_batch": 10.09,
+        "m4_tx_cpu_s_per_delivered_GiB": 21.3139,
+        "inner_TCP_retrans": 21830,
+        "mss_all_4_streams": 1025
+      },
+      {
+        "name": "TBF48K_fq_codel",
+        "burst_kib": 48,
+        "receiver_goodput_mbps": 281.917,
+        "sharedtun_queue_full": 17192,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 0,
+        "kernel_fq_codel_child_qdisc_drops": 0,
+        "m4_copied": 780514,
+        "m4_batches": 51507,
+        "m4_copied_per_batch": 15.15,
+        "m4_tx_cpu_s_per_delivered_GiB": 19.503,
+        "inner_TCP_retrans": 20874,
+        "mss_all_4_streams": 1025
+      },
+      {
+        "name": "original_A_prime",
+        "burst_kib": null,
+        "receiver_goodput_mbps": 240.086,
+        "sharedtun_queue_full": 89674,
+        "real_tun_link_tx_dropped": 0,
+        "kernel_root_qdisc_drops": 0,
+        "m4_copied": 655327,
+        "m4_batches": 44868,
+        "m4_copied_per_batch": 14.61,
+        "m4_tx_cpu_s_per_delivered_GiB": 17.2837,
+        "inner_TCP_retrans": 98421,
+        "mss_all_4_streams": 1025
+      }
+    ],
+    "real_app_and_stops": "PASS_TRUE_ORIGINAL"
+  },
+  "qualification": {
+    "proven": "Original Go TLS/Rust two ISA tests pass all real TCP and owned Stop. Aggregate token burst48K plus fair fq_codel reduces source Rust queue drops vs original without shifting loss into kernel TUN link or qdisc at scale and restores original M4 per-call copied/batch to 10-15, while receiving ~original Mbps. 16KB is clearly too little on ARM and x86, causes batching breakdown, fq_codel 19850 drops ARM, CPU/GiB bad.",
+    "x86_cpu_limit": "TBF48K x86 TX CPU per delivered GiB 19.50 vs original 16.98/17.28, +~14%: not a full efficiency win or approved default.",
+    "no_p99": "No concurrent small TCP/UDP RTT P99, idle/native Windows, 0% high load, independent 3VM WAN, FEC/Auto/Game qualification, or multi-lease run; do not merge as product.",
+    "scale_cap": "All 450Mbps is a BENCH-ONLY fixed aggregate and is not acceptable for users who require over 1Gbps or vary underlay capacity. Adaptive source load estimator/lease budget policy needs a subsequent design/verification.",
+    "prng_caveat": "Ubuntu24.04 GE seed unsupported; same model parameters, not identical dropped packet positions. Do not overinterpret minor goodput differences.",
+    "root_child_qdisc_overlap": "TBF root and fq_codel child observed drop counts match and are overlapping, not additive: 19850 ARM16KB, 9 ARM48KB, 769 x86_16KB, 0 x8648KB."
+  },
+  "product_defaults_unchanged": true,
+  "next": "H2244 live small UDP/TCP p99 versus TBF48K fair shaping and 0% clean/gigabit source. Compare service batch and user latency. Only then design dynamically owner-service-paced aggregate rate (not hard-coded 450)."
+}
