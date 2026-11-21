@@ -8869,6 +8869,11 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let diagnostic=if std::env::var("WBD_PLAN028_EXTERNAL_STAGE_DIAG")
         .ok().as_deref()==Some("1"){
         #[cfg(target_os="linux")]
+        let raw_call_diag=std::env::var("WBD_M0_029_RAW_CALL_COST")
+            .ok().as_deref()==Some("1");
+        #[cfg(target_os="linux")]
+        let raw_cost_owner=Arc::clone(e.raw_tx.as_ref().expect("original M4 raw TX owner"));
+        #[cfg(target_os="linux")]
         let service_diag=std::env::var("WBD_M0_029_TX_SYSCPU_DIAG")
             .ok().as_deref()==Some("1");
         let diag_stats=Arc::clone(&e.counters);
@@ -8938,6 +8943,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             original_kernel_monotonic_ns(),rx_tid,tx_tid,ru,rs,tu,ts,
                             diag_stats.m4_successful_turns.load(Ordering::Relaxed),
                             bins[0],bins[1],bins[2],bins[3],bins[4]);
+                    }
+                    #[cfg(target_os="linux")]
+                    if raw_call_diag{
+                        let cost=raw_cost_owner.original_m4_raw_call_cost();
+                        eprintln!("V4_PUBLIC_M4_RAW_SENDMMSG_COST role={} client_port={} generation={} mono_ns={} enabled={} sample_every={} sendmmsg_samples={} sendmmsg_wall_ns={} whole_driver_wall_ns={} copied_positive_samples={} copied_positive_records={} scope=sampled_exact_native_raw_sendmmsg_wall_not_cpu_or_peer_ack",
+                            diag_role,diag_port,diag_generation,
+                            original_kernel_monotonic_ns(),u8::from(cost.enabled),
+                            cost.sample_every,cost.sendmmsg_calls_sampled,
+                            cost.sendmmsg_wall_ns,cost.driver_wall_ns,
+                            cost.positive_copied_calls_sampled,cost.positive_copied_records_sampled);
                     }
                 }
             }).ok()
