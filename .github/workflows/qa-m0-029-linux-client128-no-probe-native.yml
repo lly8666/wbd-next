@@ -16,6 +16,7 @@ on:
     paths:
       - '.github/workflows/qa-m0-029-linux-client128-no-probe-native.yml'
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - 'tools/m0_029_product_shared_tun_noprobe.py'
       - 'tools/m0_plan029_linux_dual_native_build.sh'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go'
       - 'tools/m0_plan029_linux_dual_isa_suite.py'
@@ -59,7 +60,7 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
             autoconf automake libtool make gcc nasm python3 iproute2 \
-            iputils-ping iptables openssl
+            iputils-ping iptables ethtool iperf3 openssl
           test -c /dev/net/tun
           sudo -n true
           python3 -m py_compile tools/m0_plan029_linux_dual_isa_suite.py \
@@ -118,23 +119,34 @@ jobs:
           assert d["status"]=="PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES"
           assert len(d["cases"])==5
           assert all(c["status"]=="PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS" for c in d["cases"])
-          # Probe-free genuine Go TLS clients and servers, after actual
-          # authenticated native binds, must announce the exact fixed
-          # bounded capacity on Normal/off, Fixed and Auto. No flags,
-          # test-only FFI or user-provided result may assert the default.
-          import re
-          root=pathlib.Path("linux-plan029-result")
-          for mode in ("normal","fixed","auto"):
-              for role,expected in (("client",128),("server",64)):
-                  log=(root/mode/(role+".log")).read_text(errors="replace")
-                  records=re.findall(
-                      r"M0_PLAN029_NATIVE_INBOX_BOUND role="+role+
-                      r" generation=(\d+) slots=(\d+) probe_only=(\d+)",log)
-                  assert records and all(
-                      int(g)>0 and int(slots)==expected and int(probe)==0
-                      for g,slots,probe in records
-                  ),(mode,role,"true non-probe cold inbox source readback absent/mismatched")
-          print("M0_029_REAL_NATIVE_NO_PROBE_CLIENT128_SERVER64_FIVE_MODES_STOP_PASS arch="+platform.machine(),flush=True)
+          # This suite uses original dedicated TUN and cannot attest the
+          # authenticated shared /32 inbox. A separate genuine shared-mode
+          # real network scenario below proves client128/server64.
+          print("M029_TRUE_DEDICATED_NATIVE_FIVE_MODES_PASS arch="+platform.machine(),flush=True)
+          PY
+      - name: Original authenticated shared TUN Normal no-probe true four-flow plus small app
+        shell: bash
+        timeout-minutes: 9
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
+          python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          python3 - <<'PY'
+          import json,os,pathlib,platform
+          d=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
+          assert d["source_sha"]==os.environ["GITHUB_SHA"]
+          assert d["arch"]==platform.machine()
+          assert d["probe_compiled"] is False
+          assert d["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
+          assert d["cold_readbacks"]["client"]["slots"]==128
+          assert d["cold_readbacks"]["server"]["slots"]==64
+          assert all(x["generation"]>0 and x["probe_only"]==0
+                     for x in d["cold_readbacks"].values())
+          assert all(x["generation"]>0 for x in d["owned_stop"].values())
+          assert d["measurement"]["original_product_tcp"]["tcp_streams"]==4
+          assert d["measurement"]["smallflow"]["status"]=="PASS_SCOPED_REAL_INNER_UDP_TCP_ECHO"
+          print("M029_REAL_NATIVE_NONPROBE_AUTHENTICATED_SHARED_TUN_CLIENT128_SERVER64_STOP_PASS",flush=True)
           PY
       - name: Upload same-SOURCE scoped native diagnostics (no secret files or raw captures)
         if: always()
@@ -146,5 +158,6 @@ jobs:
             linux-plan029-public-bundle/manifest.json
             linux-plan029-public-bundle/SHA256SUMS
             linux-plan029-result/
+            m029-product-shared-noprobe/
           retention-days: 21
           if-no-files-found: warn
