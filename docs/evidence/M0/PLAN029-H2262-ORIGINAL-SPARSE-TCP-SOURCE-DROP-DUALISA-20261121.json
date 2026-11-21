@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2262",
+  "source_sha": "5ff4d864c1bbb7fe89b73645175c377a1e088757",
+  "run_id": 44901035146,
+  "attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44901035146",
+  "status": "PASS_SCOPED_REAL_NATIVE_SPARSE_TCP_SOURCE_REJECTION_OBSERVED__QOS_PERFORMANCE_NOT_QUALIFIED",
+  "method": "Original Go TLS + Rust nonprobe native Linux x86_64/aarch64 five-mode and real authenticated Normal/off single shared /32 4-bulk-TCP plus 160 UDP and 160 original 16-byte TCP app echoes, true kernel TUN/raw and owned Stop; same native release bundle A observer-off, B original 500ms independent stage + one test-only IPv4/TCP/53222 per-direction first-fragment classification of actual SharedTun offered/refused, A-prime observer-off recovery. Original 150ms inner TCP_INFO on authentic app socket; each test-only port counter aggregated across TCP segments, not app sequences or immutable record PN. Default-off test flags, no product traffic policy changed.",
+  "outer_mtu_explicit_bytes": 1160,
+  "injected_netem_loss": false,
+  "scope": "Native Linux netns same-host original product; no physical WAN, Windows, GE1%, default 1460B or causal QoS acceptance.",
+  "native": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14706072146,
+      "artifact_zip_sha256": "05999f6d10ec08374a86dcbf95d9238c5f88260d0168c028a3773968b95fd4f0",
+      "binary_sha256": {
+        "libwbd_engine.so": "829e94098d09fb8d9787d89bd0317e0b24d09189010d711341fc55c92eb1a6b7",
+        "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+        "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+      },
+      "legs": [
+        "A",
+        "B",
+        "A_prime"
+      ],
+      "receiver_mbps": [
+        1134.58,
+        1142.84,
+        1154.67
+      ],
+      "small_tcp_p99_ms": [
+        695.294,
+        295.5495,
+        1435.3626
+      ],
+      "udp_missing_of160": [
+        29,
+        30,
+        46
+      ],
+      "tcp_missing_of160": [
+        0,
+        0,
+        0
+      ],
+      "client_cpu_seconds_per_rx_gib": [
+        11.61905,
+        11.64547,
+        11.65929
+      ],
+      "client_shared_tun_full_drops": [
+        700238,
+        729932,
+        729501
+      ],
+      "inner_tcp_retrans_segments_delta": [
+        37,
+        34,
+        37
+      ],
+      "inner_tcp_rto_p95_ms": [
+        404,
+        204,
+        808
+      ],
+      "b_sparse_inner_tcp_source": {
+        "client_forward_offered": 349,
+        "client_forward_refused": 61,
+        "client_reverse_offered": 0,
+        "client_reverse_refused": 0,
+        "server_reverse_offered": 209,
+        "server_reverse_refused": 0,
+        "server_forward_offered": 0,
+        "server_forward_refused": 0
+      },
+      "b_server_allflow_shared_queue_full": 2543,
+      "actual_owner_stop_all_legs": true
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14705114214,
+      "artifact_zip_sha256": "83c470c93d64ce7016013ef13f92ba7f20dc039912d391c0561e404b2beda55e",
+      "binary_sha256": {
+        "libwbd_engine.so": "76f40090966d1473b9c2113d9fcacf3a6b1e0c1ae05292545e0746f430815582",
+        "wbd-v4-client": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+        "wbd-v4-server": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343"
+      },
+      "legs": [
+        "A",
+        "B",
+        "A_prime"
+      ],
+      "receiver_mbps": [
+        1447.53,
+        1510.66,
+        1461.11
+      ],
+      "small_tcp_p99_ms": [
+        288.0641,
+        1471.5453,
+        2101.7543
+      ],
+      "udp_missing_of160": [
+        31,
+        25,
+        29
+      ],
+      "tcp_missing_of160": [
+        0,
+        0,
+        0
+      ],
+      "client_cpu_seconds_per_rx_gib": [
+        8.49637,
+        8.19001,
+        8.42742
+      ],
+      "client_shared_tun_full_drops": [
+        761495,
+        743825,
+        755183
+      ],
+      "inner_tcp_retrans_segments_delta": [
+        31,
+        25,
+        37
+      ],
+      "inner_tcp_rto_p95_ms": [
+        209,
+        808,
+        404
+      ],
+      "b_sparse_inner_tcp_source": {
+        "client_forward_offered": 312,
+        "client_forward_refused": 46,
+        "client_reverse_offered": 0,
+        "client_reverse_refused": 0,
+        "server_reverse_offered": 181,
+        "server_reverse_refused": 0,
+        "server_forward_offered": 0,
+        "server_forward_refused": 0
+      },
+      "b_server_allflow_shared_queue_full": 3796,
+      "actual_owner_stop_all_legs": true
+    }
+  ],
+  "findings": [
+    "Real tiny TCP/53222 first-fragment segments are rejected at the original client SharedTun source during same-lease four-flow high-supply: ARM61/349 and x86 46/312 in B. Bulk-only-local-loss hypothesis is false for this source and load.",
+    "Server reverse sparse TCP/53222 source refusal is zero in measured B, but server shared queue has nonzero other-flow full; neither implies end-to-end reverse perfect.",
+    "Final TCP160/160 is not timely first delivery. B x86 sparse TCP p99 1471.5ms and inner RTO p95 808ms; A-prime source-off has 2101.8ms p99. Performance and QoS gate remains OPEN.",
+    "No causal benefit of diagnostic B, no exact application-sequence/PN first loss identified, and original H2254 bulk-TCP evict-for-UDP remains rejected."
+  ],
+  "limits": [
+    "Only original inner IPv4 first-fragment TCP/53222 port, not a TCP seq or authenticated DATA PN; IP fragment offset>0 omitted and no payload/credentials/keys captured.",
+    "B observer and per-packet port classification are test-only and may affect scheduling; A/B/A-prime drift prevents a causal improvement conclusion.",
+    "Client queue drops and server kernel RX counters are different denominators; same source side refusal cannot be mapped to server app arrival without further exact identity observation.",
+    "Host native namespaces, one 1160B outer MTU and no artificial loss; Windows/physical WAN/actual 1460 default, GE1%, upstream three-second outage, p99 timely-first and no cross-flow HOL remain OPEN.",
+    "Native signed Windows and original 029/029B outstanding gates remain untouched."
+  ],
+  "next_action": "Compare bounded, reversible same-lease admission service alternatives against 600Mbps-per-flow current FQ baseline with real four TCP bulk+small UDP/TCP; require original TLS, 160 app responses/deadlines, both-side Stop, identical ISA A/B/A-prime goodput/CPU/GiB. Do not promote unproven priority queue or repeat rejected UDP eviction."
+}
