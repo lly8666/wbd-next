@@ -99,7 +99,7 @@ class ExactDualTriplet(unittest.TestCase):
         server={"tail_ip":"100.101.0.3"}
         # Legacy H2279 stage routing must be tested under its own mode;
         # H2282 intentionally takes precedence only when WINDOW_AB is enabled.
-        with patch.object(h, "WINDOW_AB", False):
+        with patch.object(h, "WINDOW_AB", False), patch.object(h, "CAPACITY_H2284", False):
             with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"1"}):
                 self.assertEqual(h.active_stages(),("direct",-1))
             with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"0"}):

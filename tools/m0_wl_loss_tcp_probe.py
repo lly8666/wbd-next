@@ -112,7 +112,7 @@ def server(bind_ip, client_ip, source):
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         listener_buffers = _maybe_set_buffers(listener)
         listener.bind((bind_ip, PORT))
-        listener.listen(8)
+        listener.listen(max(16, BULK_FLOWS + 4))
         listener.settimeout(35)
         print(MARK + "SERVER_READY " + json.dumps({
             "source_sha": source, "bind": bind_ip, "peer": client_ip,

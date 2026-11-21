@@ -17,7 +17,8 @@ class NativeTwoMiBWindow(unittest.TestCase):
     def test_size_parameter_is_only_two_approved_source_values(self):
         env=dict(os.environ,WBD_H2281_SUSTAINED_TCP="1",
                  WBD_H2282_TCP_WINDOW_AB="1",WBD_H2279_CAPACITY_AB="0",
-                 WBD_H2283_B_BYTES="2097152")
+                 WBD_H2283_B_BYTES="2097152",
+                 WBD_H2284_EIGHT_TCP_CAPACITY="0")
         expression=("import json,sys;sys.path.insert(0,'tools');"
                     "import m0_h2276_three_runner_tcp as x;"
                     "print(json.dumps([x.WINDOW_B_BYTES,x.WINDOW_AB,"

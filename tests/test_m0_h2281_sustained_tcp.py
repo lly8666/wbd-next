@@ -15,7 +15,8 @@ class SustainedNativeTCP(unittest.TestCase):
         # Governance maintenance is intentionally run WITHOUT workflow env;
         # verify the real opt-in source in a fresh isolated Python interpreter.
         env=dict(os.environ, WBD_H2281_SUSTAINED_TCP="1",
-                 WBD_H2282_TCP_WINDOW_AB="0")
+                 WBD_H2282_TCP_WINDOW_AB="0",
+                 WBD_H2284_EIGHT_TCP_CAPACITY="0")
         code=("import json,sys; sys.path.insert(0,'tools');"
               "import m0_h2276_three_runner_tcp as x;"
               "print(json.dumps([x.SUSTAINED,x.tcp.BULK_FLOWS,"

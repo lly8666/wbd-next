@@ -16,7 +16,8 @@ import m0_h2276_three_runner_tcp as h
 class RealTCPWindowAB(unittest.TestCase):
     def test_exact_three_independent_native_stages(self):
         env=dict(os.environ, WBD_H2281_SUSTAINED_TCP="1",
-                 WBD_H2282_TCP_WINDOW_AB="1", WBD_H2279_CAPACITY_AB="0")
+                 WBD_H2282_TCP_WINDOW_AB="1", WBD_H2279_CAPACITY_AB="0",
+                 WBD_H2284_EIGHT_TCP_CAPACITY="0")
         code=("import json,sys;sys.path.insert(0,'tools');"
               "import m0_h2276_three_runner_tcp as x;"
               "print(json.dumps([x.WINDOW_AB,x.SUSTAINED,"

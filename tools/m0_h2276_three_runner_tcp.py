@@ -34,11 +34,17 @@ SUSTAINED = os.environ.get("WBD_H2281_SUSTAINED_TCP") == "1"
 WINDOW_AB = os.environ.get("WBD_H2282_TCP_WINDOW_AB") == "1"
 # Distinguish 8MiB H2282 and 2MiB H2283 test-only AB sizes; no WBD change.
 WINDOW_B_BYTES = int(os.environ.get("WBD_H2283_B_BYTES", "8388608"))
+# H2284 restore the OLD H2228 capacity gate: 8 parallel real TCP streams,
+# large test-only endpoint buffers, direct vs relay with the SAME Windows+ARM VMs.
+CAPACITY_H2284 = os.environ.get("WBD_H2284_EIGHT_TCP_CAPACITY") == "1"
 if WINDOW_B_BYTES not in (2*1024*1024, 8*1024*1024):
     raise RuntimeError("H2283_INVALID_ONLY_TEST_BUFFER_SIZE")
 if SUSTAINED:
-    tcp.BULK_MAX_BYTES = 512 * 1024 * 1024  # per flow, four independent real TCP sockets
+    tcp.BULK_MAX_BYTES = 512 * 1024 * 1024  # per flow, ordinary four or H2284 eight real TCP sockets
     tcp.BULK_SEND_S = 25
+    tcp.TIMEOUT_S = 150
+if CAPACITY_H2284:
+    tcp.BULK_FLOWS = 8
     tcp.TIMEOUT_S = 150
 CONTROL_PORT = 4789
 TIERS = (-1, 0, 1, 5)  # -1 = no-loss/no-added-delay infrastructure capacity reference
@@ -46,27 +52,32 @@ TIERS = (-1, 0, 1, 5)  # -1 = no-loss/no-added-delay infrastructure capacity ref
 
 def active_stages():
     """H2282 three 400ms zero-loss TCP socket-window AB/A-prime, else old modes."""
+    if CAPACITY_H2284:
+        return ("clean_direct", "clean_relay", "wan_relay")
     if WINDOW_AB:
         return ("base", "tuned", "base_prime")
     return ("direct", -1) if os.environ.get("WBD_H2279_CAPACITY_AB")=="1" else TIERS
 
 
 def actual_loss_tier(stage):
+    if CAPACITY_H2284 and stage in ("clean_direct", "clean_relay"):
+        return -1
     return 0 if isinstance(stage, str) else stage
 
 
 def prepare_tcp_sockbuf(stage):
     # Only the *test app* socket knobs; no WBD runtime/GoTLS changes.
-    tcp.WINDOW_TEST_BYTES = WINDOW_B_BYTES if WINDOW_AB and stage=="tuned" else 0
+    tcp.WINDOW_TEST_BYTES = (8*1024*1024 if CAPACITY_H2284 else
+                             WINDOW_B_BYTES if WINDOW_AB and stage=="tuned" else 0)
 
 
 
 def server_expected_tcp_peer(stage, relay):
-    return relay["client_ip"] if stage=="direct" else relay["relay_ip"]
+    return relay["client_ip"] if stage in ("direct","clean_direct") else relay["relay_ip"]
 
 
 def client_tcp_target(stage, relay, server):
-    return server["tail_ip"] if stage=="direct" else relay["relay_ip"]
+    return server["tail_ip"] if stage in ("direct","clean_direct") else relay["relay_ip"]
 ARM = "aarch64"
 ROLES = ("client", "relay", "server")
 TAIL = ipaddress.ip_network("100.64.0.0/10")
@@ -297,6 +308,55 @@ def netem_phase_receipt(before, after, stage):
             "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"}
 
 
+def relay_resource_sample():
+    """Read native relay host/per-core and actual tailscaled PID CPU time."""
+    require(os.name == "posix", "RELAY_CPU_MUST_BE_LINUX")
+    stat=pathlib.Path("/proc/stat").read_text().splitlines()
+    cores={}
+    for line in stat:
+        cols=line.split()
+        if not cols or not re.fullmatch(r"cpu[0-9]+",cols[0]):
+            continue
+        vals=list(map(int,cols[1:]))
+        idle=vals[3]+vals[4]
+        cores[cols[0]]=[idle,sum(vals)-idle]
+    require(cores, "RELAY_CPU_CORES_NOT_AVAILABLE")
+    ps=run("ps","-C","tailscaled","-o","pid=",tolerate=True)
+    procs={}
+    for word in ps.stdout.split():
+        if not word.isdecimal():
+            continue
+        p=pathlib.Path("/proc")/word/"stat"
+        if not p.exists():
+            continue
+        raw=p.read_text()
+        fields=raw[raw.rfind(")")+2:].split()
+        procs[word]=(int(fields[11])+int(fields[12]))/os.sysconf("SC_CLK_TCK")
+    return {"at_monotonic":time.monotonic(),
+            "host_allcore":list(os_host_cpu()),"cores":cores,
+            "tailscaled_cpu_s_by_pid":procs}
+
+
+def relay_resource_delta(before,after):
+    secs=after["at_monotonic"]-before["at_monotonic"]
+    require(secs>0,"RELAY_CPU_ELAPSED_NOT_POSITIVE")
+    old=before["tailscaled_cpu_s_by_pid"]
+    now=after["tailscaled_cpu_s_by_pid"]
+    common=old.keys() & now.keys()
+    proc_s=sum(now[k]-old[k] for k in common)
+    busy=cpu_busy_percent(before["host_allcore"],after["host_allcore"])
+    per_core={k:cpu_busy_percent(before["cores"][k],after["cores"][k])
+              for k in before["cores"].keys() & after["cores"].keys()}
+    return {"stage_s":round(secs,3),
+            "relay_host_allcore_busy_pct":busy,
+            "relay_max_single_core_busy_pct":round(max(per_core.values()),3),
+            "tailscaled_cpu_s":round(proc_s,3),
+            "tailscaled_pct_of_one_cpu":round(proc_s/secs*100,3),
+            "tailscaled_pid_count_common":len(common),
+            "relay_core_count":len(per_core),
+            "actual_procstat_not_user_space_guessed":True}
+
+
 def shaped(loss):
     require(loss in TIERS, "LOSS_TIER_NOT_ALLOWED")
     delay = 0 if loss == -1 else 200
@@ -311,6 +371,7 @@ def shaped(loss):
             "NETEM_TWO_INDEPENDENT_KERNEL_DIRECTIONS_NOT_INSTALLED")
     return dict(loss_pct=pct, stage_id=loss, one_way_delay_ms=delay,
                 real_bidir_kernel_netem=True,
+                relay_resource_before=relay_resource_sample(),
                 qdisc=readback, ts=time.monotonic())
 
 
@@ -336,6 +397,7 @@ def observed_relay_counters(own):
         rows[table + "_" + chain] = {
             "read_rc": proc.returncode, "matched_rules": selected}
     return {"kernel_tc": tc_read(),
+            "relay_resource_now": relay_resource_sample(),
             "owned_tcp_forward_rule_counters": rows,
             "qdisc_permitted_counters_only": True}
 
@@ -409,13 +471,13 @@ def remote_diag(relay):
 def run_server(own, relay):
     peer = verify(own, relay, "relay")
     original_sysctls = {}
-    if WINDOW_AB:
+    if WINDOW_AB or CAPACITY_H2284:
         # Ephemeral native ARM VM, but restore test-owned sysctls on Stop.
         for key in ("net.core.rmem_max", "net.core.wmem_max"):
             original_sysctls[key] = run("sysctl", "-n", key).stdout.strip()
     result = []
     try:
-        if WINDOW_AB:
+        if WINDOW_AB or CAPACITY_H2284:
             for key in original_sysctls:
                 run("sudo", "-n", "sysctl", "-w", key + "=16777216")
         for tier in active_stages():
@@ -468,6 +530,12 @@ def run_client(own, relay, server):
                        network_tailscale_client_server=ping_class(server["tail_ip"]),
                        stages=[])
     save(ROOT / "client-result.json", observation)
+    if CAPACITY_H2284 and (
+            observation["network_tailscale_client_server"]["status"] != "DIRECT_CANDIDATE"):
+        observation["status"] = "INFRA_DIRECT_CLIENT_ARM_NOT_DIRECT_SKIP_CAPACITY"
+        observation["skip_reason"] = "REAL_WINDOWS_TO_ARM_DIRECT_BASELINE_USES_DERP"
+        save(ROOT / "client-result.json", observation)
+        raise RuntimeError("H2284_DIRECT_ARM_TCP_UNQUALIFIED_NOT_WBD_PRODUCT")
     if observation["network_tailscale_client_relay"]["status"] != "DIRECT_CANDIDATE":
         observation["status"] = "INFRA_DERP_UNQUALIFIED_SKIP_WAN_TESTS"
         observation["skip_reason"] = "WINDOWS_TO_RELAY_NOT_DIRECT_AFTER_12_DISCO_PROBES"
@@ -478,8 +546,8 @@ def run_client(own, relay, server):
         prepare_tcp_sockbuf(tier)
         target = client_tcp_target(tier,relay,server)
         loss_tier = actual_loss_tier(tier)
-        shape = None if tier=="direct" else remote_shape(relay,loss_tier)
-        time.sleep(0.5 if tier=="direct" else 2.0)
+        shape = None if tier in ("direct","clean_direct") else remote_shape(relay,loss_tier)
+        time.sleep(0.5 if tier in ("direct","clean_direct") else 2.0)
         buffer = io.StringIO()
         begin = time.monotonic()
         cpu0 = time.process_time()
@@ -509,8 +577,12 @@ def run_client(own, relay, server):
                     rows[0]["bulk_remote_received_bytes"] > 0,
                     "SUSTAINED_BULK_DID_NOT_OVERLAP_160_ECHO_WINDOW")
         try:
-            receipt = None if tier == "direct" else netem_phase_receipt(
-                shape["netem"]["qdisc"], remote_diag(relay)["kernel_tc"], loss_tier)
+            relay_end = None if tier in ("direct","clean_direct") else remote_diag(relay)
+            receipt = None if relay_end is None else netem_phase_receipt(
+                shape["netem"]["qdisc"], relay_end["kernel_tc"], loss_tier)
+            relay_cpu = None if relay_end is None else relay_resource_delta(
+                shape["netem"]["relay_resource_before"],
+                relay_end["relay_resource_now"])
             if loss_tier in (0, 1, 5):
                 require(rows[0]["sparse_tcp_rtt_p50_ms"] >= 350,
                         "BOTH_200MS_EGRESS_CLASSES_NOT_REFLECTED_IN_TCP_RTT")
@@ -522,9 +594,10 @@ def run_client(own, relay, server):
             raise
         row = dict(stage_id=tier,
                    relay_kernel_loss_receipt=receipt,
+                   relay_resource_receipt=relay_cpu,
                    loss_pct=loss_tier,
                    socket_buffer_requested_bytes=tcp.WINDOW_TEST_BYTES,
-                   tcp_path=("DIRECT_OS_TAILNET_ARM" if tier=="direct" else
+                   tcp_path=("DIRECT_OS_TAILNET_ARM" if tier in ("direct","clean_direct") else
                              "OS_KERNEL_DNAT_SNAT_RELAY"),
                    delivered=rows[0],
                    native_tcp_bulk_timed_supply_s=(tcp.BULK_SEND_S if SUSTAINED else None),
@@ -548,7 +621,42 @@ def run_client(own, relay, server):
                          sort_keys=True), flush=True)
     require([row["stage_id"] for row in observation["stages"]] ==
             list(active_stages()), "MISSING_SOURCE_LOCKED_TCP_STAGES")
-    if WINDOW_AB:
+    if CAPACITY_H2284:
+        require([x["stage_id"] for x in observation["stages"]] ==
+                ["clean_direct","clean_relay","wan_relay"],
+                "EIGHT_FLOW_HIGH_CAPACITY_STAGES_MISSING")
+        stages=observation["stages"]
+        require(all(x["sparse_echo_inside_bulk_window"] and
+                    x["socket_buffer_requested_bytes"]==8*1024*1024 and
+                    x["delivered"]["bulk_flows"]==8 and
+                    x["delivered"]["sparse_echo_received"]==160 and
+                    len(x["delivered"]["client_bulk_buffers_os"])==8
+                    for x in stages), "HIGH_CAPACITY_REAL_8FLOW_OVERLAP_MISSING")
+        require(stages[1]["relay_kernel_loss_receipt"]["status"]==
+                stages[2]["relay_kernel_loss_receipt"]["status"]==
+                "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+                "HIGH_CAPACITY_RELAY_TWO_KERNEL_EGRESS_MISSING")
+        require(all(x["relay_resource_receipt"] is not None
+                    for x in stages[1:]), "RELAY_CPU_EVIDENCE_MISSING")
+        mbps=[x["delivered"]["bulk_receiver_goodput_mbps"] for x in stages]
+        observation["capacity_h2284"]={
+            "old_h2228_original_clean_native_eight_tcp_up_mbps":848.551,
+            "old_h2228_original_clean_native_eight_tcp_down_mbps":861.757,
+            "note":"H2228 Linux x86 ends and BBR+64MiB/VXLAN; H2284 Windows ARM other OS, cannot attribute delta to VXLAN",
+            "win_arm_clean_direct_mbps":mbps[0],
+            "win_arm_clean_kernel_relay_mbps":mbps[1],
+            "win_arm_kernel_relay_400ms_mbps":mbps[2],
+            "kernel_relay_to_direct_ratio":round(mbps[1]/mbps[0],4),
+            "network_clean_800mbps_qualification":
+                "QUALIFIED" if min(mbps[0],mbps[1])>=800 else
+                "INFRA_OR_OS_BELOW_H2228_CAPACITY_NOT_WBD_PRODUCT",
+            "kernel_relay_cpu_and_tailscaled": [
+                x["relay_resource_receipt"] for x in stages[1:]],
+            "same_source_two_independent_triplets":True,
+            "original_wbd_go_tls_rust":"NOT_RUN"
+        }
+        observation["status"]="PASS_H2284_NATIVE_8TCP_H2228_CAPACITY_COMPARISON_SCOPED"
+    elif WINDOW_AB:
         require([x["stage_id"] for x in observation["stages"]]==
                 ["base","tuned","base_prime"], "WINDOW_AB_A_PRIME_STAGES_MISSING")
         base,tuned,rebound=observation["stages"]
