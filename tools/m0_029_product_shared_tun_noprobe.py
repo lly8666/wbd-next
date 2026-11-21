@@ -70,13 +70,18 @@ if PRIO_TRIAL_LEG not in ("","A","B","A_prime") or (
     PRIO_TRIAL_LEG and (FQ_TRIAL_LEG or STAGE or SERVICE or RAWCOST
                         or RECOVERY or FIRSTDROP)):
     raise RuntimeError("M029_H2265_PRIO_TRIAL_EXCLUSIVE_LEGS")
+MTU_TRIAL_LEG=os.environ.get("WBD_M0_029_MTU_TRIAL_LEG","")
+if MTU_TRIAL_LEG not in ("","A","B","A_prime") or (
+    MTU_TRIAL_LEG and (FQ_TRIAL_LEG or PRIO_TRIAL_LEG or STAGE or SERVICE or
+                       RAWCOST or RECOVERY or FIRSTDROP)):
+    raise RuntimeError("M029_H2267_MTU_SINGLE_FACTOR_EXCLUSIVE_LEG")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
 SPARSEFLOW=SPARSEFLOW=="1"
 if SPARSEFLOW and dict(re.findall(r"([a-z_]+)=(\d+)","forward_offered=2 forward_dropped=1")) != {"forward_offered":"2","forward_dropped":"1"}:
     raise RuntimeError("M029_H2262_SPARSE_PARSE_SELF_CHECK_FAILED")
-if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
+if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG or MTU_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
@@ -111,7 +116,7 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    suffix=("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe"))
+    suffix=("mtu-"+MTU_TRIAL_LEG.lower()) if MTU_TRIAL_LEG else (("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe")))
     G["OUT"]=ROOT/("m029-product-shared-"+suffix)
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
         "m029-product-shared-"+RUN+"-"+ATTEMPT+"-"+suffix)
@@ -153,6 +158,11 @@ def main():
             users=self.secret_dir/"users.json"
             users.write_text(json.dumps({"bench0":"m029-scope-pass"})+"\n")
             users.chmod(0o600)
+            # H2267 one *already-supported* public Go cold MTU setting.
+            # Original A/A' explicitly 1160; B omits the CLI override and
+            # therefore tests the true existing Go product default 1460.
+            # No product code, real kernel policy, or Rust fastpath change.
+            mtu_args=[] if MTU_TRIAL_LEG=="B" else ["--outer-mtu","1160"]
             self.spawn("server",self.server,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
@@ -168,7 +178,7 @@ def main():
                 "--route-key-hex-file",str(route),"--users-file",str(users),
                 "--lease-pool","10.66.0.128/25","--tls-cert",str(cert),
                 "--tls-key",str(key),"--outer-repair","off",
-                "--outer-mtu","1160","--mode","shared"])
+                *mtu_args,"--mode","shared"])
             if not ready(self.logs["server"],
                 "V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443",70):
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_SHARED_SERVER_NOT_READY")
@@ -199,7 +209,7 @@ def main():
                 "--username","bench0","--password","m029-scope-pass",
                 "--auto-ip","--installation-id-file",str(self.secret_dir/"install"),
                 "--mode","normal","--fec-profile","6",
-                "--outer-repair","off","--outer-mtu","1160"])
+                "--outer-repair","off",*mtu_args])
             if not ready(self.logs["client"],
                 "V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",85):
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_CLIENT_NOT_READY")
@@ -250,7 +260,7 @@ def main():
             "tcp_directional_application_timeline":TCP_TIMELINE,
             "native_inner_tcp_info_readonly":TCP_INFO,
             "original_shared_tun_first_drop_window":FIRSTDROP,
-            "outer_ip_mtu_explicit_bytes":1160,
+            "outer_ip_mtu_explicit_bytes":(None if MTU_TRIAL_LEG=="B" else 1160),
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
             "probe_compiled":False,"status":"NOT_RUN",
@@ -262,7 +272,57 @@ def main():
     node=ProductShared(0,128)
     try:
         node.network()
+        if MTU_TRIAL_LEG:
+            # Frozen original fixture deliberately uses an underlay MTU of
+            # 1200 for legacy stress. That path CANNOT carry an outer 1460
+            # datagram. All A/B/A' must use identical 1500-capable links
+            # before either original Go TLS process creates its raw FD.
+            interfaces=((node.client,"wan0"),(node.server,"wan0"),
+                        (node.router,"rcli0"),(node.router,"rsrv0"))
+            for place,dev in interfaces:
+                root("ip","-n",place,"link","set","dev",dev,"mtu","1500")
+            underlay={}
+            for place,dev in interfaces:
+                info=json.loads(root("ip","-n",place,"-j","link","show",
+                                     "dev",dev).stdout)
+                if len(info)!=1 or info[0].get("mtu")!=1500:
+                    raise RuntimeError("M029_H2267_OUTER_PATH_REAL_MTU_NOT_1500")
+                underlay[place+"/"+dev]=info[0]["mtu"]
+            result["h2267_real_underlay_mtu_1500"]=underlay
         result["cold_readbacks"]=node.start_product()
+        if MTU_TRIAL_LEG:
+            outer=1460 if MTU_TRIAL_LEG=="B" else 1160
+            readings={}
+            for role,place,tun in (("client",node.client,G["CLIENT_TUN"]),
+                                   ("server",node.server,G["SERVER_TUN"])):
+                raw=node.logs[role].read_text(errors="replace")
+                matches=re.findall(
+                    r"V4_PUBLIC_MTU_PREPARE role="+role+
+                    r"[^\n]*outer_config=(\d+) interface=(\d+)",raw)
+                if not matches or not any(int(a)==outer and int(b)==1500
+                                          for a,b in matches):
+                    raise RuntimeError("M029_H2267_REAL_ORIGINAL_GO_MTU_PREPARE_"+role)
+                links=json.loads(root("ip","-n",place,"-j","link","show",
+                                      "dev",tun).stdout)
+                if len(links)!=1 or not (576<=links[0]["mtu"]<=outer):
+                    raise RuntimeError("M029_H2267_ORIGINAL_OWNED_TUN_MTU_INVALID_"+role)
+                fq=ns(place,"tc","-d","qdisc","show","dev",tun).stdout
+                if ("qdisc fq " not in fq or " root " not in fq or
+                    " maxrate 600Mbit" not in fq or " flow_limit 256" not in fq):
+                    raise RuntimeError("M029_H2267_ORIGINAL_GO_FQ600_CHANGED_"+role)
+                readings[role]={
+                    "cold_original_go_outer_config_bytes":outer,
+                    "cold_original_go_interface_mtu":1500,
+                    "original_owned_tun_inner_mtu":links[0]["mtu"],
+                    "original_go_fq600":True}
+            result["h2267_default_mtu_trial"]={
+                "leg":MTU_TRIAL_LEG,
+                "original_go_default_cli_not_overridden":MTU_TRIAL_LEG=="B",
+                "original_product_outer_ip_mtu_bytes":outer,
+                "same_underlay_mtu_all_legs":1500,
+                "true_cold_go_native_mtu_and_tun_readbacks":readings,
+                "no_product_go_or_rust_data_path_changes":True}
+
         if FQ_TRIAL_LEG:
             # The real original-Go owner has already applied and logged
             # fq600 on this exact ephemeral client TUN. A, A-prime never
