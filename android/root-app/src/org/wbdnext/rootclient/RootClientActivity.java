@@ -76,6 +76,35 @@ public final class RootClientActivity extends Activity {
             diagnosticExportResult.setText("无法打开系统文件保存器；未请求 Root 或读取原始日志");
         }
     }
+    // B23: read the original 0600 app-private CA already staged for
+    // Go strict TLS. No Android system trust edits or network discovery.
+    private void recallSavedTLSCA(){
+        File file=new File(getFilesDir(),RootPrivateCredentialFiles.CA);
+        if(!file.isFile()||file.length()<1||
+           file.length()>RootPrivateCredentialContract.maxBytes(
+               RootPrivateCredentialFiles.CA))return;
+        try(InputStream in=new java.io.FileInputStream(file);
+            ByteArrayOutputStream out=new ByteArrayOutputStream()){
+            byte[] chunk=new byte[4096];
+            int n;
+            int limit=RootPrivateCredentialContract.maxBytes(
+                RootPrivateCredentialFiles.CA);
+            while((n=in.read(chunk))!=-1){
+                if(out.size()+n>limit)return;
+                out.write(chunk,0,n);
+            }
+            String pem=new String(out.toByteArray(),StandardCharsets.UTF_8).trim();
+            if(!pem.startsWith("-----BEGIN CERTIFICATE-----")||
+               !pem.contains("-----END CERTIFICATE-----"))return;
+            java.util.Collection<? extends java.security.cert.Certificate> certs=
+                java.security.cert.CertificateFactory.getInstance("X.509")
+                    .generateCertificates(new java.io.ByteArrayInputStream(
+                        pem.getBytes(StandardCharsets.UTF_8)));
+            if(!certs.isEmpty())caPEM.setText(pem);
+        }catch(Exception ignored){
+            // Optional recall only; user can re-import the local CA.
+        }
+    }
     private void importTLSCA(){
         Intent choose=new Intent(Intent.ACTION_OPEN_DOCUMENT);
         choose.addCategory(Intent.CATEGORY_OPENABLE);
@@ -104,10 +133,14 @@ public final class RootClientActivity extends Activity {
                 .generateCertificates(new java.io.ByteArrayInputStream(
                     pem.getBytes(StandardCharsets.UTF_8)));
             if(certs.isEmpty())throw new IllegalArgumentException("empty trust set");
+            // Reuse A32 production 0600 writer. A CA is public trust
+            // material; unlike the password/RouteKey it needs no new
+            // storage or encryption format. Go still reads it only on START.
+            privateText(RootPrivateCredentialFiles.CA,pem+"\n");
             caPEM.setText(pem);
-            status.setText("已导入 "+certs.size()+" 张本地TLS证书；勾选严格校验后原Go才使用");
+            status.setText("已导入并保留 "+certs.size()+" 张本地TLS证书；勾选严格校验后原Go才使用");
         }catch(Exception failure){
-            status.setText("CA导入未成功：请选择有效的受限大小PEM文件，原有配置未更改");
+            status.setText("CA导入或本机保存失败；请核对PEM并重新导入");
         }
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
@@ -586,6 +619,16 @@ public final class RootClientActivity extends Activity {
         importCa.setText("从本机文件导入 WBD 服务端 TLS CA PEM");
         importCa.setOnClickListener(v->importTLSCA());
         pane.addView(importCa);
+        Button clearCa=new Button(this);
+        clearCa.setText("清除本机已导入的TLS CA（不影响密码/RouteKey）");
+        clearCa.setOnClickListener(v->{
+            File file=new File(getFilesDir(),RootPrivateCredentialFiles.CA);
+            if(!file.exists()||file.delete()){
+                caPEM.setText("");
+                status.setText("已清除本机TLS CA；严格TLS校验若需私有CA请重新导入");
+            }else status.setText("无法清除本机TLS CA，请重试");
+        });
+        pane.addView(clearCa);
         TextView caHelp=new TextView(this);
         caHelp.setText("只有勾选严格验证时才使用CA；否则默认不做证书身份校验。"+
             "严格模式下UNKNOWN_AUTHORITY请导入CA；HOSTNAME_MISMATCH请核对证书DNS SAN与SNI。");
@@ -715,6 +758,9 @@ public final class RootClientActivity extends Activity {
         status.setTextIsSelectable(true);
         pane.addView(status);
         setContentView(scroll);
+        // The exact same public CA is reused across strict-TLS STARTs;
+        // Android Keystore credentials and TLS trust policy stay separate.
+        recallSavedTLSCA();
         // Restore UI choices only. Re-enumerate physical Networks and
         // installed App UIDs from Android, never reuse an old route handle.
         try{restoreConnectionSettings(RootConnectionSettingsStore.load(this));}

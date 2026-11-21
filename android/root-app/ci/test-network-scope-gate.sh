@@ -167,6 +167,14 @@ a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").re
 assert 'target_packages' in a and 'target_uids' in a
 assert 'SelectedAppGroup.from(' in a and 'InstalledAppCatalog.stillSameGroup(' in a
 assert 'RootConnectionSettingsStore.save(this,connectionSettingsFromUi())' in a
+# B23: production Activity imports, recalls and clears ONE existing
+# original Go 0600 private CA file, never changes Android system trust.
+assert 'recallSavedTLSCA();' in a
+assert 'privateText(RootPrivateCredentialFiles.CA,pem+' in a
+assert 'file.delete()' in a
+assert 'RootPrivateCredentialContract.maxBytes(' in a
+assert 'java.security.cert.CertificateFactory.getInstance("X.509")' in a
+print("ANDROID_B23_ORIGINAL_GO_LOCAL_CA_IMPORT_RECALL_CLEAR_SOURCE_PASS")
 assert 'restoreConnectionSettings(RootConnectionSettingsStore.load(this))' in a
 assert 'new TreeMap<>(restoredSelection)' in a
 assert 'previous.get(app.packageName)==app.uid' in a
