@@ -1,7 +1,9 @@
 package org.wbdnext.rootclient;
 
-// Pure cold input grammar. Never resolve on the Android UI or through
-// netd's default resolver: only the root Go physical DNS bootstrap may do so.
+// Pure cold input grammar. Never resolve on the Android UI or via the
+// unselected/default Network. On an unvalidated LAN, RootService worker
+// may resolve once through the EXACT chosen Android Network; original Go
+// handles all public physical bootstrap, TLS, authentication and M4.
 final class ServerAddress {
     private ServerAddress(){}
     static boolean isIPv4Literal(String value){

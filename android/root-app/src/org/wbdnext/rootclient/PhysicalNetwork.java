@@ -8,6 +8,7 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import java.net.Inet4Address;
 import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,16 +23,20 @@ final class PhysicalNetwork {
     final int mtu;
     final String address;
     final boolean hasInternetCapability;
+    final boolean validatedByAndroid;
     private PhysicalNetwork(long handle,String name,int index,int mtu,String addr,
-                            boolean internetCapability){
+                            boolean internetCapability,boolean validated){
         this.handle=handle;this.interfaceName=name;
         this.ifindex=index;this.mtu=mtu;this.address=addr;
         this.hasInternetCapability=internetCapability;
+        this.validatedByAndroid=validated;
     }
     String title(){
         return interfaceName+"  "+address+"  MTU "+mtu+
             "  Network "+Long.toUnsignedString(handle)+
-            (hasInternetCapability?"":"  [仅本地链路：Android未声明Internet]");
+            (hasInternetCapability
+                ?(validatedByAndroid?"":"  [公网未验证：可连接局域网WBD]")
+                :"  [仅本地链路：Android未声明Internet]");
     }
     boolean same(PhysicalNetwork other){
         return other!=null&&handle==other.handle&&
@@ -92,12 +97,49 @@ final class PhysicalNetwork {
                 long handle=network.getNetworkHandle();
                 if(handle==0)continue;
                 out.add(new PhysicalNetwork(handle,name,iface.getIndex(),mtu,addr,
-                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)));
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)));
             }catch(Exception ignored){
                 // A disappearing Network is never a candidate.
             }
         }
         return out;
+    }
+    /**
+     * B28: one pre-Root, off-UI resolution of a WBD server hostname.
+     * For a non-VALIDATED local LAN, use Android's DNS bound to the EXACT
+     * selected Network rather than original-Go's fixed public 223.5.5.5
+     * bootstrap, which may be unreachable. This only obtains peer IPv4;
+     * original Go still emits the real SYN and standard TLS/Admission.
+     * It does NOT capture any ordinary Android app/netd DNS traffic.
+     */
+    static String coldPeerIPv4(Context context,PhysicalNetwork selected,
+                               String peer)throws UnknownHostException{
+        if(selected==null||!ServerAddress.valid(peer))
+            throw new UnknownHostException("invalid original peer identity");
+        if(ServerAddress.isIPv4Literal(peer)||selected.validatedByAndroid)
+            return peer;
+        ConnectivityManager cm=(ConnectivityManager)context.getSystemService(
+            Context.CONNECTIVITY_SERVICE);
+        if(cm==null)throw new UnknownHostException("Android ConnectivityManager unavailable");
+        for(Network network:cm.getAllNetworks()){
+            if(network.getNetworkHandle()!=selected.handle)continue;
+            // Preserve the original-Go physical 223.5.5.5 hostname
+            // bootstrap when this optional scoped LAN DNS has no answer.
+            // Only a confirmed local A record changes the cold peer to
+            // --peer-ip; never use the default Android Network resolver.
+            String ip=null;
+            try{
+                ip=PhysicalPeerIPv4Choice.select(network.getAllByName(peer));
+            }catch(UnknownHostException unresolved){
+                // Original Go still owns its existing public DNS fallback.
+            }
+            if(exact(context,selected.handle,selected.interfaceName,
+                     selected.ifindex,selected.mtu,selected.address)==null)
+                throw new UnknownHostException("physical LAN Network changed during DNS bootstrap");
+            return ip==null?peer:ip;
+        }
+        throw new UnknownHostException("selected LAN Network no longer exists");
     }
     // Consume the callback's own LinkProperties, never synchronously
     // requery ConnectivityManager inside its asynchronous callback.

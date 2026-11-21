@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B28 实体LAN服务端域名引导**：B27 `9d449f8f` 已开放真实Wi-Fi/Ethernet没有 INTERNET 标记时选择物理Network并让Service收到回调，但同LAN服务器的域名仍可能在旧原Go固定 223.5.5.5 物理DNS上不可解析。本切片只在**Android未验证有公网**、且用户填的是WBD服务端域名时，由 `RootClientService` 的既有**启动线程**调用 `Network.getAllByName(peer)`，严格使用同一当前选定handle，取有效IPv4（可能先返回AAAA），重新核验原 PhysicalNetwork 接口/ifindex/IPv4/MTU后，把**该IPv4**交给原Go `--peer-ip`。无本地A记录/本地DNS查询失败则回到原Go已存在的`--peer-host`/223.5.5.5引导，**不降级原标准TLS、RouteKey/认证、Rust M3/PN和owned Stop**。这不是“系统netd DNS已进入WBD”：仅为WBD自身*连接前*的冷域名引导，普通应用的 `getaddrinfo` 仍由系统Resolver处理，原M4只处理已进入TUN的应用UDP/53。无实机/服务器/重压测权限，BUILD/Host/真实LAN E2E须按独立 SOURCE 记录。
+
+
 > **2026-11-22 B27 LAN-only Wi-Fi/USB Ethernet 原物理出口**：基线 B26 `c48d5923` 已由同源Actions验证11 SUCCESS/4 SKIPPED（Android签名APK＋原Go/Rust双ABI＋Linux原服务端Oracle，非手机E2E）。原 `PhysicalNetwork.available` 与 `RootClientService.onCapabilitiesChanged` 均要求Android `NET_CAPABILITY_INTERNET`，同时回调只注册Internet Network；因此有实际网卡IPv4、ifindex、MTU、可达**局域网**WBD服务器但被Android标记没有互联网的实体Wi-Fi/USB Ethernet会在UI不可选或监听丢失。B27将真实物理出口资格明确改成Wi-Fi/蜂窝/Ethernet且非VPN＋严格Kernel/LinkProperties本机IPv4同源读回，NetworkRequest按三类实际TRANSPORT订阅**无需INTERNET**；Internet capability本身变化不再释放已有同一原生owner。UI对无此标记的Network单独标“仅本地链路”，可填同链路可达的服务器**直接IPv4**与独立TLS SNI；不自动切网、不跳过原Go认证/32/M4与owned Stop、不更改主线HTTP/TLS或Rust RAW/TUN/DNS。这只完成软件接线；Android实体LAN接入/应用业务/E2E/CPU均NOT_RUN。Android系统netd DNS仍未由UID规则捕获。
 
 

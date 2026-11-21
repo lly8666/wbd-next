@@ -634,8 +634,10 @@ public final class RootClientActivity extends Activity {
         pane.addView(refresh);
         TextView lanHelp=new TextView(this);
         lanHelp.setText("支持没有公网互联网的真实 Wi-Fi/USB Ethernet 局域网，"+
-            "但服务器必须在该链路上可达。没有可用外网DNS时直接填服务器 IPv4，"+
-            "TLS SNI 单独填写；不会自动切换当前Root会话的网卡。");
+            "但服务器必须在该链路上可达。未获Android互联网验证的局域网"+
+            "服务器域名会在START前由已选Network做一次本地DNS解析；无结果时继续原Go物理DNS引导；"+
+            "若局域网没有DNS可直接填服务器IPv4，TLS SNI仍单独填写。"+
+            "不会自动切换当前Root会话的网卡。");
         pane.addView(lanHelp);
         Button selfTestButton=new Button(this);
         selfTestButton.setText("A12 一键自检 ARM64/KSU/TUN/UID入TUN及分阶段路由诊断（免服务器）");

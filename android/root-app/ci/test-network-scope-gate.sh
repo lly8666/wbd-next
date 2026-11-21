@@ -17,6 +17,11 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/PhysicalUnderlayPolicy.java \
   android/root-app/ci/PhysicalUnderlayPolicyTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.PhysicalUnderlayPolicyTest
+# B28: exact production LAN peer-address selection helper, no DNS in Host.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/PhysicalPeerIPv4Choice.java \
+  android/root-app/ci/PhysicalPeerIPv4ChoiceTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.PhysicalPeerIPv4ChoiceTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/RootStopCommand.java \
   android/root-app/ci/RootStopCommandTest.java
@@ -202,6 +207,15 @@ assert '.addTransportType(NetworkCapabilities.TRANSPORT_WIFI)' in request
 assert '.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)' in request
 assert 'hasInternetCapability?"":"  [仅本地链路' in physical
 print("ANDROID_B27_LAN_ONLY_ANDROID_NETWORK_REQUEST_REAL_SERVICE_SOURCE_PASS")
+assert 'NetworkCapabilities.NET_CAPABILITY_VALIDATED' in physical
+assert 'PhysicalPeerIPv4Choice.select(network.getAllByName(peer))' in physical
+assert 'network.getNetworkHandle()!=selected.handle' in physical
+assert 'PhysicalNetwork.coldPeerIPv4(this,net,peer)' in s
+assert 'launchCommand(code,net,peerForGo,sni' in s
+assert 'ServerAddress.isIPv4Literal(peer)||selected.validatedByAndroid' in physical
+assert 'LAN_SELECTED_NETWORK_DNS_UNAVAILABLE' in s
+assert 'android.intent' not in physical
+print("ANDROID_B28_EXACT_SELECTED_LAN_NETWORK_DNS_SERVER_BOOTSTRAP_SOURCE_PASS")
 argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
 assert 'OriginalGoCommandArgs.build(' in s, "production RootService must use host-tested original Go argv"
 assert 'for(String a:args)quotedArgs.add(q(a))' in s, "every native argv token is shell quoted"

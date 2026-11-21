@@ -46,6 +46,14 @@ A real Android Wi-Fi or USB Ethernet `Network` can carry working local IPv4 to a
 
 The dropdown labels LAN-only candidates as lacking the Android Internet capability; this is **not** an assertion that a WBD server is reachable. For a LAN-only link, enter the server's directly reachable **IPv4** and separately configure its TLS SNI, because the existing original-Go hostname bootstrap uses physical 223.5.5.5 and may be unavailable without internet. No automatic cellular fallback, broad Root rule, system DNS rewrite or additional hotpath worker is introduced. Changes of actual physical handle/ifindex/local IPv4/MTU still terminate the owned generation. B27 host/signed APK evidence is not a physical-device LAN or application delivery PASS.
 
+## B28 · Use selected local Network DNS for a LAN WBD hostname before original Go TLS
+
+An unvalidated/local-only physical Wi-Fi or Ethernet `Network` may have its own LAN DNS server and a WBD peer registered under a LAN domain. Original Go's public 223.5.5.5 pre-SYN bootstrap cannot resolve such names when there is no internet. The existing RootService worker therefore performs **one cold `Network.getAllByName(peer)` on the exact selected Android Network handle** (API 21+) for a DNS-name peer on an unvalidated link, selects an actual IPv4 A answer and passes it to the **same original Go `--peer-ip`** path. The original Go still owns FakeTCP SYN, standard TLS/route-key SessionID, credential admission, /32 lease, Rust M3/M4 and owned Stop. No connection is opened by Java, and no per-packet Go/Java callback is added.
+
+When the selected Network resolver does not return an IPv4 address, the **existing original-Go physical 223.5.5.5 hostname bootstrap remains the fallback**, preserving behavior for mobile/hotspot networks that can reach the public resolver despite lacking Android's validation bit. An already-entered literal IPv4 bypasses DNS entirely; unchanged validated Internet links keep their original Go bootstrap behavior. If the peer is only reachable on a private LAN with no working resolver, use its literal IPv4 and a separately correct TLS SNI.
+
+This is **only WBD's own pre-auth server bootstrap**. It does not capture or reroute Android system `netd` queries, implement global/private DNS, or prove physical WBD application delivery. Same-SOURCE signed APK and host testing are software gates; LAN DNS success and TCP/UDP E2E still require authorized actual-device evidence.
+
 ## Honest build and device boundary
 
 - `.github/workflows/android-root-product-a1.yml` builds Rust/Go AArch64

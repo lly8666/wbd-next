@@ -392,6 +392,12 @@ public final class RootClientService extends Service {
                   net.mtu,net.address)==null){
                 throw new IllegalStateException("physical Android Network changed during staging");
             }
+            // B28: only when Android does NOT validate this LAN as
+            // Internet, resolve peer hostname using the SELECTED
+            // Network's local DNS (off UI, before Root), not netd default.
+            // The original Go FakeTCP/TLS gets a literal --peer-ip;
+            // its protected SessionID SNI, credentials, M3/PN unchanged.
+            final String peerForGo=PhysicalNetwork.coldPeerIPv4(this,net,peer);
             status="ROOT_STARTING — exact native SOURCE "+code.source.substring(0,12);
             Process p;
             synchronized(ownerLaunchLock){
@@ -403,7 +409,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken))
+                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);
@@ -832,8 +838,13 @@ public final class RootClientService extends Service {
                  " — inspect fixed receipt; Android data unverified";
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.ROOT_LAUNCH_FAILED);
-            status="ROOT_OR_NATIVE_FAILURE: "+e.getClass().getSimpleName()+
-                " (no claimed native readiness)";
+            if(e instanceof java.net.UnknownHostException){
+                status="LAN_SELECTED_NETWORK_CHANGED — 请检查同链路可达"+
+                    "的服务器IPv4，并单独设置TLS SNI；未发起Root/TLS";
+            }else{
+                status="ROOT_OR_NATIVE_FAILURE: "+e.getClass().getSimpleName()+
+                    " (no claimed native readiness)";
+            }
         }finally{
             // Original Go parses and retains secrets only in its own
             // authenticated process. Never persist plaintext user password
