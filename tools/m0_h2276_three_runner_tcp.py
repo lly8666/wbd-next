@@ -31,6 +31,7 @@ tcp.PORT = PORT
 # H2281: only on explicit 2x3 native sustained-capacity workflow.
 # Original Wintun/WSL product diagnostic keeps historical 24MiB/18s shape.
 SUSTAINED = os.environ.get("WBD_H2281_SUSTAINED_TCP") == "1"
+WINDOW_AB = os.environ.get("WBD_H2282_TCP_WINDOW_AB") == "1"
 if SUSTAINED:
     tcp.BULK_MAX_BYTES = 512 * 1024 * 1024  # per flow, four independent real TCP sockets
     tcp.BULK_SEND_S = 25
@@ -40,8 +41,20 @@ TIERS = (-1, 0, 1, 5)  # -1 = no-loss/no-added-delay infrastructure capacity ref
 
 
 def active_stages():
-    """H2279 clean same-machine native TCP direct versus kernel-relayed A/B."""
+    """H2282 three 400ms zero-loss TCP socket-window AB/A-prime, else old modes."""
+    if WINDOW_AB:
+        return ("base", "tuned", "base_prime")
     return ("direct", -1) if os.environ.get("WBD_H2279_CAPACITY_AB")=="1" else TIERS
+
+
+def actual_loss_tier(stage):
+    return 0 if isinstance(stage, str) else stage
+
+
+def prepare_tcp_sockbuf(stage):
+    # Only the *test app* socket knobs; no WBD runtime/GoTLS changes.
+    tcp.WINDOW_TEST_BYTES = 8 * 1024 * 1024 if WINDOW_AB and stage=="tuned" else 0
+
 
 
 def server_expected_tcp_peer(stage, relay):
@@ -391,29 +404,45 @@ def remote_diag(relay):
 
 def run_server(own, relay):
     peer = verify(own, relay, "relay")
+    original_sysctls = {}
+    if WINDOW_AB:
+        # Ephemeral native ARM VM, but restore test-owned sysctls on Stop.
+        for key in ("net.core.rmem_max", "net.core.wmem_max"):
+            original_sysctls[key] = run("sysctl", "-n", key).stdout.strip()
     result = []
-    for tier in active_stages():
-        expected_peer = server_expected_tcp_peer(tier,relay)
-        print("H2279_SERVER_TCP_STAGE "+
-              json.dumps({"stage":tier,"actual_peer":expected_peer}),
-              flush=True)
-        before = time.process_time()
-        host_before = os_host_cpu()
-        t = time.monotonic()
-        tcp.server(own["tail_ip"], expected_peer, own["source_sha"])
-        result.append(dict(stage_id=tier,
-                           loss_pct=(0 if tier=="direct" else tier),
-                           actual_peer=expected_peer,
-                           service_wall_s=round(time.monotonic() - t, 4),
-                           python_service_cpu_s=round(time.process_time() - before, 4),
-                           arm_host_allcore_busy_pct=cpu_busy_percent(
-                               host_before, os_host_cpu())))
+    try:
+        if WINDOW_AB:
+            for key in original_sysctls:
+                run("sudo", "-n", "sysctl", "-w", key + "=16777216")
+        for tier in active_stages():
+            prepare_tcp_sockbuf(tier)
+            expected_peer = server_expected_tcp_peer(tier,relay)
+            print("H2279_SERVER_TCP_STAGE "+
+                  json.dumps({"stage":tier,"actual_peer":expected_peer}),
+                  flush=True)
+            before = time.process_time()
+            host_before = os_host_cpu()
+            t = time.monotonic()
+            tcp.server(own["tail_ip"], expected_peer, own["source_sha"])
+            result.append(dict(stage_id=tier,
+                               loss_pct=actual_loss_tier(tier),
+                               server_app_sockbuf_requested=tcp.WINDOW_TEST_BYTES,
+                               actual_peer=expected_peer,
+                               service_wall_s=round(time.monotonic() - t, 4),
+                               python_service_cpu_s=round(time.process_time() - before, 4),
+                               arm_host_allcore_busy_pct=cpu_busy_percent(
+                                   host_before, os_host_cpu())))
+    finally:
+        for key, value in original_sysctls.items():
+            run("sudo", "-n", "sysctl", "-w", key+"="+value)
+        if original_sysctls:
+            print("H2282_TEST_OWNED_ARM_SYSCTL_RESTORED", flush=True)
     save(ROOT / "server-result.json", dict(
         source_sha=own["source_sha"], run_id=own["run_id"],
         group=own["group"], stages=result, real_native_arm=True,
-        no_product_go_rust_claim=True))
+        no_product_go_rust_claim=True,
+        h2282_restore_owned_arm_sysctls=bool(original_sysctls)))
     print("H2276_SERVER_ALL_TCP_STAGES_PASS", flush=True)
-
 
 def run_client(own, relay, server):
     win = own["tail_ip"]
@@ -442,8 +471,10 @@ def run_client(own, relay, server):
         print("H2277_SKIP_SHARED_DERP_NOT_WBD_PERFORMANCE", flush=True)
         raise RuntimeError("H2277_INFRA_DERP_NO_VALID_3RUNNER_PERFORMANCE")
     for tier in active_stages():
+        prepare_tcp_sockbuf(tier)
         target = client_tcp_target(tier,relay,server)
-        shape = None if tier=="direct" else remote_shape(relay,tier)
+        loss_tier = actual_loss_tier(tier)
+        shape = None if tier=="direct" else remote_shape(relay,loss_tier)
         time.sleep(0.5 if tier=="direct" else 2.0)
         buffer = io.StringIO()
         begin = time.monotonic()
@@ -475,8 +506,8 @@ def run_client(own, relay, server):
                     "SUSTAINED_BULK_DID_NOT_OVERLAP_160_ECHO_WINDOW")
         try:
             receipt = None if tier == "direct" else netem_phase_receipt(
-                shape["netem"]["qdisc"], remote_diag(relay)["kernel_tc"], tier)
-            if tier in (0, 1, 5):
+                shape["netem"]["qdisc"], remote_diag(relay)["kernel_tc"], loss_tier)
+            if loss_tier in (0, 1, 5):
                 require(rows[0]["sparse_tcp_rtt_p50_ms"] >= 350,
                         "BOTH_200MS_EGRESS_CLASSES_NOT_REFLECTED_IN_TCP_RTT")
         except Exception as topology_exc:
@@ -487,7 +518,8 @@ def run_client(own, relay, server):
             raise
         row = dict(stage_id=tier,
                    relay_kernel_loss_receipt=receipt,
-                   loss_pct=(0 if tier=="direct" else tier),
+                   loss_pct=loss_tier,
+                   socket_buffer_requested_bytes=tcp.WINDOW_TEST_BYTES,
                    tcp_path=("DIRECT_OS_TAILNET_ARM" if tier=="direct" else
                              "OS_KERNEL_DNAT_SNAT_RELAY"),
                    delivered=rows[0],
@@ -512,7 +544,38 @@ def run_client(own, relay, server):
                          sort_keys=True), flush=True)
     require([row["stage_id"] for row in observation["stages"]] ==
             list(active_stages()), "MISSING_SOURCE_LOCKED_TCP_STAGES")
-    if os.environ.get("WBD_H2279_CAPACITY_AB")=="1":
+    if WINDOW_AB:
+        require([x["stage_id"] for x in observation["stages"]]==
+                ["base","tuned","base_prime"], "WINDOW_AB_A_PRIME_STAGES_MISSING")
+        base,tuned,rebound=observation["stages"]
+        for leg in (base,tuned,rebound):
+            require(leg["relay_kernel_loss_receipt"]["status"] ==
+                    "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED" and
+                    leg["delivered"]["sparse_echo_received"]==160,
+                    "WINDOW_AB_REAL_TCP_QDISC_RECEIPT_MISSING")
+        require((base["socket_buffer_requested_bytes"],
+                 tuned["socket_buffer_requested_bytes"],
+                 rebound["socket_buffer_requested_bytes"]) ==
+                (0,8*1024*1024,0),"SOCKET_BUFFER_AB_NOT_APPLIED")
+        default_mean=(base["delivered"]["bulk_receiver_goodput_mbps"]+
+                      rebound["delivered"]["bulk_receiver_goodput_mbps"])/2
+        require(default_mean>0,"SOCKET_AB_NO_VALID_DEFAULT_GOODPUT")
+        os_bufs=tuned["delivered"].get("client_bulk_buffers_os",[])
+        require(len(os_bufs)==4 and all(x["requested_bytes"]==8*1024*1024
+                    and x["sndbuf_os"]>0 and x["rcvbuf_os"]>0
+                    for x in os_bufs), "WINDOW_AB_NO_REAL_WINSOCK_READBACK")
+        observation["window_ab"] = {
+            "normal_mbps":base["delivered"]["bulk_receiver_goodput_mbps"],
+            "tuned_mbps":tuned["delivered"]["bulk_receiver_goodput_mbps"],
+            "normal_prime_mbps":rebound["delivered"]["bulk_receiver_goodput_mbps"],
+            "gain_over_default_avg_pct":round(100*(tuned["delivered"]["bulk_receiver_goodput_mbps"]/default_mean-1),3),
+            "os_windows_bulk_buffers_actual":os_bufs,
+            "p99_ms":[x["delivered"]["sparse_tcp_rtt_p99_ms"] for x in (base,tuned,rebound)],
+            "cpu_windows_allcore_busy_pct":[x["windows_host_allcore_busy_pct"] for x in (base,tuned,rebound)],
+            "no_product_default_change":True}
+        observation["status"]="PASS_H2282_REAL_NATIVE_WINSOCK_ARM_SOCKET_BUFFER_AB_SCOPED"
+        observation["capacity_qualification"]="WINDOW_TUNING_CANDIDATE_ONLY_NOT_WBD_PRODUCT"
+    elif os.environ.get("WBD_H2279_CAPACITY_AB")=="1":
         direct = observation["stages"][0]["delivered"]["bulk_receiver_goodput_mbps"]
         relayed = observation["stages"][1]["delivered"]["bulk_receiver_goodput_mbps"]
         require(direct>0 and relayed>0, "REAL_TCP_CAPACITY_NOT_POSITIVE")

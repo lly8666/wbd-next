@@ -24,6 +24,24 @@ BULK_SEND_S = 18
 ECHO_COUNT = 160
 ECHO_PERIOD_S = 0.08
 TIMEOUT_S = 100
+# H2282 test-only per-stage override from independent 2x3 network wrapper.
+# Never changes original signed Wintun/WSL2 product diagnostic by default.
+WINDOW_TEST_BYTES = 0
+
+
+def _read_socket_buffers(sock):
+    return {"requested_bytes": WINDOW_TEST_BYTES,
+            "sndbuf_os": sock.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF),
+            "rcvbuf_os": sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)}
+
+
+def _maybe_set_buffers(sock):
+    if WINDOW_TEST_BYTES:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, WINDOW_TEST_BYTES)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, WINDOW_TEST_BYTES)
+    return _read_socket_buffers(sock)
+
+
 MARK = "M029_H2271_NATIVE_TCP_"
 TOKEN = 0x4D3032395F544350
 
@@ -51,6 +69,7 @@ def server(bind_ip, client_ip, source):
     received = {"B": [], "E": []}
     errors = []
     lock = threading.Lock()
+    accepted_buffers = []
 
     def handle(conn, peer):
         try:
@@ -60,6 +79,8 @@ def server(bind_ip, client_ip, source):
                     raise RuntimeError("H2271_WRONG_REAL_TUNNEL_PEER")
                 kind = exact(conn, 1)
                 if kind == b"B":
+                    with lock:
+                        accepted_buffers.append(_read_socket_buffers(conn))
                     size = 0
                     while True:
                         data = conn.recv(65536)
@@ -89,6 +110,7 @@ def server(bind_ip, client_ip, source):
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        listener_buffers = _maybe_set_buffers(listener)
         listener.bind((bind_ip, PORT))
         listener.listen(8)
         listener.settimeout(35)
@@ -111,6 +133,8 @@ def server(bind_ip, client_ip, source):
         "source_sha": source, "bind": bind_ip, "peer": client_ip,
         "bulk_received_bytes": sum(received["B"]),
         "bulk_flows": BULK_FLOWS, "echo_received": ECHO_COUNT,
+        "listener_buffers_os": listener_buffers,
+        "accepted_bulk_buffers_os": accepted_buffers,
         "real_kernel_tcp": True}, sort_keys=True), flush=True)
 
 
@@ -118,13 +142,17 @@ def client(bind_ip, target_ip, source):
     bulk = []
     errors = []
     lock = threading.Lock()
+    client_bulk_buffers = []
 
     def bulk_client():
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.settimeout(TIMEOUT_S)
+                local_buffers = _maybe_set_buffers(sock)
                 sock.bind((bind_ip, 0))
                 sock.connect((target_ip, PORT))
+                with lock:
+                    client_bulk_buffers.append(local_buffers)
                 if sock.getsockname()[0] != bind_ip:
                     raise RuntimeError("H2271_NOT_ORIGINAL_WINTUN_OR_TUN_SOURCE")
                 sock.sendall(b"B")
@@ -199,6 +227,7 @@ def client(bind_ip, target_ip, source):
         "bulk_flows": BULK_FLOWS, "bulk_remote_received_bytes": total,
         "bulk_receiver_goodput_mbps": round(total * 8 / elapsed / 1e6, 3),
         "bulk_wall_s": round(elapsed, 3),
+        "client_bulk_buffers_os": client_bulk_buffers,
         "sparse_echo_sent": ECHO_COUNT, "sparse_echo_received": len(latencies),
         "sparse_tcp_rtt_p50_ms": quant(latencies, .5),
         "sparse_tcp_rtt_p95_ms": quant(latencies, .95),
