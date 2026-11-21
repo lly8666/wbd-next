@@ -4302,6 +4302,13 @@ struct LoopCounts {
     tx_dropped:AtomicU64,tx_uncertain:AtomicU64,tx_backpressure:AtomicU64,
     route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    rx_worker_tid:AtomicU32,tx_worker_tid:AtomicU32,
+    // Only the opt-in H2257 profile reads successful original M4 turns.
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    m4_successful_turns:AtomicU64,
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    m4_successful_turn_bins:[AtomicU64;5],
     #[cfg(feature="fec2_product_record")]
     outer_presentation_ack:AtomicU32,
     #[cfg(feature="fec2_product_record")]
@@ -5882,6 +5889,31 @@ fn original_kernel_monotonic_ns()->u64{
     if unsafe{clock_gettime(1,&mut t)}!=0{return 0}
     u64::try_from(t.seconds).unwrap_or(0).saturating_mul(1_000_000_000)
         .saturating_add(u64::try_from(t.nanoseconds).unwrap_or(0))
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_worker_linux_tid()->Option<u32>{
+    // One cold worker-start read; no new Go FFI, syscall ABI or per-packet IO.
+    let task=std::fs::read_link("/proc/thread-self").ok()?;
+    task.file_name()?.to_str()?.parse::<u32>().ok().filter(|n|*n>0)
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_parse_linux_task_ticks(stat:&str)->Option<(u64,u64)>{
+    // TASK stat utime=field14, stime=field15; COMM can include ')' or ' '.
+    let tail=stat.rsplit_once(") ")?.1;
+    let mut values=tail.split_ascii_whitespace();
+    let user=values.nth(11)?.parse::<u64>().ok()?;
+    let system=values.next()?.parse::<u64>().ok()?;
+    Some((user,system))
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_linux_task_ticks(tid:u32)->Option<(u64,u64)>{
+    if tid==0{return None}
+    let stat=std::fs::read_to_string(format!("/proc/self/task/{tid}/stat")).ok()?;
+    m029_parse_linux_task_ticks(&stat)
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_success_copy_bucket(copied:u32)->Option<usize>{
+    match copied{1=>Some(0),2..=4=>Some(1),5..=8=>Some(2),9..=16=>Some(3),17..=32=>Some(4),_=>None}
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn owner_thread_cpu_ns()->u64{
@@ -8195,6 +8227,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let tun_for_rx=Arc::clone(&tun);
     let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
         .spawn(move||{
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            if std::env::var("WBD_M0_029_TX_SYSCPU_DIAG").ok().as_deref()==Some("1"){
+                stats_rx.rx_worker_tid.store(m029_worker_linux_tid().unwrap_or(0),Ordering::Release);
+            }
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
             #[cfg(feature="fec2_product_record")]
@@ -8384,6 +8420,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let tx_ifname=ifname;
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            let service_diag=std::env::var("WBD_M0_029_TX_SYSCPU_DIAG")
+                .ok().as_deref()==Some("1");
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            if service_diag{
+                stats.tx_worker_tid.store(m029_worker_linux_tid().unwrap_or(0),Ordering::Release);
+            }
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            let mut service_success_turns=0u64;
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            let mut service_success_bins=[0u64;5];
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
             #[cfg(feature="fec2_product_record")]
@@ -8503,6 +8550,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+                    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+                    if service_diag{
+                        stats.m4_successful_turns.store(service_success_turns,Ordering::Relaxed);
+                        for (out,value) in stats.m4_successful_turn_bins.iter().zip(service_success_bins.iter()){
+                            out.store(*value,Ordering::Relaxed);
+                        }
+                    }
                     last_cpu_sample=Instant::now();
                 }
                 // Snapshot actual FEC close / pending parity and authentic
@@ -8656,6 +8710,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     fec_ingress_on
                 ){
                     Ok(done)=>{
+                        // This background_tun_once performs at most one
+                        // original send_kernel_multimsg. Positive copied
+                        // returns are real kernel receipts, never inferred
+                        // ACKs or all attempted syscall denominators.
+                        #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+                        if service_diag{
+                            if let Some(bin)=m029_success_copy_bucket(done.copied){
+                                service_success_turns=service_success_turns.saturating_add(1);
+                                service_success_bins[bin]=service_success_bins[bin].saturating_add(1);
+                            }
+                        }
                         #[cfg(feature="fec2_product_record")]
                         if egress_diag && done.failed {
                             diag_turn_err[0]=diag_turn_err[0].saturating_add(1);
@@ -8761,6 +8826,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            if service_diag{
+                stats.m4_successful_turns.store(service_success_turns,Ordering::Relaxed);
+                for (out,value) in stats.m4_successful_turn_bins.iter().zip(service_success_bins.iter()){
+                    out.store(*value,Ordering::Relaxed);
+                }
+            }
         })
     else{
         shutdown.store(true,Ordering::Release);
@@ -8796,6 +8868,9 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(feature="fec2_product_record")]
     let diagnostic=if std::env::var("WBD_PLAN028_EXTERNAL_STAGE_DIAG")
         .ok().as_deref()==Some("1"){
+        #[cfg(target_os="linux")]
+        let service_diag=std::env::var("WBD_M0_029_TX_SYSCPU_DIAG")
+            .ok().as_deref()==Some("1");
         let diag_stats=Arc::clone(&e.counters);
         let diag_stop=Arc::clone(&shutdown);
         let diag_raw=Arc::clone(&raw);
@@ -8843,6 +8918,27 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         diag_stats.rx_thread_cpu_ns.load(Ordering::Relaxed),
                         diag_stats.tx_thread_cpu_ns.load(Ordering::Relaxed),
                         u8::from(readable),nic_rx,nic_tx,nic_drop);
+                    #[cfg(target_os="linux")]
+                    if service_diag{
+                        // Original worker TIDs from this exact session.
+                        // Read outside worker, 2 task-stat files per 500ms.
+                        let rx_tid=diag_stats.rx_worker_tid.load(Ordering::Acquire);
+                        let tx_tid=diag_stats.tx_worker_tid.load(Ordering::Acquire);
+                        let rx=m029_linux_task_ticks(rx_tid);
+                        let tx=m029_linux_task_ticks(tx_tid);
+                        let show=|sample:Option<(u64,u64)>|sample.map_or(
+                            ("UNAVAILABLE".to_owned(),"UNAVAILABLE".to_owned()),
+                            |(u,s)|(u.to_string(),s.to_string()));
+                        let (ru,rs)=show(rx);
+                        let (tu,ts)=show(tx);
+                        let bins:Vec<u64>=diag_stats.m4_successful_turn_bins.iter().map(|x|
+                            x.load(Ordering::Relaxed)).collect();
+                        eprintln!("V4_PUBLIC_M4_NATIVE_SERVICE_DIAG role={} client_port={} generation={} mono_ns={} rx_tid={} tx_tid={} rx_user_ticks={} rx_system_ticks={} tx_user_ticks={} tx_system_ticks={} m4_success_turns={} m4_bin_1={} m4_bin_2_4={} m4_bin_5_8={} m4_bin_9_16={} m4_bin_17_32={} scope=definitely_copied_original_sendmmsg_turns_only",
+                            diag_role,diag_port,diag_generation,
+                            original_kernel_monotonic_ns(),rx_tid,tx_tid,ru,rs,tu,ts,
+                            diag_stats.m4_successful_turns.load(Ordering::Relaxed),
+                            bins[0],bins[1],bins[2],bins[3],bins[4]);
+                    }
                 }
             }).ok()
     }else{None};
@@ -9532,6 +9628,18 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    #[test]
+    fn m0_plan029_h2257_linux_task_stat_and_positive_send_turn_bins(){
+        let example="10 (wbd) worker) S 0 0 0 0 0 0 0 0 0 0 123 45 0";
+        assert_eq!(m029_parse_linux_task_ticks(example),Some((123,45)));
+        assert_eq!(m029_parse_linux_task_ticks("invalid"),None);
+        for (count,want) in [(0,None),(1,Some(0)),(2,Some(1)),
+            (4,Some(1)),(5,Some(2)),(8,Some(2)),(9,Some(3)),
+            (16,Some(3)),(17,Some(4)),(32,Some(4)),(33,None)]{
+            assert_eq!(m029_success_copy_bucket(count),want);
+        }
+    }
     #[test]
     fn m0_h2213_linux_native_32_lane_limit_33rd_denied(){
         assert_eq!(MAX_SESSIONS,32);

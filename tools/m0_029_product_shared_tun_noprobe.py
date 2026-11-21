@@ -29,6 +29,10 @@ STAGE=os.environ.get("WBD_M0_029_STAGE_TIMELINE","0")
 if STAGE not in ("0","1"):
     raise RuntimeError("M029_STAGE_TIMELINE_SWITCH_INVALID")
 STAGE=(STAGE=="1")
+SERVICE=os.environ.get("WBD_M0_029_SERVICE_CPU","0")
+if SERVICE not in ("0","1") or (SERVICE=="1" and not STAGE):
+    raise RuntimeError("M029_SERVICE_CPU_REQUIRES_REAL_STAGE")
+SERVICE=(SERVICE=="1")
 
 def authenticate_source_and_bundle():
     if os.environ.get("GITHUB_ACTIONS")!="true" or platform.machine()!=ARCH or (
@@ -93,6 +97,7 @@ def main():
             self.spawn("server",self.server,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
+                *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
                 str(BUNDLE/"wbd-v4-server"),"--raw-interface","wan0",
                 "--local-ip",G["SERVER_IP"],"--local-port","443",
                 "--tun-name",G["SERVER_TUN"],
@@ -118,6 +123,7 @@ def main():
             self.spawn("client",self.client,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
+                *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -172,6 +178,7 @@ def main():
     result={"source_sha":SHA,"run_id":RUN,"attempt":ATTEMPT,
             "outer_repair_cli":"off_both_endpoints",
             "independent_m1_m4_stage_observer":STAGE,
+            "native_user_system_cpu_service_observer":SERVICE,
             "outer_ip_mtu_explicit_bytes":1160,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
@@ -288,6 +295,43 @@ def main():
                     "samples":rows,"echo_window_samples":overlap,
                     "source":"independent_Rust_500ms_observer",
                     "observed_without_new_DATA_path":True}
+        if SERVICE:
+            required=("mono_ns","generation","rx_tid","tx_tid",
+                      "rx_user_ticks","rx_system_ticks",
+                      "tx_user_ticks","tx_system_ticks",
+                      "m4_success_turns","m4_bin_1","m4_bin_2_4",
+                      "m4_bin_5_8","m4_bin_9_16","m4_bin_17_32")
+            bins=("m4_bin_1","m4_bin_2_4","m4_bin_5_8",
+                  "m4_bin_9_16","m4_bin_17_32")
+            result["native_user_system_cpu_service_timeline"]={}
+            for role in ("client","server"):
+                rows=[]
+                for line in node.logs[role].read_text(errors="replace").splitlines():
+                    if "V4_PUBLIC_M4_NATIVE_SERVICE_DIAG role="+role+" " not in line:
+                        continue
+                    fields={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=([0-9]+)",line)}
+                    if any(k not in fields for k in required):
+                        raise RuntimeError("M029_NATIVE_USER_SYS_TASK_STAT_UNAVAILABLE_"+role)
+                    rows.append({k:fields[k] for k in required})
+                if len(rows)<8 or len({x["generation"] for x in rows})!=1:
+                    raise RuntimeError("M029_NATIVE_SERVICE_GENERATION_OR_SAMPLE_MISSING_"+role)
+                for row in rows:
+                    if row["tx_tid"]<=0 or row["rx_tid"]<=0 or row["tx_tid"]==row["rx_tid"] or (
+                        sum(row[k] for k in bins)!=row["m4_success_turns"]):
+                        raise RuntimeError("M029_NATIVE_M4_BATCH_HISTOGRAM_INVALID_"+role)
+                for a,b in zip(rows,rows[1:]):
+                    if b["mono_ns"]<=a["mono_ns"] or any(
+                        b[k]<a[k] for k in
+                        ("rx_user_ticks","rx_system_ticks","tx_user_ticks",
+                         "tx_system_ticks","m4_success_turns",*bins)):
+                        raise RuntimeError("M029_NATIVE_USER_SYS_OR_SEND_TURNS_NONMONOTONE_"+role)
+                if rows[-1]["m4_success_turns"]<=rows[0]["m4_success_turns"]:
+                    raise RuntimeError("M029_NATIVE_M4_COPY_TURNS_NOT_OBSERVED_"+role)
+                result["native_user_system_cpu_service_timeline"][role]={
+                    "samples":rows,
+                    "source":"authentic_linux_task_stat_and_original_definite_M4_copy_turns",
+                    "clock_ticks_per_second":os.sysconf("SC_CLK_TCK"),
+                    "scope":"positive_copied_turns_not_all_sendmmsg_syscalls"}
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
         if traffic["receiver_bytes"]<=0 or traffic["tcp_streams"]!=4 or (

@@ -117,6 +117,9 @@ jobs:
           cargo +1.85.1 test --locked -p wbd-engine --lib \
             --features m0_v4_embedded_go \
             m0_plan029_shared_tun_protocol_ingress_diagnostic_is_source_scoped -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --lib \
+            --features m0_v4_embedded_go \
+            m0_plan029_h2257_linux_task_stat_and_positive_send_turn_bins -- --nocapture
           python3 -u tools/m0_plan029_linux_dual_isa_suite.py
           python3 - <<'PY'
           import json,os,pathlib,platform
@@ -183,7 +186,7 @@ jobs:
         timeout-minutes: 14
         run: |
           set -euo pipefail
-          WBD_M0_029_STAGE_TIMELINE=1 python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib
           plain=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
@@ -200,6 +203,12 @@ jobs:
           for role in ("client","server"):
               timeline=observed["m1_m4_stage_timeline"][role]
               assert len(timeline["samples"])>=8 and timeline["echo_window_samples"]>=4
+          if observed["native_user_system_cpu_service_observer"]:
+              assert not plain["native_user_system_cpu_service_observer"]
+              for role in ("client","server"):
+                  rows=observed["native_user_system_cpu_service_timeline"][role]["samples"]
+                  assert len(rows)>=8 and rows[-1]["m4_success_turns"]>rows[0]["m4_success_turns"]
+              print("M029_H2257_NATIVE_USER_SYS_AND_REAL_COPIED_TURNS_PASS",flush=True)
           print("M029_H2256_GENUINE_STAGE_WINDOWS_OBSERVED_NOT_CAUSAL_CPU_PASS",flush=True)
           PY
       - name: Upload same-SOURCE scoped native diagnostics (no secret files or raw captures)
