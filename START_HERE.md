@@ -1,6 +1,8 @@
 # WBD Next｜main 接续
 
-**当前：029B/029日常H2137限域PASS；H2162 Game2/4全20分流策略原生PASS_SCOPED；H2169 Game启动填充Game2/off-FEC与Game4/fixed-FEC × off/tls/flows 6场真网络PASS_SCOPED；H2177 新增**原生Linux x86_64/ARM64各服务端＋客户端五模式10/10真实内核TCP/UDP/Stop PASS_SCOPED**；**H2186 Linux原生双ISA各8场随机填充/AES/MTU/Stop真网络16/16 PASS_SCOPED**；完整技术出口仍OPEN、030未开。** [PR35](https://github.com/lly8666/wbd-next/pull/35)非冲突设计已合入，依据[029B提示](docs/prompts/M0-PLAN029B.md)与[方案](docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md)施工。028保留限域FAIL、不重开多Wintun/旧矩阵；030未开。029旧H2077仅`PASS_SCOPED`。
+**M0 当前入口（2026-11-21）**　先读[根约束](AGENTS.md)、[永久提示词](docs/prompts/M0.md)、[分配](.governance/registry.json)和[游标](.governance/workstreams/M0/cursor.json)。当前授权为[029 吞吐与效率施工](docs/decisions/M0-PLAN029-THROUGHPUT.md)，Linux ARM64 先行。进度以远端为准。以下为原包资格索引。
+
+**历史：029B/029日常H2137限域PASS；H2162 Game2/4全20分流策略原生PASS_SCOPED；H2169 Game启动填充Game2/off-FEC与Game4/fixed-FEC × off/tls/flows 6场真网络PASS_SCOPED；H2177 新增**原生Linux x86_64/ARM64各服务端＋客户端五模式10/10真实内核TCP/UDP/Stop PASS_SCOPED**；**H2186 Linux原生双ISA各8场随机填充/AES/MTU/Stop真网络16/16 PASS_SCOPED**；完整技术出口仍OPEN、030未开。** [PR35](https://github.com/lly8666/wbd-next/pull/35)非冲突设计已合入，依据[029B提示](docs/prompts/M0-PLAN029B.md)与[方案](docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md)施工。028保留限域FAIL、不重开多Wintun/旧矩阵；030未开。029旧H2077仅`PASS_SCOPED`。
 
 **H2205–H2208（2026-11-19）**：Win2025原WinForms 409项GUI/Go与Linux ARM64原TLS 12/12 [H2205证据](docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json) **PASS_SCOPED**；H2206服务端指定网卡唯一IPv4已实现；H2208短RouteKey改轻量v2离线计算一次、私有缓存复用，Win/Linux Go单测限域通过。Android仍仅设置组件、OpenWrt仅试验配置，真实JNI/路由器联网NOT_RUN。
 

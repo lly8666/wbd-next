@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "PLAN029 user-authorized 2026-11-12: native Windows Wintun Rust CN IPv4+domain union direct split, one DNS endpoint per direct/tunnel without fallback; server bootstrap reuses direct DNS; real config/GUI and bounded startup padding. Follow CLIENT_SPLIT_DNS_CONTRACT; one M0 main writer, preserve PLAN028 scoped limits. 2026-11-13 amendment: contract §3B scoped owned Defender diagnosis, executable real adapters without circular qualification gates; §5 per-resource pressure isolation and bounded backend investigation.",
-      "done_when": "PLAN029 exit plus CLIENT_SPLIT_DNS_CONTRACT D1-D5/P1-P2: real Windows Direct/Tunnel TCP/UDP and DNS egress, shared-CDN isolation, constant route/WFP count, canonical config/GUI/MTU1460, bounded padding, performance and owned Stop. DESIGN only is not PASS; do not reopen excluded 028 scope.",
-      "assigned_task": "R0-M0-PLAN029-CLIENT-DNS-PADDING"
+      "goal": "执行 docs/decisions/M0-PLAN029-THROUGHPUT.md。M0 在 main 登记与集成，产品按已登记短分支推进。先 ARM64 原生 Normal/off，再验 x86 与 Windows。既有 029/029B 分流、配置、隔离、Stop 与未验边界沿用，030 未启动。",
+      "done_when": "按该计划验收系统接收吞吐、CPU/有效GiB、及时交付率、无HOL及受影响入口；实测分别归属平台与SOURCE。否决/未测保留；本包完成后回到029/029B余项。",
+      "assigned_task": "M0-PLAN029-THROUGHPUT"
     },
     {
       "id": "M1",
