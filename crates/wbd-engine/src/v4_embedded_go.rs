@@ -5499,6 +5499,33 @@ struct SharedTunLeaseQueueDiag {
     offered:u64,direct_delivered:u64,downstream_full:u64,
     pending_overflow:u64,pending_byte_limit:u64,
     pending_peak_packets:usize,pending_peak_bytes:usize,
+    tcp_offered:u64,udp_offered:u64,other_offered:u64,
+    tcp_new_dropped:u64,udp_new_dropped:u64,other_new_dropped:u64,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+impl SharedTunLeaseQueueDiag {
+    fn note_new_packet(&mut self,proto:u8,refused:u64) {
+        // ONLY the just-read IPv4 datagram. Delta.delivered can include
+        // old queued packets and must never be attributed to this protocol.
+        let (offered,dropped)=match proto {
+            6=>(&mut self.tcp_offered,&mut self.tcp_new_dropped),
+            17=>(&mut self.udp_offered,&mut self.udp_new_dropped),
+            _=>(&mut self.other_offered,&mut self.other_new_dropped),
+        };
+        *offered=offered.saturating_add(1);
+        *dropped=dropped.saturating_add(refused);
+    }
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_protocol_ingress_diagnostic_is_source_scoped() {
+    let mut diag=SharedTunLeaseQueueDiag::default();
+    diag.note_new_packet(6,0);
+    diag.note_new_packet(17,1);
+    diag.note_new_packet(17,0);
+    diag.note_new_packet(1,1);
+    assert_eq!((diag.tcp_offered,diag.udp_offered,diag.other_offered),(1,2,1));
+    assert_eq!((diag.tcp_new_dropped,diag.udp_new_dropped,diag.other_new_dropped),(0,1,1));
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u8>>){
@@ -5570,6 +5597,7 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             if lease_diag_enabled{
                 let stats=lease_diag.entry(key).or_default();
                 stats.offered+=1;
+                stats.note_new_packet(scratch[i][9],delta.overflow);
                 stats.direct_delivered+=delta.delivered;
                 stats.downstream_full+=delta.backpressure;
                 stats.pending_overflow+=delta.overflow;
@@ -5584,10 +5612,12 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     }
     if lease_diag_enabled{
         for (ip,st) in lease_diag{
-            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={}",
+            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={} tcp_offered={} udp_offered={} other_offered={} tcp_new_dropped={} udp_new_dropped={} other_new_dropped={}",
                 ip[0],ip[1],ip[2],ip[3],st.offered,st.direct_delivered,
                 st.downstream_full,st.pending_overflow,st.pending_byte_limit,
-                st.pending_peak_packets,st.pending_peak_bytes);
+                st.pending_peak_packets,st.pending_peak_bytes,
+                st.tcp_offered,st.udp_offered,st.other_offered,
+                st.tcp_new_dropped,st.udp_new_dropped,st.other_new_dropped);
         }
     }
     let remaining:usize=pending.values().map(|q|q.packets.len()).sum();

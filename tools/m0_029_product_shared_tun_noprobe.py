@@ -87,6 +87,7 @@ def main():
             users.write_text(json.dumps({"bench0":"m029-scope-pass"})+"\n")
             users.chmod(0o600)
             self.spawn("server",self.server,["env","LD_LIBRARY_PATH="+str(BUNDLE),
+                "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 str(BUNDLE/"wbd-v4-server"),"--raw-interface","wan0",
                 "--local-ip",G["SERVER_IP"],"--local-port","443",
                 "--tun-name",G["SERVER_TUN"],
@@ -109,6 +110,7 @@ def main():
             if not ready(self.logs["echo-server"],"H2244_ECHO_SERVER_READY",15):
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_ECHO_SERVER_NOT_READY")
             self.spawn("client",self.client,["env","LD_LIBRARY_PATH="+str(BUNDLE),
+                "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -179,6 +181,30 @@ def main():
         result["owned_stop"]={
             "client":node.stop("client","V4_PUBLIC_SHARED_TUN_STOP generation="),
             "server":node.stop("server","V4_PUBLIC_SHARED_TUN_STOP generation=")}
+        # Explicit source-only diagnostic: UDP/TCP entering the authenticated
+        # /32 shared reader versus NEW pending drops. Neither a M4 copied
+        # prefix nor AEAD/PN verification nor a timed delivery receipt.
+        result["shared_tun_protocol_ingress"]={}
+        expected={"offered","tcp_offered","udp_offered","other_offered",
+                  "tcp_new_dropped","udp_new_dropped","other_new_dropped"}
+        for role in ("client","server"):
+            rows=[]
+            for line in node.logs[role].read_text(errors="replace").splitlines():
+                if not line.startswith("M0_SHARED_TUN_LEASE_QUEUE_DIAG "):
+                    continue
+                fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\\d+)",line)}
+                if not expected.issubset(fields):
+                    raise RuntimeError("M029_INGRESS_PROTOCOL_COUNTERS_MISSING_"+role)
+                if fields["offered"]!=sum(fields[k] for k in
+                       ("tcp_offered","udp_offered","other_offered")):
+                    raise RuntimeError("M029_INGRESS_PROTOCOL_DENOMINATOR_MISMATCH_"+role)
+                if any(fields[k+"_new_dropped"]>fields[k+"_offered"]
+                       for k in ("tcp","udp","other")):
+                    raise RuntimeError("M029_INGRESS_PROTOCOL_DROP_EXCEEDS_OFFERED_"+role)
+                rows.append({k:fields[k] for k in sorted(expected)})
+            if not rows or sum(x["offered"] for x in rows)==0:
+                raise RuntimeError("M029_TRUE_SHARED_TUN_INGRESS_DIAG_NOT_OBSERVED_"+role)
+            result["shared_tun_protocol_ingress"][role]=rows
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
         if traffic["receiver_bytes"]<=0 or traffic["tcp_streams"]!=4 or (
