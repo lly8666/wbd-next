@@ -257,8 +257,12 @@ assert "q.next_signal(next_pn,at)" in fec_worker
 assert "q.complete_signal(signal,sent,at)" in fec_worker
 assert "q.accept_report(report,at);" in fec_worker
 assert "if q.counters[10]>before{" in fec_worker
-assert "q.counters[1]>0" in fec_worker
-assert "stats.fec2_repair_raw.load(Ordering::Relaxed)>0" in fec_worker
+# B19: the original M3/PLAN027 Quality must refer to THIS
+# revision's real copied source and repair, never the old global B13 sums.
+assert "q.counters[1],positive_baseline," in fec_worker
+assert "revision_source_copied,revision_repair_copied" in fec_worker
+assert "e.android_fec2_revision_source_copied=true;" in fec_worker
+assert "if rev==revision{e.android_fec2_revision_repair_copied=true}" in fec_worker
 assert "*_applied=revision;" in fec_worker
 assert "e.quality_tx=Some(OriginalQualityTx::new(" in fec_worker
 assert "e.android_fec2_pending.is_some()||e.android_fec2_tx.is_some()" in fec_worker
