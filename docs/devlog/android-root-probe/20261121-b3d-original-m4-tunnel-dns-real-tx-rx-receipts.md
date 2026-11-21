@@ -8,6 +8,8 @@ A54 `ea480c5e9559c6ab3e60cd77c2fe965df229a308` 的 B3 冷授权与签名 APK/双
 
 Host JVM/Go 测试、原 Rust DNS inverse-map、source gate、ARM64 APK 和原 Linux Oracle 需以新 SOURCE Actions 结果为准。即使真实原 TUN 已写，也不能声称 Android 系统 DNS/netd 接管或 App 成功解析；CN 物理分流、TCP53、IPv6、Split、Fixed/Auto/Game 仍 NOT_PROVEN。未经另行授权不操作实体真机/用户服务器。
 
+B3d2 治理同步收口：本提交同时更新功能卡和含 `feature-impact` 的该 devlog；此变更仅记录 B3d/B3d1 的原 Go Android/Linux 计数结构兼容事实，不添加功能开关、安全门、协议或业务状态。
+
 B3d1 跨平台构建修补：`V4PublicLoopPulse` 的 Linux stub 同步增添两个 Android-only 零值字段，保证共享 Go 源码和 Linux 原服务端 Oracle 编译。Linux 数据面、业务默认与加密协议均未改变；源码门检查双侧结构体一致。
 
 ```feature-impact
