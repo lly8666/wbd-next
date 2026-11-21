@@ -71,6 +71,10 @@ mod v4_android_cn_dns;
 // decision for BOTH small and jumbo original M4 TUN packets.
 #[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_dns_route;
+// B16 one original Android M4 IPv4 DF0 / local DF1 PMTU codec, with
+// Host tests executing the exact same production encoder.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_ipv4_mtu;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;

@@ -28,6 +28,8 @@ use crate::v4_owner_crypto::NormalOffReport;
 #[cfg(feature="fec2_product_record")]
 use super::OriginalQualityTx;
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
+#[cfg(feature="fec2_product_record")]
+use crate::v4_android_ipv4_mtu::{can_fragment,fragment,header_len,fragmentation_needed};
 use wbd_types::MonoNs;
 use std::sync::{Arc,Mutex,OnceLock,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
@@ -91,6 +93,10 @@ pub(super) struct AndroidOriginalStats{
     fec2_mature_quality_matched:AtomicU64,
     #[cfg(feature="fec2_product_record")]
     fec2_m2_applied:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fixed_ipv4_fragments_raw:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fixed_df1_pmtu_tun:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -673,43 +679,6 @@ struct PendingAndroidJumbo{
 struct PendingAndroidFixedIpv4{
     source:Vec<u8>,offset:usize,generation:u32,physical_mtu:u32,
 }
-fn fixed_ipv4_checksum(header:&[u8])->u16{
-    let mut sum=0u32;
-    for word in header.chunks_exact(2){
-        sum+=u32::from(u16::from_be_bytes([word[0],word[1]]));
-    }
-    while sum>0xffff{sum=(sum&0xffff)+(sum>>16);}
-    !(sum as u16)
-}
-// This first native slice handles the ordinary IHL=20, unfragmented,
-// DF=0 case. IPv4 options/copy-bit and DF=1/ICMP PMTU must not be
-// approximated by a malformed packet or a Normal LINK fallback.
-fn fill_fixed_ipv4_fragment(
-    source:&[u8],offset:usize,cap:usize,out:&mut[u8],
-)->Option<(usize,usize)>{
-    if source.len()<21||source.len()>65_535||source[0]!=0x45||
-       source[6]&0x3f!=0||source[7]!=0||
-       usize::from(u16::from_be_bytes([source[2],source[3]]))!=source.len()||
-       offset>=source.len()-20||offset%8!=0{return None}
-    let max=cap.min(out.len()).checked_sub(20)?;
-    if max<8{return None}
-    let remain=source.len()-20-offset;
-    let bytes=if remain>max{max&!7}else{remain};
-    if bytes==0{return None}
-    let end=offset.checked_add(bytes)?;
-    if end>source.len()-20||offset/8>0x1fff{return None}
-    let len=20+bytes;
-    out[..20].copy_from_slice(&source[..20]);
-    out[2..4].copy_from_slice(&(len as u16).to_be_bytes());
-    let flags=(if end<source.len()-20{0x2000u16}else{0})|
-        ((offset/8) as u16);
-    out[6..8].copy_from_slice(&flags.to_be_bytes());
-    out[10..12].fill(0);
-    let checksum=fixed_ipv4_checksum(&out[..20]);
-    out[10..12].copy_from_slice(&checksum.to_be_bytes());
-    out[20..len].copy_from_slice(&source[20+offset..20+end]);
-    Some((len,end))
-}
 enum JumboTurn{Copied{done:bool},Deferred,Abandoned}
 fn send_android_jumbo_one(
     e:&mut Entry,plan:&mut PendingAndroidJumbo,
@@ -922,7 +891,7 @@ fn tun_worker(
                 let cap=frame.record_payload_mtu.saturating_sub(
                     wbd_codec::fec_v2::SOURCE_HEADER
                 ).min(slab.writable().len().saturating_sub(14));
-                let Some((n,end))=fill_fixed_ipv4_fragment(
+                let Some((n,end,done))=fragment(
                     &plan.source,plan.offset,cap,
                     &mut slab.writable()[14..],
                 )else{
@@ -939,10 +908,9 @@ fn tun_worker(
                     retire=true;break
                 }
                 plan.offset=end;
+                stats.fixed_ipv4_fragments_raw.fetch_add(1,Ordering::Relaxed);
                 clock.on_local_business(now().0);
-                if end==plan.source.len()-20{
-                    retire=true;break
-                }
+                if done{retire=true;break}
             }
             if retire{
                 if let Some(mut finished)=pending_fixed.take(){
@@ -1366,15 +1334,27 @@ fn tun_worker(
             }
             #[cfg(feature="fec2_product_record")]
             if e.protected_features==7{
-                // Fixed never sends Normal LINK20. Only unfragmented
-                // IHL20 DF=0 IPv4 is currently eligible for native
-                // fragmentation; DF=1 needs separate ICMP PMTU wiring.
-                let eligible=jumbo_spare.len()>=21&&jumbo_spare[0]==0x45&&
-                    jumbo_spare[6]&0x3f==0&&jumbo_spare[7]==0&&
-                    usize::from(u16::from_be_bytes([
-                        jumbo_spare[2],jumbo_spare[3]
-                    ]))==jumbo_spare.len();
-                if eligible{
+                // Fixed does not use Normal LINK20. When a DF=1
+                // oversized packet reaches the TUN, tell its originating
+                // IPv4 stack the actual local single-source capacity.
+                if header_len(&jumbo_spare).is_some()&&jumbo_spare[6]&0x40!=0{
+                    let mut icmp=[0u8;128];
+                    if let Some(n)=fragmentation_needed(
+                        &jumbo_spare,frame.single_business_payload_mtu,&mut icmp
+                    ){
+                        if tun.write_local_pmtu_icmp_ipv4(
+                            e.generation,&icmp[..n]
+                        ).ok()==Some(n){
+                            stats.fixed_df1_pmtu_tun.fetch_add(1,Ordering::Relaxed);
+                        }else{stats.tx_error.fetch_add(1,Ordering::Relaxed);}
+                    }
+                    stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                    drop(slab);e.arena.drain_returns();
+                    continue
+                }
+                // DF0 native IPv4 fragment slow-path, including RFC791
+                // copy-bit Options and already-fragmented IP input.
+                if can_fragment(&jumbo_spare){
                     if matches!(route,crate::v4_android_dns_route::DnsRoute::TunnelUDP)&&
                        e.android_dns_flows.rewrite_query(
                            &mut jumbo_spare,now().0/1_000_000
@@ -2004,46 +1984,3 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_off_readback(
     OK
 }
 
-#[cfg(test)]
-mod fixed_ipv4_fragment_tests{
-    use super::{fill_fixed_ipv4_fragment,fixed_ipv4_checksum};
-    #[test]
-    fn df0_fragment_offsets_checksums_and_exact_payload(){
-        let mut source=vec![0u8;4020];
-        source[0]=0x45;
-        source[2..4].copy_from_slice(&(4020u16).to_be_bytes());
-        source[4..6].copy_from_slice(&0x1234u16.to_be_bytes());
-        source[8]=64;source[9]=17;
-        for i in 20..source.len(){source[i]=(i%251) as u8}
-        let mut part=vec![0u8;1350];
-        let mut offset=0;let mut restored=Vec::new();let mut count=0;
-        loop{
-            let (n,end)=fill_fixed_ipv4_fragment(&source,offset,1350,&mut part)
-                .expect("ordinary DF0 fragment");
-            assert!(n<=1350);
-            assert_eq!(part[4..6],[0x12,0x34]);
-            assert_eq!(fixed_ipv4_checksum(&part[..20]),0);
-            let word=u16::from_be_bytes([part[6],part[7]]);
-            assert_eq!(usize::from(word&0x1fff)*8,offset);
-            assert_eq!(word&0x2000!=0,end<4000);
-            restored.extend_from_slice(&part[20..n]);
-            count+=1;offset=end;
-            if offset==4000{break}
-        }
-        assert!(count>1);
-        assert_eq!(restored,source[20..]);
-    }
-    #[test]
-    fn no_df_or_options_or_existing_fragments(){
-        let mut source=vec![0u8;3000];
-        source[0]=0x45;
-        source[2..4].copy_from_slice(&3000u16.to_be_bytes());
-        let mut out=[0u8;1350];
-        source[6]=0x40;
-        assert!(fill_fixed_ipv4_fragment(&source,0,1350,&mut out).is_none());
-        source[6]=0x20;
-        assert!(fill_fixed_ipv4_fragment(&source,0,1350,&mut out).is_none());
-        source[6]=0;source[0]=0x46;
-        assert!(fill_fixed_ipv4_fragment(&source,0,1350,&mut out).is_none());
-    }
-}

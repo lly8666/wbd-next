@@ -18,6 +18,9 @@ cargo +1.85.1 test --locked -p wbd-engine --lib b6_original_m4 \
 # B7 real App retries reuse bounded physical DNS generation ownership.
 cargo +1.85.1 test --locked -p wbd-engine --lib b7_physical_dns \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+# B16: the same production IPv4 fragment and local ICMP codec runs on Host.
+cargo +1.85.1 test --locked -p wbd-engine --lib b16_ \
+  -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 python3 - <<'PY'
 from pathlib import Path
 import hashlib,json,os
@@ -45,6 +48,15 @@ assert 'test v4_android_dns_route::tests::b6_original_m4_cn_physical_tc_inverse_
 assert 'test result: ok. 2 passed;' in log
 assert 'test v4_android_dns_physical_flow::tests::b7_physical_dns_app_retransmit_reuses_generation_slot_not_other_apps ... ok' in log
 assert 'test v4_android_dns_physical_flow::tests::b7_physical_dns_retransmit_expiry_and_query_identity ... ok' in log
+for scenario in (
+ "b16_ordinary_df0_fragments_restore_all_ipv4_payload",
+ "b16_df1_returns_icmp_pmtu_not_a_fragment",
+ "b16_ipv4_options_copy_bit_first_and_later_fragments",
+ "b16_existing_fragment_offset_mf_survives_refragment",
+ "b16_bad_option_length_is_not_fragmented",
+):
+ assert f"test v4_android_ipv4_mtu::tests::{scenario} ... ok" in log
+assert "test result: ok. 5 passed;" in log
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
 lib=Path("crates/wbd-engine/src/lib.rs").read_text()
 m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
