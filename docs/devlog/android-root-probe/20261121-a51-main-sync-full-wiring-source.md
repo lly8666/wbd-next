@@ -29,3 +29,11 @@ A51第一轮来源 `1ad36036` 原生双ABI编译 PASS，但Linux original Oracle
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"合并后的Android A48纯ACK测试缺main原builder import，限定Rust测试模块补齐，不改原parser协议；历史CI编译FAIL保留。"}
 ```
+
+## A51d｜原Go Admission测试 import 去重
+
+合并SOURCE `3b85f471` 真实原Linux Oracle `linux-original-server-normal-off` Go测试编译 FAIL：`admission_v4_test.go` 同时从main和Android两边带入两条 `fmt` import。保留main H2216真实TLS测试和Android A38原Admission三态，只删第二条重复import；另外检查 `admission_v4.go`、`v4productcli/linux.go` 的import没有重复，原协议生产代码未修改。旧FAIL记录不改写，需新SOURCE真实Linux Oracle再验。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A51共享TLS测试合并后编译发现双fmt import，仅删除重复Go测试import，主线与Android实际Admission测试都保留。"}
+```

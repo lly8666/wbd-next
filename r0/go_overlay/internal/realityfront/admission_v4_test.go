@@ -15,7 +15,6 @@ import (
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "net/netip"
     "testing"
-    "fmt"
     "syscall"
     "time"
 )
