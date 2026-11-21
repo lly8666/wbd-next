@@ -1698,7 +1698,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "a10244cb22cc7063bfa61c006544aaf3d3a3a7ca"
+      "result_blob": "acfd03d717a8774600f04a65807cda2bdc9a1407"
     },
     {
       "kind": "replace",
@@ -1779,7 +1779,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "01a54690c7e8c5954d498f5f2db13f35d1d1a2bd"
+      "result_blob": "b3c2553b70762abeff2fdcaff2155a0d4fdf812c"
     },
     {
       "kind": "create",

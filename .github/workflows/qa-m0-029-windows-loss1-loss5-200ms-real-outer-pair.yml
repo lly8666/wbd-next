@@ -1,3 +1,7 @@
+# H2269 rerun: source-locked Windows assembly manifest must pin both current
+# Linux Go v4productcli overlays from THIS experiment source; prior native
+# actions 44916252695/44916255067 failed PRE-FLIGHT (hash mismatch),
+# not Windows NPF/Wintun business or TCP performance.
 # H2269: Two explicitly scoped original real signed Windows NPF/Wintun and
 # Ubuntu-WSL2 native repair contrasts at one-way200ms, 1% and 5% actual netem.
 # Reuse original on-branch native workflow and source-frozen OFF/ON pair runner.
