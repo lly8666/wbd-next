@@ -342,7 +342,7 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ipv4_tcp::{build, Presentation};
+    use crate::ipv4_tcp::{build, build_presentation_ack, Presentation};
     use wbd_types::{BufferKey,LaneKey,RecordPn,SeqOffset,TunnelKey};
     use wbd_types::buffer_contract::{BufferOrigin, FrozenMetadata, FrozenRecordHandle};
 

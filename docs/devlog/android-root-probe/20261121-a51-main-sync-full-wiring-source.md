@@ -21,3 +21,11 @@ A51真实合成文件中的Android A38 original protected admission fixture末�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"A51合并Go测试缺末尾函数闭合修复；Android原Rust外层通告窗口与main 65535对齐，保留原安全所有权，实际移动网络性能待测。"}
 ```
+
+## A51c｜保留Android A48实测回归所需的主线builder导入
+
+A51第一轮来源 `1ad36036` 原生双ABI编译 PASS，但Linux original Oracle在Rust `wbd-platform --lib` **测试编译阶段** E0425 `build_presentation_ack` 未导入：main测试模块原只用 `build,Presentation`，本次主线parser上追加了Android A48 ACK反例测试。只在 `#[cfg(test)]` 增加共享原builder的use，不改main解析器本体、生产ACK、Rust AEAD/M3/Route/Stop。旧Action FAIL不改记PASS，新SOURCE需真实回归。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"合并后的Android A48纯ACK测试缺main原builder import，限定Rust测试模块补齐，不改原parser协议；历史CI编译FAIL保留。"}
+```
