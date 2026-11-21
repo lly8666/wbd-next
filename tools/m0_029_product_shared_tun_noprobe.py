@@ -65,13 +65,18 @@ if FQ_TRIAL_RATE not in ("250","300"):
     raise RuntimeError("M029_H2264_FQ_TRIAL_RATE_NOT_PREDECLARED")
 if FQ_TRIAL_LEG and (STAGE or SERVICE or RAWCOST or RECOVERY or FIRSTDROP):
     raise RuntimeError("M029_H2263_FQ_TRIAL_CANNOT_MIX_OBSERVERS")
+PRIO_TRIAL_LEG=os.environ.get("WBD_M0_029_PRIO_TRIAL_LEG","")
+if PRIO_TRIAL_LEG not in ("","A","B","A_prime") or (
+    PRIO_TRIAL_LEG and (FQ_TRIAL_LEG or STAGE or SERVICE or RAWCOST
+                        or RECOVERY or FIRSTDROP)):
+    raise RuntimeError("M029_H2265_PRIO_TRIAL_EXCLUSIVE_LEGS")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
 SPARSEFLOW=SPARSEFLOW=="1"
 if SPARSEFLOW and dict(re.findall(r"([a-z_]+)=(\d+)","forward_offered=2 forward_dropped=1")) != {"forward_offered":"2","forward_dropped":"1"}:
     raise RuntimeError("M029_H2262_SPARSE_PARSE_SELF_CHECK_FAILED")
-if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
+if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
@@ -106,7 +111,7 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    suffix=("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe")
+    suffix=("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe"))
     G["OUT"]=ROOT/("m029-product-shared-"+suffix)
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
         "m029-product-shared-"+RUN+"-"+ATTEMPT+"-"+suffix)
@@ -291,9 +296,77 @@ def main():
                 "test_only_qdisc_override":FQ_TRIAL_LEG=="B",
                 "all_other_go_rust_product_settings_unchanged":True,
                 "scope":"ephemeral_owned_client_TUN_in_one_isolated_native_netns"}
+        if PRIO_TRIAL_LEG:
+            # H2265 test-only kernel-only service order. No product CLI,
+            # Rust scheduler, auth/TLS, PN/AEAD or owned Stop change.
+            tun=G["CLIENT_TUN"]
+            before=ns(node.client,"tc","-d","qdisc","show","dev",tun).stdout
+            if ("qdisc fq " not in before or " root " not in before or
+                " maxrate 600Mbit" not in before or " flow_limit 256" not in before):
+                raise RuntimeError("M029_H2265_ORIGINAL_GO_FQ600_MISSING")
+            if PRIO_TRIAL_LEG=="B":
+                # Two bounded-priority kernel fq600 bands; only known
+                # 160-request genuine test echo destinations are high.
+                # Not a product/general flow classifier.
+                ns(node.client,"tc","qdisc","replace","dev",tun,
+                   "root","handle","1:","prio","bands","2",
+                   "priomap",*(["1"]*16))
+                for parent,handle in (("1:1","10:"),("1:2","20:")):
+                    ns(node.client,"tc","qdisc","add","dev",tun,
+                       "parent",parent,"handle",handle,"fq",
+                       "maxrate","600mbit","flow_limit","256")
+                for proto,port in ((6,53222),(17,53221)):
+                    ns(node.client,"tc","filter","add","dev",tun,
+                       "parent","1:","protocol","ip","prio","1","u32",
+                       "match","ip","protocol",str(proto),"0xff",
+                       "match","ip","dport",str(port),"0xffff",
+                       "flowid","1:1")
+            actual=ns(node.client,"tc","-d","qdisc","show","dev",tun).stdout
+            server=ns(node.server,"tc","-d","qdisc","show",
+                      "dev",G["SERVER_TUN"]).stdout
+            if ("qdisc fq " not in server or " root " not in server or
+                " maxrate 600Mbit" not in server or " flow_limit 256" not in server):
+                raise RuntimeError("M029_H2265_SERVER_ORIGINAL_FQ600_CHANGED")
+            if PRIO_TRIAL_LEG=="B":
+                if (not all("qdisc "+kind+" "+handle in actual for kind,handle in
+                            (("prio","1:"),("fq","10:"),("fq","20:"))) or
+                    actual.count(" maxrate 600Mbit")!=2 or
+                    actual.count(" flow_limit 256")!=2):
+                    raise RuntimeError("M029_H2265_PRIO_CHILD_FQ600_NOT_EFFECTIVE")
+                filters=ns(node.client,"tc","filter","show",
+                           "dev",tun,"parent","1:").stdout
+                if filters.count("flowid 1:1")<2:
+                    raise RuntimeError("M029_H2265_TEST_APP_FILTERS_MISSING")
+            elif ("qdisc fq " not in actual or " root " not in actual or
+                  " maxrate 600Mbit" not in actual or
+                  " flow_limit 256" not in actual):
+                raise RuntimeError("M029_H2265_BASELINE_FQ600_NOT_RESTORED")
+            result["h2265_prio_trial"]={
+                "leg":PRIO_TRIAL_LEG,
+                "client_mode":("test_only_prio2_dual_child_fq600" if
+                    PRIO_TRIAL_LEG=="B" else "original_go_fq600"),
+                "server_mode":"original_go_fq600",
+                "test_only_tcp_echo_dport":53222,"test_only_udp_echo_dport":53221,
+                "bounded_sparse_requests_per_protocol":160,
+                "original_go_rust_binary_unchanged":True,
+                "client_after_cold_qdisc":actual,"server_qdisc":server,
+                "not_a_product_flow_classifier":True}
         result["actual_router_netem"]=node.impair()
         time.sleep(3)
         result["measurement"]=node.measure("product_no_probe128")
+        if PRIO_TRIAL_LEG:
+            qdisc=json.loads(ns(node.client,"tc","-s","-j","qdisc",
+                               "show","dev",G["CLIENT_TUN"]).stdout)
+            by_handle={x.get("handle"):x for x in qdisc}
+            if PRIO_TRIAL_LEG=="B":
+                if any(by_handle.get(h,{}).get("kind")!=kind for h,kind in
+                       (("1:","prio"),("10:","fq"),("20:","fq"))):
+                    raise RuntimeError("M029_H2265_NATIVE_QDISC_BANDS_NOT_OBSERVED")
+                def packets(row):
+                    return row.get("packets",row.get("stats",{}).get("packets",-1))
+                if any(packets(by_handle[h])<=0 for h in ("10:","20:")):
+                    raise RuntimeError("M029_H2265_REAL_SPARSE_BULK_BANDS_NOT_EXERCISED")
+            result["h2265_prio_trial"]["client_qdisc_after_business"]=qdisc
         result["owned_stop"]={
             "client":node.stop("client","V4_PUBLIC_SHARED_TUN_STOP generation="),
             "server":node.stop("server","V4_PUBLIC_SHARED_TUN_STOP generation=")}
