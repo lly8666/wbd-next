@@ -346,9 +346,11 @@ func parse(role string,args []string)(config,error){
     // calculated 900Mbit cap tests headroom below measured ~1.05Gbit/s
     // ARM original Normal service capacity. Both choices keep the SAME
     // owned fq scheduler/flow_limit=256; never silently disable it.
-    if *tunFqRate!=0 && *tunFqRate!=600 &&
-        *tunFqRate!=900 && *tunFqRate!=1500 {
-        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0, 600, 900 or 1500")
+    // 1500 causes 28/160 sparse UDP missing; 900 offers faster single TCP
+    // but 2/160 UDP missing and higher small TCP p99. Never default both.
+    // Keep fq600 original all-mode default, explicit900 a user tradeoff.
+    if *tunFqRate!=0 && *tunFqRate!=600 && *tunFqRate!=900 {
+        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0, 600 or 900")
     }
     c.tunFqMaxrateMbps=*tunFqRate
     if *tunTxQLen!=500&&*tunTxQLen!=2048{return c,fmt.Errorf("tun-txqlen-packets must be 500 or 2048")}
@@ -551,7 +553,7 @@ func setOwnedTunTxQueue(name string,packets int)error{
 // fail closed instead of claiming protected startup traffic.
 func setOwnedTunFq(name string,rateMbps int)error{
     if rateMbps==0{return nil}
-    if rateMbps!=600&&rateMbps!=900&&rateMbps!=1500{
+    if rateMbps!=600&&rateMbps!=900{
         return fmt.Errorf("unsupported owned TUN fq rate")
     }
     // The default kernel fq flow_limit=100 dropped two real warmup UDP
