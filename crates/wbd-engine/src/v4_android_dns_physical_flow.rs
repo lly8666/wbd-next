@@ -113,7 +113,7 @@ impl PhysicalDnsUdpFlows{
     /// Original source/destination are held for one reverse IP reply.
     pub(crate) fn prepare(
         &mut self,packet:&[u8],wire:&mut [u8],now_ms:u64
-    )->Result<(usize,u16),PhysicalDnsError>{
+    )->Result<(usize,u16,bool),PhysicalDnsError>{
         let (ihl,start)=eligible(packet)?;
         if be16(&packet[ihl..ihl+2])==0||
            packet[12..16]==[0;4]||packet[16..20]==[0;4]||
@@ -124,21 +124,39 @@ impl PhysicalDnsUdpFlows{
         let dns=&packet[start..];
         if wire.len()<dns.len(){return Err(PhysicalDnsError::Malformed)}
         let (id,qname_len,qname)=dns_question(dns,false)?;
-        let slot=(0..CAP).map(|v|(self.next+v)%CAP)
-            .find(|&idx|self.entries[idx].is_none_or(
-                |f|f.until_ms<=now_ms))
-            .ok_or(PhysicalDnsError::Capacity)?;
+        let source_port=be16(&packet[ihl..ihl+2]);
+        let local:[u8;4]=packet[12..16].try_into().unwrap();
+        let resolver:[u8;4]=packet[16..20].try_into().unwrap();
+        // B7: a real application's retry of one still-live DNS question
+        // reuses its original synthetic ID and 64-slot owner entry.
+        // Different app sockets/resolvers/questions never share a reply.
+        let identical=self.entries.iter().position(|entry|entry.is_some_and(|f|
+            f.until_ms>now_ms&&f.local==local&&
+            f.resolver==resolver&&f.source_port==source_port&&
+            f.id==id&&f.qname_len==qname_len&&
+            f.qname[..usize::from(qname_len)]==qname[..usize::from(qname_len)]));
+        let (slot,new_slot)=if let Some(idx)=identical{
+            (idx,false)
+        }else{
+            let idx=(0..CAP).map(|v|(self.next+v)%CAP)
+                .find(|&idx|self.entries[idx].is_none_or(
+                    |f|f.until_ms<=now_ms))
+                .ok_or(PhysicalDnsError::Capacity)?;
+            (idx,true)
+        };
         let synthetic=FIRST_DNS_ID+slot as u16;
         wire[..dns.len()].copy_from_slice(dns);
         wire[..2].copy_from_slice(&synthetic.to_be_bytes());
-        self.entries[slot]=Some(Original{
-            local:packet[12..16].try_into().unwrap(),
-            resolver:packet[16..20].try_into().unwrap(),
-            source_port:be16(&packet[ihl..ihl+2]),
-            id,qname_len,qname,until_ms:now_ms.saturating_add(MAX_AGE_MS),
-        });
-        self.next=(slot+1)%CAP;
-        Ok((dns.len(),synthetic))
+        if new_slot{
+            self.entries[slot]=Some(Original{
+                local,resolver,source_port,id,qname_len,qname,
+                until_ms:now_ms.saturating_add(MAX_AGE_MS),
+            });
+            self.next=(slot+1)%CAP;
+        }
+        // A failed retransmit must NOT erase the still-valid earlier
+        // outbound request. The owner cancels only a newly reserved slot.
+        Ok((dns.len(),synthetic,new_slot))
     }
     /// Abort a failed kernel send. The original IP remains unmodified and
     /// may be retried by the application, not transparently via Tunnel DNS.
@@ -216,7 +234,8 @@ mod tests{
         let original=ip_query(&make_query(0x1001));
         let mut flows=PhysicalDnsUdpFlows::default();
         let mut wire=[0u8;MAX_DNS_WIRE];
-        let (n,id)=flows.prepare(&original,&mut wire,1).unwrap();
+        let (n,id,created)=flows.prepare(&original,&mut wire,1).unwrap();
+        assert!(created);
         assert_eq!(flows.len(),1);
         assert_eq!(&original[16..20],&[8,8,8,8]);
         assert_ne!(be16(&wire[..2]),0x1001);
@@ -240,7 +259,8 @@ mod tests{
         let p=ip_query(&make_query(0x1001));
         let mut flows=PhysicalDnsUdpFlows::default();
         let mut wire=[0u8;MAX_DNS_WIRE];
-        let (n,id)=flows.prepare(&p,&mut wire,1).unwrap();
+        let (n,id,created)=flows.prepare(&p,&mut wire,1).unwrap();
+        assert!(created);
         let mut response=wire[..n].to_vec();response[2]=0x81;response[3]=0x80;
         let old=response[20];
         response[20]=if old==b'x'{b'y'}else{b'x'};
@@ -250,12 +270,68 @@ mod tests{
         assert_eq!(flows.receive(&response,&mut ip,12_001),Err(PhysicalDnsError::Expired));
         flows.cancel(id);
         assert_eq!(flows.len(),0);
-        let (_,next)=flows.prepare(&p,&mut wire,2).unwrap();
+        let (_,next,created)=flows.prepare(&p,&mut wire,2).unwrap();
+        assert!(created);
         flows.stop();
         let mut okay=wire[..n].to_vec();okay[2]=0x81;okay[3]=0x80;
         assert_eq!(flows.receive(&okay,&mut ip,3),Err(PhysicalDnsError::Unowned));
         assert_eq!(flows.len(),0);
         assert_ne!(next,0);
+    }
+    #[test]
+    fn b7_physical_dns_app_retransmit_reuses_generation_slot_not_other_apps(){
+        let first=ip_query(&make_query(0x2222));
+        let mut other=first.clone();
+        other[20..22].copy_from_slice(&50002u16.to_be_bytes());
+        let mut flows=PhysicalDnsUdpFlows::default();
+        let mut wire=[0u8;MAX_DNS_WIRE];
+        let (n,id,fresh)=flows.prepare(&first,&mut wire,100).unwrap();
+        assert!(fresh);assert_eq!(flows.len(),1);
+        let original_wire=wire[..n].to_vec();
+        for at in [101,102,103,104,105,106,107,108]{
+            let (again,reused,created)=flows.prepare(&first,&mut wire,at).unwrap();
+            assert_eq!((again,reused,created),(n,id,false));
+            assert_eq!(&wire[..n],original_wire);
+            assert_eq!(flows.len(),1);
+            // On a retry send failure original in-flight mapping survives.
+            if created{flows.cancel(reused)}
+            assert_eq!(flows.len(),1);
+        }
+        let (_,second,fresh)=flows.prepare(&other,&mut wire,109).unwrap();
+        assert!(fresh);assert_ne!(second,id);assert_eq!(flows.len(),2);
+        let mut reply=original_wire.clone();
+        reply[2]=0x81;reply[3]=0x80;
+        let mut output=[0u8;MAX_DNS_REPLY_IPV4];
+        assert!(flows.receive(&reply,&mut output,110).is_ok());
+        assert_eq!(&output[22..24],&40001u16.to_be_bytes());
+        assert_eq!(flows.len(),1);
+        assert_eq!(flows.receive(&reply,&mut output,111),Err(PhysicalDnsError::Unowned));
+        // Stop cancels the other App's unrelated pending transaction.
+        flows.stop();
+        assert_eq!(flows.len(),0);
+        let mut new_reply=wire[..n].to_vec();
+        new_reply[2]=0x81;new_reply[3]=0x80;
+        assert_eq!(flows.receive(&new_reply,&mut output,112),
+            Err(PhysicalDnsError::Unowned));
+    }
+    #[test]
+    fn b7_physical_dns_retransmit_expiry_and_query_identity(){
+        let source=ip_query(&make_query(0x3001));
+        let mut different=ip_query(&make_query(0x3002));
+        different[16..20].copy_from_slice(&[9,9,9,9]);
+        let mut flows=PhysicalDnsUdpFlows::default();
+        let mut wire=[0u8;MAX_DNS_WIRE];
+        let (n,first,fresh)=flows.prepare(&source,&mut wire,1).unwrap();
+        assert!(fresh);
+        let (_,different_id,fresh)=flows.prepare(&different,&mut wire,2).unwrap();
+        assert!(fresh);assert_ne!(first,different_id);
+        let (_,retry,fresh)=flows.prepare(&source,&mut wire,11_999).unwrap();
+        assert_eq!(retry,first);assert!(!fresh);
+        let (_,after_expiry,fresh)=flows.prepare(&source,&mut wire,12_002).unwrap();
+        assert!(fresh);assert_ne!(after_expiry,first);
+        assert_eq!(n,make_query(0x3001).len());
+        flows.cancel(after_expiry);flows.stop();
+        assert_eq!(flows.len(),0);
     }
     #[test]
     fn b2c2b3_b4_physical_two_app_resolvers_reverse_order_and_stop(){
@@ -265,9 +341,11 @@ mod tests{
         b[20..22].copy_from_slice(&50002u16.to_be_bytes());
         let mut flows=PhysicalDnsUdpFlows::default();
         let mut wire=[0u8;MAX_DNS_WIRE];
-        let (na,ida)=flows.prepare(&a,&mut wire,1).unwrap();
+        let (na,ida,created)=flows.prepare(&a,&mut wire,1).unwrap();
+        assert!(created);
         let mut ra=wire[..na].to_vec();ra[2]=0x81;ra[3]=0x80;
-        let (nb,idb)=flows.prepare(&b,&mut wire,1).unwrap();
+        let (nb,idb,created)=flows.prepare(&b,&mut wire,1).unwrap();
+        assert!(created);
         assert_ne!(ida,idb);
         let mut rb=wire[..nb].to_vec();rb[2]=0x81;rb[3]=0x80;
         let mut ip=[0u8;MAX_DNS_REPLY_IPV4];

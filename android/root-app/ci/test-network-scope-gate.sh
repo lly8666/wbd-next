@@ -81,6 +81,7 @@ java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.Root
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java \
   android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java \
+  android/root-app/src/org/wbdnext/rootclient/RootDNSStatusBrief.java \
   android/root-app/ci/RootDiagnosticReportTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDiagnosticReportTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
@@ -758,6 +759,27 @@ assert 'b6_original_m4_dns_three_compat_modes_and_tcp53_passthrough' in router
 assert 'cargo +1.85.1 test --locked -p wbd-engine --lib b6_original_m4' in Path("android/root-native/ci/dns-b2c2b-rust-udp-map-host.sh").read_text()
 assert nativeworker.count("tun.read_ip_scatter(")==1
 print("ANDROID_B6_ORIGINAL_M4_DNS_CN_NONCN_TCP53_TC_M4_ABI_AND_APP_REPORT_SOURCE_PASS")
+# B7 real original M4 physical DNS retransmit and operator-only receipt.
+physical_flow=Path("crates/wbd-engine/src/v4_android_dns_physical_flow.rs").read_text()
+device_accept=Path("android/root-app/ci/device_first_run.py").read_text()
+assert 'let identical=self.entries.iter().position(' in physical_flow
+assert 'Ok((dns.len(),synthetic,new_slot))' in physical_flow
+assert nativeworker.count('if new_slot{physical_flows.cancel(id);}')==2
+assert 'b7_physical_dns_app_retransmit_reuses_generation_slot_not_other_apps' in physical_flow
+assert 'b7_physical_dns_retransmit_expiry_and_query_identity' in physical_flow
+assert 'cargo +1.85.1 test --locked -p wbd-engine --lib b7_physical_dns' in Path("android/root-native/ci/dns-b2c2b-rust-udp-map-host.sh").read_text()
+assert 'cn8503_m4_dual_dns_query_and_reply_observed' in device_accept
+assert 'android_system_netd_dns_interception": "NOT_RUN"' in device_accept
+assert 'real_app_dns_answer_bytes_and_latency": "NOT_RUN"' in device_accept
+print("ANDROID_B7_LOSSY_PHYSICAL_DNS_RETRANSMIT_AND_OPERATOR_RECEIPT_SOURCE_PASS")
+assert 'RootDNSStatusBrief.fromReport(report)' in root_ui
+assert 'dnsStatusBrief.setText(' in root_ui
+assert '查看本会话DNS收发' in root_ui
+brief=Path("android/root-app/src/org/wbdnext/rootclient/RootDNSStatusBrief.java").read_text()
+assert 'system_netd_dns_capture' in brief
+assert '不代表浏览器DNS' in brief
+assert 'ANDROID_B7_APP_LOCAL_DNS_LIVE_REPORT_CURRENT_SESSION_HOST_PASS' in Path("android/root-app/ci/RootDiagnosticReportTest.java").read_text()
+print("ANDROID_B7_APP_READONLY_DNS_SESSION_DIAGNOSTIC_BUTTON_SOURCE_PASS")
 
 print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")

@@ -851,6 +851,23 @@ public final class RootDiagnosticReportTest {
         if(!RootDiagnosticReceipt.safeNativeSnapshot(
             "V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=1 parse_fail=0 parsed=1 auth=1 rejected=0 writefail=0 tun=2 trej=0 rawtx=2 rtun=1 tcp=0 udp=1 icmp=0 dnsudp=1 dnstcp=0 dnsraw=0 dnsrtun=0 dnsptx=0 dnsprx=0 dnsperr=0 rxerr=0 txerr=0 health=1"))
             throw new AssertionError("B6 broke previous M4 wire");
+        // B7 production App button uses ONLY current private fixed receipts.
+        String liveBrief=RootDNSStatusBrief.fromReport(RootDiagnosticReport.build(
+            b6Dir,source,36));
+        contains(liveBrief,"双出口TUN回包:");
+        contains(liveBrief,"物理TC回写: NOT_OBSERVED");
+        contains(liveBrief,"Android系统DNS: NOT_CLAIMED_NOT_CONNECTED");
+        if(liveBrief.contains("198.51.100.")||liveBrief.contains("TEST_SECRET"))
+            throw new AssertionError("B7 private report exposed network/secret");
+        if(!RootDNSStatusBrief.fromReport("wrong report").equals("尚无本机有效诊断"))
+            throw new AssertionError("B7 unverified report displayed");
+        String injected="WBD_ANDROID_ROOT_SAFE_DIAGNOSTIC_V1\n"+
+            "cn_dns_split_live=SECRET=USER_EMAIL\n"+
+            "system_netd_dns_capture=NOT_CLAIMED_NOT_CONNECTED\n";
+        String sanitized=RootDNSStatusBrief.fromReport(injected);
+        if(sanitized.contains("USER_EMAIL")||sanitized.contains("SECRET"))
+            throw new AssertionError("B7 unsanitized report value displayed");
+        System.out.println("ANDROID_B7_APP_LOCAL_DNS_LIVE_REPORT_CURRENT_SESSION_HOST_PASS");
         System.out.println("ANDROID_B6_REAL_CN_NONCN_TCP53_TC_ROUTE_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_B5_CN8503_SPLIT_COLD_AND_DUAL_PATH_REPORT_HOST_PASS");
         System.out.println("ANDROID_B4_PHYSICAL_DNS_COLD_REAL_SOCKET_TX_RX_REPORT_HOST_PASS");

@@ -54,6 +54,32 @@ class FirstRunTests(unittest.TestCase):
         self.assertEqual(d.new_events(["A", "B"], ["Q", "R"]), [])
         self.assertEqual(d.new_events([], ["START_REQUESTED"]), ["START_REQUESTED"])
 
+    def test_b7_dns_fixed_events_only_and_no_app_e2e_ghost_pass(self):
+        raw = ("WBD_ROOT_DIAG: ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED\n"
+               "WBD_ROOT_DIAG: ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT\n"
+               "WBD_ROOT_DIAG: ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED\n"
+               "WBD_ROOT_DIAG: ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN\n"
+               "WBD_ROOT_DIAG: ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN\n"
+               "WBD_ROOT_DIAG: ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED\n"
+               "WBD_ROOT_DIAG: ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN\n"
+               "WBD_ROOT_DIAG: TEST_SECRET_TOKEN_123\n")
+        actual=d.parse_events(raw)
+        self.assertEqual(len(actual),7)
+        report=d.summarize([],actual,actual,[],[],True)
+        self.assertEqual(report["cn8503_m4_dual_dns_query_and_reply_observed"],"OBSERVED")
+        self.assertEqual(report["tcp53_original_m3_raw_copied_no_reply_proof"],"OBSERVED")
+        self.assertEqual(report["physical_dns_tc_reply_original_tun_written"],"OBSERVED")
+        self.assertEqual(report["real_app_dns_answer_bytes_and_latency"],"NOT_RUN")
+        self.assertEqual(report["android_system_netd_dns_interception"],"NOT_RUN")
+        self.assertEqual(report["real_android_linux_tls_and_data_e2e"],"NOT_RUN")
+        self.assertNotIn("TEST_SECRET_TOKEN_123",str(report))
+        poor=d.summarize([],actual[:2],actual[:2],[],[],True)
+        self.assertEqual(poor["cn8503_m4_dual_dns_query_and_reply_observed"],"NOT_OBSERVED")
+        bad=d.parse_events("WBD_ROOT_DIAG: ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_FAILED\n")
+        wrong=d.summarize([],bad,bad,[],[],True)
+        self.assertEqual(wrong["cn8503_cold_native_split"],"FAILED")
+        self.assertEqual(wrong["cn_physical_query_kernel_sent"],"NOT_OBSERVED")
+
     def test_only_private_route_metadata(self):
         raw = ("0: from all lookup local\n"
                "9600: from all uidrange 10142-10142 lookup 19842\n"

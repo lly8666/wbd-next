@@ -104,7 +104,8 @@ mod tests{
         let mut physical=PhysicalDnsUdpFlows::default();
         let mut tunnel=TunnelDnsUdpFlows::default();
         let mut wire=[0u8;MAX_DNS_WIRE];
-        let (n,synthetic)=physical.prepare(&cn,&mut wire,100).unwrap();
+        let (n,synthetic,created)=physical.prepare(&cn,&mut wire,100).unwrap();
+        assert!(created);
         assert_ne!(synthetic,0x4567);
         assert_eq!(cn,cn_before,"physical question must not mutate original IP");
         let mut answer=wire[..n].to_vec();
@@ -134,7 +135,8 @@ mod tests{
         assert_eq!(be16(&received[28..30]),0x4567);
         assert_eq!(tunnel.len(),0);
         // Stop retires both original generation inverse maps.
-        let (n,_)=physical.prepare(&cn,&mut wire,103).unwrap();
+        let (n,_,created)=physical.prepare(&cn,&mut wire,103).unwrap();
+        assert!(created);
         let mut old=wire[..n].to_vec();old[2]|=0x80;
         tunnel.rewrite_query(&mut noncn,103).unwrap(); 
         physical.stop();tunnel.stop();

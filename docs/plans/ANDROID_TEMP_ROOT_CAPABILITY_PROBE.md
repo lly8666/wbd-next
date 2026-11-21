@@ -1,5 +1,6 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B7 原 M4 物理 DNS 重传与设备可验收**：解决丢包时相同 App IPv4 UDP/53 DNS 重传每次消耗新 synthetic DNS ID/64 槽的问题：原 `PhysicalDnsUdpFlows` 仅在相同源 IPv4、原解析器、UDP 源端口、原 DNS ID、QNAME/QTYPE/QCLASS 且槽未过期时重用 synthetic ID，不额外占槽；不同 App/解析器/请求仍隔离。仅新建槽 sendto 失败才取消，复用的重传失败不会丢掉此前真实发送的有效请求映射；成功逆映射消费一次，Stop 精确清空。新增两个 Rust 原 IPv4 测试、App 手动「查看本会话DNS收发」脱敏按钮（无 Root / 额外联网）、用户自控 `device_first_run.py` 只读新增 B5/B6 原 M4 CN/非 CN/TC/TCP53 固定事件汇总及 Python Host 回归。原默认隧道 DNS ON、物理/CN模式 OFF、TLS 校验默认 OFF/可选 ON；不操作 Android 系统 netd 或用户手机/服务器。**Fixed/Auto/Game/FEC、IPv6、TCP53物理代理、热点与实体设备应用 E2E 仍未完成**；BUILD_PASS 不能冒充实机成功。\n\n
 > **2026-11-21 B6 真实 DNS 分流计数与 TCP53 兼容**：在 B5 已通过的 CN8503 原 Rust M4 单 TUN reader 上，把普通小包和 jumbo/EDNS 的域名路径决策收敛为同一个纯 Rust `v4_android_dns_route`。合法完整 IPv4 UDP53：CN 物理 223.5.5.5，非 CN M3 加密隧道 1.1.1.1；其他两种旧模式、默认设置不改。Android App 的普通 TCP53 **原样经原 M1/M3 WBD 隧道**，按真实完成的原 RAW 复制计数，不是新建直连 TCP53 代理。物理 UDP 回复 DNS TC=1 仅在实际写入原 TUN 后记录，**不等于客户端已发起 TCP 重试，更不等于该 TCP 查询拿到答复**。新原生只读 ABI 增加 `cnptx/noncnraw/tcpraw/ptctun` 四个实际收发计数，并由原 Go 低频 Pulse → Root Service → 独立 B6 数值与固定事件报告；旧 A47/B3d/B4 18/20/23 数值收据原格式兼容。增加同一原 Rust 物理 TC IPv4 反写+非 CN 原隧道 IPv4 逆映射+Stop 的 Host 组合测试及签名 APK 源码门。没有 Android 系统 netd DNS 的真实捕获或全局改写；这个范围仍须单独明确验证，并在设备授权后才能声称真机 E2E。TLS 校验默认 OFF、隧道 DNS 默认 ON、物理/CN 模式默认 OFF，全都保持。
 
 

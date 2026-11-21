@@ -44,7 +44,7 @@ public final class RootClientActivity extends Activity {
     private Spinner networks;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices;
-    private TextView status,deviceSelfTestResult,diagnosticExportResult;
+    private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
     private static final int LOCAL_TLS_CA_IMPORT=2043;
     // START can fail before any Service exists. Persist fixed app-only
@@ -532,6 +532,18 @@ public final class RootClientActivity extends Activity {
                 status.setText("已请求恢复；等待原Go精确内核读回");
             }).show());
         pane.addView(restore);
+        Button inspectDNS=new Button(this);
+        inspectDNS.setText("查看本会话DNS收发（本机脱敏收据，无Root/联网）");
+        inspectDNS.setOnClickListener(v->{
+            String report=RootDiagnosticReport.build(
+                getFilesDir(),signedSource(),Build.VERSION.SDK_INT);
+            dnsStatusBrief.setText(RootDNSStatusBrief.fromReport(report));
+        });
+        pane.addView(inspectDNS);
+        dnsStatusBrief=new TextView(this);
+        dnsStatusBrief.setText("点击上方按钮读取当前会话实际DNS路径收据");
+        dnsStatusBrief.setTextIsSelectable(true);
+        pane.addView(dnsStatusBrief);
         Button exportDiagnostic=new Button(this);
         exportDiagnostic.setText("导出脱敏排障 TXT（无 Root／无需联网）");
         exportDiagnostic.setOnClickListener(v->exportSafeDiagnostic());

@@ -34,6 +34,15 @@ ROOT_PROCESS_EXIT_ZERO ROOT_PROCESS_EXIT_NONZERO
 ROOT_LAUNCH_FAILED START_REFUSED STOP_REQUESTED STOP_SIGNAL_STARTED
 STOP_SIGNAL_ACCEPTED STOP_SIGNAL_REFUSED STOP_SIGNAL_ERROR
 OWNER_CLEANUP_FINISHED
+ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_FAILED
+ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_ENABLED ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED
+ORIGINAL_RUST_DNS_UDP53_TUN_SEEN ORIGINAL_RUST_DNS_TCP53_TUN_SEEN
+ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED
+ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED
+ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN
+ORIGINAL_RUST_DNS_PHYSICAL_UDP_COPIED ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN
+ORIGINAL_RUST_DNS_TUNNEL_RAW_COPIED ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN
+ORIGINAL_RUST_DNS_PHYSICAL_ERROR
 """.split())
 EVENT_RE = re.compile(r"\bWBD_ROOT_DIAG\s*:\s*([A-Z0-9_]+)\b")
 
@@ -218,6 +227,34 @@ def summarize(baseline, mid, final, route_before, route_after, interactive):
             else "NOT_RUN",
         "real_android_linux_tls_and_data_e2e": "NOT_RUN",
         "system_dns_resolver_and_tcp53": "NOT_RUN",
+        # B7 fixed low-entropy events from a manual Android App session.
+        "cn8503_cold_native_split":
+            "OBSERVED" if "ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED" in observed
+            else "FAILED" if "ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_FAILED" in observed
+            else "NOT_OBSERVED",
+        "cn_physical_query_kernel_sent":
+            "OBSERVED" if "ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT" in observed else "NOT_OBSERVED",
+        "noncn_tunnel_query_original_raw_copied":
+            "OBSERVED" if "ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED" in observed else "NOT_OBSERVED",
+        "cn_dns_physical_response_original_tun_written":
+            "OBSERVED" if "ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN" in observed else "NOT_OBSERVED",
+        "noncn_dns_authenticated_response_original_tun_written":
+            "OBSERVED" if "ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN" in observed else "NOT_OBSERVED",
+        "tcp53_original_m3_raw_copied_no_reply_proof":
+            "OBSERVED" if "ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED" in observed else "NOT_OBSERVED",
+        "physical_dns_tc_reply_original_tun_written":
+            "OBSERVED" if "ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN" in observed
+            else "NOT_OBSERVED",
+        "cn8503_m4_dual_dns_query_and_reply_observed":
+            "OBSERVED" if all(k in observed for k in (
+                "ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED",
+                "ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT",
+                "ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED",
+                "ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN",
+                "ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN"))
+            else "NOT_OBSERVED",
+        "android_system_netd_dns_interception": "NOT_RUN",
+        "real_app_dns_answer_bytes_and_latency": "NOT_RUN",
         "ordinary_app_kernel_su_grant": "NOT_RUN",
         "interactive_run": interactive,
         "allowlisted_events": sorted(observed),

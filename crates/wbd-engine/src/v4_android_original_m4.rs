@@ -751,7 +751,7 @@ fn tun_worker(
                         let packet=&slab.writable()[14..14+n];
                         match physical_flows.prepare(
                             packet,&mut physical_wire,at.0/1_000_000){
-                            Ok((len,id))=>{
+                            Ok((len,id,new_slot))=>{
                                 if socket.send_question(
                                     tun.generation(),&physical_wire[..len]).is_ok(){
                                     stats.dns_physical_tx.fetch_add(1,Ordering::Relaxed);
@@ -759,7 +759,7 @@ fn tun_worker(
                                         stats.dns_cn_physical_sent.fetch_add(1,Ordering::Relaxed);
                                     }
                                 }else{
-                                    physical_flows.cancel(id);
+                                    if new_slot{physical_flows.cancel(id);}
                                     stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
                                 }
                             }
@@ -847,7 +847,7 @@ fn tun_worker(
                 if let Some(socket)=dns.as_ref(){
                     match physical_flows.prepare(
                         &jumbo_spare,&mut physical_wire,at.0/1_000_000){
-                        Ok((len,id))=>{
+                        Ok((len,id,new_slot))=>{
                             if socket.send_question(
                                 tun.generation(),&physical_wire[..len]).is_ok(){
                                 stats.dns_physical_tx.fetch_add(1,Ordering::Relaxed);
@@ -855,7 +855,7 @@ fn tun_worker(
                                     stats.dns_cn_physical_sent.fetch_add(1,Ordering::Relaxed);
                                 }
                             }else{
-                                physical_flows.cancel(id);
+                                if new_slot{physical_flows.cancel(id);}
                                 stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
                             }
                         }
