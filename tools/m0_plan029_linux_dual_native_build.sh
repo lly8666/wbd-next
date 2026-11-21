@@ -90,7 +90,14 @@ export WBD_ISAL_SOURCE_SHA="$ISA_SOURCE"
 test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
 nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" | grep -Eq ' [TW] ec_encode_data$'
 rustup toolchain install 1.85.1 --profile minimal
-features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
+# Distinct WIP qualification of the genuine non-probe product code path.
+# Default remains unchanged for old existing test workflows; only a named
+# native product scope may disable developer probe symbols.
+if [ "${WBD_M0_029_NO_PROBE:-0}" = 1 ]; then
+  features=m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
+else
+  features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
+fi
 cargo +1.85.1 build --release --locked -p wbd-engine --features "$features"
 cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_game_lane::tests
 cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_fec2_live_rx::tests
@@ -126,6 +133,10 @@ d={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
    "rust":"1.85.1","go":"1.23.12",
    "architecture":platform.machine(),"sha256":hashes,
    "rust_native_fec_acceleration":True,
+   "m0_probe_compiled":os.environ.get("WBD_M0_029_NO_PROBE")!="1",
+   "normal_linux_client_shared_tun_inbox_default":128,
+   "normal_linux_server_shared_tun_inbox_default":64,
+   "game_group_shared_tun_inbox_default":64,
    "original_go_faketcp":"11-source-locked-records",
    "original_go_native_client_and_server":"all-current-v4productcli-overlay-files",
    "native_server_cold_cohort":"exact protected epoch PLUS original adjacent 5tuple",

@@ -4603,16 +4603,35 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
 // Only overloaded (>8) authenticated routes need cross-turn fairness.
 // Fewer routes retain the original direct, allocation-free hot loop.
 // The sorted scratch list is reused and only contains already-pending /32s.
-// These inputs are ONLY honored by explicit developer/probe builds.
-// Unknown values fail back to the exact pre-029 64-slot product baseline.
+// Only authenticated Linux Normal client generations get the measured
+// 128-slot product M1 ingress. Shared Normal server routes remain 64;
+// Game group binds a separate original 64-slot owner. No extra reader,
+// no per-packet probe, no new rate/PN/AEAD/recovery behavior.
+#[cfg(all(target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+fn normal_shared_tun_product_inbox_slots(server_side:bool)->usize{
+    if server_side{64}else{128}
+}
+#[cfg(all(test,target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_linux_normal_client_default_128_server_64(){
+    assert_eq!(normal_shared_tun_product_inbox_slots(false),128);
+    assert_eq!(normal_shared_tun_product_inbox_slots(true),64);
+}
+// Explicit opt-in developer/probe rollback and 256 counterexample. Unknown
+// values fail safely back to the exact PRODUCT default of this owner.
 #[cfg(all(target_os="linux",feature="m0_v4_probe",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
-fn shared_tun_trial_inbox_slots(value:Option<&str>)->usize{
+fn shared_tun_trial_inbox_slots(value:Option<&str>,default_slots:usize)->usize{
     match value {
+        Some("64")=>64,
         Some("128")=>128,
         Some("256")=>256,
-        _=>64,
+        _=>default_slots,
     }
 }
 #[cfg(all(test,target_os="linux",feature="m0_v4_probe",
@@ -4620,13 +4639,15 @@ fn shared_tun_trial_inbox_slots(value:Option<&str>)->usize{
     any(target_env="gnu",target_env="musl")))]
 #[test]
 fn m0_plan029_shared_tun_trial_inbox_capacity_is_cold_bounded(){
-    assert_eq!(shared_tun_trial_inbox_slots(None),64);
-    assert_eq!(shared_tun_trial_inbox_slots(Some("64")),64);
-    assert_eq!(shared_tun_trial_inbox_slots(Some("128")),128);
-    assert_eq!(shared_tun_trial_inbox_slots(Some("256")),256);
-    assert_eq!(shared_tun_trial_inbox_slots(Some("129")),64);
-    assert_eq!(shared_tun_trial_inbox_slots(Some("8192")),64);
-    assert_eq!(shared_tun_trial_inbox_slots(Some("0")),64);
+    assert_eq!(shared_tun_trial_inbox_slots(None,128),128);
+    assert_eq!(shared_tun_trial_inbox_slots(None,64),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("64"),128),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("64"),64),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("128"),64),128);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("256"),64),256);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("129"),128),128);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("8192"),64),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("0"),128),128);
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Default)]
@@ -5667,26 +5688,30 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     // all destinations without a second destructive TUN reader.
     let Some(lease)=e.client_lease_ipv4 else{return BAD_STAGE};
     let ip=if e.server_side{lease}else{[0u8;4]};
-    // 1 Gbit/s at 1000B/packet ~= 125k packets/sec. The original 64
-    // owned inbox slots represent only ~0.512ms of arrivals, shorter than
-    // a plausible 2ms native TX service gap (~250 packets). Test 256
-    // (2.048ms, 4x bounded inbox metadata and up to ~256KiB of 1kB
-    // retained packets per lease); default 64 remains untouched.
-    // This cannot cure a sustained egress service deficit. No control
-    // timer/Go per-packet callback is introduced.
+    // One real ARM64 and one real x86 zero-loss 64/128/64 A/B/A showed
+    // application receiver goodput +6..13% and lower CPU/effective GiB;
+    // GE1% 400ms RTT offered no local backlog, so this is a bounded
+    // fixed normal-client source budget, NOT a new congestion controller.
+    // Original server and separate Game shared-TUN binds remain at 64.
+    // For 1000B packets at 1Gbit/s: 64~0.512ms, 128~1.024ms.
+    // Added worst-case jumbo memory <=64*65535B~4MiB/client generation.
+    let default_slots=normal_shared_tun_product_inbox_slots(e.server_side);
     #[cfg(feature="m0_v4_probe")]
     let trial=std::env::var("WBD_M0_029_INBOX_SLOTS_TEST").ok();
     #[cfg(feature="m0_v4_probe")]
-    let slots=shared_tun_trial_inbox_slots(trial.as_deref());
+    let slots=shared_tun_trial_inbox_slots(trial.as_deref(),default_slots);
     #[cfg(not(feature="m0_v4_probe"))]
-    let slots=64;
+    let slots=default_slots;
+    // Exactly one COLD original-native receipt per authenticated generation,
+    // never a hot-path syscall/callback. Product/probe are distinguished.
     #[cfg(feature="m0_v4_probe")]
-    if trial.is_some(){
-        // Cold-only receipt: the real authenticated generation, never a
-        // test-side inference from an environment variable alone.
-        eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=1",
-            if e.server_side{"server"}else{"client"},e.generation,slots);
-    }
+    let probe_only=trial.as_deref().is_some_and(
+        |v|matches!(v,"64"|"128"|"256"));
+    #[cfg(not(feature="m0_v4_probe"))]
+    let probe_only=false;
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only={}",
+        if e.server_side{"server"}else{"client"},e.generation,slots,
+        if probe_only{1}else{0});
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(slots);
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
