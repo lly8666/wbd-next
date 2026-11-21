@@ -197,7 +197,7 @@ def configure_relay(own, server, client):
     shaped(0)
     return dict(**own, relay_ip=relay,
                 server_ip=arm, client_ip=win, tcp_port=PORT,
-                control_port=CONTROL_PORT, control_token=own["control_token"],
+                control_port=CONTROL_PORT,
                 forwarding="KERNEL_TCP_DNAT_SNAT_NOT_APP_TCP_PROXY",
                 netem_only="CLASSIFIED_FORWARDED_TCP_TAILSCALE0_BAND3",
                 other_traffic="UNSHAPED_DEFAULT_BAND2",

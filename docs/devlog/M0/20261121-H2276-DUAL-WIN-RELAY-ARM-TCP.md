@@ -22,3 +22,7 @@
 ```
 
 - 额外竞态恢复：前期 H2271 夹具曾遗漏 CLI，已由独立 c5066db H2273 真实修复并启动新 1/5% Actions；另有 H2274 FEC2 并行 Action 44923756259 在途。本 H2276 是**不同的** Windows 原生跨机 TCP 容量前置，不将两个相同编号的研究合并或取代它们。当前 TCP 应用 PORT=45902 由最新分支源锁读入；H2276 仅 import Python server/client，不改 c5066db 活动文件。
+
+## H2276 首轮已发生的夹具失败与修复
+- 同一精确SOURCE `1ccf31022e54a73f29484340e82714c635f3f556` [run44924127257](https://github.com/lly8666/wbd-next/actions/runs/44924127257) attempt1：静态/单测 job SUCCESS，两套 Windows client、relay、ARM server 六个不同 Runner 已并行启动、组内相互拿到真实 peer artifact。**两套 relay job 136906426541(a)、136906426561(b) 都在内核 iptables/tc 配置完成后构造 relay-ready JSON 时 TypeError**：`dict(**own, control_token=own["control_token"])` 重复关键字；relay-ready 未上传，因此未进行本增量的任何跨机 TCP 吞吐/P99 业务样本。此错误仅为新夹具，不是 WBD TCP 真实性能失败；原 Action FAIL 如实保留，后续不能重用旧 SOURCE 重跑。
+- 只删除多余 `control_token` 显式参数（既有 `own` 中已附带该 token），保留已有真实同源跨组认证、独立 Netem 分类/Stop。增加实跑 `configure_relay` 的 Python 全方法单测（mock OS 命令但实际执行 ready 组装）防止廉价静态只覆盖分散函数而漏掉返回值错误。新 SOURCE 的真实三 runner 网络结果保持 NOT_RUN 直至对应成功 Actions/ZIP 验明。

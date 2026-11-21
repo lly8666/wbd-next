@@ -27,6 +27,28 @@ class ExactDualTriplet(unittest.TestCase):
         self.assertEqual(wf.count("uses: tailscale/github-action@v4"), 3)
         self.assertIn("h2276-" + chr(36) + "{{ matrix.group }}-client-result", wf)
 
+    def test_real_configure_relay_ready_receipt_reuses_exact_peer_token(self):
+        # Regression: H2276 run44924127257 both relay jobs configured the
+        # real Linux kernel then raised duplicate control_token in dict(**own).
+        # Mock only OS calls: run the entire real Python configure_relay path.
+        own = {**identity("relay"), "control_token": "same-existing-token"}
+        client = identity("client")
+        server = identity("server")
+        calls = []
+        with patch.object(h, "run", side_effect=lambda *args, **kw: calls.append(args)), \
+             patch.object(h, "shaped", return_value={"stage_id": 0}), \
+             patch.object(h, "ping_class", return_value={"status": "DIRECT_CANDIDATE"}):
+            result = h.configure_relay(own, server, client)
+        self.assertEqual(result["control_token"], own["control_token"])
+        self.assertEqual(result["source_sha"], own["source_sha"])
+        self.assertEqual(result["group"], "a")
+        self.assertEqual(result["server_ip"], server["tail_ip"])
+        self.assertEqual(result["client_ip"], client["tail_ip"])
+        self.assertEqual(result["tcp_port"], h.PORT)
+        self.assertEqual(result["role"], "relay")
+        self.assertTrue(any("iptables" in args for args in calls))
+        self.assertTrue(any("qdisc" in args for args in calls))
+
     def test_relay_source_and_group_pair_must_be_identical(self):
         a = identity("relay")
         self.assertEqual(h.verify(a, identity("client"), "client"), "100.101.0.1")
