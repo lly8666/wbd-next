@@ -1,0 +1,157 @@
+# H2268 offline evidence archived from prior full A/B/A-prime business SUCCESS;\n# previous same-source Action had test-only final digest typo, not a product failure.\n# H2268: Original real Go TLS/Rust Linux ARM64 1160 historic MTU comparator,
+# native kernel bidirectional 1% OR 5% iid loss, 200ms each way, TCP
+# long-lived 4 bulk + same 160 tiny app requests. OFF/ON/OFF actual outer
+# retransmission F/R counters, first delivery/late & Stop; never fake P99.
+name: M0 PLAN029 H2272 native TCP echo Nagle 1 and 5pct
+run-name: "M0-029 H2272 ARM TCP P99 Nagle control loss1,5 | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-arm-nagle-loss-real.yml'
+      - 'tools/m0_h2244_smallflow_echo.py'
+      - 'tools/m0_029_product_shared_tun_noprobe.py'
+      - 'docs/devlog/M0/20261121-H2272-LINUX-TCP-NAGLE-DIAG.md'
+permissions:
+  contents: read
+jobs:
+  original-normal-shared-true-loss:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-nagle-native]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        loss: [1, 5]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    concurrency:
+      group: m0-029-h2272-nagle-${{ matrix.loss }}-${{ github.sha }}
+      cancel-in-progress: false
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      WBD_M0_029_NO_PROBE: "1"
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exact native ARM64 and existing source-locked build prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc nasm python3 iproute2 \
+            iputils-ping iptables ethtool iperf3 openssl
+          test -c /dev/net/tun
+          sudo -n true
+          python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
+          bash -n tools/m0_plan029_linux_dual_native_build.sh
+      - name: Single original Go TLS Rust no-probe build for all three legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh >plan029-linux-build.log 2>&1 || {
+            tail -n 125 plan029-linux-build.log >&2
+            exit 1
+          }
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os,platform,subprocess
+          b=pathlib.Path("linux-plan029-public-bundle")
+          m=json.loads((b/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]==platform.machine()=="aarch64"
+          assert m["m0_probe_compiled"] is False
+          assert (m["normal_linux_client_shared_tun_inbox_default"],
+                  m["normal_linux_server_shared_tun_inbox_default"]) == (128,64)
+          for k,v in m["sha256"].items():
+              assert hashlib.sha256((b/k).read_bytes()).hexdigest()==v
+          exported=subprocess.check_output(["nm","-D",str(b/"libwbd_engine.so")],text=True)
+          assert "wbd_m0_embedded_go_loop_debug_pause_jumbo" not in exported
+          print("M029_H2268_ONE_RELEASE_ORIGINAL_GO_RUST_ARM64_BUILD_PASS",flush=True)
+          PY
+
+      - name: H2272 one native ARM runner per loss, test-only server Nagle A/no-B/yes-A/no
+        shell: bash
+        timeout-minutes: 37
+        env:
+          LOSS: ${{ matrix.loss }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2244_smallflow_echo.py tools/m0_029_product_shared_tun_noprobe.py
+          for leg in A B A_prime; do
+            if [ "$leg" = B ]; then nodelay=1; else nodelay=0; fi
+            echo "H2272_REAL_NATIVE_TCP_APP_SERVER_NAGLE loss=$LOSS leg=$leg nodeLAY=$nodelay source=$GITHUB_SHA"
+            WBD_M0_029_LOSS_REPAIR_PCT="$LOSS" \
+            WBD_M0_029_LOSS_REPAIR_LEG="$leg" \
+            WBD_M0_029_H2272_FORCE_REPAIR=off \
+            WBD_M0_029_ECHO_SERVER_NODELAY="$nodelay" \
+            WBD_M0_029_ECHO_TIMELINE=1 \
+            WBD_M0_029_TCP_INFO=1 \
+            WBD_M0_029_SPARSE_TCP_DIAG=1 \
+              python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          done
+          python3 - <<'PY'
+          import os,json,pathlib
+          loss=int(os.environ["LOSS"])
+          legs=(("A",0),("B",1),("A_prime",0))
+          rows=[]
+          for leg,nodelay in legs:
+              path=pathlib.Path(f"m029-product-shared-loss{loss}-{leg.lower()}/summary.json")
+              row=json.loads(path.read_text())
+              assert row["source_sha"]==os.environ["GITHUB_SHA"]
+              assert row["arch"]=="aarch64"
+              assert row["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
+              assert row["h2272_echo_control"]["server_tcp_nodelay_actual"]==nodelay
+              assert row["h2268_control"]["original_go_repair_on"] is False
+              assert row["server_native_outer_ready_readback"]["repair_enabled"]==0
+              assert row["outer_repair_native_stop_readback"]["client"]==[0]
+              assert row["h2268_original_outer_m2_real_wire"]["client"][0]["repair_accepted_wire_bytes"]==0
+              assert all(row["owned_stop"][role]["generation"]>0 for role in ("client","server"))
+              m=row["measurement"]
+              assert m["original_product_tcp"]["tcp_streams"]==4
+              assert m["smallflow"]["tcp"]["requests_sent"]==160
+              assert m["smallflow"]["tcp"]["unique_replies"]==160
+              assert m["smallflow"]["udp"]["requests_sent"]==160
+              assert row["native_tcp_info_timeline"]["echo_overlap_samples"]>=30
+              t=row["tcp_directional_timeline"]["summaries_ms"]
+              rows.append({"leg":leg,"server_tcp_nodelay_os_readback":nodelay,
+                  "original_tcp_goodput_mbps":m["original_product_tcp"]["receiver_bps"]/1e6,
+                  "tcp_p50_ms":m["smallflow"]["tcp"]["latency_ms"]["p50"],
+                  "tcp_p99_ms":m["smallflow"]["tcp"]["latency_ms"]["p99"],
+                  "udp_p99_ms":m["smallflow"]["udp"]["latency_ms"]["p99"],
+                  "udp_missing_of160":m["smallflow"]["udp"]["missing"],
+                  "tcp_native_retrans":row["native_tcp_info_timeline"]["retransmitted_tcp_segments_delta"],
+                  "tcp_reverse_p99_ms":t["reverse_app_observed_ms"]["p99"],
+                  "server_processing_p99_ms":t["server_processing_ms"]["p99"],
+                  "client_full":row["owned_stop"]["client"]["queue_full_drops"]})
+          digest={"study":"H2272","source_sha":os.environ["GITHUB_SHA"],
+              "run_id":os.environ["GITHUB_RUN_ID"],"attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+              "loss_pct":loss,"one_way_ms":200,"arch":"aarch64",
+              "same_product_one_source_original_repair_off_all_legs":True,
+              "test_only_server_TCP_NODELAY_A_B_Aprime":rows,
+              "full_product_QoS_NOT_QUALIFIED":True}
+          pathlib.Path(f"h2272-loss{loss}-nagle-comparison.json").write_text(json.dumps(digest,indent=2)+"\n")
+          print("H2272_REAL_TCP_APP_NAGLE_RESULT "+json.dumps(digest,sort_keys=True),flush=True)
+          PY
+      - name: Upload true-source evidence even if one leg fails
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-029-h2272-nagle-loss${{ matrix.loss }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            plan029-linux-build.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/SHA256SUMS
+            m029-product-shared-loss${{ matrix.loss }}-*/
+            h2272-loss${{ matrix.loss }}-nagle-comparison.json
+          if-no-files-found: warn
+          retention-days: 21

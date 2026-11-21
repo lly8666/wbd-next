@@ -75,6 +75,12 @@ if MTU_TRIAL_LEG not in ("","A","B","A_prime") or (
     MTU_TRIAL_LEG and (FQ_TRIAL_LEG or PRIO_TRIAL_LEG or STAGE or SERVICE or
                        RAWCOST or RECOVERY or FIRSTDROP)):
     raise RuntimeError("M029_H2267_MTU_SINGLE_FACTOR_EXCLUSIVE_LEG")
+H2272_FORCE_REPAIR=os.environ.get("WBD_M0_029_H2272_FORCE_REPAIR","")
+H2272_NODELAY=os.environ.get("WBD_M0_029_ECHO_SERVER_NODELAY","")
+if H2272_FORCE_REPAIR not in ("","off") or H2272_NODELAY not in ("","0","1"):
+    raise RuntimeError("H2272_ONLY_OFF_REPAIR_AND_BOOLEAN_NODELAY")
+if (H2272_FORCE_REPAIR or H2272_NODELAY) and not (H2272_FORCE_REPAIR=="off" and H2272_NODELAY in ("0","1")):
+    raise RuntimeError("H2272_BOTH_TEST_SWITCHES_REQUIRED")
 LOSS_REPAIR_LEG=os.environ.get("WBD_M0_029_LOSS_REPAIR_LEG","")
 LOSS_REPAIR_PCT=os.environ.get("WBD_M0_029_LOSS_REPAIR_PCT","")
 if LOSS_REPAIR_LEG not in ("","A","B","A_prime") or (
@@ -172,7 +178,7 @@ def main():
             # therefore tests the true existing Go product default 1460.
             # No product code, real kernel policy, or Rust fastpath change.
             mtu_args=[] if MTU_TRIAL_LEG=="B" else ["--outer-mtu","1160"]
-            repair_arg="on" if LOSS_REPAIR_LEG=="B" else "off"
+            repair_arg=H2272_FORCE_REPAIR or ("on" if LOSS_REPAIR_LEG=="B" else "off")
             self.spawn("server",self.server,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
@@ -198,6 +204,7 @@ def main():
                 ["iperf3","-s","-B",G["SERVER_IP"],"-p","5202"])
             self.spawn("echo-server",self.server,[
                 "env",*(["WBD_M0_029_ECHO_TIMELINE=1"] if TCP_TIMELINE else []),
+                *(["WBD_M0_029_ECHO_SERVER_NODELAY="+H2272_NODELAY] if H2272_NODELAY else []),
                 "GITHUB_SHA="+SHA,"GITHUB_RUN_ID="+RUN,
                 "python3","-u",str(ROOT/"tools/m0_h2244_smallflow_echo.py"),
                 "server","--bind",G["SERVER_INNER"]])
@@ -275,7 +282,7 @@ def main():
             "original_shared_tun_first_drop_window":FIRSTDROP,
             "outer_ip_mtu_explicit_bytes":(None if MTU_TRIAL_LEG=="B" else 1160),
             "h2268_200ms_oneway_loss_pct":int(LOSS_REPAIR_PCT) if LOSS_REPAIR_LEG else None,
-            "h2268_true_outer_repair":("on" if LOSS_REPAIR_LEG=="B" else "off") if LOSS_REPAIR_LEG else None,
+            "h2268_true_outer_repair":(H2272_FORCE_REPAIR or ("on" if LOSS_REPAIR_LEG=="B" else "off")) if LOSS_REPAIR_LEG else None,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
             "probe_compiled":False,"status":"NOT_RUN",
@@ -440,13 +447,20 @@ def main():
                 "leg":LOSS_REPAIR_LEG,"loss_percent":int(LOSS_REPAIR_PCT),
                 "one_way_delay_ms":200,"outer_ip_mtu":1160,
                 "physical_router_and_endpoint_mtu":actual,
-                "original_go_repair_on":LOSS_REPAIR_LEG=="B",
+                "original_go_repair_on":(H2272_FORCE_REPAIR or ("on" if LOSS_REPAIR_LEG=="B" else "off"))=="on",
                 "original_history_low_MTU_is_intentional_direct_comparator":True,
                 "kernel_netem_real_bidirectional":True,
                 "same_released_original_Go_TLS_Rust_product":True}
 
         time.sleep(3)
         result["measurement"]=node.measure("product_no_probe128")
+        if H2272_NODELAY:
+            raw=node.logs["echo-server"].read_text(errors="replace")
+            found=re.findall(r"H2272_SERVER_TCP_NODELAY_OS_READBACK val=(\d+)",raw)
+            if found!=[H2272_NODELAY]:
+                raise RuntimeError("H2272_REAL_TCP_NODELAY_READBACK_MISSING")
+            result["h2272_echo_control"]={"server_tcp_nodelay_actual":int(found[0]),
+                "original_repair_effective":"off","no_production_change":True}
         if PRIO_TRIAL_LEG:
             qdisc=json.loads(ns(node.client,"tc","-s","-j","qdisc",
                                "show","dev",G["CLIENT_TUN"]).stdout)
@@ -472,7 +486,7 @@ def main():
         server_ready=re.findall(
             r"V4_PUBLIC_MIXED_NORMAL_OUTER_READY role=server client_port=(\d+) repair_enabled=(\d+) proof=authenticated_original_rust_owner",
             server_log)
-        expected_repair="1" if LOSS_REPAIR_LEG=="B" else "0"
+        expected_repair="1" if (H2272_FORCE_REPAIR or ("on" if LOSS_REPAIR_LEG=="B" else "off"))=="on" else "0"
         if len(server_ready)!=1 or server_ready[0][1]!=expected_repair or int(server_ready[0][0])<=0:
             raise RuntimeError("M029_SERVER_AUTHENTICATED_RUST_OUTER_OFF_READY_MISSING")
         result["server_native_outer_ready_readback"]={
@@ -494,7 +508,7 @@ def main():
             # never invent a server Rust readback from the CLI string.
             result["outer_repair_native_stop_readback"][role]=[int(x) for x in values]
             result["outer_repair_native_stop_scope"][role]=(
-                ("NATIVE_ON_CONFIRMED" if LOSS_REPAIR_LEG=="B" else "NATIVE_OFF_CONFIRMED") if values else "NOT_EMITTED_UNVERIFIED")
+                ("NATIVE_ON_CONFIRMED" if expected_repair=="1" else "NATIVE_OFF_CONFIRMED") if values else "NOT_EMITTED_UNVERIFIED")
         if LOSS_REPAIR_LEG:
             # Original Go log lines carry a timestamp prefix: match actual
             # marker within the line, never a fabricated start-of-line.
@@ -517,7 +531,7 @@ def main():
                     raise RuntimeError("M029_H2268_M2_WIRE_COUNTER_FIELDS_MISSING")
                 if any(m["repair_enabled"]!=int(expected_repair) for m in matches):
                     raise RuntimeError("M029_H2268_NOT_AUTHENTICATED_ORIGINAL_M2_POLICY")
-                if LOSS_REPAIR_LEG!="B" and any(
+                if expected_repair=="0" and any(
                     m["repair_accepted_wire_bytes"] or m["repair_uncertain_wire_bytes"]
                     or m["original_frozen_retransmitted"] for m in matches):
                     raise RuntimeError("M029_H2268_OFF_HAS_TRUE_M2_REPAIR_COPIES")

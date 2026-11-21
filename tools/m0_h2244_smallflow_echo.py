@@ -28,6 +28,9 @@ GAP_MS=80
 START_DELAY_S=2.0
 # Diagnostic only: original kernel TCP echo payload/wire and cadence
 # never change. Same-host monotonic timestamps, no nonce or payload stored.
+ECHO_SERVER_NODELAY=os.environ.get("WBD_M0_029_ECHO_SERVER_NODELAY","")
+if ECHO_SERVER_NODELAY not in ("","0","1"):
+    raise RuntimeError("H2272_ECHO_SERVER_NODELAY_INVALID")
 TCP_TRACE=os.environ.get("WBD_M0_029_ECHO_TIMELINE")=="1"
 TCP_INFO_TRACE=os.environ.get("WBD_M0_029_TCP_INFO")=="1"
 if TCP_INFO_TRACE and not TCP_TRACE:
@@ -65,6 +68,13 @@ def _udp_server(bind, stop):
 
 def _tcp_session(conn):
     conn.settimeout(2.5)
+    if ECHO_SERVER_NODELAY=="1":
+        conn.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
+    if ECHO_SERVER_NODELAY:
+        actual=conn.getsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY)
+        print("H2272_SERVER_TCP_NODELAY_OS_READBACK val="+str(actual),flush=True)
+        if actual!=int(ECHO_SERVER_NODELAY):
+            raise RuntimeError("H2272_NATIVE_TCP_NODELAY_READBACK_MISMATCH")
     pending=bytearray()
     trace=[]
     try:
