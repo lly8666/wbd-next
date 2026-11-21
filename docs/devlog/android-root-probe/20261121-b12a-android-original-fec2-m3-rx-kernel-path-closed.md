@@ -10,7 +10,7 @@ SOURCE `ebc8a6085a56493ec91f5cb727b77f404ebd946d`；本片是未授权的后续 
 
 ## 软件门追踪（B12a 编译前修正）
 
-提交 `554aa5b588abe529b8c8047e27f827653ea1e2b7` 修复了 M4 RX worker 对原 `Result<(Vec<RxPacket>, AuthenticatedRxReport), ...>` 的错误解构；源码测试进一步锁住唯一 `open_unique_with_fec2_after_admission_in_place` 与 kind2/3 分流，防止未来误接独立 opener。上一个治理 Job 的失败原因是该 Rust-only 小修提交未同步更新 devlog，而不是 Fixed/Auto 获得 APPLIED；本次改动在同一修订内补齐变更证据。
+提交 `554aa5b588abe529b8c8047e27f827653ea1e2b7` 修复了 M4 RX worker 对原 `Result<(Vec<RxPacket>, AuthenticatedRxReport), ...>` 的错误解构；源码测试进一步锁住唯一 `open_unique_with_fec2_after_admission_in_place` 与 kind2/3 分流，防止未来误接独立 opener。上一个治理 Job 的失败原因是该 Rust-only 小修提交未同步更新 devlog，而不是 Fixed/Auto 获得 APPLIED；本次改动在同一修订内补齐变更证据。 本修订还同步更新功能卡摘要及CLI状态，以让实际源码、闭门条件和声明一致。
 
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B12a将原M3 AEAD/PN唯一接收器的FEC2 kind2/3接进Android M4原RX/TUN、DNS逆映射与Stop，APPLIED=0/Go Fixed禁用，TX/M2待续。"}
