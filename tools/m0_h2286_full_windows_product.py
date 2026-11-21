@@ -16,7 +16,11 @@ import pathlib
 import re
 import subprocess
 import sys
+import threading
 import time
+
+from m0_wl_native_resource_sampler import sample_windows_original_process
+from m0_h2290_windows_hotpath_cpu import original_window_cpu
 
 import m0_h2276_three_runner_tcp as core
 import m0_h2285_windows_wsl_route as guestroute
@@ -188,6 +192,9 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
     prev_seconds=tcp.BULK_SEND_S
     prev_timeout=tcp.TIMEOUT_S
     prev_inner_tcp_port=tcp.PORT
+    win32_cpu_stop=threading.Event()
+    win32_cpu_sampler=None
+    source_win_cpu_file=ROOT/"original-win-cpu.jsonl"
     try:
         guestroute.wsl("sysctl","-w","net.ipv4.ip_forward=1")
         for rule in scope_nat_rules(win,guest,relay_ip):
@@ -199,6 +206,13 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
             proc=subprocess.Popen(cmd,stdin=subprocess.PIPE,stdout=f,
                   stderr=subprocess.STDOUT,text=True,env=env)
         output["original_windows_pid"]=proc.pid
+        # Read-only actual Win32 GetProcessTimes + Toolhelp GetThreadTimes;
+        # no product callback or packet-path instrumentation.
+        win32_cpu_sampler=threading.Thread(
+            target=sample_windows_original_process,
+            args=(proc,source_win_cpu_file,win32_cpu_stop),
+            name="H2290-real-Windows-Go-Rust-CPU-observer",daemon=True)
+        win32_cpu_sampler.start()
         # Genuine Windows Wintun UDP must overlap original protected admission.
         udplog=(ROOT/"win-inner-udp.log").open("w")
         udp=subprocess.Popen([sys.executable,"-u",
@@ -237,8 +251,10 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         print("H2289_ORIGINAL_WINDOWS_WINTUN_INNER_TCP_PORT45902_NOT_OUTER18727",flush=True)
         print("H2286_WINDOWS_ORIGINAL_NPCAP_TLS_WINTUN_TCP_START",flush=True)
         capture=io.StringIO()
+        original_tcp_wall_start=time.monotonic()
         with contextlib.redirect_stdout(capture):
             tcp.client(APP_IP,APP_PEER,own["source_sha"])
+        original_tcp_wall_end=time.monotonic()
         parsed=[json.loads(s.split(tcp.MARK+"CLIENT_DONE ",1)[1])
                 for s in capture.getvalue().splitlines()
                 if tcp.MARK+"CLIENT_DONE " in s]
@@ -248,6 +264,14 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
                 "ORIGINAL_WINTUN_ARM_TUN_REAL_TCP_BAD_RECEIPT")
         q=core.remote_diag(relay)
         qdisc=core.netem_phase_receipt(shape["netem"]["qdisc"],q["kernel_tc"],-1)
+        relay_resource=core.relay_resource_delta(
+            shape["netem"]["relay_resource_before"],q["relay_resource_now"])
+        require(relay_resource["tailscaled_pid_count_common"]>0 and
+                relay_resource["relay_core_count"]>0,
+                "ORIGINAL_PRODUCT_RELAY_NATIVE_CPU_SAMPLES_INCOMPLETE")
+        win32_product_cpu=original_window_cpu(
+            source_win_cpu_file,original_tcp_wall_start,
+            original_tcp_wall_end,parsed[0]["bulk_remote_received_bytes"],clientlog)
         require(qdisc["status"]=="REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED" and
                 all(qdisc["per_direction"][d]["egress_packets"]>0
                     for d in ("win_to_arm","arm_to_win")),
@@ -262,6 +286,8 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
             windows_original_product_bulk_stage_cpu_percent=
                 core.cpu_busy_percent(before,core.os_host_cpu()),
             kernel_relay_qdisc=qdisc,
+            relay_tailscaled_and_host_cpu_stage=relay_resource,
+            windows_original_go_rust_cpu_stage=win32_product_cpu,
             real_wsl_conntrack_counters=counters,
             true_go_tls_rust_windows_arm=True)
         core.save(ROOT/"client-result.json",output)
@@ -302,6 +328,9 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
                 output["status"]="PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP"
             elif output["status"].startswith("MEASURED"):
                 output["status"]="FAIL_H2286_REAL_ORIGINAL_WINDOWS_OWNED_STOP"
+        win32_cpu_stop.set()
+        if win32_cpu_sampler is not None:
+            win32_cpu_sampler.join(timeout=8)
         if udp is not None and udp.poll() is None:
             with contextlib.suppress(OSError):udp.kill()
         for rule in reversed(installed):
@@ -309,6 +338,11 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         guestroute.wsl("sysctl","-w","net.ipv4.ip_forward="+orig_forward)
         output["guest_iptables_and_ip_forward_restored"]=True
         core.save(ROOT/"client-result.json",output)
+        # H2276 cross-runner awaits exactly one top-level client-result.json
+        # inside the h2276-out-only artifact. The prior multi-root ZIP broke
+        # ARM and relay post-test cleanup despite both Win products PASS.
+        core.save(core.ROOT/"client-result.json",output)
+        print("H2290_SOURCE_LOCKED_MINIMAL_CROSS_RUNNER_RESULT_READY",flush=True)
         print("H2286_CLIENT_ACTUAL_WINDOWS_ORIGINAL_RESULT "+output["status"],flush=True)
     require(output["status"]=="PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP",
             "ORIGINAL_PRODUCT_OR_STOP_NOT_VERIFIED")
