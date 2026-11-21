@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2290,
-  "checkpoint_sha": "619d793beff0562aafb0fde7d892c8c8d2987393",
+  "sequence": 2291,
+  "checkpoint_sha": "cb7fea05d3582d7e62cad137809d37305992dfd0",
   "progress": "partial",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "M0 PLAN029/H2289真实原Windows完整Npcap1.88/Wintun0.14.1 GoTLS/Rust→独立ARM原GoTLS/Rust AF_PACKET/TUN经独立ARM relay双组持续4TCP/25s真实收到A118.620Mbps/P99281ms、B154.914Mbps/P99297ms、各160/160小TCP回显、两Windows原Rust/WAL Stop PASS。H2290分解Windows原Go/Rust及relay tailscaled真实CPU，避免无依据改热路径。PR#68 Draft。",
-  "why_now": "用户指出旧H2228三Runner基线>800Mbps，新裸TCP夹具之前受短流/默认128KiB窗口误导。H2284已证实Windows→ARM网络可千兆，H2285 Windows→WSL2→ARM裸kernel TCP A468/B496Mbps。H2289端口串用已修，完整原产品到ARM真实TUN成功但只118.6/154.9Mbps、Win整机busy88.2/85.8%，需要真实进程/线程和relay CPU归因；H2289 post-PASS multi-root artifact阻塞ARM/relay清理须修。",
+  "current_task": "M0 PLAN029 H2290：两组独立真原Windows签名Npcap/Wintun GoTLS/Rust→ARM原Rust TUN完整TCP/Stop 8/8 PASS，A154.675Mbps/P99250ms、B80.902Mbps/P99125ms。真实Win进程仅0.707/0.464核、kernel82%，原Rust TX12.234/7.922 CPU秒下界，relay tailscaled1.56/1.06核。H2291默认OFF Windows原Rust TX16/NPF64KiB候选正在编译和原产品双组三机验证，PR#68 Draft。",
+  "why_now": "已证明原Windows产品不是夹具裸TCP、且Win整机高CPU不等于原Go/Rust进程CPU饱和。H2290 Windows原TX线程多数内核时间、原NPF一次只8包/16KiB，采用默认OFF仅显式Rust编译feature将ready batch由8×4调整16×2总服务32、NPF ready-only队列64KiB/16包，不改认证、驱动PREFIX或小TCP Direct回程8包。",
   "done_when": "原Win签名Npcap/Wintun GoTLS/Rust与独立ARM原GoTLS/Rust在两组三Runner持续4x25s真收端goodput、160次小TCP P99、Win原Go/Rust阶段CPU秒/GiB与各TX/RX热线程/relay tailscaled最热核/ARM原Rust和本机drop、原子Stop均来源真实证据；然后只修真实热点并同VM A/B/A′验证吞吐/P99/CPU与Stop。双向200ms0/1/5% FEC2等后续资格仍OPEN，不能拿OS基准或最优组冒充产品PASS。",
-  "next_action": "H2290核收 SOURCE d5690ef Action44940140123 全部双组三Runner，修跨Job h2276-out/client-result.json单根artifact等待阻塞；核Win32原Go+Rust真实进程+TX/RX thread在25s bulk窗口的CPU、user/kernel seconds/GiB和ARM relay tailscaled进程/最热核、ARM收到的真实TCP与P99/Stop。若原Windows进程真正接近单核/多核饱和则选Rust TX批次/唤醒或Go重复copy一个热点做原A→优化B→A′；若原进程不满转向Tailscale/WSL/driver OS，不盲扩SharedTun。",
+  "next_action": "优先收H2291真正Windows构建job与Action44941989692完整两组三Runner结果，验证原Win DLL实际SHA及Npcap真实queue=1/65536/16、ARM原TUN真收、P99、原Go/Rust TX/RX CPU秒/实际GiB和relay CPU/Stop；若PASS再在同runner原DLL A→候选DLL B→原DLL A′做有辨别力对照，拒绝跨VM伪收益。若Windows编译失败先修有限Cargo/feature/ISA-L，不重放全部旧裸TCP；后续真实双向200ms丢包1/5% FEC2仍OPEN。",
   "unverified": true,
-  "last_tested_source": "7c431364afaeb42a7cf5e138a3fb1a92a30169ec",
+  "last_tested_source": "d5690ef41ca5fb40313375b82e1761dd6f95a4d1",
   "evidence_refs": [
-    "docs/devlog/M0/20261122-M0-PLAN029-H2290-WIN-ARM-REAL-PRODUCT-PERF.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2291-WIN-REAL-CPU-RESTORE.md"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
     "docs/devlog/M0/20261122-M0-PLAN029-H2285-WIN-WSL2-ARM-ROUTE-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2289 Action44939085405 两个原Win客户端job成功，两个不同Windows2025签名Npcap/Wintun原GoTLS/Rust→两组独立ARM原GoTLS/Rust真实原Rust TUN TCP: A378322944B/25.515s=118.620Mbps P99281ms, B492257280B/25.421s=154.914Mbps P99297ms; 160/160且晚回0、原WAL Stop PASS，Win全HOST busy88.211/85.758%（含tailscaled/WSL/driver，不能直接说原Rust热点）。H2289 ARM/relay后置多根ZIP路径空等；H2290 d569已静态通过/在跑同一两组原客户端真实Win32进程+线程及relay CPU阶段测量和artifact单根收尾。产品源码/默认未改，性能优化候选未验证。"
+  "partial_summary": "H2290 Action44940140123 8/8 SUCCESS 已收原Windows完整签名Npcap1.88/Wintun0.14.1 GoTLS/Rust→真实ARM GoTLS/Rust TUN：A491520000B 154.675Mbps P99250ms，原Win进程17.703s/25s kernel占82.35%，每GiB38.673s TX线程12.234s下界；B262619136B 80.902Mbps P99125ms，原进程11.328s/24.4s kernel82.21%，每GiB46.316s TX7.922s。两个组160echo/160且0 late >1s、Stop通过、relay tailscaled分别约1.56/1.06核。H2291实验源f9329239原产品候选跑中，不能晋级默认。"
 }
