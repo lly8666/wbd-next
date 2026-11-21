@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B6 真实 DNS 分流计数与 TCP53 兼容**：在 B5 已通过的 CN8503 原 Rust M4 单 TUN reader 上，把普通小包和 jumbo/EDNS 的域名路径决策收敛为同一个纯 Rust `v4_android_dns_route`。合法完整 IPv4 UDP53：CN 物理 223.5.5.5，非 CN M3 加密隧道 1.1.1.1；其他两种旧模式、默认设置不改。Android App 的普通 TCP53 **原样经原 M1/M3 WBD 隧道**，按真实完成的原 RAW 复制计数，不是新建直连 TCP53 代理。物理 UDP 回复 DNS TC=1 仅在实际写入原 TUN 后记录，**不等于客户端已发起 TCP 重试，更不等于该 TCP 查询拿到答复**。新原生只读 ABI 增加 `cnptx/noncnraw/tcpraw/ptctun` 四个实际收发计数，并由原 Go 低频 Pulse → Root Service → 独立 B6 数值与固定事件报告；旧 A47/B3d/B4 18/20/23 数值收据原格式兼容。增加同一原 Rust 物理 TC IPv4 反写+非 CN 原隧道 IPv4 逆映射+Stop 的 Host 组合测试及签名 APK 源码门。没有 Android 系统 netd DNS 的真实捕获或全局改写；这个范围仍须单独明确验证，并在设备授权后才能声称真机 E2E。TLS 校验默认 OFF、隧道 DNS 默认 ON、物理/CN 模式默认 OFF，全都保持。
+
+
 > **2026-11-21 B5 CN8503 普通 App DNS 分流**：在原 B3/B4 全隧道/全物理 DNS 兼容路径外，新增显式第三模式 `--android-cn-dns-split`（UI 默认 OFF，原 UI 全隧道默认 ON，TLS 证书验证默认 OFF）。原 Go 先用已存在的固定源 CN8503 Go 规则完整验证原文件的 8431 domain、69 full、3 regexp，然后将**同一份原规则字节冷传递一次**到原 Rust M4；Rust 自己用冷编译 HashSet/RegexSet 解析完整原 IPv4/UDP53 QNAME，CN→同一物理 Network 的 223.5.5.5 UDP，非 CN→原 M3 AEAD 隧道 1.1.1.1，两个原有 inverse-map 回 TUN；无 Go/JNI 逐包、无第二 TUN reader、无 FakeIP。物理 DNS 的 UDP 发包不等于 Android 系统 Resolver 已接管；Split 模式目前不含系统 DNS、TCP53/回落、IPv6、DoH、Fixed/Auto/Game。Host 新 SOURCE 的真实 8503 Rust/Go 匹配、ARM64 签名 APK、Linux Oracle 待 CI 实证，手机/用户服务器未授权不操作。\n\n
 > **2026-11-21 B4b Root Service 实生产传参补齐**：B4a 双 ABI Host 的 Java 收据已修复，但源码门发现 `physical_dns` Intent 未进入 Root Service 的 owner/launch/argv，现已接通同一生产参数链；该修补不涉及数据面和任何强制安全检测。等待新 SOURCE 原 APK 签名/Go Host/Linux Oracle，不用旧失败或前置绿色推断真实手机 DNS。
 

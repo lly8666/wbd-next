@@ -48,6 +48,12 @@ grep -Fq 'b5_cn8503_cold_match_domain_full_regex_and_no_false_suffix ... ok' \
 grep -Fq 'b5_cn8503_cold_actual_pinned_rules_full_typed_when_supplied ... ok' \
   out/android-b2-cn-geosite/rust-m4-cn-split.log
 printf '%s\n' 'ANDROID_B5_PINNED_CN8503_GO_TO_RUST_M4_FULL_TYPED_HOST_PASS'
+# The real 8503 source remains loaded by B6, whose route policy is cold.
+cargo +1.85.1 test --locked -p wbd-engine --lib b6_original_m4 \
+  -- --nocapture 2>&1 | tee out/android-b2-cn-geosite/rust-m4-b6-dns-route.log
+grep -Fq 'b6_original_m4_cn_physical_tc_inverse_and_noncn_tunnel_inverse ... ok' \
+  out/android-b2-cn-geosite/rust-m4-b6-dns-route.log
+printf '%s\n' 'ANDROID_B6_FULL_TYPED_CN_SOURCE_PLUS_DUAL_ROUTE_HOST_PASS'
 python3 - <<'PY'
 import hashlib,json,os,pathlib
 out=pathlib.Path("out/android-b2-cn-geosite")

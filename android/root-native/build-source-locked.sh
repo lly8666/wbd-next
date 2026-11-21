@@ -120,6 +120,7 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
       wbd_m0_embedded_go_android_physical_dns_effective \
       wbd_m0_embedded_go_android_cn_dns_split_enable \
       wbd_m0_embedded_go_android_cn_dns_split_effective \
+      wbd_m0_embedded_go_loop_dns_route_receipts \
       wbd_m0_embedded_go_loop_start wbd_m0_embedded_go_loop_stats \
       wbd_m0_embedded_go_loop_business_receipts \
       wbd_m0_embedded_go_loop_return_path_receipts \

@@ -48,6 +48,11 @@ final class RootDiagnosticReport {
                     String original=prefix+event.substring("NATIVE_M4_DIAG ".length());
                     if(RootDiagnosticReceipt.safeNativeSnapshot(original))debug.add(line);
                 }
+                else if(stamp&&event.startsWith("NATIVE_DNS_B6_DIAG ")){
+                    String original="V4_PUBLIC_ANDROID_DNS_B6_DIAG role=client "+
+                        event.substring("NATIVE_DNS_B6_DIAG ".length());
+                    if(RootDiagnosticReceipt.safeDNSB6Snapshot(original))debug.add(line);
+                }
             }
         }catch(Exception ignored){
             // Read-only diagnostic export must never affect live Root.
@@ -326,17 +331,49 @@ final class RootDiagnosticReport {
             ?"BOTH_PHYSICAL_AND_TUNNEL_DNS_TUN_WRITTEN":
              "DUAL_PATH_NOT_OBSERVED";
         out.append("cn_dns_split_live=").append(cnLive).append('\n');
+        // B6: classify only true original M4 socket/RAW/TUN copy events.
+        // CN match itself cannot be mistaken for physical delivery.
+        String splitCopied=has(session,"ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT")&&
+            has(session,"ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED")
+            ?"CN_PHYSICAL_AND_NONCN_TUNNEL_QUERY_COPIED":
+             has(session,"ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT")
+            ?"CN_PHYSICAL_QUERY_COPIED_NONCN_NOT_OBSERVED":
+             has(session,"ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED")
+            ?"NONCN_TUNNEL_QUERY_COPIED_CN_NOT_OBSERVED":"NOT_OBSERVED";
+        out.append("cn_dns_split_route_copies=").append(splitCopied).append('\n');
+        String tcpPass=has(session,"ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED")
+            ?"ORIGINAL_M3_TCP53_RAW_COPIED_NO_REPLY_PROOF":
+             has(session,"ORIGINAL_RUST_DNS_TCP53_TUN_SEEN")
+            ?"ORIGINAL_TUN_TCP53_SEEN_RAW_NOT_OBSERVED":"NOT_OBSERVED";
+        out.append("dns_tcp53_passthrough=").append(tcpPass).append('\n');
+        out.append("physical_dns_truncated_reply=").append(
+            has(session,"ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN")
+            ?"TC1_REPLY_INSERTED_IN_APP_TUN_TCP_RETRY_NOT_PROVEN":"NOT_OBSERVED").append('\n');
+        out.append("system_netd_dns_capture=NOT_CLAIMED_NOT_CONNECTED\n");
         out.append("device_real_business_tcp_udp=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("android_netd_physical_bypass=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("receipt_event_count=").append(events.size()).append('\n');
         out.append("events_timestamp_ms_and_fixed_stage_only:\n");
         int from=Math.max(0,events.size()-MAX_LINES);
         for(int i=from;i<events.size();i++)out.append(events.get(i)).append('\n');
-        out.append("native_m4_numeric_debug_count=").append(rawDebug.size()).append('\n');
+        int m4Count=0;
+        for(String line:rawDebug)if(line.contains("|NATIVE_M4_DIAG "))m4Count++;
+        out.append("native_m4_numeric_debug_count=").append(m4Count).append('\n');
         out.append("native_m4_numeric_debug_samples:\n");
-        int debugStart=Math.max(0,rawDebug.size()-MAX_NATIVE_DEBUG);
-        for(int i=debugStart;i<rawDebug.size();i++)
-            out.append(rawDebug.get(i)).append('\n');
+        int m4From=Math.max(0,m4Count-MAX_NATIVE_DEBUG),m4At=0;
+        for(String line:rawDebug){
+            if(!line.contains("|NATIVE_M4_DIAG "))continue;
+            if(m4At++>=m4From)out.append(line).append('\n');
+        }
+        int b6Count=0;
+        for(String line:rawDebug)if(line.contains("|NATIVE_DNS_B6_DIAG "))b6Count++;
+        out.append("native_dns_b6_numeric_debug_count=").append(b6Count).append('\n');
+        out.append("native_dns_b6_numeric_debug_samples:\n");
+        int b6From=Math.max(0,b6Count-MAX_NATIVE_DEBUG), b6At=0;
+        for(String line:rawDebug){
+            if(!line.contains("|NATIVE_DNS_B6_DIAG "))continue;
+            if(b6At++>=b6From)out.append(line).append('\n');
+        }
         out.append("END_OF_SAFE_DIAGNOSTIC\n");
         return out.toString();
     }

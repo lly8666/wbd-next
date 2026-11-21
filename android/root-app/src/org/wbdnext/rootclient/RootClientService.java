@@ -392,6 +392,9 @@ public final class RootClientService extends Service {
                     int forensic=line.indexOf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=");
                     if(forensic>=0&&diagnostics!=null)
                         diagnostics.recordNativeSnapshot(line.substring(forensic));
+                    int dnsB6=line.indexOf("V4_PUBLIC_ANDROID_DNS_B6_DIAG role=client ");
+                    if(dnsB6>=0&&diagnostics!=null)
+                        diagnostics.recordDNSB6Snapshot(line.substring(dnsB6));
                     // Fixed allowlisted shell/Go entry markers expose only
                     // proven pre-TUN boundaries, never stderr, argv or keys.
                     if(OriginalGoMilestones.matches(line,"WBD_PUBLIC_ROOT_SHELL_ENTERED"))
@@ -728,6 +731,14 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_PHYSICAL_ERROR"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_ERROR);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_CN_PHYSICAL_SENT"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_NONCN_TUNNEL_RAW_COPIED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_TCP53_ORIGINAL_RAW_COPIED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MATCHED_TUN"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_GET_MATCHED_TUN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MISMATCH"))

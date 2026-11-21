@@ -114,3 +114,30 @@ func TestB4AndroidPhysicalDnsOriginalM4ReadbackClasses(t *testing.T){
   t.Fatalf("actual original M4 physical DNS counters missing %s",got)
  }
 }
+
+func TestB6AndroidDNSOriginalCopyReceiptClassesAndNumericSnapshot(t *testing.T){
+ p:=realityfront.V4PublicLoopPulse{}
+ if got:=originalAndroidBusinessReceiptClasses(p);len(got)!=0{
+  t.Fatalf("B6 zero counters cannot imply DNS success: %v",got)
+ }
+ if got:=originalAndroidDNSB6Snapshot(p);!strings.Contains(got,
+  "cnptx=0 noncnraw=0 tcpraw=0 ptctun=0"){
+  t.Fatalf("zero B6 snapshot invalid: %s",got)
+ }
+ p.DnsCNPhysicalSent=2
+ p.DnsNonCNTunnelRaw=3
+ p.DnsTCP53OriginalRaw=4
+ p.DnsPhysicalTCTun=1
+ want:=[]string{"DNS_CN_PHYSICAL_SENT","DNS_NONCN_TUNNEL_RAW_COPIED",
+  "DNS_TCP53_ORIGINAL_RAW_COPIED","DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN"}
+ if got:=originalAndroidBusinessReceiptClasses(p);!reflect.DeepEqual(got,want){
+  t.Fatalf("B6 actual M4 raw/socket/TUN classes differ got=%v",got)
+ }
+ if got:=originalAndroidDNSB6Snapshot(p);!strings.Contains(got,
+  "cnptx=2 noncnraw=3 tcpraw=4 ptctun=1"){
+  t.Fatalf("B6 native numeric route snapshot missing: %s",got)
+ }
+ if got:=originalAndroidM4OwnerSnapshot(p);strings.Contains(got,"cnptx="){
+  t.Fatalf("B6 altered legacy A47/B3d/B4 M4 wire: %s",got)
+ }
+}

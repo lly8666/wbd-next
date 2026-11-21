@@ -67,6 +67,10 @@ mod v4_android_dns_physical_flow;
 // B5 cold-compiled CN8503 match at the one original Rust M4 UDP53 read.
 #[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_cn_dns;
+// B6 one deterministic UDP53/CN/physical/tunnel and TCP53-pass-through
+// decision for BOTH small and jumbo original M4 TUN packets.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_dns_route;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;

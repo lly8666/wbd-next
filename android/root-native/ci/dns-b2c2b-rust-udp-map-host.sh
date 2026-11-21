@@ -12,6 +12,9 @@ cargo +1.85.1 test --locked -p wbd-engine --lib b2c2b \
 cargo +1.85.1 test --locked -p wbd-engine --lib \
   b3_real_m4_captured_app_dns_two_resolvers_inverse_and_stop \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+# B6 independent full physical-TC + non-CN M3 inverse + TCP53 host pair.
+cargo +1.85.1 test --locked -p wbd-engine --lib b6_original_m4 \
+  -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 python3 - <<'PY'
 from pathlib import Path
 import hashlib,json,os
@@ -34,6 +37,9 @@ for test in names:
 assert "test result: ok. 8 passed;" in log,log[-1500:]
 assert "test v4_android_dns_udp_flow::tests::b3_real_m4_captured_app_dns_two_resolvers_inverse_and_stop ... ok" in log
 assert "test result: ok. 1 passed;" in log
+assert 'test v4_android_dns_route::tests::b6_original_m4_dns_three_compat_modes_and_tcp53_passthrough ... ok' in log
+assert 'test v4_android_dns_route::tests::b6_original_m4_cn_physical_tc_inverse_and_noncn_tunnel_inverse ... ok' in log
+assert 'test result: ok. 2 passed;' in log
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
 lib=Path("crates/wbd-engine/src/lib.rs").read_text()
 m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
@@ -72,8 +78,10 @@ assert "android_dns_physical_ready:true" not in entry
 # B5 retains exactly one M4 TUN reader and both Rust-owned DNS paths.
 assert 'mod v4_android_cn_dns;' in lib
 assert 'e.android_cn_dns=Some(Arc::new(matcher));' in entry
-assert 'rules.is_cn_ipv4_query(head)' in m4
-assert 'rules.is_cn_ipv4_query(&jumbo_spare)' in m4
+assert m4.count('crate::v4_android_dns_route::choose(')==2
+assert 'DnsRoute::PhysicalUDP' in m4
+assert 'DnsRoute::TunnelUDP' in m4
+assert 'DnsRoute::TCP53OriginalTunnel' in m4
 assert 'android_cn_dns.is_some()' in m4
 assert m4.count("tun.read_ip_scatter(")==1
 
@@ -124,4 +132,5 @@ receipt={
 print("ANDROID_B3_ORIGINAL_GO_RUST_TUNNEL_UDP_DNS_OPTIN_AND_INVERSE_MAP_HOST_PASS")
 print("ANDROID_B2C2C_ORIGINAL_RUST_M4_PHYSICAL_DNS_UDP_AND_TUNNEL_OWNER_SOURCE_GATE_PASS_COLD_DISABLED")
 print("ANDROID_B4_RUST_M4_PHYSICAL_DNS_COLD_GRANT_TWO_RESOLVERS_STOP_HOST_PASS")
+print("ANDROID_B6_M4_TWO_DNS_BACKENDS_TC_TCP53_SINGLE_TUN_READER_HOST_PASS")
 PY

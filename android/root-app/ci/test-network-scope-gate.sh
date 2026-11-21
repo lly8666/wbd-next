@@ -626,7 +626,7 @@ assert 'pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_effective
 assert 'e.android_dns_flows.stop();' in engine_entry
 assert 'e.android_dns_hijack_ready=true;' in engine_entry
 assert 'e.android_dns_physical_ready' in engine_entry
-assert 'if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&' in nativeworker
+assert "DnsRoute::PhysicalUDP" in nativeworker
 assert 'e.android_dns_flows.rewrite_query(' in nativeworker
 # Rust formats the owner type and its method on separate source lines.
 assert 'crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::' in owner
@@ -711,8 +711,8 @@ assert 'wbd_m0_embedded_go_android_cn_dns_split_effective' in required
 assert 'pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_enable(' in engine_entry
 assert 'e.android_cn_dns=Some(Arc::new(matcher));' in engine_entry
 assert 'e.android_cn_dns=None;' in engine_entry
-assert 'rules.is_cn_ipv4_query(head)' in nativeworker
-assert 'rules.is_cn_ipv4_query(&jumbo_spare)' in nativeworker
+assert 'crate::v4_android_dns_route::choose(' in nativeworker
+assert nativeworker.count('crate::v4_android_dns_route::choose(')==2
 assert 'android_cn_dns.is_some()' in nativeworker
 assert 'RegexSetBuilder::new(patterns)' in cn_rule
 assert 'pub(crate) fn is_cn_ipv4_query' in cn_rule
@@ -723,6 +723,41 @@ assert 'cn_dns_split_live=' in Path("android/root-app/src/org/wbdnext/rootclient
 assert 'ANDROID_B5_CN8503_SPLIT_COLD_AND_DUAL_PATH_REPORT_HOST_PASS' in Path("android/root-app/ci/RootDiagnosticReportTest.java").read_text()
 assert 'cargo +1.85.1 test --locked -p wbd-engine --lib b5_cn8503' in Path("android/root-native/ci/dns-b2-pinned-cn.sh").read_text()
 print("ANDROID_B5_REAL_CN8503_ORIGINAL_M4_DUAL_DNS_APP_GO_RUST_SOURCE_PASS")
+# B6 same real original M4: full packet route, TCP53 unchanged encrypted
+# tunnel, physical TC reply actually inserted, four new readonly counters.
+router=Path("crates/wbd-engine/src/v4_android_dns_route.rs").read_text()
+assert 'mod v4_android_dns_route;' in Path("crates/wbd-engine/src/lib.rs").read_text()
+assert 'DnsRoute::TCP53OriginalTunnel' in nativeworker
+assert 'tcp53_original:matches!(route' in nativeworker
+assert 'stats.dns_tcp53_original_raw.fetch_add(1' in nativeworker
+assert 'stats.dns_noncn_tunnel_raw.fetch_add(1' in nativeworker
+assert 'stats.dns_cn_physical_sent.fetch_add(1' in nativeworker
+assert 'stats.dns_physical_tc_tun.fetch_add(1' in nativeworker
+assert 'physical_packet[30]&0x02!=0' in nativeworker
+assert 'pub unsafe extern "C" fn wbd_m0_embedded_go_loop_dns_route_receipts(' in nativeworker
+assert 'wbd_m0_embedded_go_loop_dns_route_receipts' in required
+assert 'wbd_m0_embedded_go_loop_dns_route_receipts' in android_bridge
+assert 'originalAndroidDNSRouteReceipts()' in android_bridge
+assert 'DnsCNPhysicalSent:route[0]' in android_bridge
+assert 'DnsCNPhysicalSent,DnsNonCNTunnelRaw,DnsTCP53OriginalRaw,DnsPhysicalTCTun' in linux_bridge
+assert 'originalAndroidDNSB6Snapshot(p realityfront.V4PublicLoopPulse)' in nativecli
+assert 'DNS_CN_PHYSICAL_SENT' in nativecli
+assert 'DNS_NONCN_TUNNEL_RAW_COPIED' in nativecli
+assert 'DNS_TCP53_ORIGINAL_RAW_COPIED' in nativecli
+assert 'DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN' in nativecli
+assert 'ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT' in root_svc
+assert 'ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED' in root_svc
+assert 'ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED' in root_svc
+assert 'ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN' in root_svc
+assert 'recordDNSB6Snapshot(line.substring(dnsB6))' in root_svc
+assert 'safeDNSB6Snapshot(String raw)' in root_receipt
+assert 'cn_dns_split_route_copies=' in Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+assert 'ANDROID_B6_REAL_CN_NONCN_TCP53_TC_ROUTE_RECEIPT_HOST_PASS' in Path("android/root-app/ci/RootDiagnosticReportTest.java").read_text()
+assert 'b6_original_m4_cn_physical_tc_inverse_and_noncn_tunnel_inverse' in router
+assert 'b6_original_m4_dns_three_compat_modes_and_tcp53_passthrough' in router
+assert 'cargo +1.85.1 test --locked -p wbd-engine --lib b6_original_m4' in Path("android/root-native/ci/dns-b2c2b-rust-udp-map-host.sh").read_text()
+assert nativeworker.count("tun.read_ip_scatter(")==1
+print("ANDROID_B6_ORIGINAL_M4_DNS_CN_NONCN_TCP53_TC_M4_ABI_AND_APP_REPORT_SOURCE_PASS")
 
 print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")

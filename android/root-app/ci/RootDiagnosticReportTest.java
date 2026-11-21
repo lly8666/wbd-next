@@ -807,6 +807,51 @@ public final class RootDiagnosticReportTest {
         cnWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_FAILED);
         contains(RootDiagnosticReport.build(cnDir,source,36),
             "cn_dns_split_native_cold=CN8503_SPLIT_GRANT_FAILED");
+        // B6 independent numeric format is not allowed to alter A47/B3d/B4
+        // M4 parsing. Only current-session fixed events prove current copies.
+        File b6Dir=Files.createTempDirectory("wbd-b6-dns-route-counters").toFile();
+        RootDiagnosticReceipt b6Writer=new RootDiagnosticReceipt(
+            new File(b6Dir,"wbd-root-diagnostic.txt"));
+        b6Writer.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        b6Writer.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        String numeric="V4_PUBLIC_ANDROID_DNS_B6_DIAG role=client cnptx=2 noncnraw=3 tcpraw=4 ptctun=1";
+        if(!b6Writer.recordDNSB6Snapshot(numeric))
+            throw new AssertionError("B6 Rust->Go exact numeric receipt not accepted");
+        for(String bad:new String[]{
+            numeric+" extraneous=1",numeric.replace("noncnraw=3","noncnraw=-3"),
+            numeric.replace("tcpraw=4","tcpraw=bad"),
+            numeric.replace("ptctun=1","ptctun=")
+        })if(b6Writer.recordDNSB6Snapshot(bad))
+            throw new AssertionError("B6 nonnumeric/mixed receipt accepted");
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "cnptx=2 noncnraw=3 tcpraw=4 ptctun=1");
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "cn_dns_split_route_copies=NOT_OBSERVED");
+        b6Writer.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT);
+        b6Writer.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED);
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "cn_dns_split_route_copies=CN_PHYSICAL_AND_NONCN_TUNNEL_QUERY_COPIED");
+        b6Writer.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TCP53_TUN_SEEN);
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "dns_tcp53_passthrough=ORIGINAL_TUN_TCP53_SEEN_RAW_NOT_OBSERVED");
+        b6Writer.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED);
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "dns_tcp53_passthrough=ORIGINAL_M3_TCP53_RAW_COPIED_NO_REPLY_PROOF");
+        b6Writer.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN);
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "physical_dns_truncated_reply=TC1_REPLY_INSERTED_IN_APP_TUN_TCP_RETRY_NOT_PROVEN");
+        b6Writer.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        b6Writer.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "cn_dns_split_route_copies=NOT_OBSERVED");
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "dns_tcp53_passthrough=NOT_OBSERVED");
+        contains(RootDiagnosticReport.build(b6Dir,source,36),
+            "physical_dns_truncated_reply=NOT_OBSERVED");
+        if(!RootDiagnosticReceipt.safeNativeSnapshot(
+            "V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=1 parse_fail=0 parsed=1 auth=1 rejected=0 writefail=0 tun=2 trej=0 rawtx=2 rtun=1 tcp=0 udp=1 icmp=0 dnsudp=1 dnstcp=0 dnsraw=0 dnsrtun=0 dnsptx=0 dnsprx=0 dnsperr=0 rxerr=0 txerr=0 health=1"))
+            throw new AssertionError("B6 broke previous M4 wire");
+        System.out.println("ANDROID_B6_REAL_CN_NONCN_TCP53_TC_ROUTE_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_B5_CN8503_SPLIT_COLD_AND_DUAL_PATH_REPORT_HOST_PASS");
         System.out.println("ANDROID_B4_PHYSICAL_DNS_COLD_REAL_SOCKET_TX_RX_REPORT_HOST_PASS");
         System.out.println("ANDROID_B3D_REAL_M4_DNS_QUERY_COPIED_AUTH_INVERSE_TUN_RECEIPT_HOST_PASS");

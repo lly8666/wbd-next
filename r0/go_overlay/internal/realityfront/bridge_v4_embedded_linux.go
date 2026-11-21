@@ -731,6 +731,8 @@ type V4PublicLoopPulse struct{
     DnsTunnelRawCopied,DnsTunnelReplyTun uint64
     // Android-only physical UDP DNS pulse; Linux zero value.
     DnsPhysicalTx,DnsPhysicalRx,DnsPhysicalError uint64
+    // Android-only original M4 DNS route counters; Linux zero value.
+    DnsCNPhysicalSent,DnsNonCNTunnelRaw,DnsTCP53OriginalRaw,DnsPhysicalTCTun uint64
     // A45 Android real RAW RX and selected-App inner protocol evidence.
     RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
     RawAuthRejected,ReverseTunWriteFailed uint64

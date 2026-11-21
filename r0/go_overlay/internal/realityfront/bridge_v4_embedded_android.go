@@ -64,6 +64,7 @@ extern int32_t wbd_m0_embedded_go_loop_business_receipts(uint64_t,uint64_t *,uin
 extern int32_t wbd_m0_embedded_go_loop_raw_rx_debug(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_return_path_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_dns_ingress_observed(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_loop_dns_route_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_predead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_health(uint64_t,uint32_t *);
@@ -489,6 +490,16 @@ func (b *v4EmbeddedNativeBridge) originalAndroidBusinessReceipts()(tunSeen,tunRe
     return uint64(a),uint64(r),uint64(tx),uint64(rx),uint64(udp),uint64(tcp),uint64(tunnelRaw),uint64(tunnelTun),
         uint64(physTx),uint64(physRx),uint64(physErr),nil
 }
+// B6 original M4 additive diagnostics, separate from historical A47/B4 ABI.
+func (b *v4EmbeddedNativeBridge) originalAndroidDNSRouteReceipts()(result [4]uint64,err error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return result,errV4Embedded}
+    var a,bn,c,d C.uint64_t
+    rc:=C.wbd_m0_embedded_go_loop_dns_route_receipts(
+        C.uint64_t(b.handle),&a,&bn,&c,&d)
+    if rc!=0{return result,fmt.Errorf("%w: Android original M4 DNS B6 receipts=%d",
+        errV4Embedded,int(rc))}
+    return [4]uint64{uint64(a),uint64(bn),uint64(c),uint64(d)},nil
+}
 // Read-only original Rust worker stats under the authenticated owner scope.
 type V4PublicFecTxSnapshot struct{
     Accepted,SourceNotReady,Full,Partial uint64
@@ -600,6 +611,8 @@ type V4PublicLoopPulse struct{
     DnsUDP53Seen,DnsTCP53Seen uint64
     DnsTunnelRawCopied,DnsTunnelReplyTun uint64
     DnsPhysicalTx,DnsPhysicalRx,DnsPhysicalError uint64
+    // B6 exact original M4 copy receipts; not app resolver E2E proof.
+    DnsCNPhysicalSent,DnsNonCNTunnelRaw,DnsTCP53OriginalRaw,DnsPhysicalTCTun uint64
     // A45 Android real RAW RX and selected-App inner protocol evidence.
     RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
     RawAuthRejected,ReverseTunWriteFailed uint64
@@ -652,6 +665,8 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
         "%w: real Bionic underlay scope readback=%d",errV4Embedded,int(rc))}
     tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP,dnsRaw,dnsTun,physTx,physRx,physErr,businessErr:=b.originalAndroidBusinessReceipts()
     if businessErr!=nil{return V4PublicLoopPulse{},businessErr}
+    route,routeErr:=b.originalAndroidDNSRouteReceipts()
+    if routeErr!=nil{return V4PublicLoopPulse{},routeErr}
     r,returnErr:=b.originalAndroidReturnPathReceipts()
     if returnErr!=nil{return V4PublicLoopPulse{},returnErr}
     rawDebug,debugErr:=b.originalAndroidRawRxDebug()
@@ -667,6 +682,8 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
         DnsUDP53Seen:dnsUDP,DnsTCP53Seen:dnsTCP,
         DnsTunnelRawCopied:dnsRaw,DnsTunnelReplyTun:dnsTun,
         DnsPhysicalTx:physTx,DnsPhysicalRx:physRx,DnsPhysicalError:physErr,
+        DnsCNPhysicalSent:route[0],DnsNonCNTunnelRaw:route[1],
+        DnsTCP53OriginalRaw:route[2],DnsPhysicalTCTun:route[3],
         PhysicalScopeInvalid:scopeInvalid!=0,
         RxRecords:stats.RxOK,TxRecords:stats.TxOK,
         RxErrors:stats.RxErr,TxErrors:stats.TxErr,

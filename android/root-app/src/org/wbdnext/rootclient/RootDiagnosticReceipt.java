@@ -192,6 +192,10 @@ final class RootDiagnosticReceipt {
         ORIGINAL_RUST_DNS_PHYSICAL_UDP_COPIED,
         ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN,
         ORIGINAL_RUST_DNS_PHYSICAL_ERROR,
+        ORIGINAL_RUST_DNS_CN_PHYSICAL_SENT,
+        ORIGINAL_RUST_DNS_NONCN_TUNNEL_RAW_COPIED,
+        ORIGINAL_RUST_DNS_TCP53_ORIGINAL_RAW_COPIED,
+        ORIGINAL_RUST_DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN,
         ORIGINAL_RUST_RAW_SOCKET_READABLE,
         ORIGINAL_RUST_RAW_PARSE_FAILED,
         ORIGINAL_RUST_RAW_PARSED,
@@ -329,6 +333,33 @@ final class RootDiagnosticReceipt {
         final String body=raw.substring("V4_PUBLIC_ANDROID_M4_DIAG role=client ".length());
         return appendReceipt((Long.toString(System.currentTimeMillis())+
             "|NATIVE_M4_DIAG "+body+"\n").getBytes(StandardCharsets.US_ASCII),450);
+    }
+    // B6 is a separate additive receipt. Never change the historical
+    // 18/20/23-number M4 wire accepted by A47/B3d/B4 report export.
+    private static final String B6_PREFIX=
+        "V4_PUBLIC_ANDROID_DNS_B6_DIAG role=client ";
+    private static final String[] B6_KEYS={"cnptx","noncnraw","tcpraw","ptctun"};
+    static boolean safeDNSB6Snapshot(String raw){
+        if(raw==null||raw.length()>140||!raw.startsWith(B6_PREFIX))return false;
+        String[] parts=raw.substring(B6_PREFIX.length()).split(" ",-1);
+        if(parts.length!=B6_KEYS.length)return false;
+        for(int i=0;i<parts.length;i++){
+            String prefix=B6_KEYS[i]+"=";
+            if(!parts[i].startsWith(prefix))return false;
+            String digits=parts[i].substring(prefix.length());
+            if(digits.isEmpty()||digits.length()>20)return false;
+            for(int j=0;j<digits.length();j++){
+                char c=digits.charAt(j);
+                if(c<'0'||c>'9')return false;
+            }
+        }
+        return true;
+    }
+    synchronized boolean recordDNSB6Snapshot(String raw){
+        if(!safeDNSB6Snapshot(raw))return false;
+        String body=raw.substring(B6_PREFIX.length());
+        return appendReceipt((Long.toString(System.currentTimeMillis())+
+            "|NATIVE_DNS_B6_DIAG "+body+"\n").getBytes(StandardCharsets.US_ASCII),230);
     }
     private static final int MAX_BYTES=16384;
     private final File current;

@@ -1706,6 +1706,12 @@ func originalAndroidM4OwnerSnapshot(p realityfront.V4PublicLoopPulse)string{
  p.DnsPhysicalTx,p.DnsPhysicalRx,p.DnsPhysicalError,
  p.RxErrors,p.TxErrors,health)
 }
+// A separate B6 numeric wire avoids changing historic A47/B3d/B4 M4
+// snapshot formats; values come only from real Rust RAW/UDP/TUN operations.
+func originalAndroidDNSB6Snapshot(p realityfront.V4PublicLoopPulse)string{
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_DNS_B6_DIAG role=client cnptx=%d noncnraw=%d tcpraw=%d ptctun=%d",
+  p.DnsCNPhysicalSent,p.DnsNonCNTunnelRaw,p.DnsTCP53OriginalRaw,p.DnsPhysicalTCTun)
+}
 // Real original Rust M4 state, not Ready and never a guessed Chrome PASS.
 func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]string{
  var stages []string
@@ -1720,6 +1726,10 @@ func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]st
  if p.DnsPhysicalTx>0{stages=append(stages,"DNS_PHYSICAL_UDP_COPIED")}
  if p.DnsPhysicalRx>0{stages=append(stages,"DNS_PHYSICAL_REVERSE_TUN_WRITTEN")}
  if p.DnsPhysicalError>0{stages=append(stages,"DNS_PHYSICAL_ERROR")}
+ if p.DnsCNPhysicalSent>0{stages=append(stages,"DNS_CN_PHYSICAL_SENT")}
+ if p.DnsNonCNTunnelRaw>0{stages=append(stages,"DNS_NONCN_TUNNEL_RAW_COPIED")}
+ if p.DnsTCP53OriginalRaw>0{stages=append(stages,"DNS_TCP53_ORIGINAL_RAW_COPIED")}
+ if p.DnsPhysicalTCTun>0{stages=append(stages,"DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN")}
  if p.RawPollReady>0{stages=append(stages,"RAW_SOCKET_READABLE")}
  if p.RawParseFailed>0{stages=append(stages,"RAW_PARSE_FAILED")}
  if p.RawParsed>0{stages=append(stages,"RAW_PARSED")}
@@ -2098,6 +2108,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 lastNumericM4=time.Now()
                 log.Print(originalAndroidM4RxSnapshot(p))
                 log.Print(originalAndroidM4OwnerSnapshot(p))
+                log.Print(originalAndroidDNSB6Snapshot(p))
             }
             for _,stage:=range originalAndroidBusinessReceiptClasses(p){
                 if !businessLogged[stage]{
@@ -2115,6 +2126,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         if final,e:=native.OriginalLoopPulse();e==nil{
             log.Print(originalAndroidM4RxSnapshot(final))
             log.Print(originalAndroidM4OwnerSnapshot(final))
+            log.Print(originalAndroidDNSB6Snapshot(final))
         }
     }
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())

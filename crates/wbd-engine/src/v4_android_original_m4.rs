@@ -60,6 +60,9 @@ pub(super) struct AndroidOriginalStats{
     dns_tunnel_raw_copied:AtomicU64,dns_tunnel_reply_tun:AtomicU64,
     dns_physical_tx:AtomicU64,dns_physical_rx:AtomicU64,
     dns_physical_error:AtomicU64,
+    // B6 only actual original M4 socket send, raw copy or TUN write.
+    dns_cn_physical_sent:AtomicU64,dns_noncn_tunnel_raw:AtomicU64,
+    dns_tcp53_original_raw:AtomicU64,dns_physical_tc_tun:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -351,6 +354,7 @@ struct PendingAndroidJumbo{
     source:Vec<u8>,packet_id:u32,frame_mtu:usize,
     issued:usize,total:usize,generation:u32,physical_mtu:u32,
     tunnel_dns_query:bool,
+    split_noncn_query:bool,tcp53_original:bool,
 }
 enum JumboTurn{Copied{done:bool},Deferred,Abandoned}
 fn send_android_jumbo_one(
@@ -416,6 +420,22 @@ fn original_complete_ipv4_head(
     crate::v4_session_address::admitted_client_source(head,Some(lease))
 }
 
+fn count_dns_ingress(stats:&AndroidOriginalStats,
+    observed:crate::v4_android_dns_ingress::Dns53Observation
+){
+    match observed{
+        crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}=>{
+            stats.dns_udp53_seen.fetch_add(1,Ordering::Relaxed);
+        },
+        crate::v4_android_dns_ingress::Dns53Observation::TcpPort53=>{
+            stats.dns_tcp53_seen.fetch_add(1,Ordering::Relaxed);
+        },
+        crate::v4_android_dns_ingress::Dns53Observation::Incomplete=>{
+            stats.dns_unready.fetch_add(1,Ordering::Relaxed);
+        },
+        crate::v4_android_dns_ingress::Dns53Observation::NotDns=>{},
+    }
+}
 fn tun_worker(
     cell:Arc<Mutex<Entry>>,shutdown:Arc<AtomicBool>,
     wake:Arc<AndroidWorkerWake>,tun:Arc<AndroidOwnedTun>,
@@ -528,8 +548,16 @@ fn tun_worker(
                         clock.on_local_business(at.0);
                         if done{
                             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
-                            if pending.as_ref().is_some_and(|p|p.tunnel_dns_query){
-                                stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
+                            if let Some(p)=pending.as_ref(){
+                                if p.tunnel_dns_query{
+                                    stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
+                                }
+                                if p.split_noncn_query{
+                                    stats.dns_noncn_tunnel_raw.fetch_add(1,Ordering::Relaxed);
+                                }
+                                if p.tcp53_original{
+                                    stats.dns_tcp53_original_raw.fetch_add(1,Ordering::Relaxed);
+                                }
                             }
                             retire=true;break
                         }
@@ -619,6 +647,11 @@ fn tun_worker(
                                 e.generation,&physical_packet[..len]
                             ).ok()==Some(len)=>{
                             stats.dns_physical_rx.fetch_add(1,Ordering::Relaxed);
+                            // Real TC=1 DNS response was injected into the
+                            // original App TUN, not proof of later TCP retry.
+                            if physical_packet[30]&0x02!=0{
+                                stats.dns_physical_tc_tun.fetch_add(1,Ordering::Relaxed);
+                            }
                         }
                         _=>{
                             stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
@@ -694,37 +727,22 @@ fn tun_worker(
                 17=>{stats.tun_udp.fetch_add(1,Ordering::Relaxed);},
                 _=>{},
             }
-            // Observe each authentic TUN datagram exactly at the EXISTING
-            // one-syscall Rust M4 ingress, only after the original /32
-            // lease/IPv4 gate and before M1 seal. This NEVER consumes,
-            // rewrites or drops it: no DNS backend or inverse mapping has
-            // been admitted yet. No second read, worker or Go JNI callback.
-            let dns_observation=if e.android_dns_hijack_ready {
+            // B6: classify complete packets only. For jumbo/EDNS the
+            // existing single readv already supplied a scatter tail; do
+            // not count that incomplete head as a malformed DNS attempt.
+            let escaped=head.starts_with(LINK_MAGIC);
+            let dns_observation=if e.android_dns_hijack_ready&&n<=head_cap&&!escaped {
                 crate::v4_android_dns_ingress::observe_ipv4_dns53(head,n)
             }else{
                 crate::v4_android_dns_ingress::Dns53Observation::NotDns
             };
-            match dns_observation{
-                crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}=>{
-                    stats.dns_udp53_seen.fetch_add(1,Ordering::Relaxed);
-                },
-                crate::v4_android_dns_ingress::Dns53Observation::TcpPort53=>{
-                    stats.dns_tcp53_seen.fetch_add(1,Ordering::Relaxed);
-                },
-                crate::v4_android_dns_ingress::Dns53Observation::Incomplete=>{
-                    stats.dns_unready.fetch_add(1,Ordering::Relaxed);
-                },
-                crate::v4_android_dns_ingress::Dns53Observation::NotDns=>{},
-            }
-            let escaped=head.starts_with(LINK_MAGIC);
+            if n<=head_cap&&!escaped{count_dns_ingress(&stats,dns_observation)}
             let at=now();
             if n<=head_cap&&!escaped{
-                let split_cn_physical=e.android_cn_dns.as_ref().is_some_and(|rules|
-                    rules.is_cn_ipv4_query(head));
-                if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&
-                   (e.android_cn_dns.is_none()||split_cn_physical)&&
-                   matches!(dns_observation,
-                     crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+                let route=crate::v4_android_dns_route::choose(
+                    head,dns_observation,e.android_dns_hijack_ready,
+                    e.android_dns_physical_ready,e.android_cn_dns.as_deref());
+                if matches!(route,crate::v4_android_dns_route::DnsRoute::PhysicalUDP){
                     // This separate cold gate is UNGRANTABLE until a
                     // complete authenticated original-Go CN selector,
                     // physical UDP/TCP53 and system Resolver ownership
@@ -737,6 +755,9 @@ fn tun_worker(
                                 if socket.send_question(
                                     tun.generation(),&physical_wire[..len]).is_ok(){
                                     stats.dns_physical_tx.fetch_add(1,Ordering::Relaxed);
+                                    if e.android_cn_dns.is_some(){
+                                        stats.dns_cn_physical_sent.fetch_add(1,Ordering::Relaxed);
+                                    }
                                 }else{
                                     physical_flows.cancel(id);
                                     stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
@@ -757,11 +778,7 @@ fn tun_worker(
                 // original DNS with 1.1.1.1 on the same loaned M1 slab.
                 // No Go/JNI per packet, alternate TUN reader or fallback.
                 let mut tunnel_dns_query=false;
-                if e.android_dns_hijack_ready &&
-                   (!e.android_dns_physical_ready||
-                       (e.android_cn_dns.is_some()&&!split_cn_physical))&&
-                   matches!(dns_observation,
-                       crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+                if matches!(route,crate::v4_android_dns_route::DnsRoute::TunnelUDP){
                     let dns_packet=&mut slab.writable()[14..14+n];
                     if e.android_dns_flows.rewrite_query(
                         dns_packet,at.0/1_000_000
@@ -785,6 +802,12 @@ fn tun_worker(
                             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
                             if tunnel_dns_query{
                                 stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
+                                if e.android_cn_dns.is_some(){
+                                    stats.dns_noncn_tunnel_raw.fetch_add(1,Ordering::Relaxed);
+                                }
+                            }
+                            if matches!(route,crate::v4_android_dns_route::DnsRoute::TCP53OriginalTunnel){
+                                stats.dns_tcp53_original_raw.fetch_add(1,Ordering::Relaxed);
                             }
                             clock.on_local_business(at.0);
                         }
@@ -811,13 +834,16 @@ fn tun_worker(
                 stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                 break
             }
-            let split_cn_physical=e.android_cn_dns.as_ref().is_some_and(|rules|
-                rules.is_cn_ipv4_query(&jumbo_spare));
-            if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&
-               (e.android_cn_dns.is_none()||split_cn_physical)&&
-               matches!(crate::v4_android_dns_ingress::observe_ipv4_dns53(
-                   &jumbo_spare,n
-               ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+            let dns_observation=if e.android_dns_hijack_ready{
+                crate::v4_android_dns_ingress::observe_ipv4_dns53(&jumbo_spare,n)
+            }else{
+                crate::v4_android_dns_ingress::Dns53Observation::NotDns
+            };
+            count_dns_ingress(&stats,dns_observation);
+            let route=crate::v4_android_dns_route::choose(
+                &jumbo_spare,dns_observation,e.android_dns_hijack_ready,
+                e.android_dns_physical_ready,e.android_cn_dns.as_deref());
+            if matches!(route,crate::v4_android_dns_route::DnsRoute::PhysicalUDP){
                 if let Some(socket)=dns.as_ref(){
                     match physical_flows.prepare(
                         &jumbo_spare,&mut physical_wire,at.0/1_000_000){
@@ -825,6 +851,9 @@ fn tun_worker(
                             if socket.send_question(
                                 tun.generation(),&physical_wire[..len]).is_ok(){
                                 stats.dns_physical_tx.fetch_add(1,Ordering::Relaxed);
+                                if e.android_cn_dns.is_some(){
+                                    stats.dns_cn_physical_sent.fetch_add(1,Ordering::Relaxed);
+                                }
                             }else{
                                 physical_flows.cancel(id);
                                 stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
@@ -843,12 +872,7 @@ fn tun_worker(
             // DNS with EDNS can exceed the common slab head; inspect the
             // one already-collected complete IP before M3 fragmentation.
             let mut tunnel_dns_query=false;
-            if e.android_dns_hijack_ready &&
-               (!e.android_dns_physical_ready||
-                   (e.android_cn_dns.is_some()&&!split_cn_physical))&&
-               matches!(crate::v4_android_dns_ingress::observe_ipv4_dns53(
-                   &jumbo_spare,n
-               ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+            if matches!(route,crate::v4_android_dns_route::DnsRoute::TunnelUDP){
                 if e.android_dns_flows.rewrite_query(
                     &mut jumbo_spare,now().0/1_000_000
                 ).is_err(){
@@ -887,6 +911,9 @@ fn tun_worker(
                 issued:0,total:total_frames,
                 generation:e.generation,physical_mtu:physical,
                 tunnel_dns_query,
+                split_noncn_query:tunnel_dns_query&&e.android_cn_dns.is_some(),
+                tcp53_original:matches!(route,
+                    crate::v4_android_dns_route::DnsRoute::TCP53OriginalTunnel),
             });
             // No second TUN read until this logical datagram is complete
             // or retired. Return the unused original slab before fragments.
@@ -1101,6 +1128,27 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_raw_rx_debug(
     let Some(rx)=e.android_raw_rx.as_ref()else{return BAD_STAGE};
     let snap=rx.raw_diagnostic_snapshot();
     unsafe{std::ptr::copy_nonoverlapping(snap.as_ptr(),out,count);}
+    OK
+}
+
+/// B6 additive read-only M4 routing receipt, no changes to historical
+/// A47/B3d/B4 M4 ABI. Increments only after actual OS RAW/UDP/TUN copy.
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_loop_dns_route_receipts(
+    h:u64,cn_physical_sent:*mut u64,noncn_tunnel_raw:*mut u64,
+    tcp53_original_raw:*mut u64,physical_tc_tun:*mut u64
+)->i32{
+    if cn_physical_sent.is_null()||noncn_tunnel_raw.is_null()||
+       tcp53_original_raw.is_null()||physical_tc_tun.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.android_workers.is_none(){return BAD_STAGE}
+    unsafe{
+        cn_physical_sent.write(e.android_metrics.dns_cn_physical_sent.load(Ordering::Relaxed));
+        noncn_tunnel_raw.write(e.android_metrics.dns_noncn_tunnel_raw.load(Ordering::Relaxed));
+        tcp53_original_raw.write(e.android_metrics.dns_tcp53_original_raw.load(Ordering::Relaxed));
+        physical_tc_tun.write(e.android_metrics.dns_physical_tc_tun.load(Ordering::Relaxed));
+    }
     OK
 }
 
