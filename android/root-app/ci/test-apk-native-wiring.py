@@ -62,6 +62,9 @@ assert 'fn wbd_m0_embedded_go_normal_startup_padding_counters(' in android_rust
 assert 'fn wbd_m0_embedded_go_fixed_stage_pending(' in android_rust
 assert 'fn wbd_m0_embedded_go_fixed_pending_readback(' in android_rust
 assert 'fn wbd_m0_embedded_go_fixed_m4_counters(' in android_rust
+assert 'if !fixed_pending.is_some_and(|(profile,rev)|' in android_rust
+assert 'control.low_rate_quality.is_some()' in android_rust
+assert 'control.low_rate_signal.is_some()' in android_rust
 assert 'policy.propose(&slab.writable()[14..14+n],ms,room)' in android_rust
 assert 'startup_padding_copied_bytes.fetch_add(' in android_rust
 assert 'normalStartupPaddingCounters()(string,uint64,uint64,error)' in android_bridge

@@ -213,7 +213,13 @@ assert "Ok(record) if matches!(record.kind,2|3)" in fec_owner
 assert "owner.drain_windows_authenticated_fec2(" in fec_worker
 assert "blocks.accept_authenticated(*exact,kind,payload,at)" in fec_worker
 assert "tun.write_authenticated_ip(ip).ok()==Some(ip.len())" in fec_worker
-assert "if *applied==0||exact.negotiated_features!=7" in fec_worker
+assert "let fixed_pending=e.android_fec2_pending;" in fec_worker
+assert "if !fixed_pending.is_some_and(|(profile,rev)|" in fec_worker
+assert "exact.negotiated_features!=7" in fec_worker
+assert "if *applied==0||exact.negotiated_features!=7" not in fec_worker
+assert "stats.fec2_unique_symbols.fetch_add(1,Ordering::Relaxed)" in fec_worker
+assert "control.low_rate_quality.is_some()" in fec_worker
+assert "control.low_rate_signal.is_some()" in fec_worker
 assert "e.protected_features!=3" in fec_worker
 # B12bc: Go PENDING now reaches real Android Rust FFI but never APPLIED.
 assert "C.wbd_m0_embedded_go_fixed_stage_pending(" in fec_go
@@ -236,9 +242,15 @@ assert "e.protected_features!=3" in fec_worker
 assert "fn wbd_m0_embedded_go_fixed_stage_pending(" in fec_worker
 assert "fn wbd_m0_embedded_go_fixed_pending_readback(" in fec_worker
 assert "fn wbd_m0_embedded_go_fixed_m4_counters(" in fec_worker
+assert "if out.is_null()||len!=7{return INVALID}" in fec_worker
+assert "originalAndroidFixedM4Counters()([7]uint64,error)" in fec_go
+# The original Go/Rust Fixed APPLIED readback cannot be driven by receipt counts.
+assert "let actual=e.android_fec2_rx.as_ref()" in fec_worker
+assert "u32::from(*rev==r)" in fec_worker
 assert "if let Some(stream)=e.android_fec2_tx.as_mut(){stream.stop()}" in fec_entry
 assert "e.android_fec2_pending=None;" in fec_entry
 print("ANDROID_B12BC_FIXED_ORIGINAL_SOURCE_PARITY_RAW_PENDING_CLOSED_SOURCE_PASS")
+print("ANDROID_B12D_REAL_PENDING_FIRST_M3_REVERSE_QUALITY_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

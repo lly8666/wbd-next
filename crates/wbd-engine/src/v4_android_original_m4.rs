@@ -75,6 +75,14 @@ pub(super) struct AndroidOriginalStats{
     fec2_source_raw:AtomicU64,
     #[cfg(feature="fec2_product_record")]
     fec2_repair_raw:AtomicU64,
+    // Actual M3 AEAD+unique-PN FEC2 ingress and authenticated PLAN027
+    // low-rate control. Neither proves local Fixed APPLIED.
+    #[cfg(feature="fec2_product_record")]
+    fec2_unique_symbols:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_reverse_quality_reports:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_reverse_quality_signals:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -371,6 +379,11 @@ fn raw_worker(
                 let lease=e.client_lease_ipv4;
                 #[cfg(feature="fec2_product_record")]
                 let fixed_requested=e.protected_features==7;
+                // B12d: genuine Go TLS Fixed PENDING is enough to RECEIVE
+                // authenticated peer source/parity and low-rate M2 controls.
+                // Local APPLIED is still a separate, later evidence gate.
+                #[cfg(feature="fec2_product_record")]
+                let fixed_pending=e.android_fec2_pending;
                 let (report,delivered,failed,dns_written,healthy,hint,retired)={
                     let Entry{owner,normal,android_dns_flows,
                         android_dns_hijack_ready,android_dns_physical_ready,android_cn_dns,
@@ -381,12 +394,16 @@ fn raw_worker(
                         (!*android_dns_physical_ready||android_cn_dns.is_some());
                     #[cfg(feature="fec2_product_record")]
                     let result=if fixed_requested{
-                        let Some((exact,blocks,applied))=android_fec2_rx.as_mut()
+                        let Some((exact,blocks,_applied))=android_fec2_rx.as_mut()
                             else{break};
-                        // The original Go verified TLS feature7 is NOT
-                        // proof of first-source kernel copy or reverse M2.
-                        // No API may change applied=0 until TX/M2 is wired.
-                        if *applied==0||exact.negotiated_features!=7||
+                        // B12a's APPLIED-first receive check made authentic
+                        // reverse feedback impossible: M2 can only be
+                        // witnessed after original verified PENDING ingresses.
+                        // This enables just the original AEAD/PN RX/TUN
+                        // pipeline, NEVER a sender APPLIED grant or UI mode.
+                        if !fixed_pending.is_some_and(|(profile,rev)|
+                            profile<=6&&rev>0)||
+                           exact.negotiated_features!=7||
                            !exact.direction_s2c{break}
                         let mut report=NormalOffReport::default();
                         let mut delivered=0u32;
@@ -398,6 +415,9 @@ fn raw_worker(
                         let opened=owner.drain_windows_authenticated_fec2(
                             at,std::mem::take(&mut rx_storage),
                             |_pn,kind,payload|{
+                                // M3 already opened this record with the
+                                // original unique AEAD/PN replay owner.
+                                stats.fec2_unique_symbols.fetch_add(1,Ordering::Relaxed);
                                 match blocks.accept_authenticated(*exact,kind,payload,at){
                                     Ok(firsts)=>{
                                         if firsts.is_empty(){
@@ -456,6 +476,19 @@ fn raw_worker(
                                 }
                             },
                             |_pn,control|{
+                                // Original PLAN027 low-rate M2 envelope:
+                                // authenticated kind1 only, not raw TCP ACK,
+                                // old per-PN receipts or Go policy intent.
+                                if control.low_rate_quality.is_some(){
+                                    stats.fec2_reverse_quality_reports.fetch_add(
+                                        1,Ordering::Relaxed
+                                    );
+                                }
+                                if control.low_rate_signal.is_some(){
+                                    stats.fec2_reverse_quality_signals.fetch_add(
+                                        1,Ordering::Relaxed
+                                    );
+                                }
                                 healthy=true;
                                 hint=control.peer_idle_ns;
                                 retired=control.peer_retire;
@@ -1674,7 +1707,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
 pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_m4_counters(
     h:u64,out:*mut u64,len:usize
 )->i32{
-    if out.is_null()||len!=4{return INVALID}
+    if out.is_null()||len!=7{return INVALID}
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.protected_features!=7{return BAD_STAGE}
@@ -1683,8 +1716,11 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_m4_counters(
         e.android_metrics.fec2_repair_raw.load(Ordering::Relaxed),
         e.android_metrics.fec2_source_tun.load(Ordering::Relaxed),
         e.android_metrics.fec2_recovered_tun.load(Ordering::Relaxed),
+        e.android_metrics.fec2_unique_symbols.load(Ordering::Relaxed),
+        e.android_metrics.fec2_reverse_quality_reports.load(Ordering::Relaxed),
+        e.android_metrics.fec2_reverse_quality_signals.load(Ordering::Relaxed),
     ];
-    unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,4)};
+    unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,7)};
     OK
 }
 

@@ -148,15 +148,17 @@ func (b *v4EmbeddedNativeBridge) readbackOriginalFixedPending(
     return actual,ack,nil
 }
 
-// B12c: one low-frequency ORIGINAL Android Rust M4 receipt readback.
-// Native returns counts only after actual kernel copies/TUN writes.
-func (b *v4EmbeddedNativeBridge) originalAndroidFixedM4Counters()([4]uint64,error){
-    var result [4]uint64
+// B12d: one low-frequency original Rust M4 receipt readback.
+// 0..3 = kernel-copy/TUN write, 4 = unique M3 kind2/3 openings,
+// 5..6 = M3-authenticated PLAN027 quality/quality-signal kind1.
+// Neither source copies nor reverse feedback alone is Fixed APPLIED.
+func (b *v4EmbeddedNativeBridge) originalAndroidFixedM4Counters()([7]uint64,error){
+    var result [7]uint64
     if b==nil||!b.committed||b.stopped||b.handle==0||
        b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2){
         return result,errV4Embedded
     }
-    var counters [4]C.uint64_t
+    var counters [7]C.uint64_t
     rc:=C.wbd_m0_embedded_go_fixed_m4_counters(
         C.uint64_t(b.handle),&counters[0],C.size_t(len(counters)))
     if rc!=0{
