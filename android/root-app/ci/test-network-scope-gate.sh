@@ -283,13 +283,11 @@ assert "e.staged_count==0" in fec_worker
 assert "android_fixed_cold_and_m4_reservation_share_exact_14_bytes" in Path(
     "crates/wbd-engine/src/v4_mtu_budget_ffi.rs"
 ).read_text()
-# B17 authentic Go Fixed -> native FEC2 pending/worker is explicitly
-# available from the Root App; normal default and no Auto remain.
+# B17/B19 original Go Fixed/Auto -> native FEC2, Normal default.
 client=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
-assert 'p.cfg.FECMode==FecV2Auto||' in client
-assert 'p.cfg.FECMode==FecV2Fixed&&p.cfg.StartupPaddingMode!=0' in client
+assert 'v4ProductFecEnabled(p.cfg.FECMode)&&p.cfg.StartupPaddingMode!=0' in client
 assert 'runtime.GOOS!="android"||mode==FecV2Off' in client
-assert 'if p.fec!=nil&&runtime.GOOS!="android"{p.fec.start(bridge)}' in client
+assert 'if p.fec!=nil&&(runtime.GOOS!="android"||mode==FecV2Auto)' in client
 assert 'String fecMode=fecModes.getSelectedItem().toString()' in a
 assert 'request.putExtra("fec_mode",fecMode);' in a
 assert 'request.putExtra("fec_profile",fecProfile);' in a
@@ -297,7 +295,19 @@ assert 'intent.getStringExtra("fec_mode")' in s
 assert 'intent.getIntExtra("fec_profile",1)' in s
 assert 'pair(args,"--mode",fecMode);' in argv
 assert 'pair(args,"--fec-profile",Integer.toString(fecProfile))' in argv
-assert 'cfg.fecMode==realityfront.FecV2Auto' in cold
+assert 'cfg.gameLanes!=0||cfg.mixedModes||' in cold
+assert 'C.wbd_m0_embedded_go_public_fec2_mature_quality(' in go_bridge
+assert 'return b.verifyOriginalAndroidAutoPending()' in go_bridge
+assert 'C.wbd_m0_embedded_go_fixed_pending_readback(' in fec_go
+assert 'new String[]{"normal","fec-fixed","fec-auto"}' in a
+assert '"fec-auto"' in argv
+assert 'e.android_fec2_auto_requested.or(e.android_fec2_pending)' in fec_worker
+assert 'stream.quiescent_change(next_profile,next_rev,at).is_ok()' in fec_worker
+assert 'stream.prior_parity_revision()' in fec_worker
+assert 'plan.offset==0' in fec_worker
+assert 'super::android_auto_report_is_revision_positive(' in fec_worker
+assert 'android_auto_report_is_revision_positive(' in fec_entry
+print("ANDROID_B19_ORIGINAL_AUTO_ROOT_APP_M4_QUALITY_REVISION_PASS")
 print("ANDROID_B17_FIXED_ORIGINAL_GO_ROOT_APP_OPTIN_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,

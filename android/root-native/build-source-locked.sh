@@ -83,7 +83,8 @@ cp r0/go_overlay/cmd/wbd-v4-client/ksu_cshared_entry_android.go legacy/cmd/wbd-v
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Signed Android Root defaults to Normal/off; explicit Fixed opt-in
 # uses this SAME original FEC2 M1 TX/RX Rust/Go TLS/M3/Quality owner.
-# Auto/Game remain unavailable; native build is not physical E2E.
+# Auto shares original Rust FEC2/Quality + low-rate Go policy.
+# Game remains unavailable; native build is not physical E2E.
 features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
 go_tags=wbd_v4_embedded_go
 for pair in "aarch64 arm64" "x86_64 amd64"; do

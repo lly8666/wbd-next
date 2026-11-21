@@ -107,12 +107,15 @@ public final class OriginalGoCommandArgsTest {
         value(withFec("fec-fixed",0,"off"),"--fec-profile","0");
         value(withFec("fec-fixed",6,"off"),"--fec-profile","6");
         absent(withFec("normal",1,"off"),"--fec-profile");
-        rejected(()->withFec("fec-auto",1,"off"));
+        value(withFec("fec-auto",1,"off"),"--mode","fec-auto");
+        absent(withFec("fec-auto",1,"off"),"--fec-profile");
+        rejected(()->withFec("fec-auto",1,"tls"));
         rejected(()->withFec("game2",1,"off"));
         rejected(()->withFec("fec-fixed",7,"off"));
         rejected(()->withFec("fec-fixed",-1,"off"));
         rejected(()->withFec("fec-fixed",1,"tls"));
         System.out.println("ANDROID_B17_FIXED_EXPLICIT_NATIVE_GO_ARGV_HOST_PASS");
+        System.out.println("ANDROID_B19_AUTO_EXPLICIT_NATIVE_GO_ARGV_HOST_PASS");
         value(withTunQueue(500),"--tun-txqlen-packets","500");
         value(withTunQueue(2048),"--tun-txqlen-packets","2048");
         rejected(()->withTunQueue(499));

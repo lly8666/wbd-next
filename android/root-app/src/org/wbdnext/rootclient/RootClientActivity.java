@@ -245,8 +245,8 @@ public final class RootClientActivity extends Activity {
             String paddingMode=startupPaddingModes.getSelectedItem().toString();
             String fecMode=fecModes.getSelectedItem().toString();
             int fecProfile=Integer.parseInt(fecProfiles.getSelectedItem().toString());
-            if("fec-fixed".equals(fecMode)&&!"off".equals(paddingMode))
-                throw new IllegalArgumentException("Fixed FEC2 requires startup padding off");
+            if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
+                throw new IllegalArgumentException("Fixed/Auto FEC2 requires startup padding off");
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
             boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
@@ -367,7 +367,7 @@ public final class RootClientActivity extends Activity {
         scroll.addView(pane);
         TextView intro=new TextView(this);
         intro.setText("WBD Root Lite v2 · ARM64 简版测试\n"+
-            "原 Go FakeTCP/TLS + 原 Rust M4；Normal/off 默认，Fixed 显式实验选项；非 VPN/FakeIP。\n"+
+            "原 Go FakeTCP/TLS + 原 Rust M4；Normal/off 默认，Fixed/Auto 显式实验选项；非 VPN/FakeIP。\n"+
             "① 选择实体 Wi-Fi/移动网络  ② 输入 WBD 服务器/账户/Key\n"+
             "③ START 后查看固定阶段码，STOP 精确撤销 UID/清理。\n"+
             "首次测试建议取消下面的「默认全部普通App」，只勾选一个测试App。\n"+
@@ -426,15 +426,15 @@ public final class RootClientActivity extends Activity {
             new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
         pane.addView(recordCiphers);
         TextView modeHint=new TextView(this);
-        modeHint.setText("原传输模式：Normal/off 默认；Fixed 使用原 TLS/FEC2/M3，实机未验；Auto/Game 尚未接线。");
+        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 都用原 TLS/FEC2/M3；Auto只依据真实低频质量调整档位，实机未验；Game关闭。");
         pane.addView(modeHint);
         fecModes=new Spinner(this);
         fecModes.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
-            new String[]{"normal","fec-fixed"}));
+            new String[]{"normal","fec-fixed","fec-auto"}));
         pane.addView(fecModes);
         TextView profileHint=new TextView(this);
-        profileHint.setText("Fixed FEC2 档位 0–6（默认1）；Normal 不使用此设置");
+        profileHint.setText("Fixed档位0–6（默认1）；Auto初始Strong并据原质量换档，Normal不用");
         pane.addView(profileHint);
         fecProfiles=new Spinner(this);
         fecProfiles.setAdapter(new ArrayAdapter<>(this,

@@ -184,9 +184,29 @@ fn send_android_fixed_source(
     e:&mut Entry,slab:crate::memory::UniqueBuffer,n:usize,
     frame:wbd_codec::path_budget::FrameBudget,physical:u32,
     raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
-    storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs
+    storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs,
+    allow_revision_change:bool
 )->bool{
     use wbd_types::ConfigRevision;
+    // One natural original M4 FIRST source boundary, never between two
+    // fragments of the same inner IP packet. Old source/parity rows remain
+    // in the same FixedStream; a Busy old parity quantum postpones NEXT.
+    if allow_revision_change{
+        if let Some((next_profile,next_rev))=e.android_fec2_auto_requested{
+            let changed=e.android_fec2_tx.as_mut().is_some_and(|stream|
+                stream.quiescent_change(next_profile,next_rev,at).is_ok());
+            if changed{
+                e.android_fec2_pending=Some((next_profile,next_rev));
+                e.android_fec2_auto_requested=None;
+                if let Some((_,_,applied))=e.android_fec2_rx.as_mut(){*applied=0}
+                e.android_fec2_revision_min_source_pn=0;
+                e.android_fec2_revision_source_copied=false;
+                e.android_fec2_revision_repair_copied=false;
+                e.android_fec2_quality_positive_baseline=
+                    e.quality_tx.as_ref().map_or(0,|q|q.counters[1]);
+            }
+        }
+    }
     let Some((profile,rev))=e.android_fec2_pending else{return false};
     if e.protected_features!=7||e.phase!=PH_ACTIVE||n==0{return false}
     let Ok(max)=wbd_codec::fec_v2::max_original_for_record_budget(
@@ -223,6 +243,10 @@ fn send_android_fixed_source(
                 usize::from(copied),0,false,true,&[(pn,2,rev)]);
         }
         if copied{
+            e.android_fec2_revision_source_copied=true;
+            if e.android_fec2_revision_min_source_pn==0{
+                e.android_fec2_revision_min_source_pn=pn;
+            }
             stats.fec2_source_raw.fetch_add(1,Ordering::Relaxed);
             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
         }
@@ -246,8 +270,10 @@ fn send_android_fixed_due(
         e.android_fec2_tx=Some(stream);return
     };
     let revision=stream.revision();
+    let previous=stream.prior_parity_revision();
     let _=stream.poll_parity_quanta(at,1,|bytes,_block,_row,rev|{
-        if rev!=revision{return DriverProof::NotSent}
+        // Quiescent Auto keeps old parity under its immutable old matrix.
+        if rev!=revision&&Some(rev)!=previous{return DriverProof::NotSent}
         let mut record=match e.arena.allocate(){
             Ok(x)=>x,Err(_)=>return DriverProof::NotSent
         };
@@ -261,6 +287,7 @@ fn send_android_fixed_due(
         ){Ok(x)=>x,Err(_)=>return DriverProof::NotSent};
         if send_staged(e,raw,stats,storage,scratch,at)==Some(pn){
             stats.fec2_repair_raw.fetch_add(1,Ordering::Relaxed);
+            if rev==revision{e.android_fec2_revision_repair_copied=true}
             DriverProof::Copied
         }else{DriverProof::NotSent}
     });
@@ -439,6 +466,14 @@ fn raw_worker(
                 // Local APPLIED is still a separate, later evidence gate.
                 #[cfg(feature="fec2_product_record")]
                 let fixed_pending=e.android_fec2_pending;
+                #[cfg(feature="fec2_product_record")]
+                let min_source_pn=e.android_fec2_revision_min_source_pn;
+                #[cfg(feature="fec2_product_record")]
+                let revision_source_copied=e.android_fec2_revision_source_copied;
+                #[cfg(feature="fec2_product_record")]
+                let revision_repair_copied=e.android_fec2_revision_repair_copied;
+                #[cfg(feature="fec2_product_record")]
+                let positive_baseline=e.android_fec2_quality_positive_baseline;
                 let (report,delivered,failed,dns_written,healthy,hint,retired)={
                     let Entry{owner,normal,android_dns_flows,
                         android_dns_hijack_ready,android_dns_physical_ready,android_cn_dns,
@@ -540,6 +575,7 @@ fn raw_worker(
                                     );
                                     if let Some(q)=quality_tx.as_mut(){
                                         let before=q.counters[10];
+                                        let report_first=report.first;
                                         q.accept_report(report,at);
                                         // Only original sender history matches
                                         // this AEAD-unique quality window and
@@ -549,9 +585,12 @@ fn raw_worker(
                                         if q.counters[10]>before{
                                             stats.fec2_mature_quality_matched.fetch_add(
                                                 1,Ordering::Relaxed);
-                                            if *_applied==0 && q.counters[1]>0 &&
-                                               stats.fec2_source_raw.load(Ordering::Relaxed)>0 &&
-                                               stats.fec2_repair_raw.load(Ordering::Relaxed)>0 {
+                                            if *_applied==0 &&
+                                               super::android_auto_report_is_revision_positive(
+                                                   report_first,min_source_pn,
+                                                   q.counters[1],positive_baseline,
+                                                   revision_source_copied,revision_repair_copied
+                                               ){
                                                 if let Some((_,revision))=fixed_pending{
                                                     // Exact same only-once
                                                     // native Go Fixed revision,
@@ -901,7 +940,8 @@ fn tun_worker(
                 };
                 let sent=send_android_fixed_source(
                     &mut e,slab,n,frame,plan.physical_mtu,&raw,&stats,
-                    &mut storage,&mut wire_scratch,now()
+                    &mut storage,&mut wire_scratch,now(),
+                    plan.offset==0
                 );
                 if !sent{
                     stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
@@ -1219,7 +1259,7 @@ fn tun_worker(
                 if e.protected_features==7{
                     if send_android_fixed_source(
                         &mut e,slab,n,frame,physical,&raw,&stats,
-                        &mut storage,&mut wire_scratch,at
+                        &mut storage,&mut wire_scratch,at,true
                     ){
                         clock.on_local_business(at.0);
                         if tunnel_dns_query{
@@ -1881,13 +1921,23 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
-       e.android_workers.is_some()||e.protected_features!=7||
-       e.android_fec2_rx.is_none()||
+       e.protected_features!=7||e.android_fec2_rx.is_none()||
        e.owner.normal_firstsend_identity().is_none_or(
            |(_,epoch)|epoch.as_slice()!=supplied
        ){return BAD_STAGE}
-    // B13 only stages the first Fixed revision. Quiescent Auto reprofile
-    // has a separate ownership transition and cannot overwrite this proof.
+    // Auto revisions are accepted ONLY after real previous native APPLIED.
+    // The existing original worker applies them at a fresh source boundary;
+    // this control call never truncates old FEC rows or invents APPLIED.
+    if e.android_workers.is_some(){
+        let Some((_,active))=e.android_fec2_pending else{return BAD_STAGE};
+        if revision<=active||e.android_fec2_auto_requested.is_some()||
+           e.android_fec2_rx.as_ref().is_none_or(|(_,_,rev)|*rev!=active)||
+           e.android_fec2_tx.as_ref().is_none_or(
+               |stream|stream.revision().0!=active
+           )||e.quality_tx.is_none(){return BAD_STAGE}
+        e.android_fec2_auto_requested=Some((profile,revision));
+        return OK
+    }
     if e.android_fec2_pending.is_some()||e.android_fec2_tx.is_some()||
        e.quality_tx.is_some(){return INVALID}
     let Some((lane,verified_epoch))=e.owner.normal_firstsend_identity()
@@ -1914,7 +1964,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
        e.protected_features!=7||e.owner.normal_firstsend_identity().is_none_or(
            |(_,epoch)|epoch.as_slice()!=supplied
        ){return BAD_STAGE}
-    let Some((p,r))=e.android_fec2_pending else{return BAD_STAGE};
+    let Some((p,r))=e.android_fec2_auto_requested.or(e.android_fec2_pending)
+        else{return BAD_STAGE};
     // APPLIED is set only by matched 3s mature PLAN027 quality for
     // actual local RAW-copied kind2 source PNs and real same-revision
     // parity copy. A mere authenticated kind1, queue or intent is pending.

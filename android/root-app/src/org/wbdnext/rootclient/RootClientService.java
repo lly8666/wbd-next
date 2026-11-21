@@ -228,9 +228,10 @@ public final class RootClientService extends Service {
             String modeExtra=intent.getStringExtra("fec_mode");
             final String fecMode=modeExtra==null?"normal":modeExtra;
             final int fecProfile=intent.getIntExtra("fec_profile",1);
-            if((!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode))||
+            if((!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
+                !"fec-auto".equals(fecMode))||
                fecProfile<0||fecProfile>6||
-               ("fec-fixed".equals(fecMode)&&!"off".equals(paddingMode)))
+               (!"normal".equals(fecMode)&&!"off".equals(paddingMode)))
                 throw new IllegalArgumentException("unsupported Fixed/Normal selection");
             if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
                !"flows".equals(paddingMode))

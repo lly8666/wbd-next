@@ -163,12 +163,13 @@ final class OriginalGoCommandArgs {
                               boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
                               String recordCipher,int requestedTunQueue,String paddingMode,
                               String fecMode,int fecProfile){
-        if(!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode))
-            throw new IllegalArgumentException("Android original Go supports normal or fec-fixed");
+        if(!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
+           !"fec-auto".equals(fecMode))
+            throw new IllegalArgumentException("Android original Go supports normal, fec-fixed or fec-auto");
         if(fecProfile<0||fecProfile>6)
             throw new IllegalArgumentException("FEC2 Fixed profile must be 0..6");
-        if("fec-fixed".equals(fecMode)&&!"off".equals(paddingMode))
-            throw new IllegalArgumentException("Fixed does not use Normal startup padding");
+        if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
+            throw new IllegalArgumentException("Fixed/Auto use FEC2, not Normal padding");
         if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
            !"flows".equals(paddingMode))
             throw new IllegalArgumentException("unsupported original startup padding");

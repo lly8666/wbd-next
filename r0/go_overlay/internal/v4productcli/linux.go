@@ -1185,12 +1185,11 @@ func Run(role string,args []string)(retErr error){
             return fmt.Errorf("Android physical Network/MTU unavailable")
         }
         if cfg.gameLanes!=0||cfg.mixedModes||
-           cfg.fecMode==realityfront.FecV2Auto||!cfg.disableOuterRepair||
+           !cfg.disableOuterRepair||
            !cfg.autoIP||cfg.rotationInterval!=0{
-            // No fake Game/Fixed/M2, and no automatic A/B transfer without
-            // a real shared TUN native owner. Explicit reauth after Stop
-            // remains the single original normal/off client pathway.
-            return fmt.Errorf("Android ARM64 supports Normal/off or explicit Fixed with protected auto /32, outer-repair off and no overlap rotation; Auto/Game not connected")
+            // Normal/Fixed/Auto share the authenticated original Go TLS,
+            // Rust FEC2/Quality, same physical RAW/TUN owner and Stop.
+            return fmt.Errorf("Android ARM64 supports Normal/off, explicit Fixed or Auto and protected auto /32; Game/rotation/outer-repair unavailable")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
         cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialer(

@@ -21,6 +21,13 @@ cargo +1.85.1 test --locked -p wbd-engine --lib b7_physical_dns \
 # B16: the same production IPv4 fragment and local ICMP codec runs on Host.
 cargo +1.85.1 test --locked -p wbd-engine --lib b16_ \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+# B18/B19 original Rust PLAN027 quality + same-owner Auto revision host tests.
+cargo +1.85.1 test --locked -p wbd-engine --lib \
+  --features m0_v4_embedded_go,fec2_product_record b18_ \
+  -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+cargo +1.85.1 test --locked -p wbd-engine --lib \
+  --features m0_v4_embedded_go,fec2_product_record b19_ \
+  -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 python3 - <<'PY'
 from pathlib import Path
 import hashlib,json,os
@@ -57,6 +64,8 @@ for scenario in (
 ):
  assert f"test v4_android_ipv4_mtu::tests::{scenario} ... ok" in log
 assert "test result: ok. 5 passed;" in log
+assert "test v4_embedded_go::b18_original_linux_android_quality_30_field_mapping ... ok" in log
+assert "test v4_embedded_go::b19_original_android_auto_report_scopes_each_revision ... ok" in log
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
 lib=Path("crates/wbd-engine/src/lib.rs").read_text()
 m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()

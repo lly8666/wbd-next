@@ -113,14 +113,12 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.mu.Lock()
     defer p.mu.Unlock()
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
-    // Android defaults to Normal/off; explicit Fixed consumes the same
-    // original Go TLS feature7 and native Rust PENDING/FEC2 M4. Auto/Game
-    // and outer repair are not active Android product modes.
+    // Android Normal default, explicit Fixed/Auto on same authenticated
+    // original Rust feature7 FEC2 M4. FEC2 never uses Normal-only pad.
     if runtime.GOOS=="android" &&
-       (p.cfg.FECMode==FecV2Auto||
-        !p.cfg.DisableOuterRepair||p.cfg.SharedTun!=nil||
+       (!p.cfg.DisableOuterRepair||p.cfg.SharedTun!=nil||
         !cfg.AutoLease||
-        (p.cfg.FECMode==FecV2Fixed&&p.cfg.StartupPaddingMode!=0)){
+        (v4ProductFecEnabled(p.cfg.FECMode)&&p.cfg.StartupPaddingMode!=0)){
         return nil,ErrAdmissionUnsupported
     }
     conn:=assoc.BootstrapConn()
@@ -302,9 +300,11 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
             shutdown,
         )
     }
-    // Android Fixed Quality and exact APPLIED live in Rust M4. There is
-    // no reason to start a duplicate Go 2Hz Auto policy loop for Fixed.
-    if p.fec!=nil&&runtime.GOOS!="android"{p.fec.start(bridge)}
+    // Fixed uses only native Quality. Android Auto alone starts the
+    // original 2Hz Go policy readback, never a per-DATA Go callback.
+    if p.fec!=nil&&(runtime.GOOS!="android"||mode==FecV2Auto){
+        p.fec.start(bridge)
+    }
     return session,nil
 }
 // Only numeric true original M2 counters, once before Stop; never changes

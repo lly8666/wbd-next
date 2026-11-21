@@ -1,9 +1,8 @@
 //go:build android && cgo && wbd_v4_embedded_go
 
-// Same original-Go protected Fixed mode bridge as Linux, now compiled on
-// Android and linked to the real Rust M4 pending/revision ABI. PENDING is not
-// APPLIED: Android Go TLS admission still forbids Fixed/Auto before the
-// genuine reverse M2/receiver and runtime source+parity path are complete.
+// Original-Go protected Fixed/Auto Android bridge to real Rust M4.
+// REQUESTED and PENDING are not APPLIED without same-revision source,
+// repair and authentic mature PLAN027 Quality from the original M3.
 package realityfront
 
 /*
@@ -74,6 +73,26 @@ func (b *v4EmbeddedNativeBridge) stageOriginalFixedPending(
     }
     ack.Revision=intent.Revision
     return pending,ack,nil
+}
+
+// Cold Auto requires the original native feature7 Fixed/Auto PENDING.
+func (b *v4EmbeddedNativeBridge) verifyOriginalAndroidAutoPending()error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+        b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)||
+        b.protectedEpoch==[16]byte{}{return ErrAdmissionUnsupported}
+    var profile C.uint8_t
+    var revision C.uint64_t
+    var applied C.uint32_t
+    rc:=C.wbd_m0_embedded_go_fixed_pending_readback(
+        C.uint64_t(b.handle),
+        (*C.uchar)(unsafe.Pointer(&b.protectedEpoch[0])),C.size_t(16),
+        &profile,&revision,&applied)
+    runtime.KeepAlive(b)
+    if rc!=0||uint64(revision)!=1||uint8(profile)>6||applied!=0{
+        return fmt.Errorf("%w: Android original Auto pending not ready=%d",
+            errV4Embedded,int(rc))
+    }
+    return nil
 }
 
 // Auto profile is a newer policy on the original authenticated TLS owner,

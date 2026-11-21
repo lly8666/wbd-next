@@ -587,7 +587,11 @@ func (b *v4EmbeddedNativeBridge) readOriginalNativeHealth()([3]uint32,error){
 }
 // Auto mode is selected once by the credential-verified Go product,
  // read back from the same Rust native owner before any M4 worker starts.
-func (b *v4EmbeddedNativeBridge) enableOriginalLowRateAuto()error{return ErrAdmissionUnsupported}
+func (b *v4EmbeddedNativeBridge) enableOriginalLowRateAuto()error{
+    // Authentic original fixed-stage PENDING already arms Rust M4 Quality;
+    // only verify that native cold revision, no second sender or clock.
+    return b.verifyOriginalAndroidAutoPending()
+}
 func (b *v4EmbeddedNativeBridge) armOriginalPublicM2Feedback(_ uint32)error{return ErrAdmissionUnsupported}
 func (b *v4EmbeddedNativeBridge) startRustOwnerLoop(ifindex uint32)error{
     if !b.committed||b.handle==0{return errV4Embedded}

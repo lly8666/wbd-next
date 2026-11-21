@@ -734,6 +734,27 @@ impl OriginalQualityTx{
         }
     }
 }
+// Only a matched quality report from a NEW first-send window can
+// certify the current original Auto revision. Prior-PN reports, no
+// copied source or no copied current parity are not new APPLIED.
+#[cfg(feature="fec2_product_record")]
+fn android_auto_report_is_revision_positive(
+    report_first:u64,new_source_first:u64,positives:u64,baseline:u64,
+    current_source_copied:bool,current_repair_copied:bool,
+)->bool{
+    new_source_first!=0&&report_first>=new_source_first&&
+    positives>baseline&&current_source_copied&&current_repair_copied
+}
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn b19_original_android_auto_report_scopes_each_revision(){
+    assert!(!android_auto_report_is_revision_positive(90,100,8,7,true,true));
+    assert!(!android_auto_report_is_revision_positive(100,100,7,7,true,true));
+    assert!(!android_auto_report_is_revision_positive(100,100,8,7,true,false));
+    assert!(!android_auto_report_is_revision_positive(100,100,8,7,false,true));
+    assert!(android_auto_report_is_revision_positive(100,100,8,7,true,true));
+}
 // One original Rust PLAN027 30-slot observation for Linux and Android.
 // Index 0..13: matched SendWindow history; 14..29: actual FEC2 source k.
 #[cfg(feature="fec2_product_record")]
@@ -954,6 +975,23 @@ struct Entry{
     #[cfg(all(feature="fec2_product_record",target_os="android",
         any(target_arch="aarch64",target_arch="x86_64")))]
     android_fec2_pending:Option<(u8,u64)>,
+    // A real Go Auto NEXT revision waits for an original new source turn;
+    // old source+parity remain with their previous original FEC owner.
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_auto_requested:Option<(u8,u64)>,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_revision_min_source_pn:u64,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_revision_source_copied:bool,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_revision_repair_copied:bool,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_quality_positive_baseline:u64,
     #[cfg(all(feature="fec2_product_record",target_os="android",
         any(target_arch="aarch64",target_arch="x86_64")))]
     android_fec2_tx:Option<crate::v4_fixed_stream::FixedStream>,
@@ -1370,7 +1408,22 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             any(target_arch="aarch64",target_arch="x86_64")))]
         android_fec2_pending:None,
         #[cfg(all(feature="fec2_product_record",target_os="android",
-            any(target_arch="aarch64",target_arch="x86_64")))]
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_auto_requested:None,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_revision_min_source_pn:0,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_revision_source_copied:false,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_revision_repair_copied:false,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_quality_positive_baseline:0,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
         android_fec2_tx:None,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_startup_padding:None,
@@ -3102,6 +3155,10 @@ fn stop(handle:u64)->i32{
             if let Some(stream)=e.android_fec2_tx.as_mut(){stream.stop()}
             e.android_fec2_tx=None;
             e.android_fec2_pending=None;
+            e.android_fec2_auto_requested=None;
+            e.android_fec2_revision_min_source_pn=0;
+            e.android_fec2_revision_source_copied=false;
+            e.android_fec2_revision_repair_copied=false;
         }
         #[cfg(feature="fec2_product_record")]
         if let Some((_,blocks,applied))=e.android_fec2_rx.as_mut(){
