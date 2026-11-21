@@ -9,7 +9,7 @@ mod=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 SOURCE="a"*40
 
-def fixture(bps=(300,330,290),cpu=(10,11,10)):
+def fixture(bps=(300,330,290),cpu=(10,9,10)):
     rows=[]
     for idx,(name,slots) in enumerate(mod.ORDER):
         echo={k:{"requests_sent":160,"unique_replies":150,"missing":10,
