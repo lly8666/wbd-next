@@ -164,5 +164,59 @@ class WholeChainNativeEvidenceGate(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"PRODUCT_SOURCE_ALREADY_MUTATED"):
             G.from_h2243(x,arch="aarch64")
 
+    def test_h2244_real_ge1_arm_450_mechanism_not_speed_win(self):
+        # Actual genuine native source/action H2244, not a synthetic Mbps improvement.
+        source="03bebcb1a5ef38825293894ba2b5f21459d12474"
+        a=stage(source,44858024963,receiver_goodput_mbps=333.885,
+                sharedtun_queue_full=99450,tx_cpu_s_per_received_gib=9.9978,
+                inner_tcp_retrans=108403,m4_copied_per_batch=929081/56008)
+        b=stage(source,44858024963,"candidate",
+                receiver_goodput_mbps=313.479,sharedtun_queue_full=396,
+                tx_cpu_s_per_received_gib=10.907,
+                inner_tcp_retrans=7979,m4_copied_per_batch=842469/84123)
+        ap=stage(source,44858024963,receiver_goodput_mbps=358.341,
+                 sharedtun_queue_full=77001,tx_cpu_s_per_received_gib=9.9829,
+                 inner_tcp_retrans=79965,m4_copied_per_batch=984603/58301)
+        answer=G.assess(a,b,original_restored=ap)
+        self.assertEqual(answer["verdict"],"REJECT_AS_PRODUCT_DEFAULT")
+        self.assertIn("NATIVE_CPU_PER_RECEIVED_GIB_REGRESSION",answer["blockers"])
+        self.assertIn("RECEIVER_GOODPUT_REGRESSION",answer["blockers"])
+        self.assertLess(answer["candidate"]["local_drop_upper_per_received_gib"],
+                        answer["original"]["local_drop_lower_per_received_gib"])
+
+    def test_h2244_real_zero_highline_protects_bulk_and_udp_even_if_tcp_tail_better(self):
+        # Real 0% H2244 test Action; qdisc parent/child 154920 overlap, not
+        # 309840 distinct drops. 160 UDP probes = tail screen, not SLA.
+        source="ffb2262b5d69e89b4ffdc6e4a063776476eadfc2"
+        a=stage(source,44858243522,receiver_goodput_mbps=1255.701,
+                sharedtun_queue_full=1055762,root_qdisc_drops=0,
+                tx_cpu_s_per_received_gib=6.8439,
+                m4_copied_per_batch=3362451/121279,inner_tcp_retrans=960058)
+        b=stage(source,44858243522,"candidate",
+                receiver_goodput_mbps=990.69,sharedtun_queue_full=353553,
+                root_qdisc_drops=154920,child_qdisc_drops=154920,
+                tx_cpu_s_per_received_gib=7.749,
+                m4_copied_per_batch=2659512/167715,inner_tcp_retrans=473375)
+        ap=stage(source,44858243522,receiver_goodput_mbps=1247.144,
+                 sharedtun_queue_full=996152,tx_cpu_s_per_received_gib=6.909,
+                 m4_copied_per_batch=3334609/127435,inner_tcp_retrans=909579)
+        tail=dict(udp_replies=129,udp_requests=160,udp_p99_ms=6.4324,
+                  udp_baseline_p99_ms=4.0462,tcp_samples=160,
+                  tcp_p99_ms=292.7608,tcp_baseline_p99_ms=3214.8732,
+                  real_concurrent_with_bulk=True,same_source_same_vm=True)
+        result=G.assess(a,b,original_restored=ap,tail=tail)
+        self.assertEqual(result["verdict"],"REJECT_AS_PRODUCT_DEFAULT")
+        for blocker in ("RECEIVER_GOODPUT_REGRESSION",
+                        "NATIVE_CPU_PER_RECEIVED_GIB_REGRESSION",
+                        "ORIGINAL_M4_SENDMMSG_BATCH_COLLAPSE"):
+            self.assertIn(blocker,result["blockers"])
+        self.assertIn("SMALL_UDP_P99_REGRESSION",result["open_gates"])
+        self.assertIn("UDP_LOSS_MUST_BE_REPORTED_NOT_HIDDEN",result["open_gates"])
+        self.assertEqual(result["candidate"]["kernel_tun_driver_drops"],0)
+        self.assertLess(result["candidate"]["local_drop_upper_per_received_gib"],
+                        result["original"]["local_drop_lower_per_received_gib"])
+        self.assertGreater(result["candidate"]["local_drop_upper_per_received_gib"],
+                           result["candidate"]["local_drop_lower_per_received_gib"])
+
 if __name__=="__main__":
     unittest.main()
