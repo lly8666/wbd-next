@@ -192,7 +192,7 @@ def main():
             for line in node.logs[role].read_text(errors="replace").splitlines():
                 if not line.startswith("M0_SHARED_TUN_LEASE_QUEUE_DIAG "):
                     continue
-                fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\\d+)",line)}
+                fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\d+)",line)}
                 if not expected.issubset(fields):
                     raise RuntimeError("M029_INGRESS_PROTOCOL_COUNTERS_MISSING_"+role)
                 if fields["offered"]!=sum(fields[k] for k in
