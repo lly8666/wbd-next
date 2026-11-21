@@ -4603,9 +4603,29 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
 // Only overloaded (>8) authenticated routes need cross-turn fairness.
 // Fewer routes retain the original direct, allocation-free hot loop.
 // The sorted scratch list is reused and only contains already-pending /32s.
+// These inputs are ONLY honored by explicit developer/probe builds.
+// Unknown values fail back to the exact pre-029 64-slot product baseline.
+#[cfg(all(target_os="linux",feature="m0_v4_probe",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+fn shared_tun_trial_inbox_slots(value:Option<&str>)->usize{
+    if value==Some("256"){256}else{64}
+}
+#[cfg(all(test,target_os="linux",feature="m0_v4_probe",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_trial_inbox_capacity_is_cold_bounded(){
+    assert_eq!(shared_tun_trial_inbox_slots(None),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("64")),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("256")),256);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("8192")),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("0")),64);
+}
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Default)]
 struct SharedTunFairTurn{
+    enabled:bool,
     last_route:Option<[u8;4]>,
     scratch:Vec<[u8;4]>,
 }
@@ -4659,7 +4679,8 @@ fn flush_shared_tun(
     pending.retain(|_,q|if q.route.alive.load(Ordering::Acquire){true}else{
         d.retired+=q.packets.len() as u64;false
     });
-    if pending.len()<=SHARED_TUN_DRAIN_PER_TURN/SHARED_TUN_DRAIN_PER_ROUTE{
+    if !fair.enabled||
+        pending.len()<=SHARED_TUN_DRAIN_PER_TURN/SHARED_TUN_DRAIN_PER_ROUTE{
         for q in pending.values_mut(){
             drain_one_shared_tun_route(q,now,&mut attempts_left,&mut d);
         }
@@ -5366,6 +5387,7 @@ fn m0_plan029_shared_tun_fair_turn_rotates_twelve_pending_leases(){
         for _ in 0..8{drop(rx.try_recv().unwrap());}
     }
     let mut fair=SharedTunFairTurn::default();
+    fair.enabled=true;
     let first=flush_shared_tun(&mut pending,&mut fair);
     assert_eq!((first.delivered,first.expired,first.retired),(64,0,0));
     assert_eq!(pending.len(),4);
@@ -5439,6 +5461,7 @@ fn m0_plan029_fair_turn_still_expires_routes_after_global_budget(){
         for _ in 0..8{drop(rx.try_recv().unwrap());}
     }
     let mut fair=SharedTunFairTurn::default();
+    fair.enabled=true;
     let d=flush_shared_tun(&mut pending,&mut fair);
     assert_eq!((d.delivered,d.expired,d.retired),(64,32,0));
     assert!(pending.is_empty());
@@ -5457,6 +5480,12 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     let mut scratch:[Vec<u8>;8]=std::array::from_fn(|_|vec![0u8;M0_TUN_IPV4_MAX]);
     let mut pending=HashMap::<[u8;4],PendingSharedTunRoute>::new();
     let mut fair=SharedTunFairTurn::default();
+    // Both candidate switches are developer-only and read at native-owner
+    // startup. Default product behavior stays the same as clean main.
+    // This one controls *cross-lease* fairness, not single-lease flow order.
+    #[cfg(feature="m0_v4_probe")]
+    {fair.enabled=std::env::var("WBD_M0_029_FAIR_LEASE_TEST")
+        .ok().as_deref()==Some("1");}
     // Cold diagnostic opt-in. This worker already owns the verified /32
     // route table: no new per-packet Go bridge, timer, mutex, or unbounded
     // packet cache. All extra accounting is disabled in normal production.
@@ -5632,7 +5661,19 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     // all destinations without a second destructive TUN reader.
     let Some(lease)=e.client_lease_ipv4 else{return BAD_STAGE};
     let ip=if e.server_side{lease}else{[0u8;4]};
-    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
+    // 1 Gbit/s at 1000B/packet ~= 125k packets/sec. The original 64
+    // owned inbox slots represent only ~0.512ms of arrivals, shorter than
+    // a plausible 2ms native TX service gap (~250 packets). Test 256
+    // (2.048ms, 4x bounded inbox metadata and up to ~256KiB of 1kB
+    // retained packets per lease); default 64 remains untouched.
+    // This cannot cure a sustained egress service deficit. No control
+    // timer/Go per-packet callback is introduced.
+    #[cfg(feature="m0_v4_probe")]
+    let slots=shared_tun_trial_inbox_slots(
+        std::env::var("WBD_M0_029_INBOX_SLOTS_TEST").ok().as_deref());
+    #[cfg(not(feature="m0_v4_probe"))]
+    let slots=64;
+    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(slots);
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
         alive:Arc::new(AtomicBool::new(true)),
