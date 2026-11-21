@@ -1,5 +1,8 @@
 """H2281 long-running Win Winsock->ARM TCP two triplets, no short-bulk P99."""
 import pathlib
+import json
+import os
+import subprocess
 import sys
 import unittest
 ROOT=pathlib.Path(__file__).resolve().parents[1]
@@ -9,13 +12,21 @@ import m0_h2276_three_runner_tcp as h
 
 class SustainedNativeTCP(unittest.TestCase):
     def test_source_locked_25_second_real_bulk_overlaps_160_tcp_echo(self):
-        self.assertTrue(h.SUSTAINED,"H2281 explicit CI env not set")
-        self.assertEqual(h.tcp.BULK_FLOWS,4)
-        self.assertEqual(h.tcp.BULK_SEND_S,25)
-        self.assertEqual(h.tcp.BULK_MAX_BYTES,512*1024*1024)
-        self.assertEqual(h.tcp.ECHO_COUNT,160)
-        self.assertGreater(h.tcp.BULK_SEND_S, h.tcp.ECHO_COUNT*h.tcp.ECHO_PERIOD_S)
-        self.assertEqual(h.TIERS,(-1,0,1,5))
+        # Governance maintenance is intentionally run WITHOUT workflow env;
+        # verify the real opt-in source in a fresh isolated Python interpreter.
+        env=dict(os.environ, WBD_H2281_SUSTAINED_TCP="1",
+                 WBD_H2282_TCP_WINDOW_AB="0")
+        code=("import json,sys; sys.path.insert(0,'tools');"
+              "import m0_h2276_three_runner_tcp as x;"
+              "print(json.dumps([x.SUSTAINED,x.tcp.BULK_FLOWS,"
+              "x.tcp.BULK_SEND_S,x.tcp.BULK_MAX_BYTES,"
+              "x.tcp.ECHO_COUNT,x.tcp.ECHO_PERIOD_S,x.TIERS]))")
+        p=subprocess.run([sys.executable,"-c",code],cwd=ROOT,env=env,
+                         capture_output=True,text=True,check=True)
+        cfg=json.loads(p.stdout)
+        self.assertEqual(cfg[:5],[True,4,25,512*1024*1024,160])
+        self.assertGreater(cfg[2],cfg[4]*cfg[5])
+        self.assertEqual(cfg[6],[-1,0,1,5])
 
     def test_workflow_keeps_two_independent_triplets_and_both_loss_directions(self):
         w=(ROOT/".github/workflows/qa-h2281-dual-arm-relay-sustained-tcp.yml").read_text()

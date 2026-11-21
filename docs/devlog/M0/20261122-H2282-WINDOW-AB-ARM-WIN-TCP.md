@@ -24,3 +24,7 @@
 ## 第一轮精确SOURCE静态失败与回归修复
 - [H2282 Action44929841876](https://github.com/lly8666/wbd-next/actions/runs/44929841876) SOURCE `90119c7667effe4d97779e9758f09b2d61463081` 的 static 检查 FAIL 于旧 H2279 测试 `test_h2279_clean_path_uses_identical_windows_and_arm_real_tcp`：在H2282全局env启动时，`active_stages()` 按设计返回 `('base','tuned','base_prime')`，旧测试却无隔离地期待 H2279 `('direct',-1)`。共23项仅此1项失败；六原生Runner严格由needs:static跳过，**没有产品/网络/性能样本**。
 - 修复仅在旧H2279测试内临时 `patch.object(h,"WINDOW_AB",False)`，保持H2282自己既有真实socket setsockopt/getopt回归和全部真实产品验证门；不修改H2279或H2282生产模式路由，也不依赖跳过单测。后续再按两组三Runner源锁校验，不将本static FAIL描述为TCP窗口负结果。
+
+## H2282 静态模式隔离与中央完整治理回归
+- 第一_SOURCE `90119c7667effe4d97779e9758f09b2d61463081` [44929841876](https://github.com/lly8666/wbd-next/actions/runs/44929841876) 因旧H2279 mode测试未隔离H2282 global flag而static FAIL，六机从未启动。第二_SOURCE `cb09a27013e391b338a782b21ead9b82a8f3d675` 仅修旧H2279局部单测，H2282 真实 [Action44930023496](https://github.com/lly8666/wbd-next/actions/runs/44930023496) static SUCCESS并已启动两套六VM；保留本轮真实结果独立核收。
+- 中央 governance-maintenance 在缺省 env 环境下执行所有必跑unit，自带H2281/H2282 mode-specific测试原先错误要求CI运行时必须带 `WBD_H2281_SUSTAINED_TCP=1` 和 `WBD_H2282_TCP_WINDOW_AB=1`，导致另一条维护检查在源码正确时FAIL。此次改为每个测试自己启一个短暂独立Python解释器并以真实opt-in env import源模块、读回 `SUSTAINED/WINDOW_AB`及bulk供给配置；小Winsock/Linux socket setsockopt readback测试用精确 `patch.object(WINDOW_AB,True)` 隔离。这样同一测试在维护的空env和真实三Runner的opt-in环境都要通过；不降低模式/CPU/业务资格门，不改变Go/Rust/Wintun产品。
