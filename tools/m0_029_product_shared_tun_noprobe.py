@@ -55,13 +55,20 @@ FIRSTDROP=os.environ.get("WBD_M0_029_FIRST_DROP_WINDOW","0")
 if FIRSTDROP not in ("0","1"):
     raise RuntimeError("M029_H2261_FIRST_DROP_WINDOW_INVALID")
 FIRSTDROP=(FIRSTDROP=="1")
+# H2263 is an isolated fixture-only Linux netns FQ experiment: only 250
+# Mbps B differs from original cold Go fq600, A/A-prime never overridden.
+FQ_TRIAL_LEG=os.environ.get("WBD_M0_029_FQ_TRIAL_LEG","")
+if FQ_TRIAL_LEG not in ("","A","B","A_prime"):
+    raise RuntimeError("M029_H2263_FQ_TRIAL_LEG_INVALID")
+if FQ_TRIAL_LEG and (STAGE or SERVICE or RAWCOST or RECOVERY or FIRSTDROP):
+    raise RuntimeError("M029_H2263_FQ_TRIAL_CANNOT_MIX_OBSERVERS")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
 SPARSEFLOW=SPARSEFLOW=="1"
 if SPARSEFLOW and dict(re.findall(r"([a-z_]+)=(\d+)","forward_offered=2 forward_dropped=1")) != {"forward_offered":"2","forward_dropped":"1"}:
     raise RuntimeError("M029_H2262_SPARSE_PARSE_SELF_CHECK_FAILED")
-if SPARSEFLOW and not (STAGE and TCP_TIMELINE and TCP_INFO):
+if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
@@ -96,7 +103,7 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    suffix="recovery" if RECOVERY else "stage" if STAGE else "noprobe"
+    suffix=("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe")
     G["OUT"]=ROOT/("m029-product-shared-"+suffix)
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
         "m029-product-shared-"+RUN+"-"+ATTEMPT+"-"+suffix)
@@ -248,6 +255,39 @@ def main():
     try:
         node.network()
         result["cold_readbacks"]=node.start_product()
+        if FQ_TRIAL_LEG:
+            # The real original-Go owner has already applied and logged
+            # fq600 on this exact ephemeral client TUN. A, A-prime never
+            # change it. Only B's isolated test namespace gets a temporary
+            # single cold kernel qdisc override (not a product CLI value).
+            before=ns(node.client,"tc","-d","qdisc","show",
+                      "dev",G["CLIENT_TUN"]).stdout
+            if "qdisc fq " not in before or " root " not in before or (
+                " maxrate 600Mbit" not in before or " flow_limit 256" not in before):
+                raise RuntimeError("M029_H2263_ACTUAL_ORIGINAL_FQ600_KERNEL_MISSING")
+            if FQ_TRIAL_LEG=="B":
+                ns(node.client,"tc","qdisc","replace","dev",G["CLIENT_TUN"],
+                   "root","fq","maxrate","250mbit","flow_limit","256")
+            after=ns(node.client,"tc","-d","qdisc","show",
+                     "dev",G["CLIENT_TUN"]).stdout
+            expected=250 if FQ_TRIAL_LEG=="B" else 600
+            if ("qdisc fq " not in after or " root " not in after or
+                " maxrate "+str(expected)+"Mbit" not in after or
+                " flow_limit 256" not in after):
+                raise RuntimeError("M029_H2263_EFFECTIVE_FQ_"+str(expected)+"_READBACK_FAILED")
+            server=ns(node.server,"tc","-d","qdisc","show",
+                      "dev",G["SERVER_TUN"]).stdout
+            if ("qdisc fq " not in server or " maxrate 600Mbit" not in server or
+                " flow_limit 256" not in server):
+                raise RuntimeError("M029_H2263_SERVER_ORIGINAL_FQ600_NOT_PRESERVED")
+            result["h2263_client_fq_trial"]={
+                "leg":FQ_TRIAL_LEG,"original_go_kernel_fq_mbps":600,
+                "effective_client_kernel_fq_mbps":expected,
+                "original_server_kernel_fq_mbps":600,
+                "per_flow_kernel_fq":True,
+                "test_only_qdisc_override":FQ_TRIAL_LEG=="B",
+                "all_other_go_rust_product_settings_unchanged":True,
+                "scope":"ephemeral_owned_client_TUN_in_one_isolated_native_netns"}
         result["actual_router_netem"]=node.impair()
         time.sleep(3)
         result["measurement"]=node.measure("product_no_probe128")
