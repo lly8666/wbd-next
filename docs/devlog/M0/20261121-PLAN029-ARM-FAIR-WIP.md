@@ -127,3 +127,9 @@
 ```
 
 - **H2270 catalog correction**: first code/source commit b2743dd7 governance Feature catalog FAIL because newly edited Linux raw native product source also requires `linux-raw-tun` feature card declared and changed in the SAME source lineage. This follow-on updates both `outer-opportunistic-repair` and `linux-raw-tun` cards and aligns latest `feature-impact` to both. No new product code/semantics. Original b274 native Rust x86 unit PASS, ARM and 1/5% true netem trials at time of this note PENDING. Historical governance FAIL preserved; latest source governance must pass, no bypass.
+
+- **H2270 feature catalog STRICT per-push fix**：`tools/feature_catalog.py` 只检查本次推送所变的devlog/卡，且解析当日devlog所有 `feature-impact` 块的ID并要求每个卡也在同一次push有改动。先前b274源提交只同步outer卡、f3ca同步两ID却未收进16KiB内、17d只更linux卡都无法使本次治理通过。这次同一次提交真正改 `linux-raw-tun` 与 `outer-opportunistic-repair` 两JSON卡（严格UTF-8 <16KiB）及本devlog；不放宽校验、不动原始产品 Rust fix、保持main不变。等待真实治理和丢包Action新SOURCE结算。
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair","linux-raw-tun"],"reason":"Same-push governance closure of both existing source-impacted bounded feature cards and current WIP devlog; no data-plane modification. The optional Linux ACK consumer repair remains restricted to the original experimental Rust source and requires native proof."}
+```
