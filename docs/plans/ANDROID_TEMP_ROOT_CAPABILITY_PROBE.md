@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B9 软件功能接线（真机及性能待验）**：原 Go `--record-cipher` 及已认证 policy、原 Rust `RecordSuite::try_from(identity.cipher)` 已支持 ChaCha20-Poly1305/AES-128-GCM/AES-256-GCM；Android App 现在提供同三项选择，并经 Activity→Root Service→原 Go argv 进入既有原 M3 AEAD/PN。默认 ChaCha20 兼容旧 APK；旧 Java 参数重载及 B8 外层 MTU 入口不变。没有新增加密实现、TLS/PN 前导、逐包 Java/Go 或“更安全”拦截。AES 可能有硬件性能收益，但未做 ARM64 实机速度/兼容测试，不宣称更快。未接线 Fixed/Auto/Game/系统 netd 与其他功能资格仍按 B8 记录。
+
+
 > **2026-11-21 B8（软件接线；实机未验）**：Android App 原来固定 `--outer-mtu=1460`，现在给用户完整外层 IPv4 IP MTU 输入（576..1500B，默认1460，不含L2）。原生产路径 Activity → Service → 原 Go `--outer-mtu` → 已有 Rust 冷预算 → 内层 TUN MTU 自动应用和内核读回；旧 Java argv 重载继续默认1460。真实物理路径/MSS/record 限制若使 MTU 不可用则保留原 Go 错误，不静默截断。当前以软件补功能为先；Fixed/Auto/Game、系统 DNS/netd、物理 TCP53、IPv6、热点、自动切网及新 SOURCE 设备/性能 PASS 仍未完成。
 
 

@@ -99,6 +99,26 @@ final class OriginalGoCommandArgs {
                               boolean allApps,int[] excludedAppIDs,
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
                               boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,
+            tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,"chacha20-poly1305");
+    }
+    // B9 original Go authenticates this choice in the V4 cold snapshot;
+    // Rust's existing RecordSuite handles all three, no separate Android AEAD.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
+                              String recordCipher){
+        if(!"chacha20-poly1305".equals(recordCipher)&&
+           !"aes-128-gcm".equals(recordCipher)&&
+           !"aes-256-gcm".equals(recordCipher))
+            throw new IllegalArgumentException("unsupported original V4 record cipher");
         if(requestedOuterMTU<576||requestedOuterMTU>1500)
             throw new IllegalArgumentException("outer IPv4 IP MTU must be 576..1500");
         if(iface==null||!iface.matches("[A-Za-z0-9_.-]{1,32}")||
@@ -129,6 +149,7 @@ final class OriginalGoCommandArgs {
         pair(args,"--route-key-hex-file",routeKeyFile);
         pair(args,"--installation-id-file",installationFile);
         pair(args,"--outer-mtu",Integer.toString(requestedOuterMTU));
+        pair(args,"--record-cipher",recordCipher);
         pair(args,"--tun-fq-maxrate-mbps","0");
         pair(args,"--tun-txqlen-packets","500");
         pair(args,"--outer-repair","off");

@@ -156,6 +156,17 @@ assert 'pair(args,"--outer-mtu",Integer.toString(requestedOuterMTU))' in argv
 assert 'outerMTU:=flags.Int("outer-mtu",1460' in cold
 assert 'deriveMTUBudget(c.outerMTU,' in cold
 print("ANDROID_B8_ORIGINAL_GO_MTU_PRODUCTION_WIRING_SOURCE_PASS")
+# B9: one original protected cipher choice, not a new Android AEAD.
+assert 'recordCiphers.setAdapter(new ArrayAdapter' in a
+assert 'request.putExtra("record_cipher",recordCipher)' in a
+assert 'intent.getStringExtra("record_cipher")' in s
+assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher);' in s
+assert 'pair(args,"--record-cipher",recordCipher)' in argv
+assert 'cipherName:=flags.String("record-cipher","chacha20-poly1305"' in cold
+assert 'PolicyForClientWithInitialAndCipher(1,"off",0,4,20,c.recordCipher)' in cold
+assert 'RecordSuite::try_from(identity.cipher)' in Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
+print("ANDROID_B9_EXISTING_GO_M3_RUST_AUTHENTICATED_CIPHER_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

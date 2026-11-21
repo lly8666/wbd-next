@@ -41,7 +41,7 @@ public final class RootClientActivity extends Activity {
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField;
-    private Spinner networks;
+    private Spinner networks,recordCiphers;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief;
@@ -241,6 +241,7 @@ public final class RootClientActivity extends Activity {
             String secret=password.getText().toString();
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
+            String recordCipher=recordCiphers.getSelectedItem().toString();
             boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
             // TLS/authenticated /32 and Rust M4. No pre-auth route mutation,
@@ -307,6 +308,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("peer",peer);
             request.putExtra("port",port);
             request.putExtra("outer_mtu",requestedOuterMTU);
+            request.putExtra("record_cipher",recordCipher);
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
@@ -408,6 +410,15 @@ public final class RootClientActivity extends Activity {
         outerMTUField=input(pane,"外层完整 IPv4 IP MTU（576–1500 字节；默认1460，非TUN MTU）",
             InputType.TYPE_CLASS_NUMBER);
         outerMTUField.setText("1460");
+        recordCiphers=new Spinner(this);
+        recordCiphers.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,
+            new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
+        pane.addView(recordCiphers);
+        TextView cipherHint=new TextView(this);
+        cipherHint.setText("原WBD受认证M3记录AEAD（默认ChaCha20）；AES-128/256为原协议已支持选项。" +
+            "不同ARM64设备性能取决于CPU硬件与网络，请以实际测速选择。");
+        pane.addView(cipherHint);
         user=input(pane,"Authenticated account",InputType.TYPE_CLASS_TEXT);
         password=input(pane,"Password (app-private file, not argv)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
