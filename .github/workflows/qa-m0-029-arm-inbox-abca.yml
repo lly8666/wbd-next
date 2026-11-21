@@ -50,7 +50,9 @@ jobs:
           tree=ast.parse(target)
           assert len([n for n in tree.body if isinstance(n,ast.ClassDef)])==1
           assert '("original_before",64),("inbox256_candidate",256),("original_after",64)' in target
-          assert "WBD_M0_029_INBOX_SLOTS_TEST=256" in target
+          assert "WBD_M0_029_INBOX_SLOTS_TEST=" in target
+          assert "COLD_NATIVE_INBOX_NOT_APPLIED_EXACTLY" in target
+          assert "GE_GOOD_BAD_PCT" in target
           assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in target
           assert "H2244_ECHO_SERVER_READY" in target
           assert "iperf3" in target and "gemodel" in target

@@ -5669,10 +5669,18 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     // This cannot cure a sustained egress service deficit. No control
     // timer/Go per-packet callback is introduced.
     #[cfg(feature="m0_v4_probe")]
-    let slots=shared_tun_trial_inbox_slots(
-        std::env::var("WBD_M0_029_INBOX_SLOTS_TEST").ok().as_deref());
+    let trial=std::env::var("WBD_M0_029_INBOX_SLOTS_TEST").ok();
+    #[cfg(feature="m0_v4_probe")]
+    let slots=shared_tun_trial_inbox_slots(trial.as_deref());
     #[cfg(not(feature="m0_v4_probe"))]
     let slots=64;
+    #[cfg(feature="m0_v4_probe")]
+    if trial.is_some(){
+        // Cold-only receipt: the real authenticated generation, never a
+        // test-side inference from an environment variable alone.
+        eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=1",
+            if e.server_side{"server"}else{"client"},e.generation,slots);
+    }
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(slots);
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,

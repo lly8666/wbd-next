@@ -32,6 +32,11 @@ CLIENT_TUN="wbdc0"
 SERVER_TUN="wbds0"
 SERVER_INNER="10.66.0.1"
 COUNT=160
+# Same H2228 stationary GE formula: good loss 0.1%, bad loss 90%,
+# bad->good probability 25%, and target 1% average packet/skb loss.
+_GE_BAD=(0.01-0.001)/(0.90-0.001)
+GE_GOOD_BAD_PCT=round(100*(0.25*_GE_BAD)/(1-_GE_BAD),6)
+assert abs(GE_GOOD_BAD_PCT-0.252809)<0.0000005
 PHASES=(("original_before",64),("inbox256_candidate",256),("original_after",64))
 CLK=os.sysconf(os.sysconf_names["SC_CLK_TCK"])
 
@@ -69,9 +74,6 @@ def cpu_and_mem(pid):
     status=Path(f"/proc/{pid}/status").read_text()
     rss=re.search(r"^VmRSS:\s+(\d+) kB$",status,re.M)
     return {"cpu_s":c,"rss_kib":int(rss.group(1)) if rss else None}
-
-def qdisc(reader):
-    return json.loads(ns(reader,"tc","-s","-j","qdisc","show","dev","rcli0" if reader==active.router else "wan0").stdout)
 
 def qdisc_delta(old,new):
     a=next((x for x in old if x.get("kind")=="netem"),None)
@@ -214,9 +216,8 @@ class Owned:
         users=self.secret_dir/"users.json"
         users.write_text(json.dumps({"bench0":"m029-scope-pass"})+"\n")
         users.chmod(0o600)
-        server_env=["LD_LIBRARY_PATH="+str(BUNDLE)]
-        if self.slots==256:
-            server_env.append("WBD_M0_029_INBOX_SLOTS_TEST=256")
+        server_env=["LD_LIBRARY_PATH="+str(BUNDLE),
+                    "WBD_M0_029_INBOX_SLOTS_TEST="+str(self.slots)]
         # The multi-lease fair scheduler is OFF for this single-lease test.
         self.spawn("server",self.server,["env",*server_env,
             str(BUNDLE/"wbd-v4-server"),"--raw-interface","wan0",
@@ -253,6 +254,14 @@ class Owned:
         match=re.findall(r"V4_PUBLIC_LEASE_APPLIED role=client.*os_readback=(10\.66\.0\.\d+)/32",contents)
         if not match:raise RuntimeError("AUTHENTICATED_LEASE_OS_READBACK_MISSING")
         self.lease=match[-1]
+        if not ready(self.logs["server"],"M0_PLAN029_NATIVE_INBOX_BOUND role=server",20):
+            raise RuntimeError("COLD_NATIVE_INBOX_RECEIPT_MISSING")
+        report=self.logs["server"].read_text(errors="replace")
+        slots_seen=re.findall(
+            r"M0_PLAN029_NATIVE_INBOX_BOUND role=server generation=\d+ slots=(\d+) probe_only=1",
+            report)
+        if len(slots_seen)!=1 or int(slots_seen[0])!=self.slots:
+            raise RuntimeError("COLD_NATIVE_INBOX_NOT_APPLIED_EXACTLY")
         root("ip","-n",self.client,"route","replace",SERVER_INNER+"/32",
              "dev",CLIENT_TUN)
         return self.lease
@@ -261,18 +270,18 @@ class Owned:
         # Identical GE1% and +200ms each direction, applied only AFTER TLS.
         for dev in ("rcli0","rsrv0"):
             ns(self.router,"tc","qdisc","replace","dev",dev,"root","netem",
-               "delay","200ms","loss","gemodel","0.16%","25%","90%","0.1%",
-               "limit","65536")
+               "delay","200ms","loss","gemodel",f"{GE_GOOD_BAD_PCT:.6f}%",
+               "25%","90%","0.1%","limit","65536")
         return {dev:json.loads(ns(self.router,"tc","-s","-j","qdisc","show",
                                  "dev",dev).stdout) for dev in ("rcli0","rsrv0")}
 
     def measure(self,label):
-        before={dev:json.loads(ns(self.router,"tc","-s","-j","qdisc","show",
-                "dev",dev).stdout) for dev in ("rcli0","rsrv0")}
-        # Direct original kernel TCP reference: distinct underlay address,
-        # same network impairments, same job/ISA; not a second WBD data path.
+        # Direct original kernel TCP reference is outside the WBD accounting
+        # window; do not mix its qdisc skb/drop deltas into WBD measurements.
         direct=iperf_json(self.client,SERVER_IP,CLIENT_IP,5202,5,4)
         time.sleep(3)
+        before={dev:json.loads(ns(self.router,"tc","-s","-j","qdisc","show",
+                "dev",dev).stdout) for dev in ("rcli0","rsrv0")}
         cpu0={who:cpu_and_mem(self.pid(who)) for who in ("server","client")}
         small_out=OUT/(label+"-echo.json")
         self.spawn("small-"+label,self.client,["env","GITHUB_SHA="+SHA,
@@ -344,7 +353,10 @@ def main():
            "architecture":ARCH,"kernel":platform.release(),
            "old_and_new_same_build_manifest":manifest["sha256"],
            "topology":"single native Linux ARM64 VM, three isolated netns, true Go TLS Rust raw/TUN",
-           "scenario":"GE1% two physical L3 router qdiscs; +200ms each direction; 4 TCP + 160 UDP/TCP",
+           "scenario":"GE1% stationary two L3 router qdiscs; +200ms each direction; 4 TCP + 160 UDP/TCP",
+           "netem_ge_stationary_parameters":{"target_loss_pct":1.0,"good_to_bad_pct":GE_GOOD_BAD_PCT,
+                                            "bad_to_good_pct":25.0,"bad_loss_pct":90.0,
+                                            "good_loss_pct":0.1},
            "driver":"original unmodified AF_PACKET/TUN; no fixed cap and no reader gate",
            "product_mode":"normal/off","only_changed_setting":"server Rust m0_v4_probe inbox 64 vs 256",
            "phases":[],"status":"NOT_RUN","scope_exclusions":[
