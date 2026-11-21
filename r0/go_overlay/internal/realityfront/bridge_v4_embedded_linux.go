@@ -405,6 +405,9 @@ func (b *v4EmbeddedNativeBridge) attachRawRxOnInterface(ifname string,ifindex ui
 func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
     return ErrAdmissionUnsupported
 }
+func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error{
+    return ErrAdmissionUnsupported
+}
 func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
     if !b.committed||b.handle==0||len(name)==0||len(name)>15{return errV4Embedded}
     raw:=[]byte(name)
@@ -723,6 +726,8 @@ type V4PublicLoopPulse struct{
     DnsUDP53Seen,DnsTCP53Seen uint64
     // Android-only native DNS proof counters: Linux stays zero-valued.
     DnsTunnelRawCopied,DnsTunnelReplyTun uint64
+    // Android-only physical UDP DNS pulse; Linux zero value.
+    DnsPhysicalTx,DnsPhysicalRx,DnsPhysicalError uint64
     // A45 Android real RAW RX and selected-App inner protocol evidence.
     RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
     RawAuthRejected,ReverseTunWriteFailed uint64

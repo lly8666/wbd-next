@@ -73,7 +73,23 @@ public final class OriginalGoCommandArgsTest {
             "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
             new int[]{10123},false,null,null,false,false);
         absent(noDNS,"--android-tunnel-dns");
+        absent(noDNS,"--android-physical-dns");
         value(noDNS,"--mode","normal");
+        List<String> physicalDNS=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,false,true,true);
+        if(!physicalDNS.contains("--android-physical-dns"))
+            throw new AssertionError("actual physical DNS opt-in not forwarded");
+        absent(physicalDNS,"--android-tunnel-dns");
+        absent(physicalDNS,"--tls-verify-server");
+        List<String> physicalAll=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            null,true,new int[]{10111,10112},null,false,false,true);
+        if(!physicalAll.contains("--android-physical-dns"))
+            throw new AssertionError("all ordinary App DNS option not forwarded");
+        value(physicalAll,"--android-route-exclude-appids","10111,10112");
         List<String> all=build("203.0.113.10",null,true,new int[]{10111,10112},CA);
         if(!all.contains("--android-route-all-apps"))
             throw new AssertionError("no all-app route policy");
@@ -117,6 +133,7 @@ public final class OriginalGoCommandArgsTest {
         catch(UnsupportedOperationException expected){}
         System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_OPT_IN_HOST_PASS");
         System.out.println("ANDROID_B3_TUNNEL_DNS_ON_OFF_REAL_GO_ARGV_HOST_PASS");
+        System.out.println("ANDROID_B4_REAL_PHYSICAL_DNS_SELECTED_ALL_APP_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_ORIGINAL_APK_GO_CLI_ARGV_HOST_CONTRACT_PASS");
     }
 }

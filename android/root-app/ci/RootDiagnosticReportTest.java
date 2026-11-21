@@ -738,6 +738,42 @@ public final class RootDiagnosticReportTest {
         if(!dnsWriter.recordNativeSnapshot(b3dNative))
             throw new AssertionError("real native DNS TX/RX numeric receipt rejected");
         contains(RootDiagnosticReport.build(dnsDir,source,36),"dnsraw=1 dnsrtun=1");
+        // B4: physical socket grant, actual question send and TUN reply
+        // must be distinguishable, with exact per-Start session isolation.
+        File physicalDir=Files.createTempDirectory("wbd-b4-physical-dns").toFile();
+        RootDiagnosticReceipt physicalWriter=new RootDiagnosticReceipt(
+            new File(physicalDir,"wbd-root-diagnostic.txt"));
+        physicalWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        physicalWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        physicalWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_ENABLED);
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_native_cold=PHYSICAL_COLD_GRANTED_ALL_APP_TUN_UDP53_ONLY");
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_live=NOT_OBSERVED");
+        physicalWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_UDP_COPIED);
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_live=PHYSICAL_UDP_QUERY_SENT_REPLY_NOT_OBSERVED");
+        physicalWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN);
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_live=PHYSICAL_UDP_REPLY_INVERSE_TUN_WRITTEN");
+        String physicalM4="V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=1 parse_fail=0 parsed=1 auth=1 rejected=0 writefail=0 tun=2 trej=0 rawtx=2 rtun=1 tcp=0 udp=1 icmp=0 dnsudp=1 dnstcp=0 dnsraw=0 dnsrtun=0 dnsptx=1 dnsprx=1 dnsperr=0 rxerr=0 txerr=0 health=1";
+        if(!physicalWriter.recordNativeSnapshot(physicalM4))
+            throw new AssertionError("physical DNS actual M4 numeric receipt rejected");
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "dnsptx=1 dnsprx=1 dnsperr=0");
+        physicalWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        physicalWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_live=NOT_OBSERVED");
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_native_cold=NOT_OBSERVED");
+        physicalWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_FAILED);
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_native_cold=PHYSICAL_COLD_GRANT_FAILED");
+        physicalWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_ERROR);
+        contains(RootDiagnosticReport.build(physicalDir,source,36),
+            "physical_dns_live=PHYSICAL_DNS_ERROR_NO_DELIVERY_PROOF");
+        System.out.println("ANDROID_B4_PHYSICAL_DNS_COLD_REAL_SOCKET_TX_RX_REPORT_HOST_PASS");
         System.out.println("ANDROID_B3D_REAL_M4_DNS_QUERY_COPIED_AUTH_INVERSE_TUN_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_B3C_APP_TUNNEL_DNS_COLD_SAFE_READBACK_HOST_PASS");
         System.out.println("ANDROID_B3B_COLD_NATIVE_DNS_EFFECTIVE_AND_FAILED_SAFE_REPORT_HOST_PASS");

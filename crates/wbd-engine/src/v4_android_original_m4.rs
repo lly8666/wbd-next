@@ -272,12 +272,13 @@ fn raw_worker(
                 let lease=e.client_lease_ipv4;
                 let (report,delivered,failed,dns_written,healthy,hint,retired)={
                     let Entry{owner,normal,android_dns_flows,
-                        android_dns_hijack_ready,..}=&mut *e;
+                        android_dns_hijack_ready,android_dns_physical_ready,..}=&mut *e;
                     let Some(reassembly)=normal.as_mut()else{break};
                     match owner.drain_android_normal_off_to_tun(
                         reassembly,&tun,lease,at,
                         std::mem::take(&mut rx_storage),
-                        android_dns_flows,*android_dns_hijack_ready,
+                        android_dns_flows,*android_dns_hijack_ready &&
+                            !*android_dns_physical_ready,
                         &mut dns_reply_scratch,
                     ){
                         Ok((returned,report,delivered,failed,dns_written,healthy,hint,retired))=>{
@@ -941,10 +942,11 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
                 crate::v4_android_dns_udp_flow::MAX_DNS_IPV4_PACKET
             );
             let Entry{owner,normal,android_dns_flows,
-                android_dns_hijack_ready,..}=&mut *e;
+                android_dns_hijack_ready,android_dns_physical_ready,..}=&mut *e;
             owner.drain_android_normal_off_to_tun(
                 normal.as_mut().unwrap(),&tun,lease,at,Vec::with_capacity(32),
-                android_dns_flows,*android_dns_hijack_ready,
+                android_dns_flows,*android_dns_hijack_ready &&
+                    !*android_dns_physical_ready,
                 &mut dns_reply_scratch
             )
         };
@@ -1101,11 +1103,14 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_raw_rx_debug(
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_dns_ingress_observed(
     h:u64,udp_seen:*mut u64,tcp_seen:*mut u64,
     incomplete:*mut u64,dns_raw_copied:*mut u64,
-    dns_reply_tun:*mut u64,hijack_enabled:*mut u32
+    dns_reply_tun:*mut u64,physical_tx:*mut u64,
+    physical_rx:*mut u64,physical_error:*mut u64,
+    hijack_enabled:*mut u32
 )->i32{
     if udp_seen.is_null()||tcp_seen.is_null()||incomplete.is_null()||
        dns_raw_copied.is_null()||dns_reply_tun.is_null()||
-       hijack_enabled.is_null(){return INVALID}
+       physical_tx.is_null()||physical_rx.is_null()||
+       physical_error.is_null()||hijack_enabled.is_null(){return INVALID}
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.android_workers.is_none(){return BAD_STAGE}
@@ -1115,6 +1120,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_dns_ingress_observed(
         incomplete.write(e.android_metrics.dns_unready.load(Ordering::Relaxed));
         dns_raw_copied.write(e.android_metrics.dns_tunnel_raw_copied.load(Ordering::Relaxed));
         dns_reply_tun.write(e.android_metrics.dns_tunnel_reply_tun.load(Ordering::Relaxed));
+        physical_tx.write(e.android_metrics.dns_physical_tx.load(Ordering::Relaxed));
+        physical_rx.write(e.android_metrics.dns_physical_rx.load(Ordering::Relaxed));
+        physical_error.write(e.android_metrics.dns_physical_error.load(Ordering::Relaxed));
         hijack_enabled.write(0); // Must NEVER claim DNS interception here.
     }
     OK

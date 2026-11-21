@@ -655,6 +655,39 @@ assert 'ANDROID_B3D_REAL_M4_DNS_QUERY_COPIED_AUTH_INVERSE_TUN_RECEIPT_HOST_PASS'
 assert "dns_capture=NOT_CONNECTED" in nativecli
 print("ANDROID_B3_REAL_ORIGINAL_M3_TUNNEL_UDP_DNS_COLD_WIRING_SOURCE_PASS")
 print("ANDROID_B3D_REAL_M4_TUNNEL_DNS_TX_AND_AUTH_RX_WIRING_SOURCE_PASS")
+# B4: explicit physical App UDP53 mode is a distinct production path.
+assert 'physicalDNS.setChecked(false)' in root_ui
+assert 'request.putExtra("physical_dns",physicalDNS.isChecked())' in root_ui
+assert 'physicalDNS.setOnCheckedChangeListener' in root_ui
+assert 'intent.getBooleanExtra("physical_dns",false)' in root_svc
+assert 'verifyTLS,tunnelDNS,physicalDNS' in root_svc
+assert 'if(physicalDNS)args.add("--android-physical-dns")' in argv
+assert 'ANDROID_B4_REAL_PHYSICAL_DNS_SELECTED_ALL_APP_GO_ARGV_HOST_PASS' in argv_test
+assert 'androidPhysicalDNS:=flags.Bool("android-physical-dns",false' in nativecli
+assert 'c.androidPhysicalDNS=*androidPhysicalDNS' in nativecli
+assert 'AndroidPhysicalDNS:c.androidPhysicalDNS' in nativecli
+assert 'AndroidPhysicalDNS bool' in client
+assert 'bridge.enableAndroidPhysicalDNS()' in client
+assert 'V4_PUBLIC_ANDROID_PHYSICAL_DNS_EFFECTIVE role=client cold=1' in client
+assert 'wbd_m0_embedded_go_android_physical_dns_enable' in android_bridge
+assert 'wbd_m0_embedded_go_android_physical_dns_effective' in android_bridge
+assert 'func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error' in linux_bridge
+assert 'wbd_m0_embedded_go_android_physical_dns_enable' in required
+assert 'wbd_m0_embedded_go_android_physical_dns_effective' in required
+assert 'pub extern "C" fn wbd_m0_embedded_go_android_physical_dns_enable(' in engine_entry
+assert 'e.android_dns_physical_ready=true;' in engine_entry
+assert 'AndroidBoundPhysicalDnsUdp::open(' in nativeworker
+assert 'dns_physical_tx.fetch_add(1' in nativeworker
+assert 'dns_physical_rx.fetch_add(1' in nativeworker
+assert 'physical_tx.write(e.android_metrics.dns_physical_tx' in nativeworker
+assert 'physical_rx.write(e.android_metrics.dns_physical_rx' in nativeworker
+assert 'DnsPhysicalTx:physTx,DnsPhysicalRx:physRx,DnsPhysicalError:physErr' in android_bridge
+assert 'DNS_PHYSICAL_REVERSE_TUN_WRITTEN' in nativecli
+assert 'ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN' in root_svc
+assert 'physical_dns_live=' in Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+assert 'ANDROID_B4_PHYSICAL_DNS_COLD_REAL_SOCKET_TX_RX_REPORT_HOST_PASS' in Path("android/root-app/ci/RootDiagnosticReportTest.java").read_text()
+print("ANDROID_B4_REAL_PHYSICAL_APP_UDP53_RUST_GO_JAVA_COLD_AND_LIVE_WIRING_SOURCE_PASS")
+
 print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")
 print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")

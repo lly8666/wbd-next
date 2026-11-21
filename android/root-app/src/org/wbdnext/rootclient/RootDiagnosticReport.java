@@ -299,6 +299,21 @@ final class RootDiagnosticReport {
             ? "QUERY_ORIGINAL_M4_RAW_COPIED_REPLY_NOT_OBSERVED":
              "NOT_OBSERVED";
         out.append("tunnel_dns_live=").append(tunnelLive).append('\n');
+        // Distinct B4 physical DNS path: native cold selection does not
+        // imply the physical UDP question was sent or inverse TUN written.
+        String physicalCold=has(session,"ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_FAILED")
+            ? "PHYSICAL_COLD_GRANT_FAILED":
+             has(session,"ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_ENABLED")
+            ? "PHYSICAL_COLD_GRANTED_ALL_APP_TUN_UDP53_ONLY":
+             "NOT_OBSERVED";
+        out.append("physical_dns_native_cold=").append(physicalCold).append('\n');
+        String physicalLive=has(session,"ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN")
+            ? "PHYSICAL_UDP_REPLY_INVERSE_TUN_WRITTEN":
+             has(session,"ORIGINAL_RUST_DNS_PHYSICAL_UDP_COPIED")
+            ? "PHYSICAL_UDP_QUERY_SENT_REPLY_NOT_OBSERVED":
+             has(session,"ORIGINAL_RUST_DNS_PHYSICAL_ERROR")
+            ? "PHYSICAL_DNS_ERROR_NO_DELIVERY_PROOF":"NOT_OBSERVED";
+        out.append("physical_dns_live=").append(physicalLive).append('\n');
         out.append("device_real_business_tcp_udp=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("android_netd_physical_bypass=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("receipt_event_count=").append(events.size()).append('\n');

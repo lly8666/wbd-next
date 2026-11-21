@@ -257,4 +257,29 @@ mod tests{
         assert_eq!(flows.len(),0);
         assert_ne!(next,0);
     }
+    #[test]
+    fn b2c2b3_b4_physical_two_app_resolvers_reverse_order_and_stop(){
+        let a=ip_query(&make_query(0x1111));
+        let mut b=ip_query(&make_query(0x2222));
+        b[16..20].copy_from_slice(&[9,9,9,9]);
+        b[20..22].copy_from_slice(&50002u16.to_be_bytes());
+        let mut flows=PhysicalDnsUdpFlows::default();
+        let mut wire=[0u8;MAX_DNS_WIRE];
+        let (na,ida)=flows.prepare(&a,&mut wire,1).unwrap();
+        let mut ra=wire[..na].to_vec();ra[2]=0x81;ra[3]=0x80;
+        let (nb,idb)=flows.prepare(&b,&mut wire,1).unwrap();
+        assert_ne!(ida,idb);
+        let mut rb=wire[..nb].to_vec();rb[2]=0x81;rb[3]=0x80;
+        let mut ip=[0u8;MAX_DNS_REPLY_IPV4];
+        let len=flows.receive(&rb,&mut ip,2).unwrap();
+        assert_eq!(&ip[12..20],&[9,9,9,9,10,66,0,2]);
+        assert_eq!(&ip[22..24],&50002u16.to_be_bytes());
+        assert_eq!(&ip[28..30],&0x2222u16.to_be_bytes());
+        assert_eq!(checksum(&ip[..20],0),0);
+        assert!(len>28);
+        assert_eq!(flows.len(),1);
+        flows.stop();
+        assert_eq!(flows.receive(&ra,&mut ip,3),Err(PhysicalDnsError::Unowned));
+        assert_eq!(flows.len(),0);
+    }
 }

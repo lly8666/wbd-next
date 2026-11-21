@@ -629,6 +629,10 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUNNEL_DNS_FAILED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=PHYSICAL_DNS_ENABLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_ENABLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=PHYSICAL_DNS_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_FAILED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=M4_STARTED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=COLD_RTO_STOP_FAILED"))
@@ -712,6 +716,12 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TUNNEL_RAW_COPIED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_TUNNEL_REVERSE_TUN_WRITTEN"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_PHYSICAL_UDP_COPIED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_UDP_COPIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_PHYSICAL_REVERSE_TUN_WRITTEN"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_PHYSICAL_ERROR"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_ERROR);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MATCHED_TUN"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_GET_MATCHED_TUN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MISMATCH"))

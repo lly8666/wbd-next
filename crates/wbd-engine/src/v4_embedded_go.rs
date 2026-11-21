@@ -4336,6 +4336,41 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_effective(
         !e.android_dns_physical_ready));}
     OK
 }
+// B4: explicit App UDP53 -> physically bound 223.5.5.5 mode.
+// Independent of the legacy tunnel DNS default; not geosite split or netd.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_physical_dns_enable(h:u64)->i32{
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_dns_hijack_ready=true;
+    e.android_dns_physical_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_effective(
+    h:u64,enabled:*mut u32
+)->i32{
+    if enabled.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    unsafe{enabled.write(u32::from(e.android_dns_hijack_ready &&
+        e.android_dns_physical_ready));}
+    OK
+}
 #[cfg(target_os="android")]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_attach_tun(

@@ -92,3 +92,25 @@ func TestB3dOriginalAndroidTunnelDNSRealNativeClasses(t *testing.T){
     t.Fatalf("real original M4 DNS numeric snapshot missing: %s",snapshot)
   }
 }
+
+func TestB4AndroidPhysicalDnsOriginalM4ReadbackClasses(t *testing.T){
+ p:=realityfront.V4PublicLoopPulse{}
+ if got:=originalAndroidBusinessReceiptClasses(p);len(got)!=0{
+  t.Fatalf("physical cold grant cannot fabricate sent/received: %v",got)
+ }
+ p.DnsPhysicalTx=1
+ want:=[]string{"DNS_PHYSICAL_UDP_COPIED"}
+ if got:=originalAndroidBusinessReceiptClasses(p);!reflect.DeepEqual(got,want){
+  t.Fatalf("actual physical UDP TX class missing %v",got)
+ }
+ p.DnsPhysicalRx=2
+ p.DnsPhysicalError=3
+ want=[]string{"DNS_PHYSICAL_UDP_COPIED","DNS_PHYSICAL_REVERSE_TUN_WRITTEN","DNS_PHYSICAL_ERROR"}
+ if got:=originalAndroidBusinessReceiptClasses(p);!reflect.DeepEqual(got,want){
+  t.Fatalf("physical RX/error receipt classes differ %v",got)
+ }
+ got:=originalAndroidM4OwnerSnapshot(p)
+ if !strings.Contains(got,"dnsptx=1 dnsprx=2 dnsperr=3"){
+  t.Fatalf("actual original M4 physical DNS counters missing %s",got)
+ }
+}

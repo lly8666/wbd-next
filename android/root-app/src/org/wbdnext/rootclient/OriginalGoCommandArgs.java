@@ -59,6 +59,19 @@ final class OriginalGoCommandArgs {
                               String cnFile,int[] targetUids,
                               boolean allApps,int[] excludedAppIDs,
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,tunnelDNS,false);
+    }
+    // Only explicit physical-DNS opt-in changes the original tunnel default.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS){
         if(iface==null||!iface.matches("[A-Za-z0-9_.-]{1,32}")||
            handle==0||!ServerAddress.isIPv4Literal(localIPv4)||
            !ServerAddress.valid(peer)||peerPort<1||peerPort>65535||
@@ -91,7 +104,8 @@ final class OriginalGoCommandArgs {
         pair(args,"--tun-txqlen-packets","500");
         pair(args,"--outer-repair","off");
         pair(args,"--android-cn-geosite-file",cnFile);
-        if(tunnelDNS)args.add("--android-tunnel-dns");
+        if(physicalDNS)args.add("--android-physical-dns");
+        else if(tunnelDNS)args.add("--android-tunnel-dns");
         if(allApps){
             if(targetUids!=null)
                 throw new IllegalArgumentException("all-app cannot also target selected UIDs");

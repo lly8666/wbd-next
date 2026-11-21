@@ -30,6 +30,8 @@ type V4LinuxClientProductConfig struct {
     // Android original M3 TUN UDP/53 only; normal/off, not Android system
     // Resolver/netd, CN physical split, or FakeIP. Default disabled for CLI.
     AndroidTunnelDNS bool
+    // Explicit ordinary-App UDP53 physical 223.5.5.5 compatibility mode.
+    AndroidPhysicalDNS bool
     Tun *os.File
     TunName string
     // Only original Go authenticated AUTO /32 client mode uses one shared
@@ -86,7 +88,7 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
     // Go's android target also satisfies the linux build constraint.
     // The Android native owner does NOT support main's Linux protected
     // startup-padding API. Only true off is admissible on Android.
-    if runtime.GOOS!="android"&&cfg.AndroidTunnelDNS{
+    if runtime.GOOS!="android"&&(cfg.AndroidTunnelDNS||cfg.AndroidPhysicalDNS){
         return nil,ErrAdmissionUnsupported
     }
     if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0{
@@ -233,7 +235,17 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if err!=nil{originalAndroidPostauth("TUN_FAILED")
         }else{originalAndroidPostauth("TUN_ATTACHED")}
     }
-    if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidTunnelDNS{
+    if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidPhysicalDNS{
+        // Separate explicit all-App TUN UDP53 physical mode, not CN split
+        // and never an Android system Resolver/netd takeover.
+        err=bridge.enableAndroidPhysicalDNS()
+        if err!=nil{
+            originalAndroidPostauth("PHYSICAL_DNS_FAILED")
+        }else{
+            originalAndroidPostauth("PHYSICAL_DNS_ENABLED")
+            log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_EFFECTIVE role=client cold=1 app_tun_udp53=1 upstream=223.5.5.5 cn_split=NOT_ACTIVE system_resolver=NOT_CAPTURED")
+        }
+    }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidTunnelDNS{
         // Real original-Go cold grant after true TLS/lease/RAW/TUN binding.
         // The original Rust worker, M3, inverse map and owned Stop already
         // exist; neither Go nor Java processes any DNS DATA packet.

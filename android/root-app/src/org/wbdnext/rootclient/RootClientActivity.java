@@ -42,7 +42,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort;
     private Spinner networks;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS;
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult,diagnosticExportResult;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
@@ -307,6 +307,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
             request.putExtra("tunnel_dns",tunnelDNS.isChecked());
+            request.putExtra("physical_dns",physicalDNS.isChecked());
             if(allApps){
                 request.putExtra("exclude_appids",entire.excludedAppIDs);
                 request.putExtra("manager_packages",entire.managerPackages);
@@ -477,6 +478,16 @@ public final class RootClientActivity extends Activity {
         tunnelDNS.setText("隧道DNS：已进入WBD TUN的普通App UDP/53走1.1.1.1并还原原解析器回包（不接管Android系统DNS / CN分流）");
         tunnelDNS.setChecked(true);
         pane.addView(tunnelDNS);
+        physicalDNS=new CheckBox(this);
+        physicalDNS.setText("可选物理DNS：进入WBD TUN的普通App UDP/53直接通过当前物理Network发送到223.5.5.5（全部域名，不是CN域名分流或Android系统DNS）");
+        physicalDNS.setChecked(false);
+        pane.addView(physicalDNS);
+        tunnelDNS.setOnCheckedChangeListener((button,checked)->{
+            if(checked)physicalDNS.setChecked(false);
+        });
+        physicalDNS.setOnCheckedChangeListener((button,checked)->{
+            if(checked)tunnelDNS.setChecked(false);
+        });
         appChoices=new LinearLayout(this);
         appChoices.setOrientation(LinearLayout.VERTICAL);
         pane.addView(appChoices);

@@ -24,13 +24,14 @@ names=[
  "b2c2b1_rust_udp53_rejects_fragments_and_malformed_without_packet_mutation",
  "b2c2b2_m4_uses_only_tunnel_dns_source_and_owned_reply_ports",
  "b2c2b3_physical_owned_ipv4_udp53_real_question_reply_checksum",
- "b2c2b3_physical_no_cross_flow_no_unowned_reply_after_stop"
+ "b2c2b3_physical_no_cross_flow_no_unowned_reply_after_stop",
+ "b2c2b3_b4_physical_two_app_resolvers_reverse_order_and_stop"
 ]
 for test in names:
  module=("v4_android_dns_physical_flow" if test.startswith("b2c2b3_")
          else "v4_android_dns_udp_flow")
  assert f"test {module}::tests::{test} ... ok" in log,test
-assert "test result: ok. 7 passed;" in log,log[-1500:]
+assert "test result: ok. 8 passed;" in log,log[-1500:]
 assert "test v4_android_dns_udp_flow::tests::b3_real_m4_captured_app_dns_two_resolvers_inverse_and_stop ... ok" in log
 assert "test result: ok. 1 passed;" in log
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
@@ -68,6 +69,8 @@ assert "pub extern \"C\" fn wbd_m0_embedded_go_android_tunnel_dns_enable(" in en
 assert "e.android_tun.is_none()" in entry and "e.client_lease_ipv4.is_none()" in entry
 assert "android_dns_physical_ready:false" in entry
 assert "android_dns_physical_ready:true" not in entry
+assert 'pub extern "C" fn wbd_m0_embedded_go_android_physical_dns_enable(' in entry
+assert "e.android_dns_physical_ready=true;" in entry
 physical=Path("crates/wbd-engine/src/v4_android_dns_physical_flow.rs").read_text()
 platform=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
 assert 'struct PhysicalDnsUdpFlows' in physical
@@ -102,7 +105,7 @@ receipt={
  "android_tunnel_dns_real_native_cold_grant":"REQUIRES_REAL_TLS_LEASE_RAW_TUN",
  "android_tunnel_dns_physical_device_e2e":"NOT_RUN",
  "android_system_resolver":"NOT_CONNECTED",
- "physical_scoped_dns_and_tunnel_reply_backend":"ORIGINAL_M4_REAL_PHYSICAL_FD_AND_TUNNEL_RX_HOOKS_CONNECTED_COLD_DISABLED",
+ "physical_scoped_dns_and_tunnel_reply_backend":"EXPLICIT_APP_UDP53_PHYSICAL_COLD_GRANT_WIRED_DEVICE_NOT_RUN",
  "physical_actual_udp53_socket":"NOT_OPENED_DEFAULT_FALSE",
  "physical_reply_aead_authentication":"NOT_APPLICABLE_CONNECTED_KERNEL_UDP_ID_QNAME",
  "physical_ipv4_checksums_original_resolution_rewrite":"HOST_PASS",
@@ -112,4 +115,5 @@ receipt={
 (out/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
 print("ANDROID_B3_ORIGINAL_GO_RUST_TUNNEL_UDP_DNS_OPTIN_AND_INVERSE_MAP_HOST_PASS")
 print("ANDROID_B2C2C_ORIGINAL_RUST_M4_PHYSICAL_DNS_UDP_AND_TUNNEL_OWNER_SOURCE_GATE_PASS_COLD_DISABLED")
+print("ANDROID_B4_RUST_M4_PHYSICAL_DNS_COLD_GRANT_TWO_RESOLVERS_STOP_HOST_PASS")
 PY

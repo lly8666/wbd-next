@@ -137,6 +137,8 @@ type config struct{
     // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
     // System resolver/netd and CN physical split are NOT enabled by this.
     androidTunnelDNS bool
+    // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
+    androidPhysicalDNS bool
     // Signed APK's verified offline CN list only, not live DNS capture.
     androidCNSnapshot *dnsnative.CNRules
     // Constructed from selected kernel interface and Android Network netId
@@ -260,6 +262,8 @@ func parse(role string,args []string)(config,error){
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
     androidTunnelDNS:=flags.Bool("android-tunnel-dns",false,
         "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
+    androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
+        "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
     ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     peerHost:=flags.String("peer-host","","Android Root client only: physical 223.5.5.5 DNS server name bootstrap before FakeTCP SYN")
@@ -333,11 +337,13 @@ func parse(role string,args []string)(config,error){
         if !*androidRouteAll&&*androidRouteExclude!=""{
             return c,fmt.Errorf("Android exclude IDs require all-app mode")
         }
-        if *androidTunnelDNS&&!*androidRouteAll&&*androidRouteUID==0&&
+        if (*androidTunnelDNS||*androidPhysicalDNS)&&!*androidRouteAll&&*androidRouteUID==0&&
            *androidRouteGroup==""{
             return c,fmt.Errorf("Android tunnel DNS needs a selected ordinary App UID route")
         }
-        c.androidTunnelDNS=*androidTunnelDNS
+        // Physical explicitly selected takes precedence; legacy tunnel default unchanged.
+        c.androidTunnelDNS=*androidTunnelDNS&&!*androidPhysicalDNS
+        c.androidPhysicalDNS=*androidPhysicalDNS
         var e error
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
@@ -353,7 +359,7 @@ func parse(role string,args []string)(config,error){
             }
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
-             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS{
+             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS||*androidPhysicalDNS{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1683,12 +1689,13 @@ func originalAndroidM4RxSnapshot(p realityfront.V4PublicLoopPulse)string{
 func originalAndroidM4OwnerSnapshot(p realityfront.V4PublicLoopPulse)string{
  health:=0
  if p.AuthenticatedPeerControl{health=1}
- return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=%d parse_fail=%d parsed=%d auth=%d rejected=%d writefail=%d tun=%d trej=%d rawtx=%d rtun=%d tcp=%d udp=%d icmp=%d dnsudp=%d dnstcp=%d dnsraw=%d dnsrtun=%d rxerr=%d txerr=%d health=%d",
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=%d parse_fail=%d parsed=%d auth=%d rejected=%d writefail=%d tun=%d trej=%d rawtx=%d rtun=%d tcp=%d udp=%d icmp=%d dnsudp=%d dnstcp=%d dnsraw=%d dnsrtun=%d dnsptx=%d dnsprx=%d dnsperr=%d rxerr=%d txerr=%d health=%d",
  p.RawPollReady,p.RawParseFailed,p.RawParsed,p.RawAuthenticated,
  p.RawAuthRejected,p.ReverseTunWriteFailed,p.TunIPv4Admitted,
  p.TunIPv4Rejected,p.BusinessRawCopied,p.BusinessReverseTun,
  p.TunTCPSeen,p.TunUDPSeen,p.TunICMPSeen,p.DnsUDP53Seen,
  p.DnsTCP53Seen,p.DnsTunnelRawCopied,p.DnsTunnelReplyTun,
+ p.DnsPhysicalTx,p.DnsPhysicalRx,p.DnsPhysicalError,
  p.RxErrors,p.TxErrors,health)
 }
 // Real original Rust M4 state, not Ready and never a guessed Chrome PASS.
@@ -1702,6 +1709,9 @@ func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]st
  if p.DnsTCP53Seen>0{stages=append(stages,"DNS_TCP53_TUN_SEEN")}
  if p.DnsTunnelRawCopied>0{stages=append(stages,"DNS_TUNNEL_RAW_COPIED")}
  if p.DnsTunnelReplyTun>0{stages=append(stages,"DNS_TUNNEL_REVERSE_TUN_WRITTEN")}
+ if p.DnsPhysicalTx>0{stages=append(stages,"DNS_PHYSICAL_UDP_COPIED")}
+ if p.DnsPhysicalRx>0{stages=append(stages,"DNS_PHYSICAL_REVERSE_TUN_WRITTEN")}
+ if p.DnsPhysicalError>0{stages=append(stages,"DNS_PHYSICAL_ERROR")}
  if p.RawPollReady>0{stages=append(stages,"RAW_SOCKET_READABLE")}
  if p.RawParseFailed>0{stages=append(stages,"RAW_PARSE_FAILED")}
  if p.RawParsed>0{stages=append(stages,"RAW_PARSED")}
@@ -1952,6 +1962,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
             AndroidTunnelDNS:c.androidTunnelDNS,
+            AndroidPhysicalDNS:c.androidPhysicalDNS,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
