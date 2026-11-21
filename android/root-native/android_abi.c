@@ -1,0 +1,34 @@
+// Source-locked NDK/Bionic C ABI layout gate for Android ARM64 and x86_64.
+// This is NOT a Linux GNU/musl ABI assertion and does not touch device state.
+#include <stddef.h>
+#if !defined(__aarch64__) && !defined(__x86_64__)
+#error "Only Android ARM64 and x86_64 64-bit Bionic ABIs permitted"
+#endif
+#include <sys/ioctl.h>
+#include <linux/ioctl.h>
+#include <stdint.h>
+#include <net/if.h>
+#include <netinet/in.h>
+#include <linux/if_tun.h>
+#include <linux/if_packet.h>
+#include <linux/filter.h>
+#include <android/multinetwork.h>
+
+_Static_assert(sizeof(void *) == 8, "Android product requires 64-bit pointers");
+_Static_assert(sizeof(struct ifreq) == 40, "Android ifreq must be Linux64 40 bytes");
+_Static_assert(offsetof(struct ifreq, ifr_flags) == 16, "Bionic ifr_flags at offset16");
+_Static_assert(sizeof(struct sockaddr_in) == 16, "unexpected Bionic sockaddr_in");
+_Static_assert(sizeof(struct sockaddr_ll) == 20, "unexpected Bionic sockaddr_ll");
+_Static_assert(IFNAMSIZ == 16, "unexpected ifname length");
+_Static_assert(TUNGETIFF == 0x800454d2UL, "TUNGETIFF ABI changed");
+_Static_assert(TUNSETIFF == 0x400454caUL, "TUNSETIFF ABI changed");
+_Static_assert(SO_BINDTODEVICE == 25, "socket binding ABI changed");
+_Static_assert(SIOCGIFMTU == 0x8921UL, "Bionic interface MTU ioctl changed");
+_Static_assert(SO_ATTACH_FILTER == 26, "Bionic classic BPF socket option changed");
+_Static_assert(sizeof(struct sock_filter) == 8, "Bionic sock_filter layout changed");
+_Static_assert(sizeof(struct sock_fprog) == 16, "Bionic sock_fprog layout changed");
+int wbd_android_abi_gate_only(void) {
+    // Symbol references force header/type checking, not a device operation.
+    net_handle_t network = 0;
+    return network == 0 ? 0 : 1;
+}

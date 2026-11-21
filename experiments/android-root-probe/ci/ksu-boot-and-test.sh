@@ -1,0 +1,199 @@
+#!/usr/bin/env bash
+# Cold boot real KernelSU twice; do NOT invoke adb root. KSU's --allow-shell is a CI preflight only.
+set -euo pipefail
+# Unlike android-emulator-runner, our manually booted KSU AVD does not inject adb into PATH.
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+# Avoid unbounded adb shell hangs on unhealthy AVD startup.
+adb() {
+  timeout --signal=TERM --kill-after=2s 18s "$ANDROID_HOME/platform-tools/adb" "$@"
+}
+export ANDROID_AVD_HOME="$GITHUB_WORKSPACE/out/ksu/avd-home"
+test -s "$ANDROID_AVD_HOME/wbd_ksu36.ini"
+"$ANDROID_HOME/emulator/emulator" -list-avds | grep -qx wbd_ksu36
+cd "$GITHUB_WORKSPACE"
+mkdir -p out/ksu out/appcase
+emulator="$ANDROID_HOME/emulator/emulator"
+rooted="$GITHUB_WORKSPACE/out/ksu/patched-ramdisk.img"
+# Pre-generate and serve a stable CI-only ADB key BEFORE launching Play Store AVD.
+# This configures the emulator control channel; it is NOT app Root authorization.
+mkdir -p "$HOME/.android"
+if [[ ! -s "$HOME/.android/adbkey" ]]; then
+  adb keygen "$HOME/.android/adbkey" >out/ksu/adb-keygen.txt 2>&1
+fi
+adb start-server >out/ksu/adb-server-start.txt 2>&1
+adb devices -l >out/ksu/adb-devices-initial.txt
+EMU_PID=""
+cleanup() {
+  # Do NOT wait unboundedly for a wedged emulator parent. SOURCE e1d73f
+  # finished all real KSU gates in ~2 min but the old EXIT-trap wait blocked
+  # until the 780s outer timeout, falsely failing an otherwise good run.
+  set +e
+  {
+    echo "cleanup_enter $(date -u +%Y-%m-%dT%H:%M:%SZ) emulator_parent=$EMU_PID"
+    adb emu kill >/dev/null 2>&1
+    echo "adb_emu_kill_rc=$?"
+    if [[ -n "$EMU_PID" ]];then
+      kill -TERM "$EMU_PID" >/dev/null 2>&1
+      echo "emulator_term_rc=$?"
+      for n in $(seq 1 25);do
+        state="$(ps -o stat= -p "$EMU_PID" 2>/dev/null | tr -d ' ')" || true
+        if [[ -z "$state" || "$state" == Z* ]];then
+          echo "emulator_exited_or_zombie state=$state iteration=$n"
+          wait "$EMU_PID" >/dev/null 2>&1 || true
+          echo "cleanup_exit $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          return
+        fi
+        sleep 0.2
+      done
+      echo "emulator_ignored_term; forcing_kill"
+      kill -KILL "$EMU_PID" >/dev/null 2>&1 || true
+      # Never issue an unbounded wait after SIGKILL: a kernel D-state process
+      # may not be reapable; GitHub runner will tear down orphan processes.
+    fi
+    echo "cleanup_exit $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  } >out/ksu/cleanup.log 2>&1
+}
+trap cleanup EXIT
+start_avd() {
+  local phase="$1"
+  "$emulator" -avd wbd_ksu36 -ramdisk "$rooted" \
+    -no-snapshot-load -no-snapshot-save -no-window -no-audio -no-boot-anim \
+    -gpu swiftshader_indirect -accel on -memory 3072 \
+    >"out/ksu/emulator-$phase.log" 2>&1 &
+  EMU_PID=$!
+  # Avoid 300-second opaque wait on "device unauthorized".
+  local authorized=0
+  local auth_deadline=$((SECONDS+130))
+  local n=0
+  while (( SECONDS < auth_deadline )); do
+    n=$((n+1))
+    adb devices -l >"out/ksu/adb-devices-$phase.txt" 2>&1 || true
+    if grep -Eq 'emulator-[0-9]+[[:space:]]+device([[:space:]]|$)' "out/ksu/adb-devices-$phase.txt"; then
+      authorized=1
+      break
+    fi
+    if grep -Eq 'emulator-[0-9]+[[:space:]]+unauthorized' "out/ksu/adb-devices-$phase.txt"; then
+      printf '%s\n' "ADB_UNAUTHORIZED on $phase at $n" >"out/ksu/adb-unauthorized-$phase.txt"
+    fi
+    if ! kill -0 "$EMU_PID" 2>/dev/null; then
+      tail -n 100 "out/ksu/emulator-$phase.log"
+      echo "ENV_BLOCKED: emulator process exited before ADB online"
+      exit 3
+    fi
+    sleep 2
+  done
+  if [[ "$authorized" != 1 ]]; then
+    echo "ENV_BLOCKED: ADB never reached authorized 'device' on $phase; never confuse with KSU app authorization"
+    tail -n 90 "out/ksu/emulator-$phase.log"
+    exit 3
+  fi
+  local booted=0
+  local boot_deadline=$((SECONDS+210))
+  while (( SECONDS < boot_deadline ));do
+    if [[ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]];then booted=1;break;fi
+    sleep 2
+  done
+  if [[ "$booted" != 1 ]];then
+    echo "ENV_BLOCKED: patched AVD boot failed in phase $phase"
+    tail -n 90 "out/ksu/emulator-$phase.log"
+    exit 3
+  fi
+  # Android sys.boot_completed can be published while system_server's
+  # PackageManager binder is still registering. An immediate adb install
+  # otherwise fails "Can't find service: package" before ANY Root test runs.
+  # This is a bounded AVD readiness check, not root authorization spoofing.
+  local package_ready=0
+  local package_deadline=$((SECONDS+95))
+  while (( SECONDS < package_deadline ));do
+    local check
+    check="$(adb shell pm path android 2>&1)" || true
+    printf '%s\n' "$check" >"out/ksu/package-ready-$phase.txt"
+    if grep -q '^package:' "out/ksu/package-ready-$phase.txt";then
+      package_ready=1;break
+    fi
+    sleep 2
+  done
+  if [[ "$package_ready" != 1 ]];then
+    echo "ENV_BLOCKED: Android PackageManager not ready after boot_completed in phase $phase"
+    adb shell service check package >"out/ksu/package-service-$phase.txt" 2>&1 || true
+    tail -n 55 "out/ksu/emulator-$phase.log"
+    exit 3
+  fi
+  adb shell getenforce >"out/ksu/enforce-$phase.txt"
+  adb shell uname -r >"out/ksu/kernel-$phase.txt"
+  adb shell getprop ro.build.version.sdk >"out/ksu/api-$phase.txt"
+  test "$(tr -d '\r' <"out/ksu/api-$phase.txt")" = 36
+  test "$(tr -d '\r' <"out/ksu/enforce-$phase.txt")" = Enforcing
+}
+start_avd first
+adb install -r out/ksu/manager.apk >out/ksu/install-manager.txt
+adb shell pm path me.weishu.kernelsu >out/ksu/manager-pm-first.txt 2>&1 || true
+adb shell pm list packages | grep -E 'kernelsu|rootprobe' >out/ksu/packages-first.txt || true
+adb shell ls -l /data/adb /data/adb/ksud /system/bin/su /system/xbin/su >out/ksu/ksu-paths-first.txt 2>&1 || true
+adb shell cat /proc/modules | grep -Ei 'kernelsu|ksu' >out/ksu/modules-first.txt 2>&1 || true
+adb install -r out/apk/app-su.apk >out/ksu/install-test-app.txt
+adb shell monkey -p me.weishu.kernelsu -c android.intent.category.LAUNCHER 1 >out/ksu/first-manager-launch.txt 2>&1 || true
+sleep 5
+adb emu kill >out/ksu/first-cold-stop.txt 2>&1 || true
+wait "$EMU_PID" >/dev/null 2>&1 || true
+for n in $(seq 1 40);do
+  if ! adb devices | grep -q 'emulator-.*device';then break;fi
+  sleep 1
+done
+start_avd second
+adb shell pm path me.weishu.kernelsu >out/ksu/manager-pm-second-before.txt 2>&1 || true
+adb shell pm list packages -u | grep -E 'kernelsu|rootprobe' >out/ksu/packages-second-all.txt || true
+adb shell ls -l /data/adb /data/adb/ksud /system/bin/su /system/xbin/su >out/ksu/ksu-paths-second.txt 2>&1 || true
+adb shell cat /proc/modules | grep -Ei 'kernelsu|ksu' >out/ksu/modules-second.txt 2>&1 || true
+# If the manager was removed during cold boot, reinstall the same already SHA-verified
+# official APK (not fake su), and check once. Real KSU kernel must independently work.
+if ! grep -q '^package:' out/ksu/manager-pm-second-before.txt; then
+  adb install -r out/ksu/manager.apk >out/ksu/reinstall-manager-second.txt
+  adb shell pm path me.weishu.kernelsu >out/ksu/manager-pm-after-reinstall.txt 2>&1 || true
+  adb shell am start -n me.weishu.kernelsu/me.weishu.kernelsu.ui.MainActivity >out/ksu/manager-second-launch.txt 2>&1 || true
+  sleep 3
+fi
+adb shell su -c id >out/ksu/fixture-shell-su.txt 2>&1 || true
+adb shell su -c '/data/adb/ksud debug info' >out/ksu/ksud-debug-info.txt 2>&1 || true
+adb shell pm list packages | grep -E 'kernelsu|rootprobe' >out/ksu/packages.txt || true
+adb shell getprop ro.build.type >out/ksu/build-type-second.txt
+adb shell getprop ro.build.fingerprint >out/ksu/build-fingerprint-second.txt
+# Trigger a real app request before explicitly granting ONLY our app in the manager UI.
+adb shell am start -n org.wbdnext.rootprobe/.ProbeActivity >out/ksu/initial-app-launch.txt
+sleep 5
+python3 experiments/android-root-probe/ci/ksu-grant-ui.py
+# Previous KSU root-generated TUN/raw PASS is source-locked and not rerun here.
+# Prove the missing link: actual untrusted App DatagramSocket -> owned TUN.
+bash experiments/android-root-probe/ci/appflow-case.sh
+# Same official KSU approval / source-locked native artifact: real App DNS/TCP
+# and Android netd-selected underlay via emulator host, no extra AVD.
+bash experiments/android-root-probe/ci/mainstream-case.sh
+# KSU root worker SIGKILL must leave no orphan UID rule.
+bash experiments/android-root-probe/ci/appflow-crash-case.sh
+# Synthetic two-downstream kernel NAT and explicit ordinary-App recovery button.
+bash experiments/android-root-probe/ci/tether-recovery-case.sh
+# The production-like diagnostic APK embeds both ABIs; prove on-device lib
+# extraction and real ordinary-App->KSU Root, without an ADB-pushed binary.
+bash experiments/android-root-probe/ci/device-diagnostic-case.sh
+python3 - <<'PY'
+import json,os,hashlib
+from pathlib import Path
+p=Path("out/ksu")
+s=json.loads(Path("out/appflow/summary.json").read_text())
+d={"schema":"android-ksu-real-app-uid-tun/v1",
+"source":os.environ["GITHUB_SHA"],
+"manager":"real KernelSU v3.3.1 on ephemeral Android16 API36 x86_64 AVD",
+"manager_sha256":"b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450",
+"ksud_info":(p/"ksud-debug-info.txt").read_text(errors="replace")[:1200],
+"patched_ramdisk_sha256":hashlib.sha256((p/"patched-ramdisk.img").read_bytes()).hexdigest(),
+"app_uid":s.get("app_uid"),"status":s["status"],
+"app_origin_udp_captured":s["status"]=="APP_UID_TUN_ROUNDTRIP_PASS",
+"sigkill_cleanup_status":json.loads(Path("out/appflow-crash/summary.json").read_text())["status"],
+"mainstream_status":json.loads(Path("out/mainstream/summary.json").read_text())["status"],
+"tether_recovery_status":json.loads(Path("out/tether-recovery/summary.json").read_text())["status"],
+"embedded_diagnostic_status":json.loads(Path("out/device-diag/summary.json").read_text())["status"],
+"netd_nat_hotspot_usb":"NOT_RUN",
+"scope":"one exact UID and one synthetic /32 temporary policy rule, AVD only"}
+(p/"summary.json").write_text(json.dumps(d,indent=2,sort_keys=True))
+if not d["app_origin_udp_captured"] or d["sigkill_cleanup_status"]!="SIGKILL_WATCHDOG_CLEANUP_PASS" or d["mainstream_status"]!="MAINSTREAM_DNS_TLS_PASS" or d["tether_recovery_status"]=="FAIL" or d["embedded_diagnostic_status"]!="EMBEDDED_APK_DEVICE_DIAGNOSTIC_PASS":raise SystemExit("real App mainstream, UDP roundtrip, recovery or SIGKILL cleanup failed")
+PY

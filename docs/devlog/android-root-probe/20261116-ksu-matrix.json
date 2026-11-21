@@ -1,0 +1,110 @@
+{
+  "schema": "wbd-real-kernelsu-app-su/v1",
+  "source_sha": "0a4967b790aea4bf45b8945aff12068bf60a51d6",
+  "branch": "experiment/android-temp-root-probe",
+  "ci": {
+    "run": 43819366919,
+    "conclusion": "success",
+    "artifact_id": 14203682923,
+    "artifact_zip_sha256": "8f6402485c925b1e94d57c63e573b01c79603bbc133359b3e5d195bc166001e5"
+  },
+  "environment": {
+    "android": "16/API36",
+    "abi": "x86_64",
+    "selinux": "Enforcing",
+    "avd": "google_apis_playstore temporary",
+    "kernel": "6.6.66-android15-8-gb66429556fb8-ab13070261",
+    "manager": "real KernelSU v3.3.1 / ksud32680 / LKM",
+    "manager_apk_sha256": "b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450",
+    "original_ramdisk_sha256": "7f286403ef23d62a70f62c8adea07828b3c0d798e8a0ca049060e31ba012ddd3",
+    "private_patched_ramdisk_sha256": "84cc9fbe1828315e259b375a5407ca1bdcef69908c74e14bf2fd29d2f64027b6",
+    "shell_ksu_preflight": "uid=0 context=u:r:ksu:s0; not used as app authorization"
+  },
+  "app": {
+    "package": "org.wbdnext.rootprobe",
+    "uid": 10218,
+    "selinux": "u:r:untrusted_app:s0:c218,c256,c512,c768",
+    "min_sdk": 28,
+    "target_sdk": 37,
+    "compile_sdk": 36,
+    "apk_sha256": "30ebfe17e2bf3f099dcdb2c8ac6173e28a1f9fadb1b3c4a55a174e3396c09872",
+    "app_json_sha256": "9da97889e5a16f66a6836a6e1d864b331e79704f320b4cb97879251663338387",
+    "manager_detail_verified_package": true,
+    "superuser_ui_after_grant_checked": true,
+    "permission_scope": "only this test package",
+    "su_command": "su -c",
+    "su_exit": 0,
+    "elapsed_ms": 1155,
+    "status": "APP_SU_NATIVE_EXERCISE_PASS"
+  },
+  "native": {
+    "source_sha": "42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d",
+    "uid": 0,
+    "euid": 0,
+    "selinux": "u:r:ksu:s0",
+    "tun": {
+      "status": "SUPPORTED_IN_SCOPE",
+      "mtu": 1400,
+      "udp_ingress_bytes": 38,
+      "udp_egress_bytes": 39,
+      "cleanup": "owned TUN fd close -> interface gone"
+    },
+    "raw_tcp": {
+      "status": "SUPPORTED_IN_SCOPE",
+      "syn_sent_bytes": 40,
+      "observed_syn": true,
+      "observed_rst": true,
+      "cleanup": "raw socket closed"
+    }
+  },
+  "history_sources": [
+    [
+      "4cb26b4dcd2df093a0a71cb7506d19f8ca501a2c",
+      43814160086,
+      "CI adb PATH missing"
+    ],
+    [
+      "9db2cb05c05ba9b6ea6ed6d33f3ae34002cce652",
+      43814465785,
+      "Github API 403"
+    ],
+    [
+      "1cd11a90bf78054fa8e6bdd6f48b03174d2e3e9b",
+      43814722207,
+      "AVD name missing"
+    ],
+    [
+      "3ee638fea9f46c204c813771b44cddb166153823",
+      43815647904,
+      "KSU Manager missing on second boot"
+    ],
+    [
+      "97fc31cb5957a821e1c32ea85f0de95f709ba3a9",
+      43816663355,
+      "different google_apis kernel KSU LKM mismatch"
+    ],
+    [
+      "0b2a33e8bfe2dcd11807ac5d575e00350e497207",
+      43816989487,
+      "ADB unauthorized"
+    ],
+    [
+      "b43658e4c2bc5d0135981abfbdcbb69f85c65872",
+      43817976068,
+      "Compose app row absent from uiautomator"
+    ],
+    [
+      "74e2f9c22a4d3f02f68d100f87faceb0b61c3038",
+      43818761054,
+      "Compose Superuser switch node absent"
+    ]
+  ],
+  "not_run": [
+    "production Android client/FGS/callback",
+    "actual Android netd fwmark and physical network routing",
+    "NAT/conntrack/hotspot/USB downstream",
+    "real phone/OEM ARM64/16KiB runtime/battery",
+    "IPv6 CLAT and real underlay raw",
+    "unexpected termination recovery"
+  ]
+}

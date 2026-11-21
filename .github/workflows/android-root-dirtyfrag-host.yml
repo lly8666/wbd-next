@@ -1,0 +1,32 @@
+name: Android16 DirtyFrag old-image ARM64 host preflight (not exploit)
+run-name: "android-dirtyfrag|host|${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/android-temp-root-probe]
+    paths:
+      - ".github/workflows/android-root-dirtyfrag-host.yml"
+      - "experiments/android-root-probe/ci/dirtyfrag-host-preflight.sh"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-dirtyfrag-host-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  one-arm64-host:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify ARM64 KVM and older image provenance only (no guest / exploit)
+        shell: bash
+        run: bash experiments/android-root-probe/ci/dirtyfrag-host-preflight.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-dirtyfrag-host-${{ github.sha }}-${{ github.run_id }}
+          path: out/dirtyfrag-host/
+          retention-days: 21
+          if-no-files-found: error

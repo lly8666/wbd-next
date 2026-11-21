@@ -16,6 +16,16 @@ pub(crate) fn admitted_client_source(packet:&[u8],lease:Option<[u8;4]>)->bool{
         packet[12..16]==ip[..]
 }
 
+// Reverse Android client packet must be destined to its Go protected /32.
+// Manual/static client lease (None) retains prior original-owner semantics.
+pub(crate) fn admitted_client_destination(packet:&[u8],lease:Option<[u8;4]>)->bool{
+    let Some(ip)=lease else{return true};
+    packet.len()>=20 && packet[0]>>4==4 &&
+       usize::from(packet[0]&0x0f)*4>=20 &&
+       usize::from(packet[0]&0x0f)*4<=packet.len() &&
+       packet[16..20]==ip[..]
+}
+
 #[cfg(test)]
 mod tests{
     use super::*;
@@ -40,6 +50,12 @@ mod tests{
         assert!(!admitted_client_source(&b_packet,Some(a)));
         assert!(!admitted_client_source(&a_packet,Some(b)));
         assert!(admitted_client_source(&b_packet,None)); // manual unchanged
+        let mut inbound=packet(b);
+        inbound[16..20].copy_from_slice(&a);
+        assert!(admitted_client_destination(&inbound,Some(a)));
+        assert!(!admitted_client_destination(&inbound,Some(b)));
+        assert!(admitted_client_destination(&inbound,None));
+        assert!(!admitted_client_destination(&inbound[..10],Some(a)));
         let mut short=vec![0x45,0,0,0];
         assert!(!admitted_client_source(&short,Some(a)));
         short=packet(a);short[0]=0x65;

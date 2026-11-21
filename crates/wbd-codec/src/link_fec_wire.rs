@@ -130,6 +130,54 @@ impl<'a> LinkPacketPlan<'a> {
     }
     pub fn issued(&self)->usize{self.emitted}
     pub fn total_frames(&self)->usize{self.count}
+    /// Rehydrate an actual owner's previously issued cursor in O(1)
+    /// without regenerating earlier ciphertext or allocating discarded
+    /// frames. The owner MUST prove those exact indices were already issued
+    /// under this same immutable packet ID, generation and MTU snapshot.
+    pub fn resume_issued(&mut self,issued:usize)->Result<(),WireError>{
+        if issued>self.count||self.is_abandoned(){return Err(WireError::InvalidFragment)}
+        self.emitted=issued;
+        Ok(())
+    }
+    /// Android ARM64 original M4 zero-allocation fragment staging. Writes
+    /// EXACTLY the same frozen LINK20 bytes as issue_next() but directly
+    /// into a pre-loaned M1 slab. A capacity/MTU change retires this plan:
+    /// never regenerate an old fragment or mix two strides for one ID.
+    pub fn issue_next_into(
+        &mut self,current_frame_mtu:usize,dst:&mut [u8],
+    )->Result<Option<usize>,LinkPlanError>{
+        if let Some((required,available))=self.abandoned{
+            return Err(LinkPlanError::MtuShrank{
+                emitted:self.emitted,required,available,
+            })
+        }
+        if self.emitted==self.count{return Ok(None)}
+        let part=if self.fragmented{
+            let start=self.emitted*self.chunk;
+            &self.source[start..self.source.len().min(start+self.chunk)]
+        }else{self.source};
+        let required=part.len()+if self.fragmented{LINK_HEADER}else{0};
+        let available=current_frame_mtu.min(dst.len());
+        if required>available{
+            self.abandoned=Some((required,available));
+            return Err(LinkPlanError::MtuShrank{
+                emitted:self.emitted,required,available,
+            })
+        }
+        if self.fragmented{
+            dst[..8].copy_from_slice(LINK_MAGIC);
+            dst[8..10].copy_from_slice(&[1,0]);
+            dst[10..12].copy_from_slice(&(self.emitted as u16).to_be_bytes());
+            dst[12..14].copy_from_slice(&(self.count as u16).to_be_bytes());
+            dst[14..16].copy_from_slice(&(self.source.len() as u16).to_be_bytes());
+            dst[16..20].copy_from_slice(&self.packet_id.to_be_bytes());
+            dst[LINK_HEADER..required].copy_from_slice(part);
+        }else{
+            dst[..required].copy_from_slice(part)
+        }
+        self.emitted+=1;
+        Ok(Some(required))
+    }
     pub fn is_abandoned(&self)->bool{self.abandoned.is_some()}
     pub fn original_frame_mtu(&self)->usize{self.planned_frame_mtu}
 
@@ -324,6 +372,52 @@ mod tests {
                 _ => panic!("escaped fragment silently treated as ordinary"),
             }
         }
+    }
+    #[test]
+    fn arm64_original_m4_slab_link_plan_is_byte_identical_and_capacity_fail_closed(){
+        for source in [
+            vec![0x5a;63],vec![0x5a;65],vec![0xb7;65_535],
+            LINK_MAGIC.to_vec(),
+        ]{
+            let mut original=LinkPacketPlan::new(
+                &source,1300,LinkMode::FixedOff,0x0102_0304
+            ).unwrap();
+            let mut in_place=LinkPacketPlan::new(
+                &source,1300,LinkMode::FixedOff,0x0102_0304
+            ).unwrap();
+            let mut buffer=[0u8;1300];
+            let mut index=0;
+            loop{
+                let old=original.issue_next(1300).unwrap();
+                let next=in_place.issue_next_into(1300,&mut buffer).unwrap();
+                assert_eq!(next,old.as_ref().map(Vec::len));
+                match old{
+                    Some(bytes)=>{
+                        assert_eq!(&buffer[..bytes.len()],bytes.as_slice());
+                        index+=1;
+                    },
+                    None=>break,
+                }
+            }
+            assert_eq!(in_place.issued(),index);
+            let mut resumed=LinkPacketPlan::new(
+                &source,1300,LinkMode::FixedOff,0x0102_0304
+            ).unwrap();
+            resumed.resume_issued(index).unwrap();
+            assert_eq!(resumed.issue_next_into(1300,&mut buffer),Ok(None));
+            assert_eq!(resumed.resume_issued(index+1),
+                Err(WireError::InvalidFragment));
+        }
+        let source=vec![7u8;1800];
+        let mut shrink=LinkPacketPlan::new(
+            &source,1300,LinkMode::FixedOff,9
+        ).unwrap();
+        let mut tiny=[0u8;10];
+        assert!(matches!(shrink.issue_next_into(1300,&mut tiny),
+            Err(LinkPlanError::MtuShrank{emitted:0,..})));
+        assert!(shrink.is_abandoned());
+        let mut full=[0u8;1300];
+        assert!(shrink.issue_next_into(1300,&mut full).is_err());
     }
     #[test]
     fn r0_l01_magic_and_wf_escape_exact_old_go_wire_modes() {

@@ -161,6 +161,16 @@ pub fn parse_data_packet_fast<'a>(
     parse_data_packet_checked(packet, trusted, false)
 }
 
+/// Android A50 call-site compatibility: use main's one shared M3-pending
+/// fast parser and return only UNAUTHENTICATED ciphertext for the original
+/// Rust M1/M3 AEAD, PN and replay checks.
+#[cfg(any(target_os="android",test))]
+pub(crate) fn parse_data_packet_android_m3_pending<'a>(
+    packet:&'a [u8],trusted:TrustedRx<'_>,
+)->Result<UnauthenticatedData<'a>,RxError>{
+    parse_data_packet_fast(packet,trusted)
+}
+
 fn parse_data_packet_checked<'a>(
     packet: &'a [u8],
     trusted: TrustedRx<'_>,
@@ -332,7 +342,7 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ipv4_tcp::{build, Presentation};
+    use crate::ipv4_tcp::{build, build_presentation_ack, Presentation};
     use wbd_types::{BufferKey,LaneKey,RecordPn,SeqOffset,TunnelKey};
     use wbd_types::buffer_contract::{BufferOrigin, FrozenMetadata, FrozenRecordHandle};
 
@@ -427,6 +437,110 @@ mod tests {
         let mut wrong_type=pkt.clone();wrong_type[33]=0x10;
         assert_eq!(parse_data_packet_fast(&wrong_type,trusted(None,1500)),
             Err(RxError::InvalidDataFlags));
+    }
+
+    #[test]
+    fn a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted(){
+        let original=wire(b"original sealed M3 bytes",0x1_0000_000a,None);
+        assert_eq!(
+            parse_data_packet_android_m3_pending(&original,trusted(None,1500))
+                .unwrap().ciphertext,
+            b"original sealed M3 bytes"
+        );
+        // Real Bionic returned the exact original outer tuple and IP
+        // checksum. Only the transport checksum was rejected 113 times.
+        let mut drift=original.clone();
+        drift[36]^=0x40;
+        assert_eq!(
+            parse_data_packet(&drift,trusted(None,1500)),
+            Err(RxError::TcpChecksum)
+        );
+        let provisional=parse_data_packet_android_m3_pending(
+            &drift,trusted(None,1500)).unwrap();
+        assert_eq!(provisional.ciphertext,b"original sealed M3 bytes");
+        assert_eq!(provisional.seq32,10); // wire wraps; M1 still extends
+
+        // A forged valid tuple is not an authenticated M3 record: even
+        // payload mutation is only returned as UNAUTHENTICATED bytes;
+        // original M3 AEAD+PN remains the sole final admission.
+        let mut altered=original.clone();
+        altered[40]^=1;
+        assert_eq!(parse_data_packet(&altered,trusted(None,1500)),
+            Err(RxError::TcpChecksum));
+        assert_ne!(
+            parse_data_packet_android_m3_pending(
+                &altered,trusted(None,1500)).unwrap().ciphertext,
+            b"original sealed M3 bytes"
+        );
+
+        // Only structural/tuple gates precede the authenticated M3 opener.
+        // Checksums are deliberately not a DATA admission condition.
+        for (offset,mask,expected) in [
+            (12,1,RxError::WrongTuple),
+            (33,1,RxError::InvalidDataFlags),
+            (2,1,RxError::TotalLengthMismatch),
+            (22,1,RxError::WrongTuple),
+        ] {
+            let mut bad=original.clone();
+            bad[offset]^=mask;
+            assert_eq!(
+                parse_data_packet_android_m3_pending(&bad,trusted(None,1500)),
+                Err(expected),"offset={offset}"
+            );
+        }
+        assert_eq!(
+            parse_data_packet_android_m3_pending(&original,trusted(None,39)),
+            Err(RxError::ExceedsMtu{actual:original.len(),mtu:39})
+        );
+        // A real checksum-validated pure ACK stays control, not M3 DATA.
+        let mut ack_buf=[0u8;64];
+        let ack=build_presentation_ack(
+            tuple(),13,25,2,PacketPersona::Legacy,1500,&mut ack_buf
+        ).unwrap();
+        assert!(parse_ack_packet(ack,trusted(None,1500),false).is_ok());
+        assert_eq!(parse_data_packet_android_m3_pending(
+            ack,trusted(None,1500)),Err(RxError::InvalidDataFlags));
+    }
+
+    #[test]
+    fn a49_single_pass_matches_a48_two_pass_android_admission(){
+        let original=wire(b"original sealed M3 bytes",0x1_0000_000a,None);
+        let mut bad_tcp=original.clone();bad_tcp[36]^=0x40;
+        let mut bad_tuple=original.clone();bad_tuple[12]^=1;
+        let mut bad_ip=original.clone();bad_ip[10]^=1;
+        let mut bad_flags=original.clone();bad_flags[33]^=1;
+        for packet in [&original[..],&bad_tcp[..],&bad_tuple[..],
+                       &bad_flags[..]]{
+            let old=match parse_data_packet(packet,trusted(None,1500)){
+                Ok(data)=>Ok(data),
+                Err(RxError::TcpChecksum)=>
+                    parse_data_packet_android_m3_pending(packet,trusted(None,1500)),
+                Err(other)=>Err(other),
+            };
+            // The M3-pending result stays UNAUTHENTICATED in BOTH cases.
+            let fast=parse_data_packet_android_m3_pending(
+                packet,trusted(None,1500));
+            assert_eq!(fast,old);
+        }
+        // A short IPv4 checksum mismatch may occur with offload, and M3
+        // still decides whether ciphertext is usable. The strict diagnostic
+        // parser remains explicit, but no Android DATA requires it.
+        assert_eq!(parse_data_packet(&bad_ip,trusted(None,1500)),
+                   Err(RxError::IpChecksum));
+        assert!(parse_data_packet_android_m3_pending(
+            &bad_ip,trusted(None,1500)).is_ok());
+        assert_eq!(parse_data_packet(&bad_tcp,trusted(None,1500)),
+                   Err(RxError::TcpChecksum));
+        let mut changed_dscp=original.clone();changed_dscp[1]=0x03;
+        assert!(parse_data_packet_android_m3_pending(
+            &changed_dscp,trusted(None,1500)).is_ok());
+        let mut no_df=original.clone();no_df[6]=0;
+        assert!(parse_data_packet_android_m3_pending(
+            &no_df,trusted(None,1500)).is_ok());
+        let mut fragmented=original.clone();fragmented[6]=0x20;
+        assert_eq!(parse_data_packet_android_m3_pending(
+            &fragmented,trusted(None,1500)),
+            Err(RxError::FragmentedOrUnexpectedFlags));
     }
 
     #[test]

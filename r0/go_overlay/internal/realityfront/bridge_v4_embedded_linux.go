@@ -1,4 +1,4 @@
-//go:build linux && cgo && wbd_v4_embedded_go
+//go:build linux && !android && cgo && wbd_v4_embedded_go
 
 // Developer-opt-in non-_test package-private Go→Rust control adapter.
 // Caller is only the credential-verified EstablishServerV4 ownerBridge path.
@@ -401,6 +401,16 @@ func (b *v4EmbeddedNativeBridge) attachRawRxOnInterface(ifname string,ifindex ui
     if rc!=0{return fmt.Errorf("%w: authenticated raw underlay %q/%d bind=%d",&v4EmbeddedNativeStatus{Operation:"raw_rx_attach",Code:int(rc)},ifname,ifindex,int(rc))}
     return nil
 }
+// Android only: a Linux native CLI cannot request a Bionic tunnel-DNS grant.
+func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
+    return ErrAdmissionUnsupported
+}
+func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error{
+    return ErrAdmissionUnsupported
+}
+func (b *v4EmbeddedNativeBridge) enableAndroidCNDNSSplit(_ []byte)error{
+    return ErrAdmissionUnsupported
+}
 func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
     if !b.committed||b.handle==0||len(name)==0||len(name)>15{return errV4Embedded}
     raw:=[]byte(name)
@@ -714,6 +724,21 @@ type V4PublicWorkerCPU struct{RxNs,TxNs uint64}
 // authentication path is redirected to Go.
 type V4PublicLoopPulse struct{
     RxRecords,TxRecords,RxErrors,TxErrors uint64
+    // Android: real original Rust M4 business path; Linux leaves these zero.
+    TunIPv4Admitted,TunIPv4Rejected,BusinessRawCopied,BusinessReverseTun uint64
+    DnsUDP53Seen,DnsTCP53Seen uint64
+    // Android-only native DNS proof counters: Linux stays zero-valued.
+    DnsTunnelRawCopied,DnsTunnelReplyTun uint64
+    // Android-only physical UDP DNS pulse; Linux zero value.
+    DnsPhysicalTx,DnsPhysicalRx,DnsPhysicalError uint64
+    // Android-only original M4 DNS route counters; Linux zero value.
+    DnsCNPhysicalSent,DnsNonCNTunnelRaw,DnsTCP53OriginalRaw,DnsPhysicalTCTun uint64
+    // A45 Android real RAW RX and selected-App inner protocol evidence.
+    RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
+    RawAuthRejected,ReverseTunWriteFailed uint64
+    TunICMPSeen,TunTCPSeen,TunUDPSeen uint64
+    // Original Android native RAW RX counters / latest observed IPv4 header.
+    RawDebug [22]uint64
     RxThreadCPUns,TxThreadCPUns uint64
     AuthenticatedPeerDead bool
     // Before Native Health terminal: trigger ORIGINAL Go cold B while A
@@ -722,6 +747,8 @@ type V4PublicLoopPulse struct{
     // Only true after exact candidate native Normal or Game AEAD/PN opened
     // the canonical server Health kind0 after full remote M4 Commit.
     AuthenticatedPeerControl bool
+    // Bionic physical scope invalidation, not authenticated peer Health death.
+    PhysicalScopeInvalid bool
 }
 func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,error){
     if b==nil||!b.committed||b.stopped||b.handle==0 {

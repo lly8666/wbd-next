@@ -15,6 +15,7 @@ import (
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "net/netip"
     "testing"
+    "syscall"
     "time"
 )
 
@@ -1339,5 +1340,124 @@ func TestH2216RealV4TLSCertificateVerifySwitch(t *testing.T) {
                 }
             })
         }
+    }
+}
+
+// A33: pure host classifier, no simulated handshake, Root or device access.
+func TestV4AndroidColdFixedFailureClasses(t *testing.T){
+ cases:=[]struct{err error;want string}{
+  {nil,"NONE"},
+  {context.DeadlineExceeded,"TIMEOUT"},
+  {os.ErrDeadlineExceeded,"TIMEOUT"},
+  {syscall.ETIMEDOUT,"TIMEOUT"},
+  {fmt.Errorf("nested %w",faketcp.ErrBootstrapTimeout),"TIMEOUT"},
+  {context.Canceled,"CANCELLED"},
+  {faketcp.ErrBootstrapClosed,"BOOTSTRAP_CLOSED"},
+  {io.EOF,"PEER_CLOSED"},
+  {io.ErrUnexpectedEOF,"PEER_CLOSED"},
+  {x509.UnknownAuthorityError{},"CERTIFICATE"},
+  {ErrAdmissionAuth,"AUTH_REJECTED"},
+  {ErrAdmissionVersion,"VERSION_REJECTED"},
+  {ErrAdmissionParams,"POLICY_REJECTED"},
+  {errors.New("private hostname/password/path must not appear"),"OTHER"},
+ }
+ for _,test:=range cases{
+  if got:=v4AndroidColdFailureClass(test.err);got!=test.want{
+   t.Errorf("fixed cold class want %s got %s",test.want,got)
+  }
+ }
+}
+
+func TestV4AndroidColdDeadlineUnknownIsNotMisreported(t *testing.T){
+ cases:=[]struct{err error;remaining time.Duration;want string}{
+  {errors.New("private opaque error"),-time.Millisecond,"DEADLINE_ELAPSED_OTHER"},
+  {errors.New("private opaque error"),time.Second,"OTHER"},
+  {context.Canceled,-time.Millisecond,"CANCELLED"},
+  {faketcp.ErrBootstrapTimeout,-time.Millisecond,"TIMEOUT"},
+  {x509.UnknownAuthorityError{},-time.Millisecond,"CERTIFICATE"},
+ }
+ for _,c:=range cases{
+  if got:=v4AndroidClassAtDeadline(c.err,c.remaining);got!=c.want{t.Fatalf("%s != %s",got,c.want)}
+ }
+}
+
+
+// A36 exact typed x509 reasons; deliberately no certificate bytes/SNI in
+// public messages. The real original Go/uTLS handshake still verifies all.
+func TestV4AndroidCertificateReasonTypedNoBypass(t *testing.T){
+    now:=time.Now()
+    cert:=&x509.Certificate{NotBefore:now.Add(-2*time.Hour),NotAfter:now.Add(time.Hour)}
+    cases:=[]struct{name string;err error;want string}{
+        {"untrusted",x509.UnknownAuthorityError{Cert:cert},"UNKNOWN_AUTHORITY"},
+        {"name",x509.HostnameError{Certificate:cert,Host:"wrong.test"},"HOSTNAME_MISMATCH"},
+        {"expired",x509.CertificateInvalidError{Cert:&x509.Certificate{NotBefore:now.Add(-3*time.Hour),NotAfter:now.Add(-time.Hour)},Reason:x509.Expired},"EXPIRED"},
+        {"not_yet",x509.CertificateInvalidError{Cert:&x509.Certificate{NotBefore:now.Add(time.Hour),NotAfter:now.Add(2*time.Hour)},Reason:x509.Expired},"NOT_YET_VALID"},
+        {"usage",x509.CertificateInvalidError{Cert:cert,Reason:x509.IncompatibleUsage},"INCOMPATIBLE_USAGE"},
+        {"invalid",x509.CertificateInvalidError{Cert:cert,Reason:x509.TooManyIntermediates},"INVALID_CERTIFICATE"},
+    }
+    for _,tc:=range cases{
+        t.Run(tc.name,func(t *testing.T){
+            wrapped:=fmt.Errorf("original protected handshake: %w",tc.err)
+            if got:=v4AndroidColdFailureClass(wrapped);got!="CERTIFICATE"{
+                t.Fatalf("old cert classification drifted: %s",got)
+            }
+            if got:=v4AndroidCertFailureReason(wrapped);got!=tc.want{
+                t.Fatalf("reason got %s want %s",got,tc.want)
+            }
+        })
+    }
+}
+
+
+// A38 real original protected admission, not a mocked x509 classifier:
+// self-signed server cert, no trust roots: mainline default OFF must
+// genuinely complete uTLS+protected auth; opt-in strict must reject; and
+// strict with a matching trust root must still succeed.
+func TestA38OriginalProtectedAdmissionCertVerifyPolicy(t *testing.T){
+    cases:=[]struct{name string;verify bool;trusted bool;wantSuccess bool}{
+        {"main_default_no_cert_verify",false,false,true},
+        {"strict_unknown_authority",true,false,false},
+        {"strict_trusted_ca",true,true,true},
+    }
+    for _,tc:=range cases{
+        t.Run(tc.name,func(t *testing.T){
+            cert:=makeServerCert(t)
+            key:=[]byte("0123456789abcdef0123456789abcdef")
+            store,e:=NewV4EpochStore(4)
+            if e!=nil{t.Fatal(e)}
+            serverConn,clientConn:=newAssociationPeer(t)
+            defer serverConn.Close()
+            defer clientConn.Close()
+            serverResult:=make(chan error,1)
+            go func(){
+                _,e:=EstablishServerV4(context.Background(),serverConn,ServerAdmissionConfig{
+                    TLS:ServerConfig{ServerName:"target.test",RouteKey:key,
+                        TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:4*time.Second},
+                    ExpectedUsername:"a38user",ExpectedPassword:"a38password",ServerLimit:1400,
+                },V4ServerOptions{DataPlaneReady:true,Epochs:store})
+                serverResult<-e
+            }()
+            clientTLS:=ClientConfig{ServerName:"target.test",RouteKey:key,
+                VerifyServer:tc.verify,Timeout:4*time.Second}
+            if tc.trusted{clientTLS.RootCAs=v4TestRoots(cert)}
+            client,err:=EstablishClientV4(context.Background(),clientConn,ClientAdmissionConfig{
+                TLS:clientTLS,Username:"a38user",Password:"a38password",
+                TunnelID:[]byte("a38-stable-tun01"),ClientLimit:1400,
+                DesiredLanes:1,LaneID:1,Policy:v4TestPolicy(1,CipherChaCha),
+            },V4ClientOptions{DataPlaneReady:true})
+            if tc.wantSuccess{
+                if err!=nil||client==nil{t.Fatalf("original protected admission rejected: %v",err)}
+            }else{
+                if err==nil||v4AndroidColdFailureClass(err)!="CERTIFICATE"{
+                    t.Fatalf("strict untrusted cert not rejected as certificate: %v",err)
+                }
+            }
+            _=clientConn.Close()
+            serverConn.Close()
+            select{
+            case <-serverResult:
+            case <-time.After(6*time.Second):t.Fatal("real original server handshake did not stop")
+            }
+        })
     }
 }

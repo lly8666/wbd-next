@@ -1,0 +1,65 @@
+{
+  "schema": "android-root-device-diagnostic-apk/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source": "d5919d9d2967c29de83351b157d9c1db27a04e63",
+  "action": {
+    "id": 43884001753,
+    "job": 133357088634,
+    "conclusion": "success",
+    "artifact_id": 14233518488,
+    "zip_sha256": "b3a44aa622ab9a29d38e546c83beb01b71853dddb74343724a2fcf10388e04cc"
+  },
+  "apk": {
+    "file": "diag/device-diagnostic.apk",
+    "bytes": 1479348,
+    "sha256": "247a8e90247ad6d1b798c68b0a658ea010007d0bebf9dda07ea4641a7cef5ff0",
+    "min_sdk": 28,
+    "target_sdk": 37,
+    "package": "org.wbdnext.rootprobe",
+    "signing": "ephemeral CI debug",
+    "arm64_elf_sha256": "2a91f1f199697381496980cdaf3ce296ca0a842558f62497f7832e142d31b85a",
+    "x86_64_elf_sha256": "273bf31806db9cf2034743931e72e9b7171913381c73b54fc142d599f3d2876a",
+    "elf_load_alignment": 16384
+  },
+  "emulator": {
+    "api": 36,
+    "abi": "x86_64",
+    "app_uid": 10218,
+    "root_uid": 0,
+    "root_type": "real KernelSU3.3.1 prepatched AVD, not DirtyFrag",
+    "selinux": "Enforcing",
+    "path": "installed APK nativeLibraryDir/libwbdprobe.so",
+    "new_test_uses_external_adb_push": false,
+    "status": "EMBEDDED_APK_DEVICE_DIAGNOSTIC_PASS",
+    "core": "CORE_IPV4_ROOT_PROBE_PASS",
+    "checks": {
+      "app_su": "PASS",
+      "cap_net_admin": "PASS",
+      "cap_net_raw": "PASS",
+      "tun": "PASS",
+      "raw_tcp": "PASS",
+      "ipv6_tun": "PASS",
+      "policy_route": "PASS",
+      "synthetic_tether_nat": "PASS"
+    },
+    "main_network_rules_equal": true,
+    "main_network_routes_equal": true
+  },
+  "not_run": [
+    "arm64 physical runtime",
+    "real hotspot WiFi",
+    "real USB tether",
+    "BPF/HW offload",
+    "cellular raw underlay",
+    "physical CLAT",
+    "production Android WBD VPN",
+    "target37 long-living FGS"
+  ],
+  "historical_fail": {
+    "source": "d2794f1cb4faa8a75a445506842e7a4bf16e0774",
+    "run": 43883692925,
+    "conclusion": "failure",
+    "reason": "aapt2 dump xmltree missing --file, KSU NOT_RUN"
+  },
+  "scope": "Scoped Root prerequisites only; CI cannot certify real phone or tether/VPN product"
+}

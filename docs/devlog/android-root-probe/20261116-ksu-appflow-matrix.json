@@ -1,0 +1,72 @@
+{
+  "schema": "android-ksu-app-uid-tun-roundtrip/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source_sha": "e7d59cf7574d9932a9a24b3b273bb4e5106723b0",
+  "run": {
+    "id": 43823818642,
+    "conclusion": "success",
+    "artifact_id": 14205657446,
+    "zip_sha256": "2705d0863a0a740cdd7293b3e72864ffa3e0808082364dbc18d689fb0a3671cd"
+  },
+  "avd": {
+    "android": "16",
+    "api": 36,
+    "abi": "x86_64",
+    "selinux": "Enforcing",
+    "root_manager": "KernelSU v3.3.1",
+    "root_context": "u:r:ksu:s0"
+  },
+  "app": {
+    "package": "org.wbdnext.rootprobe",
+    "uid": 10218,
+    "selinux": "u:r:untrusted_app:s0:c218,c256,c512,c768",
+    "target_sdk": 37,
+    "compile_sdk": 36,
+    "su_exit": 0,
+    "app_send_payload_bytes": 40,
+    "app_receive_payload_bytes": 42,
+    "reply_from": "198.18.253.2:49492",
+    "app_flow_status": "APP_UID_TUN_ROUNDTRIP_PASS",
+    "elapsed_ms": 828,
+    "app_json_sha256": "4e5c8f4378e2be7c0977ec4468d5aec60991f56232118cec212ca062535c4cbb"
+  },
+  "native": {
+    "abi": "x86_64-linux-android",
+    "binary_sha256": "fced8a1bb3b0064d18963bb6e13f1d3580ee7eb87a71a6e1d1b38d9e5e1b0249",
+    "root_uid": 0,
+    "tun_mtu": 1400,
+    "app_udp_tun_packet_bytes": 68,
+    "root_tun_udp_reply_bytes": 70,
+    "app_uid_rule": "10218-10218",
+    "destination": "198.18.254.2/32",
+    "priority": 8200,
+    "table": 235,
+    "cleanup": {
+      "rules_equal": true,
+      "routes_equal": true,
+      "tun_gone": true
+    },
+    "summary_sha256": "b228293e9191384c053de89020f507cf8f360aa6ebba2806133b9769b1509185"
+  },
+  "history": [
+    {
+      "source": "fbfe544c19f264b97f17f0dd8950b4f1b3d676f5",
+      "run": 43823013289,
+      "status": "SUCCESS_ONE_WAY",
+      "zip_sha256": "a0d91a16814d8919acbdb502fad9c7496931840764724389d341baf995d01033"
+    },
+    {
+      "source": "4eae26c3a99ac41feebe15a4565ff73ead337ea3",
+      "run": 43823711435,
+      "status": "CI_FAIL_OLD_EXPECTATION",
+      "note": "App actually received reply, CI still expected old one-way label"
+    }
+  ],
+  "not_run": [
+    "product Android app and netd underlay",
+    "NAT/conntrack real tether/USB/hotspot",
+    "physical ARM64 OEM or modem",
+    "DNS/IPv6/CLAT/FGS",
+    "SIGKILL global owned route cleanup"
+  ]
+}

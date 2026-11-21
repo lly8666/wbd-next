@@ -1,0 +1,94 @@
+{
+  "schema": "android-ksu-mainstream-app/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source_sha": "47f501dacb2284a06582d6d8449203d6e06871f3",
+  "run": {
+    "id": 43833012235,
+    "status": "success",
+    "artifact_id": 14209673218,
+    "zip_sha256": "890e59d510d1390e4f43407d4b5a77f5f732e9383851e41f75a05a46669374a3",
+    "files": 113
+  },
+  "android": {
+    "version": 16,
+    "api": 36,
+    "arch": "x86_64",
+    "selinux": "Enforcing",
+    "manager": "KernelSU3.3.1 real LKM",
+    "app_uid": 10218,
+    "app_context": "u:r:untrusted_app:s0:c218,c256,c512,c768",
+    "target_sdk": 37,
+    "su_exit": 0
+  },
+  "cases": {
+    "udp": {
+      "status": "PASS",
+      "app_payload_sent": 40,
+      "app_received": 42,
+      "root_tun_ipv4_udp_in": 68,
+      "root_tun_ipv4_udp_reply": 70
+    },
+    "direct_dns_udp53": {
+      "status": "PASS",
+      "query_bytes": 32,
+      "response_dns_bytes": 48,
+      "response_ipudp_bytes": 76,
+      "name": "probe.wbd.test.",
+      "answer": "198.18.254.2",
+      "system_resolver": "NOT_RUN"
+    },
+    "tcp_http": {
+      "status": "PASS",
+      "real_java_socket": true,
+      "seen_syn": true,
+      "request_bytes": 76,
+      "http_reply_bytes": 97,
+      "tun_ip_tcp_reply_bytes": 137,
+      "app_ack_seen": true,
+      "http_status": 200
+    },
+    "netd_underlay": {
+      "status": "PASS",
+      "active_network_id": "100",
+      "interface": "wlan0",
+      "transport": "emulator virtual wifi",
+      "route_count": 5,
+      "Network_bindSocket": true,
+      "target": "10.0.2.2:18317",
+      "host_nonce_echo_verified": true,
+      "completed_while_uid_rule_active": true,
+      "marker_ipv4_udp_bytes": 73
+    },
+    "cleanup": {
+      "status": "PASS",
+      "uid": "10218-10218",
+      "destination": "198.18.254.2/32",
+      "priority": 8200,
+      "table": 235,
+      "interface_gone": true,
+      "ipv4_rules_before_after_equal": true,
+      "all_routes_before_after_equal": true
+    },
+    "sigkill": {
+      "status": "PASS",
+      "native_worker_exit": 137,
+      "independent_watchdog_removed_orphan_rule": true
+    }
+  },
+  "sha256": {
+    "app_private_json": "eedc6261cbec6a4f5e9a654c8429fff7aaaafe878551ea6da417e8cd55587106",
+    "host_summary_json": "d2c902946cbb6a40492056327542f1c02eff049d102e6ad97841b610f9997901",
+    "native_manifest_json": "8a8008c347fd1d15796b3ab6993adc4a0321a642b809a41697fe04adb2c7d26f",
+    "native_binary": "8ad232cbbe644bd0e9f8f56cfe7f6f343a5ee2efb5fbb6d440e34b0d605dd5ad",
+    "ksu_summary_json": "a8a15b4f0fc4f3c46628cd358566e68dddb574a68b0367421598115de60810d9"
+  },
+  "not_run": [
+    "system DNS resolver/Private DNS",
+    "generic transparent TCP/TLS proxy",
+    "physical Wi-Fi/cellular network switch",
+    "NAT conntrack tether WiFi hotspot USB",
+    "IPv6/CLAT",
+    "real ARM64/16KiB OEM phone",
+    "long-running FGS/background recovery"
+  ]
+}

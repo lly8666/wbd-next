@@ -1,0 +1,128 @@
+{
+  "schema": "android-ksu-system-dns-tls/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source_sha": "32008210b41a4764b77856a8dd81ec9a47c88f83",
+  "run": {
+    "id": 43843733837,
+    "conclusion": "success",
+    "artifact_id": 14214651040,
+    "artifact_entries": 116,
+    "zip_sha256": "3be4e95760d8762df3407fb6d103ca2ec5773ef4d43327ef05d6547c7d03f92d"
+  },
+  "avd": {
+    "android": "16/API36",
+    "abi": "x86_64",
+    "selinux": "Enforcing",
+    "manager": "KernelSU3.3.1 LKM",
+    "app_uid": 10218,
+    "app_target_sdk": 37,
+    "app_selinux": "u:r:untrusted_app:s0:c218,c256,c512,c768",
+    "app_su_exit": 0
+  },
+  "functional": {
+    "system_dns": {
+      "status": "PASS",
+      "api": "Network.getAllByName",
+      "netid": "100",
+      "domain": "example.com",
+      "returned_ip_addresses": 4,
+      "has_ipv4": true,
+      "elapsed_ms": 15,
+      "system_dns_via_root_tun": false
+    },
+    "tls_underlay": {
+      "status": "PASS",
+      "netid": "100",
+      "host": "10.0.2.2:18318",
+      "server_hostname": "wbd-ci-host.test",
+      "version": "TLSv1.3",
+      "cipher": "TLS_AES_256_GCM_SHA384",
+      "certificate_and_hostname_verified": true,
+      "encrypted_nonce_roundtrip": true,
+      "attempts": 1,
+      "public_cert_sha256": "a4ffd371e58b54f3bab7dace16523eded850e9691dd30c14f2314f536303d6d6",
+      "private_key": "CI runner only, not committed or uploaded"
+    },
+    "ordinary_app_udp_tun": {
+      "status": "PASS",
+      "app_sent": 40,
+      "tun_read_ipudp": 68,
+      "tun_write_ipudp": 70,
+      "app_received": 42
+    },
+    "ordinary_app_direct_dns53": {
+      "status": "PASS",
+      "query": 32,
+      "response": 48
+    },
+    "ordinary_app_tcp_http": {
+      "status": "PASS",
+      "syn_and_ack_observed": true,
+      "http_get_bytes": 76,
+      "http_response_bytes": 97,
+      "status_code": 200
+    },
+    "netd_underlay_host": {
+      "status": "PASS",
+      "netid": "100",
+      "virtual_interface": "wlan0",
+      "plain_echo_host": "10.0.2.2:18317",
+      "host_nonce_confirmed": true,
+      "completed_with_UID_rule_active": true,
+      "attempts": 1
+    },
+    "normal_cleanup": {
+      "status": "PASS",
+      "owned_rule": "pref8200 uidrange10218-10218 to198.18.254.2/32 lookup235",
+      "tun_gone": true,
+      "rules_before_after_identical": true,
+      "routes_before_after_identical": true
+    },
+    "sigkill_cleanup": {
+      "status": "PASS",
+      "worker_exit": 137,
+      "watchdog_removed_orphan_rule": true
+    },
+    "avd_exit": {
+      "status": "PASS",
+      "cleanup_start": "2026-11-16T09:56:20Z",
+      "cleanup_end": "2026-11-16T09:56:22Z"
+    }
+  },
+  "sha256": {
+    "app_mainstream": "d76faae18674fba3fb3ca5cbad7b62ac81684768564bab28d854e91f5086e406",
+    "mainstream_summary": "087090a84180291f5210b90ad467e654f5933d8bd01f088462ef3a8ff845ab57",
+    "host_echo_log": "35066ad717342fb8f1e9873ffcd01b1eb0d1857854ed2668afa5fcd12ee416ff",
+    "ksu_summary": "f6131d666bb0d06676bf412f698151fbb2a847019f72fb376680fda383f80a52",
+    "appflow_summary": "877d49a18f63eafeee37b08cc024cfe6b05fd0860f2697f474c2b6ab5259755e",
+    "sigkill_summary": "30da79d518b03133c1123183b33686b1632b09c6c1d62bab337c1e2da3e4fc68",
+    "apk_manifest": "93fecf09d703ea67fec0d061d8fd4da8a3fa3d17a4d4d378407164a129072180",
+    "native_manifest": "f1d9e91702cd35d40552d75435b0adfc2aedc640d7151aa59153c8e79eab4479",
+    "cleanup_log": "1bd37538b1db070a75c8674cba3ba68a16516122c822a7b89ccdfdb190c9fe58"
+  },
+  "failures": [
+    {
+      "source": "e1d73f4046b5f8c36958159a9c339d1403eaf7e3",
+      "run": 43839583300,
+      "conclusion": "CI_FAIL",
+      "reason": "Unbounded emulator EXIT wait after all network functional pass",
+      "zip_sha256": "49cc4e33ca7ed41ea351da43a2840097c17b71e5f7f7031d407bf5abfbd91555"
+    },
+    {
+      "source": "83cadd9e24bfa0f9c7fa8db00acbb598896ac479",
+      "run": 43842381940,
+      "conclusion": "CI_FAIL",
+      "reason": "App netd-bound virtual host 10.0.2.2 initial TCP timeout, DNS/TLS not reached",
+      "zip_sha256": "0103f899ee29622f96faa1e95cc2d5f0e7a71cd8dab98009270e5e938feb8f14"
+    }
+  ],
+  "not_run": [
+    "system DNS through TUN or Private DNS/DoH",
+    "physical WiFi/cellular failover",
+    "retry recovery triggered",
+    "production transparent TLS or public CA trust",
+    "NAT/conntrack WiFi hotspot USB tether",
+    "IPv6/CLAT forwarding",
+    "physical ARM64 OEM/16KiB or production FGS/reboot"
+  ]
+}

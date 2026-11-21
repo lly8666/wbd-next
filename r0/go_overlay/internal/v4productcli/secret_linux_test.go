@@ -30,6 +30,22 @@ func TestArm64V4PrivateCredentialsNoArgv(t *testing.T) {
     if got.password!="pinned-secret"||len(got.routeKey)!=32{
       t.Fatal("trusted fd-only config not applied")
     }
+    // A32 Android ContextImpl.MODE_PRIVATE historically creates 0660;
+    // do NOT change Go's strict readPrivateArgFile check to accept it.
+    // Reject it for both independent Android secret entry files.
+    if err:=os.Chmod(pass,0660);err!=nil{t.Fatal(err)}
+    if _,err:=parse("client",args);err==nil{
+      t.Fatal("Android MODE_PRIVATE 0660 password file must fail closed")
+    }
+    if err:=os.Chmod(pass,0600);err!=nil{t.Fatal(err)}
+    if err:=os.Chmod(key,0660);err!=nil{t.Fatal(err)}
+    if _,err:=parse("client",args);err==nil{
+      t.Fatal("Android MODE_PRIVATE 0660 route key file must fail closed")
+    }
+    if err:=os.Chmod(key,0600);err!=nil{t.Fatal(err)}
+    if _,err:=parse("client",args);err!=nil{
+      t.Fatalf("both 0600 files must pass unchanged original Go parser: %v",err)
+    }
     if err:=os.Chmod(pass,0644);err!=nil{t.Fatal(err)}
     if _,err:=parse("client",args);err==nil{t.Fatal("world-readable password accepted")}
     if err:=os.Chmod(pass,0600);err!=nil{t.Fatal(err)}

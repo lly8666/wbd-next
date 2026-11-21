@@ -1,0 +1,32 @@
+name: Android16 pre-Apr r07 ARM64 unrooted emulator baseline
+run-name: "android-dirtyfrag|old-api36-unrooted|${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/android-temp-root-probe]
+    paths:
+      - ".github/workflows/android-root-dirtyfrag-old-api36.yml"
+      - "experiments/android-root-probe/ci/dirtyfrag-old-avd-case.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-dirtyfrag-old-api36-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  one-disposable-avd:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify historical archive and boot exactly ONE unrooted Android16 ARM64 AVD
+        shell: bash
+        run: python3 experiments/android-root-probe/ci/dirtyfrag-old-avd-case.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-dirtyfrag-old-api36-${{ github.sha }}-${{ github.run_id }}
+          path: out/dirtyfrag-api36/
+          retention-days: 21
+          if-no-files-found: error

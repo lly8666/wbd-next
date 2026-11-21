@@ -50,6 +50,13 @@ use crate::runtime::early_rx::EarlyAccepted;
 use crate::runtime::RxPacket;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use crate::runtime::TxDispatch;
+#[cfg(target_os="android")]
+use wbd_platform::android_root_io::{AndroidOwnedTun,AndroidBoundRawRx,AndroidBoundRawTx};
+#[cfg(target_os="android")]
+use std::os::fd::BorrowedFd;
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+#[path="v4_android_original_m4.rs"]
+mod android_original_m4;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::time::Duration;
 const OK:i32=0;
@@ -767,6 +774,15 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
     assert_eq!(tx.counters[11],1);
     let _=QualityError::Unknown;
 }
+// Android64 only: the exact physical Network and interface are a cold Go
+// credential-bound scope, not a root-UID-wide fwmark or a global fallback.
+#[cfg(target_os="android")]
+struct AndroidPhysicalScope {
+    network_handle:u64,
+    interface:String,
+    ifindex:u32,
+    mtu:u32,
+}
 struct Entry{
     generation:u32,
     server_side:bool,
@@ -799,6 +815,49 @@ struct Entry{
     // route, MTU and worker turn. Never accept a different device at Stop.
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     raw_ifname:Option<String>,
+    #[cfg(target_os="android")]
+    android_physical:Option<AndroidPhysicalScope>,
+    #[cfg(target_os="android")]
+    android_raw_rx:Option<Arc<AndroidBoundRawRx>>,
+    #[cfg(target_os="android")]
+    android_raw_tx:Option<Arc<AndroidBoundRawTx>>,
+    #[cfg(target_os="android")]
+    android_tun:Option<Arc<AndroidOwnedTun>>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows,
+    // Fail-closed until physical and Tunnel DNS, CN policy, TCP53 and
+    // Android system Resolver ingress have one authenticated owned lifecycle.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_hijack_ready:bool,
+    // The separate physical-DNS owner is NOT peer-AEAD-authenticated.
+    // Do not arm before verified CN/Resolver/TCP53 generation admission.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_physical_ready:bool,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_cn_dns:Option<Arc<crate::v4_android_cn_dns::CNDnsMatcher>>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_workers:Option<android_original_m4::AndroidOriginalWorkers>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_joining:bool,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_seq_anchor:u64,
+    // H2229 main cumulative ACK ledger: unlike the M1 high-water extension
+    // anchor, only contiguous M3-authenticated bytes may appear ACKed.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_ack_pending:bool,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_ack_sent32:u32,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_ack_tx_ns:u64,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_copied_seq32:u32,
+    // Authenticated original Go feature3 Normal/off revision, not FEC APPLIED.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_off_applied_revision:u64,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_metrics:Arc<android_original_m4::AndroidOriginalStats>,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -856,7 +915,8 @@ struct Entry{
     native_retire_notice_sent:bool,
     #[cfg(feature="fec2_product_record")]
     native_retire_notice_attempts:u8,
-    #[cfg(feature="fec2_product_record")]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
     // One authenticated, immutable-per-worker public policy. V3 ON remains
     // unchanged; OFF cannot hold repair ciphertext or send outer DATA copies.
@@ -866,7 +926,8 @@ struct Entry{
     normal_off_applied_revision:u64,
     // Ordinary non-probe owner: only Go verified TLS feature7 may stage FEC2
     // Fixed. This is an intent, NEVER an applied claim before kernel FEC.
-    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),
+    any(all(target_os="linux",any(target_env="gnu",target_env="musl")),target_os="android")))]
     protected_features:u16,
     // One original credential-checked Go TLS GoLane snapshot. This remains
     // dormant until a complete original 2/4 lane set consumes it exactly
@@ -925,7 +986,7 @@ struct Entry{
     // The fixed Go bootstrap boundary cannot serve as the seq32 anchor forever.
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     rx_seq_anchor:u64,
-    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    #[cfg(any(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),target_os="android"))]
     flow:crate::v4_protected_handoff::GoFlow,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     raw_rx:Option<Arc<ScopedRawIpv4Rx>>,
@@ -1133,12 +1194,50 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:if server_side{data.identity().server_limit}else{data.identity().client_limit},
         staged_count:0,staged_bytes:0,
-        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        #[cfg(any(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),target_os="android"))]
         flow:handoff.flow,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         tx_route:None,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         raw_ifname:None,
+        #[cfg(target_os="android")]
+        android_physical:None,
+        #[cfg(target_os="android")]
+        android_raw_rx:None,
+        #[cfg(target_os="android")]
+        android_raw_tx:None,
+        #[cfg(target_os="android")]
+        android_tun:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::default(),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_hijack_ready:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_physical_ready:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_cn_dns:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_workers:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_joining:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_seq_anchor:u64::from(handoff.rx_boundary),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck::new(
+            handoff.rx_boundary
+        ),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_ack_pending:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_ack_sent32:handoff.rx_boundary,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_ack_tx_ns:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_copied_seq32:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_off_applied_revision:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_metrics:Arc::new(android_original_m4::AndroidOriginalStats::default()),
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_firstsend_m2:None,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -1192,13 +1291,15 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         native_retire_notice_sent:false,
         #[cfg(feature="fec2_product_record")]
         native_retire_notice_attempts:0,
-        #[cfg(feature="fec2_product_record")]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         original_outer:None,
         #[cfg(feature="fec2_product_record")]
         outer_repair_enabled:true,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_off_applied_revision:0,
-        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),
+    any(all(target_os="linux",any(target_env="gnu",target_env="musl")),target_os="android")))]
         protected_features:handoff.negotiated_features,
         #[cfg(feature="fec2_product_record")]
         game_pending_cold:if handoff.negotiated_features==7{Some(data)}else{None},
@@ -1276,6 +1377,10 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
     // Only Go's private callback after protected reply and successful
     // DetachTransition knows the exact post-reply SenderNext boundary.
     if e.owner.commit_after_detach(tx_boundary).is_err(){return BAD_STAGE}
+    // Original Go Detach is the ONLY authority for Android's starting
+    // appearance SEQ; never generate pure ACK with an invented zero SEQ.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    {e.android_last_copied_seq32=tx_boundary;}
     #[cfg(feature="fec2_product_record")]
     {e.game_tx_boundary=tx_boundary;}
     e.phase=PH_ACTIVE;
@@ -2743,6 +2848,34 @@ fn abort(handle:u64)->i32{
 fn stop(handle:u64)->i32{
     // Leave registry unlocked while joining. Driver handles and owner slabs
     // cannot be released while either Rust worker still references them.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    {
+        let Ok(cell)=session(handle)else{return UNKNOWN};
+        let workers={
+            let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+            if e.phase==PH_STOPPED{return OK}
+            if e.phase!=PH_ACTIVE&&e.phase!=PH_STOPPING{return BAD_STAGE}
+            if e.android_joining{return STOP_INCOMPLETE}
+            let workers=e.android_workers.take();
+            if workers.is_some(){
+                e.android_joining=true;
+                e.phase=PH_STOPPING;
+            }
+            workers
+        };
+        if let Some(workers)=workers{
+            // Kernel eventfd wakes both original M4 threads. Synchronize
+            // their join before stopping the original M1/M3 crypto owner,
+            // closing RAW/TUN, releasing the original Go generation.
+            let joined=workers.stop_and_join();
+            let Ok(mut e)=cell.lock()else{return STOP_INCOMPLETE};
+            if !joined{
+                e.phase=PH_STOPPING;
+                return STOP_INCOMPLETE
+            }
+            e.android_joining=false;
+        }
+    }
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     {
         let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -2803,6 +2936,24 @@ fn stop(handle:u64)->i32{
         e.fec2_live_tx=None;
         e.fec2_staged_pns.clear();
     }
+    #[cfg(target_os="android")]
+    {
+        // On Android ARM64, the real M4 Normal/off threads have already
+        // signaled and joined, or this entry only had cold handles.
+        // Only after that join may the original protected owner retire.
+        if let Some(raw)=e.android_raw_rx.as_ref(){raw.begin_stop()}
+        if let Some(raw)=e.android_raw_tx.as_ref(){raw.begin_stop()}
+        if let Some(tun)=e.android_tun.as_ref(){tun.begin_stop()}
+    }
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    {
+        // Both M4 kernel threads are joined. Retire every outstanding DNS
+        // reverse-map slot before crypto/TUN FD retirement of this generation.
+        e.android_dns_hijack_ready=false;
+        e.android_dns_physical_ready=false;
+        e.android_cn_dns=None;
+        e.android_dns_flows.stop();
+    }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
     let mut drained=retired.ready.batch_handles_released();
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2822,8 +2973,33 @@ fn stop(handle:u64)->i32{
             drained &= tun.stop_until(Instant::now())==StopResult::Drained;
         }
     }
+    #[cfg(target_os="android")]
+    {
+        // Existing wbd-platform::r1 BorrowFence gates Bionic RAW/TUN
+        // syscalls. Actual M4 threads were joined before owner crypto Stop.
+        let deadline=std::time::Instant::now();
+        for result in [
+            e.android_raw_rx.as_ref().map(|x|x.stop_until(deadline)),
+            e.android_raw_tx.as_ref().map(|x|x.stop_until(deadline)),
+            e.android_tun.as_ref().map(|x|x.stop_until(deadline)),
+        ]{
+            if result.is_some_and(|v|v!=wbd_platform::r1::StopResult::Drained){
+                drained=false
+            }
+        }
+        drained &= e.android_raw_rx.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
+        drained &= e.android_raw_tx.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
+        drained &= e.android_tun.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
+    }
     if !drained{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
+    }
+    #[cfg(target_os="android")]
+    {
+        e.android_raw_rx.take();
+        e.android_raw_tx.take();
+        e.android_tun.take();
+        e.android_physical.take();
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",
         any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4063,6 +4239,211 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_read_public_outer_repair(
     }
 }
 
+
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_bind_physical(
+    h:u64,network_handle:u64,ifindex:u32,physical_mtu:u32,
+    name:*const u8,len:usize,
+)->i32{
+    if name.is_null()||len==0||len>15||network_handle==0||
+        ifindex==0||!(68..=65535).contains(&physical_mtu){return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(interface)=std::str::from_utf8(bytes)else{return INVALID};
+    if !interface.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'_'||b==b'-'){
+        return INVALID
+    }
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    // Only the Go-authenticated client generation may configure this scope;
+    // the original interface/mtu are checked AGAIN when opening both FDs.
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_physical.is_some()||
+        e.android_raw_rx.is_some()||e.android_raw_tx.is_some()||
+        e.android_tun.is_some(){return BAD_STAGE}
+    e.android_physical=Some(AndroidPhysicalScope{
+        network_handle,interface:interface.to_owned(),ifindex,mtu:physical_mtu,
+    });
+    OK
+}
+
+// ARM64 Android M1/M3 method adapters have been added to the original
+// ProtectedScopedOwner; continuous M4 runtime Health/MTU/worker join remains
+// a genuine missing integration, NOT an empty ABI placeholder.
+// Original CGo attaches after verified TLS credentials, Detach and lease.
+// No second transport owner: these RAII FDs are parked on the same Entry;
+// the original Rust M3/M4 workloop still must consume them (NOT_RUN).
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_attach_raw_rx_on_interface(
+    h:u64,ifindex:u32,name:*const u8,len:usize,
+)->i32{
+    if name.is_null()||len==0||len>15||ifindex==0{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(ifname)=std::str::from_utf8(bytes)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_raw_rx.is_some()||
+        e.android_raw_tx.is_some(){return BAD_STAGE}
+    let Some(scope)=e.android_physical.as_ref()else{return BAD_STAGE};
+    if scope.interface!=ifname||scope.ifindex!=ifindex{return BAD_STAGE}
+    let f=e.flow;
+    let generation=e.generation;
+    let (source,destination,source_port,destination_port)=
+        (f.server_ip,f.client_ip,f.server_port,f.client_port);
+    let Ok(rx)=AndroidBoundRawRx::open_exact(
+        scope.network_handle,ifname,ifindex,scope.mtu,generation,
+        source,destination,source_port,destination_port,
+    )else{return INVALID};
+    let Ok(tx)=AndroidBoundRawTx::open(
+        scope.network_handle,ifname,ifindex,scope.mtu,generation,
+        f.client_ip,f.server_ip,f.client_port,f.server_port,
+    )else{return INVALID};
+    // Publish only the complete pair. Any failure before this point closes
+    // both exact-owned sockets via RAII; no loose unfiltered RAW RX survives.
+    e.android_raw_rx=Some(Arc::new(rx));
+    e.android_raw_tx=Some(Arc::new(tx));
+    OK
+}
+
+#[cfg(target_os="android")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_enable(h:u64)->i32{
+    // Only the original authenticated client lease with its fully attached
+    // RAW pair + one owned TUN may switch on the already-implemented M3
+    // tunnel UDP/53 inverse path. No CN physical DNS or Android netd grant.
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_dns_hijack_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_effective(
+    h:u64,enabled:*mut u32
+)->i32{
+    if enabled.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    // Tunnel-only UDP admission, not system Resolver or CN split proof.
+    unsafe{enabled.write(u32::from(e.android_dns_hijack_ready &&
+        !e.android_dns_physical_ready));}
+    OK
+}
+// B4: explicit App UDP53 -> physically bound 223.5.5.5 mode.
+// Independent of the legacy tunnel DNS default; not geosite split or netd.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_physical_dns_enable(h:u64)->i32{
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_dns_hijack_ready=true;
+    e.android_dns_physical_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_effective(
+    h:u64,enabled:*mut u32
+)->i32{
+    if enabled.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    unsafe{enabled.write(u32::from(e.android_dns_hijack_ready &&
+        e.android_dns_physical_ready));}
+    OK
+}
+// B5 whole pinned CN8503 domain/full/regexp classification is cold,
+// then ONLY original Rust M4 asks the matcher per captured App DNS query.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_enable(
+    h:u64,rule_bytes:*const u8,rule_len:usize
+)->i32{
+    if rule_bytes.is_null()||rule_len==0||rule_len>=6_000_000{return INVALID}
+    let raw=unsafe{std::slice::from_raw_parts(rule_bytes,rule_len)};
+    let Ok(matcher)=crate::v4_android_cn_dns::CNDnsMatcher::from_go_cold(raw)
+        else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_cn_dns.is_some()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_cn_dns=Some(Arc::new(matcher));
+    e.android_dns_hijack_ready=true;
+    e.android_dns_physical_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_effective(
+    h:u64,enabled:*mut u32,rule_count:*mut u32
+)->i32{
+    if enabled.is_null()||rule_count.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    unsafe{
+        enabled.write(u32::from(e.android_dns_hijack_ready&&
+            e.android_dns_physical_ready&&e.android_cn_dns.is_some()));
+        rule_count.write(e.android_cn_dns.as_ref().map_or(0,|m|m.total() as u32));
+    }
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_attach_tun(
+    h:u64,fd:i32,name:*const u8,len:usize,
+)->i32{
+    if fd<3||name.is_null()||len==0||len>15{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(tun_name)=std::str::from_utf8(bytes)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_tun.is_some()||
+        e.android_raw_rx.is_none()||e.android_raw_tx.is_none(){return BAD_STAGE}
+    // Rust owns a duplicate, Go retains its original. Do not assume the
+    // diagnostic probe fd is a production TUN; TUNGETIFF validates the mode.
+    let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+        else{return INVALID};
+    let Ok(tun)=AndroidOwnedTun::adopt(dup,tun_name,e.generation)
+        else{return INVALID};
+    e.android_tun=Some(Arc::new(tun));
+    OK
+}
+
 // The same non-_test Go-verified owner now owns BOTH actual M4 device
 // handles. No shadow/test engine, no alternate AEAD/PN or delivery route.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4086,13 +4467,16 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     e.raw_rx=Some(Arc::new(driver));
     e.raw_ifname=Some(ifname.to_owned());OK
 }
-#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[cfg(any(
+    all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),
+    all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))
+))]
 // PLAN028: bind the original Go protected and credential-checked /32 before
 // any native M4 worker writes an inner IPv4 datagram to the server TUN.
 // This C call is package-private original-Go VERIFIED cold control,
 // not a public IP setter. Server uses it as inbound source ownership;
 // client uses its verified OS-installed /32 as default M1 TUN authority.
-#[cfg(target_os="linux")]
+#[cfg(any(target_os="linux",target_os="android"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     handle:u64,ip:*const u8,len:usize
@@ -4108,8 +4492,11 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     // original-Go verified client lease authorizes the process-level
     // default TUN reader after that address was installed/read back.
     // Manual-IP/product callers never reach this protected cold binding.
-    if e.phase!=PH_ACTIVE||
-       e.workers.is_some()||e.client_lease_ipv4.is_some(){return BAD_STAGE}
+    if e.phase!=PH_ACTIVE||e.client_lease_ipv4.is_some(){return BAD_STAGE}
+    #[cfg(target_os="linux")]
+    if e.workers.is_some(){return BAD_STAGE}
+    #[cfg(target_os="android")]
+    if e.android_raw_rx.is_some()||e.android_tun.is_some(){return BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
     if e.game_joined{
         return BAD_STAGE
@@ -4117,6 +4504,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     e.client_lease_ipv4=Some(expected);
     OK
 }
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     if fd<3{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -4287,7 +4675,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 struct PollFd {fd:c_int,events:i16,revents:i16}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {
     fn ppoll(fds:*mut PollFd,count:usize,timeout:*const ClockTimespec,
         sigmask:*const core::ffi::c_void)->c_int;
@@ -5605,7 +5994,8 @@ fn loop_now()->MonoNs{
 /// Developer original-Go/Rust Linux Normal/FEC cold socket A/B only.
 /// An effective buffer must be read from the SAME raw TX fd; Linux wmem_max
 /// may clamp a request. This never changes FEC, PN or sendmmsg retry policy.
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn configure_original_raw_tx_ab(tx:&mut ScopedRawIpv4Tx,server:bool)
     ->Result<(),i32>
 {
@@ -7419,7 +7809,8 @@ fn m0_fec_native_m4_quanta_control_and_source_fairness_budget(){
     assert_eq!((remaining.saturating_sub(1)/4).min(5),2);
     assert_eq!(remaining-8,1);
 }
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -7430,7 +7821,8 @@ fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
     let got=unsafe{ppoll(&mut p,1,&ts,std::ptr::null())};
     got>0 && p.revents&1!=0
 }
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_raw_rx_stage_snapshot(c:&LoopCounts)->(u64,u64,u64,u64){
     (
         c.rx_chain[0].load(Ordering::Relaxed), // native observed raw L3 entries
@@ -7453,6 +7845,7 @@ fn m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract(){
     c.rx.store(0,Ordering::Relaxed);
     assert_eq!(original_raw_rx_stage_snapshot(&c),(37,21,9,0));
 }
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -9230,6 +9623,32 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     let Ok(route)=route else{return INVALID};
     let Ok(limit)=u32::try_from(route.frame.single_business_payload_mtu)
     else{return INVALID};
+    if limit<28{return INVALID}
+    unsafe{out.write(limit)};
+    OK
+}
+// Android ARM64 same protected Go original client IPv4/32 and original
+// Rust peer-MSS/record/LINK FrameBudget. Recheck real bound RAW TX socket
+// ifindex+MTU before reporting the effective single-inner IPv4 budget.
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
+    h:u64,ifindex:u32,out:*mut u32
+)->i32{
+    if out.is_null()||ifindex==0{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||
+       e.android_raw_rx.is_none()||e.android_tun.is_none()||
+       e.client_lease_ipv4.is_none(){return BAD_STAGE}
+    let Some(scope)=e.android_physical.as_ref()else{return BAD_STAGE};
+    if scope.ifindex!=ifindex{return BAD_STAGE}
+    let Some(tx)=e.android_raw_tx.as_ref()else{return BAD_STAGE};
+    if tx.check_scope(&scope.interface,ifindex).is_err(){return INVALID}
+    let Ok(frame)=e.owner.android_normal_off_frame_budget(scope.mtu)
+        else{return INVALID};
+    let Ok(limit)=u32::try_from(frame.single_business_payload_mtu)
+        else{return INVALID};
     if limit<28{return INVALID}
     unsafe{out.write(limit)};
     OK

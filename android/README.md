@@ -1,5 +1,7 @@
 # Android ARM64 client integration (NOT YET CONNECTABLE)
 
+2026-11-16: the new [temporary-root capability probe](../docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md) is an independent experiment without VpnService. It does not implement or qualify this historical shell. Use its [dedicated prompt](../docs/prompts/ANDROID_TEMP_ROOT_PROBE.md) for the new task; the status below remains historical and unqualified.
+
 This is a buildable Android VpnService **OS ownership boundary**, not a working
 VPN client yet. No JNI `libwbd_android_client.so` or original-Go authenticated
 control owner is present; service fails closed *before* VPN establishment if

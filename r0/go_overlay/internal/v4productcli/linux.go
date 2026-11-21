@@ -26,6 +26,7 @@ import (
     "net/netip"
     "os"
     "os/exec"
+    "runtime"
     "os/signal"
     "strconv"
     "strings"
@@ -35,6 +36,9 @@ import (
     "time"
     "unsafe"
 
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative"
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/rstguard"
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/rootjournal"
     "github.com/lly8666/wobuzhidao/internal/faketcp"
     "github.com/lly8666/wobuzhidao/internal/logicaltunnel"
     "github.com/lly8666/wobuzhidao/internal/realityfront"
@@ -77,6 +81,7 @@ type config struct{
     rawInterface string
     localIP netip.Addr
     peerIP netip.Addr
+    peerHost string // Android Root DNS A bootstrap before real FakeTCP SYN
     localPort uint16
     peerPort uint16
     tunName string
@@ -123,6 +128,25 @@ type config struct{
     // Cold generation's kernel-selected path budget; zero for the older
     // non-path-supervised product. Never user-supplied or serialized.
     underlayBudgetMTU int
+    androidNetworkHandle uint64 // selected physical ConnectivityManager Network
+    androidPhysicalMTU uint32 // same interface cold readback
+    androidRouteUID int // legacy single ordinary App UID; never root/global
+    androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
+    androidRouteAllApps bool // ordinary app UID ranges, no root/system/main FIB
+    androidRouteExcludeAppIDs []int // own + KernelSU manager per-user app ID exclusions
+    // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
+    // System resolver/netd and CN physical split are NOT enabled by this.
+    androidTunnelDNS bool
+    // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
+    androidPhysicalDNS bool
+    // Original pinned CN8503 QNAME classification in Rust M4, opt-in.
+    androidCNDNSSplit bool
+    // Signed APK's verified offline CN list only, not live DNS capture.
+    androidCNSnapshot *dnsnative.CNRules
+    // Constructed from selected kernel interface and Android Network netId
+    // before protected TLS. No socket is opened and no DNS request occurs
+    // until the future Rust/TUN DNS packet owner is independently qualified.
+    androidPhysicalDNSDial dnsnative.DialFunc
     // Process-scoped original Rust TUN reader. Never included in config
     // wire/user arguments; only initialized by genuine cold OS Go owner.
     sharedTun *realityfront.V4LinuxSharedTun
@@ -177,14 +201,76 @@ func originalV4ColdAssocPeerPersona(assoc *faketcp.ServerAssociation,
  return realityfront.V4PeerLegacy,true
 }
 
+// Read a bounded, deterministic set of ordinary app UIDs. The caller's
+// PackageManager must authenticate each package->UID association first;
+// Go validates the kernel-safe numeric and canonical group boundary.
+func parseAndroidRouteGroupArg(s string)([]int,error){
+    if s==""{return nil,nil}
+    parts:=strings.Split(s,",")
+    if len(parts)<2||len(parts)>8{
+        return nil,fmt.Errorf("Android UID group needs 2..8 entries")
+    }
+    uids:=make([]int,0,len(parts))
+    previous:=0
+    for _,p:=range parts{
+        if p==""||strings.TrimSpace(p)!=p{
+            return nil,fmt.Errorf("Android UID group has empty/spaced entry")
+        }
+        uid,err:=strconv.Atoi(p)
+        if err!=nil||uid<10000||uid>1999999||uid<=previous{
+            return nil,fmt.Errorf("Android UID group must be unique, sorted, ordinary app UIDs")
+        }
+        previous=uid
+        uids=append(uids,uid)
+    }
+    return uids,nil
+}
+// Canonical per-user application IDs, never arbitrary system/root UID ranges.
+func parseAndroidExcludedAppIDsArg(text string)([]int,error){
+    if text==""{return nil,fmt.Errorf("all-app routing needs owner+root-manager exclusions")}
+    parts:=strings.Split(text,",")
+    if len(parts)<2||len(parts)>8{return nil,fmt.Errorf("bounded exclusions require 2..8 app IDs")}
+    result:=make([]int,0,len(parts))
+    previous:=0
+    for _,token:=range parts{
+        if token==""||strings.TrimSpace(token)!=token{
+            return nil,fmt.Errorf("invalid excluded app ID token")
+        }
+        v,e:=strconv.Atoi(token)
+        if e!=nil||v<10000||v>19999||v<=previous{
+            return nil,fmt.Errorf("excluded app IDs must be unique sorted 10000..19999")
+        }
+        result=append(result,v);previous=v
+    }
+    return result,nil
+}
+
 func parse(role string,args []string)(config,error){
     var c config
     c.role=role
     if role!="client"&&role!="server"{return c,fmt.Errorf("unknown role")}
     flags:=flag.NewFlagSet("wbd-v4-"+role,flag.ContinueOnError)
-    iface:=flags.String("raw-interface","","real Linux underlay device")
+    iface:=flags.String("raw-interface","","real physical underlay interface")
+    androidNet:=flags.Uint64("android-network-handle",0,"Android client-only Network.getNetworkHandle() (mandatory; cold per-socket binding)")
+    androidRouteUID:=flags.Int("android-route-uid",0,
+        "Android ARM64 Root ONLY: one app UID (>=10000) routed after original TLS/lease/M4, 0 disables routing")
+    androidRouteGroup:=flags.String("android-route-uids","",
+        "Android Root: canonical 2..8 ordinary App UIDs; mutually exclusive with single and all-apps")
+    androidRouteAll:=flags.Bool("android-route-all-apps",false,
+        "Android Root after authenticated lease/M4: route ordinary App UIDs in 20 profiles, never system/root")
+    androidRouteExclude:=flags.String("android-route-exclude-appids","",
+        "Android all-apps: mandatory canonical excluded controller+root-manager app IDs (10000..19999)")
+    cnGeositeFile:=flags.String("android-cn-geosite-file","",
+        "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
+    androidTunnelDNS:=flags.Bool("android-tunnel-dns",false,
+        "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
+    androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
+        "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
+    androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false,
+        "Android Root optional: match original App UDP53 QNAME against pinned CN8503; CN via physical 223.5.5.5, other names via WBD tunnel 1.1.1.1")
     ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
+    peerHost:=flags.String("peer-host","","Android Root client only: physical 223.5.5.5 DNS server name bootstrap before FakeTCP SYN")
     defaultPort:=uint(0)
     if role=="server"{defaultPort=443}
     port:=flags.Uint("local-port",defaultPort,"original FakeTCP local port (server default 443)")
@@ -223,13 +309,69 @@ func parse(role string,args []string)(config,error){
     gameFec:=flags.String("game-fec","off","Game2/4 inner fixed FEC: off or fixed0..fixed6; BOTH authenticated endpoints must match; no Game Auto")
     startupPadding:=flags.String("startup-padding","off","Client requests off|tls|flows inside protected TLS admission; server follows verified per-session choice; fixed parity never padded")
     game4Copy:=flags.String("game4-copy-schedule","","Game4 default stagger-4-50-140; explicit stagger-4-20-60 legacy fallback or immediate rollback; Game2 unchanged")
-    outerRepair:=flags.String("outer-repair","on","outer DATA retransmission on|off; FEC parity and actual receipt feedback remain enabled")
+    outerDefault:="on"
+    if runtime.GOOS=="android"{outerDefault="off"}
+    outerRepair:=flags.String("outer-repair",outerDefault,
+        "outer DATA retransmission on|off; Android ARM64 Normal/off first-connect supports off only")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
-    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
+    tunFqDefault:=600
+    if runtime.GOOS=="android"{tunFqDefault=0}
+    tunFqRate:=flags.Int("tun-fq-maxrate-mbps",tunFqDefault,
+        "owned Linux TUN fq 600Mbps (Android default 0: cannot assume tc or qdisc support)")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
+    if runtime.GOOS=="android"{
+        if role!="client"||*androidNet==0{
+            return c,fmt.Errorf("Android root client needs explicit physical Network handle")
+        }
+        if *peerHost!=""&&*peer!=""{
+            return c,fmt.Errorf("Android peer-host and peer-ip are mutually exclusive")
+        }
+        if *androidRouteUID!=0&&(*androidRouteUID<10000||*androidRouteUID>1999999){
+            return c,fmt.Errorf("Android route UID must identify one non-system application")
+        }
+        if *androidRouteUID!=0&&*androidRouteGroup!=""{
+            return c,fmt.Errorf("Android single and group UID route flags are mutually exclusive")
+        }
+        if *androidRouteAll&&(*androidRouteUID!=0||*androidRouteGroup!=""){
+            return c,fmt.Errorf("Android all-app and selected-app routing are mutually exclusive")
+        }
+        if !*androidRouteAll&&*androidRouteExclude!=""{
+            return c,fmt.Errorf("Android exclude IDs require all-app mode")
+        }
+        if (*androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit)&&!*androidRouteAll&&*androidRouteUID==0&&
+           *androidRouteGroup==""{
+            return c,fmt.Errorf("Android tunnel DNS needs a selected ordinary App UID route")
+        }
+        // Physical explicitly selected takes precedence; legacy tunnel default unchanged.
+        c.androidTunnelDNS=*androidTunnelDNS&&!*androidPhysicalDNS&&!*androidCNDNSSplit
+        c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
+        c.androidCNDNSSplit=*androidCNDNSSplit
+        var e error
+        c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
+        if e!=nil{return c,e}
+        if *androidRouteAll{
+            c.androidRouteExcludeAppIDs,e=parseAndroidExcludedAppIDsArg(*androidRouteExclude)
+            if e!=nil{return c,e}
+            c.androidRouteAllApps=true
+        }
+        if *cnGeositeFile!=""{
+            c.androidCNSnapshot,e=dnsnative.ReadPinnedCNFile(*cnGeositeFile)
+            if e!=nil{
+                return c,fmt.Errorf("signed Android CN8503 cold source rejected: %w",e)
+            }
+        }
+        if c.androidCNDNSSplit&&c.androidCNSnapshot==nil{
+            return c,fmt.Errorf("Android CN DNS split requires the original pinned geosite file")
+        }
+    }else if *androidNet!=0||*androidRouteUID!=0||
+             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit{
+        return c,fmt.Errorf("Android Network/routing parameters are Android-only")
+    }
+    c.androidNetworkHandle=*androidNet
+    c.androidRouteUID=*androidRouteUID
     modeGiven,autoGiven:=false,false
     flags.Visit(func(f *flag.Flag){if f.Name=="mode"{modeGiven=true};if f.Name=="auto-ip"{autoGiven=true}})
     if role=="server"&&*manualLease!=""&&!modeGiven{*mode="normal"}
@@ -444,6 +586,15 @@ func parse(role string,args []string)(config,error){
         if !roots.AppendCertsFromPEM(pem){return c,fmt.Errorf("trusted server TLS PEM contains no certificate")}
         c.tlsRoots=roots
     }
+    if runtime.GOOS=="android"&&role=="client"{
+        if !c.tlsVerifyServer{
+            log.Print("V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_MODE role=client class=DISABLED")
+        }else{
+            log.Print("V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_MODE role=client class=ENABLED")
+            if c.tlsRoots==nil{log.Print("V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=OS_STORE")
+            }else{log.Print("V4_PUBLIC_ANDROID_TLS_TRUST_SOURCE role=client class=APP_PEM")}
+        }
+    }
     if role=="client"&&c.autoIP{
         if *tunnel!=""||*installPath==""{return c,fmt.Errorf("auto-ip derives tunnel ID, do not pass manual ID")}
         installation,e:=logicaltunnel.ResolveInstallation("",*installPath,false)
@@ -468,9 +619,16 @@ func parse(role string,args []string)(config,error){
         if *cert==""||*key==""{return c,fmt.Errorf("tls-cert and tls-key required")}
         c.tlsCert=*cert;c.tlsKey=*key
     }else{
-        parsed,err=netip.ParseAddr(*peer)
-        if err!=nil||!parsed.Is4(){return c,fmt.Errorf("peer-ip requires IPv4")}
-        c.peerIP=parsed
+        if *peerHost!=""{
+            if runtime.GOOS!="android"||!dnsnative.ValidBootstrapHostname(*peerHost){
+                return c,fmt.Errorf("peer-host requires a valid Android physical bootstrap DNS name")
+            }
+            c.peerHost=*peerHost
+        }else{
+            parsed,err=netip.ParseAddr(*peer)
+            if err!=nil||!parsed.Is4(){return c,fmt.Errorf("peer-ip requires IPv4")}
+            c.peerIP=parsed
+        }
         if *remotePort==0||*remotePort>65535{return c,fmt.Errorf("peer-port invalid")}
         c.peerPort=uint16(*remotePort)
     }
@@ -601,6 +759,12 @@ type ownedTun struct{
 // Original kernel-owned /dev/net/tun FD, never a synthetic traffic adapter.
 func openTun(name,cidr string,mtu int)(*ownedTun,error){
     fd,err:=os.OpenFile("/dev/net/tun",os.O_RDWR,0)
+    if err!=nil&&runtime.GOOS=="android"&&errors.Is(err,os.ErrNotExist){
+        // Android kernels expose the SAME real char TUN under either path;
+        // only ENOENT warrants a second path. The exact TUNSETIFF ioctl
+        // still authenticates a true IFF_TUN|IFF_NO_PI descriptor.
+        fd,err=os.OpenFile("/dev/tun",os.O_RDWR,0)
+    }
     if err!=nil{return nil,err}
     var ifr [40]byte
     copy(ifr[:16],[]byte(name))
@@ -698,6 +862,7 @@ func originalRandomISN()(uint32,error){
     return n,nil
 }
 var errPublicNativePeerDead=errors.New("original Rust authenticated peer dead; Go cold TLS reauthorization required")
+var errPublicNativePhysicalScopeLost=errors.New("Android original Rust underlay Network/ifindex invalid; withdraw UID route and stop, no cold retry")
 
 // Only after authenticated Rust HealthClock dead AND a real TUN wake may the
 // original Go cold client retry a transient TLS/FakeTCP timeout. This never
@@ -796,6 +961,11 @@ func monitorPublicNativePeer(ctx context.Context,errs <-chan error,
   if !live(){continue}
   stats,e:=pulse()
   if e!=nil{continue}
+  if stats.PhysicalScopeInvalid{
+   // This is not authenticated peer-dead evidence and must not permit
+   // cold TLS reauth. Stop the old route and owner immediately.
+   return errPublicNativePhysicalScopeLost
+  }
   if publicNativeHealthDead(stats){return errPublicNativePeerDead}
   // Only original *client* preterminal Health evidence can request
   // cold B. One notification per exact generation; it does not
@@ -872,14 +1042,186 @@ func chooseUnderlayIPv4(addrs []net.Addr)(netip.Addr,error){
     return found,nil
 }
 
+// Android-only privacy-preserving cold parse diagnosis. Never log
+// err.Error(), raw argv, private paths, SNI, UID, route keys or passwords.
+// Categories are stable; every original parse failure still fails closed.
+func originalAndroidColdParseClass(err error)string{
+ if err==nil{return "OTHER"}
+ s:=err.Error()
+ switch{
+ case strings.HasPrefix(s,"flag provided but not defined:")||
+      strings.HasPrefix(s,"invalid value ")||
+      strings.HasPrefix(s,"flag needs an argument:"):
+  return "FLAG_SYNTAX"
+ case strings.HasPrefix(s,"invalid password-file:"):
+  return "PASSWORD_FILE"
+ case strings.HasPrefix(s,"invalid route-key-hex-file:")||
+      strings.HasPrefix(s,"invalid route-key-file:"):
+  return "ROUTE_KEY_FILE"
+ case strings.Contains(s,"route-key")||
+      strings.HasPrefix(s,"invalid/persisted route-key"):
+  return "ROUTE_KEY_VALUE"
+ case strings.HasPrefix(s,"installation-id-file:"):
+  return "INSTALLATION_ID"
+ case strings.HasPrefix(s,"signed Android CN8503 cold source rejected:"):
+  return "CN_GEOSITE_FILE"
+ case strings.HasPrefix(s,"load server TLS trust PEM:")||
+      strings.HasPrefix(s,"invalid TLS trust PEM")||
+      strings.HasPrefix(s,"trusted server TLS PEM"):
+  return "TLS_CA_FILE"
+ case strings.Contains(s,"excluded app ID")||
+      strings.Contains(s,"Android UID group")||
+      strings.Contains(s,"Android route UID")||
+      strings.Contains(s,"all-app routing")||
+      strings.Contains(s,"all-app mode")||
+      strings.Contains(s,"bounded exclusions")||
+      strings.Contains(s,"Android all-app")||
+      strings.Contains(s,"Android single and group UID")||
+      strings.Contains(s,"Android exclude IDs"):
+  return "ALL_APP_EXCLUSIONS"
+ case strings.Contains(s,"Android root client needs explicit physical Network handle")||
+      strings.Contains(s,"Android Network/routing parameters"):
+  return "ANDROID_NETWORK_SCOPE"
+ case strings.HasPrefix(s,"peer-ip")||
+      strings.HasPrefix(s,"peer-host")||
+      strings.HasPrefix(s,"Android peer-host and peer-ip"):
+  return "PEER_ADDRESS"
+ case strings.HasPrefix(s,"missing/invalid real original V4 TLS/raw/TUN settings"):
+  return "REQUIRED_COLD_SETTINGS"
+ case strings.Contains(s,"outer-mtu")||
+      strings.Contains(s,"tun-txqlen")||
+      strings.Contains(s,"tun-fq-")||
+      strings.Contains(s,"outer-repair")||
+      strings.Contains(s,"auto-ip")||
+      strings.Contains(s,"rotation")||
+      strings.Contains(s,"mode")||
+      strings.Contains(s,"startup-padding"):
+  return "POLICY"
+ default:return "OTHER"
+ }
+}
+
+// A36: invoked by the APK Restore button as the SAME signed original-Go
+// Bionic native ELF, without credentials, server details or any FakeTCP SYN.
+// Call only after the exact previous Go/Rust owner has stopped/joined.
+// This deliberately does NOT flush system firewall, routes, DNS or VPN.
+func recoverOriginalAndroidRootOwned()error{
+    if runtime.GOOS!="android"||os.Geteuid()!=0{
+        return fmt.Errorf("exact Android root Restore requires euid 0")
+    }
+    runIP:=func(args ...string)(string,error){
+        c,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+        defer cancel()
+        b,e:=exec.CommandContext(c,"ip",args...).CombinedOutput()
+        if len(b)>256<<10{return "",fmt.Errorf("owned ip readback oversized")}
+        if e!=nil{return "",fmt.Errorf("owned ip mutation/readback failed")}
+        return string(b),nil
+    }
+    firewall,err:=exec.LookPath("iptables")
+    if err!=nil{
+        log.Print("V4_PUBLIC_ANDROID_RESTORE_RST_FAILED role=client")
+        return fmt.Errorf("original Root Restore missing scoped firewall")
+    }
+    runFirewall:=func(args ...string)(string,error){
+        c,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+        defer cancel()
+        b,e:=exec.CommandContext(c,firewall,args...).CombinedOutput()
+        if len(b)>256<<10{return "",fmt.Errorf("scoped firewall readback oversized")}
+        if e!=nil{return "",fmt.Errorf("scoped firewall command failed")}
+        return string(b),nil
+    }
+    const root="/data/local/tmp/wbd-next-root/"
+    _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
+    if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
+        log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")
+    }
+    _,rstErr:=rstguard.RecoverOwned(runFirewall,root+"rst-guard.json")
+    if rstErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_RST_FAILED role=client")}else{
+        log.Print("V4_PUBLIC_ANDROID_RESTORE_RST_CLEARED role=client")
+    }
+    if routeErr!=nil||rstErr!=nil{
+        return fmt.Errorf("original Root Restore not fully verified; owned journal retained on uncertain state")
+    }
+    log.Print("V4_PUBLIC_ANDROID_RESTORE_NATIVE_KERNEL_CLEARED role=client")
+    return nil
+}
+
 func Run(role string,args []string)(retErr error){
+ if runtime.GOOS=="android"&&role=="client"{
+  // Actual original Go Bionic ELF entry, NOT an emulated TLS/Root stage.
+  log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")
+ }
+ if runtime.GOOS=="android"&&role=="client"&&len(args)==1&&args[0]=="--android-recover-owned-root"{
+     return recoverOriginalAndroidRootOwned()
+ }
  if role=="server"&&len(args)==2&&args[0]=="--init-route-key-file"{
    return initServerRouteKeyFile(args[1])
  }
  cfg,err:=parse(role,args)
-    if err!=nil{return err}
+    if err!=nil{
+        if runtime.GOOS=="android"&&role=="client"{
+            // Emit only a source-locked category, not the original error
+            // which may contain sensitive user-supplied file paths.
+            log.Printf("V4_PUBLIC_ANDROID_GO_ARGS_REJECTED role=client class=%s",
+                originalAndroidColdParseClass(err))
+        }
+        return err
+    }
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client")
+    }
+    if runtime.GOOS=="android"&&cfg.androidCNSnapshot!=nil{
+        // Verified file/typed rules only; NOT real Android system DNS.
+        stats:=cfg.androidCNSnapshot.Stats()
+        log.Printf("V4_PUBLIC_ANDROID_CN8503_COLD_FILE_VERIFIED count=%d sha256=%s dns_capture=NOT_CONNECTED",stats.Total,stats.SHA256)
+    }
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client")
+    }
+    if runtime.GOOS=="android"{
+        if role!="client"||cfg.androidNetworkHandle==0||iface.MTU<68||iface.MTU>65535{
+            return fmt.Errorf("Android physical Network/MTU unavailable")
+        }
+        if cfg.gameLanes!=0||cfg.mixedModes||
+           cfg.fecMode!=realityfront.FecV2Off||!cfg.disableOuterRepair||
+           !cfg.autoIP||cfg.rotationInterval!=0{
+            // No fake Game/Fixed/M2, and no automatic A/B transfer without
+            // a real shared TUN native owner. Explicit reauth after Stop
+            // remains the single original normal/off client pathway.
+            return fmt.Errorf("Android ARM64 first-connect requires Normal/off, protected auto /32, outer-repair off and no overlap rotation")
+        }
+        cfg.androidPhysicalMTU=uint32(iface.MTU)
+        cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialer(
+            dnsnative.PhysicalScope{
+                NetworkHandle:cfg.androidNetworkHandle,
+                InterfaceName:cfg.rawInterface,
+                IfIndex:iface.Index,
+                MTU:iface.MTU,
+                LocalIPv4:cfg.localIP,
+            })
+        if err!=nil{
+            return fmt.Errorf("Android physical DNS cold Network scope denied: %w",err)
+        }
+        // This is scope construction, not an outbound DNS socket or proof
+        // of System Resolver interception/physical netd permission.
+        log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_COLD_SCOPE_CHECKED socket_opened=0 dns_capture=NOT_CONNECTED")
+        if cfg.peerHost!=""{
+            // Original Go cold DNS wire/ID/QNAME and scoped Bionic netd
+            // UDP/TCP socket. The only DNS upstream is 223.5.5.5 physical;
+            // DNS failure aborts before the first original FakeTCP SYN.
+            dnsCtx,cancelDNS:=context.WithTimeout(context.Background(),5*time.Second)
+            resolved,resolveErr:=dnsnative.ResolveBootstrapIPv4(
+                dnsCtx,cfg.peerHost,cfg.androidPhysicalDNSDial)
+            cancelDNS()
+            if resolveErr!=nil{
+                return fmt.Errorf("Android physical server bootstrap failed before FakeTCP SYN: %w",resolveErr)
+            }
+            cfg.peerIP=resolved
+            log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=223.5.5.5 udp_tcp53_original_go=1",cfg.peerHost)
+        }
+    }
     if role=="server"&&cfg.localIP.IsUnspecified(){
         addresses,e:=iface.Addrs()
         if e!=nil{return fmt.Errorf("inspect server raw-interface IPv4: %w",e)}
@@ -904,8 +1246,14 @@ func Run(role string,args []string)(retErr error){
         uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0,cfg.gameFecEnabled)
     if err!=nil{return err}
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client")
+    }
     tun,err:=openTun(cfg.tunName,cfg.tunCIDR,cfg.innerMTU)
     if err!=nil{return err}
+    if runtime.GOOS=="android"&&role=="client"{
+        log.Print("V4_PUBLIC_ANDROID_GO_TUN_OPENED role=client")
+    }
     // The Go cold lifetime owns TUN; each Rust generation Stop joins and
     // releases kernel loans before the FINAL Go close or a fresh TLS generation.
     connected:=false
@@ -944,7 +1292,7 @@ func Run(role string,args []string)(retErr error){
     // Both Normal and Game auto-/32 use ONE process-wide native Rust
     // reader, even while old A and new B independently own their raw
     // Game/Normal M4 drivers. No additional TUN fd or Go packet pump.
-    if role=="client"&&cfg.autoIP{
+    if role=="client"&&cfg.autoIP&&runtime.GOOS!="android"{
         shared,e:=realityfront.NewV4LinuxSharedTun(tun.f,cfg.tunName)
         if e!=nil{return e}
         cfg.sharedTun=shared
@@ -970,12 +1318,66 @@ func Run(role string,args []string)(retErr error){
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
-    if role=="client"&&cfg.autoIP{
+    if role=="client"&&cfg.autoIP&&runtime.GOOS!="android"{
         // PLAN028 only for real protected automatic IPv4 on Linux Normal.
         // The one process-shared Rust TUN reader already exists above and
         // remains owned across simultaneous A+B TLS/native generations.
         return runOriginalLinuxClientPaths(ctx,cfg,tun)
     }
+    // A35: The real Linux netns oracle drops kernel-generated TCP RST on
+        // BOTH FakeTCP endpoints. Android root must own a narrower single-flow
+        // equivalent before initial SYN; otherwise SYNACK can trigger a native
+        // kernel RST that kills a valid server session before ClientHello.
+        // All operations are cold/root-only, with an exact durable owner journal.
+        if runtime.GOOS=="android"&&role=="client"{
+            if os.Geteuid()!=0{
+                log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=IPTABLES_UNAVAILABLE")
+                return fmt.Errorf("Android root FakeTCP RST guard requires effective uid 0")
+            }
+            iptables,findErr:=exec.LookPath("iptables")
+            if findErr!=nil{
+                log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=IPTABLES_UNAVAILABLE")
+                return fmt.Errorf("Android rooted iptables binary not available")
+            }
+            runFirewall:=func(args ...string)(string,error){
+                limited,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+                defer cancel()
+                cmd:=exec.CommandContext(limited,iptables,args...)
+                out,e:=cmd.CombinedOutput()
+                if len(out)>256<<10{return "",fmt.Errorf("bounded iptables diagnostic output exceeded")}
+                if e!=nil{return "",fmt.Errorf("scoped iptables call failed")}
+                return string(out),nil
+            }
+            const journal="/data/local/tmp/wbd-next-root/rst-guard.json"
+            guard,recovered,guardErr:=rstguard.New(runFirewall,journal,rstguard.Plan{
+                Version:1,Interface:cfg.rawInterface,SourceIP:cfg.localIP.String(),
+                PeerIP:cfg.peerIP.String(),SourcePort:int(cfg.localPort),
+                PeerPort:int(cfg.peerPort),
+            })
+            if guardErr!=nil{
+                log.Printf("V4_PUBLIC_ANDROID_COLD_RST_GUARD_FAILED role=client class=%s",rstguard.Class(guardErr))
+                return fmt.Errorf("Android original FakeTCP exact RST guard refused")
+            }
+            if recovered{log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_RECOVERED role=client")}
+            log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_READY role=client")
+            defer func(){
+                if dropped,known:=guard.DropCounter();known{
+                    if dropped>0{
+                        log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_MATCHED_RST_DROP role=client")
+                    }else{
+                        log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_NO_RST_DROP role=client")
+                    }
+                }else{
+                    log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_COUNTER_UNAVAILABLE role=client")
+                }
+                if closeErr:=guard.Close();closeErr!=nil{
+                    log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_STOP_UNVERIFIED role=client")
+                    retErr=errors.Join(retErr,fmt.Errorf("Android exact RST guard Stop did not verify"))
+                }else{
+                    log.Print("V4_PUBLIC_ANDROID_COLD_RST_GUARD_STOP_CLEARED role=client")
+                }
+            }()
+        }
     reauthAuthorized:=false
     coldRetries:=0
     for attempt:=uint64(1);;attempt++{
@@ -985,6 +1387,14 @@ func Run(role string,args []string)(retErr error){
             faketcp.RawIPv4EndpointOptions{ReceivePort:cfg.localPort},
         )
         if err!=nil{return err}
+        // Before any genuine FakeTCP SYN or standard ClientHello: select only
+        // the cold raw sender's exact Android physical Network. The AF_PACKET
+        // receiver is already bound to this interface by original Go.
+        if err=raw.BindAndroidNetwork(cfg.androidNetworkHandle,
+            cfg.rawInterface,iface.Index,iface.MTU);err!=nil{
+            _=raw.Close()
+            return err
+        }
         // Real AF_PACKET endpoint is now bound to the configured local
         // port. The netns harness must not equate an earlier TUN file
         // with a listening FakeTCP server (SYN startup race).
@@ -1207,7 +1617,43 @@ func originalV4AutomaticLease(reg *logicaltunnel.LeaseRegistry)func(realityfront
 }
 // The Linux kernel must confirm the exact authenticated /32 before Rust can
 // read or write the TUN. No user-controlled inner-MTU setting is introduced.
+// A41: Android's real kernel interface/address enumeration is already used
+// for the physical Network in the original Root client. Reuse that *same*
+// native getifaddrs path for the newly-owned TUN after protected /32 has
+// been applied. Android's external "ip -j addr" can reject JSON output or
+// have a different shape even when "ip -j link" worked earlier.
+// Linux's existing JSON path stays unchanged.
+func originalV4OwnedTunIPv4FromNativeAddrs(addrs []net.Addr)(netip.Prefix,error){
+    var owned netip.Prefix
+    for _,a:=range addrs{
+        ipNet,ok:=a.(*net.IPNet)
+        if !ok{return netip.Prefix{},fmt.Errorf("non-IP native TUN address")}
+        raw4:=ipNet.IP.To4()
+        if raw4==nil{continue} // IPv6 never becomes an IPv4 lease
+        ones,bits:=ipNet.Mask.Size()
+        if bits!=32||ones!=32||owned.IsValid(){
+            return netip.Prefix{},fmt.Errorf("native TUN has non-/32 or multiple IPv4 addresses")
+        }
+        ip,ok:=netip.AddrFromSlice(raw4)
+        if !ok||!ip.Is4()||ip.IsUnspecified()||ip.IsMulticast(){
+            return netip.Prefix{},fmt.Errorf("native TUN has invalid IPv4")
+        }
+        owned=netip.PrefixFrom(ip,32)
+    }
+    if !owned.IsValid(){return netip.Prefix{},fmt.Errorf("native TUN has no IPv4")}
+    return owned,nil
+}
 func readOwnedTunIPv4(name string)(netip.Prefix,error){
+    if runtime.GOOS=="android"{
+        iface,err:=net.InterfaceByName(name)
+        if err!=nil{return netip.Prefix{},fmt.Errorf("native Android owned TUN lookup: %w",err)}
+        if iface==nil||iface.Index<=0||iface.Name!=name{
+            return netip.Prefix{},fmt.Errorf("native Android owned TUN identity mismatch")
+        }
+        addrs,err:=iface.Addrs()
+        if err!=nil{return netip.Prefix{},fmt.Errorf("native Android TUN getifaddrs: %w",err)}
+        return originalV4OwnedTunIPv4FromNativeAddrs(addrs)
+    }
     data,err:=exec.Command("ip","-j","addr","show","dev",name).CombinedOutput()
     if err!=nil{return netip.Prefix{},fmt.Errorf("owned TUN IP readback: %w %s",err,data)}
     var links []struct{
@@ -1235,6 +1681,66 @@ func readOwnedTunIPv4(name string)(netip.Prefix,error){
     if !address.IsValid(){return netip.Prefix{},fmt.Errorf("owned TUN lacks IPv4")}
     return address,nil
 }
+// Only the original OS address mutation/readback may emit these outcomes.
+func originalAndroidPostauthGo(stage string){
+    if runtime.GOOS=="android"{
+        log.Printf("V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s",stage)
+    }
+}
+// A47: printable snapshots originate in the ONE real Rust RX FD and
+// native worker; these are cumulative numeric observations, NOT app PASS.
+func originalAndroidM4RxSnapshot(p realityfront.V4PublicLoopPulse)string{
+ d:=p.RawDebug
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=rx read=%d data=%d ack=%d tuple=%d ipck=%d tcpck=%d flags=%d len=%d opts=%d ttl0=%d other=%d seq=%d offer=%d recv_err=%d lastlen=%d lastttl=%d lastflags=%d src=%d dst=%d sport=%d dport=%d errno=%d",
+ d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],d[13],d[14],d[15],d[16],d[17],d[18],d[19],d[20],d[21])
+}
+func originalAndroidM4OwnerSnapshot(p realityfront.V4PublicLoopPulse)string{
+ health:=0
+ if p.AuthenticatedPeerControl{health=1}
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=%d parse_fail=%d parsed=%d auth=%d rejected=%d writefail=%d tun=%d trej=%d rawtx=%d rtun=%d tcp=%d udp=%d icmp=%d dnsudp=%d dnstcp=%d dnsraw=%d dnsrtun=%d dnsptx=%d dnsprx=%d dnsperr=%d rxerr=%d txerr=%d health=%d",
+ p.RawPollReady,p.RawParseFailed,p.RawParsed,p.RawAuthenticated,
+ p.RawAuthRejected,p.ReverseTunWriteFailed,p.TunIPv4Admitted,
+ p.TunIPv4Rejected,p.BusinessRawCopied,p.BusinessReverseTun,
+ p.TunTCPSeen,p.TunUDPSeen,p.TunICMPSeen,p.DnsUDP53Seen,
+ p.DnsTCP53Seen,p.DnsTunnelRawCopied,p.DnsTunnelReplyTun,
+ p.DnsPhysicalTx,p.DnsPhysicalRx,p.DnsPhysicalError,
+ p.RxErrors,p.TxErrors,health)
+}
+// A separate B6 numeric wire avoids changing historic A47/B3d/B4 M4
+// snapshot formats; values come only from real Rust RAW/UDP/TUN operations.
+func originalAndroidDNSB6Snapshot(p realityfront.V4PublicLoopPulse)string{
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_DNS_B6_DIAG role=client cnptx=%d noncnraw=%d tcpraw=%d ptctun=%d",
+  p.DnsCNPhysicalSent,p.DnsNonCNTunnelRaw,p.DnsTCP53OriginalRaw,p.DnsPhysicalTCTun)
+}
+// Real original Rust M4 state, not Ready and never a guessed Chrome PASS.
+func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]string{
+ var stages []string
+ if p.TunIPv4Admitted>0{stages=append(stages,"TUN_IPV4_SEEN")}
+ if p.TunIPv4Rejected>0{stages=append(stages,"TUN_IPV4_REJECTED")}
+ if p.BusinessRawCopied>0{stages=append(stages,"APP_RAW_TX_COPIED")}
+ if p.BusinessReverseTun>0{stages=append(stages,"APP_REVERSE_TUN_WRITTEN")}
+ if p.DnsUDP53Seen>0{stages=append(stages,"DNS_UDP53_TUN_SEEN")}
+ if p.DnsTCP53Seen>0{stages=append(stages,"DNS_TCP53_TUN_SEEN")}
+ if p.DnsTunnelRawCopied>0{stages=append(stages,"DNS_TUNNEL_RAW_COPIED")}
+ if p.DnsTunnelReplyTun>0{stages=append(stages,"DNS_TUNNEL_REVERSE_TUN_WRITTEN")}
+ if p.DnsPhysicalTx>0{stages=append(stages,"DNS_PHYSICAL_UDP_COPIED")}
+ if p.DnsPhysicalRx>0{stages=append(stages,"DNS_PHYSICAL_REVERSE_TUN_WRITTEN")}
+ if p.DnsPhysicalError>0{stages=append(stages,"DNS_PHYSICAL_ERROR")}
+ if p.DnsCNPhysicalSent>0{stages=append(stages,"DNS_CN_PHYSICAL_SENT")}
+ if p.DnsNonCNTunnelRaw>0{stages=append(stages,"DNS_NONCN_TUNNEL_RAW_COPIED")}
+ if p.DnsTCP53OriginalRaw>0{stages=append(stages,"DNS_TCP53_ORIGINAL_RAW_COPIED")}
+ if p.DnsPhysicalTCTun>0{stages=append(stages,"DNS_PHYSICAL_TC_REPLY_TUN_WRITTEN")}
+ if p.RawPollReady>0{stages=append(stages,"RAW_SOCKET_READABLE")}
+ if p.RawParseFailed>0{stages=append(stages,"RAW_PARSE_FAILED")}
+ if p.RawParsed>0{stages=append(stages,"RAW_PARSED")}
+ if p.RawAuthenticated>0{stages=append(stages,"RAW_AUTHENTICATED")}
+ if p.RawAuthRejected>0{stages=append(stages,"RAW_AUTH_REJECTED")}
+ if p.ReverseTunWriteFailed>0{stages=append(stages,"REVERSE_TUN_WRITE_FAILED")}
+ if p.TunICMPSeen>0{stages=append(stages,"TUN_ICMP_SEEN")}
+ if p.TunTCPSeen>0{stages=append(stages,"TUN_TCP_SEEN")}
+ if p.TunUDPSeen>0{stages=append(stages,"TUN_UDP_SEEN")}
+ return stages
+}
 func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
     return func(lease string)error{
         prefix,err:=netip.ParsePrefix(lease)
@@ -1244,12 +1750,24 @@ func configureAuthenticatedClientIPv4(tun *ownedTun)func(string)error{
         }
         desired:=prefix.String()
         if tun.cidr!=desired{
-            if err:=runIP("addr","add",desired,"dev",tun.name);err!=nil{return err}
-            if err:=runIP("addr","del",tun.cidr,"dev",tun.name);err!=nil{return err}
+            if err:=runIP("addr","add",desired,"dev",tun.name);err!=nil{
+                originalAndroidPostauthGo("LEASE_ADD_FAILED")
+                return err
+            }
+            if err:=runIP("addr","del",tun.cidr,"dev",tun.name);err!=nil{
+                originalAndroidPostauthGo("LEASE_DEL_FAILED")
+                return err
+            }
         }
         actual,err:=readOwnedTunIPv4(tun.name)
-        if err!=nil{return err}
-        if actual!=prefix{return fmt.Errorf("client authenticated IPv4 OS readback mismatch")}
+        if err!=nil{
+            originalAndroidPostauthGo("LEASE_READBACK_FAILED")
+            return err
+        }
+        if actual!=prefix{
+            originalAndroidPostauthGo("LEASE_MISMATCH")
+            return fmt.Errorf("client authenticated IPv4 OS readback mismatch")
+        }
         tun.cidr=desired
         log.Printf("V4_PUBLIC_LEASE_APPLIED role=client source=original_authenticated_TLS os_readback=%s",desired)
         return nil
@@ -1333,12 +1851,25 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         LocalPort:c.localPort,PeerPort:c.peerPort}
     isn,err:=originalRandomISN()
     if err!=nil{return err}
-    assoc,err:=faketcp.NewClientAssociation(flow,isn,time.Second,emit)
+    // Original emitter and matching original AF_PACKET reader only.
+    // This never creates an extra TCP sender or inspects payload content.
+    var handoffCommitted atomic.Bool
+    var firstPayloadTX atomic.Bool
+    var firstPeerPayloadRX atomic.Bool
+    observedEmit:=func(seg faketcp.Segment)error{
+        e:=emit(seg)
+        if e==nil&&runtime.GOOS=="android"&&len(seg.Payload)>0&&
+           !handoffCommitted.Load()&&firstPayloadTX.CompareAndSwap(false,true){
+            log.Print("V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_PAYLOAD_TX_OK role=client")
+        }
+        return e
+    }
+    assoc,err:=faketcp.NewClientAssociation(flow,isn,time.Second,observedEmit)
     if err!=nil{return err}
     defer assoc.Close()
     errs:=make(chan error,1)
-    var handoffCommitted atomic.Bool
     var goPostHandoffDataCopies atomic.Uint64
+    var androidColdUntrustedRSTRecorded atomic.Bool
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()
@@ -1348,6 +1879,17 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 return
             }
             if !flow.MatchesInbound(seg){continue}
+            if runtime.GOOS=="android"&&len(seg.Payload)>0&&
+               !handoffCommitted.Load()&&firstPeerPayloadRX.CompareAndSwap(false,true){
+                log.Print("V4_PUBLIC_ANDROID_COLD_RAW_PEER_PAYLOAD_RX role=client")
+            }
+            // Exact original AF_PACKET inbound RST before TLS. This proves
+            // only UNAUTHENTICATED wire failure, not server identity, M4
+            // or application data; payload/IP/UID are never logged.
+            if runtime.GOOS=="android" && seg.Flags&faketcp.FlagRST!=0 &&
+               androidColdUntrustedRSTRecorded.CompareAndSwap(false,true){
+                log.Printf("V4_PUBLIC_ANDROID_COLD_UNAUTH_RST_RX role=client source=original_filtered_af_packet")
+            }
             if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
                 if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
                     select{case errs<-fmt.Errorf("invalid current V4 peer SYNACK MSS %d",seg.MSS):default:}
@@ -1367,7 +1909,35 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }()
     coldSynStart:=time.Now()
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_start unix_ms=%d",coldSynStart.UnixMilli())}
-    if err:=assoc.Start(coldSynStart);err!=nil{return err}
+    if err:=assoc.Start(coldSynStart);err!=nil{
+        // ANDROID ONLY, OBSERVABILITY ONLY: classify the exact original
+        // syscall/client-association SYN send failure without logging IPv4,
+        // credentials, keys, network handle, syscall arguments or packet.
+        // Never transform the error, retry policy or original SYN bytes.
+        if runtime.GOOS=="android"{
+            category:="other"
+            switch {
+            case errors.Is(err,syscall.EPERM),errors.Is(err,syscall.EACCES):
+                category="permission_denied"
+            case errors.Is(err,syscall.ENETUNREACH),errors.Is(err,syscall.EHOSTUNREACH),
+                 errors.Is(err,syscall.ENETDOWN):
+                category="network_unreachable"
+            case errors.Is(err,syscall.EINVAL),errors.Is(err,syscall.EAFNOSUPPORT):
+                category="invalid_argument"
+            case errors.Is(err,syscall.EADDRNOTAVAIL):
+                category="source_unavailable"
+            case errors.Is(err,syscall.ENOBUFS):
+                category="buffer_pressure"
+            }
+            log.Printf("V4_PUBLIC_ANDROID_COLD_SYN_TX_FAILED role=client class=%s",category)
+        }
+        return err
+    }
+    // Start() calls the ORIGINAL fake TCP raw segment writer synchronously.
+    // This means kernel Sendto returned success, NOT that a peer replied.
+    if runtime.GOOS=="android"{
+        log.Printf("V4_PUBLIC_ANDROID_COLD_SYN_TX_OK role=client source=original_go_raw")
+    }
     dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
     defer cancel()
     // A first SYN may precede server AF_PACKET bind just as a post-dead
@@ -1376,6 +1946,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // creation; retries cannot change SYN TCP options or skip TLS admission.
     err=waitForOriginalColdSYN(dialCtx,assoc)
     if err!=nil{return err}
+    if runtime.GOOS=="android"{
+        // Unlike a raw SYNACK candidate this proves the ORIGINAL client
+        // Association accepted its sequence/flow and reached Established.
+        log.Print("V4_PUBLIC_ANDROID_ORIGINAL_ASSOC_ESTABLISHED role=client")
+    }
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_established unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(coldSynStart).Milliseconds())}
     var policy realityfront.AdmissionPolicy
     switch c.fecMode{
@@ -1399,9 +1974,16 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             return configureAuthenticatedClientIPv4(tun)(lease)
         }
     }
+    var cn8503Raw []byte
+    if c.androidCNDNSSplit{cn8503Raw=c.androidCNSnapshot.PinnedWire()}
     native,err:=realityfront.NewV4LinuxClientProduct(
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
+            AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
+            AndroidPhysicalMTU:c.androidPhysicalMTU,
+            AndroidTunnelDNS:c.androidTunnelDNS,
+            AndroidPhysicalDNS:c.androidPhysicalDNS,
+            AndroidCN8503Raw:cn8503Raw,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
@@ -1409,7 +1991,11 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,
             StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
         })
-    if err!=nil{return err}
+    if err!=nil{
+        if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_COLD_PRODUCT_FAILED role=client")}
+        return err
+    }
+    if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_COLD_PRODUCT_PREPARED role=client")}
     cfg:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:c.tlsVerifyServer,RootCAs:c.tlsRoots,Timeout:15*time.Second},
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
@@ -1418,12 +2004,19 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }
     nativeAdmissionStart:=time.Now()
     stopColdRTO:=driveOriginalClientColdBootstrapRTO(dialCtx,assoc)
-    _,err=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg)
+    authenticated,err:=native.ConnectAuthenticatedPeer(dialCtx,assoc,cfg)
     resent,retryErr:=stopColdRTO()
     if resent>0{
         log.Printf("V4_PUBLIC_FAKETCP_CLIENT_COLD_DATA_RTO role=client mode=%s actual_original_retransmissions=%d post_detach=0",
             c.fecMode,resent)
     }
+    if runtime.GOOS=="android"&&(err!=nil||retryErr!=nil){
+        // NOT_OBSERVED refers to this one bounded Go-owned association.
+        if !firstPayloadTX.Load(){log.Print("V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_PAYLOAD_TX_NOT_OBSERVED role=client")}
+        if !firstPeerPayloadRX.Load(){log.Print("V4_PUBLIC_ANDROID_COLD_RAW_PEER_PAYLOAD_RX_NOT_OBSERVED role=client")}
+        if resent>0{log.Print("V4_PUBLIC_ANDROID_COLD_BOOTSTRAP_RTO_OBSERVED role=client")}
+    }
+    if retryErr!=nil{originalAndroidPostauthGo("COLD_RTO_STOP_FAILED")}
     if err!=nil||retryErr!=nil{
         // Failed cold admission still owns a constructed native product.
         // It must release its loans/socket/generation before a new attempt.
@@ -1432,14 +2025,27 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // Existing client product returns only after authenticated TLS detach,
     // exact Rust M4 RX attachment and native loop start.
     if assoc.State()!=faketcp.ClientAssociationDetached{
+        originalAndroidPostauthGo("DETACH_STATE_FAILED")
         _=native.Close()
         return fmt.Errorf("Normal client Rust M4 started without FakeTCP detach")
     }
-    if e:=raw.ExcludeDetachedData(flow.PeerIP,flow.PeerPort);e!=nil{
-        _=native.Close()
-        return fmt.Errorf("Normal client receive ownership handoff: %w",e)
+    // Android owns one original TLS session per Go RAW FD. After true
+    // native M4 attach, completely quiesce ONLY that obsolete Go receiver.
+    // Linux's original exact-tuple filtering remains unchanged.
+    var rxHandoffErr error
+    if runtime.GOOS=="android" {
+        rxHandoffErr=raw.QuiesceDetachedClientReceive()
+    }else{
+        rxHandoffErr=raw.ExcludeDetachedData(flow.PeerIP,flow.PeerPort)
     }
+    if rxHandoffErr!=nil{
+        originalAndroidPostauthGo("GO_RX_FILTER_FAILED")
+        _=native.Close()
+        return fmt.Errorf("Normal client receive ownership handoff: %w",rxHandoffErr)
+    }
+    originalAndroidPostauthGo("GO_RX_FILTER_OK")
     handoffCommitted.Store(true)
+    originalAndroidPostauthGo("GO_RX_HANDOFF_OK")
     repeatOriginalDetachedTLSFinalACK(ctx,assoc)
     if c.rotationGeneration>1&&c.sharedTun!=nil{
         // The Rust candidate is ready to receive real M4 data but does
@@ -1456,6 +2062,28 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         log.Printf("V4_PUBLIC_NORMAL_REMOTE_M4_PROVEN role=client generation=%d client_port=%d native_authenticated_control_or_ipv4=1 tun_route_promoted=1",
             c.rotationGeneration,c.localPort)
     }
+    // Only after genuine Go TLS credentials, a protected server-signed /32,
+    // exact installed kernel address, Rust M4 workers AND DATA handoff may
+    // Android grant ONE app UID a dedicated private route. Never a global
+    // default/main-table route, VpnService, FakeIP or early pre-auth grant.
+    var undoRootRoute func()error
+    if runtime.GOOS=="android"&&(c.androidRouteAllApps||c.androidRouteUID!=0||len(c.androidRouteUIDs)>0){
+        originalAndroidPostauthGo("UID_ROUTE_ENTERED")
+        var authorizedLease string
+        if authenticated==nil{
+            return errors.Join(fmt.Errorf("missing real authenticated lease session"),native.Close())
+        }
+        authorizedLease,err=authenticated.AuthenticatedLeaseIPv4()
+        if err==nil{
+            undoRootRoute,err=androidRootRouteAfterNative(c,tun,authorizedLease)
+        }
+        if err!=nil{
+            originalAndroidPostauthGo("UID_ROUTE_FAILED")
+            return errors.Join(
+            fmt.Errorf("Android exact original-Go authenticated routing denied: %w",err),
+            native.Close(),
+        )}
+    }
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=native_ready unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(nativeAdmissionStart).Milliseconds())}
     log.Printf("V4_PUBLIC_GO_RX_HANDOFF role=client mode=%s filtered=1 rust_ready=1 original_send_fd_open=1",c.fecMode)
     *connected=true
@@ -1470,9 +2098,37 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     // ALL Normal modes; neither ACK nor local driver errors may reauthorize TLS.
     var notifyPreDead chan<- struct{}
     if len(ready)>1{notifyPreDead=ready[1]}
+    // Reuse the original one-second Health poll, no new worker or hot-path Go.
+    businessLogged:=make(map[string]bool,6)
+    var lastNumericM4 time.Time
+    businessPulse:=func()(realityfront.V4PublicLoopPulse,error){
+        p,e:=native.OriginalLoopPulse()
+        if e==nil&&runtime.GOOS=="android"{
+            if lastNumericM4.IsZero()||time.Since(lastNumericM4)>=4*time.Second{
+                lastNumericM4=time.Now()
+                log.Print(originalAndroidM4RxSnapshot(p))
+                log.Print(originalAndroidM4OwnerSnapshot(p))
+                log.Print(originalAndroidDNSB6Snapshot(p))
+            }
+            for _,stage:=range originalAndroidBusinessReceiptClasses(p){
+                if !businessLogged[stage]{
+                    businessLogged[stage]=true
+                    log.Printf("V4_PUBLIC_ANDROID_BUSINESS role=client class=%s",stage)
+                }
+            }
+        }
+        return p,e
+    }
     err=monitorPublicNativePeer(ctx,errs,
         func()bool{return handoffCommitted.Load()},
-        native.OriginalLoopPulse,notifyPreDead)
+        businessPulse,notifyPreDead)
+    if runtime.GOOS=="android"{
+        if final,e:=native.OriginalLoopPulse();e==nil{
+            log.Print(originalAndroidM4RxSnapshot(final))
+            log.Print(originalAndroidM4OwnerSnapshot(final))
+            log.Print(originalAndroidDNSB6Snapshot(final))
+        }
+    }
     log.Printf("V4_PUBLIC_GO_RX_POST_HANDOFF role=client mode=%s go_data_full_copies=%d",c.fecMode,goPostHandoffDataCopies.Load())
     m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
     logNormalStartupPadding("client",c.fecMode!=realityfront.FecV2Off,m,n,b,e)
@@ -1527,7 +2183,20 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                     proof.PositiveConfirmationMeanUs,proof.PositiveConfirmationMeanKnown)
             }
     }
-    closeErr:=native.Close()
+    // Stop ordering: withdraw the only UID ingress route FIRST; only
+    // thereafter stop/join original Rust RX/TX, release loans and TUN FD.
+    // If cleanup cannot prove the kernel rule absent, return a hard error
+    // and preserve the root-only journal for exact crash recovery.
+    var routeErr error
+    if undoRootRoute!=nil{
+        routeErr=undoRootRoute()
+        if routeErr==nil{
+            log.Printf("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client")
+        }else{
+            log.Printf("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_UNPROVEN role=client err=%v",routeErr)
+        }
+    }
+    closeErr:=errors.Join(routeErr,native.Close())
     if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=client")}
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr
@@ -2075,6 +2744,8 @@ func runSharedMultiServer(
     // A 32-slot cap is not a claim of 32 long-lived qualified users.
     log.Printf("V4_PUBLIC_MULTI_SERVER_READY role=server port=%d cold_association_slots=%d native_owner_slots=%d shared_rust_tun=1 decoy_max_splices=%d",
         c.localPort,originalV4ColdAssociationSlots,originalV4NativeLaneSlots,cap(decoySlots))
+    var rawInitialSYNSeen atomic.Bool
+    var rawInitialSYNACKSent atomic.Bool
     go func(){
         for {
             seg,_,readErr:=raw.ReadSegment()
@@ -2086,6 +2757,12 @@ func runSharedMultiServer(
             if seg.DstPort!=c.localPort{continue}
             if faketcp.IsInitialSYN(seg){
                 if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{continue}
+                // Observability ONLY: actual original AF_PACKET receiver,
+                // syntactic untrusted SYN and MSS, NOT authenticated identity.
+                // No packet bytes, addresses or credential material logged.
+                if rawInitialSYNSeen.CompareAndSwap(false,true){
+                    log.Printf("V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX source=original_af_packet untrusted=1")
+                }
                 isn,e:=originalRandomISN()
                 if e!=nil{
                     select{case transportErr<-e:default:}
@@ -2103,6 +2780,9 @@ func runSharedMultiServer(
                 if e!=nil{
                     select{case transportErr<-e:default:}
                     return
+                }
+                if rawInitialSYNACKSent.CompareAndSwap(false,true){
+                    log.Printf("V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK source=original_af_packet untrusted=1")
                 }
                 continue
             }

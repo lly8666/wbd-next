@@ -1,0 +1,73 @@
+{
+  "schema": "android16-dirtyfrag-preapril/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source": "f43257dce625cb9504142eafa491659013857f9d",
+  "image": {
+    "platform": "Android16/API36 Google Play arm64-v8a r07",
+    "sdk_snapshot_date": "2025-12-02",
+    "sdk_snapshot_commit": "7c23968450618e94727e190d3a2ad3cf8f24adf7",
+    "archive": "arm64-v8a-36_r07.zip",
+    "bytes": 1886527965,
+    "catalog_sha1": "5b91ef80a5eb60d7b7167528db259c2a12d20e9c",
+    "observed_sha1": "5b91ef80a5eb60d7b7167528db259c2a12d20e9c",
+    "observed_sha256": "ddb0feff5c23db9f42ceabd28f6542e8ffec639abf818bf6831a2658e6cf7905",
+    "integrity": "SUPPORTED_IN_SCOPE"
+  },
+  "action": {
+    "run": 43860868119,
+    "job": 133277022985,
+    "artifact_id": 14222664457,
+    "artifact_zip_sha256": "88ee8a4f78556c2a294e94d878328b2d219ee38ce8c829e00dcb3e4235db0492",
+    "ci_conclusion": "success",
+    "case_status": "ENV_BLOCKED",
+    "qemu_error": "HVF error: HV_UNSUPPORTED; failed to initialize HVF: Invalid argument",
+    "guest_booted": false
+  },
+  "history": [
+    {
+      "run": 43857158313,
+      "source": "f0b835c70050e88041cb14afbb9b8fd6780c9e27",
+      "result": "NO_ARM64_KVM",
+      "artifact": 14220913351,
+      "zip_sha256": "ae90e4e76177830968dd2ca4d35f8c6fcb21372cdf9dce9a6bef95ee268e6718"
+    },
+    {
+      "run": 43857610954,
+      "source": "8342f575474255debd41ae409c8c5b6e7ff1f34c",
+      "result": "bad legacy Intel emulator check, corrected",
+      "artifact": 14220879880,
+      "zip_sha256": "67e26a1fa6dc5e2333cd0360e1fc40784f068973e8839283dea09066b4cb33e5"
+    },
+    {
+      "run": 43858595528,
+      "source": "640fc920cba131fe6ff9278ede81f5d4a8afdb9e",
+      "result": "ARM64 macOS emulator -accel-check 0; guest not checked"
+    },
+    {
+      "run": 43859987790,
+      "source": "22211f41a5b529be46d9e8e91688580edbf5a67f",
+      "result": "ZIP ABI folder fixture bug, corrected",
+      "artifact": 14222638280,
+      "zip_sha256": "69363ba5b763662c68502a7ace9829ca52dbc19652d32c2fe5ecec1d61fb505c"
+    },
+    {
+      "run": 43860416567,
+      "source": "32f86c09bcf42ea5c2431a4919f7855e7619f3dd",
+      "result": "avdmanager stdin fixture bug, corrected",
+      "artifact": 14222708892,
+      "zip_sha256": "098fa7606a4c96418f04452cc9e4bd495ffe95458324fc1c19c9e845b86b2ace"
+    }
+  ],
+  "dirtyfrag": {
+    "apk": "mitschud/DirtyFrag v1.10",
+    "apk_sha256": "9ff05645fd239a4af2525fb74a62110e91288bf23c674b12332762dfe5846851",
+    "manager": "tiann/KernelSU v3.3.1",
+    "manager_sha256": "b4a059ace71de2fa65cc7f12b1c58d55fc23ab25e057ee4230ce779742abe450",
+    "exploit_executed": false,
+    "app_to_su": "NOT_RUN",
+    "post_root_wbd": "NOT_RUN",
+    "guest_kernel": "NOT_OBSERVED",
+    "guest_initial_unrooted": "NOT_RUN"
+  },
+  "decision": "stop GitHub-hosted AVD retry; require bare-metal ARM64 KVM/HVF guest host"
+}

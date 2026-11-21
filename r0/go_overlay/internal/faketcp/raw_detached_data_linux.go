@@ -94,6 +94,30 @@ func (e *RawIPv4Endpoint) ExcludeDetachedData(peerIP [4]byte, peerPort uint16) e
 }
 
 
+// QuiesceDetachedClientReceive relinquishes the ORIGINAL Android client's
+// obsolete Go AF_PACKET receive socket AFTER genuine protected TLS,
+// FakeTCP Detach, and successful original Rust M4 RAW/TUN attachment.
+// Unlike the Linux server, Android's client accepts one TLS peer per RAW FD;
+// a later cold generation opens a completely new RAW FD. Some real Android
+// interfaces do not expose six-byte Ethernet MAC addresses; the original
+// donor therefore may have no initial Ethernet-specific kernel port filter.
+// Drop all packets only on the old Go RX FD using one real kernel instruction.
+// The separate Go RAW send FD still emits detached final pure ACKs;
+// the independent original Rust authenticated M4 RX FD is unchanged.
+func (e *RawIPv4Endpoint) QuiesceDetachedClientReceive() error {
+    if e == nil {
+        return errors.New("faketcp: nil detached client original Go RX")
+    }
+    e.mu.Lock()
+    defer e.mu.Unlock()
+    if e.closed || e.recvFD < 0 {
+        return net.ErrClosed
+    }
+    instruction := [1]unix.SockFilter{{Code: unix.BPF_RET | unix.BPF_K, K: 0}}
+    program := unix.SockFprog{Len: 1, Filter: &instruction[0]}
+    return unix.SetsockoptSockFprog(e.recvFD, unix.SOL_SOCKET, unix.SO_ATTACH_FILTER, &program)
+}
+
 // Restore the ORIGINAL kernel bootstrap receive-port gate only after the
 // LAST fully authenticated native Game group has drained. Keeping the final
 // detached peer tuple in SO_ATTACH_FILTER would discard the NEW TLS payload

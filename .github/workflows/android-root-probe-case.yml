@@ -1,0 +1,133 @@
+name: Android temp root probe - one case
+run-name: "android-root-probe|api${{ inputs.api }}|${{ inputs.scenario }}|${{ inputs.source_sha || github.sha }}"
+on:
+  workflow_call:
+    inputs:
+      source_sha: {required: false, type: string, default: ''}
+      api: {required: true, type: string}
+      scenario: {required: true, type: string}
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact SOURCE commit SHA carrying build artifact (blank means run SHA)
+        type: string
+        required: false
+      api:
+        description: Android API for ONE new AOSP emulator
+        type: choice
+        required: true
+        options: ['28', '29', '30', '31', '32', '33', '34', '35', '36', '37']
+      scenario:
+        description: Explicit bounded scenario
+        type: choice
+        required: true
+        options: [canary]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-root-probe-case-api${{ inputs.api }}-${{ inputs.source_sha || github.sha }}
+  cancel-in-progress: false
+jobs:
+  one-emulator:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ANDROID_PROBE_API: ${{ inputs.api }}
+      ANDROID_PROBE_SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.source_sha || github.sha }}
+      - name: KVM hardware preflight; no software emulation fallback
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/case
+          if [[ ! -c /dev/kvm ]]; then
+            printf '{"status":"ENV_BLOCKED","reason":"host has no /dev/kvm; emulator not launched"}\n' >out/case/preflight.json
+            exit 2
+          fi
+          sudo chmod a+rw /dev/kvm
+          test -r /dev/kvm && test -w /dev/kvm
+          printf '{"status":"SUPPORTED_IN_SCOPE","scope":"host KVM device accessible; emulator acceleration still must be observed"}\n' >out/case/preflight.json
+      - name: Download exactly one SOURCE-matching build artifact (no recompile)
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=""
+          for attempt in $(seq 1 40); do
+            gh api "repos/${GITHUB_REPOSITORY}/actions/runs?per_page=100" >out/case/actions-list.json
+            run_id="$(python3 - <<'PY'
+          import json,os
+          data=json.load(open("out/case/actions-list.json"))
+          match=[r for r in data["workflow_runs"]
+                 if r.get("path")==".github/workflows/android-root-probe-build.yml"
+                 and r.get("head_sha")==os.environ["ANDROID_PROBE_SOURCE_SHA"]
+                 and r.get("conclusion")=="success"]
+          failed=[r for r in data["workflow_runs"]
+                  if r.get("path")==".github/workflows/android-root-probe-build.yml"
+                  and r.get("head_sha")==os.environ["ANDROID_PROBE_SOURCE_SHA"]
+                  and r.get("conclusion") in ("failure","cancelled","timed_out")]
+          if failed:
+              raise SystemExit("Matching SOURCE build failed; no canary attempt or retry")
+          print(match[0]["id"] if match else "")
+          PY
+            )"
+            if [[ -n "$run_id" ]]; then break; fi
+            sleep 15
+          done
+          if [[ -z "$run_id" ]]; then
+            echo '{"status":"ENV_BLOCKED","reason":"matching build Action absent or failed within bounded 10m wait"}' >out/case/build.json
+            exit 3
+          fi
+          echo "ANDROID_PROBE_BUILD_RUN=$run_id" >>"$GITHUB_ENV"
+          mkdir -p out/build
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "android-root-probe-$ANDROID_PROBE_SOURCE_SHA" --dir out/build
+          (cd out/build && sha256sum -c SHA256SUMS)
+          test "$(cat out/build/SOURCE)" = "$ANDROID_PROBE_SOURCE_SHA"
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("out/build/manifest.json"))
+          assert m["source"]==os.environ["ANDROID_PROBE_SOURCE_SHA"]
+          assert m["target_sdk"]==37 and m["min_sdk"]==28
+          PY
+          echo '{"status":"SUPPORTED_IN_SCOPE","scope":"SOURCE/artifact SHA256 validated"}' >out/case/build.json
+      - name: Hardware-accelerated AOSP development image, one fresh AVD
+        uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: ${{ inputs.api }}
+          target: default
+          arch: x86_64
+          emulator-boot-timeout: 300
+          disable-animations: true
+          force-avd-creation: true
+          emulator-options: -no-snapshot -wipe-data -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on
+          script: bash experiments/android-root-probe/ci/case.sh
+      - name: Check actual API, kernel identity and probe exit status
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f out/case/summary.json ]]; then
+            echo '{"status":"ENV_BLOCKED","reason":"emulator image/boot/case did not produce summary; inspect runner log"}' >out/case/missing-summary.json
+            exit 4
+          fi
+          python3 - <<'PY'
+          import json,os
+          data=json.load(open("out/case/summary.json"))
+          assert str(data["api_observed"])==str(os.environ["ANDROID_PROBE_API"]), "wrong Android API: no qualification"
+          assert data["source"]==os.environ["ANDROID_PROBE_SOURCE_SHA"], "SOURCE mismatch"
+          assert data["status"]!="FAIL", "probe/cleanup failure"
+          print(data["status"],data["api_observed"],data["execution_path"])
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-root-probe-api${{ inputs.api }}-${{ inputs.source_sha || github.sha }}-${{ github.run_id }}
+          path: out/case/
+          retention-days: 21
+          if-no-files-found: error

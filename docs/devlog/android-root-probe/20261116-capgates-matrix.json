@@ -1,0 +1,101 @@
+{
+  "schema": "android-root-permission-gates-matrix/v1",
+  "branch": "experiment/android-root-permission-gates",
+  "source_sha": "a5794555e44efcb4945cc928cb8308258c93d8b0",
+  "workflow_run": 43806012347,
+  "workflow_conclusion": "success",
+  "build_artifact_id": 14197649452,
+  "build_zip_sha256": "fdcdb50b19af840d3a52e7f3aecb2543b03fc75a1afa7d9cfb27c999e0372237",
+  "manifest_sha256": "f949f84b7397287c8033af4847c314a0c29bde753952e91acb0e07b4d9898efb",
+  "x86_64_binary_sha256": "3cb936c2dd610605a82d2dcd164d74e0369ba5e393ffae4728f345ad2bd00e39",
+  "arm64_binary_sha256": "ae22bdc2fc9fb40d5114fbd6b27764238d29b07036497484df583c0fbfc04e88",
+  "profile_caps_eff": {
+    "none": "0000000000000000",
+    "netadmin": "0000000000001000",
+    "netraw": "0000000000002000",
+    "both": "0000000000003000",
+    "dac": "0000000000000002",
+    "admin-dac": "0000000000001002",
+    "both-dac": "0000000000003002"
+  },
+  "result_by_profile": {
+    "none": {
+      "tun": "PERMISSION_DENIED",
+      "tun-preopen": "PERMISSION_DENIED",
+      "raw": "PERMISSION_DENIED"
+    },
+    "netadmin": {
+      "tun": "PERMISSION_DENIED",
+      "tun-preopen": "SUPPORTED_IN_SCOPE",
+      "raw": "PERMISSION_DENIED"
+    },
+    "netraw": {
+      "tun": "PERMISSION_DENIED",
+      "tun-preopen": "PERMISSION_DENIED",
+      "raw": "SUPPORTED_IN_SCOPE"
+    },
+    "both": {
+      "tun": "PERMISSION_DENIED",
+      "tun-preopen": "SUPPORTED_IN_SCOPE",
+      "raw": "SUPPORTED_IN_SCOPE"
+    },
+    "dac": {
+      "tun": "PERMISSION_DENIED",
+      "tun-preopen": "PERMISSION_DENIED",
+      "raw": "PERMISSION_DENIED"
+    },
+    "admin-dac": {
+      "tun": "SUPPORTED_IN_SCOPE",
+      "tun-preopen": "SUPPORTED_IN_SCOPE",
+      "raw": "PERMISSION_DENIED"
+    },
+    "both-dac": {
+      "tun": "SUPPORTED_IN_SCOPE",
+      "tun-preopen": "SUPPORTED_IN_SCOPE",
+      "raw": "SUPPORTED_IN_SCOPE"
+    }
+  },
+  "cases": [
+    {
+      "api": 28,
+      "release": "9",
+      "image_revision": "4923214",
+      "artifact_id": 14198052659,
+      "artifact_zip_sha256": "06fbc0446dfeb3c0c6312039d59a2c4f5faef58210b18e934aeb2353a52be10c",
+      "status": "FUNCTIONAL_PASS",
+      "total": 21,
+      "mismatches": 0
+    },
+    {
+      "api": 36,
+      "release": "16",
+      "image_revision": "13818094",
+      "artifact_id": 14198163475,
+      "artifact_zip_sha256": "5cffde8b0aeb2cab1695ad6be38c1b317b417f871f0c0354553a77d11a8ed938",
+      "status": "FUNCTIONAL_PASS",
+      "total": 21,
+      "mismatches": 0
+    },
+    {
+      "api": 32,
+      "release": "12",
+      "image_revision": "",
+      "artifact_id": 14197914344,
+      "artifact_zip_sha256": "9be1849eae9f7388061b7d06bf811155e4dd8ffd83236c0b5b455261a7bdd2b3",
+      "status": "FUNCTIONAL_PASS",
+      "total": 21,
+      "mismatches": 0
+    }
+  ],
+  "historical_failed_source_sha": "63ccd028df12f39904cc6ff0421abcae6d3a14e9",
+  "historical_run": 43805552571,
+  "historical_api28_api36": "FAIL: TUN open() EACCES under only NET_ADMIN or NET_ADMIN+NET_RAW; API32 skipped after canaries failed",
+  "device_node": "/dev/tun crw-rw---- uid=1000 gid=1016, SELinux Enforcing",
+  "environment": "AOSP x86_64 emulator; adb-root UID0 u:r:su:s0; capset(V3) and PR_SET_NO_NEW_PRIVS=1",
+  "limitations": [
+    "CapBnd not dropped, UID0 and adb-root SELinux unchanged, actual app-su NOT_RUN",
+    "TUN reduced-caps testing only direct owned TUNSETIFF and fd close, no configured UDP send/read",
+    "Raw only loopback, not real egress, netd fwmark/routing/NAT/tethering and physical phone NOT_RUN",
+    "aarch64 cross-built only, no ARM64 runtime; API37 unavailable SDK"
+  ]
+}

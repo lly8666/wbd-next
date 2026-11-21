@@ -11,13 +11,18 @@ import (
     "context"
     "crypto/rand"
     "crypto/sha256"
+    "crypto/x509"
     "encoding/binary"
     "errors"
     "fmt"
     "io"
+    "log"
     "math/big"
     "net"
     "net/netip"
+    "runtime"
+    "os"
+    "syscall"
     "sync"
     "time"
 
@@ -717,6 +722,61 @@ func v4DeriveRecordKeys(exporter keyingMaterialExporter,result AdmissionResult,e
 
 // EstablishClientV4 preserves exactly one protected request and reply; no
 // additional RTT. This opt-in API is fail-closed until caller proves readiness.
+// Fixed, credential-free Android cold classification. Never serialize a Go
+// error string: TLS errors may contain SNI, remote IP or certificate details.
+func v4AndroidColdFailureClass(err error)string{
+    if err==nil{return "NONE"}
+    if errors.Is(err,context.DeadlineExceeded)||
+       errors.Is(err,os.ErrDeadlineExceeded)||
+       errors.Is(err,syscall.ETIMEDOUT)||
+       errors.Is(err,faketcp.ErrBootstrapTimeout){return "TIMEOUT"}
+    if errors.Is(err,context.Canceled){return "CANCELLED"}
+    if errors.Is(err,faketcp.ErrBootstrapClosed){return "BOOTSTRAP_CLOSED"}
+    var netErr net.Error
+    if errors.As(err,&netErr)&&netErr.Timeout(){return "TIMEOUT"}
+    var unknown x509.UnknownAuthorityError
+    var hostname x509.HostnameError
+    var invalid x509.CertificateInvalidError
+    if errors.As(err,&unknown)||errors.As(err,&hostname)||errors.As(err,&invalid){
+        return "CERTIFICATE"
+    }
+    if errors.Is(err,io.EOF)||errors.Is(err,io.ErrUnexpectedEOF){return "PEER_CLOSED"}
+    if errors.Is(err,ErrAdmissionAuth){return "AUTH_REJECTED"}
+    if errors.Is(err,ErrAdmissionVersion){return "VERSION_REJECTED"}
+    if errors.Is(err,ErrAdmissionParams){return "POLICY_REJECTED"}
+    return "OTHER"
+}
+
+// A36: split an already VERIFIED x509 verification failure into fixed
+// diagnostic classes. No certificate, hostname, issuer or PEM bytes leave
+// Go. This never changes uTLS RootCAs, SNI or InsecureSkipVerify.
+func v4AndroidCertFailureReason(err error)string{
+    var unknown x509.UnknownAuthorityError
+    if errors.As(err,&unknown){return "UNKNOWN_AUTHORITY"}
+    var hostname x509.HostnameError
+    if errors.As(err,&hostname){return "HOSTNAME_MISMATCH"}
+    var invalid x509.CertificateInvalidError
+    if errors.As(err,&invalid){
+        switch invalid.Reason{
+        case x509.Expired:
+            if invalid.Cert!=nil&&time.Now().Before(invalid.Cert.NotBefore){
+                return "NOT_YET_VALID"
+            }
+            return "EXPIRED"
+        case x509.IncompatibleUsage:return "INCOMPATIBLE_USAGE"
+        }
+        return "INVALID_CERTIFICATE"
+    }
+    return "OTHER_CERTIFICATE"
+}
+
+// A34 only observes an elapsed original TLS candidate deadline. An opaque
+// error at that boundary is not necessarily a timeout or server rejection.
+func v4AndroidClassAtDeadline(err error,remaining time.Duration)string{
+    v:=v4AndroidColdFailureClass(err)
+    if v=="OTHER"&&remaining<=0{return "DEADLINE_ELAPSED_OTHER"}
+    return v
+}
 func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConfig,opt V4ClientOptions)(*V4ClientSession,error) {
     if !opt.DataPlaneReady||opt.GameFec>7||opt.NormalFec>7||
        opt.StartupPadding>2||
@@ -758,12 +818,43 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     // This intentionally exposes an active-MITM impersonation risk when
     // VerifyServer=false; encrypted TLS is NOT server authentication.
     tlsCfg.Timeout=guard.Remaining()
+    if runtime.GOOS=="android"{
+        if tlsCfg.VerifyServer{
+            log.Print("V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_EFFECTIVE role=client class=ENABLED")
+        }else{
+            log.Print("V4_PUBLIC_ANDROID_TLS_CERT_VERIFY_EFFECTIVE role=client class=DISABLED")
+        }
+    }
+    // These are cold-path stage receipts only; the real uTLS and protected
+    // admission wire remain byte-for-byte owned by their original callers.
+    if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_TLS_HANDSHAKE_ATTEMPTED role=client")}
     client,err:=handshakeClientConn(ctx,conn,tlsCfg)
-    if err!=nil{return nil,candidateError(ctx,err)}
+    if err!=nil{
+        if runtime.GOOS=="android"{
+            log.Printf("V4_PUBLIC_ANDROID_TLS_HANDSHAKE_FAILED role=client class=%s",v4AndroidClassAtDeadline(err,guard.Remaining()))
+            if v4AndroidColdFailureClass(err)=="CERTIFICATE"{
+                log.Printf("V4_PUBLIC_ANDROID_TLS_CERT_REASON role=client class=%s",v4AndroidCertFailureReason(err))
+            }
+        }
+        return nil,candidateError(ctx,err)
+    }
+    if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_TLS_HANDSHAKE_VERIFIED role=client")}
     if err:=guard.Rearm();err!=nil{return nil,err}
-    if err:=writeFull(client,wire);err!=nil{return nil,candidateError(ctx,err)}
+    if err:=writeFull(client,wire);err!=nil{
+        if runtime.GOOS=="android"{
+            log.Printf("V4_PUBLIC_ANDROID_PROTECTED_REQUEST_WRITE_FAILED role=client class=%s",v4AndroidColdFailureClass(err))
+        }
+        return nil,candidateError(ctx,err)
+    }
+    if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_PROTECTED_REQUEST_WRITE_OK role=client")}
     result,extension,err:=v4ReadReply(client,req)
-    if err!=nil{return nil,candidateError(ctx,err)}
+    if err!=nil{
+        if runtime.GOOS=="android"{
+            log.Printf("V4_PUBLIC_ANDROID_PROTECTED_REPLY_FAILED role=client class=%s",v4AndroidColdFailureClass(err))
+        }
+        return nil,candidateError(ctx,err)
+    }
+    if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_PROTECTED_REPLY_PARSED role=client")}
     // No protected reply feature downgrade/upgrade is admissible.
     if extension.Features!=offeredFeatures || extension.GameFec!=opt.GameFec ||
        extension.NormalFec!=opt.NormalFec ||
@@ -780,6 +871,7 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     frozen,err:=v4ColdSnapshot(result,extension.Epoch,cfg.Username,false,extension.Features,extension.StartupPadding)
     if err!=nil{return nil,err}
     success=true
+    if runtime.GOOS=="android"{log.Print("V4_PUBLIC_ANDROID_ADMISSION_VERIFIED role=client")}
     return &V4ClientSession{
         ClientAdmissionSession:&ClientAdmissionSession{TLS:&ClientSession{Keys:keys},Negotiated:result},
         Epoch:extension.Epoch,verifiedLease4:result.Lease4,

@@ -1,0 +1,59 @@
+name: Android actual APK to existing su
+run-name: "android-app-su|${{ github.sha }}"
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  apk-and-canary:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build single disposable targetSdk37 APK
+        shell: bash
+        run: bash experiments/android-root-probe/ci/build-app.sh
+      - name: Download immutable prior Android native probe, no recompile
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/native
+          gh run download "43808870166" --repo "$GITHUB_REPOSITORY" \
+            --name "android-root-probe-42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d" --dir out/native
+          (cd out/native; sha256sum -c SHA256SUMS)
+          test "$(cat out/native/SOURCE)" = "42cca27e8a6b8d4e5db38e72c2b3ddd0fef61b2d"
+      - name: Require KVM hardware
+        shell: bash
+        run: |
+          test -c /dev/kvm
+          sudo chmod a+rw /dev/kvm
+      - uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: '36'
+          target: default
+          arch: x86_64
+          emulator-boot-timeout: 300
+          force-avd-creation: true
+          disable-animations: true
+          emulator-options: -no-snapshot -wipe-data -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on
+          script: bash experiments/android-root-probe/ci/app-su-case.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: app-su-api36-${{ github.sha }}
+          path: |
+            out/appcase/
+            out/apk/app-su.apk
+            out/apk/SOURCE
+            out/apk/SHA256SUMS
+            out/apk/manifest.json
+            out/apk/badging.txt
+            out/apk/compile-api.txt
+            out/apk/blocked.txt
+          retention-days: 21
+          if-no-files-found: warn

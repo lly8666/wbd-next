@@ -1,0 +1,48 @@
+# Android ARM64 A3：同一原M3 LINK20的零拷贝正常包与完整大包分片
+
+**工作基线** `02c2772d8d44da76db3210a69ffdebd277f4e4b3`，仅分支 `experiment/android-temp-root-probe`；不触碰main/M0 registry/cursor，不扩展Android x86/32位目标。
+
+## 源锁产品实证起点
+
+- [ARM64 Action 44029417500](https://github.com/lly8666/wbd-next/actions/runs/44029417500) **overall PASS**，真实原Go `cmd/wbd-v4-client` CGo最终链接和原Rust单一M1/M3/M4/Health/Stop Bionic `.so` 生产源码编译成功。真实构建ZIP [artifact 14304571415](https://github.com/lly8666/wbd-next/actions/runs/44029417500/artifacts/14304571415) 已独立解包核对，ZIP SHA256 `0c962e0daa3ad3a92bc5246d20876985c5f6afacbab5c8ad16fa42d2330694ae`；原Go `wbd-v4-client-arm64` SHA256 `62db8d080f884a869935aa65040ddf8e7bed67e71bca6c2f75be60d120e2d3b7`；共享Rust `libwbd_engine-arm64.so` SHA256 `8383d2e43577a9380fedaaa00deeaf322695e0f51b716ae87dc71552ead7842a`。两ELF均AArch64 machine183、min PT_LOAD alignment16384；manifest仍标真实TLS/设备 `NOT_RUN`。同源 [Governance 44029417519](https://github.com/lly8666/wbd-next/actions/runs/44029417519) PASS。
+
+## 本批高效正确性修复
+
+- 旧Android M4只在原M1 slab读取`single_business_payload_mtu+1`字节，真内核TUN的破坏性读取会让较大IPv4包被截断消耗后丢弃。新增 `AndroidOwnedTun::read_ip_scatter`，通过 **单次Bionic `readv`** 两个原生iovec接收整个IPv4：第一个直接是原M1 slab `[14..]`（常见小包无需复制或分配），第二个是每个TX worker只分配一次的65KiB大包尾部scratch；必须有总计>=65535字节容量，沿原 BorrowFence、Stop所有权，绝不将截断包当有效IPv4封包。
+- 单个原`ProtectedScopedOwner`的Android seal现在接收**已经在原M1 slab中的完整IPv4**，按原Go经过认证的客户端lease /32验证真实内层源地址，验证IPv4头长与total_len一致后，继续调用原 `seal_normal_off_one` 同一AEAD/PN/Seq/FrozenRecord；不再二次读TUN或分叉密码对象。
+- Jumbo或LINK magic逃逸沿原 `wbd_codec::link_fec_wire::LinkPacketPlan`，新增 `issue_next_into`直接序列化字节到原M1预借slab，逐字段与原Go历史 `issue_next`兼容；新增 `resume_issued` 仅在原同一packetID/source+MTU且确认已发行索引后O(1)恢复游标。不可复用/递增的同generation packetID，8帧/turn有界发出；所有密文仍由原M3 `seal_normal_off_fragment_one`签发且必须原 M4 RAW definite kernel copy 后才推进索引。异常、partial、MTU改变、Stop则终止余片、不重封已发PN，不出现混合stride重组。jumbo scratch单一TX worker重复复用，避免正常小包额外堆操作。
+- `HealthClock`在原正常小包和每个真实内核复制的分片后记录本地业务活动；每8个原M3帧回到同一Health/Stop/物理scope检查，不创造第二定时器或Go/Java packet callback。
+- 同一ARM64 CI增加**独立并行的纯原M3 Wire Oracle**（不是Android x86开发/测试），跑LINK20内存direct slab bytes与原 `issue_next`逐字节相等，覆盖63/65/65535B、magic逃逸、MTU/容量不足时不可续发及游标越界；Native ARM64原Go/Rust真实二进制和16KiB build gate与其并行，两项都必须PASS。
+
+## 实际验收边界
+
+本源新增 readv/M3代码**尚未获得当前SOURCE Actions/Android真机执行通过**；不能把前一SOURCE的Go BUILD_PASS当成本次SOURCE的构建成功。真实Android16 ARM64 KSU /dev/tun、SO_BINDTODEVICE、TLS认证、服务端租约、双向TCP/UDP、MTU near-boundary/65KiB IPv4、Health与线程Join Stop、内核路由/DNS/Root controller/热点评测仍 **NOT_RUN**。
+
+**唯一下一步**：先跑本源码ARM64双CI，修复真实编译/线协议Oracle问题；通过后补 Android Root控制器与journal，获设备授权在真实ARM64 KSU手机↔同源Linux服务器完成标准TLS/双向业务/Stop/MTU测试。成熟FEC/Game仅在完整原协议实证接入时解锁。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"原Go Android ARM64完整CGo与Rust同源ELF首次PASS并核验hash；Bionic单readv常包直入原M1、完整65KiB jumbo原M3 LINK20零分配分片与固定PN/MTU/packetID、8帧turn和Health公平性；独立并行wire oracle，真机仍NOT_RUN。"}
+```
+
+## 同一批原 M3/TUN 首次并行 CI：精确 Rust trait 修复
+
+- **SOURCE** `bcebdd5956232967bbf4cd750961e84ad85bbc7d`；[ARM64+原 M3 Wire Oracle Action44030658742](https://github.com/lly8666/wbd-next/actions/runs/44030658742)：独立 **original-m3-wire-oracle PASS**（65535B、LINK magic/MTU、容量不足逐字节验证），**arm64-native FAIL**（五处同一 Rust E0599：新 `v4_android_original_m4.rs` 在调用原M1 `UniqueBuffer::writable()` 前没有引入已有 `wbd_types::buffer_contract::UniqueSealable` trait）。所以该SOURCE的原Go最终链接 **NOT_RUN**，不能继承上一SOURCE的Go ELF PASS。治理 #44030658698 PASS。
+- 本修复仅在**真正原共享M1 Owner** 引用本来实现 `writable()` 的原 trait，不重新实现缓存、替换加密、增加拷贝或修改 wire。继续保留同一物理ifindex、原 authenticated /32、真实原 M3 LINK20 和 BorrowFence 退出。修复后的 ARM64 构建与手机仍待各自结果；真机 **NOT_RUN**。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"独立原M3 LINK20 byte oracle PASS，ARM64 A3 readv/jumbo源代码因5个相同的原M1 UniqueSealable trait未导入而编译FAIL；只导入原trait修复，不改线协议、加密/PN、热路径拷贝或Stop语义。"}
+```
+
+## 第二次 A3 M3 Scatter/Jumbo 源锁构建 PASS 与精确治理收尾
+
+**初始源码** `bcebdd5956232967bbf4cd750961e84ad85bbc7d` 的 [Action44030658742](https://github.com/lly8666/wbd-next/actions/runs/44030658742) 两个并行job中，`original-m3-wire-oracle` **PASS**；Android `arm64-native` **FAIL** 五处完全相同E0599（原M1 `UniqueSealable` trait仅遗漏use导入），真实CGo构建未执行，不可宣称此版本Go ELF PASS。[Gov44030658698](https://github.com/lly8666/wbd-next/actions/runs/44030658698) PASS；Maintenance44030658703 PASS。
+
+**修复源码** `2da8ce6e116d7ee28b4d7d19021e623c4374a63d` [ARM64 Action44031026873](https://github.com/lly8666/wbd-next/actions/runs/44031026873) 两个job**全部PASS**：原M3 LINK20纯wire测试63/65/65535B、magic、容量终止逐字节一致；真实Bionic Rust同一M1/M3/M4+Health/Stop + scatter/readv/有界jumbo编译/导出PASS，原Go `wbd-v4-client-arm64` 真实CGo完整链接PASS。构建ZIP [artifact14305052397](https://github.com/lly8666/wbd-next/actions/runs/44031026873/artifacts/14305052397) 已下载、实际解包/独立对 `manifest.json` 核哈希：ZIP SHA256 `681c80ed4939058ac951e0e4936014f3e0cbe28707510aae7f99d329eb16bae9`；原Go ELF `wbd-v4-client-arm64` SHA256 `62db8d080f884a869935aa65040ddf8e7bed67e71bca6c2f75be60d120e2d3b7`；Rust `libwbd_engine-arm64.so` SHA256 `f840f6d22b45f45c1aca921ebbb59418a2ef6a9dae327d44382e9fa376201dfc`。双方ELF64 AArch64 machine183/最小PT_LOAD alignment16384，无Android x86。原SOURCES分别留存。
+
+**治理遗漏精准修复**：前SOURCE的 [Gov44031026876](https://github.com/lly8666/wbd-next/actions/runs/44031026876) FAIL只因产品代码修复未同步更改功能卡（`declared feature card not updated: android-root-native-client`）。本证据提交现在更新了同一功能卡和devlog，严格控制卡片<=16KiB，**不改已BUILD_PASS的二进制源码、不跳过治理**；以本证据SOURCE的Governance实际验收为准。
+
+**尚无真实设备实证**：Android16 ARM64 KSU Root/Network handle、Bionic RAW/TUN真实读写及65535B、标准TLS认证/租约、双向TCP/UDP、Health/Stop、系统路由/DNS、Root控制器/APP、性能功耗与热点全部 **NOT_RUN**。后续优先实现正式Root控制器、ConnectivityManager Network/ifindex与owned可撤销journal，再授权真机对同源Linux WBD服务端验证标准TLS、Normal/off业务、切网和Stop；不可把构建等同于Android生产可用。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"补A3修复原M1 trait的严格功能卡治理；封存同SOURCE ARM64原Go全链接、Rust readv/jumbo ELF和原M3 wire oracle双PASS的哈希与NOT_RUN设备边界。"}
+```
