@@ -41,7 +41,7 @@ public final class RootClientActivity extends Activity {
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField;
-    private Spinner networks,recordCiphers;
+    private Spinner networks,recordCiphers,tunQueueSizes;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief;
@@ -242,6 +242,7 @@ public final class RootClientActivity extends Activity {
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
             String recordCipher=recordCiphers.getSelectedItem().toString();
+            int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
             boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
             // TLS/authenticated /32 and Rust M4. No pre-auth route mutation,
@@ -309,6 +310,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("port",port);
             request.putExtra("outer_mtu",requestedOuterMTU);
             request.putExtra("record_cipher",recordCipher);
+            request.putExtra("tun_txqlen",requestedTunQueue);
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
@@ -419,6 +421,14 @@ public final class RootClientActivity extends Activity {
         cipherHint.setText("原WBD受认证M3记录AEAD（默认ChaCha20）；AES-128/256为原协议已支持选项。" +
             "不同ARM64设备性能取决于CPU硬件与网络，请以实际测速选择。");
         pane.addView(cipherHint);
+        TextView queueLabel=new TextView(this);
+        queueLabel.setText("原 TUN 内核发送队列 txqueuelen（包；默认500，可选2048）");
+        pane.addView(queueLabel);
+        tunQueueSizes=new Spinner(this);
+        tunQueueSizes.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,
+            new String[]{"500","2048"}));
+        pane.addView(tunQueueSizes);
         user=input(pane,"Authenticated account",InputType.TYPE_CLASS_TEXT);
         password=input(pane,"Password (app-private file, not argv)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);

@@ -225,6 +225,7 @@ public final class RootClientService extends Service {
             final String recordCipher=cipherExtra==null?"chacha20-poly1305":cipherExtra;
             int port=intent.getIntExtra("port",0);
             int requestedOuterMTU=intent.getIntExtra("outer_mtu",1460);
+            int requestedTunQueue=intent.getIntExtra("tun_txqlen",500);
             boolean allApps=intent.getBooleanExtra("all_apps",false);
             int[] targetUids=intent.getIntArrayExtra("target_uids");
             String[] targetPackages=intent.getStringArrayExtra("target_packages");
@@ -245,7 +246,8 @@ public final class RootClientService extends Service {
             if(peer==null||sni==null||user==null||
                 !ServerAddress.valid(peer)||
                 sni.length()==0||user.length()==0||
-                port<1||port>65535||requestedOuterMTU<576||requestedOuterMTU>1500||!validatedScope){
+                port<1||port>65535||requestedOuterMTU<576||requestedOuterMTU>1500||
+                 (requestedTunQueue!=500&&requestedTunQueue!=2048)||!validatedScope){
                 throw new IllegalArgumentException("Verified full-app or selected-app scope changed");
             }
             trace(RootDiagnosticReceipt.Event.APP_UID_GROUP_VERIFIED);
@@ -261,7 +263,7 @@ public final class RootClientService extends Service {
             trace(RootDiagnosticReceipt.Event.ROOT_STAGE_REQUESTED);
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
-                port,requestedOuterMTU,recordCipher,targetUids,targetPackages,allApps,excludedAppIDs,
+                port,requestedOuterMTU,recordCipher,requestedTunQueue,targetUids,targetPackages,allApps,excludedAppIDs,
                 managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
@@ -281,7 +283,7 @@ public final class RootClientService extends Service {
     }
     private String launchCommand(NativePayload nativeCode,
                                  PhysicalNetwork net,String peer,String sni,
-                                 String user,int peerPort,int requestedOuterMTU,String recordCipher,int[] targetUids,
+                                 String user,int peerPort,int requestedOuterMTU,String recordCipher,int requestedTunQueue,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
                                  boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token){
         // The host-tested argv is also the exact argv passed to original Go.
@@ -295,7 +297,7 @@ public final class RootClientService extends Service {
             nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
             excludedAppIDs,
             hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null,
-            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher);
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
@@ -347,7 +349,7 @@ public final class RootClientService extends Service {
         return shell.toString();
     }
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
-                         int port,int requestedOuterMTU,String recordCipher,int[] targetUids,String[] targetPackages,
+                         int port,int requestedOuterMTU,String recordCipher,int requestedTunQueue,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
                          boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
@@ -381,7 +383,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken))
+                    launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);

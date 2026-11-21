@@ -161,12 +161,23 @@ assert 'recordCiphers.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("record_cipher",recordCipher)' in a
 assert 'intent.getStringExtra("record_cipher")' in s
 assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher' in s
-assert 'cnSplitDNS,requestedOuterMTU,recordCipher);' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher' in s
 assert 'pair(args,"--record-cipher",recordCipher)' in argv
 assert 'cipherName:=flags.String("record-cipher","chacha20-poly1305"' in cold
 assert 'PolicyForClientWithInitialAndCipher(1,"off",0,4,20,c.recordCipher)' in cold
 assert 'RecordSuite::try_from(identity.cipher)' in Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
 print("ANDROID_B9_EXISTING_GO_M3_RUST_AUTHENTICATED_CIPHER_SOURCE_PASS")
+# B10: same original Go cold path, bounded kernel TUN queue; no separate I/O.
+assert 'tunQueueSizes.setAdapter(new ArrayAdapter' in a
+assert 'request.putExtra("tun_txqlen",requestedTunQueue)' in a
+assert 'intent.getIntExtra("tun_txqlen",500)' in s
+assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue);' in s
+assert 'pair(args,"--tun-txqlen-packets",Integer.toString(requestedTunQueue))' in argv
+assert 'tunTxQLen:=flags.Int("tun-txqlen-packets",2048' in cold
+assert 'setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets)' in cold
+assert 'validateOwnedTunTxQueueReadback' in cold
+print("ANDROID_B10_ORIGINAL_GO_OS_TUN_QUEUE_PRODUCTION_WIRING_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

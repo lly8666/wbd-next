@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B10（真实 TUN 队列冷配置）**：原 Go 已支持 `--tun-txqlen-packets 500|2048`、`ip link set` 和严格内核读回，但 Root App 固定500。现在 Android App 可选500（原默认）或2048，走 Activity→同代 Service→原 Go→原内核 owned TUN 应用/读回，无任何新逐包队列或 Rust 分身。2048 是否提升吞吐/延迟没有实体性能证据，也不表示 FEC2 Fixed/Auto 已完成。Fixed/Auto 下一步仍须把原 Rust M1/FEC2 M3/M4 真进程生命周期接通，原 Go 拒绝门保留。
+
+
 > **2026-11-21 B9 软件功能接线（真机及性能待验）**：原 Go `--record-cipher` 及已认证 policy、原 Rust `RecordSuite::try_from(identity.cipher)` 已支持 ChaCha20-Poly1305/AES-128-GCM/AES-256-GCM；Android App 现在提供同三项选择，并经 Activity→Root Service→原 Go argv 进入既有原 M3 AEAD/PN。默认 ChaCha20 兼容旧 APK；旧 Java 参数重载及 B8 外层 MTU 入口不变。没有新增加密实现、TLS/PN 前导、逐包 Java/Go 或“更安全”拦截。AES 可能有硬件性能收益，但未做 ARM64 实机速度/兼容测试，不宣称更快。未接线 Fixed/Auto/Game/系统 netd 与其他功能资格仍按 B8 记录。
 
 

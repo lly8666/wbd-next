@@ -115,6 +115,23 @@ final class OriginalGoCommandArgs {
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
                               boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
                               String recordCipher){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,
+            tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,500);
+    }
+    // B10: Original-Go kernel TUN queue cold knob only; old overloads default 500.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
+                              String recordCipher,int requestedTunQueue){
+        if(requestedTunQueue!=500&&requestedTunQueue!=2048)
+            throw new IllegalArgumentException("TUN txqlen must be 500 or 2048");
         if(!"chacha20-poly1305".equals(recordCipher)&&
            !"aes-128-gcm".equals(recordCipher)&&
            !"aes-256-gcm".equals(recordCipher))
@@ -151,7 +168,7 @@ final class OriginalGoCommandArgs {
         pair(args,"--outer-mtu",Integer.toString(requestedOuterMTU));
         pair(args,"--record-cipher",recordCipher);
         pair(args,"--tun-fq-maxrate-mbps","0");
-        pair(args,"--tun-txqlen-packets","500");
+        pair(args,"--tun-txqlen-packets",Integer.toString(requestedTunQueue));
         pair(args,"--outer-repair","off");
         pair(args,"--android-cn-geosite-file",cnFile);
         if(cnSplitDNS)args.add("--android-cn-dns-split");

@@ -25,6 +25,12 @@ public final class OriginalGoCommandArgsTest {
             PASS,ROUTE,INSTALL,CN,new int[]{10123},false,null,null,
             false,true,false,false,1460,cipher);
     }
+    private static List<String> withTunQueue(int packets){
+        return OriginalGoCommandArgs.build("wlan0",43123456L,"192.0.2.10",
+            "198.51.100.7",443,43900,"wbd.example.test","user-name",
+            PASS,ROUTE,INSTALL,CN,new int[]{10123},false,null,null,
+            false,true,false,false,1460,"chacha20-poly1305",packets);
+    }
     private static void value(List<String> a,String flag,String expected){
         int i=a.indexOf(flag);
         if(i<0||i+1>=a.size()||!expected.equals(a.get(i+1)))
@@ -76,6 +82,12 @@ public final class OriginalGoCommandArgsTest {
         value(one,"--outer-repair","off");
         value(one,"--tun-fq-maxrate-mbps","0");
         value(one,"--tun-txqlen-packets","500");
+        value(withTunQueue(500),"--tun-txqlen-packets","500");
+        value(withTunQueue(2048),"--tun-txqlen-packets","2048");
+        rejected(()->withTunQueue(499));
+        rejected(()->withTunQueue(2049));
+        rejected(()->withTunQueue(0));
+        System.out.println("ANDROID_B10_ORIGINAL_GO_OWNED_TUN_TXQLEN_REAL_ARGV_HOST_PASS");
         value(one,"--android-route-uid","10123");
         for(String f:new String[]{"--password","--route-key-hex","--tls-ca-pem",
             "--android-route-uids","--android-route-all-apps","--android-route-exclude-appids"})
