@@ -1100,10 +1100,9 @@ jobs:
             test ! -e "$dst" || { echo "refused overwrite of original Go: $dst" >&2; exit 1; }
             cp "$f" "$dst"
           done
-          # Current V4 product CLI imports its own routed short-key Go
-          # package; copy the actual source-locked overlay package rather
-          # than letting the old donor's Go toolchain fetch a nonexistent
-          # public module. This is Actions assembly only, not product code.
+          # Current original-Go Linux peer imports the checked-in private
+          # v4routekey package; the immutable old donor does not contain it.
+          # Install exact current SOURCE into the Actions-only assembly.
           mkdir -p legacy/internal/v4routekey
           for f in r0/go_overlay/internal/v4routekey/*.go; do
             name="$(basename "$f")"

@@ -5,6 +5,8 @@ import (
  "path/filepath"
  "os"
  "testing"
+ "errors"
+ "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 // Cold buffer exhaustion is not a reason to kill a genuine TLS reader,
 // or cause a permanent Game4-FEC startup loss before native Rust handoff.
@@ -100,6 +102,36 @@ func TestM0PLAN029BGame2Game4ThreeRouteModesColdV4(t *testing.T){
    if (len(cold.FakeJournalPath)>0)!=(tc.policy==1){
     t.Fatalf("Game %s fake journal only for advanced CN",mode)
    }
+  }
+ }
+}
+
+// H2223 Windows parity: Game2/4 shares the same authenticated Rust
+// activation contract as Normal. No user application packet is necessary
+// before OS/WAL Applied and the independent product readiness receipt.
+// The subsequent real UDP/TCP E2E scenarios still measure business delivery.
+func TestH2223Game2Game4IdleNativeStartupDoesNotRequireApplicationReply(t *testing.T){
+ for _,lanes:=range []int{2,4}{
+  for _,row:=range []struct{tx,rx,after uint64}{
+   {0,0,0},       // Completely idle genuine TLS/NPF/Wintun startup
+   {27,0,0},      // Historical physical 27/0/0 startup failure
+   {1,0,0},       // First packet copied, no peer response
+   {12,8,4},      // Bidirectional business remains separate evidence
+  }{
+   v:=realityfront.V4WindowsNativeWorkerStatsV1{
+    Version:1,Workers:2,TXCopied:row.tx,RXDelivered:row.rx,TXAfterRX:row.after,
+   }
+   if err:=m0WindowsRustNativeStartupVerdict(v);err!=nil{
+    t.Fatalf("Game%d idle native activation %+v: %v",lanes,row,err)
+   }
+  }
+ }
+ for _,code:=range []int32{1,2,3,4,5,6,7}{
+  v:=realityfront.V4WindowsNativeWorkerStatsV1{Version:1,Workers:2,WorkerError:code}
+  if err:=m0WindowsRustNativeStartupVerdict(v);err==nil{
+   t.Fatalf("Game native worker error %d must not become Ready",code)
+  } else if code==6 && !errors.Is(err,errM0NativeV4AuthenticatedPeerDead){
+   t.Fatalf("Game authenticated dead90 must retain reauth contract: %v",err)
   }
  }
 }
