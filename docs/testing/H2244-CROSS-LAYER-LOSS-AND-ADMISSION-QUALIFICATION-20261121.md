@@ -41,3 +41,24 @@
 若无损 >=1Gbps 基线但新机制固定450Mbps，则当场拒绝**产品**方案，即使 GE1% 的绝对Mbps上升。只有真正自适应的 aggregate rate、能证明源端反馈且小业务尾时延不变差、一个 owner/原PN原密文最多一次表演重传、真实新租约/Stop 安全，才允许在 clean main 派生**正式候选**；接下来分别核 Linux ARM 与 Windows Wintun/Npcap、Normal Off/Fixed/Auto/Game2/4、实体 Windows 上行3秒问题。不要合入携带已否决 H2241 reader gate 的 #62→#63→#64 测试栈。
 
 **本分支产物边界**：SOURCE 原始 Action 结果不重写、不模拟新物理 PASS；main 和其它作者保留完整 ownership。仅开发真正可使用的证据判定工具与负例，生产实现和真实网络资格仍 OPEN。
+
+## 5. 后续真正原生实测的判定（2026-11-21；不可覆盖旧 SOURCE）
+
+为避免在静态 oracle 合格后误把测试机制直接放入产品，记录**两个 SOURCE 独立**的完整真实业务 A/B/A：
+
+- **GE1%，200ms one-way x86+ARM**：源 `03bebcb1a5ef38825293894ba2b5f21459d12474`，Action [44858024963](https://github.com/lly8666/wbd-next/actions/runs/44858024963)，artifact x86 `14688383542`、ARM `14688507919`；[完整保留证据](https://github.com/lly8666/wbd-next/blob/28f6659cefb0e72db98d75a66bc1d1baac4b2b9b/docs/evidence/M0/PLAN029-H2244-GE1-CONCURRENT-SMALL-UDP-TCP-TWO-ISA-20261121.json)。真正 Go TLS/Rust 三原生 netns，四流 BBR TCP 20s 每阶段，加160 UDP/160 TCP nonce echo 并发，全部原 owner Stop PASS。相同架构 A / TEST_TBF450_48KiB / A'：x86 goodput **290.455 / 290.867 / 353.359Mbps**，SharedTun full **9,028 / 411 / 37,565**，原生 CPU/receivedGiB **7.623 / 7.448 / 7.310**；ARM goodput **333.885 / 313.479 / 358.341Mbps**，Rust full **99,450 / 396 / 77,001**，CPU/receivedGiB **9.998 / 10.907 / 9.983**。候选两架构内层 TCP retrans 极大减少，真正 TUN driver/qdisc drops 都是0，但**没有端到端吞吐收益**；ARM true CPU/GiB 退化。x86/ARM small UDP p99 约401ms（有2–7/160未收到），small TCP p99 在 x86 1712/2248/2368ms、ARM1701/1146/1225ms：有漂移而不能单从候选下降宣称完整小流功能升级。
+- **0%高容量 x86**：源 `ffb2262b5d69e89b4ffdc6e4a063776476eadfc2`，Action [44858243522](https://github.com/lly8666/wbd-next/actions/runs/44858243522)，artifact `14689265232`，[完整保留证据](https://github.com/lly8666/wbd-next/blob/9aff153df08f4fca9690993fc771611f64e52469/docs/evidence/M0/PLAN029-H2244-ZERO-HIGHLINE-TBF1200-BURST48-20261121.json)。真实原生 Direct 参考 **59.844 / 61.917Gbps** 只是同VM内核veth而非独立WAN。A / TEST_TBF1200_48KiB / A' 接收交付 **1255.70 / 990.69 / 1247.14Mbps**，M4真实 copied/sendmmsg batch **27.72 / 15.86 / 26.17**，CPU/交付GiB **6.844 / 7.749 / 6.909**，Rust full **1,055,762 / 353,553 / 996,152**。候选内核 TUN driver drop0、parent/child fq_codel分别记录154,920（**同一事件可能重合**）；小 TCP p99 **3215 / 293 / 695ms** 大幅受益，但小 UDP p99 **4.05 / 6.43 / 5.36ms** 倒退，每次160个 UDP probe仍缺27–33个。**不能用少Rust drops或小TCP尾快当作+吞吐，真实bulk掉约20–21%、CPU/GiB升约12–13%。**
+
+以上两个 Action 是**原生完整业务与Stop通过、生产吞吐方案拒绝**的不同结果；都使用真实A/B/A不同客户端代际，netem损伤不能重放相同 packet 序列，不可把 x86 与 ARM 绝对CPU作跨VM因果比较。曾有一轮源 `fa539e7...`/ `318af9b...` 因 `sudo ip netns exec` 没传 SHA/RunID，探针拒绝后完整 Action FAIL；真实记录保留，不逆向冒充早期PASS。
+
+### 5.1 单一自适应权威的明确实施入口（只作为产品候选设计，不是本分支已实现）
+
+**不再安排固定 250/450/1200Mbps TBF 的参数矩阵。** 要解决的是可测服务能力 `μ` + 源头公平反馈 `λ` 的闭环，同时独立处理不同业务的首响应：
+
+1. **Rust原始M4已完成内核接受前缀是唯一 `μ` 事实源**：每个已有原owner TX turn 仅批量结算成功 copied/真实 wire bytes、原 `sendmmsg` batch size、实际 CPU/working-time，并读原唯一 SharedTun route 的 generation/队列年龄/满丢/lease 数。接收端真实成功另外报告，不将 kernel accepted 等于应用 goodput。不能从 `μ` 独自推导真实 WAN 可用带宽，也不能以源端被自己限速后的 copied/s 当最大 `μ`。
+2. **事件驱动容量估计**：仅有真实业务时在已有原 M4 owner 聚合例如200–500ms的量，只有连续超额积压/实际丢包、batch和CPU证据足够时对总入口预算减速并保留至少原M4已证实的短突发；若仍有需求而掉包消退，使用有界增量向上试探，超额压力后快速撤回。没有DATA、Stop、stale generation时无 event/no fake packet。实测 batch从27跌到16、CPU/GiB升到7.75时宁可拒绝该整形配置，不将降吞吐粉饰为恢复丢包。
+3. **OS只按原冷Owner应用低频有效变化**：Linux Go现有 owned TUN/ifindex/generation读回，阈值变化去重后由原OS配置路径执行，不能锁住Rust AEAD或再建一个持续DATA sender；按TCP五元组或真实租约公平、短有界token burst/ECN AQM，父/子 qdisc drops分开计。**注意实验中仅启用了 fq_codel 的 ECN 标志，没有 source-qualified 的真实 ECN marks/TCP ECN negotiation 证据；不能据此称 ECN 已有效减少源发送。** Windows使用等价 native Wintun/Npcap有界公平机制而非调用 Linux `tc`。多租约不能按每流数量获取多份总容量。
+4. **0%真正 M4 满核与1%非满核突发是两类瓶颈**：服务能力根本提升应继续独立已存在的 [PR #59](https://github.com/lly8666/wbd-next/pull/59) 原生 Linux rawIPv4 vs AF_PACKET 内核发送 primitive 研究，不能把它的纯合成帧 ABBA（x86 paced100kpps CPU/receivedGiB raw2.890 vs packet2.659、ARM raw2.791 vs packet2.615）称为真实GoTLS/Rust产品提速，也不能由此绕过 Netfilter/PMTU/邻居、原密文/lease/Stop。先证真实端到端收益再提取干净的 opt-in 原owner后端。
+5. **准入退出**：必须同时证明0% clean高容量不被限速、GE1%/5% TUN root/child driver/Rust不只是迁移掉包、四流吞吐与CPU/realGiB不退化、小UDP/TCP first/p99与miss真值、多租约公平、0-HOL新generation/Stop、Linux x86/ARM及受影响 Windows/Normal Off/Fixed/Auto/Game2/4。技术指标不达就保留原已合格主线而非重构外层 FakeTCP ACK/密文修复栈。
+
+**结论：当前 H2244 只批准一种后续研发方向：原Rust唯一M4服务状态与公平入口的跨层反馈，按需动态调速、保持大批次与独立小流；不批准任何固定速率 TBF、整reader暂停、永久内核global调参或有序可靠外层重传。**
