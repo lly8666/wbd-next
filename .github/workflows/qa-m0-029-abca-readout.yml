@@ -1,0 +1,25 @@
+name: M0 PLAN029 A/B/A evidence classifier negative gates
+run-name: "M0-029 paired readout tests | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - 'tools/m0_029_compare_inbox.py'
+      - 'tests/test_m0_029_compare_inbox.py'
+      - '.github/workflows/qa-m0-029-abca-readout.yml'
+  workflow_dispatch: {}
+permissions: {contents: read}
+jobs:
+  no-false-gain:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_029_compare_inbox.py tests/test_m0_029_compare_inbox.py
+          python3 -m unittest tests.test_m0_029_compare_inbox -v
+          echo "M0_029_ABA_READOUT_NO_FALSE_PRODUCT_PASS source=$GITHUB_SHA"
