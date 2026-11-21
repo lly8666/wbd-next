@@ -70,13 +70,18 @@ if PRIO_TRIAL_LEG not in ("","A","B","A_prime") or (
     PRIO_TRIAL_LEG and (FQ_TRIAL_LEG or STAGE or SERVICE or RAWCOST
                         or RECOVERY or FIRSTDROP)):
     raise RuntimeError("M029_H2265_PRIO_TRIAL_EXCLUSIVE_LEGS")
+LOAN_TRIAL_LEG=os.environ.get("WBD_M0_029_LOAN_TRIAL_LEG","")
+if LOAN_TRIAL_LEG not in ("","A","B","A_prime") or (
+    LOAN_TRIAL_LEG and (FQ_TRIAL_LEG or PRIO_TRIAL_LEG or STAGE or SERVICE
+                        or RAWCOST or RECOVERY or FIRSTDROP)):
+    raise RuntimeError("M029_H2266_LOAN_TRIAL_EXCLUSIVE_LEGS")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
 SPARSEFLOW=SPARSEFLOW=="1"
 if SPARSEFLOW and dict(re.findall(r"([a-z_]+)=(\d+)","forward_offered=2 forward_dropped=1")) != {"forward_offered":"2","forward_dropped":"1"}:
     raise RuntimeError("M029_H2262_SPARSE_PARSE_SELF_CHECK_FAILED")
-if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
+if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG or LOAN_TRIAL_LEG) and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
@@ -111,7 +116,7 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    suffix=("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe"))
+    suffix=("loan-"+LOAN_TRIAL_LEG.lower()) if LOAN_TRIAL_LEG else (("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe")))
     G["OUT"]=ROOT/("m029-product-shared-"+suffix)
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
         "m029-product-shared-"+RUN+"-"+ATTEMPT+"-"+suffix)
@@ -190,6 +195,7 @@ def main():
                 *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
                 *(["WBD_M0_029_FIRST_DROP_WINDOW=1"] if FIRSTDROP else []),
                 *(["WBD_M0_029_SPARSE_TCP_DIAG=1"] if SPARSEFLOW else []),
+                *(["WBD_M0_029_SHARED_LOAN_BATCH_TRIAL=1"] if LOAN_TRIAL_LEG=="B" else []),
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -351,6 +357,26 @@ def main():
                 "original_go_rust_binary_unchanged":True,
                 "client_after_cold_qdisc":actual,"server_qdisc":server,
                 "not_a_product_flow_classifier":True}
+        if LOAN_TRIAL_LEG:
+            # H2266 A/B/A-prime: original Go cold fq600 untouched.
+            # The very same original TLS/Rust source and authenticated
+            # route is used in each new isolated namespace/owned Stop.
+            client=ns(node.client,"tc","-d","qdisc","show",
+                      "dev",G["CLIENT_TUN"]).stdout
+            server=ns(node.server,"tc","-d","qdisc","show",
+                      "dev",G["SERVER_TUN"]).stdout
+            if any("qdisc fq " not in x or " root " not in x or
+                   " maxrate 600Mbit" not in x or " flow_limit 256" not in x
+                   for x in (client,server)):
+                raise RuntimeError("M029_H2266_COLD_GO_FQ600_CHANGED")
+            result["h2266_shared_loan_trial"]={
+                "leg":LOAN_TRIAL_LEG,
+                "client_bounded_m1_loan_batch_enabled":LOAN_TRIAL_LEG=="B",
+                "server_bounded_m1_loan_batch_enabled":False,
+                "kernel_fq600_preserved_both_endpoints":True,
+                "no_product_default_or_go_cli_change":True,
+                "client_kernel_qdisc":client,"server_kernel_qdisc":server,
+                "same_original_go_rust_hotpath_except_test_only_m1_loan_lock":True}
         result["actual_router_netem"]=node.impair()
         time.sleep(3)
         result["measurement"]=node.measure("product_no_probe128")
@@ -370,6 +396,25 @@ def main():
         result["owned_stop"]={
             "client":node.stop("client","V4_PUBLIC_SHARED_TUN_STOP generation="),
             "server":node.stop("server","V4_PUBLIC_SHARED_TUN_STOP generation=")}
+        if LOAN_TRIAL_LEG:
+            # Require true Rust post-Stop hotpath counters to prove B is NOT
+            # a no-op. A/A-prime must never activate the experimental path.
+            client_log=node.logs["client"].read_text(errors="replace")
+            server_log=node.logs["server"].read_text(errors="replace")
+            marker=r"M0_PLAN029_SHARED_LOAN_BATCH_TRIAL_STOP role=client prefetched=(\d+) reused=(\d+) scope=original_M1_shared_owner"
+            readings=re.findall(marker,client_log)
+            if ("M0_PLAN029_SHARED_LOAN_BATCH_TRIAL_STOP" in server_log or
+                len(readings)!=(1 if LOAN_TRIAL_LEG=="B" else 0)):
+                raise RuntimeError("M029_H2266_EXACT_NATIVE_CLIENT_B_COLD_GATE_MISMATCH")
+            if LOAN_TRIAL_LEG=="B":
+                prefetched,reused=map(int,readings[0])
+                if prefetched<=0 or reused<=0 or reused>prefetched:
+                    raise RuntimeError("M029_H2266_REAL_M1_BATCH_LOANS_NOT_REUSED")
+                result["h2266_shared_loan_trial"]["real_client_prefetched"]=prefetched
+                result["h2266_shared_loan_trial"]["real_client_reused"]=reused
+            else:
+                result["h2266_shared_loan_trial"]["real_client_prefetched"]=0
+                result["h2266_shared_loan_trial"]["real_client_reused"]=0
         # This is the actual protected original-Go -> Rust owner status,
         # not merely the CLI flag or an assumed default.
         # Before Stop, original multi-session server has exactly one READY
