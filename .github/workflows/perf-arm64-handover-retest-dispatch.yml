@@ -23,4 +23,4 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           gh workflow run m0-plan028-arm64-normaloff-two-physical-handover.yml \
             --repo "$GH_REPO" --ref "$GITHUB_REF_NAME"
-          echo "REAL_ARM64_HANDOVER_RETEST_DISPATCHED source=$GITHUB_SHA"
+          echo "REAL_ARM64_HANDOVER_33_GENUINE_UDP_RESPONSES_DISPATCHED source=$GITHUB_SHA"
