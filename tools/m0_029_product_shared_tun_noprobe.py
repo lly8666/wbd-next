@@ -33,6 +33,14 @@ SERVICE=os.environ.get("WBD_M0_029_SERVICE_CPU","0")
 if SERVICE not in ("0","1") or (SERVICE=="1" and not STAGE):
     raise RuntimeError("M029_SERVICE_CPU_REQUIRES_REAL_STAGE")
 SERVICE=(SERVICE=="1")
+RAWCOST=os.environ.get("WBD_M0_029_RAW_CALL_COST","0")
+RECOVERY=os.environ.get("WBD_M0_029_RECOVERY","0")
+if RAWCOST not in ("0","1") or RECOVERY not in ("0","1"):
+    raise RuntimeError("M029_RAW_COST_OR_RECOVERY_MODE_INVALID")
+RAWCOST=(RAWCOST=="1")
+RECOVERY=(RECOVERY=="1")
+if (RAWCOST and not (STAGE and SERVICE)) or (RECOVERY and (STAGE or SERVICE or RAWCOST)):
+    raise RuntimeError("M029_RAW_COST_REQUIRES_NATIVE_STAGE_AND_SERVICE")
 
 def authenticate_source_and_bundle():
     if os.environ.get("GITHUB_ACTIONS")!="true" or platform.machine()!=ARCH or (
@@ -64,9 +72,10 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    G["OUT"]=ROOT/("m029-product-shared-stage" if STAGE else "m029-product-shared-noprobe")
+    suffix="recovery" if RECOVERY else "stage" if STAGE else "noprobe"
+    G["OUT"]=ROOT/("m029-product-shared-"+suffix)
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
-        "m029-product-shared-"+RUN+"-"+ATTEMPT+("-stage" if STAGE else ""))
+        "m029-product-shared-"+RUN+"-"+ATTEMPT+"-"+suffix)
     G["TMP"].mkdir(parents=True,mode=0o700,exist_ok=False)
     G["OUT"].mkdir(exist_ok=False)
     Owned=G["Owned"]
@@ -98,6 +107,7 @@ def main():
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
                 *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
+                *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
                 str(BUNDLE/"wbd-v4-server"),"--raw-interface","wan0",
                 "--local-ip",G["SERVER_IP"],"--local-port","443",
                 "--tun-name",G["SERVER_TUN"],
@@ -124,6 +134,7 @@ def main():
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
                 *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
+                *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -179,6 +190,8 @@ def main():
             "outer_repair_cli":"off_both_endpoints",
             "independent_m1_m4_stage_observer":STAGE,
             "native_user_system_cpu_service_observer":SERVICE,
+            "original_m4_raw_sendmmsg_sampled_timing":RAWCOST,
+            "same_source_recovery_leg":RECOVERY,
             "outer_ip_mtu_explicit_bytes":1160,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
@@ -332,6 +345,38 @@ def main():
                     "source":"authentic_linux_task_stat_and_original_definite_M4_copy_turns",
                     "clock_ticks_per_second":os.sysconf("SC_CLK_TCK"),
                     "scope":"positive_copied_turns_not_all_sendmmsg_syscalls"}
+        if RAWCOST:
+            needed=("mono_ns","generation","enabled","sample_every",
+                    "sendmmsg_samples","sendmmsg_wall_ns",
+                    "whole_driver_wall_ns","copied_positive_samples",
+                    "copied_positive_records")
+            result["m4_exact_sendmmsg_timeline"]={}
+            for role in ("client","server"):
+                samples=[]
+                for line in node.logs[role].read_text(errors="replace").splitlines():
+                    if "V4_PUBLIC_M4_RAW_SENDMMSG_COST role="+role+" " not in line:
+                        continue
+                    fields={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=([0-9]+)",line)}
+                    if any(k not in fields for k in needed):
+                        raise RuntimeError("M029_REAL_SENDMMSG_COST_FIELD_MISSING_"+role)
+                    samples.append({k:fields[k] for k in needed})
+                if len(samples)<8 or len({x["generation"] for x in samples})!=1:
+                    raise RuntimeError("M029_REAL_SENDMMSG_COST_NOT_SAMPLED_"+role)
+                for row in samples:
+                    if row["enabled"]!=1 or row["sample_every"]!=128 or (
+                        row["sendmmsg_wall_ns"]>row["whole_driver_wall_ns"]) or (
+                        row["copied_positive_samples"]>row["sendmmsg_samples"]):
+                        raise RuntimeError("M029_RAW_COST_INVALID_DENOMINATOR_"+role)
+                for a,b in zip(samples,samples[1:]):
+                    if b["mono_ns"]<=a["mono_ns"] or any(b[k]<a[k] for k in (
+                        "sendmmsg_samples","sendmmsg_wall_ns","whole_driver_wall_ns",
+                        "copied_positive_samples","copied_positive_records")):
+                        raise RuntimeError("M029_RAW_COST_NON_MONOTONE_"+role)
+                if (samples[-1]["sendmmsg_samples"]-samples[0]["sendmmsg_samples"])<10:
+                    raise RuntimeError("M029_RAW_COST_LIVE_ORIGINAL_SENDMMSG_TOO_FEW_"+role)
+                result["m4_exact_sendmmsg_timeline"][role]={
+                    "samples":samples,"metric":"sampled_true_sendmmsg_wall_ns_vs_full_raw_driver_wall_ns",
+                    "not_cpu_time_not_all_calls_not_peer_receipt":True}
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
         if traffic["receiver_bytes"]<=0 or traffic["tcp_streams"]!=4 or (
