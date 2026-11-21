@@ -1,0 +1,99 @@
+# Separate PLAN029 zero-loss/0ms high-supply falsification, not GE1%.
+# Same original Rust/Go/ISA-L native build, same A64/B256/A64 within ONE job.
+# Its 3-netns fixture is pinned by git-blob SHA; never compare runner CPU
+# directly against a GE1 run from a different Action.
+name: M0 PLAN029 ARM true zero-loss high-supply inbox ABA
+run-name: "M0-029-ARM ZERO real A64-B256-A64 | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-arm-zero-abca.yml'
+      - 'tools/m0_029_native_inbox_zero_abca.py'
+  workflow_dispatch: {}
+permissions: {contents: read}
+concurrency:
+  group: m0-029-zero-inbox-aba-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  zero-high-supply:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Native ISA and frozen distinct zero-loss test fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          test -c /dev/net/tun
+          sudo -n true
+          python3 -m py_compile tools/m0_029_native_inbox_zero_abca.py \
+            tools/m0_029_native_inbox_abca.py tools/m0_h2244_smallflow_echo.py
+          test "$(git hash-object tools/m0_029_native_inbox_abca.py)" = b1094391ec9729931979c5158357ef2cbf72b84e
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("tools/m0_029_native_inbox_zero_abca.py").read_text()
+          assert 'ZERO_ARTIFICIAL_LOSS' in s
+          assert '"delay","0ms","loss","0%"' in s
+          assert 'owned.impair=zero_impair' in s
+          print("M029_ZERO_REAL_NATIVE_FIXTURE_PRECHECK_PASS",flush=True)
+          PY
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc g++ nasm python3 \
+            iproute2 iptables iputils-ping ethtool iperf3 openssl
+      - name: One exact-SOURCE original Go TLS Rust ISA-L native release build
+        shell: bash
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh >m029-zero-build.log 2>&1 || \
+            { tail -n 100 m029-zero-build.log;exit 2; }
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("linux-plan029-public-bundle/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="aarch64"
+          print("M029_ZERO_ORIGINAL_PRODUCT_SOURCE_LOCKED_BUILD_PASS",flush=True)
+          PY
+      - name: Zero-loss 0ms true application TCP4 plus 160 UDP/TCP A64-B256-A64
+        shell: bash
+        timeout-minutes: 17
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/m0_029_native_inbox_zero_abca.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open("m029-inbox-zero-abca/summary.json"))
+          assert d["source_sha"]==os.environ["GITHUB_SHA"]
+          assert d["status"]=="PASS_SCOPED_REAL_ABA_MEASURED_NOT_PRODUCT_GAIN"
+          assert "ZERO_LOSS_0MS" in d["scenario"]
+          assert d["netem_ge_stationary_parameters"]["target_loss_pct"]==0.0
+          assert d["base_fixture_git_blob_sha"]=="b1094391ec9729931979c5158357ef2cbf72b84e"
+          assert [p["server_inbox_slots"] for p in d["phases"]]==[64,256,64]
+          assert all(p["measure"]["original_product_tcp"]["tcp_streams"]==4
+                     and p["owned_stop"]["server"]["generation"]>0
+                     and p["owned_stop"]["client"]["generation"]>0
+                     for p in d["phases"])
+          print("M029_ZERO_LOSS_REAL_ARM_ABA_MEASURED_NO_GAIN_CLAIM",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-029-arm-zero-real-inbox-aba-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            m029-inbox-zero-abca/
+            m029-zero-build.log
+          retention-days: 14
+          if-no-files-found: warn
