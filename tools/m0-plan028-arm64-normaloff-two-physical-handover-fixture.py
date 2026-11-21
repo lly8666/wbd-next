@@ -26,7 +26,12 @@ s=s.replace("plan028-h1192-normal-auto-two-source4.json","plan028-h1198-normalof
 one("M0_PLAN028_H1192_X86_NORMAL_OFF_REAL_PHYSICAL_TWO_REAUTH_PASS",
     "M0_PLAN028_H1198_ARM64_NORMAL_OFF_TWO_PHYSICAL_M4_GAME4_HEALTH_PASS")
 old='assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3'
-new='''assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==3
+new='''# The first generation has the original READY marker; subsequent
+# authenticated replacements use B_CLIENT_READY after M3 ownership proof.
+# Require both replacements, while the physical handover receipt separately
+# confirms the exact generation sequence, UDP echo and owned Stop.
+assert server.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")==1
+assert server.count("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server")>=2
 assert server.count("V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=off profile=0")==3
 assert "V4_PUBLIC_PER_CLIENT_NORMAL_FEC_READY mode=auto" not in server'''
 one(old,new)
