@@ -447,10 +447,10 @@ mod tests {
             b"original sealed M3 bytes"
         );
 
-        // Every other original parser gate remains strictly enforced.
+        // Only structural/tuple gates precede the authenticated M3 opener.
+        // Checksums are deliberately not a DATA admission condition.
         for (offset,mask,expected) in [
             (12,1,RxError::WrongTuple),
-            (10,1,RxError::IpChecksum),
             (33,1,RxError::InvalidDataFlags),
             (2,1,RxError::TotalLengthMismatch),
             (22,1,RxError::WrongTuple),
@@ -484,7 +484,7 @@ mod tests {
         let mut bad_ip=original.clone();bad_ip[10]^=1;
         let mut bad_flags=original.clone();bad_flags[33]^=1;
         for packet in [&original[..],&bad_tcp[..],&bad_tuple[..],
-                       &bad_ip[..],&bad_flags[..]]{
+                       &bad_flags[..]]{
             let old=match parse_data_packet(packet,trusted(None,1500)){
                 Ok(data)=>Ok(data),
                 Err(RxError::TcpChecksum)=>
@@ -496,9 +496,25 @@ mod tests {
                 packet,trusted(None,1500));
             assert_eq!(fast,old);
         }
-        // Original Linux/Windows public strict parser still rejects checksum drift.
+        // A short IPv4 checksum mismatch may occur with offload, and M3
+        // still decides whether ciphertext is usable. The strict diagnostic
+        // parser remains explicit, but no Android DATA requires it.
+        assert_eq!(parse_data_packet(&bad_ip,trusted(None,1500)),
+                   Err(RxError::IpChecksum));
+        assert!(parse_data_packet_android_m3_pending(
+            &bad_ip,trusted(None,1500)).is_ok());
         assert_eq!(parse_data_packet(&bad_tcp,trusted(None,1500)),
                    Err(RxError::TcpChecksum));
+        let mut changed_dscp=original.clone();changed_dscp[1]=0x03;
+        assert!(parse_data_packet_android_m3_pending(
+            &changed_dscp,trusted(None,1500)).is_ok());
+        let mut no_df=original.clone();no_df[6]=0;
+        assert!(parse_data_packet_android_m3_pending(
+            &no_df,trusted(None,1500)).is_ok());
+        let mut fragmented=original.clone();fragmented[6]=0x20;
+        assert_eq!(parse_data_packet_android_m3_pending(
+            &fragmented,trusted(None,1500)),
+            Err(RxError::FragmentedOrUnexpectedFlags));
     }
 
     #[test]
