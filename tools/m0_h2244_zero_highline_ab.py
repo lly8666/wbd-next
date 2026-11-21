@@ -41,7 +41,7 @@ def install_highline_owned_tun(node):
     if not ("qdisc tbf 1:" in after and " root " in after
             and "qdisc fq_codel 10:" in after and "parent 1:1" in after):
         raise RuntimeError("H2244_HIGHLINE_QDISC_READBACK_FAILED")
-    if not re.search(r"\\brate\\s+(?:1200Mbit|1\\.2Gbit|1200000Kbit)\\b",after):
+    if not re.search(r"\brate\s+(?:1200Mbit|1\.2Gbit|1200000Kbit)\b",after):
         raise RuntimeError("H2244_HIGHLINE_ACTUAL_RATE_NOT_1200MBIT")
     return {"test_only_fixed_rate_mbit":1200,"burst_kib":48,
             "owned_ephemeral_tun":"wbdc0",
