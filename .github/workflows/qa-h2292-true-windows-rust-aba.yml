@@ -477,6 +477,18 @@ jobs:
           Copy-Item -Force result/h2292-download/candidate/wbd_engine.dll result/h2292-candidate/wbd_engine.dll
           Copy-Item -Force result/h2292-download/candidate/h2291-windows-dll-manifest.json result/h2292-candidate/h2291-windows-dll-manifest.json
           Write-Output H2292_TRUE_WINDOWS_GO_EXE_RUST_DLL_ABAPRIME_READY
+      - name: Publish real Windows VM identity and validate Python probe
+        shell: pwsh
+        run: |
+          python -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2285_windows_wsl_route.py tools/m0_h2286_full_windows_product.py tools/m0_h2286_inner_udp.py tools/m0_h2290_windows_hotpath_cpu.py tools/m0_wl_native_resource_sampler.py tools/m0_h2292_true_product_ab.py
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TEST_CODE_BAD' }
+          python tools/m0_h2276_three_runner_tcp.py meta $env:GROUP client
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TAIL_IDENTITY_BAD' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-client-peer
+          path: h2276-out/client-peer.json
+          retention-days: 3
       - name: Boot real Windows-owned Ubuntu WSL2 kernel with scoped iptables routing
         shell: pwsh
         timeout-minutes: 12
@@ -487,15 +499,18 @@ jobs:
           if($known -notmatch 'Ubuntu'){
             $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
             $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
-            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            # Total wall-clock bound: IWR's TimeoutSec is a read timeout,
+            # not a true maximum download time. Preserve pinned exact SHA.
+            & curl.exe --fail --location --silent --show-error --connect-timeout 15 --max-time 180 --retry 1 --retry-delay 2 --retry-max-time 220 --output $img 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl'
+            if($LASTEXITCODE -ne 0){throw 'H2292_PINNED_WSL_DOWNLOAD_BOUNDED_FAILURE'}
             if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'H2285_PINNED_UBUNTU_HASH_MISMATCH'}
             New-Item -ItemType Directory -Force $vm | Out-Null
             & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2
             if($LASTEXITCODE -ne 0){throw 'H2285_PINNED_WSL_IMPORT_FAILED'}
           }
-          & wsl.exe -d Ubuntu -u root -- sh -c 'command -v ip >/dev/null && command -v iptables >/dev/null || (apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables)'
+          & python tools/m0_wl_windows_bounded_cmd.py 150 wsl.exe -d Ubuntu -u root -- sh -c 'command -v ip >/dev/null && command -v iptables >/dev/null || (apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables)'
           if($LASTEXITCODE -ne 0){throw 'H2285_WSL2_ROUTING_TOOLS_FAILED'}
-          & wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0
+          & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0
           if($LASTEXITCODE -ne 0){throw 'H2285_REAL_WSL2_VETHERNET_MISSING'}
           Write-Output 'H2285_ACTUAL_WINDOWS_WSL2_KERNEL_ETH0_READY_NOT_WBD_PRODUCT'
       - name: Real signed Npcap 1.88 kernel service and official Wintun0.14.1 DLL install
@@ -531,18 +546,6 @@ jobs:
           if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'H2286_WINTUN_AUTHENTICODE_SIGNATURE_INVALID'}
           Copy-Item $dll result/wl-public/wintun.dll
           Write-Output H2286_REAL_SIGNED_ORIGINAL_NPCAP_WINTUN_DRIVER_READY
-      - name: Publish real Windows VM identity and validate Python probe
-        shell: pwsh
-        run: |
-          python -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2285_windows_wsl_route.py tools/m0_h2286_full_windows_product.py tools/m0_h2286_inner_udp.py tools/m0_h2290_windows_hotpath_cpu.py tools/m0_wl_native_resource_sampler.py tools/m0_h2292_true_product_ab.py
-          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TEST_CODE_BAD' }
-          python tools/m0_h2276_three_runner_tcp.py meta $env:GROUP client
-          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TAIL_IDENTITY_BAD' }
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: h2276-${{ matrix.group }}-client-peer
-          path: h2276-out/client-peer.json
-          retention-days: 3
       - name: ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun to independent ARM GoTLS/Rust through owned two-hop kernel
         shell: pwsh
         env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}

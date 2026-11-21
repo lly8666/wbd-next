@@ -51,6 +51,23 @@ class OriginalProductSameTripletAB(unittest.TestCase):
         self.assertIn("h2292-out/",workflow)
         self.assertNotIn("PASS_H2292_THROUGHPUT_IMPROVED",workflow)
 
+    def test_windows_peer_identity_published_before_slow_wsl_and_driver_install(self):
+        # H2292 run44949570906 group B finished all 3 true sessions,
+        # group A waited in WSL boot and ARM/relay timed out because the
+        # Windows Tailscale peer artifact was published AFTER slow bootstrap.
+        workflow=(ROOT/".github/workflows/qa-h2292-true-windows-rust-aba.yml").read_text()
+        peer=workflow.index("      - name: Publish real Windows VM identity and validate Python probe")
+        upload=workflow.index("          name: h2276-${{ matrix.group }}-client-peer")
+        wsl=workflow.index("      - name: Boot real Windows-owned Ubuntu WSL2 kernel")
+        drv=workflow.index("      - name: Real signed Npcap 1.88")
+        self.assertLess(peer,upload)
+        self.assertLess(upload,wsl)
+        self.assertLess(wsl,drv)
+        self.assertIn("curl.exe --fail --location",workflow)
+        self.assertIn("--max-time 180 --retry 1 --retry-delay 2",workflow)
+        self.assertIn("m0_wl_windows_bounded_cmd.py 150 wsl.exe -d Ubuntu",workflow)
+        self.assertIn("m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu",workflow)
+
     def test_no_faux_win_or_arm_tun_and_true_owned_stop(self):
         wrapper=(ROOT/"tools/m0_h2292_true_product_ab.py").read_text()
         self.assertIn("CANDIDATE_BUILD_SHA=os.environ.get",wrapper)
