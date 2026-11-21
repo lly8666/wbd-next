@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2244_GE1_CONCURRENT_BULK_UDP_TCP_REAL_NATIVE_TWO_ISA",
+  "source_sha": "03bebcb1a5ef38825293894ba2b5f21459d12474",
+  "run_id": 44858024963,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44858024963",
+  "classification": "PASS_ALL_STATIC_AND_REAL_X86_ARM_APP_STOP__NOT_PRODUCT_THROUGHPUT_OPTIMIZATION",
+  "artifact_ids": {
+    "x86_64": 14688383542,
+    "aarch64": 14688507919
+  },
+  "original_protocol_unchanged": "real Go TLS1.3 Rust one native TUN/AF_PACKET M4 owner, TCP-like ACK10, out-of-order no-HOL, original frozen PN/AEAD one-shot performative repair, FEC, lease/generation, owned Stop",
+  "topology": "independent x86_64 and ARM64 runners each 1 VM with 3 true Linux netns, no 3-runner physical WAN; own Direct TCP before/after, GE1% +200ms one-way, 4 BBR TCP streams 20s/stage, original A -> benchmark ONLY TBF450mbit burst48kb fq_codel -> fresh original A' with genuine Go TLS and Stop",
+  "true_small_flows": "160 original-application UDP nonce echoes + 160 TCP nonce echoes per phase, 80ms spacing concurrent with bulk TCP; RTT sampled on same host monotonic clock, missing excluded from p99 and counted, 160 samples only a screen not product p99 qualification",
+  "x86_64": {
+    "direct_before_after_mbps": [
+      1007.903,
+      932.21
+    ],
+    "phases": [
+      {
+        "name": "original_A",
+        "received_mbps": 290.455,
+        "rust_queue_full": 9028,
+        "rust_backpressure": 17375,
+        "inner_tcp_retrans": 16346,
+        "tx_cpu_s_per_received_GiB": 7.623,
+        "m4_copied": 810054,
+        "m4_batches": 72451,
+        "tun_driver_drop": 0,
+        "qdisc_drop_root": 0,
+        "small_udp_p99_ms": 400.7955,
+        "small_udp_replies": 155,
+        "small_tcp_p99_ms": 1711.8991,
+        "small_tcp_replies": 160
+      },
+      {
+        "name": "tbf450_burst48",
+        "received_mbps": 290.867,
+        "rust_queue_full": 411,
+        "rust_backpressure": 583,
+        "inner_tcp_retrans": 7840,
+        "tx_cpu_s_per_received_GiB": 7.4478,
+        "m4_copied": 791734,
+        "m4_batches": 84911,
+        "tun_driver_drop": 0,
+        "qdisc_drop_root": 0,
+        "qdisc_drop_child": 0,
+        "small_udp_p99_ms": 401.3064,
+        "small_udp_replies": 156,
+        "small_tcp_p99_ms": 2248.1953,
+        "small_tcp_replies": 160
+      },
+      {
+        "name": "original_A_prime",
+        "received_mbps": 353.359,
+        "rust_queue_full": 37565,
+        "rust_backpressure": 62581,
+        "inner_tcp_retrans": 34492,
+        "tx_cpu_s_per_received_GiB": 7.3096,
+        "m4_copied": 985719,
+        "m4_batches": 57794,
+        "tun_driver_drop": 0,
+        "qdisc_drop_root": 0,
+        "small_udp_p99_ms": 401.5863,
+        "small_udp_replies": 158,
+        "small_tcp_p99_ms": 2367.6231,
+        "small_tcp_replies": 160
+      }
+    ],
+    "original_stop": "PASS_ALL_GENERATIONS",
+    "echo_stop": "PASS",
+    "server_stop": "PASS"
+  },
+  "aarch64": {
+    "direct_before_after_mbps": [
+      1048.944,
+      1082.08
+    ],
+    "phases": [
+      {
+        "name": "original_A",
+        "received_mbps": 333.885,
+        "rust_queue_full": 99450,
+        "rust_backpressure": 154082,
+        "inner_tcp_retrans": 108403,
+        "tx_cpu_s_per_received_GiB": 9.9978,
+        "m4_copied": 929081,
+        "m4_batches": 56008,
+        "tun_driver_drop": 0,
+        "qdisc_drop_root": 0,
+        "small_udp_p99_ms": 406.5466,
+        "small_udp_replies": 155,
+        "small_tcp_p99_ms": 1701.4788,
+        "small_tcp_replies": 160
+      },
+      {
+        "name": "tbf450_burst48",
+        "received_mbps": 313.479,
+        "rust_queue_full": 396,
+        "rust_backpressure": 669,
+        "inner_tcp_retrans": 7979,
+        "tx_cpu_s_per_received_GiB": 10.907,
+        "m4_copied": 842469,
+        "m4_batches": 84123,
+        "tun_driver_drop": 0,
+        "qdisc_drop_root": 0,
+        "qdisc_drop_child": 0,
+        "small_udp_p99_ms": 401.2138,
+        "small_udp_replies": 157,
+        "small_tcp_p99_ms": 1146.1309,
+        "small_tcp_replies": 160
+      },
+      {
+        "name": "original_A_prime",
+        "received_mbps": 358.341,
+        "rust_queue_full": 77001,
+        "rust_backpressure": 125892,
+        "inner_tcp_retrans": 79965,
+        "tx_cpu_s_per_received_GiB": 9.9829,
+        "m4_copied": 984603,
+        "m4_batches": 58301,
+        "tun_driver_drop": 0,
+        "qdisc_drop_root": 0,
+        "small_udp_p99_ms": 401.8857,
+        "small_udp_replies": 153,
+        "small_tcp_p99_ms": 1224.9284,
+        "small_tcp_replies": 160
+      }
+    ],
+    "original_stop": "PASS_ALL_GENERATIONS",
+    "echo_stop": "PASS",
+    "server_stop": "PASS"
+  },
+  "verdict": "REJECT_FIXED_450_AS_PRODUCT_CAP; PROVE_STRONG_EARLY_LOCAL_LOSS_AND_TCP_RETRANS_FEEDBACK_BUT_NOT_END_TO_END_SPEED_GAIN; ARM_GENUINE_BULK_AND_CPU_REGRESSION_VS_BOTH_ORIGINAL_ARMS; x86_TBF_NEAR_A_BUT_FAR_BELOW_A_PRIME; small_tcp_p99_variable_per_arm; UDP_p99_NEAR_EXPECTED_400MS_BUT_2_TO_7_LOST_OF_160",
+  "caveats": [
+    "GE_UBUNTU_TC_UNSEEDED_NO_IDENTICAL_PACKET_DAMAGE",
+    "NO_PHYSICAL_WAN_OR_WINDOWS",
+    "160_ECHOES_NOT_10000_PRODUCT_P99_SLA",
+    "NO_NEW_CONTROLLER_OR_PRODUCTION_RATE",
+    "H2241_REJECTED_READER_GATE_IN_TEST_ANCESTRY_DISABLED_NOT_ELIGIBLE_FOR_MAIN_MERGE",
+    "NO_FEC_FIXED_AUTO_GAME2_GAME4_OR_MULTI_LEASE_QUALIFICATION"
+  ],
+  "next": "H2244 0% highline capacity test; then only clean-main adaptive original-M4 service governor with fair bounded burst if actual goodput/CPU/p99 gates support, never fixed450"
+}
