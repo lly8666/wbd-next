@@ -99,8 +99,9 @@ def main():
         # identity validation and never fabricates a successful Stop.
         result=copy.deepcopy(data)
         result["scenario"]="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_128_ABA"
-        result["only_changed_setting"]="client native Rust M1 inbox64→128→64; server fixed64"
-        result["only_changed_setting"]="authenticated client Rust M1 inbox 64→256→64; server fixed64"
+        # Exact real Rust cold readbacks and phase receipts, not a stale
+        # inherited 256 label, are authoritative for the actual 128 trial.
+        result["only_changed_setting"]="authenticated client Rust M1 inbox 64→128→64; server fixed64"
         result["netem_ge_stationary_parameters"]={
             "profile":"ZERO_ARTIFICIAL_LOSS","target_loss_pct":0.0,
             "oneway_extra_delay_ms":0}
