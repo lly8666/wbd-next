@@ -1027,7 +1027,7 @@ fn tun_worker(
                         if tunnel_dns_query{
                             stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
                         }
-                    }else{stats.tx_dropped.fetch_add(1,Ordering::Relaxed)}
+                    }else{stats.tx_dropped.fetch_add(1,Ordering::Relaxed);}
                     continue
                 }
                 // Common O(1) hot path: original owner AEAD/PN directly

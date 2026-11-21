@@ -10,6 +10,10 @@
 - 真正 M4 `fec2_source_raw/fec2_repair_raw/fec2_source_tun/fec2_recovered_tun` 四个低频只读计数（发端真RAW成功、接端真TUN成功）由同一 original Go Bridge 读取，不从 queue acceptance 计数。Stop/join 后先 `FixedStream::stop` 退休原 source/parity，再终止 M1 crypto 和 scoped socket。
 - 同 SOURCE 的签名 ARM64 APK 构建要求原 Rust ELF 真导出 `fixed_stage_pending/fixed_pending_readback/fixed_m4_counters`，源码 Host 门确认 source/parity 不回退Normal LINK；原 Linux/Windows共享代码逻辑不改。
 
+## B12bc 第一轮编译失败与精确修正
+
+SOURCE `90b512aeec6b2147b34b1a43f895dde4957464f6` 的 [Action #44923767025](https://github.com/lly8666/wbd-next/actions/runs/44923767025) 的6个Host Jobs SUCCESS，`arm64-native` FAIL（其余依赖Job SKIPPED）。唯一报告的Rust E0308在 `v4_android_original_m4.rs:1030`：新 Fixed source 发送失败的计数表达式意外返回`u64`而不是`()`。本次在原位置增加语句结束分号，无其他协议变化；以新SOURCE原生构建结果重新判定，不抹旧FAIL。
+
 ## 明确仍未完成
 
 Android 原 Go ConnectAuthenticatedPeer 的 Fixed/Auto pre-TLS 拒绝保持；`loop_start` 继续只允许 feature3。未实现真正反向 M2/质量反馈的原 FEC APPLIED、Auto无跨修订改配、Fixed大IP分片与有效TUN MTU，因而 **Fixed/Auto尚不能选用**，系统不会替用户开FEC。代码级双ABI/签名APK/Host/Linux Oracle与真机Android↔Linux SYN/TLS/M4/性能独立报告。下一步唯一关键是 M2 reverse + TX/RX pending到 APPLIED 的真实所有权转移与TUN容量匹配，完成后再开放 Fixed。
