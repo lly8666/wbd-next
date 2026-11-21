@@ -227,8 +227,8 @@ jobs:
               print("M029_H2261_REAL_RUST_SHARED_TUN_M1_M4_RX_TCP_RTO_WINDOW_PASS",flush=True)
           print("M029_H2256_GENUINE_STAGE_WINDOWS_OBSERVED_NOT_CAUSAL_CPU_PASS",flush=True)
           PY
-      - name: H2258 original no-observer A-prime recovery on identical release bundle
-        if: contains(github.event.head_commit.message, '[m0-029-rawcost]')
+      - name: H2258/H2262 original no-observer A-prime on identical release bundle
+        if: contains(github.event.head_commit.message, '[m0-029-rawcost]') || contains(github.event.head_commit.message, '[m0-029-sparseflow]')
         shell: bash
         timeout-minutes: 9
         run: |
@@ -249,8 +249,13 @@ jobs:
               assert all(z["generation"]>0 for z in x["owned_stop"].values())
           assert a["same_release_binary_sha256"]==b["same_release_binary_sha256"]==c["same_release_binary_sha256"]
           assert not a["original_m4_raw_sendmmsg_sampled_timing"]
-          assert b["original_m4_raw_sendmmsg_sampled_timing"]
           assert not c["original_m4_raw_sendmmsg_sampled_timing"]
+          # Sparse-source attribution is intentionally stage-only. Do not
+          # turn on unrelated RAW syscall sampling just to obtain A-prime.
+          if b.get("h2262_sparse_tcp_ingress"):
+              assert not b["original_m4_raw_sendmmsg_sampled_timing"]
+          else:
+              assert b["original_m4_raw_sendmmsg_sampled_timing"]
           assert c["same_source_recovery_leg"]
           assert not c["independent_m1_m4_stage_observer"]
           if b.get("h2262_sparse_tcp_ingress"):

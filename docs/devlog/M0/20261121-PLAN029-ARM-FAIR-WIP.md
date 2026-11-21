@@ -68,6 +68,8 @@
 
 - **H2262 解析缺陷预查**：新测试夹具正则错误地匹配反斜杠而不是数字，首次 SOURCE a1135cca 上的真实原生 run44900609061 已在途、不可冒充业务 FAIL。此提交只修正原数字解析并增加启动时合成标量自检；旧 run/attempt 将照实保留，下一真 SOURCE 独立核验。原 Rust/Go 和网络设置不变。
 
+- **H2262 旧 SOURCE 结果与正式判别入口**：a1135cca run44900609061 attempt1 原 Go TLS/Rust nonprobe 五模式及真实共享 Normal/off 两 ISA native SUCCESS，但工作流 B 观测和 A′ 因既有 `[m0-029-stage]` / `[m0-029-rawcost]` 门槛 SKIPPED：**H2262 端口判别未测**，不误标报表失败或诊断通过。现将 A′ 允许受 `[m0-029-sparseflow]` 单独开启，B 仅开启原500ms stage 加稀疏 TCP 头分类、不强迫无关 RAW 1/128 cost sampling；旧 rawcost 路径仍保持各自断言。下一 SOURCE 提交携带 `[m0-client128-product] [m0-029-stage] [m0-029-sparseflow] [m0-029-tcptrace] [m0-029-tcpinfo]`，单 VM 原生 A→B→A′ 同构件读回、160真请求、真实Stop；仍须以新run/attempt数据而非提交标记判定。
+
 ```feature-impact
 {"kind":"updated","ids":["linux-raw-tun"],"reason":"On this experimental branch change only the internal Linux authenticated Normal client shared-TUN M1 inbox default from 64 to bounded 128 (server and separate Game remain 64), after exact-source native ARM/x86 goodput evidence; no new public config/CLI/GUI, physical platform qualification or formal promotion. Updated stable Linux raw-TUN feature card in same product commit; main remains unchanged."}
 ```
