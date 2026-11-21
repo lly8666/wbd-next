@@ -16,7 +16,7 @@ import sys
 import threading
 import time
 
-PORT = 46973
+PORT = 45902
 BULK_FLOWS = 4
 BULK_BLOCK = b"Z" * 16384
 BULK_MAX_BYTES = 24 * 1024 * 1024
@@ -293,3 +293,20 @@ def run_loss_tcp(root, out, unix, server_tun_ip):
             "one_way_ms": 200, "loss_from_owned_scenario": "1pct_or_5pct",
             "native_owners_stop": "CHECKED_BY_EXISTING_WL_RUNNER_AFTER_THIS_STAGE",
             "not_cross_clock_latency": True, "not_a_product_perf_win": True}
+
+if __name__ == "__main__":
+    # H2273: H2271 source bb327 defined both application roles but omitted
+    # the CLI entrypoint. WSL Python therefore exited silently before READY
+    # in both real signed runs; it was NOT a WBD transport failure.
+    if sys.argv[1:] == ["--selfcheck"]:
+        if (PORT, BULK_FLOWS, ECHO_COUNT) != (45902, 4, 160):
+            raise RuntimeError("H2273_NATIVE_APP_SHAPE_CHANGED")
+        print("H2273_NATIVE_TCP_CLI_DISPATCH_AND_SCOPED_EXISTING_WIN_FIREWALL_PORT_READY", flush=True)
+        sys.exit(0)
+    if len(sys.argv) != 5 or sys.argv[1] not in ("server", "client"):
+        raise SystemExit("usage: m0_wl_loss_tcp_probe.py server|client bind_ip peer_ip source_sha")
+    role, bind_ip, peer_ip, source_sha = sys.argv[1:]
+    if role == "server":
+        server(bind_ip, peer_ip, source_sha)
+    else:
+        client(bind_ip, peer_ip, source_sha)

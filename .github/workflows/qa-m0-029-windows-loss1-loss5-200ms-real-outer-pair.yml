@@ -34,7 +34,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
       - name: H2271 preflight real two-OS kernel TCP diagnostic application
-        run: python3 -m py_compile tools/m0_wl_loss_tcp_probe.py
+        run: |
+          python3 -m py_compile tools/m0_wl_loss_tcp_probe.py
+          python3 tools/m0_wl_loss_tcp_probe.py --selfcheck
       - name: Exact native physical-class scenarios, immutable seed/mix and authorized dispatch to Windows
         shell: bash
         run: |
