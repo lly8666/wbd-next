@@ -134,6 +134,9 @@ type config struct{
     androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
     androidRouteAllApps bool // ordinary app UID ranges, no root/system/main FIB
     androidRouteExcludeAppIDs []int // own + KernelSU manager per-user app ID exclusions
+    // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
+    // System resolver/netd and CN physical split are NOT enabled by this.
+    androidTunnelDNS bool
     // Signed APK's verified offline CN list only, not live DNS capture.
     androidCNSnapshot *dnsnative.CNRules
     // Constructed from selected kernel interface and Android Network netId
@@ -255,6 +258,8 @@ func parse(role string,args []string)(config,error){
         "Android all-apps: mandatory canonical excluded controller+root-manager app IDs (10000..19999)")
     cnGeositeFile:=flags.String("android-cn-geosite-file","",
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
+    androidTunnelDNS:=flags.Bool("android-tunnel-dns",false,
+        "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
     ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     peerHost:=flags.String("peer-host","","Android Root client only: physical 223.5.5.5 DNS server name bootstrap before FakeTCP SYN")
@@ -328,6 +333,11 @@ func parse(role string,args []string)(config,error){
         if !*androidRouteAll&&*androidRouteExclude!=""{
             return c,fmt.Errorf("Android exclude IDs require all-app mode")
         }
+        if *androidTunnelDNS&&!*androidRouteAll&&*androidRouteUID==0&&
+           *androidRouteGroup==""{
+            return c,fmt.Errorf("Android tunnel DNS needs a selected ordinary App UID route")
+        }
+        c.androidTunnelDNS=*androidTunnelDNS
         var e error
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
@@ -343,7 +353,7 @@ func parse(role string,args []string)(config,error){
             }
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
-             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""{
+             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1938,6 +1948,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
+            AndroidTunnelDNS:c.androidTunnelDNS,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),

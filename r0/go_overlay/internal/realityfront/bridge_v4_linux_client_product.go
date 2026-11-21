@@ -27,6 +27,9 @@ type V4LinuxClientProductConfig struct {
     // never interpreted as the default/physical network on Bionic.
     AndroidPhysicalNetworkHandle uint64
     AndroidPhysicalMTU uint32
+    // Android original M3 TUN UDP/53 only; normal/off, not Android system
+    // Resolver/netd, CN physical split, or FakeIP. Default disabled for CLI.
+    AndroidTunnelDNS bool
     Tun *os.File
     TunName string
     // Only original Go authenticated AUTO /32 client mode uses one shared
@@ -83,6 +86,9 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
     // Go's android target also satisfies the linux build constraint.
     // The Android native owner does NOT support main's Linux protected
     // startup-padding API. Only true off is admissible on Android.
+    if runtime.GOOS!="android"&&cfg.AndroidTunnelDNS{
+        return nil,ErrAdmissionUnsupported
+    }
     if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0{
         return nil,ErrAdmissionUnsupported
     }
@@ -226,6 +232,18 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
         if err!=nil{originalAndroidPostauth("TUN_FAILED")
         }else{originalAndroidPostauth("TUN_ATTACHED")}
+    }
+    if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidTunnelDNS{
+        // Real original-Go cold grant after true TLS/lease/RAW/TUN binding.
+        // The original Rust worker, M3, inverse map and owned Stop already
+        // exist; neither Go nor Java processes any DNS DATA packet.
+        err=bridge.enableAndroidTunnelDNS()
+        if err!=nil{
+            originalAndroidPostauth("TUNNEL_DNS_FAILED")
+        }else{
+            originalAndroidPostauth("TUNNEL_DNS_ENABLED")
+            log.Print("V4_PUBLIC_ANDROID_TUNNEL_DNS_EFFECTIVE role=client enabled=1 original_m3=1 system_resolver=NOT_CAPTURED cn_split=NOT_ACTIVE")
+        }
     }
     if err==nil{
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)

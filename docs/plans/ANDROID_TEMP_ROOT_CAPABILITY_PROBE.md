@@ -1,5 +1,7 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B3 继续开发**：按 Android 功能卡推进真实产品功能。本轮解决“隧道 DNS UDP/53 原生数据面已有64槽改写/认证回包与Stop，但无冷授权入口”的缺口：Root App有明确可关的开关，原 Go/TLS/lease/同代 RAW+TUN 绑定之后才允许原Rust M4启用普通应用 TUN UDP53→1.1.1.1，使用原M3/replay校验和反向地址映射，不增加第二reader、Go per-DATA或系统网络写入；原生ABI与真App/Go源码门/Host均必须同源通过。Android系统Resolver/netd、CN8503→物理223.5.5.5与TCP53、IPv6/分流、Fixed/Auto/Game、热点与所有应用/弱网/性能仍未凭这项接线取得资格。此任务巨大，按功能卡逐段落实代码和证据，不把B3编译当作全功能完成。
+
 > **2026-11-21 A51 执行口径**：用户要求将最新 main `31ce49d9467cde33cce2d61c968129c3173a4b8d` 的修复完整并入 Android 实验分支。共同源码冲突中同一问题以 main 结果为准；尤其采用 main 的共享 `parse_data_packet_fast`、H2229 ACK、原 Go TLS/CLI、Windows/Linux 已验证修复。Android 独有 Root App→原Go冷控制→原Rust M4/原物理Network/UID路由/TUN/Stop 保留并核接线。已知 A48 真机 Normal/off `auth=1227,rtun=1218`，但这不是用户确认的应用Mbps/RTT或所有模式完成。**全功能接线一次排查，不以静态编译冒充运行资格**：DNS系统接管、Split/Fixed/Auto/Game、切网、热点、IPv6 和 Android 全App 核心均须真实调用链与单独验收；主线 Linux/Windows 成功不自动使 Android 可用。下一验收以合并SOURCE双ABI原件/签名APK/原Linux Oracle起点，之后逐层打穿 Android 真业务功能范围。
 
 > 2026-11-20 A45 新实机接续（不替代本计划唯一优先级）：A44 SOURCE `8da73ff0428291b006b28f762cf18ea9122d4784` 真实 API36 selected UID两次`ORIGINAL_GO_UID_ROUTE_GET_MATCHED_TUN`、原Rust `TUN_IPV4_SEEN`/真正`APP_RAW_TX_COPIED`，但没看到`APP_REVERSE_TUN_WRITTEN`；这仅证明手机向外做了业务内核复制，非对端收包。用户另一个 Ping 应用不一定属于选定UID，不能将其不通冒充完整ICMP隧道失败。继续选定应用组（Chrome+Ping APP），先查原Rust RAW RX可读/解析/认证/反向TUN与Linux服务端入站和本机TUN应答，再研究公网forward/NAT/DNS；**不为此切换全局代理**。A45 同源 HOST/ARM64 构建和新 SOURCE 真机结果分别记录，不造PASS。后续仅以最新SOURCE/真实Actions/devlog定论。

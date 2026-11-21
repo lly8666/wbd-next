@@ -351,6 +351,35 @@ mod tests {
         assert_eq!(owner.len(),0);
     }
     #[test]
+    fn b3_real_m4_captured_app_dns_two_resolvers_inverse_and_stop(){
+        // Product flow: the same sole TUN reader may see two ordinary Apps
+        // pointing at different OS/private DNS IPv4s. Each M1/M3 tunnel
+        // query uses its own bounded translated port, while responses after
+        // authenticated M3 retain the App's original resolver identity.
+        let mut flows=TunnelDnsUdpFlows::default();
+        let a_orig=[223,5,5,5];
+        let b_orig=[8,8,4,4];
+        let mut a=packet(&dns_query("www.baidu.com",0x1001),
+            [10,66,0,10],a_orig,41001,53);
+        let mut b=packet(&dns_query("www.example.net",0x1002),
+            [10,66,0,10],b_orig,41002,53);
+        flows.rewrite_query(&mut a,100).unwrap();
+        flows.rewrite_query(&mut b,101).unwrap();
+        assert_ne!(&a[20..22],&b[20..22]);
+        assert_eq!(&a[16..20],&TUNNEL_DNS);
+        assert_eq!(&b[16..20],&TUNNEL_DNS);
+        assert_eq!(flows.len(),2);
+        let mut b_reply=reply_for(&b,"www.example.net");
+        flows.rewrite_reply(&mut b_reply,110).unwrap();
+        assert_eq!(&b_reply[12..16],&b_orig);
+        assert_eq!(&b_reply[22..24],&41002u16.to_be_bytes());
+        assert!(good_checksums(&b_reply));
+        flows.stop();
+        let mut late=reply_for(&a,"www.baidu.com");
+        assert_eq!(flows.rewrite_reply(&mut late,111),Err(FlowError::Unowned));
+        assert_eq!(flows.len(),0);
+    }
+    #[test]
     fn b2c2b1_rust_udp53_rejects_fragments_and_malformed_without_packet_mutation(){
         let mut table=TunnelDnsUdpFlows::default();
         let req=packet(&dns_query("www.qq.com",17),

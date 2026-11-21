@@ -583,6 +583,52 @@ assert native_io.count('self.consume_wake();')==2
 assert 'pub fn send_built_outer(' in native_io
 assert 'pub fn build_presentation_ack' in rust_platform
 assert 'ANDROID_A52_MAIN_H2229_AUTH_CUMULATIVE_ACK_RUST_HOST_PASS' in oracle
+# B3: the original-Go-authenticated lease and the ACTUAL one-reader
+# Android M4 are connected to Rust's existing tunnel UDP53 inverse map.
+# Do not mistake this for Android OS Resolver or CN8503 physical split.
+root_ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+root_svc=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
+argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
+argv_test=Path("android/root-app/ci/OriginalGoCommandArgsTest.java").read_text()
+nativecli=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+client=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
+android_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+linux_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go").read_text()
+backend=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
+required=Path("android/root-native/build-source-locked.sh").read_text()
+assert 'tunnelDNS.setChecked(true)' in root_ui
+assert 'request.putExtra("tunnel_dns",tunnelDNS.isChecked())' in root_ui
+assert 'intent.getBooleanExtra("tunnel_dns",false)' in root_svc
+assert 'verifyTLS,tunnelDNS' in root_svc
+assert 'if(tunnelDNS)args.add("--android-tunnel-dns")' in argv
+assert 'absent(noDNS,"--android-tunnel-dns")' in argv_test
+assert 'ANDROID_B3_TUNNEL_DNS_ON_OFF_REAL_GO_ARGV_HOST_PASS' in argv_test
+assert 'androidTunnelDNS:=flags.Bool("android-tunnel-dns",false' in nativecli
+assert 'c.androidTunnelDNS=*androidTunnelDNS' in nativecli
+assert 'AndroidTunnelDNS:c.androidTunnelDNS' in nativecli
+assert 'AndroidTunnelDNS bool' in client
+assert 'bridge.enableAndroidTunnelDNS()' in client
+assert 'v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)' in client
+assert 'V4_PUBLIC_ANDROID_TUNNEL_DNS_EFFECTIVE role=client enabled=1' in client
+assert 'wbd_m0_embedded_go_android_tunnel_dns_enable' in android_bridge
+assert 'wbd_m0_embedded_go_android_tunnel_dns_effective' in android_bridge
+assert 'func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error' in linux_bridge
+assert 'pub extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_enable(' in engine_entry
+assert 'pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_effective(' in engine_entry
+assert 'e.android_dns_flows.stop();' in engine_entry
+assert 'e.android_dns_hijack_ready=true;' in engine_entry
+assert 'e.android_dns_physical_ready' in engine_entry
+assert 'if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&' in nativeworker
+assert 'e.android_dns_flows.rewrite_query(' in nativeworker
+assert 'TunnelDnsUdpFlows::is_tunnel_reply_candidate(business)' in owner
+assert 'dns_flows.rewrite_reply(' in owner
+assert 'pub(crate) fn rewrite_query(' in backend
+assert 'pub(crate) fn rewrite_reply(' in backend
+assert 'wbd_m0_embedded_go_android_tunnel_dns_enable' in required
+assert 'wbd_m0_embedded_go_android_tunnel_dns_effective' in required
+assert 'hijack_enabled.write(0)' in nativeworker
+assert "dns_capture=NOT_CONNECTED" in nativecli
+print("ANDROID_B3_REAL_ORIGINAL_M3_TUNNEL_UDP_DNS_COLD_WIRING_SOURCE_PASS")
 print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")
 print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")

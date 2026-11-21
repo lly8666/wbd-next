@@ -42,7 +42,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort;
     private Spinner networks;
-    private CheckBox allAppsDefault,tlsVerifyServer;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS;
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult,diagnosticExportResult;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
@@ -306,6 +306,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
+            request.putExtra("tunnel_dns",tunnelDNS.isChecked());
             if(allApps){
                 request.putExtra("exclude_appids",entire.excludedAppIDs);
                 request.putExtra("manager_packages",entire.managerPackages);
@@ -472,6 +473,10 @@ public final class RootClientActivity extends Activity {
         allAppsDefault.setText("默认：普通 App IPv4 走 WBD（服务器/本App/KernelSU排除，非全系统）");
         allAppsDefault.setChecked(true);
         pane.addView(allAppsDefault);
+        tunnelDNS=new CheckBox(this);
+        tunnelDNS.setText("隧道DNS：已进入WBD TUN的普通App UDP/53走1.1.1.1并还原原解析器回包（不接管Android系统DNS / CN分流）");
+        tunnelDNS.setChecked(true);
+        pane.addView(tunnelDNS);
         appChoices=new LinearLayout(this);
         appChoices.setOrientation(LinearLayout.VERTICAL);
         pane.addView(appChoices);

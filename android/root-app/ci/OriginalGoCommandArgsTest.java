@@ -30,6 +30,8 @@ public final class OriginalGoCommandArgsTest {
         List<String> one=build("198.51.100.7",new int[]{10123},false,null,null);
         absent(one,"--tls-verify-server");
         value(one,"--mode","normal");
+        if(!one.contains("--android-tunnel-dns"))
+            throw new AssertionError("real Android M4 tunnel UDP53 policy missing");
         if(!one.contains("--auto-ip"))throw new AssertionError("no protected /32");
         value(one,"--peer-ip","198.51.100.7");
         absent(one,"--peer-host");
@@ -66,6 +68,12 @@ public final class OriginalGoCommandArgsTest {
         if(!strict.contains("--tls-verify-server"))
             throw new AssertionError("strict TLS flag not sent");
         value(strict,"--tls-ca-pem",CA);
+        List<String> noDNS=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,false,false);
+        absent(noDNS,"--android-tunnel-dns");
+        value(noDNS,"--mode","normal");
         List<String> all=build("203.0.113.10",null,true,new int[]{10111,10112},CA);
         if(!all.contains("--android-route-all-apps"))
             throw new AssertionError("no all-app route policy");
@@ -108,6 +116,7 @@ public final class OriginalGoCommandArgsTest {
         try{one.add("injected");throw new AssertionError("mutable production argv");}
         catch(UnsupportedOperationException expected){}
         System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_OPT_IN_HOST_PASS");
+        System.out.println("ANDROID_B3_TUNNEL_DNS_ON_OFF_REAL_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_ORIGINAL_APK_GO_CLI_ARGV_HOST_CONTRACT_PASS");
     }
 }

@@ -114,6 +114,8 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
       wbd_m0_embedded_go_android_bind_physical \
       wbd_m0_embedded_go_attach_raw_rx_on_interface \
       wbd_m0_embedded_go_attach_tun \
+      wbd_m0_embedded_go_android_tunnel_dns_enable \
+      wbd_m0_embedded_go_android_tunnel_dns_effective \
       wbd_m0_embedded_go_loop_start wbd_m0_embedded_go_loop_stats \
       wbd_m0_embedded_go_loop_business_receipts \
       wbd_m0_embedded_go_loop_return_path_receipts \

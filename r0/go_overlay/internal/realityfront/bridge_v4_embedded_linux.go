@@ -401,6 +401,10 @@ func (b *v4EmbeddedNativeBridge) attachRawRxOnInterface(ifname string,ifindex ui
     if rc!=0{return fmt.Errorf("%w: authenticated raw underlay %q/%d bind=%d",&v4EmbeddedNativeStatus{Operation:"raw_rx_attach",Code:int(rc)},ifname,ifindex,int(rc))}
     return nil
 }
+// Android only: a Linux native CLI cannot request a Bionic tunnel-DNS grant.
+func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
+    return ErrAdmissionUnsupported
+}
 func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
     if !b.committed||b.handle==0||len(name)==0||len(name)>15{return errV4Embedded}
     raw:=[]byte(name)

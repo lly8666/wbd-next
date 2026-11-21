@@ -7,6 +7,11 @@ test "$(git rev-parse HEAD)" = "${GITHUB_SHA:?missing SHA}"
 mkdir -p out/android-b2c2b-dns-flow
 cargo +1.85.1 test --locked -p wbd-engine --lib b2c2b \
   -- --nocapture 2>&1 | tee out/android-b2c2b-dns-flow/test.log
+# B3 source-locked genuine original flow: two independent captured App DNS
+# resolver IPs are tunneled and inverted without cross-transaction leakage.
+cargo +1.85.1 test --locked -p wbd-engine --lib \
+  b3_real_m4_captured_app_dns_two_resolvers_inverse_and_stop \
+  -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 python3 - <<'PY'
 from pathlib import Path
 import hashlib,json,os
@@ -26,6 +31,8 @@ for test in names:
          else "v4_android_dns_udp_flow")
  assert f"test {module}::tests::{test} ... ok" in log,test
 assert "test result: ok. 7 passed;" in log,log[-1500:]
+assert "test v4_android_dns_udp_flow::tests::b3_real_m4_captured_app_dns_two_resolvers_inverse_and_stop ... ok" in log
+assert "test result: ok. 1 passed;" in log
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
 lib=Path("crates/wbd-engine/src/lib.rs").read_text()
 m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
@@ -56,6 +63,9 @@ assert "receiver.accept_authenticated_link(" in owner
 assert "android_dns_flows.stop();" in entry
 assert "android_dns_hijack_ready:false" in entry
 assert "android_dns_hijack_ready:true" not in entry
+assert "e.android_dns_hijack_ready=true;" in entry
+assert "pub extern \"C\" fn wbd_m0_embedded_go_android_tunnel_dns_enable(" in entry
+assert "e.android_tun.is_none()" in entry and "e.client_lease_ipv4.is_none()" in entry
 assert "android_dns_physical_ready:false" in entry
 assert "android_dns_physical_ready:true" not in entry
 physical=Path("crates/wbd-engine/src/v4_android_dns_physical_flow.rs").read_text()
@@ -87,7 +97,10 @@ receipt={
  "original_android_arm64_rust_elf_compilation":"SEPARATE_JOB_PENDING",
  "m4_dns_capture_hijack_enabled":0,
  "m4_tx_rx_same_owner_dns_hooks":"SOURCE_GATE_PASS",
- "m4_live_rewrite_query_and_reply":"CONNECTED_BUT_COLD_DISABLED",
+ "m4_live_rewrite_query_and_reply":"COLD_OPTIN_WIRED_SOURCE_AND_HOST_ONLY",
+ "b3_original_app_dns_two_resolvers_ipv4_udp_inverse_and_stop":"HOST_PASS",
+ "android_tunnel_dns_real_native_cold_grant":"REQUIRES_REAL_TLS_LEASE_RAW_TUN",
+ "android_tunnel_dns_physical_device_e2e":"NOT_RUN",
  "android_system_resolver":"NOT_CONNECTED",
  "physical_scoped_dns_and_tunnel_reply_backend":"ORIGINAL_M4_REAL_PHYSICAL_FD_AND_TUNNEL_RX_HOOKS_CONNECTED_COLD_DISABLED",
  "physical_actual_udp53_socket":"NOT_OPENED_DEFAULT_FALSE",
@@ -97,5 +110,6 @@ receipt={
  "physical_ksu_p5":"NOT_RUN"
 }
 (out/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+print("ANDROID_B3_ORIGINAL_GO_RUST_TUNNEL_UDP_DNS_OPTIN_AND_INVERSE_MAP_HOST_PASS")
 print("ANDROID_B2C2C_ORIGINAL_RUST_M4_PHYSICAL_DNS_UDP_AND_TUNNEL_OWNER_SOURCE_GATE_PASS_COLD_DISABLED")
 PY

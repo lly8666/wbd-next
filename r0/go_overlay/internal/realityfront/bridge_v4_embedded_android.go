@@ -38,6 +38,8 @@ extern int32_t wbd_m0_embedded_go_state(uint64_t,uint32_t *);
 
 extern int32_t wbd_m0_embedded_go_attach_raw_rx_on_interface(uint64_t,uint32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_android_tunnel_dns_enable(uint64_t);
+extern int32_t wbd_m0_embedded_go_android_tunnel_dns_effective(uint64_t,uint32_t *);
 
 
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
@@ -356,6 +358,27 @@ func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
         (*C.uchar)(unsafe.Pointer(&raw[0])),C.size_t(len(raw)))
     runtime.KeepAlive(raw)
     if rc!=0{return fmt.Errorf("%w: bind real TUN=%d",&v4EmbeddedNativeStatus{Operation:"tun_attach",Code:int(rc)},int(rc))}
+    return nil
+}
+// Only called after original Go TLS, OS /32 readback, RAW and TUN attach.
+ // The same Rust M4 TUN reader enables the existing UDP53 tunnel inverse
+ // map; native readback is mandatory. Android system DNS and CN physical
+ // forwarding are separate, not implied by this opt-in.
+func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
+    if b==nil||b.handle==0||!b.committed||b.serverSide||
+       b.protectedFeatures!=3 {
+        return errV4Embedded
+    }
+    rc:=C.wbd_m0_embedded_go_android_tunnel_dns_enable(C.uint64_t(b.handle))
+    if rc!=0{return fmt.Errorf("%w: original Android tunnel UDP DNS enable=%d",
+        errV4Embedded,int(rc))}
+    var effective C.uint32_t
+    rc=C.wbd_m0_embedded_go_android_tunnel_dns_effective(
+        C.uint64_t(b.handle),&effective)
+    if rc!=0||effective!=1{
+        return fmt.Errorf("%w: original Android tunnel UDP DNS readback=%d effective=%d",
+            errV4Embedded,int(rc),uint32(effective))
+    }
     return nil
 }
 func (b *v4EmbeddedNativeBridge) receiveRawToTun()(uint32,uint32,error){return 0,0,ErrAdmissionUnsupported}
