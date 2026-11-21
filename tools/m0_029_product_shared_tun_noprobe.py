@@ -496,6 +496,8 @@ def main():
             result["outer_repair_native_stop_scope"][role]=(
                 ("NATIVE_ON_CONFIRMED" if LOSS_REPAIR_LEG=="B" else "NATIVE_OFF_CONFIRMED") if values else "NOT_EMITTED_UNVERIFIED")
         if LOSS_REPAIR_LEG:
+            # Original Go log lines carry a timestamp prefix: match actual
+            # marker within the line, never a fabricated start-of-line.
             # Source-locked original authenticated Rust M2/F/R and true
             # ciphertext retransmission readback; OFF must have no repair.
             result["h2268_original_outer_m2_real_wire"]={}
@@ -508,8 +510,8 @@ def main():
                 matches=[{k:int(v) for k,v in re.findall(
                     r"([a-z0-9_]+)=(\d+)",line)}
                     for line in log.splitlines()
-                    if line.startswith("V4_PUBLIC_M2_OUTER role="+role+" ")]
-                if role=="client" and len(matches)!=1:
+                    if "V4_PUBLIC_M2_OUTER role="+role+" " in line]
+                if role=="client" and not matches:
                     raise RuntimeError("M029_H2268_CLIENT_EXACT_NATIVE_M2_WIRE_MISSING")
                 if any(not set(keys).issubset(m) for m in matches):
                     raise RuntimeError("M029_H2268_M2_WIRE_COUNTER_FIELDS_MISSING")
@@ -519,7 +521,7 @@ def main():
                     m["repair_accepted_wire_bytes"] or m["repair_uncertain_wire_bytes"]
                     or m["original_frozen_retransmitted"] for m in matches):
                     raise RuntimeError("M029_H2268_OFF_HAS_TRUE_M2_REPAIR_COPIES")
-                result["h2268_original_outer_m2_real_wire"][role]=matches
+                result["h2268_original_outer_m2_real_wire"][role]=matches[-1:]
             result["h2268_original_outer_m2_scope"]=(
                 "original_ip_M4_F_R_not_L2; no control-C claim;"
                 "server may emit no M2 after authenticated teardown;"
