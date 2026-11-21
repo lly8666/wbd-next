@@ -69,3 +69,26 @@ func TestA44OriginalAndroidBusinessReceiptClasses(t *testing.T){
   t.Fatalf("actual witness stages=%v wanted=%v",got,want)
  }
 }
+
+func TestB3dOriginalAndroidTunnelDNSRealNativeClasses(t *testing.T){
+  p:=realityfront.V4PublicLoopPulse{DnsUDP53Seen:1}
+  got:=originalAndroidBusinessReceiptClasses(p)
+  if !reflect.DeepEqual(got,[]string{"DNS_UDP53_TUN_SEEN"}) {
+    t.Fatalf("TUN observation cannot claim original M4 copy or DNS reply: %v",got)
+  }
+  p.DnsTunnelRawCopied=1
+  got=originalAndroidBusinessReceiptClasses(p)
+  if !reflect.DeepEqual(got,[]string{"DNS_UDP53_TUN_SEEN","DNS_TUNNEL_RAW_COPIED"}) {
+    t.Fatalf("RAW copied is not a reverse DNS TUN answer: %v",got)
+  }
+  p.DnsTunnelReplyTun=1
+  got=originalAndroidBusinessReceiptClasses(p)
+  if !reflect.DeepEqual(got,[]string{"DNS_UDP53_TUN_SEEN","DNS_TUNNEL_RAW_COPIED",
+    "DNS_TUNNEL_REVERSE_TUN_WRITTEN"}) {
+    t.Fatalf("original authenticated reverse DNS TUN stage absent: %v",got)
+  }
+  snapshot:=originalAndroidM4OwnerSnapshot(p)
+  if !strings.Contains(snapshot,"dnsudp=1 dnstcp=0 dnsraw=1 dnsrtun=1") {
+    t.Fatalf("real original M4 DNS numeric snapshot missing: %s",snapshot)
+  }
+}

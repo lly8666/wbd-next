@@ -718,6 +718,27 @@ public final class RootDiagnosticReportTest {
             "tunnel_dns_native_cold=COLD_NATIVE_GRANT_FAILED");
         if(RootDiagnosticReport.build(dnsDir,source,36).contains("RUST_COLD_ENABLED_APP_TUN_UDP53_ONLY"))
             throw new AssertionError("prior generation DNS grant leaked");
+        // B3d: real original M4 copy differs from mere native cold enable.
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        dnsWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED);
+        contains(RootDiagnosticReport.build(dnsDir,source,36),
+            "tunnel_dns_live=NOT_OBSERVED");
+        dnsWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TUNNEL_RAW_COPIED);
+        contains(RootDiagnosticReport.build(dnsDir,source,36),
+            "tunnel_dns_live=QUERY_ORIGINAL_M4_RAW_COPIED_REPLY_NOT_OBSERVED");
+        dnsWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN);
+        contains(RootDiagnosticReport.build(dnsDir,source,36),
+            "tunnel_dns_live=AUTHENTIC_M3_DNS_INVERSE_TUN_WRITTEN");
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        contains(RootDiagnosticReport.build(dnsDir,source,36),
+            "tunnel_dns_live=NOT_OBSERVED");
+        String b3dNative="V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=1 parse_fail=0 parsed=1 auth=1 rejected=0 writefail=0 tun=2 trej=0 rawtx=2 rtun=1 tcp=0 udp=1 icmp=0 dnsudp=1 dnstcp=0 dnsraw=1 dnsrtun=1 rxerr=0 txerr=0 health=1";
+        if(!dnsWriter.recordNativeSnapshot(b3dNative))
+            throw new AssertionError("real native DNS TX/RX numeric receipt rejected");
+        contains(RootDiagnosticReport.build(dnsDir,source,36),"dnsraw=1 dnsrtun=1");
+        System.out.println("ANDROID_B3D_REAL_M4_DNS_QUERY_COPIED_AUTH_INVERSE_TUN_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_B3C_APP_TUNNEL_DNS_COLD_SAFE_READBACK_HOST_PASS");
         System.out.println("ANDROID_B3B_COLD_NATIVE_DNS_EFFECTIVE_AND_FAILED_SAFE_REPORT_HOST_PASS");
         System.out.println("ANDROID_A47_NATIVE_NUMERIC_M4_REAL_APK_REPORT_HOST_PASS");

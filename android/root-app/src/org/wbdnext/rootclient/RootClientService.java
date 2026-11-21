@@ -708,6 +708,10 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_UDP53_TUN_SEEN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_TCP53_TUN_SEEN"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TCP53_TUN_SEEN);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_TUNNEL_RAW_COPIED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TUNNEL_RAW_COPIED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=DNS_TUNNEL_REVERSE_TUN_WRITTEN"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MATCHED_TUN"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_GET_MATCHED_TUN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_GET role=client class=MISMATCH"))

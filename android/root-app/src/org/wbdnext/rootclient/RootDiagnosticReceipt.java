@@ -183,6 +183,8 @@ final class RootDiagnosticReceipt {
         ORIGINAL_RUST_APP_REVERSE_TUN_WRITTEN,
         ORIGINAL_RUST_DNS_UDP53_TUN_SEEN,
         ORIGINAL_RUST_DNS_TCP53_TUN_SEEN,
+        ORIGINAL_RUST_DNS_TUNNEL_RAW_COPIED,
+        ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN,
         ORIGINAL_RUST_RAW_SOCKET_READABLE,
         ORIGINAL_RUST_RAW_PARSE_FAILED,
         ORIGINAL_RUST_RAW_PARSED,
@@ -272,6 +274,8 @@ final class RootDiagnosticReceipt {
         "icmp",
         "dnsudp",
         "dnstcp",
+        "dnsraw",
+        "dnsrtun",
         "rxerr",
         "txerr",
         "health"

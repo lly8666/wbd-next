@@ -292,6 +292,13 @@ final class RootDiagnosticReport {
             ?"RUST_COLD_ENABLED_APP_TUN_UDP53_ONLY":
              "NOT_OBSERVED";
         out.append("tunnel_dns_native_cold=").append(tunnelDNS).append('\n');
+        // Genuine original M4 DNS RAW copy and AEAD/M3 inverse TUN write.
+        String tunnelLive=has(session,"ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN")
+            ? "AUTHENTIC_M3_DNS_INVERSE_TUN_WRITTEN":
+             has(session,"ORIGINAL_RUST_DNS_TUNNEL_RAW_COPIED")
+            ? "QUERY_ORIGINAL_M4_RAW_COPIED_REPLY_NOT_OBSERVED":
+             "NOT_OBSERVED";
+        out.append("tunnel_dns_live=").append(tunnelLive).append('\n');
         out.append("device_real_business_tcp_udp=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("android_netd_physical_bypass=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("receipt_event_count=").append(events.size()).append('\n');

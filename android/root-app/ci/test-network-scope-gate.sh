@@ -637,8 +637,23 @@ assert 'pub(crate) fn rewrite_reply(' in backend
 assert 'wbd_m0_embedded_go_android_tunnel_dns_enable' in required
 assert 'wbd_m0_embedded_go_android_tunnel_dns_effective' in required
 assert 'hijack_enabled.write(0)' in nativeworker
+# B3d original-M4 actual RAW-copy and M3 reverse-TUN counters.
+original_owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
+assert 'dns_written=dns_written.saturating_add(1)' in original_owner
+assert 'dns_tunnel_raw_copied.fetch_add(1' in nativeworker
+assert 'dns_tunnel_reply_tun.fetch_add(u64::from(dns_written)' in nativeworker
+assert 'dns_raw_copied.write(e.android_metrics.dns_tunnel_raw_copied' in nativeworker
+assert 'dns_reply_tun.write(e.android_metrics.dns_tunnel_reply_tun' in nativeworker
+assert 'DnsTunnelRawCopied:dnsRaw,DnsTunnelReplyTun:dnsTun' in android_bridge
+assert 'DNS_TUNNEL_RAW_COPIED' in nativecli
+assert 'DNS_TUNNEL_REVERSE_TUN_WRITTEN' in nativecli
+assert 'ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN' in root_svc
+assert 'tunnel_dns_live=' in Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+assert 'ANDROID_B3D_REAL_M4_DNS_QUERY_COPIED_AUTH_INVERSE_TUN_RECEIPT_HOST_PASS' in Path("android/root-app/ci/RootDiagnosticReportTest.java").read_text()
+
 assert "dns_capture=NOT_CONNECTED" in nativecli
 print("ANDROID_B3_REAL_ORIGINAL_M3_TUNNEL_UDP_DNS_COLD_WIRING_SOURCE_PASS")
+print("ANDROID_B3D_REAL_M4_TUNNEL_DNS_TX_AND_AUTH_RX_WIRING_SOURCE_PASS")
 print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")
 print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")
