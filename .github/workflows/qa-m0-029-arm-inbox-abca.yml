@@ -1,0 +1,108 @@
+# PLAN029 one exact ARM64 performance scenario GE1%, four bulk TCP streams,
+# concurrent 160 real UDP + 160 TCP echoes, paired A/B/A on ONE native runner.
+# Not product acceptance or a new Go/Rust transport implementation.
+name: M0 PLAN029 ARM GE1 real inbox 64-256-64 ABA
+run-name: "M0-029-ARM GE1 true 64-256-64 source ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-arm-inbox-abca.yml'
+      - 'tools/m0_029_native_inbox_abca.py'
+      - 'tools/m0_h2244_smallflow_echo.py'
+  workflow_dispatch: {}
+permissions: {contents: read}
+concurrency:
+  group: m0-029-ge1-inbox-aba-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  genuine-native-aba:
+    name: 'ARM64 actual 3-netns Go TLS Rust TUN GE1 bulk and small A/B/A'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Exact source / native ISA / test-owned namespace prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          sudo -n true
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc g++ nasm python3 \
+            iproute2 iptables iputils-ping ethtool iperf3 openssl
+          python3 -m py_compile tools/m0_029_native_inbox_abca.py \
+            tools/m0_h2244_smallflow_echo.py
+          python3 - <<'PY'
+          import ast,pathlib
+          target=pathlib.Path("tools/m0_029_native_inbox_abca.py").read_text()
+          tree=ast.parse(target)
+          assert len([n for n in tree.body if isinstance(n,ast.ClassDef)])==1
+          assert '("original_before",64),("inbox256_candidate",256),("original_after",64)' in target
+          assert "WBD_M0_029_INBOX_SLOTS_TEST=256" in target
+          assert "V4_PUBLIC_SHARED_TUN_STOP generation=" in target
+          assert "H2244_ECHO_SERVER_READY" in target
+          assert "iperf3" in target and "gemodel" in target
+          assert "WBD_H2241" not in target
+          print("M029_NATIVE_INBOX_ABA_SCENE_STATIC_SOURCE_PASS",flush=True)
+          PY
+      - name: One frozen SOURCE original Go TLS Rust ISA-L release build
+        shell: bash
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          bash tools/m0_plan029_linux_dual_native_build.sh >m029-build.log 2>&1 || \
+            { tail -n 140 m029-build.log;exit 2; }
+          test -s linux-plan029-public-bundle/libwbd_engine.so
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("linux-plan029-public-bundle/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="aarch64"
+          assert len(m["sha256"])==3
+          print("M029_ORIGINAL_GO_RUST_ARM_RELEASE_SOURCE_MATCH",flush=True)
+          PY
+      - name: GE1% real 4-flow bulk and small UDP/TCP A64-B256-A64
+        shell: bash
+        timeout-minutes: 17
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/m0_029_native_inbox_abca.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open("m029-inbox-ge1-abca/summary.json"))
+          assert d["source_sha"]==os.environ["GITHUB_SHA"]
+          assert d["run_id"]==os.environ["GITHUB_RUN_ID"]
+          assert d["status"]=="PASS_SCOPED_REAL_ABA_MEASURED_NOT_PRODUCT_GAIN"
+          assert [x["server_inbox_slots"] for x in d["phases"]]==[64,256,64]
+          assert all(x["status"]=="PASS_SCOPED_REAL_SOURCE_MEASURED_NOT_PRODUCT_GAIN"
+                     and x["measure"]["original_product_tcp"]["tcp_streams"]==4
+                     and all(x["measure"]["smallflow"][kind]["requests_sent"]>=150
+                             for kind in ("udp","tcp"))
+                     and all(x["owned_stop"][side]["generation"]>0
+                             for side in ("client","server"))
+                     for x in d["phases"])
+          print("M029_TRUE_ARM_ABA_MEASURED_NOT_PRODUCT_GAIN",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-029-arm-ge1-real-inbox-aba-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            m029-inbox-ge1-abca/
+            m029-build.log
+          retention-days: 14
+          if-no-files-found: warn
