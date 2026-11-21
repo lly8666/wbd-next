@@ -233,6 +233,15 @@ jobs:
           test -x linux-plan029-public-bundle/wbd-v4-server
           test -s linux-plan029-public-bundle/libwbd_engine.so
           echo H2286_ORIGINAL_ARM64_GO_RUST_BINARY_SHARED_BETWEEN_TWO_REAL_SERVERS
+      - name: Install only read-only TCP header observer on genuine ARM TUN
+        shell: bash
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          command -v tcpdump
+          tcpdump --version | head -n 1
       - name: Native ARM64 peer identity
         shell: bash
         run: python3 tools/m0_h2276_three_runner_tcp.py meta "$GROUP" server
@@ -310,6 +319,8 @@ jobs:
             h2286-out/tcp-inner-server.log
             h2286-out/tcp-passive-headers.json
             h2286-out/tcp-passive-trace.log
+            h2286-out/tcp-tun-headers.log
+            h2286-out/tcpdump-stderr.log
             h2286-out/arm-inner-udp.log
             h2286-out/udp-stop.flag.udp.json
           if-no-files-found: warn

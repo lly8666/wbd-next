@@ -282,7 +282,10 @@ def check_server_and_run_app(group):
     try:
         # Explicit TRUE kernel TCP application on ORIGINAL Go/Rust owned TUN.
         before=core.os_host_cpu()
+        require(os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM")=="1",
+                "EXPLICIT_NATIVE_PRODUCT_TCP_TEST_PROFILE_REQUIRED")
         with subprocess.Popen(["sudo","-n","ip","netns","exec",NETNS,
+                               "env","WBD_H2286_PRODUCT_FULL_WIN_ARM=1",
                                sys.executable,"-u","tools/m0_wl_loss_tcp_probe.py",
                                "server",APP_IP,APP_PEER,own["source_sha"]],
                               stdout=(ROOT/"tcp-inner-server.log").open("w"),
@@ -294,6 +297,24 @@ def check_server_and_run_app(group):
                 time.sleep(.2)
             else:raise RuntimeError("H2286_ARM_ORIGINAL_TUN_TCP_LISTENER_NOT_READY")
             print("H2286_ARM_ORIGINAL_PRODUCT_INNER_TCP_READY",flush=True)
+            # tcpdump observes ORIGINAL kernel TUN on its actual native
+            # interface. Only formatted IPv4/TCP headers, never packet bytes,
+            # decrypted payload or an artificial TCP listener/ACK.
+            dump_out=(ROOT/"tcp-tun-headers.log").open("w")
+            dump_err=(ROOT/"tcpdump-stderr.log").open("w")
+            dump=subprocess.Popen(["sudo","-n","ip","netns","exec",NETNS,
+                 "tcpdump","-n","-tt","-l","-i","wbds0","-s","96",
+                 "-c","400","ip and tcp"],
+                 stdout=dump_out,stderr=dump_err)
+            for tick in range(80):
+                if "listening on wbds0" in (ROOT/"tcpdump-stderr.log").read_text(errors="replace"):
+                    break
+                if dump.poll() is not None:
+                    raise RuntimeError("H2288_REAL_ARM_TUN_TCPDUMP_EXIT "+
+                        (ROOT/"tcpdump-stderr.log").read_text(errors="replace")[-650:])
+                time.sleep(.1)
+            else:
+                raise RuntimeError("H2288_REAL_ARM_TUN_TCPDUMP_NO_KERNEL_LISTENER")
             tracer_log=(ROOT/"tcp-passive-trace.log").open("w")
             tracer=subprocess.Popen(["sudo","-n","ip","netns","exec",NETNS,
                  sys.executable,"-u","tools/m0_h2287_tun_tcp_trace.py",
@@ -320,8 +341,18 @@ def check_server_and_run_app(group):
                 except subprocess.TimeoutExpired:
                     tracer.kill();tracer.wait(timeout=5)
                 tracer_log.close()
+                if dump.poll() is None:
+                    dump.send_signal(signal.SIGINT)
+                try:dump.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    dump.kill();dump.wait(timeout=5)
+                dump_out.close();dump_err.close()
             require((ROOT/"tcp-passive-headers.json").exists(),
                     "H2287_TUN_PASSIVE_TRACE_MISSING")
+            require((ROOT/"tcpdump-stderr.log").is_file() and
+                    "listening on wbds0" in
+                    (ROOT/"tcpdump-stderr.log").read_text(errors="replace"),
+                    "H2288_ARM_TUN_TRUE_READ_ONLY_TCPDUMP_NOT_RUNNING")
             require(rc==0,"REAL_WBD_INNER_APPLICATION_FAILED")
         (ROOT/"udp-stop.flag").write_text(own["source_sha"]+"\n")
         for tick in range(80):
