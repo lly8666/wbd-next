@@ -43,7 +43,10 @@ def echo_receipt(node,phase,case):
     path=node.out/(phase+"-smallflow.json")
     role="h2244-small-"+phase.replace("_","-")
     script=str(REPO/"tools/m0_h2244_smallflow_echo.py")
-    node.spawn(role,node.client,["python3","-u",script,"client",
+    node.spawn(role,node.client,["env",
+                                "GITHUB_SHA="+os.environ["GITHUB_SHA"],
+                                "GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],
+                                "python3","-u",script,"client",
                                 "--server","10.66.0.1","--output",str(path)])
     # The app sleeps two seconds before sending. Run genuine bulk on the same
     # client namespace as this sidecar, not a synthetic fake transport.
