@@ -16,6 +16,8 @@ on:
     paths:
       - '.github/workflows/qa-m0-029-linux-client128-no-probe-native.yml'
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - 'crates/wbd-platform/src/linux_raw_carrier.rs'
+      - 'crates/wbd-platform/src/rx_ipv4_tcp.rs'
       - 'r0/go_overlay/internal/v4productcli/linux.go'
       - 'tools/m0_029_product_shared_tun_noprobe.py'
       - 'tools/m0_plan029_linux_dual_native_build.sh'

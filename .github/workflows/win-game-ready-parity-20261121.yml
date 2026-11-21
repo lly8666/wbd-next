@@ -1,0 +1,73 @@
+name: Windows Game2 Game4 original TLS Rust idle READY parity real OS qualification
+run-name: "WIN-GAME-READY-H2223|${{ github.sha }}"
+on:
+  push:
+    branches: ["fix/windows-game-native-ready-activation-20261121"]
+    paths:
+      - ".github/workflows/win-game-ready-parity-20261121.yml"
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go"
+      - "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_cold_handoff_windows_test.go"
+      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
+permissions: {contents: read}
+jobs:
+  windows-source-locked-idle:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Verify immutable Go/Windows manifest and assemble current Game2 Game4 source
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/prepare_windows_wiring.py --check-only
+          if($LASTEXITCODE -ne 0){throw 'signed source blob manifest mismatch'}
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'original Go/Windows assembly failed'}
+      - name: Real Windows original client Go tests, including 0/0/0 and 27/0/0
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Push-Location legacy
+          try {
+            go test -count=1 -v -tags wbd_v4_embedded_go -run '^(TestH2223Game2Game4IdleNativeStartupDoesNotRequireApplicationReply|TestH2223WindowsIdleAuthenticatedRustNativeStartupDoesNotRequireApplicationReply|TestM0PLAN028GameAllLanesSameServerPortDifferentSources|TestM0PLAN027GameColdBacklogDropsOnlyOptionalDetachedM3)$' ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'Windows Game2/4 idle/worker regression failed'}
+            go build -trimpath -tags wbd_v4_embedded_go -o ../wbd-game-ready-smoke.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'Windows Game2/4 original product CLI compile failed'}
+          }finally{Pop-Location}
+          Write-Output 'H2223_WINDOWS_GAME2_GAME4_IDLE_READY_COMPATIBLE_WITH_NORMAL_BUILD_AND_UNIT_PASS'
+  dispatch-two-real-native-os:
+    needs: windows-source-locked-idle
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions: {contents: read, actions: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Dispatch exact-SHA signed Windows Game2 and Game4-FEC ↔ genuine Linux WSL2 product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "fix/windows-game-native-ready-activation-20261121"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/$GITHUB_REF_NAME" --jq '.commit.sha')" = "$GITHUB_SHA"
+          # The Linux server build must include the same source's v4routekey
+          # dependency, not use an old donor lacking the Go package.
+          grep -Fq 'mkdir -p legacy/internal/v4routekey' .github/workflows/m0-wl-public-normal-full.yml
+          for mode in game2 game4-fec; do
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" \
+              --ref "$GITHUB_REF_NAME" -f public_mode="$mode" \
+              -f run_n0=false -f outer_repair=on
+            echo "H2223_NATIVE_ORIGINAL_WIN_LINUX_PRODUCT_DISPATCHED mode=$mode source=$GITHUB_SHA"
+          done

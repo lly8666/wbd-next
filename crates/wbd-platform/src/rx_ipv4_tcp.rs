@@ -147,13 +147,32 @@ pub fn parse_data_packet<'a>(
     packet: &'a [u8],
     trusted: TrustedRx<'_>,
 ) -> Result<UnauthenticatedData<'a>, RxError> {
+    parse_data_packet_checked(packet, trusted, true)
+}
+
+/// Product DATA ingress: minimum bounded IPv4/TCP framing and cold tuple.
+/// The original M3 AEAD + PN/replay check, not the untrusted outer TCP
+/// checksum or mutable DSCP/DF/options, decides whether bytes are delivered.
+/// This also avoids an O(ciphertext-length) pass on every received DATA.
+pub fn parse_data_packet_fast<'a>(
+    packet: &'a [u8],
+    trusted: TrustedRx<'_>,
+) -> Result<UnauthenticatedData<'a>, RxError> {
+    parse_data_packet_checked(packet, trusted, false)
+}
+
+fn parse_data_packet_checked<'a>(
+    packet: &'a [u8],
+    trusted: TrustedRx<'_>,
+    strict: bool,
+) -> Result<UnauthenticatedData<'a>, RxError> {
     let tuple = trusted.tuple;
     if !plausible_unicast(tuple.src_ip) || !plausible_unicast(tuple.dst_ip)
         || tuple.src_port == 0 || tuple.dst_port == 0 {
         return Err(RxError::InvalidTrustedTuple);
     }
     let trusted_opts = trusted.authenticated_options.unwrap_or(&[]);
-    if !valid_options(trusted_opts) { return Err(RxError::InvalidTrustedOptions); }
+    if strict && !valid_options(trusted_opts) { return Err(RxError::InvalidTrustedOptions); }
     if packet.len() > MAX_PACKET_LEN { return Err(RxError::TooLong); }
     if packet.len() > trusted.mtu {
         return Err(RxError::ExceedsMtu {actual:packet.len(),mtu:trusted.mtu});
@@ -162,14 +181,15 @@ pub fn parse_data_packet<'a>(
         return Err(RxError::TooShort);
     }
     if packet[0] != 0x45 { return Err(RxError::WrongVersionOrIhl); }
-    // No unexpected DSCP/ECN: compatible with exactly the existing writer.
-    if packet[1] != 0 { return Err(RxError::WrongIpHeader); }
+    // DSCP/ECN may change in transit: it does not define M3 ciphertext.
+    if strict && packet[1] != 0 { return Err(RxError::WrongIpHeader); }
     if usize::from(be16(&packet[2..4])) != packet.len() {
         return Err(RxError::TotalLengthMismatch);
     }
-    // Old carrier transmits unfragmented IPv4 packets with DF set; reject
-    // reserved bit, MF flag and every nonzero fragment offset.
-    if be16(&packet[6..8]) != DF_ONLY {
+    // No fragments can be promoted as complete M3 records. A cleared DF
+    // flag is harmless; do not insist on the local writer's exact flags.
+    let fragment_bits = be16(&packet[6..8]);
+    if (fragment_bits & 0x3fff) != 0 || (strict && fragment_bits != DF_ONLY) {
         return Err(RxError::FragmentedOrUnexpectedFlags);
     }
     if packet[9] != TCP_PROTO { return Err(RxError::WrongProtocol); }
@@ -177,7 +197,7 @@ pub fn parse_data_packet<'a>(
     if &packet[12..16] != tuple.src_ip || &packet[16..20] != tuple.dst_ip {
         return Err(RxError::WrongTuple);
     }
-    if !checksum_is_valid(add_bytes(0, &packet[..IPV4_HEADER_LEN])) {
+    if strict && !checksum_is_valid(add_bytes(0, &packet[..IPV4_HEADER_LEN])) {
         return Err(RxError::IpChecksum);
     }
     let tcp = &packet[IPV4_HEADER_LEN..];
@@ -185,26 +205,32 @@ pub fn parse_data_packet<'a>(
         return Err(RxError::WrongTuple);
     }
     // TCP offset in 32-bit words; reject all reserved bits and NS on DATA.
-    if tcp[12] & 0x0f != 0 { return Err(RxError::InvalidTcpHeader); }
+    if strict && tcp[12] & 0x0f != 0 { return Err(RxError::InvalidTcpHeader); }
     let hdr_len = usize::from(tcp[12] >> 4) * 4;
     if hdr_len < TCP_HEADER_LEN || hdr_len > TCP_HEADER_LEN + 40
         || hdr_len > tcp.len() { return Err(RxError::InvalidTcpHeader); }
     if tcp[13] != TCP_DATA_FLAGS { return Err(RxError::InvalidDataFlags); }
-    if tcp[18] != 0 || tcp[19] != 0 {
-        return Err(RxError::InvalidTcpHeader); // urgent pointer on DATA
+    if strict && (tcp[18] != 0 || tcp[19] != 0) {
+        return Err(RxError::InvalidTcpHeader);
     }
-    let opts = &tcp[TCP_HEADER_LEN..hdr_len];
-    if !valid_options(opts) || opts != trusted_opts {
-        return Err(RxError::UnsupportedOptions);
+    // Skip option grammar/template matching for opaque, AEAD-gated DATA.
+    // Header length is already checked, so the ciphertext slice is safe.
+    if strict {
+        let opts = &tcp[TCP_HEADER_LEN..hdr_len];
+        if !valid_options(opts) || opts != trusted_opts {
+            return Err(RxError::UnsupportedOptions);
+        }
     }
     if hdr_len == tcp.len() { return Err(RxError::EmptyData); }
     // TCP pseudoheader: src/dst, zero, protocol=6, 16-bit TCP byte length.
     // A single add_bytes() per independent even-length segment preserves the
     // odd-tail alignment inside the TCP segment, even with odd ciphertext.
-    let mut sum = add_bytes(0, &packet[12..20]);
-    sum += u64::from(TCP_PROTO) + tcp.len() as u64;
-    sum = add_bytes(sum, tcp);
-    if !checksum_is_valid(sum) { return Err(RxError::TcpChecksum); }
+    if strict {
+        let mut sum = add_bytes(0, &packet[12..20]);
+        sum += u64::from(TCP_PROTO) + tcp.len() as u64;
+        sum = add_bytes(sum, tcp);
+        if !checksum_is_valid(sum) { return Err(RxError::TcpChecksum); }
+    }
     Ok(UnauthenticatedData {
         ciphertext: &tcp[hdr_len..],
         seq32: be32(&tcp[4..8]),
@@ -247,11 +273,11 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
         actual:packet.len(),mtu:trusted.mtu})}
     if packet.len()<IPV4_HEADER_LEN+TCP_HEADER_LEN{return Err(RxError::TooShort)}
     if packet[0]!=0x45{return Err(RxError::WrongVersionOrIhl)}
-    if packet[1]!=0{return Err(RxError::WrongIpHeader)}
+    // DSCP/ECN is not part of the scoped ACK identity.
     if usize::from(be16(&packet[2..4]))!=packet.len(){
         return Err(RxError::TotalLengthMismatch)
     }
-    if be16(&packet[6..8])!=DF_ONLY{
+    if be16(&packet[6..8])&0xbfff!=0{
         return Err(RxError::FragmentedOrUnexpectedFlags)
     }
     if packet[9]!=TCP_PROTO{return Err(RxError::WrongProtocol)}
@@ -374,6 +400,35 @@ mod tests {
             assert_eq!(pkt,original);
         }
     }
+    #[test]
+    fn fast_data_is_minimal_outer_framing_until_m3_authentication() {
+        let pkt=wire(b"sealed opaque ciphertext",100,None);
+        let mut bad_tcp=pkt.clone(); bad_tcp[36]^=0x80;
+        assert_eq!(parse_data_packet(&bad_tcp,trusted(None,1500)),
+            Err(RxError::TcpChecksum));
+        assert!(parse_data_packet_fast(&bad_tcp,trusted(None,1500)).is_ok());
+        let mut bad_ip=pkt.clone();bad_ip[10]^=1;
+        assert_eq!(parse_data_packet(&bad_ip,trusted(None,1500)),
+            Err(RxError::IpChecksum));
+        assert!(parse_data_packet_fast(&bad_ip,trusted(None,1500)).is_ok());
+        let mut changed_dscp=pkt.clone();changed_dscp[1]=3;
+        assert!(parse_data_packet_fast(&changed_dscp,trusted(None,1500)).is_ok());
+        let mut no_df=pkt.clone();no_df[6]=0;
+        assert!(parse_data_packet_fast(&no_df,trusted(None,1500)).is_ok());
+        let mut fragment=pkt.clone();fragment[6]=0x20;
+        assert_eq!(parse_data_packet_fast(&fragment,trusted(None,1500)),
+            Err(RxError::FragmentedOrUnexpectedFlags));
+        let mut bad_tuple=pkt.clone();bad_tuple[12]^=1;
+        assert_eq!(parse_data_packet_fast(&bad_tuple,trusted(None,1500)),
+            Err(RxError::WrongTuple));
+        let mut bad_length=pkt.clone();bad_length[2]=1;
+        assert_eq!(parse_data_packet_fast(&bad_length,trusted(None,1500)),
+            Err(RxError::TotalLengthMismatch));
+        let mut wrong_type=pkt.clone();wrong_type[33]=0x10;
+        assert_eq!(parse_data_packet_fast(&wrong_type,trusted(None,1500)),
+            Err(RxError::InvalidDataFlags));
+    }
+
     #[test]
     fn r1_rx_ipv4_tcp_pinned_old_go_packet_golden() {
         // Go packet.go pinned 6ac1f9...: fixed legacy IPID21/ACK200/TCP window1024.
