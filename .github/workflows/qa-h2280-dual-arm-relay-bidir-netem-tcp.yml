@@ -195,7 +195,7 @@ jobs:
           d=json.load(open('h2276-out/server-result.json'))
           assert d['source_sha']==os.environ['GITHUB_SHA'] and d['group']==os.environ['GROUP']
           assert [x['stage_id'] for x in d['stages']]==[-1,0,1,5]
-          assert d['stages'][0]['actual_peer'] != d['stages'][1]['actual_peer']
+          assert all(x['actual_peer'] == d['stages'][0]['actual_peer'] for x in d['stages'])
           print('H2280_ARM_SERVER_REAL_4STAGES_SOURCE_LOCKED_PASS_SCOPED')
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -19,3 +19,10 @@
 ```feature-impact
 {"kind":"none","reason":"H2280 repairs only scoped two-independent-triple native kernel netem bidirectional topology, qdisc observed counters and strict no-silent-half-impairment qualification; Go/Rust product, Windows drivers, protocol, defaults and Stop unchanged."}
 ```
+
+## H2280 真实 A/B 双组三机运行后收据（2026-11-22）
+- 精确源 `f4fcd233cdd749c84da27453b5f194811a92a2bf`、[Action44928186966](https://github.com/lly8666/wbd-next/actions/runs/44928186966) attempt1整体 **FAIL**；static SUCCESS、A/B真正Windows2025 Winsock client 2/2 SUCCESS、A/B ARM64 relay 2/2 SUCCESS。两个ARM64 server都完成真正四次内核TCP `SERVER_ALL_TCP_STAGES_PASS`、生成source-locked server-result 4 stages，但工作流最终断言 `d['stages'][0]['actual_peer'] != d['stages'][1]['actual_peer']` 是直接继承H2279的 **direct→relay差别校验**，而H2280两次阶段均经同一个relay，所以2/2 server**收据失败**；真实业务不因此重写为整单PASS。
+- **原始真实客端、服务器、relay ZIP持久证据和整套数字：** `docs/evidence/M0/PLAN029-H2280-REAL-WIN-ARM-DUAL-BIDIR-NETEM-20261122.json`。A/B无损无附加时延52.645/47.110Mbps；双向200ms下0% 7.952/7.681Mbps、1% 3.491/3.178Mbps、5% 0.789/1.001Mbps。160/160回声每阶段完整，但P99从0% 485/500ms到1% 1000/1015ms再到5% 1593/1625ms；Win allcore CPU约1–19%、ARM host0.63–4.86%，未打满。
+- 从原始 `tc -s -j qdisc` 阶段前后差分证实每组 **两个方向** 均真正进入不同 netem。1% A Win→ARM 8794发/37drop、ARM→Win2530发/26drop；B 7977/47、2280/25。5% A 2517/96、1238/59；B 2805/92、1343/74，都是 **实际kernel intentional drop**，不能与WBD应用丢包混称。这次确实修正旧“单向200ms”的夹具缺陷。
+- 仅修最后服务端 `actual_peer` 不等式为同一经中继peer的来源检查，并增加静态fixture回归。因全部真实TCP已完成且原失败有界保留，**不为一个报告断言重复六VM重跑**；后续长流/真GoTLS/Rust实验用新校验。此前旧无损24MiB×4 flow上限造成一些快跑bulk在160 echo观察期未结束前就退出，下阶段扩大真实有界高供给（20–25s）并明确 CPU/P99/接收字节，以免把短流冲刺当持续吞吐。
+- H2280只是 **Win→ARM OS TCP/Tailscale/内核netem**；Wintun/Npcap原产品未在这一双组三机Action运行，不能说原GoTLS/Rust吞吐提高。首要结论：物理网络/窗口/TTFB退避本身可压制吞吐，需先定位再有选择地利用CPU冗余做FEC2/批处理/源级队列，禁止无限缓存牺牲P99。

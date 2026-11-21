@@ -29,6 +29,10 @@ class H2280BidirNetem(unittest.TestCase):
         self.assertIn("REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",wf)
         self.assertIn("PASS_H2280_REAL_BIDIR_KERNEL_NETEM_TCP_SCOPED",wf)
         self.assertEqual(wf.count("assert [x['stage_id'] for x in d['stages']]==[-1,0,1,5]"),2)
+        self.assertIn(
+            "assert all(x['actual_peer'] == d['stages'][0]['actual_peer'] for x in d['stages'])", wf)
+        self.assertNotIn(
+            "d['stages'][0]['actual_peer'] != d['stages'][1]['actual_peer']", wf)
 
     def test_synthetic_healthy_receipt_same_epoch_while_one_direction_absent_fails(self):
         def qdisc(up,down,updrop=0,downdrop=0):
