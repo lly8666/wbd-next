@@ -1,0 +1,26 @@
+name: PERF ARM64 original Normal/off protected handover retest dispatch
+run-name: "PERF-ARM64-HANDOVER-RETEST|${{ github.sha }}"
+on:
+  push:
+    branches: ["perf/outer-rx-minimal-parse-20261121"]
+    paths: [".github/workflows/perf-arm64-handover-retest-dispatch.yml"]
+permissions: {contents: read, actions: write}
+jobs:
+  run-real-arm64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Rebuild both genuine native ARM64 roles, re-run real TLS/UDP handover
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "perf/outer-rx-minimal-parse-20261121"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          gh workflow run m0-plan028-arm64-normaloff-two-physical-handover.yml \
+            --repo "$GH_REPO" --ref "$GITHUB_REF_NAME"
+          echo "REAL_ARM64_HANDOVER_RETEST_DISPATCHED source=$GITHUB_SHA"
