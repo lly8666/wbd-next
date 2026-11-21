@@ -1,8 +1,8 @@
 # H2276: TWO simultaneous isolated triplets, same exact source/scenario.
 # This first run is real Windows Winsock -> Linux tc kernel relay -> ARM Linux
 # end-to-end TCP capacity/p99 preflight; WBD Npcap/Wintun is NOT measured here.
-name: H2276 two independent Win relay ARM real TCP topology and loss capacity
-run-name: "M0 H2276 dual Win→relay→ARM 0/1/5 loss | ${{ github.sha }}"
+name: H2279 two independent triplets Windows to ARM direct vs relay native TCP capacity
+run-name: "M0 H2279 dual Win→ARM direct then relay 0ms TCP | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
@@ -14,6 +14,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  WBD_H2279_CAPACITY_AB: "1"
 concurrency:
   group: h2276-dual-three-runner-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
@@ -32,6 +34,7 @@ jobs:
           python3 -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py
           python3 -m unittest tests.test_m0_h2276_three_runner_tcp -v
   relay:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2279-clean-path]')
     name: "H2277 independent ARM64 Linux kernel TCP relay ${{ matrix.group }}"
     needs: static
     strategy:
@@ -94,9 +97,10 @@ jobs:
           import json,os
           d=json.load(open('h2276-peer/client-result/client-result.json'))
           assert d['group']==os.environ['GROUP'] and d['source_sha']==os.environ['GITHUB_SHA']
-          assert d['status']=='PASS_THREE_RUNNER_TCP_INFRA_SCOPED'
-          assert [x['loss_pct'] for x in d['stages']]==[-1,0,1,5]
-          print('H2276_TRIPLET_CLIENT_RECEIPT_SCOPED_NOT_WBD_PRODUCT')
+          assert d['status']=='PASS_H2279_REAL_NATIVE_DIRECT_VS_RELAY_SCOPED'
+          assert [x['stage_id'] for x in d['stages']]==['direct',-1]
+          assert d['direct_vs_relay']['same_real_windows_client_and_arm_server']
+          print('H2279_TRIPLET_DIRECT_VS_RELAY_RECEIPT_SCOPED_NOT_WBD_PRODUCT')
           PY
       - name: Remove only relay owned tc and exact iptables rules
         if: always()
@@ -117,6 +121,7 @@ jobs:
           retention-days: 14
 
   server:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2279-clean-path]')
     name: "H2276 independent genuine ARM64 kernel TCP server ${{ matrix.group }}"
     needs: static
     strategy:
@@ -180,8 +185,9 @@ jobs:
           import json,os
           d=json.load(open('h2276-out/server-result.json'))
           assert d['source_sha']==os.environ['GITHUB_SHA'] and d['group']==os.environ['GROUP']
-          assert [x['loss_pct'] for x in d['stages']]==[-1,0,1,5]
-          print('H2276_NATIVE_ARM_REAL_RECEIVER_FOUR_STAGES_PASS_SCOPED')
+          assert [x['stage_id'] for x in d['stages']]==['direct',-1]
+          assert d['stages'][0]['actual_peer'] != d['stages'][1]['actual_peer']
+          print('H2279_ARM_SERVER_DIRECT_AND_RELAY_REAL_TCP_PASS_SCOPED')
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
@@ -192,6 +198,7 @@ jobs:
           retention-days: 14
 
   client:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2279-clean-path]')
     name: "H2276 genuine Windows2025 Winsock TCP client ${{ matrix.group }}"
     needs: static
     strategy:

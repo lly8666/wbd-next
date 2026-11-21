@@ -93,6 +93,26 @@ class ExactDualTriplet(unittest.TestCase):
         self.assertEqual(result["owned_tcp_forward_rule_counters"]
                          ["nat_PREROUTING"]["matched_rules"][0]["packets"], 5)
 
+    def test_h2279_clean_path_uses_identical_windows_and_arm_real_tcp(self):
+        relay={"tail_ip":"100.101.0.2","relay_ip":"100.101.0.2",
+               "client_ip":"100.101.0.1"}
+        server={"tail_ip":"100.101.0.3"}
+        with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"1"}):
+            self.assertEqual(h.active_stages(),("direct",-1))
+        with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"0"}):
+            self.assertEqual(h.active_stages(),h.TIERS)
+        self.assertEqual(h.client_tcp_target("direct",relay,server),
+                         server["tail_ip"])
+        self.assertEqual(h.client_tcp_target(-1,relay,server),
+                         relay["tail_ip"])
+        self.assertEqual(h.server_expected_tcp_peer("direct",relay),
+                         relay["client_ip"])
+        self.assertEqual(h.server_expected_tcp_peer(-1,relay),
+                         relay["relay_ip"])
+        wf=(ROOT/".github/workflows/qa-h2276-dual-win-relay-arm-tcp.yml").read_text()
+        self.assertIn("WBD_H2279_CAPACITY_AB: \"1\"",wf)
+        self.assertEqual(wf.count("[m0-029-h2279-clean-path]"),3)
+
     def test_relay_source_and_group_pair_must_be_identical(self):
         a = identity("relay")
         self.assertEqual(h.verify(a, identity("client"), "client"), "100.101.0.1")

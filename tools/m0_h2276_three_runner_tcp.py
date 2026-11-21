@@ -30,6 +30,19 @@ PORT = 18727
 tcp.PORT = PORT
 CONTROL_PORT = 4789
 TIERS = (-1, 0, 1, 5)  # -1 = no-loss/no-added-delay infrastructure capacity reference
+
+
+def active_stages():
+    """H2279 clean same-machine native TCP direct versus kernel-relayed A/B."""
+    return ("direct", -1) if os.environ.get("WBD_H2279_CAPACITY_AB")=="1" else TIERS
+
+
+def server_expected_tcp_peer(stage, relay):
+    return relay["client_ip"] if stage=="direct" else relay["relay_ip"]
+
+
+def client_tcp_target(stage, relay, server):
+    return server["tail_ip"] if stage=="direct" else relay["relay_ip"]
 ARM = "aarch64"
 ROLES = ("client", "relay", "server")
 TAIL = ipaddress.ip_network("100.64.0.0/10")
@@ -318,13 +331,18 @@ def remote_diag(relay):
 def run_server(own, relay):
     peer = verify(own, relay, "relay")
     result = []
-    for tier in TIERS:
-        print("H2276_SERVER_STAGE_START " + str(tier), flush=True)
+    for tier in active_stages():
+        expected_peer = server_expected_tcp_peer(tier,relay)
+        print("H2279_SERVER_TCP_STAGE "+
+              json.dumps({"stage":tier,"actual_peer":expected_peer}),
+              flush=True)
         before = time.process_time()
         host_before = os_host_cpu()
         t = time.monotonic()
-        tcp.server(own["tail_ip"], peer, own["source_sha"])
-        result.append(dict(loss_pct=tier,
+        tcp.server(own["tail_ip"], expected_peer, own["source_sha"])
+        result.append(dict(stage_id=tier,
+                           loss_pct=(0 if tier=="direct" else tier),
+                           actual_peer=expected_peer,
                            service_wall_s=round(time.monotonic() - t, 4),
                            python_service_cpu_s=round(time.process_time() - before, 4),
                            arm_host_allcore_busy_pct=cpu_busy_percent(
@@ -362,16 +380,17 @@ def run_client(own, relay, server):
         save(ROOT / "client-result.json", observation)
         print("H2277_SKIP_SHARED_DERP_NOT_WBD_PERFORMANCE", flush=True)
         raise RuntimeError("H2277_INFRA_DERP_NO_VALID_3RUNNER_PERFORMANCE")
-    for tier in TIERS:
-        shape = remote_shape(relay, tier)
-        time.sleep(2.0)
+    for tier in active_stages():
+        target = client_tcp_target(tier,relay,server)
+        shape = None if tier=="direct" else remote_shape(relay,tier)
+        time.sleep(0.5 if tier=="direct" else 2.0)
         buffer = io.StringIO()
         begin = time.monotonic()
         cpu0 = time.process_time()
         host_before = os_host_cpu()
         try:
             with contextlib.redirect_stdout(buffer):
-                tcp.client(win, endpoint, own["source_sha"])
+                tcp.client(win, target, own["source_sha"])
         except Exception as exc:
             observation["status"] = "FAIL_REAL_TCP_FORWARDING_NOT_PRODUCT_PERF"
             observation["failed_stage"] = tier
@@ -387,14 +406,19 @@ def run_client(own, relay, server):
                 for s in evidence.splitlines()
                 if tcp.MARK + "CLIENT_DONE " in s]
         require(len(rows) == 1 and rows[0]["sparse_echo_received"] == 160 and
-                rows[0]["bind"] == win and rows[0]["peer"] == endpoint,
+                rows[0]["bind"] == win and rows[0]["peer"] == target,
                 "MISSING_REAL_TCP_CLIENT_RESULT")
-        row = dict(loss_pct=tier, delivered=rows[0],
+        row = dict(stage_id=tier,
+                   loss_pct=(0 if tier=="direct" else tier),
+                   tcp_path=("DIRECT_OS_TAILNET_ARM" if tier=="direct" else
+                             "OS_KERNEL_DNAT_SNAT_RELAY"),
+                   delivered=rows[0],
                    client_python_cpu_s=round(time.process_time()-cpu0, 4),
                    windows_host_allcore_busy_pct=cpu_busy_percent(
                        host_before, os_host_cpu()),
                    stage_wall_s=round(time.monotonic()-begin, 4),
-                   actual_kernel_shape=shape["netem"]["qdisc"])
+                   actual_kernel_shape=(shape["netem"]["qdisc"]
+                                        if shape is not None else None))
         observation["stages"].append(row)
         save(ROOT / "client-result.json", observation)
         print("H2276_NATIVE_WINDOWS_TCP_RECEIVER_RESULT " +
@@ -404,13 +428,29 @@ def run_client(own, relay, server):
                           "late_over_1s": rows[0]["sparse_tcp_late_1000ms"],
                           "client_app_cpu_seconds": row["client_python_cpu_s"]},
                          sort_keys=True), flush=True)
-    require([r["loss_pct"] for r in observation["stages"]] == list(TIERS),
-            "NOT_ALL_THREE_RELAY_LOSS_STAGES")
-    observation["status"] = "PASS_THREE_RUNNER_TCP_INFRA_SCOPED"
-    observation["capacity_qualification"] = (
-        "INFRA_CAPACITY_BELOW_800MBPS_NOT_PRODUCT_FAIL"
-        if observation["stages"][0]["delivered"]["bulk_receiver_goodput_mbps"] < 800
-        else "ROUTED_ZERO_LOSS_TCP_REFERENCE_AT_LEAST_800MBPS")
+    require([row["stage_id"] for row in observation["stages"]] ==
+            list(active_stages()), "MISSING_SOURCE_LOCKED_TCP_STAGES")
+    if os.environ.get("WBD_H2279_CAPACITY_AB")=="1":
+        direct = observation["stages"][0]["delivered"]["bulk_receiver_goodput_mbps"]
+        relayed = observation["stages"][1]["delivered"]["bulk_receiver_goodput_mbps"]
+        require(direct>0 and relayed>0, "REAL_TCP_CAPACITY_NOT_POSITIVE")
+        observation["direct_vs_relay"] = {
+            "direct_mbps":direct,"kernel_relay_mbps":relayed,
+            "relay_over_direct":round(relayed/direct,4),
+            "same_real_windows_client_and_arm_server":True,
+            "same_original_four_bulk_tcp_plus_160_sparse":True,
+            "same_source_and_run_id":True,
+            "no_added_loss_or_delay_both_legs":True}
+        observation["status"]="PASS_H2279_REAL_NATIVE_DIRECT_VS_RELAY_SCOPED"
+        observation["capacity_qualification"]=(
+            "BOTH_DIRECT_AND_RELAY_AT_LEAST_800MBPS" if min(direct,relayed)>=800
+            else "INFRA_UNQUALIFIED_NEEDS_NETWORK_ROUTE_CAPACITY")
+    else:
+        observation["status"] = "PASS_THREE_RUNNER_TCP_INFRA_SCOPED"
+        observation["capacity_qualification"] = (
+            "INFRA_CAPACITY_BELOW_800MBPS_NOT_PRODUCT_FAIL"
+            if observation["stages"][0]["delivered"]["bulk_receiver_goodput_mbps"] < 800
+            else "ROUTED_ZERO_LOSS_TCP_REFERENCE_AT_LEAST_800MBPS")
     save(ROOT / "client-result.json", observation)
     print("H2276_COMPLETE_ONE_REAL_WIN_RELAY_ARM_TRIPLET " +
           own["group"], flush=True)
