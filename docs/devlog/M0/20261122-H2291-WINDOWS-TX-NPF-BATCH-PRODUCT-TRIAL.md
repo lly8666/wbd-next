@@ -15,7 +15,7 @@
 - **计划验收**：先证明候选完整双组三Runner能跑且队列真实生效；只用本run绝对吞吐与CPU秒/真实GiB判断候选有没有明显机会，不把与不同Runner的H2290作配对收益。然后把原A（旧DLL）→B（候选DLL）→A′（旧DLL）放在**同一个真实Windows/ARM/relay机组三个连续25s窗口**测准确因果，必须至少两个独立三机组都不伤P99、TCP及时交付、zero local drop和Stop，才考虑默认晋级。若B全核/driver成本反恶化，立刻弃此候选再查NPF/WSL2 DPC及真正ARM RX而非盲扩大M1队列。剩余原双向200ms loss1/5% FEC2和其它平台仍OPEN，PR#68继续Draft。
 
 ```feature-impact
-{"kind":"none","reason":"H2291 adds opt-in only Windows real Rust NPF TX native 16-ready/64KiB sendqueue trial under explicit Cargo feature, preserves original all-default 8ready/16KiB. GoTLS, ARM, user config, Windows driver, original authenticated receipts and owned Stop unchanged."}
+{"kind":"none","ids":[],"reason":"H2291 adds opt-in only Windows real Rust NPF TX native 16-ready/64KiB sendqueue trial under explicit Cargo feature, preserves original all-default 8ready/16KiB. GoTLS, ARM, user config, Windows driver, original authenticated receipts and owned Stop unchanged."}
 ```
 
 ## H2291 真原产品新DLL两套三机结果（只认功能证据，不把不同VM记因果提升）

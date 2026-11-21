@@ -14,5 +14,5 @@
 - 后续用户目标仍为完整原Windows+ARM **双向200ms 1%/5% loss，FEC2 off→on→off** 与真游戏/TCP p99、内核本机zero-drop/少HOL和原Stop，029整个包未完成，原PR#68 Draft。不再做裸Winsock夹具竞赛或盲加本机queue。
 
 ```feature-impact
-{"kind":"none","reason":"H2292 only uses test-only original full signed Windows/ARM products and default-off H2291 trial feature, source-matched two real Windows Rust DLLs, authentic three-generation GoTLS/Wintun/TUN/owned Stop. No default app configs or Go/ARM product modification."}
+{"kind":"none","ids":[],"reason":"H2292 only uses test-only original full signed Windows/ARM products and default-off H2291 trial feature, source-matched two real Windows Rust DLLs, authentic three-generation GoTLS/Wintun/TUN/owned Stop. No default app configs or Go/ARM product modification."}
 ```
