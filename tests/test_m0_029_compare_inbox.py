@@ -136,6 +136,48 @@ class TestCompare(unittest.TestCase):
         self.assertEqual(out["trial_shape"],"B256_A64_B256")
         x["phases"][2]["client_inbox_slots"]=64
         with self.assertRaises(ValueError):mod.readout(x,SOURCE,"5")
+    def test_ge1_128_actual_arch_and_impact(self):
+        x=fixture()
+        x["scenario"]="GE1_BURST_200MS_EACH_WAY_NATIVE_ARM64_CLIENT_ONLY_INBOX_128_ABA"
+        x["netem_ge_stationary_parameters"]={
+            "analytical_mean_loss_pct":1.0,"good_to_bad_pct":0.252809,
+            "bad_to_good_pct":25.0,"bad_loss_pct":90.0,"good_loss_pct":0.1}
+        for idx,row in enumerate(x["phases"]):
+            stage=row.pop("server_inbox_slots")
+            row.update({"frozen_stage_slots":stage,
+                        "server_inbox_slots":64,
+                        "client_inbox_slots":(64,128,64)[idx],
+                        "native_cold_readback_verified":True,
+                        "client_generation":11+idx,
+                        "server_generation":21+idx})
+            if idx==1:row["name"]="inbox128_candidate"
+        x["only_changed_setting"]="authenticated client Rust M1 inbox 64→128→64; server fixed64"
+        out=mod.readout(x,SOURCE,"5")
+        self.assertEqual(out["trial_shape"],"A64_B128_A64")
+        self.assertEqual(out["native_architecture"],"aarch64")
+        self.assertNotIn("metadata_warning",out)
+        x["only_changed_setting"]="authenticated client Rust M1 inbox 64→256→64; server fixed64"
+        out=mod.readout(x,SOURCE,"5")
+        self.assertEqual(out["metadata_warning"],
+             "STALE_256_TOPLEVEL_LABEL_CONFLICTS_WITH_AUTHENTIC_COLD_128_PHASE_RECEIPTS")
+        x["netem_ge_stationary_parameters"]["good_to_bad_pct"]=0.16
+        with self.assertRaises(ValueError):mod.readout(x,SOURCE,"5")
+    def test_x86_native_client_128_and_wrong_arch_denied(self):
+        x=fixture()
+        x["scenario"]="ZERO_LOSS_0MS_NATIVE_X86_64_CLIENT_ONLY_INBOX_128_ABA"
+        x["architecture"]="x86_64"
+        for idx,row in enumerate(x["phases"]):
+            stage=row.pop("server_inbox_slots")
+            row.update({"frozen_stage_slots":stage,
+                        "server_inbox_slots":64,"client_inbox_slots":(64,128,64)[idx],
+                        "native_cold_readback_verified":True,
+                        "client_generation":10+idx,"server_generation":20+idx})
+            if idx==1:row["name"]="inbox128_candidate"
+        out=mod.readout(x,SOURCE,"5")
+        self.assertEqual(out["native_architecture"],"x86_64")
+        self.assertEqual(out["trial_shape"],"A64_B128_A64")
+        x["architecture"]="aarch64"
+        with self.assertRaises(ValueError):mod.readout(x,SOURCE,"5")
     def test_scalar_baseline_drift_is_explicit(self):
         r=mod.compare_scalar(100,130,120)
         self.assertEqual(r["candidate_vs_baselines"],"ABOVE_BOTH")

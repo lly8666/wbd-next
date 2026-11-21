@@ -42,7 +42,11 @@ def trial_profile(document):
         raise ValueError("explicit real native scenario required")
     if scenario=="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_REVERSED_BAB":
         side,shape,expected="client","B256_A64_B256",ORDER_BAB
-    elif scenario=="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_128_ABA":
+    elif scenario in (
+        "ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_128_ABA",
+        "GE1_BURST_200MS_EACH_WAY_NATIVE_ARM64_CLIENT_ONLY_INBOX_128_ABA",
+        "ZERO_LOSS_0MS_NATIVE_X86_64_CLIENT_ONLY_INBOX_128_ABA"
+    ):
         side,shape,expected="client","A64_B128_A64",ORDER_128
     elif scenario in (
         "ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_ABA",
@@ -87,7 +91,7 @@ def readout(document,source,run_id):
     if (document.get("status")!="PASS_SCOPED_REAL_ABA_MEASURED_NOT_PRODUCT_GAIN"
         or document.get("source_sha")!=source
         or str(document.get("run_id"))!=str(run_id)
-        or document.get("architecture")!="aarch64"
+        or document.get("architecture") not in ("aarch64","x86_64")
         or re.fullmatch(r"[0-9a-f]{40}",source) is None):
         raise ValueError("original native A/B/A SOURCE, run or status missing")
     phases=document.get("phases")
@@ -103,6 +107,12 @@ def readout(document,source,run_id):
     changed_side="client" if is_client else "server"
     prior_end=None
     side,shape,expected=trial_profile(document)
+    arch=document["architecture"]
+    scenario=document["scenario"]
+    if ("_X86_64_" in scenario and arch!="x86_64") or (
+        "_ARM64_" in scenario and arch!="aarch64"
+    ):
+        raise ValueError("native source ISA and scenario disagree")
     if is_client!=(side=="client"):
         raise ValueError("actual changed endpoint conflicts with scenario")
     for idx,phase in enumerate(phases):
@@ -157,10 +167,11 @@ def readout(document,source,run_id):
                 raise ValueError("missing echo RTT quantiles")
     paired=compare_reverse if shape=="B256_A64_B256" else compare_scalar
     report={"source_sha":source,"run_id":str(run_id),
+            "native_architecture":arch,
             "changed_inbox_side":changed_side,
             "trial_shape":shape,
             "status":"SAME_RUN_SCOPED_SCREEN_NOT_PRODUCT_PASS",
-            "reference":"one native ARM64 job, three sequential cold real-TLS/Rust owners; 20s four-stream case each leg",
+            "reference":"one native runner, three sequential cold real-TLS/Rust owners; 20s four-stream case each leg",
             "receiver_goodput_mbps":paired(*[
                 p["measure"]["original_product_tcp"]["receiver_bps"]/1e6 for p in phases]),
             "sender_and_receiver_cpu_seconds_per_gib":{},
@@ -188,12 +199,18 @@ def readout(document,source,run_id):
     g=report["receiver_goodput_mbps"]
     client=report["sender_and_receiver_cpu_seconds_per_gib"]["client"]
     server=report["sender_and_receiver_cpu_seconds_per_gib"]["server"]
+    declared=document.get("only_changed_setting")
+    if shape=="A64_B128_A64" and isinstance(declared,str) and (
+        "256" in declared and "128" not in declared
+    ):
+        report["metadata_warning"]="STALE_256_TOPLEVEL_LABEL_CONFLICTS_WITH_AUTHENTIC_COLD_128_PHASE_RECEIPTS"
+        report["qualifications"].append("Original artifact top-level parameter label is stale; rely on authenticated Rust per-phase cold readback, never that field")
     report["qualifications"].extend([
         "No native shared-TUN fairness benefit inferred: only one authenticated /32 in the scene",
         "Cannot call candidate useful if it only moves full drops to kernel or lowers goodput",
         "No cross-run or cross-ISA CPU causality; avoid unqualified physical WAN extrapolation",
         "No hard default promotion on one 20-second three-leg screen",
-        "1000B at 1Gbps: 64 M1 slots 0.512ms, 256 slots 2.048ms; all 256 jumbo slots ~16MiB total, ~12MiB added per lease"])
+        "1000B at 1Gbps: 64 M1 slots 0.512ms, 128 slots 1.024ms, 256 slots 2.048ms; jumbo extra per lease ~4MiB at128 or ~12MiB at256"])
     if shape=="B256_A64_B256":
         # Two candidate legs around one original baseline are a reverse
         # falsification, not a substitute for an independently repeated A/B/A.
