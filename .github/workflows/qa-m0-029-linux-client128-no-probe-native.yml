@@ -19,6 +19,7 @@ on:
       - 'crates/wbd-platform/src/linux_raw_carrier.rs'
       - 'crates/wbd-platform/src/rx_ipv4_tcp.rs'
       - 'r0/go_overlay/internal/v4productcli/linux.go'
+      - 'r0/go_overlay/internal/v4productcli/game_linux.go'
       - 'tools/m0_029_product_shared_tun_noprobe.py'
       - 'tools/m0_plan029_linux_dual_native_build.sh'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go'

@@ -191,7 +191,7 @@ def main():
         # absence or read error must NOT be inferred from CLI --repair off.
         server_log=node.logs["server"].read_text(errors="replace")
         server_ready=re.findall(
-            r"V4_PUBLIC_MULTI_NATIVE_OUTER_READY role=server client_port=(\d+) repair_enabled=(\d+) proof=authenticated_original_rust_owner",
+            r"V4_PUBLIC_MIXED_NORMAL_OUTER_READY role=server client_port=(\d+) repair_enabled=(\d+) proof=authenticated_original_rust_owner",
             server_log)
         if len(server_ready)!=1 or server_ready[0][1]!="0" or int(server_ready[0][0])<=0:
             raise RuntimeError("M029_SERVER_AUTHENTICATED_RUST_OUTER_OFF_READY_MISSING")

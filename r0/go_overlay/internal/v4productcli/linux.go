@@ -2071,20 +2071,6 @@ func runSharedMultiServer(
         if leases!=nil{autoLease=1}
         log.Printf("V4_PUBLIC_MULTI_SESSION_READY role=server one_port=%d active_detached_flows=%d auto_lease=%d original_TLS=1 Rust_M4=1",
             c.localPort,count,autoLease)
-        // One authenticated original Rust-owner readback at cold READY.
-        // Multi-session server Stop can omit this session's OuterCounters
-        // marker; CLI --outer-repair alone must NOT certify effective state.
-        // Read after original TLS/Rust M4 and /32 promotion, outside mu.
-        // No queue, per-packet FFI, new timers or traffic ownership.
-        if effective,readErr:=p.OriginalOuterCounters();readErr==nil{
-            enabled:=0
-            if effective.OuterRepairEnabled{enabled=1}
-            log.Printf("V4_PUBLIC_MULTI_NATIVE_OUTER_READY role=server client_port=%d repair_enabled=%d proof=authenticated_original_rust_owner",
-                flow.ClientPort,enabled)
-        }else{
-            log.Printf("V4_PUBLIC_MULTI_NATIVE_OUTER_READY_UNAVAILABLE role=server client_port=%d",
-                flow.ClientPort)
-        }
         for _,old:=range older{
             if err:=retire(old,"same-lease-new-generation");err!=nil{
                 select{case transportErr<-err:default:}
