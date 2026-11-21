@@ -721,6 +721,8 @@ type V4PublicLoopPulse struct{
     // Android: real original Rust M4 business path; Linux leaves these zero.
     TunIPv4Admitted,TunIPv4Rejected,BusinessRawCopied,BusinessReverseTun uint64
     DnsUDP53Seen,DnsTCP53Seen uint64
+    // Android-only native DNS proof counters: Linux stays zero-valued.
+    DnsTunnelRawCopied,DnsTunnelReplyTun uint64
     // A45 Android real RAW RX and selected-App inner protocol evidence.
     RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
     RawAuthRejected,ReverseTunWriteFailed uint64

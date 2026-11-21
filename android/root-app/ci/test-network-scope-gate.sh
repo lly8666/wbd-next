@@ -645,6 +645,7 @@ assert 'dns_tunnel_reply_tun.fetch_add(u64::from(dns_written)' in nativeworker
 assert 'dns_raw_copied.write(e.android_metrics.dns_tunnel_raw_copied' in nativeworker
 assert 'dns_reply_tun.write(e.android_metrics.dns_tunnel_reply_tun' in nativeworker
 assert 'DnsTunnelRawCopied:dnsRaw,DnsTunnelReplyTun:dnsTun' in android_bridge
+assert 'DnsTunnelRawCopied,DnsTunnelReplyTun uint64' in linux_bridge
 assert 'DNS_TUNNEL_RAW_COPIED' in nativecli
 assert 'DNS_TUNNEL_REVERSE_TUN_WRITTEN' in nativecli
 assert 'ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN' in root_svc
