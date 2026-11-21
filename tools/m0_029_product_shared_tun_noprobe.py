@@ -41,6 +41,10 @@ RAWCOST=(RAWCOST=="1")
 RECOVERY=(RECOVERY=="1")
 if (RAWCOST and not (STAGE and SERVICE)) or (RECOVERY and (STAGE or SERVICE or RAWCOST)):
     raise RuntimeError("M029_RAW_COST_REQUIRES_NATIVE_STAGE_AND_SERVICE")
+TCP_TIMELINE=os.environ.get("WBD_M0_029_ECHO_TIMELINE","0")
+if TCP_TIMELINE not in ("0","1"):
+    raise RuntimeError("M029_TCP_DIRECTIONAL_TIMELINE_INVALID")
+TCP_TIMELINE=(TCP_TIMELINE=="1")
 
 def authenticate_source_and_bundle():
     if os.environ.get("GITHUB_ACTIONS")!="true" or platform.machine()!=ARCH or (
@@ -84,6 +88,15 @@ def main():
     ready=G["ready"]
 
     class ProductShared(Owned):
+        def spawn(self,role,place,argv):
+            # Frozen original fixture's small TCP/UDP real app is untouched
+            # except test-only numeric timestamps in the same namespace.
+            if TCP_TIMELINE and role.startswith("small-"):
+                if not argv or argv[0]!="env":
+                    raise RuntimeError("M029_ECHO_TCP_TIMELINE_NOT_ORIGINAL_APP")
+                argv=["env","WBD_M0_029_ECHO_TIMELINE=1",*argv[1:]]
+            return super().spawn(role,place,argv)
+
         def start_product(self):
             # Original TLS, owned cert/secret and route key, never test keys
             # supplied straight to Rust instead of the original Go owner.
@@ -125,7 +138,8 @@ def main():
             self.spawn("direct-server",self.server,
                 ["iperf3","-s","-B",G["SERVER_IP"],"-p","5202"])
             self.spawn("echo-server",self.server,[
-                "env","GITHUB_SHA="+SHA,"GITHUB_RUN_ID="+RUN,
+                "env",*(["WBD_M0_029_ECHO_TIMELINE=1"] if TCP_TIMELINE else []),
+                "GITHUB_SHA="+SHA,"GITHUB_RUN_ID="+RUN,
                 "python3","-u",str(ROOT/"tools/m0_h2244_smallflow_echo.py"),
                 "server","--bind",G["SERVER_INNER"]])
             if not ready(self.logs["echo-server"],"H2244_ECHO_SERVER_READY",15):
@@ -192,6 +206,7 @@ def main():
             "native_user_system_cpu_service_observer":SERVICE,
             "original_m4_raw_sendmmsg_sampled_timing":RAWCOST,
             "same_source_recovery_leg":RECOVERY,
+            "tcp_directional_application_timeline":TCP_TIMELINE,
             "outer_ip_mtu_explicit_bytes":1160,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
@@ -377,6 +392,60 @@ def main():
                 result["m4_exact_sendmmsg_timeline"][role]={
                     "samples":samples,"metric":"sampled_true_sendmmsg_wall_ns_vs_full_raw_driver_wall_ns",
                     "not_cpu_time_not_all_calls_not_peer_receipt":True}
+        if TCP_TIMELINE:
+            # One real client TCP stream/one server worker in this leg.
+            # Both namespaces share Linux CLOCK_MONOTONIC, and sequence
+            # numbers match existing test-only 16-byte echo frames.
+            small_path=G["OUT"]/"product_no_probe128-echo.json"
+            small_raw=json.loads(small_path.read_text())
+            client_trace=small_raw.get("tcp_client_trace",[])
+            if not ready(node.logs["echo-server"],"H2259_SERVER_TCP_TRACE ",5):
+                raise RuntimeError("M029_TCP_SERVER_DIRECTIONAL_TRACE_MISSING")
+            raw=node.logs["echo-server"].read_text(errors="replace")
+            matches=re.findall(r"^H2259_SERVER_TCP_TRACE (\\[.*\\])$",raw,re.M)
+            if len(matches)!=1:
+                raise RuntimeError("M029_EXACTLY_ONE_TCP_SERVER_STREAM_REQUIRED")
+            server_trace=json.loads(matches[0])
+            if len(client_trace)!=160 or len(server_trace)!=160:
+                raise RuntimeError("M029_TCP_TRACE_MUST_COVER_ALL_160_REAL_REPLIES")
+            if len({x[0] for x in client_trace})!=160 or (
+                len({x[0] for x in server_trace})!=160):
+                raise RuntimeError("M029_TCP_DIRECTIONAL_DUPLICATE_SEQUENCE")
+            server_by_seq={x[0]:x for x in server_trace}
+            samples=[]
+            for row in client_trace:
+                seq,c_start,c_done,c_reply=row
+                matching=server_by_seq.get(seq)
+                if (matching is None or c_done is None or c_reply is None):
+                    raise RuntimeError("M029_TCP_DIRECTIONAL_MISSING_AUTHENTIC_TEST_REPLY")
+                _,s_recv,s_done=matching
+                if not (c_start<=c_done and c_start<=s_recv<=s_done and
+                        c_start<=c_reply):
+                    raise RuntimeError("M029_TCP_DIRECTIONAL_MONOTONIC_ORDER_INVALID")
+                samples.append({
+                    "seq":seq,"client_before_send_ns":c_start,
+                    "client_send_done_ns":c_done,"server_recv_ns":s_recv,
+                    "server_send_done_ns":s_done,"client_reply_ns":c_reply,
+                    "forward_app_observed_ms":round((s_recv-c_start)/1e6,4),
+                    "server_processing_ms":round((s_done-s_recv)/1e6,4),
+                    "reverse_app_observed_ms":round((c_reply-s_done)/1e6,4),
+                    "client_sendall_ms":round((c_done-c_start)/1e6,4),
+                    "end_to_end_ms":round((c_reply-c_start)/1e6,4)
+                })
+            def pct(values,n):
+                values=sorted(values)
+                return round(values[max(0,(len(values)*n+99)//100-1)],4)
+            summaries={}
+            for field in ("forward_app_observed_ms","server_processing_ms",
+                          "reverse_app_observed_ms","client_sendall_ms","end_to_end_ms"):
+                values=[x[field] for x in samples]
+                summaries[field]={"p50":pct(values,50),"p95":pct(values,95),
+                                  "p99":pct(values,99),"max":max(values)}
+            result["tcp_directional_timeline"]={
+                "scope":"test_only_one_real_inner_TCP_socket_same_host_monotonic",
+                "same_original_payload_and_real_160_sequences":True,
+                "samples":samples,"summaries_ms":summaries,
+                "caution":"server_recv is app-recv not inner M3, TCP sendall return is not peer ACK"}
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
         if traffic["receiver_bytes"]<=0 or traffic["tcp_streams"]!=4 or (

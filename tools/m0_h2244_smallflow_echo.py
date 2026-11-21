@@ -26,6 +26,9 @@ TCP_PORT=53222
 COUNT=160
 GAP_MS=80
 START_DELAY_S=2.0
+# Diagnostic only: original kernel TCP echo payload/wire and cadence
+# never change. Same-host monotonic timestamps, no nonce or payload stored.
+TCP_TRACE=os.environ.get("WBD_M0_029_ECHO_TIMELINE")=="1"
 DRAIN_S=2.5
 
 def frame(nonce,seq):
@@ -60,6 +63,7 @@ def _udp_server(bind, stop):
 def _tcp_session(conn):
     conn.settimeout(2.5)
     pending=bytearray()
+    trace=[]
     try:
         while True:
             try: part=conn.recv(4096)
@@ -70,11 +74,18 @@ def _tcp_session(conn):
                 f=bytes(pending[:FRAME_LEN])
                 del pending[:FRAME_LEN]
                 if not f.startswith(MAGIC):return
+                if TCP_TRACE:
+                    seq=struct.unpack("!I",f[12:16])[0]
+                    received_ns=time.monotonic_ns()
                 conn.sendall(f)
+                if TCP_TRACE:
+                    trace.append([seq,received_ns,time.monotonic_ns()])
     except (BrokenPipeError,ConnectionResetError,OSError):
         pass
     finally:
         conn.close()
+        if TCP_TRACE:
+            print("H2259_SERVER_TCP_TRACE "+json.dumps(trace,separators=(",",":")),flush=True)
 
 def run_server(bind):
     stop=threading.Event()
@@ -109,6 +120,7 @@ def run_client(address,out,count,gap_ms,start_delay_s):
     tcp.settimeout(0.2)
     sent={"udp":{}, "tcp":{}}
     recv={"udp":{}, "tcp":{}}
+    tcp_send_done={}
     errors=[]
     duplicates={"udp":0,"tcp":0}
     start_mono=time.monotonic_ns()+int(start_delay_s*1e9)
@@ -132,7 +144,9 @@ def run_client(address,out,count,gap_ms,start_delay_s):
             sent[kind][i]=time.monotonic_ns()
             try:
                 if kind=="udp":udp.sendto(payload,(address,UDP_PORT))
-                else:tcp.sendall(payload)
+                else:
+                    tcp.sendall(payload)
+                    if TCP_TRACE:tcp_send_done[i]=time.monotonic_ns()
             except OSError as exc:
                 sent[kind].pop(i,None)
                 errors.append("H2244_"+kind+"_SEND_"+type(exc).__name__)
@@ -206,6 +220,11 @@ def run_client(address,out,count,gap_ms,start_delay_s):
         "errors":errors,
         "sample_scope":"160 real requests/protocol, SCREEN not product p99 SLA"
     }
+    if TCP_TRACE:
+        data["tcp_client_trace"]=[
+            [seq,sent["tcp"][seq],tcp_send_done.get(seq),recv["tcp"].get(seq)]
+            for seq in sorted(sent["tcp"])]
+        data["tcp_trace_scope"]="same_host_monotonic_test_app_only_not_wire_or_kernel_path"
     pathlib.Path(out).write_text(json.dumps(data,sort_keys=True,indent=2)+"\n")
     print("H2244_SMALL_ECHO_RESULT "+status,flush=True)
     if status.startswith("FAIL"):

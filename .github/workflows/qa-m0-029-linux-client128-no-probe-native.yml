@@ -21,6 +21,7 @@ on:
       - 'r0/go_overlay/internal/v4productcli/linux.go'
       - 'r0/go_overlay/internal/v4productcli/game_linux.go'
       - 'tools/m0_029_product_shared_tun_noprobe.py'
+      - 'tools/m0_h2244_smallflow_echo.py'
       - 'tools/m0_plan029_linux_dual_native_build.sh'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go'
       - 'tools/m0_plan029_linux_dual_isa_suite.py'
@@ -153,7 +154,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
-          python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib,platform
           d=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
@@ -186,7 +187,7 @@ jobs:
         timeout-minutes: 14
         run: |
           set -euo pipefail
-          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib
           plain=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
@@ -223,7 +224,7 @@ jobs:
         timeout-minutes: 9
         run: |
           set -euo pipefail
-          WBD_M0_029_RECOVERY=1 python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_RECOVERY=1 WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib
           paths=["m029-product-shared-noprobe/summary.json",
@@ -243,6 +244,16 @@ jobs:
           assert not c["original_m4_raw_sendmmsg_sampled_timing"]
           assert c["same_source_recovery_leg"]
           assert not c["independent_m1_m4_stage_observer"]
+          if c["tcp_directional_application_timeline"]:
+              assert a["tcp_directional_application_timeline"]
+              assert b["tcp_directional_application_timeline"]
+              for leg in (a,b,c):
+                  diag=leg["tcp_directional_timeline"]
+                  assert len(diag["samples"])==160
+                  for row in diag["samples"]:
+                      assert row["end_to_end_ms"]>=0
+                  assert diag["same_original_payload_and_real_160_sequences"]
+              print("M029_H2259_ORIGINAL_TCP_DIRECTIONAL_160_APP_TIMESTAMPS_A_B_APRIME_PASS",flush=True)
           print("M029_H2258_SAME_RELEASE_NATIVE_A_B_APRIME_REAL_APP_STOP_PASS_NOT_QOS_PASS",flush=True)
           PY
       - name: Upload same-SOURCE scoped native diagnostics (no secret files or raw captures)
