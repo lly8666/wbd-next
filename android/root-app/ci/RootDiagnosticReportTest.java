@@ -640,6 +640,7 @@ public final class RootDiagnosticReportTest {
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UNDERLAY_FAILED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_RAW_FAILED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUN_FAILED,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_FAILED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_HEALTH_FAILED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_START_FAILED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UID_ROUTE_FAILED,
@@ -662,6 +663,7 @@ public final class RootDiagnosticReportTest {
         for(RootDiagnosticReceipt.Event success:new RootDiagnosticReceipt.Event[]{
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_NATIVE_COMMIT_OK,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_LEASE_OS_OK,
+            RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_FILTER_OK,
             RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_GO_RX_HANDOFF_OK,
@@ -695,6 +697,7 @@ public final class RootDiagnosticReportTest {
         if(a47.recordNativeSnapshot(
             "V4_PUBLIC_ANDROID_M4_DIAG role=client kind=rx password=123"))
             throw new AssertionError("untrusted stderr accepted");
+        System.out.println("ANDROID_B3B_COLD_NATIVE_DNS_EFFECTIVE_AND_FAILED_SAFE_REPORT_HOST_PASS");
         System.out.println("ANDROID_A47_NATIVE_NUMERIC_M4_REAL_APK_REPORT_HOST_PASS");
         System.out.println("ANDROID_A40_PROTECTED_POSTAUTH_REAL_NATIVE_OS_M4_STAGE_HOST_PASS");
         System.out.println("ANDROID_A39_ZERO_EVENT_APP_PREFLIGHT_FIXED_DIAGNOSTIC_HOST_PASS");

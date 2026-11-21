@@ -610,6 +610,14 @@ assert 'AndroidTunnelDNS bool' in client
 assert 'bridge.enableAndroidTunnelDNS()' in client
 assert 'v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)' in client
 assert 'V4_PUBLIC_ANDROID_TUNNEL_DNS_EFFECTIVE role=client enabled=1' in client
+assert 'ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED' in root_svc
+assert 'ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_FAILED' in root_svc
+assert 'ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED' in Path(
+    "android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
+assert 'ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_FAILED' in Path(
+    "android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+assert 'ANDROID_B3B_COLD_NATIVE_DNS_EFFECTIVE_AND_FAILED_SAFE_REPORT_HOST_PASS' in Path(
+    "android/root-app/ci/RootDiagnosticReportTest.java").read_text()
 assert 'wbd_m0_embedded_go_android_tunnel_dns_enable' in android_bridge
 assert 'wbd_m0_embedded_go_android_tunnel_dns_effective' in android_bridge
 assert 'func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error' in linux_bridge
@@ -620,7 +628,9 @@ assert 'e.android_dns_hijack_ready=true;' in engine_entry
 assert 'e.android_dns_physical_ready' in engine_entry
 assert 'if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&' in nativeworker
 assert 'e.android_dns_flows.rewrite_query(' in nativeworker
-assert 'TunnelDnsUdpFlows::is_tunnel_reply_candidate(business)' in owner
+# Rust formats the owner type and its method on separate source lines.
+assert 'crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::' in owner
+assert 'is_tunnel_reply_candidate(business)' in owner
 assert 'dns_flows.rewrite_reply(' in owner
 assert 'pub(crate) fn rewrite_query(' in backend
 assert 'pub(crate) fn rewrite_reply(' in backend

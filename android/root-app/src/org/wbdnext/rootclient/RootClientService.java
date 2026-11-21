@@ -625,6 +625,10 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_RAW_ATTACHED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUN_ATTACHED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUN_ATTACHED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUNNEL_DNS_ENABLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUNNEL_DNS_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_FAILED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=M4_STARTED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=COLD_RTO_STOP_FAILED"))

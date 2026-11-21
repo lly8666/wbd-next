@@ -85,6 +85,8 @@ public final class OriginalGoMilestonesTest {
             "V4_PUBLIC_ANDROID_POSTAUTH role=client class=UNDERLAY_OK",
             "V4_PUBLIC_ANDROID_POSTAUTH role=client class=RAW_ATTACHED",
             "V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUN_ATTACHED",
+            "V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUNNEL_DNS_ENABLED",
+            "V4_PUBLIC_ANDROID_POSTAUTH role=client class=TUNNEL_DNS_FAILED",
             "V4_PUBLIC_ANDROID_POSTAUTH role=client class=M4_STARTED",
             "V4_PUBLIC_ANDROID_BUSINESS role=client class=TUN_IPV4_SEEN",
             "V4_PUBLIC_ANDROID_BUSINESS role=client class=TUN_IPV4_REJECTED",

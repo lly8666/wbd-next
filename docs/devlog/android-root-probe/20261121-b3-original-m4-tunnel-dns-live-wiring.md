@@ -11,6 +11,9 @@
 3. 原Rust现有唯一 M4 TX readv：仅捕获已进入TUN、非碎片、标准QNAME完整的应用UDP53，当前已授权时重写目的1.1.1.1、保留原查询目标/源端口/ID/QNAME于本代64槽，按原M1/M3 AEAD+PN/Seq与LINK/RAW发送。原Rust RX仅经真实M3 AEAD+unique PN/replay+完整LINK/32租约后接收来自1.1.1.1:53且synthetic源端口匹配的响应，验证QNAME、ID、地址/长度，恢复原应用DNS目标的源IP/端口、IPv4/UDP校验再写唯一真实TUN；任何未匹配包不伪造合法DNS。原owner Stop撤销映射，绝不增加Socket/新TUN reader/Go每包中继。
 4. CI：签名ARM64 APK必须包含实际App→Service→Go CLI开关；同源原Android ARM64/x86 Rust必须导出两个native C ABI；原Rust DNS Host含两个来自不同原DNS解析器的真实IPv4/UDP查询与回复逆映射/Stop测试；Linux原Go/Rust Oracle保持原件；源锁脚本检查实际全链，不能凭文案生成PASS。新SOURCE CI未返回前记候选。
 
+## B3b｜同源产品CI发现源码门误报；冷授权终端凭据
+B3首次产品Action #44891389121 已证明Go/Rust双ABI构建、真实原Rust M3、B3新逆映射1/1 PASS和此前7/7 DNS测试PASS；正式APK Job的source-gate第527行误认原Rust `TunnelDnsUdpFlows::\n is_tunnel_reply_candidate` 跨行书写为未接线。B3b改用原owner类型标记与原方法标记双断言，不改任一认证/UDP生产字节。Root安全诊断新增原Go Rust native readback `TUNNEL_DNS_ENABLED` 与确切失效 `TUNNEL_DNS_FAILED` 两枚固定枚举，Service只接收已锚定原Go时戳+标记，不保存stdout/私有DNS QNAME，报告将其区分于仅勾选UI和System Resolver接管。精确原JVM测试覆盖成功、失败阶段回读。前次Action失败保留，不假追认APK PASS。
+
 ## 明确尚未完成
 
 **这是产品M4捕获UDP/53的真实开关，不是Android系统 DNS 接管。** Android netd/resolv 私有DNS并不一定经过已选择App UID规则：没有改变Android系统DNS/NAT，System Resolver捕获、CN8503 QNAME选择→223.5.5.5同代物理UDP/TCP、TCP53分片、AAAA/IPv6、直连真实IP路由、Fixed/Auto/Game的Android RustM4皆未据此取得功能准入。原 `wbd_m0_embedded_go_loop_dns_ingress_observed` 的 `hijack_enabled=0` 继续表示没有系统级DNS捕获资格；独立 tunnel-only cold effective=1 是不同事实。后续按功能卡逐段实现并对真实设备提供可读证据，严格区分Host、编译、同源真实网络。
