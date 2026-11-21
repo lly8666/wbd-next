@@ -21,13 +21,17 @@ final class PhysicalNetwork {
     final int ifindex;
     final int mtu;
     final String address;
-    private PhysicalNetwork(long handle,String name,int index,int mtu,String addr){
+    final boolean hasInternetCapability;
+    private PhysicalNetwork(long handle,String name,int index,int mtu,String addr,
+                            boolean internetCapability){
         this.handle=handle;this.interfaceName=name;
         this.ifindex=index;this.mtu=mtu;this.address=addr;
+        this.hasInternetCapability=internetCapability;
     }
     String title(){
         return interfaceName+"  "+address+"  MTU "+mtu+
-            "  Network "+Long.toUnsignedString(handle);
+            "  Network "+Long.toUnsignedString(handle)+
+            (hasInternetCapability?"":"  [仅本地链路：Android未声明Internet]");
     }
     boolean same(PhysicalNetwork other){
         return other!=null&&handle==other.handle&&
@@ -35,15 +39,16 @@ final class PhysicalNetwork {
             ifindex==other.ifindex&&mtu==other.mtu&&
             address.equals(other.address);
     }
-    // B24: USB/Ethernet uses the same real Network/ifindex/IPv4 owner
-    // and original RAW interface as Wi-Fi/cellular. No VPN or new route.
-    static boolean physicalInternet(NetworkCapabilities caps){
-        return caps!=null&&
-            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)&&
-            !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)&&
-            (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)||
-             caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)||
-             caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
+    // B27: no INTERNET requirement. Many user-controlled WiFi/Ethernet
+    // LAN links reach a nearby WBD server without Internet validation.
+    // The SAME cold selection and Service callback policy is used; the
+    // original kernel IPv4/interface/MTU check is still mandatory.
+    static boolean physicalUnderlay(NetworkCapabilities caps){
+        return caps!=null&&PhysicalUnderlayPolicy.accepts(
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI),
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR),
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET),
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN));
     }
     static List<PhysicalNetwork> available(Context context){
         ConnectivityManager cm=(ConnectivityManager)context.getSystemService(
@@ -53,7 +58,7 @@ final class PhysicalNetwork {
         for(Network network:cm.getAllNetworks()){
             try{
                 NetworkCapabilities caps=cm.getNetworkCapabilities(network);
-                if(!physicalInternet(caps)){
+                if(!physicalUnderlay(caps)){
                     continue;
                 }
                 LinkProperties link=cm.getLinkProperties(network);
@@ -86,7 +91,8 @@ final class PhysicalNetwork {
                 if(addr==null)continue;
                 long handle=network.getNetworkHandle();
                 if(handle==0)continue;
-                out.add(new PhysicalNetwork(handle,name,iface.getIndex(),mtu,addr));
+                out.add(new PhysicalNetwork(handle,name,iface.getIndex(),mtu,addr,
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)));
             }catch(Exception ignored){
                 // A disappearing Network is never a candidate.
             }

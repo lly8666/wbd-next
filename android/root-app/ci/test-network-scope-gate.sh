@@ -10,6 +10,13 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/NetworkScopeGate.java \
   android/root-app/ci/NetworkScopeGateTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.NetworkScopeGateTest
+# B27: execute exact production physical-underlay policy in plain JVM.
+# INTERNET capability is deliberately not an input to this function;
+# actual native socket+LinkProperties checks remain in PhysicalNetwork.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/PhysicalUnderlayPolicy.java \
+  android/root-app/ci/PhysicalUnderlayPolicyTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.PhysicalUnderlayPolicyTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/RootStopCommand.java \
   android/root-app/ci/RootStopCommandTest.java
@@ -178,9 +185,23 @@ assert 'AllAppRouteScope.same(this,excludedAppIDs,managerPackages)' in s, "verif
 # shared physical policy; refresh never silently changes valid selection.
 physical=Path("android/root-app/src/org/wbdnext/rootclient/PhysicalNetwork.java").read_text()
 assert 'NetworkCapabilities.TRANSPORT_ETHERNET' in physical
-assert 'if(!physicalInternet(caps))' in physical
-assert 'PhysicalNetwork.physicalInternet(caps)' in s
+assert 'if(!physicalUnderlay(caps))' in physical
+assert 'PhysicalNetwork.physicalUnderlay(caps)' in s
 print("ANDROID_B24_ETHERNET_ORIGINAL_PHYSICAL_UNDERLAY_SOURCE_PASS")
+# B27: a physically usable LAN does not require Android to call it
+# an Internet-capable Network. Keep the same selected owner on a
+# capability-only flip, with no auto-roam or new Rust/Go packet path.
+assert 'PhysicalUnderlayPolicy.accepts(' in physical
+assert 'caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)' in physical
+assert 'caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)' in physical
+assert 'NetworkRequest request=new NetworkRequest.Builder()' in s
+request=s.split('NetworkRequest request=new NetworkRequest.Builder()',1)[1].split('cm.registerNetworkCallback',1)[0]
+assert '.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)' not in request
+assert '.addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)' in request
+assert '.addTransportType(NetworkCapabilities.TRANSPORT_WIFI)' in request
+assert '.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)' in request
+assert 'hasInternetCapability?"":"  [仅本地链路' in physical
+print("ANDROID_B27_LAN_ONLY_ANDROID_NETWORK_REQUEST_REAL_SERVICE_SOURCE_PASS")
 argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
 assert 'OriginalGoCommandArgs.build(' in s, "production RootService must use host-tested original Go argv"
 assert 'for(String a:args)quotedArgs.add(q(a))' in s, "every native argv token is shell quoted"

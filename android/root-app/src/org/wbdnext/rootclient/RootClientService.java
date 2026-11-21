@@ -88,7 +88,7 @@ public final class RootClientService extends Service {
                     requestStop("PHYSICAL_NETWORK_LOST — withdrawing UID policy");
             }
             @Override public void onCapabilitiesChanged(Network network,NetworkCapabilities caps){
-                boolean valid=PhysicalNetwork.physicalInternet(caps);
+                boolean valid=PhysicalNetwork.physicalUnderlay(caps);
                 if(gate.changed(network.getNetworkHandle(),valid))
                     requestStop("PHYSICAL_NETWORK_CAPABILITIES_CHANGED");
             }
@@ -102,10 +102,15 @@ public final class RootClientService extends Service {
                     requestStop("PHYSICAL_NETWORK_BLOCKED");
             }
         };
-        // Register ALL physical candidates, not only the default network.
-        // A different Network's event cannot revoke our selected handle.
+        // Listen to the exact selected WiFi/cell/Ethernet even when the
+        // selected LAN has NO INTERNET capability. Android INTERNET
+        // capability changing alone must not silently kill a valid
+        // physically-bound original Go/Rust session.
         NetworkRequest request=new NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build();
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
+            .build();
         cm.registerNetworkCallback(request,callback,networkEvents);
         synchronized(this){
             watchedManager=cm;

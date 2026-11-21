@@ -251,7 +251,7 @@ final class RootDeviceSelfTest {
         }
         if(chosen==null||PhysicalNetwork.exact(ctx,chosen.handle,
            chosen.interfaceName,chosen.ifindex,chosen.mtu,chosen.address)==null){
-            events.add("PHYSICAL_NETWORK=FAIL (refresh real Wi-Fi/cellular Network)");
+            events.add("PHYSICAL_NETWORK=FAIL (refresh real Wi-Fi/cellular/Ethernet IPv4 Network)");
             return String.join("\n",events);
         }
         events.add("NATIVE_ARM64_KERNEL=PASS (actual uname aarch64)");

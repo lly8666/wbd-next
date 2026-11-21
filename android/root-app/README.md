@@ -40,6 +40,12 @@ Selected-App discovery also includes packages exposing Android's regular **plain
 
 Neither this work nor the prior DNS modes capture Android `netd` system resolver traffic. Existing UDP/53 logic only handles packets that actually enter the original Rust M4 TUN, and no root/system UID routes, new TLS layer or extra packet loop were added. All Android device E2E, system DNS interception and performance remain NOT_RUN without real evidence.
 
+## B27 · LAN-only Wi-Fi / USB Ethernet physical underlay
+
+A real Android Wi-Fi or USB Ethernet `Network` can carry working local IPv4 to a WBD server even without Android's `NET_CAPABILITY_INTERNET` flag. Previously both the Root App chooser and the foreground Service watcher incorrectly excluded those links, and its callback `NetworkRequest` only subscribed to Internet-capable Networks. The selection and its watcher now reuse the same **physical transport / not VPN** policy, while retaining all original kernel interface, ifindex, LinkProperties IPv4, MTU, generation and owned Stop checks. The callback explicitly subscribes to Wi-Fi, cellular and Ethernet, not only Internet-capable networks.
+
+The dropdown labels LAN-only candidates as lacking the Android Internet capability; this is **not** an assertion that a WBD server is reachable. For a LAN-only link, enter the server's directly reachable **IPv4** and separately configure its TLS SNI, because the existing original-Go hostname bootstrap uses physical 223.5.5.5 and may be unavailable without internet. No automatic cellular fallback, broad Root rule, system DNS rewrite or additional hotpath worker is introduced. Changes of actual physical handle/ifindex/local IPv4/MTU still terminate the owned generation. B27 host/signed APK evidence is not a physical-device LAN or application delivery PASS.
+
 ## Honest build and device boundary
 
 - `.github/workflows/android-root-product-a1.yml` builds Rust/Go AArch64

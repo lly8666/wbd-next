@@ -605,7 +605,7 @@ public final class RootClientActivity extends Activity {
         TextView intro=new TextView(this);
         intro.setText("WBD Root Lite v2 · ARM64 简版测试\n"+
             "原 Go FakeTCP/TLS + 原 Rust M4；Normal/off 默认，Fixed/Auto 显式实验选项；非 VPN/FakeIP。\n"+
-            "① 选择实体 Wi-Fi/移动网络  ② 输入 WBD 服务器/账户/Key\n"+
+            "① 选择实体 Wi-Fi/移动/有线IPv4网络  ② 输入 WBD 服务器/账户/Key\n"+
             "③ START 后查看固定阶段码，STOP 精确撤销 UID/清理。\n"+
             "首次测试建议取消下面的「默认全部普通App」，只勾选一个测试App。\n"+
             "TLS默认不检验证书（与主线一致），不验证服务器身份；严格模式可手动开启。\n"+
@@ -632,6 +632,11 @@ public final class RootClientActivity extends Activity {
         refresh.setText("Refresh physical Networks");
         refresh.setOnClickListener(v->chooseNetworks());
         pane.addView(refresh);
+        TextView lanHelp=new TextView(this);
+        lanHelp.setText("支持没有公网互联网的真实 Wi-Fi/USB Ethernet 局域网，"+
+            "但服务器必须在该链路上可达。没有可用外网DNS时直接填服务器 IPv4，"+
+            "TLS SNI 单独填写；不会自动切换当前Root会话的网卡。");
+        pane.addView(lanHelp);
         Button selfTestButton=new Button(this);
         selfTestButton.setText("A12 一键自检 ARM64/KSU/TUN/UID入TUN及分阶段路由诊断（免服务器）");
         selfTestButton.setOnClickListener(v->runDeviceSelfTest());

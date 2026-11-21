@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B27 LAN-only Wi-Fi/USB Ethernet 原物理出口**：基线 B26 `c48d5923` 已由同源Actions验证11 SUCCESS/4 SKIPPED（Android签名APK＋原Go/Rust双ABI＋Linux原服务端Oracle，非手机E2E）。原 `PhysicalNetwork.available` 与 `RootClientService.onCapabilitiesChanged` 均要求Android `NET_CAPABILITY_INTERNET`，同时回调只注册Internet Network；因此有实际网卡IPv4、ifindex、MTU、可达**局域网**WBD服务器但被Android标记没有互联网的实体Wi-Fi/USB Ethernet会在UI不可选或监听丢失。B27将真实物理出口资格明确改成Wi-Fi/蜂窝/Ethernet且非VPN＋严格Kernel/LinkProperties本机IPv4同源读回，NetworkRequest按三类实际TRANSPORT订阅**无需INTERNET**；Internet capability本身变化不再释放已有同一原生owner。UI对无此标记的Network单独标“仅本地链路”，可填同链路可达的服务器**直接IPv4**与独立TLS SNI；不自动切网、不跳过原Go认证/32/M4与owned Stop、不更改主线HTTP/TLS或Rust RAW/TUN/DNS。这只完成软件接线；Android实体LAN接入/应用业务/E2E/CPU均NOT_RUN。Android系统netd DNS仍未由UID规则捕获。
+
+
 > **2026-11-22 B26 日常使用接线（当前SOURCE的CI另验）**：在 B25 `776cec4f` 原Go/Rust双ABI、签名Root APK、Host原Linux Oracle `11 SUCCESS / 4 SKIPPED` 基线上，解决每次GitHub Actions调试签名变化卸载时 `noBackupFilesDir` 预设丢失：Root Activity 经 Android SAF 显式导出/导入正式B22/B25 `RootConnectionSettings` 非密钥设置，8192B上限；保留服务器、SNI、账户、MTU、AEAD、Fixed/Auto/DNS及包名+UID，不包含Keystore密码/RouteKey、PEM、物理Network handle或Root授权，不自动Start。导入冷表单并重新用当前 PackageManager检查包名+UID；签名升级后密码/RouteKey需要用户重新输入。进一步在原 `InstalledAppCatalog` 的launcher可见范围外**只增加 Android manifest `<queries>` 定向 text/plain `ACTION_SEND` 与HTTPS `ACTION_VIEW` 处理器**，供真实无Launcher但可见的App选择，Service仍使用同一冷PackageManager真实 UID 复核，不申请 QUERY_ALL_PACKAGES。此处**未接入全系统netd DNS或系统UID**；原M4只处理进入TUN的应用DNS。B26独立Action/Host/签名产物不是实体手机 E2E 或CPU结论。
 
 
