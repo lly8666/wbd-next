@@ -8526,15 +8526,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             let mut tx_storage=Vec::<TxDispatch>::with_capacity(32);
             let mut tx_pending=Vec::<(crate::memory::UniqueBuffer,usize)>::with_capacity(32);
             let mut tx_prefetched=Vec::<crate::memory::UniqueBuffer>::with_capacity(8);
-            // H2266 TEST ONLY, cold-switched; original product stays OFF.
-            // This merely amortizes the existing M1 owner lock after four
-            // real small SharedTun packets. No extra reader, new packet
-            // scheduler, rate/priority policy, PN or AEAD path.
-            let shared_loan_batch_trial=std::env::var("WBD_M0_029_SHARED_LOAN_BATCH_TRIAL")
-                .ok().as_deref()==Some("1");
-            let mut tx_shared_loans=Vec::<crate::memory::UniqueBuffer>::with_capacity(7);
-            let mut shared_loan_prefetched=0u64;
-            let mut shared_loan_reused=0u64;
             let mut tx_records=Vec::<crate::memory::FrozenRecord>::with_capacity(32);
             let mut tx_presentations=Vec::<Presentation>::with_capacity(32);
             let mut tx_actual_firstsend=Vec::<(wbd_types::RecordPn,u64)>::with_capacity(32);
@@ -8580,10 +8571,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     }
                 }
                 if split_ingress {
-                    // No speculative M1 buffers can survive a TX turn or
-                    // steal the existing authenticated feedback reserve.
-                    tx_shared_loans.clear();
-                    let mut shared_staged=0usize;
                     // The per-client TX remains the SOLE consumer of its
                     // source ingress; shared packets take original M1 loans.
                     for _ in 0..32 {
@@ -8601,14 +8588,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                 if buf.len()>M0_SMALL_ARENA_PAYLOAD{
                                     jumbo_queue.push_back(buf.into_vec());
                                 }else{
-                                    let loan=if shared_loan_batch_trial &&
-                                        !tx_shared_loans.is_empty(){
-                                        // Existing generation-scoped M1 loan,
-                                        // no new owner lock on the next ready
-                                        // SharedTun packet.
-                                        shared_loan_reused+=1;
-                                        Ok(tx_shared_loans.pop().expect("nonempty bounded M1 loans"))
-                                    }else{
+                                    let loan={
                                         let Ok(mut owner)=tx_cell.lock()else{break};
                                         if owner.phase!=PH_ACTIVE{break}
                                         #[cfg(feature="fec2_product_record")]
@@ -8619,33 +8599,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                         }else{0};
                                         #[cfg(not(feature="fec2_product_record"))]
                                         let floor=0;
-                                        let first=owner.arena.allocate_preserving(floor);
-                                        if first.is_ok()&&shared_loan_batch_trial &&
-                                            shared_staged>=4 && jumbo_queue.is_empty(){
-                                            // Same proof-of-hot as dedicated
-                                            // TUN's existing bounded prefetch.
-                                            // Cap extra slabs to the remaining
-                                            // original 32-message TX turn.
-                                            let extra=7usize.min(32usize.saturating_sub(
-                                                tx_pending.len().saturating_add(1)));
-                                            for _ in 0..extra{
-                                                match owner.arena.allocate_preserving(floor){
-                                                    Ok(slab)=>{
-                                                        tx_shared_loans.push(slab);
-                                                        shared_loan_prefetched+=1;
-                                                    },
-                                                    Err(_)=>break,
-                                                }
-                                            }
-                                        }
-                                        first
+                                        owner.arena.allocate_preserving(floor)
                                     };
                                     match loan{
                                         Ok(mut slab)=>{
                                             let n=buf.len();
                                             slab.writable()[14..14+n].copy_from_slice(buf.as_slice());
                                             tx_pending.push((slab,n));
-                                            shared_staged+=1;
                                         },
                                         Err(_)=>{deferred_shared=Some(buf);break}
                                     }
@@ -8654,9 +8614,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                             Err(_)=>break,
                         }
                     }
-                    // Even if no next packet is ready, return every unused
-                    // speculative slab before any M3 seal/M4 send/Stop.
-                    tx_shared_loans.clear();
                 }
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
@@ -8924,12 +8881,6 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             active_jumbo.take();
             jumbo_queue.clear();
-            if shared_loan_batch_trial{
-                // Strict same-source test-only activation proof. One STOP
-                // aggregate outside the loop; never a packet-rate log.
-                eprintln!("M0_PLAN029_SHARED_LOAN_BATCH_TRIAL_STOP role=client prefetched={} reused={} scope=original_M1_shared_owner",
-                    shared_loan_prefetched,shared_loan_reused);
-            }
             #[cfg(feature="fec2_product_record")]
             if raw_socket_diag_enabled{
                 let final_buffer=raw_socket_diag.diagnostic_tx_socket()
