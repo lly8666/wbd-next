@@ -8,6 +8,7 @@ import (
     "fmt"
     "log"
     "math/rand"
+    "os"
     "time"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -413,6 +414,9 @@ func runOriginalLinuxClientPaths(
             superseded:=candidate.path!=desired
             log.Printf("V4_PUBLIC_PATH_CANDIDATE_FAILED role=client generation=%d class=%s old_untouched=%t superseded_by_new_OS_path=%t",
                 candidate.seq,nativeColdFailureClass(e),current!=nil,superseded)
+            if os.Getenv("WBD_H2216_NAT_DEBUG")=="1" {
+                log.Printf("H2216_NAT_CLIENT_COLD_DIAGNOSTIC generation=%d type=%T error=%v",candidate.seq,e,e)
+            }
             candidate=nil
             if superseded{
                 // A new effective physical path is new information; do not

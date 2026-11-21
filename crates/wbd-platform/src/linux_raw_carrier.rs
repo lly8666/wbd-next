@@ -1,4 +1,4 @@
-//! Linux x86_64 GNU IPv4/TCP raw TX for an already authenticated V4 owner.
+//! Linux x86_64/aarch64 IPv4/TCP raw TX and packet-level native M4 RX for an already authenticated V4 owner.
 //! Sends original immutable M1 FrozenRecord via normal ipv4_tcp::build.
 //! No TLS keys/cold auth/Go readiness in this driver. Owned Linux raw fd
 //! needs CAP_NET_RAW and exact interface bound by kernel SO_BINDTODEVICE.
@@ -18,10 +18,13 @@ use crate::linux_rx_batch::{self,RxEntry,RxStatus};
 use crate::linux_packet_preflight::{interface_index,observe_interface_mtu};
 use crate::linux_mtu_scope::{ScopedRouteBudget,BudgetError};
 use crate::ipv4_tcp::{self,Ipv4Tuple,Presentation,PacketPersona};
-use crate::rx_ipv4_tcp::{parse_data_packet,parse_ack_packet,TrustedRx,RxError};
+use crate::rx_ipv4_tcp::{parse_data_packet_fast,parse_ack_packet,TrustedRx,RxError};
 use wbd_types::buffer_contract::FrozenRecordHandle;
 
 const AF_INET:c_int=2;
+const AF_PACKET:c_int=17;
+const SOCK_DGRAM:c_int=2;
+const ETH_P_IP:u16=0x0800;
 const SOCK_RAW:c_int=3;
 const SOCK_NONBLOCK:c_int=0x800;
 const SOCK_CLOEXEC:c_int=0x80000;
@@ -57,8 +60,16 @@ const MSG_DONTWAIT:c_int=0x40;
 struct SockAddrIn {
     family:u16, port:u16, ip_be:u32, zero:[u8;8],
 }
+// Linux sockaddr_ll (20B), bound to the exact underlay device and IPv4 ethertype.
+// AF_PACKET/SOCK_DGRAM presents L3 directly, with no Ethernet header copy.
+#[repr(C)]
+struct SockAddrLl {
+    family:u16,protocol:u16,ifindex:c_int,hatype:u16,
+    pkttype:u8,halen:u8,address:[u8;8],
+}
 unsafe extern "C" {
     fn socket(domain:c_int,typ:c_int,proto:c_int)->c_int;
+    fn bind(fd:c_int,addr:*const c_void,len:u32)->c_int;
     fn setsockopt(fd:c_int,level:c_int,opt:c_int,value:*const c_void,len:u32)->c_int;
     fn getsockopt(fd:c_int,level:c_int,opt:c_int,value:*mut c_void,len:*mut u32)->c_int;
     fn poll(fds:*mut PollFd,nfds:usize,timeout:c_int)->c_int;
@@ -335,20 +346,64 @@ pub struct ScopedRawIpv4Rx {
     serialize:Mutex<()>,
 }
 impl ScopedRawIpv4Rx {
-    /// Kernel-level prefilter; tuple comes from already-authenticated GoFlow.
-    /// Failure is fail-closed: no unfiltered fallback to extra socket reads.
+    /// Original Go FakeTCP receives on AF_PACKET even if Linux netfilter
+    /// drops TCP/443 in PREROUTING/INPUT to suppress the kernel TCP stack.
+    /// A post-Detach IPPROTO_TCP raw socket is *after* those firewall hooks:
+    /// it can silently starve native Rust M4 while pcap sees every frame.
+    ///
+    /// Receive from the SAME trusted underlay with AF_PACKET/SOCK_DGRAM:
+    /// the kernel provides the complete L3 IPv4 bytes directly to the
+    /// existing 32-slot recvmmsg, checksum/tuple parser and M3 AEAD owner.
+    /// Only this authenticated exact-tuple product path changes; the legacy
+    /// explicit open() developer API remains untouched.
+    /// BPF+ifindex+ETH_P_IP are fail-closed, never promiscuous.
     pub fn open_exact_tuple(ifname:&str,expected_ifindex:u32,generation:u32,
         tuple:Ipv4Tuple<'_>)->Result<Self,RawTxError>{
         let instructions=exact_tcp_rx_filter(tuple)?;
-        let rx=Self::open(ifname,expected_ifindex,generation)?;
+        if generation==0||ifname.is_empty()||ifname.len()>15||
+            !ifname.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'_'||b==b'-'){
+            return Err(RawTxError::InvalidInterface)
+        }
+        let actual=interface_index(ifname).map_err(|_|RawTxError::InvalidInterface)?;
+        if actual==0||actual!=expected_ifindex{return Err(RawTxError::InvalidInterface)}
+        let linux_ifindex=c_int::try_from(actual).map_err(|_|RawTxError::InvalidInterface)?;
+        let observed=observe_interface_mtu(ifname,actual)
+            .map_err(|_|RawTxError::InvalidInterface)?;
+        // AF_PACKET protocol and sockaddr_ll.protocol are in network order.
+        // SOCK_DGRAM strips only the link header (not IPv4/TCP or checksum).
+        let proto=ETH_P_IP.to_be();
+        let descriptor=unsafe{socket(AF_PACKET,
+            SOCK_DGRAM|SOCK_NONBLOCK|SOCK_CLOEXEC,c_int::from(proto))};
+        if descriptor<0{return Err(RawTxError::Kernel(errno()))}
+        let fd=unsafe{OwnedFd::from_raw_fd(descriptor)};
+        let name=CString::new(ifname).map_err(|_|RawTxError::InvalidInterface)?;
+        let rc=unsafe{setsockopt(fd.as_raw_fd(),SOL_SOCKET,SO_BINDTODEVICE,
+            name.as_ptr().cast(),name.as_bytes_with_nul().len() as u32)};
+        if rc!=0{return Err(RawTxError::Kernel(errno()))}
+        let scope=SockAddrLl{
+            family:AF_PACKET as u16,protocol:proto,ifindex:linux_ifindex,
+            hatype:0,pkttype:0,halen:0,address:[0;8],
+        };
+        let rc=unsafe{bind(fd.as_raw_fd(),(&scope as *const SockAddrLl).cast(),
+            std::mem::size_of::<SockAddrLl>() as u32)};
+        if rc!=0{return Err(RawTxError::Kernel(errno()))}
         let prog=SockFprog{len:instructions.len() as u16,
             filter:instructions.as_ptr()};
-        // SAFETY: synchronously copied Linux sock_fprog references the live
-        // immutable stack instruction array. Owned fd closes on failure.
-        let rc=unsafe{setsockopt(rx.fd.as_raw_fd(),SOL_SOCKET,SO_ATTACH_FILTER,
+        // Classic socket BPF sees IPv4 at byte zero on SOCK_DGRAM packet
+        // sockets, so the original exact 5-tuple offsets remain unchanged.
+        // No unfiltered fallback on SO_ATTACH_FILTER failure.
+        let rc=unsafe{setsockopt(fd.as_raw_fd(),SOL_SOCKET,SO_ATTACH_FILTER,
             (&prog as *const SockFprog).cast(),std::mem::size_of::<SockFprog>() as u32)};
         if rc!=0{return Err(RawTxError::Kernel(errno()))}
-        Ok(rx)
+        let effective=tune_raw_rx_buffer(fd.as_raw_fd())?;
+        eprintln!("WBD_LINUX_RAW_RX_RCVBUF requested_bytes={} effective_bytes={} kernel_capped={} scope=OWNED_PACKET_RX_SOCKET_L3",
+            RAW_RX_RCVBUF_REQUEST_BYTES,effective,
+            effective<RAW_RX_RCVBUF_EFFECTIVE_CEILING_BYTES);
+        let budget=ScopedRouteBudget::open(ifname,actual,generation,observed.kernel_mtu)
+            .map_err(|_|RawTxError::InvalidInterface)?;
+        Ok(Self{fd,ifindex:actual,ifname:ifname.to_owned(),generation,
+            mtu:observed.kernel_mtu as usize,budget,stopped:AtomicBool::new(false),
+            borrow:BorrowFence::default(),serialize:Mutex::new(())})
     }
     pub fn open(ifname:&str,expected_ifindex:u32,generation:u32)
         ->Result<Self,RawTxError>{
@@ -444,7 +499,7 @@ impl ScopedRawIpv4Rx {
             }
             let n=n as usize;
             if n<40 {continue}
-            let parsed=match parse_data_packet(&buffer[..n],TrustedRx{
+            let parsed=match parse_data_packet_fast(&buffer[..n],TrustedRx{
                 tuple,persona,mtu:self.mtu,authenticated_options:None,
             }){
                 Ok(p)=>p,
@@ -652,14 +707,16 @@ impl ScopedRawIpv4Rx{
             if n<40{outcome.entries[i]=RawReadyEntry::Rejected;continue}
             let trusted=TrustedRx{
                 tuple,persona,mtu,authenticated_options:None};
-            let parsed=match parse_data_packet(&slot[..n],trusted){
+            let parsed=match parse_data_packet_fast(&slot[..n],trusted){
                 Ok(v)=>v,
                 Err(_)=>{
                     // The protected handshake has not negotiated SACK.
                     // Reject option-bearing pure ACKs, never reinterpret as DATA.
-                    outcome.entries[i]=parse_ack_packet(&slot[..n],trusted,false)
+                    outcome.entries[i]=if n>=40 && slot[0]==0x45 && slot[33]==0x10 {
+                    parse_ack_packet(&slot[..n],trusted,false)
                         .map(|ack|RawReadyEntry::PureAck{ack32:ack.ack32})
-                        .unwrap_or(RawReadyEntry::Rejected);
+                        .unwrap_or(RawReadyEntry::Rejected)
+                }else{RawReadyEntry::Rejected};
                     continue
                 }
             };
@@ -951,7 +1008,7 @@ impl ScopedRawIpv4Rx {
                 Some(RxEntry::Complete{len})=>{
                     let slot=&mut buffers[i];
                     let parsed=if len<=mtu{
-                        parse_data_packet(&slot[..len],TrustedRx{
+                        parse_data_packet_fast(&slot[..len],TrustedRx{
                             tuple,persona,mtu,authenticated_options:None
                         })
                     }else{out.entries[i]=RawReadyEntry::Rejected;continue};
@@ -967,7 +1024,8 @@ impl ScopedRawIpv4Rx {
                         Err(reason)=>{
                             // Pure carrier ACK is a scoped optional cache hint,
                             // NOT an authenticated business or quality receipt.
-                            if let Ok(ack)=parse_ack_packet(&slot[..len],TrustedRx{
+                            if len>=40 && slot[0]==0x45 && slot[33]==0x10 {
+                              if let Ok(ack)=parse_ack_packet(&slot[..len],TrustedRx{
                                 tuple,persona,mtu,authenticated_options:None
                             },sack_negotiated){
                                 if ack.sacks().is_empty(){
@@ -980,6 +1038,7 @@ impl ScopedRawIpv4Rx {
                                         ack32:ack.ack32,sacks,count};
                                 }
                                 continue
+                              }
                             }
                             // TEST DIAGNOSTIC ONLY: bounded numeric/header-only
                             // evidence to distinguish W168 exact tuple/persona

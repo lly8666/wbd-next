@@ -22,7 +22,7 @@
      build_bytes, build_presentation_ack, build_presentation_ack_sack,
      SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
  };
- use wbd_platform::rx_ipv4_tcp::{parse_data_packet,parse_ack_packet,extend_seq32,TrustedRx};
+ use wbd_platform::rx_ipv4_tcp::{parse_data_packet_fast,parse_ack_packet,extend_seq32,TrustedRx};
 
  // std::thread::Builder::name is only a Rust thread name on some
  // Windows runtimes. Expose the actual OS thread description once so that
@@ -958,10 +958,26 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  // old-generation retirement notice BEFORE owned Stop.
                  // No new timer/control carrier or untrusted NPF trigger.
                  let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
-                 if m.health.unhealthy(m2_clock().0){
+                 let now=m2_clock().0;
+                 if m.health.unhealthy(now){
                      if m.health.peer_retired() || m.retire_notice_sent ||
                          m.retire_notice_attempts>=3{
-                         eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT reason=authenticated_dead_or_peer_retired");
+                         // This line executes only at real owned terminal
+                         // transition. Do not emit per packet/tick, infer
+                         // network loss or change dead90/reset semantics.
+                         let cause=if m.health.peer_retired(){
+                             "authenticated_peer_retire"
+                         }else{
+                             "no_authenticated_inbound_90s"
+                         };
+                         let last_auth_age=m.health.last_authenticated_age_ns(now)
+                             .map(|ns|(ns/1_000_000).to_string())
+                             .unwrap_or_else(||"never".into());
+                         eprintln!("WBD_WINDOWS_RUST_NATIVE_HEALTH_TIMEOUT cause={} last_authenticated_rx_age_ms={} attached_age_ms={} local_business_age_ms={} peer_retired={} retire_notice_sent={} retire_notice_attempts={} source=rust_aead_unique_pn_health_clock",
+                             cause,last_auth_age,m.health.attached_age_ns(now)/1_000_000,
+                             m.health.local_business_age_ns(now)/1_000_000,
+                             u8::from(m.health.peer_retired()),u8::from(m.retire_notice_sent),
+                             m.retire_notice_attempts);
                          return Err(AUTHENTICATED_PEER_DEAD)
                      }
                      m.retire_notice_due=true;
@@ -1484,7 +1500,8 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              let Some(packet)=io::ethernet_ipv4(&frame[..n])else{continue};
              // Optional SACK only after actual original Go protected
              // FakeTCP SYN/SYN-ACK; packet checksum is NOT crypto proof.
-             if let Ok(outer)=parse_ack_packet(packet,trusted,sack_negotiated){
+             if packet.len()>=40 && packet[0]==0x45 && packet[33]==0x10 {
+               if let Ok(outer)=parse_ack_packet(packet,trusted,sack_negotiated){
                  let mut blocks=[WireSack{start:0,end:0};4];
                  blocks[..outer.sacks().len()].copy_from_slice(outer.sacks());
                  if !outer.sacks().is_empty()||
@@ -1492,8 +1509,9 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                      last_outer_ack=Some((outer.ack32,blocks,outer.sacks().len()));
                  }
                  continue
+               }
              }
-              let Ok(sealed)=parse_data_packet(packet,trusted)else{
+              let Ok(sealed)=parse_data_packet_fast(packet,trusted)else{
                  counters.rejected.fetch_add(1,Ordering::Relaxed);continue
              };
              let verified=match open_and_deliver(&cfg,&lane,&mut tun,
@@ -1531,10 +1549,11 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
               let _=m2_outer_ack_hint_entry(&mut e,cfg.epoch,
                   cfg.luid,cfg.ifindex,ack32,&sacks[..n]);
           }
-          // RX publishes <=50 authenticated SACK snapshots per second,
-          // never one Go call or global lock per inner business packet.
+          // H2229: 10ms (~100Hz) authentic-gap SACK publication,
+          // coalesced on the existing RX turn (no per-packet timer, no
+          // new ACK/PN/feedback transport or ordered business delivery).
           if sack_negotiated&&verified_batch&&
-              last_sack_publish.elapsed()>=Duration::from_millis(20){
+              last_sack_publish.elapsed()>=Duration::from_millis(10){
               last_sack_publish=Instant::now();
               let snapshot=ack.sacks();
               let mut current=match counters.sack_frame.lock(){
@@ -1942,14 +1961,28 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          clock.arm_client_cold_ready(at); // isolated cadence; production arms live Entry in start_native
          assert!(clock.tx_due(at));
          let mut now=at;
-         for n in 0..5 {
-             assert!(clock.tx_due(now),"bounded native cold Health copy {n}");
+         let mut copies=0u8;
+         // H2224 replaces 5 x 400ms with 4..=7 real authenticated
+         // kind0 copies separated by 225..=575ms. A time/packet fixed
+         // oracle would now silently reject the intentionally random policy.
+         loop {
+             assert!(clock.tx_due(now),"cold Health copy {copies}");
+             copies+=1;
+             assert!(copies<=7,"cold Health proof must remain bounded");
              clock.on_health_send_result(now,true);
-             if n<4 {now+=400_000_000;assert!(clock.tx_due(now));}
+             let due=clock.next_tx_deadline().expect("live native Health deadline");
+             let gap=due-now;
+             if gap>575_000_000 {
+                 assert!(due>at+5_000_000_000,"restored steady Health");
+                 break
+             }
+             assert!((225_000_000..=575_000_000).contains(&gap));
+             assert!(!clock.tx_due(due-1),"must not early-send a repeat");
+             now=due;
          }
+         assert!((4..=7).contains(&copies));
+         assert!(now-at<=3_450_000_000,"cold proof before server 5s gate");
          assert!(!clock.tx_due(now+1_000_000_000));
-         assert!(clock.next_tx_deadline().is_some_and(|d|
-             d>at+5_000_000_000)); // restored ordinary 15s health
      }
      #[test]
      fn plan029_h1977_only_valid_1024_tcp_data_sequenced_for_boundaries(){

@@ -11,6 +11,7 @@ import (
     "errors"
     "fmt"
     "log"
+    "os"
     "sync"
     "sync/atomic"
     "time"
@@ -264,7 +265,7 @@ func runGameClient(
     if err!=nil{return err}
     cfg:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{
-            ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:true,RootCAs:c.tlsRoots,Timeout:15*time.Second,
+            ServerName:c.serverName,RouteKey:c.routeKey,VerifyServer:c.tlsVerifyServer,RootCAs:c.tlsRoots,Timeout:15*time.Second,
         },
         Username:c.username,Password:c.password,TunnelID:c.tunnel[:],
         AutoLease:c.autoIP,InstallationID:c.installation[:],
@@ -1147,6 +1148,9 @@ func runGameMultiServer(
                     stage,nativeColdFailureClass(result.err),
                     realityfront.V4OriginalNativeM4FailureStage(result.err),
                     realityfront.V4NormalM4NativeCode(result.err),port)
+                if os.Getenv("WBD_H2216_NAT_DEBUG")=="1" {
+                    log.Printf("H2216_NAT_SERVER_COLD_DIAGNOSTIC client_port=%d type=%T error=%v",port,result.err,result.err)
+                }
                 forget(result.assoc)
                 continue
             }

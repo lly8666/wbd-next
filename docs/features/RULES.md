@@ -13,9 +13,9 @@
 
 ## 登记与晋级
 
-- 2026-10-28用户授权 M0 后续直接在 main 开发；新功能先登记 experimental、真实开发分支与 NOT_RUN。
+- M0 新产品增量按[治理 §3](../GOVERNANCE.md#3-一个控制面多条工作线一条集成通道)登记到远端短分支，初始登记 experimental、真实研发分支和 NOT_RUN。
   `owner=M0, development_branch=main` 时填非空 `main_development_reason` 说明该授权/任务；这不自动晋级 formal，也不扩展其他工位权限。
-  明确另授的独立实验才用 `experiment/<topic>`，work继续既有授权；原研发来源不因集成批量改名。
+  当前 M0 增量用 `experiment/m0-<topic>`，work 沿用既有工位授权；原研发来源不因集成改名。
 - 一项产品能力一份 `entries/<stable-id>.json`；修复、优化、调默认值更新原条目，不为每个 helper 建卡。
   多分支同能力沿用同一 ID，集成时合并变化，不能靠换 ID 丢掉历史状态。
 - `development_branch` 指研发来源；`available_on` 只列已有代码的分支，不列“准备合并”的目标。

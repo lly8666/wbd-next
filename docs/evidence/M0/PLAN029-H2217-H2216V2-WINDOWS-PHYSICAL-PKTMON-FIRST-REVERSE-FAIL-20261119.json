@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "workstream": "M0",
+  "plan": "PLAN029/PLAN029B",
+  "task": "H2217-H2216V2-PHYSICAL-CLIENT-RX0-FORENSICS",
+  "date": "2026-11-19",
+  "source_sha": "91b9d521ce1451300533d078844340add4820c29",
+  "source_qualification": "USER-REPORTED H2216v2 91b9d52; installed executable SHA256 absent; code provenance not independently binary-verified",
+  "result": "FAIL",
+  "qualification": "PHYSICAL_WINDOWS_TO_PUBLIC_IPV4_OBSERVED_FAIL_SCOPE_NO_ENDPOINT_PROOF",
+  "input_capture": {
+    "archive": "wbd-all-components-20261119.zip",
+    "archive_sha256": "3a688065c19d61740121e2d29cd691310c3b5d0d557f314793563eb539a0083e",
+    "pktmon_pcap_sha256": "5885726232bf1275d166a64ace98f71f09012e522fc83146dcbd53419a2c5a5e",
+    "pktmon_drop_pcap_sha256": "c5509a83e895d060b5ec7719eed6e0a3dcc176ccc3b7aeb9388cf00c5f4952ff",
+    "client_log_sha256": "431579bef0b841357953d8e29667812a98666b953cdd91d3f80da488d7c2c2fb",
+    "raw_material_location": "User-uploaded chat attachment only; no raw pcap, ETL, usernames or physical endpoints committed to repository",
+    "caplen_bytes": 54,
+    "ipv4_tcp_payload_retained": false
+  },
+  "timeline_local_beijing": [
+    {
+      "at": "18:14:57.648",
+      "stage": "server SYN/ACK; TTL=52"
+    },
+    {
+      "at": "18:14:57.901",
+      "stage": "server PSH/ACK, on-wire TCP payload lengths 1200 and 708, truncated capture"
+    },
+    {
+      "at": "18:14:59 to 18:15:00",
+      "stage": "server more data and ACK"
+    },
+    {
+      "at": "18:15:03.058",
+      "stage": "Windows outward TCP, two segments of 71B"
+    },
+    {
+      "at": "18:15:16.570",
+      "stage": "Windows outward TCP still observed"
+    },
+    {
+      "at": "18:15:21.958",
+      "stage": "Windows outward TCP still observed"
+    },
+    {
+      "at": "18:15:23",
+      "stage": "Windows native client exited after first+reverse timeout"
+    },
+    {
+      "at": "18:15:29.912",
+      "stage": "server direction packet 87B payload observed after client exit; classification/retransmission unknown"
+    }
+  ],
+  "client_exit": {
+    "tx_copied": 32,
+    "rx_delivered": 0,
+    "tx_after_rx": 0,
+    "rejected": 23,
+    "worker_error": 0,
+    "workers": 2,
+    "skipped_wintun_ipv6": 23,
+    "authenticated_reverse_reports": 0,
+    "error": "context deadline exceeded",
+    "interpretation": "23 Rejected equals the 23 Wintun IPv6 skip increments; no additional counted native RX parse/AEAD rejection was reported by this run. Does not itself prove Npcap delivered any frame to the Rust RX worker."
+  },
+  "pktmon": {
+    "packet_component_events": 80,
+    "drop_events": 30,
+    "deduplicated_tcp_header_groups": 15,
+    "inbound_ttl": 52,
+    "outbound_ttl": 128,
+    "inbound_ipv4_ihl": 20,
+    "inbound_tos": 0,
+    "inbound_frag_flags": "0x4000",
+    "inbound_ipv4_header_checksums_valid": true,
+    "tcp_header_flags_observed": "SYN/ACK, ACK, PSH/ACK",
+    "capture_components": [
+      "vmxnet3",
+      "WFP Native Filter",
+      "Npcap Packet Driver",
+      "TCPIP"
+    ],
+    "tcpip_drop_reasons": {
+      "transport_endpoint_not_found": 20,
+      "arbitration_unhandled": 10
+    },
+    "note": "Component event repeats are not distinct wire packets; TCPIP missing endpoint does not establish that Npcap userland missed packet. Filtered PktMon does not independently account for every Rust TXCopied syscall."
+  },
+  "conclusion": "Physical client first+reverse failed despite earlier scoped NAT CI. The attached header-only capture establishes inbound physical/Npcap-component visibility and outbound physical activity, not post-handoff Rust RX consumption or full TCP checksum/AEAD. No claimed fix.",
+  "next_first_anomaly": "In one new physical reproduction correlate time of Go->Rust capture handoff, NPF event wake/pcap_next_ex full frames, IPv4/tuple+DATA/ACK/AEAD stages, and server post-auth native packet issuance/actual exterior send. Preserve original TLS/Stop; avoid changing TTL/parser/firewall on this evidence.",
+  "not_proven": [
+    "Binary hash/source lock",
+    "physical server architecture or detailed server TX logs",
+    "full payload and TCP checksum",
+    "per-packet owner/AEAD",
+    "all Rust TXCopied observed on physical NIC",
+    "why late server packet arrived",
+    "full 029/029B technical exit"
+  ],
+  "historical_ci_kept": {
+    "run_id": 44495120323,
+    "result": "PASS_SCOPED",
+    "note": "Three-client Linux native SNAT/DNAT and Windows build are not the same physical WAN scene and do not override this FAIL"
+  }
+}

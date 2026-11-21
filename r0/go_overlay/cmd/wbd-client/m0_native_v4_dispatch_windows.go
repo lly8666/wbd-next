@@ -22,6 +22,7 @@ type m0NativeV4Options struct {
  ServerName string
  RouteKey []byte
  TrustedServerRoots *x509.CertPool
+ TLSVerifyServer bool // opt-in certificate identity validation; default OFF for legacy compatibility
  Username,Password string
  TunnelID [16]byte
  Installation [16]byte
@@ -75,7 +76,7 @@ func m0CanonicalWindowsStartupPadding(mode string,legacy bool)(string,error){
 var errM0NativeV4PacketBridge=errors.New("Windows original Go native V4 TLS authenticated, but public Rust M3 TCP/Wintun application packet bridge and full OS Applied/Stop remain NOT_RUN; refusing production network activation")
 
 // Application-scoped TLS trust: a locally imported server certificate/CA
-// adds no system-wide trust and never skips hostname/signature validation.
+// adds no system-wide trust. Verification is opt-in using tls-verify-server.
 func m0LoadWindowsV4ServerRoots(path string)(*x509.CertPool,error){
  if path==""{return nil,nil} // Use ordinary Windows system roots.
  raw,err:=os.ReadFile(path)

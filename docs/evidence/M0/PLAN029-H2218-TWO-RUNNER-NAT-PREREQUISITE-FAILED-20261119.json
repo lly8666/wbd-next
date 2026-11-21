@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "workstream": "M0",
+  "plan": "PLAN029",
+  "task": "H2218-DISTINCT-HOSTED-RUNNER-SNAT-DNAT-TCP443-NETWORK-GATE",
+  "date": "2026-11-19",
+  "source_sha": "07ebb05b4e3cc4faccc01c9349373f91b945fc44",
+  "result": "BLOCKED_NETWORK_PREREQUISITE_NOT_PRODUCT_FAIL",
+  "qualification": "LIVE_TWO_DISTINCT_GITHUB_HOSTED_RUNNERS_REAL_LINUX_NETNS_NAT_ONLY",
+  "action": {
+    "run_id": 44509653652,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44509653652",
+    "conclusion": "failure",
+    "head_sha": "07ebb05b4e3cc4faccc01c9349373f91b945fc44",
+    "jobs": [
+      {
+        "id": 135510241940,
+        "architecture": "native_aarch64",
+        "role": "SERVER_BEHIND_HOST_DNAT",
+        "conclusion": "success"
+      },
+      {
+        "id": 135510242576,
+        "architecture": "native_x86_64",
+        "role": "CLIENT_BEHIND_HOST_SNAT",
+        "conclusion": "failure_expected_FAIL_CLOSED"
+      }
+    ],
+    "artifacts": [
+      {
+        "id": 14519904375,
+        "name": "h2218-peer"
+      },
+      {
+        "id": 14522800312,
+        "name": "h2218-client-result"
+      },
+      {
+        "id": 14520499132,
+        "name": "h2218-server-log"
+      }
+    ]
+  },
+  "actual_network": {
+    "hosted_compute": "GitHub-hosted Azure distinct runner VMs; not physical Windows or customer routers",
+    "client_namespace_ip": "10.249.21.2/30",
+    "client_router": "separate x86 runner host, actual Linux iptables MASQUERADE",
+    "server_namespace_ip": "10.249.20.2/30",
+    "server_router": "separate native ARM64 runner host, actual Linux PREROUTING DNAT tcp/443 to server namespace",
+    "separate_runners": true,
+    "rendezvous": "GitHub same-run artifact containing ephemeral server public egress address and random challenge; artifact never proxies business packets",
+    "server_local_private_socket_auth_challenge": "PASS",
+    "client_public_tcp443_attempts": 4,
+    "client_public_tcp443_errors": [
+      "TimeoutError",
+      "TimeoutError",
+      "TimeoutError",
+      "TimeoutError"
+    ],
+    "client_postrouting_snat_pkts": 4,
+    "client_postrouting_snat_bytes": 240,
+    "server_prerouting_dnat_pkts": 0,
+    "server_prerouting_dnat_bytes": 0,
+    "server_log": [
+      "H2218_PRIVATE_SERVER_READY",
+      "H2218_PAIRED_CHALLENGE_REACHED_PRIVATE_SERVER"
+    ],
+    "client_to_server_nat443": "UNREACHABLE",
+    "remote_public_ipv4": "EPHEMERAL_HOSTED_EGRESS_IP_REDACTED_IN_REPO; raw artifact preserves exact value",
+    "strongest_supported_conclusion": "Client SNAT saw four attempts; no traffic matched server-runner DNAT rule; public path/ingress prereq missing. Azure upstream inbound restriction or egress NAT public address not mapping back are plausible, but exact upstream middlebox not proven.",
+    "not_proven": "No real Go/Rust/TLS application attempt, no native Npcap Windows, no user physical ISP or forwarded home-router NAT proof."
+  },
+  "test_exclusions": {
+    "actual_wbd_original_go_tls": "NOT_RUN",
+    "wbd_rust_native_rx_tx_aead": "NOT_RUN",
+    "user_reported_h2216v2_physical_failure": "STILL_FAIL_AND_UNEXPLAINED",
+    "physical_Windows_Npcap": "NOT_RUN",
+    "protocol_checksum_or_TTL": "NOT_EVALUATED",
+    "owned_Stop": "NOT_RUN"
+  },
+  "historical_setup_failures_preserved": [
+    {
+      "run_id": 44509437042,
+      "reason": "invalid actions/checkout pin; x86 job failed before tests"
+    },
+    {
+      "run_id": 44509491954,
+      "reason": "invalid actions/checkout pin; x86 job failed before tests"
+    }
+  ],
+  "next_gate": "For actual independent-host WBD run, require two self-hosted runners with a reachable public TCP443 port-forward to the server NAT, or explicitly authorized transparent L3 transport preserving exact raw FakeTCP and full packet bytes. Do not substitute GitHub artifact rendezvous as live relay, or weaken AEAD/TTL/checksum.",
+  "scope_note": "Previously H2216 same-runner Linux netns SNAT/DNAT passed but does not qualify cross-runner WAN; user's real Windows packet capture had TLS success so this hosted ingress failure does not explain her/his post-TLS RXDelivered=0."
+}

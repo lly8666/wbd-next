@@ -418,3 +418,127 @@ func TestM0PLAN028OwnedWSLNextHopOnlyForExactNativeAlias(t *testing.T){
   })
  }
 }
+
+
+func TestH2223WindowsIdleAuthenticatedRustNativeStartupDoesNotRequireApplicationReply(t *testing.T){
+ for _,row:=range []struct{tx,rx,after uint64}{
+  {0,0,0}, // original TLS + native workers, completely idle Wintun
+  {2,0,0}, // real prior physical case: uplink without reverse app DATA
+  {27,0,0},
+  {10,8,4}, // actual bidirectional DATA stays independent of READY
+ }{
+  state:=realityfront.V4WindowsNativeWorkerStatsV1{
+   Version:1,Workers:2,TXCopied:row.tx,RXDelivered:row.rx,
+   TXAfterRX:row.after,
+  }
+  if err:=m0WindowsRustNativeStartupVerdict(state);err!=nil{
+   t.Fatalf("idle authenticated Rust workers must READY without business: %+v %v",row,err)
+  }
+ }
+ for _,workerCode:=range []int32{1,3,6}{
+  state:=realityfront.V4WindowsNativeWorkerStatsV1{Version:1,Workers:2,WorkerError:workerCode}
+  if err:=m0WindowsRustNativeStartupVerdict(state);err==nil{
+   t.Fatalf("fatal or verified dead native worker rc=%d must not READY",workerCode)
+  }
+ }
+}
+
+
+func TestH2223InitialColdRetryOnlyBeforeRustM4ForTransientOriginalTransport(t *testing.T){
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto}{
+  for _,timeout:=range []error{context.DeadlineExceeded,syscall.ETIMEDOUT,faketcp.ErrBootstrapTimeout}{
+   tagged:=m0WindowsTagOriginalColdTransport(timeout)
+   if !errors.Is(tagged,errM0OriginalColdTransportTimeout){t.Fatalf("not tagged: %v",tagged)}
+   for n:=0;n<2;n++{
+    if !m0WindowsInitialTransportRetryAllowed(mode,false,n,tagged){
+     t.Fatalf("valid original TLS transport retry mode=%v count=%d",mode,n)
+    }
+   }
+   if m0WindowsInitialTransportRetryAllowed(mode,false,2,tagged)||
+      m0WindowsInitialTransportRetryAllowed(mode,true,0,tagged){
+    t.Fatal("original TLS retries must be bounded and never after OS Applied")
+   }
+  }
+ }
+ for _,err:=range []error{
+  realityfront.ErrAdmissionAuth,context.Canceled,
+  errors.New("TLS certificate rejected"),errors.New("Npcap driver error"),
+ }{
+  if m0WindowsInitialTransportRetryAllowed(m0WinModeNormal,false,0,
+    m0WindowsTagOriginalColdTransport(err)){
+   t.Fatalf("permanent, auth, or Stop failure retried: %v",err)
+  }
+ }
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeGame2,m0WinModeGame4}{
+  if m0WindowsInitialTransportRetryAllowed(mode,false,0,
+    m0WindowsTagOriginalColdTransport(context.DeadlineExceeded)){
+   t.Fatalf("Game multi-lane cold state machine widened: %v",mode)
+  }
+ }
+ // Even a 45s post-TLS M4/OS deadline cannot restart a new TLS session
+ // unless the source of its error was explicitly original cold transport.
+ if m0WindowsInitialTransportRetryAllowed(m0WinModeNormal,false,0,
+  context.DeadlineExceeded){
+  t.Fatal("untagged post-TLS timeout must not be retried")
+ }
+}
+
+func TestH2224ActualNativeQualityFecDirectionsAndUnknownNotZero(t *testing.T){
+ // Normal is truly off in both directions, no fake quality.
+ if tx,rx:=m0WindowsQualityStatuses(m0WinModeNormal,"",false,m0NativeV4PacketStats{});tx!="off"||rx!="off"{
+  t.Fatalf("off mismatched TX/RX %s %s",tx,rx)
+ }
+ sample:=m0NativeV4PacketStats{}
+ tx,rx:=m0WindowsQualityStatuses(m0WinModeFixed,"strong",false,sample)
+ if tx!="pending"||rx!="negotiated-strong"{t.Fatalf("cold fixed status %s %s",tx,rx)}
+ tx,rx=m0WindowsQualityStatuses(m0WinModeFixed,"strong",true,sample)
+ if tx!="applied-strong"||rx!="negotiated-strong"{t.Fatalf("verified fixed TX %s RX %s",tx,rx)}
+ sample.AutoPending=true
+ tx,rx=m0WindowsQualityStatuses(m0WinModeAuto,"",false,sample)
+ if tx!="pending"||rx!="unknown"{t.Fatalf("pending auto %s %s",tx,rx)}
+ sample.AutoPending=false
+ sample.AutoAppliedRevision=2
+ sample.AutoDesiredProfile=realityfront.FecV2High
+ tx,rx=m0WindowsQualityStatuses(m0WinModeAuto,"",false,sample)
+ if tx!="applied-high"||rx!="unknown"{t.Fatalf("applied C2S auto cannot invent S2C %s %s",tx,rx)}
+}
+
+
+// H2226: only already-AEAD-authenticated, mature low-frequency Quality
+// START/CLOSE summaries can show a coarse GUI loss upper and feedback delay.
+// No per-record M2 feedback, underlay-packet inference or age-as-zero.
+func TestH2226LowRateQualityGuiUsesOnlyMatchedMatureSummary(t *testing.T){
+ before:=realityfront.V4WindowsAutoQuality{Version:1,Size:256,Revision:7}
+ after:=before
+ after.Counters[0]=100
+ after.Counters[1]=90
+ after.Counters[2]=7
+ after.Counters[3]=3
+ after.Counters[10]=1
+ after.Counters[12]=3_120_000_000
+ after.Counters[13]=1
+ ms,loss,ok:=m0WindowsLowRateGuiEstimate(before,after)
+ if !ok||ms!=120||loss!=100{
+  t.Fatalf("mature low-rate estimate got ok=%t ms=%d upper_tenths=%d",ok,ms,loss)
+ }
+ noReport:=after;noReport.Counters[10]=0
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,noReport);ok{
+  t.Fatal("no authenticated Quality report displayed fake sample")
+ }
+ censored:=after;censored.Counters[11]=1
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,censored);ok{
+  t.Fatal("host-capacity censored report displayed as link quality")
+ }
+ otherEpoch:=after;otherEpoch.Revision=8
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,otherEpoch);ok{
+  t.Fatal("cross-revision low-rate history accepted")
+ }
+ incomplete:=after;incomplete.Counters[0]=101
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,incomplete);ok{
+  t.Fatal("missing/ambiguous first-send denominator treated as measured")
+ }
+ old:=after;old.Counters[12]=2_999_999_999
+ if _,_,ok:=m0WindowsLowRateGuiEstimate(before,old);ok{
+  t.Fatal("sub-three-second immature quality was treated as RTT")
+ }
+}

@@ -5,9 +5,7 @@
 //! assigns PN, acknowledges a record, nor delivers business payload. M0/M3
 //! must authenticate/replay-check it before exposing any bytes to the app.
 //! There is no TCP stream reconstruction, raw OS socket, packet coalescing,
-//! kernel checksum-offload accommodation in the default public parser, malloc
-//! or unsafe code. A48 adds a separate *Android-only* untrusted M3-pending
-//! entrypoint for a real RAW TCP checksum incompatibility.
+//! kernel checksum-offload accommodation, malloc or unsafe code in this module.
 //!
 //! Outbound compatibility: crate::ipv4_tcp, pinned historical Go packet.go
 //! wobuzhidao@a7a82db31fe736ffedee330795a3234d358f1984.
@@ -149,28 +147,34 @@ pub fn parse_data_packet<'a>(
     packet: &'a [u8],
     trusted: TrustedRx<'_>,
 ) -> Result<UnauthenticatedData<'a>, RxError> {
-    parse_data_packet_checked(packet,trusted,true)
+    parse_data_packet_checked(packet, trusted, true)
 }
 
-/// A48: Android's real Bionic RAW TCP FD returned 113/114 packets with
-/// valid destination tuple, IPv4 checksum, flags and lengths, but invalid
-/// TCP checksums after the physical network path. The cold original-Go
-/// FakeTCP path accepts these bytes, and only the original M3 can actually
-/// authenticate a DATA record. This narrowly scoped second entrypoint
-/// still enforces ALL other IPv4/TCP checks; its result is *untrusted*.
-/// Linux and Windows builds cannot call it outside tests.
-#[cfg(any(target_os="android",test))]
-pub(crate) fn parse_data_packet_android_m3_pending<'a>(
+/// Product DATA ingress: minimum bounded IPv4/TCP framing and cold tuple.
+/// The original M3 AEAD + PN/replay check, not the untrusted outer TCP
+/// checksum or mutable DSCP/DF/options, decides whether bytes are delivered.
+/// This also avoids an O(ciphertext-length) pass on every received DATA.
+pub fn parse_data_packet_fast<'a>(
     packet: &'a [u8],
     trusted: TrustedRx<'_>,
 ) -> Result<UnauthenticatedData<'a>, RxError> {
-    parse_data_packet_checked(packet,trusted,false)
+    parse_data_packet_checked(packet, trusted, false)
+}
+
+/// Android A50 call-site compatibility: use main's one shared M3-pending
+/// fast parser and return only UNAUTHENTICATED ciphertext for the original
+/// Rust M1/M3 AEAD, PN and replay checks.
+#[cfg(any(target_os="android",test))]
+pub(crate) fn parse_data_packet_android_m3_pending<'a>(
+    packet:&'a [u8],trusted:TrustedRx<'_>,
+)->Result<UnauthenticatedData<'a>,RxError>{
+    parse_data_packet_fast(packet,trusted)
 }
 
 fn parse_data_packet_checked<'a>(
     packet: &'a [u8],
     trusted: TrustedRx<'_>,
-    require_tcp_checksum:bool,
+    strict: bool,
 ) -> Result<UnauthenticatedData<'a>, RxError> {
     let tuple = trusted.tuple;
     if !plausible_unicast(tuple.src_ip) || !plausible_unicast(tuple.dst_ip)
@@ -178,9 +182,7 @@ fn parse_data_packet_checked<'a>(
         return Err(RxError::InvalidTrustedTuple);
     }
     let trusted_opts = trusted.authenticated_options.unwrap_or(&[]);
-    if require_tcp_checksum && !valid_options(trusted_opts) {
-        return Err(RxError::InvalidTrustedOptions);
-    }
+    if strict && !valid_options(trusted_opts) { return Err(RxError::InvalidTrustedOptions); }
     if packet.len() > MAX_PACKET_LEN { return Err(RxError::TooLong); }
     if packet.len() > trusted.mtu {
         return Err(RxError::ExceedsMtu {actual:packet.len(),mtu:trusted.mtu});
@@ -189,17 +191,15 @@ fn parse_data_packet_checked<'a>(
         return Err(RxError::TooShort);
     }
     if packet[0] != 0x45 { return Err(RxError::WrongVersionOrIhl); }
-    // No unexpected DSCP/ECN: compatible with exactly the existing writer.
-    if require_tcp_checksum && packet[1] != 0 {
-        return Err(RxError::WrongIpHeader);
-    }
+    // DSCP/ECN may change in transit: it does not define M3 ciphertext.
+    if strict && packet[1] != 0 { return Err(RxError::WrongIpHeader); }
     if usize::from(be16(&packet[2..4])) != packet.len() {
         return Err(RxError::TotalLengthMismatch);
     }
-    // Old carrier transmits unfragmented IPv4 packets with DF set; reject
-    // reserved bit, MF flag and every nonzero fragment offset.
-    let flags=be16(&packet[6..8]);
-    if flags&0x3fff!=0 || (require_tcp_checksum && flags!=DF_ONLY) {
+    // No fragments can be promoted as complete M3 records. A cleared DF
+    // flag is harmless; do not insist on the local writer's exact flags.
+    let fragment_bits = be16(&packet[6..8]);
+    if (fragment_bits & 0x3fff) != 0 || (strict && fragment_bits != DF_ONLY) {
         return Err(RxError::FragmentedOrUnexpectedFlags);
     }
     if packet[9] != TCP_PROTO { return Err(RxError::WrongProtocol); }
@@ -207,8 +207,7 @@ fn parse_data_packet_checked<'a>(
     if &packet[12..16] != tuple.src_ip || &packet[16..20] != tuple.dst_ip {
         return Err(RxError::WrongTuple);
     }
-    if require_tcp_checksum &&
-        !checksum_is_valid(add_bytes(0, &packet[..IPV4_HEADER_LEN])) {
+    if strict && !checksum_is_valid(add_bytes(0, &packet[..IPV4_HEADER_LEN])) {
         return Err(RxError::IpChecksum);
     }
     let tcp = &packet[IPV4_HEADER_LEN..];
@@ -216,33 +215,31 @@ fn parse_data_packet_checked<'a>(
         return Err(RxError::WrongTuple);
     }
     // TCP offset in 32-bit words; reject all reserved bits and NS on DATA.
-    if require_tcp_checksum && tcp[12] & 0x0f != 0 {
-        return Err(RxError::InvalidTcpHeader);
-    }
+    if strict && tcp[12] & 0x0f != 0 { return Err(RxError::InvalidTcpHeader); }
     let hdr_len = usize::from(tcp[12] >> 4) * 4;
     if hdr_len < TCP_HEADER_LEN || hdr_len > TCP_HEADER_LEN + 40
         || hdr_len > tcp.len() { return Err(RxError::InvalidTcpHeader); }
     if tcp[13] != TCP_DATA_FLAGS { return Err(RxError::InvalidDataFlags); }
-    if require_tcp_checksum && (tcp[18] != 0 || tcp[19] != 0) {
+    if strict && (tcp[18] != 0 || tcp[19] != 0) {
         return Err(RxError::InvalidTcpHeader);
     }
-    if require_tcp_checksum {
+    // Skip option grammar/template matching for opaque, AEAD-gated DATA.
+    // Header length is already checked, so the ciphertext slice is safe.
+    if strict {
         let opts = &tcp[TCP_HEADER_LEN..hdr_len];
         if !valid_options(opts) || opts != trusted_opts {
             return Err(RxError::UnsupportedOptions);
         }
     }
     if hdr_len == tcp.len() { return Err(RxError::EmptyData); }
-    // Strict Linux/Windows must verify the full TCP pseudoheader checksum.
-    // A49 Android M3-pending skips the O(ciphertext length) scan entirely;
-    // the ORIGINAL M3 AEAD/PN/replay must still authenticate every record.
-    if require_tcp_checksum {
+    // TCP pseudoheader: src/dst, zero, protocol=6, 16-bit TCP byte length.
+    // A single add_bytes() per independent even-length segment preserves the
+    // odd-tail alignment inside the TCP segment, even with odd ciphertext.
+    if strict {
         let mut sum = add_bytes(0, &packet[12..20]);
         sum += u64::from(TCP_PROTO) + tcp.len() as u64;
         sum = add_bytes(sum, tcp);
-        if !checksum_is_valid(sum) {
-            return Err(RxError::TcpChecksum);
-        }
+        if !checksum_is_valid(sum) { return Err(RxError::TcpChecksum); }
     }
     Ok(UnauthenticatedData {
         ciphertext: &tcp[hdr_len..],
@@ -286,11 +283,11 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
         actual:packet.len(),mtu:trusted.mtu})}
     if packet.len()<IPV4_HEADER_LEN+TCP_HEADER_LEN{return Err(RxError::TooShort)}
     if packet[0]!=0x45{return Err(RxError::WrongVersionOrIhl)}
-    if packet[1]!=0{return Err(RxError::WrongIpHeader)}
+    // DSCP/ECN is not part of the scoped ACK identity.
     if usize::from(be16(&packet[2..4]))!=packet.len(){
         return Err(RxError::TotalLengthMismatch)
     }
-    if be16(&packet[6..8])!=DF_ONLY{
+    if be16(&packet[6..8])&0xbfff!=0{
         return Err(RxError::FragmentedOrUnexpectedFlags)
     }
     if packet[9]!=TCP_PROTO{return Err(RxError::WrongProtocol)}
@@ -345,7 +342,7 @@ pub fn parse_ack_packet(packet:&[u8],trusted:TrustedRx<'_>,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ipv4_tcp::{build,build_presentation_ack,Presentation};
+    use crate::ipv4_tcp::{build, Presentation};
     use wbd_types::{BufferKey,LaneKey,RecordPn,SeqOffset,TunnelKey};
     use wbd_types::buffer_contract::{BufferOrigin, FrozenMetadata, FrozenRecordHandle};
 
@@ -413,6 +410,35 @@ mod tests {
             assert_eq!(pkt,original);
         }
     }
+    #[test]
+    fn fast_data_is_minimal_outer_framing_until_m3_authentication() {
+        let pkt=wire(b"sealed opaque ciphertext",100,None);
+        let mut bad_tcp=pkt.clone(); bad_tcp[36]^=0x80;
+        assert_eq!(parse_data_packet(&bad_tcp,trusted(None,1500)),
+            Err(RxError::TcpChecksum));
+        assert!(parse_data_packet_fast(&bad_tcp,trusted(None,1500)).is_ok());
+        let mut bad_ip=pkt.clone();bad_ip[10]^=1;
+        assert_eq!(parse_data_packet(&bad_ip,trusted(None,1500)),
+            Err(RxError::IpChecksum));
+        assert!(parse_data_packet_fast(&bad_ip,trusted(None,1500)).is_ok());
+        let mut changed_dscp=pkt.clone();changed_dscp[1]=3;
+        assert!(parse_data_packet_fast(&changed_dscp,trusted(None,1500)).is_ok());
+        let mut no_df=pkt.clone();no_df[6]=0;
+        assert!(parse_data_packet_fast(&no_df,trusted(None,1500)).is_ok());
+        let mut fragment=pkt.clone();fragment[6]=0x20;
+        assert_eq!(parse_data_packet_fast(&fragment,trusted(None,1500)),
+            Err(RxError::FragmentedOrUnexpectedFlags));
+        let mut bad_tuple=pkt.clone();bad_tuple[12]^=1;
+        assert_eq!(parse_data_packet_fast(&bad_tuple,trusted(None,1500)),
+            Err(RxError::WrongTuple));
+        let mut bad_length=pkt.clone();bad_length[2]=1;
+        assert_eq!(parse_data_packet_fast(&bad_length,trusted(None,1500)),
+            Err(RxError::TotalLengthMismatch));
+        let mut wrong_type=pkt.clone();wrong_type[33]=0x10;
+        assert_eq!(parse_data_packet_fast(&wrong_type,trusted(None,1500)),
+            Err(RxError::InvalidDataFlags));
+    }
+
     #[test]
     fn a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted(){
         let original=wire(b"original sealed M3 bytes",0x1_0000_000a,None);

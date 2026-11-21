@@ -3,6 +3,7 @@
 package v4productcli
 
 import (
+ "fmt"
  "net"
  "net/netip"
  "strings"
@@ -62,5 +63,49 @@ func TestH2206ServerNATCLIUnspecifiedIsDeferredOnlyForServer(t *testing.T){
  cfg,err:=parse("client",clientArgs)
  if err==nil||!strings.Contains(err.Error(),"server-only") && !strings.Contains(err.Error(),"client local-ip"){
   t.Fatalf("client wildcard must reject; cfg=%v err=%v",cfg.localIP,err)
+ }
+}
+
+
+func TestH2224OwnedServerMasqueradeScopeInstallReadbackAndCleanup(t *testing.T){
+ cfg:=config{role:"server",tunName:"wbdv40",tunCIDR:"10.66.0.1/24",rawInterface:"eth0"}
+ seen:=[][]string{}
+ cmd:=func(args ...string)([]byte,error){
+  seen=append(seen,append([]string(nil),args...))
+  return nil,nil
+ }
+ nat,err:=installOwnedServerMasquerade(cfg,cmd)
+ if err!=nil{t.Fatal(err)}
+ if len(seen)!=2||!strings.EqualFold(seen[0][2],"-I")||
+  seen[0][3]!="POSTROUTING"||seen[0][4]!="1"||
+  seen[0][6]!="10.66.0.0/24"||seen[0][8]!="eth0"||
+  seen[1][2]!="-C" {t.Fatalf("unexpected NAT calls: %v",seen)}
+ if err=nat.Close();err!=nil{t.Fatal(err)}
+ if err=nat.Close();err!=nil{t.Fatal(err)}
+ if len(seen)!=3||seen[2][2]!="-D"{
+  t.Fatalf("only one owned cleanup permitted: %v",seen)
+ }
+ for _,args:=range seen{
+  if args[len(args)-1]!="MASQUERADE"||
+    !strings.Contains(strings.Join(args," "),"--comment wbd-v4-"){
+   t.Fatalf("NAT should use unique owned exact source and exit: %v",args)
+  }
+ }
+}
+func TestH2224OwnedServerMasqueradeFailClosedNoForeignCleanup(t *testing.T){
+ cfg:=config{role:"server",tunName:"wbdv40",tunCIDR:"10.66.0.1/24",rawInterface:"eth0"}
+ calls:=0
+ cmd:=func(args ...string)([]byte,error){
+  calls++
+  if calls==2{return []byte("readback denied"),fmt.Errorf("readback denied")}
+  return nil,nil
+ }
+ nat,err:=installOwnedServerMasquerade(cfg,cmd)
+ if err==nil||nat!=nil||calls!=3{t.Fatalf("expected insert-check-owned-delete, got %v %v %d",nat,err,calls)}
+ if _,err:=linuxMasqueradeRule(config{role:"client",tunCIDR:cfg.tunCIDR,rawInterface:"eth0"},"wbd-v4-1");err==nil{
+  t.Fatal("client must never mutate server NAT")
+ }
+ if _,err:=linuxMasqueradeRule(config{role:"server",tunName:"eth0",tunCIDR:cfg.tunCIDR,rawInterface:"eth0"},"wbd-v4-1");err==nil{
+  t.Fatal("must not masquerade onto self TUN")
  }
 }

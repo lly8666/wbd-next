@@ -34,7 +34,11 @@ G1 在授权范围内自主执行。G2 接口/职责调整由 M0 合并影响与
 
 ## 3. 一个控制面，多条工作线，一条集成通道
 
-**2026-10-28 M0 主线开发覆盖规则：** M0 的源码、调用方、夹具、功能登记和进度均直接在 main；不再常规开 experiment/preflight/integration 分支再抄进度回主线。旧分支一次核独有差异/在途run，必要增量带回main，不整树覆盖、不重刷已有效证据。只有明确另授的独立并行任务继续指定分支；单一主线活动写入者、非force和精确SOURCE仍保留。独立FEC历史工位已完成，不执行其旧next_action。下文通用worker分支条款仅适用于仍有明确授权的worker，不要求M0离开main。
+**2026-11-21 M0 分支决策（替代 2026-10-28 的常规直写规则）。** main 是唯一任务登记、接班与集成入口，M0 保持 main 单写者。治理、文档、任务分配与恢复指针可直接提交 main；产品和夹具按一个可验收增量从干净 main 建一条远端 `experiment/m0-<topic>` 短分支。先在 main 的当前计划/cursor 登记唯一分支名、基线或其解析方式及下一动作，再动工；同一增量不叠 PR、不覆盖其他作者。分支与 Draft PR 承载 WIP，不另开工位或复制 cursor。实施期间每个可恢复的小段先提交并推远端，允许标 partial/unverified。无需等待能全量编译才保存，也不用每个 helper 开 CI 实验。昂贵测试先冻结 SOURCE，查已有 intent/run，再按既有契约发起。
+
+**中断恢复。** 以 main.cursor 的登记名定位真实分支、PR 和增量。登记后分支尚未创建则从约定基线创建；已有远端提交而尚无 PR 则在同分支持续并补 PR；有测试 intent 则按 request_id/SOURCE 查在途、已完和 artifact，无法确定不重派。红灯定位首个异常续原分支。已合则核 main 的实际合入内容与精确回执，补漏记 S/H。原增量被否决则留依据并从干净 main 开下一项。未经推送的本地工作不能承诺跨 agent 恢复。新 agent 继承同一 M0；发现并发先核作者/分支头，不 force/reset。
+
+**集成。** 增量达到预定功能/性能范围、相关检查和真实 Stop（涉及生命周期时）后当轮合入；文档增量验治理，实验数据可单独归档。测试前后同时固定基线和候选 SHA，合入前复核 main 与实际 PR head；若基线变化影响语义，重测受影响入口。用非 force 更新，避免合入已否决试验祖先。合入后核实际合成结果与必要集成 CI，再写证据 S 和只改 cursor 的 H；默认启用与平台资格按该增量证据分开判断。其他已有 worker 的授权、分支和 scope 保持原规则。
 
 ### 长期提示词与任务发布分离
 
@@ -143,7 +147,7 @@ runner CPU/ISA、架构、配额、PSI/steal、注入与内核/队列 drop 是�
 
 worker ready_for_integration 前：接口行为、正确性证据、适用配置/CLI/GUI、`docs/features/`卡片、资源成本、未验范围、回退方式齐全。M0 重新核实际 SOURCE，集成后跑必要组合回归；模块通过不等于产品通过。
 
-功能登记闭环（2026-10-28修订）：M0在main开发并声明experimental及main_development_reason，其他明确授权的独立任务可用experiment/work；integration只作已有隔离集成的历史入口。每次产品代码变化在原devlog写 feature-impact：更新列出的卡片，或解释没有产品功能影响。卡片由同一个稳定ID维护；配置、默认值、平台/模式接线、删除/回退都不能漏记。formal 需要实际 main 集成、明确晋级决定和适用产品证据，不能因合并或单测绿灯自动晋级。完整规则和格式在 `docs/features/README.md`。
+功能登记闭环（2026-10-28修订）：M0 按§3记录真实研发分支；历史或明确授权的 main 研发沿用 main_development_reason，其他已有工位按原授权使用 experiment/work；integration只作已有隔离集成的历史入口。每次产品代码变化在原devlog写 feature-impact：更新列出的卡片，或解释没有产品功能影响。卡片由同一个稳定ID维护；配置、默认值、平台/模式接线、删除/回退都不能漏记。formal 需要实际 main 集成、明确晋级决定和适用产品证据，不能因合并或单测绿灯自动晋级。完整规则和格式在 `docs/features/README.md`。
 
 Governance push覆盖 main、work/**、experiment/**。三类分支都执行 Feature catalog 检查；旧main/work角色身份、路径、证据门完整保留。实验job仅做功能登记契约，不伪造M0身份、不修改registry授权，不声称产品通过。integration不加入自动push范围。工作包若需新增卡片写路径，由集成者一次授予相应文档范围，不能变成逐功能审批。目录变更先在本分支可见；集成者消费实验登记时可先合文档，不必合产品代码。
 

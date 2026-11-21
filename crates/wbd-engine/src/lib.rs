@@ -12,6 +12,10 @@ pub mod fec2_staged;
 /// Independent Go TLS/M4 integration still gates all real product capability.
 mod v4_fixed_stream;
 /// Shared event-driven authenticated Health/dead/FIN/idle clock for both native owners.
+// H2229 authenticated cosmetic Game ACK parity across native Windows/Linux.
+// No per-record receipt and no modification to original outer repair policy.
+#[cfg(feature="fec2_product_record")]
+mod v4_presentation_ack;
 mod v4_native_health;
 /// M0 one-owner adapter around frozen M1 GameTx/Rx with per-lane AEAD/PN.
 /// Not a public Go product grant until real lanes are bound.

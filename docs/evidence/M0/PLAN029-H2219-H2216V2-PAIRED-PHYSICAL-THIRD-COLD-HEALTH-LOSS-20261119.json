@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "task": "H2219-H2216V2-PAIRED-WIN-LINUX-THIRD-COLD-CONTROL-DROP",
+  "date": "2026-11-19",
+  "source_sha": "91b9d521ce1451300533d078844340add4820c29",
+  "source_lock": "H2216v2 user-reported client source prefix 91b9d52; actual installed binary hash NOT_VERIFIED",
+  "result": "FAIL_PHYSICAL_PUBLIC_NORMAL_FIRST_REVERSE",
+  "status": "REAL_TWO_RUN_PAIRED_CAPTURE_FAILURE_NOT_PRODUCT_FIX",
+  "artifacts": {
+    "origin": "User-provided chat ZIP only; raw capture and private/public addresses are not copied to repository",
+    "archive": "wbd-paired-20261119-1845.zip",
+    "archive_sha256": "39d9f3e62d739247713df03204f67dfd838530edc09097c5ff681ca09a3719a8",
+    "linux_round1_sha256": "c406ca2d3d80b2e9402d4996c7d62d070ec6cb26f65f3c4890f707f06762b87a",
+    "linux_round2_sha256": "1861a6f1e08ef5d6c32caf72785c47e2915a9726e57b04d98f30174e99552bfd",
+    "windows_independent_npcap_round2_sha256": "ad4e6b153e5d727e2cfcd0f6f1430826b1d60670d747e05bd0409ce86d9368d9",
+    "all_ethernet_caplen_bytes": 54,
+    "full_tcp_checksum_verifiable": false,
+    "record_kind_cryptographically_verifiable": false
+  },
+  "rounds": [
+    {
+      "client_source_port": 40015,
+      "server_ready_local": "18:46:20.264",
+      "cold_sequence": [
+        {
+          "time": "18:46:20.264",
+          "seq_start": 4016913351,
+          "seq_end": 4016913447,
+          "bytes": 96,
+          "client_ack_progress": true
+        },
+        {
+          "time": "18:46:20.664",
+          "seq_start": 4016913447,
+          "seq_end": 4016913564,
+          "bytes": 117,
+          "client_ack_progress": true
+        },
+        {
+          "time": "18:46:21.064",
+          "seq_start": 4016913564,
+          "seq_end": 4016913629,
+          "bytes": 65,
+          "windows_nic_seen": false,
+          "windows_npcap_component_seen": false
+        }
+      ],
+      "subsequent_server_packet": {
+        "time": "18:46:35.378",
+        "seq_start": 4016913629,
+        "seq_end": 4016913703,
+        "bytes": 74,
+        "windows_seen": true
+      },
+      "stuck_ack32": 4016913564,
+      "stuck_ack_count_linux": 39,
+      "linux_missing_original_seq_retransmissions": 0,
+      "windows_rx_data_delivered": 0,
+      "windows_authenticated_reverse_reports": 0
+    },
+    {
+      "client_source_port": 40016,
+      "server_ready_local": "18:50:01.400",
+      "cold_sequence": [
+        {
+          "time": "18:50:01.400",
+          "seq_start": 1909226370,
+          "seq_end": 1909226472,
+          "bytes": 102,
+          "client_ack_progress": true
+        },
+        {
+          "time": "18:50:01.800",
+          "seq_start": 1909226472,
+          "seq_end": 1909226536,
+          "bytes": 64,
+          "client_ack_progress": true
+        },
+        {
+          "time": "18:50:02.200",
+          "seq_start": 1909226536,
+          "seq_end": 1909226602,
+          "bytes": 66,
+          "windows_nic_seen": false,
+          "windows_independent_npcap_seen": false
+        }
+      ],
+      "subsequent_server_packet": {
+        "time": "18:50:18.672",
+        "seq_start": 1909226602,
+        "seq_end": 1909226691,
+        "bytes": 89,
+        "windows_seen": true
+      },
+      "stuck_ack32": 1909226536,
+      "stuck_ack_count_linux": 40,
+      "linux_missing_original_seq_retransmissions": 0,
+      "windows_rx_data_delivered": 0,
+      "windows_authenticated_reverse_reports": 0
+    }
+  ],
+  "linux_egress": {
+    "interface_name": "enp0s3",
+    "outbound_mac_same_as_following_delivered_segments": true,
+    "ipv4_header_checksum_valid_for_missing_segments": true,
+    "df": "0x4000",
+    "ttl": 64,
+    "tcp_window": 4096,
+    "ipv4_id": 43,
+    "note": "Same L2 destination and syntactically valid IPv4 header on missing/later frames; 54-byte snaplen does NOT cover TCP data or checksum. Linux egress tcpdump does not prove actual upstream delivery."
+  },
+  "code_correlations": [
+    {
+      "path": "crates/wbd-engine/src/v4_native_health.rs",
+      "meaning": "arm_server_cold_commit arms exactly 3 existing authenticated Health kind0 records, on_health_send_result spaces successful cold copies by 400ms, then reverts to jittered about 15s"
+    },
+    {
+      "path": "crates/wbd-engine/src/v4_embedded_go.rs",
+      "meaning": "Production Linux native Normal FEC/off emits fresh authenticated Health via stage_original_reverse_feedback; feedback_last control is excluded from original_outer DATA-only firstsend/shadow sampling; no same-seq frozen Health retransmit is shown by this path"
+    },
+    {
+      "path": "crates/wbd-recovery/src/outer_ack.rs",
+      "meaning": "ACK-only metadata can nominate optional retained DATA gap; without retained Health frozen record it cannot recreate the missing bytes"
+    }
+  ],
+  "diagnosis": "Two repetitions show missing exactly third 400ms cold control-family segment while first two acknowledged; later ~14.3/16.5s records have new TCP seq not retransmission, hence perpetual cumulative ACK hole. Consistent with specific native Health cold burst but record kind not cryptographically decoded. The earlier physical Windows RXDelivered=0 is not conclusively caused by this ACK hole; Rust can authenticate out-of-order records, and Health alone is not a business TUN delivery.",
+  "unproven": [
+    "exact pre-Windows drop hop or intermediary",
+    "TCP checksum validity",
+    "specific AEAD kind of 65/66-byte record",
+    "server actual per-record M2 shadow state or full Stop counters",
+    "one dropped Health as sole cause of missing business reverse TUN packet",
+    "candidate fix or Windows physical end-to-end PASS"
+  ],
+  "next": "Reproduce deliberate third cold Health drop in same-SOURCE native double-NAT kernel fixture: require first two ACK, one exact-seq frozen replay with distinct receipt/driver accounting and eventual cumulative ACK progress; assert M3 AEAD/PN unique replay and real reverse business receipt/Stop. For physical origin of drop capture full TEST traffic on server outer gateway and client upstream WAN; do not weaken tuple/checksum/AEAD or infer product PASS."
+}

@@ -1,0 +1,29 @@
+name: PERF original Windows client Linux server same-source real network retest
+run-name: "PERF-WIN-LINUX-RETEST|${{ github.sha }}"
+on:
+  push:
+    branches: ["perf/outer-rx-minimal-parse-20261121"]
+    paths: [".github/workflows/perf-wl-original-network-retest-dispatch.yml"]
+permissions: {contents: read, actions: write}
+jobs:
+  real-windows-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Dispatch new signed Windows client and same-SOURCE Linux native server
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF_NAME" = "perf/outer-rx-minimal-parse-20261121"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/$GITHUB_REF_NAME" --jq '.commit.sha')" = "$GITHUB_SHA"
+          grep -Fq 'mkdir -p legacy/internal/v4routekey' .github/workflows/m0-wl-public-normal-full.yml
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$GITHUB_REF_NAME" \
+            -f public_mode=normal -f run_n0=false -f outer_repair=off \
+            -f perf_scenario_file=scenarios/plan027-h875-windows-normal-off-10m-25ms-loss0-60s.json
+          echo "WIN_LINUX_CURRENT_PRODUCT_RETEST_DISPATCHED sha=$GITHUB_SHA"

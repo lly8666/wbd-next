@@ -471,9 +471,9 @@ assert 'RxError::IpChecksum' in main_ttl
 assert 'crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(' in android_io
 # main Linux single kernel raw / multi-buffer receive both call the
 # H2216 shared parser; n and len are distinct source-local variable names.
-assert 'parse_data_packet(&slot[..n],trusted)' in linux_io
+assert 'parse_data_packet_fast(&slot[..n],trusted)' in linux_io
 assert 'parse_ack_packet(&slot[..n],trusted,false)' in linux_io
-assert 'parse_data_packet(&slot[..len],TrustedRx{' in linux_io
+assert 'parse_data_packet_fast(&slot[..len],TrustedRx{' in linux_io
 assert 'parse_ack_packet(&slot[..len],TrustedRx{' in linux_io
 assert 'ANDROID_A46_MAIN_WINDOWS_H2216_ROUTED_TTL_DATA_ACK_RUST_HOST_PASS' in Path('android/root-native/ci/linux-original-oracle.sh').read_text()
 # A47 actual same-socket RAW recv metadata, precise rejection buckets,
@@ -516,13 +516,17 @@ parser=Path("crates/wbd-platform/src/rx_ipv4_tcp.rs").read_text()
 android_io=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
 linux_io=Path("crates/wbd-platform/src/linux_raw_carrier.rs").read_text()
 owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
-assert 'parse_data_packet_checked(packet,trusted,true)' in parser
+# The main H222x DATA parser supersedes Android A50's separate parser
+# implementation. Android forwards into the same public main fast parser.
+assert 'pub fn parse_data_packet_fast' in parser
+assert 'parse_data_packet_checked(packet, trusted, true)' in parser
+assert 'parse_data_packet_checked(packet, trusted, false)' in parser
 assert 'fn parse_data_packet_android_m3_pending' in parser
 assert '#[cfg(any(target_os="android",test))]' in parser
-assert 'parse_data_packet_checked(packet,trusted,false)' in parser
-assert 'if require_tcp_checksum {' in parser
-assert 'if require_tcp_checksum && !checksum_is_valid(sum)' not in parser
+assert 'parse_data_packet_fast(packet,trusted)' in parser
+assert 'if strict {' in parser
 assert 'sum = add_bytes(sum, tcp);' in parser
+assert 'fast_data_is_minimal_outer_framing_until_m3_authentication' in parser
 assert 'a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted' in parser
 assert 'let parsed=match crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(' in android_io
 assert 'if (observed&127)==0' not in android_io
@@ -538,11 +542,12 @@ assert 'if error.kind()!=io::ErrorKind::WouldBlock' in android_io
 assert 'wait_readable(raw.readiness_fd(),0)' not in nativeworker
 assert 'wait_readable(tun.readiness_fd(),0)' not in nativeworker
 assert 'parse_data_packet_android_m3_pending' not in linux_io
-assert 'parse_data_packet(&slot[..n],trusted)' in linux_io
-assert 'parse_data_packet(&slot[..len],TrustedRx{' in linux_io
+assert 'parse_data_packet_fast(&slot[..n],trusted)' in linux_io
+assert 'parse_data_packet_fast(&slot[..len],TrustedRx{' in linux_io
 assert 'self.offer_after_active(slab,0..len,absolute,now)' in owner
 assert 'ANDROID_A48_ANDROID_BIONIC_TCP_CHECKSUM_ONLY_M3_PENDING_HOST_PASS' in Path(
     "android/root-native/ci/linux-original-oracle.sh").read_text()
+print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")
 print("ANDROID_A49_SINGLE_PASS_AND_BOUNDED_NONBLOCKING_DRAIN_SOURCE_PASS")
 print("ANDROID_A48_EXACT_ANDROID_ONLY_CHECKSUM_GATE_M3_AUTH_STILL_REQUIRED_SOURCE_PASS")
 print("ANDROID_A47_ORIGINAL_RUST_RAW_NUMERIC_AND_GO_JAVA_FORENSICS_SOURCE_PASS")

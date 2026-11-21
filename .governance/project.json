@@ -2,7 +2,7 @@
   "schema_version": 1,
   "repository": "lly8666/wbd-next",
   "control_branch": "main",
-  "phase": "MAIN_PLAN028_PLANNED_USER_SCOPED_PLAN027A_CLOSED",
+  "phase": "MAIN_PLAN029_THROUGHPUT_ARM_FIRST",
   "governance_evidence": "docs/evidence/M0/GOV-003-PR4-main-integration.json",
   "product_design": "DESIGN_READY",
   "product_implementation": "INTEGRATED_FUNCTIONAL_SCOPES_PERFORMANCE_CLOSEOUT",
@@ -12,7 +12,7 @@
   "physical": "NOT_RUN",
   "mission_ref": "PROJECT_CHARTER.md",
   "governance_ref": "docs/GOVERNANCE.md",
-  "next_decision": "2026-11-03 user explicitly accepted PLAN027A scoped closeout and will separately activate a new agent for PLAN028. See docs/evidence/M0/PLAN027A-H998-USER-ACCEPTED-SCOPED-CLOSEOUT-20261103.json. Main priority is no new 027A Actions; PLAN028 planned, not started. Retain real H995 online physical PMTU failure and H997 ARM64 Game4FEC Action failures; do not treat remote user-space ICMP3/4 or causal CPU optimization as proven. Default full outer IPv4 IP MTU 1460 without L2; 1500 explicit max, inner auto/OS readback. PLAN028 §4.1–4.2 must handle actual network path change and fresh budget.",
+  "next_decision": "M0 按 registry 当前分配与 docs/decisions/M0-PLAN029-THROUGHPUT.md 从 ARM64 推进。029/029B 既有出口保留，030 未启动。",
   "hot_read_set": [
     "AGENTS.md",
     "PROJECT_CHARTER.md",

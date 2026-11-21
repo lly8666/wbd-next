@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2228",
+  "date": "2026-11-20",
+  "source_sha": "2a2f809592856411daa70b3c043b2f6430774ce8",
+  "run_id": 44705243325,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44705243325",
+  "result": "ACTUAL_THREE_DISTINCT_NATIVE_RUNNERS_AND_REAL_TCP_SAMPLES; FULL_MATRIX_FAIL",
+  "topology": {
+    "client": "independent_ubuntu24_x86_64",
+    "middle": "independent_ubuntu24_arm64_2x_vxlan_kernel_L3_router",
+    "server": "independent_ubuntu24_x86_64",
+    "vxlan_client_id": 2281,
+    "vxlan_server_id": 2282,
+    "ipv4_forwarding": true,
+    "nat": false,
+    "actual_end_to_end_ping_ttl": 63,
+    "owner": "original Go TLS Rust M4 kernel TUN AF_PACKET",
+    "tailscale": "Authenticated_3_ephemeral_tag_ci_GH_OIDC",
+    "initial_tail_peer_ping": "server first DERP then DIRECT via 20.221.60.81:14344 in 8ms; client direct via 51.8.190.56:51336 in 24ms",
+    "model_initial_qualification": "incorrectly conservative because parser searched ANY DERP instead of FINAL pong; corrected in H2228 follow-up"
+  },
+  "original_artifacts": {
+    "client_result": {
+      "id": 14614499675,
+      "name": "h2228-client-result"
+    },
+    "client_evidence": {
+      "id": 14615222767,
+      "name": "h2228-x86-client-evidence"
+    },
+    "relay_evidence": {
+      "id": 14614898374,
+      "name": "h2228-arm-relay-evidence"
+    },
+    "server_evidence": {
+      "id": 14615232364,
+      "name": "h2228-x86-server-evidence"
+    }
+  },
+  "netem": {
+    "host": "ARM64_router_only",
+    "egress": [
+      "rcli0",
+      "rsrv0"
+    ],
+    "added_one_way_delay_ms": 200,
+    "normal_jitter_ms": 15,
+    "correlation": 0.25,
+    "tc_loss_model": "gemodel",
+    "mean_bad_state_burst_packets": 4,
+    "good_state_drop_probability": 0.001,
+    "bad_state_drop_probability": 0.9,
+    "target_packet_loss_pct": [
+      0,
+      1,
+      5,
+      10,
+      20
+    ],
+    "qdisc_limit_packets": 65536,
+    "rate_cap": "NONE",
+    "sample_final_20pct_client_egress_drops_cumulative": 41838,
+    "sample_final_20pct_server_egress_drops_cumulative": 44607,
+    "note": "cumulative end drops span all phase shapes and must NOT be read as 20pct actual"
+  },
+  "baseline_0ms_zero_loss_direct_8parallel_mbps": {
+    "upload": 848.551,
+    "download": 861.757
+  },
+  "business_200ms_added_one_way_20sec_4parallel_mbps": [
+    {
+      "loss_pct": 0,
+      "observed_ping_rtt_ms": 443.032,
+      "direct_up": 501.313,
+      "wbd_up": 305.804,
+      "direct_down": 403.283,
+      "wbd_down": 258.27,
+      "three_sec_wbd_uplink": 188.737
+    },
+    {
+      "loss_pct": 1,
+      "observed_ping_rtt_ms": 439.856,
+      "direct_up": 181.347,
+      "wbd_up": null,
+      "direct_down": 123.785,
+      "wbd_down": null,
+      "three_sec_wbd_uplink": null
+    },
+    {
+      "loss_pct": 5,
+      "observed_ping_rtt_ms": 421.246,
+      "direct_up": 92.955,
+      "wbd_up": 73.82,
+      "direct_down": 71.253,
+      "wbd_down": 23.069,
+      "three_sec_wbd_uplink": null
+    },
+    {
+      "loss_pct": 10,
+      "observed_ping_rtt_ms": 414.987,
+      "direct_up": 43.726,
+      "wbd_up": 7.812,
+      "direct_down": 15.257,
+      "wbd_down": 12.845,
+      "three_sec_wbd_uplink": 5.593
+    },
+    {
+      "loss_pct": 20,
+      "observed_ping_rtt_ms": 426.66,
+      "direct_up": 1.94,
+      "wbd_up": null,
+      "direct_down": 2.864,
+      "wbd_down": null,
+      "three_sec_wbd_uplink": null
+    }
+  ],
+  "exact_failed_business_cases": [
+    "WBD at 1pct and20pct source cold client not READY; no valid business TCP samples for these phases",
+    "WBD at 5pct real 3sec single stream iperf control socket closed unexpectedly",
+    "12 direct cases captured, expected15 WBD business cases 6 missing; 23 case result files including 2 cold error cases"
+  ],
+  "original_client_0pct_native_stop": {
+    "raw_tun_delivered": 1269839,
+    "original_outer_first_wire_bytes": 945961869,
+    "original_outer_repair_accepted_bytes": 13859200,
+    "real_first_copies": 1250111,
+    "outer_policy": "UNCHANGED_ENABLED",
+    "tun_queue_full_drops": 10110
+  },
+  "test_fixture_corrections": "Corrected netns BBR readback; reused Tailnet TCP18727; final Tailscale ping (not early DERP); never short-circuit cold handshake solely due sudo launcher process PID (use root-owned actual native PID). Requires another run.",
+  "physical_windows_npcap_xray_1gbps": "NOT_RUN",
+  "physical_3s_upstream_crash": "NOT_RUN",
+  "same_source_product_code_changed": false,
+  "post_h2229_ack_compatible": {
+    "current_main_source": "975c8f5ea5278af4a1b56649be8cda9b6eb16f69",
+    "h2229_4_native_jobs_action": 44727976115,
+    "status": "TRUE_THREE_RUNNER_ALL_27_TCP_CASES_COMPLETED_DERP_CAPACITY_UNQUALIFIED",
+    "old_h2228_results_must_not_be_claimed_new_ack": true,
+    "second_real_three_runner_old_source": {
+      "run_id": 44708081108,
+      "source_sha": "f696bf938262bf6da75213f78811c8b61030a710",
+      "network": "TRUE_3_INDEPENDENT_LINUX_GH_RUNNERS_ARM64_KERNEL_L3_ROUTE_BUT_BOTH_TAIL_PATHS_DERP",
+      "clear_0pct_0ms_direct_8flow_upload_mbps": 19.572,
+      "clear_0pct_0ms_direct_8flow_download_mbps": 19.836,
+      "case_count": 27,
+      "iperf_success_count": 24,
+      "tcp_errors": 3,
+      "failed_cases": [
+        "10pct_WBD_tcp_3s_one_stream_upload",
+        "20pct_direct_kernel_tcp_20s_four_stream_upload",
+        "20pct_WBD_tcp_20s_four_stream_upload"
+      ],
+      "capacity_comparison": "INFRA_UNQUALIFIED_BECAUSE_DERP_AND_CLEAR_BASELINE_BELOW_800",
+      "artifacts": {
+        "summary": 14617351515,
+        "client": 14616647584,
+        "arm_relay": 14617191402
+      }
+    },
+    "next": "Improve root-owned native-worker-after-iperf and real kernel phase-drop classification; keep main product ACK/retrans unchanged; require future >=800Mbps direct Tailnet before bandwidth attribution.",
+    "new_ack_run": {
+      "run_id": 44733044743,
+      "run_attempt": 1,
+      "source_sha": "8f6054e7d6851f6fa58afdfb5a63f7e4ec504bc1",
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44733044743",
+      "original_go_rust_from_latest_h2229_ack_main": true,
+      "branch_source_merged_main_parent": "975c8f5ea5278af4a1b56649be8cda9b6eb16f69",
+      "scoped_static_tests": "H2228_12_OF_12_AND_H2229_5_OF_5_SUCCESS",
+      "actual_linux_runners": {
+        "client": "x86_64",
+        "kernel_l3_router": "aarch64",
+        "server": "x86_64"
+      },
+      "original_native_server_build": "SUCCESS",
+      "original_native_relay": "SUCCESS",
+      "original_native_client_test_job": "FAIL_AT_CAPACITY_QUALIFICATION_ONLY",
+      "tcp_app_matrix_status": "PASS_REAL_THREE_RUNNER_TCP_MATRIX",
+      "real_iperf_cases": 27,
+      "real_iperf_success": 27,
+      "real_iperf_failed": 0,
+      "expected_cases_missing": 0,
+      "no_loss_no_delay_direct_8stream_mbps": {
+        "upload": 19.31,
+        "download": 19.836
+      },
+      "capacity": "INFRA_RELAY_OR_DERP_UNQUALIFIED_DO_NOT_ATTRIBUTE_TO_WBD",
+      "network_note": "Tailnet connection via DERP or otherwise unqualified with below-800Mbps clean-reference; cannot compare product 80Mbps physical cap.",
+      "experimental_200ms_one_way_extra_jitter15ms_burst_ge_mbps": [
+        {
+          "loss_target_pct": 0,
+          "direct_up": 23.068,
+          "wbd_up": 21.653,
+          "direct_down": 17.092,
+          "wbd_down": 15.676,
+          "wbd_3sec_up": 33.552
+        },
+        {
+          "loss_target_pct": 1,
+          "direct_up": 20.342,
+          "wbd_up": 18.14,
+          "direct_down": 13.894,
+          "wbd_down": 13.212,
+          "wbd_3sec_up": 12.234
+        },
+        {
+          "loss_target_pct": 5,
+          "direct_up": 18.559,
+          "wbd_up": 16.987,
+          "direct_down": 12.373,
+          "wbd_down": 10.433,
+          "wbd_3sec_up": 4.544
+        },
+        {
+          "loss_target_pct": 10,
+          "direct_up": 13.055,
+          "wbd_up": 16.988,
+          "direct_down": 2.989,
+          "wbd_down": 9.909,
+          "wbd_3sec_up": 4.194
+        },
+        {
+          "loss_target_pct": 20,
+          "direct_up": 7.183,
+          "wbd_up": 3.355,
+          "direct_down": 3.198,
+          "wbd_down": 1.783,
+          "wbd_3sec_up": 0.699
+        }
+      ],
+      "original_artifacts": {
+        "client_summary": {
+          "id": 14628207245,
+          "name": "h2228-client-result"
+        },
+        "client_evidence": {
+          "id": 14627419399,
+          "name": "h2228-x86-client-evidence"
+        },
+        "arm_router_evidence": {
+          "id": 14627772952,
+          "name": "h2228-arm-relay-evidence"
+        },
+        "server_evidence": {
+          "id": 14627258751,
+          "name": "h2228-x86-server-evidence"
+        }
+      },
+      "no_inner_tcp_failure_in_this_run": true,
+      "physical_windows_npcap_3sec_crash": "NOT_RUN",
+      "product_throughput_improvement_causation": "NOT_PROVEN_NO_CLEAN_800MBPS_BASELINE",
+      "no_product_outer_retransmission_change": true
+    }
+  }
+}

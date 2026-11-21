@@ -933,6 +933,11 @@ type m0NativeV4PacketStats struct{
  AutoDesiredProfile realityfront.FecV2Profile `json:"auto_requested_profile,omitempty"`
  AutoPending bool `json:"auto_revision_pending,omitempty"`
  AutoPolicyError string `json:"auto_policy_error,omitempty"`
+ // Low-rate authenticated Quality START/CLOSE summary only. Never per-PN
+ // M2 feedback, a physical-wire loss claim, or a fake zero on missing data.
+ LowRateQualityValid bool `json:"lowrate_quality_valid,omitempty"`
+ LowRateApproxRTTMS uint32 `json:"lowrate_approx_rtt_ms,omitempty"`
+ LowRateLossUpperTenthsPct uint32 `json:"lowrate_firstsend_loss_upper_tenths_pct,omitempty"`
  OldestPendingMS int64 `json:"oldest_unacked_carrier_ms"`
  MaxInterdeliveryMS int64 `json:"max_observed_interdelivery_ms"`
  SourceBatchCounts [5]uint64 `json:"original_source_batch_counts_0_to_4"`

@@ -110,30 +110,9 @@ impl GameCounters{
         }
     }
 }
-// Pure TCP ACK ledger, NOT M2 applied/retransmit and NOT authentication.
-// Only the genuine Rust game opener, after Wintun copy, may call verified.
-struct AckLedger{next:u64,holes:Vec<(u64,u64)>}
-impl AckLedger{
-    fn new(start:u32)->Self{Self{next:u64::from(start),holes:Vec::with_capacity(256)}}
-    fn verified(&mut self,seq:u32,len:usize)->u32{
-        let base=self.next as u32;
-        let diff=i64::from(i32::from_ne_bytes(seq.wrapping_sub(base).to_ne_bytes()));
-        if diff < 0{return base}
-        let begin=self.next.saturating_add(diff as u64);
-        let end=begin.saturating_add(len as u64);
-        if end<=self.next{return base}
-        if begin<=self.next{self.next=end}
-        else if self.holes.len()<256{
-            let i=self.holes.partition_point(|(b,_)|*b<=begin);
-            self.holes.insert(i,(begin,end));
-        }
-        while self.holes.first().is_some_and(|(b,_)|*b<=self.next){
-            let (_,end)=self.holes.remove(0);
-            self.next=self.next.max(end);
-        }
-        self.next as u32
-    }
-}
+// Game Windows and Linux use exactly the same bounded authenticated
+// presentation-only ACK ledger. No M2 feedback or TUN ordered-delivery gate.
+use crate::v4_presentation_ack::NativePresentationAck as AckLedger;
 enum GameTcpColdCommand{
     Prepare(SyncSender<Result<u16,i32>>),
     Enable(u16,SyncSender<Result<u16,i32>>),
@@ -1323,7 +1302,6 @@ mod tests{
     }
     #[test]
     fn game_native_npf_rx_accepts_original_linux_server_windows11_persona_only(){
-        use wbd_platform::rx_ipv4_tcp::RxError;
         let server=[172,24,106,93];let client=[172,24,96,1];
         let trusted=trusted_windows_game_rx(&server,&client,443,41031,1400);
         assert_eq!(trusted.persona,PacketPersona::Windows11);
@@ -1338,19 +1316,27 @@ mod tests{
         let accepted=parse_data_packet(&data,trusted).unwrap();
         assert_eq!(accepted.seq32,1234);
         assert_eq!(accepted.ciphertext,&[8,7,6,5,4]);
-        // SOURCE768 trusted Legacy TTL64 and rejected the real Linux server
-        // Windows11 TTL128 live frames after pre-handoff early packets.
+        // A received TTL is a mutable hop limit, never an identity check.
+        // A valid carrier reaches the still-mandatory M3 AEAD/replay gate.
         assert_eq!(parse_data_packet(&data,TrustedRx{
             persona:PacketPersona::Legacy,..trusted
-        }),Err(RxError::WrongPersona));
-        // Do not widen parser to accept any unauthenticated carrier persona.
+        }).unwrap().ciphertext,&[8,7,6,5,4]);
+        // A received TTL64 cannot prove Legacy origin: an authentic
+        // Windows11 packet may have traversed 64 routers from TTL128.
+        // Carrier parsing is deliberately UNAUTHENTICATED. The real native
+        // M3 AEAD and replay gate, not TTL, decides whether a packet is ours.
         let mut other=[0u8;256];
         let legacy=build_bytes(tuple,Presentation{
             ack32:991,advertised_window:4096,ip_id:75,
             persona:PacketPersona::Legacy,
         },u64::from(1234u32),&[8,7,6,5,4],None,1400,&mut other)
             .unwrap().to_vec();
-        assert_eq!(parse_data_packet(&legacy,trusted),Err(RxError::WrongPersona));
+        assert_eq!(parse_data_packet(&legacy,trusted).unwrap().ciphertext,
+            &[8,7,6,5,4]);
+        // The same packet reaches M3 independent of the sender's persona hint.
+        assert_eq!(parse_data_packet(&data,TrustedRx{
+            persona:PacketPersona::Legacy,..trusted
+        }).unwrap().ciphertext,&[8,7,6,5,4]);
     }
     #[test]
     fn game_presentation_ack_is_real_empty_payload_tcp_control_not_empty_data(){

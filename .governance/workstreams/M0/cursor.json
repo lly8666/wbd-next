@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2213,
-  "checkpoint_sha": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
-  "progress": "in_progress",
-  "task_id": "PLAN029B-H2213-RUST32-ORDINARY-TLS-RANDOM-CUTOFF",
-  "current_task": "H2213 Rust Linux/Windows 16→32 native lane slots（Windows实际32 prepared，33rd FULL）；Go FakeTCP cold32→64；普通TLS独立Decoy8、每条随机15–45s断开。Rust Action44446847868、Go Action44446847713、Linux双ISA2×2真TLS/UDP/Stop Action44446847738 PASS_SCOPED。",
-  "why_now": "用户要求服务端Rust 16槽升32且简单测试，普通非WBD TLS→Decoy随机到时主动关闭并释放资源。",
-  "done_when": "Rust32/33边界、Windows32真实prepared owners、Go普通TLS强制超时、Linux x86/ARM业务/Stop限域PASS；32在线设备压力和公网实机另证。",
-  "next_action": "H2213小任务限域PASS不重测；下一个独立H只测32真实客户端负载/CPU延迟或外网NAT代表，严格不要把32注册槽误报32设备稳定容量。Android JNI/OpenWrt实机NOT_RUN，029/029B总出口OPEN，030未开。",
+  "sequence": 2245,
+  "checkpoint_sha": "0387b054f2e936c2f8288ab9d3c2f79f605a84fc",
+  "progress": "planned",
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "current_task": "029 吞吐与效率。已发布永久提示词、研究原文和 ARM64 优先施工方案。首增量预登记 experiment/m0-029-throughput-arm-fair，尚未施工。",
+  "why_now": "1% 四流突发与 0% 满核是不同瓶颈。H2244 固定整形降 Rust 丢包却损耗吞吐或 CPU/GiB。",
+  "done_when": "ARM 同机分离公平顺序与总速率，核真实交付、CPU/有效GiB和稀疏流首响应；按计划继续服务能力、x86/Windows移植与出口，保留各端未验项。",
+  "next_action": "查询预登记分支及 PR；若已有则接续其 HEAD/在途run，否则从首次发布本 task_id 的 main cursor-only H 创建该分支，完成 ARM64 Normal/off 公平顺序单因素 GE1% 原/候选/恢复对照。",
   "unverified": true,
-  "last_tested_source": "38e92ad9bc532f7bda0f6ffb084c3b600c528ba2",
-  "evidence_refs": [
-    "docs/evidence/M0/PLAN029B-H2213-RUST32-DECOY-RANDOM-15-45-LINUX-WINDOWS-SCOPED-PASS-20261119.json"
-  ],
+  "last_tested_source": null,
+  "evidence_refs": [],
   "context_refs": [
-    "docs/evidence/M0/PLAN029B-H2212-LINUX-X86-ARM64-REAL-SHORTKEY-DECOY-CACHE-STOP-PASS-20261119.json",
-    "docs/evidence/M0/PLAN029B-H2209-H2210-OLD-P2-ORDINARY-TLS-LINUX-GO-RUST-SCOPED-PASS-20261119.json"
+    "docs/decisions/M0-PLAN029-THROUGHPUT.md",
+    "docs/devlog/M0/20261121-PLAN029-THROUGHPUT-HANDOFF.md",
+    "docs/evidence/M0/PLAN029-H2229-AUTHENTICATED-ACK10-WINDOW65535-NOHOL-20261120.json",
+    "docs/evidence/M0/PLAN029-H2228-THREE-ARM-RELAY-GE200-REAL-TCP-20261120.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2213：Rust32 native lanes、Go64 cold associations、普通TLS8条独立Decoy转发随机15–45s强制断开；Windows实际32 prepared/33rd FULL，Linux Rust32/33边界，Go真实TLS600ms限域强制断开，Linux原生x86/ARM各2真TLS/UDP/Stop成功。32业务客户端同时满载与公网物理NOT_RUN，029OPEN。"
+  "partial_summary": "新施工包产品 NOT_RUN。旧 H2230、H2244 限域结果仅背景，实体 Windows 3 秒上行与 80–200 Mbps 仍 OPEN。无本包性能 dispatch。"
 }

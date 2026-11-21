@@ -95,6 +95,27 @@ func m0WindowsColdPathRetryAllowed(
   authenticatedDead||pathChanged,applied,retries,err)
 }
 
+// H2223: a first-time original FakeTCP/TLS transport timeout may retry
+// without inventing a new handshake. Each attempt owns a fresh source-port
+// ordinal and new original Go association. This tag is assigned ONLY inside
+// the pre-M4 SYN/TLS phase, not for OS, route, driver or business failures.
+var errM0OriginalColdTransportTimeout=errors.New("original FakeTCP/TLS cold transport timeout")
+func m0WindowsTagOriginalColdTransport(err error)error{
+ if err==nil||errors.Is(err,context.Canceled)||
+  errors.Is(err,realityfront.ErrAdmissionAuth){return err}
+ if m0WindowsOriginalColdRetryAllowed(true,false,0,err){
+  return fmt.Errorf("%w: %w",errM0OriginalColdTransportTimeout,err)
+ }
+ return err
+}
+func m0WindowsInitialTransportRetryAllowed(
+ mode m0WindowsV4Mode,applied bool,failedAttempts int,err error,
+)bool{
+ if applied||failedAttempts>=2||err==nil||
+  errors.Is(err,context.Canceled)||errors.Is(err,realityfront.ErrAdmissionAuth)||
+  !errors.Is(err,errM0OriginalColdTransportTimeout){return false}
+ return mode==m0WinModeNormal||mode==m0WinModeFixed||mode==m0WinModeAuto
+}
 // Cold record offer is resolved by Rust's versioned full-IP budget ABI.
 // No separate Windows 1400 cap or Go framing arithmetic is authoritative.
 
@@ -563,13 +584,20 @@ func runM0NativeV4Windows(o m0NativeV4Options)error{
   // After genuine dead90, a new FakeTCP SYN can precede recovery of a
   // 105s one-way outage. Keep GUI alive and retry only cold timeouts,
   // never bypass TLS authentication or reuse the old Rust generation.
-  if ctx.Err()==nil && m0WindowsColdPathRetryAllowed(
-   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err){
+  initialRetry:=m0WindowsInitialTransportRetryAllowed(
+   o.Mode,applied,coldRetries,err)
+  recoveryRetry:=m0WindowsColdPathRetryAllowed(
+   o.Mode,reauthAuthorized,pathRecoveryAuthorized,applied,coldRetries,err)
+  if ctx.Err()==nil&&(initialRetry||recoveryRetry){
    coldRetries++
    authority:="authenticated_health90"
    if pathRecoveryAuthorized{authority="native_physical_ipv4_path"}
+   if initialRetry&&!reauthAuthorized&&!pathRecoveryAuthorized{
+    authority="initial_original_tls_transport_only"
+   }
    fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_COLD_RETRY generation=%d attempt=%d class=timeout authority=%s previous_owner_drained=1\n",generation,coldRetries,authority)
-   timer:=time.NewTimer(2*time.Second)
+   // 1-second and 2-second bounded initial backoff (3 total attempts).
+   timer:=time.NewTimer(time.Duration(coldRetries)*time.Second)
    select{
    case <-ctx.Done():timer.Stop();return nil
    case <-timer.C:
@@ -833,7 +861,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   case <-ctx.Done():return ctx.Err()
   case e:=<-failure:return fmt.Errorf("original V4 TCP bootstrap failed: %w",e)
   case e:=<-handshaked:
-   if e!=nil{return e}
+   if e!=nil{return m0WindowsTagOriginalColdTransport(e)}
    break waitHandshake
   case <-ticker.C:
    if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return e}
@@ -868,7 +896,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if err!=nil{return err}
  auth:=realityfront.ClientAdmissionConfig{
   TLS:realityfront.ClientConfig{ServerName:o.ServerName,
-    RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:true,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second},
+    RouteKey:append([]byte(nil),o.RouteKey...),VerifyServer:o.TLSVerifyServer,RootCAs:o.TrustedServerRoots,Timeout:15*time.Second},
   AutoLease:o.AutoLease,DesiredLanes:1,InstallationID:o.Installation[:],
   Username:o.Username,Password:o.Password,
   TunnelID:o.TunnelID[:],ClientLimit:recordOffer,
@@ -947,7 +975,8 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
   return errors.Join(err,fmt.Errorf("original Windows cold TLS FakeTCP retransmit kernel failure: %w",retryErr),stopErr)
  default:
  }
- if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",err)}
+ if err!=nil{return fmt.Errorf("original credential TLS→mode-specific native Rust V4 owner rejected: %w",
+  m0WindowsTagOriginalColdTransport(err))}
  fmt.Printf("WBD_WINDOWS_ORIGINAL_GO_TLS_RECORD_CAP_AUTHENTICATED mode=%v requested_tun_mtu=%d client_record_offer=%d original_tls=1\n",o.Mode,o.TunnelMTU,auth.ClientLimit)
  // After TLS+Rust, either the same native product service assumes
  // full ownership or we retire Rust FIRST; never return GUI Applied
@@ -1160,6 +1189,10 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  if diagnostic{interval=time.Second}
  metricsTicker:=time.NewTicker(interval)
  defer metricsTicker.Stop()
+ // Low-frequency live GUI status, independent of optional heavy debug JSON.
+ // This invokes the existing Rust readback (not a DATA packet callback).
+ qualityTicker:=time.NewTicker(2*time.Second)
+ defer qualityTicker.Stop()
  var runtimeErr error
 waitNative:
  for{
@@ -1178,6 +1211,16 @@ waitNative:
     fmt.Printf("WBD_WINDOWS_AUTO_REVISION_REQUESTED_NOT_APPLIED revision=%d profile=%d\n",
      state.RequestedRevision,state.Desired)
    }
+  case <-qualityTicker.C:
+   if e:=transport.RefreshEffective(ctx);e!=nil{
+    runtimeErr=fmt.Errorf("native GUI quality owner readback: %w",e)
+    break waitNative
+   }
+   sample:=transport.Stats()
+   installed:=false
+   if p,ok:=transport.(*m0WinRustNativePeer);ok{installed=p.fixedInstalledReported}
+   tx,rx:=m0WindowsQualityStatuses(o.Mode,o.FEC2Profile,installed,sample)
+   m0WindowsPrintQualityNativeV2(tx,rx,sample)
   case <-metricsTicker.C:
    actualMTU,mtuErr:=product.RuntimeMTU(ctx)
    if mtuErr!=nil||actualMTU!=o.TunnelMTU{
@@ -1220,6 +1263,62 @@ waitNative:
  }
  fmt.Println("WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1")
  return runtimeErr
+}
+
+
+// H2224: the GUI receives a bounded read-only STATUS from the SAME Rust owner.
+// It never infers S2C adaptive FEC from C2S, or absence of a sample as zero loss.
+func m0WindowsQualityProfileName(n int)string{
+ switch n{
+ case 0:return "light"
+ case 1:return "mild"
+ case 2:return "medium"
+ case 3:return "balanced"
+ case 4:return "high"
+ case 5:return "strong"
+ case 6:return "maximum"
+ }
+ return "unknown"
+}
+func m0WindowsQualityStatuses(mode m0WindowsV4Mode,
+ selected string,installed bool,s m0NativeV4PacketStats)(tx,rx string){
+ switch mode {
+ case m0WinModeNormal:
+  return "off","off"
+ case m0WinModeFixed:
+  switch selected {
+  case "light","mild","medium","balanced","high","strong","maximum":
+   if installed{return "applied-"+selected,"negotiated-"+selected}
+   return "pending","negotiated-"+selected
+  }
+  return "unknown","unknown"
+ case m0WinModeAuto:
+  if s.AutoPending{return "pending","unknown"}
+  if s.AutoAppliedRevision==0||s.AutoPolicyError!=""{
+   return "unknown","unknown"
+  }
+  return "applied-"+m0WindowsQualityProfileName(int(s.AutoDesiredProfile)),"unknown"
+ default:
+  return "unknown","unknown"
+ }
+}
+// Preserve the existing Game and legacy call contract. Game never adopts
+// Normal/Auto's low-frequency Quality sampler or M2-derived liveness.
+func m0WindowsPrintQualityV2(tx,rx string,txCopied,rxDelivered uint64){
+ m0WindowsPrintQualityNativeV2(tx,rx,m0NativeV4PacketStats{
+  TxPackets:txCopied,RxFirstDelivered:rxDelivered,
+ })
+}
+func m0WindowsPrintQualityNativeV2(tx,rx string,s m0NativeV4PacketStats){
+ rtt,loss,source:="unknown","unknown","none"
+ if s.Mode==m0WinModeAuto&&s.LowRateQualityValid{
+  rtt=fmt.Sprintf("%d",s.LowRateApproxRTTMS)
+  loss=fmt.Sprintf("%d.%d",
+   s.LowRateLossUpperTenthsPct/10,s.LowRateLossUpperTenthsPct%10)
+  source="authenticated-lowrate-quality"
+ }
+ fmt.Printf("WBD_CLIENT_QUALITY_V2 rtt_ms=%s loss_pct=%s tx_ipv4=%d rx_ipv4=%d fec_c2s=%s fec_s2c=%s quality_source=%s\n",
+  rtt,loss,s.TxPackets,s.RxFirstDelivered,tx,rx,source)
 }
 
 func m0WindowsV4Profile(name string)(realityfront.FecV2Profile,error){

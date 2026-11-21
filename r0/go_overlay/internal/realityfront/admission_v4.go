@@ -812,10 +812,11 @@ func EstablishClientV4(ctx context.Context,conn net.Conn,cfg ClientAdmissionConf
     success:=false
     defer func(){ guard.Finish(success);if !success {_=conn.Close()} }()
     tlsCfg:=cfg.TLS
-    // Main-compatible TLS policy belongs to the original CLI opt-in.
-    // Never override it here: the Android A37 device actually showed
-    // DISABLED at parse yet UnknownAuthority at this admission boundary.
-    // A route key does not establish certificate identity when disabled.
+    // H2214/H2216: the client TLS verification policy is an explicit
+    // per-connection choice at the product CLI / WinForms cold boundary.
+    // Never silently force verification ON after the caller opted out.
+    // This intentionally exposes an active-MITM impersonation risk when
+    // VerifyServer=false; encrypted TLS is NOT server authentication.
     tlsCfg.Timeout=guard.Remaining()
     if runtime.GOOS=="android"{
         if tlsCfg.VerifyServer{

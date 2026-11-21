@@ -1,0 +1,219 @@
+name: 'M0 H2229 Windows-style authenticated native ACK10ms Linux Win Normal Game no HOL'
+run-name: 'H2229 original native ACK x86 ARM64 Windows ${{ github.sha }}'
+on:
+  push:
+    branches: ['fix/h2229-unified-native-ack-10ms-window65535-no-hol']
+    paths:
+      - 'crates/wbd-engine/src/v4_presentation_ack.rs'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - 'crates/wbd-engine/src/v4_game_public_kernel.rs'
+      - 'crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
+      - 'crates/wbd-engine/src/v4_windows_native_runtime.rs'
+      - 'crates/wbd-engine/src/lib.rs'
+      - 'tests/test_m0_h2229_native_ack_unified.py'
+      - '.github/workflows/qa-h2229-unified-auth-native-ack10ms.yml'
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  scoped-protocol:
+    name: 'H2229 static + original native Rust platform full ACK ledger test (NOT WAN)'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Audit immutable product source and authenticated ACK boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m unittest -v tests.test_m0_h2229_native_ack_unified
+      - name: Rust native x86 compilation+ledger/auth/no-HOL tests
+        shell: bash
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          F=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record
+          cargo +1.85.1 test --locked -p wbd-engine --features "$F" --lib v4_presentation_ack::tests -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features "$F" --lib original_presentation_ack_tests -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-platform --lib ipv4_tcp -- --nocapture
+          echo H2229_NATIVE_RUST_ACK10MS_WINDOW65535_COMPILE_PASS_NOT_PHYSICAL
+  arm64-original-product:
+    name: 'H2229 ARM64 original Go TLS Rust M4 NAT one443 Game and Normal'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build EXACT original TLS Go and source-native Rust/ISA-L
+        shell: bash
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc g++ nasm python3 \
+            iproute2 iputils-ping iptables conntrack openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2229-arm64-build.log 2>&1 || {
+            tail -n 160 h2229-arm64-build.log;exit 2;
+          }
+      - name: ACTUAL native one443 mixed Normal Game2 Game4 FEC6 kernel double-NAT
+        shell: bash
+        timeout-minutes: 14
+        run: |
+          set -euo pipefail
+          bash tools/h2216-routed-double-nat-native.sh linux-plan029-public-bundle >h2229-arm64-nat.log 2>&1 || {
+            tail -n 190 h2229-arm64-nat.log;exit 2;
+          }
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('fixed-kernel-result/h2216-double-nat-proof.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['qualification']=='REAL_LINUX_NATIVE_NETNS_DOUBLE_NAT'
+          assert d['modes']==['game2','game4-fixed6','fec-auto'],d
+          print('H2229_ARM64_ORIGINAL_GO_RUST_GAME_NORMAL_KERNEL_NAT_STOP_PASS_NOT_REMOTE_RUNNER')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2229-arm64-auth-ack
+          path: |
+            h2229-arm64-build.log
+            h2229-arm64-nat.log
+            fixed-kernel-result/h2216-double-nat-proof.json
+          if-no-files-found: warn
+          retention-days: 14
+  x86-original-product:
+    name: 'H2229 x86_64 original Go TLS Rust M4 mixed Game/Normal NAT'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build original Go TLS Rust native product including all modes
+        shell: bash
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc g++ nasm python3 \
+            iproute2 iputils-ping iptables conntrack openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2229-x86-build.log 2>&1 || {
+            tail -n 160 h2229-x86-build.log;exit 2;
+          }
+      - name: Real native original TLS double NAT and TUN all 3 product modes
+        shell: bash
+        timeout-minutes: 14
+        run: |
+          set -euo pipefail
+          bash tools/h2216-routed-double-nat-native.sh linux-plan029-public-bundle >h2229-x86-nat.log 2>&1 || {
+            tail -n 190 h2229-x86-nat.log;exit 2;
+          }
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('fixed-kernel-result/h2216-double-nat-proof.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['qualification']=='REAL_LINUX_NATIVE_NETNS_DOUBLE_NAT',d
+          print('H2229_X86_ORIGINAL_GO_RUST_GAME_NORMAL_KERNEL_NAT_STOP_PASS_NOT_WINDOWS')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2229-x86-auth-ack
+          path: |
+            h2229-x86-build.log
+            h2229-x86-nat.log
+            fixed-kernel-result/h2216-double-nat-proof.json
+          if-no-files-found: warn
+          retention-days: 14
+  windows-native-owner:
+    name: 'H2229 Windows MSVC Rust M3 original authenticated Go TLS all ciphers'
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env: {GOTOOLCHAIN: local}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Verify actual original Windows Go source assembly (unchanged)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'source mismatch'}
+          python tools/prepare_windows_wiring.py > h2229-windows-assembly.log
+          if($LASTEXITCODE -ne 0){Get-Content h2229-windows-assembly.log -Tail 60;throw 'assembly mismatch'}
+          Push-Location legacy
+          try {
+            go build -trimpath -tags wbd_v4_embedded_go -o ../wbd-client.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'auth original Windows Go driver failed'}
+          } finally { Pop-Location }
+      - name: Build source-pinned ISA-L native Windows MSVC
+        shell: pwsh
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'NASM missing'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin')|Where-Object {Test-Path (Join-Path $_ 'nasm.exe')}|Select-Object -First 1
+          if(-not $nasm){throw 'NASM missing'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'ISA-L clone'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if($LASTEXITCODE -ne 0){throw 'ISA-L pinned commit'}
+          $vswhere='C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath|Select-Object -First 1
+          if(-not $vsroot){throw 'MSVC not available'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          cmd.exe /d /s /c ('call "'+$vcvars+'" && cd isa-l && nmake /f Makefile.nmake')
+          if($LASTEXITCODE -ne 0){throw 'native ISA-L compilation'}
+      - name: Compile actual Windows ACK owners and all cipher TLS
+        shell: pwsh
+        timeout-minutes: 25
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'rustup failed'}
+          $lib=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File|Select-Object -First 1
+          if(-not $lib){throw 'ISA-L static missing'}
+          $env:WBD_ISAL_PREFIX=$lib.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'Windows Rust ACK/Game owner failed'}
+          $env:WBD_M0_WIN_OWNER_DLL=(Resolve-Path target/release/wbd_engine.dll).Path
+          Push-Location legacy
+          try{
+            go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0WindowsTwoOriginalGoFakeTCPProtectedTLSRustOwnersAllCiphers$' ./internal/realityfront
+            if($LASTEXITCODE -ne 0){throw 'Go TLS Windows all ciphers failed'}
+          } finally {Pop-Location}
+          Write-Output 'H2229_WINDOWS_ORIGINAL_M3_DLL_ALL_AUTH_CIPHERS_PASS_NOT_PHYSICAL'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2229-windows-auth-ack
+          path: |
+            h2229-windows-assembly.log
+          if-no-files-found: warn
+          retention-days: 14

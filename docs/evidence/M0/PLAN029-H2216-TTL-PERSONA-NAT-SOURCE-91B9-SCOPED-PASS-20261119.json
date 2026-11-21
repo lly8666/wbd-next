@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "workstream": "M0",
+  "plan": "PLAN029/PLAN029B",
+  "task": "H2216-ROUTED-TTL-NATIVE-RX-PERSONA-REMOVAL",
+  "date": "2026-11-19",
+  "qualification": "PASS_SCOPED_NOT_PHYSICAL_WAN",
+  "product_source_sha": "91b9d521ce1451300533d078844340add4820c29",
+  "latest_observed_main_sha": "517d786c4f5b7d1393d87b15c8d6b68f32ff1d90",
+  "exact_source_note": "H2216 QA at 91b9d521 succeeded. Subsequent f4d75096 docs and 517d786c native-suite test inventory only; no production parser change between them.",
+  "implementation": {
+    "shared_rust_rx": "crates/wbd-platform/src/rx_ipv4_tcp.rs::parse_data_packet/parse_ack_packet no longer call routed_persona_ttl or compare observed hop-limit to persona; accepted received TTL range is 1..255 with otherwise valid packet. TTL=0 rejects WrongIpHeader.",
+    "client_side": "Windows Normal v4_windows_native_runtime.rs and Game v4_windows_game_native_runtime.rs call shared parsers. Linux client original-Go attachment uses wbd-platform/src/linux_raw_carrier.rs through native raw RX.",
+    "server_side": "Linux server original-Go attachment uses same native Linux raw carrier and shared Rust parsers; original Go r0/go_overlay/internal/faketcp/packet.go::ParseIPv4TCP does not check received TTL/persona.",
+    "still_required": "Exact trusted tuple, IPv4/TCP checksums, packet length/options/MTU, protected TLS admission, AEAD, replay/generation and owned Stop remain. Sender initial TTL presentation is not removed.",
+    "physical_header_only_observation": "User-supplied pre-fix physical captures showed Windows11 TTL128 -> received116, Linux Legacy TTL64 -> received52; not a post-fix physical WAN PASS."
+  },
+  "actions": [
+    {
+      "id": 44495120323,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44495120323",
+      "source_sha": "91b9d521ce1451300533d078844340add4820c29",
+      "status": "completed",
+      "conclusion": "success",
+      "windows_job_id": 135460218056,
+      "arm64_job_id": 135460218340,
+      "proof": "Windows AMD64 original-Go CLI/native Rust DLL/GUI self tests and field-trial ZIP; native ARM64 original-Go/Rust build+parser, three independent Linux netns client-SNAT and server DNAT:443, 48 real UDP echoes across Normal/Game2/Game4, Stop isolation and twelve native TLS/TUN scenes"
+    },
+    {
+      "id": 44496578609,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44496578609",
+      "source_sha": "517d786c4f5b7d1393d87b15c8d6b68f32ff1d90",
+      "status": "completed",
+      "conclusion": "success",
+      "proof": "Final main native-functional inventory 95/95 with renamed checksum assertion"
+    },
+    {
+      "id": 44496578586,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44496578586",
+      "source_sha": "517d786c4f5b7d1393d87b15c8d6b68f32ff1d90",
+      "status": "completed",
+      "conclusion": "success",
+      "proof": "Final main R0 V4 real TLS suite"
+    },
+    {
+      "id": 44496578545,
+      "url": "https://github.com/lly8666/wbd-next/actions/runs/44496578545",
+      "source_sha": "517d786c4f5b7d1393d87b15c8d6b68f32ff1d90",
+      "status": "completed",
+      "conclusion": "success",
+      "proof": "Main governance"
+    }
+  ],
+  "artifacts": {
+    "action_id": 44495120323,
+    "names": [
+      "h2216-v2-linux-arm64-server-native",
+      "h2216-v2-windows-amd64-gui-signed-wintun"
+    ],
+    "note": "Action-reported artifacts; individual packaged SHA256SUMS not independently retrieved during M0 cursor refresh."
+  },
+  "historical_fail_preserved": [
+    {
+      "action_id": 44494160039,
+      "source_sha": "5774edc8ae1cfc8565b74309bbbb58e0a2d048d7",
+      "status": "FAIL",
+      "note": "Earlier ARM64 NAT fixture failed before UDP phase; subsequently fixed, not relabeled"
+    },
+    {
+      "action_id": 44495120317,
+      "source_sha": "91b9d521ce1451300533d078844340add4820c29",
+      "status": "FAIL",
+      "note": "Native functional inventory still expected prior TTL test name; fixed in 517d786c, not relabeled"
+    }
+  ],
+  "not_run": [
+    "Physical Windows Npcap -> publicly routed ARM64 server end-to-end after fix",
+    "External ISP/NAT physical MTU/p99/DPI, real 32-client sustained load",
+    "Full PLAN029 D1-D5/P1-P2 and PLAN029B technical exit"
+  ],
+  "boundary": "No new runtime change, new Action or production deployment in this documentation update.",
+  "source_sha": "91b9d521ce1451300533d078844340add4820c29"
+}

@@ -1,0 +1,230 @@
+name: 'M0 H2218 two independent runner NAT-to-NAT TCP443 gate'
+run-name: 'H2218 x86 SNAT to ARM64 DNAT distinct runners ${{ github.sha }}'
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-h2218-two-runner-nat-preflight.yml']
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  arm64-server-private-dnat:
+    name: 'ARM64 private server behind a separate kernel DNAT gateway'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Create genuine ARM64 server netns and DNAT:443 on this runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo -n true
+          command -v ip
+          command -v iptables
+          mkdir -p h2218-out
+          sudo ip netns add h18srv
+          sudo ip link add h18svh type veth peer name h18svn
+          sudo ip link set h18svn netns h18srv
+          sudo ip addr add 10.249.20.1/30 dev h18svh
+          sudo ip link set h18svh up
+          sudo ip -n h18srv addr add 10.249.20.2/30 dev h18svn
+          sudo ip -n h18srv link set h18svn up
+          sudo ip -n h18srv link set lo up
+          sudo ip -n h18srv route replace default via 10.249.20.1
+          sudo sysctl -qw net.ipv4.ip_forward=1
+          sudo iptables -t nat -I PREROUTING 1 -p tcp --dport 443 -m comment --comment H2218-DNAT -j DNAT --to-destination 10.249.20.2:443
+          sudo iptables -I FORWARD 1 -d 10.249.20.2/32 -p tcp --dport 443 -m comment --comment H2218-DNAT -j ACCEPT
+          sudo iptables -I FORWARD 1 -s 10.249.20.2/32 -m comment --comment H2218-DNAT -j ACCEPT
+          python3 - <<'PY'
+          import secrets,pathlib
+          pathlib.Path("h2218-out/nonce").write_text(secrets.token_hex(16))
+          PY
+          cat > h2218-server.py <<'PY'
+          import pathlib,socket,time
+          token=pathlib.Path("h2218-out/nonce").read_text().strip().encode()
+          with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as server:
+              server.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+              server.bind(("10.249.20.2",443))
+              server.listen(8)
+              server.settimeout(1)
+              end=time.monotonic()+270
+              print("H2218_PRIVATE_SERVER_READY",flush=True)
+              while time.monotonic()<end:
+                  try: conn,addr=server.accept()
+                  except socket.timeout: continue
+                  with conn:
+                      conn.settimeout(3)
+                      try:
+                          data=conn.recv(128)
+                          if data==b"H2218/"+token:
+                              conn.sendall(b"H2218-ACK/"+token)
+                              print("H2218_PAIRED_CHALLENGE_REACHED_PRIVATE_SERVER",flush=True)
+                          else: print("H2218_UNRELATED_PROBE",flush=True)
+                      except OSError: pass
+          PY
+          nohup sudo -n ip netns exec h18srv python3 -u h2218-server.py >h2218-out/server.log 2>&1 </dev/null &
+          python3 - <<'PY'
+          import json,os,pathlib,socket,time,urllib.request
+          token=pathlib.Path("h2218-out/nonce").read_text().strip().encode()
+          for i in range(50):
+              try:
+                  with socket.create_connection(("10.249.20.2",443),timeout=.3) as sock:
+                      sock.sendall(b"H2218/"+token)
+                      assert sock.recv(128)==b"H2218-ACK/"+token
+                  break
+              except OSError: time.sleep(.1)
+          else: raise SystemExit("PRIVATE_SERVER_NOT_READY")
+          external=None
+          for site in ("https://api.ipify.org","https://checkip.amazonaws.com"):
+              try:
+                  external=urllib.request.urlopen(site,timeout=7).read(80).decode().strip()
+                  socket.inet_aton(external)
+                  break
+              except (OSError,ValueError): external=None
+          if not external: raise SystemExit("PUBLIC_IPV4_NOT_OBSERVED")
+          peer={"source":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
+                "server_runner_arch":os.uname().machine,
+                "server_public_ip":external,"server_private_ip":"10.249.20.2",
+                "port":443,"nonce":token.decode(),"test":"NETWORK_GATE_ONLY_NOT_WBD"}
+          pathlib.Path("h2218-out/peer.json").write_text(json.dumps(peer,indent=2)+"\n")
+          print("H2218_SERVER_PRIVATE_DNAT_READY public_ip="+external+" tcp443=1",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2218-peer
+          path: h2218-out/peer.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Keep private server online until distinct runner finishes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 52); do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2218-client-result -D h2218-client-result >/dev/null 2>&1; then break; fi
+            sleep 5
+          done
+          if test -s h2218-client-result/receipt.json; then
+            python3 -c 'import json;print("REMOTE_RESULT="+json.load(open("h2218-client-result/receipt.json"))["result"])'
+          else
+            echo "NO_CLIENT_RECEIPT; SERVER_HOLD_ENDED"
+          fi
+      - name: Collect server DNAT kernel counters and remove own netns
+        if: always()
+        shell: bash
+        run: |
+          sudo -n iptables -t nat -nvL PREROUTING | grep -E 'DNAT|Chain' || true
+          sudo -n iptables -t nat -D PREROUTING -p tcp --dport 443 -m comment --comment H2218-DNAT -j DNAT --to-destination 10.249.20.2:443 || true
+          sudo -n iptables -D FORWARD -d 10.249.20.2/32 -p tcp --dport 443 -m comment --comment H2218-DNAT -j ACCEPT || true
+          sudo -n iptables -D FORWARD -s 10.249.20.2/32 -m comment --comment H2218-DNAT -j ACCEPT || true
+          sudo -n ip netns del h18srv || true
+          sudo -n ip link del h18svh || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2218-server-log
+          path: h2218-out/server.log
+          if-no-files-found: warn
+          retention-days: 3
+  x86-client-private-snat:
+    name: 'x86 independent private client behind its own kernel SNAT gateway'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Confirm independent x86 runner and retrieve ARM64's rendezvous artifact
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo -n true
+          command -v ip
+          command -v iptables
+          mkdir -p h2218-peer
+          for i in $(seq 1 35); do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2218-peer -D h2218-peer >/dev/null 2>&1; then break; fi
+            sleep 5
+          done
+          test -s h2218-peer/peer.json || { echo "NO_PEER_ARTIFACT: CROSS_RUNNER_NOT_RUN"; exit 1; }
+      - name: Client isolated netns, NAT MASQUERADE and real public TCP443 challenge
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2218-out
+          sudo ip netns add h18cli
+          sudo ip link add h18clh type veth peer name h18cln
+          sudo ip link set h18cln netns h18cli
+          sudo ip addr add 10.249.21.1/30 dev h18clh
+          sudo ip link set h18clh up
+          sudo ip -n h18cli addr add 10.249.21.2/30 dev h18cln
+          sudo ip -n h18cli link set h18cln up
+          sudo ip -n h18cli link set lo up
+          sudo ip -n h18cli route replace default via 10.249.21.1
+          sudo sysctl -qw net.ipv4.ip_forward=1
+          sudo iptables -t nat -I POSTROUTING 1 -s 10.249.21.2/32 -m comment --comment H2218-SNAT -j MASQUERADE
+          sudo iptables -I FORWARD 1 -s 10.249.21.2/32 -m comment --comment H2218-SNAT -j ACCEPT
+          sudo iptables -I FORWARD 1 -d 10.249.21.2/32 -m conntrack --ctstate ESTABLISHED,RELATED -m comment --comment H2218-SNAT -j ACCEPT
+          cat >h2218-client.py <<'PY'
+          import json,os,pathlib,socket,time
+          peer=json.loads(pathlib.Path("h2218-peer/peer.json").read_text())
+          assert peer["source"]==os.environ["GITHUB_SHA"]
+          assert peer["run_id"]==os.environ["GITHUB_RUN_ID"]
+          assert peer["server_runner_arch"]=="aarch64"
+          assert peer["server_private_ip"]=="10.249.20.2"
+          msg=("H2218/"+peer["nonce"]).encode()
+          want=("H2218-ACK/"+peer["nonce"]).encode()
+          passed=False;errors=[]
+          for _ in range(4):
+              try:
+                  with socket.create_connection((peer["server_public_ip"],443),timeout=4) as c:
+                      c.settimeout(4)
+                      c.sendall(msg)
+                      if c.recv(128)==want: passed=True;break
+                      errors.append("wrong reply (not paired server)")
+              except OSError as exc:
+                  errors.append(type(exc).__name__+": "+str(exc)[:95])
+              time.sleep(2)
+          result="PASS_CROSS_RUNNER_NAT_TCP443_NETWORK_GATE_ONLY" if passed else "UNREACHABLE_CROSS_RUNNER_NAT_TCP443"
+          receipt={"source":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],
+                   "result":result,"client_runner_arch":os.uname().machine,
+                   "client_private_ip":"10.249.21.2","server_private_ip":"10.249.20.2",
+                   "server_public_ip":peer["server_public_ip"],"errors":errors[-4:],
+                   "WBD_Go_Rust":"NOT_RUN","Windows_Npcap":"NOT_RUN","physical_ISP":"NOT_RUN"}
+          pathlib.Path("h2218-out/receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+          print("H2218_CROSS_RUNNER="+result,flush=True)
+          PY
+          sudo -n ip netns exec h18cli env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" python3 h2218-client.py
+          cat h2218-out/receipt.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2218-client-result
+          path: h2218-out/receipt.json
+          if-no-files-found: warn
+          retention-days: 3
+      - name: Fail closed if public TCP443 cannot reach ARM64's private server
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          r=json.load(open("h2218-out/receipt.json"))
+          assert r["result"]=="PASS_CROSS_RUNNER_NAT_TCP443_NETWORK_GATE_ONLY",r
+          assert r["WBD_Go_Rust"]=="NOT_RUN",r
+          print("H2218_DISTINCT_RUNNER_NAT_GATE_PASS_NOT_PRODUCT_PASS")
+          PY
+      - name: Collect client SNAT counters and remove own netns
+        if: always()
+        shell: bash
+        run: |
+          sudo -n iptables -t nat -nvL POSTROUTING | grep -E 'MASQUERADE|Chain' || true
+          sudo -n iptables -t nat -D POSTROUTING -s 10.249.21.2/32 -m comment --comment H2218-SNAT -j MASQUERADE || true
+          sudo -n iptables -D FORWARD -s 10.249.21.2/32 -m comment --comment H2218-SNAT -j ACCEPT || true
+          sudo -n iptables -D FORWARD -d 10.249.21.2/32 -m conntrack --ctstate ESTABLISHED,RELATED -m comment --comment H2218-SNAT -j ACCEPT || true
+          sudo -n ip netns del h18cli || true
+          sudo -n ip link del h18clh || true

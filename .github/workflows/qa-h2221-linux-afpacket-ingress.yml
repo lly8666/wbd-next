@@ -1,0 +1,99 @@
+name: QA H2221 Linux AF_PACKET M4 netfilter contract
+run-name: H2221 source ${{ github.sha }} native Rust plus kernel filter
+on:
+  push:
+    branches: ['fix/plan029-linux-m4-afpacket-rx']
+    paths:
+      - 'crates/wbd-platform/src/linux_raw_carrier.rs'
+      - 'tools/m0_h2221_linux_packet_before_netfilter.py'
+      - '.github/workflows/qa-h2221-linux-afpacket-ingress.yml'
+permissions: {contents: read}
+jobs:
+  linux-native-rust:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Platform Rust compile and unit contracts for exact SOURCE
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-platform --lib
+  isolated-linux-netfilter:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Compare AF_PACKET and IPPROTO_TCP with raw PREROUTING DROP
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo -n true
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables
+          sudo -n python3 -u tools/m0_h2221_linux_packet_before_netfilter.py
+  arm64-original-go-rust-server-field-trial:
+    name: 'ARM64 actual original-Go TLS/Rust M4 build — FIELD_TRIAL_ONLY'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    env:
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Native ARM64 prerequisites and exact trial source
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo -n true
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm python3 iproute2 iputils-ping iptables conntrack openssl
+      - name: Build real original Go+Rust authenticated Linux server from branch
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh > h2221-arm64-build.log 2>&1 || { tail -n 160 h2221-arm64-build.log; exit 1; }
+          test -s linux-plan029-public-bundle/wbd-v4-server
+          test -s linux-plan029-public-bundle/libwbd_engine.so
+          test -s linux-plan029-public-bundle/manifest.json
+      - name: Authentic original Go TLS and Rust native M4 three-client double NAT end-to-end
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          test -c /dev/net/tun
+          bash tools/h2216-routed-double-nat-native.sh linux-plan029-public-bundle > h2221-double-nat.log 2>&1 || { tail -n 170 h2221-double-nat.log; exit 1; }
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path("fixed-kernel-result/h2216-double-nat-proof.json")
+          d=json.loads(p.read_text())
+          assert d["source_sha"]==os.environ["GITHUB_SHA"],d
+          assert d["qualification"]=="REAL_LINUX_NATIVE_NETNS_DOUBLE_NAT",d
+          print("H2221_SCOPE_AUTHENTIC_GO_TLS_RUST_M4_DOUBLE_NAT_PASS_NOT_WINDOWS_PHYSICAL")
+          PY
+      - name: Package exact-source ARM64 server-only field trial (no product PASS)
+        run: |
+          set -euo pipefail
+          mkdir -p delivery/h2221-linux-arm64-server
+          cp linux-plan029-public-bundle/wbd-v4-server linux-plan029-public-bundle/libwbd_engine.so linux-plan029-public-bundle/manifest.json delivery/h2221-linux-arm64-server/
+          (cd delivery/h2221-linux-arm64-server && sha256sum wbd-v4-server libwbd_engine.so manifest.json > SHA256SUMS)
+          printf 'SOURCE=%s\nSCOPE=ARM64_NATIVE_BUILD_AND_PLATFORM_TEST_ONLY\nLINUX_AF_PACKET_M4_RX=EXPERIMENTAL\nLINUX_FIREWALL_RULES=NOT_CAPTURED\nWINDOWS_TO_PHYSICAL_SERVER=NOT_RUN\nACTUAL_REVERSE_BUSINESS_RXDELIVERED=NOT_RUN\nPRODUCT_PASS=NO\n' "$GITHUB_SHA" > delivery/h2221-linux-arm64-server/BUILD_INFO.txt
+          tar -czf delivery/wbd-h2221-linux-arm64-server-TRIAL.tar.gz -C delivery h2221-linux-arm64-server
+          sha256sum delivery/wbd-h2221-linux-arm64-server-TRIAL.tar.gz > delivery/SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2221-arm64-server-afpacket-field-trial
+          path: |
+            delivery/
+            h2221-arm64-build.log
+            h2221-double-nat.log
+            fixed-kernel-result/h2216-double-nat-proof.json
+          if-no-files-found: warn
+          retention-days: 30
