@@ -1,10 +1,11 @@
-# H2263: One native ARM64 runner, ONE scenario, serial A(Go fq600)
-# -> B(isolated test netns client TUN fq250) -> A'(Go fq600).
+# H2263/H2264: One native ARM64 runner, ONE declared FQ candidate per
+# SOURCE. Serial A(Go fq600) -> B(isolated test netns client TUN selected
+# per-flow cap 250 or 300Mbps) -> A'(Go fq600), same exact build/Stop.
 # Keep identical original Go TLS/Rust no-probe binaries, genuine TUN/raw,
 # four kernel TCP bulk +160 sparse UDP and small TCP and owned Stop each leg.
 # This is a test fixture qdisc contrast, NOT a product/default config change.
-name: M0 PLAN029 ARM64 original shared-TUN fq250 single-factor
-run-name: "M0-029 ARM64 true original FQ600-250-600 | ${{ github.sha }}"
+name: M0 PLAN029 ARM64 original shared-TUN per-flow FQ single-factor
+run-name: "M0-029 ARM64 original FQ600-${{ contains(github.event.head_commit.message, '[m0-029-fq300-arm]') && '300' || '250' }}-600 | ${{ github.sha }}"
 on:
   workflow_dispatch:
   push:
@@ -16,7 +17,7 @@ permissions:
   contents: read
 jobs:
   arm64-true-fq-abaprime:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-fq250-arm]')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-fq250-arm]') || contains(github.event.head_commit.message, '[m0-029-fq300-arm]')
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 48
     concurrency:
@@ -28,6 +29,7 @@ jobs:
       WBD_PLAN029_LINUX_DUAL_ISA: "1"
       WBD_M0_029_NO_PROBE: "1"
       WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      WBD_M0_029_FQ_TRIAL_RATE: ${{ contains(github.event.head_commit.message, '[m0-029-fq300-arm]') && '300' || '250' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -71,7 +73,7 @@ jobs:
           assert "wbd_m0_embedded_go_loop_debug_pause_jumbo" not in exported
           print("M029_H2263_ONE_RELEASE_ORIGINAL_GO_RUST_ARM64_BUILD_PASS",flush=True)
           PY
-      - name: Same-native-ISA original A fq600, B fq250, A-prime fq600 with real Stop
+      - name: Same-native-ISA original A fq600, B declared fq cap, A-prime fq600 with real Stop
         shell: bash
         timeout-minutes: 28
         run: |
@@ -92,9 +94,11 @@ jobs:
                  "m029-product-shared-fq-a_prime/summary.json"]
           rows=[json.loads(pathlib.Path(p).read_text()) for p in paths]
           sha=os.environ["GITHUB_SHA"]
+          selected=int(os.environ["WBD_M0_029_FQ_TRIAL_RATE"])
+          assert selected in (250,300)
           immutable=rows[0]["same_release_binary_sha256"]
           digest=[]
-          for r,leg,rate in zip(rows,("A","B","A_prime"),(600,250,600)):
+          for r,leg,rate in zip(rows,("A","B","A_prime"),(600,selected,600)):
               assert r["source_sha"]==sha and r["arch"]=="aarch64"
               assert r["same_release_binary_sha256"]==immutable
               assert r["probe_compiled"] is False and r["independent_m1_m4_stage_observer"] is False
@@ -134,7 +138,7 @@ jobs:
                "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"arch":"aarch64",
                "scope":"only original Linux native netns full protected Go TLS/Rust at explicit outer1160, no injected loss",
                "one_immutable_binary_bundle":immutable,
-               "single_factor":"test-only client ephemeral TUN kernel fq600->250->600, all other settings and test-only classifier same",
+               "single_factor":"test-only client ephemeral TUN kernel fq600->"+str(selected)+"->600, all other settings and test-only classifier same",
                "not_product_default":True,"not_causal_if_baseline_drift_exceeds_effect":True,
                "not_full_timed_delivery_or_qualifying_performance":True,
                "legs":digest}
@@ -146,7 +150,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: m0-029-h2263-arm-fq-${{ github.run_id }}-${{ github.run_attempt }}
+          name: m0-029-h2263-h2264-arm-fq-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             plan029-linux-build.log
             linux-plan029-public-bundle/manifest.json

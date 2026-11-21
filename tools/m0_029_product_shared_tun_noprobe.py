@@ -60,6 +60,9 @@ FIRSTDROP=(FIRSTDROP=="1")
 FQ_TRIAL_LEG=os.environ.get("WBD_M0_029_FQ_TRIAL_LEG","")
 if FQ_TRIAL_LEG not in ("","A","B","A_prime"):
     raise RuntimeError("M029_H2263_FQ_TRIAL_LEG_INVALID")
+FQ_TRIAL_RATE=os.environ.get("WBD_M0_029_FQ_TRIAL_RATE","250")
+if FQ_TRIAL_RATE not in ("250","300"):
+    raise RuntimeError("M029_H2264_FQ_TRIAL_RATE_NOT_PREDECLARED")
 if FQ_TRIAL_LEG and (STAGE or SERVICE or RAWCOST or RECOVERY or FIRSTDROP):
     raise RuntimeError("M029_H2263_FQ_TRIAL_CANNOT_MIX_OBSERVERS")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
@@ -267,10 +270,10 @@ def main():
                 raise RuntimeError("M029_H2263_ACTUAL_ORIGINAL_FQ600_KERNEL_MISSING")
             if FQ_TRIAL_LEG=="B":
                 ns(node.client,"tc","qdisc","replace","dev",G["CLIENT_TUN"],
-                   "root","fq","maxrate","250mbit","flow_limit","256")
+                   "root","fq","maxrate",FQ_TRIAL_RATE+"mbit","flow_limit","256")
             after=ns(node.client,"tc","-d","qdisc","show",
                      "dev",G["CLIENT_TUN"]).stdout
-            expected=250 if FQ_TRIAL_LEG=="B" else 600
+            expected=int(FQ_TRIAL_RATE) if FQ_TRIAL_LEG=="B" else 600
             if ("qdisc fq " not in after or " root " not in after or
                 " maxrate "+str(expected)+"Mbit" not in after or
                 " flow_limit 256" not in after):
