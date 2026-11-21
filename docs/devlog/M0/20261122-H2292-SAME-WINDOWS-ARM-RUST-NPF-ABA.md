@@ -16,3 +16,8 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"H2292 only uses test-only original full signed Windows/ARM products and default-off H2291 trial feature, source-matched two real Windows Rust DLLs, authentic three-generation GoTLS/Wintun/TUN/owned Stop. No default app configs or Go/ARM product modification."}
 ```
+
+## H2292 第一轮真实失败已核准，修唯一候选manifest路径后续原配对
+- [Action44943590620](https://github.com/lly8666/wbd-next/actions/runs/44943590620) 精确SOURCE `c3c0745be16db6baf9d28923fbea3af532ff3e2f`：static、Win同源双DLL真实编译、ARM原构件复用均SUCCESS；两组Windows真实原产品 **A_default** 已实际成功，A组 ARM真收 498302976B/**154.435Mbps**、P99 **172ms**、原Win CPU **32.8943秒/GiB**，B组收381911040B/**119.740Mbps**、P99 **219ms**、Win CPU **45.0279秒/GiB**；两组原证书、Npcap/Wintun/TUN、160回显和WAL Stop成功。但两组刚切 `B_tx16` 即在原 `tools/m0_h2286_full_windows_product.py:assert_original_binaries()` 因 `result/wl-public/h2291-windows-dll-manifest.json` 缺失发生 `FileNotFoundError`，真实候选 B **根本没有启动**，两组ARM端随之收包等待失败；整单6远端jobs FAIL。**不算B性能负例、不得将只完成A写成三腿PASS**。
+- 原H2292 Windows builder已在 `result/h2292-download/candidate/` 输出真实候选manifest+DLL，client下载到 `result/h2292-candidate/`；在切换DLL时只复制候选DLL，漏将其**同SOURCE证明**复制到当前 `result/wl-public/`。现修复局限于H2292测试切换器：只有B阶段把候选来源manifest同步到原产品校验路径，A/A′和finally清理它，DLL真实 SHA与source/feature/Go EXE依然逐腿校验，三个阶段各自真实重启、各自Stop与ARM复用，不改原 GoTLS/Rust/NPF生产代码。补静态回归防此遗漏再次消耗六台VM。旧FAIL与成功的A原证据完整保留。
+- 下一轮必须同一组真正同机A→B→A′各25s、160小TCP与ARM真实收字节均完整才能计算候选吞吐CPU/有效GiB/P99，原DEFAULT-off feature维持。依旧两套各三台独立VM，不另开无谓裸TCP测试；任何旧版差异与后续1%5%外层修复资格均明确OPEN。

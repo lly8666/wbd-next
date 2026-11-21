@@ -29,6 +29,9 @@ BINARY=pathlib.Path("result/wl-public/wbd_engine.dll")
 ORIGINAL=ROOT/"original-verified-wbd_engine.dll"
 CANDIDATE=pathlib.Path("result/h2292-candidate/wbd_engine.dll")
 MANIFEST=pathlib.Path("result/h2292-candidate/h2291-windows-dll-manifest.json")
+# The shared original product validator reads the source-locked manifest from
+# the same directory as the currently active actual Windows Rust DLL.
+ACTIVE_MANIFEST=BINARY.parent/"h2291-windows-dll-manifest.json"
 
 
 def require(ok,reason):
@@ -106,6 +109,8 @@ def verify_binary_archive():
              "m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record" and
             hashlib.sha256(BINARY.read_bytes()).hexdigest()==default["dll_sha256"],
             "DEFAULT_AND_CANDIDATE_SAME_COMPILED_RUST_FEATURE_BASE")
+    require(not ACTIVE_MANIFEST.exists(),
+            "H2292_BASELINE_MUST_NOT_START_WITH_CANDIDATE_MANIFEST")
     shutil.copy2(BINARY,ORIGINAL)
     return default["dll_sha256"],src["dll_sha256"]
 
@@ -122,9 +127,18 @@ def win_trial(group,relay,arm,ready):
             tuned=tag=="B_tx16"
             chosen=CANDIDATE if tuned else ORIGINAL
             shutil.copy2(chosen,BINARY)
+            if tuned:
+                # H2286.assert_original_binaries reads this exact path for
+                # every fresh original Go/Rust session. H2292 first A passed
+                # but B never started because this companion manifest was
+                # left only under result/h2292-candidate/.
+                shutil.copy2(MANIFEST,ACTIVE_MANIFEST)
+            else:
+                ACTIVE_MANIFEST.unlink(missing_ok=True)
             require(hashlib.sha256(BINARY.read_bytes()).hexdigest()==
-                    (new_sha if tuned else old_sha),
-                    "ACTUAL_DLL_BEFORE_ORIGINAL_GO_EXEC_NOT_EXPECTED")
+                    (new_sha if tuned else old_sha) and
+                    ACTIVE_MANIFEST.exists()==tuned,
+                    "ACTUAL_DLL_AND_CANDIDATE_MANIFEST_NOT_AT_ACTIVE_LOCATION")
             os.environ["WBD_H2291_WINDOWS_TX_CANDIDATE"]="1" if tuned else "0"
             if tuned:
                 os.environ["WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA"]=CANDIDATE_BUILD_SHA
@@ -214,6 +228,7 @@ def win_trial(group,relay,arm,ready):
         # Never leave candidate DLL installed in this test job after Stop.
         if ORIGINAL.exists():
             shutil.copy2(ORIGINAL,BINARY)
+        ACTIVE_MANIFEST.unlink(missing_ok=True)
         if original_candidate is None:
             os.environ.pop("WBD_H2291_WINDOWS_TX_CANDIDATE",None)
         else:
