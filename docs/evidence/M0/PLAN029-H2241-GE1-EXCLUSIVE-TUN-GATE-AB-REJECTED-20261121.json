@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2241_REAL_GE1_TRUE_SINGLE_ROUTE_GATE_ABA_REJECTED_AS_PRODUCT",
+  "source_sha": "db4a5877308b75692c1aec3f756e9225ced95419",
+  "run_id": 44847350573,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44847350573",
+  "artifact_id": 14684120917,
+  "status": "PASS_NATIVE_X86_ORIGINAL_GO_TLS_RUST_ROUTING_NEGATIVES_AND_THREE_REAL_TCP_CASES_ALL_OWNED_STOP",
+  "product_optimization": "NOT_ACCEPTED",
+  "test_only_gate_enabled_only_in_middle_case": true,
+  "topology": "one GitHub x86 VM with original TLS, Rust TUN/AF_PACKET and three actual Linux netns; not physical WAN or Windows",
+  "condition": {
+    "target_GE_loss_pct": 1,
+    "oneway_extra_delay_ms": 200,
+    "added_jitter_ms": 0,
+    "actual_inner_tcp_streams": 4,
+    "iperf_duration_s": 20,
+    "netem_random_seed": "UNSEEDED_UBUNTU_TC",
+    "same_source_runner": true
+  },
+  "direct_receiver_mbps": {
+    "before": 973.642,
+    "after": 1034.405
+  },
+  "variants": [
+    {
+      "name": "original_before",
+      "gate": false,
+      "receiver_goodput_mbps": 267.847,
+      "real_inner_tcp_retransmits": 32417,
+      "source_rust_tun_queue_full": 25940,
+      "source_rust_tun_backpressure": 40335,
+      "source_rust_tun_queue_age_drops": 0,
+      "max_source_200ms_queue_full": 4700,
+      "source_tun_kernel_qdisc_drops": 0,
+      "source_tun_kernel_link_tx_drops": 0,
+      "tx_cpu_sampled_seconds": 6.375005071,
+      "tx_cpu_per_receiver_gib_s_approx": 10.22,
+      "retx_per_receiver_gib_approx": 51981
+    },
+    {
+      "name": "exclusive_gate_candidate",
+      "gate": true,
+      "receiver_goodput_mbps": 319.747,
+      "real_inner_tcp_retransmits": 43909,
+      "source_rust_tun_queue_full": 2185,
+      "source_rust_tun_backpressure": 77285,
+      "source_rust_tun_queue_age_drops": 0,
+      "max_source_200ms_queue_full": 188,
+      "source_tun_kernel_qdisc_drops": 0,
+      "source_tun_kernel_link_tx_drops": 38670,
+      "tx_cpu_sampled_seconds": 8.66415833,
+      "tx_cpu_per_receiver_gib_s_approx": 11.64,
+      "retx_per_receiver_gib_approx": 58980,
+      "gate_turns": 12326,
+      "gate_actual_sleep_total_ns": 3170008992,
+      "gate_actual_max_one_sleep_ns": 1896508,
+      "only_one_exact_route_condition": true
+    },
+    {
+      "name": "original_after",
+      "gate": false,
+      "receiver_goodput_mbps": 265.633,
+      "real_inner_tcp_retransmits": 57456,
+      "source_rust_tun_queue_full": 50467,
+      "source_rust_tun_backpressure": 76875,
+      "source_rust_tun_queue_age_drops": 0,
+      "max_source_200ms_queue_full": 8844,
+      "source_tun_kernel_qdisc_drops": 0,
+      "source_tun_kernel_link_tx_drops": 0,
+      "tx_cpu_sampled_seconds": 6.32179562,
+      "tx_cpu_per_receiver_gib_s_approx": 10.22,
+      "retx_per_receiver_gib_approx": 92899
+    }
+  ],
+  "first_native_action": {
+    "run_id": 44846997911,
+    "result": "FAIL_UNIT_ONLY_MISSING_PINNED_ISAL_PREFIX",
+    "detail": "product original Go TLS and accelerated Rust release compile passed, separate routing Rust unit mistakenly requested native FEC feature; fixed by testing isolated route logic without the unrelated ISA-L native test dependency; no TCP executed in failed run"
+  },
+  "conclusion": {
+    "what_worked": "Candidate cold single-route gate reduced Rust source queue full 25940/50467 to2185 and showed higher receiver goodput 319.7 vs267.8/265.6Mbps in this single same-VM unseeded GE draw.",
+    "why_rejected": "True kernel TUN device tx_dropped became38670 only during candidate, while original two phases0 and all fq qdisc drops0; loss was displaced upstream. M4 TX CPU per actual delivered GiB worsened ~14% (11.64 vs10.22 s/GiB), true max requested <=1000us sleep measured1896508ns, p99/small TCP and UDP not qualified. TCP retrans per delivered GiB not unambiguously improved.",
+    "caveats": "No exact shared loss sequence across TCP cases, one source/SOURCE x86 only, source link tx_dropped and qdisc drop different counters. The gate may delay other flows on one lease and a joining second lease during a sleeping turn. Product full no-HOL cannot be claimed.",
+    "stop_all_real": true,
+    "second_live_lease_rust_unit_negative": true,
+    "stale_generation_unit_negative": true,
+    "next": "Do not turn gate on by default. First identify source first failure without hiding local loss: investigate fair producer-side pacing at existing kernel TUN and original M4 consumption/wakeup including sent/kern wait under same 1% multi-flow, rather than expanding queue or outer ordered ACK wait; evaluate actual packet delivery/p99 and multi-lease promptly before platform rollout."
+  },
+  "immutable_protocols": "original standard Go TLS/TCP-like, one Rust data owner, out-of-order immediate RX delivery/no HOL, original ciphertext/PN bounded once opportunistic performative outer retransmission, FEC, AEAD/MTU/lease/generation and owned Stop remain unchanged",
+  "modes_not_run": [
+    "Windows actual Wintun/Npcap",
+    "Linux ARM64 product gate",
+    "Normal Fixed/Auto",
+    "Game2/Game4",
+    "physical independent WAN",
+    "small TCP/UDP p99"
+  ]
+}
