@@ -237,6 +237,8 @@ class OwnedLocal:
             *(['WBD_H2240_TUN_TIMELINE=1',
                'WBD_PLAN028_EXTERNAL_STAGE_DIAG=1']
               if os.environ.get("WBD_H2240_NATIVE_TEST")=="1" else []),
+            *(['WBD_H2241_ONE_ROUTE_PRESSURE_GATE=1']
+              if os.environ.get("WBD_H2241_NATIVE_GATE")=="1" else []),
             str(self.build/"wbd-v4-client"),
             "--raw-interface","wan0","--local-ip",IP_C,
             "--local-port",str(port),"--peer-ip",IP_S,"--peer-port","443",

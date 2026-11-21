@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "checkpoint": "H2240_TRUE_GE1_SOURCE_SHARED_TUN_M4_TIMELINE",
+  "source_sha": "8c9272f8126b140d3f62b90c84da8b781b43be3b",
+  "run_id": 44839906785,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44839906785",
+  "artifact_id": 14680371720,
+  "result": "PASS_STATIC_NATIVE_GO_TLS_RUST_IPERF_1_FLOW_4_FLOW_1_FLOW_AND_ORIGINAL_OWNED_STOP",
+  "topology": "x86_64 single runner true three-Linux-netns L3 router; original Go TLS/Rust with actual TUN and raw AF_PACKET; no physical Windows/WAN",
+  "condition": {
+    "GE_target_loss_pct": 1,
+    "additional_oneway_delay_ms": 200,
+    "inner_tcp": true,
+    "real_receiver_goodput": true,
+    "no_random_seed_control": true,
+    "duration_iperf_each_s": 20,
+    "original_cli_fec_profile_argument": "6",
+    "fec_enabled_interpretation": "VERIFY_PRODUCT_PROFILE_SEMANTICS_NOT_ASSUMED"
+  },
+  "direct_four_flow_receiver_mbps": {
+    "before": 763.76,
+    "after": 909.956
+  },
+  "phases": [
+    {
+      "name": "single_before",
+      "streams": 1,
+      "receiver_mbps": 142.789,
+      "inner_tcp_retransmits": 4098,
+      "shared_tun_queue_full_drops": 0,
+      "shared_tun_backpressure": 21,
+      "max_200ms_queue_full": 0,
+      "case_buckets_tun_observed": 387350,
+      "case_buckets_tx_copied": 387307,
+      "case_buckets_tx_cpu_s": 1.971687038,
+      "maximum_oldest_pending_ns": 0
+    },
+    {
+      "name": "four_flows",
+      "streams": 4,
+      "receiver_mbps": 320.265,
+      "inner_tcp_retransmits": 28342,
+      "shared_tun_queue_full_drops": 20064,
+      "shared_tun_backpressure": 35335,
+      "max_200ms_queue_full": 3470,
+      "case_buckets_tun_observed": 879487,
+      "case_buckets_tx_copied": 859429,
+      "case_buckets_tx_cpu_s": 5.186644895,
+      "maximum_oldest_pending_ns": 487655,
+      "largest_two_adjacent_200ms_drop_count": 6231,
+      "near_largest_drop_500ms_m4_cpu_fraction": 0.737,
+      "near_2749_drop_500ms_m4_cpu_fraction": 0.4
+    },
+    {
+      "name": "single_after",
+      "streams": 1,
+      "receiver_mbps": 102.075,
+      "inner_tcp_retransmits": 2540,
+      "shared_tun_queue_full_drops": 14,
+      "shared_tun_backpressure": 33,
+      "max_200ms_queue_full": 14,
+      "case_buckets_tun_observed": 272659,
+      "case_buckets_tx_copied": 272651,
+      "case_buckets_tx_cpu_s": 1.373308266,
+      "maximum_oldest_pending_ns": 0
+    }
+  ],
+  "source_notes": "Original production SharedTun reader uses per lease 8 packets pending and 64 slots per original M4 inbox. When inbox/pending saturates, physical reader can keep reading true kernel TUN; it drops new arrivals at full. Submillisecond oldest pending wait at 200ms samples is NOT proof of no short transient full; 200ms counters indicate short bursts. Kernel qdisc drops require per-phase direct readback, not inferred. Threads are clock_monotonic aligned but 200ms/500ms bins are not per-packet causality.",
+  "conclusion": "H2240 shows source-side local overflow is strongly concurrent-flow/burst related, not a persistently full M4 CPU core; no proof of specific scheduler defect yet. Do not enlarge queue or add HOL; test precisely single live lease admission backpressure, never on multiple active leases.",
+  "product_fix": "NOT_IMPLEMENTED_NOT_PROVEN",
+  "physical_windows": "NOT_RUN",
+  "modes_fixed_auto_game": "NOT_RUN"
+}

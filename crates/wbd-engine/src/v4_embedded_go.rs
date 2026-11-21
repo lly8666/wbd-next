@@ -4649,6 +4649,24 @@ fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
     pending.retain(|_,q|!q.packets.is_empty());
     d
 }
+// H2241 bench-opt-in boundary: a kernel TUN is shared by ALL authenticated
+// leases, so withholding a read because ONE route is congested would create
+// cross-lease HOL. Permit kernel ingress backpressure ONLY when exactly one
+// live current route exists and its exact generation has a full small queue.
+// Never wait on an outer PN, missing packet, ACK, FEC block or another lease.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn only_live_shared_tun_route_saturated(
+    routes:&HashMap<[u8;4],SharedTunRoute>,
+    pending:&HashMap<[u8;4],PendingSharedTunRoute>
+)->bool{
+    if routes.len()!=1 || pending.len()!=1{return false}
+    let Some((key,route))=routes.iter().next()else{return false};
+    if !route.alive.load(Ordering::Acquire){return false}
+    pending.get(key).is_some_and(|q|
+        same_shared_tun_route(&q.route,route)&&
+        q.packets.len()==SHARED_TUN_PENDING_PER_ROUTE &&
+        q.queued_bytes<=SHARED_TUN_PENDING_BYTES_PER_ROUTE)
+}
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 impl SharedTunReader{
     fn note_dispatch(&self,d:SharedTunDispatchDelta){
@@ -5116,6 +5134,53 @@ fn m0_plan028_h1461_peak75_urgent_fifo_drain_without_larger_queue(){
 
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
+fn m0_h2241_exclusive_reader_gate_refuses_cross_route_or_generation_hol(){
+    let (tx,_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    let alive=Arc::new(AtomicBool::new(true));
+    let route=SharedTunRoute{generation:12,alive:Arc::clone(&alive),send:tx};
+    let key=[10,66,0,2];
+    let mut routes=HashMap::new();
+    routes.insert(key,route.clone());
+    let (recycle,_recycle_rx)=mpsc::sync_channel::<Vec<u8>>(8);
+    let mut pending=HashMap::new();
+    let packets=(0..SHARED_TUN_PENDING_PER_ROUTE).map(|i|
+        PendingSharedTunPacket{
+            packet:OriginalTunIngress::Shared(SharedTunPacket{
+                bytes:vec![i as u8],recycle:recycle.clone(),
+            }),
+            bytes:1,queued_at:Instant::now(),
+        }
+    ).collect::<VecDeque<_>>();
+    pending.insert(key,PendingSharedTunRoute{
+        route:route.clone(),packets,queued_bytes:SHARED_TUN_PENDING_PER_ROUTE,
+    });
+    assert!(only_live_shared_tun_route_saturated(&routes,&pending));
+    // A second independently authenticated /32 must NEVER wait because A
+    // has full ingress. A's pending FIFO/lease remains unchanged.
+    let (b_tx,_b_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    routes.insert([10,66,0,3],SharedTunRoute{
+        generation:2,alive:Arc::new(AtomicBool::new(true)),send:b_tx,
+    });
+    assert!(!only_live_shared_tun_route_saturated(&routes,&pending));
+    routes.remove(&[10,66,0,3]);
+    // Stale /32 owner cannot block a newly authenticated successor.
+    let (new_tx,_new_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    routes.insert(key,SharedTunRoute{
+        generation:13,alive:Arc::new(AtomicBool::new(true)),send:new_tx,
+    });
+    assert!(!only_live_shared_tun_route_saturated(&routes,&pending));
+    routes.insert(key,route.clone());
+    assert!(only_live_shared_tun_route_saturated(&routes,&pending));
+    alive.store(false,Ordering::Release);
+    assert!(!only_live_shared_tun_route_saturated(&routes,&pending));
+    alive.store(true,Ordering::Release);
+    pending.get_mut(&key).unwrap().packets.pop_front();
+    assert!(!only_live_shared_tun_route_saturated(&routes,&pending));
+    assert_eq!(pending[&key].queued_bytes,SHARED_TUN_PENDING_PER_ROUTE);
+}
+
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
 fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
     let (recycle,_rx)=mpsc::sync_channel::<Vec<u8>>(32);
     let packet=|n:u8,size:usize|OriginalTunIngress::Shared(SharedTunPacket{
@@ -5332,6 +5397,20 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     let mut pressure_tun_batches=0u64;
     #[cfg(feature="fec2_product_record")]
     let mut pressure_tun_observed=0u64;
+    // H2241: a cold bench candidate, not production default behavior.
+    // Each backpressured turn yields for 125..1000us; no new queue/reader,
+    // no additional sender/PN, and never pauses for another live lease.
+    #[cfg(feature="fec2_product_record")]
+    let exclusive_gate=std::env::var("WBD_H2241_ONE_ROUTE_PRESSURE_GATE")
+        .ok().as_deref()==Some("1");
+    #[cfg(feature="fec2_product_record")]
+    let mut exclusive_sleep_us=125u64;
+    #[cfg(feature="fec2_product_record")]
+    let mut exclusive_gate_turns=0u64;
+    #[cfg(feature="fec2_product_record")]
+    let mut exclusive_gate_sleep_ns=0u64;
+    #[cfg(feature="fec2_product_record")]
+    let mut exclusive_gate_max_ns=0u64;
     let fd=router.tun.readiness_fd();
     while !router.stop.load(Ordering::Acquire){
         #[cfg(feature="fec2_product_record")]
@@ -5362,6 +5441,25 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             continue
         }
         router.note_dispatch(flush_shared_tun(&mut pending));
+        #[cfg(feature="fec2_product_record")]
+        if exclusive_gate{
+            // Route table lock is NEVER held during sleep; a new authenticated
+            // lease can publish immediately. If >1 route or an old generation,
+            // continue the original fair reader immediately, with no waiting.
+            let stop_read=router.routes.try_lock().ok().is_some_and(|routes|
+                only_live_shared_tun_route_saturated(&routes,&pending));
+            if stop_read{
+                let start=Instant::now();
+                thread::sleep(Duration::from_micros(exclusive_sleep_us));
+                let elapsed=start.elapsed().as_nanos().min(u64::MAX as u128) as u64;
+                exclusive_gate_turns=exclusive_gate_turns.saturating_add(1);
+                exclusive_gate_sleep_ns=exclusive_gate_sleep_ns.saturating_add(elapsed);
+                exclusive_gate_max_ns=exclusive_gate_max_ns.max(elapsed);
+                exclusive_sleep_us=(exclusive_sleep_us*2).min(1000);
+                continue
+            }
+            exclusive_sleep_us=125;
+        }
         if !loop_readiness(fd,&router.stop,if pending.is_empty(){10}else{1}){continue}
         let read={
             let [a,b,c,d,e,f,g,h]=&mut scratch;
@@ -5419,6 +5517,12 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             }
             router.note_dispatch(delta);
         }
+    }
+    #[cfg(feature="fec2_product_record")]
+    if exclusive_gate{
+        eprintln!("V4_PUBLIC_H2241_TUN_GATE_STOP generation={} gated_turns={} sleep_ns={} max_sleep_ns={} single_route_only=1 no_hol=1 original_owner=1 no_queue_or_wire_change=1",
+            router.generation,exclusive_gate_turns,
+            exclusive_gate_sleep_ns,exclusive_gate_max_ns);
     }
     #[cfg(feature="fec2_product_record")]
     if pressure_timeline{
