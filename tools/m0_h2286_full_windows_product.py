@@ -27,6 +27,9 @@ APP_IP="10.66.0.2"
 APP_PEER="10.66.0.1"
 GUEST_PORT=443
 RELAY_PORT=18727
+# Product inside REAL Wintun/TUN must NEVER inherit the outer/relay TCP port.
+# Importing legacy m0_h2276_three_runner_tcp sets tcp.PORT=18727 globally!
+INNER_TUN_TCP_PORT=45902
 
 
 def require(cond,label):
@@ -184,6 +187,7 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
     prev_bytes=tcp.BULK_MAX_BYTES
     prev_seconds=tcp.BULK_SEND_S
     prev_timeout=tcp.TIMEOUT_S
+    prev_inner_tcp_port=tcp.PORT
     try:
         guestroute.wsl("sysctl","-w","net.ipv4.ip_forward=1")
         for rule in scope_nat_rules(win,guest,relay_ip):
@@ -222,6 +226,15 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         tcp.BULK_MAX_BYTES=512*1024*1024
         tcp.BULK_SEND_S=25
         tcp.TIMEOUT_S=180
+        require(core.PORT==RELAY_PORT and
+                INNER_TUN_TCP_PORT!=RELAY_PORT and
+                tcp.PORT==RELAY_PORT,
+                "LEGACY_CORE_PORT_MUTATION_NOT_IDENTIFIED_FAIL_CLOSED")
+        tcp.PORT=INNER_TUN_TCP_PORT
+        require(tcp.PORT==45902,"INNER_TUN_TCP_PORT_NOT_ISOLATED")
+        output["original_product_inner_tcp_port"]=tcp.PORT
+        output["outer_kernel_arm_relay_port"]=core.PORT
+        print("H2289_ORIGINAL_WINDOWS_WINTUN_INNER_TCP_PORT45902_NOT_OUTER18727",flush=True)
         print("H2286_WINDOWS_ORIGINAL_NPCAP_TLS_WINTUN_TCP_START",flush=True)
         capture=io.StringIO()
         with contextlib.redirect_stdout(capture):
@@ -266,6 +279,7 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         core.save(ROOT/"client-result.json",output)
         raise
     finally:
+        tcp.PORT=prev_inner_tcp_port
         tcp.WINDOW_TEST_BYTES=prev_window
         tcp.BULK_MAX_BYTES=prev_bytes
         tcp.BULK_SEND_S=prev_seconds

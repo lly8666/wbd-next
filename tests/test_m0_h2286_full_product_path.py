@@ -113,6 +113,25 @@ class H2286TrueOriginalWinArmProduct(unittest.TestCase):
                   "h2286-a-original-arm-product-ready-evil"):
             self.assertIsNone(allowed.fullmatch(n))
 
+    def test_inner_original_Wintun_tcp_45902_never_inherits_outer_18727(self):
+        # Proven original ARM wbds0 tcpdump at Action44938505739:
+        # actual client SYN dest 18727, Linux app LISTEN dest45902, RST each.
+        # Importing legacy three-runner core overwrote shared tcp.PORT.
+        self.assertEqual(win.INNER_TUN_TCP_PORT,45902)
+        self.assertEqual(win.RELAY_PORT,18727)
+        self.assertEqual(win.core.PORT,18727)
+        self.assertEqual(win.tcp.PORT,18727)
+        source=(ROOT/"tools/m0_h2286_full_windows_product.py").read_text()
+        self.assertIn("prev_inner_tcp_port=tcp.PORT",source)
+        self.assertIn("tcp.PORT=INNER_TUN_TCP_PORT",source)
+        self.assertIn("tcp.PORT=prev_inner_tcp_port",source)
+        self.assertIn("LEGACY_CORE_PORT_MUTATION_NOT_IDENTIFIED_FAIL_CLOSED",source)
+        self.assertIn("H2289_ORIGINAL_WINDOWS_WINTUN_INNER_TCP_PORT45902_NOT_OUTER18727",source)
+        self.assertIn("original_product_inner_tcp_port",source)
+        self.assertIn("outer_kernel_arm_relay_port",source)
+        probe=(ROOT/"tools/m0_wl_loss_tcp_probe.py").read_text()
+        self.assertIn("PORT = 45902",probe)
+
     def test_true_product_code_not_modified(self):
         assert (ROOT/"tools/m0_h2286_full_windows_product.py").is_file()
         assert (ROOT/"tools/m0_h2286_arm_product.py").is_file()
