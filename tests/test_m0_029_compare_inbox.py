@@ -12,6 +12,8 @@ SOURCE="a"*40
 def fixture(bps=(300,330,290),cpu=(10,9,10)):
     rows=[]
     for idx,(name,slots) in enumerate(mod.ORDER):
+        start=1000000000+idx*30000000000
+        end=start+20000000000
         echo={k:{"requests_sent":160,"unique_replies":150,"missing":10,
                  "latency_ms":{"p99":300.0}} for k in ("udp","tcp")}
         row={"name":name,"server_inbox_slots":slots,
@@ -19,12 +21,12 @@ def fixture(bps=(300,330,290),cpu=(10,9,10)):
              "owned_stop":{"server":{"generation":20+idx},"client":{"generation":30+idx}},
              "measure":{"original_product_tcp":{
                  "tcp_streams":4,"receiver_bps":bps[idx]*1e6,
-                 "start_monotonic_ns":1000,"end_monotonic_ns":200000000000},
+                 "start_monotonic_ns":start,"end_monotonic_ns":end},
                  "cpu_and_rss":{"server":{"cpu_seconds_per_rx_gib":cpu[idx]},
                                 "client":{"cpu_seconds_per_rx_gib":cpu[idx]}},
                  "smallflow":{"status":"PASS_SCOPED_REAL_INNER_UDP_TCP_ECHO",
-                              "probe_start_monotonic_ns":1000000000,
-                              "probe_end_monotonic_ns":12000000000,**echo},
+                              "probe_start_monotonic_ns":start+2000000000,
+                              "probe_end_monotonic_ns":start+14000000000,**echo},
                  "router_kernel_skb":{dev:{"netem_skb_emitted_delta":1000,
                                            "netem_skb_drop_delta":10}
                                       for dev in ("rcli0","rsrv0")}}}
@@ -62,6 +64,30 @@ class TestCompare(unittest.TestCase):
         y=fixture()
         y["phases"][1]["measure"]["smallflow"]["probe_end_monotonic_ns"]=1000000000000
         with self.assertRaises(ValueError):mod.readout(y,SOURCE,"5")
+    def test_client_only_phases_must_have_actual_both_cold_readbacks(self):
+        data=fixture()
+        for idx,row in enumerate(data["phases"]):
+            row["client_inbox_slots"]=row.pop("server_inbox_slots")
+            row["server_inbox_slots"]=64
+            row["client_generation"]=10+idx
+            row["server_generation"]=20+idx
+            row["native_cold_readback_verified"]=True
+        result=mod.readout(data,SOURCE,"5")
+        self.assertEqual(result["changed_inbox_side"],"client")
+        self.assertNotEqual(result["status"],"PRODUCT_PASS")
+        data["phases"][1]["server_inbox_slots"]=256
+        with self.assertRaises(ValueError):mod.readout(data,SOURCE,"5")
+        data["phases"][1]["server_inbox_slots"]=64
+        del data["phases"][1]["native_cold_readback_verified"]
+        with self.assertRaises(ValueError):mod.readout(data,SOURCE,"5")
+    def test_overlapping_original_candidate_legs_must_fail(self):
+        data=fixture()
+        candidate=data["phases"][1]["measure"]
+        candidate["original_product_tcp"]["start_monotonic_ns"]=10000000000
+        candidate["original_product_tcp"]["end_monotonic_ns"]=30000000000
+        candidate["smallflow"]["probe_start_monotonic_ns"]=12000000000
+        candidate["smallflow"]["probe_end_monotonic_ns"]=24000000000
+        with self.assertRaises(ValueError):mod.readout(data,SOURCE,"5")
     def test_scalar_baseline_drift_is_explicit(self):
         r=mod.compare_scalar(100,130,120)
         self.assertEqual(r["candidate_vs_baselines"],"ABOVE_BOTH")
