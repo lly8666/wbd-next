@@ -5,22 +5,22 @@
   "reservation_revision": 4,
   "assignment_epoch": 1,
   "sequence": 2292,
-  "checkpoint_sha": "8011df207afb35ca7e43e9ea1f0bef62efc04059",
+  "checkpoint_sha": "c75fafc71f558593c319579f9fae3b34bcb29ca0",
   "progress": "partial",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "M0 PLAN029 H2292：两组完整原Windows2025签名Npcap/Wintun GoTLS/Rust→独立ARM原GoTLS/Rust TUN，真实A原DLL两组154.435/119.740Mbps P99 172/219ms、160echo/Stop成功；首次B仅因测试切换候选manifest丢失而未启动。源码dc2da4已修，新的源锁双组三Runner Action44949570906构建和静态成功，业务在途；PR#68 Draft。",
-  "why_now": "真实Windows Go/Rust TX线程内核成本高且H2291 NPF16/64KiB候选跨VM不可比较，必须同Win同ARM同relay A默认→B候选→A′默认测真实吞吐/CPU秒/GiB/P99。此前c3c0745的B FileNotFoundError是夹具丢候选manifest而非性能失败；dc2da4修复精确位置，未修改产品默认。",
+  "current_task": "M0 PLAN029/H2292完整产品双组三Runner原Windows2025签名Npcap/Wintun GoTLS/Rust→独立ARM relay→独立ARM原AF_PACKET/TUN、同机A default/B TX16/NPF64KiB/A′default、25s四TCP+160小TCP 9/9 ACTION SUCCESS。A候选吞吐+48.7% Win CPU/GiB-37.8% P99 188vs原266/250；B+21.4% CPU/GiB-21.9% P99 313vs原297/375；真实ARM收到字节/Stop全PASS。下一任务H2293真1%/5% FEC2弱网原Windows产品。",
+  "why_now": "两组原真实Windows产品都在同一组三Runner旧→新→旧配对证明H2291 TX16+NPF16x64KiB原Rust feature opt-in减少CPU/GiB且提高吞吐，但尚未验证双向200ms loss1/5%及FEC2和其他模式。曾经8Mbps裸TCP是夹具窗口不足，勿反复复测。H2292测试准备WLS peer发布过晚已修，Windows Rust相同编译SRC经真实产品diff零差重复复用。",
   "done_when": "原Win签名Npcap/Wintun GoTLS/Rust与独立ARM原GoTLS/Rust在两组三Runner持续4x25s真收端goodput、160次小TCP P99、Win原Go/Rust阶段CPU秒/GiB与各TX/RX热线程/relay tailscaled最热核/ARM原Rust和本机drop、原子Stop均来源真实证据；然后只修真实热点并同VM A/B/A′验证吞吐/P99/CPU与Stop。双向200ms0/1/5% FEC2等后续资格仍OPEN，不能拿OS基准或最优组冒充产品PASS。",
-  "next_action": "收H2292 Action44949570906九jobs最终状态、同VM双组 A/B/A′ ARM真收字节、Windows原Go/Rust进程CPU秒/GiB、TX线程、P99、relay tailscaled、原Stop/实际NPF profile；若新失败定位第一错误续同枝，若两组配对均胜且尾延迟不变考虑feature晋级，否则保持默认OFF。随后尽快用完整Windows产品测双向200ms 1%/5%原内核loss和FEC2 OFF/fixed/OFF，不再测试裸TCP。",
+  "next_action": "优先H2293真实两组独立3Runner原Windows2025签名Npcap/Wintun原GoTLS/Rust客户端，经ARM Linux relay双向实际tc 200ms/1%和5%分档，到独立ARM原GoTLS/Rust TUN服务端，同机FEC2 OFF→fixed0/light或fixed1/mild→OFF，验原FEC2 Applied、ARM接收、cpu/GiB、P99/late/Stop及Linux Rust稳态和本机drop；之后判TX16 default及affected modes资格。",
   "unverified": true,
-  "last_tested_source": "c3c0745be16db6baf9d28923fbea3af532ff3e2f",
+  "last_tested_source": "13d391cbb64ef06c55b046c6d73a2d69e096c54d",
   "evidence_refs": [
-    "docs/devlog/M0/20261122-M0-PLAN029-H2292-WIN-TRUE-PRODUCT-RESTART.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2292-DUAL-FULL-WINDOWS-TX16-QUALIFICATION.md"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
-    "docs/devlog/M0/20261122-M0-PLAN029-H2291-WIN-REAL-CPU-RESTORE.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2292-WIN-TRUE-PRODUCT-RESTART.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2292旧c3c0745 Action44943590620静态/真实双DLL构建和ARM构件复用SUCCESS，两组A默认真实完整原Windows产品154.435Mbps/P99172ms、119.740Mbps/P99219ms，160/160 Wintun-TUN和WAL Stop；B切换时因h2291 manifest未在result/wl-public而FileNotFoundError，B/A′ NOT_RUN。dc2da4针对测试专用manifest同步已推送，Action44949570906在途。H2290原版与H2291候选不同VM不能推因果性能。"
+  "partial_summary": "H2292 SOURCE13d391cbb64ef06c55b046c6d73a2d69e096c54d Action44951274107 9/9 PASS。完整原Windows到ARM sameVM两组三段A/B/A': A129.189/189.617/125.835Mbps, Win CPU秒/GiB44.5287/28.1498/45.9966, P99266/188/250; B119.277/139.332/110.18, CPU48.7536/39.4356/52.1978, P99297/313/375。原本H2292 B manifest夹具FAIL和A WSL身份超时历史留存，现完全成功。feature默认OFF，产品FEC2弱网未做，不可收口。"
 }
