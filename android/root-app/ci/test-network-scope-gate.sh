@@ -466,7 +466,9 @@ assert 'fn h2216_original_windows_128_to_116_client_public_nat_data_and_ack()' i
 assert 'PacketPersona::Windows11, 116u8' in main_ttl
 assert 'PacketPersona::Legacy, 52u8' in main_ttl
 assert 'RxError::IpChecksum' in main_ttl
-assert 'crate::rx_ipv4_tcp::parse_data_packet(' in android_io
+# A50 intentionally replaced the strict front gate with the M3-pending fast
+# path; the original AEAD/PN verifier still decides actual delivery.
+assert 'crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(' in android_io
 # main Linux single kernel raw / multi-buffer receive both call the
 # H2216 shared parser; n and len are distinct source-local variable names.
 assert 'parse_data_packet(&slot[..n],trusted)' in linux_io
