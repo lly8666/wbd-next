@@ -43,7 +43,10 @@
  fn set_native_thread_name(name:&[u16;14]) {
      let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
  }
- const BATCH:usize=8;
+ // Existing 32-packet service quantum is unchanged. H2291 ONLY reduces
+// per-batch owner-lock acquisitions and permits 16 immediately READY M1
+// records to share one 64KiB NPF queue syscall, without waiting to fill.
+const BATCH:usize=if cfg!(feature="h2291_windows_tx_service"){16}else{8};
  // H1977 original signed Win32-QPC for 1024-byte translated TCP DATA.
  // TCP ACK/FIN/fragment packets are excluded, duplicates are RETAINED.
  // The rewritten kernel-local proxy port is joined to original source port
@@ -118,7 +121,9 @@
 // A Direct return quantum must match this TX loop's four 8-packet ingress
 // quanta. Otherwise the finite TCP return FIFO can fill under a real burst.
 const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
- const POST_INGRESS_RETURN_QUANTUM:usize=BATCH;
+ // Preserve the original small TCP reverse-service fairness ceiling even
+// when the separate Tunnel ingress seal batch is raised to sixteen.
+const POST_INGRESS_RETURN_QUANTUM:usize=8;
  // An auto-reset mailbox wake is not a counting semaphore. When all 32
  // Direct returns of a bounded RX turn were consumed, more TCP ACK/DATA
  // may already be queued even though Windows coalesced the SetEvent calls.
@@ -1068,7 +1073,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  if reverse_count==DIRECT_RETURN_QUANTUM{still_ready=true}
                  } // reverse work genuinely pending
              }
-             for _ in 0..4 {
+             for _ in 0..(RX_WAKE_BATCH/BATCH) {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms)?;

@@ -1,0 +1,19 @@
+# M0 PLAN029 H2291 · 完整Windows产品 TX/Npcap内核开销的有界候选
+
+## 已核实原H2290源锁两组三Runner（2026-11-22）
+- [Action44940140123](https://github.com/lly8666/wbd-next/actions/runs/44940140123) SOURCE `d5690ef41ca5fb40313375b82e1761dd6f95a4d1` attempt1 **8/8 SUCCESS**，两套独立Win2025真实签名Npcap1.88/Wintun0.14.1 + 原 Go TLS/Rust → 独立ARM64 Linux kernel relay→独立ARM原GoTLS/Rust AF_PACKET/TUN TCP，25s×四个Windows原Wintun内核TCP/160稀疏echo，原GoTLS认证与OS Applied、WAL和Rust Owned Stop PASS。新的单根client-result ZIP解除了旧H2289等待器空转，ARM两组Stop/relay两组都已成功结束。Windows EXE仍为`c5066db61fc51bafd7c2ad2def3029e615efa777`构件，ARM原真实二进制`97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573`，非Python/Winsock外层冒充。
+- 原始原生Windows CPU采样ZIP：A `14721287235`（单根客户端结果`14721476211`，ARM`14721491245`），B `14721376734`（结果`14721915093`，ARM`14720254736`）。结构化真数据见`docs/evidence/M0/PLAN029-H2290-WIN-ARM-REAL-TX-RX-CPU-20261122.json`。
+- **A** ARM原Rust TUN TCP实际接收 `491520000B` /25.422s = **154.675Mbps**；160/160小TCP，P99 **250ms**、>1s 0。Win host allcore busy83.673%，但**原Go/Rust共进程CPU总17.703s/25.031s采样窗口=0.707核**（user3.125/kernel14.578，kernel82.35%，38.673 CPU秒/实际ARM GiB）；已识别原Rust TX线程CPU下界12.234s（kernel10.281）、RX下界5.094s（kernel4.047）。ARM relay tailscaled CPU39.890s/25.509=1.564核，relay最热核48.96%。
+- **B** 真ARM接收 `262619136B`/25.969s=**80.902Mbps**；160/160 P99 **125ms**、迟回0。Win host busy62.049%，原Go/Rust进程11.328s/24.422s=0.464核（kernel9.3125/user2.0156，kernel82.21%，46.316s/GiB）；原Rust TX下界7.922s(kernel6.594)、RX3.109s(kernel2.469)，relay tailscaled27.65s/26.145=1.058核，relay最热核36.92%。
+- **事实与边界**：原产品数据完整且本机丢包看似极低，但CPU热点**不是一核满载**。Go/Rust线程下界不涵盖未命名线程/驱动DPC/ISR/WSL2/tailscaled；kernel时间可能包括等待内核驱动及copy，不等于所有都是同步系统调用CPU；源功能级瓶颈还未知。A/B不同实际VM容量变动不作为产品优化因果提升。别拿早期H2289的118/155Mbps替换H2290两组真实80.9/154.7数据。需要有辨别力的新处理条件。
+
+## 本次唯一原产品代码候选（默认完全不变）
+- 窗口原源码 `crates/wbd-engine/src/v4_windows_native_runtime.rs`：原Wintun就绪Tunnel DATA一次`BATCH=8`、每个TX轮至多4个批次，总服务`RX_WAKE_BATCH=32`；原`crates/wbd-platform/src/windows_native_io.rs`：真正原Npcap TX `pcap_sendqueue_transmit`队列每次只装**8包/16KiB**，不足队列就立即发，单包回落原pcap_sendpacket，原驱动PREFIX/uncertain结果不可更改。观察到Windows原Rust TX/RX线程kernel时间占大头，先质疑一次出队/进NPF的固定成本，而不直接给Windows本地M1/TUN/Go大量队列。
+- 显式**release默认OFF** Cargo feature `h2291_windows_tx_service`（engine映射到platform）仅H2291候选真实Windows DLL启用，将就绪`BATCH=16`、每轮最多**2次**批次（依旧总不超过32包）、Npcap sendqueue最大**16包/64KiB**；原`POST_INGRESS_RETURN_QUANTUM=8`维持小TCP Direct回程公平；**没有等待凑批/没有计时器、Go逐包调用、额外业务状态/重复密文发送**。每包仍保留原PN唯一性、真实NPF accepted/uncertain前缀的认证账与Rust WAL Stop，所有其他产品/模式构建保持原8/16KiB。
+- Windows原生测试在真正wpcap模拟C ABI下断言同16个ready Ethernet帧：feature开**1次**sendqueue transmit，feature关仍**2次**；首包立即发、短返回的accepted/uncertain依旧原测试。真正候选DLL必须在接入Win签名Npcap驱动后输出`H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue=1 queue_bytes=65536 max_frames=16`，否则候选FAIL，不可由源码字符串伪造PASS。
+- 新 `qa-h2291-dual-original-win-tx-batch.yml`单Action内**一个Windows builder**通过指定工具链在真正Windows跑平台/Engine Rust单测、构建**唯一同SHA候选dll**并记录实际PE原导出/SHA256；两个独立三机组仅下载一次候选构件，原GoTLS EXE保持来源原`c506...`实际SHA不变、签名Npcap和Wintun仍实际安装，ARM原二进制由于本次改动仅Windows-only模块和显式默认关闭Cargo feature，可复用旧精确ARM hash；两组真正原Wintun→ARM TUN 25s 4TCP+160echo、Windows原Go/Rust CPU进程及TX/RX线程/relay tailscaled、P99、业务源字节、原Owned Stop均原样对照，若任一构件或真实队列不成立**INFRA_FAIL/NO PRODUCT CLAIM**。
+- **计划验收**：先证明候选完整双组三Runner能跑且队列真实生效；只用本run绝对吞吐与CPU秒/真实GiB判断候选有没有明显机会，不把与不同Runner的H2290作配对收益。然后把原A（旧DLL）→B（候选DLL）→A′（旧DLL）放在**同一个真实Windows/ARM/relay机组三个连续25s窗口**测准确因果，必须至少两个独立三机组都不伤P99、TCP及时交付、zero local drop和Stop，才考虑默认晋级。若B全核/driver成本反恶化，立刻弃此候选再查NPF/WSL2 DPC及真正ARM RX而非盲扩大M1队列。剩余原双向200ms loss1/5% FEC2和其它平台仍OPEN，PR#68继续Draft。
+
+```feature-impact
+{"kind":"none","reason":"H2291 adds opt-in only Windows real Rust NPF TX native 16-ready/64KiB sendqueue trial under explicit Cargo feature, preserves original all-default 8ready/16KiB. GoTLS, ARM, user config, Windows driver, original authenticated receipts and owned Stop unchanged."}
+```

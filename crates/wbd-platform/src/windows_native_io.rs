@@ -156,8 +156,20 @@ pub struct NpcapSendQueue {
     pub len: u32,
     pub buffer: *mut u8,
 }
-const NPF_QUEUE_BYTES: usize = 16 * 1024;
-const NPF_QUEUE_PACKETS: usize = 8;
+// H2291 applies ONLY when the matching feature is present. The original
+// production default stays 8 packets/16KiB until both Windows/ARM product
+// triplets prove throughput, P99 and CPU per delivered GiB. First READY
+// packet still transmits immediately; no coalescing deadline is introduced.
+const NPF_QUEUE_BYTES: usize = if cfg!(feature="h2291_windows_tx_service") {
+    64 * 1024
+} else {
+    16 * 1024
+};
+const NPF_QUEUE_PACKETS: usize = if cfg!(feature="h2291_windows_tx_service") {
+    16
+} else {
+    8
+};
 
 /// Single RX-worker use only; raw pcap_t and DLL remain owned by the Go
 /// scoped handoff. The Go reader MUST have stopped before construction.
@@ -227,10 +239,15 @@ impl NpcapTx {
         let queue = fns.queue_alloc
             .filter(|_| fns.queue_transmit.is_some() && fns.queue_destroy.is_some())
             .and_then(|allocate| NonNull::new(unsafe { allocate(NPF_QUEUE_BYTES as u32) }));
+        #[cfg(feature="h2291_windows_tx_service")]
+        eprintln!(
+            "H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue={} queue_bytes={} max_frames={} ready_only=1",
+            u8::from(queue.is_some()), NPF_QUEUE_BYTES, NPF_QUEUE_PACKETS);
         Ok(Self { handle, fns, queue })
     }
     /// Drive all READY Ethernet frames without waiting to fill a queue.
-    /// At most 8/16KiB are submitted to one NPF sendqueue call; a short
+    /// At most the profile's bounded 8/16 packet and 16/64KiB queue in one
+    /// NPF sendqueue call. The default release profile remains 8/16KiB; a short
     /// return is mapped to EXACT accepted packet-end offsets. A fragment of
     /// one packet is Uncertain; never re-encrypt/retry its potentially copied
     /// bytes or infer any peer ACK from this syscall.
@@ -634,6 +651,37 @@ mod tests {
         let q = unsafe { Box::from_raw(queue) };
         unsafe { drop(Box::from_raw(q.buffer.cast::<[u8; NPF_QUEUE_BYTES]>())); }
         QUEUE_FREES.fetch_add(1, Ordering::SeqCst);
+    }
+    #[test]
+    fn h2291_ready_sixteen_frames_use_one_queue_only_when_explicitly_enabled() {
+        QUEUE_COPIES.store(0, Ordering::SeqCst);
+        QUEUE_BYTES.store(0, Ordering::SeqCst);
+        let fns = NpcapFns {
+            next_ex,send_packet,get_event,
+            queue_alloc:Some(queue_alloc),
+            queue_transmit:Some(queue_whole),
+            queue_destroy:Some(queue_destroy),
+        };
+        let mut tx=unsafe{NpcapTx::from_borrowed(2,fns).unwrap()};
+        let sixteen=[&IPV4[..];16];
+        let result=tx.send_batch(&sixteen);
+        assert_eq!(result.accepted_prefix,16);
+        assert_eq!(result.uncertain_index,None);
+        assert!(result.error.is_none());
+        assert_eq!(QUEUE_COPIES.load(Ordering::SeqCst),
+            if cfg!(feature="h2291_windows_tx_service"){1}else{2});
+        assert_eq!(QUEUE_BYTES.load(Ordering::SeqCst),
+            (if cfg!(feature="h2291_windows_tx_service"){16}else{8})
+             *(16+IPV4.len()));
+        drop(tx);
+    }
+    unsafe extern "C" fn queue_whole(
+        _: *mut c_void, queue:*mut NpcapSendQueue, _:i32
+    )->u32{
+        let len=unsafe{(*queue).len};
+        QUEUE_BYTES.store(len as usize,Ordering::SeqCst);
+        QUEUE_COPIES.fetch_add(1,Ordering::SeqCst);
+        len
     }
     #[test]
     fn native_sendqueue_partial_bytes_map_to_one_uncertain_packet() {

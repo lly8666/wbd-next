@@ -65,11 +65,20 @@ def assert_original_binaries():
     m=json.loads((p/"windows-binary-manifest.json").read_text())
     require(m["source_sha"]=="c5066db61fc51bafd7c2ad2def3029e615efa777",
             "FROZEN_WIN_BINARY_SOURCE_MANIFEST")
+    h2291=os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")=="1"
+    c=None
+    if h2291:
+        c=json.loads((p/"h2291-windows-dll-manifest.json").read_text())
+        require(c["source_sha"]==os.environ["GITHUB_SHA"] and
+                c["trial_feature"]=="h2291_windows_tx_service" and
+                c["original_go_exe_source_sha"]==m["source_sha"],
+                "H2291_EXACT_RUST_SOURCE_AND_ORIGINAL_GO_ABI_MANIFEST")
     for filename,key in (("wbd-client-embedded.exe","exe"),
                          ("wbd_engine.dll","dll")):
         f=p/filename
+        expected=(c["dll_sha256"] if h2291 and key=="dll" else m["sha256"][key])
         require(f.is_file() and f.stat().st_size>100000 and
-                hashlib.sha256(f.read_bytes()).hexdigest()==m["sha256"][key],
+                hashlib.sha256(f.read_bytes()).hexdigest()==expected,
                 "WIN_NATIVE_EXE_DLL_ACTUAL_SHA256_"+key)
     require((p/"wintun.dll").is_file() and
             (p/"wpcap.dll").is_file(),"SIGNED_NATIVE_DRIVER_LIBRARY_ABSENT")
@@ -343,6 +352,14 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         # ARM and relay post-test cleanup despite both Win products PASS.
         core.save(core.ROOT/"client-result.json",output)
         print("H2290_SOURCE_LOCKED_MINIMAL_CROSS_RUNNER_RESULT_READY",flush=True)
+        if os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")=="1":
+            actual=clientlog.read_text(errors="replace") if clientlog.exists() else ""
+            output["h2291_original_windows_npf_queue_verified"]=(
+                "H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue=1 queue_bytes=65536 max_frames=16"
+                in actual)
+            if not output["h2291_original_windows_npf_queue_verified"]:
+                output["status"]="FAIL_H2291_RUST_CANDIDATE_QUEUE_NOT_ACTUALLY_USED"
+            core.save(ROOT/"client-result.json",output)
         print("H2286_CLIENT_ACTUAL_WINDOWS_ORIGINAL_RESULT "+output["status"],flush=True)
     require(output["status"]=="PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP",
             "ORIGINAL_PRODUCT_OR_STOP_NOT_VERIFIED")
