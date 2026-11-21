@@ -4514,6 +4514,24 @@ fn original_shared_small_udp(packet:&[u8])->bool{
         packet[9]==17
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn original_shared_unsealed_bulk_tcp(packet:&OriginalTunIngress)->bool{
+    let OriginalTunIngress::Shared(buf)=packet else{return false};
+    let data=buf.as_slice();
+    // This test-only admission never substitutes for the original M3
+    // authentication. It only determines which unsealed TUN source may
+    // be evicted; never sacrifice a short TCP, SYN/FIN/RST or pure ACK.
+    if data.len()<20+20+512||data[0]>>4!=4{return false}
+    let ihl=usize::from(data[0]&15)*4;
+    if ihl<20||ihl+20>data.len()||data[9]!=6{return false}
+    let total=usize::from(u16::from_be_bytes([data[2],data[3]]));
+    if total!=data.len()||
+        u16::from_be_bytes([data[6],data[7]])&0x3fff!=0{return false}
+    let tcp_h=usize::from(data[ihl+12]>>4)*4;
+    tcp_h>=20&&ihl+tcp_h<=total&&
+        total.saturating_sub(ihl+tcp_h)>=512&&
+        data[ihl+13]&0x07==0
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
     key:[u8;4],route:SharedTunRoute,bytes:usize,make:F
@@ -4605,7 +4623,8 @@ fn enqueue_shared_tun_cold_priority<F:FnOnce()->OriginalTunIngress>(
             // One-factor, cold opt-in only. Do not let a saturated single
             // TCP lease reject the first tiny independent UDP merely because
             // the eight unsealed pending slots all hold TCP. Evict the most
-            // recent pending TCP, never an in-kernel/PN-sealed record or UDP.
+            // recent VERIFIED BULK TCP, never small TCP/SYN/FIN/RST/ACK,
+            // any in-kernel/PN-sealed record or UDP.
             // The surviving TCP and UDP streams retain their FIFO ordering;
             // one old UDP already pending prevents repeated UDP preemption.
             // There is NO new slot, growth, cross-lease state or retry.
@@ -4613,7 +4632,7 @@ fn enqueue_shared_tun_cold_priority<F:FnOnce()->OriginalTunIngress>(
                 !q.packets.iter().any(|p|
                     original_shared_ipv4_protocol(&p.packet)==Some(17)){
                 if let Some(index)=q.packets.iter().rposition(|p|
-                    original_shared_ipv4_protocol(&p.packet)==Some(6)){
+                    original_shared_unsealed_bulk_tcp(&p.packet)){
                     let removed_bytes=q.packets[index].bytes;
                     if q.queued_bytes.saturating_sub(removed_bytes)
                         .saturating_add(bytes)<=SHARED_TUN_PENDING_BYTES_PER_ROUTE{
@@ -5562,10 +5581,18 @@ fn m0_plan029_fair_turn_still_expires_routes_after_global_budget(){
 fn m0_plan029_udp_slot_trial_keeps_authenticated_queue_bounded_and_fifo(){
     let (recycle,_reuse)=mpsc::sync_channel::<Vec<u8>>(32);
     let packet=|seq:u8,proto:u8|{
-        let mut bytes=vec![0u8;40];
+        let len:usize=if proto==6{832}else{40};
+        let mut bytes=vec![0u8;len];
         bytes[0]=0x45;
-        bytes[3]=40;
+        bytes[2]=(len>>8) as u8;
+        bytes[3]=len as u8;
         bytes[9]=proto;
+        if proto==6{
+            // Valid 20-byte TCP header and 792 bytes of data, not a
+            // small TCP echo, bare ACK or handshake packet.
+            bytes[20+12]=0x50;
+            bytes[20+13]=0x18; // PSH/ACK; no FIN/SYN/RST.
+        }
         bytes[28]=seq;
         OriginalTunIngress::Shared(SharedTunPacket{
             bytes,recycle:recycle.clone(),
@@ -5579,7 +5606,7 @@ fn m0_plan029_udp_slot_trial_keeps_authenticated_queue_bounded_and_fifo(){
     let ip=[10,66,0,141];
     let mut pending=HashMap::new();
     for seq in 1..=8u8{
-        let d=enqueue_shared_tun(&mut pending,ip,route.clone(),40,
+        let d=enqueue_shared_tun(&mut pending,ip,route.clone(),832,
             ||packet(seq,6));
         assert_eq!(d.overflow,0);
     }
@@ -5593,7 +5620,7 @@ fn m0_plan029_udp_slot_trial_keeps_authenticated_queue_bounded_and_fifo(){
         &mut pending,ip,route.clone(),40,true,||packet(99,17));
     assert_eq!((d.overflow,d.displaced_tcp),(1,1));
     assert_eq!(pending[&ip].packets.len(),8);
-    assert_eq!(pending[&ip].queued_bytes,8*40);
+    assert_eq!(pending[&ip].queued_bytes,7*832+40);
     let seqs=pending[&ip].packets.iter().map(|p|
         match &p.packet{
             OriginalTunIngress::Shared(b)=>b.as_slice()[28],
@@ -5610,6 +5637,48 @@ fn m0_plan029_udp_slot_trial_keeps_authenticated_queue_bounded_and_fifo(){
     // queue; no runtime default is silently promoted by the trial.
     let off=enqueue_shared_tun(&mut pending,ip,route,40,||packet(101,17));
     assert_eq!((off.overflow,off.displaced_tcp),(1,0));
+}
+
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[cfg(test)]
+#[test]
+fn m0_plan029_udp_priority_cannot_evict_small_tcp_or_control(){
+    let (recycle,_rx)=mpsc::sync_channel::<Vec<u8>>(16);
+    let make=|payload:usize,flags:u8|{
+        let total=20+20+payload;
+        let mut b=vec![0u8;total];
+        b[0]=0x45;b[2]=(total>>8) as u8;b[3]=total as u8;
+        b[9]=6;b[32]=0x50;b[33]=flags;
+        OriginalTunIngress::Shared(SharedTunPacket{
+            bytes:b,recycle:recycle.clone(),
+        })
+    };
+    assert!(!original_shared_unsealed_bulk_tcp(&make(0,0x10)));
+    assert!(!original_shared_unsealed_bulk_tcp(&make(24,0x18)));
+    assert!(!original_shared_unsealed_bulk_tcp(&make(511,0x18)));
+    assert!(!original_shared_unsealed_bulk_tcp(&make(800,0x12)));
+    assert!(!original_shared_unsealed_bulk_tcp(&make(800,0x11)));
+    assert!(!original_shared_unsealed_bulk_tcp(&make(800,0x14)));
+    assert!(original_shared_unsealed_bulk_tcp(&make(512,0x18)));
+    let (tx,_receiver)=mpsc::sync_channel::<OriginalTunIngress>(1);
+    assert!(tx.try_send(make(24,0x18)).is_ok());
+    let route=SharedTunRoute{generation:99,alive:Arc::new(AtomicBool::new(true)),send:tx};
+    let ip=[10,66,0,144];
+    let mut pending=HashMap::new();
+    for _ in 0..SHARED_TUN_PENDING_PER_ROUTE{
+        let d=enqueue_shared_tun(&mut pending,ip,route.clone(),64,
+            ||make(24,0x18));
+        assert_eq!(d.overflow,0);
+    }
+    // An overloaded lease with only small TCP does not let new UDP steal
+    // a control packet; this is an intentionally truthful UDP rejection.
+    let d=enqueue_shared_tun_cold_priority(&mut pending,ip,route,40,true,||{
+        let mut b=vec![0u8;40];b[0]=0x45;b[3]=40;b[9]=17;
+        OriginalTunIngress::Shared(SharedTunPacket{bytes:b,recycle:recycle.clone()})
+    });
+    assert_eq!((d.overflow,d.displaced_tcp),(1,0));
+    assert_eq!(pending[&ip].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
+    assert_eq!(pending[&ip].queued_bytes,SHARED_TUN_PENDING_PER_ROUTE*64);
 }
 
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
