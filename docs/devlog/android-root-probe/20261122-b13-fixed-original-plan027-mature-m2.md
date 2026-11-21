@@ -11,6 +11,10 @@
 - 原 Go Android只读收据更新为9 u64：0/1真实 source/parity RAW copied、2/3 TUN source/recovered、4 unique symbol、5/6认证Quality/Signal见数、7成熟匹配Quality、8精确 Native APPLIED。它不是逐包 Go DATA，更不伪造成功。
 - 原引擎的确定性 Linux 主机单元测试用本模块同一 `OriginalQualityTx` 检验：parity排除、坏first_sent、未成熟、错误窗口ID、重复报告都不得替代真实M2。Android源码门同步保留 Go Fixed pre-TLS 硬拒绝、`loop_start` feature3-only。
 
+## B13 第一轮 CI 与精确修复
+
+首轮 SOURCE `15000d4cc0d680c7298f73481e8a59cc37a9dbc7` 的 [dual64 #44926579702](https://github.com/lly8666/wbd-next/actions/runs/44926579702) 是6个Host SUCCESS，arm64-native FAIL，其下游依赖SKIPPED。Rust E0599：原 `ProtectedScopedOwner::next_original_record_pn` 虽早已定义（只读查询唯一 M3 sealer 的即将使用的 PN），但 cfg 仅为 Windows/Linux，Android B13共享质量窗口不可调用。本次只为该**已存在**方法补相同原 Bionic arm64/x86_64 cfg，绝不新开PN分配器、网络线程或消息类型。以新 SOURCE CI 独立判定，不抹旧FAIL。
+
 ## 剩余阻塞
 
 **当前未开放 Android Fixed/Auto。** Android Fixed 的原 App/Go正式调用链、按实际Fixed Rust方向的内TUN MTU应用和超限IP处理，以及Android↔Linux业务/丢包恢复/同SOURCE物理设备和性能，仍待独立事实验收。不要将构建、符号和Host纯逻辑测试当作已经在手机实际收到成熟反馈。
