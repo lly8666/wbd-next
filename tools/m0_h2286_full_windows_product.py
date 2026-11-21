@@ -130,6 +130,19 @@ def nat_packet_counters(win,guest,relay):
 
 def original_win_client_args(exe,peer,server):
     root=pathlib.Path("result/wl-public")
+    # H2293 only uses the already-supported original Windows FEC2 Fixed
+    # admission. Its V3 carrier MUST remain fixed/4 for a FixedStream;
+    # FEC2 k<=16 itself uses light/mild according to real loss profile.
+    weak_fec=os.environ.get("WBD_H2293_FEC_ABA")=="1"
+    requested=os.environ.get("WBD_H2293_FEC_STAGE","off") if weak_fec else "off"
+    loss=int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0")) if weak_fec else 0
+    require(not weak_fec or (loss in (1,5) and
+            requested in ("off","fixed")),"H2293_FEC_COLD_MODE")
+    profile="light" if loss==1 else "mild"
+    carrier=["--fec-mode","fixed","--fec-parity","4",
+             "--fec.mode","fixed","--fec.profile",profile] if requested=="fixed" else [
+             "--fec-mode","off","--fec-parity","0",
+             "--fec.mode","off","--fec.profile","strong"]
     return [
       exe,"--native-v4-product","--control-stdin",
       "--server-ip",peer,"--server-port",str(GUEST_PORT),
@@ -141,8 +154,7 @@ def original_win_client_args(exe,peer,server):
       "--installation-id","445566778899aabbccddeeff00112233",
       "--lease4",APP_IP+"/32","--adapter","WBDWLMAIN",
       "--state-path",str(ROOT/"owned-wal.json"),
-      "--mtu","1280","--lanes","1","--fec-mode","off","--fec-parity","0",
-      "--fec.mode","off","--fec.profile","strong",
+      "--mtu","1280","--lanes","1",*carrier,
       "--route-mode","all","--outer-repair","off"
     ]
 
@@ -263,7 +275,14 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
                 "ORIGINAL_SIGNED_WINTUN_TO_ARM_TUN_ACTUAL_UDP_NOT_RX")
         output["native_original_win_to_arm_udp"]=udp_proof
         # Start real ARM relay two-direction clean qdisc owned by THIS triplet.
-        shape=core.remote_shape(relay,-1)
+        # H2293 persists actual bidirectional impairment across cold Go
+        # TLS+Wintun admission and app TCP. Refresh the scoped stage
+        # counters right before the TCP payload to avoid reporting
+        # startup packets as application delivery.
+        weak_loss=(int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0"))
+                   if os.environ.get("WBD_H2293_FEC_ABA")=="1" else -1)
+        require(weak_loss in (-1,1,5),"H2293_EXACT_IMPAIRMENT_TIER")
+        shape=core.remote_shape(relay,weak_loss)
         before=core.os_host_cpu()
         tcp.WINDOW_TEST_BYTES=2*1024*1024
         tcp.BULK_MAX_BYTES=512*1024*1024
@@ -292,7 +311,7 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
                 parsed[0]["bind"]==APP_IP and parsed[0]["peer"]==APP_PEER,
                 "ORIGINAL_WINTUN_ARM_TUN_REAL_TCP_BAD_RECEIPT")
         q=core.remote_diag(relay)
-        qdisc=core.netem_phase_receipt(shape["netem"]["qdisc"],q["kernel_tc"],-1)
+        qdisc=core.netem_phase_receipt(shape["netem"]["qdisc"],q["kernel_tc"],weak_loss)
         relay_resource=core.relay_resource_delta(
             shape["netem"]["relay_resource_before"],q["relay_resource_now"])
         require(relay_resource["tailscaled_pid_count_common"]>0 and
@@ -315,6 +334,7 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
             windows_original_product_bulk_stage_cpu_percent=
                 core.cpu_busy_percent(before,core.os_host_cpu()),
             kernel_relay_qdisc=qdisc,
+            h2293_actual_bidir_weak_loss_pct=(weak_loss if weak_loss>0 else None),
             relay_tailscaled_and_host_cpu_stage=relay_resource,
             windows_original_go_rust_cpu_stage=win32_product_cpu,
             real_wsl_conntrack_counters=counters,

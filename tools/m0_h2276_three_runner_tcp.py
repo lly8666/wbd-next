@@ -413,7 +413,12 @@ def control_service(own):
     # H2292 only: tiny authenticated ARM-ready heartbeat on the EXISTING
     # unshaped control port. No second TCP proxy, no plaintext product data.
     # The server AND client must be true source-locked Tailscale peers.
-    h2292_order=("A_default","B_tx16","A_prime")
+    # H2293 retains the original authenticated three-leg ready protocol
+    # but uses *explicit* FEC semantics instead of TX feature switches.
+    # The same-run client/server/relay must all select this exact order.
+    h2292_order=(("A_off","B_fixed","A_prime_off")
+                 if os.environ.get("WBD_H2293_FEC_ABA")=="1" else
+                 ("A_default","B_tx16","A_prime"))
     h2292_next=-1
     h2292_ready=load(ROOT/"relay-ready.json") if os.environ.get(
         "WBD_H2292_TRUE_PRODUCT_ABA")=="1" else None
