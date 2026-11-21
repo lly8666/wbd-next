@@ -120,7 +120,7 @@ jobs:
               m=r["measurement"]
               digest.append({
                   "leg":leg,"fq_mbps":rate,
-                  "receiver_mbps":m["original_product_tcp"]["receiver_mbps"],
+                  "receiver_mbps":round(m["original_product_tcp"]["receiver_bps"]/1_000_000,5),
                   "client_cpu_seconds_per_rx_gib":m["cpu_and_rss"]["client"]["cpu_seconds_per_rx_gib"],
                   "server_cpu_seconds_per_rx_gib":m["cpu_and_rss"]["server"]["cpu_seconds_per_rx_gib"],
                   "udp_missing_of160":m["smallflow"]["udp"]["missing"],
