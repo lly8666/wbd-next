@@ -16,6 +16,7 @@ on:
     paths:
       - '.github/workflows/qa-m0-029-linux-client128-no-probe-native.yml'
       - 'tools/m0_plan029_linux_dual_native_build.sh'
+      - 'r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go'
       - 'tools/m0_plan029_linux_dual_isa_suite.py'
       - 'tools/m0_plan029_linux_native_app.py'
       - 'tools/arm64_linux_netns_smoke.sh'
@@ -85,6 +86,11 @@ jobs:
               assert hashlib.sha256((b/n).read_bytes()).hexdigest()==digest
           assert m["rust_native_fec_acceleration"] is True
           assert m.get("m0_probe_compiled") is False, "developer probe must NOT be in product build"
+          # Check product Rust library truly excludes the debug-only C ABI.
+          import subprocess
+          exported=subprocess.check_output(["nm","-D","linux-plan029-public-bundle/libwbd_engine.so"],text=True)
+          assert "wbd_m0_embedded_go_loop_debug_pause_jumbo" not in exported
+          print("M0_029_NO_PROBE_NATIVE_SYMBOL_ABSENT_PASS",flush=True)
           assert (m["normal_linux_client_shared_tun_inbox_default"],
                   m["normal_linux_server_shared_tun_inbox_default"],
                   m["game_group_shared_tun_inbox_default"])==(128,64,64)
