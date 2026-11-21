@@ -205,7 +205,8 @@ assert '.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)' not in requ
 assert '.addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)' in request
 assert '.addTransportType(NetworkCapabilities.TRANSPORT_WIFI)' in request
 assert '.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)' in request
-assert 'hasInternetCapability?"":"  [仅本地链路' in physical
+assert '[仅本地链路：Android未声明Internet]' in physical
+assert '[公网未验证：可连接局域网WBD]' in physical
 print("ANDROID_B27_LAN_ONLY_ANDROID_NETWORK_REQUEST_REAL_SERVICE_SOURCE_PASS")
 assert 'NetworkCapabilities.NET_CAPABILITY_VALIDATED' in physical
 assert 'PhysicalPeerIPv4Choice.select(network.getAllByName(peer))' in physical
@@ -213,7 +214,7 @@ assert 'network.getNetworkHandle()!=selected.handle' in physical
 assert 'PhysicalNetwork.coldPeerIPv4(this,net,peer)' in s
 assert 'launchCommand(code,net,peerForGo,sni' in s
 assert 'ServerAddress.isIPv4Literal(peer)||selected.validatedByAndroid' in physical
-assert 'LAN_SELECTED_NETWORK_DNS_UNAVAILABLE' in s
+assert 'LAN_SELECTED_NETWORK_CHANGED' in s
 assert 'android.intent' not in physical
 print("ANDROID_B28_EXACT_SELECTED_LAN_NETWORK_DNS_SERVER_BOOTSTRAP_SOURCE_PASS")
 argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()

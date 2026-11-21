@@ -10,3 +10,9 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B28 cold selected-network Android LAN peer IPv4 lookup on unvalidated link with unchanged original-Go physical DNS fallback and authentic TLS/M3 hotpath"}
 ```
+
+## B28a｜旧B27静态标签断言导致APK门失败（不改业务代码）
+
+SOURCE `e2308014ec06e1a60902a01a7727667ab472ed23` 的 [CI #44959280494](https://github.com/lly8666/wbd-next/actions/runs/44959280494) 真实 `root-arm64-app` Host第60行失败：`assert 'hasInternetCapability?"":"  [仅本地链路' in physical` 要求 B27 旧同一行三元写法；B28 已把UI改成双标签（无INTERNET与有INTERNET但未VALIDATED），因此Host Python `AssertionError`，签名APK本Job未执行。B28正式生产 `ANDROID_B28_SELECTED_NETWORK_LAN_HOSTNAME_IPV4_HOST_PASS` 已在同Job真实执行成功，原生双ABI和先行M3/DNS Host成功不能替代失败的APK。B28a只把断言改为核对当前生产两类UI标签的实际文本及已存在的 Service 物理Network接线，**Go/Rust/Java产品业务代码零修改**，功能卡同批记实；以新SOURCE的签名APK/Host和Linux Oracle验收。
+
+附注：同一段旧式断言还残留了原 `LAN_SELECTED_NETWORK_DNS_UNAVAILABLE` 状态文字，产品现按真实物理scope失效显示 `LAN_SELECTED_NETWORK_CHANGED`；一起按生产现状更正。逐条抽查当前 B27/B28 源码段的 Host 文本锚点均匹配，**不等于真正重跑的Actions成功**。
