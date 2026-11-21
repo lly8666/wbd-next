@@ -25,6 +25,9 @@ ARCH=os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
 RUN=os.environ["GITHUB_RUN_ID"]
 ATTEMPT=os.environ["GITHUB_RUN_ATTEMPT"]
 BUNDLE=ROOT/"linux-plan029-public-bundle"
+LEG=os.environ.get("WBD_M0_029_UDP_RESERVE_LEG","")
+if LEG not in ("","A","B","Aprime"):
+    raise RuntimeError("M029_UNKNOWN_ONE_FACTOR_LEG")
 
 def authenticate_source_and_bundle():
     if os.environ.get("GITHUB_ACTIONS")!="true" or platform.machine()!=ARCH or (
@@ -56,9 +59,9 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    G["OUT"]=ROOT/"m029-product-shared-noprobe"
+    G["OUT"]=ROOT/("m029-product-shared-noprobe"+("-"+LEG if LEG else ""))
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
-        "m029-product-shared-"+RUN+"-"+ATTEMPT)
+        "m029-product-shared-"+RUN+"-"+ATTEMPT+("-"+LEG if LEG else ""))
     G["TMP"].mkdir(parents=True,mode=0o700,exist_ok=False)
     G["OUT"].mkdir(exist_ok=False)
     Owned=G["Owned"]
@@ -111,6 +114,7 @@ def main():
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_ECHO_SERVER_NOT_READY")
             self.spawn("client",self.client,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
+                *(["WBD_M0_029_UDP_RESERVE_TEST=1"] if LEG=="B" else []),
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -163,6 +167,8 @@ def main():
                     "show","dev",dev).stdout) for dev in ("rcli0","rsrv0")}
 
     result={"source_sha":SHA,"run_id":RUN,"attempt":ATTEMPT,
+            "trial_leg":LEG if LEG else "single",
+            "test_only_udp_reservation":LEG=="B",
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
             "probe_compiled":False,"status":"NOT_RUN",
@@ -186,7 +192,8 @@ def main():
         # prefix nor AEAD/PN verification nor a timed delivery receipt.
         result["shared_tun_protocol_ingress"]={}
         expected={"offered","tcp_offered","udp_offered","other_offered",
-                  "tcp_new_dropped","udp_new_dropped","other_new_dropped"}
+                  "tcp_new_dropped","udp_new_dropped","other_new_dropped",
+                  "tcp_pending_displaced"}
         for role in ("client","server"):
             rows=[]
             for line in node.logs[role].read_text(errors="replace").splitlines():
@@ -204,6 +211,14 @@ def main():
                 rows.append({k:fields[k] for k in sorted(expected)})
             if not rows or sum(x["offered"] for x in rows)==0:
                 raise RuntimeError("M029_TRUE_SHARED_TUN_INGRESS_DIAG_NOT_OBSERVED_"+role)
+            if (sum(row["tcp_new_dropped"]+row["udp_new_dropped"]+
+                    row["other_new_dropped"]+row["tcp_pending_displaced"]
+                    for row in rows)!=result["owned_stop"][role]["queue_full_drops"]):
+                raise RuntimeError("M029_NEW_VS_DISPLACED_ACCOUNTING_MISMATCH_"+role)
+            if LEG!="B" and any(row["tcp_pending_displaced"] for row in rows):
+                raise RuntimeError("M029_OLD_LEG_MUST_NOT_DISPLACE")
+            if role=="server" and any(row["tcp_pending_displaced"] for row in rows):
+                raise RuntimeError("M029_SERVER_NEVER_OPTED_IN")
             result["shared_tun_protocol_ingress"][role]=rows
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
