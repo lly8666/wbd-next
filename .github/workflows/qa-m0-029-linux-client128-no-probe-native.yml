@@ -187,7 +187,7 @@ jobs:
         timeout-minutes: 14
         run: |
           set -euo pipefail
-          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} WBD_M0_029_TCP_INFO=${{ contains(github.event.head_commit.message, '[m0-029-tcpinfo]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          WBD_M0_029_STAGE_TIMELINE=1 WBD_M0_029_SERVICE_CPU=${{ contains(github.event.head_commit.message, '[m0-029-syscpu]') && '1' || '0' }} WBD_M0_029_RAW_CALL_COST=${{ contains(github.event.head_commit.message, '[m0-029-rawcost]') && '1' || '0' }} WBD_M0_029_ECHO_TIMELINE=${{ contains(github.event.head_commit.message, '[m0-029-tcptrace]') && '1' || '0' }} WBD_M0_029_TCP_INFO=${{ contains(github.event.head_commit.message, '[m0-029-tcpinfo]') && '1' || '0' }} WBD_M0_029_FIRST_DROP_WINDOW=${{ contains(github.event.head_commit.message, '[m0-029-firstdrop]') && '1' || '0' }} python3 -u tools/m0_029_product_shared_tun_noprobe.py
           python3 - <<'PY'
           import json,os,pathlib
           plain=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
@@ -216,6 +216,14 @@ jobs:
                   rows=observed["m4_exact_sendmmsg_timeline"][role]["samples"]
                   assert len(rows)>=8 and rows[-1]["sendmmsg_samples"]>rows[0]["sendmmsg_samples"]
               print("M029_H2258_REAL_SENDMMSG_SCOPED_SAMPLING_PASS",flush=True)
+          if observed["original_shared_tun_first_drop_window"]:
+              assert observed["native_inner_tcp_info_readonly"]
+              assert not plain["original_shared_tun_first_drop_window"]
+              assert observed["h2261_alignment"]["app_original_tcp_sequences"]==160
+              for role in ("client","server"):
+                  row=observed["h2261_original_tun_m4_rx_windows"][role]
+                  assert row["echo_window_samples"]>=4 and len(row["samples"])>=8
+              print("M029_H2261_REAL_RUST_SHARED_TUN_M1_M4_RX_TCP_RTO_WINDOW_PASS",flush=True)
           print("M029_H2256_GENUINE_STAGE_WINDOWS_OBSERVED_NOT_CAUSAL_CPU_PASS",flush=True)
           PY
       - name: H2258 original no-observer A-prime recovery on identical release bundle
@@ -244,6 +252,11 @@ jobs:
           assert not c["original_m4_raw_sendmmsg_sampled_timing"]
           assert c["same_source_recovery_leg"]
           assert not c["independent_m1_m4_stage_observer"]
+          if b["original_shared_tun_first_drop_window"]:
+              assert not a["original_shared_tun_first_drop_window"]
+              assert not c["original_shared_tun_first_drop_window"]
+              assert b["h2261_alignment"]["app_original_tcp_sequences"]==160
+              print("M029_H2261_SAME_BUILD_A_B_APRIME_DIAG_EXCLUSIVE_PASS",flush=True)
           if c["tcp_directional_application_timeline"]:
               assert a["tcp_directional_application_timeline"]
               assert b["tcp_directional_application_timeline"]
