@@ -27,6 +27,9 @@ TIMEOUT_S = 100
 # H2282 test-only per-stage override from independent 2x3 network wrapper.
 # Never changes original signed Wintun/WSL2 product diagnostic by default.
 WINDOW_TEST_BYTES = 0
+# A full original remote Win-GoTLS-to-ARM-Rust start may need more setup than
+# the old same-VM case; this timeout is test LISTEN only, not product code.
+LISTENER_ACCEPT_TIMEOUT_S = 120 if os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM") == "1" else 35
 # H2286 test-only SAME 4x25s REAL Windows Wintun <-> remote ARM TUN capacity.
 # Not a WBD product knob. Explicitly isolate all historical H2273 smoke tests.
 if os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM") == "1":
@@ -121,7 +124,7 @@ def server(bind_ip, client_ip, source):
         listener_buffers = _maybe_set_buffers(listener)
         listener.bind((bind_ip, PORT))
         listener.listen(max(16, BULK_FLOWS + 4))
-        listener.settimeout(35)
+        listener.settimeout(LISTENER_ACCEPT_TIMEOUT_S)
         print(MARK + "SERVER_READY " + json.dumps({
             "source_sha": source, "bind": bind_ip, "peer": client_ip,
             "real_kernel_tcp": True}), flush=True)

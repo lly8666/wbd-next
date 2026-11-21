@@ -294,9 +294,34 @@ def check_server_and_run_app(group):
                 time.sleep(.2)
             else:raise RuntimeError("H2286_ARM_ORIGINAL_TUN_TCP_LISTENER_NOT_READY")
             print("H2286_ARM_ORIGINAL_PRODUCT_INNER_TCP_READY",flush=True)
-            try:rc=proc.wait(timeout=440)
-            except subprocess.TimeoutExpired:
-                proc.kill();raise RuntimeError("H2286_REAL_WBD_TUN_TCP_SERVER_TIMED_OUT")
+            tracer_log=(ROOT/"tcp-passive-trace.log").open("w")
+            tracer=subprocess.Popen(["sudo","-n","ip","netns","exec",NETNS,
+                 sys.executable,"-u","tools/m0_h2287_tun_tcp_trace.py",
+                 str(ROOT/"tcp-passive-headers.json")],
+                 stdout=tracer_log,stderr=subprocess.STDOUT)
+            try:
+                for tick in range(80):
+                    trace_text=(ROOT/"tcp-passive-trace.log").read_text(errors="replace")
+                    if "H2287_REAL_ARM_RUST_TUN_TCP_LISTENING_AND_PASSIVE_CAPTURE_READY" in trace_text:
+                        break
+                    if tracer.poll() is not None:
+                        raise RuntimeError("H2287_REAL_TUN_PASSIVE_HEADER_TRACER_EXIT "+
+                                           trace_text[-900:])
+                    time.sleep(.1)
+                else:
+                    raise RuntimeError("H2287_REAL_TUN_PASSIVE_TRACER_NOT_READY")
+                try:rc=proc.wait(timeout=440)
+                except subprocess.TimeoutExpired:
+                    proc.kill();raise RuntimeError("H2286_REAL_WBD_TUN_TCP_SERVER_TIMED_OUT")
+            finally:
+                if tracer.poll() is None:
+                    tracer.terminate()
+                try:tracer.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    tracer.kill();tracer.wait(timeout=5)
+                tracer_log.close()
+            require((ROOT/"tcp-passive-headers.json").exists(),
+                    "H2287_TUN_PASSIVE_TRACE_MISSING")
             require(rc==0,"REAL_WBD_INNER_APPLICATION_FAILED")
         (ROOT/"udp-stop.flag").write_text(own["source_sha"]+"\n")
         for tick in range(80):
