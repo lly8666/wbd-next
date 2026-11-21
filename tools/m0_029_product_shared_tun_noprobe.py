@@ -51,6 +51,12 @@ if TCP_INFO not in ("0","1"):
 TCP_INFO=TCP_INFO=="1"
 if TCP_INFO and not TCP_TIMELINE:
     raise RuntimeError("M029_H2260_TCP_INFO_NEEDS_APP_TRACE")
+FIRSTDROP=os.environ.get("WBD_M0_029_FIRST_DROP_WINDOW","0")
+if FIRSTDROP not in ("0","1"):
+    raise RuntimeError("M029_H2261_FIRST_DROP_WINDOW_INVALID")
+FIRSTDROP=(FIRSTDROP=="1")
+if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
+    raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
 
 def authenticate_source_and_bundle():
     if os.environ.get("GITHUB_ACTIONS")!="true" or platform.machine()!=ARCH or (
@@ -129,6 +135,7 @@ def main():
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
                 *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
                 *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
+                *(["WBD_M0_029_FIRST_DROP_WINDOW=1"] if FIRSTDROP else []),
                 str(BUNDLE/"wbd-v4-server"),"--raw-interface","wan0",
                 "--local-ip",G["SERVER_IP"],"--local-port","443",
                 "--tun-name",G["SERVER_TUN"],
@@ -157,6 +164,7 @@ def main():
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
                 *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
                 *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
+                *(["WBD_M0_029_FIRST_DROP_WINDOW=1"] if FIRSTDROP else []),
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -216,6 +224,7 @@ def main():
             "same_source_recovery_leg":RECOVERY,
             "tcp_directional_application_timeline":TCP_TIMELINE,
             "native_inner_tcp_info_readonly":TCP_INFO,
+            "original_shared_tun_first_drop_window":FIRSTDROP,
             "outer_ip_mtu_explicit_bytes":1160,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
@@ -401,6 +410,42 @@ def main():
                 result["m4_exact_sendmmsg_timeline"][role]={
                     "samples":samples,"metric":"sampled_true_sendmmsg_wall_ns_vs_full_raw_driver_wall_ns",
                     "not_cpu_time_not_all_calls_not_peer_receipt":True}
+        if FIRSTDROP:
+            # Original protected router and Rust M1/M4/RX counters. They
+            # have their own denominators, never identify a TCP test seq.
+            needed=("mono_ns","generation","shared_delivered",
+                    "shared_full","shared_byte","shared_age",
+                    "shared_retired","shared_unrouted","shared_backpressure",
+                    "tx_tcp_seen","tx_tcp_staged","tx_udp_seen",
+                    "tx_arena_failed","tx_deferred","m4_copied",
+                    "rx_kernel","rx_tuple","rx_unique","rx_tun","rx_invalid")
+            begin=result["measurement"]["smallflow"]["probe_start_monotonic_ns"]
+            end=result["measurement"]["smallflow"]["probe_end_monotonic_ns"]
+            result["h2261_original_tun_m4_rx_windows"]={}
+            for role in ("client","server"):
+                rows=[]
+                for line in node.logs[role].read_text(errors="replace").splitlines():
+                    if "V4_PUBLIC_M4_FIRST_DROP_WINDOW role="+role+" " not in line:
+                        continue
+                    values={k:int(v) for k,v in re.findall(
+                        r"([a-z0-9_]+)=([0-9]+)",line)}
+                    if any(k not in values for k in needed):
+                        raise RuntimeError("M029_H2261_MISSING_NATIVE_ROUTER_OR_FIELDS_"+role)
+                    rows.append({k:values[k] for k in needed})
+                if len(rows)<8 or len({row["generation"] for row in rows})!=1:
+                    raise RuntimeError("M029_H2261_NATIVE_OWNER_WINDOW_MISSING_"+role)
+                for old,new in zip(rows,rows[1:]):
+                    if new["mono_ns"]<=old["mono_ns"] or any(
+                        new[k]<old[k] for k in needed if k!="generation"):
+                        raise RuntimeError("M029_H2261_COUNTER_OR_CLOCK_NOT_MONOTONE_"+role)
+                overlap=sum(begin<=row["mono_ns"]<=end for row in rows)
+                if overlap<4 or not any(row["m4_copied"]>0 for row in rows):
+                    raise RuntimeError("M029_H2261_NO_REAL_BUSINESS_WINDOW_"+role)
+                result["h2261_original_tun_m4_rx_windows"][role]={
+                    "samples":rows,"echo_window_samples":overlap,
+                    "clock":"Linux_MONOTONIC_shared_between_netns",
+                    "source":"existing_original_Rust_shared_TUN_M1_M4_RX_counters",
+                    "scope":"cumulative_aggregates_not_per_TCP_sequence"}
         if TCP_TIMELINE:
             # One real client TCP stream/one server worker in this leg.
             # Both namespaces share Linux CLOCK_MONOTONIC, and sequence
@@ -488,6 +533,30 @@ def main():
                 "min_snd_cwnd":min(x[5] for x in during),
                 "source":"exact_original_test_inner_TCP_socket_linux_getsockopt_104B",
                 "caution":"retransmits are not proof of which Rust/underlay layer delayed the forward app receipt"}
+        if FIRSTDROP:
+            # Same absolute Linux monotonic basis across client/server netns,
+            # independent Rust observers and exact original app TCP_INFO.
+            # This does NOT prove a unique first lost packet.
+            c=result["h2261_original_tun_m4_rx_windows"]["client"]["samples"]
+            srv=result["h2261_original_tun_m4_rx_windows"]["server"]["samples"]
+            tcp=result["tcp_directional_timeline"]["samples"]
+            info=result["native_tcp_info_timeline"]["samples"]
+            start=result["measurement"]["smallflow"]["probe_start_monotonic_ns"]
+            end=result["measurement"]["smallflow"]["probe_end_monotonic_ns"]
+            if len(tcp)!=160 or not any(start<=r[0]<=end for r in info):
+                raise RuntimeError("M029_H2261_ORIGINAL_SEQ_AND_TCP_INFO_NOT_ALIGNED")
+            if not all(any(start<=r["mono_ns"]<=end for r in xs)
+                       for xs in (c,srv)):
+                raise RuntimeError("M029_H2261_ORIGINAL_BOTH_RUST_OBSERVERS_NOT_ALIGNED")
+            # Preserve the exact 160 real forward intervals and all 500ms
+            # native counters for post-run differential attribution.
+            result["h2261_alignment"]={
+                "true_echo_start_ns":start,"true_echo_end_ns":end,
+                "app_original_tcp_sequences":len(tcp),
+                "native_client_samples":len(c),"native_server_samples":len(srv),
+                "true_inner_tcp_info_samples":len(info),
+                "first_per_sequence_lost_location":"UNPROVEN_AGGREGATE_ONLY",
+                "no_added_packet_read_or_native_data_path":True}
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
         if traffic["receiver_bytes"]<=0 or traffic["tcp_streams"]!=4 or (
