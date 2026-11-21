@@ -2,7 +2,7 @@
 # native kernel bidirectional 1% OR 5% iid loss, 200ms each way, TCP
 # long-lived 4 bulk + same 160 tiny app requests. OFF/ON/OFF actual outer
 # retransmission F/R counters, first delivery/late & Stop; never fake P99.
-name: M0 PLAN029 ARM native 1 and 5pct 200ms true TCP OFF ON OFF repair
+name: M0 PLAN029 ARM native 1 and 5pct 200ms true TCP OFF ON OFF repair (H2270)
 run-name: "M0-029 native ARM loss1,5 200ms true outer OFF-ON-OFF | ${{ github.sha }}"
 on:
   workflow_dispatch:
@@ -11,6 +11,7 @@ on:
     paths:
       - '.github/workflows/qa-m0-029-arm-loss1-loss5-200ms-outer-repair.yml'
       - 'tools/m0_029_product_shared_tun_noprobe.py'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
 permissions:
   contents: read
 jobs:
@@ -127,6 +128,9 @@ jobs:
               assert row["h2262_sparse_tcp_ingress"]["client"]["forward_offered"]>0
               original=row["h2268_original_outer_m2_real_wire"]["client"]
               assert len(original)==1 and original[0]["repair_enabled"]==int(leg=="B")
+              if leg=="B":
+                  assert original[0]["repair_accepted_wire_bytes"]>0, "H2270_REAL_ORIGINAL_ON_NO_ACTUAL_FROZEN_REPAIR"
+                  assert original[0]["original_frozen_retransmitted"]>0, "H2270_NO_IMMUTABLE_CIPHERTEXT_RETRANSMITTED"
               if leg!="B":
                   assert original[0]["repair_accepted_wire_bytes"]==0
                   assert original[0]["repair_uncertain_wire_bytes"]==0

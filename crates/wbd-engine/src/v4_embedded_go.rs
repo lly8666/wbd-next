@@ -493,6 +493,102 @@ impl OriginalOuterRepair{
         *slot=slot.saturating_add(1);
     }
 }
+// H2270: PLAN027 retired the per-record M2 Receipt on the ordinary live
+// path. These bounded, unauthenticated TCP-like ACK/SACK appearance hints
+// ONLY nominate an existing immutable one-shot shadow from actual kernel
+// copied original DATA. They never grant delivery, authenticated peer
+// activity, RTT samples, fresh bytes, FEC credit or replay admission.
+// Keep the same per-lane/epoch index and original <=10% global repair budget
+// already used by signed Windows Normal; do not resurrect M2 Receipt.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn apply_original_outer_presentation_feedback<H:
+    wbd_types::buffer_contract::FrozenRecordHandle>(
+    index:&mut wbd_recovery::outer_ack::OuterAckIndex,
+    shadow:&mut wbd_recovery::ReceiptState<H>,
+    lane:wbd_types::LaneKey,epoch:[u8;16],
+    ack32:u32,sacks:&[wbd_recovery::outer_ack::SackRange32],
+    now:MonoNs,
+)->(usize,usize){
+    // Index scope and cumulative bounds are checked before ANY shadow
+    // changes. A forged/stale/out-of-range raw ACK is harmless optional
+    // metadata, never an authenticated receipt or packet failure.
+    let Ok(update)=index.on_feedback(lane,epoch,ack32,sacks,
+        now,20_000_000)else{return(0,0)};
+    let mut retired=0;
+    for pn in update.retired{
+        retired+=usize::from(shadow.discard_outer_ack_hint(pn).is_some());
+    }
+    let mut nominated=0;
+    for pn in update.gap_candidates{
+        nominated+=usize::from(shadow.on_outer_gap_hint(pn,now));
+    }
+    (retired,nominated)
+}
+
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn h2270_original_linux_presentation_ack_restores_one_shot_repair_without_m2_receipt(){
+    use wbd_types::{TunnelKey,RecordPn,SeqOffset};
+    use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
+    let lane=wbd_types::LaneKey{
+        tunnel:TunnelKey{slot:11,generation:6},slot:2,generation:7,
+    };
+    let epoch=[0x77;16];
+    let mut index=wbd_recovery::outer_ack::OuterAckIndex::new(
+        lane,epoch,1000,16).unwrap();
+    let mut shadow=wbd_recovery::ReceiptState::new(
+        lane,wbd_recovery::ReceiptConfig{
+            max_shadow_entries:16,pto_ns:810_000_000,
+            reorder_window_ns:20_000_000,
+        }).unwrap();
+    shadow.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
+    shadow.enable_opportunistic_v3().unwrap();
+    let mut arena=Arena::new(113,8,256,8,4096).unwrap();
+    for i in 0..4u64{
+        let mut loan=arena.allocate().unwrap();
+        loan.writable()[..10].copy_from_slice(&[i as u8;10]);
+        let pn=RecordPn(i+1);
+        let at=MonoNs(i*1_000_000);
+        let frozen=loan.freeze(0..10,FrozenMetadata{
+            lane,pn,seq:SeqOffset(1000+i*10),carrier_snapshot:12,
+        }).unwrap();
+        assert!(index.on_definitely_sent(pn,1000+i*10,10,at).unwrap());
+        shadow.on_sent_adaptive_with_floor(frozen,at,1_200_000_000)
+            .unwrap();
+    }
+    // No blind DATA PTO and no live per-record M2 Receipt:
+    assert!(shadow.on_timer(MonoNs(490_000_000)).candidates.is_empty());
+    // A checked true first-send range and subsequent SACK positive span
+    // can nominate only original missing ciphertext, never re-seal a PN.
+    let hint=wbd_recovery::outer_ack::SackRange32{start:1030,end:1040};
+    assert_eq!(apply_original_outer_presentation_feedback(
+        &mut index,&mut shadow,lane,[0x66;16],1000,&[hint],
+        MonoNs(500_000_000)),(0,0)); // stale/wrong epoch
+    assert_eq!(shadow.outstanding(),4);
+    let (retired,nominated)=apply_original_outer_presentation_feedback(
+        &mut index,&mut shadow,lane,epoch,1000,&[hint],
+        MonoNs(500_000_000));
+    assert_eq!(retired,1); // positive SACK retires PN4 shadow
+    assert!(nominated>0); // real original gap can now be nominated
+    assert!(shadow.diagnostic_snapshot().cosmetic_candidates>0);
+    assert_eq!(shadow.outstanding(),3);
+    assert_eq!(shadow.on_timer(MonoNs(519_999_999)).candidates.len(),0);
+    let due=shadow.on_timer(MonoNs(520_000_000)).candidates;
+    assert!(!due.is_empty());
+    assert!(due.iter().all(|c|c.pn().0<=3));
+    // A stale ACK outside original M4 copied boundaries cannot advance
+    // optional state or create a false retransmission.
+    assert_eq!(apply_original_outer_presentation_feedback(
+        &mut index,&mut shadow,lane,epoch,1050,&[],
+        MonoNs(530_000_000)),(0,0));
+    drop(due);
+    drop(shadow);
+    arena.drain_returns();
+    assert_eq!(arena.report().loaned,0);
+}
+
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_process_repair_quota()->&'static Mutex<wbd_recovery::GlobalRepairAllocator>{
@@ -6452,6 +6548,24 @@ fn background_raw_once(
         // Exactly once per native RX batch; no per-packet cross-thread lock.
         activity.record_batch(authenticated_at,business_at,peer_idle_hint);
         if peer_retire_at!=0{activity.record_peer_retire(peer_retire_at)}
+    }
+    // H2270 missing native Linux half of PLAN027's outer ACK/SACK.
+    // Raw strict tuple/checksum ACKs were already parsed above into
+    // outer_hint/outer_sack_hint, but previously silently discarded here.
+    // Feed only this existing per-session optional shadow index. An
+    // unauthenticated presentation hint MUST NOT reach Health, M3, Auto,
+    // delivery, or the retired per-record M2 Receipt producer.
+    #[cfg(feature="fec2_product_record")]
+    if let (Some(outer),Some(ack32))=(outer,outer_hint){
+        if let Ok(mut own)=outer.lock(){
+            let lane=own.route.outbound_lane();
+            let epoch=own.epoch;
+            let now=loop_now();
+            let own=&mut *own;
+            let _=apply_original_outer_presentation_feedback(
+                &mut own.outer_ack,&mut own.shadow,lane,epoch,
+                ack32,&outer_sack_hint,now);
+        }
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
     // A unique authenticated LINK shard with no completed datagram is
