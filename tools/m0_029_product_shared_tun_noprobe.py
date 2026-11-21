@@ -25,6 +25,10 @@ ARCH=os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
 RUN=os.environ["GITHUB_RUN_ID"]
 ATTEMPT=os.environ["GITHUB_RUN_ATTEMPT"]
 BUNDLE=ROOT/"linux-plan029-public-bundle"
+STAGE=os.environ.get("WBD_M0_029_STAGE_TIMELINE","0")
+if STAGE not in ("0","1"):
+    raise RuntimeError("M029_STAGE_TIMELINE_SWITCH_INVALID")
+STAGE=(STAGE=="1")
 
 def authenticate_source_and_bundle():
     if os.environ.get("GITHUB_ACTIONS")!="true" or platform.machine()!=ARCH or (
@@ -56,9 +60,9 @@ def main():
     # and Stop implementation. No substitution of an easier packet carrier.
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
-    G["OUT"]=ROOT/"m029-product-shared-noprobe"
+    G["OUT"]=ROOT/("m029-product-shared-stage" if STAGE else "m029-product-shared-noprobe")
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
-        "m029-product-shared-"+RUN+"-"+ATTEMPT)
+        "m029-product-shared-"+RUN+"-"+ATTEMPT+("-stage" if STAGE else ""))
     G["TMP"].mkdir(parents=True,mode=0o700,exist_ok=False)
     G["OUT"].mkdir(exist_ok=False)
     Owned=G["Owned"]
@@ -88,6 +92,7 @@ def main():
             users.chmod(0o600)
             self.spawn("server",self.server,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
+                *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
                 str(BUNDLE/"wbd-v4-server"),"--raw-interface","wan0",
                 "--local-ip",G["SERVER_IP"],"--local-port","443",
                 "--tun-name",G["SERVER_TUN"],
@@ -112,6 +117,7 @@ def main():
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_ECHO_SERVER_NOT_READY")
             self.spawn("client",self.client,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
+                *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
                 str(BUNDLE/"wbd-v4-client"),"--raw-interface","wan0",
                 "--local-ip",G["CLIENT_IP"],"--local-port","44100",
                 "--peer-ip",G["SERVER_IP"],"--peer-port","443",
@@ -165,6 +171,7 @@ def main():
 
     result={"source_sha":SHA,"run_id":RUN,"attempt":ATTEMPT,
             "outer_repair_cli":"off_both_endpoints",
+            "independent_m1_m4_stage_observer":STAGE,
             "outer_ip_mtu_explicit_bytes":1160,
             "arch":ARCH,"original_go_sha":manifest["original_go_sha"],
             "same_release_binary_sha256":manifest["sha256"],
@@ -243,6 +250,42 @@ def main():
                     !=result["owned_stop"][role]["queue_full_drops"]):
                 raise RuntimeError("M029_NEW_SOURCE_DROP_ACCOUNTING_MISMATCH_"+role)
             result["shared_tun_protocol_ingress"][role]=rows
+        if STAGE:
+            # Existing independent Rust observer: 500ms samples of original
+            # atomic counters. Do not add locks/FFI/timers on packet paths.
+            bounds=result["measurement"]["smallflow"]
+            begin=bounds["probe_start_monotonic_ns"]
+            end=bounds["probe_end_monotonic_ns"]
+            required=("mono_ns","generation","source_queued","m4_copied",
+                      "tx_backpressure","tx_worker_cpu_ns","rx_worker_cpu_ns",
+                      "tun_delivered","kernel_raw_observed")
+            result["m1_m4_stage_timeline"]={}
+            for role in ("client","server"):
+                rows=[]
+                raw=node.logs[role].read_text(errors="replace")
+                for line in raw.splitlines():
+                    if "V4_PUBLIC_M4_EXTERNAL_STAGE_DIAG role="+role+" " not in line:
+                        continue
+                    fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\d+)",line)}
+                    if any(k not in fields for k in required):
+                        raise RuntimeError("M029_M1_M4_STAGE_FIELD_MISSING_"+role)
+                    rows.append({k:fields[k] for k in required})
+                if len(rows)<8 or len({x["generation"] for x in rows})!=1:
+                    raise RuntimeError("M029_STAGE_NATIVE_SAMPLES_TOO_FEW_OR_WRONG_GENERATION_"+role)
+                for old,new in zip(rows,rows[1:]):
+                    if new["mono_ns"]<=old["mono_ns"] or any(
+                        new[key]<old[key] for key in
+                        ("m4_copied","tx_backpressure","tx_worker_cpu_ns",
+                         "rx_worker_cpu_ns","tun_delivered","kernel_raw_observed")
+                    ):
+                        raise RuntimeError("M029_STAGE_COUNTER_OR_CLOCK_NOT_MONOTONE_"+role)
+                overlap=sum(begin<=x["mono_ns"]<=end for x in rows)
+                if overlap<4 or max(x["m4_copied"] for x in rows)==0:
+                    raise RuntimeError("M029_TRUE_PACKET_SERVICE_STAGE_NOT_OBSERVED_"+role)
+                result["m1_m4_stage_timeline"][role]={
+                    "samples":rows,"echo_window_samples":overlap,
+                    "source":"independent_Rust_500ms_observer",
+                    "observed_without_new_DATA_path":True}
         traffic=result["measurement"]["original_product_tcp"]
         small=result["measurement"]["smallflow"]
         if traffic["receiver_bytes"]<=0 or traffic["tcp_streams"]!=4 or (

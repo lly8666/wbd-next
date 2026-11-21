@@ -177,6 +177,31 @@ jobs:
                      for role in ("client","server"))
           print("M029_REAL_NATIVE_NONPROBE_AUTHENTICATED_SHARED_TUN_CLIENT128_SERVER64_STOP_PASS",flush=True)
           PY
+      - name: H2256 independent low-frequency M1-to-M4 stage profile on same native bundle
+        if: contains(github.event.head_commit.message, '[m0-029-stage]')
+        shell: bash
+        timeout-minutes: 14
+        run: |
+          set -euo pipefail
+          WBD_M0_029_STAGE_TIMELINE=1 python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          python3 - <<'PY'
+          import json,os,pathlib
+          plain=json.loads(pathlib.Path("m029-product-shared-noprobe/summary.json").read_text())
+          observed=json.loads(pathlib.Path("m029-product-shared-stage/summary.json").read_text())
+          for d in (plain,observed):
+              assert d["source_sha"]==os.environ["GITHUB_SHA"]
+              assert d["probe_compiled"] is False
+              assert d["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
+              assert d["server_native_outer_ready_readback"]["repair_enabled"]==0
+              assert all(x["generation"]>0 for x in d["owned_stop"].values())
+          assert plain["same_release_binary_sha256"]==observed["same_release_binary_sha256"]
+          assert plain["independent_m1_m4_stage_observer"] is False
+          assert observed["independent_m1_m4_stage_observer"] is True
+          for role in ("client","server"):
+              timeline=observed["m1_m4_stage_timeline"][role]
+              assert len(timeline["samples"])>=8 and timeline["echo_window_samples"]>=4
+          print("M029_H2256_GENUINE_STAGE_WINDOWS_OBSERVED_NOT_CAUSAL_CPU_PASS",flush=True)
+          PY
       - name: Upload same-SOURCE scoped native diagnostics (no secret files or raw captures)
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -188,5 +213,6 @@ jobs:
             linux-plan029-public-bundle/SHA256SUMS
             linux-plan029-result/
             m029-product-shared-noprobe/
+            m029-product-shared-stage/
           retention-days: 21
           if-no-files-found: warn
