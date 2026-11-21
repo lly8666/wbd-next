@@ -4600,46 +4600,82 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     d
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
-->SharedTunDispatchDelta{
+// Only overloaded (>8) authenticated routes need cross-turn fairness.
+// Fewer routes retain the original direct, allocation-free hot loop.
+// The sorted scratch list is reused and only contains already-pending /32s.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[derive(Default)]
+struct SharedTunFairTurn{
+    last_route:Option<[u8;4]>,
+    scratch:Vec<[u8;4]>,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn drain_one_shared_tun_route(
+    q:&mut PendingSharedTunRoute,now:Instant,attempts_left:&mut usize,
+    d:&mut SharedTunDispatchDelta
+){
+    while q.packets.front().is_some_and(|p|
+        now.saturating_duration_since(p.queued_at)>=SHARED_TUN_PENDING_MAX_AGE){
+        if let Some(old)=q.packets.pop_front(){
+            q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+            d.expired+=1;
+        }
+    }
+    // A recovered receiver may free a whole TUN batch per turn. Drain up
+    // to one batch for this lease, with a shared cap for all leases.
+    // Full is a cold backpressure signal: stop this lease immediately.
+    for _ in 0..SHARED_TUN_DRAIN_PER_ROUTE{
+        if *attempts_left==0{break}
+        let Some(old)=q.packets.pop_front()else{break};
+        *attempts_left-=1;
+        q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+        match q.route.send.try_send(old.packet){
+            Ok(())=>d.delivered+=1,
+            Err(TrySendError::Full(packet))=>{
+                q.queued_bytes+=old.bytes;
+                q.packets.push_front(PendingSharedTunPacket{
+                    packet,bytes:old.bytes,queued_at:old.queued_at,
+                });
+                d.backpressure+=1;
+                break;
+            },
+            Err(TrySendError::Disconnected(_))=>{
+                d.retired+=1+q.packets.len() as u64;
+                q.packets.clear();q.queued_bytes=0;
+                q.route.alive.store(false,Ordering::Release);
+                break;
+            },
+        }
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn flush_shared_tun(
+    pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
+    fair:&mut SharedTunFairTurn
+)->SharedTunDispatchDelta{
     let mut d=SharedTunDispatchDelta::default();
     let now=Instant::now();
     let mut attempts_left=SHARED_TUN_DRAIN_PER_TURN;
     pending.retain(|_,q|if q.route.alive.load(Ordering::Acquire){true}else{
         d.retired+=q.packets.len() as u64;false
     });
-    for q in pending.values_mut(){
-        while q.packets.front().is_some_and(|p|
-            now.saturating_duration_since(p.queued_at)>=SHARED_TUN_PENDING_MAX_AGE){
-            if let Some(old)=q.packets.pop_front(){
-                q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
-                d.expired+=1;
-            }
+    if pending.len()<=SHARED_TUN_DRAIN_PER_TURN/SHARED_TUN_DRAIN_PER_ROUTE{
+        for q in pending.values_mut(){
+            drain_one_shared_tun_route(q,now,&mut attempts_left,&mut d);
         }
-        // A recovered receiver may free a whole TUN batch per turn. Drain up
-        // to one batch for this lease, with a shared cap for all leases.
-        // Full is a cold backpressure signal: stop this lease immediately.
-        for _ in 0..SHARED_TUN_DRAIN_PER_ROUTE{
+    }else{
+        fair.scratch.clear();
+        fair.scratch.extend(pending.keys().copied());
+        fair.scratch.sort_unstable();
+        let count=fair.scratch.len();
+        let start=fair.last_route.map_or(0,|last|
+            fair.scratch.partition_point(|ip|*ip<=last))%count;
+        for offset in 0..count{
             if attempts_left==0{break}
-            let Some(old)=q.packets.pop_front()else{break};
-            attempts_left-=1;
-            q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
-            match q.route.send.try_send(old.packet){
-                Ok(())=>d.delivered+=1,
-                Err(TrySendError::Full(packet))=>{
-                    q.queued_bytes+=old.bytes;
-                    q.packets.push_front(PendingSharedTunPacket{
-                        packet,bytes:old.bytes,queued_at:old.queued_at,
-                    });
-                    d.backpressure+=1;
-                    break;
-                },
-                Err(TrySendError::Disconnected(_))=>{
-                    d.retired+=1+q.packets.len() as u64;
-                    q.packets.clear();q.queued_bytes=0;
-                    q.route.alive.store(false,Ordering::Release);
-                    break;
-                },
+            let key=fair.scratch[(start+offset)%count];
+            if let Some(q)=pending.get_mut(&key){
+                drain_one_shared_tun_route(q,now,&mut attempts_left,&mut d);
+                fair.last_route=Some(key);
             }
         }
     }
@@ -4860,16 +4896,16 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[55]),
         _=>panic!("wrong B kind"),
     }
-    assert_eq!(flush_shared_tun(&mut pending).delivered,0);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,0);
     assert_eq!(pending[&ka].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
     drop(a_rx.try_recv().expect("free only A inbox slot"));
-    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,1);
     match a_rx.try_recv().expect("oldest A packet first"){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[1]),
         _=>panic!("wrong A kind"),
     }
     a.store(false,Ordering::Release);
-    assert_eq!(flush_shared_tun(&mut pending).retired,(SHARED_TUN_PENDING_PER_ROUTE-1) as u64);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).retired,(SHARED_TUN_PENDING_PER_ROUTE-1) as u64);
     assert!(pending.is_empty());
     let (new_tx,new_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let newer=SharedTunRoute{
@@ -4916,7 +4952,7 @@ fn m0_plan028_shared_tun_partial_backlog_eager_oldest_fifo_before_full(){
         _=>panic!("wrong next eager FIFO packet"),
     }
     assert_eq!(pending[&key].packets.len(),1);
-    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,1);
     match rx.try_recv().expect("final packet immediately flushed"){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[3]),
         _=>panic!("wrong last FIFO packet"),
@@ -4995,7 +5031,7 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
     // A blocked for two turns: first fills its eight-packet pending queue,
     // second must report bounded drops; B never waits for A.
     for turn in 0..2{
-        let _=flush_shared_tun(&mut pending);
+        let _=flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default());
         let mut a_dropped=0;
         for _ in 0..8{
             let n=next_a;next_a+=1;
@@ -5027,7 +5063,7 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
             }
             a_received+=1;
         }
-        let d=flush_shared_tun(&mut pending);
+        let d=flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default());
         assert_eq!(d.delivered,8,"A must recover a full ingress batch");
         assert_eq!((d.backpressure,d.expired,d.retired),(0,0,0));
         let mut a_dropped=0;
@@ -5091,7 +5127,7 @@ fn m0_plan028_h1461_peak75_urgent_fifo_drain_without_larger_queue(){
             _=>panic!("older pending FIFO packet lost or reordered"),
         }
     }
-    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,1);
     assert!(pending.is_empty());
     match a_rx.try_recv().unwrap(){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[16]),
@@ -5150,7 +5186,7 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
     assert_eq!(pending[&ka].queued_bytes,8);
     let expired=Instant::now()-SHARED_TUN_PENDING_MAX_AGE-Duration::from_millis(1);
     for item in pending.get_mut(&ka).unwrap().packets.iter_mut(){item.queued_at=expired;}
-    let d=flush_shared_tun(&mut pending);
+    let d=flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default());
     assert_eq!(d.expired,8);assert_eq!(d.backpressure,0);
     assert!(pending.is_empty()); // Silent A no longer wakes reader at 1ms.
     assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,
@@ -5296,6 +5332,76 @@ fn retire_shared_tun_session(session:&SharedTunSession){
         }
     }
 }
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_fair_turn_rotates_twelve_pending_leases(){
+    // 12 bounded original owner inboxes with 8 older packets each.
+    // A 64-attempt turn can service only eight full routes; the remaining
+    // four must get first service next turn even if the initial eight refill.
+    let (recycle,_recycled)=mpsc::sync_channel::<Vec<u8>>(128);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let mut routes=Vec::new();
+    let mut receivers=Vec::new();
+    let mut pending=HashMap::new();
+    for n in 1u8..=12{
+        let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+        for _ in 0..8{tx.try_send(packet(0)).unwrap();}
+        let key=[10,66,1,n];
+        let route=SharedTunRoute{
+            generation:20,alive:Arc::new(AtomicBool::new(true)),send:tx,
+        };
+        for _ in 0..8{
+            let d=enqueue_shared_tun(&mut pending,key,route.clone(),1,
+                ||packet(n));
+            assert_eq!((d.overflow,d.delivered),(0,0));
+        }
+        routes.push((key,route));
+        receivers.push(rx);
+    }
+    for rx in &receivers{
+        for _ in 0..8{drop(rx.try_recv().unwrap());}
+    }
+    let mut fair=SharedTunFairTurn::default();
+    let first=flush_shared_tun(&mut pending,&mut fair);
+    assert_eq!((first.delivered,first.expired,first.retired),(64,0,0));
+    assert_eq!(pending.len(),4);
+    for n in 0..12{
+        assert_eq!(pending.get(&routes[n].0).map_or(0,|q|q.packets.len()),
+            if n<8{0}else{8});
+    }
+    // The original eight pending routes refill while their owner inboxes
+    // are full, keeping twelve independently bounded backlogs for turn 2.
+    for (key,route) in routes.iter().take(8){
+        for _ in 0..8{
+            let d=enqueue_shared_tun(&mut pending,*key,route.clone(),1,
+                ||packet(key[3]));
+            assert_eq!((d.overflow,d.delivered),(0,0));
+        }
+    }
+    for rx in receivers.iter().take(8){
+        for _ in 0..8{drop(rx.try_recv().unwrap());}
+    }
+    assert_eq!(pending.len(),12);
+    let second=flush_shared_tun(&mut pending,&mut fair);
+    assert_eq!((second.delivered,second.expired,second.retired),(64,0,0));
+    for n in 0..12{
+        assert_eq!(pending.get(&routes[n].0).map_or(0,|q|q.packets.len()),
+            if (4..8).contains(&n){8}else{0},
+            "fair rotation must prioritize four previously skipped leases");
+    }
+    for (idx,rx) in receivers.iter().enumerate(){
+        if idx>=8 || idx<4{
+            for _ in 0..8{
+                match rx.try_recv().unwrap(){
+                    OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[idx as u8+1]),
+                    _=>panic!("wrong shared-TUN ingress kind"),
+                }
+            }
+        }
+    }
+}
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Default)]
 struct SharedTunLeaseQueueDiag {
@@ -5309,6 +5415,7 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     // never wait to fill the batch. These kernel receive slots are reused.
     let mut scratch:[Vec<u8>;8]=std::array::from_fn(|_|vec![0u8;M0_TUN_IPV4_MAX]);
     let mut pending=HashMap::<[u8;4],PendingSharedTunRoute>::new();
+    let mut fair=SharedTunFairTurn::default();
     // Cold diagnostic opt-in. This worker already owns the verified /32
     // route table: no new per-packet Go bridge, timer, mutex, or unbounded
     // packet cache. All extra accounting is disabled in normal production.
@@ -5324,7 +5431,7 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             thread::sleep(Duration::from_millis(5));
             continue
         }
-        router.note_dispatch(flush_shared_tun(&mut pending));
+        router.note_dispatch(flush_shared_tun(&mut pending,&mut fair));
         if !loop_readiness(fd,&router.stop,if pending.is_empty(){10}else{1}){continue}
         let read={
             let [a,b,c,d,e,f,g,h]=&mut scratch;
