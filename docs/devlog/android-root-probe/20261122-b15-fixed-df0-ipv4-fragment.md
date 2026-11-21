@@ -17,3 +17,11 @@ SOURCE 基线 `1c5181284aa513f4364875e1d76146dadada2f43`。针对真实代码缺
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B15 Fixed native IPv4 DF0 slow path remains, document real CI size and DNS source gate failures and correct same-commit feature declaration"}
 ```
+
+## B15c｜关闭未启用FEC2的构建边界
+
+复查发现 B15 新增 `pending_fixed` 处理块引用 `send_android_fixed_source`；后者仅在 `fec2_product_record` feature 下存在。把 TX worker 状态和 Fixed 分片处理块同步置于同一个 `#[cfg(feature="fec2_product_record")]` 条件下，防止没有 FEC2 的 Android 编译失败。Normal/off 运行代码不变；仍需最新 SOURCE 原生构建收据。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B15c bound new Fixed slow-path state and TX block to the existing FEC2 compilation feature; no change to Normal/off runtime"}
+```

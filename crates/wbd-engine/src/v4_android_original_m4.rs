@@ -815,6 +815,7 @@ fn tun_worker(
     let mut physical_packet=[0u8;
         crate::v4_android_dns_physical_flow::MAX_DNS_REPLY_IPV4];
     let mut pending=None::<PendingAndroidJumbo>;
+    #[cfg(feature="fec2_product_record")]
     let mut pending_fixed=None::<PendingAndroidFixedIpv4>;
     let mut next_packet_id=1u32;
     let frame=match cell.lock(){
@@ -895,6 +896,7 @@ fn tun_worker(
         // FEC2 IPv4 DF=0 slow path: source packets are ordinary IPv4
         // fragments, each sealed with its own original M3 PN. Do not
         // read another TUN packet until the bounded plan is settled.
+        #[cfg(feature="fec2_product_record")]
         if pending_fixed.is_some(){
             let mut retire=false;
             let mut deferred=false;
