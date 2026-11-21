@@ -48,6 +48,7 @@ env:
   WBD_H2284_EIGHT_TCP_CAPACITY: "0"
   WBD_H2291_WINDOWS_TX_CANDIDATE: "0"
   WBD_H2292_TRUE_PRODUCT_ABA: "1"
+  WBD_H2292_COMPILED_SOURCE_SHA: "dc2da4b98ecc419a67e3e2ee6530f944b78d88ef"
 concurrency:
   group: h2292-dual-original-product-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
@@ -130,63 +131,58 @@ jobs:
 
   win_candidate_build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2292-true-rust-aba]')
-    name: H2292 build two real Windows native Rust DLLs from exact same commit and base features, TX16 only difference
+    name: H2292 reuse exact archived native Windows Rust A/B DLLs after zero compiled-product delta
     needs: static
     runs-on: windows-2025
-    timeout-minutes: 30
-    env: {AWS_LC_SYS_PREBUILT_NASM: "1"}
+    timeout-minutes: 12
+    permissions: {contents: read, actions: read}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
-      - name: Compile real NPF queue default and trial tests, then both DLLs from SAME Rust code
+      - name: Verify actual compiled-source SHA and both original Windows PE DLL bytes from same prior Action
         shell: pwsh
-        timeout-minutes: 25
+        timeout-minutes: 10
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference='Stop'
-          & rustup toolchain install 1.85.1 --profile minimal --no-self-update
-          if($LASTEXITCODE -ne 0){throw 'H2292_RUST_TOOLCHAIN_FAILED'}
-          & rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
-          if($LASTEXITCODE -ne 0){throw 'H2292_MSVC_TARGET_FAILED'}
-          $base='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'
-          & cargo +1.85.1 test --locked -p wbd-platform --lib windows_native_io -- --test-threads=1
-          if($LASTEXITCODE -ne 0){throw 'H2292_TRUE_DEFAULT_NPF8_TEST_FAILED'}
-          & cargo +1.85.1 test --locked -p wbd-platform --features h2291_windows_tx_service --lib windows_native_io -- --test-threads=1
-          if($LASTEXITCODE -ne 0){throw 'H2292_TRUE_TRIAL_NPF16_TEST_FAILED'}
-          New-Item -ItemType Directory -Force result/h2292-build/baseline,result/h2292-build/candidate | Out-Null
-          & cargo +1.85.1 build --locked --release -p wbd-engine --features $base
-          if($LASTEXITCODE -ne 0){throw 'H2292_DEFAULT_WINDOWS_RUST_BUILD_FAILED'}
-          Copy-Item target/release/wbd_engine.dll result/h2292-build/baseline/wbd_engine.dll
-          & cargo +1.85.1 build --locked --release -p wbd-engine --features "$base,h2291_windows_tx_service"
-          if($LASTEXITCODE -ne 0){throw 'H2292_TRIAL_WINDOWS_RUST_BUILD_FAILED'}
-          Copy-Item target/release/wbd_engine.dll result/h2292-build/candidate/wbd_engine.dll
+          $compiled=$env:WBD_H2292_COMPILED_SOURCE_SHA
+          if($compiled -ne 'dc2da4b98ecc419a67e3e2ee6530f944b78d88ef'){throw 'H2292_UNAPPROVED_WINDOWS_BINARY_COMPILE_SOURCE'}
+          & git fetch --depth=1 origin $compiled
+          if($LASTEXITCODE -ne 0){throw 'H2292_ORIGINAL_DLL_COMPILE_SOURCE_NOT_REACHABLE'}
+          $productDiff=@(& git diff --name-only $compiled $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock)
+          if($LASTEXITCODE -ne 0 -or $productDiff.Count -ne 0){
+            throw ('H2292_REAL_WINDOWS_PRODUCT_COMPILED_SOURCE_CHANGED '+($productDiff -join ','))
+          }
+          New-Item -ItemType Directory -Force result/h2292-build | Out-Null
+          & gh run download 44949570906 --repo $env:GITHUB_REPOSITORY --name "h2292-two-real-win-rust-dlls-$compiled" --dir result/h2292-build
+          if($LASTEXITCODE -ne 0){throw 'H2292_PRIOR_REAL_BUILD_PAIR_ARCHIVE_UNAVAILABLE'}
           @'
           import ctypes,hashlib,json,os,pathlib
-          src=os.environ['GITHUB_SHA']
+          root=pathlib.Path('result/h2292-build')
+          source=os.environ['WBD_H2292_COMPILED_SOURCE_SHA']
+          aa=json.loads((root/'baseline/h2292-baseline-dll-manifest.json').read_text())
+          bb=json.loads((root/'candidate/h2291-windows-dll-manifest.json').read_text())
+          assert aa['source_sha']==bb['source_sha']==source
           base='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'
-          for tag in ('baseline','candidate'):
-              p=pathlib.Path('result/h2292-build')/tag
-              dll=p/'wbd_engine.dll'
-              getattr(ctypes.WinDLL(str(dll.resolve())),'wbd_m0_win_native_v3_start')
-              sha=hashlib.sha256(dll.read_bytes()).hexdigest()
-              if tag=='baseline':
-                  out={'source_sha':src,'feature':'H2291_TX_SERVICE_DISABLED',
-                       'base_features':base,'dll_sha256':sha}
-                  name='h2292-baseline-dll-manifest.json'
-              else:
-                  out={'source_sha':src,'trial_feature':'h2291_windows_tx_service',
-                       'base_features':base,'original_go_exe_source_sha':'c5066db61fc51bafd7c2ad2def3029e615efa777',
-                       'dll_sha256':sha}
-                  name='h2291-windows-dll-manifest.json'
-              (p/name).write_text(json.dumps(out,sort_keys=True))
-          print('H2292_TWO_REAL_WINDOWS_DLLS_SAME_BASE_FEATURES_AND_SOURCE_PE_SHA_PASSED')
+          assert aa['base_features']==bb['base_features']==base
+          assert aa['feature']=='H2291_TX_SERVICE_DISABLED'
+          assert bb['trial_feature']=='h2291_windows_tx_service'
+          assert bb['original_go_exe_source_sha']=='c5066db61fc51bafd7c2ad2def3029e615efa777'
+          for tag,manifest in (('baseline',aa),('candidate',bb)):
+              path=root/tag/'wbd_engine.dll'
+              assert hashlib.sha256(path.read_bytes()).hexdigest()==manifest['dll_sha256']
+              getattr(ctypes.WinDLL(str(path.resolve())),'wbd_m0_win_native_v3_start')
+          print('H2292_EXACT_PRIOR_REAL_RUST_DLL_PAIR_REUSED_ZERO_PRODUCT_DIFF')
           '@ | python -
-          if($LASTEXITCODE -ne 0){throw 'H2292_NATIVE_WINDOWS_TWO_DLL_PE_MANIFEST_FAILED'}
+          if($LASTEXITCODE -ne 0){throw 'H2292_ARCHIVED_REAL_DLL_HASH_ABI_READBACK_FAILED'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: h2292-two-real-win-rust-dlls-${{ github.sha }}
           if-no-files-found: error
           path: result/h2292-build/
           retention-days: 7
+
   relay:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2292-true-rust-aba]')
     name: "H2286 independent ARM64 kernel relay ${{ matrix.group }}"
@@ -470,7 +466,7 @@ jobs:
           New-Item -ItemType Directory -Force result/h2292-download,result/h2292-candidate | Out-Null
           & gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "h2292-two-real-win-rust-dlls-$env:GITHUB_SHA" --dir result/h2292-download
           if($LASTEXITCODE -ne 0){throw 'H2292_TWO_SAME_SOURCE_WINDOWS_DLLS_NOT_FOUND'}
-          & python -c "import os,json,hashlib,pathlib; p=pathlib.Path('result/h2292-download'); a=json.loads((p/'baseline/h2292-baseline-dll-manifest.json').read_text()); b=json.loads((p/'candidate/h2291-windows-dll-manifest.json').read_text()); assert a['source_sha']==b['source_sha']==os.environ['GITHUB_SHA']; assert a['base_features']==b['base_features']=='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'; assert a['feature']=='H2291_TX_SERVICE_DISABLED' and b['trial_feature']=='h2291_windows_tx_service'; assert all(hashlib.sha256((p/k/'wbd_engine.dll').read_bytes()).hexdigest()==x['dll_sha256'] for k,x in [('baseline',a),('candidate',b)]); print('H2292_TWO_ACTUAL_DLLS_DIFFER_ONLY_BY_ONE_RUST_FEATURE')"
+          & python -c "import os,json,hashlib,pathlib; p=pathlib.Path('result/h2292-download'); a=json.loads((p/'baseline/h2292-baseline-dll-manifest.json').read_text()); b=json.loads((p/'candidate/h2291-windows-dll-manifest.json').read_text()); assert a['source_sha']==b['source_sha']==os.environ['WBD_H2292_COMPILED_SOURCE_SHA']; assert a['base_features']==b['base_features']=='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'; assert a['feature']=='H2291_TX_SERVICE_DISABLED' and b['trial_feature']=='h2291_windows_tx_service'; assert all(hashlib.sha256((p/k/'wbd_engine.dll').read_bytes()).hexdigest()==x['dll_sha256'] for k,x in [('baseline',a),('candidate',b)]); print('H2292_TWO_ACTUAL_DLLS_DIFFER_ONLY_BY_ONE_RUST_FEATURE')"
           if($LASTEXITCODE -ne 0){throw 'H2292_TWO_DLLS_SOURCE_FEATURES_SHA_MISMATCH'}
           Copy-Item -Force result/h2292-download/baseline/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item -Force result/h2292-download/baseline/h2292-baseline-dll-manifest.json result/wl-public/h2292-baseline-dll-manifest.json

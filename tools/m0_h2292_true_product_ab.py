@@ -21,7 +21,7 @@ import time
 
 import m0_h2276_three_runner_tcp as core
 
-CANDIDATE_BUILD_SHA=os.environ.get("GITHUB_SHA","NO_GITHUB_SHA")
+CANDIDATE_BUILD_SHA=os.environ.get("WBD_H2292_COMPILED_SOURCE_SHA",os.environ.get("GITHUB_SHA","NO_GITHUB_SHA"))
 LEGS=("A_default","B_tx16","A_prime")
 ROOT=pathlib.Path("h2292-out")
 H2286=pathlib.Path("h2286-out")
@@ -103,7 +103,7 @@ def verify_binary_archive():
     require(frozen["source_sha"]==src["original_go_exe_source_sha"] and
             hashlib.sha256(exe.read_bytes()).hexdigest()==frozen["sha256"]["exe"],
             "EXACT_ORIGINAL_WINDOWS_GO_TLS_EXE")
-    require(default["source_sha"]==os.environ["GITHUB_SHA"] and
+    require(default["source_sha"]==CANDIDATE_BUILD_SHA and
             default["feature"]=="H2291_TX_SERVICE_DISABLED" and
             default["base_features"]==
              "m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record" and

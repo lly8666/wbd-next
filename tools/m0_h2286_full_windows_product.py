@@ -85,7 +85,8 @@ def assert_original_binaries():
     baseline=None
     if original_ab and not h2291:
         baseline=json.loads((p/"h2292-baseline-dll-manifest.json").read_text())
-        require(baseline["source_sha"]==os.environ["GITHUB_SHA"] and
+        compiled_source=os.environ.get("WBD_H2292_COMPILED_SOURCE_SHA",os.environ["GITHUB_SHA"])
+        require(baseline["source_sha"]==compiled_source and
                 baseline["feature"]=="H2291_TX_SERVICE_DISABLED" and
                 baseline["base_features"]==
                  "m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record",

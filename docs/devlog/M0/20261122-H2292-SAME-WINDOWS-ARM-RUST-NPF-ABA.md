@@ -32,3 +32,9 @@
 - 当前新H2292工作流之前把客户端**Tailscale身份发布**放在WSL2下载/导入、安装Npcap/Wintun之后，导致Windows真实Tailnet已可用而ARM耗时等待尚未发布的身份。直接将Windows源锁真实 peer生成和上传搬到下载两个SHA吻合的Rust DLL之后、但**耗时WSL2/原签名驱动启动之前**；ARM两角色即可并行真实prepare，测试仍由原Windows代码在真实OS/签名驱动成功后才开始GoTLS/业务，不会提前伪造产品READY。
 - WSL2原镜像仍必须核验**同一固定SHA256**，但将原 `Invoke-WebRequest -TimeoutSec 180`（可能不是总墙钟上限）替换为 `curl.exe --connect-timeout 15 --max-time 180 --retry-max-time 220`，保留硬SHA；现有`m0_wl_windows_bounded_cmd.py`对真实 Linux guest `apt-get`/eth0 readback执行有界150s/30s，失败提供明确子进程原因，不放宽WAL/GoTLS/业务验收。文件顺序与硬边界均加静态回归。
 - 此修改先不带高成本六机marker、只触发原廉价静态/中央治理，等在途run最终收回Windows WSL2原错误后再决定下次精确三机重测。默认H2291 feature仍OFF，双组三腿产品最终验收仍OPEN。
+
+## H2292 热路径效率：完全复用已实际编译的Windows同源双Rust DLL（新一轮）
+- 上轮 `dc2da4` 的Windows `win_candidate_build` 已经在 [Action44949570906](https://github.com/lly8666/wbd-next/actions/runs/44949570906) 成功从实际源码编译验证同feature-baseline与仅TX16/NPF64KiB候选的两份Win64 Rust DLL，产生原始 `h2292-two-real-win-rust-dlls-dc2da4b98ecc419a67e3e2ee6530f944b78d88ef`，各自实际SHA与对应编译来源manifest由构件保存。随后只修改了三Runner测试脚本/Actions工作流、单测和证据，没有改 `crates`、`r0/go_overlay`、`Cargo.toml`、`Cargo.lock` 的编译源。
+- 为提高下一轮重复测试效率，H2292工作流的Windows builder现在只执行**真实Git对照**：checkout exact `dc2da4...`，`git diff --name-only <compiled> $GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock` 必须零变化；复用先前原Win DLL构件，逐一核验两份PE实文件SHA256、原Go EXE来源、特性与实际Windows `ctypes.WinDLL` 的ABI导出；复制但绝不篡改原编译SHA。当前run依然用**新测试SOURCE**的组ID/凭据/真实WAN和业务，但编译输入是验证完全一致的已签名来源。若任何编译输入有变化则FAIL并要求重新编译，不能把陈旧DLL算新产品。
+- 原测试 `true_windows_product` 与H2292切换器仅在`WBD_H2292_TRUE_PRODUCT_ABA=1` 明确试验范围允许单独的`WBD_H2292_COMPILED_SOURCE_SHA` 读取，原Windows GoTLS EXE和真实基础feature、两个Rust DLL SHA、原OS签名驱动及WAL Stop保持原验收。一般产品和旧测试不放宽源检查。
+- 配合前一提交：组内Windows **先发布真实Tailnet peer和工件** 再做耗时WSL2/签名驱动，而ARM relay与ARM server并行组网；WSL2固定镜像SHA不变且下载与Linux tools都有硬时限。当前新三Runner运行的实际成败须等待原Action结果和两组构件；旧一次A组WSL boot拖延、ARM wait9min失败，B组原产品同机A/B/A′成功+20.3%吞吐、-19.7%CPU/GiB只是组内有限结果，不得晋级默认。
