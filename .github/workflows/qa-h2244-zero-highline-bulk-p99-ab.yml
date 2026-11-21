@@ -1,0 +1,98 @@
+name: 'H2244 genuine 0% highline native TBF1200 bulk and smallflow A/B/A'
+run-name: 'H2244 zero-loss native TBF1200 burst48 highline source ${{ github.sha }}'
+on:
+  push:
+    branches: ['feat/m0-h2244-zero-highline-probe']
+    paths:
+      - '.github/workflows/qa-h2244-zero-highline-bulk-p99-ab.yml'
+      - 'tools/m0_h2244_zero_highline_ab.py'
+      - 'tests/test_m0_h2244_zero_highline_ab.py'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: h2244-zero-highline-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    name: 'Source-locked 0% fair burst 1200 negative rate/readback and no-HOL tests'
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2244_zero_highline_ab.py tools/m0_h2244_smallflow_echo.py
+          python3 -m unittest tests.test_m0_h2244_zero_highline_ab tests.test_m0_h2244_smallflow_abca tests.test_m0_h2243_burst_fair_abca -v
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("tools/m0_h2244_zero_highline_ab.py").read_text()
+          assert 'os.environ["WBD_H2241_NATIVE_GATE"]="0"' in s
+          assert 'install_highline_owned_tun' in s
+          assert 'node.stop_client(0)' in s
+          assert 'test_only_fixed_1200mbit_not_default' in s
+          print('H2244_ZERO_HIGHLINE_BENCH_ONLY_TEST_NOT_PRODUCT')
+          PY
+  native-x86:
+    needs: static
+    name: 'True original Linux x86 0% kernel highline, no DERP, owned Stop'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Original Go TLS and original accelerated Rust native source
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "x86_64"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2244-zero-build.log 2>&1 ||
+            { tail -n 140 h2244-zero-build.log;exit 2; }
+      - name: Genuine original to highline TBF1200 to original A/B/A with concurrent smallflow
+        shell: bash
+        timeout-minutes: 13
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/m0_h2244_zero_highline_ab.py
+          python3 - <<'PY'
+          import json,os
+          s=json.load(open("h2244-zero-highline/summary.json"))
+          assert s['source_sha']==os.environ['GITHUB_SHA']
+          assert s['run_id']==os.environ['GITHUB_RUN_ID']
+          assert s['status']=='PASS_H2244_TRUE_ZERO_LOSS_HIGHLINE_NATIVE_BULK_AND_SMALL_ABA_DIAGNOSTIC_ONLY'
+          assert s['arch']=='x86_64'
+          assert s['server_owned_stop'] and s['echo_server_owned_stop']
+          assert [r['test_only_rate_mbit'] for r in s['phases']]==[0,1200,0]
+          assert len(s['direct_before_after'])==3
+          assert all(p['bulk_tcp']['status']=='PASS_REAL_KERNEL_IPERF3_TCP'
+                     and p['smallflow']['status']=='PASS_SCOPED_REAL_INNER_UDP_TCP_ECHO'
+                     and p['client_owned_stop']['status']=='REAL_RUST_OWNED_STOP'
+                     and p['smallflow']['udp']['latency_ms']['p99'] is not None
+                     and p['smallflow']['tcp']['latency_ms']['p99'] is not None
+                     and p['gate_disabled']['status']=='ORIGINAL_PRODUCT_NO_GATE_RECEIPT'
+                     for p in s['phases'])
+          print('H2244_0PCT_REAL_ORIGINAL_BULK_P99_LOCAL_HIGHLINE_TEST_ONLY')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2244-true-x86-zero-highline-bulk-small-p99
+          path: |
+            h2244-zero-highline/
+            h2244-zero-build.log
+          retention-days: 10
+          if-no-files-found: warn
