@@ -341,11 +341,14 @@ func parse(role string,args []string)(config,error){
     }
     if *outerMTU<576||*outerMTU>1500{return c,fmt.Errorf("outer-mtu public IPv4 range is 576..1500; jumbo is experimental/unsupported")}
     if err:=validateOriginalRotationPolicy(role,*rotateInterval,*rotateJitter);err!=nil{return c,err}
-    // Keep the existing all-mode fq600 default. A cold explicit 1500Mbit
-    // per-flow option tests whether that cap hurts fast single-TCP flows.
-    // Unlike 0 it retains identical fq scheduling and flow_limit=256.
-    if *tunFqRate!=0 && *tunFqRate!=600 && *tunFqRate!=1500 {
-        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0, 600 or 1500")
+    // All-mode default remains fq600. After a real 1500Mbit single-flow
+    // gain caused large local full drops and sparse UDP losses, a single
+    // calculated 900Mbit cap tests headroom below measured ~1.05Gbit/s
+    // ARM original Normal service capacity. Both choices keep the SAME
+    // owned fq scheduler/flow_limit=256; never silently disable it.
+    if *tunFqRate!=0 && *tunFqRate!=600 &&
+        *tunFqRate!=900 && *tunFqRate!=1500 {
+        return c,fmt.Errorf("tun-fq-maxrate-mbps must be 0, 600, 900 or 1500")
     }
     c.tunFqMaxrateMbps=*tunFqRate
     if *tunTxQLen!=500&&*tunTxQLen!=2048{return c,fmt.Errorf("tun-txqlen-packets must be 500 or 2048")}
@@ -548,7 +551,7 @@ func setOwnedTunTxQueue(name string,packets int)error{
 // fail closed instead of claiming protected startup traffic.
 func setOwnedTunFq(name string,rateMbps int)error{
     if rateMbps==0{return nil}
-    if rateMbps!=600&&rateMbps!=1500{
+    if rateMbps!=600&&rateMbps!=900&&rateMbps!=1500{
         return fmt.Errorf("unsupported owned TUN fq rate")
     }
     // The default kernel fq flow_limit=100 dropped two real warmup UDP

@@ -2,13 +2,8 @@
 # fq600 versus fq1500; default remains 600, not a product gain claim.
 name: M0 PLAN029 native single TCP fq600 versus fq1500
 run-name: "M0|029|ARM fq600-1500| ${{ github.sha }}"
+# Rejected universal fq1500 due real sparse-UDP harm; manual audit only.
 on:
-  push:
-    branches: ['experiment/m0-029-throughput-arm-fair']
-    paths:
-      - '.github/workflows/qa-m0-029-arm-fq-singleflow.yml'
-      - 'tools/m0_029_real_single_flow_fq_ab.py'
-      - 'r0/go_overlay/internal/v4productcli/linux.go'
   workflow_dispatch: {}
 permissions: {contents: read}
 concurrency:
