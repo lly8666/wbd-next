@@ -196,7 +196,7 @@ def main():
         for role in ("client","server"):
             raw=node.logs[role].read_text(errors="replace")
             values=re.findall(r"V4_PUBLIC_M2_OUTER role="+role+
-                              r"[^\\n]*? repair_enabled=(\\d+)",raw)
+                              r"[^\n]*? repair_enabled=(\d+)",raw)
             if not values or any(value!="0" for value in values):
                 raise RuntimeError("M029_TRUE_NORMAL_OFF_NATIVE_OUTER_READBACK_MISSING_"+role)
             result["outer_repair_native_stop_readback"][role]=[int(x) for x in values]
