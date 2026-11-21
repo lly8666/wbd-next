@@ -256,6 +256,8 @@ def main():
             bounds=result["measurement"]["smallflow"]
             begin=bounds["probe_start_monotonic_ns"]
             end=bounds["probe_end_monotonic_ns"]
+            # m4_copied contains a digit: permit numeric field identifiers.
+            assert dict(re.findall(r"([a-z0-9_]+)=(\d+)","m4_copied=7"))["m4_copied"]=="7"
             required=("mono_ns","generation","source_queued","m4_copied",
                       "tx_backpressure","tx_worker_cpu_ns","rx_worker_cpu_ns",
                       "tun_delivered","kernel_raw_observed")
@@ -266,7 +268,7 @@ def main():
                 for line in raw.splitlines():
                     if "V4_PUBLIC_M4_EXTERNAL_STAGE_DIAG role="+role+" " not in line:
                         continue
-                    fields={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\d+)",line)}
+                    fields={k:int(v) for k,v in re.findall(r"([a-z0-9_]+)=(\d+)",line)}
                     if any(k not in fields for k in required):
                         raise RuntimeError("M029_M1_M4_STAGE_FIELD_MISSING_"+role)
                     rows.append({k:fields[k] for k in required})
