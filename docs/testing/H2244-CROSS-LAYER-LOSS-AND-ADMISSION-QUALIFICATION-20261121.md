@@ -1,6 +1,6 @@
 # M0 H2244｜跨层丢包转移可接受条件与统一服务率闭环：可执行判定门
 
-**2026-11-21，独立干净 main 分支的第一项 TEST_ONLY 工作；没有更改产品配置、Go/Rust DATA、TLS、外层重传或 Linux qdisc。** 关联先行 [H2244 设计契约](../decisions/M0-H2244-UNIFIED-INGRESS-FAIR-SERVICE-DESIGN-20261121.md) 在 H2243 Draft PR #64 上，尚未合 main。当前文件只将关键错误判断转为可测试的、拒绝假改善的跨层判定。不能据此宣称实际吞吐优化完成。
+**2026-11-21，独立干净 main 分支的第一项 TEST_ONLY 工作；没有更改产品配置、Go/Rust DATA、TLS、外层重传或 Linux qdisc。** 关联先行 [H2244 设计契约](https://github.com/lly8666/wbd-next/blob/59e48baf37edbeab7a9fe028fe3d6112db421d43/docs/decisions/M0-H2244-UNIFIED-INGRESS-FAIR-SERVICE-DESIGN-20261121.md) 在 H2243 Draft PR #64 上，尚未合 main。当前文件只将关键错误判断转为可测试的、拒绝假改善的跨层判定。不能据此宣称实际吞吐优化完成。
 
 ## 1. 先把“丢包下移是否还能修掉”回答精确
 
