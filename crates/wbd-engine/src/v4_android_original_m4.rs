@@ -71,6 +71,10 @@ pub(super) struct AndroidOriginalStats{
     fec2_source_tun:AtomicU64,
     #[cfg(feature="fec2_product_record")]
     fec2_recovered_tun:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_source_raw:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_repair_raw:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -151,6 +155,90 @@ fn send_staged(
         },
     }
 }
+// B12b: original M1 borrowed IPv4 slab -> existing FixedStream source
+// -> original M3 AEAD/PN -> SAME Android RAW sendto, with actual copy proof.
+#[cfg(feature="fec2_product_record")]
+fn send_android_fixed_source(
+    e:&mut Entry,slab:crate::memory::UniqueBuffer,n:usize,
+    frame:wbd_codec::path_budget::FrameBudget,physical:u32,
+    raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
+    storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs
+)->bool{
+    use wbd_types::ConfigRevision;
+    let Some((profile,rev))=e.android_fec2_pending else{return false};
+    if e.protected_features!=7||e.phase!=PH_ACTIVE||n==0{return false}
+    let Ok(max)=wbd_codec::fec_v2::max_original_for_record_budget(
+        frame.record_payload_mtu
+    )else{return false};
+    if n>max{return false}
+    let Some((_,epoch))=e.owner.normal_firstsend_identity()else{return false};
+    let mut stream=match e.android_fec2_tx.take(){
+        Some(x) if x.revision()==ConfigRevision(rev)=>x,
+        Some(x)=>{e.android_fec2_tx=Some(x);return false},
+        None=>match crate::v4_fixed_stream::FixedStream::new(
+            profile,rev,frame.record_payload_mtu
+        ){Some(x)=>x,None=>return false},
+    };
+    let result=stream.offer_source(slab,14..14+n,at,|ticket,plain|{
+        if ticket.revision!=ConfigRevision(rev){return false}
+        let Some(len)=wbd_codec::fec_v2::SOURCE_HEADER.checked_add(plain.len())
+            else{return false};
+        let mut record=match e.arena.allocate(){Ok(x)=>x,Err(_)=>return false};
+        let Some(end)=14usize.checked_add(len)else{return false};
+        if end>record.writable().len(){return false}
+        if wbd_codec::fec_v2::source_into(
+            ticket.block_id,ticket.index,plain,frame.record_payload_mtu,
+            &mut record.writable()[14..end]
+        ).ok()!=Some(len){return false}
+        let (pn,_,_)=match e.owner.seal_fec2_product_one(
+            record,len,2,frame,u64::from(physical),epoch,at
+        ){Ok(x)=>x,Err(_)=>return false};
+        if send_staged(e,raw,stats,storage,scratch,at)==Some(pn){
+            stats.fec2_source_raw.fetch_add(1,Ordering::Relaxed);
+            stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
+            true
+        }else{false}
+    });
+    e.android_fec2_tx=Some(stream);
+    e.arena.drain_returns();
+    result.is_ok_and(|accepted|accepted.source_enqueued)
+}
+// One <=4-row RS16 quantum per ready turn, only when fresh DATA was
+// handled or no TUN DATA is ready. Original M4 copied/not-sent is final.
+#[cfg(feature="fec2_product_record")]
+fn send_android_fixed_due(
+    e:&mut Entry,frame:wbd_codec::path_budget::FrameBudget,physical:u32,
+    raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
+    storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs
+){
+    use crate::v4_fixed_stream::DriverProof;
+    let Some(mut stream)=e.android_fec2_tx.take()else{return};
+    let Some((_,epoch))=e.owner.normal_firstsend_identity()else{
+        e.android_fec2_tx=Some(stream);return
+    };
+    let revision=stream.revision();
+    let _=stream.poll_parity_quanta(at,1,|bytes,_block,_row,rev|{
+        if rev!=revision{return DriverProof::NotSent}
+        let mut record=match e.arena.allocate(){
+            Ok(x)=>x,Err(_)=>return DriverProof::NotSent
+        };
+        let Some(end)=14usize.checked_add(bytes.len())else{
+            return DriverProof::NotSent
+        };
+        if end>record.writable().len(){return DriverProof::NotSent}
+        record.writable()[14..end].copy_from_slice(bytes);
+        let (pn,_,_)=match e.owner.seal_fec2_product_one(
+            record,bytes.len(),3,frame,u64::from(physical),epoch,at
+        ){Ok(x)=>x,Err(_)=>return DriverProof::NotSent};
+        if send_staged(e,raw,stats,storage,scratch,at)==Some(pn){
+            stats.fec2_repair_raw.fetch_add(1,Ordering::Relaxed);
+            DriverProof::Copied
+        }else{DriverProof::NotSent}
+    });
+    e.android_fec2_tx=Some(stream);
+    e.arena.drain_returns();
+}
+
 fn send_authenticated_health(
     e:&mut Entry,raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
     storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs,idle_ns:u64,
@@ -707,9 +795,17 @@ fn tun_worker(
                 },
             _=>u64::MAX,
         };
-        let due=clock.next_deadline()
+        let mut due=clock.next_deadline()
             .unwrap_or(at.0.saturating_add(30_000_000_000))
             .min(ack_due);
+        #[cfg(feature="fec2_product_record")]
+        if let Ok(e)=cell.lock(){
+            if e.protected_features==7{
+                if let Some(t)=e.android_fec2_tx.as_ref().and_then(|x|x.next_deadline()){
+                    due=due.min(t.0);
+                }
+            }
+        }
         let timeout=((due.saturating_sub(at.0)+999_999)/1_000_000)
             .min(1_000).max(1) as i32;
         let readiness=if let Some(socket)=dns.as_ref(){
@@ -775,7 +871,18 @@ fn tun_worker(
                 }
             }
         }
-        if !tun_ready{continue}
+        if !tun_ready{
+            #[cfg(feature="fec2_product_record")]
+            if let Ok(mut e)=cell.lock(){
+                if e.phase==PH_ACTIVE&&e.protected_features==7{
+                    if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
+                        send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
+                            &mut storage,&mut wire_scratch,now());
+                    }
+                }
+            }
+            continue
+        }
         // One sparse normal packet is sent immediately, never held waiting
         // for batch fill. Eight bounded source turns before Health/Stop.
         // TUN adopt() sets O_NONBLOCK. Drain a short bounded burst with
@@ -798,8 +905,14 @@ fn tun_worker(
             let mut slab=match e.arena.allocate(){
                 Ok(v)=>v,Err(_)=>break
             };
-            let head_cap=frame.single_business_payload_mtu.min(
+            let mut head_cap=frame.single_business_payload_mtu.min(
                 slab.writable().len().saturating_sub(14));
+            #[cfg(feature="fec2_product_record")]
+            if e.protected_features==7{
+                head_cap=head_cap.min(frame.record_payload_mtu.saturating_sub(
+                    wbd_codec::fec_v2::SOURCE_HEADER
+                ));
+            }
             if head_cap<20||head_cap>MAX_LOGICAL_DATAGRAM{
                 stats.tx_error.fetch_add(1,Ordering::Relaxed);
                 break
@@ -903,6 +1016,19 @@ fn tun_worker(
                         break
                     }
                     tunnel_dns_query=true;
+                }
+                #[cfg(feature="fec2_product_record")]
+                if e.protected_features==7{
+                    if send_android_fixed_source(
+                        &mut e,slab,n,frame,physical,&raw,&stats,
+                        &mut storage,&mut wire_scratch,at
+                    ){
+                        clock.on_local_business(at.0);
+                        if tunnel_dns_query{
+                            stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
+                        }
+                    }else{stats.tx_dropped.fetch_add(1,Ordering::Relaxed)}
+                    continue
                 }
                 // Common O(1) hot path: original owner AEAD/PN directly
                 // over the kernel-filled slab, immutable M4 RAW sendto.
@@ -1008,6 +1134,14 @@ fn tun_worker(
                 }
                 continue
             }
+            #[cfg(feature="fec2_product_record")]
+            if e.protected_features==7{
+                // No silent Fixed->Normal LINK jumbo fallback.
+                drop(slab);
+                e.arena.drain_returns();
+                stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                break
+            }
             // DNS with EDNS can exceed the common slab head; inspect the
             // one already-collected complete IP before M3 fragmentation.
             let mut tunnel_dns_query=false;
@@ -1059,6 +1193,16 @@ fn tun_worker(
             drop(slab);
             e.arena.drain_returns();
             break
+        }
+        // Fresh business sources first, then at most one parity quantum.
+        #[cfg(feature="fec2_product_record")]
+        if let Ok(mut e)=cell.lock(){
+            if e.phase==PH_ACTIVE&&e.protected_features==7{
+                if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
+                    send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
+                        &mut storage,&mut wire_scratch,now());
+                }
+            }
         }
     }
     physical_flows.stop();
@@ -1476,6 +1620,71 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_native_health_effective(
         out.add(1).write((p.dead_ns()/1_000_000_000) as u32);
         out.add(2).write(p.dormant_ns().map_or(0,|x|(x/1_000_000_000) as u32));
     }
+    OK
+}
+
+// B12c: actual original Go verified TLS/Detach feature7 Fixed REQUESTED.
+// Native reply is PENDING until copied source+parity and genuine reverse M2.
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
+    h:u64,epoch_ptr:*const u8,len:usize,profile:u8,revision:u64
+)->i32{
+    if epoch_ptr.is_null()||len!=16||profile>6||revision==0{return INVALID}
+    let supplied=unsafe{std::slice::from_raw_parts(epoch_ptr,16)};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       e.android_workers.is_some()||e.protected_features!=7||
+       e.android_fec2_rx.is_none()||
+       e.owner.normal_firstsend_identity().is_none_or(
+           |(_,epoch)|epoch.as_slice()!=supplied
+       ){return BAD_STAGE}
+    if revision<=e.android_fec2_pending.map_or(0,|(_,r)|r)||
+       e.android_fec2_tx.is_some(){return INVALID}
+    e.android_fec2_pending=Some((profile,revision));
+    OK
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
+    h:u64,epoch_ptr:*const u8,len:usize,
+    profile:*mut u8,revision:*mut u64,applied:*mut u32
+)->i32{
+    if epoch_ptr.is_null()||len!=16||profile.is_null()||
+       revision.is_null()||applied.is_null(){return INVALID}
+    let supplied=unsafe{std::slice::from_raw_parts(epoch_ptr,16)};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       e.protected_features!=7||e.owner.normal_firstsend_identity().is_none_or(
+           |(_,epoch)|epoch.as_slice()!=supplied
+       ){return BAD_STAGE}
+    let Some((p,r))=e.android_fec2_pending else{return BAD_STAGE};
+    // Only a real authenticated reverse M2 may set RX APPLIED; it is
+    // unimplemented, thus zero here, not a fabricated success.
+    let actual=e.android_fec2_rx.as_ref()
+        .map_or(0u32,|(_,_,rev)|u32::from(*rev==r));
+    unsafe{profile.write(p);revision.write(r);applied.write(actual)};
+    OK
+}
+// B12c read-only copied native M4 FEC receipts. No per-packet Go callback.
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_m4_counters(
+    h:u64,out:*mut u64,len:usize
+)->i32{
+    if out.is_null()||len!=4{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.protected_features!=7{return BAD_STAGE}
+    let v=[
+        e.android_metrics.fec2_source_raw.load(Ordering::Relaxed),
+        e.android_metrics.fec2_repair_raw.load(Ordering::Relaxed),
+        e.android_metrics.fec2_source_tun.load(Ordering::Relaxed),
+        e.android_metrics.fec2_recovered_tun.load(Ordering::Relaxed),
+    ];
+    unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,4)};
     OK
 }
 

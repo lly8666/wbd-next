@@ -81,11 +81,10 @@ cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
 test ! -e legacy/cmd/wbd-v4-client/ksu_cshared_entry_android.go
 cp r0/go_overlay/cmd/wbd-v4-client/ksu_cshared_entry_android.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
-# Android ARM64 first authentic Go/Rust product is Normal/off only.
-# Use the ALREADY-EXISTING original-Go !wbd_v4_fec2_product source variants.
-# Native Fixed/Auto and Game are explicitly UNAVAILABLE until real ARM64
-# FEC/M2/Game kernels exist; never introduce dummy C ABI to force green.
-# Keep original Rust Health/M1/M3 + future codec in this source stage.
+# Signed Android release remains Normal/off only. Build the actual original
+# FEC2 M1 TX/RX Rust backend and Go TLS PENDING/readback control in this
+# SAME feature7-capable ELF; public Fixed/Auto stays unavailable until
+# genuine reverse M2 APPLIED and Android loop admission exist.
 features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
 go_tags=wbd_v4_embedded_go
 for pair in "aarch64 arm64" "x86_64 amd64"; do
@@ -137,6 +136,9 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
       wbd_m0_embedded_go_normal_off_readback \
       wbd_m0_embedded_go_normal_startup_padding_set \
       wbd_m0_embedded_go_normal_startup_padding_counters \
+      wbd_m0_embedded_go_fixed_stage_pending \
+      wbd_m0_embedded_go_fixed_pending_readback \
+      wbd_m0_embedded_go_fixed_m4_counters \
       wbd_m0_embedded_go_bind_authenticated_client_ipv4 \
       wbd_m0_embedded_go_observed_tx_ipv4_mtu; do
     grep -Eq " [TW] ${symbol}$" "$symbol_table" || {

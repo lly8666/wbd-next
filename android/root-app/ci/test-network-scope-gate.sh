@@ -215,8 +215,30 @@ assert "blocks.accept_authenticated(*exact,kind,payload,at)" in fec_worker
 assert "tun.write_authenticated_ip(ip).ok()==Some(ip.len())" in fec_worker
 assert "if *applied==0||exact.negotiated_features!=7" in fec_worker
 assert "e.protected_features!=3" in fec_worker
-assert "return prev,ack,ErrAdmissionUnsupported" in fec_go
+# B12bc: Go PENDING now reaches real Android Rust FFI but never APPLIED.
+assert "C.wbd_m0_embedded_go_fixed_stage_pending(" in fec_go
+assert "C.wbd_m0_embedded_go_fixed_pending_readback(" in fec_go
+assert "originalAndroidFixedM4Counters()" in fec_go
+assert 'runtime.GOOS=="android" &&' in Path(
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go"
+).read_text()
 print("ANDROID_B12A_ORIGINAL_SINGLE_REPLAY_FEC2_RX_TUN_CLOSED_SOURCE_PASS")
+# Native Fixed source & parity use original M1/M3 with actual RAW-copy proof.
+assert "fn send_android_fixed_source(" in fec_worker
+assert "fn send_android_fixed_due(" in fec_worker
+assert "stream.offer_source(slab,14..14+n,at" in fec_worker
+assert "wbd_codec::fec_v2::source_into(" in fec_worker
+assert "stream.poll_parity_quanta(at,1," in fec_worker
+assert "e.owner.seal_fec2_product_one(" in fec_worker
+assert "send_staged(e,raw,stats,storage,scratch,at)==Some(pn)" in fec_worker
+assert "e.android_fec2_tx=Some(stream);" in fec_worker
+assert "e.protected_features!=3" in fec_worker
+assert "fn wbd_m0_embedded_go_fixed_stage_pending(" in fec_worker
+assert "fn wbd_m0_embedded_go_fixed_pending_readback(" in fec_worker
+assert "fn wbd_m0_embedded_go_fixed_m4_counters(" in fec_worker
+assert "if let Some(stream)=e.android_fec2_tx.as_mut(){stream.stop()}" in fec_entry
+assert "e.android_fec2_pending=None;" in fec_entry
+print("ANDROID_B12BC_FIXED_ORIGINAL_SOURCE_PARITY_RAW_PENDING_CLOSED_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

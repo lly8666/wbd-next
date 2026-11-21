@@ -863,8 +863,14 @@ struct Entry{
     android_fec2_rx:Option<(
         crate::v4_fec2_live_rx::VerifiedReceiveEpoch,
         crate::v4_fec2_live_rx::Fec2LiveRx,
-        u64, // exact Go Fixed M4 APPLIED revision; zero forever in B12a
+        u64, // only true original M2 APPLIED, never a desired Fixed flag
     )>,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_pending:Option<(u8,u64)>,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_tx:Option<crate::v4_fixed_stream::FixedStream>,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_startup_padding:Option<crate::v4_client_startup_padding::TunnelStartupPadding>,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -1272,6 +1278,12 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         #[cfg(all(feature="fec2_product_record",target_os="android",
             any(target_arch="aarch64",target_arch="x86_64")))]
         android_fec2_rx,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+            any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_pending:None,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+            any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_tx:None,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_startup_padding:None,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -2995,6 +3007,12 @@ fn stop(handle:u64)->i32{
         e.android_dns_physical_ready=false;
         e.android_cn_dns=None;
         e.android_dns_flows.stop();
+        #[cfg(feature="fec2_product_record")]
+        {
+            if let Some(stream)=e.android_fec2_tx.as_mut(){stream.stop()}
+            e.android_fec2_tx=None;
+            e.android_fec2_pending=None;
+        }
         #[cfg(feature="fec2_product_record")]
         if let Some((_,blocks,applied))=e.android_fec2_rx.as_mut(){
             *applied=0;blocks.stop();
