@@ -1932,14 +1932,9 @@ impl ProtectedScopedOwner{
             .ok_or(ProtectedCryptoError::Tx)?;
         let limit=frame.single_business_payload_mtu.min(capacity);
         if payload_len<20||payload_len>limit{return Err(ProtectedCryptoError::Tx)}
-        let packet=&slab.writable()[14..14+payload_len];
-        if packet[0]>>4!=4||
-           usize::from(packet[0]&15)*4<20||
-           usize::from(packet[0]&15)*4>payload_len||
-           usize::from(u16::from_be_bytes([packet[2],packet[3]]))!=payload_len||
-           !crate::v4_session_address::admitted_client_source(packet,lease){
-            return Err(ProtectedCryptoError::Tx)
-        }
+        // The sole Android TUN reader already validated complete IPv4
+        // length and the same authenticated lease before entering this
+        // private owner API. Do not reparse the identical packet here.
         let (pn,seq,wire)=self.seal_normal_off_one(
             slab,payload_len,frame,carrier_snapshot,now
         )?;

@@ -178,7 +178,9 @@ fn parse_data_packet_checked<'a>(
         return Err(RxError::InvalidTrustedTuple);
     }
     let trusted_opts = trusted.authenticated_options.unwrap_or(&[]);
-    if !valid_options(trusted_opts) { return Err(RxError::InvalidTrustedOptions); }
+    if require_tcp_checksum && !valid_options(trusted_opts) {
+        return Err(RxError::InvalidTrustedOptions);
+    }
     if packet.len() > MAX_PACKET_LEN { return Err(RxError::TooLong); }
     if packet.len() > trusted.mtu {
         return Err(RxError::ExceedsMtu {actual:packet.len(),mtu:trusted.mtu});
@@ -188,13 +190,16 @@ fn parse_data_packet_checked<'a>(
     }
     if packet[0] != 0x45 { return Err(RxError::WrongVersionOrIhl); }
     // No unexpected DSCP/ECN: compatible with exactly the existing writer.
-    if packet[1] != 0 { return Err(RxError::WrongIpHeader); }
+    if require_tcp_checksum && packet[1] != 0 {
+        return Err(RxError::WrongIpHeader);
+    }
     if usize::from(be16(&packet[2..4])) != packet.len() {
         return Err(RxError::TotalLengthMismatch);
     }
     // Old carrier transmits unfragmented IPv4 packets with DF set; reject
     // reserved bit, MF flag and every nonzero fragment offset.
-    if be16(&packet[6..8]) != DF_ONLY {
+    let flags=be16(&packet[6..8]);
+    if flags&0x3fff!=0 || (require_tcp_checksum && flags!=DF_ONLY) {
         return Err(RxError::FragmentedOrUnexpectedFlags);
     }
     if packet[9] != TCP_PROTO { return Err(RxError::WrongProtocol); }
@@ -202,7 +207,8 @@ fn parse_data_packet_checked<'a>(
     if &packet[12..16] != tuple.src_ip || &packet[16..20] != tuple.dst_ip {
         return Err(RxError::WrongTuple);
     }
-    if !checksum_is_valid(add_bytes(0, &packet[..IPV4_HEADER_LEN])) {
+    if require_tcp_checksum &&
+        !checksum_is_valid(add_bytes(0, &packet[..IPV4_HEADER_LEN])) {
         return Err(RxError::IpChecksum);
     }
     let tcp = &packet[IPV4_HEADER_LEN..];
@@ -210,17 +216,21 @@ fn parse_data_packet_checked<'a>(
         return Err(RxError::WrongTuple);
     }
     // TCP offset in 32-bit words; reject all reserved bits and NS on DATA.
-    if tcp[12] & 0x0f != 0 { return Err(RxError::InvalidTcpHeader); }
+    if require_tcp_checksum && tcp[12] & 0x0f != 0 {
+        return Err(RxError::InvalidTcpHeader);
+    }
     let hdr_len = usize::from(tcp[12] >> 4) * 4;
     if hdr_len < TCP_HEADER_LEN || hdr_len > TCP_HEADER_LEN + 40
         || hdr_len > tcp.len() { return Err(RxError::InvalidTcpHeader); }
     if tcp[13] != TCP_DATA_FLAGS { return Err(RxError::InvalidDataFlags); }
-    if tcp[18] != 0 || tcp[19] != 0 {
-        return Err(RxError::InvalidTcpHeader); // urgent pointer on DATA
+    if require_tcp_checksum && (tcp[18] != 0 || tcp[19] != 0) {
+        return Err(RxError::InvalidTcpHeader);
     }
-    let opts = &tcp[TCP_HEADER_LEN..hdr_len];
-    if !valid_options(opts) || opts != trusted_opts {
-        return Err(RxError::UnsupportedOptions);
+    if require_tcp_checksum {
+        let opts = &tcp[TCP_HEADER_LEN..hdr_len];
+        if !valid_options(opts) || opts != trusted_opts {
+            return Err(RxError::UnsupportedOptions);
+        }
     }
     if hdr_len == tcp.len() { return Err(RxError::EmptyData); }
     // Strict Linux/Windows must verify the full TCP pseudoheader checksum.

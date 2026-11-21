@@ -523,8 +523,10 @@ assert 'if require_tcp_checksum && !checksum_is_valid(sum)' not in parser
 assert 'sum = add_bytes(sum, tcp);' in parser
 assert 'a48_android_m3_pending_accepts_only_tcp_checksum_drift_as_untrusted' in parser
 assert 'let parsed=match crate::rx_ipv4_tcp::parse_data_packet_android_m3_pending(' in android_io
-assert 'if (observed&127)==0' in android_io
-assert 'self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1' in android_io
+assert 'if (observed&127)==0' not in android_io
+assert 'if cfg!(debug_assertions) && total>=40' in android_io
+assert 'self.debug[RX_DATA_OK].fetch_add(1' in android_io
+assert 'self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1' not in android_io
 assert 'self.debug[RX_DATA_OK].fetch_add(1' in android_io
 assert 'Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)=>{' not in android_io
 assert 'a49_single_pass_matches_a48_two_pass_android_admission' in parser

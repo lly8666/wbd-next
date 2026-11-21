@@ -371,6 +371,18 @@ fn tun_worker(
         crate::v4_android_dns_physical_flow::MAX_DNS_REPLY_IPV4];
     let mut pending=None::<PendingAndroidJumbo>;
     let mut next_packet_id=1u32;
+    let frame=match cell.lock(){
+        Ok(e)=>match e.android_physical.as_ref() {
+            Some(s)=>match e.owner.android_normal_off_frame_budget(s.mtu){
+                Ok(value)=>value,
+                Err(_)=>{shutdown.store(true,Ordering::Release);return}
+            },
+            None=>{shutdown.store(true,Ordering::Release);return}
+        },
+        Err(_)=>{shutdown.store(true,Ordering::Release);return}
+    };
+    // One cold generation owns the physical MTU/MSS/record budget.
+    // The existing 1Hz scope check retires a changed interface/MTU.
     let mut last_scope=Instant::now()-Duration::from_secs(2);
     while !shutdown.load(Ordering::Acquire){
         stats.tx_cpu_ns.store(thread_cpu_ns(),Ordering::Relaxed);
@@ -542,11 +554,7 @@ fn tun_worker(
                 shutdown.store(true,Ordering::Release);
                 break
             };
-            let frame=match e.owner.android_normal_off_frame_budget(physical){
-                Ok(x)=>x,Err(_)=>{
-                    stats.tx_error.fetch_add(1,Ordering::Relaxed);break
-                },
-            };
+            // The precomputed, generation-scoped FrameBudget is Copy.
             // Reserve ONE original M1 loan BEFORE consuming the TUN packet.
             let mut slab=match e.arena.allocate(){
                 Ok(v)=>v,Err(_)=>break
@@ -600,8 +608,11 @@ fn tun_worker(
             // lease/IPv4 gate and before M1 seal. This NEVER consumes,
             // rewrites or drops it: no DNS backend or inverse mapping has
             // been admitted yet. No second read, worker or Go JNI callback.
-            let dns_observation=
-                crate::v4_android_dns_ingress::observe_ipv4_dns53(head,n);
+            let dns_observation=if e.android_dns_hijack_ready {
+                crate::v4_android_dns_ingress::observe_ipv4_dns53(head,n)
+            }else{
+                crate::v4_android_dns_ingress::Dns53Observation::NotDns
+            };
             match dns_observation{
                 crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}=>{
                     stats.dns_udp53_seen.fetch_add(1,Ordering::Relaxed);

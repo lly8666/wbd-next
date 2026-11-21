@@ -448,7 +448,9 @@ impl AndroidBoundRawRx {
         let total=self.read_untrusted(generation,slab)?;
         self.debug[RX_READ_OK].fetch_add(1,Ordering::Relaxed);
         self.debug[RX_LAST_LENGTH].store(total as u64,Ordering::Relaxed);
-        if total>=40{
+        // Full per-packet forensics is useful in debug builds only.
+        // Release packets do not incur six unrelated atomic stores.
+        if cfg!(debug_assertions) && total>=40{
             self.debug[RX_LAST_TTL].store(u64::from(slab[8]),Ordering::Relaxed);
             self.debug[RX_LAST_FLAGS].store(u64::from(slab[33]),Ordering::Relaxed);
             self.debug[RX_LAST_SRC_IP].store(
@@ -476,13 +478,7 @@ impl AndroidBoundRawRx {
             &slab[..total],trusted
         ){
             Ok(data)=>{
-                let observed=self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
-                if (observed&127)==0 &&
-                   matches!(crate::rx_ipv4_tcp::parse_data_packet(
-                       &slab[..total],trusted),
-                       Err(crate::rx_ipv4_tcp::RxError::TcpChecksum)){
-                    self.debug[RX_TCP_CHECKSUM_BAD].fetch_add(1,Ordering::Relaxed);
-                }
+                self.debug[RX_DATA_OK].fetch_add(1,Ordering::Relaxed);
                 data
             },
             Err(reason)=>{
