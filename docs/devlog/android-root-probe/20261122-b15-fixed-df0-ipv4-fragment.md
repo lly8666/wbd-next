@@ -9,3 +9,11 @@ SOURCE 基线 `1c5181284aa513f4364875e1d76146dadada2f43`。针对真实代码缺
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B15 Android Fixed DF0 IHL20 jumbo now fragments at IPv4 layer and feeds original FEC2 owner; DF1/options/phone testing remain pending"}
 ```
+
+## 首轮 CI 证据及源码门修订
+
+首轮 SOURCE `64731e47bb41ddb3a77e64f72444485041444338` 的 [dual64 #44930277640](https://github.com/lly8666/wbd-next/actions/runs/44930277640)：原 B2C2b DNS Host Rust 测试运行通过，随后旧 Python 静态断言仅允许两处 `android_dns_flows.rewrite_query`，B15 新 Fixed jumbo 分支新增第三处调用，因此源码门 FAIL；其余源级/ABI 真正结论查各 job。首次 [governance #44930277680](https://github.com/lly8666/wbd-next/actions/runs/44930277680) 由于功能卡超过 16KiB FAIL；第二次 [#44930359351](https://github.com/lly8666/wbd-next/actions/runs/44930359351) 因仅修改功能卡、同提交没有 feature-impact 日志 FAIL。当前冻结修正 B15 源码门按三个确实存在的原 M4 调用验收，功能卡缩短而**保留原历史 verification**，本日志与功能卡在同提交申报；等待新 SOURCE 所有 Jobs，绝不追认前三次为成功。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B15 Fixed native IPv4 DF0 slow path remains, document real CI size and DNS source gate failures and correct same-commit feature declaration"}
+```
