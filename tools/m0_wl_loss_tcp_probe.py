@@ -27,6 +27,14 @@ TIMEOUT_S = 100
 # H2282 test-only per-stage override from independent 2x3 network wrapper.
 # Never changes original signed Wintun/WSL2 product diagnostic by default.
 WINDOW_TEST_BYTES = 0
+# H2286 test-only SAME 4x25s REAL Windows Wintun <-> remote ARM TUN capacity.
+# Not a WBD product knob. Explicitly isolate all historical H2273 smoke tests.
+if os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM") == "1":
+    BULK_MAX_BYTES = 512 * 1024 * 1024
+    BULK_SEND_S = 25
+    TIMEOUT_S = 180
+    WINDOW_TEST_BYTES = 2 * 1024 * 1024
+
 
 
 def _read_socket_buffers(sock):
