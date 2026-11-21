@@ -15,3 +15,7 @@
 ## B19a｜同源测试审计修正
 
 SOURCE `27f76465e53a4cd4c172c1ca8eb1448dce40e242` 的 [CI #44934886304](https://github.com/lly8666/wbd-next/actions/runs/44934886304) 中 native ARM64/x86 与 Rust B18/B19 Host 真实测试均成功；`root-arm64-app` 在 Python Source Gate 第163行失败。原因是旧 B13 静态测试仍要求 `q.counters[1]>0` 与全局 `repair_raw>0` 文本，而 B19 原真实行为已改成**逐 revision 的 copied-source、copied-parity、matched Quality**，旧断言不可作为验收。此提交只更新上述静态断言以核对当前精确源码，不更改TLS/M3/M4/Go/Java产品代码，也不改写旧失败证据。Android物理Auto E2E/性能仍NOT_RUN。
+
+## B19b｜功能卡同批更正
+
+SOURCE `37654a20813b18ad5a636fb1054939bdbebb7cb0` 的 [治理 #44935254797](https://github.com/lly8666/wbd-next/actions/runs/44935254797) 真实失败为 `declared feature card not updated: android-root-native-client`：B19a 仅修改 App 源码门/日志，却没有修改同源功能卡。此提交同步功能卡当前 B19 Auto 实验能力与“Host门修正、物理NOT_RUN”的限制，不改动 Go/Rust/Java 产品路径，不将旧 CI FAIL 改为PASS。
