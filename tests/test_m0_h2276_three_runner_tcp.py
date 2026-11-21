@@ -49,6 +49,32 @@ class ExactDualTriplet(unittest.TestCase):
         self.assertTrue(any("iptables" in args for args in calls))
         self.assertTrue(any("qdisc" in args for args in calls))
 
+    def test_real_relay_config_disables_only_ephemeral_stateful_forwarding(self):
+        own = {**identity("relay"), "control_token": "ephemeral"}
+        commands = []
+        with patch.object(h, "run", side_effect=lambda *a, **k: commands.append(a)), \
+             patch.object(h, "shaped", return_value={"stage_id": 0}), \
+             patch.object(h, "ping_class", return_value={"status": "DIRECT_CANDIDATE"}):
+            h.configure_relay(own, identity("server"), identity("client"))
+        self.assertIn(("sudo", "-n", "tailscale", "set",
+                       "--stateful-filtering=false"), commands)
+
+    def test_live_forwarding_counter_readback_is_scoped(self):
+        from types import SimpleNamespace
+        own = {**identity("relay"), "control_token": "scoped"}
+        def fake(*args, **kwargs):
+            return SimpleNamespace(stdout=(
+                " pkts bytes target prot opt in out source destination\n"
+                " 5 300 DNAT tcp -- tailscale0 * 100.101.0.1 100.101.0.2 "
+                "tcp dpt:45902 to:100.101.0.3:45902\n"
+            ), returncode=0)
+        with patch.object(h, "run", side_effect=fake), \
+             patch.object(h, "tc_read", return_value=[{"kind": "netem", "packets": 7}]):
+            result = h.observed_relay_counters(own)
+        self.assertEqual(result["kernel_tc"][0]["packets"], 7)
+        self.assertEqual(result["owned_tcp_forward_rule_counters"]
+                         ["nat_PREROUTING"]["matched_rules"][0]["packets"], 5)
+
     def test_relay_source_and_group_pair_must_be_identical(self):
         a = identity("relay")
         self.assertEqual(h.verify(a, identity("client"), "client"), "100.101.0.1")

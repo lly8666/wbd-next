@@ -177,6 +177,10 @@ def configure_relay(own, server, client):
     relay = own["tail_ip"]
     require(os.name == "posix", "LINUX_RELAY_REQUIRED")
     run("sudo", "-n", "sysctl", "-w", "net.ipv4.ip_forward=1")
+    # Same-interface tailnet transit is blocked by Tailscale's stateful
+    # FORWARD policy for NEW connections. This runner is ephemeral and has
+    # exact port/source NAT+FORWARD rules only; leave peer ACL/OIDC intact.
+    run("sudo", "-n", "tailscale", "set", "--stateful-filtering=false")
     for row in command_plan(arm, win, relay):
         run("sudo", "-n", "iptables", *row)
     # The default band is unshaped. Only the original forwarded TCP data
@@ -217,6 +221,32 @@ def shaped(loss):
                 qdisc=tc_read(), ts=time.monotonic())
 
 
+def observed_relay_counters(own):
+    """Read scoped local kernel counters after actual attempted TCP traffic."""
+    rows = {}
+    for table, chain in (("nat", "PREROUTING"),
+                         ("nat", "POSTROUTING"),
+                         ("filter", "FORWARD")):
+        proc = run("sudo", "-n", "iptables", "-t", table, "-L", chain,
+                   "-v", "-n", "-x", timeout=8, tolerate=True)
+        selected = []
+        for line in proc.stdout.splitlines():
+            words = line.split()
+            if (len(words) >= 8 and words[0].isdigit() and
+                    words[1].isdigit() and
+                    str(PORT) in line and
+                    (own["tail_ip"] in line or
+                     own["tail_ip"] not in line and "dpt:" in line)):
+                selected.append({"packets": int(words[0]),
+                                 "bytes": int(words[1]),
+                                 "port": PORT})
+        rows[table + "_" + chain] = {
+            "read_rc": proc.returncode, "matched_rules": selected}
+    return {"kernel_tc": tc_read(),
+            "owned_tcp_forward_rule_counters": rows,
+            "qdisc_permitted_counters_only": True}
+
+
 def control_service(own):
     """Single source-locked relay; control interface never enters netem band."""
     token = own["control_token"]
@@ -224,6 +254,18 @@ def control_service(own):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):
             pass
+
+        def do_GET(self):
+            if self.path != "/diag" or self.headers.get("X-Run-Token") != token:
+                self.send_error(403)
+                return
+            output = observed_relay_counters(own)
+            raw = json.dumps(output).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            self.wfile.write(raw)
 
         def do_POST(self):
             if self.path != "/loss" or self.headers.get("X-Run-Token") != token:
@@ -263,6 +305,14 @@ def remote_shape(relay, tier):
     require(body["configured"] and body["loss"] == tier,
             "KERNEL_IMPAIRMENT_NO_READBACK")
     return body
+
+
+def remote_diag(relay):
+    req = urllib.request.Request(
+        "http://" + relay["relay_ip"] + ":" + str(CONTROL_PORT) + "/diag",
+        headers={"X-Run-Token": relay["control_token"]})
+    with urllib.request.urlopen(req, timeout=12) as response:
+        return json.loads(response.read(40000))
 
 
 def run_server(own, relay):
@@ -313,8 +363,19 @@ def run_client(own, relay, server):
         begin = time.monotonic()
         cpu0 = time.process_time()
         host_before = os_host_cpu()
-        with contextlib.redirect_stdout(buffer):
-            tcp.client(win, endpoint, own["source_sha"])
+        try:
+            with contextlib.redirect_stdout(buffer):
+                tcp.client(win, endpoint, own["source_sha"])
+        except Exception as exc:
+            observation["status"] = "FAIL_REAL_TCP_FORWARDING_NOT_PRODUCT_PERF"
+            observation["failed_stage"] = tier
+            observation["client_exception_type"] = type(exc).__name__
+            try:
+                observation["relay_after_failure"] = remote_diag(relay)
+            except Exception as diag_error:
+                observation["relay_diag_error"] = type(diag_error).__name__
+            save(ROOT / "client-result.json", observation)
+            raise
         evidence = buffer.getvalue()
         rows = [json.loads(s.split(tcp.MARK + "CLIENT_DONE ", 1)[1])
                 for s in evidence.splitlines()
@@ -379,6 +440,8 @@ def cleanup_relay(own, server, client):
         run("sudo", "-n", "iptables", *r, tolerate=True)
     run("sudo", "-n", "tc", "qdisc", "del", "dev", "tailscale0",
         "root", tolerate=True)
+    run("sudo", "-n", "tailscale", "set", "--stateful-filtering=true",
+        tolerate=True)
     print("H2276_RELAY_OWNED_NETWORK_RULES_CLEANED", flush=True)
 
 
