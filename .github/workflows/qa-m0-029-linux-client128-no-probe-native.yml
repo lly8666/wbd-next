@@ -5,6 +5,7 @@
 # PLAN029 Linux-only current-source native qualification.
 # Each job runs its OWN original Go client + original Go server + Rust engine.
 # ubuntu-24.04-arm is a native aarch64 runner, NOT QEMU or a cross build.
+# H2262: [m0-client128-product] enables exact-source dual-ISA real network run.
 # One ISA-L / Rust / Go build PER ISA, then five short netns sessions on that
 # runner, same binary hashes. Not the Windows CN/FakeIP/GUI/WFP feature matrix.
 name: M0 PLAN029 actual non-probe Linux Normal client128 dual ISA
