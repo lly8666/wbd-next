@@ -54,6 +54,8 @@ def concurrent_probe(node,label,idx):
     probe_out=node.out/(label+"-smallflow.json")
     role="h2244-zero-small-"+label.replace("_","-")
     node.spawn(role,node.client,[
+        "env","GITHUB_SHA="+os.environ["GITHUB_SHA"],
+        "GITHUB_RUN_ID="+os.environ["GITHUB_RUN_ID"],
         "python3","-u",str(REPO/"tools/m0_h2244_smallflow_echo.py"),
         "client","--server","10.66.0.1","--output",str(probe_out)])
     case=node.iperf_case(idx,0,"wbd","upload",20,4)
