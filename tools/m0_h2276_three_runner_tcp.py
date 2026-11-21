@@ -410,6 +410,13 @@ def control_service(own):
     WBD-free end-to-end real TCP connection in native kernel DNAT/SNAT.
     """
     token = own["control_token"]
+    # H2292 only: tiny authenticated ARM-ready heartbeat on the EXISTING
+    # unshaped control port. No second TCP proxy, no plaintext product data.
+    # The server AND client must be true source-locked Tailscale peers.
+    h2292_order=("A_default","B_tx16","A_prime")
+    h2292_next=-1
+    h2292_ready=load(ROOT/"relay-ready.json") if os.environ.get(
+        "WBD_H2292_TRUE_PRODUCT_ABA")=="1" else None
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server:
         server.bind((own["tail_ip"], CONTROL_PORT))
         server.settimeout(600)
@@ -429,6 +436,22 @@ def control_service(own):
                               "netem": output}
                 elif item.get("op") == "diag":
                     result = observed_relay_counters(own)
+                elif item.get("op")=="h2292_arm_stage_ready":
+                    tag=item.get("stage")
+                    require(h2292_ready is not None and
+                            addr[0]==h2292_ready["server_ip"] and
+                            tag in h2292_order and
+                            h2292_order.index(tag)==h2292_next+1,
+                            "H2292_AUTH_ARM_READY_OR_ORDER")
+                    h2292_next+=1
+                    result={"status":"H2292_REAL_ARM_STAGE_READY",
+                            "stage":h2292_order[h2292_next]}
+                elif item.get("op")=="h2292_query_stage":
+                    require(h2292_ready is not None and
+                            addr[0]==h2292_ready["client_ip"],
+                            "H2292_AUTH_WINDOWS_PEER")
+                    result={"status":"H2292_REAL_ARM_STAGE_STATE",
+                            "stage":h2292_order[h2292_next] if h2292_next>=0 else None}
                 else:
                     raise RuntimeError("H2276_UNKNOWN_CONTROL_COMMAND")
                 server.sendto(json.dumps(result).encode(), addr)

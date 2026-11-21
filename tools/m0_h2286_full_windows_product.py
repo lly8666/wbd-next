@@ -69,14 +69,33 @@ def assert_original_binaries():
     c=None
     if h2291:
         c=json.loads((p/"h2291-windows-dll-manifest.json").read_text())
-        require(c["source_sha"]==os.environ["GITHUB_SHA"] and
+        # H2292 reuses H2291's EXACT original compiled Rust DLL. The
+        # workflow first checks that no crate/Go/ABI source changed between
+        # that build SHA and this fixture-only test SHA. Do not falsify a
+        # binary manifest's true compile source to match a new test commit.
+        approved_source=(os.environ.get("WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA",
+                                        os.environ["GITHUB_SHA"])
+                         if os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1"
+                         else os.environ["GITHUB_SHA"])
+        require(c["source_sha"]==approved_source and
                 c["trial_feature"]=="h2291_windows_tx_service" and
                 c["original_go_exe_source_sha"]==m["source_sha"],
                 "H2291_EXACT_RUST_SOURCE_AND_ORIGINAL_GO_ABI_MANIFEST")
+    original_ab=os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1"
+    baseline=None
+    if original_ab and not h2291:
+        baseline=json.loads((p/"h2292-baseline-dll-manifest.json").read_text())
+        require(baseline["source_sha"]==os.environ["GITHUB_SHA"] and
+                baseline["feature"]=="H2291_TX_SERVICE_DISABLED" and
+                baseline["base_features"]==
+                 "m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record",
+                "H2292_REAL_RUST_DEFAULT_FEATURE_MATCHED_SOURCE")
     for filename,key in (("wbd-client-embedded.exe","exe"),
                          ("wbd_engine.dll","dll")):
         f=p/filename
-        expected=(c["dll_sha256"] if h2291 and key=="dll" else m["sha256"][key])
+        expected=(c["dll_sha256"] if h2291 and key=="dll" else
+                  baseline["dll_sha256"] if baseline and key=="dll" else
+                  m["sha256"][key])
         require(f.is_file() and f.stat().st_size>100000 and
                 hashlib.sha256(f.read_bytes()).hexdigest()==expected,
                 "WIN_NATIVE_EXE_DLL_ACTUAL_SHA256_"+key)

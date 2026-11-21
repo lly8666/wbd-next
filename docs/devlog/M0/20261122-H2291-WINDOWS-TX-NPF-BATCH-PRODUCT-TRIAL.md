@@ -17,3 +17,10 @@
 ```feature-impact
 {"kind":"none","reason":"H2291 adds opt-in only Windows real Rust NPF TX native 16-ready/64KiB sendqueue trial under explicit Cargo feature, preserves original all-default 8ready/16KiB. GoTLS, ARM, user config, Windows driver, original authenticated receipts and owned Stop unchanged."}
 ```
+
+## H2291 真原产品新DLL两套三机结果（只认功能证据，不把不同VM记因果提升）
+- 精确SOURCE `f9329239733aa40698378a2882d0eb4621e9ebc7`，[Action 44941989692](https://github.com/lly8666/wbd-next/actions/runs/44941989692) attempt1 **9/9 SUCCESS**。新增真正 Windows release Rust DLL builder一次编译，真实MSVC wbd-platform NPF生效与短写单测7/7、PE ABI/SHA256 artifact `14722156403`，同一构件/原Go EXE c506.../原ARM GoTLS/Rust二进制97db...复用两组真实Windows2025 Npcap1.88+Wintun0.14.1→独立ARM kernel relay→另独立ARM原AF_PACKET/TUN。两组实际Rust原客户端日志都有`H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue=1 queue_bytes=65536 max_frames=16 ready_only=1`，是实际原Npcap pcap_t借用成功输出，不是靠代码marker猜测。
+- A Windows完整原Rust→ARM TUN 4TCP25.406秒实收`561463296B`，**176.797Mbps**，160/160小TCP，P50 250ms P99 **312ms**、晚于1秒0；Windows原Go/Rust 16.96875 CPU秒/真实ARM GiB **32.451s/GiB**，TX热OS线程下界13.1406s，RX3.4219s。Windows整机busy86.105%，ARM relay tailscaled约1.593核，relay最忙单核49.621%；原Go/Rust WAL Stop通过，原NPF本机 ingress drop 0、源数据`tx_records=487029`，无机会式修复。真实ZIP A原Windows所有日志/Win32采样`14721998486`、单根跨job收据`14721893863`。
+- B实收`378044416B`/25.906s = **116.743Mbps**，P50 266 P99 **344ms**、160/160、小流晚于1s0；原Win进程17.57812 CPU秒，**49.9263s/ARM GiB**，TX下界13.000s、RX4.2344s；Win host busy88.263%，ARM relay tailscaled约1.589核，最忙核51.503%。原Rust/WAL Stop通过，NPF local ingress drop0，发原数据`tx_records=325471`。B真实日志/CPU ZIP`14722176818`、单根收据`14722161634`。
+- H2290不同RUNNER旧版A154.675/P99250、B80.902/P99125；这**不构成候选吞吐提高22/36Mbps的因果证据**。本轮候选绝对吞吐较高、P99也较高；VM网络抖动/驱动与流控混杂，无法判断候选是否降低CPU/业务GiB成本，更不能晋级默认。恢复判别测试H2292：保持两套各三台真实Runner，**组内同一VM、同一个上游网络**的旧DLL A→真实候选B→旧DLL A′，每阶段真正重启原Go TLS/Rust客户端、25秒4流、160echo，原WAL Stop，原ARM TCP应用每阶段独立启动，保存各阶段独立CPU/队列profile及实际ARM字节，合格才谈批次收益。
+- **真实问题提醒**：H2291 Engine Windows过滤单测命令只筛选 `v4_windows_native_runtime`，实际返回0/429筛掉；Windows原NPF平台测试7/7与完整产品9/9真实有效，但不能把零项模块过滤说成引擎单测PASS。H2292要选择有实际匹配的Engine单测或静态保证源语义，并留完整真实产品运行作为最高资格门。
