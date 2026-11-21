@@ -32,6 +32,8 @@ def fixture(bps=(300,330,290),cpu=(10,9,10)):
                                       for dev in ("rcli0","rsrv0")}}}
         rows.append(row)
     return {"source_sha":SOURCE,"run_id":"5","architecture":"aarch64",
+            "scenario":"ZERO_LOSS_0MS_NATIVE_ARM64_HIGH_SUPPLY_4_TCP_PLUS_SMALL",
+            "netem_ge_stationary_parameters":{"profile":"ZERO_ARTIFICIAL_LOSS","target_loss_pct":0.0},
             "status":"PASS_SCOPED_REAL_ABA_MEASURED_NOT_PRODUCT_GAIN",
             "old_and_new_same_build_manifest":{
                  "libwbd_engine.so":"hash","wbd-v4-client":"hash",
@@ -66,6 +68,7 @@ class TestCompare(unittest.TestCase):
         with self.assertRaises(ValueError):mod.readout(y,SOURCE,"5")
     def test_client_only_phases_must_have_actual_both_cold_readbacks(self):
         data=fixture()
+        data["scenario"]="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_ABA"
         for idx,row in enumerate(data["phases"]):
             row["client_inbox_slots"]=row.pop("server_inbox_slots")
             row["server_inbox_slots"]=64
@@ -88,6 +91,51 @@ class TestCompare(unittest.TestCase):
         candidate["smallflow"]["probe_start_monotonic_ns"]=12000000000
         candidate["smallflow"]["probe_end_monotonic_ns"]=24000000000
         with self.assertRaises(ValueError):mod.readout(data,SOURCE,"5")
+    def test_ge1_wrong_stationary_probability_rejected(self):
+        x=fixture()
+        x["scenario"]="GE1% stationary two L3 router qdiscs; +200ms each direction"
+        x["netem_ge_stationary_parameters"]={
+            "target_loss_pct":1.0,"good_to_bad_pct":0.252809,
+            "bad_to_good_pct":25.0,"bad_loss_pct":90.0,
+            "good_loss_pct":0.1}
+        self.assertEqual(mod.readout(x,SOURCE,"5")["trial_shape"],"A64_B256_A64")
+        x["netem_ge_stationary_parameters"]["good_to_bad_pct"]=0.16
+        with self.assertRaises(ValueError):mod.readout(x,SOURCE,"5")
+    def test_client_lower_memory_128_cold_source(self):
+        x=fixture()
+        x["scenario"]="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_128_ABA"
+        for idx,row in enumerate(x["phases"]):
+            old=row.pop("server_inbox_slots")
+            row["frozen_stage_slots"]=old
+            row["server_inbox_slots"]=64
+            row["client_inbox_slots"]=(64,128,64)[idx]
+            row["native_cold_readback_verified"]=True
+            row["client_generation"]=10+idx
+            row["server_generation"]=20+idx
+            if idx==1:row["name"]="inbox128_candidate"
+        out=mod.readout(x,SOURCE,"5")
+        self.assertEqual(out["trial_shape"],"A64_B128_A64")
+        self.assertEqual(out["changed_inbox_side"],"client")
+        x["phases"][1]["frozen_stage_slots"]=128
+        with self.assertRaises(ValueError):mod.readout(x,SOURCE,"5")
+    def test_reverse_order_client_actual_phases_not_mislabeled(self):
+        x=fixture(bps=(330,300,340))
+        x["scenario"]="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_REVERSED_BAB"
+        for idx,row in enumerate(x["phases"]):
+            stage=row.pop("server_inbox_slots")
+            row["frozen_stage_slots"]=stage
+            row["name"]=("candidate_before","original_middle","candidate_after")[idx]
+            row["server_inbox_slots"]=64
+            row["client_inbox_slots"]=(256,64,256)[idx]
+            row["native_cold_readback_verified"]=True
+            row["client_generation"]=10+idx
+            row["server_generation"]=20+idx
+        out=mod.readout(x,SOURCE,"5")
+        self.assertEqual(out["screen_decision"],"REVERSE_BAB_MEASURED_NOT_PRODUCT_PASS")
+        self.assertGreater(out["receiver_goodput_mbps"]["candidate_gain_vs_baseline_pct"],0)
+        self.assertEqual(out["trial_shape"],"B256_A64_B256")
+        x["phases"][2]["client_inbox_slots"]=64
+        with self.assertRaises(ValueError):mod.readout(x,SOURCE,"5")
     def test_scalar_baseline_drift_is_explicit(self):
         r=mod.compare_scalar(100,130,120)
         self.assertEqual(r["candidate_vs_baselines"],"ABOVE_BOTH")

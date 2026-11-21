@@ -12,6 +12,8 @@ import pathlib
 import re
 
 ORDER=(("original_before",64),("inbox256_candidate",256),("original_after",64))
+ORDER_128=(("original_before",64),("inbox128_candidate",128),("original_after",64))
+ORDER_BAB=(("candidate_before",256),("original_middle",64),("candidate_after",256))
 KINDS=("udp","tcp")
 ROLES=("server","client")
 
@@ -34,6 +36,53 @@ def compare_scalar(a,b,after):
               ("ABOVE_BOTH" if b>max(a,after) else
                "BELOW_BOTH" if b<min(a,after) else "INSIDE_BASELINE_RANGE")}
 
+def trial_profile(document):
+    scenario=document.get("scenario")
+    if not isinstance(scenario,str):
+        raise ValueError("explicit real native scenario required")
+    if scenario=="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_REVERSED_BAB":
+        side,shape,expected="client","B256_A64_B256",ORDER_BAB
+    elif scenario=="ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_128_ABA":
+        side,shape,expected="client","A64_B128_A64",ORDER_128
+    elif scenario in (
+        "ZERO_LOSS_0MS_NATIVE_ARM64_CLIENT_ONLY_INBOX_ABA",
+        "GE1_BURST_200MS_EACH_WAY_NATIVE_ARM64_CLIENT_ONLY_INBOX_ABA"
+    ):
+        side,shape,expected="client","A64_B256_A64",ORDER
+    elif scenario=="ZERO_LOSS_0MS_NATIVE_ARM64_HIGH_SUPPLY_4_TCP_PLUS_SMALL" or (
+        scenario.startswith("GE1%") and "client-only" not in scenario.lower()
+    ):
+        side,shape,expected="server","A64_B256_A64",ORDER
+    else:
+        raise ValueError("unrecognized native A/B/A product scenario")
+    model=document.get("netem_ge_stationary_parameters")
+    if not isinstance(model,dict):
+        raise ValueError("network impairment proof missing")
+    if "GE1" in scenario:
+        if not (
+            abs(float(model.get("good_to_bad_pct",float("nan")))-0.252809)<0.000005
+            and model.get("bad_to_good_pct")==25.0
+            and model.get("bad_loss_pct")==90.0
+            and model.get("good_loss_pct")==0.1
+            and (model.get("target_loss_pct")==1.0
+                 or model.get("analytical_mean_loss_pct")==1.0)
+        ):
+            raise ValueError("GE1 label without mathematically correct original netem probabilities")
+    elif model.get("target_loss_pct")!=0.0:
+        raise ValueError("zero-loss experiment without zero artificial-loss readback")
+    return side,shape,expected
+
+def compare_reverse(candidate_before,baseline_middle,candidate_after):
+    first,baseline,after=(positive(v,"reverse paired") for v in
+                          (candidate_before,baseline_middle,candidate_after))
+    center=(first+after)/2
+    return {"candidate_before":round(first,5),
+            "baseline_middle":round(baseline,5),
+            "candidate_after":round(after,5),
+            "candidate_mean":round(center,5),
+            "candidate_replica_drift_pct":round(100*(after-first)/center,3),
+            "candidate_gain_vs_baseline_pct":round(100*(center/baseline-1),3)}
+
 def readout(document,source,run_id):
     if (document.get("status")!="PASS_SCOPED_REAL_ABA_MEASURED_NOT_PRODUCT_GAIN"
         or document.get("source_sha")!=source
@@ -53,12 +102,15 @@ def readout(document,source,run_id):
     is_client=any("client_inbox_slots" in p for p in phases)
     changed_side="client" if is_client else "server"
     prior_end=None
+    side,shape,expected=trial_profile(document)
+    if is_client!=(side=="client"):
+        raise ValueError("actual changed endpoint conflicts with scenario")
     for idx,phase in enumerate(phases):
-        if (phase.get("name")!=ORDER[idx][0]
+        if (phase.get("name")!=expected[idx][0]
             or phase.get("status")!="PASS_SCOPED_REAL_SOURCE_MEASURED_NOT_PRODUCT_GAIN"):
             raise ValueError("A/B/A source, order or phase identity mismatch")
         if is_client:
-            if (phase.get("client_inbox_slots")!=ORDER[idx][1]
+            if (phase.get("client_inbox_slots")!=expected[idx][1]
                 or phase.get("server_inbox_slots")!=64
                 or phase.get("native_cold_readback_verified") is not True
                 or not isinstance(phase.get("client_generation"),int)
@@ -66,7 +118,13 @@ def readout(document,source,run_id):
                 or not isinstance(phase.get("server_generation"),int)
                 or phase["server_generation"]<=0):
                 raise ValueError("client-only actual cold M1 slot / server control mismatch")
-        elif phase.get("server_inbox_slots")!=ORDER[idx][1]:
+            if shape in ("A64_B128_A64","B256_A64_B256") and (
+                phase.get("frozen_stage_slots")!=ORDER[idx][1]
+            ):
+                raise ValueError("frozen source phase stage and actual native cold readback differ")
+        elif phase.get("server_inbox_slots")!=expected[idx][1] or (
+            "client_inbox_slots" in phase
+        ):
             raise ValueError("server-only M1 slot identity mismatch")
         for role in ROLES:
             if positive(phase["owned_stop"][role].get("generation"),"owned stop")<1:
@@ -97,18 +155,20 @@ def readout(document,source,run_id):
                 raise ValueError("echo sent/delivered/missing counts invalid")
             if replies and not isinstance(d.get("latency_ms"),dict):
                 raise ValueError("missing echo RTT quantiles")
+    paired=compare_reverse if shape=="B256_A64_B256" else compare_scalar
     report={"source_sha":source,"run_id":str(run_id),
             "changed_inbox_side":changed_side,
+            "trial_shape":shape,
             "status":"SAME_RUN_SCOPED_SCREEN_NOT_PRODUCT_PASS",
-            "reference":"A64-B256-A64 on native ARM64; one 20s four-stream case per leg",
-            "receiver_goodput_mbps":compare_scalar(*[
+            "reference":"one native ARM64 job, three sequential cold real-TLS/Rust owners; 20s four-stream case each leg",
+            "receiver_goodput_mbps":paired(*[
                 p["measure"]["original_product_tcp"]["receiver_bps"]/1e6 for p in phases]),
             "sender_and_receiver_cpu_seconds_per_gib":{},
             "smallflow":{},
             "underlay_skb_counts":{},
             "qualifications":[]}
     for role in ROLES:
-        report["sender_and_receiver_cpu_seconds_per_gib"][role]=compare_scalar(*[
+        report["sender_and_receiver_cpu_seconds_per_gib"][role]=paired(*[
             p["measure"]["cpu_and_rss"][role]["cpu_seconds_per_rx_gib"] for p in phases])
     for kind in KINDS:
         rows=[p["measure"]["smallflow"][kind] for p in phases]
@@ -134,6 +194,11 @@ def readout(document,source,run_id):
         "No cross-run or cross-ISA CPU causality; avoid unqualified physical WAN extrapolation",
         "No hard default promotion on one 20-second three-leg screen",
         "1000B at 1Gbps: 64 M1 slots 0.512ms, 256 slots 2.048ms; all 256 jumbo slots ~16MiB total, ~12MiB added per lease"])
+    if shape=="B256_A64_B256":
+        # Two candidate legs around one original baseline are a reverse
+        # falsification, not a substitute for an independently repeated A/B/A.
+        report["screen_decision"]="REVERSE_BAB_MEASURED_NOT_PRODUCT_PASS"
+        return report
     report["screen_decision"]=(
         "BETTER_GOODPUT_OUTSIDE_BASELINE_BUT_NOT_ACCEPTED" if
           g["candidate_vs_baselines"]=="ABOVE_BOTH" and
