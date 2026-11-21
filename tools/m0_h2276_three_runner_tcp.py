@@ -725,7 +725,7 @@ def run_client(own, relay, server):
 
 def await_artifact(name, dest):
     """Wait only the artifact of this SAME workflow run, no cross-run reuse."""
-    require(bool(re.fullmatch(r"h2276-[ab]-(?:client|relay|server)-(?:peer|ready|result)", name)),
+    require(bool(re.fullmatch(r"h2276-[ab]-(?:client|relay|server)-(?:peer|ready|result)|h2286-[ab]-original-arm-product-ready", name)),
             "ARTIFACT_NAME")
     dest = pathlib.Path(dest)
     dest.mkdir(parents=True, exist_ok=True)

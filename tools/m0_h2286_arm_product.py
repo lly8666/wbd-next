@@ -192,7 +192,14 @@ def credential(own):
 def native_product(own,relay):
     bundle=pathlib.Path("linux-plan029-public-bundle").resolve()
     mani=json.loads((bundle/"manifest.json").read_text())
-    require(mani["source_sha"]==own["source_sha"] and
+    frozen=os.environ.get("WBD_H2286_ARM_PRODUCT_FROZEN_SOURCE","")
+    if frozen:
+        require(frozen=="97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573",
+                "ONLY_VERIFIED_ARCHIVED_ARM_NATIVE_SOURCE")
+    expected=frozen or own["source_sha"]
+    # H2286 workflow itself MUST prove git diff compiled product inputs is
+    # EXACT EMPTY before setting this flag; no cross-source product claim.
+    require(mani["source_sha"]==expected and
             mani["architecture"]=="aarch64" and
             mani["original_go_sha"]=="a7a82db31fe736ffedee330795a3234d358f1984",
             "ORIGINAL_GO_RUST_ARM_BINARY_MANIFEST")
@@ -254,6 +261,8 @@ def native_product(own,relay):
          "real_original_arm_tun_created":True,
          "original_product_server_pid":proc.pid,
          "test_only_route_key_artifact":"PRIVATE_REPO_ONE_DAY",
+         "original_arm_native_binary_compiled_source_sha":expected,
+         "fixture_source_sha":own["source_sha"],
          "local_port":443,"front_port":FRONT_PORT,
          "server_ip_in_kernel_veth":SERVER_IP,"server_tun":APP_IP,
          "client_lease":APP_PEER+"/32",

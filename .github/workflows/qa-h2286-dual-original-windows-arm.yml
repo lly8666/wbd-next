@@ -52,10 +52,10 @@ jobs:
           python3 -m unittest tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp tests.test_m0_h2281_sustained_tcp tests.test_m0_h2282_window_ab_tcp tests.test_m0_h2283_window2m_ab_tcp tests.test_m0_h2284_old_eight_flow_capacity tests.test_m0_h2285_windows_wsl_route tests.test_m0_h2286_full_product_path -v
   original_arm_build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2286-real-windows-arm-product]')
-    name: H2286 original ARM64 Go TLS Rust binary build ONCE shared by both groups
+    name: H2286 source-locked original ARM64 GoTLS Rust binary REUSE build once across both groups
     needs: static
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 80
+    timeout-minutes: 14
     permissions: {contents: read}
     env:
       CGO_ENABLED: "1"
@@ -64,27 +64,30 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
-        with: {go-version: '1.23.12', check-latest: false, cache: false}
-      - name: Build exact-SOURCE original ARM64 GoTLS Rust native ISA-L ONCE
+      - name: Reuse EXACT previous ARM original product binary after strict zero compiled-product delta
         shell: bash
-        timeout-minutes: 70
+        timeout-minutes: 10
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm python3 iproute2 iptables openssl
-          test -c /dev/net/tun
-          bash tools/m0_plan029_linux_dual_native_build.sh > arm-build.log 2>&1 || { tail -n 110 arm-build.log; exit 2; }
+          BUILD_SOURCE=97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573
+          git fetch --depth=1 origin "$BUILD_SOURCE"
+          product_delta="$(git diff --name-only "$BUILD_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/m0_install_public_faketcp.py tools/m0_plan029_linux_dual_native_build.sh)"
+          test -z "$product_delta" || { echo "H2286_FROZEN_ARM_COMPILED_PRODUCT_CHANGED_REFUSE_ARCHIVE $product_delta" >&2; exit 2; }
+          mkdir -p linux-plan029-public-bundle
+          gh run download 44936859273 --repo "$GITHUB_REPOSITORY" --name "h2286-arm-original-product-$BUILD_SOURCE" --dir linux-plan029-public-bundle
           python3 - <<'PY'
-          import hashlib,json,os,pathlib
+          import hashlib,json,pathlib
           p=pathlib.Path('linux-plan029-public-bundle')
           m=json.loads((p/'manifest.json').read_text())
-          assert m['source_sha']==os.environ['GITHUB_SHA'] and m['architecture']=='aarch64'
+          assert m['source_sha']=='97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573'
+          assert m['architecture']=='aarch64'
           assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
-          for name in ('wbd-v4-server','libwbd_engine.so'):
-            assert hashlib.sha256((p/name).read_bytes()).hexdigest()==m['sha256'][name]
           assert m['rust_native_fec_acceleration']
-          print('H2286_ONE_ORIGINAL_ARM_GO_RUST_SAME_SOURCE_BUILD_VERIFIED')
+          for n in ('wbd-v4-server','wbd-v4-client','libwbd_engine.so'):
+            assert hashlib.sha256((p/n).read_bytes()).hexdigest()==m['sha256'][n]
+          print('H2286_ONE_ARM_NATIVE_BUILD_REUSED_WITH_STRICT_COMPILED_PRODUCT_DIFF_ZERO')
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -208,6 +211,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GROUP: ${{ matrix.group }}
+      WBD_H2286_ARM_PRODUCT_FROZEN_SOURCE: 97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
@@ -441,8 +445,13 @@ jobs:
             & ./tools/m0_h2286_windows_npf_owner.ps1 -Action Cleanup
             if($LASTEXITCODE -ne 0){throw 'H2286_WINDOWS_WSL_NPF_OWNER_NOT_RESTORED'}
           }
-          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup
-          if($LASTEXITCODE -ne 0){throw 'H2286_SIGNED_NPCAP_NATIVE_DRIVER_OWNED_CLEANUP_FAILED'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 | Tee-Object h2286-npcap-cleanup.log
+          $actual=Get-Content h2286-npcap-cleanup.log -Raw
+          if(-not ($actual.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or $actual.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))){
+            throw 'H2286_SIGNED_NPCAP_NATIVE_DRIVER_OWNED_CLEANUP_RECEIPT_FAILED'
+          }
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'H2286_NPCAP_SERVICE_SURVIVED_REAL_OWNED_CLEANUP'}
+          Write-Output 'H2286_SIGNED_NPCAP_ACTUAL_SERVICE_REMOVED_BUT_STALE_LASTEXITCODE_IGNORED'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -453,5 +462,6 @@ jobs:
             h2286-out/original-win-client.log
             h2286-out/win-inner-udp.log
             h2286-out/original-product-ready.flag.udp.json
+            h2286-npcap-cleanup.log
           if-no-files-found: warn
           retention-days: 14

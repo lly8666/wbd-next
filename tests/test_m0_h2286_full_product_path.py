@@ -89,9 +89,29 @@ class H2286TrueOriginalWinArmProduct(unittest.TestCase):
         self.assertIn("REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",p)
         self.assertIn("PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP",p)
         self.assertIn("retention-days: 1",p)
+        self.assertIn("gh run download 44936859273",p)
+        self.assertIn("product_delta=",p)
+        self.assertIn("WBD_H2286_ARM_PRODUCT_FROZEN_SOURCE: 97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573",p)
+        self.assertIn("WBD_NPCAP_DRIVER_CI_CLEANUP_PASS",p)
+        self.assertNotIn("if($LASTEXITCODE -ne 0){throw 'H2286_SIGNED_NPCAP_NATIVE_DRIVER_OWNED_CLEANUP_FAILED'}",p)
+
         self.assertNotIn("PASS_FULL_PRODUCT_ALL_PLATFORMS",p)
         self.assertNotIn("gh workflow run m0-wl-public-normal-full.yml",p)
         self.assertNotIn("WBD_H2286_PRODUCT_FULL_WIN_ARM: \"1\"\nconcurrency:",p)
+
+    def test_artifact_name_is_strictly_scoped_to_original_arm_ready(self):
+        from m0_h2276_three_runner_tcp import await_artifact
+        import inspect,re
+        code=inspect.getsource(await_artifact)
+        self.assertIn("h2286-[ab]-original-arm-product-ready",code)
+        allowed=re.compile(r"h2276-[ab]-(?:client|relay|server)-(?:peer|ready|result)|h2286-[ab]-original-arm-product-ready")
+        for n in ("h2286-a-original-arm-product-ready",
+                  "h2286-b-original-arm-product-ready"):
+            self.assertIsNotNone(allowed.fullmatch(n))
+        for n in ("h2286-c-original-arm-product-ready",
+                  "h2286-a-other",
+                  "h2286-a-original-arm-product-ready-evil"):
+            self.assertIsNone(allowed.fullmatch(n))
 
     def test_true_product_code_not_modified(self):
         assert (ROOT/"tools/m0_h2286_full_windows_product.py").is_file()
