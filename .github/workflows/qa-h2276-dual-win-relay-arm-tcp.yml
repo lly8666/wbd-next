@@ -32,13 +32,13 @@ jobs:
           python3 -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py
           python3 -m unittest tests.test_m0_h2276_three_runner_tcp -v
   relay:
-    name: "H2276 Linux kernel TCP relay ${{ matrix.group }}"
+    name: "H2277 independent ARM64 Linux kernel TCP relay ${{ matrix.group }}"
     needs: static
     strategy:
       fail-fast: false
       matrix:
         group: [a, b]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 55
     permissions: {contents: read, actions: read, id-token: write}
     env:

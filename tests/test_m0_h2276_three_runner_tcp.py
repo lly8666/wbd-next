@@ -23,7 +23,8 @@ class ExactDualTriplet(unittest.TestCase):
         self.assertEqual(wf.count("group: [a, b]"), 3)
         self.assertIn("runs-on: windows-2025", wf)
         self.assertIn("runs-on: ubuntu-24.04-arm", wf)
-        self.assertIn("runs-on: ubuntu-24.04", wf)
+        self.assertEqual(wf.count("runs-on: ubuntu-24.04-arm"), 2)
+        self.assertIn("runs-on: ubuntu-24.04\n    timeout-minutes: 5", wf)
         self.assertEqual(wf.count("uses: tailscale/github-action@v4"), 3)
         self.assertIn("h2276-" + chr(36) + "{{ matrix.group }}-client-result", wf)
 
@@ -48,6 +49,18 @@ class ExactDualTriplet(unittest.TestCase):
         self.assertEqual(result["role"], "relay")
         self.assertTrue(any("iptables" in args for args in calls))
         self.assertTrue(any("qdisc" in args for args in calls))
+
+    def test_direct_path_parser_keeps_derp_even_with_nonzero_exit(self):
+        from types import SimpleNamespace
+        with patch.object(h, "run", return_value=SimpleNamespace(
+            stdout="pong from runner (100.101.0.2) via DERP(iad) in 40ms\n",
+            returncode=1)):
+            row=h.ping_class("100.101.0.2")
+        self.assertEqual(row["status"], "DERP_OR_RELAY_LIMIT")
+        self.assertEqual(row["run_returncode"], 1)
+
+    def test_relay_os_role_requires_native_arm_linux(self):
+        self.assertIn("aarch64", h.meta.__code__.co_consts.__str__())
 
     def test_reuse_proven_tailnet_tcp_and_udp_ports(self):
         self.assertEqual(h.PORT, 18727)

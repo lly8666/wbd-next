@@ -66,7 +66,7 @@ def meta(group, role):
     arch = platform.machine().lower()
     require((role == "server" and arch in ("aarch64", "arm64")) or
             (role == "client" and os.name == "nt" and arch in ("amd64", "x86_64")) or
-            (role == "relay" and os.name == "posix" and arch == "x86_64"),
+            (role == "relay" and os.name == "posix" and arch in ("aarch64", "arm64")),
             "ACTUAL_OS_ARCH_ROLE")
     ip = run("tailscale", "ip", "-4").stdout.strip()
     addr = ipaddress.ip_address(ip)
@@ -129,11 +129,14 @@ def cpu_busy_percent(before, after):
     return round(busy * 100 / total, 3)
 
 def ping_class(ip):
-    p = run("tailscale", "ping", "--c", "4", ip, timeout=25, tolerate=True)
+    # Give NAT traversal its original bounded direct-discovery window.
+    # Nonzero Tailscale return code can still contain genuine DERP pongs:
+    # that is DERP, NOT 'no tail pong'.
+    p = run("tailscale", "ping", "--c", "12", ip, timeout=50, tolerate=True)
     rows = [x.strip() for x in p.stdout.splitlines()
             if x.strip().startswith("pong from ")]
     last = rows[-1] if rows else ""
-    if p.returncode or not last:
+    if not last:
         status = "UNKNOWN_NO_TAIL_PONG"
     elif "via DERP" in last:
         status = "DERP_OR_RELAY_LIMIT"
@@ -353,6 +356,12 @@ def run_client(own, relay, server):
                        network_tailscale_client_server=ping_class(server["tail_ip"]),
                        stages=[])
     save(ROOT / "client-result.json", observation)
+    if observation["network_tailscale_client_relay"]["status"] != "DIRECT_CANDIDATE":
+        observation["status"] = "INFRA_DERP_UNQUALIFIED_SKIP_WAN_TESTS"
+        observation["skip_reason"] = "WINDOWS_TO_RELAY_NOT_DIRECT_AFTER_12_DISCO_PROBES"
+        save(ROOT / "client-result.json", observation)
+        print("H2277_SKIP_SHARED_DERP_NOT_WBD_PERFORMANCE", flush=True)
+        raise RuntimeError("H2277_INFRA_DERP_NO_VALID_3RUNNER_PERFORMANCE")
     for tier in TIERS:
         shape = remote_shape(relay, tier)
         time.sleep(2.0)
