@@ -294,6 +294,32 @@ def run_loss_tcp(root, out, unix, server_tun_ip):
             "native_owners_stop": "CHECKED_BY_EXISTING_WL_RUNNER_AFTER_THIS_STAGE",
             "not_cross_clock_latency": True, "not_a_product_perf_win": True}
 
+def archive_loss_tcp_stage(out, legdir):
+    """Move exact original signed Windows/Linux real TCP app logs per cold leg.
+
+    H2273's single signed Windows runner executes sequential OFF→ON in the
+    same result root. Reusing the old H2271 stage directory made ON fail
+    with WinError183 *after* OFF's genuine native TCP and owned Stop.
+    Preserve both independent directions in this leg's evidence, and free
+    the original stage path before the next cold TLS generation.
+    """
+    out, legdir = pathlib.Path(out), pathlib.Path(legdir)
+    archived = []
+    for origin in ("windows", "linux"):
+        source = out / ("m029-h2271-" + origin)
+        target = legdir / source.name
+        if source.is_symlink() or target.exists():
+            raise RuntimeError("H2278_TCP_ARCHIVE_FOREIGN_OR_STALE_PATH")
+        if source.is_dir():
+            if not legdir.is_dir():
+                raise RuntimeError("H2278_TCP_ARCHIVE_LEG_NOT_CREATED")
+            source.rename(target)  # atomic on this same Windows worktree disk
+            archived.append(origin)
+        elif source.exists():
+            raise RuntimeError("H2278_TCP_ARCHIVE_NOT_DIRECTORY")
+    return archived
+
+
 if __name__ == "__main__":
     # H2273: H2271 source bb327 defined both application roles but omitted
     # the CLI entrypoint. WSL Python therefore exited silently before READY

@@ -75,6 +75,16 @@ for repair in ("off","on"):
     if scene["scenario_id"] in (
         "wl-outer-repair-10m-200ms-loss1-60s",
         "wl-outer-repair-10m-200ms-loss5-60s"):
+        # H2278: exact per-leg real TCP source logs must survive and the
+        # sequential ON leg must not find OFF's original stage directories.
+        from m0_wl_loss_tcp_probe import archive_loss_tcp_stage
+        preserved=archive_loss_tcp_stage(out,legdir)
+        print("H2278_ORIGINAL_NATIVE_TCP_EVIDENCE_MOVED "+
+              json.dumps({"policy":repair,"origins":preserved},
+                         sort_keys=True),flush=True)
+    if scene["scenario_id"] in (
+        "wl-outer-repair-10m-200ms-loss1-60s",
+        "wl-outer-repair-10m-200ms-loss5-60s"):
         t=report.get("plan029_loss_tcp",{})
         if (t.get("status")!="PASS_SCOPED_REAL_TWO_OS_KERNEL_TCP" or
                 t.get("source_sha")!=source or

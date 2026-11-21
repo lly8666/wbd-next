@@ -17,13 +17,24 @@ on:
       - '.github/workflows/qa-m0-029-windows-loss1-loss5-200ms-real-outer-pair.yml'
       - 'tools/m0_wl_loss_tcp_probe.py'
       - 'tools/m0_wl_outer_pair.py'
+      - 'tests/test_m0_h2278_loss_tcp_archive.py'
       - 'tools/m0_wl_public_normal_e2e.py'
   workflow_dispatch:
 permissions:
   contents: read
   actions: write
 jobs:
+  tcp-cold-leg-archive-unit:
+    name: H2278 original Windows native TCP OFF/ON archive unit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - run: python3 -m unittest tests.test_m0_h2278_loss_tcp_archive -v
+        shell: bash
   dispatch-real-signed-windows-native:
+    needs: [tcp-cold-leg-archive-unit]
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-win-loss200-native]')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
