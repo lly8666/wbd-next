@@ -242,8 +242,6 @@ public final class RootClientActivity extends Activity {
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
             boolean verifyTLS=tlsVerifyServer.isChecked();
-            if(tunnelDNS.isChecked()&&!verifyTLS)
-                throw new IllegalArgumentException("隧道DNS仅允许在严格TLS证书验证开启时使用");
             // Default is full ordinary App UID takeover AFTER true WBD
             // TLS/authenticated /32 and Rust M4. No pre-auth route mutation,
             // no Android system/root UID, VPN, fake-IP or system DNS.
@@ -444,12 +442,12 @@ public final class RootClientActivity extends Activity {
             }).show());
         pane.addView(clearSecrets);
         tlsVerifyServer=new CheckBox(this);
-        tlsVerifyServer.setText("严格验证TLS服务器证书和SNI（Android 默认开启）");
-        tlsVerifyServer.setChecked(true);
+        tlsVerifyServer.setText("严格验证TLS服务器证书和SNI（默认关闭，主线兼容）");
+        tlsVerifyServer.setChecked(false);
         pane.addView(tlsVerifyServer);
         TextView verifyWarning=new TextView(this);
-        verifyWarning.setText("Android 默认严格验证证书链与SNI；不受信任的自签证书需导入专属CA。"+
-            "取消勾选存在中间人风险，且不能作为安全E2E验收证据。");
+        verifyWarning.setText("默认仍使用原TLS加密/受保护认证，但不验证服务端证书身份，有中间人风险。"+
+            "勾选后才验证证书与SNI，并可使用下方本地CA。");
         pane.addView(verifyWarning);
         caPEM=input(pane,"Optional server TLS CA PEM (only for strict verification)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
@@ -459,8 +457,8 @@ public final class RootClientActivity extends Activity {
         importCa.setOnClickListener(v->importTLSCA());
         pane.addView(importCa);
         TextView caHelp=new TextView(this);
-        caHelp.setText("验证开启时优先使用导入的专属CA；不可信证书必须拒绝。"+
-            "UNKNOWN_AUTHORITY请导入CA；HOSTNAME_MISMATCH请核对证书DNS SAN与SNI。");
+        caHelp.setText("只有勾选严格验证时才使用CA；否则默认不做证书身份校验。"+
+            "严格模式下UNKNOWN_AUTHORITY请导入CA；HOSTNAME_MISMATCH请核对证书DNS SAN与SNI。");
         pane.addView(caHelp);
         TextView targetHelp=new TextView(this);
         targetHelp.setText("默认仅接管普通 Android 应用的 IPv4 流量（最多20个用户空间），不是系统全流量。"
@@ -476,8 +474,8 @@ public final class RootClientActivity extends Activity {
         allAppsDefault.setChecked(true);
         pane.addView(allAppsDefault);
         tunnelDNS=new CheckBox(this);
-        tunnelDNS.setText("实验性隧道DNS（默认关闭）：仅已进入WBD TUN的普通App UDP/53→1.1.1.1（非系统DNS / CN分流）");
-        tunnelDNS.setChecked(false);
+        tunnelDNS.setText("隧道DNS：已进入WBD TUN的普通App UDP/53走1.1.1.1并还原原解析器回包（不接管Android系统DNS / CN分流）");
+        tunnelDNS.setChecked(true);
         pane.addView(tunnelDNS);
         appChoices=new LinearLayout(this);
         appChoices.setOrientation(LinearLayout.VERTICAL);

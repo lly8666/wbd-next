@@ -36,9 +36,9 @@ final class OriginalGoCommandArgs {
                               String tlsCaFile){
         return build(iface,handle,localIPv4,peer,peerPort,localPort,
             sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
-            targetUids,allApps,excludedAppIDs,tlsCaFile,true);
+            targetUids,allApps,excludedAppIDs,tlsCaFile,false);
     }
-    // Android APK defaults to strict TLS; the shared Go CLI preserves its legacy default.
+    // Default matches main: the flag only opts into strict verification.
     static List<String> build(String iface,long handle,String localIPv4,
                               String peer,int peerPort,int localPort,
                               String sni,String user,String passwordFile,
@@ -48,10 +48,10 @@ final class OriginalGoCommandArgs {
                               String tlsCaFile,boolean verifyTLS){
         return build(iface,handle,localIPv4,peer,peerPort,localPort,
             sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
-            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,false);
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,true);
     }
-    // Experimental tunnel DNS requires explicit opt-in on every App Start;
-    // old APK callers cannot silently enable an unverified DNS data path.
+    // Explicit tunnel UDP DNS toggle: old Android app callers default ON;
+    // disabling it leaves the exact legacy Normal/off TUN DATA behavior.
     static List<String> build(String iface,long handle,String localIPv4,
                               String peer,int peerPort,int localPort,
                               String sni,String user,String passwordFile,
@@ -59,8 +59,6 @@ final class OriginalGoCommandArgs {
                               String cnFile,int[] targetUids,
                               boolean allApps,int[] excludedAppIDs,
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS){
-        if(tunnelDNS&&!verifyTLS)
-            throw new IllegalArgumentException("Android tunnel DNS requires verified TLS server identity");
         if(iface==null||!iface.matches("[A-Za-z0-9_.-]{1,32}")||
            handle==0||!ServerAddress.isIPv4Literal(localIPv4)||
            !ServerAddress.valid(peer)||peerPort<1||peerPort>65535||

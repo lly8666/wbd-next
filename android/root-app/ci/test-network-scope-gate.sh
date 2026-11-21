@@ -329,12 +329,12 @@ assert 'rootjournal.RecoverOwned(' in go_product and 'rstguard.RecoverOwned(' in
 assert 'flags.Bool("tls-verify-server",false' in go_product
 assert 'VerifyServer:c.tlsVerifyServer' in go_product
 assert 'c.tlsVerifyServer=role=="client"&&*verifyTLS' in go_product
-assert 'tlsVerifyServer.setChecked(true)' in Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+assert 'tlsVerifyServer.setChecked(false)' in Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert 'request.putExtra("tls_verify_server",verifyTLS)' in Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert 'args.add("--tls-verify-server")' in argv
 for ev in ("ORIGINAL_GO_TLS_CERT_VERIFY_DISABLED","ORIGINAL_GO_TLS_CERT_VERIFY_ENABLED"):
  assert ev in s and ev in receipt
-print("ANDROID_A53_ANDROID_TLS_STRICT_DEFAULT_SHARED_GO_LEGACY_SOURCE_PASS")
+print("ANDROID_A37_MAIN_DEFAULT_TLS_CERT_VERIFY_OFF_SOURCE_PASS")
 # A38: prove no second forced verify in the REAL protected admission;
 # the user's A37 device showed disabled at parse but unknown CA at TLS.
 assert 'tlsCfg.VerifyServer=true' not in go_admission
@@ -596,16 +596,10 @@ android_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_andr
 linux_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go").read_text()
 backend=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()
 required=Path("android/root-native/build-source-locked.sh").read_text()
-assert 'tunnelDNS.setChecked(false)' in root_ui
+assert 'tunnelDNS.setChecked(true)' in root_ui
 assert 'request.putExtra("tunnel_dns",tunnelDNS.isChecked())' in root_ui
 assert 'intent.getBooleanExtra("tunnel_dns",false)' in root_svc
 assert 'verifyTLS,tunnelDNS' in root_svc
-assert 'intent.getBooleanExtra("tls_verify_server",true)' in root_svc
-assert 'if(tunnelDNS&&!verifyTLS)' in root_svc
-assert 'targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,false);' in argv
-assert 'if(tunnelDNS&&!verifyTLS)' in argv
-assert 'ANDROID_A53_ANDROID_STRICT_TLS_DEFAULT_DNS_OPTIN_HOST_PASS' in argv_test
-assert 'if *androidTunnelDNS&&!*verifyTLS{' in nativecli
 assert 'if(tunnelDNS)args.add("--android-tunnel-dns")' in argv
 assert 'absent(noDNS,"--android-tunnel-dns")' in argv_test
 assert 'ANDROID_B3_TUNNEL_DNS_ON_OFF_REAL_GO_ARGV_HOST_PASS' in argv_test
@@ -645,7 +639,6 @@ assert 'wbd_m0_embedded_go_android_tunnel_dns_effective' in required
 assert 'hijack_enabled.write(0)' in nativeworker
 assert "dns_capture=NOT_CONNECTED" in nativecli
 print("ANDROID_B3_REAL_ORIGINAL_M3_TUNNEL_UDP_DNS_COLD_WIRING_SOURCE_PASS")
-print("ANDROID_A53_ANDROID_DEFAULT_STRICT_TLS_TUNNEL_DNS_COLD_SOURCE_PASS")
 print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")
 print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")

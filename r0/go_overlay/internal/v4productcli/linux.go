@@ -333,12 +333,6 @@ func parse(role string,args []string)(config,error){
         if !*androidRouteAll&&*androidRouteExclude!=""{
             return c,fmt.Errorf("Android exclude IDs require all-app mode")
         }
-        // B3 experimental DNS must not be enabled on an unverified TLS peer.
-        // The shared Go CLI retains its legacy default for other modes;
-        // only this Android DNS capability is explicitly fail-closed.
-        if *androidTunnelDNS&&!*verifyTLS{
-            return c,fmt.Errorf("Android tunnel DNS requires verified TLS server identity")
-        }
         if *androidTunnelDNS&&!*androidRouteAll&&*androidRouteUID==0&&
            *androidRouteGroup==""{
             return c,fmt.Errorf("Android tunnel DNS needs a selected ordinary App UID route")

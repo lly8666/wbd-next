@@ -1,6 +1,6 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
-> **2026-11-21 A53 安全 Normal/off 资格准备**：A48 真实 ARM64 API36 以 TLS 证书验证关闭取得原 M3 `auth=1227`、反向 TUN `rtun=1218`；A52 主线累计 ACK 与 B3 DNS 生产接线仅有 Host/双ABI CI，未得到同源码 Android 实机业务资格。Android App 本轮默认开启证书/SNI 严格校验、默认关闭实验性隧道 DNS；显式 DNS opt-in 必须先开启证书校验（App、argv、原 Go Android CLI 三门）。Go 共享 CLI 的旧默认及 Windows/Linux 语义不改。无用户设备/服务器授权时仅跑 Host/签名 APK/原 Linux oracle，不触发 KSU/TAP 和实体部署；下一关键网络资格是同 SOURCE、受信任服务器身份的 ARM64 Normal/off 单 UID 真 TCP/UDP/ACK/Stop，再单独验 DNS。
+> **2026-11-21 A54 兼容性恢复（用户纠正 A53）**：A53 新增的 Android TLS 默认强制验证、实验 DNS 默认关闭、Java/Go 组合限制没有用户授权，现已全部撤销；当前恢复 B3 原有 Android App 默认 TLS 验证 OFF、隧道 DNS ON，原 Go CLI TLS 验证显式可选、DNS 开关独立。此处说的是 A53 额外兼容性门回滚，不变更原 FakeTCP/TLS 建链、受保护 Admission、Rust AEAD/PN/M4、真内核 TUN/RAW、路由/owned Stop。源代码和验收以 A54 提交及 CI 为准；A53 devlog 是历史行为，不再是现行要求。仍不得把编译/Host/旧手机日志写成当前 Android 真 E2E PASS。
 
 > **2026-11-21 B3 继续开发**：按 Android 功能卡推进真实产品功能。本轮解决“隧道 DNS UDP/53 原生数据面已有64槽改写/认证回包与Stop，但无冷授权入口”的缺口：Root App有明确可关的开关，原 Go/TLS/lease/同代 RAW+TUN 绑定之后才允许原Rust M4启用普通应用 TUN UDP53→1.1.1.1，使用原M3/replay校验和反向地址映射，不增加第二reader、Go per-DATA或系统网络写入；原生ABI与真App/Go源码门/Host均必须同源通过。Android系统Resolver/netd、CN8503→物理223.5.5.5与TCP53、IPv6/分流、Fixed/Auto/Game、热点与所有应用/弱网/性能仍未凭这项接线取得资格。此任务巨大，按功能卡逐段落实代码和证据，不把B3编译当作全功能完成。
 

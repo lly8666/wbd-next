@@ -228,10 +228,8 @@ public final class RootClientService extends Service {
             int[] excludedAppIDs=intent.getIntArrayExtra("exclude_appids");
             String[] managerPackages=intent.getStringArrayExtra("manager_packages");
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
-            boolean verifyTLS=intent.getBooleanExtra("tls_verify_server",true);
+            boolean verifyTLS=intent.getBooleanExtra("tls_verify_server",false);
             boolean tunnelDNS=intent.getBooleanExtra("tunnel_dns",false);
-            if(tunnelDNS&&!verifyTLS)
-                throw new IllegalArgumentException("Android tunnel DNS requires verified TLS server identity");
             if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&
