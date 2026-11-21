@@ -40,6 +40,9 @@ public final class RootClientActivity extends Activity {
     private final List<PhysicalNetwork> physical=new ArrayList<>();
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
+    // A saved selection is only restored if fresh package+UID still match;
+    // the OS Network handle and any root route are never restored.
+    private final Map<String,Integer> restoredSelection=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
@@ -193,7 +196,8 @@ public final class RootClientActivity extends Activity {
     private void chooseInstalledApplications(){
         // Keep only exact package+UID matches from the previous snapshot.
         // A package reinstalled with a new UID is NEVER auto-reselected.
-        Map<String,Integer> previous=new TreeMap<>();
+        Map<String,Integer> previous=new TreeMap<>(restoredSelection);
+        restoredSelection.clear();
         for(InstalledAppTarget app:installedApps){
             CheckBox cb=checkedApps.get(app.packageName);
             if(cb!=null&&cb.isChecked())previous.put(app.packageName,app.uid);
@@ -216,6 +220,62 @@ public final class RootClientActivity extends Activity {
             appChoices.addView(cb);
             checkedApps.put(app.packageName,cb);
         }
+    }
+    // B22 settings are strictly UI cold inputs. Actual Go TLS, /32,
+    // app UID routing and native start still happen only on explicit START.
+    private static void selectSpinner(Spinner spinner,String value){
+        for(int i=0;i<spinner.getCount();i++){
+            if(value.equals(spinner.getItemAtPosition(i).toString())){
+                spinner.setSelection(i);
+                return;
+            }
+        }
+    }
+    private RootConnectionSettings connectionSettingsFromUi(){
+        Map<String,Integer> selected=new TreeMap<>();
+        if(!allAppsDefault.isChecked()){
+            for(InstalledAppTarget app:installedApps){
+                CheckBox check=checkedApps.get(app.packageName);
+                if(check!=null&&check.isChecked())
+                    selected.put(app.packageName,app.uid);
+            }
+        }
+        return new RootConnectionSettings(
+            serverAddress.getText().toString().trim(),
+            serverName.getText().toString().trim(),
+            user.getText().toString().trim(),
+            Integer.parseInt(serverPort.getText().toString().trim()),
+            Integer.parseInt(outerMTUField.getText().toString().trim()),
+            Integer.parseInt(tunQueueSizes.getSelectedItem().toString()),
+            recordCiphers.getSelectedItem().toString(),
+            startupPaddingModes.getSelectedItem().toString(),
+            fecModes.getSelectedItem().toString(),
+            Integer.parseInt(fecProfiles.getSelectedItem().toString()),
+            tlsVerifyServer.isChecked(),tunnelDNS.isChecked(),
+            physicalDNS.isChecked(),cnSplitDNS.isChecked(),
+            allAppsDefault.isChecked(),selected);
+    }
+    private void saveConnectionSettings()throws Exception{
+        RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
+    }
+    private void restoreConnectionSettings(RootConnectionSettings s){
+        if(s==null)return;
+        serverAddress.setText(s.peer);
+        serverName.setText(s.sni);
+        user.setText(s.account);
+        serverPort.setText(Integer.toString(s.port));
+        outerMTUField.setText(Integer.toString(s.outerMTU));
+        selectSpinner(recordCiphers,s.cipher);
+        selectSpinner(tunQueueSizes,Integer.toString(s.tunQueue));
+        selectSpinner(startupPaddingModes,s.padding);
+        selectSpinner(fecModes,s.mode);
+        selectSpinner(fecProfiles,Integer.toString(s.profile));
+        tlsVerifyServer.setChecked(s.verifyTLS);
+        tunnelDNS.setChecked(s.tunnelDNS);
+        physicalDNS.setChecked(s.physicalDNS);
+        cnSplitDNS.setChecked(s.cnSplitDNS);
+        allAppsDefault.setChecked(s.allApps);
+        restoredSelection.putAll(s.selected);
     }
     private void privateText(String file,String text)throws Exception{
         // A32: Android's MODE_PRIVATE can produce 0660 (group read/write).
@@ -339,7 +399,13 @@ public final class RootClientActivity extends Activity {
             traceUi(RootDiagnosticReceipt.Event.UI_START_DISPATCH_REQUESTED);
             startForegroundService(request);
             traceUi(RootDiagnosticReceipt.Event.UI_START_DISPATCHED);
+            // Save only validated non-secret UI settings. Physical Network
+            // and authorized UID routing remain scoped to THIS Start.
+            boolean remembered=true;
+            try{saveConnectionSettings();}
+            catch(Exception unavailable){remembered=false;}
             String notice=saved?"":"；设备密码自动保存失败（不影响本次连接）";
+            if(!remembered)notice+="；普通连接参数未能保存";
             RootClientService.status=(verifyTLS
                 ?"Root start — strict TLS server certificate validation ON"
                 :"Root start — TLS certificate validation OFF (main default)")+notice;
@@ -568,6 +634,17 @@ public final class RootClientActivity extends Activity {
         refreshApps.setText("Refresh installed applications");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());
         pane.addView(refreshApps);
+        Button rememberConnection=new Button(this);
+        rememberConnection.setText("保存连接设置（本机，下次恢复；不含密码/RouteKey）");
+        rememberConnection.setOnClickListener(v->{
+            try{
+                saveConnectionSettings();
+                status.setText("已保存服务器、账号、模式及DNS/MTU等本机设置；密码/RouteKey仍由Keystore单独管理");
+            }catch(Exception failure){
+                status.setText("保存连接设置失败：请填写合法服务器/SNI/账户和模式参数");
+            }
+        });
+        pane.addView(rememberConnection);
         Button connect=new Button(this);connect.setText("START — ROOT / ORIGINAL Go+Rust");
         connect.setOnClickListener(v->start());
         pane.addView(connect);
@@ -638,6 +715,12 @@ public final class RootClientActivity extends Activity {
         status.setTextIsSelectable(true);
         pane.addView(status);
         setContentView(scroll);
+        // Restore UI choices only. Re-enumerate physical Networks and
+        // installed App UIDs from Android, never reuse an old route handle.
+        try{restoreConnectionSettings(RootConnectionSettingsStore.load(this));}
+        catch(Exception unavailable){
+            status.setText("本机普通连接设置未恢复，请重新填写（不影响手动START）");
+        }
         chooseNetworks();
         chooseInstalledApplications();
         try{

@@ -38,6 +38,13 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/ci/ServerAddressTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.ServerAddressTest
+# B22: exact production non-secret connection UI settings codec;
+# native TLS/Root, physical Network and UID route are never restored here.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
+  android/root-app/ci/RootConnectionSettingsTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionSettingsTest
 # Execute the EXACT production RootService original Go argv builder on the
 # host JVM. No Android guest, fake Network, Root permission or packet I/O.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
@@ -159,6 +166,14 @@ assert 'ServerAddress.valid(peer)' in s
 a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 assert 'target_packages' in a and 'target_uids' in a
 assert 'SelectedAppGroup.from(' in a and 'InstalledAppCatalog.stillSameGroup(' in a
+assert 'RootConnectionSettingsStore.save(this,connectionSettingsFromUi())' in a
+assert 'restoreConnectionSettings(RootConnectionSettingsStore.load(this))' in a
+assert 'new TreeMap<>(restoredSelection)' in a
+assert 'previous.get(app.packageName)==app.uid' in a
+assert 'RootConnectionSettings' in Path(
+ "android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsStore.java"
+).read_text()
+print("ANDROID_B22_PUBLIC_CONNECTION_SETTINGS_NO_BACKUP_REAL_APP_WIRING_PASS")
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
 assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
 assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android applications are the product UI default"
