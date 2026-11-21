@@ -230,6 +230,7 @@ public final class RootClientService extends Service {
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
             boolean verifyTLS=intent.getBooleanExtra("tls_verify_server",false);
             boolean tunnelDNS=intent.getBooleanExtra("tunnel_dns",false);
+            boolean physicalDNS=intent.getBooleanExtra("physical_dns",false);
             if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&
@@ -257,7 +258,7 @@ public final class RootClientService extends Service {
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,targetUids,targetPackages,allApps,excludedAppIDs,
-                managerPackages,hasCA,verifyTLS,tunnelDNS),"wbd-native-root-owner");
+                managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.START_REFUSED);
@@ -278,7 +279,7 @@ public final class RootClientService extends Service {
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
-                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,String token){
+                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,String token){
         // The host-tested argv is also the exact argv passed to original Go.
         // Secret *values* never appear here, only app-private file paths.
         List<String> args=OriginalGoCommandArgs.build(
@@ -290,7 +291,7 @@ public final class RootClientService extends Service {
             nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
             excludedAppIDs,
             hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null,
-            verifyTLS,tunnelDNS);
+            verifyTLS,tunnelDNS,physicalDNS);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
@@ -344,7 +345,7 @@ public final class RootClientService extends Service {
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
                          int port,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
-                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS){
+                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
@@ -376,7 +377,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,ownerToken))
+                    launchCommand(code,net,peer,sni,user,port,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);

@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B4b Root Service 实生产传参补齐**：B4a 双 ABI Host 的 Java 收据已修复，但源码门发现 `physical_dns` Intent 未进入 Root Service 的 owner/launch/argv，现已接通同一生产参数链；该修补不涉及数据面和任何强制安全检测。等待新 SOURCE 原 APK 签名/Go Host/Linux Oracle，不用旧失败或前置绿色推断真实手机 DNS。
+
+
 > **2026-11-21 B4a 新旧安卓收据兼容修复**：B4 源码首次 CI 的 Root App Java Host 因 M4 数值新增物理字段后拒绝历史 B3d 收据而失败。此轮生产导出读回同时兼容 A47/B3d/B4 三种确定字段格式并保留真实历史值，不制造物理DNS成功，原数据面不变；只在新 SOURCE CI 完成后登记 BUILD/Host 资格。
 
 

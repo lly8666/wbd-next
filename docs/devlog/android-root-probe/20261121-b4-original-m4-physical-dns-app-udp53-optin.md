@@ -19,6 +19,10 @@ SOURCE 起点 `b9a9c1764e41dd66e0e2b2c61dc65005cb72e656`：B3d 正式签名 APK�
 
 B4 SOURCE `25a8ad081d682a47c3bf7d2909e5ae0296aa4f07` 的 `root-arm64-app` 在 `RootDiagnosticReportTest.java:739` 报 `real native DNS TX/RX numeric receipt rejected`：原 Java M4 数值导出解析器在 B4 新增 3 个物理 DNS 字段后只接受新 23 字段格式，B3d 的 20 字段历史收据不再被接纳。B4a 在相同生产 `safeNativeSnapshot` 路径兼容 A47（18）、B3d（20）、B4（23）精确字段格式；新增三格式与错误交叉字段 Host 回归，旧历史不伪造新的物理计数，不更动 TLS、DNS 模式、Rust RAW/TUN 或用户默认值。B4 失败记录保留，以新 SOURCE Host/签名 APK/原 Linux Oracle 为准。
 
+## B4b Root Service 实生产参数链修补（真实源码门 failure）
+
+B4a SOURCE `7a1f6d9b489ce25bef2547eae712d93421559ec1` 的 JVM A47/B3d/B4 兼容收据已 PASS，但正式 Root APK source gate 在 `android/root-app/ci/test-network-scope-gate.sh` Python 第 566 行失败：`intent.getBooleanExtra("physical_dns",false)` 未进入 RootClientService，因多块 staged Git tree 覆盖了先前同文件的 owner 参数传播改动。B4b 修复 **Intent physical_dns → RootClientService cold boolean → runRoot owner thread → launchCommand → 生产 OriginalGoCommandArgs.build(…,verifyTLS,tunnelDNS,physicalDNS) → 原 Go CLI**。保持此前 B4 的所有 Rust/Go/物理 DNS 逻辑、B3 隧道默认、可选 TLS 校验和三代历史收据不变。原 B4/B4a 失败证据保留，新 SOURCE 签名 APK 测试才有资格决定 BUILD_PASS。
+
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B4将既有原Rust M4真实Android物理DNS UDP socket及逆映射完成App/Go/Rust全生产链显式接线，并增加真实收发计数、旧接口兼容/Host/Rust与正式签名APK验证。保持B3隧道默认与TLS兼容设置。"}
 ```
