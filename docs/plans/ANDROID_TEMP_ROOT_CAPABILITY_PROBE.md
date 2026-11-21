@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B11b App→Go 接线（真实原生数据路径）**：签名 Android App现提供 `startup-padding off|tls|flows`，默认off，Activity→Service→受保护Go `--startup-padding` → B11a原Rust M4 TX &真实RAW-copy计数；旧Intent和全部Java overload保留off。只影响进入Normal/off隧道的普通原LINK数据，不对DNS物理、Jumbo LINK、Health、FEC2 padding。尚未做Android实体业务及性能验收；不将它描述为FEC Fixed/Auto实现。
+
+
 > **2026-11-21 B11a 原生数据面接线（待同源CI）**：在原Go已认证`--startup-padding off|tls|flows` 的正常客户端产品中，移植原Rust `TunnelStartupPadding` 与同一 M1/M3 `seal_normal_off_one_padded` 到 Android 真实TUN→RAW M4 TX worker。保留按真实sendto复制成功才记账、记录长度/MSS/外层MTU限制和原Go冷模式真实读回，默认off不变。本片先接原生 CLI→Rust，Android App选项另片才开放；Fixed/Auto/Game仍由现有Go/Rust拒绝门阻断，设备性能/真实业务未验。
 
 

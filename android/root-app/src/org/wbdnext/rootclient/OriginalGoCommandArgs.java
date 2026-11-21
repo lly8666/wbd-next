@@ -130,6 +130,25 @@ final class OriginalGoCommandArgs {
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
                               boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
                               String recordCipher,int requestedTunQueue){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,
+            tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,
+            requestedTunQueue,"off");
+    }
+    // B11b original-Go authenticated cold selection; legacy callers stay off.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
+                              String recordCipher,int requestedTunQueue,String paddingMode){
+        if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
+           !"flows".equals(paddingMode))
+            throw new IllegalArgumentException("unsupported original startup padding");
         if(requestedTunQueue!=500&&requestedTunQueue!=2048)
             throw new IllegalArgumentException("TUN txqlen must be 500 or 2048");
         if(!"chacha20-poly1305".equals(recordCipher)&&
@@ -167,6 +186,7 @@ final class OriginalGoCommandArgs {
         pair(args,"--installation-id-file",installationFile);
         pair(args,"--outer-mtu",Integer.toString(requestedOuterMTU));
         pair(args,"--record-cipher",recordCipher);
+        pair(args,"--startup-padding",paddingMode);
         pair(args,"--tun-fq-maxrate-mbps","0");
         pair(args,"--tun-txqlen-packets",Integer.toString(requestedTunQueue));
         pair(args,"--outer-repair","off");

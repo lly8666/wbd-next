@@ -41,7 +41,7 @@ public final class RootClientActivity extends Activity {
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField;
-    private Spinner networks,recordCiphers,tunQueueSizes;
+    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief;
@@ -242,6 +242,7 @@ public final class RootClientActivity extends Activity {
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
             String recordCipher=recordCiphers.getSelectedItem().toString();
+            String paddingMode=startupPaddingModes.getSelectedItem().toString();
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
             boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
@@ -311,6 +312,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("outer_mtu",requestedOuterMTU);
             request.putExtra("record_cipher",recordCipher);
             request.putExtra("tun_txqlen",requestedTunQueue);
+            request.putExtra("startup_padding",paddingMode);
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
@@ -429,6 +431,14 @@ public final class RootClientActivity extends Activity {
             android.R.layout.simple_spinner_dropdown_item,
             new String[]{"500","2048"}));
         pane.addView(tunQueueSizes);
+        TextView padLabel=new TextView(this);
+        padLabel.setText("原 Normal 隧道启动填充（默认off；tls仅TLS、flows普通TCP/UDP；不等于FEC）");
+        pane.addView(padLabel);
+        startupPaddingModes=new Spinner(this);
+        startupPaddingModes.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,
+            new String[]{"off","tls","flows"}));
+        pane.addView(startupPaddingModes);
         user=input(pane,"Authenticated account",InputType.TYPE_CLASS_TEXT);
         password=input(pane,"Password (app-private file, not argv)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);

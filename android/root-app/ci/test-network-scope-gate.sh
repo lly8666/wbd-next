@@ -172,7 +172,7 @@ assert 'tunQueueSizes.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("tun_txqlen",requestedTunQueue)' in a
 assert 'intent.getIntExtra("tun_txqlen",500)' in s
 assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue' in s
-assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue);' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue' in s
 assert 'pair(args,"--tun-txqlen-packets",Integer.toString(requestedTunQueue))' in argv
 assert 'tunTxQLen:=flags.Int("tun-txqlen-packets",2048' in cold
 assert 'setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets)' in cold
@@ -190,6 +190,15 @@ assert 'policy.propose(&slab.writable()[14..14+n],ms,room)' in rust_m4
 assert 'startup_padding_copied_bytes.fetch_add(' in rust_m4
 assert 'self.seal_normal_off_one_padded(' in rust_owner
 print("ANDROID_B11A_ORIGINAL_GO_RUST_M4_STARTUP_PADDING_NATIVE_SOURCE_WIRING_PASS")
+# B11b: real signed Android App -> original protected Go/Rust M4, no Java DATA.
+assert 'startupPaddingModes.setAdapter(new ArrayAdapter' in a
+assert 'request.putExtra("startup_padding",paddingMode)' in a
+assert 'intent.getStringExtra("startup_padding")' in s
+assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode);' in s
+assert 'pair(args,"--startup-padding",paddingMode)' in argv
+assert 'startupPadding:=flags.String("startup-padding","off"' in cold
+print("ANDROID_B11B_APP_GO_M4_PROTECTED_STARTUP_PADDING_SOURCE_WIRING_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

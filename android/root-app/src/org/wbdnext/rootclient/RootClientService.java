@@ -223,6 +223,11 @@ public final class RootClientService extends Service {
             String user=intent.getStringExtra("user");
             String cipherExtra=intent.getStringExtra("record_cipher");
             final String recordCipher=cipherExtra==null?"chacha20-poly1305":cipherExtra;
+            String paddingExtra=intent.getStringExtra("startup_padding");
+            final String paddingMode=paddingExtra==null?"off":paddingExtra;
+            if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
+               !"flows".equals(paddingMode))
+                throw new IllegalArgumentException("unsupported original Normal startup padding");
             int port=intent.getIntExtra("port",0);
             int requestedOuterMTU=intent.getIntExtra("outer_mtu",1460);
             int requestedTunQueue=intent.getIntExtra("tun_txqlen",500);
@@ -263,7 +268,7 @@ public final class RootClientService extends Service {
             trace(RootDiagnosticReceipt.Event.ROOT_STAGE_REQUESTED);
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
-                port,requestedOuterMTU,recordCipher,requestedTunQueue,targetUids,targetPackages,allApps,excludedAppIDs,
+                port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,targetUids,targetPackages,allApps,excludedAppIDs,
                 managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
@@ -283,7 +288,7 @@ public final class RootClientService extends Service {
     }
     private String launchCommand(NativePayload nativeCode,
                                  PhysicalNetwork net,String peer,String sni,
-                                 String user,int peerPort,int requestedOuterMTU,String recordCipher,int requestedTunQueue,int[] targetUids,
+                                 String user,int peerPort,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
                                  boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token){
         // The host-tested argv is also the exact argv passed to original Go.
@@ -297,7 +302,7 @@ public final class RootClientService extends Service {
             nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
             excludedAppIDs,
             hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null,
-            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue);
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
@@ -349,7 +354,7 @@ public final class RootClientService extends Service {
         return shell.toString();
     }
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
-                         int port,int requestedOuterMTU,String recordCipher,int requestedTunQueue,int[] targetUids,String[] targetPackages,
+                         int port,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
                          boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
@@ -383,7 +388,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken))
+                    launchCommand(code,net,peer,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);

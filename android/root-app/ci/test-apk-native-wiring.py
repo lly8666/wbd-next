@@ -47,14 +47,20 @@ assert "V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client" in route_go
 assert 'peerThrowArgs("add",original.ServerIP)' in allapp_go
 assert 'peerThrowArgs("del",p.ServerIP)' in allapp_go
 assert "legacyAllAppsVersion = 3" in allapp_go
-# The 2026-11 main Linux protected padding source is imported in the
-# shared Go product file. Android must NOT call it or claim no-op success:
-# Go's android target satisfies the linux build tag on common Go files.
+# B11b true original-Go TLS ColdSnapshot -> Android original Rust M4.
+# Before B11a the unsupported-only requirement was correct; not any more.
 shared_client=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
 android_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
-assert 'if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0' in shared_client
-assert 'runtime.GOOS!="android"&&p.cfg.OuterIPMTU!=0' in shared_client
-assert 'configureNormalStartupPadding(_ uint8,_ int)error' in android_bridge
+android_rust=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+assert 'if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0' not in shared_client
+assert 'err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)' in shared_client
+assert 'func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(mode uint8,outer int)error' in android_bridge
+assert 'wbd_m0_embedded_go_normal_startup_padding_set' in android_bridge
+assert 'wbd_m0_embedded_go_normal_startup_padding_counters' in android_bridge
+assert 'fn wbd_m0_embedded_go_normal_startup_padding_set(' in android_rust
+assert 'fn wbd_m0_embedded_go_normal_startup_padding_counters(' in android_rust
+assert 'policy.propose(&slab.writable()[14..14+n],ms,room)' in android_rust
+assert 'startup_padding_copied_bytes.fetch_add(' in android_rust
 assert 'normalStartupPaddingCounters()(string,uint64,uint64,error)' in android_bridge
 assert android_bridge.count('return ErrAdmissionUnsupported')>=5
 ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
