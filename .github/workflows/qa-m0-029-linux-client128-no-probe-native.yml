@@ -117,7 +117,7 @@ jobs:
                   log=(root/mode/(role+".log")).read_text(errors="replace")
                   records=re.findall(
                       r"M0_PLAN029_NATIVE_INBOX_BOUND role="+role+
-                      r" generation=(\\d+) slots=(\\d+) probe_only=(\\d+)",log)
+                      r" generation=(\d+) slots=(\d+) probe_only=(\d+)",log)
                   assert records and all(
                       int(g)>0 and int(slots)==expected and int(probe)==0
                       for g,slots,probe in records
