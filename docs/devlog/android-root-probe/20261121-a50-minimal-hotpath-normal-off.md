@@ -11,3 +11,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"减少加密DATA在原M3前的外层重复校验/诊断/预解析；真实CPU、吞吐、兼容性仍需同源跑测。"}
 ```
+
+## A50a｜真实 CI 门禁修复
+
+已把 Android 源码 gate 里对 `parse_data_packet` 严格前置检查的断言更新为真实 `parse_data_packet_android_m3_pending`；这是测试契约适配，不增加回热路径扫描。首次编译/源锁失败不可改记为通过。每次修复均保留独立 SOURCE、Actions 结果。
