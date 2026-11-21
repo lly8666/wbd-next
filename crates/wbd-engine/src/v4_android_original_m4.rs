@@ -774,7 +774,12 @@ fn tun_worker(
     let mut next_packet_id=1u32;
     let frame=match cell.lock(){
         Ok(e)=>match e.android_physical.as_ref() {
-            Some(s)=>match e.owner.android_normal_off_frame_budget(s.mtu){
+            Some(s)=>match if e.protected_features==7{
+                #[cfg(feature="fec2_product_record")]
+                {e.owner.android_fixed_frame_budget(s.mtu)}
+                #[cfg(not(feature="fec2_product_record"))]
+                {e.owner.android_normal_off_frame_budget(s.mtu)}
+            }else{e.owner.android_normal_off_frame_budget(s.mtu)}{
                 Ok(value)=>value,
                 Err(_)=>{shutdown.store(true,Ordering::Release);return}
             },
@@ -1333,9 +1338,19 @@ fn tun_worker(
 pub(super) fn start(handle:u64,ifindex:u32)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    // Feature7 is native-startable ONLY after original Go TLS/Detach,
+    // first Fixed PENDING revision, original FEC2 RX, low-rate M2 owner
+    // and no unaudited pre-M4 early Normal LINK records. Public Go
+    // Fixed/Auto admission remains closed until native product E2E.
+    #[cfg(feature="fec2_product_record")]
+    let fixed_ready=e.protected_features==7&&
+        e.android_fec2_pending.is_some()&&e.quality_tx.is_some()&&
+        e.android_fec2_rx.is_some()&&e.staged_count==0;
+    #[cfg(not(feature="fec2_product_record"))]
+    let fixed_ready=false;
     if e.phase!=PH_ACTIVE||e.server_side||e.android_workers.is_some()||
        e.android_joining||e.client_lease_ipv4.is_none()||
-       e.protected_features!=3||
+       !(e.protected_features==3||fixed_ready)||
        e.android_physical.as_ref().is_none_or(|p|p.ifindex!=ifindex)||
        e.normal.is_none(){
         return BAD_STAGE
@@ -1345,8 +1360,13 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
     )else{return BAD_STAGE};
     let rx=Arc::clone(rx);let tx=Arc::clone(tx);let tun=Arc::clone(tun);
     let Some(scope)=e.android_physical.as_ref()else{return BAD_STAGE};
-    if tx.check_scope(&scope.interface,ifindex).is_err()||
-       e.owner.android_normal_off_frame_budget(scope.mtu).is_err(){
+    let budget=if fixed_ready{
+        #[cfg(feature="fec2_product_record")]
+        {e.owner.android_fixed_frame_budget(scope.mtu)}
+        #[cfg(not(feature="fec2_product_record"))]
+        {e.owner.android_normal_off_frame_budget(scope.mtu)}
+    }else{e.owner.android_normal_off_frame_budget(scope.mtu)};
+    if tx.check_scope(&scope.interface,ifindex).is_err()||budget.is_err(){
         return INVALID
     }
     let dns=if e.android_dns_hijack_ready&&e.android_dns_physical_ready{

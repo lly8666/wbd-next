@@ -69,6 +69,9 @@ assert 'q.accept_report(report,at);' in android_rust
 assert 'fn send_android_fixed_quality_due(' in android_rust
 assert 'e.quality_tx=Some(OriginalQualityTx::new(' in android_rust
 assert 'if out.is_null()||len!=9{return INVALID}' in android_rust
+assert 'fn send_android_fixed_quality_due(' in android_rust
+assert 'let fixed_ready=e.protected_features==7&&' in android_rust
+assert 'e.owner.android_fixed_frame_budget(s.mtu)' in android_rust
 assert 'policy.propose(&slab.writable()[14..14+n],ms,room)' in android_rust
 assert 'startup_padding_copied_bytes.fetch_add(' in android_rust
 assert 'normalStartupPaddingCounters()(string,uint64,uint64,error)' in android_bridge

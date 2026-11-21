@@ -218,9 +218,11 @@ assert "if !fixed_pending.is_some_and(|(profile,rev)|" in fec_worker
 assert "exact.negotiated_features!=7" in fec_worker
 assert "if *applied==0||exact.negotiated_features!=7" not in fec_worker
 assert "stats.fec2_unique_symbols.fetch_add(1,Ordering::Relaxed)" in fec_worker
-assert "control.low_rate_quality.is_some()" in fec_worker
+assert "if let Some(report)=control.low_rate_quality{" in fec_worker
+assert "q.accept_report(report,at);" in fec_worker
 assert "control.low_rate_signal.is_some()" in fec_worker
-assert "e.protected_features!=3" in fec_worker
+assert "!(e.protected_features==3||fixed_ready)" in fec_worker
+assert "let fixed_ready=e.protected_features==7&&" in fec_worker
 # B12bc: Go PENDING now reaches real Android Rust FFI but never APPLIED.
 assert "C.wbd_m0_embedded_go_fixed_stage_pending(" in fec_go
 assert "C.wbd_m0_embedded_go_fixed_pending_readback(" in fec_go
@@ -238,7 +240,8 @@ assert "stream.poll_parity_quanta(at,1," in fec_worker
 assert "e.owner.seal_fec2_product_one(" in fec_worker
 assert "send_staged(e,raw,stats,storage,scratch,at)==Some(pn)" in fec_worker
 assert "e.android_fec2_tx=Some(stream);" in fec_worker
-assert "e.protected_features!=3" in fec_worker
+assert "!(e.protected_features==3||fixed_ready)" in fec_worker
+assert "let fixed_ready=e.protected_features==7&&" in fec_worker
 assert "fn wbd_m0_embedded_go_fixed_stage_pending(" in fec_worker
 assert "fn wbd_m0_embedded_go_fixed_pending_readback(" in fec_worker
 assert "fn wbd_m0_embedded_go_fixed_m4_counters(" in fec_worker
@@ -265,6 +268,21 @@ assert "e.android_fec2_pending=None;" in fec_entry
 print("ANDROID_B12BC_FIXED_ORIGINAL_SOURCE_PARITY_RAW_PENDING_CLOSED_SOURCE_PASS")
 print("ANDROID_B12D_REAL_PENDING_FIRST_M3_REVERSE_QUALITY_SOURCE_PASS")
 print("ANDROID_B13_ORIGINAL_FIXED_PLAN027_MATURE_M2_CAUSAL_SOURCE_PASS")
+mtu_owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
+assert "fn android_frame_budget_for(" in mtu_owner
+assert "fec:AndroidFec::FixedOff" not in mtu_owner
+assert "AndroidFec::V3Fec2Fixed" in mtu_owner
+assert "pub(crate) fn android_fixed_frame_budget(" in mtu_owner
+assert "e.owner.android_fixed_frame_budget(s.mtu)" in fec_worker
+assert "e.owner.android_fixed_frame_budget(scope.mtu)" in fec_worker
+assert "e.staged_count==0" in fec_worker
+assert "android_fixed_cold_and_m4_reservation_share_exact_14_bytes" in Path(
+    "crates/wbd-engine/src/v4_mtu_budget_ffi.rs"
+).read_text()
+# Public client policy remains intentionally Normal/off only.
+client=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
+assert '(p.cfg.FECMode!=""&&p.cfg.FECMode!=FecV2Off||' in client
+print("ANDROID_B14_FIXED_ORIGINAL_NATIVE_M4_DIRECTIONAL_MTU_START_READY_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

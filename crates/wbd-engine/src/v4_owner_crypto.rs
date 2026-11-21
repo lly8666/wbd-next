@@ -1901,10 +1901,11 @@ mod m0_fec2_full_mtu_repair_body_contract {
 
 #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 impl ProtectedScopedOwner{
-    /// Same original M1/M3 Normal/off owner; Bionic supplies only I/O and
-    /// the cold physical link ceiling. No second AEAD, replay or TCP stream.
-    pub(crate) fn android_normal_off_frame_budget(
-        &self,physical_mtu:u32
+    // B14: identical Rust FrameBudget derivation for both authenticated
+    // Android modes, with the negotiated FEC2 14B reservation. No Go
+    // packet-time MTU recomputation and no secondary native budget oracle.
+    fn android_frame_budget_for(
+        &self,physical_mtu:u32,fec:AndroidFec
     )->Result<FrameBudget,ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached(){
             return Err(ProtectedCryptoError::Inactive)
@@ -1915,8 +1916,22 @@ impl ProtectedScopedOwner{
             ipv4_header_len:20,tcp_header_len:20,
             peer_mss:if self.peer_mss_advertised{Some(self.peer_mss)}else{None},
             record_wire_limit:self.tx_wire_limit,
-            fec:AndroidFec::FixedOff,game:false,
+            fec,game:false,
         }).map_err(|_|ProtectedCryptoError::Tx)
+    }
+    pub(crate) fn android_normal_off_frame_budget(
+        &self,physical_mtu:u32
+    )->Result<FrameBudget,ProtectedCryptoError>{
+        self.android_frame_budget_for(physical_mtu,AndroidFec::FixedOff)
+    }
+    /// Only the original Go/TLS feature7 Fixed session can select this
+    /// existing v2 FEC2 14B source/repair reservation. SOURCE and repair
+    /// must fit its record limit before the first physical TUN read.
+    #[cfg(feature="fec2_product_record")]
+    pub(crate) fn android_fixed_frame_budget(
+        &self,physical_mtu:u32
+    )->Result<FrameBudget,ProtectedCryptoError>{
+        self.android_frame_budget_for(physical_mtu,AndroidFec::V3Fec2Fixed)
     }
 
     /// Original-GO authenticated /32 and one FULL original kernel TUN IP

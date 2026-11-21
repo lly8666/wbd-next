@@ -113,6 +113,25 @@ mod tests {
         assert_eq!(derive(input(3)).unwrap().single_inner_ip_cap,1398);
     }
     #[test]
+    fn android_fixed_cold_and_m4_reservation_share_exact_14_bytes(){
+        // This identical Rust oracle is consumed by Go cold TUN OS MTU
+        // installation and the Native Bionic Fixed M4 preflight. Without
+        // this mode-aware reserve a valid source can overshoot a repair.
+        for mtu in [576u32,1280,1460,1500]{
+            let mut off=input(0);
+            off.configured_outer_ip_mtu=mtu;
+            off.physical_outer_ip_mtu=mtu;
+            off.peer_advertised_mss=mtu-40;
+            let mut fixed=off;
+            fixed.mode=1;
+            let a=derive(off).unwrap();
+            let b=derive(fixed).unwrap();
+            assert_eq!(a.record_wire_cap,b.record_wire_cap);
+            assert_eq!(a.record_payload_cap,b.record_payload_cap);
+            assert_eq!(a.single_inner_ip_cap,b.single_inner_ip_cap+14);
+        }
+    }
+    #[test]
     fn cold_ffi_golden_mode_mss_and_version() {
         for (mode,want) in [(0,1429),(1,1415),(2,1413),(3,1398)] {
             let b=derive(input(mode)).unwrap();
