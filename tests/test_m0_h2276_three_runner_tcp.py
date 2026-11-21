@@ -97,10 +97,13 @@ class ExactDualTriplet(unittest.TestCase):
         relay={"tail_ip":"100.101.0.2","relay_ip":"100.101.0.2",
                "client_ip":"100.101.0.1"}
         server={"tail_ip":"100.101.0.3"}
-        with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"1"}):
-            self.assertEqual(h.active_stages(),("direct",-1))
-        with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"0"}):
-            self.assertEqual(h.active_stages(),h.TIERS)
+        # Legacy H2279 stage routing must be tested under its own mode;
+        # H2282 intentionally takes precedence only when WINDOW_AB is enabled.
+        with patch.object(h, "WINDOW_AB", False):
+            with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"1"}):
+                self.assertEqual(h.active_stages(),("direct",-1))
+            with patch.dict(h.os.environ, {"WBD_H2279_CAPACITY_AB":"0"}):
+                self.assertEqual(h.active_stages(),h.TIERS)
         self.assertEqual(h.client_tcp_target("direct",relay,server),
                          server["tail_ip"])
         self.assertEqual(h.client_tcp_target(-1,relay,server),

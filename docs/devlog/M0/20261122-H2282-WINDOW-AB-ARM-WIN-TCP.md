@@ -20,3 +20,7 @@
 ```feature-impact
 {"kind":"none","reason":"H2282 only native dual-three-runner test socket buffer AB/A-prime and owned ARM sysctl restore/readback, original WBD client/server/Go Rust/Windows driver/default untouched."}
 ```
+
+## 第一轮精确SOURCE静态失败与回归修复
+- [H2282 Action44929841876](https://github.com/lly8666/wbd-next/actions/runs/44929841876) SOURCE `90119c7667effe4d97779e9758f09b2d61463081` 的 static 检查 FAIL 于旧 H2279 测试 `test_h2279_clean_path_uses_identical_windows_and_arm_real_tcp`：在H2282全局env启动时，`active_stages()` 按设计返回 `('base','tuned','base_prime')`，旧测试却无隔离地期待 H2279 `('direct',-1)`。共23项仅此1项失败；六原生Runner严格由needs:static跳过，**没有产品/网络/性能样本**。
+- 修复仅在旧H2279测试内临时 `patch.object(h,"WINDOW_AB",False)`，保持H2282自己既有真实socket setsockopt/getopt回归和全部真实产品验证门；不修改H2279或H2282生产模式路由，也不依赖跳过单测。后续再按两组三Runner源锁校验，不将本static FAIL描述为TCP窗口负结果。
