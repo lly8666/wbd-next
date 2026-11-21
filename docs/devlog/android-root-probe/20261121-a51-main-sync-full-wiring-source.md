@@ -13,3 +13,11 @@ Android源码门同步更新成主线parse_data_packet_fast，不再要求旧 st
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"按用户要求以main最新共享语义优先将main完整并入实验，Android Root/Go/Rust/UID和Stop保留，共享最小DATA parser统一main；全功能实机和性能资格未继承。"}
 ```
+
+## A51b｜Go合并测试闭合与Android真实DATA窗口
+
+A51真实合成文件中的Android A38 original protected admission fixture末尾漏掉最后一个Go函数 `}`（语法/拼接问题，原源码测试不删），已单独闭合。主线H2229原Rust外层 `advertised_window:65_535`，Android单真实M4发送 `Presentation` 遗留4096，此处恢复与main一致的65_535，不改加密、路由/Stop、ACK控制包协议或其真机资格。增静态源锁断言，不把主线性能PASS冒称Android性能PASS。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"A51合并Go测试缺末尾函数闭合修复；Android原Rust外层通告窗口与main 65535对齐，保留原安全所有权，实际移动网络性能待测。"}
+```

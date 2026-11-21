@@ -93,7 +93,7 @@ fn now()->MonoNs{
 fn presentation(e:&Entry,stats:&AndroidOriginalStats)->Presentation{
     Presentation{
         ack32:e.android_seq_anchor as u32,
-        advertised_window:4096,
+        advertised_window:65_535,
         ip_id:stats.ip_id.fetch_add(1,Ordering::Relaxed) as u16,
         persona:PacketPersona::Legacy,
     }

@@ -547,6 +547,10 @@ assert 'parse_data_packet_fast(&slot[..len],TrustedRx{' in linux_io
 assert 'self.offer_after_active(slab,0..len,absolute,now)' in owner
 assert 'ANDROID_A48_ANDROID_BIONIC_TCP_CHECKSUM_ONLY_M3_PENDING_HOST_PASS' in Path(
     "android/root-native/ci/linux-original-oracle.sh").read_text()
+assert 'advertised_window:65_535' in nativeworker
+assert 'advertised_window:65_535' in Path(
+    'crates/wbd-engine/src/v4_embedded_go.rs').read_text()
+print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")
 print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")
 print("ANDROID_A49_SINGLE_PASS_AND_BOUNDED_NONBLOCKING_DRAIN_SOURCE_PASS")
 print("ANDROID_A48_EXACT_ANDROID_ONLY_CHECKSUM_GATE_M3_AUTH_STILL_REQUIRED_SOURCE_PASS")
