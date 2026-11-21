@@ -37,3 +37,5 @@ wbd-codec = { path = "../wbd-codec" }
 wbd-platform = { path = "../wbd-platform" }
 wbd-recovery = { path = "../wbd-recovery" }
 rtrb = { workspace = true }
+# Full cold-compiled geosite regexp semantics, not Go per-TUN-packet.
+regex = "=1.12.2"

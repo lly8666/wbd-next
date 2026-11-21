@@ -42,6 +42,8 @@ extern int32_t wbd_m0_embedded_go_android_tunnel_dns_enable(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_tunnel_dns_effective(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_physical_dns_enable(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_physical_dns_effective(uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_android_cn_dns_split_enable(uint64_t,const uint8_t *,size_t);
+extern int32_t wbd_m0_embedded_go_android_cn_dns_split_effective(uint64_t,uint32_t *,uint32_t *);
 
 
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
@@ -396,6 +398,24 @@ func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error{
     if rc!=0||effective!=1{return fmt.Errorf(
         "%w: Android physical UDP DNS effective=%d/%d",
         errV4Embedded,int(rc),uint32(effective))}
+    return nil
+}
+// B5 one cold transfer of the already pinned 8503 rules, never DATA.
+func (b *v4EmbeddedNativeBridge) enableAndroidCNDNSSplit(raw []byte)error{
+    if b==nil||b.handle==0||!b.committed||b.serverSide||
+       b.protectedFeatures!=3||len(raw)==0{return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_android_cn_dns_split_enable(
+        C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&raw[0])),
+        C.size_t(len(raw)))
+    runtime.KeepAlive(raw)
+    if rc!=0{return fmt.Errorf("%w: Android CN8503 M4 split cold grant=%d",
+        errV4Embedded,int(rc))}
+    var enabled,count C.uint32_t
+    rc=C.wbd_m0_embedded_go_android_cn_dns_split_effective(
+        C.uint64_t(b.handle),&enabled,&count)
+    if rc!=0||enabled!=1||count!=8503{return fmt.Errorf(
+        "%w: original Android CN split effective=%d/%d rules=%d",
+        errV4Embedded,int(rc),uint32(enabled),uint32(count))}
     return nil
 }
 func (b *v4EmbeddedNativeBridge) receiveRawToTun()(uint32,uint32,error){return 0,0,ErrAdmissionUnsupported}

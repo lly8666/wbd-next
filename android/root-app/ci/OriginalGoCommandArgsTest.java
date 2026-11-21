@@ -90,6 +90,27 @@ public final class OriginalGoCommandArgsTest {
         if(!physicalAll.contains("--android-physical-dns"))
             throw new AssertionError("all ordinary App DNS option not forwarded");
         value(physicalAll,"--android-route-exclude-appids","10111,10112");
+        List<String> split=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,false,true,true,true);
+        if(!split.contains("--android-cn-dns-split"))
+            throw new AssertionError("B5 original CN8503 split not enabled");
+        absent(split,"--android-tunnel-dns");
+        absent(split,"--android-physical-dns");
+        absent(split,"--tls-verify-server");
+        value(split,"--android-cn-geosite-file",CN);
+        List<String> splitAll=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            null,true,new int[]{10111,10112},null,false,false,false,true);
+        if(!splitAll.contains("--android-cn-dns-split"))
+            throw new AssertionError("B5 ordinary all-app split not enabled");
+        absent(splitAll,"--android-physical-dns");
+        value(splitAll,"--android-route-exclude-appids","10111,10112");
+        absent(one,"--android-cn-dns-split");
+        absent(noDNS,"--android-cn-dns-split");
+        System.out.println("ANDROID_B5_CN8503_SPLIT_SELECTED_ALL_APP_AND_LEGACY_GO_ARGV_HOST_PASS");
         List<String> all=build("203.0.113.10",null,true,new int[]{10111,10112},CA);
         if(!all.contains("--android-route-all-apps"))
             throw new AssertionError("no all-app route policy");

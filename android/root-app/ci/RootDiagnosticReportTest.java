@@ -782,6 +782,32 @@ public final class RootDiagnosticReportTest {
         physicalWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_ERROR);
         contains(RootDiagnosticReport.build(physicalDir,source,36),
             "physical_dns_live=PHYSICAL_DNS_ERROR_NO_DELIVERY_PROOF");
+        // B5 authenticated Rust split cold state is not a DNS success,
+        // and previous sessions must not contaminate current diagnostics.
+        File cnDir=Files.createTempDirectory("wbd-b5-cn8503-split").toFile();
+        RootDiagnosticReceipt cnWriter=new RootDiagnosticReceipt(
+            new File(cnDir,"wbd-root-diagnostic.txt"));
+        cnWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        cnWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        cnWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED);
+        contains(RootDiagnosticReport.build(cnDir,source,36),
+            "cn_dns_split_native_cold=CN8503_SPLIT_M4_COLD_ENABLED");
+        contains(RootDiagnosticReport.build(cnDir,source,36),
+            "cn_dns_split_live=DUAL_PATH_NOT_OBSERVED");
+        cnWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN);
+        cnWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN);
+        contains(RootDiagnosticReport.build(cnDir,source,36),
+            "cn_dns_split_live=BOTH_PHYSICAL_AND_TUNNEL_DNS_TUN_WRITTEN");
+        cnWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        cnWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        contains(RootDiagnosticReport.build(cnDir,source,36),
+            "cn_dns_split_native_cold=NOT_OBSERVED");
+        contains(RootDiagnosticReport.build(cnDir,source,36),
+            "cn_dns_split_live=DUAL_PATH_NOT_OBSERVED");
+        cnWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_FAILED);
+        contains(RootDiagnosticReport.build(cnDir,source,36),
+            "cn_dns_split_native_cold=CN8503_SPLIT_GRANT_FAILED");
+        System.out.println("ANDROID_B5_CN8503_SPLIT_COLD_AND_DUAL_PATH_REPORT_HOST_PASS");
         System.out.println("ANDROID_B4_PHYSICAL_DNS_COLD_REAL_SOCKET_TX_RX_REPORT_HOST_PASS");
         System.out.println("ANDROID_B3D_REAL_M4_DNS_QUERY_COPIED_AUTH_INVERSE_TUN_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_B3C_APP_TUNNEL_DNS_COLD_SAFE_READBACK_HOST_PASS");

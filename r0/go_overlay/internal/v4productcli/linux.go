@@ -139,6 +139,8 @@ type config struct{
     androidTunnelDNS bool
     // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
     androidPhysicalDNS bool
+    // Original pinned CN8503 QNAME classification in Rust M4, opt-in.
+    androidCNDNSSplit bool
     // Signed APK's verified offline CN list only, not live DNS capture.
     androidCNSnapshot *dnsnative.CNRules
     // Constructed from selected kernel interface and Android Network netId
@@ -264,6 +266,8 @@ func parse(role string,args []string)(config,error){
         "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
     androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
         "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
+    androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false,
+        "Android Root optional: match original App UDP53 QNAME against pinned CN8503; CN via physical 223.5.5.5, other names via WBD tunnel 1.1.1.1")
     ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
     peer:=flags.String("peer-ip","","remote underlay IPv4 (client only)")
     peerHost:=flags.String("peer-host","","Android Root client only: physical 223.5.5.5 DNS server name bootstrap before FakeTCP SYN")
@@ -337,13 +341,14 @@ func parse(role string,args []string)(config,error){
         if !*androidRouteAll&&*androidRouteExclude!=""{
             return c,fmt.Errorf("Android exclude IDs require all-app mode")
         }
-        if (*androidTunnelDNS||*androidPhysicalDNS)&&!*androidRouteAll&&*androidRouteUID==0&&
+        if (*androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit)&&!*androidRouteAll&&*androidRouteUID==0&&
            *androidRouteGroup==""{
             return c,fmt.Errorf("Android tunnel DNS needs a selected ordinary App UID route")
         }
         // Physical explicitly selected takes precedence; legacy tunnel default unchanged.
-        c.androidTunnelDNS=*androidTunnelDNS&&!*androidPhysicalDNS
-        c.androidPhysicalDNS=*androidPhysicalDNS
+        c.androidTunnelDNS=*androidTunnelDNS&&!*androidPhysicalDNS&&!*androidCNDNSSplit
+        c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
+        c.androidCNDNSSplit=*androidCNDNSSplit
         var e error
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
@@ -358,8 +363,11 @@ func parse(role string,args []string)(config,error){
                 return c,fmt.Errorf("signed Android CN8503 cold source rejected: %w",e)
             }
         }
+        if c.androidCNDNSSplit&&c.androidCNSnapshot==nil{
+            return c,fmt.Errorf("Android CN DNS split requires the original pinned geosite file")
+        }
     }else if *androidNet!=0||*androidRouteUID!=0||
-             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS||*androidPhysicalDNS{
+             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1956,6 +1964,8 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             return configureAuthenticatedClientIPv4(tun)(lease)
         }
     }
+    var cn8503Raw []byte
+    if c.androidCNDNSSplit{cn8503Raw=c.androidCNSnapshot.PinnedWire()}
     native,err:=realityfront.NewV4LinuxClientProduct(
         realityfront.V4LinuxClientProductConfig{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
@@ -1963,6 +1973,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
             AndroidTunnelDNS:c.androidTunnelDNS,
             AndroidPhysicalDNS:c.androidPhysicalDNS,
+            AndroidCN8503Raw:cn8503Raw,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),

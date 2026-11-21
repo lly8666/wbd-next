@@ -39,6 +39,15 @@ grep -Fq -- '--- PASS: TestPinnedCNGeositeOnRealUDPAndTCPDNSLoopback' \
  out/android-b2-cn-geosite/go-matcher-wire.log
 grep -Fq -- '--- PASS: TestB2bSignedAPKRuleColdFileRequires0600NoSymlinkAndPinnedHash' \
  out/android-b2-cn-geosite/go-matcher-wire.log
+# B5: same real pinned text through the Rust original-M4 full-type matcher.
+# Host only; Go does not process DATA packets in the Android product.
+cargo +1.85.1 test --locked -p wbd-engine --lib b5_cn8503 \
+  -- --nocapture 2>&1 | tee out/android-b2-cn-geosite/rust-m4-cn-split.log
+grep -Fq 'b5_cn8503_cold_match_domain_full_regex_and_no_false_suffix ... ok' \
+  out/android-b2-cn-geosite/rust-m4-cn-split.log
+grep -Fq 'b5_cn8503_cold_actual_pinned_rules_full_typed_when_supplied ... ok' \
+  out/android-b2-cn-geosite/rust-m4-cn-split.log
+printf '%s\n' 'ANDROID_B5_PINNED_CN8503_GO_TO_RUST_M4_FULL_TYPED_HOST_PASS'
 python3 - <<'PY'
 import hashlib,json,os,pathlib
 out=pathlib.Path("out/android-b2-cn-geosite")

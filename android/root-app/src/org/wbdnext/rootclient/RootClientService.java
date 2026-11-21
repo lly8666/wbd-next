@@ -231,6 +231,7 @@ public final class RootClientService extends Service {
             boolean verifyTLS=intent.getBooleanExtra("tls_verify_server",false);
             boolean tunnelDNS=intent.getBooleanExtra("tunnel_dns",false);
             boolean physicalDNS=intent.getBooleanExtra("physical_dns",false);
+            boolean cnSplitDNS=intent.getBooleanExtra("cn_dns_split",false);
             if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&
@@ -258,7 +259,7 @@ public final class RootClientService extends Service {
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,targetUids,targetPackages,allApps,excludedAppIDs,
-                managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS),"wbd-native-root-owner");
+                managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.START_REFUSED);
@@ -279,7 +280,7 @@ public final class RootClientService extends Service {
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
-                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,String token){
+                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token){
         // The host-tested argv is also the exact argv passed to original Go.
         // Secret *values* never appear here, only app-private file paths.
         List<String> args=OriginalGoCommandArgs.build(
@@ -291,7 +292,7 @@ public final class RootClientService extends Service {
             nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
             excludedAppIDs,
             hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null,
-            verifyTLS,tunnelDNS,physicalDNS);
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
@@ -345,7 +346,7 @@ public final class RootClientService extends Service {
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
                          int port,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
-                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS){
+                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
@@ -377,7 +378,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peer,sni,user,port,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,ownerToken))
+                    launchCommand(code,net,peer,sni,user,port,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);
@@ -634,6 +635,10 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_ENABLED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=PHYSICAL_DNS_FAILED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_PHYSICAL_DNS_FAILED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=CN_DNS_SPLIT_ENABLED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=CN_DNS_SPLIT_FAILED"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_FAILED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=M4_STARTED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_STARTED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=COLD_RTO_STOP_FAILED"))

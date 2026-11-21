@@ -31,6 +31,7 @@ type CNRules struct {
  regex []*regexp.Regexp
  total int
  digest string
+ raw []byte // Exact original Go-pinned bytes, passed once to Rust M4 cold control.
 }
 type CNStats struct{
  Total int
@@ -97,7 +98,14 @@ func LoadPinnedCN(raw []byte)(*CNRules,error){
   len(r.exact)!=69||len(r.regex)!=3||len(r.keywords)!=0{
   return nil,fmt.Errorf("CN geosite type/count differs from pinned source")
  }
+ r.raw=append([]byte(nil),raw...)
  return r,nil
+}
+// PinnedWire passes exactly the bytes already parsed by original Go;
+// Rust M4 receives them ONCE at cold admission, never per DNS packet.
+func (r *CNRules) PinnedWire()[]byte{
+ if r==nil{return nil}
+ return append([]byte(nil),r.raw...)
 }
 func (r *CNRules) Stats() CNStats{
  if r==nil{return CNStats{}}

@@ -69,6 +69,14 @@ assert "pub extern \"C\" fn wbd_m0_embedded_go_android_tunnel_dns_enable(" in en
 assert "e.android_tun.is_none()" in entry and "e.client_lease_ipv4.is_none()" in entry
 assert "android_dns_physical_ready:false" in entry
 assert "android_dns_physical_ready:true" not in entry
+# B5 retains exactly one M4 TUN reader and both Rust-owned DNS paths.
+assert 'mod v4_android_cn_dns;' in lib
+assert 'e.android_cn_dns=Some(Arc::new(matcher));' in entry
+assert 'rules.is_cn_ipv4_query(head)' in m4
+assert 'rules.is_cn_ipv4_query(&jumbo_spare)' in m4
+assert 'android_cn_dns.is_some()' in m4
+assert m4.count("tun.read_ip_scatter(")==1
+
 assert 'pub extern "C" fn wbd_m0_embedded_go_android_physical_dns_enable(' in entry
 assert "e.android_dns_physical_ready=true;" in entry
 physical=Path("crates/wbd-engine/src/v4_android_dns_physical_flow.rs").read_text()

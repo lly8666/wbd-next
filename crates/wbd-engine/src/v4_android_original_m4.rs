@@ -272,13 +272,13 @@ fn raw_worker(
                 let lease=e.client_lease_ipv4;
                 let (report,delivered,failed,dns_written,healthy,hint,retired)={
                     let Entry{owner,normal,android_dns_flows,
-                        android_dns_hijack_ready,android_dns_physical_ready,..}=&mut *e;
+                        android_dns_hijack_ready,android_dns_physical_ready,android_cn_dns,..}=&mut *e;
                     let Some(reassembly)=normal.as_mut()else{break};
                     match owner.drain_android_normal_off_to_tun(
                         reassembly,&tun,lease,at,
                         std::mem::take(&mut rx_storage),
                         android_dns_flows,*android_dns_hijack_ready &&
-                            !*android_dns_physical_ready,
+                            (!*android_dns_physical_ready||android_cn_dns.is_some()),
                         &mut dns_reply_scratch,
                     ){
                         Ok((returned,report,delivered,failed,dns_written,healthy,hint,retired))=>{
@@ -719,7 +719,10 @@ fn tun_worker(
             let escaped=head.starts_with(LINK_MAGIC);
             let at=now();
             if n<=head_cap&&!escaped{
+                let split_cn_physical=e.android_cn_dns.as_ref().is_some_and(|rules|
+                    rules.is_cn_ipv4_query(head));
                 if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&
+                   (e.android_cn_dns.is_none()||split_cn_physical)&&
                    matches!(dns_observation,
                      crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
                     // This separate cold gate is UNGRANTABLE until a
@@ -755,6 +758,8 @@ fn tun_worker(
                 // No Go/JNI per packet, alternate TUN reader or fallback.
                 let mut tunnel_dns_query=false;
                 if e.android_dns_hijack_ready &&
+                   (!e.android_dns_physical_ready||
+                       (e.android_cn_dns.is_some()&&!split_cn_physical))&&
                    matches!(dns_observation,
                        crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
                     let dns_packet=&mut slab.writable()[14..14+n];
@@ -806,7 +811,10 @@ fn tun_worker(
                 stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                 break
             }
+            let split_cn_physical=e.android_cn_dns.as_ref().is_some_and(|rules|
+                rules.is_cn_ipv4_query(&jumbo_spare));
             if e.android_dns_hijack_ready&&e.android_dns_physical_ready&&
+               (e.android_cn_dns.is_none()||split_cn_physical)&&
                matches!(crate::v4_android_dns_ingress::observe_ipv4_dns53(
                    &jumbo_spare,n
                ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
@@ -836,6 +844,8 @@ fn tun_worker(
             // one already-collected complete IP before M3 fragmentation.
             let mut tunnel_dns_query=false;
             if e.android_dns_hijack_ready &&
+               (!e.android_dns_physical_ready||
+                   (e.android_cn_dns.is_some()&&!split_cn_physical))&&
                matches!(crate::v4_android_dns_ingress::observe_ipv4_dns53(
                    &jumbo_spare,n
                ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
@@ -942,11 +952,11 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
                 crate::v4_android_dns_udp_flow::MAX_DNS_IPV4_PACKET
             );
             let Entry{owner,normal,android_dns_flows,
-                android_dns_hijack_ready,android_dns_physical_ready,..}=&mut *e;
+                android_dns_hijack_ready,android_dns_physical_ready,android_cn_dns,..}=&mut *e;
             owner.drain_android_normal_off_to_tun(
                 normal.as_mut().unwrap(),&tun,lease,at,Vec::with_capacity(32),
                 android_dns_flows,*android_dns_hijack_ready &&
-                    !*android_dns_physical_ready,
+                    (!*android_dns_physical_ready||android_cn_dns.is_some()),
                 &mut dns_reply_scratch
             )
         };

@@ -72,6 +72,19 @@ final class OriginalGoCommandArgs {
                               boolean allApps,int[] excludedAppIDs,
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
                               boolean physicalDNS){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,tunnelDNS,physicalDNS,false);
+    }
+    // B5 full CN8503 QNAME split is explicit; legacy overloads unchanged.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS){
         if(iface==null||!iface.matches("[A-Za-z0-9_.-]{1,32}")||
            handle==0||!ServerAddress.isIPv4Literal(localIPv4)||
            !ServerAddress.valid(peer)||peerPort<1||peerPort>65535||
@@ -104,7 +117,8 @@ final class OriginalGoCommandArgs {
         pair(args,"--tun-txqlen-packets","500");
         pair(args,"--outer-repair","off");
         pair(args,"--android-cn-geosite-file",cnFile);
-        if(physicalDNS)args.add("--android-physical-dns");
+        if(cnSplitDNS)args.add("--android-cn-dns-split");
+        else if(physicalDNS)args.add("--android-physical-dns");
         else if(tunnelDNS)args.add("--android-tunnel-dns");
         if(allApps){
             if(targetUids!=null)

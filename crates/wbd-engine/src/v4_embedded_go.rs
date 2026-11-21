@@ -834,6 +834,8 @@ struct Entry{
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_dns_physical_ready:bool,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_cn_dns:Option<Arc<crate::v4_android_cn_dns::CNDnsMatcher>>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_workers:Option<android_original_m4::AndroidOriginalWorkers>,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_joining:bool,
@@ -1212,6 +1214,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_dns_hijack_ready:false,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_dns_physical_ready:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_cn_dns:None,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_workers:None,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -2947,6 +2951,7 @@ fn stop(handle:u64)->i32{
         // reverse-map slot before crypto/TUN FD retirement of this generation.
         e.android_dns_hijack_ready=false;
         e.android_dns_physical_ready=false;
+        e.android_cn_dns=None;
         e.android_dns_flows.stop();
     }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
@@ -4369,6 +4374,52 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_effective(
     }
     unsafe{enabled.write(u32::from(e.android_dns_hijack_ready &&
         e.android_dns_physical_ready));}
+    OK
+}
+// B5 whole pinned CN8503 domain/full/regexp classification is cold,
+// then ONLY original Rust M4 asks the matcher per captured App DNS query.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_enable(
+    h:u64,rule_bytes:*const u8,rule_len:usize
+)->i32{
+    if rule_bytes.is_null()||rule_len==0||rule_len>=6_000_000{return INVALID}
+    let raw=unsafe{std::slice::from_raw_parts(rule_bytes,rule_len)};
+    let Ok(matcher)=crate::v4_android_cn_dns::CNDnsMatcher::from_go_cold(raw)
+        else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_cn_dns.is_some()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_cn_dns=Some(Arc::new(matcher));
+    e.android_dns_hijack_ready=true;
+    e.android_dns_physical_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_effective(
+    h:u64,enabled:*mut u32,rule_count:*mut u32
+)->i32{
+    if enabled.is_null()||rule_count.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    unsafe{
+        enabled.write(u32::from(e.android_dns_hijack_ready&&
+            e.android_dns_physical_ready&&e.android_cn_dns.is_some()));
+        rule_count.write(e.android_cn_dns.as_ref().map_or(0,|m|m.total() as u32));
+    }
     OK
 }
 #[cfg(target_os="android")]

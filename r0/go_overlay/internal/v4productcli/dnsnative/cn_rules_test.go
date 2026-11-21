@@ -53,6 +53,10 @@ func TestPinnedCNGeosite8503FullTypedSnapshotAndNoSilentFallback(t *testing.T){
  raw:=pinnedRules(t)
  r,err:=LoadPinnedCN(raw)
  if err!=nil{t.Fatal("pinned upstream not fully loaded",err)}
+ wire:=r.PinnedWire()
+ if !bytes.Equal(wire,raw){t.Fatal("Go-pinned cold bytes differ from original source")}
+ wire[0]^=1
+ if !bytes.Equal(r.PinnedWire(),raw){t.Fatal("Rust cold snapshot was mutable through caller")}
  st:=r.Stats()
  if st.Total!=8503||st.Domain!=8431||st.Full!=69||
   st.Regex!=3||st.Keyword!=0||st.SHA256!=PinnedCNSHA256{

@@ -408,6 +408,9 @@ func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
 func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error{
     return ErrAdmissionUnsupported
 }
+func (b *v4EmbeddedNativeBridge) enableAndroidCNDNSSplit(_ []byte)error{
+    return ErrAdmissionUnsupported
+}
 func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
     if !b.committed||b.handle==0||len(name)==0||len(name)>15{return errV4Embedded}
     raw:=[]byte(name)

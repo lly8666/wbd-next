@@ -1,5 +1,6 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B5 CN8503 普通 App DNS 分流**：在原 B3/B4 全隧道/全物理 DNS 兼容路径外，新增显式第三模式 `--android-cn-dns-split`（UI 默认 OFF，原 UI 全隧道默认 ON，TLS 证书验证默认 OFF）。原 Go 先用已存在的固定源 CN8503 Go 规则完整验证原文件的 8431 domain、69 full、3 regexp，然后将**同一份原规则字节冷传递一次**到原 Rust M4；Rust 自己用冷编译 HashSet/RegexSet 解析完整原 IPv4/UDP53 QNAME，CN→同一物理 Network 的 223.5.5.5 UDP，非 CN→原 M3 AEAD 隧道 1.1.1.1，两个原有 inverse-map 回 TUN；无 Go/JNI 逐包、无第二 TUN reader、无 FakeIP。物理 DNS 的 UDP 发包不等于 Android 系统 Resolver 已接管；Split 模式目前不含系统 DNS、TCP53/回落、IPv6、DoH、Fixed/Auto/Game。Host 新 SOURCE 的真实 8503 Rust/Go 匹配、ARM64 签名 APK、Linux Oracle 待 CI 实证，手机/用户服务器未授权不操作。\n\n
 > **2026-11-21 B4b Root Service 实生产传参补齐**：B4a 双 ABI Host 的 Java 收据已修复，但源码门发现 `physical_dns` Intent 未进入 Root Service 的 owner/launch/argv，现已接通同一生产参数链；该修补不涉及数据面和任何强制安全检测。等待新 SOURCE 原 APK 签名/Go Host/Linux Oracle，不用旧失败或前置绿色推断真实手机 DNS。
 
 

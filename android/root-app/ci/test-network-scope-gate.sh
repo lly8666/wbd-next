@@ -688,6 +688,42 @@ assert 'physical_dns_live=' in Path("android/root-app/src/org/wbdnext/rootclient
 assert 'ANDROID_B4_PHYSICAL_DNS_COLD_REAL_SOCKET_TX_RX_REPORT_HOST_PASS' in Path("android/root-app/ci/RootDiagnosticReportTest.java").read_text()
 print("ANDROID_B4_REAL_PHYSICAL_APP_UDP53_RUST_GO_JAVA_COLD_AND_LIVE_WIRING_SOURCE_PASS")
 
+# B5 actual CN8503 split: complete App UI -> Go cold -> Rust M4 worker.
+root_receipt=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
+cn_rule=Path("crates/wbd-engine/src/v4_android_cn_dns.rs").read_text()
+go_cn=Path("r0/go_overlay/internal/v4productcli/dnsnative/cn_rules.go").read_text()
+assert 'cnSplitDNS.setChecked(false)' in root_ui
+assert 'request.putExtra("cn_dns_split",cnSplitDNS.isChecked())' in root_ui
+assert 'intent.getBooleanExtra("cn_dns_split",false)' in root_svc
+assert 'managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS' in root_svc
+assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS)' in root_svc
+assert 'if(cnSplitDNS)args.add("--android-cn-dns-split")' in argv
+assert 'ANDROID_B5_CN8503_SPLIT_SELECTED_ALL_APP_AND_LEGACY_GO_ARGV_HOST_PASS' in argv_test
+assert 'androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false' in nativecli
+assert 'c.androidCNDNSSplit=*androidCNDNSSplit' in nativecli
+assert 'AndroidCN8503Raw:cn8503Raw' in nativecli
+assert 'AndroidCN8503Raw []byte' in client
+assert 'bridge.enableAndroidCNDNSSplit(p.cfg.AndroidCN8503Raw)' in client
+assert 'func (b *v4EmbeddedNativeBridge) enableAndroidCNDNSSplit(raw []byte)error' in android_bridge
+assert 'func (b *v4EmbeddedNativeBridge) enableAndroidCNDNSSplit(_ []byte)error' in linux_bridge
+assert 'wbd_m0_embedded_go_android_cn_dns_split_enable' in required
+assert 'wbd_m0_embedded_go_android_cn_dns_split_effective' in required
+assert 'pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_enable(' in engine_entry
+assert 'e.android_cn_dns=Some(Arc::new(matcher));' in engine_entry
+assert 'e.android_cn_dns=None;' in engine_entry
+assert 'rules.is_cn_ipv4_query(head)' in nativeworker
+assert 'rules.is_cn_ipv4_query(&jumbo_spare)' in nativeworker
+assert 'android_cn_dns.is_some()' in nativeworker
+assert 'RegexSetBuilder::new(patterns)' in cn_rule
+assert 'pub(crate) fn is_cn_ipv4_query' in cn_rule
+assert 'r.raw=append([]byte(nil),raw...)' in go_cn
+assert 'ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED' in root_svc
+assert 'ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED' in root_receipt
+assert 'cn_dns_split_live=' in Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReport.java").read_text()
+assert 'ANDROID_B5_CN8503_SPLIT_COLD_AND_DUAL_PATH_REPORT_HOST_PASS' in Path("android/root-app/ci/RootDiagnosticReportTest.java").read_text()
+assert 'cargo +1.85.1 test --locked -p wbd-engine --lib b5_cn8503' in Path("android/root-native/ci/dns-b2-pinned-cn.sh").read_text()
+print("ANDROID_B5_REAL_CN8503_ORIGINAL_M4_DUAL_DNS_APP_GO_RUST_SOURCE_PASS")
+
 print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")
 print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")

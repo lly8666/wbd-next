@@ -314,6 +314,18 @@ final class RootDiagnosticReport {
              has(session,"ORIGINAL_RUST_DNS_PHYSICAL_ERROR")
             ? "PHYSICAL_DNS_ERROR_NO_DELIVERY_PROOF":"NOT_OBSERVED";
         out.append("physical_dns_live=").append(physicalLive).append('\n');
+        // B5 actual Go/Rust split grant is distinct from old cold-only file.
+        String cnCold=has(session,"ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_FAILED")
+            ?"CN8503_SPLIT_GRANT_FAILED":
+             has(session,"ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED")
+            ?"CN8503_SPLIT_M4_COLD_ENABLED":"NOT_OBSERVED";
+        out.append("cn_dns_split_native_cold=").append(cnCold).append('\n');
+        String cnLive=has(session,"ORIGINAL_GO_POSTAUTH_CN_DNS_SPLIT_ENABLED")&&
+            has(session,"ORIGINAL_RUST_DNS_PHYSICAL_REVERSE_TUN_WRITTEN")&&
+            has(session,"ORIGINAL_RUST_DNS_TUNNEL_REVERSE_TUN_WRITTEN")
+            ?"BOTH_PHYSICAL_AND_TUNNEL_DNS_TUN_WRITTEN":
+             "DUAL_PATH_NOT_OBSERVED";
+        out.append("cn_dns_split_live=").append(cnLive).append('\n');
         out.append("device_real_business_tcp_udp=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("android_netd_physical_bypass=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("receipt_event_count=").append(events.size()).append('\n');

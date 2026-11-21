@@ -32,6 +32,8 @@ type V4LinuxClientProductConfig struct {
     AndroidTunnelDNS bool
     // Explicit ordinary-App UDP53 physical 223.5.5.5 compatibility mode.
     AndroidPhysicalDNS bool
+    // Cold Go-verified CN8503 snapshot only. No per-query Go callback.
+    AndroidCN8503Raw []byte
     Tun *os.File
     TunName string
     // Only original Go authenticated AUTO /32 client mode uses one shared
@@ -88,7 +90,7 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
     // Go's android target also satisfies the linux build constraint.
     // The Android native owner does NOT support main's Linux protected
     // startup-padding API. Only true off is admissible on Android.
-    if runtime.GOOS!="android"&&(cfg.AndroidTunnelDNS||cfg.AndroidPhysicalDNS){
+    if runtime.GOOS!="android"&&(cfg.AndroidTunnelDNS||cfg.AndroidPhysicalDNS||len(cfg.AndroidCN8503Raw)>0){
         return nil,ErrAdmissionUnsupported
     }
     if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0{
@@ -235,7 +237,15 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if err!=nil{originalAndroidPostauth("TUN_FAILED")
         }else{originalAndroidPostauth("TUN_ATTACHED")}
     }
-    if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidPhysicalDNS{
+    if err==nil&&runtime.GOOS=="android"&&len(p.cfg.AndroidCN8503Raw)>0{
+        err=bridge.enableAndroidCNDNSSplit(p.cfg.AndroidCN8503Raw)
+        if err!=nil{
+            originalAndroidPostauth("CN_DNS_SPLIT_FAILED")
+        }else{
+            originalAndroidPostauth("CN_DNS_SPLIT_ENABLED")
+            log.Print("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=8503 cn=223.5.5.5 noncn=1.1.1.1 system_resolver=NOT_CAPTURED")
+        }
+    }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidPhysicalDNS{
         // Separate explicit all-App TUN UDP53 physical mode, not CN split
         // and never an Android system Resolver/netd takeover.
         err=bridge.enableAndroidPhysicalDNS()
