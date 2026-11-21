@@ -25,6 +25,8 @@ use wbd_platform::ipv4_tcp::{
 use crate::v4_presentation_ack::presentation_ack_only_due;
 #[cfg(feature="fec2_product_record")]
 use crate::v4_owner_crypto::NormalOffReport;
+#[cfg(feature="fec2_product_record")]
+use super::OriginalQualityTx;
 use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 use wbd_types::MonoNs;
 use std::sync::{Arc,Mutex,OnceLock,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
@@ -83,6 +85,12 @@ pub(super) struct AndroidOriginalStats{
     fec2_reverse_quality_reports:AtomicU64,
     #[cfg(feature="fec2_product_record")]
     fec2_reverse_quality_signals:AtomicU64,
+    // Genuine PLAN027 3s-mature matched source window and exact local
+    // revision promotion. Raw decoded kind1 alone never counts as M2.
+    #[cfg(feature="fec2_product_record")]
+    fec2_mature_quality_matched:AtomicU64,
+    #[cfg(feature="fec2_product_record")]
+    fec2_m2_applied:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -201,11 +209,18 @@ fn send_android_fixed_source(
         let (pn,_,_)=match e.owner.seal_fec2_product_one(
             record,len,2,frame,u64::from(physical),epoch,at
         ){Ok(x)=>x,Err(_)=>return false};
-        if send_staged(e,raw,stats,storage,scratch,at)==Some(pn){
+        let copied=send_staged(e,raw,stats,storage,scratch,at)==Some(pn);
+        if let Some(q)=e.quality_tx.as_mut(){
+            // Register the very same original kind2 PN AFTER real RAW M4
+            // settlement. Unsent never becomes first-send or loss=zero.
+            q.settle_batch(&[(wbd_types::RecordPn(pn),0)],
+                usize::from(copied),0,false,true,&[(pn,2,rev)]);
+        }
+        if copied{
             stats.fec2_source_raw.fetch_add(1,Ordering::Relaxed);
             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
-            true
-        }else{false}
+        }
+        copied
     });
     e.android_fec2_tx=Some(stream);
     e.arena.drain_returns();
@@ -244,6 +259,40 @@ fn send_android_fixed_due(
         }else{DriverProof::NotSent}
     });
     e.android_fec2_tx=Some(stream);
+    e.arena.drain_returns();
+}
+
+// PLAN027 original M2 sender: low-rate START/CLOSE is one existing
+// authenticated kind1 on the SAME M1/M3/PN and RAW fd. START must be
+// definitely copied before counted DATA, CLOSE must include only settled
+// source PNs, and an absent report never grants Fixed APPLIED.
+#[cfg(feature="fec2_product_record")]
+fn send_android_fixed_quality_due(
+    e:&mut Entry,raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
+    storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs,idle_ns:u64
+){
+    if e.phase!=PH_ACTIVE||e.protected_features!=7||
+       e.android_fec2_pending.is_none(){return}
+    let Some(next_pn)=e.owner.next_original_record_pn()else{return};
+    let Some(signal)=e.quality_tx.as_mut()
+        .and_then(|q|q.next_signal(next_pn,at).ok().flatten())else{return};
+    let sent=(||->Option<bool>{
+        let physical=e.android_physical.as_ref()?.mtu;
+        let frame=e.owner.android_normal_off_frame_budget(physical).ok()?;
+        let control=crate::v4_native_health::encode_authenticated_low_rate_signal_live(
+            idle_ns,signal,frame.record_payload_mtu
+        ).ok()?;
+        let slab=e.arena.allocate().ok()?;
+        let pn=e.owner.seal_original_authenticated_receipt(
+            slab,&control,frame,u64::from(physical),at
+        ).ok()?.0;
+        Some(send_staged(e,raw,stats,storage,scratch,at)==Some(pn))
+    })().unwrap_or(false);
+    if let Some(q)=e.quality_tx.as_mut(){
+        if q.complete_signal(signal,sent,at).is_err(){
+            stats.tx_error.fetch_add(1,Ordering::Relaxed);
+        }
+    }
     e.arena.drain_returns();
 }
 
@@ -388,7 +437,7 @@ fn raw_worker(
                     let Entry{owner,normal,android_dns_flows,
                         android_dns_hijack_ready,android_dns_physical_ready,android_cn_dns,
                         #[cfg(feature="fec2_product_record")]
-                        android_fec2_rx,
+                        android_fec2_rx,quality_tx,
                         ..}=&mut *e;
                     let dns_capture=*android_dns_hijack_ready &&
                         (!*android_dns_physical_ready||android_cn_dns.is_some());
@@ -479,10 +528,35 @@ fn raw_worker(
                                 // Original PLAN027 low-rate M2 envelope:
                                 // authenticated kind1 only, not raw TCP ACK,
                                 // old per-PN receipts or Go policy intent.
-                                if control.low_rate_quality.is_some(){
+                                if let Some(report)=control.low_rate_quality{
                                     stats.fec2_reverse_quality_reports.fetch_add(
                                         1,Ordering::Relaxed
                                     );
+                                    if let Some(q)=quality_tx.as_mut(){
+                                        let before=q.counters[10];
+                                        q.accept_report(report,at);
+                                        // Only original sender history matches
+                                        // this AEAD-unique quality window and
+                                        // exact copied source PNs. Stale,
+                                        // incomplete, unknown or wrong scope
+                                        // stay PENDING and count no success.
+                                        if q.counters[10]>before{
+                                            stats.fec2_mature_quality_matched.fetch_add(
+                                                1,Ordering::Relaxed);
+                                            if *_applied==0 && q.counters[1]>0 &&
+                                               stats.fec2_source_raw.load(Ordering::Relaxed)>0 &&
+                                               stats.fec2_repair_raw.load(Ordering::Relaxed)>0 {
+                                                if let Some((_,revision))=fixed_pending{
+                                                    // Exact same only-once
+                                                    // native Go Fixed revision,
+                                                    // not a raw receipt flag.
+                                                    *_applied=revision;
+                                                    stats.fec2_m2_applied.fetch_add(
+                                                        1,Ordering::Relaxed);
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                                 if control.low_rate_signal.is_some(){
                                     stats.fec2_reverse_quality_signals.fetch_add(
@@ -759,6 +833,12 @@ fn tun_worker(
                 send_presentation_ack_if_due(
                     &mut e,&raw,&stats,&mut wire_scratch,at
                 );
+                #[cfg(feature="fec2_product_record")]
+                if e.protected_features==7{
+                    send_android_fixed_quality_due(&mut e,&raw,&stats,
+                        &mut storage,&mut wire_scratch,at,
+                        clock.local_idle_ns(at.0));
+                }
             }
         }
 
@@ -835,6 +915,10 @@ fn tun_worker(
         if let Ok(e)=cell.lock(){
             if e.protected_features==7{
                 if let Some(t)=e.android_fec2_tx.as_ref().and_then(|x|x.next_deadline()){
+                    due=due.min(t.0);
+                }
+                if let Some(t)=e.quality_tx.as_ref()
+                    .and_then(|q|q.next_close_deadline()){
                     due=due.min(t.0);
                 }
             }
@@ -1673,8 +1757,16 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_stage_pending(
        e.owner.normal_firstsend_identity().is_none_or(
            |(_,epoch)|epoch.as_slice()!=supplied
        ){return BAD_STAGE}
-    if revision<=e.android_fec2_pending.map_or(0,|(_,r)|r)||
-       e.android_fec2_tx.is_some(){return INVALID}
+    // B13 only stages the first Fixed revision. Quiescent Auto reprofile
+    // has a separate ownership transition and cannot overwrite this proof.
+    if e.android_fec2_pending.is_some()||e.android_fec2_tx.is_some()||
+       e.quality_tx.is_some(){return INVALID}
+    let Some((lane,verified_epoch))=e.owner.normal_firstsend_identity()
+        else{return BAD_STAGE};
+    if verified_epoch.as_slice()!=supplied{return BAD_STAGE}
+    e.quality_tx=Some(OriginalQualityTx::new(
+        lane,verified_epoch,wbd_recovery::WireDirection::ClientToServer
+    ));
     e.android_fec2_pending=Some((profile,revision));
     OK
 }
@@ -1694,8 +1786,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
            |(_,epoch)|epoch.as_slice()!=supplied
        ){return BAD_STAGE}
     let Some((p,r))=e.android_fec2_pending else{return BAD_STAGE};
-    // Only a real authenticated reverse M2 may set RX APPLIED; it is
-    // unimplemented, thus zero here, not a fabricated success.
+    // APPLIED is set only by matched 3s mature PLAN027 quality for
+    // actual local RAW-copied kind2 source PNs and real same-revision
+    // parity copy. A mere authenticated kind1, queue or intent is pending.
     let actual=e.android_fec2_rx.as_ref()
         .map_or(0u32,|(_,_,rev)|u32::from(*rev==r));
     unsafe{profile.write(p);revision.write(r);applied.write(actual)};
@@ -1707,7 +1800,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_pending_readback(
 pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_m4_counters(
     h:u64,out:*mut u64,len:usize
 )->i32{
-    if out.is_null()||len!=7{return INVALID}
+    if out.is_null()||len!=9{return INVALID}
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.protected_features!=7{return BAD_STAGE}
@@ -1719,8 +1812,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_fixed_m4_counters(
         e.android_metrics.fec2_unique_symbols.load(Ordering::Relaxed),
         e.android_metrics.fec2_reverse_quality_reports.load(Ordering::Relaxed),
         e.android_metrics.fec2_reverse_quality_signals.load(Ordering::Relaxed),
+        e.android_metrics.fec2_mature_quality_matched.load(Ordering::Relaxed),
+        e.android_metrics.fec2_m2_applied.load(Ordering::Relaxed),
     ];
-    unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,7)};
+    unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,9)};
     OK
 }
 

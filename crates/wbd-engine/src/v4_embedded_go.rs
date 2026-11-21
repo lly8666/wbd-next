@@ -577,9 +577,11 @@ impl LinuxQualityRx{
     fn has_report(&self)->bool{!self.reports.is_empty()}
 }
 
-#[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-struct LinuxQualityTx{
+#[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
+struct OriginalQualityTx{
     lane:wbd_types::LaneKey,epoch:[u8;16],direction:wbd_recovery::WireDirection,
     sender:Option<wbd_recovery::quality_window::SendWindowSampler>,
     history:wbd_recovery::quality_window::SendHistory,
@@ -590,9 +592,11 @@ struct LinuxQualityTx{
     last_open_gate_pn:Option<u64>,
     slow:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
 }
-#[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-impl LinuxQualityTx{
+#[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
+impl OriginalQualityTx{
     fn new(lane:wbd_types::LaneKey,epoch:[u8;16],
         direction:wbd_recovery::WireDirection)->Self{
         Self{lane,epoch,direction,sender:None,
@@ -738,7 +742,7 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
     use wbd_recovery::WireDirection;
     let lane=wbd_types::LaneKey{
         tunnel:wbd_types::TunnelKey{slot:1,generation:3},slot:2,generation:3};
-    let mut tx=LinuxQualityTx::new(lane,[7;16],WireDirection::ClientToServer);
+    let mut tx=OriginalQualityTx::new(lane,[7;16],WireDirection::ClientToServer);
     assert!(!tx.due(MonoNs(1)), "idle sender has no quality work");
     tx.last_settled=Some(40); // one actual first-copy observation
     assert!(tx.due(MonoNs(1)));
@@ -774,6 +778,56 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
     assert_eq!(tx.counters[11],1);
     let _=QualityError::Unknown;
 }
+// Same PLAN027 sender implementation on Linux and Android. This is a
+// deterministic proof of the *matching predicate*, not a network receipt.
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn original_fixed_quality_requires_copied_source_not_repair_or_uncertain(){
+    use wbd_recovery::{WireDirection,quality_window::WireReport};
+    use wbd_types::{LaneKey,TunnelKey,RecordPn};
+    let lane=LaneKey{tunnel:TunnelKey{slot:3,generation:7},
+        slot:1,generation:7};
+    let mut tx=OriginalQualityTx::new(
+        lane,[8;16],WireDirection::ClientToServer);
+    assert_eq!(tx.counters[10],0);
+    // A genuinely earlier source PN is the only START trigger.
+    tx.last_settled=Some(20);
+    let start=tx.next_signal(21,MonoNs(0)).unwrap().unwrap();
+    assert_eq!(start.first,22);
+    tx.complete_signal(start,true,MonoNs(1)).unwrap();
+    // Parity is NOT counted as source F even when the driver copied it.
+    tx.settle_batch(&[(RecordPn(22),128)],1,0,false,true,
+        &[(22,2,1)]);
+    tx.settle_batch(&[(RecordPn(23),128)],1,0,false,true,
+        &[(23,3,1)]);
+    let close=tx.next_signal(24,MonoNs(2_000_000_000))
+        .unwrap().unwrap();
+    assert_eq!(close.first_sent,1);
+    assert!(close.complete);
+    tx.complete_signal(close,true,MonoNs(2_000_000_001)).unwrap();
+    // Peer report without authentication would NEVER reach accept_report.
+    // Once the moved M3 opener authenticates it, original local source
+    // history must also match exact id/PN range/count/maturity.
+    let correct=WireReport{id:close.id,first:close.first,last:close.last,
+        first_sent:1,received_unique:1,possibly_repaired:0,
+        mature:true,complete:true,capacity_limited:false};
+    tx.accept_report(WireReport{first_sent:0,..correct},
+        MonoNs(5_000_000_000));
+    tx.accept_report(WireReport{mature:false,..correct},
+        MonoNs(5_000_000_000));
+    tx.accept_report(WireReport{id:999,..correct},
+        MonoNs(5_000_000_000));
+    assert_eq!(tx.counters[10],0);
+    assert_eq!(tx.counters[1],0);
+    tx.accept_report(correct,MonoNs(5_000_000_000));
+    assert_eq!(tx.counters[10],1);
+    assert_eq!(tx.counters[1],1);
+    tx.accept_report(correct,MonoNs(5_000_000_000));
+    assert_eq!(tx.counters[10],1, "replayed summary is not new M2");
+}
+
 // Android64 only: the exact physical Network and interface are a cold Go
 // credential-bound scope, not a root-UID-wide fwmark or a global fallback.
 #[cfg(target_os="android")]
@@ -899,9 +953,11 @@ struct Entry{
         any(target_arch="x86_64",target_arch="aarch64"),
         any(target_env="gnu",target_env="musl")))]
     quality_rx:Option<Arc<Mutex<LinuxQualityRx>>>,
-    #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-    quality_tx:Option<LinuxQualityTx>,
+    #[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
+    quality_tx:Option<OriginalQualityTx>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
     #[cfg(all(feature="fec2_product_record",target_os="linux"))]
@@ -1310,8 +1366,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         quality_rx:None,
-        #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        #[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
         quality_tx:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
@@ -8268,7 +8326,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // installation is separate from mature network-quality observation.
     if e.original_public_feedback_armed && e.protected_features==7 &&
         e.auto_low_rate_mode{
-        e.quality_tx=Some(LinuxQualityTx::new(
+        e.quality_tx=Some(OriginalQualityTx::new(
             first.lane,first.epoch,first.route.outbound_direction()));
     }
     let mature=Arc::new(Mutex::new(first));
@@ -8279,7 +8337,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // authenticated Go health sender; no duplicate two-sender race.
     #[cfg(feature="fec2_product_record")]
     let quality_rx=if e.original_public_feedback_armed &&
-        e.protected_features==7 && e.auto_low_rate_mode{
+        e.protected_features==7 && (e.auto_low_rate_mode || e.server_side){
         let (lane,exact_epoch)=match e.owner.normal_firstsend_identity(){
             Some(v)=>v,None=>return BAD_STAGE};
         let direction=if e.server_side{wbd_recovery::WireDirection::ClientToServer}
@@ -8701,7 +8759,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                     tx.last_open_gate_pn.is_none_or(|last|p>last)))
                             .map(|tx|MonoNs(tx.next_open));
                         // Exactly the same executable predicate as
-                        // LinuxQualityTx::due/next_signal; no overdue START
+                        // OriginalQualityTx::due/next_signal; no overdue START
                         // deadline can busy-loop before the first DATA PN.
                         let low_close=e.quality_tx.as_ref()
                             .and_then(|tx|tx.next_close_deadline());
