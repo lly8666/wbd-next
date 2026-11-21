@@ -151,7 +151,7 @@ assert 'outerMTUField.setText("1460")' in a
 assert 'request.putExtra("outer_mtu",requestedOuterMTU)' in a
 assert 'intent.getIntExtra("outer_mtu",1460)' in s
 assert 'launchCommand(code,net,peer,sni,user,port,requestedOuterMTU' in s
-assert 'cnSplitDNS,requestedOuterMTU);' in s
+assert 'cnSplitDNS,requestedOuterMTU' in s
 assert 'pair(args,"--outer-mtu",Integer.toString(requestedOuterMTU))' in argv
 assert 'outerMTU:=flags.Int("outer-mtu",1460' in cold
 assert 'deriveMTUBudget(c.outerMTU,' in cold

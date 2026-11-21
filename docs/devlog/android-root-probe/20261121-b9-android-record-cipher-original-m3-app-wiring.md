@@ -10,6 +10,10 @@ B8 源码 `32b553ec798641e8055d15ece19bd558cb11b812` 已将外层IPv4 MTU传入�
 
 后续真正缺口：Android Fixed/Auto/FEC2/Games 的原 Rust owner 及多 lane 生命周期，Android resolver/netd、物理 TCP53、CN IP direct、IPv6、热点与切网重建。B9 不能替它们开假开关。
 
+## B9a｜旧 B8 源码门失配的精确修复
+
+SOURCE `f7e926d59d54eb2cf7b18ec63e102e2f434fc367` [Action #44917505827](https://github.com/lly8666/wbd-next/actions/runs/44917505827) 的 `root-arm64-app` 在 JVM 的 B9 三种真实 argv 用例已 PASS 后，脚本中 B8 遗留的 `cnSplitDNS,requestedOuterMTU);` 文本断言失败：B9 原生产 Service 正确追加了 `recordCipher`。仅将旧 B8 检查改为确认 MTU 参数存在，紧邻的 B9 检查仍精确固定完整新调用签名；不改任何 Go/Rust/Android 生产代码、协议、默认值或证据。旧 Action FAIL 保留，后续同 SOURCE Actions 需独立验证签名 APK 和 Linux Oracle。
+
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B9把原Go已经支持的三种V4记录AEAD通过Android原App/Service/Go真实参数选取，沿现有受保护Admission/Rust M3原算法，默认ChaCha和B8旧参数兼容；同源Host/源码门及设备待验边界明确。"}
 ```
