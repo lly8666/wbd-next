@@ -62,6 +62,9 @@ jobs:
           test "$GITHUB_REF_NAME" = "fix/windows-game-native-ready-activation-20261121"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(gh api "repos/$GH_REPO/branches/$GITHUB_REF_NAME" --jq '.commit.sha')" = "$GITHUB_SHA"
+          # The Linux server build must include the same source's v4routekey
+          # dependency, not use an old donor lacking the Go package.
+          grep -Fq 'mkdir -p legacy/internal/v4routekey' .github/workflows/m0-wl-public-normal-full.yml
           for mode in game2 game4-fec; do
             gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" \
               --ref "$GITHUB_REF_NAME" -f public_mode="$mode" \
