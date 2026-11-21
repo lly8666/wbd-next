@@ -157,6 +157,11 @@ jobs:
           assert d["arch"]==platform.machine()
           assert d["probe_compiled"] is False
           assert d["outer_repair_cli"]=="off_both_endpoints"
+          # Verbatim original Rust proof, sampled once at authenticated
+          # server READY (the legacy multi-server STOP marker may be absent).
+          assert d["server_native_outer_ready_readback"]["proof"]=="authenticated_original_rust_owner"
+          assert d["server_native_outer_ready_readback"]["client_port"]>0
+          assert d["server_native_outer_ready_readback"]["repair_enabled"]==0
           assert d["outer_repair_native_stop_readback"]["client"] and set(d["outer_repair_native_stop_readback"]["client"])=={0}
           assert d["outer_repair_native_stop_scope"]["server"] in ("NATIVE_OFF_CONFIRMED","NOT_EMITTED_UNVERIFIED")
           assert d["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"

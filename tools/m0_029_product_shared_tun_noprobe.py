@@ -186,6 +186,19 @@ def main():
             "server":node.stop("server","V4_PUBLIC_SHARED_TUN_STOP generation=")}
         # This is the actual protected original-Go -> Rust owner status,
         # not merely the CLI flag or an assumed default.
+        # Before Stop, original multi-session server has exactly one READY
+        # authenticated Rust generation. Prove effective repair state there;
+        # absence or read error must NOT be inferred from CLI --repair off.
+        server_log=node.logs["server"].read_text(errors="replace")
+        server_ready=re.findall(
+            r"V4_PUBLIC_MULTI_NATIVE_OUTER_READY role=server client_port=(\d+) repair_enabled=(\d+) proof=authenticated_original_rust_owner",
+            server_log)
+        if len(server_ready)!=1 or server_ready[0][1]!="0" or int(server_ready[0][0])<=0:
+            raise RuntimeError("M029_SERVER_AUTHENTICATED_RUST_OUTER_OFF_READY_MISSING")
+        result["server_native_outer_ready_readback"]={
+            "client_port":int(server_ready[0][0]),
+            "repair_enabled":int(server_ready[0][1]),
+            "proof":"authenticated_original_rust_owner"}
         result["outer_repair_native_stop_readback"]={}
         result["outer_repair_native_stop_scope"]={}
         for role in ("client","server"):
