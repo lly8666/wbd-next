@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2284,
-  "checkpoint_sha": "85b548177578be407373599e941c702a5cbe5a2f",
+  "sequence": 2285,
+  "checkpoint_sha": "2c0e3691fe41e2df2263e5ca48b9896ef8555935",
   "progress": "partial",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029/H2284: 用旧H2228的八并行高窗口条件复测双组三Runner真Win2025→ARM中继→ARM服务端，源8b37f34 Action44932436553 7/7成功；裸TCP已千兆级（A直接1286/中继680/400ms493，B直接1068/中继995/400ms600），现转入H2285真原WBD GoTLS/Rust/Wintun-Npcap跨机路径打通，PR#68 Draft/main产品未改。",
-  "why_now": "旧H2228 x86/Linux BBR/64MiB/8并行0ms上848.55/下861.76Mbps不是相同OS产品成绩。新夹具先前四流+Windows128KiB与24MiB短流限制造成低速错判；H2284正确八流Windows/ARM跨机吞吐可超过1Gbps，但A组经relay仅680<800、B组995达标，不能挑组，需接原产品并定位单核/原WBD丢包。",
-  "done_when": "在两套同源互不共享Windows2025原Wintun/Npcap客户端 + ARM Linux内核中继 + 独立ARM原Go TLS/Rust服务端真正跨机、0/1/5%双向200ms且真实kernel source/netem/原Rust M1-M4/TUN全收/少drop、Win/relay/ARM CPU、P99、owned Stop。零损双向800容量门每组单独判断，不拿原生OS TCP冒充WBD产品。",
-  "next_action": "H2285先验证原Windows Npcap发WSL2 vEthernet原FakeTCP外层的真实L2/L3转发能力（不能直把Tailnet L3 IP当Npcap物理出口），再将ARM原GoTLS/Rust kernel raw server连到同组relay；仅成功则跑原Windows Wintun→ARM TUN业务对比0/1/5%及原FEC2 OFF→fixed→OFF、P99/CPU/各环节drop。不再用低吞吐夹具反复扫本机队列。",
+  "current_task": "M0 PLAN029/H2285 两组独立Win2025→本机真实WSL2 kernel NAT→ARM64 Linux relay→另一ARM64 Linux真TCP已7/7成功，25秒/4TCP上行A468.2/B496.2Mbps、P99 94/47ms，双向真实NAT/relay netem发包、ARM收字节齐全。H2286转原Windows签名Npcap/Wintun和远ARM GoTLS/Rust AF_PACKET产品。PR#68 Draft。",
+  "why_now": "旧三Runner已证实在窗口/八流条件可千兆；H2285排除了Windows WSL2物理侧内核 L3到独立ARM中继/服务器不通。以前8–60Mbps的OS裸TCP短流小缓冲不能归因WBD。剩余是原Windows Npcap Ethernet→WSL kernel forward→ARM raw Ethernet/原Go TLS认证和真实Wintun业务，而非继续盲调M1/M4软件queue。",
+  "done_when": "两套独立三Runner真实原Windows2025 Npcap/Wintun GoTLS/Rust客户端、独立ARM Linux内核中继双向loss0/1/5%与200ms、独立ARM原GoTLS/Rust AF_PACKET wan0+TUN服务端，所有TCP真实接收/first-delivery、P99/未回、三机CPU、M1/M4/内核drop、FEC2对照与original Stop全部证据。每组干净800Mbps底层门独立判；绝不使用Winsock/Python test当产品PASS。",
+  "next_action": "H2286 同双组三Runner先用原签名Npcap真实Windows WSL2以太链路、真正ARM AF_PACKET网卡并测试实际原FakeTCP443能跨Windows WSL2 L3→ARM relay→ARM服务端；产品GoTLS/Rust编译/会话证书和routeKey同SOURCE临时安全同步、真实Windows Wintun内层TCP，随后按双向200ms loss1/5% FEC2 off/fixed/off调吞吐、CPU及P99。任何网卡/SYN/服务端首包未证据fail-closed，勿盲增Rust队列。",
   "unverified": true,
-  "last_tested_source": "8b37f34e2158108ee0aa5a9d7fff462ea2d28a93",
+  "last_tested_source": "2f700651c0e1849dbab9b321ede1d3a96b7a6d0e",
   "evidence_refs": [
-    "docs/devlog/M0/20261122-M0-PLAN029-H2284-OLD3RUNNER-CAPACITY-RECOVERY.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2285-WIN-WSL2-ARM-ROUTE-RECOVERY.md"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
-    "docs/devlog/M0/20261122-M0-PLAN029-H2283-WINDOW-CAPACITY-RECOVERY.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2284-OLD3RUNNER-CAPACITY-RECOVERY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2284双组7/7 Win2025+ARM relay+ARM server真8TCP 25s+160echo OK。A direct1286.230/relay680.275/400ms492.618,P99 79/250/532ms,relay tailscaled约1.53core; B1067.682/995.493/599.637,P99 94/94/485ms, tailscaled约1.88core。Windows全核最高81.49%，relay最热核<58%。原GoTLS/Rust/Windows Wintun/NPF完全NOT_RUN; 029 OPEN。"
+  "partial_summary": "H2285 SOURCE2f700651 Action44933890725 7/7: A native Win→WSL NAT→ARM relay→ARM 25s 4TCP TCP468.211Mbps/P9994ms/ARM真实RX1468661760B, B496.194Mbps/P9947ms/RX1563197440B; WSL PREROUTING/POSTROUTING每组各5个实际TCP会话、两个中继netem方向发包>0，三机CPU和同组身份读回。仅真实OS TCP路由资格，不是WBD GoTLS/Rust产品。H2284 B组零损中继995Mbps达800容量门，A组680未达。"
 }
