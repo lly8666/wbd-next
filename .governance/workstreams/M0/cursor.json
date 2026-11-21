@@ -4,23 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2245,
-  "checkpoint_sha": "0387b054f2e936c2f8288ab9d3c2f79f605a84fc",
-  "progress": "planned",
+  "sequence": 2275,
+  "checkpoint_sha": "95bd30c356df08b35cccaf0c0a42a610d28f1078",
+  "progress": "partial",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "029 吞吐与效率。已发布永久提示词、研究原文和 ARM64 优先施工方案。首增量预登记 experiment/m0-029-throughput-arm-fair，尚未施工。",
-  "why_now": "1% 四流突发与 0% 满核是不同瓶颈。H2244 固定整形降 Rust 丢包却损耗吞吐或 CPU/GiB。",
-  "done_when": "ARM 同机分离公平顺序与总速率，核真实交付、CPU/有效GiB和稀疏流首响应；按计划继续服务能力、x86/Windows移植与出口，保留各端未验项。",
-  "next_action": "查询预登记分支及 PR；若已有则接续其 HEAD/在途run，否则从首次发布本 task_id 的 main cursor-only H 创建该分支，完成 ARM64 Normal/off 公平顺序单因素 GE1% 原/候选/恢复对照。",
+  "current_task": "029吞吐/弱网TCP P99继续实验。实验短分支 experiment/m0-029-throughput-arm-fair，PR#68 Draft。H2272 ARM1/5%原生P99测试应用Nagle因素确证；Windows H2273和Linux FEC2 H2274在途/待收，原产品默认未改。",
+  "why_now": "1%/5%双向200ms：Linux原SharedTun满丢0但TCP好率低、RTO与P99高。H2272服务端Nagle只解释一部分延迟；Windows旧10Mbps UDP成绩并非真实持续TCP。",
+  "done_when": "按PLAN029核收端真实goodput、两端CPU/有效GiB、及时送达与未回、无HOL/owned Stop，分别验Linux ARM/x86和Windows及受影响模式；否决/未测保留。",
+  "next_action": "先查H2273 Windows1%/5%原生run 44923149093/44923151036和H2274实验HEAD1282c546的ARM FEC2 Actions，按run/attempt/ZIP结算实际原TCP+Stop；若尚无run先查push/触发，不重复dispatch。依据损失位置与CPU/P99选择下一单因素产品修复。",
   "unverified": true,
-  "last_tested_source": null,
-  "evidence_refs": [],
+  "last_tested_source": "7e7df34174c12b1a1e0f72f4e463ec5b7da25dcb",
+  "evidence_refs": [
+    "docs/evidence/M0/PLAN029-H2272-LINUX-TCP-ECHO-NAGLE-LOSS1-LOSS5-20261121.json"
+  ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
-    "docs/devlog/M0/20261121-PLAN029-THROUGHPUT-HANDOFF.md",
-    "docs/evidence/M0/PLAN029-H2229-AUTHENTICATED-ACK10-WINDOW65535-NOHOL-20261120.json",
-    "docs/evidence/M0/PLAN029-H2228-THREE-ARM-RELAY-GE200-REAL-TCP-20261120.json"
+    "docs/devlog/M0/20261121-M0-PLAN029-RECOVERY-H2275.md",
+    "docs/evidence/M0/PLAN029-H2229-AUTHENTICATED-ACK10-WINDOW65535-NOHOL-20261120.json"
   ],
   "open_requests": [],
-  "partial_summary": "新施工包产品 NOT_RUN。旧 H2230、H2244 限域结果仅背景，实体 Windows 3 秒上行与 80–200 Mbps 仍 OPEN。无本包性能 dispatch。"
+  "partial_summary": "H2272准确同源同runner真业务/Stop PASS_SCOPED但未形成产品P99/吞吐联合收益。H2271最初Windows双Action FAIL属新增Python CLI遗漏/未放行端口，已在H2273修夹具并重派。H2274只测试原FEC2 fixed选项且真产品资格未核；Win实体/双端CPU/p99全模式及029整体OPEN。"
 }
