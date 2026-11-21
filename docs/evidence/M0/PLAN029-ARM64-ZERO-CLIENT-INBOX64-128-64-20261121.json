@@ -139,5 +139,14 @@
     "Correct 400ms RTT GE1 client128 experiment not yet completed.",
     "No physical ARM device, Windows 3s uplink, x86 product goodput, or >8 authentic lease fairness proof.",
     "True source, run, attempt and all binary hashes must be inspected for product qualification."
-  ]
+  ],
+  "artifact_metadata_warning": {
+    "source_sha": "4490c09a97b2df18482c33c9300d0dae4716a529",
+    "original_summary_field": "only_changed_setting",
+    "original_summary_value": "authenticated client Rust M1 inbox 64→256→64; server fixed64",
+    "status": "WRONG_STALE_LABEL_NOT_ACTUAL_PARAM_OR_DELIVERY_PROOF",
+    "accurate_proven_identity": "Each original phase has native Rust generation/side readback client slots [64,128,64], server slots [64,64,64], with frozen stage metadata [64,256,64]; user-visible summary `only_changed_setting` was overwritten by inherited stale string.",
+    "corrected_fixture_source_commit": "635553ebb3dbfd87a04ebadc7d4f238722dfdce2",
+    "evidence_handling": "Retain original artifact unchanged. Numeric source-specific results are valid conditional on exact per-phase native cold readback. Do not quote incorrect top-level changed-setting label as proof. Future x86 and native runs use corrected fixture."
+  }
 }
