@@ -1,0 +1,290 @@
+# H2276: TWO simultaneous isolated triplets, same exact source/scenario.
+# This first run is real Windows Winsock -> Linux tc kernel relay -> ARM Linux
+# end-to-end TCP capacity/p99 preflight; WBD Npcap/Wintun is NOT measured here.
+name: H2285 dual native Windows WSL2 kernel TCP route through ARM relay to independent ARM Linux server
+run-name: "M0 H2285 dual Win WSL2 kernel forwarding via ARM relay to ARM TCP | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-h2285-dual-wsl2-arm-route.yml'
+      - 'tools/m0_h2276_three_runner_tcp.py'
+      - 'tools/m0_wl_loss_tcp_probe.py'
+      - 'tests/test_m0_h2276_three_runner_tcp.py'
+      - 'tests/test_m0_h2280_bidir_netem_tcp.py'
+      - 'tests/test_m0_h2281_sustained_tcp.py'
+      - 'tests/test_m0_h2282_window_ab_tcp.py'
+      - 'tests/test_m0_h2283_window2m_ab_tcp.py'
+      - 'tests/test_m0_h2284_old_eight_flow_capacity.py'
+      - 'tools/m0_h2285_windows_wsl_route.py'
+      - 'tests/test_m0_h2285_windows_wsl_route.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  WBD_H2279_CAPACITY_AB: "0"
+  WBD_H2281_SUSTAINED_TCP: "1"
+  WBD_H2282_TCP_WINDOW_AB: "0"
+  WBD_H2283_B_BYTES: "2097152"
+  WBD_H2284_EIGHT_TCP_CAPACITY: "0"
+concurrency:
+  group: h2285-dual-three-runner-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Exact source Python and original finite real-socket dual triplet contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2285_windows_wsl_route.py
+          python3 -m unittest tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp tests.test_m0_h2281_sustained_tcp tests.test_m0_h2282_window_ab_tcp tests.test_m0_h2283_window2m_ab_tcp tests.test_m0_h2284_old_eight_flow_capacity tests.test_m0_h2285_windows_wsl_route -v
+  relay:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2285-wsl2-arm-route]')
+    name: "H2285 independent ARM64 kernel relay ${{ matrix.group }}"
+    needs: static
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-relay-${{ matrix.group }}-${{ github.run_id }}
+      - name: Publish independently allocated Linux relay identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables
+          python3 tools/m0_h2276_three_runner_tcp.py meta "$GROUP" relay
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-relay-peer
+          path: h2276-out/relay-peer.json
+          retention-days: 3
+      - name: Await both SAME-GROUP actual Windows and ARM peers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-client-peer" h2276-peer/client
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-server-peer" h2276-peer/server
+          python3 tools/m0_h2276_three_runner_tcp.py relay "$GROUP" relay h2276-peer/server/server-peer.json h2276-peer/client/client-peer.json
+          nohup python3 -u tools/m0_h2276_three_runner_tcp.py serve "$GROUP" relay > h2276-out/relay-control.log 2>&1 < /dev/null &
+          echo $! > h2276-out/relay-control.pid
+          for i in $(seq 1 90); do
+            if grep -Fq H2276_RELAY_CONTROL_READY h2276-out/relay-control.log; then break; fi
+            if ! kill -0 "$(cat h2276-out/relay-control.pid)" 2>/dev/null; then cat h2276-out/relay-control.log; exit 2; fi
+            sleep .5
+          done
+          grep -Fq H2276_RELAY_CONTROL_READY h2276-out/relay-control.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-relay-ready
+          path: h2276-out/relay-ready.json
+          retention-days: 3
+      - name: Wait real Windows kernel TCP evidence; preserve unqualified DERP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-client-result" h2276-peer/client-result
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2276-peer/client-result/client-result.json'))
+          assert d['group']==os.environ['GROUP'] and d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['status']=='PASS_H2285_NATIVE_WSL2_L3_FORWARD_TO_INDEPENDENT_ARM_TCP_SCOPED'
+          assert d['wsl_l3_owned_tcp_nat']['status']=='REAL_WSL2_KERNEL_DNAT_SNAT_COUNTERS_POSITIVE'
+          assert d['original_wbd_go_tls_rust_npcap_wintun']=='NOT_RUN_ROUTE_FEASIBILITY_ONLY'
+          assert d['delivered']['sparse_echo_received']==160
+          assert d['delivered']['bulk_remote_received_bytes']>0
+          assert d['two_relay_kernel_egress_packet_directions']['status']=='REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED'
+          assert all(
+              d['two_relay_kernel_egress_packet_directions']['per_direction'][dr]['egress_packets']>0
+              for dr in ('win_to_arm','arm_to_win')
+          )
+          print('H2285_WINDOWS_TO_WSL_KERNEL_TO_ARM_RELAY_REAL_TCP_ONLY_NOT_WBD_PRODUCT')
+          PY
+      - name: Remove only relay owned tc and exact iptables rules
+        if: always()
+        shell: bash
+        run: |
+          if test -s h2276-peer/server/server-peer.json && test -s h2276-peer/client/client-peer.json; then
+            python3 tools/m0_h2276_three_runner_tcp.py cleanup "$GROUP" relay h2276-peer/server/server-peer.json h2276-peer/client/client-peer.json || true
+          fi
+          if test -s h2276-out/relay-control.pid; then
+            kill "$(cat h2276-out/relay-control.pid)" 2>/dev/null || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-relay-evidence
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14
+
+  server:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2285-wsl2-arm-route]')
+    name: "H2285 independent real ARM64 Linux TCP server ${{ matrix.group }}"
+    needs: static
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-arm-${{ matrix.group }}-${{ github.run_id }}
+      - name: Native ARM64 peer identity
+        shell: bash
+        run: python3 tools/m0_h2276_three_runner_tcp.py meta "$GROUP" server
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-server-peer
+          path: h2276-out/server-peer.json
+          retention-days: 3
+      - name: Wait exact relay kernel route installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" server "h2276-$GROUP-relay-ready" h2276-peer/relay
+          nohup python3 -u tools/m0_h2285_windows_wsl_route.py server "$GROUP" h2276-peer/relay/relay-ready.json > h2276-out/server.log 2>&1 < /dev/null &
+          echo $! > h2276-out/server.pid
+          for i in $(seq 1 80); do
+            if grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2276-out/server.log; then break; fi
+            if ! kill -0 "$(cat h2276-out/server.pid)" 2>/dev/null; then cat h2276-out/server.log; exit 2; fi
+            sleep .5
+          done
+          grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2276-out/server.log
+          cp h2276-out/server-peer.json h2276-out/server-ready.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-server-ready
+          path: h2276-out/server-ready.json
+          retention-days: 3
+      - name: Wait true remote ARM TCP receiver and owned sysctl Stop
+        shell: bash
+        timeout-minutes: 40
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 2400); do
+            if grep -Fq H2285_REAL_ARM_TCP_SERVER_DONE h2276-out/server.log; then break; fi
+            if ! kill -0 "$(cat h2276-out/server.pid)" 2>/dev/null; then tail -n 75 h2276-out/server.log; exit 2; fi
+            sleep 1
+          done
+          grep -Fq H2285_REAL_ARM_TCP_SERVER_DONE h2276-out/server.log
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2276-out/server-result.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['group']==os.environ['GROUP']
+          assert d['actual_kernel_tcp_server_finished'] and d['owned_kernel_sysctls_restored']
+          assert d['true_original_go_tls_rust']=='NOT_RUN'
+          print('H2285_REMOTE_ARM_REAL_TCP_SERVER_DONE_SCOPED')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-arm-evidence
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14
+
+  client:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2285-wsl2-arm-route]')
+    name: "H2285 genuine Windows2025 client with WSL2 kernel route ${{ matrix.group }}"
+    needs: static
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: windows-2025
+    timeout-minutes: 55
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-win-${{ matrix.group }}-${{ github.run_id }}
+      - name: Boot real Windows-owned Ubuntu WSL2 kernel with scoped iptables routing
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'H2285_WSL2_NOT_AVAILABLE'}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'H2285_PINNED_UBUNTU_HASH_MISMATCH'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2
+            if($LASTEXITCODE -ne 0){throw 'H2285_PINNED_WSL_IMPORT_FAILED'}
+          }
+          & wsl.exe -d Ubuntu -u root -- sh -c 'command -v ip >/dev/null && command -v iptables >/dev/null || (apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables)'
+          if($LASTEXITCODE -ne 0){throw 'H2285_WSL2_ROUTING_TOOLS_FAILED'}
+          & wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0
+          if($LASTEXITCODE -ne 0){throw 'H2285_REAL_WSL2_VETHERNET_MISSING'}
+          Write-Output 'H2285_ACTUAL_WINDOWS_WSL2_KERNEL_ETH0_READY_NOT_WBD_PRODUCT'
+      - name: Publish real Windows VM identity and validate Python probe
+        shell: pwsh
+        run: |
+          python -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2285_windows_wsl_route.py
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TEST_CODE_BAD' }
+          python tools/m0_h2276_three_runner_tcp.py meta $env:GROUP client
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TAIL_IDENTITY_BAD' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-client-peer
+          path: h2276-out/client-peer.json
+          retention-days: 3
+      - name: True Windows Winsock TCP through owned WSL2 Linux DNAT and dedicated ARM router to ARM TCP server
+        shell: pwsh
+        timeout-minutes: 43
+        run: |
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_REAL_RELAY_NOT_READY' }
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-server-ready" h2276-peer/server
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_REAL_ARM_NOT_READY' }
+          python -u tools/m0_h2285_windows_wsl_route.py client $env:GROUP h2276-peer/relay/relay-ready.json h2276-peer/server/server-ready.json
+          if ($LASTEXITCODE -ne 0) { throw 'H2285_WINDOWS_NATIVE_WSL2_KERNEL_ROUTE_FAILED_NOT_WBD_PRODUCT' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-client-result
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14
