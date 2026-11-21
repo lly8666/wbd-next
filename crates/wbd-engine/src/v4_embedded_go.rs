@@ -8876,6 +8876,16 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         #[cfg(target_os="linux")]
         let service_diag=std::env::var("WBD_M0_029_TX_SYSCPU_DIAG")
             .ok().as_deref()==Some("1");
+        #[cfg(target_os="linux")]
+        let first_drop_diag=std::env::var("WBD_M0_029_FIRST_DROP_WINDOW")
+            .ok().as_deref()==Some("1");
+        // Independent slow observer; no new work in original TUN/TX/RX
+        // packet loops or per-packet Go bridge. Missing router never emits
+        // forged zero loss.
+        #[cfg(target_os="linux")]
+        let first_drop_router=if first_drop_diag{
+            e.shared_tun.as_ref().and_then(|s|shared_tun_reader(s.router).ok())
+        }else{None};
         let diag_stats=Arc::clone(&e.counters);
         let diag_stop=Arc::clone(&shutdown);
         let diag_raw=Arc::clone(&raw);
@@ -8923,6 +8933,35 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         diag_stats.rx_thread_cpu_ns.load(Ordering::Relaxed),
                         diag_stats.tx_thread_cpu_ns.load(Ordering::Relaxed),
                         u8::from(readable),nic_rx,nic_tx,nic_drop);
+                    #[cfg(target_os="linux")]
+                    if first_drop_diag{
+                        if let Some(router)=first_drop_router.as_ref(){
+                            // Existing atomic counters only. 500ms clock
+                            // shared with real TCP_INFO and app echo across
+                            // these same-kernel Linux network namespaces.
+                            eprintln!("V4_PUBLIC_M4_FIRST_DROP_WINDOW role={} client_port={} generation={} mono_ns={} shared_delivered={} shared_full={} shared_byte={} shared_age={} shared_retired={} shared_unrouted={} shared_backpressure={} tx_tcp_seen={} tx_tcp_staged={} tx_udp_seen={} tx_arena_failed={} tx_deferred={} m4_copied={} rx_kernel={} rx_tuple={} rx_unique={} rx_tun={} rx_invalid={} scope=owner_cumulative_no_tcp_seq_attribution",
+                                diag_role,diag_port,diag_generation,
+                                original_kernel_monotonic_ns(),
+                                router.delivered.load(Ordering::Relaxed),
+                                router.queue_full_drops.load(Ordering::Relaxed),
+                                router.queue_byte_drops.load(Ordering::Relaxed),
+                                router.queue_age_drops.load(Ordering::Relaxed),
+                                router.retired_drops.load(Ordering::Relaxed),
+                                router.unrouted.load(Ordering::Relaxed),
+                                router.backpressure.load(Ordering::Relaxed),
+                                diag_stats.tx_chain[1].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[6].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[0].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[4].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[7].load(Ordering::Relaxed),
+                                diag_stats.tx.load(Ordering::Relaxed),
+                                diag_stats.rx_chain[0].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[1].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[2].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[5].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[13].load(Ordering::Relaxed));
+                        }
+                    }
                     #[cfg(target_os="linux")]
                     if service_diag{
                         // Original worker TIDs from this exact session.
