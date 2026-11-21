@@ -16,3 +16,8 @@ H2293两份workflow初始实现推WIP后，先核同源静态 Actions；原生�
 ```feature-impact
 {"kind":"none","ids":[],"reason":"H2293 only source-locked existing signed Windows+ARM original product weak-loss Normal FEC2 OFF/Fixed/OFF test harness, per-loss two identical independent triplets and real kernel/readback/Stop verification; no product GoTLS/Rust default, driver, mode or config changed."}
 ```
+
+## Stage0 复用原CI静态准入（SOURCE 5985eacb）
+- [loss1 static Action44960304778](https://github.com/lly8666/wbd-next/actions/runs/44960304778)：静态核对 SUCCESS，Win双DLL/ARM原构件/两组三机昂贵jobs全部SKIPPED（因WIP提交消息未含marker）；**不是网络验收**。
+- [loss5 static Action44960304721](https://github.com/lly8666/wbd-next/actions/runs/44960304721)：同源静态SUCCESS、昂贵jobs全部SKIPPED；两个损伤场景均未执行。
+- 下一冻结提交仅变更此devlog以显式同时触发各一份 loss1 和 loss5 的完整独立双组三Runner Action，仍用同一当前SOURCE代码、严格利用原Go/Rust/Win签名DLL和ARM构件，明确不从一个loss的成绩推另一个。Action运行后才从原始产物认领结果。
