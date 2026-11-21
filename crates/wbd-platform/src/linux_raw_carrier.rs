@@ -9,7 +9,7 @@ use std::ffi::{c_int,c_void,CString};
 use std::io;
 use std::net::Ipv4Addr;
 use std::os::fd::{FromRawFd,AsRawFd,OwnedFd};
-use std::sync::{Mutex,atomic::{AtomicBool,Ordering}};
+use std::sync::{Mutex,atomic::{AtomicBool,AtomicU64,Ordering}};
 use std::time::{Instant,Duration};
 use crate::r1::{BorrowFence,BorrowError,StopResult};
 use crate::{TxBatchOutcome,TxError};
@@ -175,6 +175,57 @@ pub enum RawTxError {
     InvalidScope,Stopped,InvalidInterface,Kernel(i32),InvalidPacket,
     BoundedMtu,PacketExceedsBudget,NoCapacity,RouteStale,RouteUnavailable,ShortSend,UnsupportedOptions,
 }
+/// H2258 bounded, explicitly enabled read-only samples from the SAME
+/// original authenticated Linux RAW TX driver. Wall time includes scheduling;
+/// neither a kernel-copy return nor a sampled syscall is a peer ACK.
+#[derive(Debug,Clone,Copy,Default)]
+pub struct OriginalM4RawCallCost{
+    pub enabled:bool,
+    pub sample_every:u64,
+    pub sendmmsg_calls_sampled:u64,
+    pub sendmmsg_wall_ns:u64,
+    pub driver_wall_ns:u64,
+    pub positive_copied_calls_sampled:u64,
+    pub positive_copied_records_sampled:u64,
+}
+struct OriginalM4RawCallSampler{
+    enabled:bool,
+    seen:AtomicU64,
+    samples:AtomicU64,
+    syscall_ns:AtomicU64,
+    full_ns:AtomicU64,
+    positive_calls:AtomicU64,
+    positive_records:AtomicU64,
+}
+impl OriginalM4RawCallSampler{
+    fn new()->Self{
+        Self{enabled:std::env::var("WBD_M0_029_RAW_CALL_COST").ok().as_deref()==Some("1"),
+            seen:AtomicU64::new(0),samples:AtomicU64::new(0),
+            syscall_ns:AtomicU64::new(0),full_ns:AtomicU64::new(0),
+            positive_calls:AtomicU64::new(0),positive_records:AtomicU64::new(0)}
+    }
+    fn select(&self)->bool{
+        // No atomic counter, clock call or lock when disabled.
+        self.enabled && self.seen.fetch_add(1,Ordering::Relaxed)%128==0
+    }
+    fn record(&self,driver_ns:u64,syscall_ns:u64,copied:usize){
+        self.full_ns.fetch_add(driver_ns,Ordering::Relaxed);
+        self.syscall_ns.fetch_add(syscall_ns,Ordering::Relaxed);
+        self.samples.fetch_add(1,Ordering::Relaxed);
+        if copied>0{
+            self.positive_calls.fetch_add(1,Ordering::Relaxed);
+            self.positive_records.fetch_add(copied as u64,Ordering::Relaxed);
+        }
+    }
+    fn snapshot(&self)->OriginalM4RawCallCost{
+        OriginalM4RawCallCost{enabled:self.enabled,sample_every:128,
+            sendmmsg_calls_sampled:self.samples.load(Ordering::Relaxed),
+            sendmmsg_wall_ns:self.syscall_ns.load(Ordering::Relaxed),
+            driver_wall_ns:self.full_ns.load(Ordering::Relaxed),
+            positive_copied_calls_sampled:self.positive_calls.load(Ordering::Relaxed),
+            positive_copied_records_sampled:self.positive_records.load(Ordering::Relaxed)}
+    }
+}
 pub struct ScopedRawIpv4Tx {
     fd:OwnedFd,
     ifindex:u32,
@@ -185,6 +236,7 @@ pub struct ScopedRawIpv4Tx {
     stopped:AtomicBool,
     borrow:BorrowFence,
     serialize:Mutex<()>,
+    m029_raw_cost:OriginalM4RawCallSampler,
 }
 impl ScopedRawIpv4Tx {
     /// Open only after authenticated Go V4 Detach/Commit in the SAME
@@ -222,8 +274,13 @@ impl ScopedRawIpv4Tx {
         Ok(Self{
             fd,ifindex:actual,ifname:ifname.to_owned(),generation,
             mtu:observed.kernel_mtu as usize,budget,stopped:AtomicBool::new(false),
-            borrow:BorrowFence::default(),serialize:Mutex::new(())
+            borrow:BorrowFence::default(),serialize:Mutex::new(()),
+            m029_raw_cost:OriginalM4RawCallSampler::new()
         })
+    }
+    /// A cold independent observer may read aggregates only; default OFF.
+    pub fn original_m4_raw_call_cost(&self)->OriginalM4RawCallCost{
+        self.m029_raw_cost.snapshot()
     }
     /// No packet payload, owner or socket mutation.
     pub fn diagnostic_tx_socket(&self)->Result<RawTxSocketReadback,RawTxError>{
@@ -888,6 +945,8 @@ impl ScopedRawIpv4Tx {
             return KernelSendReport{outcome:TxBatchOutcome::copied_all(0),
                 signal:KernelSendSignal::None}
         }
+        let sampled=self.m029_raw_cost.select();
+        let cost_start=sampled.then(Instant::now);
         let dest=match checked_destination(tuple){
             Ok(d)=>d,
             Err(e)=>return raw_batch_failure(0,e)
@@ -911,9 +970,22 @@ impl ScopedRawIpv4Tx {
                 Err(_)=>return raw_batch_failure(0,RawTxError::InvalidPacket)
             };
         }
-        let result=linux_batch::submit_scatter_fd(
-            self.fd.as_raw_fd(),std::net::SocketAddrV4::new(dest,0),
-            &headers,&sizes,records);
+        let mut syscall_ns=None;
+        let result=if sampled{
+            linux_batch::submit_scatter_fd_sampled(
+                self.fd.as_raw_fd(),std::net::SocketAddrV4::new(dest,0),
+                &headers,&sizes,records,&mut syscall_ns)
+        }else{
+            linux_batch::submit_scatter_fd(
+                self.fd.as_raw_fd(),std::net::SocketAddrV4::new(dest,0),
+                &headers,&sizes,records)
+        };
+        // An early malformed-iovec result is NOT a completed syscall.
+        if let (Some(start),Some(actual_syscall_ns))=(cost_start,syscall_ns){
+            self.m029_raw_cost.record(
+                start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64,
+                actual_syscall_ns,result.outcome.accepted_prefix);
+        }
         if result.signal.invalidates_path(){self.budget.invalidate()}
         result
     }

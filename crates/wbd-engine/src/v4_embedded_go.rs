@@ -4302,6 +4302,13 @@ struct LoopCounts {
     tx_dropped:AtomicU64,tx_uncertain:AtomicU64,tx_backpressure:AtomicU64,
     route_refresh:AtomicU64,
     rx_thread_cpu_ns:AtomicU64,tx_thread_cpu_ns:AtomicU64,
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    rx_worker_tid:AtomicU32,tx_worker_tid:AtomicU32,
+    // Only the opt-in H2257 profile reads successful original M4 turns.
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    m4_successful_turns:AtomicU64,
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    m4_successful_turn_bins:[AtomicU64;5],
     #[cfg(feature="fec2_product_record")]
     outer_presentation_ack:AtomicU32,
     #[cfg(feature="fec2_product_record")]
@@ -4600,46 +4607,132 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     d
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn flush_shared_tun(pending:&mut HashMap<[u8;4],PendingSharedTunRoute>)
-->SharedTunDispatchDelta{
+// Only overloaded (>8) authenticated routes need cross-turn fairness.
+// Fewer routes retain the original direct, allocation-free hot loop.
+// The sorted scratch list is reused and only contains already-pending /32s.
+// Only authenticated Linux Normal client generations get the measured
+// 128-slot product M1 ingress. Shared Normal server routes remain 64;
+// Game group binds a separate original 64-slot owner. No extra reader,
+// no per-packet probe, no new rate/PN/AEAD/recovery behavior.
+#[cfg(all(target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+fn normal_shared_tun_product_inbox_slots(server_side:bool)->usize{
+    if server_side{64}else{128}
+}
+#[cfg(all(test,target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_linux_normal_client_default_128_server_64(){
+    assert_eq!(normal_shared_tun_product_inbox_slots(false),128);
+    assert_eq!(normal_shared_tun_product_inbox_slots(true),64);
+}
+// Explicit opt-in developer/probe rollback and 256 counterexample. Unknown
+// values fail safely back to the exact PRODUCT default of this owner.
+#[cfg(all(target_os="linux",feature="m0_v4_probe",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+fn shared_tun_trial_inbox_slots(value:Option<&str>,default_slots:usize)->usize{
+    match value {
+        Some("64")=>64,
+        Some("128")=>128,
+        Some("256")=>256,
+        _=>default_slots,
+    }
+}
+#[cfg(all(test,target_os="linux",feature="m0_v4_probe",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_trial_inbox_capacity_is_cold_bounded(){
+    assert_eq!(shared_tun_trial_inbox_slots(None,128),128);
+    assert_eq!(shared_tun_trial_inbox_slots(None,64),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("64"),128),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("64"),64),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("128"),64),128);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("256"),64),256);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("129"),128),128);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("8192"),64),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("0"),128),128);
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[derive(Default)]
+struct SharedTunFairTurn{
+    enabled:bool,
+    last_route:Option<[u8;4]>,
+    scratch:Vec<[u8;4]>,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn drain_one_shared_tun_route(
+    q:&mut PendingSharedTunRoute,now:Instant,attempts_left:&mut usize,
+    d:&mut SharedTunDispatchDelta
+){
+    while q.packets.front().is_some_and(|p|
+        now.saturating_duration_since(p.queued_at)>=SHARED_TUN_PENDING_MAX_AGE){
+        if let Some(old)=q.packets.pop_front(){
+            q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+            d.expired+=1;
+        }
+    }
+    // A recovered receiver may free a whole TUN batch per turn. Drain up
+    // to one batch for this lease, with a shared cap for all leases.
+    // Full is a cold backpressure signal: stop this lease immediately.
+    for _ in 0..SHARED_TUN_DRAIN_PER_ROUTE{
+        if *attempts_left==0{break}
+        let Some(old)=q.packets.pop_front()else{break};
+        *attempts_left-=1;
+        q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
+        match q.route.send.try_send(old.packet){
+            Ok(())=>d.delivered+=1,
+            Err(TrySendError::Full(packet))=>{
+                q.queued_bytes+=old.bytes;
+                q.packets.push_front(PendingSharedTunPacket{
+                    packet,bytes:old.bytes,queued_at:old.queued_at,
+                });
+                d.backpressure+=1;
+                break;
+            },
+            Err(TrySendError::Disconnected(_))=>{
+                d.retired+=1+q.packets.len() as u64;
+                q.packets.clear();q.queued_bytes=0;
+                q.route.alive.store(false,Ordering::Release);
+                break;
+            },
+        }
+    }
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn flush_shared_tun(
+    pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
+    fair:&mut SharedTunFairTurn
+)->SharedTunDispatchDelta{
     let mut d=SharedTunDispatchDelta::default();
     let now=Instant::now();
     let mut attempts_left=SHARED_TUN_DRAIN_PER_TURN;
     pending.retain(|_,q|if q.route.alive.load(Ordering::Acquire){true}else{
         d.retired+=q.packets.len() as u64;false
     });
-    for q in pending.values_mut(){
-        while q.packets.front().is_some_and(|p|
-            now.saturating_duration_since(p.queued_at)>=SHARED_TUN_PENDING_MAX_AGE){
-            if let Some(old)=q.packets.pop_front(){
-                q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
-                d.expired+=1;
-            }
+    if !fair.enabled||
+        pending.len()<=SHARED_TUN_DRAIN_PER_TURN/SHARED_TUN_DRAIN_PER_ROUTE{
+        for q in pending.values_mut(){
+            drain_one_shared_tun_route(q,now,&mut attempts_left,&mut d);
         }
-        // A recovered receiver may free a whole TUN batch per turn. Drain up
-        // to one batch for this lease, with a shared cap for all leases.
-        // Full is a cold backpressure signal: stop this lease immediately.
-        for _ in 0..SHARED_TUN_DRAIN_PER_ROUTE{
-            if attempts_left==0{break}
-            let Some(old)=q.packets.pop_front()else{break};
-            attempts_left-=1;
-            q.queued_bytes=q.queued_bytes.saturating_sub(old.bytes);
-            match q.route.send.try_send(old.packet){
-                Ok(())=>d.delivered+=1,
-                Err(TrySendError::Full(packet))=>{
-                    q.queued_bytes+=old.bytes;
-                    q.packets.push_front(PendingSharedTunPacket{
-                        packet,bytes:old.bytes,queued_at:old.queued_at,
-                    });
-                    d.backpressure+=1;
-                    break;
-                },
-                Err(TrySendError::Disconnected(_))=>{
-                    d.retired+=1+q.packets.len() as u64;
-                    q.packets.clear();q.queued_bytes=0;
-                    q.route.alive.store(false,Ordering::Release);
-                    break;
-                },
+    }else{
+        fair.scratch.clear();
+        fair.scratch.extend(pending.keys().copied());
+        fair.scratch.sort_unstable();
+        let count=fair.scratch.len();
+        let start=fair.last_route.map_or(0,|last|
+            fair.scratch.partition_point(|ip|*ip<=last))%count;
+        for offset in 0..count{
+            let key=fair.scratch[(start+offset)%count];
+            if let Some(q)=pending.get_mut(&key){
+                // Expiry applies to EVERY route even after the 64th
+                // send attempt. Only attempted service advances fairness.
+                let may_serve=attempts_left>0;
+                drain_one_shared_tun_route(q,now,&mut attempts_left,&mut d);
+                if may_serve{fair.last_route=Some(key);}
             }
         }
     }
@@ -4860,16 +4953,16 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[55]),
         _=>panic!("wrong B kind"),
     }
-    assert_eq!(flush_shared_tun(&mut pending).delivered,0);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,0);
     assert_eq!(pending[&ka].packets.len(),SHARED_TUN_PENDING_PER_ROUTE);
     drop(a_rx.try_recv().expect("free only A inbox slot"));
-    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,1);
     match a_rx.try_recv().expect("oldest A packet first"){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[1]),
         _=>panic!("wrong A kind"),
     }
     a.store(false,Ordering::Release);
-    assert_eq!(flush_shared_tun(&mut pending).retired,(SHARED_TUN_PENDING_PER_ROUTE-1) as u64);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).retired,(SHARED_TUN_PENDING_PER_ROUTE-1) as u64);
     assert!(pending.is_empty());
     let (new_tx,new_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let newer=SharedTunRoute{
@@ -4916,7 +5009,7 @@ fn m0_plan028_shared_tun_partial_backlog_eager_oldest_fifo_before_full(){
         _=>panic!("wrong next eager FIFO packet"),
     }
     assert_eq!(pending[&key].packets.len(),1);
-    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,1);
     match rx.try_recv().expect("final packet immediately flushed"){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[3]),
         _=>panic!("wrong last FIFO packet"),
@@ -4995,7 +5088,7 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
     // A blocked for two turns: first fills its eight-packet pending queue,
     // second must report bounded drops; B never waits for A.
     for turn in 0..2{
-        let _=flush_shared_tun(&mut pending);
+        let _=flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default());
         let mut a_dropped=0;
         for _ in 0..8{
             let n=next_a;next_a+=1;
@@ -5027,7 +5120,7 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
             }
             a_received+=1;
         }
-        let d=flush_shared_tun(&mut pending);
+        let d=flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default());
         assert_eq!(d.delivered,8,"A must recover a full ingress batch");
         assert_eq!((d.backpressure,d.expired,d.retired),(0,0,0));
         let mut a_dropped=0;
@@ -5091,7 +5184,7 @@ fn m0_plan028_h1461_peak75_urgent_fifo_drain_without_larger_queue(){
             _=>panic!("older pending FIFO packet lost or reordered"),
         }
     }
-    assert_eq!(flush_shared_tun(&mut pending).delivered,1);
+    assert_eq!(flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default()).delivered,1);
     assert!(pending.is_empty());
     match a_rx.try_recv().unwrap(){
         OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[16]),
@@ -5150,7 +5243,7 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
     assert_eq!(pending[&ka].queued_bytes,8);
     let expired=Instant::now()-SHARED_TUN_PENDING_MAX_AGE-Duration::from_millis(1);
     for item in pending.get_mut(&ka).unwrap().packets.iter_mut(){item.queued_at=expired;}
-    let d=flush_shared_tun(&mut pending);
+    let d=flush_shared_tun(&mut pending,&mut SharedTunFairTurn::default());
     assert_eq!(d.expired,8);assert_eq!(d.backpressure,0);
     assert!(pending.is_empty()); // Silent A no longer wakes reader at 1ms.
     assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,
@@ -5296,12 +5389,209 @@ fn retire_shared_tun_session(session:&SharedTunSession){
         }
     }
 }
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_fair_turn_rotates_twelve_pending_leases(){
+    // 12 bounded original owner inboxes with 8 older packets each.
+    // A 64-attempt turn can service only eight full routes; the remaining
+    // four must get first service next turn even if the initial eight refill.
+    let (recycle,_recycled)=mpsc::sync_channel::<Vec<u8>>(128);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let mut routes=Vec::new();
+    let mut receivers=Vec::new();
+    let mut pending=HashMap::new();
+    for n in 1u8..=12{
+        let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+        for _ in 0..8{tx.try_send(packet(0)).unwrap();}
+        let key=[10,66,1,n];
+        let route=SharedTunRoute{
+            generation:20,alive:Arc::new(AtomicBool::new(true)),send:tx,
+        };
+        for _ in 0..8{
+            let d=enqueue_shared_tun(&mut pending,key,route.clone(),1,
+                ||packet(n));
+            assert_eq!((d.overflow,d.delivered),(0,0));
+        }
+        routes.push((key,route));
+        receivers.push(rx);
+    }
+    for rx in &receivers{
+        for _ in 0..8{drop(rx.try_recv().unwrap());}
+    }
+    let mut fair=SharedTunFairTurn::default();
+    fair.enabled=true;
+    let first=flush_shared_tun(&mut pending,&mut fair);
+    assert_eq!((first.delivered,first.expired,first.retired),(64,0,0));
+    assert_eq!(pending.len(),4);
+    for n in 0..12{
+        assert_eq!(pending.get(&routes[n].0).map_or(0,|q|q.packets.len()),
+            if n<8{0}else{8});
+    }
+    // The original eight pending routes refill while their owner inboxes
+    // are full, keeping twelve independently bounded backlogs for turn 2.
+    for (key,route) in routes.iter().take(8){
+        for _ in 0..8{
+            let d=enqueue_shared_tun(&mut pending,*key,route.clone(),1,
+                ||packet(key[3]));
+            assert_eq!((d.overflow,d.delivered),(0,0));
+        }
+    }
+    for rx in receivers.iter().take(8){
+        for _ in 0..8{drop(rx.try_recv().unwrap());}
+    }
+    assert_eq!(pending.len(),12);
+    let second=flush_shared_tun(&mut pending,&mut fair);
+    assert_eq!((second.delivered,second.expired,second.retired),(64,0,0));
+    for n in 0..12{
+        assert_eq!(pending.get(&routes[n].0).map_or(0,|q|q.packets.len()),
+            if (4..8).contains(&n){8}else{0},
+            "fair rotation must prioritize four previously skipped leases");
+    }
+    for (idx,rx) in receivers.iter().enumerate(){
+        if idx>=8 || idx<4{
+            for _ in 0..8{
+                match rx.try_recv().unwrap(){
+                    OriginalTunIngress::Shared(p)=>assert_eq!(p.as_slice(),&[idx as u8+1]),
+                    _=>panic!("wrong shared-TUN ingress kind"),
+                }
+            }
+        }
+    }
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_fair_turn_still_expires_routes_after_global_budget(){
+    let (recycle,_returned)=mpsc::sync_channel::<Vec<u8>>(128);
+    let packet=|n:u8|OriginalTunIngress::Shared(SharedTunPacket{
+        bytes:vec![n],recycle:recycle.clone(),
+    });
+    let mut pending=HashMap::new();
+    let mut receivers=Vec::new();
+    for n in 1u8..=12{
+        let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
+        for _ in 0..8{tx.try_send(packet(0)).unwrap();}
+        let key=[10,66,2,n];
+        let route=SharedTunRoute{
+            generation:20,alive:Arc::new(AtomicBool::new(true)),send:tx,
+        };
+        for _ in 0..8{
+            assert_eq!(enqueue_shared_tun(&mut pending,key,route.clone(),1,
+                ||packet(n)).overflow,0);
+        }
+        if n>8{
+            let overdue=Instant::now()-SHARED_TUN_PENDING_MAX_AGE-
+                Duration::from_millis(1);
+            for item in pending.get_mut(&key).unwrap().packets.iter_mut(){
+                item.queued_at=overdue;
+            }
+        }
+        receivers.push(rx);
+    }
+    // Release the real owner inboxes. The first 64 fresh sends consume the
+    // whole budget; the remaining 32 older packets are already expired.
+    for rx in &receivers{
+        for _ in 0..8{drop(rx.try_recv().unwrap());}
+    }
+    let mut fair=SharedTunFairTurn::default();
+    fair.enabled=true;
+    let d=flush_shared_tun(&mut pending,&mut fair);
+    assert_eq!((d.delivered,d.expired,d.retired),(64,32,0));
+    assert!(pending.is_empty());
+}
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[derive(Default)]
 struct SharedTunLeaseQueueDiag {
     offered:u64,direct_delivered:u64,downstream_full:u64,
     pending_overflow:u64,pending_byte_limit:u64,
     pending_peak_packets:usize,pending_peak_bytes:usize,
+    tcp_offered:u64,udp_offered:u64,other_offered:u64,
+    tcp_new_dropped:u64,udp_new_dropped:u64,other_new_dropped:u64,
+    sparse_forward_offered:u64,sparse_forward_dropped:u64,
+    sparse_reverse_offered:u64,sparse_reverse_dropped:u64,
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+// Only explicit H2262 diagnostics identify original inner TCP echo port.
+// No production payload, key, PN or per-packet logging is collected.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m0_029_sparse_tcp_echo_direction(ip:&[u8])->Option<bool>{
+    if ip.len()<24 || ip[0]>>4!=4 || ip[9]!=6{return None}
+    let header_len=usize::from(ip[0]&15)*4;
+    let total_len=usize::from(u16::from_be_bytes([ip[2],ip[3]]));
+    if header_len<20 || ip.len()<header_len+4 ||
+        total_len<header_len+4 || total_len>ip.len(){return None}
+    if u16::from_be_bytes([ip[6],ip[7]])&0x1fff!=0{return None}
+    let source=u16::from_be_bytes([ip[header_len],ip[header_len+1]]);
+    let target=u16::from_be_bytes([ip[header_len+2],ip[header_len+3]]);
+    if target==53222{Some(true)}
+    else if source==53222{Some(false)}
+    else{None}
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+impl SharedTunLeaseQueueDiag {
+    fn note_new_packet(&mut self,proto:u8,refused:u64) {
+        // ONLY the just-read IPv4 datagram. Delta.delivered can include
+        // old queued packets and must never be attributed to this protocol.
+        let (offered,dropped)=match proto {
+            6=>(&mut self.tcp_offered,&mut self.tcp_new_dropped),
+            17=>(&mut self.udp_offered,&mut self.udp_new_dropped),
+            _=>(&mut self.other_offered,&mut self.other_new_dropped),
+        };
+        *offered=offered.saturating_add(1);
+        *dropped=dropped.saturating_add(refused);
+    }
+    fn note_sparse_tcp_echo(&mut self,ip:&[u8],refused:u64){
+        match m0_029_sparse_tcp_echo_direction(ip){
+            Some(true)=>{
+                self.sparse_forward_offered+=1;
+                self.sparse_forward_dropped+=refused;
+            },
+            Some(false)=>{
+                self.sparse_reverse_offered+=1;
+                self.sparse_reverse_dropped+=refused;
+            },
+            None=>{},
+        }
+    }
+}
+#[cfg(all(test,target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_sparse_echo_original_tun_diagnostic_is_bounded_and_header_only(){
+    let mut ip=[0u8;40];
+    ip[0]=0x45;ip[9]=6;ip[2..4].copy_from_slice(&40u16.to_be_bytes());
+    ip[20..22].copy_from_slice(&43210u16.to_be_bytes());
+    ip[22..24].copy_from_slice(&53222u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),Some(true));
+    let mut diag=SharedTunLeaseQueueDiag::default();
+    diag.note_sparse_tcp_echo(&ip,1);
+    ip[20..22].copy_from_slice(&53222u16.to_be_bytes());
+    ip[22..24].copy_from_slice(&43210u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),Some(false));
+    diag.note_sparse_tcp_echo(&ip,0);
+    assert_eq!((diag.sparse_forward_offered,diag.sparse_forward_dropped,
+        diag.sparse_reverse_offered,diag.sparse_reverse_dropped),(1,1,1,0));
+    ip[6..8].copy_from_slice(&1u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),None);
+    ip[6..8].copy_from_slice(&0u16.to_be_bytes());
+    ip[22..24].copy_from_slice(&5201u16.to_be_bytes());
+    ip[20..22].copy_from_slice(&40000u16.to_be_bytes());
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),None);
+    ip[0]=0x44;assert_eq!(m0_029_sparse_tcp_echo_direction(&ip),None);
+    assert_eq!(m0_029_sparse_tcp_echo_direction(&ip[..19]),None);
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_protocol_ingress_diagnostic_is_source_scoped() {
+    let mut diag=SharedTunLeaseQueueDiag::default();
+    diag.note_new_packet(6,0);
+    diag.note_new_packet(17,1);
+    diag.note_new_packet(17,0);
+    diag.note_new_packet(1,1);
+    assert_eq!((diag.tcp_offered,diag.udp_offered,diag.other_offered),(1,2,1));
+    assert_eq!((diag.tcp_new_dropped,diag.udp_new_dropped,diag.other_new_dropped),(0,1,1));
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u8>>){
@@ -5309,10 +5599,19 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     // never wait to fill the batch. These kernel receive slots are reused.
     let mut scratch:[Vec<u8>;8]=std::array::from_fn(|_|vec![0u8;M0_TUN_IPV4_MAX]);
     let mut pending=HashMap::<[u8;4],PendingSharedTunRoute>::new();
+    let mut fair=SharedTunFairTurn::default();
+    // Both candidate switches are developer-only and read at native-owner
+    // startup. Default product behavior stays the same as clean main.
+    // This one controls *cross-lease* fairness, not single-lease flow order.
+    #[cfg(feature="m0_v4_probe")]
+    {fair.enabled=std::env::var("WBD_M0_029_FAIR_LEASE_TEST")
+        .ok().as_deref()==Some("1");}
     // Cold diagnostic opt-in. This worker already owns the verified /32
     // route table: no new per-packet Go bridge, timer, mutex, or unbounded
     // packet cache. All extra accounting is disabled in normal production.
     let lease_diag_enabled=std::env::var("WBD_SHARED_TUN_ROUTE_DIAG")
+        .ok().as_deref()==Some("1");
+    let sparse_echo_diag=lease_diag_enabled && std::env::var("WBD_M0_029_SPARSE_TCP_DIAG")
         .ok().as_deref()==Some("1");
     let mut lease_diag=BTreeMap::<[u8;4],SharedTunLeaseQueueDiag>::new();
     let fd=router.tun.readiness_fd();
@@ -5324,7 +5623,7 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             thread::sleep(Duration::from_millis(5));
             continue
         }
-        router.note_dispatch(flush_shared_tun(&mut pending));
+        router.note_dispatch(flush_shared_tun(&mut pending,&mut fair));
         if !loop_readiness(fd,&router.stop,if pending.is_empty(){10}else{1}){continue}
         let read={
             let [a,b,c,d,e,f,g,h]=&mut scratch;
@@ -5366,6 +5665,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             if lease_diag_enabled{
                 let stats=lease_diag.entry(key).or_default();
                 stats.offered+=1;
+                stats.note_new_packet(scratch[i][9],delta.overflow);
+                if sparse_echo_diag{stats.note_sparse_tcp_echo(&scratch[i][..len],delta.overflow);}
                 stats.direct_delivered+=delta.delivered;
                 stats.downstream_full+=delta.backpressure;
                 stats.pending_overflow+=delta.overflow;
@@ -5380,10 +5681,18 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     }
     if lease_diag_enabled{
         for (ip,st) in lease_diag{
-            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={}",
+            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={} tcp_offered={} udp_offered={} other_offered={} tcp_new_dropped={} udp_new_dropped={} other_new_dropped={}",
                 ip[0],ip[1],ip[2],ip[3],st.offered,st.direct_delivered,
                 st.downstream_full,st.pending_overflow,st.pending_byte_limit,
-                st.pending_peak_packets,st.pending_peak_bytes);
+                st.pending_peak_packets,st.pending_peak_bytes,
+                st.tcp_offered,st.udp_offered,st.other_offered,
+                st.tcp_new_dropped,st.udp_new_dropped,st.other_new_dropped);
+            if sparse_echo_diag{
+                eprintln!("M0_SHARED_TUN_SPARSE_TCP_DIAG ip={}.{}.{}.{} forward_offered={} forward_dropped={} reverse_offered={} reverse_dropped={} scope=original_inner_tcp_53222",
+                    ip[0],ip[1],ip[2],ip[3],
+                    st.sparse_forward_offered,st.sparse_forward_dropped,
+                    st.sparse_reverse_offered,st.sparse_reverse_dropped);
+            }
         }
     }
     let remaining:usize=pending.values().map(|q|q.packets.len()).sum();
@@ -5484,7 +5793,31 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     // all destinations without a second destructive TUN reader.
     let Some(lease)=e.client_lease_ipv4 else{return BAD_STAGE};
     let ip=if e.server_side{lease}else{[0u8;4]};
-    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
+    // One real ARM64 and one real x86 zero-loss 64/128/64 A/B/A showed
+    // application receiver goodput +6..13% and lower CPU/effective GiB;
+    // GE1% 400ms RTT offered no local backlog, so this is a bounded
+    // fixed normal-client source budget, NOT a new congestion controller.
+    // Original server and separate Game shared-TUN binds remain at 64.
+    // For 1000B packets at 1Gbit/s: 64~0.512ms, 128~1.024ms.
+    // Added worst-case jumbo memory <=64*65535B~4MiB/client generation.
+    let default_slots=normal_shared_tun_product_inbox_slots(e.server_side);
+    #[cfg(feature="m0_v4_probe")]
+    let trial=std::env::var("WBD_M0_029_INBOX_SLOTS_TEST").ok();
+    #[cfg(feature="m0_v4_probe")]
+    let slots=shared_tun_trial_inbox_slots(trial.as_deref(),default_slots);
+    #[cfg(not(feature="m0_v4_probe"))]
+    let slots=default_slots;
+    // Exactly one COLD original-native receipt per authenticated generation,
+    // never a hot-path syscall/callback. Product/probe are distinguished.
+    #[cfg(feature="m0_v4_probe")]
+    let probe_only=trial.as_deref().is_some_and(
+        |v|matches!(v,"64"|"128"|"256"));
+    #[cfg(not(feature="m0_v4_probe"))]
+    let probe_only=false;
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only={}",
+        if e.server_side{"server"}else{"client"},e.generation,slots,
+        if probe_only{1}else{0});
+    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(slots);
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
         alive:Arc::new(AtomicBool::new(true)),
@@ -5497,6 +5830,35 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     drop(router);
     OK
 }
+// A single first-packet poll wake may correspond to an entire ready TUN
+// burst. TUN is already O_NONBLOCK and read_ready_batch(1) gives an exact
+// WouldBlock boundary; avoid repeating a poll syscall for each DATA packet.
+// Exactly one speculative nonblocking read after the final packet; then
+// return to bounded 10ms poll. Re-poll after 32 successful reads to bound
+// uninterrupted per-TUN dispatch without waiting for a full batch.
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+const M0_TUN_INGRESS_POLL_BATCH:u8=32;
+#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[inline]
+fn original_tun_next_poll_credit(prev:u8,consumed_kernel_packet:bool)->u8{
+    if consumed_kernel_packet {
+        (prev+1)%M0_TUN_INGRESS_POLL_BATCH
+    }else{0}
+}
+#[cfg(all(test,any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_shared_tun_ingress_one_poll_per_ready_burst(){
+    let mut credit=0;
+    assert_eq!(credit,0); // first read MUST wait for readiness
+    for i in 1..32 {
+        credit=original_tun_next_poll_credit(credit,true);
+        assert_eq!(credit,i);
+    }
+    credit=original_tun_next_poll_credit(credit,true);
+    assert_eq!(credit,0); // forced bounded re-poll after 32 true reads
+    assert_eq!(original_tun_next_poll_credit(7,false),0); // EAGAIN resets
+    assert_eq!(original_tun_next_poll_credit(0,false),0); // idle never spins
+}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_tun_ingress_worker(
     cell:Arc<Mutex<Entry>>,tun:Arc<ScopedTunSink>,stop:Arc<AtomicBool>,
@@ -5505,8 +5867,12 @@ fn original_tun_ingress_worker(
 ){
     use std::sync::mpsc::TrySendError;
     let mut scratch=vec![0u8;M0_TUN_IPV4_MAX];
+    let mut ready_credit=0u8;
     while !stop.load(Ordering::Acquire){
-        if !loop_readiness(tun_fd,&stop,10){continue}
+        // At idle only the first packet blocks for readiness. A successful
+        // real kernel read grants up to 31 further nonblocking reads without
+        // an extra poll; EAGAIN resets immediately to original wait behavior.
+        if ready_credit==0 && !loop_readiness(tun_fd,&stop,10){continue}
         // A source M1 slab exists BEFORE any destructive TUN read. The
         // original sixteen authenticated receipt slots remain inaccessible.
         let loan={
@@ -5527,6 +5893,10 @@ fn original_tun_ingress_worker(
         };
         let batch={let mut slots=[&mut scratch[..]];
             tun.read_ready_batch(generation,&mut slots)};
+        // Includes invalid/unsupported IP packets genuinely removed from
+        // this FD; never infer consumed packet from an error or empty read.
+        ready_credit=original_tun_next_poll_credit(
+            ready_credit,matches!(&batch,Ok(receipt) if receipt.observed>0));
         let msg=match batch{
             Ok(batch)=>match batch.entry(0){
                 Some(TunReadyEntry::UntrustedIpv4{len}) if len<=M0_SMALL_ARENA_PAYLOAD=>{
@@ -5546,8 +5916,8 @@ fn original_tun_ingress_worker(
             Err(_)=>None,
         };
         let Some(mut msg)=msg else{continue};
-        // Exact finite backpressure: if 512-item inbox is full, RETAIN the
-        // already kernel-consumed packet rather than discarding identity.
+        // Exact finite backpressure: when the owned bounded inbox is full,
+        // RETAIN the already kernel-consumed packet rather than discarding identity.
         // Stop breaks the wait and drops every real owned M1 buffer.
         loop{
             if stop.load(Ordering::Acquire){return}
@@ -5587,6 +5957,31 @@ fn original_kernel_monotonic_ns()->u64{
     if unsafe{clock_gettime(1,&mut t)}!=0{return 0}
     u64::try_from(t.seconds).unwrap_or(0).saturating_mul(1_000_000_000)
         .saturating_add(u64::try_from(t.nanoseconds).unwrap_or(0))
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_worker_linux_tid()->Option<u32>{
+    // One cold worker-start read; no new Go FFI, syscall ABI or per-packet IO.
+    let task=std::fs::read_link("/proc/thread-self").ok()?;
+    task.file_name()?.to_str()?.parse::<u32>().ok().filter(|n|*n>0)
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_parse_linux_task_ticks(stat:&str)->Option<(u64,u64)>{
+    // TASK stat utime=field14, stime=field15; COMM can include ')' or ' '.
+    let tail=stat.rsplit_once(") ")?.1;
+    let mut values=tail.split_ascii_whitespace();
+    let user=values.nth(11)?.parse::<u64>().ok()?;
+    let system=values.next()?.parse::<u64>().ok()?;
+    Some((user,system))
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_linux_task_ticks(tid:u32)->Option<(u64,u64)>{
+    if tid==0{return None}
+    let stat=std::fs::read_to_string(format!("/proc/self/task/{tid}/stat")).ok()?;
+    m029_parse_linux_task_ticks(&stat)
+}
+#[cfg(all(feature="fec2_product_record",target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn m029_success_copy_bucket(copied:u32)->Option<usize>{
+    match copied{1=>Some(0),2..=4=>Some(1),5..=8=>Some(2),9..=16=>Some(3),17..=32=>Some(4),_=>None}
 }
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn owner_thread_cpu_ns()->u64{
@@ -7900,6 +8295,10 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let tun_for_rx=Arc::clone(&tun);
     let Ok(rx)=thread::Builder::new().name("wbd-original-m4-rx".into())
         .spawn(move||{
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            if std::env::var("WBD_M0_029_TX_SYSCPU_DIAG").ok().as_deref()==Some("1"){
+                stats_rx.rx_worker_tid.store(m029_worker_linux_tid().unwrap_or(0),Ordering::Release);
+            }
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
             #[cfg(feature="fec2_product_record")]
@@ -8089,6 +8488,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     let tx_ifname=ifname;
     let Ok(tx)=thread::Builder::new().name("wbd-original-m4-tx".into())
         .spawn(move||{
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            let service_diag=std::env::var("WBD_M0_029_TX_SYSCPU_DIAG")
+                .ok().as_deref()==Some("1");
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            if service_diag{
+                stats.tx_worker_tid.store(m029_worker_linux_tid().unwrap_or(0),Ordering::Release);
+            }
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            let mut service_success_turns=0u64;
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            let mut service_success_bins=[0u64;5];
             let cpu_origin=owner_thread_cpu_ns();
             let mut last_cpu_sample=Instant::now();
             #[cfg(feature="fec2_product_record")]
@@ -8208,6 +8618,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                 if last_cpu_sample.elapsed()>=Duration::from_millis(100){
                     stats.tx_thread_cpu_ns.store(
                         owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+                    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+                    if service_diag{
+                        stats.m4_successful_turns.store(service_success_turns,Ordering::Relaxed);
+                        for (out,value) in stats.m4_successful_turn_bins.iter().zip(service_success_bins.iter()){
+                            out.store(*value,Ordering::Relaxed);
+                        }
+                    }
                     last_cpu_sample=Instant::now();
                 }
                 // Snapshot actual FEC close / pending parity and authentic
@@ -8361,6 +8778,17 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                     fec_ingress_on
                 ){
                     Ok(done)=>{
+                        // This background_tun_once performs at most one
+                        // original send_kernel_multimsg. Positive copied
+                        // returns are real kernel receipts, never inferred
+                        // ACKs or all attempted syscall denominators.
+                        #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+                        if service_diag{
+                            if let Some(bin)=m029_success_copy_bucket(done.copied){
+                                service_success_turns=service_success_turns.saturating_add(1);
+                                service_success_bins[bin]=service_success_bins[bin].saturating_add(1);
+                            }
+                        }
                         #[cfg(feature="fec2_product_record")]
                         if egress_diag && done.failed {
                             diag_turn_err[0]=diag_turn_err[0].saturating_add(1);
@@ -8466,6 +8894,13 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
             }
             stats.tx_thread_cpu_ns.store(
                 owner_thread_cpu_ns().saturating_sub(cpu_origin),Ordering::Relaxed);
+            #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+            if service_diag{
+                stats.m4_successful_turns.store(service_success_turns,Ordering::Relaxed);
+                for (out,value) in stats.m4_successful_turn_bins.iter().zip(service_success_bins.iter()){
+                    out.store(*value,Ordering::Relaxed);
+                }
+            }
         })
     else{
         shutdown.store(true,Ordering::Release);
@@ -8501,6 +8936,24 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(feature="fec2_product_record")]
     let diagnostic=if std::env::var("WBD_PLAN028_EXTERNAL_STAGE_DIAG")
         .ok().as_deref()==Some("1"){
+        #[cfg(target_os="linux")]
+        let raw_call_diag=std::env::var("WBD_M0_029_RAW_CALL_COST")
+            .ok().as_deref()==Some("1");
+        #[cfg(target_os="linux")]
+        let raw_cost_owner=Arc::clone(e.raw_tx.as_ref().expect("original M4 raw TX owner"));
+        #[cfg(target_os="linux")]
+        let service_diag=std::env::var("WBD_M0_029_TX_SYSCPU_DIAG")
+            .ok().as_deref()==Some("1");
+        #[cfg(target_os="linux")]
+        let first_drop_diag=std::env::var("WBD_M0_029_FIRST_DROP_WINDOW")
+            .ok().as_deref()==Some("1");
+        // Independent slow observer; no new work in original TUN/TX/RX
+        // packet loops or per-packet Go bridge. Missing router never emits
+        // forged zero loss.
+        #[cfg(target_os="linux")]
+        let first_drop_router=if first_drop_diag{
+            e.shared_tun.as_ref().and_then(|s|shared_tun_reader(s.router).ok())
+        }else{None};
         let diag_stats=Arc::clone(&e.counters);
         let diag_stop=Arc::clone(&shutdown);
         let diag_raw=Arc::clone(&raw);
@@ -8548,6 +9001,66 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                         diag_stats.rx_thread_cpu_ns.load(Ordering::Relaxed),
                         diag_stats.tx_thread_cpu_ns.load(Ordering::Relaxed),
                         u8::from(readable),nic_rx,nic_tx,nic_drop);
+                    #[cfg(target_os="linux")]
+                    if first_drop_diag{
+                        if let Some(router)=first_drop_router.as_ref(){
+                            // Existing atomic counters only. 500ms clock
+                            // shared with real TCP_INFO and app echo across
+                            // these same-kernel Linux network namespaces.
+                            eprintln!("V4_PUBLIC_M4_FIRST_DROP_WINDOW role={} client_port={} generation={} mono_ns={} shared_delivered={} shared_full={} shared_byte={} shared_age={} shared_retired={} shared_unrouted={} shared_backpressure={} tx_tcp_seen={} tx_tcp_staged={} tx_udp_seen={} tx_arena_failed={} tx_deferred={} m4_copied={} rx_kernel={} rx_tuple={} rx_unique={} rx_tun={} rx_invalid={} scope=owner_cumulative_no_tcp_seq_attribution",
+                                diag_role,diag_port,diag_generation,
+                                original_kernel_monotonic_ns(),
+                                router.delivered.load(Ordering::Relaxed),
+                                router.queue_full_drops.load(Ordering::Relaxed),
+                                router.queue_byte_drops.load(Ordering::Relaxed),
+                                router.queue_age_drops.load(Ordering::Relaxed),
+                                router.retired_drops.load(Ordering::Relaxed),
+                                router.unrouted.load(Ordering::Relaxed),
+                                router.backpressure.load(Ordering::Relaxed),
+                                diag_stats.tx_chain[1].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[6].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[0].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[4].load(Ordering::Relaxed),
+                                diag_stats.tx_chain[7].load(Ordering::Relaxed),
+                                diag_stats.tx.load(Ordering::Relaxed),
+                                diag_stats.rx_chain[0].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[1].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[2].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[5].load(Ordering::Relaxed),
+                                diag_stats.rx_chain[13].load(Ordering::Relaxed));
+                        }
+                    }
+                    #[cfg(target_os="linux")]
+                    if service_diag{
+                        // Original worker TIDs from this exact session.
+                        // Read outside worker, 2 task-stat files per 500ms.
+                        let rx_tid=diag_stats.rx_worker_tid.load(Ordering::Acquire);
+                        let tx_tid=diag_stats.tx_worker_tid.load(Ordering::Acquire);
+                        let rx=m029_linux_task_ticks(rx_tid);
+                        let tx=m029_linux_task_ticks(tx_tid);
+                        let show=|sample:Option<(u64,u64)>|sample.map_or(
+                            ("UNAVAILABLE".to_owned(),"UNAVAILABLE".to_owned()),
+                            |(u,s)|(u.to_string(),s.to_string()));
+                        let (ru,rs)=show(rx);
+                        let (tu,ts)=show(tx);
+                        let bins:Vec<u64>=diag_stats.m4_successful_turn_bins.iter().map(|x|
+                            x.load(Ordering::Relaxed)).collect();
+                        eprintln!("V4_PUBLIC_M4_NATIVE_SERVICE_DIAG role={} client_port={} generation={} mono_ns={} rx_tid={} tx_tid={} rx_user_ticks={} rx_system_ticks={} tx_user_ticks={} tx_system_ticks={} m4_success_turns={} m4_bin_1={} m4_bin_2_4={} m4_bin_5_8={} m4_bin_9_16={} m4_bin_17_32={} scope=definitely_copied_original_sendmmsg_turns_only",
+                            diag_role,diag_port,diag_generation,
+                            original_kernel_monotonic_ns(),rx_tid,tx_tid,ru,rs,tu,ts,
+                            diag_stats.m4_successful_turns.load(Ordering::Relaxed),
+                            bins[0],bins[1],bins[2],bins[3],bins[4]);
+                    }
+                    #[cfg(target_os="linux")]
+                    if raw_call_diag{
+                        let cost=raw_cost_owner.original_m4_raw_call_cost();
+                        eprintln!("V4_PUBLIC_M4_RAW_SENDMMSG_COST role={} client_port={} generation={} mono_ns={} enabled={} sample_every={} sendmmsg_samples={} sendmmsg_wall_ns={} whole_driver_wall_ns={} copied_positive_samples={} copied_positive_records={} scope=sampled_exact_native_raw_sendmmsg_wall_not_cpu_or_peer_ack",
+                            diag_role,diag_port,diag_generation,
+                            original_kernel_monotonic_ns(),u8::from(cost.enabled),
+                            cost.sample_every,cost.sendmmsg_calls_sampled,
+                            cost.sendmmsg_wall_ns,cost.driver_wall_ns,
+                            cost.positive_copied_calls_sampled,cost.positive_copied_records_sampled);
+                    }
                 }
             }).ok()
     }else{None};
@@ -9237,6 +9750,18 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[cfg(all(feature="fec2_product_record",target_os="linux"))]
+    #[test]
+    fn m0_plan029_h2257_linux_task_stat_and_positive_send_turn_bins(){
+        let example="10 (wbd) worker) S 0 0 0 0 0 0 0 0 0 0 123 45 0";
+        assert_eq!(m029_parse_linux_task_ticks(example),Some((123,45)));
+        assert_eq!(m029_parse_linux_task_ticks("invalid"),None);
+        for (count,want) in [(0,None),(1,Some(0)),(2,Some(1)),
+            (4,Some(1)),(5,Some(2)),(8,Some(2)),(9,Some(3)),
+            (16,Some(3)),(17,Some(4)),(32,Some(4)),(33,None)]{
+            assert_eq!(m029_success_copy_bucket(count),want);
+        }
+    }
     #[test]
     fn m0_h2213_linux_native_32_lane_limit_33rd_denied(){
         assert_eq!(MAX_SESSIONS,32);

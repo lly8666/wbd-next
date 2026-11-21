@@ -980,6 +980,20 @@ func runGameMultiServer(
             reason,len(detached))
         return nil
     }
+    // Cold one-shot proof from this exact authenticated mixed Normal owner.
+    // Never infer effective repair policy from CLI intent or sibling Game.
+    logMixedNormalOuter:=func(rec *originalV4MultiRecord){
+        effective,e:=rec.product.OriginalOuterCounters()
+        if e!=nil{
+            log.Printf("V4_PUBLIC_MIXED_NORMAL_OUTER_READY_UNAVAILABLE role=server client_port=%d",
+                rec.peer.Port)
+            return
+        }
+        enabled:=0
+        if effective.OuterRepairEnabled{enabled=1}
+        log.Printf("V4_PUBLIC_MIXED_NORMAL_OUTER_READY role=server client_port=%d repair_enabled=%d proof=authenticated_original_rust_owner",
+            rec.peer.Port,enabled)
+    }
     scheduleGameRetire:=func(group *originalGameCohortLive){
         if group==nil{return}
         grace:=originalLaneRetirementGrace()
@@ -1259,6 +1273,7 @@ func runGameMultiServer(
                 *connected=true
                 log.Printf("V4_PUBLIC_MIXED_NORMAL_READY role=server port=%d client_ipv4=%d.%d.%d.%d client_port=%d active_normal=%d active_game_groups=%d detached_flows=%d protected_TLS=1 Rust_M4=1",
                     c.localPort,peer.IP[0],peer.IP[1],peer.IP[2],peer.IP[3],peer.Port,len(activeNormal),len(active),len(detached))
+                logMixedNormalOuter(rec)
                 continue
             }
             // The existing protected Go TLS admission can return exactly
@@ -1599,6 +1614,7 @@ func runGameMultiServer(
             *connected=true
             log.Printf("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=%d source=authenticated_client_native_Health promoted=1 active_normal=%d old_route_preserved_until_proof=1",
                 rec.peer.Port,len(activeNormal))
+            logMixedNormalOuter(rec)
             if older!=nil{scheduleNormalRetire(older)}
         case <-ticker.C:
             now:=time.Now()

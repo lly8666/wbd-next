@@ -62,7 +62,17 @@ extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_predead(uint64_t,uint3
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_health(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_firstsend_m2_coverage(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
-extern int32_t wbd_m0_embedded_go_loop_debug_pause_jumbo(uint64_t,uint32_t,uint32_t *,uint32_t *);
+// Optional developer-only Rust ABI. The real release builds without
+// m0_v4_probe deliberately DO NOT export it. GCC/Clang ELF weak linkage
+// preserves the probe under test and makes the absence fail closed at the
+// diagnostic call site, instead of breaking normal original-Go TLS linking.
+extern int32_t wbd_m0_embedded_go_loop_debug_pause_jumbo(
+    uint64_t,uint32_t,uint32_t *,uint32_t *) __attribute__((weak));
+static inline int32_t wbd_m0_embedded_go_optional_debug_pause_jumbo(
+    uint64_t h,uint32_t on,uint32_t *paused,uint32_t *loaned) {
+    if (wbd_m0_embedded_go_loop_debug_pause_jumbo == NULL) return -1;
+    return wbd_m0_embedded_go_loop_debug_pause_jumbo(h,on,paused,loaned);
+}
 extern int32_t wbd_m0_embedded_go_loop_thread_cpu(uint64_t,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_route_refresh(uint64_t,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_route_events(uint64_t,uint64_t *,uint32_t *);
@@ -700,7 +710,9 @@ func (b *v4EmbeddedNativeBridge) rustOwnerDebugJumboPause(enabled bool)(bool,uin
     var on C.uint32_t
     if enabled {on=1}
     var paused,loaned C.uint32_t
-    rc:=C.wbd_m0_embedded_go_loop_debug_pause_jumbo(
+    // Product builds have no developer ABI: weak C wrapper returns an
+    // error and cannot accidentally switch a data-plane pause on.
+    rc:=C.wbd_m0_embedded_go_optional_debug_pause_jumbo(
         C.uint64_t(b.handle),on,&paused,&loaned)
     if rc!=0{return false,0,fmt.Errorf("%w: jumbo turn barrier=%d",errV4Embedded,int(rc))}
     return paused!=0,uint32(loaned),nil

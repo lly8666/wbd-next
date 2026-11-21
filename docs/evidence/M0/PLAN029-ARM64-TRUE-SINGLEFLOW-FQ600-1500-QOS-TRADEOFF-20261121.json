@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "NEGATIVE_TRADEOFF_REJECT_FQ1500_AS_ALL_MODE_CLIENT_DEFAULT",
+  "source_sha": "c396fa799b491da94f117a7ad545daae27252ad5",
+  "run_id": 44874536618,
+  "attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44874536618",
+  "artifact": {
+    "id": 14695477496,
+    "name": "m029-fq-singleflow-44874536618-1",
+    "sha256": "8dfbf1e0f0538a9e8247e8d005e61de5f0700ea42cb83b4f6fe7be8a26cf8261"
+  },
+  "native": {
+    "arch": "aarch64",
+    "real": "original Go TLS + Rust AF_PACKET/TUN, 3 network namespaces, real original owner Stop, no m0_v4_probe",
+    "same_source_same_binary_hashes": {
+      "libwbd_engine.so": "a3a6d896c9be324ea4819f929a91625ddd00a965c1a9d492cf69f62418e4e17a",
+      "wbd-v4-client": "b044eef2c5a3fd73c2921aa2df9d00290283c6d0a773065c1f28e1a946547cba",
+      "wbd-v4-server": "1743a33f1f8cf9c4cc01555ec3ebebd3953cb2609ad32a7b2bb7115902b8eeda"
+    },
+    "driver_qdisc": "original owned Linux TUN tc root fq flow_limit=256, per-flow maxrate 600 vs 1500 Mbit both actual kernel tc readback",
+    "bulk": "one real kernel TCP iperf3 stream 20s with concurrent 160 UDP and 160 TCP small echoes",
+    "artificial_drop_pct": 0,
+    "client_rust_inbox": 128,
+    "server_rust_inbox": 64
+  },
+  "arms": [
+    {
+      "name": "old_fq600",
+      "client_perflow_cap_mbps": 600,
+      "receiver_useful_tcp_mbps": 566.978,
+      "receiver_bytes": 1417543680,
+      "client_cpu_seconds_per_received_gib": 14.61153,
+      "server_cpu_seconds_per_received_gib": 15.3387,
+      "udp_missing": 0,
+      "udp_replies": 160,
+      "udp_survivor_p99_ms": 1.9035,
+      "tcp_missing": 0,
+      "tcp_survivor_p99_ms": 1.7773,
+      "client_local_shared_full_drops": 184,
+      "server_local_shared_full_drops": 75,
+      "tcp_retransmissions": 184,
+      "real_owned_stop_both": true
+    },
+    {
+      "name": "candidate_fq1500",
+      "client_perflow_cap_mbps": 1500,
+      "receiver_useful_tcp_mbps": 1064.081,
+      "receiver_bytes": 2687631360,
+      "client_cpu_seconds_per_received_gib": 12.26103,
+      "server_cpu_seconds_per_received_gib": 11.33017,
+      "udp_missing": 28,
+      "udp_replies": 132,
+      "udp_survivor_p99_ms": 3.9143,
+      "tcp_missing": 0,
+      "tcp_survivor_p99_ms": 293.0622,
+      "client_local_shared_full_drops": 293881,
+      "server_local_shared_full_drops": 461,
+      "tcp_retransmissions": 293015,
+      "real_owned_stop_both": true
+    }
+  ],
+  "comparison": {
+    "single_stream_receiver_gain_pct": 87.676,
+    "client_cpu_seconds_per_gib_reduction_pct": 16.087,
+    "server_cpu_seconds_per_gib_reduction_pct": 26.133,
+    "actual_udp_missing_increase": 28,
+    "small_tcp_survivor_p99_growth_fold": 164.9,
+    "local_full_drops_increase": 293697
+  },
+  "decision": "600Mbit per-flow is confirmed real source limit; default1500 causes severe shared-M1 local overflow and QoS regression. Do NOT globally promote1500. Evaluate a calculated intermediate normal-only cap with service headroom or isolate sparse first-delivery path before raising persistent cap.",
+  "caveats": [
+    "One native 20-second two-leg screen, not 3-leg baseline restoration; no cross-platform conclusion.",
+    "Zero artificial netem loss but 293881 native SharedTun full drops in candidate; not zero packet loss.",
+    "UDP offer-to-reply 160/160 vs 132/160; don't report p99 among survivors as successful low-latency delivery.",
+    "FQ 0 would change queue type and is not an equivalent counterfactual; both arms use the same fq and flow_limit256.",
+    "Single-flow 1064Mbps local receiver under raw Linux native VM; not physical WAN, Windows or all modes.",
+    "No general aggregate capacity/fairness solution from per-flow fq cap change alone."
+  ]
+}

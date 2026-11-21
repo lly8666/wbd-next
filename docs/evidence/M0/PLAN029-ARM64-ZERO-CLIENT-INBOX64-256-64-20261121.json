@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "PROMISING_CLIENT_ONLY_SCOPED_NATIVE_ABA_NOT_PRODUCT_PASS",
+  "scenario": "NATIVE_ARM64_ZERO_ARTIFICIAL_LOSS_CLIENT_M1_INBOX_A64_B256_A64_TRUE_KERNEL_BULK_PLUS_SMALL",
+  "source_sha": "aeed826fd175b580a5225003e1e97adf4ceebe0c",
+  "run_id": 44868667527,
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44868667527",
+  "artifact": {
+    "id": 14693076782,
+    "name": "m0-029-arm-client-inbox-zero-aba-44868667527-1",
+    "sha256": "a0e12ee2f7613ddf5bdcb0b1a3d39fad896ad47e5085c5c753fa2df8ae3bdefe"
+  },
+  "frozen_reused_original_fixture_git_blob_sha": "b1094391ec9729931979c5158357ef2cbf72b84e",
+  "runner": {
+    "architecture": "aarch64",
+    "kernel": "7.0.0-1017-azure",
+    "topology": "three genuine Linux netns (client/router/server), original Go TLS+Rust AF_PACKET/TUN, authenticated generation and owned Stop each leg",
+    "artificial_netem": {
+      "loss_pct": 0,
+      "extra_oneway_ms": 0,
+      "both_directions": true,
+      "observed_skb_drops": [
+        0,
+        0,
+        0
+      ]
+    },
+    "source_lifetime": "one source, one native Go/Rust release build, three sequential TLS generations",
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "binary_sha256": {
+      "libwbd_engine.so": "26ae05786050ba0acd18b53188d62480fd6ece716770b37fcced5e2a22e3e8e6",
+      "wbd-v4-client": "1ed739db0f8c63b8f251e82e9d7658025ba2897e6d898176e79eda0661bd5d2c",
+      "wbd-v4-server": "0a910dc677f0753445c2765fcece3eb5bcfaa0327ee3c107727df81cd4c7de38"
+    },
+    "only_changed_factor": "Rust authenticated client M1 shared TUN sync channel 64→256→64 via m0_v4_probe only, server fixed at64",
+    "phase_order": [
+      "original_before",
+      "inbox256_candidate",
+      "original_after"
+    ],
+    "real_traffic": "20s four iperf3 TCP streams and overlapping 160 UDP + 160 TCP real application echo requests each phase; separate five-second Direct calibration not part of WBD goodput denominator"
+  },
+  "phase_stats": [
+    {
+      "name": "original_before",
+      "client_slots": 64,
+      "server_slots": 64,
+      "actual_native_cold_readback": true,
+      "receiver_goodput_mbps": 966.85809,
+      "receiver_unique_bytes": 2417491968,
+      "client_cpu_sec_per_gib": 12.90715,
+      "server_cpu_sec_per_gib": 12.37417,
+      "client_pending_full_drops": 727204,
+      "client_backpressure": 1088853,
+      "server_pending_full_drops": 2605,
+      "udp": {
+        "offered": 160,
+        "unique_replies": 121,
+        "missing": 39,
+        "p99_ms_among_replies": 3.8442
+      },
+      "tcp": {
+        "offered": 160,
+        "unique_replies": 160,
+        "missing": 0,
+        "p99_ms_among_replies": 647.3967
+      },
+      "original_tcp_retransmissions": 726342,
+      "original_real_owned_stop_both": true
+    },
+    {
+      "name": "client256_candidate",
+      "client_slots": 256,
+      "server_slots": 64,
+      "actual_native_cold_readback": true,
+      "receiver_goodput_mbps": 1067.71018,
+      "receiver_unique_bytes": 2669674496,
+      "client_cpu_sec_per_gib": 12.52852,
+      "server_cpu_sec_per_gib": 11.91717,
+      "client_pending_full_drops": 543600,
+      "client_backpressure": 887753,
+      "server_pending_full_drops": 639,
+      "udp": {
+        "offered": 160,
+        "unique_replies": 127,
+        "missing": 33,
+        "p99_ms_among_replies": 7.6021
+      },
+      "tcp": {
+        "offered": 160,
+        "unique_replies": 160,
+        "missing": 0,
+        "p99_ms_among_replies": 632.8943
+      },
+      "original_tcp_retransmissions": 542950,
+      "original_real_owned_stop_both": true
+    },
+    {
+      "name": "original_after",
+      "client_slots": 64,
+      "server_slots": 64,
+      "actual_native_cold_readback": true,
+      "receiver_goodput_mbps": 978.83701,
+      "receiver_unique_bytes": 2447376384,
+      "client_cpu_sec_per_gib": 12.91188,
+      "server_cpu_sec_per_gib": 12.46437,
+      "client_pending_full_drops": 736804,
+      "client_backpressure": 1107209,
+      "server_pending_full_drops": 2741,
+      "udp": {
+        "offered": 160,
+        "unique_replies": 121,
+        "missing": 39,
+        "p99_ms_among_replies": 6.1086
+      },
+      "tcp": {
+        "offered": 160,
+        "unique_replies": 160,
+        "missing": 0,
+        "p99_ms_among_replies": 695.2377
+      },
+      "original_tcp_retransmissions": 736291,
+      "original_real_owned_stop_both": true
+    }
+  ],
+  "paired_interpretation": {
+    "candidate_receiver_goodput_vs_baselines_mean_pct": 9.75103,
+    "baseline_A_to_Aprime_goodput_drift_pct": 1.23895,
+    "client_cpu_s_per_gib_candidate_vs_baseline_mean_pct": -2.95127,
+    "server_cpu_s_per_gib_candidate_vs_baseline_mean_pct": -4.04291,
+    "client_shared_tun_full_drops_candidate_vs_baselines_mean_pct": -25.73811,
+    "udp_missing_candidates": [
+      39,
+      33,
+      39
+    ],
+    "udp_survivor_p99_ms": [
+      3.8442,
+      7.6021,
+      6.1086
+    ],
+    "decision": "POSITIVE_SCREEN_KEEP_FOR_GE1_FALSIFICATION_AND_MEMORY_REVIEW; NOT_FORMAL_PRODUCT_OR_DEFAULT_PASS",
+    "important_negative_control": "A separate real server256/64/64-side control with server changed 64→256→64 produced -0.30% goodput vs A/A' mean and more missing UDP; see run44868169236."
+  },
+  "caveats": [
+    "No artificial qdisc loss/delay is not no real local drops; client shared-TUN queue itself dropped 0.54m-0.74m packets.",
+    "Only 160 UDP and 160 TCP echo samples each; survivor-only p99 has low statistical qualification and UDP nonreplies remain significant.",
+    "Candidate UDP survivors p99 rose while missing decreased, a real potential latency vs delivery tradeoff.",
+    "Single 20-second per-leg A/B/A with separate cold TLS generations, no reversed-order confirmation.",
+    "Unknown user/kernel thread attribution, true OS CPU quota and physical NIC; full product resource budget not verified.",
+    "At 65,535B worst-case incoming jumbo, 192 additional slots may retain about 12MiB extra per client generation, two generations overlap further.",
+    "Neither Windows physical 80-200Mbps nor 3s uplink problem nor GE1%, 10+ actual client leases or cross-ISA product qualification covered.",
+    "No default value changed, opt-in requires developer m0_v4_probe at source."
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "task": "M0-PLAN029-THROUGHPUT",
+  "study": "H2257",
+  "status": "PASS_SCOPED_DIAGNOSTIC__NO_QOS_PERFORMANCE_CAUSAL_PROMOTION",
+  "source_sha": "2cdbfdd5a475859e9bf3760229566be8a227d269",
+  "run_id": 44890290584,
+  "attempt": 1,
+  "unit_native_run_id": 44890290593,
+  "governance_run_id": 44890290674,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44890290584",
+  "configuration": "Native aarch64/x86_64 per ISA original Go TLS/Rust nonprobe five modes; shared Normal/off client128/server64, four TCP bulk+160 UDP/TCP echo, real TUN/raw and owned Stop, explicit MTU1160/no injected netem, original authenticated server native outer repair=0 and client native Stop=0. Per ISA identical binaries first without independent observer and then with 500ms stage+task-stat observer.",
+  "method": "Exact authenticated Linux Rust RX/TX worker TIDs captured cold once, independent observer samples /proc/self/task/TID/stat utime/stime at USER_HZ=100. 31 samples within true 15.02s app echo window per role. Original background_tun_once returns at most one real send_kernel_multimsg; only copied>0 positive turns count in 5 bins, 0-copy and uncertain not counted.",
+  "results": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14702065749,
+      "sha256": {
+        "libwbd_engine.so": "2a11adffa601348fc4b065fdc5c2d96ce562311cf99d43879e19b072891b3d45",
+        "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+        "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+      },
+      "baseline": {
+        "receiver_mbps": 1152.384717,
+        "udp_missing_of160": 35,
+        "small_tcp_p99_ms": 633.4356
+      },
+      "observed": {
+        "receiver_mbps": 1139.390252,
+        "udp_missing_of160": 40,
+        "small_tcp_p99_ms": 1482.4923
+      },
+      "cpu_echo": {
+        "duration_s_approx": 15.02,
+        "client_tx_user_ticks": 533,
+        "client_tx_system_ticks": 935,
+        "client_tx_single_core_fraction": 0.9772,
+        "client_tx_system_share": 0.6369,
+        "server_rx_user_ticks": 470,
+        "server_rx_system_ticks": 734,
+        "server_rx_system_share": 0.6096
+      },
+      "copied_positive_m4_turns": {
+        "total": 67461,
+        "bins_1_2to4_5to8_9to16_17to32": [
+          153,
+          1687,
+          937,
+          420,
+          64264
+        ],
+        "last_band_fraction": 0.9526
+      }
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14702230360,
+      "sha256": {
+        "libwbd_engine.so": "1433f294f0a2a5df97cd555a7950755c880ea08c2f987396d7565a641d1ac0d9",
+        "wbd-v4-client": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+        "wbd-v4-server": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343"
+      },
+      "baseline": {
+        "receiver_mbps": 1406.788447,
+        "udp_missing_of160": 27,
+        "small_tcp_p99_ms": 288.8012
+      },
+      "observed": {
+        "receiver_mbps": 1475.261599,
+        "udp_missing_of160": 19,
+        "small_tcp_p99_ms": 1485.0415
+      },
+      "cpu_echo": {
+        "duration_s_approx": 15.02,
+        "client_tx_user_ticks": 463,
+        "client_tx_system_ticks": 1018,
+        "client_tx_single_core_fraction": 0.986,
+        "client_tx_system_share": 0.6874,
+        "server_rx_user_ticks": 433,
+        "server_rx_system_ticks": 896,
+        "server_rx_system_share": 0.6742
+      },
+      "copied_positive_m4_turns": {
+        "total": 90231,
+        "bins_1_2to4_5to8_9to16_17to32": [
+          123,
+          3624,
+          2218,
+          879,
+          83387
+        ],
+        "last_band_fraction": 0.9242
+      }
+    }
+  ],
+  "findings": [
+    "Client TX worker under real bulk load spends >60% of measured CPU in Linux system mode on both ISAs; server RX similar. Does not attribute to a specific syscall.",
+    "Most definite-positive copied client M4 send turns already involve 17-32 records. Larger fixed send batch is not supported by the observed bottleneck.",
+    "UDP missing and >1s small TCP p99 on observer leg remain unacceptable."
+  ],
+  "limits": [
+    "A->B only, observer adds thread, /proc reads and scheduling overhead; no A' and no causal CPU/goodput or latency interpretation.",
+    "Scoped worker Linux system time can include other kernel overhead, not exclusively sendmmsg/recvmmsg.",
+    "Only definite-positive copied M4 turns; does not measure all attempted send syscalls, zero copied turns, uncertain or peer delivery.",
+    "Different ISA runners not causal comparisons; source-locked binary hashes/per-sample records available in Action artifacts.",
+    "No default 1460MTU, WAN/Windows, physical, GE1%, upstream 3s outage, or full timely delivery qualification."
+  ],
+  "next": "Read original native Linux raw send/receive kernel service paths and test a single bounded source-level cost reduction only after isolating dominant system calls; do not increase M4 32 cap or reintroduce UDP priority eviction."
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "SCOPED_FAST_SINGLE_TCP_BUT_SMALLFLOW_QOS_REGRESSION_DO_NOT_PROMOTE_FQ900_DEFAULT",
+  "source_sha": "85c9cad54583cdd059269dc845c19661faf2b447",
+  "run_id": 44874998119,
+  "attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44874998119",
+  "artifact": {
+    "id": 14695577597,
+    "name": "m029-fq900-singleflow-44874998119-1",
+    "sha256": "3947f50ae370132165e8144b6b957ec3dc3c9d80cd621adc9d5d5f7c94e92fd2"
+  },
+  "platform": "true original-Go TLS/Rust AF_PACKET+TUN native ARM64 3-netns, same source/Go/Rust source-locked nonprobe binaries, authenticated real Linux client128/server64, live Stop both",
+  "scenario": "0% artificial netem loss, one real kernel TCP stream for20s overlapping 160 UDP and160 small TCP echo, same client kernel root fq flow_limit=256, 600 vs900 Mbit per-flow, server fq600",
+  "same_binary_sha256": {
+    "libwbd_engine.so": "a3a6d896c9be324ea4819f929a91625ddd00a965c1a9d492cf69f62418e4e17a"
+  },
+  "phases": [
+    {
+      "name": "fq600_baseline",
+      "client_kernel_fq_maxrate_mbps": 600,
+      "client_rust_inbox": 128,
+      "server_rust_inbox": 64,
+      "receiver_goodput_mbps": 567.1697,
+      "receiver_bytes": 1418067968,
+      "client_cpu_seconds_per_rx_gib": 14.74999,
+      "server_cpu_seconds_per_rx_gib": 15.6889,
+      "udp_requests": 160,
+      "udp_replies": 160,
+      "udp_missing": 0,
+      "udp_survivors_p99_ms": 1.5179,
+      "tcp_requests": 160,
+      "tcp_replies": 160,
+      "tcp_missing": 0,
+      "tcp_survivors_p99_ms": 1.5282,
+      "client_shared_tun_queue_full_drops": 20,
+      "server_shared_tun_queue_full_drops": 57,
+      "original_tcp_retransmissions": 20,
+      "native_stop_both": true
+    },
+    {
+      "name": "fq900_candidate",
+      "client_kernel_fq_maxrate_mbps": 900,
+      "client_rust_inbox": 128,
+      "server_rust_inbox": 64,
+      "receiver_goodput_mbps": 847.025,
+      "receiver_bytes": 2117730304,
+      "client_cpu_seconds_per_rx_gib": 13.59841,
+      "server_cpu_seconds_per_rx_gib": 14.28289,
+      "udp_requests": 160,
+      "udp_replies": 158,
+      "udp_missing": 2,
+      "udp_survivors_p99_ms": 4.1815,
+      "tcp_requests": 160,
+      "tcp_replies": 160,
+      "tcp_missing": 0,
+      "tcp_survivors_p99_ms": 81.3094,
+      "client_shared_tun_queue_full_drops": 1406,
+      "server_shared_tun_queue_full_drops": 265,
+      "original_tcp_retransmissions": 1402,
+      "native_stop_both": true
+    }
+  ],
+  "decision": {
+    "single_stream_goodput_gain_pct": 49.342,
+    "client_cpu_seconds_per_gib_reduction_pct": 7.807,
+    "server_cpu_seconds_per_gib_reduction_pct": 8.962,
+    "added_udp_nonreplies": 2,
+    "small_tcp_survivor_p99_worse_fold": 53.2,
+    "real_local_queue_pressure_grew": true,
+    "default": "KEEP_600_ALL_MODES_LOW_LATENCY",
+    "explicit900": "OPTIONAL_USER_SELECTED_FAST_SINGLE_FLOW_WITH_DOCUMENTED_QOS_RISK",
+    "rejected1500": "REMOVE_FROM_NEW_PUBLIC_CHOICES_OR_KEEP_ONLY_HISTORICAL_EVIDENCE",
+    "future_priority": "Deliver larger effective M1/M4 TX service and interflow early delivery without starving sparse UDP/TCP. Stop varying static fq rate numbers."
+  },
+  "limitations": [
+    "No physical WAN/Windows, and one ARM64 same-run A/B with separate cold TLS generations is not global causal certainty.",
+    "No artificial netem drop does not mean zero Rust local drops. The 900 case still lost two of160 sparse UDP responses.",
+    "Survivor-only p99 must never be represented as full offered-request timely delivery.",
+    "900 is explicit opt-in only; all-mode default600 unchanged.",
+    "No per-flow fq cap can solve aggregate multiple TCP sources exceeding shared M1/M4 service."
+  ]
+}

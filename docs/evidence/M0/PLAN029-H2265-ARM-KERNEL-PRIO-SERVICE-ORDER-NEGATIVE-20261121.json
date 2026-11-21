@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "task": "M0-PLAN029-THROUGHPUT",
+  "experiment": "H2265",
+  "source_sha": "540fec2125cc184b0e976a25fb8a58db42cb994c",
+  "source_label": "experiment/m0-029-throughput-arm-fair",
+  "run_id": 44905780854,
+  "attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44905780854",
+  "workflow_conclusion": "SUCCESS",
+  "qualification": "PASS_SCOPED_GENUINE_NATIVE_KERNEL_TWO_FQ_CHILDREN_WITH_NEGATIVE_TAIL_AND_REFUSAL_FINDING__NOT_PRODUCT_QOS_PASS",
+  "artifact": {
+    "id": 14707853120,
+    "name": "m0-029-h2265-arm-prio-44905780854-1",
+    "zip_sha256": "55f00b0418c48cb2985a48e45dca427db6ce28bfea3ab26b4c2cecfd78a98408",
+    "not_expired_at_review": true
+  },
+  "source_scope": {
+    "arch": "native Linux ARM64",
+    "one_original_Go_TLS_Rust_nonprobe_bundle": true,
+    "original_fixture_frozen_source_blob": "b1094391ec9729931979c5158357ef2cbf72b84e",
+    "same_runner_serial_A_B_Aprime": true,
+    "authenticated_original_shared_TUN_client128_server64": true,
+    "original_outer_mode": "Normal/off",
+    "explicit_outer_ipv4_mtu_bytes": 1160,
+    "artificial_netem_loss": false,
+    "real_kernel_AF_PACKET_TUN": true,
+    "original_bulk_TCP_streams": 4,
+    "small_udp_requests_each_leg": 160,
+    "small_tcp_echo_requests_each_leg": 160,
+    "original_both_owned_stop_each_leg": true,
+    "prioritized_port_is_test_only": true,
+    "original_go_cold_fq600_and_other_product_defaults_unchanged": true
+  },
+  "one_factor": {
+    "A": "original Go native per-flow fq maxrate600Mbps flow_limit256 on client TUN",
+    "B": "isolation-only client TUN root kernel prio2, child fq600/flow_limit256 on each band; destination TCP port53222 and UDP port53221 known original fixture requests high, all other bulk low; original server fq600 unchanged",
+    "A_prime": "fresh original-Go cold fq600 identical to A",
+    "production_code_changed": false,
+    "security_protocol_changed": false
+  },
+  "B_native_kernel_qdisc_actual": {
+    "root_handle": "1:",
+    "root_kind": "prio",
+    "total_bytes": 3906865930,
+    "total_packets": 3588080,
+    "priority_child": {
+      "handle": "10:",
+      "kind": "fq",
+      "parent": "1:1",
+      "bytes": 28140,
+      "packets": 503,
+      "drops": 0
+    },
+    "bulk_child": {
+      "handle": "20:",
+      "kind": "fq",
+      "parent": "1:2",
+      "bytes": 3906837790,
+      "packets": 3587577,
+      "drops": 0
+    },
+    "root_drops": 0
+  },
+  "legs": [
+    {
+      "leg": "A",
+      "receiver_mbps": 1189.56147,
+      "client_cpu_seconds_per_rx_gib": 11.25624,
+      "server_cpu_seconds_per_rx_gib": 10.21292,
+      "client_shared_tun_total_full": 753887,
+      "sparse_tcp_forward_offered": 341,
+      "sparse_tcp_forward_refused": 56,
+      "udp_missing_of160": 27,
+      "tcp_missing_of160": 0,
+      "small_tcp_p99_ms": 367.5721,
+      "actual_inner_tcp_info_retrans_segments_delta": 33,
+      "actual_rto_p95_us": 204000,
+      "owned_stop": true
+    },
+    {
+      "leg": "B",
+      "receiver_mbps": 1184.40504,
+      "client_cpu_seconds_per_rx_gib": 11.27606,
+      "server_cpu_seconds_per_rx_gib": 10.38412,
+      "client_shared_tun_total_full": 730081,
+      "sparse_tcp_forward_offered": 343,
+      "sparse_tcp_forward_refused": 67,
+      "udp_missing_of160": 28,
+      "tcp_missing_of160": 0,
+      "small_tcp_p99_ms": 617.9552,
+      "actual_inner_tcp_info_retrans_segments_delta": 41,
+      "actual_rto_p95_us": 203000,
+      "owned_stop": true
+    },
+    {
+      "leg": "A_prime",
+      "receiver_mbps": 1199.11035,
+      "client_cpu_seconds_per_rx_gib": 11.12321,
+      "server_cpu_seconds_per_rx_gib": 10.15987,
+      "client_shared_tun_total_full": 748262,
+      "sparse_tcp_forward_offered": 263,
+      "sparse_tcp_forward_refused": 50,
+      "udp_missing_of160": 26,
+      "tcp_missing_of160": 0,
+      "small_tcp_p99_ms": 2370.1938,
+      "actual_inner_tcp_info_retrans_segments_delta": 27,
+      "actual_rto_p95_us": 2349000,
+      "owned_stop": true
+    }
+  ],
+  "B_vs_A_Aprime_mean": {
+    "receiver_goodput_delta_percent": -0.8314972,
+    "client_CPU_per_GiB_delta_percent": 0.771556,
+    "server_CPU_per_GiB_delta_percent": 1.9410694,
+    "sparse_tcp_source_refused_delta_percent": 26.41509,
+    "udp_missed_delta_percent": 5.660377
+  },
+  "judgement": [
+    "TRUE original echo TCP and UDP packets traversed the high prio child in B: 503 packets, no qdisc child drops, while 3,587,577 bulk packets traversed the low child. The kernel service-order change is not a no-op.",
+    "Despite real priority, the true original client's shared source rejected 67 of343 sparse TCP first fragments in B, vs 56 of341 and 50 of263 in original A and A-prime. No evidence of improved local sparse admission.",
+    "TCP small-flow p99 B 618ms vs A 368ms and A-prime 2370ms shows substantial drift; no causal positive or stable negative p99 claim can be inferred from single A/B/A-prime, but screen fails.",
+    "Receiver goodput preserved within ~1% and CPU/GiB up <2%; this does not offset missing sparse QoS improvement. No general app-port prioritization is acceptable for product, and no production scheduler/default changed.",
+    "Next hypothesis must distinguish source-side same-lease M1 admission capacity and service order from kernel qdisc order, not blindly increase 32-record M4 batch or resurrect H2254 rejected eviction."
+  ],
+  "unknown": [
+    "Full original Go-only end-to-end before/after product CPU and p99 is not proven with matched builds.",
+    "Physical WAN, default1460 outer MTU, Windows, GE1%, multi-lease fairness, 3s real uplink outage, all-mode QoS and scale NOT_RUN for H2265.",
+    "Exact app-sequence first lost packet and packet-level causal RTO origin not identified; shared source counts are first-fragment TCP segments, not app frames.",
+    "Long-run P99 stability needs larger than 160 requests and lost UDP counted separately; high-priority unbounded traffic starvation NOT_TESTED and thus not a product option."
+  ]
+}

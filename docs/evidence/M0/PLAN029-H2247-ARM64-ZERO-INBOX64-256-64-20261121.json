@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "scenario": "ARM64_ZERO_LOSS_NATIVE_GO_RUST_SAME_VM_64_256_64_SERVER_INBOX",
+  "status": "NEGATIVE_PRODUCT_GAIN_REJECT_SERVER256_AS_DEFAULT",
+  "source_sha": "7bb79d2203e6e62c349e665ee03e5ee386c0282e",
+  "run_id": 44868169236,
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44868169236",
+  "artifact": {
+    "id": 14692579439,
+    "name": "m0-029-arm-zero-real-inbox-aba-44868169236-1",
+    "sha256": "c9f66caead4d5918ac8055937066bbe9fe2eb9e08f0f8387389ac33651ae818c"
+  },
+  "native": {
+    "architecture": "aarch64",
+    "kernel": "7.0.0-1017-azure",
+    "runner_relation": "same native ARM64 VM sequential legs",
+    "real_owners": "original Go TLS + Rust TUN AF_PACKET + owned Stop each phase",
+    "network": "3 native netns, 0ms added delay, 0% artificial netem loss in both directions",
+    "genuine_load": "4 kernel iperf3 TCP upload streams for 20s + simultaneously 160 UDP/160 TCP real application echoes per phase",
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "binary_sha256": {
+      "libwbd_engine.so": "26ae05786050ba0acd18b53188d62480fd6ece716770b37fcced5e2a22e3e8e6",
+      "wbd-v4-client": "1ed739db0f8c63b8f251e82e9d7658025ba2897e6d898176e79eda0661bd5d2c",
+      "wbd-v4-server": "0a910dc677f0753445c2765fcece3eb5bcfaa0327ee3c107727df81cd4c7de38"
+    },
+    "controlled_only_change": "server authenticated Rust M1 shared TUN inbox 64→256→64 via m0_v4_probe cold flag, client remains default64",
+    "original_source_script_blob_sha": "b1094391ec9729931979c5158357ef2cbf72b84e"
+  },
+  "phases": [
+    {
+      "name": "original_before",
+      "server_slots": 64,
+      "receiver_tcp_mbps": 1014.8161,
+      "receiver_bytes": 2537422848,
+      "client_cpu_sec_per_effective_gib": 12.30556,
+      "server_cpu_sec_per_effective_gib": 11.91625,
+      "udp": {
+        "sent": 160,
+        "replied": 122,
+        "missing": 38,
+        "p99_ms_survivors": 5.1118
+      },
+      "tcp": {
+        "sent": 160,
+        "replied": 160,
+        "missing": 0,
+        "p99_ms_survivors": 1450.5735
+      },
+      "shared_tun": {
+        "client": {
+          "backpressure": 1167056,
+          "queue_full_drops": 782287
+        },
+        "server": {
+          "backpressure": 6863,
+          "queue_full_drops": 3056
+        }
+      },
+      "qdisc": {
+        "router_rcli0_skb_drops": 0,
+        "router_rsrv0_skb_drops": 0
+      },
+      "genuine_owner_stop_both_sides": true
+    },
+    {
+      "name": "server256_candidate",
+      "server_slots": 256,
+      "receiver_tcp_mbps": 1008.28905,
+      "receiver_bytes": 2521038848,
+      "client_cpu_sec_per_effective_gib": 12.44516,
+      "server_cpu_sec_per_effective_gib": 11.90851,
+      "udp": {
+        "sent": 160,
+        "replied": 116,
+        "missing": 44,
+        "p99_ms_survivors": 5.1098
+      },
+      "tcp": {
+        "sent": 160,
+        "replied": 160,
+        "missing": 0,
+        "p99_ms_survivors": 615.3549
+      },
+      "shared_tun": {
+        "client": {
+          "backpressure": 1131344,
+          "queue_full_drops": 753914
+        },
+        "server": {
+          "backpressure": 0,
+          "queue_full_drops": 0
+        }
+      },
+      "qdisc": {
+        "router_rcli0_skb_drops": 0,
+        "router_rsrv0_skb_drops": 0
+      },
+      "genuine_owner_stop_both_sides": true
+    },
+    {
+      "name": "original_after",
+      "server_slots": 64,
+      "receiver_tcp_mbps": 1007.75467,
+      "receiver_bytes": 2519597056,
+      "client_cpu_sec_per_effective_gib": 12.40541,
+      "server_cpu_sec_per_effective_gib": 11.99203,
+      "udp": {
+        "sent": 160,
+        "replied": 126,
+        "missing": 34,
+        "p99_ms_survivors": 2.8119
+      },
+      "tcp": {
+        "sent": 160,
+        "replied": 160,
+        "missing": 0,
+        "p99_ms_survivors": 6412.602
+      },
+      "shared_tun": {
+        "client": {
+          "backpressure": 1145390,
+          "queue_full_drops": 763093
+        },
+        "server": {
+          "backpressure": 4991,
+          "queue_full_drops": 2241
+        }
+      },
+      "qdisc": {
+        "router_rcli0_skb_drops": 0,
+        "router_rsrv0_skb_drops": 0
+      },
+      "genuine_owner_stop_both_sides": true
+    }
+  ],
+  "paired_interpretation": {
+    "receiver_goodput_candidate_vs_original_mean_pct": -0.29629,
+    "original_A_to_Aprime_drift_pct": -0.69583,
+    "client_cpu_sec_per_gib_candidate_vs_original_mean_pct": 0.72579,
+    "server_cpu_sec_per_gib_candidate_vs_original_mean_pct": -0.38171,
+    "client_tcp_new_retransmissions": [
+      781526,
+      753076,
+      762021
+    ],
+    "server_shared_tun_overflow_reduced_to_zero": true,
+    "end_to_end_effective_delivery_improved": false,
+    "udp_smallflow_missing_improved": false,
+    "local_pressure_is_asymmetric": true,
+    "next_hypothesis": "Original client shared TUN ingress backpressure and M1/M4 service throughput dominate, server-inbox queue length is not the product bottleneck. Test client-only cold 256 vs 64 at identical zero-loss load.",
+    "default_decision": "REJECT_SERVER_INBOX_256_DEFAULT; preserve original 64 for all modes/platforms"
+  },
+  "caveats": [
+    "High supply is actual product source plus same-host kernel iperf3; not physical WAN and not proof of all-platform 1Gbps qualification.",
+    "The deliberate zero netem qdisc loss does NOT mean no genuine local/inner/driver packet losses; client SharedTun overflow is large.",
+    "SharedTun queue drops count packets read then not admitted, not TCP application loss or unique bytes.",
+    "Survivor-only latency p99 is not meaningful alone while UDP missing 21-28%.",
+    "Different Windows, x86, ARM physical and FEC/Game paths NOT_RUN.",
+    "Extra 192 inbox slots can hold worst-case jumbo 192*65535B~12MiB per lease; memory ceiling not suitable to enable without separate safety evidence.",
+    "Cross-lease fairness switch was OFF in this single authenticated lease test. Its effects are NOT_PROVEN."
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2258",
+  "conclusion": "PASS_SCOPED_TRUE_NATIVE_SENDMMSG_WALL_DIAGNOSTIC__NOT_THROUGHPUT_QOS_CAUSAL_GAIN",
+  "source_sha": "ed494713b05afedf5d40afe5bb1b6692090856f9",
+  "run_id": 44892114676,
+  "attempt": 1,
+  "governance_run": 44892114653,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44892114676",
+  "method": "Original native Linux same release Go TLS+Rust no-probe 5 dedicated modes, authenticated shared /32 Normal client128/server64, four bulk kernel TCP +160 UDP/TCP small echoes, real AF_PACKET/IP_HDRINCL/raw, authentic server Rust outer-repair off and client Rust Stop off. On each ISA A no observer, B stage500ms+user/sys plus scoped original raw driver 1/128 calls exact original sendmmsg wall and driver wall (only if kernel call invoked), A-prime no observer; same binary SHA per ISA. B time window 31 monotonic samples within echo probe; 0 artificial loss; MTU1160; network-isolated GitHub native runner.",
+  "data": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14703075376,
+      "manifest_sha256": {
+        "libwbd_engine.so": "89b3fa0b5e52eaf57311ceaacff9ee4770ed50da6905de9ab2b24947fbff188d",
+        "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+        "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1175.309,
+          "client_cpu_s_per_received_gib": 11.37818,
+          "udp_missing": 41,
+          "tcp_missing": 0,
+          "tcp_p99_ms": 301.879
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1165.351,
+          "client_cpu_s_per_received_gib": 11.49386,
+          "udp_missing": 47,
+          "tcp_missing": 0,
+          "tcp_p99_ms": 1487.792
+        },
+        {
+          "leg": "A_prime",
+          "receiver_mbps": 1164.074,
+          "client_cpu_s_per_received_gib": 11.51735,
+          "udp_missing": 42,
+          "tcp_missing": 0,
+          "tcp_p99_ms": 617.134
+        }
+      ],
+      "sampled_echo_window": {
+        "client_true_sendmmsg_samples": 539,
+        "client_sendmmsg_mean_wall_us": 136.521,
+        "client_whole_driver_mean_wall_us": 142.676,
+        "client_sendmmsg_wall_fraction_of_driver": 0.9569,
+        "client_copied_records_per_sampled_sendmmsg": 30.69,
+        "client_m4_tx_worker_user_ticks": 546,
+        "client_m4_tx_worker_system_ticks": 925,
+        "server_true_sendmmsg_samples": 908,
+        "server_sendmmsg_mean_wall_us": 68.248,
+        "server_driver_mean_wall_us": 69.651,
+        "server_sendmmsg_wall_fraction_of_driver": 0.9799
+      }
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14702830921,
+      "manifest_sha256": {
+        "libwbd_engine.so": "64f879a8b037d68e09e8c9b7aa4662f6690f74f1c6bdaf7548ad077944780c9d",
+        "wbd-v4-client": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+        "wbd-v4-server": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1477.85,
+          "client_cpu_s_per_received_gib": 8.33119,
+          "udp_missing": 26,
+          "tcp_missing": 0,
+          "tcp_p99_ms": 285.055
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1501.095,
+          "client_cpu_s_per_received_gib": 8.21603,
+          "udp_missing": 27,
+          "tcp_missing": 0,
+          "tcp_p99_ms": 617.059
+        },
+        {
+          "leg": "A_prime",
+          "receiver_mbps": 1481.561,
+          "client_cpu_s_per_received_gib": 8.33375,
+          "udp_missing": 29,
+          "tcp_missing": 0,
+          "tcp_p50_ms": 5154.8257,
+          "tcp_p95_ms": 10913.5544,
+          "tcp_p99_ms": 11473.5417,
+          "udp_p50_ms": 1.0702
+        }
+      ],
+      "sampled_echo_window": {
+        "client_true_sendmmsg_samples": 711,
+        "client_sendmmsg_mean_wall_us": 112.904,
+        "client_whole_driver_mean_wall_us": 119.935,
+        "client_sendmmsg_wall_fraction_of_driver": 0.9414,
+        "client_copied_records_per_sampled_sendmmsg": 29.965,
+        "client_m4_tx_worker_user_ticks": 454,
+        "client_m4_tx_worker_system_ticks": 1027,
+        "server_true_sendmmsg_samples": 1889,
+        "server_sendmmsg_mean_wall_us": 23.159,
+        "server_driver_mean_wall_us": 24.246,
+        "server_sendmmsg_wall_fraction_of_driver": 0.9552
+      }
+    }
+  ],
+  "findings": [
+    "Real exact native original sendmmsg wall covers ~94-96% of the sampled complete client RAW driver call time under four-bulk supply, consistent with kernel-heavy path but WALL IS NOT CPU.",
+    "Sampled TX kernel-copy records ~30 per successful sampled call; further increasing already 32-slot maximum is not strongly supported.",
+    "All three legs functionally passed; x86 A-prime has severe independent-stage-OFF small TCP p50>5seconds/p99>11seconds with UDP response p50~1ms. No-hol/timely-first-delivery gate fails on this real app."
+  ],
+  "limits": [
+    "Sampling selects every 128th original driver call: estimator subject to selection/scheduler bias and misses other 127; sampled wall includes runnable/runnable scheduling and driver preflight, it cannot attribute Linux kernel CPU precisely.",
+    "Actual sendmmsg time can be high due to virtual network backend and scheduler, not proof of specific physical kernel contention.",
+    "No throughput or CPU causal promotion: A/B/A-prime per-run instability, observer extra /proc/thread, and large original A-prime TCP p99 failure.",
+    "No packet-level TCP kernel RTT/ACK/retransmission timeline; only aggregate echo percentiles. Do not infer which packet starved or declare TCP/UDP queue interaction from p50 alone.",
+    "No Windows physical, WAN/GE1%, default outer MTU1460, upstream3s outage, or cross-ISA same-runner comparison."
+  ],
+  "next_action": "Inspect and isolate TCP small-app send/reply/read timing and TCP retransmits for true /32 four-bulk exact-source app. Preserve default service code and Stop, determine whether 11s A' is kernel TCP underlay or genuine Rust smallflow scheduling; reject changes that worsen first-delivery."
+}

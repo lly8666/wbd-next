@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "PASS_SCOPED_REAL_NONPROBE_LINUX_TWO_ISA_FIVE_DEDICATED_AND_ONE_SHARED_NORMAL",
+  "source_sha": "724f8bccf7026c0595b3758fd1fe7e7976bb6dc2",
+  "run_id": 44873953379,
+  "attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44873953379",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "conditions": "One source-locked non-probe original Go TLS + Rust AF_PACKET/TUN native binary per ISA. Five genuine two-direction dedicated-TUN modes plus separate original authenticated shared /32 Normal (4 TCP kernel streams, 160 UDP/160 TCP echo, genuine Stop).",
+  "product_internal_change": "Native Linux original Go authenticated Normal client shared TUN Rust M1 cold inbox128, server64; Game separate64. Bounded 32 ready kernel TUN reads per first readiness wake; no long DATA PTO/new Go packet bridge.",
+  "authenticity": [
+    "native kernel and netns x86_64+aarch64, not QEMU",
+    "Rust m0_v4_probe feature not compiled, no debug jumbo symbol",
+    "both original Go TLS owners native authenticated cold slots 128/64 and probe_only=0",
+    "real kernel TCP4 receiver unique bytes and overlapping UDP/TCP echoes",
+    "original owned Stop client/server reader_joined=1",
+    "same source and full per-ISA binary hashes"
+  ],
+  "measured": [
+    {
+      "architecture": "aarch64",
+      "artifact_id": 14695420925,
+      "artifact_sha256": "f10f67ce543e8a0fcad84105559e25de5e73635291df48943a1592559b1aa90c",
+      "receiver_mbps": 1057.75162,
+      "receiver_bytes": 2644770816,
+      "client_cpu_s_per_received_gib": 12.48815,
+      "server_cpu_s_per_received_gib": 12.05375,
+      "udp_missing_of160": 47,
+      "tcp_missing_of160": 0,
+      "client_shared_tun_full_drops": 659225,
+      "server_shared_tun_full_drops": 3012,
+      "binary_sha256": {
+        "wbd-v4-client": "a50cf5b4e470f95d67778e0bb72b11bd8c3673416ac4871a3bed2fcf154aa8cc",
+        "wbd-v4-server": "ba4741c3c0aa06b3bf8f77d176de05958c304b9a1e3931e098a92197bb33d9c0",
+        "libwbd_engine.so": "a3a6d896c9be324ea4819f929a91625ddd00a965c1a9d492cf69f62418e4e17a"
+      },
+      "actual_cold_product_slots": {
+        "client": 128,
+        "server": 64
+      },
+      "probe_only": 0,
+      "genuine_stop_reader_joined_both": true,
+      "normal_shared_status": "PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64",
+      "five_dedicated_modes": [
+        "normal",
+        "fixed",
+        "auto",
+        "game2",
+        "game4-fixed6"
+      ],
+      "five_dedicated_result": "PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES"
+    },
+    {
+      "architecture": "x86_64",
+      "artifact_id": 14695043430,
+      "artifact_sha256": "5434389081470b53cc8d9045716cc42f863b8c517c0083b0e671bd514b84b61b",
+      "receiver_mbps": 1375.48394,
+      "receiver_bytes": 3439067136,
+      "client_cpu_s_per_received_gib": 8.91385,
+      "server_cpu_s_per_received_gib": 8.84828,
+      "udp_missing_of160": 33,
+      "tcp_missing_of160": 0,
+      "client_shared_tun_full_drops": 726666,
+      "server_shared_tun_full_drops": 3849,
+      "binary_sha256": {
+        "wbd-v4-client": "a6d4d3e75c765a530ca97f3db493003ece46ecc12684cb491a4ad3b532cd5c78",
+        "wbd-v4-server": "d8f01c96e32c5114b770f434ac0af970374176a6fb914d371944e5d976139177",
+        "libwbd_engine.so": "267d74d1279c6d3633e84ac4e54bd108b086b85688a279536038ab146b6ef7e3"
+      },
+      "actual_cold_product_slots": {
+        "client": 128,
+        "server": 64
+      },
+      "probe_only": 0,
+      "genuine_stop_reader_joined_both": true,
+      "normal_shared_status": "PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64",
+      "five_dedicated_modes": [
+        "normal",
+        "fixed",
+        "auto",
+        "game2",
+        "game4-fixed6"
+      ],
+      "five_dedicated_result": "PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES"
+    }
+  ],
+  "caveats": [
+    "main is unchanged; this branch-only product change has NOT merged",
+    "the five dedicated modes do not themselves exercise shared M1; the separate shared Normal case does",
+    "not a paired A/B proving poll32 percent gain at this source; earlier 64/128 comparisons are distinct source",
+    "sparse UDP nonreply 47/160 ARM and 33/160 x86 remain unresolved, survivor p99 not full delivery",
+    "shared TUN client queue full drops remain >650k, so local source overload remains",
+    "not Windows physical 3s outage/80-200Mbps, physical ARM, multi-lease fairness, long soak, or all modes performance PASS"
+  ]
+}

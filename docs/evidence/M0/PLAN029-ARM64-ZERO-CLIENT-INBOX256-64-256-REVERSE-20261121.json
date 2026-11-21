@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "REVERSE_ORDER_ZERO_NATIVE_CLIENT256_GAIN_REPLICATED_NOT_PRODUCTION_DEFAULT_PASS",
+  "scenario": "ARM64_ZERO_ARTIFICIAL_LOSS_REVERSED_B256_A64_B256_CLIENT_ONLY_M1_INBOX",
+  "source_sha": "6a37138d29430150820cb3d89d942f4621df1189",
+  "run_id": 44869362804,
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44869362804",
+  "artifact": {
+    "id": 14692714251,
+    "name": "m0-029-arm-client-inbox-zero-bab-44869362804-1",
+    "sha256": "6acd78c516a14b31aa5074176957a1eef8dc67ffe4af241069306b33557bfc5e"
+  },
+  "frozen_fixture_git_blob_sha": "b1094391ec9729931979c5158357ef2cbf72b84e",
+  "native": {
+    "platform": "genuine ARM64 Linux hosted VM",
+    "kernel": "7.0.0-1017-azure",
+    "topology": "three isolated native Linux netns, one router netem 0ms/0%, actual original Go TLS and Rust native TUN/AF_PACKET",
+    "duration": "three sequential 20s native TCP4 upload cases, each overlapping 160 real UDP and 160 real TCP echo, exact per-generation original client and server Stop",
+    "control": "authenticated server Rust M1 shared-TUN inbox 64 in all three legs; client real cold capacity 256→64→256, read back both sides and generation",
+    "binary_sha256": {
+      "libwbd_engine.so": "26ae05786050ba0acd18b53188d62480fd6ece716770b37fcced5e2a22e3e8e6",
+      "wbd-v4-client": "1ed739db0f8c63b8f251e82e9d7658025ba2897e6d898176e79eda0661bd5d2c",
+      "wbd-v4-server": "0a910dc677f0753445c2765fcece3eb5bcfaa0327ee3c107727df81cd4c7de38"
+    }
+  },
+  "phases": [
+    {
+      "name": "candidate_before",
+      "client_slots": 256,
+      "server_slots": 64,
+      "genuine_cold_readback_both": true,
+      "receiver_unique_mbps": 1049.81348,
+      "receiver_bytes": 2624978944,
+      "client_cpu_seconds_per_received_gib": 12.59458,
+      "server_cpu_seconds_per_received_gib": 11.91556,
+      "client_queue_full_drops": 527979,
+      "client_backpressure": 846437,
+      "server_queue_full_drops": 2603,
+      "tcp_retransmissions": 527401,
+      "small_udp": {
+        "offered": 160,
+        "replied": 137,
+        "missing": 23,
+        "p99_ms_survivors": 10.0536
+      },
+      "small_tcp": {
+        "offered": 160,
+        "replied": 160,
+        "missing": 0,
+        "p99_ms_survivors": 219.6653
+      },
+      "original_owned_stop_both": true,
+      "netem_skb_drops_both": 0
+    },
+    {
+      "name": "original_middle",
+      "client_slots": 64,
+      "server_slots": 64,
+      "genuine_cold_readback_both": true,
+      "receiver_unique_mbps": 962.40388,
+      "receiver_bytes": 2431254528,
+      "client_cpu_seconds_per_received_gib": 13.06816,
+      "server_cpu_seconds_per_received_gib": 12.31737,
+      "client_queue_full_drops": 769488,
+      "client_backpressure": 1151977,
+      "server_queue_full_drops": 1598,
+      "tcp_retransmissions": 767072,
+      "small_udp": {
+        "offered": 160,
+        "replied": 128,
+        "missing": 32,
+        "p99_ms_survivors": 5.6216
+      },
+      "small_tcp": {
+        "offered": 160,
+        "replied": 160,
+        "missing": 0,
+        "p99_ms_survivors": 1524.2264
+      },
+      "original_owned_stop_both": true,
+      "netem_skb_drops_both": 0
+    },
+    {
+      "name": "candidate_after",
+      "client_slots": 256,
+      "server_slots": 64,
+      "genuine_cold_readback_both": true,
+      "receiver_unique_mbps": 1056.57537,
+      "receiver_bytes": 2642149376,
+      "client_cpu_seconds_per_received_gib": 12.64278,
+      "server_cpu_seconds_per_received_gib": 12.02913,
+      "client_queue_full_drops": 524507,
+      "client_backpressure": 860093,
+      "server_queue_full_drops": 1393,
+      "tcp_retransmissions": 524124,
+      "small_udp": {
+        "offered": 160,
+        "replied": 129,
+        "missing": 31,
+        "p99_ms_survivors": 8.7146
+      },
+      "small_tcp": {
+        "offered": 160,
+        "replied": 160,
+        "missing": 0,
+        "p99_ms_survivors": 708.8985
+      },
+      "original_owned_stop_both": true,
+      "netem_skb_drops_both": 0
+    }
+  ],
+  "paired_interpretation": {
+    "candidate_mean_receiver_mbps": 1053.19442,
+    "middle_original_receiver_mbps": 962.40388,
+    "candidate_mean_goodput_gain_over_original_pct": 9.43373,
+    "candidate_replica_B_to_Bprime_drift_pct": 0.6441,
+    "candidate_mean_client_cpu_per_gib_vs_original_pct": -3.4395,
+    "candidate_mean_server_cpu_per_gib_vs_original_pct": -2.80113,
+    "client_full_drops_mean_candidate_vs_original_pct": -31.6218,
+    "separate_forward_ABA": {
+      "run_id": 44868667527,
+      "source_sha": "aeed826fd175b580a5225003e1e97adf4ceebe0c",
+      "gain_pct": 9.75103,
+      "original_drift_pct": 1.23895
+    },
+    "observation": "In both true same-job forward and reversed tests, client256 materially improved native real receiver goodput and CPU per unique GiB at 0% artificial loss; service still experiences large local full drops and UDP missing.",
+    "future_decision": "Keep as high-line conditional candidate; no universal default while GE1 separate trial shows no local queue pressure and ambiguous negative gain; test 128 with lower worst-case RAM."
+  },
+  "limitations": [
+    "Artifact is a separate native ARM VM; cross-run CPU comparability not claimed, only within-job paired differences.",
+    "0% artificial impairment does not imply end-to-end packet perfect; local client pending overflow and real TCP retransmissions remain large.",
+    "Small UDP missing 23/32/31 at 160-sample screens; survivor p99 worse with client256 in this reverse job; not a smallflow full SLA.",
+    "Client native 256 adds at most 192*65,535B ~12MiB jumbo packet payload retention per lease; no ordinary release/default promotion without memory and other modes.",
+    "GE1 client 64/256/64 at 200ms each way is a separate negative/inconclusive workload, and its short Direct reference varied strongly.",
+    "No Windows physical / x86 goodput / true >8 authenticated lease performance or extended soak."
+  ]
+}

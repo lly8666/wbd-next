@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2260",
+  "status": "PASS_SCOPED_NATIVE_REAL_INNER_TCP_INFO_RTO_AND_RETRANS_CORRELATED_WITH_FORWARD_APP_STALL__QOS_OPEN",
+  "source_sha": "719a3450f5ae7a4bbdd5226742177ca2f44d726e",
+  "run_id": 44894072913,
+  "attempt": 1,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44894072913",
+  "prior_native_H2259": {
+    "source": "af6ca59b051c0b209ef057a233548fe0d8ea0ef3",
+    "run": 44893090584,
+    "full_160_original_app_directional_timestamps": true
+  },
+  "method": "Real native ARM64 and x86_64 original Go TLS+Rust release nonprobe, 5 original dual endpoint modes, Normal/off client128 server64 authentic shared TUN four TCP bulk+160 UDP/160 TCP sparse original 16-byte app echo per leg. Same ISA same immutable release A uninstrumented Rust, B independent stage/Rust sysCPU/RAW call, A-prime recovery; original owned Stop and real Rust server READY repair=0/client Stop repair=0. Each original client inner TCP socket sampled via read-only Linux TCP_INFO native 104B prefix at 150ms, max 160; 116 samples total and 102 echo-overlap samples per leg aligned with exact H2259 matched app timestamp/seq. Explicit outer MTU1160, zero artificial netem loss; no new product wire or kernel TCP setting.",
+  "native": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14702574201,
+      "release_sha256": {
+        "libwbd_engine.so": "89b3fa0b5e52eaf57311ceaacff9ee4770ed50da6905de9ab2b24947fbff188d",
+        "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+        "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+      },
+      "leg_names": [
+        "A",
+        "B",
+        "A_prime"
+      ],
+      "receiver_mbps_approx": [
+        1161.7,
+        1162.3,
+        1183.8
+      ],
+      "udp_missing_of160": [
+        25,
+        29,
+        44
+      ],
+      "tcp_missing_of160": [
+        0,
+        0,
+        0
+      ],
+      "tcp_total_p99_ms": [
+        287.5315,
+        1566.0035,
+        699.2299
+      ],
+      "tcp_forward_app_p99_ms": [
+        287.1328,
+        1563.054,
+        699.0404
+      ],
+      "tcp_server_processing_p99_ms": [
+        0.1991,
+        0.2711,
+        0.2393
+      ],
+      "native_client_tcp_info": {
+        "total_retrans_echo_delta": [
+          30,
+          33,
+          41
+        ],
+        "rto_max_us": [
+          206000,
+          808000,
+          406000
+        ],
+        "cwnd_min": [
+          1,
+          1,
+          1
+        ],
+        "unacked_max": [
+          2,
+          2,
+          2
+        ]
+      },
+      "B_exact_stall": {
+        "app_seqs": [
+          122,
+          123,
+          124,
+          125,
+          126
+        ],
+        "forward_ms_approx": [
+          1643.1,
+          1563.1,
+          1483.1,
+          1406,
+          1326
+        ],
+        "rto_us_during": [
+          202000,
+          404000,
+          808000
+        ],
+        "cwnd_before": 54,
+        "cwnd_during": 1,
+        "unacked": 2,
+        "cumulative_total_retrans_before": 24,
+        "during_max": 28,
+        "after_recovery": 29,
+        "cwnd_after_recovery": 54,
+        "rto_us_after_recovery": 202000
+      }
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14703750224,
+      "release_sha256": {
+        "libwbd_engine.so": "64f879a8b037d68e09e8c9b7aa4662f6690f74f1c6bdaf7548ad077944780c9d",
+        "wbd-v4-client": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+        "wbd-v4-server": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343"
+      },
+      "leg_names": [
+        "A",
+        "B",
+        "A_prime"
+      ],
+      "receiver_mbps_approx": [
+        1445.9,
+        1498.5,
+        1493.1
+      ],
+      "udp_missing_of160": [
+        26,
+        29,
+        35
+      ],
+      "tcp_missing_of160": [
+        0,
+        0,
+        0
+      ],
+      "tcp_total_p99_ms": [
+        295.4167,
+        295.8058,
+        297.2008
+      ],
+      "tcp_forward_app_p99_ms": [
+        295.2951,
+        295.3078,
+        295.3498
+      ],
+      "tcp_server_processing_p99_ms": [
+        0.1817,
+        0.1745,
+        0.0971
+      ],
+      "native_client_tcp_info": {
+        "total_retrans_echo_delta": [
+          31,
+          35,
+          40
+        ],
+        "rto_max_us": [
+          204000,
+          202000,
+          205000
+        ],
+        "cwnd_min": [
+          1,
+          1,
+          1
+        ],
+        "unacked_max": [
+          2,
+          2,
+          2
+        ]
+      }
+    }
+  ],
+  "findings": [
+    "Six real app legs and both ISAs original Go TLS/Rust no-probe real five modes and Stop PASSED; final 160/160 TCP replies are not first-delivery QoS.",
+    "Inner Linux kernel TCP on the actual tiny test socket retransmitted 30-41 SEGMENTS (not 30-41 independently lost requests) in each echo window under bulk load.",
+    "ARM B multi-sequence forward backlog (~1.64s maximum) temporally overlapped actual inner TCP RTO backoff 202->404->808ms, cwnd collapse54->1, unacked2 and cumulative total_retrans 24->28, returning to cwnd54 afterward; inner TCP retransmission mechanism is verified, cause of first loss is not."
+  ],
+  "limits": [
+    "Linux native TCP_INFO is an approximately 150ms sampled point-in-time state, not a per-seq TCP packet trace; retransmission correlation does NOT identify which original Rust/TUN/underlay/M3 layer caused first missing packet.",
+    "The raw 116 7-field sample rows per leg and true 160 numeric app event rows are preserved in each GitHub Action artifact ZIP; source-locked evidence here stores scoped stats and standout sequences.",
+    "The H2258 real x86 A-prime no-observer 11.47-second TCP p99 was NOT REPRODUCED in H2260, not fixed or overwritten.",
+    "A/B/A-prime are same ISA/same binaries but workload/system drift remains; adding test-only TCP_INFO monitor may perturb scheduling. No causal product goodput/CPU/QoS gain claims.",
+    "No default outer MTU1460, physical WAN, Windows/physical ARM, GE1%,3s uplink gap, multi-lease fairness or no-HOL/first-delivery product qualification."
+  ],
+  "next_action": "Locate earliest original client SharedTun offered/pending reject vs original Rust M1/M4 copied, underlay/native RX and server TUN using same CLOCK_MONOTONIC around true TCP seq-level RTO backoff; do not change default queue or 32-batch cap without source-locked first-drop evidence."
+}
