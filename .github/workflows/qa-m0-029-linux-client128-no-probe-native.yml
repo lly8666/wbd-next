@@ -200,7 +200,7 @@ jobs:
               udp=x["measurement"]["smallflow"]["udp"]
               tcp=x["measurement"]["smallflow"]["tcp"]
               return {"receiver_mbps":x["measurement"]["original_product_tcp"]["receiver_bps"]/1e6,
-                      "client_cpu_s_per_gib":x["measurement"]["cpu_and_rss"]["client"]["cpu_s"]/(
+                      "client_cpu_s_per_gib":x["measurement"]["cpu_and_rss"]["client"]["cpu_seconds"]/(
                           x["measurement"]["original_product_tcp"]["receiver_bytes"]/1073741824),
                       "udp_missing_of160":udp["missing"],"udp_survivor_p99_ms":udp["latency_ms"]["p99"],
                       "tcp_missing_of160":tcp["missing"],"tcp_survivor_p99_ms":tcp["latency_ms"]["p99"],
