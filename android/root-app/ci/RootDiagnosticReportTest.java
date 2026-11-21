@@ -738,6 +738,15 @@ public final class RootDiagnosticReportTest {
         if(!dnsWriter.recordNativeSnapshot(b3dNative))
             throw new AssertionError("real native DNS TX/RX numeric receipt rejected");
         contains(RootDiagnosticReport.build(dnsDir,source,36),"dnsraw=1 dnsrtun=1");
+        // Historical A47/B3d M4 numeric logs remain readable after B4.
+        String a47M4="V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=1 parse_fail=0 parsed=1 auth=1 rejected=0 writefail=0 tun=2 trej=0 rawtx=2 rtun=1 tcp=0 udp=1 icmp=0 dnsudp=1 dnstcp=0 rxerr=0 txerr=0 health=1";
+        if(!a47.recordNativeSnapshot(a47M4))
+            throw new AssertionError("older A47 native M4 snapshot rejected after B4");
+        contains(RootDiagnosticReport.build(a47dir,source,36),
+            "NATIVE_M4_DIAG kind=m4 poll=1 parse_fail=0");
+        if(dnsWriter.recordNativeSnapshot(b3dNative+" dnsptx=1"))
+            throw new AssertionError("mixed historical/new DNS numeric format accepted");
+        System.out.println("ANDROID_B4A_OLD_A47_B3D_AND_NEW_B4_M4_NUMERIC_RECEIPTS_HOST_PASS");
         // B4: physical socket grant, actual question send and TUN reply
         // must be distinguishable, with exact per-Start session isolation.
         File physicalDir=Files.createTempDirectory("wbd-b4-physical-dns").toFile();

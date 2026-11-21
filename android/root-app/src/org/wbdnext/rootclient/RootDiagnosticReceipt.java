@@ -298,11 +298,22 @@ final class RootDiagnosticReceipt {
         if(parts[0].equals("kind=rx"))keys=RAW_KEYS;
         else if(parts[0].equals("kind=m4"))keys=M4_KEYS;
         else return false;
-        if(parts.length!=keys.length+1)return false;
+        // Preserve A47 and B3d reports across the B4 DNS metric addition.
+        // Historical fields keep their exact order and are never invented.
+        boolean oldM4=parts[0].equals("kind=m4")&&
+            parts.length==M4_KEYS.length-4; // A47: five DNS counters absent
+        boolean b3dM4=parts[0].equals("kind=m4")&&
+            parts.length==M4_KEYS.length-2; // B3d: three physical absent
+        if(parts.length!=keys.length+1&&!oldM4&&!b3dM4)return false;
+        int field=1;
         for(int i=0;i<keys.length;i++){
-            String prefix=keys[i]+"=";
-            if(!parts[i+1].startsWith(prefix))return false;
-            String digits=parts[i+1].substring(prefix.length());
+            String key=keys[i];
+            if((oldM4||b3dM4)&&(key.equals("dnsptx")||
+                key.equals("dnsprx")||key.equals("dnsperr")))continue;
+            if(oldM4&&(key.equals("dnsraw")||key.equals("dnsrtun")))continue;
+            String prefix=key+"=";
+            if(!parts[field].startsWith(prefix))return false;
+            String digits=parts[field++].substring(prefix.length());
             if(digits.length()==0||digits.length()>20)return false;
             for(int j=0;j<digits.length();j++){
                 char c=digits.charAt(j);

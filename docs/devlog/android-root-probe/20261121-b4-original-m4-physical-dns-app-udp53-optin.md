@@ -15,6 +15,10 @@ SOURCE 起点 `b9a9c1764e41dd66e0e2b2c61dc65005cb72e656`：B3d 正式签名 APK�
 
 这个可选模式是“**所有进入原 TUN 的普通 App UDP/53 请求走物理 223.5.5.5**”，不是利用 CN8503 规则把 CN 与非 CN 域名自动分到不同上游，不是 Android 系统 DNS/netd 通道，不含 TCP/53、IPv6、DoH/DoT；真实 App DNS 成功与手机端性能仍待同 SOURCE 授权实测。默认隧道模式仍按原 B3/B3d 走 WBD。下一片功能卡需把验证过的 CN8503 QNAME 匹配器以冷授权快照接入 Rust M4 分流，保持物理 CN 与隧道非 CN 同一代原 TUN reader，不新增 Go/JNI 逐包。
 
+## B4a 兼容性回归修复（真实 CI failure）
+
+B4 SOURCE `25a8ad081d682a47c3bf7d2909e5ae0296aa4f07` 的 `root-arm64-app` 在 `RootDiagnosticReportTest.java:739` 报 `real native DNS TX/RX numeric receipt rejected`：原 Java M4 数值导出解析器在 B4 新增 3 个物理 DNS 字段后只接受新 23 字段格式，B3d 的 20 字段历史收据不再被接纳。B4a 在相同生产 `safeNativeSnapshot` 路径兼容 A47（18）、B3d（20）、B4（23）精确字段格式；新增三格式与错误交叉字段 Host 回归，旧历史不伪造新的物理计数，不更动 TLS、DNS 模式、Rust RAW/TUN 或用户默认值。B4 失败记录保留，以新 SOURCE Host/签名 APK/原 Linux Oracle 为准。
+
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B4将既有原Rust M4真实Android物理DNS UDP socket及逆映射完成App/Go/Rust全生产链显式接线，并增加真实收发计数、旧接口兼容/Host/Rust与正式签名APK验证。保持B3隧道默认与TLS兼容设置。"}
 ```
