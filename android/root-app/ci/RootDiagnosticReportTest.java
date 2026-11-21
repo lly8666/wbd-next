@@ -15,6 +15,7 @@ public final class RootDiagnosticReportTest {
         String source="74d4442bc40c7452c89e96efc7658389d474c34c";
         String report=RootDiagnosticReport.build(dir,source,35);
         contains(report,"last_session_stage=NOT_STARTED");
+        contains(report,"tunnel_dns_native_cold=NOT_OBSERVED");
         wr.record(RootDiagnosticReceipt.Event.START_REQUESTED);
         wr.record(RootDiagnosticReceipt.Event.ROUTE_SCOPE_ALL_ORDINARY_APPS_IPV4);
         wr.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_SYN_TX_OK);
@@ -697,6 +698,27 @@ public final class RootDiagnosticReportTest {
         if(a47.recordNativeSnapshot(
             "V4_PUBLIC_ANDROID_M4_DIAG role=client kind=rx password=123"))
             throw new AssertionError("untrusted stderr accepted");
+        // B3c: the safe operator export explicitly distinguishes the
+        // native Rust grant from an unchecked UI checkbox, without claiming
+        // Android netd DNS interception or real per-App DNS packet delivery.
+        File dnsDir=Files.createTempDirectory("wbd-b3c-dns-effective").toFile();
+        RootDiagnosticReceipt dnsWriter=new RootDiagnosticReceipt(
+            new File(dnsDir,"wbd-root-diagnostic.txt"));
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        dnsWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED);
+        dnsWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED);
+        contains(RootDiagnosticReport.build(dnsDir,source,36),
+            "tunnel_dns_native_cold=RUST_COLD_ENABLED_APP_TUN_UDP53_ONLY");
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        dnsWriter.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        dnsWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED);
+        dnsWriter.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_FAILED);
+        contains(RootDiagnosticReport.build(dnsDir,source,36),
+            "tunnel_dns_native_cold=COLD_NATIVE_GRANT_FAILED");
+        if(RootDiagnosticReport.build(dnsDir,source,36).contains("RUST_COLD_ENABLED_APP_TUN_UDP53_ONLY"))
+            throw new AssertionError("prior generation DNS grant leaked");
+        System.out.println("ANDROID_B3C_APP_TUNNEL_DNS_COLD_SAFE_READBACK_HOST_PASS");
         System.out.println("ANDROID_B3B_COLD_NATIVE_DNS_EFFECTIVE_AND_FAILED_SAFE_REPORT_HOST_PASS");
         System.out.println("ANDROID_A47_NATIVE_NUMERIC_M4_REAL_APK_REPORT_HOST_PASS");
         System.out.println("ANDROID_A40_PROTECTED_POSTAUTH_REAL_NATIVE_OS_M4_STAGE_HOST_PASS");

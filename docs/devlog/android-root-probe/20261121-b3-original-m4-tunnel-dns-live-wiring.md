@@ -14,6 +14,13 @@
 ## B3b｜同源产品CI发现源码门误报；冷授权终端凭据
 B3首次产品Action #44891389121 已证明Go/Rust双ABI构建、真实原Rust M3、B3新逆映射1/1 PASS和此前7/7 DNS测试PASS；正式APK Job的source-gate第527行误认原Rust `TunnelDnsUdpFlows::\n is_tunnel_reply_candidate` 跨行书写为未接线。B3b改用原owner类型标记与原方法标记双断言，不改任一认证/UDP生产字节。Root安全诊断新增原Go Rust native readback `TUNNEL_DNS_ENABLED` 与确切失效 `TUNNEL_DNS_FAILED` 两枚固定枚举，Service只接收已锚定原Go时戳+标记，不保存stdout/私有DNS QNAME，报告将其区分于仅勾选UI和System Resolver接管。精确原JVM测试覆盖成功、失败阶段回读。前次Action失败保留，不假追认APK PASS。
 
+## B3c｜Root安全报告结构化区分原Rust DNS 冷授权
+Android Safe Diagnostic 新增固定 `tunnel_dns_native_cold` 字段：同会话 Rust native enable + effective readback 才是 `RUST_COLD_ENABLED_APP_TUN_UDP53_ONLY`，原Go错误固定枚举得 `COLD_NATIVE_GRANT_FAILED`，没有本代证据为 `NOT_OBSERVED`。这不是系统DNS，更不是成功解析/转发证据。Host JVM测试覆盖两个连续generation时前代标志不得泄漏；旧Root与Go协议不动。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B3c保持真实M3隧道UDP53开关，增加同会话原Rust DNS native授权/失败可读诊断字段与单元回归，功能卡记录此变更。"}
+```
+
 ## 明确尚未完成
 
 **这是产品M4捕获UDP/53的真实开关，不是Android系统 DNS 接管。** Android netd/resolv 私有DNS并不一定经过已选择App UID规则：没有改变Android系统DNS/NAT，System Resolver捕获、CN8503 QNAME选择→223.5.5.5同代物理UDP/TCP、TCP53分片、AAAA/IPv6、直连真实IP路由、Fixed/Auto/Game的Android RustM4皆未据此取得功能准入。原 `wbd_m0_embedded_go_loop_dns_ingress_observed` 的 `hijack_enabled=0` 继续表示没有系统级DNS捕获资格；独立 tunnel-only cold effective=1 是不同事实。后续按功能卡逐段实现并对真实设备提供可读证据，严格区分Host、编译、同源真实网络。

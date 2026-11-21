@@ -283,6 +283,15 @@ final class RootDiagnosticReport {
         out.append("server_ip_exclusion=PRIVATE_TABLE_THROW32_REQUIRED_ALL_APPS\n");
         out.append("server_ip_exclusion_readback=").append(peer?"OBSERVED_PRIVATE_FIB_ONLY":"NOT_OBSERVED").append('\n');
         out.append("last_session_stage=").append(stage(session)).append('\n');
+        // Real Go logs TUNNEL_DNS_ENABLED only after original Rust cold
+        // effective readback returned 1; this is not system netd capture or
+        // observed successful DNS request/answer delivery.
+        String tunnelDNS=has(session,"ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_FAILED")
+            ?"COLD_NATIVE_GRANT_FAILED":
+             has(session,"ORIGINAL_GO_POSTAUTH_TUNNEL_DNS_ENABLED")
+            ?"RUST_COLD_ENABLED_APP_TUN_UDP53_ONLY":
+             "NOT_OBSERVED";
+        out.append("tunnel_dns_native_cold=").append(tunnelDNS).append('\n');
         out.append("device_real_business_tcp_udp=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("android_netd_physical_bypass=NOT_PROVEN_BY_THIS_REPORT\n");
         out.append("receipt_event_count=").append(events.size()).append('\n');
