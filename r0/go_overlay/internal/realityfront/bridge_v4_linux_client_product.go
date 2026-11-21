@@ -113,13 +113,14 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.mu.Lock()
     defer p.mu.Unlock()
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
-    // Android first-connect has ONLY the source-locked original Normal/off
-    // Rust M4, no active Fixed/Auto, M2 feedback or native outer repair.
-    // Reject an unsupported request before even beginning authenticated TLS.
+    // Android defaults to Normal/off; explicit Fixed consumes the same
+    // original Go TLS feature7 and native Rust PENDING/FEC2 M4. Auto/Game
+    // and outer repair are not active Android product modes.
     if runtime.GOOS=="android" &&
-       (p.cfg.FECMode!=""&&p.cfg.FECMode!=FecV2Off||
+       (p.cfg.FECMode==FecV2Auto||
         !p.cfg.DisableOuterRepair||p.cfg.SharedTun!=nil||
-        !cfg.AutoLease){
+        !cfg.AutoLease||
+        (p.cfg.FECMode==FecV2Fixed&&p.cfg.StartupPaddingMode!=0)){
         return nil,ErrAdmissionUnsupported
     }
     conn:=assoc.BootstrapConn()
@@ -277,9 +278,10 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if err!=nil{originalAndroidPostauth("HEALTH_FAILED")}
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
-    if err==nil&&p.cfg.OuterIPMTU!=0{
-        // Original TLS ColdSnapshot selects one mode for Rust M1/M3 on both
-        // Linux and Android, using the exact selected outer MTU budget.
+    if err==nil&&p.cfg.OuterIPMTU!=0&&
+        (runtime.GOOS!="android"||mode==FecV2Off){
+        // Fixed's original FEC2 source budget is independent of
+        // Android Normal-only startup padding; Fixed requires off.
         err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
     }
     // Source-locked Android feature3/off does not advertise the unported
@@ -300,7 +302,9 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
             shutdown,
         )
     }
-    if p.fec!=nil{p.fec.start(bridge)}
+    // Android Fixed Quality and exact APPLIED live in Rust M4. There is
+    // no reason to start a duplicate Go 2Hz Auto policy loop for Fixed.
+    if p.fec!=nil&&runtime.GOOS!="android"{p.fec.start(bridge)}
     return session,nil
 }
 // Only numeric true original M2 counters, once before Stop; never changes

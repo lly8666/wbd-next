@@ -146,6 +146,29 @@ final class OriginalGoCommandArgs {
                               String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
                               boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
                               String recordCipher,int requestedTunQueue,String paddingMode){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,
+            tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,
+            recordCipher,requestedTunQueue,paddingMode,"normal",1);
+    }
+    // B17: explicit Fixed opt-in; all old callers remain Normal/off.
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
+                              String recordCipher,int requestedTunQueue,String paddingMode,
+                              String fecMode,int fecProfile){
+        if(!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode))
+            throw new IllegalArgumentException("Android original Go supports normal or fec-fixed");
+        if(fecProfile<0||fecProfile>6)
+            throw new IllegalArgumentException("FEC2 Fixed profile must be 0..6");
+        if("fec-fixed".equals(fecMode)&&!"off".equals(paddingMode))
+            throw new IllegalArgumentException("Fixed does not use Normal startup padding");
         if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
            !"flows".equals(paddingMode))
             throw new IllegalArgumentException("unsupported original startup padding");
@@ -170,7 +193,9 @@ final class OriginalGoCommandArgs {
         absolute(cnFile);
         if(tlsCaFile!=null)absolute(tlsCaFile);
         final ArrayList<String> args=new ArrayList<>();
-        pair(args,"--mode","normal");
+        pair(args,"--mode",fecMode);
+        if("fec-fixed".equals(fecMode))
+            pair(args,"--fec-profile",Integer.toString(fecProfile));
         args.add("--auto-ip");
         pair(args,"--raw-interface",iface);
         pair(args,"--android-network-handle",Long.toUnsignedString(handle));

@@ -81,10 +81,9 @@ cp r0/go_overlay/cmd/wbd-v4-client/main.go legacy/cmd/wbd-v4-client/
 test ! -e legacy/cmd/wbd-v4-client/ksu_cshared_entry_android.go
 cp r0/go_overlay/cmd/wbd-v4-client/ksu_cshared_entry_android.go legacy/cmd/wbd-v4-client/
 cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
-# Signed Android release remains Normal/off only. Build the actual original
-# FEC2 M1 TX/RX Rust backend and Go TLS PENDING/readback control in this
-# SAME feature7-capable ELF; public Fixed/Auto stays unavailable until
-# genuine reverse M2 APPLIED and Android loop admission exist.
+# Signed Android Root defaults to Normal/off; explicit Fixed opt-in
+# uses this SAME original FEC2 M1 TX/RX Rust/Go TLS/M3/Quality owner.
+# Auto/Game remain unavailable; native build is not physical E2E.
 features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
 go_tags=wbd_v4_embedded_go
 for pair in "aarch64 arm64" "x86_64 amd64"; do
@@ -183,10 +182,9 @@ d={"schema":"android-root-product-a1-rust-cold-build/v1",
 (p/"rust-cold-stage-manifest.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
 (p/"SOURCE").write_text(os.environ["GITHUB_SHA"]+"\n")
 PY
-# Genuine original-Go Normal/off link remains a hard gate. Android CGo
-# links only mandatory native original M1/M3/M4/Health/Stop. Optional
-# Fixed/FEC/Game and Linux-only diagnostics fail closed in Go, not via
-# fabricated native ELF symbols or a suppressed linker error.
+# Genuine original-Go Normal/off default and explicit Fixed opt-in
+# share this original M1/M3/M4/Health/Stop and native FEC2 backend.
+# Auto/Game still reject before TLS, not via synthetic ELF symbols.
 for pair in "aarch64 arm64" "x86_64 amd64"; do
   read -r triple goarch <<< "$pair"
   rust_target="$triple-linux-android"

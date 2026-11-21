@@ -37,6 +37,13 @@ public final class OriginalGoCommandArgsTest {
             PASS,ROUTE,INSTALL,CN,new int[]{10123},false,null,null,
             false,true,false,false,1460,"chacha20-poly1305",500,mode);
     }
+    private static List<String> withFec(String mode,int profile,String padding){
+        return OriginalGoCommandArgs.build("wlan0",43123456L,"192.0.2.10",
+            "198.51.100.7",443,43900,"wbd.example.test","user-name",
+            PASS,ROUTE,INSTALL,CN,new int[]{10123},false,null,null,
+            false,true,false,false,1460,"chacha20-poly1305",500,
+            padding,mode,profile);
+    }
     private static void value(List<String> a,String flag,String expected){
         int i=a.indexOf(flag);
         if(i<0||i+1>=a.size()||!expected.equals(a.get(i+1)))
@@ -96,6 +103,16 @@ public final class OriginalGoCommandArgsTest {
         rejected(()->withPadding(""));
         rejected(()->withPadding(null));
         System.out.println("ANDROID_B11B_ORIGINAL_GO_STARTUP_PADDING_PRODUCTION_ARGV_HOST_PASS");
+        value(withFec("fec-fixed",0,"off"),"--mode","fec-fixed");
+        value(withFec("fec-fixed",0,"off"),"--fec-profile","0");
+        value(withFec("fec-fixed",6,"off"),"--fec-profile","6");
+        absent(withFec("normal",1,"off"),"--fec-profile");
+        rejected(()->withFec("fec-auto",1,"off"));
+        rejected(()->withFec("game2",1,"off"));
+        rejected(()->withFec("fec-fixed",7,"off"));
+        rejected(()->withFec("fec-fixed",-1,"off"));
+        rejected(()->withFec("fec-fixed",1,"tls"));
+        System.out.println("ANDROID_B17_FIXED_EXPLICIT_NATIVE_GO_ARGV_HOST_PASS");
         value(withTunQueue(500),"--tun-txqlen-packets","500");
         value(withTunQueue(2048),"--tun-txqlen-packets","2048");
         rejected(()->withTunQueue(499));
