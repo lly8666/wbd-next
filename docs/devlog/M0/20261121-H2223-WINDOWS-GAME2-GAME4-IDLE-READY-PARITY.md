@@ -37,3 +37,7 @@ The cross-OS product tests use an actual WSL2 Linux kernel on the same Windows A
 During CI, the Windows↔Linux original Go build path was corrected to copy the **already existing** current-source `internal/v4routekey` package into the immutable pinned donor's temporary Actions assembly. This changes no product wire bytes or application validation. An initial Windows unit-only run on older branch source passed but its exact-SHA dispatcher was superseded by this final build-source fix; only the three complete green runs above count as promotion evidence.
 
 **Merge policy:** promote PR #70 after the three final successes; preserve this doclog and the updated `windows-native-transport` feature card on `main`. The unrelated experimental encrypted-DATA parser PR #69 remains separate and is not automatically merged.
+
+## Main feature catalog 16 KiB compliance
+
+The main feature-card JSON was originally 16,379 bytes (five bytes below the 16 KiB limit); the expanded H2223 summary produced 16,429 bytes and the governance gate rejected it. The summary is abbreviated without removing this detailed signed Windows/Linux E2E evidence, source refs or the product behavior change. The card remains regular JSON and carries this updated feature-impact declaration in the same main commit.
