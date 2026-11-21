@@ -90,6 +90,15 @@ if LOSS_REPAIR_LEG not in ("","A","B","A_prime") or (
     raise RuntimeError("M029_H2268_REAL_LOSS_1_5_REPAIR_SWITCH_INVALID")
 if not LOSS_REPAIR_LEG and LOSS_REPAIR_PCT:
     raise RuntimeError("M029_H2268_LOSS_WITHOUT_ARM_INVALID")
+H2274_FEC=os.environ.get("WBD_M0_029_H2274_FEC_TRIAL","")
+if H2274_FEC not in ("","off","fixed0","fixed1"):
+    raise RuntimeError("H2274_ONLY_EXISTING_OFF_OR_FEC2_LIGHT_MILD_ALLOWED")
+if H2274_FEC and not (
+        LOSS_REPAIR_LEG in ("A","B","A_prime") and
+        LOSS_REPAIR_PCT in ("1","5") and
+        H2272_FORCE_REPAIR=="off" and H2272_NODELAY=="1" and
+        H2274_FEC in (("off","fixed0") if LOSS_REPAIR_PCT=="1" else ("off","fixed1"))):
+    raise RuntimeError("H2274_NATIVE_SAME_LOSS_NO_NAGLE_REPAIR_OFF_ONLY")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
@@ -179,6 +188,8 @@ def main():
             # No product code, real kernel policy, or Rust fastpath change.
             mtu_args=[] if MTU_TRIAL_LEG=="B" else ["--outer-mtu","1160"]
             repair_arg=H2272_FORCE_REPAIR or ("on" if LOSS_REPAIR_LEG=="B" else "off")
+            fec_arg="fec-fixed" if H2274_FEC.startswith("fixed") else "normal"
+            fec_profile=H2274_FEC[-1] if H2274_FEC.startswith("fixed") else "6"
             self.spawn("server",self.server,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
@@ -225,7 +236,7 @@ def main():
                 "--route-key-hex-file",str(route),"--tls-ca-pem",str(cert),
                 "--username","bench0","--password","m029-scope-pass",
                 "--auto-ip","--installation-id-file",str(self.secret_dir/"install"),
-                "--mode","normal","--fec-profile","6",
+                "--mode",fec_arg,"--fec-profile",fec_profile,
                 "--outer-repair",repair_arg,*mtu_args])
             if not ready(self.logs["client"],
                 "V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client",85):
@@ -477,6 +488,32 @@ def main():
         result["owned_stop"]={
             "client":node.stop("client","V4_PUBLIC_SHARED_TUN_STOP generation="),
             "server":node.stop("server","V4_PUBLIC_SHARED_TUN_STOP generation=")}
+        if H2274_FEC:
+            real=node.logs["client"].read_text(errors="replace")
+            observed=re.findall(
+                r"V4_PUBLIC_FEC2_READBACK role=client mode=(\w+) requested=(\d+) applied=(\d+) profile=(\d+) pending=(\w+)",
+                real)
+            expected_profile=int(H2274_FEC[-1]) if H2274_FEC.startswith("fixed") else None
+            if H2274_FEC.startswith("fixed"):
+                native=[v for v in observed if (
+                    v[0].lower()=="fixed" and int(v[1])>0 and int(v[2])>0 and
+                    int(v[3])==expected_profile and v[4].lower()=="false")]
+                if not native:
+                    raise RuntimeError("H2274_REAL_ORIGINAL_FEC2_CLIENT_EFFECTIVE_NATIVE_READBACK_MISSING")
+            serverlog=node.logs["server"].read_text(errors="replace")
+            result["h2274_fec_native"]={
+                "cold_client_mode":H2274_FEC,
+                "client_original_fec2_effective_readback":observed,
+                "server_original_fec2_effective_evidence":[
+                    line for line in serverlog.splitlines()
+                    if "V4_PUBLIC_MULTI_NATIVE_FEC_EFFECTIVE" in line][-3:],
+                "native_client_FEC_TX_evidence":[
+                    line for line in real.splitlines() if
+                    "V4_PUBLIC_FEC2_TX role=client" in line][-2:],
+                "true_two_end_original_product":True,
+                "original_outer_repair_off":True,
+                "echo_server_nodelay_1":True,
+                "not_evidence_of_TCP_recovered_until_first_delivered":True}
         # This is the actual protected original-Go -> Rust owner status,
         # not merely the CLI flag or an assumed default.
         # Before Stop, original multi-session server has exactly one READY
