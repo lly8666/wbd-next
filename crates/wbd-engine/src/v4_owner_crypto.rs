@@ -2029,7 +2029,7 @@ impl ProtectedScopedOwner{
         lease:Option<[u8;4]>,now:MonoNs,storage:Vec<RxPacket>,
         dns_flows:&mut crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows,
         dns_capture_enabled:bool,dns_reply_scratch:&mut Vec<u8>,
-    )->Result<(Vec<RxPacket>,NormalOffReport,u32,u32,bool,Option<u64>,bool),
+    )->Result<(Vec<RxPacket>,NormalOffReport,u32,u32,u32,bool,Option<u64>,bool),
         (ProtectedCryptoError,Vec<RxPacket>)>{
         if self.state!=OwnerPhase::Active||tun.generation()!=self.generation||
            !receiver.accepts(self){
@@ -2037,6 +2037,7 @@ impl ProtectedScopedOwner{
         }
         let mut delivered=0u32;
         let mut failed=0u32;
+        let mut dns_written=0u32;
         let mut healthy=false;
         let mut idle_hint=None;
         let mut retire=false;
@@ -2054,6 +2055,7 @@ impl ProtectedScopedOwner{
                             return
                         }
                         let mut ip=business;
+                        let mut inverted_dns=false;
                         if dns_capture_enabled &&
                            crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::
                                is_tunnel_reply_candidate(business){
@@ -2075,9 +2077,11 @@ impl ProtectedScopedOwner{
                                 return
                             }
                             ip=dns_reply_scratch.as_slice();
+                            inverted_dns=true;
                         }
                         if tun.write_authenticated_ip(ip).ok()==Some(ip.len()){
-                            delivered=delivered.saturating_add(1)
+                            delivered=delivered.saturating_add(1);
+                            if inverted_dns{dns_written=dns_written.saturating_add(1)}
                         }else{
                             failed=failed.saturating_add(1)
                         }
@@ -2091,6 +2095,6 @@ impl ProtectedScopedOwner{
             }
         )?;
         report.authenticated=authenticated;
-        Ok((returned,report,delivered,failed,healthy,idle_hint,retire))
+        Ok((returned,report,delivered,failed,dns_written,healthy,idle_hint,retire))
     }
 }

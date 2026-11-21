@@ -59,7 +59,7 @@ extern int32_t wbd_m0_embedded_go_loop_stats(uint64_t,uint64_t *,uint64_t *,uint
 extern int32_t wbd_m0_embedded_go_loop_business_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
 extern int32_t wbd_m0_embedded_go_loop_raw_rx_debug(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_loop_return_path_receipts(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *);
-extern int32_t wbd_m0_embedded_go_loop_dns_ingress_observed(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
+extern int32_t wbd_m0_embedded_go_loop_dns_ingress_observed(uint64_t,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint64_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_dead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_predead(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_loop_authenticated_peer_health(uint64_t,uint32_t *);
@@ -437,18 +437,18 @@ func (b *v4EmbeddedNativeBridge) originalAndroidReturnPathReceipts()(result [9]u
     return result,nil
 }
 // Only original Rust M4 worker-owned counters. Unavailable is not PASS.
-func (b *v4EmbeddedNativeBridge) originalAndroidBusinessReceipts()(tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP uint64,err error){
-    if b==nil||!b.committed||b.stopped||b.handle==0{return 0,0,0,0,0,0,errV4Embedded}
+func (b *v4EmbeddedNativeBridge) originalAndroidBusinessReceipts()(tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP,dnsRawCopied,dnsReplyTun uint64,err error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return 0,0,0,0,0,0,0,0,errV4Embedded}
     var a,r,tx,rx C.uint64_t
     rc:=C.wbd_m0_embedded_go_loop_business_receipts(
         C.uint64_t(b.handle),&a,&r,&tx,&rx)
-    if rc!=0{return 0,0,0,0,0,0,fmt.Errorf("%w: actual native business counters=%d",errV4Embedded,int(rc))}
-    var udp,tcp,unready C.uint64_t
+    if rc!=0{return 0,0,0,0,0,0,0,0,fmt.Errorf("%w: actual native business counters=%d",errV4Embedded,int(rc))}
+    var udp,tcp,unready,tunnelRaw,tunnelTun C.uint64_t
     var hijack C.uint32_t
     rc=C.wbd_m0_embedded_go_loop_dns_ingress_observed(
-        C.uint64_t(b.handle),&udp,&tcp,&unready,&hijack)
-    if rc!=0{return 0,0,0,0,0,0,fmt.Errorf("%w: actual TUN DNS53 ingress=%d",errV4Embedded,int(rc))}
-    return uint64(a),uint64(r),uint64(tx),uint64(rx),uint64(udp),uint64(tcp),nil
+        C.uint64_t(b.handle),&udp,&tcp,&unready,&tunnelRaw,&tunnelTun,&hijack)
+    if rc!=0{return 0,0,0,0,0,0,0,0,fmt.Errorf("%w: actual TUN DNS53 ingress=%d",errV4Embedded,int(rc))}
+    return uint64(a),uint64(r),uint64(tx),uint64(rx),uint64(udp),uint64(tcp),uint64(tunnelRaw),uint64(tunnelTun),nil
 }
 // Read-only original Rust worker stats under the authenticated owner scope.
 type V4PublicFecTxSnapshot struct{
@@ -559,6 +559,7 @@ type V4PublicLoopPulse struct{
     // Android: real original Rust M4 business path; Linux leaves these zero.
     TunIPv4Admitted,TunIPv4Rejected,BusinessRawCopied,BusinessReverseTun uint64
     DnsUDP53Seen,DnsTCP53Seen uint64
+    DnsTunnelRawCopied,DnsTunnelReplyTun uint64
     // A45 Android real RAW RX and selected-App inner protocol evidence.
     RawPollReady,RawParseFailed,RawParsed,RawAuthenticated uint64
     RawAuthRejected,ReverseTunWriteFailed uint64
@@ -609,7 +610,7 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
         C.uint64_t(b.handle),&scopeInvalid)
     if rc!=0{return V4PublicLoopPulse{},fmt.Errorf(
         "%w: real Bionic underlay scope readback=%d",errV4Embedded,int(rc))}
-    tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP,businessErr:=b.originalAndroidBusinessReceipts()
+    tunSeen,tunRejected,rawCopied,reverseTun,dnsUDP,dnsTCP,dnsRaw,dnsTun,businessErr:=b.originalAndroidBusinessReceipts()
     if businessErr!=nil{return V4PublicLoopPulse{},businessErr}
     r,returnErr:=b.originalAndroidReturnPathReceipts()
     if returnErr!=nil{return V4PublicLoopPulse{},returnErr}
@@ -624,6 +625,7 @@ func (b *v4EmbeddedNativeBridge) originalPublicLoopPulse()(V4PublicLoopPulse,err
         TunIPv4Admitted:tunSeen,TunIPv4Rejected:tunRejected,
         BusinessRawCopied:rawCopied,BusinessReverseTun:reverseTun,
         DnsUDP53Seen:dnsUDP,DnsTCP53Seen:dnsTCP,
+        DnsTunnelRawCopied:dnsRaw,DnsTunnelReplyTun:dnsTun,
         PhysicalScopeInvalid:scopeInvalid!=0,
         RxRecords:stats.RxOK,TxRecords:stats.TxOK,
         RxErrors:stats.RxErr,TxErrors:stats.TxErr,

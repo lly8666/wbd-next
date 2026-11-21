@@ -1683,12 +1683,13 @@ func originalAndroidM4RxSnapshot(p realityfront.V4PublicLoopPulse)string{
 func originalAndroidM4OwnerSnapshot(p realityfront.V4PublicLoopPulse)string{
  health:=0
  if p.AuthenticatedPeerControl{health=1}
- return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=%d parse_fail=%d parsed=%d auth=%d rejected=%d writefail=%d tun=%d trej=%d rawtx=%d rtun=%d tcp=%d udp=%d icmp=%d dnsudp=%d dnstcp=%d rxerr=%d txerr=%d health=%d",
+ return fmt.Sprintf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=m4 poll=%d parse_fail=%d parsed=%d auth=%d rejected=%d writefail=%d tun=%d trej=%d rawtx=%d rtun=%d tcp=%d udp=%d icmp=%d dnsudp=%d dnstcp=%d dnsraw=%d dnsrtun=%d rxerr=%d txerr=%d health=%d",
  p.RawPollReady,p.RawParseFailed,p.RawParsed,p.RawAuthenticated,
  p.RawAuthRejected,p.ReverseTunWriteFailed,p.TunIPv4Admitted,
  p.TunIPv4Rejected,p.BusinessRawCopied,p.BusinessReverseTun,
  p.TunTCPSeen,p.TunUDPSeen,p.TunICMPSeen,p.DnsUDP53Seen,
- p.DnsTCP53Seen,p.RxErrors,p.TxErrors,health)
+ p.DnsTCP53Seen,p.DnsTunnelRawCopied,p.DnsTunnelReplyTun,
+ p.RxErrors,p.TxErrors,health)
 }
 // Real original Rust M4 state, not Ready and never a guessed Chrome PASS.
 func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]string{
@@ -1699,6 +1700,8 @@ func originalAndroidBusinessReceiptClasses(p realityfront.V4PublicLoopPulse)[]st
  if p.BusinessReverseTun>0{stages=append(stages,"APP_REVERSE_TUN_WRITTEN")}
  if p.DnsUDP53Seen>0{stages=append(stages,"DNS_UDP53_TUN_SEEN")}
  if p.DnsTCP53Seen>0{stages=append(stages,"DNS_TCP53_TUN_SEEN")}
+ if p.DnsTunnelRawCopied>0{stages=append(stages,"DNS_TUNNEL_RAW_COPIED")}
+ if p.DnsTunnelReplyTun>0{stages=append(stages,"DNS_TUNNEL_REVERSE_TUN_WRITTEN")}
  if p.RawPollReady>0{stages=append(stages,"RAW_SOCKET_READABLE")}
  if p.RawParseFailed>0{stages=append(stages,"RAW_PARSE_FAILED")}
  if p.RawParsed>0{stages=append(stages,"RAW_PARSED")}

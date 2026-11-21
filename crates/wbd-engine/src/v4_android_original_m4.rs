@@ -56,6 +56,8 @@ pub(super) struct AndroidOriginalStats{
     // readv. Only bounded metadata; no QNAME log, redirect or extra reader.
     dns_udp53_seen:AtomicU64,dns_tcp53_seen:AtomicU64,
     dns_unready:AtomicU64,
+    // Actual original-M4 RAW-copy and authenticated reverse-TUN DNS delivery.
+    dns_tunnel_raw_copied:AtomicU64,dns_tunnel_reply_tun:AtomicU64,
     dns_physical_tx:AtomicU64,dns_physical_rx:AtomicU64,
     dns_physical_error:AtomicU64,
 }
@@ -268,7 +270,7 @@ fn raw_worker(
                 };
                 stats.raw_candidates.fetch_add(1,Ordering::Relaxed);
                 let lease=e.client_lease_ipv4;
-                let (report,delivered,failed,healthy,hint,retired)={
+                let (report,delivered,failed,dns_written,healthy,hint,retired)={
                     let Entry{owner,normal,android_dns_flows,
                         android_dns_hijack_ready,..}=&mut *e;
                     let Some(reassembly)=normal.as_mut()else{break};
@@ -278,9 +280,9 @@ fn raw_worker(
                         android_dns_flows,*android_dns_hijack_ready,
                         &mut dns_reply_scratch,
                     ){
-                        Ok((returned,report,delivered,failed,healthy,hint,retired))=>{
+                        Ok((returned,report,delivered,failed,dns_written,healthy,hint,retired))=>{
                             rx_storage=returned;
-                            (report,delivered,failed,healthy,hint,retired)
+                            (report,delivered,failed,dns_written,healthy,hint,retired)
                         },
                         Err((_,returned))=>{
                             rx_storage=returned;
@@ -292,6 +294,7 @@ fn raw_worker(
                 e.arena.drain_returns();
                 stats.rx.fetch_add(u64::from(delivered),Ordering::Relaxed);
                 stats.business_reverse_tun.fetch_add(u64::from(delivered),Ordering::Relaxed);
+                stats.dns_tunnel_reply_tun.fetch_add(u64::from(dns_written),Ordering::Relaxed);
                 stats.reverse_tun_write_failed.fetch_add(u64::from(failed),Ordering::Relaxed);
                 stats.raw_auth_rejected.fetch_add(
                     u64::from(report.authenticated.rejected)+
@@ -346,6 +349,7 @@ fn raw_worker(
 struct PendingAndroidJumbo{
     source:Vec<u8>,packet_id:u32,frame_mtu:usize,
     issued:usize,total:usize,generation:u32,physical_mtu:u32,
+    tunnel_dns_query:bool,
 }
 enum JumboTurn{Copied{done:bool},Deferred,Abandoned}
 fn send_android_jumbo_one(
@@ -523,6 +527,9 @@ fn tun_worker(
                         clock.on_local_business(at.0);
                         if done{
                             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
+                            if pending.as_ref().is_some_and(|p|p.tunnel_dns_query){
+                                stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
+                            }
                             retire=true;break
                         }
                     },
@@ -745,6 +752,7 @@ fn tun_worker(
                 // Only a completely admitted DNS generation may replace
                 // original DNS with 1.1.1.1 on the same loaned M1 slab.
                 // No Go/JNI per packet, alternate TUN reader or fallback.
+                let mut tunnel_dns_query=false;
                 if e.android_dns_hijack_ready &&
                    matches!(dns_observation,
                        crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
@@ -756,6 +764,7 @@ fn tun_worker(
                         stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
                         break
                     }
+                    tunnel_dns_query=true;
                 }
                 // Common O(1) hot path: original owner AEAD/PN directly
                 // over the kernel-filled slab, immutable M4 RAW sendto.
@@ -768,6 +777,9 @@ fn tun_worker(
                             &mut wire_scratch,at
                         )==Some(pn){
                             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
+                            if tunnel_dns_query{
+                                stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
+                            }
                             clock.on_local_business(at.0);
                         }
                     },
@@ -821,15 +833,18 @@ fn tun_worker(
             }
             // DNS with EDNS can exceed the common slab head; inspect the
             // one already-collected complete IP before M3 fragmentation.
+            let mut tunnel_dns_query=false;
             if e.android_dns_hijack_ready &&
                matches!(crate::v4_android_dns_ingress::observe_ipv4_dns53(
                    &jumbo_spare,n
-               ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}) &&
-               e.android_dns_flows.rewrite_query(
-                   &mut jumbo_spare,now().0/1_000_000
-               ).is_err(){
-                stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
-                break
+               ),crate::v4_android_dns_ingress::Dns53Observation::UdpQuestion{..}){
+                if e.android_dns_flows.rewrite_query(
+                    &mut jumbo_spare,now().0/1_000_000
+                ).is_err(){
+                    stats.tx_dropped.fetch_add(1,Ordering::Relaxed);
+                    break
+                }
+                tunnel_dns_query=true;
             }
             let Some(packet_id_after)=next_packet_id.checked_add(1)else{
                 // A same-generation u32 packet ID must never wrap/reuse.
@@ -860,6 +875,7 @@ fn tun_worker(
                 packet_id,frame_mtu:frame.link_frame_mtu,
                 issued:0,total:total_frames,
                 generation:e.generation,physical_mtu:physical,
+                tunnel_dns_query,
             });
             // No second TUN read until this logical datagram is complete
             // or retired. Return the unused original slab before fragments.
@@ -933,7 +949,7 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
             )
         };
         match drained{
-            Ok((returned,report,delivered,failed,healthy,hint,retire))=>{
+            Ok((returned,report,delivered,failed,dns_written,healthy,hint,retire))=>{
                 drop(returned);
                 e.arena.drain_returns();
                 let accepted=report.authenticated.link_ready!=0||healthy;
@@ -944,6 +960,7 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
                     if retire{activity.record_peer_retire(at.0)}
                 }
                 counters.rx.fetch_add(u64::from(delivered),Ordering::Relaxed);
+                counters.dns_tunnel_reply_tun.fetch_add(u64::from(dns_written),Ordering::Relaxed);
                 counters.rx_error.fetch_add(u64::from(failed),Ordering::Relaxed);
             },
             Err((_,returned))=>{drop(returned);return INVALID},
@@ -1083,9 +1100,11 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_raw_rx_debug(
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_loop_dns_ingress_observed(
     h:u64,udp_seen:*mut u64,tcp_seen:*mut u64,
-    incomplete:*mut u64,hijack_enabled:*mut u32
+    incomplete:*mut u64,dns_raw_copied:*mut u64,
+    dns_reply_tun:*mut u64,hijack_enabled:*mut u32
 )->i32{
     if udp_seen.is_null()||tcp_seen.is_null()||incomplete.is_null()||
+       dns_raw_copied.is_null()||dns_reply_tun.is_null()||
        hijack_enabled.is_null(){return INVALID}
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
@@ -1094,6 +1113,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_loop_dns_ingress_observed(
         udp_seen.write(e.android_metrics.dns_udp53_seen.load(Ordering::Relaxed));
         tcp_seen.write(e.android_metrics.dns_tcp53_seen.load(Ordering::Relaxed));
         incomplete.write(e.android_metrics.dns_unready.load(Ordering::Relaxed));
+        dns_raw_copied.write(e.android_metrics.dns_tunnel_raw_copied.load(Ordering::Relaxed));
+        dns_reply_tun.write(e.android_metrics.dns_tunnel_reply_tun.load(Ordering::Relaxed));
         hijack_enabled.write(0); // Must NEVER claim DNS interception here.
     }
     OK
