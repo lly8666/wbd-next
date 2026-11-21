@@ -4609,7 +4609,11 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
 fn shared_tun_trial_inbox_slots(value:Option<&str>)->usize{
-    if value==Some("256"){256}else{64}
+    match value {
+        Some("128")=>128,
+        Some("256")=>256,
+        _=>64,
+    }
 }
 #[cfg(all(test,target_os="linux",feature="m0_v4_probe",
     any(target_arch="x86_64",target_arch="aarch64"),
@@ -4618,7 +4622,9 @@ fn shared_tun_trial_inbox_slots(value:Option<&str>)->usize{
 fn m0_plan029_shared_tun_trial_inbox_capacity_is_cold_bounded(){
     assert_eq!(shared_tun_trial_inbox_slots(None),64);
     assert_eq!(shared_tun_trial_inbox_slots(Some("64")),64);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("128")),128);
     assert_eq!(shared_tun_trial_inbox_slots(Some("256")),256);
+    assert_eq!(shared_tun_trial_inbox_slots(Some("129")),64);
     assert_eq!(shared_tun_trial_inbox_slots(Some("8192")),64);
     assert_eq!(shared_tun_trial_inbox_slots(Some("0")),64);
 }

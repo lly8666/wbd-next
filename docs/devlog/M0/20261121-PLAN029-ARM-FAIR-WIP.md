@@ -9,6 +9,8 @@
 - **已经验证**：原生 source `ee5f3af` 下 ARM64/x86_64 各 9 个 SharedTun + 1 个 budget-expiration 单测 PASS；原 Go TLS/Rust ARM64 五模式真实双端和 Stop 的 source `894f887` Action 44866505807 PASS_SCOPED。新分支后续参数源码不可继承旧 PASS。
 - **G1 参数候选**：1Gbps/1000B ≈125kpps，64 个真实 M1 inbox 槽≈0.512ms，另 8 个 pending≈0.064ms；假定服务间隙约2ms，理论需求≈250包。测试 256 槽≈2.048ms，单租约多 192 个槽；按1000B平均增加约192KiB/租约，**最坏65,535B jumbo 则可增加约12MiB/租约**，是正式启用前的内存风险。仅 `m0_v4_probe` 编译且显式开发环境变量可选择，默认原 64。公平转轮另由 `WBD_M0_029_FAIR_LEASE_TEST=1` 显式启用，不能混入单租约参数因果对照。
 - **新真实网络夹具**：已在分支添加原 Go/Rust 三 netns、同 runner A64→B256→A'64、四条内核TCP+各160 UDP/TCP 小回显和 owned Stop；GE1% 按 H2228 原 stationary 公式 p_good_to_bad≈0.252809%/bad_to_good25%/bad_loss90%/good_loss0.1%，并使 direct 与 WBD qdisc 计数窗口分开。历史错误 GE 0.16% 实为理论 0.67%，其 SOURCE 不得记 GE1% 合格。性能新 SOURCE NOT_RUN（待 Actions）。
+- **真实零损容量反例（2026-11-21）**：服务端独改 64/256/64 的真 ARM64 Go/Rust [44868169236](https://github.com/lly8666/wbd-next/actions/runs/44868169236)，接收1.0148/1.0083/1.0078Gbps、UDP漏回38/44/34，服务端本地满丢被消灭却没有最终收益，**REJECT_SERVER256_DEFAULT**；证据 `docs/evidence/M0/PLAN029-H2247-ARM64-ZERO-INBOX64-256-64-20261121.json`。不同独立 [44868667527](https://github.com/lly8666/wbd-next/actions/runs/44868667527) 客户端独改 64/256/64，接收0.9669/1.0677/0.9788Gbps，客户端 CPU/GiB12.91/12.53/12.91、服务端12.37/11.92/12.46、UDP漏回39/33/39，但存活 UDP p99 3.84/7.60/6.11ms，属**正向候选、非默认产品PASS**；双端 Stop / 冷槽读回证据 `docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-256-64-20261121.json`。
+- **进一步按内存收敛**：开发探针增加精确 `128` 槽选项（1Gbps/1000B约1.024ms），相对64最大仅加64×65,535B≈4MiB/lease；256最多加192槽≈12MiB/lease。默认64且仅 `m0_v4_probe` 显式测试开关可选；待原生同源128与256收益差别及A/A′波动后再决定产品值。已启动 GE1% 客户端64/256/64与零损反向B256/A64/B256，均不自动继承其他 SOURCE 成绩；只有真实业务、CPU/GiB、小流期限与内存成本共同支持才会改正式默认。
 - **状态**：WIP / NOT_RUN。此日志记录施工事实及待验边界，不是产品验收收据。
 
 ```feature-impact
