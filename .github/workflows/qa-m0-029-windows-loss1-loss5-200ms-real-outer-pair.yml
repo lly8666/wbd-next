@@ -5,8 +5,9 @@
 # H2269: Two explicitly scoped original real signed Windows NPF/Wintun and
 # Ubuntu-WSL2 native repair contrasts at one-way200ms, 1% and 5% actual netem.
 # Reuse original on-branch native workflow and source-frozen OFF/ON pair runner.
-# This is 10Mbps historical physical-matched mixed-UDP/TCP business smoke,
-# NOT a full Windows 4-bulk-TCP P99/SLA or all-mode 128 promotion.
+# H2271: keep historical UDP 10Mbps source-locked baseline and, while the same
+# signed two-OS owner and netem are live, add separately measured real kernel
+# four-bulk-TCP + 160-echo p99 for EACH original OS client. No product changes.
 name: M0 PLAN029 signed Windows native 1 and 5pct 200ms outer repair source pairs
 run-name: "M0-029 WIN-LINUX signed 1pct/5pct 200ms pair DISPATCH | ${{ github.sha }}"
 on:
@@ -14,6 +15,9 @@ on:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
       - '.github/workflows/qa-m0-029-windows-loss1-loss5-200ms-real-outer-pair.yml'
+      - 'tools/m0_wl_loss_tcp_probe.py'
+      - 'tools/m0_wl_outer_pair.py'
+      - 'tools/m0_wl_public_normal_e2e.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -29,6 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
+      - name: H2271 preflight real two-OS kernel TCP diagnostic application
+        run: python3 -m py_compile tools/m0_wl_loss_tcp_probe.py
       - name: Exact native physical-class scenarios, immutable seed/mix and authorized dispatch to Windows
         shell: bash
         run: |

@@ -72,6 +72,19 @@ for repair in ("off","on"):
     if archived.is_dir():
         shutil.copytree(archived,legdir/"native-evidence")
     report=json.loads(report_path.read_text()) if report_path.is_file() else {}
+    if scene["scenario_id"] in (
+        "wl-outer-repair-10m-200ms-loss1-60s",
+        "wl-outer-repair-10m-200ms-loss5-60s"):
+        t=report.get("plan029_loss_tcp",{})
+        if (t.get("status")!="PASS_SCOPED_REAL_TWO_OS_KERNEL_TCP" or
+                t.get("source_sha")!=source or
+                any(t.get(k,{}).get("sparse_echo_received")!=160
+                    for k in ("windows_client","linux_client"))):
+            raise RuntimeError("H2271_REAL_WIN_LINUX_TCP_REQUIRED_NO_FALSE_UDP_PASS")
+        print("M029_H2271_NATIVE_LOSS_TCP_PAIR "+
+              json.dumps({"policy":repair,"scenario":scene["scenario_id"],
+                          "windows":t["windows_client"],
+                          "linux":t["linux_client"]},sort_keys=True),flush=True)
     # Original Windows child must leave no attached WAL/route journal before
     # the subsequent generation is allowed to start on the SAME OS.
     wal_left=[str(p.relative_to(out)) for p in
