@@ -130,7 +130,9 @@ assert 'if(has(session,"START_DIAGNOSTIC_STAGES_V2")' in report, "legacy receipt
 assert 'last_session_stage=' in report
 assert 'OriginalGoMilestones.matches(line,' in s
 assert 'RootFecStateBrief.fromGoLine(line)' in s
-assert 'fecStatusText.setText(RootClientService.fecStatus)' in a
+assert 'fecStatusText.setText(RootClientService.fecStatus)' in Path(
+    "android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java"
+).read_text()
 assert 'V4_PUBLIC_ANDROID_FEC_STATE role=client mode=%s' in go_src
 assert 'native.OriginalFECReadback()' in go_src
 assert 'state!=lastFecState' in go_src

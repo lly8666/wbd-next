@@ -10,3 +10,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B20 original Go periodic FEC native readback on existing Health loop and Root App live Fixed/Auto pending/applied version display with production Java host test"}
 ```
+
+## B20a｜Host源码门的变量顺序修正
+
+SOURCE `5b7e1b28eff5c4918e2cb3122af9550fcc881b35` 的 [Android运行 #44936625032](https://github.com/lly8666/wbd-next/actions/runs/44936625032) 原生ARM64/x86、纯Java `ANDROID_B20_FEC_NATIVE_REVISION_STATUS_HOST_PASS`、M3/DNS Host均通过；`root-arm64-app` Job因Host Python源码检查第29行的 `a` 在赋值前被读取而失败（`NameError`），正式APK打包步骤SKIPPED。此提交将该单条断言直接读取实际 Activity 文件，不改变产品Go/Rust/Java，实现与原失败记录保持不变；治理所需的同批功能卡已更新。新SOURCE通过与否依新Action，不造实机 E2E。 
