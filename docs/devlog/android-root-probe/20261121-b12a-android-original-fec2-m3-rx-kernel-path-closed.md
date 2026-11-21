@@ -8,6 +8,10 @@ SOURCE `ebc8a6085a56493ec91f5cb727b77f404ebd946d`；本片是未授权的后续 
 - **关键拒绝门**：FEC RX scoped revision始终初始化0，没有设置接口；M4 RX遇未APPLIED即拒绝；`loop_start`明确只接受feature3，原Go Android FixedPending仍 `ErrAdmissionUnsupported`。必须补完原M1 FixedStream source+parity、M4 copied-prefix、双向M2/反向反馈、实际内核APPLIED再开放。
 - 软件验收依赖此SOURCE同源ARM64/x86 Go/Rust、签名APK、Linux oracle、功能卡治理；Android物理设备真实数据、恢复、吞吐及固定模式仍NOT_RUN/NOT_AVAILABLE。
 
+## B12a Rust cfg 原生编译回归
+
+Actions #44921580818 的实际 Rust Host 编译报告 v4_owner_crypto.rs:1710–1712 的跨平台 cfg 属性缺少一层右括号，造成编译失败；并非 Android FEC2 已经启用或实体业务失败。此修订精确补齐括号，原 RX APPLIED 仍固定0、Go Fixed仍拒绝。旧 FAIL 保留，新同 SOURCE 软件CI独立验收。
+
 ## 软件门追踪（B12a 编译前修正）
 
 提交 `554aa5b588abe529b8c8047e27f827653ea1e2b7` 修复了 M4 RX worker 对原 `Result<(Vec<RxPacket>, AuthenticatedRxReport), ...>` 的错误解构；源码测试进一步锁住唯一 `open_unique_with_fec2_after_admission_in_place` 与 kind2/3 分流，防止未来误接独立 opener。上一个治理 Job 的失败原因是该 Rust-only 小修提交未同步更新 devlog，而不是 Fixed/Auto 获得 APPLIED；本次改动在同一修订内补齐变更证据。 本修订还同步更新功能卡摘要及CLI状态，以让实际源码、闭门条件和声明一致。

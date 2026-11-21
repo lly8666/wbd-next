@@ -1709,7 +1709,7 @@ impl ProtectedScopedOwner {
     // dispatch verified FEC2 kinds to the Android M4 RX worker.
     #[cfg(all(feature="fec2_product_record",
         any(target_os="windows",all(target_os="android",
-            any(target_arch="aarch64",target_arch="x86_64"))))]
+            any(target_arch="aarch64",target_arch="x86_64")))))]
     pub(crate) fn drain_windows_authenticated_fec2<F,G>(
         &mut self,now:MonoNs,storage:Vec<RxPacket>,mut accept:F,
         mut accept_kind1:G,
