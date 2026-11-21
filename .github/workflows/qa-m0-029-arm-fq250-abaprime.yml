@@ -134,7 +134,7 @@ jobs:
                   "sparse_tcp_forward_offered":c["forward_offered"],
                   "server_sparse_tcp_reverse_refused":s["reverse_dropped"],
                   "original_client_allflow_full":r["owned_stop"]["client"]["queue_full_drops"]})
-          out={"study":"H2263","source_sha":sha,"run_id":os.environ["GITHUB_RUN_ID"],
+          out={"study":"H2264" if selected==300 else "H2263","source_sha":sha,"run_id":os.environ["GITHUB_RUN_ID"],
                "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"arch":"aarch64",
                "scope":"only original Linux native netns full protected Go TLS/Rust at explicit outer1160, no injected loss",
                "one_immutable_binary_bundle":immutable,
