@@ -307,7 +307,7 @@ fn raw_worker(
                         let mut healthy=false;
                         let mut hint=None;
                         let mut retired=false;
-                        let (returned,auth)=owner.drain_windows_authenticated_fec2(
+                        let opened=owner.drain_windows_authenticated_fec2(
                             at,std::mem::take(&mut rx_storage),
                             |_pn,kind,payload|{
                                 match blocks.accept_authenticated(*exact,kind,payload,at){
@@ -373,7 +373,7 @@ fn raw_worker(
                                 retired=control.peer_retire;
                             },
                         );
-                        match returned{
+                        match opened{
                             Ok((back,authed))=>{
                                 report.authenticated=authed;
                                 Ok((back,report,delivered,failed,dns_written,
