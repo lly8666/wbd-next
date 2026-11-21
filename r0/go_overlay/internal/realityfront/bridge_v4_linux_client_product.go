@@ -87,13 +87,9 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
        (cfg.StartupPaddingMode!=0&&(cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
         return nil,ErrAdmissionParams
     }
-    // Go's android target also satisfies the linux build constraint.
-    // The Android native owner does NOT support main's Linux protected
-    // startup-padding API. Only true off is admissible on Android.
+    // Go's Android target also satisfies Linux build constraints.
+    // Native original M4 now owns TLS-selected Normal padding on both.
     if runtime.GOOS!="android"&&(cfg.AndroidTunnelDNS||cfg.AndroidPhysicalDNS||len(cfg.AndroidCN8503Raw)>0){
-        return nil,ErrAdmissionUnsupported
-    }
-    if runtime.GOOS=="android"&&cfg.StartupPaddingMode!=0{
         return nil,ErrAdmissionUnsupported
     }
     return &V4LinuxClientProduct{cfg:cfg},nil
@@ -281,10 +277,9 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if err!=nil{originalAndroidPostauth("HEALTH_FAILED")}
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
-    if err==nil&&runtime.GOOS!="android"&&p.cfg.OuterIPMTU!=0{
-        // The original TLS reply echoed the selected mode; ColdSnapshot
-        // rejects any post-handshake edit before this native M4 cold call.
-        // Android feature3/off has NO native padding implementation.
+    if err==nil&&p.cfg.OuterIPMTU!=0{
+        // Original TLS ColdSnapshot selects one mode for Rust M1/M3 on both
+        // Linux and Android, using the exact selected outer MTU budget.
         err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
     }
     // Source-locked Android feature3/off does not advertise the unported

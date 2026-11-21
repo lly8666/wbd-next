@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-21 B11a 原生数据面接线（待同源CI）**：在原Go已认证`--startup-padding off|tls|flows` 的正常客户端产品中，移植原Rust `TunnelStartupPadding` 与同一 M1/M3 `seal_normal_off_one_padded` 到 Android 真实TUN→RAW M4 TX worker。保留按真实sendto复制成功才记账、记录长度/MSS/外层MTU限制和原Go冷模式真实读回，默认off不变。本片先接原生 CLI→Rust，Android App选项另片才开放；Fixed/Auto/Game仍由现有Go/Rust拒绝门阻断，设备性能/真实业务未验。
+
+
 > **2026-11-21 B10（真实 TUN 队列冷配置）**：原 Go 已支持 `--tun-txqlen-packets 500|2048`、`ip link set` 和严格内核读回，但 Root App 固定500。现在 Android App 可选500（原默认）或2048，走 Activity→同代 Service→原 Go→原内核 owned TUN 应用/读回，无任何新逐包队列或 Rust 分身。2048 是否提升吞吐/延迟没有实体性能证据，也不表示 FEC2 Fixed/Auto 已完成。Fixed/Auto 下一步仍须把原 Rust M1/FEC2 M3/M4 真进程生命周期接通，原 Go 拒绝门保留。
 
 

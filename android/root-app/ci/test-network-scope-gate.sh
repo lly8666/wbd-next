@@ -178,6 +178,18 @@ assert 'tunTxQLen:=flags.Int("tun-txqlen-packets",2048' in cold
 assert 'setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets)' in cold
 assert 'validateOwnedTunTxQueueReadback' in cold
 print("ANDROID_B10_ORIGINAL_GO_OS_TUN_QUEUE_PRODUCTION_WIRING_SOURCE_PASS")
+# B11a: the original protected Normal mode reaches Bionic Rust M4, not Java DATA.
+rust_m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+rust_owner=Path("crates/wbd-engine/src/v4_owner_crypto.rs").read_text()
+go_product=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
+go_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+assert 'wbd_m0_embedded_go_normal_startup_padding_set' in rust_m4 and 'wbd_m0_embedded_go_normal_startup_padding_counters' in rust_m4
+assert 'wbd_m0_embedded_go_normal_startup_padding_set' in go_bridge and 'wbd_m0_embedded_go_normal_startup_padding_counters' in go_bridge
+assert 'bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)' in go_product
+assert 'policy.propose(&slab.writable()[14..14+n],ms,room)' in rust_m4
+assert 'startup_padding_copied_bytes.fetch_add(' in rust_m4
+assert 'self.seal_normal_off_one_padded(' in rust_owner
+print("ANDROID_B11A_ORIGINAL_GO_RUST_M4_STARTUP_PADDING_NATIVE_SOURCE_WIRING_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

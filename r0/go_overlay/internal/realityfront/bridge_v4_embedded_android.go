@@ -47,6 +47,8 @@ extern int32_t wbd_m0_embedded_go_android_cn_dns_split_effective(uint64_t,uint32
 
 
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_normal_startup_padding_set(uint64_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_normal_startup_padding_counters(uint64_t,uint32_t *,uint64_t *,uint64_t *);
 
 
 
@@ -515,14 +517,38 @@ type V4PublicFecTxFailures struct{
 func (b *v4EmbeddedNativeBridge) originalPublicFecTxFailures()(V4PublicFecTxFailures,error){return V4PublicFecTxFailures{},ErrAdmissionUnsupported}
 // Strict post-auth, pre-worker native policy; a Go-only toggle is invalid.
 func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(_ bool)error{return ErrAdmissionUnsupported}
-// Main's Linux authenticated startup-padding API is deliberately unavailable
-// to Android feature3 Normal/off. The shared Go product code must explicitly
-// branch on runtime.GOOS before invoking it; NEVER record a fake native ACK.
-func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(_ uint8,_ int)error{
-    return ErrAdmissionUnsupported
+// Original Go protected cold selection; original Rust M4 owns all DATA.
+func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(mode uint8,outer int)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0||
+       b.protectedEpoch==[16]byte{}||b.protectedFeatures!=3||
+       mode>2||outer<576||outer>1500{return errV4Embedded}
+    rc:=C.wbd_m0_embedded_go_normal_startup_padding_set(
+        C.uint64_t(b.handle),C.uint32_t(mode),C.uint32_t(outer))
+    if rc!=0{return fmt.Errorf("%w: Android original startup padding set=%d",errV4Embedded,int(rc))}
+    effective,records,bytes,err:=b.originalPaddingReadback()
+    if err!=nil||effective!=uint32(mode)||records!=0||bytes!=0{
+        return fmt.Errorf("%w: Android original startup padding readback mismatch: %v",errV4Embedded,err)
+    }
+    return nil
+}
+func (b *v4EmbeddedNativeBridge) originalPaddingReadback()(uint32,uint64,uint64,error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return 0,0,0,errV4Embedded}
+    var mode C.uint32_t
+    var records,bytes C.uint64_t
+    rc:=C.wbd_m0_embedded_go_normal_startup_padding_counters(
+        C.uint64_t(b.handle),&mode,&records,&bytes)
+    if rc!=0{return 0,0,0,fmt.Errorf("%w: Android original startup padding counters=%d",errV4Embedded,int(rc))}
+    return uint32(mode),uint64(records),uint64(bytes),nil
 }
 func (b *v4EmbeddedNativeBridge) normalStartupPaddingCounters()(string,uint64,uint64,error){
-    return "",0,0,ErrAdmissionUnsupported
+    mode,records,bytes,err:=b.originalPaddingReadback()
+    if err!=nil{return "",0,0,err}
+    switch mode{
+    case 0:return "off",records,bytes,nil
+    case 1:return "tls",records,bytes,nil
+    case 2:return "flows",records,bytes,nil
+    default:return "",0,0,errV4Embedded
+    }
 }
 // 3x-dead redundancy and the actual owner-only Rust effective readback.
 // This is a cold post-TLS/pre-worker call shared by Linux client and server.

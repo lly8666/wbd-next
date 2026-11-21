@@ -23,6 +23,7 @@ use wbd_platform::ipv4_tcp::{
     Ipv4Tuple,Presentation,PacketPersona,build_presentation_ack,
 };
 use crate::v4_presentation_ack::presentation_ack_only_due;
+use wbd_codec::record_frame::FIXED_WIRE_OVERHEAD;
 use wbd_types::MonoNs;
 use std::sync::{Arc,Mutex,OnceLock,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
@@ -63,6 +64,7 @@ pub(super) struct AndroidOriginalStats{
     // B6 only actual original M4 socket send, raw copy or TUN write.
     dns_cn_physical_sent:AtomicU64,dns_noncn_tunnel_raw:AtomicU64,
     dns_tcp53_original_raw:AtomicU64,dns_physical_tc_tun:AtomicU64,
+    startup_padding_copied_records:AtomicU64,startup_padding_copied_bytes:AtomicU64,
 }
 pub(super) struct AndroidOriginalWorkers{
     shutdown:Arc<AtomicBool>,
@@ -791,8 +793,26 @@ fn tun_worker(
                 }
                 // Common O(1) hot path: original owner AEAD/PN directly
                 // over the kernel-filled slab, immutable M4 RAW sendto.
+                // Original authenticated M1/M3 padding: bounded by
+                // record wire budget, actual slab and physical outer cap.
+                // No padding on LINK fragments, Health or physical DNS.
+                let ms=at.0/1_000_000;
+                let room=frame.record_wire_mtu
+                    .min(e.android_startup_pad_wire_limit)
+                    .min(slab.writable().len())
+                    .saturating_sub(n.saturating_add(FIXED_WIRE_OVERHEAD));
+                if e.android_startup_padding.is_some()&&
+                   ms.saturating_sub(e.android_startup_pad_gc_ms)>=30_000{
+                    if let Some(policy)=e.android_startup_padding.as_mut(){
+                        policy.expire_coarse(ms);
+                    }
+                    e.android_startup_pad_gc_ms=ms;
+                }
+                let padding=if let Some(policy)=e.android_startup_padding.as_mut(){
+                    policy.propose(&slab.writable()[14..14+n],ms,room)
+                }else{0};
                 match e.owner.seal_android_read_normal_ip(
-                    &tun,slab,n,frame,u64::from(physical),Some(lease),at
+                    &tun,slab,n,frame,u64::from(physical),Some(lease),at,padding
                 ){
                     Ok((pn,_,_,_))=>{
                         if send_staged(
@@ -800,6 +820,12 @@ fn tun_worker(
                             &mut wire_scratch,at
                         )==Some(pn){
                             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
+                            if padding>0{
+                                stats.startup_padding_copied_records.fetch_add(1,Ordering::Relaxed);
+                                stats.startup_padding_copied_bytes.fetch_add(
+                                    padding as u64,Ordering::Relaxed
+                                );
+                            }
                             if tunnel_dns_query{
                                 stats.dns_tunnel_raw_copied.fetch_add(1,Ordering::Relaxed);
                                 if e.android_cn_dns.is_some(){
@@ -1040,6 +1066,52 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
     e.android_workers=Some(AndroidOriginalWorkers{
         shutdown,wake_rx:rx_wake,wake_tx:tx_wake,rx:rx_handle,tx:tx_handle
     });
+    OK
+}
+// Real Go TLS/cold owner only; this cannot enable Fixed/Auto/Game.
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_normal_startup_padding_set(
+    h:u64,mode:u32,outer_path_mtu:u32
+)->i32{
+    use crate::v4_client_startup_padding::{StartupMode,TunnelStartupPadding};
+    let selected=match mode{
+        0=>StartupMode::Off,1=>StartupMode::Tls,2=>StartupMode::Flows,
+        _=>return INVALID,
+    };
+    if !(576..=1500).contains(&outer_path_mtu){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.protected_features!=3||
+       e.android_workers.is_some()||e.android_joining{return BAD_STAGE}
+    let Some((_,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
+    let directional=crate::v4_client_startup_padding::linux_tx_padding_epoch(epoch,false);
+    let seed=u64::from_be_bytes(directional[..8].try_into().unwrap_or([0;8]))
+        ^u64::from_be_bytes(directional[8..].try_into().unwrap_or([0;8]));
+    e.android_startup_padding=if selected==StartupMode::Off{None}else{
+        Some(TunnelStartupPadding::new(selected,seed))
+    };
+    e.android_startup_pad_mode=mode;
+    e.android_startup_pad_wire_limit=if mode==0{0}else{
+        (outer_path_mtu as usize).saturating_sub(40)
+    };
+    e.android_startup_pad_gc_ms=0;
+    e.android_metrics.startup_padding_copied_records.store(0,Ordering::Relaxed);
+    e.android_metrics.startup_padding_copied_bytes.store(0,Ordering::Relaxed);
+    OK
+}
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_normal_startup_padding_counters(
+    h:u64,mode:*mut u32,records:*mut u64,bytes:*mut u64
+)->i32{
+    if mode.is_null()||records.is_null()||bytes.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.protected_features!=3{return BAD_STAGE}
+    unsafe{
+        mode.write(e.android_startup_pad_mode);
+        records.write(e.android_metrics.startup_padding_copied_records.load(Ordering::Relaxed));
+        bytes.write(e.android_metrics.startup_padding_copied_bytes.load(Ordering::Relaxed));
+    }
     OK
 }
 #[no_mangle]

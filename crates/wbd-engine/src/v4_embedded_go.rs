@@ -858,6 +858,14 @@ struct Entry{
     android_off_applied_revision:u64,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_metrics:Arc<android_original_m4::AndroidOriginalStats>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_padding:Option<crate::v4_client_startup_padding::TunnelStartupPadding>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_pad_mode:u32,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_pad_wire_limit:usize,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_pad_gc_ms:u64,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -1238,6 +1246,14 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_off_applied_revision:0,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_metrics:Arc::new(android_original_m4::AndroidOriginalStats::default()),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_padding:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_pad_mode:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_pad_wire_limit:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_pad_gc_ms:0,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_firstsend_m2:None,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]

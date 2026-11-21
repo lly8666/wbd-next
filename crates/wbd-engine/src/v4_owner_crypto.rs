@@ -1922,7 +1922,7 @@ impl ProtectedScopedOwner{
     pub(crate) fn seal_android_read_normal_ip(
         &mut self,tun:&AndroidOwnedTun,mut slab:UniqueBuffer,
         payload_len:usize,frame:FrameBudget,carrier_snapshot:u64,
-        lease:Option<[u8;4]>,now:MonoNs,
+        lease:Option<[u8;4]>,now:MonoNs,padding_bytes:usize,
     )->Result<(u64,u32,usize,usize),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
            tun.generation()!=self.generation||lease.is_none(){
@@ -1935,9 +1935,13 @@ impl ProtectedScopedOwner{
         // The sole Android TUN reader already validated complete IPv4
         // length and the same authenticated lease before entering this
         // private owner API. Do not reparse the identical packet here.
-        let (pn,seq,wire)=self.seal_normal_off_one(
-            slab,payload_len,frame,carrier_snapshot,now
-        )?;
+        let (pn,seq,wire)=if padding_bytes==0{
+            self.seal_normal_off_one(slab,payload_len,frame,carrier_snapshot,now)
+        }else{
+            self.seal_normal_off_one_padded(
+                slab,payload_len,frame,carrier_snapshot,now,padding_bytes
+            )
+        }?;
         Ok((pn,seq,wire,payload_len))
     }
 
