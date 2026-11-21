@@ -1,4 +1,4 @@
-# H2268: Original real Go TLS/Rust Linux ARM64 1160 historic MTU comparator,
+# H2268 offline evidence archived from prior full A/B/A-prime business SUCCESS;\n# previous same-source Action had test-only final digest typo, not a product failure.\n# H2268: Original real Go TLS/Rust Linux ARM64 1160 historic MTU comparator,
 # native kernel bidirectional 1% OR 5% iid loss, 200ms each way, TCP
 # long-lived 4 bulk + same 160 tiny app requests. OFF/ON/OFF actual outer
 # retransmission F/R counters, first delivery/late & Stop; never fake P99.
@@ -112,7 +112,7 @@ jobs:
               assert proof["leg"]==leg and proof["loss_percent"]==loss
               assert proof["one_way_delay_ms"]==200 and proof["outer_ip_mtu"]==1160
               assert proof["original_go_repair_on"]==(leg=="B")
-              assert proof["historical_MTU_is_intentional_direct_comparator"] is True
+              assert proof["original_history_low_MTU_is_intentional_direct_comparator"] is True
               assert len(proof["physical_router_and_endpoint_mtu"])==4
               assert all(v==1200 for v in proof["physical_router_and_endpoint_mtu"].values())
               assert row["server_native_outer_ready_readback"]["repair_enabled"]==int(leg=="B")

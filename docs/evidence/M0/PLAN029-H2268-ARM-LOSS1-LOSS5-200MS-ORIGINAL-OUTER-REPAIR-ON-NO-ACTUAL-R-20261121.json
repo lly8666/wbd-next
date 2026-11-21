@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "task": "M0-PLAN029-THROUGHPUT",
+  "study": "H2268",
+  "scope": "ORIGINAL_Go_TLS_Rust_no_probe_ARM64_client128_server64, true kernel netem 1% and 5% bidirectional iid, 200ms each way, one-way200/RTT>=400, exactly same intentional physical underlay1200 outer1160 for historical direct comparator. Each loss independent same immutable release three owned Go TLS/Rust Normal shared route A repairOFF/B ON/A-prime OFF, concurrent four real TCP iperf3 streams and 160 TCP+160 UDP independent exact app echoes. Client M2 auth repair ON/OFF readback, server true original Rust READY repair1 or0, two native owned Stop. NO product mutation.",
+  "source_sha": "4c40061bcbb08604876d295325d45b1f2ff45c58",
+  "head_at_evidence": "4222dc00cc7fbbdabf38f59999b473c8823328cc",
+  "main_unchanged": "31ce49d9467cde33cce2d61c968129c3173a4b8d",
+  "workflow": {
+    "run_id": 44916507110,
+    "attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44916507110",
+    "conclusion": "FAIL_ONLY_FINAL_TEST_DIGEST_KEYERROR_after_6_actual_original_business_and_native_Stop_PASS",
+    "last_error": "KeyError: 'historical_MTU_is_intentional_direct_comparator'",
+    "actual_summary_field": "original_history_low_MTU_is_intentional_direct_comparator",
+    "first_attempt": {
+      "run": 44915955377,
+      "status": "FAIL_TEST_PARSER_TIMESTAMP_ANCHOR_ON_FIRST_OFF_LEG_B_NOT_RUN",
+      "corrected_in_source": "4c40061bcbb08604876d295325d45b1f2ff45c58"
+    }
+  },
+  "artifacts": [
+    {
+      "loss_pct": 1,
+      "id": 14712046995,
+      "zip_sha256": "34d78b11425cff124f64631d1488552180755c89470f56cfebb3b13c501a2a23",
+      "name": "m0-029-h2268-arm-loss1-44916507110-1"
+    },
+    {
+      "loss_pct": 5,
+      "id": 14712435504,
+      "zip_sha256": "e9b08c9ff7e8b120303fe29227cf131f1db079206d1898ed74df954bfcdb4477",
+      "name": "m0-029-h2268-arm-loss5-44916507110-1"
+    }
+  ],
+  "observations": [
+    {
+      "loss_pct": 1,
+      "legs": [
+        {
+          "leg": "A",
+          "on": false,
+          "goodput_mbps": 76.889,
+          "client_cpu_s_per_received_gib": 20.80856,
+          "server_cpu_s_per_received_gib": 18.7277,
+          "tcp_p99_ms": 883.998,
+          "small_tcp_late_gt1000ms": 0,
+          "small_tcp_replies_of160": 160,
+          "udp_missing_of160": 4,
+          "tcp_info_retrans_segments": 1,
+          "client_shared_full_drops": 0,
+          "sparse_tcp_source_refusals": 0,
+          "original_client_m2_repair_accepted_bytes": 0,
+          "original_client_frozen_retransmits": 0
+        },
+        {
+          "leg": "B",
+          "on": true,
+          "goodput_mbps": 73.549,
+          "client_cpu_s_per_received_gib": 25.93275,
+          "server_cpu_s_per_received_gib": 23.07041,
+          "tcp_p99_ms": 1144.6937,
+          "small_tcp_late_gt1000ms": 3,
+          "small_tcp_replies_of160": 160,
+          "udp_missing_of160": 5,
+          "tcp_info_retrans_segments": 2,
+          "client_shared_full_drops": 0,
+          "sparse_tcp_source_refusals": 0,
+          "original_client_m2_repair_accepted_bytes": 0,
+          "original_client_frozen_retransmits": 0,
+          "original_m2_expired0": 92490,
+          "original_m2_authenticated_ack": 0,
+          "original_m2_timing_samples": 0
+        },
+        {
+          "leg": "A_prime",
+          "on": false,
+          "goodput_mbps": 75.193,
+          "client_cpu_s_per_received_gib": 21.78187,
+          "server_cpu_s_per_received_gib": 20.494,
+          "tcp_p99_ms": 1671.9208,
+          "small_tcp_late_gt1000ms": 9,
+          "small_tcp_replies_of160": 160,
+          "udp_missing_of160": 2,
+          "tcp_info_retrans_segments": 0,
+          "client_shared_full_drops": 0,
+          "sparse_tcp_source_refusals": 0,
+          "original_client_m2_repair_accepted_bytes": 0,
+          "original_client_frozen_retransmits": 0
+        }
+      ]
+    },
+    {
+      "loss_pct": 5,
+      "legs": [
+        {
+          "leg": "A",
+          "on": false,
+          "goodput_mbps": 30.427,
+          "client_cpu_s_per_received_gib": 30.99676,
+          "server_cpu_s_per_received_gib": 30.44324,
+          "tcp_p99_ms": 1224.4066,
+          "small_tcp_late_gt1000ms": 11,
+          "small_tcp_replies_of160": 160,
+          "udp_missing_of160": 14,
+          "tcp_info_retrans_segments": 6,
+          "client_shared_full_drops": 0,
+          "sparse_tcp_source_refusals": 0,
+          "original_client_m2_repair_accepted_bytes": 0,
+          "original_client_frozen_retransmits": 0
+        },
+        {
+          "leg": "B",
+          "on": true,
+          "goodput_mbps": 32.38,
+          "client_cpu_s_per_received_gib": 34.84851,
+          "server_cpu_s_per_received_gib": 32.24787,
+          "tcp_p99_ms": 1680.7053,
+          "small_tcp_late_gt1000ms": 25,
+          "small_tcp_replies_of160": 160,
+          "udp_missing_of160": 19,
+          "tcp_info_retrans_segments": 10,
+          "client_shared_full_drops": 0,
+          "sparse_tcp_source_refusals": 0,
+          "original_client_m2_repair_accepted_bytes": 0,
+          "original_client_frozen_retransmits": 0,
+          "original_m2_expired0": 46538,
+          "original_m2_authenticated_ack": 0,
+          "original_m2_timing_samples": 0
+        },
+        {
+          "leg": "A_prime",
+          "on": false,
+          "goodput_mbps": 37.006,
+          "client_cpu_s_per_received_gib": 29.92356,
+          "server_cpu_s_per_received_gib": 28.21689,
+          "tcp_p99_ms": 1762.3043,
+          "small_tcp_late_gt1000ms": 35,
+          "small_tcp_replies_of160": 160,
+          "udp_missing_of160": 13,
+          "tcp_info_retrans_segments": 9,
+          "client_shared_full_drops": 0,
+          "sparse_tcp_source_refusals": 0,
+          "original_client_m2_repair_accepted_bytes": 0,
+          "original_client_frozen_retransmits": 0
+        }
+      ]
+    }
+  ],
+  "native_results": [
+    "Both true loss cases all 3 A/B/A-prime original Go TLS Rust business PASS_SCOPED and exact original two Stop. OFF and ON real client M2 readback and authenticated server Rust repair enabled matched 0/1/0.",
+    "B policy ON both actual original_m2 repair_accepted_wire_bytes=0 repair_uncertain_wire_bytes=0 original_frozen_retransmitted=0 and authenticated_ack=0 timing_samples=0. Config switch was genuinely ON but actual outer repair did NOTHING. Cannot label this as recovered first delivery or real retransmission effectiveness.",
+    "1% B client cpu_seconds/receivedGiB +21.78% vs A/A-prime average, goodput -3.28%, UDP5 vs4/2, tcp p99 1145 vs884/1672 (A/A-prime severe drift).",
+    "5% B client cpu_seconds/receivedGiB +14.41%, goodput -3.96%, UDP19 vs14/13, tiny tcp p99 1681 vs1224/1762 (A/A-prime drift). No reproducible QoS win. Absolute and rate CPU not equivalent.",
+    "Under 1/5% loss and 400ms RTT, all six client shared pending full drops=0 and sparse TCP source refusal=0. Original Linux Normal client M1 128 not bottleneck here; low throughput dominated native TCP/network loss/control/window. Do not enlarge Windows / modes or client inbox based solely on this GE/weaknet context.",
+    "UDP survivor p99 ~400ms consistent with network RTT lower bound but 2–19 /160 missing. Final 160/160 TCP is eventual only; counts >1000ms 0/3/9 in 1% and 11/25/35 in 5%, not a complete-on-time gate. Numeric samples are preserved in exact artifacts."
+  ],
+  "decision": "NO_NEW_PRODUCT_PERFORMANCE_PROMOTION. OUTER_REPAIR_ON_CONFIGURED_BUT_ZERO_REAL_REPAIR_PACKET_COPY; further code work should isolate absence of original authenticated ACK/timing feedback and effective F/R delivery before tuning transport; Windows P99 must be independently measured.",
+  "limitations": [
+    "Separate ARMs native VMs for 1/5% and separate TLS per leg, A/A' serious P99 drift. 160 small echo cannot certify long-tail SLA. Kernel netem random percent not exact packet loss realized.",
+    "Original Go Rust has authenticated UDP M2 feedback counters=0 in client as observed; server original Go M2 may not print on native Stop and is not automatically presumed emitted.",
+    "The entire workflow conclusion FAIL due *test-only digest KeyError after all 3 valid legs*, NOT a performance API failure; no false Action SUCCESS. Per-leg summary original status PASS_SCOPED and both Stop verifiable.",
+    "Real Windows Wintun/Npcap signed p99 not covered by ARM tests. Windows path not identical Rust Linux shared sync channel64; no cross-platform 64 to128 change until actual Windows queue/path evidence.",
+    "Physical WAN, Windows physical device and 3sec interruption OPEN."
+  ]
+}
