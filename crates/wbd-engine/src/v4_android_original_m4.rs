@@ -19,7 +19,10 @@ use wbd_platform::android_root_io::{
     AndroidBoundRawRx,AndroidBoundRawTx,AndroidOwnedTun,AndroidWorkerWake,
     AndroidBoundPhysicalDnsUdp,
 };
-use wbd_platform::ipv4_tcp::{Ipv4Tuple,Presentation,PacketPersona};
+use wbd_platform::ipv4_tcp::{
+    Ipv4Tuple,Presentation,PacketPersona,build_presentation_ack,
+};
+use crate::v4_presentation_ack::presentation_ack_only_due;
 use wbd_types::MonoNs;
 use std::sync::{Arc,Mutex,OnceLock,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
@@ -46,6 +49,9 @@ pub(super) struct AndroidOriginalStats{
     // reported as actual kernel thread CPU, never wall time or a guess.
     rx_cpu_ns:AtomicU64,tx_cpu_ns:AtomicU64,
     ip_id:AtomicU32,
+    // Actual 40-byte original RAW TCP appearance ACK copies. Not business
+    // delivery, M2 receipt or an authenticated peer liveness witness.
+    ack_only_copied:AtomicU64,
     // B2c2a transparent ingress observations from the ONE original M4
     // readv. Only bounded metadata; no QNAME log, redirect or extra reader.
     dns_udp53_seen:AtomicU64,dns_tcp53_seen:AtomicU64,
@@ -92,7 +98,7 @@ fn now()->MonoNs{
 }
 fn presentation(e:&Entry,stats:&AndroidOriginalStats)->Presentation{
     Presentation{
-        ack32:e.android_seq_anchor as u32,
+        ack32:e.android_presentation_ack.ack(),
         advertised_window:65_535,
         ip_id:stats.ip_id.fetch_add(1,Ordering::Relaxed) as u16,
         persona:PacketPersona::Legacy,
@@ -114,7 +120,14 @@ fn send_staged(
     );
     e.arena.drain_returns();
     match result{
-        Ok((n,pn)) if n>0=>{
+        Ok((n,pn,seq_end)) if n>0=>{
+            // Definite kernel copied original ciphertext only. This is the
+            // legal appearance SEQ for later 40B ACK-only, never an M1
+            // merely staged reservation.
+            e.android_last_copied_seq32=seq_end;
+            e.android_last_ack_sent32=p.ack32;
+            e.android_last_ack_tx_ns=at.0;
+            e.android_ack_pending=e.android_presentation_ack.ack()!=p.ack32;
             stats.tx.fetch_add(1,Ordering::Relaxed);
             Some(pn)
         },
@@ -155,6 +168,46 @@ fn send_authenticated_health(
     // postpone this authenticated HealthClock. Match the original PN.
     send_staged(e,raw,stats,storage,scratch,at)==Some(pn)
 }
+// Reuse main H2229's authenticated cumulative ACK, coalesced to 10ms.
+// No extra socket, JNI callback, M2 receipt, AEAD PN or TUN reader.
+fn send_presentation_ack_if_due(
+    e:&mut Entry,raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
+    scratch:&mut [u8],at:MonoNs,
+){
+    let ack=e.android_presentation_ack.ack();
+    if !e.android_ack_pending||ack==e.android_last_ack_sent32{
+        e.android_ack_pending=false;
+        return
+    }
+    if !presentation_ack_only_due(
+        at.0,e.android_last_ack_tx_ns,ack,e.android_last_ack_sent32
+    ){return}
+    let Some(scope)=e.android_physical.as_ref()else{return};
+    let f=e.flow;
+    let tuple=Ipv4Tuple{
+        src_ip:&f.client_ip,dst_ip:&f.server_ip,
+        src_port:f.client_port,dst_port:f.server_port,
+    };
+    let built=build_presentation_ack(
+        tuple,e.android_last_copied_seq32,ack,
+        stats.ip_id.fetch_add(1,Ordering::Relaxed) as u16,
+        PacketPersona::Legacy,scope.mtu as usize,scratch
+    );
+    if let Ok(packet)=built{
+        if raw.send_built_outer(e.generation,packet,scope.mtu).is_ok(){
+            e.android_last_ack_sent32=ack;
+            e.android_ack_pending=false;
+            stats.ack_only_copied.fetch_add(1,Ordering::Relaxed);
+        }else{
+            stats.tx_error.fetch_add(1,Ordering::Relaxed);
+        }
+    }else{
+        stats.tx_error.fetch_add(1,Ordering::Relaxed);
+    }
+    // Even on a transient send failure the next attempt remains bounded.
+    e.android_last_ack_tx_ns=at.0;
+}
+
 fn raw_worker(
     cell:Arc<Mutex<Entry>>,shutdown:Arc<AtomicBool>,
     wake:Arc<AndroidWorkerWake>,raw:Arc<AndroidBoundRawRx>,
@@ -252,8 +305,21 @@ fn raw_worker(
                 let authenticated=report.authenticated.link_ready!=0||healthy;
                 if authenticated{
                     stats.raw_authenticated.fetch_add(1,Ordering::Relaxed);
+                    // Keep the main H2229 contiguous presentation ledger
+                    // independent from the M1 seq32 high-water extension
+                    // anchor. A future authenticated span must NOT ACK a hole.
+                    let before=e.android_presentation_ack.ack();
+                    let advanced=e.android_presentation_ack.verified(
+                        absolute as u32,wire_len
+                    );
                     e.android_seq_anchor=e.android_seq_anchor.max(
                         absolute.saturating_add(wire_len as u64));
+                    if advanced!=before && !e.android_ack_pending{
+                        e.android_ack_pending=true;
+                        // One wake for pending ACK; TX owns the 10ms
+                        // coalescing deadline and the sole original RAW FD.
+                        let _=peer_wake.signal_wake();
+                    }
                 }
                 (
                     if authenticated{at.0}else{0},
@@ -425,6 +491,15 @@ fn tun_worker(
             clock.on_health_send_result(at.0,copied);
         }
         if shutdown.load(Ordering::Acquire){break}
+        // The same TX worker owns appearance ACK and DATA writes, and
+        // original Stop joins it before closing the physically bound FD.
+        if let Ok(mut e)=cell.lock(){
+            if e.phase==PH_ACTIVE{
+                send_presentation_ack_if_due(
+                    &mut e,&raw,&stats,&mut wire_scratch,at
+                );
+            }
+        }
 
         // Fragment work owns the logical IP packet until all original
         // M3 frames are definitely kernel copied. No fresh TUN read, no
@@ -474,8 +549,16 @@ fn tun_worker(
         }
 
         let at=now();
+        let ack_due=match cell.lock(){
+            Ok(e) if e.phase==PH_ACTIVE&&e.android_ack_pending=>
+                if e.android_last_ack_tx_ns==0{at.0}else{
+                    e.android_last_ack_tx_ns.saturating_add(10_000_000)
+                },
+            _=>u64::MAX,
+        };
         let due=clock.next_deadline()
-            .unwrap_or(at.0.saturating_add(30_000_000_000));
+            .unwrap_or(at.0.saturating_add(30_000_000_000))
+            .min(ack_due);
         let timeout=((due.saturating_sub(at.0)+999_999)/1_000_000)
             .min(1_000).max(1) as i32;
         let readiness=if let Some(socket)=dns.as_ref(){

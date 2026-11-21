@@ -550,6 +550,40 @@ assert 'ANDROID_A48_ANDROID_BIONIC_TCP_CHECKSUM_ONLY_M3_PENDING_HOST_PASS' in Pa
 assert 'advertised_window:65_535' in nativeworker
 assert 'advertised_window:65_535' in Path(
     'crates/wbd-engine/src/v4_embedded_go.rs').read_text()
+# A52: main H2229 is the ONE original appearance ACK ledger on Android.
+# Authenticated M3 changes the contiguous head, never M1's future high-water
+# or a naked RAW ACK; the already-owned TX worker emits exact 40B ACKs at
+# >=10ms only through the original PhysicalNetwork-bound RAW FD.
+main_ack=Path("crates/wbd-engine/src/v4_presentation_ack.rs").read_text()
+engine_entry=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+native_io=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+rust_platform=Path("crates/wbd-platform/src/ipv4_tcp.rs").read_text()
+oracle=Path("android/root-native/ci/linux-original-oracle.sh").read_text()
+assert 'mod v4_presentation_ack;' in Path("crates/wbd-engine/src/lib.rs").read_text()
+assert '#[cfg(any(feature="fec2_product_record",target_os="android"))]' in Path(
+    "crates/wbd-engine/src/lib.rs").read_text()
+assert 'a52_android_normal_off_ack_never_skips_authenticated_gap' in main_ack
+assert 'android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck' in engine_entry
+assert 'android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck::new(' in engine_entry
+assert 'e.android_last_copied_seq32=tx_boundary' in engine_entry
+assert 'let advanced=e.android_presentation_ack.verified(' in nativeworker
+assert 'absolute.saturating_add(wire_len as u64)' in nativeworker
+assert 'ack32:e.android_presentation_ack.ack()' in nativeworker
+assert 'send_presentation_ack_if_due(' in nativeworker
+assert 'presentation_ack_only_due(' in nativeworker
+assert 'build_presentation_ack(' in nativeworker
+assert 'raw.send_built_outer(e.generation,packet,scope.mtu)' in nativeworker
+assert 'e.android_last_copied_seq32=seq_end' in nativeworker
+assert 'record.metadata().seq.0' in owner
+assert 'record.bytes().len()' in owner
+assert 'driver.send_original_frozen(' in owner
+assert 'pub fn signal_wake(&self)' in native_io
+assert 'fn consume_wake(&self)' in native_io
+assert native_io.count('self.consume_wake();')==2
+assert 'pub fn send_built_outer(' in native_io
+assert 'pub fn build_presentation_ack' in rust_platform
+assert 'ANDROID_A52_MAIN_H2229_AUTH_CUMULATIVE_ACK_RUST_HOST_PASS' in oracle
+print("ANDROID_A52_MAIN_H2229_REAL_BIONIC_ACK_ONLY_SOURCE_GATE_PASS")
 print("ANDROID_A51_MAIN_WINDOW65535_ANDROID_M4_PARITY_SOURCE_PASS")
 print("ANDROID_A51_MAIN_FAST_DATA_SHARED_WITH_ANDROID_M3_SOURCE_PASS")
 print("ANDROID_A49_SINGLE_PASS_AND_BOUNDED_NONBLOCKING_DRAIN_SOURCE_PASS")

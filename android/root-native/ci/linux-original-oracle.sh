@@ -93,6 +93,15 @@ assert m["donor_go"]=="a7a82db31fe736ffedee330795a3234d358f1984"
 print("ANDROID_A3_ORIGINAL_LINUX_SERVER_CURRENT_DONOR_OVERLAY_PASS")
 PY
 rustup toolchain install 1.85.1 --profile minimal
+# A52: run the EXACT main H2229 cumulative appearance ACK ledger on host,
+# including Android out-of-order wrap and 10ms deadline negative cases.
+# Pure rustc --test compiles only the original shared file; Android's Bionic
+# link and actual owned RAW sendto remain separate native/phone qualifications.
+rustc +1.85.1 --edition=2021 --test \
+  crates/wbd-engine/src/v4_presentation_ack.rs \
+  -o out/android-a3-linux/a52-h2229-ack-ledger
+out/android-a3-linux/a52-h2229-ack-ledger
+echo ANDROID_A52_MAIN_H2229_AUTH_CUMULATIVE_ACK_RUST_HOST_PASS
 # A46: run EXACT main/Windows H2216 IPv4 TTL NAT fixture against the
 # same Rust wbd-platform source used by Android and Linux. Public DATA and
 # pure ACK must pass; IP checksum corruption and zero TTL must still fail.

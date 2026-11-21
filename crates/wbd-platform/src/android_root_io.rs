@@ -792,6 +792,15 @@ impl AndroidWorkerWake{
         else if n<0{Err(io::Error::last_os_error())}
         else{Err(io::ErrorKind::WriteZero.into())}
     }
+    // The same original eventfd also wakes the TX worker after authenticated
+    // cumulative ACK progress. The caller owns the shutdown generation;
+    // consuming this wake never cancels a Stop.
+    pub fn signal_wake(&self)->io::Result<()>{self.signal_stop()}
+    fn consume_wake(&self){
+        let mut count=0u64;
+        let _=unsafe{read(self.fd.as_raw_fd(),(&mut count as *mut u64).cast(),
+            std::mem::size_of::<u64>())};
+    }
     /// The same original TX worker may wait for the one TUN reader and the
     /// physically bound DNS reply socket together. Stop eventfd interrupts
     /// both; the poll does not introduce another reader/thread or 1ms busy
@@ -814,7 +823,11 @@ impl AndroidWorkerWake{
                 Ok((false,false))
             }else{Err(err)}
         }
-        if n==0||fds[2].revents!=0{return Ok((false,false))}
+        if n==0{return Ok((false,false))}
+        if fds[2].revents!=0{
+            self.consume_wake();
+            return Ok((false,false))
+        }
         if fds[0].revents & !POLLIN!=0||fds[1].revents & !POLLIN!=0{
             return Err(io::Error::new(io::ErrorKind::BrokenPipe,
                 "original Android TUN/physical DNS poll invalid"))
@@ -834,7 +847,11 @@ impl AndroidWorkerWake{
             let err=io::Error::last_os_error();
             return if err.kind()==io::ErrorKind::Interrupted{Ok(false)}else{Err(err)}
         }
-        if n==0||fds[1].revents!=0{return Ok(false)}
+        if n==0{return Ok(false)}
+        if fds[1].revents!=0{
+            self.consume_wake();
+            return Ok(false)
+        }
         if fds[0].revents & !POLLIN!=0{
             return Err(io::Error::new(io::ErrorKind::BrokenPipe,
                 "Android original M4 device poll error/hup"))

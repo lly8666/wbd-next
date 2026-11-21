@@ -839,6 +839,18 @@ struct Entry{
     android_joining:bool,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_seq_anchor:u64,
+    // H2229 main cumulative ACK ledger: unlike the M1 high-water extension
+    // anchor, only contiguous M3-authenticated bytes may appear ACKed.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_ack_pending:bool,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_ack_sent32:u32,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_ack_tx_ns:u64,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_copied_seq32:u32,
     // Authenticated original Go feature3 Normal/off revision, not FEC APPLIED.
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_off_applied_revision:u64,
@@ -1207,6 +1219,18 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_seq_anchor:u64::from(handoff.rx_boundary),
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck::new(
+            handoff.rx_boundary
+        ),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_ack_pending:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_ack_sent32:handoff.rx_boundary,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_ack_tx_ns:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_copied_seq32:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_off_applied_revision:0,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_metrics:Arc::new(android_original_m4::AndroidOriginalStats::default()),
@@ -1349,6 +1373,10 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
     // Only Go's private callback after protected reply and successful
     // DetachTransition knows the exact post-reply SenderNext boundary.
     if e.owner.commit_after_detach(tx_boundary).is_err(){return BAD_STAGE}
+    // Original Go Detach is the ONLY authority for Android's starting
+    // appearance SEQ; never generate pure ACK with an invented zero SEQ.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    {e.android_last_copied_seq32=tx_boundary;}
     #[cfg(feature="fec2_product_record")]
     {e.game_tx_boundary=tx_boundary;}
     e.phase=PH_ACTIVE;

@@ -1986,7 +1986,7 @@ impl ProtectedScopedOwner{
         &mut self,driver:&AndroidBoundRawTx,tuple:AndroidTuple<'_>,
         presentation:AndroidPresentation,route_budget:u32,now:MonoNs,
         storage:&mut Vec<TxDispatch>,scratch:&mut [u8],
-    )->Result<(usize,u64),ProtectedCryptoError>{
+    )->Result<(usize,u64,u32),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
            driver.generation()!=self.generation||driver.is_stopping()||
            !storage.is_empty()||storage.capacity()!=1{
@@ -2005,10 +2005,16 @@ impl ProtectedScopedOwner{
                 return Err(ProtectedCryptoError::Tx)
             }
             let original_pn=ready[0].record.metadata().pn.0;
+            // Only definite RAW sendto copies may advance the outer
+            // presentation SEQ. Uncopied staged M1 bytes are not sent.
+            let seq_end=ready[0].record.metadata().seq.0
+                .checked_add(ready[0].record.bytes().len() as u64)
+                .ok_or(ProtectedCryptoError::Tx)? as u32;
             driver.send_original_frozen(
                 self.generation,&ready[0].record,tuple,presentation,
                 route_budget,scratch
-            ).map(|n|(n,original_pn)).map_err(|_|ProtectedCryptoError::Owner)
+            ).map(|n|(n,original_pn,seq_end))
+                .map_err(|_|ProtectedCryptoError::Owner)
         })();
         *storage=batch.recycle();
         outcome
