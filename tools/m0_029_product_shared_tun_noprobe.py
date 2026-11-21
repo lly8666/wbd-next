@@ -402,7 +402,8 @@ def main():
             if not ready(node.logs["echo-server"],"H2259_SERVER_TCP_TRACE ",5):
                 raise RuntimeError("M029_TCP_SERVER_DIRECTIONAL_TRACE_MISSING")
             raw=node.logs["echo-server"].read_text(errors="replace")
-            matches=re.findall(r"^H2259_SERVER_TCP_TRACE (\\[.*\\])$",raw,re.M)
+            assert re.findall(r"^H2259_SERVER_TCP_TRACE (\[.*\])$","H2259_SERVER_TCP_TRACE [[0,1,2]]",re.M)==["[[0,1,2]]"]
+            matches=re.findall(r"^H2259_SERVER_TCP_TRACE (\[.*\])$",raw,re.M)
             if len(matches)!=1:
                 raise RuntimeError("M029_EXACTLY_ONE_TCP_SERVER_STREAM_REQUIRED")
             server_trace=json.loads(matches[0])
