@@ -17,3 +17,7 @@ B34b (`d70132608bf5`) 同SOURCE [Android dual64 #44978243692](https://github.com
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B35把B34已有选中物理DNS IPv4连接到原Go服务器peer-host冷UDP/TCP53域名引导，复用Bionic Network绑定与原DNS解析器，保持M4/默认路由/Stop及实机未验边界。"}
 ```
+
+## B35b｜原有Host门修正与软件资格边界
+
+B35第一生产SOURCE `75db92980286` 的 [治理 #44990719102](https://github.com/lly8666/wbd-next/actions/runs/44990719102) **FAIL**：提交当时缺同批feature-impact；后续补齐但不改写该FAIL。其 [dual64 #44990719114](https://github.com/lly8666/wbd-next/actions/runs/44990719114) B2c物理Host真实四项socket测试PASS、历史source字符串断言FAIL；后续相邻任务取消，保持旧证据。B35 Go/Java/原DNS产品改动保持原样，修复只针对B2c的旧调用字符串并把B35真实UDP/TCP53上游测试纳入同一Host Job。修正后的代码SOURCE `db1b76f6c3f166c31d0f3a775f927abc17efb3a4` 在 [dual64 #44990792361](https://github.com/lly8666/wbd-next/actions/runs/44990792361) 已确认B2c物理Host **SUCCESS**，双ABI/签名APK/原Linux Oracle结果须按该Action最终Job逐项查，绝不由Host单项继承。该SOURCE的 [治理 #44990792386](https://github.com/lly8666/wbd-next/actions/runs/44990792386) 因只改CI脚本而未同批改功能卡/devlog判FAIL；B35b仅同期更新两份文档以完成最终治理，不更改产品SOURCE或重复启动原生构建。
