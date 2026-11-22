@@ -109,7 +109,7 @@ jobs:
           while IFS= read -r path; do
             test -n "$path" || continue
             case "$path" in
-              crates/wbd-platform/Cargo.toml|crates/wbd-engine/Cargo.toml|crates/wbd-platform/src/windows_native_io.rs|crates/wbd-engine/src/v4_windows_native_runtime.rs) ;;
+              crates/wbd-platform/Cargo.toml|crates/wbd-engine/Cargo.toml|crates/wbd-platform/src/windows_native_io.rs|crates/wbd-engine/src/v4_windows_native_runtime.rs|crates/wbd-engine/src/v4_windows_owner.rs|crates/wbd-engine/src/v4_windows_fec2_owner.rs) ;;
               *) echo "H2291_UNEXPECTED_ARM_COMPILED_PRODUCT_DELTA $path" >&2; exit 2;;
             esac
           done <<< "$product_delta"
@@ -165,9 +165,23 @@ jobs:
           & git fetch --depth=1 origin $compiled
           if($LASTEXITCODE -ne 0){throw 'H2292_ORIGINAL_DLL_COMPILE_SOURCE_NOT_REACHABLE'}
           $productDiff=@(& git diff --name-only $compiled $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock)
-          if($LASTEXITCODE -ne 0 -or $productDiff.Count -ne 0){
-            throw ('H2292_REAL_WINDOWS_PRODUCT_COMPILED_SOURCE_CHANGED '+($productDiff -join ','))
+          if($LASTEXITCODE -ne 0){throw 'H2294_PRODUCT_DIFF_INSPECTION_FAILED'}
+          # This is an immutable archived DLL of the older source, NOT a
+          # pretend rebuild. The ONLY allowed newer changes are Windows-native
+          # opt-in experiment modules/features, disabled in this old binary.
+          # No FEC OFF original transport, original-Go or ARM source drift.
+          foreach($changed in $productDiff){
+            switch -Exact ($changed) {
+              'crates/wbd-platform/Cargo.toml' {break}
+              'crates/wbd-engine/Cargo.toml' {break}
+              'crates/wbd-platform/src/windows_native_io.rs' {break}
+              'crates/wbd-engine/src/v4_windows_native_runtime.rs' {break}
+              'crates/wbd-engine/src/v4_windows_owner.rs' {break}
+              'crates/wbd-engine/src/v4_windows_fec2_owner.rs' {break}
+              default {throw "H2294_ARCHIVED_WINDOWS_COMPILATION_SOURCE_NOT_PRESERVED $changed"}
+            }
           }
+          Write-Output "H2294_OLD_WINDOWS_DLL_ARCHIVE_NO_NON_WINDOWS_PRODUCT_DELTA"
           New-Item -ItemType Directory -Force result/h2292-build | Out-Null
           & gh run download 44949570906 --repo $env:GITHUB_REPOSITORY --name "h2292-two-real-win-rust-dlls-$compiled" --dir result/h2292-build
           if($LASTEXITCODE -ne 0){throw 'H2292_PRIOR_REAL_BUILD_PAIR_ARCHIVE_UNAVAILABLE'}

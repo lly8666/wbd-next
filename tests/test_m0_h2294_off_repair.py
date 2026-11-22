@@ -94,6 +94,10 @@ class H2294FecOffOriginalRepair(unittest.TestCase):
             self.assertIn("h2294-out/",wf)
             self.assertIn("git diff --name-only $compiled $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock",wf)
             self.assertIn("H2294_FEC_OFF_REPAIR",wf)
+            self.assertIn("H2294_OLD_WINDOWS_DLL_ARCHIVE_NO_NON_WINDOWS_PRODUCT_DELTA",wf)
+            self.assertIn("H2294_ARCHIVED_WINDOWS_COMPILATION_SOURCE_NOT_PRESERVED",wf)
+            self.assertIn("crates/wbd-engine/src/v4_windows_fec2_owner.rs) ;;",wf)
+            self.assertNotIn("crates/wbd-engine/src/runtime/fec2_owner.rs) ;;",wf)
             self.assertNotIn("default_go_rust_product_promoted':True",wf)
 
 
