@@ -420,6 +420,8 @@ def control_service(own):
                   if os.environ.get("WBD_H2302_WINDOW_ABA")=="1" else
                   ("A_off","B_repair","A_prime_off")
                  if os.environ.get("WBD_H2294_OFF_REPAIR_ABA")=="1" else
+                 ("A_fixed","B_off","A_prime_fixed")
+                 if os.environ.get("WBD_H2307_FEC_FIXED_FIRST")=="1" else
                  ("A_off","B_fixed","A_prime_off")
                  if os.environ.get("WBD_H2293_FEC_ABA")=="1" else
                  ("A_default","B_tx16","A_prime"))

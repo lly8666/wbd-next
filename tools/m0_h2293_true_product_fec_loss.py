@@ -29,6 +29,7 @@ FEC_LOSS=int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0"))
 FEC_PROFILE="light" if FEC_LOSS==1 else "mild"
 H2294_OFF_REPAIR=os.environ.get("WBD_H2294_OFF_REPAIR_ABA")=="1"
 H2302_WINDOW_ABA=os.environ.get("WBD_H2302_WINDOW_ABA")=="1"
+H2307_FIXED_FIRST=os.environ.get("WBD_H2307_FEC_FIXED_FIRST")=="1"
 H2302_BASE_BYTES=int(os.environ.get("WBD_H2302_BASE_BYTES","2097152"))
 H2302_TUNED_BYTES=int(os.environ.get("WBD_H2302_TUNED_BYTES","8388608"))
 if H2302_WINDOW_ABA and (H2302_BASE_BYTES,H2302_TUNED_BYTES) not in (
@@ -45,10 +46,14 @@ def h2302_window_bytes(tag):
     return H2302_TUNED_BYTES if tag=="B_window" else H2302_BASE_BYTES
 if H2302_WINDOW_ABA and H2294_OFF_REPAIR:
     raise RuntimeError("H2302_WINDOW_AND_REPAIR_MUST_NOT_COEXIST")
-LEGS=(("A_base","B_window","A_prime_base") if H2302_WINDOW_ABA else
+if H2307_FIXED_FIRST and (H2302_WINDOW_ABA or H2294_OFF_REPAIR):
+    raise RuntimeError("H2307_FEC_FIRST_MUST_ISOLATE_WINDOW_AND_REPAIR")
+LEGS=(("A_fixed","B_off","A_prime_fixed") if H2307_FIXED_FIRST else
+      ("A_base","B_window","A_prime_base") if H2302_WINDOW_ABA else
       ("A_off","B_repair","A_prime_off") if H2294_OFF_REPAIR else
       ("A_off","B_fixed","A_prime_off"))
-ROOT=pathlib.Path("h2302-out" if H2302_WINDOW_ABA else
+ROOT=pathlib.Path("h2307-out" if H2307_FIXED_FIRST else
+                  "h2302-out" if H2302_WINDOW_ABA else
                   "h2294-out" if H2294_OFF_REPAIR else "h2293-out")
 H2286=pathlib.Path("h2286-out")
 BINARY=pathlib.Path("result/wl-public/wbd_engine.dll")
@@ -306,6 +311,8 @@ def win_trial(group,relay,arm,ready):
             # is used for ALL legs. Only original FEC2 cold admission varies.
             tuned=True
             fec_fixed=(tag=="B_fixed")
+            if H2307_FIXED_FIRST:
+                fec_fixed=tag in ("A_fixed","A_prime_fixed")
             if H2294_OFF_REPAIR:
                 # Real Normal/FEC OFF in ALL three cold GoTLS/Rust sessions.
                 fec_fixed=False
@@ -468,6 +475,14 @@ def win_trial(group,relay,arm,ready):
             require([x["original_outer_repair_expected_on"] for x in results]==
                     [False,True,False],
                     "H2294_ORIGINAL_SINGLE_COPY_REPAIR_ABA_FAILED")
+        elif H2307_FIXED_FIRST:
+            require([x["fec2_fixed_expected"] for x in results]==[True,False,True] and
+                    [bool(x["fec2_genuine_rust_owner_applied_readback"]) for x in results]==
+                    [True,False,True] and
+                    all(not x["original_outer_repair_expected_on"] and
+                        x["actual_original_native_frozen_repair_packets"]==0
+                        for x in results),
+                    "H2307_FIXED_OFF_FIXED_GENUINE_RUST_APPLICATION_MISSING")
         else:
             require([x["fec2_fixed_expected"] for x in results]==[False,True,False] and
                     [bool(x["fec2_genuine_rust_owner_applied_readback"]) for x in results]==
@@ -475,7 +490,9 @@ def win_trial(group,relay,arm,ready):
         result={"group":group,"source_sha":os.environ["GITHUB_SHA"],
                 "candidate_binary_source_sha":CANDIDATE_BUILD_SHA,
                 "original_go_exe_source_sha":"c5066db61fc51bafd7c2ad2def3029e615efa777",
-                "status":("PASS_H2302_MEASURED_ORIGINAL_TCP_WINDOW_ABA_FEC_OFF_SCOPED"
+                "status":("PASS_H2307_MEASURED_ORIGINAL_FEC2_FIXED_OFF_FIXED_SCOPED"
+                          if H2307_FIXED_FIRST else
+                          "PASS_H2302_MEASURED_ORIGINAL_TCP_WINDOW_ABA_FEC_OFF_SCOPED"
                           if H2302_WINDOW_ABA else
                           "PASS_H2294_MEASURED_FEC_OFF_OUTER_REPAIR_ABA_SCOPED"
                           if H2294_OFF_REPAIR else
@@ -504,7 +521,8 @@ def win_trial(group,relay,arm,ready):
         # Cross-runner ARM/relay consumers still receive their original
         # scoped true TCP/CPU/Stop receipt, plus all three actual stage facts.
         last=json.loads((H2286/"client-result.json").read_text())
-        result_key=("h2302_same_vm_tcp_window_abaprime" if H2302_WINDOW_ABA else
+        result_key=("h2307_same_vm_original_fec2_fixed_off_fixed" if H2307_FIXED_FIRST else
+                    "h2302_same_vm_tcp_window_abaprime" if H2302_WINDOW_ABA else
                     "h2294_same_vm_original_product_fecoff_repair_abaprime"
                     if H2294_OFF_REPAIR else
                     "h2293_same_vm_original_product_fec2_abaprime")
