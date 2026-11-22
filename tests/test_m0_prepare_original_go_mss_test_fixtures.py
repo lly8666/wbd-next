@@ -25,7 +25,10 @@ class OldTestSourceMSSMigration(unittest.TestCase):
    for name in EXPECTED:
     s=(dst/name).read_text()
     self.assertNotIn(REMOVED,s)
-    self.assertIn(FIXTURE,s)
+    if EXPECTED[name]:
+     self.assertIn(FIXTURE,s)
+    else:
+     self.assertEqual(s.count("faketcp.PublicV4AdvertisedMSS()"),7)
  def test_missing_or_unreviewed_reference_fails_closed(self):
   with tempfile.TemporaryDirectory() as tmp:
    root=pathlib.Path(tmp);dst=self.make(root)
