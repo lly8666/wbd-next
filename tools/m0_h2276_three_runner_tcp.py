@@ -37,12 +37,20 @@ WINDOW_B_BYTES = int(os.environ.get("WBD_H2283_B_BYTES", "8388608"))
 # H2284 restore the OLD H2228 capacity gate: 8 parallel real TCP streams,
 # large test-only endpoint buffers, direct vs relay with the SAME Windows+ARM VMs.
 CAPACITY_H2284 = os.environ.get("WBD_H2284_EIGHT_TCP_CAPACITY") == "1"
+# H2310 causal control: same Windows/ARM tailnet relay, actual Win BBR2
+# kernel TCP, eight MiB buffers. NO WBD TLS/Rust/Npcap/TUN product here.
+BARE_BBR2_H2310=os.environ.get("WBD_H2310_BBR2_BARE_TCP")=="1"
 if WINDOW_B_BYTES not in (2*1024*1024, 8*1024*1024):
     raise RuntimeError("H2283_INVALID_ONLY_TEST_BUFFER_SIZE")
 if SUSTAINED:
     tcp.BULK_MAX_BYTES = 512 * 1024 * 1024  # per flow, ordinary four or H2284 eight real TCP sockets
     tcp.BULK_SEND_S = 25
     tcp.TIMEOUT_S = 150
+if BARE_BBR2_H2310:
+    require_bool = SUSTAINED and not WINDOW_AB and not CAPACITY_H2284
+    if not require_bool:
+        raise RuntimeError("H2310_BARE_BBR2_MUST_USE_4X25S_SUSTAINED_PROFILE")
+    tcp.TIMEOUT_S=180
 if CAPACITY_H2284:
     tcp.BULK_FLOWS = 8
     tcp.TIMEOUT_S = 150
@@ -67,7 +75,7 @@ def actual_loss_tier(stage):
 
 def prepare_tcp_sockbuf(stage):
     # Only the *test app* socket knobs; no WBD runtime/GoTLS changes.
-    tcp.WINDOW_TEST_BYTES = (8*1024*1024 if CAPACITY_H2284 else
+    tcp.WINDOW_TEST_BYTES = (8*1024*1024 if CAPACITY_H2284 or BARE_BBR2_H2310 else
                              WINDOW_B_BYTES if WINDOW_AB and stage=="tuned" else 0)
 
 
@@ -505,13 +513,13 @@ def remote_diag(relay):
 def run_server(own, relay):
     peer = verify(own, relay, "relay")
     original_sysctls = {}
-    if WINDOW_AB or CAPACITY_H2284:
+    if WINDOW_AB or CAPACITY_H2284 or BARE_BBR2_H2310:
         # Ephemeral native ARM VM, but restore test-owned sysctls on Stop.
         for key in ("net.core.rmem_max", "net.core.wmem_max"):
             original_sysctls[key] = run("sysctl", "-n", key).stdout.strip()
     result = []
     try:
-        if WINDOW_AB or CAPACITY_H2284:
+        if WINDOW_AB or CAPACITY_H2284 or BARE_BBR2_H2310:
             for key in original_sysctls:
                 run("sudo", "-n", "sysctl", "-w", key + "=16777216")
         for tier in active_stages():
@@ -590,6 +598,16 @@ def run_client(own, relay, server):
             with contextlib.redirect_stdout(buffer):
                 tcp.client(win, target, own["source_sha"])
         except Exception as exc:
+            if BARE_BBR2_H2310:
+                lines=buffer.getvalue().splitlines()
+                for field,suffix in (("h2310_failed_client_sender_kernel_tcpinfo",
+                                      "CLIENT_SENDER_TCP_INFO "),
+                                     ("h2310_failed_client_socket_progress",
+                                      "CLIENT_PROGRESS_DIAGNOSTIC ")):
+                    mark=tcp.MARK+suffix
+                    readings=[json.loads(s.split(mark,1)[1]) for s in lines if mark in s]
+                    observation[field]=readings
+                save(ROOT/"client-result.json",observation)
             observation["status"] = "FAIL_REAL_TCP_FORWARDING_NOT_PRODUCT_PERF"
             observation["failed_stage"] = tier
             observation["client_exception_type"] = type(exc).__name__
@@ -626,7 +644,16 @@ def run_client(own, relay, server):
             observation["topology_error"] = str(topology_exc)
             save(ROOT / "client-result.json", observation)
             raise
+        if BARE_BBR2_H2310:
+            mark=tcp.MARK+"CLIENT_SENDER_TCP_INFO "
+            original_sender=[json.loads(s.split(mark,1)[1]) for s in
+                             evidence.splitlines() if mark in s]
+            require(len(original_sender)==1 and
+                    original_sender[0]["real_original_windows_kernel_socket"] and
+                    len(original_sender[0]["per_bulk_flow"])==4,
+                    "H2310_BARE_TRUE_WINDOWS_TCP_INFO_NOT_READ_BACK")
         row = dict(stage_id=tier,
+                   h2310_bare_sender_tcp_info=(original_sender[0] if BARE_BBR2_H2310 else None),
                    relay_kernel_loss_receipt=receipt,
                    relay_resource_receipt=relay_cpu,
                    loss_pct=loss_tier,
