@@ -76,6 +76,7 @@ jobs:
     env:
       WBD_H2294_OFF_REPAIR_ABA: "0" # isolate old mode
       WBD_H2302_WINDOW_ABA: "0" # isolate old mode unit imports
+      WBD_H2293_FEC_ABA: "0" # historical H2293 units assume loss is 1 or 5; real runtime remains 1 at 0%
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
