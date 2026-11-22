@@ -13,6 +13,7 @@ on:
       - 'tools/m0_h2302_windows_scoped_bbr2.py'
       - 'tests/test_m0_h2276_three_runner_tcp.py'
       - 'tests/test_m0_h2280_bidir_netem_tcp.py'
+      - 'tests/test_m0_h2303_kernel_cc_triplets.py'
   workflow_dispatch:
 permissions:
   contents: read
@@ -40,7 +41,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2302_windows_scoped_bbr2.py
-          python3 -m unittest tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp -v
+          python3 -m unittest tests.test_m0_h2303_kernel_cc_triplets -v
           WBD_H2303_NATIVE_TCP_CC_AB=1 WBD_H2303_NATIVE_TCP_LOSS=1 python3 -c "import sys;sys.path.insert(0,'tools');import m0_h2276_three_runner_tcp as t;assert t.active_stages()==('cc_cubic_before','cc_bbr2_candidate','cc_cubic_after');assert all(t.actual_loss_tier(x)==1 for x in t.active_stages());print('H2303_TEST_ONLY_THREE_REAL_KERNEL_LOSS1_STAGES_STATIC_PASS')"
   relay:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2303-real-cc-loss1]')
