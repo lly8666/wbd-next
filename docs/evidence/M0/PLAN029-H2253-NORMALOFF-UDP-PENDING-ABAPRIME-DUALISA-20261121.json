@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "source_sha": "0145601d059e9498b8c0b6858ff2da53fadab0e1",
+  "run_id": 44881210369,
+  "run_attempt": 1,
+  "run_conclusion": "SUCCESS",
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44881210369",
+  "status": "PASS_SCOPED_REAL_SOURCE_NORMAL_OFF_CLIENT_NATIVE_READBACK__TRIAL_DEFAULT_NO_PROMOTION",
+  "scenario": "Native Linux original Go TLS/Rust true nonprobe and authenticated shared Normal /32, four kernel TCP streams with synchronized 160 UDP+160 small TCP echoes, owned Stop, two independent ISAs; same native runner and same release binary per ISA A(flag OFF)->B(test opt-in ON)->Aprime(OFF). Router netem injected 0% loss and explicit outer IP MTU1160.",
+  "settings": {
+    "client_go_outer_repair_cli": "off",
+    "server_go_outer_repair_cli": "off",
+    "client_native_repair_enabled": [
+      0
+    ],
+    "server_native_repair_readback": "NOT_EMITTED_UNVERIFIED",
+    "product_default_udp_slot_trial": "off",
+    "B_only_flag": "WBD_M0_029_UDP_RESERVE_TEST=1",
+    "normal_client_shared_m1_slots": 128,
+    "server_slots": 64,
+    "fq_mbps_per_flow": 600
+  },
+  "statistics": [
+    {
+      "arch": "aarch64",
+      "artifact_id": 14698530930,
+      "artifact_sha256": "8657af69053a0de455d151e6863835229c979765304c531a4dfee361b212e96e",
+      "binary_sha256": {
+        "libwbd_engine.so": "d3aa1483aa468b95f9656ad490382f9190087bcb04d97184f0ac21b261c7a136",
+        "wbd-v4-client": "4da45d8e9fe55d926badb87ce454a5a9111a2904b4dbe81bd3d1bdc1fe5d0e3c",
+        "wbd-v4-server": "28bdec30462b62681e151069a462628d7bd6ff24768b3a2c4f8c577c32c8729d"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "goodput_mbps": 1162.8121,
+          "client_cpu_s_per_gib": 11.53668,
+          "server_cpu_s_per_gib": 10.58021,
+          "udp_requests": 160,
+          "udp_missing": 37,
+          "udp_new_rejected_client": 37,
+          "udp_new_rejected_server": 0,
+          "small_tcp_requests": 160,
+          "small_tcp_missing": 0,
+          "small_tcp_survivor_p99_ms": 294.5896,
+          "tcp_pending_displaced": 0,
+          "client_new_tcp_rejected": 716468,
+          "client_stop_queue_full": 716505
+        },
+        {
+          "leg": "B",
+          "goodput_mbps": 1157.1801,
+          "client_cpu_s_per_gib": 11.58251,
+          "server_cpu_s_per_gib": 10.61019,
+          "udp_requests": 160,
+          "udp_missing": 0,
+          "udp_new_rejected_client": 0,
+          "udp_new_rejected_server": 0,
+          "small_tcp_requests": 160,
+          "small_tcp_missing": 0,
+          "small_tcp_survivor_p99_ms": 721.5686,
+          "tcp_pending_displaced": 31,
+          "client_new_tcp_rejected": 756547,
+          "client_stop_queue_full": 756578
+        },
+        {
+          "leg": "Aprime",
+          "goodput_mbps": 1168.8061,
+          "client_cpu_s_per_gib": 11.5475,
+          "server_cpu_s_per_gib": 10.64368,
+          "udp_requests": 160,
+          "udp_missing": 32,
+          "udp_new_rejected_client": 32,
+          "udp_new_rejected_server": 0,
+          "small_tcp_requests": 160,
+          "small_tcp_missing": 0,
+          "small_tcp_survivor_p99_ms": 658.5029,
+          "tcp_pending_displaced": 0,
+          "client_new_tcp_rejected": 709980,
+          "client_stop_queue_full": 710012
+        }
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "artifact_id": 14697948773,
+      "artifact_sha256": "dc0ea0bbf4693ac5891a1de8c2371cd07468a4394f9a4c4459d9aab576022fc3",
+      "binary_sha256": {
+        "libwbd_engine.so": "4863598f8bc2a6ea9e244b913bd358bf200c673d2009d9614cfd649b6a97c89b",
+        "wbd-v4-client": "5f284c6486c110305481cbe7e47e8af974ee46864389d3d17c7c5edaa41884aa",
+        "wbd-v4-server": "dea3add9c3b2c93121aaebfa73b478f17c3fe687bbc299826b867e05651c87a7"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "goodput_mbps": 1471.1981,
+          "client_cpu_s_per_gib": 8.37812,
+          "server_cpu_s_per_gib": 8.06022,
+          "udp_requests": 160,
+          "udp_missing": 19,
+          "udp_new_rejected_client": 17,
+          "udp_new_rejected_server": 2,
+          "small_tcp_requests": 160,
+          "small_tcp_missing": 0,
+          "small_tcp_survivor_p99_ms": 613.3053,
+          "tcp_pending_displaced": 0,
+          "client_new_tcp_rejected": 740898,
+          "client_stop_queue_full": 740915
+        },
+        {
+          "leg": "B",
+          "goodput_mbps": 1469.0304,
+          "client_cpu_s_per_gib": 8.43991,
+          "server_cpu_s_per_gib": 8.35805,
+          "udp_requests": 160,
+          "udp_missing": 0,
+          "udp_new_rejected_client": 0,
+          "udp_new_rejected_server": 0,
+          "small_tcp_requests": 160,
+          "small_tcp_missing": 0,
+          "small_tcp_survivor_p99_ms": 433.3979,
+          "tcp_pending_displaced": 22,
+          "client_new_tcp_rejected": 764624,
+          "client_stop_queue_full": 764646
+        },
+        {
+          "leg": "Aprime",
+          "goodput_mbps": 1515.0743,
+          "client_cpu_s_per_gib": 8.16337,
+          "server_cpu_s_per_gib": 7.85441,
+          "udp_requests": 160,
+          "udp_missing": 37,
+          "udp_new_rejected_client": 37,
+          "udp_new_rejected_server": 0,
+          "small_tcp_requests": 160,
+          "small_tcp_missing": 0,
+          "small_tcp_survivor_p99_ms": 696.7638,
+          "tcp_pending_displaced": 0,
+          "client_new_tcp_rejected": 737253,
+          "client_stop_queue_full": 737290
+        }
+      ]
+    }
+  ],
+  "decision": "Do NOT promote current blind latest-TCP victim to default. Both ISAs did rescue UDP from >0 missing to 0 in this no-artificial-loss, explicit MTU1160 case, but ARM small TCP p99 295/722/659ms with A/A' drift; x86 613/433/697ms, higher B CPU/GiB and A/A' drift in goodput 1471→1515. Large old TCP queue full remains. Basic swap might preferentially choose co-scheduled short TCP packets: actual victim identity NOT observed. Improve only when actual TCP victim is verified full-sized bulk data, preserve short TCP and ACK; single-factor re-test, no further batch/cap sweeps.",
+  "unverified": [
+    "Server native outer repair_effective readback absent in shared Go multi-server; two endpoint CLI flags off and client readback zero, server status NOT_EMITTED_UNVERIFIED.",
+    "Outer MTU1160 explicit, not user default1460.",
+    "No loss injection/GE1%, true cross-lease or physical WAN/ARM board/Windows 80-200Mbps/outage.",
+    "Same binary with cold flag A/B/A' is NOT old-vs-new SOURCE CPU causal proof.",
+    "Small TCP latency distribution measured among all 160 survivors, but deadline eligibility and p99 per real product still OPEN."
+  ],
+  "original_failures_retained": [
+    44880746790,
+    44880712768,
+    44880440236
+  ]
+}
