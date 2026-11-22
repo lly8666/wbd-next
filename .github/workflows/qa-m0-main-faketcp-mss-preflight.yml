@@ -9,6 +9,8 @@ on:
       - '.github/workflows/qa-m0-main-faketcp-mss-preflight.yml'
       - 'tools/m0_install_public_faketcp.py'
       - 'tests/test_m0_main_faketcp_source_gate.py'
+      - 'tests/test_m0_main_legacy_mss_fixture.py'
+      - 'tools/m0_legacy_test_mss_compat.py'
       - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
       - 'r0/go_overlay/internal/faketcp/**'
   workflow_dispatch:
@@ -25,6 +27,6 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          python3 -m py_compile tools/m0_install_public_faketcp.py
+          python3 -m py_compile tools/m0_install_public_faketcp.py tools/m0_legacy_test_mss_compat.py
           python3 tools/m0_install_public_faketcp.py --check-only
-          python3 -m unittest tests.test_m0_main_faketcp_source_gate -v
+          python3 -m unittest tests.test_m0_main_faketcp_source_gate tests.test_m0_main_legacy_mss_fixture -v
