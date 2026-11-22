@@ -77,6 +77,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Report the precise first failed source line without dumping
+          # command arguments (the original Go TLS tests have private keys).
+          trap 'ec=$?; echo "M0_PLAN012_FIRST_FAILED_BASH_LINE=${LINENO} exit_code=${ec}" >&2' ERR
           mkdir -p fixed-kernel-result fixed-build
           test "$(git -C legacy rev-parse HEAD)" = a7a82db31fe736ffedee330795a3234d358f1984
           rustup toolchain install 1.85.1 --profile minimal
@@ -163,6 +166,7 @@ jobs:
           # frozen SYN/SYN-ACK 1360B packet/association implementations.
           # This seven-file installation is the SAME manifest-checked
           # production FakeTCP source used by Windows and ARM64 Linux.
+          echo M0_PLAN012_RUST_EXPORTS_ALL_EXACT_AND_SHARED_TUN_NATIVE_PASSED
           # The original frozen TLS lacks ClientConfig.RootCAs used by the
           # newer copied admission_v4 test and real authenticated product.
           grep -Fq "RootCAs" legacy/internal/realityfront/tls.go
