@@ -374,6 +374,16 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
             marker=tcp.MARK+"CLIENT_CC_ACTIVE_PROFILE "
             records=[json.loads(line.split(marker,1)[1]) for line in
                      capture.getvalue().splitlines() if marker in line]
+            # Real original kernel-TCP can finish before the CC observation
+            # qualifies. Retain genuine delivered bytes/P99 even when the
+            # observer cannot prove which Windows template was selected.
+            output["h2308_real_tcp_finished_before_cc_gate"]=parsed
+            output["h2308_actual_cc_profile_readback_before_gate"]=records
+            core.save(ROOT/"client-result.json",output)
+            print("H2308_REAL_TCP_FINISHED_CC_READBACK_PENDING "+
+                  json.dumps({"product_tcp_receipts":parsed,
+                              "actual_tcp_profiles":records},
+                             sort_keys=True),flush=True)
             require(len(records)==1 and records[0].get("real_windows_kernel_tcp")
                     and not records[0].get("read_error") and
                     isinstance(records[0].get("rows"),list) and

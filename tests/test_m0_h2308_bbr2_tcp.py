@@ -43,4 +43,8 @@ class H2308CCRegression(unittest.TestCase):
                      "CLIENT_CC_ACTIVE_PROFILE","AppliedSetting"):
             self.assertIn(term,p)
         self.assertIn("H2308_BBR2_SELECTED_TCP_PROFILE_UNQUALIFIED",w)
+        self.assertIn('h2308_real_tcp_finished_before_cc_gate',w)
+        self.assertIn('h2308_actual_cc_profile_readback_before_gate',w)
+        self.assertLess(w.index('H2308_REAL_TCP_FINISHED_CC_READBACK_PENDING'),
+                        w.index('H2308_BBR2_SELECTED_TCP_PROFILE_UNQUALIFIED'))
 if __name__=="__main__":unittest.main()
