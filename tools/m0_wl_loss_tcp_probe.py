@@ -30,6 +30,9 @@ WINDOW_TEST_BYTES = 0
 # A full original remote Win-GoTLS-to-ARM-Rust start may need more setup than
 # the old same-VM case; this timeout is test LISTEN only, not product code.
 LISTENER_ACCEPT_TIMEOUT_S = 120 if os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM") == "1" else 35
+# H2306: allow test-only signed driver startup; do not alter active TCP timeout.
+if os.environ.get("WBD_H2306_TCP_PROGRESS")=="1":
+    LISTENER_ACCEPT_TIMEOUT_S = 220
 # H2286 test-only SAME 4x25s REAL Windows Wintun <-> remote ARM TUN capacity.
 # Not a WBD product knob. Explicitly isolate all historical H2273 smoke tests.
 if os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM") == "1":

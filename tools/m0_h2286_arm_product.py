@@ -298,6 +298,7 @@ def check_server_and_run_app(group):
                                "env","WBD_H2286_PRODUCT_FULL_WIN_ARM=1",
                                "WBD_H2302_WINDOW_ABA="+os.environ.get("WBD_H2302_WINDOW_ABA","0"),
                                "WBD_H2302_INNER_TCP_TEST_BYTES="+os.environ.get("WBD_H2302_INNER_TCP_TEST_BYTES","2097152"),
+                               "WBD_H2306_TCP_PROGRESS="+os.environ.get("WBD_H2306_TCP_PROGRESS","0"),
                                sys.executable,"-u","tools/m0_wl_loss_tcp_probe.py",
                                "server",APP_IP,APP_PEER,own["source_sha"]],
                               stdout=(ROOT/"tcp-inner-server.log").open("w"),

@@ -12,6 +12,10 @@ class H2306OriginalProductProgress(unittest.TestCase):
             self.assertIn(value,p)
         self.assertIn('sock.shutdown(socket.SHUT_WR)',p)
         self.assertIn("H2271_REAL_TCP_CLIENT_INCOMPLETE",p)
+        self.assertIn("LISTENER_ACCEPT_TIMEOUT_S = 220",p)
+        self.assertIn('if os.environ.get("WBD_H2306_TCP_PROGRESS")=="1"',p)
+        self.assertIn('"WBD_H2306_TCP_PROGRESS="+os.environ.get("WBD_H2306_TCP_PROGRESS","0")',
+                      (ROOT/"tools/m0_h2286_arm_product.py").read_text())
         w=(ROOT/"tools/m0_h2286_full_windows_product.py").read_text()
         self.assertIn("H2306_REAL_TCP_PROGRESS_ON_FAILURE",w)
         self.assertIn('output["h2306_tcp_progress_on_failure"]=rows[0]',w)
