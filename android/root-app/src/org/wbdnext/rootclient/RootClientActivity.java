@@ -47,7 +47,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
     private TextView selectedAppsSummary,bypassSummary,presetResult;
@@ -472,7 +472,8 @@ public final class RootClientActivity extends Activity {
             physicalDNS.isChecked(),cnSplitDNS.isChecked(),
             allAppsDefault.isChecked(),selected,
             RootDirectIPv4.canonicalCSV(directCIDRsField.getText().toString()),
-            bypass,RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString()));
+            bypass,RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString()),
+            physicalDNSFollowNetwork.isChecked());
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -486,6 +487,7 @@ public final class RootClientActivity extends Activity {
         outerMTUField.setText(Integer.toString(s.outerMTU));
         directCIDRsField.setText(s.directCIDRs);
         physicalDNSUpstreamField.setText(s.physicalDNSUpstream);
+        physicalDNSFollowNetwork.setChecked(s.physicalDNSFollowNetwork);
         selectSpinner(recordCiphers,s.cipher);
         selectSpinner(tunQueueSizes,Integer.toString(s.tunQueue));
         selectSpinner(startupPaddingModes,s.padding);
@@ -523,8 +525,9 @@ public final class RootClientActivity extends Activity {
             String account=user.getText().toString().trim();
             String directCIDRs=RootDirectIPv4.canonicalCSV(
                 directCIDRsField.getText().toString());
-            String physicalDnsIPv4=RootPhysicalDNSUpstream.canonical(
-                physicalDNSUpstreamField.getText().toString());
+            String physicalDnsIPv4=physicalDNSFollowNetwork.isChecked()
+                ?PhysicalNetwork.selectedDNSIPv4(this,scope)
+                :RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString());
             String secret=password.getText().toString();
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
@@ -627,6 +630,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
             request.putExtra("direct_cidrs",directCIDRs);
             request.putExtra("physical_dns_upstream",physicalDnsIPv4);
+            request.putExtra("physical_dns_follow_network",physicalDNSFollowNetwork.isChecked());
             if(allApps){
                 request.putExtra("exclude_appids",entire.excludedAppIDs);
                 request.putExtra("manager_packages",entire.managerPackages);
@@ -882,10 +886,17 @@ public final class RootClientActivity extends Activity {
             "物理UDP53上游IPv4（默认223.5.5.5，可填物理LAN路由器DNS如192.168.1.1）",
             InputType.TYPE_CLASS_TEXT);
         physicalDNSUpstreamField.setText(RootPhysicalDNSUpstream.DEFAULT);
+        physicalDNSFollowNetwork=new CheckBox(this);
+        physicalDNSFollowNetwork.setText("物理DNS跟随所选Wi-Fi/移动/有线Network的IPv4 DNS（只在START时取值）");
+        physicalDNSFollowNetwork.setChecked(false);
+        physicalDNSFollowNetwork.setOnCheckedChangeListener((button,checked)->
+            physicalDNSUpstreamField.setEnabled(!checked));
+        pane.addView(physicalDNSFollowNetwork);
         TextView upstreamHint=new TextView(this);
         upstreamHint.setText("可选物理/CN DNS模式下原Rust M4使用此UDP53；"+
             "若WBD服务器填写域名，原Go也通过选定Network的同一DNS IPv4冷引导，"+
-            "遇截断走同端点TCP53；默认223.5.5.5，系统netd DNS不受影响。");
+            "遇截断走同端点TCP53；可选跟随所选Network IPv4 DNS，IPv6-only需手填IPv4；"+
+            "默认223.5.5.5，系统netd DNS不受影响。");
         pane.addView(upstreamHint);
         cnSplitDNS=new CheckBox(this);
         cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走WBD隧道1.1.1.1（不接管Android系统DNS）");

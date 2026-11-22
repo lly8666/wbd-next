@@ -17,7 +17,7 @@ import java.util.TreeSet;
 final class RootConnectionSettings {
     final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
     final int port,outerMTU,tunQueue,profile;
-    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps;
+    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork;
     final Map<String,Integer> selected,bypass;
     RootConnectionSettings(String peer,String sni,String account,
         int port,int outerMTU,int tunQueue,String cipher,String padding,
@@ -51,6 +51,17 @@ final class RootConnectionSettings {
         boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,
+            mode,profile,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,
+            directCIDRs,bypass,physicalDNSUpstream,false);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS) {
+        this.physicalDNSFollowNetwork=followSelectedNetworkDNS;
         this.physicalDNSUpstream=RootPhysicalDNSUpstream.canonical(physicalDNSUpstream);
         if(bypass==null)throw new IllegalArgumentException("missing bypass map");
         this.bypass=new TreeMap<>(bypass);
@@ -127,6 +138,7 @@ final class RootConnectionSettings {
         p.setProperty("all_apps",Boolean.toString(allApps));
         p.setProperty("direct_cidrs",directCIDRs);
         p.setProperty("physical_dns_upstream",physicalDNSUpstream);
+        p.setProperty("physical_dns_follow_network",Boolean.toString(physicalDNSFollowNetwork));
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -182,7 +194,9 @@ final class RootConnectionSettings {
                 flag(p,"tls_verify"),flag(p,"tunnel_dns"),
                 flag(p,"physical_dns"),flag(p,"cn_split_dns"),
                 flag(p,"all_apps"),selected,p.getProperty("direct_cidrs",""),
-                bypass,p.getProperty("physical_dns_upstream",RootPhysicalDNSUpstream.DEFAULT));
+                bypass,p.getProperty("physical_dns_upstream",RootPhysicalDNSUpstream.DEFAULT),
+                p.containsKey("physical_dns_follow_network")&&
+                    flag(p,"physical_dns_follow_network"));
         }catch(IllegalArgumentException invalid){
             return null;
         }

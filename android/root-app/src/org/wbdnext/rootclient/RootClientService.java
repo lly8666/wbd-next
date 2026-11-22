@@ -233,6 +233,9 @@ public final class RootClientService extends Service {
             String directCIDRs=RootDirectIPv4.canonicalCSV(intent.getStringExtra("direct_cidrs"));
             String physicalDnsIPv4=RootPhysicalDNSUpstream.canonical(
                 intent.getStringExtra("physical_dns_upstream"));
+            if(intent.getBooleanExtra("physical_dns_follow_network",false)&&
+               !physicalDnsIPv4.equals(PhysicalNetwork.selectedDNSIPv4(this,chosen)))
+                throw new IllegalArgumentException("选定Network DNS发生变化，请重新START");
             String sni=intent.getStringExtra("sni");
             String user=intent.getStringExtra("user");
             String cipherExtra=intent.getStringExtra("record_cipher");

@@ -122,6 +122,17 @@ public final class RootConnectionSettingsTest {
         check(b.directCIDRs.isEmpty()&&
             b.physicalDNSUpstream.equals("223.5.5.5")&&b.bypass.isEmpty(),
             "older presets without new keys must restore original defaults");
+        RootConnectionSettings follow=new RootConnectionSettings(
+            "lan.example.test","tls.example.test","acct",443,1460,500,
+            "chacha20-poly1305","off","normal",1,false,false,true,false,true,
+            new TreeMap<>(),"",new TreeMap<>(),"192.168.1.1",true);
+        RootConnectionSettings afterFollow=read(stored(follow));
+        check(afterFollow!=null&&afterFollow.physicalDNSFollowNetwork&&
+            afterFollow.physicalDNSUpstream.equals("192.168.1.1"),
+            "B36 follow selected Network DNS lost through local/SAF settings");
+        check(!b.physicalDNSFollowNetwork&&!bypassRestored.physicalDNSFollowNetwork,
+            "B22/B34 old settings cannot implicitly enable Network DNS");
+        System.out.println("ANDROID_B36_SELECTED_NETWORK_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B34_ALL_APP_BYPASS_AND_PHYSICAL_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B33_DIRECT_CIDRS_ROOT_PRESET_CODEC_HOST_PASS");
         System.out.println("ANDROID_B22_LAST_CONNECTION_NO_BACKUP_PRESET_HOST_PASS");

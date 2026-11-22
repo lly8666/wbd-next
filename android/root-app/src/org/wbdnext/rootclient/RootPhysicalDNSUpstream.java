@@ -1,5 +1,8 @@
 package org.wbdnext.rootclient;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+
 // B34: the real Android Root product's physically bound UDP/53 destination.
 // A LOCAL router DNS IPv4 (e.g. 192.168.1.1) is valid when the selected
 // physical Android Network can actually reach it. B35 also reuses this
@@ -8,6 +11,17 @@ package org.wbdnext.rootclient;
 final class RootPhysicalDNSUpstream {
     static final String DEFAULT="223.5.5.5";
     private RootPhysicalDNSUpstream(){}
+    // B36: consume the DNS list of the explicitly selected Network once
+    // per START; no additional DNS resolver or per-packet processing.
+    static String firstSelectedIPv4(Iterable<InetAddress> addresses){
+        if(addresses!=null)for(InetAddress address:addresses){
+            if(address instanceof Inet4Address){
+                try{return canonical(address.getHostAddress());}
+                catch(IllegalArgumentException unsupported){/* next IPv4 */ }
+            }
+        }
+        throw new IllegalArgumentException("所选Network没有IPv4 DNS，请手动输入物理DNS上游");
+    }
     static String canonical(String raw){
         if(raw==null||raw.trim().isEmpty())return DEFAULT;
         String[] items=raw.trim().split("\\.",-1);

@@ -45,6 +45,22 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/ci/RootPhysicalDNSUpstreamTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPhysicalDNSUpstreamTest
+# B36: the exact selected Android Network supplies DNS only at START.
+python3 - <<'PY'
+from pathlib import Path
+p=Path("android/root-app/src/org/wbdnext/rootclient")
+network=(p/"PhysicalNetwork.java").read_text()
+activity=(p/"RootClientActivity.java").read_text()
+service=(p/"RootClientService.java").read_text()
+settings=(p/"RootConnectionSettings.java").read_text()
+assert 'chosen.matchesLinkProperties(link)' in network
+assert 'RootPhysicalDNSUpstream.firstSelectedIPv4(link.getDnsServers())' in network
+assert 'PhysicalNetwork.selectedDNSIPv4(this,scope)' in activity
+assert 'request.putExtra("physical_dns_follow_network",physicalDNSFollowNetwork.isChecked())' in activity
+assert 'PhysicalNetwork.selectedDNSIPv4(this,chosen)' in service
+assert 'p.setProperty("physical_dns_follow_network"' in settings
+print("ANDROID_B36_REAL_SELECTED_NETWORK_DNS_COLD_GO_RUST_SOURCE_PASS")
+PY
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootRecoveryCommandTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \

@@ -113,6 +113,22 @@ final class PhysicalNetwork {
      * original Go still emits the real SYN and standard TLS/Admission.
      * It does NOT capture any ordinary Android app/netd DNS traffic.
      */
+    // B36: only this actual ConnectivityManager.Network LinkProperties,
+    // never the OS process-default resolver or a guessed interface DNS.
+    static String selectedDNSIPv4(Context context,PhysicalNetwork chosen){
+        ConnectivityManager cm=(ConnectivityManager)context.getSystemService(
+            Context.CONNECTIVITY_SERVICE);
+        if(cm==null||chosen==null)
+            throw new IllegalArgumentException("没有所选Android Network");
+        for(Network network:cm.getAllNetworks()){
+            if(network.getNetworkHandle()!=chosen.handle)continue;
+            LinkProperties link=cm.getLinkProperties(network);
+            if(!chosen.matchesLinkProperties(link))
+                throw new IllegalArgumentException("读取DNS时选中Network已变化");
+            return RootPhysicalDNSUpstream.firstSelectedIPv4(link.getDnsServers());
+        }
+        throw new IllegalArgumentException("所选Network已断开");
+    }
     static String coldPeerIPv4(Context context,PhysicalNetwork selected,
                                String peer)throws UnknownHostException{
         if(selected==null||!ServerAddress.valid(peer))
