@@ -17,3 +17,7 @@ Rust host纯单元测试在相同原生产规范化函数上检查乱序2/4lane�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B39原Rust Go-TLS Game2/4冷组建立同一Android物理Network和每lane真实Bionic RAW RX/TX owner，保留M4未接和Game模式拒绝。"}
 ```
+
+## B39a 编译与跨平台回归修订（初版失败必须保留）
+
+初版 `796c45863599`：Rust Game2/4 original host单测SUCCESS；真实Android双ABI `arm64-native` FAIL，原因是Git Tree同文件分阶段覆盖，Rust `GameGroupNative` Android scope/raw字段、`AndroidGameRawLane`类型与 `canonical_original_game_lanes` 调用未进入最终源码。当前B39a在一个文件内重新合并这些生产代码，同时强化Android根App源门核查这些字段。独立maintenance regression的旧PLAN029静态测试只允许Windows/Linux `v4_client_split` 和 `v4_client_startup_padding`，与先前Android已编译路径不符；仅更新其目标平台枚举，未弱化任何协议断言或移除测试。是否彻底通过，以本修复新SOURCE Actions为准。无设备/Game流量PASS。

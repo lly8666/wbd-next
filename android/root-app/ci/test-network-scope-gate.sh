@@ -55,6 +55,9 @@ game=Path("crates/wbd-engine/src/v4_android_game_cold.rs").read_text()
 platform=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
 build=Path("android/root-native/build-source-locked.sh").read_text()
 assert 'canonical_original_game_lanes(' in engine
+assert 'struct AndroidGameRawLane' in engine
+assert 'android_physical:AndroidPhysicalScope' in engine
+assert 'android_raw:Option<Vec<AndroidGameRawLane>>' in engine
 assert 'if scope.as_ref().is_some_and(|old|old!=physical)' in engine
 assert 'AndroidBoundRawRx::open_exact(' in engine
 assert 'AndroidBoundRawTx::open(' in engine

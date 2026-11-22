@@ -884,6 +884,7 @@ fn original_fixed_quality_requires_copied_source_not_repair_or_uncertain(){
 // Android64 only: the exact physical Network and interface are a cold Go
 // credential-bound scope, not a root-UID-wide fwmark or a global fallback.
 #[cfg(target_os="android")]
+#[derive(Clone,PartialEq,Eq)]
 struct AndroidPhysicalScope {
     network_handle:u64,
     interface:String,
@@ -1144,6 +1145,11 @@ struct Entry{
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     tun_sink:Option<Arc<ScopedTunSink>>,
 }
+// Android original Game2/4 real per-lane physical RAW FD pair, not M4.
+#[cfg(all(target_os="android",feature="fec2_product_record"))]
+struct AndroidGameRawLane{
+    rx:Arc<AndroidBoundRawRx>,tx:Arc<AndroidBoundRawTx>,
+}
 // Global registry only handles lifetime lookup. Once the original
 // authenticated Go control starts perpetual workers, RX's actual AEAD+PN,
 // LINK and M1 arena are MOVED to RX; this Entry guards TX/control only.
@@ -1153,6 +1159,12 @@ struct GameGroupNative{
     handles:Vec<u64>,stopped:bool,stopping:bool,
     original_identity:ColdIdentity,
     client_lease_ipv4:Option<[u8;4]>,
+    #[cfg(target_os="android")]
+    android_physical:AndroidPhysicalScope,
+    #[cfg(target_os="android")]
+    android_lanes:Vec<crate::v4_android_game_cold::OriginalGameColdLane>,
+    #[cfg(target_os="android")]
+    android_raw:Option<Vec<AndroidGameRawLane>>,
     // Game server's optional shared single-reader route is an authenticated
     // /32. One Game group owns its private receiver and Stop fence only.
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
@@ -3305,6 +3317,37 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         epoch=Some(id.logical_epoch);tunnel=Some(id.tunnel_id);
     }
     if seen!=((1u8<<handles.len())-1){return Err(INVALID)}
+    // B39 Android: same protected Go TLS incarnation group on one Bionic
+    // physical Network, one lease and independent actual FakeTCP lane ports.
+    // This is COLD, no per-packet Go/TLS or second M3/PN owner.
+    #[cfg(target_os="android")]
+    let (android_physical,android_lanes)={
+        if server{return Err(BAD_STAGE)} // Android Root is client-only.
+        let mut scope:Option<AndroidPhysicalScope>=None;
+        let mut lanes=Vec::with_capacity(handles.len());
+        for e in &locks{
+            if e.android_joining||e.android_workers.is_some()||
+               e.android_raw_rx.is_some()||e.android_raw_tx.is_some()||
+               e.android_tun.is_some()||e.client_lease_ipv4.is_none(){
+                return Err(BAD_STAGE)
+            }
+            let Some(physical)=e.android_physical.as_ref()else{
+                return Err(BAD_STAGE)
+            };
+            if scope.as_ref().is_some_and(|old|old!=physical){
+                return Err(INVALID)
+            }
+            if scope.is_none(){scope=Some(physical.clone())}
+            let id=e.game_pending_cold.as_ref().ok_or(BAD_STAGE)?.identity();
+            lanes.push(crate::v4_android_game_cold::OriginalGameColdLane{
+                lane:id.go_lane_id,flow:e.flow,
+                tx_seq:u64::from(e.game_tx_boundary),rx_seq:e.rx_boundary
+            });
+        }
+        let lanes=crate::v4_android_game_cold::canonical_original_game_lanes(
+            &lanes).ok_or(INVALID)?;
+        (scope.ok_or(BAD_STAGE)?,lanes)
+    };
     let mut r=registry().lock().map_err(|_|BAD_STAGE)?;
     if r.game_groups.len()>=MAX_SESSIONS/2{return Err(FULL)}
     let generation=r.generation;
@@ -3350,6 +3393,12 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         original_identity,
         stopped:false,stopping:false,outer_repair_enabled:true,
         client_lease_ipv4:client_lease.flatten(),
+        #[cfg(target_os="android")]
+        android_physical,
+        #[cfg(target_os="android")]
+        android_lanes,
+        #[cfg(target_os="android")]
+        android_raw:None,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         shared_tun:None,
