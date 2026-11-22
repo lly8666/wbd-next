@@ -1,0 +1,75 @@
+{
+  "schema": "M0_PLAN029_H2292_PARTIAL_TWO_TRUE_TRIPLETS_PRODUCT_ABA",
+  "source_sha": "dc2da4b98ecc419a67e3e2ee6530f944b78d88ef",
+  "run_id": 44949570906,
+  "attempt": 1,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44949570906",
+  "scope": "TRUE_ORIGINAL_SIGNED_WINDOWS_GO_TLS_RUST_NPCAP_WINTUN_TO_ARM_GO_TLS_RUST_AF_PACKET_TUN_TCP",
+  "total_groups_expected": 2,
+  "group_b_real_complete": true,
+  "group_a": "PENDING_WINDOWS_WSL2_BOOT_AT_LAST_CHECK",
+  "overall": "IN_PROGRESS_NOT_OVERALL_PASS",
+  "features": "SAME_SOURCE_BASE_FEATURES_ONLY_B_H2291_WINDOWS_TX_SERVICE",
+  "config": {
+    "flows": 4,
+    "bulk_offer_seconds": 25,
+    "sparse_tcp_echoes": 160,
+    "real_redispatch_of_original_client_per_leg": true,
+    "windows_original_exe_source": "c5066db61fc51bafd7c2ad2def3029e615efa777",
+    "arm_original_go_rust_source": "97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573"
+  },
+  "B": {
+    "client_job_id": 136985064736,
+    "relay_job_id": 136985064729,
+    "arm_server_job_id": 136985064715,
+    "jobs_status": "SUCCESS_ALL_THREE",
+    "original_dll_sha256": "788359f2647ffc57624f97d5b8965d249c69d3c895fe234c041dfe0f67516a62",
+    "candidate_dll_sha256": "9ad8c70f06b0ca1fd1f762a45d7a72f7a93600f0f49e47db2ab801c45cc8d114",
+    "stages": [
+      {
+        "leg": "A_default",
+        "arm_received_bytes": 376209408,
+        "mbps": 117.74,
+        "p99_ms": 313,
+        "windows_process_cpu_s_per_arm_gib": 52.4888,
+        "windows_rust_tx_cpu_lower_bound_s": 13.3125,
+        "relay_tailscaled_cpu_percent_one_core": 135.645,
+        "echo": 160,
+        "late_gt1s": 0,
+        "owned_stop": "PASS",
+        "npf_64k_profile": false
+      },
+      {
+        "leg": "B_tx16",
+        "arm_received_bytes": 433750016,
+        "mbps": 136.159,
+        "p99_ms": 359,
+        "windows_process_cpu_s_per_arm_gib": 42.354,
+        "windows_rust_tx_cpu_lower_bound_s": 12.4375,
+        "relay_tailscaled_cpu_percent_one_core": 143.856,
+        "echo": 160,
+        "late_gt1s": 0,
+        "owned_stop": "PASS",
+        "npf_64k_profile": true
+      },
+      {
+        "leg": "A_prime",
+        "arm_received_bytes": 347734016,
+        "mbps": 108.629,
+        "p99_ms": 360,
+        "windows_process_cpu_s_per_arm_gib": 53.0238,
+        "windows_rust_tx_cpu_lower_bound_s": 12.0469,
+        "relay_tailscaled_cpu_percent_one_core": 131.501,
+        "echo": 160,
+        "late_gt1s": 0,
+        "owned_stop": "PASS",
+        "npf_64k_profile": false
+      }
+    ],
+    "candidate_vs_mean_baseline_mbps_pct": 20.295,
+    "candidate_vs_mean_baseline_cpu_s_per_gib_pct": -19.718,
+    "candidate_p99_minus_worst_baseline_ms": -1,
+    "candidate_p99_minus_first_baseline_ms": 46,
+    "interpretation": "ONE_GROUP_B_ONLY_REAL_CAUSAL_SAME_VM_SUPPORTS_BOTH_GOODPUT_AND_CPU_IMPROVEMENT; P99_NO_WORSE_THAN_WORST_A_PRIME; PROMOTION_FORBIDDEN_UNTIL_GROUP_A"
+  }
+}

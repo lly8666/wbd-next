@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "REJECT_SHARED_TUN_4X8_READY_BURST_REVERT_NO_ROBUST_CPU_GOODPUT_QOS_GAIN",
+  "baseline": {
+    "source_sha": "5de189007b0d81444a9c62cabe8563c440a68aed",
+    "run_id": 44875670709,
+    "attempt": 1,
+    "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44875670709",
+    "aarch64": {
+      "artifact_id": 14695338573,
+      "artifact_sha256": "b38ba10805e82ca59c48efdbd03c2018091d1abac938d04306a8232578b4b7ae",
+      "receiver_mbps": 1085.1554,
+      "direct_gbps": 84.0514,
+      "client_cpu_s_per_gib": 12.08174,
+      "server_cpu_s_per_gib": 11.77225,
+      "small_tcp_survivor_p99_ms": 625.6088,
+      "small_tcp_missing": 0,
+      "udp_missing": 29,
+      "udp_survivor_p99_ms": 6.2625,
+      "client_shared_full": 677072,
+      "server_shared_full": 3181
+    },
+    "x86_64": {
+      "artifact_id": 14695199039,
+      "artifact_sha256": "51f0a49e7c876013baaa62b6ee9b4342b41d01bbde01bc664c6fa3c724282bbb",
+      "receiver_mbps": 1386.1611,
+      "direct_gbps": 89.5076,
+      "client_cpu_s_per_gib": 8.77167,
+      "server_cpu_s_per_gib": 8.85754,
+      "small_tcp_survivor_p99_ms": 321.0156,
+      "small_tcp_missing": 0,
+      "udp_missing": 21,
+      "udp_survivor_p99_ms": 5.5426,
+      "client_shared_full": 750680,
+      "server_shared_full": 3541
+    }
+  },
+  "candidate": {
+    "source_sha": "5377b9546b4be42248d3c8385b4a363b7a352ec4",
+    "run_id": 44877313328,
+    "attempt": 1,
+    "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44877313328",
+    "two_ISA_native_unit_run": 44877313318,
+    "aarch64": {
+      "artifact_id": 14696601149,
+      "artifact_sha256": "c68b19909b859cc7480d94e6259da57c8f599355c1df544b01d708c8478badf3",
+      "receiver_mbps": 1100.531,
+      "direct_gbps": 88.4,
+      "client_cpu_s_per_gib": 11.95593,
+      "server_cpu_s_per_gib": 11.49549,
+      "small_tcp_survivor_p99_ms": 1495.7613,
+      "small_tcp_missing": 0,
+      "udp_missing": 31,
+      "udp_survivor_p99_ms": 8.1761,
+      "client_shared_full": 728316,
+      "server_shared_full": 3287
+    },
+    "x86_64": {
+      "artifact_id": 14697175150,
+      "artifact_sha256": "7992df7040ebd74d65eb9de0e431d1e8ed3f17e42c430ae7f97ed700053be556",
+      "receiver_mbps": 867.741,
+      "direct_gbps": 91.2518,
+      "client_cpu_s_per_gib": 14.05015,
+      "server_cpu_s_per_gib": 13.57985,
+      "small_tcp_survivor_p99_ms": 288.5532,
+      "small_tcp_missing": 0,
+      "udp_missing": 31,
+      "udp_survivor_p99_ms": 2.5574,
+      "client_shared_full": 623480,
+      "server_shared_full": 966
+    }
+  },
+  "change": "Only original SharedTunReader readiness batching of 4 consecutive 8-packet ready-only reads (per wake) instead of each 8 read followed by poll. No extra buffers, no new admission/FEC/TLS/rate change.",
+  "results_and_bounds": [
+    "Both genuine native-ISA original-Go TLS/Rust nonprobe shared Normal 128/64/Stop + five dedicated modes were functionally successful, but functional PASS does not imply performance improvement.",
+    "ARM product four-stream +1.42% goodput under independent runner, TCP survivor p99 ~626→1496ms and UDP missing29→31; not robust QoS.",
+    "x86 product four-stream -37.4% goodput, client CPU/GiB8.77→14.05 and UDP missing21→31; Direct reference ~89.5→91.3Gbit/s so link reference does not account for the change.",
+    "Not a same-VM A/B/A' trial; runner CPU contention and test drift remain possible. The pronounced divergent negatives are enough not to promote a micro-optimization, not proof of exact causality.",
+    "Do not carry forward a misleading p99 PASS: UDP missing remained and TCP survivor p99 may be very high even when all TCP replies return.",
+    "For reviewer: no additional static batch-count sweep. Revert shared readiness helper only, keep previously qualified client128 and separate independent-TUN poll32."
+  ]
+}
