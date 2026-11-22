@@ -16,7 +16,7 @@ import java.util.TreeSet;
  */
 final class RootConnectionSettings {
     final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
-    final int port,outerMTU,tunQueue,profile;
+    final int port,outerMTU,tunQueue,profile,nativeHealthSeconds;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork;
     final Map<String,Integer> selected,bypass;
     RootConnectionSettings(String peer,String sni,String account,
@@ -61,6 +61,17 @@ final class RootConnectionSettings {
         boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,15);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds) {
+        this.nativeHealthSeconds=healthSeconds;
         this.physicalDNSFollowNetwork=followSelectedNetworkDNS;
         this.physicalDNSUpstream=RootPhysicalDNSUpstream.canonical(physicalDNSUpstream);
         if(bypass==null)throw new IllegalArgumentException("missing bypass map");
@@ -85,6 +96,7 @@ final class RootConnectionSettings {
            account==null||account.isEmpty()||account.length()>128||
            port<1||port>65535||outerMTU<576||outerMTU>1500||
            (tunQueue!=500&&tunQueue!=2048)||profile<0||profile>6||
+            (nativeHealthSeconds!=15&&nativeHealthSeconds!=30)||
            !oneOf(cipher,"chacha20-poly1305","aes-128-gcm","aes-256-gcm")||
            !oneOf(padding,"off","tls","flows")||
            !oneOf(mode,"normal","fec-fixed","fec-auto")||
@@ -139,6 +151,7 @@ final class RootConnectionSettings {
         p.setProperty("direct_cidrs",directCIDRs);
         p.setProperty("physical_dns_upstream",physicalDNSUpstream);
         p.setProperty("physical_dns_follow_network",Boolean.toString(physicalDNSFollowNetwork));
+        p.setProperty("native_health_seconds",Integer.toString(nativeHealthSeconds));
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -196,7 +209,8 @@ final class RootConnectionSettings {
                 flag(p,"all_apps"),selected,p.getProperty("direct_cidrs",""),
                 bypass,p.getProperty("physical_dns_upstream",RootPhysicalDNSUpstream.DEFAULT),
                 p.containsKey("physical_dns_follow_network")&&
-                    flag(p,"physical_dns_follow_network"));
+                    flag(p,"physical_dns_follow_network"),
+                Integer.parseInt(p.getProperty("native_health_seconds","15")));
         }catch(IllegalArgumentException invalid){
             return null;
         }

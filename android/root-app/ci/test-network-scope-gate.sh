@@ -45,6 +45,22 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/ci/RootPhysicalDNSUpstreamTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPhysicalDNSUpstreamTest
+# B37: one cold Go-to-native Health policy, not a Go heartbeat worker.
+python3 - <<'PY'
+from pathlib import Path
+a=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+s=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
+argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
+go=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+product=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
+assert 'request.putExtra("native_health_seconds",nativeHealthSeconds)' in a
+assert 'intent.getIntExtra("native_health_seconds",15)' in s
+assert 'pair(args,"--android-native-health-seconds",Integer.toString(nativeHealthSeconds))' in argv
+assert 'androidNativeHealth:=flags.Uint("android-native-health-seconds",15,' in go
+assert 'HealthKeepaliveSeconds:c.androidNativeHealthSeconds' in go
+assert 'bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)' in product
+print("ANDROID_B37_ACTUAL_RUST_M4_HEALTH_COLD_WIRING_SOURCE_PASS")
+PY
 # B36: the exact selected Android Network supplies DNS only at START.
 python3 - <<'PY'
 from pathlib import Path
@@ -355,7 +371,7 @@ assert 'startupPaddingModes.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("startup_padding",paddingMode)' in a
 assert 'intent.getStringExtra("startup_padding")' in s
 assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode' in s
-assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4);' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds);' in s
 assert 'pair(args,"--startup-padding",paddingMode)' in argv
 assert 'startupPadding:=flags.String("startup-padding","off"' in cold
 print("ANDROID_B11B_APP_GO_M4_PROTECTED_STARTUP_PADDING_SOURCE_WIRING_PASS")
@@ -1113,7 +1129,7 @@ assert 'cnSplitDNS.setChecked(false)' in root_ui
 assert 'request.putExtra("cn_dns_split",cnSplitDNS.isChecked())' in root_ui
 assert 'intent.getBooleanExtra("cn_dns_split",false)' in root_svc
 assert 'managerPackages,bypassPackages,bypassUIDs,' in root_svc
-assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4);' in root_svc
+assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds);' in root_svc
 assert 'if(cnSplitDNS)args.add("--android-cn-dns-split")' in argv
 assert 'ANDROID_B5_CN8503_SPLIT_SELECTED_ALL_APP_AND_LEGACY_GO_ARGV_HOST_PASS' in argv_test
 assert 'androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false' in nativecli

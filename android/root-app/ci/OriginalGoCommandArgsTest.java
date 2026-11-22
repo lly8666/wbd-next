@@ -261,6 +261,21 @@ public final class OriginalGoCommandArgsTest {
             "normal",1,"","192.168.1.1");
         absent(unusedPhysical,"--android-physical-dns-upstream-ipv4");
         System.out.println("ANDROID_B35_PEER_HOST_CUSTOM_PHYSICAL_DNS_COLD_ARGV_HOST_PASS");
+        List<String> lowWake=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,true,false,false,1460,"chacha20-poly1305",500,"off",
+            "normal",1,"","223.5.5.5",30);
+        value(lowWake,"--android-native-health-seconds","30");
+        value(one,"--android-native-health-seconds","15");
+        rejected(()->OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,true,false,false,1460,"chacha20-poly1305",500,"off",
+            "normal",1,"","223.5.5.5",60));
+        System.out.println("ANDROID_B37_ORIGINAL_RUST_HEALTH_15_30_REAL_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_ORIGINAL_APK_GO_CLI_ARGV_HOST_CONTRACT_PASS");
     }
 }

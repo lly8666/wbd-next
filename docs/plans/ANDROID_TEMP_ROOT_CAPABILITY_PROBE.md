@@ -1,3 +1,5 @@
+> **2026-11-22 B37原Rust Health低唤醒接线**：原15s/90s Rust HealthClock是已安装的TLS后M4生命周期，现把Android用户显式的15/30秒间隔从Root App→Service→原Go CLI→已有`HealthKeepaliveSeconds`→Rust实际effective readback接线。默认15s不变；30s低频不改变90s dead、AEAD/PN/租约/真实TUN/RAW/owned Stop，不新增心跳goroutine或热路径。CPU/唤醒和手机省电效果NOT_PROVEN，需实测；Android Game/系统netd DNS/IPv6/热点仍未接。
+
 > **2026-11-22 B36 真实选定Network DNS冷接线**：App显式选用已选择的Wi-Fi/移动/有线ConnectivityManager.Network的LinkProperties IPv4 DNS，START时绑定成同一数值上游，Service冷复核后复用B35原Go服务器域名UDP/TCP53与B34原Rust M4物理App UDP53，旧手动IPv4/默认223.5.5.5/SAF预设兼容。不读取默认系统DNS，不添加新包线程，不接netd系统Resolver、IPv6、物理App TCP53、Game；同源Actions/实机资格分开。
 
 # Android Root 原生 WBD 客户端｜现行唯一执行方案

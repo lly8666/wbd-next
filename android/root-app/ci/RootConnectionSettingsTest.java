@@ -132,6 +132,23 @@ public final class RootConnectionSettingsTest {
             "B36 follow selected Network DNS lost through local/SAF settings");
         check(!b.physicalDNSFollowNetwork&&!bypassRestored.physicalDNSFollowNetwork,
             "B22/B34 old settings cannot implicitly enable Network DNS");
+        RootConnectionSettings lowWake=new RootConnectionSettings(
+            "lan.example.test","tls.example.test","acct",443,1460,500,
+            "chacha20-poly1305","off","normal",1,false,false,true,false,true,
+            new TreeMap<>(),"",new TreeMap<>(),"192.168.1.1",true,30);
+        RootConnectionSettings lowWakeRestored=read(stored(lowWake));
+        check(lowWakeRestored!=null&&lowWakeRestored.nativeHealthSeconds==30,
+            "B37 original native Health setting not saved");
+        check(b.nativeHealthSeconds==15&&bypassRestored.nativeHealthSeconds==15,
+            "old presets must use original 15-second Health default");
+        boolean healthInvalid=false;
+        try{new RootConnectionSettings(
+            "lan.example.test","tls.example.test","acct",443,1460,500,
+            "chacha20-poly1305","off","normal",1,false,false,true,false,true,
+            new TreeMap<>(),"",new TreeMap<>(),"192.168.1.1",true,60);}
+        catch(IllegalArgumentException expected){healthInvalid=true;}
+        check(healthInvalid,"unsupported native Health setting persisted");
+        System.out.println("ANDROID_B37_ORIGINAL_NATIVE_HEALTH_PRESET_HOST_PASS");
         System.out.println("ANDROID_B36_SELECTED_NETWORK_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B34_ALL_APP_BYPASS_AND_PHYSICAL_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B33_DIRECT_CIDRS_ROOT_PRESET_CODEC_HOST_PASS");

@@ -141,6 +141,7 @@ type config struct{
     // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
     androidPhysicalDNS bool
     androidPhysicalDNSUpstream netip.Addr // original Rust M4 real bound UDP53 upstream
+    androidNativeHealthSeconds uint32 // B37 cold Rust HealthClock interval, no Go packet or heartbeat worker
     // Original pinned CN8503 QNAME classification in Rust M4, opt-in.
     androidCNDNSSplit bool
     // Signed APK's verified offline CN list only, not live DNS capture.
@@ -270,6 +271,8 @@ func parse(role string,args []string)(config,error){
         "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
     androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
         "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
+    androidNativeHealth:=flags.Uint("android-native-health-seconds",15,
+         "Android Root: actual Rust authenticated native Health interval 15 or 30 seconds, 90s dead unchanged")
     androidPhysicalDNSUpstream:=flags.String("android-physical-dns-upstream-ipv4","223.5.5.5",
         "Android Root: selected-Network physical DNS IPv4 for captured App UDP/53 and original Go peer-host cold UDP/TCP53 bootstrap; default 223.5.5.5; not system Resolver")
     androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false,
@@ -332,6 +335,10 @@ func parse(role string,args []string)(config,error){
         if role!="client"||*androidNet==0{
             return c,fmt.Errorf("Android root client needs explicit physical Network handle")
         }
+        if *androidNativeHealth!=15&&*androidNativeHealth!=30{
+            return c,fmt.Errorf("Android original Rust Health interval must be 15 or 30 seconds")
+        }
+        c.androidNativeHealthSeconds=uint32(*androidNativeHealth)
         if *peerHost!=""&&*peer!=""{
             return c,fmt.Errorf("Android peer-host and peer-ip are mutually exclusive")
         }
@@ -2004,6 +2011,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             AndroidPhysicalDNS:c.androidPhysicalDNS,
             AndroidPhysicalDNSUpstream:c.androidPhysicalDNSUpstream,
             AndroidCN8503Raw:cn8503Raw,
+             HealthKeepaliveSeconds:c.androidNativeHealthSeconds,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),

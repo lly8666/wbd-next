@@ -46,7 +46,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredSelection=new TreeMap<>();
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
-    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
+    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
@@ -473,7 +473,8 @@ public final class RootClientActivity extends Activity {
             allAppsDefault.isChecked(),selected,
             RootDirectIPv4.canonicalCSV(directCIDRsField.getText().toString()),
             bypass,RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString()),
-            physicalDNSFollowNetwork.isChecked());
+            physicalDNSFollowNetwork.isChecked(),
+            Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString()));
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -488,6 +489,7 @@ public final class RootClientActivity extends Activity {
         directCIDRsField.setText(s.directCIDRs);
         physicalDNSUpstreamField.setText(s.physicalDNSUpstream);
         physicalDNSFollowNetwork.setChecked(s.physicalDNSFollowNetwork);
+        selectSpinner(nativeHealthIntervals,Integer.toString(s.nativeHealthSeconds));
         selectSpinner(recordCiphers,s.cipher);
         selectSpinner(tunQueueSizes,Integer.toString(s.tunQueue));
         selectSpinner(startupPaddingModes,s.padding);
@@ -535,6 +537,7 @@ public final class RootClientActivity extends Activity {
             String paddingMode=startupPaddingModes.getSelectedItem().toString();
             String fecMode=fecModes.getSelectedItem().toString();
             int fecProfile=Integer.parseInt(fecProfiles.getSelectedItem().toString());
+            int nativeHealthSeconds=Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString());
             if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
                 throw new IllegalArgumentException("Fixed/Auto FEC2 requires startup padding off");
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
@@ -622,6 +625,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("startup_padding",paddingMode);
             request.putExtra("fec_mode",fecMode);
             request.putExtra("fec_profile",fecProfile);
+            request.putExtra("native_health_seconds",nativeHealthSeconds);
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
@@ -770,6 +774,14 @@ public final class RootClientActivity extends Activity {
             new String[]{"0","1","2","3","4","5","6"}));
         fecProfiles.setSelection(1);
         pane.addView(fecProfiles);
+        TextView healthHint=new TextView(this);
+        healthHint.setText("原Rust M4已认证Health发送间隔（秒）：15默认 / 30低频。"+
+            "90秒dead门不变；低频仅减少空闲控制包，不保证所有网络时延或续航更优。");
+        pane.addView(healthHint);
+        nativeHealthIntervals=new Spinner(this);
+        nativeHealthIntervals.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,new String[]{"15","30"}));
+        pane.addView(nativeHealthIntervals);
         TextView cipherHint=new TextView(this);
         cipherHint.setText("原WBD受认证M3记录AEAD（默认ChaCha20）；AES-128/256为原协议已支持选项。" +
             "不同ARM64设备性能取决于CPU硬件与网络，请以实际测速选择。");
