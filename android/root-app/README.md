@@ -20,6 +20,26 @@ UI 把进阶 KernelSU/TUN 一键自检放到默认折叠的“高级选项”，
 **测试版安装注意**：GitHub Actions 的调试签名证书每次生成，且 APK 包名相同，无法直接 \`adb install -r\` 覆盖上次版本。请自行先在旧版按 STOP，检查没有残留 KernelSU UID 私有路由，再卸载旧调试包并安装新的 Lite APK；卸载会清除派生缓存。
 
 
+## B34 · Two live Root categories: installed-app bypass and physical DNS upstream
+
+**All ordinary-App mode** can additionally bypass up to six real installed
+ordinary packages, keeping mandatory WBD controller and KernelSU Manager
+AppIDs excluded. The actual original Go rootjournal still installs the
+existing up-to-eight AppID holes across the same 20 Android user profile
+UID ranges. The Activity and Service recheck PackageManager package→UID
+at cold START and before su; package change stops the original owner.
+B34 choices persist as nonsecret local/SAF settings only, not live routes.
+Shared UID and the same per-user AppID are bypassed together. Real physical
+egress through later Android netd rules remains **unverified on a phone**.
+
+**Physical / CN UDP53 DNS** now allows the user to select an actual IPv4
+upstream on the selected physical Network (default `223.5.5.5`, e.g.
+`192.168.1.1` on a reachable LAN). The original Go parser validates it,
+the authenticated Go→Rust M4 cold owner sets and reads it back, and the
+existing Rust physically bound UDP53 socket connects to that destination.
+This does not capture Android system netd/DoH, enable physical TCP53, or
+change original Go's separate WBD-server-domain cold bootstrap.
+
 ## B33 · Real per-App IPv4 direct CIDRs (optional, original Root FIB)
 
 The cold Root Activity adds a field for up to **four** explicit IPv4 CIDRs,

@@ -226,6 +226,23 @@ public final class OriginalGoCommandArgsTest {
         System.out.println("ANDROID_A37_MAIN_TLS_DEFAULT_OFF_OPT_IN_HOST_PASS");
         System.out.println("ANDROID_B3_TUNNEL_DNS_ON_OFF_REAL_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_B4_REAL_PHYSICAL_DNS_SELECTED_ALL_APP_GO_ARGV_HOST_PASS");
+        // B34: same original Go/Rust M4 owner; real physical DNS receives
+        // a custom single upstream only when explicit physical/CN mode uses it.
+        List<String> localPhysical=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,false,true,false,1460,"chacha20-poly1305",500,"off",
+            "normal",1,"","192.168.1.1");
+        value(localPhysical,"--android-physical-dns-upstream-ipv4","192.168.1.1");
+        absent(one,"--android-physical-dns-upstream-ipv4");
+        rejected(()->OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,false,true,false,1460,"chacha20-poly1305",500,"off",
+            "normal",1,"","127.0.0.1"));
+        System.out.println("ANDROID_B34_REAL_GO_CUSTOM_PHYSICAL_DNS_UPSTREAM_ARGV_PASS");
         System.out.println("ANDROID_ORIGINAL_APK_GO_CLI_ARGV_HOST_CONTRACT_PASS");
     }
 }

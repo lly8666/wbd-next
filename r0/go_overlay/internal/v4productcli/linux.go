@@ -140,6 +140,7 @@ type config struct{
     androidTunnelDNS bool
     // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
     androidPhysicalDNS bool
+    androidPhysicalDNSUpstream netip.Addr // original Rust M4 real bound UDP53 upstream
     // Original pinned CN8503 QNAME classification in Rust M4, opt-in.
     androidCNDNSSplit bool
     // Signed APK's verified offline CN list only, not live DNS capture.
@@ -269,6 +270,8 @@ func parse(role string,args []string)(config,error){
         "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
     androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
         "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
+    androidPhysicalDNSUpstream:=flags.String("android-physical-dns-upstream-ipv4","223.5.5.5",
+        "Android Root: exact real physical DNS UDP/53 upstream on the selected Network; defaults 223.5.5.5; NOT system Resolver nor Go peer bootstrap")
     androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false,
         "Android Root optional: match original App UDP53 QNAME against pinned CN8503; CN via physical 223.5.5.5, other names via WBD tunnel 1.1.1.1")
     ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
@@ -353,6 +356,12 @@ func parse(role string,args []string)(config,error){
         c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidCNDNSSplit=*androidCNDNSSplit
         var e error
+        c.androidPhysicalDNSUpstream,e=dnsnative.ParsePhysicalDNSUpstreamIPv4(*androidPhysicalDNSUpstream)
+        if e!=nil{return c,fmt.Errorf("Android physical DNS upstream rejected: %w",e)}
+        if *androidPhysicalDNSUpstream!="223.5.5.5"&&
+           !c.androidPhysicalDNS&&!c.androidCNDNSSplit{
+            return c,fmt.Errorf("custom physical DNS requires physical or CN-split DNS mode")
+        }
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
         c.androidDirectCIDRs,e=rootjournal.ParseDirectCIDRs(*androidDirectCIDRs)
@@ -376,7 +385,9 @@ func parse(role string,args []string)(config,error){
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
-              *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit{
+              *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
+              *androidPhysicalDNSUpstream!="223.5.5.5"||
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1991,6 +2002,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
             AndroidTunnelDNS:c.androidTunnelDNS,
             AndroidPhysicalDNS:c.androidPhysicalDNS,
+            AndroidPhysicalDNSUpstream:c.androidPhysicalDNSUpstream,
             AndroidCN8503Raw:cn8503Raw,
             Tun:tun.f,TunName:c.tunName,SharedTun:c.sharedTun,
             CleanupOwnedNetwork:productNativeCleanup(c,tun),

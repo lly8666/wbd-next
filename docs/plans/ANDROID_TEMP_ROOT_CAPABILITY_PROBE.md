@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B34两类真实主线**：全普通App模式新增额外最多6个已安装App的绕过清单，App与Service/Root前冷核验真实包名+UID；原本地/SAF预设冷保存，真实原Go `--android-route-exclude-appids` 仍在原私有FIB的20 profile、最多8个排除AppID（永远含本App及KernelSU Manager）、原journal/Stop运行。共享UID/跨profile同AppID会一起绕过；Android后续物理路由需真机验证。同时将物理/CN DNS模式的上游UDP53 IPv4从固定223.5.5.5推广为可选IPv4，App→Service→原Go `--android-physical-dns-upstream-ipv4` →原Go/Rust已认证M4冷设置与读回→原Rust已有 `android_setsocknetwork`/SO_BINDTODEVICE物理socket连接（可指定本地DNS 192.168.1.1）。不改系统netd、WBD自身服务器冷DNS引导、DoH、App TCP53、IPv6、Game；本SOURCE的Host/签名APK/原Linux Oracle须独立看Actions。
+
+
 > **2026-11-22 B33d 最终同源软件资格**：实验源 `dd2292c8f9ca049b81d6afca05854630d8f1e59d` [Android dual64 #44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) **11 SUCCESS / 4 SKIPPED**；[Governance #44975823362](https://github.com/lly8666/wbd-next/actions/runs/44975823362) **SUCCESS**。包括Android原Go/Rust双ABI、正式签名ARM64 Root APK、原Linux Server Oracle、B33单/组/all UID直连CIDR原journal真实内核ip命令Host测试。此前B33/B33a/B33b源码门旧断言失败及取消Action均保留历史；资格仅限Host/Build。Android实体物理出站、用户App UDP/TCP逐字节E2E、CPU/吞吐/切网仍NOT_RUN，系统netd DNS/IPv6/Game/物理TCP53仍未实现。
 
 

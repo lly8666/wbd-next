@@ -13,6 +13,7 @@ import (
     "fmt"
     "log"
     "net"
+    "net/netip"
     "os"
     "runtime"
     "sync"
@@ -32,6 +33,7 @@ type V4LinuxClientProductConfig struct {
     AndroidTunnelDNS bool
     // Explicit ordinary-App UDP53 physical 223.5.5.5 compatibility mode.
     AndroidPhysicalDNS bool
+    AndroidPhysicalDNSUpstream netip.Addr // original Rust bound UDP53 destination
     // Cold Go-verified CN8503 snapshot only. No per-query Go callback.
     AndroidCN8503Raw []byte
     Tun *os.File
@@ -232,13 +234,21 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if err!=nil{originalAndroidPostauth("TUN_FAILED")
         }else{originalAndroidPostauth("TUN_ATTACHED")}
     }
+    if err==nil&&runtime.GOOS=="android"&&
+       (len(p.cfg.AndroidCN8503Raw)>0||p.cfg.AndroidPhysicalDNS){
+        upstream:=p.cfg.AndroidPhysicalDNSUpstream
+        if !upstream.IsValid(){upstream=netip.MustParseAddr("223.5.5.5")}
+        p.cfg.AndroidPhysicalDNSUpstream=upstream
+        err=bridge.setAndroidPhysicalDNSUpstream(upstream)
+        if err!=nil{originalAndroidPostauth("PHYSICAL_DNS_FAILED")}
+    }
     if err==nil&&runtime.GOOS=="android"&&len(p.cfg.AndroidCN8503Raw)>0{
         err=bridge.enableAndroidCNDNSSplit(p.cfg.AndroidCN8503Raw)
         if err!=nil{
             originalAndroidPostauth("CN_DNS_SPLIT_FAILED")
         }else{
             originalAndroidPostauth("CN_DNS_SPLIT_ENABLED")
-            log.Print("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=8503 cn=223.5.5.5 noncn=1.1.1.1 system_resolver=NOT_CAPTURED")
+            log.Printf("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=8503 cn=%s noncn=1.1.1.1 system_resolver=NOT_CAPTURED",p.cfg.AndroidPhysicalDNSUpstream.String())
         }
     }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidPhysicalDNS{
         // Separate explicit all-App TUN UDP53 physical mode, not CN split
@@ -248,7 +258,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
             originalAndroidPostauth("PHYSICAL_DNS_FAILED")
         }else{
             originalAndroidPostauth("PHYSICAL_DNS_ENABLED")
-            log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_EFFECTIVE role=client cold=1 app_tun_udp53=1 upstream=223.5.5.5 cn_split=NOT_ACTIVE system_resolver=NOT_CAPTURED")
+            log.Printf("V4_PUBLIC_ANDROID_PHYSICAL_DNS_EFFECTIVE role=client cold=1 app_tun_udp53=1 upstream=%s cn_split=NOT_ACTIVE system_resolver=NOT_CAPTURED",p.cfg.AndroidPhysicalDNSUpstream.String())
         }
     }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidTunnelDNS{
         // Real original-Go cold grant after true TLS/lease/RAW/TUN binding.

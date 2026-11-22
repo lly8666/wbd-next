@@ -28,6 +28,7 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootStopCommandTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
+  android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
   android/root-app/src/org/wbdnext/rootclient/RootRecoveryCommand.java \
   android/root-app/ci/RootRecoveryCommandTest.java \
@@ -39,6 +40,11 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
   android/root-app/ci/RootDirectIPv4Test.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDirectIPv4Test
+# B34 real original App physical upstream parser, no Android runtime mock.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
+  android/root-app/ci/RootPhysicalDNSUpstreamTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPhysicalDNSUpstreamTest
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootRecoveryCommandTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
@@ -71,6 +77,8 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
   android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
   android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
+  android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
   android/root-app/ci/RootConnectionSettingsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionSettingsTest
@@ -81,6 +89,8 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
   android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
   android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
+  android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsTransfer.java \
   android/root-app/ci/RootConnectionSettingsTransferTest.java
@@ -91,6 +101,7 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
   android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
+  android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
   android/root-app/ci/OriginalGoCommandArgsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoCommandArgsTest
@@ -194,8 +205,8 @@ assert 'echo WBD_PUBLIC_ROOT_EXEC_ATTEMPTED' in s
 assert 'log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")' in go_src
 
 assert s.count('InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)')>=2, "multi UID identity rechecked on Service and pre-su"
-assert 'watchSelectedPackages(allApps?managerPackages:targetPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw selected group or manager exclusions on package events"
-assert 'AllAppRouteScope.same(this,excludedAppIDs,managerPackages)' in s, "verify full-app owner+manager UID exclusions before su"
+assert 'watchedAllAppPackages(managerPackages,bypassPackages)' in s and 'stopWatchingSelectedPackage()' in s, "withdraw selected group or manager exclusions on package events"
+assert 'AllAppRouteScope.same(this,excludedAppIDs,managerPackages,' in s, "verify full-app owner+manager UID exclusions before su"
 # B24: Ethernet exact Android Network selected and watched by one
 # shared physical policy; refresh never silently changes valid selection.
 physical=Path("android/root-app/src/org/wbdnext/rootclient/PhysicalNetwork.java").read_text()
@@ -275,7 +286,7 @@ print("ANDROID_B26_SAF_PRESET_REAL_ACTIVITY_EXPORT_IMPORT_SOURCE_PASS")
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
 assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
 assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android applications are the product UI default"
-assert 'AllAppRouteScope.snapshot(this)' in a and 'all_apps' in a, "default mode must pass verified scopes not fake overlay"
+assert 'AllAppRouteScope.snapshot(this,bypassPackages,bypassUIDs)' in a and 'all_apps' in a, "default mode must pass verified scopes not fake overlay"
 
 assert 'ServerAddress.valid(peer)' in a and 'Server underlay IPv4 or DNS name' in a
 assert 'RootRouteKeyCache.resolve(this,sni,keyInput)' in a
@@ -328,7 +339,7 @@ assert 'startupPaddingModes.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("startup_padding",paddingMode)' in a
 assert 'intent.getStringExtra("startup_padding")' in s
 assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode' in s
-assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs);' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4);' in s
 assert 'pair(args,"--startup-padding",paddingMode)' in argv
 assert 'startupPadding:=flags.String("startup-padding","off"' in cold
 print("ANDROID_B11B_APP_GO_M4_PROTECTED_STARTUP_PADDING_SOURCE_WIRING_PASS")
@@ -470,6 +481,38 @@ assert 'routeWithDirect(' in b33_route and 'directArgs(' in b33_route
 assert 'direct_cidrs' in b33_ui and 'direct_cidrs' in b33_svc
 assert '--android-direct-cidrs' in b33_argv and 'RootDirectIPv4.canonicalCSV(' in b33_argv
 print("ANDROID_B33_ORIGINAL_ROOT_IP_DIRECT_CIDR_THREE_UID_SCOPES_SOURCE_PASS")
+# B34 original all-app UID exclusion over 20 user profiles, with exact
+# installed package+UID revalidation before every original Go/Root grant.
+b34_scope=Path("android/root-app/src/org/wbdnext/rootclient/AllAppRouteScope.java").read_text()
+b34_policy=Path("android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java").read_text()
+b34_settings=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java").read_text()
+assert 'AllAppUIDPolicy.excluded(Process.myUid(),managerUIDs,bypassUIDs)' in b34_scope
+assert 'info.uid!=bypassUIDs[i]' in b34_scope
+assert 'new TreeSet<>(reserved)' in b34_policy
+assert '"bypass_packages"' in b33_ui and '"bypass_uids"' in b33_ui
+assert '"bypass_packages"' in b33_svc and '"bypass_uids"' in b33_svc
+assert 'watchedAllAppPackages(managerPackages,bypassPackages)' in b33_svc
+assert 'p.setProperty("bypass_count"' in b34_settings
+print("ANDROID_B34_ALL_APP_BYPASS_REAL_UID_FIB_AND_PRESET_SOURCE_PASS")
+# B34 physical DNS app-selected IPv4 is set only on original Go
+# authenticated Rust M4 generation, on the EXISTING bound UDP socket.
+b34_bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+b34_product=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
+b34_platform=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+b34_rust=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+b34_m4=Path("crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+assert '"physical_dns_upstream"' in b33_ui and '"physical_dns_upstream"' in b33_svc
+assert '--android-physical-dns-upstream-ipv4' in b33_argv
+assert 'flags.String("android-physical-dns-upstream-ipv4"' in b33_go
+assert 'dnsnative.ParsePhysicalDNSUpstreamIPv4(' in b33_go
+assert 'setAndroidPhysicalDNSUpstream(upstream)' in b34_product
+assert 'wbd_m0_embedded_go_android_physical_dns_upstream_set' in b34_bridge
+assert 'wbd_m0_embedded_go_android_physical_dns_upstream_effective' in b34_bridge
+assert 'pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_upstream_set(' in b34_rust
+assert 'e.android_dns_physical_upstream' in b34_m4
+assert 'ip_be:u32::from_ne_bytes(upstream_ipv4)' in b34_platform
+assert 'android_setsocknetwork(' in b34_platform
+print("ANDROID_B34_ORIGINAL_RUST_M4_BOUND_PHYSICAL_DNS_IPV4_SOURCE_PASS")
 # B29: default Tunnel DNS must not reject Fixed/Auto feature7 before M4.
 b29_go=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
 b29_rust=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
@@ -1047,8 +1090,8 @@ go_cn=Path("r0/go_overlay/internal/v4productcli/dnsnative/cn_rules.go").read_tex
 assert 'cnSplitDNS.setChecked(false)' in root_ui
 assert 'request.putExtra("cn_dns_split",cnSplitDNS.isChecked())' in root_ui
 assert 'intent.getBooleanExtra("cn_dns_split",false)' in root_svc
-assert 'managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS' in root_svc
-assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs);' in root_svc
+assert 'managerPackages,bypassPackages,bypassUIDs,' in root_svc
+assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4);' in root_svc
 assert 'if(cnSplitDNS)args.add("--android-cn-dns-split")' in argv
 assert 'ANDROID_B5_CN8503_SPLIT_SELECTED_ALL_APP_AND_LEGACY_GO_ARGV_HOST_PASS' in argv_test
 assert 'androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false' in nativecli

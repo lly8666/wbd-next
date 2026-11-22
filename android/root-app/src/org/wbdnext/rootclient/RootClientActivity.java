@@ -40,15 +40,17 @@ public final class RootClientActivity extends Activity {
     private final List<PhysicalNetwork> physical=new ArrayList<>();
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
+    private final Map<String,CheckBox> checkedBypassApps=new TreeMap<>();
     // A saved selection is only restored if fresh package+UID still match;
     // the OS Network handle and any root route are never restored.
     private final Map<String,Integer> restoredSelection=new TreeMap<>();
-    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField;
+    private final Map<String,Integer> restoredBypass=new TreeMap<>();
+    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
-    private LinearLayout appChoices,selectedAppControls;
-    private EditText appSearch;
-    private TextView selectedAppsSummary,presetResult;
+    private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
+    private EditText appSearch,bypassSearch;
+    private TextView selectedAppsSummary,bypassSummary,presetResult;
     private RootConnectionSettings pendingPresetExport;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText,m4TrafficBrief;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
@@ -329,14 +331,26 @@ public final class RootClientActivity extends Activity {
             CheckBox cb=checkedApps.get(app.packageName);
             if(cb!=null&&cb.isChecked())previous.put(app.packageName,app.uid);
         }
+        Map<String,Integer> previousBypass=new TreeMap<>(restoredBypass);
+        restoredBypass.clear();
+        for(InstalledAppTarget app:installedApps){
+            CheckBox cb=checkedBypassApps.get(app.packageName);
+            if(cb!=null&&cb.isChecked())previousBypass.put(app.packageName,app.uid);
+        }
         installedApps.clear();
         checkedApps.clear();
+        checkedBypassApps.clear();
         appChoices.removeAllViews();
+        bypassChoices.removeAllViews();
         installedApps.addAll(InstalledAppCatalog.discoverable(this));
         if(installedApps.isEmpty()){
             TextView message=new TextView(this);
             message.setText("当前未发现可选的普通已安装应用；请检查本机安装及包可见性");
             appChoices.addView(message);
+            TextView bypassMessage=new TextView(this);
+            bypassMessage.setText("当前用户没有可排除的普通应用");
+            bypassChoices.addView(bypassMessage);
+            updateAppSelectionCount();
             return;
         }
         for(InstalledAppTarget app:installedApps){
@@ -347,6 +361,13 @@ public final class RootClientActivity extends Activity {
             cb.setOnCheckedChangeListener((button,checked)->updateAppSelectionCount());
             appChoices.addView(cb);
             checkedApps.put(app.packageName,cb);
+            CheckBox bypass=new CheckBox(this);
+            bypass.setText(app.title());
+            bypass.setChecked(previousBypass.containsKey(app.packageName)&&
+                previousBypass.get(app.packageName)==app.uid);
+            bypass.setOnCheckedChangeListener((button,checked)->updateAppSelectionCount());
+            bypassChoices.addView(bypass);
+            checkedBypassApps.put(app.packageName,bypass);
         }
         applyAppSearch();
         updateAppSelectionCount();
@@ -362,12 +383,30 @@ public final class RootClientActivity extends Activity {
         selectedAppsSummary.setText(
             "当前已勾选 "+count+" 个应用 / "+uids.size()+" 个UID（最多8个不同UID、16个包）。"+
             "仅在手动START且成功认证后生效");
+        if(bypassSummary!=null){
+            int packages=0;
+            java.util.Set<Integer> appIds=new java.util.TreeSet<>();
+            for(InstalledAppTarget app:installedApps){
+                CheckBox bypass=checkedBypassApps.get(app.packageName);
+                if(bypass!=null&&bypass.isChecked()){
+                    packages++;
+                    appIds.add(app.uid%AllAppUIDPolicy.PER_USER);
+                }
+            }
+            bypassSummary.setText("全App绕过："+packages+"个已安装包 / "+
+                appIds.size()+"个独立AppID；最多6个包（需与WBD/Root Manager的排除配额合计≤8）。"+
+                "只有手动START且原Go认证、Kernel UID规则已真实安装后生效");
+        }
     }
     private void applyAppSearch(){
         String text=appSearch==null?"":appSearch.getText().toString();
         for(InstalledAppTarget app:installedApps){
             CheckBox cb=checkedApps.get(app.packageName);
             if(cb!=null)cb.setVisibility(RootAppPickerModel.matches(app,text)
+                ?View.VISIBLE:View.GONE);
+            CheckBox bypass=checkedBypassApps.get(app.packageName);
+            if(bypass!=null)bypass.setVisibility(RootAppPickerModel.matches(
+                app,bypassSearch==null?"":bypassSearch.getText().toString())
                 ?View.VISIBLE:View.GONE);
         }
     }
@@ -403,6 +442,14 @@ public final class RootClientActivity extends Activity {
     }
     private RootConnectionSettings connectionSettingsFromUi(){
         Map<String,Integer> selected=new TreeMap<>();
+        Map<String,Integer> bypass=new TreeMap<>();
+        if(allAppsDefault.isChecked()){
+            for(InstalledAppTarget app:installedApps){
+                CheckBox check=checkedBypassApps.get(app.packageName);
+                if(check!=null&&check.isChecked())
+                    bypass.put(app.packageName,app.uid);
+            }
+        }
         if(!allAppsDefault.isChecked()){
             for(InstalledAppTarget app:installedApps){
                 CheckBox check=checkedApps.get(app.packageName);
@@ -424,7 +471,8 @@ public final class RootClientActivity extends Activity {
             tlsVerifyServer.isChecked(),tunnelDNS.isChecked(),
             physicalDNS.isChecked(),cnSplitDNS.isChecked(),
             allAppsDefault.isChecked(),selected,
-            RootDirectIPv4.canonicalCSV(directCIDRsField.getText().toString()));
+            RootDirectIPv4.canonicalCSV(directCIDRsField.getText().toString()),
+            bypass,RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString()));
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -437,6 +485,7 @@ public final class RootClientActivity extends Activity {
         serverPort.setText(Integer.toString(s.port));
         outerMTUField.setText(Integer.toString(s.outerMTU));
         directCIDRsField.setText(s.directCIDRs);
+        physicalDNSUpstreamField.setText(s.physicalDNSUpstream);
         selectSpinner(recordCiphers,s.cipher);
         selectSpinner(tunQueueSizes,Integer.toString(s.tunQueue));
         selectSpinner(startupPaddingModes,s.padding);
@@ -448,6 +497,7 @@ public final class RootClientActivity extends Activity {
         cnSplitDNS.setChecked(s.cnSplitDNS);
         allAppsDefault.setChecked(s.allApps);
         restoredSelection.putAll(s.selected);
+        restoredBypass.putAll(s.bypass);
     }
     private void privateText(String file,String text)throws Exception{
         // A32: Android's MODE_PRIVATE can produce 0660 (group read/write).
@@ -473,6 +523,8 @@ public final class RootClientActivity extends Activity {
             String account=user.getText().toString().trim();
             String directCIDRs=RootDirectIPv4.canonicalCSV(
                 directCIDRsField.getText().toString());
+            String physicalDnsIPv4=RootPhysicalDNSUpstream.canonical(
+                physicalDNSUpstreamField.getText().toString());
             String secret=password.getText().toString();
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
@@ -490,11 +542,24 @@ public final class RootClientActivity extends Activity {
             boolean allApps=allAppsDefault.isChecked();
             SelectedAppGroup chosen=null;
             AllAppRouteScope entire=null;
+            String[] bypassPackages=null;
+            int[] bypassUIDs=null;
             if(allApps){
-                entire=AllAppRouteScope.snapshot(this);
+                Map<String,Integer> chosenBypass=new TreeMap<>();
+                for(InstalledAppTarget app:installedApps){
+                    CheckBox cb=checkedBypassApps.get(app.packageName);
+                    if(cb!=null&&cb.isChecked())chosenBypass.put(app.packageName,app.uid);
+                }
+                if(chosenBypass.size()>6)
+                    throw new IllegalArgumentException("全App模式最多排除6个用户选定App包");
+                bypassPackages=chosenBypass.keySet().toArray(new String[0]);
+                bypassUIDs=new int[chosenBypass.size()];
+                int at=0;
+                for(int uid:chosenBypass.values())bypassUIDs[at++]=uid;
+                entire=AllAppRouteScope.snapshot(this,bypassPackages,bypassUIDs);
                 if(!AllAppRouteScope.same(this,entire.excludedAppIDs,
-                    entire.managerPackages))
-                    throw new IllegalArgumentException("Root Manager app identity changed");
+                    entire.managerPackages,bypassPackages,bypassUIDs))
+                    throw new IllegalArgumentException("Root Manager或绕过App UID发生变化");
             }else{
                 ArrayList<InstalledAppTarget> chosenApps=new ArrayList<>();
                 for(InstalledAppTarget app:installedApps){
@@ -561,9 +626,12 @@ public final class RootClientActivity extends Activity {
             request.putExtra("physical_dns",physicalDNS.isChecked());
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
             request.putExtra("direct_cidrs",directCIDRs);
+            request.putExtra("physical_dns_upstream",physicalDnsIPv4);
             if(allApps){
                 request.putExtra("exclude_appids",entire.excludedAppIDs);
                 request.putExtra("manager_packages",entire.managerPackages);
+                request.putExtra("bypass_packages",bypassPackages);
+                request.putExtra("bypass_uids",bypassUIDs);
             }else{
                 request.putExtra("target_uids",chosen.uids);
                 request.putExtra("target_packages",chosen.packages);
@@ -810,6 +878,15 @@ public final class RootClientActivity extends Activity {
         physicalDNS.setText("可选物理DNS：进入WBD TUN的普通App UDP/53直接通过当前物理Network发送到223.5.5.5（全部域名，不是CN域名分流或Android系统DNS）");
         physicalDNS.setChecked(false);
         pane.addView(physicalDNS);
+        physicalDNSUpstreamField=input(pane,
+            "物理UDP53上游IPv4（默认223.5.5.5，可填物理LAN路由器DNS如192.168.1.1）",
+            InputType.TYPE_CLASS_TEXT);
+        physicalDNSUpstreamField.setText(RootPhysicalDNSUpstream.DEFAULT);
+        TextView upstreamHint=new TextView(this);
+        upstreamHint.setText("仅在「可选物理DNS」或「CN8503 DNS分流」时使用。"+
+            "原Rust M4在已选择的实体Network上连接该UDP53 IPv4；"+
+            "WBD服务器冷引导223.5.5.5及系统netd仍不变。");
+        pane.addView(upstreamHint);
         cnSplitDNS=new CheckBox(this);
         cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走WBD隧道1.1.1.1（不接管Android系统DNS）");
         cnSplitDNS.setChecked(false);
@@ -854,9 +931,49 @@ public final class RootClientActivity extends Activity {
         appChoices=new LinearLayout(this);
         appChoices.setOrientation(LinearLayout.VERTICAL);
         selectedAppControls.addView(appChoices);
-        allAppsDefault.setOnCheckedChangeListener((button,checked)->
-            selectedAppControls.setVisibility(checked?View.GONE:View.VISIBLE));
+
         selectedAppControls.setVisibility(View.GONE);
+        // B34: full ordinary-app takeover keeps the original owned kernel
+        // 20-profile FIB; selectively exclude up to six verified ordinary
+        // package AppIDs across profiles with no new data/payload path.
+        bypassAppControls=new LinearLayout(this);
+        bypassAppControls.setOrientation(LinearLayout.VERTICAL);
+        pane.addView(bypassAppControls);
+        TextView bypassHint=new TextView(this);
+        bypassHint.setText("全App模式可额外排除实际已安装App，令该App按Android后续系统路由直连。"+
+            "仍仅影响IPv4；共享UID/跨用户相同AppID都会一起绕过WBD。"+
+            "必须重新手动START；不保证Android netd最终选哪个物理接口。");
+        bypassAppControls.addView(bypassHint);
+        bypassSummary=new TextView(this);
+        bypassAppControls.addView(bypassSummary);
+        bypassSearch=input(bypassAppControls,"搜索需要绕过WBD的已安装App（名称/包名/UID）",
+            InputType.TYPE_CLASS_TEXT);
+        bypassSearch.addTextChangedListener(new android.text.TextWatcher(){
+            @Override public void beforeTextChanged(CharSequence x,int a,int c,int after){}
+            @Override public void onTextChanged(CharSequence x,int a,int before,int c){applyAppSearch();}
+            @Override public void afterTextChanged(android.text.Editable e){}
+        });
+        Button toggleBypass=new Button(this);
+        toggleBypass.setText("展开／折叠全App绕过名单（最多6个已安装应用）");
+        toggleBypass.setOnClickListener(v->bypassChoices.setVisibility(
+            bypassChoices.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE));
+        bypassAppControls.addView(toggleBypass);
+        Button clearBypass=new Button(this);
+        clearBypass.setText("清空额外绕过应用");
+        clearBypass.setOnClickListener(v->{
+            for(CheckBox cb:checkedBypassApps.values())cb.setChecked(false);
+            updateAppSelectionCount();
+        });
+        bypassAppControls.addView(clearBypass);
+        bypassChoices=new LinearLayout(this);
+        bypassChoices.setOrientation(LinearLayout.VERTICAL);
+        bypassAppControls.addView(bypassChoices);
+        bypassChoices.setVisibility(View.GONE);
+        allAppsDefault.setOnCheckedChangeListener((button,checked)->{
+            selectedAppControls.setVisibility(checked?View.GONE:View.VISIBLE);
+            bypassAppControls.setVisibility(checked?View.VISIBLE:View.GONE);
+        });
+        bypassAppControls.setVisibility(View.VISIBLE);
         Button refreshApps=new Button(this);
         refreshApps.setText("Refresh installed applications");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());

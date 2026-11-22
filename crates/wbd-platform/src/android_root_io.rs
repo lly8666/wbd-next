@@ -655,7 +655,7 @@ impl AndroidBoundRawTx {
 }
 
 /// One original M4 generation's actual Android kernel UDP socket, connected
-/// exclusively to CN physical DNS 223.5.5.5:53. The NDK sets the exact
+/// exclusively to the original Go cold-selected physical IPv4 DNS:53. The NDK sets the exact
 /// ConnectivityManager Network and SO_BINDTODEVICE *before* connect;
 /// getsockname and SO_BINDTODEVICE readback must agree with cold Go scope.
 /// There is never a root UID global mark, DNS fallback or sidecar TUN reader.
@@ -669,10 +669,13 @@ pub struct AndroidBoundPhysicalDnsUdp {
 impl AndroidBoundPhysicalDnsUdp {
     pub fn open(
         network_handle:u64,interface:&str,ifindex:u32,mtu:u32,
-        source_ipv4:[u8;4],generation:u32,
+        source_ipv4:[u8;4],upstream_ipv4:[u8;4],generation:u32,
     )->io::Result<Self>{
         if generation==0||mtu<MIN_IPV4_MTU||mtu>MAX_IPV4_MTU||
-           source_ipv4==[0;4]||source_ipv4[0]>=224{
+           source_ipv4==[0;4]||source_ipv4[0]>=224||
+           upstream_ipv4[0]==0||upstream_ipv4[0]==127||
+           upstream_ipv4[0]>=224||
+           (upstream_ipv4[0]==169&&upstream_ipv4[1]==254){
             return Err(io::Error::new(io::ErrorKind::InvalidInput,
                 "invalid physical DNS original generation"))
         }
@@ -702,7 +705,7 @@ impl AndroidBoundPhysicalDnsUdp {
         }
         let peer=AndroidSockAddrIn{
             family:AF_INET as u16,port:53u16.to_be(),
-            ip_be:u32::from_ne_bytes([223,5,5,5]),zero:[0;8],
+            ip_be:u32::from_ne_bytes(upstream_ipv4),zero:[0;8],
         };
         if unsafe{connect(fd.as_raw_fd(),(&peer as *const AndroidSockAddrIn).cast(),
             std::mem::size_of::<AndroidSockAddrIn>() as u32)}!=0{

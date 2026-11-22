@@ -405,6 +405,9 @@ func (b *v4EmbeddedNativeBridge) attachRawRxOnInterface(ifname string,ifindex ui
 func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
     return ErrAdmissionUnsupported
 }
+func (b *v4EmbeddedNativeBridge) setAndroidPhysicalDNSUpstream(_ netip.Addr)error{
+    return ErrAdmissionUnsupported
+}
 func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error{
     return ErrAdmissionUnsupported
 }

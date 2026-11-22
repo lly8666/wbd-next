@@ -159,6 +159,13 @@ public final class RootClientService extends Service {
         registerReceiver(receiver,filter);
         installedPackageWatch=receiver;
     }
+    private static String[] watchedAllAppPackages(String[] manager,String[] bypass){
+        if(manager==null||bypass==null)throw new IllegalArgumentException("unknown Root app scope");
+        String[] out=new String[manager.length+bypass.length];
+        System.arraycopy(manager,0,out,0,manager.length);
+        System.arraycopy(bypass,0,out,manager.length,bypass.length);
+        return out;
+    }
     private void stopWatchingSelectedPackage(){
         BroadcastReceiver receiver=installedPackageWatch;
         installedPackageWatch=null;
@@ -224,6 +231,8 @@ public final class RootClientService extends Service {
             trace(RootDiagnosticReceipt.Event.NETWORK_SCOPE_VERIFIED);
             String peer=intent.getStringExtra("peer");
             String directCIDRs=RootDirectIPv4.canonicalCSV(intent.getStringExtra("direct_cidrs"));
+            String physicalDnsIPv4=RootPhysicalDNSUpstream.canonical(
+                intent.getStringExtra("physical_dns_upstream"));
             String sni=intent.getStringExtra("sni");
             String user=intent.getStringExtra("user");
             String cipherExtra=intent.getStringExtra("record_cipher");
@@ -252,6 +261,12 @@ public final class RootClientService extends Service {
             String[] targetPackages=intent.getStringArrayExtra("target_packages");
             int[] excludedAppIDs=intent.getIntArrayExtra("exclude_appids");
             String[] managerPackages=intent.getStringArrayExtra("manager_packages");
+            String[] rawBypassPackages=intent.getStringArrayExtra("bypass_packages");
+            int[] rawBypassUIDs=intent.getIntArrayExtra("bypass_uids");
+            final String[] bypassPackages=rawBypassPackages==null&&rawBypassUIDs==null
+                ?new String[0]:rawBypassPackages;
+            final int[] bypassUIDs=rawBypassPackages==null&&rawBypassUIDs==null
+                ?new int[0]:rawBypassUIDs;
             boolean hasCA=intent.getBooleanExtra("has_ca",false);
             boolean verifyTLS=intent.getBooleanExtra("tls_verify_server",false);
             boolean tunnelDNS=intent.getBooleanExtra("tunnel_dns",false);
@@ -260,8 +275,10 @@ public final class RootClientService extends Service {
             if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&
-                  AllAppRouteScope.same(this,excludedAppIDs,managerPackages)
+                  AllAppRouteScope.same(this,excludedAppIDs,managerPackages,
+                       bypassPackages,bypassUIDs)
                 : excludedAppIDs==null&&managerPackages==null&&
+                  rawBypassPackages==null&&rawBypassUIDs==null&&
                   InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids);
             if(!validatedScope)trace(RootDiagnosticReceipt.Event.START_FAILED_UID_SCOPE);
             if(peer==null||sni==null||user==null||
@@ -277,7 +294,8 @@ public final class RootClientService extends Service {
             selection=chosen;
             ownerToken=newOwnerToken();
             watchPhysicalNetwork(chosen);
-            watchSelectedPackages(allApps?managerPackages:targetPackages);
+            watchSelectedPackages(allApps
+                ?watchedAllAppPackages(managerPackages,bypassPackages):targetPackages);
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                 chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("Physical Network changed during callback registration");
@@ -285,7 +303,8 @@ public final class RootClientService extends Service {
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,targetPackages,allApps,excludedAppIDs,
-                managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs),"wbd-native-root-owner");
+                managerPackages,bypassPackages,bypassUIDs,
+                hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.START_REFUSED);
@@ -306,7 +325,7 @@ public final class RootClientService extends Service {
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
-                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs){
+                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs,String physicalDnsIPv4){
         // The host-tested argv is also the exact argv passed to original Go.
         // Secret *values* never appear here, only app-private file paths.
         List<String> args=OriginalGoCommandArgs.build(
@@ -318,7 +337,7 @@ public final class RootClientService extends Service {
             nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
             excludedAppIDs,
             hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null,
-            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs);
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
@@ -372,7 +391,8 @@ public final class RootClientService extends Service {
     private void runRoot(PhysicalNetwork net,String peer,String sni,String user,
                          int port,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
-                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs){
+                         String[] bypassPackages,int[] bypassUIDs,
+                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
@@ -405,12 +425,13 @@ public final class RootClientService extends Service {
                 if(stopping.get())
                     throw new IllegalStateException("Root launch withdrawn before native start");
                 if(!(allApps
-                   ? AllAppRouteScope.same(this,excludedAppIDs,managerPackages)
+                   ? AllAppRouteScope.same(this,excludedAppIDs,managerPackages,
+                       bypassPackages,bypassUIDs)
                    : InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)))
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs))
+                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);

@@ -115,6 +115,8 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
       wbd_m0_embedded_go_attach_tun \
       wbd_m0_embedded_go_android_tunnel_dns_enable \
       wbd_m0_embedded_go_android_tunnel_dns_effective \
+      wbd_m0_embedded_go_android_physical_dns_upstream_set \
+      wbd_m0_embedded_go_android_physical_dns_upstream_effective \
       wbd_m0_embedded_go_android_physical_dns_enable \
       wbd_m0_embedded_go_android_physical_dns_effective \
       wbd_m0_embedded_go_android_cn_dns_split_enable \

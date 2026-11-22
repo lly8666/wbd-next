@@ -15,10 +15,10 @@ import java.util.TreeSet;
  * only after its package AND current installed UID still match.
  */
 final class RootConnectionSettings {
-    final String peer,sni,account,cipher,padding,mode,directCIDRs;
+    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
     final int port,outerMTU,tunQueue,profile;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps;
-    final Map<String,Integer> selected;
+    final Map<String,Integer> selected,bypass;
     RootConnectionSettings(String peer,String sni,String account,
         int port,int outerMTU,int tunQueue,String cipher,String padding,
         String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
@@ -32,6 +32,28 @@ final class RootConnectionSettings {
         String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
         boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
         Map<String,Integer> selected,String directCIDRs) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,
+            mode,profile,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,
+            directCIDRs,new TreeMap<>());
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,
+            directCIDRs,bypass,RootPhysicalDNSUpstream.DEFAULT);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream) {
+        this.physicalDNSUpstream=RootPhysicalDNSUpstream.canonical(physicalDNSUpstream);
+        if(bypass==null)throw new IllegalArgumentException("missing bypass map");
+        this.bypass=new TreeMap<>(bypass);
         this.directCIDRs=RootDirectIPv4.canonicalCSV(directCIDRs);
         this.peer=peer;this.sni=sni;this.account=account;
         this.port=port;this.outerMTU=outerMTU;this.tunQueue=tunQueue;
@@ -58,7 +80,8 @@ final class RootConnectionSettings {
            (!"normal".equals(mode)&&!"off".equals(padding))||
            (tunnelDNS?1:0)+(physicalDNS?1:0)+(cnSplitDNS?1:0)>1||
            selected.size()>SelectedAppGroup.MAX_PACKAGES||
-           (allApps&&!selected.isEmpty()))return false;
+           (allApps&&!selected.isEmpty())||
+           (!allApps&&!bypass.isEmpty())||bypass.size()>6)return false;
         // The route actually supports up to 16 package names sharing no
         // more than 8 distinct UIDs. The B22 preset incorrectly capped
         // PACKAGE count at 8, so a valid 9..16 package selection vanished
@@ -70,6 +93,17 @@ final class RootConnectionSettings {
                uid<10000||uid>1999999)return false;
             uids.add(uid);
             if(uids.size()>SelectedAppGroup.MAX_UIDS)return false;
+        }
+        // Only genuinely installed package/UID pairs may be restored to a
+        // selected all-app bypass after fresh PackageManager validation.
+        // The same app ID is excluded in every existing Android user profile.
+        for(Map.Entry<String,Integer> x:bypass.entrySet()){
+            int uid=x.getValue()==null?-1:x.getValue();
+            if(!InstalledAppTarget.validPackage(x.getKey())||
+                uid<10000||uid>1999999||
+                uid%AllAppUIDPolicy.PER_USER<AllAppUIDPolicy.FIRST_APP_ID||
+                uid%AllAppUIDPolicy.PER_USER>AllAppUIDPolicy.LAST_APP_ID)
+                return false;
         }
         return true;
     }
@@ -92,7 +126,15 @@ final class RootConnectionSettings {
         p.setProperty("cn_split_dns",Boolean.toString(cnSplitDNS));
         p.setProperty("all_apps",Boolean.toString(allApps));
         p.setProperty("direct_cidrs",directCIDRs);
+        p.setProperty("physical_dns_upstream",physicalDNSUpstream);
         p.setProperty("selected_count",Integer.toString(selected.size()));
+        p.setProperty("bypass_count",Integer.toString(bypass.size()));
+        int bypassNumber=0;
+        for(Map.Entry<String,Integer> x:bypass.entrySet()){
+            p.setProperty("bypass_"+bypassNumber+"_package",x.getKey());
+            p.setProperty("bypass_"+bypassNumber+"_uid",Integer.toString(x.getValue()));
+            bypassNumber++;
+        }
         int i=0;
         for(Map.Entry<String,Integer> x:selected.entrySet()){
             p.setProperty("selected_"+i+"_package",x.getKey());
@@ -120,6 +162,14 @@ final class RootConnectionSettings {
                 int uid=Integer.parseInt(p.getProperty("selected_"+i+"_uid","-1"));
                 if(selected.put(pkg,uid)!=null)return null;
             }
+            int bypassCount=Integer.parseInt(p.getProperty("bypass_count","0"));
+            if(bypassCount<0||bypassCount>6)return null;
+            Map<String,Integer> bypass=new TreeMap<>();
+            for(int i=0;i<bypassCount;i++){
+                String pkg=p.getProperty("bypass_"+i+"_package","");
+                int uid=Integer.parseInt(p.getProperty("bypass_"+i+"_uid","-1"));
+                if(bypass.put(pkg,uid)!=null)return null;
+            }
             return new RootConnectionSettings(
                 p.getProperty("peer",""),p.getProperty("sni",""),
                 p.getProperty("account",""),
@@ -131,7 +181,8 @@ final class RootConnectionSettings {
                 Integer.parseInt(p.getProperty("fec_profile","-1")),
                 flag(p,"tls_verify"),flag(p,"tunnel_dns"),
                 flag(p,"physical_dns"),flag(p,"cn_split_dns"),
-                flag(p,"all_apps"),selected,p.getProperty("direct_cidrs",""));
+                flag(p,"all_apps"),selected,p.getProperty("direct_cidrs",""),
+                bypass,p.getProperty("physical_dns_upstream",RootPhysicalDNSUpstream.DEFAULT));
         }catch(IllegalArgumentException invalid){
             return null;
         }

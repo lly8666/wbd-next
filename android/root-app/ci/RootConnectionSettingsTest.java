@@ -104,6 +104,25 @@ public final class RootConnectionSettingsTest {
         check(directRestored!=null&&
             directRestored.directCIDRs.equals("10.9.0.0/16,192.168.7.0/24"),
             "B33 direct IPv4 CIDRs lost through original settings codec");
+        // B34: extra all-app bypass packages and physical DNS upstream are
+        // nonsecret cold UI settings, never a restored UID route or Network.
+        Map<String,Integer> bypass=new TreeMap<>();
+        bypass.put("org.example.localgame",10333);
+        bypass.put("org.example.lanclient",110444);
+        RootConnectionSettings withBypass=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,false,true,false,true,new TreeMap<>(),
+            "192.168.7.0/24",bypass,"192.168.1.1");
+        RootConnectionSettings bypassRestored=read(stored(withBypass));
+        check(bypassRestored!=null&&bypassRestored.bypass.equals(bypass)&&
+            bypassRestored.physicalDNSUpstream.equals("192.168.1.1")&&
+            bypassRestored.directCIDRs.equals("192.168.7.0/24"),
+            "real all-app bypass/physical DNS/IPv4 direct preset lost");
+        check(b.directCIDRs.isEmpty()&&
+            b.physicalDNSUpstream.equals("223.5.5.5")&&b.bypass.isEmpty(),
+            "older presets without new keys must restore original defaults");
+        System.out.println("ANDROID_B34_ALL_APP_BYPASS_AND_PHYSICAL_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B33_DIRECT_CIDRS_ROOT_PRESET_CODEC_HOST_PASS");
         System.out.println("ANDROID_B22_LAST_CONNECTION_NO_BACKUP_PRESET_HOST_PASS");
         System.out.println("ANDROID_B25_PRESET_SELECTED_16_PACKAGES_8_UNIQUE_UIDS_HOST_PASS");

@@ -40,6 +40,8 @@ extern int32_t wbd_m0_embedded_go_attach_raw_rx_on_interface(uint64_t,uint32_t,c
 extern int32_t wbd_m0_embedded_go_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_android_tunnel_dns_enable(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_tunnel_dns_effective(uint64_t,uint32_t *);
+extern int32_t wbd_m0_embedded_go_android_physical_dns_upstream_set(uint64_t,const uint8_t *,size_t);
+extern int32_t wbd_m0_embedded_go_android_physical_dns_upstream_effective(uint64_t,uint8_t *,size_t);
 extern int32_t wbd_m0_embedded_go_android_physical_dns_enable(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_physical_dns_effective(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_cn_dns_split_enable(uint64_t,const uint8_t *,size_t);
@@ -387,6 +389,28 @@ func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
     if rc!=0||effective!=1{
         return fmt.Errorf("%w: original Android tunnel UDP DNS readback=%d effective=%d",
             errV4Embedded,int(rc),uint32(effective))
+    }
+    return nil
+}
+// B34: exact original Android physical-Network DNS IPv4 destination is
+// granted after TLS, native RAW/TUN and /32. No user-controlled fd/route is
+// accepted; this changes only Rust's already-owned UDP53 connected socket.
+func (b *v4EmbeddedNativeBridge) setAndroidPhysicalDNSUpstream(ip netip.Addr)error{
+    if b==nil||b.handle==0||!b.committed||b.serverSide||!ip.IsValid()||!ip.Is4()||
+       ip.IsUnspecified()||ip.IsLoopback()||ip.IsMulticast()||ip.IsLinkLocalUnicast(){
+        return errV4Embedded
+    }
+    raw:=ip.As4()
+    rc:=C.wbd_m0_embedded_go_android_physical_dns_upstream_set(
+        C.uint64_t(b.handle),(*C.uint8_t)(unsafe.Pointer(&raw[0])),C.size_t(len(raw)))
+    runtime.KeepAlive(raw)
+    if rc!=0{return fmt.Errorf("%w: original Android physical DNS upstream cold=%d",errV4Embedded,int(rc))}
+    var actual [4]C.uint8_t
+    rc=C.wbd_m0_embedded_go_android_physical_dns_upstream_effective(
+        C.uint64_t(b.handle),&actual[0],C.size_t(len(actual)))
+    if rc!=0||actual[0]!=C.uint8_t(raw[0])||actual[1]!=C.uint8_t(raw[1])||
+       actual[2]!=C.uint8_t(raw[2])||actual[3]!=C.uint8_t(raw[3]){
+        return fmt.Errorf("%w: original Android physical DNS upstream readback=%d",errV4Embedded,int(rc))
     }
     return nil
 }

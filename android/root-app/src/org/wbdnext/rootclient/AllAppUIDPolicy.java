@@ -16,19 +16,33 @@ final class AllAppUIDPolicy {
         return id;
     }
     static int[] excluded(int ownerUID,int[] rootManagerUIDs){
+        return excluded(ownerUID,rootManagerUIDs,new int[0]);
+    }
+    // B34: one native ordinary-App FIB, with additional USER-CHOSEN
+    // per-user app IDs removed from all 20 existing UID ranges.
+    // Controller and actual Root Manager remain mandatory exclusions.
+    static int[] excluded(int ownerUID,int[] rootManagerUIDs,int[] bypassUIDs){
         if(rootManagerUIDs==null||rootManagerUIDs.length<1||
-           rootManagerUIDs.length>=MAX_EXCLUDED)
-            throw new IllegalArgumentException("a verified KernelSU Manager app UID is required");
-        TreeSet<Integer> ids=new TreeSet<>();
-        int self=appId(ownerUID);
-        ids.add(self);
+            rootManagerUIDs.length>=MAX_EXCLUDED||bypassUIDs==null||
+            bypassUIDs.length>6)
+            throw new IllegalArgumentException("invalid Root all-app owner/bypass scope");
+        TreeSet<Integer> reserved=new TreeSet<>();
+        int owner=appId(ownerUID);
+        reserved.add(owner);
         for(int uid:rootManagerUIDs){
             int id=appId(uid);
-            if(id==self)throw new IllegalArgumentException("Root Manager shares WBD owner UID");
+            if(id==owner)throw new IllegalArgumentException("Root Manager shares WBD owner UID");
+            reserved.add(id);
+        }
+        TreeSet<Integer> ids=new TreeSet<>(reserved);
+        for(int uid:bypassUIDs){
+            int id=appId(uid);
+            if(reserved.contains(id))
+                throw new IllegalArgumentException("selected bypass is WBD owner or Root Manager");
             ids.add(id);
         }
         if(ids.size()<2||ids.size()>MAX_EXCLUDED)
-            throw new IllegalArgumentException("invalid bounded App UID exclusions");
+            throw new IllegalArgumentException("too many unique ordinary bypass AppIDs");
         int[] out=new int[ids.size()];
         int i=0;for(int id:ids)out[i++]=id;
         return out;

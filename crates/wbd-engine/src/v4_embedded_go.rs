@@ -941,6 +941,8 @@ struct Entry{
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_dns_physical_ready:bool,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_physical_upstream:[u8;4],
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_cn_dns:Option<Arc<crate::v4_android_cn_dns::CNDnsMatcher>>,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_workers:Option<android_original_m4::AndroidOriginalWorkers>,
@@ -1377,6 +1379,8 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         android_dns_hijack_ready:false,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_dns_physical_ready:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_physical_upstream:[223,5,5,5],
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_cn_dns:None,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -4569,7 +4573,40 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_effective(
         !e.android_dns_physical_ready));}
     OK
 }
-// B4: explicit App UDP53 -> physically bound 223.5.5.5 mode.
+// B34: native cold physical IPv4 upstream for the existing physically
+// Network-bound original Rust M4 UDP53 owner. Source is original Go verified
+// IPv4 after REAL TLS/lease and underlay scope, never a DATA callback.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_upstream_set(
+    h:u64,input:*const u8,len:usize,
+)->i32{
+    if input.is_null()||len!=4{return INVALID}
+    let ip=unsafe{std::slice::from_raw_parts(input,4)};
+    if ip[0]==0||ip[0]==127||ip[0]>=224||
+       (ip[0]==169&&ip[1]==254){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       !android_dns_original_m4_ready(&e)||
+       e.android_workers.is_some()||e.android_dns_hijack_ready||
+       e.android_dns_physical_ready{return BAD_STAGE}
+    e.android_dns_physical_upstream.copy_from_slice(ip);
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_upstream_effective(
+    h:u64,output:*mut u8,len:usize,
+)->i32{
+    if output.is_null()||len!=4{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_workers.is_some(){return BAD_STAGE}
+    unsafe{std::ptr::copy_nonoverlapping(e.android_dns_physical_upstream.as_ptr(),output,4);}
+    OK
+}
+// B4: explicit App UDP53 -> physically bound user-selected IPv4 mode.
 // Independent of the legacy tunnel DNS default; not geosite split or netd.
 #[cfg(target_os="android")]
 #[no_mangle]

@@ -1523,7 +1523,7 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
         // scope are required before *any* DNS socket is opened.
         match AndroidBoundPhysicalDnsUdp::open(
             scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
-            e.flow.client_ip,e.generation
+            e.flow.client_ip,e.android_dns_physical_upstream,e.generation
         ){
             Ok(fd)=>Some(Arc::new(fd)),
             Err(_)=>return INVALID,

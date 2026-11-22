@@ -15,6 +15,8 @@
 | 普通App IPv4 TUN→223.5.5.5物理 UDP53、CN8503分流与TCP53原隧道透传 | WIRED | HOST_PASS；只覆盖TUN内App包、TCP53不是物理直连 | 保留已有Socket/M3；后续按真实需求完善物理TCP |
 | LAN-only Wi-Fi/Ethernet/蜂窝、同选定Network域名启动 | WIRED | B28b HOST_PASS；LAN手机 NOT_RUN | 使用现有Network，不新建resolver |
 | App选择、设置持久化/SAF导入导出、凭据加密保存、TLS CA选配、诊断 | WIRED；B32完整已安装普通App枚举HOST_PASS | B32a同SOURCE双ABI＋签名APK/Linux Oracle 11 SUCCESS/4 SKIPPED，仍非手机可见性验收 | B33增加可保存/导出非秘密直连CIDR冷表单 |
+| 全App额外按已安装普通App绕过 | B34 WIRED_CANDIDATE | 复用原20 profile的UID FIB、8个排除AppID配额（含本App/KernelSU Manager），用户额外最多6包；App→预设→Service双UID冷核验→原Go、精确Stop；Host/正式APK待新SOURCE CI | 跨profile相同AppID共享绕过，手机物理出站未验 |
+| 物理DNS可选IPv4上游 | B34 WIRED_CANDIDATE | App/SAF→Service→Go冷参数→原Go/Rust M4设置/读回→已有实体Network绑定UDP53 Socket，默认223.5.5.5、LAN可选192.168.1.1；Host/双ABI待新SOURCE | 不是系统netd DNS/DoH、原Go服务器域名引导或物理TCP53 |
 | Android系统Resolver/netd UDP/TCP/DoH交付 | MISSING | 普通App TUN DNS ≠ netd DNS | 需要独立准确方案，不能声明已经全局拦截 |
 | Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
 | Android Game2/Game4 原多lane TLS→Rust Game M4双向 | MISSING | Linux/Windows已有原Game，不等于Android端口 | 真正端口并接共享TUN后再开放App选项 |
@@ -22,7 +24,11 @@
 | Android物理TCP53、原生业务IP直连例外 | **B33 HOST_PASS / BUILD_PASS** | 同源原Root私有table 19842最多4个真实CIDR throw，单UID/组UID/all-App同原journal/Stop；App→Service→Go CLI→真实ip规则命令Host PASS；签名APK PASS | **Android实体netd后续物理路由NOT_RUN**，物理TCP53仍MISSING |
 | Android轮换/动态换物理Network、热点共享/Tether | BLOCKED | 原Go Linux rotation存在，Android明确禁用；Network loss只Stop | 后续独立源路径；不因可选参数存在而宣称实现 |
 
-## 本批执行选择
+## B34 本批执行选择
+
+上一B33c `dd2292c8` [#44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) 原Go/Rust/签名APK/Linux Oracle **11 SUCCESS/4 SKIPPED**。本批大类优先做**全App模式按已安装普通App额外绕过**与**真正物理UDP53上游IPv4可配置**，全部复用原Go/Rust、原持久UID FIB、原Rust物理绑定socket。B34资格看新SOURCE Actions；不新建Go逐包Worker、Android系统resolver劫持或大型CI。
+
+## 原B33完成的软件资格
 
 B31已补服务端IPv4 /32例外；B32a已补完整普通App选取。**B33**进一步批量施工显式最多4个IPv4 CIDR的真实内核FIB直连例外：原Root Activity设置（可本机保存及SAF导入/导出）、原Service手动START、原Go冷参数、single/group/all原journal路由安装/读回/Stop、Host原伪ip内核命令回归，全部同一SOURCE。默认输入空保持原WBD全隧道，无新增Go/Rust逐包控制器。最新B33c SOURCE dd2292c8f9ca [#44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) 11 SUCCESS/4 SKIPPED，正式签名APK/Host/原Linux Oracle均PASS。真实手机netd/实际物理出站、应用E2E及性能仍NOT_RUN。
 
