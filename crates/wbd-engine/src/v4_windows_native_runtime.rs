@@ -43,7 +43,10 @@
  fn set_native_thread_name(name:&[u16;14]) {
      let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
  }
- const BATCH:usize=8;
+ // Source-qualified H2292 2×3Runner zero-loss TX16 trial. Disabled in
+ // ordinary builds pending first main-source compiled and regression gates.
+ // Original-NPF driver short-prefix/uncertain handling is unchanged.
+ const BATCH:usize=if cfg!(feature="h2291_windows_tx_service"){16}else{8};
  // H1977 original signed Win32-QPC for 1024-byte translated TCP DATA.
  // TCP ACK/FIN/fragment packets are excluded, duplicates are RETAINED.
  // The rewritten kernel-local proxy port is joined to original source port
