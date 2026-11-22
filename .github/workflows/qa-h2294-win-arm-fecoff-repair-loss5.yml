@@ -2,6 +2,7 @@
 # Other modes/default-ON and mixed/new flows NOT measured here.
 # Each action validates only symmetric 200ms-per-way 5% packet loss.
 # H2276: TWO simultaneous isolated triplets, same exact source/scenario.
+# H2316: after verified 1% P1 full 9/9, launch exact 5% FEC-OFF repair OFF/ON/OFF with original M2 Stop counters.
 # H2290 uses TWO true native signed Windows Npcap/Wintun original GoTLS/Rust
 # → independent ARM kernel relay → native ARM original GoTLS/Rust AF_PACKET/TUN;
 # real ARM TCP bytes, P99 and owned Stop; read-only actual Win32 process CPU.
