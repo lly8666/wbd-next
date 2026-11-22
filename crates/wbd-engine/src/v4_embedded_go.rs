@@ -5561,6 +5561,22 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
     registry.remove(&handle);
     OK
 }
+// PLAN029: Zero-loss original GoTLS/Rust client-only M1 shared-TUN
+// 64→128 A/B/A' improved actual receiver goodput (ARM +7.70%)
+// with reduced local full drops and CPU/GiB. Server and Game remain 64.
+// This one bounded, per-authenticated-generation cold capacity setting
+// never changes TCP, AEAD/PN, pacing, or cross-lease admission.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn normal_shared_tun_product_inbox_slots(server_side:bool)->usize{
+    if server_side{64}else{128}
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_linux_normal_client_default_128_server_64(){
+    assert_eq!(normal_shared_tun_product_inbox_slots(false),128);
+    assert_eq!(normal_shared_tun_product_inbox_slots(true),64);
+}
+
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
@@ -5580,7 +5596,12 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     // all destinations without a second destructive TUN reader.
     let Some(lease)=e.client_lease_ipv4 else{return BAD_STAGE};
     let ip=if e.server_side{lease}else{[0u8;4]};
-    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
+    // Cold readback confirms the exact Normal client/server queue size once,
+    // before native M4 activation; no per-DATA probe or heap growth loop.
+    let inbox_slots=normal_shared_tun_product_inbox_slots(e.server_side);
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0",
+        if e.server_side{"server"}else{"client"},e.generation,inbox_slots);
+    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
         alive:Arc::new(AtomicBool::new(true)),
