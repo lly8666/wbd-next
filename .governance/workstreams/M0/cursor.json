@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2312,
-  "checkpoint_sha": "41e1d58fa2d29569e6c2995eab68405e395a1aab",
+  "sequence": 2316,
+  "checkpoint_sha": "1f2f65575d01af391d2090fea7acf4e5184145b1",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "M0 PLAN029/P0 H2312 Windows0%原生 TX/NPF单变量真A/B/A′。沿Draft PR#68 experiment/m0-029-throughput-arm-fair。NPF-only双组三runner已测，TX-only双组三runner在验，P1/P2未启动；main原生Go与治理红灯已修复验证。",
-  "why_now": "H2292 TX8/NPF16→TX16/NPF64联合变化无单因归属。H2312 NPF-only组a Mbps+14.93%、组b−1.16%，不能判稳定升速；六条真实原GoTLS/Rust业务、160小TCP/Stop均成功，NPF调到16-frame容量却实际每call约8帧，下一步重点查TX8→16。",
-  "done_when": "P0同源码双组Windows2025→ARM三机 A/B/A′单变量完全读回：真direct、容量、remote unique bytes、CPU/GiB/P99、NPF copied prefix、原GoTLS+Rust owned Stop；达到功能和稳定有益性能门才晋级默认，否则持续定位首个证据瓶颈。再按PLAN029逐关P1 FEC OFF一次机会修复1%/5%和P2固定maximum0/1/5%；不降门造绿。",
-  "next_action": "先核收 H2312 TX-only SOURCE438f679385ed4e2ace2efe755f7c4ecc9250bf1e Action45029306636：双组真实ARM receipt/Win signed NPF/Stop及relay源锁判定；比较和NPF-only SOURCEa8ea2e9159f90333cdc6e7ee7f86708e142d2f46 Action45028638145（真实六腿成功但旧relay摘要断言红）的NPF frames/call、Mbps、CPU/GiB与P99。若漂移淹没增益先核物理容量，不强行进入P1。",
+  "current_task": "M0 PLAN029 三关实际进度。P0 H2312/H2313 TX/NPF分开真Windows2025→ARM双组三runner已9/9原生Success、队列TX16 >99%满却Mbps收益双组相反，600–800Mbps NOT_QUALIFIED。P1 FEC OFF原密文一次机会修复1%真9/9通过、5%另一组第三腿relay失联红；真实Rust Stop核接受7/5和12/13次补发。P2原Windows Fixed Maximum 20parity服务H2314内核单元2Job Pass，原生FEC Maximum真外网测试尚NOT_RUN，PR68 Draft，产品默认不变。main PLAN012/020旧红源锁修复中。",
+  "why_now": "过去H2292联合TX16/NPF64不明归因；H2313两组实际NPF每batch 16帧占比99.55/99.38%，网络表现仍−17.9%/+47.5%，应先独立物理direct和relay容量/Windows CPU，不能默认晋级。P1旧夹具用pre-Stop周期快照错误报外层补发为0，原Rust joined Stop原工件证实1% 7/5次、5% 12/13次，已由H2316修计数源。5%组b A′的UDP relay control失联，整体FAIL不可造PASS。",
+  "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
+  "next_action": "先核 main新PLAN012 Action45033874758：H1067旧WB-R1 prelude不应复制；和PLAN020 Win WAL Action45033874814/新GUI错误标识后的Action：继续定位第一个真失败，非删门。分支PR68 H2314原生20-row FEC最高档单元45030957556 PASS需独立原3runner真实最大parity反馈；H2294 5% Action45032406637已真实Fail b组第三腿relay控制失联，先检查direct/WSL和relay生命周期才决定是否重验。不把1%和5%实际outer copies当peer repair ACK。",
   "unverified": true,
-  "last_tested_source": "a8ea2e9159f90333cdc6e7ee7f86708e142d2f46",
+  "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -22,5 +22,5 @@
     "docs/prompts/M0.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2311 Rust NPF实验双开关+Windows真native unit PASS_SCOPED。H2312 NPF-only两套3runner/所有Windows client+ARM server/真原Go TLS+Rust/Stop六腿功能成功，旧relay单变量签名断言导致完整Action红；吞吐+14.93%和−1.16%不稳定，NPF每次几乎8帧，已修relay断言。TX-only原生三机正在检验，P1/P2 NOT_RUN；main原生Fixed/Normal和治理SUCCESS。"
+  "partial_summary": "P0 H2313 source93702d5 Action45031290436两组原生9/9 Success但goodput一组−17.9%、一组+47.5%，绝对600–800未达；P1 H2294 1% Action45031628979 9/9真Success Rust Stop7/5 copies；5% Action45032406637 Fail因组b A′控制失联，但B双组Stop12/13 copies，非零，当前机制无稳定测速因果；P2 H2314 source3d2d670 Action45030957556 Windows原native unit2/2 Success但WAN最高FEC NOT_RUN。main Fixed/Normal原生已过，新PLAN012/PLAN020源锁红灯按首个错误修中，未谎称已绿。"
 }
