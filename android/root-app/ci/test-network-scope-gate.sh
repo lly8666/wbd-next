@@ -436,6 +436,19 @@ assert 'super::android_auto_report_is_revision_positive(' in fec_worker
 assert 'android_auto_report_is_revision_positive(' in fec_entry
 print("ANDROID_B19_ORIGINAL_AUTO_ROOT_APP_M4_QUALITY_REVISION_PASS")
 print("ANDROID_B17_FIXED_ORIGINAL_GO_ROOT_APP_OPTIN_SOURCE_PASS")
+# B29: default Tunnel DNS must not reject Fixed/Auto feature7 before M4.
+b29_go=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
+b29_rust=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+b29_route=Path("crates/wbd-engine/src/v4_android_dns_route.rs").read_text()
+assert b29_go.count('b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)')==3
+assert b29_rust.count('!android_dns_original_m4_ready(&e)')==3
+assert 'original_m4_dns_feature_allowed(' in b29_rust
+assert 'features==3||(features==7&&fec2_rx_ready)' in b29_route
+assert 'tunnelDNS.setChecked(true)' in a
+assert 'v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)' in client
+assert 'let fixed_requested=e.protected_features==7' in Path(
+    "crates/wbd-engine/src/v4_android_original_m4.rs").read_text()
+print("ANDROID_B29_FIXED_AUTO_NORMAL_SAME_ORIGINAL_M4_DNS_COLD_WIRING_SOURCE_PASS")
 assert 'privateText("wbd-route.secret",key+"\\n")' in a, "the original Go still reads only the canonical 32B hex secret file"
 # Verified device bug: AOSP ContextImpl.MODE_PRIVATE can create 0660,
 # original Go readPrivateArgFile intentionally rejects any group bits.

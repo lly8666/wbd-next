@@ -28,12 +28,37 @@ pub(crate) fn choose(
         Dns53Observation::NotDns|Dns53Observation::Incomplete=>DnsRoute::Original,
     }
 }
+// Reuse existing original M4 DNS only for Normal feature3 or a real
+// feature7 FEC2 receive owner, not for an unprepared/other negotiated mode.
+pub(crate) fn original_m4_dns_feature_allowed(features:u16,fec2_rx_ready:bool)->bool{
+    features==3||(features==7&&fec2_rx_ready)
+}
 #[cfg(test)]
 mod tests{
     use super::*;
     use crate::v4_android_dns_ingress::observe_ipv4_dns53;
     use crate::v4_android_dns_physical_flow::{PhysicalDnsUdpFlows,MAX_DNS_WIRE,MAX_DNS_REPLY_IPV4,PhysicalDnsError};
     use crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows;
+    #[test]
+    fn b29_original_m4_dns_feature7_requires_real_fec2_receiver(){
+        assert!(original_m4_dns_feature_allowed(3,false));
+        assert!(original_m4_dns_feature_allowed(3,true));
+        assert!(!original_m4_dns_feature_allowed(7,false));
+        assert!(original_m4_dns_feature_allowed(7,true));
+        for feature in [0u16,1,2,4,5,6,8,11]{
+            assert!(!original_m4_dns_feature_allowed(feature,true));
+        }
+        let ip=ipv4_udp53("www.example.net",[9,9,9,9],50002);
+        let observation=observe_ipv4_dns53(&ip,ip.len());
+        for feature in [3u16,7]{
+            assert_eq!(choose(&ip,observation,
+                original_m4_dns_feature_allowed(feature,true),false,None),
+                DnsRoute::TunnelUDP);
+        }
+        assert_eq!(choose(&ip,observation,
+            original_m4_dns_feature_allowed(7,false),false,None),
+            DnsRoute::Original);
+    }
     fn be16(b:&[u8])->u16{u16::from_be_bytes([b[0],b[1]])}
     fn dns_query(name:&str,txid:u16)->Vec<u8>{
         let mut q=vec![0u8;12];

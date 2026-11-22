@@ -374,7 +374,8 @@ func (b *v4EmbeddedNativeBridge) attachKernelTun(fd uintptr,name string)error{
  // forwarding are separate, not implied by this opt-in.
 func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
     if b==nil||b.handle==0||!b.committed||b.serverSide||
-       b.protectedFeatures!=3 {
+       (b.protectedFeatures!=v4RequiredFeatures&&
+        b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)) {
         return errV4Embedded
     }
     rc:=C.wbd_m0_embedded_go_android_tunnel_dns_enable(C.uint64_t(b.handle))
@@ -392,7 +393,8 @@ func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
 // B4 physical DNS cold grant uses the same original authenticated M4 owner.
 func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error{
     if b==nil||b.handle==0||!b.committed||b.serverSide||
-       b.protectedFeatures!=3{return errV4Embedded}
+       (b.protectedFeatures!=v4RequiredFeatures&&
+        b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)){return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_android_physical_dns_enable(C.uint64_t(b.handle))
     if rc!=0{return fmt.Errorf("%w: Android physical UDP DNS grant=%d",
         errV4Embedded,int(rc))}
@@ -407,7 +409,8 @@ func (b *v4EmbeddedNativeBridge) enableAndroidPhysicalDNS()error{
 // B5 one cold transfer of the already pinned 8503 rules, never DATA.
 func (b *v4EmbeddedNativeBridge) enableAndroidCNDNSSplit(raw []byte)error{
     if b==nil||b.handle==0||!b.committed||b.serverSide||
-       b.protectedFeatures!=3||len(raw)==0{return errV4Embedded}
+       (b.protectedFeatures!=v4RequiredFeatures&&
+        b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2))||len(raw)==0{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_android_cn_dns_split_enable(
         C.uint64_t(b.handle),(*C.uchar)(unsafe.Pointer(&raw[0])),
         C.size_t(len(raw)))

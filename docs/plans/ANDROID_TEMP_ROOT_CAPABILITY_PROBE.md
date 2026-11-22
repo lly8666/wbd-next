@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B29 Fixed/Auto M4 DNS 实际接线**：依用户最新优先级，实机受限时先补完成度。B17/B19 已接通 feature7 Fixed/Auto，App 默认Tunnel DNS开启，但原Go/Rust三种 DNS 冷授权只接受feature3，在 M4 之前拒绝Fixed/Auto。本批允许带真实FEC2 RX的同代feature7复用原Tunnel/Physical/CN DNS、唯一TUN、M3/PN与Stop，原Go FEC2 PENDING仍在M4前配置，不造新网络/安全框架。Host/BUILD看此SOURCE Actions，实机Fixed/Auto+DNS交付/性能仍NOT_RUN。
+
+
 > **2026-11-22 B28 实体LAN服务端域名引导**：B27 `9d449f8f` 已开放真实Wi-Fi/Ethernet没有 INTERNET 标记时选择物理Network并让Service收到回调，但同LAN服务器的域名仍可能在旧原Go固定 223.5.5.5 物理DNS上不可解析。本切片只在**Android未验证有公网**、且用户填的是WBD服务端域名时，由 `RootClientService` 的既有**启动线程**调用 `Network.getAllByName(peer)`，严格使用同一当前选定handle，取有效IPv4（可能先返回AAAA），重新核验原 PhysicalNetwork 接口/ifindex/IPv4/MTU后，把**该IPv4**交给原Go `--peer-ip`。无本地A记录/本地DNS查询失败则回到原Go已存在的`--peer-host`/223.5.5.5引导，**不降级原标准TLS、RouteKey/认证、Rust M3/PN和owned Stop**。这不是“系统netd DNS已进入WBD”：仅为WBD自身*连接前*的冷域名引导，普通应用的 `getaddrinfo` 仍由系统Resolver处理，原M4只处理已进入TUN的应用UDP/53。无实机/服务器/重压测权限，BUILD/Host/真实LAN E2E须按独立 SOURCE 记录。
 
 

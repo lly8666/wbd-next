@@ -4518,6 +4518,21 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_attach_raw_rx_on_interface(
     OK
 }
 
+// B29: feature3 Normal and feature7 Fixed/Auto share the original M4
+// TUN/DNS owner. The protected TLS handoff prepares the feature7 FEC2 RX;
+// Go stages its Fixed/Auto PENDING revision later, before M4 starts.
+#[cfg(target_os="android")]
+fn android_dns_original_m4_ready(e:&Entry)->bool{
+    let fec2_ready={
+        #[cfg(feature="fec2_product_record")]
+        {e.android_fec2_rx.is_some()}
+        #[cfg(not(feature="fec2_product_record"))]
+        {false}
+    };
+    crate::v4_android_dns_route::original_m4_dns_feature_allowed(
+        e.protected_features,fec2_ready
+    )
+}
 #[cfg(target_os="android")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_enable(h:u64)->i32{
@@ -4527,7 +4542,7 @@ pub extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_enable(h:u64)->i32{
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
-       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       !android_dns_original_m4_ready(&e)||e.client_lease_ipv4.is_none()||
        e.android_physical.is_none()||e.android_raw_rx.is_none()||
        e.android_raw_tx.is_none()||e.android_tun.is_none()||
        e.android_workers.is_some()||e.normal.is_none()||
@@ -4562,7 +4577,7 @@ pub extern "C" fn wbd_m0_embedded_go_android_physical_dns_enable(h:u64)->i32{
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
-       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       !android_dns_original_m4_ready(&e)||e.client_lease_ipv4.is_none()||
        e.android_physical.is_none()||e.android_raw_rx.is_none()||
        e.android_raw_tx.is_none()||e.android_tun.is_none()||
        e.android_workers.is_some()||e.normal.is_none()||
@@ -4603,7 +4618,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_enable(
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
-       e.protected_features!=3||e.client_lease_ipv4.is_none()||
+       !android_dns_original_m4_ready(&e)||e.client_lease_ipv4.is_none()||
        e.android_physical.is_none()||e.android_raw_rx.is_none()||
        e.android_raw_tx.is_none()||e.android_tun.is_none()||
        e.android_workers.is_some()||e.normal.is_none()||
