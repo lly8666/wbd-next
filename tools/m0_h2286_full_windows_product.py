@@ -167,6 +167,16 @@ def original_win_client_args(exe,peer,server):
              "--fec.mode","fixed","--fec.profile",profile] if requested=="fixed" else [
              "--fec-mode","off","--fec-parity","0",
              "--fec.mode","off","--fec.profile","strong"]
+    # H2294: scoped original one-shot outer repair A/OFF -> B/ON -> A'/OFF.
+    # FEC must remain OFF throughout; only the original authenticated sender
+    # policy changes. Never alter client TCP settings or global Windows OS.
+    h2294=os.environ.get("WBD_H2294_OFF_REPAIR_ABA")=="1"
+    repair_stage=os.environ.get("WBD_H2294_REPAIR_STAGE","off")
+    require(not h2294 or (requested=="off" and
+            repair_stage in ("off","on")),
+            "H2294_FEC_MUST_BE_OFF_AND_REPAIR_STAGE_EXPLICIT")
+    require(not h2294 or os.environ.get("WBD_H2293_FEC_ABA")=="1",
+            "H2294_REAL_BIDIR_NETEM_ORIGINAL_GUEST_GATE_REQUIRED")
     return [
       exe,"--native-v4-product","--control-stdin",
       "--server-ip",peer,"--server-port",str(GUEST_PORT),
@@ -179,7 +189,7 @@ def original_win_client_args(exe,peer,server):
       "--lease4",APP_IP+"/32","--adapter","WBDWLMAIN",
       "--state-path",str(ROOT/"owned-wal.json"),
       "--mtu","1280","--lanes","1",*carrier,
-      "--route-mode","all","--outer-repair","off"
+      "--route-mode","all","--outer-repair",("on" if h2294 and repair_stage=="on" else "off")
     ]
 
 
