@@ -16,3 +16,9 @@ B39已经将原Go经TLS验证的两个原Game独立lane组合进同一个Rust `G
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B40将B39真Game2冷组复用为同一原Rust GameAdapter的Android单TUN双RAW M3/M4工作器，功能仍不对App开放。"}
 ```
+
+## 同SOURCE软件收据与关键边界（2026-11-22）
+
+B40生产源码 `9ba1d39f82c424039bbc5940a1de392f159bbca4` 的 [Android Dual64 #45031248129](https://github.com/lly8666/wbd-next/actions/runs/45031248129) 已完整 `completed/success`：`arm64-native`、`root-arm64-app`、`linux-original-server-normal-off`、`linux-x86-original-server-d2-s0`、`original-m3-wire-oracle`、B1/B2 DNS等与`arm64-cuttlefish-host-admission`合计 **11 SUCCESS**，Android x86/KSU native/NativeBridge/D2/TAP四个诊断 **SKIPPED**。独立 [Feature catalog #45031248185](https://github.com/lly8666/wbd-next/actions/runs/45031248185) SUCCESS（Governance Job SKIPPED），[B39d静态回归 #45030552833](https://github.com/lly8666/wbd-next/actions/runs/45030552833) SUCCESS。
+
+**准确解释：**B40新增Game2/off Android Rust M4的生产源文件通过交叉编译和符号检查，但目前仍是**未被原Go Android Game2双TLS产品调用的worker**。原Linux Normal/off Oracle成功验证未回归；Cuttlefish宿主PASS不是Android guest TUN/RAW。原Game2客户端未在真实Android设备完成双lane TLS、服务端真实回包、M3双lane成功计数、App UID路由和Stop，也没有CPU/RSS/带宽验收。上述设备及业务场景均为NOT_RUN/NOT_PROVEN，不能继承正常模式之前的历史真机证据。

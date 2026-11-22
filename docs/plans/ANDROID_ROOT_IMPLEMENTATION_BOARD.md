@@ -1,4 +1,4 @@
-- **B40 Game2/off原Rust Android M4源码在建**：真正GameAdapter TX（1个实体TUN读）→原M3按lane RAW TX，2条各自原M3 AEAD/PN RAW RX→共享GameReceiveOwner first-delivery→同一实体TUN write；原HealthClock和ACK ledger内同一worker，组级Stop先join完整M4再drain RAW FD。仅2lane/FEC off。尚无原Go Android双TLS冷客户端、Root UID产品启动/E2E，Game仍不开放；本SOURCE原生构建仅软件资格。
+- **B40 Game2/off原Rust Android M4源码完成、双ABI/签名APK软件PASS；Go/App及设备未接**：真正GameAdapter TX（1个实体TUN读）→原M3按lane RAW TX，2条各自原M3 AEAD/PN RAW RX→共享GameReceiveOwner first-delivery→同一实体TUN write；原HealthClock和ACK ledger内同一worker，组级Stop先join完整M4再drain RAW FD。仅2lane/FEC off。尚无原Go Android双TLS冷客户端、Root UID产品启动/E2E，Game仍不开放；[B40同源Dual64 #45031248129](https://github.com/lly8666/wbd-next/actions/runs/45031248129) 11 SUCCESS/4 SKIPPED；软件编译资格，不是M4实机。
 - **B39 Game2 Android 原生底层在建**：既有原Go/TLS提交后的 `game_group_join_original` 新增 Android 真选定Network一致性、双/四lane原TCP source port/真实TX序号规范；Android新组级raw bind复用原 `AndroidBoundRawRx/Tx`，每lane精确BPF五元组及Bionic物理绑定，group Stop先同步归还借用再停同一GameAdapter。Rust `game_group_state.drivers_installed` 仍是0；无Android Game TUN/M4循环、Go双TLS模式入口、真实业务验收。Host Rust单测、双ABI动态符号/编译与治理需本SOURCE独立验证，绝不等同已上线Game2。
 # Android Root 原产品功能施工台账（B30｜源码与设备分层）
 
