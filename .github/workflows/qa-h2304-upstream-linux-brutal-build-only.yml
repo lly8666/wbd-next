@@ -38,7 +38,7 @@ jobs:
           test -f "/lib/modules/$KERNEL/build/Makefile" || {
             echo H2304_UPSTREAM_NOT_BUILDABLE_MISSING_ACTUAL_KERNEL_HEADERS; exit 2;
           }
-          timeout 240 make -C "$d" -j2
+          (cd "$d" && timeout 240 make -j2)
           test -s "$d/brutal.ko"
           echo H2304_UPSTREAM_TCP_BRUTAL_GPL3_EXTERNAL_MODULE_COMPILES_FOR_EPHEMERAL_RUNNER
           echo H2304_NO_MODULE_LOADED_NO_SYSCTL_NO_GPL_SOURCE_IN_WBD
