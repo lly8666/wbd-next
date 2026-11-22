@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-OUTER-OPPORTUNISTIC-REPAIR",
+  "study": "H2270",
+  "date": "2026-11-21",
+  "status": "LINUX_NATIVE_OUTER_REPAIR_FUNCTIONAL_RESTORED_SCOPED__P99_THROUGHPUT_NOT_QUALIFIED",
+  "repo": "lly8666/wbd-next",
+  "commit_with_actual_Rust_product_fix": "b2743dd7877d16130684864790074fab8f057ddf",
+  "current_experiment_governance_verified_head": "4791016359b92b2e7012be92e1d52ae5459d2859",
+  "original_go_and_rust_native_tester": {
+    "run_id": 44918335232,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44918335232",
+    "architecture": "real_aarch64",
+    "product_source_sha": "b2743dd7877d16130684864790074fab8f057ddf",
+    "bundles": {
+      "libwbd_engine.so": "058dda46c52da6a2792c3527ada247396463ed8711d1ce217f730283144ae981",
+      "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+      "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+    },
+    "artifact_ids": {
+      "1%": 14712399628,
+      "5%": 14713115633
+    },
+    "scoped_business": "same-arm-vm each tier same-release A-OFF/B-ON/Aprime-OFF, each real original Go TLS native Rust owner with bidirectional true Linux router netem 200ms per direction, kernel IID random 1% or 5%, original packet-size direct-comparison outer1160 underlay1200; four long-lived TCP flows + 160 real sparse TCP + 160 UDP application echoes, real original native OS double-ended Stop",
+    "all_six_legs_original_native_stop_and_normal_service": "PASS_SCOPED",
+    "all_tier_actions": "SUCCESS"
+  },
+  "root_cause": {
+    "historic_source_with_present_feedback_consumer": "6693910f879f9e55e77dd823c1b05d8942321929",
+    "historic_reference_lines": "crates/wbd-engine/src/v4_embedded_go.rs approximately original 4300-4317",
+    "before_fix_source": "aa589bd8aa4daf2aacd80bacfb86bc12cb56c36a",
+    "exact_missing_handoff": "background_raw_once parsed and retained strict PureAck/PureAckSack and authenticated LINK appearance outer_hint/outer_sack_hint but never called OuterAckIndex::on_feedback, so original immutable cipher shadows expired without gap hint candidates; sender first-copy on_definitely_sent already worked",
+    "restoration": "one strictly scoped native Linux RX-batch call to old OuterAckIndex.on_feedback, retire optional positive shadows and nominate eligible bounded real gap into ReceiptState.on_outer_gap_hint; no new PN, TLS, DATA PTO, timer, extra Go data plane, M1 or M4 change",
+    "deprecation": "PLAN027 explicitly deprecated per-record M2 bitmap Receipt; present original Rust receipt.rs ReceiptState is ONLY bounded immutable optional repair-shadow reuse. authenticated_ack=0 and timing_samples=0 are expected in the retired per-record protocol and must not invalidate true outer FakeTCP ACK behavior",
+    "scope_restrictions": "pure outer ACK/SACK remains untrusted; never improves Health, AEAD authenticity, Auto quality, M3 business delivery or FEC credit; same-lane generation, immutable ciphertext and global quota <=10% R/F",
+    "suspected_historical_regression": "Present in old actual product source from PLAN027/H920, missing by H2268. Precise deletion commit not yet independently established; do not falsely attribute to a particular server ACK change."
+  },
+  "regression": {
+    "before_fix": {
+      "study": "H2268",
+      "run_id": 44916507110,
+      "real_original_repair_on_but_R_zero_at_loss_pct": [
+        1,
+        5
+      ],
+      "client_expired_shadows": {
+        "1%": 92490,
+        "5%": 46538
+      },
+      "both_true_client_repair_accepted_wire_bytes": 0
+    },
+    "after_fix": {
+      "unit_test_run_id": 44918335193,
+      "unit_test_url": "https://github.com/lly8666/wbd-next/actions/runs/44918335193",
+      "unit_conclusion": "SUCCESS_AARCH64_AND_X86_64",
+      "native_run_id": 44918335232,
+      "unit_conditions": "wrong epoch/out-of-range ACK ignored; genuine positive SACK frees only confirmed record; missing first-copy shadow nominated after bounded guard; no blind PTO; actual original memory/Stop",
+      "features_unchanged": "per_record_M2_Receipt_OFF; outer_FakeTCP_ACK_SACK_ON; original_cold_Go_TLS_Rust_aeAD_PN_no_reseal; one-shot"
+    }
+  },
+  "observations": {
+    "1%": [
+      {
+        "leg": "A",
+        "cold_native_outer_repair": "off",
+        "tcp_effective_receive_mbps": 80.846586,
+        "client_cpu_seconds_per_received_gib": 20.10243,
+        "server_cpu_seconds_per_received_gib": 18.12343,
+        "small_tcp_survivor_p99_ms": 962.281,
+        "small_tcp_over_1s_of160": 1,
+        "udp_missing_of160": 5,
+        "original_ciphertext_repair_kernel_copied_records": 0,
+        "original_ciphertext_repair_accepted_ip_bytes": 0,
+        "original_optional_gap_candidate_first": 0,
+        "original_first_outer_ip_wire_bytes": 241723244,
+        "original_repair_over_fresh_pct": 0,
+        "router_true_linux_netem_drop_skb": {
+          "rcli0": 521,
+          "rsrv0": 2027
+        },
+        "actual_original_client_shared_tun_full_drops": 0,
+        "original_server_authenticated_repair_readback": 0,
+        "original_client_m2_deprecated_per_record_ack_count": 0
+      },
+      {
+        "leg": "B",
+        "cold_native_outer_repair": "on",
+        "tcp_effective_receive_mbps": 61.315753,
+        "client_cpu_seconds_per_received_gib": 26.36821,
+        "server_cpu_seconds_per_received_gib": 23.89619,
+        "small_tcp_survivor_p99_ms": 727.2464,
+        "small_tcp_over_1s_of160": 0,
+        "udp_missing_of160": 0,
+        "original_ciphertext_repair_kernel_copied_records": 1753,
+        "original_ciphertext_repair_accepted_ip_bytes": 2030353,
+        "original_optional_gap_candidate_first": 1795,
+        "original_first_outer_ip_wire_bytes": 186370409,
+        "original_repair_over_fresh_pct": 1.08942,
+        "router_true_linux_netem_drop_skb": {
+          "rcli0": 485,
+          "rsrv0": 1690
+        },
+        "actual_original_client_shared_tun_full_drops": 0,
+        "original_server_authenticated_repair_readback": 1,
+        "original_client_m2_deprecated_per_record_ack_count": 0
+      },
+      {
+        "leg": "A_prime",
+        "cold_native_outer_repair": "off",
+        "tcp_effective_receive_mbps": 72.881703,
+        "client_cpu_seconds_per_received_gib": 21.54877,
+        "server_cpu_seconds_per_received_gib": 20.33557,
+        "small_tcp_survivor_p99_ms": 962.2105,
+        "small_tcp_over_1s_of160": 1,
+        "udp_missing_of160": 3,
+        "original_ciphertext_repair_kernel_copied_records": 0,
+        "original_ciphertext_repair_accepted_ip_bytes": 0,
+        "original_optional_gap_candidate_first": 0,
+        "original_first_outer_ip_wire_bytes": 219426687,
+        "original_repair_over_fresh_pct": 0,
+        "router_true_linux_netem_drop_skb": {
+          "rcli0": 508,
+          "rsrv0": 1956
+        },
+        "actual_original_client_shared_tun_full_drops": 0,
+        "original_server_authenticated_repair_readback": 0,
+        "original_client_m2_deprecated_per_record_ack_count": 0
+      }
+    ],
+    "5%": [
+      {
+        "leg": "A",
+        "cold_native_outer_repair": "off",
+        "tcp_effective_receive_mbps": 41.477408,
+        "client_cpu_seconds_per_received_gib": 28.22027,
+        "server_cpu_seconds_per_received_gib": 26.79911,
+        "small_tcp_survivor_p99_ms": 1144.0475,
+        "small_tcp_over_1s_of160": 3,
+        "udp_missing_of160": 19,
+        "original_ciphertext_repair_kernel_copied_records": 0,
+        "original_ciphertext_repair_accepted_ip_bytes": 0,
+        "original_optional_gap_candidate_first": 0,
+        "original_first_outer_ip_wire_bytes": 139469128,
+        "original_repair_over_fresh_pct": 0,
+        "router_true_linux_netem_drop_skb": {
+          "rcli0": 2304,
+          "rsrv0": 6094
+        },
+        "actual_original_client_shared_tun_full_drops": 0,
+        "original_server_authenticated_repair_readback": 0,
+        "original_client_m2_deprecated_per_record_ack_count": 0
+      },
+      {
+        "leg": "B",
+        "cold_native_outer_repair": "on",
+        "tcp_effective_receive_mbps": 23.694246,
+        "client_cpu_seconds_per_received_gib": 49.93388,
+        "server_cpu_seconds_per_received_gib": 48.68998,
+        "small_tcp_survivor_p99_ms": 1995.8028,
+        "small_tcp_over_1s_of160": 37,
+        "udp_missing_of160": 8,
+        "original_ciphertext_repair_kernel_copied_records": 2934,
+        "original_ciphertext_repair_accepted_ip_bytes": 3388690,
+        "original_optional_gap_candidate_first": 3605,
+        "original_first_outer_ip_wire_bytes": 80836283,
+        "original_repair_over_fresh_pct": 4.19204,
+        "router_true_linux_netem_drop_skb": {
+          "rcli0": 2092,
+          "rsrv0": 3832
+        },
+        "actual_original_client_shared_tun_full_drops": 0,
+        "original_server_authenticated_repair_readback": 1,
+        "original_client_m2_deprecated_per_record_ack_count": 0
+      },
+      {
+        "leg": "A_prime",
+        "cold_native_outer_repair": "off",
+        "tcp_effective_receive_mbps": 36.338422,
+        "client_cpu_seconds_per_received_gib": 36.03553,
+        "server_cpu_seconds_per_received_gib": 35.10857,
+        "small_tcp_survivor_p99_ms": 2133.147,
+        "small_tcp_over_1s_of160": 67,
+        "udp_missing_of160": 14,
+        "original_ciphertext_repair_kernel_copied_records": 0,
+        "original_ciphertext_repair_accepted_ip_bytes": 0,
+        "original_optional_gap_candidate_first": 0,
+        "original_first_outer_ip_wire_bytes": 120055625,
+        "original_repair_over_fresh_pct": 0,
+        "router_true_linux_netem_drop_skb": {
+          "rcli0": 2316,
+          "rsrv0": 5194
+        },
+        "actual_original_client_shared_tun_full_drops": 0,
+        "original_server_authenticated_repair_readback": 0,
+        "original_client_m2_deprecated_per_record_ack_count": 0
+      }
+    ]
+  },
+  "first_copy_policy_and_budget": {
+    "client_ON_actual_frozen_retransmissions": {
+      "1%": 1753,
+      "5%": 2934
+    },
+    "client_ON_R_F_percent": {
+      "1%": 1.0894,
+      "5%": 4.192
+    },
+    "client_OFF_actual_frozen_retransmissions_in_both_A_legs": 0,
+    "client_ON_uncertain_accepted_wire_bytes": 0,
+    "repair_at_most_one_attempt": true,
+    "R_F_hard_cap_percent": 10,
+    "server_TRUE_repair_enabled_readback_on": true,
+    "server_true_frozen_retransmissions": "UNKNOWN_at_server_retire_no_preStop_summary__do_not_invent"
+  },
+  "decision": {
+    "outer_repair_functional_bug_fix": "PASS_SCOPED_LINUX_AARCH64_NATIVE_CORRECTNESS",
+    "not_an_end_to_end_P99_or_TCP_speed_optimization": true,
+    "one_percent_ON_small_tcp_survivor_p99_ms": 727.2464,
+    "five_percent_ON_small_tcp_survivor_p99_ms": 1995.8028,
+    "five_percent_ON_tcp_receive_mbps": 23.694246,
+    "five_percent_ON_client_cpu_seconds_per_received_gib": 49.93388,
+    "five_percent_ON_udp_missing_of160": 8,
+    "status": "FIX_SOURCE_RETAIN_AS_DRAFT_NO_MAIN_MERGE_FOR_PERFORMANCE",
+    "limits": [
+      "1% and 5% from separate ARM VM jobs and fresh TLS per leg; A/Aprime P99 and TCP goodput drift; 160 sparse TCP samples are insufficient for qualified tail SLA.",
+      "Windows signed client native and reverse server repair ledger not demonstrated at this exact source; no cross-OS Native CPU/P99 PASS.",
+      "No physical WAN; outer1160 underlay1200 are deliberately historical same-MTU direct-comparison design, not invalid config.",
+      "Source-specific functional repair copied ciphertext is not evidence of recovery of TCP application packet, unique delivery, or deadline P99 gain.",
+      "Kernel netem qdisc counters measure kernel skb, not individual wire IPv4 packets; true verified installed stochastic loss 1% or5%.",
+      "Full original main unchanged; PR#68 must remain Draft while user-requested bug fix is reviewed."
+    ]
+  }
+}

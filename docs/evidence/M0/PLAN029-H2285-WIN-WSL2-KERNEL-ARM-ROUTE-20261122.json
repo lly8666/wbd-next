@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "plan": "M0-PLAN029",
+  "stage": "H2285_SOURCE_LOCKED_WINDOWS_WSL2_KERNEL_FWD_ARM_RELAY_TCP",
+  "date": "2026-11-22",
+  "source_sha": "2f700651c0e1849dbab9b321ede1d3a96b7a6d0e",
+  "run_id": 44933890725,
+  "attempt": 1,
+  "action_url": "https://github.com/lly8666/wbd-next/actions/runs/44933890725",
+  "action_conclusion": "success",
+  "seven_jobs": "7/7-success",
+  "true_roles_per_group": [
+    "independent_win2025_windows_winsock_client_with_ubuntu_wsl2_guest",
+    "independent_arm64_linux_kernel_relay",
+    "independent_arm64_linux_kernel_tcp_server"
+  ],
+  "test_scope": "NATIVE_WINDOWS_OS_TCP_TO_WSL2_ETH0_REAL_LINUX_CONNTRACK_TO_ARM_RELAY_TO_DIFFERENT_ARM_TCP_SERVER_NOT_WBD_PRODUCT",
+  "configuration": {
+    "per_group_tcp_bulk_flows": 4,
+    "max_bytes_per_flow": 536870912,
+    "offer_duration_s": 25,
+    "actual_windows_bulk_so_sndbuf_rcvbuf_bytes": 2097152,
+    "actual_arm_linux_accepted_socket_rcvbuf_bytes": 4194304,
+    "sparse_echoes": 160,
+    "netem_added_delay_ms_per_direction": 0,
+    "netem_added_loss_percent": 0,
+    "original_wbd_windows_npcap_wintun_go_tls_rust": "NOT_RUN",
+    "original_wbd_arm_afpacket_server": "NOT_RUN"
+  },
+  "a": {
+    "client_artifact": 14718607219,
+    "server_artifact": 14718424211,
+    "client_relay_tailnet_direct_candidate": true,
+    "client_arm_tailnet_direct_candidate": true,
+    "windows_real_vethernet_src": "192.168.240.1",
+    "wsl_guest_real_eth0": "192.168.243.192",
+    "goodput_mbps": 468.211,
+    "bulk_remote_received_bytes": 1468661760,
+    "bulk_wall_s": 25.094,
+    "windows_allcore_cpu_busy_percent": 63.943,
+    "arm_allcore_cpu_busy_percent": 21.4,
+    "p99_ms": 94,
+    "echo_160_of_160": true,
+    "late_over_1000ms": 0,
+    "wsl_guest_kernel_nat_first_packets": {
+      "prerouting_dnat": 5,
+      "postrouting_snat": 5
+    },
+    "wsl_forward_data_packets": {
+      "win_to_relay": 88472,
+      "relay_to_win": 140540
+    },
+    "relay_two_way_netem_egress_packets": {
+      "win_to_arm": 1242706,
+      "arm_to_win": 140540
+    },
+    "intentional_qdisc_drop_both": 0,
+    "own_guest_nat_cleanup": "PASS_WORKFLOW_CLIENT_STEP_SUCCESS",
+    "arm_sysctl_restored": true
+  },
+  "b": {
+    "client_artifact": 14718846434,
+    "server_artifact": 14718747832,
+    "client_relay_tailnet_direct_candidate": true,
+    "client_arm_tailnet_direct_candidate": true,
+    "windows_real_vethernet_src": "172.20.80.1",
+    "wsl_guest_real_eth0": "172.20.90.120",
+    "goodput_mbps": 496.194,
+    "bulk_remote_received_bytes": 1563197440,
+    "bulk_wall_s": 25.203,
+    "windows_allcore_cpu_busy_percent": 61.541,
+    "arm_allcore_cpu_busy_percent": 25.108,
+    "p99_ms": 47,
+    "echo_160_of_160": true,
+    "late_over_1000ms": 0,
+    "wsl_guest_kernel_nat_first_packets": {
+      "prerouting_dnat": 5,
+      "postrouting_snat": 5
+    },
+    "wsl_forward_data_packets": {
+      "win_to_relay": 73160,
+      "relay_to_win": 195553
+    },
+    "relay_two_way_netem_egress_packets": {
+      "win_to_arm": 1262378,
+      "arm_to_win": 195554
+    },
+    "intentional_qdisc_drop_both": 0,
+    "own_guest_nat_cleanup": "PASS_WORKFLOW_CLIENT_STEP_SUCCESS",
+    "arm_sysctl_restored": true
+  },
+  "verdict": {
+    "same_source_two_independent_three_runner_groups": true,
+    "real_native_windows_to_wsl_guest_kernel_forward_to_relay_and_real_arm_server": "VERIFIED",
+    "single_wsl_guest_count_per_windows_vm": 1,
+    "no_fourth_runner": true,
+    "wsl_forwarding_reachability_blocker": "DISPROVEN_ON_BOTH_GROUPS",
+    "client_windows_physical_Npcap_L2_frame_captured": "NOT_RUN",
+    "server_arm_original_AF_PACKET_on_veth": "NOT_RUN",
+    "go_tls_real_auth_and_wintun_tcp": "NOT_RUN",
+    "wbd_original_product_goodput_cpu_p99": "NOT_RUN",
+    "next": "Add true original signed Windows Npcap L2 entry and independent ARM GoTLS/Rust raw eth wan0; preserve two groups, app real TUN, owned stop and CPU/P99/drop before optimizing",
+    "product_default_promotion": false
+  }
+}
