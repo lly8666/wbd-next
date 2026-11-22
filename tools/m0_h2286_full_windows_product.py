@@ -356,6 +356,12 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
                 core.save(ROOT/"client-result.json",output)
                 print("H2308_TCP_ACTIVE_PROFILE_ON_FAILURE "+
                       json.dumps(rows,sort_keys=True),flush=True)
+            if os.environ.get("WBD_H2309_WIN_TCP_INFO")=="1":
+                marker=tcp.MARK+"CLIENT_SENDER_TCP_INFO "
+                rows=[json.loads(s.split(marker,1)[1]) for s in
+                      capture.getvalue().splitlines() if marker in s]
+                output["h2309_real_windows_tcp_info_failure"]=rows
+                core.save(ROOT/"client-result.json",output)
             if os.environ.get("WBD_H2306_TCP_PROGRESS")=="1":
                 marker=tcp.MARK+"CLIENT_PROGRESS_DIAGNOSTIC "
                 rows=[json.loads(s.split(marker,1)[1]) for s in
@@ -370,6 +376,15 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         parsed=[json.loads(s.split(tcp.MARK+"CLIENT_DONE ",1)[1])
                 for s in capture.getvalue().splitlines()
                 if tcp.MARK+"CLIENT_DONE " in s]
+        if os.environ.get("WBD_H2309_WIN_TCP_INFO")=="1":
+            marker=tcp.MARK+"CLIENT_SENDER_TCP_INFO "
+            sender_records=[json.loads(s.split(marker,1)[1]) for s in
+                            capture.getvalue().splitlines() if marker in s]
+            require(len(sender_records)==1 and
+                    sender_records[0]["real_original_windows_kernel_socket"],
+                    "H2309_NO_REAL_WINDOWS_SENDER_KERNEL_TCP_INFO")
+            output["h2309_original_windows_sender_tcp_info"]=sender_records[0]
+            core.save(ROOT/"client-result.json",output)
         if os.environ.get("WBD_H2308_WIN_BBR2")=="1":
             marker=tcp.MARK+"CLIENT_CC_ACTIVE_PROFILE "
             records=[json.loads(line.split(marker,1)[1]) for line in
@@ -391,7 +406,10 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
                          row.get("LocalAddress")==APP_IP and
                          row.get("RemoteAddress")==APP_PEER and
                          row.get("RemotePort")==45902 and
-                         row.get("AppliedSetting") in ("Internet","Datacenter")])>=4,
+                         # Microsoft's MSFT_NetTCPConnection AppliedSetting:
+                         # 0=Internet, 1=Datacenter (uint8), serialized
+                         # as JSON number, never automatically text.
+                         row.get("AppliedSetting") in (0,1,"Internet","Datacenter")])>=4,
                     "H2308_BBR2_SELECTED_TCP_PROFILE_UNQUALIFIED")
             output["h2308_actual_os_tcp_connection_profiles"]=records[0]
             print("H2308_ACTUAL_ORIGINAL_WINDOWS_TCP_PROFILE "+

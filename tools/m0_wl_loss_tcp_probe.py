@@ -165,10 +165,16 @@ def client(bind_ip, target_ip, source):
     progress_enabled=os.environ.get("WBD_H2306_TCP_PROGRESS")=="1"
     progress=[{"flow":i,"phase":"not_started","submitted_bytes":0}
               for i in range(BULK_FLOWS)]
+    win_tcpinfo_enabled=(os.environ.get("WBD_H2309_WIN_TCP_INFO")=="1"
+                         and os.name=="nt")
+    # A maximum of 140 read-only OS samples per true kernel TCP socket.
+    win_tcpinfo=[[] for _ in range(BULK_FLOWS)]
 
     def bulk_client(flow_index):
         state=progress[flow_index]
         started=time.monotonic()
+        observer_stop=threading.Event()
+        observer=None
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.settimeout(TIMEOUT_S)
@@ -180,6 +186,24 @@ def client(bind_ip, target_ip, source):
                     client_bulk_buffers.append(local_buffers)
                 if sock.getsockname()[0] != bind_ip:
                     raise RuntimeError("H2271_NOT_ORIGINAL_WINTUN_OR_TUN_SOURCE")
+                if win_tcpinfo_enabled:
+                    from m0_h2309_win_tcp_info import read_original_socket_tcp_info
+                    def observe_original_kernel_tcp():
+                        while not observer_stop.is_set():
+                            if len(win_tcpinfo[flow_index])>=140:
+                                break
+                            try:
+                                row=read_original_socket_tcp_info(sock)
+                                row["elapsed_s"]=round(time.monotonic()-started,3)
+                                win_tcpinfo[flow_index].append(row)
+                            except Exception as exc:
+                                win_tcpinfo[flow_index].append({
+                                    "read_only_error":type(exc).__name__+":"+str(exc)})
+                                break
+                            observer_stop.wait(2)
+                    observer=threading.Thread(
+                        target=observe_original_kernel_tcp,daemon=True)
+                    observer.start()
                 state["phase"]="send_kind"
                 sock.sendall(b"B")
                 first = time.monotonic()
@@ -208,6 +232,10 @@ def client(bind_ip, target_ip, source):
             state["exception"]=type(exc).__name__+":"+str(exc)
             with lock:
                 errors.append(type(exc).__name__ + ":" + str(exc))
+        finally:
+            observer_stop.set()
+            if observer is not None:
+                observer.join(timeout=3)
 
     workers = [threading.Thread(target=bulk_client,args=(i,)) for i in range(BULK_FLOWS)]
     for worker in workers:
@@ -283,6 +311,14 @@ def client(bind_ip, target_ip, source):
 
     for worker in workers:
         worker.join(timeout=TIMEOUT_S)
+    if win_tcpinfo_enabled:
+        print(MARK+"CLIENT_SENDER_TCP_INFO "+
+              json.dumps({"source_sha":source,
+                          "real_original_windows_kernel_socket":True,
+                          "read_only":True,"sample_period_s":2,
+                          "per_bulk_flow":win_tcpinfo,
+                          "diagnostic_not_receiver_goodput":True},
+                         sort_keys=True),flush=True)
     if progress_enabled:
         print(MARK+"CLIENT_PROGRESS_DIAGNOSTIC "+json.dumps({
             "source_sha":source,"flows":progress,
