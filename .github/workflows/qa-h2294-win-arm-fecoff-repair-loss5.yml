@@ -16,6 +16,8 @@ on:
       - 'tests/test_m0_h2292_true_product_ab.py'
       - 'tests/test_m0_h2293_true_fec_loss.py'
       - 'docs/devlog/M0/20261122-H2293-REAL-WIN-ARM-FEC2-LOSS.md'
+      - 'docs/devlog/M0/20261122-H2294-FEC-OFF-OUTER-REPAIR-3RUNNER.md'
+      - 'tests/test_m0_h2294_off_repair.py'
       - 'crates/wbd-platform/src/windows_native_io.rs'
       - 'crates/wbd-engine/src/v4_windows_native_runtime.rs'
       - 'crates/wbd-platform/Cargo.toml'
