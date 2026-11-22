@@ -1,6 +1,6 @@
 # H2276: TWO simultaneous isolated triplets, same exact source/scenario.
 # H2290 uses TWO true native signed Windows Npcap/Wintun original GoTLS/Rust
-# H2312 next true product test: only NPF queue 16KiB/8p -> 64KiB/16p; TX8 unchanged.
+# H2312 source-locked P0: NPF-only measured, now TX8->TX16 with NPF64 fixed.
 # Rerun: h2311_windows_npf_trace now exposed at engine crate for source-locked A DLL.
 # → independent ARM kernel relay → native ARM original GoTLS/Rust AF_PACKET/TUN;
 # real ARM TCP bytes, P99 and owned Stop; read-only actual Win32 process CPU.
@@ -318,7 +318,21 @@ jobs:
           assert d['client_original_authenticated_ready']
           assert d['h2292_same_vm_original_product_abaprime']['status']=='PASS_H2292_SAME_WINDOWS_VM_ORIGINAL_GO_TLS_RUST_A_B_A_PRIME_SCOPED'
           assert [x['stage'] for x in d['h2292_same_vm_original_product_abaprime']['stages']]==['A_default','B_tx16','A_prime']
-          assert [x['real_windows_npcap_64k_16_profile'] for x in d['h2292_same_vm_original_product_abaprime']['stages']]==[False,True,False]
+          stages=d['h2292_same_vm_original_product_abaprime']['stages']
+          factor=os.environ.get('WBD_H2312_FACTOR','legacy')
+          if factor=='legacy':
+              assert [x['real_windows_npcap_64k_16_profile'] for x in stages]==[False,True,False]
+          else:
+              assert factor in ('npf_only','tx_only')
+              assert [x['real_windows_npcap_64k_16_profile'] for x in stages]==[False,False,False]
+              assert all(x['h2312_factor']==factor for x in stages)
+              expected=[8,16,8] if factor=='npf_only' else [16,16,16]
+              assert [x['h2312_npf_service']['npf_queue_packets'] for x in stages]==expected
+              assert all(x['h2312_npf_service']['queue_calls']>0 and
+                         x['h2312_npf_service']['queue_frames_submitted']>0 and
+                         x['h2312_npf_service']['queue_bytes_copied']>0 and
+                         x['h2312_npf_service']['queue_short_calls']==0
+                         for x in stages)
           assert d['client_owned_stop']=='PASS_REAL_ORIGINAL_GO_RUST_WAL_STOP'
           assert d['guest_iptables_and_ip_forward_restored']
           assert d['product_tcp']['bulk_remote_received_bytes']>0
