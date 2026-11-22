@@ -137,14 +137,17 @@ def audit():
                 require(v.get("path") == f"../{k}",
                         f"wrong internal source pin for {crate}->{k}")
             else:
-                require(((crate=="wbd-codec" and k in {"aws-lc-rs","chacha20","aes"})
-                         or (crate=="wbd-engine" and k=="rtrb") or
-                         (crate=="wbd-engine" and k=="regex" and
-                          v=={"version":"=1.12.2"}))
-                        and v=={"workspace":True} or
-                        (crate=="wbd-codec" and k=="wbd-isal-safe" and
-                         v=={"path":"../../native/isal-safe","optional":True,"default-features":False}),
-                        f"unapproved external dependency {crate}->{k}")
+                # Workspace dependencies and exact-version direct dependencies
+                # are different Cargo.toml shapes; never require both at once.
+                require(
+                    ((crate=="wbd-codec" and k in {"aws-lc-rs","chacha20","aes"} or
+                      crate=="wbd-engine" and k=="rtrb")
+                     and v=={"workspace":True}) or
+                    (crate=="wbd-engine" and k=="regex" and
+                     v=={"version":"=1.12.2"}) or
+                    (crate=="wbd-codec" and k=="wbd-isal-safe" and
+                     v=={"path":"../../native/isal-safe","optional":True,"default-features":False}),
+                    f"unapproved external dependency {crate}->{k}")
     lock_deps={p["name"]:set(p.get("dependencies",[])) for p in packages}
     require(lock_deps["wbd-engine"]==
             {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb","regex"},
