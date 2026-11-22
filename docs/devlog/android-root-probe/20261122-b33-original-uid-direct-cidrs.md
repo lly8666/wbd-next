@@ -32,3 +32,11 @@ B33a同源原Go/Rust Native和已有Java Host用例继续成功，但B33新增Py
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B33b纠正Go flag无双破折号与App真实CLI argv有双破折号的源码门误断言，保留原Root内核CIDR业务及旧真实失败记录"}
 ```
+
+## B33c｜最后一处旧式B5参数结束断言复核
+
+B33b [#44975490831](https://github.com/lly8666/wbd-next/actions/runs/44975490831) Java Host/新B33真实接线 SOURCE PASS 后，B5旧源门仍假定 `verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS)` 应在Service内作为参数调用结尾；实际上B33当前真实Go argv继续传递外层MTU、AEAD、txqlen、padding、FEC及directCIDRs。完整扫描同一 Host Python 脚本的 `assert 'literal' in s/a/argv/cold/root_svc/root_ui` 后，仅发现此处仍有旧结尾约定（其余为f-string动态断言/转义字符串）。本批改为断言**完整真实参数调用顺序**，保持原业务代码和同一原Root UID Stop完全不变；旧B33/B33a/B33b失败结果留存，不作Android实机声明。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B33c纠正B5历史源码门对Service参数签名结尾的旧假设；已扫描剩余源码静态检查，直接验证包含CIDR的新真实完整Root argv调用链"}
+```

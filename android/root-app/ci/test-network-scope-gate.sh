@@ -1048,7 +1048,7 @@ assert 'cnSplitDNS.setChecked(false)' in root_ui
 assert 'request.putExtra("cn_dns_split",cnSplitDNS.isChecked())' in root_ui
 assert 'intent.getBooleanExtra("cn_dns_split",false)' in root_svc
 assert 'managerPackages,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS' in root_svc
-assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS)' in root_svc
+assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs);' in root_svc
 assert 'if(cnSplitDNS)args.add("--android-cn-dns-split")' in argv
 assert 'ANDROID_B5_CN8503_SPLIT_SELECTED_ALL_APP_AND_LEGACY_GO_ARGV_HOST_PASS' in argv_test
 assert 'androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false' in nativecli
