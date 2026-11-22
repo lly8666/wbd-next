@@ -15,7 +15,7 @@ import java.util.TreeSet;
  * only after its package AND current installed UID still match.
  */
 final class RootConnectionSettings {
-    final String peer,sni,account,cipher,padding,mode;
+    final String peer,sni,account,cipher,padding,mode,directCIDRs;
     final int port,outerMTU,tunQueue,profile;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps;
     final Map<String,Integer> selected;
@@ -24,6 +24,15 @@ final class RootConnectionSettings {
         String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
         boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
         Map<String,Integer> selected) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,
+            mode,profile,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,"");
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs) {
+        this.directCIDRs=RootDirectIPv4.canonicalCSV(directCIDRs);
         this.peer=peer;this.sni=sni;this.account=account;
         this.port=port;this.outerMTU=outerMTU;this.tunQueue=tunQueue;
         this.cipher=cipher;this.padding=padding;this.mode=mode;
@@ -82,6 +91,7 @@ final class RootConnectionSettings {
         p.setProperty("physical_dns",Boolean.toString(physicalDNS));
         p.setProperty("cn_split_dns",Boolean.toString(cnSplitDNS));
         p.setProperty("all_apps",Boolean.toString(allApps));
+        p.setProperty("direct_cidrs",directCIDRs);
         p.setProperty("selected_count",Integer.toString(selected.size()));
         int i=0;
         for(Map.Entry<String,Integer> x:selected.entrySet()){
@@ -121,7 +131,7 @@ final class RootConnectionSettings {
                 Integer.parseInt(p.getProperty("fec_profile","-1")),
                 flag(p,"tls_verify"),flag(p,"tunnel_dns"),
                 flag(p,"physical_dns"),flag(p,"cn_split_dns"),
-                flag(p,"all_apps"),selected);
+                flag(p,"all_apps"),selected,p.getProperty("direct_cidrs",""));
         }catch(IllegalArgumentException invalid){
             return null;
         }

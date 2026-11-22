@@ -93,6 +93,18 @@ public final class RootConnectionSettingsTest {
                 false,true,false,false,true,new TreeMap<>());
             throw new AssertionError("Auto startup padding accepted");
         }catch(IllegalArgumentException expected){}
+        // B33: same user-selected real IPv4 direct prefixes survive SAF and
+        // private local settings in the exact original Root App codec.
+        RootConnectionSettings direct=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,true,false,false,true,new TreeMap<>(),
+            "192.168.7.0/24,10.9.0.0/16");
+        RootConnectionSettings directRestored=read(stored(direct));
+        check(directRestored!=null&&
+            directRestored.directCIDRs.equals("10.9.0.0/16,192.168.7.0/24"),
+            "B33 direct IPv4 CIDRs lost through original settings codec");
+        System.out.println("ANDROID_B33_DIRECT_CIDRS_ROOT_PRESET_CODEC_HOST_PASS");
         System.out.println("ANDROID_B22_LAST_CONNECTION_NO_BACKUP_PRESET_HOST_PASS");
         System.out.println("ANDROID_B25_PRESET_SELECTED_16_PACKAGES_8_UNIQUE_UIDS_HOST_PASS");
     }

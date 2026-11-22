@@ -163,6 +163,22 @@ final class OriginalGoCommandArgs {
                               boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
                               String recordCipher,int requestedTunQueue,String paddingMode,
                               String fecMode,int fecProfile){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,
+            sni,user,passwordFile,routeKeyFile,installationFile,cnFile,
+            targetUids,allApps,excludedAppIDs,tlsCaFile,verifyTLS,
+            tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,
+            recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,"");
+    }
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
+                              String recordCipher,int requestedTunQueue,String paddingMode,
+                              String fecMode,int fecProfile,String directCIDRs){
         if(!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
            !"fec-auto".equals(fecMode))
             throw new IllegalArgumentException("Android original Go supports normal, fec-fixed or fec-auto");
@@ -217,6 +233,10 @@ final class OriginalGoCommandArgs {
         pair(args,"--tun-txqlen-packets",Integer.toString(requestedTunQueue));
         pair(args,"--outer-repair","off");
         pair(args,"--android-cn-geosite-file",cnFile);
+        // Same original Go cold rootjournal UID/FIB path; empty means
+        // all normal App IPv4 traffic stays on the original WBD tunnel.
+        String direct=RootDirectIPv4.canonicalCSV(directCIDRs);
+        if(!direct.isEmpty())pair(args,"--android-direct-cidrs",direct);
         if(cnSplitDNS)args.add("--android-cn-dns-split");
         else if(physicalDNS)args.add("--android-physical-dns");
         else if(tunnelDNS)args.add("--android-tunnel-dns");

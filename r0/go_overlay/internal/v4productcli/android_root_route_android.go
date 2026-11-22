@@ -97,6 +97,7 @@ func androidRootRouteAfterNative(
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
             ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
             Tun:tun.name,Lease:lease.String(),ServerIP:c.peerIP.String(),
+            DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...),
             Underlay:c.rawInterface,
             NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         })
@@ -117,6 +118,7 @@ func androidRootRouteAfterNative(
         group,e:=rootjournal.NewGroup(runner,rootOnlyJournal,rootjournal.GroupPlan{
             UIDs:append([]int(nil),c.androidRouteUIDs...),
             Tun:tun.name,Lease:lease.String(),ServerIP:c.peerIP.String(),
+            DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...),
             Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         })
         if e!=nil{return nil,e}
@@ -136,7 +138,8 @@ func androidRootRouteAfterNative(
     }
     session,e:=rootjournal.New(runner,rootOnlyJournal,rootjournal.Plan{
         UID:c.androidRouteUID,Tun:tun.name,Lease:lease.String(),
-        ServerIP:c.peerIP.String(),Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,
+        ServerIP:c.peerIP.String(),DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...),
+        Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,
         IfIndex:physical.Index,
     })
     if e!=nil{return nil,e}

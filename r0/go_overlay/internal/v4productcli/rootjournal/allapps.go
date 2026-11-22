@@ -35,6 +35,7 @@ type AllAppPlan struct {
  Tun string `json:"tun"`
  Lease string `json:"lease"`
  ServerIP string `json:"server_ip,omitempty"`
+ DirectCIDRs []string `json:"direct_cidrs,omitempty"`
  Underlay string `json:"underlay"`
  NetworkHandle uint64 `json:"network_handle"`
  IfIndex int `json:"ifindex"`
@@ -71,6 +72,7 @@ func (p AllAppPlan) valid()bool{
   e==nil&&lease.IsValid()&&lease.Bits()==32&&lease.Addr().Is4()&&
   !lease.Addr().IsMulticast()&&!lease.Addr().IsUnspecified()&&
   p.ServerIP!=lease.Addr().String()&&
+  validDirectCIDRs(p.DirectCIDRs,p.ServerIP)&&
   nameOK(p.Tun)&&nameOK(p.Underlay)&&p.Tun!=p.Underlay&&
   p.NetworkHandle!=0&&p.IfIndex>0&&len(p.Nonce)==32
 }
@@ -168,35 +170,43 @@ func allRuleState(out string,rs []allRange)([]bool,error){
  }
  return present,nil
 }
-func (s *AllAppSession) query(p AllAppPlan)(bool,bool,[]bool,error){
- t,e:=s.run(routeShow()...);if e!=nil{return false,false,nil,e}
- route,peer,e:=allAppRouteState(t,p.Tun,p.ServerIP)
- if e!=nil{return false,false,nil,e}
- rules,e:=s.run(ruleShow()...);if e!=nil{return false,false,nil,e}
+func (s *AllAppSession) query(p AllAppPlan)(bool,bool,[]bool,[]bool,error){
+ t,e:=s.run(routeShow()...);if e!=nil{return false,false,nil,nil,e}
+ route,peer,direct,e:=routeWithDirect(t,p.Tun,p.ServerIP,p.DirectCIDRs)
+ if e!=nil{return false,false,nil,nil,e}
+ rules,e:=s.run(ruleShow()...);if e!=nil{return false,false,nil,nil,e}
  present,e:=allRuleState(rules,p.ranges())
- return route,peer,present,e
+ return route,peer,direct,present,e
 }
 func (s *AllAppSession) requireEmpty(p AllAppPlan)error{
- route,peer,rules,e:=s.query(p)
+ route,peer,direct,rules,e:=s.query(p)
  if e!=nil{return e}
- if route||peer||anyRules(rules){return fmt.Errorf("all-app private table/rules occupied")}
+ if route||peer||anyDirectPresent(direct)||anyRules(rules){
+  return fmt.Errorf("all-app private table/rules occupied")
+ }
  return nil
 }
 func (s *AllAppSession) requireReady(p AllAppPlan)error{
- route,peer,rules,e:=s.query(p)
+ route,peer,direct,rules,e:=s.query(p)
  if e!=nil{return e}
- if !route||(p.Version==allAppsVersion&&!peer)||!allRules(rules){
-  return fmt.Errorf("all-app UID/peer exception kernel readback mismatch")
+ if !route||(p.Version==allAppsVersion&&!peer)||
+  !allDirectPresent(direct)||!allRules(rules){
+  return fmt.Errorf("all-app UID/direct/peer exception readback mismatch")
  }
  return nil
 }
 func (s *AllAppSession) removeExact(p AllAppPlan)error{
- route,peer,rules,e:=s.query(p)
+ route,peer,direct,rules,e:=s.query(p)
  if e!=nil{return e}
  rs:=p.ranges()
  for i:=len(rules)-1;i>=0;i--{
   if rules[i]{
    if _,e=s.run(allRuleArgs("del",rs[i],i)...);e!=nil{return e}
+  }
+ }
+ for i:=len(direct)-1;i>=0;i--{
+  if direct[i]{
+   if _,e=s.run(directArgs("del",p.DirectCIDRs[i])...);e!=nil{return e}
   }
  }
  if peer{
@@ -282,8 +292,8 @@ func NewAllApps(run Runner,path string,original AllAppPlan)(session *AllAppSessi
  if _,e=s.run(routeAdd(original.Tun)...);e!=nil{
   return nil,errors.Join(e,s.removeExact(original))
  }
- route,peer,rules,e:=s.query(original)
- if e!=nil||!route||peer||anyRules(rules){
+ route,peer,direct,rules,e:=s.query(original)
+ if e!=nil||!route||peer||anyDirectPresent(direct)||anyRules(rules){
   return nil,errors.Join(fmt.Errorf("all-app route-only readback mismatch: %w",e),s.removeExact(original))
  }
  // Durable journal + default TUN precede an exact /32 exception, which
@@ -291,16 +301,28 @@ func NewAllApps(run Runner,path string,original AllAppPlan)(session *AllAppSessi
  if _,e=s.run(peerThrowArgs("add",original.ServerIP)...);e!=nil{
   return nil,errors.Join(e,s.removeExact(original))
  }
- route,peer,rules,e=s.query(original)
- if e!=nil||!route||!peer||anyRules(rules){
+ route,peer,direct,rules,e=s.query(original)
+ if e!=nil||!route||!peer||anyDirectPresent(direct)||anyRules(rules){
   return nil,errors.Join(fmt.Errorf("all-app peer exception readback mismatch: %w",e),s.removeExact(original))
+ }
+ // Apply explicit direct prefixes in the SAME private UID FIB,
+ // before any App UID rule can route new business.
+ for index,cidr:=range original.DirectCIDRs{
+  if _,e=s.run(directArgs("add",cidr)...);e!=nil{
+   return nil,errors.Join(e,s.removeExact(original))
+  }
+  _,_,seen,_,checkErr:=s.query(original)
+  if checkErr!=nil||len(seen)<=index||!seen[index]{
+   return nil,errors.Join(fmt.Errorf("direct prefix %d missing FIB readback: %w",index,checkErr),
+    s.removeExact(original))
+  }
  }
  for i,r:=range original.ranges(){
   if _,e=s.run(allRuleArgs("add",r,i)...);e!=nil{
    return nil,errors.Join(e,s.removeExact(original))
   }
-  _,peerReadback,readback,checkErr:=s.query(original)
-  if checkErr!=nil||!peerReadback||!readback[i]{
+  _,peerReadback,directReadback,readback,checkErr:=s.query(original)
+  if checkErr!=nil||!peerReadback||!allDirectPresent(directReadback)||!readback[i]{
    return nil,errors.Join(fmt.Errorf("all-app uidrange #%d missing kernel readback: %w",i,checkErr),
       s.removeExact(original))
   }

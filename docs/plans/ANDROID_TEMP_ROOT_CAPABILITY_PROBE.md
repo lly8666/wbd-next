@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B33真实普通App IPv4分流/直连前缀**：B32a [#44969771959](https://github.com/lly8666/wbd-next/actions/runs/44969771959) 11 SUCCESS/4 SKIPPED、治理SUCCESS；B31真实三种UID模式服务端/32例外已同源通过。本批把可选最多四个**用户输入的IPv4 CIDR**从正式Root App→本机SAF预设→Service→原Go冷`--android-direct-cidrs`→single/group/all原Root journal**同一table 19842**内核`throw CIDR`真实安装/读回与Stop；首条UID规则前安装，默认空即原全隧道，原DNS/Go TLS/Rust M4/PN/Stop不增加额外数据面。此处的throw只让内核继续匹配**后续Android规则**，并非已证明一定经选定Network物理出口；实机/netd/首包延迟仍NOT_RUN，本SOURCE以Actions新证据为准。
+
+
 > **2026-11-22 B32 Root选定普通App完整枚举**：B26以来只列launch/share/HTTPS处理器，不能覆盖大量没有这些Intent的普通游戏或App。本批在原侧载Root工具上增加`QUERY_ALL_PACKAGES`和当前用户`getInstalledApplications(0)`，保留旧Intent supplement、原`InstalledAppTarget.eligible`及Service冷UID复核、UID路由/Stop/SAF。Host/签名APK以本SOURCE Actions为准；实机可见性/真实应用E2E未验。
 
 

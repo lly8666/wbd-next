@@ -20,6 +20,22 @@ UI 把进阶 KernelSU/TUN 一键自检放到默认折叠的“高级选项”，
 **测试版安装注意**：GitHub Actions 的调试签名证书每次生成，且 APK 包名相同，无法直接 \`adb install -r\` 覆盖上次版本。请自行先在旧版按 STOP，检查没有残留 KernelSU UID 私有路由，再卸载旧调试包并安装新的 Lite APK；卸载会清除派生缓存。
 
 
+## B33 · Real per-App IPv4 direct CIDRs (optional, original Root FIB)
+
+The cold Root Activity adds a field for up to **four** explicit IPv4 CIDRs,
+such as `192.168.1.0/24,10.9.0.0/16`. Empty is the original full-tunnel
+default. Selected single UID, selected UID group and all ordinary App UIDs
+share the same native Root journal table 19842: `ip -4 route add throw
+CIDR table 19842`, placed before the first App UID rule and withdrawn by
+the same exact owned Stop/recovery. The WBD physical server exception remains
+separately pinned. The real original Go CLI owns cold validation and kernel
+readback; Android UI settings/SAF preserve only these nonsecret prefixes.
+No new packet thread, Go-to-Rust per-packet callback, fake VPN, DNS resolver
+or blanket main table change. A throw in the WBD private FIB delegates to
+Android's later rules; **actual physical egress on a phone is still untested**.
+If a CIDR would capture a different network than intended, users should
+leave the field empty until physical device verification.
+
 ## B32 · Root installed ordinary App picker, including games without launcher intents
 
 The original selected UID route, selected 16 packages / 8 distinct UID capacity,

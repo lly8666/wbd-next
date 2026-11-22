@@ -27,11 +27,18 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/ci/RootStopCommandTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootStopCommandTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
   android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
   android/root-app/src/org/wbdnext/rootclient/RootRecoveryCommand.java \
   android/root-app/ci/RootRecoveryCommandTest.java \
   android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java
+# B33 original app cold direct-prefix normalizer, with no Android
+# guest or per-packet FFI.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
+  android/root-app/ci/RootDirectIPv4Test.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootDirectIPv4Test
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootRecoveryCommandTest
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
@@ -63,6 +70,7 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
   android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
+  android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
   android/root-app/ci/RootConnectionSettingsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionSettingsTest
@@ -72,6 +80,7 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
   android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
+  android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsTransfer.java \
   android/root-app/ci/RootConnectionSettingsTransferTest.java
@@ -81,6 +90,7 @@ java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.Root
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
   android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
   android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java \
   android/root-app/ci/OriginalGoCommandArgsTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoCommandArgsTest
@@ -446,6 +456,20 @@ for source in (b31_single,b31_group):
  assert 'peerThrowArgs("add",original.ServerIP)' in source
  assert 'peerThrowArgs("del",p.ServerIP)' in source
 print("ANDROID_B31_ORIGINAL_ROOT_UID_PEER_EXCEPTION_WIRING_SOURCE_PASS")
+# B33 one original Go Android Root owner, 4 selected CIDR direct
+# FIB throws in all 3 existing UID routes, with no new raw/tun worker.
+b33_go=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+b33_root=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
+b33_route=Path("r0/go_overlay/internal/v4productcli/rootjournal/direct.go").read_text()
+b33_ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+b33_svc=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
+b33_argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
+assert '--android-direct-cidrs' in b33_go and 'rootjournal.ParseDirectCIDRs(' in b33_go
+assert b33_root.count('DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...)')==3
+assert 'routeWithDirect(' in b33_route and 'directArgs(' in b33_route
+assert 'direct_cidrs' in b33_ui and 'direct_cidrs' in b33_svc
+assert '--android-direct-cidrs' in b33_argv and 'RootDirectIPv4.canonicalCSV(' in b33_argv
+print("ANDROID_B33_ORIGINAL_ROOT_IP_DIRECT_CIDR_THREE_UID_SCOPES_SOURCE_PASS")
 # B29: default Tunnel DNS must not reject Fixed/Auto feature7 before M4.
 b29_go=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
 b29_rust=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()

@@ -43,7 +43,7 @@ public final class RootClientActivity extends Activity {
     // A saved selection is only restored if fresh package+UID still match;
     // the OS Network handle and any root route are never restored.
     private final Map<String,Integer> restoredSelection=new TreeMap<>();
-    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField;
+    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS;
     private LinearLayout appChoices,selectedAppControls;
@@ -423,7 +423,8 @@ public final class RootClientActivity extends Activity {
             Integer.parseInt(fecProfiles.getSelectedItem().toString()),
             tlsVerifyServer.isChecked(),tunnelDNS.isChecked(),
             physicalDNS.isChecked(),cnSplitDNS.isChecked(),
-            allAppsDefault.isChecked(),selected);
+            allAppsDefault.isChecked(),selected,
+            RootDirectIPv4.canonicalCSV(directCIDRsField.getText().toString()));
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -435,6 +436,7 @@ public final class RootClientActivity extends Activity {
         user.setText(s.account);
         serverPort.setText(Integer.toString(s.port));
         outerMTUField.setText(Integer.toString(s.outerMTU));
+        directCIDRsField.setText(s.directCIDRs);
         selectSpinner(recordCiphers,s.cipher);
         selectSpinner(tunQueueSizes,Integer.toString(s.tunQueue));
         selectSpinner(startupPaddingModes,s.padding);
@@ -469,6 +471,8 @@ public final class RootClientActivity extends Activity {
             String peer=serverAddress.getText().toString().trim();
             String sni=serverName.getText().toString().trim();
             String account=user.getText().toString().trim();
+            String directCIDRs=RootDirectIPv4.canonicalCSV(
+                directCIDRsField.getText().toString());
             String secret=password.getText().toString();
             String keyInput=routeKey.getText().toString(); // never trim/normalize a secret
             String pem=caPEM.getText().toString().trim();
@@ -556,6 +560,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("tunnel_dns",tunnelDNS.isChecked());
             request.putExtra("physical_dns",physicalDNS.isChecked());
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
+            request.putExtra("direct_cidrs",directCIDRs);
             if(allApps){
                 request.putExtra("exclude_appids",entire.excludedAppIDs);
                 request.putExtra("manager_packages",entire.managerPackages);
@@ -664,6 +669,13 @@ public final class RootClientActivity extends Activity {
         outerMTUField=input(pane,"外层完整 IPv4 IP MTU（576–1500 字节；默认1460，非TUN MTU）",
             InputType.TYPE_CLASS_NUMBER);
         outerMTUField.setText("1460");
+        directCIDRsField=input(pane,
+            "可选真实IPv4直连网段（逗号分隔，最多4个，如192.168.1.0/24；默认全走WBD）",
+            InputType.TYPE_CLASS_TEXT);
+        TextView directHint=new TextView(this);
+        directHint.setText("仅对本次选定的普通App UID生效：原Root私有路由表将这些IPv4网段交给后续Android路由，"+
+            "不经WBD TUN。不是域名分流、系统DNS、或已证明的物理接口出站。");
+        pane.addView(directHint);
         recordCiphers=new Spinner(this);
         recordCiphers.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,

@@ -38,6 +38,7 @@ type Plan struct {
     Tun string `json:"tun"`
     Lease string `json:"lease"`
     ServerIP string `json:"server_ip,omitempty"`
+    DirectCIDRs []string `json:"direct_cidrs,omitempty"`
     Underlay string `json:"underlay"`
     NetworkHandle uint64 `json:"network_handle"`
     IfIndex int `json:"ifindex"`
@@ -71,6 +72,7 @@ func (p Plan) valid()bool{
         nameOK(p.Tun)&&nameOK(p.Underlay)&&p.Tun!=p.Underlay&&
         (p.ServerIP==""||(validServerPeerIPv4(p.ServerIP)&&
         p.ServerIP!=addr.Addr().String()))&&
+        validDirectCIDRs(p.DirectCIDRs,p.ServerIP)&&
         p.NetworkHandle!=0&&p.IfIndex>0&&
         p.Version==version&&len(p.Nonce)==32
 }
@@ -318,6 +320,16 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
             return nil,errors.Join(err,s.removeExact(original))
         }
     }
+    for index,cidr:=range original.DirectCIDRs{
+        if _,err=s.run(directArgs("add",cidr)...);err!=nil{
+            return nil,errors.Join(err,s.removeExact(original))
+        }
+        _,_,direct,_,readErr:=s.query(original)
+        if readErr!=nil||!direct[index]{
+            return nil,errors.Join(fmt.Errorf("selected direct CIDR missing FIB readback: %w",readErr),
+                s.removeExact(original))
+        }
+    }
     if _,err=s.run(ruleAdd(original.UID)...);err!=nil{
         return nil,errors.Join(err,s.removeExact(original))
     }
@@ -327,47 +339,59 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
     s.active=true
     return s,nil
 }
-func (s *Session) query(p Plan)(bool,bool,bool,error){
+func (s *Session) query(p Plan)(bool,bool,[]bool,bool,error){
     out,err:=s.run(routeShow()...)
-    if err!=nil{return false,false,false,err}
-    route,peer,err:=allAppRouteState(out,p.Tun,p.ServerIP)
-    if err!=nil{return false,false,false,err}
+    if err!=nil{return false,false,nil,false,err}
+    route,peer,direct,err:=routeWithDirect(out,p.Tun,p.ServerIP,p.DirectCIDRs)
+    if err!=nil{return false,false,nil,false,err}
     lines,err:=s.run(ruleShow()...)
-    if err!=nil{return false,false,false,err}
+    if err!=nil{return false,false,nil,false,err}
     rule,err:=ruleState(lines,p.UID)
-    return route,peer,rule,err
+    return route,peer,direct,rule,err
 }
 func (s *Session) requireEmpty()error{
-    route,peer,rule,err:=s.query(s.plan)
+    route,peer,direct,rule,err:=s.query(s.plan)
     if err!=nil{return err}
-    if route||peer||rule{return fmt.Errorf("WBD routing table/rule occupied")}
+    if route||peer||anyDirectPresent(direct)||rule{
+        return fmt.Errorf("WBD routing table/rule occupied")
+    }
     return nil
 }
 func (s *Session) requireRouteOnly(p Plan)error{
-    route,peer,rule,err:=s.query(p)
+    route,peer,direct,rule,err:=s.query(p)
     if err!=nil{return err}
-    if !route||peer||rule{return fmt.Errorf("WBD route-only readback mismatch")}
+    if !route||peer||anyDirectPresent(direct)||rule{
+        return fmt.Errorf("WBD route-only readback mismatch")
+    }
     return nil
 }
 func (s *Session) requirePeerRouteOnly(p Plan)error{
-    route,peer,rule,err:=s.query(p)
+    route,peer,direct,rule,err:=s.query(p)
     if err!=nil{return err}
-    if !route||!peer||rule{return fmt.Errorf("WBD peer-only route readback mismatch")}
+    if !route||!peer||anyDirectPresent(direct)||rule{
+        return fmt.Errorf("WBD peer-only route readback mismatch")
+    }
     return nil
 }
 func (s *Session) requireReady(p Plan)error{
-    route,peer,rule,err:=s.query(p)
+    route,peer,direct,rule,err:=s.query(p)
     if err!=nil{return err}
-    if !route||(p.ServerIP!=""&&!peer)||!rule{
-        return fmt.Errorf("WBD authenticated UID/peer readback mismatch")
+    if !route||(p.ServerIP!=""&&!peer)||
+        !allDirectPresent(direct)||!rule{
+        return fmt.Errorf("WBD authenticated UID/direct/peer readback mismatch")
     }
     return nil
 }
 func (s *Session) removeExact(p Plan)error{
-    route,peer,rule,err:=s.query(p)
+    route,peer,direct,rule,err:=s.query(p)
     if err!=nil{return err}
     if rule{
         if _,err=s.run(ruleDel(p.UID)...);err!=nil{return err}
+    }
+    for i:=len(direct)-1;i>=0;i--{
+        if direct[i]{
+            if _,err=s.run(directArgs("del",p.DirectCIDRs[i])...);err!=nil{return err}
+        }
     }
     if peer{
         if _,err=s.run(peerThrowArgs("del",p.ServerIP)...);err!=nil{return err}

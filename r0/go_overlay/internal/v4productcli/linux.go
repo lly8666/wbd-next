@@ -134,6 +134,7 @@ type config struct{
     androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
     androidRouteAllApps bool // ordinary app UID ranges, no root/system/main FIB
     androidRouteExcludeAppIDs []int // own + KernelSU manager per-user app ID exclusions
+    androidDirectCIDRs []string // opt-in real kernel throw routes in SAME UID table
     // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
     // System resolver/netd and CN physical split are NOT enabled by this.
     androidTunnelDNS bool
@@ -260,6 +261,8 @@ func parse(role string,args []string)(config,error){
         "Android Root after authenticated lease/M4: route ordinary App UIDs in 20 profiles, never system/root")
     androidRouteExclude:=flags.String("android-route-exclude-appids","",
         "Android all-apps: mandatory canonical excluded controller+root-manager app IDs (10000..19999)")
+    androidDirectCIDRs:=flags.String("android-direct-cidrs","",
+        "Android Root: up to four explicit IPv4 CIDRs to bypass the WBD private UID table; empty keeps original full tunnel")
     cnGeositeFile:=flags.String("android-cn-geosite-file","",
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
     androidTunnelDNS:=flags.Bool("android-tunnel-dns",false,
@@ -352,6 +355,11 @@ func parse(role string,args []string)(config,error){
         var e error
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
+        c.androidDirectCIDRs,e=rootjournal.ParseDirectCIDRs(*androidDirectCIDRs)
+        if e!=nil{return c,fmt.Errorf("Android cold direct IPv4 CIDRs rejected: %w",e)}
+        if len(c.androidDirectCIDRs)>0&&!(*androidRouteAll||*androidRouteUID!=0||*androidRouteGroup!=""){
+            return c,fmt.Errorf("Android direct IPv4 CIDRs need selected or all-App UID scope")
+        }
         if *androidRouteAll{
             c.androidRouteExcludeAppIDs,e=parseAndroidExcludedAppIDsArg(*androidRouteExclude)
             if e!=nil{return c,e}
@@ -367,7 +375,8 @@ func parse(role string,args []string)(config,error){
             return c,fmt.Errorf("Android CN DNS split requires the original pinned geosite file")
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
-             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit{
+             *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
+              *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||*androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
