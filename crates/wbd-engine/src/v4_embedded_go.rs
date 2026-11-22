@@ -57,6 +57,11 @@ use std::os::fd::BorrowedFd;
 #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 #[path="v4_android_original_m4.rs"]
 mod android_original_m4;
+// B40 true Game2/off native M4, one Android TUN TX and two original
+// authenticated Game M3 RAW RX workers. Go App mode still separately gated.
+#[cfg(all(target_os="android",feature="fec2_product_record"))]
+#[path="v4_android_game_m4.rs"]
+mod android_game_m4;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::time::Duration;
 const OK:i32=0;
@@ -1165,6 +1170,8 @@ struct GameGroupNative{
     android_lanes:Vec<crate::v4_android_game_cold::OriginalGameColdLane>,
     #[cfg(target_os="android")]
     android_raw:Option<Vec<AndroidGameRawLane>>,
+    #[cfg(target_os="android")]
+    android_workers:Option<android_game_m4::AndroidGameWorkers>,
     // Game server's optional shared single-reader route is an authenticated
     // /32. One Game group owns its private receiver and Stop fence only.
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
@@ -3399,6 +3406,8 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         android_lanes,
         #[cfg(target_os="android")]
         android_raw:None,
+        #[cfg(target_os="android")]
+        android_workers:None,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         shared_tun:None,
@@ -3444,7 +3453,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
         lanes.write(e.handles.len() as u32);
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         drivers_installed.write(u32::from(e.drivers.is_some()));
-        #[cfg(not(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))))]
+        #[cfg(target_os="android")]
+        drivers_installed.write(u32::from(e.android_workers.as_ref()
+            .is_some_and(|w|w.is_live())));
+        #[cfg(not(any(target_os="android",
+            all(any(target_arch="x86_64",target_arch="aarch64"),
+                any(target_env="gnu",target_env="musl")))))]
         drivers_installed.write(0);
     }
     // Explicit zero is critical: this is authenticated shared crypto owner
@@ -3802,8 +3816,8 @@ pub extern "C" fn wbd_m0_embedded_go_android_game_group_raw_bind(group:u64)->i32
     g.android_raw=Some(exact);
     OK
 }
-// Read-only actual kernel descriptor ownership; this is not an M4-ready
-// receipt. The existing game_group_state must continue returning drivers=0.
+// Read-only physical RAW descriptor ownership, NOT an M4-ready receipt.
+// Game group state reports true workers only after B40's real TUN/RAW start.
 #[cfg(all(feature="fec2_product_record",target_os="android"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_raw_state(
@@ -3822,10 +3836,55 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_raw_state(
     unsafe{lanes.write(count)};
     OK
 }
+// Real original TLS Game2/off Bionic M4: one verified Go-owned TUN FD
+// cloned into Rust, its original two precise M3 RX RAW FDs and a single
+// GameAdapter TX scheduler. Game4/FEC and App launch remain gated.
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
+    group:u64,fd:i32,tun_name:*const u8,tun_len:usize,
+)->i32{
+    if fd<3||tun_name.is_null()||tun_len==0||tun_len>15{return INVALID}
+    let Ok(name)=std::str::from_utf8(unsafe{
+        std::slice::from_raw_parts(tun_name,tun_len)
+    })else{return INVALID};
+    let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+        else{return INVALID};
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping||g.android_workers.is_some()||
+       g.android_lanes.len()!=2{return BAD_STAGE}
+    let Some(raw)=g.android_raw.as_ref().filter(|v|v.len()==2)
+        else{return BAD_STAGE};
+    let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
+    let workers=android_game_m4::AndroidGameWorkers::start(
+        Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
+        lease,dup,name,(group>>32) as u32
+    );
+    let Ok(workers)=workers else{return BAD_STAGE};
+    g.android_workers=Some(workers);
+    OK
+}
+// These counters are actual native TUN/RAW syscall and M3 TUN delivery
+// receipts, not optimistic TLS READY: [raw TX copied, RAW RX parsed,
+// authenticated unique IP written to TUN, rejected].
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_counters(
+    group:u64,out:*mut u64,len:usize,
+)->i32{
+    if out.is_null()||len!=4{return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping{return BAD_STAGE}
+    let Some(w)=g.android_workers.as_ref()else{return BAD_STAGE};
+    unsafe{std::ptr::copy_nonoverlapping(w.counters().as_ptr(),out,len)};
+    OK
+}
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
-    let (adapter,mut driver,mut android_raw)={
+    let (adapter,mut driver,mut android_workers,mut android_raw)={
         let Ok(mut r)=registry().lock()else{return BAD_STAGE};
         let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
         if e.stopped{return OK}
@@ -3844,6 +3903,11 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
              {None::<()>}
          },{
              #[cfg(target_os="android")]
+             {e.android_workers.take()}
+             #[cfg(not(target_os="android"))]
+             {None::<()>}
+         },{
+             #[cfg(target_os="android")]
              {e.android_raw.take()}
              #[cfg(not(target_os="android"))]
              {None::<()>}
@@ -3858,6 +3922,21 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
             return STOP_INCOMPLETE
         }
     }
+    // Stop the ONE original Game2 TUN TX plus both per-lane M3 workers
+    // before closing physically bound RAW FDs or the GameAdapter.
+    #[cfg(target_os="android")]
+    if let Some(ref mut workers)=android_workers{
+        if workers.stop_and_drain().is_err(){
+            let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+            let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+            e.android_workers=android_workers;
+            e.android_raw=android_raw;
+            e.stopping=false;
+            return STOP_INCOMPLETE
+        }
+    }
+    #[cfg(not(target_os="android"))]
+    let _=&android_workers;
     // Original owned Stop joins every Bionic kernel borrow before
     // releasing either lane. The GameAdapter is stopped only afterward.
     #[cfg(target_os="android")]
@@ -3875,6 +3954,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
             let Ok(mut r)=registry().lock()else{return BAD_STAGE};
             let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
             e.android_raw=android_raw;
+            e.android_workers=android_workers;
             e.stopping=false;
             return STOP_INCOMPLETE
         }

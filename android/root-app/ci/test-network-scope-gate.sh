@@ -45,6 +45,32 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/ci/RootPhysicalDNSUpstreamTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPhysicalDNSUpstreamTest
+# B40: real Rust Game2/off TX TUN reader and two original M3 lane RX
+# workers are compiled as part of the SAME GameAdapter.
+python3 - <<'PY'
+from pathlib import Path
+g=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+m=Path("crates/wbd-engine/src/v4_android_game_m4.rs").read_text()
+b=Path("android/root-native/build-source-locked.sh").read_text()
+assert 'android_workers:Option<android_game_m4::AndroidGameWorkers>' in g
+assert 'wbd_m0_embedded_go_android_game_group_m4_start(' in g
+assert 'wbd_m0_embedded_go_android_game_group_m4_counters(' in g
+assert 'AndroidGameWorkers::start(' in g
+assert 'workers.stop_and_drain()' in g
+assert 'drivers_installed.write(u32::from(e.android_workers.as_ref()' in g
+assert 'AndroidOwnedTun::adopt(fd,tun_name,generation)' in m
+assert 'rx.take_lane_for_worker(' in m
+assert 'rx_raw.read_original_record(' in m
+assert 'opener.open(&mut wire[..len])' in m
+assert 'owner.prepare_opened_receive(' in m
+assert 'owner.finish_receive(packet,written)' in m
+assert 'game.offer(&source[..n],now)' in m
+assert 'game.drain(now,|lane,_id,pn,wire|' in m
+assert 'tx_raw[i].send_built_outer(' in m
+assert 'HealthClock::new(' in m
+assert 'wbd_m0_embedded_go_android_game_group_m4_start' in b
+print("ANDROID_B40_ORIGINAL_GAME2_OFF_BIONIC_RAW_TUN_M3_M4_NATIVE_SOURCE_PASS")
+PY
 # B39: original native Rust Game groups on Android now bind exactly one
 # Bionic physical Network and independent RAW RX/TX per authenticated lane.
 # This is cold-only; a Game M4/TUN worker and App mode are NOT READY.
