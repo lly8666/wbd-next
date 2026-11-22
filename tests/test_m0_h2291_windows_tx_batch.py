@@ -32,7 +32,7 @@ class WindowsNPFTXService(unittest.TestCase):
         self.assertIn('const POST_INGRESS_RETURN_QUANTUM:usize=8;',runtime)
         self.assertIn('64 * 1024',platform)
         self.assertIn('16 * 1024',platform)
-        self.assertIn('NPF_QUEUE_PACKETS: usize = if cfg!(feature="h2291_windows_tx_service")',platform)
+        self.assertIn('NPF_QUEUE_PACKETS: usize = if cfg!(any(feature="h2291_windows_tx_service", feature="h2311_windows_npf64_only"))',platform)
         self.assertIn('fn h2291_ready_sixteen_frames_use_one_queue_only_when_explicitly_enabled()',platform)
         self.assertIn('queue_bytes={} max_frames={} ready_only=1',platform)
         self.assertIn('let result=npf.send_batch(&ready[..count]);',runtime)
