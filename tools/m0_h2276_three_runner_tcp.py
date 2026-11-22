@@ -32,11 +32,17 @@ tcp.PORT = PORT
 # Original Wintun/WSL product diagnostic keeps historical 24MiB/18s shape.
 SUSTAINED = os.environ.get("WBD_H2281_SUSTAINED_TCP") == "1"
 WINDOW_AB = os.environ.get("WBD_H2282_TCP_WINDOW_AB") == "1"
+CC_AB = os.environ.get("WBD_H2303_NATIVE_TCP_CC_AB") == "1"
+CC_LOSS = int(os.environ.get("WBD_H2303_NATIVE_TCP_LOSS", "1"))
+if CC_AB and (CC_LOSS not in (1, 5) or WINDOW_AB):
+    raise RuntimeError("H2303_INVALID_NATIVE_TCP_CC_LOSS_OR_WINDOW_AB")
 # Distinguish 8MiB H2282 and 2MiB H2283 test-only AB sizes; no WBD change.
 WINDOW_B_BYTES = int(os.environ.get("WBD_H2283_B_BYTES", "8388608"))
 # H2284 restore the OLD H2228 capacity gate: 8 parallel real TCP streams,
 # large test-only endpoint buffers, direct vs relay with the SAME Windows+ARM VMs.
 CAPACITY_H2284 = os.environ.get("WBD_H2284_EIGHT_TCP_CAPACITY") == "1"
+if CC_AB and CAPACITY_H2284:
+    raise RuntimeError("H2303_NO_EIGHT_FLOW_CAPACITY_CONFOUND")
 if WINDOW_B_BYTES not in (2*1024*1024, 8*1024*1024):
     raise RuntimeError("H2283_INVALID_ONLY_TEST_BUFFER_SIZE")
 if SUSTAINED:
@@ -52,6 +58,8 @@ TIERS = (-1, 0, 1, 5)  # -1 = no-loss/no-added-delay infrastructure capacity ref
 
 def active_stages():
     """H2282 three 400ms zero-loss TCP socket-window AB/A-prime, else old modes."""
+    if CC_AB:
+        return ("cc_cubic_before", "cc_bbr2_candidate", "cc_cubic_after")
     if CAPACITY_H2284:
         return ("clean_direct", "clean_relay", "wan_relay")
     if WINDOW_AB:
@@ -60,6 +68,8 @@ def active_stages():
 
 
 def actual_loss_tier(stage):
+    if CC_AB:
+        return CC_LOSS
     if CAPACITY_H2284 and stage in ("clean_direct", "clean_relay"):
         return -1
     return 0 if isinstance(stage, str) else stage
@@ -67,7 +77,7 @@ def actual_loss_tier(stage):
 
 def prepare_tcp_sockbuf(stage):
     # Only the *test app* socket knobs; no WBD runtime/GoTLS changes.
-    tcp.WINDOW_TEST_BYTES = (8*1024*1024 if CAPACITY_H2284 else
+    tcp.WINDOW_TEST_BYTES = (8*1024*1024 if CC_AB or CAPACITY_H2284 else
                              WINDOW_B_BYTES if WINDOW_AB and stage=="tuned" else 0)
 
 
@@ -501,13 +511,13 @@ def remote_diag(relay):
 def run_server(own, relay):
     peer = verify(own, relay, "relay")
     original_sysctls = {}
-    if WINDOW_AB or CAPACITY_H2284:
+    if WINDOW_AB or CAPACITY_H2284 or CC_AB:
         # Ephemeral native ARM VM, but restore test-owned sysctls on Stop.
         for key in ("net.core.rmem_max", "net.core.wmem_max"):
             original_sysctls[key] = run("sysctl", "-n", key).stdout.strip()
     result = []
     try:
-        if WINDOW_AB or CAPACITY_H2284:
+        if WINDOW_AB or CAPACITY_H2284 or CC_AB:
             for key in original_sysctls:
                 run("sudo", "-n", "sysctl", "-w", key + "=16777216")
         for tier in active_stages():
@@ -583,8 +593,23 @@ def run_client(own, relay, server):
         cpu0 = time.process_time()
         host_before = os_host_cpu()
         try:
-            with contextlib.redirect_stdout(buffer):
-                tcp.client(win, target, own["source_sha"])
+            native_tcp_policy = contextlib.nullcontext()
+            if CC_AB:
+                if platform.system()!="Windows":
+                    raise RuntimeError("H2303_NATIVE_WINDOWS_SENDER_REQUIRED")
+                from m0_h2302_windows_scoped_bbr2 import (
+                    scoped_bbr2_remoteport, read_provider, port_filter_exists)
+                # Genuine sender contrast: only B has a scoped BBR2 port
+                # filter; A and A-prime must be kernel CUBIC and unfiltered.
+                if tier=="cc_bbr2_candidate":
+                    native_tcp_policy=scoped_bbr2_remoteport(PORT)
+                else:
+                    require(read_provider("internet")=="cubic" and
+                            not port_filter_exists(PORT),
+                            "H2303_BASELINE_WINDOWS_CUBIC_NOT_VERIFIED")
+            with native_tcp_policy:
+                with contextlib.redirect_stdout(buffer):
+                    tcp.client(win, target, own["source_sha"])
         except Exception as exc:
             observation["status"] = "FAIL_REAL_TCP_FORWARDING_NOT_PRODUCT_PERF"
             observation["failed_stage"] = tier
@@ -626,6 +651,9 @@ def run_client(own, relay, server):
                    relay_kernel_loss_receipt=receipt,
                    relay_resource_receipt=relay_cpu,
                    loss_pct=loss_tier,
+                   h2303_cc_phase=("bbr2_scoped_template" if CC_AB and
+                       tier=="cc_bbr2_candidate" else "cubic_baseline" if CC_AB
+                       else None),
                    socket_buffer_requested_bytes=tcp.WINDOW_TEST_BYTES,
                    tcp_path=("DIRECT_OS_TAILNET_ARM" if tier in ("direct","clean_direct") else
                              "OS_KERNEL_DNAT_SNAT_RELAY"),
@@ -651,7 +679,37 @@ def run_client(own, relay, server):
                          sort_keys=True), flush=True)
     require([row["stage_id"] for row in observation["stages"]] ==
             list(active_stages()), "MISSING_SOURCE_LOCKED_TCP_STAGES")
-    if CAPACITY_H2284:
+    if CC_AB:
+        legs=observation["stages"]
+        require([x["stage_id"] for x in legs]==
+            ["cc_cubic_before","cc_bbr2_candidate","cc_cubic_after"],
+            "H2303_ACTUAL_A_B_APRIME_NOT_THREE_LEGS")
+        require(all(x["relay_kernel_loss_receipt"]["status"]==
+            "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED"
+            and x["socket_buffer_requested_bytes"]==8*1024*1024
+            and x["delivered"]["bulk_flows"]==4
+            and x["delivered"]["sparse_echo_received"]==160
+            for x in legs),
+            "H2303_REAL_TCP_KERNEL_LOSS_OR_WINDOW_READBACK_MISSING")
+        rates=[x["delivered"]["bulk_receiver_goodput_mbps"] for x in legs]
+        base=(rates[0]+rates[2])/2
+        require(base>0,"H2303_NO_REAL_CUBIC_BASELINE_RECEIVED")
+        observation["h2303_native_sender_cc"]={
+            "loss_pct":CC_LOSS,
+            "policy":["cubic","bbr2_template_scoped","cubic"],
+            "tcp_goodput_mbps":rates,
+            "b_over_cubic_pair_pct":round(100*(rates[1]/base-1),3),
+            "p99_ms":[x["delivered"]["sparse_tcp_rtt_p99_ms"] for x in legs],
+            "missing_echo":[160-x["delivered"]["sparse_echo_received"] for x in legs],
+            "actual_socket_algorithm":"NOT_PROVEN_BY_TEMPLATE_READBACK",
+            "real_product_tls_rust":"NOT_RUN",
+            "network":"REAL_TWO_INDEPENDENT_LINUX_KERNEL_BIDIR_NETEM",
+            "candidate_qualification":"MECHANISM_SCREEN_ONLY"}
+        observation["status"]="PASS_H2303_BARE_KERNEL_TCP_ONLY_NOT_WBD_PRODUCT"
+        print("H2303_CUBIC_BBR2_CUBIC_REAL_3RUNNER_RESULT "+
+              json.dumps(observation["h2303_native_sender_cc"],sort_keys=True),
+              flush=True)
+    elif CAPACITY_H2284:
         require([x["stage_id"] for x in observation["stages"]] ==
                 ["clean_direct","clean_relay","wan_relay"],
                 "EIGHT_FLOW_HIGH_CAPACITY_STAGES_MISSING")
