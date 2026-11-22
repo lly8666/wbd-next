@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "task": "PLAN029/P0 H2313",
+  "source_sha": "93702d5a4558ca0d37f053cd02140b74713adc1e",
+  "run_id": 45031290436,
+  "run_conclusion": "success",
+  "original_go_exe_source_sha": "c5066db61fc51bafd7c2ad2def3029e615efa777",
+  "platform": "signed original Win2025 Npcap Wintun Go TLS Rust; independent ARM relay + ARM Go TLS Rust TUN",
+  "scenario": "zero-loss same Windows VM A TX8 B TX16 A-prime TX8; NPF64KiB constant; 4x TCP bulk 25s +160 sparse echos",
+  "jobs_passed": 9,
+  "jobs_total": 9,
+  "groups": {
+    "a": [
+      {
+        "stage": "A_default",
+        "mbps": 148.922,
+        "rx": 472940544,
+        "cpu": 36.6804,
+        "p99": 235,
+        "queue_calls": 50764,
+        "queue_frames": 405922,
+        "queue_2_7": 56,
+        "queue_8": 50708,
+        "queue_9_15": 0,
+        "queue_16": 0,
+        "direct": 193,
+        "direct_small": 187,
+        "direct_large": 6,
+        "frames_per_queue_call": 7.9963,
+        "queue16_pct": 0
+      },
+      {
+        "stage": "B_tx16",
+        "mbps": 123.464,
+        "rx": 394018816,
+        "cpu": 49.0944,
+        "p99": 235,
+        "queue_calls": 21186,
+        "queue_frames": 338253,
+        "queue_2_7": 49,
+        "queue_8": 3,
+        "queue_9_15": 44,
+        "queue_16": 21090,
+        "direct": 186,
+        "direct_small": 185,
+        "direct_large": 1,
+        "frames_per_queue_call": 15.9659,
+        "queue16_pct": 99.5469
+      },
+      {
+        "stage": "A_prime",
+        "mbps": 151.814,
+        "rx": 482426880,
+        "cpu": 35.7852,
+        "p99": 250,
+        "queue_calls": 51760,
+        "queue_frames": 413959,
+        "queue_2_7": 39,
+        "queue_8": 51721,
+        "queue_9_15": 0,
+        "queue_16": 0,
+        "direct": 150,
+        "direct_small": 148,
+        "direct_large": 2,
+        "frames_per_queue_call": 7.9977,
+        "queue16_pct": 0
+      }
+    ],
+    "b": [
+      {
+        "stage": "A_default",
+        "mbps": 137.416,
+        "rx": 437207040,
+        "cpu": 44.2448,
+        "p99": 297,
+        "queue_calls": 46984,
+        "queue_frames": 375671,
+        "queue_2_7": 57,
+        "queue_8": 46927,
+        "queue_9_15": 0,
+        "queue_16": 0,
+        "direct": 382,
+        "direct_small": 351,
+        "direct_large": 31,
+        "frames_per_queue_call": 7.9957,
+        "queue16_pct": 0
+      },
+      {
+        "stage": "B_tx16",
+        "mbps": 198.789,
+        "rx": 631701504,
+        "cpu": 27.5149,
+        "p99": 219,
+        "queue_calls": 34004,
+        "queue_frames": 542042,
+        "queue_2_7": 135,
+        "queue_8": 17,
+        "queue_9_15": 58,
+        "queue_16": 33794,
+        "direct": 532,
+        "direct_small": 414,
+        "direct_large": 118,
+        "frames_per_queue_call": 15.9405,
+        "queue16_pct": 99.3824
+      },
+      {
+        "stage": "A_prime",
+        "mbps": 132.045,
+        "rx": 420380672,
+        "cpu": 43.4216,
+        "p99": 609,
+        "queue_calls": 45144,
+        "queue_frames": 361075,
+        "queue_2_7": 29,
+        "queue_8": 45115,
+        "queue_9_15": 0,
+        "queue_16": 0,
+        "direct": 284,
+        "direct_small": 284,
+        "direct_large": 0,
+        "frames_per_queue_call": 7.9983,
+        "queue16_pct": 0
+      }
+    ]
+  },
+  "paired": {
+    "a": {
+      "throughput_pct": -17.892,
+      "cpu_gib_pct": 35.497,
+      "b_full_queue_pct": 99.5469
+    },
+    "b": {
+      "throughput_pct": 47.546,
+      "cpu_gib_pct": -37.228,
+      "b_full_queue_pct": 99.3824
+    }
+  },
+  "extra_scope": [
+    "per-leg original Windows Go TLS and Rust stop plus ARM original TUN receiver verified",
+    "queue histogram is real NPF-driver submission, not remote ACK; source lock and 6 actual receiver bytes",
+    "no physical direct baseline >=800Mbps measured; no 600-800Mbps Windows WBD qualification",
+    "not a stable TX16 default promotion",
+    "fixed max FEC/repair not present in H2313 experiment"
+  ]
+}
