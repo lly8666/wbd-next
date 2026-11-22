@@ -1,6 +1,6 @@
 # H2276: TWO simultaneous isolated triplets, same exact source/scenario.
 # H2290 uses TWO true native signed Windows Npcap/Wintun original GoTLS/Rust
-# H2312 source-locked P0: NPF-only measured, now TX8->TX16 with NPF64 fixed.
+# H2313 diagnostic retry: TX8/16 NPF64 unchanged; new measured 2-7/8/9-15/16 NPF fill and size histograms.
 # Rerun: h2311_windows_npf_trace now exposed at engine crate for source-locked A DLL.
 # → independent ARM kernel relay → native ARM original GoTLS/Rust AF_PACKET/TUN;
 # real ARM TCP bytes, P99 and owned Stop; read-only actual Win32 process CPU.
