@@ -39,6 +39,21 @@ def kernel_tcp():
             d=dict(zip(line.split()[1:],entry.split()[1:]))
             for key in ("AttemptFails","OutRsts","InErrs","InSegs","OutSegs"):
                 values[key]=int(d.get(key,"0"))
+    if os.environ.get("WBD_H2306_TCP_PROGRESS")=="1":
+        # Read-only original ARM accepted TCP kernel state in TUN namespace.
+        sockets=subprocess.run(["ss","-H","-tin","sport",":"+str(PORT)],
+                               capture_output=True,text=True,timeout=8)
+        if sockets.returncode:
+            raise RuntimeError("H2306_ARM_TCP_SS_READBACK_FAILED "+
+                               sockets.stderr[-200:])
+        for line,entry in zip(snmp.splitlines()[::2],snmp.splitlines()[1::2]):
+            if line.startswith("Tcp:") and entry.startswith("Tcp:"):
+                d=dict(zip(line.split()[1:],entry.split()[1:]))
+                for key in ("RetransSegs","ActiveOpens","PassiveOpens","EstabResets"):
+                    values[key]=int(d.get(key,"0"))
+        return {"listener_45902_actual_ss":listeners[:5],
+                "established_45902_actual_ss_tin":sockets.stdout.splitlines()[:24],
+                "tcp_snmp":values}
     return {"listener_45902_actual_ss":listeners[:5],
             "tcp_snmp":values}
 

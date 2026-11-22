@@ -325,6 +325,7 @@ def check_server_and_run_app(group):
                 raise RuntimeError("H2288_REAL_ARM_TUN_TCPDUMP_NO_KERNEL_LISTENER")
             tracer_log=(ROOT/"tcp-passive-trace.log").open("w")
             tracer=subprocess.Popen(["sudo","-n","ip","netns","exec",NETNS,
+                 "env","WBD_H2306_TCP_PROGRESS="+os.environ.get("WBD_H2306_TCP_PROGRESS","0"),
                  sys.executable,"-u","tools/m0_h2287_tun_tcp_trace.py",
                  str(ROOT/"tcp-passive-headers.json")],
                  stdout=tracer_log,stderr=subprocess.STDOUT)

@@ -158,35 +158,55 @@ def client(bind_ip, target_ip, source):
     errors = []
     lock = threading.Lock()
     client_bulk_buffers = []
+    # H2306 test-only per-flow progress: never alters the original product.
+    progress_enabled=os.environ.get("WBD_H2306_TCP_PROGRESS")=="1"
+    progress=[{"flow":i,"phase":"not_started","submitted_bytes":0}
+              for i in range(BULK_FLOWS)]
 
-    def bulk_client():
+    def bulk_client(flow_index):
+        state=progress[flow_index]
+        started=time.monotonic()
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.settimeout(TIMEOUT_S)
                 local_buffers = _maybe_set_buffers(sock)
                 sock.bind((bind_ip, 0))
+                state["phase"]="connecting"
                 sock.connect((target_ip, PORT))
                 with lock:
                     client_bulk_buffers.append(local_buffers)
                 if sock.getsockname()[0] != bind_ip:
                     raise RuntimeError("H2271_NOT_ORIGINAL_WINTUN_OR_TUN_SOURCE")
+                state["phase"]="send_kind"
                 sock.sendall(b"B")
                 first = time.monotonic()
                 amount = 0
+                state["phase"]="sendall_bulk"
                 while amount < BULK_MAX_BYTES and time.monotonic() - first < BULK_SEND_S:
                     sock.sendall(BULK_BLOCK)
                     amount += len(BULK_BLOCK)
+                    if progress_enabled:
+                        state.update(submitted_bytes=amount,
+                                     last_completed_send_s=round(time.monotonic()-started,3))
+                state["phase"]="shutdown_write"
                 sock.shutdown(socket.SHUT_WR)
+                state["phase"]="await_arm_receipt"
                 reported = struct.unpack("!Q", exact(sock, 8))[0]
                 if amount != reported:
                     raise RuntimeError("H2271_REAL_TCP_REMOTE_BYTES_NOT_MATCHED")
                 with lock:
                     bulk.append((amount, first, time.monotonic()))
+                state["phase"]="complete"
+                state["elapsed_s"]=round(time.monotonic()-started,3)
         except Exception as exc:
+            state["error_at_phase"]=state["phase"]
+            state["phase"]="error"
+            state["elapsed_s"]=round(time.monotonic()-started,3)
+            state["exception"]=type(exc).__name__+":"+str(exc)
             with lock:
                 errors.append(type(exc).__name__ + ":" + str(exc))
 
-    workers = [threading.Thread(target=bulk_client) for _ in range(BULK_FLOWS)]
+    workers = [threading.Thread(target=bulk_client,args=(i,)) for i in range(BULK_FLOWS)]
     for worker in workers:
         worker.start()
     echo_times = {}
@@ -231,6 +251,15 @@ def client(bind_ip, target_ip, source):
 
     for worker in workers:
         worker.join(timeout=TIMEOUT_S)
+    if progress_enabled:
+        print(MARK+"CLIENT_PROGRESS_DIAGNOSTIC "+json.dumps({
+            "source_sha":source,"flows":progress,
+            "finished_bulk_flows":len(bulk),
+            "echo_received":len(latencies),"echo_errors":echo_error,
+            "send_supply_s":BULK_SEND_S,"socket_timeout_s":TIMEOUT_S,
+            "joined":all(not w.is_alive() for w in workers),
+            "errors":errors,"diagnostic_not_goodput_or_success":True},
+            sort_keys=True),flush=True)
     if errors or len(bulk) != BULK_FLOWS or any(worker.is_alive() for worker in workers):
         raise RuntimeError("H2271_REAL_TCP_CLIENT_INCOMPLETE " + repr(errors))
     total = sum(row[0] for row in bulk)

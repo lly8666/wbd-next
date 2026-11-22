@@ -344,8 +344,20 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         print("H2286_WINDOWS_ORIGINAL_NPCAP_TLS_WINTUN_TCP_START",flush=True)
         capture=io.StringIO()
         original_tcp_wall_start=time.monotonic()
-        with contextlib.redirect_stdout(capture):
-            tcp.client(APP_IP,APP_PEER,own["source_sha"])
+        try:
+            with contextlib.redirect_stdout(capture):
+                tcp.client(APP_IP,APP_PEER,own["source_sha"])
+        except Exception:
+            if os.environ.get("WBD_H2306_TCP_PROGRESS")=="1":
+                marker=tcp.MARK+"CLIENT_PROGRESS_DIAGNOSTIC "
+                rows=[json.loads(s.split(marker,1)[1]) for s in
+                      capture.getvalue().splitlines() if marker in s]
+                require(len(rows)==1,"H2306_REAL_TCP_PROGRESS_ON_FAILURE_MISSING")
+                output["h2306_tcp_progress_on_failure"]=rows[0]
+                core.save(ROOT/"client-result.json",output)
+                print("H2306_REAL_TCP_PROGRESS_ON_FAILURE "+
+                      json.dumps(rows[0],sort_keys=True),flush=True)
+            raise
         original_tcp_wall_end=time.monotonic()
         parsed=[json.loads(s.split(tcp.MARK+"CLIENT_DONE ",1)[1])
                 for s in capture.getvalue().splitlines()
