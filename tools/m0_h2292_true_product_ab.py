@@ -84,16 +84,38 @@ def wait_arm_stage(relay,tag):
 
 
 
+def h2312_mode():
+    return os.environ.get("WBD_H2312_FACTOR","legacy")
+
+
+def h2312_profile(text):
+    import re
+    m=re.search(r"PLAN029_H2311_NPF_STOP_PROFILE ([^\r\n]+)",text)
+    if m is None:return None
+    fields=("queue_calls","queue_frames_submitted","queue_bytes_submitted",
+            "queue_bytes_copied","queue_short_calls","direct_calls",
+            "direct_bytes_submitted","direct_frames_accepted","direct_errors",
+            "npf_queue_bytes","npf_queue_packets")
+    pairs={k:int(v) for k,v in re.findall(r"([a-z_]+)=(\d+)",m.group(1)) if k in fields}
+    return pairs if len(pairs)==len(fields) else None
+
+
 def verify_binary_archive():
     require(os.name=="nt","ONLY_REAL_WINDOWS2025")
     require(os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1",
             "EXPLICIT_H2292_TRUE_ABA_ONLY")
     ROOT.mkdir(exist_ok=True)
+    factor=h2312_mode()
+    require(factor in ("legacy","npf_only","tx_only"),"H2312_TRIAL_SELECTOR")
     src=json.loads(MANIFEST.read_text())
+    expected_trial="h2291_windows_tx_service" if factor=="legacy" else (
+        "h2311_windows_npf64_only" if factor=="npf_only" else "h2311_windows_tx16_only")
     require(src["source_sha"]==CANDIDATE_BUILD_SHA and
-            src["trial_feature"]=="h2291_windows_tx_service" and
+            src["trial_feature"]==expected_trial and
             src["original_go_exe_source_sha"]==
-             "c5066db61fc51bafd7c2ad2def3029e615efa777",
+             "c5066db61fc51bafd7c2ad2def3029e615efa777" and
+            (factor=="legacy" or (CANDIDATE_BUILD_SHA==os.environ["GITHUB_SHA"] and
+                                   src.get("h2312_factor")==factor)),
             "EXACT_CANDIDATE_COMPILE_SOURCE")
     require(hashlib.sha256(CANDIDATE.read_bytes()).hexdigest()==src["dll_sha256"],
             "EXACT_CANDIDATE_PE_BYTES")
@@ -103,10 +125,13 @@ def verify_binary_archive():
     require(frozen["source_sha"]==src["original_go_exe_source_sha"] and
             hashlib.sha256(exe.read_bytes()).hexdigest()==frozen["sha256"]["exe"],
             "EXACT_ORIGINAL_WINDOWS_GO_TLS_EXE")
+    expected_base="H2291_TX_SERVICE_DISABLED" if factor=="legacy" else (
+        "H2312_NPF8_16_TRACE" if factor=="npf_only" else "H2312_NPF16_64_TRACE")
     require(default["source_sha"]==CANDIDATE_BUILD_SHA and
-            default["feature"]=="H2291_TX_SERVICE_DISABLED" and
+            default["feature"]==expected_base and
             default["base_features"]==
              "m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record" and
+            (factor=="legacy" or default.get("h2312_factor")==factor) and
             hashlib.sha256(BINARY.read_bytes()).hexdigest()==default["dll_sha256"],
             "DEFAULT_AND_CANDIDATE_SAME_COMPILED_RUST_FEATURE_BASE")
     require(not ACTIVE_MANIFEST.exists(),
@@ -170,10 +195,27 @@ def win_trial(group,relay,arm,ready):
                     receipt["product_tcp"]["bulk_remote_received_bytes"]>0 and
                     receipt["windows_original_go_rust_cpu_stage"]["process_cpu_s_per_actual_arm_gib"]>0,
                     "ORIGINAL_TRIPLET_LEG_TCP_OR_WAL_OR_CPU_INCOMPLETE")
-            require(has_profile==tuned and
-                    receipt.get("h2291_original_windows_npf_queue_verified")==
-                    (True if tuned else None),
-                    "RUST_NPF16_ONLY_ON_B_LEG_NOT_REAL")
+            factor=h2312_mode()
+            if factor=="legacy":
+                require(has_profile==tuned and
+                        receipt.get("h2291_original_windows_npf_queue_verified")==
+                        (True if tuned else None),
+                        "RUST_NPF16_ONLY_ON_B_LEG_NOT_REAL")
+                trace=None
+            else:
+                trace=h2312_profile(log)
+                expect_bytes=65536 if (factor=="tx_only" or tuned) else 16384
+                expect_frames=16 if (factor=="tx_only" or tuned) else 8
+                require(trace is not None and
+                        trace["npf_queue_bytes"]==expect_bytes and
+                        trace["npf_queue_packets"]==expect_frames and
+                        trace["queue_calls"]>0 and
+                        trace["queue_frames_submitted"]>0 and
+                        trace["queue_bytes_copied"]>0 and
+                        trace["queue_bytes_copied"]<=trace["queue_bytes_submitted"] and
+                        not has_profile and
+                        receipt.get("h2291_original_windows_npf_queue_verified") is None,
+                        "H2312_ORIGINAL_DRIVER_REAL_ACTUAL_TRACE_NOT_MATCHED")
             for n in ("client-result.json","original-win-client.log",
                       "original-win-cpu.jsonl","win-inner-udp.log",
                       "original-product-ready.flag.udp.json"):
@@ -192,6 +234,7 @@ def win_trial(group,relay,arm,ready):
                    receipt["relay_tailscaled_and_host_cpu_stage"]["tailscaled_pct_of_one_cpu"],
                "valid_160_echo":True,
                "real_windows_npcap_64k_16_profile":has_profile,
+               "h2312_factor":factor,"h2312_npf_service":trace,
                "original_go_tls_rust_wal_stop":"PASS",
                "stage_elapsed_s_including_tls_setup":round(time.monotonic()-started,3)}
             results.append(r)
