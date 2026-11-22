@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "task": "M0-PLAN029-THROUGHPUT",
+  "experiment": "H2266",
+  "date": "2026-11-21",
+  "source_sha": "18de07c2baeb4534597640755275926dffc552bf",
+  "branch": "experiment/m0-029-throughput-arm-fair",
+  "main_source_at_experiment": "31ce49d9467cde33cce2d61c968129c3173a4b8d",
+  "native_run": {
+    "id": 44909006431,
+    "attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44909006431",
+    "conclusion": "SUCCESS",
+    "qualification": "PASS_SCOPED_ORIGINAL_NATIVE_GO_TLS_RUST_AND_STOP__NO_PRODUCT_P99_CPU_GAIN"
+  },
+  "native_artifact": {
+    "id": 14709033780,
+    "name": "m0-029-h2266-arm-loan-44909006431-1",
+    "zip_sha256": "b661d57c0dff2d3a996e0efcecc8ba18b4588371d59726246fdde9328b27979a"
+  },
+  "other_source_actions": {
+    "native_unit_dual_ISA": {
+      "id": 44909006400,
+      "conclusion": "SUCCESS",
+      "jobs": "native x86_64 and native aarch64 both SUCCESS"
+    },
+    "regression": {
+      "id": 44909006385,
+      "conclusion": "SUCCESS"
+    },
+    "feature_inventory_first_attempt": {
+      "id": 44909006367,
+      "conclusion": "FAIL",
+      "reason": "linux-raw-tun changed card declaration missing in same source commit"
+    },
+    "feature_inventory_second_attempt": {
+      "id": 44909158557,
+      "conclusion": "FAIL",
+      "reason": "card-only push lacked changed devlog in same push"
+    },
+    "feature_inventory_third_attempt": {
+      "id": 44909336396,
+      "conclusion": "SUCCESS",
+      "source_sha": "db2cdce37e99948aea7991337d9028b96ed846c2",
+      "scope": "documentation-only correction, native product source remains 18de07c"
+    }
+  },
+  "source_scope": {
+    "arch": "native Linux aarch64",
+    "one_immutable_original_go_tls_rust_bundle": true,
+    "one_build_for_3_legs": true,
+    "original_fixture_frozen_blob_sha": "b1094391ec9729931979c5158357ef2cbf72b84e",
+    "client_shared_inbox_slots": 128,
+    "server_shared_inbox_slots": 64,
+    "outer_repair": "off",
+    "explicit_outer_mtu_bytes": 1160,
+    "original_cold_go_client_server_kernel_fq_mbps": 600,
+    "artificial_netem_loss": false,
+    "real_kernel_AF_PACKET_TUN": true,
+    "bulk_original_tcp_streams": 4,
+    "real_udp_echo_requests": 160,
+    "real_small_tcp_echo_requests": 160,
+    "genuine_owned_stop_both_ends_each_leg": true,
+    "Windows": false,
+    "physical_WAN": false,
+    "default_outer_mtu1460_qualified": false
+  },
+  "original_binaries_same_three_legs_sha256": {
+    "libwbd_engine_so": "a7fbd499029fc87839b870bb6817f962bd747d42cf6a2d51b219c9f58bc354a6",
+    "wbd_v4_client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+    "wbd_v4_server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+  },
+  "one_factor": {
+    "A": "original Rust one M1 owner lock per received ready small SharedTun packet",
+    "B": "B-only client cold opt-in WBD_M0_029_SHARED_LOAN_BATCH_TRIAL=1; after >=4 true small ready packets in one TX turn, reserve <=7 additional original generation-scoped arena loans under one owner lock; reuse ready actual packets; unused returned before seal; server remains original",
+    "A_prime": "original Rust without flag in fresh authenticated namespace",
+    "no_change": "same incoming ordering, <=32 source turn, first sparse packet immediate, original M3 PN/AEAD/TLS FQ600 raw owner queue/Stop; default unchanged",
+    "candidate_is_test_only": true
+  },
+  "legs": [
+    {
+      "leg": "A",
+      "receiver_mbps": 1142.23485,
+      "client_cpu_seconds_per_rx_gib": 11.62068,
+      "server_cpu_seconds_per_rx_gib": 10.50787,
+      "small_tcp_survivor_p99_ms": 298.3939,
+      "sparse_tcp_forward_offered": 348,
+      "sparse_tcp_forward_refused": 55,
+      "udp_missing_of160": 31,
+      "tcp_missing_of160": 0,
+      "client_shared_tun_full": 692814,
+      "client_m1_batched_loans_prefetched": 0,
+      "client_m1_batched_loans_reused": 0,
+      "owned_stop": true
+    },
+    {
+      "leg": "B",
+      "receiver_mbps": 1153.42434,
+      "client_cpu_seconds_per_rx_gib": 11.53001,
+      "server_cpu_seconds_per_rx_gib": 10.55087,
+      "small_tcp_survivor_p99_ms": 321.321,
+      "sparse_tcp_forward_offered": 342,
+      "sparse_tcp_forward_refused": 45,
+      "udp_missing_of160": 28,
+      "tcp_missing_of160": 0,
+      "client_shared_tun_full": 731481,
+      "client_m1_batched_loans_prefetched": 2091521,
+      "client_m1_batched_loans_reused": 2082956,
+      "owned_stop": true
+    },
+    {
+      "leg": "A_prime",
+      "receiver_mbps": 1157.84934,
+      "client_cpu_seconds_per_rx_gib": 11.49357,
+      "server_cpu_seconds_per_rx_gib": 10.54783,
+      "small_tcp_survivor_p99_ms": 2784.7858,
+      "sparse_tcp_forward_offered": 228,
+      "sparse_tcp_forward_refused": 45,
+      "udp_missing_of160": 41,
+      "tcp_missing_of160": 0,
+      "client_shared_tun_full": 720656,
+      "client_m1_batched_loans_prefetched": 0,
+      "client_m1_batched_loans_reused": 0,
+      "owned_stop": true
+    }
+  ],
+  "B_vs_A_Aprime_mean": {
+    "receiver_goodput_delta_percent": 0.2941,
+    "client_CPU_per_rx_GiB_delta_percent": -0.23462,
+    "server_CPU_per_rx_GiB_delta_percent": 0.21866,
+    "sparse_TCP_source_refused_delta_percent": -10,
+    "UDP_missing_delta_percent": -22.22222,
+    "A_prime_over_A_p99_ratio": 9.3326,
+    "B_prefetched_loan_reuse_fraction": 0.9959
+  },
+  "outcome": "REJECT_AND_REVERT_H2266_CANDIDATE; no new product P99/CPU joint benefit",
+  "judgement": [
+    "Native action succeeds and actual post-Stop client TX worker records show 2,091,521 prefetched and 2,082,956 reused original generation-scoped arena loans in B, and zero in both A and A-prime. B code was exercised, not a no-op.",
+    "B receiver goodput +0.29% versus average original A/A-prime; client CPU seconds/effective GiB -0.23%; server CPU/GiB +0.22%. Changes are below credible drift and cannot be promoted as causal CPU/throughput improvement.",
+    "B small TCP survivor p99 is 321ms versus A 298ms, while A-prime jumps to 2785ms. Single-run baseline drift invalidates stable P99 effect; regardless B does not meet <=200ms candidate screen.",
+    "B UDP missing 28/160, small TCP source forward refused 45/342 and client all-flow source full 731481: local pressure remains, below jointly acceptable QoS thresholds. TCP 160/160 eventual echo does not prove timely delivery.",
+    "No product default, FQ maxrate, two-end encryption, original packet order or one owner changed. Candidate is not worth extra maintenance and is reverted in later evidence-only closeout; main untouched."
+  ],
+  "open": [
+    "No original Go-only versus Go+Rust matched hardware product A/B CPU and P99.",
+    "No GE1%, physical WAN, Windows, default outer1460, cross-lease fairness, 3s WAN outage or long stable p99 qualification for this source.",
+    "No first lost application TCP sequence attribution; observed sparse source counters are IPv4 first-fragment TCP/53222, not delivery receipts."
+  ],
+  "next": "Stop minor M1 owner-lock micro-tuning without demonstrated CPU/P99 margin. Quantify actual service-time/throughput bound vs 4x600 demanded traffic, and test ONE structural work-conserving congestion control/fair admission hypothesis that changes the loss-vs-service relation before product changes; preserve no cross-flow HOL, original PN/AEAD/Stop and unit CPU cost."
+}

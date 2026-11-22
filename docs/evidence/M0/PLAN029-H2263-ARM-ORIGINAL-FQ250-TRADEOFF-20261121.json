@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2263",
+  "source_sha": "3561460274171d4df4989b95d9d468d7144d703e",
+  "run_id": 44902034107,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44902034107",
+  "workflow_conclusion": "FAIL",
+  "failure_stage": "summary_only_KeyError_receiver_mbps_after_three_original_native_leg_success",
+  "evidence_status": "THREE_GENUINE_NATIVE_LEGS_VALID_PASS_SCOPED_OBSERVATION__REPORT_STEP_FAIL__CANDIDATE_NOT_ADOPTED",
+  "artifact": {
+    "id": 14706631429,
+    "zip_sha256": "f20f39287dc266c19f609891428c214e60da575b3588a33d5d95e935570ca0f5",
+    "name": "m0-029-h2263-arm-fq-44902034107-1"
+  },
+  "source_scope": {
+    "isa": "native aarch64",
+    "topology": "real original Go TLS/Rust nonprobe, one owned authenticated shared TUN /32, Linux real kernel TCP4 plus 160 UDP/TCP each leg, actual owner Stop",
+    "outer_ip_mtu_explicit_bytes": 1160,
+    "netem_injected_loss": 0,
+    "real_physical_WAN": false,
+    "production_cli_qdisc_changes": false,
+    "difference": "B only ephemeral isolated client TUN kernel fq maxrate250mbit flow_limit256 applied after Go owner original fq600 and verified; A/A-prime original600, server600 all legs",
+    "original_go_config_allowed_rates": [
+      0,
+      600,
+      900
+    ],
+    "runtime_protocol_unchanged": true,
+    "same_one_immutable_release_bundle": true,
+    "diagnostics_uniform_all_legs": "Original 53222 sparse TCP IPv4 first-fragment offered/refused, TCP_INFO, 160 real app sequence timeline, stage observer off"
+  },
+  "binary_sha256": {
+    "libwbd_engine.so": "829e94098d09fb8d9787d89bd0317e0b24d09189010d711341fc55c92eb1a6b7",
+    "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+    "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+  },
+  "leg_order": [
+    "A",
+    "B",
+    "A_prime"
+  ],
+  "legs": [
+    {
+      "leg": "A",
+      "client_fq_mbps": 600,
+      "server_fq_mbps": 600,
+      "fixture_override": false,
+      "receiver_mbps": 1177.91601108,
+      "client_cpu_seconds_per_rx_gib": 11.31226,
+      "server_cpu_seconds_per_rx_gib": 10.38263,
+      "udp_missing_of160": 30,
+      "tcp_missing_of160": 0,
+      "tcp_p99_ms": 306.5986,
+      "client_sparse_tcp_53222_source_offered": 350,
+      "client_sparse_tcp_53222_source_refused": 64,
+      "server_sparse_tcp_53222_source_refused": 1,
+      "client_shared_full": 717592,
+      "inner_iperf_tcp_retransmissions": 717604,
+      "inner_app_socket_rto_us_p95": 2145000,
+      "original_go_tls_rust_stop": true
+    },
+    {
+      "leg": "B",
+      "client_fq_mbps": 250,
+      "server_fq_mbps": 600,
+      "fixture_override": true,
+      "receiver_mbps": 935.39096725,
+      "client_cpu_seconds_per_rx_gib": 11.70155,
+      "server_cpu_seconds_per_rx_gib": 11.97239,
+      "udp_missing_of160": 2,
+      "tcp_missing_of160": 0,
+      "tcp_p99_ms": 81.8487,
+      "client_sparse_tcp_53222_source_offered": 327,
+      "client_sparse_tcp_53222_source_refused": 3,
+      "server_sparse_tcp_53222_source_refused": 0,
+      "client_shared_full": 17724,
+      "inner_iperf_tcp_retransmissions": 17719,
+      "inner_app_socket_rto_us_p95": 202000,
+      "original_go_tls_rust_stop": true
+    },
+    {
+      "leg": "A_prime",
+      "client_fq_mbps": 600,
+      "server_fq_mbps": 600,
+      "fixture_override": false,
+      "receiver_mbps": 1186.34213641,
+      "client_cpu_seconds_per_rx_gib": 11.31554,
+      "server_cpu_seconds_per_rx_gib": 10.36353,
+      "udp_missing_of160": 29,
+      "tcp_missing_of160": 0,
+      "tcp_p99_ms": 621.0664,
+      "client_sparse_tcp_53222_source_offered": 336,
+      "client_sparse_tcp_53222_source_refused": 55,
+      "server_sparse_tcp_53222_source_refused": 2,
+      "client_shared_full": 743248,
+      "inner_iperf_tcp_retransmissions": 742688,
+      "inner_app_socket_rto_us_p95": 206000,
+      "original_go_tls_rust_stop": true
+    }
+  ],
+  "compared_to_mean_of_A_and_A_prime": {
+    "B_receiver_goodput_change_percent": -20.87235,
+    "B_client_cpu_seconds_per_rx_gib_change_percent": 3.42632,
+    "B_server_cpu_seconds_per_rx_gib_change_percent": 15.41789,
+    "B_client_shared_full_reduction_percent": 97.57345,
+    "B_client_sparse_tcp_refused_reduction_percent": 94.95798,
+    "A_A_prime_goodput_drift_percent": 0.71534,
+    "A_A_prime_small_tcp_p99_drift_percent": 102.5666
+  },
+  "interpretation": [
+    "Local client original shared-TUN ingress first-fragment rejection of sparse TCP/53222 is genuinely reduced from A64/A-prime55 to B3 when four bulk TCP streams are each cold FQ paced at 250Mbps in isolated test-only kernel TUN; UDP missing reduced from30/29 to2 and small TCP p99 306/621 to82ms in same VM.",
+    "Sender pressure and service capacity mismatch is a supported causal mechanism (only known change is client TUN qdisc per-flow cap); this does not identify exact per-application-sequence first loss, or imply no crossflow HOL in untested modes.",
+    "B receiver goodput is 20.87 percent lower and client/server CPU/GiB higher 3.43/15.42 percent; reject fq250 product default despite QoS positives.",
+    "Original GitHub Action final failure is report parser KeyError after all three real source-locked ProductShared sessions have returned PASS_SCOPED and all exact original owned Stop. Do not relabel historical Action SUCCESS; repair report offline."
+  ],
+  "limits": [
+    "Only native ARM64, same-host genuine Linux namespaces, no artificial GE loss, explicit 1160 outer MTU, four bulk same-lease TCP plus 160 UDP/TCP app messages.",
+    "Diagnostic port classifier enabled equivalently all three legs and defaults off. Original Go private user config unchanged; B qdisc override is a test-harness change in an ephemeral namespace, not an accepted publicly configurable value.",
+    "Per-stream kernel TCP retransmissions and first-fragment source refusal are different counters, neither is exact app-sequence causal first loss.",
+    "A/A-prime TCP p99 drifts by 2x. P99 survivor does not account for missing UDP and cannot alone grant product timely-first SLA.",
+    "Windows, default 1460, physical WAN, GE1%, two leases and full PLAN029 exit NOT_RUN."
+  ],
+  "next_action": "Evaluate one intermediate per-flow FQ cap bounded by real four-stream ARM service rate, on one native ARM runner with same original TLS/Rust A-B-Aprime, before proposing any real Go cold adaptive configuration; preserve current fq600 product default. If CPU/GiB/goodput tradeoff persists, reject fixed cap and investigate efficient service/fairness."
+}
