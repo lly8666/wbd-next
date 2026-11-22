@@ -1,0 +1,48 @@
+# H2314 owner/Windows native scoped unit only. Not a remote maximum-FEC
+# acceptance, and no production default, Go ABI or existing four-row FFI change.
+name: H2314 Windows Fixed maximum 20 parity original owner unit
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-h2314-windows-fixed-maximum-service-unit.yml'
+      - 'tests/test_m0_h2314_maximum_service.py'
+      - 'crates/wbd-engine/Cargo.toml'
+      - 'crates/wbd-engine/src/v4_windows_fec2_owner.rs'
+      - 'crates/wbd-engine/src/v4_windows_native_runtime.rs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m unittest tests.test_m0_h2314_maximum_service -v
+  windows_unit:
+    needs: static
+    runs-on: windows-2025
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Real Windows Rust original maximum 20-parity M1/M3/AEAD and prefix unit
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $features='m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,h2311_windows_npf64_only,h2314_windows_fixed_max_burst'
+          & cargo +1.85.1 test --locked -p wbd-engine --features $features --lib m0_windows_fixed_maximum_twenty_frozen_rows_one_original_prefix -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'H2314_ORIGINAL_WINDOWS_MAXIMUM_OWNER_FAIL'}
+          & cargo +1.85.1 test --locked -p wbd-engine --features $features --lib m0_fixed_stream_full_maximum_five_quanta_one_genuine_m4_prefix -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'H2314_EXISTING_M1_FIVE_QUANTA_REGRESSION'}
+          & cargo +1.85.1 test --locked -p wbd-engine --features $features --lib native_driver_prefix_never_claims_peer_receipt -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'H2314_NPF_PREFIX_NOT_PEER_GATE'}
+          & cargo +1.85.1 test --locked -p wbd-engine --features $features --lib m0_h2314_fixed_maximum_two_ready_twenty_rows_cover_full_source_turn -- --test-threads=1
+          if($LASTEXITCODE -ne 0){throw 'H2314_MAXIMUM_SOURCE_TO_PARITY_SERVICE_COVERAGE'}
+          Write-Output 'H2314_NATIVE_SCOPED_WINDOWS_UNIT_PASS_NOT_REAL_FEC_PRODUCT'
