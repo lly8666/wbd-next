@@ -30,6 +30,8 @@ win_native_lock_profile = []
 h2291_windows_tx_service = ["wbd-platform/h2291_windows_tx_service"]
 # P0/H2311 only: isolate the two H2292 TX changes, with NPF syscall
 # attribution enabled only for these explicit trial binaries. Defaults OFF.
+# H2312 separately enables the trace on an otherwise unchanged TX8/NPF16 baseline.
+h2311_windows_npf_trace = ["wbd-platform/h2311_windows_npf_trace"]
 h2311_windows_tx16_only = ["wbd-platform/h2311_windows_npf_trace"]
 h2311_windows_npf64_only = ["wbd-platform/h2311_windows_npf64_only", "wbd-platform/h2311_windows_npf_trace"]
 # Optional fixed-source ISA-L backend; runtime selects it automatically when compiled.
