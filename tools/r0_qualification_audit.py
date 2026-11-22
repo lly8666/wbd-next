@@ -126,7 +126,7 @@ def audit():
         # R1 composition is M0-owned and strictly one-way. Keep every
         # lower-level crate pure types-only and engine as the sole importer.
         expected = (set() if crate=="wbd-types" else
-                    {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb"}
+                    {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb","regex"}
                     if crate=="wbd-engine" else
                     {"wbd-types","aws-lc-rs","chacha20","aes","wbd-isal-safe"}
                     if crate=="wbd-codec" else {"wbd-types"})
@@ -138,14 +138,16 @@ def audit():
                         f"wrong internal source pin for {crate}->{k}")
             else:
                 require(((crate=="wbd-codec" and k in {"aws-lc-rs","chacha20","aes"})
-                         or (crate=="wbd-engine" and k=="rtrb"))
+                         or (crate=="wbd-engine" and k=="rtrb") or
+                         (crate=="wbd-engine" and k=="regex" and
+                          v=={"version":"=1.12.2"}))
                         and v=={"workspace":True} or
                         (crate=="wbd-codec" and k=="wbd-isal-safe" and
                          v=={"path":"../../native/isal-safe","optional":True,"default-features":False}),
                         f"unapproved external dependency {crate}->{k}")
     lock_deps={p["name"]:set(p.get("dependencies",[])) for p in packages}
     require(lock_deps["wbd-engine"]==
-            {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb"},
+            {"wbd-types","wbd-codec","wbd-platform","wbd-recovery","rtrb","regex"},
             "Cargo.lock lost R1 engine assembly edges")
     require(lock_deps["wbd-codec"]=={"wbd-types","aws-lc-rs","chacha20","aes","wbd-isal-safe"},
             "Cargo.lock codec crypto plus optional native backend dependencies drift")
