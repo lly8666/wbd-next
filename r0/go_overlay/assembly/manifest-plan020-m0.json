@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "28a46730b5455bf18bbcbb61e1cdadf2691b1663",
+      "result_blob": "3238f8819563c51bc34c33f5e884f9d36c421231",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -308,6 +308,10 @@
         {
           "find": "ServerName:*serverName,RouteKey:routeKey,TrustedServerRoots:trustedRoots,Username:*username,Password:*password,",
           "replace": "ServerName:*serverName,RouteKey:routeKey,TrustedServerRoots:trustedRoots,TLSVerifyServer:*tlsVerifyServer,Username:*username,Password:*password,"
+        },
+        {
+          "find": "\t\tserverName         = flag.String(\"server-name\", \"\", \"recognized TLS server name\")",
+          "replace": "\t\tserverName         = flag.String(\"server-name\", \"\", \"recognized TLS server name\")\n\t\ttlsVerifyServer = flag.Bool(\"tls-verify-server\", false, \"opt-in original TLS server certificate verification; default OFF; requires trusted CA PEM\")"
         }
       ]
     },

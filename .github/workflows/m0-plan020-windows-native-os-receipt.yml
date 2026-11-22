@@ -9,6 +9,8 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
       - ".github/workflows/m0-plan012-combined-functional.yml" # PLAN022 one identical SOURCE cross-OS functional batch
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
+      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
+      - "tests/test_m0_plan020_tls_flag_assembly.py"
       - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go"
       - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go"
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go"
@@ -117,6 +119,15 @@ jobs:
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'exact original / M0 Git bytes mismatch'}
           & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/assembly.json
+          if($LASTEXITCODE -ne 0){throw 'PLAN020_SOURCE_LOCKED_ORIGINAL_GO_ASSEMBLY_FAILED'}
+          @'
+          import pathlib
+          s=pathlib.Path('legacy/cmd/wbd-client/main_windows.go').read_text()
+          assert s.count('tlsVerifyServer = flag.Bool("tls-verify-server", false,')==1
+          assert s.count('TLSVerifyServer:*tlsVerifyServer')==1
+          print('PLAN020_H2214_DEFAULT_OFF_SERVER_TLS_VERIFY_FLAG_SOURCE_ASSEMBLED')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'PLAN020_ORIGINAL_GO_TLS_VERIFY_FLAG_SOURCE_INVALID'}
           if ($LASTEXITCODE -ne 0) {throw 'exact original Windows assembly FAIL'}
       - name: Compile linked ORIGINAL credential Go Rust + signed Wintun five-stage OS WAL production packages
         shell: pwsh
