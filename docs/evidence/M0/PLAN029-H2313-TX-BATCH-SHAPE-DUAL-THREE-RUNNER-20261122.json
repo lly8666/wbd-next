@@ -27,7 +27,10 @@
         "direct_small": 187,
         "direct_large": 6,
         "frames_per_queue_call": 7.9963,
-        "queue16_pct": 0
+        "queue16_pct": 0,
+        "rust_tx_cpu_lower_bound_s": 12.2188,
+        "relay_tailscaled_pct_of_one_cpu": 154.528,
+        "tcp_echo_late_1000ms": 0
       },
       {
         "stage": "B_tx16",
@@ -45,7 +48,10 @@
         "direct_small": 185,
         "direct_large": 1,
         "frames_per_queue_call": 15.9659,
-        "queue16_pct": 99.5469
+        "queue16_pct": 99.5469,
+        "rust_tx_cpu_lower_bound_s": 13.3594,
+        "relay_tailscaled_pct_of_one_cpu": 147.028,
+        "tcp_echo_late_1000ms": 0
       },
       {
         "stage": "A_prime",
@@ -63,7 +69,10 @@
         "direct_small": 148,
         "direct_large": 2,
         "frames_per_queue_call": 7.9977,
-        "queue16_pct": 0
+        "queue16_pct": 0,
+        "rust_tx_cpu_lower_bound_s": 12.3281,
+        "relay_tailscaled_pct_of_one_cpu": 156.225,
+        "tcp_echo_late_1000ms": 0
       }
     ],
     "b": [
@@ -83,7 +92,10 @@
         "direct_small": 351,
         "direct_large": 31,
         "frames_per_queue_call": 7.9957,
-        "queue16_pct": 0
+        "queue16_pct": 0,
+        "rust_tx_cpu_lower_bound_s": 13.25,
+        "relay_tailscaled_pct_of_one_cpu": 160.929,
+        "tcp_echo_late_1000ms": 0
       },
       {
         "stage": "B_tx16",
@@ -101,7 +113,10 @@
         "direct_small": 414,
         "direct_large": 118,
         "frames_per_queue_call": 15.9405,
-        "queue16_pct": 99.3824
+        "queue16_pct": 99.3824,
+        "rust_tx_cpu_lower_bound_s": 12.0938,
+        "relay_tailscaled_pct_of_one_cpu": 172.69,
+        "tcp_echo_late_1000ms": 0
       },
       {
         "stage": "A_prime",
@@ -119,7 +134,10 @@
         "direct_small": 284,
         "direct_large": 0,
         "frames_per_queue_call": 7.9983,
-        "queue16_pct": 0
+        "queue16_pct": 0,
+        "rust_tx_cpu_lower_bound_s": 12.5938,
+        "relay_tailscaled_pct_of_one_cpu": 156.789,
+        "tcp_echo_late_1000ms": 0
       }
     ]
   },

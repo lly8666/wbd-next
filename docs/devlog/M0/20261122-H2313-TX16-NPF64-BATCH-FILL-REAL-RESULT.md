@@ -12,3 +12,7 @@
 组a候选下降**-17.892%**且 CPU/GiB **+35.497%**；组b候选上涨**+47.546%**且 CPU/GiB **-37.228%**。批次容量能用满、底层 driver copied prefix 完整，但吞吐提升不稳定，说明不能继续简单加大批次。下一步应固定真正 independent physical direct+relay 容量，分 sender pacing/inner TCP cwnd、平台 kernel/user 时、一次批次两端资源及一帧公网时间占比；绝不将两个不同 group 的 A 绝对值误归为同链路归因。
 
 判定：**FUNCTIONAL_SAME_SOURCE_PASS / NPF_BATCH_SHAPE_PROVED / PERFORMANCE_QUALIFICATION_NO**；真实 WBD 600–800Mbps 未达，不能默认晋级 TX16。P1机会修复、P2最高档 FEC 由不同 SOURCE 独立资格。
+
+## 可证伪的 CPU/转发服务界
+
+原 Windows 真 TX Rust 线程 **CPU 用量下界（s）**：a A/B/A′ `12.2188 / 13.3594 / 12.3281`，b `13.2500 / 12.0938 / 12.5938`，对应每段25s TCP bulk，**不能证明 TX 本身已被单核100%压满**。同腿独立 Linux ARM relay tailscaled 真实 CPU占单核百分比分别 a `154.528 / 147.028 / 156.225%`、b `160.929 / 172.690 / 156.789%`，代表多核分摊后的 ~1.5–1.73 核工时负载，不能仅凭这个就断言 tailscaled 是唯一瓶颈。两组 P99 与 Win CPU/GiB跟随链路吞吐显著变动，下一关必须在**同次**采独立 direct/relay 物理可用吞吐，否则不能将 NPF16 实验是否胜出归因到 Rust TX 内核热路径。
