@@ -28,6 +28,8 @@ class H2312SingleFactor(unittest.TestCase):
         self.assertIn("cargo +1.85.1 build --locked --release -p wbd-engine --features $bFeatures",w)
         self.assertIn("H2312_NPF8_16_TRACE",w)
         self.assertIn("H2312_NPF16_64_TRACE",w)
+        self.assertIn("crates/wbd-engine/src/v4_windows_fec2_owner.rs) ;;",w)
+        self.assertNotIn("crates/wbd-engine/src/runtime/fec2_owner.rs) ;;",w)
         self.assertIn("H2312_ORIGINAL_DRIVER_REAL_ACTUAL_TRACE_NOT_MATCHED",trial_source)
         self.assertIn("if factor=='legacy':",w)
         self.assertIn("expected=[8,16,8] if factor=='npf_only' else [16,16,16]",w)

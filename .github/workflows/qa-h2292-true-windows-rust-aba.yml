@@ -106,7 +106,7 @@ jobs:
           while IFS= read -r path; do
             test -n "$path" || continue
             case "$path" in
-              crates/wbd-platform/Cargo.toml|crates/wbd-engine/Cargo.toml|crates/wbd-platform/src/windows_native_io.rs|crates/wbd-engine/src/v4_windows_native_runtime.rs|crates/wbd-engine/src/v4_windows_owner.rs) ;;
+              crates/wbd-platform/Cargo.toml|crates/wbd-engine/Cargo.toml|crates/wbd-platform/src/windows_native_io.rs|crates/wbd-engine/src/v4_windows_native_runtime.rs|crates/wbd-engine/src/v4_windows_owner.rs|crates/wbd-engine/src/v4_windows_fec2_owner.rs) ;;
               *) echo "H2291_UNEXPECTED_ARM_COMPILED_PRODUCT_DELTA $path" >&2; exit 2;;
             esac
           done <<< "$product_delta"
