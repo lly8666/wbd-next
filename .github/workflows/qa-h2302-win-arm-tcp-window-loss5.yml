@@ -107,16 +107,12 @@ jobs:
           BUILD_SOURCE=97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573
           git fetch --depth=1 origin "$BUILD_SOURCE"
           product_delta="$(git diff --name-only "$BUILD_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/m0_install_public_faketcp.py tools/m0_plan029_linux_dual_native_build.sh)"
-          # Only Windows native TX-source and opt-in Cargo feature declaration
-          # differ from the old ARM binary. They do not change Linux ARM code.
-          while IFS= read -r path; do
-            test -n "$path" || continue
-            case "$path" in
-              crates/wbd-platform/Cargo.toml|crates/wbd-engine/Cargo.toml|crates/wbd-platform/src/windows_native_io.rs|crates/wbd-engine/src/v4_windows_native_runtime.rs) ;;
-              *) echo "H2291_UNEXPECTED_ARM_COMPILED_PRODUCT_DELTA $path" >&2; exit 2;;
-            esac
-          done <<< "$product_delta"
-          echo H2291_ARM_SOURCE_LOCK_WIN_ONLY_DIFF_ALLOWED_NO_ARM_PRODUCT_CHANGE
+          # H2302 is a SOCKET-only exploratory control on exact archived
+          # H2286 Go/Rust binaries. Preserve source delta, never claim this
+          # run is a current-branch product build or product promotion.
+          printf '%s\n' "$product_delta" > h2302-archived-arm-source-delta.txt
+          echo H2302_ARCHIVED_ARM_SOURCE_BOUNDARY_NOT_CURRENT_PRODUCT
+          echo "H2302_ARCHIVED_ARM_EXACT_BINARY_SOURCE=$BUILD_SOURCE"
           mkdir -p linux-plan029-public-bundle
           gh run download 44936859273 --repo "$GITHUB_REPOSITORY" --name "h2286-arm-original-product-$BUILD_SOURCE" --dir linux-plan029-public-bundle
           python3 - <<'PY'
@@ -168,9 +164,11 @@ jobs:
           & git fetch --depth=1 origin $compiled
           if($LASTEXITCODE -ne 0){throw 'H2292_ORIGINAL_DLL_COMPILE_SOURCE_NOT_REACHABLE'}
           $productDiff=@(& git diff --name-only $compiled $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock)
-          if($LASTEXITCODE -ne 0 -or $productDiff.Count -ne 0){
-            throw ('H2292_REAL_WINDOWS_PRODUCT_COMPILED_SOURCE_CHANGED '+($productDiff -join ','))
-          }
+          if($LASTEXITCODE -ne 0){throw 'H2302_ARCHIVED_WINDOWS_PRODUCT_COMPARE_FAILED'}
+          # Deliberately test exact archived DLL bytes; this A/B does NOT
+          # qualify the experiment branch or main product binaries.
+          $productDiff | Out-File -FilePath h2302-archived-win-rust-source-delta.txt
+          Write-Output H2302_ARCHIVED_WINDOWS_DLL_SOURCE_BOUNDARY_NOT_CURRENT_PRODUCT
           New-Item -ItemType Directory -Force result/h2292-build | Out-Null
           & gh run download 44949570906 --repo $env:GITHUB_REPOSITORY --name "h2292-two-real-win-rust-dlls-$compiled" --dir result/h2292-build
           if($LASTEXITCODE -ne 0){throw 'H2292_PRIOR_REAL_BUILD_PAIR_ARCHIVE_UNAVAILABLE'}
@@ -484,7 +482,9 @@ jobs:
           & git fetch --depth=1 origin c5066db61fc51bafd7c2ad2def3029e615efa777
           if($LASTEXITCODE -ne 0){throw 'H2286_OLD_ORIGINAL_BINARY_PRODUCT_REF_UNAVAILABLE'}
           $diff=@(& git diff --name-only c5066db61fc51bafd7c2ad2def3029e615efa777 $env:GITHUB_SHA -- r0/go_overlay tools/prepare_windows_wiring.py)
-          if($LASTEXITCODE -ne 0 -or $diff.Count -ne 0){throw ('H2286_REAL_ORIGINAL_PRODUCT_SOURCE_CHANGED_REBUILD_REQUIRED '+($diff -join ','))}
+          if($LASTEXITCODE -ne 0){throw 'H2302_ARCHIVED_WIN_GO_SOURCE_COMPARE_FAILED'}
+          $diff | Out-File -FilePath h2302-archived-win-go-source-delta.txt
+          Write-Output H2302_ARCHIVED_WINDOWS_GO_SOURCE_BOUNDARY_NOT_CURRENT_PRODUCT
           New-Item -ItemType Directory -Force result/wl-public | Out-Null
           & gh run download 44923149093 --repo $env:GITHUB_REPOSITORY --name 'm0-wl-windows-product-binaries-c5066db61fc51bafd7c2ad2def3029e615efa777' --dir result/wl-public
           if($LASTEXITCODE -ne 0){throw 'H2286_REAL_ORIGINAL_WINDOWS_BINARY_ARTIFACT_MISSING'}
