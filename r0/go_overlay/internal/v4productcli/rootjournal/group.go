@@ -25,6 +25,7 @@ type GroupPlan struct {
  UIDs []int `json:"uids"`
  Tun string `json:"tun"`
  Lease string `json:"lease"`
+ ServerIP string `json:"server_ip,omitempty"`
  Underlay string `json:"underlay"`
  NetworkHandle uint64 `json:"network_handle"`
  IfIndex int `json:"ifindex"`
@@ -53,6 +54,8 @@ func (p GroupPlan) valid() bool {
  return p.Version==groupVersion&&ValidGroupUIDs(p.UIDs)&&
   err==nil&&lease.IsValid()&&lease.Addr().Is4()&&lease.Bits()==32&&
   !lease.Addr().IsUnspecified()&&!lease.Addr().IsMulticast()&&
+  (p.ServerIP==""||(validServerPeerIPv4(p.ServerIP)&&
+   p.ServerIP!=lease.Addr().String()))&&
   nameOK(p.Tun)&&nameOK(p.Underlay)&&p.Tun!=p.Underlay&&
   p.NetworkHandle!=0&&p.IfIndex>0&&len(p.Nonce)==32
 }
@@ -140,15 +143,15 @@ func groupWrite(path string,p GroupPlan)error{
  if closeErr!=nil{return closeErr}
  return parentSync(path)
 }
-func (s *GroupSession) query(p GroupPlan)(bool,[]bool,error){
+func (s *GroupSession) query(p GroupPlan)(bool,bool,[]bool,error){
  out,err:=s.run(routeShow()...)
- if err!=nil{return false,nil,err}
- route,err:=routeState(out,p.Tun)
- if err!=nil{return false,nil,err}
+ if err!=nil{return false,false,nil,err}
+ route,peer,err:=allAppRouteState(out,p.Tun,p.ServerIP)
+ if err!=nil{return false,false,nil,err}
  lines,err:=s.run(ruleShow()...)
- if err!=nil{return false,nil,err}
+ if err!=nil{return false,false,nil,err}
  rules,err:=groupRuleState(lines,p)
- return route,rules,err
+ return route,peer,rules,err
 }
 func anyRules(b []bool)bool{
  for _,v:=range b{if v{return true}}
@@ -159,30 +162,41 @@ func allRules(b []bool)bool{
  return true
 }
 func (s *GroupSession) requireEmpty(p GroupPlan)error{
- route,rules,err:=s.query(p)
+ route,peer,rules,err:=s.query(p)
  if err!=nil{return err}
- if route||anyRules(rules){return fmt.Errorf("Android UID group table/rules occupied")}
+ if route||peer||anyRules(rules){return fmt.Errorf("Android group table/rules occupied")}
  return nil
 }
 func (s *GroupSession) requireRouteOnly(p GroupPlan)error{
- route,rules,err:=s.query(p)
+ route,peer,rules,err:=s.query(p)
  if err!=nil{return err}
- if !route||anyRules(rules){return fmt.Errorf("Android group route-only readback mismatch")}
+ if !route||peer||anyRules(rules){return fmt.Errorf("Android group route-only mismatch")}
+ return nil
+}
+func (s *GroupSession) requirePeerRouteOnly(p GroupPlan)error{
+ route,peer,rules,err:=s.query(p)
+ if err!=nil{return err}
+ if !route||!peer||anyRules(rules){return fmt.Errorf("Android group peer-only mismatch")}
  return nil
 }
 func (s *GroupSession) requireReady(p GroupPlan)error{
- route,rules,err:=s.query(p)
+ route,peer,rules,err:=s.query(p)
  if err!=nil{return err}
- if !route||!allRules(rules){return fmt.Errorf("Android group uidrange readback mismatch")}
+ if !route||(p.ServerIP!=""&&!peer)||!allRules(rules){
+  return fmt.Errorf("Android group UID/peer readback mismatch")
+ }
  return nil
 }
 func (s *GroupSession) removeExact(p GroupPlan)error{
- route,rules,err:=s.query(p)
+ route,peer,rules,err:=s.query(p)
  if err!=nil{return err}
  for i:=len(rules)-1;i>=0;i--{
   if rules[i]{
    if _,err=s.run(groupRuleArgs("del",p.UIDs[i],i)...);err!=nil{return err}
   }
+ }
+ if peer{
+  if _,err=s.run(peerThrowArgs("del",p.ServerIP)...);err!=nil{return err}
  }
  if route{
   if _,err=s.run(routeDel(p.Tun)...);err!=nil{return err}
@@ -253,12 +267,20 @@ func NewGroup(run Runner,path string,original GroupPlan)(session *GroupSession,r
  if err=s.requireRouteOnly(original);err!=nil{
   return nil,errors.Join(err,s.removeExact(original))
  }
+ if original.ServerIP!=""{
+  if _,err=s.run(peerThrowArgs("add",original.ServerIP)...);err!=nil{
+   return nil,errors.Join(err,s.removeExact(original))
+  }
+  if err=s.requirePeerRouteOnly(original);err!=nil{
+   return nil,errors.Join(err,s.removeExact(original))
+  }
+ }
  for i,uid:=range original.UIDs {
   if _,err=s.run(groupRuleArgs("add",uid,i)...);err!=nil{
    return nil,errors.Join(err,s.removeExact(original))
   }
-  route,rules,e:=s.query(original)
-  if e!=nil||!route||len(rules)<=i||!rules[i]{
+  route,peer,rules,e:=s.query(original)
+  if e!=nil||!route||(original.ServerIP!=""&&!peer)||len(rules)<=i||!rules[i]{
    return nil,errors.Join(fmt.Errorf("group rule %d missing kernel readback: %w",i,e),s.removeExact(original))
   }
  }

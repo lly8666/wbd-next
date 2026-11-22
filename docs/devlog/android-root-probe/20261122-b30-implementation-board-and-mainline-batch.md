@@ -7,3 +7,13 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B30以源码与同SOURCE Actions标记已施工能力、未验能力和真正MISSING；后续继续原Root UID路由Server-IP例外跨模式闭环，不新增防御/代理框架"}
 ```
+
+## B31｜真实生产代码：三种普通App UID路由的一致服务端IPv4例外
+
+B30盘点确认 all-app 私有 FIB table 19842 已有`throw peer/32`，但single与2–8UID组同样走default TUN时没有例外，选定App访问自身WBD服务器物理IPv4会再被导入TUN。本轮不另造网络代理：完全复用原rootjournal的`peerThrowArgs`及`allAppRouteState`，在单UID/组UID持久journal上加入可选ServerIP字段（历史v1/v2仍可恢复），原Go TLS后真实`c.peerIP`传入；在首条UID规则前安装/读回内核`throw <peer>/32`，原Stop与crash recovery按UID、例外、default TUN顺序撤回。原 all-app 未改。
+
+既有Go Host fake ip测试覆盖单/组选定App的插入顺序、Stop无残留、失败回滚与外来例外拒删；将整套rootjournal Go测试放入已有Linux Oracle脚本，不造额外重型工作流。Host/BUILD按本SOURCE Actions，真实Android netd下App直连仍NOT_RUN；这不等于物理TCP53或用户自定义直连CIDR已接。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B31单UID与多UID组在同一原Root journal/FIB中复用既有all-app服务端/32 throw，实现三种普通App UID路由范围的物理WBD服务端例外、精确Stop及Host回归"}
+```

@@ -67,6 +67,8 @@ cp r0/go_overlay/internal/v4productcli/rootjournal/*.go legacy/internal/v4produc
 # Source-locked Android root cold RST owner; host Go tests use only a fake iptables runner.
 mkdir -p legacy/internal/v4productcli/rstguard
 cp r0/go_overlay/internal/v4productcli/rstguard/*.go legacy/internal/v4productcli/rstguard/
+(cd legacy && go test -count=1 ./internal/v4productcli/rootjournal)
+echo ANDROID_B31_ORIGINAL_ROOT_UID_PEER_EXCEPTION_HOST_PASS
 (cd legacy && go test -count=1 ./internal/v4productcli/rstguard)
 echo ANDROID_A35_FAKE_RUNNER_RST_GUARD_JOURNAL_HOST_PASS
 # linux.go now names the same pure-Go pinned CN8503 cold parser package.

@@ -16,6 +16,7 @@ import (
 type groupFake struct {
  tun string
  route bool
+ peerThrow string
  rules map[int]int // priority -> exact UID
  foreign string
  failAddAt int
@@ -29,8 +30,10 @@ func (f *groupFake) run(args ...string)(string,error){
  switch{
  case reflect.DeepEqual(args,routeShow()):
   if f.foreign=="route"{return "default dev foreign0\n",nil}
-  if f.route{return "default dev "+f.tun+" scope link\n",nil}
-  return "",nil
+  out:=""
+  if f.route{out+="default dev "+f.tun+" scope link\n"}
+  if f.peerThrow!=""{out+="throw "+f.peerThrow+"\n"}
+  return out,nil
  case reflect.DeepEqual(args,ruleShow()):
   var p []int
   for priority:=range f.rules{p=append(p,priority)}
@@ -50,12 +53,18 @@ func (f *groupFake) run(args ...string)(string,error){
     Priority+GroupMaxUIDs-1))
   }
   return strings.Join(lines,"\n")+"\n",nil
+ case len(args)==7&&args[0]=="-4"&&args[1]=="route"&&args[2]=="add"&&args[3]=="throw":
+  if !f.route||f.peerThrow!=""{return "",errors.New("peer throw occupied")}
+  f.peerThrow=strings.TrimSuffix(args[4],"/32");return "",nil
+ case len(args)==7&&args[0]=="-4"&&args[1]=="route"&&args[2]=="del"&&args[3]=="throw":
+  if f.failDelete||f.peerThrow!=strings.TrimSuffix(args[4],"/32"){return "",errors.New("peer exception foreign")}
+  f.peerThrow="";return "",nil
  case len(args)>3&&args[0]=="-4"&&args[1]=="route"&&args[2]=="add":
   if f.route{return "",errors.New("route exists")}
   f.route=true;return "",nil
  case len(args)>3&&args[0]=="-4"&&args[1]=="route"&&args[2]=="del":
   if f.failDelete{return "",errors.New("route deletion refused")}
-  if !f.route{return "",errors.New("route missing")}
+  if !f.route||f.peerThrow!=""{return "",errors.New("route missing or peer active")}
   f.route=false;return "",nil
  case len(args)>3&&args[0]=="-4"&&args[1]=="rule"&&args[2]=="add":
   f.adds++
@@ -190,4 +199,30 @@ func TestGroupStopFailureKeepsJournalAndAllowsExactRecovery(t *testing.T){
  if _,err=os.Stat(path);err!=nil{t.Fatal("durable journal missing despite kernel mutation failure",err)}
  f.failDelete=false
  if err=s.Stop();err!=nil{t.Fatal("cannot retry exact Stop",err)}
+}
+
+// B31: selected group uses same private FIB peer throw as all-app.
+func TestB31GroupServerPeerThrowBeforeRulesAndStop(t *testing.T){
+ f,path,plan:=groupFixture(t);plan.ServerIP="203.0.113.9"
+ s,err:=NewGroup(f.run,path,plan);if err!=nil{t.Fatal(err)}
+ if !f.route||f.peerThrow!=plan.ServerIP||len(f.rules)!=len(plan.UIDs){
+  t.Fatal("missing grouped App peer route")
+ }
+ throwAt,firstRule:=-1,-1
+ for i,line:=range f.calls{
+  if strings.Contains(line,"route add throw 203.0.113.9/32"){throwAt=i}
+  if strings.Contains(line,"rule add pref")&&firstRule<0{firstRule=i}
+ }
+ if throwAt<0||firstRule<0||throwAt>=firstRule{t.Fatal("group peer route late")}
+ if err=s.Stop();err!=nil{t.Fatal(err)}
+ if f.route||f.peerThrow!=""||len(f.rules)!=0{t.Fatal("group Stop leaked route")}
+}
+func TestB31GroupForeignPeerRouteNotRemoved(t *testing.T){
+ f,path,plan:=groupFixture(t);plan.ServerIP="203.0.113.9"
+ s,err:=NewGroup(f.run,path,plan);if err!=nil{t.Fatal(err)}
+ f.peerThrow="198.51.100.11"
+ if err=s.Stop();err==nil{t.Fatal("foreign route should block owned Stop")}
+ if _,err:=os.Stat(path);err!=nil{t.Fatal("journal missing on foreign route",err)}
+ f.peerThrow=plan.ServerIP
+ if err=s.Stop();err!=nil{t.Fatal(err)}
 }

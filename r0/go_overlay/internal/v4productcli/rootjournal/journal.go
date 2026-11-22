@@ -37,6 +37,7 @@ type Plan struct {
     UID int `json:"uid"`
     Tun string `json:"tun"`
     Lease string `json:"lease"`
+    ServerIP string `json:"server_ip,omitempty"`
     Underlay string `json:"underlay"`
     NetworkHandle uint64 `json:"network_handle"`
     IfIndex int `json:"ifindex"`
@@ -68,6 +69,8 @@ func (p Plan) valid()bool{
         addr.Bits()==32&&!addr.Addr().IsUnspecified()&&
         !addr.Addr().IsMulticast()&&p.UID>=10000&&p.UID<=1999999&&
         nameOK(p.Tun)&&nameOK(p.Underlay)&&p.Tun!=p.Underlay&&
+        (p.ServerIP==""||(validServerPeerIPv4(p.ServerIP)&&
+        p.ServerIP!=addr.Addr().String()))&&
         p.NetworkHandle!=0&&p.IfIndex>0&&
         p.Version==version&&len(p.Nonce)==32
 }
@@ -307,6 +310,14 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
     if err=s.requireRouteOnly(original);err!=nil{
         return nil,errors.Join(err,s.removeExact(original))
     }
+    if original.ServerIP!=""{
+        if _,err=s.run(peerThrowArgs("add",original.ServerIP)...);err!=nil{
+            return nil,errors.Join(err,s.removeExact(original))
+        }
+        if err=s.requirePeerRouteOnly(original);err!=nil{
+            return nil,errors.Join(err,s.removeExact(original))
+        }
+    }
     if _,err=s.run(ruleAdd(original.UID)...);err!=nil{
         return nil,errors.Join(err,s.removeExact(original))
     }
@@ -316,41 +327,52 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
     s.active=true
     return s,nil
 }
-func (s *Session) query(p Plan)(bool,bool,error){
-    routeText,err:=s.run(routeShow()...)
-    if err!=nil{return false,false,err}
-    route,err:=routeState(routeText,p.Tun)
-    if err!=nil{return false,false,err}
-    rules,err:=s.run(ruleShow()...)
-    if err!=nil{return false,false,err}
-    rule,err:=ruleState(rules,p.UID)
-    return route,rule,err
+func (s *Session) query(p Plan)(bool,bool,bool,error){
+    out,err:=s.run(routeShow()...)
+    if err!=nil{return false,false,false,err}
+    route,peer,err:=allAppRouteState(out,p.Tun,p.ServerIP)
+    if err!=nil{return false,false,false,err}
+    lines,err:=s.run(ruleShow()...)
+    if err!=nil{return false,false,false,err}
+    rule,err:=ruleState(lines,p.UID)
+    return route,peer,rule,err
 }
 func (s *Session) requireEmpty()error{
-    a,b,err:=s.query(s.plan)
+    route,peer,rule,err:=s.query(s.plan)
     if err!=nil{return err}
-    if a||b{return fmt.Errorf("WBD routing table/rule already occupied")}
+    if route||peer||rule{return fmt.Errorf("WBD routing table/rule occupied")}
     return nil
 }
 func (s *Session) requireRouteOnly(p Plan)error{
-    a,b,err:=s.query(p)
+    route,peer,rule,err:=s.query(p)
     if err!=nil{return err}
-    if !a||b{return fmt.Errorf("WBD route-only readback mismatch")}
+    if !route||peer||rule{return fmt.Errorf("WBD route-only readback mismatch")}
+    return nil
+}
+func (s *Session) requirePeerRouteOnly(p Plan)error{
+    route,peer,rule,err:=s.query(p)
+    if err!=nil{return err}
+    if !route||!peer||rule{return fmt.Errorf("WBD peer-only route readback mismatch")}
     return nil
 }
 func (s *Session) requireReady(p Plan)error{
-    a,b,err:=s.query(p)
+    route,peer,rule,err:=s.query(p)
     if err!=nil{return err}
-    if !a||!b{return fmt.Errorf("WBD authenticated uidrange route readback mismatch")}
+    if !route||(p.ServerIP!=""&&!peer)||!rule{
+        return fmt.Errorf("WBD authenticated UID/peer readback mismatch")
+    }
     return nil
 }
 func (s *Session) removeExact(p Plan)error{
-    a,b,err:=s.query(p)
+    route,peer,rule,err:=s.query(p)
     if err!=nil{return err}
-    if b{
+    if rule{
         if _,err=s.run(ruleDel(p.UID)...);err!=nil{return err}
     }
-    if a{
+    if peer{
+        if _,err=s.run(peerThrowArgs("del",p.ServerIP)...);err!=nil{return err}
+    }
+    if route{
         if _,err=s.run(routeDel(p.Tun)...);err!=nil{return err}
     }
     if err=s.requireEmpty();err!=nil{return err}

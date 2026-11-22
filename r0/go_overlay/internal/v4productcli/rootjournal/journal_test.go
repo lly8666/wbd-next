@@ -15,6 +15,7 @@ type fakeIP struct{
     uid int
     route bool
     rule bool
+    peerThrow string
     foreign string
     refuse string
     calls [][]string
@@ -28,8 +29,10 @@ func (f *fakeIP) run(args ...string)(string,error){
     switch{
     case reflect.DeepEqual(args,routeShow()):
         if f.foreign=="route"{return "default dev other0\n",nil}
-        if f.route{return "default dev "+f.tun+" scope link\n",nil}
-        return "",nil
+        out:=""
+        if f.route{out+="default dev "+f.tun+" scope link\n"}
+        if f.peerThrow!=""{out+="throw "+f.peerThrow+"\n"}
+        return out,nil
     case reflect.DeepEqual(args,ruleShow()):
         if f.foreign=="rule"{return fmt.Sprintf("%d: from all uidrange 10001-10001 lookup %d\n",Priority,Table),nil}
         if f.rule{
@@ -37,11 +40,17 @@ func (f *fakeIP) run(args ...string)(string,error){
                 Priority,f.uid,f.uid,Table),nil
         }
         return "0: from all lookup local\n32766: from all lookup main\n",nil
+    case len(args)==7&&args[0]=="-4"&&args[1]=="route"&&args[2]=="add"&&args[3]=="throw":
+        if f.peerThrow!=""||!f.route{return "",errors.New("peer throw occupied")}
+        f.peerThrow=strings.TrimSuffix(args[4],"/32");return "",nil
+    case len(args)==7&&args[0]=="-4"&&args[1]=="route"&&args[2]=="del"&&args[3]=="throw":
+        if f.peerThrow!=strings.TrimSuffix(args[4],"/32"){return "",errors.New("peer exception foreign")}
+        f.peerThrow="";return "",nil
     case len(args)>2&&args[0]=="-4"&&args[1]=="route"&&args[2]=="add":
         if f.route{return "",errors.New("File exists")}
         f.route=true;return "",nil
     case len(args)>2&&args[0]=="-4"&&args[1]=="route"&&args[2]=="del":
-        if !f.route{return "",errors.New("no owned route")}
+        if !f.route||f.peerThrow!=""{return "",errors.New("route missing or peer active")}
         f.route=false;return "",nil
     case len(args)>2&&args[0]=="-4"&&args[1]=="rule"&&args[2]=="add":
         if f.rule{return "",errors.New("File exists")}
@@ -132,4 +141,27 @@ func TestRefuseUIDRootAndNon32UntrustedLease(t *testing.T){
     if _,err:=New(f.run,path,p);err==nil{t.Fatal("unauthenticated broad lease")}
     p.Lease="10.66.0.8/32";p.NetworkHandle=0
     if _,err:=New(f.run,path,p);err==nil{t.Fatal("unselected Android Network")}
+}
+
+// B31: selected UID original server-IP bypass is installed before the UID
+// policy rule, and is removed with the original root journal owner.
+func TestB31SingleUIDServerPeerThrowBeforeRuleAndStop(t *testing.T){
+ f,path,plan:=fixture(t);plan.ServerIP="203.0.113.9"
+ s,err:=New(f.run,path,plan);if err!=nil{t.Fatal(err)}
+ if !f.route||!f.rule||f.peerThrow!=plan.ServerIP{t.Fatal("missing real peer bypass")}
+ throwAt,ruleAt:=-1,-1
+ for i,cmd:=range f.calls{
+  line:=strings.Join(cmd," ")
+  if strings.Contains(line,"route add throw 203.0.113.9/32"){throwAt=i}
+  if strings.Contains(line,"rule add pref"){ruleAt=i}
+ }
+ if throwAt<0||ruleAt<0||throwAt>=ruleAt{t.Fatal("peer exclusion came after first App UID")}
+ if err=s.Stop();err!=nil{t.Fatal(err)}
+ if f.route||f.rule||f.peerThrow!=""{t.Fatal("owned peer or UID route leaked")}
+}
+func TestB31SingleUIDPeerFailureRollsBackRoute(t *testing.T){
+ f,path,plan:=fixture(t);plan.ServerIP="203.0.113.9";f.refuse="route add throw"
+ if _,err:=New(f.run,path,plan);err==nil{t.Fatal("accepted failed peer exclusion")}
+ if f.route||f.rule||f.peerThrow!=""{t.Fatal("partial root route leaked")}
+ if _,err:=os.Stat(path);!os.IsNotExist(err){t.Fatal("journal retained after proven rollback")}
 }

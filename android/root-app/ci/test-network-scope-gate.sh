@@ -436,6 +436,16 @@ assert 'super::android_auto_report_is_revision_positive(' in fec_worker
 assert 'android_auto_report_is_revision_positive(' in fec_entry
 print("ANDROID_B19_ORIGINAL_AUTO_ROOT_APP_M4_QUALITY_REVISION_PASS")
 print("ANDROID_B17_FIXED_ORIGINAL_GO_ROOT_APP_OPTIN_SOURCE_PASS")
+# B31 Root original single/selected group/all-app policy must pass
+# the same Go-authenticated physical peer IPv4 to the real FIB owner.
+b31_android=Path("r0/go_overlay/internal/v4productcli/android_root_route_android.go").read_text()
+b31_single=Path("r0/go_overlay/internal/v4productcli/rootjournal/journal.go").read_text()
+b31_group=Path("r0/go_overlay/internal/v4productcli/rootjournal/group.go").read_text()
+assert b31_android.count('ServerIP:c.peerIP.String()')==3
+for source in (b31_single,b31_group):
+ assert 'peerThrowArgs("add",original.ServerIP)' in source
+ assert 'peerThrowArgs("del",p.ServerIP)' in source
+print("ANDROID_B31_ORIGINAL_ROOT_UID_PEER_EXCEPTION_WIRING_SOURCE_PASS")
 # B29: default Tunnel DNS must not reject Fixed/Auto feature7 before M4.
 b29_go=Path("r0/go_overlay/internal/realityfront/bridge_v4_embedded_android.go").read_text()
 b29_rust=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()

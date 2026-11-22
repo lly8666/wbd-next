@@ -116,8 +116,8 @@ func androidRootRouteAfterNative(
     if len(c.androidRouteUIDs)>0{
         group,e:=rootjournal.NewGroup(runner,rootOnlyJournal,rootjournal.GroupPlan{
             UIDs:append([]int(nil),c.androidRouteUIDs...),
-            Tun:tun.name,Lease:lease.String(),Underlay:c.rawInterface,
-            NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
+            Tun:tun.name,Lease:lease.String(),ServerIP:c.peerIP.String(),
+            Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         })
         if e!=nil{return nil,e}
         originalAndroidSelectedUIDRouteGet(runner,c.androidRouteUIDs,tun.name)
@@ -136,7 +136,7 @@ func androidRootRouteAfterNative(
     }
     session,e:=rootjournal.New(runner,rootOnlyJournal,rootjournal.Plan{
         UID:c.androidRouteUID,Tun:tun.name,Lease:lease.String(),
-        Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,
+        ServerIP:c.peerIP.String(),Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,
         IfIndex:physical.Index,
     })
     if e!=nil{return nil,e}

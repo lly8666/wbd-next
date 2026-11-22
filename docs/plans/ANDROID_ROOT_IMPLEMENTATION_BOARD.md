@@ -19,7 +19,7 @@
 | Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
 | Android Game2/Game4 原多lane TLS→Rust Game M4双向 | MISSING | Linux/Windows已有原Game，不等于Android端口 | 真正端口并接共享TUN后再开放App选项 |
 | Android应用TCP/UDP双端逐字节E2E、切网恢复、低CPU/吞吐/首包 | NOT_RUN | 旧API36只有内核数据收据与用户主观“数据通了” | 必须有设备授权后验；此期不假造 |
-| Android物理TCP53、原生业务IP直连例外 | PARTIAL | TCP53已有原隧道，all-app有server /32 throw；selected/group尚无统一例外 | **本次先统一真实UID路线的原服务端例外** |
+| Android物理TCP53、原生业务IP直连例外 | B31 WIRED_CANDIDATE | TCP53已有原隧道；all-app既有server /32，单UID/组UID同原Go peer/32的throw已施工、待CI | 独立直连CIDR、Android真实netd、物理TCP53仍缺 |
 | Android轮换/动态换物理Network、热点共享/Tether | BLOCKED | 原Go Linux rotation存在，Android明确禁用；Network loss只Stop | 后续独立源路径；不因可选参数存在而宣称实现 |
 
 ## 本批执行选择
