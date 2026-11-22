@@ -14,7 +14,7 @@ function Inspect-Settings {
     $setting=Get-NetTCPSetting -SettingName $name -ErrorAction Stop
     $rows+= [pscustomobject]@{Template=$name;Provider=([string]$setting.CongestionProvider)}
   }
-  return ,$rows
+  return $rows
 }
 if($Action -eq 'Setup') {
   New-Item -ItemType Directory -Force $root | Out-Null

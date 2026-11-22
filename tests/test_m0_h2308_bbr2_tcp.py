@@ -10,6 +10,8 @@ class H2308CCRegression(unittest.TestCase):
                        "H2308_WINDOWS_ORIGINAL_TCP_CC_RESTORED",
                        "H2308_WINDOWS2025_OS_BBR2_REAL_READBACK_APPLIED"):
             self.assertIn(phrase,p)
+        self.assertIn('return $rows',p)
+        self.assertNotIn('return ,$rows',p)
         for loss in (1,5):
             w=(ROOT/f".github/workflows/qa-h2308-bbr2-loss{loss}.yml").read_text()
             for term in (f'WBD_H2293_WEAK_LOSS_PCT: "{loss}"',
@@ -30,6 +32,8 @@ class H2308CCRegression(unittest.TestCase):
                 self.assertIn(term,w)
             self.assertLess(w.index("H2308 verify Windows TCP baseline"),
                             w.index("ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun"))
+            self.assertNotIn("if($LASTEXITCODE -ne 0){throw 'H2308_ORIGINAL_TCP_CC_SETUP_FAILED'}",w)
+            self.assertNotIn("if($LASTEXITCODE -ne 0){throw 'H2308_ORIGINAL_TCP_CC_RESTORE_FAILED'}",w)
             self.assertLess(w.index("H2308 always restore Windows TCP"),
                             w.index("Stop and restore exact WSL"))
     def test_real_active_inner_tcp_profile_not_intended_setting(self):

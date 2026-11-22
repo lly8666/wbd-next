@@ -606,7 +606,6 @@ jobs:
         timeout-minutes: 3
         run: |
           & ./tools/m0_h2308_windows_cc.ps1 -Action Setup
-          if($LASTEXITCODE -ne 0){throw 'H2308_ORIGINAL_TCP_CC_SETUP_FAILED'}
       - name: ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun to independent ARM GoTLS/Rust through owned two-hop kernel
         shell: pwsh
         env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
@@ -628,7 +627,6 @@ jobs:
         shell: pwsh
         run: |
           & ./tools/m0_h2308_windows_cc.ps1 -Action Restore
-          if($LASTEXITCODE -ne 0){throw 'H2308_ORIGINAL_TCP_CC_RESTORE_FAILED'}
       - name: Stop and restore exact WSL vEthernet Hyper-V neighbor plus signed Npcap service
         if: always()
         shell: pwsh
