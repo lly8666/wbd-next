@@ -10,6 +10,7 @@ class H2302WindowsArmTCPWindow(unittest.TestCase):
              "H2302_WINDOWS_REAL_TCP_SOCKET_READBACK",
              "H2302_REAL_ARM_ACCEPTED_TCP_RCVBUF_NOT_APPLIED"):
             self.assertIn(marker,s)
+        self.assertIn("H2302_TCP_WINDOW_THREE_REAL_LEGS_COMPLETE",s)
     def test_test_app_override_only_and_bounded(self):
         env=dict(os.environ,WBD_H2286_PRODUCT_FULL_WIN_ARM="1",
                  WBD_H2302_WINDOW_ABA="1",WBD_H2302_INNER_TCP_TEST_BYTES="8388608")
@@ -26,7 +27,7 @@ class H2302WindowsArmTCPWindow(unittest.TestCase):
         for marker in ('WBD_H2302_WINDOW_ABA: "1"',
             'WBD_H2294_OFF_REPAIR_ABA: "0"',
             "[m0-029-h2302-window-loss5]",
-            "H2302_TCP_WINDOW_THREE_REAL_LEGS_COMPLETE",
+            "h2302_same_vm_tcp_window_abaprime",
             "H2302_REAL_ARM_TUN_THREE_FEC_OFF_TCP_STAGES_DONE",
             "PASS_H2302_MEASURED_ORIGINAL_TCP_WINDOW_ABA_FEC_OFF_SCOPED",
             "client_owned_stop","kernel_relay_qdisc"):
