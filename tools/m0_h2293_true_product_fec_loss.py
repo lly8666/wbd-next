@@ -391,8 +391,13 @@ def win_trial(group,relay,arm,ready):
                 require(bool(telemetry) and all(
                     not v.get("actual_rust_m2_effective",{}).get("opportunistic_v3_enabled",True)
                     for v in telemetry),"H2302_OUTER_REPAIR_MUST_REMAIN_OFF_ALL_STAGES")
-            native_repair_copies=max((int(t.get("frozen_ciphertext_retransmits",0))
-                                      for t in telemetry),default=0)
+            # Periodic app snapshot is NOT a joined kernel repair counter.
+            # Earlier 1% real WBD receipt incorrectly reported 0 while original
+            # Rust Stop proved 7 and 5 definite, immutable NPF copies.
+            periodic_snapshot_copies=max(
+                (int(t.get("frozen_ciphertext_retransmits",0))
+                 for t in telemetry),default=0)
+            native_repair_copies=periodic_snapshot_copies
             if H2294_OFF_REPAIR:
                 # H2316 actual original Windows Rust M2 shadow and appearance
                 # ACK readback. This is a Stop receipt, NOT proof of remote ACK.
@@ -400,8 +405,12 @@ def win_trial(group,relay,arm,ready):
                 m2_stop=parse_native_m2_stop(log)
                 require(m2_stop is not None and
                         (enabled or m2_stop["repair_polls"]==0) and
-                        (enabled or m2_stop["queued"]==0),
-                        "H2316_ORIGINAL_NATIVE_M2_CANDIDATE_ACCOUNTING_MISSING")
+                        (enabled or m2_stop["queued"]==0) and
+                        (enabled or m2_stop["kernel_accepted_repair_packets"]==0),
+                        "H2316_ORIGINAL_NATIVE_M2_JOINED_STOP_NOT_CONSISTENT")
+                native_repair_copies=m2_stop["kernel_accepted_repair_packets"]
+                require(native_repair_copies>=periodic_snapshot_copies,
+                        "H2316_PRESTOP_SNAPSHOT_CANNOT_EXCEED_JOINED_STOP")
             else:
                 m2_stop=None
             require(receipt["status"]==
@@ -437,6 +446,10 @@ def win_trial(group,relay,arm,ready):
                "h2294_fec_off_only":H2294_OFF_REPAIR or H2302_WINDOW_ABA,
                "original_outer_repair_expected_on":(H2294_OFF_REPAIR and tag=="B_repair"),
                "actual_original_native_frozen_repair_packets":native_repair_copies,
+               "h2316_pre_stop_periodic_snapshot_repair_packets":periodic_snapshot_copies,
+               "h2316_joined_stop_kernel_repair_packets":(
+                   m2_stop["kernel_accepted_repair_packets"]
+                   if m2_stop is not None else None),
                "h2316_original_m2_shadow_stop":m2_stop,
                "fec2_fixed_expected":fec_fixed,
                "fec2_profile_expected":(FEC_PROFILE if fec_fixed else "off"),

@@ -16,6 +16,10 @@ CURSOR_FIELDS=(
 )
 TAG="WBD_WINDOWS_NATIVE_M2_OPPORTUNITY_STOP "
 CURSOR="WBD_WINDOWS_NATIVE_OUTER_CURSOR "
+OUTER_REPAIR="WBD_WINDOWS_NATIVE_OUTER_REPAIR "
+REPAIR_FIELDS=("source_wire_bytes","repair_accepted_wire_bytes",
+               "repair_uncertain_wire_bytes","control_wire_bytes",
+               "repair_packets","r_to_f_ppm","r_to_total_ppm")
 
 def _one(line:str,tag:str,names):
     matches=[x for x in line.splitlines() if tag in x]
@@ -34,9 +38,20 @@ def parse_native_m2_stop(text:str):
     # OUTER_CURSOR only ever counts actual exact owner gap nominations,
     # checked-once rate limits, and pending bounded queues.
     c=_one(text,CURSOR,CURSOR_FIELDS)
-    if m is None or c is None:return None
-    if m["queued"]!=c["fifo_left"]:
+    r=_one(text,OUTER_REPAIR,REPAIR_FIELDS)
+    if m is None or c is None or r is None:return None
+    # These are two genuine, independent Stop perspectives on the
+    # EXACT SAME accepted immutable packet; check their agreement.
+    if (m["queued"]!=c["fifo_left"] or
+        m["repair_accepted"]!=r["repair_packets"] or
+        (r["repair_packets"]>0 and r["repair_accepted_wire_bytes"]==0)):
         return None
     return {**m,**c,
+            "kernel_accepted_repair_packets":r["repair_packets"],
+            "kernel_accepted_repair_wire_bytes":r["repair_accepted_wire_bytes"],
+            "kernel_uncertain_repair_wire_bytes":r["repair_uncertain_wire_bytes"],
+            "source_wire_bytes":r["source_wire_bytes"],
+            "r_to_f_ppm":r["r_to_f_ppm"],
+            "r_to_total_ppm":r["r_to_total_ppm"],
             "driver_copied_not_peer_receipt":True,
-            "counter_scope":"original_windows_rust_m2_owned_stop"}
+            "counter_scope":"original_windows_rust_owner_joined_stop_not_periodic_snapshot"}

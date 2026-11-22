@@ -67,6 +67,10 @@ class H2294FecOffOriginalRepair(unittest.TestCase):
                      "H2294_FEC_OFF_REPAIR_THREE_REAL_LEGS_COMPLETE",
                      "PASS_REAL_ORIGINAL_GO_RUST_WAL_STOP"):
             self.assertIn(name,trial)
+        self.assertIn("H2316_ORIGINAL_NATIVE_M2_JOINED_STOP_NOT_CONSISTENT",trial)
+        self.assertIn("h2316_pre_stop_periodic_snapshot_repair_packets",trial)
+        self.assertIn("h2316_joined_stop_kernel_repair_packets",trial)
+        self.assertIn("m2_stop[\"kernel_accepted_repair_packets\"]",trial)
         self.assertIn("true_windows_product(group,relay,arm,ready)",trial)
         self.assertIn("arm.check_server_and_run_app(group)",trial)
         self.assertIn("start_owned_wsl_liveness(group)",trial)
