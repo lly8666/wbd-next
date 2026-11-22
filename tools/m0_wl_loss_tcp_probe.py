@@ -212,6 +212,35 @@ def client(bind_ip, target_ip, source):
     workers = [threading.Thread(target=bulk_client,args=(i,)) for i in range(BULK_FLOWS)]
     for worker in workers:
         worker.start()
+    # H2308 diagnostic only: read Windows *active TCP connection* applied
+    # template from kernel, not merely believing a netsh intended config.
+    # It never changes TCP congestion/provider, kernel ACK, or WBD bytes.
+    if os.environ.get("WBD_H2308_WIN_BBR2")=="1":
+        snapshot={"real_windows_kernel_tcp":os.name=="nt","rows":[]}
+        if os.name=="nt":
+            t0=time.monotonic()
+            while len(client_bulk_buffers)<BULK_FLOWS and time.monotonic()-t0<8:
+                time.sleep(.2)
+            script=(
+                "$p=@(Get-NetTCPConnection -RemotePort 45902 "
+                "-State Established -ErrorAction SilentlyContinue | "
+                "Select-Object LocalAddress,LocalPort,RemoteAddress,"
+                "RemotePort,AppliedSetting);"
+                "ConvertTo-Json -InputObject $p -Compress -Depth 4"
+            )
+            try:
+                proc=subprocess.run(
+                    ["powershell.exe","-NoProfile","-NonInteractive",
+                     "-Command",script],
+                    capture_output=True,text=True,timeout=25)
+                if proc.returncode:
+                    raise RuntimeError("WINDOWS_TCP_PROFILE_READ_FAILED "+
+                                       proc.stderr[-240:])
+                snapshot["rows"]=json.loads(proc.stdout)
+            except Exception as exc:
+                snapshot["read_error"]=type(exc).__name__+":"+str(exc)
+        print(MARK+"CLIENT_CC_ACTIVE_PROFILE "+
+              json.dumps(snapshot,sort_keys=True),flush=True)
     echo_times = {}
     latencies = []
     echo_error = []
