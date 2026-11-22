@@ -11,3 +11,7 @@ B41只支持`game2`+`game-fec off`+`startup-padding off`+`outer-repair off`+原a
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B41 Android原Go真实双FakeTCP/TLS受保护Game2/off入口交接B39/B40 Rust组、精确双端口RST持久所有权和UID Root路由，App/实机资格另验。"}
 ```
+
+## B41a 首次SOURCE失败的精确修正
+
+SOURCE `dd693e34df6426cb3b06a41cd6138865d9c0915a` [Dual64 #45033149984](https://github.com/lly8666/wbd-next/actions/runs/45033149984) 7个并行Host Job SUCCESS，但`arm64-native`在Go/Cgo而非Rust M4失败：新 `bridge_v4_game_native_android.go` 的 `import "C"` 前原Go业务说明与C头文件注释相连，Clang把带 Unicode 箭头的Go文本当作C预处理输入（unexpected character U+2192）。因此其后APK/Linux oracle均SKIPPED，**原B41不得标记Go/Build PASS**。B41a仅调整此前已经实际写入的Cgo前导注释到Go普通注释范围，所有TLS/RAW/TUN/UID算法与工作器不变。最终资格看本次修复SOURCE新的同源Actions，失败历史保留。

@@ -2,11 +2,7 @@
 
 package realityfront
 
-// B41 Android original-Go TLS Game2/off → ONE B39/B40 Rust Game owner.
-// The only input is two genuine credential-checked TLS sessions and their
-// ORIGINAL FakeTCP Detach snapshots. No cold248, public C installer, Go
-// per-DATA pump or independently implemented Game/AEAD protocol.
- /*
+/*
 #include <stdint.h>
 #include <stddef.h>
 extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32_t,uint64_t *);
