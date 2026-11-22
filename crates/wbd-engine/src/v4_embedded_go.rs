@@ -3715,10 +3715,68 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
     });
     OK
 }
+// B39 Android's actual physical Game2/4 RAW lane FDs. These are opened
+// only AFTER all original-Go TLS identities joined into ONE Rust adapter.
+// This installs one Bionic Network-bound exact 5-tuple RX/TX pair PER lane.
+// It intentionally does not start TUN, AEAD worker loops or claim Game M4.
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_game_group_raw_bind(group:u64)->i32{
+    let (scope,lanes)={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+        if g.stopped||g.stopping||g.android_raw.is_some(){return BAD_STAGE}
+        (g.android_physical.clone(),g.android_lanes.clone())
+    };
+    if !matches!(lanes.len(),2|4){return INVALID}
+    let generation=(group>>32) as u32;
+    let mut exact=Vec::with_capacity(lanes.len());
+    for lane in lanes{
+        let f=lane.flow;
+        // RX is FROM the original real Go server 443 TO this unique client
+        // FakeTCP port. TX is the opposite. No wildcard RAW listener.
+        let Ok(rx)=AndroidBoundRawRx::open_exact(
+            scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
+            generation,f.server_ip,f.client_ip,f.server_port,f.client_port
+        )else{return BAD_STAGE};
+        let Ok(tx)=AndroidBoundRawTx::open(
+            scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
+            generation,f.client_ip,f.server_ip,f.client_port,f.server_port
+        )else{return BAD_STAGE};
+        exact.push(AndroidGameRawLane{rx:Arc::new(rx),tx:Arc::new(tx)});
+    }
+    // Raw sockets were created outside the process registry lock. Stop may
+    // have begun concurrently; in that case FDs drop without publication.
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping||g.android_raw.is_some(){return BAD_STAGE}
+    g.android_raw=Some(exact);
+    OK
+}
+// Read-only actual kernel descriptor ownership; this is not an M4-ready
+// receipt. The existing game_group_state must continue returning drivers=0.
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_raw_state(
+    group:u64,lanes:*mut u32
+)->i32{
+    if lanes.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping{return BAD_STAGE}
+    let count=g.android_raw.as_ref().filter(|raw|raw.len()==g.android_lanes.len()&&
+        raw.iter().all(|lane|lane.rx.readiness_fd()>2&&lane.tx.readiness_fd()>2&&
+            lane.rx.generation()==(group>>32) as u32&&
+            lane.tx.generation()==(group>>32) as u32&&
+            !lane.rx.is_stopping()&&!lane.tx.is_stopping()))
+        .map_or(0,|raw|raw.len() as u32);
+    unsafe{lanes.write(count)};
+    OK
+}
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
-    let (adapter,mut driver)={
+    let (adapter,mut driver,mut android_raw)={
         let Ok(mut r)=registry().lock()else{return BAD_STAGE};
         let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
         if e.stopped{return OK}
@@ -3735,6 +3793,11 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
              {e.drivers.take()}
              #[cfg(not(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))))]
              {None::<()>}
+         },{
+             #[cfg(target_os="android")]
+             {e.android_raw.take()}
+             #[cfg(not(target_os="android"))]
+             {None::<()>}
          })
     };
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3746,6 +3809,29 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
             return STOP_INCOMPLETE
         }
     }
+    // Original owned Stop joins every Bionic kernel borrow before
+    // releasing either lane. The GameAdapter is stopped only afterward.
+    #[cfg(target_os="android")]
+    if let Some(ref mut lanes)=android_raw{
+        for lane in lanes.iter(){
+            lane.rx.begin_stop();
+            lane.tx.begin_stop();
+        }
+        let deadline=std::time::Instant::now()+
+            std::time::Duration::from_secs(3);
+        let drained=lanes.iter().all(|lane|
+            lane.rx.stop_until(deadline)==wbd_platform::r1::StopResult::Drained&&
+            lane.tx.stop_until(deadline)==wbd_platform::r1::StopResult::Drained);
+        if !drained{
+            let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+            let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+            e.android_raw=android_raw;
+            e.stopping=false;
+            return STOP_INCOMPLETE
+        }
+    }
+    #[cfg(not(target_os="android"))]
+    let _=&android_raw;
     let Ok(mut game)=adapter.lock()else{return STOP_INCOMPLETE};
     game.stop();drop(game);
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};

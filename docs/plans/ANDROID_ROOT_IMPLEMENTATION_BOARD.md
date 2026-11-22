@@ -1,3 +1,4 @@
+- **B39 Game2 Android 原生底层在建**：既有原Go/TLS提交后的 `game_group_join_original` 新增 Android 真选定Network一致性、双/四lane原TCP source port/真实TX序号规范；Android新组级raw bind复用原 `AndroidBoundRawRx/Tx`，每lane精确BPF五元组及Bionic物理绑定，group Stop先同步归还借用再停同一GameAdapter。Rust `game_group_state.drivers_installed` 仍是0；无Android Game TUN/M4循环、Go双TLS模式入口、真实业务验收。Host Rust单测、双ABI动态符号/编译与治理需本SOURCE独立验证，绝不等同已上线Game2。
 # Android Root 原产品功能施工台账（B30｜源码与设备分层）
 
 - **B38原生产调用链完成、Host/Build PASS，实体NOT_RUN**：手工最多4条IPv4 CIDR之外，显式选用真实所选Network的LinkAddress子网自动并入原Root UID FIB throw路由；不改main系统路由、不新建包分类器；同源[Dual64 #45028073114](https://github.com/lly8666/wbd-next/actions/runs/45028073114) 11 SUCCESS/4 SKIPPED；真机NOT_RUN。

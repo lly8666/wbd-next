@@ -1,3 +1,5 @@
+> **2026-11-22 B39 Android Game2原生组的实质第一段（M4未装）**：原Rust `game_group_join_original` Android分支现在必须从已认证的真实Go TLS/M1 lane及同一物理Network、同租约取得2/4条有序原FakeTCP tuple与原TX/RX序号，且拒绝已被Normal M4占用的lane。随后可选择性给整个已认证的Game组绑定每lane的Bionic所选Network精确IPv4 RAW RX/TX sockets，并在组级Stop回收FD borrows。这是Game2完整生产前的真实Rust cold→physical boundary，不是合成Game数据。没有 Android Game共享TUN、Game M4 raw/TUN worker、Go 2-lane TLS启动及UID接线；因此App/CLI仍拒绝Game、`drivers_installed=0`。软件验收仅看新B39同SOURCE Actions，真实设备NOT_RUN。
+
 > **2026-11-22 B38实体Network直连子网生产接线**：新显式LAN直连选项从当前用户选定的ConnectivityManager.Network的真实IPv4 LinkAddress与前缀生成规范单条on-link CIDR，与原B33最多4条手工CIDR合并，Service冷读取同一Network再次核对，再通过原Go `--android-direct-cidrs` 接已有Root UID私有FIB throw路由。无新Go/Rust数据引擎、不更改主路由/Android默认Network；不代表强制走选中物理网卡。旧默认全隧道及旧本机/SAF预设不变。Host/签名APK资格看同SOURCE Actions，实体NOT_RUN。
 
 > **2026-11-22 B37原Rust Health低唤醒接线**：原15s/90s Rust HealthClock是已安装的TLS后M4生命周期，现把Android用户显式的15/30秒间隔从Root App→Service→原Go CLI→已有`HealthKeepaliveSeconds`→Rust实际effective readback接线。默认15s不变；30s低频不改变90s dead、AEAD/PN/租约/真实TUN/RAW/owned Stop，不新增心跳goroutine或热路径。CPU/唤醒和手机省电效果NOT_PROVEN，需实测；Android Game/系统netd DNS/IPv6/热点仍未接。

@@ -45,6 +45,29 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/ci/RootPhysicalDNSUpstreamTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPhysicalDNSUpstreamTest
+# B39: original native Rust Game groups on Android now bind exactly one
+# Bionic physical Network and independent RAW RX/TX per authenticated lane.
+# This is cold-only; a Game M4/TUN worker and App mode are NOT READY.
+python3 - <<'PY'
+from pathlib import Path
+engine=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+game=Path("crates/wbd-engine/src/v4_android_game_cold.rs").read_text()
+platform=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+build=Path("android/root-native/build-source-locked.sh").read_text()
+assert 'canonical_original_game_lanes(' in engine
+assert 'if scope.as_ref().is_some_and(|old|old!=physical)' in engine
+assert 'AndroidBoundRawRx::open_exact(' in engine
+assert 'AndroidBoundRawTx::open(' in engine
+assert 'wbd_m0_embedded_go_android_game_group_raw_bind(group:u64)' in engine
+assert 'wbd_m0_embedded_go_android_game_group_raw_state(' in engine
+assert 'lane.rx.stop_until(deadline)' in engine
+assert 'lane.tx.stop_until(deadline)' in engine
+assert 'drivers_installed.write(0)' in engine
+assert 'exact_raw_tcp_filter(' in platform
+assert 'wbd_m0_embedded_go_android_game_group_raw_bind' in build
+assert 'android_game_cold_original_two_tls_lanes_use_slot_not_arrival' in game
+print("ANDROID_B39_ORIGINAL_GAME2_COLD_TLS_GROUP_BOUND_RAW_AND_OWNED_STOP_SOURCE_PASS")
+PY
 # B38: actual selected LinkAddress IPv4 subnet uses existing Go private
 # UID FIB throw route, not another Java kernel route engine or packet pump.
 python3 - <<'PY'

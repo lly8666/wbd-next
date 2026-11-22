@@ -162,6 +162,9 @@ jobs:
       - name: Assert zero-allocation M3 LINK20 bytes match original Go fixture
         shell: bash
         run: cargo +1.85.1 test --locked -p wbd-codec arm64_original_m4_slab_link_plan_is_byte_identical_and_capacity_fail_closed
+      - name: Verify exact original Go Game2/4 cold lane layout (real Rust unit tests)
+        shell: bash
+        run: cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record android_game_cold_
   arm64-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

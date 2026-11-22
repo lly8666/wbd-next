@@ -110,6 +110,11 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
   test -s "$symbol_table"
   for symbol in wbd_m0_embedded_go_prepare_client wbd_m0_embedded_go_stage \
       wbd_m0_embedded_go_commit wbd_m0_embedded_go_stop \
+      wbd_m0_embedded_go_game_group_join \
+      wbd_m0_embedded_go_game_group_state \
+      wbd_m0_embedded_go_android_game_group_raw_bind \
+      wbd_m0_embedded_go_android_game_group_raw_state \
+      wbd_m0_embedded_go_game_group_stop \
       wbd_m0_embedded_go_android_bind_physical \
       wbd_m0_embedded_go_attach_raw_rx_on_interface \
       wbd_m0_embedded_go_attach_tun \
@@ -149,6 +154,10 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
     }
   done
 done
+# B39 means original Game group crypto and physically bound RAW FDs COMPILE.
+# They are intentionally not called by the shipping Android app until real
+# Game M4 single-TUN workers/Stop and independent Go TLS lanes exist.
+# group_state must keep drivers_installed=0 for a mere cold socket pair.
 # The authenticated cold Rust owner is a genuine cross-target ABI milestone,
 # while full Go/M4 product linking has a separately failing/passing gate.
 # Persist exact hashes+16KiB ELF evidence for ARM64 only even if Go fails.
