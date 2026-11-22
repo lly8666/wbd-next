@@ -5,13 +5,13 @@
   "reservation_revision": 4,
   "assignment_epoch": 1,
   "sequence": 2316,
-  "checkpoint_sha": "1f2f65575d01af391d2090fea7acf4e5184145b1",
+  "checkpoint_sha": "8d8b5522ca685fc5c4e241cb029c28ebb18fc536",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
   "current_task": "M0 PLAN029 三关实际进度。P0 H2312/H2313 TX/NPF分开真Windows2025→ARM双组三runner已9/9原生Success、队列TX16 >99%满却Mbps收益双组相反，600–800Mbps NOT_QUALIFIED。P1 FEC OFF原密文一次机会修复1%真9/9通过、5%另一组第三腿relay失联红；真实Rust Stop核接受7/5和12/13次补发。P2原Windows Fixed Maximum 20parity服务H2314内核单元2Job Pass，原生FEC Maximum真外网测试尚NOT_RUN，PR68 Draft，产品默认不变。main PLAN012/020旧红源锁修复中。",
   "why_now": "过去H2292联合TX16/NPF64不明归因；H2313两组实际NPF每batch 16帧占比99.55/99.38%，网络表现仍−17.9%/+47.5%，应先独立物理direct和relay容量/Windows CPU，不能默认晋级。P1旧夹具用pre-Stop周期快照错误报外层补发为0，原Rust joined Stop原工件证实1% 7/5次、5% 12/13次，已由H2316修计数源。5%组b A′的UDP relay control失联，整体FAIL不可造PASS。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "先核 main新PLAN012 Action45033874758：H1067旧WB-R1 prelude不应复制；和PLAN020 Win WAL Action45033874814/新GUI错误标识后的Action：继续定位第一个真失败，非删门。分支PR68 H2314原生20-row FEC最高档单元45030957556 PASS需独立原3runner真实最大parity反馈；H2294 5% Action45032406637已真实Fail b组第三腿relay控制失联，先检查direct/WSL和relay生命周期才决定是否重验。不把1%和5%实际outer copies当peer repair ACK。",
+  "next_action": "先核收 main PLAN012原Go真实完整 Action45034182690（旧WB-R1已删、V2routekey正式完整源+Go单元补入）与PLAN020 WinWAL Action45034182656（原Go TLS verify flag编译已修，GUI Source后级首失败有精确断言），以真实SOURCE状态结算不造绿。P1 5% H2294 Action45032406637 整轮FAIL：b组第三腿relay control失联，Stop确证12/13冻结密文接受副本，禁止当真实对端恢复；其失联需要先定位再重试。P2 H2314原生单元2/2 PASS但fixed maximum真实两组3runner仍NOT_RUN。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
@@ -22,5 +22,5 @@
     "docs/prompts/M0.md"
   ],
   "open_requests": [],
-  "partial_summary": "P0 H2313 source93702d5 Action45031290436两组原生9/9 Success但goodput一组−17.9%、一组+47.5%，绝对600–800未达；P1 H2294 1% Action45031628979 9/9真Success Rust Stop7/5 copies；5% Action45032406637 Fail因组b A′控制失联，但B双组Stop12/13 copies，非零，当前机制无稳定测速因果；P2 H2314 source3d2d670 Action45030957556 Windows原native unit2/2 Success但WAN最高FEC NOT_RUN。main Fixed/Normal原生已过，新PLAN012/PLAN020源锁红灯按首个错误修中，未谎称已绿。"
+  "partial_summary": "P0 H2313双组Action45031290436 9/9原生成功，TX16队列>99%满却吞吐变动两组−17.9%/+47.5%，600–800未资格；P1 1% FEC OFF H2294 Action45031628979 9/9成功，实际joinedStop接受7/5次机会修复；5% Action45032406637 组a 3/3、组b 2/3真实客户端腿成功但b A′中继控制失联，整体FAIL，joinedStop12/13次，不信旧周期快照0；H2316修正Stop对账。P2 H2314 20Parity原Windows Unit Action45030957556 2/2成功，最高档真实WAN NOT_RUN。main先前Fixed/Normal实际绿，本轮PLAN012和PLAN020新Actions测试仍在跑。"
 }
