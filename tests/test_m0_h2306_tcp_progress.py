@@ -24,6 +24,19 @@ class H2306OriginalProductProgress(unittest.TestCase):
         self.assertNotIn('s.sendall(',p)
         a=(ROOT/"tools/m0_h2286_arm_product.py").read_text()
         self.assertIn('WBD_H2306_TCP_PROGRESS="+os.environ.get("WBD_H2306_TCP_PROGRESS","0")',a)
+    def test_real_rust_route_drop_counters_are_opt_in_and_not_queue_resize(self):
+        arm=(ROOT/"tools/m0_h2286_arm_product.py").read_text()
+        self.assertIn('WBD_SHARED_TUN_ROUTE_DIAG=1',arm)
+        self.assertIn('WBD_H2306_TCP_PROGRESS',arm)
+        self.assertIn('*route_diag,*server',arm)
+        src=(ROOT/"crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+        for term in ("WBD_SHARED_TUN_ROUTE_DIAG",
+                     "M0_SHARED_TUN_LEASE_QUEUE_DIAG",
+                     "tcp_new_dropped",
+                     "SHARED_TUN_PENDING_PER_ROUTE:usize=8",
+                     "SHARED_TUN_PENDING_MAX_AGE:Duration=Duration::from_millis(100)"):
+            self.assertIn(term,src)
+
     def test_1pct_5pct_real_original_dual_triplet(self):
         for loss in (1,5):
             s=(ROOT/f".github/workflows/qa-h2306-2to8-loss{loss}.yml").read_text()

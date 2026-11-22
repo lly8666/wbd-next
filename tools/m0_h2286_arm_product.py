@@ -227,8 +227,12 @@ def native_product(own,relay):
             "--mode","normal","--outer-repair","off","--peer-persona","windows11",
             "--outer-mtu","1280"]
     log=(ROOT/"original-arm-server.log").open("w")
+    # Opt-in native archived Rust counters: exact route /32 TCP-vs-UDP
+    # new-packet drops and downstream inbox pressure. No queue changes.
+    route_diag=(["WBD_SHARED_TUN_ROUTE_DIAG=1"]
+                if os.environ.get("WBD_H2306_TCP_PROGRESS")=="1" else [])
     proc=subprocess.Popen(["sudo","-n","ip","netns","exec",NETNS,
-                          "env","LD_LIBRARY_PATH="+str(bundle),*server],
+                          "env","LD_LIBRARY_PATH="+str(bundle),*route_diag,*server],
                           stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL)
     (ROOT/"server.pid").write_text(str(proc.pid)+"\n")
     for tick in range(150):
