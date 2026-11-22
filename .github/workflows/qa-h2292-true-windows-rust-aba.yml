@@ -144,7 +144,7 @@ jobs:
     needs: static
     runs-on: windows-2025
     env:
-      WBD_H2292_COMPILED_SOURCE_SHA: ${{ env.WBD_H2312_FACTOR != 'legacy' && github.sha || 'dc2da4b98ecc419a67e3e2ee6530f944b78d88ef' }}
+      WBD_H2292_COMPILED_SOURCE_SHA: ${{ ((github.event_name == 'workflow_dispatch' && inputs.h2312_factor != 'legacy') || contains(github.event.head_commit.message, '[m0-029-h2312-npf]') || contains(github.event.head_commit.message, '[m0-029-h2312-tx]')) && github.sha || 'dc2da4b98ecc419a67e3e2ee6530f944b78d88ef' }}
     timeout-minutes: 12
     permissions: {contents: read, actions: read}
     steps:
@@ -482,7 +482,7 @@ jobs:
     name: "H2286 original signed Windows2025 Npcap Wintun GoTLS Rust client ${{ matrix.group }}"
     needs: [static, win_candidate_build]
     env:
-      WBD_H2292_COMPILED_SOURCE_SHA: ${{ env.WBD_H2312_FACTOR != 'legacy' && github.sha || 'dc2da4b98ecc419a67e3e2ee6530f944b78d88ef' }}
+      WBD_H2292_COMPILED_SOURCE_SHA: ${{ ((github.event_name == 'workflow_dispatch' && inputs.h2312_factor != 'legacy') || contains(github.event.head_commit.message, '[m0-029-h2312-npf]') || contains(github.event.head_commit.message, '[m0-029-h2312-tx]')) && github.sha || 'dc2da4b98ecc419a67e3e2ee6530f944b78d88ef' }}
     strategy:
       fail-fast: false
       matrix:
