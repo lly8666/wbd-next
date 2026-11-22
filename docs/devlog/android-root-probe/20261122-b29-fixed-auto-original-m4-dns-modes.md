@@ -23,3 +23,13 @@ B29产品SOURCE `02216e9c` 的 [Governance #44967034512](https://github.com/lly8
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B29a仅治理修正：功能卡UTF-8 <=16KiB且同一提交devlog有feature-impact；保留B29真实产品SOURCE与历史FAIL"}
 ```
+
+## B29b｜首轮 Android App Host 静态门真实 FAIL 和最小修复
+
+产品 SOURCE `02216e9c` 的 [Android dual64 #44967034484](https://github.com/lly8666/wbd-next/actions/runs/44967034484) 最终10 SUCCESS、1 FAIL（`root-arm64-app`）、5 SKIPPED。真双 ABI `arm64-native`、B29 Rust DNS 单测及全部 DNS/M3 Host、原 Linux server/Normal/off Oracle 均 SUCCESS。签名APK未走到打包步骤，不能说该 SOURCE 签名APK通过。失败点是本轮 `test-network-scope-gate.sh` 新源码断言把 `b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)` 预期出现3次，而实际原 Go Android bridge 中为3个B29 DNS cold grant加**历史已存在**1个 FEC native Quality 读回，共4次；并非产品编译/运行错误。
+
+本次只将该断言改成4次，明确第四次的来源。原Go/Rust/Java产品、协议、TLS、M3/PN、Stop和其余测试均不改，保留旧FAIL。下一个冻结SOURCE自身签名APK/Host/原Linux Oracle全部SUCCESS前，不称本批BUILD完整PASS；手机仍NOT_RUN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B29b仅修新增Host静态源码门把三个原DNS grant和原有第四个FEC Quality条件混淆的计数；原产品代码未改，首轮root-arm64-app FAIL保留"}
+```
