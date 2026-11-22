@@ -39,13 +39,6 @@ on:
       - 'tools/m0_h2285_windows_wsl_route.py'
       - 'tests/test_m0_h2285_windows_wsl_route.py'
   workflow_dispatch:
-    inputs:
-      h2312_factor:
-        description: 'P0 true original product isolated NPF/TX factor'
-        type: choice
-        required: true
-        default: legacy
-        options: [legacy, npf_only, tx_only]
 permissions:
   contents: read
 env:
