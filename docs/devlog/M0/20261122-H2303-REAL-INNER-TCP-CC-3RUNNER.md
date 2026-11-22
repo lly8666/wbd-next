@@ -26,3 +26,10 @@
 ```feature-impact
 {"kind":"none","ids":[],"reason":"H2302/H2303 is only temporary OS-native test-owned real TCP congestion algorithm eligibility and a two-triplet bare kernel A/B/A' mechanism screen. No WBD product source, FEC algorithm or default changed."}
 ```
+
+## H2304–H2305 upstream Brutal actual Linux qualification (scoped)
+
+- Exact upstream `HyNetworks/tcp-brutal` `d2397ff8bca04a29fd2de01cf7d2d4b825224de8`, independent original GPL-3.0 source in temporary build directory. [H2304 Action 44972771843](https://github.com/lly8666/wbd-next/actions/runs/44972771843) build-only PASS, Ubuntu Azure native kernel `7.0.0-1017-azure`, produces real `brutal.ko`; no load, no package copied into WBD.
+- [H2305 Action 44972890853](https://github.com/lly8666/wbd-next/actions/runs/44972890853), original external upstream exact SHA and temporary disposable GitHub Linux VM, native kernel module load `sudo insmod`, actual Linux TCP accepted socket originally `cubic`, `setsockopt(TCP_CONGESTION,"brutal")` then true `getsockopt` returns `brutal`; sends/gets documented `TCP_BRUTAL_PARAMS` rate=**1,250,000 bytes/sec** (10Mbps), cwnd gain=15 (1.5x), group ID=467; reads same params plus module version integer 131073; real loopback TCP received 3072 exact bytes; all accepted sockets closed, strict `rmmod brutal`, kernel module negative observation and original global TCP `cubic` preserved, **SUCCESS**.
+- So upstream kernel module inner Linux **compile and true socket selection are native PASS**, but NOT loss1/5 WAN goodput/P99 proof, not WBD original TUN/raw/Go TLS product, not Windows/outer installation, and not a redistribution decision. No GPL code imported. For later original Linux→Windows real sender A/B/A′ under 200ms×2 loss1/5, set a **single per-lease aggregate rate**, and compare Brutal to CUBIC/BBR with original 160 sparse and independent small flows; do not allow each of 4 TCP flows to claim the full link cap. Clear & restore all test-only routes/modules/OS filters. If base network capacity unknown or variable, this algorithm needs rate discovery and can be harmful.
+- **No production default adoption** from these two capability tests.
