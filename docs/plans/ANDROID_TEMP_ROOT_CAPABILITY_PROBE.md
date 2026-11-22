@@ -1,5 +1,7 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B30 施工台账与主线批量推进**： 完整源码对照与完成度在 [ANDROID_ROOT_IMPLEMENTATION_BOARD](ANDROID_ROOT_IMPLEMENTATION_BOARD.md)。本次将WIRED/Host/手机部分证据/完全MISSING明确分开；不再重复实现已接原Go/Rust功能。优先修原Root UID路由三种范围的服务端IPv4直连例外，再按主线价值推进缺口；未经授权不动真设备。
+
 > **2026-11-22 B29 Fixed/Auto M4 DNS 实际接线**：依用户最新优先级，实机受限时先补完成度。B17/B19 已接通 feature7 Fixed/Auto，App 默认Tunnel DNS开启，但原Go/Rust三种 DNS 冷授权只接受feature3，在 M4 之前拒绝Fixed/Auto。本批允许带真实FEC2 RX的同代feature7复用原Tunnel/Physical/CN DNS、唯一TUN、M3/PN与Stop，原Go FEC2 PENDING仍在M4前配置，不造新网络/安全框架。Host/BUILD看此SOURCE Actions，实机Fixed/Auto+DNS交付/性能仍NOT_RUN。
 
 
