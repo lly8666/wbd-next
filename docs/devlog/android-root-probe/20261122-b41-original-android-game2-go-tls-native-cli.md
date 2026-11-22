@@ -15,3 +15,9 @@ B41只支持`game2`+`game-fec off`+`startup-padding off`+`outer-repair off`+原a
 ## B41a 首次SOURCE失败的精确修正
 
 SOURCE `dd693e34df6426cb3b06a41cd6138865d9c0915a` [Dual64 #45033149984](https://github.com/lly8666/wbd-next/actions/runs/45033149984) 7个并行Host Job SUCCESS，但`arm64-native`在Go/Cgo而非Rust M4失败：新 `bridge_v4_game_native_android.go` 的 `import "C"` 前原Go业务说明与C头文件注释相连，Clang把带 Unicode 箭头的Go文本当作C预处理输入（unexpected character U+2192）。因此其后APK/Linux oracle均SKIPPED，**原B41不得标记Go/Build PASS**。B41a仅调整此前已经实际写入的Cgo前导注释到Go普通注释范围，所有TLS/RAW/TUN/UID算法与工作器不变。最终资格看本次修复SOURCE新的同源Actions，失败历史保留。
+
+## B41b 第二次SOURCE失败：Host门证明CLI分发实际上未提交
+
+B41a `487e246251ba854707fd97d44688bb1e4f6e63b0` 的 Android `arm64-native` 确实通过同源ARM64/x86_64 Go/Rust链接（说明双TLS控制端可编译），六个Host Job也通过；但签名APK前置 `android/root-app/ci/test-network-scope-gate.sh` **FAIL**。该门第一个B41检查发现最终 `linux.go` 中既无 `return runAndroidGame2(...)`，Android平台条件仍拒绝所有Game：第一次Git Tree分阶段提交中，原CLI文件改动被后来创建的基于旧Tree的阶段覆盖。因此B41a签名APK并未执行，独立Linux Oracle当时仍在跑。软件编译成功不得冒充Game2入口已经启用。
+
+B41b以 **B41a最终HEAD为基础** 重新实际写入同一个原CLI `linux.go`：Android选中 `game2/off` 且FEC/StartupPadding/App DNS/轮换全未开启时，实际分流 `runAndroidGame2(ctx,cfg,ifindex,tun,&connected)`；Game4/其他未连模式继续拒绝，Linux保持原native game路径。保留真实源门及首次失败，**不删断言、不为了绿色CI伪造ELF或App按钮**。后续B41b新SOURCE同源Actions重新验收Go双ABI、签名Root APK与原Linux Oracle；设备和CPU仍NOT_RUN。
