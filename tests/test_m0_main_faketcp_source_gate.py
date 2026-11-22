@@ -20,6 +20,15 @@ class PinnedMssMainWorkflow(unittest.TestCase):
                 self.assertIn("r0/go_overlay/internal/faketcp/public_v4_mss.go",s)
                 self.assertLess(s.index("python3 tools/m0_install_public_faketcp.py legacy"),
                                 s.index("go test -tags"))
+    def test_plan012_same_original_tls_owner_and_mss_assembly(self):
+        plan=(ROOT/".github/workflows/m0-plan012-combined-functional.yml").read_text()
+        self.assertIn("for file in tls.go bridge_v4_linux_server_product.go",plan)
+        self.assertIn("grep -Fq \"RootCAs\" legacy/internal/realityfront/tls.go",plan)
+        self.assertIn('"r0/go_overlay/internal/realityfront/tls.go",',plan)
+        self.assertIn("python3 tools/m0_install_public_faketcp.py legacy",plan)
+        self.assertIn("python3 tools/m0_prepare_original_go_mss_test_fixtures.py legacy",plan)
+        self.assertIn("ref: a7a82db31fe736ffedee330795a3234d358f1984",plan)
+
     def test_verification_not_frozen_go_mss_stub(self):
         p=(ROOT/"tools/m0_install_public_faketcp.py").read_text()
         src=(ROOT/"r0/go_overlay/internal/faketcp/public_v4_mss.go").read_text()
