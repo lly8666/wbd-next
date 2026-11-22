@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "experiment": "H2312_TX_ONLY",
+  "product_source_sha": "438f679385ed4e2ace2efe755f7c4ecc9250bf1e",
+  "real_run_id": 45029306636,
+  "real_run_conclusion": "success",
+  "jobs_passed": 9,
+  "groups": {
+    "a": [
+      {
+        "stage": "A_default",
+        "tcp_mbps": 332.548,
+        "arm_rx_bytes": 1046986752,
+        "p99_ms": 203,
+        "win_process_cpu_s_per_gib": 15.191,
+        "windows_rust_tx_cpu_lower_bound_s": 12.7656,
+        "npf_queue_calls": 115552,
+        "npf_queue_frames": 923004,
+        "npf_frames_per_queue_call": 7.987780393242869,
+        "npf_direct_calls": 802,
+        "npf_direct_bytes": 99465,
+        "npf_queue_bytes": 65536,
+        "npf_queue_packets": 16,
+        "npf_queue_short_calls": 0,
+        "echo_160": true
+      },
+      {
+        "stage": "B_tx16",
+        "tcp_mbps": 238.151,
+        "arm_rx_bytes": 754434048,
+        "p99_ms": 172,
+        "win_process_cpu_s_per_gib": 20.1478,
+        "windows_rust_tx_cpu_lower_bound_s": 11.1562,
+        "npf_queue_calls": 67637,
+        "npf_queue_frames": 647791,
+        "npf_frames_per_queue_call": 9.577464996969114,
+        "npf_direct_calls": 9372,
+        "npf_direct_bytes": 2093590,
+        "npf_queue_bytes": 65536,
+        "npf_queue_packets": 16,
+        "npf_queue_short_calls": 0,
+        "echo_160": true
+      },
+      {
+        "stage": "A_prime",
+        "tcp_mbps": 330.746,
+        "arm_rx_bytes": 1041973248,
+        "p99_ms": 203,
+        "win_process_cpu_s_per_gib": 17.792,
+        "windows_rust_tx_cpu_lower_bound_s": 14.3438,
+        "npf_queue_calls": 111979,
+        "npf_queue_frames": 895227,
+        "npf_frames_per_queue_call": 7.994597201260951,
+        "npf_direct_calls": 696,
+        "npf_direct_bytes": 63050,
+        "npf_queue_bytes": 65536,
+        "npf_queue_packets": 16,
+        "npf_queue_short_calls": 0,
+        "echo_160": true
+      }
+    ],
+    "b": [
+      {
+        "stage": "A_default",
+        "tcp_mbps": 169.167,
+        "arm_rx_bytes": 538247168,
+        "p99_ms": 266,
+        "win_process_cpu_s_per_gib": 37.8717,
+        "windows_rust_tx_cpu_lower_bound_s": 13.9844,
+        "npf_queue_calls": 58271,
+        "npf_queue_frames": 465931,
+        "npf_frames_per_queue_call": 7.995932796759966,
+        "npf_direct_calls": 288,
+        "npf_direct_bytes": 34663,
+        "npf_queue_bytes": 65536,
+        "npf_queue_packets": 16,
+        "npf_queue_short_calls": 0,
+        "echo_160": true
+      },
+      {
+        "stage": "B_tx16",
+        "tcp_mbps": 165.749,
+        "arm_rx_bytes": 525402112,
+        "p99_ms": 250,
+        "win_process_cpu_s_per_gib": 34.1355,
+        "windows_rust_tx_cpu_lower_bound_s": 12.375,
+        "npf_queue_calls": 28214,
+        "npf_queue_frames": 450960,
+        "npf_frames_per_queue_call": 15.983554263840647,
+        "npf_direct_calls": 298,
+        "npf_direct_bytes": 71714,
+        "npf_queue_bytes": 65536,
+        "npf_queue_packets": 16,
+        "npf_queue_short_calls": 0,
+        "echo_160": true
+      },
+      {
+        "stage": "A_prime",
+        "tcp_mbps": 139.512,
+        "arm_rx_bytes": 443875328,
+        "p99_ms": 312,
+        "win_process_cpu_s_per_gib": 41.8036,
+        "windows_rust_tx_cpu_lower_bound_s": 12.2188,
+        "npf_queue_calls": 47650,
+        "npf_queue_frames": 381075,
+        "npf_frames_per_queue_call": 7.997376705141658,
+        "npf_direct_calls": 243,
+        "npf_direct_bytes": 31989,
+        "npf_queue_bytes": 65536,
+        "npf_queue_packets": 16,
+        "npf_queue_short_calls": 0,
+        "echo_160": true
+      }
+    ]
+  },
+  "legs_per_group": 3,
+  "target_platform": "Windows2025 signed Wintun Npcap original Go TLS plus Rust -> ARM real relay -> ARM original Go TLS Rust AF_PACKET TUN",
+  "scenario": "zero loss, 4x real TCP bulk 25s plus 160 sparse echo per leg, NPF64KiB kept equal on A/B/A-prime",
+  "original_go_exe_source_sha": "c5066db61fc51bafd7c2ad2def3029e615efa777",
+  "no_derp_claim_without_transport_receipt": true,
+  "qualifier": "NO_STABLE_SPEEDUP_NOT_DEFAULT_600_800_UNQUALIFIED",
+  "comparison": {
+    "a": {
+      "b_vs_aaprime_goodput_pct": -28.1914,
+      "b_vs_aaprime_cpu_gib_pct": 22.1708
+    },
+    "b": {
+      "b_vs_aaprime_goodput_pct": 7.3925,
+      "b_vs_aaprime_cpu_gib_pct": -14.3135
+    }
+  },
+  "limits": [
+    "queue copied prefix is not remote delivery",
+    "neither independent bare >=800Mbps capacity in this Action nor absolute 600-800 WBD achieved",
+    "same source A/B/A-prime is only local paired evidence; physical capacity drift remains"
+  ]
+}
