@@ -11,3 +11,12 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B34原Root全App真实安装包额外绕过继续复用原20-profile UID FIB/Stop，物理DNS IPv4上游从App/预设/Go冷配置接原Rust已认证M4绑定Socket，含生产源Host回归"}
 ```
+
+
+## B34a｜修正旧B29冷授权计数，保留同源Native通过证据
+
+B34原始SOURCE `d4a74893` 的六项DNS/M3 Host、Go/Rust Android ARM64/x86_64原生编译已经SUCCESS，新B34两类纵向源检查也PASS。正式APK源码门遇到旧B29静态计数：B29此前三处 `!android_dns_original_m4_ready(&e)`，B34为真实物理DNS上游冷设置在**同一已认证M4代际**增加第四处，这是必需的新门，而不是重复虚假授权。将旧计数3更新为4，保留B34新冷ABI符号/读回检查及所有旧业务门。真实用户手机、netd及TCP53仍NOT_RUN。新SOURCE另看Action，不能把首次失败改写为成功。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B34a原Rust物理UDP53上游冷设置增加第四处同代M4 readiness门，修正旧B29仅计三处的源码门假设；原业务Go/Rust代码保持原样"}
+```

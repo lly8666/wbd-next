@@ -520,7 +520,9 @@ b29_route=Path("crates/wbd-engine/src/v4_android_dns_route.rs").read_text()
 # The 4th pre-existing match belongs to native FEC quality readback,
 # not a newly permitted DNS cold grant.
 assert b29_go.count('b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)')==4
-assert b29_rust.count('!android_dns_original_m4_ready(&e)')==3
+# B34 keeps all prior 3 DNS M4 cold gates and adds one exact authenticated
+# physical UDP53 upstream setter; this MUST be the fourth cold-ready check.
+assert b29_rust.count('!android_dns_original_m4_ready(&e)')==4
 assert 'original_m4_dns_feature_allowed(' in b29_rust
 assert 'features==3||(features==7&&fec2_rx_ready)' in b29_route
 assert 'tunnelDNS.setChecked(true)' in a
