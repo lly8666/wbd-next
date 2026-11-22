@@ -28,6 +28,11 @@ class PinnedMssMainWorkflow(unittest.TestCase):
         self.assertIn("M0_PLAN012_ORIGINAL_RUST_ABI_MISSING_EXACT_SYMBOL",plan)
         self.assertIn("abi_req wbd_m0_embedded_go_fec2_probe_real_raw_tx",plan)
         self.assertNotIn("nm -D target/release/libwbd_engine.so | grep -q",plan)
+        # H1067 deliberately retired the old WB-R1 route prelude, so do
+        # NOT restore missing legacy TLS-product files just to satisfy CI.
+        self.assertNotIn("v4_route_prelude.go",plan)
+        self.assertNotIn("v4_route_prelude_test.go",plan)
+        self.assertIn("for file in tls.go bridge_v4_linux_server_product.go",plan)
         self.assertNotIn("grep -q 'test result: ok. 4 passed; 0 failed' fixed-kernel-result/continuous-rx.log",plan)
         self.assertIn("grep -Fq \"RootCAs\" legacy/internal/realityfront/tls.go",plan)
         self.assertIn('"r0/go_overlay/internal/realityfront/tls.go",',plan)

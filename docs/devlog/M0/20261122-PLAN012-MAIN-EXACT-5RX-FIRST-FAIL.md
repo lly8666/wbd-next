@@ -9,3 +9,7 @@
 更新后的真实 [Action 45032506054](https://github.com/lly8666/wbd-next/actions/runs/45032506054) 工件同时证明 10 个独立原 Rust 阶段的准确结果：default/opt-in release BUILD 完成、release record 1/1、game lanes 2/2、continuous RX 5/5、fixed TX 5/5、五条 PLAN028 shared-TUN/route 各1/1，然而 **没有`original-go-game-tls.log`**，故当前红灯出现在这些 Rust 检查完成、original-Go 命令开始之前。对应工作流仍有11个 `nm -D libwbd_engine.so | grep -q` 通过 `set -o pipefail` 并列调用；`nm` 遇 `grep -q` 提前返回可能 SIGPIPE=141，造成**有符号却红灯**，但在旧 run 缺少符号列表时不能断言它一定是原因。
 
 后继修复将每次真实 .so 的 `nm -D` 先存 `default-abi-symbols.log` / `opt-in-abi-symbols.log`，随后用11个逐项`abi_req`对同一只读符号表核对**完整正确名字**，缺任何一个仍真FAIL并打印缺失名字，且将源列表保存在 FAIL artifact 中。没有消掉 Go/真实1%网络关，也不把前级 Rust PASS 冒充全部原Go PASS。待新 SOURCE 真实重验后决定是否需要继续改动。
+
+## 第三关：旧工作流尝试复制已删除的 WB-R1 prelude
+
+新原生 [Action 45033537657](https://github.com/lly8666/wbd-next/actions/runs/45033537657) ERR trap 证明首个失败：`M0_PLAN012_FIRST_FAILED_BASH_LINE=70 exit_code=1`，日志 `cp: cannot stat 'r0/go_overlay/internal/realityfront/v4_route_prelude.go'`。GitHub 原文件历史显示 `v4_route_prelude.go` 与 `v4_route_prelude_test.go` 由 H1067 commit `00fdb00d0e60` 终止旧 WB-R1 前置标识、切换 mandatory 标准 ClientHello，因此当前 root Git tree 已不存在，恢复文件会复活被废止协议。同步清除**只这两个旧路径**在工作流的 paths 触发器、原Go复制循环和输入SHA list，保持其余32个当前真实 overlay 文件、完整 GoTLS/原native/Rust真实1%/Stop 门不变。旧Action保持红，下一SOURCE应通过该明确 cp 首错才能看到后续门。
