@@ -464,7 +464,7 @@ b33_route=Path("r0/go_overlay/internal/v4productcli/rootjournal/direct.go").read
 b33_ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
 b33_svc=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
 b33_argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
-assert '--android-direct-cidrs' in b33_go and 'rootjournal.ParseDirectCIDRs(' in b33_go
+assert 'flags.String("android-direct-cidrs"' in b33_go and 'rootjournal.ParseDirectCIDRs(' in b33_go
 assert b33_root.count('DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...)')==3
 assert 'routeWithDirect(' in b33_route and 'directArgs(' in b33_route
 assert 'direct_cidrs' in b33_ui and 'direct_cidrs' in b33_svc

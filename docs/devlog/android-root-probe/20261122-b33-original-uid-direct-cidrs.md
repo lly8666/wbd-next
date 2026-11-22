@@ -24,3 +24,11 @@ B33首轮原生ARM64双ABI与DNS/M3 Host成功，但正式APK的 `test-network-s
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B33a校正B11b旧APK静态断言，原App到Go末尾新增直连CIDR参数后合法通过完整源验证；实际内核Route及Go/Rust逻辑不改"}
 ```
+
+## B33b｜原Go flag定义与App argv的源码检查职责分开
+
+B33a同源原Go/Rust Native和已有Java Host用例继续成功，但B33新增Python source gate把原Go `flags.String("android-direct-cidrs",...)` 误认为源码字符串必须包含命令行前缀 `--android-direct-cidrs`。Go flag定义**本来不含**两个破折号，实际App argv仍明确生成带两个破折号的参数。这是新验收门自身误判；修正为分别验证Go `flags.String("android-direct-cidrs"` 和App `"--android-direct-cidrs"`，并直接核实Root桥三次 `DirectCIDRs`、原路由与App Intent的真实源码存在。旧FAIL历史保留，新SOURCE签名APK／Linux Oracle独立复验，实机仍NOT_RUN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B33b纠正Go flag无双破折号与App真实CLI argv有双破折号的源码门误断言，保留原Root内核CIDR业务及旧真实失败记录"}
+```
