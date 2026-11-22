@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B34b 两类主线正式Host/Build资格**：B34a原生产SOURCE `d70132608bf5772f61098199f1910dc13e542ecd` [Android dual64 #44978243692](https://github.com/lly8666/wbd-next/actions/runs/44978243692) **11 SUCCESS、4 SKIPPED**；[Governance #44978243728](https://github.com/lly8666/wbd-next/actions/runs/44978243728) **SUCCESS**。包括真实Go/Rust Bionic双ABI、签名ARM64 Root APK、原Linux Server Oracle、实际Java设置／CLI/范围测试和原Rust冷DNS ABI导出。B34全App额外指定普通安装App绕过及实体UDP53可选IPv4上游两项均标`WIRED/HOST_PASS/BUILD_PASS`，**不是**Android真实App业务E2E、物理DNS联网收发、跨profile出站或CPU/吞吐验收；系统netd DNS、IPv6/CLAT、Game2/4与物理TCP53仍未接通。
+
+
 > **2026-11-22 B34两类真实主线**：全普通App模式新增额外最多6个已安装App的绕过清单，App与Service/Root前冷核验真实包名+UID；原本地/SAF预设冷保存，真实原Go `--android-route-exclude-appids` 仍在原私有FIB的20 profile、最多8个排除AppID（永远含本App及KernelSU Manager）、原journal/Stop运行。共享UID/跨profile同AppID会一起绕过；Android后续物理路由需真机验证。同时将物理/CN DNS模式的上游UDP53 IPv4从固定223.5.5.5推广为可选IPv4，App→Service→原Go `--android-physical-dns-upstream-ipv4` →原Go/Rust已认证M4冷设置与读回→原Rust已有 `android_setsocknetwork`/SO_BINDTODEVICE物理socket连接（可指定本地DNS 192.168.1.1）。不改系统netd、WBD自身服务器冷DNS引导、DoH、App TCP53、IPv6、Game；本SOURCE的Host/签名APK/原Linux Oracle须独立看Actions。
 
 

@@ -15,8 +15,8 @@
 | 普通App IPv4 TUN→223.5.5.5物理 UDP53、CN8503分流与TCP53原隧道透传 | WIRED | HOST_PASS；只覆盖TUN内App包、TCP53不是物理直连 | 保留已有Socket/M3；后续按真实需求完善物理TCP |
 | LAN-only Wi-Fi/Ethernet/蜂窝、同选定Network域名启动 | WIRED | B28b HOST_PASS；LAN手机 NOT_RUN | 使用现有Network，不新建resolver |
 | App选择、设置持久化/SAF导入导出、凭据加密保存、TLS CA选配、诊断 | WIRED；B32完整已安装普通App枚举HOST_PASS | B32a同SOURCE双ABI＋签名APK/Linux Oracle 11 SUCCESS/4 SKIPPED，仍非手机可见性验收 | B33增加可保存/导出非秘密直连CIDR冷表单 |
-| 全App额外按已安装普通App绕过 | B34 WIRED_CANDIDATE | 复用原20 profile的UID FIB、8个排除AppID配额（含本App/KernelSU Manager），用户额外最多6包；App→预设→Service双UID冷核验→原Go、精确Stop；Host/正式APK待新SOURCE CI | 跨profile相同AppID共享绕过，手机物理出站未验 |
-| 物理DNS可选IPv4上游 | B34 WIRED_CANDIDATE | App/SAF→Service→Go冷参数→原Go/Rust M4设置/读回→已有实体Network绑定UDP53 Socket，默认223.5.5.5、LAN可选192.168.1.1；Host/双ABI待新SOURCE | 不是系统netd DNS/DoH、原Go服务器域名引导或物理TCP53 |
+| 全App额外按已安装普通App绕过 | **B34 HOST_PASS / BUILD_PASS** | 同源B34a原Go/Rust双ABI+签名ARM64 Root APK+Linux Oracle **11 SUCCESS/4 SKIPPED**；复用原20 profile UID FIB/8排除AppID配额（必含本App/KernelSU Manager），用户额外最多6包；App/SAF→Service双UID冷核验→原Go/journal精确Stop | **Android真机NOT_RUN**；跨profile同AppID可能共同绕过，实际物理出口未验 |
+| 物理DNS可选IPv4上游 | **B34 HOST_PASS / BUILD_PASS** | 同源B34a 11 SUCCESS/4 SKIPPED；App/SAF→Service→Go冷参数→原Go/Rust M4冷设置/逐字节读回→已有Android绑定Network UDP53 Socket；默认223.5.5.5，可选LAN路由器IPv4 | **实体UDP53查询/E2E NOT_RUN**；系统netd/DoH、原Go冷服务器引导、物理TCP53均非此路径 |
 | Android系统Resolver/netd UDP/TCP/DoH交付 | MISSING | 普通App TUN DNS ≠ netd DNS | 需要独立准确方案，不能声明已经全局拦截 |
 | Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
 | Android Game2/Game4 原多lane TLS→Rust Game M4双向 | MISSING | Linux/Windows已有原Game，不等于Android端口 | 真正端口并接共享TUN后再开放App选项 |
@@ -26,7 +26,7 @@
 
 ## B34 本批执行选择
 
-上一B33c `dd2292c8` [#44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) 原Go/Rust/签名APK/Linux Oracle **11 SUCCESS/4 SKIPPED**。本批大类优先做**全App模式按已安装普通App额外绕过**与**真正物理UDP53上游IPv4可配置**，全部复用原Go/Rust、原持久UID FIB、原Rust物理绑定socket。B34资格看新SOURCE Actions；不新建Go逐包Worker、Android系统resolver劫持或大型CI。
+上一B33c `dd2292c8` [#44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) 原Go/Rust/签名APK/Linux Oracle **11 SUCCESS/4 SKIPPED**。本批大类优先做**全App模式按已安装普通App额外绕过**与**真正物理UDP53上游IPv4可配置**，全部复用原Go/Rust、原持久UID FIB、原Rust物理绑定socket。B34a源 `d70132608bf5` [Android dual64 #44978243692](https://github.com/lly8666/wbd-next/actions/runs/44978243692) **11 SUCCESS/4 SKIPPED**，包括完整签名ARM64 APK、Go/Rust双ABI与原Linux Oracle；[治理 #44978243728](https://github.com/lly8666/wbd-next/actions/runs/44978243728) **SUCCESS**。不新建Go逐包Worker、Android系统resolver劫持或大型CI。
 
 ## 原B33完成的软件资格
 

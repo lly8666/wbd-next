@@ -20,3 +20,14 @@ B34原始SOURCE `d4a74893` 的六项DNS/M3 Host、Go/Rust Android ARM64/x86_64�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B34a原Rust物理UDP53上游冷设置增加第四处同代M4 readiness门，修正旧B29仅计三处的源码门假设；原业务Go/Rust代码保持原样"}
 ```
+
+
+## B34b｜同SOURCE双ABI、签名APK、原Linux Oracle全部SUCCESS
+
+B34a原生产代码SOURCE `d70132608bf5772f61098199f1910dc13e542ecd` 的 [Android dual64 #44978243692](https://github.com/lly8666/wbd-next/actions/runs/44978243692) **11 SUCCESS / 4 SKIPPED**，包括Android Go/Rust双ABI、签名ARM64 Root APK、Java生产App/预设/原Go argv测试、原Linux server Oracle、真实Rust M4 DNS源及Host套件；[治理 #44978243728](https://github.com/lly8666/wbd-next/actions/runs/44978243728) **SUCCESS**。B34原始 `d4a74893` 早期静态门错误仍保留为**FAILED** 历史，而不是删改。
+
+这两类现归类 `WIRED + HOST_PASS + BUILD_PASS`，不需要再次造全App控制面、独立DNS套接字或新的Packet worker。所有 Android 真实物理出站、系统netd DNS、App字节级业务E2E、局域网UDP DNS实机返回、Game2/4、IPv6/464XLAT、物理TCP53及CPU/首包延迟仍按 `NOT_RUN/MISSING` 记录，没有设备授权，不可声明成功。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B34b将已同源验证的全App额外绕过和原Rust物理DNS IPv4上游从CANDIDATE升级为HOST/BUILD_PASS，官方Action #44978243692 11 SUCCESS/4 SKIPPED，保留实体NOT_RUN"}
+```
