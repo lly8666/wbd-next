@@ -77,7 +77,7 @@ jobs:
           python3 tools/m0_install_public_faketcp.py --check-only
           python3 tools/m0_install_public_faketcp.py legacy
           (cd legacy && go test -count=1 ./internal/faketcp)
-          python3 tools/m0_legacy_test_mss_compat.py legacy
+          python3 tools/m0_prepare_original_go_mss_test_fixtures.py legacy
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go -c -o "$GITHUB_WORKSPACE/common-build/owner-go.test" ./internal/realityfront)
           python3 - <<'PY'
@@ -89,7 +89,7 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux_test.go",
             "tools/run-v4-tun-netns.sh",
             "tools/m0_install_public_faketcp.py",
-            "tools/m0_legacy_test_mss_compat.py",
+            "tools/m0_prepare_original_go_mss_test_fixtures.py",
             "r0/go_overlay/assembly/manifest-plan020-m0.json",
             "r0/go_overlay/internal/faketcp/public_v4_mss.go",
             ".github/workflows/m0-normal-product-smoke.yml"]

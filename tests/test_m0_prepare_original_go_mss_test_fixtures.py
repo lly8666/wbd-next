@@ -10,7 +10,7 @@ class OldTestSourceMSSMigration(unittest.TestCase):
   dst=root/"internal"/"realityfront"
   dst.mkdir(parents=True)
   for name,count in EXPECTED.items():
-   (dst/name).write_text("package realityfront\n// "+(" "+REMOVED)*count+"\n")
+   (dst/name).write_text("package realityfront\n// "+(" "+REMOVED)*count+(" faketcp.PublicV4AdvertisedMSS()"*7 if name=="bridge_v4_probe_linux_test.go" else "")+"\n")
   return dst
  def test_only_exact_legacy_test_uses_migrate_to_1460_vector(self):
   with tempfile.TemporaryDirectory() as tmp:
@@ -19,7 +19,7 @@ class OldTestSourceMSSMigration(unittest.TestCase):
    prepare(root)
    self.assertEqual(product.read_text(),"package realityfront\nvar currentProduct=true\n")
    self.assertEqual(len(EXPECTED),3)
-   self.assertEqual(sum(EXPECTED.values()),10)
+   self.assertEqual(sum(EXPECTED.values()),3)
    self.assertIn("const m0CurrentV4MSSFixture = 1420",(dst/FILE).read_text())
    self.assertIn("SetPublicV4AdvertisedMSS(m0CurrentV4MSSFixture)",(dst/FILE).read_text())
    for name in EXPECTED:
