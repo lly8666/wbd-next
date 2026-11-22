@@ -15,3 +15,11 @@ B17/B19 已将Root App Fixed/Auto接到原Go TLS feature7及原Rust FEC2 M4；Ro
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B29修复Fixed/Auto在默认Tunnel DNS及显式Physical/CN DNS时被Go/Rust feature3冷授权拒绝，共享原FEC2/M3/M4与Stop，不增加防御框架"}
 ```
+
+## B29a｜仅治理回执：功能卡容量与同提交声明
+
+B29产品SOURCE `02216e9c` 的 [Governance #44967034512](https://github.com/lly8666/wbd-next/actions/runs/44967034512) 真实FAIL：单行历史功能卡更新后UTF-8字节数超过16KiB（JS字符数不足以判断）。第一次资料修正 `8368740d` 将卡片的 `doc_refs` 仅保留最新本轮devlog，不删除原历史文档或旧 verification；但其 [Governance #44967121529](https://github.com/lly8666/wbd-next/actions/runs/44967121529) 因功能卡单独修改、没有**同提交**变更含 `feature-impact` 的devlog而FAIL。此次只补本段并同步最短卡片摘要，不改变任何 Go/Rust/Java/CI 产品代码、不重跑重型Android CI。产品SOURCE仍为 `02216e9c`，其原生构建/测试按原Action独立结论；历史两个治理失败不改写。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B29a仅治理修正：功能卡UTF-8 <=16KiB且同一提交devlog有feature-impact；保留B29真实产品SOURCE与历史FAIL"}
+```
