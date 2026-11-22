@@ -13,6 +13,8 @@ on:
     paths:
       - '.github/workflows/qa-h2294-win-arm-fecoff-repair-loss1.yml'
       - 'tools/m0_h2293_true_product_fec_loss.py'
+      - 'tools/m0_h2316_native_m2_stop.py'
+      - 'tests/test_m0_h2316_native_m2_stop.py'
       - 'tests/test_m0_h2292_true_product_ab.py'
       - 'tests/test_m0_h2293_true_fec_loss.py'
       - 'docs/devlog/M0/20261122-H2293-REAL-WIN-ARM-FEC2-LOSS.md'
@@ -79,7 +81,7 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2285_windows_wsl_route.py tools/m0_h2286_full_windows_product.py tools/m0_h2286_arm_product.py tools/m0_h2286_inner_udp.py tools/m0_h2287_tun_tcp_trace.py tools/m0_h2290_windows_hotpath_cpu.py tools/m0_wl_native_resource_sampler.py tools/m0_h2293_true_product_fec_loss.py
-          python3 -m unittest tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp tests.test_m0_h2281_sustained_tcp tests.test_m0_h2282_window_ab_tcp tests.test_m0_h2283_window2m_ab_tcp tests.test_m0_h2284_old_eight_flow_capacity tests.test_m0_h2285_windows_wsl_route tests.test_m0_h2286_full_product_path tests.test_m0_h2287_tun_tcp_trace tests.test_m0_h2290_windows_hotpath_cpu tests.test_m0_h2291_windows_tx_batch tests.test_m0_h2292_true_product_ab tests.test_m0_h2293_true_fec_loss tests.test_m0_h2294_off_repair -v
+          python3 -m unittest tests.test_m0_h2316_native_m2_stop tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp tests.test_m0_h2281_sustained_tcp tests.test_m0_h2282_window_ab_tcp tests.test_m0_h2283_window2m_ab_tcp tests.test_m0_h2284_old_eight_flow_capacity tests.test_m0_h2285_windows_wsl_route tests.test_m0_h2286_full_product_path tests.test_m0_h2287_tun_tcp_trace tests.test_m0_h2290_windows_hotpath_cpu tests.test_m0_h2291_windows_tx_batch tests.test_m0_h2292_true_product_ab tests.test_m0_h2293_true_fec_loss tests.test_m0_h2294_off_repair -v
   original_arm_build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2294-fecoff-repair-loss1]')
     name: H2286 source-locked original ARM64 GoTLS Rust binary REUSE build once across both groups

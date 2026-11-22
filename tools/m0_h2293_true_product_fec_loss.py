@@ -393,6 +393,17 @@ def win_trial(group,relay,arm,ready):
                     for v in telemetry),"H2302_OUTER_REPAIR_MUST_REMAIN_OFF_ALL_STAGES")
             native_repair_copies=max((int(t.get("frozen_ciphertext_retransmits",0))
                                       for t in telemetry),default=0)
+            if H2294_OFF_REPAIR:
+                # H2316 actual original Windows Rust M2 shadow and appearance
+                # ACK readback. This is a Stop receipt, NOT proof of remote ACK.
+                from m0_h2316_native_m2_stop import parse_native_m2_stop
+                m2_stop=parse_native_m2_stop(log)
+                require(m2_stop is not None and
+                        (enabled or m2_stop["repair_polls"]==0) and
+                        (enabled or m2_stop["queued"]==0),
+                        "H2316_ORIGINAL_NATIVE_M2_CANDIDATE_ACCOUNTING_MISSING")
+            else:
+                m2_stop=None
             require(receipt["status"]==
                     "PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP" and
                     receipt["client_owned_stop"]=="PASS_REAL_ORIGINAL_GO_RUST_WAL_STOP" and
@@ -426,6 +437,7 @@ def win_trial(group,relay,arm,ready):
                "h2294_fec_off_only":H2294_OFF_REPAIR or H2302_WINDOW_ABA,
                "original_outer_repair_expected_on":(H2294_OFF_REPAIR and tag=="B_repair"),
                "actual_original_native_frozen_repair_packets":native_repair_copies,
+               "h2316_original_m2_shadow_stop":m2_stop,
                "fec2_fixed_expected":fec_fixed,
                "fec2_profile_expected":(FEC_PROFILE if fec_fixed else "off"),
                "fec2_genuine_rust_owner_applied_readback":matched,
