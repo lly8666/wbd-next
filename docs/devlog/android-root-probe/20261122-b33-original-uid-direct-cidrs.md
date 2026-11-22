@@ -16,3 +16,11 @@ Go `rootjournal` Host新测试覆盖三种真实原内核命令、安装在UID�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B33原Android Root single/group/all三种UID路由支持最多四个用户CIDR真实私有FIB throw、原持久journal/Stop、原Go冷旗和正式Root App/SAF/Host测试完整纵向接线"}
 ```
+
+## B33a｜修正历史B11b Host源码门（保持真实FAIL记录）
+
+B33首轮原生ARM64双ABI与DNS/M3 Host成功，但正式APK的 `test-network-scope-gate.sh` 旧B11b静态断言还要求Service调用原Go命令参数以 `fecProfile);` 结束。当前B33真实Service在该同一参数链末尾新增 `directCIDRs`，B11b旧文本检查在测试执行前报告 `AssertionError`，并非原 TLS/Rust M4 运行失败。本次只校正为验证实际当前源 `fecProfile,directCIDRs);`，保留旧Action失败、不删除新B33完整源码门；同一B33a SOURCE需重新由正式APK源码检查、Go route Host、原Linux Oracle建立资格。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B33a校正B11b旧APK静态断言，原App到Go末尾新增直连CIDR参数后合法通过完整源验证；实际内核Route及Go/Rust逻辑不改"}
+```

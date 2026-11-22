@@ -328,7 +328,7 @@ assert 'startupPaddingModes.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("startup_padding",paddingMode)' in a
 assert 'intent.getStringExtra("startup_padding")' in s
 assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode' in s
-assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile);' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs);' in s
 assert 'pair(args,"--startup-padding",paddingMode)' in argv
 assert 'startupPadding:=flags.String("startup-padding","off"' in cold
 print("ANDROID_B11B_APP_GO_M4_PROTECTED_STARTUP_PADDING_SOURCE_WIRING_PASS")
