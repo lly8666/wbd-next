@@ -7,6 +7,7 @@ finally. Not evidence the *socket* selected BBR2 or WBD goodput. Never touch
 Internet template, current physical users, Wintun/FakeTCP, WBD defaults.
 """
 import json
+import contextlib
 import os
 import re
 import socket
@@ -30,9 +31,9 @@ def read_provider(template):
     if not m: raise RuntimeError("H2302_OS_TEMPLATE_PROVIDER_UNREADABLE_"+template)
     return m.group(1).lower()
 
-def port_filter_exists():
+def port_filter_exists(port=PORT):
     raw=netsh("show", "supplementalports")
-    return str(PORT) in raw
+    return str(port) in raw
 
 def real_test_socket():
     with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as server:
@@ -47,6 +48,67 @@ def real_test_socket():
                 if client.recv(64)!=b"H2302-real-kernel-TCP":
                     raise RuntimeError("H2302_REAL_TCP_NOT_RECEIVED")
             return {"local":client.getsockname(),"peer":client.getpeername()}
+
+
+@contextlib.contextmanager
+def scoped_bbr2_remoteport(port):
+    """Scoped actual Windows sender test only: no WBD/FakeTCP modification.
+
+    Attach Custom BBR2 to this real kernel TCP remote port for ONE original
+    traffic leg; restore both the exact filter and original Custom provider
+    even when the client/test fails. A real template readback is NOT proof of
+    per-socket effective BBR2; compare actual native TCP receiver bytes too.
+    """
+    if os.name!="nt" or os.environ.get("GITHUB_ACTIONS")!="true" or \
+       not os.environ.get("RUNNER_TEMP") or not 1024<=port<=65535:
+        raise RuntimeError("H2303_SCOPED_GITHUB_WINDOWS_REAL_TCP_ONLY")
+    original=read_provider("custom")
+    internet=read_provider("internet")
+    if original not in ("cubic","ctcp","bbr2","dctcp","default","none"):
+        raise RuntimeError("H2303_UNRECOGNIZED_CUSTOM_TEMPLATE")
+    if port_filter_exists(port):
+        raise RuntimeError("H2303_TEST_PORT_ALREADY_OWNED_BY_OTHER_FILTER")
+    changed=False
+    added=False
+    try:
+        changed=True
+        netsh("set","supplemental","template=custom","congestionprovider=bbr2")
+        if read_provider("custom")!="bbr2":
+            raise RuntimeError("H2303_WINDOWS_BBR2_PROVIDER_READBACK_MISSING")
+        netsh("add","supplementalport","template=custom",
+              "localport=*","remoteport="+str(port))
+        added=True
+        if not port_filter_exists(port):
+            raise RuntimeError("H2303_REAL_TCP_REMOTEPORT_FILTER_NOT_APPLIED")
+        if read_provider("internet")!=internet:
+            raise RuntimeError("H2303_INTERNET_TEMPLATE_NOT_UNCHANGED")
+        print("H2303_NATIVE_WINDOWS_BBR2_TEST_PORT_APPLIED "+
+              json.dumps({"remoteport":port,"original_custom":original,
+                          "candidate_custom":"bbr2",
+                          "effective_socket_provider":"NOT_PROVEN_BY_TEMPLATE_ONLY"},
+                         sort_keys=True),flush=True)
+        yield
+    finally:
+        fails=[]
+        if added:
+            try: netsh("delete","supplementalport","localport=*",
+                       "remoteport="+str(port))
+            except Exception as e: fails.append("delete:"+str(e))
+        if changed:
+            try: netsh("set","supplemental","template=custom",
+                       "congestionprovider="+original)
+            except Exception as e: fails.append("restore:"+str(e))
+        try:
+            if read_provider("custom")!=original or port_filter_exists(port) or \
+               read_provider("internet")!=internet:
+                fails.append("scope_readback_mismatch")
+        except Exception as e: fails.append("readback:"+str(e))
+        if fails:
+            raise RuntimeError("H2303_EXACT_WINDOWS_BBR2_STOP_ROLLBACK_FAILED "+
+                               ";".join(fails))
+        print("H2303_NATIVE_WINDOWS_BBR2_TEST_PORT_REMOVED_PROVIDER_RESTORED",
+              flush=True)
+
 
 def main():
     if os.name!="nt" or os.environ.get("GITHUB_ACTIONS")!="true" or        not os.environ.get("RUNNER_TEMP"):
