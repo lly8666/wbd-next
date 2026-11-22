@@ -1,7 +1,7 @@
 # Android Root 原产品功能施工台账（B30｜源码与设备分层）
 
 - **唯一工作分支**：`experiment/android-temp-root-probe`，对照基线 `f115ab1840f1c50eb1922f9c34b67267ca1fd770`，Draft PR #36。主线 `main` 不写。
-- **证据**：[B32a Android Dual64 #44969771959](https://github.com/lly8666/wbd-next/actions/runs/44969771959) 11 SUCCESS/4 SKIPPED 与 [Governance #44969771923](https://github.com/lly8666/wbd-next/actions/runs/44969771923) SUCCESS，均为已完成基线；本B33 SOURCE 另看新Action。Android真实应用E2E/性能依旧未验。
+- **证据**：[B33c Android Dual64 #44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) **11 SUCCESS/4 SKIPPED**，包括签名ARM64 APK、原Go/Rust双ABI、Linux原服务端Oracle与原rootjournal全套Host测试；[Governance #44975823362](https://github.com/lly8666/wbd-next/actions/runs/44975823362) SUCCESS。Android真实应用E2E/性能依旧未验。
 - **口径**：`WIRED` 源码确实连入生产调用链；`HOST_PASS` 同SOURCE已有Host/ARM64编译资格；`PHONE_PARTIAL` 旧真实API36片段凭据；`NOT_RUN` 手机/真实双端业务未验；`MISSING` 确认无生产路径；`BLOCKED` 需大范围不同架构或授权设备。不要把历史步骤名、单一日志和按钮等同真实能力。
 
 | 功能主线 | 产品源码状态 | 可复验资格/边界 | 施工后续 |
@@ -19,11 +19,11 @@
 | Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
 | Android Game2/Game4 原多lane TLS→Rust Game M4双向 | MISSING | Linux/Windows已有原Game，不等于Android端口 | 真正端口并接共享TUN后再开放App选项 |
 | Android应用TCP/UDP双端逐字节E2E、切网恢复、低CPU/吞吐/首包 | NOT_RUN | 旧API36只有内核数据收据与用户主观“数据通了” | 必须有设备授权后验；此期不假造 |
-| Android物理TCP53、原生业务IP直连例外 | B31 HOST_PASS；B33显式直连CIDR WIRED_CANDIDATE | 复用原Root私有table throw最多4个用户CIDR，单UID/组UID/all-App统一、journal/Stop，App→Service→Go CLI冷接线；本SOURCE Host待验 | Android系统netd物理实际回退和物理TCP53仍NOT_RUN/缺失 |
+| Android物理TCP53、原生业务IP直连例外 | **B33 HOST_PASS / BUILD_PASS** | 同源原Root私有table 19842最多4个真实CIDR throw，单UID/组UID/all-App同原journal/Stop；App→Service→Go CLI→真实ip规则命令Host PASS；签名APK PASS | **Android实体netd后续物理路由NOT_RUN**，物理TCP53仍MISSING |
 | Android轮换/动态换物理Network、热点共享/Tether | BLOCKED | 原Go Linux rotation存在，Android明确禁用；Network loss只Stop | 后续独立源路径；不因可选参数存在而宣称实现 |
 
 ## 本批执行选择
 
-B31已补服务端IPv4 /32例外；B32a已补完整普通App选取。**B33**进一步批量施工显式最多4个IPv4 CIDR的真实内核FIB直连例外：原Root Activity设置（可本机保存及SAF导入/导出）、原Service手动START、原Go冷参数、single/group/all原journal路由安装/读回/Stop、Host原伪ip内核命令回归，全部同一SOURCE。默认输入空保持原WBD全隧道，无新增Go/Rust逐包控制器。此为真实Root源路径接线，Android netd是否按后续规则走物理出口仍需独立实体证据。
+B31已补服务端IPv4 /32例外；B32a已补完整普通App选取。**B33**进一步批量施工显式最多4个IPv4 CIDR的真实内核FIB直连例外：原Root Activity设置（可本机保存及SAF导入/导出）、原Service手动START、原Go冷参数、single/group/all原journal路由安装/读回/Stop、Host原伪ip内核命令回归，全部同一SOURCE。默认输入空保持原WBD全隧道，无新增Go/Rust逐包控制器。最新B33c SOURCE dd2292c8f9ca [#44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) 11 SUCCESS/4 SKIPPED，正式签名APK/Host/原Linux Oracle均PASS。真实手机netd/实际物理出站、应用E2E及性能仍NOT_RUN。
 
 维护：本台账是**进度标记**，不是独立竞争执行方案；每批以SOURCE/Action更新行，既往NOT_RUN/FAIL不删。

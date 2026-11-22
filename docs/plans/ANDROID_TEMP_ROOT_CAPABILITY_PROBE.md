@@ -1,5 +1,8 @@
 # Android Root 原生 WBD 客户端｜现行唯一执行方案
 
+> **2026-11-22 B33d 最终同源软件资格**：实验源 `dd2292c8f9ca049b81d6afca05854630d8f1e59d` [Android dual64 #44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) **11 SUCCESS / 4 SKIPPED**；[Governance #44975823362](https://github.com/lly8666/wbd-next/actions/runs/44975823362) **SUCCESS**。包括Android原Go/Rust双ABI、正式签名ARM64 Root APK、原Linux Server Oracle、B33单/组/all UID直连CIDR原journal真实内核ip命令Host测试。此前B33/B33a/B33b源码门旧断言失败及取消Action均保留历史；资格仅限Host/Build。Android实体物理出站、用户App UDP/TCP逐字节E2E、CPU/吞吐/切网仍NOT_RUN，系统netd DNS/IPv6/Game/物理TCP53仍未实现。
+
+
 > **2026-11-22 B33真实普通App IPv4分流/直连前缀**：B32a [#44969771959](https://github.com/lly8666/wbd-next/actions/runs/44969771959) 11 SUCCESS/4 SKIPPED、治理SUCCESS；B31真实三种UID模式服务端/32例外已同源通过。本批把可选最多四个**用户输入的IPv4 CIDR**从正式Root App→本机SAF预设→Service→原Go冷`--android-direct-cidrs`→single/group/all原Root journal**同一table 19842**内核`throw CIDR`真实安装/读回与Stop；首条UID规则前安装，默认空即原全隧道，原DNS/Go TLS/Rust M4/PN/Stop不增加额外数据面。此处的throw只让内核继续匹配**后续Android规则**，并非已证明一定经选定Network物理出口；实机/netd/首包延迟仍NOT_RUN，本SOURCE以Actions新证据为准。
 
 

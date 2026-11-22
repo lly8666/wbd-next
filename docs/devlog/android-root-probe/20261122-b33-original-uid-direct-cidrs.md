@@ -40,3 +40,13 @@ B33b [#44975490831](https://github.com/lly8666/wbd-next/actions/runs/44975490831
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B33c纠正B5历史源码门对Service参数签名结尾的旧假设；已扫描剩余源码静态检查，直接验证包含CIDR的新真实完整Root argv调用链"}
 ```
+
+## B33d｜同一SOURCE完成：签名APK与原Linux Oracle已PASS
+
+实验 SOURCE `dd2292c8f9ca049b81d6afca05854630d8f1e59d` [Android dual64 #44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) **11 SUCCESS、4 SKIPPED**，包含 Bionic/Go/Rust双ABI、正式签名ARM64 Root APK、Linux原始Server Oracle、Go rootjournal三种真实ip(8)命令Host回归、Java真实设置/参数测试与DNS/M3 Host。对应 [Governance #44975823362](https://github.com/lly8666/wbd-next/actions/runs/44975823362) **SUCCESS**。
+
+B33原生直连CIDR现为 **WIRED + HOST_PASS + BUILD_PASS**。此资格**不**表示用户Android真实选定Network下的内核FIB/netd后续路由肯定使用该物理接口；系统netd DNS捕获、真实App TCP/UDP内容双向、Fixed/Auto实体恢复、CPU/首包/吞吐，均仍NOT_RUN或MISSING。B33、B33a、B33b的前期失败及原始Action结果不删除。没有新建大型CI、数据包控制器或部署设备。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B33d同SOURCE #44975823370已签名ARM64 APK/Go Rust/Linux原Oracle 11 SUCCESS 4 SKIPPED；更新项目施工台账至HOST_BUILD_PASS并保持真机netd/业务/性能NOT_RUN"}
+```
