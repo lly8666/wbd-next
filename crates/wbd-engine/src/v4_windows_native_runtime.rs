@@ -46,7 +46,10 @@
  // Existing 32-packet service quantum is unchanged. H2291 ONLY reduces
 // per-batch owner-lock acquisitions and permits 16 immediately READY M1
 // records to share one 64KiB NPF queue syscall, without waiting to fill.
-const BATCH:usize=if cfg!(feature="h2291_windows_tx_service"){16}else{8};
+// Old H2291 continues to enable both factors. H2311 separates NPF capacity
+// from the Rust ingress/service batch; neither opt-in changes production.
+const BATCH:usize=if cfg!(any(feature="h2291_windows_tx_service",
+    feature="h2311_windows_tx16_only")){16}else{8};
  // H1977 original signed Win32-QPC for 1024-byte translated TCP DATA.
  // TCP ACK/FIN/fragment packets are excluded, duplicates are RETAINED.
  // The rewritten kernel-local proxy port is joined to original source port
