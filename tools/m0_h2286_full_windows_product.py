@@ -66,6 +66,8 @@ def assert_original_binaries():
     require(m["source_sha"]=="c5066db61fc51bafd7c2ad2def3029e615efa777",
             "FROZEN_WIN_BINARY_SOURCE_MANIFEST")
     h2291=os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")=="1"
+    factor=os.environ.get("WBD_H2312_FACTOR","legacy")
+    require(factor in ("legacy","npf_only","tx_only"),"H2312_ALLOWED_PRODUCT_SELECTOR")
     c=None
     if h2291:
         c=json.loads((p/"h2291-windows-dll-manifest.json").read_text())
@@ -77,19 +79,26 @@ def assert_original_binaries():
                                         os.environ["GITHUB_SHA"])
                          if os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1"
                          else os.environ["GITHUB_SHA"])
+        expected="h2291_windows_tx_service" if factor=="legacy" else (
+            "h2311_windows_npf64_only" if factor=="npf_only" else "h2311_windows_tx16_only")
         require(c["source_sha"]==approved_source and
-                c["trial_feature"]=="h2291_windows_tx_service" and
-                c["original_go_exe_source_sha"]==m["source_sha"],
+                c["trial_feature"]==expected and
+                c["original_go_exe_source_sha"]==m["source_sha"] and
+                (factor=="legacy" or (c.get("h2312_factor")==factor and
+                    approved_source==os.environ["GITHUB_SHA"])),
                 "H2291_EXACT_RUST_SOURCE_AND_ORIGINAL_GO_ABI_MANIFEST")
     original_ab=os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1"
     baseline=None
     if original_ab and not h2291:
         baseline=json.loads((p/"h2292-baseline-dll-manifest.json").read_text())
         compiled_source=os.environ.get("WBD_H2292_COMPILED_SOURCE_SHA",os.environ["GITHUB_SHA"])
+        expected_base="H2291_TX_SERVICE_DISABLED" if factor=="legacy" else (
+            "H2312_NPF8_16_TRACE" if factor=="npf_only" else "H2312_NPF16_64_TRACE")
         require(baseline["source_sha"]==compiled_source and
-                baseline["feature"]=="H2291_TX_SERVICE_DISABLED" and
+                baseline["feature"]==expected_base and
                 baseline["base_features"]==
-                 "m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record",
+                "m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record" and
+                (factor=="legacy" or baseline.get("h2312_factor")==factor),
                 "H2292_REAL_RUST_DEFAULT_FEATURE_MATCHED_SOURCE")
     for filename,key in (("wbd-client-embedded.exe","exe"),
                          ("wbd_engine.dll","dll")):
@@ -529,11 +538,17 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         print("H2290_SOURCE_LOCKED_MINIMAL_CROSS_RUNNER_RESULT_READY",flush=True)
         if os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")=="1":
             actual=clientlog.read_text(errors="replace") if clientlog.exists() else ""
-            output["h2291_original_windows_npf_queue_verified"]=(
-                "H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue=1 queue_bytes=65536 max_frames=16"
-                in actual)
-            if not output["h2291_original_windows_npf_queue_verified"]:
-                output["status"]="FAIL_H2291_RUST_CANDIDATE_QUEUE_NOT_ACTUALLY_USED"
+            if os.environ.get("WBD_H2312_FACTOR","legacy")=="legacy":
+                output["h2291_original_windows_npf_queue_verified"]=(
+                    "H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue=1 queue_bytes=65536 max_frames=16"
+                    in actual)
+                if not output["h2291_original_windows_npf_queue_verified"]:
+                    output["status"]="FAIL_H2291_RUST_CANDIDATE_QUEUE_NOT_ACTUALLY_USED"
+            else:
+                output["h2312_original_npf_profile_logged"]=(
+                    "PLAN029_H2311_NPF_STOP_PROFILE " in actual)
+                if not output["h2312_original_npf_profile_logged"]:
+                    output["status"]="FAIL_H2312_CANDIDATE_NATIVE_OWNER_STOP_TRACE_ABSENT"
             core.save(ROOT/"client-result.json",output)
         print("H2286_CLIENT_ACTUAL_WINDOWS_ORIGINAL_RESULT "+output["status"],flush=True)
     require(output["status"]=="PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP",
