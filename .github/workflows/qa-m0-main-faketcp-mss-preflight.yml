@@ -1,0 +1,30 @@
+# Cheap source-only guard; original Go native workflow remains authoritative.
+name: M0 main pinned FakeTCP MSS assembly preflight
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/m0-fixed-real-kernel-applied.yml'
+      - '.github/workflows/m0-normal-product-smoke.yml'
+      - '.github/workflows/qa-m0-main-faketcp-mss-preflight.yml'
+      - 'tools/m0_install_public_faketcp.py'
+      - 'tests/test_m0_main_faketcp_source_gate.py'
+      - 'r0/go_overlay/assembly/manifest-plan020-m0.json'
+      - 'r0/go_overlay/internal/faketcp/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_install_public_faketcp.py
+          python3 tools/m0_install_public_faketcp.py --check-only
+          python3 -m unittest tests.test_m0_main_faketcp_source_gate -v

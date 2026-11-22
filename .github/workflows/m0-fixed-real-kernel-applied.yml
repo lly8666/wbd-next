@@ -49,6 +49,11 @@ jobs:
           for file in fec_v2_policy.go fec_v2_policy_test.go fec_v2_runtime_controller.go fec_v2_runtime_controller_test.go admission_v4.go admission_v4_test.go bridge_v4_probe_linux.go bridge_v4_probe_linux_test.go bridge_v4_embedded_linux.go bridge_v4_fec2_owner_off_linux.go bridge_v4_fec2_owner_probe_linux.go bridge_v4_fec2_owner_probe_linux_test.go bridge_v4_embedded_linux_test.go bridge_v4_embedded_perf_linux_test.go bridge_v4_normal_off_policy_linux.go bridge_v4_normal_off_policy_linux_test.go bridge_v4_fixed_pending_linux.go bridge_v4_fixed_pending_linux_test.go; do
             cp "r0/go_overlay/internal/realityfront/$file" "legacy/internal/realityfront/$file"
           done
+          # Same content-addressed source gate already used by PLAN012:
+          # never compile copied Go tests against an unpatched original FakeTCP.
+          python3 tools/m0_install_public_faketcp.py --check-only
+          python3 tools/m0_install_public_faketcp.py legacy
+          (cd legacy && go test -count=1 ./internal/faketcp)
           export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
           (cd legacy && go test -tags wbd_v4_native_probe,wbd_v4_embedded_go,wbd_v4_fec2_owner_probe -c -o "$GITHUB_WORKSPACE/fixed-build/owner-go.test" ./internal/realityfront)
           cp target/release/libwbd_engine.so fixed-build/
@@ -63,7 +68,11 @@ jobs:
             "r0/go_overlay/internal/realityfront/bridge_v4_fec2_owner_probe_linux_test.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_fixed_pending_linux_test.go",
-            "tools/run-v4-tun-netns.sh",".github/workflows/m0-fixed-real-kernel-applied.yml"]
+            "tools/run-v4-tun-netns.sh",
+            "tools/m0_install_public_faketcp.py",
+            "r0/go_overlay/assembly/manifest-plan020-m0.json",
+            "r0/go_overlay/internal/faketcp/public_v4_mss.go",
+            ".github/workflows/m0-fixed-real-kernel-applied.yml"]
           m={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],"run_id":int(os.environ["GITHUB_RUN_ID"]),
             "attempt":int(os.environ["GITHUB_RUN_ATTEMPT"]),
             "task_id":"R0-M0-PLAN008-PRODUCT-VERTICAL-INTEGRATION-025",
