@@ -1,0 +1,72 @@
+name: H2305 Linux upstream GPL Brutal actual real TCP socket test ephemeral VM
+run-name: "M0 H2305 pinned GPL TCP Brutal real selected socket + bandwidth + owned unload | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-brutal-inner-outer-20261122']
+    paths:
+      - '.github/workflows/qa-h2305-upstream-brutal-real-socket-only.yml'
+      - 'tools/m0_h2305_tcp_brutal_socket_probe.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disposable-kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Exact external GPL upstream SHA, kernel module scoped load, real owned socket, fail-closed unload
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_ACTIONS" = true
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2305_tcp_brutal_socket_probe.py
+          UPSTREAM_SHA=d2397ff8bca04a29fd2de01cf7d2d4b825224de8
+          d="$(mktemp -d)"
+          loaded=0
+          initial_cc="$(cat /proc/sys/net/ipv4/tcp_congestion_control)"
+          cleanup() {
+            result=$?
+            trap - EXIT
+            if test "$loaded" = 1; then
+              if ! sudo rmmod brutal; then
+                echo H2305_TEST_OWNED_GPL_BRUTAL_KERNEL_MODULE_UNLOAD_FAILED
+                result=2
+              fi
+            fi
+            if grep -q '^brutal ' /proc/modules; then
+              echo H2305_BRUTAL_MODULE_STILL_LOADED
+              result=2
+            fi
+            if test "$(cat /proc/sys/net/ipv4/tcp_congestion_control)" != "$initial_cc"; then
+              echo H2305_GLOBAL_LINUX_TCP_CONGESTION_DEFAULT_CHANGED
+              result=2
+            fi
+            rm -rf "$d"
+            exit "$result"
+          }
+          trap cleanup EXIT
+          if grep -q '^brutal ' /proc/modules; then
+            echo H2305_NOT_OWNED_ALREADY_LOADED_BRUTAL_REJECT
+            exit 2
+          fi
+          git -C "$d" init -q
+          git -C "$d" remote add upstream https://github.com/HyNetworks/tcp-brutal.git
+          timeout 90 git -C "$d" fetch -q --depth 1 upstream "$UPSTREAM_SHA"
+          git -C "$d" checkout -q --detach FETCH_HEAD
+          test "$(git -C "$d" rev-parse HEAD)" = "$UPSTREAM_SHA"
+          grep -qi 'GNU GENERAL PUBLIC LICENSE' "$d/LICENSE"
+          KERNEL="$(uname -r)"
+          if test ! -f "/lib/modules/$KERNEL/build/Makefile"; then
+            timeout 150 sudo apt-get update -qq
+            timeout 150 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "linux-headers-$KERNEL"
+          fi
+          test -f "/lib/modules/$KERNEL/build/Makefile"
+          (cd "$d" && timeout 240 make -j2)
+          test -s "$d/brutal.ko"
+          sudo insmod "$d/brutal.ko"
+          loaded=1
+          grep -q '^brutal ' /proc/modules
+          python3 -u tools/m0_h2305_tcp_brutal_socket_probe.py
+          echo H2305_TEST_ONLY_REAL_TCP_BRUTAL_SOURCE_PINNED_AND_CLEANUP_PENDING
