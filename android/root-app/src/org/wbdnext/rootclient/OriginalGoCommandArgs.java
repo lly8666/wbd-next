@@ -255,7 +255,9 @@ final class OriginalGoCommandArgs {
         String direct=RootDirectIPv4.canonicalCSV(directCIDRs);
         if(!direct.isEmpty())pair(args,"--android-direct-cidrs",direct);
         String physicalIP=RootPhysicalDNSUpstream.canonical(physicalDnsUpstream);
-        if(physicalDNS||cnSplitDNS)
+        if(physicalDNS||cnSplitDNS||
+            (!RootPhysicalDNSUpstream.DEFAULT.equals(physicalIP)&&
+             !ServerAddress.isIPv4Literal(peer)))
             pair(args,"--android-physical-dns-upstream-ipv4",physicalIP);
         if(cnSplitDNS)args.add("--android-cn-dns-split");
         else if(physicalDNS)args.add("--android-physical-dns");

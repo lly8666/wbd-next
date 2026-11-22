@@ -883,9 +883,9 @@ public final class RootClientActivity extends Activity {
             InputType.TYPE_CLASS_TEXT);
         physicalDNSUpstreamField.setText(RootPhysicalDNSUpstream.DEFAULT);
         TextView upstreamHint=new TextView(this);
-        upstreamHint.setText("仅在「可选物理DNS」或「CN8503 DNS分流」时使用。"+
-            "原Rust M4在已选择的实体Network上连接该UDP53 IPv4；"+
-            "WBD服务器冷引导223.5.5.5及系统netd仍不变。");
+        upstreamHint.setText("可选物理/CN DNS模式下原Rust M4使用此UDP53；"+
+            "若WBD服务器填写域名，原Go也通过选定Network的同一DNS IPv4冷引导，"+
+            "遇截断走同端点TCP53；默认223.5.5.5，系统netd DNS不受影响。");
         pane.addView(upstreamHint);
         cnSplitDNS=new CheckBox(this);
         cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走WBD隧道1.1.1.1（不接管Android系统DNS）");

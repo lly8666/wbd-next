@@ -418,7 +418,12 @@ public final class RootClientService extends Service {
             // Network's local DNS (off UI, before Root), not netd default.
             // The original Go FakeTCP/TLS gets a literal --peer-ip;
             // its protected SessionID SNI, credentials, M3/PN unchanged.
-            final String peerForGo=PhysicalNetwork.coldPeerIPv4(this,net,peer);
+            // A configured physical DNS server belongs to this selected Network.
+            // Let original Go resolve the hostname on its already-bound
+            // UDP/TCP53 socket rather than first consulting Android netd.
+            final String peerForGo=!RootPhysicalDNSUpstream.DEFAULT.equals(physicalDnsIPv4)
+                &&!ServerAddress.isIPv4Literal(peer)
+                ?peer:PhysicalNetwork.coldPeerIPv4(this,net,peer);
             status="ROOT_STARTING — exact native SOURCE "+code.source.substring(0,12);
             Process p;
             synchronized(ownerLaunchLock){

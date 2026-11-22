@@ -2,8 +2,9 @@ package org.wbdnext.rootclient;
 
 // B34: the real Android Root product's physically bound UDP/53 destination.
 // A LOCAL router DNS IPv4 (e.g. 192.168.1.1) is valid when the selected
-// physical Android Network can actually reach it. Neither system netd
-// resolver nor original TLS server bootstrap is modified by this field.
+// physical Android Network can actually reach it. B35 also reuses this
+// endpoint for original Go peer-host UDP/TCP53 cold bootstrap; system netd
+// Resolver and the authenticated TLS/M3 protocol remain unchanged.
 final class RootPhysicalDNSUpstream {
     static final String DEFAULT="223.5.5.5";
     private RootPhysicalDNSUpstream(){}

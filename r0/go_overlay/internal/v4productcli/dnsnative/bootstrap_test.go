@@ -73,3 +73,35 @@ func TestB2c3BootstrapRejectsMalformedNameOrUnavailablePhysical(t *testing.T){
         t.Fatal("missing physical DialFunc did not fail closed")
     }
 }
+
+func TestB35ConfiguredPhysicalBootstrapUsesRealUDPAndSameUpstreamTCP(t *testing.T){
+    physical:=serveDNS(t,[4]byte{203,0,113,92})
+    upstream:=netip.MustParseAddr("192.168.1.1")
+    target:=upstream.String()+":53"
+    dial:=func(ctx context.Context,path Path,protocol,address string)(net.Conn,error){
+        if path!=Physical||address!=target||(protocol!="udp"&&protocol!="tcp"){
+            return nil,errors.New("B35 bootstrap used an unselected DNS endpoint")
+        }
+        return (&net.Dialer{}).DialContext(ctx,protocol,physical.addr)
+    }
+    got,err:=ResolveBootstrapIPv4WithUpstream(context.Background(),
+        "lan.example.test",dial,upstream)
+    if err!=nil||got!=netip.AddrFrom4(physical.ip){
+        t.Fatal("custom selected physical DNS UDP bootstrap failed",got,err)
+    }
+    physical.truncate=true
+    got,err=ResolveBootstrapIPv4WithUpstream(context.Background(),
+        "wbd.example.test",dial,upstream)
+    if err!=nil||got!=netip.AddrFrom4(physical.ip){
+        t.Fatal("custom selected DNS TC-to-TCP bootstrap failed",got,err)
+    }
+    if physical.udpCalls.Load()!=2||physical.tcpCalls.Load()!=1{
+        t.Fatal("custom selected DNS must reuse the same upstream for UDP/TCP")
+    }
+    for _,bad:=range []string{"0.0.0.0","127.0.0.1","::1"}{
+        if _,err:=ResolveBootstrapIPv4WithUpstream(context.Background(),
+            "lan.example.test",dial,netip.MustParseAddr(bad));err==nil{
+            t.Fatal("invalid bootstrap DNS destination accepted",bad)
+        }
+    }
+}

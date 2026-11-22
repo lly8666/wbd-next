@@ -243,6 +243,24 @@ public final class OriginalGoCommandArgsTest {
             false,false,true,false,1460,"chacha20-poly1305",500,"off",
             "normal",1,"","127.0.0.1"));
         System.out.println("ANDROID_B34_REAL_GO_CUSTOM_PHYSICAL_DNS_UPSTREAM_ARGV_PASS");
+        // B35: the same physical IPv4 can serve ORIGINAL Go's cold peer
+        // hostname lookup even when ordinary App DNS stays in the tunnel.
+        List<String> customPeerBootstrap=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","lan.wbd.example",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,true,false,false,1460,"chacha20-poly1305",500,"off",
+            "normal",1,"","192.168.1.1");
+        value(customPeerBootstrap,"--peer-host","lan.wbd.example");
+        value(customPeerBootstrap,"--android-physical-dns-upstream-ipv4","192.168.1.1");
+        List<String> unusedPhysical=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,true,false,false,1460,"chacha20-poly1305",500,"off",
+            "normal",1,"","192.168.1.1");
+        absent(unusedPhysical,"--android-physical-dns-upstream-ipv4");
+        System.out.println("ANDROID_B35_PEER_HOST_CUSTOM_PHYSICAL_DNS_COLD_ARGV_HOST_PASS");
         System.out.println("ANDROID_ORIGINAL_APK_GO_CLI_ARGV_HOST_CONTRACT_PASS");
     }
 }

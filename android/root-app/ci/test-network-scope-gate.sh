@@ -607,7 +607,11 @@ assert 'cnGeositeFile:=flags.String("android-cn-geosite-file"' in cold
 assert 'dnsnative.ReadPinnedCNFile(*cnGeositeFile)' in cold
 assert 'dns_capture=NOT_CONNECTED' in cold
 assert 'peerHost:=flags.String("peer-host"' in cold
-assert 'dnsnative.ResolveBootstrapIPv4(' in cold
+assert 'dnsnative.ResolveBootstrapIPv4WithUpstream(' in cold
+assert 'dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(' in cold
+assert 'cfg.androidPhysicalDNSUpstream)' in cold
+assert 'ANDROID_B35_PEER_HOST_CUSTOM_PHYSICAL_DNS_COLD_ARGV_HOST_PASS' in Path(
+    "android/root-app/ci/OriginalGoCommandArgsTest.java").read_text()
 assert 'V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED' in cold
 typed=Path("r0/go_overlay/internal/v4productcli/dnsnative/cn_rules.go").read_text()
 assert 'syscall.O_NOFOLLOW|syscall.O_NONBLOCK' in typed

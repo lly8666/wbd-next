@@ -28,23 +28,34 @@ import "C"
 import (
  "context"
  "fmt"
+ "net/netip"
  "syscall"
  "unsafe"
 )
 
 // NewAndroidPhysicalDNSDialer provides REAL netd pre-connect binding for
 // DNS UDP and TCP sockets to the selected physical Android Network.
-// The returned dialer rejects Tunnel and all endpoints except 223.5.5.5:53.
+// The returned dialer rejects Tunnel and any endpoint other than its exact
+// cold-selected IPv4:53. Legacy callers still default to 223.5.5.5.
 // NO socket is opened until Resolve selects Physical; no default route,
 // per-UID system exemption, Java packet forwarding or VpnService is used.
 //
 // The original client may construct this at cold validation. Creating it
 // does not prove the Android DNS system ingress or a successful DNS query.
 func NewAndroidPhysicalDNSDialer(s PhysicalScope)(DialFunc,error){
+ return NewAndroidPhysicalDNSDialerWithUpstream(s,netip.MustParseAddr("223.5.5.5"))
+}
+
+func NewAndroidPhysicalDNSDialerWithUpstream(
+ s PhysicalScope,upstream netip.Addr,
+)(DialFunc,error){
+ if _,err:=ParsePhysicalDNSUpstreamIPv4(upstream.String());err!=nil{
+  return nil,err
+ }
  if s.LocalIPv4.IsLoopback()||s.LocalIPv4.IsLinkLocalUnicast(){
   return nil,fmt.Errorf("%w: physical DNS scope cannot be loopback or link-local",ErrUnbound)
  }
- return newScopedPhysicalDialer(s,ChinaDNS,
+ return newScopedPhysicalDialer(s,upstream.String()+":53",
   func(ctx context.Context,network string,conn syscall.RawConn)error{
    if err:=ctx.Err();err!=nil{return err}
    name:=C.CString(s.InterfaceName)

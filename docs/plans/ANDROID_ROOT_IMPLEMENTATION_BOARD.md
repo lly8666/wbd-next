@@ -1,5 +1,7 @@
 # Android Root 原产品功能施工台账（B30｜源码与设备分层）
 
+- **B35在建**：已选物理DNS IPv4不再仅接原Rust M4 App UDP53，也接原Go `--peer-host` 的冷UDP53/TCP53服务器域名引导；原 `Network` 绑定不变，默认223.5.5.5，不新增系统netd接管。Host/签名APK/实体资格依B35新SOURCE Action独立认定；Game/IPv6/热点/实体E2E仍缺。
+
 - **唯一工作分支**：`experiment/android-temp-root-probe`，对照基线 `f115ab1840f1c50eb1922f9c34b67267ca1fd770`，Draft PR #36。主线 `main` 不写。
 - **证据**：[B33c Android Dual64 #44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) **11 SUCCESS/4 SKIPPED**，包括签名ARM64 APK、原Go/Rust双ABI、Linux原服务端Oracle与原rootjournal全套Host测试；[Governance #44975823362](https://github.com/lly8666/wbd-next/actions/runs/44975823362) SUCCESS。Android真实应用E2E/性能依旧未验。
 - **口径**：`WIRED` 源码确实连入生产调用链；`HOST_PASS` 同SOURCE已有Host/ARM64编译资格；`PHONE_PARTIAL` 旧真实API36片段凭据；`NOT_RUN` 手机/真实双端业务未验；`MISSING` 确认无生产路径；`BLOCKED` 需大范围不同架构或授权设备。不要把历史步骤名、单一日志和按钮等同真实能力。

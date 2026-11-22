@@ -5,6 +5,7 @@ package dnsnative
 // DialFunc can open UDP53 and same-endpoint TCP53 on truncation.
 // The original B1 Resolver checks DNS ID/question and never falls back to
 // the system resolver, a tunnel socket, or an alternate DNS upstream.
+// B35 permits the existing App physical upstream IPv4 for this cold stage.
 import (
     "context"
     "crypto/rand"
@@ -138,12 +139,25 @@ func bootstrapReplyIPv4(host string,answer []byte)(netip.Addr,error){
     return netip.Addr{},ErrInvalid
 }
 func ResolveBootstrapIPv4(ctx context.Context,host string,dial DialFunc)(netip.Addr,error){
+    return ResolveBootstrapIPv4WithUpstream(ctx,host,dial,netip.MustParseAddr("223.5.5.5"))
+}
+
+// ResolveBootstrapIPv4WithUpstream uses the selected Android Network's
+// already-scoped Go UDP/TCP dialer with one configured DNS IPv4. The same
+// endpoint is retained when a valid DNS TC reply requires TCP/53.
+func ResolveBootstrapIPv4WithUpstream(
+    ctx context.Context,host string,dial DialFunc,upstream netip.Addr,
+)(netip.Addr,error){
     if ctx==nil||dial==nil{return netip.Addr{},ErrUnbound}
+    if _,err:=ParsePhysicalDNSUpstreamIPv4(upstream.String());err!=nil{
+        return netip.Addr{},err
+    }
     question,err:=bootstrapQuery(host)
     if err!=nil{return netip.Addr{},err}
     resolver,err:=New(dial,nil,false)
     if err!=nil{return netip.Addr{},err}
-    reply,err:=resolver.Resolve(ctx,question,true) // always Physical, 223.5.5.5
+    resolver.direct=upstream.String()+":53"
+    reply,err:=resolver.Resolve(ctx,question,true) // always exact selected physical upstream
     if err!=nil{return netip.Addr{},fmt.Errorf("physical DNS bootstrap: %w",err)}
     ip,err:=bootstrapReplyIPv4(host,reply)
     if err!=nil{return netip.Addr{},fmt.Errorf("DNS bootstrap A answer: %w",err)}

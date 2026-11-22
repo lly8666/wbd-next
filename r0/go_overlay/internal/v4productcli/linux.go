@@ -271,7 +271,7 @@ func parse(role string,args []string)(config,error){
     androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
         "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
     androidPhysicalDNSUpstream:=flags.String("android-physical-dns-upstream-ipv4","223.5.5.5",
-        "Android Root: exact real physical DNS UDP/53 upstream on the selected Network; defaults 223.5.5.5; NOT system Resolver nor Go peer bootstrap")
+        "Android Root: selected-Network physical DNS IPv4 for captured App UDP/53 and original Go peer-host cold UDP/TCP53 bootstrap; default 223.5.5.5; not system Resolver")
     androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false,
         "Android Root optional: match original App UDP53 QNAME against pinned CN8503; CN via physical 223.5.5.5, other names via WBD tunnel 1.1.1.1")
     ip:=flags.String("local-ip","","underlay local IPv4; server may omit or use 0.0.0.0 to resolve unique IPv4 of --raw-interface (NAT-friendly)")
@@ -359,8 +359,8 @@ func parse(role string,args []string)(config,error){
         c.androidPhysicalDNSUpstream,e=dnsnative.ParsePhysicalDNSUpstreamIPv4(*androidPhysicalDNSUpstream)
         if e!=nil{return c,fmt.Errorf("Android physical DNS upstream rejected: %w",e)}
         if *androidPhysicalDNSUpstream!="223.5.5.5"&&
-           !c.androidPhysicalDNS&&!c.androidCNDNSSplit{
-            return c,fmt.Errorf("custom physical DNS requires physical or CN-split DNS mode")
+           !c.androidPhysicalDNS&&!c.androidCNDNSSplit&&*peerHost==""{
+            return c,fmt.Errorf("custom physical DNS requires physical/CN-split App DNS or server peer-host bootstrap")
         }
         c.androidRouteUIDs,e=parseAndroidRouteGroupArg(*androidRouteGroup)
         if e!=nil{return c,e}
@@ -1212,14 +1212,14 @@ func Run(role string,args []string)(retErr error){
             return fmt.Errorf("Android ARM64 supports Normal/off, explicit Fixed or Auto and protected auto /32; Game/rotation/outer-repair unavailable")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
-        cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialer(
+        cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(
             dnsnative.PhysicalScope{
                 NetworkHandle:cfg.androidNetworkHandle,
                 InterfaceName:cfg.rawInterface,
                 IfIndex:iface.Index,
                 MTU:iface.MTU,
                 LocalIPv4:cfg.localIP,
-            })
+            },cfg.androidPhysicalDNSUpstream)
         if err!=nil{
             return fmt.Errorf("Android physical DNS cold Network scope denied: %w",err)
         }
@@ -1228,17 +1228,17 @@ func Run(role string,args []string)(retErr error){
         log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_COLD_SCOPE_CHECKED socket_opened=0 dns_capture=NOT_CONNECTED")
         if cfg.peerHost!=""{
             // Original Go cold DNS wire/ID/QNAME and scoped Bionic netd
-            // UDP/TCP socket. The only DNS upstream is 223.5.5.5 physical;
+            // UDP/TCP socket. Use the single configured physical upstream;
             // DNS failure aborts before the first original FakeTCP SYN.
             dnsCtx,cancelDNS:=context.WithTimeout(context.Background(),5*time.Second)
-            resolved,resolveErr:=dnsnative.ResolveBootstrapIPv4(
-                dnsCtx,cfg.peerHost,cfg.androidPhysicalDNSDial)
+            resolved,resolveErr:=dnsnative.ResolveBootstrapIPv4WithUpstream(
+                dnsCtx,cfg.peerHost,cfg.androidPhysicalDNSDial,cfg.androidPhysicalDNSUpstream)
             cancelDNS()
             if resolveErr!=nil{
                 return fmt.Errorf("Android physical server bootstrap failed before FakeTCP SYN: %w",resolveErr)
             }
             cfg.peerIP=resolved
-            log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=223.5.5.5 udp_tcp53_original_go=1",cfg.peerHost)
+            log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=%s udp_tcp53_original_go=1",cfg.peerHost,cfg.androidPhysicalDNSUpstream)
         }
     }
     if role=="server"&&cfg.localIP.IsUnspecified(){
