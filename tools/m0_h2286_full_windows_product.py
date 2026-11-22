@@ -160,8 +160,11 @@ def original_win_client_args(exe,peer,server):
     weak_fec=os.environ.get("WBD_H2293_FEC_ABA")=="1"
     requested=os.environ.get("WBD_H2293_FEC_STAGE","off") if weak_fec else "off"
     loss=int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0")) if weak_fec else 0
-    require(not weak_fec or (loss in (1,5) and
-            requested in ("off","fixed")),"H2293_FEC_COLD_MODE")
+    window_only=os.environ.get("WBD_H2302_WINDOW_ABA")=="1"
+    require(not weak_fec or (
+            (loss in (1,5) and requested in ("off","fixed")) or
+            (window_only and loss==0 and requested=="off")),
+            "H2293_FEC_COLD_MODE")
     profile="light" if loss==1 else "mild"
     carrier=["--fec-mode","fixed","--fec-parity","4",
              "--fec.mode","fixed","--fec.profile",profile] if requested=="fixed" else [
@@ -317,7 +320,9 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         # startup packets as application delivery.
         weak_loss=(int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0"))
                    if os.environ.get("WBD_H2293_FEC_ABA")=="1" else -1)
-        require(weak_loss in (-1,1,5),"H2293_EXACT_IMPAIRMENT_TIER")
+        require(weak_loss in (-1,0,1,5) and
+                (weak_loss!=0 or os.environ.get("WBD_H2302_WINDOW_ABA")=="1"),
+                "H2293_EXACT_IMPAIRMENT_TIER")
         shape=core.remote_shape(relay,weak_loss)
         before=core.os_host_cpu()
         chosen=(int(os.environ.get("WBD_H2302_INNER_TCP_TEST_BYTES","0"))
@@ -373,7 +378,7 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
             windows_original_product_bulk_stage_cpu_percent=
                 core.cpu_busy_percent(before,core.os_host_cpu()),
             kernel_relay_qdisc=qdisc,
-            h2293_actual_bidir_weak_loss_pct=(weak_loss if weak_loss>0 else None),
+            h2293_actual_bidir_weak_loss_pct=(weak_loss if weak_loss>=0 else None),
             relay_tailscaled_and_host_cpu_stage=relay_resource,
             windows_original_go_rust_cpu_stage=win32_product_cpu,
             real_wsl_conntrack_counters=counters,

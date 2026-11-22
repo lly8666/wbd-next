@@ -33,8 +33,12 @@ H2302_BASE_BYTES=int(os.environ.get("WBD_H2302_BASE_BYTES","2097152"))
 H2302_TUNED_BYTES=int(os.environ.get("WBD_H2302_TUNED_BYTES","8388608"))
 if H2302_WINDOW_ABA and (H2302_BASE_BYTES,H2302_TUNED_BYTES) not in (
     (2*1024*1024,8*1024*1024),
-    (8*1024*1024,16*1024*1024)):
-    raise RuntimeError("H2303_WINDOW_ABA_ONLY_2_TO_8_OR_8_TO_16_MIB")
+    (8*1024*1024,16*1024*1024),
+    (8*1024*1024,2*1024*1024),
+    (16*1024*1024,8*1024*1024)):
+    # Historical H2303_WINDOW_ABA_ONLY_2_TO_8_OR_8_TO_16_MIB unit
+    # retained; H2304 also tests two reverse signed kernel TCP contrasts.
+    raise RuntimeError("H2304_UNSUPPORTED_2_8_16_MIB_WINDOW_CONTRAST")
 def h2302_window_bytes(tag):
     if tag not in ("A_base","B_window","A_prime_base"):
         raise RuntimeError("H2303_UNKNOWN_WINDOW_STAGE")
@@ -245,7 +249,7 @@ def verify_binary_archive():
     require(os.name=="nt","ONLY_REAL_WINDOWS2025")
     require(os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1" and
             os.environ.get("WBD_H2293_FEC_ABA")=="1" and
-            FEC_LOSS in (1,5) and
+            (FEC_LOSS in (0,1,5) if H2302_WINDOW_ABA else FEC_LOSS in (1,5)) and
             os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")=="0",
             "H2293_EXPLICIT_PRODUCT_FEC2_ONLY_AND_ALL_TX16_FROZEN")
     ROOT.mkdir(exist_ok=True)
@@ -589,7 +593,7 @@ def arm_trial(group):
     require(os.name=="posix" and
             os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1" and
             os.environ.get("WBD_H2293_FEC_ABA")=="1" and
-            FEC_LOSS in (1,5),
+            (FEC_LOSS in (0,1,5) if H2302_WINDOW_ABA else FEC_LOSS in (1,5)),
             "ARM_TRUE_THREE_LEG_MODE")
     own=arm.own_meta(group)
     relay=core.load(pathlib.Path("h2276-peer/relay/relay-ready.json"))
