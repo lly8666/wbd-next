@@ -23,6 +23,8 @@ class PinnedMssMainWorkflow(unittest.TestCase):
     def test_plan012_same_original_tls_owner_and_mss_assembly(self):
         plan=(ROOT/".github/workflows/m0-plan012-combined-functional.yml").read_text()
         self.assertIn("for file in tls.go bridge_v4_linux_server_product.go",plan)
+        self.assertIn("grep -q 'test result: ok. 5 passed; 0 failed' fixed-kernel-result/continuous-rx.log",plan)
+        self.assertNotIn("grep -q 'test result: ok. 4 passed; 0 failed' fixed-kernel-result/continuous-rx.log",plan)
         self.assertIn("grep -Fq \"RootCAs\" legacy/internal/realityfront/tls.go",plan)
         self.assertIn('"r0/go_overlay/internal/realityfront/tls.go",',plan)
         self.assertIn("python3 tools/m0_install_public_faketcp.py legacy",plan)
