@@ -13,3 +13,7 @@
 ## 第三关：旧工作流尝试复制已删除的 WB-R1 prelude
 
 新原生 [Action 45033537657](https://github.com/lly8666/wbd-next/actions/runs/45033537657) ERR trap 证明首个失败：`M0_PLAN012_FIRST_FAILED_BASH_LINE=70 exit_code=1`，日志 `cp: cannot stat 'r0/go_overlay/internal/realityfront/v4_route_prelude.go'`。GitHub 原文件历史显示 `v4_route_prelude.go` 与 `v4_route_prelude_test.go` 由 H1067 commit `00fdb00d0e60` 终止旧 WB-R1 前置标识、切换 mandatory 标准 ClientHello，因此当前 root Git tree 已不存在，恢复文件会复活被废止协议。同步清除**只这两个旧路径**在工作流的 paths 触发器、原Go复制循环和输入SHA list，保持其余32个当前真实 overlay 文件、完整 GoTLS/原native/Rust真实1%/Stop 门不变。旧Action保持红，下一SOURCE应通过该明确 cp 首错才能看到后续门。
+
+## 第四关：原CLI依赖当前 V2 route-key 模块但旧 donor 不包含
+
+[Action 45033874758](https://github.com/lly8666/wbd-next/actions/runs/45033874758) 前级Rust和原Go当前FakeTCP/MSS真单元已全部通过（`H983`、`H984` 原日志），进入真实原Go测试首个新错误：`internal/v4productcli/linux.go:41:5: no required module provides package github.com/lly8666/wobuzhidao/internal/v4routekey`，首失败 `BASH_LINE=186`。当前仓库实际包含 `r0/go_overlay/internal/v4routekey/{cache.go,short.go,short_test.go}`，这是正式 H2207/H2208 **v2 offline route-key KDF/cache**，原 Go donor SHA a7a82 不具备。工作流现需 source-preserving复制这三文件，`cmp`逐字验证、运行本模块全部真实 Go 原测试，计入源 SHA 输入，再跑后续产品 TLS。不是取消KDF、降低校验或复活旧 prelude，也不构造假模块。

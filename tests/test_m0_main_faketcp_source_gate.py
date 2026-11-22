@@ -32,6 +32,10 @@ class PinnedMssMainWorkflow(unittest.TestCase):
         # NOT restore missing legacy TLS-product files just to satisfy CI.
         self.assertNotIn("v4_route_prelude.go",plan)
         self.assertNotIn("v4_route_prelude_test.go",plan)
+        self.assertIn("mkdir -p legacy/internal/v4productcli legacy/internal/v4routekey",plan)
+        self.assertIn("(cd legacy && go test -count=1 ./internal/v4routekey)",plan)
+        self.assertIn("M0_PLAN012_CURRENT_V2_ROUTE_KEY_DERIVATION_SOURCE_AND_REAL_TEST_PASS",plan)
+        self.assertIn('"r0/go_overlay/internal/v4routekey/short_test.go",',plan)
         self.assertIn("for file in tls.go bridge_v4_linux_server_product.go",plan)
         self.assertNotIn("grep -q 'test result: ok. 4 passed; 0 failed' fixed-kernel-result/continuous-rx.log",plan)
         self.assertIn("grep -Fq \"RootCAs\" legacy/internal/realityfront/tls.go",plan)

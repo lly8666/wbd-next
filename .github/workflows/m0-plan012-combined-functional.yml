@@ -154,7 +154,16 @@ jobs:
           done
           # Assemble ACTUAL public original-Go V4 client and server entry
           # sources, not a clone of V3 or a package-private Go test binary.
-          mkdir -p legacy/internal/v4productcli legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+          mkdir -p legacy/internal/v4productcli legacy/internal/v4routekey legacy/cmd/wbd-v4-client legacy/cmd/wbd-v4-server
+          # H2207/H2208 current v2 offline key KDF is a real Go package,
+          # absent from the pinned donor. No old WB-R1 prelude resurrection.
+          for file in cache.go short.go short_test.go; do
+            test -f "r0/go_overlay/internal/v4routekey/$file"
+            cp "r0/go_overlay/internal/v4routekey/$file" "legacy/internal/v4routekey/$file"
+            cmp -s "r0/go_overlay/internal/v4routekey/$file" "legacy/internal/v4routekey/$file"
+          done
+          (cd legacy && go test -count=1 ./internal/v4routekey)
+          echo M0_PLAN012_CURRENT_V2_ROUTE_KEY_DERIVATION_SOURCE_AND_REAL_TEST_PASS
           # Public Linux product imports the actual detached-data kernel BPF
           # and cold SYN MSS owners. Both are opt-in files in THIS source tree,
           # not part of the frozen original donor; without them the Go V4
@@ -283,6 +292,9 @@ jobs:
             "crates/wbd-engine/src/fec2_staged.rs",
             "crates/wbd-codec/src/fec_v2.rs","crates/wbd-codec/src/record_crypto.rs",
             "r0/go_overlay/internal/realityfront/tls.go",
+            "r0/go_overlay/internal/v4routekey/cache.go",
+            "r0/go_overlay/internal/v4routekey/short.go",
+            "r0/go_overlay/internal/v4routekey/short_test.go",
             "r0/go_overlay/internal/realityfront/admission_v4.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
             "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
