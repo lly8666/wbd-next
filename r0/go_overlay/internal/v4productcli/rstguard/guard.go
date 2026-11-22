@@ -50,11 +50,15 @@ type Plan struct {
     PeerIP string
     SourcePort int
     PeerPort int
+    // Game2's TWO consecutive original Go source ports use ONE durable,
+    // owned iptables range rule. The legacy Normal exact port is unchanged.
+    Game2 bool
 }
 
 func (p Plan) valid() bool {
     if p.Version != 1 || len(p.Interface) < 1 || len(p.Interface) > 15 ||
         p.SourcePort < 1 || p.SourcePort > 65535 ||
+        (p.Game2 && p.SourcePort == 65535) ||
         p.PeerPort < 1 || p.PeerPort > 65535 { return false }
     for _, c := range p.Interface {
         if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
@@ -71,10 +75,14 @@ func (p Plan) valid() bool {
 }
 
 func (p Plan) params() []string {
+    sourcePorts:=strconv.Itoa(p.SourcePort)
+    if p.Game2{
+        sourcePorts += ":"+strconv.Itoa(p.SourcePort+1)
+    }
     return []string{
         "-o", p.Interface, "-s", p.SourceIP+"/32", "-d", p.PeerIP+"/32",
         "-p", "tcp", "-m", "tcp",
-        "--sport", strconv.Itoa(p.SourcePort), "--dport", strconv.Itoa(p.PeerPort),
+        "--sport", sourcePorts, "--dport", strconv.Itoa(p.PeerPort),
         "--tcp-flags", "RST", "RST",
         "-m", "comment", "--comment", marker, "-j", "DROP",
     }

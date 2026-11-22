@@ -198,7 +198,10 @@ d={"schema":"android-root-product-a1-rust-cold-build/v1",
 PY
 # Genuine original-Go Normal/off default and explicit Fixed opt-in
 # share this original M1/M3/M4/Health/Stop and native FEC2 backend.
-# Auto/Game still reject before TLS, not via synthetic ELF symbols.
+# CLI Game2/off now uses genuine two-lane Go TLS and B39/B40 original Rust
+# group, Bionic RAW/TUN, durable two-port RST and exact UID route.
+# The signed Root App selector still exposes only Normal/Fixed/Auto;
+# Game2 has not passed real Android device/data/Stop validation.
 for pair in "aarch64 arm64" "x86_64 amd64"; do
   read -r triple goarch <<< "$pair"
   rust_target="$triple-linux-android"
@@ -315,9 +318,9 @@ def elf(path):
     return {"type":e_type,"machine":e_machine,"min_pt_load_align":min(aligns)}
 result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_SHA"],
 "donor_go":"a7a82db31fe736ffedee330795a3234d358f1984",
-"rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record","mode":"NORMAL_OFF_BUILD_ONLY",
+"rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record","mode":"NORMAL_FIXED_AUTO_AND_GAME2_OFF_NATIVE_COMPILED",
 "android_abis":["arm64"],"ci_only_abis":["x86_64"],"go_os":"android","android_api":28,
-"go_build_tags":"wbd_v4_embedded_go","go_fec_game_native":"NOT_COMPILED_UNSUPPORTED",
+"go_build_tags":"wbd_v4_embedded_go","go_fec_game_native":"GAME2_OFF_REAL_GO_TLS_RUST_M4_COMPILED_DEVICE_NOT_RUN",
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
 "elf":elf(x) if x.name.endswith(".so") or x.name in ("wbd-v4-client-arm64","wbd-v4-client-amd64") else None} for x in art},
 "production_tls_auth_lease":"NOT_RUN","actual_tun_data":"NOT_RUN",

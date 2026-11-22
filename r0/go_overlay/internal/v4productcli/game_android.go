@@ -1,0 +1,222 @@
+//go:build android && cgo && wbd_v4_embedded_go
+
+package v4productcli
+
+// B41 original Android Game2/off product: two real Bionic-network-bound
+// FakeTCP/TLS lanes → one original Rust GameAdapter/M3/M4. The Go receiver
+// handles ONLY the cold TLS association; original Rust owns every DATA.
+import (
+    "context"
+    "errors"
+    "fmt"
+    "log"
+    "net"
+    "os"
+    "os/exec"
+    "sync"
+    "sync/atomic"
+    "time"
+
+    "github.com/lly8666/wobuzhidao/internal/faketcp"
+    "github.com/lly8666/wobuzhidao/internal/realityfront"
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/rstguard"
+)
+
+func androidGame2Port(base uint16,lane int)(uint16,error){
+    if lane<0||lane>1||int(base)+lane>65535||base==0{
+        return 0,fmt.Errorf("original Android Game2 requires two consecutive nonzero ports")
+    }
+    return base+uint16(lane),nil
+}
+// Real original-Go Root cold entry. Only after both original TLS sessions,
+// independent complete Detach and the shared Rust Game2 M4 reach Ready do
+// ordinary Android app UID routes switch to the SAME protected /32.
+func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
+    tun *ownedTun,connected *bool,
+)(retErr error){
+    if c.gameLanes!=2||c.gameFecEnabled||c.startupPaddingMode!=0||
+       c.rotationInterval!=0||c.androidTunnelDNS||c.androidPhysicalDNS||
+       c.androidCNDNSSplit||!c.autoIP||c.androidNetworkHandle==0{
+        return fmt.Errorf("Android original Game2/off cold mode only; FEC/padding/DNS/rotation not connected")
+    }
+    if os.Geteuid()!=0{return fmt.Errorf("Android Game2 requires original root owned kernel")}
+    iface,e:=net.InterfaceByName(c.rawInterface)
+    if e!=nil||iface==nil||uint32(iface.Index)!=ifindex||
+       uint32(iface.MTU)!=c.androidPhysicalMTU{
+        return fmt.Errorf("original Game2 selected physical interface changed")
+    }
+    policy,e:=realityfront.PolicyForClientWithInitialAndCipher(
+        2,"fixed",4,4,20,c.recordCipher)
+    if e!=nil{return e}
+    iptables,e:=exec.LookPath("iptables")
+    if e!=nil{return fmt.Errorf("original Android Game2 exact RST guard unavailable")}
+    runFirewall:=func(args ...string)(string,error){
+        bounded,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+        defer cancel()
+        out,err:=exec.CommandContext(bounded,iptables,args...).CombinedOutput()
+        if len(out)>256<<10||err!=nil{
+            return "",fmt.Errorf("original Game2 scoped firewall denied")
+        }
+        return string(out),nil
+    }
+    raws:=make([]*faketcp.RawIPv4Endpoint,0,2)
+    assocs:=make([]*faketcp.ClientAssociation,0,2)
+    var guard *rstguard.Guard
+    stopRTO:=make([]func()(uint64,error),0,2)
+    coldCtx,cancelCold:=context.WithCancel(ctx)
+    var readers sync.WaitGroup
+    var ready atomic.Bool
+    defer func(){
+        cancelCold()
+        for _,stop:=range stopRTO{
+            // Idempotent original cold RTO join on ALL exit paths,
+            // including a partial first/second FakeTCP SYN failure.
+            _,_ = stop()
+        }
+        // The Go physical RAW readers have no authority after this point.
+        // Closing the actual source sockets unblocks their kernel reads.
+        for _,r:=range raws{retErr=errors.Join(retErr,r.Close())}
+        readers.Wait()
+        for _,a:=range assocs{a.Close()}
+        if guard!=nil{
+            if err:=guard.Close();err!=nil{
+                retErr=errors.Join(retErr,fmt.Errorf("Game2 exact RST guard owned Stop failed"))
+            }
+        }
+    }()
+    // ONE durable scoped iptables rule covers ONLY the two original
+    // consecutive Game2 source ports, never all TCP or the root UID.
+    // The legacy Root Restore reads the very same rst-guard.json.
+    guard,_,e=rstguard.New(runFirewall,
+        "/data/local/tmp/wbd-next-root/rst-guard.json",rstguard.Plan{
+        Version:1,Interface:c.rawInterface,
+        SourceIP:c.localIP.String(),PeerIP:c.peerIP.String(),
+        SourcePort:int(c.localPort),PeerPort:int(c.peerPort),Game2:true,
+    })
+    if e!=nil{return fmt.Errorf("Game2 two-port exact RST guard: %w",e)}
+    for lane:=0;lane<2;lane++{
+        local,e:=androidGame2Port(c.localPort,lane)
+        if e!=nil{return e}
+        raw,e:=faketcp.OpenRawIPv4EndpointWithOptions(
+            c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
+            faketcp.RawIPv4EndpointOptions{ReceivePort:local})
+        if e!=nil{return e}
+        raws=append(raws,raw)
+        if e=raw.BindAndroidNetwork(c.androidNetworkHandle,
+            c.rawInterface,iface.Index,iface.MTU);e!=nil{return e}
+        flow:=faketcp.ClientFlow{
+            LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
+            LocalPort:local,PeerPort:c.peerPort,
+        }
+        isn,e:=originalRandomISN()
+        if e!=nil{return e}
+        assoc,e:=faketcp.NewClientAssociation(flow,isn,time.Second,
+            func(seg faketcp.Segment)error{
+                _,err:=raw.WriteSegment(seg)
+                return err
+            })
+        if e!=nil{return e}
+        assocs=append(assocs,assoc)
+        readers.Add(1)
+        go func(a *faketcp.ClientAssociation,r *faketcp.RawIPv4Endpoint,
+            flow faketcp.ClientFlow){
+            defer readers.Done()
+            for{
+                seg,_,err:=r.ReadSegment()
+                if err!=nil{
+                    // After original M4 READY and explicit quiesce, this
+                    // receiver never owns authenticated DATA or reconnection.
+                    select{case <-coldCtx.Done():return;default:}
+                    if ready.Load(){return}
+                    return
+                }
+                if !flow.MatchesInbound(seg){continue}
+                if a.State()!=faketcp.ClientAssociationDetached{
+                    _=a.HandleSegment(seg,time.Now())
+                }
+            }
+        }(assoc,raw,flow)
+        if e=assoc.Start(time.Now());e!=nil{return e}
+        synCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
+        e=waitForOriginalColdSYN(synCtx,assoc)
+        cancel()
+        if e!=nil{return e}
+        stopRTO=append(stopRTO,driveOriginalClientColdBootstrapRTO(coldCtx,assoc))
+    }
+    log.Print("V4_PUBLIC_ANDROID_GAME2_COLD_SOURCE role=client lanes=2 physical_network_bound=1 fake_tcp=original_go")
+    // Real original-Go protected TLS on each of the TWO independent lanes,
+    // then exact Rust B39 grouped cold + B40 M4 activation.
+    native,e:=realityfront.NewV4AndroidGame2Product(
+        realityfront.V4AndroidGame2Config{
+            NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
+            AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
+            AndroidPhysicalMTU:c.androidPhysicalMTU,
+            Tun:tun.f,TunName:c.tunName,
+            ConfigureTunnelMTU:configureTunnelMTU(c,tun),
+            ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
+        })
+    if e!=nil{return e}
+    var undoRoute func()error
+    defer func(){
+        // Original group Stop MUST join M4 and all RAW loan borrows
+        // BEFORE revoking this product's UID route/physical source.
+        closeErr:=native.Close()
+        retErr=errors.Join(retErr,closeErr)
+        if closeErr==nil&&undoRoute!=nil{
+            retErr=errors.Join(retErr,undoRoute())
+        }
+    }()
+    admission:=realityfront.ClientAdmissionConfig{
+        TLS:realityfront.ClientConfig{
+            ServerName:c.serverName,RouteKey:c.routeKey,
+            VerifyServer:c.tlsVerifyServer,RootCAs:c.tlsRoots,
+            Timeout:15*time.Second,
+        },
+        Username:c.username,Password:c.password,
+        TunnelID:c.tunnel[:],AutoLease:true,InstallationID:c.installation[:],
+        ClientLimit:c.recordLimit,DesiredLanes:2,Policy:policy,
+    }
+    tlsCtx,cancelTLS:=context.WithTimeout(ctx,60*time.Second)
+    lease,e:=native.ConnectAuthenticatedGame2(tlsCtx,assocs,admission)
+    cancelTLS()
+    for _,stop:=range stopRTO{
+        _,stopErr:=stop()
+        e=errors.Join(e,stopErr)
+    }
+    if e!=nil{return e}
+    for i,a:=range assocs{
+        if a.State()!=faketcp.ClientAssociationDetached{
+            return fmt.Errorf("original Android Game2 TLS lane%d not detached",i+1)
+        }
+    }
+    ready.Store(true)
+    for i,raw:=range raws{
+        if e=raw.QuiesceDetachedClientReceive();e!=nil{
+            return fmt.Errorf("original Android Game2 Go-Rust RAW RX handoff lane%d: %w",i+1,e)
+        }
+    }
+    repeatOriginalDetachedTLSFinalACK(coldCtx,assocs...)
+    if c.androidRouteAllApps||c.androidRouteUID!=0||len(c.androidRouteUIDs)>0{
+        undoRoute,e=androidRootRouteAfterNative(c,tun,lease)
+        if e!=nil{
+            return fmt.Errorf("original Android Game2 authenticated UID FIB: %w",e)
+        }
+    }
+    *connected=true
+    log.Print("V4_ORIGINAL_ANDROID_GAME2_NATIVE_READY role=client lanes=2 original_go_tls=1 original_rust_m4=1 uid_route_after_m4=1")
+    ticker:=time.NewTicker(realityfront.V4AndroidGame2StatusInterval)
+    defer ticker.Stop()
+    for{
+        select{
+        case <-ctx.Done():return nil
+        case <-ticker.C:
+            lanes,active,e:=native.OriginalNativeState()
+            if e!=nil{return e}
+            if lanes!=2||!active{
+                return fmt.Errorf("original Android Game2 M3/M4 worker stopped")
+            }
+            // Numeric actual syscall counters only, no per-packet Go worker.
+            // Terminal diagnostics are readable through OriginalM4Counters.
+        }
+    }
+}

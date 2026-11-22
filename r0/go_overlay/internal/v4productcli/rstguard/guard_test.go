@@ -61,7 +61,10 @@ func parseTestPlan(args []string) Plan{
         case "-o":p.Interface=args[i+1]
         case "-s":p.SourceIP=strings.TrimSuffix(args[i+1],"/32")
         case "-d":p.PeerIP=strings.TrimSuffix(args[i+1],"/32")
-        case "--sport":fmt.Sscan(args[i+1],&p.SourcePort)
+        case "--sport":
+            parts:=strings.Split(args[i+1],":")
+            fmt.Sscan(parts[0],&p.SourcePort)
+            if len(parts)==2{p.Game2=true}
         case "--dport":fmt.Sscan(args[i+1],&p.PeerPort)
         }
     }
@@ -159,5 +162,28 @@ func TestScopedRSTGuardRejectNonPhysicalScope(t *testing.T){
         {Version:1,Interface:"wlan0",SourceIP:"192.0.2.5",PeerIP:"::1",SourcePort:45444,PeerPort:443},
     }{
         if p.valid(){t.Fatalf("accepted invalid scope")}
+    }
+}
+
+func TestGame2OriginalTwoPortOneOwnedRSTRule(t *testing.T){
+    p:=basePlan()
+    p.Game2=true
+    if !p.valid(){t.Fatal("two consecutive real ports rejected")}
+    rule:=strings.Join(p.params()," ")
+    if !strings.Contains(rule,"--sport 45821:45822")||
+       strings.Contains(rule,"--sport 45821:45823"){
+        t.Fatalf("not the exact original two source ports: %s",rule)
+    }
+    f:=&fakeIPTables{}
+    journal:=filepath.Join(privateTempDir(t),"rst-guard.json")
+    guard,_,err:=New(f.run,journal,p)
+    if err!=nil||!f.present||f.plan!=p{t.Fatalf("game2 actual single rule: %v",err)}
+    if err=guard.Close();err!=nil||f.present{t.Fatalf("owned drain %v",err)}
+    p.SourcePort=65535
+    if p.valid(){t.Fatal("Game2 second port overflow")}
+    // Restoring ordinary Normal must never inherit a Game2 range.
+    p=basePlan()
+    if !p.valid()||strings.Contains(strings.Join(p.params()," "),":"){
+        t.Fatal("normal exact single port changed")
     }
 }

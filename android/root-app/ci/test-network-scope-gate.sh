@@ -45,6 +45,45 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/ci/RootPhysicalDNSUpstreamTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPhysicalDNSUpstreamTest
+# B41 original Android Game2 real Go→Rust product path: TWO authenticated
+# original TLS associations, same /32, exact Android Network, original
+# grouped Rust M4; only AFTER M4 do ordinary UID routes apply.
+python3 - <<'PY'
+from pathlib import Path
+g=Path("r0/go_overlay/internal/v4productcli/game_android.go").read_text()
+bridge=Path("r0/go_overlay/internal/realityfront/bridge_v4_game_native_android.go").read_text()
+go=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+guard=Path("r0/go_overlay/internal/v4productcli/rstguard/guard.go").read_text()
+guardtest=Path("r0/go_overlay/internal/v4productcli/rstguard/guard_test.go").read_text()
+build=Path("android/root-native/build-source-locked.sh").read_text()
+app=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java").read_text()
+assert 'return runAndroidGame2(ctx,cfg,uint32(iface.Index),tun,&connected)' in go
+assert 'func runAndroidGame2(' in g
+assert 'runAndroidGame2(_ context.Context' in Path(
+    "r0/go_overlay/internal/v4productcli/game_android_stub_linux.go").read_text()
+assert 'rstguard.New(runFirewall' in g
+assert 'SourcePort:int(c.localPort),PeerPort:int(c.peerPort),Game2:true' in g
+assert 'sourcePorts += ":"+strconv.Itoa(p.SourcePort+1)' in guard
+assert 'TestGame2OriginalTwoPortOneOwnedRSTRule' in guardtest
+assert 'raw.BindAndroidNetwork(c.androidNetworkHandle' in g
+assert 'realityfront.NewV4AndroidGame2Product(' in g
+assert 'native.ConnectAuthenticatedGame2(tlsCtx,assocs,admission)' in g
+assert 'raw.QuiesceDetachedClientReceive()' in g
+assert g.index('raw.QuiesceDetachedClientReceive()')<g.index('androidRootRouteAfterNative(c,tun,lease)')
+assert 'V4LinuxGameClientVerifiedGroup(p.sessions...)' in bridge
+assert 'EstablishClientV4(ctx,assoc.BootstrapConn(),laneCfg' in bridge
+assert 'owner.prepareAuthenticatedClient(session,handoff,assoc.Flow())' in bridge
+assert 'owner.bindAuthenticatedClientIPv4(current)' in bridge
+assert 'v4BindPlatformUnderlay(owner,V4LinuxClientProductConfig{' in bridge
+assert 'C.wbd_m0_embedded_go_game_group_join(' in bridge
+assert 'C.wbd_m0_embedded_go_android_game_group_raw_bind(' in bridge
+assert 'C.wbd_m0_embedded_go_android_game_group_m4_start(' in bridge
+assert bridge.index('C.wbd_m0_embedded_go_game_group_stop(') < bridge.index(
+    'owner.StopAndReleaseOriginalOwner()')
+assert 'new String[]{"normal","fec-fixed","fec-auto"}' in app
+assert 'go_tags=wbd_v4_embedded_go' in build
+print("ANDROID_B41_REAL_GO_TLS_GAME2_OFF_SAME_RUST_M4_ROOT_UID_AND_OWNED_STOP_SOURCE_PASS")
+PY
 # B40: real Rust Game2/off TX TUN reader and two original M3 lane RX
 # workers are compiled as part of the SAME GameAdapter.
 python3 - <<'PY'
@@ -546,7 +585,8 @@ assert 'intent.getStringExtra("fec_mode")' in s
 assert 'intent.getIntExtra("fec_profile",1)' in s
 assert 'pair(args,"--mode",fecMode);' in argv
 assert 'pair(args,"--fec-profile",Integer.toString(fecProfile))' in argv
-assert 'cfg.gameLanes!=0||cfg.mixedModes||' in cold
+assert '(cfg.gameLanes!=0&&cfg.gameLanes!=2)||cfg.mixedModes||' in cold
+assert 'cfg.gameLanes==2&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0||' in cold
 assert 'C.wbd_m0_embedded_go_public_fec2_mature_quality(' in go_bridge
 assert 'return b.verifyOriginalAndroidAutoPending()' in go_bridge
 assert 'C.wbd_m0_embedded_go_fixed_pending_readback(' in fec_go
