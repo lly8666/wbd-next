@@ -1,0 +1,53 @@
+name: H2302 scoped native sender BBR2/BBR capability no global persistence
+run-name: "M0 H2302 real TCP Windows BBR2 and Linux BBR socket | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/m0-029-brutal-inner-outer-20261122
+    paths:
+      - '.github/workflows/qa-h2302-true-kernel-bbr2-and-bbr.yml'
+      - 'tools/m0_h2302_windows_scoped_bbr2.py'
+      - 'tools/m0_h2300_inner_tcp_cc_probe.py'
+      - 'tests/test_m0_h2300_inner_tcp_cc_probe.py'
+permissions:
+  contents: read
+jobs:
+  windows-test-only:
+    name: Win2025 scoped BBR2 custom template and real client socket exact restore
+    runs-on: windows-2025
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Isolated OS only, no WBD product data or main defaults
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m py_compile tools/m0_h2302_windows_scoped_bbr2.py
+          if($LASTEXITCODE -ne 0){throw 'H2302_INVALID_WINDOWS_PYTHON'}
+          python -u tools/m0_h2302_windows_scoped_bbr2.py
+          if($LASTEXITCODE -ne 0){throw 'H2302_SCOPED_WINDOWS_BBR2_WITH_ROLLBACK_FAIL'}
+  linux-sender-per-socket:
+    name: Linux kernel owned TCP BBR module/single socket not sysctl global
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest tests.test_m0_h2300_inner_tcp_cc_probe -v
+          echo H2302_AVAILABLE_BEFORE="$(cat /proc/sys/net/ipv4/tcp_available_congestion_control)"
+          if ! grep -qw bbr /proc/sys/net/ipv4/tcp_available_congestion_control; then
+            # Scoped to disposable GitHub Linux VM: loading stock kernel module
+            # does not alter any default algorithm or users' physical hosts.
+            sudo modprobe tcp_bbr || echo H2302_STOCK_TCP_BBR_MODULE_UNAVAILABLE
+          fi
+          echo H2302_AVAILABLE_AFTER="$(cat /proc/sys/net/ipv4/tcp_available_congestion_control)"
+          if grep -qw bbr /proc/sys/net/ipv4/tcp_available_congestion_control; then
+            python3 tools/m0_h2300_inner_tcp_cc_probe.py linux-owned-socket --algorithm bbr
+            echo H2302_REAL_LINUX_OWNED_TCP_BBR_GETSOCKOPT_PASS
+          else
+            echo H2302_LINUX_BBR_UNAVAILABLE_NO_FALSE_PERFORMANCE_CLAIM
+          fi
+          echo H2302_NO_GLOBAL_TCP_CONGESTION_DEFAULT_CHANGE
