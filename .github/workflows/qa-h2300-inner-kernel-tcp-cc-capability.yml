@@ -1,0 +1,47 @@
+name: H2300 genuine Windows Linux inner TCP congestion control capability
+run-name: "M0 H2300 actual kernel congestion readback (NO global setter) | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/m0-029-inner-tcp-bbr-20261122
+    paths:
+      - 'tools/m0_h2300_inner_tcp_cc_probe.py'
+      - 'tests/test_m0_h2300_inner_tcp_cc_probe.py'
+      - '.github/workflows/qa-h2300-inner-kernel-tcp-cc-capability.yml'
+      - 'docs/devlog/M0/20261122-H2300-INNER-TCP-BBR-EXPERIMENT.md'
+permissions:
+  contents: read
+jobs:
+  linux-owned-kernel-socket:
+    name: Real Linux kernel TCP_CUBIC and BBR optional socket readback
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: |
+          python3 -m py_compile tools/m0_h2300_inner_tcp_cc_probe.py
+          python3 -m unittest tests.test_m0_h2300_inner_tcp_cc_probe -v
+          python3 tools/m0_h2300_inner_tcp_cc_probe.py linux-read
+          python3 tools/m0_h2300_inner_tcp_cc_probe.py linux-owned-socket --algorithm cubic
+          if grep -qw bbr /proc/sys/net/ipv4/tcp_available_congestion_control; then
+            python3 tools/m0_h2300_inner_tcp_cc_probe.py linux-owned-socket --algorithm bbr
+          else
+            echo H2300_LINUX_BBR_NOT_AVAILABLE_DO_NOT_PRETEND_APPLIED
+          fi
+  windows-readonly-templates:
+    name: Real Windows2025 OS TCP supplemental template readback (NO setter)
+    runs-on: windows-2025
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m py_compile tools/m0_h2300_inner_tcp_cc_probe.py
+          if($LASTEXITCODE -ne 0){throw 'H2300_PYTHON_FAILED'}
+          python -m unittest tests.test_m0_h2300_inner_tcp_cc_probe -v
+          if($LASTEXITCODE -ne 0){throw 'H2300_WINDOWS_NO_GLOBAL_CC_GUARD_FAILED'}
+          python tools/m0_h2300_inner_tcp_cc_probe.py windows-read
+          if($LASTEXITCODE -ne 0){throw 'H2300_WINDOWS_READ_ONLY_OS_TCP_READBACK_FAILED'}
+          Write-Output 'H2300_WINDOWS_BBR2_APPLIED_TO_ORIGINAL_INNER_TCP_NOT_PROVEN'
