@@ -28,6 +28,8 @@ class H2309TrueKernelSendTCPInfo(unittest.TestCase):
                      "row.get(\"AppliedSetting\") in (0,1"):
             self.assertIn(term,wrap)
     def test_two_original_bbr2_fec_off_loss1_loss5_three_runner_ci(self):
+        self.assertIn("H2308_WINDOWS_ORIGINAL_TCP_CC_RESTORED",
+                      (ROOT/"tools/m0_h2308_windows_cc.ps1").read_text())
         for loss in (1,5):
             wf=(ROOT/f".github/workflows/qa-h2309-bbr2-tcpinfo-loss{loss}.yml").read_text()
             for term in (f'WBD_H2293_WEAK_LOSS_PCT: "{loss}"',
@@ -38,7 +40,7 @@ class H2309TrueKernelSendTCPInfo(unittest.TestCase):
                          f'[m0-029-h2309-bbr2-tcpinfo-loss{loss}]',
                          "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
                          "H2302_REAL_ARM_TUN_THREE_FEC_OFF_TCP_STAGES_DONE",
-                         "H2308_WINDOWS_ORIGINAL_TCP_CC_RESTORED",
+                         "H2308 always restore Windows TCP",
                          "client_owned_stop","original_rust_binary_identical_all_legs"):
                 self.assertIn(term,wf)
 if __name__=="__main__":
