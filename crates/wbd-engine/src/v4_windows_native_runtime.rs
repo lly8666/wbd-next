@@ -1542,17 +1542,27 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
               flush_tx_wake(&tx_notify,&counters);
           }
           if let Some((ack32,blocks,n))=last_outer_ack{
-              let mut e=match lock_owner(&lane,&counters,LockDirection::Rx){
-                  Ok(e)=>e,Err(code)=>return code
+              let genuine_gap_nominated={
+                  let mut e=match lock_owner(&lane,&counters,LockDirection::Rx){
+                      Ok(e)=>e,Err(code)=>return code
+                  };
+                  let mut sacks=[wbd_recovery::outer_ack::SackRange32{
+                      start:0,end:0};4];
+                  for (dst,src) in sacks.iter_mut().zip(&blocks[..n]){
+                      *dst=wbd_recovery::outer_ack::SackRange32{
+                          start:src.start,end:src.end};
+                  }
+                  m2_outer_ack_hint_entry(&mut e,cfg.epoch,
+                      cfg.luid,cfg.ifindex,ack32,&sacks[..n])
+                      .unwrap_or(false)
               };
-              let mut sacks=[wbd_recovery::outer_ack::SackRange32{
-                  start:0,end:0};4];
-              for (dst,src) in sacks.iter_mut().zip(&blocks[..n]){
-                  *dst=wbd_recovery::outer_ack::SackRange32{
-                      start:src.start,end:src.end};
+              if genuine_gap_nominated{
+                  // Genuine bounded immutable repair became newly eligible.
+                  // A pure ACK with no real gap cannot wake TX or form an
+                  // ACK loop. Reuse the SINGLE original event and owner,
+                  // never synthesize PTO/reseal or block any fresh business.
+                  flush_tx_wake(&tx_notify,&counters);
               }
-              let _=m2_outer_ack_hint_entry(&mut e,cfg.epoch,
-                  cfg.luid,cfg.ifindex,ack32,&sacks[..n]);
           }
           // H2229: 10ms (~100Hz) authentic-gap SACK publication,
           // coalesced on the existing RX turn (no per-packet timer, no
