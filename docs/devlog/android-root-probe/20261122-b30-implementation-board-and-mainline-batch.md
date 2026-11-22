@@ -17,3 +17,13 @@ B30盘点确认 all-app 私有 FIB table 19842 已有`throw peer/32`，但single
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B31单UID与多UID组在同一原Root journal/FIB中复用既有all-app服务端/32 throw，实现三种普通App UID路由范围的物理WBD服务端例外、精确Stop及Host回归"}
 ```
+
+## B32｜批量真实日常功能：当前用户全部已安装普通App可选
+
+审计证实B26原 `InstalledAppCatalog.visibleNames` 只枚举 `MAIN/LAUNCHER`、text/plain SEND、HTTPS VIEW，目标游戏/普通App即使安装也可能完全没有这些入口。原Root APK正式App picker现在申请 Android `QUERY_ALL_PACKAGES`（该Root工具为自签名侧载测试APK，并非商店上架方案），通过同一 `PackageManager.getInstalledApplications(0)` 冷获取当前用户App包名；保留旧三Intent supplement，不得手填凭空UID。原 `InstalledAppTarget.eligible` 过滤系统/root和WBD自身不变，`stillSameGroup`和`stillSame`在Service和root su前仍以当前包名→真实UID复核，同原Go路由最大8 UID /16包。既有UI筛选/批选/SAF持久化不改，无任何Go/Rust每DATA处理或新后台线程。旧B24/B26/A7的窄包可见性描述保留为历史阶段，README以B32为当前模式。
+
+实证层级：Host App源码门必须核对 manifest 权限、真实PackageManager枚举、UID复核；正式签名APK从原Android产品SOURCE编译。新SOURCE未验前只记WIRED_CANDIDATE，实机包列表/Android UID路由、Game应用E2E均NOT_RUN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B32 Root App枚举当前用户全部已安装普通App及无launcher游戏，用现有PackageManager身份复核与原UID路由；保留旧筛选/批选/SAF，不新建控制器或逐包处理"}
+```

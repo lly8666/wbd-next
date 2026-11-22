@@ -4,11 +4,13 @@
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- B32: rooted sideload selector lists ordinary installed apps even without launcher/share/view activities. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- Android11+ package visibility: only launchable user apps, not
-         QUERY_ALL_PACKAGES or raw enumeration of private packages. -->
+    <!-- Android11+ rooted selector needs installed ordinary App visibility.
+         KernelSU manager queries remain explicit for existing UID exclusions. -->
     <queries>
         <!-- Narrow visibility for root manager bypass: the app MUST NOT
              capture KernelSU Manager traffic in all-app route mode. -->

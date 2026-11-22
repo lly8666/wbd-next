@@ -20,11 +20,28 @@ UI 把进阶 KernelSU/TUN 一键自检放到默认折叠的“高级选项”，
 **测试版安装注意**：GitHub Actions 的调试签名证书每次生成，且 APK 包名相同，无法直接 \`adb install -r\` 覆盖上次版本。请自行先在旧版按 STOP，检查没有残留 KernelSU UID 私有路由，再卸载旧调试包并安装新的 Lite APK；卸载会清除派生缓存。
 
 
+## B32 · Root installed ordinary App picker, including games without launcher intents
+
+The original selected UID route, selected 16 packages / 8 distinct UID capacity,
+and exact cold PackageManager package→UID recheck already existed. Before B32,
+the app list was limited to launcher, text-share and HTTPS-view activity handlers,
+so some ordinary installed games/background apps could never be selected.
+The rooted sideload test APK now declares `QUERY_ALL_PACKAGES` and enumerates
+`PackageManager.getInstalledApplications(0)` once on cold UI refresh and
+fresh Start identity checks. It keeps the old intent-query fallback and
+`InstalledAppTarget.eligible` unchanged: no system/root UID, WBD own
+UID or App-to-UID guessing is added, nor any Go/Rust DATA path/worker.
+This does not claim Android device install/UID-route E2E or Play Store
+distribution eligibility; B32 is an original Root sideload app feature.
+
+The historical B24/B26/A7 narrow-visibility descriptions below record
+the stages when those changes were made; B32 is the current selector scope.
+
 ## B24 · Physical Ethernet + multi-App selection workflow
 
 A real Android Ethernet/USB Ethernet `ConnectivityManager.Network` with a matched interface, IPv4, ifindex and MTU can now be explicitly selected as an original-Go/Rust underlay, alongside Wi-Fi and cellular. The foreground Service uses the **same** transport rule; loss or a true physical-scope change still stops the exact owned generation. UI refresh retains a selection only while those original Network/OS attributes remain identical. There is no automatic roaming, re-auth, or extra packet thread.
 
-Selected-App mode now supports a local name/package/UID filter, preserves checked items hidden by filtering, and batch-selects matched visible Apps within the original 8-UID/16-package constraint. Search/selection only touches UI state; original-Go app routing remains a separate manual authenticated START with exact package/UID cold readback. Manifest still exposes only launcher-visible Apps, not `QUERY_ALL_PACKAGES`; invisible/nonlauncher applications are not claimed supported.
+Selected-App mode now supports a local name/package/UID filter, preserves checked items hidden by filtering, and batch-selects matched visible Apps within the original 8-UID/16-package constraint. Search/selection only touches UI state; original-Go app routing remains a separate manual authenticated START with exact package/UID cold readback. At B24 the manifest had no `QUERY_ALL_PACKAGES` and couldn't list all nonlauncher apps; B32 supersedes that visibility limit.
 
 Same-SOURCE signed APK and Host checks qualify only BUILD/Host, not physical Ethernet, Android system DNS, actual App TCP/UDP delivery or performance.
 
@@ -36,7 +53,7 @@ The original selected-App route already supports **up to 16 packages sharing at 
 
 The CI-signed debug APK uses a disposable signing key for each SOURCE. A fresh installation may require uninstalling the old package, which clears `noBackupFilesDir`. The Root Activity now offers **export and import through Android's document picker** for the actual production `RootConnectionSettings` (same B22/B25 codec), maximum 8KiB. This includes the server name, SNI, username, cipher, MTU, FEC/DNS modes and up to 16 selected package/UID identities. It deliberately **does not** export the password, RouteKey, TLS CA PEM, selected physical Network handle, native owner token or Root routing rule. Because exported settings include a username/server identity, choose the destination carefully. On import, only the cold form is restored and the selected App UIDs are rechecked against Android's currently visible installed packages; the user must re-enter credentials and explicitly START.
 
-Selected-App discovery also includes packages exposing Android's regular **plain-text share** or **HTTPS-link open** activities, including some non-launcher apps. Manifest `<queries>` is deliberately narrow: there is **no** `QUERY_ALL_PACKAGES` and the capability does not extend to every non-launcher/system-invisible installed app. Fresh package/UID resolution is performed in the cold Service path and cannot be bypassed by an imported file. Search/chooser changes never touch an active original-Go/Rust owner.
+Selected-App discovery also includes packages exposing Android's regular **plain-text share** or **HTTPS-link open** activities, including some non-launcher apps. At B26 the manifest `<queries>` was deliberately narrow, without `QUERY_ALL_PACKAGES`; B32 now extends the picker to current-user installed packages. Fresh package/UID resolution is performed in the cold Service path and cannot be bypassed by an imported file. Search/chooser changes never touch an active original-Go/Rust owner.
 
 Neither this work nor the prior DNS modes capture Android `netd` system resolver traffic. Existing UDP/53 logic only handles packets that actually enter the original Rust M4 TUN, and no root/system UID routes, new TLS layer or extra packet loop were added. All Android device E2E, system DNS interception and performance remain NOT_RUN without real evidence.
 
@@ -148,7 +165,7 @@ Owner takeover protection now parses both the legacy two-field and new three-fie
 
 [Actions #44056494256](https://github.com/lly8666/wbd-next/actions/runs/44056494256) at SOURCE `f7f142da2ad8e58365b7e36dd1ba6f734b32923c`: **5/5 jobs PASS**; Android ARM64 Go/Rust and signed Root APK BUILD_PASS, original Linux WBD server oracle PASS, JVM NetworkCallback gate 16 assertions, production Stop script POSIX sh -n 11 assertions, and old/new owner.pid parsing regression PASS. Host ARM64 has no accessible `/dev/kvm`, so Android guest/App Root/true network E2E remain **ENV_BLOCKED / NOT_RUN**. This does not authorize physical devices.
 
-## A7: real installed-app picker (not manual arbitrary UID)
+## A7: historical initial installed-app picker (superseded by B32)
 
 `RootClientActivity` queries current-user launcher apps using
 `PackageManager.queryIntentActivities(MAIN+LAUNCHER)` and the **real**
@@ -178,7 +195,7 @@ still P3 **NOT_RUN**.
 
 ## A8: actual bounded multi-UID Root route (Normal/off only)
 
-Select **1–16 installed visible launcher packages**. A cold, canonical
+The old A8 UI selected **1–16 launcher-visible packages**; B32 expands the current UI to all currently installed eligible ordinary packages. A cold, canonical
 selection resolves to **1–8 distinct sorted Android kernel UIDs**;
 packages sharing an UID get ONE kernel route and cannot be separated
 by a per-package policy. App UI, the foreground Service, and just before

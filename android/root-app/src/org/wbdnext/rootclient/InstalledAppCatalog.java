@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-// B26: discover current-user launchers plus the narrowly-declared Android
-// share-text and HTTPS handlers. This includes installed non-launcher apps
-// exposing those standard entry points, WITHOUT QUERY_ALL_PACKAGES.
-// All discovery and UID identity checks are cold-only, never in Go/Rust M4.
+// B32: rooted selector enumerates current-user installed packages, including
+// ordinary non-launcher apps and games. The narrower B26 intent queries remain
+// a compatibility supplement. Eligibility and selected package/UID recheck
+// still use the same original cold owner, never Go/Rust M4 packet callbacks.
 final class InstalledAppCatalog {
     private InstalledAppCatalog(){}
 
@@ -36,8 +36,16 @@ final class InstalledAppCatalog {
 
     private static TreeSet<String> visibleNames(PackageManager pm){
         TreeSet<String> names=new TreeSet<>();
-        // Query only the three explicit Android manifest intents once per
-        // cold scope check. No per-selected-app full label scan.
+        // B32: one cold PackageManager enumeration. Without QUERY_ALL_PACKAGES,
+        // Android11 would hide ordinary games with no launcher/shared intent.
+        // Do not include a UID merely from its package name: the original
+        // InstalledAppTarget.eligible and fresh Service recheck remain active.
+        for(ApplicationInfo installed:pm.getInstalledApplications(0)){
+            if(installed!=null&&installed.packageName!=null)
+                names.add(installed.packageName);
+        }
+        // Keep previously supported intent handlers for older/restricted OS
+        // package visibility implementations; TreeSet deduplicates them.
         for(Intent intent:discoverableIntents()){
             for(ResolveInfo info:pm.queryIntentActivities(intent,0)){
                 if(info!=null&&info.activityInfo!=null)

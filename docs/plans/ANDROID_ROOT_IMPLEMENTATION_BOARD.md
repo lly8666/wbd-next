@@ -14,7 +14,7 @@
 | 普通App IPv4 TUN→1.1.1.1 UDP53、反向映射，跨Normal/Fixed/Auto | WIRED | B29b HOST_PASS；系统netd不是入口 | 不重做已有64槽；验App DNS |
 | 普通App IPv4 TUN→223.5.5.5物理 UDP53、CN8503分流与TCP53原隧道透传 | WIRED | HOST_PASS；只覆盖TUN内App包、TCP53不是物理直连 | 保留已有Socket/M3；后续按真实需求完善物理TCP |
 | LAN-only Wi-Fi/Ethernet/蜂窝、同选定Network域名启动 | WIRED | B28b HOST_PASS；LAN手机 NOT_RUN | 使用现有Network，不新建resolver |
-| App选择、设置持久化/SAF导入导出、凭据加密保存、TLS CA选配、诊断 | WIRED | HOST_PASS、签名APK；UI真机使用 NOT_RUN | 不重复App壳 |
+| App选择、设置持久化/SAF导入导出、凭据加密保存、TLS CA选配、诊断 | WIRED；B32完整已安装普通App枚举 CANDIDATE | 旧B26只显示有桌面/分享/HTTPS入口App；B32 Root APK加当前用户全安装包枚举、原UID复核不变；签名APK待本SOURCE | 真机App选择与Play分发资格NOT_RUN，不重复Root壳 |
 | Android系统Resolver/netd UDP/TCP/DoH交付 | MISSING | 普通App TUN DNS ≠ netd DNS | 需要独立准确方案，不能声明已经全局拦截 |
 | Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
 | Android Game2/Game4 原多lane TLS→Rust Game M4双向 | MISSING | Linux/Windows已有原Game，不等于Android端口 | 真正端口并接共享TUN后再开放App选项 |

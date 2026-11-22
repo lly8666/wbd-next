@@ -335,7 +335,7 @@ public final class RootClientActivity extends Activity {
         installedApps.addAll(InstalledAppCatalog.discoverable(this));
         if(installedApps.isEmpty()){
             TextView message=new TextView(this);
-            message.setText("当前无可见的桌面／HTTPS浏览器／文本分享应用");
+            message.setText("当前未发现可选的普通已安装应用；请检查本机安装及包可见性");
             appChoices.addView(message);
             return;
         }
@@ -816,7 +816,7 @@ public final class RootClientActivity extends Activity {
         pane.addView(selectedAppControls);
         TextView searchHint=new TextView(this);
         searchHint.setText("应用选择：按名称、包名或UID过滤；隐藏不代表取消已勾选。"+
-            "只列出Android当前可见的桌面、HTTPS网页或文本分享处理App");
+            "枚举当前用户已安装普通App（含无桌面入口的游戏/服务App）；仅当前真实UID可选");
         selectedAppControls.addView(searchHint);
         appSearch=input(selectedAppControls,"过滤已安装应用（仅本地）",InputType.TYPE_CLASS_TEXT);
         appSearch.addTextChangedListener(new android.text.TextWatcher(){

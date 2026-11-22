@@ -546,7 +546,7 @@ assert 'st.Mode().Perm()!=0600' in typed
 assert 'return ReadPinnedCN(f)' in typed
 print("ANDROID_B2B_SIGNED_GEOSITE_TO_ORIGINAL_GO_COLD_SOURCE_GATE_PASS")
 m=Path("android/root-app/AndroidManifest.xml").read_text()
-assert '<queries>' in m and '<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"' not in m, "narrow package visibility"
+assert '<queries>' in m and '<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"' in m, "B32 full current-user package picker"
 catalog=Path("android/root-app/src/org/wbdnext/rootclient/InstalledAppCatalog.java").read_text()
 assert 'Intent.ACTION_SEND' in catalog and 'share.setType("text/plain")' in catalog
 assert 'Intent.ACTION_VIEW' in catalog and 'Intent.CATEGORY_BROWSABLE' in catalog
@@ -555,7 +555,10 @@ assert 'TreeSet<String> available=visibleNames(pm)' in catalog
 assert 'ApplicationInfo app=pm.getApplicationInfo(name,0)' in catalog
 assert 'android.intent.action.SEND' in m and 'android.intent.action.VIEW' in m
 assert 'android:mimeType="text/plain"' in m and 'android:scheme="https"' in m
-print("ANDROID_B26_NARROW_NONLAUNCHER_SHARE_HTTPS_APP_UID_DISCOVERY_PASS")
+assert 'pm.getInstalledApplications(0)' in catalog
+assert 'InstalledAppTarget.eligible(name,app.uid,Process.myUid()' in catalog
+assert 'SelectedAppGroup.matchesReceipt(' in catalog
+print("ANDROID_B32_INSTALLED_ORDINARY_APP_GAME_PICKER_ORIGINAL_UID_HOST_SOURCE_PASS")
 # The exact POSIX read arity must preserve kernel starttime for both
 # existing old 2-field receipts and current 3-field receipts.
 import subprocess,tempfile
