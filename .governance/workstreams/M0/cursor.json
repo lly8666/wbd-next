@@ -14,12 +14,11 @@
   "next_action": "核收H2293新source4566239f loss1 Action44961559152、loss5 Action44961559233（各2套真3Runner），先看Win前置DIRECT vs DERP、WSL Linux PID/bootID是否持久、实际kernel PREROUTING/FORWARD规则及TCP首到/ACK/RTO，FEC2 Installed仅B正且A/A′负、原GoTLS+Rust WAL Stop与ARM TUN。若仍~110s断链，优先根据WSL bootID+netfilter实际计数与ARM TCP服务端日志定位、再针对M1/M4和TCP_RTO小增量施工，不空跑同样12Runner。",
   "unverified": true,
   "last_tested_source": "13d391cbb64ef06c55b046c6d73a2d69e096c54d",
-  "evidence_refs": [
-    "docs/devlog/M0/20261122-M0-PLAN029-H2293-WEAKLOSS-WSL-LIFECYCLE-RECOVERY.md"
-  ],
+  "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
-    "docs/devlog/M0/20261122-M0-PLAN029-H2292-DUAL-FULL-WINDOWS-TX16-QUALIFICATION.md"
+    "docs/devlog/M0/20261122-M0-PLAN029-H2292-DUAL-FULL-WINDOWS-TX16-QUALIFICATION.md",
+    "docs/devlog/M0/20261122-M0-PLAN029-H2293-WEAKLOSS-WSL-LIFECYCLE-RECOVERY.md"
   ],
   "open_requests": [],
   "partial_summary": "原Win/ARM完整产品无损最后QUALIFIED仍H2292 Source13d391c/Action44951274107 9/9: A129/190/126Mbps P99 266/188/250ms，B119/139/110Mbps P99 297/313/375ms，真GoTLS Rust Stop全PASS。首轮H2293 1% Action44960412167、5%44960412020整体失败于首次off弱网TCP Reset和WSL规则丢失，且5%A DERP invalid，fixed/FEC没有任何有效收字节/吞吐比较。源1469e7纯fixture WSL guest常驻+bootID+exact rules+早期direct门静态双PASS；Source4566239f真实双组三Runner两档正运行。原Go/Rust/默认OFF不变，PR68 Draft，029未完。"
