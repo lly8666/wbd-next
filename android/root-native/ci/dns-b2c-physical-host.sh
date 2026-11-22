@@ -9,14 +9,15 @@ test "$(git rev-parse HEAD)" = "${GITHUB_SHA:?SOURCE required}"
 mkdir -p out/android-b2c-physical
 export GO111MODULE=off GOTOOLCHAIN=local
 go test -count=1 -timeout=35s -v \
-  -run '^TestB2cPhysical' \
+  -run '^(TestB2cPhysical|TestB35ConfiguredPhysicalBootstrap)' \
   ./r0/go_overlay/internal/v4productcli/dnsnative \
   | tee out/android-b2c-physical/go-physical-real-loopback.log
 for test in \
  TestB2cPhysicalScopeRealUDPAndTruncatedSameScopedTCP \
  TestB2cPhysicalScopeRejectsTunnelEndpointAndUnboundCallback \
  TestB2cPhysicalSocketBindFailureNeverSendsAndNeverFallsBack \
- TestB2cPhysicalScopeMustMatchOriginalKernelInterfaceIPv4AndMTU;do
+ TestB2cPhysicalScopeMustMatchOriginalKernelInterfaceIPv4AndMTU \
+ TestB35ConfiguredPhysicalBootstrapUsesRealUDPAndSameUpstreamTCP;do
  grep -Fq -- "--- PASS: $test" out/android-b2c-physical/go-physical-real-loopback.log
 done
 python3 - <<'PY'
@@ -33,7 +34,8 @@ assert "#include <net/if.h>" in source and "IFNAMSIZ" in source
 assert "strcmp(actual,expected)==0?1:0" in source and "ErrUnbound" in source
 assert "d.ControlContext=" in common and "d.LocalAddr=" in common
 assert 'network4:=network+"4"' in common
-assert "dnsnative.NewAndroidPhysicalDNSDialer(" in go
+assert "dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(" in go
+assert "upstream.String()+\":53\"" in source
 assert "V4_PUBLIC_ANDROID_PHYSICAL_DNS_COLD_SCOPE_CHECKED" in go
 out=Path("out/android-b2c-physical")
 receipt={
@@ -45,7 +47,7 @@ receipt={
  "real_host_bind_failure_no_udp_send":"PASS",
  "rejected_tunnel_wrong_endpoint_and_bad_ifindex_mtu_ip":"PASS",
  "android_setsocknetwork_bionic":"CROSS_COMPILE_ONLY_NOT_EXECUTED",
- "dns_server_production":"223.5.5.5:53_PHYSICAL_ONLY",
+ "dns_server_production":"SELECTED_IPV4_53_PHYSICAL_ONLY_DEFAULT_223.5.5.5",
  "android_real_physical_dns_socket":"NOT_RUN",
  "wbd_rust_tun_dns_packet_capture":"NOT_CONNECTED",
  "android_system_resolver":"NOT_CONNECTED",
