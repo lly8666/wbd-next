@@ -27,3 +27,11 @@ B30盘点确认 all-app 私有 FIB table 19842 已有`throw peer/32`，但single
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B32 Root App枚举当前用户全部已安装普通App及无launcher游戏，用现有PackageManager身份复核与原UID路由；保留旧筛选/批选/SAF，不新建控制器或逐包处理"}
 ```
+
+## B32a｜正式APK构建门的旧窄包权限假设
+
+B32正式Root App现从PackageManager冷枚举全部当前用户普通安装包，原sideload Manifest有`QUERY_ALL_PACKAGES`。但 `android/root-app/ci/build-source-locked.sh` 历史B26静态检查仍断言该权限不存在，和已改真实产品行为冲突。B32a只将这个signed APK Manifest门改为确认权限存在，原 `AllAppRouteScope` 注释对齐当前行为，不动原Go/Rust/TUN、Root同代UID路由和Stop。B32旧SOURCE如果因此FAIL，保留真实失败；B32a新SOURCE必须同源双ABI、正式APK及Linux Oracle通过才称BUILD_PASS。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B32a将正式签名APK B26遗留 narrow-manifest source gate改为B32当前普通安装App可见性；Go/Rust与原Uid内核转发均不变"}
+```

@@ -12,7 +12,9 @@ import java.util.Collections;
  * Device-wide ordinary app UID scope, across bounded per-user ranges.
  * Android system/root/isolated UIDs are NOT included. The controller and
  * every known installed KernelSU Manager get exact per-user AppID exclusions.
- * No permission to QUERY_ALL_PACKAGES; explicit manifest package queries.
+ * B32 original Root sideload app has QUERY_ALL_PACKAGES for complete
+ * installed ordinary App visibility. Owner/KernelSU UIDs are still excluded
+ * from the full-app kernel route; no new packet engine is used.
  */
 final class AllAppRouteScope {
     private static final String[] MANAGERS={

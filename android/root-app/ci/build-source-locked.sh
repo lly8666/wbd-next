@@ -155,9 +155,9 @@ assert any(e.find("action").get(ns+"name")=="android.intent.action.SEND" and
 assert any(e.find("action").get(ns+"name")=="android.intent.action.VIEW" and
            e.find("data").get(ns+"scheme")=="https"
            for e in q.findall("intent")),"allow HTTPS-opening non-launcher packages"
-assert all(p.get(ns+"name")!="android.permission.QUERY_ALL_PACKAGES"
-           for p in x.findall("uses-permission")),"no broad package visibility"
-print("ANDROID_ROOT_NARROW_INSTALLED_PACKAGE_VISIBILITY_MANIFEST_PASS")
+assert any(p.get(ns+"name")=="android.permission.QUERY_ALL_PACKAGES"
+           for p in x.findall("uses-permission")),"B32 root picker needs installed ordinary app visibility"
+print("ANDROID_B32_ALL_INSTALLED_APP_VISIBILITY_MANIFEST_PASS")
 PY
 python3 - <<'PY'
 from pathlib import Path
