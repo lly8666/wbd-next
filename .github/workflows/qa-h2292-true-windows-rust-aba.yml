@@ -1,6 +1,7 @@
 # H2276: TWO simultaneous isolated triplets, same exact source/scenario.
 # H2290 uses TWO true native signed Windows Npcap/Wintun original GoTLS/Rust
 # H2312 next true product test: only NPF queue 16KiB/8p -> 64KiB/16p; TX8 unchanged.
+# Rerun: h2311_windows_npf_trace now exposed at engine crate for source-locked A DLL.
 # → independent ARM kernel relay → native ARM original GoTLS/Rust AF_PACKET/TUN;
 # real ARM TCP bytes, P99 and owned Stop; read-only actual Win32 process CPU.
 name: H2292 paired A NPF8 B NPF16 A-prime NPF8 same native Windows ARM GoTLS Rust triplets
