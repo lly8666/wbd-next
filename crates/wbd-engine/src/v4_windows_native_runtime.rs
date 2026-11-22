@@ -991,9 +991,14 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
  // frame in a continuously backlogged DATA sender; otherwise do not
  // interfere with original M1 definite-copy readiness and DATA piggyback.
  fn native_ack_only_due(sack_negotiated:bool,pending_sack:bool,
-     cumulative_changed:bool,business_active:bool)->bool{
+     cumulative_changed:bool,business_active:bool,
+     ack_interval_elapsed:bool)->bool{
+     // An active local source does not prove a reverse DATA carrier exists.
+     // In particular repair/control-only turns must not starve genuine
+     // cumulative ACK progress when SACK was not negotiated.
+     // Keep such ACK-only frames coalesced to <=100Hz.
      (sack_negotiated&&pending_sack)||
-         (!business_active&&cumulative_changed)
+         (cumulative_changed&&(!business_active||ack_interval_elapsed))
  }
  // One cold/signed owner receipt at graceful worker Stop. This is not
  // a fabricated os-Applied flag: the counters count genuinely copied
@@ -1015,6 +1020,9 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      direct_notify:Arc<WakeEvent>,
      tcp_control:Option<Receiver<TcpColdCommand>>)->i32{
      let mut ip_id=1u16;
+     // Genuine reverse ACK-only fallback, only when no piggybacked DATA
+     // has settled current progress; never a periodic ACK/PTO generator.
+     let mut last_pure_ack=None::<Instant>;
      // Cache Auto next check in the worker. A full packet batch never
      // takes an extra owner mutex for a 2-second policy decision.
      let mut next_auto_check=m2_clock().0.saturating_add(2_000_000_000);
@@ -1280,9 +1288,11 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
              let sack_pending=counters.sack_rev.load(Ordering::Acquire)!=
                  counters.sack_sent_rev.load(Ordering::Acquire);
              if native_ack_only_due(sack_negotiated,sack_pending,
-                 next_ack!=counters.ack_sent.load(Ordering::Acquire),active){
+                 next_ack!=counters.ack_sent.load(Ordering::Acquire),active,
+                 last_pure_ack.is_none_or(|t|t.elapsed()>=Duration::from_millis(10))){
                  send_presentation_ack(&cfg,&mut npf,&counters,&mut ip_id,
                      sack_negotiated)?;
+                 last_pure_ack=Some(Instant::now());
                  return Ok(false)
              }
              // Original authenticated Tunnel ACK semantics use Tunnel
@@ -2267,13 +2277,18 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      fn h517_negotiated_positive_sack_is_not_starved_by_full_native_business_batch(){
          // Continuous TUN ready business formerly returned before all
          // presentation ACK-only checks; genuine SACK could never escape.
-         assert!(native_ack_only_due(true,true,false,true));
-         assert!(native_ack_only_due(true,true,true,true));
-         // No background pure ACK flood on lossless, busy Normal source.
-         assert!(!native_ack_only_due(true,false,true,true));
-         assert!(!native_ack_only_due(false,true,false,true));
-         assert!(!native_ack_only_due(false,false,false,false));
-         assert!(native_ack_only_due(false,false,true,false));
+         assert!(native_ack_only_due(true,true,false,true,false));
+         assert!(native_ack_only_due(true,true,true,true,false));
+         // No background pure ACK flood before the 10ms fallback.
+         assert!(!native_ack_only_due(true,false,true,true,false));
+         assert!(native_ack_only_due(true,false,true,true,true));
+         assert!(!native_ack_only_due(false,true,false,true,true));
+         assert!(!native_ack_only_due(false,false,false,false,true));
+         assert!(native_ack_only_due(false,false,true,false,false));
+         // Cumulative-only peer ACK must escape a saturated source turn,
+         // but only after coalescing; no SACK negotiation is required.
+         assert!(!native_ack_only_due(false,false,true,true,false));
+         assert!(native_ack_only_due(false,false,true,true,true));
      }
      #[test]
      fn bounded_rx_tx_wake_coalescing_preserves_single_and_full_batches(){
