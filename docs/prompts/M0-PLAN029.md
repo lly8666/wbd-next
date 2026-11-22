@@ -1,5 +1,9 @@
 # M0｜PLAN029长期接续提示词
 
+
+> **2026-11-22 追加：M0-PLAN029-THROUGHPUT 专项的新用户顺序，优先于本页旧的吞吐实施暗示。** M0执行时先读 [新版完整三关方案](../decisions/M0-PLAN029-THROUGHPUT.md#2026-11-22-用户追加授权分三关施工本节覆盖下面的旧先-arm-公平优先顺序) 与 [永久 M0 提示词中的逐关操作](M0.md#2026-11-22当前-plan029-吞吐三关专项执行指令用户新授权先于旧-arm-调度优先级)。顺序必须是 **0% 真 Windows 原生数据面TX瓶颈／同源A-B-A′→FEC OFF、最多一次外层修复 OFF-ON-OFF 在1%后5%→固定 FEC maximum 应发/实发/吞吐1%后5%**。优先复用 PR #68 内 H2292/H2294/H2307/H2309 原始6runner、单runner和本机读回夹具，不能假定 PR #68 已合入 main。本页的 CN/FakeIP/029B 等原有独立出口**未被取消或判完成**，registry/cursor 精确 assigned_task 决定正在施工的 scope；旧材料保留作为相关功能和历史交付事实，不越权同时重启所有工作流。任务要求真实双端、首次交付、F/R预算、parity实发和真实 Stop；旧假红/5%真实失败分别归档。只有在真实物理/容量与源码资格满足时才宣称 performance PASS，不对5% FEC OFF 预置不现实的400Mbps/全bulk门槛。
+
+
 **2026-11-16后继定案**：[029B方案](../decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md) / [029B提示词](M0-PLAN029B.md)。先收当前已冻结优化批次，再完整实施029B，纳入029收口、030前；不取消Action、不等029先全部关闭。CN域名强制直连改为可选高级功能，分流off真正不实例化业务模块，公共DNS/填充/IPv6处理保留；以下旧CN并集要求仅适用于高级开启。设计已定案不等于实现/测试PASS。
 
 你在 `lly8666/wbd-next/main` 接续已授权PLAN029。默认上轮中断：刷新main，读START_HERE/AGENTS、registry/M0 cursor、[029计划](../decisions/M0-PLAN029-CLIENT-DNS-PADDING-20261102.md)与[分流/DNS施工契约](../architecture/CLIENT_SPLIT_DNS_CONTRACT.md)，重点最新§3B、§5、§7。只补checkpoint之后必要代码/日志/Actions；先收在途结果、补中断记录，不重复dispatch、不覆盖其他改动。028限定收口，不恢复旧矩阵；030未开工。
