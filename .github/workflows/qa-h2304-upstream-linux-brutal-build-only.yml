@@ -1,0 +1,44 @@
+name: H2304 pinned upstream GPL TCP Brutal Linux build feasibility (no install)
+run-name: "H2304 upstream GPLv3 TCP Brutal build only, no copy or module load | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-brutal-inner-outer-20261122']
+    paths: ['.github/workflows/qa-h2304-upstream-linux-brutal-build-only.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-only:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Check exact pinned public GPL-3.0 module sources only in disposable /tmp
+        shell: bash
+        run: |
+          set -euo pipefail
+          UPSTREAM_SHA=d2397ff8bca04a29fd2de01cf7d2d4b825224de8
+          d="$(mktemp -d)"
+          trap 'rm -rf "$d"' EXIT
+          git -C "$d" init -q
+          git -C "$d" remote add upstream https://github.com/HyNetworks/tcp-brutal.git
+          timeout 90 git -C "$d" fetch -q --depth 1 upstream "$UPSTREAM_SHA"
+          git -C "$d" checkout -q --detach FETCH_HEAD
+          test "$(git -C "$d" rev-parse HEAD)" = "$UPSTREAM_SHA"
+          grep -qi 'GNU GENERAL PUBLIC LICENSE' "$d/LICENSE"
+          echo "H2304_UPSTREAM_GPL3_EXACT_SHA=$UPSTREAM_SHA"
+          KERNEL="$(uname -r)"
+          echo "H2304_KERNEL=$KERNEL"
+          if test ! -f "/lib/modules/$KERNEL/build/Makefile"; then
+            # Disposable hosted Runner only, bounded. No Linux module install
+            # to running kernel or route/kernel congestion-control changes.
+            timeout 150 sudo apt-get update -qq
+            timeout 150 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "linux-headers-$KERNEL"
+          fi
+          test -f "/lib/modules/$KERNEL/build/Makefile" || {
+            echo H2304_UPSTREAM_NOT_BUILDABLE_MISSING_ACTUAL_KERNEL_HEADERS; exit 2;
+          }
+          timeout 240 make -C "$d" -j2
+          test -s "$d/brutal.ko"
+          echo H2304_UPSTREAM_TCP_BRUTAL_GPL3_EXTERNAL_MODULE_COMPILES_FOR_EPHEMERAL_RUNNER
+          echo H2304_NO_MODULE_LOADED_NO_SYSCTL_NO_GPL_SOURCE_IN_WBD
