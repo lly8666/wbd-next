@@ -1,8 +1,8 @@
 # Android Root 原产品功能施工台账（B30｜源码与设备分层）
 
-- **B38在建**：手工最多4条IPv4 CIDR之外，显式选用真实所选Network的LinkAddress子网自动并入原Root UID FIB throw路由；不改main系统路由、不新建包分类器；Host/签名APK待同源验收，真机NOT_RUN。
-- **B37源已接线，软件资格以对应Action为准**：可选原Rust已认证Health间隔15s默认/30s低唤醒，90s dead保持；原App→Service→Go参数→既有Rust HealthClock有效读回。Host/双ABI/签名APK分层验收，实体CPU/RSS/idle尚无实测。
-- **B36已进入同源Host/Build软件资格，实体NOT_RUN**：选中Network LinkProperties IPv4 DNS→Root App START→Service冷复核→B35 Go / B34 Rust既有DNS生产参数；Host/签名APK结果以本SOURCE Action为准，不包括系统DNS/IPv6/实体。
+- **B38原生产调用链完成、Host/Build PASS，实体NOT_RUN**：手工最多4条IPv4 CIDR之外，显式选用真实所选Network的LinkAddress子网自动并入原Root UID FIB throw路由；不改main系统路由、不新建包分类器；同源[Dual64 #45028073114](https://github.com/lly8666/wbd-next/actions/runs/45028073114) 11 SUCCESS/4 SKIPPED；真机NOT_RUN。
+- **B37原生产Health接线Host/Build PASS，实体NOT_RUN**：可选原Rust已认证Health间隔15s默认/30s低唤醒，90s dead保持；原App→Service→Go参数→既有Rust HealthClock有效读回。Host/双ABI/签名APK分层验收，实体CPU/RSS/idle尚无实测。
+- **B36选定Network DNS接线Host/Build PASS，实体NOT_RUN**：选中Network LinkProperties IPv4 DNS→Root App START→Service冷复核→B35 Go / B34 Rust既有DNS生产参数；Host/签名APK结果以本SOURCE Action为准，不包括系统DNS/IPv6/实体。
 - **B35已完成源码接线，Build/Host PASS，实体NOT_RUN**：已选物理DNS IPv4不再仅接原Rust M4 App UDP53，也接原Go `--peer-host` 的冷UDP53/TCP53服务器域名引导；原 `Network` 绑定不变，默认223.5.5.5，不新增系统netd接管。Host/签名APK/实体资格依B35新SOURCE Action独立认定；Game/IPv6/热点/实体E2E仍缺。
 
 - **唯一工作分支**：`experiment/android-temp-root-probe`，对照基线 `f115ab1840f1c50eb1922f9c34b67267ca1fd770`，Draft PR #36。主线 `main` 不写。

@@ -13,3 +13,8 @@ B37之前原Rust Health15/30在源码独立接通，CI结果不得由B38源码�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B38从用户所选真实Android Network的IPv4 LinkAddress自动构建on-link直连CIDR并复用B33原Go Root UID私有FIB throw，不新增数据面。"}
 ```
+
+
+## 同 SOURCE 最终软件收据（2026-11-22）
+
+B38产品 SOURCE [`41c374f4e83d`](https://github.com/lly8666/wbd-next/commit/41c374f4e83decf4d1446ac63688a592a0b7d396) 的 [Android dual64 #45028073114](https://github.com/lly8666/wbd-next/actions/runs/45028073114)：`arm64-native`、`root-arm64-app`、`linux-original-server-normal-off`、`linux-x86-original-server-d2-s0`、原M3、B1/B2 DNS 及相关Host共 **11 SUCCESS**；四个 Android x86/KSU 原生/NativeBridge/D2/TAP诊断 **SKIPPED**。Cuttlefish是host admission PASS，不是ARM64 Android guest实连。同步 [治理 #45028073121](https://github.com/lly8666/wbd-next/actions/runs/45028073121) Feature catalog SUCCESS，Governance Job SKIPPED。B38和此前 [B36 #45027169236](https://github.com/lly8666/wbd-next/actions/runs/45027169236)、[B37 #45027641087](https://github.com/lly8666/wbd-next/actions/runs/45027641087) 各有独立 11 SUCCESS / 4 SKIPPED 资格。最新代码尚无 Android 真实 App LAN TCP/UDP、System DNS、Game2/4、IPv6或性能PASS；以上均NOT_RUN/NOT_PROVEN。
