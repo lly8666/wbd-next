@@ -115,6 +115,28 @@ final class PhysicalNetwork {
      */
     // B36: only this actual ConnectivityManager.Network LinkProperties,
     // never the OS process-default resolver or a guessed interface DNS.
+    // B38: read one selected physical IPv4 LinkAddress prefix, on demand
+    // at START only. No default Network, global route or packet callback.
+    static String selectedConnectedIPv4Subnet(Context context,PhysicalNetwork chosen){
+        ConnectivityManager cm=(ConnectivityManager)context.getSystemService(
+            Context.CONNECTIVITY_SERVICE);
+        if(cm==null||chosen==null)
+            throw new IllegalArgumentException("没有选定的实体Network");
+        for(Network network:cm.getAllNetworks()){
+            if(network.getNetworkHandle()!=chosen.handle)continue;
+            LinkProperties link=cm.getLinkProperties(network);
+            if(!chosen.matchesLinkProperties(link))
+                throw new IllegalArgumentException("实体Network子网已改变");
+            for(LinkAddress address:link.getLinkAddresses()){
+                if(address.getAddress() instanceof Inet4Address&&
+                   chosen.address.equals(address.getAddress().getHostAddress()))
+                    return RootDirectIPv4.connectedSubnet(chosen.address,
+                        address.getPrefixLength());
+            }
+            throw new IllegalArgumentException("选定Network没有可信IPv4本地前缀");
+        }
+        throw new IllegalArgumentException("选定Network已断开");
+    }
     static String selectedDNSIPv4(Context context,PhysicalNetwork chosen){
         ConnectivityManager cm=(ConnectivityManager)context.getSystemService(
             Context.CONNECTIVITY_SERVICE);

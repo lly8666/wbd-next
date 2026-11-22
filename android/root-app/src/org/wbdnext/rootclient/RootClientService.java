@@ -231,6 +231,13 @@ public final class RootClientService extends Service {
             trace(RootDiagnosticReceipt.Event.NETWORK_SCOPE_VERIFIED);
             String peer=intent.getStringExtra("peer");
             String directCIDRs=RootDirectIPv4.canonicalCSV(intent.getStringExtra("direct_cidrs"));
+            if(intent.getBooleanExtra("direct_lan_auto",false)){
+                // Cold original selected-Network route source must remain
+                // identical to App START. No per-packet check or new FIB owner.
+                String localSubnet=PhysicalNetwork.selectedConnectedIPv4Subnet(this,chosen);
+                if(!RootDirectIPv4.includes(directCIDRs,localSubnet))
+                    throw new IllegalArgumentException("实体Network直连子网已变化，请重新START");
+            }
             String physicalDnsIPv4=RootPhysicalDNSUpstream.canonical(
                 intent.getStringExtra("physical_dns_upstream"));
             if(intent.getBooleanExtra("physical_dns_follow_network",false)&&

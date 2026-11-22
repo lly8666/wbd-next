@@ -7,6 +7,36 @@ import java.util.TreeSet;
 final class RootDirectIPv4 {
     static final int MAX_PREFIXES=4;
     private RootDirectIPv4(){}
+    // B38: already kernel-owned IPv4 on-link address plus LinkAddress mask.
+    // This returns a network CIDR for the EXISTING rootjournal throw rule,
+    // never a Java TUN packet filter or an alternative system route table.
+    static String connectedSubnet(String localIPv4,int bits){
+        if(bits<1||bits>32)throw new IllegalArgumentException("所选物理Network前缀无效");
+        String[] a=localIPv4==null?new String[0]:localIPv4.split("\\.",-1);
+        if(a.length!=4)throw new IllegalArgumentException("必须是真实IPv4源地址");
+        long ip=0;
+        for(String part:a)ip=(ip<<8)|parseDecimal(part,255);
+        long mask=(0xffffffffL << (32-bits))&0xffffffffL;
+        long first=ip>>>24;
+        if(first==0||first==127||first>=224||((ip>>>16)==0xa9fe))
+            throw new IllegalArgumentException("不支持的物理IPv4源地址");
+        long net=ip&mask;
+        return canonicalCSV(((net>>>24)&255)+"."+((net>>>16)&255)+"."+
+            ((net>>>8)&255)+"."+(net&255)+"/"+bits);
+    }
+    static String withConnectedSubnet(String manual,String connected){
+        String old=canonicalCSV(manual);
+        String add=canonicalCSV(connected);
+        if(add.isEmpty()||add.indexOf(',')>=0)
+            throw new IllegalArgumentException("所选Network需单条IPv4直连前缀");
+        for(String existing:old.split(","))if(existing.equals(add))return old;
+        return canonicalCSV(old.isEmpty()?add:old+","+add);
+    }
+    static boolean includes(String csv,String cidr){
+        for(String existing:canonicalCSV(csv).split(","))
+            if(existing.equals(cidr))return true;
+        return false;
+    }
 
     static String canonicalCSV(String raw){
         if(raw==null||raw.trim().isEmpty())return "";

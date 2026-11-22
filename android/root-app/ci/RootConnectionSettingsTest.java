@@ -148,6 +148,17 @@ public final class RootConnectionSettingsTest {
             new TreeMap<>(),"",new TreeMap<>(),"192.168.1.1",true,60);}
         catch(IllegalArgumentException expected){healthInvalid=true;}
         check(healthInvalid,"unsupported native Health setting persisted");
+        RootConnectionSettings onLink=new RootConnectionSettings(
+            "lan.example.test","tls.example.test","acct",443,1460,500,
+            "chacha20-poly1305","off","normal",1,false,false,true,false,true,
+            new TreeMap<>(),"192.168.1.0/24",new TreeMap<>(),
+            "192.168.1.1",false,15,true);
+        RootConnectionSettings onLinkRestored=read(stored(onLink));
+        check(onLinkRestored!=null&&onLinkRestored.autoConnectedDirect,
+            "B38 live selected Network subnet auto-direct option not persisted");
+        check(!b.autoConnectedDirect&&!lowWakeRestored.autoConnectedDirect,
+            "old preset must never silently opt into LAN direct");
+        System.out.println("ANDROID_B38_SELECTED_NETWORK_LOCAL_CIDR_PRESET_HOST_PASS");
         System.out.println("ANDROID_B37_ORIGINAL_NATIVE_HEALTH_PRESET_HOST_PASS");
         System.out.println("ANDROID_B36_SELECTED_NETWORK_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B34_ALL_APP_BYPASS_AND_PHYSICAL_DNS_PRESET_HOST_PASS");

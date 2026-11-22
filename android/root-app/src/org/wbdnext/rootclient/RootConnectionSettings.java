@@ -17,7 +17,7 @@ import java.util.TreeSet;
 final class RootConnectionSettings {
     final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
     final int port,outerMTU,tunQueue,profile,nativeHealthSeconds;
-    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork;
+    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect;
     final Map<String,Integer> selected,bypass;
     RootConnectionSettings(String peer,String sni,String account,
         int port,int outerMTU,int tunQueue,String cipher,String padding,
@@ -71,6 +71,18 @@ final class RootConnectionSettings {
         boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,false);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect) {
+        this.autoConnectedDirect=autoConnectedDirect;
         this.nativeHealthSeconds=healthSeconds;
         this.physicalDNSFollowNetwork=followSelectedNetworkDNS;
         this.physicalDNSUpstream=RootPhysicalDNSUpstream.canonical(physicalDNSUpstream);
@@ -152,6 +164,7 @@ final class RootConnectionSettings {
         p.setProperty("physical_dns_upstream",physicalDNSUpstream);
         p.setProperty("physical_dns_follow_network",Boolean.toString(physicalDNSFollowNetwork));
         p.setProperty("native_health_seconds",Integer.toString(nativeHealthSeconds));
+        p.setProperty("direct_lan_auto",Boolean.toString(autoConnectedDirect));
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -210,7 +223,8 @@ final class RootConnectionSettings {
                 bypass,p.getProperty("physical_dns_upstream",RootPhysicalDNSUpstream.DEFAULT),
                 p.containsKey("physical_dns_follow_network")&&
                     flag(p,"physical_dns_follow_network"),
-                Integer.parseInt(p.getProperty("native_health_seconds","15")));
+                Integer.parseInt(p.getProperty("native_health_seconds","15")),
+                p.containsKey("direct_lan_auto")&&flag(p,"direct_lan_auto"));
         }catch(IllegalArgumentException invalid){
             return null;
         }

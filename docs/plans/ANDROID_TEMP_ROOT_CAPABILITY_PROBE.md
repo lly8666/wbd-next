@@ -1,3 +1,5 @@
+> **2026-11-22 B38实体Network直连子网生产接线**：新显式LAN直连选项从当前用户选定的ConnectivityManager.Network的真实IPv4 LinkAddress与前缀生成规范单条on-link CIDR，与原B33最多4条手工CIDR合并，Service冷读取同一Network再次核对，再通过原Go `--android-direct-cidrs` 接已有Root UID私有FIB throw路由。无新Go/Rust数据引擎、不更改主路由/Android默认Network；不代表强制走选中物理网卡。旧默认全隧道及旧本机/SAF预设不变。Host/签名APK资格看同SOURCE Actions，实体NOT_RUN。
+
 > **2026-11-22 B37原Rust Health低唤醒接线**：原15s/90s Rust HealthClock是已安装的TLS后M4生命周期，现把Android用户显式的15/30秒间隔从Root App→Service→原Go CLI→已有`HealthKeepaliveSeconds`→Rust实际effective readback接线。默认15s不变；30s低频不改变90s dead、AEAD/PN/租约/真实TUN/RAW/owned Stop，不新增心跳goroutine或热路径。CPU/唤醒和手机省电效果NOT_PROVEN，需实测；Android Game/系统netd DNS/IPv6/热点仍未接。
 
 > **2026-11-22 B36 真实选定Network DNS冷接线**：App显式选用已选择的Wi-Fi/移动/有线ConnectivityManager.Network的LinkProperties IPv4 DNS，START时绑定成同一数值上游，Service冷复核后复用B35原Go服务器域名UDP/TCP53与B34原Rust M4物理App UDP53，旧手动IPv4/默认223.5.5.5/SAF预设兼容。不读取默认系统DNS，不添加新包线程，不接netd系统Resolver、IPv6、物理App TCP53、Game；同源Actions/实机资格分开。

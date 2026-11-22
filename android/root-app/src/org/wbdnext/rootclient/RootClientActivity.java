@@ -47,7 +47,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
     private TextView selectedAppsSummary,bypassSummary,presetResult;
@@ -474,7 +474,8 @@ public final class RootClientActivity extends Activity {
             RootDirectIPv4.canonicalCSV(directCIDRsField.getText().toString()),
             bypass,RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString()),
             physicalDNSFollowNetwork.isChecked(),
-            Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString()));
+            Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString()),
+            autoConnectedDirect.isChecked());
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -487,6 +488,7 @@ public final class RootClientActivity extends Activity {
         serverPort.setText(Integer.toString(s.port));
         outerMTUField.setText(Integer.toString(s.outerMTU));
         directCIDRsField.setText(s.directCIDRs);
+        autoConnectedDirect.setChecked(s.autoConnectedDirect);
         physicalDNSUpstreamField.setText(s.physicalDNSUpstream);
         physicalDNSFollowNetwork.setChecked(s.physicalDNSFollowNetwork);
         selectSpinner(nativeHealthIntervals,Integer.toString(s.nativeHealthSeconds));
@@ -527,6 +529,10 @@ public final class RootClientActivity extends Activity {
             String account=user.getText().toString().trim();
             String directCIDRs=RootDirectIPv4.canonicalCSV(
                 directCIDRsField.getText().toString());
+            if(autoConnectedDirect.isChecked()){
+                String subnet=PhysicalNetwork.selectedConnectedIPv4Subnet(this,scope);
+                directCIDRs=RootDirectIPv4.withConnectedSubnet(directCIDRs,subnet);
+            }
             String physicalDnsIPv4=physicalDNSFollowNetwork.isChecked()
                 ?PhysicalNetwork.selectedDNSIPv4(this,scope)
                 :RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString());
@@ -633,6 +639,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("physical_dns",physicalDNS.isChecked());
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
             request.putExtra("direct_cidrs",directCIDRs);
+            request.putExtra("direct_lan_auto",autoConnectedDirect.isChecked());
             request.putExtra("physical_dns_upstream",physicalDnsIPv4);
             request.putExtra("physical_dns_follow_network",physicalDNSFollowNetwork.isChecked());
             if(allApps){
@@ -752,6 +759,10 @@ public final class RootClientActivity extends Activity {
         directHint.setText("仅对本次选定的普通App UID生效：原Root私有路由表将这些IPv4网段交给后续Android路由，"+
             "不经WBD TUN。不是域名分流、系统DNS、或已证明的物理接口出站。");
         pane.addView(directHint);
+        autoConnectedDirect=new CheckBox(this);
+        autoConnectedDirect.setText("可选：所选实体Network的当前IPv4直连子网自动绕过WBD（与手动CIDR合并，最多4条）");
+        autoConnectedDirect.setChecked(false);
+        pane.addView(autoConnectedDirect);
         recordCiphers=new Spinner(this);
         recordCiphers.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,

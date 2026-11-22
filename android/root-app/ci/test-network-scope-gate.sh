@@ -45,6 +45,25 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
   android/root-app/ci/RootPhysicalDNSUpstreamTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootPhysicalDNSUpstreamTest
+# B38: actual selected LinkAddress IPv4 subnet uses existing Go private
+# UID FIB throw route, not another Java kernel route engine or packet pump.
+python3 - <<'PY'
+from pathlib import Path
+base=Path("android/root-app/src/org/wbdnext/rootclient")
+network=(base/"PhysicalNetwork.java").read_text()
+ui=(base/"RootClientActivity.java").read_text()
+svc=(base/"RootClientService.java").read_text()
+arg=(base/"OriginalGoCommandArgs.java").read_text()
+go=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+assert 'chosen.matchesLinkProperties(link)' in network
+assert 'RootDirectIPv4.connectedSubnet(chosen.address,' in network
+assert 'RootDirectIPv4.withConnectedSubnet(directCIDRs,subnet)' in ui
+assert 'request.putExtra("direct_lan_auto",autoConnectedDirect.isChecked())' in ui
+assert 'RootDirectIPv4.includes(directCIDRs,localSubnet)' in svc
+assert 'pair(args,"--android-direct-cidrs",direct)' in arg
+assert 'rootjournal.ParseDirectCIDRs(*androidDirectCIDRs)' in go
+print("ANDROID_B38_CONNECTED_REAL_NETWORK_IPV4_SUBNET_TO_ORIGINAL_GO_UID_FIB_SOURCE_PASS")
+PY
 # B37: one cold Go-to-native Health policy, not a Go heartbeat worker.
 python3 - <<'PY'
 from pathlib import Path
