@@ -164,7 +164,7 @@ def stop_owned_wsl_liveness(child,marker):
         child.wait(timeout=18)
         v=wsl("sh","-c",
               "test -s "+marker+" && pid=$(cat "+marker+") && "
-              "! kill -0 \\"$pid\\" 2>/dev/null && rm -f "+marker,
+              "! kill -0 $pid 2>/dev/null && rm -f "+marker,
               timeout=18,tolerate=True)
         require(v.returncode==0,"ORIGINAL_TEST_GUEST_KEEPER_PID_NOT_STOPPED")
         v=wsl("sh","-c","test ! -e "+marker,timeout=18,tolerate=True)
