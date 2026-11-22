@@ -72,6 +72,10 @@ class H2294FecOffOriginalRepair(unittest.TestCase):
         self.assertIn("start_owned_wsl_liveness(group)",trial)
         self.assertIn("stop_owned_wsl_liveness(keeper,keeper_marker)",trial)
         self.assertIn('exec cat',trial)
+        # Exact WSL Linux PID for owned Stop; a single '$' silently makes
+        # all real Windows keepalive checks fail before original product.
+        self.assertIn('echo $$ >',trial)
+        self.assertNotIn('echo $ >',trial)
         self.assertIn("child.stdin.close()",trial)
         self.assertIn("! kill -0 $pid",trial)
 
