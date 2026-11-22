@@ -21,3 +21,9 @@ SOURCE `dd693e34df6426cb3b06a41cd6138865d9c0915a` [Dual64 #45033149984](https://
 B41a `487e246251ba854707fd97d44688bb1e4f6e63b0` 的 Android `arm64-native` 确实通过同源ARM64/x86_64 Go/Rust链接（说明双TLS控制端可编译），六个Host Job也通过；但签名APK前置 `android/root-app/ci/test-network-scope-gate.sh` **FAIL**。该门第一个B41检查发现最终 `linux.go` 中既无 `return runAndroidGame2(...)`，Android平台条件仍拒绝所有Game：第一次Git Tree分阶段提交中，原CLI文件改动被后来创建的基于旧Tree的阶段覆盖。因此B41a签名APK并未执行，独立Linux Oracle当时仍在跑。软件编译成功不得冒充Game2入口已经启用。
 
 B41b以 **B41a最终HEAD为基础** 重新实际写入同一个原CLI `linux.go`：Android选中 `game2/off` 且FEC/StartupPadding/App DNS/轮换全未开启时，实际分流 `runAndroidGame2(ctx,cfg,ifindex,tun,&connected)`；Game4/其他未连模式继续拒绝，Linux保持原native game路径。保留真实源门及首次失败，**不删断言、不为了绿色CI伪造ELF或App按钮**。后续B41b新SOURCE同源Actions重新验收Go双ABI、签名Root APK与原Linux Oracle；设备和CPU仍NOT_RUN。
+
+## B41b同源软件收据完成：确实接到原Go CLI和签名APK
+
+原Go产品SOURCE `7fc34e6a7848662cb5bc6eb0d639f96007014369` 的 [Android Dual64 #45033871118](https://github.com/lly8666/wbd-next/actions/runs/45033871118) 已 **completed/success：11 SUCCESS / 4 SKIPPED**。`arm64-native` 是两ABI真实NDK Go/Rust ELF编译、Go Game2原始包导入和Rust符号链接成功；`root-arm64-app` 包含先前B41a失败的**完整真实CLI分发源门**，以及无VpnService的签名ARM64 APK和原Go/Rust符号/加载检查，均SUCCESS。`linux-x86-original-server-d2-s0`、`linux-original-server-normal-off`与`arm64-cuttlefish-host-admission` Host门也均SUCCESS。B41b [Feature catalog #45033871248](https://github.com/lly8666/wbd-next/actions/runs/45033871248) SUCCESS（Governance Job SKIPPED）。旧B41 `dd693e` 的Cgo前导FAIL及B41a `487e246` 的真实CLI分发未提交的APK源门FAIL均保留，不覆盖。
+
+**严格成果：**现在显式手工Android CLI `--mode game2` 的确在同源源码编译内走原Go双真实TLS控制入口→原Rust Game2 B39/B40组M4→既有Root UID路由；签名App UI仍**没有**Game2模式选项。CI的`arm64-native`证明代码/动态符号编译和链接，不证明实体设备能完成真实两条TLS、每lane内核RAW和TUN数据、双向Game2回包、Rust receipt/stop或速度CPU。Android guest/实体手机均NOT_RUN。
