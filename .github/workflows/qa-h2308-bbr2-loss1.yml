@@ -5,8 +5,8 @@
 # H2290 uses TWO true native signed Windows Npcap/Wintun original GoTLS/Rust
 # → independent ARM kernel relay → native ARM original GoTLS/Rust AF_PACKET/TUN;
 # real ARM TCP bytes, P99 and owned Stop; read-only actual Win32 process CPU.
-name: H2308 original Windows BBR2 FEC OFF TCP 8-2-8MiB RTT400ms loss1
-run-name: "M0 H2308 original WBD Windows BBR2 FEC OFF RTT400ms loss1 | ${{ github.sha }}"
+name: H2308 original signed Windows BBR2 FEC OFF 400ms loss1
+run-name: "M0 H2308 original Windows BBR2 FEC OFF RTT400ms loss1 | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
@@ -39,6 +39,7 @@ on:
       - 'tests/test_m0_h2290_windows_hotpath_cpu.py'
       - 'tests/test_m0_h2287_tun_tcp_trace.py'
       - 'tools/m0_h2276_three_runner_tcp.py'
+      - 'tools/m0_h2308_windows_cc.ps1'
       - 'tools/m0_wl_loss_tcp_probe.py'
       - 'tests/test_m0_h2276_three_runner_tcp.py'
       - 'tests/test_m0_h2280_bidir_netem_tcp.py'
@@ -600,17 +601,13 @@ jobs:
           if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'H2286_WINTUN_AUTHENTICODE_SIGNATURE_INVALID'}
           Copy-Item $dll result/wl-public/wintun.dll
           Write-Output H2286_REAL_SIGNED_ORIGINAL_NPCAP_WINTUN_DRIVER_READY
-      - name: H2308 verify and apply BBR2 to Windows Internet and Datacenter TCP templates
+      - name: H2308 verify Windows TCP baseline and enable BBR2 with exact restore snapshot
         shell: pwsh
         timeout-minutes: 3
         run: |
-          $ErrorActionPreference='Stop'
-          New-Item -ItemType Directory -Force h2308-out | Out-Null
-          $before=@(foreach($name in @('Internet','Datacenter')){
-            $setting=Get-NetTCPSetting -SettingName $name -ErrorAction Stop
-            [pscustomobject]@{Template=$name;Provider=([string]$setting.CongestionProvider)}
-          })
-          if($before.Count -ne 2 -or @($before | Where-Object {$_.Provider -notmatch '^(Default|CUBIC|CTCP|DCTCP|BBR2|NewReno|None)
+          & ./tools/m0_h2308_windows_cc.ps1 -Action Setup
+          if($LASTEXITCODE -ne 0){throw 'H2308_ORIGINAL_TCP_CC_SETUP_FAILED'}
+      - name: ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun to independent ARM GoTLS/Rust through owned two-hop kernel
         shell: pwsh
         env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
         timeout-minutes: 53
@@ -626,40 +623,12 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'H2286_REAL_WINDOWS_WSL_ORIGINAL_NPCAP_MAC_HYPERV_NOT_READY'}
           python -u tools/m0_h2293_true_product_fec_loss.py client $env:GROUP h2276-peer/relay/relay-ready.json h2276-peer/server/server-peer.json h2286-peer/server/server-ready.json
           if($LASTEXITCODE -ne 0){throw 'H2286_ORIGINAL_WINDOWS_GO_TLS_RUST_WINTUN_NPCAP_ARM_GO_RUST_PRODUCT_FAILED'}
-      - name: H2308 always restore original Windows TCP congestion providers
+      - name: H2308 always restore Windows TCP congestion configuration
         if: always()
         shell: pwsh
         run: |
-          $ErrorActionPreference='Stop'
-          if(Test-Path h2308-out/windows-cc-before.json){
-            $original=@(Get-Content h2308-out/windows-cc-before.json -Raw | ConvertFrom-Json)
-            if($original.Count -ne 2){throw 'H2308_MISSING_ORIGINAL_TCP_TEMPLATE_VALUES'}
-            foreach($setting in $original){
-              $name=[string]$setting.Template
-              $provider=([string]$setting.Provider).ToLowerInvariant()
-              if($name -notin @('Internet','Datacenter') -or
-                 $provider -notin @('default','cubic','ctcp','dctcp','bbr2','newreno','none')){
-                throw 'H2308_REFUSE_UNTRUSTED_TCP_RESTORE_VALUE'
-              }
-              if($provider -eq 'newreno'){$provider='none'}
-              & netsh.exe interface tcp set supplemental "template=$name" "congestionprovider=$provider"
-              if($LASTEXITCODE -ne 0){throw "H2308_WINDOWS_TCP_ORIGINAL_RESTORE_FAILED $name"}
-            }
-            $restored=@(foreach($name in @('Internet','Datacenter')){
-              $setting=Get-NetTCPSetting -SettingName $name -ErrorAction Stop
-              [pscustomobject]@{Template=$name;Provider=([string]$setting.CongestionProvider)}
-            })
-            ConvertTo-Json -InputObject $restored -Depth 5 | Set-Content -Encoding utf8 h2308-out/windows-cc-restored.json
-            for($i=0;$i -lt 2;$i++){
-              if($original[$i].Template -ne $restored[$i].Template -or
-                 $original[$i].Provider -ne $restored[$i].Provider){
-                throw "H2308_WINDOWS_TCP_PROVIDER_NOT_RESTORED $($original[$i].Template)"
-              }
-            }
-            Write-Output 'H2308_WINDOWS_ORIGINAL_TCP_CC_RESTORED'
-          }else{
-            Write-Output 'H2308_TCP_CC_NOT_MODIFIED_BEFORE_FAILURE'
-          }
+          & ./tools/m0_h2308_windows_cc.ps1 -Action Restore
+          if($LASTEXITCODE -ne 0){throw 'H2308_ORIGINAL_TCP_CC_RESTORE_FAILED'}
       - name: Stop and restore exact WSL vEthernet Hyper-V neighbor plus signed Npcap service
         if: always()
         shell: pwsh
@@ -696,77 +665,6 @@ jobs:
             h2286-out/original-product-ready.flag.udp.json
             h2302-out/
             h2308-out/
-            h2286-npcap-cleanup.log
-          if-no-files-found: warn
-          retention-days: 14
-}).Count -gt 0){
-            throw 'H2308_ORIGINAL_WIN_TCP_PROVIDER_UNKNOWN_DO_NOT_MUTATE'
-          }
-          ConvertTo-Json -InputObject $before -Depth 5 | Set-Content -Encoding utf8 h2308-out/windows-cc-before.json
-          foreach($setting in $before){
-            & netsh.exe interface tcp set supplemental "template=$($setting.Template)" 'congestionprovider=bbr2'
-            if($LASTEXITCODE -ne 0){throw "H2308_BBR2_NOT_SUPPORTED_BY_THIS_WINDOWS2025_TEMPLATE $($setting.Template)"}
-          }
-          $after=@(foreach($name in @('Internet','Datacenter')){
-            $setting=Get-NetTCPSetting -SettingName $name -ErrorAction Stop
-            [pscustomobject]@{Template=$name;Provider=([string]$setting.CongestionProvider)}
-          })
-          ConvertTo-Json -InputObject $after -Depth 5 | Set-Content -Encoding utf8 h2308-out/windows-cc-after.json
-          if(@($after | Where-Object {$_.Provider -ne 'BBR2'}).Count -gt 0){
-            throw 'H2308_BBR2_OS_REAL_READBACK_NOT_APPLIED'
-          }
-          Write-Output 'H2308_WINDOWS2025_OS_TCP_INTERNET_DATACENTER_BBR2_APPLIED'
-      - name: ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun to independent ARM GoTLS/Rust through owned two-hop kernel
-        shell: pwsh
-        env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
-        timeout-minutes: 53
-        run: |
-          $ErrorActionPreference='Stop'
-          if(-not (Test-Path "h2276-peer/relay/relay-ready.json") -or
-             -not (Test-Path "h2276-peer/server/server-peer.json")){
-             throw 'H2293_EARLY_SOURCE_PEER_PREFLIGHT_NOT_PRESENT'
-          }
-          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2286-$env:GROUP-original-arm-product-ready" h2286-peer/server
-          if($LASTEXITCODE -ne 0){throw 'H2286_ORIGINAL_ARM64_PRODUCT_GO_TLS_RUST_NOT_READY'}
-          & ./tools/m0_h2286_windows_npf_owner.ps1 -Action Install
-          if($LASTEXITCODE -ne 0){throw 'H2286_REAL_WINDOWS_WSL_ORIGINAL_NPCAP_MAC_HYPERV_NOT_READY'}
-          python -u tools/m0_h2293_true_product_fec_loss.py client $env:GROUP h2276-peer/relay/relay-ready.json h2276-peer/server/server-peer.json h2286-peer/server/server-ready.json
-          if($LASTEXITCODE -ne 0){throw 'H2286_ORIGINAL_WINDOWS_GO_TLS_RUST_WINTUN_NPCAP_ARM_GO_RUST_PRODUCT_FAILED'}
-      - name: Stop and restore exact WSL vEthernet Hyper-V neighbor plus signed Npcap service
-        if: always()
-        shell: pwsh
-        run: |
-          if(Test-Path h2286-out/windows-vethernet-owner.json){
-            & ./tools/m0_h2286_windows_npf_owner.ps1 -Action Cleanup
-            if($LASTEXITCODE -ne 0){throw 'H2286_WINDOWS_WSL_NPF_OWNER_NOT_RESTORED'}
-          }
-          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 | Tee-Object h2286-npcap-cleanup.log
-          $actual=Get-Content h2286-npcap-cleanup.log -Raw
-          if(-not ($actual.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or $actual.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))){
-            throw 'H2286_SIGNED_NPCAP_NATIVE_DRIVER_OWNED_CLEANUP_RECEIPT_FAILED'
-          }
-          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'H2286_NPCAP_SERVICE_SURVIVED_REAL_OWNED_CLEANUP'}
-          Write-Output 'H2286_SIGNED_NPCAP_ACTUAL_SERVICE_REMOVED_BUT_STALE_LASTEXITCODE_IGNORED'
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          # Receiver expects single TOP-LEVEL client-result.json after download!
-          # Never combine h2276-out and h2286-out in this cross-job receipt.
-          name: h2276-${{ matrix.group }}-client-result
-          path: h2276-out/
-          if-no-files-found: warn
-          retention-days: 14
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: h2290-${{ matrix.group }}-original-windows-hotpath-raw-evidence
-          path: |
-            h2286-out/client-result.json
-            h2286-out/original-win-client.log
-            h2286-out/original-win-cpu.jsonl
-            h2286-out/win-inner-udp.log
-            h2286-out/original-product-ready.flag.udp.json
-            h2302-out/
             h2286-npcap-cleanup.log
           if-no-files-found: warn
           retention-days: 14
