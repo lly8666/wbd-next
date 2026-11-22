@@ -474,8 +474,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2292-true-rust-aba]') || contains(github.event.head_commit.message, '[m0-029-h2312-npf]') || contains(github.event.head_commit.message, '[m0-029-h2312-tx]')
     name: "H2286 original signed Windows2025 Npcap Wintun GoTLS Rust client ${{ matrix.group }}"
     needs: [static, win_candidate_build]
-    env:
-      WBD_H2292_COMPILED_SOURCE_SHA: "dc2da4b98ecc419a67e3e2ee6530f944b78d88ef"
     strategy:
       fail-fast: false
       matrix:
@@ -484,6 +482,7 @@ jobs:
     timeout-minutes: 100
     permissions: {contents: read, actions: read, id-token: write}
     env:
+      WBD_H2292_COMPILED_SOURCE_SHA: "dc2da4b98ecc419a67e3e2ee6530f944b78d88ef"
       GH_TOKEN: ${{ github.token }}
       GROUP: ${{ matrix.group }}
     steps:
