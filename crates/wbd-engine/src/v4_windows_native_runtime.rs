@@ -1222,6 +1222,8 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
                      }
                  }
              }
+             // A bounded <=4-row parity quantum remains the default/Auto path;
+             // opt-in Fixed MAXIMUM changes only the original owner's budget.
              // Source-first: all READY original sources transmit before any
              // deferred parity. Default/Auto remains one <=4-row quantum.
              #[cfg(feature="fec2_product_record")]
