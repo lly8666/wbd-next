@@ -95,6 +95,12 @@ def build_network(own,relay):
             cmd("sysctl","-n",key)+"\n")
         root("sysctl","-w",key+"=16777216")
     root("ip","netns","add",NETNS)
+    if os.environ.get("WBD_H2302_WINDOW_ABA")=="1":
+        # Test-owned netns only. Ensure a 16MiB TCP receive request can be
+        # realized inside the actual ARM socket namespace, not just host sysctl.
+        # This namespace is destroyed by the existing owned Stop.
+        for key in ("net.core.rmem_max","net.core.wmem_max"):
+            ns("sysctl","-w",key+"=16777216")
     root("ip","link","add",HOST_DEV,"type","veth","peer","name",PEER_DEV)
     root("ip","link","set",PEER_DEV,"netns",NETNS)
     ns("ip","link","set","lo","up")

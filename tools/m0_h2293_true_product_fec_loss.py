@@ -29,6 +29,16 @@ FEC_LOSS=int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0"))
 FEC_PROFILE="light" if FEC_LOSS==1 else "mild"
 H2294_OFF_REPAIR=os.environ.get("WBD_H2294_OFF_REPAIR_ABA")=="1"
 H2302_WINDOW_ABA=os.environ.get("WBD_H2302_WINDOW_ABA")=="1"
+H2302_BASE_BYTES=int(os.environ.get("WBD_H2302_BASE_BYTES","2097152"))
+H2302_TUNED_BYTES=int(os.environ.get("WBD_H2302_TUNED_BYTES","8388608"))
+if H2302_WINDOW_ABA and (H2302_BASE_BYTES,H2302_TUNED_BYTES) not in (
+    (2*1024*1024,8*1024*1024),
+    (8*1024*1024,16*1024*1024)):
+    raise RuntimeError("H2303_WINDOW_ABA_ONLY_2_TO_8_OR_8_TO_16_MIB")
+def h2302_window_bytes(tag):
+    if tag not in ("A_base","B_window","A_prime_base"):
+        raise RuntimeError("H2303_UNKNOWN_WINDOW_STAGE")
+    return H2302_TUNED_BYTES if tag=="B_window" else H2302_BASE_BYTES
 if H2302_WINDOW_ABA and H2294_OFF_REPAIR:
     raise RuntimeError("H2302_WINDOW_AND_REPAIR_MUST_NOT_COEXIST")
 LEGS=(("A_base","B_window","A_prime_base") if H2302_WINDOW_ABA else
@@ -287,7 +297,7 @@ def win_trial(group,relay,arm,ready):
         for tag in LEGS:
             if H2302_WINDOW_ABA:
                 os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"]=str(
-                    8*1024*1024 if tag=="B_window" else 2*1024*1024)
+                    h2302_window_bytes(tag))
             # H2292's genuine source-frozen TX16/NPF64KiB candidate
             # is used for ALL legs. Only original FEC2 cold admission varies.
             tuned=True
@@ -440,7 +450,7 @@ def win_trial(group,relay,arm,ready):
                 "FEC_AB_THREE_SAME_WINDOWS_RUST_DLL_MUST_NEVER_SWITCH")
         if H2302_WINDOW_ABA:
             require([x["window_bytes_requested"] for x in results]==
-                    [2*1024*1024,8*1024*1024,2*1024*1024] and
+                    [H2302_BASE_BYTES,H2302_TUNED_BYTES,H2302_BASE_BYTES] and
                     all(not x["fec2_fixed_expected"] and
                         not x["fec2_genuine_rust_owner_applied_readback"] and
                         not x["original_outer_repair_expected_on"] and
@@ -588,7 +598,7 @@ def arm_trial(group):
     for i,tag in enumerate(LEGS):
         if H2302_WINDOW_ABA:
             os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"]=str(
-                8*1024*1024 if tag=="B_window" else 2*1024*1024)
+                h2302_window_bytes(tag))
         if i:
             arm_restart_original_tun_udp(tag,own)
         stage=stage_control(relay,"h2292_arm_stage_ready",tag)
