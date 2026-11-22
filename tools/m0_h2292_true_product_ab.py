@@ -100,6 +100,16 @@ def h2312_profile(text):
     return pairs if len(pairs)==len(fields) else None
 
 
+def h2313_queue_shape(log):
+    import re
+    m=re.search(r"PLAN029_H2313_NPF_BATCH_SHAPE ([^\r\n]+)",log)
+    if m is None:return None
+    fields=("queue_2_7","queue_8","queue_9_15","queue_16",
+            "direct_le256","direct_gt256")
+    vals={k:int(v) for k,v in re.findall(r"([a-z_0-9]+)=(\d+)",m.group(1)) if k in fields}
+    return vals if len(vals)==len(fields) else None
+
+
 def verify_binary_archive():
     require(os.name=="nt","ONLY_REAL_WINDOWS2025")
     require(os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1",
@@ -204,6 +214,13 @@ def win_trial(group,relay,arm,ready):
                 trace=None
             else:
                 trace=h2312_profile(log)
+                shape=h2313_queue_shape(log)
+                require(shape is not None and
+                        trace is not None and
+                        shape["queue_2_7"]+shape["queue_8"]+
+                        shape["queue_9_15"]+shape["queue_16"]==trace["queue_calls"] and
+                        shape["direct_le256"]+shape["direct_gt256"]==trace["direct_calls"],
+                        "H2313_ORIGINAL_NPF_REAL_BATCH_HISTOGRAM_INCONSISTENT")
                 expect_bytes=65536 if (factor=="tx_only" or tuned) else 16384
                 expect_frames=16 if (factor=="tx_only" or tuned) else 8
                 require(trace is not None and
@@ -235,6 +252,7 @@ def win_trial(group,relay,arm,ready):
                "valid_160_echo":True,
                "real_windows_npcap_64k_16_profile":has_profile,
                "h2312_factor":factor,"h2312_npf_service":trace,
+               "h2313_npf_batch_shape":(shape if factor!="legacy" else None),
                "original_go_tls_rust_wal_stop":"PASS",
                "stage_elapsed_s_including_tls_setup":round(time.monotonic()-started,3)}
             results.append(r)

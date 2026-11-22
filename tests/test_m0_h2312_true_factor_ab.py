@@ -37,6 +37,8 @@ class H2312SingleFactor(unittest.TestCase):
         self.assertIn("arm_rx_bytes",trial_source)
         self.assertIn("client_owned_stop",trial_source)
         self.assertIn("queue_bytes_copied",trial_source)
+        self.assertIn("H2313_ORIGINAL_NPF_REAL_BATCH_HISTOGRAM_INCONSISTENT",trial_source)
+        self.assertIn("PLAN029_H2313_NPF_BATCH_SHAPE",(ROOT/"crates/wbd-platform/src/windows_native_io.rs").read_text())
         self.assertIn('trace["queue_calls"]>0',trial_source)
         self.assertNotIn("MOCK_PRODUCT_PASS",trial_source)
 
@@ -56,6 +58,14 @@ class H2312SingleFactor(unittest.TestCase):
         result=trial.h2312_profile(line)
         self.assertEqual(len(result),11)
         self.assertEqual(result["npf_queue_packets"],11)
+        self.assertIsNone(trial.h2313_queue_shape("no native stop"))
+        shape_line=("PLAN029_H2313_NPF_BATCH_SHAPE queue_2_7=1 queue_8=3 "
+                    "queue_9_15=0 queue_16=2 direct_le256=7 direct_gt256=11 "
+                    "driver_copy_not_peer_receipt=1")
+        shape=trial.h2313_queue_shape(shape_line)
+        self.assertEqual(shape["queue_8"],3)
+        self.assertEqual(sum(shape[k] for k in ("queue_2_7","queue_8","queue_9_15","queue_16")),6)
+        self.assertEqual(shape["direct_gt256"],11)
 
 
 if __name__=="__main__":

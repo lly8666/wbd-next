@@ -182,6 +182,12 @@ struct NpfServiceTrace {
     queue_bytes_submitted: u64,
     queue_bytes_copied: u64,
     queue_short_calls: u64,
+    queue_calls_2_7: u64,
+    queue_calls_8: u64,
+    queue_calls_9_15: u64,
+    queue_calls_16: u64,
+    direct_frames_le256: u64,
+    direct_frames_gt256: u64,
     direct_calls: u64,
     direct_bytes_submitted: u64,
     direct_frames_accepted: u64,
@@ -317,6 +323,13 @@ impl NpcapTx {
                         #[cfg(feature="h2311_windows_npf_trace")]
                         {
                             self.trace.queue_calls += 1;
+                            match n {
+                                2..=7=>self.trace.queue_calls_2_7+=1,
+                                8=>self.trace.queue_calls_8+=1,
+                                9..=15=>self.trace.queue_calls_9_15+=1,
+                                16=>self.trace.queue_calls_16+=1,
+                                _=>unreachable!("NPF ready queue is at most 16 frames"),
+                            }
                             self.trace.queue_frames_submitted += n as u64;
                             self.trace.queue_bytes_submitted += bytes as u64;
                         }
@@ -374,6 +387,9 @@ impl NpcapTx {
             #[cfg(feature="h2311_windows_npf_trace")]
             {
                 self.trace.direct_calls += 1;
+                // Size is a diagnostic, NOT a decrypted kind/peer receipt.
+                if frame.len()<=256{self.trace.direct_frames_le256+=1}
+                else{self.trace.direct_frames_gt256+=1}
                 self.trace.direct_bytes_submitted += frame.len() as u64;
             }
             let rc = unsafe {
@@ -405,6 +421,13 @@ impl Drop for NpcapTx {
             self.trace.queue_short_calls, self.trace.direct_calls,
             self.trace.direct_bytes_submitted, self.trace.direct_frames_accepted,
             self.trace.direct_errors, NPF_QUEUE_BYTES, NPF_QUEUE_PACKETS
+        );
+        #[cfg(feature="h2311_windows_npf_trace")]
+        eprintln!(
+            "PLAN029_H2313_NPF_BATCH_SHAPE queue_2_7={} queue_8={} queue_9_15={} queue_16={} direct_le256={} direct_gt256={} driver_copy_not_peer_receipt=1",
+            self.trace.queue_calls_2_7,self.trace.queue_calls_8,
+            self.trace.queue_calls_9_15,self.trace.queue_calls_16,
+            self.trace.direct_frames_le256,self.trace.direct_frames_gt256
         );
         if let (Some(queue), Some(destroy)) = (self.queue.take(), self.fns.queue_destroy) {
             unsafe { destroy(queue.as_ptr()); }
@@ -741,14 +764,30 @@ mod tests {
         let three=[&IPV4[..];3];
         assert_eq!(tx.send_batch(&three).accepted_prefix,3);
         assert_eq!(tx.trace.queue_calls,1);
+        assert_eq!(tx.trace.queue_calls_2_7,1);
+        assert_eq!(tx.trace.queue_calls_8+tx.trace.queue_calls_9_15+tx.trace.queue_calls_16,0);
         assert_eq!(tx.trace.queue_frames_submitted,3);
         assert_eq!(tx.trace.queue_bytes_submitted,3*(16+IPV4.len()) as u64);
         assert_eq!(tx.trace.queue_bytes_copied,tx.trace.queue_bytes_submitted);
         assert_eq!(tx.trace.queue_short_calls,0);
         assert_eq!(tx.send_batch(&[&IPV4[..]]).accepted_prefix,1);
         assert_eq!(tx.trace.direct_calls,1);
+        assert_eq!(tx.trace.direct_frames_le256,1);
+        assert_eq!(tx.trace.direct_frames_gt256,0);
         assert_eq!(tx.trace.direct_frames_accepted,1);
         assert_eq!(tx.trace.direct_bytes_submitted,IPV4.len() as u64);
+        let sixteen=[&IPV4[..];16];
+        assert_eq!(tx.send_batch(&sixteen).accepted_prefix,16);
+        if NPF_QUEUE_PACKETS==16{
+            assert_eq!(tx.trace.queue_calls_16,1);
+            assert_eq!(tx.trace.queue_calls_8,0);
+        }else{
+            assert_eq!(tx.trace.queue_calls_8,2);
+            assert_eq!(tx.trace.queue_calls_16,0);
+        }
+        assert_eq!(tx.trace.queue_calls,
+            tx.trace.queue_calls_2_7+tx.trace.queue_calls_8+
+            tx.trace.queue_calls_9_15+tx.trace.queue_calls_16);
     }
     unsafe extern "C" fn queue_whole(
         _: *mut c_void, queue:*mut NpcapSendQueue, _:i32
