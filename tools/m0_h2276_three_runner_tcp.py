@@ -416,7 +416,9 @@ def control_service(own):
     # H2293 retains the original authenticated three-leg ready protocol
     # but uses *explicit* FEC semantics instead of TX feature switches.
     # The same-run client/server/relay must all select this exact order.
-    h2292_order=(("A_off","B_fixed","A_prime_off")
+    h2292_order=(("A_off","B_repair","A_prime_off")
+                 if os.environ.get("WBD_H2294_OFF_REPAIR_ABA")=="1" else
+                 ("A_off","B_fixed","A_prime_off")
                  if os.environ.get("WBD_H2293_FEC_ABA")=="1" else
                  ("A_default","B_tx16","A_prime"))
     h2292_next=-1
