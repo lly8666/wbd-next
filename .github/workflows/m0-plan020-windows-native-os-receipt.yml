@@ -416,25 +416,25 @@ jobs:
           @'
           import os,pathlib,json,re,hashlib
           gui=pathlib.Path("legacy/windows/gui/MainForm.cs").read_text(encoding="utf8")
-          assert "WBD_WINDOWS_OS_APPLIED" in gui
+          assert "WBD_WINDOWS_OS_APPLIED" in gui, "H2214_GUI_MAINFORM_OS_APPLIED_SENTINEL_MISSING"
           portable=pathlib.Path("legacy/windows/gui/Portable.cs").read_text(encoding="utf8")
-          assert 'Info("--native-v4-product --control-stdin --config "' in portable
-          assert 'if (nativeApplied && !nativeStopped)' in portable
-          assert 'e.Data == "WBD_WINDOWS_OS_APPLIED"' in portable
-          assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable
+          assert 'Info("--native-v4-product --control-stdin --config "' in portable, "H2214_GUI_PORTABLE_ORIGINAL_PRODUCT_CHILD_MISSING"
+          assert 'if (nativeApplied && !nativeStopped)' in portable, 'H2214_GUI_APPLIED_REQUIRES_OWNED_STOP_MISSING'
+          assert 'e.Data == "WBD_WINDOWS_OS_APPLIED"' in portable, 'H2214_GUI_APPLIED_EVENT_MISSING'
+          assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable, 'H2214_GUI_DISCONNECT_OWNER_STOP_EVENT_MISSING'
           tagged=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
-          assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged
+          assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged, 'H2214_ORIGINAL_GO_NATIVE_APPLIED_EVENT_MISSING'
           assert 'if e=windowsclient.N4NativeNetworkReady(ctx)' not in tagged
-          assert 'receipt,e:=product.Apply(ctx)' in tagged
-          assert 'if !receipt.AllNativeOSApplied' in tagged
-          assert 'observed,e:=product.LiveReceipt(ctx)' in tagged
-          assert 'stopErr:=cleanup()' in tagged
+          assert 'receipt,e:=product.Apply(ctx)' in tagged, 'H2214_ORIGINAL_NATIVE_WAL_APPLY_MISSING'
+          assert 'if !receipt.AllNativeOSApplied' in tagged, 'H2214_REQUIRE_REAL_OS_APPLIED_MISSING'
+          assert 'observed,e:=product.LiveReceipt(ctx)' in tagged, 'H2214_REQUIRE_ORIGINAL_OS_READBACK_MISSING'
+          assert 'stopErr:=cleanup()' in tagged, 'H2214_REQUIRE_ORIGINAL_WAL_STOP_MISSING'
           for name in ("wbd-client.exe","wbd_engine.dll","wintun.dll","WBD.exe"):
               p=pathlib.Path("result/portable")/name
               # Native Go/Rust drivers are large PE binaries; genuine
               # deterministic .NET WinForms EXEs can be under 100 KiB.
               minimum=4096 if name=="WBD.exe" else 100000
-              assert p.is_file() and p.stat().st_size>minimum,name
+              assert p.is_file() and p.stat().st_size>minimum,'H2214_PORTABLE_ORIGINAL_ASSET_MISSING_OR_TOO_SMALL_'+name
           manifest=dict(source_sha=os.environ["GITHUB_SHA"],original_go="a7a82db31fe736ffedee330795a3234d358f1984",
                         native_v4_client_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd-client.exe").read_bytes()).hexdigest(),
                         native_rust_m3_dll_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd_engine.dll").read_bytes()).hexdigest(),
