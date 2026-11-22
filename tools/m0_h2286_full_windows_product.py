@@ -320,7 +320,10 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
         require(weak_loss in (-1,1,5),"H2293_EXACT_IMPAIRMENT_TIER")
         shape=core.remote_shape(relay,weak_loss)
         before=core.os_host_cpu()
-        tcp.WINDOW_TEST_BYTES=2*1024*1024
+        chosen=(int(os.environ.get("WBD_H2302_INNER_TCP_TEST_BYTES","0"))
+                if os.environ.get("WBD_H2302_WINDOW_ABA")=="1" else 2*1024*1024)
+        require(chosen in (2*1024*1024,8*1024*1024),"H2302_INVALID_TEST_WINDOW")
+        tcp.WINDOW_TEST_BYTES=chosen
         tcp.BULK_MAX_BYTES=512*1024*1024
         tcp.BULK_SEND_S=25
         tcp.TIMEOUT_S=180

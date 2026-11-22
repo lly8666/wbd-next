@@ -37,7 +37,11 @@ if os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM") == "1":
     BULK_SEND_S = 25
     TIMEOUT_S = 180
     WINDOW_TEST_BYTES = 2 * 1024 * 1024
-
+    if os.environ.get("WBD_H2302_WINDOW_ABA") == "1":
+        chosen = int(os.environ.get("WBD_H2302_INNER_TCP_TEST_BYTES", "0"))
+        if chosen not in (2*1024*1024, 8*1024*1024):
+            raise RuntimeError("H2302_UNSUPPORTED_TEST_WINDOW")
+        WINDOW_TEST_BYTES = chosen
 
 
 def _read_socket_buffers(sock):

@@ -28,9 +28,14 @@ CANDIDATE_BUILD_SHA=os.environ.get("WBD_H2292_COMPILED_SOURCE_SHA",os.environ.ge
 FEC_LOSS=int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0"))
 FEC_PROFILE="light" if FEC_LOSS==1 else "mild"
 H2294_OFF_REPAIR=os.environ.get("WBD_H2294_OFF_REPAIR_ABA")=="1"
-LEGS=(("A_off","B_repair","A_prime_off") if H2294_OFF_REPAIR else
+H2302_WINDOW_ABA=os.environ.get("WBD_H2302_WINDOW_ABA")=="1"
+if H2302_WINDOW_ABA and H2294_OFF_REPAIR:
+    raise RuntimeError("H2302_WINDOW_AND_REPAIR_MUST_NOT_COEXIST")
+LEGS=(("A_base","B_window","A_prime_base") if H2302_WINDOW_ABA else
+      ("A_off","B_repair","A_prime_off") if H2294_OFF_REPAIR else
       ("A_off","B_fixed","A_prime_off"))
-ROOT=pathlib.Path("h2294-out" if H2294_OFF_REPAIR else "h2293-out")
+ROOT=pathlib.Path("h2302-out" if H2302_WINDOW_ABA else
+                  "h2294-out" if H2294_OFF_REPAIR else "h2293-out")
 H2286=pathlib.Path("h2286-out")
 BINARY=pathlib.Path("result/wl-public/wbd_engine.dll")
 ORIGINAL=ROOT/"original-verified-wbd_engine.dll"
@@ -276,9 +281,13 @@ def win_trial(group,relay,arm,ready):
     original_sha=os.environ.get("WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA")
     original_fec_stage=os.environ.get("WBD_H2293_FEC_STAGE")
     original_repair_stage=os.environ.get("WBD_H2294_REPAIR_STAGE")
+    original_window_bytes=os.environ.get("WBD_H2302_INNER_TCP_TEST_BYTES")
     kernel_liveness=[]
     try:
         for tag in LEGS:
+            if H2302_WINDOW_ABA:
+                os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"]=str(
+                    8*1024*1024 if tag=="B_window" else 2*1024*1024)
             # H2292's genuine source-frozen TX16/NPF64KiB candidate
             # is used for ALL legs. Only original FEC2 cold admission varies.
             tuned=True
@@ -357,6 +366,10 @@ def win_trial(group,relay,arm,ready):
                 require(all(bool(t.get("actual_rust_m2_effective",{}).get(
                     "opportunistic_v3_enabled"))==enabled for t in telemetry),
                     "H2294_ORIGINAL_NATIVE_REPAIR_POLICY_NOT_APPLIED")
+            if H2302_WINDOW_ABA:
+                require(bool(telemetry) and all(
+                    not v.get("actual_rust_m2_effective",{}).get("opportunistic_v3_enabled",True)
+                    for v in telemetry),"H2302_OUTER_REPAIR_MUST_REMAIN_OFF_ALL_STAGES")
             native_repair_copies=max((int(t.get("frozen_ciphertext_retransmits",0))
                                       for t in telemetry),default=0)
             require(receipt["status"]==
@@ -376,8 +389,20 @@ def win_trial(group,relay,arm,ready):
                       "original-win-cpu.jsonl","win-inner-udp.log",
                       "original-product-ready.flag.udp.json"):
                 maybe_copy(H2286/n,ROOT/tag/n)
+            win_buffers=receipt["product_tcp"]["client_bulk_buffers_os"]
+            if H2302_WINDOW_ABA:
+                expected=int(os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"])
+                require(len(win_buffers)==4 and all(
+                    v["requested_bytes"]==expected and
+                    v["sndbuf_os"]>=expected and v["rcvbuf_os"]>=expected
+                    for v in win_buffers),"H2302_WINDOWS_REAL_TCP_SOCKET_READBACK")
+                require(native_repair_copies==0,"H2302_REPAIR_OFF_MUST_HAVE_ZERO_COPIES")
             r={"stage":tag,"candidate_enabled":tuned,
-               "h2294_fec_off_only":H2294_OFF_REPAIR,
+               "h2302_window_test":H2302_WINDOW_ABA,
+               "window_bytes_requested":(int(os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"])
+                                         if H2302_WINDOW_ABA else None),
+               "windows_actual_socket_buffers":win_buffers if H2302_WINDOW_ABA else None,
+               "h2294_fec_off_only":H2294_OFF_REPAIR or H2302_WINDOW_ABA,
                "original_outer_repair_expected_on":(H2294_OFF_REPAIR and tag=="B_repair"),
                "actual_original_native_frozen_repair_packets":native_repair_copies,
                "fec2_fixed_expected":fec_fixed,
@@ -413,7 +438,15 @@ def win_trial(group,relay,arm,ready):
         require(all(x["compiled_rust_dll_sha256"]==new_sha and
                     x["real_windows_npcap_64k_16_profile"] for x in results),
                 "FEC_AB_THREE_SAME_WINDOWS_RUST_DLL_MUST_NEVER_SWITCH")
-        if H2294_OFF_REPAIR:
+        if H2302_WINDOW_ABA:
+            require([x["window_bytes_requested"] for x in results]==
+                    [2*1024*1024,8*1024*1024,2*1024*1024] and
+                    all(not x["fec2_fixed_expected"] and
+                        not x["fec2_genuine_rust_owner_applied_readback"] and
+                        not x["original_outer_repair_expected_on"] and
+                        x["actual_original_native_frozen_repair_packets"]==0
+                        for x in results),"H2302_WINDOW_ALONE_WITH_FEC_REPAIR_OFF")
+        elif H2294_OFF_REPAIR:
             require(all(not x["fec2_fixed_expected"] and
                         not x["fec2_genuine_rust_owner_applied_readback"]
                         for x in results),
@@ -428,12 +461,14 @@ def win_trial(group,relay,arm,ready):
         result={"group":group,"source_sha":os.environ["GITHUB_SHA"],
                 "candidate_binary_source_sha":CANDIDATE_BUILD_SHA,
                 "original_go_exe_source_sha":"c5066db61fc51bafd7c2ad2def3029e615efa777",
-                "status":("PASS_H2294_MEASURED_FEC_OFF_OUTER_REPAIR_ABA_SCOPED"
+                "status":("PASS_H2302_MEASURED_ORIGINAL_TCP_WINDOW_ABA_FEC_OFF_SCOPED"
+                          if H2302_WINDOW_ABA else
+                          "PASS_H2294_MEASURED_FEC_OFF_OUTER_REPAIR_ABA_SCOPED"
                           if H2294_OFF_REPAIR else
                           "PASS_H2293_MEASURED_ORIGINAL_WINDOWS_FEC2_FIXED_ABA_SAME_RUST_SCOPED"),
                 "real_bidir_kernel_loss_pct":FEC_LOSS,
                 "fec2_fixed_profile":("off" if H2294_OFF_REPAIR else FEC_PROFILE),
-                "fec_off_outer_repair_only":H2294_OFF_REPAIR,
+                "fec_off_outer_repair_only":H2294_OFF_REPAIR or H2302_WINDOW_ABA,
                 "outer_repair_true_native_copies_by_stage":{
                     x["stage"]:x["actual_original_native_frozen_repair_packets"]
                     for x in results},
@@ -455,13 +490,15 @@ def win_trial(group,relay,arm,ready):
         # Cross-runner ARM/relay consumers still receive their original
         # scoped true TCP/CPU/Stop receipt, plus all three actual stage facts.
         last=json.loads((H2286/"client-result.json").read_text())
-        result_key=("h2294_same_vm_original_product_fecoff_repair_abaprime"
+        result_key=("h2302_same_vm_tcp_window_abaprime" if H2302_WINDOW_ABA else
+                    "h2294_same_vm_original_product_fecoff_repair_abaprime"
                     if H2294_OFF_REPAIR else
                     "h2293_same_vm_original_product_fec2_abaprime")
         last[result_key]=result
         core.save(core.ROOT/"client-result.json",last)
         core.save(H2286/"client-result.json",last)
-        print(("H2294_FEC_OFF_REPAIR_THREE_REAL_LEGS_COMPLETE" if H2294_OFF_REPAIR
+        print(("H2302_TCP_WINDOW_THREE_REAL_LEGS_COMPLETE" if H2302_WINDOW_ABA else
+               "H2294_FEC_OFF_REPAIR_THREE_REAL_LEGS_COMPLETE" if H2294_OFF_REPAIR
                else "H2293_TWO_INDEPENDENT_TRIPLET_WINDOWS_FEC2_THREE_REAL_LEGS_COMPLETE"),flush=True)
     finally:
         primary_exc=sys.exc_info()[0]
@@ -497,6 +534,10 @@ def win_trial(group,relay,arm,ready):
             os.environ.pop("WBD_H2293_FEC_STAGE",None)
         else:
             os.environ["WBD_H2293_FEC_STAGE"]=original_fec_stage
+        if original_window_bytes is None:
+            os.environ.pop("WBD_H2302_INNER_TCP_TEST_BYTES",None)
+        else:
+            os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"]=original_window_bytes
         if original_repair_stage is None:
             os.environ.pop("WBD_H2294_REPAIR_STAGE",None)
         else:
@@ -545,6 +586,9 @@ def arm_trial(group):
     core.verify(own,relay,"relay")
     all_stages=[]
     for i,tag in enumerate(LEGS):
+        if H2302_WINDOW_ABA:
+            os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"]=str(
+                8*1024*1024 if tag=="B_window" else 2*1024*1024)
         if i:
             arm_restart_original_tun_udp(tag,own)
         stage=stage_control(relay,"h2292_arm_stage_ready",tag)
@@ -556,6 +600,22 @@ def arm_trial(group):
                 r["native_true_arm_tun_udp"]["real_native_os_udp_received"]>=12,
                 "REAL_ARM_RUST_TUN_TCP_UDP_RECEIPT_MISSING")
         r["stage"]=tag
+        if H2302_WINDOW_ABA:
+            expected=int(os.environ["WBD_H2302_INNER_TCP_TEST_BYTES"])
+            marker="M029_H2271_NATIVE_TCP_SERVER_DONE "
+            server_rows=[json.loads(s.split(marker,1)[1])
+                for s in (arm.ROOT/"tcp-inner-server.log").read_text(errors="replace").splitlines()
+                if marker in s]
+            require(len(server_rows)==1,"H2302_ARM_TCP_READBACK_MISSING")
+            bufs=server_rows[0]
+            require(bufs["listener_buffers_os"]["requested_bytes"]==expected and
+                    bufs["listener_buffers_os"]["rcvbuf_os"]>=expected and
+                    len(bufs["accepted_bulk_buffers_os"])==4 and
+                    all(v["requested_bytes"]==expected and v["rcvbuf_os"]>=expected
+                        for v in bufs["accepted_bulk_buffers_os"]),
+                    "H2302_REAL_ARM_ACCEPTED_TCP_RCVBUF_NOT_APPLIED")
+            r["h2302_window_bytes_requested"]=expected
+            r["h2302_real_arm_tcp_socket_readback"]=bufs
         all_stages.append(r)
         core.save(arm.ROOT/("server-"+tag+".json"),r)
         for n in ("tcp-inner-server.log","tcp-tun-headers.log",
@@ -567,12 +627,16 @@ def arm_trial(group):
                  h2293_arm_server_three_original_tcp_stages=all_stages,
                  h2293_same_arm_original_go_tls_rust_server=True,
                  h2293_actual_bidir_loss_pct=FEC_LOSS)
+    if H2302_WINDOW_ABA:
+        summary.update(h2302_arm_server_three_original_tcp_stages=all_stages,
+                       h2302_same_arm_original_go_tls_rust_server=True)
     if H2294_OFF_REPAIR:
         summary.update(h2294_arm_server_three_original_tcp_stages=all_stages,
                        h2294_same_arm_original_go_tls_rust_server=True,
                        h2294_actual_bidir_loss_pct=FEC_LOSS)
     core.save(arm.ROOT/"server-result.json",summary)
-    print(("H2294_REAL_ARM_TUN_THREE_FEC_OFF_TCP_STAGES_DONE" if H2294_OFF_REPAIR
+    print(("H2302_REAL_ARM_TUN_THREE_FEC_OFF_TCP_STAGES_DONE" if H2302_WINDOW_ABA else
+           "H2294_REAL_ARM_TUN_THREE_FEC_OFF_TCP_STAGES_DONE" if H2294_OFF_REPAIR
            else "H2293_REAL_ARM_TUN_THREE_FEC2_LOSS_TCP_STAGES_DONE"),flush=True)
 
 
