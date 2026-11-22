@@ -25,3 +25,7 @@ Rust host纯单元测试在相同原生产规范化函数上检查乱序2/4lane�
 ## B39b 外部依赖图历史断言修订
 
 B39a源码的独立 maintenance regression 在826个原静态测试完成后又停在 `tools/r0_qualification_audit.py`，因为锁定R0图仍只允许 `wbd-engine` 的 `rtrb`，而现有产品早已由原B5 `regex = "=1.12.2"` 构建原 Rust CN8503 域名规则。本批只修该审计的`wbd-engine`依赖集合、对应`Cargo.lock`集合与`regex`的**精确版本限定**；没有删掉Regex、放行其他第三方依赖，也没有改任何协议数据或加热点安全检查。当前Game M4仍缺。最终以B39b SOURCE维护及原生构建结果为准。
+
+## B39d 最终R0脚本失败的确切原因
+
+B39c `e4e738ca` 的精确regex例外仍错误地使用 `v=={"version":"=1.12.2"}`：Python `tomllib` 对仓库现有 `regex = "=1.12.2"` 返回的是**字符串** `"=1.12.2"`，而非inline-table字典。因此R0静态依赖审核继续FAIL。B39d只将这一条断言修成 `v=="=1.12.2"`，保持外部依赖/反向图拒绝规则；同提交改动功能卡和devlog供Feature catalog按原规则核对。B39a跨ABI软件资格另按其真实Actions记载。无新Android Game M4或实机资格。

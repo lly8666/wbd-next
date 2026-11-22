@@ -144,7 +144,7 @@ def audit():
                       crate=="wbd-engine" and k=="rtrb")
                      and v=={"workspace":True}) or
                     (crate=="wbd-engine" and k=="regex" and
-                     v=={"version":"=1.12.2"}) or
+                     v=="=1.12.2") or
                     (crate=="wbd-codec" and k=="wbd-isal-safe" and
                      v=={"path":"../../native/isal-safe","optional":True,"default-features":False}),
                     f"unapproved external dependency {crate}->{k}")
