@@ -13,3 +13,7 @@ B34b (`d70132608bf5`) 同SOURCE [Android dual64 #44978243692](https://github.com
 ## 软件验收与未证明
 
 同源Go Host真UDP/TCP53自定义上游/旧默认/无效地址、Java原App argv（选中域名vs IP、隧道DNS不变）、原生产源检查、Android Go/Rust双ABI签名APK及原Linux Server Oracle，以新SOURCE Action为准。本devlog提交时不能预称这些测试PASS。Android实体Network真实查询、系统Resolver、App TCP53物理路径、IPv6/CLAT、Game2/4、热点、切网和吞吐仍为NOT_RUN或MISSING。没有操作个人设备或外网服务器；不动main。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B35把B34已有选中物理DNS IPv4连接到原Go服务器peer-host冷UDP/TCP53域名引导，复用Bionic Network绑定与原DNS解析器，保持M4/默认路由/Stop及实机未验边界。"}
+```
