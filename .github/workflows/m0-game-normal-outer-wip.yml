@@ -7,6 +7,8 @@ on:
       - crates/wbd-engine/src/v4_windows_game_outer.rs
       - crates/wbd-engine/src/v4_game_cosmetic_outer.rs
       - crates/wbd-engine/src/v4_game_public_kernel.rs
+      - crates/wbd-engine/src/v4_windows_game_native_runtime.rs
+      - crates/wbd-engine/src/v4_presentation_ack.rs
       - crates/wbd-platform/src/linux_raw_carrier.rs
       - .github/workflows/m0-game-normal-outer-wip.yml
 permissions: {contents: read}
@@ -26,6 +28,7 @@ jobs:
           set -euo pipefail
           rustup toolchain install 1.85.1 --profile minimal
           cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_game_cosmetic_outer::tests -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_presentation_ack::tests -- --nocapture
           cargo +1.85.1 test --locked -p wbd-platform --lib linux_raw_carrier::tests -- --nocapture
   windows-unit:
     runs-on: windows-2025
@@ -38,4 +41,6 @@ jobs:
         run: |
           rustup toolchain install 1.85.1 --profile minimal
           cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_windows_game_outer::tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_presentation_ack::tests -- --nocapture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
