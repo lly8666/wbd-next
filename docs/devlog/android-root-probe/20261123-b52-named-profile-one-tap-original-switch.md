@@ -13,3 +13,11 @@ B51a `09aa7049ebbb5f157ef3158687b5c943d69150fe` [Android Dual64 #45172614955](ht
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B52四命名Root配置实际显示名称/mode、单击连接或跨配置冷切换；原B48 owned Stop与B49真实Network核验后唯一复用原START，纯JVM/签名APK源门，不加网络热路径。"}
 ```
+
+## B52a｜保留首轮治理 FAIL，独立Host编译依赖最小修复
+
+B52初始 SOURCE `856bdaad6c0b039fb0ff882417f4de691eef62b3` [产品Action #45182476002](https://github.com/lly8666/wbd-next/actions/runs/45182476002) 因后继提交 **CANCELLED**；正式B52a产品 SOURCE `aeebc9103919906a33ed9768f0dc56dd55020345` [#45182581375](https://github.com/lly8666/wbd-next/actions/runs/45182581375) 单独判定。B52a仅令既有纯Java冷切网状态类的四槽范围采用独立常量，避免原B49纯JVM `javac RootColdNetworkSwitch.java + Test.java` 引入完整B50 App设置依赖；真实业务代码和槽数不变。[B52a治理 #45182581460](https://github.com/lly8666/wbd-next/actions/runs/45182581460) **FAIL**：此次代码调整未同步 devlog 的 feature-impact，已按原样保留。这条补记录是文档修正，不回改历史或产品SOURCE。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B52a独立Java冷切网测试仍需无需App完整依赖地编译；四槽常量直接声明，源锁继续复用B49旧检测，不改变原Go/Rust或用户切换行为。"}
+```
