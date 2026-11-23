@@ -124,6 +124,22 @@ final class RootEncryptedCredentialStore {
         throws Exception{
         return loadFile(profileFile(ctx,slot));
     }
+    // Activating one saved server makes the legacy "last connection" UI
+    // credentials agree with that server across Activity recreation.
+    // An empty slot clears ONLY the default remembered record, never the
+    // independent credentials belonging to the other three profiles.
+    static synchronized RootSavedCredentialRecord.Secrets activateProfile(
+        Context ctx,int slot)throws Exception{
+        RootSavedCredentialRecord.Secrets selected;
+        try{selected=loadFile(profileFile(ctx,slot));}
+        catch(Exception unavailable){
+            deleteFile(file(ctx));
+            return null;
+        }
+        if(selected==null)deleteFile(file(ctx));
+        else saveFile(file(ctx),selected.password,selected.routeKey);
+        return selected;
+    }
     private static void deleteFile(File target)throws Exception{
         noSymlinks(target);
         new AtomicFile(target).delete();

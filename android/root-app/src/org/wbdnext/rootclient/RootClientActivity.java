@@ -572,16 +572,16 @@ public final class RootClientActivity extends Activity {
                 profileResult.setText("该槽位尚未保存连接配置");
                 return;
             }
-            // UI-only. Previous Root generation, kernel routes and selected
-            // physical Network are never changed by a preset load.
+            // Activate the SAME slot's existing Keystore record BEFORE
+            // changing the last-connection cache. On the next Activity open,
+            // the last saved server and automatically filled login now match.
+            RootSavedCredentialRecord.Secrets saved=
+                RootEncryptedCredentialStore.activateProfile(this,slot);
+            RootConnectionSettingsStore.save(this,profile.settings);
+            // UI-only: the running Root generation, UID route and physical
+            // Network never change without a separate explicit START.
             restoreConnectionSettings(profile.settings);
             chooseInstalledApplications(); // current Android package/UID only
-            RootConnectionSettingsStore.save(this,profile.settings);
-            // Do not inherit the previous server's global/other-slot login.
-            // Missing/unreadable per-profile keys simply require manual entry.
-            RootSavedCredentialRecord.Secrets saved=null;
-            try{saved=RootEncryptedCredentialStore.loadProfile(this,slot);}
-            catch(Exception unavailable){/* Manual credential entry remains available. */}
             password.setText(saved==null?"":saved.password);
             routeKey.setText(saved==null?"":saved.routeKey);
             profileLabel.setText(profile.label);

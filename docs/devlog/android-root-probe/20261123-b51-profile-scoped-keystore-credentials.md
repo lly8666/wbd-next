@@ -9,3 +9,11 @@ B51直接复用已有 `RootEncryptedCredentialStore` 现成AndroidKeyStore AES-G
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B51四个Root连接配置槽各自保存/载入/清除密码与RouteKey，直接复用原AndroidKeyStore AES-GCM和RootSavedCredentialRecord，避免切换服务器误用上一槽凭据；Go/Rust/Stop不改。"}
 ```
+
+## B51a｜真实连接体验：冷载入配置后重开App仍是对应服务器密码
+
+复核发现B51只更改当前UI两项凭据，原Activity `onCreate` 仍按B22上次服务器配置 + A38单份全局加密记录自动填入。载入一个不带密码的槽位后若直接关/重开App，原上个服务器的全局密文可能被填到新服务器表单，造成真实连接失败。B51a在用户载入槽位时先调用 `RootEncryptedCredentialStore.activateProfile`，利用**既有同一AES-GCM文件保存函数**将选中槽凭据同步为当前默认UI记忆；选中槽无凭据则只删旧默认密文而不碰其他槽或Keystore密钥。之后才保存当前 `RootConnectionSettings`，切换/重开表单一致；仍不自动请求Root、TLS/路由也无变化。更新同一源锁门，Android签名APK与Host结果按B51a新SOURCE实际Action。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B51a多服务器配置载入后同步已有默认UI Keystore记忆，避免重开Activity时错误回填另一个服务器密码；不改原生协议与热数据面。"}
+```

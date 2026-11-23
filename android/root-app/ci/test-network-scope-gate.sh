@@ -174,7 +174,10 @@ for token in ('saveProfile(Context ctx,int slot','loadProfile(Context ctx,int sl
               'RootSavedCredentialRecord.decrypt(key(false),ciphertext)'):
  assert token in encrypted
 assert 'RootEncryptedCredentialStore.saveProfile(this,slot,' in app
-assert 'RootEncryptedCredentialStore.loadProfile(this,slot)' in app
+assert 'RootEncryptedCredentialStore.activateProfile(this,slot)' in app
+assert 'RootSavedCredentialRecord.Secrets activateProfile(' in encrypted
+assert 'else saveFile(file(ctx),selected.password,selected.routeKey);' in encrypted
+assert 'if(selected==null)deleteFile(file(ctx));' in encrypted
 assert 'RootEncryptedCredentialStore.clearProfile(this,slot)' in app
 assert 'password.setText(saved==null?"":saved.password)' in app
 assert 'routeKey.setText(saved==null?"":saved.routeKey)' in app
