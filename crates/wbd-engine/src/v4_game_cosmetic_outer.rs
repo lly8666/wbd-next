@@ -291,7 +291,7 @@ mod tests{
         // A new advancing cumulative ACK allows a different frozen candidate,
         // unlike the former single-shadow/per-lane 1s stall implementation.
         let (pn2,seq2)=heads[1];
-        for t in [350_000_000,360_000_000,370_000_000]{
+        for t in [350_000_000,360_000_000,370_000_000,380_000_000]{
             let _=c.on_feedback(0,seq2 as u32,t);
         }
         let second=c.take_due(410_000_000,&[true,true]).unwrap();
