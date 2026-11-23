@@ -75,6 +75,9 @@ jobs:
               if result['status']!='PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR':
                   raise RuntimeError(f'Genuine native failed {index} {mode}: {result["blockers"]}')
               telem=leg['telemetry'];outer=telem['game_outer_policy'];fecproof=telem['game_fec_native_proof']
+              if not isinstance(fecproof,dict):
+                  assert mode=='game4' and fecproof=='NOT_APPLICABLE_OR_NOT_OBSERVED',fecproof
+                  fecproof={}
               schedule=telem.get('game4_copy_schedule_readback')
               sides={}
               for role in ('client','server'):
