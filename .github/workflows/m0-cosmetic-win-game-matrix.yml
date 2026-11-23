@@ -136,8 +136,19 @@ jobs:
           assert "V4_PUBLIC_GAME_OUTER role=server " in s
           win_fec=re.findall(r"WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance=(\d+)",c)
           win_off=re.findall(r"WBD_GAME_NORMAL_SHARED_OUTER_STOP lane=\d+ fec_sparse=\w+ candidates=\d+ repair_accepted=(\d+)",c)
-          server_fec=re.findall(r"WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance=(\d+)",s)
-          server_off=re.findall(r"WBD_GAME_NORMAL_SHARED_OUTER_STOP lane=\d+ fec_sparse=\w+ candidates=\d+ repair_accepted=(\d+)",s)
+          # Linux uses its OWN Go/Rust Game STOP format, NOT the Windows
+          # shadow receipt strings. Require both original owner readbacks.
+          server_go=re.findall(r"V4_PUBLIC_GAME_OUTER role=server lanes=(\d+) repair_enabled=1 outer_data_retransmitted=(\d+) blocked_duplicate=\d+ first_lane_copied=(\d+) parity_separate=1",s)
+          server_rust=re.findall(r"WBD_GAME_(?:OFF|FEC)_LINUX_NORMAL_OUTER_STOP copied_appearance=(\d+) first_record_wire_bytes=(\d+) copy_record_wire_bytes=(\d+) original_pn_seq_only=1",s)
+          assert len(server_go)==1 and len(server_rust)==1, "real Linux Game outer Go + Rust Stop receipts required"
+          lanes,repeat,first_lane=map(int,server_go[0])
+          copied,f,rbytes=map(int,server_rust[0])
+          assert lanes==(4 if mode.startswith("game4") else 2) and repeat==copied and f>0 and rbytes>=0
+          assert rbytes/f<=.100000001, "Linux Game original R/F over 10pct"
+          linux_outer={"kind":"linux_original_go_rust_outer_copied",
+            "count":copied,"original_first_record_wire_bytes":f,
+            "original_repeat_record_wire_bytes":rbytes,
+            "original_R_over_F":rbytes/f,"original_first_lane_copied":first_lane}
           def actual_or_unobserved(a,b):
               if a:return {"kind":"game_fec_original_ciphertext_copied","count":max(map(int,a))}
               if b:return {"kind":"game_normal_shared_outer_accepted","count":sum(map(int,b))}
@@ -150,9 +161,9 @@ jobs:
             "source_locked_both_real_os_and_owned_stop":True,
             "outer_enabled_both_real_owners":True,
             "windows_outer":actual_or_unobserved(win_fec,win_off),
-            "linux_outer":actual_or_unobserved(server_fec,server_off),
+            "linux_outer":linux_outer,
             "game_fec_parity":"SEPARATE_FROM_OUTER_R_NOT_COUNTED_AS_REPAIR",
-            "wire_R_over_F":"NOT_MEASURED_GAME_MULTI_LANE_ORIGINAL_WIRE_DENOMINATOR",
+            "windows_wire_R_over_F":"NOT_MEASURED_WINDOWS_GAME_MULTI_LANE_FIRST_BYTE_DENOMINATOR",
             "product_game_outer_bilateral_grade":"SCOPED_TWO_OS_ON_ONLY; EXPECT_REAL_COPIES_AND_TWO_OWNED_LEDGERS"
           }
           (root/"m0-game-outer-evidence.json").write_text(json.dumps(grade,indent=2)+"\n")

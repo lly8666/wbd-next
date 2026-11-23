@@ -81,7 +81,9 @@ def genuine_case(scene,leg,dir_path,hashes,source,mode):
     if leg.get("result")!="PASS_SCOPED_OBSERVATION":reason.append("ORIGINAL_PRODUCT_NOT_FULL_PASS")
     if not leg.get("cleanup",{}).get("owned_namespaces_absent"):reason.append("OWNED_NETNS_NOT_CLEAN")
     if not leg.get("telemetry",{}).get("stop_drained_both"):reason.append("NATIVE_BOTH_STOP_NOT_PASS")
-    if not leg.get("telemetry",{}).get("recovery_policy_verified"):reason.append("OUTER_ON_NOT_AUTHENTIC")
+    telemetry=leg.get("telemetry",{})
+    key="recovery_policy_verified" if mode=="normal" else "outer_repair_native_verified"
+    if telemetry.get(key) is not True:reason.append("OUTER_ON_NOT_AUTHENTIC")
     for role,dirn in (("client","c2s"),("server","s2c")):
         if mode=="normal":
             v=leg.get("v3_repair_accounting",{}).get(dirn,{})
@@ -162,7 +164,7 @@ def main():
     files=("wbd-v4-client","wbd-v4-server","libwbd_engine.so")
     assert all((bundle/n).is_file() for n in (*files,"manifest.json","SHA256SUMS"))
     m=json.loads((bundle/"manifest.json").read_text())
-    assert m["source"]==source and m["architecture"]=="x86_64"
+    assert m["source_sha"]==source and m["architecture"]=="x86_64"
     hashes={n:sha(bundle/n) for n in files}
     local=base/"bundle-A"/"fixed-build";local.mkdir(parents=True,exist_ok=True)
     for name in files:(local/name).symlink_to(bundle/name)
