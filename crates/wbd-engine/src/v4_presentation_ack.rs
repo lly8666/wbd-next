@@ -14,6 +14,11 @@ impl NativePresentationAck{
         Self{next:u64::from(initial),future:Vec::with_capacity(256)}
     }
     pub(crate) fn ack(&self)->u32{self.next as u32}
+    // Only a successfully authenticated and copied future original M3
+    // record; caller tests before verified() updates the cumulative head.
+    pub(crate) fn authenticated_future(&self,seq:u32)->bool{
+        (seq.wrapping_sub(self.next as u32) as i32)>0
+    }
     // Exactly one original cold-authenticated seq32 anchor per lane.
     // Called only after a real Game AEAD+unique-PN opener and successful
     // TUN commit. Future spans are cosmetic; never gate TUN delivery.
@@ -60,9 +65,30 @@ pub(crate) fn presentation_ack_only_due(now_ns:u64,last_ns:u64,
     current!=last_sent&&(last_ns==0||
         now_ns.saturating_sub(last_ns)>=ACK_ONLY_MIN_INTERVAL_NS)
 }
+/// Game2/4 may issue a duplicate ACK only on a NEW authenticated
+/// later DATA interval. Never periodic on idle or before 10ms coalescing.
+pub(crate) fn presentation_game_ack_due(now_ns:u64,last_ns:u64,
+    current:u32,last_sent:u32,auth_future:bool)->bool{
+    (current!=last_sent||auth_future)&&
+        (last_ns==0||now_ns.saturating_sub(last_ns)>=ACK_ONLY_MIN_INTERVAL_NS)
+}
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn r1_game_duplicate_ack_only_on_authenticated_future_and_10ms(){
+        let mut ledger=NativePresentationAck::new(100);
+        assert!(!ledger.authenticated_future(100));
+        assert!(ledger.authenticated_future(150));
+        assert!(!presentation_game_ack_due(1,0,100,100,false));
+        assert!(presentation_game_ack_due(1,0,100,100,true));
+        assert!(!presentation_game_ack_due(9_000_000,1,100,100,true));
+        assert!(presentation_game_ack_due(10_000_001,1,100,100,true));
+        assert!(!presentation_game_ack_due(10_000_001,1,100,100,false));
+        assert_eq!(ledger.verified(150,10),100);
+        assert_eq!(ledger.verified(100,50),160);
+        assert!(!ledger.authenticated_future(160));
+    }
     #[test]
     fn h2229_10ms_ack_only_and_duplicate_suppression(){
         assert!(!presentation_ack_only_due(10,0,10,10));
