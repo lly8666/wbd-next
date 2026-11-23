@@ -25,6 +25,8 @@
 
 - 2026-11-23 branch feature-card 合规校正：原实验分支历史验证文本偏长，新增说明后超过治理单卡16KiB限制。仅压缩摘要、保留原验证明细字段，功能行为/产品代码和结论均未变。
 
+- 2026-11-23 复核原生功能测试的来源范围：`wbd-engine` 的 native-functional engine 选择 `r1_` 前缀；新 ACK 决策测试由 `r2_m0_...` 仅更名为 `r1_m0_...`，不变更测试输入或生产行为，确保 CI 真正执行而不是误用 filtered-out 测试做证据。
+
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Cosmetic-only ACK shadow indexes sampled copied first sends, omits OFF/unsampled tree work and temp vectors; genuine authenticated later Linux DATA gives bounded duplicate ACK even without SACK, never a business delivery receipt; no policy/default changed; native CPU/performance still unqualified."}
 ```
