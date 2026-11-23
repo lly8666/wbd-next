@@ -21,3 +21,9 @@ B45b `9f7685bd25a7cbc6fdd67e81555b6dd600bb4188` [Dual64 #45138246728](https://gi
 ## B46a｜同源首轮Go编译与Rust目标环境修复
 
 B46原产品SOURCE `c3fe6df56f0cc87070c6e9bea182af5d69efd2be` [Dual64 #45143767720](https://github.com/lly8666/wbd-next/actions/runs/45143767720) **completed/FAIL**，精确6个DNS/CN/M3 Host Job SUCCESS，arm64-native FAIL；签名App/Linux Oracle跳过。Rust AArch64与x86_64原生代码都已经release编译完成，Go失败 `V4ClientSession.verifiedGameFec undefined`：字段只在原 `V4ServerSession`，原客户端 `EstablishClientV4`早已在受保护reply之后精确校验 `extension.GameFec!=opt.GameFec`。B46a删除不必要的二次字段访问，不新增Go假确认，并把源码门改为校验原 TLS 真正已有的受保护回复核验。第二问题是Rust `target_env="android"`非有效target_env；原Android NDK目标由 `target_os="android"` 标识，本次把原Linux FEC计数 ABI 的编译门改为原Linux三元组或Android AArch64/x86_64，避免Android端缺 `wbd_fec_network_game_group_counters` 实际导出。保留旧失败，B46a必须本SOURCE新CI成功才记签名App/BULD，实体FEC仍NOT_RUN。
+
+## B46a同源软件资格收口（实机未验证）
+
+最终产品SOURCE `3952345601d3bd77e9f8c6f5bc4c0938a6b9b438`：[Android Dual64 #45144428626](https://github.com/lly8666/wbd-next/actions/runs/45144428626) **completed/success，11 SUCCESS / 4 SKIPPED**：Android Go/Rust ARM64+x86_64双ABI、签名ARM64 Root APK与原App三DNS/Game2/4 fixed0..6 argv/预设/状态纯JVM门、Linux原Normal/off Server Oracle、Linux x86 D2-S0、六个DNS/CN/M3 Host Job均SUCCESS；ARM64 Cuttlefish host-admission仅为宿主准入，**不是**Android guest运行；四个x86 KSU/NativeBridge/D2-S1/TAP guest SKIPPED。 [Feature catalog #45144428602](https://github.com/lly8666/wbd-next/actions/runs/45144428602) SUCCESS、Governance SKIPPED。之前首轮B46 `c3fe6df56f0c` 构建失败保留在历史。
+
+结论严格限定 **BUILD_PASS/HOST_PASS**；未执行实体Android或个人Linux Server部署，Game2/4 fixed 原真实双向TCP/UDP、实际FEC恢复到App、DNS、UID路由、owned Stop、CPU/吞吐皆 **NOT_RUN/NOT_PROVEN**。原 Go 客户端 `EstablishClientV4` 已直接校验受保护回包 `extension.GameFec==opt.GameFec`，不是不存在的 `V4ClientSession.verifiedGameFec` 二次检查。后续首先以真机普通业务验证为准，不转向极端工况/新安全加固；本轮不运行设备。
