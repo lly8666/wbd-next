@@ -33,7 +33,8 @@ import (
 // This is a real Android Go→Bionic Rust product boundary, not a second
 // Linux Game kernel driver. Only Game2/off can be admitted at B41;
 // Game4 and fixed Game FEC are deliberately unconnected.
-type V4AndroidGame2Config struct{
+type V4AndroidGameConfig struct{
+    Lanes uint8
     NetworkInterface string
     NetworkIfIndex uint32
     AndroidPhysicalNetworkHandle uint64
@@ -48,9 +49,9 @@ type V4AndroidGame2Config struct{
     PhysicalDNSUpstream netip.Addr
     CN8503Raw []byte
 }
-type V4AndroidGame2Product struct{
+type V4AndroidGameProduct struct{
     mu sync.Mutex
-    cfg V4AndroidGame2Config
+    cfg V4AndroidGameConfig
     native uint64
     owners []*v4EmbeddedNativeBridge
     verified *V4LinuxGameVerifiedGroup
@@ -59,8 +60,9 @@ type V4AndroidGame2Product struct{
     stopped bool
     connected bool
 }
-func NewV4AndroidGame2Product(cfg V4AndroidGame2Config)(*V4AndroidGame2Product,error){
-    if cfg.Tun==nil||cfg.ConfigureLeaseIPv4==nil||
+func NewV4AndroidGameProduct(cfg V4AndroidGameConfig)(*V4AndroidGameProduct,error){
+    if (cfg.Lanes!=2&&cfg.Lanes!=4)||
+        cfg.Tun==nil||cfg.ConfigureLeaseIPv4==nil||
         cfg.NetworkInterface==""||len(cfg.NetworkInterface)>15||
         cfg.NetworkIfIndex==0||cfg.AndroidPhysicalNetworkHandle==0||
         cfg.AndroidPhysicalMTU<576||cfg.AndroidPhysicalMTU>65535||
@@ -77,20 +79,20 @@ func NewV4AndroidGame2Product(cfg V4AndroidGame2Config)(*V4AndroidGame2Product,e
         return nil,ErrAdmissionUnsupported
     }
     if _,err=cfg.Tun.Stat();err!=nil{return nil,errors.Join(ErrAdmissionParams,err)}
-    return &V4AndroidGame2Product{cfg:cfg},nil
+    return &V4AndroidGameProduct{cfg:cfg},nil
 }
-// ConnectAuthenticatedGame2 consumes genuine original-Go SYN/TLS session
+// ConnectAuthenticatedGame consumes genuine original-Go SYN/TLS session
 // state, never caller-supplied cold-bundle bytes or mutable private crypto.
 // The provided associations must already be real established FakeTCP peers.
-func (p *V4AndroidGame2Product) ConnectAuthenticatedGame2(
+func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
     ctx context.Context,assocs []*faketcp.ClientAssociation,base ClientAdmissionConfig,
 )(lease string,err error){
     if p==nil{return "",ErrAdmissionParams}
     p.mu.Lock();defer p.mu.Unlock()
     if p.connected||p.stopped||p.native!=0||len(p.owners)!=0||
-       len(assocs)!=2||!base.AutoLease||
-       base.DesiredLanes!=2||base.Policy.Transport!=TransportGame||
-       base.Policy.DesiredLanes!=2||base.Policy.SupportedNow()!=nil{
+       len(assocs)!=int(p.cfg.Lanes)||!base.AutoLease||
+       base.DesiredLanes!=p.cfg.Lanes||base.Policy.Transport!=TransportGame||
+       base.Policy.DesiredLanes!=p.cfg.Lanes||base.Policy.SupportedNow()!=nil{
         return "",ErrAdmissionUnsupported
     }
     defer func(){
@@ -150,8 +152,8 @@ func (p *V4AndroidGame2Product) ConnectAuthenticatedGame2(
     if e!=nil{return "",e}
     p.verified=verified
     e=verified.withPrivateOriginalTLS(func(cold []V4ColdSessionSnapshot)error{
-        if len(cold)!=2{return ErrAdmissionUnsupported}
-        ids:=[2]C.uint64_t{}
+        if len(cold)!=int(p.cfg.Lanes){return ErrAdmissionUnsupported}
+        ids:=make([]C.uint64_t,len(cold))
         for i,owner:=range p.owners{
             if owner==nil||owner.handle==0||!owner.committed||
                 owner.stopped||owner.protectedLane!=uint8(i+1)||
@@ -181,7 +183,7 @@ func (p *V4AndroidGame2Product) ConnectAuthenticatedGame2(
     p.connected=true
     return lease,nil
 }
-func (p *V4AndroidGame2Product) bindAndStartOriginalM4()error{
+func (p *V4AndroidGameProduct) bindAndStartOriginalM4()error{
     if p.native==0||p.verified==nil{return ErrAdmissionUnsupported}
     if rc:=C.wbd_m0_embedded_go_android_game_group_raw_bind(
         C.uint64_t(p.native));rc!=0{
@@ -190,7 +192,7 @@ func (p *V4AndroidGame2Product) bindAndStartOriginalM4()error{
     var bound C.uint32_t
     rc:=C.wbd_m0_embedded_go_android_game_group_raw_state(
         C.uint64_t(p.native),&bound)
-    if rc!=0||bound!=2{
+    if rc!=0||bound!=C.uint32_t(p.cfg.Lanes){
         return fmt.Errorf("%w: real Game2 two RAW lane readback=%d/%d",
             errV4Embedded,int(rc),uint32(bound))
     }
@@ -219,12 +221,12 @@ func (p *V4AndroidGame2Product) bindAndStartOriginalM4()error{
     }
     lanes,ready,e:=p.OriginalNativeState()
     if e!=nil{return e}
-    if lanes!=2||!ready{return ErrAdmissionUnsupported}
+    if lanes!=uint32(p.cfg.Lanes)||!ready{return ErrAdmissionUnsupported}
     return nil
 }
 // Readback reflects the ACTUAL Rust group worker state; TLS cold READY
 // is never promoted into M4 success by this Go wrapper.
-func (p *V4AndroidGame2Product) OriginalNativeState()(lanes uint32,ready bool,err error){
+func (p *V4AndroidGameProduct) OriginalNativeState()(lanes uint32,ready bool,err error){
     if p==nil||p.native==0||p.stopped{return 0,false,ErrAdmissionUnsupported}
     var count,installed C.uint32_t
     rc:=C.wbd_m0_embedded_go_game_group_state(
@@ -234,23 +236,23 @@ func (p *V4AndroidGame2Product) OriginalNativeState()(lanes uint32,ready bool,er
     }
     return uint32(count),installed==1,nil
 }
-type V4AndroidGame2Counters struct{
+type V4AndroidGameCounters struct{
     RawCopied,RawReceived,TunDelivered,Rejected uint64
     TunnelDnsQueries,TunnelDnsReplies uint64
     PhysicalDnsQueries,PhysicalDnsReplies,PhysicalDnsErrors uint64
 }
-func (p *V4AndroidGame2Product) OriginalM4Counters()(V4AndroidGame2Counters,error){
+func (p *V4AndroidGameProduct) OriginalM4Counters()(V4AndroidGameCounters,error){
     if p==nil||p.native==0||p.stopped||!p.connected{
-        return V4AndroidGame2Counters{},ErrAdmissionUnsupported
+        return V4AndroidGameCounters{},ErrAdmissionUnsupported
     }
     var values [9]C.uint64_t
     rc:=C.wbd_m0_embedded_go_android_game_group_m4_counters(
         C.uint64_t(p.native),&values[0],9)
     if rc!=0{
-        return V4AndroidGame2Counters{},fmt.Errorf(
+        return V4AndroidGameCounters{},fmt.Errorf(
             "%w: original Android Game2 M4 counts=%d",errV4Embedded,int(rc))
     }
-    return V4AndroidGame2Counters{
+    return V4AndroidGameCounters{
         RawCopied:uint64(values[0]),RawReceived:uint64(values[1]),
         TunDelivered:uint64(values[2]),Rejected:uint64(values[3]),
         TunnelDnsQueries:uint64(values[4]),TunnelDnsReplies:uint64(values[5]),
@@ -258,7 +260,7 @@ func (p *V4AndroidGame2Product) OriginalM4Counters()(V4AndroidGame2Counters,erro
         PhysicalDnsErrors:uint64(values[8]),
     },nil
 }
-func (p *V4AndroidGame2Product) AuthenticatedLeaseIPv4()(string,error){
+func (p *V4AndroidGameProduct) AuthenticatedLeaseIPv4()(string,error){
     if p==nil||!p.connected||p.authenticatedLease==""||p.stopped{
         return "",ErrAdmissionUnsupported
     }
@@ -267,7 +269,7 @@ func (p *V4AndroidGame2Product) AuthenticatedLeaseIPv4()(string,error){
 // Group Stop joins the actual single-TUN/two-RAW M4 and all native
 // driver borrows BEFORE original-Go per-lane M1 owner Release. A failed
 // joined Stop never reports disconnect or revokes the owner prematurely.
-func (p *V4AndroidGame2Product) stopLocked()error{
+func (p *V4AndroidGameProduct) stopLocked()error{
     if p.stopped{return nil}
     if p.native!=0{
         rc:=C.wbd_m0_embedded_go_game_group_stop(C.uint64_t(p.native))
@@ -297,7 +299,7 @@ func (p *V4AndroidGame2Product) stopLocked()error{
     p.stopped=true
     return nil
 }
-func (p *V4AndroidGame2Product) Close()error{
+func (p *V4AndroidGameProduct) Close()error{
     if p==nil{return ErrAdmissionParams}
     p.mu.Lock();defer p.mu.Unlock()
     return p.stopLocked()
@@ -305,4 +307,4 @@ func (p *V4AndroidGame2Product) Close()error{
 
 // Stable low-rate NativeState monitoring can use this period; the Go
 // product has no independent DATA/PTO/health loop at any point.
-const V4AndroidGame2StatusInterval=time.Second
+const V4AndroidGameStatusInterval=time.Second

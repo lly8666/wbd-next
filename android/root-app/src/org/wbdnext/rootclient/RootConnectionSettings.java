@@ -111,7 +111,7 @@ final class RootConnectionSettings {
             (nativeHealthSeconds!=15&&nativeHealthSeconds!=30)||
            !oneOf(cipher,"chacha20-poly1305","aes-128-gcm","aes-256-gcm")||
            !oneOf(padding,"off","tls","flows")||
-           !oneOf(mode,"normal","fec-fixed","fec-auto","game2")||
+           !oneOf(mode,"normal","fec-fixed","fec-auto","game2","game4")||
            (!"normal".equals(mode)&&!"off".equals(padding))||
            (tunnelDNS?1:0)+(physicalDNS?1:0)+(cnSplitDNS?1:0)>1||
            selected.size()>SelectedAppGroup.MAX_PACKAGES||

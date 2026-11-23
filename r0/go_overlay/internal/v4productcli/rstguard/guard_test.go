@@ -64,7 +64,14 @@ func parseTestPlan(args []string) Plan{
         case "--sport":
             parts:=strings.Split(args[i+1],":")
             fmt.Sscan(parts[0],&p.SourcePort)
-            if len(parts)==2{p.Game2=true}
+            if len(parts)==2{
+                var last int
+                fmt.Sscan(parts[1],&last)
+                switch last-p.SourcePort {
+                case 1:p.Game2=true
+                case 3:p.Game4=true
+                }
+            }
         case "--dport":fmt.Sscan(args[i+1],&p.PeerPort)
         }
     }
@@ -185,5 +192,46 @@ func TestGame2OriginalTwoPortOneOwnedRSTRule(t *testing.T){
     p=basePlan()
     if !p.valid()||strings.Contains(strings.Join(p.params()," "),":"){
         t.Fatal("normal exact single port changed")
+    }
+}
+
+// B45: the actual original four-lane Root RST owner has precisely one
+// durable INPUT-SCOPE rule and can be recovered with an old Game2 journal.
+func TestGame4OriginalFourPortOneOwnedRSTRule(t *testing.T){
+    p:=basePlan()
+    p.Game4=true
+    if !p.valid(){t.Fatal("four consecutive real source ports rejected")}
+    rule:=strings.Join(p.params()," ")
+    if !strings.Contains(rule,"--sport 45821:45824") ||
+       strings.Contains(rule,"--sport 45821:45825"){
+        t.Fatalf("not the exact original four ports: %s",rule)
+    }
+    fake:=&fakeIPTables{}
+    journal:=filepath.Join(privateTempDir(t),"rst-guard.json")
+    guard,_,err:=New(fake.run,journal,p)
+    if err!=nil||!fake.present||fake.plan!=p{
+        t.Fatalf("game4 actual single rule: %v",err)
+    }
+    if err=guard.Close();err!=nil||fake.present{t.Fatalf("Game4 owned stop %v",err)}
+    p.SourcePort=65533
+    if p.valid(){t.Fatal("Game4 fourth port overflow accepted")}
+    p.SourcePort=45821
+    p.Game2=true
+    if p.valid(){t.Fatal("Game2 and Game4 owner flags mixed")}
+    p.Game2=false
+    // Recover a committed Game2 journal after upgrading the app to Game4.
+    prior:=basePlan()
+    prior.Game2=true
+    fake=&fakeIPTables{}
+    journal=filepath.Join(privateTempDir(t),"rst-guard.json")
+    old,_,err:=New(fake.run,journal,prior)
+    if err!=nil{t.Fatal(err)}
+    if err=old.lock.Close();err!=nil{t.Fatal(err)}
+    fresh,recovered,err:=New(fake.run,journal,p)
+    if err!=nil||!recovered||fake.plan!=p{
+        t.Fatalf("original Game2→Game4 journal recovery: %v",err)
+    }
+    if err=fresh.Close();err!=nil||fake.present{
+        t.Fatalf("Game4 recovered stop %v",err)
     }
 }

@@ -545,7 +545,7 @@ public final class RootClientActivity extends Activity {
             int fecProfile=Integer.parseInt(fecProfiles.getSelectedItem().toString());
             int nativeHealthSeconds=Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString());
             if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
-                throw new IllegalArgumentException("Fixed/Auto/Game2 requires startup padding off");
+                throw new IllegalArgumentException("Fixed/Auto/Game2/Game4 requires startup padding off");
             // B44: Game2/off now uses the existing Normal physical and CN
             // UDP53 owner in the original Rust single-TUN M4.
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
@@ -771,15 +771,15 @@ public final class RootClientActivity extends Activity {
             new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
         pane.addView(recordCiphers);
         TextView modeHint=new TextView(this);
-        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 原TLS/FEC2；Game2/off 原Go双TLS→Rust单TUN双RAW M4，共用隧道/物理/CN DNS三模式。实机未验；Game4/FEC Game未接。");
+        modeHint.setText("原传输模式：Normal/off默认；Fixed/Auto原TLS/FEC2；Game2/4-off原Go 2/4条TLS→原Rust单TUN多RAW M4，复用三种DNS。Game4宽错峰；设备未验，Game FEC未接。");
         pane.addView(modeHint);
         fecModes=new Spinner(this);
         fecModes.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
-            new String[]{"normal","fec-fixed","fec-auto","game2"}));
+            new String[]{"normal","fec-fixed","fec-auto","game2","game4"}));
         pane.addView(fecModes);
         TextView profileHint=new TextView(this);
-        profileHint.setText("Fixed档位0–6（默认1）；Auto按原质量换档；Normal及Game2/off不使用此档位");
+        profileHint.setText("Fixed档位0–6（默认1）；Auto按原质量换档；Normal及Game2/4-off不使用此档位");
         pane.addView(profileHint);
         fecProfiles=new Spinner(this);
         fecProfiles.setAdapter(new ArrayAdapter<>(this,
@@ -940,7 +940,8 @@ public final class RootClientActivity extends Activity {
         fecModes.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
             @Override public void onItemSelected(android.widget.AdapterView<?> parent,
                 View view,int position,long id){
-                if("game2".equals(fecModes.getSelectedItem().toString())){
+                if("game2".equals(fecModes.getSelectedItem().toString())||
+                   "game4".equals(fecModes.getSelectedItem().toString())){
                     // Keep whichever of Normal's three DNS modes was
                     // selected; Game2 retains no startup padding.
                     startupPaddingModes.setSelection(0);

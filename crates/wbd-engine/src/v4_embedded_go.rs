@@ -57,7 +57,7 @@ use std::os::fd::BorrowedFd;
 #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
 #[path="v4_android_original_m4.rs"]
 mod android_original_m4;
-// B40 true Game2/off native M4, one Android TUN TX and two original
+// B45 true Game2/4-off native M4, one Android TUN TX and 2/4 original
 // authenticated Game M3 RAW RX workers. Go App mode still separately gated.
 #[cfg(all(target_os="android",feature="fec2_product_record"))]
 #[path="v4_android_game_m4.rs"]
@@ -3836,9 +3836,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_raw_state(
     unsafe{lanes.write(count)};
     OK
 }
-// Real original TLS Game2/off Bionic M4: one verified Go-owned TUN FD
-// cloned into Rust, its original two precise M3 RX RAW FDs and a single
-// GameAdapter TX scheduler. Game4/FEC and App launch remain gated.
+// Real original TLS Game2/4-off Bionic M4: one Go-owned TUN FD,
+// 2/4 exact authenticated M3 RX RAW FDs and one GameAdapter TX scheduler.
+// Original Game4 wide stagger runs without a second TUN or Go DATA worker.
 #[cfg(all(feature="fec2_product_record",target_os="android"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
@@ -3872,7 +3872,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
     let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     if g.stopped||g.stopping||g.android_workers.is_some()||
-       g.android_lanes.len()!=2{return BAD_STAGE}
+       !matches!(g.android_lanes.len(),2|4){return BAD_STAGE}
     let Some(raw)=g.android_raw.as_ref().filter(|v|v.len()==2)
         else{return BAD_STAGE};
     let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
@@ -3942,7 +3942,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
             return STOP_INCOMPLETE
         }
     }
-    // Stop the ONE original Game2 TUN TX plus both per-lane M3 workers
+    // Stop the ONE original Game2/4 TUN TX plus every original per-lane M3 worker
     // before closing physically bound RAW FDs or the GameAdapter.
     #[cfg(target_os="android")]
     if let Some(ref mut workers)=android_workers{

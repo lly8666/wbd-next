@@ -143,6 +143,22 @@ public final class OriginalGoCommandArgsTest {
         if(!gameCN.contains("--android-cn-dns-split"))
             throw new AssertionError("Game2 CN8503 DNS flag not wired");
         value(gameCN,"--android-cn-geosite-file",CN);
+        // B45 production App argv names the actual 4-lane Go TLS mode.
+        for(int mode=0;mode<3;mode++){
+            List<String> game4=OriginalGoCommandArgs.build(
+                "wlan0",43123456L,"192.0.2.10","198.51.100.7",
+                443,43900,"wbd.example.test","user-name",
+                PASS,ROUTE,INSTALL,CN,new int[]{10123},false,null,null,
+                false,mode==0,mode==1,mode==2,1460,
+                "chacha20-poly1305",500,"off","game4",1);
+            value(game4,"--mode","game4");
+            absent(game4,"--fec-profile");
+            if(!game4.contains(new String[]{"--android-tunnel-dns",
+                "--android-physical-dns","--android-cn-dns-split"}[mode]))
+                throw new AssertionError("Game4 original DNS mode not wired");
+        }
+        rejected(()->withFec("game4",1,"flows"));
+        System.out.println("ANDROID_B45_GAME4_OFF_APP_ARGV_THREE_DNS_HOST_PASS");
         System.out.println("ANDROID_B44_GAME2_ORIGINAL_PHYSICAL_CN_DNS_ARGV_HOST_PASS");
         rejected(()->withFec("game2",1,"tls"));
         System.out.println("ANDROID_B43_GAME2_TUNNEL_DNS_ARGV_HOST_PASS");

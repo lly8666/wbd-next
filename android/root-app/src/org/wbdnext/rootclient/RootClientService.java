@@ -256,14 +256,17 @@ public final class RootClientService extends Service {
             if(nativeHealthSeconds!=15&&nativeHealthSeconds!=30)
                 throw new IllegalArgumentException("unsupported original Rust Health interval");
             if((!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
-                !"fec-auto".equals(fecMode)&&!"game2".equals(fecMode))||
+                !"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)&&
+                !"game4".equals(fecMode))||
                fecProfile<0||fecProfile>6||
                (!"normal".equals(fecMode)&&!"off".equals(paddingMode)))
-                throw new IllegalArgumentException("unsupported original Normal/Fixed/Auto/Game2 selection");
+                throw new IllegalArgumentException("unsupported original Normal/Fixed/Auto/Game2/Game4 selection");
             fecStatus="normal".equals(fecMode)
                 ?"FEC: Normal/off（默认；无FEC修复）"
-                :"game2".equals(fecMode)
-                    ?"Game2/off: 双原Go TLS → 单Rust M4；等待设备真实运行"
+                :("game2".equals(fecMode)||"game4".equals(fecMode))
+                    ?("game4".equals(fecMode)
+                        ?"Game4/off: 4原Go TLS → 单Rust M4宽错峰；等待设备真实运行"
+                        :"Game2/off: 双原Go TLS → 单Rust M4；等待设备真实运行")
                     :"FEC: "+fecMode+" 已选择，等待原Go/Rust的真实版本读回";
             if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
                !"flows".equals(paddingMode))

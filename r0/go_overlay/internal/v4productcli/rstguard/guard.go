@@ -50,15 +50,19 @@ type Plan struct {
     PeerIP string
     SourcePort int
     PeerPort int
-    // Game2's TWO consecutive original Go source ports use ONE durable,
-    // owned iptables range rule. The legacy Normal exact port is unchanged.
+    // Normal 1, Game2 2, Game4 4 consecutive original Go ports
+    // use one exact durable rule. Keep Game2 in the v1 journal format so
+    // pre-B45 crash/Restore preserves its original owner.
     Game2 bool
+    Game4 bool
 }
 
 func (p Plan) valid() bool {
     if p.Version != 1 || len(p.Interface) < 1 || len(p.Interface) > 15 ||
         p.SourcePort < 1 || p.SourcePort > 65535 ||
-        (p.Game2 && p.SourcePort == 65535) ||
+        (p.Game2 && p.Game4) ||
+        (p.Game2 && p.SourcePort > 65534) ||
+        (p.Game4 && p.SourcePort > 65532) ||
         p.PeerPort < 1 || p.PeerPort > 65535 { return false }
     for _, c := range p.Interface {
         if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
@@ -78,6 +82,8 @@ func (p Plan) params() []string {
     sourcePorts:=strconv.Itoa(p.SourcePort)
     if p.Game2{
         sourcePorts += ":"+strconv.Itoa(p.SourcePort+1)
+    } else if p.Game4{
+        sourcePorts += ":"+strconv.Itoa(p.SourcePort+3)
     }
     return []string{
         "-o", p.Interface, "-s", p.SourceIP+"/32", "-d", p.PeerIP+"/32",

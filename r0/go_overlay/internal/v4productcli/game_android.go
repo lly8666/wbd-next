@@ -229,7 +229,11 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
             counters,e:=native.OriginalM4Counters()
             if e!=nil{return e}
             // Existing one-second status ticker; exact Rust native counters.
-            log.Printf("V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d physicaltx=%d physicalrx=%d physicalerr=%d",
+            format:="V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d physicaltx=%d physicalrx=%d physicalerr=%d"
+            if c.gameLanes==4{
+                format="V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d physicaltx=%d physicalrx=%d physicalerr=%d"
+            }
+            log.Printf(format,
                 counters.RawCopied,counters.RawReceived,counters.TunDelivered,
                 counters.Rejected,counters.TunnelDnsQueries,counters.TunnelDnsReplies,
                 counters.PhysicalDnsQueries,counters.PhysicalDnsReplies,counters.PhysicalDnsErrors)

@@ -1211,15 +1211,16 @@ func Run(role string,args []string)(retErr error){
         if role!="client"||cfg.androidNetworkHandle==0||iface.MTU<68||iface.MTU>65535{
             return fmt.Errorf("Android physical Network/MTU unavailable")
         }
-        if (cfg.gameLanes!=0&&cfg.gameLanes!=2)||cfg.mixedModes||
+        if (cfg.gameLanes!=0&&cfg.gameLanes!=2&&cfg.gameLanes!=4)||cfg.mixedModes||
            !cfg.disableOuterRepair||
            !cfg.autoIP||cfg.rotationInterval!=0{
-            return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/off only; Game4/rotation/outer-repair unavailable")
+            return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/4-off only; rotation/outer-repair unavailable")
         }
-        if cfg.gameLanes==2&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0){
-            // Game2/off now shares all three real Normal App UDP53 paths
-            // on original Rust single TUN; GameFEC/padding remain gated.
-            return fmt.Errorf("Android Game2 requires FEC/padding off")
+        if cfg.gameLanes!=0&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0||
+           (cfg.gameLanes==4&&(!cfg.game4CopyStagger||!cfg.game4CopyWideStagger))){
+            // Game2/4 share original Rust one TUN, with Game4's mature
+            // 0/4/50/140ms native stagger. Game FEC stays disabled.
+            return fmt.Errorf("Android Game2/4 requires Game FEC/padding off and default Game4 schedule")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
         cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(
@@ -1335,13 +1336,13 @@ func Run(role string,args []string)(retErr error){
         }()
         log.Printf("V4_PUBLIC_SHARED_TUN_READER_READY role=client auto_lease=1 owner=rust_single_kernel_reader game_lanes=%d",cfg.gameLanes)
     }
-    if runtime.GOOS=="android"&&role=="client"&&cfg.gameLanes==2{
+    if runtime.GOOS=="android"&&role=="client"&&(cfg.gameLanes==2||cfg.gameLanes==4){
         // B41 genuine original-Go dual TLS/FakeTCP on selected Network,
         // one original Rust GameAdapter and M4, exact Root UID route after
         // both lane Detach/readback. No Go DATA worker and no Game4.
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
-        return runAndroidGame2(ctx,cfg,uint32(iface.Index),tun,&connected)
+        return runAndroidGame(ctx,cfg,uint32(iface.Index),tun,&connected)
     }
     if cfg.gameLanes!=0||(role=="server"&&cfg.mixedModes){
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)

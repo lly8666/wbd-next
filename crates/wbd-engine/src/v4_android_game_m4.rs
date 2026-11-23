@@ -1,5 +1,5 @@
-//! B40 original Game2/off M4 on Android's *existing* Bionic RAW/TUN.
-//! One authenticated GameAdapter owns both AEAD/PN lanes, one native TUN
+//! B45 original Game2/4-off M4 on Android's *existing* Bionic RAW/TUN.
+//! One authenticated GameAdapter owns 2/4 AEAD/PN lanes, one native TUN
 //! reader, two per-lane original M3 RX openers, and an owned joined Stop.
 //! No Java/Go DATA callbacks, private protocol or separate source scheduler.
 #![allow(unsafe_code)]
@@ -46,9 +46,10 @@ impl AndroidGameWorkers{
         tunnel_dns:bool,health_seconds:u32,
         physical_dns:bool,upstream:[u8;4],cn:Option<CNDnsMatcher>,
     )->Result<Self,()>{
-        // First product data worker is Game2/OFF only. Game4 stagger, FEC,
-        // Make-Before-Break and App/Go cold launch remain separately gated.
-        if generation==0||lanes.len()!=2||raw.len()!=2||
+        // Game2/off and Game4/off reuse the same original M4, not new
+        // packet workers. GameFEC/rotation remain separately gated.
+        let lane_count=lanes.len();
+        if generation==0||!matches!(lane_count,2|4)||raw.len()!=lane_count||
             scope.mtu<576||tun_name.is_empty()||
             !matches!(health_seconds,15|30)||
             (tunnel_dns&&physical_dns)||
@@ -56,15 +57,23 @@ impl AndroidGameWorkers{
         let tun=Arc::new(AndroidOwnedTun::adopt(fd,tun_name,generation)
             .map_err(|_|())?);
         let (rx_owner,inner_mtu,origin,evidence)={
-            let game=adapter.lock().map_err(|_|())?;
+            let mut game=adapter.lock().map_err(|_|())?;
             if game.has_game_fec(){return Err(())}
+            // Original Linux Game4/off wide stagger: 0/4/50/140ms,
+            // configured BEFORE the original Rust M4 takes its M3 owners.
+            // B45 also drains due copies while TUN is otherwise idle.
+            if lane_count==4{
+                game.configure_game4_stagger_mode(2).map_err(|_|())?;
+            }
             let (origin,evidence)=game.health_context();
             (game.receiver_handle(),game.inner_mtu(),origin,evidence)
         };
         if !(20..=2000).contains(&inner_mtu){return Err(())}
         // B44: exactly the Normal M4 physically bound UDP53 socket, with
         // the original selected Network and first authenticated Go lane.
-        if lanes[0].flow.client_ip!=lanes[1].flow.client_ip{return Err(())}
+        if lanes.iter().any(|l|l.flow.client_ip!=lanes[0].flow.client_ip){
+            return Err(())
+        }
         let physical_socket=if physical_dns{
             Some(Arc::new(AndroidBoundPhysicalDnsUdp::open(
                 scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
@@ -73,19 +82,21 @@ impl AndroidGameWorkers{
         }else{None};
         // Move (never copy) exactly one M3 replay opener to each native
         // raw worker before either TUN or RAW traffic can begin.
-        let mut openers=Vec::with_capacity(2);
+        let mut openers=Vec::with_capacity(lane_count);
         {
             let mut rx=rx_owner.lock().map_err(|_|())?;
-            for id in 1..=2{
+            for id in 1..=lane_count{
                 openers.push(rx.take_lane_for_worker(LaneKey{
-                    tunnel:TunnelKey{slot:14,generation},slot:id,generation
+                    tunnel:TunnelKey{slot:14,generation},slot:id as u32,generation
                 }).map_err(|_|())?);
             }
         }
         let stop=Arc::new(AtomicBool::new(false));
         let started=Arc::new(AtomicBool::new(false));
-        let mut wakes=Vec::with_capacity(3);
-        for _ in 0..3{wakes.push(Arc::new(AndroidWorkerWake::new().map_err(|_|())?))}
+        let mut wakes=Vec::with_capacity(1+lane_count);
+        for _ in 0..1+lane_count{
+            wakes.push(Arc::new(AndroidWorkerWake::new().map_err(|_|())?))
+        }
         let raw_tx=Arc::new(AtomicU64::new(0));
         let raw_rx=Arc::new(AtomicU64::new(0));
         let delivered=Arc::new(AtomicU64::new(0));
@@ -126,10 +137,10 @@ impl AndroidGameWorkers{
         let tx_physical_errors=Arc::clone(&physical_errors);
         let tx_cn=cn;
         let tx_dns_capture=tunnel_dns||physical_dns;
-        let tx=thread::Builder::new().name("wbd-android-game2-tx".into())
+        let tx=thread::Builder::new().name("wbd-android-game-tx".into())
             .spawn(move||{
                 let mut source=[0u8;65_535];
-                let mut outer=[[0u8;2048];2];
+                let mut outer=[[0u8;2048];4];
                 let mut health_wire=[0u8;2048];
                 let mut health_outer=[0u8;2048];
                 // Original M4 owns both the app TUN and selected-Network
@@ -138,6 +149,38 @@ impl AndroidGameWorkers{
                 let mut physical_wire=[0u8;MAX_DNS_WIRE];
                 let mut physical_packet=[0u8;MAX_DNS_REPLY_IPV4];
                 let mut offsets=tx_begin;
+                // The original GameAdapter may schedule Game4 later copies.
+                // Invoke this SAME native RAW sender both on TUN ingress and
+                // when a due copy matures without further App traffic.
+                macro_rules! drain_original_game {
+                    ($game:expr,$when:expr) => {{
+                        $game.drain($when,|lane,_id,pn,wire|{
+                                        let i=(lane.slot as usize).saturating_sub(1);
+                                        if i>=lane_count{return false}
+                                        let f=tx_flows[i];
+                                        let tuple=Ipv4Tuple{
+                                            src_ip:&f.client_ip,dst_ip:&f.server_ip,
+                                            src_port:f.client_port,dst_port:f.server_port};
+                                        let appearance=Presentation{
+                                            ack32:tx_ack[i].load(Ordering::Acquire),
+                                            advertised_window:65_535,ip_id:pn as u16,
+                                            persona:PacketPersona::Legacy};
+                                        let valid=ipv4_tcp::build_bytes(
+                                            tuple,appearance,offsets[i],wire,None,
+                                            mtu as usize,&mut outer[i])
+                                            .ok().and_then(|packet|
+                                                tx_raw[i].send_built_outer(
+                                                    generation,packet,mtu).ok())
+                                            .is_some_and(|size|size==wire.len()+40);
+                                        if valid{
+                                            offsets[i]=offsets[i].saturating_add(wire.len() as u64);
+                                            tx_seq[i].store(offsets[i] as u32,Ordering::Release);
+                                            tx_sent.fetch_add(1,Ordering::Relaxed);
+                                        }
+                                        valid
+                        })
+                    }};
+                }
                 let mut health=HealthClock::new(
                     health_policy,
                     origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
@@ -247,31 +290,7 @@ impl AndroidGameWorkers{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
                             }else if let Ok(mut game)=tx_adapter.lock(){
                                 if game.offer(&source[..n],now).is_ok(){
-                                    let copied=game.drain(now,|lane,_id,pn,wire|{
-                                        let i=(lane.slot as usize).saturating_sub(1);
-                                        if i>=2{return false}
-                                        let f=tx_flows[i];
-                                        let tuple=Ipv4Tuple{
-                                            src_ip:&f.client_ip,dst_ip:&f.server_ip,
-                                            src_port:f.client_port,dst_port:f.server_port};
-                                        let appearance=Presentation{
-                                            ack32:tx_ack[i].load(Ordering::Acquire),
-                                            advertised_window:65_535,ip_id:pn as u16,
-                                            persona:PacketPersona::Legacy};
-                                        let valid=ipv4_tcp::build_bytes(
-                                            tuple,appearance,offsets[i],wire,None,
-                                            mtu as usize,&mut outer[i])
-                                            .ok().and_then(|packet|
-                                                tx_raw[i].send_built_outer(
-                                                    generation,packet,mtu).ok())
-                                            .is_some_and(|size|size==wire.len()+40);
-                                        if valid{
-                                            offsets[i]=offsets[i].saturating_add(wire.len() as u64);
-                                            tx_seq[i].store(offsets[i] as u32,Ordering::Release);
-                                            tx_sent.fetch_add(1,Ordering::Relaxed);
-                                        }
-                                        valid
-                                    });
+                                    let copied=drain_original_game!(game,now);
                                     if copied>0{health.on_local_business(now.0)}
                                 }else{tx_rejected.fetch_add(1,Ordering::Relaxed);}
                             }else{break}
@@ -282,13 +301,28 @@ impl AndroidGameWorkers{
                         tx_stop.store(true,Ordering::Release);
                         break
                     }
+                    // Game4's authenticated staged copies must progress
+                    // even when there is no next App TUN packet.
+                    let mut wait_ms=250;
+                    if lane_count==4{
+                        let when=MonoNs(origin.elapsed().as_nanos()
+                            .min(u128::from(u64::MAX)) as u64);
+                        if let Ok(mut game)=tx_adapter.lock(){
+                            let copied=drain_original_game!(game,when);
+                            if copied>0{health.on_local_business(when.0)}
+                            if let Some(due)=game.game4_next_due_ns(){
+                                wait_ms=((due.saturating_sub(when.0)+999_999)/
+                                    1_000_000).clamp(1,250) as i32;
+                            }
+                        }else{tx_stop.store(true,Ordering::Release);break}
+                    }
                     // The existing eventfd waits on TUN and, only when
                     // enabled, the actual scoped physical DNS UDP socket.
                     let ready=if let Some(socket)=tx_physical.as_ref(){
                         tx_wake.wait_tun_and_physical_dns(
-                            tx_tun.readiness_fd(),socket.readiness_fd(),250)
+                            tx_tun.readiness_fd(),socket.readiness_fd(),wait_ms)
                     }else{
-                        tx_wake.wait_readable(tx_tun.readiness_fd(),250)
+                        tx_wake.wait_readable(tx_tun.readiness_fd(),wait_ms)
                             .map(|v|(v,false))
                     };
                     let (_,dns_ready)=match ready{
@@ -335,7 +369,7 @@ impl AndroidGameWorkers{
             }).map_err(|_|())?;
         let mut threads=vec![tx];
         let mut openers=openers.into_iter();
-        for i in 0..2{
+        for i in 0..lane_count{
             let mut opener:GameLaneOpener=openers.next().ok_or(())?;
             let rx_raw=Arc::clone(&raw[i].rx);
             let ack_raw=Arc::clone(&raw[i].tx);
@@ -356,7 +390,7 @@ impl AndroidGameWorkers{
             let lane=LaneKey{tunnel:TunnelKey{slot:14,generation},
                 slot:i as u32+1,generation};
             let result=thread::Builder::new()
-                .name(format!("wbd-android-game2-rx-{}",i+1))
+                .name(format!("wbd-android-game-rx-{}",i+1))
                 .spawn(move||{
                     let mut wire=[0u8;2048];
                     let mut ack_wire=[0u8;64];

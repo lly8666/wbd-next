@@ -76,6 +76,21 @@ public final class RootConnectionSettingsTest {
         catch(IllegalArgumentException expected){gameDNSRejected=true;}
         check(gameDNSRejected,"Game2 still permits only one App DNS mode");
         System.out.println("ANDROID_B44_GAME2_ALL_THREE_ORIGINAL_APP_DNS_PRESET_HOST_PASS");
+        // B45: four authenticated original Go TLS lanes use exactly the
+        // same non-secret App preset and each of Normal's three DNS modes.
+        for(int mode=0;mode<3;mode++){
+            RootConnectionSettings game4=new RootConnectionSettings(
+                "wbd.example.test","tls.example.test","example_user",443,
+                1460,500,"chacha20-poly1305","off","game4",1,
+                false,mode==0,mode==1,mode==2,true,
+                new TreeMap<String,Integer>());
+            RootConnectionSettings again=read(stored(game4));
+            check(again!=null&&"game4".equals(again.mode)&&
+                again.tunnelDNS==(mode==0)&&again.physicalDNS==(mode==1)&&
+                again.cnSplitDNS==(mode==2),
+                "Game4 selected-App DNS option survives cold preset");
+        }
+        System.out.println("ANDROID_B45_GAME4_OFF_PRESET_THREE_DNS_HOST_PASS");
         System.out.println("ANDROID_B42_GAME2_OFF_ORIGINAL_PRESET_HOST_PASS");
         RootConnectionSettings fixed=read(stored(sample(true,"fec-fixed")));
         check(fixed!=null&&fixed.allApps&&fixed.selected.isEmpty(),"all ordinary App scope");
