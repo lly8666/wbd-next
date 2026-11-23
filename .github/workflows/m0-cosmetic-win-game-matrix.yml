@@ -1,3 +1,4 @@
+# H2332 rearm: same ACK must stall >=1s; 0% true Game copy flood is FAIL.
 # H2331: signed native runs use one immutable exact-main source branch; concurrent main commits cannot alter dispatched SHA.
 # H2330 ARM: new signed current-SOURCE Game native build then OFF/fixed6 Game2/4 three-loss matrix.
 # H2330 Windows Game: first build signed exact new Game source, then 12 true loss-tiers reuse it. No old 92920fb binary.
@@ -276,6 +277,16 @@ jobs:
           }
           (root/"m0-game-outer-evidence.json").write_text(json.dumps(grade,indent=2)+"\n")
           print("M0_WINDOWS_LINUX_GAME_OUTER_EXACT_SOURCE",json.dumps(grade,sort_keys=True))
+          if loss==0:
+              # Game original STOP is authoritative; no regular 80ms
+              # cosmetic stream under genuine netem 0% may pass.
+              # Windows count is a conservative proxy, not wire R/F.
+              win=grade["windows_outer"]
+              if not isinstance(win,dict) or win["count"]>4:
+                  raise SystemExit("WINDOWS_GAME_ZERO_LOSS_COSMETIC_FLOOD")
+              if not isinstance(grade["linux_outer"],dict) or (
+                  grade["linux_outer"]["original_R_over_F"]>.0005):
+                  raise SystemExit("LINUX_GAME_ZERO_LOSS_WIRE_REPAIR_OVER_0_05PCT")
           if loss>0 and (not isinstance(grade["windows_outer"],dict) or
                         grade["windows_outer"]["count"]<=0 or
                         not isinstance(grade["linux_outer"],dict) or
