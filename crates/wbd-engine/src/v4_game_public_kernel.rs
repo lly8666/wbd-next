@@ -312,6 +312,12 @@ impl GameKernelOwner{
                 // lane slots, owned exclusively by this existing TX worker.
                 let mut cosmetic=scoped_cosmetic;
                 let mut observed_hints=[0u64;4];
+                // Diagnostic experiment only: distinguish genuine SACK gaps
+                // from duplicate cumulative ACK nominations, without packet
+                // logging, new workers or altered DATA/replay semantics.
+                let hint_probe=std::env::var("WBD_GAME_FEC_HINT_PROBE")
+                    .ok().as_deref()==Some("1");
+                let mut hint_counts=[[0u64;5];4];
                 let mut observed_future=vec![0u64;n];
                 let mut ack_sent=tx_ack_initial;
                 let mut ack_last_ns=vec![0u64;n];
@@ -821,8 +827,19 @@ impl GameKernelOwner{
                                 }
                             }
                             for _ in 0..count{
-                                let _=cosmetic.on_feedback(i,current as u32,
+                                let found=cosmetic.on_feedback(i,current as u32,
                                     &sack[..total],clock_ns);
+                                if hint_probe {
+                                    let row=&mut hint_counts[i];
+                                    row[0]+=1;
+                                    if total>0 {
+                                        row[1]+=1;
+                                        if found {row[3]+=1;}
+                                    }else{
+                                        row[2]+=1;
+                                        if found {row[4]+=1;}
+                                    }
+                                }
                             }
                             observed_hints[i]=current;
                         }
@@ -926,6 +943,12 @@ impl GameKernelOwner{
                         }
                     }
                     arena.drain_returns();
+                }
+                if hint_probe {
+                    let sums=std::array::from_fn::<_,5,_>(|j|
+                        hint_counts.iter().map(|r|r[j]).sum::<u64>());
+                    eprintln!("M0_GAME_TX_HINT_PROBE feedback={} with_sack={} without_sack={} nominated_sack={} nominated_dupack={} probes_only=1",
+                        sums[0],sums[1],sums[2],sums[3],sums[4]);
                 }
                 eprintln!("WBD_GAME_IPV4_MTU_EXCEPTION df0_ip_fragments={} icmp3_code4_kernel_sent={} icmp3_code4_rejected={} NOT_REMOTE_APPLIED=1",
                     tx_fail.df0_fragments.load(Ordering::Relaxed),
