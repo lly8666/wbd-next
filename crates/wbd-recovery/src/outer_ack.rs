@@ -132,6 +132,24 @@ impl OuterAckIndex {
         expired
     }
 
+    /// The original TLS/Go M4 owner proves that a DATA record was copied,
+    /// but OFF/unsampled records need only advance the wire ACK bound.
+    /// No BTree node, heap allocation or shadow handle is made for them.
+    /// An intervening definitely-copied control span may leave a forward
+    /// sequence gap; backwards/overlapping spans still fail closed.
+    pub fn on_definitely_sent_untracked(&mut self,seq_start:u64,
+        wire_len:u32,now:MonoNs)->Result<(),OuterAckError>{
+        let end=seq_start.checked_add(u64::from(wire_len))
+            .ok_or(OuterAckError::InvalidSend)?;
+        if wire_len==0||seq_start<self.highest_sent_end||
+            now<self.last_sent_at{
+            return Err(OuterAckError::InvalidSend)
+        }
+        self.highest_sent_end=end;
+        self.last_sent_at=now;
+        Ok(())
+    }
+
     /// FEC's low-CPU optional shadow sample must still advance the exact
     /// original TCP byte-stream boundary on EVERY actually copied record.
     /// Skipped symbols create no BTree node, frozen buffer or repair credit.
@@ -176,7 +194,8 @@ impl OuterAckIndex {
             return Ok(OuterAckUpdate::default());
         }
         // Validate every SACK BEFORE releasing any shadow on a hostile hint.
-        let mut ranges = Vec::with_capacity(sacks.len());
+        let mut ranges=[(0u64,0u64);MAX_SACK_RANGES];
+        let mut range_count=0usize;
         let mut highest_positive = ack;
         for range in sacks {
             let start = extend_near(self.highest_sent_end, range.start)?;
@@ -185,7 +204,8 @@ impl OuterAckIndex {
                 return Err(OuterAckError::OutOfRange);
             }
             highest_positive = highest_positive.max(end);
-            ranges.push((start, end));
+            ranges[range_count]=(start,end);
+            range_count+=1;
         }
 
         // Production currently carries cumulative ACK without negotiated
@@ -198,20 +218,18 @@ impl OuterAckIndex {
             self.duplicate_acks=0;
         }
         let mut result = OuterAckUpdate::default();
-        let cumulative: Vec<_> = self.sent.range(..ack)
-            .filter_map(|(&seq, span)| (span.end <= ack).then_some(seq))
-            .collect();
-        for seq in cumulative {
-            if let Some(span) = self.sent.remove(&seq) {
+        // No temporary Vec or second tree walk per positive ACK. A
+        // partially ACKed head is retained; all following spans are later.
+        while self.sent.first_key_value().is_some_and(|(&seq,span)|
+            seq<ack&&span.end<=ack){
+            if let Some((_,span))=self.sent.pop_first(){
                 result.retired.push(span.pn);
             }
         }
-        for (start, end) in ranges {
-            let positive: Vec<_> = self.sent.range(start..end)
-                .filter_map(|(&seq, span)| (span.end <= end).then_some(seq))
-                .collect();
-            for seq in positive {
-                if let Some(span) = self.sent.remove(&seq) {
+        for &(start,end) in ranges[..range_count].iter(){
+            while let Some((&seq,span))=self.sent.range(start..end).next(){
+                if span.end>end{break}
+                if let Some(span)=self.sent.remove(&seq){
                     result.retired.push(span.pn);
                 }
             }
@@ -253,7 +271,9 @@ impl OuterAckIndex {
         }
         if sacks.is_empty() && self.duplicate_acks>=3 &&
             self.nominated_stalled_ack!=Some(ack) {
-            if let Some((_,head))=self.sent.range(ack..).next() {
+            // An unsampled ACK head must NOT nominate a later retained
+            // ciphertext: that later record has no missing-byte evidence.
+            if let Some(head)=self.sent.get(&ack) {
                 if self.sent.range(head.end..).next().is_some() &&
                     now.0.saturating_sub(head.at.0)>=reorder_guard_ns &&
                     !result.gap_candidates.contains(&head.pn) {
@@ -323,14 +343,45 @@ mod tests {
         for tick in [40_000_000,50_000_000,60_000_000]{
             let result=x.on_feedback(lane(),[7;16],100,&[],MonoNs(tick),
                 20_000_000).unwrap();
-            // Normal may nominate a later sparse copy by itself.
-            // The Game FEC caller MUST reject that copy because
-            // actual 100-109 (not sampled) is the ACK's real hole.
+            // Do not nominate a later sampled copy when the actual
+            // untracked 100-109 interval is the cumulative ACK hole.
             assert!(!x.tracks_cumulative_head(100));
-            if tick==60_000_000{
-                assert_eq!(result.gap_candidates,vec![RecordPn(2)]);
-            }
+            assert!(result.gap_candidates.is_empty());
         }
+    }
+
+    #[test]
+    fn m0_unsampled_firstsend_keeps_bounds_without_index_or_fake_gap(){
+        let mut x=index(100,8);
+        assert_eq!(x.on_definitely_sent_untracked(100,10,MonoNs(10)),Ok(()));
+        assert_eq!(x.outstanding(),0);
+        assert_eq!(x.on_definitely_sent(RecordPn(2),110,10,
+            MonoNs(20)),Ok(true));
+        assert_eq!(x.on_definitely_sent_untracked(120,10,MonoNs(30)),Ok(()));
+        assert_eq!(x.on_definitely_sent(RecordPn(4),130,10,
+            MonoNs(40)),Ok(true));
+        assert_eq!(x.outstanding(),2);
+        assert_eq!(x.highest_sent_end(),140);
+        for t in [80_000_000,90_000_000,100_000_000]{
+            assert!(x.on_feedback(lane(),[7;16],100,&[],MonoNs(t),
+                20_000_000).unwrap().gap_candidates.is_empty());
+        }
+        // Once real cumulative progress reaches a retained head,
+        // an actual later copied span permits exactly one nomination.
+        for t in [110_000_000,120_000_000,130_000_000]{
+            let update=x.on_feedback(lane(),[7;16],110,&[],MonoNs(t),
+                20_000_000).unwrap();
+            if t==130_000_000{assert_eq!(update.gap_candidates,vec![RecordPn(2)])}
+        }
+        assert!(x.on_feedback(lane(),[7;16],110,&[],
+            MonoNs(140_000_000),20_000_000).unwrap().gap_candidates.is_empty());
+        // Owner may have sent original control between DATA copies;
+        // only strictly forward definitely-copied offsets are admitted.
+        assert_eq!(x.on_definitely_sent_untracked(150,10,MonoNs(150_000_000)),Ok(()));
+        assert_eq!(x.highest_sent_end(),160);
+        assert!(x.on_definitely_sent_untracked(155,10,MonoNs(160_000_000)).is_err());
+        assert!(x.on_definitely_sent_untracked(160,0,MonoNs(160_000_000)).is_err());
+        assert!(x.on_definitely_sent_untracked(160,10,MonoNs(10)).is_err());
     }
 
     use wbd_types::TunnelKey;
