@@ -1,3 +1,4 @@
+# H2330 ARM: new signed current-SOURCE Game native build then OFF/fixed6 Game2/4 three-loss matrix.
 # H2330 Windows Game: first build signed exact new Game source, then 12 true loss-tiers reuse it. No old 92920fb binary.
 name: M0 signed Windows to Linux bidirectional Game2 Game4 cosmetic matrix
 run-name: "M0-WINDOWS-GAME-OUTER-12|${{ github.sha }}"
