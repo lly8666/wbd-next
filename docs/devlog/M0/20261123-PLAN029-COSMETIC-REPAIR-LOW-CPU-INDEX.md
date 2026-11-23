@@ -23,6 +23,8 @@
 - 新增确定性纯单元模拟“新认证后到 → 有界重复 ACK”、“无新认证后到 → 不造重复 ACK”、原缺口被补齐后恢复。实际同 SOURCE Windows↔Linux netem、CPU/GiB、R/F、双端 Stop 仍须独立测量；未验仍记 NOT_RUN。
 - 对旧文档记账释义：2026-10-23 的 `R/C>=6%` 中 C 指**外层线路容量**；2026-10-30 PLAN027 把 C 用作**控制流量字节**。两者绝不可当作同一指标，新报表分别明确分母。
 
+- 2026-11-23 复核原生功能测试的来源范围：`wbd-engine` 的 native-functional engine 选择 `r1_` 前缀；新 ACK 决策测试由 `r2_m0_...` 仅更名为 `r1_m0_...`，不变更测试输入或生产行为，确保 CI 真正执行而不是误用 filtered-out 测试做证据。
+
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Cosmetic-only ACK shadow indexes sampled copied first sends, omits OFF/unsampled tree work and temp vectors; genuine authenticated later Linux DATA gives bounded duplicate ACK even without SACK, never a business delivery receipt; no policy/default changed; native CPU/performance still unqualified."}
 ```

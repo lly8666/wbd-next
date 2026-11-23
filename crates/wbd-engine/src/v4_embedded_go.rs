@@ -5839,7 +5839,7 @@ impl OriginalPresentationAck{
 mod original_presentation_ack_tests{
     use super::{OriginalPresentationAck,original_cosmetic_ack_due};
     #[test]
-    fn r2_m0_cumulative_duplicate_ack_requires_new_authenticated_future(){
+    fn r1_m0_cumulative_duplicate_ack_requires_new_authenticated_future(){
         let mut p=OriginalPresentationAck::new(100);
         assert!(!original_cosmetic_ack_due(false,false,false,false,false));
         assert_eq!(p.verified(140,20),100); // unique accepted M3 later
