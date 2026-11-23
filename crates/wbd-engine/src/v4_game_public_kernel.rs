@@ -112,6 +112,8 @@ pub(crate) struct GameKernelOwner{
     rx_lock_sample:Arc<RxLockSample>,tx_reasons:Arc<TxRejectReasons>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
+    outer_first_wire_bytes:Arc<AtomicU64>,
+    outer_repair_wire_bytes:Arc<AtomicU64>,
     tx_lane_switch:SyncSender<TxLaneSwitch>,
     rx_lane_switch:Vec<SyncSender<RxLaneSwitch>>,
     physical_ifname:String,physical_ifindex:u32,
@@ -203,6 +205,8 @@ impl GameKernelOwner{
         let rx_lock_sample=Arc::new(RxLockSample::default());
         let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
         let outer_repeated_copy_sent=Arc::new(AtomicU64::new(0));
+        let outer_first_wire_bytes=Arc::new(AtomicU64::new(0));
+        let outer_repair_wire_bytes=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
         for i in 0..n{
             lanes.push(TxLane{
@@ -255,6 +259,8 @@ impl GameKernelOwner{
         let tx_fail=Arc::clone(&tx_reasons);
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
         let outer_repeated=Arc::clone(&outer_repeated_copy_sent);
+        let tx_outer_first_bytes=Arc::clone(&outer_first_wire_bytes);
+        let tx_outer_repair_bytes=Arc::clone(&outer_repair_wire_bytes);
         #[allow(unused_variables)]
         let (inner_mtu,rx_owner,fec_enabled,health_origin,health_rx)={
             let game=adapter.lock().map_err(|_|())?;
@@ -610,6 +616,11 @@ impl GameKernelOwner{
                             let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
                             let ok=sent.is_ok();
                             if ok {
+                                // One real Linux RAW first DATA copy; no FEC
+                                // symbol/repeat misattribution. Original TCP
+                                // DATA has exactly 40 bytes outer overhead.
+                                tx_outer_first_bytes.fetch_add(
+                                    wire.len() as u64+40,Ordering::Relaxed);
                                 if pad>0{
                                     tx_pad_records.fetch_add(1,Ordering::Relaxed);
                                     tx_pad_bytes.fetch_add(pad as u64,Ordering::Relaxed);
@@ -827,6 +838,8 @@ impl GameKernelOwner{
                             }else{false};
                             if copied{
                                 outer_repeated.fetch_add(1,Ordering::Relaxed);
+                                tx_outer_repair_bytes.fetch_add(
+                                    copy.wire.len() as u64+40,Ordering::Relaxed);
                             }
                             let _=cosmetic.complete(copy.lane,copy.pn,copied,
                                 clock_ns);
@@ -1237,7 +1250,8 @@ impl GameKernelOwner{
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
             rx_delivery_commit_failed,rx_lock_sample,tx_reasons,outer_blocked_duplicate,
-            outer_repeated_copy_sent,tx_lane_switch,rx_lane_switch,
+            outer_repeated_copy_sent,outer_first_wire_bytes,
+            outer_repair_wire_bytes,tx_lane_switch,rx_lane_switch,
             physical_ifname:ifname.to_string(),physical_ifindex:ifindex,
             physical_generation:generation,server,
             diagnostic_adapter:adapter,tx_work_sample,tx_shared_burst_extra,
@@ -1291,10 +1305,12 @@ impl GameKernelOwner{
     pub(crate) fn fail_closed_after_hot_rekey(&self){
         self.stop.store(true,Ordering::Release);
     }
-    pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
+    pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64,u64,u64){
         (self.outer_repeated_copy_sent.load(Ordering::Relaxed),
          self.outer_blocked_duplicate.load(Ordering::Relaxed),
-         self.copied.load(Ordering::Relaxed))
+         self.copied.load(Ordering::Relaxed),
+         self.outer_first_wire_bytes.load(Ordering::Relaxed),
+         self.outer_repair_wire_bytes.load(Ordering::Relaxed))
     }
     pub(crate) fn padding_copied_counters(&self)->(u64,u64){
         (self.padded_copied_records.load(Ordering::Relaxed),
