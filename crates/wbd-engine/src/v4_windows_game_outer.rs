@@ -19,7 +19,7 @@ use std::sync::Arc;
 // Windows GameFEC outer packet under genuine 10% loss. The Normal single
 // adaptive PTO is a cosmetic fallback when the peer supplies no usable
 // duplicate-ACK gap. Rate-limited repeats NEVER count as FEC recovery.
-const FEC_SHADOW_SAMPLE_MASK:u64=0;
+const FEC_SHADOW_SAMPLE_MASK:u64=1; // one optional FEC snapshot / 2 original copies
 const FEC_OUTER_MIN_INTERVAL_NS:u64=80_000_000;
 
 /// GameAdapter owns the distinct original-Go-TLS-derived AEAD/PN, not Normal
@@ -96,9 +96,9 @@ impl GameOuter{
             // v3 gap-only mode had no dependable retransmit wake. Use the
             // SAME Normal receipt/810ms adaptive PTO when FEC is enabled;
             // Game/off continues its existing v3 ACK-only path.
-            if !fec_sparse{
-                shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
-            }
+            // Game OFF and fixed6 both follow Normal's true-gap-only
+            // cosmetic policy: no healthy 810ms DATA PTO.
+            shadow.enable_opportunistic_v3().map_err(|_|BAD_STAGE)?;
             let ack=OuterAckIndex::new(lane,cfg.first.epoch,
                 u64::from(entry.tx_seq),MAX_M2_FIXED_FROZEN)
                 .map_err(|_|BAD_STAGE)?;
@@ -148,19 +148,21 @@ impl GameOuter{
             return m.ack.advance_untracked(high,wire.len() as u32)
                 .map_err(|_|BAD_STAGE)
         }
+        let now=m2_clock();
+        let bytes=wire.len().checked_add(54).ok_or(INVALID)? as u64;
+        // ALL successful original first copies count toward F, even
+        // unselected FEC samples; the shared R/F cap cannot be diluted.
+        m2_global().lock().map_err(|_|BAD_STAGE)?
+            .on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
         if !retain{
-            // Normal ACK still bounds all actual copied TCP bytes; gaps
-            // at unsampled spans MUST NOT nominate the next held record.
             m.ack.advance_untracked(high,wire.len() as u32)
                 .map_err(|_|BAD_STAGE)?;
             return Ok(())
         }
-        let now=m2_clock();
-        let bytes=wire.len().checked_add(54).ok_or(INVALID)? as u64;
-        m2_global().lock().map_err(|_|BAD_STAGE)?
-            .on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
-        m.ack.on_definitely_sent(RecordPn(pn),high,wire.len() as u32,now)
-            .map_err(|_|BAD_STAGE)?;
+        if !m.ack.on_definitely_sent(RecordPn(pn),high,
+            wire.len() as u32,now).map_err(|_|BAD_STAGE)?{
+            return Ok(()) // no shadow without positive indexed hint
+        }
         // Normal's bounded optional receipt arena: a full cache never
         // blocks actual original FEC source/parity first sends.
         if m.shadow.outstanding()>=MAX_M2_FIXED_FROZEN ||
@@ -188,13 +190,11 @@ impl GameOuter{
         let m=self.lanes.get_mut(index).ok_or(INVALID)?;
         let high=m.ack.highest_sent_end();
         if seq!=high as u32 || wire_len==0{return Err(BAD_STAGE)}
-        if !self.repair_enabled||self.fec_sparse{
-            return m.ack.advance_untracked(high,wire_len as u32)
-                .map_err(|_|BAD_STAGE)
-        }
-        m.ack.on_definitely_sent(
-            RecordPn(pn),high,wire_len as u32,m2_clock())
-            .map(|_|()).map_err(|_|BAD_STAGE)
+        // Authenticated Health advances the original TCP sequence only;
+        // never index it as repairable DATA in either Game mode.
+        let _=pn;
+        m.ack.advance_untracked(high,wire_len as u32)
+            .map_err(|_|BAD_STAGE)
     }
     pub(super) fn on_hint(&mut self,index:usize,ack:u32,
         sacks:&[SackRange32])->bool{
@@ -203,7 +203,7 @@ impl GameOuter{
         // first-copy indexing makes such gaps observable. No FEC credit.
         if !self.repair_enabled{return false}
         let Some(m)=self.lanes.get_mut(index)else{return false};
-        let exact=!self.fec_sparse||m.ack.tracks_cumulative_head(ack);
+        let exact=m.ack.tracks_cumulative_head(ack);
         let now=m2_clock();
         let Ok(update)=m.ack.on_feedback(
             m.lane,self.epoch,ack,sacks,now,20_000_000)else{return false};
@@ -378,7 +378,7 @@ mod tests{
     }
     #[test]
     fn h811_fec_reuses_normal_cumulative_gap_without_flooding_every_record(){
-        assert_eq!(FEC_SHADOW_SAMPLE_MASK+1,1);
+        assert_eq!(FEC_SHADOW_SAMPLE_MASK+1,2);
         assert_eq!(1_000_000_000/FEC_OUTER_MIN_INTERVAL_NS,12);
         // All original FEC sends now have an exact Normal ACK entry.
         // No earlier untracked hole may suppress the only appearance retry.
@@ -394,16 +394,14 @@ mod tests{
             }
         }
         assert_eq!(ack.highest_sent_end(),420);
-        assert!(ack.tracks_cumulative_head(100));
+        assert!(!ack.tracks_cumulative_head(100));
         assert!(ack.tracks_cumulative_head(250)); // packet 16
-        assert!(ack.tracks_cumulative_head(260)); // packet 17
+        assert!(!ack.tracks_cumulative_head(260)); // unsampled packet 17
         assert!(ack.tracks_cumulative_head(410)); // packet 32
         // No fake M4/FEC credit is awarded by the optional ACK index.
     }
     #[test]
-    fn h814_normal_receipt_pto_fallback_nominates_real_fec_original_once(){
-        // Exact production Normal receipt configuration; no artificial
-        // crypto reseal, source FEC credit, new PN or fake NPF receipt.
+    fn r1_game_fec_receipt_needs_authentic_gap_without_unsolicited_pto(){
         let lane=LaneKey{tunnel:TunnelKey{slot:0x474d0001,generation:9},
             slot:1,generation:9};
         let mut s=ReceiptState::<GameFrozen>::new(lane,ReceiptConfig{
@@ -411,29 +409,25 @@ mod tests{
             pto_ns:810_000_000,reorder_window_ns:20_000_000,
         }).unwrap();
         s.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
-        // GameFEC intentionally DOES NOT enable gap-only opportunistic_v3.
-        assert!(!s.is_opportunistic_v3());
+        s.enable_opportunistic_v3().unwrap();
+        assert!(s.is_opportunistic_v3());
         let frozen=GameFrozen{
             wire:Arc::from([0x5au8;120].as_slice()),
-            meta:FrozenMetadata{lane,seq:SeqOffset(100),pn:RecordPn(7),
-                carrier_snapshot:0},
+            meta:FrozenMetadata{lane,seq:SeqOffset(100),pn:RecordPn(7),carrier_snapshot:0},
             origin:BufferOrigin{owner_arena:lane.tunnel.slot,
                 key:BufferKey{slot:7,generation:0}},
         };
         s.on_sent_adaptive_with_floor(
             frozen,MonoNs(0),WIN_NORMAL_M2_MIN_RETAIN_NS).unwrap();
-        let due=s.next_deadline().expect("Normal PTO must schedule original");
-        assert!(due.0>0&&due.0<WIN_NORMAL_M2_MIN_RETAIN_NS);
-        assert!(s.on_timer(MonoNs(due.0-1)).candidates.is_empty());
-        let result=s.on_timer(due);
-        assert_eq!(result.candidates.len(),1);
-        let candidate=&result.candidates[0];
-        assert_eq!(candidate.pn(),RecordPn(7));
-        assert_eq!(candidate.frozen().metadata().seq,SeqOffset(100));
-        assert_eq!(candidate.frozen().bytes(),&[0x5au8;120]);
-        s.on_send_result(candidate,RepairSendResult::Accepted,due).unwrap();
+        assert!(s.on_timer(MonoNs(900_000_000)).candidates.is_empty());
+        assert!(s.on_outer_gap_hint(RecordPn(7),MonoNs(910_000_000)));
+        let due=s.next_deadline().unwrap();
+        assert!(due.0>=930_000_000);
+        let candidates=s.on_timer(due).candidates;
+        assert_eq!(candidates.len(),1);
+        assert_eq!(candidates[0].pn(),RecordPn(7));
+        s.on_send_result(&candidates[0],RepairSendResult::Accepted,due).unwrap();
         assert_eq!(s.outstanding(),0);
-        assert!(s.on_timer(MonoNs(2_000_000_000)).candidates.is_empty());
     }
     #[test]
     fn game_outer_budget_lanes_have_distinct_real_scope(){

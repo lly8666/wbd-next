@@ -115,7 +115,9 @@ impl CosmeticOuter{
         l.first_record_wire_bytes=l.first_record_wire_bytes.saturating_add(wire.len() as u64);
         if sampled && l.pending.is_none() && l.held.is_none() &&
             now_ns>=l.not_before&&!wire.is_empty()&&wire.len()<=MAX_WIRE{
-            l.pending=Some((now_ns.saturating_add(AFTER_FIRST_NS),
+            // Unlike the old 250ms healthy timer, a real ACK gap alone
+            // may arm this frozen original ciphertext. No fake DATA PTO.
+            l.pending=Some((u64::MAX,
                 CosmeticCopy{lane:index,pn,seq,wire:Arc::from(wire)}));
         }
         Ok(())
@@ -170,12 +172,13 @@ impl CosmeticOuter{
             CosmeticCopy{lane:index,pn,seq,wire:Arc::from(wire)}));
     }
     pub fn next_due(&self)->Option<u64>{
-        self.lanes.iter().filter_map(|l|l.pending.as_ref().map(|x|x.0)).min()
+        self.lanes.iter().filter_map(|l|l.pending.as_ref()
+            .and_then(|x|(x.0!=u64::MAX).then_some(x.0))).min()
     }
     pub fn take_due(&mut self,now_ns:u64,active:&[bool])->Option<CosmeticCopy>{
         for l in &mut self.lanes{
             let Some((due,row))=l.pending.as_ref()else{continue};
-            if *due>now_ns||l.held.is_some(){continue}
+            if *due==u64::MAX||*due>now_ns||l.held.is_some(){continue}
             if !active.is_empty()&&!active.get(row.lane).copied().unwrap_or(false){
                 l.pending=None;continue
             }
@@ -239,6 +242,20 @@ mod tests{
         assert_eq!(c.first_record_wire_bytes(),0); // should_sample path
     }
     #[test]
+    fn r1_game_lossless_cumulative_ack_has_no_outer_copy(){
+        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:18,generation:2},
+            slot:1,generation:2};
+        let mut c=CosmeticOuter::with_normal_feedback(&[key],&[100],[9;16]).unwrap();
+        for i in 0..32u64{
+            c.on_firstsend(0,i+1,100+10*i,b"0123456789",
+                (i+1)*1_000_000).unwrap();
+        }
+        assert!(c.take_due(500_000_000,&[]).is_none());
+        assert!(!c.on_feedback(0,420,600_000_000));
+        assert!(c.next_due().is_none());
+        assert_eq!(c.sent(),0);
+    }
+    #[test]
     fn h812_normal_ack_targets_missing_original_not_later_sample(){
         let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:14,generation:11},
             slot:1,generation:11};
@@ -248,7 +265,7 @@ mod tests{
             c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
                 i*1_000_000).unwrap();
         }
-        assert_eq!(c.next_due(),Some(266_000_000)); // original PN16 only
+        assert_eq!(c.next_due(),None); // no unsolicited Game DATA PTO
         for t in [40_000_000,50_000_000,60_000_000]{
             assert!(!c.on_feedback(0,100,t))
         }
@@ -291,50 +308,45 @@ mod tests{
             c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
                 i*1_000_000).unwrap();
         }
-        assert_eq!(c.next_due(),Some(266_000_000));
+        assert_eq!(c.next_due(),None);
         assert!(!c.on_feedback(0,260,100_000_000));
         assert!(c.next_due().is_none());
         assert_eq!(c.sent(),0);
     }
     #[test]
-    fn m0_plan028_game2_off_policy_on_uses_same_frozen_outer_pn_seq_once(){
-        // Game2 OFF still has two original authenticated lanes. The FEC
-        // flag must not suppress a requested sparse outer appearance.
-        // One first copy per physical lane is TRACKED only on every 16th
-        // confirmed copied record, independent of FEC source ownership.
-        let first=LaneKey{tunnel:wbd_types::TunnelKey{slot:17,generation:9},
+    fn r1_game_original_ciphertext_requires_real_gap_and_replays_once(){
+        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:17,generation:9},
             slot:1,generation:9};
-        let second=LaneKey{tunnel:wbd_types::TunnelKey{slot:17,generation:9},
-            slot:2,generation:9};
-        let mut outer=CosmeticOuter::with_normal_feedback(
-            &[first,second],&[100,900],[5;16]).unwrap();
+        let mut outer=CosmeticOuter::with_normal_feedback(&[key],&[100],[5;16]).unwrap();
         let wire=b"real-original-ciphertext";
-        for i in 0..16u64{
+        // PN16 is the exact sampled head; PN32 is an actual later copy.
+        for i in 0..32u64{
             outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
                 wire,(i+1)*1_000_000).unwrap();
         }
-        assert_eq!(outer.next_due(),Some(266_000_000));
-        assert!(outer.take_due(265_999_999,&[true,true]).is_none());
-        let repeat=outer.take_due(266_000_000,&[true,true]).unwrap();
-        assert_eq!(repeat.lane,0);
-        assert_eq!(repeat.pn,16);
-        assert_eq!(repeat.seq,100+15*wire.len() as u64);
-        let frozen=repeat.frozen(first);
+        assert_eq!(outer.next_due(),None);
+        assert!(outer.take_due(1_000_000_000,&[true]).is_none());
+        let head=(100+15*wire.len()) as u32;
+        for t in [80_000_000,90_000_000,100_000_000]{
+            assert!(!outer.on_feedback(0,head,t));
+        }
+        assert!(outer.on_feedback(0,head,110_000_000));
+        let copy=outer.take_due(110_000_000,&[true]).unwrap();
+        assert_eq!((copy.pn,copy.seq),(16,u64::from(head)));
+        let frozen=copy.frozen(key);
         assert_eq!(frozen.bytes(),wire);
         assert_eq!(frozen.metadata().pn,RecordPn(16));
-        assert_eq!(frozen.metadata().seq,SeqOffset(repeat.seq));
-        assert!(outer.take_due(266_000_001,&[true,true]).is_none());
-        assert!(outer.complete(0,16,true,266_000_000));
-        assert!(!outer.complete(0,16,true,266_000_001));
+        assert!(outer.take_due(110_000_001,&[true]).is_none());
+        assert!(outer.complete(0,16,true,110_000_000));
+        assert!(!outer.complete(0,16,true,110_000_001));
         assert_eq!(outer.sent(),1);
-        assert_eq!(outer.first_record_wire_bytes(),16*wire.len() as u64);
+        assert_eq!(outer.first_record_wire_bytes(),32*wire.len() as u64);
         assert_eq!(outer.copied_record_wire_bytes(),wire.len() as u64);
-        // Cooldown protects low-rate appearance even if data is busy.
-        for i in 16..32u64{
+        for i in 32..48u64{
             outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
                 wire,(i+1)*1_000_000).unwrap();
         }
-        assert!(outer.next_due().is_none());
+        assert!(outer.next_due().is_none()); // bounded cooldown
     }
     #[test]
     fn game_fec_cosmetic_cannot_resume_retired_lane_or_double_credit(){
