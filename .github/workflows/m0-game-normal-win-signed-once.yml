@@ -17,8 +17,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      FROZEN_REF: experiment/m0-game-normal-frozen-6e555ea
-      FROZEN_SHA: 6e555ea8044469be0316e18e94f1d9ce1e70e0f0
+      FROZEN_REF: experiment/m0-game-normal-frozen-6f8859d
+      FROZEN_SHA: 6f8859d3f8cf1b2286dc7658bc0768c72b9bf157
       SCENARIO: scenarios/m0-cosmetic-game2-loss30-60s.json
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
