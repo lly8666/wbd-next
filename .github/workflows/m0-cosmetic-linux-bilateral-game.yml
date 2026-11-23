@@ -1,4 +1,4 @@
-# H2328 rearm: real manifest source_sha and Game-mode owned readback corrected; exact main-source rerun.
+# H2330 staging: new genuine current-source Linux client and Linux server Normal/Game2/Game4 OFF/fixed6 18-case matrix.
 # H2325 arm exact source-frozen one-time bilateral native matrix; no runtime product change.
 name: M0 current-source Linux client AND server Normal/Game cosmetic outer repair
 run-name: "M0-LINUX-CLIENT-SERVER-COSMETIC|${{ github.sha }}"

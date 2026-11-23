@@ -1,4 +1,4 @@
-# H2325 arm exact source-frozen one-time bilateral native matrix; no runtime product change.
+# H2330 Windows Game: first build signed exact new Game source, then 12 true loss-tiers reuse it. No old 92920fb binary.
 name: M0 signed Windows to Linux bidirectional Game2 Game4 cosmetic matrix
 run-name: "M0-WINDOWS-GAME-OUTER-12|${{ github.sha }}"
 on:
@@ -7,7 +7,93 @@ on:
     paths: [.github/workflows/m0-cosmetic-win-game-matrix.yml]
 permissions: {contents: read, actions: write}
 jobs:
+  bootstrap:
+    if: contains(github.event.head_commit.message, '[m0-cosmetic-win-game-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 48
+    outputs:
+      run_id: ${{ steps.real.outputs.run_id }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      FIRST_SCENE: scenarios/m0-cosmetic-game2-loss0-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze this exact original Game native runtime and scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          import os
+          v=read_scenario(os.environ["FIRST_SCENE"])
+          assert v["public_mode"]=="game2" and v["seed"]==20261029
+          assert v["duration_s"]==60 and v["tun_mtu"]==1400
+          assert all(v[d]["loss_pct"]==0 and v[d]["offered_mbps"]==10
+                     for d in ("windows_to_linux","linux_to_windows"))
+          src=open("crates/wbd-engine/src/v4_game_cosmetic_outer.rs").read()
+          assert "u64::MAX" in src and "const SAMPLE_MASK:u64=1;" in src
+          win=open("crates/wbd-engine/src/v4_windows_game_outer.rs").read()
+          assert "shadow.enable_opportunistic_v3()" in win
+          print("M0_GAME_NORMAL_ALIGNED_SOURCE_FROZEN",os.environ["GITHUB_SHA"])
+          PY
+      - name: Build and execute one genuinely signed Windows Game2 zero-loss native source
+        id: real
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_run() {
+            gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg sha "$GITHUB_SHA" --arg scene "$FIRST_SCENE" '[.workflow_runs[] | select(.head_sha==$sha and (.name|contains($scene)))] | sort_by(.created_at) | last | .id // empty'
+          }
+          id="$(find_run)"
+          if [ -z "$id" ]; then
+            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+            # No reuse: build signed Windows original Go EXE/Rust DLL and
+            # exact original Linux peer from this same code+fixture SOURCE.
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f public_mode=game2 -f native_outer_mtu=legacy1400 \
+              -f outer_repair=on -f "perf_scenario_file=$FIRST_SCENE"
+          fi
+          for i in $(seq 1 75); do
+            id="$(find_run)"; if [ -n "$id" ]; then break; fi
+            sleep 10
+          done
+          test -n "$id" || { echo M0_GAME_SIGNED_BUILD_DISPATCH_MISSING >&2; exit 1; }
+          echo "run_id=$id" >>"$GITHUB_OUTPUT"
+          echo "M0_GAME_SIGNED_BUILD_STARTED_NOT_PASS run=$id source=$GITHUB_SHA"
+          result=""
+          for i in $(seq 1 160); do
+            row="$(gh api "repos/$GH_REPO/actions/runs/$id")"
+            if [ "$(jq -r .status <<<"$row")" = completed ]; then
+              result="$(jq -r .conclusion <<<"$row")"; break
+            fi
+            if (( i % 4 == 0 )); then
+              boot="$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+                jq -r '[.jobs[] | select(.name=="native-public-two-os") | .steps[]? |
+                 select(.name=="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)" and .status=="in_progress") | .started_at] | first // empty')"
+              if [ -n "$boot" ]; then
+                secs=$(( $(date -u +%s) - $(date -u -d "$boot" +%s) ))
+                if (( secs>840 )); then
+                  echo "M0_GAME_STALE_WSL2_ENV_NOT_QUALIFIED run=$id seconds=$secs" >&2
+                  gh api -X POST "repos/$GH_REPO/actions/runs/$id/cancel" >/dev/null || :
+                  exit 1
+                fi
+              fi
+            fi
+            sleep 15
+          done
+          test "$result" = success || { echo "M0_GAME_NEW_SOURCE_NATIVE_FAIL run=$id result=$result" >&2; exit 1; }
+          gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+            jq -e '.jobs | any(.name=="native-public-two-os" and .conclusion=="success")' | grep -Fxq true
+          names="$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100" --jq '.artifacts[].name')"
+          grep -Fxq "m0-wl-windows-product-binaries-$GITHUB_SHA" <<<"$names"
+          grep -Fxq m0-plan024-linux-product <<<"$names"
+          grep -Fxq "m0-wl-full-public-normal-direct-h1506-legacy-$id" <<<"$names"
+          echo "M0_GAME_REAL_SIGNED_SOURCE_AND_NATIVE_ZERO_PASS run=$id"
   game:
+    needs: [bootstrap]
     if: contains(github.event.head_commit.message, '[m0-cosmetic-win-game-once]')
     strategy:
       fail-fast: false
@@ -20,8 +106,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      PRODUCT_SOURCE: 92920fb96f2d77ca11abcfdf4a4069d24731f62b
-      PRODUCT_RUN: "45111958268"
+      PRODUCT_SOURCE: ${{ github.sha }}
+      PRODUCT_RUN: ${{ needs.bootstrap.outputs.run_id }}
       MODE: ${{ matrix.mode }}
       LOSS: ${{ matrix.loss }}
       SCENARIO: scenarios/m0-cosmetic-${{ matrix.mode }}-loss${{ matrix.loss }}-60s.json
