@@ -515,13 +515,16 @@ public final class RootClientActivity extends Activity {
     private void start(){
         traceUi(RootDiagnosticReceipt.Event.UI_START_TAPPED);
         boolean dispatchRequested=false;
+        boolean claimedStart=false;
         try{
-            // One explicit cold authorization at a time. In particular,
-            // do not rewrite the previous live Root owner's credential
-            // files while a different physical Network is selected.
-            if(RootClientService.sessionOwnerActive)
+            // Reserve the asynchronous Activity→Service gap before ANY
+            // app-private credentials are written. The Service swaps this
+            // reservation for its actual running native owner.
+            if(RootClientService.sessionOwnerActive||
+               !RootClientService.startDispatchPending.compareAndSet(false,true))
                 throw new IllegalStateException(
-                    "旧原生会话尚未退出。先STOP并等待结束，再选新Network手动START");
+                    "旧原生会话或START仍在执行。先STOP并等待结束，再手动START");
+            claimedStart=true;
             if(physical.isEmpty())throw new IllegalArgumentException("No real physical Android Network");
             int pos=networks.getSelectedItemPosition();
             if(pos<0||pos>=physical.size())throw new IllegalArgumentException("No selected Network");
@@ -679,6 +682,7 @@ public final class RootClientActivity extends Activity {
             // Preserve on-screen values for another Start in this Activity.
             // The keystore-backed snapshot also restores them after restart.
         }catch(Exception e){
+            if(claimedStart)RootClientService.startDispatchPending.set(false);
             traceUi(dispatchRequested
                 ?RootDiagnosticReceipt.Event.UI_START_DISPATCH_FAILED
                 :RootDiagnosticReceipt.Event.UI_START_VALIDATION_REJECTED);
@@ -1076,7 +1080,8 @@ public final class RootClientActivity extends Activity {
         Button reselect=new Button(this);
         reselect.setText("切换实体Network：STOP旧会话，再刷新并手动START");
         reselect.setOnClickListener(v->{
-            if(RootClientService.sessionOwnerActive){
+            if(RootClientService.sessionOwnerActive||
+               RootClientService.startDispatchPending.get()){
                 new AlertDialog.Builder(this)
                     .setTitle("先退出原会话")
                     .setMessage("将先请求原Go/Rust停止并撤回旧普通App UID路由。"+

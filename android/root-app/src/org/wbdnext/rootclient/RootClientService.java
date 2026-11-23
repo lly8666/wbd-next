@@ -42,6 +42,7 @@ public final class RootClientService extends Service {
     // Read-only UI lifecycle. Explicit cold Network reselect must NOT
     // overwrite still-active native credential files or start another Root.
     static volatile boolean sessionOwnerActive=false;
+    static final AtomicBoolean startDispatchPending=new AtomicBoolean(false);
     static volatile boolean previousOwnerStopConfirmed=false;
     private final AtomicBoolean running=new AtomicBoolean(false);
     private final AtomicBoolean stopping=new AtomicBoolean(false);
@@ -213,9 +214,13 @@ public final class RootClientService extends Service {
         }
         if(!START.equals(intent.getAction())||restoring.get()||
            !running.compareAndSet(false,true)){
+            if(START.equals(intent.getAction()))startDispatchPending.set(false);
             return START_NOT_STICKY;
         }
         sessionOwnerActive=true;
+        // The active native owner now supersedes the Activity's short
+        // asynchronous START reservation; the new Root is not READY yet.
+        startDispatchPending.set(false);
         previousOwnerStopConfirmed=false;
         stopping.set(false);
         stopSignalDispatched.set(false);
@@ -422,7 +427,7 @@ public final class RootClientService extends Service {
                          String[] bypassPackages,int[] bypassUIDs,
                          boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
-        boolean nativeStopSeen=false,routeStopSeen=false;
+        boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         try{
@@ -800,6 +805,10 @@ public final class RootClientService extends Service {
                         nativeStopSeen=true;
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_STOP_JOINED);
                     }
+                    if(RootGameSessionStatus.gameGroupStopped(fecMode,line)){
+                        gameStopSeen=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_GAME_GROUP_STOP_JOINED);
+                    }
                     if(OriginalGoMilestones.matches(line,
                         "V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client")){
                         trace(RootDiagnosticReceipt.Event.SERVER_PEER_THROW_PRIVATE_FIB_READBACK);
@@ -901,7 +910,7 @@ public final class RootClientService extends Service {
                 tunConfigured?"TUN_PRE_RAW":"PRE_TUN";
             previousOwnerStopConfirmed=readyRecorded&&
                 RootGameSessionStatus.confirmedPreviousOwnerStop(
-                    nativeStopSeen,routeStopSeen,exit==0,uidReady);
+                    fecMode,gameStopSeen,nativeStopSeen,routeStopSeen,exit==0,uidReady);
             if(previousOwnerStopConfirmed){
                 trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED);
                 status="OWNED_STOP_VERIFIED — 原Go/Rust与UID路由已归还；可手动重选Network并START（业务未验）";

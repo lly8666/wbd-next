@@ -51,11 +51,21 @@ final class RootGameSessionStatus {
                 "V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client");
     }
 
-    static boolean confirmedPreviousOwnerStop(boolean nativeStop,boolean routeStop,
+    static boolean gameGroupStopped(String selectedMode,String logLine){
+        int lanes=expectedLanes(selectedMode);
+        if(lanes==0||logLine==null)return false;
+        String marker="V4_PUBLIC_ANDROID_GAME_STOP_JOINED role=client lanes="+
+            lanes+" rust_m4=joined uid_route=settled rst_guard=cleared";
+        return logLine.endsWith(marker)&&OriginalGoMilestones.matches(logLine,marker);
+    }
+
+    static boolean confirmedPreviousOwnerStop(String selectedMode,boolean groupStopped,
+                                              boolean nativeStop,boolean routeStop,
                                               boolean successExit,boolean hadUIDRoute){
         // Product claims a clean cold restart ONLY when the previous
         // original process terminated and every owned UID route was
         // read back as withdrawn. Game never gets special fake credit.
-        return successExit&&nativeStop&&(!hadUIDRoute||routeStop);
+        return successExit&&nativeStop&&(!hadUIDRoute||routeStop)&&
+            (expectedLanes(selectedMode)==0||groupStopped);
     }
 }

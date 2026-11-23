@@ -109,9 +109,34 @@ assert 'sessionOwnerActive=true;' in service
 assert 'sessionOwnerActive=false;' in service
 assert 'RootGameSessionStatus.session' not in game_status
 assert 'V4_ORIGINAL_ANDROID_GAME_NATIVE_READY role=client lanes=' in game_status
-assert 'if(RootClientService.sessionOwnerActive)' in app
+assert 'if(RootClientService.sessionOwnerActive||' in app
 assert '切换实体Network：STOP旧会话' in app
 print("ANDROID_B47_GAME_NATIVE_APP_LIFECYCLE_COLD_NETWORK_RESELECT_SOURCE_PASS")
+# B48 actual group Stop: withdraw original UID policy before Rust
+# joined Stop, join the old cold RTO/RAW Go owners and clear the exact
+# durable RST guard. Only an error-free READY product can emit final
+# Stop, and the App requires a Game-specific completed group marker.
+assert g.index('routeErr=undoRoute()') < g.index('closeErr:=native.Close()')
+assert 'V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client' in g
+assert 'retErr=errors.Join(retErr,routeErr,closeErr)' in g
+assert 'retErr=errors.Join(retErr,stopErr)' in g
+assert 'retErr=errors.Join(retErr,r.Close())' in g
+assert 'if guard!=nil{' in g
+assert 'retErr=errors.Join(retErr,fmt.Errorf("Game2/4 RST guard owned Stop failed: %w",err))' in g
+assert 'if productReady&&retErr==nil{' in g
+assert 'V4_PUBLIC_ANDROID_GAME_STOP_JOINED role=client lanes=%d' in g
+assert 'V4_PUBLIC_NATIVE_STOP_DRAINED role=client' in g
+assert 'RootGameSessionStatus.gameGroupStopped(fecMode,line)' in service
+assert 'fecMode,gameStopSeen,nativeStopSeen,routeStopSeen,exit==0,uidReady' in service
+assert 'static final AtomicBoolean startDispatchPending=' in service
+assert 'startDispatchPending.compareAndSet(false,true)' in app
+assert 'startDispatchPending.set(false)' in service
+assert 'ORIGINAL_GO_GAME_GROUP_STOP_JOINED' in Path(
+    "android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
+assert 'static boolean gameGroupStopped(' in game_status
+assert 'expectedLanes(selectedMode)==0||groupStopped' in game_status
+print("ANDROID_B48_ORIGINAL_GAME2_GAME4_ACTUAL_GO_RUST_UID_RST_STOP_SOURCE_PASS")
+
 # B43: Game2 shares original Normal UDP53, native Health and M4 counters.
 rust_group=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
 m4=Path("crates/wbd-engine/src/v4_android_game_m4.rs").read_text()

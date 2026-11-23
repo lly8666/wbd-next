@@ -69,12 +69,14 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
     coldCtx,cancelCold:=context.WithCancel(ctx)
     var readers sync.WaitGroup
     var ready atomic.Bool
+    var productReady bool
     defer func(){
         cancelCold()
         for _,stop:=range stopRTO{
             // Idempotent original cold RTO join on ALL exit paths,
             // including a partial first/second FakeTCP SYN failure.
-            _,_ = stop()
+            _,stopErr:=stop()
+            retErr=errors.Join(retErr,stopErr)
         }
         // The Go physical RAW readers have no authority after this point.
         // Closing the actual source sockets unblocks their kernel reads.
@@ -83,8 +85,14 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
         for _,a:=range assocs{a.Close()}
         if guard!=nil{
             if err:=guard.Close();err!=nil{
-                retErr=errors.Join(retErr,fmt.Errorf("Game2 exact RST guard owned Stop failed"))
+                retErr=errors.Join(retErr,fmt.Errorf("Game2/4 RST guard owned Stop failed: %w",err))
             }
+        }
+        // Native joined Stop, all Go RAW borrows and the exact durable
+        // RST guard must ALL have succeeded. No ready/error shortcut.
+        if productReady&&retErr==nil{
+            log.Printf("V4_PUBLIC_ANDROID_GAME_STOP_JOINED role=client lanes=%d rust_m4=joined uid_route=settled rst_guard=cleared",c.gameLanes)
+            log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=client")
         }
     }()
     // ONE durable scoped iptables rule covers ONLY the two original
@@ -176,13 +184,20 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
     if e!=nil{return e}
     var undoRoute func()error
     defer func(){
-        // Original group Stop MUST join M4 and all RAW loan borrows
-        // BEFORE revoking this product's UID route/physical source.
-        closeErr:=native.Close()
-        retErr=errors.Join(retErr,closeErr)
-        if closeErr==nil&&undoRoute!=nil{
-            retErr=errors.Join(retErr,undoRoute())
+        // Prevent new routed App packets entering the stopping TUN,
+        // then join the single Rust group TX and all 2/4 RAW RX workers.
+        // Failed route withdrawal is a hard error, never clean Stop.
+        var routeErr error
+        if undoRoute!=nil{
+            routeErr=undoRoute()
+            if routeErr==nil{
+                log.Printf("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client")
+            }else{
+                log.Printf("V4_PUBLIC_ANDROID_UID_ROUTE_STOP_UNPROVEN role=client")
+            }
         }
+        closeErr:=native.Close()
+        retErr=errors.Join(retErr,routeErr,closeErr)
     }()
     admission:=realityfront.ClientAdmissionConfig{
         TLS:realityfront.ClientConfig{
@@ -221,6 +236,7 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
         }
     }
     *connected=true
+    productReady=true
     log.Printf("V4_ORIGINAL_ANDROID_GAME_NATIVE_READY role=client lanes=%d original_go_tls=1 original_rust_m4=1 uid_route_after_m4=1",c.gameLanes)
     if c.gameFecEnabled{
         log.Printf("V4_PUBLIC_ANDROID_GAME_FEC_APPLIED role=client lanes=%d mode=fixed profile=%d original_tls=1 original_rust_m4=1",
