@@ -1,3 +1,4 @@
+# Isolated v2: accepted PN counts by SACK vs duplicate ACK.
 # Isolated experimental diagnostic. Production PR #71 and main unchanged.
 name: M0 Game4 FEC 5pct ACK gap nomination source probe
 run-name: "M0-GAME-FEC-ACK-HINT|${{ github.sha }}"
