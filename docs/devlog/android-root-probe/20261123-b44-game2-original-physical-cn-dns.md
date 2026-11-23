@@ -15,3 +15,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B44在原Game2单TUN双RAW M4中复用Normal原Network物理DNS socket、CN8503和三DNS App入口/原Go ABI/计数，不新增逐包Go数据面或安全框架。"}
 ```
+
+## B44 同SOURCE最终软件资格（非实体E2E）
+
+B44产品源码 `f193d5829a3d4e8d46078fb1953b2a2b3e98a6ec` [Android Dual64 #45132376536](https://github.com/lly8666/wbd-next/actions/runs/45132376536) **completed/success，11 SUCCESS/4 SKIPPED**：arm64-native双ABI原Go/Rust、root-arm64-app签名arm64-v8a APK与真实生产类Java测试/B44源码门、linux-original-server-normal-off、linux-x86-original-server-d2-s0，以及六个DNS/CN/M3 Host Job全独立SUCCESS；arm64-cuttlefish-host-admission只验宿主准入，不是guest；四个Android x86 KSU/NativeBridge/TAP guest Job SKIPPED。B44 [Feature catalog #45132376508](https://github.com/lly8666/wbd-next/actions/runs/45132376508) SUCCESS、Governance SKIPPED。**仅BUILD_PASS/HOST_PASS**。Game2真手机两条TLS、物理/CN DNS实际问答、App TCP/UDP真实业务、UID/owned Stop、CPU/吞吐全部NOT_RUN/NOT_PROVEN。旧A48 Normal/off有真实收据，但不得继承给B44。没有部署物理设备或服务端，PR#36仍Draft。
