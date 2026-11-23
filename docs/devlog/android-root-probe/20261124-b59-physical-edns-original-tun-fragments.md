@@ -26,3 +26,18 @@ B59首SOURCE `90caae98548dce71aa5fff1fb29689221e666454` [Dual64 #45219267382](ht
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B59a修复两处Host源码门误认泛型函数签名，真实Rust EDNS大包/小包/中途失败三测试已在原SOURCE PASS；Bionic生产代码不变。"}
 ```
+
+## B59b｜最终同源软件资格与不可宣称项
+
+B59a产品SOURCE `ccc5d47868c34dfee2c2c422207e53573ee9c360` [Android Dual64 #45220240360](https://github.com/lly8666/wbd-next/actions/runs/45220240360) **completed SUCCESS：11 SUCCESS / 4 SKIPPED**：
+
+- 原Go+Rust双ABI Android native / 签名原ARM64 Root APK **SUCCESS**；B59新完整EDNS TXT UDP53大应答 MTU576/1260/1460分片重组、小答原样、第二片TUN失败不误报的3个真实 Rust Host tests **PASS**；已有6个DNS/CN/M3 Host Job皆SUCCESS。
+- 原Linux Normal/off 服务端 Oracle **SUCCESS**，原Linux x86 D2-S0 Oracle **SUCCESS**，ARM64 Cuttlefish宿主准入 **SUCCESS（host-only，不是 Android guest/E2E）**。
+- KSU guest、NativeBridge、D2-S1、TAP guest **4 SKIPPED**；没有实体手机、个人服务器或任何物理Network操作。真机 App DNS/回包/原生Stop、系统Resolver/netd/DoH、物理TCP53、Android↔Linux业务逐字节及CPU/功耗 **NOT_RUN/NOT_PROVEN**。
+- 原B59 `90caae98548d` [#45219267382](https://github.com/lly8666/wbd-next/actions/runs/45219267382) 的DNS Host和APK源码查找误判泛型Rust函数签名导致产品FAIL，`ccc5d47868c3` B59a仅更正两处测试查找且没有修改生产代码，现整套同源PASS。功能卡 B59a [#45220240322](https://github.com/lly8666/wbd-next/actions/runs/45220240322) SUCCESS，原B59治理 [#45219267577](https://github.com/lly8666/wbd-next/actions/runs/45219267577) SUCCESS。
+
+本B59b仅登记最终状态、更新板卡摘要；不再重新编译Go/Rust/APK、不重新执行大型诊断，也不改变已有唯一分支、Draft PR #36 或main。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B59b登记B59a同源双ABI/签名ARM64 APK/原Linux Oracle及EDNS RFC791 Host软件11 SUCCESS/4 SKIPPED，修复首版测试门FAIL的最终事实；所有Android真实网络及系统Resolver继续NOT_RUN。"}
+```
