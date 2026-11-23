@@ -1,3 +1,4 @@
+# H2325 arm exact source-frozen one-time bilateral native matrix; no runtime product change.
 name: M0 signed Windows to Linux bidirectional Game2 Game4 cosmetic matrix
 run-name: "M0-WINDOWS-GAME-OUTER-12|${{ github.sha }}"
 on:
