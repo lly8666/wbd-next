@@ -23,6 +23,11 @@
 - 新原生单元覆盖连续推进ACK但局部4连发的**无损不重传**。Linux 原双向实测 validator 对 Game 无损加包数上限：按真实 `first_lane_copied` 为代理分母，复制包数<=0.05%；仅为保守外观频率代理，不冒充真正wire byte R/F。任何超线 FAIL 而非假PASS。
 - 旧7e源码测量不可当新源码修复证据，需同时核收 Windows→Linux Game12、Linux client/server Game18 新SHA和真实 netem/Stop/CPU。
 
+## H2333 · 真实 native unit 在两平台发现第二条 exact-gap 假机会
+- 在 SOURCE `53fd6ff` 的 Windows Rust 428/429 与 Linux 348/349 全库测试中，新增 `r1_game_short_duplicate_ack_burst_with_progress_is_not_real_stall` 都**失败**，直接证明第一版只限制稀疏 stall 不足以防洪泛：Game的 exact sampled cumulative gap 分支绕过同ACK>=1秒门。
+- main SOURCE `21cff32` 已将 `exact_gap` 也加真实同ACK>=1s与>=3认证重复ACK条件；原早期88ms/110ms提名旧单元更改为认证值持续1秒后再提名。这是保守的表演式外观，首发优先，无DATA定时PTO、无假ACK，原冻结密文只一次，字节上限不变。
+- 53fd源码的双端真网和Windows游戏测试即使随后green也不继承本次修复。必须对新SOURCE做新的exact-code unit与0/5/30% Linux/Win Game外层复测。
+
 ```feature-impact
-{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game genuine authenticated ACK must stay unchanged >=1s; zero-loss game appearance flood is now fail-closed with per-role original Stop count; original one-shot F budget and no DATA PTO unchanged, native WAN pending."}
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game exact sampled gap and sparse stalled-ACK both require unchanged authenticated ACK >=1s; zero-loss per-role original Stop anti-flood remains fail-closed, immutable one-copy and byte cap kept; native WAN pending."}
 ```
