@@ -75,6 +75,16 @@ impl NativePresentationAck{
         self.stalled=None;
         true
     }
+    /// Same four newest authentic positive intervals as Normal. Fixed stack
+    /// output (unlike Normal's convenient Vec), no allocation on Game RX.
+    pub(crate) fn sacks4(&self)
+        ->[Option<wbd_platform::ipv4_tcp::SackRange32>;4]{
+        let mut spans=self.future.iter().rev().take(4);
+        std::array::from_fn(|_|spans.next().map(|&(start,end)|
+            wbd_platform::ipv4_tcp::SackRange32{
+                start:start as u32,end:end as u32,
+            }))
+    }
     /// Latest actually AEAD-opened physical future span for Normal-style
     /// SACK feedback. One positive interval bounds many missing candidates;
     /// fixed-size, no allocation or separate controller in the hot path.
@@ -121,6 +131,19 @@ mod tests{
         assert_eq!(ledger.verified(100,50),160);
         assert!(ledger.latest_sack().is_none());
         assert!(!ledger.authenticated_future(160));
+    }
+    #[test]
+    fn game_four_sack_positive_intervals_match_normal_newest_four(){
+        let mut x=NativePresentationAck::new(100);
+        for i in 1..=6u32{
+            assert_eq!(x.verified(100+100*i,20),100);
+        }
+        let got=x.sacks4();
+        for i in 0..4usize{
+            assert_eq!(got[i],Some(wbd_platform::ipv4_tcp::SackRange32{
+                start:700-(i as u32)*100,end:720-(i as u32)*100
+            }));
+        }
     }
     #[test]
     fn normal_stalled_outer_head_progresses_after_250ms_without_tun_receipt(){
