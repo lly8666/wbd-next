@@ -1688,3 +1688,47 @@ assert "RootDiagnosticReceipt.safeEventToken(event)" in report
 print("ANDROID_A36_APP_RESTORE_CERT_TRUST_SOURCE_GATE_PASS")
 print("ANDROID_NETWORK_EVENT_NO_POLLING_SOURCE_GATE_PASS")
 PY
+
+# B58 original Android selected-App / full ordinary-App route expansion.
+# All three production modes retain one Go owner, original kernel ip rules,
+# the same durable journal/Stop and final exact kernel table readback.
+python3 - <<'PY'
+from pathlib import Path
+java=Path("android/root-app/src/org/wbdnext/rootclient")
+go=Path("r0/go_overlay/internal/v4productcli")
+group=(go/"rootjournal/group.go").read_text()
+allapps=(go/"rootjournal/allapps.go").read_text()
+single=(go/"rootjournal/journal.go").read_text()
+direct=(go/"rootjournal/direct.go").read_text()
+cli=(go/"linux.go").read_text()
+selected=(java/"SelectedAppGroup.java").read_text()
+routes=(java/"RootDirectIPv4.java").read_text()
+argv=(java/"OriginalGoCommandArgs.java").read_text()
+app=(java/"RootClientActivity.java").read_text()
+assert 'static final int MAX_UIDS=16;' in selected
+assert 'static final int MAX_PACKAGES=32;' in selected
+assert 'targetUids.length>16' in argv
+assert 'static final int MAX_PREFIXES=16;' in routes
+assert 'const GroupMaxUIDs = 16' in group
+assert 'const MaxDirectIPv4CIDRs=16' in direct
+assert 'if len(parts)<2||len(parts)>16{' in cli
+assert '2..16 ordinary App UIDs' in cli
+assert '最多16个不同UID、32个包' in app
+assert '最多16个IPv4直连网段' in routes
+# Keep the final full-table readback; avoid quadratic re-queries inside UID
+# loops and keep one aggregate direct FIB gate BEFORE the first UID add.
+assert 'allDirectPresent(direct)||anyRules(rules)' in allapps
+assert 'allDirectPresent(direct)||anyRules(rules)' in group
+assert 'allDirectPresent(direct)||rule' in single
+assert 'if e=s.requireReady(original);e!=nil{' in allapps
+assert 'if err=s.requireReady(original);err!=nil{' in group
+assert 'if err=s.requireReady(original);err!=nil{' in single
+assert 's.query(original)' not in allapps.split('for i,r:=range original.ranges(){',1)[1].split('if e=s.requireReady(original);e!=nil',1)[0]
+assert 's.query(original)' not in group.split('for i,uid:=range original.UIDs {',1)[1].split('if err=s.requireReady(original);err!=nil',1)[0]
+assert 'TestB58SixteenRealSelectedUIDsBoundedKernelReadbacks' in (go/"rootjournal/group_test.go").read_text()
+assert 'TestB58AllAppsConstantReadbackAcrossAllTwentyUserProfiles' in (go/"rootjournal/allapps_test.go").read_text()
+assert 'TestB58SixteenDirectPrefixesAndSixteenAppUIDsOriginalKernel' in (go/"rootjournal/direct_integration_test.go").read_text()
+assert 'TestB58OriginalGoColdSixteenSelectedUIDs' in (go/"android_parse_reason_linux_test.go").read_text()
+print("ANDROID_B58_SELECTED_16_UID_32_PACKAGES_AND_DIRECT_16_CIDRS_ORIGINAL_ROOT_SOURCE_PASS")
+print("ANDROID_B58_SINGLE_GROUP_ALL_APP_CONSTANT_KERNEL_READBACK_SOURCE_PASS")
+PY

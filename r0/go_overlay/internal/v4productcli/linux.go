@@ -131,7 +131,7 @@ type config struct{
     androidNetworkHandle uint64 // selected physical ConnectivityManager Network
     androidPhysicalMTU uint32 // same interface cold readback
     androidRouteUID int // legacy single ordinary App UID; never root/global
-    androidRouteUIDs []int // canonical 2..8 ordinary Android App UIDs, cold-only
+    androidRouteUIDs []int // canonical 2..16 ordinary Android App UIDs, cold-only
     androidRouteAllApps bool // ordinary app UID ranges, no root/system/main FIB
     androidRouteExcludeAppIDs []int // own + KernelSU manager per-user app ID exclusions
     androidDirectCIDRs []string // opt-in real kernel throw routes in SAME UID table
@@ -210,8 +210,8 @@ func originalV4ColdAssocPeerPersona(assoc *faketcp.ServerAssociation,
 func parseAndroidRouteGroupArg(s string)([]int,error){
     if s==""{return nil,nil}
     parts:=strings.Split(s,",")
-    if len(parts)<2||len(parts)>8{
-        return nil,fmt.Errorf("Android UID group needs 2..8 entries")
+    if len(parts)<2||len(parts)>16{
+        return nil,fmt.Errorf("Android UID group needs 2..16 entries")
     }
     uids:=make([]int,0,len(parts))
     previous:=0
@@ -258,13 +258,13 @@ func parse(role string,args []string)(config,error){
     androidRouteUID:=flags.Int("android-route-uid",0,
         "Android ARM64 Root ONLY: one app UID (>=10000) routed after original TLS/lease/M4, 0 disables routing")
     androidRouteGroup:=flags.String("android-route-uids","",
-        "Android Root: canonical 2..8 ordinary App UIDs; mutually exclusive with single and all-apps")
+        "Android Root: canonical 2..16 ordinary App UIDs; mutually exclusive with single and all-apps")
     androidRouteAll:=flags.Bool("android-route-all-apps",false,
         "Android Root after authenticated lease/M4: route ordinary App UIDs in 20 profiles, never system/root")
     androidRouteExclude:=flags.String("android-route-exclude-appids","",
         "Android all-apps: mandatory canonical excluded controller+root-manager app IDs (10000..19999)")
     androidDirectCIDRs:=flags.String("android-direct-cidrs","",
-        "Android Root: up to four explicit IPv4 CIDRs to bypass the WBD private UID table; empty keeps original full tunnel")
+        "Android Root: up to sixteen explicit IPv4 CIDRs to bypass the WBD private UID table; empty keeps original full tunnel")
     cnGeositeFile:=flags.String("android-cn-geosite-file","",
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
     androidTunnelDNS:=flags.Bool("android-tunnel-dns",false,

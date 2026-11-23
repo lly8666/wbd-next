@@ -135,3 +135,49 @@ func TestB33OriginalRootDirectCIDRFailureRollsBack(t *testing.T){
  if fake.defaultTun||len(fake.throws)!=0||len(fake.rules)!=0{t.Fatal("partial prefix route not rolled back")}
  if _,e:=os.Stat(path);!os.IsNotExist(e){t.Fatal("journal not cleared after verified rollback")}
 }
+
+func TestB58SixteenDirectPrefixesAndSixteenAppUIDsOriginalKernel(t *testing.T){
+ _,path,plan:=groupFixture(t)
+ plan.ServerIP="203.0.113.9"
+ plan.UIDs=make([]int,16)
+ for i:=range plan.UIDs{plan.UIDs[i]=11200+i}
+ var direct []string
+ for i:=0;i<16;i++{direct=append(direct,fmt.Sprintf("10.%d.0.0/16",i))}
+ sort.Strings(direct)
+ plan.DirectCIDRs=direct
+ fake:=b33Fake(t)
+ owner,err:=NewGroup(fake.run,path,plan)
+ if err!=nil{t.Fatal(err)}
+ if len(fake.throws)!=17||len(fake.rules)!=16{
+  t.Fatalf("original FIB missing 16 CIDRs/16 UIDs: %d %d",
+   len(fake.throws),len(fake.rules))
+ }
+ reads:=0
+ for _,call:=range fake.calls{
+  if strings.Contains(call," route show table ")||
+   strings.Contains(call," rule show"){reads++}
+ }
+ if reads>14{t.Fatalf("still rereads FIB per UID/CIDR: %d",reads)}
+ b33CheckedStop(t,owner,fake,path)
+}
+func TestB58AllAppsSixteenDirectPrefixesSingleFIB(t *testing.T){
+ _,path,plan:=allFixture(t)
+ var direct []string
+ for i:=0;i<16;i++{direct=append(direct,fmt.Sprintf("10.%d.0.0/16",i))}
+ sort.Strings(direct)
+ plan.DirectCIDRs=direct
+ fake:=b33Fake(t)
+ owner,err:=NewAllApps(fake.run,path,plan)
+ if err!=nil{t.Fatal(err)}
+ if len(fake.throws)!=17||len(fake.rules)!=len(plan.ranges()){
+  t.Fatalf("ordinary app FIB incomplete: %d prefixes %d UID rules",
+   len(fake.throws),len(fake.rules))
+ }
+ reads:=0
+ for _,call:=range fake.calls{
+  if strings.Contains(call," route show table ")||
+   strings.Contains(call," rule show"){reads++}
+ }
+ if reads>14{t.Fatalf("full-app startup still quadratic: %d",reads)}
+ b33CheckedStop(t,owner,fake,path)
+}

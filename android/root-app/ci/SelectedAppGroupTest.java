@@ -58,14 +58,27 @@ public final class SelectedAppGroupTest {
         mustRejectInvalidTarget("com.bad.system",9999,"system UID rejected before assembly");
         mustRejectInvalidTarget("com.bad.root",0,"root UID rejected before assembly");
         mustFail(Arrays.asList(app("com.a.alpha",10101)),"alias of owner UID");
-        List<InstalledAppTarget> nine=new ArrayList<>();
-        for(int i=0;i<9;i++)nine.add(app("com.test.app"+i,11000+i));
-        mustFail(nine,"more than eight UIDs");
+        // B58 real production selection: 16 different Android UIDs and
+        // 32 installed package names, including shared-UID applications.
         List<InstalledAppTarget> sixteen=new ArrayList<>();
-        for(int i=0;i<16;i++)sixteen.add(app("com.test.app"+i,11011));
-        check(make(sixteen).uids.length==1,"sixteen packages with shared UID allowed");
-        sixteen.add(app("com.test.extra",11011));
-        mustFail(sixteen,"more than sixteen packages");
+        for(int i=0;i<16;i++)sixteen.add(app("com.test.app"+i,11000+i));
+        check(make(sixteen).uids.length==16,"sixteen original UID routes supported");
+        check(make(sixteen).commaSeparatedUIDs().split(",").length==16,
+            "all 16 original Go --android-route-uids forwarded");
+        List<InstalledAppTarget> seventeen=new ArrayList<>(sixteen);
+        seventeen.add(app("com.test.app16",11016));
+        mustFail(seventeen,"over sixteen real UIDs");
+        List<InstalledAppTarget> packages=new ArrayList<>();
+        for(int i=0;i<32;i++)packages.add(app("com.test.pkg"+i,11000+i%16));
+        SelectedAppGroup wide=make(packages);
+        check(wide.uids.length==16&&wide.packages.length==32,
+            "32 packages sharing 16 real App UIDs");
+        check(SelectedAppGroup.matchesReceipt(wide.packages,wide.uids,
+            packages,10101,"org.wbdnext.rootclient"),
+            "32 package/16 UID exact cold selection receipt");
+        packages.add(app("com.test.pkg32",11000));
+        mustFail(packages,"over thirty-two packages");
         System.out.println("ANDROID_ROOT_MULTI_APP_UID_GROUP_CONTRACT_PASS assertions="+count);
+        System.out.println("ANDROID_B58_SELECTED_16_UID_32_PACKAGE_ORIGINAL_ROOT_HOST_PASS");
     }
 }

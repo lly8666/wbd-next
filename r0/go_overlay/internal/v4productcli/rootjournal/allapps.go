@@ -307,24 +307,25 @@ func NewAllApps(run Runner,path string,original AllAppPlan)(session *AllAppSessi
  }
  // Apply explicit direct prefixes in the SAME private UID FIB,
  // before any App UID rule can route new business.
- for index,cidr:=range original.DirectCIDRs{
+ // B58: Install all direct CIDRs before publishing any UID route.
+ // One full FIB check replaces per-prefix readbacks.
+ for _,cidr:=range original.DirectCIDRs{
   if _,e=s.run(directArgs("add",cidr)...);e!=nil{
    return nil,errors.Join(e,s.removeExact(original))
   }
-  _,_,seen,_,checkErr:=s.query(original)
-  if checkErr!=nil||len(seen)<=index||!seen[index]{
-   return nil,errors.Join(fmt.Errorf("direct prefix %d missing FIB readback: %w",index,checkErr),
+ }
+ if len(original.DirectCIDRs)>0{
+  route,peer,direct,rules,e=s.query(original)
+  if e!=nil||!route||!peer||!allDirectPresent(direct)||anyRules(rules){
+   return nil,errors.Join(fmt.Errorf("all-app direct FIB not ready before UID: %w",e),
     s.removeExact(original))
   }
  }
+ // Every add checks its own kernel exit code. Read the entire 20-profile
+ // table ONCE after all adds, not N times over an ever-growing rule list.
  for i,r:=range original.ranges(){
   if _,e=s.run(allRuleArgs("add",r,i)...);e!=nil{
    return nil,errors.Join(e,s.removeExact(original))
-  }
-  _,peerReadback,directReadback,readback,checkErr:=s.query(original)
-  if checkErr!=nil||!peerReadback||!allDirectPresent(directReadback)||!readback[i]{
-   return nil,errors.Join(fmt.Errorf("all-app uidrange #%d missing kernel readback: %w",i,checkErr),
-      s.removeExact(original))
   }
  }
  if e=s.requireReady(original);e!=nil{

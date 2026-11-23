@@ -8,7 +8,7 @@ import (
     "strings"
 )
 
-const MaxDirectIPv4CIDRs=4
+const MaxDirectIPv4CIDRs=16
 
 // ParseDirectCIDRs is a cold-only explicit user route selection. The real
 // Android kernel policy still belongs to the existing UID table owner.
@@ -16,7 +16,7 @@ const MaxDirectIPv4CIDRs=4
 func ParseDirectCIDRs(raw string)([]string,error){
     if raw==""{return nil,nil}
     fields:=strings.Split(raw,",")
-    if len(fields)>MaxDirectIPv4CIDRs{return nil,fmt.Errorf("maximum four direct IPv4 CIDRs")}
+    if len(fields)>MaxDirectIPv4CIDRs{return nil,fmt.Errorf("maximum sixteen direct IPv4 CIDRs")}
     result:=make([]string,0,len(fields))
     for _,field:=range fields{
         field=strings.TrimSpace(field)

@@ -514,7 +514,7 @@ public final class RootClientActivity extends Activity {
             if(cb!=null&&cb.isChecked()){count++;uids.add(app.uid);}
         }
         selectedAppsSummary.setText(
-            "当前已勾选 "+count+" 个应用 / "+uids.size()+" 个UID（最多8个不同UID、16个包）。"+
+            "当前已勾选 "+count+" 个应用 / "+uids.size()+" 个UID（最多16个不同UID、32个包）。"+
             "仅在手动START且成功认证后生效");
         if(bypassSummary!=null){
             int packages=0;
@@ -559,7 +559,7 @@ public final class RootClientActivity extends Activity {
             }
             updateAppSelectionCount();
         }catch(IllegalArgumentException unsupported){
-            selectedAppsSummary.setText("当前筛选结果超过8个不同UID/16个包，或没有匹配；"+
+            selectedAppsSummary.setText("当前筛选结果超过16个不同UID/32个包，或没有匹配；"+
                 "请缩小过滤条件，不会更改原选中列表");
         }
     }
@@ -1197,7 +1197,7 @@ public final class RootClientActivity extends Activity {
             +"原服务器IPv4在私有路由表设置/32 throw排除，必须内核读回才放行UID路由；" 
             +"其后Android netd是否真实走物理出口尚未真机验。"
             +"IPv6、系统DNS、系统进程不接管。"
-            +"取消全应用模式后，可选择最多 8 个实际 App UID。");
+            +"取消全应用模式后，可选择最多 16 个实际 App UID。");
         pane.addView(targetHelp);
         allAppsDefault=new CheckBox(this);
         allAppsDefault.setText("默认：普通 App IPv4 走 WBD（服务器/本App/KernelSU排除，非全系统）");
@@ -1271,7 +1271,7 @@ public final class RootClientActivity extends Activity {
             @Override public void afterTextChanged(android.text.Editable s){}
         });
         Button selectFiltered=new Button(this);
-        selectFiltered.setText("勾选当前过滤的应用（保留其他已选，最多8个UID）");
+        selectFiltered.setText("勾选当前过滤的应用（保留其他已选，最多16个UID）");
         selectFiltered.setOnClickListener(v->selectMatchingApps());
         selectedAppControls.addView(selectFiltered);
         Button clearSelected=new Button(this);

@@ -299,7 +299,7 @@ final class OriginalGoCommandArgs {
             pair(args,"--android-route-exclude-appids",AllAppUIDPolicy.csv(excludedAppIDs));
         }else{
             if(excludedAppIDs!=null||targetUids==null||targetUids.length==0||
-               targetUids.length>8)
+               targetUids.length>16)
                 throw new IllegalArgumentException("exact selected UIDs required");
             Set<Integer> seen=new HashSet<>();
             for(int uid:targetUids){

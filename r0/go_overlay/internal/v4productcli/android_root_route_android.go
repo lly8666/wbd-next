@@ -52,7 +52,7 @@ func androidRootRouteAfterNative(
         }
     }else if len(c.androidRouteUIDs)>0{
         if c.androidRouteUID!=0||!rootjournal.ValidGroupUIDs(c.androidRouteUIDs){
-            return nil,fmt.Errorf("Android group route must contain 2..8 distinct sorted ordinary App UIDs")
+            return nil,fmt.Errorf("Android group route must contain 2..16 distinct sorted ordinary App UIDs")
         }
     }else if c.androidRouteUID<10000||c.androidRouteUID>1999999{
         return nil,fmt.Errorf("Android single route UID must identify an ordinary App")

@@ -159,7 +159,8 @@ func TestGroupForeignStateRejectWithoutKernelMutation(t *testing.T){
 func TestGroupRejectUntrustedUIDsAndLease(t *testing.T){
  for _,uids:=range [][]int{{},{10010},{10011,10011},{10035,10011},
   {0,10011},{9999,10011},{10011,2000000},
-  {10001,10002,10003,10004,10005,10006,10007,10008,10009}}{
+  {10001,10002,10003,10004,10005,10006,10007,10008,
+   10009,10010,10011,10012,10013,10014,10015,10016,10017}}{
   f,path,p:=groupFixture(t);p.UIDs=uids
   if _,err:=NewGroup(f.run,path,p);err==nil{t.Fatalf("accepted invalid UIDs %v",uids)}
  }
@@ -225,4 +226,22 @@ func TestB31GroupForeignPeerRouteNotRemoved(t *testing.T){
  if _,err:=os.Stat(path);err!=nil{t.Fatal("journal missing on foreign route",err)}
  f.peerThrow=plan.ServerIP
  if err=s.Stop();err!=nil{t.Fatal(err)}
+}
+
+func TestB58SixteenRealSelectedUIDsBoundedKernelReadbacks(t *testing.T){
+ f,path,plan:=groupFixture(t)
+ plan.UIDs=make([]int,16)
+ for i:=range plan.UIDs{plan.UIDs[i]=11100+i}
+ owner,err:=NewGroup(f.run,path,plan)
+ if err!=nil{t.Fatal(err)}
+ adds,reads:=0,0
+ for _,call:=range f.calls{
+  if strings.Contains(call," rule add pref "){adds++}
+  if strings.Contains(call," route show table ")||
+   strings.Contains(call," rule show"){reads++}
+ }
+ if adds!=16||len(f.rules)!=16{t.Fatalf("missing 16 UID rules: %d %d",adds,len(f.rules))}
+ if reads>12{t.Fatalf("group installation still rechecks whole FIB per UID: %d",reads)}
+ if err=owner.Stop();err!=nil{t.Fatal(err)}
+ if len(f.rules)!=0||f.route{t.Fatal("16-UID route Stop did not withdraw")}
 }

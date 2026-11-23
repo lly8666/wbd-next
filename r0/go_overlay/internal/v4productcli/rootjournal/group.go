@@ -1,7 +1,7 @@
 package rootjournal
 
 // Group routing keeps ONE authenticated TUN lease and dedicated FIB table,
-// but grants only up to eight canonical ordinary Android application UIDs.
+// but grants up to sixteen canonical ordinary Android application UIDs.
 // All kernel mutations are cold-only, journal-first and exactly reversible.
 import (
  "crypto/rand"
@@ -17,7 +17,7 @@ import (
  "syscall"
 )
 
-const GroupMaxUIDs = 8
+const GroupMaxUIDs = 16
 const groupVersion = 2
 
 type GroupPlan struct {
@@ -289,26 +289,28 @@ func NewGroup(run Runner,path string,original GroupPlan)(session *GroupSession,r
    return nil,errors.Join(err,s.removeExact(original))
   }
  }
- for index,cidr:=range original.DirectCIDRs{
+ // B58: Every direct prefix is in the existing FIB before any UID is added.
+ // A single exact snapshot replaces one route/rule show per prefix.
+ for _,cidr:=range original.DirectCIDRs{
   if _,err=s.run(directArgs("add",cidr)...);err!=nil{
    return nil,errors.Join(err,s.removeExact(original))
   }
-  _,_,direct,_,checkErr:=s.query(original)
-  if checkErr!=nil||!direct[index]{
-   return nil,errors.Join(fmt.Errorf("group direct CIDR missing FIB readback: %w",checkErr),
+ }
+ if len(original.DirectCIDRs)>0{
+  route,peer,direct,rules,checkErr:=s.query(original)
+  if checkErr!=nil||!route||(original.ServerIP!=""&&!peer)||
+   !allDirectPresent(direct)||anyRules(rules){
+   return nil,errors.Join(fmt.Errorf("group direct FIB not ready before UID: %w",checkErr),
     s.removeExact(original))
   }
  }
+ // 16 App UIDs use the same one Go /32, one TUN and private table.
  for i,uid:=range original.UIDs {
   if _,err=s.run(groupRuleArgs("add",uid,i)...);err!=nil{
    return nil,errors.Join(err,s.removeExact(original))
   }
-  route,peer,direct,rules,e:=s.query(original)
-  if e!=nil||!route||(original.ServerIP!=""&&!peer)||
-   !allDirectPresent(direct)||len(rules)<=i||!rules[i]{
-   return nil,errors.Join(fmt.Errorf("group rule %d missing kernel readback: %w",i,e),s.removeExact(original))
-  }
  }
+ // Exactly one final complete readback before the original READY receipt.
  if err=s.requireReady(original);err!=nil{
   return nil,errors.Join(err,s.removeExact(original))
  }

@@ -2,10 +2,10 @@ package org.wbdnext.rootclient;
 
 import java.util.TreeSet;
 
-/** Cold UI option only: up to four real IPv4 prefixes for Android's existing
+/** Cold UI option only: up to sixteen real IPv4 prefixes for Android's existing
  * uidrange private FIB throw routes. There is no Java packet forwarding. */
 final class RootDirectIPv4 {
-    static final int MAX_PREFIXES=4;
+    static final int MAX_PREFIXES=16;
     private RootDirectIPv4(){}
     // B38: already kernel-owned IPv4 on-link address plus LinkAddress mask.
     // This returns a network CIDR for the EXISTING rootjournal throw rule,
@@ -42,7 +42,7 @@ final class RootDirectIPv4 {
         if(raw==null||raw.trim().isEmpty())return "";
         String[] tokens=raw.split(",",-1);
         if(tokens.length>MAX_PREFIXES)
-            throw new IllegalArgumentException("最多4个IPv4直连网段");
+            throw new IllegalArgumentException("最多16个IPv4直连网段");
         TreeSet<String> sorted=new TreeSet<>();
         for(String token:tokens){
             String route=token.trim();

@@ -151,7 +151,7 @@ echo ANDROID_A44_ORIGINAL_RUST_BUSINESS_WITNESS_CLASSIFIER_REAL_GO_HOST_PASS
 (cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run TestA45OriginalAndroidReturnPathReceiptClasses ./internal/v4productcli)
 echo ANDROID_A45_ORIGINAL_RETURN_PATH_AND_ICMP_CLASSIFIER_GO_HOST_PASS
 # A47 original Go renderer against real compiled original Rust bridge.
-(cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run TestA47OriginalNumericNativeM4Snapshots ./internal/v4productcli)
+(cd legacy && timeout 180s go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product -run 'Test(A47OriginalNumericNativeM4Snapshots|B58OriginalGoColdSixteenSelectedUIDs)' ./internal/v4productcli)
 echo ANDROID_A47_REAL_ORIGINAL_GO_NUMERIC_M4_SNAPSHOT_HOST_PASS
 for role in client server;do
   (cd legacy && go build -trimpath -buildvcs=false \

@@ -30,8 +30,8 @@ final class RootAppPickerModel {
                 names.add(app.packageName);
             }
         }
-        // No UI mutation before native selected-app max 8 unique UIDs /
-        // max 16 package contract accepts the whole filtered result.
+        // No UI mutation before native selected-app max 16 unique UIDs /
+        // max 32 package contract accepts the whole filtered result.
         SelectedAppGroup.from(selected,selfUID,selfPackage);
         return names;
     }

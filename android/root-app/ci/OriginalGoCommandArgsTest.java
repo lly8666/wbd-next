@@ -196,6 +196,19 @@ public final class OriginalGoCommandArgsTest {
         value(host,"--peer-host","server.example.test");
         absent(host,"--peer-ip");
         value(host,"--android-route-uids","10123,110123");
+        int[] sixteen=new int[16];
+        StringBuilder wideUIDCSV=new StringBuilder();
+        for(int i=0;i<16;i++){
+            sixteen[i]=11100+i;
+            if(i>0)wideUIDCSV.append(',');
+            wideUIDCSV.append(sixteen[i]);
+        }
+        value(build("198.51.100.7",sixteen,false,null,null),
+            "--android-route-uids",wideUIDCSV.toString());
+        int[] seventeen=new int[17];
+        for(int i=0;i<17;i++)seventeen[i]=11100+i;
+        rejected(()->build("198.51.100.7",seventeen,false,null,null));
+        System.out.println("ANDROID_B58_ORIGINAL_GO_16_SELECTED_UID_ARGV_HOST_PASS");
         absent(host,"--tls-ca-pem");
         absent(host,"--tls-verify-server");
         List<String> strict=OriginalGoCommandArgs.build(

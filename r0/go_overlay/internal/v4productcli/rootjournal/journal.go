@@ -320,13 +320,18 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
             return nil,errors.Join(err,s.removeExact(original))
         }
     }
-    for index,cidr:=range original.DirectCIDRs{
+    // B58: batch ordinary LAN/direct prefixes, then confirm the entire
+    // private FIB once before the one selected App UID is installed.
+    for _,cidr:=range original.DirectCIDRs{
         if _,err=s.run(directArgs("add",cidr)...);err!=nil{
             return nil,errors.Join(err,s.removeExact(original))
         }
-        _,_,direct,_,readErr:=s.query(original)
-        if readErr!=nil||!direct[index]{
-            return nil,errors.Join(fmt.Errorf("selected direct CIDR missing FIB readback: %w",readErr),
+    }
+    if len(original.DirectCIDRs)>0{
+        route,peer,direct,rule,readErr:=s.query(original)
+        if readErr!=nil||!route||(original.ServerIP!=""&&!peer)||
+            !allDirectPresent(direct)||rule{
+            return nil,errors.Join(fmt.Errorf("single-app direct FIB not ready before UID: %w",readErr),
                 s.removeExact(original))
         }
     }

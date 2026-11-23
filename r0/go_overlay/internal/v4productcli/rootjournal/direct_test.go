@@ -3,6 +3,8 @@ package rootjournal
 import (
  "reflect"
  "testing"
+ "fmt"
+ "strings"
 )
 
 func TestB33DirectIPv4CIDRColdCanonicalModes(t *testing.T){
@@ -14,9 +16,16 @@ func TestB33DirectIPv4CIDRColdCanonicalModes(t *testing.T){
  for _,bad:=range []string{
   "0.0.0.0/0","192.168.1.3/24","224.0.0.0/4","127.0.0.0/8",
   "10.0.0.0/8,10.0.0.0/8","10.0.0.0/8,,192.168.0.0/16",
-  "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,198.51.100.0/24,203.0.113.0/24",
  }{
   if x,e:=ParseDirectCIDRs(bad);e==nil{t.Fatalf("accepted direct %q: %v",bad,x)}
+ }
+ var prefixes []string
+ for i:=0;i<16;i++{prefixes=append(prefixes,fmt.Sprintf("10.%d.0.0/16",i))}
+ all,e:=ParseDirectCIDRs(strings.Join(prefixes,","))
+ if e!=nil||len(all)!=16{t.Fatalf("16 direct IPv4 prefixes not parsed: %v %v",all,e)}
+ if !validDirectCIDRs(all,"203.0.113.10"){t.Fatal("16 direct prefixes not accepted")}
+ if _,e=ParseDirectCIDRs(strings.Join(prefixes,",")+",10.16.0.0/16");e==nil{
+  t.Fatal("17 direct IPv4 prefixes should require explicit larger contract")
  }
  if validDirectCIDRs([]string{"203.0.113.10/32"},"203.0.113.10"){t.Fatal("duplicate protected peer route")}
  if validDirectCIDRs([]string{"192.168.0.0/16","10.0.0.0/8"},""){t.Fatal("noncanonical route order")}

@@ -9,8 +9,8 @@ import java.util.TreeSet;
 // share an identical UID. Capture exactly one sorted, bounded cold snapshot;
 // never requery PackageManager on the original Rust packet path.
 final class SelectedAppGroup {
-    static final int MAX_UIDS=8;
-    static final int MAX_PACKAGES=16;
+    static final int MAX_UIDS=16;
+    static final int MAX_PACKAGES=32;
     final String[] packages;
     final int[] uids;
 
@@ -21,7 +21,7 @@ final class SelectedAppGroup {
     static SelectedAppGroup from(List<InstalledAppTarget> selected,
                                  int ownUID,String ownPackage){
         if(selected==null||selected.isEmpty()||selected.size()>MAX_PACKAGES)
-            throw new IllegalArgumentException("Select 1..16 real packages");
+            throw new IllegalArgumentException("Select 1..32 real packages");
         TreeMap<String,Integer> byPackage=new TreeMap<>();
         TreeSet<Integer> uniqueUIDs=new TreeSet<>();
         for(InstalledAppTarget app:selected){
@@ -34,7 +34,7 @@ final class SelectedAppGroup {
             }
             uniqueUIDs.add(app.uid);
             if(uniqueUIDs.size()>MAX_UIDS){
-                throw new IllegalArgumentException("At most 8 unique App UIDs per session");
+                throw new IllegalArgumentException("At most 16 unique App UIDs per session");
             }
         }
         String[] packages=byPackage.keySet().toArray(new String[0]);

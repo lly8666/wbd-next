@@ -212,3 +212,21 @@ func TestAllAppsPreviousV3OwnedJournalExactRecoveryToV4(t *testing.T){
   t.Fatal("v3->v4 cleanup left any owner state")
  }
 }
+
+func TestB58AllAppsConstantReadbackAcrossAllTwentyUserProfiles(t *testing.T){
+ f,path,plan:=allFixture(t)
+ owner,err:=NewAllApps(f.run,path,plan)
+ if err!=nil{t.Fatal(err)}
+ adds,reads:=0,0
+ for _,call:=range f.calls{
+  if strings.Contains(call," rule add pref "){adds++}
+  if strings.Contains(call," route show table ")||
+   strings.Contains(call," rule show"){reads++}
+ }
+ if adds!=len(plan.ranges())||adds<40{
+  t.Fatalf("ordinary App UID coverage changed: %d/%d",adds,len(plan.ranges()))
+ }
+ if reads>12{t.Fatalf("all-app start still rereads full table per UID: %d/%d",reads,adds)}
+ if err=owner.Stop();err!=nil{t.Fatal(err)}
+ if f.route||len(f.rules)!=0{t.Fatal("all-app exact Stop no longer drains")}
+}

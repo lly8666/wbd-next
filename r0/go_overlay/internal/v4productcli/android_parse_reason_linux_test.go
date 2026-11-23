@@ -5,6 +5,7 @@ import (
  "fmt"
  "strings"
  "testing"
+ "strconv"
 )
 
 // Host runs production classifier only. No simulated NIC, fake server,
@@ -54,4 +55,16 @@ func TestAndroidA37OriginalGoCertMainDefaultAndStrictOptIn(t *testing.T){
  strict,e:=parse("client",append(append([]string{},args...),"--tls-verify-server"))
  if e!=nil{t.Fatalf("original-Go strict parse: %v",e)}
  if !strict.tlsVerifyServer{t.Fatal("strict opt-in ignored")}
+}
+
+func TestB58OriginalGoColdSixteenSelectedUIDs(t *testing.T){
+ ids:=make([]string,16)
+ for i:=range ids{ids[i]=strconv.Itoa(11000+i)}
+ got,err:=parseAndroidRouteGroupArg(strings.Join(ids,","))
+ if err!=nil||len(got)!=16||got[0]!=11000||got[15]!=11015{
+  t.Fatalf("16 Go app UIDs lost in native cold parser: %v %v",got,err)
+ }
+ if _,err=parseAndroidRouteGroupArg(strings.Join(ids,",")+",11016");err==nil{
+  t.Fatal("17 selected App UIDs must not be truncated")
+ }
 }

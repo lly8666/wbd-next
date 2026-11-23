@@ -226,6 +226,24 @@ public final class RootConnectionSettingsTest {
         System.out.println("ANDROID_B34_ALL_APP_BYPASS_AND_PHYSICAL_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B33_DIRECT_CIDRS_ROOT_PRESET_CODEC_HOST_PASS");
         System.out.println("ANDROID_B22_LAST_CONNECTION_NO_BACKUP_PRESET_HOST_PASS");
+        // B58: one nonsecret saved connection retains 32 packages / 16
+        // native original Go UIDs and all 16 exact direct CIDRs.
+        Map<String,Integer> wideSelected=new TreeMap<>();
+        StringBuilder wideRoutes=new StringBuilder();
+        for(int i=0;i<32;i++)wideSelected.put("org.example.wide"+i,11500+i%16);
+        for(int i=0;i<16;i++){
+            if(i>0)wideRoutes.append(',');
+            wideRoutes.append("10.").append(i).append(".0.0/16");
+        }
+        RootConnectionSettings wide=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,true,false,false,false,wideSelected,wideRoutes.toString());
+        RootConnectionSettings roundtrip=read(stored(wide));
+        check(roundtrip!=null&&roundtrip.selected.equals(wideSelected)&&
+            roundtrip.directCIDRs.split(",").length==16,
+            "16 UID/32 App/16 direct CIDR configuration not preserved");
+        System.out.println("ANDROID_B58_MULTIPROFILE_LARGE_APP_AND_DIRECT_PRESET_HOST_PASS");
         System.out.println("ANDROID_B25_PRESET_SELECTED_16_PACKAGES_8_UNIQUE_UIDS_HOST_PASS");
     }
 }
