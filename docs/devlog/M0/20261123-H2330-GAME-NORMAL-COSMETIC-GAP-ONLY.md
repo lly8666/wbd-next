@@ -28,6 +28,11 @@
 - main SOURCE `21cff32` 已将 `exact_gap` 也加真实同ACK>=1s与>=3认证重复ACK条件；原早期88ms/110ms提名旧单元更改为认证值持续1秒后再提名。这是保守的表演式外观，首发优先，无DATA定时PTO、无假ACK，原冻结密文只一次，字节上限不变。
 - 53fd源码的双端真网和Windows游戏测试即使随后green也不继承本次修复。必须对新SOURCE做新的exact-code unit与0/5/30% Linux/Win Game外层复测。
 
+## H2334 · Game ACK 停滞期内的逐样本洪泛防护
+- 仅冻结每PN最多一次**不足以**防止固定 ACK 下每80ms换另一个旧PN持续假重传；主Source `f082e5763eea64397865e35419ba483f2b94cadf` 又加一层**每个真实认证累计ACK值最多一次已实发的原密文外观**；成功实发立即锁定当前ACK，ACK必须真推进后才允许下一机会。无损若ACK因为协议显示停滞也最多一份，不再周期耗CPU。
+- 新 `r1_game_one_cosmetic_copy_per_stalled_ack_epoch` 确定性单元：真实首发样本、同ACK持续1s后一次允许，后续又有真实首发仍不得重复；与`r1_game_short_duplicate_ack_burst_with_progress_is_not_real_stall`组合。
+- 本SOURCE完整Windows Game2/4 OFF/fixed6与Linux两个真实端0/5/30%未核收，旧7e/53测试不能继承，仍需按新F/R/Stop和0%门判断。高损9%外观为历史目标非任意条件硬下限，安全与低CPU优先。
+
 ```feature-impact
-{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game exact sampled gap and sparse stalled-ACK both require unchanged authenticated ACK >=1s; zero-loss per-role original Stop anti-flood remains fail-closed, immutable one-copy and byte cap kept; native WAN pending."}
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game unchanged authenticated ACK >=1s plus one *actual* cosmetic ciphertext copy per cumulative-ACK epoch, no timed replay flood; per-role 0-loss external guard and original 10pct budget preserved; new-source WAN pending."}
 ```

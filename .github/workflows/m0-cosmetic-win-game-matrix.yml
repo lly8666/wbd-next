@@ -1,3 +1,4 @@
+# H2334: rerun strict 0/5/30 Win Game2/4 with >=1s unchanged ACK and one cosmetic copy per ACK epoch.
 # H2332 rearm: same ACK must stall >=1s; 0% true Game copy flood is FAIL.
 # H2331: signed native runs use one immutable exact-main source branch; concurrent main commits cannot alter dispatched SHA.
 # H2330 ARM: new signed current-SOURCE Game native build then OFF/fixed6 Game2/4 three-loss matrix.
