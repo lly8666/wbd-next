@@ -393,15 +393,23 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     {
         let meta = frozen.metadata();
         if meta.lane != self.lane || hard_expiry <= at { return Err(DataError::Malformed); }
-        if self.entries.contains_key(&meta.pn) { return Err(DataError::Duplicate); }
-        if self.entries.len() == self.config.max_shadow_entries {
-            return Err(DataError::NoCapacity(LimitedResource::ShadowBytes));
+        // Single tree descent for the initial optional v3 shadow. Keep
+        // duplicate-PN precedence even when the bounded table is full.
+        let at_capacity=self.entries.len()==self.config.max_shadow_entries;
+        match self.entries.entry(meta.pn){
+            std::collections::btree_map::Entry::Occupied(_)=>
+                return Err(DataError::Duplicate),
+            std::collections::btree_map::Entry::Vacant(slot)=>{
+                if at_capacity {
+                    return Err(DataError::NoCapacity(LimitedResource::ShadowBytes))
+                }
+                slot.insert(Entry {
+                    frozen, last_sent: at, hard_expiry, repair_attempts: 0,
+                    retry_epoch: 0, missing_reported: false,negative_since:None,queued: None,
+                    indexed_wake: None,
+                });
+            },
         }
-        self.entries.insert(meta.pn, Entry {
-            frozen, last_sent: at, hard_expiry, repair_attempts: 0,
-            retry_epoch: 0, missing_reported: false,negative_since:None,queued: None,
-            indexed_wake: None,
-        });
         self.expiry_index.insert((hard_expiry.0, meta.pn));
         // Fresh v3 DATA has no authenticated negative hint or queued repair:
         // wake_at() is provably None until a later gap reports it. Avoid
