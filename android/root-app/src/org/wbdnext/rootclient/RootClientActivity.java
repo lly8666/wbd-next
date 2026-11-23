@@ -92,6 +92,15 @@ public final class RootClientActivity extends Activity {
     // B23: read the original 0600 app-private CA already staged for
     // Go strict TLS. No Android system trust edits or network discovery.
     private void recallSavedTLSCA(){
+        // B54: last selected profile's optional UI CA wins over an older
+        // server's root-staged CA. Empty explicitly means no private CA.
+        try{
+            String selected=RootConnectionProfileCAStore.loadCurrent(this);
+            if(selected!=null){
+                caPEM.setText(selected);
+                return;
+            }
+        }catch(Exception unavailable){/* old A32 recall still works */}
         File file=new File(getFilesDir(),RootPrivateCredentialFiles.CA);
         if(!file.isFile()||file.length()<1||
            file.length()>RootPrivateCredentialContract.maxBytes(
@@ -151,6 +160,7 @@ public final class RootClientActivity extends Activity {
             // storage or encryption format. Go still reads it only on START.
             privateText(RootPrivateCredentialFiles.CA,pem+"\n");
             caPEM.setText(pem);
+            RootConnectionProfileCAStore.saveCurrent(this,pem);
             status.setText("已导入并保留 "+certs.size()+" 张本地TLS证书；勾选严格校验后原Go才使用");
         }catch(Exception failure){
             status.setText("CA导入或本机保存失败；请核对PEM并重新导入");
@@ -715,6 +725,8 @@ public final class RootClientActivity extends Activity {
             RootConnectionProfile profile=new RootConnectionProfile(
                 profileLabel.getText().toString(),connectionSettingsFromUi());
             RootConnectionProfileStore.save(this,slot,profile);
+            RootConnectionProfileCAStore.saveSlot(this,slot,
+                caPEM.getText().toString());
             refreshNamedProfileChoices();
             // The optional per-profile login is just the existing encrypted
             // AndroidKeyStore record, now keyed by one of the four UI slots.
@@ -738,9 +750,10 @@ public final class RootClientActivity extends Activity {
                 profileResult.setText("该槽位尚未保存连接配置");
                 return false;
             }
-            // Activate the SAME slot's existing Keystore record BEFORE
-            // changing the last-connection cache. On the next Activity open,
-            // the last saved server and automatically filled login now match.
+            // Choose the same saved server's optional CA and its existing
+            // per-slot Keystore record. No root-staged CA is touched here.
+            String storedCA=RootConnectionProfileCAStore.loadSlot(this,slot);
+            RootConnectionProfileCAStore.saveCurrent(this,storedCA);
             RootSavedCredentialRecord.Secrets saved=
                 RootEncryptedCredentialStore.activateProfile(this,slot);
             RootConnectionSettingsStore.save(this,profile.settings);
@@ -750,6 +763,7 @@ public final class RootClientActivity extends Activity {
             chooseInstalledApplications(); // current Android package/UID only
             password.setText(saved==null?"":saved.password);
             routeKey.setText(saved==null?"":saved.routeKey);
+            caPEM.setText(storedCA);
             profileLabel.setText(profile.label);
             profileResult.setText("已载入槽位"+slot+"："+profile.label+
                 (saved==null?"；请填写此服务器的密码/RouteKey":
@@ -771,6 +785,7 @@ public final class RootClientActivity extends Activity {
             int slot=chosenProfileSlot();
             RootConnectionProfileStore.delete(this,slot);
             RootEncryptedCredentialStore.clearProfile(this,slot);
+            RootConnectionProfileCAStore.clearSlot(this,slot);
             refreshNamedProfileChoices();
             profileResult.setText("已删除槽位"+slot+"的连接与该槽密码/RouteKey；运行中的Root未改变");
         }catch(Exception e){
@@ -899,6 +914,10 @@ public final class RootClientActivity extends Activity {
             privateText("wbd-pass.secret",secret+"\n");
             privateText("wbd-route.secret",key+"\n");
             if(verifyTLS&&!pem.isEmpty())privateText("wbd-server-ca.pem",pem+"\n");
+            // Cold UI recall only. Failure does not block an otherwise valid
+            // original Go/TLS connection or add an auth/security gate.
+            try{RootConnectionProfileCAStore.saveCurrent(this,pem);}
+            catch(Exception unavailable){/* current session uses its in-memory CA */}
             Intent request=new Intent(this,RootClientService.class);
             request.setAction(RootClientService.START);
             request.putExtra("handle",scope.handle);
@@ -1160,7 +1179,9 @@ public final class RootClientActivity extends Activity {
             File file=new File(getFilesDir(),RootPrivateCredentialFiles.CA);
             if(!file.exists()||file.delete()){
                 caPEM.setText("");
-                status.setText("已清除本机TLS CA；严格TLS校验若需私有CA请重新导入");
+                try{RootConnectionProfileCAStore.saveCurrent(this,"");}
+                catch(Exception unavailable){/* original on-device CA already cleared */}
+                status.setText("已清除当前TLS CA；配置槽中保存的CA只会在再次载入该槽时恢复");
             }else status.setText("无法清除本机TLS CA，请重试");
         });
         pane.addView(clearCa);
@@ -1314,7 +1335,7 @@ public final class RootClientActivity extends Activity {
         // B50: four named daily connection profiles, all using the
         // existing B22 settings serializer and selected app UID recheck.
         TextView namedProfileHint=new TextView(this);
-        namedProfileHint.setText("本机常用连接：最多4套服务器/模式/UID/分流配置；密码/RouteKey独立按槽位用现有Keystore保存，CA和物理Network不存配置。");
+        namedProfileHint.setText("本机最多4套服务器/模式/UID配置；密码/RouteKey用现有Keystore分槽保存，可选本地TLS CA也随槽切换；真实物理Network始终手选。");
         pane.addView(namedProfileHint);
         profileSlots=new Spinner(this);
         profileSlots.setAdapter(new ArrayAdapter<>(this,

@@ -1,3 +1,5 @@
+> **B54 四套配置的可选原Go TLS CA跟随（本SOURCE待CI）**：为B52多服务器切换补已有B23可选私有CA的各槽保存/载入/删除与重开App正确回填，继续原Go标准TLS及默认验证开关，不新建证书机制、不影响 Rust M4/UID/Stop或按普通App路由。B53批量SAF迁移依旧不导出CA，重装仍要手动重导；新SOURCE正式签名APK/双ABI/Oracle依据Actions、真机NOT_RUN。详见[B54](../devlog/android-root-probe/20261123-b54-profile-scoped-original-ca.md)。
+
 > **B53 四套Root连接一文件SAF迁移（本SOURCE待CI）**：继B52一键跨原生Stop/START接线，本批以原四槽命名Profile/RootConnectionSettings同一Codec导出/恢复普通服务器、Normal/Fixed/Auto/Game/FEC、UID/三DNS/MTU/Health/CIDR设置；选中/空槽原样保留，不包含密码/Key/CA或旧Network。导入只修改四个本地Profile并清对应旧Keystore槽，绝不动当前Go/Rust或UID规则，无后台新控制器。正式签名APK及Host同源结果看Actions，实机NOT_RUN。详见[B53记录](../devlog/android-root-probe/20261123-b53-four-profile-saf-backup-restore.md)。
 
 > **B52 保存的连接配置一键真实原生连接/冷切换（本SOURCE待CI）**：基于B51a已通过双ABI/ARM64 APK/Linux Oracle [#45172614955](https://github.com/lly8666/wbd-next/actions/runs/45172614955) 11 SUCCESS/4 SKIPPED，正式Activity显示四个真实命名槽+mode，并允许用户指定当前实体Network后一击用该槽独立Keystore登录连接原Go/Rust；运行中则复用B48真实owned Stop和B49精确Network读回/1Hz前台单次续接，没有新Go/Rust热路径或无人值守重启。新SOURCE设备/E2E/性能仍NOT_RUN；详见[B52](../devlog/android-root-probe/20261123-b52-named-profile-one-tap-original-switch.md)。

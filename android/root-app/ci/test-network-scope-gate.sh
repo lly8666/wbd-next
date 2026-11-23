@@ -213,6 +213,23 @@ assert 'PROFILE_BUNDLE_EXPORT=2046' in app and 'PROFILE_BUNDLE_IMPORT=2047' in a
 assert 'profile.write(payload)' in bundle
 assert 'RootConnectionProfile.read(' in bundle
 print("ANDROID_B53_FOUR_SAF_PROFILE_IMPORT_EXPORT_ORIGINAL_SETTINGS_SOURCE_PASS")
+# B54: optional user CA follows the selected Root profile, not
+# the previous server's single global UI field. Original strict TLS/off
+# choice and original Go private CA handoff remain unchanged.
+profile_ca=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionProfileCAStore.java").read_text()
+assert 'RootConnectionProfileCAStore.saveSlot(this,slot,' in app
+assert 'RootConnectionProfileCAStore.loadSlot(this,slot)' in app
+assert 'RootConnectionProfileCAStore.saveCurrent(this,storedCA)' in app
+assert 'caPEM.setText(storedCA);' in app
+assert 'RootConnectionProfileCAStore.loadCurrent(this)' in app
+assert 'RootConnectionProfileCAStore.clearSlot(this,slot)' in app
+assert 'RootConnectionProfileCAStore.saveCurrent(this,pem)' in app
+assert 'RootPrivateCredentialContract.maxBytes(RootPrivateCredentialFiles.CA)' in profile_ca
+assert 'getNoBackupFilesDir()' in profile_ca
+assert 'RootPrivateCredentialFiles.CA,pem+' in app
+assert 'tls_verify_server' in app
+print("ANDROID_B54_OPTIONAL_PER_PROFILE_ORIGINAL_GO_TLS_CA_COLD_SOURCE_PASS")
+
 
 
 
