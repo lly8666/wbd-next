@@ -1350,6 +1350,20 @@ class LinuxExperiment:
                 if len(rows)==1:
                     game_outer_policy[role]={k:int(v) for k,v in
                         re.findall(r"([a-z_]+)=(\d+)",rows[0])}
+                    # The Game native Rust TX owner knows the actual
+                    # full-byte denominator: per-lane original first DATA
+                    # including FEC parity, and copied original repair only.
+                    # The older public policy line reported counts alone.
+                    stamps=[line for line in log.splitlines()
+                        if "WBD_GAME_OFF_LINUX_NORMAL_OUTER_STOP " in line or
+                           "WBD_GAME_FEC_LINUX_NORMAL_OUTER_STOP " in line]
+                    if len(stamps)==1:
+                        stats={k:int(v) for k,v in re.findall(
+                            r"([a-z_]+)=(\d+)",stamps[0])}
+                        for name in ("first_record_wire_bytes",
+                                     "copy_record_wire_bytes"):
+                            if name in stats:
+                                game_outer_policy[role][name]=stats[name]
         if self.lanes > 1:
             game_verified = verify_native_game_counters(self.lanes,counters,
                 self.config["traffic"])
