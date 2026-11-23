@@ -381,7 +381,8 @@ mod tests{
         let mut ack=OuterAckIndex::new(lane,[7;16],100,128).unwrap();
         for i in 1..=32u64{
             let seq=ack.highest_sent_end();
-            if i&FEC_SHADOW_SAMPLE_MASK==0{
+            // Test-specific sparse alternate sample; production uses the Normal mixed hash.
+            if i&1==0{
                 ack.on_definitely_sent(RecordPn(i),seq,10,
                     MonoNs(i*1_000_000)).unwrap();
             }else{
