@@ -6351,7 +6351,12 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     let mut outer_hint=None::<u32>;
     #[cfg(feature="fec2_product_record")]
-    let mut outer_sack_hint=Vec::<wbd_recovery::outer_ack::SackRange32>::with_capacity(4);
+    // Reuse four stack slots instead of allocating a Vec on EVERY raw RX
+    // batch, including ordinary DATA-only batches with no outer SACK.
+    let mut outer_sack_hint=[
+        wbd_recovery::outer_ack::SackRange32{start:0,end:0};4
+    ];
+    let mut outer_sack_count=0usize;
     #[cfg(feature="fec2_product_record")]
     let(mut authenticated_at,mut business_at,mut peer_idle_hint,mut peer_retire_at)=(0u64,0u64,None,0u64);
     // Unused preposted original M1 slabs persist in this RX worker; used
@@ -6366,7 +6371,7 @@ fn background_raw_once(
                 // Strict TCP checksum/tuple ACK-only is a legitimate carrier
                 // turn, never a crypto failure or peer Health witness.
                 outer_only_valid=true;
-                if outer_sack_hint.is_empty(){outer_hint=Some(ack32);}
+                if outer_sack_count==0{outer_hint=Some(ack32);}
                 drop(slab);continue
             },
             #[cfg(feature="fec2_product_record")]
@@ -6375,11 +6380,17 @@ fn background_raw_once(
             })=>{
                 outer_only_valid=true;
                 outer_hint=Some(ack32);
-                outer_sack_hint.clear();
-                outer_sack_hint.extend(sacks[..usize::from(count)].iter().map(|s|
-                    wbd_recovery::outer_ack::SackRange32{
-                        start:s.start,end:s.end
-                    }));
+                outer_sack_count=usize::from(count);
+                if outer_sack_count>outer_sack_hint.len(){
+                    invalid_seen=true;
+                    drop(slab);continue
+                }
+                for (dst,src) in outer_sack_hint.iter_mut()
+                    .zip(sacks[..outer_sack_count].iter()){
+                    *dst=wbd_recovery::outer_ack::SackRange32{
+                        start:src.start,end:src.end
+                    };
+                }
                 drop(slab);continue
             },
             _=>{drop(slab);continue},
@@ -6564,7 +6575,7 @@ fn background_raw_once(
             let own=&mut *own;
             let _=apply_original_outer_presentation_feedback(
                 &mut own.outer_ack,&mut own.shadow,lane,epoch,
-                ack32,&outer_sack_hint,now);
+                ack32,&outer_sack_hint[..outer_sack_count],now);
         }
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
@@ -7640,22 +7651,35 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut fresh_bytes=0u64;
         for record in frozen_for_outer.iter().take(real_copied){
             let meta=record.metadata();
-            let _=original.outer_ack.on_definitely_sent(
-                meta.pn,meta.seq.0,record.bytes().len() as u32,now);
-            fresh_bytes=fresh_bytes.saturating_add((record.bytes().len()+
+            let cipher_len=record.bytes().len();
+            // Cosmetic repair is optional: OFF or an unsampled first-send
+            // only advances the genuine TCP sequence bound (O(1)); it must
+            // not allocate an ACK BTree node or optional frozen payload.
+            let selected=allow_repair&&v3_admit_shadow(meta.pn.0,meta.lane,now);
+            let indexed=if selected{
+                original.outer_ack.on_definitely_sent(
+                    meta.pn,meta.seq.0,cipher_len as u32,now).unwrap_or(false)
+            }else{
+                let _=original.outer_ack.on_definitely_sent_untracked(
+                    meta.seq.0,cipher_len as u32,now);
+                false
+            };
+            fresh_bytes=fresh_bytes.saturating_add((cipher_len+
                 wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64);
             original.sent_fresh=original.sent_fresh.saturating_add(1);
-            if allow_repair && v3_admit_shadow(meta.pn.0,meta.lane,now){
-                // A selected once-repair must never pin the shared source
-                // M1 slab for a whole RTT. Copy ciphertext exactly once into
-                // bounded process-shared repair-only backing after M4 copy.
-                // No new PN, AEAD or business HOL on admission failure.
+            if indexed{
+                // Optional: one exact immutable snapshot after actual M4
+                // copy; failed admission is invisible to original DATA.
                 let tracked=record.try_v3_repair_snapshot().is_some_and(|frozen|
                     original.shadow.on_sent_adaptive_with_floor(
                         frozen,now,LINUX_ORIGINAL_V3_RETAIN_FLOOR_NS).is_ok());
                 if !tracked{
                     original.note_block(OriginalRepairBlockReason::FreshShadow);
                 }
+            }else if selected{
+                // Index saturation or invalid optional metadata cannot
+                // consume a slab for a repair that has no ACK hint path.
+                original.note_block(OriginalRepairBlockReason::Capacity);
             }
         }
         original.sent_first_wire_bytes=original.sent_first_wire_bytes
