@@ -22,3 +22,9 @@ B54初版 `0d491c8f1f4e31667d0d176729a5a94fb07e08ae` 的 [Dual64 #45184681794](h
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B54a B53四槽SAF导入覆盖服务器时同步清对应旧CA，避免新配置绑定旧私有CA；无协议/TLS或热数据面改动。"}
 ```
+
+**B54b 源码门表达式整理**：上述导入循环的行邻接断言使用Python `chr(10)` 表示真正换行，避免字符串反斜线双转义导致Host假FAIL；被检生产代码和Go/Rust完全不动。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B54b将四槽导入Keystore与CA邻接源码门的换行表达式改为chr(10)，保留真实逻辑断言而非宽松跳过。"}
+```

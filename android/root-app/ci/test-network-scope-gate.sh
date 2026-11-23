@@ -208,7 +208,8 @@ assert 'RootConnectionProfileStore.load(this,i+1)' in app
 assert 'RootConnectionProfileStore.save(this,slot,restored[i])' in app
 assert 'RootConnectionProfileStore.delete(this,slot)' in app
 assert 'RootEncryptedCredentialStore.clearProfile(this,slot)' in app
-assert 'RootEncryptedCredentialStore.clearProfile(this,slot);\\n                RootConnectionProfileCAStore.clearSlot(this,slot);' in app
+assert ('RootEncryptedCredentialStore.clearProfile(this,slot);' +
+        chr(10) + '                RootConnectionProfileCAStore.clearSlot(this,slot);') in app
 assert 'coldSwitch.cancel();' in app
 assert 'PROFILE_BUNDLE_EXPORT=2046' in app and 'PROFILE_BUNDLE_IMPORT=2047' in app
 assert 'profile.write(payload)' in bundle
