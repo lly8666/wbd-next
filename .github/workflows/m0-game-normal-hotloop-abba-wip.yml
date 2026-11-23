@@ -25,11 +25,23 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = x86_64
-          for source in "$OLD_SOURCE" "$NEW_SOURCE"; do
-            git fetch --quiet --depth=1 origin "$source"
-          done
-          test -z "$(git diff --name-only "$OLD_SOURCE" "$NEW_SOURCE" -- tools/network_harness scenarios/m0-cosmetic-game4-fec-loss30-60s.json)"
-          test -z "$(git diff --name-only "$NEW_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/network_harness)"
+          # checkout intentionally drops auth after the source checkout.
+          # Never run unauthenticated git fetch by raw private SHA.
+          # GitHub's authenticated compare API validates the same frozen
+          # source-only invariant without depending on shallow git history.
+          gh api "repos/$GH_REPO/compare/$OLD_SOURCE...$NEW_SOURCE" |
+            jq -e '
+              .status=="ahead" and
+              ([.files[].filename | select(startswith("tools/network_harness/") or .=="scenarios/m0-cosmetic-game4-fec-loss30-60s.json")] | length)==0 and
+              ([.files[].filename | select((startswith("crates/") or startswith("r0/go_overlay/internal/") or .=="Cargo.toml" or .=="Cargo.lock") and .!="crates/wbd-engine/src/v4_game_cosmetic_outer.rs")] | length)==0 and
+              ([.files[].filename | select(.=="crates/wbd-engine/src/v4_game_cosmetic_outer.rs")] | length)==1
+            ' >/dev/null
+          gh api "repos/$GH_REPO/compare/$NEW_SOURCE...$GITHUB_SHA" |
+            jq -e '
+              .status=="ahead" and
+              ([.files[].filename | select(startswith("crates/") or startswith("r0/go_overlay/") or startswith("tools/network_harness/") or .=="Cargo.toml" or .=="Cargo.lock" or .=="scenarios/m0-cosmetic-game4-fec-loss30-60s.json")] | length)==0
+            ' >/dev/null
+          echo M0_ABBA_SOURCE_COMPARE_SAME_PRODUCT_EXCEPT_INDEXED_TIMER
           test "$(gh api "repos/$GH_REPO/actions/runs/$OLD_RUN" --jq .head_sha)" = "$OLD_SOURCE"
           test "$(gh api "repos/$GH_REPO/actions/runs/$NEW_RUN" --jq .head_sha)" = "$NEW_SOURCE"
           test "$(gh api "repos/$GH_REPO/actions/runs/$OLD_RUN" --jq .conclusion)" = success
@@ -72,7 +84,7 @@ jobs:
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
           test -c /dev/net/tun
-      - name: Four REAL original client/server bidirectional Game2 30pct legs on SAME Ubuntu runner
+      - name: Four REAL original client/server bidirectional Game4 FEC 30pct legs on SAME Ubuntu runner
         shell: bash
         run: |
           set -euo pipefail
