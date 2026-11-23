@@ -28,6 +28,14 @@
 - 当前真实 Linux source `91170a8f` 的 1/10/20% 原生新场景和 Game2/4 FEC30% 后续结果；Windows Game2/4 OFF 与 fixed 双端新源码真实 R/F、首次业务交付、Stop；高密度补发 CPU（尤其 Game4 FEC）与 Normal/原旧源同场景 ABBA。Linux Game 使用 group-local `RepairBudget`，Windows 用原 `GlobalRepairAllocator`，资源域尚未完全同算法。
 - `main` 未修改；PR#71 必须维持 Draft，不把 Rust 单测成功或 Linux 单一成功当成 Windows/全项目通过。无盲 DATA PTO、旧 M2 receipt 复活、额外 worker、逐包加密。
 
+## 恢复续作｜2026-11-23 20:34 CST 后现场更新（仍为 Draft）
+- **六档 Linux 原生双端完成**：同源完整 Game2 OFF 0/1/5/10/20/30% loss [Actions 45172010956](https://github.com/lly8666/wbd-next/actions/runs/45172010956) 全部成功。R/F 客/服：1%=0.4505/0.4855%，5%≈2.4%，10%=5.2968/5.5010%，20%=8.8955/8.9026%，30%≈8.9%；0%仅约0.0001%，是每侧一次实际外观补发，不是严格零。所有实际首发/补发字节与 Stop/第一次业务交付来自原始 Linux GoTLS+Rust/TUN，非算法单测。
+- **Windows2025 签名真实原生**：[Actions 45171406732](https://github.com/lly8666/wbd-next/actions/runs/45171406732) frozen SOURCE `6f8859d3f8cf1b2286dc7658bc0768c72b9bf157` 最终 **success**；Game2 OFF、10Mbps 每方向、250ms、tc30%、60s，Windows/WSL2 实际初次业务≈9.2969/9.2892Mbps，受控 Stop `PASS_BOTH_OWNED`。Windows 原始客户端 NPF owner 的两个 lane 实际 `repair_accepted=7980/7982`，Linux server `F=169272580,R=15120362` (约8.93%)；**旧 SOURCE Windows R/F 精确字节计数未读回，不可拿次数冒充比例。**
+- Windows `v4_windows_game_outer.rs` 新加 `WBD_GAME_WINDOWS_NORMAL_OUTER_WIRE` 只读 STOP：成功 NPF first DATA 字节 `first_record_wire_bytes`、实际成功同密文补发 `copy_record_wire_bytes` 与整数 `r_f_ppm`，包括 Ethernet+IPv4+TCP 54 字节，真实驱动成功后计账。Linux 和 Windows targeted Rust 单元新源 `c6f48286...` [Actions 45176327562](https://github.com/lly8666/wbd-next/actions/runs/45176327562) 通过。已冻结 `experiment/m0-game-normal-frozen-c6f4828`，源锁签名 Game2 OFF 5/30% + Game4 fixed FEC30% 分别 dispatch，后续真实结论另读 Actions，dispatch success 不可标记原生 success。
+- **CPU 同机 ABBA**：`OLD=91170a8f`、`NEW=405da606` 唯一 Rust 产品源差异为 `v4_game_cosmetic_outer.rs` 的 indexed deadline 门控；二者既有 Game4-FEC30% 原生场景通过。早期 ABBA 工作流 [45173542415](https://github.com/lly8666/wbd-next/actions/runs/45173542415) 在前置检查失败：一开始尝试无凭证 shallow fetch，之后错误要求旧多场景 run 整体 success（实际旧 run 只因缺少 1/10/20% Game2 场景文件而整体 failed）。现用经认证 compare API 精确核对差异，只要求旧/新 `native-bundle-once` 和指定 `game4-fec,30` 原生 job 成功；[45176167885](https://github.com/lly8666/wbd-next/actions/runs/45176167885) 已实际进入同机 OLD/NEW/NEW/OLD 四轮，最终 CPU 数据待读取，不预写 gains。
+- **当前限制**：Windows 的 Game2/4 OFF/fixed 六档全部原生 R/F 与 CPU p99 尚未完全收口；Game 高密度 FEC 与旧单 shadow 的 CPU 对照需要同机 ABBA；Windows 真实网络 success 只证明所测 Game2 30% 功能不证明整表；Linux 的 group-local budget 与 Normal process-global quota 仍须明确场景作用域。新功能继续 Draft 不 merge main。
+
+
 ```feature-impact
 {"kind":"updated","reason":"Game2/4 OFF/fixed Linux and Windows outer opportunistic retransmission is being rewritten on the proven Normal v3 ACK-gap, immutable shadow and byte-budget algorithm; source branch draft, not qualified.","ids":["outer-opportunistic-repair"]}
 ```
