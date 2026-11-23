@@ -1,0 +1,171 @@
+name: M0 signed Windows to Linux bidirectional Game2 Game4 cosmetic matrix
+run-name: "M0-WINDOWS-GAME-OUTER-12|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-cosmetic-win-game-matrix.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  game:
+    if: contains(github.event.head_commit.message, '[m0-cosmetic-win-game-once]')
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        mode: [game2, game4, game2-fec, game4-fec]
+        loss: [0, 5, 30]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PRODUCT_SOURCE: 92920fb96f2d77ca11abcfdf4a4069d24731f62b
+      PRODUCT_RUN: "45111958268"
+      MODE: ${{ matrix.mode }}
+      LOSS: ${{ matrix.loss }}
+      SCENARIO: scenarios/m0-cosmetic-${{ matrix.mode }}-loss${{ matrix.loss }}-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze same signed EXE DLL and Linux peer, genuine both-way Game scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch --quiet --depth=1 origin "$PRODUCT_SOURCE"
+          delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          test -z "$delta" || { echo "M0_GAME_PRODUCT_SOURCE_DRIFT $delta" >&2; exit 1; }
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .conclusion)" = success
+          names="$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/artifacts?per_page=100" --jq '.artifacts[].name')"
+          grep -Fxq "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" <<<"$names"
+          grep -Fxq m0-plan024-linux-product <<<"$names"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          import os
+          s=read_scenario(os.environ["SCENARIO"])
+          assert s["public_mode"]==os.environ["MODE"]
+          assert (s["duration_s"],s["warmup_s"],s["drain_s"],s["tun_mtu"],s["seed"])==(60,5,10,1400,20261029)
+          assert all(s[d]["loss_pct"]==int(os.environ["LOSS"]) and
+                     s[d]["offered_mbps"]==10 and s[d]["delay_ms"]==250
+                     for d in ("windows_to_linux","linux_to_windows"))
+          print("M0_GAME_SOURCE_LOCKED_SCENARIO",s["scenario_sha256"])
+          PY
+      - name: Dispatch one signed Windows native Game and wait for its owned Stop
+        id: dispatch
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_run() {
+            gh api "repos/$GH_REPO/actions/workflows/m0-wl-public-normal-full.yml/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg sha "$GITHUB_SHA" --arg scene "$SCENARIO" '[.workflow_runs[] | select(.head_sha==$sha and (.name|contains($scene)))] | sort_by(.created_at) | last | .id // empty'
+          }
+          id="$(find_run)"
+          if [ -z "$id" ]; then
+            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+              -f "public_mode=$MODE" -f native_outer_mtu=legacy1400 \
+              -f outer_repair=on -f "perf_scenario_file=$SCENARIO" \
+              -f "perf_reuse_run_id=$PRODUCT_RUN" \
+              -f "perf_binary_source_sha=$PRODUCT_SOURCE"
+          fi
+          for i in $(seq 1 90); do
+            id="$(find_run)"
+            if [ -n "$id" ]; then break; fi
+            sleep 10
+          done
+          test -n "$id" || { echo GAME_DISPATCH_NOT_OBSERVED >&2; exit 1; }
+          echo "run_id=$id" >>"$GITHUB_OUTPUT"
+          echo "GAME_SIGNED_NATIVE_STARTED_NOT_PASS mode=$MODE loss=$LOSS run=$id source=$PRODUCT_SOURCE"
+          conclusion=""
+          for i in $(seq 1 150); do
+            state="$(gh api "repos/$GH_REPO/actions/runs/$id")"
+            if [ "$(jq -r .status <<<"$state")" = completed ]; then
+              conclusion="$(jq -r .conclusion <<<"$state")"
+              break
+            fi
+            if (( i % 4 == 0 )); then
+              boot="$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+                jq -r '[.jobs[] | select(.name=="native-public-two-os") | .steps[]? |
+                  select(.name=="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)" and .status=="in_progress") | .started_at] | first // empty')"
+              if [ -n "$boot" ]; then
+                age=$(( $(date -u +%s) - $(date -u -d "$boot" +%s) ))
+                if (( age>840 )); then
+                  echo "M0_GAME_TRUE_ENV_BLOCKED_STALE_WSL run=$id age=$age" >&2
+                  gh api -X POST "repos/$GH_REPO/actions/runs/$id/cancel" >/dev/null || :
+                  exit 1
+                fi
+              fi
+            fi
+            sleep 15
+          done
+          echo "M0_GAME_NATIVE_EXECUTED mode=$MODE loss=$LOSS run=$id conclusion=$conclusion"
+          test "$conclusion" = success || exit 1
+          gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+            jq -e '.jobs | any(.name=="native-public-two-os" and .conclusion=="success")' | grep -Fxq true
+      - name: Preserve two-OS actual Game outer ledger, parity separate, FEC and Stop
+        if: always() && steps.dispatch.outputs.run_id != ''
+        shell: bash
+        env:
+          NATIVE_RUN: ${{ steps.dispatch.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          artifact="m0-wl-full-public-normal-direct-h1506-legacy-$NATIVE_RUN"
+          gh run download "$NATIVE_RUN" --repo "$GH_REPO" --name "$artifact" --dir out
+          python3 - <<'PY'
+          import json,os,pathlib,re
+          from tools.m0_wl_perf_v2_config import read_scenario
+          root=pathlib.Path("out")
+          mode=os.environ["MODE"];loss=int(os.environ["LOSS"])
+          expected=read_scenario(os.environ["SCENARIO"])
+          r=json.loads((root/"report.json").read_text())
+          assert r["source"]==os.environ["GITHUB_SHA"]
+          assert r["linux_binary_source"]==os.environ["PRODUCT_SOURCE"]
+          assert r["mode_public"]=="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_"+mode
+          assert r["stop"]=="PASS_BOTH_OWNED"
+          assert r["WL_V2"]["status"]=="MEASURED_BOTH_OS_KERNEL"
+          assert r["WL_V2"]["scenario_sha256"]==expected["scenario_sha256"]
+          eff=r.get("original_outer_repair_effective",{})
+          assert eff.get("windows") is True and eff.get("linux") is True
+          assert eff.get("enabled")==1 and eff.get("game_lanes")==(4 if mode.startswith("game4") else 2)
+          c=(root/"mode-results"/mode/"client.log").read_text(errors="replace")
+          s=(root/"mode-results"/mode/"server.log").read_text(errors="replace")
+          assert "WBD_WINDOWS_GAME_OUTER_REPAIR_EFFECTIVE enabled=1 " in c
+          assert "V4_PUBLIC_GAME_OUTER role=server " in s
+          win_fec=re.findall(r"WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance=(\d+)",c)
+          win_off=re.findall(r"WBD_GAME_NORMAL_SHARED_OUTER_STOP lane=\d+ fec_sparse=\w+ candidates=\d+ repair_accepted=(\d+)",c)
+          server_fec=re.findall(r"WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance=(\d+)",s)
+          server_off=re.findall(r"WBD_GAME_NORMAL_SHARED_OUTER_STOP lane=\d+ fec_sparse=\w+ candidates=\d+ repair_accepted=(\d+)",s)
+          def actual_or_unobserved(a,b):
+              if a:return {"kind":"game_fec_original_ciphertext_copied","count":max(map(int,a))}
+              if b:return {"kind":"game_normal_shared_outer_accepted","count":sum(map(int,b))}
+              return "NOT_MEASURED_GAME_OUTER_COUNT"
+          grade={
+            "source":os.environ["PRODUCT_SOURCE"],"fixture":os.environ["GITHUB_SHA"],
+            "native_run":os.environ["NATIVE_RUN"],"mode":mode,"loss_pct_each_direction":loss,
+            "windows_to_linux":r["WL_V2"]["first_delivery_fraction"].get("windows"),
+            "linux_to_windows":r["WL_V2"]["first_delivery_fraction"].get("linux"),
+            "source_locked_both_real_os_and_owned_stop":True,
+            "outer_enabled_both_real_owners":True,
+            "windows_outer":actual_or_unobserved(win_fec,win_off),
+            "linux_outer":actual_or_unobserved(server_fec,server_off),
+            "game_fec_parity":"SEPARATE_FROM_OUTER_R_NOT_COUNTED_AS_REPAIR",
+            "wire_R_over_F":"NOT_MEASURED_GAME_MULTI_LANE_ORIGINAL_WIRE_DENOMINATOR",
+            "product_game_outer_bilateral_grade":"SCOPED_TWO_OS_ON_ONLY; EXPECT_REAL_COPIES_AND_TWO_OWNED_LEDGERS"
+          }
+          (root/"m0-game-outer-evidence.json").write_text(json.dumps(grade,indent=2)+"\n")
+          print("M0_WINDOWS_LINUX_GAME_OUTER_EXACT_SOURCE",json.dumps(grade,sort_keys=True))
+          if loss>0 and (not isinstance(grade["windows_outer"],dict) or
+                        grade["windows_outer"]["count"]<=0 or
+                        not isinstance(grade["linux_outer"],dict) or
+                        grade["linux_outer"]["count"]<=0):
+              raise SystemExit("REAL_BILATERAL_GAME_OUTER_LEDGER_NOT_PROVED")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-windows-linux-game-${{ matrix.mode }}-loss${{ matrix.loss }}-${{ github.sha }}
+          path: out/m0-game-outer-evidence.json
+          retention-days: 21
+          if-no-files-found: warn
