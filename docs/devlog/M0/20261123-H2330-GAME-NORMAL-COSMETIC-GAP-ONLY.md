@@ -17,6 +17,12 @@
 - 新实现不伪造 ACK/SACK，也绝不无条件定时DATA重发。仅当原 Game AEAD 确证的逆向DATA持续携带同一累计ACK（3个真实重复样本），且该流曾有实际原始首发在候选后面，允许从**仍未被累计ACK确认**、不超过2s的可选冻结样本里按低频率复制一次，哪怕最早缺失记录未被抽样。初始ACK在至少1s以后才能认作稳定停滞，避免0%场景的250ms×2真实RTT误判。没有原数据复制就没有重传机会，累计确认/重排保护/字节预算照常卡死异常发包。
 - 复制不解码、不发FEC parity、不创新PN、不抵业务丢包；每lane 80ms限频，全量源实际字节F与已实发R共同判定R/F≤10%。补充 (r1_game_stalled_real_ack_allows_unacked_sample_not_exact_head) 单元。新源码Game 0/5/30 重新实际双向验收，旧Source失败不能冒充新PASS。
 
+## H2332 · Game 0% 真实重传洪泛：7e 同源码绿色不代表产品通过
+- SOURCE `7e2190e` Linux 原始GoTLS/Rust 客户端+服务端 Game2 双向 netem 0%：两端 **各1257 次外层复制**，但首发业务100%且tc无丢包；5%为客户端1250次、服务端1256次。原 Linux Game validator 只在有损要求非零，没审零损R；该组即使Action绿也必须判产品**FAIL**。
+- 原 `ack_ever_progressed` sticky 布尔值只要过去曾见累计ACK推进，就容许后续短毫秒重复ACK burst伪装成“长停滞”。本轮改为每次真实认证累计 ACK 改变即重置 `last_ack_change_ns`，同一 ACK 连续 >=1秒加至少3个认证 hints、实发后续字节、原样本仍未 ACK、样本年龄<=2秒、全量首发F的R/F<=10%、最多一次原密文才能提名；绝不恢复周期性 DATA PTO。
+- 新原生单元覆盖连续推进ACK但局部4连发的**无损不重传**。Linux 原双向实测 validator 对 Game 无损加包数上限：按真实 `first_lane_copied` 为代理分母，复制包数<=0.05%；仅为保守外观频率代理，不冒充真正wire byte R/F。任何超线 FAIL 而非假PASS。
+- 旧7e源码测量不可当新源码修复证据，需同时核收 Windows→Linux Game12、Linux client/server Game18 新SHA和真实 netem/Stop/CPU。
+
 ```feature-impact
-{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game OFF/fixed6 removes unsolicited 250/810ms DATA PTO; genuine authenticated future triggers bounded duplicate cumulative ACK, only real peer gaps nominate frozen cipher, first-send F budget and CPU caps preserved; new-source native tests pending."}
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game genuine authenticated ACK must stay unchanged >=1s; zero-loss game appearance flood is now fail-closed with per-role original Stop count; original one-shot F budget and no DATA PTO unchanged, native WAN pending."}
 ```
