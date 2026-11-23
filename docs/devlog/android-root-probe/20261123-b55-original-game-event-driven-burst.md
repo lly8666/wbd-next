@@ -10,3 +10,11 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B55原Rust Android Game2/4 M4真正TUN→GameAdapter→RAW TX最多8包免逐包poll，Health/Game4/FEC到期优先的1s idle wait、2/4路RAW RX idle1s readiness；无新业务worker/安全控制。"}
 ```
+
+## B55b｜普通App物理DNS查询也参与现有有界事件公平调度
+
+在上述 B55 Game TX data path 复核中找到实际功能问题：`DnsRoute::PhysicalUDP` 原先向同一 `AndroidBoundPhysicalDnsUdp` 发出真实query后直接 `continue`，**绕开当轮FEC/Game4 due与物理DNS回复fd的poll**。对真实用户多App同时发短串查询会推迟原TUN答复，并非仅极端攻击流量。B55b把这条早退改成 `if PhysicalUDP{...}else{原TunnelDns+GameAdapter offer/drain}`，保证物理查询绝不重复原M3业务发送，又会和普通App RAW业务一起按B55最多8个TUN后回归**同一原物理UDP DNS fd/eventfd**，同时处理Health、Game4/FEC due；无额外工作线程、Socket、DNS代理。源门直接锁住不能早退且不能把物理查询送GameAdapter。B55a旧SOURCE和CI独立保留，B55b新SOURCE另验，Android实机双向与CPU仍NOT_RUN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B55b消除原Android Game物理DNS发送后continue造成的原物理DNS reply/原Game4-FEC due事件长期不公平，所有原业务共用8包事件短突发，无新worker或协议路径。"}
+```

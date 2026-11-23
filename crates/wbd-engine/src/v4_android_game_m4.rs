@@ -280,8 +280,7 @@ impl AndroidGameWorkers{
                                         }
                                     }
                                 }else{tx_physical_errors.fetch_add(1,Ordering::Relaxed);}
-                                continue
-                            }
+                            }else{
                             // Same 64-slot original Normal TunnelDnsUdpFlows,
                             // before the genuine GameAdapter seal.
                             let mut dns_rejected=false;
@@ -306,6 +305,7 @@ impl AndroidGameWorkers{
                                     if copied>0{health.on_local_business(now.0)}
                                 }else{tx_rejected.fetch_add(1,Ordering::Relaxed);}
                             }else{break}
+                            } // Physical UDP only uses scoped socket, never GameAdapter/M3.
                         }else{tx_rejected.fetch_add(1,Ordering::Relaxed);}
                     }else if read.as_ref().err().is_some_and(|e|
                         e.kind()!=io::ErrorKind::WouldBlock){

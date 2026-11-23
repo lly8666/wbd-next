@@ -374,6 +374,15 @@ assert 'IDLE_WAKE_MAX_MS:i32=1_000' in schedule
 assert 'const MAX_INLINE_TUN_BURST:u8=8;' in schedule
 assert 'mod v4_android_game_schedule;' in Path(
     "crates/wbd-engine/src/lib.rs").read_text()
+# B55b physical UDP53 queries also rejoin the bounded M4 event loop
+# after up to eight TUN reads; no accidental duplicate M3 forwarding.
+physical_path=m.split('if matches!(route,DnsRoute::PhysicalUDP){',1)[1].split(
+    '// Same 64-slot original Normal TunnelDnsUdpFlows,',1)[0]
+assert 'continue' not in physical_path
+assert '}else{' in physical_path
+assert 'Physical UDP only uses scoped socket, never GameAdapter/M3.' in m
+assert 'if tun_burst.inline_next(received_business){continue}' in m
+print("ANDROID_B55B_GAME_PHYSICAL_DNS_REPLY_FAIRNESS_SOURCE_PASS")
 print("ANDROID_B55_ORIGINAL_GAME2_GAME4_LOW_WAKE_AND_TUN_BURST_SOURCE_PASS")
 PY
 # B39: original native Rust Game groups on Android now bind exactly one
