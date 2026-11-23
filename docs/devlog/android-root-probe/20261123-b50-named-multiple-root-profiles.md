@@ -14,3 +14,11 @@ B50完成单个大类「常用连接多配置」实际生产接线，非诊断�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B50四套命名Root连接配置复用原B22 serializer/UID冷复核，载入仅替换UI表单、修跨配置旧UID复选框残留；原Go/Rust业务/Stop不变。"}
 ```
+
+## B50 自动CI真实失败（保留，不改记）
+
+B50 SOURCE `e5b4334b712208e94b1caa28c460de3f45aa12c0` [dual64 #45171551179](https://github.com/lly8666/wbd-next/actions/runs/45171551179) 的 `root-arm64-app` **FAIL**：正式APK javac 发现新增 `TextView profileHint` 与已有 `onCreate` 同名变量重定义；所有B50纯JVM多配置测试和源静态门先前已PASS，仍没有此SOURCE签名APK。B51新SOURCE仅将新局部变量改名 `namedProfileHint`，原设置存储与Go/Rust不改；新产品构建需独立验收。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"记录B50 root-arm64-app真Java局部变量重名FAIL并在B51仅改新控件变量名，保留失败证据与原产品逻辑。"}
+```

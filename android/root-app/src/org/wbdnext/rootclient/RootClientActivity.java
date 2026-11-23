@@ -1139,9 +1139,9 @@ public final class RootClientActivity extends Activity {
         pane.addView(refreshApps);
         // B50: four named daily connection profiles, all using the
         // existing B22 settings serializer and selected app UID recheck.
-        TextView profileHint=new TextView(this);
-        profileHint.setText("本机常用连接：最多4套服务器/模式/UID/分流配置；密码/RouteKey独立按槽位用现有Keystore保存，CA和物理Network不存配置。");
-        pane.addView(profileHint);
+        TextView namedProfileHint=new TextView(this);
+        namedProfileHint.setText("本机常用连接：最多4套服务器/模式/UID/分流配置；密码/RouteKey独立按槽位用现有Keystore保存，CA和物理Network不存配置。");
+        pane.addView(namedProfileHint);
         profileSlots=new Spinner(this);
         profileSlots.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
