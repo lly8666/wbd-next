@@ -27,7 +27,15 @@ use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx,RawTxError};
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
-use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
+use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation,SackRange32};
+fn pack_game_sack(sack:Option<SackRange32>)->u64{
+    sack.map_or(0,|v|(u64::from(v.start)<<32)|u64::from(v.end))
+}
+fn unpack_game_sack(packed:u64)->Option<SackRange32>{
+    (packed!=0).then_some(SackRange32{
+        start:(packed>>32) as u32,end:packed as u32,
+    })
+}
 use wbd_platform::r1::StopResult;
 #[repr(C)]
 struct GamePollFd {fd:i32,events:i16,revents:i16}
@@ -210,6 +218,15 @@ impl GameKernelOwner{
         let presentation_hints=Arc::new((0..n)
             .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
         let tx_hints=Arc::clone(&presentation_hints);
+        // Exactly one newest authenticated SACK-positive block per lane,
+        // encoded in one atomic word; original Go protected SYN/SYN-ACK
+        // negotiated SACK Permitted. No per-packet heap or second worker.
+        let outbound_sacks=Arc::new((0..n)
+            .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
+        let tx_outbound_sacks=Arc::clone(&outbound_sacks);
+        let inbound_peer_sacks=Arc::new((0..n)
+            .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
+        let tx_inbound_peer_sacks=Arc::clone(&inbound_peer_sacks);
         // Go-TLS original per-lane RX boundary is the authority; do not
         // infer cumulative ACK from the first packet that happens to arrive.
         let presentation_ack=Arc::new(rx_seqs.iter()
@@ -777,9 +794,16 @@ impl GameKernelOwner{
                             if current==observed_hints[i]{continue}
                             let count=(current>>32)
                                 .wrapping_sub(observed_hints[i]>>32).min(3);
+                            let positive=unpack_game_sack(
+                                tx_inbound_peer_sacks[i].load(Ordering::Acquire));
+                            let sack=[wbd_recovery::outer_ack::SackRange32{
+                                start:positive.map_or(0,|s|s.start),
+                                end:positive.map_or(0,|s|s.end),
+                            }];
+                            let sacks=if positive.is_some(){&sack[..]}else{&[]};
                             for _ in 0..count{
                                 let _=cosmetic.on_feedback(i,current as u32,
-                                    clock_ns);
+                                    sacks,clock_ns);
                             }
                             observed_hints[i]=current;
                         }
@@ -825,8 +849,12 @@ impl GameKernelOwner{
                         };
                         let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,
                             src_port:sp,dst_port:dp};
+                        let packed=tx_outbound_sacks[index].load(Ordering::Acquire);
+                        let one=unpack_game_sack(packed);
+                        let slot=[one.unwrap_or(SackRange32{start:0,end:0})];
+                        let sacks=if one.is_some(){&slot[..]}else{&[]};
                         if item.raw.send_presentation_ack_sack(generation,tuple,
-                            item.seq as u32,current,&[]).is_ok(){
+                            item.seq as u32,current,sacks).is_ok(){
                             ack_sent[index]=current;
                             ack_last_ns[index]=clock_ns;
                             observed_future[index]=future;
@@ -901,6 +929,8 @@ impl GameKernelOwner{
             let rx_tun=Arc::clone(&tun);
             let rx_stop=Arc::clone(&stop);
             let rx_hints=Arc::clone(&presentation_hints);
+            let rx_sack=Arc::clone(&outbound_sacks);
+            let rx_peer_sack=Arc::clone(&inbound_peer_sacks);
             let rx_ack=Arc::clone(&presentation_ack);
             let rx_future=Arc::clone(&authenticated_future);
             let rx_initial=rx_seqs[i];
@@ -933,6 +963,8 @@ impl GameKernelOwner{
                         flow=change.flow;
                         lane_opener=change.opener;
                         ack_ledger=NativePresentationAck::new(change.rx_seq);
+                        rx_sack[i].store(0,Ordering::Release);
+                        rx_peer_sack[i].store(0,Ordering::Release);
                         rx_ack[i].store(change.rx_seq,Ordering::Release);
                         let _=change.ready.send(old);
                     }
@@ -942,7 +974,7 @@ impl GameKernelOwner{
                         (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
                     };
                     let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
-                    let (len,seq32,ack32)=match raw.recv_one_with_ack_control_into(
+                    let (len,seq32,ack32,peer_sack)=match raw.recv_one_with_ack_control_into(
                         generation,&mut wire,tuple,peer_persona,outer_repair_enabled
                     ){
                         Ok(data)=>data,
@@ -974,6 +1006,7 @@ impl GameKernelOwner{
                     // metadata: no AEAD open, delivery, Health or FEC credit.
                     if len==0{
                         if outer_repair_enabled{
+                            rx_peer_sack[i].store(pack_game_sack(peer_sack),Ordering::Release);
                             let last=rx_hints[i].load(Ordering::Relaxed);
                             rx_hints[i].store(
                                 ((last>>32).wrapping_add(1)<<32)|u64::from(ack32),
@@ -999,8 +1032,10 @@ impl GameKernelOwner{
                         if ack_ledger.authenticated_future(seq32){
                             rx_future[i].fetch_add(1,Ordering::Release);
                         }
-                        rx_ack[i].store(
-                            ack_ledger.verified(seq32,len),Ordering::Release);
+                        let actual_ack=ack_ledger.verified(seq32,len);
+                        rx_sack[i].store(pack_game_sack(
+                            ack_ledger.latest_sack()),Ordering::Release);
+                        rx_ack[i].store(actual_ack,Ordering::Release);
                     }
                     if outer_repair_enabled && matches!(&opened,Ok(Some(_))){
                         // AEAD-opened DATA may also carry Normal-style outer
