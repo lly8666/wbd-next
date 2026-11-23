@@ -51,6 +51,9 @@ pub(super) struct GameOuter{
     // Keep the single-repair hard expiry and per-lane rate cap.
     pub(super) repair_enabled:bool,
     fec_sparse:bool,fec_seen:Vec<u64>,fec_copied:u64,
+    // Original NPF successful first-copy and repair wire bytes (Ethernet+
+    // IPv4+TCP+ciphertext). Read at owned Drop, never infer from candidates.
+    first_record_wire_bytes:u64,copy_record_wire_bytes:u64,
 }
 impl GameOuter{
     pub(super) fn new(cfg:&WbdWinGameNativeAttachV3,
@@ -67,7 +70,8 @@ impl GameOuter{
         let repair_enabled=cfg.disable_outer_repair==0;
         let mut owner=Self{lanes:Vec::with_capacity(lanes.len()),
             epoch:cfg.first.epoch,repair_enabled,fec_sparse,
-            fec_seen:vec![0;lanes.len()],fec_copied:0};
+            fec_seen:vec![0;lanes.len()],fec_copied:0,
+            first_record_wire_bytes:0,copy_record_wire_bytes:0};
         for (index,entry) in lanes.iter().enumerate(){
             // Each independent Game TCP sequence stream needs its OWN
             // Normal budget direction. No collision with the group crypto
@@ -147,6 +151,8 @@ impl GameOuter{
         // unselected FEC samples; the shared R/F cap cannot be diluted.
         m2_global().lock().map_err(|_|BAD_STAGE)?
             .on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
+        self.first_record_wire_bytes=self.first_record_wire_bytes
+            .saturating_add(bytes);
         // No BTree node unless the original frozen snapshot is both
         // sampled and admitted. Guard optional CPU before tree mutation.
         if !sampled||m.shadow.outstanding()>=MAX_M2_FIXED_FROZEN{
@@ -284,8 +290,14 @@ impl GameOuter{
         };
         let _=m.shadow.on_send_result(&held.candidate,status,now);
         let _=g.revoke(held.lease,now);
-        if self.fec_sparse && sent==1{
-            self.fec_copied=self.fec_copied.saturating_add(1);
+        if sent==1{
+            // NPF's exact copied prefix is the authority; count only one
+            // original ciphertext replay, never a FEC parity first-send.
+            self.copy_record_wire_bytes=self.copy_record_wire_bytes
+                .saturating_add(held.candidate.frozen().bytes().len() as u64+54);
+            if self.fec_sparse{
+                self.fec_copied=self.fec_copied.saturating_add(1);
+            }
         }
         Ok(())
     }
@@ -310,6 +322,12 @@ impl Drop for GameOuter{
             eprintln!("WBD_GAME_NORMAL_SHARED_OUTER_STOP enabled=0 lanes={} copied_appearance=0 optional_shadow=0",self.lanes.len());
             return
         }
+        eprintln!("WBD_GAME_WINDOWS_NORMAL_OUTER_WIRE first_record_wire_bytes={} copy_record_wire_bytes={} r_f_ppm={} exact_npf_copied=1 source_original=1",
+            self.first_record_wire_bytes,self.copy_record_wire_bytes,
+            if self.first_record_wire_bytes>0{
+                self.copy_record_wire_bytes.saturating_mul(1_000_000)
+                    /self.first_record_wire_bytes
+            }else{0});
         if self.fec_sparse{
             eprintln!("WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance={} firstsend_records={:?} normal_ack_gap=1 same_original_pn_seq=1 no_fec_recovery_credit=1",
                 self.fec_copied,self.fec_seen);
@@ -352,7 +370,8 @@ mod tests{
             lane,direction:dir,route,ack,shadow,
             ready:VecDeque::new(),held:None,retry_after_ns:None,
         }],epoch:[3;16],repair_enabled:false,
-        fec_sparse:false,fec_seen:vec![0],fec_copied:0};
+        fec_sparse:false,fec_seen:vec![0],fec_copied:0,
+        first_record_wire_bytes:0,copy_record_wire_bytes:0};
         assert!(!owner.repair_enabled);
         assert_eq!(owner.on_firstsend(0,1,200,&[7u8;120]),Ok(()));
         assert_eq!(owner.lanes[0].ack.highest_sent_end(),320);
