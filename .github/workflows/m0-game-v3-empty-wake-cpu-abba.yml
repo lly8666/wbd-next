@@ -1,5 +1,5 @@
 # M0 source-locked Game4-FEC30 ABBA: skip v3's provably empty initial wake only.
-name: M0 Game Normal-v3 Game4-FEC 30pct empty-wake CPU ABBA
+name: M0 Game Normal-v3 Game4-FEC 30pct empty-wake reverse ABBA
 on:
   push:
     branches: [work/m0-game-normal-outer-20261123]
@@ -97,7 +97,7 @@ jobs:
           # ABBA counterbalances warm process/cache/order noise. Each leg
           # starts fresh original GoTLS + Rust clients/servers and independent
           # kernel netns, with true netem, both owned Stop, immutable hashes.
-          labels=(old new new old)
+          labels=(new old old new)
           index=0
           for label in "${labels[@]}"; do
             index=$((index+1))
@@ -132,7 +132,7 @@ jobs:
           python3 - <<'PY'
           import json,pathlib,statistics
           rows=[]
-          for idx,label in enumerate(("old","new","new","old"),1):
+          for idx,label in enumerate(("new","old","old","new"),1):
               p=pathlib.Path(f"out/{idx}-{label}/result.json")
               if not p.is_file():continue
               x=json.loads(p.read_text())
@@ -145,7 +145,7 @@ jobs:
           summary={"schema":"m0-game4-fec-30pct-v3-empty-wake-cpu-abba/v1",
               "old_source":"267490cee46bf3007309bd7e2880d588980b4f82",
               "new_source":"ec70d999aef539efd19f09de5d6de2eace02f808",
-              "order":"OLD_NEW_NEW_OLD","real_same_ubuntu_runner":True,
+              "order":"NEW_OLD_OLD_NEW","real_same_ubuntu_runner":True,
               "qualified":qualified,"rows":rows,"attribution":"FULL_ORIGINAL_GO_RUST_PROCESS_CPU_NOT_ISOLATED_ALGORITHM"}
           if qualified:
               for role in ("client","server"):
@@ -161,7 +161,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: m0-game-normal-v3-game4-fec30-empty-wake-cpu-abba-${{ github.sha }}
+          name: m0-game-normal-v3-game4-fec30-empty-wake-reverse-abba-${{ github.sha }}
           path: |
             out/summary.json
             out/*/result.json
