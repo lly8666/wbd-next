@@ -1,4 +1,6 @@
-# First commit installed this workflow; this follow-up push arms the one-shot gate.
+# M0/H2324: exact signed baseline manifest proved m0_v4_probe+native_fec_acceleration with pinned ISA-L.
+# Native reuse verifies the *actual* same-source feature set and BOTH EXE/DLL SHA256, not obsolete two-feature expectation.
+# This one-shot push re-arms the guarded original Windows-to-Linux six-tier gate.
 name: M0 Windows-to-Linux original ACK repair 0 then five loss tiers
 on:
   push:

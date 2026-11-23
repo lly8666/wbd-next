@@ -1612,6 +1612,21 @@ jobs:
               assert m.get('native_fec_acceleration') is True
               assert m.get('isa_l_source')=='c387163fcbca62701d646149564c550c78a4f985'
               print('H2062_REUSED_EXACT_UNTESTED_H2061_BINARY_MANIFEST_HASH_GATE')
+          elif (os.environ.get('WBD_WL_REUSE_RUN_ID') and
+                os.environ.get('WBD_WL_V2_SCENARIO','').startswith('scenarios/') and
+                os.environ.get('WBD_WL_PUBLIC_MODES')=='normal' and
+                m['source_sha']==os.environ.get('WBD_WL_BINARY_SOURCE') and
+                m['source_sha']==os.environ.get('GITHUB_SHA')):
+              # The live signed Normal WAN source contains actual native
+              # m0_v4_probe + official ISA-L; the old generic two-feature
+              # expectation wrongly rejected the *same* proven binary.
+              # Scope to same-run source, actual scenario and pinned features.
+              # Preserve below SHA256 verification of BOTH real EXE and DLL.
+              assert m['features']=='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
+              assert m.get('native_fec_acceleration') is True
+              assert m.get('isa_l_source')=='c387163fcbca62701d646149564c550c78a4f985'
+              assert m.get('original_go_source','a7a82db31fe736ffedee330795a3234d358f1984')=='a7a82db31fe736ffedee330795a3234d358f1984'
+              print('M0_PLAN029_NORMAL_TRUE_SOURCE_PROBE_ISAL_REUSE_MANIFEST_PASS')
           else:
               assert m['features']=='m0_v4_embedded_go,fec2_product_record'
           for name,key in [('wbd-client-embedded.exe','exe'),('wbd_engine.dll','dll')]:
