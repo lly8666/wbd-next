@@ -19,3 +19,7 @@ B45源码尚待本SOURCE Actions确切结果；Android真实四lane SYN/TLS/认�
 ## B45a｜同批 Go 生产入口组合修复
 
 首轮B45 `1558e784647b3c66f740838477bd761b93d56e65` [Dual64 #45136996614](https://github.com/lly8666/wbd-next/actions/runs/45136996614) 原Rust ARM64/x86编译完成，Android Go编译FAIL：最终计数日志编辑不慎覆盖 `game_android.go` 四lane代码为旧Game2导出，但CLI/bridge已指向 `runAndroidGame` 和 `V4AndroidGameProduct`，造成四个undefined。本修复从已准备好的真实四lane Go Blob恢复，保留B45的四TLS/四端口/Group M4/Stop，同时对齐Linux `int(c.gameLanes)` 策略参数类型，并在实际原Go低频读数按Game2/4打印对应M4 marker供Root App解析。首轮失败证据保留；新SOURCE独立验收，绝不继承旧BUILD_PASS。
+
+## B45b｜保留首轮失败，纠正两处旧源码门与目录声明
+
+B45a `2d3b6ed28aeebac23255f69eb6aa9b96721375ab` [Dual64 #45137530915](https://github.com/lly8666/wbd-next/actions/runs/45137530915) 已通过原Go/Rust双ABI `arm64-native`、原DNS/CN/M3六个Host Job，但 `root-arm64-app` 的 `test-network-scope-gate.sh` 失败于旧B45源码assert：真实Rust源码是 `g.android_lanes.len()`，断言误写 `len(g.android_lanes)`。后续旧B40门还要求已被Game4 due共享宏替换的原文字 `game.drain(now,|...)`。B45b仅把源码门核验改为**实际同一个GameAdapter**的 `drain_original_game!(game,now/when)` 和四lane原Rust `g.android_lanes.len()`，不改已编译成功的Go/Rust数据面。前一个 B45a [功能卡 #45137530944](https://github.com/lly8666/wbd-next/actions/runs/45137530944)因devlog声明更新而功能卡内容未更改FAIL；本次同步修改原功能卡摘要，遵循16KiB限额。每个旧SOURCE失败都保留，新SOURCE签名APK/原Linux Oracle/治理以实际Actions结论为准。

@@ -150,7 +150,7 @@ assert 'len(cold)!=int(p.cfg.Lanes)' in bridge
 assert 'ids:=make([]C.uint64_t,len(cold))' in bridge
 assert 'bound!=C.uint32_t(p.cfg.Lanes)' in bridge
 assert 'lanes!=uint32(p.cfg.Lanes)' in bridge
-assert 'len(g.android_lanes),2|4' in rust_group
+assert 'g.android_lanes.len(),2|4' in rust_group
 assert 'let lane_count=lanes.len();' in m4
 assert 'for i in 0..lane_count' in m4
 assert 'for id in 1..=lane_count' in m4
@@ -188,7 +188,10 @@ assert 'opener.open(&mut wire[..len])' in m
 assert 'owner.prepare_opened_receive(' in m
 assert 'owner.finish_receive(packet,written)' in m
 assert 'game.offer(&source[..n],now)' in m
-assert 'game.drain(now,|lane,_id,pn,wire|' in m
+# B45 same original GameAdapter RAW sender is shared by TUN ingress
+# and Game4 due ticks, instead of the B40 inlined one-time drain.
+assert 'drain_original_game!(game,now)' in m
+assert 'drain_original_game!(game,when)' in m
 assert 'tx_raw[i].send_built_outer(' in m
 assert 'HealthClock::new(' in m
 assert 'wbd_m0_embedded_go_android_game_group_m4_start' in b
