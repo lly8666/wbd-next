@@ -200,6 +200,20 @@ assert 'if(loadNamedProfile(slot))start();' in app
 assert 'refreshNamedProfileChoices();' in app
 assert 'connect.setOnClickListener(v->{coldSwitch.cancel();start();})' in app
 print("ANDROID_B52_NAMED_PROFILE_ORIGINAL_GO_RUST_SINGLE_ACTION_SWITCH_SOURCE_PASS")
+# B53: original B50 4-slot nonsecret profile codec + SAF import/export.
+bundle=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionProfileBundle.java").read_text()
+assert 'RootConnectionProfileBundle.write(out,snapshot)' in app
+assert 'RootConnectionProfileBundle.read(in)' in app
+assert 'RootConnectionProfileStore.load(this,i+1)' in app
+assert 'RootConnectionProfileStore.save(this,slot,restored[i])' in app
+assert 'RootConnectionProfileStore.delete(this,slot)' in app
+assert 'RootEncryptedCredentialStore.clearProfile(this,slot)' in app
+assert 'coldSwitch.cancel();' in app
+assert 'PROFILE_BUNDLE_EXPORT=2046' in app and 'PROFILE_BUNDLE_IMPORT=2047' in app
+assert 'profile.write(payload)' in bundle
+assert 'RootConnectionProfile.read(' in bundle
+print("ANDROID_B53_FOUR_SAF_PROFILE_IMPORT_EXPORT_ORIGINAL_SETTINGS_SOURCE_PASS")
+
 
 
 
@@ -470,6 +484,20 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootConnectionProfile.java \
   android/root-app/ci/RootConnectionProfileTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionProfileTest
+# B53: one actual SAF codec for all four named original Go/Rust profiles.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
+  android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
+  android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
+  android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
+  android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsTransfer.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionProfile.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionProfileBundle.java \
+  android/root-app/ci/RootConnectionProfileBundleTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionProfileBundleTest
 # Execute the EXACT production RootService original Go argv builder on the
 # host JVM. No Android guest, fake Network, Root permission or packet I/O.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \

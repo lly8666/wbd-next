@@ -55,11 +55,14 @@ public final class RootClientActivity extends Activity {
     private TextView selectedAppsSummary,bypassSummary,presetResult,profileResult;
     private EditText profileLabel;
     private RootConnectionSettings pendingPresetExport;
+    private RootConnectionProfile[] pendingBundleExport;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText,m4TrafficBrief;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
     private static final int LOCAL_TLS_CA_IMPORT=2043;
     private static final int CONNECTION_PRESET_EXPORT=2044;
     private static final int CONNECTION_PRESET_IMPORT=2045;
+    private static final int PROFILE_BUNDLE_EXPORT=2046;
+    private static final int PROFILE_BUNDLE_IMPORT=2047;
     // START can fail before any Service exists. Persist fixed app-only
     // stages so a 0-event TXT is no longer the only device-side evidence.
     private void traceUi(RootDiagnosticReceipt.Event event){
@@ -153,6 +156,84 @@ public final class RootClientActivity extends Activity {
             status.setText("CA导入或本机保存失败；请核对PEM并重新导入");
         }
     }
+    // B53: one explicit SAF transaction for all four existing named slots.
+    // No Root permission, credential plaintext, CA or physical Network handle.
+    private void exportAllProfiles(){
+        try{
+            RootConnectionProfile[] profiles=
+                new RootConnectionProfile[RootConnectionProfile.SLOTS];
+            int count=0;
+            for(int i=0;i<profiles.length;i++){
+                profiles[i]=RootConnectionProfileStore.load(this,i+1);
+                if(profiles[i]!=null)count++;
+            }
+            if(count==0){
+                profileResult.setText("四个配置槽均为空，请先保存连接配置");
+                return;
+            }
+            pendingBundleExport=profiles;
+            Intent select=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            select.addCategory(Intent.CATEGORY_OPENABLE);
+            select.setType("application/octet-stream");
+            select.putExtra(Intent.EXTRA_TITLE,"wbd-root-four-profiles.wbpb");
+            startActivityForResult(select,PROFILE_BUNDLE_EXPORT);
+        }catch(Exception unavailable){
+            pendingBundleExport=null;
+            profileResult.setText("无法读取当前四个配置槽，导出未开始");
+        }
+    }
+    private void importAllProfiles(){
+        Intent select=new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        select.addCategory(Intent.CATEGORY_OPENABLE);
+        select.setType("*/*");
+        try{startActivityForResult(select,PROFILE_BUNDLE_IMPORT);}
+        catch(Exception unavailable){profileResult.setText("系统文件选择器不可用");}
+    }
+    private void onAllProfilesResult(int code,int result,Intent data){
+        if(code==PROFILE_BUNDLE_EXPORT){
+            RootConnectionProfile[] snapshot=pendingBundleExport;
+            pendingBundleExport=null;
+            if(result!=RESULT_OK||data==null||data.getData()==null||
+               snapshot==null){
+                profileResult.setText("四槽配置导出已取消");
+                return;
+            }
+            try(OutputStream out=getContentResolver().openOutputStream(
+                data.getData(),"wt")){
+                if(out==null)throw new java.io.IOException("No profile export output");
+                RootConnectionProfileBundle.write(out,snapshot);
+                profileResult.setText("四槽普通连接设置已导出；不含密码、RouteKey、CA及Network");
+            }catch(Exception unavailable){
+                profileResult.setText("四槽导出失败：未完整写入文件");
+            }
+            return;
+        }
+        if(result!=RESULT_OK||data==null||data.getData()==null){
+            profileResult.setText("四槽导入已取消");
+            return;
+        }
+        coldSwitch.cancel();
+        try(InputStream in=getContentResolver().openInputStream(data.getData())){
+            RootConnectionProfile[] restored=RootConnectionProfileBundle.read(in);
+            if(restored==null)throw new IllegalArgumentException("not four WBD profiles");
+            // Import replaces the four cold slots only. Reusing old slot
+            // credentials for another server would select the wrong account.
+            // The active Go/Rust process owns separate staged files already.
+            for(int i=0;i<restored.length;i++){
+                int slot=i+1;
+                RootEncryptedCredentialStore.clearProfile(this,slot);
+                if(restored[i]==null)RootConnectionProfileStore.delete(this,slot);
+                else RootConnectionProfileStore.save(this,slot,restored[i]);
+            }
+            refreshNamedProfileChoices();
+            profileResult.setText("四槽设置已恢复。各槽密码/RouteKey需在本机重新填写保存；"+
+                "当前Root会话和选定物理Network不变");
+        }catch(Exception failed){
+            refreshNamedProfileChoices();
+            profileResult.setText("四槽导入未完整成功；若已有部分槽写入请检查后重试。"+
+                "未触发Root连接或内核路由");
+        }
+    }
     private void exportConnectionPreset(){
         try{
             // Freeze the user's NONSECRET cold form before SAF takes focus.
@@ -225,6 +306,11 @@ public final class RootClientActivity extends Activity {
         super.onActivityResult(requestCode,resultCode,data);
         if(requestCode==LOCAL_TLS_CA_IMPORT){
             if(resultCode==RESULT_OK)acceptTLSCA(data);
+            return;
+        }
+        if(requestCode==PROFILE_BUNDLE_EXPORT||
+           requestCode==PROFILE_BUNDLE_IMPORT){
+            onAllProfilesResult(requestCode,resultCode,data);
             return;
         }
         if(requestCode==CONNECTION_PRESET_EXPORT||
@@ -1253,6 +1339,14 @@ public final class RootClientActivity extends Activity {
         deleteProfile.setText("删除所选配置槽");
         deleteProfile.setOnClickListener(v->deleteNamedProfile());
         pane.addView(deleteProfile);
+        Button exportAllProfiles=new Button(this);
+        exportAllProfiles.setText("导出全部4套配置（单个文件，不含凭据）");
+        exportAllProfiles.setOnClickListener(v->exportAllProfiles());
+        pane.addView(exportAllProfiles);
+        Button importAllProfiles=new Button(this);
+        importAllProfiles.setText("恢复全部4套配置（需重新填写本机凭据）");
+        importAllProfiles.setOnClickListener(v->importAllProfiles());
+        pane.addView(importAllProfiles);
         profileResult=new TextView(this);
         profileResult.setText("选择槽位保存/载入；每槽独立密码/RouteKey，旧原生会话不变，配合B49前台冷切网。");
         pane.addView(profileResult);
