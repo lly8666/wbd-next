@@ -547,8 +547,8 @@ public final class RootClientActivity extends Activity {
             if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
                 throw new IllegalArgumentException("Fixed/Auto/Game2 requires startup padding off");
             if("game2".equals(fecMode)&&
-               (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()))
-                throw new IllegalArgumentException("Game2/off requires all App DNS modes off");
+               (physicalDNS.isChecked()||cnSplitDNS.isChecked()))
+                throw new IllegalArgumentException("Game2/off permits tunnel UDP DNS; physical/CN App DNS unavailable");
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
             boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
@@ -772,7 +772,7 @@ public final class RootClientActivity extends Activity {
             new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
         pane.addView(recordCiphers);
         TextView modeHint=new TextView(this);
-        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 原 TLS/FEC2；Game2/off 原 Go 双TLS→Rust单TUN双RAW M4。设备实测待验；Game4/FEC Game未接。");
+        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 原TLS/FEC2；Game2/off 原Go双TLS→Rust单TUN双RAW M4，支持原Rust隧道UDP/53。实机待验；Game4/FEC Game未接。");
         pane.addView(modeHint);
         fecModes=new Spinner(this);
         fecModes.setAdapter(new ArrayAdapter<>(this,
@@ -942,7 +942,7 @@ public final class RootClientActivity extends Activity {
             @Override public void onItemSelected(android.widget.AdapterView<?> parent,
                 View view,int position,long id){
                 if("game2".equals(fecModes.getSelectedItem().toString())){
-                    tunnelDNS.setChecked(false);
+                    // Original tunnel UDP53 remains available in Game2.
                     physicalDNS.setChecked(false);
                     cnSplitDNS.setChecked(false);
                     startupPaddingModes.setSelection(0);

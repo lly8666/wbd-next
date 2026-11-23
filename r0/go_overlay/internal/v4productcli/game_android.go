@@ -35,9 +35,9 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
     tun *ownedTun,connected *bool,
 )(retErr error){
     if c.gameLanes!=2||c.gameFecEnabled||c.startupPaddingMode!=0||
-       c.rotationInterval!=0||c.androidTunnelDNS||c.androidPhysicalDNS||
+       c.rotationInterval!=0||c.androidPhysicalDNS||
        c.androidCNDNSSplit||!c.autoIP||c.androidNetworkHandle==0{
-        return fmt.Errorf("Android original Game2/off cold mode only; FEC/padding/DNS/rotation not connected")
+        return fmt.Errorf("Android original Game2/off requires FEC/padding/physical App DNS/rotation off")
     }
     if os.Geteuid()!=0{return fmt.Errorf("Android Game2 requires original root owned kernel")}
     iface,e:=net.InterfaceByName(c.rawInterface)
@@ -154,6 +154,8 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
             Tun:tun.f,TunName:c.tunName,
             ConfigureTunnelMTU:configureTunnelMTU(c,tun),
             ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
+            TunnelDNS:c.androidTunnelDNS,
+            HealthSeconds:c.androidNativeHealthSeconds,
         })
     if e!=nil{return e}
     var undoRoute func()error
@@ -215,8 +217,12 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
             if lanes!=2||!active{
                 return fmt.Errorf("original Android Game2 M3/M4 worker stopped")
             }
-            // Numeric actual syscall counters only, no per-packet Go worker.
-            // Terminal diagnostics are readable through OriginalM4Counters.
+            counters,e:=native.OriginalM4Counters()
+            if e!=nil{return e}
+            // Existing one-second status ticker; exact Rust native counters.
+            log.Printf("V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d",
+                counters.RawCopied,counters.RawReceived,counters.TunDelivered,
+                counters.Rejected,counters.TunnelDnsQueries,counters.TunnelDnsReplies)
         }
     }
 }

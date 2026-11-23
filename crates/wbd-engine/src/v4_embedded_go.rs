@@ -3843,8 +3843,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_raw_state(
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     group:u64,fd:i32,tun_name:*const u8,tun_len:usize,
+    tunnel_dns:u32,health_seconds:u32,
 )->i32{
-    if fd<3||tun_name.is_null()||tun_len==0||tun_len>15{return INVALID}
+    if fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
+       tunnel_dns>1||!matches!(health_seconds,15|30){return INVALID}
     let Ok(name)=std::str::from_utf8(unsafe{
         std::slice::from_raw_parts(tun_name,tun_len)
     })else{return INVALID};
@@ -3859,7 +3861,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
     let workers=android_game_m4::AndroidGameWorkers::start(
         Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
-        lease,dup,name,(group>>32) as u32
+        lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds
     );
     let Ok(workers)=workers else{return BAD_STAGE};
     g.android_workers=Some(workers);
@@ -3873,7 +3875,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
 pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_counters(
     group:u64,out:*mut u64,len:usize,
 )->i32{
-    if out.is_null()||len!=4{return INVALID}
+    if out.is_null()||len!=6{return INVALID}
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
     if g.stopped||g.stopping{return BAD_STAGE}

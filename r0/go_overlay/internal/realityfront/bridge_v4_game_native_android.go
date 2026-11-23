@@ -9,7 +9,7 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_bind(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_state(uint64_t,uint32_t *);
-extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_m4_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_release(uint64_t);
@@ -41,6 +41,8 @@ type V4AndroidGame2Config struct{
     TunName string
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     ConfigureLeaseIPv4 func(string)error
+    TunnelDNS bool
+    HealthSeconds uint32
 }
 type V4AndroidGame2Product struct{
     mu sync.Mutex
@@ -58,7 +60,8 @@ func NewV4AndroidGame2Product(cfg V4AndroidGame2Config)(*V4AndroidGame2Product,e
         cfg.NetworkInterface==""||len(cfg.NetworkInterface)>15||
         cfg.NetworkIfIndex==0||cfg.AndroidPhysicalNetworkHandle==0||
         cfg.AndroidPhysicalMTU<576||cfg.AndroidPhysicalMTU>65535||
-        cfg.TunName==""||len(cfg.TunName)>15{
+        cfg.TunName==""||len(cfg.TunName)>15||
+        (cfg.HealthSeconds!=15&&cfg.HealthSeconds!=30){
         return nil,ErrAdmissionParams
     }
     iface,err:=net.InterfaceByName(cfg.NetworkInterface)
@@ -185,9 +188,12 @@ func (p *V4AndroidGame2Product) bindAndStartOriginalM4()error{
             errV4Embedded,int(rc),uint32(bound))
     }
     name:=[]byte(p.cfg.TunName)
+    dns:=C.uint32_t(0)
+    if p.cfg.TunnelDNS{dns=1}
     rc=C.wbd_m0_embedded_go_android_game_group_m4_start(
         C.uint64_t(p.native),C.int32_t(p.cfg.Tun.Fd()),
-        (*C.uchar)(unsafe.Pointer(&name[0])),C.size_t(len(name)))
+        (*C.uchar)(unsafe.Pointer(&name[0])),C.size_t(len(name)),
+        dns,C.uint32_t(p.cfg.HealthSeconds))
     runtime.KeepAlive(name)
     if rc!=0{
         return fmt.Errorf("%w: original Game2 Rust single-TUN/two-RAW M4=%d",
@@ -212,14 +218,15 @@ func (p *V4AndroidGame2Product) OriginalNativeState()(lanes uint32,ready bool,er
 }
 type V4AndroidGame2Counters struct{
     RawCopied,RawReceived,TunDelivered,Rejected uint64
+    TunnelDnsQueries,TunnelDnsReplies uint64
 }
 func (p *V4AndroidGame2Product) OriginalM4Counters()(V4AndroidGame2Counters,error){
     if p==nil||p.native==0||p.stopped||!p.connected{
         return V4AndroidGame2Counters{},ErrAdmissionUnsupported
     }
-    var values [4]C.uint64_t
+    var values [6]C.uint64_t
     rc:=C.wbd_m0_embedded_go_android_game_group_m4_counters(
-        C.uint64_t(p.native),&values[0],4)
+        C.uint64_t(p.native),&values[0],6)
     if rc!=0{
         return V4AndroidGame2Counters{},fmt.Errorf(
             "%w: original Android Game2 M4 counts=%d",errV4Embedded,int(rc))
@@ -227,6 +234,7 @@ func (p *V4AndroidGame2Product) OriginalM4Counters()(V4AndroidGame2Counters,erro
     return V4AndroidGame2Counters{
         RawCopied:uint64(values[0]),RawReceived:uint64(values[1]),
         TunDelivered:uint64(values[2]),Rejected:uint64(values[3]),
+        TunnelDnsQueries:uint64(values[4]),TunnelDnsReplies:uint64(values[5]),
     },nil
 }
 func (p *V4AndroidGame2Product) AuthenticatedLeaseIPv4()(string,error){

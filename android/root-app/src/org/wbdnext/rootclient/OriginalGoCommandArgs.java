@@ -223,8 +223,8 @@ final class OriginalGoCommandArgs {
             throw new IllegalArgumentException("FEC2 Fixed profile must be 0..6");
         if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
             throw new IllegalArgumentException("Fixed/Auto/Game2 require startup padding off");
-        if("game2".equals(fecMode)&&(tunnelDNS||physicalDNS||cnSplitDNS))
-            throw new IllegalArgumentException("Game2/off has no original M4 App DNS owner");
+        if("game2".equals(fecMode)&&(physicalDNS||cnSplitDNS))
+            throw new IllegalArgumentException("Game2/off only supports original tunnel UDP53 App DNS");
         if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
            !"flows".equals(paddingMode))
             throw new IllegalArgumentException("unsupported original startup padding");

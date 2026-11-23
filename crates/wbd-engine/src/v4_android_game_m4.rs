@@ -18,6 +18,8 @@ use crate::v4_presentation_ack::{NativePresentationAck,presentation_ack_only_due
 use crate::v4_session_address::{admitted_client_source,admitted_client_destination};
 use super::{AndroidPhysicalScope,AndroidGameRawLane};
 use crate::v4_android_game_cold::OriginalGameColdLane;
+use crate::v4_android_dns_udp_flow::{TunnelDnsUdpFlows,MAX_DNS_IPV4_PACKET};
+use crate::v4_android_dns_ingress::{observe_ipv4_dns53,Dns53Observation};
 
 pub(super) struct AndroidGameWorkers{
     stop:Arc<AtomicBool>,started:Arc<AtomicBool>,
@@ -25,17 +27,21 @@ pub(super) struct AndroidGameWorkers{
     threads:Vec<JoinHandle<()>>,tun:Arc<AndroidOwnedTun>,
     raw_tx:Arc<AtomicU64>,raw_rx:Arc<AtomicU64>,
     delivered:Arc<AtomicU64>,rejected:Arc<AtomicU64>,
+    dns_queries:Arc<AtomicU64>,dns_replies:Arc<AtomicU64>,
+    dns_flows:Option<Arc<Mutex<TunnelDnsUdpFlows>>>,
 }
 impl AndroidGameWorkers{
     pub(super) fn start(
         adapter:Arc<Mutex<GameAdapter>>,scope:&AndroidPhysicalScope,
         lanes:&[OriginalGameColdLane],raw:&[AndroidGameRawLane],
         lease:[u8;4],fd:OwnedFd,tun_name:&str,generation:u32,
+        tunnel_dns:bool,health_seconds:u32,
     )->Result<Self,()>{
         // First product data worker is Game2/OFF only. Game4 stagger, FEC,
         // Make-Before-Break and App/Go cold launch remain separately gated.
         if generation==0||lanes.len()!=2||raw.len()!=2||
-            scope.mtu<576||tun_name.is_empty(){return Err(())}
+            scope.mtu<576||tun_name.is_empty()||
+            !matches!(health_seconds,15|30){return Err(())}
         let tun=Arc::new(AndroidOwnedTun::adopt(fd,tun_name,generation)
             .map_err(|_|())?);
         let (rx_owner,inner_mtu,origin,evidence)={
@@ -64,6 +70,13 @@ impl AndroidGameWorkers{
         let raw_rx=Arc::new(AtomicU64::new(0));
         let delivered=Arc::new(AtomicU64::new(0));
         let rejected=Arc::new(AtomicU64::new(0));
+        // Reuse Normal's bounded DNS transaction map with the original
+        // single Game2 TUN reader and two authenticated RAW receivers.
+        let dns_flows=tunnel_dns.then(||Arc::new(Mutex::new(TunnelDnsUdpFlows::default())));
+        let dns_queries=Arc::new(AtomicU64::new(0));
+        let dns_replies=Arc::new(AtomicU64::new(0));
+        let health_policy=HealthPolicy::new(u64::from(health_seconds)*1_000_000_000,
+            HealthPolicy::DEFAULT_DEAD_NS,None).ok_or(())?;
         let ack=Arc::new(lanes.iter().map(|l|AtomicU32::new(l.rx_seq))
             .collect::<Vec<_>>());
         let seq=Arc::new(lanes.iter().map(|l|AtomicU32::new(l.tx_seq as u32))
@@ -81,6 +94,8 @@ impl AndroidGameWorkers{
         let tx_seq=Arc::clone(&seq);
         let tx_sent=Arc::clone(&raw_tx);
         let tx_rejected=Arc::clone(&rejected);
+        let tx_dns=dns_flows.as_ref().map(Arc::clone);
+        let tx_dns_queries=Arc::clone(&dns_queries);
         let tx=thread::Builder::new().name("wbd-android-game2-tx".into())
             .spawn(move||{
                 let mut source=[0u8;65_535];
@@ -89,7 +104,7 @@ impl AndroidGameWorkers{
                 let mut health_outer=[0u8;2048];
                 let mut offsets=tx_begin;
                 let mut health=HealthClock::new(
-                    HealthPolicy::default_connected(),
+                    health_policy,
                     origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
                 // Cold ready kind0 is emitted only after *both* native RX
                 // and the only TUN TX worker have started.
@@ -149,7 +164,27 @@ impl AndroidGameWorkers{
                     if let Ok(n)=read{
                         if n>0&&n<=inner_mtu &&
                             admitted_client_source(&source[..n],Some(lease)){
-                            if let Ok(mut game)=tx_adapter.lock(){
+                            // B43 original DNS53 query rewrite before
+                            // the exact same GameAdapter M1 AEAD/PN seal.
+                            let mut dns_rejected=false;
+                            if let Some(ref flows)=tx_dns{
+                                if n>=28&&source[9]==17&&
+                                   matches!(observe_ipv4_dns53(&source[..n],n),
+                                       Dns53Observation::UdpQuestion{..}){
+                                    match flows.lock(){
+                                        Ok(mut table)=>{
+                                            if table.rewrite_query(&mut source[..n],
+                                                now.0/1_000_000).is_ok(){
+                                                tx_dns_queries.fetch_add(1,Ordering::Relaxed);
+                                            }else{dns_rejected=true;}
+                                        },
+                                        Err(_)=>break,
+                                    }
+                                }
+                            }
+                            if dns_rejected{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            }else if let Ok(mut game)=tx_adapter.lock(){
                                 if game.offer(&source[..n],now).is_ok(){
                                     let copied=game.drain(now,|lane,_id,pn,wire|{
                                         let i=(lane.slot as usize).saturating_sub(1);
@@ -208,6 +243,8 @@ impl AndroidGameWorkers{
             let rx_read=Arc::clone(&raw_rx);
             let rx_delivered=Arc::clone(&delivered);
             let rx_rejected=Arc::clone(&rejected);
+            let rx_dns=dns_flows.as_ref().map(Arc::clone);
+            let rx_dns_replies=Arc::clone(&dns_replies);
             let ack_heads=Arc::clone(&ack);
             let seq_heads=Arc::clone(&seq);
             let f=lanes[i].flow;
@@ -219,6 +256,7 @@ impl AndroidGameWorkers{
                 .spawn(move||{
                     let mut wire=[0u8;2048];
                     let mut ack_wire=[0u8;64];
+                     let mut dns_reply=[0u8;MAX_DNS_IPV4_PACKET];
                     let tuple=Ipv4Tuple{
                         src_ip:&f.server_ip,dst_ip:&f.client_ip,
                         src_port:f.server_port,dst_port:f.client_port};
@@ -248,12 +286,40 @@ impl AndroidGameWorkers{
                                         };
                                         match prepared{
                                             Ok(Some(mut packet))=>{
-                                                let accepted=admitted_client_destination(
+                                                let mut accepted=admitted_client_destination(
                                                     packet.payload(),Some(lease));
+                                                // Original M3 AEAD/replay must pass before
+                                                // any Game2 DNS reply translation.
+                                                let mut dns_len=0usize;
+                                                if accepted{
+                                                    if let Some(ref flows)=rx_dns{
+                                                        if TunnelDnsUdpFlows::is_tunnel_reply_candidate(
+                                                            packet.payload()){
+                                                            let frame=packet.payload();
+                                                            if frame.len()>dns_reply.len(){accepted=false}
+                                                            else{
+                                                                dns_reply[..frame.len()].copy_from_slice(frame);
+                                                                match flows.lock(){
+                                                                    Ok(mut table)=>{
+                                                                        if table.rewrite_reply(
+                                                                            &mut dns_reply[..frame.len()],
+                                                                            origin.elapsed().as_millis() as u64
+                                                                        ).is_ok(){dns_len=frame.len();}
+                                                                        else{accepted=false;}
+                                                                    },
+                                                                    Err(_)=>{rx_stop.store(true,Ordering::Release);accepted=false;},
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                let ip=if dns_len>0{&dns_reply[..dns_len]}
+                                                    else{packet.payload()};
                                                 let written=accepted &&
-                                                    rx_tun.write_authenticated_ip(
-                                                        packet.payload()).ok()
-                                                    ==Some(packet.payload().len());
+                                                    rx_tun.write_authenticated_ip(ip).ok()==Some(ip.len());
+                                                if written&&dns_len>0{
+                                                    rx_dns_replies.fetch_add(1,Ordering::Relaxed);
+                                                }
                                                 let settled=match rx_owner.lock(){
                                                     Ok(mut owner)=>owner.finish_receive(packet,written),
                                                     Err(_)=>break,
@@ -319,13 +385,15 @@ impl AndroidGameWorkers{
         }
         started.store(true,Ordering::Release);
         Ok(Self{stop,started,wakes,threads,tun,
-            raw_tx,raw_rx,delivered,rejected})
+            raw_tx,raw_rx,delivered,rejected,dns_queries,dns_replies,dns_flows})
     }
-    pub(super) fn counters(&self)->[u64;4]{
+    pub(super) fn counters(&self)->[u64;6]{
         [self.raw_tx.load(Ordering::Relaxed),
          self.raw_rx.load(Ordering::Relaxed),
          self.delivered.load(Ordering::Relaxed),
-         self.rejected.load(Ordering::Relaxed)]
+         self.rejected.load(Ordering::Relaxed),
+         self.dns_queries.load(Ordering::Relaxed),
+         self.dns_replies.load(Ordering::Relaxed)]
     }
     pub(super) fn is_live(&self)->bool{
         self.started.load(Ordering::Acquire)&&
@@ -338,6 +406,11 @@ impl AndroidGameWorkers{
         let mut panic=false;
         for thread in self.threads.drain(..){
             if thread.join().is_err(){panic=true}
+        }
+        // All original Game2 workers have joined; discard only this
+        // generation's DNS mapping, without system resolver changes.
+        if let Some(flows)=self.dns_flows.take(){
+            flows.lock().map_err(|_|())?.stop();
         }
         self.tun.begin_stop();
         let result=self.tun.stop_until(Instant::now()+Duration::from_secs(3));

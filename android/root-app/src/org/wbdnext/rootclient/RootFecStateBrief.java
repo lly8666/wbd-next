@@ -9,9 +9,35 @@ package org.wbdnext.rootclient;
  */
 final class RootFecStateBrief {
     private static final String MARKER="V4_PUBLIC_ANDROID_FEC_STATE role=client ";
+    private static final String GAME_MARKER="V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client ";
+    private static final String[] GAME_FIELDS={
+        "rawtx=","rawrx=","tun=","rejected=","dnstx=","dnsrx="
+    };
+    private static String game2Counters(String line){
+        if(!OriginalGoMilestones.matches(line,
+            "V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client"))return null;
+        int start=line.indexOf(GAME_MARKER);
+        if(start<0)return null;
+        String[] values=line.substring(start+GAME_MARKER.length()).split(" ",-1);
+        if(values.length!=GAME_FIELDS.length)return null;
+        long[] counts=new long[6];
+        try{
+            for(int i=0;i<counts.length;i++){
+                if(!values[i].startsWith(GAME_FIELDS[i]))return null;
+                counts[i]=Long.parseLong(values[i].substring(GAME_FIELDS[i].length()));
+                if(counts[i]<0)return null;
+            }
+        }catch(NumberFormatException bad){return null;}
+        return "Game2/off 原Rust M4：RAW发送="+counts[0]+
+            "，RAW接收="+counts[1]+"，反向TUN="+counts[2]+
+            "，拒绝="+counts[3]+"；隧道DNS请求="+counts[4]+
+            "，回包="+counts[5]+"（内核计数，非应用E2E）";
+    }
     private RootFecStateBrief(){}
 
     static String fromGoLine(String line){
+        String game=game2Counters(line);
+        if(game!=null)return game;
         if(!OriginalGoMilestones.matches(line,
             "V4_PUBLIC_ANDROID_FEC_STATE role=client"))return null;
         // OriginalGoMilestones already checked the exact start or Go

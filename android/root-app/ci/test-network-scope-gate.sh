@@ -85,14 +85,32 @@ settings=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionSetting
 assert '"game2".equals(fecModes.getSelectedItem().toString())' in app
 assert 'request.putExtra("fec_mode",fecMode);' in app
 assert '!"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)' in service
-assert '"game2".equals(fecMode)&&(tunnelDNS||physicalDNS||cnSplitDNS)' in service
+assert '"game2".equals(fecMode)&&(physicalDNS||cnSplitDNS)' in service
 assert 'pair(args,"--mode",fecMode);' in argv
-assert '"game2".equals(fecMode)&&(tunnelDNS||physicalDNS||cnSplitDNS)' in argv
+assert '"game2".equals(fecMode)&&(physicalDNS||cnSplitDNS)' in argv
 assert '!oneOf(mode,"normal","fec-fixed","fec-auto","game2")' in settings
 assert bridge.index('C.wbd_m0_embedded_go_game_group_stop(') < bridge.index(
     'owner.StopAndReleaseOriginalOwner()')
 assert 'new String[]{"normal","fec-fixed","fec-auto","game2"}' in app
 assert 'go_tags=wbd_v4_embedded_go' in build
+# B43: Game2 shares original Normal UDP53, native Health and M4 counters.
+rust_group=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
+m4=Path("crates/wbd-engine/src/v4_android_game_m4.rs").read_text()
+fec_status=Path("android/root-app/src/org/wbdnext/rootclient/RootFecStateBrief.java").read_text()
+assert 'TunnelDNS:c.androidTunnelDNS' in g
+assert 'HealthSeconds:c.androidNativeHealthSeconds' in g
+assert 'tunnel_dns:u32,health_seconds:u32' in rust_group
+assert 'tunnel_dns==1,health_seconds' in rust_group
+assert 'dns,C.uint32_t(p.cfg.HealthSeconds)' in bridge
+assert 'TunnelDnsUdpFlows::default()' in m4
+assert 'table.rewrite_query(&mut source[..n]' in m4
+assert 'table.rewrite_reply(' in m4
+assert m4.index('opener.open(&mut wire[..len])')<m4.index('table.rewrite_reply(')
+assert 'HealthPolicy::new(u64::from(health_seconds)*1_000_000_000' in m4
+assert 'OriginalM4Counters()' in g
+assert 'V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client' in g
+assert 'game2Counters(String line)' in fec_status
+print("ANDROID_B43_GAME2_ORIGINAL_M4_TUNNEL_DNS_HEALTH_COUNTERS_SOURCE_PASS")
 print("ANDROID_B41_REAL_GO_TLS_GAME2_OFF_SAME_RUST_M4_ROOT_UID_AND_OWNED_STOP_SOURCE_PASS")
 PY
 # B40: real Rust Game2/off TX TUN reader and two original M3 lane RX

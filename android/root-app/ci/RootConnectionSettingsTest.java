@@ -52,10 +52,16 @@ public final class RootConnectionSettingsTest {
         check(gameRestored!=null&&"game2".equals(gameRestored.mode)&&
             !gameRestored.tunnelDNS&&!gameRestored.physicalDNS&&
             !gameRestored.cnSplitDNS,"Game2/off original preset round trip");
+        // B43: original Game2 native M4 now permits Normal tunnel UDP53.
+        RootConnectionSettings gameTunnel=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","game2",1,
+            false,true,false,false,true,new TreeMap<String,Integer>());
+        check(read(stored(gameTunnel)).tunnelDNS,"Game2 tunnel DNS preset persists");
         boolean gameDNSRejected=false;
         try{new RootConnectionSettings("wbd.example.test","tls.example.test",
             "example_user",443,1460,500,"chacha20-poly1305","off","game2",1,
-            false,true,false,false,true,new TreeMap<String,Integer>());}
+            false,false,true,false,true,new TreeMap<String,Integer>());}
         catch(IllegalArgumentException expected){gameDNSRejected=true;}
         check(gameDNSRejected,"Game2 App DNS currently has no original M4 owner");
         System.out.println("ANDROID_B42_GAME2_OFF_ORIGINAL_PRESET_HOST_PASS");

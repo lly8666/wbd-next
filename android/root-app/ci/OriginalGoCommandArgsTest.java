@@ -122,8 +122,10 @@ public final class OriginalGoCommandArgsTest {
         absent(game2,"--android-physical-dns");
         absent(game2,"--android-cn-dns-split");
         value(game2,"--android-route-uid","10123");
-        rejected(()->withFec("game2",1,"off")); // old tunnel DNS default ON
+        if(!withFec("game2",1,"off").contains("--android-tunnel-dns"))
+            throw new AssertionError("Game2 original tunnel DNS flag missing");
         rejected(()->withFec("game2",1,"tls"));
+        System.out.println("ANDROID_B43_GAME2_TUNNEL_DNS_ARGV_HOST_PASS");
         System.out.println("ANDROID_B42_GAME2_ORIGINAL_GO_APP_ARGV_HOST_PASS");
         rejected(()->withFec("fec-fixed",7,"off"));
         rejected(()->withFec("fec-fixed",-1,"off"));

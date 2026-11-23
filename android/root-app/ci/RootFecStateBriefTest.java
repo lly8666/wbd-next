@@ -36,6 +36,15 @@ public final class RootFecStateBriefTest {
             "mode=fixed requested=1 applied=1 profile=1 pending=false");
         refused("user_password="+marker+
             "mode=fixed requested=1 applied=1 profile=1 pending=false");
+        String gm="V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client ";
+        String game=RootFecStateBrief.fromGoLine("2026/11/23 12:34:56 "+
+            gm+"rawtx=16 rawrx=18 tun=12 rejected=1 dnstx=3 dnsrx=2");
+        contains(game,"Game2/off 原Rust M4");
+        contains(game,"RAW发送=16");
+        contains(game,"隧道DNS请求=3");
+        contains(game,"回包=2");
+        refused(gm+"rawtx=1 rawrx=2 tun=3 rejected=0 dnstx=1 dnsrx=1 junk=x");
+        refused(gm+"rawtx=-1 rawrx=2 tun=3 rejected=0 dnstx=1 dnsrx=1");
         refused(null);
         System.out.println("ANDROID_B20_FEC_NATIVE_REVISION_STATUS_HOST_PASS");
     }
