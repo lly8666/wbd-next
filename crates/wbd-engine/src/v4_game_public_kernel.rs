@@ -21,7 +21,7 @@ use crate::v4_game_cosmetic_outer::CosmeticOuter;
 use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::game_shared::GameError;
 use crate::v4_protected_handoff::GoFlow;
-use crate::v4_presentation_ack::{NativePresentationAck,presentation_ack_only_due};
+use crate::v4_presentation_ack::{NativePresentationAck,presentation_game_ack_due};
 use crate::memory::Arena;
 use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
@@ -216,6 +216,12 @@ impl GameKernelOwner{
             .map(|&a|AtomicU32::new(a)).collect::<Vec<_>>());
         let tx_ack=Arc::clone(&presentation_ack);
         let tx_ack_initial=rx_seqs.clone();
+        // In the existing worker only, new AEAD-authenticated later records
+        // that actually committed to the TUN can request a cumulative
+        // duplicate ACK. No new wake/timer/receiver thread or old M2.
+        let authenticated_future=Arc::new((0..n)
+            .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
+        let tx_future=Arc::clone(&authenticated_future);
         let mut feedback_epoch=[0u8;16];
         feedback_epoch[..4].copy_from_slice(&generation.to_be_bytes());
         let scoped_cosmetic=CosmeticOuter::with_normal_feedback(
@@ -282,6 +288,7 @@ impl GameKernelOwner{
                 // lane slots, owned exclusively by this existing TX worker.
                 let mut cosmetic=scoped_cosmetic;
                 let mut observed_hints=[0u64;4];
+                let mut observed_future=vec![0u64;n];
                 let mut ack_sent=tx_ack_initial;
                 let mut ack_last_ns=vec![0u64;n];
                 let mut observed_offers=0u64;
@@ -313,6 +320,8 @@ impl GameKernelOwner{
                                             ack_last_ns[slot]=0;
                                             tx_ack[slot].store(change.rx_seq,Ordering::Release);
                                             observed_hints[slot]=tx_hints[slot]
+                                                .load(Ordering::Acquire);
+                                            observed_future[slot]=tx_future[slot]
                                                 .load(Ordering::Acquire);
                                             if cosmetic.rekey_one_lane(slot,
                                                 lanes[slot].key,change.seq,
@@ -805,8 +814,9 @@ impl GameKernelOwner{
                     // no ciphertext/PN/FEC/M2 or new peer liveness.
                     for (index,item) in lanes.iter().enumerate(){
                         let current=tx_ack[index].load(Ordering::Acquire);
-                        if !presentation_ack_only_due(clock_ns,ack_last_ns[index],
-                            current,ack_sent[index]){continue}
+                        let future=tx_future[index].load(Ordering::Acquire);
+                        if !presentation_game_ack_due(clock_ns,ack_last_ns[index],
+                            current,ack_sent[index],future!=observed_future[index]){continue}
                         let f=item.flow;
                         let (src,dst,sp,dp)=if server{
                             (f.server_ip,f.client_ip,f.server_port,f.client_port)
@@ -819,6 +829,7 @@ impl GameKernelOwner{
                             item.seq as u32,current,&[]).is_ok(){
                             ack_sent[index]=current;
                             ack_last_ns[index]=clock_ns;
+                            observed_future[index]=future;
                         }
                     }
                     if stagger||fec_enabled{
@@ -891,6 +902,7 @@ impl GameKernelOwner{
             let rx_stop=Arc::clone(&stop);
             let rx_hints=Arc::clone(&presentation_hints);
             let rx_ack=Arc::clone(&presentation_ack);
+            let rx_future=Arc::clone(&authenticated_future);
             let rx_initial=rx_seqs[i];
             let recv_count=Arc::clone(&delivered);
             let recv_rejected=Arc::clone(&rejected);
@@ -1045,6 +1057,9 @@ impl GameKernelOwner{
                                     }
                                 };
                                 if all_written&&committed.is_ok(){
+                                    if ack_ledger.authenticated_future(seq32){
+                                        rx_future[i].fetch_add(1,Ordering::Release);
+                                    }
                                     rx_ack[i].store(ack_ledger.verified(seq32,len),Ordering::Release);
                                     recv_count.fetch_add(wrote_count,Ordering::Relaxed);
                                 }else if committed.is_err()||wrote_count>0{
@@ -1115,7 +1130,10 @@ impl GameKernelOwner{
                                 tun_failed.fetch_add(1,Ordering::Relaxed);
                                 recv_rejected.fetch_add(1,Ordering::Relaxed);
                             }else if finished.is_ok(){
-                                rx_ack[i].store(ack_ledger.verified(seq32,len),Ordering::Release);
+                                if ack_ledger.authenticated_future(seq32){
+                                        rx_future[i].fetch_add(1,Ordering::Release);
+                                    }
+                                    rx_ack[i].store(ack_ledger.verified(seq32,len),Ordering::Release);
                                 recv_count.fetch_add(1,Ordering::Relaxed);
                             }else{
                                 // A committed-to-TUN but stale/invalid receive

@@ -86,6 +86,7 @@ struct GameCounters{
     stop:AtomicBool,err:AtomicI32,tx:AtomicU64,
     rx:AtomicU64,after:AtomicU64,rejected:AtomicU64,
     ack:[AtomicU32;4],ack_sent:[AtomicU32;4],tx_seq:[AtomicU32;4],
+    authenticated_future:[AtomicU32;4],
     first_due_entry:AtomicBool,first_send_failure:AtomicBool,
 }
 impl GameCounters{
@@ -96,6 +97,7 @@ impl GameCounters{
             ack:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.rx_seq))),
             ack_sent:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.rx_seq))),
             tx_seq:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.tx_seq))),
+            authenticated_future:std::array::from_fn(|_|AtomicU32::new(0)),
             first_due_entry:AtomicBool::new(false),first_send_failure:AtomicBool::new(false),
         }
     }
@@ -112,7 +114,7 @@ impl GameCounters{
 }
 // Game Windows and Linux use exactly the same bounded authenticated
 // presentation-only ACK ledger. No M2 feedback or TUN ordered-delivery gate.
-use crate::v4_presentation_ack::NativePresentationAck as AckLedger;
+use crate::v4_presentation_ack::{NativePresentationAck as AckLedger,presentation_game_ack_due};
 enum GameTcpColdCommand{
     Prepare(SyncSender<Result<u16,i32>>),
     Enable(u16,SyncSender<Result<u16,i32>>),
@@ -283,12 +285,16 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
 }
 fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
     npf:&mut [NpcapTx],c:&GameCounters,ip_id:&mut u16,
-    active:&mut [bool],
+    active:&mut [bool],last_ns:&mut [u64;4],future_sent:&mut [u32;4],
 )->Result<(),i32>{
+    let now=m2_clock().0;
     for (i,l) in lanes.iter().enumerate(){
         if !active[i]{continue}
         let ack=c.ack[i].load(Ordering::Acquire);
-        if ack==c.ack_sent[i].load(Ordering::Acquire){continue}
+        let future=c.authenticated_future[i].load(Ordering::Acquire);
+        if !presentation_game_ack_due(now,last_ns[i],ack,
+            c.ack_sent[i].load(Ordering::Acquire),
+            future!=future_sent[i]){continue}
         let mut scratch=[0u8;FRAME_CAP];
         let frame=presentation_ack_frame(Ipv4Tuple{
             src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
@@ -299,7 +305,9 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
         *ip_id=ip_id.wrapping_add(1);
         let status=npf[i].send_batch(&[frame]);
         if status.accepted_prefix==1{
-            c.ack_sent[i].store(ack,Ordering::Release)
+            c.ack_sent[i].store(ack,Ordering::Release);
+            future_sent[i]=future;
+            last_ns[i]=now;
         }
         if status.error.is_some()||status.uncertain_index.is_some(){
             eprintln!("M0_PLAN026_GAME_NATIVE_TX_LANE_RETIRED lane={} stage=npcap_ack_send_driver accepted_prefix={} uncertain_index={:?} error={:?}",i+1,status.accepted_prefix,status.uncertain_index,status.error);
@@ -327,6 +335,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     // TX and RX capture endpoints have distinct native failure lifetimes.
     // Retiring one local TX handle must never stop another lane's NPF send.
     let mut active=vec![true;npf.len()];
+    let mut ack_last_ns=[0u64;4];
+    let mut ack_future_sent=[0u32;4];
     let (health_origin,health_evidence)={
         let g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
         game::native_game_health_context(&g)
@@ -476,7 +486,8 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             if !active.iter().any(|x|*x){return BAD_STAGE}
             did_work=true;
         }
-        if let Err(rc)=send_ack(&cfg.first,&lanes,&mut npf,&c,&mut id,&mut active){
+        if let Err(rc)=send_ack(&cfg.first,&lanes,&mut npf,&c,&mut id,
+            &mut active,&mut ack_last_ns,&mut ack_future_sent){
             eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=send_ack rc={rc}");
             return rc
         }
@@ -725,6 +736,9 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     if copied as usize!=total{return Err(BAD_STAGE)}
     // The group game opener already verified independent original
     // authenticated AEAD/PN, so presentation ACK can only follow that.
+    if ledgers[lane].authenticated_future(seq){
+        c.authenticated_future[lane].fetch_add(1,Ordering::Release);
+    }
     let ack=ledgers[lane].verified(seq,wire.len());
     c.ack[lane].store(ack,Ordering::Release);
     Ok(())
@@ -770,6 +784,9 @@ fn flush_deferred_fec(
                 game::finish_fec_group(&mut g,(i+1) as u32,row.copied)
             };
             if rc!=OK{return Err(rc)}
+            if ledgers[i].authenticated_future(row.seq){
+                c.authenticated_future[i].fetch_add(1,Ordering::Release);
+            }
             let ack=ledgers[i].verified(row.seq,row.wire_len);
             c.ack[i].store(ack,Ordering::Release);
             *slot=None;
