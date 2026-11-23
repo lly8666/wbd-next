@@ -204,11 +204,13 @@ def prepare(root, legacy, output, source, spec):
     for before, after in substitutions:
         need(original.count(before) == 1, "H2207 Windows short-key original-Go source drift: " + before[:50])
         original = original.replace(before, after)
-    # H2214: user-requested insecure-by-default TLS server verification flag.
+    # H2214: PLAN020 manifest already installs the original-Go TLS flag.
+    # Do not declare it twice in the exact-source assembled Windows client.
     flag_anchor = '\t\tserverName         = flag.String("server-name", "", "recognized TLS server name")'
-    need(original.count(flag_anchor) == 1, "H2214 Windows TLS flag source drift")
-    original = original.replace(flag_anchor,
-        flag_anchor + '\n\t\ttlsVerifyServer = flag.Bool("tls-verify-server", false, "verify server certificate and hostname; off by default for old client compatibility")')
+    verify_flag = '\t\ttlsVerifyServer = flag.Bool("tls-verify-server", false,'
+    need(original.count(flag_anchor) == 1, "H2214 Windows TLS flag anchor drift")
+    need(original.count(verify_flag) == 1,
+         "H2214 original-Go assembled TLS verification flag missing or duplicated")
     cfg_anchor = 'ServerName: *serverName, RouteKey: routeKey, Timeout: 15 * time.Second,'
     need(original.count(cfg_anchor) == 1, "H2214 original Windows TLS config source drift")
     original = original.replace(cfg_anchor,
