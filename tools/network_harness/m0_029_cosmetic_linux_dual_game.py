@@ -103,9 +103,18 @@ def genuine_case(scene,leg,dir_path,hashes,source,mode):
         else:
             p=leg.get("telemetry",{}).get("game_outer_policy",{}).get(role,{})
             repeats=p.get("outer_data_retransmitted")
+            f=p.get("first_record_wire_bytes")
+            r=p.get("copy_record_wire_bytes")
+            wire_ratio=(r/f if type(f) is int and f>0
+                and type(r) is int and r>=0 else None)
             out["repair"][role]={"original_outer_data_repeat_count":repeats,
-               "outer_policy":p,"wire_R_F":
-               "NOT_MEASURED_GAME_PARITY_AND_FIRST_LANE_COPIES_NOT_OUTER_R"}
+               "outer_policy":p,"F":f,"R_accepted":r,"R_F":wire_ratio,
+               "wire_R_F":wire_ratio if wire_ratio is not None
+                   else "NOT_MEASURED_GAME_ORIGINAL_M4_WIRE"}
+            if wire_ratio is None:
+                reason.append("NO_GAME_ORIGINAL_M4_F_R_"+role)
+            elif wire_ratio>.100000001 or (loss==0 and wire_ratio>.0005):
+                reason.append("GAME_BYTE_BUDGET_OR_ZERO_LOSS_OVER_"+role)
             if p.get("repair_enabled")!=1 or type(repeats) is not int:
                 reason.append("NO_NATIVE_GAME_OUTER_LEDGER_"+role)
             elif loss>0 and repeats==0:
