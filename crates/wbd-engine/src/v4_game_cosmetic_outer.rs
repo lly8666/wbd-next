@@ -47,6 +47,7 @@ impl FrozenRecordHandle for CosmeticFrozen{
 struct Lane{
     seen:u64,not_before:u64,pending:Option<(u64,CosmeticCopy)>,
     held:Option<(u64,usize)>,sent:u64,
+    last_replay_ack:Option<u32>, // one actual copy per unchanged cumulative ACK epoch
     first_record_wire_bytes:u64,copied_record_wire_bytes:u64,
     key:Option<LaneKey>,epoch:[u8;16],ack:Option<OuterAckIndex>,
     last_ack:Option<u32>,dup_acks:u8,
@@ -59,6 +60,7 @@ impl CosmeticOuter{
     pub fn new(count:usize)->Self{
         Self{lanes:(0..count).map(|_|Lane{
             seen:0,not_before:0,pending:None,held:None,sent:0,
+            last_replay_ack:None,
             first_record_wire_bytes:0,copied_record_wire_bytes:0,
             key:None,epoch:[0;16],ack:None,
             last_ack:None,dup_acks:0,last_ack_change_ns:0,pending_at_ns:0
@@ -93,6 +95,7 @@ impl CosmeticOuter{
         };
         *l=Lane{
             seen:0,not_before:0,pending:None,held:None,sent:l.sent,
+            last_replay_ack:None,
             first_record_wire_bytes:l.first_record_wire_bytes,
             copied_record_wire_bytes:l.copied_record_wire_bytes,
             key:Some(key),epoch,
@@ -159,6 +162,11 @@ impl CosmeticOuter{
             l.dup_acks=0;
             l.last_ack_change_ns=now_ns;
         }
+        // Without new cumulative progress the same genuine gap cannot
+        // endlessly repeat new sampled original ciphertext (0%-loss flood).
+        // ReceiptState already guarantees one copy per PN; this also bounds
+        // one appearance per authenticated cumulative ACK epoch.
+        if l.last_replay_ack==Some(ack32){return false}
         let Some((due,copy))=l.pending.as_mut()else{return false};
         // Original Game copy is a TCP-looking appearance, NOT a
         // reliability recovery. A frozen record can be selected from the
@@ -236,6 +244,7 @@ impl CosmeticOuter{
         l.not_before=now_ns.saturating_add(MIN_INTERVAL_NS);
         if copied{
             l.sent=l.sent.saturating_add(1);
+            l.last_replay_ack=l.last_ack;
             l.copied_record_wire_bytes=l.copied_record_wire_bytes.saturating_add(record_bytes as u64);
         }
         true
@@ -344,6 +353,31 @@ mod tests{
             assert!(c.next_due().is_none());
         }
         assert_eq!(c.sent(),0);
+    }
+    #[test]
+    fn r1_game_one_cosmetic_copy_per_stalled_ack_epoch(){
+        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:47,generation:7},
+            slot:1,generation:7};
+        let mut c=CosmeticOuter::with_normal_feedback(&[key],&[100],[6;16]).unwrap();
+        for i in 1..=32u64{
+            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
+                i*1_000_000).unwrap();
+        }
+        for t in [80_000_000,90_000_000,100_000_000,1_100_000_000]{
+            let _=c.on_feedback(0,100,t);
+        }
+        let first=c.take_due(1_110_000_000,&[true]).unwrap();
+        assert!(c.complete(0,first.pn,true,1_110_000_000));
+        for i in 33..=64u64{
+            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
+                1_200_000_000+i*1_000_000).unwrap();
+        }
+        for t in [1_310_000_000,1_410_000_000,1_510_000_000,
+                  1_710_000_000,2_110_000_000]{
+            assert!(!c.on_feedback(0,100,t));
+            assert!(c.take_due(t,&[true]).is_none());
+        }
+        assert_eq!(c.sent(),1);
     }
     #[test]
     fn h812_normal_ack_targets_missing_original_not_later_sample(){
