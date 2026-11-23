@@ -6131,6 +6131,18 @@ fn drain_data_turn_returns(arena:&mut Arena)->usize{
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP)
 }
 
+// Pure presentation policy: a duplicate cumulative ACK is allowed only
+// after a new authenticated future interval in this RX batch. It is a
+// low-rate TCP-like appearance hint, never a business delivery receipt.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[inline]
+fn original_cosmetic_ack_due(changed:bool,authenticated_future:bool,
+    sack_negotiated:bool,has_sack:bool,abandoned:bool)->bool{
+    changed||authenticated_future||abandoned||(sack_negotiated&&has_sack)
+}
+
 // Only original M3 authenticated contiguous TCP spans may advance the
 // presentation ACK, never the unauthenticated highest raw seq32.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -6199,7 +6211,20 @@ impl OriginalPresentationAck{
 }
 #[cfg(all(test,feature="fec2_product_record",target_os="linux"))]
 mod original_presentation_ack_tests{
-    use super::OriginalPresentationAck;
+    use super::{OriginalPresentationAck,original_cosmetic_ack_due};
+    #[test]
+    fn r2_m0_cumulative_duplicate_ack_requires_new_authenticated_future(){
+        let mut p=OriginalPresentationAck::new(100);
+        assert!(!original_cosmetic_ack_due(false,false,false,false,false));
+        assert_eq!(p.verified(140,20),100); // unique accepted M3 later
+        assert!(original_cosmetic_ack_due(false,true,false,false,false));
+        assert!(!original_cosmetic_ack_due(false,false,false,false,false));
+        assert!(original_cosmetic_ack_due(false,false,true,true,false));
+        assert!(original_cosmetic_ack_due(true,false,false,false,false));
+        assert_eq!(p.verified(100,40),160);
+        assert!(p.future.is_empty());
+        assert!(!original_cosmetic_ack_due(false,false,false,false,false));
+    }
     #[test]
     fn h501_unique_crypto_contiguous_only_not_raw_highwater(){
         let mut x=OriginalPresentationAck::new(1000);
@@ -6349,6 +6374,8 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     let mut outer_only_valid=false;
     #[cfg(feature="fec2_product_record")]
+    let mut authenticated_future_in_batch=false;
+    #[cfg(feature="fec2_product_record")]
     let mut outer_hint=None::<u32>;
     #[cfg(feature="fec2_product_record")]
     // Reuse four stack slots instead of allocating a Vec on EVERY raw RX
@@ -6415,7 +6442,10 @@ fn background_raw_once(
         }
         #[cfg(feature="fec2_product_record")]
         if receipt.authenticated_link>0||receipt.authenticated_control{
-            if outer_sack_hint.is_empty(){outer_hint=Some(ack32);}
+            // Only an authenticated later interval gives a genuine reason
+            // for another cumulative ACK when SACK was not negotiated.
+            authenticated_future_in_batch|=absolute>presentation_ack.next;
+            if outer_sack_count==0{outer_hint=Some(ack32);}
             let contiguous=presentation_ack.verified(absolute,len);
             fec_stats.outer_presentation_ack.store(contiguous,Ordering::Release);
         }
@@ -6517,11 +6547,16 @@ fn background_raw_once(
         // Keep a bounded 10ms coalescing interval; no per-packet ACK storm,
         // cloned PN, or wait for a missing outer byte. Data can be out of
         // order at its original TUN writer throughout.
-        if (ack32!=*last_ack_sent32 || sack_negotiated || abandoned) &&
-            (now.saturating_sub(*last_sack_tx_ns)>=10_000_000) {
+        // The old no-SACK path suppressed duplicate ACKs even when truly
+        // authenticated later DATA arrived behind a gap. Publish at most
+        // one ACK per 10ms on such *new* positive evidence; no PTO, synthetic
+        // loss, periodic idle ACK or extra per-record control transport.
+        if now.saturating_sub(*last_sack_tx_ns)>=10_000_000 {
             let sacks=if sack_negotiated{presentation_ack.sacks()}
                 else{Vec::new()};
-            if ack32!=*last_ack_sent32 || !sacks.is_empty() || abandoned{
+            if original_cosmetic_ack_due(
+                ack32!=*last_ack_sent32,authenticated_future_in_batch,
+                sack_negotiated,!sacks.is_empty(),abandoned){
                 let seq=outer.and_then(|own|own.lock().ok().map(|o|
                     o.outer_ack.highest_sent_end() as u32));
                 if let Some(seq32)=seq{
