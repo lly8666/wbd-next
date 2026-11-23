@@ -84,6 +84,23 @@ pub(crate) fn fragment(
     out[out_h..n].copy_from_slice(&p[h+offset..h+end]);
     Some((n,end,end==p.len()-h))
 }
+/// B57 original Game2/4 large IPv4 DF=0 is sent as RFC791 pieces,
+/// each consumed by the unchanged GameAdapter/M3/RAW original sender.
+/// A valid 65KiB IPv4 packet at the ordinary min 576 MTU takes <=119 pieces.
+pub(crate) fn emit_game_ipv4_fragments<F:FnMut(&[u8])->bool>(
+    original:&[u8],inner_mtu:usize,scratch:&mut[u8],mut send:F
+)->Result<usize,()>{
+    if original.len()<=inner_mtu||inner_mtu<576||
+       inner_mtu>scratch.len()||!can_fragment(original){return Err(())}
+    let mut offset=0;
+    for index in 0..128{
+        let (n,end,done)=fragment(original,offset,inner_mtu,scratch).ok_or(())?;
+        if !send(&scratch[..n]){return Err(())}
+        if done{return Ok(index+1)}
+        offset=end;
+    }
+    Err(())
+}
 /// Local ICMPv4 Destination Unreachable / Fragmentation Needed (3/4).
 /// The original app sees it through the SAME owned TUN; not peer M3 DATA.
 pub(crate) fn fragmentation_needed(
@@ -197,6 +214,54 @@ mod tests{
         }
         assert_eq!(offset,3000);
         assert!(count>=3);
+    }
+    #[test]
+    fn b57_android_game_df0_udp_oversize_real_fragment_payload_roundtrip(){
+        let source=ip(4_020,20,0);
+        let mut scratch=[0u8;2_048];
+        let mut payload=Vec::new();
+        let mut next_offset=0;
+        let count=emit_game_ipv4_fragments(&source,1_300,&mut scratch,|f|{
+            assert!(f.len()<=1_300);
+            assert_eq!(checksum(&f[..20]),0);
+            assert_eq!(usize::from(word(&f[6..8])&0x1fff)*8,next_offset);
+            next_offset+=f.len()-20;
+            payload.extend_from_slice(&f[20..]);
+            true
+        }).unwrap();
+        assert!(count>=4);
+        assert_eq!(payload,&source[20..]);
+    }
+    #[test]
+    fn b57_android_game_large_udp_min_ipv4_mtu_bounded_dispatch(){
+        let packet=ip(65_520,20,0);
+        let mut scratch=[0u8;2_048];
+        let mut count=0;
+        let n=emit_game_ipv4_fragments(&packet,576,&mut scratch,|f|{
+            assert!(f.len()<=576);
+            assert_eq!(checksum(&f[..20]),0);
+            count+=1;true
+        }).unwrap();
+        assert_eq!(n,count);
+        assert!(n>8&&n<=128);
+    }
+    #[test]
+    fn b57_android_game_df1_local_pmtu_and_failed_dispatch(){
+        let packet=ip(4_020,20,0x4000);
+        let mut scratch=[0u8;2_048];
+        assert!(emit_game_ipv4_fragments(&packet,1_360,&mut scratch,|_|true)
+            .is_err());
+        let n=fragmentation_needed(&packet,1_360,&mut scratch).unwrap();
+        assert_eq!(&scratch[20..22],&[3,4]);
+        assert_eq!(word(&scratch[26..28]),1_360);
+        assert_eq!(checksum(&scratch[..20]),0);
+        assert_eq!(checksum(&scratch[20..n]),0);
+        let packet=ip(4_020,20,0);
+        let mut calls=0;
+        assert!(emit_game_ipv4_fragments(&packet,1_200,&mut scratch,|_|{
+            calls+=1;calls<2
+        }).is_err());
+        assert_eq!(calls,2);
     }
     #[test]
     fn b16_bad_option_length_is_not_fragmented(){

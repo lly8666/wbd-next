@@ -391,6 +391,20 @@ assert 'pub(crate) const RAW_RX_IDLE_MAX_MS:i32=30_000' in schedule
 workflow=Path(".github/workflows/android-root-product-a1.yml").read_text()
 assert '      - "crates/wbd-engine/src/v4_android_game_*.rs"' in workflow
 print("ANDROID_B56_ORIGINAL_GAME_2_4_M3_RX_BURST_EVENT_STOP_SOURCE_PASS")
+# B57: actual original Game2/4 TUN full App IPv4 / physical UDP53
+# or original RFC791 DF0→GameAdapter M3 and local DF1 ICMP PMTU.
+ipv4=Path("crates/wbd-engine/src/v4_android_ipv4_mtu.rs").read_text()
+assert 'n>0&&admitted_client_source(&source[..n],Some(lease))' in m
+assert 'emit_game_ipv4_fragments(' in m
+assert 'game.offer(piece,now)' in m
+assert 'drain_original_game!(game,now)' in m
+assert 'fragmentation_needed(' in m
+assert 'tx_tun.write_local_pmtu_icmp_ipv4(' in m
+assert 'let mut game_ipv4_fragment=[0u8;2_048]' in m
+assert 'fn emit_game_ipv4_fragments<' in ipv4
+assert 'can_fragment(original)' in ipv4
+assert 'if matches!(route,DnsRoute::PhysicalUDP)' in m
+print("ANDROID_B57_GAME_IPV4_DF0_DF1_PMTU_ORIGINAL_M3_SOURCE_PASS")
 print("ANDROID_B55B_GAME_PHYSICAL_DNS_REPLY_FAIRNESS_SOURCE_PASS")
 print("ANDROID_B55_ORIGINAL_GAME2_GAME4_LOW_WAKE_AND_TUN_BURST_SOURCE_PASS")
 PY

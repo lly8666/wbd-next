@@ -27,6 +27,8 @@ cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec
 # B56 same ORIGINAL Game M3/PN/ACK worker receives short RAW bursts
 # and waits for kernel data/Stop without periodic 1s RX polling.
 cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record b56_android_game_ -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+# B57 original Game2/4 DF0 RFC791 + DF1 local PMTU, same B16 code.
+cargo +1.85.1 test --locked -p wbd-engine --lib b57_android_game_ -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 # B16: the same production IPv4 fragment and local ICMP codec runs on Host.
 cargo +1.85.1 test --locked -p wbd-engine --lib b16_ \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
@@ -87,6 +89,13 @@ for scenario in (
 ):
  assert f"test v4_android_ipv4_mtu::tests::{scenario} ... ok" in log
 assert "test result: ok. 5 passed;" in log
+for test in (
+ "b57_android_game_df0_udp_oversize_real_fragment_payload_roundtrip",
+ "b57_android_game_large_udp_min_ipv4_mtu_bounded_dispatch",
+ "b57_android_game_df1_local_pmtu_and_failed_dispatch"
+):
+ assert f"test v4_android_ipv4_mtu::tests::{test} ... ok" in log
+assert "test result: ok. 3 passed;" in log
 assert "test v4_embedded_go::b18_original_linux_android_quality_30_field_mapping ... ok" in log
 assert "test v4_embedded_go::b19_original_android_auto_report_scopes_each_revision ... ok" in log
 wire=Path("crates/wbd-engine/src/v4_android_dns_udp_flow.rs").read_text()

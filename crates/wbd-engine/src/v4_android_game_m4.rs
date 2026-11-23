@@ -26,6 +26,7 @@ use crate::v4_android_dns_physical_flow::{
 use crate::v4_android_cn_dns::CNDnsMatcher;
 use crate::v4_android_dns_route::{choose,DnsRoute};
 use crate::v4_android_game_schedule::{GameTunBurst,wait_ms,RAW_RX_IDLE_MAX_MS};
+use crate::v4_android_ipv4_mtu::{emit_game_ipv4_fragments,fragmentation_needed};
 
 pub(super) struct AndroidGameWorkers{
     stop:Arc<AtomicBool>,started:Arc<AtomicBool>,
@@ -150,6 +151,8 @@ impl AndroidGameWorkers{
         let tx=thread::Builder::new().name("wbd-android-game-tx".into())
             .spawn(move||{
                 let mut source=[0u8;65_535];
+                let mut game_ipv4_fragment=[0u8;2_048];
+                let mut game_ipv4_icmp=[0u8;128];
                 let mut outer=[[0u8;2048];4];
                 let mut health_wire=[0u8;2048];
                 let mut health_outer=[0u8;2048];
@@ -252,8 +255,7 @@ impl AndroidGameWorkers{
                     let read=tx_tun.read_ip(&mut source);
                     let received_business=matches!(&read,Ok(n) if *n>0);
                     if let Ok(n)=read{
-                        if n>0&&n<=inner_mtu &&
-                            admitted_client_source(&source[..n],Some(lease)){
+                        if n>0&&admitted_client_source(&source[..n],Some(lease)){
                             // B44 shares Normal's exact DNS classification:
                             // all physical, CN physical/non-CN tunnel, or
                             // all tunnel. TCP/53 stays original Game M1/M3.
@@ -299,11 +301,49 @@ impl AndroidGameWorkers{
                             }
                             if dns_rejected{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            }else if n>inner_mtu&&source[6]&0x40!=0{
+                                // B57: tell the actual App IPv4 stack its
+                                // original Game M3 budget, not a fake DATA ACK.
+                                let wrote=fragmentation_needed(
+                                    &source[..n],inner_mtu,&mut game_ipv4_icmp
+                                ).is_some_and(|len|
+                                    tx_tun.write_local_pmtu_icmp_ipv4(
+                                        generation,&game_ipv4_icmp[..len]
+                                    ).ok()==Some(len));
+                                if !wrote{
+                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                }
                             }else if let Ok(mut game)=tx_adapter.lock(){
-                                if game.offer(&source[..n],now).is_ok(){
-                                    let copied=drain_original_game!(game,now);
-                                    if copied>0{health.on_local_business(now.0)}
-                                }else{tx_rejected.fetch_add(1,Ordering::Relaxed);}
+                                let accepted=if n<=inner_mtu{
+                                    if game.offer(&source[..n],now).is_ok(){
+                                        let copied=drain_original_game!(game,now);
+                                        if copied>0{health.on_local_business(now.0)}
+                                        true
+                                    }else{false}
+                                }else{
+                                    // DF=0 reuses the original RFC791 codec,
+                                    // but EVERY fragment goes through THIS
+                                    // GameAdapter, unchanged AEAD/PN/RAW.
+                                    emit_game_ipv4_fragments(
+                                        &source[..n],inner_mtu,
+                                        &mut game_ipv4_fragment,|piece|{
+                                            if tx_stop.load(Ordering::Acquire){
+                                                return false
+                                            }
+                                            if game.offer(piece,now).is_err(){
+                                                return false
+                                            }
+                                            let copied=drain_original_game!(game,now);
+                                            if copied>0{
+                                                health.on_local_business(now.0)
+                                            }
+                                            true
+                                        }
+                                    ).is_ok()
+                                };
+                                if !accepted{
+                                    tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                }
                             }else{break}
                             } // Physical UDP only uses scoped socket, never GameAdapter/M3.
                         }else{tx_rejected.fetch_add(1,Ordering::Relaxed);}
