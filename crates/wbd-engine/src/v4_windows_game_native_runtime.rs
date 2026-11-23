@@ -681,7 +681,9 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     if ledgers[lane].authenticated_future(seq){
         c.authenticated_future[lane].fetch_add(1,Ordering::Release);
     }
-    let latest_ack=ledgers[lane].verified(seq,wire.len());
+    let _=ledgers[lane].verified(seq,wire.len());
+    let _=ledgers[lane].abandon_stalled(now_ms.saturating_mul(1_000_000));
+    let latest_ack=ledgers[lane].ack();
     let sack=ledgers[lane].latest_sack();
     c.sack[lane].store(sack.map_or(0,|s|
         (u64::from(s.start)<<32)|u64::from(s.end)),Ordering::Release);
