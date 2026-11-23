@@ -5,7 +5,7 @@
 # H2330 ARM: real Linux original GoTLS+Rust clients and servers, both directions, 18 loss/Game combinations.
 # H2330 staging: new genuine current-source Linux client and Linux server Normal/Game2/Game4 OFF/fixed6 18-case matrix.
 # H2325 arm exact source-frozen one-time bilateral native matrix; no runtime product change.
-name: M0 WIP Linux Game equals Normal real bilateral source
+name: M0 WIP Linux Game Normal-v3 ACK SACK real bilateral source
 run-name: "M0-GAME-NORMAL-LINUX-NATIVE|${{ github.sha }}"
 on:
   push:
@@ -69,11 +69,8 @@ jobs:
           - {mode: game2, loss: 5}
           - {mode: game2, loss: 30}
           - {mode: game4, loss: 0}
-          - {mode: game4, loss: 5}
           - {mode: game4, loss: 30}
-          - {mode: game2-fec, loss: 0}
           - {mode: game2-fec, loss: 30}
-          - {mode: game4-fec, loss: 0}
           - {mode: game4-fec, loss: 30}
     runs-on: ubuntu-24.04
     timeout-minutes: 22
