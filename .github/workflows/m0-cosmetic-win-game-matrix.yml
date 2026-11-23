@@ -135,7 +135,13 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          git fetch --quiet --depth=1 origin "$PRODUCT_SOURCE"
+          # GitHub checkout already pinned this same immutable SHA.
+          # Redundant anonymous git fetch on GitHub-hosted runner can 403
+          # under transient policy/rate limits before the native test.
+          # Fetch only when reusing genuinely DIFFERENT product source.
+          if [ "$PRODUCT_SOURCE" != "$GITHUB_SHA" ]; then
+            git fetch --quiet --depth=1 origin "$PRODUCT_SOURCE"
+          fi
           delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
           test -z "$delta" || { echo "M0_GAME_PRODUCT_SOURCE_DRIFT $delta" >&2; exit 1; }
           test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
