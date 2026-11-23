@@ -43,6 +43,14 @@
 - **CPU 结论已关闭该微优化**：同机 Game4-FEC30% 旧/新/新/旧 ABBA [45176167885](https://github.com/lly8666/wbd-next/actions/runs/45176167885)，全产品 CPU 旧/新客户端18.165/18.225秒，服务端18.710/18.825秒，`next_deadline()` 热循环改动没有证明有效，已经撤销；其他有效 Normal-v3 ACK/SACK 算法仍保留。
 
 
+## 2026-11-23 M0 CPU 尝试：空候选延迟分配，ABBA 否定并撤销
+
+- **辨别性假设**：`ReceiptState::on_timer()` 即使无到期候选也每个 TX turn 调用 `Vec::with_capacity(32)`；先 `Vec::new()`，仅首次真实候选时 `reserve(32)` 可以减少 heap allocator CPU，不改变 Normal v3 的 ACK/SACK、R/F、驱动完成。
+- **唯一生产代码差异**：旧 SOURCE `4762fa9c61dfad540fd4e04349001cfb0eda54df`，实验 SOURCE `6446db7bde09b96b9892f127e12ebb52ae915df2`，除测试/文档外仅 `crates/wbd-recovery/src/receipt.rs` 两处延迟分配变更；不涉及 Game 算法或业务语义。
+- 两端单元 [45186779452](https://github.com/lly8666/wbd-next/actions/runs/45186779452) Linux/Windows **PASS**；真实 Linux 双端七场 [45186810758](https://github.com/lly8666/wbd-next/actions/runs/45186810758) **8/8 jobs SUCCESS**；Game4 fixed FEC30% 真实接受原密文重传字节 `R/F=8.8960%/8.8971%`，双端唯一首次交付 ~10Mbps，Stop/cleanup 通过。
+- **关键受控 CPU 实验**：同 Ubuntu runner 旧→新→新→旧四轮原 GoTLS/Rust 客户端与服务端、Game4 fixed FEC 30% 60 秒、各轮重启真实进程和网络命名空间；[45188200851](https://github.com/lly8666/wbd-next/actions/runs/45188200851) 全轮 PASS。旧/新 CPU 秒：客户端 **10.410→10.710（+2.88%）**，服务端 **10.715→11.060（+3.22%）**。四轮 `R/F≈8.9%`、首次交付≈10Mbps、Stop/cleanup 维持正常。不能把不同 runner 的独立测试 CPU 数字用于替代本 ABBA。
+- **结论与处置**：优化假设未获实测支持，且两端 CPU 相同方向劣化；已通过 `f3103dcca786a2019cb27a0af474d5d6832618b1` **恢复旧有立即分配行为**，不保留无效热路径优化。两条 source-locked 测试 workflow 增加 `receipt.rs` 文件触发以保证未来此处修改进入测试；原 Game-v3 功能不改。整体新高密度表演重传相对旧稀疏 Game 的 CPU 成本仍未隔离归因，保持性能关口 OPEN；下一轮应优先按 TX、ACK 树、shadow 拷贝与 FEC 分类做真实 CPU 样本或精准 ABBA，避免盲目细枝优化。仅保留本轮记录，不合并 main。
+
 ```feature-impact
 {"kind":"updated","reason":"Game2/4 OFF/fixed Linux and Windows outer opportunistic retransmission is being rewritten on the proven Normal v3 ACK-gap, immutable shadow and byte-budget algorithm; source branch draft, not qualified.","ids":["outer-opportunistic-repair"]}
 ```
