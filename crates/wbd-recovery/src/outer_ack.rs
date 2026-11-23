@@ -368,13 +368,17 @@ mod tests {
         }
         // Once real cumulative progress reaches a retained head,
         // an actual later copied span permits exactly one nomination.
-        for t in [110_000_000,120_000_000,130_000_000]{
+        for t in [110_000_000,120_000_000,130_000_000,140_000_000]{
             let update=x.on_feedback(lane(),[7;16],110,&[],MonoNs(t),
                 20_000_000).unwrap();
-            if t==130_000_000{assert_eq!(update.gap_candidates,vec![RecordPn(2)])}
+            if t==140_000_000{
+                assert_eq!(update.gap_candidates,vec![RecordPn(2)]);
+            }else{
+                assert!(update.gap_candidates.is_empty());
+            }
         }
         assert!(x.on_feedback(lane(),[7;16],110,&[],
-            MonoNs(140_000_000),20_000_000).unwrap().gap_candidates.is_empty());
+            MonoNs(150_000_000),20_000_000).unwrap().gap_candidates.is_empty());
         // Owner may have sent original control between DATA copies;
         // only strictly forward definitely-copied offsets are admitted.
         assert_eq!(x.on_definitely_sent_untracked(150,10,MonoNs(150_000_000)),Ok(()));
