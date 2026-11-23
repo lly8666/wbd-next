@@ -1032,10 +1032,13 @@ impl GameKernelOwner{
                         if ack_ledger.authenticated_future(seq32){
                             rx_future[i].fetch_add(1,Ordering::Release);
                         }
-                        let actual_ack=ack_ledger.verified(seq32,len);
+                        let _=ack_ledger.verified(seq32,len);
+                        let now_ns=rx_start.elapsed().as_nanos()
+                            .min(u128::from(u64::MAX)) as u64;
+                        let _=ack_ledger.abandon_stalled(now_ns);
                         rx_sack[i].store(pack_game_sack(
                             ack_ledger.latest_sack()),Ordering::Release);
-                        rx_ack[i].store(actual_ack,Ordering::Release);
+                        rx_ack[i].store(ack_ledger.ack(),Ordering::Release);
                     }
                     if outer_repair_enabled && matches!(&opened,Ok(Some(_))){
                         // AEAD-opened DATA may also carry Normal-style outer
