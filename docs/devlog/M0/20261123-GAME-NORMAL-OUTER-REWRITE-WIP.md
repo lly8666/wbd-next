@@ -51,6 +51,14 @@
 - **关键受控 CPU 实验**：同 Ubuntu runner 旧→新→新→旧四轮原 GoTLS/Rust 客户端与服务端、Game4 fixed FEC 30% 60 秒、各轮重启真实进程和网络命名空间；[45188200851](https://github.com/lly8666/wbd-next/actions/runs/45188200851) 全轮 PASS。旧/新 CPU 秒：客户端 **10.410→10.710（+2.88%）**，服务端 **10.715→11.060（+3.22%）**。四轮 `R/F≈8.9%`、首次交付≈10Mbps、Stop/cleanup 维持正常。不能把不同 runner 的独立测试 CPU 数字用于替代本 ABBA。
 - **结论与处置**：优化假设未获实测支持，且两端 CPU 相同方向劣化；已通过 `f3103dcca786a2019cb27a0af474d5d6832618b1` **恢复旧有立即分配行为**，不保留无效热路径优化。两条 source-locked 测试 workflow 增加 `receipt.rs` 文件触发以保证未来此处修改进入测试；原 Game-v3 功能不改。整体新高密度表演重传相对旧稀疏 Game 的 CPU 成本仍未隔离归因，保持性能关口 OPEN；下一轮应优先按 TX、ACK 树、shadow 拷贝与 FEC 分类做真实 CPU 样本或精准 ABBA，避免盲目细枝优化。仅保留本轮记录，不合并 main。
 
+## 2026-11-23 M0 性能归因：同二进制 Game4 fixed FEC30 CPU 分解（生产代码未改）
+
+- 实测源是已验证的真实原 GoTLS/Rust 产品 **`4762fa9c61dfad540fd4e04349001cfb0eda54df`**，其工件来自 [45181693979](https://github.com/lly8666/wbd-next/actions/runs/45181693979)，逐文件 SHA-256 校验；与本工作分支对照，`crates/` 与 `r0/go_overlay/` 产品文件没有差异。只为 TEST-ONLY `tools/network_harness/runner.py` 添加环境变量 `WBD_M0_GAME_THREAD_CPU_DIAG=1`，按既有 1Hz `/proc/PID/task/TID/stat` 收集原产品线程 CPU ticks，不新增产品线程/协议或热路径计时。
+- [真实同 runner 三场线程 CPU 诊断 45193049027](https://github.com/lly8666/wbd-next/actions/runs/45193049027) **SUCCESS**，原双向 10Mbps、250ms 单程、30% IID 丢包、每场60秒，真实 Stop/清理/首次交付/R/F 保留。整进程 CPU 客/服：Normal **2.79/3.04s**，Game4 OFF **5.73/5.94s**，Game4 fixed FEC **9.61/9.89s**。Game4 fixed FEC 客端 Rust TX **4.92s**、四个 Rust RX 合计 **3.93s**、其余约 **0.64s**；服务端 Rust TX **5.16s**、RX 合计 **3.96s**、其余约 **0.69s**。线程采样覆盖整进程约 **98.8%/99.2%**。Game4 OFF 客端 TX/RX **2.62/2.36s**、服务端 **2.72/2.40s**。这些是线程归属，不是对 TX 内部 FEC/ACK/驱动函数的归因；不同模式原始物理 DATA/FEC 工作量不同，绝不可把绝对值差全部认作重传。
+- [真实同一原产品 Game4 fixed FEC30 OFF→ON→ON→OFF CPU ABBA 45194110138](https://github.com/lly8666/wbd-next/actions/runs/45194110138) **SUCCESS**，每轮独立真 GoTLS/Rust 产品+内核 netem+Stop/cleanup；只改变既有 `--outer-repair` 开关。客户端 OFF 平均 **8.465s**，ON **10.705s**，增加 **2.240s (+26.46%)**；服务端 OFF **8.790s**，ON **11.005s**，增加 **2.215s (+25.20%)**。OFF 两端真实复制 `0` 次；ON 每端约 **79,000** 次同密文补发，真正接纳外层线字节 `R/F≈8.9%`；四轮双向唯一首次交付 **≈10Mbps**，真实双端 Stop PASS。此对照因产品二进制完全相同，可以说**开启整套表演重传系统带来约2.2s/60s CPU 增量**，但这包含不可回避的真实 RAW 再发、接收端额外处理与候选/索引，不能把2.2s全归咎 `ReceiptState` 或 `Vec`。
+- 为进一步区别重传额外 CPU 究竟主要位于 TX 还是 RX，已将既有采样 opt-in 接入相同 ON/OFF ABBA；[新跟进 45195689153](https://github.com/lly8666/wbd-next/actions/runs/45195689153) **仍需以真实最终 job/log 核查**，未成功前不写结果。若 TX 显著增加，优先再缩小到候选与原生 RAW 发送的函数开销；若 RX 也明显增加，先分清额外密文抵达后的正常工作，再谈优化。此前两项试探性热路径优化均被同机 ABBA 否定且已回滚，禁止靠减少 `R/F` 伪造 CPU 改善。
+- PR#71 保持 **Draft**，`main` 不碰；本节全部是可复现的 TEST-ONLY 性能仪表与真实证据，不新增任何生产 Go/Rust 优化，性能原因尚未完全分离，CPU 关口 OPEN。
+
 ```feature-impact
 {"kind":"updated","reason":"Game2/4 OFF/fixed Linux and Windows outer opportunistic retransmission is being rewritten on the proven Normal v3 ACK-gap, immutable shadow and byte-budget algorithm; source branch draft, not qualified.","ids":["outer-opportunistic-repair"]}
 ```
