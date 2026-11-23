@@ -303,6 +303,9 @@ public final class RootClientActivity extends Activity {
                 matched=i;break;
             }
         }
+        // Snapshot the named profile before the one-shot Stop decision
+        // consumes its intent; B49 plain Network switch has slot zero.
+        int slot=coldSwitch.profileSlot();
         boolean ready=coldSwitch.complete(
             RootClientService.previousOwnerStopConfirmed,matched>=0);
         if(!ready){
@@ -310,6 +313,10 @@ public final class RootClientActivity extends Activity {
             return;
         }
         networks.setSelection(matched);
+        if(slot!=0&&!loadNamedProfile(slot)){
+            RootClientService.status="旧Go/Rust已完整停止，但目标配置不可读取；未启动新会话";
+            return;
+        }
         // Original Activity start() owns all UID/secret/Network validation,
         // original FakeTCP/TLS/lease, Rust M4 and kernel journal.
         start();
@@ -540,15 +547,89 @@ public final class RootClientActivity extends Activity {
         restoredSelection.putAll(s.selected);
         restoredBypass.putAll(s.bypass);
     }
+    // Only four cold files, read at an explicit UI lifecycle/user action.
+    // Do not poll profiles or modify the native owner in the 1Hz refresh.
+    private void refreshNamedProfileChoices(){
+        if(profileSlots==null)return;
+        int selected=profileSlots.getSelectedItemPosition();
+        String[] labels=new String[RootConnectionProfile.SLOTS];
+        for(int i=0;i<labels.length;i++){
+            try{
+                RootConnectionProfile p=RootConnectionProfileStore.load(this,i+1);
+                labels[i]=p==null?"配置槽"+(i+1)+"（空）":
+                    "配置槽"+(i+1)+" · "+p.label+" · "+p.settings.mode;
+            }catch(Exception unavailable){
+                labels[i]="配置槽"+(i+1)+"（读取失败）";
+            }
+        }
+        profileSlots.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,labels));
+        if(selected>=0&&selected<labels.length)profileSlots.setSelection(selected);
+    }
+    private void connectSelectedSavedProfile(){
+        final int slot=chosenProfileSlot();
+        if(RootClientService.startDispatchPending.get()){
+            profileResult.setText("当前已有原Root START在派发，请等完成后再切换");
+            return;
+        }
+        final int pos=networks.getSelectedItemPosition();
+        if(pos<0||pos>=physical.size()){
+            profileResult.setText("请选择当前真实Wi-Fi/移动/有线Network");
+            return;
+        }
+        PhysicalNetwork target=physical.get(pos);
+        if(PhysicalNetwork.exact(this,target.handle,target.interfaceName,
+            target.ifindex,target.mtu,target.address)==null){
+            chooseNetworks();
+            profileResult.setText("目标Network已变化，请重新选择");
+            return;
+        }
+        try{
+            if(RootConnectionProfileStore.load(this,slot)==null){
+                profileResult.setText("该槽位为空，请先保存可用配置");
+                return;
+            }
+            // A quick connect uses THIS stored server's credentials, not
+            // whichever password the user last typed for another server.
+            if(RootEncryptedCredentialStore.loadProfile(this,slot)==null){
+                profileResult.setText("此槽没有已保存的密码/RouteKey；请先载入、填写并保存");
+                return;
+            }
+        }catch(Exception unavailable){
+            profileResult.setText("无法读取此槽的连接或本机凭据，请手动载入检查");
+            return;
+        }
+        if(!RootClientService.sessionOwnerActive){
+            coldSwitch.cancel();
+            if(loadNamedProfile(slot))start(); // existing real Go/Rust START
+            return;
+        }
+        // Active: one real Service STOP; B48 joined Stop + UID return must
+        // finish before we consume this frozen slot and target Network.
+        coldSwitch.armProfile(slot,target.handle,target.interfaceName,
+            target.ifindex,target.mtu,target.address);
+        Intent request=new Intent(this,RootClientService.class);
+        request.setAction(RootClientService.STOP);
+        try{
+            startService(request);
+            profileResult.setText("已请求原Go/Rust Stop；完整归还后将连接配置槽"+
+                slot+"，仅启动一次（离开本页面即取消接续）");
+        }catch(Exception unavailable){
+            coldSwitch.cancel();
+            profileResult.setText("原Stop请求派发失败，未启动新Root会话");
+        }
+    }
     private int chosenProfileSlot(){
         return profileSlots.getSelectedItemPosition()+1;
     }
     private void saveNamedProfile(){
+        coldSwitch.cancel();
         try{
             int slot=chosenProfileSlot();
             RootConnectionProfile profile=new RootConnectionProfile(
                 profileLabel.getText().toString(),connectionSettingsFromUi());
             RootConnectionProfileStore.save(this,slot,profile);
+            refreshNamedProfileChoices();
             // The optional per-profile login is just the existing encrypted
             // AndroidKeyStore record, now keyed by one of the four UI slots.
             // An incomplete login must not reuse the previous slot's key.
@@ -564,13 +645,12 @@ public final class RootClientActivity extends Activity {
             profileResult.setText("保存失败：填写有效名称及完整连接设置后再保存");
         }
     }
-    private void loadNamedProfile(){
+    private boolean loadNamedProfile(int slot){
         try{
-            int slot=chosenProfileSlot();
             RootConnectionProfile profile=RootConnectionProfileStore.load(this,slot);
             if(profile==null){
                 profileResult.setText("该槽位尚未保存连接配置");
-                return;
+                return false;
             }
             // Activate the SAME slot's existing Keystore record BEFORE
             // changing the last-connection cache. On the next Activity open,
@@ -589,15 +669,23 @@ public final class RootClientActivity extends Activity {
                 (saved==null?"；请填写此服务器的密码/RouteKey":
                     "；本槽密码/RouteKey已从原Keystore恢复")+
                 "。选择Network后手动START，运行中的Root不变");
+            return true;
         }catch(Exception e){
             profileResult.setText("读取配置失败；当前已运行的Root会话不受影响");
+            return false;
         }
     }
+    private void loadNamedProfile(){
+        coldSwitch.cancel();
+        loadNamedProfile(chosenProfileSlot());
+    }
     private void deleteNamedProfile(){
+        coldSwitch.cancel();
         try{
             int slot=chosenProfileSlot();
             RootConnectionProfileStore.delete(this,slot);
             RootEncryptedCredentialStore.clearProfile(this,slot);
+            refreshNamedProfileChoices();
             profileResult.setText("已删除槽位"+slot+"的连接与该槽密码/RouteKey；运行中的Root未改变");
         }catch(Exception e){
             profileResult.setText("删除配置失败");
@@ -1157,6 +1245,10 @@ public final class RootClientActivity extends Activity {
         loadProfile.setText("载入所选配置（不启动Root）");
         loadProfile.setOnClickListener(v->loadNamedProfile());
         pane.addView(loadProfile);
+        Button connectProfile=new Button(this);
+        connectProfile.setText("连接此配置／切换到此配置（使用选定实体Network）");
+        connectProfile.setOnClickListener(v->connectSelectedSavedProfile());
+        pane.addView(connectProfile);
         Button deleteProfile=new Button(this);
         deleteProfile.setText("删除所选配置槽");
         deleteProfile.setOnClickListener(v->deleteNamedProfile());
@@ -1189,7 +1281,7 @@ public final class RootClientActivity extends Activity {
         presetResult.setTextIsSelectable(true);
         pane.addView(presetResult);
         Button connect=new Button(this);connect.setText("START — ROOT / ORIGINAL Go+Rust");
-        connect.setOnClickListener(v->start());
+        connect.setOnClickListener(v->{coldSwitch.cancel();start();});
         pane.addView(connect);
         Button stop=new Button(this);stop.setText("STOP — WITHDRAW UID ROUTE / NATIVE JOIN");
         stop.setOnClickListener(v->{
@@ -1336,6 +1428,7 @@ public final class RootClientActivity extends Activity {
         }
         chooseNetworks();
         chooseInstalledApplications();
+        refreshNamedProfileChoices();
         try{
             RootSavedCredentialRecord.Secrets saved=
                 RootEncryptedCredentialStore.load(this);
@@ -1355,6 +1448,7 @@ public final class RootClientActivity extends Activity {
         // route and generation are NEVER implicitly switched.
         chooseNetworks();
         chooseInstalledApplications();
+        refreshNamedProfileChoices();
         ui.post(refreshStatus);
     }
     @Override protected void onPause(){

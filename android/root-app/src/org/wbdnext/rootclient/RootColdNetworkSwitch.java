@@ -5,10 +5,23 @@ final class RootColdNetworkSwitch {
     private boolean armed;
     private long handle;
     private String iface,local;
-    private int index,mtu;
+    private int index,mtu,profileSlot;
+    // Slot zero is the B49 same-profile Network switch; 1..4 are B52
+    // user-selected saved connections. No change to Go/Rust owner.
     void arm(long h,String n,int i,int m,String ip){
+        profileSlot=0;
+        setTarget(h,n,i,m,ip);
+    }
+    void armProfile(int slot,long h,String n,int i,int m,String ip){
+        if(slot<1||slot>RootConnectionProfile.SLOTS)
+            throw new IllegalArgumentException("profile slot 1..4");
+        profileSlot=slot;
+        setTarget(h,n,i,m,ip);
+    }
+    private void setTarget(long h,String n,int i,int m,String ip){
         handle=h;iface=n;index=i;mtu=m;local=ip;armed=true;
     }
+    int profileSlot(){return armed?profileSlot:0;}
     boolean pending(){return armed;}
     boolean matches(long h,String n,int i,int m,String ip){
         return armed&&handle==h&&index==i&&mtu==m&&
@@ -17,7 +30,8 @@ final class RootColdNetworkSwitch {
     boolean complete(boolean oldStopVerified,boolean targetStillPresent){
         if(!armed)return false;
         armed=false; // single use even on failures
+        profileSlot=0;
         return oldStopVerified&&targetStillPresent;
     }
-    void cancel(){armed=false;}
+    void cancel(){armed=false;profileSlot=0;}
 }

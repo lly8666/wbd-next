@@ -182,6 +182,25 @@ assert 'RootEncryptedCredentialStore.clearProfile(this,slot)' in app
 assert 'password.setText(saved==null?"":saved.password)' in app
 assert 'routeKey.setText(saved==null?"":saved.routeKey)' in app
 print("ANDROID_B51_PROFILE_SCOPED_EXISTING_KEYSTORE_SOURCE_PASS")
+# B52: real signed Root Activity chooses saved profile and current Network,
+# routes through the existing old owner Stop and original START, no new daemon.
+cold=Path("android/root-app/src/org/wbdnext/rootclient/RootColdNetworkSwitch.java").read_text()
+assert 'void armProfile(int slot,' in cold
+assert 'int profileSlot()' in cold
+assert 'profileSlot=0;' in cold
+assert 'int slot=coldSwitch.profileSlot();' in app
+assert 'RootClientService.previousOwnerStopConfirmed,matched>=0' in app
+assert 'if(slot!=0&&!loadNamedProfile(slot))' in app
+assert 'coldSwitch.armProfile(slot,target.handle' in app
+assert 'RootConnectionProfileStore.load(this,slot)' in app
+assert 'RootEncryptedCredentialStore.loadProfile(this,slot)' in app
+assert 'connectProfile.setOnClickListener(v->connectSelectedSavedProfile())' in app
+assert 'RootClientService.STOP' in app
+assert 'if(loadNamedProfile(slot))start();' in app
+assert 'refreshNamedProfileChoices();' in app
+assert 'connect.setOnClickListener(v->{coldSwitch.cancel();start();})' in app
+print("ANDROID_B52_NAMED_PROFILE_ORIGINAL_GO_RUST_SINGLE_ACTION_SWITCH_SOURCE_PASS")
+
 
 
 # B43: Game2 shares original Normal UDP53, native Health and M4 counters.
