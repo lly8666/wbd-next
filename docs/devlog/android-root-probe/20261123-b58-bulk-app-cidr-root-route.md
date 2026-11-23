@@ -13,3 +13,11 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B58批量扩容16 UID/32真实包、16直连IPv4 CIDR并同步原Java/Go/rootjournal三类UID route；减少全App每条UID全表读回为直连前/最后一次完整内核读回，原journal/Stop不变，无逐包成本。"}
 ```
+
+## B58a｜保留原SOURCE真实APK FAIL，更新旧8UID/16包测试断言
+
+B58初版 SOURCE `0d9369380e36bb72affae74b46d8e87251f302ea` 的 [Dual64 #45207972287](https://github.com/lly8666/wbd-next/actions/runs/45207972287)：六个DNS/CN/M3 Host、双ABI原生构建和两个Linux原Oracle SUCCESS，但正式 `root-arm64-app` Job **FAIL**，`RootAppPickerModelTest` 在16 UID已接线后仍断言第9个UID必须拒绝，导致签名APK根本未产出。实际 B58 `SelectedAppGroupTest` 及16CIDR Host门已成功，不能用它们覆盖APK FAIL。这次 B58a **仅改两个旧Host测试**，将旧错误的 9UID/17包拒绝改为16UID/32包有效、17UID/33包拒绝，同时补同一真实设置编解码的16UID/32包往返；不触碰原Java/Go/Rust生产路由、标准TLS、UID journal或数据面。新SOURCE签名APK/Host/原Linux Oracle必须各自根据新CI结论判定，Android实体业务仍NOT_RUN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B58a修订旧B24/B25 Host 测试的8UID/16包上限为B58生产16UID/32包边界，保留原root-arm64-app失败Action；不改网络/Root生产代码。"}
+```

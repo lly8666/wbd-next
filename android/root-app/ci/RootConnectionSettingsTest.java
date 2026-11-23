@@ -118,23 +118,39 @@ public final class RootConnectionSettingsTest {
         RootConnectionSettings restored=read(stored(sixteen));
         check(restored!=null&&restored.selected.equals(shared),
             "round-trip all 16 packages sharing one original route UID");
-        Map<String,Integer> tooManyUids=new TreeMap<>();
-        for(int i=0;i<9;i++)tooManyUids.put("org.example.diff"+i,11010+i);
+        // B58: migrate the old B25 invalid-boundary assertions.
+        Map<String,Integer> sixteenUids=new TreeMap<>();
+        for(int i=0;i<16;i++)sixteenUids.put("org.example.diff"+i,11010+i);
+        RootConnectionSettings wideUIDs=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,true,false,false,false,sixteenUids);
+        check(read(stored(wideUIDs)).selected.equals(sixteenUids),
+            "sixteen unique UID settings must survive preset roundtrip");
+        Map<String,Integer> tooManyUids=new TreeMap<>(sixteenUids);
+        tooManyUids.put("org.example.diff16",11026);
         boolean rejected=false;
         try{new RootConnectionSettings(
             "wbd.example.test","tls.example.test","example_user",443,
             1460,500,"chacha20-poly1305","off","normal",1,
             false,true,false,false,false,tooManyUids);}
         catch(IllegalArgumentException expected){rejected=true;}
-        check(rejected,"nine different UIDs are not a valid selected route");
-        shared.put("org.example.more17",10123);
+        check(rejected,"seventeen different UIDs exceed B58 selected scope");
+        for(int i=16;i<32;i++)shared.put("org.example.more"+i,10123);
+        RootConnectionSettings widePackages=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","normal",1,
+            false,true,false,false,false,shared);
+        check(read(stored(widePackages)).selected.equals(shared),
+            "thirty-two packages sharing one UID must be saved");
+        shared.put("org.example.more32",10123);
         rejected=false;
         try{new RootConnectionSettings(
             "wbd.example.test","tls.example.test","example_user",443,
             1460,500,"chacha20-poly1305","off","normal",1,
             false,true,false,false,false,shared);}
         catch(IllegalArgumentException expected){rejected=true;}
-        check(rejected,"more than sixteen packages cannot be saved");
+        check(rejected,"thirty-three packages exceed B58 selected scope");
         String raw=new String(bytes,StandardCharsets.ISO_8859_1);
         check(!raw.contains("password=")&&!raw.contains("route_key=")&&
             !raw.contains("ca_pem=")&&!raw.contains("network_handle="),
@@ -244,6 +260,7 @@ public final class RootConnectionSettingsTest {
             roundtrip.directCIDRs.split(",").length==16,
             "16 UID/32 App/16 direct CIDR configuration not preserved");
         System.out.println("ANDROID_B58_MULTIPROFILE_LARGE_APP_AND_DIRECT_PRESET_HOST_PASS");
+        System.out.println("ANDROID_B58A_PRESET_16_UID_32_PACKAGE_BOUNDARY_HOST_PASS");
         System.out.println("ANDROID_B25_PRESET_SELECTED_16_PACKAGES_8_UNIQUE_UIDS_HOST_PASS");
     }
 }

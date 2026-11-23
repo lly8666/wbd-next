@@ -31,24 +31,37 @@ public final class RootAppPickerModelTest {
         check(next.contains("org.example.ping")&&next.contains("org.example.browser")&&
             next.contains("org.example.search")&&next.size()==3,
             "visible matching UID + previously checked hidden app retained");
+        // B58: actual Root App selector now supports 16 canonical UIDs
+        // and 32 installed packages, not the obsolete B24 8/16 limit.
         List<InstalledAppTarget> many=new ArrayList<>();
-        for(int i=0;i<9;i++)many.add(app("org.example.app"+i,"test",10300+i));
+        for(int i=0;i<16;i++)many.add(app("org.example.app"+i,"test",10300+i));
+        check(RootAppPickerModel.addMatching(many,Collections.emptySet(),"",
+            10200,"org.wbdnext.rootclient").size()==16,
+            "sixteen original App UIDs must be selectable");
+        List<InstalledAppTarget> seventeen=new ArrayList<>(many);
+        seventeen.add(app("org.example.app16","test",10316));
         boolean rejected=false;
-        try{RootAppPickerModel.addMatching(many,Collections.emptySet(),"",
+        try{RootAppPickerModel.addMatching(seventeen,Collections.emptySet(),"",
             10200,"org.wbdnext.rootclient");}
         catch(IllegalArgumentException expected){rejected=true;}
-        check(rejected,"must not exceed original eight distinct UIDs");
-        // 16 packages with one shared UID must be selectable as one route.
+        check(rejected,"seventeen distinct UIDs must exceed the new limit");
         List<InstalledAppTarget> shared=new ArrayList<>();
-        for(int i=0;i<16;i++)shared.add(app("org.example.shared"+i,"Shared",10145));
+        for(int i=0;i<32;i++)shared.add(app("org.example.shared"+i,"Shared",10145));
         check(RootAppPickerModel.addMatching(shared,Collections.emptySet(),"Shared",
-            10200,"org.wbdnext.rootclient").size()==16,
-            "all sixteen packages sharing one UID selectable");
+            10200,"org.wbdnext.rootclient").size()==32,
+            "thirty-two installed packages sharing one UID selectable");
+        shared.add(app("org.example.shared32","Shared",10145));
+        rejected=false;
+        try{RootAppPickerModel.addMatching(shared,Collections.emptySet(),"Shared",
+            10200,"org.wbdnext.rootclient");}
+        catch(IllegalArgumentException expected){rejected=true;}
+        check(rejected,"thirty-three packages exceed the B58 selection");
         rejected=false;
         try{RootAppPickerModel.addMatching(items,Collections.emptySet(),"absent",
             10200,"org.wbdnext.rootclient");}
         catch(IllegalArgumentException expected){rejected=true;}
         check(rejected,"empty match cannot silently change selection");
         System.out.println("ANDROID_B24_APP_PICKER_FILTER_BATCH_EXACT_UID_HOST_PASS");
+        System.out.println("ANDROID_B58_APP_PICKER_16_UID_32_PACKAGE_HOST_PASS");
     }
 }
