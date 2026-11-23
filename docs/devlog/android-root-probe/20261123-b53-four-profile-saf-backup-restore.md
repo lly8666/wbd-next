@@ -12,3 +12,11 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B53四套Root命名连接统一SAF导入/导出，用原B50/B22设置编解码与原本地ProfileStore；覆盖旧槽时清该槽Keystore、无密钥或Network数据导出，原Go/Rust不变。"}
 ```
+
+## B52软件 FAIL 的最小兼容修复（保留原始证据）
+
+B52a SOURCE `aeebc9103919906a33ed9768f0dc56dd55020345` [Android Dual64 #45182581375](https://github.com/lly8666/wbd-next/actions/runs/45182581375) 的 `root-arm64-app` **FAIL**：在新 `onResume` 增加四槽名刷新之后，B24旧源码门仍要求 `chooseNetworks → chooseInstalledApplications → ui.post(refreshStatus)` 三个调用相邻。新代码依然有完整真实Network/App UID刷新及单个1Hz状态循环，原纯JVM冷切网测试也通过。B53同SOURCE仅把**原断言**更新成 `chooseNetworks → chooseInstalledApplications → refreshNamedProfileChoices → ui.post(refreshStatus)`，不删Network/App旧检查，不加新线程/协议。B52a原FAIL不升级；B53独立正式签名APK必须重新验证。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B53随批对齐B24原UI onResume源码门到B52命名槽刷新后的真实顺序，保留网络/UID/1Hz回归与B52a实际FAIL，不动Go/Rust。"}
+```

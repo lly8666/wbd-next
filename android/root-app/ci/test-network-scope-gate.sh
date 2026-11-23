@@ -668,7 +668,7 @@ assert 'RootConnectionSettingsStore.save(this,connectionSettingsFromUi())' in a
 assert 'RootAppPickerModel.addMatching(' in a
 assert 'RootAppPickerModel.matches(app,text)' in a
 assert 'appSearch.addTextChangedListener(' in a
-assert 'chooseNetworks();\n        chooseInstalledApplications();\n        ui.post(refreshStatus);' in a
+assert 'chooseNetworks();\n        chooseInstalledApplications();\n        refreshNamedProfileChoices();\n        ui.post(refreshStatus);' in a
 assert 'physical.get(i).same(previouslySelected)' in a
 print("ANDROID_B24_APP_PICKER_FILTER_BATCH_AND_NETWORK_REFRESH_SOURCE_PASS")
 # B23: production Activity imports, recalls and clears ONE existing
