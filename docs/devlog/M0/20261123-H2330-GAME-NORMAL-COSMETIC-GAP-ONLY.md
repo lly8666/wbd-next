@@ -13,6 +13,10 @@
 ## 分支镜像：Normal-matching sampling
 - 保持Game Linux真实后到/重复ACK驱动，1/16首发抽样过稀不能呈现高损候选；现在改为1/2位掩码并保留每lane单份原冻结密文，零定时DATA PTO。补充 r1 单元，并等待本分支自身 native WAN 验收，旧main SOURCE测试不可继承。
 
+## 新增：首个丢包未被抽样时的真实停滞机会
+- main 产品源码 `1cade763d20d15f1550a8e77fa6c6a97373f1fc4` 在此前双端 Game5%/30% 外观 R=0 后，补充 AEAD 确证的真正重复 ACK 停滞分支：至少三次实际逆向数据提示、实际后续已复制首发、初始至少1秒 RTT 稳定、最多2秒旧密文、累计 ACK 尚未覆盖候选、依旧 <=10% F 字节、80ms/lane 有界发送、无 timer-only DATA。
+- 当前 PR68 分支只镜像该 **Linux Game 原功能源码** 和精确 unit；main 上新 12 个 Windows Game / 18 个 Linux 双端真实场景为 main SOURCE `7e2190e4bf7a0c643c76eaae4bd4b37c99e470bc`，**不能继承到本 PR 分支**，新分支完整验证仍未通过；旧 M2 逐 record Receipt 继续废弃。
+
 ```feature-impact
-{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game OFF/fixed6 removes unsolicited 250/810ms DATA PTO; genuine authenticated future triggers bounded duplicate cumulative ACK, only real peer gaps nominate frozen cipher, first-send F budget and CPU caps preserved; new-source native tests pending."}
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game Linux authentic duplicate-ACK stall admits an unacked sampled original even if true first missing head was unsampled; initial >=1s, candidate <=2s, real first-send behind, 10pct cap and one original replay, no timer-only DATA; new-source WAN pending."}
 ```
