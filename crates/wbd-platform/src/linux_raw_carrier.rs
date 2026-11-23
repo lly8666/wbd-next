@@ -463,6 +463,14 @@ impl ScopedRawIpv4Rx {
     pub fn recv_one_with_ack_into(&self,generation:u32,buffer:&mut [u8],
         tuple:Ipv4Tuple<'_>,persona:PacketPersona)
         ->Result<(usize,u32,u32),RawTxError>{
+        self.recv_one_with_ack_control_into(generation,buffer,tuple,persona,false)
+    }
+    /// Game's original RX may also surface checksum/tuple-checked pure ACK
+    /// as len=0 (never AEAD DATA). Normal already uses identical optional
+    /// carrier hints; only the outer repair shadow may consume this event.
+    pub fn recv_one_with_ack_control_into(&self,generation:u32,buffer:&mut [u8],
+        tuple:Ipv4Tuple<'_>,persona:PacketPersona,allow_pure_ack:bool)
+        ->Result<(usize,u32,u32),RawTxError>{
         if generation!=self.generation{return Err(RawTxError::InvalidScope)}
         if self.is_stopping(){return Err(RawTxError::Stopped)}
         if buffer.len()<64{return Err(RawTxError::InvalidPacket)}
@@ -506,7 +514,16 @@ impl ScopedRawIpv4Rx {
                 Err(RxError::WrongTuple|RxError::WrongProtocol|
                     RxError::InvalidDataFlags|RxError::EmptyData|
                     RxError::WrongPersona|RxError::FragmentedOrUnexpectedFlags|
-                    RxError::WrongVersionOrIhl) => continue,
+                    RxError::WrongVersionOrIhl) => {
+                    if allow_pure_ack && buffer[0]==0x45 && buffer[33]==0x10 {
+                        if let Ok(ack)=parse_ack_packet(&buffer[..n],TrustedRx{
+                            tuple,persona,mtu:self.mtu,authenticated_options:None,
+                        },false){
+                            return Ok((0,0,ack.ack32))
+                        }
+                    }
+                    continue
+                },
                 Err(_)=>return Err(RawTxError::InvalidPacket),
             };
             let start=n-parsed.ciphertext.len();
