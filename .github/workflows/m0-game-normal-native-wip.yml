@@ -39,6 +39,9 @@ jobs:
           ledger=Path("crates/wbd-engine/src/v4_presentation_ack.rs").read_text()
           assert "fn abandon_stalled" in ledger
           assert "fn sacks4" in ledger
+          for loss in (1,10,20):
+              scene=Path(f"scenarios/m0-cosmetic-game2-loss{loss}-60s.json")
+              assert scene.is_file(),scene
           raw=Path("crates/wbd-platform/src/linux_raw_carrier.rs").read_text()
           assert "ack.sacks().len().min(slots.len())" in raw
           product=Path("r0/go_overlay/internal/v4productcli/game_linux.go").read_text()
@@ -71,6 +74,7 @@ jobs:
       matrix:
         include:
           - {mode: game2, loss: 5}
+          # New 1/10/20% scenarios share exact original netem structure.
           - {mode: game2, loss: 1}
           - {mode: game2, loss: 10}
           - {mode: game2, loss: 30}
