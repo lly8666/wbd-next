@@ -17,3 +17,9 @@ B48仅在 `experiment/android-temp-root-probe` / Draft PR #36 源码施工，没
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B48原Go Game2/4组级真实Stop接UID先撤、Rust单GameAdapter M4 join、多RAW与持久RST清理后双收据；正式App校验Game专属Stop和异步START冷切网单Owner。"}
 ```
+
+## B48 本SOURCE软件验收收口（真机NOT_RUN）
+
+最终产品SOURCE `8b5d4ec18ace6c97300f01f8d96605834e5e1f67`：[Android Dual64 #45163517303](https://github.com/lly8666/wbd-next/actions/runs/45163517303) **completed/success，11 SUCCESS / 4 SKIPPED**。SUCCESS包括同源原Go/Rust Android ARM64+x86_64双ABI、真实签名ARM64 Root APK（运行生产 `RootGameSessionStatusTest`、B48 Game2/4 off/fixed组Stop、路由、原生退出及异步START Host门）、原Linux Normal/off Server Oracle、x86 D2-S0与六个DNS/CN/M3 Host Job；ARM64 Cuttlefish只核宿主准入，不是Android guest启动。四个Android x86 KSU/NativeBridge/D2-S1/TAP guest Job仍**SKIPPED**。[功能卡治理 #45163517365](https://github.com/lly8666/wbd-next/actions/runs/45163517365) **completed/success**（Governance Job本来SKIPPED）。
+
+**结论只记 BUILD_PASS / HOST_PASS**：真实Android Game2/4 TLS/租约/多RAW业务与owned Stop、UID实际撤销、物理Network冷切换、真普通App TCP/UDP/DNS字节E2E及CPU/吞吐仍全部 **NOT_RUN / NOT_PROVEN**。本日志收口不触碰产品SOURCE，也未安装APK、运行远程设备或修改main。下一阶段取得普通业务与Stop设备证据后再按瓶颈做性能，不钻极端工况。
