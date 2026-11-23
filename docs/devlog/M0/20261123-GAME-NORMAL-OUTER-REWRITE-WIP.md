@@ -36,6 +36,13 @@
 - **当前限制**：Windows 的 Game2/4 OFF/fixed 六档全部原生 R/F 与 CPU p99 尚未完全收口；Game 高密度 FEC 与旧单 shadow 的 CPU 对照需要同机 ABBA；Windows 真实网络 success 只证明所测 Game2 30% 功能不证明整表；Linux 的 group-local budget 与 Normal process-global quota 仍须明确场景作用域。新功能继续 Draft 不 merge main。
 
 
+## Game4 OFF 缺口与 Windows 精确计量（本次恢复追加）
+- **Game4 OFF 不是被排除的模式**：Windows `v4_windows_game_outer.rs` 中 Game OFF 与 fixed FEC 都使用同一 `win_v3_admit_shadow`、`OuterAckIndex`、`ReceiptState`、实际 NPF 成功结算与共享预算；FEC 区别只在附加 parity / `fec_sparse` 计账。Linux Game4 OFF 之前高损原始场景 R/F≈8.909%/8.908%，但是之前 Windows 新源码三场测试遗漏 Game4 OFF 本身。
+- **SOURCE c6f4828 的 Windows 真签名首次 R/F 实测**，从原生 run 产物 `mode-results/*/client.log` 与 `server.log` 的实际字节读取：Game2 OFF5% Windows/Lin = **2.478%/2.451%** [45176682065](https://github.com/lly8666/wbd-next/actions/runs/45176682065)；Game2 OFF30%=**8.896%/8.928%** [45176686641](https://github.com/lly8666/wbd-next/actions/runs/45176686641)；Game4 fixed FEC30%=**8.608%/8.863%** [45176691464](https://github.com/lly8666/wbd-next/actions/runs/45176691464)。三者 `PASS_ACTUAL_WINDOWS_LINUX_NATIVE_*`、`PASS_BOTH_OWNED`，不是只读 workflow success。
+- 为关闭此缺口，`experiment/m0-game-normal-final-game4off-8dbda7d` 精确冻结已回滚无效 CPU 微优化的最终 Game 算法，Windows2025 signed Game4 OFF 0/5/30% 双端真实原生 [45181672649](https://github.com/lly8666/wbd-next/actions/runs/45181672649)、[45181676755](https://github.com/lly8666/wbd-next/actions/runs/45181676755)、[45181680575](https://github.com/lly8666/wbd-next/actions/runs/45181680575) 已触发，Linux 当前分支含 Game4 OFF 0/5/30% [45181693979](https://github.com/lly8666/wbd-next/actions/runs/45181693979)。另单独补齐此前 Windows Game2 fixed FEC 30% [工作流 m0-game-normal-game2-fec-win-once](https://github.com/lly8666/wbd-next/actions/workflows/m0-game-normal-game2-fec-win-once.yml)。这些新 job 结果尚未核实，不预写 PASS。
+- **CPU 结论已关闭该微优化**：同机 Game4-FEC30% 旧/新/新/旧 ABBA [45176167885](https://github.com/lly8666/wbd-next/actions/runs/45176167885)，全产品 CPU 旧/新客户端18.165/18.225秒，服务端18.710/18.825秒，`next_deadline()` 热循环改动没有证明有效，已经撤销；其他有效 Normal-v3 ACK/SACK 算法仍保留。
+
+
 ```feature-impact
 {"kind":"updated","reason":"Game2/4 OFF/fixed Linux and Windows outer opportunistic retransmission is being rewritten on the proven Normal v3 ACK-gap, immutable shadow and byte-budget algorithm; source branch draft, not qualified.","ids":["outer-opportunistic-repair"]}
 ```
