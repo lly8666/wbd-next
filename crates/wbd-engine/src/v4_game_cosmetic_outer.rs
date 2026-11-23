@@ -13,6 +13,8 @@ const SAMPLE_MASK:u64=1; // Normal-matching 1/2 eligibility, at most one live sh
 const AFTER_FIRST_NS:u64=250_000_000; // test-only old sample() fixture, NOT a production PTO
 const MIN_INTERVAL_NS:u64=80_000_000; // <=12.5 per second per lane
 const REORDER_GUARD_NS:u64=20_000_000; // Normal ACK reordering guard
+const INITIAL_ACK_STALL_NS:u64=1_000_000_000; // >=2 true 250ms RTT legs; no empty startup replay
+const COSMETIC_MAX_AGE_NS:u64=2_000_000_000; // never replay ancient original DATA
 const MAX_WIRE:usize=1536;
 
 #[derive(Clone)]
@@ -47,6 +49,8 @@ struct Lane{
     held:Option<(u64,usize)>,sent:u64,
     first_record_wire_bytes:u64,copied_record_wire_bytes:u64,
     key:Option<LaneKey>,epoch:[u8;16],ack:Option<OuterAckIndex>,
+    initial_ack:Option<u32>,last_ack:Option<u32>,dup_acks:u8,
+    ack_ever_progressed:bool,first_at_ns:u64,pending_at_ns:u64,
 }
 pub(crate) struct CosmeticOuter{
     lanes:Vec<Lane>,
@@ -56,7 +60,9 @@ impl CosmeticOuter{
         Self{lanes:(0..count).map(|_|Lane{
             seen:0,not_before:0,pending:None,held:None,sent:0,
             first_record_wire_bytes:0,copied_record_wire_bytes:0,
-            key:None,epoch:[0;16],ack:None
+            key:None,epoch:[0;16],ack:None,
+            initial_ack:None,last_ack:None,dup_acks:0,
+            ack_ever_progressed:false,first_at_ns:u64::MAX,pending_at_ns:0
         }).collect()}
     }
     /// Original Normal ACK interval index, bounded to 128 sampled entries
@@ -71,6 +77,7 @@ impl CosmeticOuter{
             result.lanes[i].key=Some(*key);
             result.lanes[i].epoch=epoch;
             result.lanes[i].ack=Some(OuterAckIndex::new(*key,epoch,seqs[i],128)?);
+            result.lanes[i].initial_ack=Some(seqs[i] as u32);
         }
         Ok(result)
     }
@@ -92,6 +99,8 @@ impl CosmeticOuter{
             copied_record_wire_bytes:l.copied_record_wire_bytes,
             key:Some(key),epoch,
             ack:Some(OuterAckIndex::new(key,epoch,seq,128)?),
+            initial_ack:Some(seq as u32),last_ack:None,dup_acks:0,
+            ack_ever_progressed:false,first_at_ns:u64::MAX,pending_at_ns:0,
         };
         Ok(())
     }
@@ -103,6 +112,7 @@ impl CosmeticOuter{
         let Some(ack)=l.ack.as_mut()else{
             return Err(OuterAckError::WrongScope)
         };
+        if l.first_at_ns==u64::MAX{l.first_at_ns=now_ns}
         l.seen=l.seen.wrapping_add(1);
         let sampled=l.seen&SAMPLE_MASK==0;
         if sampled{
@@ -117,6 +127,7 @@ impl CosmeticOuter{
             now_ns>=l.not_before&&!wire.is_empty()&&wire.len()<=MAX_WIRE{
             // Unlike the old 250ms healthy timer, a real ACK gap alone
             // may arm this frozen original ciphertext. No fake DATA PTO.
+            l.pending_at_ns=now_ns;
             l.pending=Some((u64::MAX,
                 CosmeticCopy{lane:index,pn,seq,wire:Arc::from(wire)}));
         }
@@ -145,12 +156,41 @@ impl CosmeticOuter{
         let exact=indexer.tracks_cumulative_head(ack32);
         let Ok(result)=indexer.on_feedback(key,l.epoch,ack32,&[],
             MonoNs(now_ns),REORDER_GUARD_NS)else{return false};
+        if l.last_ack==Some(ack32){
+            l.dup_acks=l.dup_acks.saturating_add(1);
+        }else{
+            l.last_ack=Some(ack32);
+            l.dup_acks=0;
+        }
+        if l.initial_ack.is_some_and(|initial|ack32!=initial){
+            l.ack_ever_progressed=true;
+        }
         let Some((due,copy))=l.pending.as_mut()else{return false};
-        if result.retired.contains(&RecordPn(copy.pn)){
+        // Original Game copy is a TCP-looking appearance, NOT a
+        // reliability recovery. A frozen record can be selected from the
+        // genuinely unacknowledged window after three independently
+        // AEAD-opened reverse DATA hints, even if the exact missing head
+        // was never sampled. Never replay a cumulatively ACKed record.
+        let offset=(copy.seq as u32).wrapping_sub(ack32) as i32;
+        let acked=offset<0||result.retired.contains(&RecordPn(copy.pn));
+        let age=now_ns.saturating_sub(l.pending_at_ns);
+        if acked||age>COSMETIC_MAX_AGE_NS{
             l.pending=None;
             return false
         }
-        if exact && result.gap_candidates.contains(&RecordPn(copy.pn)){
+        let later_actual_copy=indexer.highest_sent_end()>
+            copy.seq.saturating_add(copy.wire.len() as u64);
+        let true_stall=l.dup_acks>=3 && later_actual_copy &&
+            age>=REORDER_GUARD_NS &&
+            (l.ack_ever_progressed||
+                now_ns.saturating_sub(l.first_at_ns)>=INITIAL_ACK_STALL_NS);
+        let exact_gap=exact&&result.gap_candidates.contains(&RecordPn(copy.pn));
+        let next_bytes=l.copied_record_wire_bytes
+            .saturating_add(copy.wire.len() as u64);
+        // The original firstsend ledger is all actually copied original
+        // bytes. Forbid attempts that could exceed sustained R/F<=10%.
+        if (exact_gap||true_stall) &&
+            next_bytes.saturating_mul(10)<=l.first_record_wire_bytes{
             *due=(*due).min(now_ns);
             return true
         }
@@ -254,6 +294,37 @@ mod tests{
         assert!(!c.on_feedback(0,420,600_000_000));
         assert!(c.next_due().is_none());
         assert_eq!(c.sent(),0);
+    }
+    #[test]
+    fn r1_game_stalled_real_ack_allows_unacked_sample_not_exact_head(){
+        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:44,generation:7},
+            slot:1,generation:7};
+        let mut c=CosmeticOuter::with_normal_feedback(
+            &[key],&[100],[6;16]).unwrap();
+        for i in 1..=32u64{
+            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
+                i*1_000_000).unwrap();
+        }
+        assert!(c.next_due().is_none());
+        // The first actual original seq100 was not sampled; PN2 is
+        // unacknowledged but not the real hole. This is cosmetics ONLY.
+        for t in [80_000_000,90_000_000,100_000_000,110_000_000]{
+            assert!(!c.on_feedback(0,100,t)); // initial RTT quiet
+        }
+        assert!(c.take_due(990_000_000,&[true]).is_none());
+        // Four separate authentically opened later Game records carry
+        // one genuinely stalled cumulative ACK after the initial RTT.
+        assert!(c.on_feedback(0,100,1_010_000_000));
+        assert!(c.on_feedback(0,100,1_020_000_000)); // one due only
+        assert!(c.on_feedback(0,100,1_030_000_000));
+        assert_eq!(c.next_due(),Some(1_010_000_000));
+        let copy=c.take_due(1_040_000_000,&[true]).unwrap();
+        assert_eq!((copy.pn,copy.seq),(2,110));
+        assert_eq!(copy.frozen(key).bytes(),b"0123456789");
+        assert!(c.complete(0,2,true,1_040_000_000));
+        assert!(c.take_due(1_041_000_000,&[true]).is_none());
+        assert_eq!(c.sent(),1);
+        assert!(c.copied_record_wire_bytes()*10<=c.first_record_wire_bytes());
     }
     #[test]
     fn h812_normal_ack_targets_missing_original_not_later_sample(){

@@ -12,6 +12,11 @@
 - Linux Game原 1/16 抽样在真实30%高损的首个缺口落在未抽样位置时，后续即便重复ACK也无法准确提名。与 Normal 一致改1/2 有界抽样，按每lane原 M4 firstsend count 做一个位掩码判断；最多一个实际冻结shadow，不回头重加DATA PTO，旧M2每record控制不可复活。验证中不得承诺能强制达到历史9%下限。
 - 已调整来源锁定的 r1 单元，以第二个真实copy的 PN2/Seq 作为 exact ACK head；无损即使过1秒也不得补发。
 
+## 真实 5%/30% 双端失败后的机会式补救
+- 新Source `fd0c92a63ae54ac73d4bc71edd3b71469d28353f` 的真 Linux Game2 原 Client 与原 Server 在0%没有重传（PASS），5%/30%业务与netem/owned Stop均真实，但两端 `outer_data_retransmitted=0`，验收失败。原因是TCP累计ACK卡在首个**未抽样的真实丢包位置**，后续真实认证重复ACK无法提名任何候选；这正是把本来只为表演的外层重复发包当成真实修复，导致所有高损样式为零。
+- 新实现不伪造 ACK/SACK，也绝不无条件定时DATA重发。仅当原 Game AEAD 确证的逆向DATA持续携带同一累计ACK（3个真实重复样本），且该流曾有实际原始首发在候选后面，允许从**仍未被累计ACK确认**、不超过2s的可选冻结样本里按低频率复制一次，哪怕最早缺失记录未被抽样。初始ACK在至少1s以后才能认作稳定停滞，避免0%场景的250ms×2真实RTT误判。没有原数据复制就没有重传机会，累计确认/重排保护/字节预算照常卡死异常发包。
+- 复制不解码、不发FEC parity、不创新PN、不抵业务丢包；每lane 80ms限频，全量源实际字节F与已实发R共同判定R/F≤10%。补充 (r1_game_stalled_real_ack_allows_unacked_sample_not_exact_head) 单元。新源码Game 0/5/30 重新实际双向验收，旧Source失败不能冒充新PASS。
+
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game OFF/fixed6 removes unsolicited 250/810ms DATA PTO; genuine authenticated future triggers bounded duplicate cumulative ACK, only real peer gaps nominate frozen cipher, first-send F budget and CPU caps preserved; new-source native tests pending."}
 ```
