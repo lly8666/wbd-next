@@ -942,8 +942,8 @@ impl GameKernelOwner{
                         (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
                     };
                     let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
-                    let (len,seq32,ack32)=match raw.recv_one_with_ack_into(
-                        generation,&mut wire,tuple,peer_persona
+                    let (len,seq32,ack32)=match raw.recv_one_with_ack_control_into(
+                        generation,&mut wire,tuple,peer_persona,outer_repair_enabled
                     ){
                         Ok(data)=>data,
                         Err(wbd_platform::linux_raw_carrier::RawTxError::Kernel(110))=>{
@@ -970,6 +970,17 @@ impl GameKernelOwner{
                         }
                     };
                     if rx_stop.load(Ordering::Acquire){break}
+                    // Pure carrier ACK matches Normal's optional outer
+                    // metadata: no AEAD open, delivery, Health or FEC credit.
+                    if len==0{
+                        if outer_repair_enabled{
+                            let last=rx_hints[i].load(Ordering::Relaxed);
+                            rx_hints[i].store(
+                                ((last>>32).wrapping_add(1)<<32)|u64::from(ack32),
+                                Ordering::Release);
+                        }
+                        continue
+                    }
                     raw_seen.fetch_add(1,Ordering::Relaxed);
                     sampled_sequence=sampled_sequence.wrapping_add(1);
                     // The two real RX preparation paths each own exactly one
@@ -981,9 +992,9 @@ impl GameKernelOwner{
                     // with no shared GameReceiveOwner lock and no extra copy.
                     let opened=lane_opener.open(&mut wire[..len]);
                     if outer_repair_enabled && matches!(&opened,Ok(Some(_))){
-                        // TCP appearance is not AEAD-authenticated by
-                        // itself: only actual original Game opens may
-                        // nominate peer ACK gaps. This does not award
+                        // AEAD-opened DATA may also carry Normal-style outer
+                        // ACK hints. Pure ACKs are handled above and cannot
+                        // award authenticated activity. Neither path awards
                         // business, Health, FEC or receipt credit.
                         let last=rx_hints[i].load(Ordering::Relaxed);
                         rx_hints[i].store(
