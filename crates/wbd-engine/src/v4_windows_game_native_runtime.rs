@@ -87,7 +87,7 @@ struct GameCounters{
     rx:AtomicU64,after:AtomicU64,rejected:AtomicU64,
     ack:[AtomicU32;4],ack_sent:[AtomicU32;4],tx_seq:[AtomicU32;4],
     authenticated_future:[AtomicU32;4],
-    sack:[AtomicU64;4],
+    sack:[[AtomicU64;4];4],
     first_due_entry:AtomicBool,first_send_failure:AtomicBool,
 }
 impl GameCounters{
@@ -99,7 +99,7 @@ impl GameCounters{
             ack_sent:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.rx_seq))),
             tx_seq:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.tx_seq))),
             authenticated_future:std::array::from_fn(|_|AtomicU32::new(0)),
-            sack:std::array::from_fn(|_|AtomicU64::new(0)),
+            sack:std::array::from_fn(|_|std::array::from_fn(|_|AtomicU64::new(0))),
             first_due_entry:AtomicBool::new(false),first_send_failure:AtomicBool::new(false),
         }
     }
@@ -298,12 +298,18 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
         if !presentation_game_ack_due(now,last_ns[i],ack,
             c.ack_sent[i].load(Ordering::Acquire),
             future!=future_sent[i]){continue}
-        let packed=c.sack[i].load(Ordering::Acquire);
-        let positive=(packed!=0).then_some(SackRange32{
-            start:(packed>>32) as u32,end:packed as u32,
-        });
-        let slot=[positive.unwrap_or(SackRange32{start:0,end:0})];
-        let sacks=if positive.is_some(){&slot[..]}else{&[]};
+        let mut slot=[SackRange32{start:0,end:0};4];
+        let mut count=0;
+        for field in &c.sack[i]{
+            let packed=field.load(Ordering::Acquire);
+            if packed!=0{
+                slot[count]=SackRange32{
+                    start:(packed>>32) as u32,end:packed as u32,
+                };
+                count+=1;
+            }
+        }
+        let sacks=&slot[..count];
         let mut scratch=[0u8;FRAME_CAP];
         let frame=presentation_ack_frame(Ipv4Tuple{
             src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
@@ -684,9 +690,11 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     let _=ledgers[lane].verified(seq,wire.len());
     let _=ledgers[lane].abandon_stalled(now_ms.saturating_mul(1_000_000));
     let latest_ack=ledgers[lane].ack();
-    let sack=ledgers[lane].latest_sack();
-    c.sack[lane].store(sack.map_or(0,|s|
-        (u64::from(s.start)<<32)|u64::from(s.end)),Ordering::Release);
+    let sacks=ledgers[lane].sacks4();
+    for (field,positive) in c.sack[lane].iter().zip(sacks){
+        field.store(positive.map_or(0,|s|
+            (u64::from(s.start)<<32)|u64::from(s.end)),Ordering::Release);
+    }
     c.ack[lane].store(latest_ack,Ordering::Release);
     // Rewrite all DNS frames before any kernel Wintun write or deferred
     // copy: a full ring cannot trigger a second DNS transaction rewrite.
@@ -955,14 +963,17 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 // hint. It never creates FEC recovery, Health or delivered.
                 if let Ok(hint)=wbd_platform::rx_ipv4_tcp::parse_ack_packet(
                     ipv4,trusted,true){
-                    let newest=hint.sacks().last().copied();
-                    let sack=[wbd_recovery::outer_ack::SackRange32{
-                        start:newest.map_or(0,|v|v.start),
-                        end:newest.map_or(0,|v|v.end),
-                    }];
-                    let ranges=if newest.is_some(){&sack[..]}else{&[]};
+                    let mut sack=[wbd_recovery::outer_ack::SackRange32{
+                        start:0,end:0
+                    };4];
+                    let count=hint.sacks().len().min(4);
+                    for (dst,src) in sack.iter_mut().zip(hint.sacks()){
+                        *dst=wbd_recovery::outer_ack::SackRange32{
+                            start:src.start,end:src.end,
+                        };
+                    }
                     let changed=match outer.lock(){
-                        Ok(mut m)=>m.on_hint(i,hint.ack32,ranges),
+                        Ok(mut m)=>m.on_hint(i,hint.ack32,&sack[..count]),
                         Err(_)=>return BAD_STAGE,
                     };
                     if changed{let _=tx_wake.wake();}
