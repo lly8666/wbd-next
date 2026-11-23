@@ -21,3 +21,11 @@ B58初版 SOURCE `0d9369380e36bb72affae74b46d8e87251f302ea` 的 [Dual64 #4520797
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B58a修订旧B24/B25 Host 测试的8UID/16包上限为B58生产16UID/32包边界，保留原root-arm64-app失败Action；不改网络/Root生产代码。"}
 ```
+
+## B58b｜治理登记修正（不改变生产或Host算法）
+
+B58a SOURCE `452302f11c0a90c6aadcb6403d1edb2041272e1a` [Feature catalog #45209186318](https://github.com/lly8666/wbd-next/actions/runs/45209186318) **FAIL**：devlog存在更新声明但本次commit未实际修改`android-root-native-client.json`。此处仅把功能卡短summary更新为B58b，并在本记录确认该失败；原B58a的Java Host边界16/32测试、Go rootjournal与Rust M4完全不变。B58a产品 [Dual64 #45209186326](https://github.com/lly8666/wbd-next/actions/runs/45209186326) 独立保留，B58b以它自己的SOURCE检验签名APK与治理，不将构建或真实设备未测范围提升。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B58b补B58a实际触发的Feature catalog卡片变更要求；仅更新短summary与失败收据，不涉及任何生产网络、TLS或性能动作。"}
+```
