@@ -113,7 +113,6 @@ final class RootConnectionSettings {
            !oneOf(padding,"off","tls","flows")||
            !oneOf(mode,"normal","fec-fixed","fec-auto","game2")||
            (!"normal".equals(mode)&&!"off".equals(padding))||
-            ("game2".equals(mode)&&(physicalDNS||cnSplitDNS))||
            (tunnelDNS?1:0)+(physicalDNS?1:0)+(cnSplitDNS?1:0)>1||
            selected.size()>SelectedAppGroup.MAX_PACKAGES||
            (allApps&&!selected.isEmpty())||

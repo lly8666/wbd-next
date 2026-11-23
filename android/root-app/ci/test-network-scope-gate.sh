@@ -85,9 +85,10 @@ settings=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionSetting
 assert '"game2".equals(fecModes.getSelectedItem().toString())' in app
 assert 'request.putExtra("fec_mode",fecMode);' in app
 assert '!"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)' in service
-assert '"game2".equals(fecMode)&&(physicalDNS||cnSplitDNS)' in service
+assert '!"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)' in service
+assert 'if("game2".equals(fecMode)&&(physicalDNS||cnSplitDNS))' not in service
 assert 'pair(args,"--mode",fecMode);' in argv
-assert '"game2".equals(fecMode)&&(physicalDNS||cnSplitDNS)' in argv
+assert 'if("game2".equals(fecMode)&&(physicalDNS||cnSplitDNS))' not in argv
 assert '!oneOf(mode,"normal","fec-fixed","fec-auto","game2")' in settings
 assert bridge.index('C.wbd_m0_embedded_go_game_group_stop(') < bridge.index(
     'owner.StopAndReleaseOriginalOwner()')
@@ -110,6 +111,34 @@ assert 'HealthPolicy::new(u64::from(health_seconds)*1_000_000_000' in m4
 assert 'OriginalM4Counters()' in g
 assert 'V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client' in g
 assert 'game2Counters(String line)' in fec_status
+# B44 original selected Network physical UDP53 and pinned CN8503 cold
+# classifier share this same Game2 single-TUN M4; no extra Go DATA path.
+platform=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+dns_router=Path("crates/wbd-engine/src/v4_android_dns_route.rs").read_text()
+assert 'PhysicalDNS:c.androidPhysicalDNS' in g
+assert 'PhysicalDNSUpstream:c.androidPhysicalDNSUpstream' in g
+assert 'CN8503Raw:cn8503Raw' in g
+assert 'c.androidCNSnapshot.PinnedWire()' in g
+assert 'PhysicalDNSUpstream netip.Addr' in bridge
+assert 'CN8503Raw []byte' in bridge
+assert 'C.size_t(len(p.cfg.CN8503Raw))' in bridge
+assert 'physical_dns:u32,upstream:*const u8' in rust_group
+assert 'CNDnsMatcher::from_go_cold(cold)' in rust_group
+assert 'physical_dns==1,physical_upstream,cn' in rust_group
+assert 'AndroidBoundPhysicalDnsUdp::open(' in m4
+assert 'PhysicalDnsUdpFlows::default()' in m4
+assert 'let route=choose(&source[..n]' in m4
+assert 'physical_flows.prepare(&source[..n]' in m4
+assert 'physical_flows.receive(' in m4
+assert 'tx_tun.write_scoped_physical_dns_ip(' in m4
+assert 'tx_wake.wait_tun_and_physical_dns(' in m4
+assert 'socket.stop_until(' in m4
+assert 'DnsRoute::TCP53OriginalTunnel' in dns_router
+assert 'pub struct AndroidBoundPhysicalDnsUdp' in platform
+assert 'original Android TUN/physical DNS poll invalid' in platform
+assert 'game2Counters(String line)' in fec_status
+assert '"physicaltx=","physicalrx=","physicalerr="' in fec_status
+print("ANDROID_B44_GAME2_ORIGINAL_PHYSICAL_CN8503_SINGLE_TUN_DNS_SOURCE_PASS")
 print("ANDROID_B43_GAME2_ORIGINAL_M4_TUNNEL_DNS_HEALTH_COUNTERS_SOURCE_PASS")
 print("ANDROID_B41_REAL_GO_TLS_GAME2_OFF_SAME_RUST_M4_ROOT_UID_AND_OWNED_STOP_SOURCE_PASS")
 PY
@@ -615,7 +644,7 @@ assert 'intent.getIntExtra("fec_profile",1)' in s
 assert 'pair(args,"--mode",fecMode);' in argv
 assert 'pair(args,"--fec-profile",Integer.toString(fecProfile))' in argv
 assert '(cfg.gameLanes!=0&&cfg.gameLanes!=2)||cfg.mixedModes||' in cold
-assert 'cfg.gameLanes==2&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0||' in cold
+assert 'cfg.gameLanes==2&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0)' in cold
 assert 'C.wbd_m0_embedded_go_public_fec2_mature_quality(' in go_bridge
 assert 'return b.verifyOriginalAndroidAutoPending()' in go_bridge
 assert 'C.wbd_m0_embedded_go_fixed_pending_readback(' in fec_go

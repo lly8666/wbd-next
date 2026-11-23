@@ -287,8 +287,6 @@ public final class RootClientService extends Service {
             boolean tunnelDNS=intent.getBooleanExtra("tunnel_dns",false);
             boolean physicalDNS=intent.getBooleanExtra("physical_dns",false);
             boolean cnSplitDNS=intent.getBooleanExtra("cn_dns_split",false);
-            if("game2".equals(fecMode)&&(physicalDNS||cnSplitDNS))
-                throw new IllegalArgumentException("Game2/off physical/CN App DNS unavailable");
             if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&

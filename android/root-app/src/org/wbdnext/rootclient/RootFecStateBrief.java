@@ -11,7 +11,8 @@ final class RootFecStateBrief {
     private static final String MARKER="V4_PUBLIC_ANDROID_FEC_STATE role=client ";
     private static final String GAME_MARKER="V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client ";
     private static final String[] GAME_FIELDS={
-        "rawtx=","rawrx=","tun=","rejected=","dnstx=","dnsrx="
+        "rawtx=","rawrx=","tun=","rejected=","dnstx=","dnsrx=",
+        "physicaltx=","physicalrx=","physicalerr="
     };
     private static String game2Counters(String line){
         if(!OriginalGoMilestones.matches(line,
@@ -19,8 +20,10 @@ final class RootFecStateBrief {
         int start=line.indexOf(GAME_MARKER);
         if(start<0)return null;
         String[] values=line.substring(start+GAME_MARKER.length()).split(" ",-1);
-        if(values.length!=GAME_FIELDS.length)return null;
-        long[] counts=new long[6];
+        // Keep B43 six-counter receipts readable alongside B44 nine-counter
+        // physical/CN DNS receipts from the same original M4 owner.
+        if(values.length!=6&&values.length!=GAME_FIELDS.length)return null;
+        long[] counts=new long[values.length];
         try{
             for(int i=0;i<counts.length;i++){
                 if(!values[i].startsWith(GAME_FIELDS[i]))return null;
@@ -31,7 +34,10 @@ final class RootFecStateBrief {
         return "Game2/off 原Rust M4：RAW发送="+counts[0]+
             "，RAW接收="+counts[1]+"，反向TUN="+counts[2]+
             "，拒绝="+counts[3]+"；隧道DNS请求="+counts[4]+
-            "，回包="+counts[5]+"（内核计数，非应用E2E）";
+            "，回包="+counts[5]+
+            (counts.length==9?"；物理DNS发送="+counts[6]+
+                "，回包="+counts[7]+"，错误="+counts[8]:"")+
+            "（内核计数，非应用E2E）";
     }
     private RootFecStateBrief(){}
 

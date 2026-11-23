@@ -35,9 +35,8 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
     tun *ownedTun,connected *bool,
 )(retErr error){
     if c.gameLanes!=2||c.gameFecEnabled||c.startupPaddingMode!=0||
-       c.rotationInterval!=0||c.androidPhysicalDNS||
-       c.androidCNDNSSplit||!c.autoIP||c.androidNetworkHandle==0{
-        return fmt.Errorf("Android original Game2/off requires FEC/padding/physical App DNS/rotation off")
+       c.rotationInterval!=0||!c.autoIP||c.androidNetworkHandle==0{
+        return fmt.Errorf("Android original Game2/off requires FEC/padding/rotation off")
     }
     if os.Geteuid()!=0{return fmt.Errorf("Android Game2 requires original root owned kernel")}
     iface,e:=net.InterfaceByName(c.rawInterface)
@@ -146,6 +145,13 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
     log.Print("V4_PUBLIC_ANDROID_GAME2_COLD_SOURCE role=client lanes=2 physical_network_bound=1 fake_tcp=original_go")
     // Real original-Go protected TLS on each of the TWO independent lanes,
     // then exact Rust B39 grouped cold + B40 M4 activation.
+    var cn8503Raw []byte
+    if c.androidCNDNSSplit{
+        if c.androidCNSnapshot==nil{
+            return fmt.Errorf("original Game2 CN8503 cold source absent")
+        }
+        cn8503Raw=c.androidCNSnapshot.PinnedWire()
+    }
     native,e:=realityfront.NewV4AndroidGame2Product(
         realityfront.V4AndroidGame2Config{
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
@@ -156,6 +162,9 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
             ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
             TunnelDNS:c.androidTunnelDNS,
             HealthSeconds:c.androidNativeHealthSeconds,
+            PhysicalDNS:c.androidPhysicalDNS,
+            PhysicalDNSUpstream:c.androidPhysicalDNSUpstream,
+            CN8503Raw:cn8503Raw,
         })
     if e!=nil{return e}
     var undoRoute func()error
@@ -220,9 +229,10 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
             counters,e:=native.OriginalM4Counters()
             if e!=nil{return e}
             // Existing one-second status ticker; exact Rust native counters.
-            log.Printf("V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d",
+            log.Printf("V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d physicaltx=%d physicalrx=%d physicalerr=%d",
                 counters.RawCopied,counters.RawReceived,counters.TunDelivered,
-                counters.Rejected,counters.TunnelDnsQueries,counters.TunnelDnsReplies)
+                counters.Rejected,counters.TunnelDnsQueries,counters.TunnelDnsReplies,
+                counters.PhysicalDnsQueries,counters.PhysicalDnsReplies,counters.PhysicalDnsErrors)
         }
     }
 }

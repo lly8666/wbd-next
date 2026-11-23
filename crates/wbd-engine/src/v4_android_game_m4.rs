@@ -9,7 +9,7 @@ use std::sync::{Arc,Mutex,atomic::{AtomicBool,AtomicU32,AtomicU64,Ordering}};
 use std::thread::{self,JoinHandle};
 use std::time::{Duration,Instant};
 use wbd_types::{LaneKey,TunnelKey,MonoNs};
-use wbd_platform::android_root_io::{AndroidOwnedTun,AndroidWorkerWake};
+use wbd_platform::android_root_io::{AndroidOwnedTun,AndroidWorkerWake,AndroidBoundPhysicalDnsUdp};
 use wbd_platform::ipv4_tcp::{self,Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::r1::StopResult;
 use crate::v4_game_lane::{GameAdapter,GameLaneOpener,GameReceiveOwner};
@@ -20,6 +20,11 @@ use super::{AndroidPhysicalScope,AndroidGameRawLane};
 use crate::v4_android_game_cold::OriginalGameColdLane;
 use crate::v4_android_dns_udp_flow::{TunnelDnsUdpFlows,MAX_DNS_IPV4_PACKET};
 use crate::v4_android_dns_ingress::{observe_ipv4_dns53,Dns53Observation};
+use crate::v4_android_dns_physical_flow::{
+    PhysicalDnsUdpFlows,MAX_DNS_WIRE,MAX_DNS_REPLY_IPV4
+};
+use crate::v4_android_cn_dns::CNDnsMatcher;
+use crate::v4_android_dns_route::{choose,DnsRoute};
 
 pub(super) struct AndroidGameWorkers{
     stop:Arc<AtomicBool>,started:Arc<AtomicBool>,
@@ -29,6 +34,9 @@ pub(super) struct AndroidGameWorkers{
     delivered:Arc<AtomicU64>,rejected:Arc<AtomicU64>,
     dns_queries:Arc<AtomicU64>,dns_replies:Arc<AtomicU64>,
     dns_flows:Option<Arc<Mutex<TunnelDnsUdpFlows>>>,
+    physical_dns:Option<Arc<AndroidBoundPhysicalDnsUdp>>,
+    physical_tx:Arc<AtomicU64>,physical_rx:Arc<AtomicU64>,
+    physical_errors:Arc<AtomicU64>,
 }
 impl AndroidGameWorkers{
     pub(super) fn start(
@@ -36,12 +44,15 @@ impl AndroidGameWorkers{
         lanes:&[OriginalGameColdLane],raw:&[AndroidGameRawLane],
         lease:[u8;4],fd:OwnedFd,tun_name:&str,generation:u32,
         tunnel_dns:bool,health_seconds:u32,
+        physical_dns:bool,upstream:[u8;4],cn:Option<CNDnsMatcher>,
     )->Result<Self,()>{
         // First product data worker is Game2/OFF only. Game4 stagger, FEC,
         // Make-Before-Break and App/Go cold launch remain separately gated.
         if generation==0||lanes.len()!=2||raw.len()!=2||
             scope.mtu<576||tun_name.is_empty()||
-            !matches!(health_seconds,15|30){return Err(())}
+            !matches!(health_seconds,15|30)||
+            (tunnel_dns&&physical_dns)||
+            (cn.is_some()&&!physical_dns){return Err(())}
         let tun=Arc::new(AndroidOwnedTun::adopt(fd,tun_name,generation)
             .map_err(|_|())?);
         let (rx_owner,inner_mtu,origin,evidence)={
@@ -51,6 +62,15 @@ impl AndroidGameWorkers{
             (game.receiver_handle(),game.inner_mtu(),origin,evidence)
         };
         if !(20..=2000).contains(&inner_mtu){return Err(())}
+        // B44: exactly the Normal M4 physically bound UDP53 socket, with
+        // the original selected Network and first authenticated Go lane.
+        if lanes[0].flow.client_ip!=lanes[1].flow.client_ip{return Err(())}
+        let physical_socket=if physical_dns{
+            Some(Arc::new(AndroidBoundPhysicalDnsUdp::open(
+                scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
+                lanes[0].flow.client_ip,upstream,generation
+            ).map_err(|_|())?))
+        }else{None};
         // Move (never copy) exactly one M3 replay opener to each native
         // raw worker before either TUN or RAW traffic can begin.
         let mut openers=Vec::with_capacity(2);
@@ -72,9 +92,13 @@ impl AndroidGameWorkers{
         let rejected=Arc::new(AtomicU64::new(0));
         // Reuse Normal's bounded DNS transaction map with the original
         // single Game2 TUN reader and two authenticated RAW receivers.
-        let dns_flows=tunnel_dns.then(||Arc::new(Mutex::new(TunnelDnsUdpFlows::default())));
+        let dns_flows=(tunnel_dns||cn.is_some())
+            .then(||Arc::new(Mutex::new(TunnelDnsUdpFlows::default())));
         let dns_queries=Arc::new(AtomicU64::new(0));
         let dns_replies=Arc::new(AtomicU64::new(0));
+        let physical_tx=Arc::new(AtomicU64::new(0));
+        let physical_rx=Arc::new(AtomicU64::new(0));
+        let physical_errors=Arc::new(AtomicU64::new(0));
         let health_policy=HealthPolicy::new(u64::from(health_seconds)*1_000_000_000,
             HealthPolicy::DEFAULT_DEAD_NS,None).ok_or(())?;
         let ack=Arc::new(lanes.iter().map(|l|AtomicU32::new(l.rx_seq))
@@ -96,12 +120,23 @@ impl AndroidGameWorkers{
         let tx_rejected=Arc::clone(&rejected);
         let tx_dns=dns_flows.as_ref().map(Arc::clone);
         let tx_dns_queries=Arc::clone(&dns_queries);
+        let tx_physical=physical_socket.as_ref().map(Arc::clone);
+        let tx_physical_tx=Arc::clone(&physical_tx);
+        let tx_physical_rx=Arc::clone(&physical_rx);
+        let tx_physical_errors=Arc::clone(&physical_errors);
+        let tx_cn=cn;
+        let tx_dns_capture=tunnel_dns||physical_dns;
         let tx=thread::Builder::new().name("wbd-android-game2-tx".into())
             .spawn(move||{
                 let mut source=[0u8;65_535];
                 let mut outer=[[0u8;2048];2];
                 let mut health_wire=[0u8;2048];
                 let mut health_outer=[0u8;2048];
+                // Original M4 owns both the app TUN and selected-Network
+                // physical DNS socket; no extra socket reader or worker.
+                let mut physical_flows=PhysicalDnsUdpFlows::default();
+                let mut physical_wire=[0u8;MAX_DNS_WIRE];
+                let mut physical_packet=[0u8;MAX_DNS_REPLY_IPV4];
                 let mut offsets=tx_begin;
                 let mut health=HealthClock::new(
                     health_policy,
@@ -164,13 +199,39 @@ impl AndroidGameWorkers{
                     if let Ok(n)=read{
                         if n>0&&n<=inner_mtu &&
                             admitted_client_source(&source[..n],Some(lease)){
-                            // B43 original DNS53 query rewrite before
-                            // the exact same GameAdapter M1 AEAD/PN seal.
+                            // B44 shares Normal's exact DNS classification:
+                            // all physical, CN physical/non-CN tunnel, or
+                            // all tunnel. TCP/53 stays original Game M1/M3.
+                            let observed=if tx_dns_capture{
+                                observe_ipv4_dns53(&source[..n],n)
+                            }else{Dns53Observation::NotDns};
+                            let route=choose(&source[..n],observed,
+                                tx_dns_capture,physical_dns,tx_cn.as_ref());
+                            if matches!(route,DnsRoute::PhysicalUDP){
+                                if let Some(socket)=tx_physical.as_ref(){
+                                    match physical_flows.prepare(&source[..n],
+                                        &mut physical_wire,now.0/1_000_000){
+                                        Ok((len,id,new_slot))=>{
+                                            if socket.send_question(
+                                                generation,&physical_wire[..len]).is_ok(){
+                                                tx_physical_tx.fetch_add(1,Ordering::Relaxed);
+                                            }else{
+                                                if new_slot{physical_flows.cancel(id);}
+                                                tx_physical_errors.fetch_add(1,Ordering::Relaxed);
+                                            }
+                                        },
+                                        Err(_)=>{
+                                            tx_physical_errors.fetch_add(1,Ordering::Relaxed);
+                                        }
+                                    }
+                                }else{tx_physical_errors.fetch_add(1,Ordering::Relaxed);}
+                                continue
+                            }
+                            // Same 64-slot original Normal TunnelDnsUdpFlows,
+                            // before the genuine GameAdapter seal.
                             let mut dns_rejected=false;
-                            if let Some(ref flows)=tx_dns{
-                                if n>=28&&source[9]==17&&
-                                   matches!(observe_ipv4_dns53(&source[..n],n),
-                                       Dns53Observation::UdpQuestion{..}){
+                            if matches!(route,DnsRoute::TunnelUDP){
+                                if let Some(ref flows)=tx_dns{
                                     match flows.lock(){
                                         Ok(mut table)=>{
                                             if table.rewrite_query(&mut source[..n],
@@ -180,7 +241,7 @@ impl AndroidGameWorkers{
                                         },
                                         Err(_)=>break,
                                     }
-                                }
+                                }else{dns_rejected=true;}
                             }
                             if dns_rejected{
                                 tx_rejected.fetch_add(1,Ordering::Relaxed);
@@ -221,13 +282,56 @@ impl AndroidGameWorkers{
                         tx_stop.store(true,Ordering::Release);
                         break
                     }
-                    // No 1ms data poll, no Go goroutine, no per-DATA clock
-                    // owner. The same eventfd wakes Stop and TUN readiness.
-                    if tx_wake.wait_readable(tx_tun.readiness_fd(),250).is_err(){
-                        tx_stop.store(true,Ordering::Release);
-                        break
+                    // The existing eventfd waits on TUN and, only when
+                    // enabled, the actual scoped physical DNS UDP socket.
+                    let ready=if let Some(socket)=tx_physical.as_ref(){
+                        tx_wake.wait_tun_and_physical_dns(
+                            tx_tun.readiness_fd(),socket.readiness_fd(),250)
+                    }else{
+                        tx_wake.wait_readable(tx_tun.readiness_fd(),250)
+                            .map(|v|(v,false))
+                    };
+                    let (_,dns_ready)=match ready{
+                        Ok(v)=>v,
+                        Err(_)=>{
+                            tx_rejected.fetch_add(1,Ordering::Relaxed);
+                            tx_stop.store(true,Ordering::Release);
+                            break
+                        }
+                    };
+                    if dns_ready{
+                        if let Some(socket)=tx_physical.as_ref(){
+                            for _ in 0..8{
+                                let n=match socket.read_answer(
+                                    generation,&mut physical_wire){
+                                    Ok(n)=>n,
+                                    Err(err) if err.kind()==io::ErrorKind::WouldBlock=>break,
+                                    Err(_)=>{
+                                        tx_physical_errors.fetch_add(1,Ordering::Relaxed);
+                                        tx_stop.store(true,Ordering::Release);
+                                        break
+                                    }
+                                };
+                                let result=physical_flows.receive(
+                                    &physical_wire[..n],&mut physical_packet,
+                                    origin.elapsed().as_millis() as u64);
+                                match result{
+                                    Ok(len) if physical_packet[16..20]==lease&&
+                                        tx_tun.write_scoped_physical_dns_ip(
+                                            generation,&physical_packet[..len]
+                                        ).ok()==Some(len)=>{
+                                        tx_physical_rx.fetch_add(1,Ordering::Relaxed);
+                                    },
+                                    _=>{
+                                        tx_physical_errors.fetch_add(1,Ordering::Relaxed);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
+                physical_flows.stop();
+                if let Some(socket)=tx_physical.as_ref(){socket.begin_stop();}
             }).map_err(|_|())?;
         let mut threads=vec![tx];
         let mut openers=openers.into_iter();
@@ -385,15 +489,19 @@ impl AndroidGameWorkers{
         }
         started.store(true,Ordering::Release);
         Ok(Self{stop,started,wakes,threads,tun,
-            raw_tx,raw_rx,delivered,rejected,dns_queries,dns_replies,dns_flows})
+            raw_tx,raw_rx,delivered,rejected,dns_queries,dns_replies,dns_flows,
+            physical_dns:physical_socket,physical_tx,physical_rx,physical_errors})
     }
-    pub(super) fn counters(&self)->[u64;6]{
+    pub(super) fn counters(&self)->[u64;9]{
         [self.raw_tx.load(Ordering::Relaxed),
          self.raw_rx.load(Ordering::Relaxed),
          self.delivered.load(Ordering::Relaxed),
          self.rejected.load(Ordering::Relaxed),
          self.dns_queries.load(Ordering::Relaxed),
-         self.dns_replies.load(Ordering::Relaxed)]
+         self.dns_replies.load(Ordering::Relaxed),
+         self.physical_tx.load(Ordering::Relaxed),
+         self.physical_rx.load(Ordering::Relaxed),
+         self.physical_errors.load(Ordering::Relaxed)]
     }
     pub(super) fn is_live(&self)->bool{
         self.started.load(Ordering::Acquire)&&
@@ -411,6 +519,12 @@ impl AndroidGameWorkers{
         // generation's DNS mapping, without system resolver changes.
         if let Some(flows)=self.dns_flows.take(){
             flows.lock().map_err(|_|())?.stop();
+        }
+        // The same worker's physical DNS socket is retired only after
+        // its real kernel borrows joined, before the borrowed TUN owner.
+        if let Some(socket)=self.physical_dns.take(){
+            if socket.stop_until(Instant::now()+Duration::from_secs(3))
+                !=StopResult::Drained{return Err(())}
         }
         self.tun.begin_stop();
         let result=self.tun.stop_until(Instant::now()+Duration::from_secs(3));

@@ -43,6 +43,14 @@ public final class RootFecStateBriefTest {
         contains(game,"RAW发送=16");
         contains(game,"隧道DNS请求=3");
         contains(game,"回包=2");
+        String physical=RootFecStateBrief.fromGoLine(gm+
+            "rawtx=16 rawrx=18 tun=12 rejected=1 dnstx=3 dnsrx=2 "+
+            "physicaltx=7 physicalrx=6 physicalerr=1");
+        contains(physical,"物理DNS发送=7");
+        contains(physical,"回包=6");
+        contains(physical,"错误=1");
+        refused(gm+"rawtx=16 rawrx=18 tun=12 rejected=1 dnstx=3 dnsrx=2 "+
+            "physicaltx=7 physicalrx=-6 physicalerr=1");
         refused(gm+"rawtx=1 rawrx=2 tun=3 rejected=0 dnstx=1 dnsrx=1 junk=x");
         refused(gm+"rawtx=-1 rawrx=2 tun=3 rejected=0 dnstx=1 dnsrx=1");
         refused(null);

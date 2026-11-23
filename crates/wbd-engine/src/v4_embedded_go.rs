@@ -3844,9 +3844,26 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_raw_state(
 pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     group:u64,fd:i32,tun_name:*const u8,tun_len:usize,
     tunnel_dns:u32,health_seconds:u32,
+    physical_dns:u32,upstream:*const u8,
+    cn_raw:*const u8,cn_len:usize,
 )->i32{
     if fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
-       tunnel_dns>1||!matches!(health_seconds,15|30){return INVALID}
+       tunnel_dns>1||physical_dns>1||upstream.is_null()||
+       !matches!(health_seconds,15|30)||cn_len>1024*1024||
+       (cn_len>0&&cn_raw.is_null())||
+       (cn_len>0&&physical_dns==0)||
+       (physical_dns==1&&tunnel_dns==1){return INVALID}
+    // Reuse original pinned CN8503 cold matcher; no Go packet callbacks.
+    let cn=if cn_len>0{
+        let cold=unsafe{std::slice::from_raw_parts(cn_raw,cn_len)};
+        match crate::v4_android_cn_dns::CNDnsMatcher::from_go_cold(cold){
+            Ok(m)=>Some(m),Err(_)=>return INVALID
+        }
+    }else{None};
+    let mut physical_upstream=[0u8;4];
+    physical_upstream.copy_from_slice(unsafe{
+        std::slice::from_raw_parts(upstream,4)
+    });
     let Ok(name)=std::str::from_utf8(unsafe{
         std::slice::from_raw_parts(tun_name,tun_len)
     })else{return INVALID};
@@ -3861,7 +3878,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
     let workers=android_game_m4::AndroidGameWorkers::start(
         Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
-        lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds
+        lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds,
+        physical_dns==1,physical_upstream,cn
     );
     let Ok(workers)=workers else{return BAD_STAGE};
     g.android_workers=Some(workers);
@@ -3875,7 +3893,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
 pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_counters(
     group:u64,out:*mut u64,len:usize,
 )->i32{
-    if out.is_null()||len!=6{return INVALID}
+    if out.is_null()||len!=9{return INVALID}
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
     if g.stopped||g.stopping{return BAD_STAGE}

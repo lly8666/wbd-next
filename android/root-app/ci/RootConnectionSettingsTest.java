@@ -58,12 +58,24 @@ public final class RootConnectionSettingsTest {
             1460,500,"chacha20-poly1305","off","game2",1,
             false,true,false,false,true,new TreeMap<String,Integer>());
         check(read(stored(gameTunnel)).tunnelDNS,"Game2 tunnel DNS preset persists");
+        // B44: same Normal physical/CN UDP53 branches now enter Game2 M4.
+        RootConnectionSettings gamePhysical=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","game2",1,
+            false,false,true,false,true,new TreeMap<String,Integer>());
+        check(read(stored(gamePhysical)).physicalDNS,"Game2 physical DNS preset");
+        RootConnectionSettings gameCN=new RootConnectionSettings(
+            "wbd.example.test","tls.example.test","example_user",443,
+            1460,500,"chacha20-poly1305","off","game2",1,
+            false,false,false,true,true,new TreeMap<String,Integer>());
+        check(read(stored(gameCN)).cnSplitDNS,"Game2 CN8503 DNS preset");
         boolean gameDNSRejected=false;
         try{new RootConnectionSettings("wbd.example.test","tls.example.test",
             "example_user",443,1460,500,"chacha20-poly1305","off","game2",1,
-            false,false,true,false,true,new TreeMap<String,Integer>());}
+            false,true,true,false,true,new TreeMap<String,Integer>());}
         catch(IllegalArgumentException expected){gameDNSRejected=true;}
-        check(gameDNSRejected,"Game2 App DNS currently has no original M4 owner");
+        check(gameDNSRejected,"Game2 still permits only one App DNS mode");
+        System.out.println("ANDROID_B44_GAME2_ALL_THREE_ORIGINAL_APP_DNS_PRESET_HOST_PASS");
         System.out.println("ANDROID_B42_GAME2_OFF_ORIGINAL_PRESET_HOST_PASS");
         RootConnectionSettings fixed=read(stored(sample(true,"fec-fixed")));
         check(fixed!=null&&fixed.allApps&&fixed.selected.isEmpty(),"all ordinary App scope");

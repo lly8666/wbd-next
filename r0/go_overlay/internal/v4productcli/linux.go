@@ -1216,11 +1216,10 @@ func Run(role string,args []string)(retErr error){
            !cfg.autoIP||cfg.rotationInterval!=0{
             return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/off only; Game4/rotation/outer-repair unavailable")
         }
-        if cfg.gameLanes==2&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0||
-           cfg.androidPhysicalDNS||cfg.androidCNDNSSplit){
-            // Actual B41 original Go dual TLS -> B40 Rust M4. FEC,
-            // startup padding and App DNS have no Game2 owner yet.
-            return fmt.Errorf("Android Game2 requires FEC/padding off and physical/CN App DNS off")
+        if cfg.gameLanes==2&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0){
+            // Game2/off now shares all three real Normal App UDP53 paths
+            // on original Rust single TUN; GameFEC/padding remain gated.
+            return fmt.Errorf("Android Game2 requires FEC/padding off")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
         cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(

@@ -124,6 +124,26 @@ public final class OriginalGoCommandArgsTest {
         value(game2,"--android-route-uid","10123");
         if(!withFec("game2",1,"off").contains("--android-tunnel-dns"))
             throw new AssertionError("Game2 original tunnel DNS flag missing");
+        List<String> gamePhysical=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,false,true,false,1460,"chacha20-poly1305",500,
+            "off","game2",1);
+        value(gamePhysical,"--mode","game2");
+        if(!gamePhysical.contains("--android-physical-dns"))
+            throw new AssertionError("Game2 physical DNS flag not wired");
+        List<String> gameCN=OriginalGoCommandArgs.build(
+            "wlan0",43123456L,"192.0.2.10","198.51.100.7",443,43900,
+            "wbd.example.test","user-name",PASS,ROUTE,INSTALL,CN,
+            new int[]{10123},false,null,null,
+            false,false,false,true,1460,"chacha20-poly1305",500,
+            "off","game2",1);
+        value(gameCN,"--mode","game2");
+        if(!gameCN.contains("--android-cn-dns-split"))
+            throw new AssertionError("Game2 CN8503 DNS flag not wired");
+        value(gameCN,"--android-cn-geosite-file",CN);
+        System.out.println("ANDROID_B44_GAME2_ORIGINAL_PHYSICAL_CN_DNS_ARGV_HOST_PASS");
         rejected(()->withFec("game2",1,"tls"));
         System.out.println("ANDROID_B43_GAME2_TUNNEL_DNS_ARGV_HOST_PASS");
         System.out.println("ANDROID_B42_GAME2_ORIGINAL_GO_APP_ARGV_HOST_PASS");

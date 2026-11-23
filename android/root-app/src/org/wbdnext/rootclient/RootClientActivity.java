@@ -546,9 +546,8 @@ public final class RootClientActivity extends Activity {
             int nativeHealthSeconds=Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString());
             if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
                 throw new IllegalArgumentException("Fixed/Auto/Game2 requires startup padding off");
-            if("game2".equals(fecMode)&&
-               (physicalDNS.isChecked()||cnSplitDNS.isChecked()))
-                throw new IllegalArgumentException("Game2/off permits tunnel UDP DNS; physical/CN App DNS unavailable");
+            // B44: Game2/off now uses the existing Normal physical and CN
+            // UDP53 owner in the original Rust single-TUN M4.
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
             boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
@@ -772,7 +771,7 @@ public final class RootClientActivity extends Activity {
             new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
         pane.addView(recordCiphers);
         TextView modeHint=new TextView(this);
-        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 原TLS/FEC2；Game2/off 原Go双TLS→Rust单TUN双RAW M4，支持原Rust隧道UDP/53。实机待验；Game4/FEC Game未接。");
+        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 原TLS/FEC2；Game2/off 原Go双TLS→Rust单TUN双RAW M4，共用隧道/物理/CN DNS三模式。实机未验；Game4/FEC Game未接。");
         pane.addView(modeHint);
         fecModes=new Spinner(this);
         fecModes.setAdapter(new ArrayAdapter<>(this,
@@ -942,9 +941,8 @@ public final class RootClientActivity extends Activity {
             @Override public void onItemSelected(android.widget.AdapterView<?> parent,
                 View view,int position,long id){
                 if("game2".equals(fecModes.getSelectedItem().toString())){
-                    // Original tunnel UDP53 remains available in Game2.
-                    physicalDNS.setChecked(false);
-                    cnSplitDNS.setChecked(false);
+                    // Keep whichever of Normal's three DNS modes was
+                    // selected; Game2 retains no startup padding.
                     startupPaddingModes.setSelection(0);
                 }
             }
