@@ -44,11 +44,18 @@ jobs:
           echo M0_ABBA_SOURCE_COMPARE_SAME_PRODUCT_EXCEPT_INDEXED_TIMER
           test "$(gh api "repos/$GH_REPO/actions/runs/$OLD_RUN" --jq .head_sha)" = "$OLD_SOURCE"
           test "$(gh api "repos/$GH_REPO/actions/runs/$NEW_RUN" --jq .head_sha)" = "$NEW_SOURCE"
-          test "$(gh api "repos/$GH_REPO/actions/runs/$OLD_RUN" --jq .conclusion)" = success
-          # New matrix might still be in progress, but its signed/verified
-          # bundle build must itself already have succeeded.
-          gh api "repos/$GH_REPO/actions/runs/$NEW_RUN/jobs?per_page=100" |
-            jq -e '.jobs | any(.name=="native-bundle-once" and .conclusion=="success")' | grep -Fxq true
+          # The old multi-scenario run had unrelated Game2 1/10/20
+          # missing-scenario failures, but its exact Game4-FEC30 leg and
+          # source-hashed product builder succeeded. Inspect those required
+          # jobs, not the unrelated matrix aggregate conclusion.
+          for run in "$OLD_RUN" "$NEW_RUN"; do
+            gh api "repos/$GH_REPO/actions/runs/$run/jobs?per_page=100" |
+              jq -e '
+                ([.jobs[] | select(.name=="native-bundle-once" and .conclusion=="success")] | length)==1 and
+                ([.jobs[] | select(.name=="one-genuine-linux-client-and-server-scenario (game4-fec, 30)" and .conclusion=="success")] | length)==1
+              ' >/dev/null
+          done
+          echo M0_ABBA_PREVIOUS_EXACT_GAME4_FEC30_BOTH_SOURCES_PASSED
           python3 - <<'PY'
           import json,os
           p=json.load(open(os.environ["SCENARIO"]))
