@@ -55,6 +55,16 @@ impl NativePresentationAck{
         }
         self.ack()
     }
+    /// Latest actually AEAD-opened physical future span for Normal-style
+    /// SACK feedback. One positive interval bounds many missing candidates;
+    /// fixed-size, no allocation or separate controller in the hot path.
+    pub(crate) fn latest_sack(&self)
+        ->Option<wbd_platform::ipv4_tcp::SackRange32>{
+        self.future.last().map(|&(start,end)|
+            wbd_platform::ipv4_tcp::SackRange32{
+                start:start as u32,end:end as u32,
+            })
+    }
 }
 /// No speculative ACK: only a changed authenticated cumulative head is
 /// eligible. Coalesce to <=100 pure ACKs/s/lane even on a continuous RX
@@ -86,7 +96,10 @@ mod tests{
         assert!(presentation_game_ack_due(10_000_001,1,100,100,true));
         assert!(!presentation_game_ack_due(10_000_001,1,100,100,false));
         assert_eq!(ledger.verified(150,10),100);
+        assert_eq!(ledger.latest_sack(),Some(
+            wbd_platform::ipv4_tcp::SackRange32{start:150,end:160}));
         assert_eq!(ledger.verified(100,50),160);
+        assert!(ledger.latest_sack().is_none());
         assert!(!ledger.authenticated_future(160));
     }
     #[test]
