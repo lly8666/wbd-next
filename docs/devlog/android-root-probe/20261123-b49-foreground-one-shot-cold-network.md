@@ -9,3 +9,11 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B49前台一次用户动作接原B48 Go/Rust owned Stop→精确Network重选→原Activity START，不增加后台Root启动或数据面；真实纯Java门及签名APK同SOURCE核验。"}
 ```
+
+## B49a｜功能卡容量修复
+
+B49 SOURCE `344594efcf893bfae93f737ae4c62fa9a1956e47` 的 [Feature catalog #45168583926](https://github.com/lly8666/wbd-next/actions/runs/45168583926) FAIL：当前摘要/GUI超16KiB；本次只缩文字，保留历史 verification/FAIL，未变动原Go/Rust/App代码与已在途产品Action。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B49a仅将当期卡片摘要/GUI压缩至16KiB以内，不动产品实现或历史验证。"}
+```
