@@ -96,9 +96,10 @@ func logGameOuterRepair(role string,n int,p *realityfront.V4LinuxGameProduct,off
     if err!=nil{return err}
     if proof.RepairEnabled==off{return realityfront.ErrAdmissionUnsupported}
     if off&&proof.DataRetransmitted!=0{return realityfront.ErrAdmissionUnsupported}
-    log.Printf("V4_PUBLIC_GAME_OUTER role=%s lanes=%d repair_enabled=%d outer_data_retransmitted=%d blocked_duplicate=%d first_lane_copied=%d parity_separate=1",
+    log.Printf("V4_PUBLIC_GAME_OUTER role=%s lanes=%d repair_enabled=%d outer_data_retransmitted=%d blocked_duplicate=%d first_lane_copied=%d first_record_wire_bytes=%d copy_record_wire_bytes=%d parity_separate=1",
         role,n,func()int{if proof.RepairEnabled{return 1};return 0}(),
-        proof.DataRetransmitted,proof.BlockedDuplicate,proof.FirstLaneCopied)
+        proof.DataRetransmitted,proof.BlockedDuplicate,proof.FirstLaneCopied,
+        proof.FirstWireBytes,proof.RepairWireBytes)
     return nil
 }
 // Per-original-M4-Linux owned raw send counters, NEVER padded intent.
