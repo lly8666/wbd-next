@@ -1,4 +1,4 @@
-# M0 WIP: three signed ORIGINAL Windows2025 Npcap/Wintun + WSL2 Game scenarios.
+# M0 WIP: specifically close Game4 OFF 0/5/30 genuine signed Windows NPF/WSL2 gap.
 # Dispatch an immutable, independently pinned SOURCE. The dispatch job itself
 # is NOT native success; only downstream exact-source run can qualify.
 name: M0 Game Normal outer signed Windows dispatch once
@@ -17,17 +17,17 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      FROZEN_REF: experiment/m0-game-normal-frozen-c6f4828
-      FROZEN_SHA: c6f48286d1bacbccb0b877dabfb74781d14c5c83
+      FROZEN_REF: experiment/m0-game-normal-final-game4off-8dbda7d
+      FROZEN_SHA: 8dbda7d425ec3e5322f79729b5c5a285d323416d
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
-      - name: Dispatch frozen signed Game2 5/30pct and Game4 fixed FEC30 original two-OS cases
+      - name: Dispatch frozen signed Game4 OFF 0/5/30pct original two-OS cases
         shell: bash
         run: |
           set -euo pipefail
           test "$(gh api "repos/$GH_REPO/git/ref/heads/$FROZEN_REF" --jq '.object.sha')" = "$FROZEN_SHA"
-          for spec in game2:5 game2:30 game4-fec:30; do
+          for spec in game4:0 game4:5 game4:30; do
             mode="${spec%%:*}"
             loss="${spec##*:}"
             scenario="scenarios/m0-cosmetic-${mode}-loss${loss}-60s.json"
