@@ -9,8 +9,8 @@ use wbd_types::MonoNs;
 use wbd_types::{LaneKey,RecordPn,SeqOffset,BufferKey};
 use wbd_types::buffer_contract::{BufferOrigin,FrozenMetadata,FrozenRecordHandle};
 
-const SAMPLE_MASK:u64=15; // one optional original snapshot / 16 real raw copies
-const AFTER_FIRST_NS:u64=250_000_000; // conservative timed fallback
+const SAMPLE_MASK:u64=1; // Normal-matching 1/2 eligibility, at most one live shadow per lane
+const AFTER_FIRST_NS:u64=250_000_000; // test-only old sample() fixture, NOT a production PTO
 const MIN_INTERVAL_NS:u64=80_000_000; // <=12.5 per second per lane
 const REORDER_GUARD_NS:u64=20_000_000; // Normal ACK reordering guard
 const MAX_WIRE:usize=1536;
@@ -74,8 +74,8 @@ impl CosmeticOuter{
         }
         Ok(result)
     }
-    /// Always advance actual copied TCP byte bounds; 15/16 use Normal's
-    /// untracked constant-time path. Track every 16th as positive later
+    /// Always advance actual copied TCP byte bounds; 1/2 use Normal's
+    /// untracked constant-time path. Track every second as positive later
     /// send evidence; freeze at most ONE original PN/Seq per lane.
     /// A fresh protected original TLS lane must not reuse the previous
     /// TCP sequence/ACK gap index or a frozen ciphertext on a new 4-tuple.
@@ -215,7 +215,7 @@ mod tests{
     fn game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source(){
         let mut c=CosmeticOuter::new(2);
         let wire=vec![9u8;1290];
-        for i in 1..16{
+        for i in 1..2{
             assert!(!c.should_sample(0),"no per-source duplicate allocation");
             assert!(c.next_due().is_none());
             let _=i;
@@ -271,12 +271,12 @@ mod tests{
         }
         assert!(c.take_due(80_000_000,&[]).is_none());
         for t in [85_000_000,86_000_000,87_000_000]{
-            assert!(!c.on_feedback(0,250,t))
+            assert!(!c.on_feedback(0,110,t))
         }
-        assert!(c.on_feedback(0,250,88_000_000));
+        assert!(c.on_feedback(0,110,88_000_000));
         let row=c.take_due(88_000_000,&[]).unwrap();
-        assert_eq!((row.pn,row.seq),(16,250));
-        assert!(c.complete(0,16,true,88_000_000));
+        assert_eq!((row.pn,row.seq),(2,110));
+        assert!(c.complete(0,2,true,88_000_000));
         assert_eq!(c.sent(),1);
         assert_eq!(c.first_record_wire_bytes(),320);
         assert_eq!(c.copied_record_wire_bytes(),10);
@@ -319,26 +319,26 @@ mod tests{
             slot:1,generation:9};
         let mut outer=CosmeticOuter::with_normal_feedback(&[key],&[100],[5;16]).unwrap();
         let wire=b"real-original-ciphertext";
-        // PN16 is the exact sampled head; PN32 is an actual later copy.
+        // PN2 is the exact sampled head; PN4 is an actual later copy.
         for i in 0..32u64{
             outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
                 wire,(i+1)*1_000_000).unwrap();
         }
         assert_eq!(outer.next_due(),None);
         assert!(outer.take_due(1_000_000_000,&[true]).is_none());
-        let head=(100+15*wire.len()) as u32;
+        let head=(100+wire.len()) as u32;
         for t in [80_000_000,90_000_000,100_000_000]{
             assert!(!outer.on_feedback(0,head,t));
         }
         assert!(outer.on_feedback(0,head,110_000_000));
         let copy=outer.take_due(110_000_000,&[true]).unwrap();
-        assert_eq!((copy.pn,copy.seq),(16,u64::from(head)));
+        assert_eq!((copy.pn,copy.seq),(2,u64::from(head)));
         let frozen=copy.frozen(key);
         assert_eq!(frozen.bytes(),wire);
-        assert_eq!(frozen.metadata().pn,RecordPn(16));
+        assert_eq!(frozen.metadata().pn,RecordPn(2));
         assert!(outer.take_due(110_000_001,&[true]).is_none());
-        assert!(outer.complete(0,16,true,110_000_000));
-        assert!(!outer.complete(0,16,true,110_000_001));
+        assert!(outer.complete(0,2,true,110_000_000));
+        assert!(!outer.complete(0,2,true,110_000_001));
         assert_eq!(outer.sent(),1);
         assert_eq!(outer.first_record_wire_bytes(),32*wire.len() as u64);
         assert_eq!(outer.copied_record_wire_bytes(),wire.len() as u64);

@@ -10,6 +10,9 @@
 - Linux Game2/4 FEC OFF/fixed6 两处真实TUN提交分支以一组每lane atomic代替额外每记录控制通道；Windows Game原Wintun成功和延迟FEC完成分支也更新一个atomic，NPF前缀成功后才结算已发送ACK。不允许虚构未协商SACK能力。
 - 原生选择器将 `r1_game_duplicate_ack_only_on_authenticated_future_and_10ms` 加入原engine unit；新SOURCE真Windows↔Linux与原Linux双端真网、真实受损F/R/C和CPU不继承旧测试PASS。
 
+## 分支镜像：Normal-matching sampling
+- 保持Game Linux真实后到/重复ACK驱动，1/16首发抽样过稀不能呈现高损候选；现在改为1/2位掩码并保留每lane单份原冻结密文，零定时DATA PTO。补充 r1 单元，并等待本分支自身 native WAN 验收，旧main SOURCE测试不可继承。
+
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game OFF/fixed6 removes unsolicited 250/810ms DATA PTO; genuine authenticated future triggers bounded duplicate cumulative ACK, only real peer gaps nominate frozen cipher, first-send F budget and CPU caps preserved; new-source native tests pending."}
 ```
