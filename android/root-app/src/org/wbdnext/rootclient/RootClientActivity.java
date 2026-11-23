@@ -545,7 +545,10 @@ public final class RootClientActivity extends Activity {
             int fecProfile=Integer.parseInt(fecProfiles.getSelectedItem().toString());
             int nativeHealthSeconds=Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString());
             if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
-                throw new IllegalArgumentException("Fixed/Auto FEC2 requires startup padding off");
+                throw new IllegalArgumentException("Fixed/Auto/Game2 requires startup padding off");
+            if("game2".equals(fecMode)&&
+               (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()))
+                throw new IllegalArgumentException("Game2/off requires all App DNS modes off");
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
             boolean verifyTLS=tlsVerifyServer.isChecked();
             // Default is full ordinary App UID takeover AFTER true WBD
@@ -769,15 +772,15 @@ public final class RootClientActivity extends Activity {
             new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
         pane.addView(recordCiphers);
         TextView modeHint=new TextView(this);
-        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 都用原 TLS/FEC2/M3；Auto只依据真实低频质量调整档位，实机未验；Game关闭。");
+        modeHint.setText("原传输模式：Normal/off 默认；Fixed/Auto 原 TLS/FEC2；Game2/off 原 Go 双TLS→Rust单TUN双RAW M4。设备实测待验；Game4/FEC Game未接。");
         pane.addView(modeHint);
         fecModes=new Spinner(this);
         fecModes.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
-            new String[]{"normal","fec-fixed","fec-auto"}));
+            new String[]{"normal","fec-fixed","fec-auto","game2"}));
         pane.addView(fecModes);
         TextView profileHint=new TextView(this);
-        profileHint.setText("Fixed档位0–6（默认1）；Auto初始Strong并据原质量换档，Normal不用");
+        profileHint.setText("Fixed档位0–6（默认1）；Auto按原质量换档；Normal及Game2/off不使用此档位");
         pane.addView(profileHint);
         fecProfiles=new Spinner(this);
         fecProfiles.setAdapter(new ArrayAdapter<>(this,
@@ -933,6 +936,19 @@ public final class RootClientActivity extends Activity {
         });
         cnSplitDNS.setOnCheckedChangeListener((button,checked)->{
             if(checked){tunnelDNS.setChecked(false);physicalDNS.setChecked(false);}
+        });
+        // B42: select B41 original Go/Rust Game2 owner, not a new protocol.
+        fecModes.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent,
+                View view,int position,long id){
+                if("game2".equals(fecModes.getSelectedItem().toString())){
+                    tunnelDNS.setChecked(false);
+                    physicalDNS.setChecked(false);
+                    cnSplitDNS.setChecked(false);
+                    startupPaddingModes.setSelection(0);
+                }
+            }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent){}
         });
         selectedAppControls=new LinearLayout(this);
         selectedAppControls.setOrientation(LinearLayout.VERTICAL);

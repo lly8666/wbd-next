@@ -110,7 +110,21 @@ public final class OriginalGoCommandArgsTest {
         value(withFec("fec-auto",1,"off"),"--mode","fec-auto");
         absent(withFec("fec-auto",1,"off"),"--fec-profile");
         rejected(()->withFec("fec-auto",1,"tls"));
-        rejected(()->withFec("game2",1,"off"));
+        // B42 genuine Android App argv -> B41 original Go Game2/off.
+        List<String> game2=OriginalGoCommandArgs.build("wlan0",43123456L,"192.0.2.10",
+            "198.51.100.7",443,43900,"wbd.example.test","user-name",
+            PASS,ROUTE,INSTALL,CN,new int[]{10123},false,null,null,
+            false,false,false,false,1460,"chacha20-poly1305",500,
+            "off","game2",1);
+        value(game2,"--mode","game2");
+        absent(game2,"--fec-profile");
+        absent(game2,"--android-tunnel-dns");
+        absent(game2,"--android-physical-dns");
+        absent(game2,"--android-cn-dns-split");
+        value(game2,"--android-route-uid","10123");
+        rejected(()->withFec("game2",1,"off")); // old tunnel DNS default ON
+        rejected(()->withFec("game2",1,"tls"));
+        System.out.println("ANDROID_B42_GAME2_ORIGINAL_GO_APP_ARGV_HOST_PASS");
         rejected(()->withFec("fec-fixed",7,"off"));
         rejected(()->withFec("fec-fixed",-1,"off"));
         rejected(()->withFec("fec-fixed",1,"tls"));

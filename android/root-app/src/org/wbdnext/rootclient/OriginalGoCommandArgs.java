@@ -217,12 +217,14 @@ final class OriginalGoCommandArgs {
         if(nativeHealthSeconds!=15&&nativeHealthSeconds!=30)
             throw new IllegalArgumentException("original native Health interval must be 15 or 30 seconds");
         if(!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
-           !"fec-auto".equals(fecMode))
-            throw new IllegalArgumentException("Android original Go supports normal, fec-fixed or fec-auto");
+           !"fec-auto".equals(fecMode)&&!"game2".equals(fecMode))
+            throw new IllegalArgumentException("Android original Go supports normal, fec-fixed, fec-auto or game2/off");
         if(fecProfile<0||fecProfile>6)
             throw new IllegalArgumentException("FEC2 Fixed profile must be 0..6");
         if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
-            throw new IllegalArgumentException("Fixed/Auto use FEC2, not Normal padding");
+            throw new IllegalArgumentException("Fixed/Auto/Game2 require startup padding off");
+        if("game2".equals(fecMode)&&(tunnelDNS||physicalDNS||cnSplitDNS))
+            throw new IllegalArgumentException("Game2/off has no original M4 App DNS owner");
         if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
            !"flows".equals(paddingMode))
             throw new IllegalArgumentException("unsupported original startup padding");

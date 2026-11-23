@@ -256,13 +256,15 @@ public final class RootClientService extends Service {
             if(nativeHealthSeconds!=15&&nativeHealthSeconds!=30)
                 throw new IllegalArgumentException("unsupported original Rust Health interval");
             if((!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
-                !"fec-auto".equals(fecMode))||
+                !"fec-auto".equals(fecMode)&&!"game2".equals(fecMode))||
                fecProfile<0||fecProfile>6||
                (!"normal".equals(fecMode)&&!"off".equals(paddingMode)))
-                throw new IllegalArgumentException("unsupported Fixed/Normal selection");
+                throw new IllegalArgumentException("unsupported original Normal/Fixed/Auto/Game2 selection");
             fecStatus="normal".equals(fecMode)
                 ?"FEC: Normal/off（默认；无FEC修复）"
-                :"FEC: "+fecMode+" 已选择，等待原Go/Rust的真实版本读回";
+                :"game2".equals(fecMode)
+                    ?"Game2/off: 双原Go TLS → 单Rust M4；等待设备真实运行"
+                    :"FEC: "+fecMode+" 已选择，等待原Go/Rust的真实版本读回";
             if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
                !"flows".equals(paddingMode))
                 throw new IllegalArgumentException("unsupported original Normal startup padding");
@@ -285,6 +287,8 @@ public final class RootClientService extends Service {
             boolean tunnelDNS=intent.getBooleanExtra("tunnel_dns",false);
             boolean physicalDNS=intent.getBooleanExtra("physical_dns",false);
             boolean cnSplitDNS=intent.getBooleanExtra("cn_dns_split",false);
+            if("game2".equals(fecMode)&&(tunnelDNS||physicalDNS||cnSplitDNS))
+                throw new IllegalArgumentException("Game2/off currently requires App DNS modes off");
             if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&
