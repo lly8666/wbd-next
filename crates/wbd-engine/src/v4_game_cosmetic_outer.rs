@@ -178,7 +178,13 @@ impl CosmeticOuter{
         let true_stall=l.dup_acks>=3 && later_actual_copy &&
             age>=REORDER_GUARD_NS &&
             now_ns.saturating_sub(l.last_ack_change_ns)>=INITIAL_ACK_STALL_NS;
-        let exact_gap=exact&&result.gap_candidates.contains(&RecordPn(copy.pn));
+        // Even an exact sampled ACK head cannot be declared missing from a
+        // short burst while cumulative ACK is legitimately advancing.
+        // Both Normal-style gap and sparse-stall Game cosmetic paths share
+        // the same genuine unchanged-ACK one-second guard.
+        let exact_gap=exact&&result.gap_candidates.contains(&RecordPn(copy.pn)) &&
+            l.dup_acks>=3 &&
+            now_ns.saturating_sub(l.last_ack_change_ns)>=INITIAL_ACK_STALL_NS;
         let next_bytes=l.copied_record_wire_bytes
             .saturating_add(copy.wire.len() as u64);
         // The original firstsend ledger is all actually copied original
@@ -357,10 +363,11 @@ mod tests{
         for t in [85_000_000,86_000_000,87_000_000]{
             assert!(!c.on_feedback(0,110,t))
         }
-        assert!(c.on_feedback(0,110,88_000_000));
-        let row=c.take_due(88_000_000,&[]).unwrap();
+        assert!(!c.on_feedback(0,110,88_000_000));
+        assert!(c.on_feedback(0,110,1_100_000_000));
+        let row=c.take_due(1_100_000_000,&[]).unwrap();
         assert_eq!((row.pn,row.seq),(2,110));
-        assert!(c.complete(0,2,true,88_000_000));
+        assert!(c.complete(0,2,true,1_100_000_000));
         assert_eq!(c.sent(),1);
         assert_eq!(c.first_record_wire_bytes(),320);
         assert_eq!(c.copied_record_wire_bytes(),10);
@@ -414,15 +421,16 @@ mod tests{
         for t in [80_000_000,90_000_000,100_000_000]{
             assert!(!outer.on_feedback(0,head,t));
         }
-        assert!(outer.on_feedback(0,head,110_000_000));
-        let copy=outer.take_due(110_000_000,&[true]).unwrap();
+        assert!(!outer.on_feedback(0,head,110_000_000));
+        assert!(outer.on_feedback(0,head,1_100_000_000));
+        let copy=outer.take_due(1_100_000_000,&[true]).unwrap();
         assert_eq!((copy.pn,copy.seq),(2,u64::from(head)));
         let frozen=copy.frozen(key);
         assert_eq!(frozen.bytes(),wire);
         assert_eq!(frozen.metadata().pn,RecordPn(2));
-        assert!(outer.take_due(110_000_001,&[true]).is_none());
-        assert!(outer.complete(0,2,true,110_000_000));
-        assert!(!outer.complete(0,2,true,110_000_001));
+        assert!(outer.take_due(1_100_000_001,&[true]).is_none());
+        assert!(outer.complete(0,2,true,1_100_000_000));
+        assert!(!outer.complete(0,2,true,1_100_000_001));
         assert_eq!(outer.sent(),1);
         assert_eq!(outer.first_record_wire_bytes(),32*wire.len() as u64);
         assert_eq!(outer.copied_record_wire_bytes(),wire.len() as u64);
