@@ -46,7 +46,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out
-          sudo -n env GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" \
+          sudo -n env WBD_M0_GAME_THREAD_CPU_DIAG=1 GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" \
             GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_ACTIONS="$GITHUB_ACTIONS" \
             GITHUB_WORKSPACE="$GITHUB_WORKSPACE" RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
             python3 - <<'PY'
@@ -86,8 +86,31 @@ jobs:
                   for direction in ('c2s','s2c')}
               assert min(measured.values())>9.4, measured
               cpu={role:leg['measurement_cost'][role]['cpu_s'] for role in ('client','server')}
+              # Existing 1Hz /proc sampler: test-only, no product TX/RX change.
+              import collections
+              snaps=json.loads((path/'network-snapshots.json').read_text())
+              start=next(e for e in snaps if e['name']=='before-iid')['end_ns']
+              end=next(e for e in snaps if e['name']=='measurement-end')['ns']
+              samples=[e for e in json.loads((path/'host-samples.json').read_text())
+                  if start<=e['ns']<=end]
+              assert len(samples)>=40, (index,label,len(samples))
+              threads={}
+              for role in ('client','server'):
+                  tids={};names={}
+                  for sample in samples:
+                      for t in sample.get('fec_cpu_irq',{}).get('product_threads',{}).get(role,[]):
+                          key=t['tid'];tick=t['cpu_ticks']
+                          if key not in tids:tids[key]=[tick,tick]
+                          else:tids[key][1]=tick
+                          names[key]=t['name']
+                  named=collections.defaultdict(float)
+                  for tid,(first,last) in tids.items():
+                      named[names[tid]]+=max(0,last-first)/os.sysconf('SC_CLK_TCK')
+                  threads[role]={'cpu_by_name_s':dict(sorted(named.items())),
+                      'coverage':sum(named.values())/cpu[role] if cpu[role] else None}
               row={'index':index,'outer':label,'source':source,'cpu_s':cpu,'copies':copies,
-                   'ratio':ratio,'unique_first_mbps':measured,'stop':'PASS','mode':'game4-fec','loss_pct':30}
+                   'ratio':ratio,'unique_first_mbps':measured,'threads':threads,
+                   'stop':'PASS','mode':'game4-fec','loss_pct':30}
               (path/'m0-onoff-leg.json').write_text(json.dumps(row,indent=2)+'\n')
               rows.append(row)
               print('M0_ONOFF_REAL_LEG',json.dumps(row,sort_keys=True),flush=True)
