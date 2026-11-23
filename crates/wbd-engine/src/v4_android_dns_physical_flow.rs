@@ -210,6 +210,51 @@ impl PhysicalDnsUdpFlows{
         Ok(size)
     }
 }
+/// B59: large physical DNS UDP answers (e.g. EDNS0) are synthesized by
+/// the existing exact App-ID/QNAME/lease mapper above. If their IPv4 length
+/// exceeds the original TUN's bounded inner MTU, use B16's RFC791 fragment
+/// builder to send the same restored UDP datagram in smaller TUN writes.
+/// This never opens a second socket, changes a DNS response or invokes M3.
+/// Each callback writes through the original scoped physical-DNS TUN owner.
+/// A false callback cannot be counted as a completed App DNS reply.
+pub(crate) fn emit_physical_dns_tun_reply<F:FnMut(&[u8],bool)->bool>(
+    packet:&mut [u8],inner_mtu:usize,scratch:&mut [u8],mut write:F
+)->Result<usize,()>{
+    if inner_mtu<68||inner_mtu>scratch.len()||
+       packet.len()<28||packet.len()>MAX_DNS_REPLY_IPV4||
+       packet[0]!=0x45||packet[9]!=17||
+       usize::from(be16(&packet[2..4]))!=packet.len()||
+       be16(&packet[6..8])!=0x4000||
+       be16(&packet[20..22])!=53{
+        return Err(())
+    }
+    if packet.len()<=inner_mtu{
+        return if write(packet,false){Ok(1)}else{Err(())};
+    }
+    // The physical synthetic response is generated locally with DF set.
+    // Temporarily clear DF to permit real RFC791 fragments, then restore
+    // the unchanged original complete reply even after a failed TUN write.
+    let original_flags=[packet[6],packet[7]];
+    let original_sum=[packet[10],packet[11]];
+    packet[6..8].fill(0);
+    packet[10..12].fill(0);
+    let sum=checksum(&packet[..20],0);
+    packet[10..12].copy_from_slice(&sum.to_be_bytes());
+    let mut offset=0;
+    let mut result=Err(());
+    for i in 0..128{
+        let Some((n,end,done))=crate::v4_android_ipv4_mtu::fragment(
+            packet,offset,inner_mtu,scratch
+        )else{break};
+        if !write(&scratch[..n],true){break}
+        if done{result=Ok(i+1);break}
+        offset=end;
+    }
+    packet[6..8].copy_from_slice(&original_flags);
+    packet[10..12].copy_from_slice(&original_sum);
+    result
+}
+
 #[cfg(test)]
 mod tests{
     use super::*;
@@ -359,5 +404,146 @@ mod tests{
         flows.stop();
         assert_eq!(flows.receive(&ra,&mut ip,3),Err(PhysicalDnsError::Unowned));
         assert_eq!(flows.len(),0);
+    }
+}
+
+#[cfg(test)]
+mod b59_tests{
+    use super::*;
+
+    fn original_query()->Vec<u8>{
+        let mut q=vec![0u8;12];
+        q[0..2].copy_from_slice(&0x1234u16.to_be_bytes());
+        q[2]=1;q[5]=1;q[11]=1; // QD=1; EDNS OPT additional
+        for label in ["wide","example","org"]{
+            q.push(label.len() as u8);
+            q.extend_from_slice(label.as_bytes());
+        }
+        q.extend_from_slice(&[0,0,16,0,1]); // TXT IN
+        q.extend_from_slice(&[0,0,41,16,0,0,0,0,0,0,0]); // OPT 4096
+        let size=28+q.len();
+        let mut ip=vec![0u8;size];
+        ip[0]=0x45;ip[2..4].copy_from_slice(&(size as u16).to_be_bytes());
+        ip[8]=64;ip[9]=17;
+        ip[12..16].copy_from_slice(&[10,66,0,2]);
+        ip[16..20].copy_from_slice(&[8,8,8,8]);
+        ip[20..22].copy_from_slice(&41011u16.to_be_bytes());
+        ip[22..24].copy_from_slice(&53u16.to_be_bytes());
+        ip[24..26].copy_from_slice(&((size-20) as u16).to_be_bytes());
+        ip[28..].copy_from_slice(&q);
+        ip
+    }
+    fn original_physical_reply(large:bool)->Vec<u8>{
+        let request=original_query();
+        let mut flows=PhysicalDnsUdpFlows::default();
+        let mut outbound=[0u8;MAX_DNS_WIRE];
+        let (n,synthetic,new)=flows.prepare(&request,&mut outbound,10).unwrap();
+        assert!(new);
+        let mut response=outbound[..n].to_vec();
+        let opt=response.split_off(n-11);
+        response[2]=0x81;response[3]=0x80;
+        if large{
+            response[6..8].copy_from_slice(&1u16.to_be_bytes()); // 1 TXT answer
+            // A valid multiple-string TXT RDATA, almost a full EDNS datagram.
+            let mut txt=Vec::new();
+            for _ in 0..15{
+                txt.push(240);
+                txt.extend_from_slice(&[b'x';240]);
+            }
+            response.extend_from_slice(&[0xc0,0x0c,0,16,0,1,0,0,0,60]);
+            response.extend_from_slice(&(txt.len() as u16).to_be_bytes());
+            response.extend_from_slice(&txt);
+        }
+        response.extend_from_slice(&opt);
+        assert!(response.len()<=MAX_DNS_WIRE);
+        let mut packet=vec![0u8;MAX_DNS_REPLY_IPV4];
+        let len=flows.receive(&response,&mut packet,11).unwrap();
+        assert_eq!(flows.len(),0);
+        packet.truncate(len);
+        assert_eq!(&packet[12..20],&[8,8,8,8,10,66,0,2]);
+        assert_eq!(&packet[20..24],&[0,53,0xa0,0x33]); // 41011 app UDP port
+        assert_eq!(&packet[28..30],&0x1234u16.to_be_bytes());
+        assert_eq!(checksum(&packet[..20],0),0);
+        let mut pseudo=0u32;
+        for word in packet[12..20].chunks_exact(2){
+            pseudo+=u32::from(be16(word));
+        }
+        pseudo+=17+(packet.len()-20) as u32;
+        assert_eq!(checksum(&packet[20..],pseudo),0);
+        packet
+    }
+
+    #[test]
+    fn b59_physical_dns_edns_large_response_normal_game_ipv4_reassembles(){
+        let original=original_physical_reply(true);
+        assert!(original.len()>3_600);
+        for mtu in [576usize,1_260,1_460]{
+            let mut packet=original.clone();
+            let mut scratch=[0u8;2_048];
+            let mut pieces=Vec::new();
+            let count=emit_physical_dns_tun_reply(
+                &mut packet,mtu,&mut scratch,|p,fragmented|{
+                    assert!(fragmented);
+                    assert!(p.len()<=mtu);
+                    pieces.push(p.to_vec());
+                    true
+                }).unwrap();
+            assert!(count>=3&&count<=128);
+            assert_eq!(pieces.len(),count);
+            let mut reconstructed=Vec::new();
+            for (i,fragment) in pieces.iter().enumerate(){
+                let offset=usize::from(be16(&fragment[6..8])&0x1fff)*8;
+                assert_eq!(offset,reconstructed.len());
+                assert_eq!(usize::from(be16(&fragment[2..4])),fragment.len());
+                assert_eq!(checksum(&fragment[..20],0),0);
+                if i==0{
+                    assert_eq!(&fragment[20..22],&53u16.to_be_bytes());
+                }
+                let more=be16(&fragment[6..8])&0x2000!=0;
+                assert_eq!(more,i+1<count);
+                reconstructed.extend_from_slice(&fragment[20..]);
+            }
+            // Exact original App UDP length, DNS ID, TXT bytes and checksum
+            // reassemble without any new DNS parser or TCP stack.
+            assert_eq!(reconstructed,&original[20..]);
+            assert_eq!(packet,original); // helper restores synthetic DF/checksum
+        }
+    }
+    #[test]
+    fn b59_physical_dns_small_reply_unchanged_one_tun_write(){
+        let original=original_physical_reply(false);
+        assert!(original.len()<576);
+        let mut packet=original.clone();
+        let mut scratch=[0u8;2_048];
+        let mut writes=0;
+        let count=emit_physical_dns_tun_reply(
+            &mut packet,1_300,&mut scratch,|p,fragmented|{
+                assert!(!fragmented);
+                assert_eq!(p,original.as_slice());
+                writes+=1;true
+            }).unwrap();
+        assert_eq!((count,writes),(1,1));
+        assert_eq!(packet,original);
+    }
+    #[test]
+    fn b59_physical_dns_partial_tun_write_never_reports_complete(){
+        let original=original_physical_reply(true);
+        let mut packet=original.clone();
+        let mut scratch=[0u8;2_048];
+        let mut attempts=0;
+        assert_eq!(emit_physical_dns_tun_reply(
+            &mut packet,1_200,&mut scratch,|_,fragmented|{
+                assert!(fragmented);
+                attempts+=1;
+                attempts==1
+            }),Err(()));
+        assert_eq!(attempts,2);
+        assert_eq!(packet,original);
+        let mut wrong=original.clone();
+        wrong[20]=1; // unowned source port no longer DNS53
+        assert_eq!(emit_physical_dns_tun_reply(
+            &mut wrong,1_200,&mut scratch,|_,_|panic!("unowned DNS emitted")),Err(()));
+        assert_eq!(emit_physical_dns_tun_reply(
+            &mut packet,60,&mut scratch,|_,_|panic!("invalid MTU emitted")),Err(()));
     }
 }

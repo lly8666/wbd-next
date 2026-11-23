@@ -29,6 +29,10 @@ cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec
 cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record b56_android_game_ -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 # B57 original Game2/4 DF0 RFC791 + DF1 local PMTU, same B16 code.
 cargo +1.85.1 test --locked -p wbd-engine --lib b57_android_game_ -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+# B59: test real 4096B-bounded EDNS physical answer fragmentation
+# to the SAME original TUN in Normal and Game2/4; no TCP DNS proxy.
+cargo +1.85.1 test --locked -p wbd-engine --lib b59_physical_dns_ \
+  -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 # B16: the same production IPv4 fragment and local ICMP codec runs on Host.
 cargo +1.85.1 test --locked -p wbd-engine --lib b16_ \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
@@ -89,6 +93,12 @@ for scenario in (
 ):
  assert f"test v4_android_ipv4_mtu::tests::{scenario} ... ok" in log
 assert "test result: ok. 5 passed;" in log
+for test in (
+ "b59_physical_dns_edns_large_response_normal_game_ipv4_reassembles",
+ "b59_physical_dns_small_reply_unchanged_one_tun_write",
+ "b59_physical_dns_partial_tun_write_never_reports_complete"
+):
+ assert f"test v4_android_dns_physical_flow::b59_tests::{test} ... ok" in log,test
 for test in (
  "b57_android_game_df0_udp_oversize_real_fragment_payload_roundtrip",
  "b57_android_game_large_udp_min_ipv4_mtu_bounded_dispatch",
@@ -165,6 +175,18 @@ assert 'bind_underlay_socket(fd.as_raw_fd(),network_handle,interface)?' in platf
 assert 'getsockopt(' in platform and 'getsockname(' in platform
 assert 'actual[expected.as_bytes().len()]!=0' in platform
 assert 'pub fn write_scoped_physical_dns_ip(' in platform
+# B59 original generation produces IPv4 DNS fragments only after the
+# owned physical socket plus original App ID/QNAME/lease have matched.
+game=Path("crates/wbd-engine/src/v4_android_game_m4.rs").read_text()
+assert 'pub(crate) fn emit_physical_dns_tun_reply(' in physical
+assert 'crate::v4_android_ipv4_mtu::fragment(' in physical
+assert m4.count("emit_physical_dns_tun_reply(")==1
+assert game.count("emit_physical_dns_tun_reply(")==1
+assert 'frame.single_business_payload_mtu' in m4
+assert 'inner_mtu,&mut physical_fragment' in game
+assert 'pub fn write_scoped_physical_dns_ipv4_fragment(' in platform
+assert m4.count('write_scoped_physical_dns_ipv4_fragment(')==1
+assert game.count('write_scoped_physical_dns_ipv4_fragment(')==1
 assert "std::net::" not in wire and "read_ip_scatter" not in wire
 receipt={
  "schema":"wbd-android-b2c2b1-original-rust-dns-udp-inverse-map/v1",
@@ -187,10 +209,14 @@ receipt={
  "physical_actual_udp53_socket":"NOT_OPENED_DEFAULT_FALSE",
  "physical_reply_aead_authentication":"NOT_APPLICABLE_CONNECTED_KERNEL_UDP_ID_QNAME",
  "physical_ipv4_checksums_original_resolution_rewrite":"HOST_PASS",
+ "b59_physical_edns_ipv4_original_tun_fragment_576_1260_1460":"HOST_PASS",
+ "b59_normal_game_same_tun_fragmented_dns_source":"SOURCE_WIRED_DEVICE_NOT_RUN",
+ "b59_real_android_physical_dns_jumbo_e2e":"NOT_RUN",
  "android16_p2_p3":"ENV_BLOCKED_KVM_NOT_AVAILABLE",
  "physical_ksu_p5":"NOT_RUN"
 }
 (out/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
+print("ANDROID_B59_PHYSICAL_EDNS_JUMBO_NORMAL_GAME_ORIGINAL_TUN_IPV4_FRAGMENT_HOST_PASS")
 print("ANDROID_B3_ORIGINAL_GO_RUST_TUNNEL_UDP_DNS_OPTIN_AND_INVERSE_MAP_HOST_PASS")
 print("ANDROID_B2C2C_ORIGINAL_RUST_M4_PHYSICAL_DNS_UDP_AND_TUNNEL_OWNER_SOURCE_GATE_PASS_COLD_DISABLED")
 print("ANDROID_B4_RUST_M4_PHYSICAL_DNS_COLD_GRANT_TWO_RESOLVERS_STOP_HOST_PASS")

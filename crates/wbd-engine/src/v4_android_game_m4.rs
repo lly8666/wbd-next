@@ -161,6 +161,9 @@ impl AndroidGameWorkers{
                 let mut physical_flows=PhysicalDnsUdpFlows::default();
                 let mut physical_wire=[0u8;MAX_DNS_WIRE];
                 let mut physical_packet=[0u8;MAX_DNS_REPLY_IPV4];
+                // B59: original Game TX thread also returns large DNS
+                // replies through this same single TUN, no extra worker.
+                let mut physical_fragment=[0u8;2_048];
                 let mut offsets=tx_begin;
                 let mut tun_burst=GameTunBurst::default();
                 // The original GameAdapter may schedule Game4 later copies.
@@ -426,11 +429,27 @@ impl AndroidGameWorkers{
                                     &physical_wire[..n],&mut physical_packet,
                                     origin.elapsed().as_millis() as u64);
                                 match result{
-                                    Ok(len) if physical_packet[16..20]==lease&&
-                                        tx_tun.write_scoped_physical_dns_ip(
-                                            generation,&physical_packet[..len]
-                                        ).ok()==Some(len)=>{
-                                        tx_physical_rx.fetch_add(1,Ordering::Relaxed);
+                                    Ok(len) if physical_packet[16..20]==lease=>{
+                                        let delivered=crate::v4_android_dns_physical_flow::
+                                            emit_physical_dns_tun_reply(
+                                                &mut physical_packet[..len],
+                                                inner_mtu,&mut physical_fragment,
+                                                |piece,fragmented|{
+                                                    let wrote=if fragmented{
+                                                        tx_tun.write_scoped_physical_dns_ipv4_fragment(
+                                                            generation,piece)
+                                                    }else{
+                                                        tx_tun.write_scoped_physical_dns_ip(
+                                                            generation,piece)
+                                                    };
+                                                    wrote.ok()==Some(piece.len())
+                                                }
+                                            ).is_ok();
+                                        if delivered{
+                                            tx_physical_rx.fetch_add(1,Ordering::Relaxed);
+                                        }else{
+                                            tx_physical_errors.fetch_add(1,Ordering::Relaxed);
+                                        }
                                     },
                                     _=>{
                                         tx_physical_errors.fetch_add(1,Ordering::Relaxed);

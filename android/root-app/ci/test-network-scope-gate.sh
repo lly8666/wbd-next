@@ -1732,3 +1732,23 @@ assert 'TestB58OriginalGoColdSixteenSelectedUIDs' in (go/"android_parse_reason_l
 print("ANDROID_B58_SELECTED_16_UID_32_PACKAGES_AND_DIRECT_16_CIDRS_ORIGINAL_ROOT_SOURCE_PASS")
 print("ANDROID_B58_SINGLE_GROUP_ALL_APP_CONSTANT_KERNEL_READBACK_SOURCE_PASS")
 PY
+
+# B59: original Normal/Game physically scoped DNS jumbo reply to one TUN.
+python3 - <<'PY'
+from pathlib import Path
+eng=Path("crates/wbd-engine/src")
+normal=(eng/"v4_android_original_m4.rs").read_text()
+game=(eng/"v4_android_game_m4.rs").read_text()
+dns=(eng/"v4_android_dns_physical_flow.rs").read_text()
+io=Path("crates/wbd-platform/src/android_root_io.rs").read_text()
+for owner in (normal,game):
+ assert owner.count("emit_physical_dns_tun_reply(")==1
+ assert owner.count("write_scoped_physical_dns_ipv4_fragment(")==1
+ assert owner.count("write_scoped_physical_dns_ip(")>=1
+assert normal.count("tun.read_ip_scatter(")==1
+assert game.count("tx_tun.read_ip(")==1
+assert 'pub(crate) fn emit_physical_dns_tun_reply(' in dns
+assert 'crate::v4_android_ipv4_mtu::fragment(' in dns
+assert 'pub fn write_scoped_physical_dns_ipv4_fragment(' in io
+print("ANDROID_B59_NORMAL_GAME_PHYSICAL_EDNS_ORIGINAL_TUN_RFC791_SOURCE_PASS")
+PY

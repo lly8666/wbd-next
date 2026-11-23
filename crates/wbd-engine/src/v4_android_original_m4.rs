@@ -822,6 +822,8 @@ fn tun_worker(
         crate::v4_android_dns_physical_flow::MAX_DNS_WIRE];
     let mut physical_packet=[0u8;
         crate::v4_android_dns_physical_flow::MAX_DNS_REPLY_IPV4];
+    // B59: one bounded reusable fragment slab for physical EDNS answers.
+    let mut physical_fragment=[0u8;2_048];
     let mut pending=None::<PendingAndroidJumbo>;
     #[cfg(feature="fec2_product_record")]
     let mut pending_fixed=None::<PendingAndroidFixedIpv4>;
@@ -1091,15 +1093,31 @@ fn tun_worker(
                         now().0/1_000_000);
                     match result{
                         Ok(len) if e.client_lease_ipv4.is_some_and(|lease|
-                            physical_packet[16..20]==lease) &&
-                            tun.write_scoped_physical_dns_ip(
-                                e.generation,&physical_packet[..len]
-                            ).ok()==Some(len)=>{
-                            stats.dns_physical_rx.fetch_add(1,Ordering::Relaxed);
-                            // Real TC=1 DNS response was injected into the
-                            // original App TUN, not proof of later TCP retry.
-                            if physical_packet[30]&0x02!=0{
-                                stats.dns_physical_tc_tun.fetch_add(1,Ordering::Relaxed);
+                            physical_packet[16..20]==lease)=>{
+                            let delivered=crate::v4_android_dns_physical_flow::
+                                emit_physical_dns_tun_reply(
+                                    &mut physical_packet[..len],
+                                    frame.single_business_payload_mtu,
+                                    &mut physical_fragment,|piece,fragmented|{
+                                        let wrote=if fragmented{
+                                            tun.write_scoped_physical_dns_ipv4_fragment(
+                                                e.generation,piece)
+                                        }else{
+                                            tun.write_scoped_physical_dns_ip(
+                                                e.generation,piece)
+                                        };
+                                        wrote.ok()==Some(piece.len())
+                                    }
+                                ).is_ok();
+                            if delivered{
+                                stats.dns_physical_rx.fetch_add(1,Ordering::Relaxed);
+                                // Existing TC=1 observation means the original
+                                // App may still retry TCP53 over original M3.
+                                if physical_packet[30]&0x02!=0{
+                                    stats.dns_physical_tc_tun.fetch_add(1,Ordering::Relaxed);
+                                }
+                            }else{
+                                stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
                             }
                         }
                         _=>{
