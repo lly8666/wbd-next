@@ -516,6 +516,12 @@ public final class RootClientActivity extends Activity {
         traceUi(RootDiagnosticReceipt.Event.UI_START_TAPPED);
         boolean dispatchRequested=false;
         try{
+            // One explicit cold authorization at a time. In particular,
+            // do not rewrite the previous live Root owner's credential
+            // files while a different physical Network is selected.
+            if(RootClientService.sessionOwnerActive)
+                throw new IllegalStateException(
+                    "旧原生会话尚未退出。先STOP并等待结束，再选新Network手动START");
             if(physical.isEmpty())throw new IllegalArgumentException("No real physical Android Network");
             int pos=networks.getSelectedItemPosition();
             if(pos<0||pos>=physical.size())throw new IllegalArgumentException("No selected Network");
@@ -1063,6 +1069,35 @@ public final class RootClientActivity extends Activity {
             startService(i);
         });
         pane.addView(stop);
+        // Explicit two-stage cold physical Network reselection; NO
+        // automatic root relaunch after Android onLost/capability changes.
+        // The new START reuses the complete existing credential/UID/TLS
+        // validation and creates an entirely fresh Go/Rust generation.
+        Button reselect=new Button(this);
+        reselect.setText("切换实体Network：STOP旧会话，再刷新并手动START");
+        reselect.setOnClickListener(v->{
+            if(RootClientService.sessionOwnerActive){
+                new AlertDialog.Builder(this)
+                    .setTitle("先退出原会话")
+                    .setMessage("将先请求原Go/Rust停止并撤回旧普通App UID路由。"+
+                        "不会自动连接另一个Network；请等退出，第二次点此按钮刷新网络列表，"+
+                        "亲自选择新的Wi-Fi/蜂窝后手动START。")
+                    .setNegativeButton("取消",null)
+                    .setPositiveButton("请求STOP",(dialog,which)->{
+                        Intent i=new Intent(this,RootClientService.class);
+                        i.setAction(RootClientService.STOP);
+                        startService(i);
+                        status.setText("旧会话STOP已请求；等待实际Go/Rust退出再重选Network");
+                    }).show();
+            }else{
+                chooseNetworks();
+                status.setText(RootClientService.previousOwnerStopConfirmed
+                    ?"旧会话原生Stop及UID路由撤回已确认；选择新Network后手动START"
+                    :"网络列表已刷新；没有完整旧会话Stop收据，"+
+                     "如有残留先用WBD恢复网络，再手动START");
+            }
+        });
+        pane.addView(reselect);
         Button restore=new Button(this);
         restore.setText("恢复网络（WBD临时Root防火墙/UID路由）");
         restore.setOnClickListener(v->new AlertDialog.Builder(this)

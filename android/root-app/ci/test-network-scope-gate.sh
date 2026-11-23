@@ -97,6 +97,21 @@ assert bridge.index('C.wbd_m0_embedded_go_game_group_stop(') < bridge.index(
     'owner.StopAndReleaseOriginalOwner()')
 assert 'new String[]{"normal","fec-fixed","fec-auto","game2","game4","game2-fixed","game4-fixed"}' in app
 assert 'go_tags=wbd_v4_embedded_go' in build
+# B47: signed App Service consumes *actual* Game2/4 Go native
+# READY and does not overwrite a live Root owner's cold credential files.
+service=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
+game_status=Path("android/root-app/src/org/wbdnext/rootclient/RootGameSessionStatus.java").read_text()
+assert 'RootGameSessionStatus.gameReady(fecMode,line)' in service
+assert 'RootGameSessionStatus.readyBrief(fecMode)' in service
+assert 'RootGameSessionStatus.confirmedPreviousOwnerStop(' in service
+assert 'nativeStopSeen,routeStopSeen,exit==0,uidReady' in service
+assert 'sessionOwnerActive=true;' in service
+assert 'sessionOwnerActive=false;' in service
+assert 'RootGameSessionStatus.session' not in game_status
+assert 'V4_ORIGINAL_ANDROID_GAME_NATIVE_READY role=client lanes=' in game_status
+assert 'if(RootClientService.sessionOwnerActive)' in app
+assert '切换实体Network：STOP旧会话' in app
+print("ANDROID_B47_GAME_NATIVE_APP_LIFECYCLE_COLD_NETWORK_RESELECT_SOURCE_PASS")
 # B43: Game2 shares original Normal UDP53, native Health and M4 counters.
 rust_group=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
 m4=Path("crates/wbd-engine/src/v4_android_game_m4.rs").read_text()
@@ -409,6 +424,14 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
   android/root-app/ci/OriginalGoMilestonesTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoMilestonesTest
+# B47 signed-App original Game2/4 connection READY + owned Stop receipt.
+# These are exact markers from real Go/Rust, never UI mode fake-ready.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
+  android/root-app/src/org/wbdnext/rootclient/RootGameSessionStatus.java \
+  android/root-app/ci/RootGameSessionStatusTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootGameSessionStatusTest
+
 # B20: execute the SAME immutable native FEC status decoder embedded in
 # the signed APK. No guest, test-only parser, network or forged APPLIED.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \

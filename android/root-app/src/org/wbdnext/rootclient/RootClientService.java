@@ -39,6 +39,10 @@ public final class RootClientService extends Service {
     // Actual original Go -> Rust M3/M4 mode revision; separate from
     // generic Root/TUN readiness and never evidence of phone E2E.
     public static volatile String fecStatus="FEC: 尚无本会话原生状态";
+    // Read-only UI lifecycle. Explicit cold Network reselect must NOT
+    // overwrite still-active native credential files or start another Root.
+    static volatile boolean sessionOwnerActive=false;
+    static volatile boolean previousOwnerStopConfirmed=false;
     private final AtomicBoolean running=new AtomicBoolean(false);
     private final AtomicBoolean stopping=new AtomicBoolean(false);
     private final AtomicBoolean stopSignalDispatched=new AtomicBoolean(false);
@@ -211,6 +215,8 @@ public final class RootClientService extends Service {
            !running.compareAndSet(false,true)){
             return START_NOT_STICKY;
         }
+        sessionOwnerActive=true;
+        previousOwnerStopConfirmed=false;
         stopping.set(false);
         stopSignalDispatched.set(false);
         trace(RootDiagnosticReceipt.Event.START_REQUESTED);
@@ -331,6 +337,7 @@ public final class RootClientService extends Service {
             trace(RootDiagnosticReceipt.Event.START_REFUSED);
             status="START_REFUSED: "+e.getMessage();
             running.set(false);
+            sessionOwnerActive=false;
             stopWatchingPhysicalNetwork();
             stopWatchingSelectedPackage();
             selection=null;
@@ -415,6 +422,7 @@ public final class RootClientService extends Service {
                          String[] bypassPackages,int[] bypassUIDs,
                          boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
+        boolean nativeStopSeen=false,routeStopSeen=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         try{
@@ -784,10 +792,14 @@ public final class RootClientService extends Service {
                     }
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_GO_RX_HANDOFF role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_HANDOFF);
-                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_STOP_DRAINED role=client"))
+                    if(RootGameSessionStatus.uidRouteWithdrawn(line)){
+                        routeStopSeen=true;
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_UID_ROUTE_STOP_DRAINED);
-                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_NATIVE_STOP_DRAINED role=client"))
+                    }
+                    if(RootGameSessionStatus.nativeStopped(line)){
+                        nativeStopSeen=true;
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_RUST_STOP_JOINED);
+                    }
                     if(OriginalGoMilestones.matches(line,
                         "V4_PUBLIC_ANDROID_PEER_THROW_ROUTE_READBACK role=client")){
                         trace(RootDiagnosticReceipt.Event.SERVER_PEER_THROW_PRIVATE_FIB_READBACK);
@@ -850,14 +862,21 @@ public final class RootClientService extends Service {
                         uidReady=true;
                         trace(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT);
                     }
-                    if(!nativeReady&&OriginalGoMilestones.matches(line,"V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")){
+                    if(!nativeReady&&(
+                        OriginalGoMilestones.matches(line,
+                            "V4_ORIGINAL_GO_CLIENT_NATIVE_READY role=client")||
+                        RootGameSessionStatus.gameReady(fecMode,line))){
                         nativeReady=true;
                         trace(RootDiagnosticReceipt.Event.NATIVE_M4_RECEIPT);
+                        if(RootGameSessionStatus.expectedLanes(fecMode)!=0)
+                            trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_GAME_NATIVE_READY);
                     }
                     if(uidReady&&nativeReady&&!stopping.get()&&!readyRecorded){
                         readyRecorded=true;
                         trace(RootDiagnosticReceipt.Event.NATIVE_M4_AND_UID_READY);
-                        status="NATIVE_M4_READY + VERIFIED_UID_ROUTE_READBACK; real Android traffic unverified";
+                        String gameBrief=RootGameSessionStatus.readyBrief(fecMode);
+                        status=gameBrief!=null?gameBrief:
+                            "NATIVE_M4_READY + VERIFIED_UID_ROUTE_READBACK; real Android traffic unverified";
                     }
                     // Deliberately don't echo username, auth errors, route
                     // key, password, TLS transcript or full native stdout.
@@ -880,10 +899,18 @@ public final class RootClientService extends Service {
                 synackSeen?"SYNACK_PRE_AUTH":
                 rawReady?"RAW_PRE_SYNACK":
                 tunConfigured?"TUN_PRE_RAW":"PRE_TUN";
-            status=exit==0
-                ?"ORIGINAL_NATIVE_EXITED_ZERO — phone data not independently verified"
-                :"ROOT_OR_NATIVE_EXIT_"+exit+" after "+lastStage+
-                 " — inspect fixed receipt; Android data unverified";
+            previousOwnerStopConfirmed=readyRecorded&&
+                RootGameSessionStatus.confirmedPreviousOwnerStop(
+                    nativeStopSeen,routeStopSeen,exit==0,uidReady);
+            if(previousOwnerStopConfirmed){
+                trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED);
+                status="OWNED_STOP_VERIFIED — 原Go/Rust与UID路由已归还；可手动重选Network并START（业务未验）";
+            }else{
+                status=exit==0
+                    ?"ORIGINAL_NATIVE_EXITED_ZERO — 完整Stop收据未确认；请核查后手动START"
+                    :"ROOT_OR_NATIVE_EXIT_"+exit+" after "+lastStage+
+                     " — inspect fixed receipt; Android data unverified";
+            }
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.ROOT_LAUNCH_FAILED);
             if(e instanceof java.net.UnknownHostException){
@@ -912,6 +939,9 @@ public final class RootClientService extends Service {
                 stopForeground(true);
                 stopSelf();
             }
+            // Last: UI cannot stage new cold credentials until this
+            // owner has been joined, files removed and watchers released.
+            sessionOwnerActive=false;
         }
     }
     // The Restore button never changes the firewall in Java. It stops
