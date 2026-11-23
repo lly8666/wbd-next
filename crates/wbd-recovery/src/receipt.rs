@@ -589,7 +589,8 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     /// There is no full-table scan and no second network-repair timer.
     pub fn on_timer(&mut self, now: MonoNs) -> PollResult<H> {
         let mut releases=Vec::new();
-        let mut candidates=Vec::with_capacity(MAX_POLL_CANDIDATES);
+        // Idle polls produce no candidates; don't allocate 32 slots on every TX turn.
+        let mut candidates=Vec::new();
         #[cfg(test)]
         { self.last_timer_index_pops=0; }
 
@@ -650,6 +651,7 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
                 entry.queued=Some(Queued {
                     epoch:entry.retry_epoch,until,started:now
                 });
+                if candidates.is_empty(){ candidates.reserve(MAX_POLL_CANDIDATES); }
                 candidates.push(RepairCandidate {
                     pn,origin:entry.frozen.origin(),retry_epoch:entry.retry_epoch,
                     repair_attempt_stage:0,dispatch_by:until,
