@@ -1616,7 +1616,15 @@ jobs:
                 os.environ.get('WBD_WL_V2_SCENARIO','').startswith('scenarios/') and
                 os.environ.get('WBD_WL_PUBLIC_MODES')=='normal' and
                 m['source_sha']==os.environ.get('WBD_WL_BINARY_SOURCE') and
-                m['source_sha']==os.environ.get('GITHUB_SHA')):
+                (m['source_sha']==os.environ.get('GITHUB_SHA') or
+                 (os.environ.get('WBD_WL_OUTER_PAIR')=='1' and
+                  os.environ.get('WBD_WL_REUSE_RUN_ID')=='45111958268' and
+                  os.environ.get('WBD_WL_BINARY_SOURCE')=='92920fb96f2d77ca11abcfdf4a4069d24731f62b' and
+                  os.environ.get('WBD_WL_V2_SCENARIO')=='scenarios/wl-outer-repair-10m-250ms-loss30-60s.json'))):
+              # Signed source-matched reuse, or exactly the one frozen
+              # post-source OFF/ON pair. The preceding immutable-source diff
+              # must still prove no changed product code, and both exe/DLL
+              # sha256 must match the original downloaded manifest.
               # The live signed Normal WAN source contains actual native
               # m0_v4_probe + official ISA-L; the old generic two-feature
               # expectation wrongly rejected the *same* proven binary.
