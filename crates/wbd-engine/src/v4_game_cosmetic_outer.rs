@@ -52,6 +52,8 @@ struct Lane{
     held:Option<(RepairCandidate<CosmeticFrozen>,ReservationId)>,
     retry_after_ns:Option<u64>,
     sent:u64,
+    // Only consumed by the source-isolated FEC hint-origin experiment.
+    diag_nom_sack:u64,diag_nom_dupack:u64,
 }
 pub(crate) struct CosmeticOuter{
     lanes:Vec<Lane>,
@@ -81,7 +83,8 @@ fn new_lane(key:LaneKey,seq:u64,epoch:[u8;16])->Result<Lane,OuterAckError>{
         .map_err(|_|OuterAckError::InvalidConfig)?;
     shadow.enable_opportunistic_v3().map_err(|_|OuterAckError::InvalidConfig)?;
     Ok(Lane{seen:0,key,epoch,ack,shadow,ready:VecDeque::with_capacity(32),
-        held:None,retry_after_ns:None,sent:0})
+        held:None,retry_after_ns:None,sent:0,
+        diag_nom_sack:0,diag_nom_dupack:0})
 }
 impl CosmeticOuter{
     pub fn with_normal_feedback(keys:&[LaneKey],seqs:&[u64],epoch:[u8;16])
@@ -163,7 +166,12 @@ impl CosmeticOuter{
         for pn in update.retired{let _=l.shadow.discard_outer_ack_hint(pn);}
         let mut found=false;
         for pn in update.gap_candidates{
-            found|=l.shadow.on_outer_gap_hint(pn,now);
+            let admitted=l.shadow.on_outer_gap_hint(pn,now);
+            if admitted{
+                found=true;
+                if sacks.is_empty(){l.diag_nom_dupack+=1}
+                else{l.diag_nom_sack+=1}
+            }
         }
         found
     }
@@ -243,6 +251,10 @@ impl CosmeticOuter{
                     OUTER_HEADER_BYTES);
         }
         true
+    }
+    pub fn nomination_causes(&self)->(u64,u64){
+        (self.lanes.iter().map(|l|l.diag_nom_sack).sum(),
+         self.lanes.iter().map(|l|l.diag_nom_dupack).sum())
     }
     pub fn sent(&self)->u64{self.lanes.iter().map(|l|l.sent).sum()}
     pub fn copied_record_wire_bytes(&self)->u64{self.copied_record_wire_bytes}
