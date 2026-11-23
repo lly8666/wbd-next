@@ -17,8 +17,7 @@ use std::sync::Arc;
 // Normal's original frozen-receipt/ACK index only when a real optional
 // shadow can be retained. The old dense index wasted tree work on
 // first sends that were never eligible for a cosmetic copy.
-const FEC_SHADOW_SAMPLE_MASK:u64=1; // one optional FEC snapshot / 2 original copies
-const FEC_OUTER_MIN_INTERVAL_NS:u64=80_000_000;
+// Use Normal's single mixed PN/lane 1/2 eligibility in OFF and fixed FEC.
 
 /// GameAdapter owns the distinct original-Go-TLS-derived AEAD/PN, not Normal
 /// M1's key. After real NPF firstsend, this bounded immutable snapshot
@@ -129,7 +128,6 @@ impl GameOuter{
         // ALL real first copies still count towards F further below.
         let seen=self.fec_seen.get_mut(index).ok_or(INVALID)?;
         *seen=seen.wrapping_add(1);
-        let sampled=(*seen&FEC_SHADOW_SAMPLE_MASK)==0;
         let m=self.lanes.get_mut(index).ok_or(INVALID)?;
         let high=m.ack.highest_sent_end();
         let delta=seq.wrapping_sub(high as u32) as i32;
@@ -143,6 +141,7 @@ impl GameOuter{
                 .map_err(|_|BAD_STAGE)
         }
         let now=m2_clock();
+        let sampled=win_v3_admit_shadow(pn,m.lane,now);
         let bytes=wire.len().checked_add(54).ok_or(INVALID)? as u64;
         // ALL successful original first copies count toward F, even
         // unselected FEC samples; the shared R/F cap cannot be diluted.
@@ -150,8 +149,7 @@ impl GameOuter{
             .on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
         // No BTree node unless the original frozen snapshot is both
         // sampled and admitted. Guard optional CPU before tree mutation.
-        if !sampled||m.shadow.outstanding()>=MAX_M2_FIXED_FROZEN||
-            (!self.fec_sparse&&!win_v3_admit_shadow(pn,m.lane,now)){
+        if !sampled||m.shadow.outstanding()>=MAX_M2_FIXED_FROZEN{
             m.ack.advance_untracked(high,wire.len() as u32)
                 .map_err(|_|BAD_STAGE)?;
             return Ok(())
@@ -196,16 +194,15 @@ impl GameOuter{
         // first-copy indexing makes such gaps observable. No FEC credit.
         if !self.repair_enabled{return false}
         let Some(m)=self.lanes.get_mut(index)else{return false};
-        let exact=m.ack.tracks_cumulative_head(ack);
         let now=m2_clock();
         let Ok(update)=m.ack.on_feedback(
             m.lane,self.epoch,ack,sacks,now,20_000_000)else{return false};
         for pn in update.retired{let _=m.shadow.discard_outer_ack_hint(pn);}
         let mut work=false;
-        if exact{
-            for pn in update.gap_candidates{
-                work|=m.shadow.on_outer_gap_hint(pn,now);
-            }
+        // Normal permits SACK-proven gaps even if cumulative ACK points
+        // to a skipped sample; the index itself guards cumulative hints.
+        for pn in update.gap_candidates{
+            work|=m.shadow.on_outer_gap_hint(pn,now);
         }
         work
     }
@@ -287,11 +284,8 @@ impl GameOuter{
         };
         let _=m.shadow.on_send_result(&held.candidate,status,now);
         let _=g.revoke(held.lease,now);
-        if self.fec_sparse{
-            // At most 12.5 optional outer repeats per second per lane.
-            // No additional FEC symbol/PN, real first credit or Health.
-            m.retry_after_ns=Some(now.0.saturating_add(FEC_OUTER_MIN_INTERVAL_NS));
-            if sent==1{self.fec_copied=self.fec_copied.saturating_add(1)}
+        if self.fec_sparse && sent==1{
+            self.fec_copied=self.fec_copied.saturating_add(1);
         }
         Ok(())
     }
@@ -317,8 +311,8 @@ impl Drop for GameOuter{
             return
         }
         if self.fec_sparse{
-            eprintln!("WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance={} sampled_original={:?} exact_ack_head_only=1 same_original_pn_seq=1 no_fec_recovery_credit=1",
-                self.fec_copied,self.fec_seen.iter().map(|n|n/(FEC_SHADOW_SAMPLE_MASK+1)).collect::<Vec<_>>());
+            eprintln!("WBD_GAME_FEC_NORMAL_OUTER_STOP copied_appearance={} firstsend_records={:?} normal_ack_gap=1 same_original_pn_seq=1 no_fec_recovery_credit=1",
+                self.fec_copied,self.fec_seen);
         }
         if let Ok(mut g)=m2_global().lock(){
             let now=m2_clock();
@@ -371,13 +365,16 @@ mod tests{
     }
     #[test]
     fn r1_game_windows_off_and_fixed_share_normal_half_sample(){
-        assert_eq!(FEC_SHADOW_SAMPLE_MASK,1);
-        assert_eq!((1..=64u64).filter(|n|n&FEC_SHADOW_SAMPLE_MASK==0).count(),32);
+        let key=LaneKey{tunnel:TunnelKey{slot:0x474d_0001,generation:1},
+            slot:1,generation:1};
+        let selected=(1..=512u64).filter(|pn|{
+            win_v3_admit_shadow(*pn,key,MonoNs(1_000_000_000))
+        }).count();
+        assert!((190..=322).contains(&selected));
     }
     #[test]
     fn h811_fec_reuses_normal_cumulative_gap_without_flooding_every_record(){
-        assert_eq!(FEC_SHADOW_SAMPLE_MASK+1,2);
-        assert_eq!(1_000_000_000/FEC_OUTER_MIN_INTERVAL_NS,12);
+        // Normal budget pacing is shared; no Game-only 80ms throttle.
         // All original FEC sends now have an exact Normal ACK entry.
         // No earlier untracked hole may suppress the only appearance retry.
         let lane=LaneKey{tunnel:TunnelKey{slot:29,generation:7},slot:1,generation:7};
