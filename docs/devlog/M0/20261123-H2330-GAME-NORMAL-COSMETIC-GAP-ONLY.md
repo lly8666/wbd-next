@@ -26,6 +26,10 @@
 - 新增 `r1_game_short_duplicate_ack_burst_with_progress_is_not_real_stall` 实际在 Windows 全库428/429 与 Linux348/349 回归中首次 FAIL。原因不仅是sticky ever-progressed，`exact_gap` 也绕过 >=1s ACK稳定门提名原记录。修为**两种Game候选(exact-gap及稀疏真实停滞)** 均需同一已认证累计ACK不变>=1s及至少三次重复。旧h812测试早期88ms、110ms触发行为本身错误，改为真正保持1s后的时间点；无损持续推进短burst单元必须通过。
 - 21cff32是main产品新增修复。PR分支仅同步源码和真实失败证据；PR自己的真WAN另需资格，不能继承main。零损 Game2/4 OFF/fixed6 双端不应有规律外观重复。
 
+## H2334 · Game 新增一ACK最多一份外观
+- 原始每PN最多一次仍可在同一冻结累计ACK下连续换PN复制，源 `f082e5763eea64397865e35419ba483f2b94cadf` 又给每lane新增 `last_replay_ack`，**只在同一真实累计ACK首次成功补发后锁定**，直到有认证 ACK 进展才准另一原密文机会；每端80ms限频、10%字节上限、同ACK稳定≥1秒仍保留。
+- 新 `r1_game_one_cosmetic_copy_per_stalled_ack_epoch` 与 `r1_game_short_duplicate_ack_burst_with_progress_is_not_real_stall` 必须源锁单元通过。新的main双端测试 SOURCE `60a20196d9c028c20d989232b991a6a0becb30e0` 已发起，PR自身未取得WAN性能PASS。
+
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game Linux authentic duplicate-ACK stall admits an unacked sampled original even if true first missing head was unsampled; initial >=1s, candidate <=2s, real first-send behind, 10pct cap and one original replay, no timer-only DATA; new-source WAN pending."}
 ```
