@@ -8,6 +8,7 @@ on:
     paths:
       - crates/wbd-engine/src/v4_windows_game_outer.rs
       - crates/wbd-engine/src/v4_game_cosmetic_outer.rs
+      - crates/wbd-recovery/src/receipt.rs
       - crates/wbd-engine/src/v4_game_public_kernel.rs
       - crates/wbd-engine/src/v4_windows_game_native_runtime.rs
       - crates/wbd-engine/src/v4_presentation_ack.rs
