@@ -178,7 +178,7 @@ assert 'pub fn write_scoped_physical_dns_ip(' in platform
 # B59 original generation produces IPv4 DNS fragments only after the
 # owned physical socket plus original App ID/QNAME/lease have matched.
 game=Path("crates/wbd-engine/src/v4_android_game_m4.rs").read_text()
-assert 'pub(crate) fn emit_physical_dns_tun_reply(' in physical
+assert 'pub(crate) fn emit_physical_dns_tun_reply<' in physical
 assert 'crate::v4_android_ipv4_mtu::fragment(' in physical
 assert m4.count("emit_physical_dns_tun_reply(")==1
 assert game.count("emit_physical_dns_tun_reply(")==1

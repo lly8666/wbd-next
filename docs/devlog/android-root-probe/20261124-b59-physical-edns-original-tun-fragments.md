@@ -18,3 +18,11 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B59原Rust Normal/Game物理DNS EDNS大IPv4通过B16相同TUN分片返回App，补齐超过inner MTU的大DNS答案；真实Id/QNAME/原租约、Stop、Go/TLS和原TCP53不变。"}
 ```
+
+## B59a｜保留首SOURCE DNS Host FAIL，修泛型函数的源码查找（非数据面变更）
+
+B59首SOURCE `90caae98548dce71aa5fff1fb29689221e666454` [Dual64 #45219267382](https://github.com/lly8666/wbd-next/actions/runs/45219267382) 新增 `b59_physical_dns_*` 的 **3 个Rust Host实跑均PASS**，但`b2c2b-rust-dns-udp-inverse-map` Job的最后Python源码门检查`pub(crate) fn emit_physical_dns_tun_reply(`，真实泛型Rust声明为`pub(crate) fn emit_physical_dns_tun_reply<F:...>(`，因纯字符串不匹配FAIL；正式Root App源码脚本也使用了同一个错误查找。本B59a仅将两个源码门查找改为 `pub(crate) fn emit_physical_dns_tun_reply<`，保留所有原Rust真实 tests / 构建/其它source gates，不改任何生产 Rust/Go/Java、协议、MTU/分片逻辑或权限。首SOURCE失败按Actions结果保留，不冒充整套PASS。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B59a修复两处Host源码门误认泛型函数签名，真实Rust EDNS大包/小包/中途失败三测试已在原SOURCE PASS；Bionic生产代码不变。"}
+```

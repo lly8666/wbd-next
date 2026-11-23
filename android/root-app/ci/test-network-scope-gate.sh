@@ -1747,7 +1747,7 @@ for owner in (normal,game):
  assert owner.count("write_scoped_physical_dns_ip(")>=1
 assert normal.count("tun.read_ip_scatter(")==1
 assert game.count("tx_tun.read_ip(")==1
-assert 'pub(crate) fn emit_physical_dns_tun_reply(' in dns
+assert 'pub(crate) fn emit_physical_dns_tun_reply<' in dns
 assert 'crate::v4_android_ipv4_mtu::fragment(' in dns
 assert 'pub fn write_scoped_physical_dns_ipv4_fragment(' in io
 print("ANDROID_B59_NORMAL_GAME_PHYSICAL_EDNS_ORIGINAL_TUN_RFC791_SOURCE_PASS")
