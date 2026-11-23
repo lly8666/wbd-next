@@ -110,6 +110,15 @@ def genuine_case(scene,leg,dir_path,hashes,source,mode):
                 reason.append("NO_NATIVE_GAME_OUTER_LEDGER_"+role)
             elif loss>0 and repeats==0:
                 reason.append("GAME_OUTER_NONZERO_NOT_OBSERVED_"+role)
+            elif loss==0:
+                # Real Game STOP first_lane_copied is a conservative packet
+                # denominator, not the true wire-byte R/F. Never let
+                # 1,257 original replays at zero loss masquerade as PASS.
+                first=p.get("first_lane_copied")
+                if type(first) is not int or first<=0:
+                    reason.append("GAME_ZERO_LOSS_FIRST_COUNT_MISSING_"+role)
+                elif repeats*2000>first:
+                    reason.append("GAME_ZERO_LOSS_COSMETIC_FLOOD_"+role)
             if mode.endswith("-fec"):
                 proof=leg.get("telemetry",{}).get("game_fec_native_proof",{}).get(role,{})
                 out.setdefault("parity_separate",{})[role]=proof
