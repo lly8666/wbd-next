@@ -4,7 +4,7 @@
 //! authenticated delivery and first-send credit are independent.
 use std::collections::VecDeque;
 use std::sync::Arc;
-use wbd_recovery::outer_ack::{OuterAckIndex,OuterAckError};
+use wbd_recovery::outer_ack::{OuterAckIndex,OuterAckError,SackRange32};
 use wbd_recovery::{
     ReceiptState,ReceiptConfig,RepairCandidate,RepairSendResult,
     RepairBudget,RepairBudgetConfig,BudgetDirection,WireDirection,BudgetError,ReservationId,
@@ -154,10 +154,11 @@ impl CosmeticOuter{
     }
     // Same Normal ACK/SACK algorithm: retire optionally frozen positive spans,
     // nominate only existing missing original spans, never a blind DATA PTO.
-    pub fn on_feedback(&mut self,index:usize,ack32:u32,now_ns:u64)->bool{
+    pub fn on_feedback(&mut self,index:usize,ack32:u32,
+        sacks:&[SackRange32],now_ns:u64)->bool{
         let Some(l)=self.lanes.get_mut(index)else{return false};
         let now=MonoNs(now_ns);
-        let Ok(update)=l.ack.on_feedback(l.key,l.epoch,ack32,&[],
+        let Ok(update)=l.ack.on_feedback(l.key,l.epoch,ack32,sacks,
             now,REORDER_GUARD_NS)else{return false};
         for pn in update.retired{let _=l.shadow.discard_outer_ack_hint(pn);}
         let mut found=false;
@@ -263,7 +264,7 @@ mod tests{
         for i in 0..64u64{
             c.on_firstsend(0,i+1,100+100*i,&[9;100],(i+1)*1_000_000).unwrap();
         }
-        assert!(!c.on_feedback(0,6500,300_000_000));
+        assert!(!c.on_feedback(0,6500,&[],300_000_000));
         assert!(c.take_due(400_000_000,&[]).is_none());
         assert_eq!(c.sent(),0);
         assert_eq!(c.first_record_wire_bytes(),64*140);
@@ -282,7 +283,7 @@ mod tests{
         // At least the first indexed head has a genuine later indexed send.
         let (pn,seq)=heads[0];
         for t in [200_000_000,210_000_000,220_000_000]{
-            let _=c.on_feedback(0,seq as u32,t);
+            let _=c.on_feedback(0,seq as u32,&[],t);
         }
         let first=c.take_due(260_000_000,&[true,true]).unwrap();
         assert_eq!((first.pn,first.seq),(pn,seq));
@@ -292,7 +293,7 @@ mod tests{
         // unlike the former single-shadow/per-lane 1s stall implementation.
         let (pn2,seq2)=heads[1];
         for t in [350_000_000,360_000_000,370_000_000,380_000_000]{
-            let _=c.on_feedback(0,seq2 as u32,t);
+            let _=c.on_feedback(0,seq2 as u32,&[],t);
         }
         let second=c.take_due(410_000_000,&[true,true]).unwrap();
         assert_eq!(second.pn,pn2);
@@ -310,13 +311,13 @@ mod tests{
         }
         let (pn,seq)=target.unwrap();
         for t in [180_000_000,190_000_000,200_000_000]{
-            let _=c.on_feedback(0,seq as u32,t);
+            let _=c.on_feedback(0,seq as u32,&[],t);
         }
         let first=c.take_due(250_000_000,&[true,true]).unwrap();
         assert_eq!(first.pn,pn);
         assert!(c.complete(0,pn,true,250_000_000));
         for t in [260_000_000,270_000_000,280_000_000]{
-            let _=c.on_feedback(0,seq as u32,t);
+            let _=c.on_feedback(0,seq as u32,&[],t);
         }
         assert!(c.take_due(300_000_000,&[true,true]).is_none());
     }
