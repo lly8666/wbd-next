@@ -38,6 +38,9 @@ jobs:
           assert "win_v3_admit_shadow" in win
           ledger=Path("crates/wbd-engine/src/v4_presentation_ack.rs").read_text()
           assert "fn abandon_stalled" in ledger
+          assert "fn sacks4" in ledger
+          raw=Path("crates/wbd-platform/src/linux_raw_carrier.rs").read_text()
+          assert "ack.sacks().len().min(slots.len())" in raw
           product=Path("r0/go_overlay/internal/v4productcli/game_linux.go").read_text()
           assert "first_record_wire_bytes=%d copy_record_wire_bytes=%d" in product
           print("M0_GAME_NORMAL_V3_REWRITE_SOURCE_PRECHECK_PASS")
@@ -67,15 +70,17 @@ jobs:
       max-parallel: 4
       matrix:
         include:
+          - {mode: game2, loss: 5}
+          - {mode: game2, loss: 1}
+          - {mode: game2, loss: 10}
           - {mode: game2, loss: 30}
+          - {mode: game2, loss: 20}
+          - {mode: game2, loss: 0}
           - {mode: game4, loss: 30}
           - {mode: game2-fec, loss: 30}
           - {mode: game4-fec, loss: 30}
-          - {mode: game2, loss: 0}
-          - {mode: game2, loss: 5}
+          - {mode: normal, loss: 5}
           - {mode: normal, loss: 30}
-          - {mode: normal, loss: 0}
-          - {mode: game4, loss: 0}
     runs-on: ubuntu-24.04
     timeout-minutes: 22
     env:
