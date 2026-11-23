@@ -15,3 +15,7 @@ B45源码尚待本SOURCE Actions确切结果；Android真实四lane SYN/TLS/认�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B45原Go四TLS/四source-port RST journal接复用的Rust GameAdapter单TUN四RAW宽错峰+App Game4/off/三DNS/UID/Stop，不改原协议或安全层。"}
 ```
+
+## B45a｜同批 Go 生产入口组合修复
+
+首轮B45 `1558e784647b3c66f740838477bd761b93d56e65` [Dual64 #45136996614](https://github.com/lly8666/wbd-next/actions/runs/45136996614) 原Rust ARM64/x86编译完成，Android Go编译FAIL：最终计数日志编辑不慎覆盖 `game_android.go` 四lane代码为旧Game2导出，但CLI/bridge已指向 `runAndroidGame` 和 `V4AndroidGameProduct`，造成四个undefined。本修复从已准备好的真实四lane Go Blob恢复，保留B45的四TLS/四端口/Group M4/Stop，同时对齐Linux `int(c.gameLanes)` 策略参数类型，并在实际原Go低频读数按Game2/4打印对应M4 marker供Root App解析。首轮失败证据保留；新SOURCE独立验收，绝不继承旧BUILD_PASS。

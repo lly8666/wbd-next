@@ -22,22 +22,26 @@ import (
     "github.com/lly8666/wobuzhidao/internal/v4productcli/rstguard"
 )
 
-func androidGame2Port(base uint16,lane int)(uint16,error){
-    if lane<0||lane>1||int(base)+lane>65535||base==0{
-        return 0,fmt.Errorf("original Android Game2 requires two consecutive nonzero ports")
+func androidGamePort(base uint16,lane int)(uint16,error){
+    if lane<0||lane>3||int(base)+lane>65535||base==0{
+        return 0,fmt.Errorf("original Android Game2/4 requires consecutive nonzero source ports")
     }
     return base+uint16(lane),nil
 }
 // Real original-Go Root cold entry. Only after both original TLS sessions,
 // independent complete Detach and the shared Rust Game2 M4 reach Ready do
 // ordinary Android app UID routes switch to the SAME protected /32.
-func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
+func runAndroidGame(ctx context.Context,c config,ifindex uint32,
     tun *ownedTun,connected *bool,
 )(retErr error){
-    if c.gameLanes!=2||c.gameFecEnabled||c.startupPaddingMode!=0||
-       c.rotationInterval!=0||!c.autoIP||c.androidNetworkHandle==0{
-        return fmt.Errorf("Android original Game2/off requires FEC/padding/rotation off")
+    if (c.gameLanes!=2&&c.gameLanes!=4)||c.gameFecEnabled||
+       c.startupPaddingMode!=0||c.rotationInterval!=0||
+       !c.autoIP||c.androidNetworkHandle==0||
+       (c.gameLanes==4&&(!c.game4CopyStagger||!c.game4CopyWideStagger)){
+        return fmt.Errorf("Android original Game2/4 off requires original FEC/padding/rotation off and wide Game4 stagger")
     }
+    // Check the entire consecutive source-port group before any rule/socket.
+    if _,e:=androidGamePort(c.localPort,int(c.gameLanes)-1);e!=nil{return e}
     if os.Geteuid()!=0{return fmt.Errorf("Android Game2 requires original root owned kernel")}
     iface,e:=net.InterfaceByName(c.rawInterface)
     if e!=nil||iface==nil||uint32(iface.Index)!=ifindex||
@@ -45,7 +49,7 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         return fmt.Errorf("original Game2 selected physical interface changed")
     }
     policy,e:=realityfront.PolicyForClientWithInitialAndCipher(
-        2,"fixed",4,4,20,c.recordCipher)
+        int(c.gameLanes),"fixed",4,4,20,c.recordCipher)
     if e!=nil{return e}
     iptables,e:=exec.LookPath("iptables")
     if e!=nil{return fmt.Errorf("original Android Game2 exact RST guard unavailable")}
@@ -58,10 +62,10 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         }
         return string(out),nil
     }
-    raws:=make([]*faketcp.RawIPv4Endpoint,0,2)
-    assocs:=make([]*faketcp.ClientAssociation,0,2)
+    raws:=make([]*faketcp.RawIPv4Endpoint,0,int(c.gameLanes))
+    assocs:=make([]*faketcp.ClientAssociation,0,int(c.gameLanes))
     var guard *rstguard.Guard
-    stopRTO:=make([]func()(uint64,error),0,2)
+    stopRTO:=make([]func()(uint64,error),0,int(c.gameLanes))
     coldCtx,cancelCold:=context.WithCancel(ctx)
     var readers sync.WaitGroup
     var ready atomic.Bool
@@ -90,11 +94,12 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         "/data/local/tmp/wbd-next-root/rst-guard.json",rstguard.Plan{
         Version:1,Interface:c.rawInterface,
         SourceIP:c.localIP.String(),PeerIP:c.peerIP.String(),
-        SourcePort:int(c.localPort),PeerPort:int(c.peerPort),Game2:true,
+        SourcePort:int(c.localPort),PeerPort:int(c.peerPort),
+        Game2:c.gameLanes==2,Game4:c.gameLanes==4,
     })
     if e!=nil{return fmt.Errorf("Game2 two-port exact RST guard: %w",e)}
-    for lane:=0;lane<2;lane++{
-        local,e:=androidGame2Port(c.localPort,lane)
+    for lane:=0;lane<int(c.gameLanes);lane++{
+        local,e:=androidGamePort(c.localPort,lane)
         if e!=nil{return e}
         raw,e:=faketcp.OpenRawIPv4EndpointWithOptions(
             c.rawInterface,c.localIP.As4(),faketcp.PacketPersonaLegacy,
@@ -142,7 +147,7 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         if e!=nil{return e}
         stopRTO=append(stopRTO,driveOriginalClientColdBootstrapRTO(coldCtx,assoc))
     }
-    log.Print("V4_PUBLIC_ANDROID_GAME2_COLD_SOURCE role=client lanes=2 physical_network_bound=1 fake_tcp=original_go")
+    log.Printf("V4_PUBLIC_ANDROID_GAME_COLD_SOURCE role=client lanes=%d physical_network_bound=1 fake_tcp=original_go",c.gameLanes)
     // Real original-Go protected TLS on each of the TWO independent lanes,
     // then exact Rust B39 grouped cold + B40 M4 activation.
     var cn8503Raw []byte
@@ -152,8 +157,9 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         }
         cn8503Raw=c.androidCNSnapshot.PinnedWire()
     }
-    native,e:=realityfront.NewV4AndroidGame2Product(
-        realityfront.V4AndroidGame2Config{
+    native,e:=realityfront.NewV4AndroidGameProduct(
+        realityfront.V4AndroidGameConfig{
+            Lanes:c.gameLanes,
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
@@ -185,10 +191,10 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         },
         Username:c.username,Password:c.password,
         TunnelID:c.tunnel[:],AutoLease:true,InstallationID:c.installation[:],
-        ClientLimit:c.recordLimit,DesiredLanes:2,Policy:policy,
+        ClientLimit:c.recordLimit,DesiredLanes:c.gameLanes,Policy:policy,
     }
     tlsCtx,cancelTLS:=context.WithTimeout(ctx,60*time.Second)
-    lease,e:=native.ConnectAuthenticatedGame2(tlsCtx,assocs,admission)
+    lease,e:=native.ConnectAuthenticatedGame(tlsCtx,assocs,admission)
     cancelTLS()
     for _,stop:=range stopRTO{
         _,stopErr:=stop()
@@ -214,8 +220,8 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         }
     }
     *connected=true
-    log.Print("V4_ORIGINAL_ANDROID_GAME2_NATIVE_READY role=client lanes=2 original_go_tls=1 original_rust_m4=1 uid_route_after_m4=1")
-    ticker:=time.NewTicker(realityfront.V4AndroidGame2StatusInterval)
+    log.Printf("V4_ORIGINAL_ANDROID_GAME_NATIVE_READY role=client lanes=%d original_go_tls=1 original_rust_m4=1 uid_route_after_m4=1",c.gameLanes)
+    ticker:=time.NewTicker(realityfront.V4AndroidGameStatusInterval)
     defer ticker.Stop()
     for{
         select{
@@ -223,12 +229,15 @@ func runAndroidGame2(ctx context.Context,c config,ifindex uint32,
         case <-ticker.C:
             lanes,active,e:=native.OriginalNativeState()
             if e!=nil{return e}
-            if lanes!=2||!active{
+            if lanes!=uint32(c.gameLanes)||!active{
                 return fmt.Errorf("original Android Game2 M3/M4 worker stopped")
             }
+            log.Printf("V4_PUBLIC_ANDROID_GAME_LANES role=client requested=%d native=%d active=%t",
+                c.gameLanes,lanes,active)
             counters,e:=native.OriginalM4Counters()
             if e!=nil{return e}
-            // Existing one-second status ticker; exact Rust native counters.
+            // Existing one-second status ticker, actual Rust M4.
+            // Keep B43/B44 Game2 marker; distinguish real 4-lane readback.
             format:="V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d physicaltx=%d physicalrx=%d physicalerr=%d"
             if c.gameLanes==4{
                 format="V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client rawtx=%d rawrx=%d tun=%d rejected=%d dnstx=%d dnsrx=%d physicaltx=%d physicalrx=%d physicalerr=%d"
