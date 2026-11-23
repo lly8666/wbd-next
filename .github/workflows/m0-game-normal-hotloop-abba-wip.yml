@@ -1,5 +1,5 @@
-# H2335 arm one source-locked original Linux Game2 30% old/new ABBA. Product code unchanged.
-name: M0 Game Normal-v3 Game4-FEC 30pct timer hotloop CPU ABBA
+# M0 source-locked Game4-FEC30 ABBA: only receipt.rs idle candidate Vec allocation changes.
+name: M0 Game Normal-v3 Game4-FEC 30pct lazy timer Vec CPU ABBA
 on:
   push:
     branches: [work/m0-game-normal-outer-20261123]
@@ -12,10 +12,10 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      OLD_SOURCE: 91170a8ff92de8c47f46bbaae1543eaddce2a360
-      NEW_SOURCE: 405da606ff3520161f610e0cb279fcf54ee28e19
-      OLD_RUN: "45170955001"
-      NEW_RUN: "45173101086"
+      OLD_SOURCE: 4762fa9c61dfad540fd4e04349001cfb0eda54df
+      NEW_SOURCE: 6446db7bde09b96b9892f127e12ebb52ae915df2
+      OLD_RUN: "45181693979"
+      NEW_RUN: "45186810758"
       SCENARIO: scenarios/m0-cosmetic-game4-fec-loss30-60s.json
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -33,15 +33,15 @@ jobs:
             jq -e '
               .status=="ahead" and
               ([.files[].filename | select(startswith("tools/network_harness/") or .=="scenarios/m0-cosmetic-game4-fec-loss30-60s.json")] | length)==0 and
-              ([.files[].filename | select((startswith("crates/") or startswith("r0/go_overlay/internal/") or .=="Cargo.toml" or .=="Cargo.lock") and .!="crates/wbd-engine/src/v4_game_cosmetic_outer.rs")] | length)==0 and
-              ([.files[].filename | select(.=="crates/wbd-engine/src/v4_game_cosmetic_outer.rs")] | length)==1
+              ([.files[].filename | select((startswith("crates/") or startswith("r0/go_overlay/internal/") or .=="Cargo.toml" or .=="Cargo.lock") and .!="crates/wbd-recovery/src/receipt.rs")] | length)==0 and
+              ([.files[].filename | select(.=="crates/wbd-recovery/src/receipt.rs")] | length)==1
             ' >/dev/null
           gh api "repos/$GH_REPO/compare/$NEW_SOURCE...$GITHUB_SHA" |
             jq -e '
               .status=="ahead" and
               ([.files[].filename | select(startswith("crates/") or startswith("r0/go_overlay/") or startswith("tools/network_harness/") or .=="Cargo.toml" or .=="Cargo.lock" or .=="scenarios/m0-cosmetic-game4-fec-loss30-60s.json")] | length)==0
             ' >/dev/null
-          echo M0_ABBA_SOURCE_COMPARE_SAME_PRODUCT_EXCEPT_INDEXED_TIMER
+          echo M0_ABBA_SOURCE_COMPARE_SAME_PRODUCT_EXCEPT_LAZY_CANDIDATES
           test "$(gh api "repos/$GH_REPO/actions/runs/$OLD_RUN" --jq .head_sha)" = "$OLD_SOURCE"
           test "$(gh api "repos/$GH_REPO/actions/runs/$NEW_RUN" --jq .head_sha)" = "$NEW_SOURCE"
           # The old multi-scenario run had unrelated Game2 1/10/20
@@ -145,8 +145,8 @@ jobs:
                   "cleanup":x.get("cleanup")})
           qualified=len(rows)==4 and all(x["status"]=="PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR" for x in rows)
           summary={"schema":"m0-game4-fec-30pct-original-linux-v3-cpu-abba/v1",
-              "old_source":"91170a8ff92de8c47f46bbaae1543eaddce2a360",
-              "new_source":"405da606ff3520161f610e0cb279fcf54ee28e19",
+              "old_source":"4762fa9c61dfad540fd4e04349001cfb0eda54df",
+              "new_source":"6446db7bde09b96b9892f127e12ebb52ae915df2",
               "order":"OLD_NEW_NEW_OLD","real_same_ubuntu_runner":True,
               "qualified":qualified,"rows":rows,"attribution":"FULL_ORIGINAL_GO_RUST_PROCESS_CPU_NOT_ISOLATED_ALGORITHM"}
           if qualified:
@@ -163,7 +163,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
-          name: m0-game-normal-v3-game4-fec30-timer-cpu-abba-${{ github.sha }}
+          name: m0-game-normal-v3-game4-fec30-lazy-vec-cpu-abba-${{ github.sha }}
           path: |
             out/summary.json
             out/*/result.json
