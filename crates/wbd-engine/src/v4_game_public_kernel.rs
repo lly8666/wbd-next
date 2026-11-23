@@ -947,8 +947,9 @@ impl GameKernelOwner{
                 if hint_probe {
                     let sums=std::array::from_fn::<_,5,_>(|j|
                         hint_counts.iter().map(|r|r[j]).sum::<u64>());
-                    eprintln!("M0_GAME_TX_HINT_PROBE feedback={} with_sack={} without_sack={} nominated_sack={} nominated_dupack={} probes_only=1",
-                        sums[0],sums[1],sums[2],sums[3],sums[4]);
+                    let (pn_sack,pn_dupack)=cosmetic.nomination_causes();
+                    eprintln!("M0_GAME_TX_HINT_PROBE feedback={} with_sack={} without_sack={} nominated_sack={} nominated_dupack={} nominated_pn_sack={} nominated_pn_dupack={} probes_only=1",
+                        sums[0],sums[1],sums[2],sums[3],sums[4],pn_sack,pn_dupack);
                 }
                 eprintln!("WBD_GAME_IPV4_MTU_EXCEPTION df0_ip_fragments={} icmp3_code4_kernel_sent={} icmp3_code4_rejected={} NOT_REMOTE_APPLIED=1",
                     tx_fail.df0_fragments.load(Ordering::Relaxed),
