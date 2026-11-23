@@ -113,19 +113,21 @@ impl CosmeticOuter{
             return Err(OuterAckError::WrongScope)
         };
         l.seen=l.seen.wrapping_add(1);
-        let sampled=l.seen&SAMPLE_MASK==0;
-        if sampled{
+        // One live immutable optional candidate per lane is the ONLY
+        // reason for an ACK BTree node; all others advance TCP seq O(1).
+        let selected=l.seen&SAMPLE_MASK==0 &&
+            l.pending.is_none()&&l.held.is_none()&&
+            now_ns>=l.not_before&&!wire.is_empty()&&wire.len()<=MAX_WIRE;
+        let indexed=if selected{
             ack.on_definitely_sent(RecordPn(pn),seq,wire.len() as u32,
-                MonoNs(now_ns))?;
+                MonoNs(now_ns))?
         }else{
             ack.advance_untracked(seq,wire.len() as u32)?;
-        }
-        // Exact protected-record bytes of successfully copied first sends.
+            false
+        };
+        // All original first copies count in F, including unsampled.
         l.first_record_wire_bytes=l.first_record_wire_bytes.saturating_add(wire.len() as u64);
-        if sampled && l.pending.is_none() && l.held.is_none() &&
-            now_ns>=l.not_before&&!wire.is_empty()&&wire.len()<=MAX_WIRE{
-            // Unlike the old 250ms healthy timer, a real ACK gap alone
-            // may arm this frozen original ciphertext. No fake DATA PTO.
+        if indexed{
             l.pending_at_ns=now_ns;
             l.pending=Some((u64::MAX,
                 CosmeticCopy{lane:index,pn,seq,wire:Arc::from(wire)}));
@@ -353,6 +355,23 @@ mod tests{
             assert!(c.next_due().is_none());
         }
         assert_eq!(c.sent(),0);
+    }
+    #[test]
+    fn r1_game_only_index_live_original_shadow_not_half_the_source(){
+        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:49,generation:7},
+            slot:1,generation:7};
+        let mut c=CosmeticOuter::with_normal_feedback(&[key],&[100],[6;16]).unwrap();
+        for i in 1..=64u64{
+            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
+                i*1_000_000).unwrap();
+        }
+        let lane=&c.lanes[0];
+        assert_eq!(lane.ack.as_ref().unwrap().highest_sent_end(),740);
+        assert_eq!(lane.ack.as_ref().unwrap().outstanding(),1);
+        assert_eq!(lane.first_record_wire_bytes,640);
+        assert_eq!(lane.pending.as_ref().unwrap().1.pn,2);
+        assert_eq!(c.sent(),0);
+        assert!(c.next_due().is_none());
     }
     #[test]
     fn r1_game_one_cosmetic_copy_per_stalled_ack_epoch(){
