@@ -1,6 +1,9 @@
 //! B55 pure scheduling for original Android Game2/4 TUN TX and RAW RX.
 //! No new crypto/protocol, worker, TUN reader or data queue.
 pub(crate) const IDLE_WAKE_MAX_MS:i32=1_000;
+// RAW RX has no Health/Game4/FEC deadline; only kernel RAW data or Stop
+// eventfd needs to wake it. A 30s ceiling is a backup, not a packet timer.
+pub(crate) const RAW_RX_IDLE_MAX_MS:i32=30_000;
 const MAX_INLINE_TUN_BURST:u8=8;
 
 #[derive(Default)]
@@ -41,6 +44,20 @@ mod tests {
         assert_eq!(wait_ms(now,Some(now+15_000_000_000),Some(now+50_000_000)),50);
         assert_eq!(wait_ms(now,Some(now+15_000_000_000),Some(now+140_000_000)),140);
         assert_eq!(wait_ms(now,Some(now+30_000_000),Some(now+140_000_000)),30);
+    }
+    #[test]
+    fn b56_android_game_rx_event_driven_idle_not_periodic_1s(){
+        assert_eq!(RAW_RX_IDLE_MAX_MS,30_000);
+        assert!(RAW_RX_IDLE_MAX_MS>IDLE_WAKE_MAX_MS);
+    }
+    #[test]
+    fn b56_android_game_raw_rx_short_burst_and_stop_event_turn(){
+        let mut rx=GameTunBurst::default();
+        for _ in 0..7 {assert!(rx.inline_next(true))}
+        assert!(!rx.inline_next(true),"eighth original RAW recv must give Stop fd a turn");
+        assert!(rx.inline_next(true));
+        assert!(!rx.inline_next(false),"WouldBlock resumes kernel readiness");
+        assert!(rx.inline_next(true),"next M3 record immediately processed");
     }
     #[test]
     fn b55_android_game_business_burst_bounded_and_idle_reset(){

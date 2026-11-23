@@ -25,7 +25,7 @@ use crate::v4_android_dns_physical_flow::{
 };
 use crate::v4_android_cn_dns::CNDnsMatcher;
 use crate::v4_android_dns_route::{choose,DnsRoute};
-use crate::v4_android_game_schedule::{GameTunBurst,wait_ms,IDLE_WAKE_MAX_MS};
+use crate::v4_android_game_schedule::{GameTunBurst,wait_ms,RAW_RX_IDLE_MAX_MS};
 
 pub(super) struct AndroidGameWorkers{
     stop:Arc<AtomicBool>,started:Arc<AtomicBool>,
@@ -442,13 +442,16 @@ impl AndroidGameWorkers{
                     let clock=Instant::now();
                     let mut last_ack=rx_first;
                     let mut last_ack_ns=0u64;
+                    let mut raw_burst=GameTunBurst::default();
                     while !rx_stop.load(Ordering::Acquire)&&
                         !rx_started.load(Ordering::Acquire){
                         thread::yield_now();
                     }
                     while !rx_stop.load(Ordering::Acquire){
-                        match rx_raw.read_original_record(generation,&mut wire,tuple,
-                            PacketPersona::Legacy){
+                        let read=rx_raw.read_original_record(generation,&mut wire,
+                            tuple,PacketPersona::Legacy);
+                        let raw_received=matches!(&read,Ok((n,_)) if *n>0);
+                        match read{
                             Ok((len,seq32))=>{
                                 rx_read.fetch_add(1,Ordering::Relaxed);
                                 let decrypted=opener.open(&mut wire[..len]);
@@ -650,8 +653,12 @@ impl AndroidGameWorkers{
                                 break
                             }
                         }
+                        // B56: already-queued original M3 records use
+                        // one bounded recv burst, avoiding a poll per record.
+                        // One existing Stop eventfd turn every eight reads.
+                        if raw_burst.inline_next(raw_received){continue}
                         if rx_wake.wait_readable(
-                            rx_raw.readiness_fd(),IDLE_WAKE_MAX_MS
+                            rx_raw.readiness_fd(),RAW_RX_IDLE_MAX_MS
                         ).is_err(){
                             rx_stop.store(true,Ordering::Release);
                             break

@@ -1,3 +1,5 @@
+> **B56 Android 原Game2/4 RAW RX 低唤醒/业务吞吐（本SOURCE待CI）**：基于B55b [#45189246018](https://github.com/lly8666/wbd-next/actions/runs/45189246018) 11 SUCCESS / 4 SKIPPED，原2/4路Game M3 RAW RX继TX后加入最多8包的原位连续处理，避免每条record都走poll；无定时逻辑的RX idle改为30s同一RAW+Stop eventfd即时唤醒，原PN/AEAD/FEC/TUN/ACK/owned Stop不变；Game Rust文件增原Dual64工作流触发，不加Job。[B56记录](../devlog/android-root-probe/20261123-b56-game-raw-rx-event-driven-burst.md)，同源签名APK/Host/Oracle待本SOURCE CI、真机性能NOT_RUN。
+
 > **B55 原Game2/4 M4首送/低CPU热路径（本SOURCE待CI）**：前SOURCE `c3f4b828` [#45185545494](https://github.com/lly8666/wbd-next/actions/runs/45185545494) 11 SUCCESS/4 SKIPPED，本批原Rust单TUN读取同一GameAdapter/2/4RAW最多8包无逐包poll，原Health/Game4/FEC到期优先的1s eventfd TX idle、2/4路RX idle 250ms→1s。无新线程/用户态额外分组控制/协议；3条Rust Host +签名APK按新SOURCE验，真机业务与CPU NOT_RUN。[B55](../devlog/android-root-probe/20261123-b55-original-game-event-driven-burst.md)。
 
 > **B54 四套配置的可选原Go TLS CA跟随（本SOURCE待CI）**：为B52多服务器切换补已有B23可选私有CA的各槽保存/载入/删除与重开App正确回填，继续原Go标准TLS及默认验证开关，不新建证书机制、不影响 Rust M4/UID/Stop或按普通App路由。B53批量SAF迁移依旧不导出CA，重装仍要手动重导；新SOURCE正式签名APK/双ABI/Oracle依据Actions、真机NOT_RUN。详见[B54](../devlog/android-root-probe/20261123-b54-profile-scoped-original-ca.md)。

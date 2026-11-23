@@ -367,7 +367,7 @@ schedule=Path("crates/wbd-engine/src/v4_android_game_schedule.rs").read_text()
 assert 'let mut tun_burst=GameTunBurst::default();' in m
 assert 'tun_burst.inline_next(received_business)' in m
 assert 'health.next_deadline(),game_due' in m
-assert 'rx_raw.readiness_fd(),IDLE_WAKE_MAX_MS' in m
+assert 'rx_raw.readiness_fd(),RAW_RX_IDLE_MAX_MS' in m
 assert 'game.game4_next_due_ns()' in m
 assert 'game.game_fec_next_due_ns(when)' in m
 assert 'IDLE_WAKE_MAX_MS:i32=1_000' in schedule
@@ -382,6 +382,15 @@ assert 'continue' not in physical_path
 assert '}else{' in physical_path
 assert 'Physical UDP only uses scoped socket, never GameAdapter/M3.' in m
 assert 'if tun_burst.inline_next(received_business){continue}' in m
+# B56 original Game RAW RX: no sidecar and no extra packet queues.
+assert 'let mut raw_burst=GameTunBurst::default();' in m
+assert 'let raw_received=matches!(&read,Ok((n,_)) if *n>0);' in m
+assert 'if raw_burst.inline_next(raw_received){continue}' in m
+assert 'rx_raw.readiness_fd(),RAW_RX_IDLE_MAX_MS' in m
+assert 'pub(crate) const RAW_RX_IDLE_MAX_MS:i32=30_000' in schedule
+workflow=Path(".github/workflows/android-root-product-a1.yml").read_text()
+assert '      - "crates/wbd-engine/src/v4_android_game_*.rs"' in workflow
+print("ANDROID_B56_ORIGINAL_GAME_2_4_M3_RX_BURST_EVENT_STOP_SOURCE_PASS")
 print("ANDROID_B55B_GAME_PHYSICAL_DNS_REPLY_FAIRNESS_SOURCE_PASS")
 print("ANDROID_B55_ORIGINAL_GAME2_GAME4_LOW_WAKE_AND_TUN_BURST_SOURCE_PASS")
 PY
