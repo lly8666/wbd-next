@@ -85,30 +85,6 @@ impl TxDurationSample{
         max.fetch_max(ns,Ordering::Relaxed);
     }
 }
-// All counters belong to the existing Game TX thread. No atomics, worker,
-// allocation or per-packet clock unless the diagnostic is explicitly enabled.
-#[derive(Default)]
-struct TxOuterPhaseSample{
-    calls:u64,samples:u64,total_ns:u64,max_ns:u64,
-}
-impl TxOuterPhaseSample{
-    fn begin(&mut self,enabled:bool)->Option<Instant>{
-        if !enabled{return None}
-        self.calls+=1;
-        (self.calls%128==0).then(Instant::now)
-    }
-    fn end(&mut self,start:Option<Instant>){
-        if let Some(t)=start{
-            let ns=t.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
-            self.samples+=1;
-            self.total_ns=self.total_ns.saturating_add(ns);
-            self.max_ns=self.max_ns.max(ns);
-        }
-    }
-}
-const OUTER_PHASE_NAMES:[&str;6]=[
-    "first_raw","on_firstsend","next_due","on_feedback","take_due","repair_raw"
-];
 #[derive(Default)]
 struct TxRejectReasons {
     offer:AtomicU64,slab:AtomicU64,record:AtomicU64,policy:AtomicU64,
@@ -214,8 +190,6 @@ impl GameKernelOwner{
         let tx_shared_burst_extra=Arc::new(AtomicU64::new(0));
         let tx_shared_burst_worker=Arc::clone(&tx_shared_burst_extra);
         let tx_sample_enabled=std::env::var("WBD_GAME_TX_SAMPLE")
-            .ok().as_deref()==Some("1");
-        let tx_outer_phase_enabled=std::env::var("WBD_GAME_OUTER_PHASE_SAMPLE")
             .ok().as_deref()==Some("1");
         let cold_group_committed=Arc::new(AtomicBool::new(false));
         let tx_cold_group_committed=Arc::clone(&cold_group_committed);
@@ -337,8 +311,6 @@ impl GameKernelOwner{
                 // Game FEC presentation-only replay has two/four fixed
                 // lane slots, owned exclusively by this existing TX worker.
                 let mut cosmetic=scoped_cosmetic;
-                let mut outer_phase:[TxOuterPhaseSample;6]=
-                    std::array::from_fn(|_|TxOuterPhaseSample::default());
                 let mut observed_hints=[0u64;4];
                 let mut observed_future=vec![0u64;n];
                 let mut ack_sent=tx_ack_initial;
@@ -642,9 +614,7 @@ impl GameKernelOwner{
                                 ack32:tx_ack[index].load(Ordering::Acquire),advertised_window:65_535,ip_id:(pn as u16).wrapping_add(75),
                                 persona:peer_persona
                             };
-                            let sampled=outer_phase[0].begin(tx_outer_phase_enabled);
                             let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
-                            outer_phase[0].end(sampled);
                             let ok=sent.is_ok();
                             if ok {
                                 // One real Linux RAW first DATA copy; no FEC
@@ -663,11 +633,8 @@ impl GameKernelOwner{
                                     // Normal ACK metadata is sparse; a
                                     // lost optional hint never changes M4/FEC
                                     // copied result or original sender credit.
-                                    let sampled=outer_phase[1].begin(tx_outer_phase_enabled);
-                                    let result=cosmetic.on_firstsend(index,pn,item.seq,
-                                        wire,due_now.0);
-                                    outer_phase[1].end(sampled);
-                                    if result.is_err(){
+                                    if cosmetic.on_firstsend(index,pn,item.seq,
+                                        wire,due_now.0).is_err(){
                                         eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane={} reason=sparse_index",index+1);
                                     }
                                 }
@@ -743,10 +710,7 @@ impl GameKernelOwner{
                     let stagger=game.game4_stagger_enabled();
                     drop(flush); // release mutable cosmetic capture
                     let cosmetic_due=if outer_repair_enabled{
-                        let sampled=outer_phase[2].begin(tx_outer_phase_enabled);
-                        let due=cosmetic.next_due();
-                        outer_phase[2].end(sampled);
-                        due
+                        cosmetic.next_due()
                     }else{None};
                     let next_due=copy_due.into_iter().chain(fec_due)
                         .chain(cosmetic_due).min();
@@ -857,17 +821,12 @@ impl GameKernelOwner{
                                 }
                             }
                             for _ in 0..count{
-                                let sampled=outer_phase[3].begin(tx_outer_phase_enabled);
                                 let _=cosmetic.on_feedback(i,current as u32,
                                     &sack[..total],clock_ns);
-                                outer_phase[3].end(sampled);
                             }
                             observed_hints[i]=current;
                         }
-                        let sampled=outer_phase[4].begin(tx_outer_phase_enabled);
-                        let pending_copy=cosmetic.take_due(clock_ns,&[]);
-                        outer_phase[4].end(sampled);
-                        if let Some(copy)=pending_copy{
+                        if let Some(copy)=cosmetic.take_due(clock_ns,&[]){
                             let copied=if let Some(item)=lanes.get(copy.lane){
                                 let f=item.flow;
                                 let (src,dst,sp,dp)=if server{
@@ -879,14 +838,11 @@ impl GameKernelOwner{
                                     src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
                                 };
                                 let view=copy.frozen(item.key);
-                                let sampled=outer_phase[5].begin(tx_outer_phase_enabled);
-                                let copied=item.raw.send_one(generation,&view,tuple,Presentation{
+                                item.raw.send_one(generation,&view,tuple,Presentation{
                                     ack32:tx_ack[copy.lane].load(Ordering::Acquire),advertised_window:65_535,
                                     ip_id:(copy.pn as u16).wrapping_add(76),
                                     persona:peer_persona
-                                }).is_ok();
-                                outer_phase[5].end(sampled);
-                                copied
+                                }).is_ok()
                             }else{false};
                             if copied{
                                 outer_repeated.fetch_add(1,Ordering::Relaxed);
@@ -970,12 +926,6 @@ impl GameKernelOwner{
                         }
                     }
                     arena.drain_returns();
-                }
-                if tx_outer_phase_enabled{
-                    for (name,phase) in OUTER_PHASE_NAMES.iter().zip(outer_phase.iter()){
-                        eprintln!("M0_GAME_M4_TX_OUTER_PHASE phase={} calls={} samples={} sampled_ns={} max_ns={} stride=128",
-                            name,phase.calls,phase.samples,phase.total_ns,phase.max_ns);
-                    }
                 }
                 eprintln!("WBD_GAME_IPV4_MTU_EXCEPTION df0_ip_fragments={} icmp3_code4_kernel_sent={} icmp3_code4_rejected={} NOT_REMOTE_APPLIED=1",
                     tx_fail.df0_fragments.load(Ordering::Relaxed),
