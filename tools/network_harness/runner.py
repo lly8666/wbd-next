@@ -1514,7 +1514,8 @@ class LinuxExperiment:
                     "--output", str(self.out / (role + "-traffic.json")), "--start-ns", str(start_ns)], role + "-traffic.log")
             self.monitor = Monitor({**self.products, **{r + "-injector": p for r, p in self.workers.items()}},
                                    self.out, self.ns,
-                                   fec_irq_diag=self.config.get("owner")=="fec-network-work")
+                                   fec_irq_diag=(self.config.get("owner")=="fec-network-work"
+                                       or os.environ.get("WBD_M0_GAME_THREAD_CPU_DIAG")=="1"))
             self.monitor.thread.start()
             deadline = time.monotonic() + 18
             while time.monotonic() < deadline:
