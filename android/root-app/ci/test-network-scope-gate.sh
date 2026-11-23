@@ -78,9 +78,20 @@ assert 'v4BindPlatformUnderlay(owner,V4LinuxClientProductConfig{' in bridge
 assert 'C.wbd_m0_embedded_go_game_group_join(' in bridge
 assert 'C.wbd_m0_embedded_go_android_game_group_raw_bind(' in bridge
 assert 'C.wbd_m0_embedded_go_android_game_group_m4_start(' in bridge
+# B42 original App Game2/off UI→Service→Go argv, not a new data plane.
+service=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
+argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
+settings=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java").read_text()
+assert '"game2".equals(fecModes.getSelectedItem().toString())' in app
+assert 'request.putExtra("fec_mode",fecMode);' in app
+assert '!"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)' in service
+assert '"game2".equals(fecMode)&&(tunnelDNS||physicalDNS||cnSplitDNS)' in service
+assert 'pair(args,"--mode",fecMode);' in argv
+assert '"game2".equals(fecMode)&&(tunnelDNS||physicalDNS||cnSplitDNS)' in argv
+assert '!oneOf(mode,"normal","fec-fixed","fec-auto","game2")' in settings
 assert bridge.index('C.wbd_m0_embedded_go_game_group_stop(') < bridge.index(
     'owner.StopAndReleaseOriginalOwner()')
-assert 'new String[]{"normal","fec-fixed","fec-auto"}' in app
+assert 'new String[]{"normal","fec-fixed","fec-auto","game2"}' in app
 assert 'go_tags=wbd_v4_embedded_go' in build
 print("ANDROID_B41_REAL_GO_TLS_GAME2_OFF_SAME_RUST_M4_ROOT_UID_AND_OWNED_STOP_SOURCE_PASS")
 PY
@@ -590,7 +601,7 @@ assert 'cfg.gameLanes==2&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0||' in c
 assert 'C.wbd_m0_embedded_go_public_fec2_mature_quality(' in go_bridge
 assert 'return b.verifyOriginalAndroidAutoPending()' in go_bridge
 assert 'C.wbd_m0_embedded_go_fixed_pending_readback(' in fec_go
-assert 'new String[]{"normal","fec-fixed","fec-auto"}' in a
+assert 'new String[]{"normal","fec-fixed","fec-auto","game2"}' in a
 assert '"fec-auto"' in argv
 assert 'e.android_fec2_auto_requested.or(e.android_fec2_pending)' in fec_worker
 assert 'stream.quiescent_change(next_profile,next_rev,at).is_ok()' in fec_worker
