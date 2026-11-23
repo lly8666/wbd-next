@@ -14,3 +14,11 @@ Android实体双服务端私有CA/切网与应用TCP/UDP E2E继续 NOT_RUN；BUI
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B54按四命名Root配置槽保存/回填原有可选TLS CA，切换服务器不继续用上一槽CA；默认TLS验证开关、原Go标准握手及Rust数据面不变。"}
 ```
+
+## B54a｜四槽批量恢复时同步清旧Server CA
+
+B54初版 `0d491c8f1f4e31667d0d176729a5a94fb07e08ae` 的 [Dual64 #45184681794](https://github.com/lly8666/wbd-next/actions/runs/45184681794) 软件资格单独保留。交叉核对 B53 一文件批量导入：档案刻意不导出 CA，但之前只删除被覆盖槽的旧Keystore密码/RouteKey，未清旧槽CA。B54a 直接在既有按槽导入循环加一行 `RootConnectionProfileCAStore.clearSlot(this,slot)`，使新服务器不继承旧服务器的可选CA；不改原Go/TLS验证默认、Root冷启动、Rust或数据热路径。源锁源码门要求 **Keystore + CA 同一导入循环清理**；B54原实际FAIL/NOT_RUN不改记。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B54a B53四槽SAF导入覆盖服务器时同步清对应旧CA，避免新配置绑定旧私有CA；无协议/TLS或热数据面改动。"}
+```

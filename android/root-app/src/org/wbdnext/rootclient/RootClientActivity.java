@@ -232,6 +232,7 @@ public final class RootClientActivity extends Activity {
             for(int i=0;i<restored.length;i++){
                 int slot=i+1;
                 RootEncryptedCredentialStore.clearProfile(this,slot);
+                RootConnectionProfileCAStore.clearSlot(this,slot);
                 if(restored[i]==null)RootConnectionProfileStore.delete(this,slot);
                 else RootConnectionProfileStore.save(this,slot,restored[i]);
             }
