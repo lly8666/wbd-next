@@ -1,3 +1,4 @@
+# H2331: signed native runs use one immutable exact-main source branch; concurrent main commits cannot alter dispatched SHA.
 # H2330 ARM: new signed current-SOURCE Game native build then OFF/fixed6 Game2/4 three-loss matrix.
 # H2330 Windows Game: first build signed exact new Game source, then 12 true loss-tiers reuse it. No old 92920fb binary.
 name: M0 signed Windows to Linux bidirectional Game2 Game4 cosmetic matrix
@@ -17,6 +18,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
+      FROZEN_REF: experiment/m0-game-cosmetic-${{ github.sha }}
       FIRST_SCENE: scenarios/m0-cosmetic-game2-loss0-60s.json
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -50,10 +52,19 @@ jobs:
           }
           id="$(find_run)"
           if [ -z "$id" ]; then
-            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+            ref_sha=""
+            for attempt in $(seq 1 45); do
+              ref_sha="$(gh api "repos/$GH_REPO/git/ref/heads/$FROZEN_REF" --jq .object.sha 2>/dev/null || true)"
+              if [ "$ref_sha" = "$GITHUB_SHA" ]; then break; fi
+              sleep 2
+            done
+            test "$ref_sha" = "$GITHUB_SHA" || {
+              echo "M0_GAME_IMMUTABLE_SOURCE_REF_MISSING_OR_DRIFT source=$GITHUB_SHA ref=$FROZEN_REF actual=$ref_sha" >&2
+              exit 1
+            }
             # No reuse: build signed Windows original Go EXE/Rust DLL and
             # exact original Linux peer from this same code+fixture SOURCE.
-            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$FROZEN_REF" \
               -f public_mode=game2 -f native_outer_mtu=legacy1400 \
               -f outer_repair=on -f "perf_scenario_file=$FIRST_SCENE"
           fi
@@ -107,6 +118,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
+      FROZEN_REF: experiment/m0-game-cosmetic-${{ github.sha }}
       PRODUCT_SOURCE: ${{ github.sha }}
       PRODUCT_RUN: ${{ needs.bootstrap.outputs.run_id }}
       MODE: ${{ matrix.mode }}
@@ -150,8 +162,17 @@ jobs:
           }
           id="$(find_run)"
           if [ -z "$id" ]; then
-            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
-            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref main \
+            ref_sha=""
+            for attempt in $(seq 1 45); do
+              ref_sha="$(gh api "repos/$GH_REPO/git/ref/heads/$FROZEN_REF" --jq .object.sha 2>/dev/null || true)"
+              if [ "$ref_sha" = "$GITHUB_SHA" ]; then break; fi
+              sleep 2
+            done
+            test "$ref_sha" = "$GITHUB_SHA" || {
+              echo "M0_GAME_IMMUTABLE_SOURCE_REF_MISSING_OR_DRIFT source=$GITHUB_SHA ref=$FROZEN_REF actual=$ref_sha" >&2
+              exit 1
+            }
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$FROZEN_REF" \
               -f "public_mode=$MODE" -f native_outer_mtu=legacy1400 \
               -f outer_repair=on -f "perf_scenario_file=$SCENARIO" \
               -f "perf_reuse_run_id=$PRODUCT_RUN" \

@@ -1,3 +1,4 @@
+# H2331: Game real 5/30% source must include authenticated stall and 1/2 sample, not legacy zero appearance.
 # H2330 ARM: real Linux original GoTLS+Rust clients and servers, both directions, 18 loss/Game combinations.
 # H2330 staging: new genuine current-source Linux client and Linux server Normal/Game2/Game4 OFF/fixed6 18-case matrix.
 # H2325 arm exact source-frozen one-time bilateral native matrix; no runtime product change.
@@ -26,6 +27,16 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = x86_64
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path("crates/wbd-engine/src/v4_game_cosmetic_outer.rs").read_text()
+          assert "const SAMPLE_MASK:u64=1;" in game
+          assert "const INITIAL_ACK_STALL_NS:u64=1_000_000_000;" in game
+          assert "l.dup_acks>=3 && later_actual_copy" in game
+          assert "COSMETIC_MAX_AGE_NS" in game
+          assert "next_bytes.saturating_mul(10)<=l.first_record_wire_bytes" in game
+          print("M0_GAME_GENUINE_STALLED_ACK_COSMETIC_PRECHECK_PASS")
+          PY
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
           sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/m0-linux-native-amd64.sh"
