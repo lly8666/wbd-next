@@ -11,6 +11,33 @@ final class RootFecStateBrief {
     private static final String MARKER="V4_PUBLIC_ANDROID_FEC_STATE role=client ";
     private static final String GAME_MARKER="V4_PUBLIC_ANDROID_GAME2_M4_COUNTERS role=client ";
     private static final String GAME4_MARKER="V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client ";
+    private static final String GAME_FEC_MARKER="V4_PUBLIC_ANDROID_GAME_FEC_COUNTERS role=client ";
+    private static final String[] GAME_FEC_FIELDS={
+        "lanes=","profile=","source=","parity=","copied=",
+        "recovered=","expired=","failed="
+    };
+    private static String gameFixedCounters(String line){
+        if(!OriginalGoMilestones.matches(line,
+            "V4_PUBLIC_ANDROID_GAME_FEC_COUNTERS role=client"))return null;
+        int start=line.indexOf(GAME_FEC_MARKER);
+        if(start<0)return null;
+        String[] parts=line.substring(start+GAME_FEC_MARKER.length()).split(" ",-1);
+        if(parts.length!=GAME_FEC_FIELDS.length)return null;
+        long[] v=new long[GAME_FEC_FIELDS.length];
+        try{
+            for(int i=0;i<v.length;i++){
+                if(!parts[i].startsWith(GAME_FEC_FIELDS[i]))return null;
+                v[i]=Long.parseLong(parts[i].substring(GAME_FEC_FIELDS[i].length()));
+                if(v[i]<0)return null;
+            }
+        }catch(NumberFormatException bad){return null;}
+        if((v[0]!=2&&v[0]!=4)||v[1]>6)return null;
+        return "Game"+v[0]+" 固定FEC 档位"+v[1]+
+            "：原Rust源符号="+v[2]+"，校验符号="+v[3]+
+            "，内核已复制校验="+v[4]+"，恢复候选="+v[5]+
+            "，过期="+v[6]+"，失败="+v[7]+
+            "（候选非TUN实际交付，非应用E2E）";
+    }
     private static final String[] GAME_FIELDS={
         "rawtx=","rawrx=","tun=","rejected=","dnstx=","dnsrx=",
         "physicaltx=","physicalrx=","physicalerr="
@@ -49,6 +76,8 @@ final class RootFecStateBrief {
     private RootFecStateBrief(){}
 
     static String fromGoLine(String line){
+        String gameFec=gameFixedCounters(line);
+        if(gameFec!=null)return gameFec;
         String game=gameCounters(line);
         if(game!=null)return game;
         if(!OriginalGoMilestones.matches(line,

@@ -9,8 +9,9 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_bind(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_state(uint64_t,uint32_t *);
-extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t);
+extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_m4_counters(uint64_t,uint64_t *,size_t);
+extern int32_t wbd_fec_network_game_group_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
 extern int32_t wbd_m0_embedded_go_game_group_release(uint64_t);
 */
@@ -30,11 +31,12 @@ import (
     "github.com/lly8666/wobuzhidao/internal/faketcp"
 )
 
-// This is a real Android Go→Bionic Rust product boundary, not a second
-// Linux Game kernel driver. Only Game2/off can be admitted at B41;
-// Game4 and fixed Game FEC are deliberately unconnected.
+// The same original Go TLS and private Rust GameAdapter power
+// Android Game2/4 off or authenticated fixed Game FEC. No Go DATA worker.
 type V4AndroidGameConfig struct{
     Lanes uint8
+    GameFecEnabled bool
+    GameFecProfile uint8
     NetworkInterface string
     NetworkIfIndex uint32
     AndroidPhysicalNetworkHandle uint64
@@ -62,6 +64,7 @@ type V4AndroidGameProduct struct{
 }
 func NewV4AndroidGameProduct(cfg V4AndroidGameConfig)(*V4AndroidGameProduct,error){
     if (cfg.Lanes!=2&&cfg.Lanes!=4)||
+        (cfg.GameFecEnabled&&cfg.GameFecProfile>6)||
         cfg.Tun==nil||cfg.ConfigureLeaseIPv4==nil||
         cfg.NetworkInterface==""||len(cfg.NetworkInterface)>15||
         cfg.NetworkIfIndex==0||cfg.AndroidPhysicalNetworkHandle==0||
@@ -101,6 +104,8 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
         }
     }()
     var epoch [16]byte
+    var negotiatedFec uint8
+    if p.cfg.GameFecEnabled{negotiatedFec=p.cfg.GameFecProfile+1}
     for i,assoc:=range assocs{
         if assoc==nil||assoc.BootstrapConn()==nil{
             return "",ErrAdmissionParams
@@ -109,10 +114,15 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
         laneCfg.LaneID=uint8(i+1)
         // Same real Go TLS policy and exporter as Linux Game2/off.
         session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),laneCfg,V4ClientOptions{
-            DataPlaneReady:true,Epoch:epoch,fec2Product:true,GameFec:0,
-            StartupPadding:0,
+            DataPlaneReady:true,Epoch:epoch,fec2Product:true,
+            GameFec:negotiatedFec,StartupPadding:0,
         })
         if e!=nil{return "",e}
+        // Original Go credential-checked protected reply MUST echo
+        // fixed profile on every lane; a local flag is never proof.
+        if session.verifiedGameFec!=negotiatedFec{
+            return "",ErrAdmissionUnsupported
+        }
         if i==0{epoch=session.Epoch}
         handoff,e:=assoc.Detach()
         if e!=nil{return "",e}
@@ -206,12 +216,14 @@ func (p *V4AndroidGameProduct) bindAndStartOriginalM4()error{
     if len(p.cfg.CN8503Raw)>0{
         cn=(*C.uchar)(unsafe.Pointer(&p.cfg.CN8503Raw[0]))
     }
+    fec:=C.uint32_t(255) // off; 0..6 = original fixed Game FEC
+    if p.cfg.GameFecEnabled{fec=C.uint32_t(p.cfg.GameFecProfile)}
     rc=C.wbd_m0_embedded_go_android_game_group_m4_start(
         C.uint64_t(p.native),C.int32_t(p.cfg.Tun.Fd()),
         (*C.uchar)(unsafe.Pointer(&name[0])),C.size_t(len(name)),
         dns,C.uint32_t(p.cfg.HealthSeconds),physical,
         (*C.uchar)(unsafe.Pointer(&upstream[0])),cn,
-        C.size_t(len(p.cfg.CN8503Raw)))
+        C.size_t(len(p.cfg.CN8503Raw)),fec)
     runtime.KeepAlive(name)
     runtime.KeepAlive(upstream)
     runtime.KeepAlive(p.cfg.CN8503Raw)
@@ -258,6 +270,32 @@ func (p *V4AndroidGameProduct) OriginalM4Counters()(V4AndroidGameCounters,error)
         TunnelDnsQueries:uint64(values[4]),TunnelDnsReplies:uint64(values[5]),
         PhysicalDnsQueries:uint64(values[6]),PhysicalDnsReplies:uint64(values[7]),
         PhysicalDnsErrors:uint64(values[8]),
+    },nil
+}
+// The existing Linux original FEC group readback ABI yields actual
+// source/parity/kernel-copied/recovered candidate counters. Recovered
+// candidate is NOT a verified App TUN delivery; M4 TunDelivered is separate.
+type V4AndroidGameFecCounters struct{
+    SourceOffered,ParityOffered,ParityKernelCopied uint64
+    SourceCandidate,RecoveredCandidate,Expired,Failed uint64
+    ParityPlanned,ParitySent,RetainedBytes uint64
+}
+func (p *V4AndroidGameProduct) OriginalGameFecCounters()(V4AndroidGameFecCounters,error){
+    if p==nil||!p.cfg.GameFecEnabled||p.native==0||p.stopped||
+        !p.connected{return V4AndroidGameFecCounters{},ErrAdmissionUnsupported}
+    var values [16]C.uint64_t
+    rc:=C.wbd_fec_network_game_group_counters(
+        C.uint64_t(p.native),&values[0],C.size_t(len(values)))
+    if rc!=0{return V4AndroidGameFecCounters{},
+        fmt.Errorf("%w: original Android fixed Game FEC counters=%d",
+            errV4Embedded,int(rc))}
+    return V4AndroidGameFecCounters{
+        SourceOffered:uint64(values[0]),ParityOffered:uint64(values[1]),
+        ParityKernelCopied:uint64(values[2]),
+        SourceCandidate:uint64(values[3]),RecoveredCandidate:uint64(values[4]),
+        Expired:uint64(values[5]),Failed:uint64(values[6]),
+        ParityPlanned:uint64(values[7]),ParitySent:uint64(values[8]),
+        RetainedBytes:uint64(values[9]),
     },nil
 }
 func (p *V4AndroidGameProduct) AuthenticatedLeaseIPv4()(string,error){

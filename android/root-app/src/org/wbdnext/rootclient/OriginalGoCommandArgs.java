@@ -218,8 +218,9 @@ final class OriginalGoCommandArgs {
             throw new IllegalArgumentException("original native Health interval must be 15 or 30 seconds");
         if(!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
            !"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)&&
-           !"game4".equals(fecMode))
-            throw new IllegalArgumentException("Android original Go supports normal, fec-fixed, fec-auto, game2/off, game4/off");
+           !"game4".equals(fecMode)&&!"game2-fixed".equals(fecMode)&&
+           !"game4-fixed".equals(fecMode))
+            throw new IllegalArgumentException("Android original Go supports Normal/FEC and Game2/4 off/fixed");
         if(fecProfile<0||fecProfile>6)
             throw new IllegalArgumentException("FEC2 Fixed profile must be 0..6");
         if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
@@ -248,9 +249,16 @@ final class OriginalGoCommandArgs {
         absolute(cnFile);
         if(tlsCaFile!=null)absolute(tlsCaFile);
         final ArrayList<String> args=new ArrayList<>();
-        pair(args,"--mode",fecMode);
+        // Game fixed is the SAME original Go game2/game4 mode and
+        // separately authenticated --game-fec fixed0..6, not Normal FEC2.
+        String productMode=fecMode;
+        if("game2-fixed".equals(fecMode))productMode="game2";
+        if("game4-fixed".equals(fecMode))productMode="game4";
+        pair(args,"--mode",productMode);
         if("fec-fixed".equals(fecMode))
             pair(args,"--fec-profile",Integer.toString(fecProfile));
+        if("game2-fixed".equals(fecMode)||"game4-fixed".equals(fecMode))
+            pair(args,"--game-fec","fixed"+fecProfile);
         args.add("--auto-ip");
         pair(args,"--raw-interface",iface);
         pair(args,"--android-network-handle",Long.toUnsignedString(handle));

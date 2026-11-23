@@ -64,6 +64,20 @@ public final class RootFecStateBriefTest {
         contains(four,"物理DNS发送=3");
         refused(g4+"rawtx=40 rawrx=48 tun=12 rejected=0 dnstx=5 "+
             "dnsrx=4 physicaltx=3 physicalrx=3 physicalerr=-1");
+        String ff="V4_PUBLIC_ANDROID_GAME_FEC_COUNTERS role=client ";
+        String g2fixed=RootFecStateBrief.fromGoLine("2026/11/23 16:30:00 "+
+            ff+"lanes=2 profile=0 source=12 parity=6 copied=5 recovered=2 expired=0 failed=0");
+        contains(g2fixed,"Game2 固定FEC 档位0");
+        contains(g2fixed,"内核已复制校验=5");
+        contains(g2fixed,"恢复候选=2");
+        contains(g2fixed,"非应用E2E");
+        String g4fixed=RootFecStateBrief.fromGoLine(ff+
+            "lanes=4 profile=6 source=112 parity=24 copied=22 recovered=4 expired=1 failed=2");
+        contains(g4fixed,"Game4 固定FEC 档位6");
+        refused(ff+"lanes=4 profile=7 source=1 parity=1 copied=1 recovered=1 expired=0 failed=0");
+        refused(ff+"lanes=3 profile=6 source=1 parity=1 copied=1 recovered=1 expired=0 failed=0");
+        refused(ff+"lanes=4 profile=6 source=-1 parity=1 copied=1 recovered=1 expired=0 failed=0");
+        refused(ff+"lanes=4 profile=6 source=1 parity=1 copied=1 recovered=1 expired=0 failed=0 injected=1");
         refused(null);
         System.out.println("ANDROID_B20_FEC_NATIVE_REVISION_STATUS_HOST_PASS");
     }

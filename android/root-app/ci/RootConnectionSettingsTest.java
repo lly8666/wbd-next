@@ -90,6 +90,19 @@ public final class RootConnectionSettingsTest {
                 again.cnSplitDNS==(mode==2),
                 "Game4 selected-App DNS option survives cold preset");
         }
+        for(String mode:new String[]{"game2-fixed","game4-fixed"}){
+            for(int profile:new int[]{0,6}){
+                RootConnectionSettings gameFec=new RootConnectionSettings(
+                    "wbd.example.test","tls.example.test","example_user",443,
+                    1460,500,"chacha20-poly1305","off",mode,profile,
+                    false,true,false,false,true,new TreeMap<String,Integer>());
+                RootConnectionSettings restored=read(stored(gameFec));
+                check(restored!=null&&mode.equals(restored.mode)&&
+                    restored.profile==profile&&restored.tunnelDNS,
+                    "Game fixed original TLS/FEC profile and DNS preset");
+            }
+        }
+        System.out.println("ANDROID_B46_GAME2_GAME4_FIXED_FEC_PRESET_HOST_PASS");
         System.out.println("ANDROID_B45_GAME4_OFF_PRESET_THREE_DNS_HOST_PASS");
         System.out.println("ANDROID_B42_GAME2_OFF_ORIGINAL_PRESET_HOST_PASS");
         RootConnectionSettings fixed=read(stored(sample(true,"fec-fixed")));

@@ -1214,13 +1214,13 @@ func Run(role string,args []string)(retErr error){
         if (cfg.gameLanes!=0&&cfg.gameLanes!=2&&cfg.gameLanes!=4)||cfg.mixedModes||
            !cfg.disableOuterRepair||
            !cfg.autoIP||cfg.rotationInterval!=0{
-            return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/4-off only; rotation/outer-repair unavailable")
+            return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/4 fixed/off only; rotation/outer-repair unavailable")
         }
-        if cfg.gameLanes!=0&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0||
+        if cfg.gameLanes!=0&&(cfg.startupPaddingMode!=0||
            (cfg.gameLanes==4&&(!cfg.game4CopyStagger||!cfg.game4CopyWideStagger))){
-            // Game2/4 share original Rust one TUN, with Game4's mature
-            // 0/4/50/140ms native stagger. Game FEC stays disabled.
-            return fmt.Errorf("Android Game2/4 requires Game FEC/padding off and default Game4 schedule")
+            // Original Game FEC fixed profiles use the existing Linux
+            // codec, and the same Android Rust 1-TUN 2/4-RAW owner.
+            return fmt.Errorf("Android Game2/4 requires padding off and default Game4 schedule")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
         cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(

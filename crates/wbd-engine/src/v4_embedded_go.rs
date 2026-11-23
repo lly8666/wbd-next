@@ -3474,9 +3474,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
 ///  M1 parity planned,M1 parity copied,retained source bytes].
 /// Candidate is NOT yet actual TUN delivered; final delivery uses native
 /// V4_PUBLIC_GAME_KERNEL.delivered on the ORIGINAL kernel sink.
-#[cfg(all(feature="fec2_product_record",target_os="linux",
+// The *same* original Game FEC counters are read by Android's existing
+// low-rate Go ticker, never a fabricated second mobile decoder.
+#[cfg(all(feature="fec2_product_record",
+    any(target_os="linux",target_os="android"),
     any(target_arch="x86_64",target_arch="aarch64"),
-    any(target_env="gnu",target_env="musl")))]
+    any(target_env="gnu",target_env="musl",target_env="android")))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_fec_network_game_group_counters(
     group:u64,out:*mut u64,len:usize
@@ -3846,10 +3849,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     tunnel_dns:u32,health_seconds:u32,
     physical_dns:u32,upstream:*const u8,
     cn_raw:*const u8,cn_len:usize,
+    game_fec_profile:u32,
 )->i32{
     if fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
        tunnel_dns>1||physical_dns>1||upstream.is_null()||
        !matches!(health_seconds,15|30)||cn_len>1024*1024||
+       (game_fec_profile!=255&&game_fec_profile>6)||
        (cn_len>0&&cn_raw.is_null())||
        (cn_len>0&&physical_dns==0)||
        (physical_dns==1&&tunnel_dns==1){return INVALID}
@@ -3873,13 +3878,17 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
     if g.stopped||g.stopping||g.android_workers.is_some()||
        !matches!(g.android_lanes.len(),2|4){return BAD_STAGE}
-    let Some(raw)=g.android_raw.as_ref().filter(|v|v.len()==2)
+    // B46: B45 cold authenticated four-lane RAW group MUST reach M4.
+    // This had been hardcoded to 2 despite the 2|4 group ownership gate.
+    let Some(raw)=g.android_raw.as_ref()
+        .filter(|v|v.len()==g.android_lanes.len())
         else{return BAD_STAGE};
     let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
     let workers=android_game_m4::AndroidGameWorkers::start(
         Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
         lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds,
-        physical_dns==1,physical_upstream,cn
+        physical_dns==1,physical_upstream,cn,
+        (game_fec_profile!=255).then_some(game_fec_profile as u8)
     );
     let Ok(workers)=workers else{return BAD_STAGE};
     g.android_workers=Some(workers);

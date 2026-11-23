@@ -34,11 +34,11 @@ func androidGamePort(base uint16,lane int)(uint16,error){
 func runAndroidGame(ctx context.Context,c config,ifindex uint32,
     tun *ownedTun,connected *bool,
 )(retErr error){
-    if (c.gameLanes!=2&&c.gameLanes!=4)||c.gameFecEnabled||
+    if (c.gameLanes!=2&&c.gameLanes!=4)||
        c.startupPaddingMode!=0||c.rotationInterval!=0||
        !c.autoIP||c.androidNetworkHandle==0||
        (c.gameLanes==4&&(!c.game4CopyStagger||!c.game4CopyWideStagger)){
-        return fmt.Errorf("Android original Game2/4 off requires original FEC/padding/rotation off and wide Game4 stagger")
+        return fmt.Errorf("Android original Game2/4 requires padding/rotation off and wide Game4 stagger")
     }
     // Check the entire consecutive source-port group before any rule/socket.
     if _,e:=androidGamePort(c.localPort,int(c.gameLanes)-1);e!=nil{return e}
@@ -160,6 +160,7 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
     native,e:=realityfront.NewV4AndroidGameProduct(
         realityfront.V4AndroidGameConfig{
             Lanes:c.gameLanes,
+            GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
@@ -221,6 +222,10 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
     }
     *connected=true
     log.Printf("V4_ORIGINAL_ANDROID_GAME_NATIVE_READY role=client lanes=%d original_go_tls=1 original_rust_m4=1 uid_route_after_m4=1",c.gameLanes)
+    if c.gameFecEnabled{
+        log.Printf("V4_PUBLIC_ANDROID_GAME_FEC_APPLIED role=client lanes=%d mode=fixed profile=%d original_tls=1 original_rust_m4=1",
+            c.gameLanes,c.gameFecProfile)
+    }
     ticker:=time.NewTicker(realityfront.V4AndroidGameStatusInterval)
     defer ticker.Stop()
     for{
@@ -234,6 +239,13 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
             }
             log.Printf("V4_PUBLIC_ANDROID_GAME_LANES role=client requested=%d native=%d active=%t",
                 c.gameLanes,lanes,active)
+            if c.gameFecEnabled{
+                fec,e:=native.OriginalGameFecCounters()
+                if e!=nil{return e}
+                log.Printf("V4_PUBLIC_ANDROID_GAME_FEC_COUNTERS role=client lanes=%d profile=%d source=%d parity=%d copied=%d recovered=%d expired=%d failed=%d",
+                    c.gameLanes,c.gameFecProfile,fec.SourceOffered,fec.ParityOffered,
+                    fec.ParityKernelCopied,fec.RecoveredCandidate,fec.Expired,fec.Failed)
+            }
             counters,e:=native.OriginalM4Counters()
             if e!=nil{return e}
             // Existing one-second status ticker, actual Rust M4.

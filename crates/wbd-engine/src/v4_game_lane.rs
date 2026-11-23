@@ -101,6 +101,10 @@ pub(crate) struct PreparedGameFecBatch{
 #[cfg(feature="fec2_product_record")]
 impl PreparedGameFecBatch{
     pub(crate) fn frames(&self)->&[Vec<u8>]{&self.frames}
+    // Android original TUN ingress reuses Normal UDP53 response
+    // translation directly on authenticated FEC-recovered IP frames,
+    // without allocating/copying a second packet batch.
+    pub(crate) fn frames_mut(&mut self)->&mut [Vec<u8>]{&mut self.frames}
 }
 pub(crate) struct GameReceiveOwner{
     rx:GameRx,rx_scope:GameScope,lanes:Vec<RxLane>,

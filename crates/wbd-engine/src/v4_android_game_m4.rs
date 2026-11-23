@@ -1,6 +1,6 @@
-//! B45 original Game2/4-off M4 on Android's *existing* Bionic RAW/TUN.
+//! B46 original Game2/4-off or fixed Game FEC on Android's Bionic RAW/TUN.
 //! One authenticated GameAdapter owns 2/4 AEAD/PN lanes, one native TUN
-//! reader, two per-lane original M3 RX openers, and an owned joined Stop.
+//! reader, 2/4 independent original M3 RX openers, and an owned joined Stop.
 //! No Java/Go DATA callbacks, private protocol or separate source scheduler.
 #![allow(unsafe_code)]
 use std::io;
@@ -45,20 +45,28 @@ impl AndroidGameWorkers{
         lease:[u8;4],fd:OwnedFd,tun_name:&str,generation:u32,
         tunnel_dns:bool,health_seconds:u32,
         physical_dns:bool,upstream:[u8;4],cn:Option<CNDnsMatcher>,
+        game_fec_profile:Option<u8>,
     )->Result<Self,()>{
-        // Game2/off and Game4/off reuse the same original M4, not new
-        // packet workers. GameFEC/rotation remain separately gated.
+        // Original Game2/4 off and fixed Game FEC share ONE M4 worker.
+        // No new packet protocol, TLS lane, or rotation owner.
         let lane_count=lanes.len();
         if generation==0||!matches!(lane_count,2|4)||raw.len()!=lane_count||
             scope.mtu<576||tun_name.is_empty()||
             !matches!(health_seconds,15|30)||
             (tunnel_dns&&physical_dns)||
-            (cn.is_some()&&!physical_dns){return Err(())}
+            (cn.is_some()&&!physical_dns)||
+            game_fec_profile.is_some_and(|p|p>6){return Err(())}
         let tun=Arc::new(AndroidOwnedTun::adopt(fd,tun_name,generation)
             .map_err(|_|())?);
         let (rx_owner,inner_mtu,origin,evidence)={
             let mut game=adapter.lock().map_err(|_|())?;
             if game.has_game_fec(){return Err(())}
+            if let Some(profile)=game_fec_profile{
+                // Same GameAdapter FEC TX/RX owners used by Linux.
+                // Original TLS fixed profile was verified by the Go
+                // admission across all 2/4 authenticated group lanes.
+                game.enable_game_fec(profile,false).map_err(|_|())?;
+            }
             // Original Linux Game4/off wide stagger: 0/4/50/140ms,
             // configured BEFORE the original Rust M4 takes its M3 owners.
             // B45 also drains due copies while TUN is otherwise idle.
@@ -137,6 +145,7 @@ impl AndroidGameWorkers{
         let tx_physical_errors=Arc::clone(&physical_errors);
         let tx_cn=cn;
         let tx_dns_capture=tunnel_dns||physical_dns;
+        let tx_fec_enabled=game_fec_profile.is_some();
         let tx=thread::Builder::new().name("wbd-android-game-tx".into())
             .spawn(move||{
                 let mut source=[0u8;65_535];
@@ -301,16 +310,39 @@ impl AndroidGameWorkers{
                         tx_stop.store(true,Ordering::Release);
                         break
                     }
-                    // Game4's authenticated staged copies must progress
-                    // even when there is no next App TUN packet.
+                    // B46: Linux's original fixed Game FEC needs bounded
+                    // parity work even when no more App TUN packets arrive.
+                    // One existing TX worker owns both FEC and Game4 due
+                    // copies, with the same RAW kernel send callback.
                     let mut wait_ms=250;
-                    if lane_count==4{
+                    if lane_count==4||tx_fec_enabled{
                         let when=MonoNs(origin.elapsed().as_nanos()
                             .min(u128::from(u64::MAX)) as u64);
                         if let Ok(mut game)=tx_adapter.lock(){
+                            if tx_fec_enabled{
+                                for _ in 0..4{
+                                    let fec_now=MonoNs(origin.elapsed().as_nanos()
+                                        .min(u128::from(u64::MAX)) as u64);
+                                    match game.poll_game_fec(fec_now){
+                                        Ok(0)=>break,
+                                        Ok(_)=>{
+                                            let copied=drain_original_game!(game,fec_now);
+                                            if copied>0{
+                                                health.on_local_business(fec_now.0);
+                                            }
+                                        },
+                                        Err(_)=>{
+                                            tx_rejected.fetch_add(1,Ordering::Relaxed);
+                                            break
+                                        }
+                                    }
+                                }
+                            }
                             let copied=drain_original_game!(game,when);
                             if copied>0{health.on_local_business(when.0)}
-                            if let Some(due)=game.game4_next_due_ns(){
+                            let due=game.game4_next_due_ns().into_iter()
+                                .chain(game.game_fec_next_due_ns(when)).min();
+                            if let Some(due)=due{
                                 wait_ms=((due.saturating_sub(when.0)+999_999)/
                                     1_000_000).clamp(1,250) as i32;
                             }
@@ -383,6 +415,7 @@ impl AndroidGameWorkers{
             let rx_rejected=Arc::clone(&rejected);
             let rx_dns=dns_flows.as_ref().map(Arc::clone);
             let rx_dns_replies=Arc::clone(&dns_replies);
+            let rx_fec_enabled=game_fec_profile.is_some();
             let ack_heads=Arc::clone(&ack);
             let seq_heads=Arc::clone(&seq);
             let f=lanes[i].flow;
@@ -417,6 +450,113 @@ impl AndroidGameWorkers{
                                 let decrypted=opener.open(&mut wire[..len]);
                                 match decrypted{
                                     Ok(Some((id,payload)))=>{
+                                        if rx_fec_enabled{
+                                            // Original Linux Game FEC RX: per-lane
+                                            // AEAD/PN has already opened above.
+                                            // One shared decoder may yield up to
+                                            // 16 authenticated recovered IP frames.
+                                            let fec_now=MonoNs(origin.elapsed().as_nanos()
+                                                .min(u128::from(u64::MAX)) as u64);
+                                            let prepared=match rx_owner.lock(){
+                                                Ok(mut owner)=>owner.prepare_opened_fec_batch(
+                                                    lane,id,payload,fec_now),
+                                                Err(_)=>break,
+                                            };
+                                            match prepared{
+                                                Ok(Some(mut batch))=>{
+                                                    // Preflight ALL recovered frames
+                                                    // before any irreversible TUN write.
+                                                    // Rewrite DNS directly in FEC-owned
+                                                    // slabs: no second packet copies.
+                                                    let mut valid=true;
+                                                    let mut dns_count=0u64;
+                                                    for frame in batch.frames_mut(){
+                                                        if !admitted_client_destination(
+                                                            frame,Some(lease)){
+                                                            valid=false;break
+                                                        }
+                                                        if let Some(flows)=rx_dns.as_ref(){
+                                                            if TunnelDnsUdpFlows::
+                                                                is_tunnel_reply_candidate(frame){
+                                                                if frame.len()>MAX_DNS_IPV4_PACKET{
+                                                                    valid=false;break
+                                                                }
+                                                                match flows.lock(){
+                                                                    Ok(mut table)=>{
+                                                                        if table.rewrite_reply(
+                                                                            frame,
+                                                                            origin.elapsed().as_millis() as u64
+                                                                        ).is_ok(){
+                                                                            dns_count+=1;
+                                                                        }else{valid=false;break}
+                                                                    },
+                                                                    Err(_)=>{
+                                                                        rx_stop.store(true,Ordering::Release);
+                                                                        valid=false;break
+                                                                    },
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    let mut all_written=valid;
+                                                    let mut wrote=0u64;
+                                                    if valid{
+                                                        for frame in batch.frames(){
+                                                            if rx_tun.write_authenticated_ip(frame)
+                                                                .ok()==Some(frame.len()){
+                                                                wrote+=1;
+                                                            }else{
+                                                                all_written=false;
+                                                                break
+                                                            }
+                                                        }
+                                                    }
+                                                    let settled=match rx_owner.lock(){
+                                                        Ok(mut owner)=>owner.finish_fec_batch(
+                                                            batch,all_written),
+                                                        Err(_)=>break,
+                                                    };
+                                                    if settled.is_err()||
+                                                       (wrote>0&&!all_written){
+                                                        // A partial multi-frame TUN batch
+                                                        // cannot be rolled back.
+                                                        rx_stop.store(true,Ordering::Release);
+                                                        break
+                                                    }
+                                                    if all_written{
+                                                        rx_delivered.fetch_add(wrote,Ordering::Relaxed);
+                                                        if dns_count>0{
+                                                            rx_dns_replies.fetch_add(
+                                                                dns_count,Ordering::Relaxed);
+                                                        }
+                                                        // Even parity-only batches consume
+                                                        // the real authenticated TCP record.
+                                                        let current=ledger.verified(seq32,len);
+                                                        ack_heads[i].store(current,Ordering::Release);
+                                                        let now_ns=clock.elapsed().as_nanos()
+                                                            .min(u128::from(u64::MAX)) as u64;
+                                                        if presentation_ack_only_due(
+                                                            now_ns,last_ack_ns,current,last_ack){
+                                                            if let Ok(ack_packet)=
+                                                                ipv4_tcp::build_presentation_ack(
+                                                                    ack_tuple,seq_heads[i].load(Ordering::Acquire),
+                                                                    current,(now_ns as u16).wrapping_add(11),
+                                                                    PacketPersona::Legacy,mtu as usize,&mut ack_wire){
+                                                                if ack_raw.send_built_outer(
+                                                                    generation,ack_packet,mtu).is_ok(){
+                                                                    last_ack=current;last_ack_ns=now_ns;
+                                                                }
+                                                            }
+                                                        }
+                                                    }else{
+                                                        rx_rejected.fetch_add(1,Ordering::Relaxed);
+                                                    }
+                                                },
+                                                Ok(None)=>{},
+                                                Err(_)=>{rx_rejected.fetch_add(1,Ordering::Relaxed);},
+                                            }
+                                        }else{
+
                                         let prepared=match rx_owner.lock(){
                                             Ok(mut owner)=>owner.prepare_opened_receive(
                                                 lane,id,payload),
@@ -491,6 +631,7 @@ impl AndroidGameWorkers{
                                             },
                                             Ok(None)=>{},
                                             Err(_)=>{rx_rejected.fetch_add(1,Ordering::Relaxed);},
+                                        }
                                         }
                                     },
                                     Ok(None)=>{}, // original authenticated kind0 Health

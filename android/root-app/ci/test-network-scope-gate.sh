@@ -89,12 +89,13 @@ assert 'request.putExtra("fec_mode",fecMode);' in app
 assert '!"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)&&' in service
 assert '!"game4".equals(fecMode)' in service
 assert 'if("game2".equals(fecMode)&&(physicalDNS||cnSplitDNS))' not in service
-assert 'pair(args,"--mode",fecMode);' in argv
+assert 'pair(args,"--mode",productMode);' in argv
 assert 'if("game2".equals(fecMode)&&(physicalDNS||cnSplitDNS))' not in argv
-assert '!oneOf(mode,"normal","fec-fixed","fec-auto","game2","game4")' in settings
+assert '!oneOf(mode,"normal","fec-fixed","fec-auto","game2","game4",' in settings
+assert '"game2-fixed","game4-fixed")' in settings
 assert bridge.index('C.wbd_m0_embedded_go_game_group_stop(') < bridge.index(
     'owner.StopAndReleaseOriginalOwner()')
-assert 'new String[]{"normal","fec-fixed","fec-auto","game2","game4"}' in app
+assert 'new String[]{"normal","fec-fixed","fec-auto","game2","game4","game2-fixed","game4-fixed"}' in app
 assert 'go_tags=wbd_v4_embedded_go' in build
 # B43: Game2 shares original Normal UDP53, native Health and M4 counters.
 rust_group=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
@@ -163,6 +164,30 @@ assert 'TestGame4OriginalFourPortOneOwnedRSTRule' in guardtest
 assert 'V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client' in g
 assert 'V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client' in fec_status
 assert '"game4".equals(fecModes.getSelectedItem().toString())' in app
+# B46: restore the REAL B45 Game4 M4 gate (previously hardcoded
+# raw v.len()==2), plus reuse original Linux Game fixed FEC for Android.
+assert '.filter(|v|v.len()==g.android_lanes.len())' in rust_group
+assert '(game_fec_profile!=255).then_some(game_fec_profile as u8)' in rust_group
+assert 'GameFecEnabled:c.gameFecEnabled' in g
+assert 'GameFecProfile:c.gameFecProfile' in g
+assert 'session.verifiedGameFec!=negotiatedFec' in bridge
+assert 'GameFec:negotiatedFec,StartupPadding:0' in bridge
+assert 'OriginalGameFecCounters()' in g
+assert 'C.wbd_fec_network_game_group_counters(' in bridge
+assert 'game.enable_game_fec(profile,false)' in m4
+assert 'game.poll_game_fec(fec_now)' in m4
+assert 'game.game_fec_next_due_ns(when)' in m4
+assert 'owner.prepare_opened_fec_batch(' in m4
+assert 'owner.finish_fec_batch(' in m4
+assert 'for frame in batch.frames_mut()' in m4
+assert 'rx_tun.write_authenticated_ip(frame)' in m4
+assert 'pub(crate) fn frames_mut(' in Path(
+    "crates/wbd-engine/src/v4_game_lane.rs").read_text()
+assert 'game2-fixed' in app and 'game4-fixed' in app
+assert 'pair(args,"--game-fec","fixed"+fecProfile)' in argv
+assert 'V4_PUBLIC_ANDROID_GAME_FEC_COUNTERS role=client' in g
+assert 'gameFixedCounters(String line)' in fec_status
+print("ANDROID_B46_ORIGINAL_GAME_FIXED_FEC_2_4_TLS_RUST_M4_APP_PRODUCTION_SOURCE_PASS")
 print("ANDROID_B45_GAME4_OFF_FOUR_ORIGINAL_TLS_ONE_RUST_M4_STAGGER_APP_SOURCE_PASS")
 print("ANDROID_B44_GAME2_ORIGINAL_PHYSICAL_CN8503_SINGLE_TUN_DNS_SOURCE_PASS")
 print("ANDROID_B43_GAME2_ORIGINAL_M4_TUNNEL_DNS_HEALTH_COUNTERS_SOURCE_PASS")
@@ -670,14 +695,14 @@ assert 'request.putExtra("fec_mode",fecMode);' in a
 assert 'request.putExtra("fec_profile",fecProfile);' in a
 assert 'intent.getStringExtra("fec_mode")' in s
 assert 'intent.getIntExtra("fec_profile",1)' in s
-assert 'pair(args,"--mode",fecMode);' in argv
+assert 'pair(args,"--mode",productMode);' in argv
 assert 'pair(args,"--fec-profile",Integer.toString(fecProfile))' in argv
 assert '(cfg.gameLanes!=0&&cfg.gameLanes!=2&&cfg.gameLanes!=4)||cfg.mixedModes||' in cold
-assert 'if cfg.gameLanes!=0&&(cfg.gameFecEnabled||cfg.startupPaddingMode!=0||' in cold
+assert 'if cfg.gameLanes!=0&&(cfg.startupPaddingMode!=0||' in cold
 assert 'C.wbd_m0_embedded_go_public_fec2_mature_quality(' in go_bridge
 assert 'return b.verifyOriginalAndroidAutoPending()' in go_bridge
 assert 'C.wbd_m0_embedded_go_fixed_pending_readback(' in fec_go
-assert 'new String[]{"normal","fec-fixed","fec-auto","game2","game4"}' in a
+assert 'new String[]{"normal","fec-fixed","fec-auto","game2","game4","game2-fixed","game4-fixed"}' in a
 assert '"fec-auto"' in argv
 assert 'e.android_fec2_auto_requested.or(e.android_fec2_pending)' in fec_worker
 assert 'stream.quiescent_change(next_profile,next_rev,at).is_ok()' in fec_worker

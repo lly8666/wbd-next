@@ -158,6 +158,20 @@ public final class OriginalGoCommandArgsTest {
                 throw new AssertionError("Game4 original DNS mode not wired");
         }
         rejected(()->withFec("game4",1,"flows"));
+        for(String mode:new String[]{"game2-fixed","game4-fixed"}){
+            for(int profile:new int[]{0,3,6}){
+                List<String> fixed=withFec(mode,profile,"off");
+                value(fixed,"--mode",mode.startsWith("game2")?"game2":"game4");
+                value(fixed,"--game-fec","fixed"+profile);
+                absent(fixed,"--fec-profile");
+                value(fixed,"--outer-repair","off");
+            }
+            rejected(()->withFec(mode,1,"tls"));
+        }
+        absent(withFec("game2",1,"off"),"--game-fec");
+        absent(withFec("game4",1,"off"),"--game-fec");
+        rejected(()->withFec("game4-fixed",7,"off"));
+        System.out.println("ANDROID_B46_ORIGINAL_GAME2_GAME4_FIXED_FEC_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_B45_GAME4_OFF_APP_ARGV_THREE_DNS_HOST_PASS");
         System.out.println("ANDROID_B44_GAME2_ORIGINAL_PHYSICAL_CN_DNS_ARGV_HOST_PASS");
         rejected(()->withFec("game2",1,"tls"));
