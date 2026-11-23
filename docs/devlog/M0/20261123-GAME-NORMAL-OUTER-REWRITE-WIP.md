@@ -86,6 +86,13 @@
 - **需要后续验证的曲线差异，不伪称已接近 Normal**：相同 5% netem 下，Game4 **OFF** 原生 R/F≈**2.37–2.41%**，此前 Normal5%≈2.36%，但本次 Game4 **fixed FEC** `R/F≈3.6%`，高约50%。虽然满足高载 R/F≤10%、真实首发/补发、首次交付与 Stop，且并非脚本推测，但它尚不能被描述为固定 FEC 全档完全复制 Normal 曲线。下一轮若要收敛差异，应先按真实 ACK/SACK 提名来源、lane first/ parity、netem 真丢包与 shadow 保留规模做对照，不能盲目下调样本密度或 9% cap 以换取指标。
 - 试验第一次触发 [45217108299](https://github.com/lly8666/wbd-next/actions/runs/45217108299) 在网络测量前因测试工作流未转发 `LOSS` 到 `sudo env` 报 `KeyError`，不是产品失败；已在 `93ab3309` 仅修测试参数并完成上面实测。产品源码仍保留此前两组相反顺序 ABBA 确认的 v3 新 shadow 空 wake 剪枝；没有新 CPU 优化被擅自保留。PR#71 仍 Draft，Windows 更新源的真实原生 CPU/全曲线收口独立保持 OPEN。
 
+## 2026-11-24 追加性能试验：初始 shadow 单次 BTree entry 查找，反向 ABBA 无确证，已撤销
+
+- **针对已归因热点的最小候选**：前次真实六阶段 TX 采样 [45202957306](https://github.com/lly8666/wbd-next/actions/runs/45202957306) 显示每端约849k原始首发、约半数 shadow、`on_firstsend≈0.64s`，候选 SOURCE `c3b3c94a795a06865ad25b397f84638780ba113e` 相比已经通过空 wake 优化的旧 SOURCE `9d2a3230a84b1581e1f7abbf7f3d0d4fccfea347`，仅在 `crates/wbd-recovery/src/receipt.rs` 把 `contains_key` + `insert` 重复 BTree 查询改为单次 `entry`，完整保留“重复 PN 优先、容量限制次之”以及 v3 原 wake 算法。新 SOURCE [45219194857](https://github.com/lly8666/wbd-next/actions/runs/45219194857) 两OS Rust 单元 SUCCESS，[45219194995](https://github.com/lly8666/wbd-next/actions/runs/45219194995) 原生 Linux 构建+七场全8 jobs SUCCESS，真实 `R/F≈8.9%`、首次交付与Stop不变。
+- **第一批旧→新→新→旧同机ABBA**：[45219767098](https://github.com/lly8666/wbd-next/actions/runs/45219767098) 四轮真实 Game4 fixed FEC30，旧/新客户端整进程 **9.180s→8.890s（−3.16%）**，服务端 **9.470s→9.205s（−2.80%）**，两端 `R/F≈8.9%`、首次≈10Mbps、Stop/cleanup PASS。这批数值有明显上升的单-runner 时序波动，不能用单批成果证实3%节省。
+- **第二批反向新→旧→旧→新同机ABBA**：[45221348662](https://github.com/lly8666/wbd-next/actions/runs/45221348662) 同样四轮真实成功，旧/新客户端 **18.370s→18.335s（−0.19%）**，服务端 **18.905s→18.840s（−0.34%）**；R/F、业务首次交付和Stop均维持。这一相反顺序复验将收益缩小到测试波动量级，**没有证明稳定可归因的 CPU 收益**，且不同 runner 的绝对 CPU 秒不得直接相互比较。
+- **处置**：按预先设定的严格验收条件，于 `95e5a560eebcd7b92bd26d999b9d44008e3a5516` **撤销**本次 `entry` 微优化；文件 Git blob 恢复到 `46e9298f3e8d6b2887f6c5311c397ecaefa63d4f`，与旧 SOURCE `9d2a323` 的 `receipt.rs` 完全相同，前次已双反向ABBA证明约2%收益的 **v3 新 shadow 空 wake 剪枝保持原样**。本次没有新增可保留生产优化，不为制造更快数字而牺牲可靠度、曲线或添控制器。低损 CPU 与 fixed FEC5% R/F≈3.6% 的独立问题仍待进一步诊断，Windows 新源 CPU 原生签名测量未完成，PR#71 Draft、main不动。
+
 ```feature-impact
 {"kind":"updated","reason":"Game2/4 OFF/fixed Linux and Windows outer opportunistic retransmission is being rewritten on the proven Normal v3 ACK-gap, immutable shadow and byte-budget algorithm; source branch draft, not qualified.","ids":["outer-opportunistic-repair"]}
 ```
