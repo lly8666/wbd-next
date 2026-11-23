@@ -11,3 +11,7 @@
 ## B42a｜修正两处历史模式列表源码门
 
 旧 `test-network-scope-gate.sh` B41/B19仍要求正式App恰好三模式，与B42真实Game2/off接线矛盾。本批只改两处旧模式列表断言为四模式，并补真实Activity→Service→Go argv→Preset的源码接线检查；B41两lane TLS、原Rust M4及Stop门保留。B42首次SOURCE若因此失败必须保留，不冒称当前构建PASS。
+
+## B42b｜治理卡字节限额纠正
+
+B42原SOURCE `7fdfb687` [治理#45118420208](https://github.com/lly8666/wbd-next/actions/runs/45118420208) Feature catalog FAIL：功能卡UTF-8 16393字节超过16KiB限额9字节。只收紧摘要/使用说明，不删旧verification和实际功能路径；B42a的源门更正保留。此处治理修复不构成产品真机业务PASS。
