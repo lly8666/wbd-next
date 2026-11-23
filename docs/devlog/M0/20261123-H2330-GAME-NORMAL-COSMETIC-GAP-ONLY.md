@@ -17,6 +17,11 @@
 - main 产品源码 `1cade763d20d15f1550a8e77fa6c6a97373f1fc4` 在此前双端 Game5%/30% 外观 R=0 后，补充 AEAD 确证的真正重复 ACK 停滞分支：至少三次实际逆向数据提示、实际后续已复制首发、初始至少1秒 RTT 稳定、最多2秒旧密文、累计 ACK 尚未覆盖候选、依旧 <=10% F 字节、80ms/lane 有界发送、无 timer-only DATA。
 - 当前 PR68 分支只镜像该 **Linux Game 原功能源码** 和精确 unit；main 上新 12 个 Windows Game / 18 个 Linux 双端真实场景为 main SOURCE `7e2190e4bf7a0c643c76eaae4bd4b37c99e470bc`，**不能继承到本 PR 分支**，新分支完整验证仍未通过；旧 M2 逐 record Receipt 继续废弃。
 
+## H2332：PR 专属更正，不能继承 7e 真网假绿
+- main SOURCE `7e2190e` 原 Linux client/server 真0% Game2 双端各1257次重传，5%分别1250/1256次；0%绿色 **是假验收**，main 已单独修复。
+- 本 PR 实验分支同步相同 **Linux Game产品逻辑**：只有同一AEAD认证的累计ACK不变>=1秒、3次认证重复、后续真正已发、候选≤2秒且R/F<=10%才准一次旧密文复制；任何ACK进展立即重置停滞计时，无周期DATA PTO。内置新的r1单元无损短重复ACK不误报。
+- 新主分支来源锁定Linux 18场景、Windows Game12场景不自动证明PR分支资格，PR自身真网状态仍NOT_RUN。
+
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Game Linux authentic duplicate-ACK stall admits an unacked sampled original even if true first missing head was unsampled; initial >=1s, candidate <=2s, real first-send behind, 10pct cap and one original replay, no timer-only DATA; new-source WAN pending."}
 ```
