@@ -27,6 +27,8 @@
 
 - 2026-11-23 复核原生功能测试的来源范围：`wbd-engine` 的 native-functional engine 选择 `r1_` 前缀；新 ACK 决策测试由 `r2_m0_...` 仅更名为 `r1_m0_...`，不变更测试输入或生产行为，确保 CI 真正执行而不是误用 filtered-out 测试做证据。
 
+- 本次严格配对 feature 卡与 devlog 同提交：原分支上轮 `r1_` 测试重命名提交的功能卡内容未发生差异，导致 Feature catalog 按规则拒绝；现明确补充固定栈 SACK 字眼、无产品执行语义变更。
+
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Cosmetic-only ACK shadow indexes sampled copied first sends, omits OFF/unsampled tree work and temp vectors; genuine authenticated later Linux DATA gives bounded duplicate ACK even without SACK, never a business delivery receipt; no policy/default changed; native CPU/performance still unqualified."}
 ```
