@@ -79,6 +79,9 @@ mod v4_android_dns_route;
 // Host tests executing the exact same production encoder.
 #[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_ipv4_mtu;
+// B55 game readiness schedule, pure host tests and Android original worker.
+#[cfg(any(test,all(target_os="android",feature="fec2_product_record")))]
+mod v4_android_game_schedule;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;

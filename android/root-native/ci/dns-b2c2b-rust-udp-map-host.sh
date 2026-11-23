@@ -22,6 +22,8 @@ cargo +1.85.1 test --locked -p wbd-engine --lib \
 # B7 real App retries reuse bounded physical DNS generation ownership.
 cargo +1.85.1 test --locked -p wbd-engine --lib b7_physical_dns \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+# B55: run the SAME original Android Game M4 scheduler pure Rust tests.
+cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,fec2_product_record b55_android_game_ -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 # B16: the same production IPv4 fragment and local ICMP codec runs on Host.
 cargo +1.85.1 test --locked -p wbd-engine --lib b16_ \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
@@ -57,6 +59,13 @@ assert "test result: ok. 1 passed;" in log
 assert 'test v4_android_dns_route::tests::b6_original_m4_dns_three_compat_modes_and_tcp53_passthrough ... ok' in log
 assert 'test v4_android_dns_route::tests::b6_original_m4_cn_physical_tc_inverse_and_noncn_tunnel_inverse ... ok' in log
 assert 'test result: ok. 2 passed;' in log
+for test in (
+ "b55_android_game_idle_event_wait_not_fixed_250ms_spin",
+ "b55_android_game_game4_fec_and_health_due_not_delayed",
+ "b55_android_game_business_burst_bounded_and_idle_reset"
+):
+ assert f"test v4_android_game_schedule::tests::{test} ... ok" in log
+assert 'test result: ok. 3 passed;' in log
 assert 'test v4_android_dns_route::tests::b29_original_m4_dns_feature7_requires_real_fec2_receiver ... ok' in log
 assert 'test v4_android_dns_physical_flow::tests::b7_physical_dns_app_retransmit_reuses_generation_slot_not_other_apps ... ok' in log
 assert 'test v4_android_dns_physical_flow::tests::b7_physical_dns_retransmit_expiry_and_query_identity ... ok' in log

@@ -25,6 +25,7 @@ use crate::v4_android_dns_physical_flow::{
 };
 use crate::v4_android_cn_dns::CNDnsMatcher;
 use crate::v4_android_dns_route::{choose,DnsRoute};
+use crate::v4_android_game_schedule::{GameTunBurst,wait_ms,IDLE_WAKE_MAX_MS};
 
 pub(super) struct AndroidGameWorkers{
     stop:Arc<AtomicBool>,started:Arc<AtomicBool>,
@@ -158,6 +159,7 @@ impl AndroidGameWorkers{
                 let mut physical_wire=[0u8;MAX_DNS_WIRE];
                 let mut physical_packet=[0u8;MAX_DNS_REPLY_IPV4];
                 let mut offsets=tx_begin;
+                let mut tun_burst=GameTunBurst::default();
                 // The original GameAdapter may schedule Game4 later copies.
                 // Invoke this SAME native RAW sender both on TUN ingress and
                 // when a due copy matures without further App traffic.
@@ -248,6 +250,7 @@ impl AndroidGameWorkers{
                     // The sole TUN consumer; a full-size scratch prevents
                     // silent truncation of oversized DF/IPv4 packets.
                     let read=tx_tun.read_ip(&mut source);
+                    let received_business=matches!(&read,Ok(n) if *n>0);
                     if let Ok(n)=read{
                         if n>0&&n<=inner_mtu &&
                             admitted_client_source(&source[..n],Some(lease)){
@@ -314,7 +317,7 @@ impl AndroidGameWorkers{
                     // parity work even when no more App TUN packets arrive.
                     // One existing TX worker owns both FEC and Game4 due
                     // copies, with the same RAW kernel send callback.
-                    let mut wait_ms=250;
+                    let mut game_due=None;
                     if lane_count==4||tx_fec_enabled{
                         let when=MonoNs(origin.elapsed().as_nanos()
                             .min(u128::from(u64::MAX)) as u64);
@@ -340,16 +343,17 @@ impl AndroidGameWorkers{
                             }
                             let copied=drain_original_game!(game,when);
                             if copied>0{health.on_local_business(when.0)}
-                            let due=game.game4_next_due_ns().into_iter()
+                            game_due=game.game4_next_due_ns().into_iter()
                                 .chain(game.game_fec_next_due_ns(when)).min();
-                            if let Some(due)=due{
-                                wait_ms=((due.saturating_sub(when.0)+999_999)/
-                                    1_000_000).clamp(1,250) as i32;
-                            }
                         }else{tx_stop.store(true,Ordering::Release);break}
                     }
-                    // The existing eventfd waits on TUN and, only when
-                    // enabled, the actual scoped physical DNS UDP socket.
+                    // B55: queued business uses the SAME TUN and real
+                    // GameAdapter, with a DNS/Stop event turn every 8 reads.
+                    if tun_burst.inline_next(received_business){continue}
+                    let poll_now=origin.elapsed().as_nanos()
+                        .min(u128::from(u64::MAX)) as u64;
+                    let wait_ms=wait_ms(poll_now,health.next_deadline(),game_due);
+                    // Same eventfd and physically bound DNS socket.
                     let ready=if let Some(socket)=tx_physical.as_ref(){
                         tx_wake.wait_tun_and_physical_dns(
                             tx_tun.readiness_fd(),socket.readiness_fd(),wait_ms)
@@ -646,7 +650,9 @@ impl AndroidGameWorkers{
                                 break
                             }
                         }
-                        if rx_wake.wait_readable(rx_raw.readiness_fd(),250).is_err(){
+                        if rx_wake.wait_readable(
+                            rx_raw.readiness_fd(),IDLE_WAKE_MAX_MS
+                        ).is_err(){
                             rx_stop.store(true,Ordering::Release);
                             break
                         }

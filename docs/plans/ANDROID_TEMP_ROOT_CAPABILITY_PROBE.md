@@ -1,3 +1,5 @@
+> **B55 原Game2/4 M4首送/低CPU热路径（本SOURCE待CI）**：前SOURCE `c3f4b828` [#45185545494](https://github.com/lly8666/wbd-next/actions/runs/45185545494) 11 SUCCESS/4 SKIPPED，本批原Rust单TUN读取同一GameAdapter/2/4RAW最多8包无逐包poll，原Health/Game4/FEC到期优先的1s eventfd TX idle、2/4路RX idle 250ms→1s。无新线程/用户态额外分组控制/协议；3条Rust Host +签名APK按新SOURCE验，真机业务与CPU NOT_RUN。[B55](../devlog/android-root-probe/20261123-b55-original-game-event-driven-burst.md)。
+
 > **B54 四套配置的可选原Go TLS CA跟随（本SOURCE待CI）**：为B52多服务器切换补已有B23可选私有CA的各槽保存/载入/删除与重开App正确回填，继续原Go标准TLS及默认验证开关，不新建证书机制、不影响 Rust M4/UID/Stop或按普通App路由。B53批量SAF迁移依旧不导出CA，重装仍要手动重导；新SOURCE正式签名APK/双ABI/Oracle依据Actions、真机NOT_RUN。详见[B54](../devlog/android-root-probe/20261123-b54-profile-scoped-original-ca.md)。
 
 > **B53 四套Root连接一文件SAF迁移（本SOURCE待CI）**：继B52一键跨原生Stop/START接线，本批以原四槽命名Profile/RootConnectionSettings同一Codec导出/恢复普通服务器、Normal/Fixed/Auto/Game/FEC、UID/三DNS/MTU/Health/CIDR设置；选中/空槽原样保留，不包含密码/Key/CA或旧Network。导入只修改四个本地Profile并清对应旧Keystore槽，绝不动当前Go/Rust或UID规则，无后台新控制器。正式签名APK及Host同源结果看Actions，实机NOT_RUN。详见[B53记录](../devlog/android-root-probe/20261123-b53-four-profile-saf-backup-restore.md)。

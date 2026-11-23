@@ -362,6 +362,19 @@ assert 'tx_raw[i].send_built_outer(' in m
 assert 'HealthClock::new(' in m
 assert 'wbd_m0_embedded_go_android_game_group_m4_start' in b
 print("ANDROID_B40_ORIGINAL_GAME2_OFF_BIONIC_RAW_TUN_M3_M4_NATIVE_SOURCE_PASS")
+# B55 true Android Game2/4 Rust original worker, not fake Activity state.
+schedule=Path("crates/wbd-engine/src/v4_android_game_schedule.rs").read_text()
+assert 'let mut tun_burst=GameTunBurst::default();' in m
+assert 'tun_burst.inline_next(received_business)' in m
+assert 'health.next_deadline(),game_due' in m
+assert 'rx_raw.readiness_fd(),IDLE_WAKE_MAX_MS' in m
+assert 'game.game4_next_due_ns()' in m
+assert 'game.game_fec_next_due_ns(when)' in m
+assert 'IDLE_WAKE_MAX_MS:i32=1_000' in schedule
+assert 'const MAX_INLINE_TUN_BURST:u8=8;' in schedule
+assert 'mod v4_android_game_schedule;' in Path(
+    "crates/wbd-engine/src/lib.rs").read_text()
+print("ANDROID_B55_ORIGINAL_GAME2_GAME4_LOW_WAKE_AND_TUN_BURST_SOURCE_PASS")
 PY
 # B39: original native Rust Game groups on Android now bind exactly one
 # Bionic physical Network and independent RAW RX/TX per authenticated lane.
