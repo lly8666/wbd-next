@@ -38,6 +38,8 @@ import java.util.TreeMap;
 public final class RootClientActivity extends Activity {
     private final Handler ui=new Handler(Looper.getMainLooper());
     private final List<PhysicalNetwork> physical=new ArrayList<>();
+    // B49: one foreground user-triggered cold reselect, never background Root restart.
+    private final RootColdNetworkSwitch coldSwitch=new RootColdNetworkSwitch();
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private final Map<String,CheckBox> checkedBypassApps=new TreeMap<>();
@@ -280,11 +282,37 @@ public final class RootClientActivity extends Activity {
     }
     private final Runnable refreshStatus=new Runnable(){
         @Override public void run(){
+            completeUserColdSwitchIfReady();
             if(status!=null)status.setText(RootClientService.status);
             if(fecStatusText!=null)fecStatusText.setText(RootClientService.fecStatus);
             ui.postDelayed(this,1000);
         }
     };
+    // Uses the already existing foreground UI refresh: zero new timers or packet workers.
+    private void completeUserColdSwitchIfReady(){
+        if(!coldSwitch.pending()||RootClientService.sessionOwnerActive||
+           RootClientService.startDispatchPending.get())return;
+        chooseNetworks();
+        int matched=-1;
+        for(int i=0;i<physical.size();i++){
+            PhysicalNetwork n=physical.get(i);
+            if(coldSwitch.matches(n.handle,n.interfaceName,n.ifindex,n.mtu,n.address)&&
+               PhysicalNetwork.exact(this,n.handle,n.interfaceName,n.ifindex,
+                   n.mtu,n.address)!=null){
+                matched=i;break;
+            }
+        }
+        boolean ready=coldSwitch.complete(
+            RootClientService.previousOwnerStopConfirmed,matched>=0);
+        if(!ready){
+            RootClientService.status="一键冷切网中止：旧原生Stop未完整确认或目标Network已变化；请检查后手动START";
+            return;
+        }
+        networks.setSelection(matched);
+        // Original Activity start() owns all UID/secret/Network validation,
+        // original FakeTCP/TLS/lease, Rust M4 and kernel journal.
+        start();
+    }
     private EditText input(LinearLayout view,String label,int kind){
         TextView title=new TextView(this);
         title.setText(label);
@@ -1068,6 +1096,7 @@ public final class RootClientActivity extends Activity {
         pane.addView(connect);
         Button stop=new Button(this);stop.setText("STOP — WITHDRAW UID ROUTE / NATIVE JOIN");
         stop.setOnClickListener(v->{
+            coldSwitch.cancel();
             Intent i=new Intent(this,RootClientService.class);
             i.setAction(RootClientService.STOP);
             startService(i);
@@ -1080,6 +1109,7 @@ public final class RootClientActivity extends Activity {
         Button reselect=new Button(this);
         reselect.setText("切换实体Network：STOP旧会话，再刷新并手动START");
         reselect.setOnClickListener(v->{
+            coldSwitch.cancel();
             if(RootClientService.sessionOwnerActive||
                RootClientService.startDispatchPending.get()){
                 new AlertDialog.Builder(this)
@@ -1103,6 +1133,41 @@ public final class RootClientActivity extends Activity {
             }
         });
         pane.addView(reselect);
+        // User explicitly chooses a real new Network before requesting STOP.
+        // This is not an onLost-triggered automatic Root relaunch.
+        Button oneShotSwitch=new Button(this);
+        oneShotSwitch.setText("切换到选中Network：旧会话Stop完成后自动START一次");
+        oneShotSwitch.setOnClickListener(v->{
+            if(!RootClientService.sessionOwnerActive||
+               RootClientService.startDispatchPending.get()){
+                status.setText("没有可切换的活跃会话；请选择Network后手动START");
+                return;
+            }
+            int pos=networks.getSelectedItemPosition();
+            if(pos<0||pos>=physical.size()){
+                status.setText("请先选择目标Network");
+                return;
+            }
+            PhysicalNetwork target=physical.get(pos);
+            if(PhysicalNetwork.exact(this,target.handle,target.interfaceName,
+                target.ifindex,target.mtu,target.address)==null){
+                chooseNetworks();
+                status.setText("目标Network发生变化，请重新选择");
+                return;
+            }
+            coldSwitch.arm(target.handle,target.interfaceName,target.ifindex,
+                target.mtu,target.address);
+            Intent stopOld=new Intent(this,RootClientService.class);
+            stopOld.setAction(RootClientService.STOP);
+            try{
+                startService(stopOld);
+                status.setText("已请求原Go/Rust owned Stop；确认全部归还后启动所选Network一次");
+            }catch(Exception failure){
+                coldSwitch.cancel();
+                status.setText("旧会话Stop请求未派发；没有启动新Root会话");
+            }
+        });
+        pane.addView(oneShotSwitch);
         Button restore=new Button(this);
         restore.setText("恢复网络（WBD临时Root防火墙/UID路由）");
         restore.setOnClickListener(v->new AlertDialog.Builder(this)
@@ -1196,6 +1261,7 @@ public final class RootClientActivity extends Activity {
         ui.post(refreshStatus);
     }
     @Override protected void onPause(){
+        coldSwitch.cancel(); // explicit authorization ends with foreground Activity
         ui.removeCallbacks(refreshStatus);super.onPause();
     }
 }

@@ -136,6 +136,18 @@ assert 'ORIGINAL_GO_GAME_GROUP_STOP_JOINED' in Path(
 assert 'static boolean gameGroupStopped(' in game_status
 assert 'expectedLanes(selectedMode)==0||groupStopped' in game_status
 print("ANDROID_B48_ORIGINAL_GAME2_GAME4_ACTUAL_GO_RUST_UID_RST_STOP_SOURCE_PASS")
+# B49 uses the existing 1Hz Activity refresh, true owned Stop, exact Network,
+# and the actual original Activity start() (not a Java fake Root).
+cold=Path("android/root-app/src/org/wbdnext/rootclient/RootColdNetworkSwitch.java").read_text()
+assert 'completeUserColdSwitchIfReady();' in app
+assert 'RootClientService.previousOwnerStopConfirmed' in app
+assert 'coldSwitch.complete(' in app and 'coldSwitch.arm(target.handle' in app
+assert 'PhysicalNetwork.exact(this,n.handle' in app
+assert 'networks.setSelection(matched);' in app
+assert 'ui.postDelayed(this,1000);' in app
+assert 'coldSwitch.cancel();' in app
+assert 'oldStopVerified&&targetStillPresent' in cold
+print("ANDROID_B49_FOREGROUND_COLD_NETWORK_SOURCE_PASS")
 
 # B43: Game2 shares original Normal UDP53, native Health and M4 counters.
 rust_group=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
@@ -449,6 +461,10 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/OriginalGoMilestones.java \
   android/root-app/ci/OriginalGoMilestonesTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoMilestonesTest
+# B49 production pure-JVM one-shot Network decision.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test android/root-app/src/org/wbdnext/rootclient/RootColdNetworkSwitch.java android/root-app/ci/RootColdNetworkSwitchTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootColdNetworkSwitchTest
+
 # B47 signed-App original Game2/4 connection READY + owned Stop receipt.
 # These are exact markers from real Go/Rust, never UI mode fake-ready.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
