@@ -148,6 +148,23 @@ assert 'ui.postDelayed(this,1000);' in app
 assert 'coldSwitch.cancel();' in app
 assert 'oldStopVerified&&targetStillPresent' in cold
 print("ANDROID_B49_FOREGROUND_COLD_NETWORK_SOURCE_PASS")
+# B50 named connection profiles are COLD UI only, never another
+# native/TUN/RAW reader or credentials/physical Network serializer.
+profile=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionProfile.java").read_text()
+profile_store=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionProfileStore.java").read_text()
+assert 'RootConnectionProfileStore.save(this,slot,profile)' in app
+assert 'RootConnectionProfileStore.load(this,slot)' in app
+assert 'RootConnectionProfileStore.delete(this,slot)' in app
+assert 'restoreConnectionSettings(profile.settings)' in app
+assert 'chooseInstalledApplications(); // current Android package/UID only' in app
+assert 'restoredSelection.clear();' in app and 'restoredBypass.clear();' in app
+assert 'for(CheckBox box:checkedApps.values())box.setChecked(false)' in app
+assert 'RootConnectionSettings.read(' in profile
+assert 'settings.write(settingsBytes)' in profile
+assert 'getNoBackupFilesDir()' in profile_store
+assert 'start();' in app
+print("ANDROID_B50_NAMED_ROOT_UI_PROFILES_PRODUCTION_SOURCE_PASS")
+
 
 # B43: Game2 shares original Normal UDP53, native Health and M4 counters.
 rust_group=Path("crates/wbd-engine/src/v4_embedded_go.rs").read_text()
@@ -403,6 +420,19 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsTransfer.java \
   android/root-app/ci/RootConnectionSettingsTransferTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionSettingsTransferTest
+# B50 host-run production named profile codec across Normal/Auto/Game.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
+  android/root-app/src/org/wbdnext/rootclient/InstalledAppTarget.java \
+  android/root-app/src/org/wbdnext/rootclient/SelectedAppGroup.java \
+  android/root-app/src/org/wbdnext/rootclient/RootDirectIPv4.java \
+  android/root-app/src/org/wbdnext/rootclient/AllAppUIDPolicy.java \
+  android/root-app/src/org/wbdnext/rootclient/RootPhysicalDNSUpstream.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsTransfer.java \
+  android/root-app/src/org/wbdnext/rootclient/RootConnectionProfile.java \
+  android/root-app/ci/RootConnectionProfileTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionProfileTest
 # Execute the EXACT production RootService original Go argv builder on the
 # host JVM. No Android guest, fake Network, Root permission or packet I/O.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \

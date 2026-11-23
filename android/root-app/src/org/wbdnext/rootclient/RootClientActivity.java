@@ -48,11 +48,12 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredSelection=new TreeMap<>();
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
-    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals;
+    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
-    private TextView selectedAppsSummary,bypassSummary,presetResult;
+    private TextView selectedAppsSummary,bypassSummary,presetResult,profileResult;
+    private EditText profileLabel;
     private RootConnectionSettings pendingPresetExport;
     private TextView status,deviceSelfTestResult,diagnosticExportResult,dnsStatusBrief,fecStatusText,m4TrafficBrief;
     private static final int SAFE_DIAGNOSTIC_SAVE=2042;
@@ -530,8 +531,58 @@ public final class RootClientActivity extends Activity {
         physicalDNS.setChecked(s.physicalDNS);
         cnSplitDNS.setChecked(s.cnSplitDNS);
         allAppsDefault.setChecked(s.allApps);
+        // B50: replacing a preset must REPLACE checked package/UID pairs,
+        // not union with the old UI selection (which changes Root routes).
+        restoredSelection.clear();
+        restoredBypass.clear();
+        for(CheckBox box:checkedApps.values())box.setChecked(false);
+        for(CheckBox box:checkedBypassApps.values())box.setChecked(false);
         restoredSelection.putAll(s.selected);
         restoredBypass.putAll(s.bypass);
+    }
+    private int chosenProfileSlot(){
+        return profileSlots.getSelectedItemPosition()+1;
+    }
+    private void saveNamedProfile(){
+        try{
+            int slot=chosenProfileSlot();
+            RootConnectionProfile profile=new RootConnectionProfile(
+                profileLabel.getText().toString(),connectionSettingsFromUi());
+            RootConnectionProfileStore.save(this,slot,profile);
+            profileResult.setText("已保存槽位"+slot+"："+
+                profile.label+"（原Normal/Fixed/Auto/Game及UID/DNS/MTU；不含密码/Key/物理Network）");
+        }catch(Exception e){
+            profileResult.setText("保存失败：填写有效名称及完整连接设置后再保存");
+        }
+    }
+    private void loadNamedProfile(){
+        try{
+            int slot=chosenProfileSlot();
+            RootConnectionProfile profile=RootConnectionProfileStore.load(this,slot);
+            if(profile==null){
+                profileResult.setText("该槽位尚未保存连接配置");
+                return;
+            }
+            // UI-only. Previous Root generation, kernel routes and selected
+            // physical Network are never changed by a preset load.
+            restoreConnectionSettings(profile.settings);
+            chooseInstalledApplications(); // current Android package/UID only
+            RootConnectionSettingsStore.save(this,profile.settings);
+            profileLabel.setText(profile.label);
+            profileResult.setText("已载入槽位"+slot+"："+profile.label+
+                "；可选择真实Network并手动START，运行中的Root不变");
+        }catch(Exception e){
+            profileResult.setText("读取配置失败；当前已运行的Root会话不受影响");
+        }
+    }
+    private void deleteNamedProfile(){
+        try{
+            int slot=chosenProfileSlot();
+            RootConnectionProfileStore.delete(this,slot);
+            profileResult.setText("已删除槽位"+slot+"的本机连接配置；正在运行的Root未改变");
+        }catch(Exception e){
+            profileResult.setText("删除配置失败");
+        }
     }
     private void privateText(String file,String text)throws Exception{
         // A32: Android's MODE_PRIVATE can produce 0660 (group read/write).
@@ -1067,6 +1118,33 @@ public final class RootClientActivity extends Activity {
         refreshApps.setText("Refresh installed applications");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());
         pane.addView(refreshApps);
+        // B50: four named daily connection profiles, all using the
+        // existing B22 settings serializer and selected app UID recheck.
+        TextView profileHint=new TextView(this);
+        profileHint.setText("本机常用连接：最多4套服务器/模式/UID/分流配置。仅切换表单；密码、RouteKey、CA及实体Network不会存入配置。");
+        pane.addView(profileHint);
+        profileSlots=new Spinner(this);
+        profileSlots.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,
+            new String[]{"配置槽1","配置槽2","配置槽3","配置槽4"}));
+        pane.addView(profileSlots);
+        profileLabel=input(pane,"配置名称（例：家里Wi-Fi／游戏）",InputType.TYPE_CLASS_TEXT);
+        profileLabel.setText("常用连接");
+        Button saveProfile=new Button(this);
+        saveProfile.setText("保存到所选配置槽");
+        saveProfile.setOnClickListener(v->saveNamedProfile());
+        pane.addView(saveProfile);
+        Button loadProfile=new Button(this);
+        loadProfile.setText("载入所选配置（不启动Root）");
+        loadProfile.setOnClickListener(v->loadNamedProfile());
+        pane.addView(loadProfile);
+        Button deleteProfile=new Button(this);
+        deleteProfile.setText("删除所选配置槽");
+        deleteProfile.setOnClickListener(v->deleteNamedProfile());
+        pane.addView(deleteProfile);
+        profileResult=new TextView(this);
+        profileResult.setText("选择槽位，保存或载入；之后正常START/STOP，也可与B49前台冷切网配合。");
+        pane.addView(profileResult);
         Button rememberConnection=new Button(this);
         rememberConnection.setText("保存连接设置（本机，下次恢复；不含密码/RouteKey）");
         rememberConnection.setOnClickListener(v->{
