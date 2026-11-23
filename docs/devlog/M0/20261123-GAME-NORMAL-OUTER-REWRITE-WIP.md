@@ -61,6 +61,15 @@
   - **因果边界**：可判定 ON 增量主要是 Rust TX 工作；该 TX 线程同时运行 `CosmeticOuter::on_firstsend/on_feedback/take_due`、预算与真实 RAW `send_one`，这两个成本目前**尚未被分别计时**，不能把 TX 增量全算在 BTree/Arc/Vec，也不能误判为 Go/RX/FEC 基础开销。新的 79k/侧真实额外 RAW 发送有不可回避成本；下一次只有在函数级证据确认内部重传索引/分配成本占显著比例后，才最小改热路径并按当前 R/F 9%、首次交付、CPU ABBA 验收。此前两项盲点微优化均被同机 ABBA 否定且已回滚，禁止靠降低真实 `R/F` 伪造 CPU 改善。
 - PR#71 保持 **Draft**，`main` 不碰；本节全部是可复现的 TEST-ONLY 性能仪表与真实证据，不新增任何生产 Go/Rust 优化，性能原因尚未完全分离，CPU 关口 OPEN。
 
+## 2026-11-23 M0 TX 六阶段计时 / R/F CPU 理论量纲 / v3 初始空 wake ABBA
+
+- **纯源锁原 GoTLS/Rust TX 六阶段采样**：[Action 45202957306](https://github.com/lly8666/wbd-next/actions/runs/45202957306) SUCCESS；原产品 SOURCE `267490cee46bf3007309bd7e2880d588980b4f82`，原生 Linux Game4 fixed FEC30% 双向10Mbps，四轮 OFF→ON→ON→OFF，真实 R/F ON≈8.9%/OFF=0，首次交付≈10Mbps，Stop PASS。每128次选一进行 wall-clock `Instant` 抽样，TEST-ONLY 环境开关，其余原生任务默认关闭。整进程 CPU 客端 OFF8.230→ON10.105s（+22.78%），服务端 OFF8.535→ON10.405s（+21.91%）。
+- **TX 阶段采样 ON 两轮均值（估计墙钟，不是精确 60 秒 CPU）**：客户端 84.7万 `on_firstsend`×0.774µs≈0.656s，34.5万 `on_feedback`×1.596µs≈0.551s，22.6万 `take_due`×0.550µs≈0.124s、同数 `next_due`×0.157µs≈0.035s，7.9万 `repair_raw send_one`×2.280µs≈0.180s；服务端相应约0.638/0.531/0.134/0.030/0.178s。原始 RAW `send_one` 均值2.2–2.5µs，与补发 RAW 的2.26–2.28µs近似。两个端点近80%新增 TX 阶段成本集中在候选/ACK与到期索引管理，只有约12%属于 RAW 补发调用本身。**注意计时包括 warmup/drain、存在离调/抽样尾部误差，不能把估算墙钟严格加总为60s CPU或声称确定的循环数**；用于归因优先级，严格 CPU 用同机整进程/线程 ABBA。
+- **理论负载模型**：60秒每端原始物理首次 DATA `F≈864MB`（约84.9万包、115Mbps），本身已含Game4物理四lane与fixed FEC，虽然业务仅10Mbps/方向。外层表演重传 `R≈76.9MB`（约7.9万次、10.25Mbps），真实 `R/F≈8.9%`、额外包数≈9.3%，但额外线速约等于一整份业务注入速率。此前同产品 ON/OFF 真实线程差约 TX+1.44s/RX+0.295s、整进程+1.78s/60s，即增量约 18.2/3.7/22.5µs/补发的**摊销**，不是单次syscall耗时。所有真实首发都需算采样/预算，约一半可登记shadow，所有反馈需更新ACK索引；9%线字节而+20%整进程CPU**不代表失控/不合常理**，但其中管理成本真实且可针对性优化，不得靠降低R/F掩盖。
+- **极小生产优化候选**：`crates/wbd-recovery/src/receipt.rs` `on_sent` 在 `opportunistic_v3` 且新entry无`negative_since`/queue 时 `wake_at` 必为`None`，故只省掉这次不产生索引节点的三次`BTreeMap`搜索；后续真实负缺口的`refresh_wake`全部保留，legacy路径不改。SOURCE `ec70d999aef539efd19f09de5d6de2eace02f808` vs `267490cee46bf3007309bd7e2880d588980b4f82` 仅有 `receipt.rs` 5行diff。两OS单元 [45205533812](https://github.com/lly8666/wbd-next/actions/runs/45205533812) SUCCESS，真实Linux七场 [45205533681](https://github.com/lly8666/wbd-next/actions/runs/45205533681) 全部 PASS。
+- [首次同机旧→新→新→旧 ABBA 45206294548](https://github.com/lly8666/wbd-next/actions/runs/45206294548) **四轮真实双端PASS**：客户端整进程CPU旧 **10.020s**→新 **9.785s**（−2.35%）；服务端 **10.300s**→**10.080s**（−2.14%）；R/F≈8.9%、10Mbps首次交付和Stop稳定。收益小于历史不同runner漂移，不能单凭一轮宣布长期提升；[反向顺序 NEW→OLD→OLD→NEW 45207945974](https://github.com/lly8666/wbd-next/actions/runs/45207945974) **待真实读取结果再保留或回滚**。
+- 工作分支PR#71继续Draft；`main` 不修改。采样诊断版 `v4_game_public_kernel.rs` 最终必须恢复未插桩源码以免默认关闭的诊断分支影响生产热路径；原生源码锁工件/Action保持可复审。
+
 ```feature-impact
 {"kind":"updated","reason":"Game2/4 OFF/fixed Linux and Windows outer opportunistic retransmission is being rewritten on the proven Normal v3 ACK-gap, immutable shadow and byte-budget algorithm; source branch draft, not qualified.","ids":["outer-opportunistic-repair"]}
 ```
