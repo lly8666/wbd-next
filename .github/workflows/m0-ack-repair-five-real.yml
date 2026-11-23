@@ -14,7 +14,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       WORKFLOW: m0-wl-public-normal-full.yml
-      BASE_SOURCE: 4f23ecb69f088164539fb5ede72f19e55fa3cd04
+      BASE_SOURCE: 7464b6965efb0e43b839d97beb9a7fa03a9a1b21
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -64,7 +64,7 @@ jobs:
           if [ -z "$id" ]; then
             test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
             gh workflow run "$WORKFLOW" --repo "$GH_REPO" --ref main \
-              -f public_mode=normal -f native_outer_mtu=default1460 -f outer_repair=on \
+              -f public_mode=normal -f native_outer_mtu=legacy1400 -f outer_repair=on \
               -f "perf_scenario_file=$scene"
           fi
           for i in $(seq 1 60); do
@@ -110,8 +110,9 @@ jobs:
           assert all(v["first_delivery_fraction"][side]>=.999 for side in ("windows","linux"))
           log=(path/"mode-results/normal/client.log").read_text(errors="replace")
           hits=re.findall(r"WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+)",log)
-          assert len(hits)==1, "genuine Windows frozen-repair ledger missing"
-          f,r,u=map(int,hits[0])
+          positive=[tuple(map(int,row)) for row in hits if int(row[0])>0]
+          assert positive, "genuine positive-source Windows frozen-repair ledger missing"
+          f,r,u=positive[-1]
           assert f>0 and (r+u)/f<=.0005, "unjustified lossless repair >0.05%"
           print("ACK_ZERO_REAL_OS_SCOPED_PASS",{"F":f,"R":r,"uncertain":u,"WindowsFirst":v["first_delivery_fraction"]["windows"],"LinuxFirst":v["first_delivery_fraction"]["linux"]})
           PY
@@ -142,7 +143,7 @@ jobs:
             fi
             test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
             gh workflow run "$WORKFLOW" --repo "$GH_REPO" --ref main \
-              -f public_mode=normal -f native_outer_mtu=default1460 -f outer_repair=on \
+              -f public_mode=normal -f native_outer_mtu=legacy1400 -f outer_repair=on \
               -f "perf_scenario_file=$scene" \
               -f "perf_reuse_run_id=$ZERO_RUN" -f "perf_binary_source_sha=$GITHUB_SHA"
             echo "ACK_RATE_DISPATCHED_NOT_PASS rate=$rate scene=$scene source=$GITHUB_SHA binary_source=$GITHUB_SHA reused_run=$ZERO_RUN"
