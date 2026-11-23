@@ -162,7 +162,7 @@ def main():
     files=("wbd-v4-client","wbd-v4-server","libwbd_engine.so")
     assert all((bundle/n).is_file() for n in (*files,"manifest.json","SHA256SUMS"))
     m=json.loads((bundle/"manifest.json").read_text())
-    assert m["source"]==source and m["architecture"]=="x86_64"
+    assert m["source_sha"]==source and m["architecture"]=="x86_64"
     hashes={n:sha(bundle/n) for n in files}
     local=base/"bundle-A"/"fixed-build";local.mkdir(parents=True,exist_ok=True)
     for name in files:(local/name).symlink_to(bundle/name)
