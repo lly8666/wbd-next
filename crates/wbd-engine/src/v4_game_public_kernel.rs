@@ -222,14 +222,15 @@ impl GameKernelOwner{
         let presentation_hints=Arc::new((0..n)
             .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
         let tx_hints=Arc::clone(&presentation_hints);
-        // Exactly one newest authenticated SACK-positive block per lane,
-        // encoded in one atomic word; original Go protected SYN/SYN-ACK
-        // negotiated SACK Permitted. No per-packet heap or second worker.
-        let outbound_sacks=Arc::new((0..n)
-            .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
+        // Normal's newest four authenticated positive SACK ranges per lane.
+        // Fixed atomic words; no additional worker or heap in the hot path.
+        let outbound_sacks=Arc::new((0..n).map(|_|
+            std::array::from_fn(|_|AtomicU64::new(0))
+        ).collect::<Vec<[AtomicU64;4]>>());
         let tx_outbound_sacks=Arc::clone(&outbound_sacks);
-        let inbound_peer_sacks=Arc::new((0..n)
-            .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
+        let inbound_peer_sacks=Arc::new((0..n).map(|_|
+            std::array::from_fn(|_|AtomicU64::new(0))
+        ).collect::<Vec<[AtomicU64;4]>>());
         let tx_inbound_peer_sacks=Arc::clone(&inbound_peer_sacks);
         // Go-TLS original per-lane RX boundary is the authority; do not
         // infer cumulative ACK from the first packet that happens to arrive.
@@ -805,16 +806,23 @@ impl GameKernelOwner{
                             if current==observed_hints[i]{continue}
                             let count=(current>>32)
                                 .wrapping_sub(observed_hints[i]>>32).min(3);
-                            let positive=unpack_game_sack(
-                                tx_inbound_peer_sacks[i].load(Ordering::Acquire));
-                            let sack=[wbd_recovery::outer_ack::SackRange32{
-                                start:positive.map_or(0,|s|s.start),
-                                end:positive.map_or(0,|s|s.end),
-                            }];
-                            let sacks=if positive.is_some(){&sack[..]}else{&[]};
+                            let mut sack=[wbd_recovery::outer_ack::SackRange32{
+                                start:0,end:0
+                            };4];
+                            let mut total=0;
+                            for slot in &tx_inbound_peer_sacks[i]{
+                                let positive=unpack_game_sack(
+                                    slot.load(Ordering::Acquire));
+                                if let Some(v)=positive{
+                                    sack[total]=wbd_recovery::outer_ack::SackRange32{
+                                        start:v.start,end:v.end,
+                                    };
+                                    total+=1;
+                                }
+                            }
                             for _ in 0..count{
                                 let _=cosmetic.on_feedback(i,current as u32,
-                                    sacks,clock_ns);
+                                    &sack[..total],clock_ns);
                             }
                             observed_hints[i]=current;
                         }
@@ -862,10 +870,16 @@ impl GameKernelOwner{
                         };
                         let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,
                             src_port:sp,dst_port:dp};
-                        let packed=tx_outbound_sacks[index].load(Ordering::Acquire);
-                        let one=unpack_game_sack(packed);
-                        let slot=[one.unwrap_or(SackRange32{start:0,end:0})];
-                        let sacks=if one.is_some(){&slot[..]}else{&[]};
+                        let mut slot=[SackRange32{start:0,end:0};4];
+                        let mut total=0;
+                        for field in &tx_outbound_sacks[index]{
+                            if let Some(v)=unpack_game_sack(
+                                field.load(Ordering::Acquire)){
+                                slot[total]=v;
+                                total+=1;
+                            }
+                        }
+                        let sacks=&slot[..total];
                         if item.raw.send_presentation_ack_sack(generation,tuple,
                             item.seq as u32,current,sacks).is_ok(){
                             ack_sent[index]=current;
@@ -976,8 +990,8 @@ impl GameKernelOwner{
                         flow=change.flow;
                         lane_opener=change.opener;
                         ack_ledger=NativePresentationAck::new(change.rx_seq);
-                        rx_sack[i].store(0,Ordering::Release);
-                        rx_peer_sack[i].store(0,Ordering::Release);
+                        for field in &rx_sack[i]{field.store(0,Ordering::Release)}
+                        for field in &rx_peer_sack[i]{field.store(0,Ordering::Release)}
                         rx_ack[i].store(change.rx_seq,Ordering::Release);
                         let _=change.ready.send(old);
                     }
@@ -987,7 +1001,7 @@ impl GameKernelOwner{
                         (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
                     };
                     let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
-                    let (len,seq32,ack32,peer_sack)=match raw.recv_one_with_ack_control_into(
+                    let (len,seq32,ack32,peer_sack,peer_sack_count)=match raw.recv_one_with_ack_control_into(
                         generation,&mut wire,tuple,peer_persona,outer_repair_enabled
                     ){
                         Ok(data)=>data,
@@ -1019,7 +1033,10 @@ impl GameKernelOwner{
                     // metadata: no AEAD open, delivery, Health or FEC credit.
                     if len==0{
                         if outer_repair_enabled{
-                            rx_peer_sack[i].store(pack_game_sack(peer_sack),Ordering::Release);
+                            for (k,field) in rx_peer_sack[i].iter().enumerate(){
+                                field.store(pack_game_sack((k<peer_sack_count)
+                                    .then_some(peer_sack[k])),Ordering::Release);
+                            }
                             let last=rx_hints[i].load(Ordering::Relaxed);
                             rx_hints[i].store(
                                 ((last>>32).wrapping_add(1)<<32)|u64::from(ack32),
@@ -1049,8 +1066,10 @@ impl GameKernelOwner{
                         let now_ns=rx_start.elapsed().as_nanos()
                             .min(u128::from(u64::MAX)) as u64;
                         let _=ack_ledger.abandon_stalled(now_ns);
-                        rx_sack[i].store(pack_game_sack(
-                            ack_ledger.latest_sack()),Ordering::Release);
+                        for (field,positive) in rx_sack[i].iter()
+                            .zip(ack_ledger.sacks4()){
+                            field.store(pack_game_sack(positive),Ordering::Release);
+                        }
                         rx_ack[i].store(ack_ledger.ack(),Ordering::Release);
                     }
                     if outer_repair_enabled && matches!(&opened,Ok(Some(_))){
