@@ -16,3 +16,9 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B47正式Android App接真正Game2/4 Go/Rust READY、Host解析/Stop收据判定与显式旧Root先Stop再手动冷选网；不替代原Go/Rust业务或发明自动切网。"}
 ```
+
+## B47同源CI收口（2026-11-23）
+
+产品SOURCE `c3067af60b7013327907842c0148c5613a3199a8` [Android Dual64 #45158643764](https://github.com/lly8666/wbd-next/actions/runs/45158643764) **completed/success，11 SUCCESS / 4 SKIPPED**：Android Go/Rust ARM64+x86_64、签名ARM64 Root APK、实际原Game2/4 off/fixed状态的生产纯JVM Host门、Linux原Normal/off Oracle和x86 D2-S0、6个DNS/CN/M3 Host、Cuttlefish host准入均SUCCESS；host准入不代表Android guest，4个KSU/TAP/bridge guest Job均SKIPPED。[Feature catalog #45158643786](https://github.com/lly8666/wbd-next/actions/runs/45158643786) SUCCESS。这个收口只改变文档功能卡，不改变已经编译的B47产品SOURCE。
+
+**结论**：B47可以记BUILD_PASS/HOST_PASS，真Android Game READY、实际普通App TCP/UDP传输、DNS、真实Root Stop/路由归还、冷切网及性能一律NOT_RUN。旧Game Go组级尚缺完整Stop日志，绝不能凭JVM解析门宣称Game清理证据已有。后续先实现产品真实收据/真机普通业务，而非高丢包极端工况测试。
