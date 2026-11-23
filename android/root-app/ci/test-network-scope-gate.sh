@@ -164,6 +164,21 @@ assert 'settings.write(settingsBytes)' in profile
 assert 'getNoBackupFilesDir()' in profile_store
 assert 'start();' in app
 print("ANDROID_B50_NAMED_ROOT_UI_PROFILES_PRODUCTION_SOURCE_PASS")
+# B51 real per-profile remembered credentials: reuse A38 AES-GCM store,
+# no second encryption format, Account/TLS ABI or original native flags.
+encrypted=Path("android/root-app/src/org/wbdnext/rootclient/RootEncryptedCredentialStore.java").read_text()
+for token in ('saveProfile(Context ctx,int slot','loadProfile(Context ctx,int slot',
+              'clearProfile(Context ctx,int slot','saveFile(profileFile(ctx,slot)',
+              'return loadFile(profileFile(ctx,slot))',
+              'RootSavedCredentialRecord.encrypt(key(true),password,shortKey)',
+              'RootSavedCredentialRecord.decrypt(key(false),ciphertext)'):
+ assert token in encrypted
+assert 'RootEncryptedCredentialStore.saveProfile(this,slot,' in app
+assert 'RootEncryptedCredentialStore.loadProfile(this,slot)' in app
+assert 'RootEncryptedCredentialStore.clearProfile(this,slot)' in app
+assert 'password.setText(saved==null?"":saved.password)' in app
+assert 'routeKey.setText(saved==null?"":saved.routeKey)' in app
+print("ANDROID_B51_PROFILE_SCOPED_EXISTING_KEYSTORE_SOURCE_PASS")
 
 
 # B43: Game2 shares original Normal UDP53, native Health and M4 counters.

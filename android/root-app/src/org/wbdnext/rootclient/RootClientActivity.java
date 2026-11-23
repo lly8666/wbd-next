@@ -549,8 +549,17 @@ public final class RootClientActivity extends Activity {
             RootConnectionProfile profile=new RootConnectionProfile(
                 profileLabel.getText().toString(),connectionSettingsFromUi());
             RootConnectionProfileStore.save(this,slot,profile);
-            profileResult.setText("已保存槽位"+slot+"："+
-                profile.label+"（原Normal/Fixed/Auto/Game及UID/DNS/MTU；不含密码/Key/物理Network）");
+            // The optional per-profile login is just the existing encrypted
+            // AndroidKeyStore record, now keyed by one of the four UI slots.
+            // An incomplete login must not reuse the previous slot's key.
+            boolean credentialsSaved=RootStartCredentialSave.attempt(()->
+                RootEncryptedCredentialStore.saveProfile(this,slot,
+                    password.getText().toString(),routeKey.getText().toString()));
+            if(!credentialsSaved)RootEncryptedCredentialStore.clearProfile(this,slot);
+            profileResult.setText("已保存槽位"+slot+"："+profile.label+
+                (credentialsSaved?"（密码/RouteKey按槽位设备加密保存）":
+                    "（仅普通设置；此槽未存可用密码/RouteKey）")+
+                "；物理Network仍需手选");
         }catch(Exception e){
             profileResult.setText("保存失败：填写有效名称及完整连接设置后再保存");
         }
@@ -568,9 +577,18 @@ public final class RootClientActivity extends Activity {
             restoreConnectionSettings(profile.settings);
             chooseInstalledApplications(); // current Android package/UID only
             RootConnectionSettingsStore.save(this,profile.settings);
+            // Do not inherit the previous server's global/other-slot login.
+            // Missing/unreadable per-profile keys simply require manual entry.
+            RootSavedCredentialRecord.Secrets saved=null;
+            try{saved=RootEncryptedCredentialStore.loadProfile(this,slot);}
+            catch(Exception unavailable){/* Manual credential entry remains available. */}
+            password.setText(saved==null?"":saved.password);
+            routeKey.setText(saved==null?"":saved.routeKey);
             profileLabel.setText(profile.label);
             profileResult.setText("已载入槽位"+slot+"："+profile.label+
-                "；可选择真实Network并手动START，运行中的Root不变");
+                (saved==null?"；请填写此服务器的密码/RouteKey":
+                    "；本槽密码/RouteKey已从原Keystore恢复")+
+                "。选择Network后手动START，运行中的Root不变");
         }catch(Exception e){
             profileResult.setText("读取配置失败；当前已运行的Root会话不受影响");
         }
@@ -579,7 +597,8 @@ public final class RootClientActivity extends Activity {
         try{
             int slot=chosenProfileSlot();
             RootConnectionProfileStore.delete(this,slot);
-            profileResult.setText("已删除槽位"+slot+"的本机连接配置；正在运行的Root未改变");
+            RootEncryptedCredentialStore.clearProfile(this,slot);
+            profileResult.setText("已删除槽位"+slot+"的连接与该槽密码/RouteKey；运行中的Root未改变");
         }catch(Exception e){
             profileResult.setText("删除配置失败");
         }
@@ -932,10 +951,10 @@ public final class RootClientActivity extends Activity {
         });
         pane.addView(saveSecrets);
         Button clearSecrets=new Button(this);
-        clearSecrets.setText("清除已保存密码 / RouteKey");
+        clearSecrets.setText("清除所有已保存密码 / RouteKey（含4套配置）");
         clearSecrets.setOnClickListener(v->new AlertDialog.Builder(this)
             .setTitle("清除保存的登录凭据")
-            .setMessage("仅删除本APK加密保存的密码/原始RouteKey和Keystore密钥，不影响当前Root网络会话或其他客户端。")
+            .setMessage("删除本APK默认及4个配置槽的已保存密码/RouteKey和共用Keystore密钥，不影响当前Root会话或其他客户端。")
             .setNegativeButton("取消",null)
             .setPositiveButton("清除",(dialog,which)->{
                 try{
@@ -1121,7 +1140,7 @@ public final class RootClientActivity extends Activity {
         // B50: four named daily connection profiles, all using the
         // existing B22 settings serializer and selected app UID recheck.
         TextView profileHint=new TextView(this);
-        profileHint.setText("本机常用连接：最多4套服务器/模式/UID/分流配置。仅切换表单；密码、RouteKey、CA及实体Network不会存入配置。");
+        profileHint.setText("本机常用连接：最多4套服务器/模式/UID/分流配置；密码/RouteKey独立按槽位用现有Keystore保存，CA和物理Network不存配置。");
         pane.addView(profileHint);
         profileSlots=new Spinner(this);
         profileSlots.setAdapter(new ArrayAdapter<>(this,
@@ -1143,7 +1162,7 @@ public final class RootClientActivity extends Activity {
         deleteProfile.setOnClickListener(v->deleteNamedProfile());
         pane.addView(deleteProfile);
         profileResult=new TextView(this);
-        profileResult.setText("选择槽位，保存或载入；之后正常START/STOP，也可与B49前台冷切网配合。");
+        profileResult.setText("选择槽位保存/载入；每槽独立密码/RouteKey，旧原生会话不变，配合B49前台冷切网。");
         pane.addView(profileResult);
         Button rememberConnection=new Button(this);
         rememberConnection.setText("保存连接设置（本机，下次恢复；不含密码/RouteKey）");

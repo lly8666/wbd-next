@@ -68,9 +68,18 @@ final class RootEncryptedCredentialStore {
             }
         }
     }
-    static synchronized void save(Context ctx,String password,String shortKey)throws Exception{
+    // The four named B50 profiles reuse the EXACT existing Keystore key,
+    // AES-GCM record codec and 0600 Android AtomicFile persistence.
+    // No new credentials, native format, TLS or network engine.
+    private static File profileFile(Context ctx,int slot){
+        if(slot<1||slot>RootConnectionProfile.SLOTS)
+            throw new IllegalArgumentException("profile slot 1..4");
+        return new File(ctx.getNoBackupFilesDir(),
+            "wbd-root-ui-credentials-profile-"+slot+".gcm");
+    }
+    private static void saveFile(File target,String password,String shortKey)
+        throws Exception{
         byte[] ciphertext=RootSavedCredentialRecord.encrypt(key(true),password,shortKey);
-        File target=file(ctx);
         noSymlinks(target);
         AtomicFile atomic=new AtomicFile(target);
         FileOutputStream out=null;
@@ -88,8 +97,14 @@ final class RootEncryptedCredentialStore {
             throw failure;
         }finally{Arrays.fill(ciphertext,(byte)0);}
     }
-    static synchronized RootSavedCredentialRecord.Secrets load(Context ctx)throws Exception{
-        File target=file(ctx);
+    static synchronized void save(Context ctx,String password,String shortKey)throws Exception{
+        saveFile(file(ctx),password,shortKey);
+    }
+    static synchronized void saveProfile(Context ctx,int slot,String password,String routeKey)
+        throws Exception{
+        saveFile(profileFile(ctx,slot),password,routeKey);
+    }
+    private static RootSavedCredentialRecord.Secrets loadFile(File target)throws Exception{
         if(!target.exists()&&!java.nio.file.Files.isSymbolicLink(target.toPath()))
             return null;
         noSymlinks(target);
@@ -102,11 +117,26 @@ final class RootEncryptedCredentialStore {
             return RootSavedCredentialRecord.decrypt(key(false),ciphertext);
         }finally{Arrays.fill(ciphertext,(byte)0);}
     }
-    static synchronized void clear(Context ctx)throws Exception{
-        File target=file(ctx);
+    static synchronized RootSavedCredentialRecord.Secrets load(Context ctx)throws Exception{
+        return loadFile(file(ctx));
+    }
+    static synchronized RootSavedCredentialRecord.Secrets loadProfile(Context ctx,int slot)
+        throws Exception{
+        return loadFile(profileFile(ctx,slot));
+    }
+    private static void deleteFile(File target)throws Exception{
         noSymlinks(target);
-        AtomicFile atomic=new AtomicFile(target);
-        atomic.delete();
+        new AtomicFile(target).delete();
+    }
+    static synchronized void clearProfile(Context ctx,int slot)throws Exception{
+        deleteFile(profileFile(ctx,slot)); // Keep shared key for other profiles.
+    }
+    static synchronized void clear(Context ctx)throws Exception{
+        deleteFile(file(ctx));
+        // "Clear saved credentials" includes all named B50 profiles; do not
+        // silently leave old encrypted profiles unreadable under a deleted key.
+        for(int slot=1;slot<=RootConnectionProfile.SLOTS;slot++)
+            deleteFile(profileFile(ctx,slot));
         KeyStore store=KeyStore.getInstance("AndroidKeyStore");
         store.load(null);
         if(store.containsAlias(ALIAS))store.deleteEntry(ALIAS);

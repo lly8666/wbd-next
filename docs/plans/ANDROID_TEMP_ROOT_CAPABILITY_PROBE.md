@@ -1,3 +1,5 @@
+> **B51 四套配置各自的密码/RouteKey本地恢复（本SOURCE待CI）**：在B50四命名槽上复用A38已有同一 AndroidKeyStore AES-GCM/AtomicFile/0600 记录，只为每槽分文件，绝不自造加密或更改 Go/Rust。保存时可选有效凭据，载入明确恢复该槽或留空等待用户输入，**不会错误继承其它WBD服务器的全局口令**；删除槽同步删本槽秘钥，全局“清除已保存凭据”删默认和四槽，主Keystore键随后删除。原Go TLS/账户、M4、Stop和B49冷切网原样。本SOURCE构建及APK看Actions，实体NOT_RUN。[B51记录](../devlog/android-root-probe/20261123-b51-profile-scoped-keystore-credentials.md)
+
 > **B50 多连接配置产品接线（本SOURCE待CI）**：继B49源锁 [#45168583911](https://github.com/lly8666/wbd-next/actions/runs/45168583911) 11 SUCCESS/4 SKIPPED，正式Root App新增四个本地命名配置槽，复用原B22设置序列化，覆盖Go/Rust Normal/Fixed/Auto/Game2/4选项、三DNS/MTU/Health、单/组/all UID与直连；载入后先清旧复选框再对真实已安装包UID重建，**不会改变运行中的Root、Network handle或凭据**。原 B49 手动/一键冷切网和旧 native 所有权保持；Host+ARM64 APK/原Linux oracle看新SOURCE，实体/性能未验。[B50记录](../devlog/android-root-probe/20261123-b50-named-multiple-root-profiles.md)
 
 > **B49 前台一键冷切网（SOURCE待CI）**：基于B48，用户选定真实目标Network后主动请求旧原Go/Rust完整Stop；原B48 Game/Normal UID撤销、Rust join、Go/RST清理、退出0确证后，由现有前台状态刷新一次性复用原 `start()`，当前Network精确读回，不自动在onLost后Root重启、不新建热路径或线程。见 [B49记录](../devlog/android-root-probe/20261123-b49-foreground-one-shot-cold-network.md)；正式APK/Host待新SOURCE CI，真机业务仍NOT_RUN。
