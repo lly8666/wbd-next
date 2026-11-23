@@ -1,3 +1,4 @@
+# First commit installed this workflow; this follow-up push arms the one-shot gate.
 name: M0 Windows-to-Linux original ACK repair 0 then five loss tiers
 on:
   push:
