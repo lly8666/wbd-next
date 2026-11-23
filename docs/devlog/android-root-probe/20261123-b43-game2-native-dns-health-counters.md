@@ -14,3 +14,7 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B43复用原Normal Rust UDP53映射至Game2单TUN双RAW M3，原Go Health15/30及真实M4/DNS计数至App；不造新协议/数据面或安全框架。"}
 ```
+
+## 同源软件验收收口（不代替实体资格）
+
+B43 产品 SOURCE `06937fa54efae83944dc4e68838244cf79783d3b` [Android Dual64 #45122281141](https://github.com/lly8666/wbd-next/actions/runs/45122281141) **completed/success，11 SUCCESS / 4 SKIPPED**：真实Android ARM64+x86_64原Go/Rust编译、签名arm64-v8a APK及原App/Java Source Gate、Linux原server Oracle/D2-S0与Rust DNS/M3等Host门独立SUCCESS；KSU原生/NativeBridge/D2-S1/TAP guest四个Android诊断Job SKIPPED。B43 [Feature catalog #45122281209](https://github.com/lly8666/wbd-next/actions/runs/45122281209) **Feature catalog SUCCESS / Governance SKIPPED**。这些是HOST/BUILD资格；真实Android Game2双lane TLS、DNS回包、应用TCP/UDP、UID/Stop及性能一律NOT_RUN，不将内核计数当业务完整PASS。
