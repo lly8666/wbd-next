@@ -13,7 +13,7 @@ final class RootColdNetworkSwitch {
         setTarget(h,n,i,m,ip);
     }
     void armProfile(int slot,long h,String n,int i,int m,String ip){
-        if(slot<1||slot>RootConnectionProfile.SLOTS)
+        if(slot<1||slot>4) // same four fixed App UI slots
             throw new IllegalArgumentException("profile slot 1..4");
         profileSlot=slot;
         setTarget(h,n,i,m,ip);
