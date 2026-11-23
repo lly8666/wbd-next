@@ -1,3 +1,4 @@
+# H2335 exact-source signed Win Game12 after OFF/fixed6 half-sample and Linux single-live-shadow ACK index; 0% anti-flood must still pass.
 # H2334: rerun strict 0/5/30 Win Game2/4 with >=1s unchanged ACK and one cosmetic copy per ACK epoch.
 # H2332 rearm: same ACK must stall >=1s; 0% true Game copy flood is FAIL.
 # H2331: signed native runs use one immutable exact-main source branch; concurrent main commits cannot alter dispatched SHA.

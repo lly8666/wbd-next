@@ -14,11 +14,9 @@ use wbd_recovery::{GlobalRepairError,BudgetError};
 use wbd_types::{MonoNs,RecordPn};
 use std::sync::Arc;
 
-// H814: use Normal's full bounded first-copy ACK index and frozen-receipt
-// cache, not the old 1/16 sparse window that never nominated a copied
-// Windows GameFEC outer packet under genuine 10% loss. The Normal single
-// adaptive PTO is a cosmetic fallback when the peer supplies no usable
-// duplicate-ACK gap. Rate-limited repeats NEVER count as FEC recovery.
+// Normal's original frozen-receipt/ACK index only when a real optional
+// shadow can be retained. The old dense index wasted tree work on
+// first sends that were never eligible for a cosmetic copy.
 const FEC_SHADOW_SAMPLE_MASK:u64=1; // one optional FEC snapshot / 2 original copies
 const FEC_OUTER_MIN_INTERVAL_NS:u64=80_000_000;
 
@@ -127,15 +125,11 @@ impl GameOuter{
     }
     pub(super) fn on_firstsend(&mut self,index:usize,pn:u64,seq:u32,
         wire:&[u8])->Result<(),i32>{
-        // H814 uses Normal's full first-copy receipt ledger for FEC:
-        // sparse 1/16 retained originals never matched the peer's precise
-        // cumulative ACK head in real loss and all 263 expired without a
-        // candidate. Deferring CPU optimization is explicitly intentional.
-        let retain=if self.fec_sparse{
-            let seen=self.fec_seen.get_mut(index).ok_or(INVALID)?;
-            *seen=seen.wrapping_add(1);
-            (*seen&FEC_SHADOW_SAMPLE_MASK)==0
-        }else{true};
+        // Both Game OFF and fixed6 share Normal's cheap 1/2 sample.
+        // ALL real first copies still count towards F further below.
+        let seen=self.fec_seen.get_mut(index).ok_or(INVALID)?;
+        *seen=seen.wrapping_add(1);
+        let sampled=(*seen&FEC_SHADOW_SAMPLE_MASK)==0;
         let m=self.lanes.get_mut(index).ok_or(INVALID)?;
         let high=m.ack.highest_sent_end();
         let delta=seq.wrapping_sub(high as u32) as i32;
@@ -154,19 +148,18 @@ impl GameOuter{
         // unselected FEC samples; the shared R/F cap cannot be diluted.
         m2_global().lock().map_err(|_|BAD_STAGE)?
             .on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
-        if !retain{
+        // No BTree node unless the original frozen snapshot is both
+        // sampled and admitted. Guard optional CPU before tree mutation.
+        if !sampled||m.shadow.outstanding()>=MAX_M2_FIXED_FROZEN||
+            (!self.fec_sparse&&!win_v3_admit_shadow(pn,m.lane,now)){
             m.ack.advance_untracked(high,wire.len() as u32)
                 .map_err(|_|BAD_STAGE)?;
             return Ok(())
         }
         if !m.ack.on_definitely_sent(RecordPn(pn),high,
             wire.len() as u32,now).map_err(|_|BAD_STAGE)?{
-            return Ok(()) // no shadow without positive indexed hint
+            return Ok(())
         }
-        // Normal's bounded optional receipt arena: a full cache never
-        // blocks actual original FEC source/parity first sends.
-        if m.shadow.outstanding()>=MAX_M2_FIXED_FROZEN ||
-            (!self.fec_sparse&&!win_v3_admit_shadow(pn,m.lane,now)){return Ok(())}
         let frozen=GameFrozen{
             wire:Arc::from(wire),
             meta:FrozenMetadata{
@@ -375,6 +368,11 @@ mod tests{
         assert!(!owner.on_hint(0,360,&[]));
         assert!(owner.prepare(&[true]).unwrap().is_none());
         assert_eq!(owner.next_deadline(),None);
+    }
+    #[test]
+    fn r1_game_windows_off_and_fixed_share_normal_half_sample(){
+        assert_eq!(FEC_SHADOW_SAMPLE_MASK,1);
+        assert_eq!((1..=64u64).filter(|n|n&FEC_SHADOW_SAMPLE_MASK==0).count(),32);
     }
     #[test]
     fn h811_fec_reuses_normal_cumulative_gap_without_flooding_every_record(){

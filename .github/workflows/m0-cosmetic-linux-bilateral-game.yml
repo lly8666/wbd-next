@@ -1,3 +1,4 @@
+# H2335 exact-source requalify Linux original Go/Rust client+server both directions after optional ACK-index low-CPU patch; older 60a PASS not inherited.
 # H2334: rerun strict source-frozen Linux client/server Normal6+Game12; zero-loss flood now mandatory FAIL.
 # H2332 rearm: real Game 0% client/server per-owner first-copy ratio is fail-closed.
 # H2331: Game real 5/30% source must include authenticated stall and 1/2 sample, not legacy zero appearance.
