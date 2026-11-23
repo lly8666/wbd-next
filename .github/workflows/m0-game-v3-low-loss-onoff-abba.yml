@@ -51,7 +51,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out
-          sudo -n env WBD_M0_GAME_THREAD_CPU_DIAG=1 GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" \
+          sudo -n env WBD_M0_GAME_THREAD_CPU_DIAG=1 GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" LOSS="$LOSS" \
             GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_ACTIONS="$GITHUB_ACTIONS" \
             GITHUB_WORKSPACE="$GITHUB_WORKSPACE" RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
             python3 - <<'PY'
