@@ -328,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn h811_sparse_original_firstsend_ack_head_only_not_later_shadow(){
+    fn r2_h811_sparse_original_firstsend_ack_head_only_not_later_shadow(){
         let mut x=index(100,16);
         x.advance_untracked(100,10).unwrap();
         x.on_definitely_sent(RecordPn(2),110,10,MonoNs(1_000_000)).unwrap();
@@ -351,7 +351,7 @@ mod tests {
     }
 
     #[test]
-    fn m0_unsampled_firstsend_keeps_bounds_without_index_or_fake_gap(){
+    fn r2_m0_unsampled_firstsend_keeps_bounds_without_index_or_fake_gap(){
         let mut x=index(100,8);
         assert_eq!(x.on_definitely_sent_untracked(100,10,MonoNs(10)),Ok(()));
         assert_eq!(x.outstanding(),0);
