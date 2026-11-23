@@ -631,7 +631,7 @@ fn trusted_windows_game_rx<'a>(
 // its exact bounded batch while the shared Wintun is temporarily full;
 // the original AEAD/PN and FEC decode MUST NOT be replayed on retry.
 struct DeferredFec{
-    seq:u32,wire_len:usize,copied:u32,frames:Vec<Vec<u8>>,
+    copied:u32,frames:Vec<Vec<u8>>,
 }
 // Original authenticated Tunnel DNS responses are the only Game DATA
 // that touch transaction maps. Ordinary Game/FEC DATA never locks here.
@@ -665,6 +665,14 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
             (frame.into_iter().collect(),pending)
         }
     };
+    // Normal's outer presentation ACK follows the original valid Game
+    // physical ciphertext, NOT the logical first TUN copy. Every Game lane
+    // independently authenticates its own original PN/AEAD; a sibling may
+    // already have delivered the same source, or FEC may have no new frame.
+    if ledgers[lane].authenticated_future(seq){
+        c.authenticated_future[lane].fetch_add(1,Ordering::Release);
+    }
+    c.ack[lane].store(ledgers[lane].verified(seq,wire.len()),Ordering::Release);
     // Rewrite all DNS frames before any kernel Wintun write or deferred
     // copy: a full ring cannot trigger a second DNS transaction rewrite.
     let mut blocked=false;
@@ -684,7 +692,6 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
             };
             if rc!=OK{return Err(rc)}
         }
-        c.ack[lane].store(ledgers[lane].verified(seq,wire.len()),Ordering::Release);
         return Ok(())
     }
     let total=frames.len();
@@ -714,9 +721,7 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
         // remaining payloads and their exact accepted kernel prefix instead.
         let slot=deferred.get_mut(lane).ok_or(INVALID)?;
         if slot.is_some(){return Err(BAD_STAGE)}
-        *slot=Some(DeferredFec{
-            seq,wire_len:wire.len(),copied,frames
-        });
+        *slot=Some(DeferredFec{copied,frames});
         return Ok(())
     }
     if pending{
@@ -734,13 +739,6 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
         return Ok(()) // no kernel-delivery ledger, no synthetic TCP ACK
     }
     if copied as usize!=total{return Err(BAD_STAGE)}
-    // The group game opener already verified independent original
-    // authenticated AEAD/PN, so presentation ACK can only follow that.
-    if ledgers[lane].authenticated_future(seq){
-        c.authenticated_future[lane].fetch_add(1,Ordering::Release);
-    }
-    let ack=ledgers[lane].verified(seq,wire.len());
-    c.ack[lane].store(ack,Ordering::Release);
     Ok(())
 }
 // Per-capture retirement never substitutes a shared Wintun or owner Stop.
@@ -784,11 +782,8 @@ fn flush_deferred_fec(
                 game::finish_fec_group(&mut g,(i+1) as u32,row.copied)
             };
             if rc!=OK{return Err(rc)}
-            if ledgers[i].authenticated_future(row.seq){
-                c.authenticated_future[i].fetch_add(1,Ordering::Release);
-            }
-            let ack=ledgers[i].verified(row.seq,row.wire_len);
-            c.ack[i].store(ack,Ordering::Release);
+            // Physical ACK already advanced when the original ciphertext
+            // was opened; deferred Wintun completion is a separate ledger.
             *slot=None;
             finished_any=true;
         }
