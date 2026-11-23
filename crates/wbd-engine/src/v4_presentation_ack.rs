@@ -14,14 +14,14 @@ impl NativePresentationAck{
         Self{next:u64::from(initial),future:Vec::with_capacity(256)}
     }
     pub(crate) fn ack(&self)->u32{self.next as u32}
-    // Only a successfully authenticated and copied future original M3
-    // record; caller tests before verified() updates the cumulative head.
+    // Only a future original M3 record whose physical lane AEAD/PN opened;
+    // logical first-delivery TUN copying is independently accounted.
     pub(crate) fn authenticated_future(&self,seq:u32)->bool{
         (seq.wrapping_sub(self.next as u32) as i32)>0
     }
     // Exactly one original cold-authenticated seq32 anchor per lane.
-    // Called only after a real Game AEAD+unique-PN opener and successful
-    // TUN commit. Future spans are cosmetic; never gate TUN delivery.
+    // Called after a real Game AEAD+unique-PN opener; not gated on TUN
+    // commit or logical cross-lane dedup. Future spans never gate delivery.
     pub(crate) fn verified(&mut self,seq:u32,len:usize)->u32{
         let distance=i64::from(i32::from_ne_bytes(
             seq.wrapping_sub(self.next as u32).to_ne_bytes()));
