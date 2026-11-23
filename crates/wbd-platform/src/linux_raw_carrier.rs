@@ -464,13 +464,14 @@ impl ScopedRawIpv4Rx {
         tuple:Ipv4Tuple<'_>,persona:PacketPersona)
         ->Result<(usize,u32,u32),RawTxError>{
         self.recv_one_with_ack_control_into(generation,buffer,tuple,persona,false)
+            .map(|(len,seq,ack,_)|(len,seq,ack))
     }
     /// Game's original RX may also surface checksum/tuple-checked pure ACK
     /// as len=0 (never AEAD DATA). Normal already uses identical optional
     /// carrier hints; only the outer repair shadow may consume this event.
     pub fn recv_one_with_ack_control_into(&self,generation:u32,buffer:&mut [u8],
         tuple:Ipv4Tuple<'_>,persona:PacketPersona,allow_pure_ack:bool)
-        ->Result<(usize,u32,u32),RawTxError>{
+        ->Result<(usize,u32,u32,Option<crate::ipv4_tcp::SackRange32>),RawTxError>{
         if generation!=self.generation{return Err(RawTxError::InvalidScope)}
         if self.is_stopping(){return Err(RawTxError::Stopped)}
         if buffer.len()<64{return Err(RawTxError::InvalidPacket)}
@@ -518,8 +519,11 @@ impl ScopedRawIpv4Rx {
                     if allow_pure_ack && buffer[0]==0x45 && buffer[33]==0x10 {
                         if let Ok(ack)=parse_ack_packet(&buffer[..n],TrustedRx{
                             tuple,persona,mtu:self.mtu,authenticated_options:None,
-                        },false){
-                            return Ok((0,0,ack.ack32))
+                        },true){
+                            // Original protected Go cold SYN advertises and
+                            // SYN-ACK echoes SACK Permitted. Surface one true
+                            // positive span to existing Game outer owner.
+                            return Ok((0,0,ack.ack32,ack.sacks().last().copied()))
                         }
                     }
                     continue
@@ -532,7 +536,7 @@ impl ScopedRawIpv4Rx {
             let ack=parsed.presentation_ack32;
             if len==0 {return Err(RawTxError::InvalidPacket)}
             buffer.copy_within(start..n,0);
-            return Ok((len,seq,ack))
+            return Ok((len,seq,ack,None))
         }
         Err(RawTxError::Kernel(110))
     }
