@@ -1,0 +1,34 @@
+# M0 WIP: one signed ORIGINAL Windows2025 Npcap/Wintun + WSL2 Game2 loss30.
+# Dispatch an immutable, independently pinned SOURCE. The dispatch job itself
+# is NOT native success; only downstream exact-source run can qualify.
+name: M0 Game Normal outer signed Windows dispatch once
+run-name: "M0-GAME-NORMAL-WINDOWS-SIGNED-DISPATCH|${{ github.sha }}"
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-normal-win-signed-once.yml]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch-one:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      FROZEN_REF: experiment/m0-game-normal-frozen-524455e0
+      FROZEN_SHA: 524455e0c14edf83c92d3dd09cca76a75b0df751
+      SCENARIO: scenarios/m0-cosmetic-game2-loss30-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Dispatch exactly frozen signed Game2 30pct real two-OS run
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/$FROZEN_REF" --jq '.object.sha')" = "$FROZEN_SHA"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$FROZEN_REF" \
+            -f public_mode=game2 -f native_outer_mtu=legacy1400 \
+            -f outer_repair=on -f "perf_scenario_file=$SCENARIO"
+          echo "WINDOWS_SIGNED_DISPATCHED_NOT_PASS frozen=$FROZEN_SHA scenario=$SCENARIO"
