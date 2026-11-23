@@ -20,7 +20,7 @@ use wbd_platform::windows_native_io::{
     WintunFns,WakeEvent,ReadResult,WaitResult,NativeIoError,
 };
 use wbd_platform::ipv4_tcp::{
-    build_bytes,build_presentation_ack,Ipv4Tuple,Presentation,PacketPersona,
+    build_bytes,build_presentation_ack_sack,Ipv4Tuple,Presentation,PacketPersona,SackRange32,
 };
 use wbd_platform::rx_ipv4_tcp::{parse_data_packet,TrustedRx};
 use super::native_runtime::{WbdWinNativeAttachV1,WbdWinNativeStatsV1};
@@ -87,6 +87,7 @@ struct GameCounters{
     rx:AtomicU64,after:AtomicU64,rejected:AtomicU64,
     ack:[AtomicU32;4],ack_sent:[AtomicU32;4],tx_seq:[AtomicU32;4],
     authenticated_future:[AtomicU32;4],
+    sack:[AtomicU64;4],
     first_due_entry:AtomicBool,first_send_failure:AtomicBool,
 }
 impl GameCounters{
@@ -98,6 +99,7 @@ impl GameCounters{
             ack_sent:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.rx_seq))),
             tx_seq:std::array::from_fn(|i|AtomicU32::new(lanes.get(i).map_or(0,|x|x.tx_seq))),
             authenticated_future:std::array::from_fn(|_|AtomicU32::new(0)),
+            sack:std::array::from_fn(|_|AtomicU64::new(0)),
             first_due_entry:AtomicBool::new(false),first_send_failure:AtomicBool::new(false),
         }
     }
@@ -188,10 +190,11 @@ fn wire_frame<'a>(cfg:&WbdWinNativeAttachV1,l:&LaneConfig,
 // deliberately. Never relax that validation to send this TCP-only ACK.
 fn presentation_ack_frame<'a>(
     tuple:Ipv4Tuple<'_>,source_mac:[u8;6],next_hop_mac:[u8;6],
-    seq:u32,ack:u32,ip_id:u16,mtu:usize,out:&'a mut [u8;FRAME_CAP],
+    seq:u32,ack:u32,ip_id:u16,mtu:usize,sacks:&[SackRange32],
+    out:&'a mut [u8;FRAME_CAP],
 )->Result<&'a [u8],i32>{
-    let tcp=build_presentation_ack(tuple,seq,ack,ip_id,
-        PacketPersona::Windows11,mtu,&mut out[14..]).map_err(|_|INVALID)?;
+    let tcp=build_presentation_ack_sack(tuple,seq,ack,ip_id,
+        PacketPersona::Windows11,mtu,sacks,&mut out[14..]).map_err(|_|INVALID)?;
     let n=14+tcp.len();
     out[..6].copy_from_slice(&next_hop_mac);
     out[6..12].copy_from_slice(&source_mac);
@@ -295,13 +298,19 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
         if !presentation_game_ack_due(now,last_ns[i],ack,
             c.ack_sent[i].load(Ordering::Acquire),
             future!=future_sent[i]){continue}
+        let packed=c.sack[i].load(Ordering::Acquire);
+        let positive=(packed!=0).then_some(SackRange32{
+            start:(packed>>32) as u32,end:packed as u32,
+        });
+        let slot=[positive.unwrap_or(SackRange32{start:0,end:0})];
+        let sacks=if positive.is_some(){&slot[..]}else{&[]};
         let mut scratch=[0u8;FRAME_CAP];
         let frame=presentation_ack_frame(Ipv4Tuple{
             src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
             src_port:l.local_port,dst_port:l.peer_port,
         },cfg.source_mac,cfg.next_hop_mac,
             c.tx_seq[i].load(Ordering::Acquire),ack,*ip_id,
-            cfg.path_mtu as usize,&mut scratch)?;
+            cfg.path_mtu as usize,sacks,&mut scratch)?;
         *ip_id=ip_id.wrapping_add(1);
         let status=npf[i].send_batch(&[frame]);
         if status.accepted_prefix==1{
@@ -672,7 +681,11 @@ fn receive_one(cfg:&WbdWinGameNativeAttachV3,
     if ledgers[lane].authenticated_future(seq){
         c.authenticated_future[lane].fetch_add(1,Ordering::Release);
     }
-    c.ack[lane].store(ledgers[lane].verified(seq,wire.len()),Ordering::Release);
+    let latest_ack=ledgers[lane].verified(seq,wire.len());
+    let sack=ledgers[lane].latest_sack();
+    c.sack[lane].store(sack.map_or(0,|s|
+        (u64::from(s.start)<<32)|u64::from(s.end)),Ordering::Release);
+    c.ack[lane].store(latest_ack,Ordering::Release);
     // Rewrite all DNS frames before any kernel Wintun write or deferred
     // copy: a full ring cannot trigger a second DNS transaction rewrite.
     let mut blocked=false;
@@ -939,9 +952,15 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                 // Pure checksum/tuple-checked ACK is only an appearance
                 // hint. It never creates FEC recovery, Health or delivered.
                 if let Ok(hint)=wbd_platform::rx_ipv4_tcp::parse_ack_packet(
-                    ipv4,trusted,false){
+                    ipv4,trusted,true){
+                    let newest=hint.sacks().last().copied();
+                    let sack=[wbd_recovery::outer_ack::SackRange32{
+                        start:newest.map_or(0,|v|v.start),
+                        end:newest.map_or(0,|v|v.end),
+                    }];
+                    let ranges=if newest.is_some(){&sack[..]}else{&[]};
                     let changed=match outer.lock(){
-                        Ok(mut m)=>m.on_hint(i,hint.ack32,&[]),
+                        Ok(mut m)=>m.on_hint(i,hint.ack32,ranges),
                         Err(_)=>return BAD_STAGE,
                     };
                     if changed{let _=tx_wake.wake();}
@@ -1359,7 +1378,7 @@ mod tests{
         let dst_mac=[0,0x15,0x5d,0xc5,0x4c,0x29];
         let mut bytes=[0u8;FRAME_CAP];
         let packet=presentation_ack_frame(tuple,src_mac,dst_mac,
-            0x11223344,0x55667788,9,1500,&mut bytes).unwrap();
+            0x11223344,0x55667788,9,1500,&[],&mut bytes).unwrap();
         assert_eq!(packet.len(),54); // 14 Ethernet + 20 IPv4 + 20 TCP
         assert_eq!(&packet[0..6],&dst_mac);
         assert_eq!(&packet[6..12],&src_mac);
@@ -1384,7 +1403,7 @@ mod tests{
         let mut bytes=[0xa5;FRAME_CAP];
         let result=presentation_ack_frame(Ipv4Tuple{
             src_ip:&src,dst_ip:&dst,src_port:41031,dst_port:443,
-        },[1;6],[2;6],1,1,1,39,&mut bytes);
+        },[1;6],[2;6],1,1,1,39,&[],&mut bytes);
         assert_eq!(result,Err(INVALID));
         assert!(bytes.iter().all(|&x|x==0xa5));
     }
