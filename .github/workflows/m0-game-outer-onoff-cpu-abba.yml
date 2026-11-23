@@ -1,0 +1,113 @@
+name: M0 Game4 FEC 30pct exact-product outer ON OFF CPU ABBA
+run-name: "M0-GAME-ONOFF-ABBA|${{ github.sha }}"
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-outer-onoff-cpu-abba.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  same-runner:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: 4762fa9c61dfad540fd4e04349001cfb0eda54df
+      BASE_RUN: '45181693979'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Lock exact real product bytes; test only ON OFF option differs
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/compare/$SOURCE...$GITHUB_SHA" | jq -e '
+            .status=="ahead" and
+            ([.files[].filename | select(startswith("crates/") or startswith("r0/go_overlay/") or .=="Cargo.toml" or .=="Cargo.lock" or startswith("scenarios/"))] | length)==0
+          ' >/dev/null
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BASE_RUN" --jq .head_sha)" = "$SOURCE"
+          gh run download "$BASE_RUN" --repo "$GH_REPO" \
+            --name "m0-cosmetic-linux-original-product-$SOURCE" --dir native
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('native'); m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['SOURCE'] and m['architecture']=='x86_64'
+          for line in (p/'SHA256SUMS').read_text().splitlines():
+              digest,name=line.split(maxsplit=1)
+              assert hashlib.sha256((p/name.removeprefix('*')).read_bytes()).hexdigest()==digest
+          print('M0_ONOFF_EXACT_PRODUCT_HASHES',m['source_sha'])
+          PY
+          chmod +x native/wbd-v4-client native/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Four real original Game4 fixed FEC30 OFF ON ON OFF 60s independent network legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          sudo -n env GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" \
+            GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_ACTIONS="$GITHUB_ACTIONS" \
+            GITHUB_WORKSPACE="$GITHUB_WORKSPACE" RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
+            python3 - <<'PY'
+          import json,os,pathlib,statistics
+          from tools.network_harness.m0_029_cosmetic_linux_dual_game import prepare,genuine_case,sha
+          from tools.network_harness.runner import LinuxExperiment
+          base=pathlib.Path(os.environ['GITHUB_WORKSPACE'])
+          root=base/'out'; bundle=base/'native'; source=os.environ['SOURCE']
+          scene=json.loads((base/'scenarios/m0-cosmetic-game4-fec-loss30-60s.json').read_text())
+          hashes={name:sha(bundle/name) for name in ('wbd-v4-client','wbd-v4-server','libwbd_engine.so')}
+          links=root/'bundle-A'/'fixed-build'; links.mkdir(parents=True,exist_ok=True)
+          for name in hashes: (links/name).symlink_to(bundle/name)
+          rows=[]
+          for index,label in enumerate(('off','on','on','off'),1):
+              cfg=prepare(scene,source,int(os.environ['GITHUB_RUN_ID']),'game4-fec')
+              enabled=(label=='on')
+              cfg['product']['repair_enabled']=enabled
+              cfg['bundles']['A']['repair_enabled']=enabled
+              path=root/f'{index}-{label}'
+              leg=LinuxExperiment(cfg,root/'bundle-A',path,'A').run()
+              if leg['result']!='PASS_SCOPED_OBSERVATION' or not leg['cleanup']['owned_namespaces_absent']:
+                  raise RuntimeError(f'original product failed {index} {label}: {leg.get("failures")}')
+              telem=leg.get('telemetry',{})
+              if telem.get('stop_drained_both') is not True or telem.get('outer_repair_native_verified') is not True:
+                  raise RuntimeError(f'original real Stop/outer readback failed {index} {label}')
+              proof=telem.get('game_outer_policy',{})
+              ratio={}; copies={}
+              for role in ('client','server'):
+                  p=proof[role]; assert p['repair_enabled']==int(enabled)
+                  copies[role]=p['outer_data_retransmitted']
+                  f=p.get('first_record_wire_bytes');r=p.get('copy_record_wire_bytes')
+                  ratio[role]=r/f if isinstance(f,int) and f>0 and isinstance(r,int) else None
+                  if enabled: assert copies[role]>0 and ratio[role] is not None and 0<ratio[role]<=.1
+                  else: assert copies[role]==0 and (ratio[role] is None or ratio[role]==0)
+              measured={direction:sum(float(r.get('cohort_delivered_app_mbps') or 0)
+                  for r in leg.get('observed',[]) if r.get('phase')=='iid' and r.get('direction')==direction)
+                  for direction in ('c2s','s2c')}
+              assert min(measured.values())>9.4, measured
+              cpu={role:leg['measurement_cost'][role]['cpu_s'] for role in ('client','server')}
+              row={'index':index,'outer':label,'source':source,'cpu_s':cpu,'copies':copies,
+                   'ratio':ratio,'unique_first_mbps':measured,'stop':'PASS','mode':'game4-fec','loss_pct':30}
+              (path/'m0-onoff-leg.json').write_text(json.dumps(row,indent=2)+'\n')
+              rows.append(row)
+              print('M0_ONOFF_REAL_LEG',json.dumps(row,sort_keys=True),flush=True)
+          summary={'schema':'m0-game4-fec30-exact-product-onoff-abba/v1',
+              'same_runner':True,'source':source,'order':'OFF_ON_ON_OFF','rows':rows}
+          for role in ('client','server'):
+              off=statistics.fmean(x['cpu_s'][role] for x in rows if x['outer']=='off')
+              on=statistics.fmean(x['cpu_s'][role] for x in rows if x['outer']=='on')
+              summary[role]={'off_cpu_s':off,'on_cpu_s':on,'on_minus_off_cpu_s':on-off,
+                  'on_over_off_pct':100*(on/off-1)}
+          (root/'abba-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          print('M0_SAME_RUNNER_GAME_OUTER_ONOFF_CPU_ABBA',json.dumps(summary,sort_keys=True),flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-game4-fec30-outer-onoff-cpu-${{ github.sha }}
+          path: |
+            out/abba-summary.json
+            out/*/m0-onoff-leg.json
+            out/*/result.json
+          retention-days: 30
+          if-no-files-found: warn
