@@ -170,7 +170,9 @@ assert '.filter(|v|v.len()==g.android_lanes.len())' in rust_group
 assert '(game_fec_profile!=255).then_some(game_fec_profile as u8)' in rust_group
 assert 'GameFecEnabled:c.gameFecEnabled' in g
 assert 'GameFecProfile:c.gameFecProfile' in g
-assert 'session.verifiedGameFec!=negotiatedFec' in bridge
+assert 'extension.GameFec!=opt.GameFec' in Path(
+    "r0/go_overlay/internal/realityfront/admission_v4.go").read_text()
+assert 'GameFec:negotiatedFec,StartupPadding:0' in bridge
 assert 'GameFec:negotiatedFec,StartupPadding:0' in bridge
 assert 'OriginalGameFecCounters()' in g
 assert 'C.wbd_fec_network_game_group_counters(' in bridge

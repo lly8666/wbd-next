@@ -118,11 +118,10 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
             GameFec:negotiatedFec,StartupPadding:0,
         })
         if e!=nil{return "",e}
-        // Original Go credential-checked protected reply MUST echo
-        // fixed profile on every lane; a local flag is never proof.
-        if session.verifiedGameFec!=negotiatedFec{
-            return "",ErrAdmissionUnsupported
-        }
+        // EstablishClientV4 already compares the protected reply's
+        // extension.GameFec to GameFec:negotiatedFec before returning
+        // this authenticated session. Do not invent a client struct
+        // field or re-check a mutable post-TLS snapshot here.
         if i==0{epoch=session.Epoch}
         handoff,e:=assoc.Detach()
         if e!=nil{return "",e}

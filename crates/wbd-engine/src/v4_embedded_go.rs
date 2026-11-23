@@ -3477,9 +3477,14 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
 // The *same* original Game FEC counters are read by Android's existing
 // low-rate Go ticker, never a fabricated second mobile decoder.
 #[cfg(all(feature="fec2_product_record",
-    any(target_os="linux",target_os="android"),
-    any(target_arch="x86_64",target_arch="aarch64"),
-    any(target_env="gnu",target_env="musl",target_env="android")))]
+    any(
+        all(target_os="linux",
+            any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")),
+        all(target_os="android",
+            any(target_arch="x86_64",target_arch="aarch64"))
+    )
+))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_fec_network_game_group_counters(
     group:u64,out:*mut u64,len:usize

@@ -17,3 +17,7 @@ B45b `9f7685bd25a7cbc6fdd67e81555b6dd600bb4188` [Dual64 #45138246728](https://gi
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B46修Game4真实4RAW启动阻断，Game2/4固定Game FEC0–6沿原TLS保护模式与原Rust GameAdapter TX/RX/Health/Stop、正式App参数/预设及原Linux FEC状态回读。"}
 ```
+
+## B46a｜同源首轮Go编译与Rust目标环境修复
+
+B46原产品SOURCE `c3fe6df56f0cc87070c6e9bea182af5d69efd2be` [Dual64 #45143767720](https://github.com/lly8666/wbd-next/actions/runs/45143767720) **completed/FAIL**，精确6个DNS/CN/M3 Host Job SUCCESS，arm64-native FAIL；签名App/Linux Oracle跳过。Rust AArch64与x86_64原生代码都已经release编译完成，Go失败 `V4ClientSession.verifiedGameFec undefined`：字段只在原 `V4ServerSession`，原客户端 `EstablishClientV4`早已在受保护reply之后精确校验 `extension.GameFec!=opt.GameFec`。B46a删除不必要的二次字段访问，不新增Go假确认，并把源码门改为校验原 TLS 真正已有的受保护回复核验。第二问题是Rust `target_env="android"`非有效target_env；原Android NDK目标由 `target_os="android"` 标识，本次把原Linux FEC计数 ABI 的编译门改为原Linux三元组或Android AArch64/x86_64，避免Android端缺 `wbd_fec_network_game_group_counters` 实际导出。保留旧失败，B46a必须本SOURCE新CI成功才记签名App/BULD，实体FEC仍NOT_RUN。
