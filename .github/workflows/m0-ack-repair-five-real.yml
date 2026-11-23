@@ -14,7 +14,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       WORKFLOW: m0-wl-public-normal-full.yml
-      BASE_SOURCE: 7464b6965efb0e43b839d97beb9a7fa03a9a1b21
+      BASE_SOURCE: a482cbac836fa3039cc40da7434204dfce3961fe
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -75,12 +75,27 @@ jobs:
           test -n "$id" || { echo ACK_ZERO_DISPATCH_NOT_OBSERVED >&2; exit 1; }
           echo "ACK_ZERO_NATIVE_RUN=$id SOURCE=$GITHUB_SHA"
           final=""
-          for i in $(seq 1 160); do
+          for i in $(seq 1 132); do
             row="$(gh api "repos/$GH_REPO/actions/runs/$id")"
             status="$(jq -r .status <<<"$row")"
             if [ "$status" = completed ]; then
               final="$(jq -r .conclusion <<<"$row")"
               break
+            fi
+            # GitHub Windows-hosted WSL may ignore its own 8min step limit.
+            # A separate Linux controller must not leave that runner stuck.
+            if (( i % 4 == 0 )); then
+              boot_start="$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+                jq -r '[.jobs[] | select(.name=="native-public-two-os") | .steps[]? |
+                  select(.name=="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)" and .status=="in_progress") | .started_at] | first // empty')"
+              if [ -n "$boot_start" ]; then
+                age=$(( $(date -u +%s) - $(date -u -d "$boot_start" +%s) ))
+                if (( age > 840 )); then
+                  echo "ACK_ZERO_ENVIRONMENT_BLOCKED_WSL_STALE run=$id step_seconds=$age" >&2
+                  gh api -X POST "repos/$GH_REPO/actions/runs/$id/cancel" >/dev/null || :
+                  exit 1
+                fi
+              fi
             fi
             sleep 15
           done
@@ -90,9 +105,12 @@ jobs:
           names="$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100" --jq '.artifacts[].name')"
           grep -Fxq "m0-wl-windows-product-binaries-$GITHUB_SHA" <<<"$names"
           grep -Fxq m0-plan024-linux-product <<<"$names"
-          grep -Fxq m0-wl-full-public-normal-direct <<<"$names"
+          # In the live legacy branch the native artifact name includes
+          # the H1506 scene and exact run id; the unsuffixed label never exists.
+          evidence_name="m0-wl-full-public-normal-direct-h1506-legacy-$id"
+          grep -Fxq "$evidence_name" <<<"$names"
           mkdir -p "$RUNNER_TEMP/ack-zero"
-          gh run download "$id" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$RUNNER_TEMP/ack-zero"
+          gh run download "$id" --repo "$GH_REPO" --name "$evidence_name" --dir "$RUNNER_TEMP/ack-zero"
           ACK_REPORT_DIR="$RUNNER_TEMP/ack-zero" python3 - <<'PY'
           from tools.m0_wl_perf_v2_config import read_scenario
           from pathlib import Path
@@ -177,11 +195,25 @@ jobs:
               echo "ACK_RATE_NOT_STARTED rate=$rate"; failed=1; continue
             fi
             outcome=""
-            for i in $(seq 1 180); do
+            for i in $(seq 1 132); do
               statusrow="$(gh api "repos/$GH_REPO/actions/runs/$id")"
               if [ "$(jq -r .status <<<"$statusrow")" = completed ]; then
                 outcome="$(jq -r .conclusion <<<"$statusrow")"
                 break
+              fi
+              if (( i % 4 == 0 )); then
+                boot_start="$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+                  jq -r '[.jobs[] | select(.name=="native-public-two-os") | .steps[]? |
+                    select(.name=="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)" and .status=="in_progress") | .started_at] | first // empty')"
+                if [ -n "$boot_start" ]; then
+                  age=$(( $(date -u +%s) - $(date -u -d "$boot_start" +%s) ))
+                  if (( age > 840 )); then
+                    echo "ACK_RATE_ENVIRONMENT_BLOCKED_WSL_STALE rate=$rate run=$id seconds=$age" >&2
+                    gh api -X POST "repos/$GH_REPO/actions/runs/$id/cancel" >/dev/null || :
+                    outcome="environment_blocked"
+                    break
+                  fi
+                fi
               fi
               sleep 15
             done
@@ -198,7 +230,8 @@ jobs:
             fi
             dir="out/rate-$rate"
             mkdir -p "$dir"
-            if ! gh run download "$id" --repo "$GH_REPO" --name m0-wl-full-public-normal-direct --dir "$dir"; then
+            evidence_name="m0-wl-full-public-normal-direct-h1506-legacy-$id"
+            if ! gh run download "$id" --repo "$GH_REPO" --name "$evidence_name" --dir "$dir"; then
               echo "$rate,$id,$outcome,$native,0,,," >>out/ack-repair-five.csv
               failed=1
               continue
@@ -234,7 +267,7 @@ jobs:
             fi
           done
           cat out/ack-repair-five.csv
-          test "$failed" = 0 || { echo ACK_SOME_RATE_NOT_QUALIFIED >&2; exit 1; }
+          test "$failed" = 0 || { echo ACK_SOME_RATE_NOT_QUALIFIED_OR_ENVIRONMENT_BLOCKED >&2; exit 1; }
       - name: Preserve same-SOURCE result ledger
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
