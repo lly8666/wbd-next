@@ -16,6 +16,13 @@
 - 必须检查：关闭及稀疏源不会创建索引或伪候选；未抽样 head、control seq gap、三次真实重复 ACK、有效 SACK 仍有符合语义的一次候选；Windows/Linux native Rust 编译/单元；0% ON/OFF 与代表 30% R/F 和同 VM CPU-s/GiB，签名 Windows/真实 Linux 首发、接收、延迟/Stop 不退化。
 - 既有 0/1/5/10/20/30% CI 若二进制与本次修复不是同 SHA，则仅为**前一版本基线**，不能冒充此次低 CPU 改动的网络验证；不以 workflow 的 static success 代替原生三机。
 
+### 2026-11-23 · 认证后到数据触发低频重复 ACK 外观
+- 发现原 Linux 接收者在未协商 SACK 且累计 ACK 卡在真实缺口时，收到新的真实 M3 认证后到段也不发重复 ACK，导致发送端原有三次重复 ACK 线索长期不产生；这是外观提示缺失，不意味着实际业务修复失败。
+- 同一原生 RX batch 只记录有无真正已认证、seq 位于累计缺口之后的新段；有该正向证据才准发重复累计 ACK；仍与原 10ms 限频共用唯一发送入口。无新后到、无SACK/无累计变化、空闲时零额外控制包；没有定期 DATA PTO、随机重传、重封密文或旧 M2 逐记录反馈。
+- 纠正固定四格 SACK 数组后残留的 `is_empty()` 判定：该数组长度永不为零，应以 `outer_sack_count==0` 判断是否已有真实 SACK 提示，避免丢失正常 DATA 中的原 ACK 提示。
+- 新增确定性纯单元模拟“新认证后到 → 有界重复 ACK”、“无新认证后到 → 不造重复 ACK”、原缺口被补齐后恢复。实际同 SOURCE Windows↔Linux netem、CPU/GiB、R/F、双端 Stop 仍须独立测量；未验仍记 NOT_RUN。
+- 对旧文档记账释义：2026-10-23 的 `R/C>=6%` 中 C 指**外层线路容量**；2026-10-30 PLAN027 把 C 用作**控制流量字节**。两者绝不可当作同一指标，新报表分别明确分母。
+
 ```feature-impact
-{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Cosmetic-only Linux outer ACK shadow index now stores only sampled truly copied first sends; unselected/OFF path is O(1), SACK stack-bound, ACK retirement without temporary vectors; no policy/budget/default change; full native performance not yet qualified."}
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Cosmetic-only ACK shadow indexes sampled copied first sends, omits OFF/unsampled tree work and temp vectors; genuine authenticated later Linux DATA gives bounded duplicate ACK even without SACK, never a business delivery receipt; no policy/default changed; native CPU/performance still unqualified."}
 ```
