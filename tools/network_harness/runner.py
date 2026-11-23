@@ -1233,7 +1233,8 @@ class LinuxExperiment:
             "enable_game_fec_hint_probe",False)
         if requested_hint_probe:
             required={"feedback","with_sack","without_sack",
-                      "nominated_sack","nominated_dupack","probes_only"}
+                      "nominated_sack","nominated_dupack",
+                      "nominated_pn_sack","nominated_pn_dupack","probes_only"}
             if len(game_hint_probe)!=2 or any(
                 set(v)!=required or v["feedback"]!=v["with_sack"]+v["without_sack"]
                 or v["probes_only"]!=1 or
