@@ -91,7 +91,8 @@ def product_marker_line(line):
         r"V4_(PUBLIC_(MTU |M2_OUTER |FEC2_TX |FEC2_FAILURE |FEC2_M2_PROOF |FEC2_AUTO_QUALITY |FEC2_AUTO_STAGE |FEC2_RX_PROOF |FEC2_RX_CAP |FEC2_EGRESS_DIAG |FEC2_RX_IP_CLASS |FEC2_M1_INGRESS |FEC2_M1_STAGE |FEC2_READBACK |RX_CHAIN |TX_CHAIN |M1_POOL |GAME_KERNEL |GAME_FEC_APPLIED |GAME_FEC_COUNTERS |GAME_OUTER |GAME4_COPY_SCHEDULE |GO_RX_HANDOFF |GO_RX_POST_HANDOFF |GAME_GO_RX_HANDOFF |GAME_GO_RX_POST_HANDOFF |NATIVE_STOP_DRAINED|NATIVE_COLD_TLS_RESULT |COLD_STAGE |GAME_NATIVE_STOP_DRAINED|WORKER_CPU |TIMELINE )|ORIGINAL_GO_\w+_NATIVE_READY)",
         line) or "M0_GAME_M4_RX_MULTIMSG " in line or
         "M0_GAME_M4_RX_LOCK_SAMPLE " in line or
-        "M0_GAME_M4_TX_OUTER_PHASE " in line)
+        "M0_GAME_M4_TX_OUTER_PHASE " in line or
+        "M0_GAME_TX_HINT_PROBE " in line)
 
 
 def public_game_rx_lock_sample(log_text):
@@ -635,10 +636,13 @@ class LinuxExperiment:
         # not incur per-packet clock sampling. Never inherit an ambient probe.
         self.child_env.pop("WBD_GAME_RX_LOCK_SAMPLE",None)
         self.child_env.pop("WBD_GAME_OUTER_PHASE_SAMPLE",None)
+        self.child_env.pop("WBD_GAME_FEC_HINT_PROBE",None)
         if config["bundles"].get(label,{}).get("enable_game_rx_lock_sample",False):
             self.child_env["WBD_GAME_RX_LOCK_SAMPLE"]="1"
         if config["bundles"].get(label,{}).get("enable_game_outer_phase_sample",False):
             self.child_env["WBD_GAME_OUTER_PHASE_SAMPLE"]="1"
+        if config["bundles"].get(label,{}).get("enable_game_fec_hint_probe",False):
+            self.child_env["WBD_GAME_FEC_HINT_PROBE"]="1"
 
     def nscommand(self, role, args, check=True):
         return command(["ip", "netns", "exec", self.ns[role], *args], check)
@@ -1188,6 +1192,8 @@ class LinuxExperiment:
                      "M0_GAME_M4_RX_LOCK_SAMPLE " in line]
             outer_phase_events=[line for line in lines if
                 "M0_GAME_M4_TX_OUTER_PHASE " in line]
+            hint_events=[line for line in lines if
+                "M0_GAME_TX_HINT_PROBE " in line]
             reconnect_events=[line for line in lines if "V4_PUBLIC_NATIVE_COLD_TLS_RESULT " in line]
             cold_events=[line for line in lines if "V4_PUBLIC_COLD_STAGE " in line]
             other=[line for line in lines if "V4_PUBLIC_TIMELINE " not in line
@@ -1197,10 +1203,11 @@ class LinuxExperiment:
                    and "M0_GAME_M4_RX_MULTIMSG " not in line
                    and "M0_GAME_M4_RX_LOCK_SAMPLE " not in line
                    and "M0_GAME_M4_TX_OUTER_PHASE " not in line
+                   and "M0_GAME_TX_HINT_PROBE " not in line
                 and "V4_PUBLIC_NATIVE_COLD_TLS_RESULT " not in line
                 and "V4_PUBLIC_COLD_STAGE " not in line]
             logs[role] = "\n".join(handoff[-8:]+outer_phase_events[-6:]+
-                reconnect_events[-8:]+cold_events[-12:]+other[-40:])
+                hint_events[-1:]+reconnect_events[-8:]+cold_events[-12:]+other[-40:])
             (self.out / (role + "-product-markers.log")).write_text(logs[role] + "\n")
         return logs
 
@@ -1213,6 +1220,27 @@ class LinuxExperiment:
             if matches:
                 applied[role] = matches[-1]
         verified = True
+        # Experiment-only aggregate source attribution for authenticated
+        # outer feedback. No packet trace or payload is retained.
+        game_hint_probe={}
+        for role,log in logs.items():
+            rows=[line for line in log.splitlines()
+                  if "M0_GAME_TX_HINT_PROBE " in line]
+            if len(rows)==1:
+                game_hint_probe[role]={k:int(v) for k,v in re.findall(
+                    r"([a-z_]+)=(\d+)",rows[0])}
+        requested_hint_probe=self.config["bundles"][self.label].get(
+            "enable_game_fec_hint_probe",False)
+        if requested_hint_probe:
+            required={"feedback","with_sack","without_sack",
+                      "nominated_sack","nominated_dupack","probes_only"}
+            if len(game_hint_probe)!=2 or any(
+                set(v)!=required or v["feedback"]!=v["with_sack"]+v["without_sack"]
+                or v["probes_only"]!=1 or
+                v["nominated_sack"]>v["with_sack"] or
+                v["nominated_dupack"]>v["without_sack"]
+                for v in game_hint_probe.values()):
+                verified=False
         # Opt-in native TX phase timing. Whitelist only six bounded, numeric
         # Stop summaries; product logs/payloads never enter result artifacts.
         outer_phase={}
@@ -1481,7 +1509,8 @@ class LinuxExperiment:
             (sum(fec_ip[role][k] for k in ("sys_udp","rec_udp","sys_tcp","rec_tcp","other_ip")) ==
              fec_rx[role]["systematic_tun"]+fec_rx[role]["recovered_tun"])
             for role in logs)
-        return {"game_outer_tx_phase":outer_phase if len(outer_phase)==2 else "NOT_OBSERVED",
+        return {"game_outer_hint_probe":game_hint_probe if len(game_hint_probe)==2 else "NOT_OBSERVED",
+                 "game_outer_tx_phase":outer_phase if len(outer_phase)==2 else "NOT_OBSERVED",
                  "game_outer_tx_phase_verified":outer_phase_verified,
                  "game_rx_lock_sample": lock_sample if all(
                      v is not None for v in lock_sample.values()) else "NOT_OBSERVED",
