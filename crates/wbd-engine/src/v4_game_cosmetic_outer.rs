@@ -184,12 +184,7 @@ impl CosmeticOuter{
                 continue
             }
             l.retry_after_ns=None;
-            if l.ready.is_empty() && l.shadow.next_deadline()
-                .is_some_and(|deadline|deadline.0<=now_ns){
-                // Normal ReceiptState::on_timer reserves two candidate Vecs;
-                // do not run it in every Game TX batch when no wake/expiry
-                // is due. Indexed next_deadline() is O(1) and preserves
-                // original expiry/ACK-gap scheduling exactly.
+            if l.ready.is_empty(){
                 l.ready.extend(l.shadow.on_timer(now).candidates);
             }
             while let Some(candidate)=l.ready.pop_front(){
