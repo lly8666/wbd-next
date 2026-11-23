@@ -991,6 +991,17 @@ impl GameKernelOwner{
                     // decode are done solely by THIS physical lane worker,
                     // with no shared GameReceiveOwner lock and no extra copy.
                     let opened=lane_opener.open(&mut wire[..len]);
+                    if matches!(&opened,Ok(Some(_))){
+                        // The original AEAD/PN accepted a physical lane
+                        // ciphertext, even if another lane already delivered
+                        // the same logical Game source to TUN. Normal outer
+                        // ACK is physical DATA progress, not business receipt.
+                        if ack_ledger.authenticated_future(seq32){
+                            rx_future[i].fetch_add(1,Ordering::Release);
+                        }
+                        rx_ack[i].store(
+                            ack_ledger.verified(seq32,len),Ordering::Release);
+                    }
                     if outer_repair_enabled && matches!(&opened,Ok(Some(_))){
                         // AEAD-opened DATA may also carry Normal-style outer
                         // ACK hints. Pure ACKs are handled above and cannot
@@ -1068,10 +1079,6 @@ impl GameKernelOwner{
                                     }
                                 };
                                 if all_written&&committed.is_ok(){
-                                    if ack_ledger.authenticated_future(seq32){
-                                        rx_future[i].fetch_add(1,Ordering::Release);
-                                    }
-                                    rx_ack[i].store(ack_ledger.verified(seq32,len),Ordering::Release);
                                     recv_count.fetch_add(wrote_count,Ordering::Relaxed);
                                 }else if committed.is_err()||wrote_count>0{
                                     // Partial batch cannot be rolled back after
@@ -1141,10 +1148,6 @@ impl GameKernelOwner{
                                 tun_failed.fetch_add(1,Ordering::Relaxed);
                                 recv_rejected.fetch_add(1,Ordering::Relaxed);
                             }else if finished.is_ok(){
-                                if ack_ledger.authenticated_future(seq32){
-                                        rx_future[i].fetch_add(1,Ordering::Release);
-                                    }
-                                    rx_ack[i].store(ack_ledger.verified(seq32,len),Ordering::Release);
                                 recv_count.fetch_add(1,Ordering::Relaxed);
                             }else{
                                 // A committed-to-TUN but stale/invalid receive
