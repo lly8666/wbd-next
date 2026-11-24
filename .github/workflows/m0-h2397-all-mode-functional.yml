@@ -22,3 +22,5 @@ jobs:
           gh workflow run m0-plan029-linux-dual-isa-native.yml --repo "$GH_REPO" --ref "$REF" -f all_modes=true
           gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$REF" -f public_mode=all -f native_outer_mtu=default1460 -f outer_repair=on -f run_n0=false
           echo "H2397_REAL_FUNCTIONAL_DISPATCHED_FINAL_SOURCE source=$GITHUB_SHA"
+
+# H2397: Linux trait import compile correction; functional only.

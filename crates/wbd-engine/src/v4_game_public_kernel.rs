@@ -24,7 +24,7 @@ use crate::v4_protected_handoff::GoFlow;
 use crate::v4_presentation_ack::{NativePresentationAck,presentation_game_ack_due};
 use crate::memory::{Arena,FrozenRecord};
 use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey,LogicalPacketId};
-use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
+use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable,FrozenRecordHandle};
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
 use wbd_platform::linux_batch::KernelSendSignal;
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
