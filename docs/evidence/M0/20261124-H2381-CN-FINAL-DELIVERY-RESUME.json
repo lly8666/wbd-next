@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "PLAN029-THROUGHPUT",
+  "date": "2026-11-24",
+  "previous_main_fairness": {
+    "source_sha": "130555c806e4c32bf34075883321f366d5912a5c",
+    "run_id": 45335657114,
+    "jobs": [
+      138246991763,
+      138246992153
+    ],
+    "status": "PASS_SCOPED_BOTH_ISAS"
+  },
+  "user_scope": "final built-in China domain rules + manual update; no multithreading/performance work; deliver Windows AMD64 GUI and Linux ARM64 server",
+  "CN": {
+    "upstream": "v2fly/domain-list-community",
+    "tag": "20261123144211",
+    "source_sha": "dfa5b1c2258289bdbee70d06352cca23b9bdac7f",
+    "scope": "build-time exact official GeoSite group, cold default offline; override/import/manual update; all four matcher types; same generation remains unchanged",
+    "initial_source": "dd0bd78e45839cc9acd480ce1bbfb1e1f0acb65e",
+    "initial_run": 45338271563,
+    "initial_windows_failure": "fmt imported and not used; corrected in H2379",
+    "product_source": "f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad",
+    "branch_head": "bf848747a674d9776677bf32def057e4cd4f08c5",
+    "branch": "experiment/m0-029-cn-domain-release",
+    "draft_pr": 72,
+    "release_run": 45338373098,
+    "release_jobs": [
+      {
+        "id": 138255766590,
+        "name": "Native Windows amd64 original Go Rust ISA-L GUI driver SHA and TLS unit",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 138255766867,
+        "name": "Linux ARM64 server native release and short functional checks",
+        "status": "in_progress",
+        "conclusion": null
+      }
+    ],
+    "governance_run": 45338590404,
+    "product_and_packages_status": "NOT_QUALIFIED_UNTIL_TESTS_AND_ACTUAL_ARCHIVES"
+  }
+}
