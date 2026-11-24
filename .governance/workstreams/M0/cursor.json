@@ -4,23 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2415,
-  "checkpoint_sha": "55c58136cbeccecab696c770126405ce152f1949",
-  "progress": "verifying",
+  "sequence": 2416,
+  "checkpoint_sha": "e8e344782e89f5c96201869a549e1c546bf34748",
+  "progress": "paused",
   "task_id": "M0-MIXED-MODE-ROUTE-HANDOFF",
   "current_task": "用户授权修复断开Normal后Game2/4回注0及反向切换，experiment/m0-mixed-mode-route-handoff；docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md。现有Health接管，按认证/32跨模式寻找owner；不增协议状态/热路径/心跳，不动Health90和Game4单lane热换。",
   "why_now": "用户实机Normal断开后切Game2/4可连但回注0，90s后重连恢复",
   "done_when": "原生双ISA真实同一服务端同一虚拟IP跨模式切换<90s双向TCP/UDP、异租约独立、原退役/Health90/单lane热换边界，精确SOURCE Linux glibc2.31完整包及Win GUI完整包；限域记录。",
-  "next_action": "收 PR77 SOURCE271e81c23d6809bc3e4ef3761938e0007ec053b4 Action45427455799 双ISA实网回归+Win完整包；旧Action45427122913仅作辅助证据，不能重复dispatch；按真实结果修复、合main、交付。",
-  "unverified": true,
-  "last_tested_source": null,
-  "evidence_refs": [],
+  "next_action": "本任务已限域验收并合main PR77；用户下载同SOURCE Windows GUI与Linux双ISA glibc2.31成品，实际物理WAN/旧内核及性能A/B未测，勿扩张PASS。原H2413兼容基线及H2409未决实机边界保留；等待用户新授权。",
+  "unverified": false,
+  "last_tested_source": "a4c5c97591e9b9ed6fa16221e6666c531d1909cc",
+  "evidence_refs": [
+    "docs/evidence/M0/20261124-H2416-MIXED-MODE-ROUTE-HANDOFF-PASS.json"
+  ],
   "context_refs": [
     "docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md",
     "docs/evidence/M0/20261124-LINUX-GLIBC231-DUAL-ISA-SCOPED-PASS.json",
     "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
-    "docs/devlog/M0/20261124-H2415-MIXED-MODE-ROUTE-WIP.md"
+    "docs/devlog/M0/20261124-H2415-MIXED-MODE-ROUTE-WIP.md",
+    "docs/devlog/M0/20261124-MIXED-MODE-ROUTE-HANDOFF.md"
   ],
   "open_requests": [],
-  "partial_summary": "冷交接修复已推，语义不变；精确双ISA+Win回归Action45427455799在途，治理和维护通过。产品/成品未验。"
+  "partial_summary": "跨模式/32 owner交接冷路径修复及Windows Game已有Health ready接线；双ISA同租约8次切换+Game4热lane+旧退役+独立Health90真实业务PASS，签名Windows→同WSL共享服务器四次切换PASS，三完整包哈希独立核验；PR77已合main。"
 }
