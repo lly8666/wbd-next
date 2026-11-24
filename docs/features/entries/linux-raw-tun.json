@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "linux-raw-tun",
   "name": "Linux Raw IPv4/TUN产品驱动",
-  "summary": "Linux Go/Rust原生raw/TUN；H2372双ISA公平准入实测正收益，main集成回归待验。 H2397候选统一128及全部角色/模式公平准入。",
+  "summary": "Linux Go/Rust原生raw/TUN；H2372双ISA公平准入实测正收益，已集成。 H2397已集成统一128及全部角色/模式公平准入。",
   "owner": "M4/M0 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -15,7 +15,7 @@
     "--tun-fq-maxrate-mbps": "600（0禁用）",
     "IPv6": "在owned Linux V4 TUN禁用",
     "--tun-txqlen-packets": "2048（只对本进程原始 Go 新建 Linux V4 TUN 生效；显式 500 回退）",
-    "Normal/Game 客户端与服务端 M1 inbox": "128；同一满队列五元组公平准入，H2397候选"
+    "Normal/Game 客户端与服务端 M1 inbox": "128；同一满队列五元组公平准入，H2397已合main"
   },
   "usage": {
     "cli": "Linux --raw-interface --local-ip --tun-ipv4 --tun-name；需要CAP_NET_RAW和/dev/net/tun；Linux --tun-txqlen-packets 2048|500：只修改已绑定的自身 TUN H2206 server --raw-interface eth0 --local-ip 0.0.0.0（或省略本参数）从网卡冷解析唯一IPv4；NAT网关TCP443映射需手动配置。多个IPv4要求显式地址，客户端拒绝零地址。",
@@ -47,7 +47,8 @@
     "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json",
     "docs/decisions/M0-PLAN029B-H2206-NAT-IFACE-ROUTEKEY-20261119.md",
     "docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-128-64-20261121.json",
-    "docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json"
+    "docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json",
+    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
   ],
   "verification": [
     {
@@ -119,6 +120,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
       "evidence": "docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json"
+    },
+    {
+      "platform": "Linux x86_64/aarch64 original native",
+      "scope": "H2397 seven-mode scoped original TCP/UDP/owned Stop; not physical WAN or performance.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f21ea508ab58b92a72c902d0b3e1121e26d1a17d",
+      "evidence": "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
     }
   ],
   "limitations": [
@@ -152,7 +160,7 @@
     "H2206 AF_PACKET不是TCP 0.0.0.0监听；本机NIC自动唯一IPv4，多地址失败，网关DNAT与实体跨ISA NOT_RUN。",
     "H2224公网出口和崩溃残留NOT_RUN；ip_forward及iptables权限归宿主。",
     "历史H2372仅Normal/off客户端；H2397候选全端全模式，待真实回归。",
-    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json。H2397新候选功能待验，历史性能不推广。"
+    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。"
   ],
   "promotion": null
 }

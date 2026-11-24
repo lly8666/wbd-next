@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "game-lanes",
   "name": "Game2/Game4 多通道",
-  "summary": "双/四条TLS认证Game lane，Rust分lane AEAD/PN、首到去重；冷代Health证实与旧RX退避。 H2397候选复用公平准入/ready批服务，待全模式功能回归。",
+  "summary": "双/四条TLS认证Game lane，Rust分lane AEAD/PN、首到去重；冷代Health证实与旧RX退避。 H2397已集成复用公平准入/ready批服务，七模式功能通过。",
   "owner": "M0/M1/M4 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -16,7 +16,7 @@
     "game-fec": "off（默认）",
     "game2-copies": "immediate",
     "--outer-repair": "on (default), off for genuine Rust Game2/4 outer DATA only",
-    "native ready TX": "Linux per-lane sendmmsg / Windows NPF16；H2397候选"
+    "native ready TX": "Linux per-lane sendmmsg / Windows NPF16；H2397已合main"
   },
   "usage": {
     "cli": "Windows isolated --native-v4-product --lanes 2|4 --fec.mode off|fixed, independent Npcap lanes original TLS; requires actual all-lane authentication, Wintun native copy and owned Stop. Rust Game cold --outer-repair on|off; source effective readback before native steady RX/TX. Linux Game2/4 shared TUN channel-wake enabled; no new flag.",
@@ -62,7 +62,9 @@
     "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json",
     "docs/evidence/M0/PLAN028-H1354-H1353-X86-CORRELATED-GAME4-RAW-REPLAY-SCOPED-PASS-20261108.json",
     "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json",
-    "docs/evidence/M0/20261124-H2397-game-lanes-history.json"
+    "docs/evidence/M0/20261124-H2397-game-lanes-history.json",
+    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
+    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md"
   ],
   "verification": [
     {
@@ -134,6 +136,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
       "evidence": "docs/evidence/M0/PLAN028-H1354-H1353-X86-CORRELATED-GAME4-RAW-REPLAY-SCOPED-PASS-20261108.json"
+    },
+    {
+      "platform": "Linux dual ISA + Windows/Linux native",
+      "scope": "H2397 seven-mode scoped original TCP/UDP/owned Stop; not physical WAN or performance.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f21ea508ab58b92a72c902d0b3e1121e26d1a17d",
+      "evidence": "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
     }
   ],
   "limitations": [
@@ -157,7 +166,8 @@
     "H1277：保护内 epoch=0 区分Game4整组和单lane热换代；H1276旧上行775.9s FAIL，H1277 baseline恢复但异构/高压FAIL。",
     "H1295: 新Rust /32 TUN路由独占，旧Rust M4 worker仍活至Go随机10–20s exact Stop；此前新路由publish即使旧alive=false，提前取消宽限。原始TLS/AEAD、旧代无新TUN、反抢回守卫不变。短测待验。",
     "H1354 all four Game4 lanes share ONE true physical double-blackholed veth, not independent routes; 8s outage expected. Original H1353 CI report FAIL preserved. H1355 actual Carol fixed6 false counter alert only corrected offline H1356.",
-    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-game-lanes-history.json。H2397新候选功能待验，历史性能不推广。"
+    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-game-lanes-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。",
+    "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。"
   ],
   "promotion": null
 }

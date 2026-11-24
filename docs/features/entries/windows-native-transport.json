@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "windows-native-transport",
   "name": "Windows Npcap/Wintun原生传输",
-  "summary": "Windows Game2/4 idle READY；密文 DATA 由 M3 验收。 H2397候选默认NPF16/64KiB、Windows ready公平服务与Game快解析。",
+  "summary": "Windows Game2/4 idle READY；密文 DATA 由 M3 验收。 H2397已集成默认NPF16/64KiB、Windows ready公平服务与Game快解析。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "main",
@@ -17,7 +17,7 @@
     "native-entry": "--native-v4-product=true（CLI默认；GUI显式加同一开关）",
     "record-cipher": "chacha20-poly1305（AES128/256均需显式选择）",
     "lease4": "留空=原始TLS按设备身份申请自动 /32；显式 IPv4/32=手动；OS仅使用TLS鉴权后的 /32",
-    "native TX": "16帧/64KiB；Normal/Game ready-only，H2397候选"
+    "native TX": "16帧/64KiB；Normal/Game ready-only，H2397已合main"
   },
   "usage": {
     "cli": "wbd-client.exe --config xxx.json（默认 native-v4-product=true）；可显式 --native-v4-product；--record-cipher 三选一、lease4 留空/显式、lanes 与 FEC；不可用组合拒绝，无旧V3静默回落。",
@@ -56,7 +56,9 @@
     "docs/devlog/M0/20261111-PLAN028-H1580-WINDOWS-AUTO-CIPHER-RECOVERY.md",
     "docs/devlog/M0/20261111-PLAN028-H1590-WIN-ORIGINAL-GO-FAKETCP-COLD-RETRANSMIT.md",
     "docs/devlog/M0/20261121-H2223-WINDOWS-GAME2-GAME4-IDLE-READY-PARITY.md",
-    "docs/evidence/M0/20261124-H2397-windows-native-transport-history.json"
+    "docs/evidence/M0/20261124-H2397-windows-native-transport-history.json",
+    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
+    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md"
   ],
   "verification": [
     {
@@ -128,6 +130,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "b7b688573326580e39571c1e748663b8566d5fc2",
       "evidence": "docs/evidence/M0/PLAN029-H1822-H1820-P2-SIGNED-MIXED-DIRECT1M-20261114.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun + Linux WSL2",
+      "scope": "H2397 seven-mode scoped original TCP/UDP/owned Stop; not physical WAN or performance.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f21ea508ab58b92a72c902d0b3e1121e26d1a17d",
+      "evidence": "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
     }
   ],
   "limitations": [
@@ -138,7 +147,8 @@
     "H1716 Direct UDP one-generation native WSAPoll actor code only; not yet attached to authenticated single Wintun TX/RX, no PPS/RSS or dual-DNS product proof.",
     "H2065: Normal GUI new process source-port41031 repetition caused real SYN no SYNACK after prior owned Stop. Current candidate Go port ordinal durable cold fix not yet compiled/native verified. Existing source-locked H2055/H2059 first-session success cannot qualify a fresh Go child.",
     "H2077旧Normal三场原生PASS_SCOPED；H2082新B0 DNS-only无Direct业务NAT/Win IPv6混包仅源码单测候选，实网NOT_RUN。",
-    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-windows-native-transport-history.json。H2397新候选功能待验，历史性能不推广。"
+    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-windows-native-transport-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。",
+    "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。"
   ],
   "promotion": null,
   "legacy_branch_reason": "旧M4/集成分支为冻结历史；M0现只在main接线和验收，旧SOURCE原始证据均保留。",

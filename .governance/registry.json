@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "用户2026-11-24授权既有性能设施跨模式/两端/平台统一，登记 experiment/m0-029-all-mode-native-parity；见 docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md。",
-      "done_when": "当前支持的原生七模式在Linux双ISA和Windows客户端/Linux服务端实际TCP/UDP/Stop功能回归，默认TX16/NPF64KiB、Linux全端公平准入及Windows原生有界公平ready入口、Game parser和批处理接线；不跑性能AB、不新增防御框架。",
-      "assigned_task": "M0-PLAN029-ALL-MODE-NATIVE-PARITY"
+      "goal": "用户授权直接main修复Windows Game2/4 OFF/FEC物理冷建链成功率与耗时、普通每秒日志；兼顾Linux共享服务端NAT建链，复用既有Go TLS与Rust原生owner。",
+      "done_when": "每条Game lane真实冷TLS可恢复丢包，跨尝试新端口、NAT不依赖连续端口、旧组不混拼，READY无业务门槛；普通日志不刷packet telemetry；真实原生回归及物理用户复测分别记录。",
+      "assigned_task": "M0-PLAN029-WINDOWS-GAME-COLD"
     },
     {
       "id": "M1",
