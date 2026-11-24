@@ -203,6 +203,22 @@ final class PhysicalNetwork {
             return linkAddress&&kernelAddress;
         }catch(Exception ignored){return false;}
     }
+    // B62 cold choice after prior original owner Stop; outside callbacks.
+    static PhysicalNetwork recoveryTarget(Context context,long excluded){
+        ConnectivityManager cm=context.getSystemService(ConnectivityManager.class);
+        if(cm==null)return null;
+        Network active=cm.getActiveNetwork();
+        List<PhysicalNetwork> choices=available(context);
+        long[] handles=new long[choices.size()];
+        boolean[] validated=new boolean[choices.size()];
+        for(int i=0;i<choices.size();i++){
+            handles[i]=choices.get(i).handle;
+            validated[i]=choices.get(i).validatedByAndroid;
+        }
+        int selected=RootColdRotation.recoveryIndex(active==null?0:active.getNetworkHandle(),
+            excluded,handles,validated);
+        return selected<0?null:choices.get(selected);
+    }
     static PhysicalNetwork exact(Context ctx,long handle,String iface,
                                  int ifindex,int mtu,String address){
         for(PhysicalNetwork n:available(ctx)){

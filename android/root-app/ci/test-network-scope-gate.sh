@@ -1774,7 +1774,7 @@ for token in ("completeAutomaticColdSwitchIfReady();","RootClientService.network
               "autoHandover.complete(true,","networks.setSelection(matched);",
               "autoHandover.cancel();","start();"):
     assert token in a,token
-for token in ('networkStopRequested=why.startsWith("PHYSICAL_NETWORK_")',
+for token in ('final boolean physical=why.startsWith("PHYSICAL_NETWORK_")',
               "previousOwnerStopConfirmed=readyRecorded&&","watchPhysicalNetwork(chosen)"):
     assert token in s,token
 print("ANDROID_B60_ORIGINAL_FOREGROUND_AUTO_COLD_RECONNECT_SOURCE_PASS")
@@ -1799,4 +1799,28 @@ assert 'RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.ROUTE,s
 assert 'PendingIntent.getService(this,5403,' in s
 assert 'new Intent(this,RootClientService.class).setAction(STOP)' in s
 print("ANDROID_B61_ORIGINAL_SERVICE_COLD_ROTATION_AND_NOTIFICATION_STOP_SOURCE_PASS")
+PY
+
+python3 - <<'PY'
+from pathlib import Path
+p=Path("android/root-app/src/org/wbdnext/rootclient")
+a=(p/"RootClientActivity.java").read_text()
+s=(p/"RootClientService.java").read_text()
+n=(p/"PhysicalNetwork.java").read_text()
+c=(p/"RootConnectionSettings.java").read_text()
+for token in ('request.putExtra("background_network_recovery",backgroundNetworkRecovery.isChecked())',
+              'request.putExtra("direct_cidrs_manual",manualDirectCIDRs)',
+              'selectSpinner(coldRotationMinutes,Integer.toString(s.rotationMinutes))'):
+    assert token in a,token
+for token in ('snapshot.recoverNetwork&&networkStopRequested&&',
+              'previousOwnerStopConfirmed&&!restoring.get()',
+              'watchRecoveryNetworks();','PhysicalNetwork.recoveryTarget(this,recoveryExcludedHandle)',
+              'PhysicalNetwork.selectedConnectedIPv4Subnet(this,next)',
+              'PhysicalNetwork.selectedDNSIPv4(this,next)',
+              'startOriginalOwner(snapshot.request,startId);',
+              'updateNotification("原生 M4 / UID 路由就绪")'):
+    assert token in s,token
+assert 'RootColdRotation.recoveryIndex(' in n
+assert 'p.setProperty("cold_recovery_mode"' in c and 'p.setProperty("cold_rotation_minutes"' in c
+print("ANDROID_B62_ORIGINAL_BACKGROUND_RECOVERY_PROFILE_NOTIFICATION_SOURCE_PASS")
 PY

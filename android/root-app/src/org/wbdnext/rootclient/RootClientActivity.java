@@ -54,7 +54,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
     private TextView selectedAppsSummary,bypassSummary,presetResult,profileResult;
@@ -427,8 +427,8 @@ public final class RootClientActivity extends Activity {
     // B60: exact Service Network loss -> existing original joined Stop ->
     // real Android physical selection -> original Activity.start().
     private void completeAutomaticColdSwitchIfReady(){
-        if(coldSwitch.pending()||autoNetworkRecovery==null||
-           !autoNetworkRecovery.isChecked())return;
+        if(coldSwitch.pending()||RootClientService.backgroundRecoveryActive||
+           autoNetworkRecovery==null||!autoNetworkRecovery.isChecked())return;
         if(autoHandover.armed()&&RootClientService.networkStopRequested)
             autoHandover.onNetworkStop(true);
         if(!autoHandover.pending()||RootClientService.sessionOwnerActive||
@@ -647,7 +647,9 @@ public final class RootClientActivity extends Activity {
             bypass,RootPhysicalDNSUpstream.canonical(physicalDNSUpstreamField.getText().toString()),
             physicalDNSFollowNetwork.isChecked(),
             Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString()),
-            autoConnectedDirect.isChecked());
+            autoConnectedDirect.isChecked(),
+            backgroundNetworkRecovery.isChecked()?2:autoNetworkRecovery.isChecked()?1:0,
+            Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()));
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -664,6 +666,9 @@ public final class RootClientActivity extends Activity {
         physicalDNSUpstreamField.setText(s.physicalDNSUpstream);
         physicalDNSFollowNetwork.setChecked(s.physicalDNSFollowNetwork);
         selectSpinner(nativeHealthIntervals,Integer.toString(s.nativeHealthSeconds));
+        selectSpinner(coldRotationMinutes,Integer.toString(s.rotationMinutes));
+        autoNetworkRecovery.setChecked(s.recoveryMode==1);
+        backgroundNetworkRecovery.setChecked(s.recoveryMode==2);
         selectSpinner(recordCiphers,s.cipher);
         selectSpinner(tunQueueSizes,Integer.toString(s.tunQueue));
         selectSpinner(startupPaddingModes,s.padding);
@@ -866,6 +871,7 @@ public final class RootClientActivity extends Activity {
             String account=user.getText().toString().trim();
             String directCIDRs=RootDirectIPv4.canonicalCSV(
                 directCIDRsField.getText().toString());
+            final String manualDirectCIDRs=directCIDRs;
             if(autoConnectedDirect.isChecked()){
                 String subnet=PhysicalNetwork.selectedConnectedIPv4Subnet(this,scope);
                 directCIDRs=RootDirectIPv4.withConnectedSubnet(directCIDRs,subnet);
@@ -984,6 +990,8 @@ public final class RootClientActivity extends Activity {
             request.putExtra("physical_dns",physicalDNS.isChecked());
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
             request.putExtra("direct_cidrs",directCIDRs);
+            request.putExtra("direct_cidrs_manual",manualDirectCIDRs);
+            request.putExtra("background_network_recovery",backgroundNetworkRecovery.isChecked());
             request.putExtra("direct_lan_auto",autoConnectedDirect.isChecked());
             request.putExtra("physical_dns_upstream",physicalDnsIPv4);
             request.putExtra("physical_dns_follow_network",physicalDNSFollowNetwork.isChecked());
@@ -1109,7 +1117,7 @@ public final class RootClientActivity extends Activity {
             "不经WBD TUN。不是域名分流、系统DNS、或已证明的物理接口出站。");
         pane.addView(directHint);
         autoConnectedDirect=new CheckBox(this);
-        autoConnectedDirect.setText("可选：所选实体Network的当前IPv4直连子网自动绕过WBD（与手动CIDR合并，最多4条）");
+        autoConnectedDirect.setText("可选：所选实体Network的当前IPv4直连子网自动绕过WBD（与手动CIDR合并，最多16条）");
         autoConnectedDirect.setChecked(false);
         pane.addView(autoConnectedDirect);
         recordCiphers=new Spinner(this);
@@ -1143,7 +1151,7 @@ public final class RootClientActivity extends Activity {
             android.R.layout.simple_spinner_dropdown_item,new String[]{"15","30"}));
         pane.addView(nativeHealthIntervals);
         TextView rotationHint=new TextView(this);
-        rotationHint.setText("原生定时冷轮换（分钟）：0关闭 / 5 / 15 / 30。仅本次START，原会话完整STOP后按本次连接参数重新认证同一实体Network；会暂时断流，不是热迁移。");
+        rotationHint.setText("原生定时冷轮换（分钟）：0关闭 / 5 / 15 / 30。下次START生效，可随配置保存，原会话完整STOP后按本次连接参数重新认证同一实体Network；会暂时断流，不是热迁移。");
         pane.addView(rotationHint);
         coldRotationMinutes=new Spinner(this);
         coldRotationMinutes.setAdapter(new ArrayAdapter<>(this,
@@ -1533,11 +1541,21 @@ public final class RootClientActivity extends Activity {
         autoNetworkRecovery.setChecked(false);
         autoNetworkRecovery.setOnCheckedChangeListener((button,checked)->{
             if(!checked)autoHandover.cancel();
-            else if(RootClientService.sessionOwnerActive&&
-                    !RootClientService.networkStopRequested)
-                autoHandover.arm();
+            else{
+                if(backgroundNetworkRecovery!=null)backgroundNetworkRecovery.setChecked(false);
+                if(RootClientService.sessionOwnerActive&&!RootClientService.backgroundRecoveryActive&&
+                   !RootClientService.networkStopRequested)
+                    autoHandover.arm();
+            }
         });
         pane.addView(autoNetworkRecovery);
+        backgroundNetworkRecovery=new CheckBox(this);
+        backgroundNetworkRecovery.setText("后台自动冷恢复（下次START生效）：原Go/Rust完整STOP后自动选网，断网等待系统Network事件；锁屏可用，STOP或移除任务即取消");
+        backgroundNetworkRecovery.setChecked(false);
+        backgroundNetworkRecovery.setOnCheckedChangeListener((button,checked)->{
+            if(checked){autoNetworkRecovery.setChecked(false);autoHandover.cancel();}
+        });
+        pane.addView(backgroundNetworkRecovery);
         Button restore=new Button(this);
         restore.setText("恢复网络（WBD临时Root防火墙/UID路由）");
         restore.setOnClickListener(v->{

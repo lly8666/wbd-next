@@ -16,7 +16,7 @@ import java.util.TreeSet;
  */
 final class RootConnectionSettings {
     final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
-    final int port,outerMTU,tunQueue,profile,nativeHealthSeconds;
+    final int port,outerMTU,tunQueue,profile,nativeHealthSeconds,recoveryMode,rotationMinutes;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect;
     final Map<String,Integer> selected,bypass;
     RootConnectionSettings(String peer,String sni,String account,
@@ -82,6 +82,20 @@ final class RootConnectionSettings {
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
         boolean autoConnectedDirect) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,0,0);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes) {
+        this.recoveryMode=recoveryMode;
+        this.rotationMinutes=rotationMinutes;
         this.autoConnectedDirect=autoConnectedDirect;
         this.nativeHealthSeconds=healthSeconds;
         this.physicalDNSFollowNetwork=followSelectedNetworkDNS;
@@ -109,6 +123,8 @@ final class RootConnectionSettings {
            port<1||port>65535||outerMTU<576||outerMTU>1500||
            (tunQueue!=500&&tunQueue!=2048)||profile<0||profile>6||
             (nativeHealthSeconds!=15&&nativeHealthSeconds!=30)||
+           recoveryMode<0||recoveryMode>2||
+           (rotationMinutes!=0&&rotationMinutes!=5&&rotationMinutes!=15&&rotationMinutes!=30)||
            !oneOf(cipher,"chacha20-poly1305","aes-128-gcm","aes-256-gcm")||
            !oneOf(padding,"off","tls","flows")||
            !oneOf(mode,"normal","fec-fixed","fec-auto","game2","game4",
@@ -166,6 +182,9 @@ final class RootConnectionSettings {
         p.setProperty("physical_dns_follow_network",Boolean.toString(physicalDNSFollowNetwork));
         p.setProperty("native_health_seconds",Integer.toString(nativeHealthSeconds));
         p.setProperty("direct_lan_auto",Boolean.toString(autoConnectedDirect));
+        // Saved preferences authorize nothing until the user presses START.
+        p.setProperty("cold_recovery_mode",Integer.toString(recoveryMode));
+        p.setProperty("cold_rotation_minutes",Integer.toString(rotationMinutes));
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -225,7 +244,9 @@ final class RootConnectionSettings {
                 p.containsKey("physical_dns_follow_network")&&
                     flag(p,"physical_dns_follow_network"),
                 Integer.parseInt(p.getProperty("native_health_seconds","15")),
-                p.containsKey("direct_lan_auto")&&flag(p,"direct_lan_auto"));
+                p.containsKey("direct_lan_auto")&&flag(p,"direct_lan_auto"),
+                Integer.parseInt(p.getProperty("cold_recovery_mode","0")),
+                Integer.parseInt(p.getProperty("cold_rotation_minutes","0")));
         }catch(IllegalArgumentException invalid){
             return null;
         }

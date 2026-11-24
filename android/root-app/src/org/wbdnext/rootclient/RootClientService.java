@@ -48,6 +48,7 @@ public final class RootClientService extends Service {
     // B60: only the original selected-Network callback may request
     // a foreground cold handover; no background Root worker.
     static volatile boolean networkStopRequested=false;
+    static volatile boolean backgroundRecoveryActive=false;
     private final AtomicBoolean running=new AtomicBoolean(false);
     private final AtomicBoolean stopping=new AtomicBoolean(false);
     private final AtomicBoolean stopSignalDispatched=new AtomicBoolean(false);
@@ -59,14 +60,19 @@ public final class RootClientService extends Service {
         final Intent request;
         final String password,route,ca;
         final long delayMillis;
-        RotationSnapshot(Intent request,String password,String route,String ca,long delay){
+        final boolean recoverNetwork;
+        RotationSnapshot(Intent request,String password,String route,String ca,long delay,boolean recover){
             this.request=new Intent(request);
             this.password=password;this.route=route;this.ca=ca;this.delayMillis=delay;
+            this.recoverNetwork=recover;
         }
     }
     private volatile RotationSnapshot rotationSnapshot;
     private Runnable rotationDeadline;
-    private boolean rotationRequested;
+    private boolean rotationRequested,recoveryWaiting;
+    private long recoveryExcludedHandle;
+    private ConnectivityManager recoveryManager;
+    private ConnectivityManager.NetworkCallback recoveryCallback;
     private int ownerStartId;
     private volatile Process root;
     private volatile PhysicalNetwork selection;
@@ -207,28 +213,40 @@ public final class RootClientService extends Service {
         nm.createNotificationChannel(new NotificationChannel(
             CHANNEL,"WBD Root original Go/Rust",
             NotificationManager.IMPORTANCE_LOW));
+        startForeground(5402,connectionNotification("正在连接原Go/Rust"));
+    }
+    private Notification connectionNotification(String description){
         PendingIntent open=PendingIntent.getActivity(this,5401,
-            new Intent(this,RootClientActivity.class),
+            new Intent(this,RootClientActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent stop=PendingIntent.getService(this,5403,
             new Intent(this,RootClientService.class).setAction(STOP),
             PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
-        Notification n=new Notification.Builder(this,CHANNEL)
+        return new Notification.Builder(this,CHANNEL)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setContentTitle("WBD Root Native")
-            .setContentText("Authenticating original Go / supervising Rust M4")
+            .setContentText(description)
+            .setOnlyAlertOnce(true)
             .setContentIntent(open)
             .addAction(new Notification.Action.Builder(
                 android.R.drawable.ic_menu_close_clear_cancel,"STOP",stop).build())
             .setOngoing(true).build();
-        startForeground(5402,n);
+    }
+    private void updateNotification(String description){
+        NotificationManager nm=getSystemService(NotificationManager.class);
+        if(nm!=null)nm.notify(5402,connectionNotification(description));
     }
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         if(intent==null){requestStop("Android restarted without original cold authorization");return START_NOT_STICKY;}
         if(STOP.equals(intent.getAction())){
             networkStopRequested=false;
             requestStop("USER_REQUESTED");
-            if(!running.get()&&!restoring.get())stopSelf(startId);
+            if(!running.get()&&!restoring.get()){
+                sessionOwnerActive=false;
+                stopForeground(true);
+                stopSelf(startId);
+            }
             return START_NOT_STICKY;
         }
         if(RESTORE.equals(intent.getAction())){
@@ -368,14 +386,16 @@ public final class RootClientService extends Service {
                 throw new IllegalStateException("Physical Network changed during callback registration");
             long rotationDelay=RootColdRotation.delayMillis(
                 intent.getIntExtra("cold_rotation_minutes",0));
-            if(rotationDelay>0){
+            boolean recover=intent.getBooleanExtra("background_network_recovery",false);
+            if(rotationDelay>0||recover){
                 RootPrivateCredentialFiles.verifyAtStart(this,hasCA);
                 rotationSnapshot=new RotationSnapshot(intent,
                     RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.PASSWORD),
                     RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.ROUTE),
                     hasCA?RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.CA):null,
-                    rotationDelay);
+                    rotationDelay,recover);
             }
+            backgroundRecoveryActive=recover;
             trace(RootDiagnosticReceipt.Event.ROOT_STAGE_REQUESTED);
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
@@ -933,8 +953,7 @@ public final class RootClientService extends Service {
                         String gameBrief=RootGameSessionStatus.readyBrief(fecMode);
                         status=gameBrief!=null?gameBrief:
                             "NATIVE_M4_READY + VERIFIED_UID_ROUTE_READBACK; real Android traffic unverified";
-                        if(rotationSnapshot!=null)
-                            networkEvents.post(()->scheduleRotation(generation));
+                        networkEvents.post(()->scheduleRotation(generation));
                     }
                     // Deliberately don't echo username, auth errors, route
                     // key, password, TLS transcript or full native stdout.
@@ -999,11 +1018,22 @@ public final class RootClientService extends Service {
         rotationDeadline=null;
         rotationRequested=false;
         rotationSnapshot=null;
+        backgroundRecoveryActive=false;
+        recoveryWaiting=false;
+        recoveryExcludedHandle=0;
+        if(recoveryManager!=null&&recoveryCallback!=null){
+            try{recoveryManager.unregisterNetworkCallback(recoveryCallback);}
+            catch(IllegalArgumentException alreadyGone){}
+        }
+        recoveryManager=null;
+        recoveryCallback=null;
     }
     private void scheduleRotation(String generation){
         final RotationSnapshot snapshot=rotationSnapshot;
-        if(snapshot==null||generation==null||!generation.equals(ownerToken)||
+        if(generation==null||!generation.equals(ownerToken)||
            !running.get()||stopping.get())return;
+        updateNotification("原生 M4 / UID 路由就绪");
+        if(snapshot==null||snapshot.delayMillis==0)return;
         if(rotationDeadline!=null)networkEvents.removeCallbacks(rotationDeadline);
         rotationDeadline=()->{
             rotationDeadline=null;
@@ -1019,33 +1049,105 @@ public final class RootClientService extends Service {
         final RotationSnapshot snapshot=rotationSnapshot;
         final boolean requested=rotationRequested;
         final int startId=ownerStartId;
-        cancelRotation();
         running.set(false);
         stopping.set(false);
-        if(snapshot!=null&&requested&&!restoring.get()){
+        // Recovery follows prior READY + joined Stop; never loops failed auth.
+        if(snapshot!=null&&snapshot.recoverNetwork&&networkStopRequested&&
+           previousOwnerStopConfirmed&&!restoring.get()){
+            rotationRequested=false;
+            networkStopRequested=false; // Service owns recovery, not B60 UI
+            recoveryWaiting=true;
+            if(tryResumeRecovery())return;
+            status="WAITING_FOR_PHYSICAL_NETWORK — 旧原生已完整停止，等待实体Network";
+            updateNotification("等待实体网络 · STOP 可取消");
+            try{
+                watchRecoveryNetworks();
+                networkEvents.post(()->tryResumeRecovery());
+                return;
+            }catch(Exception failure){
+                status="RECOVERY_NETWORK_WATCH_FAILED — 请手动START";
+            }
+        }else if(snapshot!=null&&requested&&!restoring.get()){
             PhysicalNetwork same=PhysicalNetwork.exact(this,oldNet.handle,oldNet.interfaceName,
                 oldNet.ifindex,oldNet.mtu,oldNet.address);
             if(RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null)){
-                try{
-                    RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.PASSWORD,snapshot.password);
-                    RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.ROUTE,snapshot.route);
-                    if(snapshot.ca!=null)
-                        RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.CA,snapshot.ca);
-                    startOriginalOwner(snapshot.request,startId);
-                    return;
-                }catch(Exception failure){
-                    new File(getFilesDir(),RootPrivateCredentialFiles.PASSWORD).delete();
-                    new File(getFilesDir(),RootPrivateCredentialFiles.ROUTE).delete();
-                    status="ROTATION_START_REFUSED — original owner stopped; manual START required";
-                }
+                if(restartOn(snapshot,same,startId))return;
             }else status="ROTATION_CANCELLED — old Stop or original physical Network changed";
         }
+        releaseStoppedOwner();
+    }
+    private void releaseStoppedOwner(){
+        cancelRotation();
         if(!restoring.get()){
             stopForeground(true);
             stopSelf();
         }
-        // Last: old owner and watchers are gone, no rotation will run.
         sessionOwnerActive=false;
+    }
+    // Event-driven waiting, no native process or periodic network poll.
+    private void watchRecoveryNetworks(){
+        ConnectivityManager cm=getSystemService(ConnectivityManager.class);
+        if(cm==null)throw new IllegalStateException("ConnectivityManager unavailable");
+        ConnectivityManager.NetworkCallback callback=new ConnectivityManager.NetworkCallback(){
+            private void changed(){
+                networkEvents.post(()->{
+                    if(recoveryCallback==this)tryResumeRecovery();
+                });
+            }
+            @Override public void onAvailable(Network network){changed();}
+            @Override public void onLost(Network network){changed();}
+            @Override public void onCapabilitiesChanged(Network network,NetworkCapabilities caps){changed();}
+            @Override public void onLinkPropertiesChanged(Network network,LinkProperties link){changed();}
+            @Override public void onBlockedStatusChanged(Network network,boolean blocked){
+                if(recoveryCallback==this&&!blocked&&recoveryExcludedHandle==network.getNetworkHandle())
+                    recoveryExcludedHandle=0;
+                changed();
+            }
+        };
+        NetworkRequest request=new NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET).build();
+        cm.registerNetworkCallback(request,callback,networkEvents);
+        recoveryManager=cm;
+        recoveryCallback=callback;
+    }
+    private boolean tryResumeRecovery(){
+        final RotationSnapshot snapshot=rotationSnapshot;
+        if(!recoveryWaiting||snapshot==null||running.get()||restoring.get())return false;
+        PhysicalNetwork next=PhysicalNetwork.recoveryTarget(this,recoveryExcludedHandle);
+        if(next==null)return false;
+        if(!restartOn(snapshot,next,ownerStartId))releaseStoppedOwner();
+        return true;
+    }
+    private boolean restartOn(RotationSnapshot snapshot,PhysicalNetwork next,int startId){
+        try{
+            // Preserve manual CIDRs; replace the old automatically discovered LAN.
+            if(snapshot.request.getBooleanExtra("direct_lan_auto",false)){
+                String manual=snapshot.request.getStringExtra("direct_cidrs_manual");
+                if(manual==null)manual=snapshot.request.getStringExtra("direct_cidrs");
+                snapshot.request.putExtra("direct_cidrs",RootDirectIPv4.withConnectedSubnet(
+                    manual,PhysicalNetwork.selectedConnectedIPv4Subnet(this,next)));
+            }
+            if(snapshot.request.getBooleanExtra("physical_dns_follow_network",false))
+                snapshot.request.putExtra("physical_dns_upstream",PhysicalNetwork.selectedDNSIPv4(this,next));
+            snapshot.request.putExtra("handle",next.handle);
+            snapshot.request.putExtra("iface",next.interfaceName);
+            snapshot.request.putExtra("index",next.ifindex);
+            snapshot.request.putExtra("mtu",next.mtu);
+            snapshot.request.putExtra("local",next.address);
+            RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.PASSWORD,snapshot.password);
+            RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.ROUTE,snapshot.route);
+            if(snapshot.ca!=null)
+                RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.CA,snapshot.ca);
+            startOriginalOwner(snapshot.request,startId);
+            return true;
+        }catch(Exception failure){
+            new File(getFilesDir(),RootPrivateCredentialFiles.PASSWORD).delete();
+            new File(getFilesDir(),RootPrivateCredentialFiles.ROUTE).delete();
+            status="COLD_RESTART_REFUSED — 原会话已退出，请手动START";
+            return false;
+        }
     }
     // The Restore button never changes the firewall in Java. It stops
     // the exact old owner, then executes the same signed original-Go ELF
@@ -1131,9 +1233,29 @@ public final class RootClientService extends Service {
         },"wbd-root-stop-signal").start();
     }
     private void requestStop(String why){
-        if(!"PERIODIC_ROTATION".equals(why))cancelRotation();
-        if(!running.get()||!stopping.compareAndSet(false,true))return;
-        networkStopRequested=why.startsWith("PHYSICAL_NETWORK_");
+        final boolean physical=why.startsWith("PHYSICAL_NETWORK_");
+        final boolean periodic="PERIODIC_ROTATION".equals(why);
+        if(!physical&&!periodic){cancelRotation();networkStopRequested=false;}
+        if(!running.get())return;
+        if(!stopping.compareAndSet(false,true)){
+            if(physical&&rotationRequested&&rotationSnapshot!=null&&rotationSnapshot.recoverNetwork){
+                rotationRequested=false;
+                networkStopRequested=true;
+                if(selection!=null&&(why.startsWith("PHYSICAL_NETWORK_LOST")||
+                    why.startsWith("PHYSICAL_NETWORK_BLOCKED")))recoveryExcludedHandle=selection.handle;
+            }
+            return;
+        }
+        networkStopRequested=physical;
+        if(physical){
+            if(rotationSnapshot!=null&&rotationSnapshot.recoverNetwork){
+                if(rotationDeadline!=null)networkEvents.removeCallbacks(rotationDeadline);
+                rotationDeadline=null;
+                rotationRequested=false;
+                if(selection!=null&&(why.startsWith("PHYSICAL_NETWORK_LOST")||
+                    why.startsWith("PHYSICAL_NETWORK_BLOCKED")))recoveryExcludedHandle=selection.handle;
+            }else cancelRotation();
+        }
         trace(RootDiagnosticReceipt.Event.STOP_REQUESTED);
         status="STOP_REQUESTED ("+why+") — waiting for original Go/Rust joined Stop";
         // Before su launch: runRoot cancels at ownerLaunchLock.
@@ -1142,10 +1264,12 @@ public final class RootClientService extends Service {
     }
     @Override public void onTaskRemoved(Intent rootIntent){
         requestStop("APP_TASK_REMOVED");
+        if(!running.get()&&!restoring.get())releaseStoppedOwner();
         super.onTaskRemoved(rootIntent);
     }
     @Override public void onDestroy(){
         requestStop("SERVICE_DESTROYED");
+        if(!running.get())sessionOwnerActive=false;
         stopWatchingPhysicalNetwork();
         stopWatchingSelectedPackage();
         super.onDestroy();
