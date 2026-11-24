@@ -1,0 +1,52 @@
+name: 'H2244 fail-closed native-source cross-layer service-gate static oracle'
+run-name: 'H2244 full-chain loss transfer CPU batch and tail proof gate source ${{ github.sha }}'
+on:
+  push:
+    branches: ['feat/m0-h2244-cross-layer-loss-gate']
+    paths:
+      - '.github/workflows/qa-h2244-cross-layer-loss-gate.yml'
+      - 'tools/m0_h2244_cross_layer_gate.py'
+      - 'tests/test_m0_h2244_cross_layer_gate.py'
+      - 'docs/testing/H2244-CROSS-LAYER-LOSS-AND-ADMISSION-QUALIFICATION-20261121.md'
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: h2244-static-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  fail-closed-static:
+    name: 'Python source-locked H2241-H2243 negative oracle, zero production mutation'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify frozen source, only independent test files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git diff --name-only origin/main...HEAD | tee /tmp/h2244-changed.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          changes=Path('/tmp/h2244-changed.txt').read_text().splitlines()
+          allowed={
+              '.github/workflows/qa-h2244-cross-layer-loss-gate.yml',
+              'tools/m0_h2244_cross_layer_gate.py',
+              'tests/test_m0_h2244_cross_layer_gate.py',
+              'docs/testing/H2244-CROSS-LAYER-LOSS-AND-ADMISSION-QUALIFICATION-20261121.md'
+          }
+          assert set(changes)<=allowed, 'H2244_UNAUTHORIZED_PRODUCT_OR_SHARED_OWNER_CHANGE'
+          assert set(changes)==allowed, 'H2244_INCOMPLETE_TEST_ONLY_SOURCE_BUNDLE'
+          print('H2244_CLEAN_MAIN_DIAGNOSTIC_ONLY_SOURCE_LOCKED')
+          PY
+      - name: Pure H2241 H2242 H2243 actual receipt fixtures and strict negatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/m0_h2244_cross_layer_gate.py tests/test_m0_h2244_cross_layer_gate.py
+          python3 -m unittest tests.test_m0_h2244_cross_layer_gate -v
+          echo 'H2244_STATIC_ONLY_NO_NATIVE_THROUGHPUT_OR_PRODUCT_CLAIM'
