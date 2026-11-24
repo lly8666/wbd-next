@@ -1841,3 +1841,20 @@ assert 'rootjournal.RecoverDNS(runIP,runFirewall,nil,' in go
 assert 'errors.Join(owner.Stop(),relay.Close(),stopUID())' in route
 print("ANDROID_B64_ORIGINAL_APP_TCP_DNS_UID_KERNEL_LISTENER_STOP_SOURCE_PASS")
 PY
+
+python3 - <<'PY'
+from pathlib import Path
+p=Path("android/root-app/src/org/wbdnext/rootclient")
+g=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
+n=(p/"PhysicalNetwork.java").read_text()
+s=(p/"RootClientService.java").read_text()
+assert 'link.getNat64Prefix()' in n and 'existingClat(handle,link,caps)' in n
+assert 'if(chosen.clat)return "";' in n
+assert 'if(clat)return matchesClat(link);' in n
+assert 'quotedArgs.add(q("--android-clat-parent="+net.parentInterface))' in s
+assert 'quotedArgs.add(q("--android-clat-prefix="+net.nat64Prefix))' in s
+assert 'rootjournal.ValidCLATScope(' in g
+assert 'V4_PUBLIC_ANDROID_CLAT_ROUTE_READBACK' in g
+assert g.index('V4_PUBLIC_ANDROID_CLAT_ROUTE_READBACK')<g.index('V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED')
+print("ANDROID_B67_ORIGINAL_EXISTING_CLAT_COLD_SCOPE_SOURCE_PASS")
+PY

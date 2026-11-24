@@ -4,6 +4,10 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
+import android.net.IpPrefix;
+import android.os.Build;
+import java.net.Inet6Address;
+import java.net.InterfaceAddress;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import java.net.Inet4Address;
@@ -22,18 +26,28 @@ final class PhysicalNetwork {
     final int ifindex;
     final int mtu;
     final String address;
+    final String parentInterface,nat64Prefix;
+    final boolean clat;
     final boolean hasInternetCapability;
     final boolean validatedByAndroid;
     private PhysicalNetwork(long handle,String name,int index,int mtu,String addr,
                             boolean internetCapability,boolean validated){
+        this(handle,name,index,mtu,addr,internetCapability,validated,name,"");
+    }
+    private PhysicalNetwork(long handle,String name,int index,int mtu,String addr,
+                            boolean internetCapability,boolean validated,
+                            String parent,String nat64Prefix){
         this.handle=handle;this.interfaceName=name;
         this.ifindex=index;this.mtu=mtu;this.address=addr;
+        this.parentInterface=parent;this.nat64Prefix=nat64Prefix;
+        this.clat=!name.equals(parent);
         this.hasInternetCapability=internetCapability;
         this.validatedByAndroid=validated;
     }
     String title(){
         return interfaceName+"  "+address+"  MTU "+mtu+
             "  Network "+Long.toUnsignedString(handle)+
+            (clat?"  [464XLAT · "+parentInterface+" · "+nat64Prefix+"]":"")+
             (hasInternetCapability
                 ?(validatedByAndroid?"":"  [公网未验证：可连接局域网WBD]")
                 :"  [仅本地链路：Android未声明Internet]");
@@ -42,7 +56,8 @@ final class PhysicalNetwork {
         return other!=null&&handle==other.handle&&
             interfaceName.equals(other.interfaceName)&&
             ifindex==other.ifindex&&mtu==other.mtu&&
-            address.equals(other.address);
+            address.equals(other.address)&&parentInterface.equals(other.parentInterface)&&
+            nat64Prefix.equals(other.nat64Prefix);
     }
     // B27: no INTERNET requirement. Many user-controlled WiFi/Ethernet
     // LAN links reach a nearby WBD server without Internet validation.
@@ -93,9 +108,13 @@ final class PhysicalNetwork {
                         }
                     }
                 }
-                if(addr==null)continue;
                 long handle=network.getNetworkHandle();
                 if(handle==0)continue;
+                if(addr==null){
+                    PhysicalNetwork translated=existingClat(handle,link,caps);
+                    if(translated!=null)out.add(translated);
+                    continue;
+                }
                 out.add(new PhysicalNetwork(handle,name,iface.getIndex(),mtu,addr,
                     caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
                     caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)));
@@ -104,6 +123,74 @@ final class PhysicalNetwork {
             }
         }
         return out;
+    }
+    // Android 11+ exposes the selected Network's NAT64 prefix publicly.
+    // AOSP ClatCoordinator creates v4-<parent>, assigns an RFC7335 /32
+    // and sets the translated MTU. Never create/reconfigure CLAT here.
+    private static PhysicalNetwork existingClat(long handle,LinkProperties link,
+                                                NetworkCapabilities caps){
+        if(Build.VERSION.SDK_INT<30||link==null||caps==null)return null;
+        try{
+            String parent=link.getInterfaceName();
+            String name=PhysicalUnderlayPolicy.clatInterface(parent);
+            IpPrefix prefix=link.getNat64Prefix();
+            if(name==null||prefix==null||!(prefix.getAddress() instanceof Inet6Address))return null;
+            NetworkInterface parentNIC=NetworkInterface.getByName(parent);
+            if(parentNIC==null||!parentNIC.isUp())return null;
+            boolean nativeIPv4=false,globalIPv6=false;
+            for(LinkAddress address:link.getLinkAddresses()){
+                java.net.InetAddress ip=address.getAddress();
+                if(ip instanceof Inet4Address&&!ip.isAnyLocalAddress()&&!ip.isLoopbackAddress()&&!ip.isLinkLocalAddress())
+                    nativeIPv4=true;
+                if(ip instanceof Inet6Address&&!ip.isAnyLocalAddress()&&!ip.isLoopbackAddress()&&
+                   !ip.isLinkLocalAddress()&&!ip.isMulticastAddress()){
+                    java.util.Enumeration<java.net.InetAddress> local=parentNIC.getInetAddresses();
+                    while(local.hasMoreElements())if(ip.equals(local.nextElement())){globalIPv6=true;break;}
+                }
+            }
+            NetworkInterface translated=NetworkInterface.getByName(name);
+            if(translated==null||!translated.isUp()||translated.getIndex()<=0||
+               translated.getMTU()<576||translated.getMTU()>65535)return null;
+            String chosen=null;
+            for(InterfaceAddress address:translated.getInterfaceAddresses()){
+                if(!(address.getAddress() instanceof Inet4Address))continue;
+                String candidate=address.getAddress().getHostAddress();
+                if(!PhysicalUnderlayPolicy.useClat(nativeIPv4,globalIPv6,prefix.getPrefixLength(),
+                    parent,name,candidate,address.getNetworkPrefixLength()))continue;
+                if(chosen!=null)return null;
+                chosen=candidate;
+            }
+            if(chosen==null)return null;
+            return new PhysicalNetwork(handle,name,translated.getIndex(),translated.getMTU(),chosen,
+                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET),
+                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),parent,prefix.toString());
+        }catch(Exception ignored){return null;}
+    }
+    private boolean matchesClat(LinkProperties link){
+        if(Build.VERSION.SDK_INT<30||link==null||!parentInterface.equals(link.getInterfaceName()))return false;
+        try{
+            IpPrefix prefix=link.getNat64Prefix();
+            if(prefix==null||!nat64Prefix.equals(prefix.toString()))return false;
+            NetworkInterface parent=NetworkInterface.getByName(parentInterface);
+            NetworkInterface translated=NetworkInterface.getByName(interfaceName);
+            if(parent==null||!parent.isUp()||translated==null||!translated.isUp()||
+               translated.getIndex()!=ifindex||translated.getMTU()!=mtu)return false;
+            boolean nativeIPv4=false,globalIPv6=false;
+            for(LinkAddress a:link.getLinkAddresses()){
+                java.net.InetAddress ip=a.getAddress();
+                if(ip instanceof Inet4Address&&!ip.isAnyLocalAddress()&&!ip.isLoopbackAddress()&&!ip.isLinkLocalAddress())nativeIPv4=true;
+                if(ip instanceof Inet6Address&&!ip.isAnyLocalAddress()&&!ip.isLoopbackAddress()&&!ip.isLinkLocalAddress()&&!ip.isMulticastAddress()){
+                    java.util.Enumeration<java.net.InetAddress> local=parent.getInetAddresses();
+                    while(local.hasMoreElements())if(ip.equals(local.nextElement())){globalIPv6=true;break;}
+                }
+            }
+            for(InterfaceAddress a:translated.getInterfaceAddresses()){
+                if(address.equals(a.getAddress().getHostAddress())&&
+                   PhysicalUnderlayPolicy.useClat(nativeIPv4,globalIPv6,prefix.getPrefixLength(),
+                       parentInterface,interfaceName,address,a.getNetworkPrefixLength()))return true;
+            }
+            return false;
+        }catch(Exception e){return false;}
     }
     /**
      * B28: one pre-Root, off-UI resolution of a WBD server hostname.
@@ -127,6 +214,9 @@ final class PhysicalNetwork {
             LinkProperties link=cm.getLinkProperties(network);
             if(!chosen.matchesLinkProperties(link))
                 throw new IllegalArgumentException("实体Network子网已改变");
+            // A CLAT /32 represents the translator itself, not an on-link
+            // IPv4 LAN. Do not synthesize a direct route for 192.0.0.x.
+            if(chosen.clat)return "";
             for(LinkAddress address:link.getLinkAddresses()){
                 if(address.getAddress() instanceof Inet4Address&&
                    chosen.address.equals(address.getAddress().getHostAddress()))
@@ -182,6 +272,7 @@ final class PhysicalNetwork {
     // Consume the callback's own LinkProperties, never synchronously
     // requery ConnectivityManager inside its asynchronous callback.
     boolean matchesLinkProperties(LinkProperties link){
+        if(clat)return matchesClat(link);
         if(link==null||!interfaceName.equals(link.getInterfaceName()))return false;
         try{
             NetworkInterface iface=NetworkInterface.getByName(interfaceName);

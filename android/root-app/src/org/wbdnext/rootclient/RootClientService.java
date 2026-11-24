@@ -310,7 +310,7 @@ public final class RootClientService extends Service {
                 // Cold original selected-Network route source must remain
                 // identical to App START. No per-packet check or new FIB owner.
                 String localSubnet=PhysicalNetwork.selectedConnectedIPv4Subnet(this,chosen);
-                if(!RootDirectIPv4.includes(directCIDRs,localSubnet))
+                if(!localSubnet.isEmpty()&&!RootDirectIPv4.includes(directCIDRs,localSubnet))
                     throw new IllegalArgumentException("实体Network直连子网已变化，请重新START");
             }
             String physicalDnsIPv4=RootPhysicalDNSUpstream.canonical(
@@ -459,6 +459,10 @@ public final class RootClientService extends Service {
             verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
+        if(net.clat){
+            quotedArgs.add(q("--android-clat-parent="+net.parentInterface));
+            quotedArgs.add(q("--android-clat-prefix="+net.nat64Prefix));
+        }
         if(appTcpDNS)quotedArgs.add(q("--android-app-tcp-dns"));
         if(systemDNS)quotedArgs.add(q("--android-system-dns"));
         if(tether!=null){
@@ -1097,7 +1101,7 @@ public final class RootClientService extends Service {
         }else if(snapshot!=null&&requested&&!restoring.get()){
             PhysicalNetwork same=PhysicalNetwork.exact(this,oldNet.handle,oldNet.interfaceName,
                 oldNet.ifindex,oldNet.mtu,oldNet.address);
-            if(RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null)){
+            if(RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null&&oldNet.same(same))){
                 if(restartOn(snapshot,same,startId))return;
             }else status="ROTATION_CANCELLED — old Stop or original physical Network changed";
         }
@@ -1153,8 +1157,9 @@ public final class RootClientService extends Service {
             if(snapshot.request.getBooleanExtra("direct_lan_auto",false)){
                 String manual=snapshot.request.getStringExtra("direct_cidrs_manual");
                 if(manual==null)manual=snapshot.request.getStringExtra("direct_cidrs");
-                snapshot.request.putExtra("direct_cidrs",RootDirectIPv4.withConnectedSubnet(
-                    manual,PhysicalNetwork.selectedConnectedIPv4Subnet(this,next)));
+                String subnet=PhysicalNetwork.selectedConnectedIPv4Subnet(this,next);
+                snapshot.request.putExtra("direct_cidrs",subnet.isEmpty()?
+                    RootDirectIPv4.canonicalCSV(manual):RootDirectIPv4.withConnectedSubnet(manual,subnet));
             }
             if(snapshot.request.getBooleanExtra("physical_dns_follow_network",false))
                 snapshot.request.putExtra("physical_dns_upstream",PhysicalNetwork.selectedDNSIPv4(this,next));

@@ -905,7 +905,7 @@ public final class RootClientActivity extends Activity {
             final String manualDirectCIDRs=directCIDRs;
             if(autoConnectedDirect.isChecked()){
                 String subnet=PhysicalNetwork.selectedConnectedIPv4Subnet(this,scope);
-                directCIDRs=RootDirectIPv4.withConnectedSubnet(directCIDRs,subnet);
+                if(!subnet.isEmpty())directCIDRs=RootDirectIPv4.withConnectedSubnet(directCIDRs,subnet);
             }
             String physicalDnsIPv4=physicalDNSFollowNetwork.isChecked()
                 ?PhysicalNetwork.selectedDNSIPv4(this,scope)

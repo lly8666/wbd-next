@@ -129,6 +129,7 @@ type config struct{
     // non-path-supervised product. Never user-supplied or serialized.
     underlayBudgetMTU int
     androidNetworkHandle uint64 // selected physical ConnectivityManager Network
+    androidClatParent,androidClatPrefix string // existing Android 464XLAT underlay
     androidPhysicalMTU uint32 // same interface cold readback
     androidRouteUID int // legacy single ordinary App UID; never root/global
     androidRouteUIDs []int // canonical 2..16 ordinary Android App UIDs, cold-only
@@ -277,6 +278,8 @@ func parse(role string,args []string)(config,error){
         "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
     androidAppTCPDNS:=flags.Bool("android-app-tcp-dns",false,
         "Android Root: optional ordinary App TCP53 follows the selected DNS mode through kernel TCP")
+    androidClatParent:=flags.String("android-clat-parent","","Android Root: existing CLAT IPv6 parent interface")
+    androidClatPrefix:=flags.String("android-clat-prefix","","Android Root: selected Network NAT64 /96")
     androidSystemDNS:=flags.Bool("android-system-dns",false,
         "Android Root: selected UID and selected Network ordinary IPv4 UDP/TCP53 system DNS (no Private DNS/DoH)")
     tetherInterface:=flags.String("android-tether-interface","","Android Root: explicitly selected existing software tether interface")
@@ -373,6 +376,7 @@ func parse(role string,args []string)(config,error){
         c.androidTunnelDNS=*androidTunnelDNS&&!*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidCNDNSSplit=*androidCNDNSSplit
+        c.androidClatParent,c.androidClatPrefix=*androidClatParent,*androidClatPrefix
         c.androidSystemDNS=*androidSystemDNS
         c.androidAppTCPDNS=*androidAppTCPDNS||c.androidSystemDNS
         if *tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
@@ -419,7 +423,7 @@ func parse(role string,args []string)(config,error){
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||
-              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1252,6 +1256,9 @@ func Run(role string,args []string)(retErr error){
             return fmt.Errorf("Android Game2/4 requires padding off and default Game4 schedule")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
+        if cfg.androidClatParent!=""||cfg.androidClatPrefix!=""{
+            if err=checkOriginalAndroidCLAT(cfg);err!=nil{return err}
+        }
         cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(
             dnsnative.PhysicalScope{
                 NetworkHandle:cfg.androidNetworkHandle,
@@ -1279,6 +1286,20 @@ func Run(role string,args []string)(retErr error){
             }
             cfg.peerIP=resolved
             log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=%s udp_tcp53_original_go=1",cfg.peerHost,cfg.androidPhysicalDNSUpstream)
+        }
+        if cfg.androidClatParent!=""{
+            // Read the actual selected Network route before any FakeTCP
+            // SYN. The original RAW bind and M4 still own all traffic.
+            mark:=fmt.Sprintf("0x%x",uint32(cfg.androidNetworkHandle>>32)|0xf0000)
+            routeCtx,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+            output,e:=exec.CommandContext(routeCtx,"ip","-4","route","get",cfg.peerIP.String(),
+                "from",cfg.localIP.String(),"oif",cfg.rawInterface,"mark",mark,"uid","0").CombinedOutput()
+            cancel()
+            if e!=nil||!rootjournal.SelectedUIDRouteGetUsesTun(string(output),cfg.rawInterface){
+                return fmt.Errorf("Android CLAT route is not the selected Network IPv4 translation path")
+            }
+            log.Printf("V4_PUBLIC_ANDROID_CLAT_ROUTE_READBACK role=client interface=%s parent=%s ipv4_mtu=%d",
+                cfg.rawInterface,cfg.androidClatParent,iface.MTU)
         }
     }
     if role=="server"&&cfg.localIP.IsUnspecified(){
@@ -2940,4 +2961,29 @@ func runSharedMultiServer(
             }
         }
     }
+}
+
+ // B67 cold OS validation only; Android already owns the translator.
+func checkOriginalAndroidCLAT(c config)error{
+ if !rootjournal.ValidCLATScope(c.androidClatParent,c.rawInterface,c.androidClatPrefix,c.localIP)||
+    c.androidNetworkHandle>>32==0||c.androidNetworkHandle>>32>65535{
+    return fmt.Errorf("invalid Android CLAT parent/IPv4/NAT64 scope")
+ }
+ parent,e:=net.InterfaceByName(c.androidClatParent)
+ if e!=nil||parent==nil||parent.Flags&net.FlagUp==0{return fmt.Errorf("Android CLAT parent missing")}
+ addresses,e:=parent.Addrs();if e!=nil{return e}
+ global:=false
+ for _,a:=range addresses{
+    p,e:=netip.ParsePrefix(a.String())
+    if e==nil&&p.Addr().Is6()&&!p.Addr().Is4In6()&&p.Addr().IsGlobalUnicast(){global=true;break}
+ }
+ if !global{return fmt.Errorf("Android CLAT parent lost usable IPv6")}
+ translated,e:=net.InterfaceByName(c.rawInterface)
+ if e!=nil||translated==nil||translated.Flags&net.FlagUp==0{return fmt.Errorf("Android CLAT interface missing")}
+ addresses,e=translated.Addrs();if e!=nil{return e}
+ for _,a:=range addresses{
+    p,e:=netip.ParsePrefix(a.String())
+    if e==nil&&p.Bits()==32&&p.Addr()==c.localIP{return nil}
+ }
+ return fmt.Errorf("Android CLAT IPv4 /32 changed")
 }
