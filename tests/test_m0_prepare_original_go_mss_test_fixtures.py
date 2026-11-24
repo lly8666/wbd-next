@@ -10,7 +10,7 @@ class OldTestSourceMSSMigration(unittest.TestCase):
   dst=root/"internal"/"realityfront"
   dst.mkdir(parents=True)
   for name,count in EXPECTED.items():
-   (dst/name).write_text("package realityfront\n// "+(" "+REMOVED)*count+(" faketcp.PublicV4AdvertisedMSS()"*7 if name=="bridge_v4_probe_linux_test.go" else "")+"\n")
+   (dst/name).write_text("package realityfront\n// "+(" "+REMOVED)*count+"\n")
   return dst
  def test_only_exact_legacy_test_uses_migrate_to_1460_vector(self):
   with tempfile.TemporaryDirectory() as tmp:
@@ -19,16 +19,13 @@ class OldTestSourceMSSMigration(unittest.TestCase):
    prepare(root)
    self.assertEqual(product.read_text(),"package realityfront\nvar currentProduct=true\n")
    self.assertEqual(len(EXPECTED),3)
-   self.assertEqual(sum(EXPECTED.values()),3)
+   self.assertEqual(sum(EXPECTED.values()),10)
    self.assertIn("const m0CurrentV4MSSFixture = 1420",(dst/FILE).read_text())
    self.assertIn("SetPublicV4AdvertisedMSS(m0CurrentV4MSSFixture)",(dst/FILE).read_text())
    for name in EXPECTED:
     s=(dst/name).read_text()
     self.assertNotIn(REMOVED,s)
-    if EXPECTED[name]:
-     self.assertIn(FIXTURE,s)
-    else:
-     self.assertEqual(s.count("faketcp.PublicV4AdvertisedMSS()"),7)
+    self.assertIn(FIXTURE,s)
  def test_missing_or_unreviewed_reference_fails_closed(self):
   with tempfile.TemporaryDirectory() as tmp:
    root=pathlib.Path(tmp);dst=self.make(root)

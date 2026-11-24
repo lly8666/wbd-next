@@ -2768,6 +2768,13 @@ print(json.dumps(result),flush=True)
    finally:
     for p in (linuxrate,windowsrate):
      if p.poll() is None:p.terminate()
+   if (scenario and scenario["scenario_id"] in (
+       "wl-outer-repair-10m-200ms-loss1-60s",
+       "wl-outer-repair-10m-200ms-loss5-60s")):
+    # H2271: independent real kernel TCP stage AFTER the frozen 60s UDP
+    # witness, with original Windows/WSL2 Go TLS/Rust owners and tc still live.
+    from m0_wl_loss_tcp_probe import run_loss_tcp
+    report["plan029_loss_tcp"]=run_loss_tcp(root,out,unix,p1_rate_tunnel_ip)
    print(netem("snapshot"),flush=True)
    if scenario:
     tun_fq_after=tun_fq_snapshot("after")

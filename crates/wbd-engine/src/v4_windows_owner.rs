@@ -719,27 +719,28 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
 // NOT proof of business delivery, authenticated Health or Auto loss.
 fn m2_outer_ack_hint_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,ack32:u32,sacks:&[SackRange32]
-)->Result<(),i32>{
+)->Result<bool,i32>{
     if !v3_ready(e,epoch,luid,ifindex){return Err(INVALID)}
     let (lane,scope_epoch)=e.owner.normal_firstsend_identity().ok_or(BAD_STAGE)?;
     if scope_epoch!=epoch{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
-    if !m.outer_repair_enabled{return Ok(())}
-    // Auto and Normal share authentic outer ACK/SACK gap feedback.
+    if !m.outer_repair_enabled{return Ok(false)}
+    // Original unauthenticated appearance hints can ONLY nominate an
+    // already-indexed, definitely-sent immutable shadow for this epoch.
+    // No authenticated Health, M3 delivery or TCP-like reliable window.
     let now=m2_clock();
     let Ok(result)=m.outer_ack.on_feedback(lane,epoch,ack32,sacks,
-        now,20_000_000)else{return Ok(())};
+        now,20_000_000)else{return Ok(false)};
     for pn in result.retired{let _=m.shadow.discard_outer_ack_hint(pn);}
-    // Each new real ACK/SACK gap is handled once per owner turn. The shared
-    // original-shadow cursor selects mature PNs, never newest-256 by cadence.
-    if !result.gap_candidates.is_empty(){
-        // Original first-send snapshots already have one 50% PN sample.
-        // Do not independently halve genuine authenticated gaps again.
-        for pn in result.gap_candidates{
-            let _=m.shadow.on_outer_gap_hint(pn,now);
-        }
+    // Notify the existing TX worker only if a REAL, live, bounded shadow
+    // accepted its FIRST genuine gap hint. An unrelated/pure duplicate ACK,
+    // stale epoch or an unsampled/missing shadow never creates a wake.
+    // The TX worker owns the existing repair timer/one-copy/10% quota.
+    let mut nominated=false;
+    for pn in result.gap_candidates{
+        nominated|=m.shadow.on_outer_gap_hint(pn,now);
     }
-    Ok(())
+    Ok(nominated)
 }
 fn m2_next_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     ifindex:u32,out:&mut [u8],

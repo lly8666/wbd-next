@@ -1,0 +1,51 @@
+# P0 cheap source-locked native compile/test; no Tailscale, WSL, network or product qualification.
+name: H2311 Windows NPF/TX two-factor isolation native unit
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-h2311-windows-npf-factor-unit.yml'
+      - 'crates/wbd-platform/src/windows_native_io.rs'
+      - 'crates/wbd-engine/src/v4_windows_native_runtime.rs'
+      - 'crates/wbd-platform/Cargo.toml'
+      - 'crates/wbd-engine/Cargo.toml'
+      - 'tests/test_m0_h2311_windows_npf_isolation.py'
+      - 'tests/test_m0_h2291_windows_tx_batch.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: h2311-source-locked-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m unittest tests.test_m0_h2311_windows_npf_isolation tests.test_m0_h2291_windows_tx_batch -v
+  win_native:
+    needs: static
+    runs-on: windows-2025
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if ((git rev-parse HEAD) -ne $env:GITHUB_SHA) { throw "H2311_SOURCE_MISMATCH" }
+          cargo +1.85.1 test --locked -p wbd-platform --features h2311_windows_npf_trace
+          if ($LASTEXITCODE -ne 0) { throw "H2311_ORIGINAL_NPF_8_16_TEST_FAILED" }
+          cargo +1.85.1 test --locked -p wbd-platform --features h2311_windows_npf_trace,h2311_windows_npf64_only
+          if ($LASTEXITCODE -ne 0) { throw "H2311_NPF_16_64_TEST_FAILED" }
+          cargo +1.85.1 check --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_tx16_only
+          if ($LASTEXITCODE -ne 0) { throw "H2311_RUST_TX16_ONLY_COMPILE_FAILED" }
+          cargo +1.85.1 check --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_npf64_only
+          if ($LASTEXITCODE -ne 0) { throw "H2311_RUST_NPF64_ONLY_COMPILE_FAILED" }
+          Write-Output "H2311_SCOPED_FEATURE_MATRIX_NATIVE_COMPILE_AND_PREFIX_TEST_PASS_NOT_REAL_PRODUCT"

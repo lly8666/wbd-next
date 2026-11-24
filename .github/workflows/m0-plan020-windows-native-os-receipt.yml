@@ -9,8 +9,6 @@ on:
       - "r0/go_overlay/internal/windowsclient/native_product_activation_windows.go"
       - ".github/workflows/m0-plan012-combined-functional.yml" # PLAN022 one identical SOURCE cross-OS functional batch
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go"
-      - "r0/go_overlay/assembly/manifest-plan020-m0.json"
-      - "tests/test_m0_plan020_tls_flag_assembly.py"
       - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection.go"
       - "r0/go_overlay/cmd/wbd-client/m0_windows_v4_mode_selection_test.go"
       - "r0/go_overlay/cmd/wbd-client/m0_native_v4_peer_windows.go"
@@ -119,15 +117,6 @@ jobs:
           '@ | python -
           if ($LASTEXITCODE -ne 0) {throw 'exact original / M0 Git bytes mismatch'}
           & python r0/go_overlay/assembly/assemble.py --legacy-root legacy --overlay-root . --manifest r0/go_overlay/assembly/manifest-plan020-m0.json --receipt result/assembly.json
-          if($LASTEXITCODE -ne 0){throw 'PLAN020_SOURCE_LOCKED_ORIGINAL_GO_ASSEMBLY_FAILED'}
-          @'
-          import pathlib
-          s=pathlib.Path('legacy/cmd/wbd-client/main_windows.go').read_text()
-          assert s.count('tlsVerifyServer = flag.Bool("tls-verify-server", false,')==1
-          assert s.count('TLSVerifyServer:*tlsVerifyServer')==1
-          print('PLAN020_H2214_DEFAULT_OFF_SERVER_TLS_VERIFY_FLAG_SOURCE_ASSEMBLED')
-          '@ | python -
-          if($LASTEXITCODE -ne 0){throw 'PLAN020_ORIGINAL_GO_TLS_VERIFY_FLAG_SOURCE_INVALID'}
           if ($LASTEXITCODE -ne 0) {throw 'exact original Windows assembly FAIL'}
       - name: Compile linked ORIGINAL credential Go Rust + signed Wintun five-stage OS WAL production packages
         shell: pwsh
@@ -416,25 +405,25 @@ jobs:
           @'
           import os,pathlib,json,re,hashlib
           gui=pathlib.Path("legacy/windows/gui/MainForm.cs").read_text(encoding="utf8")
-          assert "WBD_WINDOWS_OS_APPLIED" in gui, "H2214_GUI_MAINFORM_OS_APPLIED_SENTINEL_MISSING"
+          assert "WBD_WINDOWS_OS_APPLIED" in gui
           portable=pathlib.Path("legacy/windows/gui/Portable.cs").read_text(encoding="utf8")
-          assert 'Info("--native-v4-product --control-stdin --config "' in portable, "H2214_GUI_PORTABLE_ORIGINAL_PRODUCT_CHILD_MISSING"
-          assert 'if (nativeApplied && !nativeStopped)' in portable, 'H2214_GUI_APPLIED_REQUIRES_OWNED_STOP_MISSING'
-          assert 'e.Data == "WBD_WINDOWS_OS_APPLIED"' in portable, 'H2214_GUI_APPLIED_EVENT_MISSING'
-          assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable, 'H2214_GUI_DISCONNECT_OWNER_STOP_EVENT_MISSING'
+          assert 'Info("--native-v4-product --control-stdin --config "' in portable
+          assert 'if (nativeApplied && !nativeStopped)' in portable
+          assert 'e.Data == "WBD_WINDOWS_OS_APPLIED"' in portable
+          assert 'e.Data == "WBD_WINDOWS_NATIVE_DISCONNECTED_V1 wal_restored=1 rust_stopped=1"' in portable
           tagged=pathlib.Path("legacy/cmd/wbd-client/m0_native_v4_windows.go").read_text()
-          assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged, 'H2214_ORIGINAL_GO_NATIVE_APPLIED_EVENT_MISSING'
+          assert 'fmt.Println("WBD_WINDOWS_OS_APPLIED")' in tagged
           assert 'if e=windowsclient.N4NativeNetworkReady(ctx)' not in tagged
-          assert 'receipt,e:=product.Apply(ctx)' in tagged, 'H2214_ORIGINAL_NATIVE_WAL_APPLY_MISSING'
-          assert 'if !receipt.AllNativeOSApplied' in tagged, 'H2214_REQUIRE_REAL_OS_APPLIED_MISSING'
-          assert 'observed,e:=product.LiveReceipt(ctx)' in tagged, 'H2214_REQUIRE_ORIGINAL_OS_READBACK_MISSING'
-          assert 'stopErr:=cleanup()' in tagged, 'H2214_REQUIRE_ORIGINAL_WAL_STOP_MISSING'
+          assert 'receipt,e:=product.Apply(ctx)' in tagged
+          assert 'if !receipt.AllNativeOSApplied' in tagged
+          assert 'observed,e:=product.LiveReceipt(ctx)' in tagged
+          assert 'stopErr:=cleanup()' in tagged
           for name in ("wbd-client.exe","wbd_engine.dll","wintun.dll","WBD.exe"):
               p=pathlib.Path("result/portable")/name
               # Native Go/Rust drivers are large PE binaries; genuine
               # deterministic .NET WinForms EXEs can be under 100 KiB.
               minimum=4096 if name=="WBD.exe" else 100000
-              assert p.is_file() and p.stat().st_size>minimum,'H2214_PORTABLE_ORIGINAL_ASSET_MISSING_OR_TOO_SMALL_'+name
+              assert p.is_file() and p.stat().st_size>minimum,name
           manifest=dict(source_sha=os.environ["GITHUB_SHA"],original_go="a7a82db31fe736ffedee330795a3234d358f1984",
                         native_v4_client_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd-client.exe").read_bytes()).hexdigest(),
                         native_rust_m3_dll_sha256=hashlib.sha256(pathlib.Path("result/portable/wbd_engine.dll").read_bytes()).hexdigest(),

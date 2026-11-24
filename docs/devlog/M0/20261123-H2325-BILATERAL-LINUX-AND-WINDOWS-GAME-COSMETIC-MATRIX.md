@@ -1,5 +1,7 @@
 # M0 / H2325 · 双向外层表演式重传：Linux client+server、Windows client↔Linux、Game2/Game4
 
+> **PR #68 接班镜像，不是实测继承：** 30 项测试工作流、Linux fixture 以及签名 Windows 复用路径都在 main **`71e8304532f77236f4aa635afd9f4d004eba2db2`** 执行。本 PR 分支在镜像时产品 HEAD `47789a32964451e4e507047dd89eb962a8516e7a` 未被本矩阵重建和原生测试；两边源码不得假定相同。结果应归属其各自 `GITHUB_SHA` / 产品 SOURCE。
+
 ## 用户要求与不越权的资格范围
 
 用户要求补齐两端双向，尤其 **真实 Linux 原生客户端** 和 Game2/Game4 的外层重传。外层重复原冻结密文属于 *TCP-like 展示*，**不是业务修复**；不可用 FEC parity、Game4 四 lane 首发复制或传输层业务重传冒充外层 R。0% 接近零；10% 长期 R/F 上限；高损约 9% 是外观参考而非硬下限。CPU 开销最小，业务 first-send 优先；旧逐 record M2 Receipt 废弃。

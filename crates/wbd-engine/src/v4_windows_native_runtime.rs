@@ -43,10 +43,13 @@
  fn set_native_thread_name(name:&[u16;14]) {
      let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
  }
- // Source-qualified H2292 2×3Runner zero-loss TX16 trial. Disabled in
- // ordinary builds pending first main-source compiled and regression gates.
- // Original-NPF driver short-prefix/uncertain handling is unchanged.
- const BATCH:usize=if cfg!(feature="h2291_windows_tx_service"){16}else{8};
+ // Existing 32-packet service quantum is unchanged. H2291 ONLY reduces
+// per-batch owner-lock acquisitions and permits 16 immediately READY M1
+// records to share one 64KiB NPF queue syscall, without waiting to fill.
+// Old H2291 continues to enable both factors. H2311 separates NPF capacity
+// from the Rust ingress/service batch; neither opt-in changes production.
+const BATCH:usize=if cfg!(any(feature="h2291_windows_tx_service",
+    feature="h2311_windows_tx16_only")){16}else{8};
  // H1977 original signed Win32-QPC for 1024-byte translated TCP DATA.
  // TCP ACK/FIN/fragment packets are excluded, duplicates are RETAINED.
  // The rewritten kernel-local proxy port is joined to original source port
@@ -121,7 +124,9 @@
 // A Direct return quantum must match this TX loop's four 8-packet ingress
 // quanta. Otherwise the finite TCP return FIFO can fill under a real burst.
 const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
- const POST_INGRESS_RETURN_QUANTUM:usize=BATCH;
+ // Preserve the original small TCP reverse-service fairness ceiling even
+// when the separate Tunnel ingress seal batch is raised to sixteen.
+const POST_INGRESS_RETURN_QUANTUM:usize=8;
  // An auto-reset mailbox wake is not a counting semaphore. When all 32
  // Direct returns of a bounded RX turn were consumed, more TCP ACK/DATA
  // may already be queued even though Windows coalesced the SetEvent calls.
@@ -252,6 +257,12 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      repair_uncertain_bytes:AtomicU64,
      pure_ack_outer_bytes:AtomicU64,
      repair_packets:AtomicU64,
+     #[cfg(feature="h2314_windows_fixed_max_burst")]
+     fixed_parity_source_rows:AtomicU64,
+     #[cfg(feature="h2314_windows_fixed_max_burst")]
+     fixed_parity_copied_rows:AtomicU64,
+     #[cfg(feature="h2314_windows_fixed_max_burst")]
+     fixed_parity_npf_batches:AtomicU64,
      worker_error:AtomicI32,
      ack:AtomicU32,
      ack_sent:AtomicU32,
@@ -278,6 +289,12 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              repair_uncertain_bytes:AtomicU64::new(0),
              pure_ack_outer_bytes:AtomicU64::new(0),
              repair_packets:AtomicU64::new(0),
+             #[cfg(feature="h2314_windows_fixed_max_burst")]
+             fixed_parity_source_rows:AtomicU64::new(0),
+             #[cfg(feature="h2314_windows_fixed_max_burst")]
+             fixed_parity_copied_rows:AtomicU64::new(0),
+             #[cfg(feature="h2314_windows_fixed_max_burst")]
+             fixed_parity_npf_batches:AtomicU64::new(0),
              worker_error:AtomicI32::new(0),ack:AtomicU32::new(ack),
              ack_sent:AtomicU32::new(ack),
              sack_frame:Mutex::new(([WireSack{start:0,end:0};4],0)),
@@ -620,6 +637,10 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              if status==1{
                  fresh_bytes+=lens[i] as u64;
                  counters.tx_copied.fetch_add(1,Ordering::Relaxed);
+                 #[cfg(feature="h2314_windows_fixed_max_burst")]
+                 if fixed{
+                     counters.fixed_parity_source_rows.fetch_add(1,Ordering::Relaxed);
+                 }
                  // Never count an M1 proposal on failed or partially
                  // accepted Npcap prefix. No shadow/repair double count.
                  if staged_pad[i]>0{
@@ -702,6 +723,70 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              counters.ack_sent.store(ack,Ordering::Release);
          }
      }
+     if outcome.error.is_some(){return Err(BAD_STAGE)}
+     Ok(true)
+ }
+ // H2314 opt-in Fixed MAXIMUM: one frozen original M1 block has k16/r20.
+ // Send its five old 4-row quanta through the SAME original NPF writer:
+ // with NPF64/16 this forms a 16+4 ready batch, not five 4-row syscalls.
+ // One genuine kernel accepted-prefix settles all 20 rows; no new ABI,
+ // second worker, plaintext copy to Go, or cross-flow wait.
+ #[cfg(all(feature="fec2_product_record",feature="h2314_windows_fixed_max_burst"))]
+ fn send_fixed_maximum_parity(
+     cfg:&WbdWinNativeAttachV1,lane:&Arc<Mutex<Entry>>,
+     npf:&mut NpcapTx,counters:&Counters,ip_id:&mut u16,
+ )->Result<bool,i32>{
+     let batch={
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         fec2::stage_fixed_maximum_parity_entry(
+             &mut e,cfg.epoch,cfg.luid,cfg.ifindex
+         )?
+     };
+     let count=batch.count;
+     if count==0{return Ok(false)}
+     if count>20{return Err(BAD_STAGE)}
+     let mut frames=[[0u8;MAX_LINK];20];
+     let mut lengths=[0usize;20];
+     let ack=counters.ack.load(Ordering::Acquire);
+     for (i,row) in batch.rows[..count].iter().enumerate(){
+         let used=row.used as usize;
+         let frame=packet_frame(cfg,row.seq,ack,&row.wire[..used],
+             *ip_id,&mut frames[i])?;
+         lengths[i]=frame.len();
+         *ip_id=ip_id.wrapping_add(1);
+     }
+     let last=&batch.rows[count-1];
+     counters.tx_seq.store(last.seq.wrapping_add(last.used),Ordering::Release);
+     let mut packets:[&[u8];20]=[&[];20];
+     for i in 0..count{packets[i]=&frames[i][..lengths[i]]}
+     let outcome=npf.send_batch(&packets[..count]);
+     let mut copied=0u8;
+     let mut uncertain=0u8;
+     for i in 0..count{
+         match kernel_result(outcome,count,i)?{
+             1=>{
+                 copied+=1;
+                 counters.tx_copied.fetch_add(1,Ordering::Relaxed);
+                 counters.fresh_outer_bytes.fetch_add(lengths[i] as u64,Ordering::Relaxed);
+             },
+             2=>uncertain+=1,
+             _=>{},
+         }
+     }
+     let not_sent=(count as u8)-copied-uncertain;
+     {
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         e.fec2_tx.as_mut().ok_or(BAD_STAGE)?
+             .settle_staged(copied,not_sent,uncertain)
+             .map_err(|_|BAD_STAGE)?;
+         if copied>0{
+             let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
+             m.fec_copied_parity=m.fec_copied_parity.saturating_add(copied as u64);
+             counters.ack_sent.store(ack,Ordering::Release);
+         }
+     }
+     counters.fixed_parity_copied_rows.fetch_add(copied as u64,Ordering::Relaxed);
+     counters.fixed_parity_npf_batches.fetch_add(1,Ordering::Relaxed);
      if outcome.error.is_some(){return Err(BAD_STAGE)}
      Ok(true)
  }
@@ -1079,7 +1164,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  if reverse_count==DIRECT_RETURN_QUANTUM{still_ready=true}
                  } // reverse work genuinely pending
              }
-             for _ in 0..4 {
+             for _ in 0..(RX_WAKE_BATCH/BATCH) {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms)?;
@@ -1145,11 +1230,37 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                      }
                  }
              }
-             // A bounded <=4-row parity quantum follows ready fresh sources.
-             // In Fixed/Auto there is never an extra native parity worker.
+             // A bounded <=4-row parity quantum remains the default/Auto path;
+             // opt-in Fixed MAXIMUM changes only the original owner's budget.
+             // Source-first: all READY original sources transmit before any
+             // deferred parity. Default/Auto remains one <=4-row quantum.
              #[cfg(feature="fec2_product_record")]
              let parity=if fixed{
-                 send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?
+                 #[cfg(feature="h2314_windows_fixed_max_burst")]
+                 {
+                     let maximum=if !auto{
+                         let e=lock_owner(&lane,&counters,LockDirection::Tx)?;
+                         e.fec2_tx.as_ref().is_some_and(|tx|tx.profile_index()==6)
+                     }else{false};
+                     if maximum{
+                         let mut sent=false;
+                         // A 32-source full turn closes two k16 jobs.
+                         // r20/k16 requires 40 parity rows: two * 20.
+                         // No parity crosses the original Stop boundary.
+                         for _ in 0..2{
+                             if counters.stopping.load(Ordering::Acquire){break}
+                             if !send_fixed_maximum_parity(
+                                 &cfg,&lane,&mut npf,&counters,&mut ip_id
+                             )?{break}
+                             sent=true;
+                         }
+                         sent
+                     }else{
+                         send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?
+                     }
+                 }
+                 #[cfg(not(feature="h2314_windows_fixed_max_burst"))]
+                 {send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?}
              }else{false};
              #[cfg(not(feature="fec2_product_record"))]
              let parity=false;
@@ -1550,17 +1661,27 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
               flush_tx_wake(&tx_notify,&counters);
           }
           if let Some((ack32,blocks,n))=last_outer_ack{
-              let mut e=match lock_owner(&lane,&counters,LockDirection::Rx){
-                  Ok(e)=>e,Err(code)=>return code
+              let genuine_gap_nominated={
+                  let mut e=match lock_owner(&lane,&counters,LockDirection::Rx){
+                      Ok(e)=>e,Err(code)=>return code
+                  };
+                  let mut sacks=[wbd_recovery::outer_ack::SackRange32{
+                      start:0,end:0};4];
+                  for (dst,src) in sacks.iter_mut().zip(&blocks[..n]){
+                      *dst=wbd_recovery::outer_ack::SackRange32{
+                          start:src.start,end:src.end};
+                  }
+                  m2_outer_ack_hint_entry(&mut e,cfg.epoch,
+                      cfg.luid,cfg.ifindex,ack32,&sacks[..n])
+                      .unwrap_or(false)
               };
-              let mut sacks=[wbd_recovery::outer_ack::SackRange32{
-                  start:0,end:0};4];
-              for (dst,src) in sacks.iter_mut().zip(&blocks[..n]){
-                  *dst=wbd_recovery::outer_ack::SackRange32{
-                      start:src.start,end:src.end};
+              if genuine_gap_nominated{
+                  // Genuine bounded immutable repair became newly eligible.
+                  // A pure ACK with no real gap cannot wake TX or form an
+                  // ACK loop. Reuse the SINGLE original event and owner,
+                  // never synthesize PTO/reseal or block any fresh business.
+                  flush_tx_wake(&tx_notify,&counters);
               }
-              let _=m2_outer_ack_hint_entry(&mut e,cfg.epoch,
-                  cfg.luid,cfg.ifindex,ack32,&sacks[..n]);
           }
           // H2229: 10ms (~100Hz) authentic-gap SACK publication,
           // coalesced on the existing RX turn (no per-packet timer, no
@@ -1952,6 +2073,15 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          f,r,u,k,session.counters.repair_packets.load(Ordering::Relaxed),
          if f>0{(r+u).saturating_mul(1_000_000)/f}else{0},
          if f+r+u+k>0{(r+u).saturating_mul(1_000_000)/(f+r+u+k)}else{0});
+     #[cfg(feature="h2314_windows_fixed_max_burst")]
+     {
+         let src=session.counters.fixed_parity_source_rows.load(Ordering::Relaxed);
+         let parity=session.counters.fixed_parity_copied_rows.load(Ordering::Relaxed);
+         let batches=session.counters.fixed_parity_npf_batches.load(Ordering::Relaxed);
+         eprintln!("PLAN029_H2314_MAXIMUM_PARITY_STOP copied_source_rows={} copied_parity_rows={} staged_wide_batches={} copied_parity_per_source_ppm={} ideal_complete_maximum_ppm=1250000 copied_npf_not_remote_delivery=1",
+             src,parity,batches,
+             if src>0{parity.saturating_mul(1_000_000)/src}else{0});
+     }
      // Authenticated dead90 is the worker's lifecycle verdict, not a
      // driver-loan drain failure. Both workers have already finished and
      // joined above: give Go the owned Stop receipt so it can recover WAL,
@@ -2338,4 +2468,15 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          assert_eq!(kernel_result(out,4,2),Ok(2));
          assert_eq!(kernel_result(out,4,3),Ok(0));
      }
+     #[cfg(feature="h2314_windows_fixed_max_burst")]
+     #[test]
+     fn m0_h2314_fixed_maximum_two_ready_twenty_rows_cover_full_source_turn(){
+         // Scheduling arithmetic only. This test never claims NPF or peer send.
+         assert_eq!(RX_WAKE_BATCH,32);
+         assert_eq!(RX_WAKE_BATCH/16,2);
+         assert_eq!(2*20,40);
+         assert_eq!(32*20/16,40);
+         assert_eq!(20/4,5);
+     }
+
  }

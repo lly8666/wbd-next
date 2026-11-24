@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "scope": "PLAN029 P1 H2294 5percent FEC OFF outer once-only repair OFF-ON-OFF dual original native Windows ARM three-runner",
+  "source_sha": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
+  "action_id": 45032406637,
+  "action_conclusion": "failure",
+  "original_windows_go_exe_sha": "c5066db61fc51bafd7c2ad2def3029e615efa777",
+  "original_windows_rust_dll_sha": "dc2da4b98ecc419a67e3e2ee6530f944b78d88ef",
+  "platform": "independent real Win2025 signed Npcap/Wintun original GoTLS+Rust to ARM native relay to ARM original GoTLS Rust AF_PACKET TUN",
+  "last_stage_status": "group a full 3-legs client+relay+ARM original PASS; group b A/B native products PASS but A-prime FAILED H2276_RELAY_UDP_CONTROL_NOT_REACHABLE and ARM/relay failed. Whole 9-job run FAIL.",
+  "groups": {
+    "a": [
+      {
+        "stage": "A_off",
+        "actual_tcp_goodput_mbps": 0.525,
+        "arm_remote_tcp_rx_bytes": 10911744,
+        "sparse_p99_ms": 1734,
+        "sparse_echo_late_over_1s": 28,
+        "rust_joined_kernel_accepted_frozen_ciphertext_copy_packets": 0,
+        "accepted_repair_wire_bytes": 0,
+        "real_kernel_netem_drops_win_to_arm": 670,
+        "real_kernel_netem_drops_arm_to_win": 591,
+        "candidate_first": 0,
+        "repair_abandoned": 0
+      },
+      {
+        "stage": "B_repair",
+        "actual_tcp_goodput_mbps": 0.76,
+        "arm_remote_tcp_rx_bytes": 11108352,
+        "sparse_p99_ms": 1125,
+        "sparse_echo_late_over_1s": 6,
+        "rust_joined_kernel_accepted_frozen_ciphertext_copy_packets": 12,
+        "accepted_repair_wire_bytes": 2857,
+        "real_kernel_netem_drops_win_to_arm": 692,
+        "real_kernel_netem_drops_arm_to_win": 522,
+        "candidate_first": 249,
+        "repair_abandoned": 237
+      },
+      {
+        "stage": "A_prime_off",
+        "actual_tcp_goodput_mbps": 0.837,
+        "arm_remote_tcp_rx_bytes": 11403264,
+        "sparse_p99_ms": 1375,
+        "sparse_echo_late_over_1s": 22,
+        "rust_joined_kernel_accepted_frozen_ciphertext_copy_packets": 0,
+        "accepted_repair_wire_bytes": 0,
+        "real_kernel_netem_drops_win_to_arm": 756,
+        "real_kernel_netem_drops_arm_to_win": 551,
+        "candidate_first": 0,
+        "repair_abandoned": 0
+      }
+    ],
+    "b": [
+      {
+        "stage": "A_off",
+        "actual_tcp_goodput_mbps": 0.422,
+        "arm_remote_tcp_rx_bytes": 10862592,
+        "sparse_p99_ms": 1422,
+        "sparse_echo_late_over_1s": 22,
+        "rust_joined_kernel_accepted_frozen_ciphertext_copy_packets": 0,
+        "accepted_repair_wire_bytes": 0,
+        "real_kernel_netem_drops_win_to_arm": 724,
+        "real_kernel_netem_drops_arm_to_win": 592,
+        "candidate_first": 0,
+        "repair_abandoned": 0
+      },
+      {
+        "stage": "B_repair",
+        "actual_tcp_goodput_mbps": 0.713,
+        "arm_remote_tcp_rx_bytes": 10993664,
+        "sparse_p99_ms": 1672,
+        "sparse_echo_late_over_1s": 23,
+        "rust_joined_kernel_accepted_frozen_ciphertext_copy_packets": 13,
+        "accepted_repair_wire_bytes": 1959,
+        "real_kernel_netem_drops_win_to_arm": 693,
+        "real_kernel_netem_drops_arm_to_win": 547,
+        "candidate_first": 248,
+        "repair_abandoned": 235
+      }
+    ]
+  },
+  "partial_comparison": {
+    "a": {
+      "on_vs_off_mean_pct": 11.601,
+      "qualification": "full same-host triplet actual pass but one group only not two-group pass"
+    },
+    "b": {
+      "on_vs_only_first_off_pct": 68.957,
+      "qualification": "uncertified two-stage only due missing third A-prime"
+    }
+  },
+  "sources": {
+    "original_windows_raw_a_artifact_id": 14758149166,
+    "original_windows_raw_b_artifact_id": 14758960601
+  },
+  "warning": "Client generated legacy periodic frozen_ciphertext_retransmits=0 but joined original Rust Stop proved B 12/13 accepted; original 5% Action precedes H2316 joined-stop correction. Count actual copies from original owner kernel Stop only. Driver copied != remote delivered.",
+  "verdict": "FULL_P1_LOSS5_NOT_QUALIFIED; REAL_KERNEL_REPAIR_COPIES_ON_ONLY_12_AND_13; no causal throughput gain established across both groups"
+}

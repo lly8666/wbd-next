@@ -18,8 +18,8 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "执行 docs/decisions/M0-PLAN029-THROUGHPUT.md 当前2026-11-22用户追加三关：P0先真实Windows原生零损TX/NPF瓶颈，同源A/B/A′；P1冻结产品FEC OFF、机会式原密文单次修复1%后5%；P2固定FEC maximum先验parity实发再弱网。复用PR#68现有双组三runner夹具，主线main登记集成；029B其他既有出口与Stop/隔离保持，030未启动。",
-      "done_when": "按三关各自功能、机制、性能和物理资格单独记录PASS/FAIL/INCONCLUSIVE/NOT_RUN，真实Windows/ARM GoTLS/Rust双端接收有效goodput、CPU/GiB、160稀疏流P99、NPF copied prefix、F/R/parity/Stop；0%600–800Mbps与maximum下400Mbps为有容量前提的独立进度目标，不能虚假过门；完成后回029/029B剩余出口。",
+      "goal": "执行 docs/decisions/M0-PLAN029-THROUGHPUT.md。M0 在 main 登记与集成，产品按已登记短分支推进。先 ARM64 原生 Normal/off，再验 x86 与 Windows。既有 029/029B 分流、配置、隔离、Stop 与未验边界沿用，030 未启动。",
+      "done_when": "按该计划验收系统接收吞吐、CPU/有效GiB、及时交付率、无HOL及受影响入口；实测分别归属平台与SOURCE。否决/未测保留；本包完成后回到029/029B余项。",
       "assigned_task": "M0-PLAN029-THROUGHPUT"
     },
     {

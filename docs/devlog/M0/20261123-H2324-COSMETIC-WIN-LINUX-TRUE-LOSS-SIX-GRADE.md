@@ -1,5 +1,7 @@
 # M0 H2324 · 2026-11-23 同源码 Windows→Linux 表演式外层重传六档实测
 
+> **分支镜像、来源勿混淆：** 本记录的全部真实测量来自 **main** 产品 SOURCE `92920fb96f2d77ca11abcfdf4a4069d24731f62b`。本 Draft PR 分支当时 HEAD 为 `9e27b7ab76921d203c09d19c7ca35fa16fb642e5`，**未在该 PR 分支源码上独立测量 0/1/5/10/20/30%**。镜像仅供 M0/PLAN029 接班引用同一份证据，不允许把 main PASS 记为 PR P1/P2 PASS。
+
 ## 准确范围
 - 产品和夹具 source `92920fb96f2d77ca11abcfdf4a4069d24731f62b`（只含早前已通过原生 Rust/Windows 构建的产品逻辑及后来调整的编排 guard）。自动验收 [#45111930620](https://github.com/lly8666/wbd-next/actions/runs/45111930620) **PASS**。
 - 正式架构：Windows 2025 签名 Npcap/Npf、原 Go TLS/Rust DLL/Wintun → 真 Linux WSL2 TUN，Normal、FEC OFF、`outer-repair=on`，每方向 offered 10Mbps、250ms、60s，seed 20261030，legacy 1400 MTU。五档复用基线 #45111958268 的**相同 EXE/DLL、Linux 构件和锁定产品源码**。0% 构件、两端 Stop/WSL 真 Linux kernel 也成功。

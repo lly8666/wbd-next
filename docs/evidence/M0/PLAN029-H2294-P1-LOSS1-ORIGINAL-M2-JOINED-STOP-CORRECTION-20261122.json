@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "scope": "P1 H2294 FEC OFF outer repair OFF/ON/OFF 1% true bidirectional 200ms per hop original Windows/ARM 2x 3Runner",
+  "source_sha": "cc8f7308630f60f7de71f5ef2587f1468c503345",
+  "run_id": 45031628979,
+  "run_conclusion": "success",
+  "jobs_success": 9,
+  "original_windows_rust_binary_source_sha": "dc2da4b98ecc419a67e3e2ee6530f944b78d88ef",
+  "original_windows_go_exe_source_sha": "c5066db61fc51bafd7c2ad2def3029e615efa777",
+  "verified": "original signed Windows Npcap Wintun GoTLS Rust -> ARM original GoTLS Rust AF_PACKET TUN; actual two-direction netem; original owned Stop; 160 sparse TCP echo each stage",
+  "stage_receipts_caveat": "periodic WBD_WINDOWS_NATIVE_PACKET_TELEMETRY reports frozen_ciphertext_retransmits=0 at snapshot; this is inaccurate for final accepted copy count. Authentic Rust joined WBD_WINDOWS_NATIVE_M2_OPPORTUNITY_STOP and WBD_WINDOWS_NATIVE_OUTER_REPAIR prove accepted copy counts 7/5; no remote delivery ACK proven",
+  "groups": {
+    "a": [
+      {
+        "stage": "A_off",
+        "mbps": 1.406,
+        "rx": 14647296,
+        "cpu": 139.7405,
+        "p99": 422,
+        "late": 0,
+        "repair_enabled": false,
+        "driver_repair": 0,
+        "netem": [
+          167,
+          97
+        ]
+      },
+      {
+        "stage": "B_repair",
+        "mbps": 1.487,
+        "rx": 15712256,
+        "cpu": 154.8276,
+        "p99": 938,
+        "late": 0,
+        "repair_enabled": true,
+        "driver_repair": 7,
+        "netem": [
+          167,
+          94
+        ],
+        "m2": {
+          "authenticated_reverse_reports": 0,
+          "repair_polls": 16312,
+          "shadow_outstanding": 0,
+          "candidate_first": 91,
+          "expired_first": 0,
+          "acked_first": 0,
+          "repair_accepted": 7,
+          "repair_abandoned": 84,
+          "preflight_stale": 0,
+          "quota_rejected": 0,
+          "queued": 0,
+          "unique_candidates": 97,
+          "unique_candidate_cipher_bytes": 112791,
+          "checked_once": 145,
+          "burst_wait": 0,
+          "fifo_left": 0
+        },
+        "outer_stop": {
+          "source_wire_bytes": 17883588,
+          "repair_accepted_wire_bytes": 1569,
+          "repair_uncertain_wire_bytes": 0,
+          "control_wire_bytes": 119755,
+          "repair_packets": 7,
+          "r_to_f_ppm": 87,
+          "r_to_total_ppm": 87
+        }
+      },
+      {
+        "stage": "A_prime_off",
+        "mbps": 1.506,
+        "rx": 14254080,
+        "cpu": 167.1356,
+        "p99": 1047,
+        "late": 2,
+        "repair_enabled": false,
+        "driver_repair": 0,
+        "netem": [
+          156,
+          101
+        ]
+      }
+    ],
+    "b": [
+      {
+        "stage": "A_off",
+        "mbps": 1.543,
+        "rx": 15204352,
+        "cpu": 133.5169,
+        "p99": 1062,
+        "late": 3,
+        "repair_enabled": false,
+        "driver_repair": 0,
+        "netem": [
+          156,
+          121
+        ]
+      },
+      {
+        "stage": "B_repair",
+        "mbps": 1.45,
+        "rx": 15187968,
+        "cpu": 103.836,
+        "p99": 922,
+        "late": 0,
+        "repair_enabled": true,
+        "driver_repair": 5,
+        "netem": [
+          158,
+          90
+        ],
+        "m2": {
+          "authenticated_reverse_reports": 0,
+          "repair_polls": 16066,
+          "shadow_outstanding": 2,
+          "candidate_first": 84,
+          "expired_first": 3,
+          "acked_first": 0,
+          "repair_accepted": 5,
+          "repair_abandoned": 79,
+          "preflight_stale": 0,
+          "quota_rejected": 0,
+          "queued": 0,
+          "unique_candidates": 95,
+          "unique_candidate_cipher_bytes": 109735,
+          "checked_once": 139,
+          "burst_wait": 0,
+          "fifo_left": 0
+        },
+        "outer_stop": {
+          "source_wire_bytes": 17169204,
+          "repair_accepted_wire_bytes": 694,
+          "repair_uncertain_wire_bytes": 0,
+          "control_wire_bytes": 119789,
+          "repair_packets": 5,
+          "r_to_f_ppm": 40,
+          "r_to_total_ppm": 40
+        }
+      },
+      {
+        "stage": "A_prime_off",
+        "mbps": 1.48,
+        "rx": 14565376,
+        "cpu": 137.0712,
+        "p99": 485,
+        "late": 0,
+        "repair_enabled": false,
+        "driver_repair": 0,
+        "netem": [
+          182,
+          101
+        ]
+      }
+    ]
+  },
+  "paired": {
+    "a": {
+      "b_vs_baseline_mean_pct": 2.129,
+      "actual_frozen_copy_packets": 7,
+      "actual_frozen_copy_wire_bytes": 1569,
+      "candidate": 91
+    },
+    "b": {
+      "b_vs_baseline_mean_pct": -4.069,
+      "actual_frozen_copy_packets": 5,
+      "actual_frozen_copy_wire_bytes": 694,
+      "candidate": 84
+    }
+  },
+  "verdict": "NO_CONSISTENT_GOODPUT_GAIN_REAL_REPAIR_WAS_7_AND_5_IMMUTABLE_COPIES_NOT_ZERO",
+  "source_artifact_ids": {
+    "a": 14758576124,
+    "b": 14758810410
+  },
+  "limits": [
+    "driver acceptance is not peer delivery",
+    "authenticated_reverse_reports=0: weak outer ACK hints, no authenticated feedback",
+    "do not backfill historical successful Action JSON; corrected cold evidence from original artifact"
+  ]
+}

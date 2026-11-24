@@ -1,0 +1,51 @@
+# H2294: genuine Windows-only native WSL guest keeper: two real owned Stop generations.
+# Small preflight to avoid burning 2x3Runner original signed WBD jobs on fixture bugs.
+name: H2294 WSL Linux keeper PID and owned Stop native Windows smoke
+run-name: "M0 H2294 exact Windows WSL keeper test | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-h2294-wsl-keeper-only.yml'
+      - 'tools/m0_h2294_wsl_lifecycle_probe.py'
+      - 'tools/m0_h2293_true_product_fec_loss.py'
+      - 'docs/devlog/M0/20261122-H2294-FEC-OFF-OUTER-REPAIR-3RUNNER.md'
+jobs:
+  windows-native-keeper:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2294-wsl-keeper]')
+    runs-on: windows-2025
+    timeout-minutes: 13
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Original bounded Windows WSL Ubuntu 24.04.5 signed-input boot
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'H2294_WINDOWS_WSL2_NOT_AVAILABLE'}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            & curl.exe --fail --location --silent --show-error --connect-timeout 15 --max-time 180 --retry 1 --retry-delay 2 --retry-max-time 220 --output $img 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl'
+            if($LASTEXITCODE -ne 0){throw 'H2294_PINNED_WSL_DOWNLOAD_BOUNDED_FAILURE'}
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'H2294_PINNED_UBUNTU_HASH_MISMATCH'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2
+            if($LASTEXITCODE -ne 0){throw 'H2294_PINNED_WSL_IMPORT_FAILED'}
+          }
+          & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- sh -c 'test -r /proc/sys/kernel/random/boot_id && command -v cat && command -v kill'
+          if($LASTEXITCODE -ne 0){throw 'H2294_REAL_WINDOWS_UBUNTU_GUEST_NOT_READY'}
+          Write-Output H2294_REAL_NATIVE_WINDOWS_WSL_GUEST_READY
+      - name: Exact user-scoped Linux guest PID survives and Stop verified twice
+        shell: pwsh
+        timeout-minutes: 2
+        run: |
+          $ErrorActionPreference='Stop'
+          python -m py_compile tools/m0_h2293_true_product_fec_loss.py tools/m0_h2294_wsl_lifecycle_probe.py
+          if($LASTEXITCODE -ne 0){throw 'H2294_WSL_LIFECYCLE_PYTHON_BAD'}
+          python -u tools/m0_h2294_wsl_lifecycle_probe.py
+          if($LASTEXITCODE -ne 0){throw 'H2294_WSL_LINUX_GUEST_OWNED_PID_STOP_FAIL'}

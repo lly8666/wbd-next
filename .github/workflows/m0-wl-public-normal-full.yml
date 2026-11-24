@@ -1612,42 +1612,6 @@ jobs:
               assert m.get('native_fec_acceleration') is True
               assert m.get('isa_l_source')=='c387163fcbca62701d646149564c550c78a4f985'
               print('H2062_REUSED_EXACT_UNTESTED_H2061_BINARY_MANIFEST_HASH_GATE')
-          elif (os.environ.get('WBD_WL_REUSE_RUN_ID') and
-                os.environ.get('WBD_WL_V2_SCENARIO','').startswith('scenarios/') and
-                os.environ.get('WBD_WL_PUBLIC_MODES') in
-                  ('normal','game2','game4','game2-fec','game4-fec') and
-                m['source_sha']==os.environ.get('WBD_WL_BINARY_SOURCE') and
-                (m['source_sha']==os.environ.get('GITHUB_SHA') or
-                 (os.environ.get('WBD_WL_OUTER_PAIR')=='1' and
-                  os.environ.get('WBD_WL_PUBLIC_MODES')=='normal' and
-                  os.environ.get('WBD_WL_REUSE_RUN_ID')=='45111958268' and
-                  os.environ.get('WBD_WL_BINARY_SOURCE')=='92920fb96f2d77ca11abcfdf4a4069d24731f62b' and
-                  os.environ.get('WBD_WL_V2_SCENARIO')=='scenarios/wl-outer-repair-10m-250ms-loss30-60s.json') or
-                 (os.environ.get('WBD_WL_REUSE_RUN_ID')=='45111958268' and
-                  os.environ.get('WBD_WL_BINARY_SOURCE')=='92920fb96f2d77ca11abcfdf4a4069d24731f62b' and
-                  os.environ.get('WBD_WL_PUBLIC_MODES') in
-                    ('game2','game4','game2-fec','game4-fec') and
-                  os.environ.get('WBD_WL_V2_SCENARIO') in (
-                     'scenarios/m0-cosmetic-'+os.environ.get('WBD_WL_PUBLIC_MODES')+'-loss0-60s.json',
-                     'scenarios/m0-cosmetic-'+os.environ.get('WBD_WL_PUBLIC_MODES')+'-loss5-60s.json',
-                     'scenarios/m0-cosmetic-'+os.environ.get('WBD_WL_PUBLIC_MODES')+'-loss30-60s.json')))):
-              # Exact signed source 92920fb96f2d77ca11abcfdf4a4069d24731f62b from run 45111958268.
-              # Only test-owned Game2/Game4 OFF/FEC6 scenarios are allowlisted;
-              # original EXE/DLL SHA256 and source-diff hard gates remain below.
-              # Signed source-matched reuse, or exactly the one frozen
-              # post-source OFF/ON pair. The preceding immutable-source diff
-              # must still prove no changed product code, and both exe/DLL
-              # sha256 must match the original downloaded manifest.
-              # The live signed Normal WAN source contains actual native
-              # m0_v4_probe + official ISA-L; the old generic two-feature
-              # expectation wrongly rejected the *same* proven binary.
-              # Scope to same-run source, actual scenario and pinned features.
-              # Preserve below SHA256 verification of BOTH real EXE and DLL.
-              assert m['features']=='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
-              assert m.get('native_fec_acceleration') is True
-              assert m.get('isa_l_source')=='c387163fcbca62701d646149564c550c78a4f985'
-              assert m.get('original_go_source','a7a82db31fe736ffedee330795a3234d358f1984')=='a7a82db31fe736ffedee330795a3234d358f1984'
-              print('M0_PLAN029_NORMAL_TRUE_SOURCE_PROBE_ISAL_REUSE_MANIFEST_PASS')
           else:
               assert m['features']=='m0_v4_embedded_go,fec2_product_record'
           for name,key in [('wbd-client-embedded.exe','exe'),('wbd_engine.dll','dll')]:

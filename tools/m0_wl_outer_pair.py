@@ -23,6 +23,8 @@ scenario=os.environ.get("WBD_WL_V2_SCENARIO","")
 allowed=(
     "scenarios/plan027-h876-normal-pair-10m-250ms-0loss-60s.json",
     "scenarios/wl-outer-repair-10m-250ms-loss30-60s.json",
+    "scenarios/wl-outer-repair-10m-200ms-loss1-60s.json",
+    "scenarios/wl-outer-repair-10m-200ms-loss5-60s.json",
     "scenarios/plan027-h913-normal-pair-100m-25ms0-60s.json",
     "scenarios/plan027a-h996-normal-pair-1460-3m-25ms0-60s.json",
 )
@@ -70,6 +72,29 @@ for repair in ("off","on"):
     if archived.is_dir():
         shutil.copytree(archived,legdir/"native-evidence")
     report=json.loads(report_path.read_text()) if report_path.is_file() else {}
+    if scene["scenario_id"] in (
+        "wl-outer-repair-10m-200ms-loss1-60s",
+        "wl-outer-repair-10m-200ms-loss5-60s"):
+        # H2278: exact per-leg real TCP source logs must survive and the
+        # sequential ON leg must not find OFF's original stage directories.
+        from m0_wl_loss_tcp_probe import archive_loss_tcp_stage
+        preserved=archive_loss_tcp_stage(out,legdir)
+        print("H2278_ORIGINAL_NATIVE_TCP_EVIDENCE_MOVED "+
+              json.dumps({"policy":repair,"origins":preserved},
+                         sort_keys=True),flush=True)
+    if scene["scenario_id"] in (
+        "wl-outer-repair-10m-200ms-loss1-60s",
+        "wl-outer-repair-10m-200ms-loss5-60s"):
+        t=report.get("plan029_loss_tcp",{})
+        if (t.get("status")!="PASS_SCOPED_REAL_TWO_OS_KERNEL_TCP" or
+                t.get("source_sha")!=source or
+                any(t.get(k,{}).get("sparse_echo_received")!=160
+                    for k in ("windows_client","linux_client"))):
+            raise RuntimeError("H2271_REAL_WIN_LINUX_TCP_REQUIRED_NO_FALSE_UDP_PASS")
+        print("M029_H2271_NATIVE_LOSS_TCP_PAIR "+
+              json.dumps({"policy":repair,"scenario":scene["scenario_id"],
+                          "windows":t["windows_client"],
+                          "linux":t["linux_client"]},sort_keys=True),flush=True)
     # Original Windows child must leave no attached WAL/route journal before
     # the subsequent generation is allowed to start on the SAME OS.
     wal_left=[str(p.relative_to(out)) for p in

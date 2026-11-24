@@ -1,0 +1,100 @@
+# One source-locked true native ARM64 original-Go TLS/Rust single stream
+# fq600 versus fq900; default remains 600, not a product gain claim.
+name: M0 PLAN029 native single TCP fq600 versus fq900
+run-name: "M0|029|ARM fq600-900| ${{ github.sha }}"
+# True source-locked diagnostic, manual only to avoid repetitive sweep.
+on:
+  workflow_dispatch: {}
+permissions: {contents: read}
+concurrency:
+  group: m029-fq-single-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  native-single:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 38
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      WBD_M0_029_NO_PROBE: "1"
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Genuine source/runner and original kernel prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          test -c /dev/net/tun
+          sudo -n true
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc g++ nasm python3 \
+            iproute2 iptables iputils-ping ethtool iperf3 openssl
+          python3 -m py_compile tools/m0_029_real_single_flow_fq900_ab.py \
+            tools/m0_029_native_inbox_abca.py tools/m0_h2244_smallflow_echo.py
+          test "$(git hash-object tools/m0_029_native_inbox_abca.py)" = b1094391ec9729931979c5158357ef2cbf72b84e
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path("tools/m0_029_real_single_flow_fq900_ab.py").read_text()
+          assert 'base_iperf=G["iperf_json"]' in s
+          assert 'return base_iperf(namespace,dest,source,port,seconds,1)' in s
+          assert "M029_FQ_REAL_KERNEL_COLD_PERFLOW_READBACK_INVALID" in s
+          assert '"fq600_baseline",600' in s and '"fq900_candidate",900' in s
+          print("M029_TRUE_FQ_ONE_TCP_NO_MOCK_SOURCE_PRECHECK_PASS",flush=True)
+          PY
+      - name: One original Go TLS/Rust release no-probe native source build
+        shell: bash
+        timeout-minutes: 26
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh >m029-fq900-build.log 2>&1 || \
+            { tail -n 130 m029-fq900-build.log;exit 1; }
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("linux-plan029-public-bundle/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="aarch64"
+          assert m["m0_probe_compiled"] is False
+          print("M029_NATIVE_FQ_REAL_GORUST_NO_PROBE_BUILD_PASS",flush=True)
+          PY
+      - name: One client FQ cold 600/900 real TCP1 plus simultaneous UDP and small TCP
+        shell: bash
+        timeout-minutes: 9
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_029_real_single_flow_fq900_ab.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open("m029-fq900-singleflow-ab/summary.json"))
+          assert d["source_sha"]==os.environ["GITHUB_SHA"]
+          assert d["run_id"]==os.environ["GITHUB_RUN_ID"]
+          assert d["probe_compiled"] is False
+          assert d["status"]=="PASS_SCOPED_FQ_AB_MEASURED_NOT_PRODUCT_GAIN"
+          assert [x["fq_client_mbps"] for x in d["phases"]]==[600,900]
+          assert all(x["fq_server_mbps"]==600
+                     and x["measure"]["original_product_tcp"]["tcp_streams"]==1
+                     and x["measure"]["smallflow"]["status"]=="PASS_SCOPED_REAL_INNER_UDP_TCP_ECHO"
+                     and x["cold_readbacks"]["client"]["slots"]==128
+                     and x["cold_readbacks"]["server"]["slots"]==64
+                     and all(r["probe_only"]==0 and r["generation"]>0
+                             for r in x["cold_readbacks"].values())
+                     and all(x["owned_stop"][side]["generation"]>0
+                             for side in ("client","server"))
+                     for x in d["phases"])
+          print("M029_ONE_TCP_FQ600_900_PAIR_MEASURED_NOT_PRODUCT_GAIN",flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m029-fq900-singleflow-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            m029-fq900-singleflow-ab/
+            m029-fq900-build.log
+          retention-days: 14
+          if-no-files-found: warn

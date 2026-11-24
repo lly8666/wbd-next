@@ -160,16 +160,39 @@ pub struct NpcapSendQueue {
 // production default stays 8 packets/16KiB until both Windows/ARM product
 // triplets prove throughput, P99 and CPU per delivered GiB. First READY
 // packet still transmits immediately; no coalescing deadline is introduced.
-const NPF_QUEUE_BYTES: usize = if cfg!(feature="h2291_windows_tx_service") {
+const NPF_QUEUE_BYTES: usize = if cfg!(any(feature="h2291_windows_tx_service", feature="h2311_windows_npf64_only")) {
     64 * 1024
 } else {
     16 * 1024
 };
-const NPF_QUEUE_PACKETS: usize = if cfg!(feature="h2291_windows_tx_service") {
+const NPF_QUEUE_PACKETS: usize = if cfg!(any(feature="h2291_windows_tx_service", feature="h2311_windows_npf64_only")) {
     16
 } else {
     8
 };
+
+// H2311: TX-worker-owned counters, written only at the existing NPF syscall
+// sites, emitted only on the owned worker's Drop/Stop. Queue bytes include
+// Npcap's 16-byte per-frame sendqueue header, NOT actual wire data/peer ACK.
+#[cfg(feature="h2311_windows_npf_trace")]
+#[derive(Default)]
+struct NpfServiceTrace {
+    queue_calls: u64,
+    queue_frames_submitted: u64,
+    queue_bytes_submitted: u64,
+    queue_bytes_copied: u64,
+    queue_short_calls: u64,
+    queue_calls_2_7: u64,
+    queue_calls_8: u64,
+    queue_calls_9_15: u64,
+    queue_calls_16: u64,
+    direct_frames_le256: u64,
+    direct_frames_gt256: u64,
+    direct_calls: u64,
+    direct_bytes_submitted: u64,
+    direct_frames_accepted: u64,
+    direct_errors: u64,
+}
 
 /// Single RX-worker use only; raw pcap_t and DLL remain owned by the Go
 /// scoped handoff. The Go reader MUST have stopped before construction.
@@ -227,6 +250,8 @@ pub struct NpcapTx {
     handle: NonNull<c_void>,
     fns: NpcapFns,
     queue: Option<NonNull<NpcapSendQueue>>,
+    #[cfg(feature="h2311_windows_npf_trace")]
+    trace: NpfServiceTrace,
 }
 unsafe impl Send for NpcapTx {}
 impl NpcapTx {
@@ -243,7 +268,11 @@ impl NpcapTx {
         eprintln!(
             "H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue={} queue_bytes={} max_frames={} ready_only=1",
             u8::from(queue.is_some()), NPF_QUEUE_BYTES, NPF_QUEUE_PACKETS);
-        Ok(Self { handle, fns, queue })
+        Ok(Self {
+            handle, fns, queue,
+            #[cfg(feature="h2311_windows_npf_trace")]
+            trace: NpfServiceTrace::default(),
+        })
     }
     /// Drive all READY Ethernet frames without waiting to fill a queue.
     /// At most the profile's bounded 8/16 packet and 16/64KiB queue in one
@@ -291,10 +320,28 @@ impl NpcapTx {
                     }
                     if n >= 2 {
                         queue.len = bytes as u32;
+                        #[cfg(feature="h2311_windows_npf_trace")]
+                        {
+                            self.trace.queue_calls += 1;
+                            match n {
+                                2..=7=>self.trace.queue_calls_2_7+=1,
+                                8=>self.trace.queue_calls_8+=1,
+                                9..=15=>self.trace.queue_calls_9_15+=1,
+                                16=>self.trace.queue_calls_16+=1,
+                                _=>unreachable!("NPF ready queue is at most 16 frames"),
+                            }
+                            self.trace.queue_frames_submitted += n as u64;
+                            self.trace.queue_bytes_submitted += bytes as u64;
+                        }
                         let copied = unsafe {
                             transmit(self.handle.as_ptr(), queue_ptr, 0)
                         } as usize;
                         queue.len = 0;
+                        #[cfg(feature="h2311_windows_npf_trace")]
+                        {
+                            self.trace.queue_bytes_copied += copied.min(bytes) as u64;
+                            if copied != bytes { self.trace.queue_short_calls += 1; }
+                        }
                         if copied != bytes {
                             // A driver result beyond the submitted buffer is
                             // invalid: do not credit a fabricated prefix.
@@ -337,10 +384,22 @@ impl NpcapTx {
                     error: Some(TxError::IoFailed),
                 };
             }
+            #[cfg(feature="h2311_windows_npf_trace")]
+            {
+                self.trace.direct_calls += 1;
+                // Size is a diagnostic, NOT a decrypted kind/peer receipt.
+                if frame.len()<=256{self.trace.direct_frames_le256+=1}
+                else{self.trace.direct_frames_gt256+=1}
+                self.trace.direct_bytes_submitted += frame.len() as u64;
+            }
             let rc = unsafe {
                 (self.fns.send_packet)(
                     self.handle.as_ptr(), frame.as_ptr(), frame.len() as i32)
             };
+            #[cfg(feature="h2311_windows_npf_trace")]
+            if rc == 0 { self.trace.direct_frames_accepted += 1; }
+            #[cfg(feature="h2311_windows_npf_trace")]
+            if rc != 0 { self.trace.direct_errors += 1; }
             if rc != 0 {
                 return TxBatchOutcome {
                     accepted_prefix: accepted, uncertain_index: Some(accepted),
@@ -354,6 +413,22 @@ impl NpcapTx {
 }
 impl Drop for NpcapTx {
     fn drop(&mut self) {
+        #[cfg(feature="h2311_windows_npf_trace")]
+        eprintln!(
+            "PLAN029_H2311_NPF_STOP_PROFILE queue_calls={} queue_frames_submitted={} queue_bytes_submitted={} queue_bytes_copied={} queue_short_calls={} direct_calls={} direct_bytes_submitted={} direct_frames_accepted={} direct_errors={} npf_queue_bytes={} npf_queue_packets={} driver_copy_not_peer_receipt=1",
+            self.trace.queue_calls, self.trace.queue_frames_submitted,
+            self.trace.queue_bytes_submitted, self.trace.queue_bytes_copied,
+            self.trace.queue_short_calls, self.trace.direct_calls,
+            self.trace.direct_bytes_submitted, self.trace.direct_frames_accepted,
+            self.trace.direct_errors, NPF_QUEUE_BYTES, NPF_QUEUE_PACKETS
+        );
+        #[cfg(feature="h2311_windows_npf_trace")]
+        eprintln!(
+            "PLAN029_H2313_NPF_BATCH_SHAPE queue_2_7={} queue_8={} queue_9_15={} queue_16={} direct_le256={} direct_gt256={} driver_copy_not_peer_receipt=1",
+            self.trace.queue_calls_2_7,self.trace.queue_calls_8,
+            self.trace.queue_calls_9_15,self.trace.queue_calls_16,
+            self.trace.direct_frames_le256,self.trace.direct_frames_gt256
+        );
         if let (Some(queue), Some(destroy)) = (self.queue.take(), self.fns.queue_destroy) {
             unsafe { destroy(queue.as_ptr()); }
         }
@@ -669,11 +744,50 @@ mod tests {
         assert_eq!(result.uncertain_index,None);
         assert!(result.error.is_none());
         assert_eq!(QUEUE_COPIES.load(Ordering::SeqCst),
-            if cfg!(feature="h2291_windows_tx_service"){1}else{2});
+            if cfg!(any(feature="h2291_windows_tx_service", feature="h2311_windows_npf64_only")){1}else{2});
         assert_eq!(QUEUE_BYTES.load(Ordering::SeqCst),
-            (if cfg!(feature="h2291_windows_tx_service"){16}else{8})
+            (if cfg!(any(feature="h2291_windows_tx_service", feature="h2311_windows_npf64_only")){16}else{8})
              *(16+IPV4.len()));
         drop(tx);
+    }
+    #[cfg(feature="h2311_windows_npf_trace")]
+    #[test]
+    fn h2311_trace_counts_real_driver_queue_prefix_and_direct_calls() {
+        QUEUE_COPIES.store(0, Ordering::SeqCst);
+        let fns=NpcapFns {
+            next_ex,send_packet,get_event,
+            queue_alloc:Some(queue_alloc),
+            queue_transmit:Some(queue_whole),
+            queue_destroy:Some(queue_destroy),
+        };
+        let mut tx=unsafe{NpcapTx::from_borrowed(2,fns).unwrap()};
+        let three=[&IPV4[..];3];
+        assert_eq!(tx.send_batch(&three).accepted_prefix,3);
+        assert_eq!(tx.trace.queue_calls,1);
+        assert_eq!(tx.trace.queue_calls_2_7,1);
+        assert_eq!(tx.trace.queue_calls_8+tx.trace.queue_calls_9_15+tx.trace.queue_calls_16,0);
+        assert_eq!(tx.trace.queue_frames_submitted,3);
+        assert_eq!(tx.trace.queue_bytes_submitted,3*(16+IPV4.len()) as u64);
+        assert_eq!(tx.trace.queue_bytes_copied,tx.trace.queue_bytes_submitted);
+        assert_eq!(tx.trace.queue_short_calls,0);
+        assert_eq!(tx.send_batch(&[&IPV4[..]]).accepted_prefix,1);
+        assert_eq!(tx.trace.direct_calls,1);
+        assert_eq!(tx.trace.direct_frames_le256,1);
+        assert_eq!(tx.trace.direct_frames_gt256,0);
+        assert_eq!(tx.trace.direct_frames_accepted,1);
+        assert_eq!(tx.trace.direct_bytes_submitted,IPV4.len() as u64);
+        let sixteen=[&IPV4[..];16];
+        assert_eq!(tx.send_batch(&sixteen).accepted_prefix,16);
+        if NPF_QUEUE_PACKETS==16{
+            assert_eq!(tx.trace.queue_calls_16,1);
+            assert_eq!(tx.trace.queue_calls_8,0);
+        }else{
+            assert_eq!(tx.trace.queue_calls_8,2);
+            assert_eq!(tx.trace.queue_calls_16,0);
+        }
+        assert_eq!(tx.trace.queue_calls,
+            tx.trace.queue_calls_2_7+tx.trace.queue_calls_8+
+            tx.trace.queue_calls_9_15+tx.trace.queue_calls_16);
     }
     unsafe extern "C" fn queue_whole(
         _: *mut c_void, queue:*mut NpcapSendQueue, _:i32

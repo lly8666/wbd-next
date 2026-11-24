@@ -1,0 +1,163 @@
+# H2268 offline evidence archived from prior full A/B/A-prime business SUCCESS;\n# previous same-source Action had test-only final digest typo, not a product failure.\n# H2268: Original real Go TLS/Rust Linux ARM64 1160 historic MTU comparator,
+# native kernel bidirectional 1% OR 5% iid loss, 200ms each way, TCP
+# long-lived 4 bulk + same 160 tiny app requests. OFF/ON/OFF actual outer
+# retransmission F/R counters, first delivery/late & Stop; never fake P99.
+name: M0 PLAN029 H2274 real Normal FEC2 loss 1 and 5pct
+run-name: "M0-029 H2274 ARM Normal FEC2 off-fixed-off loss1,5 | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-arm-fec2-loss-real.yml'
+      - 'tools/m0_h2244_smallflow_echo.py'
+      - 'tools/m0_029_product_shared_tun_noprobe.py'
+      - 'docs/devlog/M0/20261121-H2274-ARM-FEC2-LOSS-STUDY.md'
+permissions:
+  contents: read
+jobs:
+  original-normal-shared-true-loss:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-fec-loss-native]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        loss: [1, 5]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    concurrency:
+      group: m0-029-h2274-fec-${{ matrix.loss }}-${{ github.sha }}
+      cancel-in-progress: false
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      WBD_M0_029_NO_PROBE: "1"
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exact native ARM64 and existing source-locked build prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc nasm python3 iproute2 \
+            iputils-ping iptables ethtool iperf3 openssl
+          test -c /dev/net/tun
+          sudo -n true
+          python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
+          bash -n tools/m0_plan029_linux_dual_native_build.sh
+      - name: Single original Go TLS Rust no-probe build for all three legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh >plan029-linux-build.log 2>&1 || {
+            tail -n 125 plan029-linux-build.log >&2
+            exit 1
+          }
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os,platform,subprocess
+          b=pathlib.Path("linux-plan029-public-bundle")
+          m=json.loads((b/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]==platform.machine()=="aarch64"
+          assert m["m0_probe_compiled"] is False
+          assert (m["normal_linux_client_shared_tun_inbox_default"],
+                  m["normal_linux_server_shared_tun_inbox_default"]) == (128,64)
+          for k,v in m["sha256"].items():
+              assert hashlib.sha256((b/k).read_bytes()).hexdigest()==v
+          exported=subprocess.check_output(["nm","-D",str(b/"libwbd_engine.so")],text=True)
+          assert "wbd_m0_embedded_go_loop_debug_pause_jumbo" not in exported
+          print("M029_H2268_ONE_RELEASE_ORIGINAL_GO_RUST_ARM64_BUILD_PASS",flush=True)
+          PY
+
+      - name: H2274 original native ARM loss two-server Normal FEC2 off-fixed-off
+        shell: bash
+        timeout-minutes: 37
+        env:
+          LOSS: ${{ matrix.loss }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
+          for leg in A B A_prime; do
+            fec=off
+            if [ "$leg" = B ]; then
+              if [ "$LOSS" = 1 ]; then fec=fixed0; else fec=fixed1; fi
+            fi
+            echo "H2274_REAL_NATIVE_ORIGINAL_FEC2_START loss=$LOSS leg=$leg fec=$fec sha=$GITHUB_SHA"
+            WBD_M0_029_LOSS_REPAIR_PCT="$LOSS" \
+            WBD_M0_029_LOSS_REPAIR_LEG="$leg" \
+            WBD_M0_029_H2272_FORCE_REPAIR=off \
+            WBD_M0_029_ECHO_SERVER_NODELAY=1 \
+            WBD_M0_029_H2274_FEC_TRIAL="$fec" \
+            WBD_M0_029_ECHO_TIMELINE=1 \
+            WBD_M0_029_TCP_INFO=1 \
+            WBD_M0_029_SPARSE_TCP_DIAG=1 \
+              python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          done
+          python3 - <<'PY'
+          import os,json,pathlib
+          loss=int(os.environ["LOSS"]); source=os.environ["GITHUB_SHA"]
+          select="fixed0" if loss==1 else "fixed1"
+          binary=None; rows=[]
+          for leg,fec in (("A","off"),("B",select),("A_prime","off")):
+              path=pathlib.Path(f"m029-product-shared-loss{loss}-{leg.lower()}/summary.json")
+              row=json.loads(path.read_text())
+              assert row["source_sha"]==source and row["arch"]=="aarch64"
+              assert row["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
+              if binary is None: binary=row["same_release_binary_sha256"]
+              assert binary==row["same_release_binary_sha256"]
+              assert row["h2274_fec_native"]["cold_client_mode"]==fec
+              assert row["h2272_echo_control"]["server_tcp_nodelay_actual"]==1
+              assert row["h2268_control"]["original_go_repair_on"] is False
+              assert row["server_native_outer_ready_readback"]["repair_enabled"]==0
+              assert row["outer_repair_native_stop_readback"]["client"]==[0]
+              assert all(row["owned_stop"][r]["generation"]>0 for r in ("client","server"))
+              if leg=="B":
+                  assert row["h2274_fec_native"]["client_original_fec2_effective_readback"]
+              m=row["measurement"];small=m["smallflow"]
+              assert m["original_product_tcp"]["tcp_streams"]==4
+              assert small["tcp"]["requests_sent"]==160
+              assert small["udp"]["requests_sent"]==160
+              rows.append({"leg":leg,"fec":fec,
+                  "goodput_mbps":m["original_product_tcp"]["receiver_bps"]/1e6,
+                  "client_cpu_s_per_rx_gib":m["cpu_and_rss"]["client"]["cpu_seconds_per_rx_gib"],
+                  "server_cpu_s_per_rx_gib":m["cpu_and_rss"]["server"]["cpu_seconds_per_rx_gib"],
+                  "tcp_p50_ms":small["tcp"]["latency_ms"]["p50"],
+                  "tcp_p99_ms":small["tcp"]["latency_ms"]["p99"],
+                  "tcp_replied":small["tcp"]["unique_replies"],
+                  "udp_missing":small["udp"]["missing"],
+                  "tcp_retrans_delta":row["native_tcp_info_timeline"]["retransmitted_tcp_segments_delta"],
+                  "client_full":row["owned_stop"]["client"]["queue_full_drops"],
+                  "fec_readback":row["h2274_fec_native"]["client_original_fec2_effective_readback"],
+                  "fec_tx":row["h2274_fec_native"]["native_client_FEC_TX_evidence"]})
+          digest={"study":"H2274","source_sha":source,"run_id":os.environ["GITHUB_RUN_ID"],
+              "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"arch":"aarch64",
+              "loss_pct":loss,"one_way_delay_ms":200,
+              "same_product_frozen_binary":binary,
+              "original_FEC2_off_fixed_off_200ms_native":rows,
+              "not_default_or_full_tcp_p99_acceptance":True}
+          pathlib.Path(f"h2274-loss{loss}-fec2-comparison.json").write_text(json.dumps(digest,indent=2)+"\n")
+          print("H2274_REAL_NORMAL_FEC2_LOSS_COMPARISON "+json.dumps(digest,sort_keys=True),flush=True)
+          PY
+      - name: Upload true-source evidence even if one leg fails
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-029-h2274-fec-loss${{ matrix.loss }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            plan029-linux-build.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/SHA256SUMS
+            m029-product-shared-loss${{ matrix.loss }}-*/
+            h2274-loss${{ matrix.loss }}-fec2-comparison.json
+          if-no-files-found: warn
+          retention-days: 21

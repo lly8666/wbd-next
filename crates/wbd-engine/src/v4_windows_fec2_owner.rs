@@ -408,6 +408,53 @@ pub(super) fn stage_fixed_parity_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     result.map_err(|_|BAD_STAGE)?;
     Ok(out)
 }
+// H2314 test-only: existing M1 five 4-row quanta from the ONE frozen
+// Maximum k16/r20 job into one original kernel-prefix settlement. The
+// public WindowsFixedParityBatch[4] ABI is never changed.
+#[cfg(feature="h2314_windows_fixed_max_burst")]
+pub(super) struct WindowsFixedMaximumBatch {
+    pub count:usize,
+    pub rows:[WindowsFixedParityRow;20],
+}
+#[cfg(feature="h2314_windows_fixed_max_burst")]
+pub(super) fn stage_fixed_maximum_parity_entry(
+    e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32
+)->Result<WindowsFixedMaximumBatch,i32>{
+    use crate::v4_fixed_stream::DriverProof;
+    if !v3_ready(e,epoch,luid,ifindex)||!e.feature7||e.m2.is_none(){
+        return Err(BAD_STAGE)
+    }
+    let mut stream=e.fec2_tx.take().ok_or(BAD_STAGE)?;
+    if stream.profile_index()!=6{
+        e.fec2_tx=Some(stream);
+        return Err(INVALID)
+    }
+    let current=stream.revision();
+    let previous=stream.prior_parity_revision();
+    let mut out=WindowsFixedMaximumBatch{
+        count:0,rows:[empty_parity_row();20],
+    };
+    let mut err=None;
+    let result=stream.poll_parity_quanta(m2_clock(),5,|plain,_block,_row,revision|{
+        if (revision!=current&&Some(revision)!=previous)
+            ||out.count>=20{
+            err=Some(BAD_STAGE);return DriverProof::NotSent
+        }
+        let row=&mut out.rows[out.count];
+        match seal_symbol_entry(e,epoch,luid,ifindex,3,plain,&mut row.wire){
+            Ok((used,seq,pn))=>{
+                row.used=used as u32;row.seq=seq;row.pn=pn;
+                out.count+=1;DriverProof::Staged
+            },
+            Err(code)=>{err=Some(code);DriverProof::NotSent},
+        }
+    });
+    e.fec2_tx=Some(stream);
+    if let Some(code)=err{return Err(code)}
+    result.map_err(|_|BAD_STAGE)?;
+    Ok(out)
+}
+
 // Original-Go TLS-bound initial Fixed/Auto profile. Linux's exact
 // FixedStream starts at revision1 with an explicitly selected profile.
 // No source, staged ciphertext, M2 feedback, or parity may exist yet.
@@ -1309,5 +1356,54 @@ mod tests{
             assert_eq!(release(&mut r,h),OK);
         }
     }
+
+    #[cfg(feature="h2314_windows_fixed_max_burst")]
+    #[test]
+    fn m0_windows_fixed_maximum_twenty_frozen_rows_one_original_prefix(){
+        // Real original M1/M3 staging, synthetic definite-copy result:
+        // NOT an actual Windows NPF syscall or product delivery receipt.
+        let mut reg=Registry{generation:981,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=setup(&mut reg,false,701,70);
+        let ep=[2;16];
+        let mut end=600u32;
+        {
+            let mut e=reg.entries[&h].lock().unwrap();
+            m2_arm_entry(&mut e,ep,701,70).unwrap();
+            assert_eq!(e.fec2_tx.as_ref().unwrap().profile_index(),6);
+            for i in 0..16u8{
+                let mut wire=[0u8;2048];
+                let (n,seq,pn)=stage_fixed_source_entry(
+                    &mut e,ep,701,70,&data(i),&mut wire
+                ).unwrap();
+                assert_eq!(seq,end);
+                assert_eq!(pn,u64::from(i));
+                end=end.wrapping_add(n as u32);
+                m2_kernel_firstsend_entry(&mut e,ep,701,70,pn,seq,n,1)
+                    .expect("source firstsend copy");
+            }
+            let rows=stage_fixed_maximum_parity_entry(&mut e,ep,701,70)
+                .expect("old M1 5-quanta 20-parity job");
+            assert_eq!(rows.count,20);
+            for (i,row) in rows.rows.iter().enumerate(){
+                assert!(row.used>51);
+                assert_eq!(row.seq,end);
+                assert_eq!(row.pn,16+i as u64);
+                end=end.wrapping_add(row.used);
+            }
+            assert_eq!(e.fec2_tx.as_ref().unwrap().report().classes[0].r_sent,0);
+            assert_eq!(stage_fixed_maximum_parity_entry(&mut e,ep,701,70)
+                .unwrap().count,0,"outstanding staged ciphertext cannot reseal");
+            assert!(e.fec2_tx.as_mut().unwrap().settle_staged(19,0,0).is_err());
+            e.fec2_tx.as_mut().unwrap().settle_staged(20,0,0).unwrap();
+            assert_eq!(e.fec2_tx.as_ref().unwrap().report().classes[0].r_sent,20);
+            assert_eq!(stage_fixed_maximum_parity_entry(&mut e,ep,701,70)
+                .unwrap().count,0);
+        }
+        assert_eq!(quiesce_wintun(&mut reg,h,ep,701,70),OK);
+        assert_eq!(stop(&mut reg,h),OK);
+        assert_eq!(release(&mut reg,h),OK);
+    }
+
 
 }

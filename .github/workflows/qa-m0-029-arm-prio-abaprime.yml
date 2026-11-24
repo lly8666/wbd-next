@@ -1,0 +1,167 @@
+# H2265: experiment-only kernel priority with two child fq600 qdiscs, no Go/Rust product behavior change.
+# H2263/H2264: One native ARM64 runner, ONE declared FQ candidate per
+# SOURCE. Serial A(Go fq600) -> B(isolated test netns client TUN selected
+# per-flow cap 250 or 300Mbps) -> A'(Go fq600), same exact build/Stop.
+# Keep identical original Go TLS/Rust no-probe binaries, genuine TUN/raw,
+# four kernel TCP bulk +160 sparse UDP and small TCP and owned Stop each leg.
+# This is a test fixture qdisc contrast, NOT a product/default config change.
+name: M0 PLAN029 ARM64 original kernel service-order contrast
+run-name: "M0-029 ARM original fq600-prio-fq600 | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-arm-prio-abaprime.yml'
+      - 'tools/m0_029_product_shared_tun_noprobe.py'
+permissions:
+  contents: read
+jobs:
+  arm64-native-service-order:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-prio-arm]')
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 48
+    concurrency:
+      group: m0-029-prio-arm-${{ github.sha }}
+      cancel-in-progress: false
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      WBD_M0_029_NO_PROBE: "1"
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exact native ARM64 and existing source-locked build prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc nasm python3 iproute2 \
+            iputils-ping iptables ethtool iperf3 openssl
+          test -c /dev/net/tun
+          sudo -n true
+          python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
+          bash -n tools/m0_plan029_linux_dual_native_build.sh
+      - name: Single original Go TLS Rust no-probe build for all three legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh >plan029-linux-build.log 2>&1 || {
+            tail -n 125 plan029-linux-build.log >&2
+            exit 1
+          }
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os,platform,subprocess
+          b=pathlib.Path("linux-plan029-public-bundle")
+          m=json.loads((b/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]==platform.machine()=="aarch64"
+          assert m["m0_probe_compiled"] is False
+          assert (m["normal_linux_client_shared_tun_inbox_default"],
+                  m["normal_linux_server_shared_tun_inbox_default"]) == (128,64)
+          for k,v in m["sha256"].items():
+              assert hashlib.sha256((b/k).read_bytes()).hexdigest()==v
+          exported=subprocess.check_output(["nm","-D",str(b/"libwbd_engine.so")],text=True)
+          assert "wbd_m0_embedded_go_loop_debug_pause_jumbo" not in exported
+          print("M029_H2263_ONE_RELEASE_ORIGINAL_GO_RUST_ARM64_BUILD_PASS",flush=True)
+          PY
+      - name: Same native Go TLS A fq600 B kernel dual-fq priority A-prime original fq600 and Stop
+        shell: bash
+        timeout-minutes: 28
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          for leg in A B A_prime; do
+            echo "M029_H2263_BEGIN_LEG=$leg source=$GITHUB_SHA"
+            WBD_M0_029_PRIO_TRIAL_LEG="$leg" \
+            WBD_M0_029_ECHO_TIMELINE=1 \
+            WBD_M0_029_TCP_INFO=1 \
+            WBD_M0_029_SPARSE_TCP_DIAG=1 \
+              python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          done
+          python3 - <<'PY'
+          import json,os,pathlib
+          paths=["m029-product-shared-prio-a/summary.json",
+                 "m029-product-shared-prio-b/summary.json",
+                 "m029-product-shared-prio-a_prime/summary.json"]
+          rows=[json.loads(pathlib.Path(p).read_text()) for p in paths]
+          sha=os.environ["GITHUB_SHA"]
+          immutable=rows[0]["same_release_binary_sha256"]
+          digest=[]
+          for r,leg in zip(rows,("A","B","A_prime")):
+              assert r["source_sha"]==sha and r["arch"]=="aarch64"
+              assert r["same_release_binary_sha256"]==immutable
+              assert r["probe_compiled"] is False and r["independent_m1_m4_stage_observer"] is False
+              assert r["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
+              receipt=r["h2265_prio_trial"]
+              assert receipt["leg"]==leg
+              assert receipt["server_mode"]=="original_go_fq600"
+              assert receipt["original_go_rust_binary_unchanged"]
+              assert receipt["not_a_product_flow_classifier"]
+              assert receipt["client_mode"]==(
+                  "test_only_prio2_dual_child_fq600" if leg=="B" else "original_go_fq600")
+              if leg=="B":
+                  child={row.get("handle"):row for row in receipt["client_qdisc_after_business"]}
+                  assert all(child[h]["kind"]==kind for h,kind in (
+                      ("1:","prio"),("10:","fq"),("20:","fq")))
+                  assert all(child[h].get("packets",
+                      child[h].get("stats",{}).get("packets",0))>0 for h in ("10:","20:"))
+              assert all(r["owned_stop"][x]["generation"]>0 for x in ("client","server"))
+              assert r["server_native_outer_ready_readback"]["repair_enabled"]==0
+              assert r["measurement"]["original_product_tcp"]["tcp_streams"]==4
+              assert r["measurement"]["smallflow"]["status"]=="PASS_SCOPED_REAL_INNER_UDP_TCP_ECHO"
+              assert r["measurement"]["smallflow"]["tcp"]["requests_sent"]==160
+              assert r["measurement"]["smallflow"]["udp"]["requests_sent"]==160
+              assert r["tcp_directional_timeline"]["same_original_payload_and_real_160_sequences"]
+              assert len(r["tcp_directional_timeline"]["samples"])==160
+              assert r["native_tcp_info_timeline"]["echo_overlap_samples"]>=30
+              c=r["h2262_sparse_tcp_ingress"]["client"]
+              s=r["h2262_sparse_tcp_ingress"]["server"]
+              assert c["forward_offered"]>0 and c["forward_dropped"]<=c["forward_offered"]
+              assert s["reverse_offered"]>0 and s["reverse_dropped"]<=s["reverse_offered"]
+              m=r["measurement"]
+              digest.append({
+                  "leg":leg,"qdisc_mode":receipt["client_mode"],
+                  "receiver_mbps":round(m["original_product_tcp"]["receiver_bps"]/1_000_000,5),
+                  "client_cpu_seconds_per_rx_gib":m["cpu_and_rss"]["client"]["cpu_seconds_per_rx_gib"],
+                  "server_cpu_seconds_per_rx_gib":m["cpu_and_rss"]["server"]["cpu_seconds_per_rx_gib"],
+                  "udp_missing_of160":m["smallflow"]["udp"]["missing"],
+                  "tcp_missing_of160":m["smallflow"]["tcp"]["missing"],
+                  "small_tcp_survivor_p99_ms":m["smallflow"]["tcp"]["latency_ms"]["p99"],
+                  "sparse_tcp_forward_refused":c["forward_dropped"],
+                  "sparse_tcp_forward_offered":c["forward_offered"],
+                  "server_sparse_tcp_reverse_refused":s["reverse_dropped"],
+                  "original_client_allflow_full":r["owned_stop"]["client"]["queue_full_drops"]})
+          out={"study":"H2265","source_sha":sha,"run_id":os.environ["GITHUB_RUN_ID"],
+               "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"arch":"aarch64",
+               "scope":"only original Linux native netns full protected Go TLS/Rust at explicit outer1160, no injected loss",
+               "one_immutable_binary_bundle":immutable,
+               "single_factor":"isolated client TUN kernel fq600 -> prio2 two child fq600 -> fq600, only fixed genuine 160 TCP/UDP echo requests map high, bulk low, no product policy",
+               "not_product_default":True,"not_causal_if_baseline_drift_exceeds_effect":True,
+               "not_full_timed_delivery_or_qualifying_performance":True,
+               "legs":digest}
+          pathlib.Path("m029-h2265-prio-comparison.json").write_text(json.dumps(out,indent=2)+"\n")
+          for leg in digest: print("M029_H2265_REAL_ARM_SERVICE_ORDER "+json.dumps(leg,sort_keys=True),flush=True)
+          print("M029_H2265_NATIVE_ARM_PRIO_TWO_FQ_BANDS_ORIGINAL_GO_RUST_STOP_PASS_NOT_QOS_PASS",flush=True)
+          PY
+      - name: Upload exact-source native evidence and original per-leg artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-029-h2265-arm-prio-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            plan029-linux-build.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/SHA256SUMS
+            m029-product-shared-prio-*/
+            m029-h2265-prio-comparison.json
+          if-no-files-found: warn
+          retention-days: 21

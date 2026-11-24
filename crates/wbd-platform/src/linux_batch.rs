@@ -17,6 +17,7 @@ use std::io;
 use std::net::UdpSocket;
 use std::os::fd::{AsRawFd, RawFd};
 use std::ptr;
+use std::time::Instant;
 use wbd_types::buffer_contract::{driver_read, FrozenRecordHandle};
 
 const MSG_DONTWAIT: c_int = 0x40;
@@ -270,6 +271,24 @@ pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
     headers:&[[u8;80];MAX_READY_TX],header_lens:&[usize;MAX_READY_TX],
     records:&[H],
 )->KernelSendReport{
+    submit_scatter_fd_inner(fd,destination,headers,header_lens,records,None)
+}
+// H2258: only the sampled original RAW production call passes a receipt.
+// An absent receipt means sendmmsg was not invoked, NOT zero kernel cost.
+// The default public entry above remains the same synchronous syscall.
+pub(crate) fn submit_scatter_fd_sampled<H:FrozenRecordHandle>(
+    fd:RawFd,destination:std::net::SocketAddrV4,
+    headers:&[[u8;80];MAX_READY_TX],header_lens:&[usize;MAX_READY_TX],
+    records:&[H],kernel_call_elapsed_ns:&mut Option<u64>,
+)->KernelSendReport{
+    submit_scatter_fd_inner(fd,destination,headers,header_lens,records,
+        Some(kernel_call_elapsed_ns))
+}
+fn submit_scatter_fd_inner<H:FrozenRecordHandle>(
+    fd:RawFd,destination:std::net::SocketAddrV4,
+    headers:&[[u8;80];MAX_READY_TX],header_lens:&[usize;MAX_READY_TX],
+    records:&[H],kernel_call_elapsed_ns:Option<&mut Option<u64>>,
+)->KernelSendReport{
     let submitted=records.len().min(MAX_READY_TX);
     if submitted==0{return KernelSendReport{
         outcome:TxBatchOutcome::copied_all(0),signal:KernelSendSignal::None
@@ -305,9 +324,13 @@ pub(crate) fn submit_scatter_fd<H:FrozenRecordHandle>(
     // call, frozen records stay immutably borrowed and alive, two repr(C)
     // iovecs per packet, valid native sockaddr_in per message, vlen<=32,
     // nonblocking kernel copy. No kernel references escape on return.
+    let syscall_start=kernel_call_elapsed_ns.as_ref().map(|_|Instant::now());
     let sent=unsafe{sendmmsg(fd,messages.as_mut_ptr(),
         submitted as c_uint,MSG_DONTWAIT)};
     let errno=if sent<0{io::Error::last_os_error().raw_os_error()}else{None};
+    if let (Some(start),Some(out))=(syscall_start,kernel_call_elapsed_ns){
+        *out=Some(start.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
+    }
     let reported:[u32;MAX_READY_TX]=std::array::from_fn(|i|messages[i].msg_len);
     classify_report(sent,errno,submitted,records.len(),&reported,&expected)
 }

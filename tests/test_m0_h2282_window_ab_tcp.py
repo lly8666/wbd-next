@@ -1,0 +1,78 @@
+"""H2282: same-VM A/B/Aprime explicit socket buffer request, Windows/ARM real readback."""
+import pathlib
+import json
+import os
+import subprocess
+import socket
+import sys
+import unittest
+from unittest.mock import patch
+
+ROOT=pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/"tools"))
+import m0_h2276_three_runner_tcp as h
+
+
+class RealTCPWindowAB(unittest.TestCase):
+    def test_exact_three_independent_native_stages(self):
+        env=dict(os.environ, WBD_H2281_SUSTAINED_TCP="1",
+                 WBD_H2282_TCP_WINDOW_AB="1", WBD_H2279_CAPACITY_AB="0",
+                 WBD_H2284_EIGHT_TCP_CAPACITY="0")
+        code=("import json,sys;sys.path.insert(0,'tools');"
+              "import m0_h2276_three_runner_tcp as x;"
+              "print(json.dumps([x.WINDOW_AB,x.SUSTAINED,"
+              "x.active_stages(),[x.actual_loss_tier(y) for y in x.active_stages()],"
+              "x.tcp.BULK_MAX_BYTES,x.tcp.BULK_SEND_S,x.tcp.ECHO_COUNT]))")
+        p=subprocess.run([sys.executable,"-c",code],cwd=ROOT,env=env,
+                         capture_output=True,text=True,check=True)
+        self.assertEqual(json.loads(p.stdout),
+                         [True,True,["base","tuned","base_prime"],[0,0,0],
+                          512*1024*1024,25,160])
+
+    def test_real_local_os_socket_option_readback_for_tuned_leg(self):
+        previous=h.tcp.WINDOW_TEST_BYTES
+        try:
+            with patch.object(h,"WINDOW_AB",True), \
+                 patch.object(h,"CAPACITY_H2284",False), \
+                 patch.object(h,"WINDOW_B_BYTES",8*1024*1024):
+                self._assert_native_os_buffers()
+        finally:
+            h.tcp.WINDOW_TEST_BYTES=previous
+
+    def _assert_native_os_buffers(self):
+        try:
+            h.prepare_tcp_sockbuf("base")
+            self.assertEqual(h.tcp.WINDOW_TEST_BYTES,0)
+            h.prepare_tcp_sockbuf("tuned")
+            self.assertEqual(h.tcp.WINDOW_TEST_BYTES,8*1024*1024)
+            with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as sock:
+                before=h.tcp._read_socket_buffers(sock)
+                actual=h.tcp._maybe_set_buffers(sock)
+                self.assertEqual(before["requested_bytes"],8*1024*1024)
+                self.assertEqual(actual["requested_bytes"],8*1024*1024)
+                self.assertGreater(actual["sndbuf_os"],0)
+                self.assertGreater(actual["rcvbuf_os"],0)
+            h.prepare_tcp_sockbuf("base_prime")
+            self.assertEqual(h.tcp.WINDOW_TEST_BYTES,0)
+        finally:
+            h.tcp.WINDOW_TEST_BYTES=0
+
+    def test_two_source_identical_triplets_and_no_product_pass(self):
+        w=(ROOT/".github/workflows/qa-h2282-dual-arm-relay-window-ab-tcp.yml").read_text()
+        self.assertEqual(w.count("group: [a, b]"),3)
+        self.assertEqual(w.count("runs-on: ubuntu-24.04-arm"),2)
+        self.assertEqual(w.count("runs-on: windows-2025"),1)
+        self.assertEqual(w.count("uses: tailscale/github-action@v4"),3)
+        self.assertEqual(w.count("[m0-029-h2282-window-ab-3runner]"),3)
+        self.assertIn('WBD_H2281_SUSTAINED_TCP: "1"',w)
+        self.assertIn('WBD_H2282_TCP_WINDOW_AB: "1"',w)
+        self.assertEqual(
+          w.count("assert [x['stage_id'] for x in d['stages']]==['base','tuned','base_prime']"),2)
+        self.assertIn("PASS_H2282_REAL_NATIVE_WINSOCK_ARM_SOCKET_BUFFER_AB_SCOPED",w)
+        self.assertIn("REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",w)
+        self.assertIn("NOT measured here",w)
+        self.assertNotIn("PASS_FULL_PRODUCT_THROUGHPUT",w)
+
+
+if __name__=="__main__":
+    unittest.main()

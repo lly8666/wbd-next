@@ -1,0 +1,191 @@
+# H2268 offline evidence archived from prior full A/B/A-prime business SUCCESS;\n# previous same-source Action had test-only final digest typo, not a product failure.\n# H2268: Original real Go TLS/Rust Linux ARM64 1160 historic MTU comparator,
+# native kernel bidirectional 1% OR 5% iid loss, 200ms each way, TCP
+# long-lived 4 bulk + same 160 tiny app requests. OFF/ON/OFF actual outer
+# retransmission F/R counters, first delivery/late & Stop; never fake P99.
+name: M0 PLAN029 ARM native 1 and 5pct 200ms true TCP OFF ON OFF repair (H2270)
+run-name: "M0-029 native ARM loss1,5 200ms true outer OFF-ON-OFF | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-arm-loss1-loss5-200ms-outer-repair.yml'
+      - 'tools/m0_029_product_shared_tun_noprobe.py'
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+permissions:
+  contents: read
+jobs:
+  original-normal-shared-true-loss:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-loss200-arm]')
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        loss: [1, 5]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    concurrency:
+      group: m0-029-loss200-arm-${{ matrix.loss }}-${{ github.sha }}
+      cancel-in-progress: false
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      WBD_M0_029_NO_PROBE: "1"
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exact native ARM64 and existing source-locked build prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = aarch64
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(go version | awk '{print $3}')" = go1.23.12
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc nasm python3 iproute2 \
+            iputils-ping iptables ethtool iperf3 openssl
+          test -c /dev/net/tun
+          sudo -n true
+          python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
+          bash -n tools/m0_plan029_linux_dual_native_build.sh
+      - name: Single original Go TLS Rust no-probe build for all three legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh >plan029-linux-build.log 2>&1 || {
+            tail -n 125 plan029-linux-build.log >&2
+            exit 1
+          }
+          python3 - <<'PY'
+          import json,hashlib,pathlib,os,platform,subprocess
+          b=pathlib.Path("linux-plan029-public-bundle")
+          m=json.loads((b/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]==platform.machine()=="aarch64"
+          assert m["m0_probe_compiled"] is False
+          assert (m["normal_linux_client_shared_tun_inbox_default"],
+                  m["normal_linux_server_shared_tun_inbox_default"]) == (128,64)
+          for k,v in m["sha256"].items():
+              assert hashlib.sha256((b/k).read_bytes()).hexdigest()==v
+          exported=subprocess.check_output(["nm","-D",str(b/"libwbd_engine.so")],text=True)
+          assert "wbd_m0_embedded_go_loop_debug_pause_jumbo" not in exported
+          print("M029_H2268_ONE_RELEASE_ORIGINAL_GO_RUST_ARM64_BUILD_PASS",flush=True)
+          PY
+
+      - name: Native identical frozen outer1160 historical direct MTU true TCP 200ms loss ${{ matrix.loss }}% OFF ON OFF
+        shell: bash
+        timeout-minutes: 37
+        env:
+          LOSS: ${{ matrix.loss }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$LOSS" = 1 -o "$LOSS" = 5
+          for leg in A B A_prime; do
+            echo "M029_H2268_REAL_TCP_START loss=$LOSS leg=$leg sha=$GITHUB_SHA"
+            WBD_M0_029_LOSS_REPAIR_PCT="$LOSS" \
+            WBD_M0_029_LOSS_REPAIR_LEG="$leg" \
+            WBD_M0_029_ECHO_TIMELINE=1 \
+            WBD_M0_029_TCP_INFO=1 \
+            WBD_M0_029_SPARSE_TCP_DIAG=1 \
+              python3 -u tools/m0_029_product_shared_tun_noprobe.py
+          done
+          python3 - <<'PY'
+          import json,os,pathlib
+          loss=int(os.environ["LOSS"])
+          legs=("A","B","A_prime")
+          paths=[pathlib.Path("m029-product-shared-loss"+str(loss)+"-"+v.lower()+"/summary.json") for v in legs]
+          rows=[json.loads(p.read_text()) for p in paths]
+          sha=os.environ["GITHUB_SHA"]
+          bundle=rows[0]["same_release_binary_sha256"]
+          digest=[]
+          for row,leg in zip(rows,legs):
+              assert row["source_sha"]==sha and row["arch"]=="aarch64"
+              assert row["same_release_binary_sha256"]==bundle
+              assert row["probe_compiled"] is False
+              assert row["status"]=="PASS_SCOPED_REAL_NO_PROBE_SHARED_TUN_NORMAL_128_64"
+              proof=row["h2268_control"]
+              assert proof["leg"]==leg and proof["loss_percent"]==loss
+              assert proof["one_way_delay_ms"]==200 and proof["outer_ip_mtu"]==1160
+              assert proof["original_go_repair_on"]==(leg=="B")
+              assert proof["original_history_low_MTU_is_intentional_direct_comparator"] is True
+              assert len(proof["physical_router_and_endpoint_mtu"])==4
+              assert all(v==1200 for v in proof["physical_router_and_endpoint_mtu"].values())
+              assert row["server_native_outer_ready_readback"]["repair_enabled"]==int(leg=="B")
+              assert row["outer_repair_native_stop_readback"]["client"]==[int(leg=="B")]
+              assert all(row["owned_stop"][role]["generation"]>0 for role in ("client","server"))
+              assert row["measurement"]["original_product_tcp"]["tcp_streams"]==4
+              assert row["measurement"]["smallflow"]["tcp"]["requests_sent"]==160
+              assert row["measurement"]["smallflow"]["udp"]["requests_sent"]==160
+              actual=row["tcp_directional_timeline"]
+              assert len(actual["samples"])==160
+              assert row["native_tcp_info_timeline"]["echo_overlap_samples"]>=30
+              assert row["h2262_sparse_tcp_ingress"]["client"]["forward_offered"]>0
+              original=row["h2268_original_outer_m2_real_wire"]["client"]
+              assert len(original)==1 and original[0]["repair_enabled"]==int(leg=="B")
+              if leg=="B":
+                  assert original[0]["repair_accepted_wire_bytes"]>0, "H2270_REAL_ORIGINAL_ON_NO_ACTUAL_FROZEN_REPAIR"
+                  assert original[0]["original_frozen_retransmitted"]>0, "H2270_NO_IMMUTABLE_CIPHERTEXT_RETRANSMITTED"
+              if leg!="B":
+                  assert original[0]["repair_accepted_wire_bytes"]==0
+                  assert original[0]["repair_uncertain_wire_bytes"]==0
+                  assert original[0]["original_frozen_retransmitted"]==0
+              m=row["measurement"]
+              count_tcp=m["smallflow"]["tcp"]
+              count_udp=m["smallflow"]["udp"]
+              samples=actual["samples"]
+              # All 160 true application sequence observations are present
+              # in this stringent fixture; never infer timely from eventual.
+              late_1s=sum(x["end_to_end_ms"]>1000 for x in samples)
+              late_2s=sum(x["end_to_end_ms"]>2000 for x in samples)
+              udp_missing=count_udp["missing"]
+              tcp_missing=count_tcp["missing"]
+              diag=row["h2262_sparse_tcp_ingress"]["client"]
+              digest.append({
+                  "leg":leg,"loss_pct":loss,"one_way_ms":200,"outer_mtu":1160,
+                  "repair_on":leg=="B","same_go_tls_rust_release":True,
+                  "receiver_mbps":m["original_product_tcp"]["receiver_bps"]/1e6,
+                  "client_cpu_s_per_rx_gib":m["cpu_and_rss"]["client"]["cpu_seconds_per_rx_gib"],
+                  "server_cpu_s_per_rx_gib":m["cpu_and_rss"]["server"]["cpu_seconds_per_rx_gib"],
+                  "tcp_160_replied":160-tcp_missing,"tcp_p99_survivor_ms":count_tcp["latency_ms"]["p99"],
+                  "tcp_true_seq_late_above_1s":late_1s,"tcp_true_seq_late_above_2s":late_2s,
+                  "tcp_forward_app_p99_ms":actual["summaries_ms"]["forward_app_observed_ms"]["p99"],
+                  "tcp_info_retrans_segments":row["native_tcp_info_timeline"]["retransmitted_tcp_segments_delta"],
+                  "tcp_first_fragment_source_offered":diag["forward_offered"],
+                  "tcp_first_fragment_source_refused":diag["forward_dropped"],
+                  "udp_missing_of160":udp_missing,
+                  "client_allflow_queue_full":row["owned_stop"]["client"]["queue_full_drops"],
+                  "original_native_repair_wire":original[0],
+                  "kernel_qdisc_after_tls":row["actual_router_netem"]})
+          result={"study":"H2268","status":"REAL_ORIGINAL_NORMAL_TCP_LOSS_A_B_APRIME_FUNCTIONAL_ONLY_NOT_QOS_PROMOTION",
+             "source_sha":sha,"run_id":os.environ["GITHUB_RUN_ID"],
+             "attempt":os.environ["GITHUB_RUN_ATTEMPT"],"arch":"aarch64",
+             "loss_pct":loss,"one_way_delay_ms":200,"rtt_floor_ms":400,
+             "note":"native real original Go TLS/Rust shared Normal/off; deliberate outer1160 and original underlay1200 for historic direct comparator, A repairOFF, B repairON, A-prime repairOFF, exact 160 original TCP app sequences plus independent UDP missing; actual wire repair and native Stop, not synthetic TCP ACK",
+             "binary_sha256":bundle,"legs":digest,
+             "do_not_assume_p99_pass_from_160_eventual":True,
+             "not_windows_real_native":True}
+          pathlib.Path("m029-h2268-loss"+str(loss)+"-comparison.json").write_text(json.dumps(result,indent=2)+"\n")
+          for leg in digest:
+              keys=tuple(k for k in leg if k not in ("kernel_qdisc_after_tls","original_native_repair_wire"))
+              print("M029_H2268_ACTUAL_NATIVE_TAIL "+json.dumps({k:leg[k] for k in keys}),flush=True)
+          print("M029_H2268_COMPLETE_NATIVE_TEST_NOT_P99_PASS loss="+str(loss),flush=True)
+          PY
+      - name: Upload true-source evidence even if one leg fails
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-029-h2268-arm-loss${{ matrix.loss }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            plan029-linux-build.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/SHA256SUMS
+            m029-product-shared-loss${{ matrix.loss }}-*/
+            m029-h2268-loss${{ matrix.loss }}-comparison.json
+          if-no-files-found: warn
+          retention-days: 21

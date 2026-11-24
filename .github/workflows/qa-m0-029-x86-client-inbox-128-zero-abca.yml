@@ -1,0 +1,110 @@
+# Following the negative server-inbox256 A/B/A, test ONLY the much more
+# pressured client data-source inbox with a genuine original-Go/Rust owner.
+# Same native ARM64 runner, one source/binary build, 0% 0ms, A64/B128/A'64.
+name: M0 PLAN029 x86_64 client 128 low-memory real zero-loss ABA
+run-name: "M0-029-x86 client zero A64-B128-A64 | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-m0-029-x86-client-inbox-128-zero-abca.yml'
+      - 'tools/m0_029_native_x86_client_inbox_128_zero_abca.py'
+  workflow_dispatch: {}
+permissions: {contents: read}
+concurrency:
+  group: m0-029-arm-client-inbox-zero-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  genuine-client-inbox-aba:
+    name: 'Native ARM64 original Go TLS Rust true client M1 cold slots'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", check-latest: false, cache: false}
+      - name: Exact-source native runner / nonfake cold client and server slot checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = x86_64
+          test -c /dev/net/tun
+          sudo -n true
+          test "$(git hash-object tools/m0_029_native_inbox_abca_x86.py)" = c77885ecfec42dba06bee76d015875f62ec89fc9
+          python3 -m py_compile tools/m0_029_native_x86_client_inbox_128_zero_abca.py \
+            tools/m0_029_native_inbox_abca_x86.py tools/m0_h2244_smallflow_echo.py
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('tools/m0_029_native_x86_client_inbox_128_zero_abca.py').read_text()
+          for needle in ('M029_CLIENT_128_COLD_INBOX_NOT_ACTUALLY_APPLIED',
+                         'M029_CLIENT_128_SERVER_CONTROL_CAPACITY_CHANGED',
+                         'native_cold_readback_verified',
+                         '"delay","0ms","loss","0%"',
+                         'M029_CLIENT_128_NATIVE_RECEIPT_UNAVAILABLE'):
+              assert needle in s,needle
+          assert "WBD_H2241" not in s
+          assert 'selected=128 if stage_slots==256 else 64' in s
+          print("M029_X86_REAL_CLIENT_M1_64_128_64_SOURCE_PASS",flush=True)
+          PY
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            autoconf automake libtool make gcc g++ nasm python3 \
+            iproute2 iptables iputils-ping ethtool iperf3 openssl
+      - name: One exact-SOURCE original Go TLS Rust ISA-L release build
+        shell: bash
+        timeout-minutes: 25
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh >m029-x86-client-128-zero-build.log 2>&1 || \
+            { tail -n 100 m029-x86-client-128-zero-build.log;exit 2; }
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open('linux-plan029-public-bundle/manifest.json'))
+          assert m['source_sha']==os.environ['GITHUB_SHA']
+          assert m['architecture']=='x86_64'
+          assert len(m['sha256'])==3
+          print("M029_CLIENT_128_GORUST_RELEASE_SOURCE_MATCH",flush=True)
+          PY
+      - name: Three genuine zero-loss 4-flow plus concurrent small client-only M1 inbox legs
+        shell: bash
+        timeout-minutes: 17
+        run: |
+          set -euo pipefail
+          python3 tools/m0_029_native_x86_client_inbox_128_zero_abca.py
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('m029-x86-client-inbox-128-zero-abca/summary.json'))
+          assert d['status']=='PASS_SCOPED_REAL_ABA_MEASURED_NOT_PRODUCT_GAIN'
+          assert d['architecture']=='x86_64'
+          assert d['base_fixture_git_blob_sha']=='c77885ecfec42dba06bee76d015875f62ec89fc9'
+          assert d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['scenario']=='ZERO_LOSS_0MS_NATIVE_X86_64_CLIENT_ONLY_INBOX_128_ABA'
+          assert [x['client_inbox_slots'] for x in d['phases']]==[64,128,64]
+          assert [x['name'] for x in d['phases']]==[
+              'original_before','inbox128_candidate','original_after']
+          assert [x['server_inbox_slots'] for x in d['phases']]==[64,64,64]
+          assert all(x['native_cold_readback_verified']
+                     and x['client_generation']>0 and x['server_generation']>0
+                     and x['measure']['original_product_tcp']['tcp_streams']==4
+                     and all(x['owned_stop'][role]['generation']>0
+                             for role in ('client','server'))
+                     for x in d['phases'])
+          print('M029_CLIENT_INBOX_ONLY_ZERO_REAL_ABA_SOURCE_MEASURED_NOT_GAIN',flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-029-x86-client-inbox-128-zero-aba-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            m029-x86-client-inbox-128-zero-abca/
+            m029-x86-client-128-zero-build.log
+          retention-days: 14
+          if-no-files-found: warn
