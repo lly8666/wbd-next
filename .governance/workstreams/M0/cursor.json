@@ -4,26 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2382,
-  "checkpoint_sha": "415aa5e02239d757fb40d068a2247144a76fc4de",
-  "progress": "verifying",
+  "sequence": 2384,
+  "checkpoint_sha": "b3bbf8dd222e8ac1734be472fe8c34b4794e4226",
+  "progress": "paused",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "用户最终交付：中国域名离线内置+GUI手动更新/导入，Windows amd64 GUI完整包与Linux ARM64 server。H2376主线双ISA原生通过，性能和多线程不再开发。H2379产品SOURCE f0e8e5a2，PR72，双平台发布在途。",
-  "why_now": "用户明确只补中国域名最终缺口并简单测试，交付同源两端实际构件。",
-  "done_when": "内置规则真实来源及离线加载、手动更新失败保留、Rust规则语义、GUI自测、ARM64短功能验证、同源真实发布包与SHA；集成PR72，交付可验证下载。不要重开性能/线程研究。",
-  "next_action": "仅收45338373098 Windows/ARM64发布结果和45338590404治理；若失败修首个实际功能/构建缺陷，成功后核真实ZIP/TAR并选择性集成PR72，交付用户。",
-  "unverified": true,
-  "last_tested_source": "130555c806e4c32bf34075883321f366d5912a5c",
+  "current_task": "用户最终交付完成并收口：CN域名内置/更新/导入，Windows amd64 GUI完整包+Linux ARM64 server 同源实际交付；PR72已合main。",
+  "why_now": "用户只要求补最后CN功能、简单测试、交付两平台，明确不再多线程/吞吐优化。",
+  "done_when": "已满足用户限定交付：实际8472规则Go及Rust，手动更新失败保留原文件，Windows GUI432项、ARM64五模式真网，双平台同源包已下载并独立校验；物理跨机/全面性能未验仍保留限制。",
+  "next_action": "本轮用户指定开发及交付结束，停止主动优化和新实验；保留已知未验边界，等待明确新任务。",
+  "unverified": false,
+  "last_tested_source": "f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
-    "docs/evidence/M0/PLAN029-TCP-PERFORMANCE-EXPERIMENT-AUDIT-20261121-20261122.md",
-    "docs/prompts/M0.md",
-    "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json",
-    "docs/evidence/M0/20261124-H2370-REPAIR-COMPLETION-RESUME.json",
     "docs/evidence/M0/20261124-H2376-FAIRNESS-FEC-CLOSEOUT.json",
-    "docs/evidence/M0/20261124-H2381-CN-FINAL-DELIVERY-RESUME.json"
+    "docs/evidence/M0/20261124-H2381-CN-FINAL-DELIVERY-RESUME.json",
+    "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2376 main双ISA PASS。CN final branch PR72，H2378初版Windows未用fmt编译失败，H2379已修；同源f0e8e5a2 release45338373098，两个平台在途；H2380/H2381仅文档治理修订，未冒充构件发布。"
+  "partial_summary": "H2379 release45338373098 2/2 PASS；8472 CN规则Go/Rust实读，GUI432 PASS，Linux ARM64五模式真实功能PASS。Windows artifact14895581473、ARM64 artifact14895650652，实际包SHA已校验；PR72 merge69b9b139，主线与测试源仅文档差异。P0/P1/FEC/线程研究停止；用户交付范围完成。"
 }
