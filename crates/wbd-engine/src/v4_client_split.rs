@@ -216,7 +216,7 @@ impl DomainIndex {
         #[cfg(feature="m0_v4_embedded_go")]
         if !self.keywords.is_empty()||!self.regex.is_empty(){
             let normalized=domain.trim_end_matches('.').to_ascii_lowercase();
-            if self.keywords.iter().any(|key|normalized.contains(key))||
+            if self.keywords.iter().any(|key|normalized.contains(key.as_str()))||
                 self.regex.iter().any(|rule|rule.is_match(&normalized)){return Ok(true)}
         }
         Ok(false)

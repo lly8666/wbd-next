@@ -1919,7 +1919,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "4044ab7b8e7ebfb4061f779913813ed986f16f3b"
+      "result_blob": "904afaf7fdb028f7131d387fcfe0458803a4e7b3"
     },
     {
       "kind": "create",
