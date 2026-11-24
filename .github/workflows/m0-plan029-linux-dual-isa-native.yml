@@ -81,6 +81,11 @@ jobs:
           assert m["rust_native_fec_acceleration"] is True
           print("PLAN029_LINUX_NATIVE_BINARIES_VERIFIED arch="+platform.machine(),flush=True)
           PY
+      - name: Existing SharedTun and H2372 fair admission native regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.85.1 test --locked -p wbd-engine --lib --features m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record shared_tun
       - name: Five original dual-endpoint Linux real kernel modes on this one ISA
         shell: bash
         run: |
