@@ -4,24 +4,25 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2412,
-  "checkpoint_sha": "83d8383a6d975116041a5b7519ba0fcfe25aa80a",
-  "progress": "verifying",
+  "sequence": 2413,
+  "checkpoint_sha": "063ca71b7ddf927cb3b00332d0d2b40a294c26b0",
+  "progress": "paused",
   "task_id": "M0-LINUX-GLIBC231",
-  "current_task": "Linux x86_64/aarch64统一glibc2.31发行基线，完整客户端/服务端+Rust SO；experiment/m0-linux-glibc231",
+  "current_task": "Linux x86_64/aarch64统一glibc2.31发行基线：PR76已合main，双ISA兼容/Normal性能限域PASS",
   "why_now": "用户报告Ubuntu20.04 ARM64无法加载，明确要求双ISA双端一次解决及简单性能对照",
   "done_when": "两ISA三ELF<=GLIBC_2.31、Focal用户态真实业务及Stop、同机TCP A/B/A及CPU证据；不动数据面",
-  "next_action": "收 PR76 SOURCE f722381ca5d3ba6781f80a1561a0e1012a5e105f Action45414127999；双ISA编译/ELF/Focal/同机TCP A/B/A；未完成不得合入。",
-  "unverified": true,
-  "last_tested_source": null,
-  "evidence_refs": [],
+  "next_action": "本次用户授权的glibc2.31限域交付已完成，交付Action45415625160原始配套包；收main自动集成CI（不重复dispatch），物理Ubuntu20.04旧内核若用户复测再登记；先前H2409 NAT/热换lane未验事项仍保留，后续恢复原任务。",
+  "unverified": false,
+  "last_tested_source": "32193483a9f5bb962d2ec2ddfa1ea84d2f60b6b6",
+  "evidence_refs": [
+    "docs/evidence/M0/20261124-LINUX-GLIBC231-DUAL-ISA-SCOPED-PASS.json"
+  ],
   "context_refs": [
     "docs/decisions/M0-LINUX-GLIBC231-20261124.md",
+    "docs/devlog/M0/20261124-LINUX-GLIBC231-BUILD-TRIAL.md",
     "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
-    "docs/devlog/M0/20261124-H2411-LINUX-GLIBC231-HANDOFF.md",
-    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md",
-    "docs/devlog/M0/20261124-H2412-LINUX-GLIBC231-ISAL-BUILD.md"
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "第二轮双ISA成功安装ISA-L，归档检查附近退出，未编译Rust；完整nm输出修复已推。第三轮Action45414127999在途；修正cursor证据/上下文分类，未伪造PASS。"
+  "partial_summary": "Action45415625160双ISA三ELF最高2.28、Focal用户态真实TCP/UDP/Stop及同VM Normal TCP A/B/A通过，x86吞吐+0.47% CPU/GiB+1.33%，ARM+0.26%/-0.77%。精确候选SOURCE独立验包；PR76已合。源码差异仅文档/测试；物理5.4、FEC/弱网/P99未验，不宣称全面产品PASS。"
 }
