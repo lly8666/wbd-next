@@ -178,6 +178,12 @@ func (a *ClientAssociation) HandleSegment(seg Segment, now time.Time) error {
 		a.mu.Unlock()
 		return ErrClientHandshake
 	}
+	// The reader can race Detach between its State check and this lock.
+	// No late cold control, including RST, can close a detached owner.
+	if a.state == ClientAssociationDetached {
+		a.mu.Unlock()
+		return ErrClientDetached
+	}
 	if seg.Flags&FlagRST != 0 {
 		a.closeLocked(ErrBootstrapClosed)
 		a.mu.Unlock()
@@ -234,10 +240,6 @@ func (a *ClientAssociation) HandleSegment(seg Segment, now time.Time) error {
 		return emit(ack)
 	}
 
-	if a.state == ClientAssociationDetached {
-		a.mu.Unlock()
-		return ErrClientDetached
-	}
 	if a.state != ClientAssociationEstablished || a.bootstrap == nil {
 		a.mu.Unlock()
 		return ErrClientHandshake
@@ -361,8 +363,8 @@ func (a *ClientAssociation) Detach() (ClientHandoff, error) {
 	return handoff, nil
 }
 
-// RepeatGameColdFinalACK sends only the frozen cumulative TLS ACK before
-// the Game NPF reader is handed to Rust. A duplicate wholly below the
+// RepeatGameColdFinalACK is shared by Normal and Game cold handoff.
+// It sends only the frozen cumulative TLS ACK. A duplicate wholly below the
 // original receive boundary is old bootstrap, never a new native record.
 // A nil duplicate requests a repeat immediately after Detach.
 func (a *ClientAssociation) RepeatGameColdFinalACK(duplicate *Segment) (bool,error) {

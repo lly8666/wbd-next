@@ -816,34 +816,33 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    if e!=nil{
     select{case <-rustHandoff:return;default:}
     select{case failure<-fmt.Errorf("native NPF ReadSegment failed: %w",e):default:}
+    if assoc.State()!=faketcp.ClientAssociationDetached{assoc.Close()}
     return
    }
-   if assoc.State()==faketcp.ClientAssociationDetached{
-    // Fixed 64-slot original NPF ingress, Rust M3 remains the sole authenticator.
-    // A full pre-auth queue is an explicit LOCAL packet drop, not a valid
-    // Rust receipt, TCP carrier acknowledgement or connection-wide Stop.
-    select{case nativeFrames<-seg:
-    default:
-     if seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{
-      select{case failure<-fmt.Errorf("%w: real peer FIN/RST on saturated original NPF ingress",windowsclient.ErrN4NativeGuard):default:}
+   if assoc.State()!=faketcp.ClientAssociationDetached{
+    if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
+     if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
+      select{case failure<-windowsclient.ErrN4NativeGuard:default:}
+      assoc.Close()
       return
      }
-     ingressLocalDrops.Add(1)
+     fmt.Printf("WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=%d peer_advertised_mss=%d local_advertised_mss=%d\n",
+      generation,seg.MSS,cold.AdvertisedSynMSS)
     }
-    continue
-   }
-   if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
-    if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
-     select{case failure<-windowsclient.ErrN4NativeGuard:default:}
+    e=assoc.HandleSegment(seg,time.Now())
+    if !errors.Is(e,faketcp.ErrClientDetached){
+     if e==nil||errors.Is(e,faketcp.ErrClientHandshake)&&assoc.State()==faketcp.ClientAssociationSYNSent{continue}
+     select{case failure<-e:default:}
+     assoc.Close()
      return
     }
-    fmt.Printf("WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=%d peer_advertised_mss=%d local_advertised_mss=%d\n",
-     generation,seg.MSS,cold.AdvertisedSynMSS)
    }
-   if e=assoc.HandleSegment(seg,time.Now());e!=nil{
-    select{case failure<-e:default:}
-    return
-   }
+   // Same detached cold handoff as Game: old TLS bytes only recover
+   // their cumulative ACK, pure late TCP control is not a native failure.
+   if handled,_:=assoc.RepeatGameColdFinalACK(&seg);handled{continue}
+   if len(seg.Payload)==0{continue}
+   select{case nativeFrames<-seg:default:ingressLocalDrops.Add(1)}
+
   }
  }()
  defer func(){ _=endpoint.Close();readers.Wait() }()
@@ -861,7 +860,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    if e!=nil{return m0WindowsTagOriginalColdTransport(e)}
    break waitHandshake
   case <-ticker.C:
-   if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return e}
+   if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return m0WindowsTagOriginalColdTransport(e)}
   }
  }
  // Original pinned TLS handshake, protected credentials, exact

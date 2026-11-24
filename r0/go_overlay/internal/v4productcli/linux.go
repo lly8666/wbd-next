@@ -1364,11 +1364,17 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 log.Printf("V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS_V1 side=client peer_advertised_mss=%d",seg.MSS)
             }
             if assoc.State()!=faketcp.ClientAssociationDetached{
-                if e:=assoc.HandleSegment(seg,time.Now());e!=nil &&
-                   !errors.Is(e,faketcp.ErrClientDetached){
-                    select{case errs<-e:default:}
+                e:=assoc.HandleSegment(seg,time.Now())
+                if !errors.Is(e,faketcp.ErrClientDetached){
+                    if e!=nil&&!(errors.Is(e,faketcp.ErrClientHandshake)&&
+                        assoc.State()==faketcp.ClientAssociationSYNSent){
+                        select{case errs<-e:default:}
+                    }
+                    continue
                 }
-            }else if handoffCommitted.Load()&&len(seg.Payload)!=0{
+            }
+            if handled,_:=assoc.RepeatGameColdFinalACK(&seg);handled{continue}
+            if handoffCommitted.Load()&&len(seg.Payload)!=0{
                 goPostHandoffDataCopies.Add(1)
             }
         }
@@ -1376,14 +1382,18 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     coldSynStart:=time.Now()
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_start unix_ms=%d",coldSynStart.UnixMilli())}
     if err:=assoc.Start(coldSynStart);err!=nil{return err}
-    dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
-    defer cancel()
+    synCtx,cancelSYN:=context.WithTimeout(ctx,20*time.Second)
+    defer cancelSYN()
     // A first SYN may precede server AF_PACKET bind just as a post-dead
     // SYN can. Drive the SAME original bounded FakeTCP RTO/MaxSYNRetries
     // at initial connect and cold reauth. Association freezes local MSS at
     // creation; retries cannot change SYN TCP options or skip TLS admission.
-    err=waitForOriginalColdSYN(dialCtx,assoc)
+    err=waitForOriginalColdSYN(synCtx,assoc)
+    cancelSYN()
     if err!=nil{return err}
+    // SYN loss must not consume the following independent TLS deadline.
+    dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
+    defer cancel()
     if coldReauth{log.Printf("V4_PUBLIC_COLD_STAGE role=client stage=syn_established unix_ms=%d elapsed_ms=%d",time.Now().UnixMilli(),time.Since(coldSynStart).Milliseconds())}
     var policy realityfront.AdmissionPolicy
     switch c.fecMode{

@@ -108,6 +108,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if cold.ServerSide(){return nil,ErrAdmissionParams}
     handoff,err:=assoc.Detach()
     if err!=nil{return nil,err}
+    for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
     bridge:=&v4EmbeddedNativeBridge{}
     if err=bridge.prepareAuthenticatedClient(session,handoff,assoc.Flow());err!=nil{
         return nil,fmt.Errorf("V4 genuine Go client TLS/native owner: %w",err)

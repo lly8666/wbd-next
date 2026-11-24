@@ -63,4 +63,11 @@ func TestH2402GameColdFinalACKRespondsOnlyBelowDetachedBoundary(t *testing.T){
     if ack.Flags!=FlagACK||ack.Seq!=h.SendNext||ack.Ack!=h.ReceiveNext||ack.Window!=h.AdvertisedWindow||len(ack.Payload)!=0{t.Fatalf("wrong frozen ACK %+v",ack)}
     data.Seq=h.ReceiveNext
     if ok,err=a.RepeatGameColdFinalACK(&data);ok||err!=nil{t.Fatalf("fresh native DATA mistaken for TLS duplicate")}
+    // Same association code serves Normal and Game. Detach may race the
+    // cold observer's State check; late RST must not destroy the handoff.
+    rst:=synack;rst.Flags=FlagRST
+    if err=a.HandleSegment(rst,time.Now());!errors.Is(err,ErrClientDetached){
+        t.Fatalf("late cold RST err=%v",err)
+    }
+    if a.State()!=ClientAssociationDetached{t.Fatal("late cold RST closed detached owner")}
 }

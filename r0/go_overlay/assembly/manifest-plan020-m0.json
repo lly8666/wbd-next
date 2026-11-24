@@ -1444,7 +1444,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
-      "result_blob": "fec319274bc6517961662c204d3e031eca1b0684"
+      "result_blob": "f296543ed86bb85175e6ce71896d2b553102a0be"
     },
     {
       "kind": "create",
@@ -1698,7 +1698,7 @@
       "path": "internal/faketcp/client_association.go",
       "original_blob": "83e85b4871ee59e7ab47ea2b53387bef584898c4",
       "overlay_path": "r0/go_overlay/internal/faketcp/client_association.go",
-      "result_blob": "48f5e419ac12d7380cb24ab43034564117cea777"
+      "result_blob": "5b8b0a60cb5552f8861b134a8e701cdd269e1a43"
     },
     {
       "kind": "replace",
@@ -1782,7 +1782,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "ac5c4abeda3a229832a66f6c0fb224f403e54806"
+      "result_blob": "f547e4f495f2437532c849b7f337d96c65f9d186"
     },
     {
       "kind": "replace",
@@ -1832,7 +1832,7 @@
       "kind": "create",
       "path": "internal/faketcp/transition_h1285_association_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/transition_h1285_association_test.go",
-      "result_blob": "6b5460f3ffafad537a8237b5485dc8e3997d2a78"
+      "result_blob": "87be0617c61eef281a49c8acf8d194ffbcc7a602"
     },
     {
       "kind": "replace",
