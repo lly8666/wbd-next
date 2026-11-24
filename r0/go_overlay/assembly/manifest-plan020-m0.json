@@ -2027,13 +2027,13 @@
       "kind": "create",
       "path": "internal/v4productcli/management_snapshot_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_snapshot_linux.go",
-      "result_blob": "6d64803d4d6278c0b67fc7775f61bd3cb05dbb49"
+      "result_blob": "a960008eb132075d9e64f233771d86939ee1b025"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/management_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_linux_test.go",
-      "result_blob": "34d148435647e9cb8776b54eb9fed58bdcfdc589"
+      "result_blob": "d2ef29adc82c7f5794c7c0dddebccd202fdbb4bf"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

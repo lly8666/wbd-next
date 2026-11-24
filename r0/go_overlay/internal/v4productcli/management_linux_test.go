@@ -8,6 +8,8 @@ import(
  "strings"
  "testing"
  "time"
+
+ "github.com/lly8666/wobuzhidao/internal/realityfront"
 )
 func TestPLAN030ConfigReusesServerParser(t *testing.T){
  dir:=t.TempDir()
@@ -59,6 +61,11 @@ func TestPLAN030WatchCountersAndNegotiatedBudget(t *testing.T){
  r.applyNegotiatedBudget()
  if r.NegotiatedInnerCap==nil||*r.NegotiatedInnerCap!=1298{t.Fatalf("expected canonical Game FEC budget: %+v",r)}
  if r.ClientOuterSetting!=nil||r.ClientOSInnerMTU!=nil{t.Fatal("guessed remote MTU")}
+ normal:=managedClient{Lanes:1}
+ normal.applyIdentity(realityfront.ManagementSessionIdentity{NormalFECOff:true,ClientRecordLimit:1420,ServerRecordLimit:1420})
+ normal.applyNegotiatedBudget()
+ if normal.FEC!="off"||normal.NegotiatedInnerCap==nil||*normal.NegotiatedInnerCap!=1389{t.Fatalf("authenticated Normal/off budget missing: %+v",normal)}
+ if normal.ClientOSInnerMTU!=nil{t.Fatal("guessed remote OS MTU")}
 }
 
 func TestPLAN030ManualAccountLeaseUsesOriginalParser(t *testing.T){

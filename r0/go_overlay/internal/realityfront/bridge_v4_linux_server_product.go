@@ -463,13 +463,14 @@ type ManagementSessionIdentity struct {
     Incarnation [16]byte
     Cipher uint8
     ClientRecordLimit, ServerRecordLimit uint16
+    NormalFECOff bool
 }
 func managementSessionIdentity(s *V4ServerSession)(ManagementSessionIdentity,error){
     if s==nil{return ManagementSessionIdentity{},ErrAdmissionUnsupported}
     cold,e:=s.ColdSnapshot();if e!=nil{return ManagementSessionIdentity{},e}
     lease,e:=s.AuthenticatedLeaseIPv4();if e!=nil{return ManagementSessionIdentity{},e}
     cl,sl:=cold.RecordLimits()
-    return ManagementSessionIdentity{cold.Principal(),lease,cold.Epoch(),cold.Incarnation(),cold.Cipher(),cl,sl},nil
+    return ManagementSessionIdentity{cold.Principal(),lease,cold.Epoch(),cold.Incarnation(),cold.Cipher(),cl,sl,s.verifiedPolicy.Transport==TransportNormal&&s.verifiedPolicy.FECMode==FECOff},nil
 }
 func(p *V4LinuxServerProduct) ManagementIdentity()(ManagementSessionIdentity,error){
     p.mu.Lock();defer p.mu.Unlock()

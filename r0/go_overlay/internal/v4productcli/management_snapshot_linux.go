@@ -62,6 +62,10 @@ func managedClientFor(key realityfront.V4LinuxGameCohortID,ip [4]byte,lease stri
 }
 func(r *managedClient)applyIdentity(i realityfront.ManagementSessionIdentity){
  r.Account=i.Principal;r.TunnelIP=i.Lease;r.Session=hex.EncodeToString(i.Epoch[:8]);if r.Lanes==1{r.Session=hex.EncodeToString(i.Incarnation[:8])};r.ClientRecordLimit=i.ClientRecordLimit;r.ServerRecordLimit=i.ServerRecordLimit
+ // Normal/off has no FEC owner to query; the authenticated policy is
+ // the existing cold source for this mode. Runtime FEC readback still
+ // supplies the other modes.
+ if i.NormalFECOff{r.FEC="off"}
  switch i.Cipher{case realityfront.CipherChaCha:r.Cipher="chacha20-poly1305";case realityfront.CipherAES256:r.Cipher="aes-256-gcm";case realityfront.CipherAES128:r.Cipher="aes-128-gcm"}
 }
 // Reuse the negotiated wire-record cap and the sole Rust budget ABI.

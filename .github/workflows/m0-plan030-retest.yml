@@ -1,5 +1,5 @@
 name: PLAN030 targeted fixture-only retest
-run-name: "PLAN030 H2393 targeted Windows domain | ${{ github.sha }}"
+run-name: "PLAN030 H2394 Normal/off management snapshot and Windows domain | ${{ github.sha }}"
 on:
   push:
     branches: [experiment/m0-030-server-cli]
