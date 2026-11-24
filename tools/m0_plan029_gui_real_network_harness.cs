@@ -181,7 +181,13 @@ public static class Plan029GuiReal {
    if(normalReconnect){
     // Normal user-disconnect then user-connect only. No power cut,
     // forced process kill, new service, injected network fault or timer.
-    Click(form,"断开连接");
+    if(Environment.GetEnvironmentVariable("WBD_PLAN030_MANAGED_COMBO")=="1"){
+     // Invoke the same real MainForm action; expose exceptions instead of
+     // leaving a modal dialog blocking the unattended test runner.
+     var stopFirst=form.DisconnectAsync();
+     clock.Restart();while(!stopFirst.IsCompleted && clock.ElapsedMilliseconds<34000)Tick();
+     Need(stopFirst.IsCompleted,"managed combination first GUI Stop did not return");stopFirst.GetAwaiter().GetResult();
+    }else Click(form,"断开连接");
     clock.Restart();
     while(clock.ElapsedMilliseconds<34000){
      Tick();
@@ -198,7 +204,10 @@ public static class Plan029GuiReal {
     Console.WriteLine("PLAN029_H2061_NORMAL_GUI_FIRST_DISCONNECT_WAL_ABSENT_PASS");
     Console.Out.Flush();
     ready=false;applied=false;inner=false;
-    Click(form,"连接 / 切换");
+    if(Environment.GetEnvironmentVariable("WBD_PLAN030_MANAGED_COMBO")=="1"){
+     var second=form.ConnectSelectedAsync();clock.Restart();while(!second.IsCompleted&&clock.ElapsedMilliseconds<25000)Tick();
+     Need(second.IsCompleted,"managed combination second GUI Connect did not return");second.GetAwaiter().GetResult();
+    }else Click(form,"连接 / 切换");
     Console.WriteLine("PLAN029_H2064_SECOND_REAL_GUI_ENABLED_BUTTON_CLICKED");
     Console.Out.Flush();
     clock.Restart();

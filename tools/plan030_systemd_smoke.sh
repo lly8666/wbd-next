@@ -25,6 +25,8 @@ cat >"$T/config.json" <<'JSON'
 JSON
 chmod 0600 "$T/config.json"
 "$PKG/wbd-next" --help
+printf "" | "$PKG/wbd-next" >"$T/non-tty.log"
+grep -q "wbd-next install" "$T/non-tty.log"
 sudo "$PKG/wbd-next" install --config "$T/config.json"
 sudo systemctl is-active --quiet wbd-next.service
 sudo systemctl is-enabled --quiet wbd-next.service
@@ -38,6 +40,10 @@ assert len(s["source_sha"])==40 and s["dormant_devices"] is None,s
 assert c["state"]=="ready" and c["tun_os_mtu"]>0 and c["clients"]==[],c
 PY
 sudo wbd-next config check
+sudo wbd-next status | grep -q "运行中"
+sudo wbd-next clients | grep -q "在线设备"
+sudo wbd-next logs >"$T/logs.txt"
+grep -q "V4_PUBLIC_MIXED_MULTI_SERVER_READY" "$T/logs.txt"
 sudo wbd-next disable
 ! sudo systemctl is-enabled --quiet wbd-next.service
 sudo systemctl is-active --quiet wbd-next.service
@@ -51,6 +57,10 @@ assert d["address"]=="example.test" and d["username"]=="alice" and len(d["route-
 assert d["tls-verify-server"] is True and "BEGIN CERTIFICATE" in d["tls-ca-pem-content"]
 PY
 sudo sha256sum /var/lib/wbd-next/{route-key.hex,server.crt,server.key} >"$T/material.sha"
+if [[ "${WBD_PLAN030_ALL_CLI:-0}" == 1 ]];then
+ sudo python3 "$GITHUB_WORKSPACE/tools/plan030_cli_pty.py" "$T"
+ sudo sha256sum -c "$T/material.sha"
+fi
 sudo wbd-next stop
 sudo systemctl is-enabled --quiet wbd-next.service
 ! sudo ip link show wbd030tun
@@ -85,6 +95,8 @@ sudo "$PKG/wbd-next" install --config "$T/config.json"
 sudo sha256sum -c "$T/material.sha"
 sudo wbd-next clients --json >"$T/reinstall-listen.json"
 cmp "$T/new-listen.json" "$T/reinstall-listen.json"
+printf "no\n" | sudo wbd-next uninstall
+sudo systemctl is-active --quiet wbd-next.service
 sudo wbd-next uninstall --yes
 for p in /opt/wbd-next /etc/wbd-next /var/lib/wbd-next /run/wbd-next /usr/local/bin/wbd-next /etc/systemd/system/wbd-next.service;do test ! -e "$p";done
 test "$(cat /proc/sys/net/ipv4/ip_forward)" = "$original_forward"
