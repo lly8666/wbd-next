@@ -3364,10 +3364,10 @@ pub extern "C" fn wbd_fec_network_game_group_outer_policy_set(
     e.outer_repair_enabled=enabled!=0;
     OK
 }
-// Readback is from the real installed Game M4 driver, not the CLI flag.
-// [enabled, outer DATA retry copies, rejected duplicate logical copies,
-//  accepted first lane copies including independently generated FEC parity].
-// No outer retransmit producer exists for Game; Normal V3 remains untouched.
+// Readback is from the original installed Game M4 RAW driver, not a CLI flag.
+// Legacy n=4 preserves [enabled, accepted retry count, blocked, first count].
+// Extended n=6 appends actual first DATA wire F and actual copied retry R;
+// both are accepted original RAW bytes including IPv4+TCP headers.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
@@ -3375,14 +3375,16 @@ pub extern "C" fn wbd_fec_network_game_group_outer_policy_set(
 pub unsafe extern "C" fn wbd_fec_network_game_group_outer_policy_read(
     group:u64,out:*mut u64,n:usize
 )->i32{
-    if out.is_null()||n!=4{return INVALID}
+    if out.is_null()||(n!=4&&n!=6){return INVALID}
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
     if e.stopped{return BAD_STAGE}
     let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
-    let (repeated,blocked,first)=driver.outer_policy_counters();
-    let values=[u64::from(e.outer_repair_enabled),repeated,blocked,first];
-    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,4)};
+    let (repeated,blocked,first,first_wire,repair_wire)=
+        driver.outer_policy_counters();
+    let values=[u64::from(e.outer_repair_enabled),repeated,blocked,
+        first,first_wire,repair_wire];
+    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,n)};
     OK
 }
 // PLAN028: a complete, credential-protected Game group may attach to the

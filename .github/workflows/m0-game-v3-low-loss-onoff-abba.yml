@@ -1,0 +1,162 @@
+name: M0 Game4 FEC low-loss 0 and 5pct exact-product outer ON OFF CPU ABBA
+run-name: "M0-GAME-LOWLOSS-ONOFF|${{ github.sha }}"
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-v3-low-loss-onoff-abba.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  same-runner:
+    strategy:
+      fail-fast: false
+      matrix:
+        loss: [0, 5]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: 9d2a3230a84b1581e1f7abbf7f3d0d4fccfea347
+      LOSS: '${{ matrix.loss }}'
+      BASE_RUN: '45209632283'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Lock exact real product bytes; test only ON OFF option differs
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/compare/$SOURCE...$GITHUB_SHA" | jq -e '
+            .status=="ahead" and
+            ([.files[].filename | select(startswith("crates/") or startswith("r0/go_overlay/") or .=="Cargo.toml" or .=="Cargo.lock" or startswith("scenarios/"))] | length)==0
+          ' >/dev/null
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BASE_RUN" --jq .head_sha)" = "$SOURCE"
+          gh run download "$BASE_RUN" --repo "$GH_REPO" \
+            --name "m0-cosmetic-linux-original-product-$SOURCE" --dir native
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('native'); m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['SOURCE'] and m['architecture']=='x86_64'
+          for line in (p/'SHA256SUMS').read_text().splitlines():
+              digest,name=line.split(maxsplit=1)
+              assert hashlib.sha256((p/name.removeprefix('*')).read_bytes()).hexdigest()==digest
+          print('M0_ONOFF_EXACT_PRODUCT_HASHES',m['source_sha'])
+          PY
+          chmod +x native/wbd-v4-client native/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Four real Game4 fixed FEC low-loss OFF ON ON OFF 60s independent network legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          sudo -n env WBD_M0_GAME_THREAD_CPU_DIAG=1 GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" LOSS="$LOSS" \
+            GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_ACTIONS="$GITHUB_ACTIONS" \
+            GITHUB_WORKSPACE="$GITHUB_WORKSPACE" RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
+            python3 - <<'PY'
+          import json,os,pathlib,statistics
+          from tools.network_harness.m0_029_cosmetic_linux_dual_game import prepare,genuine_case,sha
+          from tools.network_harness.runner import LinuxExperiment
+          base=pathlib.Path(os.environ['GITHUB_WORKSPACE'])
+          root=base/'out'; bundle=base/'native'; source=os.environ['SOURCE']
+          scene=json.loads((base/'scenarios/m0-cosmetic-game4-fec-loss30-60s.json').read_text())
+          loss=int(os.environ['LOSS'])
+          assert loss in (0,5)
+          scene['scenario_id']=f'm0-cosmetic-game4-fec-loss{loss}-60s'
+          for side in ('windows_to_linux','linux_to_windows'):
+              scene[side]['loss_pct']=loss
+          hashes={name:sha(bundle/name) for name in ('wbd-v4-client','wbd-v4-server','libwbd_engine.so')}
+          links=root/'bundle-A'/'fixed-build'; links.mkdir(parents=True,exist_ok=True)
+          for name in hashes: (links/name).symlink_to(bundle/name)
+          rows=[]
+          for index,label in enumerate(('off','on','on','off'),1):
+              cfg=prepare(scene,source,int(os.environ['GITHUB_RUN_ID']),'game4-fec')
+              enabled=(label=='on')
+              cfg['product']['repair_enabled']=enabled
+              cfg['bundles']['A']['repair_enabled']=enabled
+              path=root/f'{index}-{label}'
+              leg=LinuxExperiment(cfg,root/'bundle-A',path,'A').run()
+              if leg['result']!='PASS_SCOPED_OBSERVATION' or not leg['cleanup']['owned_namespaces_absent']:
+                  raise RuntimeError(f'original product failed {index} {label}: {leg.get("failures")}')
+              telem=leg.get('telemetry',{})
+              if telem.get('stop_drained_both') is not True or telem.get('outer_repair_native_verified') is not True:
+                  raise RuntimeError(f'original real Stop/outer readback failed {index} {label}')
+              proof=telem.get('game_outer_policy',{})
+              ratio={}; copies={}
+              for role in ('client','server'):
+                  p=proof[role]; assert p['repair_enabled']==int(enabled)
+                  copies[role]=p['outer_data_retransmitted']
+                  f=p.get('first_record_wire_bytes');r=p.get('copy_record_wire_bytes')
+                  ratio[role]=r/f if isinstance(f,int) and f>0 and isinstance(r,int) else None
+                  if enabled:
+                      assert ratio[role] is not None and ratio[role]<=.1
+                      if loss==0: assert ratio[role]<=.0005 and copies[role]<=5,(role,ratio,copies)
+                      else: assert .005<ratio[role]<.10 and copies[role]>0,(role,ratio,copies)
+                  else: assert copies[role]==0 and (ratio[role] is None or ratio[role]==0)
+              measured={direction:sum(float(r.get('cohort_delivered_app_mbps') or 0)
+                  for r in leg.get('observed',[]) if r.get('phase')=='iid' and r.get('direction')==direction)
+                  for direction in ('c2s','s2c')}
+              assert min(measured.values())>9.4, measured
+              # True kernel netem readback, not commanded loss assumption.
+              snapshots=json.loads((path/'network-snapshots.json').read_text())
+              before=next(p for p in snapshots if p['name']=='before-iid')
+              after=next(p for p in snapshots if p['name']=='measurement-end')
+              true_drops={}
+              for role in ('client','server'):
+                  def netem_drop(snap):
+                      match=[q for q in snap['network'][role]['qdisc'] if q.get('kind')=='netem']
+                      assert len(match)==1
+                      return int(match[0]['drops'])
+                  true_drops[role]=netem_drop(after)-netem_drop(before)
+                  assert (true_drops[role]==0 if loss==0 else true_drops[role]>0),true_drops
+              cpu={role:leg['measurement_cost'][role]['cpu_s'] for role in ('client','server')}
+              # Existing 1Hz /proc sampler: test-only, no product TX/RX change.
+              import collections
+              snaps=json.loads((path/'network-snapshots.json').read_text())
+              start=next(e for e in snaps if e['name']=='before-iid')['end_ns']
+              end=next(e for e in snaps if e['name']=='measurement-end')['ns']
+              samples=[e for e in json.loads((path/'host-samples.json').read_text())
+                  if start<=e['ns']<=end]
+              assert len(samples)>=40, (index,label,len(samples))
+              threads={}
+              for role in ('client','server'):
+                  tids={};names={}
+                  for sample in samples:
+                      for t in sample.get('fec_cpu_irq',{}).get('product_threads',{}).get(role,[]):
+                          key=t['tid'];tick=t['cpu_ticks']
+                          if key not in tids:tids[key]=[tick,tick]
+                          else:tids[key][1]=tick
+                          names[key]=t['name']
+                  named=collections.defaultdict(float)
+                  for tid,(first,last) in tids.items():
+                      named[names[tid]]+=max(0,last-first)/os.sysconf('SC_CLK_TCK')
+                  threads[role]={'cpu_by_name_s':dict(sorted(named.items())),
+                      'coverage':sum(named.values())/cpu[role] if cpu[role] else None}
+              row={'index':index,'outer':label,'source':source,'cpu_s':cpu,'copies':copies,
+                   'ratio':ratio,'unique_first_mbps':measured,'threads':threads,
+                   'netem_true_drops':true_drops,'stop':'PASS','mode':'game4-fec','loss_pct':loss}
+              (path/'m0-onoff-leg.json').write_text(json.dumps(row,indent=2)+'\n')
+              rows.append(row)
+              print('M0_ONOFF_REAL_LEG',json.dumps(row,sort_keys=True),flush=True)
+          summary={'schema':'m0-game4-fec-low-loss-exact-product-onoff-abba/v1',
+              'loss_pct':loss,
+              'same_runner':True,'source':source,'order':'OFF_ON_ON_OFF','rows':rows}
+          for role in ('client','server'):
+              off=statistics.fmean(x['cpu_s'][role] for x in rows if x['outer']=='off')
+              on=statistics.fmean(x['cpu_s'][role] for x in rows if x['outer']=='on')
+              summary[role]={'off_cpu_s':off,'on_cpu_s':on,'on_minus_off_cpu_s':on-off,
+                  'on_over_off_pct':100*(on/off-1)}
+          (root/'abba-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          print('M0_SAME_RUNNER_GAME_LOWLOSS_ONOFF_CPU_ABBA',json.dumps(summary,sort_keys=True),flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-game4-fec${{ matrix.loss }}-outer-onoff-cpu-${{ github.sha }}
+          path: |
+            out/abba-summary.json
+            out/*/m0-onoff-leg.json
+            out/*/result.json
+          retention-days: 30
+          if-no-files-found: warn

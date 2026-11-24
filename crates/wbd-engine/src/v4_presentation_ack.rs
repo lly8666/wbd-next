@@ -8,20 +8,21 @@ pub(crate) const STEADY_TCP_WINDOW:u16=65_535;
 pub(crate) struct NativePresentationAck{
     next:u64,
     future:Vec<(u64,u64)>,
+    stalled:Option<(u64,u64)>, // presentation-only missing-head onset
 }
 impl NativePresentationAck{
     pub(crate) fn new(initial:u32)->Self{
-        Self{next:u64::from(initial),future:Vec::with_capacity(256)}
+        Self{next:u64::from(initial),future:Vec::with_capacity(256),stalled:None}
     }
     pub(crate) fn ack(&self)->u32{self.next as u32}
-    // Only a successfully authenticated and copied future original M3
-    // record; caller tests before verified() updates the cumulative head.
+    // Only a future original M3 record whose physical lane AEAD/PN opened;
+    // logical first-delivery TUN copying is independently accounted.
     pub(crate) fn authenticated_future(&self,seq:u32)->bool{
         (seq.wrapping_sub(self.next as u32) as i32)>0
     }
     // Exactly one original cold-authenticated seq32 anchor per lane.
-    // Called only after a real Game AEAD+unique-PN opener and successful
-    // TUN commit. Future spans are cosmetic; never gate TUN delivery.
+    // Called after a real Game AEAD+unique-PN opener; not gated on TUN
+    // commit or logical cross-lane dedup. Future spans never gate delivery.
     pub(crate) fn verified(&mut self,seq:u32,len:usize)->u32{
         let distance=i64::from(i32::from_ne_bytes(
             seq.wrapping_sub(self.next as u32).to_ne_bytes()));
@@ -55,6 +56,45 @@ impl NativePresentationAck{
         }
         self.ack()
     }
+    /// Normal's bounded presentation-only 250ms old-hole skip. Actual Game
+    /// ciphertext cannot be reconstituted from an outer TCP stream, so an
+    /// indefinitely stalled appearance ACK must not starve newer SACK gaps.
+    /// This does not acknowledge business, restore FEC or grant Health.
+    pub(crate) fn abandon_stalled(&mut self,now_ns:u64)->bool{
+        let Some((_,end))=self.future.last().copied()else{
+            self.stalled=None;return false
+        };
+        if self.stalled.is_none_or(|(seq,_)|seq!=self.next){
+            self.stalled=Some((self.next,now_ns));return false
+        }
+        if now_ns.saturating_sub(self.stalled.unwrap().1)<250_000_000{
+            return false
+        }
+        self.next=self.next.max(end);
+        self.future.clear();
+        self.stalled=None;
+        true
+    }
+    /// Same four newest authentic positive intervals as Normal. Fixed stack
+    /// output (unlike Normal's convenient Vec), no allocation on Game RX.
+    pub(crate) fn sacks4(&self)
+        ->[Option<wbd_platform::ipv4_tcp::SackRange32>;4]{
+        let mut spans=self.future.iter().rev().take(4);
+        std::array::from_fn(|_|spans.next().map(|&(start,end)|
+            wbd_platform::ipv4_tcp::SackRange32{
+                start:start as u32,end:end as u32,
+            }))
+    }
+    /// Latest actually AEAD-opened physical future span for Normal-style
+    /// SACK feedback. One positive interval bounds many missing candidates;
+    /// fixed-size, no allocation or separate controller in the hot path.
+    pub(crate) fn latest_sack(&self)
+        ->Option<wbd_platform::ipv4_tcp::SackRange32>{
+        self.future.last().map(|&(start,end)|
+            wbd_platform::ipv4_tcp::SackRange32{
+                start:start as u32,end:end as u32,
+            })
+    }
 }
 /// No speculative ACK: only a changed authenticated cumulative head is
 /// eligible. Coalesce to <=100 pure ACKs/s/lane even on a continuous RX
@@ -86,8 +126,44 @@ mod tests{
         assert!(presentation_game_ack_due(10_000_001,1,100,100,true));
         assert!(!presentation_game_ack_due(10_000_001,1,100,100,false));
         assert_eq!(ledger.verified(150,10),100);
+        assert_eq!(ledger.latest_sack(),Some(
+            wbd_platform::ipv4_tcp::SackRange32{start:150,end:160}));
         assert_eq!(ledger.verified(100,50),160);
+        assert!(ledger.latest_sack().is_none());
         assert!(!ledger.authenticated_future(160));
+    }
+    #[test]
+    fn game_four_sack_positive_intervals_match_normal_newest_four(){
+        let mut x=NativePresentationAck::new(100);
+        for i in 1..=6u32{
+            assert_eq!(x.verified(100+100*i,20),100);
+        }
+        let got=x.sacks4();
+        for i in 0..4usize{
+            assert_eq!(got[i],Some(wbd_platform::ipv4_tcp::SackRange32{
+                start:700-(i as u32)*100,end:720-(i as u32)*100
+            }));
+        }
+    }
+    #[test]
+    fn normal_stalled_outer_head_progresses_after_250ms_without_tun_receipt(){
+        let mut ledger=NativePresentationAck::new(1000);
+        assert_eq!(ledger.verified(1200,100),1000);
+        assert_eq!(ledger.latest_sack(),Some(
+            wbd_platform::ipv4_tcp::SackRange32{start:1200,end:1300}));
+        assert!(!ledger.abandon_stalled(0));
+        assert!(!ledger.abandon_stalled(249_000_000));
+        assert_eq!(ledger.ack(),1000);
+        assert!(ledger.abandon_stalled(250_000_000));
+        assert_eq!(ledger.ack(),1300);
+        assert!(ledger.latest_sack().is_none());
+        assert!(!ledger.abandon_stalled(251_000_000));
+        assert_eq!(ledger.verified(1400,100),1300);
+        assert!(!ledger.abandon_stalled(300_000_000));
+        assert_eq!(ledger.ack(),1300);
+        assert!(!ledger.abandon_stalled(549_000_000));
+        assert!(ledger.abandon_stalled(550_000_000));
+        assert_eq!(ledger.ack(),1500);
     }
     #[test]
     fn h2229_10ms_ack_only_and_duplicate_suppression(){

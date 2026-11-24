@@ -1,0 +1,201 @@
+# Source-frozen Game4 fixed-FEC TX hotpath timing, sampled 1/128
+# only in this diagnostic; OFF ON ON OFF exact binary same runner.
+name: M0 Game Normal-v3 native TX phase CPU profiling
+run-name: "M0-GAME-TX-PHASE|${{ github.sha }}"
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-tx-phase-profile.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-bundle-once:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Build exact original Go TLS client AND server plus Rust native shared M4 once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path("crates/wbd-engine/src/v4_game_cosmetic_outer.rs").read_text()
+          assert "ReceiptState" in game and "RepairBudget" in game
+          assert "const INITIAL_ACK_STALL_NS" not in game
+          win=Path("crates/wbd-engine/src/v4_windows_game_outer.rs").read_text()
+          assert "win_v3_admit_shadow" in win
+          ledger=Path("crates/wbd-engine/src/v4_presentation_ack.rs").read_text()
+          assert "fn abandon_stalled" in ledger
+          assert "fn sacks4" in ledger
+          assert "l.ready.extend(l.shadow.on_timer(now).candidates)" in game
+          for loss in (1,10,20):
+              scene=Path(f"scenarios/m0-cosmetic-game2-loss{loss}-60s.json")
+              assert scene.is_file(),scene
+          raw=Path("crates/wbd-platform/src/linux_raw_carrier.rs").read_text()
+          assert "ack.sacks().len().min(slots.len())" in raw
+          product=Path("r0/go_overlay/internal/v4productcli/game_linux.go").read_text()
+          assert "first_record_wire_bytes=%d copy_record_wire_bytes=%d" in product
+          print("M0_GAME_NORMAL_V3_REWRITE_SOURCE_PRECHECK_PASS")
+          PY
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/m0-linux-native-amd64.sh"
+          bash "$RUNNER_TEMP/m0-linux-native-amd64.sh"
+          test -s amd64-public-bundle/manifest.json
+          (cd amd64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("amd64-public-bundle/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="x86_64"
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-game-tx-phase-product-${{ github.sha }}
+          path: amd64-public-bundle/
+          retention-days: 30
+          if-no-files-found: error
+  phase-abba:
+    needs: native-bundle-once
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      SOURCE: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-game-tx-phase-product-${{ github.sha }}
+          path: native
+      - name: Verify exact original GoTLS and Rust product SHA256 bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('native')
+          m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['SOURCE'] and m['architecture']=='x86_64'
+          for line in (p/'SHA256SUMS').read_text().splitlines():
+              digest,name=line.split(maxsplit=1)
+              assert hashlib.sha256((p/name.removeprefix('*')).read_bytes()).hexdigest()==digest
+          print('M0_PHASE_ABBA_EXACT_SOURCE_HASHES',m['source_sha'])
+          PY
+          chmod +x native/wbd-v4-client native/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Four real original Game4 fixed FEC30 OFF ON ON OFF 60s independent network legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          sudo -n env WBD_M0_GAME_THREAD_CPU_DIAG=1 GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" \
+            GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_ACTIONS="$GITHUB_ACTIONS" \
+            GITHUB_WORKSPACE="$GITHUB_WORKSPACE" RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
+            python3 - <<'PY'
+          import json,os,pathlib,statistics
+          from tools.network_harness.m0_029_cosmetic_linux_dual_game import prepare,genuine_case,sha
+          from tools.network_harness.runner import LinuxExperiment
+          base=pathlib.Path(os.environ['GITHUB_WORKSPACE'])
+          root=base/'out'; bundle=base/'native'; source=os.environ['SOURCE']
+          scene=json.loads((base/'scenarios/m0-cosmetic-game4-fec-loss30-60s.json').read_text())
+          hashes={name:sha(bundle/name) for name in ('wbd-v4-client','wbd-v4-server','libwbd_engine.so')}
+          links=root/'bundle-A'/'fixed-build'; links.mkdir(parents=True,exist_ok=True)
+          for name in hashes: (links/name).symlink_to(bundle/name)
+          rows=[]
+          for index,label in enumerate(('off','on','on','off'),1):
+              cfg=prepare(scene,source,int(os.environ['GITHUB_RUN_ID']),'game4-fec')
+              enabled=(label=='on')
+              cfg['product']['repair_enabled']=enabled
+              cfg['bundles']['A']['repair_enabled']=enabled
+              cfg['bundles']['A']['enable_game_outer_phase_sample']=True
+              path=root/f'{index}-{label}'
+              leg=LinuxExperiment(cfg,root/'bundle-A',path,'A').run()
+              if leg['result']!='PASS_SCOPED_OBSERVATION' or not leg['cleanup']['owned_namespaces_absent']:
+                  raise RuntimeError(f'original product failed {index} {label}: {leg.get("failures")}')
+              telem=leg.get('telemetry',{})
+              if telem.get('stop_drained_both') is not True or telem.get('outer_repair_native_verified') is not True:
+                  raise RuntimeError(f'original real Stop/outer readback failed {index} {label}')
+              phases=telem.get('game_outer_tx_phase')
+              assert telem.get('game_outer_tx_phase_verified') is True, phases
+              assert isinstance(phases,dict) and set(phases)=={'client','server'}
+              expected={'first_raw','on_firstsend','next_due','on_feedback','take_due','repair_raw'}
+              for role in ('client','server'):
+                  assert set(phases[role])==expected,(role,phases)
+                  for phase,p in phases[role].items():
+                      assert p['stride']==128 and p['samples']==p['calls']//128,(role,phase,p)
+                      if phase=='first_raw' or (enabled and phase in ('on_firstsend','next_due','on_feedback','take_due','repair_raw')):
+                          assert p['samples']>0,(role,phase,p)
+                      if not enabled and phase!='first_raw':
+                          assert p['calls']==0,(role,phase,p)
+              proof=telem.get('game_outer_policy',{})
+              ratio={}; copies={}
+              for role in ('client','server'):
+                  p=proof[role]; assert p['repair_enabled']==int(enabled)
+                  copies[role]=p['outer_data_retransmitted']
+                  f=p.get('first_record_wire_bytes');r=p.get('copy_record_wire_bytes')
+                  ratio[role]=r/f if isinstance(f,int) and f>0 and isinstance(r,int) else None
+                  if enabled: assert copies[role]>0 and ratio[role] is not None and 0<ratio[role]<=.1
+                  else: assert copies[role]==0 and (ratio[role] is None or ratio[role]==0)
+              measured={direction:sum(float(r.get('cohort_delivered_app_mbps') or 0)
+                  for r in leg.get('observed',[]) if r.get('phase')=='iid' and r.get('direction')==direction)
+                  for direction in ('c2s','s2c')}
+              assert min(measured.values())>9.4, measured
+              cpu={role:leg['measurement_cost'][role]['cpu_s'] for role in ('client','server')}
+              # Existing 1Hz /proc sampler: test-only, no product TX/RX change.
+              import collections
+              snaps=json.loads((path/'network-snapshots.json').read_text())
+              start=next(e for e in snaps if e['name']=='before-iid')['end_ns']
+              end=next(e for e in snaps if e['name']=='measurement-end')['ns']
+              samples=[e for e in json.loads((path/'host-samples.json').read_text())
+                  if start<=e['ns']<=end]
+              assert len(samples)>=40, (index,label,len(samples))
+              threads={}
+              for role in ('client','server'):
+                  tids={};names={}
+                  for sample in samples:
+                      for t in sample.get('fec_cpu_irq',{}).get('product_threads',{}).get(role,[]):
+                          key=t['tid'];tick=t['cpu_ticks']
+                          if key not in tids:tids[key]=[tick,tick]
+                          else:tids[key][1]=tick
+                          names[key]=t['name']
+                  named=collections.defaultdict(float)
+                  for tid,(first,last) in tids.items():
+                      named[names[tid]]+=max(0,last-first)/os.sysconf('SC_CLK_TCK')
+                  threads[role]={'cpu_by_name_s':dict(sorted(named.items())),
+                      'coverage':sum(named.values())/cpu[role] if cpu[role] else None}
+              row={'index':index,'outer':label,'source':source,'cpu_s':cpu,'copies':copies,
+                   'ratio':ratio,'unique_first_mbps':measured,'threads':threads,
+                   'tx_phases':phases,
+                   'stop':'PASS','mode':'game4-fec','loss_pct':30}
+              (path/'m0-tx-phase-leg.json').write_text(json.dumps(row,indent=2)+'\n')
+              rows.append(row)
+              print('M0_PHASE_REAL_LEG',json.dumps(row,sort_keys=True),flush=True)
+          summary={'schema':'m0-game4-fec30-tx-phase-abba/v1',
+              'same_runner':True,'source':source,'order':'OFF_ON_ON_OFF','rows':rows}
+          for role in ('client','server'):
+              off=statistics.fmean(x['cpu_s'][role] for x in rows if x['outer']=='off')
+              on=statistics.fmean(x['cpu_s'][role] for x in rows if x['outer']=='on')
+              summary[role]={'off_cpu_s':off,'on_cpu_s':on,'on_minus_off_cpu_s':on-off,
+                  'on_over_off_pct':100*(on/off-1)}
+          (root/'tx-phase-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          print('M0_SAME_RUNNER_GAME_TX_PHASE_ABBA',json.dumps(summary,sort_keys=True),flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-game4-fec30-outer-tx-phase-${{ github.sha }}
+          path: |
+            out/tx-phase-summary.json
+            out/*/m0-tx-phase-leg.json
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,29 +1,29 @@
-//! Game FEC and Game OFF *presentation only* outer TCP replay, shared
-//! by Windows NPF and Linux raw M4. It is NOT a delivery retry,
-//! FEC source, authenticated ACK, or delivery credit.
- //! One sparse frozen ciphertext per lane; no heap work on ordinary sends,
- //! no global M2 allocator, no background thread or per-packet wall clock.
+//! Original Linux Game2/4 outer appearance repair, using Normal's existing
+//! OuterAckIndex + opportunistic-v3 ReceiptState + 9% paced/10% quota ledger.
+//! Only the original RAW driver accepts frozen PN/Seq/ciphertext. FEC, Health,
+//! authenticated delivery and first-send credit are independent.
+use std::collections::VecDeque;
 use std::sync::Arc;
-use wbd_recovery::outer_ack::{OuterAckIndex,OuterAckError};
-use wbd_types::MonoNs;
-use wbd_types::{LaneKey,RecordPn,SeqOffset,BufferKey};
+use wbd_recovery::outer_ack::{OuterAckIndex,OuterAckError,SackRange32};
+use wbd_recovery::{
+    ReceiptState,ReceiptConfig,RepairCandidate,RepairSendResult,
+    RepairBudget,RepairBudgetConfig,BudgetDirection,WireDirection,BudgetError,ReservationId,
+};
+use wbd_types::{MonoNs,LaneKey,RecordPn,SeqOffset,BufferKey};
 use wbd_types::buffer_contract::{BufferOrigin,FrozenMetadata,FrozenRecordHandle};
 
-const SAMPLE_MASK:u64=1; // Normal-matching 1/2 eligibility, at most one live shadow per lane
-const AFTER_FIRST_NS:u64=250_000_000; // test-only old sample() fixture, NOT a production PTO
-const MIN_INTERVAL_NS:u64=80_000_000; // <=12.5 per second per lane
-const REORDER_GUARD_NS:u64=20_000_000; // Normal ACK reordering guard
-const INITIAL_ACK_STALL_NS:u64=1_000_000_000; // genuine identical authenticated ACK unchanged >=1s
-const COSMETIC_MAX_AGE_NS:u64=2_000_000_000; // never replay ancient original DATA
 const MAX_WIRE:usize=1536;
+const OUTER_HEADER_BYTES:u64=40; // Linux raw original IPv4+TCP, no options
+const SHADOWS_PER_LANE:usize=6144;
+const RETAIN_FLOOR_NS:u64=1_200_000_000; // same Normal Linux RTT step floor
+const REORDER_GUARD_NS:u64=20_000_000;
+const PACER_RETRY_NS:u64=5_000_000;
 
 #[derive(Clone)]
 pub(crate) struct CosmeticCopy{
     pub lane:usize,pub pn:u64,pub seq:u64,pub wire:Arc<[u8]>,
 }
 impl CosmeticCopy{
-    // Frozen original bytes and exact original PN/Seq; the raw driver uses
-    // the same existing TCP framing/checksum/route path as first send.
     pub fn frozen(&self,key:LaneKey)->CosmeticFrozen{
         CosmeticFrozen{
             wire:Arc::clone(&self.wire),
@@ -45,466 +45,280 @@ impl FrozenRecordHandle for CosmeticFrozen{
     fn bytes(&self)->&[u8]{&self.wire}
 }
 struct Lane{
-    seen:u64,not_before:u64,pending:Option<(u64,CosmeticCopy)>,
-    held:Option<(u64,usize)>,sent:u64,
-    last_replay_ack:Option<u32>, // one actual copy per unchanged cumulative ACK epoch
-    first_record_wire_bytes:u64,copied_record_wire_bytes:u64,
-    key:Option<LaneKey>,epoch:[u8;16],ack:Option<OuterAckIndex>,
-    last_ack:Option<u32>,dup_acks:u8,
-    last_ack_change_ns:u64,pending_at_ns:u64,
+    seen:u64,
+    key:LaneKey,epoch:[u8;16],
+    ack:OuterAckIndex,shadow:ReceiptState<CosmeticFrozen>,
+    ready:VecDeque<RepairCandidate<CosmeticFrozen>>,
+    held:Option<(RepairCandidate<CosmeticFrozen>,ReservationId)>,
+    retry_after_ns:Option<u64>,
+    sent:u64,
 }
 pub(crate) struct CosmeticOuter{
     lanes:Vec<Lane>,
+    // All physical lanes share one real first-send F denominator and one
+    // Normal local epoch/pacing budget; never multiply sparse credit by N.
+    budget:RepairBudget,
+    first_record_wire_bytes:u64,
+    copied_record_wire_bytes:u64,
+}
+fn admit_shadow(pn:u64,lane:LaneKey)->bool{
+    // Normal's deterministic mixed-PN/lane 1/2 sampling, no RNG or heap.
+    let key=pn^((lane.tunnel.slot as u64)<<48)
+        ^((lane.tunnel.generation as u64)<<32)
+        ^((lane.slot as u64)<<16)^(lane.generation as u64);
+    let mut x=key.wrapping_add(0x9e3779b97f4a7c15);
+    x=(x^(x>>30)).wrapping_mul(0xbf58476d1ce4e5b9);
+    x=(x^(x>>27)).wrapping_mul(0x94d049bb133111eb);
+    (x^(x>>31))&1==0
+}
+fn new_lane(key:LaneKey,seq:u64,epoch:[u8;16])->Result<Lane,OuterAckError>{
+    let ack=OuterAckIndex::new(key,epoch,seq,SHADOWS_PER_LANE)?;
+    let mut shadow=ReceiptState::new(key,ReceiptConfig{
+        max_shadow_entries:SHADOWS_PER_LANE,
+        pto_ns:810_000_000,reorder_window_ns:REORDER_GUARD_NS,
+    }).map_err(|_|OuterAckError::InvalidConfig)?;
+    shadow.enable_adaptive_timing(600_000_000,50_000_000)
+        .map_err(|_|OuterAckError::InvalidConfig)?;
+    shadow.enable_opportunistic_v3().map_err(|_|OuterAckError::InvalidConfig)?;
+    Ok(Lane{seen:0,key,epoch,ack,shadow,ready:VecDeque::with_capacity(32),
+        held:None,retry_after_ns:None,sent:0})
 }
 impl CosmeticOuter{
-    pub fn new(count:usize)->Self{
-        Self{lanes:(0..count).map(|_|Lane{
-            seen:0,not_before:0,pending:None,held:None,sent:0,
-            last_replay_ack:None,
-            first_record_wire_bytes:0,copied_record_wire_bytes:0,
-            key:None,epoch:[0;16],ack:None,
-            last_ack:None,dup_acks:0,last_ack_change_ns:0,pending_at_ns:0
-        }).collect()}
-    }
-    /// Original Normal ACK interval index, bounded to 128 sampled entries
-    /// per lane. No new kernel reader, thread or separate FEC authority.
     pub fn with_normal_feedback(keys:&[LaneKey],seqs:&[u64],epoch:[u8;16])
         ->Result<Self,OuterAckError>{
-        if keys.is_empty()||keys.len()!=seqs.len()||keys.len()>4{
+        if keys.is_empty()||keys.len()!=seqs.len()||keys.len()>4||
+            keys.iter().any(|k|k.tunnel!=keys[0].tunnel){
             return Err(OuterAckError::InvalidConfig)
         }
-        let mut result=Self::new(keys.len());
-        for (i,key) in keys.iter().enumerate(){
-            result.lanes[i].key=Some(*key);
-            result.lanes[i].epoch=epoch;
-            result.lanes[i].ack=Some(OuterAckIndex::new(*key,epoch,seqs[i],128)?);
+        let mut lanes=Vec::with_capacity(keys.len());
+        for (key,seq) in keys.iter().zip(seqs){
+            lanes.push(new_lane(*key,*seq,epoch)?);
         }
-        Ok(result)
+        let mut budget=RepairBudget::new(BudgetDirection{
+            tunnel:keys[0].tunnel,direction:WireDirection::ClientToServer,
+        },RepairBudgetConfig{
+            outer_mtu:1600,max_repair_bytes_per_epoch:8*1024*1024,
+            max_pending_reservations:128,max_pending_bytes:4*1024*1024,
+            io_timeout_ns:100_000_000,
+        },MonoNs(0)).map_err(|_|OuterAckError::InvalidConfig)?;
+        budget.enable_opportunistic_v3();
+        Ok(Self{lanes,budget,first_record_wire_bytes:0,
+            copied_record_wire_bytes:0})
     }
-    /// Always advance actual copied TCP byte bounds; 1/2 use Normal's
-    /// untracked constant-time path. Track every second as positive later
-    /// send evidence; freeze at most ONE original PN/Seq per lane.
-    /// A fresh protected original TLS lane must not reuse the previous
-    /// TCP sequence/ACK gap index or a frozen ciphertext on a new 4-tuple.
-    /// Other three physical lanes retain their exact cosmetic state.
     pub(crate) fn rekey_one_lane(
         &mut self,index:usize,key:LaneKey,seq:u64,epoch:[u8;16],
     )->Result<(),OuterAckError>{
-        let Some(l)=self.lanes.get_mut(index)else{
+        let Some(old)=self.lanes.get(index)else{return Err(OuterAckError::WrongScope)};
+        if key.tunnel!=old.key.tunnel||old.held.is_some(){
             return Err(OuterAckError::WrongScope)
-        };
-        *l=Lane{
-            seen:0,not_before:0,pending:None,held:None,sent:l.sent,
-            last_replay_ack:None,
-            first_record_wire_bytes:l.first_record_wire_bytes,
-            copied_record_wire_bytes:l.copied_record_wire_bytes,
-            key:Some(key),epoch,
-            ack:Some(OuterAckIndex::new(key,epoch,seq,128)?),
-            last_ack:None,dup_acks:0,last_ack_change_ns:0,pending_at_ns:0,
-        };
+        }
+        let mut fresh=new_lane(key,seq,epoch)?;
+        fresh.sent=old.sent;
+        self.lanes[index]=fresh;
         Ok(())
     }
+    // The caller invokes this ONLY after a successful original RAW send.
+    // All first copies enter F; only one selected half pins a shadow+ACK node.
     pub fn on_firstsend(&mut self,index:usize,pn:u64,seq:u64,
         wire:&[u8],now_ns:u64)->Result<(),OuterAckError>{
-        let Some(l)=self.lanes.get_mut(index)else{
-            return Err(OuterAckError::WrongScope)
-        };
-        let Some(ack)=l.ack.as_mut()else{
-            return Err(OuterAckError::WrongScope)
-        };
+        let Some(l)=self.lanes.get_mut(index)else{return Err(OuterAckError::WrongScope)};
+        let now=MonoNs(now_ns);
         l.seen=l.seen.wrapping_add(1);
-        // One live immutable optional candidate per lane is the ONLY
-        // reason for an ACK BTree node; all others advance TCP seq O(1).
-        let selected=l.seen&SAMPLE_MASK==0 &&
-            l.pending.is_none()&&l.held.is_none()&&
-            now_ns>=l.not_before&&!wire.is_empty()&&wire.len()<=MAX_WIRE;
-        let indexed=if selected{
-            ack.on_definitely_sent(RecordPn(pn),seq,wire.len() as u32,
-                MonoNs(now_ns))?
+        let selected=admit_shadow(pn,l.key) &&
+            l.shadow.outstanding()<SHADOWS_PER_LANE &&
+            !wire.is_empty()&&wire.len()<=MAX_WIRE;
+        let tracked=if selected{
+            l.ack.on_definitely_sent(RecordPn(pn),seq,wire.len() as u32,now)?
         }else{
-            ack.advance_untracked(seq,wire.len() as u32)?;
+            l.ack.advance_untracked(seq,wire.len() as u32)?;
             false
         };
-        // All original first copies count in F, including unsampled.
-        l.first_record_wire_bytes=l.first_record_wire_bytes.saturating_add(wire.len() as u64);
-        if indexed{
-            l.pending_at_ns=now_ns;
-            l.pending=Some((u64::MAX,
-                CosmeticCopy{lane:index,pn,seq,wire:Arc::from(wire)}));
+        let bytes=wire.len() as u64+OUTER_HEADER_BYTES;
+        self.first_record_wire_bytes=self.first_record_wire_bytes.saturating_add(bytes);
+        // Matching Normal's definite-firstsend budget, not Game's lifetime
+        // ratio counter. No attempt to send DATA is made in this path.
+        let _=self.budget.on_fresh_accepted(bytes,now);
+        if tracked{
+            let frozen=CosmeticCopy{
+                lane:index,pn,seq,wire:Arc::from(wire)
+            }.frozen(l.key);
+            let _=l.shadow.on_sent_adaptive_with_floor(frozen,now,RETAIN_FLOOR_NS);
         }
         Ok(())
     }
-    /// Original authenticated Health advances the outer TCP stream but
-    /// creates no DATA/FEC repair candidate, first credit or feedback.
     pub fn on_health_copy(&mut self,index:usize,seq:u64,wire_len:usize)
         ->Result<(),OuterAckError>{
-        let Some(l)=self.lanes.get_mut(index)else{
-            return Err(OuterAckError::WrongScope)
-        };
-        let Some(ack)=l.ack.as_mut()else{
-            return Err(OuterAckError::WrongScope)
-        };
+        let Some(l)=self.lanes.get_mut(index)else{return Err(OuterAckError::WrongScope)};
         let n=u32::try_from(wire_len).map_err(|_|OuterAckError::InvalidSend)?;
-        ack.advance_untracked(seq,n)
+        l.ack.advance_untracked(seq,n)
     }
-
-    /// Only a real original AEAD-opened reverse Game DATA frame can carry
-    /// this packet's raw outer ACK hint. No Game FEC firstsend, Health,
-    /// delivery or crypto credit may arise from an untrusted TCP ACK.
-    pub fn on_feedback(&mut self,index:usize,ack32:u32,now_ns:u64)->bool{
+    // Same Normal ACK/SACK algorithm: retire optionally frozen positive spans,
+    // nominate only existing missing original spans, never a blind DATA PTO.
+    pub fn on_feedback(&mut self,index:usize,ack32:u32,
+        sacks:&[SackRange32],now_ns:u64)->bool{
         let Some(l)=self.lanes.get_mut(index)else{return false};
-        let (Some(key),Some(indexer))=(l.key,l.ack.as_mut())else{return false};
-        let exact=indexer.tracks_cumulative_head(ack32);
-        let Ok(result)=indexer.on_feedback(key,l.epoch,ack32,&[],
-            MonoNs(now_ns),REORDER_GUARD_NS)else{return false};
-        if l.last_ack==Some(ack32){
-            l.dup_acks=l.dup_acks.saturating_add(1);
-        }else{
-            l.last_ack=Some(ack32);
-            l.dup_acks=0;
-            l.last_ack_change_ns=now_ns;
+        let now=MonoNs(now_ns);
+        let Ok(update)=l.ack.on_feedback(l.key,l.epoch,ack32,sacks,
+            now,REORDER_GUARD_NS)else{return false};
+        for pn in update.retired{let _=l.shadow.discard_outer_ack_hint(pn);}
+        let mut found=false;
+        for pn in update.gap_candidates{
+            found|=l.shadow.on_outer_gap_hint(pn,now);
         }
-        // Without new cumulative progress the same genuine gap cannot
-        // endlessly repeat new sampled original ciphertext (0%-loss flood).
-        // ReceiptState already guarantees one copy per PN; this also bounds
-        // one appearance per authenticated cumulative ACK epoch.
-        if l.last_replay_ack==Some(ack32){return false}
-        let Some((due,copy))=l.pending.as_mut()else{return false};
-        // Original Game copy is a TCP-looking appearance, NOT a
-        // reliability recovery. A frozen record can be selected from the
-        // genuinely unacknowledged window after three independently
-        // AEAD-opened reverse DATA hints, even if the exact missing head
-        // was never sampled. Never replay a cumulatively ACKed record.
-        let offset=(copy.seq as u32).wrapping_sub(ack32) as i32;
-        let acked=offset<0||result.retired.contains(&RecordPn(copy.pn));
-        let age=now_ns.saturating_sub(l.pending_at_ns);
-        if acked||age>COSMETIC_MAX_AGE_NS{
-            l.pending=None;
-            return false
-        }
-        let later_actual_copy=indexer.highest_sent_end()>
-            copy.seq.saturating_add(copy.wire.len() as u64);
-        // A recent ACK progress resets stall time; bursts cannot replay DATA.
-        let true_stall=l.dup_acks>=3 && later_actual_copy &&
-            age>=REORDER_GUARD_NS &&
-            now_ns.saturating_sub(l.last_ack_change_ns)>=INITIAL_ACK_STALL_NS;
-        // Even an exact sampled ACK head cannot be declared missing from a
-        // short burst while cumulative ACK is legitimately advancing.
-        // Both Normal-style gap and sparse-stall Game cosmetic paths share
-        // the same genuine unchanged-ACK one-second guard.
-        let exact_gap=exact&&result.gap_candidates.contains(&RecordPn(copy.pn)) &&
-            l.dup_acks>=3 &&
-            now_ns.saturating_sub(l.last_ack_change_ns)>=INITIAL_ACK_STALL_NS;
-        let next_bytes=l.copied_record_wire_bytes
-            .saturating_add(copy.wire.len() as u64);
-        // The original firstsend ledger is all actually copied original
-        // bytes. Forbid attempts that could exceed sustained R/F<=10%.
-        if (exact_gap||true_stall) &&
-            next_bytes.saturating_mul(10)<=l.first_record_wire_bytes{
-            *due=(*due).min(now_ns);
-            return true
-        }
-        false
-    }
-    // Called only AFTER a real signed-NPF/raw first-copy succeeded. Ordinary
-    // DATA/FEC input pays a single counter+mask, no allocation or clock.
-    pub fn should_sample(&mut self,index:usize)->bool{
-        let Some(l)=self.lanes.get_mut(index)else{return false};
-        l.seen=l.seen.wrapping_add(1);
-        l.seen&SAMPLE_MASK==0 && l.pending.is_none()&&l.held.is_none()
-    }
-    pub fn sample(&mut self,index:usize,pn:u64,seq:u64,
-        wire:&[u8],now_ns:u64){
-        let Some(l)=self.lanes.get_mut(index)else{return};
-        if l.pending.is_some()||l.held.is_some()||now_ns<l.not_before||
-            wire.is_empty()||wire.len()>MAX_WIRE{return}
-        l.pending=Some((now_ns.saturating_add(AFTER_FIRST_NS),
-            CosmeticCopy{lane:index,pn,seq,wire:Arc::from(wire)}));
+        found
     }
     pub fn next_due(&self)->Option<u64>{
-        self.lanes.iter().filter_map(|l|l.pending.as_ref()
-            .and_then(|x|(x.0!=u64::MAX).then_some(x.0))).min()
+        self.lanes.iter().filter_map(|l|{
+            if !l.ready.is_empty(){return Some(l.retry_after_ns.unwrap_or(0));}
+            l.shadow.next_deadline().map(|d|d.0)
+                .map(|d|d.max(l.retry_after_ns.unwrap_or(0)))
+        }).min()
     }
+    // Same Normal v3 candidate generation, preflight, one-shot budget,
+    // and burst-pacing deferral. No separate Game ACK-epoch or lane cooldown.
     pub fn take_due(&mut self,now_ns:u64,active:&[bool])->Option<CosmeticCopy>{
-        for l in &mut self.lanes{
-            let Some((due,row))=l.pending.as_ref()else{continue};
-            if *due==u64::MAX||*due>now_ns||l.held.is_some(){continue}
-            if !active.is_empty()&&!active.get(row.lane).copied().unwrap_or(false){
-                l.pending=None;continue
+        let now=MonoNs(now_ns);
+        for (i,l) in self.lanes.iter_mut().enumerate(){
+            if (!active.is_empty()&&!active.get(i).copied().unwrap_or(false))||
+                l.held.is_some()||l.retry_after_ns.is_some_and(|v|v>now_ns){
+                continue
             }
-            let (_,row)=l.pending.take()?;
-            l.held=Some((row.pn,row.wire.len()));
-            return Some(row)
+            l.retry_after_ns=None;
+            if l.ready.is_empty(){
+                l.ready.extend(l.shadow.on_timer(now).candidates);
+            }
+            while let Some(candidate)=l.ready.pop_front(){
+                if !l.shadow.preflight(&candidate,now){continue}
+                let frozen=candidate.frozen();
+                let n=frozen.bytes().len();
+                if n==0||n>MAX_WIRE{
+                    let _=l.shadow.on_send_result(
+                        &candidate,RepairSendResult::NotSent,now);
+                    continue
+                }
+                let wire_bytes=n as u64+OUTER_HEADER_BYTES;
+                match self.budget.reserve(&candidate,wire_bytes,now){
+                    Ok(reservation)=>{
+                        let meta=frozen.metadata();
+                        let copy=CosmeticCopy{lane:i,pn:meta.pn.0,
+                            seq:meta.seq.0,wire:Arc::clone(&frozen.wire)};
+                        l.held=Some((candidate,reservation));
+                        return Some(copy)
+                    },
+                    Err(BudgetError::BurstPaced)=>{
+                        l.retry_after_ns=Some(now_ns.saturating_add(PACER_RETRY_NS));
+                        l.ready.push_front(candidate);
+                        return None
+                    },
+                    Err(BudgetError::QuotaExhausted)=>{
+                        let _=l.shadow.on_quota_exhausted(&candidate,now);
+                    },
+                    Err(_)=>{
+                        let _=l.shadow.on_send_result(
+                            &candidate,RepairSendResult::NotSent,now);
+                    }
+                }
+            }
         }
         None
     }
     pub fn complete(&mut self,index:usize,pn:u64,copied:bool,now_ns:u64)->bool{
         let Some(l)=self.lanes.get_mut(index)else{return false};
-        let Some((held_pn,record_bytes))=l.held else{return false};
-        if held_pn!=pn{return false}
-        l.held=None;
-        l.not_before=now_ns.saturating_add(MIN_INTERVAL_NS);
+        let Some((candidate,reservation))=l.held.take()else{return false};
+        if candidate.pn()!=RecordPn(pn){
+            l.held=Some((candidate,reservation));
+            return false
+        }
+        // RAW send_one's error is not proof that the kernel copied nothing.
+        // Mirror Normal: uncertain consumes the sole frozen opportunity.
+        let result=if copied{RepairSendResult::Accepted}
+            else{RepairSendResult::Uncertain};
+        let now=MonoNs(now_ns);
+        let _=self.budget.on_send_result(reservation,result,now);
+        let _=l.shadow.on_send_result(&candidate,result,now);
         if copied{
             l.sent=l.sent.saturating_add(1);
-            l.last_replay_ack=l.last_ack;
-            l.copied_record_wire_bytes=l.copied_record_wire_bytes.saturating_add(record_bytes as u64);
+            self.copied_record_wire_bytes=self.copied_record_wire_bytes
+                .saturating_add(candidate.frozen().bytes().len() as u64+
+                    OUTER_HEADER_BYTES);
         }
         true
     }
     pub fn sent(&self)->u64{self.lanes.iter().map(|l|l.sent).sum()}
-    pub fn copied_record_wire_bytes(&self)->u64{
-        self.lanes.iter().map(|l|l.copied_record_wire_bytes).sum()
-    }
-    pub fn first_record_wire_bytes(&self)->u64{
-        self.lanes.iter().map(|l|l.first_record_wire_bytes).sum()
-    }
+    pub fn copied_record_wire_bytes(&self)->u64{self.copied_record_wire_bytes}
+    pub fn first_record_wire_bytes(&self)->u64{self.first_record_wire_bytes}
 }
 #[cfg(test)]
 mod tests{
     use super::*;
-    #[test]
-    fn game_fec_outer_is_sparse_one_shot_frozen_and_does_not_mutate_source(){
-        let mut c=CosmeticOuter::new(2);
-        let wire=vec![9u8;1290];
-        for i in 1..2{
-            assert!(!c.should_sample(0),"no per-source duplicate allocation");
-            assert!(c.next_due().is_none());
-            let _=i;
-        }
-        assert!(c.should_sample(0));
-        c.sample(0,77,10001,&wire,5_000_000);
-        assert_eq!(c.next_due(),Some(255_000_000));
-        assert!(c.take_due(254_999_999,&[]).is_none());
-        let copy=c.take_due(255_000_000,&[]).unwrap();
-        assert_eq!(copy.lane,0);assert_eq!(copy.pn,77);
-        assert_eq!(copy.seq,10001);assert_eq!(&*copy.wire,&wire);
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:1,generation:7},
-            slot:1,generation:7};
-        let f=copy.frozen(key);
-        assert_eq!(f.metadata().pn,RecordPn(77));
-        assert_eq!(f.metadata().seq,SeqOffset(10001));
-        assert_eq!(f.bytes(),wire);
-        assert!(c.take_due(255_000_001,&[]).is_none());
-        assert!(!c.complete(0,78,true,255_000_000));
-        assert!(c.complete(0,77,true,255_000_000));
-        assert!(!c.complete(0,77,true,125_000_000));
-        assert_eq!(c.sent(),1);
-        assert_eq!(c.copied_record_wire_bytes(),1290);
-        assert_eq!(c.first_record_wire_bytes(),0); // should_sample path
+    fn keys(n:usize)->Vec<LaneKey>{
+        (1..=n).map(|slot|LaneKey{
+            tunnel:wbd_types::TunnelKey{slot:14,generation:7},
+            slot:slot as u32,generation:7,
+        }).collect()
     }
     #[test]
-    fn r1_game_lossless_cumulative_ack_has_no_outer_copy(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:18,generation:2},
-            slot:1,generation:2};
-        let mut c=CosmeticOuter::with_normal_feedback(&[key],&[100],[9;16]).unwrap();
-        for i in 0..32u64{
-            c.on_firstsend(0,i+1,100+10*i,b"0123456789",
-                (i+1)*1_000_000).unwrap();
+    fn lossless_real_cumulative_ack_does_not_emit_cosmetic_copy(){
+        let k=keys(2);
+        let mut c=CosmeticOuter::with_normal_feedback(&k,&[100,100],[7;16]).unwrap();
+        for i in 0..64u64{
+            c.on_firstsend(0,i+1,100+100*i,&[9;100],(i+1)*1_000_000).unwrap();
         }
-        assert!(c.take_due(500_000_000,&[]).is_none());
-        assert!(!c.on_feedback(0,420,600_000_000));
-        assert!(c.next_due().is_none());
+        assert!(!c.on_feedback(0,6500,&[],300_000_000));
+        assert!(c.take_due(400_000_000,&[]).is_none());
         assert_eq!(c.sent(),0);
+        assert_eq!(c.first_record_wire_bytes(),64*140);
     }
     #[test]
-    fn r1_game_stalled_real_ack_allows_unacked_sample_not_exact_head(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:44,generation:7},
-            slot:1,generation:7};
-        let mut c=CosmeticOuter::with_normal_feedback(
-            &[key],&[100],[6;16]).unwrap();
-        for i in 1..=32u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                i*1_000_000).unwrap();
+    fn normal_v3_gap_can_repair_more_than_one_candidate_per_lane(){
+        let k=keys(2);
+        let mut c=CosmeticOuter::with_normal_feedback(&k,&[100,100],[7;16]).unwrap();
+        let mut heads=Vec::new();
+        for i in 1..=96u64{
+            let seq=100+(i-1)*100;
+            c.on_firstsend(0,i,seq,&[9;100],i*1_000_000).unwrap();
+            if admit_shadow(i,k[0]){heads.push((i,seq));}
         }
-        assert!(c.next_due().is_none());
-        // The first actual original seq100 was not sampled; PN2 is
-        // unacknowledged but not the real hole. This is cosmetics ONLY.
-        for t in [80_000_000,90_000_000,100_000_000,110_000_000]{
-            assert!(!c.on_feedback(0,100,t)); // initial RTT quiet
+        assert!(heads.len()>30);
+        // At least the first indexed head has a genuine later indexed send.
+        let (pn,seq)=heads[0];
+        for t in [200_000_000,210_000_000,220_000_000]{
+            let _=c.on_feedback(0,seq as u32,&[],t);
         }
-        assert!(c.take_due(990_000_000,&[true]).is_none());
-        // Four separate authentically opened later Game records carry
-        // one genuinely stalled cumulative ACK after the initial RTT.
-        assert!(!c.on_feedback(0,100,1_010_000_000));
-        assert!(!c.on_feedback(0,100,1_020_000_000));
-        assert!(c.on_feedback(0,100,1_100_000_000));
-        assert_eq!(c.next_due(),Some(1_100_000_000));
-        let copy=c.take_due(1_110_000_000,&[true]).unwrap();
-        assert_eq!((copy.pn,copy.seq),(2,110));
-        assert_eq!(copy.frozen(key).bytes(),b"0123456789");
-        assert!(c.complete(0,2,true,1_110_000_000));
-        assert!(c.take_due(1_111_000_000,&[true]).is_none());
+        let first=c.take_due(260_000_000,&[true,true]).unwrap();
+        assert_eq!((first.pn,first.seq),(pn,seq));
+        assert!(c.complete(0,pn,true,260_000_000));
         assert_eq!(c.sent(),1);
-        assert!(c.copied_record_wire_bytes()*10<=c.first_record_wire_bytes());
+        // A new advancing cumulative ACK allows a different frozen candidate,
+        // unlike the former single-shadow/per-lane 1s stall implementation.
+        let (pn2,seq2)=heads[1];
+        for t in [350_000_000,360_000_000,370_000_000,380_000_000]{
+            let _=c.on_feedback(0,seq2 as u32,&[],t);
+        }
+        let second=c.take_due(410_000_000,&[true,true]).unwrap();
+        assert_eq!(second.pn,pn2);
+        assert!(c.complete(0,pn2,true,410_000_000));
     }
     #[test]
-    fn r1_game_short_duplicate_ack_burst_with_progress_is_not_real_stall(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:45,generation:7},
-            slot:1,generation:7};
-        let mut c=CosmeticOuter::with_normal_feedback(&[key],&[100],[6;16]).unwrap();
+    fn one_original_pn_is_never_repaired_twice(){
+        let k=keys(2);
+        let mut c=CosmeticOuter::with_normal_feedback(&k,&[100,100],[7;16]).unwrap();
+        let mut target=None;
         for i in 1..=64u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                i*1_000_000).unwrap();
+            let seq=100+(i-1)*100;
+            c.on_firstsend(0,i,seq,&[1;100],i*1_000_000).unwrap();
+            if target.is_none()&&admit_shadow(i,k[0]){target=Some((i,seq));}
         }
-        for step in 0..15u64{
-            let ack=100+(step*10) as u32;
-            let now=80_000_000+step*100_000_000;
-            for shift in [0u64,2_000_000,4_000_000,6_000_000]{
-                assert!(!c.on_feedback(0,ack,now+shift));
-            }
-            assert!(c.next_due().is_none());
+        let (pn,seq)=target.unwrap();
+        for t in [180_000_000,190_000_000,200_000_000]{
+            let _=c.on_feedback(0,seq as u32,&[],t);
         }
-        assert_eq!(c.sent(),0);
-    }
-    #[test]
-    fn r1_game_only_index_live_original_shadow_not_half_the_source(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:49,generation:7},
-            slot:1,generation:7};
-        let mut c=CosmeticOuter::with_normal_feedback(&[key],&[100],[6;16]).unwrap();
-        for i in 1..=64u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                i*1_000_000).unwrap();
+        let first=c.take_due(250_000_000,&[true,true]).unwrap();
+        assert_eq!(first.pn,pn);
+        assert!(c.complete(0,pn,true,250_000_000));
+        for t in [260_000_000,270_000_000,280_000_000]{
+            let _=c.on_feedback(0,seq as u32,&[],t);
         }
-        let lane=&c.lanes[0];
-        assert_eq!(lane.ack.as_ref().unwrap().highest_sent_end(),740);
-        assert_eq!(lane.ack.as_ref().unwrap().outstanding(),1);
-        assert_eq!(lane.first_record_wire_bytes,640);
-        assert_eq!(lane.pending.as_ref().unwrap().1.pn,2);
-        assert_eq!(c.sent(),0);
-        assert!(c.next_due().is_none());
-    }
-    #[test]
-    fn r1_game_one_cosmetic_copy_per_stalled_ack_epoch(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:47,generation:7},
-            slot:1,generation:7};
-        let mut c=CosmeticOuter::with_normal_feedback(&[key],&[100],[6;16]).unwrap();
-        for i in 1..=32u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                i*1_000_000).unwrap();
-        }
-        for t in [80_000_000,90_000_000,100_000_000,1_100_000_000]{
-            let _=c.on_feedback(0,100,t);
-        }
-        let first=c.take_due(1_110_000_000,&[true]).unwrap();
-        assert!(c.complete(0,first.pn,true,1_110_000_000));
-        for i in 33..=64u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                1_200_000_000+i*1_000_000).unwrap();
-        }
-        for t in [1_310_000_000,1_410_000_000,1_510_000_000,
-                  1_710_000_000,2_110_000_000]{
-            assert!(!c.on_feedback(0,100,t));
-            assert!(c.take_due(t,&[true]).is_none());
-        }
-        assert_eq!(c.sent(),1);
-    }
-    #[test]
-    fn h812_normal_ack_targets_missing_original_not_later_sample(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:14,generation:11},
-            slot:1,generation:11};
-        let mut c=CosmeticOuter::with_normal_feedback(
-            &[key],&[100],[7;16]).unwrap();
-        for i in 1..=32u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                i*1_000_000).unwrap();
-        }
-        assert_eq!(c.next_due(),None); // no unsolicited Game DATA PTO
-        for t in [40_000_000,50_000_000,60_000_000]{
-            assert!(!c.on_feedback(0,100,t))
-        }
-        assert!(c.take_due(80_000_000,&[]).is_none());
-        for t in [85_000_000,86_000_000,87_000_000]{
-            assert!(!c.on_feedback(0,110,t))
-        }
-        assert!(!c.on_feedback(0,110,88_000_000));
-        assert!(c.on_feedback(0,110,1_100_000_000));
-        let row=c.take_due(1_100_000_000,&[]).unwrap();
-        assert_eq!((row.pn,row.seq),(2,110));
-        assert!(c.complete(0,2,true,1_100_000_000));
-        assert_eq!(c.sent(),1);
-        assert_eq!(c.first_record_wire_bytes(),320);
-        assert_eq!(c.copied_record_wire_bytes(),10);
-        for i in 33..=48u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                i*1_000_000).unwrap();
-        }
-        assert!(c.next_due().is_none()); // bounded 80ms cooldown
-    }
-    #[test]
-    fn h812_original_health_advances_outer_seq_without_repair_candidate(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:14,generation:13},
-            slot:1,generation:13};
-        let mut c=CosmeticOuter::with_normal_feedback(
-            &[key],&[100],[7;16]).unwrap();
-        c.on_health_copy(0,100,42).unwrap();
-        assert!(c.on_health_copy(0,100,42).is_err());
-        c.on_firstsend(0,1,142,b"0123456789",1_000_000).unwrap();
-        assert_eq!(c.next_due(),None);
-        assert_eq!(c.sent(),0);
-    }
-    #[test]
-    fn h812_ack_retirement_cancels_pending_original_raw_copy(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:14,generation:12},
-            slot:2,generation:12};
-        let mut c=CosmeticOuter::with_normal_feedback(
-            &[key],&[100],[7;16]).unwrap();
-        for i in 1..=16u64{
-            c.on_firstsend(0,i,100+(i-1)*10,b"0123456789",
-                i*1_000_000).unwrap();
-        }
-        assert_eq!(c.next_due(),None);
-        assert!(!c.on_feedback(0,260,100_000_000));
-        assert!(c.next_due().is_none());
-        assert_eq!(c.sent(),0);
-    }
-    #[test]
-    fn r1_game_original_ciphertext_requires_real_gap_and_replays_once(){
-        let key=LaneKey{tunnel:wbd_types::TunnelKey{slot:17,generation:9},
-            slot:1,generation:9};
-        let mut outer=CosmeticOuter::with_normal_feedback(&[key],&[100],[5;16]).unwrap();
-        let wire=b"real-original-ciphertext";
-        // PN2 is the exact sampled head; PN4 is an actual later copy.
-        for i in 0..32u64{
-            outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
-                wire,(i+1)*1_000_000).unwrap();
-        }
-        assert_eq!(outer.next_due(),None);
-        assert!(outer.take_due(1_000_000_000,&[true]).is_none());
-        let head=(100+wire.len()) as u32;
-        for t in [80_000_000,90_000_000,100_000_000]{
-            assert!(!outer.on_feedback(0,head,t));
-        }
-        assert!(!outer.on_feedback(0,head,110_000_000));
-        assert!(outer.on_feedback(0,head,1_100_000_000));
-        let copy=outer.take_due(1_100_000_000,&[true]).unwrap();
-        assert_eq!((copy.pn,copy.seq),(2,u64::from(head)));
-        let frozen=copy.frozen(key);
-        assert_eq!(frozen.bytes(),wire);
-        assert_eq!(frozen.metadata().pn,RecordPn(2));
-        assert!(outer.take_due(1_100_000_001,&[true]).is_none());
-        assert!(outer.complete(0,2,true,1_100_000_000));
-        assert!(!outer.complete(0,2,true,1_100_000_001));
-        assert_eq!(outer.sent(),1);
-        assert_eq!(outer.first_record_wire_bytes(),32*wire.len() as u64);
-        assert_eq!(outer.copied_record_wire_bytes(),wire.len() as u64);
-        for i in 32..48u64{
-            outer.on_firstsend(0,i+1,100+i*wire.len() as u64,
-                wire,(i+1)*1_000_000).unwrap();
-        }
-        assert!(outer.next_due().is_none()); // bounded cooldown
-    }
-    #[test]
-    fn game_fec_cosmetic_cannot_resume_retired_lane_or_double_credit(){
-        let mut c=CosmeticOuter::new(2);
-        c.sample(1,4,120,b"immutable",50);
-        assert!(c.take_due(250_000_051,&[true,false]).is_none());
-        assert_eq!(c.sent(),0);
-        c.sample(0,9,17,b"cipher",1);
-        let row=c.take_due(250_000_002,&[true,true]).unwrap();
-        assert_eq!(row.pn,9);
-        assert!(c.complete(0,9,false,250_000_002));
-        assert_eq!(c.sent(),0);
-        assert_eq!(c.copied_record_wire_bytes(),0);
-        assert!(c.next_due().is_none());
+        assert!(c.take_due(300_000_000,&[true,true]).is_none());
     }
 }

@@ -1,0 +1,52 @@
+name: M0 Game Normal outer WIP source compile
+# Go source is an overlay without go.mod; original Go compile happens only
+# in source-frozen real public product builder, not standalone go test.
+run-name: "M0-GAME-NORMAL-WIP|${{ github.sha }}"
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths:
+      - crates/wbd-engine/src/v4_windows_game_outer.rs
+      - crates/wbd-engine/src/v4_game_cosmetic_outer.rs
+      - crates/wbd-recovery/src/receipt.rs
+      - crates/wbd-engine/src/v4_game_public_kernel.rs
+      - crates/wbd-engine/src/v4_windows_game_native_runtime.rs
+      - crates/wbd-engine/src/v4_presentation_ack.rs
+      - crates/wbd-engine/src/v4_embedded_go.rs
+      - r0/go_overlay/internal/realityfront/bridge_v4_game_native_linux.go
+      - r0/go_overlay/internal/v4productcli/game_linux.go
+      - crates/wbd-platform/src/linux_raw_carrier.rs
+      - .github/workflows/m0-game-normal-outer-wip.yml
+permissions: {contents: read}
+concurrency:
+  group: m0-game-normal-outer-wip
+  cancel-in-progress: true
+jobs:
+  linux-unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build and execute Linux Game Normal-v3 receipt/RAW regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_game_cosmetic_outer::tests -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_presentation_ack::tests -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-platform --lib linux_raw_carrier::tests -- --nocapture
+  windows-unit:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Build exact Windows Game Normal-v3 owner and regression tests
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.85.1 --profile minimal
+          cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_windows_game_outer::tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --locked -p wbd-engine --features fec2_product_record --lib v4_presentation_ack::tests -- --nocapture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

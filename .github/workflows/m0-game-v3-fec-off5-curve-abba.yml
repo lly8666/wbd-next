@@ -1,0 +1,126 @@
+name: M0 Game4 OFF versus fixed-FEC 5pct outer repair curve attribution
+run-name: 'M0-GAME4-FEC-OFF5-CURVE|${{ github.sha }}'
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-v3-fec-off5-curve-abba.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  same-runner:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: 9d2a3230a84b1581e1f7abbf7f3d0d4fccfea347
+      BASE_RUN: '45209632283'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Source-lock exact original products, unchanged 5pct scenario and network harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          gh api "repos/$GH_REPO/compare/$SOURCE...$GITHUB_SHA" | jq -e '
+            .status=="ahead" and
+            ([.files[].filename | select(startswith("crates/") or startswith("r0/go_overlay/") or .=="Cargo.toml" or .=="Cargo.lock" or startswith("scenarios/") or startswith("tools/network_harness/"))]|length)==0
+          ' >/dev/null
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BASE_RUN" --jq .head_sha)" = "$SOURCE"
+          gh run download "$BASE_RUN" --repo "$GH_REPO" \
+            --name "m0-cosmetic-linux-original-product-$SOURCE" --dir native
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          p=pathlib.Path('native');m=json.loads((p/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['SOURCE'] and m['architecture']=='x86_64'
+          for line in (p/'SHA256SUMS').read_text().splitlines():
+              digest,name=line.split(maxsplit=1)
+              assert hashlib.sha256((p/name.removeprefix('*')).read_bytes()).hexdigest()==digest
+          print('M0_FEC_CURVE_SAME_SOURCE_HASHED',m['source_sha'])
+          PY
+          chmod +x native/wbd-v4-client native/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Four original Game4 5pct OFF FEC FEC OFF independent native legs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          sudo -n env GITHUB_SHA="$SOURCE" SOURCE="$SOURCE" \
+            GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_ACTIONS="$GITHUB_ACTIONS" \
+            GITHUB_WORKSPACE="$GITHUB_WORKSPACE" RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
+            python3 - <<'PY'
+          import json,os,pathlib,statistics
+          from tools.network_harness.m0_029_cosmetic_linux_dual_game import prepare,genuine_case,sha
+          from tools.network_harness.runner import LinuxExperiment
+          base=pathlib.Path(os.environ['GITHUB_WORKSPACE']);root=base/'out';bundle=base/'native'
+          source=os.environ['SOURCE'];hashes={n:sha(bundle/n) for n in ('wbd-v4-client','wbd-v4-server','libwbd_engine.so')}
+          plain=json.loads((base/'scenarios/m0-cosmetic-game4-loss5-60s.json').read_text())
+          fec=json.loads((base/'scenarios/m0-cosmetic-game4-fec-loss30-60s.json').read_text())
+          for side in ('windows_to_linux','linux_to_windows'):
+              assert plain[side]['loss_pct']==5 and fec[side]['loss_pct']==30
+              fec[side]['loss_pct']=5
+              assert plain[side]==fec[side],(side,plain[side],fec[side])
+          fec['scenario_id']='m0-cosmetic-game4-fec-loss5-60s'
+          assert (plain['seed'],fec['seed'],plain['duration_s'],fec['duration_s'])==(20261029,20261029,60,60)
+          links=root/'bundle-A'/'fixed-build';links.mkdir(parents=True,exist_ok=True)
+          for n in hashes:(links/n).symlink_to(bundle/n)
+          rows=[]
+          for index,mode in enumerate(('game4','game4-fec','game4-fec','game4'),1):
+              scene=plain if mode=='game4' else fec
+              cfg=prepare(scene,source,int(os.environ['GITHUB_RUN_ID']),mode)
+              p=root/f'{index}-{mode}';leg=LinuxExperiment(cfg,root/'bundle-A',p,'A').run()
+              result=genuine_case(scene,leg,p,hashes,source,mode)
+              if result['status']!='PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR':
+                  raise RuntimeError(f'Genuine native failed {index} {mode}: {result["blockers"]}')
+              telem=leg['telemetry'];outer=telem['game_outer_policy'];fecproof=telem['game_fec_native_proof']
+              if not isinstance(fecproof,dict):
+                  assert mode=='game4' and fecproof=='NOT_APPLICABLE_OR_NOT_OBSERVED',fecproof
+                  fecproof={}
+              schedule=telem.get('game4_copy_schedule_readback')
+              sides={}
+              for role in ('client','server'):
+                  a=result['repair'][role]; p0=outer[role]
+                  assert p0['repair_enabled']==1 and a['R_F']<=.1
+                  assert a['original_outer_data_repeat_count']>0 and a['F']>0 and a['R_accepted']>0
+                  if mode=='game4-fec': assert fecproof[role].get('parity_copied',0)>0
+                  sides[role]={'F':a['F'],'R':a['R_accepted'],'R_F':a['R_F'],
+                      'copy_count':a['original_outer_data_repeat_count'],
+                      'first_count':p0['first_lane_copied'],
+                      'mean_first_bytes':a['F']/p0['first_lane_copied'],
+                      'mean_copy_bytes':a['R_accepted']/a['original_outer_data_repeat_count'],
+                      'fec_counts':fecproof.get(role,{}),
+                      'schedule':(schedule.get(role) if isinstance(schedule,dict) else None)}
+              row={'index':index,'mode':mode,'source':source,'loss_pct':5,
+                  'cpu_s':result['process_measurement_cpu_s'],'side':sides,
+                  'netem_drops':result['netem_drops'],'app':result['measured_app'],
+                  'cleanup':result['cleanup']['owned_namespaces_absent'],
+                  'status':result['status']}
+              assert row['cleanup'] and all(row['netem_drops'][r]>0 for r in ('client','server'))
+              (p/'m0-fec-curve-leg.json').write_text(json.dumps(row,indent=2)+'\n')
+              rows.append(row)
+              print('M0_FEC_CURVE_NATIVE_LEG',json.dumps(row,sort_keys=True),flush=True)
+          summary={'schema':'m0-game4-fec-5pct-source-frozen-off-fec-fec-off/v1',
+              'source':source,'same_runner':True,'order':'OFF_FEC_FEC_OFF',
+              'netem_loss_pct':5,'rows':rows,'means':{}}
+          for role in ('client','server'):
+              x={}
+              for mode in ('game4','game4-fec'):
+                  subset=[r['side'][role] for r in rows if r['mode']==mode]
+                  x[mode]={field:statistics.fmean(r[field] for r in subset) for field in ('F','R','R_F','first_count','copy_count','mean_first_bytes','mean_copy_bytes')}
+              x['ratio_fec_over_off']={field:x['game4-fec'][field]/x['game4'][field]
+                  for field in ('F','R','R_F','first_count','copy_count')}
+              summary['means'][role]=x
+          (root/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          print('M0_SAME_RUNNER_FEC5_CURVE_ATTRIBUTION',json.dumps(summary,sort_keys=True),flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-game4-fec5-curve-source-frozen-${{ github.sha }}
+          path: |
+            out/summary.json
+            out/*/m0-fec-curve-leg.json
+          retention-days: 30
+          if-no-files-found: warn

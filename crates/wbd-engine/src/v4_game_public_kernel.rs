@@ -27,7 +27,15 @@ use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
 use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx,RawTxError};
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
-use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation};
+use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation,SackRange32};
+fn pack_game_sack(sack:Option<SackRange32>)->u64{
+    sack.map_or(0,|v|(u64::from(v.start)<<32)|u64::from(v.end))
+}
+fn unpack_game_sack(packed:u64)->Option<SackRange32>{
+    (packed!=0).then_some(SackRange32{
+        start:(packed>>32) as u32,end:packed as u32,
+    })
+}
 use wbd_platform::r1::StopResult;
 #[repr(C)]
 struct GamePollFd {fd:i32,events:i16,revents:i16}
@@ -104,6 +112,8 @@ pub(crate) struct GameKernelOwner{
     rx_lock_sample:Arc<RxLockSample>,tx_reasons:Arc<TxRejectReasons>,
     outer_blocked_duplicate:Arc<AtomicU64>,
     outer_repeated_copy_sent:Arc<AtomicU64>,
+    outer_first_wire_bytes:Arc<AtomicU64>,
+    outer_repair_wire_bytes:Arc<AtomicU64>,
     tx_lane_switch:SyncSender<TxLaneSwitch>,
     rx_lane_switch:Vec<SyncSender<RxLaneSwitch>>,
     physical_ifname:String,physical_ifindex:u32,
@@ -195,6 +205,8 @@ impl GameKernelOwner{
         let rx_lock_sample=Arc::new(RxLockSample::default());
         let outer_blocked_duplicate=Arc::new(AtomicU64::new(0));
         let outer_repeated_copy_sent=Arc::new(AtomicU64::new(0));
+        let outer_first_wire_bytes=Arc::new(AtomicU64::new(0));
+        let outer_repair_wire_bytes=Arc::new(AtomicU64::new(0));
         let mut lanes=Vec::new();
         for i in 0..n{
             lanes.push(TxLane{
@@ -210,6 +222,16 @@ impl GameKernelOwner{
         let presentation_hints=Arc::new((0..n)
             .map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
         let tx_hints=Arc::clone(&presentation_hints);
+        // Normal's newest four authenticated positive SACK ranges per lane.
+        // Fixed atomic words; no additional worker or heap in the hot path.
+        let outbound_sacks=Arc::new((0..n).map(|_|
+            std::array::from_fn(|_|AtomicU64::new(0))
+        ).collect::<Vec<[AtomicU64;4]>>());
+        let tx_outbound_sacks=Arc::clone(&outbound_sacks);
+        let inbound_peer_sacks=Arc::new((0..n).map(|_|
+            std::array::from_fn(|_|AtomicU64::new(0))
+        ).collect::<Vec<[AtomicU64;4]>>());
+        let tx_inbound_peer_sacks=Arc::clone(&inbound_peer_sacks);
         // Go-TLS original per-lane RX boundary is the authority; do not
         // infer cumulative ACK from the first packet that happens to arrive.
         let presentation_ack=Arc::new(rx_seqs.iter()
@@ -238,6 +260,8 @@ impl GameKernelOwner{
         let tx_fail=Arc::clone(&tx_reasons);
         let outer_denied=Arc::clone(&outer_blocked_duplicate);
         let outer_repeated=Arc::clone(&outer_repeated_copy_sent);
+        let tx_outer_first_bytes=Arc::clone(&outer_first_wire_bytes);
+        let tx_outer_repair_bytes=Arc::clone(&outer_repair_wire_bytes);
         #[allow(unused_variables)]
         let (inner_mtu,rx_owner,fec_enabled,health_origin,health_rx)={
             let game=adapter.lock().map_err(|_|())?;
@@ -593,6 +617,11 @@ impl GameKernelOwner{
                             let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
                             let ok=sent.is_ok();
                             if ok {
+                                // One real Linux RAW first DATA copy; no FEC
+                                // symbol/repeat misattribution. Original TCP
+                                // DATA has exactly 40 bytes outer overhead.
+                                tx_outer_first_bytes.fetch_add(
+                                    wire.len() as u64+40,Ordering::Relaxed);
                                 if pad>0{
                                     tx_pad_records.fetch_add(1,Ordering::Relaxed);
                                     tx_pad_bytes.fetch_add(pad as u64,Ordering::Relaxed);
@@ -777,9 +806,23 @@ impl GameKernelOwner{
                             if current==observed_hints[i]{continue}
                             let count=(current>>32)
                                 .wrapping_sub(observed_hints[i]>>32).min(3);
+                            let mut sack=[wbd_recovery::outer_ack::SackRange32{
+                                start:0,end:0
+                            };4];
+                            let mut total=0;
+                            for slot in &tx_inbound_peer_sacks[i]{
+                                let positive=unpack_game_sack(
+                                    slot.load(Ordering::Acquire));
+                                if let Some(v)=positive{
+                                    sack[total]=wbd_recovery::outer_ack::SackRange32{
+                                        start:v.start,end:v.end,
+                                    };
+                                    total+=1;
+                                }
+                            }
                             for _ in 0..count{
                                 let _=cosmetic.on_feedback(i,current as u32,
-                                    clock_ns);
+                                    &sack[..total],clock_ns);
                             }
                             observed_hints[i]=current;
                         }
@@ -803,6 +846,8 @@ impl GameKernelOwner{
                             }else{false};
                             if copied{
                                 outer_repeated.fetch_add(1,Ordering::Relaxed);
+                                tx_outer_repair_bytes.fetch_add(
+                                    copy.wire.len() as u64+40,Ordering::Relaxed);
                             }
                             let _=cosmetic.complete(copy.lane,copy.pn,copied,
                                 clock_ns);
@@ -825,8 +870,18 @@ impl GameKernelOwner{
                         };
                         let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,
                             src_port:sp,dst_port:dp};
+                        let mut slot=[SackRange32{start:0,end:0};4];
+                        let mut total=0;
+                        for field in &tx_outbound_sacks[index]{
+                            if let Some(v)=unpack_game_sack(
+                                field.load(Ordering::Acquire)){
+                                slot[total]=v;
+                                total+=1;
+                            }
+                        }
+                        let sacks=&slot[..total];
                         if item.raw.send_presentation_ack_sack(generation,tuple,
-                            item.seq as u32,current,&[]).is_ok(){
+                            item.seq as u32,current,sacks).is_ok(){
                             ack_sent[index]=current;
                             ack_last_ns[index]=clock_ns;
                             observed_future[index]=future;
@@ -901,6 +956,8 @@ impl GameKernelOwner{
             let rx_tun=Arc::clone(&tun);
             let rx_stop=Arc::clone(&stop);
             let rx_hints=Arc::clone(&presentation_hints);
+            let rx_sack=Arc::clone(&outbound_sacks);
+            let rx_peer_sack=Arc::clone(&inbound_peer_sacks);
             let rx_ack=Arc::clone(&presentation_ack);
             let rx_future=Arc::clone(&authenticated_future);
             let rx_initial=rx_seqs[i];
@@ -933,6 +990,8 @@ impl GameKernelOwner{
                         flow=change.flow;
                         lane_opener=change.opener;
                         ack_ledger=NativePresentationAck::new(change.rx_seq);
+                        for field in &rx_sack[i]{field.store(0,Ordering::Release)}
+                        for field in &rx_peer_sack[i]{field.store(0,Ordering::Release)}
                         rx_ack[i].store(change.rx_seq,Ordering::Release);
                         let _=change.ready.send(old);
                     }
@@ -942,8 +1001,8 @@ impl GameKernelOwner{
                         (flow.server_ip,flow.client_ip,flow.server_port,flow.client_port)
                     };
                     let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
-                    let (len,seq32,ack32)=match raw.recv_one_with_ack_into(
-                        generation,&mut wire,tuple,peer_persona
+                    let (len,seq32,ack32,peer_sack,peer_sack_count)=match raw.recv_one_with_ack_control_into(
+                        generation,&mut wire,tuple,peer_persona,outer_repair_enabled
                     ){
                         Ok(data)=>data,
                         Err(wbd_platform::linux_raw_carrier::RawTxError::Kernel(110))=>{
@@ -970,6 +1029,21 @@ impl GameKernelOwner{
                         }
                     };
                     if rx_stop.load(Ordering::Acquire){break}
+                    // Pure carrier ACK matches Normal's optional outer
+                    // metadata: no AEAD open, delivery, Health or FEC credit.
+                    if len==0{
+                        if outer_repair_enabled{
+                            for (k,field) in rx_peer_sack[i].iter().enumerate(){
+                                field.store(pack_game_sack((k<peer_sack_count)
+                                    .then_some(peer_sack[k])),Ordering::Release);
+                            }
+                            let last=rx_hints[i].load(Ordering::Relaxed);
+                            rx_hints[i].store(
+                                ((last>>32).wrapping_add(1)<<32)|u64::from(ack32),
+                                Ordering::Release);
+                        }
+                        continue
+                    }
                     raw_seen.fetch_add(1,Ordering::Relaxed);
                     sampled_sequence=sampled_sequence.wrapping_add(1);
                     // The two real RX preparation paths each own exactly one
@@ -980,10 +1054,28 @@ impl GameKernelOwner{
                     // decode are done solely by THIS physical lane worker,
                     // with no shared GameReceiveOwner lock and no extra copy.
                     let opened=lane_opener.open(&mut wire[..len]);
+                    if matches!(&opened,Ok(Some(_))){
+                        // The original AEAD/PN accepted a physical lane
+                        // ciphertext, even if another lane already delivered
+                        // the same logical Game source to TUN. Normal outer
+                        // ACK is physical DATA progress, not business receipt.
+                        if ack_ledger.authenticated_future(seq32){
+                            rx_future[i].fetch_add(1,Ordering::Release);
+                        }
+                        let _=ack_ledger.verified(seq32,len);
+                        let now_ns=rx_start.elapsed().as_nanos()
+                            .min(u128::from(u64::MAX)) as u64;
+                        let _=ack_ledger.abandon_stalled(now_ns);
+                        for (field,positive) in rx_sack[i].iter()
+                            .zip(ack_ledger.sacks4()){
+                            field.store(pack_game_sack(positive),Ordering::Release);
+                        }
+                        rx_ack[i].store(ack_ledger.ack(),Ordering::Release);
+                    }
                     if outer_repair_enabled && matches!(&opened,Ok(Some(_))){
-                        // TCP appearance is not AEAD-authenticated by
-                        // itself: only actual original Game opens may
-                        // nominate peer ACK gaps. This does not award
+                        // AEAD-opened DATA may also carry Normal-style outer
+                        // ACK hints. Pure ACKs are handled above and cannot
+                        // award authenticated activity. Neither path awards
                         // business, Health, FEC or receipt credit.
                         let last=rx_hints[i].load(Ordering::Relaxed);
                         rx_hints[i].store(
@@ -1057,10 +1149,6 @@ impl GameKernelOwner{
                                     }
                                 };
                                 if all_written&&committed.is_ok(){
-                                    if ack_ledger.authenticated_future(seq32){
-                                        rx_future[i].fetch_add(1,Ordering::Release);
-                                    }
-                                    rx_ack[i].store(ack_ledger.verified(seq32,len),Ordering::Release);
                                     recv_count.fetch_add(wrote_count,Ordering::Relaxed);
                                 }else if committed.is_err()||wrote_count>0{
                                     // Partial batch cannot be rolled back after
@@ -1130,10 +1218,6 @@ impl GameKernelOwner{
                                 tun_failed.fetch_add(1,Ordering::Relaxed);
                                 recv_rejected.fetch_add(1,Ordering::Relaxed);
                             }else if finished.is_ok(){
-                                if ack_ledger.authenticated_future(seq32){
-                                        rx_future[i].fetch_add(1,Ordering::Release);
-                                    }
-                                    rx_ack[i].store(ack_ledger.verified(seq32,len),Ordering::Release);
                                 recv_count.fetch_add(1,Ordering::Relaxed);
                             }else{
                                 // A committed-to-TUN but stale/invalid receive
@@ -1185,7 +1269,8 @@ impl GameKernelOwner{
             rx_driver_timeout,rx_driver_other,rx_mutex_acquired,
             rx_authenticated_some,rx_dedup_none,rx_tun_failed,
             rx_delivery_commit_failed,rx_lock_sample,tx_reasons,outer_blocked_duplicate,
-            outer_repeated_copy_sent,tx_lane_switch,rx_lane_switch,
+            outer_repeated_copy_sent,outer_first_wire_bytes,
+            outer_repair_wire_bytes,tx_lane_switch,rx_lane_switch,
             physical_ifname:ifname.to_string(),physical_ifindex:ifindex,
             physical_generation:generation,server,
             diagnostic_adapter:adapter,tx_work_sample,tx_shared_burst_extra,
@@ -1239,10 +1324,12 @@ impl GameKernelOwner{
     pub(crate) fn fail_closed_after_hot_rekey(&self){
         self.stop.store(true,Ordering::Release);
     }
-    pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64){
+    pub(crate) fn outer_policy_counters(&self)->(u64,u64,u64,u64,u64){
         (self.outer_repeated_copy_sent.load(Ordering::Relaxed),
          self.outer_blocked_duplicate.load(Ordering::Relaxed),
-         self.copied.load(Ordering::Relaxed))
+         self.copied.load(Ordering::Relaxed),
+         self.outer_first_wire_bytes.load(Ordering::Relaxed),
+         self.outer_repair_wire_bytes.load(Ordering::Relaxed))
     }
     pub(crate) fn padding_copied_counters(&self)->(u64,u64){
         (self.padded_copied_records.load(Ordering::Relaxed),

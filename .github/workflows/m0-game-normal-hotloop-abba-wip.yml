@@ -1,0 +1,173 @@
+# M0 source-locked Game4-FEC30 ABBA: only receipt.rs idle candidate Vec allocation changes.
+name: M0 Game Normal-v3 Game4-FEC 30pct lazy timer Vec CPU ABBA
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-normal-hotloop-abba-wip.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  same-runner:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      OLD_SOURCE: 4762fa9c61dfad540fd4e04349001cfb0eda54df
+      NEW_SOURCE: 6446db7bde09b96b9892f127e12ebb52ae915df2
+      OLD_RUN: "45181693979"
+      NEW_RUN: "45186810758"
+      SCENARIO: scenarios/m0-cosmetic-game4-fec-loss30-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze both old and new real original product, stable harness and native scenario
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          # checkout intentionally drops auth after the source checkout.
+          # Never run unauthenticated git fetch by raw private SHA.
+          # GitHub's authenticated compare API validates the same frozen
+          # source-only invariant without depending on shallow git history.
+          gh api "repos/$GH_REPO/compare/$OLD_SOURCE...$NEW_SOURCE" |
+            jq -e '
+              .status=="ahead" and
+              ([.files[].filename | select(startswith("tools/network_harness/") or .=="scenarios/m0-cosmetic-game4-fec-loss30-60s.json")] | length)==0 and
+              ([.files[].filename | select((startswith("crates/") or startswith("r0/go_overlay/internal/") or .=="Cargo.toml" or .=="Cargo.lock") and .!="crates/wbd-recovery/src/receipt.rs")] | length)==0 and
+              ([.files[].filename | select(.=="crates/wbd-recovery/src/receipt.rs")] | length)==1
+            ' >/dev/null
+          gh api "repos/$GH_REPO/compare/$NEW_SOURCE...$GITHUB_SHA" |
+            jq -e '
+              .status=="ahead" and
+              ([.files[].filename | select(startswith("crates/") or startswith("r0/go_overlay/") or startswith("tools/network_harness/") or .=="Cargo.toml" or .=="Cargo.lock" or .=="scenarios/m0-cosmetic-game4-fec-loss30-60s.json")] | length)==0
+            ' >/dev/null
+          echo M0_ABBA_SOURCE_COMPARE_SAME_PRODUCT_EXCEPT_LAZY_CANDIDATES
+          test "$(gh api "repos/$GH_REPO/actions/runs/$OLD_RUN" --jq .head_sha)" = "$OLD_SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$NEW_RUN" --jq .head_sha)" = "$NEW_SOURCE"
+          # The old multi-scenario run had unrelated Game2 1/10/20
+          # missing-scenario failures, but its exact Game4-FEC30 leg and
+          # source-hashed product builder succeeded. Inspect those required
+          # jobs, not the unrelated matrix aggregate conclusion.
+          for run in "$OLD_RUN" "$NEW_RUN"; do
+            gh api "repos/$GH_REPO/actions/runs/$run/jobs?per_page=100" |
+              jq -e '
+                ([.jobs[] | select(.name=="native-bundle-once" and .conclusion=="success")] | length)==1 and
+                ([.jobs[] | select(.name=="one-genuine-linux-client-and-server-scenario (game4-fec, 30)" and .conclusion=="success")] | length)==1
+              ' >/dev/null
+          done
+          echo M0_ABBA_PREVIOUS_EXACT_GAME4_FEC30_BOTH_SOURCES_PASSED
+          python3 - <<'PY'
+          import json,os
+          p=json.load(open(os.environ["SCENARIO"]))
+          assert (p["public_mode"],p["seed"],p["duration_s"],p["tun_mtu"])==("game4-fec",20261029,60,1400)
+          for side in ("windows_to_linux","linux_to_windows"):
+              assert (p[side]["loss_pct"],p[side]["offered_mbps"],p[side]["delay_ms"])==(30,10,250)
+          print("GAME4_FEC_CPU_ABBA_PRECOMMITTED_SAME_HARNESS_SOURCE_LOCKED")
+          PY
+      - name: Download actual old and new original Linux client/server products and verify each byte
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run download "$OLD_RUN" --repo "$GH_REPO" \
+            --name "m0-cosmetic-linux-original-product-$OLD_SOURCE" --dir native-old
+          gh run download "$NEW_RUN" --repo "$GH_REPO" \
+            --name "m0-cosmetic-linux-original-product-$NEW_SOURCE" --dir native-new
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          for label in ("old","new"):
+              root=pathlib.Path("native-"+label)
+              manifest=json.loads((root/"manifest.json").read_text())
+              assert manifest["source_sha"]==os.environ[label.upper()+"_SOURCE"]
+              assert manifest["architecture"]=="x86_64"
+              for line in (root/"SHA256SUMS").read_text().splitlines():
+                  digest,name=line.split(maxsplit=1)
+                  path=root/name.removeprefix("*")
+                  assert path.is_file()
+                  assert hashlib.sha256(path.read_bytes()).hexdigest()==digest
+              print("M0_ABBA_PRODUCT_TRUE_HASHES",label,manifest["source_sha"])
+          PY
+          chmod +x native-old/wbd-v4-client native-old/wbd-v4-server
+          chmod +x native-new/wbd-v4-client native-new/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Four REAL original client/server bidirectional Game4 FEC 30pct legs on SAME Ubuntu runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          # ABBA counterbalances warm process/cache/order noise. Each leg
+          # starts fresh original GoTLS + Rust clients/servers and independent
+          # kernel netns, with true netem, both owned Stop, immutable hashes.
+          labels=(old new new old)
+          index=0
+          for label in "${labels[@]}"; do
+            index=$((index+1))
+            if [ "$label" = old ]; then source="$OLD_SOURCE"; else source="$NEW_SOURCE"; fi
+            echo "M0_ABBA_LEG_START leg=$index source=$source mode=game4-fec loss=30"
+            sudo -n env GITHUB_SHA="$source" GITHUB_RUN_ID="$GITHUB_RUN_ID" \
+              GITHUB_ACTIONS="$GITHUB_ACTIONS" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" \
+              RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
+              python3 -m tools.network_harness.m0_029_cosmetic_linux_dual_game \
+              --bundle "$GITHUB_WORKSPACE/native-$label" \
+              --scenario "$SCENARIO" --mode game4-fec \
+              --out "$GITHUB_WORKSPACE/out/$index-$label"
+            test -f "out/$index-$label/result.json"
+            # Enforce same runner cleanup before next leg, never overlap.
+            LABEL="$label" SOURCE="$source" INDEX="$index" python3 - <<'PY'
+          import json,os,pathlib
+          v=json.loads(pathlib.Path(f"out/{os.environ['INDEX']}-{os.environ['LABEL']}/result.json").read_text())
+          assert v["source"]==os.environ["SOURCE"]
+          assert v["mode"]=="game4-fec" and v["status"]=="PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR"
+          assert v["cleanup"]["owned_namespaces_absent"] is True
+          assert all(v["netem_drops"][r]>0 for r in ("client","server"))
+          assert all(v["repair"][r]["original_outer_data_repeat_count"]>0 for r in ("client","server"))
+          assert all(v["process_measurement_cpu_s"][r]>0 for r in ("client","server"))
+          print("M0_ABBA_REAL_LEG_PASS",os.environ["INDEX"],v["source"],v["process_measurement_cpu_s"])
+          PY
+          done
+      - name: Preserve real ABBA CPU and first delivery; distinguish correlation from proof
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p out
+          python3 - <<'PY'
+          import json,pathlib,statistics
+          rows=[]
+          for idx,label in enumerate(("old","new","new","old"),1):
+              p=pathlib.Path(f"out/{idx}-{label}/result.json")
+              if not p.is_file():continue
+              x=json.loads(p.read_text())
+              rows.append({"index":idx,"source":label,"source_sha":x.get("source"),
+                  "status":x.get("status"),"cpu_s":x.get("process_measurement_cpu_s"),
+                  "offered_and_unique_first":x.get("measured_app"),
+                  "netem_drops":x.get("netem_drops"),"repair":x.get("repair"),
+                  "cleanup":x.get("cleanup")})
+          qualified=len(rows)==4 and all(x["status"]=="PASS_BOTH_REAL_LINUX_NATIVE_OUTER_REPAIR" for x in rows)
+          summary={"schema":"m0-game4-fec-30pct-original-linux-v3-cpu-abba/v1",
+              "old_source":"4762fa9c61dfad540fd4e04349001cfb0eda54df",
+              "new_source":"6446db7bde09b96b9892f127e12ebb52ae915df2",
+              "order":"OLD_NEW_NEW_OLD","real_same_ubuntu_runner":True,
+              "qualified":qualified,"rows":rows,"attribution":"FULL_ORIGINAL_GO_RUST_PROCESS_CPU_NOT_ISOLATED_ALGORITHM"}
+          if qualified:
+              for role in ("client","server"):
+                  old=statistics.fmean(r["cpu_s"][role] for r in rows if r["source"]=="old")
+                  new=statistics.fmean(r["cpu_s"][role] for r in rows if r["source"]=="new")
+                  summary[role+"_old_cpu_mean_s"]=old
+                  summary[role+"_new_cpu_mean_s"]=new
+                  summary[role+"_new_minus_old_cpu_s"]=new-old
+          pathlib.Path("out/summary.json").write_text(json.dumps(summary,indent=2)+"\n")
+          print("M0_SAME_VM_ABBA_MEASURED_NOT_ATTRIBUTED",json.dumps(summary,sort_keys=True))
+          assert qualified,"missing true 4-leg same-runner ABBA"
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-game-normal-v3-game4-fec30-lazy-vec-cpu-abba-${{ github.sha }}
+          path: |
+            out/summary.json
+            out/*/result.json
+            out/*/*/result.json
+            out/*/*/network-snapshots.json
+          retention-days: 30
+          if-no-files-found: warn
