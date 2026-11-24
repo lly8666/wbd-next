@@ -19,7 +19,7 @@
      WintunRx, WintunTx, WakeEvent, ReadResult, WaitResult,
  };
  use wbd_platform::ipv4_tcp::{
-     build_bytes, build_presentation_ack, build_presentation_ack_sack,
+     build_bytes, finish_bytes_in_place, BASE_OVERHEAD, build_presentation_ack, build_presentation_ack_sack,
      SackRange32 as WireSack, Ipv4Tuple, PacketPersona, Presentation,
  };
  use wbd_platform::rx_ipv4_tcp::{parse_data_packet_fast,parse_ack_packet,extend_seq32,TrustedRx};
@@ -151,6 +151,7 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
  }
  const MAX_IPV4:usize=2048;
  const MAX_LINK:usize=2304;
+ const FRAME_RECORD_OFFSET:usize=14+BASE_OVERHEAD;
  const MAX_NPF:usize=65535+64;
  const IDLE_WAIT:u32=u32::MAX;
  // Rust HealthClock only: never coalesce authenticated dead with BAD_STAGE=3.
@@ -507,11 +508,11 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      lane:&Arc<Mutex<Entry>>,tun:&mut WintunRx,npf:&mut NpcapTx,
      counters:&Counters,ip_id:&mut u16,fixed:bool,
      split:&mut Option<NativeSplitWorker>,now_ms:u64,
+     sources:&mut [[u8;MAX_IPV4];BATCH],frames:&mut [[u8;MAX_LINK];BATCH],
  )->Result<StageWork,i32>{
      // One bounded Wintun drain, ONE Entry lock to seal ALL ready sources,
      // ONE NPF ready-only queue and ONE lock to settle real driver receipts.
      // No Vec, Go call, thread pool or shared registry lookup per packet.
-     let mut sources=[[0u8;MAX_IPV4];BATCH];
      let mut source_len=[0usize;BATCH];
      let mut count=0;
      let mut captured=0usize;
@@ -566,7 +567,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
          }
      }
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
-     let mut wire=[[0u8;MAX_IPV4];BATCH];
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
      {
@@ -584,7 +584,7 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
                  {
                      fec2::stage_fixed_source_entry(
                          &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                         &sources[i][..source_len[i]],&mut wire[i]
+                         &sources[i][..source_len[i]],&mut frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+MAX_IPV4]
                      )?
                  }
                  #[cfg(not(feature="fec2_product_record"))]
@@ -596,27 +596,34 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
                      &sources[i][..source_len[i]],now_ms,room)).unwrap_or(0);
                  let result=v3_seal_entry_with_padding(
                      &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     &sources[i][..source_len[i]],&mut wire[i],pad
+                     &sources[i][..source_len[i]],&mut frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+MAX_IPV4],pad
                  )?;
                  staged_pad[i]=pad;
                  result
              }else{
                  v3_seal_entry(
                      &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     &sources[i][..source_len[i]],&mut wire[i]
+                     &sources[i][..source_len[i]],&mut frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+MAX_IPV4]
                  )?
              };
              meta[i]=(pn,seq,used);
          }
      }
-     let mut frames=[[0u8;MAX_LINK];BATCH];
      let mut lens=[0usize;BATCH];
      let ack=counters.ack.load(Ordering::Acquire);
      for i in 0..count {
          let (_,seq,used)=meta[i];
-         let f=packet_frame(cfg,seq,ack,&wire[i][..used],
-             *ip_id,&mut frames[i])?;
-         lens[i]=f.len();
+         let bytes=finish_bytes_in_place(Ipv4Tuple{
+             src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
+             src_port:cfg.local_port,dst_port:cfg.peer_port,
+         },Presentation{ack32:ack,advertised_window:65535,
+             ip_id:*ip_id,persona:PacketPersona::Windows11},
+             u64::from(seq),used,cfg.path_mtu as usize,&mut frames[i][14..])
+             .map_err(|_|INVALID)?;
+         lens[i]=14+bytes.len();
+         frames[i][..6].copy_from_slice(&cfg.next_hop_mac);
+         frames[i][6..12].copy_from_slice(&cfg.source_mac);
+         frames[i][12..14].copy_from_slice(&0x0800u16.to_be_bytes());
          *ip_id=ip_id.wrapping_add(1);
      }
      let (_,last_seq,last_used)=meta[count-1];
@@ -1033,6 +1040,10 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      // existing WAIT_ANY group; Stop always keeps absolute priority.
      let mut socket_wait_head=0u8;
      let mut boundary_tx=BoundaryQpcTrace::new("TX_MAILBOX");
+     // Reuse ready-only source and final frame slabs for the TX owner.
+     // Only the written prefix reaches the driver.
+     let mut sources=[[0u8;MAX_IPV4];BATCH];
+     let mut frames=[[0u8;MAX_LINK];BATCH];
      // Signed-only original normal small TCP: no product-default change.
      let same_turn_direct=cfg!(feature="m0_v4_probe") &&
          std::env::var("GITHUB_ACTIONS").ok().as_deref()==Some("true") &&
@@ -1167,7 +1178,8 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
              for _ in 0..(RX_WAKE_BATCH/BATCH) {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
-                     &counters,&mut ip_id,fixed,&mut split,now_ms)?;
+                     &counters,&mut ip_id,fixed,&mut split,now_ms,
+                     &mut sources,&mut frames)?;
                  work+=staged.tunnel;
                  fresh_direct_ingress|=staged.direct>0;
                  direct_progress|=staged.direct>0;
