@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "PLAN029-THROUGHPUT",
+  "date": "2026-11-24",
+  "conclusion": "FINAL_USER_SCOPE_DELIVERED_SCOPED_NATIVE",
+  "tested_product_source": "f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad",
+  "main_merge_sha": "69b9b139d1a22fbd18d330c4ef820bd80da77ec6",
+  "pr": 72,
+  "main_vs_tested_source_only_docs": [
+    ".governance/workstreams/M0/cursor.json",
+    "docs/devlog/M0/20261124-PLAN029-H2380-CN-RELEASE-RECEIPT.md",
+    "docs/evidence/M0/20261124-H2381-CN-FINAL-DELIVERY-RESUME.json",
+    "docs/features/entries/dns-split-ipv6.json",
+    "docs/features/entries/gui-config-feedback.json"
+  ],
+  "release_run": 45338373098,
+  "windows": {
+    "job_id": 138255766590,
+    "status": "PASS",
+    "artifact_id": 14895581473,
+    "package": "wbd-h2378-windows-amd64-GUI.zip",
+    "bytes": 12654387,
+    "sha256": "f0853a41d5981843808b8d548a29bf7c39db707795d773e52cfcc06b7a1f849a",
+    "gui_checks": 432,
+    "embedded_source": "dfa5b1c2258289bdbee70d06352cca23b9bdac7f",
+    "upstream_tag": "20261123144211",
+    "upstream_sha256": "b5aab90aeb07df4b1248a1c2a77917b43580d6542e490c287b952c699b484a32",
+    "embedded_sha256": "b64c760cf04de401bb2c25f3749897f117702d3c0e36398d103514b73b4ec62e",
+    "canonical_rules": 8472,
+    "canonical_bytes": 110946,
+    "canonical_sha256": "065c6695f305c50df4e2f71aa7917cc0013595dbc138c3892bfdeb89906526aa",
+    "native_rust_rules": 8472,
+    "manual_update_fixture": "PASS actual embedded snapshot HTTP fixture + checksum failure preserves old",
+    "wintun": "VALID",
+    "npcap": "external official install due redistribution license"
+  },
+  "linux": {
+    "job_id": 138255766867,
+    "status": "PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES",
+    "artifact_id": 14895650652,
+    "package": "wbd-h2378-linux-arm64-server.tar.gz",
+    "bytes": 6846625,
+    "sha256": "964eea87c72196ac37dd3154366ccac841e610f26d6120ef7b11e1c332bb7a28",
+    "modes": [
+      "normal",
+      "fec-fixed",
+      "fec-auto",
+      "game2",
+      "game4"
+    ],
+    "native_isa_l": true
+  },
+  "verification": "Both actual archives downloaded, nested checksums independently verified, native PE AMD64 and ELF AArch64 verified. Windows actual physical ARM peer interoperability NOT_RUN; manual update uses deterministic HTTP fixture rather than actual GUI online operation. No final performance qualification asserted.",
+  "decision": "User requested end proactive optimization and final packaged delivery; zero-loss, FEC and multithreading no further research; scoped main fairness passed earlier; no invented complete product or 029B qualification."
+}
