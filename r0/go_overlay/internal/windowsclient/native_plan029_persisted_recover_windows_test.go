@@ -13,6 +13,8 @@ import(
  "path/filepath"
  "testing"
  "time"
+
+ "golang.org/x/sys/windows"
 )
 
 var m0CrashDNSFailure=errors.New("test DNS prewrite interruption")
@@ -35,7 +37,9 @@ func TestM0CrashV2NativeRecovery(t *testing.T){
   // A stale GUID with a real currently occupied interface index/LUID is
   // absent for v2 recovery; it must not adopt the other adapter.
   stale:=id
-  stale.WintunGUID="{0f853251-6cf5-49a7-9884-7f93d0782413}"
+  staleGUID,err:=windows.GUIDFromString("{0f853251-6cf5-49a7-9884-7f93d0782413}")
+  if err!=nil{t.Fatal(err)}
+  stale.WintunGUID=staleGUID.String()
   state,err:=n4InspectOriginalWintunForRecovery(ctx,stale)
   if err!=nil||state!=N4UnifiedAbsent{t.Fatal("stale GUID with reused index",state,err)}
   owner:=N4WindowsCreatedWintunReservation{Tunnel:tun,Installation:id.Installation,Generation:id.Generation}
