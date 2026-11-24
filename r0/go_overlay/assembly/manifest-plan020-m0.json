@@ -1811,7 +1811,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "eccaa97105f851b5a8571a0340e541c55decbd49"
+      "result_blob": "f282bda5ded1a8d458e1cd1f3d6a20403bd11562"
     },
     {
       "kind": "create",
@@ -2021,19 +2021,19 @@
       "kind": "create",
       "path": "internal/v4productcli/management_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_linux.go",
-      "result_blob": "83501c164a597055d847777aec115c3118efd402"
+      "result_blob": "5049b169e6a4733f1f06c56d50275b23c71cb96e"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/management_snapshot_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_snapshot_linux.go",
-      "result_blob": "578ef02ad5d7d990a25b9679318a0e431b3cd34f"
+      "result_blob": "6d64803d4d6278c0b67fc7775f61bd3cb05dbb49"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/management_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_linux_test.go",
-      "result_blob": "903ce9baaa0e380db7c071c59f51e3d155fd2a09"
+      "result_blob": "34d148435647e9cb8776b54eb9fed58bdcfdc589"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
