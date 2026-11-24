@@ -66,8 +66,11 @@ def assert_original_binaries():
     h2291=os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")=="1"
     factor=os.environ.get("WBD_H2312_FACTOR","legacy")
     require(factor in ("legacy","npf_only","tx_only","path_ab"),"H2312_ALLOWED_PRODUCT_SELECTOR")
+    current_repair=os.environ.get("WBD_H2368_CURRENT_REPAIR_SOURCE")=="1"
     if factor=="path_ab":
         from m0_h2292_true_product_ab import path_ab_baseline,path_ab_candidate_features,path_ab_candidate_source,PATH_AB_FEATURES
+        go_source=os.environ["GITHUB_SHA"]
+    elif current_repair:
         go_source=os.environ["GITHUB_SHA"]
     else:
         go_source="c5066db61fc51bafd7c2ad2def3029e615efa777"

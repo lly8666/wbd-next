@@ -122,22 +122,14 @@ fn check_tuple(tuple: Ipv4Tuple<'_>) -> Result<(), PacketError> {
 }
 
 fn sum_words(bytes: &[u8]) -> u64 {
-    // A 32-bit big-endian word is congruent to the sum of its two
-    // 16-bit words modulo 65535. Accumulate two of those at a time;
-    // finish_checksum performs the original end-around carry. Every
-    // caller supplies IPv4/TCP packet/header slices (<=65535 bytes),
-    // so the u64 accumulation has ample headroom.
-    let mut sum=0u64;
-    let mut wide=bytes.chunks_exact(8);
-    for row in &mut wide {
-        let word=u64::from_be_bytes(row.try_into().unwrap());
-        sum+=(word>>32)+(word&0xffff_ffff);
+    let mut sum = 0u64;
+    let mut chunks = bytes.chunks_exact(2);
+    for word in &mut chunks {
+        sum += u64::from(u16::from_be_bytes([word[0], word[1]]));
     }
-    let mut tail=wide.remainder().chunks_exact(2);
-    for word in &mut tail {
-        sum+=u64::from(u16::from_be_bytes([word[0],word[1]]));
+    if let [odd] = chunks.remainder() {
+        sum += u64::from(*odd) << 8;
     }
-    if let [odd]=tail.remainder(){sum+=u64::from(*odd)<<8;}
     sum
 }
 fn finish_checksum(mut sum: u64) -> u16 {
@@ -533,82 +525,6 @@ mod tests {
                 n, 1460, &mut direct).unwrap();
             assert_eq!(a, b);
             check_packet(b);
-        }
-    }
-
-    #[test]
-    fn wide_sum_matches_independent_checksum_all_lengths_and_alignment(){
-        let mut data=vec![0u8;65535+8];
-        let mut x=0x6d2b79f5u32;
-        for b in &mut data{
-            x^=x<<13;x^=x>>17;x^=x<<5;*b=x as u8;
-        }
-        for offset in 0..8{
-            for n in 0..=2048{
-                let bytes=&data[offset..offset+n];
-                assert_eq!(finish_checksum(sum_words(bytes)),oracle_cksum(bytes),
-                    "offset {offset}, length {n}");
-            }
-            for n in [4095usize,4096,65534,65535]{
-                let bytes=&data[offset..offset+n];
-                assert_eq!(finish_checksum(sum_words(bytes)),oracle_cksum(bytes));
-            }
-        }
-        for b in [0u8,255]{
-            data.fill(b);
-            for n in [0usize,1,2,7,8,9,1460,65535]{
-                assert_eq!(finish_checksum(sum_words(&data[..n])),oracle_cksum(&data[..n]));
-            }
-        }
-    }
-    // Explicit release-only microbenchmark; same process/runner and
-    // identical inputs, no network, clock or artificial product outcome.
-    #[test]
-    #[ignore = "explicit release CPU microbenchmark, not a product test"]
-    fn wide_sum_microbench(){
-        use std::hint::black_box;
-        use std::time::Instant;
-        #[inline(never)]
-        fn old(bytes:&[u8])->u16{
-            let mut sum=0u64;
-            let mut chunks=bytes.chunks_exact(2);
-            for word in &mut chunks{
-                sum+=u64::from(u16::from_be_bytes([word[0],word[1]]));
-            }
-            if let [odd]=chunks.remainder(){sum+=u64::from(*odd)<<8;}
-            finish_checksum(sum)
-        }
-        #[inline(never)]
-        fn new(bytes:&[u8])->u16{finish_checksum(sum_words(bytes))}
-        let mut data=[[0u8;1472];64];
-        let mut x=0x9517u32;
-        for row in &mut data{for b in row{
-            x^=x<<13;x^=x>>17;x^=x<<5;*b=x as u8;
-        }}
-        for n in [40usize,64,128,512,1200,1421,1460]{
-            let count=200_000usize;
-            let measure=|f:fn(&[u8])->u16|{
-                let f=black_box(f);
-                let t=Instant::now();
-                let mut acc=0u16;
-                for i in 0..count{
-                    let start=i&7;
-                    let bytes=black_box(&data[(i>>3)&63][start..start+n]);
-                    acc=acc.wrapping_add(black_box(f(bytes)));
-                }
-                black_box(acc);
-                t.elapsed().as_secs_f64()*1e9/(count as f64)
-            };
-            let _=measure(old);let _=measure(new);
-            let mut a=Vec::new();let mut b=Vec::new();
-            for trial in 0..3{
-                if trial%2==0{a.push(measure(old));b.push(measure(new));b.push(measure(new));a.push(measure(old));}
-                else{b.push(measure(new));a.push(measure(old));a.push(measure(old));b.push(measure(new));}
-            }
-            a.sort_by(f64::total_cmp);b.sort_by(f64::total_cmp);
-            let old_ns=(a[2]+a[3])/2.0;let new_ns=(b[2]+b[3])/2.0;
-            println!("H2361_CHECKSUM_CPU len={n} scalar_ns={old_ns:.3} wide_ns={new_ns:.3} delta_pct={:.3} scalar_samples={a:?} wide_samples={b:?}",
-                100.0*(new_ns/old_ns-1.0));
         }
     }
 

@@ -28,6 +28,8 @@ CANDIDATE_BUILD_SHA=os.environ.get("WBD_H2292_COMPILED_SOURCE_SHA",os.environ.ge
 FEC_LOSS=int(os.environ.get("WBD_H2293_WEAK_LOSS_PCT","0"))
 FEC_PROFILE="light" if FEC_LOSS==1 else "mild"
 H2294_OFF_REPAIR=os.environ.get("WBD_H2294_OFF_REPAIR_ABA")=="1"
+H2368_CURRENT_REPAIR=os.environ.get("WBD_H2368_CURRENT_REPAIR_SOURCE")=="1"
+GO_BUILD_SHA=(os.environ["GITHUB_SHA"] if H2368_CURRENT_REPAIR else "c5066db61fc51bafd7c2ad2def3029e615efa777")
 H2302_WINDOW_ABA=os.environ.get("WBD_H2302_WINDOW_ABA")=="1"
 H2307_FIXED_FIRST=os.environ.get("WBD_H2307_FEC_FIXED_FIRST")=="1"
 H2302_BASE_BYTES=int(os.environ.get("WBD_H2302_BASE_BYTES","2097152"))
@@ -261,8 +263,7 @@ def verify_binary_archive():
     src=json.loads(MANIFEST.read_text())
     require(src["source_sha"]==CANDIDATE_BUILD_SHA and
             src["trial_feature"]=="h2291_windows_tx_service" and
-            src["original_go_exe_source_sha"]==
-             "c5066db61fc51bafd7c2ad2def3029e615efa777",
+            src["original_go_exe_source_sha"]==GO_BUILD_SHA,
             "EXACT_CANDIDATE_COMPILE_SOURCE")
     require(hashlib.sha256(CANDIDATE.read_bytes()).hexdigest()==src["dll_sha256"],
             "EXACT_CANDIDATE_PE_BYTES")
@@ -514,7 +515,7 @@ def win_trial(group,relay,arm,ready):
                     [False,True,False],"REAL_FEC2_FROZEN_ABA_MECHANISM_FAILED")
         result={"group":group,"source_sha":os.environ["GITHUB_SHA"],
                 "candidate_binary_source_sha":CANDIDATE_BUILD_SHA,
-                "original_go_exe_source_sha":"c5066db61fc51bafd7c2ad2def3029e615efa777",
+                "original_go_exe_source_sha":GO_BUILD_SHA,
                 "status":("PASS_H2307_MEASURED_ORIGINAL_FEC2_FIXED_OFF_FIXED_SCOPED"
                           if H2307_FIXED_FIRST else
                           "PASS_H2302_MEASURED_ORIGINAL_TCP_WINDOW_ABA_FEC_OFF_SCOPED"

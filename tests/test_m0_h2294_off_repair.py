@@ -96,12 +96,12 @@ class H2294FecOffOriginalRepair(unittest.TestCase):
             self.assertIn("PASS_H2294_MEASURED_FEC_OFF_OUTER_REPAIR_ABA_SCOPED",wf)
             self.assertIn("H2294_REAL_ARM_TUN_THREE_FEC_OFF_TCP_STAGES_DONE",wf)
             self.assertIn("h2294-out/",wf)
-            self.assertIn("git diff --name-only $compiled $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock",wf)
-            self.assertIn("H2294_FEC_OFF_REPAIR",wf)
-            self.assertIn("H2294_OLD_WINDOWS_DLL_ARCHIVE_NO_NON_WINDOWS_PRODUCT_DELTA",wf)
-            self.assertIn("H2294_ARCHIVED_WINDOWS_COMPILATION_SOURCE_NOT_PRESERVED",wf)
-            self.assertIn("crates/wbd-engine/src/v4_windows_fec2_owner.rs) ;;",wf)
-            self.assertNotIn("crates/wbd-engine/src/runtime/fec2_owner.rs) ;;",wf)
+            self.assertIn('WBD_H2368_CURRENT_REPAIR_SOURCE: "1"',wf)
+            self.assertIn("WBD_H2292_COMPILED_SOURCE_SHA: ${{ github.sha }}",wf)
+            self.assertIn("H2368_CURRENT_SOURCE_WINDOWS_GO_RUST_BUILT",wf)
+            self.assertIn("tools/m0_plan029_linux_dual_native_build.sh",wf)
+            self.assertNotIn("gh run download 449",wf)
+            self.assertNotIn("WBD_H2286_ARM_PRODUCT_FROZEN_SOURCE:",wf)
             self.assertNotIn("default_go_rust_product_promoted':True",wf)
 
 

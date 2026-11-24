@@ -6,8 +6,8 @@
 # H2290 uses TWO true native signed Windows Npcap/Wintun original GoTLS/Rust
 # → independent ARM kernel relay → native ARM original GoTLS/Rust AF_PACKET/TUN;
 # real ARM TCP bytes, P99 and owned Stop; read-only actual Win32 process CPU.
-name: H2294 original Windows FEC-OFF one-shot repair OFF-ON-OFF dual native triplets 5pct
-run-name: "M0 H2294 original FEC OFF repair OFF-ON-OFF two 3R 200ms loss5 | ${{ github.sha }}"
+name: H2368 current-source Windows FEC-OFF one-shot repair OFF-ON-OFF dual native triplets 5pct
+run-name: "M0 H2368 current-source FEC OFF repair OFF-ON-OFF two 3R 200ms loss5 | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
@@ -29,7 +29,8 @@ env:
   WBD_H2293_FEC_ABA: "1"
   WBD_H2294_OFF_REPAIR_ABA: "1"
   WBD_H2293_WEAK_LOSS_PCT: "5"
-  WBD_H2292_COMPILED_SOURCE_SHA: "dc2da4b98ecc419a67e3e2ee6530f944b78d88ef"
+  WBD_H2292_COMPILED_SOURCE_SHA: ${{ github.sha }}
+  WBD_H2368_CURRENT_REPAIR_SOURCE: "1"
 concurrency:
   group: h2294-dual-fecoff-repair-loss5-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
@@ -51,11 +52,10 @@ jobs:
           python3 -m unittest tests.test_m0_h2316_native_m2_stop tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp tests.test_m0_h2281_sustained_tcp tests.test_m0_h2282_window_ab_tcp tests.test_m0_h2283_window2m_ab_tcp tests.test_m0_h2284_old_eight_flow_capacity tests.test_m0_h2285_windows_wsl_route tests.test_m0_h2286_full_product_path tests.test_m0_h2287_tun_tcp_trace tests.test_m0_h2290_windows_hotpath_cpu tests.test_m0_h2291_windows_tx_batch tests.test_m0_h2292_true_product_ab tests.test_m0_h2293_true_fec_loss tests.test_m0_h2294_off_repair -v
   original_arm_build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2294-fecoff-repair-loss5]')
-    name: H2286 source-locked original ARM64 GoTLS Rust binary REUSE build once across both groups
+    name: Current source original ARM64 GoTLS Rust build
     needs: static
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 14
-    permissions: {contents: read}
+    timeout-minutes: 35
     env:
       CGO_ENABLED: "1"
       GOTOOLCHAIN: local
@@ -63,50 +63,25 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
-      - name: Reuse EXACT previous ARM original product binary after strict zero compiled-product delta
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Build current native ARM product once
         shell: bash
-        timeout-minutes: 10
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          BUILD_SOURCE=97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573
-          git fetch --depth=1 origin "$BUILD_SOURCE"
-          product_delta="$(git diff --name-only "$BUILD_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.lock Cargo.toml tools/m0_install_public_faketcp.py tools/m0_plan029_linux_dual_native_build.sh)"
-          # Only Windows native TX-source and opt-in Cargo feature declaration
-          # differ from the old ARM binary. They do not change Linux ARM code.
-          while IFS= read -r path; do
-            test -n "$path" || continue
-            case "$path" in
-              crates/wbd-platform/Cargo.toml|crates/wbd-engine/Cargo.toml|crates/wbd-platform/src/windows_native_io.rs|crates/wbd-engine/src/v4_windows_native_runtime.rs|crates/wbd-engine/src/v4_windows_owner.rs|crates/wbd-engine/src/v4_windows_fec2_owner.rs) ;;
-              *) echo "H2291_UNEXPECTED_ARM_COMPILED_PRODUCT_DELTA $path" >&2; exit 2;;
-            esac
-          done <<< "$product_delta"
-          echo H2291_ARM_SOURCE_LOCK_WIN_ONLY_DIFF_ALLOWED_NO_ARM_PRODUCT_CHANGE
-          mkdir -p linux-plan029-public-bundle
-          gh run download 44936859273 --repo "$GITHUB_REPOSITORY" --name "h2286-arm-original-product-$BUILD_SOURCE" --dir linux-plan029-public-bundle
-          python3 - <<'PY'
-          import hashlib,json,pathlib
-          p=pathlib.Path('linux-plan029-public-bundle')
-          m=json.loads((p/'manifest.json').read_text())
-          assert m['source_sha']=='97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573'
-          assert m['architecture']=='aarch64'
-          assert m['original_go_sha']=='a7a82db31fe736ffedee330795a3234d358f1984'
-          assert m['rust_native_fec_acceleration']
-          for n in ('wbd-v4-server','wbd-v4-client','libwbd_engine.so'):
-            assert hashlib.sha256((p/n).read_bytes()).hexdigest()==m['sha256'][n]
-          print('H2286_ONE_ARM_NATIVE_BUILD_REUSED_WITH_STRICT_COMPILED_PRODUCT_DIFF_ZERO')
-          PY
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm python3 iproute2
+          bash tools/m0_plan029_linux_dual_native_build.sh > arm-build.log 2>&1 || { tail -n 100 arm-build.log; exit 1; }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: h2286-arm-original-product-${{ github.sha }}
           path: linux-plan029-public-bundle/
-          retention-days: 3
+          retention-days: 14
           if-no-files-found: error
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
         with:
-          name: h2286-arm-build-first-error-${{ github.sha }}
+          name: h2321-arm-build-first-error-${{ github.sha }}
           path: arm-build.log
           retention-days: 14
           if-no-files-found: warn
@@ -114,71 +89,80 @@ jobs:
 
   win_candidate_build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2294-fecoff-repair-loss5]')
-    name: H2292 reuse exact archived native Windows Rust A/B DLLs after zero compiled-product delta
+    name: H2368 current-source Windows Go TLS and native Rust build once
     needs: static
     runs-on: windows-2025
-    timeout-minutes: 12
-    permissions: {contents: read, actions: read}
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
-      - name: Verify actual compiled-source SHA and both original Windows PE DLL bytes from same prior Action
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build exact same current Go executable for all legs
         shell: pwsh
-        timeout-minutes: 10
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference='Stop'
-          $compiled=$env:WBD_H2292_COMPILED_SOURCE_SHA
-          if($compiled -ne 'dc2da4b98ecc419a67e3e2ee6530f944b78d88ef'){throw 'H2292_UNAPPROVED_WINDOWS_BINARY_COMPILE_SOURCE'}
-          & git fetch --depth=1 origin $compiled
-          if($LASTEXITCODE -ne 0){throw 'H2292_ORIGINAL_DLL_COMPILE_SOURCE_NOT_REACHABLE'}
-          $productDiff=@(& git diff --name-only $compiled $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock)
-          if($LASTEXITCODE -ne 0){throw 'H2294_PRODUCT_DIFF_INSPECTION_FAILED'}
-          # This is an immutable archived DLL of the older source, NOT a
-          # pretend rebuild. The ONLY allowed newer changes are Windows-native
-          # opt-in experiment modules/features, disabled in this old binary.
-          # No FEC OFF original transport, original-Go or ARM source drift.
-          foreach($changed in $productDiff){
-            switch -Exact ($changed) {
-              'crates/wbd-platform/Cargo.toml' {break}
-              'crates/wbd-engine/Cargo.toml' {break}
-              'crates/wbd-platform/src/windows_native_io.rs' {break}
-              'crates/wbd-engine/src/v4_windows_native_runtime.rs' {break}
-              'crates/wbd-engine/src/v4_windows_owner.rs' {break}
-              'crates/wbd-engine/src/v4_windows_fec2_owner.rs' {break}
-              default {throw "H2294_ARCHIVED_WINDOWS_COMPILATION_SOURCE_NOT_PRESERVED $changed"}
-            }
-          }
-          Write-Output "H2294_OLD_WINDOWS_DLL_ARCHIVE_NO_NON_WINDOWS_PRODUCT_DELTA"
-          New-Item -ItemType Directory -Force result/h2292-build | Out-Null
-          & gh run download 44949570906 --repo $env:GITHUB_REPOSITORY --name "h2292-two-real-win-rust-dlls-$compiled" --dir result/h2292-build
-          if($LASTEXITCODE -ne 0){throw 'H2292_PRIOR_REAL_BUILD_PAIR_ARCHIVE_UNAVAILABLE'}
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'H2321_CURRENT_GO_ASSEMBLY_FAILED'}
+          Push-Location legacy
+          try {
+            & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
+            if($LASTEXITCODE -ne 0){throw 'H2321_CURRENT_GO_OWNER_BUILD_FAILED'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'H2321_CURRENT_GO_EXE_BUILD_FAILED'}
+          } finally {Pop-Location}
+      - name: Build current native Windows Rust TX16 pair from exact source
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'H2368_SOURCE_MISMATCH'}
+          & rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'H2368_RUST_TOOLCHAIN_FAILED'}
+          $base='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'
+          New-Item -ItemType Directory -Force result/h2292-build/baseline,result/h2292-build/candidate,result/h2292-build/go | Out-Null
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features $base
+          if($LASTEXITCODE -ne 0){throw 'H2368_BASE_BUILD_FAILED'}
+          Copy-Item target/release/wbd_engine.dll result/h2292-build/baseline/wbd_engine.dll
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features "$base,h2291_windows_tx_service"
+          if($LASTEXITCODE -ne 0){throw 'H2368_TX16_BUILD_FAILED'}
+          Copy-Item target/release/wbd_engine.dll result/h2292-build/candidate/wbd_engine.dll
+          Copy-Item result/wbd-client-embedded.exe result/h2292-build/go/wbd-client-embedded.exe
           @'
           import ctypes,hashlib,json,os,pathlib
           root=pathlib.Path('result/h2292-build')
-          source=os.environ['WBD_H2292_COMPILED_SOURCE_SHA']
-          aa=json.loads((root/'baseline/h2292-baseline-dll-manifest.json').read_text())
-          bb=json.loads((root/'candidate/h2291-windows-dll-manifest.json').read_text())
-          assert aa['source_sha']==bb['source_sha']==source
+          sha=os.environ['GITHUB_SHA']
           base='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'
-          assert aa['base_features']==bb['base_features']==base
-          assert aa['feature']=='H2291_TX_SERVICE_DISABLED'
-          assert bb['trial_feature']=='h2291_windows_tx_service'
-          assert bb['original_go_exe_source_sha']=='c5066db61fc51bafd7c2ad2def3029e615efa777'
-          for tag,manifest in (('baseline',aa),('candidate',bb)):
-              path=root/tag/'wbd_engine.dll'
-              assert hashlib.sha256(path.read_bytes()).hexdigest()==manifest['dll_sha256']
-              getattr(ctypes.WinDLL(str(path.resolve())),'wbd_m0_win_native_v3_start')
-          print('H2292_EXACT_PRIOR_REAL_RUST_DLL_PAIR_REUSED_ZERO_PRODUCT_DIFF')
+          def digest(p):
+              return hashlib.sha256(p.read_bytes()).hexdigest()
+          def dump(p,row):
+              p.write_text(json.dumps(row,sort_keys=True),encoding='utf-8')
+          a=root/'baseline/wbd_engine.dll'
+          b=root/'candidate/wbd_engine.dll'
+          for p in (a,b):
+              getattr(ctypes.WinDLL(str(p.resolve())),'wbd_m0_win_native_v3_start')
+          aa=dict(source_sha=sha,feature='H2291_TX_SERVICE_DISABLED',base_features=base,dll_sha256=digest(a))
+          bb=dict(source_sha=sha,trial_feature='h2291_windows_tx_service',base_features=base,
+                  original_go_exe_source_sha=sha,dll_sha256=digest(b))
+          assert aa['dll_sha256']!=bb['dll_sha256']
+          dump(root/'baseline/h2292-baseline-dll-manifest.json',aa)
+          dump(root/'candidate/h2291-windows-dll-manifest.json',bb)
+          dump(root/'go/windows-binary-manifest.json',dict(source_sha=sha,
+               sha256=dict(exe=digest(root/'go/wbd-client-embedded.exe'),dll=aa['dll_sha256'])))
+          print('H2368_CURRENT_SOURCE_WINDOWS_GO_RUST_BUILT')
           '@ | python -
-          if($LASTEXITCODE -ne 0){throw 'H2292_ARCHIVED_REAL_DLL_HASH_ABI_READBACK_FAILED'}
+          if($LASTEXITCODE -ne 0){throw 'H2368_BINARY_MANIFEST_FAILED'}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: h2292-two-real-win-rust-dlls-${{ github.sha }}
           if-no-files-found: error
           path: result/h2292-build/
-          retention-days: 7
+          retention-days: 14
 
   relay:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2294-fecoff-repair-loss5]')
@@ -314,7 +298,6 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GROUP: ${{ matrix.group }}
-      WBD_H2286_ARM_PRODUCT_FROZEN_SOURCE: 97db898f3a1fbebcdeea7f2a1b9d9c3dfcd32573
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
@@ -453,38 +436,18 @@ jobs:
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
           hostname: h2276-win-${{ matrix.group }}-${{ github.run_id }}
-      - name: Verify original Windows GoTLS Rust product code identical to prebuilt SOURCE then reuse real EXE DLL
-        shell: pwsh
-        timeout-minutes: 10
-        run: |
-          $ErrorActionPreference='Stop'
-          & git fetch --depth=1 origin c5066db61fc51bafd7c2ad2def3029e615efa777
-          if($LASTEXITCODE -ne 0){throw 'H2286_OLD_ORIGINAL_BINARY_PRODUCT_REF_UNAVAILABLE'}
-          $diff=@(& git diff --name-only c5066db61fc51bafd7c2ad2def3029e615efa777 $env:GITHUB_SHA -- r0/go_overlay tools/prepare_windows_wiring.py)
-          if($LASTEXITCODE -ne 0 -or $diff.Count -ne 0){throw ('H2286_REAL_ORIGINAL_PRODUCT_SOURCE_CHANGED_REBUILD_REQUIRED '+($diff -join ','))}
-          New-Item -ItemType Directory -Force result/wl-public | Out-Null
-          & gh run download 44923149093 --repo $env:GITHUB_REPOSITORY --name 'm0-wl-windows-product-binaries-c5066db61fc51bafd7c2ad2def3029e615efa777' --dir result/wl-public
-          if($LASTEXITCODE -ne 0){throw 'H2286_REAL_ORIGINAL_WINDOWS_BINARY_ARTIFACT_MISSING'}
-          @'
-          import pathlib,hashlib,json
-          p=pathlib.Path('result/wl-public');m=json.loads((p/'windows-binary-manifest.json').read_text())
-          assert m['source_sha']=='c5066db61fc51bafd7c2ad2def3029e615efa777'
-          for name,key in (('wbd-client-embedded.exe','exe'),('wbd_engine.dll','dll')):
-            assert hashlib.sha256((p/name).read_bytes()).hexdigest()==m['sha256'][key]
-          print('H2286_TRUE_WINDOWS_ORIGINAL_GO_RUST_EXE_DLL_ACTUAL_SHA256_PASS')
-          '@ | python -
-          if($LASTEXITCODE -ne 0){throw 'H2286_REAL_ORIGINAL_WINDOWS_EXE_DLL_HASH_GATE_FAILED'}
       - name: Download BOTH native Windows Rust DLLs built from this source, preserve original Go EXE
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference='Stop'
-          New-Item -ItemType Directory -Force result/h2292-download,result/h2292-candidate | Out-Null
+          New-Item -ItemType Directory -Force result/h2292-download,result/h2292-candidate,result/wl-public | Out-Null
           & gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "h2292-two-real-win-rust-dlls-$env:GITHUB_SHA" --dir result/h2292-download
           if($LASTEXITCODE -ne 0){throw 'H2292_TWO_SAME_SOURCE_WINDOWS_DLLS_NOT_FOUND'}
           & python -c "import os,json,hashlib,pathlib; p=pathlib.Path('result/h2292-download'); a=json.loads((p/'baseline/h2292-baseline-dll-manifest.json').read_text()); b=json.loads((p/'candidate/h2291-windows-dll-manifest.json').read_text()); assert a['source_sha']==b['source_sha']==os.environ['WBD_H2292_COMPILED_SOURCE_SHA']; assert a['base_features']==b['base_features']=='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'; assert a['feature']=='H2291_TX_SERVICE_DISABLED' and b['trial_feature']=='h2291_windows_tx_service'; assert all(hashlib.sha256((p/k/'wbd_engine.dll').read_bytes()).hexdigest()==x['dll_sha256'] for k,x in [('baseline',a),('candidate',b)]); print('H2292_TWO_ACTUAL_DLLS_DIFFER_ONLY_BY_ONE_RUST_FEATURE')"
           if($LASTEXITCODE -ne 0){throw 'H2292_TWO_DLLS_SOURCE_FEATURES_SHA_MISMATCH'}
+          Copy-Item -Force result/h2292-download/go/* result/wl-public/
           Copy-Item -Force result/h2292-download/baseline/wbd_engine.dll result/wl-public/wbd_engine.dll
           Copy-Item -Force result/h2292-download/baseline/h2292-baseline-dll-manifest.json result/wl-public/h2292-baseline-dll-manifest.json
           Copy-Item -Force result/h2292-download/candidate/wbd_engine.dll result/h2292-candidate/wbd_engine.dll
