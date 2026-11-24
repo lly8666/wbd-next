@@ -7,3 +7,7 @@ B86仅改CI测试：使用真实生产 discoverable 接口；旧UI文案断言�
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"Record actual B85 parallel results; fix obsolete CI-only catalog method and UI text assertion, then retry only unfinished KSU cold/preauth scenarios with original production binaries."}
 ```
+
+## B86a｜实际 CI 入场修正
+
+B86 `960b181a7b114aeb537c69da3138e5bd30102630` [产品 Action 45381072996](https://github.com/lly8666/wbd-next/actions/runs/45381072996) workflow 表达式多余右括号，未启动任何产品 Job；[功能目录 45381076198](https://github.com/lly8666/wbd-next/actions/runs/45381076198) 卡片超过既有 16KiB 上限。仅修表达式括号和恢复紧凑JSON/缩短已在B80 devlog完整记录的历史说明，不改变任何产品或测试判据，保留前次FAIL。
