@@ -22,7 +22,12 @@ import time
 import m0_h2276_three_runner_tcp as core
 
 CANDIDATE_BUILD_SHA=os.environ.get("WBD_H2292_COMPILED_SOURCE_SHA",os.environ.get("GITHUB_SHA","NO_GITHUB_SHA"))
-LEGS=("A_default","B_tx16","A_prime")
+LEGS=("A_default","B_tx16","A_prime")  # legacy relay stage IDs; B is path candidate for H2321
+# H2321 compares only H2318/H2320 Windows TX source changes. Both DLLs
+# use the same TX8/NPF16KiB and the same current Go executable/ARM peer.
+PATH_AB_BASELINE="7222b4739443dbb7ff9b322f186dcf651b54490f"
+PATH_AB_FEATURES="m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_npf_trace"
+
 ROOT=pathlib.Path("h2292-out")
 H2286=pathlib.Path("h2286-out")
 BINARY=pathlib.Path("result/wl-public/wbd_engine.dll")
@@ -116,8 +121,30 @@ def verify_binary_archive():
             "EXPLICIT_H2292_TRUE_ABA_ONLY")
     ROOT.mkdir(exist_ok=True)
     factor=h2312_mode()
-    require(factor in ("legacy","npf_only","tx_only"),"H2312_TRIAL_SELECTOR")
+    require(factor in ("legacy","npf_only","tx_only","path_ab"),"H2312_TRIAL_SELECTOR")
     src=json.loads(MANIFEST.read_text())
+    if factor=="path_ab":
+        frozen=json.loads((BINARY.parent/"windows-binary-manifest.json").read_text())
+        default=json.loads((BINARY.parent/"h2292-baseline-dll-manifest.json").read_text())
+        current=os.environ["GITHUB_SHA"]
+        require(CANDIDATE_BUILD_SHA==current==src["source_sha"]==
+                src["original_go_exe_source_sha"]==frozen["source_sha"] and
+                default["source_sha"]==PATH_AB_BASELINE and
+                src["trial_feature"]=="H2321_READY_PATH" and
+                default["feature"]=="H2321_PRE_OPTIMIZATION" and
+                src["feature_set"]==default["feature_set"]==PATH_AB_FEATURES and
+                src["h2312_factor"]==default["h2312_factor"]=="path_ab",
+                "H2321_EXACT_CURRENT_GO_AND_BASELINE_CANDIDATE_SOURCES")
+        for path,digest in ((BINARY,default["dll_sha256"]),
+                            (CANDIDATE,src["dll_sha256"]),
+                            (BINARY.parent/"wbd-client-embedded.exe",frozen["sha256"]["exe"])):
+            require(hashlib.sha256(path.read_bytes()).hexdigest()==digest,
+                    "H2321_ACTUAL_BINARY_HASH")
+        require(default["dll_sha256"]!=src["dll_sha256"] and
+                frozen["sha256"]["dll"]==src["dll_sha256"] and
+                not ACTIVE_MANIFEST.exists(),"H2321_DISTINCT_DLL_PAIR")
+        shutil.copy2(BINARY,ORIGINAL)
+        return default["dll_sha256"],src["dll_sha256"]
     expected_trial="h2291_windows_tx_service" if factor=="legacy" else (
         "h2311_windows_npf64_only" if factor=="npf_only" else "h2311_windows_tx16_only")
     require(src["source_sha"]==CANDIDATE_BUILD_SHA and
@@ -221,8 +248,8 @@ def win_trial(group,relay,arm,ready):
                         shape["queue_9_15"]+shape["queue_16"]==trace["queue_calls"] and
                         shape["direct_le256"]+shape["direct_gt256"]==trace["direct_calls"],
                         "H2313_ORIGINAL_NPF_REAL_BATCH_HISTOGRAM_INCONSISTENT")
-                expect_bytes=65536 if (factor=="tx_only" or tuned) else 16384
-                expect_frames=16 if (factor=="tx_only" or tuned) else 8
+                expect_bytes=65536 if (factor=="tx_only" or (tuned and factor!="path_ab")) else 16384
+                expect_frames=16 if (factor=="tx_only" or (tuned and factor!="path_ab")) else 8
                 require(trace is not None and
                         trace["npf_queue_bytes"]==expect_bytes and
                         trace["npf_queue_packets"]==expect_frames and
@@ -239,6 +266,8 @@ def win_trial(group,relay,arm,ready):
                 maybe_copy(H2286/n,ROOT/tag/n)
             r={"stage":tag,"candidate_enabled":tuned,
                "compiled_rust_dll_sha256":new_sha if tuned else old_sha,
+               "compiled_rust_source_sha":(CANDIDATE_BUILD_SHA if tuned or factor!="path_ab" else PATH_AB_BASELINE),
+               "comparison_axis":"firstsend_copy_and_M1_ready_batch" if factor=="path_ab" else factor,
                "arm_rx_bytes":receipt["product_tcp"]["bulk_remote_received_bytes"],
                "tcp_mbps":receipt["product_tcp"]["bulk_receiver_goodput_mbps"],
                "p99_ms":receipt["product_tcp"]["sparse_tcp_rtt_p99_ms"],
@@ -265,7 +294,9 @@ def win_trial(group,relay,arm,ready):
                     c["windows_original_process_cpu_s_per_gib"])/2
         result={"group":group,"source_sha":os.environ["GITHUB_SHA"],
                 "candidate_binary_source_sha":CANDIDATE_BUILD_SHA,
-                "original_go_exe_source_sha":"c5066db61fc51bafd7c2ad2def3029e615efa777",
+                "original_go_exe_source_sha":(os.environ["GITHUB_SHA"] if h2312_mode()=="path_ab"
+                    else "c5066db61fc51bafd7c2ad2def3029e615efa777"),
+                "baseline_binary_source_sha":(PATH_AB_BASELINE if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA),
                 "status":"PASS_H2292_SAME_WINDOWS_VM_ORIGINAL_GO_TLS_RUST_A_B_A_PRIME_SCOPED",
                 "stages":results,"comparison":{
                     "B_vs_same_vm_baseline_goodput_pct":round(

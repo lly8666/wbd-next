@@ -63,11 +63,15 @@ def scope_nat_rules(win,guest,relay):
 def assert_original_binaries():
     p=pathlib.Path("result/wl-public")
     m=json.loads((p/"windows-binary-manifest.json").read_text())
-    require(m["source_sha"]=="c5066db61fc51bafd7c2ad2def3029e615efa777",
-            "FROZEN_WIN_BINARY_SOURCE_MANIFEST")
     h2291=os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")=="1"
     factor=os.environ.get("WBD_H2312_FACTOR","legacy")
-    require(factor in ("legacy","npf_only","tx_only"),"H2312_ALLOWED_PRODUCT_SELECTOR")
+    require(factor in ("legacy","npf_only","tx_only","path_ab"),"H2312_ALLOWED_PRODUCT_SELECTOR")
+    if factor=="path_ab":
+        from m0_h2292_true_product_ab import PATH_AB_BASELINE,PATH_AB_FEATURES
+        go_source=os.environ["GITHUB_SHA"]
+    else:
+        go_source="c5066db61fc51bafd7c2ad2def3029e615efa777"
+    require(m["source_sha"]==go_source,"FROZEN_WIN_BINARY_SOURCE_MANIFEST")
     c=None
     if h2291:
         c=json.loads((p/"h2291-windows-dll-manifest.json").read_text())
@@ -79,8 +83,12 @@ def assert_original_binaries():
                                         os.environ["GITHUB_SHA"])
                          if os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1"
                          else os.environ["GITHUB_SHA"])
-        expected="h2291_windows_tx_service" if factor=="legacy" else (
-            "h2311_windows_npf64_only" if factor=="npf_only" else "h2311_windows_tx16_only")
+        expected=("H2321_READY_PATH" if factor=="path_ab" else
+            "h2291_windows_tx_service" if factor=="legacy" else (
+            "h2311_windows_npf64_only" if factor=="npf_only" else "h2311_windows_tx16_only"))
+        if factor=="path_ab":
+            require(c["feature_set"]==PATH_AB_FEATURES and
+                    c["dll_sha256"]==m["sha256"]["dll"],"H2321_CANDIDATE_BUILD_PROFILE")
         require(c["source_sha"]==approved_source and
                 c["trial_feature"]==expected and
                 c["original_go_exe_source_sha"]==m["source_sha"] and
@@ -94,6 +102,10 @@ def assert_original_binaries():
         compiled_source=os.environ.get("WBD_H2292_COMPILED_SOURCE_SHA",os.environ["GITHUB_SHA"])
         expected_base="H2291_TX_SERVICE_DISABLED" if factor=="legacy" else (
             "H2312_NPF8_16_TRACE" if factor=="npf_only" else "H2312_NPF16_64_TRACE")
+        if factor=="path_ab":
+            expected_base="H2321_PRE_OPTIMIZATION"
+            compiled_source=PATH_AB_BASELINE
+            require(baseline["feature_set"]==PATH_AB_FEATURES,"H2321_BASELINE_BUILD_PROFILE")
         require(baseline["source_sha"]==compiled_source and
                 baseline["feature"]==expected_base and
                 baseline["base_features"]==
