@@ -263,17 +263,6 @@ impl FrozenRecordHandle for FrozenRecord {
          -> Result<UniqueBuffer, BufferContractError> {
          if self.stopping { return Err(BufferContractError::OwnerStopping); }
          self.drain_returns_bounded(64);
-         self.take_free_preserving(reserve)
-     }
-     // The existing owner has drained returns once for its ready batch.
-     // Reuse free slots without polling the return channel/backlog per
-     // packet; only an actual shortage needs another bounded drain.
-     pub(crate) fn allocate_after_return_drain(&mut self)->Result<UniqueBuffer,BufferContractError>{
-         if self.stopping { return Err(BufferContractError::OwnerStopping); }
-         if self.free.is_empty(){self.drain_returns_bounded(64);}
-         self.take_free_preserving(0)
-     }
-     fn take_free_preserving(&mut self,reserve:usize)->Result<UniqueBuffer,BufferContractError>{
          if self.free.len() <= reserve { return Err(BufferContractError::NoCapacity); }
          let idx = self.free.pop().ok_or(BufferContractError::NoCapacity)?;
          let slot = &mut self.slots[idx];
@@ -289,6 +278,20 @@ impl FrozenRecordHandle for FrozenRecord {
              slab: slot.available.take(),
              return_path: Arc::clone(&self.returns),
          })
+     }
+     // The synchronous native owner already holds this arena after its
+     // driver call. When the original frozen handle is the last reference,
+     // return its Box directly to the same slot rather than send it through
+     // the cross-owner channel and wake path. Shared or detached handles
+     // retain their original final-drop semantics.
+     pub(crate) fn reclaim_local_frozen(&mut self,record:FrozenRecord){
+         if !record.0.return_path.as_ref().is_some_and(|p|Arc::ptr_eq(p,&self.returns)){
+             return;
+         }
+         if let Ok(mut payload)=Arc::try_unwrap(record.0){
+             let slab=payload.slab.take().expect("live frozen source slab");
+             self.install(Returned{origin:payload.origin,slab});
+         }
      }
      fn install(&mut self, item: Returned) {
          let i = item.origin.key.slot as usize;
@@ -372,28 +375,28 @@ impl FrozenRecordHandle for FrozenRecord {
          Arena::new(7, count, 256, return_size, 1_000_000).unwrap()
      }
      #[test]
-     fn native_ready_batch_uses_free_slots_then_drains_real_shortage(){
-         let mut a=arena(3,2);
-         let first=a.allocate().unwrap();
-         let key=first.origin().key;
-         drop(first);
+     fn native_local_frozen_reclaim_skips_channel_and_preserves_shared_final_drop(){
+         let mut a=arena(2,2);
+         let mut b=a.allocate().unwrap();
+         b.writable()[0]=13;
+         let key=b.origin().key;
+         let f=b.freeze(0..1,metadata()).unwrap();
+         a.reclaim_local_frozen(f);
+         assert_eq!(a.loaned,0);
+         assert_eq!(a.drain_returns_bounded(64),0);
+         let mut b=a.allocate().unwrap();
+         assert_eq!(b.origin().key.slot,key.slot);
+         assert_ne!(b.origin().key.generation,key.generation);
+         b.writable()[0]=29;
+         let f=b.freeze(0..1,metadata()).unwrap();
+         let alias=f.clone();
+         a.reclaim_local_frozen(f);
+         assert_eq!(a.loaned,1);
+         assert_eq!(a.drain_returns_bounded(64),0);
+         assert_eq!(alias.bytes(),&[29]);
+         drop(alias);
          assert_eq!(a.drain_returns_bounded(64),1);
-         let x=a.allocate_after_return_drain().unwrap();
-         assert_eq!(x.origin().key.slot,key.slot);
-         assert_ne!(x.origin().key.generation,key.generation);
-         let y=a.allocate_after_return_drain().unwrap();
-         drop(x);
-         // A free slot still exists: no second return scan needed.
-         let z=a.allocate_after_return_drain().unwrap();
-         assert_eq!(a.loaned,3);
-         // True shortage consumes the posted returned slot.
-         let w=a.allocate_after_return_drain().unwrap();
-         assert_eq!(w.origin().key.slot,key.slot);
-         assert!(matches!(a.allocate_after_return_drain(),Err(BufferContractError::NoCapacity)));
-         drop((y,z,w));
-         assert_eq!(a.report().loaned,0);
-         a.stop();
-         assert!(matches!(a.allocate_after_return_drain(),Err(BufferContractError::OwnerStopping)));
+         assert_eq!(a.stop().loaned,0);
      }
      #[test]
      fn v3_detached_repair_keeps_ciphertext_and_frees_source_m1(){

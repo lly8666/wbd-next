@@ -1,0 +1,7 @@
+# H2354 — independent synchronous original M1 local slab return
+
+Branch experiment/m0-029-local-reclaim from current tooling; product base exact retained H2336 bc87909, not unqualified H2348 arena/counter increment. Native synchronous Normal/off already owns the original M1 loan and reacquires the SAME Entry after NPF. The prior normal drop sends each original slab to its own arena's cross-owner return channel, then next allocation drains it. Consume those completed original dispatches while loan ledger is still held; Arc::try_unwrap of the original same-arena frozen record transfers the Box into the existing Arena::install path immediately. If still shared, original last-drop semantics apply; detached/foreign uses normal drop. No new pool/channel/worker/allocations, no data re-encryption, no PN/Seq or driver receipt change. Go asynchronous receipt, Repair ON and Fixed/Auto continue original route. Loan ledger ends after dispatches are consumed. Test direct return generation reuse without queued items and shared final drop; existing actual 16/1/8 native owner test asserts no returned channel entries and zero loaned slots. Native cheap gates triggered; real comparison not yet dispatched, while H2353 calibrated fixture is being validated. No performance claim.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Reuse same original Arena::install for completed synchronous original loan; existing generation, frozen sharing and driver outcome semantics unchanged."}
+```

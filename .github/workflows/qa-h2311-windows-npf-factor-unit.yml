@@ -2,13 +2,14 @@
 name: H2311 Windows NPF/TX two-factor isolation native unit
 on:
   push:
-    branches: ['experiment/m0-029-throughput-arm-fair']
+    branches: ['experiment/m0-029-throughput-arm-fair','experiment/m0-029-local-reclaim']
     paths:
       - '.github/workflows/qa-h2311-windows-npf-factor-unit.yml'
       - 'crates/wbd-platform/src/windows_native_io.rs'
       - 'crates/wbd-engine/src/v4_windows_native_runtime.rs'
       - 'crates/wbd-engine/src/v4_windows_owner.rs'
       - 'crates/wbd-engine/src/memory/mod.rs'
+      - 'crates/wbd-engine/src/runtime/generation.rs'
       - 'crates/wbd-platform/src/ipv4_tcp.rs'
       - 'crates/wbd-platform/Cargo.toml'
       - 'crates/wbd-engine/Cargo.toml'
@@ -53,6 +54,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "H2311_RUST_NPF64_ONLY_COMPILE_FAILED" }
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_tx16_only --lib v4_windows_owner::tests -- --test-threads=1
           if ($LASTEXITCODE -ne 0) { throw "H2326_WINDOWS_OWNER_REGRESSION_FAILED" }
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_tx16_only --lib native_ready_batch_uses_free_slots_then_drains_real_shortage -- --test-threads=1
-          if ($LASTEXITCODE -ne 0) { throw "H2348_NATIVE_ARENA_BATCH_REGRESSION_FAILED" }
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_tx16_only --lib native_local_frozen_reclaim_skips_channel_and_preserves_shared_final_drop -- --test-threads=1
+          if ($LASTEXITCODE -ne 0) { throw "H2354_NATIVE_LOCAL_RECLAIM_REGRESSION_FAILED" }
           Write-Output "H2311_SCOPED_FEATURE_MATRIX_NATIVE_COMPILE_AND_PREFIX_TEST_PASS_NOT_REAL_PRODUCT"

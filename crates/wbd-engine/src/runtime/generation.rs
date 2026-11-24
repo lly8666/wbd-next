@@ -72,6 +72,13 @@
          self.contents.clear();
          std::mem::take(&mut self.contents)
      }
+     /// The same generation owner may consume completed dispatches before
+     /// returning the caller's existing Vec. The ledger is released only
+     /// after all dispatches have been consumed, exactly like recycle().
+     pub(crate) fn recycle_with(mut self,mut complete:impl FnMut(T))->Vec<T>{
+         for row in self.contents.drain(..){complete(row);}
+         std::mem::take(&mut self.contents)
+     }
  }
  impl<T> Drop for LoanBatch<T> {
      fn drop(&mut self) {
