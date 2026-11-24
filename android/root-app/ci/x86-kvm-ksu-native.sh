@@ -54,6 +54,7 @@ d={"schema":"wbd-android-x86-kvm-ksu-original-native-d1-admission/v1",
    else ("NOT_PROVEN" if read("grant-ui.txt") else "NOT_RUN"),
  "physical_network_app_readback":("PASS" if "PHYSICAL_NETWORK_EXACT_READBACK_PASS" in read("physical-network-receipt.txt") else
     ("ENV_BLOCKED" if "PHYSICAL_NETWORK_ENV_BLOCKED" in read("physical-network-receipt.txt") else "NOT_PROVEN")),
+ "android_ui_navigation":"PASS" if "ANDROID_UI_NAVIGATION_PASS" in read("ui-smoke.txt") else ("NOT_PROVEN" if read("ui-smoke.txt") else "NOT_RUN"),
  "android_art_cold_controls":"PASS" if "ANDROID_ART_COLD_CONTROLS_PASS" in read("app-su-logcat-filtered.txt") else ("FAIL" if "ANDROID_ART_COLD_CONTROLS_FAIL" in read("app-su-logcat-filtered.txt") else "NOT_RUN"),
  "translated_arm64_rust_mtu":"PASS" if "WBD_TRANSLATED_ARM64_RUST_MTU_BUDGET_PASS" in read("translated-mtu.txt") and read("translated-mtu-code.txt").strip()=="0" else ("NOT_PROVEN" if read("translated-mtu-code.txt") else "NOT_RUN"),
  "translated_original_go_cshared_help":"PASS" if "WBD_ANDROID_ARM64_ORIGINAL_GO_CSHARED_HELP_PASS" in read("translated-go-help.txt") and read("translated-go-help-code.txt").strip()=="0" else ("NOT_PROVEN" if read("translated-go-help-code.txt") else "NOT_RUN"),
@@ -395,6 +396,16 @@ test "$(tr -d '\r' <"$out/uname.txt")" = x86_64
 adb shell am start -n org.wbdnext.rootclient/.RootClientActivity \
   >"$out/activity.txt" 2>&1
 grep -q 'Starting: Intent' "$out/activity.txt"
+if [[ "${WBD_ANDROID_COLD_SUITE:-0}" == 1 ]];then
+  phase=ACTUAL_ANDROID_UI_SMOKE
+  # Record independent UI outcome; keep the rest of the cold suite useful
+  # even if a UI coordinate/guest rendering step fails.
+  set +e
+  python3 android/root-app/ci/x86-ui-smoke.py --out "$out" >"$out/ui-smoke.txt" 2>&1
+  ui_rc=$?
+  set -e
+  echo "$ui_rc" >"$out/ui-smoke-code.txt"
+fi
 phase=ORIGINAL_X86_NATIVE_GO_ELF_HELP
 adb push "$out/apk-go" /data/local/tmp/wbd-x86-ci-go.stage >"$out/push-go.txt"
 adb push "$out/apk-rust.so" /data/local/tmp/wbd-x86-ci-rust.stage >"$out/push-rust.txt"
@@ -511,6 +522,10 @@ if [[ "${WBD_ANDROID_COLD_SUITE:-0}" == 1 ]];then
   if [[ "$mturc" == 0 && "$gocshrc" == 0 ]] &&
       grep -Fq WBD_TRANSLATED_ARM64_RUST_MTU_BUDGET_PASS "$out/translated-mtu.txt" &&
       grep -Fq WBD_ANDROID_ARM64_ORIGINAL_GO_CSHARED_HELP_PASS "$out/translated-go-help.txt";then
+    if [[ "${ui_rc:-1}" != 0 ]];then
+      echo ANDROID_UI_NAVIGATION_NOT_PROVEN
+      exit 32
+    fi
     echo ANDROID_COMBINED_COLD_SUITE_PASS
   else
     echo ANDROID_TRANSLATED_COLD_SUITE_NOT_PROVEN

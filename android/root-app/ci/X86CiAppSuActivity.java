@@ -85,6 +85,7 @@ public final class X86CiAppSuActivity extends Activity {
                         RootColdRotationTest.main(new String[0]);
                         RootForegroundAutoReconnectTest.main(new String[0]);
                         NetworkScopeGateTest.main(new String[0]);
+                        RootUiRoutingTest.main(new String[0]);
                         Log.i(TAG,"ANDROID_ART_COLD_CONTROLS_PASS");
                     }catch(Throwable failure){
                         Log.e(TAG,"ANDROID_ART_COLD_CONTROLS_FAIL");

@@ -26,6 +26,11 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.graphics.Typeface;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
+import android.view.ViewGroup;
 import java.io.FileOutputStream;
 import java.io.File;
 import java.io.ByteArrayOutputStream;
@@ -39,6 +44,147 @@ import java.util.TreeMap;
 // no Java packet pump, no Java Go/TLS/AEAD, no JNI fake-ready symbols.
 public final class RootClientActivity extends Activity {
     private final Handler ui=new Handler(Looper.getMainLooper());
+    private final LinearLayout[] pages=new LinearLayout[4];
+    private final Button[] tabs=new Button[4];
+    private ScrollView pageScroll;
+    private LinearLayout pageHost;
+    private TextView homeTitle,homeSummary,routeSummary,serviceDetail;
+    private Button homeConnect,homeStop,routeFullButton,routeSplitButton,updateCNButton;
+    private int currentPage=0;
+    private String lastServiceStatus="";
+    private boolean cnUpdateRunning=false;
+    private static final int BG=0xfff4f6f8, SURFACE=0xffffffff, INK=0xff152b3a,
+        MUTED=0xff526675, ACCENT=0xff146e68, LINE=0xffdbe4e8;
+    private int dp(int n){return Math.round(n*getResources().getDisplayMetrics().density);}
+    private GradientDrawable rounded(int color,int radius){
+        GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;
+    }
+    private TextView text(String value,int sp,int color,boolean bold){
+        TextView t=new TextView(this);t.setText(value);t.setTextSize(sp);t.setTextColor(color);
+        if(bold)t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
+        return t;
+    }
+    private LinearLayout vertical(){
+        LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);return l;
+    }
+    private LinearLayout section(LinearLayout page,String title,String hint){
+        LinearLayout l=vertical();l.setPadding(dp(16),dp(14),dp(16),dp(14));
+        l.setBackground(rounded(SURFACE,16));
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);
+        lp.bottomMargin=dp(12);page.addView(l,lp);
+        l.addView(text(title,17,INK,true));
+        if(!hint.isEmpty()){
+            TextView h=text(hint,13,MUTED,false);h.setPadding(0,dp(5),0,dp(9));l.addView(h);
+        }
+        return l;
+    }
+    private Button action(String title,boolean primary,Runnable action){
+        Button b=new Button(this);b.setText(title);b.setAllCaps(false);
+        b.setTextSize(15);b.setTextColor(primary?SURFACE:ACCENT);
+        b.setBackground(rounded(primary?ACCENT:0xffe8f1f0,12));
+        b.setMinHeight(dp(48));b.setPadding(dp(12),dp(8),dp(12),dp(8));
+        b.setOnClickListener(v->action.run());return b;
+    }
+    private void showPage(int page){
+        currentPage=page;
+        for(int i=0;i<pages.length;i++){
+            pages[i].setVisibility(i==page?View.VISIBLE:View.GONE);
+            tabs[i].setTextColor(i==page?SURFACE:MUTED);
+            tabs[i].setBackground(rounded(i==page?ACCENT:SURFACE,12));
+            tabs[i].setSelected(i==page);
+        }
+        pageScroll.scrollTo(0,0);
+        refreshHome();
+    }
+    private void polish(View v){
+        if(v instanceof Button && !(v instanceof CheckBox)){
+            Button b=(Button)v;b.setAllCaps(false);b.setTextSize(14);
+            if(b!=homeConnect&&b!=homeStop&&v.getBackground()!=null){
+                b.setTextColor(ACCENT);b.setBackground(rounded(0xffe8f1f0,10));
+                b.setMinHeight(dp(44));
+            }
+        }else if(v instanceof CheckBox){
+            CheckBox cb=(CheckBox)v;cb.setTextColor(INK);
+            cb.setButtonTintList(ColorStateList.valueOf(ACCENT));
+            cb.setTextSize(14);cb.setMinHeight(dp(44));
+        }else if(v instanceof EditText){
+            EditText e=(EditText)v;e.setTextColor(INK);e.setHintTextColor(MUTED);
+            e.setTextSize(15);e.setBackgroundTintList(ColorStateList.valueOf(LINE));
+        }else if(v instanceof Spinner){
+            ((Spinner)v).setMinimumHeight(dp(48));
+            v.setBackgroundTintList(ColorStateList.valueOf(MUTED));
+        }else if(v instanceof TextView && v!=homeTitle&&v!=homeSummary&&v!=routeSummary&&v!=status){
+            TextView t=(TextView)v;t.setTextColor(MUTED);
+            t.setPadding(t.getPaddingLeft(),Math.max(t.getPaddingTop(),dp(5)),t.getPaddingRight(),Math.max(t.getPaddingBottom(),dp(5)));
+        }
+        if(v instanceof ViewGroup){
+            ViewGroup g=(ViewGroup)v;for(int i=0;i<g.getChildCount();i++)polish(g.getChildAt(i));
+        }
+    }
+    // Actual current form policy: full tunnel has no optional destination
+    // bypass; split uses the existing shared UID FIB and DNS settings.
+    private boolean splitSelected(){
+        return RootUiRouting.isSplit(cnIPDirect.isChecked(),cnSplitDNS.isChecked(),
+            physicalDNS.isChecked(),autoConnectedDirect.isChecked(),
+            directCIDRsField.getText().toString(),ipv6DirectCIDRsField.getText().toString());
+    }
+    private void chooseFullRoute(){
+        cnIPDirect.setChecked(false);cnSplitDNS.setChecked(false);physicalDNS.setChecked(false);
+        tunnelDNS.setChecked(true);autoConnectedDirect.setChecked(false);
+        directCIDRsField.setText("");ipv6DirectCIDRsField.setText("");refreshHome();
+    }
+    private void chooseSplitRoute(){
+        cnIPDirect.setChecked(true);cnSplitDNS.setChecked(true);refreshHome();
+    }
+    private void setTextIfChanged(TextView t,String value){
+        if(t!=null&&!value.contentEquals(t.getText()))t.setText(value);
+    }
+    private void refreshHome(){
+        if(homeTitle==null||allAppsDefault==null||cnIPDirect==null||ipv6DirectCIDRsField==null)return;
+        boolean active=RootClientService.sessionOwnerActive;
+        boolean pending=RootClientService.startDispatchPending.get()||coldSwitch.pending();
+        boolean ready=active&&RootClientService.sessionUiReady;
+        setTextIfChanged(homeTitle,pending?"正在切换 / 连接":ready?"已连接":active?"正在连接 / 恢复":"未连接");
+        if(homeTitle.getCurrentTextColor()!=(ready&&!pending?ACCENT:INK))
+            homeTitle.setTextColor(ready&&!pending?ACCENT:INK);
+        setTextIfChanged(homeSummary,(ready?"当前服务器 · "+RootClientService.activeUiServer+"\n":"")+"下次连接 · "+(serverAddress.getText().toString().trim().isEmpty()?"尚未选择服务器":serverAddress.getText().toString().trim())+
+            "\n"+(allAppsDefault.isChecked()?"全局普通应用":"仅选定应用")+" · "+(splitSelected()?"分流":"全量隧道")+
+            " · "+fecModes.getSelectedItem().toString());
+        if(routeSummary!=null)setTextIfChanged(routeSummary,"当前设置："+(allAppsDefault.isChecked()?"全局普通应用":"仅选定应用")+" / "+(splitSelected()?"按目标分流":"全量隧道")+"（下次连接生效）");
+        if(routeFullButton!=null&&routeSplitButton!=null){
+            boolean split=splitSelected();
+            if(routeFullButton.isSelected()!=!split||routeSplitButton.isSelected()!=split){
+            routeFullButton.setBackground(rounded(split?0xffe8f1f0:ACCENT,12));
+            routeFullButton.setTextColor(split?ACCENT:SURFACE);
+            routeFullButton.setSelected(!split);
+            routeSplitButton.setBackground(rounded(split?ACCENT:0xffe8f1f0,12));
+            routeSplitButton.setTextColor(split?SURFACE:ACCENT);
+            routeSplitButton.setSelected(split);
+            }
+        }
+        homeConnect.setEnabled(!active&&!pending);
+        homeConnect.setAlpha(!active&&!pending?1f:.45f);
+        homeStop.setEnabled(active||pending);
+        homeStop.setAlpha(active||pending?1f:.45f);
+        setTextIfChanged(serviceDetail,RootClientService.status);
+    }
+    private void quickChooseServer(){
+        refreshNamedProfileChoices();
+        String[] names=new String[RootConnectionProfile.SLOTS];
+        for(int i=0;i<names.length;i++)names[i]=profileSlots.getItemAtPosition(i).toString();
+        new AlertDialog.Builder(this).setTitle("选择服务器")
+            .setItems(names,(d,which)->{
+                profileSlots.setSelection(which);showPage(1);
+                connectSelectedSavedProfile();
+            }).setNeutralButton("管理服务器",(d,w)->showPage(1))
+            .setNegativeButton("取消",null).show();
+    }
+    private void requestStop(){
+        coldSwitch.cancel();autoHandover.cancel();
+        Intent i=new Intent(this,RootClientService.class);i.setAction(RootClientService.STOP);
+        startService(i);status.setText("已请求断开，等待原生会话退出");
+    }
+
     private final List<PhysicalNetwork> physical=new ArrayList<>();
     // B49: one foreground user-triggered cold reselect, never background Root restart.
     private final RootColdNetworkSwitch coldSwitch=new RootColdNetworkSwitch();
@@ -345,6 +491,32 @@ public final class RootClientActivity extends Activity {
                 "未触发Root/TLS/内核UID路由");
         }
     }
+    // The controller UID is excluded from WBD ordinary-app takeover.
+    // This explicit user action is cold, never performed by START or M4.
+    private void updateOfficialCN(){
+        if(cnUpdateRunning)return;
+        new AlertDialog.Builder(this).setTitle("更新中国域名库")
+            .setMessage("从 v2fly 官方发布下载规则，校验发布校验值并提取 geolocation-cn。成功后下次连接生效，当前会话不变。")
+            .setNegativeButton("取消",null)
+            .setPositiveButton("更新",(dialog,which)->{
+                if(cnUpdateRunning)return;
+                cnUpdateRunning=true;updateCNButton.setEnabled(false);
+                status.setText("正在获取官方域名库…");
+                File target=NativePayload.customCN(this);
+                new Thread(()->{
+                    String message;
+                    try{
+                        RootCnDomainUpdate.Result result=RootCnDomainUpdate.refresh(target);
+                        message="已更新 "+result.tag+" · "+result.count+" 条，下次连接生效";
+                    }catch(Exception failure){message="域名库更新失败，保留原规则："+failure.getMessage();}
+                    final String outcome=message;
+                    ui.post(()->{
+                        cnUpdateRunning=false;updateCNButton.setEnabled(true);
+                        status.setText(outcome);
+                    });
+                },"wbd-cn-manual-update").start();
+            }).show();
+    }
     private void importCNDomainRules(){
         Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);
         pick.addCategory(Intent.CATEGORY_OPENABLE);
@@ -446,7 +618,10 @@ public final class RootClientActivity extends Activity {
         @Override public void run(){
             completeUserColdSwitchIfReady();
             completeAutomaticColdSwitchIfReady();
-            if(status!=null)status.setText(RootClientService.status);
+            if(status!=null&&!RootClientService.status.equals(lastServiceStatus)){
+                lastServiceStatus=RootClientService.status;status.setText(lastServiceStatus);
+            }
+            refreshHome();
             if(fecStatusText!=null)fecStatusText.setText(RootClientService.fecStatus);
             ui.postDelayed(this,1000);
         }
@@ -600,6 +775,7 @@ public final class RootClientActivity extends Activity {
             bypassChoices.addView(bypass);
             checkedBypassApps.put(app.packageName,bypass);
         }
+        polish(appChoices);polish(bypassChoices);
         applyAppSearch();
         updateAppSelectionCount();
     }
@@ -1127,40 +1303,51 @@ public final class RootClientActivity extends Activity {
     @Override public void onCreate(Bundle state){
         super.onCreate(state);
         traceUi(RootDiagnosticReceipt.Event.UI_OPENED);
-        ScrollView scroll=new ScrollView(this);
-        LinearLayout pane=new LinearLayout(this);
-        pane.setOrientation(LinearLayout.VERTICAL);
-        int pad=(int)(getResources().getDisplayMetrics().density*12);
-        pane.setPadding(pad,pad,pad,pad);
-        scroll.addView(pane);
-        TextView intro=new TextView(this);
-        intro.setText("WBD Root Lite v2 · ARM64 简版测试\n"+
-            "原 Go FakeTCP/TLS + 原 Rust M4；Normal/off 默认，Fixed/Auto 显式实验选项；非 VPN/FakeIP。\n"+
-            "① 选择实体 Wi-Fi/移动/有线IPv4网络  ② 输入 WBD 服务器/账户/Key\n"+
-            "③ START 后查看固定阶段码，STOP 精确撤销 UID/清理。\n"+
-            "首次测试建议取消下面的「默认全部普通App」，只勾选一个测试App。\n"+
-            "TLS默认不检验证书（与主线一致），不验证服务器身份；严格模式可手动开启。\n"+
-            "注意：真实 Android↔Linux 业务尚未通过实机验收。");
-        pane.addView(intro);
-        // Keep advanced Root-only selftest but collapse it in Lite.
-        CheckBox advanced=new CheckBox(this);
-        advanced.setText("显示高级选项：真实 Root/TUN 自检（可选）");
-        advanced.setChecked(false);
-        pane.addView(advanced);
-        LinearLayout advancedPanel=new LinearLayout(this);
-        advancedPanel.setOrientation(LinearLayout.VERTICAL);
-        advancedPanel.setVisibility(View.GONE);
-        advanced.setOnCheckedChangeListener((button,checked)->
-            advancedPanel.setVisibility(checked?View.VISIBLE:View.GONE));
+        getWindow().setStatusBarColor(SURFACE);
+        getWindow().setNavigationBarColor(SURFACE);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        LinearLayout shell=vertical();shell.setBackgroundColor(BG);
+        shell.setPadding(dp(16),dp(8),dp(16),dp(8));
+        if(Build.VERSION.SDK_INT>=30){
+            getWindow().setDecorFitsSystemWindows(false);
+            shell.setOnApplyWindowInsetsListener((view,insets)->{
+                android.graphics.Insets bars=insets.getInsets(android.view.WindowInsets.Type.systemBars());
+                android.graphics.Insets ime=insets.getInsets(android.view.WindowInsets.Type.ime());
+                shell.setPadding(dp(16)+bars.left,dp(8)+bars.top,dp(16)+bars.right,dp(8)+Math.max(bars.bottom,ime.bottom));
+                return insets;
+            });
+        }
+        TextView brand=text("WBD",28,INK,true);
+        brand.setPadding(dp(4),dp(6),0,dp(8));shell.addView(brand);
+        LinearLayout navigation=new LinearLayout(this);
+        String[] nav={"连接","服务器","应用","设置"};
+        for(int i=0;i<nav.length;i++){
+            final int page=i;tabs[i]=action(nav[i],false,()->showPage(page));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(48),1);
+            lp.setMargins(dp(2),0,dp(2),dp(8));navigation.addView(tabs[i],lp);
+        }
+        shell.addView(navigation);
+        pageScroll=new ScrollView(this);pageScroll.setFillViewport(true);
+        pageHost=vertical();pageScroll.addView(pageHost);
+        shell.addView(pageScroll,new LinearLayout.LayoutParams(-1,0,1));
+        for(int i=0;i<pages.length;i++){pages[i]=vertical();pageHost.addView(pages[i]);}
+        LinearLayout pane=section(pages[0],"连接状态","原生 Root 客户端 · 普通应用流量");
+        homeTitle=text("未连接",25,INK,true);pane.addView(homeTitle);
+        homeSummary=text("",14,MUTED,false);pane.addView(homeSummary);
+        homeConnect=action("连接",true,()->{coldSwitch.cancel();start();refreshHome();});
+        pane.addView(homeConnect,new LinearLayout.LayoutParams(-1,dp(56)));
+        homeStop=action("断开",false,()->requestStop());pane.addView(homeStop);
+        pane.addView(action("选择 / 切换服务器",false,()->quickChooseServer()));
+        serviceDetail=text("",12,MUTED,false);pane.addView(serviceDetail);
+        pane=section(pages[0],"网络与传输","选择实际 Wi-Fi、移动网络或有线网络。");
+        LinearLayout advancedPanel=section(pages[3],"设备自检","无需服务器；仅验证本机 Root/TUN 能力。");
         TextView diagHint=new TextView(this);
-        diagHint.setText("真 ARM64 KernelSU 手机可直接一键测真实 App UID→内核路由→临时 TUN 的固定 UDP 包，" +
-            "不需要服务器参数；这并不等于原 Rust M4 或生产目标 App 转发验收。" +
-            " 真实 WBD 服务器与密钥只用于下面单独的 START。");
+        diagHint.setText("在 ARM64 KernelSU 设备上执行本机自检，不代表远端业务通过。");
         advancedPanel.addView(diagHint);
         networks=new Spinner(this);
         pane.addView(networks);
         Button refresh=new Button(this);
-        refresh.setText("Refresh physical Networks");
+        refresh.setText("刷新网络");
         refresh.setOnClickListener(v->chooseNetworks());
         pane.addView(refresh);
         TextView lanHelp=new TextView(this);
@@ -1187,16 +1374,18 @@ public final class RootClientActivity extends Activity {
                 deviceSelfTestResult.getText()));
         });
         advancedPanel.addView(copySelfTest);
-        pane.addView(advancedPanel);
-        serverAddress=input(pane,"Server underlay IPv4 or DNS name (physical DNS bootstrap)",InputType.TYPE_CLASS_TEXT);
-        serverName=input(pane,"Standard TLS server name / SNI",InputType.TYPE_CLASS_TEXT);
-        serverPort=input(pane,"Original FakeTCP peer port",InputType.TYPE_CLASS_NUMBER);
+        pane=section(pages[1],"服务器设置","填写连接地址、端口和 TLS 名称；可保存为命名服务器配置。");
+        serverAddress=input(pane,"服务器地址（IPv4 / 域名）",InputType.TYPE_CLASS_TEXT);
+        serverName=input(pane,"TLS 服务器名称（SNI）",InputType.TYPE_CLASS_TEXT);
+        serverPort=input(pane,"端口",InputType.TYPE_CLASS_NUMBER);
         serverPort.setText("443");
+        pane=section(pages[3],"传输参数","外层 MTU、加密、FEC 及原生传输设置；下次连接生效。");
         outerMTUField=input(pane,"外层完整 IPv4 IP MTU（576–1500 字节；默认1460，非TUN MTU）",
             InputType.TYPE_CLASS_NUMBER);
         outerMTUField.setText("1460");
+        pane=section(pages[2],"直连例外","分流模式可以按 CN 地址与自定义网段直接连接。");
         directCIDRsField=input(pane,
-            "可选真实IPv4直连网段（逗号分隔，最多4个，如192.168.1.0/24；默认全走WBD）",
+            "自定义 IPv4 直连网段（最多16条）",
             InputType.TYPE_CLASS_TEXT);
         TextView directHint=new TextView(this);
         directHint.setText("仅对本次选定的普通App UID生效：原Root私有路由表将这些IPv4网段交给后续Android路由，"+
@@ -1206,13 +1395,15 @@ public final class RootClientActivity extends Activity {
         autoConnectedDirect.setText("可选：所选实体Network的当前IPv4直连子网自动绕过WBD（与手动CIDR合并，最多16条）");
         autoConnectedDirect.setChecked(false);
         pane.addView(autoConnectedDirect);
+        pane=section(pages[3],"加密与高级传输","保持默认即可，按需调整。");
         recordCiphers=new Spinner(this);
         recordCiphers.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
             new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
         pane.addView(recordCiphers);
+        pane=section(pages[0],"传输模式","Normal · FEC · Game");
         TextView modeHint=new TextView(this);
-        modeHint.setText("原传输：Normal/off、Fixed/Auto；Game2/4-off 或 game2-fixed/game4-fixed 复用原Go TLS与Rust单TUN/2或4RAW，固定Game FEC档位0–6。三种DNS保持；真机未验。");
+        modeHint.setText("选择连接模式；Fixed / Game Fixed 可选 FEC 档位。");
         pane.addView(modeHint);
         fecModes=new Spinner(this);
         fecModes.setAdapter(new ArrayAdapter<>(this,
@@ -1228,6 +1419,7 @@ public final class RootClientActivity extends Activity {
             new String[]{"0","1","2","3","4","5","6"}));
         fecProfiles.setSelection(1);
         pane.addView(fecProfiles);
+        pane=section(pages[3],"连接维持","低频 Health 与定时冷轮换。");
         TextView healthHint=new TextView(this);
         healthHint.setText("原Rust M4已认证Health发送间隔（秒）：15默认 / 30低频。"+
             "90秒dead门不变；低频仅减少空闲控制包，不保证所有网络时延或续航更优。");
@@ -1270,8 +1462,9 @@ public final class RootClientActivity extends Activity {
         game4CopySchedules.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,new String[]{"stagger-4-50-140","stagger-4-20-60","immediate"}));
         pane.addView(game4CopySchedules);
-        user=input(pane,"Authenticated account",InputType.TYPE_CLASS_TEXT);
-        password=input(pane,"Password (app-private file, not argv)",
+        pane=section(pages[1],"账户与密钥","保存本机加密凭据后，可以一键连接或冷切换服务器。");
+        user=input(pane,"用户名",InputType.TYPE_CLASS_TEXT);
+        password=input(pane,"密码",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
         routeKey=input(pane,"Route Key：主线 v2 短 Key（8–32 位英文/数字）或传统 64 位 Hex",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -1312,6 +1505,7 @@ public final class RootClientActivity extends Activity {
                 }catch(Exception failure){status.setText("清除失败：请检查设备加密存储");}
             }).show());
         pane.addView(clearSecrets);
+        pane=section(pages[1],"TLS 证书","证书校验可选，兼容原服务端默认设置。");
         tlsVerifyServer=new CheckBox(this);
         tlsVerifyServer.setText("严格验证TLS服务器证书和SNI（默认关闭，主线兼容）");
         tlsVerifyServer.setChecked(false);
@@ -1320,7 +1514,7 @@ public final class RootClientActivity extends Activity {
         verifyWarning.setText("默认仍使用原TLS加密/受保护认证，但不验证服务端证书身份，有中间人风险。"+
             "勾选后才验证证书与SNI，并可使用下方本地CA。");
         pane.addView(verifyWarning);
-        caPEM=input(pane,"Optional server TLS CA PEM (only for strict verification)",
+        caPEM=input(pane,"自定义 CA（PEM）",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         caPEM.setMinLines(3);
         Button importCa=new Button(this);
@@ -1343,19 +1537,36 @@ public final class RootClientActivity extends Activity {
         caHelp.setText("只有勾选严格验证时才使用CA；否则默认不做证书身份校验。"+
             "严格模式下UNKNOWN_AUTHORITY请导入CA；HOSTNAME_MISMATCH请核对证书DNS SAN与SNI。");
         pane.addView(caHelp);
+        pane=section(pages[2],"应用范围","默认全局普通应用。关闭全局后勾选要接管的应用。");
         TextView targetHelp=new TextView(this);
+        targetHelp.setText("全局模式接管普通应用 IPv4；系统、Root、WBD 本身和 Root 管理器保持原网络。"
+            +" 选定应用模式仅接管已勾选的应用。"
+            +" IPv6 和系统 DNS 可在设置中开启。"
+            +" 原服务器地址保持直连。");
+        /* Legacy explanation:
         targetHelp.setText("默认仅接管普通 Android 应用的 IPv4 流量（最多20个用户空间），不是系统全流量。"
             +"仅在原 Go TLS/认证 /32、原 Rust M4 就绪后设置 KernelSU UID 路由。"
             +"系统/root/隔离 UID、WBD 自身及已识别 KernelSU Manager 绕过，"
             +"原服务器IPv4在私有路由表设置/32 throw排除，必须内核读回才放行UID路由；" 
             +"其后Android netd是否真实走物理出口尚未真机验。"
-            +"IPv6、系统DNS、系统进程不接管。"
-            +"取消全应用模式后，可选择最多 16 个实际 App UID。");
+            +"IPv6 与系统普通 DNS 可在设置中按需开启；系统/root UID 保持绕过。"
+            +"取消全应用模式后，可选择最多 16 个实际 App UID。"); */
         pane.addView(targetHelp);
         allAppsDefault=new CheckBox(this);
-        allAppsDefault.setText("默认：普通 App IPv4 走 WBD（服务器/本App/KernelSU排除，非全系统）");
+        allAppsDefault.setText("全局接管普通应用（默认）");
         allAppsDefault.setChecked(true);
         pane.addView(allAppsDefault);
+        LinearLayout policyPanel=section(pages[2],"路由策略","对接管范围统一应用；未选中的应用保持原系统网络。");
+        routeSummary=text("",14,INK,true);policyPanel.addView(routeSummary);
+        routeFullButton=action("全量隧道",false,()->chooseFullRoute());
+        routeSplitButton=action("CN 分流（国内直连）",false,()->chooseSplitRoute());
+        LinearLayout policyRow=new LinearLayout(this);
+        LinearLayout.LayoutParams fullLp=new LinearLayout.LayoutParams(0,dp(48),1);
+        fullLp.rightMargin=dp(4);policyRow.addView(routeFullButton,fullLp);
+        LinearLayout.LayoutParams splitLp=new LinearLayout.LayoutParams(0,dp(48),1);
+        splitLp.leftMargin=dp(4);policyRow.addView(routeSplitButton,splitLp);
+        policyPanel.addView(policyRow);
+        pane=section(pages[2],"DNS 与域名规则","三种 DNS 路径互斥，可独立选择普通系统 DNS。");
         tunnelDNS=new CheckBox(this);
         tunnelDNS.setText("隧道DNS：普通App UDP/53走配置的隧道上游并还原原解析器回包（系统DNS另选）");
         tunnelDNS.setChecked(true);
@@ -1386,13 +1597,18 @@ public final class RootClientActivity extends Activity {
         cnSplitDNS.setText("可选CN域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走配置的WBD隧道DNS（不接管Android系统DNS）");
         cnSplitDNS.setChecked(false);
         pane.addView(cnSplitDNS);
+        updateCNButton=new Button(this);
+        updateCNButton.setText("手动更新官方中国域名库");
+        updateCNButton.setOnClickListener(v->updateOfficialCN());
+        pane.addView(updateCNButton);
         Button importCN=new Button(this);
         importCN.setText("导入CN域名规则（main兼容文本，下次连接生效）");
-        importCN.setOnClickListener(v->importCNDomainRules());
+        importCN.setOnClickListener(v->{if(!cnUpdateRunning)importCNDomainRules();});
         pane.addView(importCN);
         Button resetCN=new Button(this);
         resetCN.setText("恢复APK内置官方CN域名规则");
         resetCN.setOnClickListener(v->{
+            if(cnUpdateRunning){status.setText("请先完成当前域名更新");return;}
             File custom=NativePayload.customCN(this);
             if(!custom.exists()||custom.delete())status.setText("已恢复内置CN域名规则，下次连接生效");
             else status.setText("未能移除自定义CN域名规则");
@@ -1402,10 +1618,13 @@ public final class RootClientActivity extends Activity {
         cnIPDirect.setText("普通CN业务分流：按签名APK内APNIC中国IPv4分配网段直连（普通App及已开启软件热点）；域名仍按上述DNS模式，海外实际IP仍走隧道");
         cnIPDirect.setChecked(false);
         pane.addView(cnIPDirect);
+        LinearLayout routingPane=pane;
+        pane=section(pages[3],"外层重传","原机会式重传开关。");
         outerRepair=new CheckBox(this);
         outerRepair.setText("外层机会式重传（原表演式重传；原密文最多一次；真机待验，默认关闭）");
         outerRepair.setChecked(false);
         pane.addView(outerRepair);
+        pane=routingPane;
         appTcpDNS=new CheckBox(this);
         appTcpDNS.setText("可选App TCP/53 DNS：进入WBD的应用TCP查询也按上面选定的DNS模式处理（内核TCP，不接管系统netd）");
         appTcpDNS.setChecked(false);
@@ -1418,6 +1637,7 @@ public final class RootClientActivity extends Activity {
         systemDNS6.setText("可选系统 DNS IPv6/53：普通IPv6地址DNS也进入上述模式（同时启用系统IPv4 DNS；不等于IPv6业务隧道）");
         systemDNS6.setChecked(false);
         pane.addView(systemDNS6);
+        pane=section(pages[3],"IPv6 与网络共享","可选内核兼容承载与软件热点，不影响默认 IPv4 连接。");
         ipv6GatewayField=input(pane,"可选 IPv6 业务兼容承载：服务端 WBD TUN IPv4（如10.219.0.1；服务端须启用 --inner-ipv6；普通App IPv6 DNS跟随上述模式；留空关闭）",InputType.TYPE_CLASS_TEXT);
         ipv6GatewayField.setText("");
         ipv6DirectCIDRsField=input(pane,"IPv6直连CIDR（逗号分隔，最多16条；IPv6承载开启时生效；自动LAN直连同时覆盖所选Network的IPv6子网）",InputType.TYPE_CLASS_TEXT);
@@ -1452,6 +1672,7 @@ public final class RootClientActivity extends Activity {
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent){}
         });
+        pane=section(pages[2],"应用名单","选择接管或绕过的实际已安装应用。");
         selectedAppControls=new LinearLayout(this);
         selectedAppControls.setOrientation(LinearLayout.VERTICAL);
         pane.addView(selectedAppControls);
@@ -1527,11 +1748,12 @@ public final class RootClientActivity extends Activity {
         });
         bypassAppControls.setVisibility(View.VISIBLE);
         Button refreshApps=new Button(this);
-        refreshApps.setText("Refresh installed applications");
+        refreshApps.setText("刷新应用名单");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());
         pane.addView(refreshApps);
         // B50: four named daily connection profiles, all using the
         // existing B22 settings serializer and selected app UID recheck.
+        pane=section(pages[1],"已保存服务器","四个命名配置槽；连接或切换会使用该槽的独立凭据和设置。");
         TextView namedProfileHint=new TextView(this);
         namedProfileHint.setText("本机最多4套服务器/模式/UID配置；密码/RouteKey用现有Keystore分槽保存，可选本地TLS CA也随槽切换；真实物理Network始终手选。");
         pane.addView(namedProfileHint);
@@ -1543,19 +1765,19 @@ public final class RootClientActivity extends Activity {
         profileLabel=input(pane,"配置名称（例：家里Wi-Fi／游戏）",InputType.TYPE_CLASS_TEXT);
         profileLabel.setText("常用连接");
         Button saveProfile=new Button(this);
-        saveProfile.setText("保存到所选配置槽");
+        saveProfile.setText("保存服务器配置");
         saveProfile.setOnClickListener(v->saveNamedProfile());
         pane.addView(saveProfile);
         Button loadProfile=new Button(this);
-        loadProfile.setText("载入所选配置（不启动Root）");
+        loadProfile.setText("载入并编辑");
         loadProfile.setOnClickListener(v->loadNamedProfile());
         pane.addView(loadProfile);
         Button connectProfile=new Button(this);
-        connectProfile.setText("连接此配置／切换到此配置（使用选定实体Network）");
+        connectProfile.setText("连接 / 冷切换到此服务器");
         connectProfile.setOnClickListener(v->connectSelectedSavedProfile());
         pane.addView(connectProfile);
         Button deleteProfile=new Button(this);
-        deleteProfile.setText("删除所选配置槽");
+        deleteProfile.setText("删除服务器配置");
         deleteProfile.setOnClickListener(v->deleteNamedProfile());
         pane.addView(deleteProfile);
         Button exportAllProfiles=new Button(this);
@@ -1569,6 +1791,7 @@ public final class RootClientActivity extends Activity {
         profileResult=new TextView(this);
         profileResult.setText("选择槽位保存/载入；每槽独立密码/RouteKey，旧原生会话不变，配合B49前台冷切网。");
         pane.addView(profileResult);
+        pane=section(pages[1],"备份与恢复","普通设置可通过系统文件选择器导入导出。");
         Button rememberConnection=new Button(this);
         rememberConnection.setText("保存连接设置（本机，下次恢复；不含密码/RouteKey）");
         rememberConnection.setOnClickListener(v->{
@@ -1593,18 +1816,7 @@ public final class RootClientActivity extends Activity {
             "调试签名更换后需手动重填密码和RouteKey");
         presetResult.setTextIsSelectable(true);
         pane.addView(presetResult);
-        Button connect=new Button(this);connect.setText("START — ROOT / ORIGINAL Go+Rust");
-        connect.setOnClickListener(v->{coldSwitch.cancel();start();});
-        pane.addView(connect);
-        Button stop=new Button(this);stop.setText("STOP — WITHDRAW UID ROUTE / NATIVE JOIN");
-        stop.setOnClickListener(v->{
-            coldSwitch.cancel();
-            autoHandover.cancel();
-            Intent i=new Intent(this,RootClientService.class);
-            i.setAction(RootClientService.STOP);
-            startService(i);
-        });
-        pane.addView(stop);
+        pane=section(pages[3],"切网与恢复","所有切换均等待原有会话完整退出，不做热迁移。");
         // Explicit two-stage cold physical Network reselection; NO
         // automatic root relaunch after Android onLost/capability changes.
         // The new START reuses the complete existing credential/UID/TLS
@@ -1712,6 +1924,7 @@ public final class RootClientActivity extends Activity {
             }).show();
         });
         pane.addView(restore);
+        pane=section(pages[3],"诊断与状态","读取原有真实收据；不新增网络探针。");
         Button inspectDNS=new Button(this);
         inspectDNS.setText("查看本会话DNS收发（本机脱敏收据，无Root/联网）");
         inspectDNS.setOnClickListener(v->{
@@ -1752,10 +1965,38 @@ public final class RootClientActivity extends Activity {
         diagnosticExportResult.setTextIsSelectable(true);
         pane.addView(diagnosticExportResult);
         status=new TextView(this);
-        status.setText("NOT_RUNNING");
-        status.setTextIsSelectable(true);
-        pane.addView(status);
-        setContentView(scroll);
+        status.setText("未连接");
+        status.setTextColor(MUTED);status.setTextSize(12);
+        status.setMaxLines(4);status.setTextIsSelectable(true);
+        status.setPadding(dp(8),dp(5),dp(8),0);shell.addView(status);
+        polish(pageHost);
+        // Move the server picker to the top of the server page without
+        // duplicating a spinner or changing its original profile slot owner.
+        View savedServers=profileSlots;
+        ViewGroup savedParent=(ViewGroup)savedServers.getParent();
+        if(savedParent instanceof LinearLayout){
+            ViewGroup outer=(ViewGroup)savedParent.getParent();
+            outer.removeView(savedParent);pages[1].addView(savedParent,0);
+        }
+        // Diagnostic tools are last, not the first settings card.
+        ((ViewGroup)advancedPanel.getParent()).removeView(advancedPanel);
+        pages[3].addView(advancedPanel);
+        // Scope and routing policy are the first two App cards.
+        ViewGroup policyParent=(ViewGroup)policyPanel.getParent();
+        policyParent.removeView(policyPanel);pages[2].addView(policyPanel,0);
+        ViewGroup scopeCard=(ViewGroup)allAppsDefault.getParent();
+        ((ViewGroup)scopeCard.getParent()).removeView(scopeCard);
+        pages[2].addView(scopeCard,0);
+        View appListCard=(View)selectedAppControls.getParent();
+        ((ViewGroup)appListCard.getParent()).removeView(appListCard);
+        pages[2].addView(appListCard,2);
+        LinearLayout appSave=section(pages[2],"保存设置","保存当前应用范围和路由选择；运行中的会话不会改变。");
+        appSave.addView(action("保存应用与路由设置",false,()->{
+            try{saveConnectionSettings();status.setText("应用范围与路由已保存，下次连接生效");}
+            catch(Exception e){status.setText("请先在服务器页填写完整连接参数，再保存设置");}
+        }));
+        setContentView(shell);
+        shell.requestApplyInsets();
         // The exact same public CA is reused across strict-TLS STARTs;
         // Android Keystore credentials and TLS trust policy stay separate.
         recallSavedTLSCA();
@@ -1780,6 +2021,14 @@ public final class RootClientActivity extends Activity {
             RootClientService.status="加密凭据不可读取，请手动输入后重新保存；仍可以尝试连接";
             status.setText(RootClientService.status);
         }
+        showPage(state==null?0:Math.max(0,Math.min(3,state.getInt("wbd_page",0))));
+    }
+    @Override protected void onSaveInstanceState(Bundle out){
+        super.onSaveInstanceState(out);out.putInt("wbd_page",currentPage);
+    }
+    @Override public void onBackPressed(){
+        if(currentPage!=0){showPage(0);return;}
+        super.onBackPressed();
     }
     @Override protected void onResume(){
         super.onResume();

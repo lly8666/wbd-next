@@ -94,6 +94,7 @@ jobs:
           name: android-b2-pinned-cn-geosite-${{ github.sha }}
           path: |
             out/android-b2-cn-geosite/cn-geosite-provenance.json
+            out/android-b2-cn-geosite/official-cn.dat
             out/android-b2-cn-geosite/wbd-cn-ipv4.txt
             out/android-b2-cn-geosite/cn-ipv4-provenance.json
             out/android-b2-cn-geosite/wbd-cn-geosite.txt
@@ -242,6 +243,18 @@ jobs:
       - name: Verify signed APK original Go/Rust CLI and loader wiring (host-only; no emulator)
         shell: bash
         run: python3 android/root-app/ci/test-apk-native-wiring.py
+      - name: Verify Android official CN updater against the exact shared upstream group
+        shell: bash
+        run: |
+          set -euo pipefail
+          jar="$ANDROID_HOME/platforms/android-36/android.jar"
+          test -f "$jar" || jar="$ANDROID_HOME/platforms/android-35/android.jar"
+          mkdir -p out/android-cn-update-test
+          javac -source 8 -target 8 -encoding UTF-8 -classpath "$jar" -d out/android-cn-update-test \
+            android/root-app/src/org/wbdnext/rootclient/RootCnDomainUpdate.java \
+            android/root-app/ci/RootCnDomainUpdateTest.java
+          java -cp "out/android-cn-update-test:$jar" org.wbdnext.rootclient.RootCnDomainUpdateTest \
+            out/android-root-app-cn/official-cn.dat out/android-root-app-cn/wbd-cn-geosite.txt
       - name: Test exact selected Network event gate (pure Java)
         if: always()
         shell: bash
@@ -264,10 +277,10 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
   android-x86-kvm-ksu-original-native:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true }}
-    # D0 + D1: actual signed original x86 Go/Rust + ordinary CI app UID
-    # authorized via real KSU Manager. This is NOT authenticated TLS/M4.
-    needs: [arm64-native, b2-authentic-cn-geosite-host]
+    if: ${{ always() && needs.arm64-native.result == 'success' && needs.b2-authentic-cn-geosite-host.result == 'success' && ((github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[android-cold-suite]'))) }}
+    # One controlled guest after the actual same-SOURCE signed product APK.
+    # Historical static assertion failure does not block real Android tests.
+    needs: [arm64-native, b2-authentic-cn-geosite-host, root-arm64-app]
     runs-on: ubuntu-24.04
     timeout-minutes: 38
     permissions: {contents: read, actions: read}
@@ -286,6 +299,14 @@ jobs:
         with:
           name: android-b2-pinned-cn-geosite-${{ github.sha }}
           path: out/android-root-app-cn
+      - name: Require the signed ARM64 APK from the completed build first
+        shell: bash
+        run: |
+          mkdir -p out/android-root-release
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "android-root-original-arm64-app-$GITHUB_SHA" --dir out/android-root-release
+          test "$(cat out/android-root-release/SOURCE)" = "$GITHUB_SHA"
+          test -s out/android-root-release/wbd-root-arm64-debug.apk
       # Existing same-source host/production APK jobs run the static gate.
       # A stale source-string assertion must not block real ART/KSU tests.
       - name: Build same-Java original Go/Rust x86_64 signed CI-only APK
@@ -309,6 +330,8 @@ jobs:
             out/android-x86-ci-app/badging.txt
             out/android-x86-ksu-native/receipt.json
             out/android-x86-ksu-native/*.txt
+            out/android-x86-ksu-native/ui-*.png
+            out/android-x86-ksu-native/ui-*.json
             out/ksu/grant-ui-result.json
             out/ksu/sdk-install.txt
             out/ksu/patch-log.txt

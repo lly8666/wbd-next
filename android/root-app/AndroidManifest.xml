@@ -32,10 +32,12 @@
             <data android:scheme="https"/>
         </intent>
     </queries>
-    <application android:label="WBD Root Lite v2 (TEST)"
+    <application android:label="WBD"
+                 android:theme="@android:style/Theme.Material.Light.NoActionBar"
                  android:usesCleartextTraffic="false"
                  android:allowBackup="false">
         <activity android:name=".RootClientActivity"
+                  android:windowSoftInputMode="adjustResize"
                   android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

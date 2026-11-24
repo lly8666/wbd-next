@@ -43,6 +43,10 @@ public final class RootClientService extends Service {
     // Read-only UI lifecycle. Explicit cold Network reselect must NOT
     // overwrite still-active native credential files or start another Root.
     static volatile boolean sessionOwnerActive=false;
+    // Presentation only: readiness is published from actual M4+UID receipt,
+    // not the Activity's draft settings or process existence.
+    static volatile boolean sessionUiReady=false;
+    static volatile String activeUiServer="";
     static final AtomicBoolean startDispatchPending=new AtomicBoolean(false);
     static volatile boolean previousOwnerStopConfirmed=false;
     // B60: only the original selected-Network callback may request
@@ -279,6 +283,7 @@ public final class RootClientService extends Service {
             return START_NOT_STICKY;
         }
         sessionOwnerActive=true;
+        sessionUiReady=false;activeUiServer="";
         ownerStartId=startId;
         cancelRotation();
         // The active native owner now supersedes the Activity's short
@@ -305,6 +310,7 @@ public final class RootClientService extends Service {
             }
             trace(RootDiagnosticReceipt.Event.NETWORK_SCOPE_VERIFIED);
             String peer=intent.getStringExtra("peer");
+            activeUiServer=peer==null?"":peer;
             String directCIDRs=RootDirectIPv4.canonicalCSV(intent.getStringExtra("direct_cidrs"));
             if(intent.getBooleanExtra("direct_lan_auto",false)){
                 // Cold original selected-Network route source must remain
@@ -996,6 +1002,7 @@ public final class RootClientService extends Service {
                     }
                     if(uidReady&&nativeReady&&!stopping.get()&&!readyRecorded){
                         readyRecorded=true;
+                        sessionUiReady=true;
                         trace(RootDiagnosticReceipt.Event.NATIVE_M4_AND_UID_READY);
                         String gameBrief=RootGameSessionStatus.readyBrief(fecMode);
                         status=gameBrief!=null?gameBrief:
@@ -1007,6 +1014,7 @@ public final class RootClientService extends Service {
                 }
             }
             int exit=p.waitFor();
+            sessionUiReady=false;
             trace(exit==0?RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_ZERO:
                 RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
             if(exit==1)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_1);
@@ -1129,6 +1137,7 @@ public final class RootClientService extends Service {
             stopForeground(true);
             stopSelf();
         }
+        sessionUiReady=false;activeUiServer="";
         sessionOwnerActive=false;
     }
     // Event-driven waiting, no native process or periodic network poll.
@@ -1305,6 +1314,7 @@ public final class RootClientService extends Service {
             }else cancelRotation();
         }
         trace(RootDiagnosticReceipt.Event.STOP_REQUESTED);
+        sessionUiReady=false;
         status="STOP_REQUESTED ("+why+") — waiting for original Go/Rust joined Stop";
         // Before su launch: runRoot cancels at ownerLaunchLock.
         // During su launch: runRoot signals after root is published.

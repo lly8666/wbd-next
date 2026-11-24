@@ -7,6 +7,10 @@ bash -n android/root-native/ci/linux-original-oracle.sh
 bash -n android/root-app/ci/x86-original-linux-server-prep.sh
 mkdir -p out/android-root-app/network-scope-test
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootUiRouting.java \
+  android/root-app/ci/RootUiRoutingTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootUiRoutingTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/NetworkScopeGate.java \
   android/root-app/ci/NetworkScopeGateTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.NetworkScopeGateTest
@@ -939,7 +943,9 @@ assert 'intent.getIntExtra("fec_profile",1)' in s
 assert 'pair(args,"--mode",productMode);' in argv
 assert 'pair(args,"--fec-profile",Integer.toString(fecProfile))' in argv
 assert '(cfg.gameLanes!=0&&cfg.gameLanes!=2&&cfg.gameLanes!=4)||cfg.mixedModes||' in cold
-assert 'if cfg.gameLanes!=0&&(cfg.startupPaddingMode!=0||' in cold
+# B77 all modes now permit startup padding via original Go/Rust path.
+assert 'if cfg.gameLanes!=0&&(cfg.startupPaddingMode!=0||' not in cold
+assert 'return runAndroidGame(ctx,cfg,uint32(iface.Index),tun,&connected)' in cold
 assert 'C.wbd_m0_embedded_go_public_fec2_mature_quality(' in go_bridge
 assert 'return b.verifyOriginalAndroidAutoPending()' in go_bridge
 assert 'C.wbd_m0_embedded_go_fixed_pending_readback(' in fec_go

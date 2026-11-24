@@ -89,7 +89,8 @@ assert "RootPrivateCredentialFiles.verifyAtStart(this,hasCA)" in service_src
 assert "APP_PRIVATE_CREDENTIALS_0600_VERIFIED" in service_src
 assert 'st.Mode().Perm()&0077!=0' in go_src
 
-assert "WBD Root Lite v2" in ui
+assert 'String[] nav={"连接","服务器","应用","设置"}' in ui
+assert "quickChooseServer()" in ui and "chooseFullRoute()" in ui and "chooseSplitRoute()" in ui
 assert 'String key=RootRouteKeyCache.resolve(this,sni,keyInput)' in ui
 v2=Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyV2.java").read_text()
 cache=Path("android/root-app/src/org/wbdnext/rootclient/RootRouteKeyCache.java").read_text()
@@ -127,6 +128,9 @@ with zipfile.ZipFile(apk) as z:
     assert b"Lorg/wbdnext/rootclient/RootStopCommand;" in dex
     assert b"Lorg/wbdnext/rootclient/RootDiagnosticReport;" in dex
     assert b"Lorg/wbdnext/rootclient/RootDiagnosticReceipt;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootUiRouting;" in dex
+    assert b"Lorg/wbdnext/rootclient/RootCnDomainUpdate;" in dex
+    assert b"Lorg/wbdnext/rootclient/X86CiAppSuActivity;" not in dex
 lite=Path("out/android-root-app/wbd-root-lite-arm64-debug.apk")
 assert lite.read_bytes()==apk.read_bytes(), "Lite test APK must be the verified signed original Go/Rust build"
 client=Path("out/android-root-app-native/wbd-v4-client-arm64")
