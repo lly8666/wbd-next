@@ -18,6 +18,8 @@ mod v4_native_health;
 mod v4_game_lane;
 // H2229 authenticated cosmetic Game ACK parity across native Windows/Linux.
 // No per-record receipt and no modification to original outer repair policy.
+#[cfg(any(feature="m0_v4_embedded_go",test))]
+mod v4_ingress_fair;
 #[cfg(feature="fec2_product_record")]
 mod v4_presentation_ack;
 #[cfg(feature="fec2_product_record")]

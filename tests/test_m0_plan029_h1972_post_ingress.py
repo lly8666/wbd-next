@@ -46,7 +46,7 @@ class PostIngressSteady(unittest.TestCase):
         a=src.index("if owner.has_udp_flows(){")
         b=src.index("let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,")
         c=src.index("if same_turn_direct && fresh_direct_ingress{")
-        d=src.index("// A bounded <=4-row parity quantum",c)
+        d=src.index("// At most 10 already-due four-row quanta",c)
         self.assertLess(a,b);self.assertLess(b,c);self.assertLess(c,d)
         code=src[c:d]
         for guard in ("POST_INGRESS_RETURN_QUANTUM",
