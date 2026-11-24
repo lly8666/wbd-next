@@ -6,14 +6,11 @@ package main
 import (
  "crypto/sha256"
  "errors"
- "fmt"
  "net/netip"
  "os"
  "path/filepath"
- "strings"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
  "github.com/lly8666/wobuzhidao/internal/splitroute"
- "golang.org/x/net/idna"
 )
 var errM0Plan029Cold=errors.New("plan029: cold split source rejected")
 const m0Plan029MaxPrefixRows=32768
@@ -26,38 +23,6 @@ func m0Plan029Rows(pp []netip.Prefix)([]realityfront.V4WindowsColdCIDR,error){
    Network:p.Masked().Addr().As4(),Bits:uint8(p.Bits())})
  }
  return out,nil
-}
-// Until the full pinned v2fly geolocation-cn include/attribute and RE2
-// compiler exists, reject unsupported directives rather than silently
-// turning keyword/regexp into suffix matches. No decrypted DoH/SNI.
-func m0Plan029CanonicalDomains(input []byte)([]byte,error){
- if len(input)>1<<20{return nil,errM0Plan029Cold}
- var result strings.Builder
- for _,line:=range strings.Split(string(input),"\n"){
-  s:=strings.TrimSpace(line)
-  if s==""{continue}
-  if strings.ContainsAny(s," \t\r")||strings.HasPrefix(s,"#")||
-   strings.HasPrefix(s,"include:")||strings.HasPrefix(s,"keyword:")||
-   strings.HasPrefix(s,"regexp:")||strings.ContainsAny(s,"@&"){
-   return nil,fmt.Errorf("%w: unsupported geosite directive",errM0Plan029Cold)
-  }
-  exact:=strings.HasPrefix(s,"=");if exact{s=strings.TrimPrefix(s,"=")}
-  s=strings.TrimSuffix(s,".")
-  a,e:=idna.Lookup.ToASCII(s)
-  if e!=nil{return nil,errM0Plan029Cold}
-  a=strings.ToLower(a)
-  if len(a)==0||len(a)>253{return nil,errM0Plan029Cold}
-  for _,label:=range strings.Split(a,"."){
-   if len(label)==0||len(label)>63||label[0]=='-'||label[len(label)-1]=='-'{return nil,errM0Plan029Cold}
-   for _,r:=range label{
-    if !(r>='a'&&r<='z')&&!(r>='0'&&r<='9')&&r!='-'{return nil,errM0Plan029Cold}
-   }
-  }
-  if exact{result.WriteByte('=')}
-  result.WriteString(a);result.WriteByte('\n')
-  if result.Len()>1<<20{return nil,errM0Plan029Cold}
- }
- return []byte(result.String()),nil
 }
 func m0Plan029ColdSource(o m0NativeV4Options,physical netip.Addr,
  physicalIndex uint32,lease netip.Addr,innerMTU uint32,domainRules []byte,
@@ -170,13 +135,18 @@ func m0Plan029TrialCold(o m0NativeV4Options,physical netip.Addr,
  if effective.RouteMode=="bypass-lan-cn"{
   file:=effective.CNRulesFile
   if !o.SplitEnable{file=os.Getenv("WBD_PLAN029_CN_RULES_FILE")}
-  if file==""||!filepath.IsAbs(file){return nil,errM0Plan029Cold}
-  info,e:=os.Lstat(file)
-  if e!=nil||info.Mode()&os.ModeSymlink!=0||
-   !info.Mode().IsRegular()||info.Size()==0||info.Size()>1<<20{
-   return nil,errM0Plan029Cold
+  if file==""&&o.SplitEnable{
+   var e error
+   domains,e=m0Plan029BuiltinDomains();if e!=nil{return nil,e}
+  }else{
+   if file==""||!filepath.IsAbs(file){return nil,errM0Plan029Cold}
+   info,e:=os.Lstat(file)
+   if e!=nil||info.Mode()&os.ModeSymlink!=0||
+    !info.Mode().IsRegular()||info.Size()==0||info.Size()>m0CNMaxRuleBytes{
+    return nil,errM0Plan029Cold
+   }
+   domains,e=os.ReadFile(file);if e!=nil{return nil,e}
   }
-  domains,e=os.ReadFile(file);if e!=nil{return nil,e}
  }
  c,e:=m0Plan029ColdSource(effective,physical,ifindex,lease,innerMTU,domains)
  if e!=nil{return nil,e}

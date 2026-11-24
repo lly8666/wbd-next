@@ -19,7 +19,7 @@ m0_fec2_owner_probe = ["wbd-codec/m0-fec2-record-probe"]
 fec2_product_record = ["wbd-codec/fec2-product-record"]
 # Explicit developer-only opt-in non-test Go embedded Rust control adapter.
 # Default production cdylib and public ABI remain disabled.
-m0_v4_embedded_go = []
+m0_v4_embedded_go = ["dep:regex-lite"]
 # Worker-frozen M1-012 direction SPSC; compile-time opt-in; default remains off.
 # Main-managed rtrb=0.3.2 workspace pin; no production TLS ABI change.
 m1_rtrb = []
@@ -39,3 +39,4 @@ wbd-codec = { path = "../wbd-codec" }
 wbd-platform = { path = "../wbd-platform" }
 wbd-recovery = { path = "../wbd-recovery" }
 rtrb = { workspace = true }
+regex-lite = { version = "=0.1.8", optional = true }

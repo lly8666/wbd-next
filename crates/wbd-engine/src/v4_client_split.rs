@@ -157,9 +157,10 @@ struct DomainNode {
 #[derive(Default)]
 pub(crate) struct DomainIndex {
     root:DomainNode,
-    // Keyword/regex are intentionally not silently downgraded to suffix.
-    // A full v2fly regex matcher must be installed before those rules enter
-    // a production snapshot. This builder rejects unsupported imports.
+    #[cfg(feature="m0_v4_embedded_go")]
+    keywords:Vec<String>,
+    #[cfg(feature="m0_v4_embedded_go")]
+    regex:Vec<regex_lite::Regex>,
     rule_count:usize,
 }
 fn domain_labels(input:&str)->Result<Vec<&str>,SplitError>{
@@ -176,6 +177,19 @@ impl DomainIndex {
     pub fn insert(&mut self,domain:&str,kind:DomainRuleType)->Result<(),SplitError>{
         match kind {
             DomainRuleType::Keyword|DomainRuleType::Regex=>{
+                #[cfg(feature="m0_v4_embedded_go")]
+                {
+                    if domain.is_empty(){return Err(SplitError::InvalidDomain)}
+                    match kind{
+                        DomainRuleType::Keyword=>self.keywords.push(domain.to_ascii_lowercase()),
+                        DomainRuleType::Regex=>self.regex.push(regex_lite::Regex::new(domain)
+                            .map_err(|_|SplitError::UnsupportedDomainRule)?),
+                        _=>unreachable!(),
+                    }
+                    self.rule_count+=1;
+                    return Ok(())
+                }
+                #[cfg(not(feature="m0_v4_embedded_go"))]
                 return Err(SplitError::UnsupportedDomainRule)
             }
             _=>{}
@@ -194,10 +208,16 @@ impl DomainIndex {
         let mut node=&self.root;
         for (i,label) in labels.iter().rev().enumerate(){
             let lower=label.to_ascii_lowercase();
-            let Some(child)=node.children.get(&lower) else{return Ok(false)};
+            let Some(child)=node.children.get(&lower) else{break};
             node=child;
             if node.suffix{return Ok(true);}
             if i+1==labels.len()&&node.exact{return Ok(true);}
+        }
+        #[cfg(feature="m0_v4_embedded_go")]
+        if !self.keywords.is_empty()||!self.regex.is_empty(){
+            let normalized=domain.trim_end_matches('.').to_ascii_lowercase();
+            if self.keywords.iter().any(|key|normalized.contains(key.as_str()))||
+                self.regex.iter().any(|rule|rule.is_match(&normalized)){return Ok(true)}
         }
         Ok(false)
     }
@@ -406,8 +426,20 @@ mod tests {
         assert!(!rules.contains("evil-example.cn").unwrap());
         assert!(!rules.contains("two.other").unwrap());
         assert!(rules.contains("ONE.OTHER").unwrap());
-        assert_eq!(rules.insert("a",DomainRuleType::Regex),Err(SplitError::UnsupportedDomainRule));
-        assert_eq!(rules.insert("a",DomainRuleType::Keyword),Err(SplitError::UnsupportedDomainRule));
+        #[cfg(not(feature="m0_v4_embedded_go"))]
+        {
+            assert_eq!(rules.insert("a",DomainRuleType::Regex),Err(SplitError::UnsupportedDomainRule));
+            assert_eq!(rules.insert("a",DomainRuleType::Keyword),Err(SplitError::UnsupportedDomainRule));
+        }
+        #[cfg(feature="m0_v4_embedded_go")]
+        {
+            rules.insert("specialtoken",DomainRuleType::Keyword).unwrap();
+            rules.insert(r"^host[0-9]+\.example$",DomainRuleType::Regex).unwrap();
+            assert!(rules.contains("www.specialtoken.example").unwrap());
+            assert!(rules.contains("HOST42.example").unwrap());
+            assert!(!rules.contains("hostx.example").unwrap());
+            assert!(rules.insert("[",DomainRuleType::Regex).is_err());
+        }
         assert_eq!(rules.contains("exa..mple.cn"),Err(SplitError::InvalidDomain));
     }
     #[test]
@@ -565,4 +597,25 @@ mod tests {
             presented_dst:ip(203,0,113,9)}).is_some());
         assert_eq!(flows.first(t,Egress::Tunnel),Some(Egress::Tunnel));
     }
+}
+
+#[cfg(all(test,feature="m0_v4_embedded_go",target_os="windows"))]
+#[test]
+fn h2378_actual_embedded_cn_snapshot_native_trie_and_regex(){
+    let Some(path)=std::env::var_os("WBD_H2378_CN_TEST_EXPORT") else{return};
+    let rules=std::fs::read_to_string(path).unwrap();
+    let mut index=DomainIndex::default();
+    for line in rules.lines(){
+        let (rule,kind)=if let Some(v)=line.strip_prefix('='){(v,DomainRuleType::Exact)}
+            else if let Some(v)=line.strip_prefix("keyword:"){(v,DomainRuleType::Keyword)}
+            else if let Some(v)=line.strip_prefix("regexp:"){(v,DomainRuleType::Regex)}
+            else{(line,DomainRuleType::Suffix)};
+        index.insert(rule,kind).unwrap_or_else(|e|panic!("actual rule {line}: {e:?}"));
+    }
+    assert!(index.len()>1000);
+    for name in ["www.baidu.com","www.qq.com","www.taobao.com","www.jd.com"]{
+        assert!(index.contains(name).unwrap(),"{name}");
+    }
+    assert!(!index.contains("wbd-test-unlisted.invalid").unwrap());
+    println!("H2378_ACTUAL_CN_RUST_RULES count={}",index.len());
 }
