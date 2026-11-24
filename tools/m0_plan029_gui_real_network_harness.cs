@@ -107,11 +107,25 @@ public static class Plan029GuiReal {
   throw new IOException("real CN DNS reply after TTL/reconnect missing");
  }
  [STAThread]public static int Main(string[] argv){
+  Application.EnableVisualStyles();
+  Application.SetCompatibleTextRenderingDefault(false);
+  // Use the actual outer WinForms message loop. Standalone DoEvents can
+  // uninstall the synchronization context between direct async UI actions.
+  int result=1;
+  using(var launch=new System.Windows.Forms.Timer{Interval=1}){
+   launch.Tick+=(sender,e)=>{
+    launch.Stop();
+    try{result=RunScene(argv);}finally{Application.ExitThread();}
+   };
+   launch.Start();
+   Application.Run();
+  }
+  return result;
+ }
+ static int RunScene(string[] argv){
   MainForm form=null;ClientSession client=null;
   try{
    Need(argv.Length==2,"expected protected portable root and seed file");
-   Application.EnableVisualStyles();
-   Application.SetCompatibleTextRenderingDefault(false);
    string dir=Path.GetFullPath(argv[0]);
    string file=Path.GetFullPath(argv[1]);
    Need(file.StartsWith(dir.TrimEnd(Path.DirectorySeparatorChar)+
@@ -224,7 +238,9 @@ public static class Plan029GuiReal {
      Label(form,"state").Contains("系统 Applied") &&
      Label(form,"mtuStatus").Contains("1460B") &&
      Label(form,"mtuStatus").Contains("1389B"),
-     "second normal GUI original Go/Rust OS Applied missing");
+     "second normal GUI original Go/Rust OS Applied missing; ready="+ready+
+     " applied="+applied+" inner="+inner+" active="+client.Active+
+     " state="+Label(form,"state")+" mtu="+Label(form,"mtuStatus"));
     Console.WriteLine("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED");
     Console.Out.Flush();
     if(dnsTtl)QueryRealCnDns(3);
@@ -269,7 +285,7 @@ public static class Plan029GuiReal {
    Console.WriteLine("PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS");Console.Out.Flush();
    return 0;
   }catch(Exception e){
-   Console.Error.WriteLine("PLAN029_REAL_GUI_FIRST_FAILURE "+e.GetType().Name+" "+e.Message);
+   Console.Error.WriteLine("PLAN029_REAL_GUI_FIRST_FAILURE "+e.GetType().Name+" "+e.Message+" "+e.StackTrace);
    return 1;
   }finally{
    if(form!=null){

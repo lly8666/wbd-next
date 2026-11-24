@@ -1,5 +1,5 @@
 name: PLAN030 targeted fixture-only retest
-run-name: "PLAN030 H2388 watch and Windows domain | ${{ github.sha }}"
+run-name: "PLAN030 H2393 targeted Windows domain | ${{ github.sha }}"
 on:
   push:
     branches: [experiment/m0-030-server-cli]
@@ -10,6 +10,8 @@ permissions:
   actions: read
 jobs:
   watch-pair:
+    # Already qualified; retain the old explicit manual reproduction only.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     env:

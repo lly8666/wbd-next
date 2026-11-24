@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "PLAN030 双ISA原生包全部普通CLI实测、安装服务真实三设备和watch同机对照通过；Windows域名重连组合仍未最终通过。",
+  "summary": "PLAN030 双ISA真实全CLI、三设备及watch PASS；两次Windows域名组合FAIL（一次第二代原生Ready实际成功但GUI判据未过，一次未启动第二代），只补真实GUI组合。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
@@ -78,6 +78,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
       "evidence": "docs/evidence/M0/20261124-H2390-PLAN030-CLI-WATCH-PASS.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64",
+      "scope": "两次真实域名组合；原始产物审计确认第二代Ready/GUI判据失败或第二代未发起；快照未达",
+      "status": "FAIL",
+      "source_sha": "600d541b9d7ce63d11409562bad8f40ad41457fd",
+      "evidence": "docs/evidence/M0/20261124-H2393-PLAN030-GUI-RECONNECT-ARTIFACT-AUDIT.json"
     }
   ],
   "limitations": [
