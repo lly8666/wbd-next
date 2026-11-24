@@ -138,7 +138,8 @@ type config struct{
     // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
     // System resolver/netd and CN physical split are NOT enabled by this.
     androidTunnelDNS bool
-    androidAppTCPDNS bool // explicit kernel App TCP53 DNS listener, no system netd
+    androidAppTCPDNS bool // explicit kernel App TCP53 DNS listener
+    androidSystemDNS bool // selected UID + selected netId plaintext IPv4 DNS
     androidTetherInterface,androidTetherSubnet string
     androidTetherIfindex int
     // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
@@ -276,6 +277,8 @@ func parse(role string,args []string)(config,error){
         "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
     androidAppTCPDNS:=flags.Bool("android-app-tcp-dns",false,
         "Android Root: optional ordinary App TCP53 follows the selected DNS mode through kernel TCP")
+    androidSystemDNS:=flags.Bool("android-system-dns",false,
+        "Android Root: selected UID and selected Network ordinary IPv4 UDP/TCP53 system DNS (no Private DNS/DoH)")
     tetherInterface:=flags.String("android-tether-interface","","Android Root: explicitly selected existing software tether interface")
     tetherSubnet:=flags.String("android-tether-subnet","","Android Root: exact active downstream IPv4 subnet")
     tetherIndex:=flags.Int("android-tether-ifindex",0,"Android Root: exact downstream ifindex")
@@ -370,7 +373,8 @@ func parse(role string,args []string)(config,error){
         c.androidTunnelDNS=*androidTunnelDNS&&!*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidCNDNSSplit=*androidCNDNSSplit
-        c.androidAppTCPDNS=*androidAppTCPDNS
+        c.androidSystemDNS=*androidSystemDNS
+        c.androidAppTCPDNS=*androidAppTCPDNS||c.androidSystemDNS
         if *tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
             subnet,e:=netip.ParsePrefix(*tetherSubnet)
             if *tetherInterface==""||*tetherIndex<=0||e!=nil||!subnet.Addr().Is4()||
@@ -415,7 +419,7 @@ func parse(role string,args []string)(config,error){
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||
-              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1179,10 +1183,11 @@ func recoverOriginalAndroidRootOwned()error{
         return string(b),nil
     }
     const root="/data/local/tmp/wbd-next-root/"
+    systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json")
     dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")
     _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
     tetherErr:=rootjournal.RecoverTether(runIP,runFirewall,root+"tether-journal.json")
-    routeErr=errors.Join(dnsErr,tetherErr,routeErr)
+    routeErr=errors.Join(systemDNSErr,dnsErr,tetherErr,routeErr)
     if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
         log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")
     }

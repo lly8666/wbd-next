@@ -98,6 +98,7 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
+    if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
     if c.androidRouteAllApps{
@@ -172,6 +173,18 @@ func androidRootRouteAfterNative(
     return stop,nil
 }
 const androidDNSJournal="/data/local/tmp/wbd-next-root/dns-tcp-journal.json"
+const androidSystemDNSJournal="/data/local/tmp/wbd-next-root/system-dns-journal.json"
+// iproute2 batch is cold-only. On a partial failure exact journal state
+// is read back and withdrawn; never replay a partially executed batch.
+func androidDNSIPBatch(rows [][]string)error{
+ var input strings.Builder
+ for _,row:=range rows{input.WriteString(strings.Join(row[1:]," "));input.WriteByte('\n')}
+ ctx,cancel:=context.WithTimeout(context.Background(),8*time.Second);defer cancel()
+ command:=exec.CommandContext(ctx,"ip","-4","-batch","-")
+ command.Stdin=strings.NewReader(input.String())
+ if _,e:=command.CombinedOutput();e!=nil{return fmt.Errorf("system DNS UID route batch: %w",e)}
+ return nil
+}
 func androidDNSFirewall(args ...string)(string,error){
  ctx,cancel:=context.WithTimeout(context.Background(),3*time.Second);defer cancel()
  b,e:=exec.CommandContext(ctx,"iptables",args...).CombinedOutput()
@@ -203,7 +216,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  tunnel:=c.androidTunnelDNS||c.androidCNDNSSplit
  physicalEndpoint:=net.JoinHostPort(c.androidPhysicalDNSUpstream.String(),"53")
  dial:=func(ctx context.Context,path dnsnative.Path,network,endpoint string)(net.Conn,error){
-  if network!="tcp"{return nil,dnsnative.ErrUnbound}
+  if network!="tcp"&&!(c.androidSystemDNS&&network=="udp"){return nil,dnsnative.ErrUnbound}
   if path==dnsnative.Physical{
    return c.androidPhysicalDNSDial(ctx,path,network,endpoint)
   }
@@ -211,7 +224,9 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   // Exact original authenticated lease, TUN interface and a separate
   // root-only source/destination rule to the fixed 1.1.1.1/32. This is
   // ordinary TCP entering the existing Rust M4, not a second TUN reader.
-  d:=net.Dialer{LocalAddr:&net.TCPAddr{IP:net.IP(lease.Addr().AsSlice())}}
+  var local net.Addr=&net.TCPAddr{IP:net.IP(lease.Addr().AsSlice())}
+  if network=="udp"{local=&net.UDPAddr{IP:net.IP(lease.Addr().AsSlice())}}
+  d:=net.Dialer{LocalAddr:local}
   d.ControlContext=func(ctx context.Context,network,address string,raw syscall.RawConn)error{
    var bindErr error
    e:=raw.Control(func(fd uintptr){
@@ -219,7 +234,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
    })
    return errors.Join(e,bindErr)
   }
-  return d.DialContext(ctx,"tcp4",endpoint)
+  return d.DialContext(ctx,network+"4",endpoint)
  }
  var match dnsnative.CNMatch
  if c.androidCNDNSSplit{match=c.androidCNSnapshot.Match}
@@ -227,14 +242,28 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  if e!=nil{return nil,errors.Join(e,stopUID())}
  uids:=append([]int(nil),c.androidRouteUIDs...)
  if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
- owner,e:=rootjournal.NewDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal,
-  rootjournal.DNSPlan{Tun:tun.name,Lease:lease.String(),Port:relay.Port(),Tunnel:tunnel,
-   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs})
+ plan:=rootjournal.DNSPlan{Tun:tun.name,Lease:lease.String(),Port:relay.Port(),Tunnel:tunnel,
+   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs}
+ if c.androidSystemDNS{
+  if e=relay.EnableUDP();e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
+ }
+ owner,e:=rootjournal.NewDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal,plan)
  if e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
+ var systemOwner *rootjournal.SystemDNSOwner
+ if c.androidSystemDNS{
+  // Android Network.getNetworkHandle stores netId in its high 32 bits.
+  // No root/system wildcard rule and no modification of netd configuration.
+  systemOwner,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,
+   androidSystemDNSJournal,rootjournal.SystemDNSPlan{DNSPlan:plan,NetID:uint32(c.androidNetworkHandle>>32)})
+  if e!=nil{return nil,errors.Join(e,owner.Stop(),relay.Close(),stopUID())}
+  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client uid_netid_port53=1")
+ }
  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")
  return func()error{
   // Withdraw capture first; join DNS streams before the original M4 Stop.
-  return errors.Join(owner.Stop(),relay.Close(),stopUID())
+  var systemErr error
+  if systemOwner!=nil{systemErr=systemOwner.Stop()}
+  return errors.Join(systemErr,errors.Join(owner.Stop(),relay.Close(),stopUID()))
  },nil
 }
 

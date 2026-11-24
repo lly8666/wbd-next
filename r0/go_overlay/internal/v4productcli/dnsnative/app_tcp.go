@@ -17,6 +17,7 @@ const maxAppTCP=64
 
 type AppTCPDNS struct {
  listener net.Listener
+ udp net.PacketConn
  resolver *Resolver
  allPhysical bool
  ctx context.Context
@@ -89,6 +90,7 @@ func (s *AppTCPDNS) serve(c net.Conn){
 func (s *AppTCPDNS) Close()error{
  s.cancel()
  e:=s.listener.Close()
+ if s.udp!=nil{e=errors.Join(e,s.udp.Close())}
  s.mu.Lock()
  for c:=range s.clients{c.Close()}
  s.mu.Unlock()

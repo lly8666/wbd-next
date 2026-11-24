@@ -54,7 +54,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS;
     private Spinner tetherChoices;
     private RootTetherScope tetherWatch;
     private final java.util.List<RootTetherScope> tetherScopes=new java.util.ArrayList<>();
@@ -676,7 +676,7 @@ public final class RootClientActivity extends Activity {
             autoConnectedDirect.isChecked(),
             backgroundNetworkRecovery.isChecked()?2:autoNetworkRecovery.isChecked()?1:0,
             Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()),
-            appTcpDNS.isChecked(),tetherSharing.isChecked());
+            appTcpDNS.isChecked(),tetherSharing.isChecked(),systemDNS.isChecked());
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -707,6 +707,7 @@ public final class RootClientActivity extends Activity {
         cnSplitDNS.setChecked(s.cnSplitDNS);
         appTcpDNS.setChecked(s.appTcpDNS);
         tetherSharing.setChecked(s.tetherSharing);
+        systemDNS.setChecked(s.systemDNS);
         allAppsDefault.setChecked(s.allApps);
         // B50: replacing a preset must REPLACE checked package/UID pairs,
         // not union with the old UI selection (which changes Root routes).
@@ -1021,6 +1022,8 @@ public final class RootClientActivity extends Activity {
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
             request.putExtra("app_tcp_dns",appTcpDNS.isChecked()&&
                 (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
+            request.putExtra("system_dns",systemDNS.isChecked()&&
+                (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
             if(tether!=null){
                 request.putExtra("tether_iface",tether.iface);
                 request.putExtra("tether_subnet",tether.subnet);
@@ -1332,6 +1335,10 @@ public final class RootClientActivity extends Activity {
         appTcpDNS.setText("可选App TCP/53 DNS：进入WBD的应用TCP查询也按上面选定的DNS模式处理（内核TCP，不接管系统netd）");
         appTcpDNS.setChecked(false);
         pane.addView(appTcpDNS);
+        systemDNS=new CheckBox(this);
+        systemDNS.setText("可选系统 DNS IPv4/53：所选应用和实体Network的普通系统UDP/TCP DNS按上述模式处理（不接管Private DNS/DoH）");
+        systemDNS.setChecked(false);
+        pane.addView(systemDNS);
         tetherSharing=new CheckBox(this);
         tetherSharing.setText("可选：共享 WBD IPv4 到现有热点/USB（仅软件转发，Android 16）");
         tetherSharing.setChecked(false);
