@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "PLAN030 第三批双ISA构建和真实管理功能通过；仅重试两个实际夹具失败。",
+  "summary": "PLAN030 双ISA原生包全部普通CLI实测、安装服务真实三设备和watch同机对照通过；Windows域名重连组合仍未最终通过。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
@@ -64,11 +64,25 @@
       "status": "NOT_RUN",
       "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
       "evidence": "docs/evidence/M0/20261124-H2388-PLAN030-PARALLEL-RESULT.json"
+    },
+    {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "实际系统安装、全部普通CLI、真实PTY菜单账号增改删、日志、重装、卸载取消/确认；原产品包不变",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2390-PLAN030-CLI-WATCH-PASS.json"
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "相同原生服务和三设备实际100pps A/B watch，1200/1200每轮、CPU/RSS/p99实测，无显著异常",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2390-PLAN030-CLI-WATCH-PASS.json"
     }
   ],
   "limitations": [
     "方向外层设置/有效外层、客户端OS应用及真实业务字节、休眠租约、样本年龄未由原有生产接口提供，明确未知；不另造wire字段和热路径统计。",
-    "Windows DNS域名重连与watch同VM成本待验；机器重启、OpenWrt及物理公网不由runner资格推断。"
+    "Windows DNS域名重连组合待验；机器重启、OpenWrt及物理公网不由runner资格推断。"
   ],
   "promotion": null
 }
