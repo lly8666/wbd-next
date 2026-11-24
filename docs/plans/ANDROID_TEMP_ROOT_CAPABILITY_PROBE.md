@@ -1,3 +1,7 @@
+**2026-11-24 最新用户决定：Android 高级 CN FakeIP = OUT_OF_SCOPE（明确不实现，不是待办）。** 保留普通 CN8503 域名 DNS 分流、真实 IPv4 CN 内核 FIB 直连、手工 CIDR；不引入合成 IP、FakeIP 映射、对应路由、UI/CLI 开关、代理数据路径或验收任务。按大类功能并行研读/合批接线，复用原 Go 冷控制及原 Rust 数据面；不展开极端工况、额外防御性安全开发或重复历史 SYN/TAP 探针。
+
+> **当前接续 B77–B79**：A48 历史 ARM64 API36 Normal/off 已真实 TLS/认证/32、M4 双向 RAW/TUN（auth1227、rtun1218）、UID、owned Stop，用户报告数据通了；独立应用层 TCP/UDP 和性能仍未完整验收。最新 `ddf7c8c9` 产品 CI 5 SUCCESS/2 FAIL/8 SKIPPED，B77 Game padding Android 字段和 B79 APNIC 日期归档地址错误、旧共享平台断言及 devlog 格式同批修复。当前大类接线先完成软件构建，实体集中后验；外层机会式重传须复用 main 已收口 Normal-v3 实现的真实驱动/ACK/SACK 路径，不增独立重传协议。新 SOURCE CI 待判，不预支 PASS。旧段仅历史证据。
+
 > **B75/B76 2026-11-24 批量接线**：B73/B74 [产品 #45334679723](https://github.com/lly8666/wbd-next/actions/runs/45334679723) 9 SUCCESS/1 FAIL/5 SKIPPED，旧B29源码断言固定4处cold DNS检查，B73新增第5处；Feature catalog SUCCESS。B75普通App IPv6 DNS走原系统IPv6 DNS relay（UDP，TCP随原开关），B76热点IPv4直连CIDR与IPv6一致、保留实际下游路由；CI同源待验，真机后续统一。
 
 > **B73/B74 2026-11-24 用户要求一次性大类功能合批接线**：B72 [#45328655906](https://github.com/lly8666/wbd-next/actions/runs/45328655906) 11 SUCCESS/4 SKIPPED。B73完成可配置隧道DNS在原Normal/Fixed/Auto/Game和App/系统/热点DNS的共同入口；B74补IPv6热点普通UDP/TCP DNS共用原三DNS模式。源码、设置及Stop同批；新CI待验，真实设备以后集中验收。不扩极端工况/防御开发。

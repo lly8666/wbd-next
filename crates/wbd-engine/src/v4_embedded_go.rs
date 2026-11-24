@@ -3903,7 +3903,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     {
         let Ok(mut adapter)=g.adapter.lock()else{return BAD_STAGE};
         let directional=crate::v4_client_startup_padding::linux_tx_padding_epoch(
-            g.original_identity.logical_epoch,g.server);
+            g.original_identity.logical_epoch,g.original_identity.server);
         adapter.set_native_startup_padding(mode,directional,outer_path_mtu as usize);
     }
     let workers=android_game_m4::AndroidGameWorkers::start(

@@ -28,7 +28,7 @@ assert len(collapsed)>1000
 lines="\n".join(str(x) for x in collapsed)+"\n"
 (out/"wbd-cn-ipv4.txt").write_text(lines,encoding="ascii")
 report={"schema":"wbd-android-cn-ipv4-apnic-snapshot/v1",
- "source_url":"https://ftp.apnic.net/stats/apnic/delegated-apnic-20261116",
+ "source_url":"https://ftp.apnic.net/stats/apnic/2026/delegated-apnic-20261116.gz",
  "source_date_utc":"2026-11-16",
  "source_sha256":hashlib.sha256(raw).hexdigest(),
  "cn_records":observed,

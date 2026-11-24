@@ -36,7 +36,7 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
         self.assertIn("e.original_identity.logical_epoch",rust)
         self.assertIn("e.drivers.is_some()",rust)
         self.assertIn("set_native_startup_padding",game)
-        self.assertIn('#[cfg(any(target_os="windows",target_os="linux",test))]',game)
+        self.assertIn('#[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]',game)
         self.assertIn("drain_for_linux_native",game)
         self.assertIn("if body.first().copied()!=Some(2){return None}",game)
         self.assertIn("configureStartupPadding(selectedPadding,effective)",go)

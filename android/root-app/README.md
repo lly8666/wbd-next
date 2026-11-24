@@ -1,3 +1,5 @@
+> **Android 功能范围（2026-11-24 用户决定）**：高级 CN FakeIP 明确不实现（OUT_OF_SCOPE）；保留真实 CN8503 普通 DNS 分流及 CN IPv4 内核 FIB 直连，不新增合成地址、FakeIP 开关或额外数据路径。
+
 ## B60 · Optional foreground automatic cold Network recovery
 
 When the user opts in for this foreground Activity, the existing selected
