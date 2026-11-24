@@ -3518,10 +3518,14 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
         id.server_limit!=base.server_limit||
         id.incarnation==base.incarnation||
         lease!=g.client_lease_ipv4||
-        new_flow.client_ip!=g.flows[slot].client_ip||
+        // A server observes NAT's public client tuple, not the client's
+        // selected physical NIC. The authenticated new lane may use a
+        // different egress address; only an unchanged full tuple is stale.
+        (!g.server&&new_flow.client_ip!=g.flows[slot].client_ip)||
         new_flow.server_ip!=g.flows[slot].server_ip||
         new_flow.server_port!=g.flows[slot].server_port||
-        new_flow.client_port==g.flows[slot].client_port{
+        (new_flow.client_ip==g.flows[slot].client_ip&&
+         new_flow.client_port==g.flows[slot].client_port){
         return INVALID
     }
     let prepared={

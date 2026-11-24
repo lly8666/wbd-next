@@ -201,6 +201,8 @@ func (p *V4LinuxGameProduct) ConnectClientGame(
         if i==0{epoch=session.Epoch}
         handoff,e:=a.Detach()
         if e!=nil{return errors.Join(e,p.abortLocked())}
+        // Same cold final-ACK repair as Windows, no added round trip.
+        for j:=0;j<2;j++{_,_=a.RepeatGameColdFinalACK(nil)}
         bridge:=&v4EmbeddedNativeBridge{}
         if e=bridge.prepareAuthenticatedClient(session,handoff,a.Flow());e!=nil{
             return errors.Join(fmt.Errorf("Game lane%d client Rust=%w",i+1,e),p.abortLocked())
@@ -289,11 +291,17 @@ func (p *V4LinuxGameProduct) ReplaceClientGameLane(
     })
     if e!=nil{return fmt.Errorf("%w: %w",ErrV4GameLaneUncommittedCold,e)}
     cold,e:=next.ColdSnapshot()
+    if e==nil&&(cold.clientLimit!=old.clientLimit||cold.serverLimit!=old.serverLimit){
+        // The server also rejects this before its native slot switch.
+        // A changed record budget cannot be mixed into a live FEC group.
+        return fmt.Errorf("%w: record budget changed",ErrV4GameLaneUncommittedCold)
+    }
     if e!=nil||!sameOriginalGameLaneHotIdentity(old,cold,lane){
         return errors.Join(ErrAdmissionParams,e)
     }
     handoff,e:=a.Detach()
     if e!=nil{return e}
+    for j:=0;j<2;j++{_,_=a.RepeatGameColdFinalACK(nil)}
     bridge:=&v4EmbeddedNativeBridge{}
     if e=bridge.prepareAuthenticatedClient(next,handoff,a.Flow());e!=nil{
         return e

@@ -246,6 +246,7 @@ func runOriginalLinuxClientPaths(
     var laneTurnCh <-chan originalGameLaneTurnResult
     var laneTurnOwner *originalClientGeneration
     var armedRotationDelay time.Duration
+    var laneColdRetries int
     stopRotation:=func(){
         if rotationTimer!=nil{
             if !rotationTimer.Stop(){select{case <-rotationTimer.C:default:}}
@@ -254,6 +255,7 @@ func runOriginalLinuxClientPaths(
         rotationCh=nil
     }
     armRotation:=func(){
+        laneColdRetries=0
         stopRotation()
         if c.rotationInterval>0 && current!=nil && ctx.Err()==nil{
             armedRotationDelay=originalNextRotationDelay(c.rotationInterval,c.rotationJitter)
@@ -452,6 +454,19 @@ func runOriginalLinuxClientPaths(
                 if errors.Is(answer.err,errOriginalGameLaneColdCandidate){
                     log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_COLD_RETRY_ARMED role=client generation=%d class=%s current_owner_preserved=1",
                         current.seq,nativeColdFailureClass(answer.err))
+                    // A transport timeout on an uncommitted candidate
+                    // gets two short fresh-tuple retries on the SAME
+                    // existing rotation timer, not a full rotation period.
+                    if laneColdRetries<2&&candidate==nil&&retiring==nil&&
+                        !errors.Is(answer.err,realityfront.ErrAdmissionAuth)&&
+                        !errors.Is(answer.err,context.Canceled)&&nativeColdTLSRetryable(answer.err){
+                        laneColdRetries++
+                        stopRotation()
+                        armedRotationDelay=originalPathRetry(laneColdRetries)
+                        rotationTimer=time.NewTimer(armedRotationDelay)
+                        rotationCh=rotationTimer.C
+                        continue
+                    }
                 }else{
                     log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_ROTATION_FAILED role=client generation=%d class=%s",
                         current.seq,nativeColdFailureClass(answer.err))

@@ -175,7 +175,6 @@ func runGameClient(
     lingerCtx,lingerCancel:=context.WithCancel(ctx)
     var lingerWG sync.WaitGroup
     defer func(){lingerCancel();lingerWG.Wait()}()
-    fail:=make(chan error,n)
     retiredRX:=make([]chan struct{},0,n)
     startRX:=func(a *faketcp.ClientAssociation,r *faketcp.RawIPv4Endpoint,
         f faketcp.ClientFlow,retired <-chan struct{}){
@@ -188,16 +187,22 @@ func runGameClient(
                     case <-retired:return
                     default:
                     }
-                    select{case fail<-readErr:default:}
+                    // This is the Go cold observer, not the live Rust RX.
+                    // A failed candidate must unblock only its own TLS.
+                    if a.State()!=faketcp.ClientAssociationDetached{a.Close()}
+                    log.Printf("V4_PUBLIC_GAME_COLD_RX_END role=client port=%d error=%v",f.LocalPort,readErr)
                     return
                 }
                 if !f.MatchesInbound(seg){continue}
                 if a.State()!=faketcp.ClientAssociationDetached{
-                    if err:=a.HandleSegment(seg,time.Now());err!=nil&&
-                        !errors.Is(err,faketcp.ErrClientDetached){
-                        select{case fail<-err:default:}
+                    e:=a.HandleSegment(seg,time.Now())
+                    if !errors.Is(e,faketcp.ErrClientDetached){
+                        if a.State()==faketcp.ClientAssociationClosed{return}
+                        continue // unrelated or duplicate cold segments are not group failures
                     }
-                }else if len(seg.Payload)!=0&&handoffCommitted.Load(){
+                }
+                if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
+                if len(seg.Payload)!=0&&handoffCommitted.Load(){
                     goPostHandoffDataCopies.Add(1)
                 }
             }
@@ -227,11 +232,22 @@ func runGameClient(
         retiredRX=append(retiredRX,make(chan struct{}))
         startRX(assoc,raw,flow,retiredRX[i])
         if e=assoc.Start(time.Now());e!=nil{return e}
-        establish,cancel:=context.WithTimeout(ctx,20*time.Second)
-        e=waitForOriginalColdSYN(establish,assoc)
-        cancel()
-        if e!=nil{return e}
-        coldRTOStops=append(coldRTOStops,driveOriginalClientColdBootstrapRTO(ctx,assoc))
+    }
+    // Every lane starts SYN before we wait for any lane. A lost SYN/ACK
+    // cannot consume the deadline of the remaining 1/3 associations.
+    establish,cancelSYN:=context.WithTimeout(ctx,20*time.Second)
+    synResults:=make(chan error,n)
+    for _,a:=range assocs{
+        go func(a *faketcp.ClientAssociation){synResults<-waitForOriginalColdSYN(establish,a)}(a)
+    }
+    var synErr error
+    for range assocs{
+        if e:=<-synResults;e!=nil&&synErr==nil{synErr=e;cancelSYN()}
+    }
+    cancelSYN()
+    if synErr!=nil{return synErr}
+    for _,a:=range assocs{
+        coldRTOStops=append(coldRTOStops,driveOriginalClientColdBootstrapRTO(ctx,a))
     }
     log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=client lanes=%d server_port=%d distinct_local_ports=%d",
         n,c.peerPort,len(flows))
@@ -457,10 +473,19 @@ func runGameClient(
         return lane,local,nil
     }
     draining:=false
+    // Read the existing Rust M4 verdict, as the shared server already
+    // does. The cold Go reader is no longer an authority on live lanes.
+    nativeStatus:=time.NewTicker(time.Second)
+    defer nativeStatus.Stop()
     for !draining{
         select{
         case <-ctx.Done():draining=true
-        case err=<-fail:draining=true
+        case <-nativeStatus.C:
+            live,e:=native.NativeM4Alive()
+            if e!=nil{err=e;draining=true}else if !live{
+                err=fmt.Errorf("Game native M4 stopped")
+                draining=true
+            }
         case turn,ok:=<-rotation:
             if !ok{rotation=nil;continue}
             lane,local,rotateErr:=rotateOne()
@@ -1317,73 +1342,56 @@ func runGameMultiServer(
                     rejectLane(lane)
                     continue
                 }
-                // A new complete A→B physical Game4 generation shares the
-                // authenticated principal/tunnel/EPOCH with the old group.
-                // It is NOT a one-lane hot swap just because its first TLS
-                // lane arrives while the old cohort is still active.
-                // Distinguish using the independently observed real TCP
-                // source IP and the AUTHENTICATED cold record/MSS budgets,
-                // never a client-supplied unprotected path-change flag.
+                // H2401's protected attempt identity already separates a
+                // fresh group from an explicit same-group hot lane. NAT
+                // may choose a different public IP as well as a new port.
+                // It must not turn a single replacement into a four-lane wait.
                 newFlow:=lane.Association().Flow()
-                oldFlow:=previous.Association().Flow()
                 oldCL,oldSL,eOld:=previous.AuthenticatedRecordLimits()
                 newCL,newSL,eNew:=lane.AuthenticatedRecordLimits()
-                if eOld!=nil||eNew!=nil{
+                if eOld!=nil||eNew!=nil||newCL!=oldCL||newSL!=oldSL{
+                    rejectLane(lane)
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_COLD_DEFERRED role=server lane=%d owner_preserved=1 class=record_budget",laneID)
+                    continue
+                }
+                if !group.product.MatchesProtectedGameFec(gameFec){
                     rejectLane(lane)
                     continue
                 }
-                physicalGroupCandidate:=
-                    newFlow.ClientIP!=oldFlow.ClientIP||
-                    newFlow.ServerIP!=oldFlow.ServerIP||
-                    newFlow.ServerPort!=oldFlow.ServerPort||
-                    newCL!=oldCL||newSL!=oldSL
-                if physicalGroupCandidate{
-                    log.Printf("V4_PUBLIC_GAME_PHYSICAL_GROUP_CANDIDATE role=server lane=%d mode=authenticated_new_source_or_record_budget same_epoch=1 old_group_untouched=1",
-                        laneID)
-                    // Fall through into the EXISTING four-lane complete
-                    // cohort staging below. Only after all four original
-                    // protected TLS/M1 owners commit can the old GameAdapter
-                    // receive an exact Stop. One lane never retires it.
-                }else{
-                    if !group.product.MatchesProtectedGameFec(gameFec){
-                        rejectLane(lane)
-                        continue
-                    }
-                    newPeer,e:=lane.DetachedPeer()
-                    if e!=nil||newFlow.ServerIP!=c.localIP.As4()||
-                        newFlow.ServerPort!=c.localPort{
-                        rejectLane(lane)
-                        continue
-                    }
-                    if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{newPeer}));e!=nil{
-                        rejectLane(lane)
-                        return fmt.Errorf("Game4 fresh one-lane TLS raw filter: %w",e)
-                    }
-                    if e=group.product.ReplaceServerGameLane(lane,laneID);e!=nil{
-                        // A possibly partially committed native crypto/RX
-                        // switch still fails closed: do not classify it as
-                        // a harmless candidate rejection.
-                        log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_NATIVE_REKEY_FAILED role=server class=uncertain_native_or_stop lane=%d",
-                            laneID)
-                        if err=retire(group,"one-lane-native-rekey-failed");err!=nil{return err}
-                        delete(active,coldKey)
-                        rejectLane(lane)
-                        continue
-                    }
-                    oldAssoc:=previous.Association()
-                    hotGrace:=originalLaneRetirementGrace()
-                    hotRetiring[oldAssoc]=time.Now().Add(hotGrace)
-                    log.Printf("V4_PUBLIC_GAME_OLD_COLD_TUPLE_RETIRE_SCHEDULED role=server lane=%d old_port=%d delay_ms=%d same_M4_slot=1",
-                        laneID,oldAssoc.Flow().ClientPort,hotGrace.Milliseconds())
-                    detached[lane.Association()]=newPeer
-                    group.members[idx]=lane
-                    group.peers[idx]=newPeer
-                    group.laneRotations[idx]++
-                    if e=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
-                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=%d rotation=%d client_port=%d server_port=%d same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
-                        laneID,group.laneRotations[idx],newFlow.ClientPort,newFlow.ServerPort)
+                newPeer,e:=lane.DetachedPeer()
+                if e!=nil||newFlow.ServerIP!=c.localIP.As4()||
+                    newFlow.ServerPort!=c.localPort{
+                    rejectLane(lane)
                     continue
                 }
+                if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{newPeer}));e!=nil{
+                    rejectLane(lane)
+                    return fmt.Errorf("Game4 fresh one-lane TLS raw filter: %w",e)
+                }
+                if e=group.product.ReplaceServerGameLane(lane,laneID);e!=nil{
+                    // A possibly partially committed native crypto/RX
+                    // switch still fails closed: do not classify it as
+                    // a harmless candidate rejection.
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_NATIVE_REKEY_FAILED role=server class=uncertain_native_or_stop lane=%d",
+                        laneID)
+                    if err=retire(group,"one-lane-native-rekey-failed");err!=nil{return err}
+                    delete(active,coldKey)
+                    rejectLane(lane)
+                    continue
+                }
+                oldAssoc:=previous.Association()
+                hotGrace:=originalLaneRetirementGrace()
+                hotRetiring[oldAssoc]=time.Now().Add(hotGrace)
+                log.Printf("V4_PUBLIC_GAME_OLD_COLD_TUPLE_RETIRE_SCHEDULED role=server lane=%d old_port=%d delay_ms=%d same_M4_slot=1",
+                    laneID,oldAssoc.Flow().ClientPort,hotGrace.Milliseconds())
+                detached[lane.Association()]=newPeer
+                group.members[idx]=lane
+                group.peers[idx]=newPeer
+                group.laneRotations[idx]++
+                if e=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
+                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=%d rotation=%d client_port=%d server_port=%d same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
+                    laneID,group.laneRotations[idx],newFlow.ClientPort,newFlow.ServerPort)
+                continue
             }
             // A client M4 local READY cannot prove this second server
             // lane arrived. Make each independently protected arrival

@@ -64,7 +64,8 @@
     "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json",
     "docs/evidence/M0/20261124-H2397-game-lanes-history.json",
     "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
-    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md"
+    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md",
+    "docs/devlog/M0/20261124-H2405-GAME-NAT-HOT-LANE.md"
   ],
   "verification": [
     {
@@ -167,7 +168,8 @@
     "H1295: 新Rust /32 TUN路由独占，旧Rust M4 worker仍活至Go随机10–20s exact Stop；此前新路由publish即使旧alive=false，提前取消宽限。原始TLS/AEAD、旧代无新TUN、反抢回守卫不变。短测待验。",
     "H1354 all four Game4 lanes share ONE true physical double-blackholed veth, not independent routes; 8s outage expected. Original H1353 CI report FAIL preserved. H1355 actual Carol fixed6 false counter alert only corrected offline H1356.",
     "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-game-lanes-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。",
-    "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。"
+    "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。",
+    "H2405 main：Linux Game2/4 冷SYN并行、每lane最终ACK修复、候选冷读故障不停止旧组；Game4同认证尝试热换允许NAT源IP/端口改变，真实MTU预算变更仍需整组。新源码原生NAT热换资格待验。"
   ],
   "promotion": null
 }
