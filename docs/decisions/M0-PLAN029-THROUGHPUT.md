@@ -1,5 +1,9 @@
 # PLAN029 · 原生吞吐与交付效率
 
+## H2378 用户最终交付范围（2026-11-24）
+
+H2376 main 原生两ISA功能回归45335657114两job PASS。主动吞吐/FEC/多线程研究结束。最后功能缺口：中国域名 geolocation-cn 内置离线快照、手动联网更新与已有自定义导入；默认CN模式无需文件；保留普通/高级CN语义。仅简单规则/构建/GUI功能回归。独立增量分支 `experiment/m0-029-cn-domain-release` 从当前 main `ae18e4200e8a3be45e715cba91d5a23f6890dd2e` 起，最终交付同一SOURCE Windows amd64 GUI+CLI+Rust+Wintun、Linux aarch64 server+Rust ISA-L；Npcap 按原授权许可官方安装。精确构建成功且实际包存在才交付；不再开启新性能课题。
+
 ## 2026-11-24 H2376 最终结论：结束主动性能研究
 
 - H2374 精确实验源 `3b187ea1a701fdf4d14738369e0d40f6b57f2c20`：双ISA真实公平准入对照均通过，ARM小TCP P99 286.97/7.70/616.43ms，x86 696.43/3.03/696.54ms；UDP漏回28/0/40及27/0/27，入站小TCP拒绝50/0/66及66/0/62；有效吞吐+0.87%/+0.25%，客户端CPU/GiB+0.81%/+0.40%。接受原8槽满队列公平准入机制。主线只选择性合入该算法，冷限定Linux Normal/off客户端，不整合历史实验祖先、不启用Game/Fixed/Auto/服务端/Windows新策略。主线集成源 `130555c806e4c32bf34075883321f366d5912a5c`；原生双ISA集成回归 [45335657114](https://github.com/lly8666/wbd-next/actions/runs/45335657114) 已启动，不能把实验源性能收据冒充新main源。
