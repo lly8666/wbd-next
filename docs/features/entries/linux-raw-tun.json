@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "linux-raw-tun",
   "name": "Linux Raw IPv4/TUN产品驱动",
-  "summary": "Linux Go/Rust原生raw/TUN；H2372双ISA公平准入实测正收益，已集成。 H2397已集成统一128及全部角色/模式公平准入。",
+  "summary": "Linux Go/Rust原生raw/TUN；H2372双ISA公平准入实测正收益，已集成。 H2397已集成统一128及全部角色/模式公平准入。 冷建链修复候选按认证/32跨Normal/Game寻找旧owner，复用原Health交接/退役；待真实双ISA验收。",
   "owner": "M4/M0 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -49,7 +49,8 @@
     "docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-128-64-20261121.json",
     "docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json",
     "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
-    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md",
+    "docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md"
   ],
   "verification": [
     {
@@ -128,6 +129,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f21ea508ab58b92a72c902d0b3e1121e26d1a17d",
       "evidence": "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
+    },
+    {
+      "platform": "Linux native x86_64/aarch64 shared server",
+      "scope": "Same /32 across Normal/Game whole-owner cold switch; no protocol or hot-lane changes; native regression pending.",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [

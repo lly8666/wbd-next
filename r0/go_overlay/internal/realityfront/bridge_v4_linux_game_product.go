@@ -509,6 +509,12 @@ func (l *V4LinuxGameAuthenticatedLane) NormalOwnerKey()(V4LinuxGameCohortID,erro
         Principal:snap.Principal(),TunnelID:snap.TunnelID(),Lanes:1,
     },nil
 }
+// The shared server's cold dispatcher uses the same server-verified
+// effective /32 as the native TUN route, for both Normal and Game.
+func (l *V4LinuxGameAuthenticatedLane) AuthenticatedLeaseIPv4()(string,error){
+    if l==nil||l.session==nil{return "",ErrAdmissionParams}
+    return l.session.AuthenticatedLeaseIPv4()
+}
 func (l *V4LinuxGameAuthenticatedLane) DetachedPeer()(faketcp.DetachedPeer,error){
     if l==nil||l.assoc==nil{return faketcp.DetachedPeer{},ErrAdmissionParams}
     state,ok:=l.assoc.TransitionState()

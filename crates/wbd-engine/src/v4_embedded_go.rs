@@ -3698,10 +3698,18 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_server_promote_after_client_heal
     let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
     if !driver.is_live()||!driver.has_authenticated_peer_health(){return BAD_STAGE}
     let Some(shared)=e.shared_tun.as_mut()else{return BAD_STAGE};
-    if !shared.publish_pending{return BAD_STAGE}
     let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
     let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
+    // Like Normal, accept the exact already-published owner if A expired
+    // before B started. Never accept a different generation's route.
+    if !shared.publish_pending{
+        return if routes.get(&shared.ip).is_some_and(|r|
+            r.generation==shared.generation &&
+            Arc::ptr_eq(&r.alive,&shared.alive) &&
+            r.alive.load(Ordering::Acquire)
+        ){OK}else{BAD_STAGE}
+    }
     let candidate=SharedTunRoute{flow_fair:true,
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),

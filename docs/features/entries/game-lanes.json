@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "game-lanes",
   "name": "Game2/Game4 多通道",
-  "summary": "双/四条TLS认证Game lane，Rust分lane AEAD/PN、首到去重；冷代Health证实与旧RX退避。 H2397已集成复用公平准入/ready批服务，七模式功能通过。",
+  "summary": "双/四条TLS认证Game lane，Rust分lane AEAD/PN、首到去重；冷代Health证实与旧RX退避。 H2397已集成复用公平准入/ready批服务，七模式功能通过。 冷建链修复候选按认证/32跨Normal/Game寻找旧owner，复用原Health交接/退役；待真实双ISA验收。",
   "owner": "M0/M1/M4 + FEC实验",
   "stage": "experimental",
   "development_branch": "experiment/fec-network-tuning",
@@ -66,7 +66,8 @@
     "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
     "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md",
     "docs/devlog/M0/20261124-H2405-GAME-NAT-HOT-LANE.md",
-    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md"
+    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md",
+    "docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md"
   ],
   "verification": [
     {
@@ -145,6 +146,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f21ea508ab58b92a72c902d0b3e1121e26d1a17d",
       "evidence": "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
+    },
+    {
+      "platform": "Linux native x86_64/aarch64 shared server",
+      "scope": "Same /32 across Normal/Game whole-owner cold switch; no protocol or hot-lane changes; native regression pending.",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": null
     }
   ],
   "limitations": [
