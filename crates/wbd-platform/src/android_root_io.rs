@@ -492,7 +492,19 @@ impl AndroidBoundRawRx {
         tuple:crate::ipv4_tcp::Ipv4Tuple<'_>,
         persona:crate::ipv4_tcp::PacketPersona,
     )->io::Result<(usize,u32)>{
+        self.read_original_record_with_ack(generation,slab,tuple,persona,false,false)
+            .map(|(len,seq,_,_,_)|(len,seq))
+    }
+    /// Same Android M3-pending DATA parser. Pure ACK/SACK remains optional
+    /// carrier metadata; len=0 never enters the protected record owner.
+    pub fn read_original_record_with_ack(
+        &self,generation:u32,slab:&mut [u8],
+        tuple:crate::ipv4_tcp::Ipv4Tuple<'_>,
+        persona:crate::ipv4_tcp::PacketPersona,
+        outer_enabled:bool,sack_permitted:bool,
+    )->io::Result<(usize,u32,u32,[crate::ipv4_tcp::SackRange32;4],usize)>{
         let total=self.read_untrusted(generation,slab)?;
+        let mut sacks=[crate::ipv4_tcp::SackRange32{start:0,end:0};4];
         self.debug[RX_READ_OK].fetch_add(1,Ordering::Relaxed);
         self.debug[RX_LAST_LENGTH].store(total as u64,Ordering::Relaxed);
         // Full per-packet forensics is useful in debug builds only.
@@ -530,9 +542,14 @@ impl AndroidBoundRawRx {
             },
             Err(reason)=>{
                 use crate::rx_ipv4_tcp::RxError;
-                if crate::rx_ipv4_tcp::parse_ack_packet(
-                    &slab[..total],trusted,false).is_ok(){
+                if let Ok(ack)=crate::rx_ipv4_tcp::parse_ack_packet(
+                    &slab[..total],trusted,outer_enabled&&sack_permitted){
                     self.debug[RX_PURE_ACK].fetch_add(1,Ordering::Relaxed);
+                    if outer_enabled{
+                        let n=ack.sacks().len();
+                        sacks[..n].copy_from_slice(ack.sacks());
+                        return Ok((0,ack.seq32,ack.ack32,sacks,n))
+                    }
                 }else{
                     let key=match reason{
                         RxError::WrongTuple|RxError::InvalidTrustedTuple=>RX_TUPLE_BAD,
@@ -555,12 +572,13 @@ impl AndroidBoundRawRx {
             },
         };
         let seq=parsed.seq32;
+        let ack=parsed.presentation_ack32;
         let wire=parsed.ciphertext.len();
         // Only exact tuple, length, flags, options and IPv4 checksum reach
         // original M1; a TCP-checksum-only mismatch is still UNAUTHENTICATED
         // until the unchanged original M3 AEAD/PN/replay accepts its record.
         slab.copy_within(total-wire..total,0);
-        Ok((wire,seq))
+        Ok((wire,seq,ack,sacks,0))
     }
 }
 

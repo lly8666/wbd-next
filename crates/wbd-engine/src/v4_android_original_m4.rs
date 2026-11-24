@@ -20,9 +20,8 @@ use wbd_platform::android_root_io::{
     AndroidBoundPhysicalDnsUdp,
 };
 use wbd_platform::ipv4_tcp::{
-    Ipv4Tuple,Presentation,PacketPersona,build_presentation_ack,
+    Ipv4Tuple,Presentation,PacketPersona,
 };
-use crate::v4_presentation_ack::presentation_ack_only_due;
 #[cfg(feature="fec2_product_record")]
 use crate::v4_owner_crypto::NormalOffReport;
 #[cfg(feature="fec2_product_record")]
@@ -145,7 +144,7 @@ fn presentation(e:&Entry,stats:&AndroidOriginalStats)->Presentation{
 }
 fn send_staged(
     e:&mut Entry,raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
-    storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs,
+    storage:&mut Vec<TxDispatch>,scratch:&mut [u8],at:MonoNs,first_data:bool,
 )->Option<u64>{
     let f=e.flow;
     let tuple=Ipv4Tuple{
@@ -154,8 +153,18 @@ fn send_staged(
     };
     let p=presentation(e,stats);
     let mtu=match e.android_physical.as_ref(){Some(x)=>x.mtu,None=>return None};
+    #[cfg(feature="fec2_product_record")]
+    let outer=&mut e.android_outer;
     let result=e.owner.submit_android_raw_ready(
-        raw,tuple,p,mtu,at,storage,scratch
+        raw,tuple,p,mtu,at,storage,scratch,|pn,seq,wire|{
+            #[cfg(feature="fec2_product_record")]
+            if let Some(c)=outer.as_mut(){
+                if first_data{let _=c.on_firstsend(0,pn,seq,wire,at.0);}
+                else{let _=c.on_health_copy(0,seq,wire.len());}
+            }
+            #[cfg(not(feature="fec2_product_record"))]
+            let _=(pn,seq,wire,first_data);
+        }
     );
     e.arena.drain_returns();
     match result{
@@ -165,8 +174,13 @@ fn send_staged(
             // merely staged reservation.
             e.android_last_copied_seq32=seq_end;
             e.android_last_ack_sent32=p.ack32;
-            e.android_last_ack_tx_ns=at.0;
-            e.android_ack_pending=e.android_presentation_ack.ack()!=p.ack32;
+            #[cfg(feature="fec2_product_record")]
+            let repair=e.android_outer.is_some();
+            #[cfg(not(feature="fec2_product_record"))]
+            let repair=false;
+            if !repair{e.android_last_ack_tx_ns=at.0;}
+            e.android_ack_pending=e.android_presentation_ack.ack()!=p.ack32||
+                (repair&&e.android_ack_pending&&e.android_presentation_ack.latest_sack().is_some());
             stats.tx.fetch_add(1,Ordering::Relaxed);
             Some(pn)
         },
@@ -244,7 +258,7 @@ fn send_android_fixed_source(
         let (pn,_,_)=match e.owner.seal_fec2_product_one_padded(
             record,len,2,frame,u64::from(physical),epoch,at,pad
         ){Ok(x)=>x,Err(_)=>return false};
-        let copied=send_staged(e,raw,stats,storage,scratch,at)==Some(pn);
+        let copied=send_staged(e,raw,stats,storage,scratch,at,true)==Some(pn);
         if copied&&pad>0{
             stats.startup_padding_copied_records.fetch_add(1,Ordering::Relaxed);
             stats.startup_padding_copied_bytes.fetch_add(pad as u64,Ordering::Relaxed);
@@ -298,7 +312,7 @@ fn send_android_fixed_due(
         let (pn,_,_)=match e.owner.seal_fec2_product_one(
             record,bytes.len(),3,frame,u64::from(physical),epoch,at
         ){Ok(x)=>x,Err(_)=>return DriverProof::NotSent};
-        if send_staged(e,raw,stats,storage,scratch,at)==Some(pn){
+        if send_staged(e,raw,stats,storage,scratch,at,true)==Some(pn){
             stats.fec2_repair_raw.fetch_add(1,Ordering::Relaxed);
             if rev==revision{e.android_fec2_revision_repair_copied=true}
             DriverProof::Copied
@@ -332,7 +346,7 @@ fn send_android_fixed_quality_due(
         let pn=e.owner.seal_original_authenticated_receipt(
             slab,&control,frame,u64::from(physical),at
         ).ok()?.0;
-        Some(send_staged(e,raw,stats,storage,scratch,at)==Some(pn))
+        Some(send_staged(e,raw,stats,storage,scratch,at,false)==Some(pn))
     })().unwrap_or(false);
     if let Some(q)=e.quality_tx.as_mut(){
         if q.complete_signal(signal,sent,at).is_err(){
@@ -370,7 +384,7 @@ fn send_authenticated_health(
     };
     // A successful kernel copy of some OTHER queued record must never
     // postpone this authenticated HealthClock. Match the original PN.
-    send_staged(e,raw,stats,storage,scratch,at)==Some(pn)
+    send_staged(e,raw,stats,storage,scratch,at,false)==Some(pn)
 }
 // Reuse main H2229's authenticated cumulative ACK, coalesced to 10ms.
 // No extra socket, JNI callback, M2 receipt, AEAD PN or TUN reader.
@@ -379,12 +393,17 @@ fn send_presentation_ack_if_due(
     scratch:&mut [u8],at:MonoNs,
 ){
     let ack=e.android_presentation_ack.ack();
-    if !e.android_ack_pending||ack==e.android_last_ack_sent32{
+    #[cfg(feature="fec2_product_record")]
+    let repair=e.android_outer.is_some();
+    #[cfg(not(feature="fec2_product_record"))]
+    let repair=false;
+    let future=repair&&e.android_presentation_ack.latest_sack().is_some();
+    if !e.android_ack_pending||(!future&&ack==e.android_last_ack_sent32){
         e.android_ack_pending=false;
         return
     }
-    if !presentation_ack_only_due(
-        at.0,e.android_last_ack_tx_ns,ack,e.android_last_ack_sent32
+    if !crate::v4_presentation_ack::presentation_game_ack_due(
+        at.0,e.android_last_ack_tx_ns,ack,e.android_last_ack_sent32,future
     ){return}
     let Some(scope)=e.android_physical.as_ref()else{return};
     let f=e.flow;
@@ -392,10 +411,17 @@ fn send_presentation_ack_if_due(
         src_ip:&f.client_ip,dst_ip:&f.server_ip,
         src_port:f.client_port,dst_port:f.server_port,
     };
-    let built=build_presentation_ack(
+    let mut sacks=[wbd_platform::ipv4_tcp::SackRange32{start:0,end:0};4];
+    let mut count=0;
+    if repair&&e.android_outer_sack{
+        for v in e.android_presentation_ack.sacks4().into_iter().flatten(){
+            sacks[count]=v;count+=1;
+        }
+    }
+    let built=wbd_platform::ipv4_tcp::build_presentation_ack_sack(
         tuple,e.android_last_copied_seq32,ack,
         stats.ip_id.fetch_add(1,Ordering::Relaxed) as u16,
-        PacketPersona::Legacy,scope.mtu as usize,scratch
+        PacketPersona::Legacy,scope.mtu as usize,&sacks[..count],scratch
     );
     if let Ok(packet)=built{
         if raw.send_built_outer(e.generation,packet,scope.mtu).is_ok(){
@@ -454,10 +480,15 @@ fn raw_worker(
                 };
                 let at=now();
                 let anchor=e.android_seq_anchor;
+                #[cfg(feature="fec2_product_record")]
+                let repair=e.android_outer.is_some();
+                #[cfg(not(feature="fec2_product_record"))]
+                let repair=false;
+                let sack_permitted=e.android_outer_sack;
                 let read=e.owner.receive_android_raw_into_owner(
-                    &raw,slab,tuple,PacketPersona::Legacy,anchor,at
+                    &raw,slab,tuple,PacketPersona::Legacy,anchor,at,repair,sack_permitted
                 );
-                let (wire_len,absolute)=match read{
+                let (wire_len,absolute,ack32,sacks,sack_count)=match read{
                     Ok(v)=>v,
                     Err((crate::v4_owner_crypto::ProtectedCryptoError::AndroidWouldBlock,_))=>{
                         e.arena.drain_returns();
@@ -470,6 +501,18 @@ fn raw_worker(
                         break
                     },
                 };
+                if wire_len==0{
+                    #[cfg(feature="fec2_product_record")]
+                    if let Some(c)=e.android_outer.as_mut(){
+                        let hints=sacks.map(|x|wbd_recovery::outer_ack::SackRange32{
+                            start:x.start,end:x.end});
+                        if c.on_feedback(0,ack32,&hints[..sack_count],at.0){
+                            let _=peer_wake.signal_wake();
+                        }
+                    }
+                    e.arena.drain_returns();
+                    continue
+                }
                 stats.raw_candidates.fetch_add(1,Ordering::Relaxed);
                 let lease=e.client_lease_ipv4;
                 #[cfg(feature="fec2_product_record")]
@@ -684,12 +727,21 @@ fn raw_worker(
                     // independent from the M1 seq32 high-water extension
                     // anchor. A future authenticated span must NOT ACK a hole.
                     let before=e.android_presentation_ack.ack();
-                    let advanced=e.android_presentation_ack.verified(
-                        absolute as u32,wire_len
-                    );
+                    let future=repair&&e.android_presentation_ack.authenticated_future(absolute as u32);
+                    let _=e.android_presentation_ack.verified(absolute as u32,wire_len);
+                    if repair&&sack_permitted{
+                        let _=e.android_presentation_ack.abandon_stalled(at.0);
+                    }
+                    let advanced=e.android_presentation_ack.ack();
+                    #[cfg(feature="fec2_product_record")]
+                    if let Some(c)=e.android_outer.as_mut(){
+                        if c.on_feedback(0,ack32,&[],at.0){
+                            let _=peer_wake.signal_wake();
+                        }
+                    }
                     e.android_seq_anchor=e.android_seq_anchor.max(
                         absolute.saturating_add(wire_len as u64));
-                    if advanced!=before && !e.android_ack_pending{
+                    if (advanced!=before||future) && !e.android_ack_pending{
                         e.android_ack_pending=true;
                         // One wake for pending ACK; TX owns the 10ms
                         // coalescing deadline and the sole original RAW FD.
@@ -778,7 +830,7 @@ fn send_android_jumbo_one(
     ){
         Ok(v)=>v,Err(_)=>return JumboTurn::Abandoned,
     };
-    if send_staged(e,raw,stats,dispatch,wire_scratch,at)!=Some(pn){
+    if send_staged(e,raw,stats,dispatch,wire_scratch,at,true)!=Some(pn){
         return JumboTurn::Abandoned
     }
     plan.issued=m3.issued();
@@ -1050,6 +1102,9 @@ fn tun_worker(
             .min(ack_due);
         #[cfg(feature="fec2_product_record")]
         if let Ok(e)=cell.lock(){
+            if let Some(t)=e.android_outer.as_ref().and_then(|c|c.next_due()){
+                due=due.min(t);
+            }
             if e.protected_features==7{
                 if let Some(t)=e.android_fec2_tx.as_ref().and_then(|x|x.next_deadline()){
                     due=due.min(t.0);
@@ -1162,11 +1217,14 @@ fn tun_worker(
         if !tun_ready{
             #[cfg(feature="fec2_product_record")]
             if let Ok(mut e)=cell.lock(){
-                if e.phase==PH_ACTIVE&&e.protected_features==7{
-                    if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
-                        send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
-                            &mut storage,&mut wire_scratch,now());
+                if e.phase==PH_ACTIVE{
+                    if e.protected_features==7{
+                        if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
+                            send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
+                                &mut storage,&mut wire_scratch,now());
+                        }
                     }
+                    send_outer_due(&mut e,&raw,&stats,&mut wire_scratch,now());
                 }
             }
             continue
@@ -1344,7 +1402,7 @@ fn tun_worker(
                     Ok((pn,_,_,_))=>{
                         if send_staged(
                             &mut e,&raw,&stats,&mut storage,
-                            &mut wire_scratch,at
+                            &mut wire_scratch,at,true
                         )==Some(pn){
                             stats.business_raw_copied.fetch_add(1,Ordering::Relaxed);
                             if padding>0{
@@ -1515,14 +1573,18 @@ fn tun_worker(
             e.arena.drain_returns();
             break
         }
-        // Fresh business sources first, then at most one parity quantum.
+        // Fresh business sources first, then parity and one original
+        // frozen outer opportunity; no extra TX owner or periodic DATA PTO.
         #[cfg(feature="fec2_product_record")]
         if let Ok(mut e)=cell.lock(){
-            if e.phase==PH_ACTIVE&&e.protected_features==7{
-                if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
-                    send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
-                        &mut storage,&mut wire_scratch,now());
+            if e.phase==PH_ACTIVE{
+                if e.protected_features==7{
+                    if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
+                        send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
+                            &mut storage,&mut wire_scratch,now());
+                    }
                 }
+                send_outer_due(&mut e,&raw,&stats,&mut wire_scratch,now());
             }
         }
     }
@@ -1534,6 +1596,57 @@ fn tun_worker(
     if shutdown.load(Ordering::Acquire){
         let _=peer_wake.signal_stop();
     }
+}
+#[cfg(feature="fec2_product_record")]
+fn send_outer_due(e:&mut Entry,raw:&AndroidBoundRawTx,stats:&AndroidOriginalStats,
+    scratch:&mut [u8],at:MonoNs){
+    let Some(mtu)=e.android_physical.as_ref().map(|s|s.mtu)else{return};
+    let p=presentation(e,stats);
+    let f=e.flow;
+    let tuple=Ipv4Tuple{src_ip:&f.client_ip,dst_ip:&f.server_ip,
+        src_port:f.client_port,dst_port:f.server_port};
+    let Some(c)=e.android_outer.as_mut()else{return};
+    let Some(copy)=c.take_due(at.0,&[])else{return};
+    let copied=wbd_platform::ipv4_tcp::build_bytes(tuple,p,copy.seq,&copy.wire,None,
+        mtu as usize,scratch).ok().and_then(|packet|
+        raw.send_built_outer(e.generation,packet,mtu).ok())
+        .is_some_and(|n|n==copy.wire.len()+40);
+    let _=c.complete(0,copy.pn,copied,at.0);
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_outer_policy_set(
+    h:u64,enabled:u32,sack:u32
+)->i32{
+    if enabled>1||sack>1{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_workers.is_some()||
+       e.android_joining{return BAD_STAGE}
+    e.android_outer=if enabled==1{
+        let Some((lane,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
+        let Ok(c)=crate::v4_game_cosmetic_outer::CosmeticOuter::with_normal_feedback(
+            &[lane],&[u64::from(e.android_last_copied_seq32)],epoch)
+            else{return BAD_STAGE};
+        Some(c)
+    }else{None};
+    e.android_outer_sack=enabled==1&&sack==1;
+    OK
+}
+#[cfg(feature="fec2_product_record")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_outer_policy_read(
+    h:u64,out:*mut u64,n:usize
+)->i32{
+    if out.is_null()||n!=4{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE{return BAD_STAGE}
+    let values=if let Some(c)=e.android_outer.as_ref(){
+        [1,c.sent(),c.first_record_wire_bytes(),c.copied_record_wire_bytes()]
+    }else{[0;4]};
+    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,4)};
+    OK
 }
 pub(super) fn start(handle:u64,ifindex:u32)->i32{
     let Ok(cell)=session(handle)else{return UNKNOWN};

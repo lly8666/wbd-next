@@ -116,11 +116,10 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.mu.Lock()
     defer p.mu.Unlock()
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
-    // Android Normal default, explicit Fixed/Auto on same authenticated
-    // original Rust feature7 FEC2 M4. FEC2 never uses Normal-only pad.
+    // Android uses its own Bionic TUN/RAW owner and original cold lease.
+    // The shared opportunistic-v3 policy is configured below on every mode.
     if runtime.GOOS=="android" &&
-       (!p.cfg.DisableOuterRepair||p.cfg.SharedTun!=nil||
-        !cfg.AutoLease){
+       (p.cfg.SharedTun!=nil||!cfg.AutoLease){
         return nil,ErrAdmissionUnsupported
     }
     conn:=assoc.BootstrapConn()
@@ -282,7 +281,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if err==nil{
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
     }
-    if err==nil&&runtime.GOOS!="android"{
+    if err==nil{
         err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)
     }
     if err==nil{
@@ -297,9 +296,9 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         // Android and Linux use the same authenticated source-only padding.
         err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
     }
-    // Source-locked Android feature3/off does not advertise the unported
-    // original mature firstsend M2 receipt/outer repair capability.
-    // The original TLS/AEAD/replay and canonical encrypted Health stay live.
+    // Linux's historical ABI name arms its native presentation path.
+    // Android uses the shared v3 controller above, not retired per-record M2.
+    // Original TLS/AEAD/replay and encrypted Health remain independent.
     if err==nil&&runtime.GOOS!="android"{
         err=bridge.armOriginalPublicM2Feedback(0)
     }

@@ -14,7 +14,8 @@ use wbd_platform::ipv4_tcp::{self,Ipv4Tuple,PacketPersona,Presentation};
 use wbd_platform::r1::StopResult;
 use crate::v4_game_lane::{GameAdapter,GameLaneOpener,GameReceiveOwner};
 use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
-use crate::v4_presentation_ack::{NativePresentationAck,presentation_ack_only_due};
+use crate::v4_presentation_ack::{NativePresentationAck,presentation_game_ack_due};
+use crate::v4_game_cosmetic_outer::CosmeticOuter;
 use crate::v4_session_address::{admitted_client_source,admitted_client_destination};
 use super::{AndroidPhysicalScope,AndroidGameRawLane};
 use crate::v4_android_game_cold::OriginalGameColdLane;
@@ -39,6 +40,10 @@ pub(super) struct AndroidGameWorkers{
     physical_dns:Option<Arc<AndroidBoundPhysicalDnsUdp>>,
     physical_tx:Arc<AtomicU64>,physical_rx:Arc<AtomicU64>,
     physical_errors:Arc<AtomicU64>,
+    outer_enabled:bool,
+    outer_copied:Arc<AtomicU64>,
+    outer_first_wire:Arc<AtomicU64>,
+    outer_repair_wire:Arc<AtomicU64>,
 }
 impl AndroidGameWorkers{
     pub(super) fn start(
@@ -48,6 +53,7 @@ impl AndroidGameWorkers{
         tunnel_dns:bool,health_seconds:u32,
         physical_dns:bool,upstream:[u8;4],cn:Option<CNDnsMatcher>,tunnel_upstream:[u8;4],
         game_fec_profile:Option<u8>,stagger:u32,
+        outer_enabled:bool,sack_mask:u32,epoch:[u8;16],
     )->Result<Self,()>{
         // Original Game2/4 off and fixed Game FEC share ONE M4 worker.
         // No new packet protocol, TLS lane, or rotation owner.
@@ -129,6 +135,23 @@ impl AndroidGameWorkers{
         let tx_raw=raw.iter().map(|l|Arc::clone(&l.tx)).collect::<Vec<_>>();
         let tx_flows=lanes.iter().map(|l|l.flow).collect::<Vec<_>>();
         let tx_begin=lanes.iter().map(|l|l.tx_seq).collect::<Vec<_>>();
+        let mut cosmetic=if outer_enabled{
+            let keys=(1..=lane_count).map(|slot|LaneKey{
+                tunnel:TunnelKey{slot:14,generation},slot:slot as u32,generation
+            }).collect::<Vec<_>>();
+            Some(CosmeticOuter::with_normal_feedback(&keys,&tx_begin,epoch).map_err(|_|())?)
+        }else{None};
+        let hints=Arc::new((0..lane_count).map(|_|AtomicU64::new(0)).collect::<Vec<_>>());
+        let peer_sacks=Arc::new((0..lane_count).map(|_|
+            std::array::from_fn::<_,4,_>(|_|AtomicU64::new(0))).collect::<Vec<_>>());
+        let tx_hints=Arc::clone(&hints);
+        let tx_peer_sacks=Arc::clone(&peer_sacks);
+        let outer_copied=Arc::new(AtomicU64::new(0));
+        let outer_first_wire=Arc::new(AtomicU64::new(0));
+        let outer_repair_wire=Arc::new(AtomicU64::new(0));
+        let tx_outer_copied=Arc::clone(&outer_copied);
+        let tx_outer_first=Arc::clone(&outer_first_wire);
+        let tx_outer_wire=Arc::clone(&outer_repair_wire);
         let mtu=scope.mtu.min(1500);
         let tx_wake=Arc::clone(&wakes[0]);
         let tx_tun=Arc::clone(&tun);
@@ -166,6 +189,7 @@ impl AndroidGameWorkers{
                 // replies through this same single TUN, no extra worker.
                 let mut physical_fragment=[0u8;2_048];
                 let mut offsets=tx_begin;
+                let mut observed_hints=[0u64;4];
                 let mut tun_burst=GameTunBurst::default();
                 // The original GameAdapter may schedule Game4 later copies.
                 // Invoke this SAME native RAW sender both on TUN ingress and
@@ -191,6 +215,10 @@ impl AndroidGameWorkers{
                                                     generation,packet,mtu).ok())
                                             .is_some_and(|size|size==wire.len()+40);
                                         if valid{
+                                            if let Some(c)=cosmetic.as_mut(){
+                                                let _=c.on_firstsend(i,pn,offsets[i],wire,$when.0);
+                                                tx_outer_first.store(c.first_record_wire_bytes(),Ordering::Relaxed);
+                                            }
                                             offsets[i]=offsets[i].saturating_add(wire.len() as u64);
                                             tx_seq[i].store(offsets[i] as u32,Ordering::Release);
                                             tx_sent.fetch_add(1,Ordering::Relaxed);
@@ -246,6 +274,9 @@ impl AndroidGameWorkers{
                                 Err(_)=>None
                             };
                             if let Some(len)=send{
+                                if let Some(c)=cosmetic.as_mut(){
+                                    let _=c.on_health_copy(0,offsets[0],len);
+                                }
                                 offsets[0]=offsets[0].saturating_add(len as u64);
                                 tx_seq[0].store(offsets[0] as u32,Ordering::Release);
                                 tx_sent.fetch_add(1,Ordering::Relaxed);
@@ -391,6 +422,47 @@ impl AndroidGameWorkers{
                                 .chain(game.game_fec_next_due_ns(when)).min();
                         }else{tx_stop.store(true,Ordering::Release);break}
                     }
+                    // Same main Normal-v3 Game controller, after fresh
+                    // business and parity. Original PN/SEQ/ciphertext only.
+                    if let Some(c)=cosmetic.as_mut(){
+                        let at=origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64;
+                        for (i,hint) in tx_hints.iter().enumerate(){
+                            let current=hint.load(Ordering::Acquire);
+                            if current==observed_hints[i]{continue}
+                            let count=(current>>32).wrapping_sub(observed_hints[i]>>32).min(3);
+                            let mut sacks=[wbd_recovery::outer_ack::SackRange32{start:0,end:0};4];
+                            let mut n=0;
+                            for slot in &tx_peer_sacks[i]{
+                                let v=slot.load(Ordering::Acquire);
+                                if v!=0{
+                                    sacks[n]=wbd_recovery::outer_ack::SackRange32{
+                                        start:(v>>32) as u32,end:v as u32};
+                                    n+=1;
+                                }
+                            }
+                            for _ in 0..count{
+                                let _=c.on_feedback(i,current as u32,&sacks[..n],at);
+                            }
+                            observed_hints[i]=current;
+                        }
+                        if let Some(copy)=c.take_due(at,&[]){
+                            let i=copy.lane;
+                            let f=tx_flows[i];
+                            let tuple=Ipv4Tuple{src_ip:&f.client_ip,dst_ip:&f.server_ip,
+                                src_port:f.client_port,dst_port:f.server_port};
+                            let p=Presentation{ack32:tx_ack[i].load(Ordering::Acquire),
+                                advertised_window:65_535,ip_id:(copy.pn as u16).wrapping_add(76),
+                                persona:PacketPersona::Legacy};
+                            let copied=ipv4_tcp::build_bytes(tuple,p,copy.seq,&copy.wire,None,
+                                mtu as usize,&mut outer[i]).ok().and_then(|packet|
+                                tx_raw[i].send_built_outer(generation,packet,mtu).ok())
+                                .is_some_and(|n|n==copy.wire.len()+40);
+                            let _=c.complete(i,copy.pn,copied,at);
+                            tx_outer_copied.store(c.sent(),Ordering::Relaxed);
+                            tx_outer_wire.store(c.copied_record_wire_bytes(),Ordering::Relaxed);
+                        }
+                        game_due=game_due.into_iter().chain(c.next_due()).min();
+                    }
                     // B55: queued business uses the SAME TUN and real
                     // GameAdapter, with a DNS/Stop event turn every 8 reads.
                     if tun_burst.inline_next(received_business){continue}
@@ -505,6 +577,10 @@ impl AndroidGameWorkers{
             let rx_fec_enabled=game_fec_profile.is_some();
             let ack_heads=Arc::clone(&ack);
             let seq_heads=Arc::clone(&seq);
+            let rx_hints=Arc::clone(&hints);
+            let rx_peer_sacks=Arc::clone(&peer_sacks);
+            let repair_wake=Arc::clone(&wakes[0]);
+            let sack_permitted=outer_enabled&&(sack_mask&(1u32<<i)!=0);
             let f=lanes[i].flow;
             let rx_first=lanes[i].rx_seq;
             let lane=LaneKey{tunnel:TunnelKey{slot:14,generation},
@@ -513,7 +589,7 @@ impl AndroidGameWorkers{
                 .name(format!("wbd-android-game-rx-{}",i+1))
                 .spawn(move||{
                     let mut wire=[0u8;2048];
-                    let mut ack_wire=[0u8;64];
+                    let mut ack_wire=[0u8;80];
                      let mut dns_reply=[0u8;MAX_DNS_IPV4_PACKET];
                     let tuple=Ipv4Tuple{
                         src_ip:&f.server_ip,dst_ip:&f.client_ip,
@@ -531,15 +607,59 @@ impl AndroidGameWorkers{
                         thread::yield_now();
                     }
                     while !rx_stop.load(Ordering::Acquire){
-                        let read=rx_raw.read_original_record(generation,&mut wire,
-                            tuple,PacketPersona::Legacy);
-                        let raw_received=matches!(&read,Ok((n,_)) if *n>0);
+                        let read=rx_raw.read_original_record_with_ack(generation,&mut wire,
+                            tuple,PacketPersona::Legacy,outer_enabled,sack_permitted);
+                        let raw_received=read.is_ok();
                         match read{
-                            Ok((len,seq32))=>{
+                            Ok((0,_,ack32,sacks,count))=>{
+                                // Pure appearance ACK never enters AEAD/FEC/Health.
+                                for (k,field) in rx_peer_sacks[i].iter().enumerate(){
+                                    let v=if k<count{(u64::from(sacks[k].start)<<32)|
+                                        u64::from(sacks[k].end)}else{0};
+                                    field.store(v,Ordering::Release);
+                                }
+                                let last=rx_hints[i].load(Ordering::Relaxed);
+                                rx_hints[i].store(((last>>32).wrapping_add(1)<<32)|
+                                    u64::from(ack32),Ordering::Release);
+                                let _=repair_wake.signal_wake();
+                            },
+                            Ok((len,seq32,ack32,_,_))=>{
                                 rx_read.fetch_add(1,Ordering::Relaxed);
                                 let decrypted=opener.open(&mut wire[..len]);
                                 match decrypted{
                                     Ok(Some((id,payload)))=>{
+                                        // Physical lane AEAD/PN progress is
+                                        // independent of logical TUN dedup/FEC.
+                                        let future=ledger.authenticated_future(seq32);
+                                        let _=ledger.verified(seq32,len);
+                                        let now_ns=clock.elapsed().as_nanos()
+                                            .min(u128::from(u64::MAX)) as u64;
+                                        if sack_permitted{let _=ledger.abandon_stalled(now_ns);}
+                                        let current=ledger.ack();
+                                        ack_heads[i].store(current,Ordering::Release);
+                                        if outer_enabled{
+                                            let last=rx_hints[i].load(Ordering::Relaxed);
+                                            rx_hints[i].store(((last>>32).wrapping_add(1)<<32)|
+                                                u64::from(ack32),Ordering::Release);
+                                        }
+                                        if presentation_game_ack_due(now_ns,last_ack_ns,current,
+                                            last_ack,outer_enabled&&future){
+                                            let mut sacks=[ipv4_tcp::SackRange32{start:0,end:0};4];
+                                            let mut n=0;
+                                            if sack_permitted{
+                                                for v in ledger.sacks4().into_iter().flatten(){
+                                                    sacks[n]=v;n+=1;
+                                                }
+                                            }
+                                            if let Ok(packet)=ipv4_tcp::build_presentation_ack_sack(
+                                                ack_tuple,seq_heads[i].load(Ordering::Acquire),current,
+                                                (now_ns as u16).wrapping_add(11),PacketPersona::Legacy,
+                                                mtu as usize,&sacks[..n],&mut ack_wire){
+                                                if ack_raw.send_built_outer(generation,packet,mtu).is_ok(){
+                                                    last_ack=current;last_ack_ns=now_ns;
+                                                }
+                                            }
+                                        }
                                         if rx_fec_enabled{
                                             // Original Linux Game FEC RX: per-lane
                                             // AEAD/PN has already opened above.
@@ -619,25 +739,7 @@ impl AndroidGameWorkers{
                                                             rx_dns_replies.fetch_add(
                                                                 dns_count,Ordering::Relaxed);
                                                         }
-                                                        // Even parity-only batches consume
-                                                        // the real authenticated TCP record.
-                                                        let current=ledger.verified(seq32,len);
-                                                        ack_heads[i].store(current,Ordering::Release);
-                                                        let now_ns=clock.elapsed().as_nanos()
-                                                            .min(u128::from(u64::MAX)) as u64;
-                                                        if presentation_ack_only_due(
-                                                            now_ns,last_ack_ns,current,last_ack){
-                                                            if let Ok(ack_packet)=
-                                                                ipv4_tcp::build_presentation_ack(
-                                                                    ack_tuple,seq_heads[i].load(Ordering::Acquire),
-                                                                    current,(now_ns as u16).wrapping_add(11),
-                                                                    PacketPersona::Legacy,mtu as usize,&mut ack_wire){
-                                                                if ack_raw.send_built_outer(
-                                                                    generation,ack_packet,mtu).is_ok(){
-                                                                    last_ack=current;last_ack_ns=now_ns;
-                                                                }
-                                                            }
-                                                        }
+
                                                     }else{
                                                         rx_rejected.fetch_add(1,Ordering::Relaxed);
                                                     }
@@ -698,23 +800,7 @@ impl AndroidGameWorkers{
                                                 }
                                                 if written{
                                                     rx_delivered.fetch_add(1,Ordering::Relaxed);
-                                                    let current=ledger.verified(seq32,len);
-                                                    ack_heads[i].store(current,Ordering::Release);
-                                                    let now_ns=clock.elapsed().as_nanos()
-                                                        .min(u128::from(u64::MAX)) as u64;
-                                                    if presentation_ack_only_due(now_ns,last_ack_ns,
-                                                        current,last_ack){
-                                                        if let Ok(ack_packet)=
-                                                            ipv4_tcp::build_presentation_ack(
-                                                                ack_tuple,seq_heads[i].load(Ordering::Acquire),
-                                                                current,(now_ns as u16).wrapping_add(11),
-                                                                PacketPersona::Legacy,mtu as usize,&mut ack_wire){
-                                                            if ack_raw.send_built_outer(
-                                                                generation,ack_packet,mtu).is_ok(){
-                                                                last_ack=current;last_ack_ns=now_ns;
-                                                            }
-                                                        }
-                                                    }
+
                                                 }else{
                                                     rx_rejected.fetch_add(1,Ordering::Relaxed);
                                                 }
@@ -761,7 +847,8 @@ impl AndroidGameWorkers{
         started.store(true,Ordering::Release);
         Ok(Self{stop,started,wakes,threads,tun,
             raw_tx,raw_rx,delivered,rejected,dns_queries,dns_replies,dns_flows,
-            physical_dns:physical_socket,physical_tx,physical_rx,physical_errors})
+            physical_dns:physical_socket,physical_tx,physical_rx,physical_errors,
+            outer_enabled,outer_copied,outer_first_wire,outer_repair_wire})
     }
     pub(super) fn counters(&self)->[u64;9]{
         [self.raw_tx.load(Ordering::Relaxed),
@@ -773,6 +860,11 @@ impl AndroidGameWorkers{
          self.physical_tx.load(Ordering::Relaxed),
          self.physical_rx.load(Ordering::Relaxed),
          self.physical_errors.load(Ordering::Relaxed)]
+    }
+    pub(super) fn outer_counters(&self)->[u64;4]{
+        [u64::from(self.outer_enabled),self.outer_copied.load(Ordering::Relaxed),
+         self.outer_first_wire.load(Ordering::Relaxed),
+         self.outer_repair_wire.load(Ordering::Relaxed)]
     }
     pub(super) fn is_live(&self)->bool{
         self.started.load(Ordering::Acquire)&&

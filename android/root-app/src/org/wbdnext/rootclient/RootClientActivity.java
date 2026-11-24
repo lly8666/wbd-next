@@ -54,7 +54,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField,ipv6GatewayField,ipv6DirectCIDRsField,tunnelDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes,game4CopySchedules;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,cnIPDirect,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,cnIPDirect,outerRepair,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     private Spinner tetherChoices;
     private RootTetherScope tetherWatch;
     private final java.util.List<RootTetherScope> tetherScopes=new java.util.ArrayList<>();
@@ -676,7 +676,7 @@ public final class RootClientActivity extends Activity {
             autoConnectedDirect.isChecked(),
             backgroundNetworkRecovery.isChecked()?2:autoNetworkRecovery.isChecked()?1:0,
             Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()),
-            appTcpDNS.isChecked(),tetherSharing.isChecked(),systemDNS.isChecked(),systemDNS6.isChecked(),RootConnectionSettings.ipv6Gateway(ipv6GatewayField.getText().toString()),RootConnectionSettings.ipv6DirectCIDRs(ipv6DirectCIDRsField.getText().toString()),RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstreamField.getText().toString()),game4CopySchedules.getSelectedItem().toString(),cnIPDirect.isChecked());
+            appTcpDNS.isChecked(),tetherSharing.isChecked(),systemDNS.isChecked(),systemDNS6.isChecked(),RootConnectionSettings.ipv6Gateway(ipv6GatewayField.getText().toString()),RootConnectionSettings.ipv6DirectCIDRs(ipv6DirectCIDRsField.getText().toString()),RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstreamField.getText().toString()),game4CopySchedules.getSelectedItem().toString(),cnIPDirect.isChecked(),outerRepair.isChecked());
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -708,6 +708,7 @@ public final class RootClientActivity extends Activity {
         physicalDNS.setChecked(s.physicalDNS);
         cnSplitDNS.setChecked(s.cnSplitDNS);
         cnIPDirect.setChecked(s.cnIPDirect);
+        outerRepair.setChecked(s.outerRepair);
         appTcpDNS.setChecked(s.appTcpDNS);
         tetherSharing.setChecked(s.tetherSharing);
         systemDNS.setChecked(s.systemDNS);
@@ -1026,6 +1027,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("physical_dns",physicalDNS.isChecked());
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
             request.putExtra("cn_ip_direct",cnIPDirect.isChecked());
+            request.putExtra("outer_repair",outerRepair.isChecked());
             request.putExtra("app_tcp_dns",appTcpDNS.isChecked()&&
                 (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
             request.putExtra("system_dns",systemDNS.isChecked()&&
@@ -1355,6 +1357,10 @@ public final class RootClientActivity extends Activity {
         cnIPDirect.setText("普通CN业务分流：按签名APK内APNIC中国IPv4分配网段直连；域名仍按上述DNS模式，海外实际IP仍走隧道");
         cnIPDirect.setChecked(false);
         pane.addView(cnIPDirect);
+        outerRepair=new CheckBox(this);
+        outerRepair.setText("外层机会式重传（原表演式重传；原密文最多一次；真机待验，默认关闭）");
+        outerRepair.setChecked(false);
+        pane.addView(outerRepair);
         appTcpDNS=new CheckBox(this);
         appTcpDNS.setText("可选App TCP/53 DNS：进入WBD的应用TCP查询也按上面选定的DNS模式处理（内核TCP，不接管系统netd）");
         appTcpDNS.setChecked(false);

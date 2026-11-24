@@ -170,6 +170,7 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
             StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
             Game4CopyStagger:c.game4CopyStagger,Game4CopyWideStagger:c.game4CopyWideStagger,
+            DisableOuterRepair:c.disableOuterRepair,
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
@@ -276,6 +277,8 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
                 counters.RawCopied,counters.RawReceived,counters.TunDelivered,
                 counters.Rejected,counters.TunnelDnsQueries,counters.TunnelDnsReplies,
                 counters.PhysicalDnsQueries,counters.PhysicalDnsReplies,counters.PhysicalDnsErrors)
+            log.Printf("V4_PUBLIC_ANDROID_GAME_OUTER role=client enabled=%t copies=%d first_wire_bytes=%d repair_wire_bytes=%d",
+                counters.OuterEnabled,counters.OuterCopied,counters.OuterFirstWire,counters.OuterRepairWire)
         }
     }
 }

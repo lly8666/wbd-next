@@ -93,6 +93,15 @@ public final class OriginalGoCommandArgsTest {
         rejected(()->withOuterMTU(1501));
         System.out.println("ANDROID_B8_ORIGINAL_GO_OUTER_MTU_APP_ARGV_HOST_PASS");
         value(one,"--outer-repair","off");
+        for(String mode:new String[]{"normal","fec-fixed","fec-auto","game2","game4","game2-fixed","game4-fixed"}){
+            List<String> enabled=OriginalGoCommandArgs.build("wlan0",43123456L,"192.0.2.10",
+                "198.51.100.7",443,43900,"wbd.example.test","user-name",
+                PASS,ROUTE,INSTALL,CN,new int[]{10123},false,null,null,
+                false,true,false,false,1460,"chacha20-poly1305",500,"off",mode,1,
+                "","223.5.5.5",15,true);
+            value(enabled,"--outer-repair","on");
+            value(withFec(mode,1,"off"),"--outer-repair","off");
+        }
         value(one,"--tun-fq-maxrate-mbps","0");
         value(one,"--tun-txqlen-packets","500");
         value(one,"--startup-padding","off");
@@ -109,7 +118,7 @@ public final class OriginalGoCommandArgsTest {
         absent(withFec("normal",1,"off"),"--fec-profile");
         value(withFec("fec-auto",1,"off"),"--mode","fec-auto");
         absent(withFec("fec-auto",1,"off"),"--fec-profile");
-        rejected(()->withFec("fec-auto",1,"tls"));
+        value(withFec("fec-auto",1,"tls"),"--startup-padding","tls");
         // B42 genuine Android App argv -> B41 original Go Game2/off.
         List<String> game2=OriginalGoCommandArgs.build("wlan0",43123456L,"192.0.2.10",
             "198.51.100.7",443,43900,"wbd.example.test","user-name",
@@ -167,7 +176,7 @@ public final class OriginalGoCommandArgsTest {
                 absent(fixed,"--fec-profile");
                 value(fixed,"--outer-repair","off");
             }
-            rejected(()->withFec(mode,1,"tls"));
+            value(withFec(mode,1,"tls"),"--startup-padding","tls");
         }
         absent(withFec("game2",1,"off"),"--game-fec");
         absent(withFec("game4",1,"off"),"--game-fec");
@@ -175,12 +184,12 @@ public final class OriginalGoCommandArgsTest {
         System.out.println("ANDROID_B46_ORIGINAL_GAME2_GAME4_FIXED_FEC_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_B45_GAME4_OFF_APP_ARGV_THREE_DNS_HOST_PASS");
         System.out.println("ANDROID_B44_GAME2_ORIGINAL_PHYSICAL_CN_DNS_ARGV_HOST_PASS");
-        rejected(()->withFec("game2",1,"tls"));
+        value(withFec("game2",1,"tls"),"--startup-padding","tls");
         System.out.println("ANDROID_B43_GAME2_TUNNEL_DNS_ARGV_HOST_PASS");
         System.out.println("ANDROID_B42_GAME2_ORIGINAL_GO_APP_ARGV_HOST_PASS");
         rejected(()->withFec("fec-fixed",7,"off"));
         rejected(()->withFec("fec-fixed",-1,"off"));
-        rejected(()->withFec("fec-fixed",1,"tls"));
+        value(withFec("fec-fixed",1,"tls"),"--startup-padding","tls");
         System.out.println("ANDROID_B17_FIXED_EXPLICIT_NATIVE_GO_ARGV_HOST_PASS");
         System.out.println("ANDROID_B19_AUTO_EXPLICIT_NATIVE_GO_ARGV_HOST_PASS");
         value(withTunQueue(500),"--tun-txqlen-packets","500");

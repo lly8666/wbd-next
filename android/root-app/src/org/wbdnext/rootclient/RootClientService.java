@@ -369,6 +369,7 @@ public final class RootClientService extends Service {
             boolean physicalDNS=intent.getBooleanExtra("physical_dns",false);
             boolean cnSplitDNS=intent.getBooleanExtra("cn_dns_split",false);
             final boolean cnIPDirect=intent.getBooleanExtra("cn_ip_direct",false);
+            final boolean outerRepair=intent.getBooleanExtra("outer_repair",false);
             final boolean appTcpDNS=intent.getBooleanExtra("app_tcp_dns",false);
             final boolean systemDNS=intent.getBooleanExtra("system_dns",false);
             final boolean systemDNS6=intent.getBooleanExtra("system_dns6",false);
@@ -427,7 +428,7 @@ public final class RootClientService extends Service {
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,targetPackages,allApps,excludedAppIDs,
                 managerPackages,bypassPackages,bypassUIDs,
-                hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,ipv6AutoDirect,tunnelDnsIPv4,game4CopySchedule,cnIPDirect),"wbd-native-root-owner");
+                hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,ipv6AutoDirect,tunnelDnsIPv4,game4CopySchedule,cnIPDirect,outerRepair),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             cancelRotation();
@@ -450,7 +451,7 @@ public final class RootClientService extends Service {
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
-                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,boolean ipv6AutoDirect,String tunnelDnsIPv4,String game4CopySchedule,boolean cnIPDirect){
+                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,boolean ipv6AutoDirect,String tunnelDnsIPv4,String game4CopySchedule,boolean cnIPDirect,boolean outerRepair){
         // The host-tested argv is also the exact argv passed to original Go.
         // Secret *values* never appear here, only app-private file paths.
         List<String> args=OriginalGoCommandArgs.build(
@@ -462,7 +463,7 @@ public final class RootClientService extends Service {
             nativeCode.cnGeosite.getAbsolutePath(),targetUids,allApps,
             excludedAppIDs,
             hasCA?new File(getFilesDir(),"wbd-server-ca.pem").getAbsolutePath():null,
-            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds);
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,outerRepair);
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         if("game4".equals(fecMode)||"game4-fixed".equals(fecMode))quotedArgs.add(q("--game4-copy-schedule="+game4CopySchedule));
@@ -537,7 +538,7 @@ public final class RootClientService extends Service {
                          int port,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
                          String[] bypassPackages,int[] bypassUIDs,
-                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,boolean ipv6AutoDirect,String tunnelDnsIPv4,String game4CopySchedule,boolean cnIPDirect){
+                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,boolean ipv6AutoDirect,String tunnelDnsIPv4,String game4CopySchedule,boolean cnIPDirect,boolean outerRepair){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
@@ -583,7 +584,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,ipv6AutoDirect,tunnelDnsIPv4,game4CopySchedule,cnIPDirect))
+                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,ipv6AutoDirect,tunnelDnsIPv4,game4CopySchedule,cnIPDirect,outerRepair))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);

@@ -214,6 +214,23 @@ final class OriginalGoCommandArgs {
                               String recordCipher,int requestedTunQueue,String paddingMode,
                               String fecMode,int fecProfile,String directCIDRs,String physicalDnsUpstream,
                               int nativeHealthSeconds){
+        return build(iface,handle,localIPv4,peer,peerPort,localPort,sni,user,
+            passwordFile,routeKeyFile,installationFile,cnFile,targetUids,allApps,
+            excludedAppIDs,tlsCaFile,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,
+            requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,
+            fecProfile,directCIDRs,physicalDnsUpstream,nativeHealthSeconds,false);
+    }
+    static List<String> build(String iface,long handle,String localIPv4,
+                              String peer,int peerPort,int localPort,
+                              String sni,String user,String passwordFile,
+                              String routeKeyFile,String installationFile,
+                              String cnFile,int[] targetUids,
+                              boolean allApps,int[] excludedAppIDs,
+                              String tlsCaFile,boolean verifyTLS,boolean tunnelDNS,
+                              boolean physicalDNS,boolean cnSplitDNS,int requestedOuterMTU,
+                              String recordCipher,int requestedTunQueue,String paddingMode,
+                              String fecMode,int fecProfile,String directCIDRs,String physicalDnsUpstream,
+                              int nativeHealthSeconds,boolean outerRepair){
         if(nativeHealthSeconds!=15&&nativeHealthSeconds!=30)
             throw new IllegalArgumentException("original native Health interval must be 15 or 30 seconds");
         if(!"normal".equals(fecMode)&&!"fec-fixed".equals(fecMode)&&
@@ -276,7 +293,7 @@ final class OriginalGoCommandArgs {
         pair(args,"--tun-fq-maxrate-mbps","0");
         pair(args,"--tun-txqlen-packets",Integer.toString(requestedTunQueue));
         pair(args,"--android-native-health-seconds",Integer.toString(nativeHealthSeconds));
-        pair(args,"--outer-repair","off");
+        pair(args,"--outer-repair",outerRepair?"on":"off");
         pair(args,"--android-cn-geosite-file",cnFile);
         // Same original Go cold rootjournal UID/FIB path; empty means
         // all normal App IPv4 traffic stays on the original WBD tunnel.

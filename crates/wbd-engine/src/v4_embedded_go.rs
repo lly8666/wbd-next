@@ -1058,6 +1058,10 @@ struct Entry{
     android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_ack_pending:bool,
+    #[cfg(all(feature="fec2_product_record",target_os="android"))]
+    android_outer:Option<crate::v4_game_cosmetic_outer::CosmeticOuter>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_outer_sack:bool,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
     android_last_ack_sent32:u32,
     #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -1510,6 +1514,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         ),
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_ack_pending:false,
+        #[cfg(all(feature="fec2_product_record",target_os="android"))]
+        android_outer:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_outer_sack:false,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
         android_last_ack_sent32:handoff.rx_boundary,
         #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
@@ -3332,6 +3340,8 @@ fn stop(handle:u64)->i32{
         e.android_raw_tx.take();
         e.android_tun.take();
         e.android_physical.take();
+        #[cfg(feature="fec2_product_record")]
+        {e.android_outer.take();}
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",
         any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3954,8 +3964,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     cn_raw:*const u8,cn_len:usize,
     game_fec_profile:u32,tunnel_upstream:*const u8,
     startup_padding:u32,outer_path_mtu:u32,stagger:u32,
+    outer_enabled:u32,sack_mask:u32,
 )->i32{
-    if startup_padding>2||!(576..=1500).contains(&outer_path_mtu)||stagger>2||tunnel_upstream.is_null()||fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
+    if outer_enabled>1||sack_mask>15||startup_padding>2||!(576..=1500).contains(&outer_path_mtu)||stagger>2||tunnel_upstream.is_null()||fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
        tunnel_dns>1||physical_dns>1||upstream.is_null()||
        !matches!(health_seconds,15|30)||cn_len>1024*1024||
        (game_fec_profile!=255&&game_fec_profile>6)||
@@ -4008,7 +4019,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
         Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
         lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds,
         physical_dns==1,physical_upstream,cn,tunnel_dns_upstream,
-        (game_fec_profile!=255).then_some(game_fec_profile as u8),stagger
+        (game_fec_profile!=255).then_some(game_fec_profile as u8),stagger,
+        outer_enabled==1,sack_mask,g.original_identity.logical_epoch
     );
     let Ok(workers)=workers else{return BAD_STAGE};
     g.android_workers=Some(workers);
@@ -4022,12 +4034,15 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
 pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_counters(
     group:u64,out:*mut u64,len:usize,
 )->i32{
-    if out.is_null()||len!=9{return INVALID}
+    if out.is_null()||!matches!(len,9|13){return INVALID}
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
     if g.stopped||g.stopping{return BAD_STAGE}
     let Some(w)=g.android_workers.as_ref()else{return BAD_STAGE};
-    unsafe{std::ptr::copy_nonoverlapping(w.counters().as_ptr(),out,len)};
+    unsafe{
+        std::ptr::copy_nonoverlapping(w.counters().as_ptr(),out,9);
+        if len==13{std::ptr::copy_nonoverlapping(w.outer_counters().as_ptr(),out.add(9),4);}
+    };
     OK
 }
 #[cfg(feature="fec2_product_record")]

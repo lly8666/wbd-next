@@ -350,7 +350,7 @@ func parse(role string,args []string)(config,error){
     outerDefault:="on"
     if runtime.GOOS=="android"{outerDefault="off"}
     outerRepair:=flags.String("outer-repair",outerDefault,
-        "outer DATA retransmission on|off; Android ARM64 Normal/off first-connect supports off only")
+        "original one-shot outer appearance retransmission on|off; Android defaults off until device qualification")
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
@@ -1302,9 +1302,8 @@ func Run(role string,args []string)(retErr error){
             return fmt.Errorf("Android physical Network/MTU unavailable")
         }
         if (cfg.gameLanes!=0&&cfg.gameLanes!=2&&cfg.gameLanes!=4)||cfg.mixedModes||
-           !cfg.disableOuterRepair||
            !cfg.autoIP||cfg.rotationInterval!=0{
-            return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/4 fixed/off only; rotation/outer-repair unavailable")
+            return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/4 fixed/off only; fixed-interval rotation unavailable")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
         if cfg.androidClatParent!=""||cfg.androidClatPrefix!=""{
@@ -2297,7 +2296,10 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     m,n,b,e:=native.OriginalNormalStartupPaddingCounters()
     logNormalStartupPadding("client",c.fecMode!=realityfront.FecV2Off,m,n,b,e)
     counters,countErr:=native.OriginalOuterCounters()
-    logAuthenticOuter("client",counters,countErr)
+    if runtime.GOOS=="android"&&countErr==nil{
+        log.Printf("V4_PUBLIC_ANDROID_NORMAL_OUTER role=client enabled=%t copies=%d first_wire_bytes=%d repair_wire_bytes=%d",
+            counters.OuterRepairEnabled,counters.OriginalFrozenRepaired,counters.FirstWireBytes,counters.RepairAcceptedWireBytes)
+    }else{logAuthenticOuter("client",counters,countErr)}
     cpu,cpuErr:=native.OriginalWorkerCPU()
     if cpuErr==nil {
         log.Printf("V4_PUBLIC_WORKER_CPU role=client rx_thread_cpu_ns=%d tx_thread_cpu_ns=%d",cpu.RxNs,cpu.TxNs)

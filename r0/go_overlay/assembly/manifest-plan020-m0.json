@@ -1724,13 +1724,13 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "cacf48971fa94f1f436793a3a4fb1b07c1eecafa"
+      "result_blob": "ac5d9a7e2bc96a1d716a54e66b392e248b57a37e"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "a10244cb22cc7063bfa61c006544aaf3d3a3a7ca"
+      "result_blob": "9f822faa11226961f215686c029cac07738e2b80"
     },
     {
       "kind": "replace",
@@ -1743,7 +1743,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
-      "result_blob": "86fce82e7eba6947e448589369faed881eeebf34"
+      "result_blob": "4134f2c0f2b918733dcb3d8639078be0d2ec2bac"
     },
     {
       "kind": "create",

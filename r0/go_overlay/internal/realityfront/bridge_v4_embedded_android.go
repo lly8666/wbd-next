@@ -51,6 +51,8 @@ extern int32_t wbd_m0_embedded_go_android_cn_dns_split_effective(uint64_t,uint32
 
 extern int32_t wbd_m0_embedded_go_loop_start(uint64_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_normal_startup_padding_set(uint64_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_android_outer_policy_set(uint64_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_android_outer_policy_read(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_normal_startup_padding_counters(uint64_t,uint32_t *,uint64_t *,uint64_t *);
 
 
@@ -491,7 +493,15 @@ type V4PublicOuterCounters struct{
     MaxQueueAgeus,RepairAttemptLimit,ShadowLimit,RetainCapus uint64
     FirstWireBytes,RepairAcceptedWireBytes,RepairUncertainWireBytes uint64
 }
-func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){return V4PublicOuterCounters{},ErrAdmissionUnsupported}
+func (b *v4EmbeddedNativeBridge) originalPublicOuterCounters()(V4PublicOuterCounters,error){
+    if b==nil||!b.committed||b.stopped||b.handle==0{return V4PublicOuterCounters{},ErrAdmissionUnsupported}
+    var v [4]C.uint64_t
+    if rc:=C.wbd_m0_embedded_go_android_outer_policy_read(C.uint64_t(b.handle),&v[0],4);rc!=0{
+        return V4PublicOuterCounters{},fmt.Errorf("%w: Android original outer readback=%d",errV4Embedded,int(rc))
+    }
+    return V4PublicOuterCounters{OuterRepairEnabled:v[0]==1,OriginalFrozenRepaired:uint64(v[1]),
+        FirstWireBytes:uint64(v[2]),RepairAcceptedWireBytes:uint64(v[3])},nil
+}
 
 func (b *v4EmbeddedNativeBridge) originalAndroidRawRxDebug()(result [22]uint64,err error){
     if b==nil||!b.committed||b.stopped||b.handle==0{return result,errV4Embedded}
@@ -553,7 +563,19 @@ type V4PublicFecTxFailures struct{
 }
 func (b *v4EmbeddedNativeBridge) originalPublicFecTxFailures()(V4PublicFecTxFailures,error){return V4PublicFecTxFailures{},ErrAdmissionUnsupported}
 // Strict post-auth, pre-worker native policy; a Go-only toggle is invalid.
-func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(_ bool)error{return ErrAdmissionUnsupported}
+func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(enabled bool)error{
+    if b==nil||!b.committed||b.stopped||b.handle==0{return ErrAdmissionUnsupported}
+    var on,sack C.uint32_t
+    if enabled{on=1}
+    if b.sackPermitted{sack=1}
+    if rc:=C.wbd_m0_embedded_go_android_outer_policy_set(C.uint64_t(b.handle),on,sack);rc!=0{
+        return fmt.Errorf("%w: Android original outer policy=%d",errV4Embedded,int(rc))
+    }
+    v,err:=b.originalPublicOuterCounters()
+    if err!=nil{return err}
+    if v.OuterRepairEnabled!=enabled{return ErrAdmissionUnsupported}
+    return nil
+}
 // Original Go protected cold selection; original Rust M4 owns all DATA.
 func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(mode uint8,outer int)error{
     if b==nil||!b.committed||b.stopped||b.handle==0||

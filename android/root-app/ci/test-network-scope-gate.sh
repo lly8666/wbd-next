@@ -358,7 +358,10 @@ assert 'workers.stop_and_drain()' in g
 assert 'drivers_installed.write(u32::from(e.android_workers.as_ref()' in g
 assert 'AndroidOwnedTun::adopt(fd,tun_name,generation)' in m
 assert 'rx.take_lane_for_worker(' in m
-assert 'rx_raw.read_original_record(' in m
+assert 'rx_raw.read_original_record_with_ack(' in m
+assert 'CosmeticOuter::with_normal_feedback(' in m
+assert 'c.on_firstsend(' in m and 'c.on_feedback(' in m and 'c.take_due(' in m and 'c.complete(' in m
+assert m.index('let _=ledger.verified(seq32,len);') < m.index('owner.prepare_opened_fec_batch(')
 assert 'opener.open(&mut wire[..len])' in m
 assert 'owner.prepare_opened_receive(' in m
 assert 'owner.finish_receive(packet,written)' in m
@@ -830,7 +833,7 @@ assert 'startupPaddingModes.setAdapter(new ArrayAdapter' in a
 assert 'request.putExtra("startup_padding",paddingMode)' in a
 assert 'intent.getStringExtra("startup_padding")' in s
 assert 'launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode' in s
-assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds);' in s
+assert 'cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,outerRepair);' in s
 assert 'pair(args,"--startup-padding",paddingMode)' in argv
 assert 'startupPadding:=flags.String("startup-padding","off"' in cold
 print("ANDROID_B11B_APP_GO_M4_PROTECTED_STARTUP_PADDING_SOURCE_WIRING_PASS")
@@ -1461,12 +1464,17 @@ assert 'a52_android_normal_off_ack_never_skips_authenticated_gap' in main_ack
 assert 'android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck' in engine_entry
 assert 'android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck::new(' in engine_entry
 assert 'e.android_last_copied_seq32=tx_boundary' in engine_entry
-assert 'let advanced=e.android_presentation_ack.verified(' in nativeworker
+assert 'e.android_presentation_ack.verified(absolute as u32,wire_len)' in nativeworker
+assert 'let advanced=e.android_presentation_ack.ack()' in nativeworker
 assert 'absolute.saturating_add(wire_len as u64)' in nativeworker
 assert 'ack32:e.android_presentation_ack.ack()' in nativeworker
 assert 'send_presentation_ack_if_due(' in nativeworker
-assert 'presentation_ack_only_due(' in nativeworker
-assert 'build_presentation_ack(' in nativeworker
+assert 'presentation_game_ack_due(' in nativeworker
+assert 'build_presentation_ack_sack(' in nativeworker
+assert 'CosmeticOuter::with_normal_feedback(' in nativeworker
+assert 'c.on_firstsend(' in nativeworker and 'c.on_feedback(' in nativeworker
+assert 'c.take_due(' in nativeworker and 'c.complete(' in nativeworker
+assert 'wbd_m0_embedded_go_android_outer_policy_set' in nativeworker
 assert 'raw.send_built_outer(e.generation,packet,scope.mtu)' in nativeworker
 assert 'e.android_last_copied_seq32=seq_end' in nativeworker
 assert 'record.metadata().seq.0' in owner
@@ -1591,7 +1599,7 @@ assert 'cnSplitDNS.setChecked(false)' in root_ui
 assert 'request.putExtra("cn_dns_split",cnSplitDNS.isChecked())' in root_ui
 assert 'intent.getBooleanExtra("cn_dns_split",false)' in root_svc
 assert 'managerPackages,bypassPackages,bypassUIDs,' in root_svc
-assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds);' in root_svc
+assert 'verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,outerRepair);' in root_svc
 assert 'if(cnSplitDNS)args.add("--android-cn-dns-split")' in argv
 assert 'ANDROID_B5_CN8503_SPLIT_SELECTED_ALL_APP_AND_LEGACY_GO_ARGV_HOST_PASS' in argv_test
 assert 'androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false' in nativecli

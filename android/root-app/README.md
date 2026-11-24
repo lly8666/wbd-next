@@ -1,3 +1,7 @@
+**2026-11-24 最新用户决定（B80）**：每次从 main 同步已正式合入的全部源码、功能/优化与历史（真实双亲 merge，保留 Android 专有代码），平台差异只在 Android Bionic RAW/TUN、Root/Network、App 冷设置等适配层处理。优先复用 main 共享核心，不复制一套协议/算法；main 的 Windows/服务端专有逻辑保留源码而不误启用在 Android。Android 必须适配原表演式/机会式外层重传，旧逐 record M2 Receipt 已废弃，禁止复活。高级 CN FakeIP 仍明确 OUT_OF_SCOPE；普通 CN DNS 与真实 IPv4 内核直连保留。
+
+**B80 WIRED_CANDIDATE**：冻结 main `5b1311c0748452c1c8dac66fc2a6e517777529fa`，双亲 merge `a0d31730e772dea9d1884076c945c7c810b879c9`（Android 原父 `1997efa2d89b52e11f21037c7972deee9139a0c0`）；206 个 main 变化文件完整同步，两个 Rust 重叠文件三方无损重放、Cargo 双依赖合成、Go manifest 按实际合成 blob 更新。Android Normal/Fixed/Auto 单 lane 与 Game2/4 off/fixed 复用 main `CosmeticOuter` 的 Normal-v3 `OuterAckIndex`/`ReceiptState`/9% pacing/10% quota，按真实 kernel copy 保留原密文一次，RAW ACK/SACK 元数据、Go 已协商 SACK、Game 物理 AEAD 后 ACK、现有 TX owner due/readback 和 Stop。Android 单 lane 使用同一个 main Game v3 控制器，不冒称已移植 Linux Normal process-global allocator。App/Go 显式 ON/OFF，旧 Android 预设默认 OFF 至实体资格，七模式开关可用性仍须同源构建和实体验证。main 8472 官方 CN 域名快照/手动更新源码已同步，Android 现役仍是经验证的 8503 typed snapshot，普通 CN 数据资产与冷导入适配另续；Linux H2376 满队列公平算法同步，Android 直接 TUN 不凭空加 Linux SharedTun 队列。旧 B79a 9 SUCCESS/1 FAIL/5 SKIPPED，APK 旧七模式 padding 拒绝断言已全部改正并补 App 开关往返正向用例。当前 SOURCE CI/实体/性能 NOT_RUN，不把接线当 PASS。
+
 > **Android 功能范围（2026-11-24 用户决定）**：高级 CN FakeIP 明确不实现（OUT_OF_SCOPE）；保留真实 CN8503 普通 DNS 分流及 CN IPv4 内核 FIB 直连，不新增合成地址、FakeIP 开关或额外数据路径。
 
 ## B60 · Optional foreground automatic cold Network recovery

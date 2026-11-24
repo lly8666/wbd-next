@@ -1971,20 +1971,22 @@ impl ProtectedScopedOwner{
     pub(crate) fn receive_android_raw_into_owner(
         &mut self,driver:&AndroidBoundRawRx,mut slab:UniqueBuffer,
         tuple:AndroidTuple<'_>,persona:AndroidPersona,
-        trusted_anchor:u64,now:MonoNs,
-    )->Result<(usize,u64),(ProtectedCryptoError,UniqueBuffer)>{
+        trusted_anchor:u64,now:MonoNs,outer_enabled:bool,sack_permitted:bool,
+    )->Result<(usize,u64,u32,[wbd_platform::ipv4_tcp::SackRange32;4],usize),
+        (ProtectedCryptoError,UniqueBuffer)>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
            driver.generation()!=self.generation||driver.is_stopping(){
             return Err((ProtectedCryptoError::Inactive,slab))
         }
-        let (len,seq)=match driver.read_original_record(
-            self.generation,slab.writable(),tuple,persona
+        let (len,seq,ack,sacks,count)=match driver.read_original_record_with_ack(
+            self.generation,slab.writable(),tuple,persona,outer_enabled,sack_permitted
         ){
             Ok(value)=>value,
             Err(err) if err.kind()==std::io::ErrorKind::WouldBlock=>
                 return Err((ProtectedCryptoError::AndroidWouldBlock,slab)),
             Err(_)=>return Err((ProtectedCryptoError::Owner,slab)),
         };
+        if len==0{return Ok((0,0,ack,sacks,count))}
         if len<FIXED_WIRE_OVERHEAD{
             return Err((ProtectedCryptoError::Tx,slab))
         }
@@ -2000,16 +2002,16 @@ impl ProtectedScopedOwner{
                 driver.record_owner_offer_reject();
                 (ProtectedCryptoError::Owner,buf)
             })?;
-        Ok((len,absolute))
+        Ok((len,absolute,ack,sacks,count))
     }
 
     /// One same M1 immutable ready record, shared pure IPv4/TCP writer and
     /// real Bionic sendto guarded by the original r1 BorrowFence. No PN
     /// reseal, blind retry, Go per-record callback or extra crypto stream.
-    pub(crate) fn submit_android_raw_ready(
+    pub(crate) fn submit_android_raw_ready<F:FnOnce(u64,u64,&[u8])>(
         &mut self,driver:&AndroidBoundRawTx,tuple:AndroidTuple<'_>,
         presentation:AndroidPresentation,route_budget:u32,now:MonoNs,
-        storage:&mut Vec<TxDispatch>,scratch:&mut [u8],
+        storage:&mut Vec<TxDispatch>,scratch:&mut [u8],on_copied:F,
     )->Result<(usize,u64,u32),ProtectedCryptoError>{
         if self.state!=OwnerPhase::Active||!self.rx_tx.detached()||
            driver.generation()!=self.generation||driver.is_stopping()||
@@ -2037,8 +2039,13 @@ impl ProtectedScopedOwner{
             driver.send_original_frozen(
                 self.generation,&ready[0].record,tuple,presentation,
                 route_budget,scratch
-            ).map(|n|(n,original_pn,seq_end))
-                .map_err(|_|ProtectedCryptoError::Owner)
+            ).map(|n|{
+                // Borrow the same immutable ciphertext before recycling its
+                // M1 loan. OFF callback is a no-op; no unconditional copy.
+                on_copied(original_pn,ready[0].record.metadata().seq.0,
+                    ready[0].record.bytes());
+                (n,original_pn,seq_end)
+            }).map_err(|_|ProtectedCryptoError::Owner)
         })();
         *storage=batch.recycle();
         outcome

@@ -9,7 +9,7 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_bind(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_state(uint64_t,uint32_t *);
-extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t,uint32_t,const unsigned char *,uint32_t,uint32_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t,uint32_t,const unsigned char *,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_m4_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_fec_network_game_group_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
@@ -40,6 +40,7 @@ type V4AndroidGameConfig struct{
     StartupPaddingMode uint8
     OuterIPMTU int
     Game4CopyStagger,Game4CopyWideStagger bool
+    DisableOuterRepair bool
     NetworkInterface string
     NetworkIfIndex uint32
     AndroidPhysicalNetworkHandle uint64
@@ -231,12 +232,15 @@ func (p *V4AndroidGameProduct) bindAndStartOriginalM4()error{
     if p.cfg.Game4CopyStagger{stagger=1;if p.cfg.Game4CopyWideStagger{stagger=2}}
     outer:=p.cfg.OuterIPMTU
     if int(p.cfg.AndroidPhysicalMTU)<outer{outer=int(p.cfg.AndroidPhysicalMTU)}
+    var outerEnabled,sackMask C.uint32_t
+    if !p.cfg.DisableOuterRepair{outerEnabled=1}
+    for i,owner:=range p.owners{if owner.sackPermitted{sackMask|=C.uint32_t(1)<<uint(i)}}
     rc=C.wbd_m0_embedded_go_android_game_group_m4_start(
         C.uint64_t(p.native),C.int32_t(p.cfg.Tun.Fd()),
         (*C.uchar)(unsafe.Pointer(&name[0])),C.size_t(len(name)),
         dns,C.uint32_t(p.cfg.HealthSeconds),physical,
         (*C.uchar)(unsafe.Pointer(&upstream[0])),cn,
-        C.size_t(len(p.cfg.CN8503Raw)),fec,(*C.uchar)(unsafe.Pointer(&tunnelRaw[0])),C.uint32_t(p.cfg.StartupPaddingMode),C.uint32_t(outer),stagger)
+        C.size_t(len(p.cfg.CN8503Raw)),fec,(*C.uchar)(unsafe.Pointer(&tunnelRaw[0])),C.uint32_t(p.cfg.StartupPaddingMode),C.uint32_t(outer),stagger,outerEnabled,sackMask)
     runtime.KeepAlive(tunnelRaw)
     runtime.KeepAlive(name)
     runtime.KeepAlive(upstream)
@@ -266,14 +270,16 @@ type V4AndroidGameCounters struct{
     RawCopied,RawReceived,TunDelivered,Rejected uint64
     TunnelDnsQueries,TunnelDnsReplies uint64
     PhysicalDnsQueries,PhysicalDnsReplies,PhysicalDnsErrors uint64
+    OuterEnabled bool
+    OuterCopied,OuterFirstWire,OuterRepairWire uint64
 }
 func (p *V4AndroidGameProduct) OriginalM4Counters()(V4AndroidGameCounters,error){
     if p==nil||p.native==0||p.stopped||!p.connected{
         return V4AndroidGameCounters{},ErrAdmissionUnsupported
     }
-    var values [9]C.uint64_t
+    var values [13]C.uint64_t
     rc:=C.wbd_m0_embedded_go_android_game_group_m4_counters(
-        C.uint64_t(p.native),&values[0],9)
+        C.uint64_t(p.native),&values[0],13)
     if rc!=0{
         return V4AndroidGameCounters{},fmt.Errorf(
             "%w: original Android Game2 M4 counts=%d",errV4Embedded,int(rc))
@@ -284,6 +290,8 @@ func (p *V4AndroidGameProduct) OriginalM4Counters()(V4AndroidGameCounters,error)
         TunnelDnsQueries:uint64(values[4]),TunnelDnsReplies:uint64(values[5]),
         PhysicalDnsQueries:uint64(values[6]),PhysicalDnsReplies:uint64(values[7]),
         PhysicalDnsErrors:uint64(values[8]),
+        OuterEnabled:values[9]==1,OuterCopied:uint64(values[10]),
+        OuterFirstWire:uint64(values[11]),OuterRepairWire:uint64(values[12]),
     },nil
 }
 // The existing Linux original FEC group readback ABI yields actual

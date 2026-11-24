@@ -143,6 +143,8 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
       wbd_m0_embedded_go_android_game_group_raw_state \
       wbd_m0_embedded_go_android_game_group_m4_start \
       wbd_m0_embedded_go_android_game_group_m4_counters \
+      wbd_m0_embedded_go_android_outer_policy_set \
+      wbd_m0_embedded_go_android_outer_policy_read \
       wbd_m0_embedded_go_game_group_stop \
       wbd_m0_embedded_go_android_bind_physical \
       wbd_m0_embedded_go_attach_raw_rx_on_interface \
