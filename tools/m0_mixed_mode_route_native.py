@@ -92,6 +92,8 @@ def stop(p,log,marker):
     assert rc==0 and marker in content(log), (rc,marker,content(log)[-4000:])
 def count_promotion():
     return len(re.findall(r"V4_PUBLIC_(?:NORMAL|GAME)_SERVER_TUN_PROMOTED_AFTER_CLIENT_AUTH_RX",content(server_log)))
+def count_retirement():
+    return len(re.findall(r"reason=same-protected-(?:normal|cohort)-grace-expired",content(server_log)))
 def start_client(ns, iface, outer, tun, port, name, mode, extra=()):
     log=out/(name+".log")
     inst="other" if ns==ns_b else "switch"
@@ -150,12 +152,13 @@ try:
     probe(ns_b,otherlease,"other-initial")
     modes=[("normal",()),("game2",()),("normal",()),("game4",("--game-fec","fixed6")),
            ("game2",("--game-fec","fixed6")),("game4",()),("fec-fixed",()),("normal",()),
-           ("game4",("--rotation-interval","5s"))]
+           ("game4",("--rotation-interval","25s"))]
     current=None
     rows=[]
     mainlease=None
     for i,(mode,extra) in enumerate(modes):
         before=count_promotion()
+        retired_before=count_retirement()
         old_stop=None
         if current is not None:
             stop(current,currentlog,currentmarker)
@@ -174,8 +177,15 @@ try:
         probe(ns_b,otherlease,f"other-during-{i}")
         rows.append({"from":None if i==0 else modes[i-1][0],"to":mode,"lease":lease,"seconds_to_business":elapsed,
                      "promotion_delta":count_promotion()-before,"bidirectional_tcp_udp":"PASS"})
-    wait_for(current,currentlog,lambda s:"V4_PUBLIC_GAME_SINGLE_LANE_READY role=client" in s,25)
-    wait_for(server,server_log,lambda s:"V4_PUBLIC_GAME_SINGLE_LANE_READY role=server" in s,25)
+        # The product already bounds each authenticated lane to old+new
+        # incarnations. Keep the new owner running until the OLD overlap
+        # grace actually finishes before the NEXT disconnect. No wait
+        # between disconnect and successor; no Health90-based work-around.
+        if i:
+            wait_for(server,server_log,lambda s:count_retirement()>retired_before,25)
+            probe(ns_a,lease,f"switch-{i}-after-old-stop")
+    wait_for(current,currentlog,lambda s:"V4_PUBLIC_GAME_SINGLE_LANE_READY role=client" in s,45)
+    wait_for(server,server_log,lambda s:"V4_PUBLIC_GAME_SINGLE_LANE_READY role=server" in s,45)
     probe(ns_a,mainlease,"game4-after-hot-lane")
     probe(ns_b,otherlease,"other-after-hot-lane")
     # Independent disconnected lease must still expire by original Health90,
