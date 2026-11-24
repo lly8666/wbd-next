@@ -1,0 +1,101 @@
+name: M0 Windows crash and portable upgrade native recovery
+on:
+  push:
+    branches: [fix/m0-windows-crash-recovery]
+    paths:
+      - '.github/workflows/m0-windows-crash-recovery.yml'
+      - 'r0/go_overlay/**'
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  windows-native:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    env:
+      GOTOOLCHAIN: local
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Assemble and build current original Go and native recovery test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'assembly failed'}
+          New-Item -ItemType Directory -Force delivery/windows-amd64 | Out-Null
+          Push-Location legacy
+          try{
+            go build -trimpath -tags wbd_v4_embedded_go -o ../delivery/windows-amd64/wbd-client.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'original Go CLI failed'}
+            go test -c -tags wbd_v4_embedded_go -o ../delivery/windows-amd64/recovery-test.exe ./internal/windowsclient
+            if($LASTEXITCODE -ne 0){throw 'native recovery tests failed to compile'}
+          }finally{Pop-Location}
+      - name: Reuse unchanged Rust and signed Wintun from final 029 delivery
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          git diff --exit-code f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad HEAD -- crates Cargo.toml Cargo.lock r0/abi
+          if($LASTEXITCODE -ne 0){throw 'Rust source changed'}
+          gh run download 45338373098 --repo $env:GITHUB_REPOSITORY --name h2378-windows-amd64-gui --dir frozen
+          if($LASTEXITCODE -ne 0){throw 'original package download failed'}
+          $zip=Get-ChildItem frozen -Recurse -Filter 'wbd-h2378-windows-amd64-GUI.zip'|Select-Object -First 1
+          if(!$zip -or (Get-FileHash $zip.FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'f0853a41d5981843808b8d548a29bf7c39db707795d773e52cfcc06b7a1f849a'){throw 'frozen package hash mismatch'}
+          Expand-Archive $zip.FullName frozen/unpacked
+          foreach($name in @('wbd_engine.dll','wintun.dll')){
+            $file=Get-ChildItem frozen/unpacked -Recurse -Filter $name|Select-Object -First 1
+            if(!$file){throw "missing $name"}
+            Copy-Item $file.FullName delivery/windows-amd64/$name
+          }
+          if((Get-AuthenticodeSignature delivery/windows-amd64/wintun.dll).Status -ne 'Valid'){throw 'Wintun signature invalid'}
+      - name: Actual native Wintun crash and recovery plus existing no-WFP unit cases
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $env:WBD_M0_CRASH_REAL='1'
+          Push-Location delivery/windows-amd64
+          try {
+            & ./recovery-test.exe '-test.v' '-test.count=1' '-test.timeout=4m' '-test.run=^(TestM0CrashV2NativeRecovery|TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback|TestPlan029NoWFPV2)' 2>&1 | Tee-Object ../../native-recovery.log
+            if($LASTEXITCODE -ne 0){throw 'actual native recovery failed'}
+          }finally{Pop-Location}
+          if((Get-Content native-recovery.log -Raw) -notmatch 'M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS'){throw 'real crash test did not execute'}
+      - name: Real WinForms portable GUI self-test including stopped child window close
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory delivery/windows-amd64 -SourceSHA $env:GITHUB_SHA -Version 'crash-recovery'
+          if($LASTEXITCODE -ne 0){throw 'WinForms build failed'}
+          $dir=(Resolve-Path delivery/windows-amd64).Path
+          $p=Start-Process -FilePath (Join-Path $dir 'WBD.exe') -ArgumentList '--self-test' -WorkingDirectory $dir -Wait -PassThru
+          $v=Get-Content (Join-Path $dir 'gui-test-result.json') -Raw | ConvertFrom-Json
+          if($p.ExitCode -ne 0 -or $v.source_sha -ne $env:GITHUB_SHA -or $v.result -ne 'PASS'){throw 'actual GUI selftest failed'}
+          if(($v|ConvertTo-Json -Depth 5) -notmatch 'GUI closes after stopped child'){throw 'new close test absent'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-win-recovery-receipts
+          path: |
+            native-recovery.log
+            delivery/windows-amd64/gui-test-result.json
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: m0-win-recovery-candidate
+          path: |
+            delivery/windows-amd64/WBD.exe
+            delivery/windows-amd64/WBD.exe.config
+            delivery/windows-amd64/wbd-client.exe
+            delivery/windows-amd64/wbd_engine.dll
+            delivery/windows-amd64/wintun.dll
+            delivery/windows-amd64/gui-fields.json
+            delivery/windows-amd64/PARAMETERS.json
+          if-no-files-found: error
