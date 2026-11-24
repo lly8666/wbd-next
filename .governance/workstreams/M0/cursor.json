@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2365,
-  "checkpoint_sha": "b39f51bb9d3686eac97374db9dd348f922cffc06",
+  "sequence": 2367,
+  "checkpoint_sha": "57eb4ce1fcfbe0359ba2f23220ea627b0c4fff96",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2364：H2347拒绝，H2349撤回，H2358不叠加，H2359供给不晋级；H2361已证实checksum CPU收益，已迁入主实验分支并启动真实对照。",
-  "why_now": "有稳定局部证据立即推进，保留负结果不再重复参数扫描；真实服务能力与供给和链路容量分别判断。",
+  "current_task": "PLAN029 P0 H2364真网完成但无整机收益；用户提出裸TCP硬件/虚拟卸载差异，H2366独立真实LSOv2对照已推送，P1需刷新旧构件。",
+  "why_now": "普通OS TCP与逐帧NPF存在结构性差异，分离LSO条件和原生服务路径；不要继续微优化盲测。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "收H2364 45323267739及同SOURCE原生45323267818/45323267772、静态与治理；如编译/业务红先修首个故障；根据实际成本保留或修正。转P1单次原密文修复与P2 maximum实际parity资格，继续定位原生服务路径，勿复活负优化。",
+  "next_action": "收H2366 45326185486四腿实际LSO读回、原始远端字节、CPU及恢复状态；如果无支持标环境限制。H2364不晋级；P1更新H2294旧构件/manifest及joined Stop以当前Normal-v3真源做1%后5%，P2按现有Maximum原生单测PASS推进真实parity。",
   "unverified": true,
-  "last_tested_source": "17ade976bb33010d7341f5561985189a0e97f066",
+  "last_tested_source": "7a3e3099f73b6603a370e88fa754f65161ca4ea4",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -27,8 +27,9 @@
     "docs/evidence/M0/20261124-H2327-H2331-NEGATIVE-NATIVE-AB.json",
     "docs/evidence/M0/20261124-H2336-H2338-H2339-PARALLEL-NATIVE-AB.json",
     "docs/evidence/M0/20261124-H2353-H2355-BALANCED-NATIVE-AB.json",
-    "docs/evidence/M0/20261124-H2364-PARALLEL-RESULTS-CHECKSUM-RESUME.json"
+    "docs/evidence/M0/20261124-H2364-PARALLEL-RESULTS-CHECKSUM-RESUME.json",
+    "docs/evidence/M0/20261124-H2366-CHECKSUM-PRODUCT-LSO-RESEARCH.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2364实验SOURCE 7a3e3099f73b6603a370e88fa754f65161ca4ea4；PR68 draft；相对H2336仅checksum产品差异，H2361双ISA原生通过、H2364静态容量通过、真实网测待定。main产品不变，P0性能/P1/P2仍OPEN。"
+  "partial_summary": "H2364 9/9功能PASS，B吞吐-15.78/-2.86%，CPU/GiB+27.19/-0.94%，容量不足，不晋级；H2314/H2311同源原生PASS。H2366 SOURCE ff2b2b83401f1e42248b3ca3341ff82bc8449e23，run45326185486在途，产品无新变化。P1/P2/物理资格OPEN。"
 }
