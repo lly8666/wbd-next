@@ -4,25 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2413,
-  "checkpoint_sha": "063ca71b7ddf927cb3b00332d0d2b40a294c26b0",
-  "progress": "paused",
-  "task_id": "M0-LINUX-GLIBC231",
-  "current_task": "Linux x86_64/aarch64统一glibc2.31发行基线：PR76已合main，双ISA兼容/Normal性能限域PASS",
-  "why_now": "用户报告Ubuntu20.04 ARM64无法加载，明确要求双ISA双端一次解决及简单性能对照",
-  "done_when": "两ISA三ELF<=GLIBC_2.31、Focal用户态真实业务及Stop、同机TCP A/B/A及CPU证据；不动数据面",
-  "next_action": "本次用户授权的glibc2.31限域交付已完成，交付Action45415625160原始配套包；收main自动集成CI（不重复dispatch），物理Ubuntu20.04旧内核若用户复测再登记；先前H2409 NAT/热换lane未验事项仍保留，后续恢复原任务。",
-  "unverified": false,
-  "last_tested_source": "32193483a9f5bb962d2ec2ddfa1ea84d2f60b6b6",
-  "evidence_refs": [
-    "docs/evidence/M0/20261124-LINUX-GLIBC231-DUAL-ISA-SCOPED-PASS.json"
-  ],
+  "sequence": 2414,
+  "checkpoint_sha": "9ef076479af8653af15ad00566055cdeb1a3af37",
+  "progress": "in_progress",
+  "task_id": "M0-MIXED-MODE-ROUTE-HANDOFF",
+  "current_task": "用户授权修复断开Normal后Game2/4回注0及反向切换，experiment/m0-mixed-mode-route-handoff；docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md。现有Health接管，按认证/32跨模式寻找owner；不增协议状态/热路径/心跳，不动Health90和Game4单lane热换。",
+  "why_now": "用户实机Normal断开后切Game2/4可连但回注0，90s后重连恢复",
+  "done_when": "原生双ISA真实同一服务端同一虚拟IP跨模式切换<90s双向TCP/UDP、异租约独立、原退役/Health90/单lane热换边界，精确SOURCE Linux glibc2.31完整包及Win GUI完整包；限域记录。",
+  "next_action": "短分支最小冷交接修复、原生双ISA同租约实测、Win完整GUI构建，成功后合入",
+  "unverified": true,
+  "last_tested_source": null,
+  "evidence_refs": [],
   "context_refs": [
-    "docs/decisions/M0-LINUX-GLIBC231-20261124.md",
-    "docs/devlog/M0/20261124-LINUX-GLIBC231-BUILD-TRIAL.md",
-    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
-    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
+    "docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md",
+    "docs/evidence/M0/20261124-LINUX-GLIBC231-DUAL-ISA-SCOPED-PASS.json",
+    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md"
   ],
   "open_requests": [],
-  "partial_summary": "Action45415625160双ISA三ELF最高2.28、Focal用户态真实TCP/UDP/Stop及同VM Normal TCP A/B/A通过，x86吞吐+0.47% CPU/GiB+1.33%，ARM+0.26%/-0.77%。精确候选SOURCE独立验包；PR76已合。源码差异仅文档/测试；物理5.4、FEC/弱网/P99未验，不宣称全面产品PASS。"
+  "partial_summary": "源码定位Go同模式active查找与Rust跨模式/32路由不一致；现场因果待复验；原H2413兼容交付保留。"
 }
