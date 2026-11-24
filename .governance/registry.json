@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "用户授权直接main修复Windows Game2/4 OFF/FEC物理冷建链成功率与耗时、普通每秒日志；兼顾Linux共享服务端NAT建链，复用既有Go TLS与Rust原生owner。",
-      "done_when": "每条Game lane真实冷TLS可恢复丢包，跨尝试新端口、NAT不依赖连续端口、旧组不混拼，READY无业务门槛；普通日志不刷packet telemetry；真实原生回归及物理用户复测分别记录。",
-      "assigned_task": "M0-PLAN029-WINDOWS-GAME-COLD"
+      "goal": "用户授权Linux双ISA客户端/服务端统一glibc 2.31发行基线，无数据面降级；docs/decisions/M0-LINUX-GLIBC231-20261124.md，短分支 experiment/m0-linux-glibc231，基线 6b8617626648a6ebed6ecad3e3be63016a3249bb 后登记提交。",
+      "done_when": "x86_64/aarch64原生三ELF的GLIBC需求不超过2.31、Ubuntu 20.04用户态真实加载及业务/Stop、同runner相同源码正常TCP吞吐和进程CPU对照；证据不足不晋级。",
+      "assigned_task": "M0-LINUX-GLIBC231"
     },
     {
       "id": "M1",
