@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2369,
-  "checkpoint_sha": "5b4e8310b62413f7d6d80d5a4248ba8816542342",
+  "sequence": 2371,
+  "checkpoint_sha": "04703336509ff922fcd60cca198c4d407cc2bc5c",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 H2368：LSO对照7/7完成，OFF两组均可超800Mbps；撤回H2364 checksum，恢复H2336产品源码；P1 1%双组当前源重建与真实重传对照已启动。",
-  "why_now": "LSO缺失不足以解释产品吞吐差距；旧弱网构件不含最新Normal-v3，优先消除源错配推进P1，再推进P2。",
+  "current_task": "PLAN029 H2370：H2368真实1%一组完整、另一组驱动copied与shadow退休计数差异；已修发送资格与完成分离并显式计账，原生与真实1%复验在途。",
+  "why_now": "已发驱动结果不能因完成时过期或RX释放shadow而丢失；修实际状态边界而非降低断言，不添加第二次机会、首发工作或新预算。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "收H2368 45328644632 静态/构建/真网各阶段、joined Stop R/F与远端吞吐/P99/CPU；若有红先查首个故障，不重复无信息网测。完成1%后再触发已更新5%入口；P2检查实际maximum parity/source与deadline，保留P0未达目标事实。",
+  "next_action": "收45331441637 recovery/Windows native及45331441636真实1%各组；核repair_copied_shadow_stale、repair_broker_unresolved、真实R/F与远端goodput/P99。1%功能完成后触发5%一次，再推进P2最高固定parity实发资格；若仍1Mbps，不以重传数冒充吞吐收益，优先分析内层真实供给。",
   "unverified": true,
-  "last_tested_source": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+  "last_tested_source": "dabe812654896a93ae6e0b4bcad741f3c0ec8441",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -29,8 +29,9 @@
     "docs/evidence/M0/20261124-H2353-H2355-BALANCED-NATIVE-AB.json",
     "docs/evidence/M0/20261124-H2364-PARALLEL-RESULTS-CHECKSUM-RESUME.json",
     "docs/evidence/M0/20261124-H2366-CHECKSUM-PRODUCT-LSO-RESEARCH.json",
-    "docs/evidence/M0/20261124-H2368-LSO-RESULTS-P1-RESUME.json"
+    "docs/evidence/M0/20261124-H2368-LSO-RESULTS-P1-RESUME.json",
+    "docs/evidence/M0/20261124-H2370-REPAIR-COMPLETION-RESUME.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2366 LSO ON相对OFF -9.75/+10.81%，OFF峰值818.674/826.710；H2368 SOURCE dabe812654896a93ae6e0b4bcad741f3c0ec8441 run45328644632在途，H2336生产源完全一致，1%仅Windows发送方repair切换，ARM固定OFF，5%未发，P0/P1/P2未完。"
+  "partial_summary": "H2368组a 1.251/1.364/1.304Mbps，copied 0/10/0；组b A 1.511，B实际1.438Mbps、copied2 vs retired1，汇总红，非网路失败。H2370 SOURCE37e96bf47beb5c5b06c673cf862345157165e51e，run45331441636/637；P0/P1/P2性能OPEN，5%未发。"
 }
