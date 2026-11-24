@@ -564,11 +564,11 @@ jobs:
         timeout-minutes: 12
         run: |
           $ErrorActionPreference='Stop'
-          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2343-capacity/relay
           if($LASTEXITCODE -ne 0){throw 'H2343_RELAY_NOT_READY'}
           python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2343-$env:GROUP-server-ready" h2343-capacity/server
           if($LASTEXITCODE -ne 0){throw 'H2343_BARE_SERVER_NOT_READY'}
-          python -u tools/m0_h2285_windows_wsl_route.py client $env:GROUP h2276-peer/relay/relay-ready.json h2343-capacity/server/server-ready.json
+          python -u tools/m0_h2285_windows_wsl_route.py client $env:GROUP h2343-capacity/relay/relay-ready.json h2343-capacity/server/server-ready.json
           if($LASTEXITCODE -ne 0){throw 'H2343_BARE_TCP_CALIBRATION_FAILED'}
           Move-Item h2276-out/client-result.json h2343-capacity/client-bare.json
       - name: ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun to independent ARM GoTLS/Rust through owned two-hop kernel
