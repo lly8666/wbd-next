@@ -1,0 +1,5 @@
+# H2343 — integrate bare route calibration into future actual same-VM product A/B
+
+H2337 run 45315781102 all seven jobs PASS. Current bare same-class Windows WSL2/ARM kernel route: group a 520.999 Mbps P99 156ms, b 192.568 Mbps P99 110ms; neither demonstrates 600Mbps, large inter-runner capacity spread. This is evidence not to use cross-VM product ratios or assume the same route is 800Mbps.
+
+For future explicit H2336/H2338 requests, same three real VMs first measure H2285 bare Winsock 4x25s/2MiB with no WBD, wait actual ARM listener, preserve bare receiver and client receipts, restore scoped sysctls/NAT, then start the original Go/TLS/Rust product on same endpoints/relay. Separate bare artifacts and role readiness; bare client result is moved away before product to avoid fake product success. Attach bare reference and 600/800 demonstrated flags to final genuine product receipt, not a fixed physical cap or new product qualification. No change to existing frozen in-flight runs; no new expensive dispatch on this fixture change. New cheap contract test only; real integrated calibration NOT_RUN. Next explicit candidate run will use it.

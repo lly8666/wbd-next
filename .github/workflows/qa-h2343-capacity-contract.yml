@@ -1,0 +1,21 @@
+name: H2343 same-VM capacity harness contract
+on:
+  push:
+    branches: ['experiment/m0-029-throughput-arm-fair']
+    paths:
+      - '.github/workflows/qa-h2343-capacity-contract.yml'
+      - 'tools/m0_h2343_same_vm_capacity.py'
+      - 'tests/test_m0_h2343_same_vm_capacity.py'
+      - '.github/workflows/qa-h2321-current-win-arm-path-ab.yml'
+      - '.github/workflows/qa-h2338-current-win-arm-profile-ab.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - run: python3 -m unittest tests.test_m0_h2343_same_vm_capacity tests.test_m0_h2321_current_path_ab -v

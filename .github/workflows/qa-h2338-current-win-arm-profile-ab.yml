@@ -256,6 +256,9 @@ jobs:
           assert d['guest_iptables_and_ip_forward_restored']
           assert d['product_tcp']['bulk_remote_received_bytes']>0
           assert d['product_tcp']['sparse_echo_received']==160
+          assert d['h2343_same_vm_bare_capacity']['source_sha']==os.environ['GITHUB_SHA']
+          assert d['h2343_same_vm_bare_capacity']['group']==os.environ['GROUP']
+          assert d['h2343_same_vm_bare_capacity']['bare_mbps']>0
           assert d['windows_original_go_rust_cpu_stage']['status']=='MEASURED_ACTUAL_WINDOWS_ORIGINAL_PROCESS_WIN32_SAMPLED_BULK'
           assert d['windows_original_go_rust_cpu_stage']['samples_in_window']>=14
           assert d['windows_original_go_rust_cpu_stage']['process_cpu_s']['total']>0
@@ -333,11 +336,48 @@ jobs:
           name: h2276-${{ matrix.group }}-server-peer
           path: h2276-out/server-peer.json
           retention-days: 3
-      - name: Wait exact relay kernel route installation
+      - name: H2343 same-VM bare ARM receiver before product starts
         shell: bash
         run: |
           set -euo pipefail
           python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" server "h2276-$GROUP-relay-ready" h2276-peer/relay
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" server "h2343-$GROUP-client-ready" h2343-capacity/client
+          mkdir -p h2343-capacity
+          nohup env WBD_H2286_PRODUCT_FULL_WIN_ARM=1 python3 -u tools/m0_h2285_windows_wsl_route.py server "$GROUP" h2276-peer/relay/relay-ready.json > h2343-capacity/server-bare.log 2>&1 < /dev/null &
+          echo $! > h2343-capacity/server-bare.pid
+          for i in $(seq 1 80); do
+            if grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2343-capacity/server-bare.log; then break; fi
+            if ! kill -0 "$(cat h2343-capacity/server-bare.pid)" 2>/dev/null; then cat h2343-capacity/server-bare.log; exit 2; fi
+            sleep .5
+          done
+          grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2343-capacity/server-bare.log
+          cp h2276-out/server-peer.json h2343-capacity/server-ready.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2343-${{ matrix.group }}-server-ready
+          path: h2343-capacity/server-ready.json
+          retention-days: 3
+      - name: H2343 finish bare TCP and restore ARM sysctls before original product
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 400); do
+            if grep -Fq H2285_REAL_ARM_TCP_SERVER_DONE h2343-capacity/server-bare.log; then break; fi
+            if ! kill -0 "$(cat h2343-capacity/server-bare.pid)" 2>/dev/null; then tail -n 75 h2343-capacity/server-bare.log; exit 2; fi
+            sleep 1
+          done
+          grep -Fq H2285_REAL_ARM_TCP_SERVER_DONE h2343-capacity/server-bare.log
+          mv h2276-out/server-result.json h2343-capacity/server-bare.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2343-${{ matrix.group }}-bare-server-evidence
+          path: h2343-capacity/
+          retention-days: 14
+      - name: Wait exact relay kernel route installation
+        shell: bash
+        run: |
+          set -euo pipefail
           python3 -u tools/m0_h2286_arm_product.py start "$GROUP" h2276-peer/relay/relay-ready.json > h2276-out/server.log 2>&1
           grep -Fq H2286_ARM_ORIGINAL_GO_TLS_RUST_AND_TRUE_AF_PACKET_TUN_READY h2276-out/server.log
           test -s h2286-out/server-ready.json && test -s h2286-out/cert.pem && test -s h2286-out/route-key-private.hex
@@ -512,6 +552,23 @@ jobs:
           if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'H2286_WINTUN_AUTHENTICODE_SIGNATURE_INVALID'}
           Copy-Item $dll result/wl-public/wintun.dll
           Write-Output H2286_REAL_SIGNED_ORIGINAL_NPCAP_WINTUN_DRIVER_READY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2343-${{ matrix.group }}-client-ready
+          path: h2276-out/client-peer.json
+          retention-days: 3
+      - name: H2343 real bare Windows WSL2 TCP calibration on these same three VMs
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
+          if($LASTEXITCODE -ne 0){throw 'H2343_RELAY_NOT_READY'}
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2343-$env:GROUP-server-ready" h2343-capacity/server
+          if($LASTEXITCODE -ne 0){throw 'H2343_BARE_SERVER_NOT_READY'}
+          python -u tools/m0_h2285_windows_wsl_route.py client $env:GROUP h2276-peer/relay/relay-ready.json h2343-capacity/server/server-ready.json
+          if($LASTEXITCODE -ne 0){throw 'H2343_BARE_TCP_CALIBRATION_FAILED'}
+          Move-Item h2276-out/client-result.json h2343-capacity/client-bare.json
       - name: ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun to independent ARM GoTLS/Rust through owned two-hop kernel
         shell: pwsh
         env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
@@ -528,6 +585,15 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'H2286_REAL_WINDOWS_WSL_ORIGINAL_NPCAP_MAC_HYPERV_NOT_READY'}
           python -u tools/m0_h2292_true_product_ab.py client $env:GROUP h2276-peer/relay/relay-ready.json h2276-peer/server/server-peer.json h2286-peer/server/server-ready.json
           if($LASTEXITCODE -ne 0){throw 'H2286_ORIGINAL_WINDOWS_GO_TLS_RUST_WINTUN_NPCAP_ARM_GO_RUST_PRODUCT_FAILED'}
+          python tools/m0_h2343_same_vm_capacity.py h2343-capacity/client-bare.json h2276-out/client-result.json
+          if($LASTEXITCODE -ne 0){throw 'H2343_CAPACITY_RECEIPT_MERGE_FAILED'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2343-${{ matrix.group }}-bare-client-evidence
+          path: h2343-capacity/
+          retention-days: 14
+          if-no-files-found: warn
       - name: Stop and restore exact WSL vEthernet Hyper-V neighbor plus signed Npcap service
         if: always()
         shell: pwsh
