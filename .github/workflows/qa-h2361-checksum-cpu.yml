@@ -1,0 +1,23 @@
+name: H2361 native outbound checksum CPU comparison
+on:
+  workflow_dispatch:
+  push:
+    branches: ['experiment/m0-029-checksum-wide']
+    paths:
+      - 'crates/wbd-platform/src/ipv4_tcp.rs'
+      - '.github/workflows/qa-h2361-checksum-cpu.yml'
+permissions: {contents: read}
+jobs:
+  native_checksum:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - run: rustup toolchain install 1.85.1 --profile minimal --no-self-update
+      - run: cargo +1.85.1 test --locked --release -p wbd-platform ipv4_tcp::tests -- --test-threads=1
+      - run: cargo +1.85.1 test --locked --release -p wbd-platform wide_sum_microbench -- --ignored --nocapture --test-threads=1
