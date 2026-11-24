@@ -143,11 +143,15 @@ func runM0NativeV4WindowsGame(
      return
     }
     if a.State()==faketcp.ClientAssociationDetached{
+     if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
+     if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
      _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
     }else if err=a.HandleSegment(seg,time.Now());err!=nil{
      // Detach may win after the reader's State snapshot. Treat the
      // already-read segment as early native input, not a failed reader.
      if errors.Is(err,faketcp.ErrClientDetached){
+      if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
+      if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
       _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
       continue
      }

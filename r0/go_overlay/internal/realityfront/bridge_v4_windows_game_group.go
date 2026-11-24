@@ -134,6 +134,9 @@ func V4WindowsEstablishOriginalGameClientGroup(
   }
   handoff,e:=assoc.Detach()
   if e!=nil{return fail(e)}
+  // No extra RTT or delay: repeat the already-earned final TLS ACK
+  // twice before this cold association moves to the native owner.
+  for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
   if e=b.prepareAuthenticatedClient(session,handoff,assoc.Flow());e!=nil{
    // A successful first lane is not a right to retain uncommitted
    // later-lane transport material. Original bridge aborts a failed

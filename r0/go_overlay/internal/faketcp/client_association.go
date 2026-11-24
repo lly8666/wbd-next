@@ -361,6 +361,29 @@ func (a *ClientAssociation) Detach() (ClientHandoff, error) {
 	return handoff, nil
 }
 
+// RepeatGameColdFinalACK sends only the frozen cumulative TLS ACK before
+// the Game NPF reader is handed to Rust. A duplicate wholly below the
+// original receive boundary is old bootstrap, never a new native record.
+// A nil duplicate requests a repeat immediately after Detach.
+func (a *ClientAssociation) RepeatGameColdFinalACK(duplicate *Segment) (bool,error) {
+    a.mu.Lock()
+    if a.state!=ClientAssociationDetached||a.bootstrap==nil{
+        a.mu.Unlock()
+        return false,nil
+    }
+    if duplicate!=nil&&(!a.flow.MatchesInbound(*duplicate)||len(duplicate.Payload)==0||
+        duplicate.Flags&(FlagSYN|FlagFIN|FlagRST)!=0||
+        int32(duplicate.Seq+uint32(len(duplicate.Payload))-a.bootstrap.NextSeq())>0){
+        a.mu.Unlock()
+        return false,nil
+    }
+    ack:=a.ackLocked()
+    ack.Window=steadyAdvertisedWindow(a.peer.WindowScaleSet)
+    emit:=a.emit
+    a.mu.Unlock()
+    return true,emit(ack)
+}
+
 func (a *ClientAssociation) EmitRetransmitDue(now time.Time) (bool, error) {
 	a.mu.Lock()
 	switch a.state {

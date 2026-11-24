@@ -720,6 +720,7 @@ type originalGameCohortPending struct{
 }
 type originalGameCohortLive struct{
     key realityfront.V4LinuxGameCohortID
+    attempt [16]byte
     product *realityfront.V4LinuxGameProduct
     members []*realityfront.V4LinuxGameAuthenticatedLane
     peers []faketcp.DetachedPeer
@@ -1305,7 +1306,7 @@ func runGameMultiServer(
                     laneID,lane.Association().Flow().ClientPort)
             }
             if group:=active[coldKey];group!=nil&&coldKey.Lanes==4&&
-                !freshGroup&&!fullGroupPending{
+                group.attempt==attempt&&!freshGroup&&!fullGroupPending{
                 if laneID<1||laneID>4{
                     rejectLane(lane)
                     continue
@@ -1497,7 +1498,7 @@ func runGameMultiServer(
                 return fmt.Errorf("Game multi-group shared-port DATA filter: %w",e)
             }
             rec:=&originalGameCohortLive{
-                key:key,product:product,members:complete,peers:newPeers,
+                key:key,attempt:attempt,product:product,members:complete,peers:newPeers,
                 gameFec:gameCfg.GameFecEnabled,managedAt:time.Now(),managedFECProfile:gameCfg.GameFecProfile,
             }
             for i,l:=range complete{

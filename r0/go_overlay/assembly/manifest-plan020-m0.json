@@ -1522,7 +1522,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_windows.go",
-      "result_blob": "4a8b6dd0269bb9f6b81792bd78a2b244c2462633"
+      "result_blob": "6f44ff1451160334eb66dd465165600b3c120829"
     },
     {
       "kind": "create",
@@ -1636,7 +1636,7 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_native_v4_game_rust_peer_windows.go",
-      "result_blob": "24444c3e293350dad37fe97f12da497673c57c4f"
+      "result_blob": "dcaebbfb74edd7763c41adba6e8da1540c88b3f1"
     },
     {
       "kind": "create",
@@ -1698,7 +1698,7 @@
       "path": "internal/faketcp/client_association.go",
       "original_blob": "83e85b4871ee59e7ab47ea2b53387bef584898c4",
       "overlay_path": "r0/go_overlay/internal/faketcp/client_association.go",
-      "result_blob": "d80b51c69a577a73fcc6494ff3cf554dd44ba162"
+      "result_blob": "48f5e419ac12d7380cb24ab43034564117cea777"
     },
     {
       "kind": "replace",
@@ -1832,7 +1832,7 @@
       "kind": "create",
       "path": "internal/faketcp/transition_h1285_association_test.go",
       "overlay_path": "r0/go_overlay/internal/faketcp/transition_h1285_association_test.go",
-      "result_blob": "f67bffca63fc85e99f886b761e64e60ec12c81e0"
+      "result_blob": "6b5460f3ffafad537a8237b5485dc8e3997d2a78"
     },
     {
       "kind": "replace",
@@ -1863,7 +1863,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "7dad8ed70f4e03a7c8d0d72599ea26de0c38d43b"
+      "result_blob": "9c1f03dfa9bf13c31fa4d1b97a66364851042231"
     },
     {
       "kind": "create",
