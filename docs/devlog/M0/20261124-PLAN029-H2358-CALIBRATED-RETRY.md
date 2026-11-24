@@ -1,0 +1,3 @@
+# H2358 — calibrated reruns and local reclaim independent trial
+
+Confirmed all four failed clients in 45318051744/45318234104 timed out downloading the already-downloaded relay-ready artifact (`H2276_MISSING_SAME_RUN_ARTIFACT`). No real product legs. H2352 fix proven by H2353 45319542287 all9 jobs PASS with four genuine stages/group and bare 413.893/440.528 Mbps. H2354 45319638991 native PASS (2x66 platform,25 owner,1 local-reclaim unit), 45319638790 maximum PASS. Retest H2347 and H2349 exact product deltas using separate download path; run H2358 same-arena return alone on H2336 bc87909, same calibrated ABBA/BAAB. No combined source or parameter changes; no new performance claim.

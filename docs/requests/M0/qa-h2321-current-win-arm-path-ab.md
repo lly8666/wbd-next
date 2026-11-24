@@ -16,3 +16,6 @@ H2336 retry: isolate static test environment from selected axis; same product de
 
 ## H2349 ready-batch arena + copied counters
 Two balanced real groups ABBA/BAAB, A exact retained H2336 bc87909, B H2348; only native runtime, Windows owner and original Arena implementation differ. Same TX8/16KiB; same-triplet bare preflight; no H2326 or H2330/RX delta. Compare actual adjacent pair and within-version spread, CPU/GiB, P99.
+
+## H2358 verified fixture retry of H2349
+Original H2348 candidate unchanged; H2353 confirmed corrected same-VM calibration. Re-run full groups with corrected artifact path.
