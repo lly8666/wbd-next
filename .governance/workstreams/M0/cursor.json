@@ -4,23 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2395,
-  "checkpoint_sha": "12d0e8af989ff3e8b5ed926f0187970d62835268",
-  "progress": "verifying",
+  "sequence": 2396,
+  "checkpoint_sha": "7c8d7e2be1815d7109cd15ada82c21b46f3f1ddc",
+  "progress": "paused",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "WinGUI v2实际四场景恢复和433项GUI通过，PR74已合main；PLAN030双ISA、真实第二代域名/管理快照PASS，完整组合旧日志判据FAIL，已同步Win修复并修正夹具，待定向复验。",
+  "current_task": "PLAN030按用户授权原始回执限定验收并合main；WinGUI v2恢复亦已合main。停止扩测与优化。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "收PR73 153a2fe 定向派发45361093079及其原生domain_reconnect子Action（完整双向业务与Stop），核对治理和最终产物，合并PR73；不重复Linux/watch/吞吐。用户实体新Win包复测尚未做。",
+  "next_action": "交付两ISA服务端包和已验Win修复包；用户实际复测或新任务授权才继续，不重复假红场景。",
   "unverified": true,
-  "last_tested_source": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+  "last_tested_source": "153a2fed9c7af6b491f5e5528c8d9e5a5ca78229",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
     "docs/prompts/M0-PLAN030.md",
     "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json",
-    "docs/evidence/M0/20261124-H2395-WINDOWS-RECOVERY-GONE-PASS.json"
+    "docs/evidence/M0/20261124-H2395-WINDOWS-RECOVERY-GONE-PASS.json",
+    "docs/evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2395：PR74 988d669 Action45357787794真实normal/partial/full/gone全部PASS，433项GUI、两ZIP SHA/CRC及4 PE amd64独立验；PR74证据495721a经merge 12d0e8a合main。PR73 9ff0ed0 Action45357895146双ISA build/systemd/mixed/watch全PASS；45357942950/45357907987真实两代域名、OS1389、第二代managed FEC off/1389均达，后置legacy server SYNACK/M4 oracle FAIL，实际混合server无旧SYNACK日志但客户端两次真实peer MSS，旧新原生Stop及shared TUN Stop有实际回执；业务完整组合尚未达。153a2fe已同步main Windows修复，operation级合并manifest无冲突，修混合server oracle及stale live source pin，派发45361093079在途。main治理发现GUI历史卡超16KiB、旧cursor分支路径引用和两项实时SHA pin过期；本次归档旧限制、移除未合分支路径引用、更新准确live pin，不改变产品。"
+  "partial_summary": "H2396：PR73 331d1d6已merge 7c8d7e2，PR74已merge 12d0e8a。45361122389原Action FAIL在旧Linux Stop marker，ZIP14905631371 SHA/CRC验，真实两代域名/MTU1389/第二代快照/双向UDP与Win→Linux TCP/直连32KiB/DNS及两端Stop、TUN reader joined、owned NAT删除均有回执。用户授权假红不重测，限定产品PASS；原Action FAIL、Linux退出码未单独保存、后置夹具未执行保留。9ff0ed0双ISA build/systemd/mixed/watch PASS；两包SHA/CRC/ELF/内部manifest独立核验。修Stop判据保留进程退出门，未主动dispatch。main原Win-Linux 45360802123、routed TTL/NAT45360802269 PASS，治理45361400021/45361400083 PASS；旧fake-child WAL Action45360802125仍在途不作为新产品验收。用户实体复测、OpenWrt、物理重启及未提供的快照字段保持未知。"
 }
