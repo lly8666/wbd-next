@@ -569,7 +569,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
-     let mut native_off_loan=None;
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          if fixed{
@@ -591,8 +590,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
              let budget=normal_off_windows_budget(&e)?;
              let pad_enabled=split.as_ref().is_some_and(|s|s.startup_padding_enabled());
              let now=m2_clock();
-             let keep_pending=!v3_native_off_loan(&e);
-             if !keep_pending{e.arena.drain_returns_bounded(64);}
              // Queue only the packets already captured by this turn. M1's
              // 32-entry ready queue accommodates the existing 8/16 batch.
              // No new delay, second queue, worker or PN allocator.
@@ -605,15 +602,12 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
                          .unwrap_or(0)
                  }else{0};
                  staged_pad[i]=pad;
-                 meta[i]=v3_queue_source_ready(&mut e,source,budget,now,pad,MAX_IPV4,!keep_pending)?;
+                 meta[i]=v3_queue_source(&mut e,source,budget,now,pad,MAX_IPV4)?;
              }
-             let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
+             v3_drain_sources(&mut e,now,&meta[..count],|i,wire|{
                  frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
                      .copy_from_slice(wire);
              })?;
-             if keep_pending{e.tx_scratch=loan.recycle();}
-             else{native_off_loan=Some(loan);}
-
          }
      }
      let mut lens=[0usize;BATCH];
@@ -643,47 +637,31 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      }
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         let settled_native_off=if let Some(loan)=native_off_loan{
-             v3_finish_native_off_loan(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,loan)?;
-             true
-         }else{false};
          let mut fresh_bytes=0u64;
-         let mut copied=0u64;
-         let mut after_rx=0u64;
-         let mut pad_bytes=0u64;
-         let mut pad_records=0u64;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
              let status=kernel_result(result,count,i)?;
-             if !settled_native_off{
-                 m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     pn,seq,used,status)?;
-             }
+             m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                 pn,seq,used,status)?;
              if status==1{
                  fresh_bytes+=lens[i] as u64;
-                 copied+=1;
+                 counters.tx_copied.fetch_add(1,Ordering::Relaxed);
+                 #[cfg(feature="h2314_windows_fixed_max_burst")]
+                 if fixed{
+                     counters.fixed_parity_source_rows.fetch_add(1,Ordering::Relaxed);
+                 }
                  // Never count an M1 proposal on failed or partially
                  // accepted Npcap prefix. No shadow/repair double count.
                  if staged_pad[i]>0{
-                     pad_bytes+=staged_pad[i] as u64;
-                     pad_records+=1;
+                     counters.startup_pad_npf_bytes.fetch_add(
+                         staged_pad[i] as u64,Ordering::Relaxed);
+                     counters.startup_pad_npf_records.fetch_add(
+                         1,Ordering::Relaxed);
                  }
                  if counters.rx_delivered.load(Ordering::Acquire)>0{
-                     after_rx+=1;
+                     counters.tx_after_rx.fetch_add(1,Ordering::Relaxed);
                  }
              }
          }
-         // Publish only the original actual copied prefix, once per
-         // service batch, while retaining per-packet receipt decisions.
-         if copied>0{counters.tx_copied.fetch_add(copied,Ordering::Relaxed);}
-         #[cfg(feature="h2314_windows_fixed_max_burst")]
-         if fixed && copied>0{
-             counters.fixed_parity_source_rows.fetch_add(copied,Ordering::Relaxed);
-         }
-         if pad_records>0{
-             counters.startup_pad_npf_bytes.fetch_add(pad_bytes,Ordering::Relaxed);
-             counters.startup_pad_npf_records.fetch_add(pad_records,Ordering::Relaxed);
-         }
-         if after_rx>0{counters.tx_after_rx.fetch_add(after_rx,Ordering::Relaxed);}
          counters.fresh_outer_bytes.fetch_add(fresh_bytes,Ordering::Relaxed);
          if fresh_bytes>0{
              // Only true Npcap-copied business resets local idle; a staged
