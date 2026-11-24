@@ -5,3 +5,5 @@ Registered increment: docs/decisions/M0-LINUX-GLIBC231-20261124.md. Use the same
 ```feature-impact
 {"kind":"none","ids":[],"reason":"Build/link environment and test harness only; no protocol, runtime defaults, product options, data-plane implementation or driver changes. Linux release ABI qualification remains pending."}
 ```
+
+First SOURCE 23a73e8c23e289d5f5c898faf15560c97a761dac Action 45411561914 ARM64 failed in Docker image preparation: bullseye-security package downloads HTTP404 after LTS EOL, before product compilation. Replace removed floating mirrors with signed Debian archive and final security snapshot. Functional/performance NOT_RUN for that failed leg.
