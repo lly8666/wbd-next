@@ -1,0 +1,636 @@
+# H2321: current-source Windows Normal/off first-send path A/B/A-prime.
+# H2347: retest original H2326 settlement delta on H2323, counterbalanced with same-triplet bare reference.
+# Both DLLs have identical TX8/NPF16KiB features; Go/ARM builds are shared.
+name: H2347 H2326 settlement balanced crossover
+run-name: "M0 H2347 H2326 settlement ABBA-BAAB | ${{ github.sha }}"
+on:
+  workflow_dispatch:
+  push:
+    branches: ['experiment/m0-029-settlement-crossover']
+    paths:
+      - 'docs/requests/M0/qa-h2347-settlement-crossover.md'
+permissions:
+  contents: read
+env:
+  WBD_H2279_CAPACITY_AB: "0"
+  WBD_H2281_SUSTAINED_TCP: "1"
+  WBD_H2282_TCP_WINDOW_AB: "0"
+  WBD_H2283_B_BYTES: "2097152"
+  WBD_H2284_EIGHT_TCP_CAPACITY: "0"
+  WBD_H2291_WINDOWS_TX_CANDIDATE: "0"
+  WBD_H2292_TRUE_PRODUCT_ABA: "1"
+  WBD_H2292_COMPILED_SOURCE_SHA: ${{ github.sha }}
+  WBD_H2312_FACTOR: path_ab
+  WBD_H2321_BASELINE_SOURCE: 6fa10d75e3b7f23f909252e2737948911d3eb64c
+  WBD_PATH_AB_AXIS: firstsend_settlement_and_control_poll
+  WBD_PATH_AB_CROSSOVER: "1"
+concurrency:
+  group: h2347-settlement-cross-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  static:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Exact source Python and original finite real-socket dual triplet contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2285_windows_wsl_route.py tools/m0_h2286_full_windows_product.py tools/m0_h2286_arm_product.py tools/m0_h2286_inner_udp.py tools/m0_h2287_tun_tcp_trace.py tools/m0_h2290_windows_hotpath_cpu.py tools/m0_wl_native_resource_sampler.py tools/m0_h2292_true_product_ab.py
+          python3 -m unittest tests.test_m0_h2321_current_path_ab tests.test_m0_h2312_true_factor_ab tests.test_m0_h2276_three_runner_tcp tests.test_m0_h2280_bidir_netem_tcp tests.test_m0_h2281_sustained_tcp tests.test_m0_h2282_window_ab_tcp tests.test_m0_h2283_window2m_ab_tcp tests.test_m0_h2284_old_eight_flow_capacity tests.test_m0_h2285_windows_wsl_route tests.test_m0_h2286_full_product_path tests.test_m0_h2287_tun_tcp_trace tests.test_m0_h2290_windows_hotpath_cpu tests.test_m0_h2291_windows_tx_batch tests.test_m0_h2292_true_product_ab -v
+  original_arm_build:
+    name: Current source original ARM64 GoTLS Rust build
+    needs: static
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    env:
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Build current native ARM product once
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm python3 iproute2
+          bash tools/m0_plan029_linux_dual_native_build.sh > arm-build.log 2>&1 || { tail -n 100 arm-build.log; exit 1; }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2286-arm-original-product-${{ github.sha }}
+          path: linux-plan029-public-bundle/
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          name: h2321-arm-build-first-error-${{ github.sha }}
+          path: arm-build.log
+          retention-days: 14
+          if-no-files-found: warn
+
+  win_candidate_build:
+    name: Fresh exact Go EXE and baseline/current Windows Rust DLL pair
+    needs: static
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build exact same current Go executable for all legs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'H2321_CURRENT_GO_ASSEMBLY_FAILED'}
+          Push-Location legacy
+          try {
+            & go build -tags wbd_v4_embedded_go ./internal/windowsownerlease
+            if($LASTEXITCODE -ne 0){throw 'H2321_CURRENT_GO_OWNER_BUILD_FAILED'}
+            & go build -trimpath -tags wbd_v4_embedded_go -o ../result/wbd-client-embedded.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'H2321_CURRENT_GO_EXE_BUILD_FAILED'}
+          } finally {Pop-Location}
+      - name: Build original and optimized Rust with identical features
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $baseline=$env:WBD_H2321_BASELINE_SOURCE
+          if((git rev-parse HEAD).Trim() -ne $env:GITHUB_SHA){throw 'H2321_CANDIDATE_SOURCE_MISMATCH'}
+          & git fetch --depth=1 origin $baseline
+          if($LASTEXITCODE -ne 0){throw 'H2321_BASELINE_FETCH_FAILED'}
+          $diff=@(& git diff --name-only $baseline $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)
+          if($LASTEXITCODE -ne 0){throw 'H2321_SOURCE_DIFF_FAILED'}
+          $allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-engine/src/v4_windows_owner.rs')
+          if(@($diff | Where-Object {$_ -notin $allowed}).Count -ne 0 -or $diff.Count -ne $allowed.Count){throw ('H2321_NOT_ISOLATED_TX_SOURCE_DELTA '+($diff -join ','))}
+          & git worktree add --detach h2321-baseline $baseline
+          if($LASTEXITCODE -ne 0 -or (git -C h2321-baseline rev-parse HEAD).Trim() -ne $baseline){throw 'H2321_BASELINE_WORKTREE_FAILED'}
+          & rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          if($LASTEXITCODE -ne 0){throw 'H2321_RUST_TOOLCHAIN_FAILED'}
+          $common='m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record'
+          $features="$common,h2311_windows_npf_trace"
+          New-Item -ItemType Directory -Force result/h2321-build/baseline,result/h2321-build/candidate,result/h2321-build/go | Out-Null
+          & cargo +1.85.1 build --locked --release --manifest-path h2321-baseline/Cargo.toml -p wbd-engine --features $features --target-dir h2321-baseline/target
+          if($LASTEXITCODE -ne 0){throw 'H2321_BASELINE_RUST_BUILD_FAILED'}
+          Copy-Item h2321-baseline/target/release/wbd_engine.dll result/h2321-build/baseline/wbd_engine.dll
+          & cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'H2321_CURRENT_RUST_BUILD_FAILED'}
+          Copy-Item target/release/wbd_engine.dll result/h2321-build/candidate/wbd_engine.dll
+          Copy-Item result/wbd-client-embedded.exe result/h2321-build/go/wbd-client-embedded.exe
+          $env:H2321_COMMON_FEATURES=$common
+          $env:H2321_EXACT_FEATURES=$features
+          @'
+          import ctypes,hashlib,json,os,pathlib
+          root=pathlib.Path('result/h2321-build')
+          sha=os.environ['GITHUB_SHA']
+          base=os.environ['WBD_H2321_BASELINE_SOURCE']
+          common=os.environ['H2321_COMMON_FEATURES']
+          features=os.environ['H2321_EXACT_FEATURES']
+          def digest(p):
+              assert p.is_file() and p.stat().st_size>100000
+              return hashlib.sha256(p.read_bytes()).hexdigest()
+          def dump(p,row):
+              p.write_text(json.dumps(row,sort_keys=True),encoding='utf-8')
+          a=root/'baseline/wbd_engine.dll'
+          b=root/'candidate/wbd_engine.dll'
+          for p in (a,b):
+              getattr(ctypes.WinDLL(str(p.resolve())),'wbd_m0_win_native_v3_start')
+          aa=dict(source_sha=base,feature='H2321_PRE_OPTIMIZATION',base_features=common,
+                  feature_set=features,h2312_factor='path_ab',dll_sha256=digest(a))
+          bb=dict(source_sha=sha,trial_feature='H2321_READY_PATH',base_features=common,
+                  feature_set=features,h2312_factor='path_ab',original_go_exe_source_sha=sha,
+                  dll_sha256=digest(b))
+          assert aa['dll_sha256']!=bb['dll_sha256']
+          dump(root/'baseline/h2292-baseline-dll-manifest.json',aa)
+          dump(root/'candidate/h2291-windows-dll-manifest.json',bb)
+          dump(root/'go/windows-binary-manifest.json',dict(source_sha=sha,
+               sha256=dict(exe=digest(root/'go/wbd-client-embedded.exe'),dll=bb['dll_sha256'])))
+          print('H2321_EXACT_SOURCE_AB_SAME_TX8_NPF16K_CURRENT_GO_EXE')
+          '@ | python -
+          if($LASTEXITCODE -ne 0){throw 'H2321_BINARY_MANIFEST_FAILED'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2321-current-build-${{ github.sha }}
+          path: result/h2321-build/
+          retention-days: 14
+          if-no-files-found: error
+
+  relay:
+    name: "H2286 independent ARM64 kernel relay ${{ matrix.group }}"
+    needs: [static, win_candidate_build]
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 100
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-relay-${{ matrix.group }}-${{ github.run_id }}
+      - name: Publish independently allocated Linux relay identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables
+          python3 tools/m0_h2276_three_runner_tcp.py meta "$GROUP" relay
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-relay-peer
+          path: h2276-out/relay-peer.json
+          retention-days: 3
+      - name: Await both SAME-GROUP actual Windows and ARM peers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-client-peer" h2276-peer/client
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-server-peer" h2276-peer/server
+          python3 tools/m0_h2276_three_runner_tcp.py relay "$GROUP" relay h2276-peer/server/server-peer.json h2276-peer/client/client-peer.json
+          nohup python3 -u tools/m0_h2276_three_runner_tcp.py serve "$GROUP" relay > h2276-out/relay-control.log 2>&1 < /dev/null &
+          echo $! > h2276-out/relay-control.pid
+          for i in $(seq 1 90); do
+            if grep -Fq H2276_RELAY_CONTROL_READY h2276-out/relay-control.log; then break; fi
+            if ! kill -0 "$(cat h2276-out/relay-control.pid)" 2>/dev/null; then cat h2276-out/relay-control.log; exit 2; fi
+            sleep .5
+          done
+          grep -Fq H2276_RELAY_CONTROL_READY h2276-out/relay-control.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-relay-ready
+          path: h2276-out/relay-ready.json
+          retention-days: 3
+      - name: Wait real Windows kernel TCP evidence; preserve unqualified DERP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" relay "h2276-$GROUP-client-result" h2276-peer/client-result
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2276-peer/client-result/client-result.json'))
+          assert d['group']==os.environ['GROUP'] and d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['status']=='PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP'
+          assert d['true_go_tls_rust_windows_arm']
+          assert d['client_original_authenticated_ready']
+          assert d['h2292_same_vm_original_product_abaprime']['status']=='PASS_H2292_SAME_WINDOWS_VM_ORIGINAL_GO_TLS_RUST_A_B_A_PRIME_SCOPED'
+          order=['A_default','B_tx16','B_prime','A_prime'] if os.environ['GROUP']=='a' else ['B_tx16','A_default','A_prime','B_prime']
+          stages=d['h2292_same_vm_original_product_abaprime']['stages']
+          assert [x['stage'] for x in stages]==order
+          assert [x['candidate_enabled'] for x in stages]==[tag.startswith('B_') for tag in order]
+          factor=os.environ.get('WBD_H2312_FACTOR','legacy')
+          assert factor=='path_ab'
+          assert all(x['h2312_factor']==factor and x['comparison_axis']=='firstsend_settlement_and_control_poll' for x in stages)
+          assert [x['compiled_rust_source_sha'] for x in stages]==[
+              os.environ['GITHUB_SHA'] if tag.startswith('B_') else os.environ['WBD_H2321_BASELINE_SOURCE'] for tag in order]
+          assert all(x['h2312_npf_service']['npf_queue_packets']==8 and
+                     x['h2312_npf_service']['npf_queue_bytes']==16384 and
+                     x['h2312_npf_service']['queue_calls']>0 and
+                     x['h2312_npf_service']['queue_frames_submitted']>0 and
+                     x['h2312_npf_service']['queue_bytes_copied']>0 and
+                     x['h2312_npf_service']['queue_short_calls']==0
+                     for x in stages)
+          assert d['client_owned_stop']=='PASS_REAL_ORIGINAL_GO_RUST_WAL_STOP'
+          assert d['guest_iptables_and_ip_forward_restored']
+          assert d['product_tcp']['bulk_remote_received_bytes']>0
+          assert d['product_tcp']['sparse_echo_received']==160
+          assert d['h2343_same_vm_bare_capacity']['source_sha']==os.environ['GITHUB_SHA']
+          assert d['h2343_same_vm_bare_capacity']['group']==os.environ['GROUP']
+          assert d['h2343_same_vm_bare_capacity']['bare_mbps']>0
+          assert d['windows_original_go_rust_cpu_stage']['status']=='MEASURED_ACTUAL_WINDOWS_ORIGINAL_PROCESS_WIN32_SAMPLED_BULK'
+          assert d['windows_original_go_rust_cpu_stage']['samples_in_window']>=14
+          assert d['windows_original_go_rust_cpu_stage']['process_cpu_s']['total']>0
+          assert d['relay_tailscaled_and_host_cpu_stage']['tailscaled_pid_count_common']>0
+          assert d['kernel_relay_qdisc']['status']=='REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED'
+          assert all(d['kernel_relay_qdisc']['per_direction'][dr]['egress_packets']>0
+                     for dr in ('win_to_arm','arm_to_win'))
+          print('H2286_TRUE_SIGNED_WINDOWS_NPCAP_WINTUN_GO_TLS_RUST_ARM_TUN_TCP_PASS')
+          PY
+      - name: Remove only relay owned tc and exact iptables rules
+        if: always()
+        shell: bash
+        run: |
+          if test -s h2276-peer/server/server-peer.json && test -s h2276-peer/client/client-peer.json; then
+            python3 tools/m0_h2276_three_runner_tcp.py cleanup "$GROUP" relay h2276-peer/server/server-peer.json h2276-peer/client/client-peer.json || true
+          fi
+          if test -s h2276-out/relay-control.pid; then
+            kill "$(cat h2276-out/relay-control.pid)" 2>/dev/null || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-relay-evidence
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14
+
+  server:
+    name: "H2286 original ARM64 GoTLS Rust TUN server ${{ matrix.group }}"
+    needs: [static, original_arm_build, win_candidate_build]
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 100
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-arm-${{ matrix.group }}-${{ github.run_id }}
+      - name: Fetch one original ARM64 build from same Action and exact source
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          mkdir -p linux-plan029-public-bundle
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "h2286-arm-original-product-$GITHUB_SHA" --dir linux-plan029-public-bundle
+          chmod +x linux-plan029-public-bundle/wbd-v4-server linux-plan029-public-bundle/wbd-v4-client
+          test -x linux-plan029-public-bundle/wbd-v4-server
+          test -s linux-plan029-public-bundle/libwbd_engine.so
+          echo H2286_ORIGINAL_ARM64_GO_RUST_BINARY_SHARED_BETWEEN_TWO_REAL_SERVERS
+      - name: Install only read-only TCP header observer on genuine ARM TUN
+        shell: bash
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq tcpdump
+          command -v tcpdump
+          tcpdump --version | head -n 1
+      - name: Native ARM64 peer identity
+        shell: bash
+        run: python3 tools/m0_h2276_three_runner_tcp.py meta "$GROUP" server
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-server-peer
+          path: h2276-out/server-peer.json
+          retention-days: 3
+      - name: H2343 same-VM bare ARM receiver before product starts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" server "h2276-$GROUP-relay-ready" h2276-peer/relay
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" server "h2343-$GROUP-client-ready" h2343-capacity/client
+          mkdir -p h2343-capacity
+          nohup env WBD_H2286_PRODUCT_FULL_WIN_ARM=1 python3 -u tools/m0_h2285_windows_wsl_route.py server "$GROUP" h2276-peer/relay/relay-ready.json > h2343-capacity/server-bare.log 2>&1 < /dev/null &
+          echo $! > h2343-capacity/server-bare.pid
+          for i in $(seq 1 80); do
+            if grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2343-capacity/server-bare.log; then break; fi
+            if ! kill -0 "$(cat h2343-capacity/server-bare.pid)" 2>/dev/null; then cat h2343-capacity/server-bare.log; exit 2; fi
+            sleep .5
+          done
+          grep -Fq M029_H2271_NATIVE_TCP_SERVER_READY h2343-capacity/server-bare.log
+          cp h2276-out/server-peer.json h2343-capacity/server-ready.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2343-${{ matrix.group }}-server-ready
+          path: h2343-capacity/server-ready.json
+          retention-days: 3
+      - name: H2343 finish bare TCP and restore ARM sysctls before original product
+        shell: bash
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 400); do
+            if grep -Fq H2285_REAL_ARM_TCP_SERVER_DONE h2343-capacity/server-bare.log; then break; fi
+            if ! kill -0 "$(cat h2343-capacity/server-bare.pid)" 2>/dev/null; then tail -n 75 h2343-capacity/server-bare.log; exit 2; fi
+            sleep 1
+          done
+          grep -Fq H2285_REAL_ARM_TCP_SERVER_DONE h2343-capacity/server-bare.log
+          mv h2276-out/server-result.json h2343-capacity/server-bare.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2343-${{ matrix.group }}-bare-server-evidence
+          path: h2343-capacity/
+          retention-days: 14
+      - name: Wait exact relay kernel route installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_h2286_arm_product.py start "$GROUP" h2276-peer/relay/relay-ready.json > h2276-out/server.log 2>&1
+          grep -Fq H2286_ARM_ORIGINAL_GO_TLS_RUST_AND_TRUE_AF_PACKET_TUN_READY h2276-out/server.log
+          test -s h2286-out/server-ready.json && test -s h2286-out/cert.pem && test -s h2286-out/route-key-private.hex
+          cp h2276-out/server-peer.json h2276-out/server-ready.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-server-ready
+          path: h2276-out/server-ready.json
+          retention-days: 3
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2286-${{ matrix.group }}-original-arm-product-ready
+          path: |
+            h2286-out/server-ready.json
+            h2286-out/cert.pem
+            h2286-out/route-key-private.hex
+          retention-days: 1
+          if-no-files-found: error
+      - name: True original ARM64 GoTLS/Rust TUN kernel UDP+TCP server while Windows signed client runs
+        shell: bash
+        env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
+        timeout-minutes: 38
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_h2292_true_product_ab.py arm "$GROUP" > h2276-out/server-app.log 2>&1 || { tail -n 90 h2276-out/server-app.log; exit 2; }
+          grep -Fq H2292_REAL_ARM_TUN_THREE_ORIGINAL_TCP_STAGES_DONE h2276-out/server-app.log
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2286-out/server-result.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['group']==os.environ['GROUP']
+          assert d['real_original_arm_go_tls_rust_tun_native_tcp']
+          assert d['tcp_inner_arm_server_finished']
+          assert d['h2292_same_arm_original_go_tls_rust_server']
+          order=['A_default','B_tx16','B_prime','A_prime'] if os.environ['GROUP']=='a' else ['B_tx16','A_default','A_prime','B_prime']
+          assert [s['stage'] for s in d['h2292_arm_server_three_original_tcp_stages']]==order
+          assert d['native_true_arm_tun_udp']['real_native_os_udp_received']>=12
+          print('H2286_REAL_ARM_GO_RUST_PRODUCT_TUN_NATIVE_TCP_RECEIVED')
+          PY
+          # Keep ORIGINAL ARM Go/Rust worker alive through the genuine
+          # Windows Rust/WAL Stop; client only publishes after it completes.
+          python3 tools/m0_h2276_three_runner_tcp.py await "$GROUP" server "h2276-$GROUP-client-result" h2276-peer/client-result
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2276-peer/client-result/client-result.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA'] and d['group']==os.environ['GROUP']
+          assert d['status']=='PASS_H2286_TRUE_ORIGINAL_WINDOWS_ARM_GO_TLS_RUST_WINTUN_TUN_TCP'
+          assert d['client_owned_stop']=='PASS_REAL_ORIGINAL_GO_RUST_WAL_STOP'
+          print('H2286_ORIGINAL_WINDOWS_RUST_OWNED_STOP_SEEN_WHILE_ARM_SERVER_ALIVE')
+          PY
+      - name: Restore exact ARM Go/Rust server netns+veth and original sysctls after Stop
+        if: always()
+        shell: bash
+        run: |
+          python3 tools/m0_h2286_arm_product.py clean "$GROUP" || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2276-${{ matrix.group }}-arm-evidence
+          path: |
+            h2276-out/
+            h2286-out/server-ready.json
+            h2286-out/server-result.json
+            h2286-out/first-error.json
+            h2286-out/original-arm-server.log
+            h2286-out/tcp-inner-server.log
+            h2286-out/tcp-passive-headers.json
+            h2286-out/tcp-passive-trace.log
+            h2286-out/tcp-tun-headers.log
+            h2286-out/tcpdump-stderr.log
+            h2286-out/arm-inner-udp.log
+            h2286-out/udp-stop.flag.udp.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  client:
+    name: "H2286 original signed Windows2025 Npcap Wintun GoTLS Rust client ${{ matrix.group }}"
+    needs: [static, win_candidate_build]
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [a, b]
+    runs-on: windows-2025
+    timeout-minutes: 100
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GROUP: ${{ matrix.group }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2276-win-${{ matrix.group }}-${{ github.run_id }}
+      - name: Download current Go EXE and the exact baseline/current Rust DLLs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          New-Item -ItemType Directory -Force result/h2321-download,result/wl-public,result/h2292-candidate | Out-Null
+          & gh run download $env:GITHUB_RUN_ID --repo $env:GITHUB_REPOSITORY --name "h2321-current-build-$env:GITHUB_SHA" --dir result/h2321-download
+          if($LASTEXITCODE -ne 0){throw 'H2321_BUILD_ARTIFACT_UNAVAILABLE'}
+          Copy-Item result/h2321-download/go/* result/wl-public/
+          Copy-Item result/h2321-download/baseline/* result/wl-public/
+          Copy-Item result/h2321-download/candidate/* result/h2292-candidate/
+      - name: Publish real Windows VM identity and validate Python probe
+        shell: pwsh
+        run: |
+          python -m py_compile tools/m0_h2276_three_runner_tcp.py tools/m0_wl_loss_tcp_probe.py tools/m0_h2285_windows_wsl_route.py tools/m0_h2286_full_windows_product.py tools/m0_h2286_inner_udp.py tools/m0_h2290_windows_hotpath_cpu.py tools/m0_wl_native_resource_sampler.py tools/m0_h2292_true_product_ab.py
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TEST_CODE_BAD' }
+          python tools/m0_h2276_three_runner_tcp.py meta $env:GROUP client
+          if ($LASTEXITCODE -ne 0) { throw 'H2276_WINDOWS_TAIL_IDENTITY_BAD' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2276-${{ matrix.group }}-client-peer
+          path: h2276-out/client-peer.json
+          retention-days: 3
+      - name: Boot real Windows-owned Ubuntu WSL2 kernel with scoped iptables routing
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'H2285_WSL2_NOT_AVAILABLE'}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            # Total wall-clock bound: IWR's TimeoutSec is a read timeout,
+            # not a true maximum download time. Preserve pinned exact SHA.
+            & curl.exe --fail --location --silent --show-error --connect-timeout 15 --max-time 180 --retry 1 --retry-delay 2 --retry-max-time 220 --output $img 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl'
+            if($LASTEXITCODE -ne 0){throw 'H2292_PINNED_WSL_DOWNLOAD_BOUNDED_FAILURE'}
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'H2285_PINNED_UBUNTU_HASH_MISMATCH'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2
+            if($LASTEXITCODE -ne 0){throw 'H2285_PINNED_WSL_IMPORT_FAILED'}
+          }
+          & python tools/m0_wl_windows_bounded_cmd.py 150 wsl.exe -d Ubuntu -u root -- sh -c 'command -v ip >/dev/null && command -v iptables >/dev/null || (apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables)'
+          if($LASTEXITCODE -ne 0){throw 'H2285_WSL2_ROUTING_TOOLS_FAILED'}
+          & python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0
+          if($LASTEXITCODE -ne 0){throw 'H2285_REAL_WSL2_VETHERNET_MISSING'}
+          Write-Output 'H2285_ACTUAL_WINDOWS_WSL2_KERNEL_ETH0_READY_NOT_WBD_PRODUCT'
+      - name: Real signed Npcap 1.88 kernel service and official Wintun0.14.1 DLL install
+        shell: pwsh
+        timeout-minutes: 14
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'h2286-original-native'
+          $drv=Join-Path $root 'npcap'
+          $usr=Join-Path $root 'user'
+          New-Item -ItemType Directory -Force $root,$drv,$usr,result/wl-public | Out-Null
+          $archive=Join-Path $root 'npcap-test.zip'
+          Invoke-WebRequest -UseBasicParsing -TimeoutSec 80 -Uri 'https://github.com/user-attachments/files/32200327/npcap.zip' -OutFile $archive
+          if((Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'H2286_PINNED_DRIVER_PACKAGE_HASH_CHANGED'}
+          Expand-Archive $archive $drv -Force
+          $installer=Join-Path $root 'npcap-1.88.exe'
+          Invoke-WebRequest -UseBasicParsing -TimeoutSec 80 -Uri 'https://npcap.com/dist/npcap-1.88.exe' -OutFile $installer
+          if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'H2286_NPCAP_VENDOR_HASH_CHANGED'}
+          $sig=Get-AuthenticodeSignature $installer
+          if($sig.Status -ne 'Valid' -or $sig.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'H2286_NPCAP_VENDOR_SIGNATURE_INVALID'}
+          & 7z x -y "-o$usr" $installer | Out-Null
+          if($LASTEXITCODE -ne 0){throw 'H2286_NPCAP_USERLAND_EXTRACT_FAILED'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr
+          if($LASTEXITCODE -ne 0){throw 'H2286_SIGNED_NPCAP_KERNEL_DRIVER_INSTALL_FAILED'}
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/wpcap.dll" -Destination result/wl-public/wpcap.dll
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/Packet.dll" -Destination result/wl-public/Packet.dll
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Invoke-WebRequest -UseBasicParsing -TimeoutSec 80 -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'H2286_WINTUN_VENDOR_HASH_CHANGED'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'H2286_WINTUN_AUTHENTICODE_SIGNATURE_INVALID'}
+          Copy-Item $dll result/wl-public/wintun.dll
+          Write-Output H2286_REAL_SIGNED_ORIGINAL_NPCAP_WINTUN_DRIVER_READY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2343-${{ matrix.group }}-client-ready
+          path: h2276-out/client-peer.json
+          retention-days: 3
+      - name: H2343 real bare Windows WSL2 TCP calibration on these same three VMs
+        env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
+          if($LASTEXITCODE -ne 0){throw 'H2343_RELAY_NOT_READY'}
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2343-$env:GROUP-server-ready" h2343-capacity/server
+          if($LASTEXITCODE -ne 0){throw 'H2343_BARE_SERVER_NOT_READY'}
+          python -u tools/m0_h2285_windows_wsl_route.py client $env:GROUP h2276-peer/relay/relay-ready.json h2343-capacity/server/server-ready.json
+          if($LASTEXITCODE -ne 0){throw 'H2343_BARE_TCP_CALIBRATION_FAILED'}
+          Move-Item h2276-out/client-result.json h2343-capacity/client-bare.json
+      - name: ORIGINAL true Go TLS/Rust Windows signed Npcap-Wintun to independent ARM GoTLS/Rust through owned two-hop kernel
+        shell: pwsh
+        env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
+        timeout-minutes: 53
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-relay-ready" h2276-peer/relay
+          if($LASTEXITCODE -ne 0){throw 'H2286_GENUINE_ARM_RELAY_NOT_READY'}
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2276-$env:GROUP-server-peer" h2276-peer/server
+          if($LASTEXITCODE -ne 0){throw 'H2286_GENUINE_ARM_SERVER_PEER_NOT_READY'}
+          python tools/m0_h2276_three_runner_tcp.py await $env:GROUP client "h2286-$env:GROUP-original-arm-product-ready" h2286-peer/server
+          if($LASTEXITCODE -ne 0){throw 'H2286_ORIGINAL_ARM64_PRODUCT_GO_TLS_RUST_NOT_READY'}
+          & ./tools/m0_h2286_windows_npf_owner.ps1 -Action Install
+          if($LASTEXITCODE -ne 0){throw 'H2286_REAL_WINDOWS_WSL_ORIGINAL_NPCAP_MAC_HYPERV_NOT_READY'}
+          python -u tools/m0_h2292_true_product_ab.py client $env:GROUP h2276-peer/relay/relay-ready.json h2276-peer/server/server-peer.json h2286-peer/server/server-ready.json
+          if($LASTEXITCODE -ne 0){throw 'H2286_ORIGINAL_WINDOWS_GO_TLS_RUST_WINTUN_NPCAP_ARM_GO_RUST_PRODUCT_FAILED'}
+          python tools/m0_h2343_same_vm_capacity.py h2343-capacity/client-bare.json h2276-out/client-result.json
+          if($LASTEXITCODE -ne 0){throw 'H2343_CAPACITY_RECEIPT_MERGE_FAILED'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2343-${{ matrix.group }}-bare-client-evidence
+          path: h2343-capacity/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Stop and restore exact WSL vEthernet Hyper-V neighbor plus signed Npcap service
+        if: always()
+        shell: pwsh
+        run: |
+          if(Test-Path h2286-out/windows-vethernet-owner.json){
+            & ./tools/m0_h2286_windows_npf_owner.ps1 -Action Cleanup
+            if($LASTEXITCODE -ne 0){throw 'H2286_WINDOWS_WSL_NPF_OWNER_NOT_RESTORED'}
+          }
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup 2>&1 | Tee-Object h2286-npcap-cleanup.log
+          $actual=Get-Content h2286-npcap-cleanup.log -Raw
+          if(-not ($actual.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_PASS') -or $actual.Contains('WBD_NPCAP_DRIVER_CI_CLEANUP_SKIP reason=no_state'))){
+            throw 'H2286_SIGNED_NPCAP_NATIVE_DRIVER_OWNED_CLEANUP_RECEIPT_FAILED'
+          }
+          if(Get-Service npcap -ErrorAction SilentlyContinue){throw 'H2286_NPCAP_SERVICE_SURVIVED_REAL_OWNED_CLEANUP'}
+          Write-Output 'H2286_SIGNED_NPCAP_ACTUAL_SERVICE_REMOVED_BUT_STALE_LASTEXITCODE_IGNORED'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          # Receiver expects single TOP-LEVEL client-result.json after download!
+          # Never combine h2276-out and h2286-out in this cross-job receipt.
+          name: h2276-${{ matrix.group }}-client-result
+          path: h2276-out/
+          if-no-files-found: warn
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2290-${{ matrix.group }}-original-windows-hotpath-raw-evidence
+          path: |
+            h2286-out/client-result.json
+            h2286-out/original-win-client.log
+            h2286-out/original-win-cpu.jsonl
+            h2286-out/win-inner-udp.log
+            h2286-out/original-product-ready.flag.udp.json
+            h2292-out/
+            h2286-npcap-cleanup.log
+          if-no-files-found: warn
+          retention-days: 14

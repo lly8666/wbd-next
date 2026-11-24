@@ -569,7 +569,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
-     let mut native_off_loan=None;
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          if fixed{
@@ -605,14 +604,10 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
                  staged_pad[i]=pad;
                  meta[i]=v3_queue_source(&mut e,source,budget,now,pad,MAX_IPV4)?;
              }
-             let keep_pending=!v3_native_off_loan(&e);
-             let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
+             v3_drain_sources(&mut e,now,&meta[..count],|i,wire|{
                  frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
                      .copy_from_slice(wire);
              })?;
-             if keep_pending{e.tx_scratch=loan.recycle();}
-             else{native_off_loan=Some(loan);}
-
          }
      }
      let mut lens=[0usize;BATCH];
@@ -642,17 +637,11 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      }
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         let settled_native_off=if let Some(loan)=native_off_loan{
-             v3_finish_native_off_loan(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,loan)?;
-             true
-         }else{false};
          let mut fresh_bytes=0u64;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
              let status=kernel_result(result,count,i)?;
-             if !settled_native_off{
-                 m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     pn,seq,used,status)?;
-             }
+             m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                 pn,seq,used,status)?;
              if status==1{
                  fresh_bytes+=lens[i] as u64;
                  counters.tx_copied.fetch_add(1,Ordering::Relaxed);
@@ -815,9 +804,17 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
  )->Result<bool,i32>{
      let mut wire=[0u8;MAX_IPV4];
      let ack=counters.ack.load(Ordering::Acquire);
-     let feedback={
+     // Both polls belong to the same original owner. Preserve feedback
+     // priority; only if no feedback was staged may repair be considered.
+     // Neither the NPF syscall nor its settlement runs under this guard.
+     let (feedback,repair)={
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         m2_next_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
+         let feedback=m2_next_feedback_entry(
+             &mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?;
+         let repair=if feedback.is_none(){
+             m2_next_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
+         }else{None};
+         (feedback,repair)
      };
      if let Some((used,seq,pn))=feedback{
          let mut frame=[0u8;MAX_LINK];
@@ -837,10 +834,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
          if outcome.error.is_some(){return Err(BAD_STAGE)}
          return Ok(true)
      }
-     let repair={
-         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         m2_next_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
-     };
      if let Some((used,seq,pn))=repair{
          let mut frame=[0u8;MAX_LINK];
          let raw=packet_frame(cfg,seq,ack,
