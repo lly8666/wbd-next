@@ -6,6 +6,7 @@ import (
  "bufio"
  "crypto/sha256"
  "crypto/tls"
+ "crypto/x509"
  "encoding/hex"
  "encoding/json"
  "errors"
@@ -16,6 +17,7 @@ import (
  "os/exec"
  "path/filepath"
  "runtime"
+ "math"
  "strconv"
  "strings"
  "time"
@@ -98,9 +100,26 @@ func checkManagedConfig(c managedServerConfig)error{
  args,clean,e:=managedArgs(c);if e!=nil{return e};defer clean()
  cfg,e:=parse("server",args);if e!=nil{return e}
  if _,e=net.InterfaceByName(cfg.rawInterface);e!=nil{return e}
- _,e=tls.LoadX509KeyPair(cfg.tlsCert,cfg.tlsKey);return e
+ return verifyManagedCertificate(c)
+}
+func verifyManagedCertificate(c managedServerConfig)error{
+ pair,e:=tls.LoadX509KeyPair(c.TLSCert,c.TLSKey);if e!=nil{return e}
+ cert,e:=x509.ParseCertificate(pair.Certificate[0]);if e!=nil{return e}
+ if e=cert.VerifyHostname(c.ServerName);e!=nil{return fmt.Errorf("TLS证书不匹配借站域名 %s: %w",c.ServerName,e)}
+ return nil
 }
 func saveManagedConfig(path string,c managedServerConfig)error{
+ // A site change must not leave verified clients with the previous SNI
+ // certificate. Keep the original pair until the new config is saved.
+ // Only locally generated managed pairs may be replaced automatically.
+ if filepath.Dir(c.TLSCert)==managedState&&filepath.Dir(c.TLSKey)==managedState{
+  if pair,e:=tls.LoadX509KeyPair(c.TLSCert,c.TLSKey);e==nil{
+   if cert,x:=x509.ParseCertificate(pair.Certificate[0]);x==nil&&cert.VerifyHostname(c.ServerName)!=nil{
+    sum:=sha256.Sum256([]byte(c.ServerName));stem:=filepath.Join(managedState,"site-"+hex.EncodeToString(sum[:8]))
+    c.TLSCert=stem+".crt";c.TLSKey=stem+".key"
+   }
+  }
+ }
  if e:=managedMaterial(c);e!=nil{return e}
  if e:=checkManagedConfig(c);e!=nil{return e}
  b,e:=json.MarshalIndent(c,"","  ");if e!=nil{return e}
@@ -108,6 +127,7 @@ func saveManagedConfig(path string,c managedServerConfig)error{
 }
 func serveManaged(path,socket string)error{
  c,b,e:=loadManagedConfig(path);if e!=nil{return e}
+ if e=verifyManagedCertificate(c);e!=nil{return e}
  args,clean,e:=managedArgs(c);if e!=nil{return e};defer clean()
  hash:=sha256.Sum256(b)
  return runManagedProduct("server",args,&serverManagement{path:socket,revision:hex.EncodeToString(hash[:])})
@@ -136,7 +156,8 @@ const managedHelp=`WBD Next 服务端管理
   wbd-next config export USER [--output PATH]  导出连接资料
   wbd-next status [--json]
   wbd-next clients [--json] [--watch]
-  wbd-next start | stop | restart | logs\n  wbd-next enable | disable   开启/关闭开机启动，不改变当前服务
+  wbd-next start | stop | restart | logs
+  wbd-next enable | disable   开启/关闭开机启动，不改变当前服务
   wbd-next uninstall [--yes]
   wbd-next serve --config PATH  前台原生 Go TLS/Rust 服务
 `
@@ -177,28 +198,56 @@ func systemctl(args ...string)error{b,e:=commandOutput("systemctl",args...);if e
 func getUnitState()string{
  b,_:=exec.Command("systemctl","is-active","wbd-next.service").Output();return strings.TrimSpace(string(b))
 }
+func managedVersion()string{
+ for _,p:=range []string{managedOpt+"/manifest.json",filepath.Join(filepath.Dir(os.Args[0]),"manifest.json")}{
+  b,e:=os.ReadFile(p);if e!=nil{continue};var v struct{Source string `json:"source_sha"`};if json.Unmarshal(b,&v)==nil&&v.Source!=""{return v.Source}
+ };return "unknown"
+}
 func showManagedStatus(asJSON bool)error{
  unit:=getUnitState();c,b,e:=loadManagedConfig(managedConfigPath)
  enabled,_:=exec.Command("systemctl","is-enabled","wbd-next.service").Output()
- v:=map[string]any{"service":unit,"installed":!os.IsNotExist(e),"autostart":strings.TrimSpace(string(enabled))}
+ v:=map[string]any{"service":unit,"installed":!os.IsNotExist(e),"autostart":strings.TrimSpace(string(enabled)),"source_sha":managedVersion(),"dormant_devices":nil}
  if e==nil{sum:=sha256.Sum256(b);v["listen"]=c.Listen;v["server_name"]=c.ServerName;v["disk_revision"]=hex.EncodeToString(sum[:])}
  if s,e:=readManagedSnapshot(managedSocket);e==nil{v["running_revision"]=s.ConfigRevision;v["online_devices"]=len(s.Clients);v["native_ready"]=true}else{v["native_ready"]=false}
  if asJSON{return json.NewEncoder(os.Stdout).Encode(v)}
  label:=map[string]string{"active":"运行中","inactive":"已停止","failed":"启动失败","activating":"启动中"}[unit];if label==""{label="未安装"}
  fmt.Printf("WBD Next 服务端：%s；监听 %s；借站域名 %s；自启 %s\n",label,c.Listen,c.ServerName,strings.TrimSpace(string(enabled)))
- if n,ok:=v["online_devices"];ok{fmt.Printf("在线设备：%v\n",n)}
+ fmt.Printf("版本/SOURCE：%s\n",v["source_sha"])
+ if n,ok:=v["online_devices"];ok{fmt.Printf("在线设备：%v；休眠设备：未知（当前owner未提供休眠租约快照）\n",n)}
  if v["disk_revision"]!=nil&&v["running_revision"]!=nil&&v["disk_revision"]!=v["running_revision"]{fmt.Println("磁盘配置已变化，需重启服务。")}
  return nil
 }
+func formatCounter(p *uint64)string{if p==nil{return "未知"};return fmt.Sprint(*p)}
+func formatMTU(p *uint32)string{if p==nil{return "未知"};return fmt.Sprint(*p)}
 func showManagedClients(args []string)error{
+ var previous managementSnapshot
+ var previousAt time.Time
  for{
   s,e:=readManagedSnapshot(argValue(args,"--socket",managedSocket));if e!=nil{return fmt.Errorf("读取运行中的服务失败: %w",e)}
+  now:=time.Now()
+  if !previousAt.IsZero(){
+   delta:=now.Sub(previousAt).Seconds()
+   if delta>0{for i:=range s.Clients{r:=&s.Clients[i];for _,p:=range previous.Clients{
+    if p.Account!=r.Account||p.Device!=r.Device||p.Session!=r.Session{continue}
+    r.RxRecordsPerSecond=managedCounterRate(p.RxRecords,r.RxRecords,delta)
+    r.TxRecordsPerSecond=managedCounterRate(p.TxRecords,r.TxRecords,delta)
+    r.GameCopiedPerSecond=managedCounterRate(p.GameCopied,r.GameCopied,delta)
+    r.GameDeliveredPerSecond=managedCounterRate(p.GameDelivered,r.GameDelivered,delta)
+   }}}
+  }
   if hasArg(args,"--json"){if e=json.NewEncoder(os.Stdout).Encode(s);e!=nil{return e}}else{
    fmt.Printf("在线设备 %d；服务端外层上限 %d；TUN OS MTU %d\n",len(s.Clients),s.ServerOuterLimit,s.TunOSMTU)
-   for _,r:=range s.Clients{fmt.Printf("%s/%s  %s  %s  %s %d lane  %s  FEC=%s/%d  %ds\n",r.Account,r.Device,r.TunnelIP,r.RemoteIP,r.Mode,r.Lanes,r.Cipher,r.FEC,r.FECProfile,r.ConnectedSeconds)}
+   for _,r:=range s.Clients{
+    fmt.Printf("%s/%s 会话=%s  %s  %s  %s %d lane  %s  FEC=%s/%d  %ds  %s\n",r.Account,r.Device,r.Session,r.TunnelIP,r.RemoteIP,r.Mode,r.Lanes,r.Cipher,r.FEC,r.FECProfile,r.ConnectedSeconds,r.State)
+    fmt.Printf("  MTU: 客户端外层设置=%s  C2S/S2C有效外层=%s/%s  自动内层上限=%s（协商预算，非客户端OS读回）\n",formatMTU(r.ClientOuterSetting),formatMTU(r.C2SEffectiveOuter),formatMTU(r.S2CEffectiveOuter),formatMTU(r.NegotiatedInnerCap))
+    fmt.Printf("  原生记录 RX/TX=%s/%s  Game复制/首达=%s/%s；真实业务字节/速率、最近业务、RTT/丢包：无可用带年龄样本\n",formatCounter(r.RxRecords),formatCounter(r.TxRecords),formatCounter(r.GameCopied),formatCounter(r.GameDelivered))
+   }
   }
-  if !hasArg(args,"--watch"){return nil};time.Sleep(2*time.Second)
+  if !hasArg(args,"--watch"){return nil};previous=s;previousAt=now;time.Sleep(2*time.Second)
  }
+}
+func managedCounterRate(old,new *uint64,seconds float64)*float64{
+ if old==nil||new==nil||*new<*old||seconds<=0{return nil};v:=math.Round(float64(*new-*old)/seconds*10)/10;return &v
 }
 func exportManagedClient(args []string)error{
  if len(args)<1{return fmt.Errorf("指定账号")}
@@ -244,7 +293,7 @@ func installManaged(r *bufio.Reader,args []string)error{
   want:=map[string]string{"amd64":"x86_64","arm64":"aarch64"}[runtime.GOARCH]
   if want==""||manifest.Architecture!=want||len(manifest.Source)!=40{return fmt.Errorf("安装包架构或SOURCE不匹配")}
   if e=os.MkdirAll(managedOpt,0755);e!=nil{return e}
-  for _,f:=range []string{"wbd-v4-server","libwbd_engine.so","manifest.json","SHA256SUMS","wbd-next"}{mode:=os.FileMode(0644);if f=="wbd-v4-server"||f=="wbd-next"{mode=0755};if e=copyManagedFile(filepath.Join(dir,f),filepath.Join(managedOpt,f),mode);e!=nil{return e}}
+  for _,f:=range []string{"wbd-v4-server","libwbd_engine.so","manifest.json","SHA256SUMS","wbd-next","README.txt"}{mode:=os.FileMode(0644);if f=="wbd-v4-server"||f=="wbd-next"{mode=0755};if e=copyManagedFile(filepath.Join(dir,f),filepath.Join(managedOpt,f),mode);e!=nil{return e}}
  }
  if _,e=os.Stat(managedConfigPath);os.IsNotExist(e){
   if path:=argValue(args,"--config","");path!=""{c,_,x:=loadManagedConfig(path);if x!=nil{return x};if x=saveManagedConfig(managedConfigPath,c);x!=nil{return x}}else if terminalInput(){if e=editManagedConfig(r);e!=nil{return e}}else{return fmt.Errorf("首次安装需要 --config PATH 或终端配置")}

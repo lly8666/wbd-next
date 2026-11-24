@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "source_sha": "b0775de27edf3bd8692f605fc7eec8fcb39ae1f3",
+  "role_id": "M0",
+  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
+  "result": "PASS_SCOPED",
+  "artifact_verified": false,
+  "scope": "Initial native x86_64/aarch64 build, independent systemd lifecycle and real mixed clients using managed foreground service; Actions job log markers confirmed, artifact digest from GitHub API not independently downloaded",
+  "run_id": 45341676019,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/m0-plan030-server-cli.yml",
+  "jobs": [
+    {
+      "id": 138266550153,
+      "scope": "amd64 build",
+      "conclusion": "success"
+    },
+    {
+      "id": 138266550559,
+      "scope": "arm64 build",
+      "conclusion": "success"
+    },
+    {
+      "id": 138268010818,
+      "scope": "amd64 three real devices 48 UDP echoes",
+      "conclusion": "success"
+    },
+    {
+      "id": 138268010847,
+      "scope": "arm64 three real devices 48 UDP echoes",
+      "conclusion": "success"
+    },
+    {
+      "id": 138268010859,
+      "scope": "arm64 systemd lifecycle",
+      "conclusion": "success"
+    },
+    {
+      "id": 138268010896,
+      "scope": "amd64 systemd lifecycle",
+      "conclusion": "success"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14897320190,
+      "arch": "x86_64",
+      "digest": "sha256:95c553b6831b019face4809a9ab6799ec134df493fc0b09ed60840c7ab18238d"
+    },
+    {
+      "id": 14896626336,
+      "arch": "aarch64",
+      "digest": "sha256:d4cf8780f3a736a5e7a8227731119a4fb4ee96f452cb4fb87593c94d3c038293"
+    }
+  ],
+  "governance": {
+    "run_id": 45341675845,
+    "conclusion": "failure",
+    "scope": "old branch cursor had verified=false claim without evidence_refs; main H2385 governance 45341746217 passed"
+  },
+  "not_run": [
+    "installed systemd with real mixed clients",
+    "Windows DNS/domain rotation",
+    "watch paired CPU/RSS/p99",
+    "physical reboot"
+  ]
+}

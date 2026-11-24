@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "PLAN030开发分支：中文管理CLI、现有Go/Rust shared服务、systemd与只读快照；待同源真实验证。",
+  "summary": "PLAN030：首批 native 双ISA构建、systemd 生命周期及真实三设备测试 PASS_SCOPED；补齐组合与展示候选待验证。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
@@ -31,18 +31,23 @@
   ],
   "verification": [
     {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "b0775de 初批原生构建、systemd生命周期、三设备前台真实管理快照",
+      "status": "PASS_SCOPED",
+      "source_sha": "b0775de27edf3bd8692f605fc7eec8fcb39ae1f3",
+      "evidence": "docs/evidence/M0/20261124-H2386-PLAN030-INITIAL-NATIVE.json"
+    },
+    {
       "platform": "linux/amd64 + linux/arm64 systemd",
-      "scope": "PLAN030实际管理及交付",
+      "scope": "安装后真实混合客户端、MTU协商预算和版本展示第二批",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     }
   ],
   "limitations": [
-    "未完成同源测试，不作formal资格。",
-    "尚无物理重启/OpenWrt资格。",
-    "现有真实快照未提供的指标标未知，不新增探针。",
-    "当前快照为已发布的真实在线owner，休眠租约、按方向有效外层MTU、应用字节/速率及样本年龄尚未接齐，不得显示为0或假定值。"
+    "方向外层设置/有效外层、客户端OS应用及真实业务字节、休眠租约、样本年龄未由原有生产接口提供，明确未知；不另造wire字段和热路径统计。",
+    "Windows DNS域名重连与watch同VM成本待验；机器重启、OpenWrt及物理公网不由runner资格推断。"
   ],
   "promotion": null
 }

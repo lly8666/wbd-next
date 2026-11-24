@@ -13,6 +13,9 @@ BR="mxx$TAG"
 TMP="$RUNNER_TEMP/plan028-mixed-443-$TAG"
 mkdir -p "$TMP"
 declare -a PIDS=()
+managed_systemd="${WBD_PLAN030_SYSTEMD:-0}"
+managed_socket="$TMP/clients.sock"
+if [[ "$managed_systemd" == 1 ]];then managed_socket=/run/wbd-next/clients.sock;fi
 cleanup(){
   code=$?
   set +e
@@ -21,6 +24,12 @@ cleanup(){
     for f in server.log A.log B.log C.log echo.log A-udp.log B-udp.log C-udp.log B-after.log C-after.log;do
       if test -f "$TMP/$f";then echo "== $f ==" >&2;tail -65 "$TMP/$f" >&2;fi
     done
+  fi
+  if [[ "$managed_systemd" == 1 ]];then
+    if [[ -x /usr/local/bin/wbd-next ]];then sudo -n wbd-next uninstall --yes;fi
+    sudo -n rm -f /etc/systemd/system/wbd-next.service.d/plan030-netns.conf
+    sudo -n rmdir /etc/systemd/system/wbd-next.service.d 2>/dev/null || true
+    sudo -n systemctl daemon-reload
   fi
   for f in server.pid A.pid B.pid C.pid echo.pid;do
     if test -f "$TMP/$f";then sudo -n kill -TERM "$(cat "$TMP/$f")" 2>/dev/null || true;fi
@@ -74,10 +83,21 @@ data={"listen":"10.25.0.1:443","server-name":"wbd-v4.example.test",
 (p/"managed.json").write_text(json.dumps(data))
 PY
   chmod 0600 "$TMP/managed.json"
+  if [[ "$managed_systemd" == 1 ]];then
+    test "$(ps -p 1 -o comm=)" = systemd
+    sudo -n mkdir -p /etc/systemd/system/wbd-next.service.d
+    printf '[Service]\nNetworkNamespacePath=/run/netns/%s\n' "$NSS" | sudo -n tee /etc/systemd/system/wbd-next.service.d/plan030-netns.conf >/dev/null
+    sudo -n ip netns exec "$NSS" "$WBD_PLAN030_PACKAGE/wbd-next" install --config "$TMP/managed.json"
+    sudo -n systemctl is-active --quiet wbd-next.service
+    sudo -n systemctl is-enabled --quiet wbd-next.service
+    sudo -n systemctl show -p MainPID --value wbd-next.service >"$TMP/server.pid"
+    sudo -n journalctl -u wbd-next.service -f -n 1000 --no-pager -o cat >"$TMP/server.log" 2>&1 &
+  else
   sudo -n ip netns exec "$NSS" bash -c "
     echo \$\$ > '$TMP/server.pid'
     exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' --manage serve --config '$TMP/managed.json' --socket '$TMP/clients.sock'
   " >"$TMP/server.log" 2>&1 &
+  fi
 else
 sudo -n ip netns exec "$NSS" bash -c "
  echo \$\$ > '$TMP/server.pid'
@@ -117,7 +137,7 @@ start_client(){
  local ns="$1" guest="$2" ip="$3" tun="$4" port="$5" who="$6" secret="$7" mode="$8" extra="$9"
  local account="$who"
  if [[ "${WBD_PLAN030_MANAGED:-0}" == 1 ]];then
-  if [[ "$who" == bob ]];then account=alice;secret=alice-mixed-protected;fi
+  if [[ "$who" == bob ]];then account=alice;secret=alice-mixed-protected;extra="$extra --outer-mtu 1400";fi
   extra="$extra --tls-verify-server"
  fi
  sudo -n ip netns exec "$ns" bash -c "
@@ -200,7 +220,7 @@ send_udp "$NSC" "$IPC" NORMAL_AUTO_C 12 "$TMP/C-udp.log" &
 PC=$!
 wait "$PA" "$PB" "$PC"
 if [[ "${WBD_PLAN030_MANAGED:-0}" == 1 ]];then
-  sudo -n env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --manage clients --json --socket "$TMP/clients.sock" >fixed-kernel-result/plan030-clients.json
+  sudo -n env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --manage clients --json --socket "$managed_socket" >fixed-kernel-result/plan030-clients.json
   python3 - "$IPA" "$IPB" "$IPC" <<'PY'
 import json,sys
 s=json.load(open("fixed-kernel-result/plan030-clients.json"))
@@ -215,6 +235,9 @@ for mode,lanes,cipher,ip in zip(("game2","game4","normal"),(2,4,1),("chacha20-po
     assert r["client_record_limit"]>0 and r["server_record_limit"]>0 and r["session"]!="0000000000000000",r
 assert rows["game4"]["fec"]=="fixed" and rows["game4"]["fec_profile"]==6
 assert rows["normal"]["fec"]=="auto"
+assert rows["game4"]["client_record_limit"]<rows["game2"]["client_record_limit"],rows
+assert rows["game4"]["negotiated_inner_cap"]<rows["game2"]["negotiated_inner_cap"],rows
+assert all(r["client_outer_setting"] is None and r["client_os_inner_mtu"] is None for r in rows.values())
 print("PLAN030_REAL_THREE_DEVICE_MANAGED_CLIENT_SNAPSHOT_PASS")
 PY
 fi
@@ -233,7 +256,7 @@ PC=$!
 wait "$PB" "$PC"
 sudo -n kill -TERM "$(cat "$TMP/bob.pid")"
 sudo -n kill -TERM "$(cat "$TMP/carol.pid")"
-sudo -n kill -TERM "$(cat "$TMP/server.pid")"
+if [[ "$managed_systemd" == 1 ]];then sudo -n wbd-next stop;else sudo -n kill -TERM "$(cat "$TMP/server.pid")";fi
 for i in {1..100};do
  if grep -Fq "V4_PUBLIC_SHARED_TUN_STOP generation=" "$TMP/server.log" &&
     grep -Fq "V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason=server-close" "$TMP/server.log" &&
@@ -272,3 +295,13 @@ pathlib.Path("fixed-kernel-result/plan028-h1151-mixed-one443.json").write_text(j
 print("M0_PLAN028_H1151_X86_ORIGINAL_TLS_ONE443_NORMAL_GAME2_GAME4_FEC6_48_REAL_UDP_EXACT_STOP_PASS",flush=True)
 PY
 echo "M0_PLAN028_H1151_NATIVE_X86_MIXED_ONE_PORT_ONE_RUST_TUN_PASS"
+if [[ "$managed_systemd" == 1 ]];then
+ sudo -n systemctl is-enabled --quiet wbd-next.service
+ ! sudo -n ip -n "$NSS" link show mxs4
+ ! sudo -n ip netns exec "$NSS" iptables-save | grep -E "wbd-next-managed|wbd-v4-"
+ sudo -n wbd-next start
+ sudo -n wbd-next restart
+ sudo -n wbd-next clients --json | python3 -c 'import json,sys;d=json.load(sys.stdin);assert d["state"]=="ready" and d["clients"]==[]'
+ sudo -n wbd-next uninstall --yes
+ echo PLAN030_REAL_INSTALLED_SYSTEMD_MIXED_CLIENTS_STOP_RESTART_UNINSTALL_PASS
+fi

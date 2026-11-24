@@ -1109,6 +1109,7 @@ func runGameMultiServer(
             rows:=make([]managedClient,0,len(activeNormal)+len(active))
             for key,rec:=range activeNormal {
                 row:=managedClientFor(key,rec.peer.IP,rec.lease,rec.managedAt)
+                if normalPending[key]!=nil{row.State="rebuilding"}
                 if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
                 if f,e:=rec.product.OriginalFECReadback();e==nil {row.FEC=string(f.Mode);row.FECProfile=int(f.Profile)}
                 if p,e:=rec.product.OriginalLoopPulse();e==nil {row.RxRecords=&p.RxRecords;row.TxRecords=&p.TxRecords}
@@ -1117,6 +1118,7 @@ func runGameMultiServer(
             }
             for key,rec:=range active {
                 row:=managedClientFor(key,rec.peers[0].IP,"",rec.managedAt)
+                for k:=range gameProofPending{if k.Principal==key.Principal&&k.TunnelID==key.TunnelID{row.State="rebuilding";break}}
                 if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
                 if row.FEC=="" {row.FEC="off"}; if rec.gameFec {row.FEC="fixed";row.FECProfile=int(rec.managedFECProfile)}
                 if p,e:=rec.product.KernelCounters();e==nil {row.GameCopied=&p.Copied;row.GameDelivered=&p.Delivered}
@@ -1589,6 +1591,7 @@ func runGameMultiServer(
             // One event-loop owner publishes the exact confirmed B. Later
             // Stop of A is generation-fenced in the existing shared TUN.
             olderSameEpoch:=active[proof.key]
+            for k,old:=range active{if k.Principal==proof.key.Principal&&k.TunnelID==proof.key.TunnelID&&old.managedAt.Before(rec.managedAt){rec.managedAt=old.managedAt}}
             active[proof.key]=rec
             *connected=true
             if olderSameEpoch!=nil{scheduleGameRetire(olderSameEpoch)}
@@ -1621,6 +1624,7 @@ func runGameMultiServer(
                 continue
             }
             older:=activeNormal[proof.key]
+            if older!=nil{rec.managedAt=older.managedAt}
             activeNormal[proof.key]=rec
             *connected=true
             log.Printf("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=%d source=authenticated_client_native_Health promoted=1 active_normal=%d old_route_preserved_until_proof=1",

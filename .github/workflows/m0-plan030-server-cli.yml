@@ -87,7 +87,7 @@ jobs:
           if [[ "${{ matrix.scenario }}" == systemd ]];then
             bash tools/plan030_systemd_smoke.sh "$PWD/wbd-next" 2>&1 | tee plan030-functional.log
           else
-            WBD_PLAN030_MANAGED=1 bash tools/m0-plan028-mixed-normal-game-native.sh "$PWD/linux-plan029-public-bundle" 2>&1 | tee plan030-functional.log
+            WBD_PLAN030_MANAGED=1 WBD_PLAN030_SYSTEMD=1 WBD_PLAN030_PACKAGE="$PWD/wbd-next" bash tools/m0-plan028-mixed-normal-game-native.sh "$PWD/linux-plan029-public-bundle" 2>&1 | tee plan030-functional.log
           fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

@@ -50,3 +50,13 @@ func TestPLAN030OnDemandSnapshotSocket(t *testing.T){
  case <-time.After(time.Second):t.Fatal("response missing")
  }
 }
+
+func TestPLAN030WatchCountersAndNegotiatedBudget(t *testing.T){
+ a,b:=uint64(20),uint64(30)
+ if v:=managedCounterRate(&a,&b,2);v==nil||*v!=5{t.Fatal(v)}
+ if managedCounterRate(&b,&a,2)!=nil||managedCounterRate(nil,&a,2)!=nil{t.Fatal("counter reset not unknown")}
+ r:=managedClient{Lanes:4,FEC:"fixed",ClientRecordLimit:1360,ServerRecordLimit:1420}
+ r.applyNegotiatedBudget()
+ if r.NegotiatedInnerCap==nil||*r.NegotiatedInnerCap!=1298{t.Fatalf("expected canonical Game FEC budget: %+v",r)}
+ if r.ClientOuterSetting!=nil||r.ClientOSInnerMTU!=nil{t.Fatal("guessed remote MTU")}
+}

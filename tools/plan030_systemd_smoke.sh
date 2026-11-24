@@ -34,9 +34,15 @@ python3 - "$T" <<'PY'
 import pathlib,json,sys
 p=pathlib.Path(sys.argv[1]);s=json.loads((p/"status.json").read_text());c=json.loads((p/"clients.json").read_text())
 assert s["native_ready"] and s["disk_revision"]==s["running_revision"] and s["online_devices"]==0,s
+assert len(s["source_sha"])==40 and s["dormant_devices"] is None,s
 assert c["state"]=="ready" and c["tun_os_mtu"]>0 and c["clients"]==[],c
 PY
 sudo wbd-next config check
+sudo wbd-next disable
+! sudo systemctl is-enabled --quiet wbd-next.service
+sudo systemctl is-active --quiet wbd-next.service
+sudo wbd-next enable
+sudo systemctl is-enabled --quiet wbd-next.service
 sudo wbd-next config export alice --output "$T/connection.json"
 sudo python3 - "$T/connection.json" <<'PY'
 import json,sys
