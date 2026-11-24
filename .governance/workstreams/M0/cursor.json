@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2334,
-  "checkpoint_sha": "a40a40b3ea61b2c53d579b3c6993bdf76316b44d",
+  "sequence": 2342,
+  "checkpoint_sha": "74dbf0238d557958fdb6e370a6ce942f965daba0",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2323单组真网累计收益已归档；H2326原生验证通过，H2330直接NPF组包原生验证通过，H2332同步OFF原M1 loan减少pending已提交；H2327/H2331隔离真实对照在途。",
-  "why_now": "继续削减实际热路径成本，不以新增防御框架或重复batch扫描代替开发；当前WSL2+1280夹具另需同环境裸路径容量校准。",
+  "current_task": "PLAN029 P0 H2326/H2330真网无稳定收益已撤出；H2335重构同步OFF loan原生PASS；H2336/H2337/H2338及H2339独立RX并行验证。",
+  "why_now": "多轴同时间开发测试，不混源码/参数/underlay；保存真实收益和失败证据。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "先结算 H2327 Action 45310787767、H2331 Action 45311438312 和 H2332 unit 45311680513；待现有pending槽开始/完成，单独派H2332与e8d4d3b对照，逐项保留实际收益；随后高线同环境容量校准。",
+  "next_action": "查H2336 45315865690、H2337 45315781102、H2338 45315865745、H2339 45316077520及其原生45316077361/45316077458；先结算真实数据或首个失败，保留有收益轴，再做组合与同VM高线校准。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
@@ -23,8 +23,9 @@
     "docs/devlog/M0/20261124-OUTER-REPAIR-SCOPED-CLOSEOUT.md",
     "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json",
     "docs/devlog/M0/20261124-PLAN029-H2321-NATIVE-TX-RESUME.md",
-    "docs/evidence/M0/20261124-H2323-WIN-ARM-FIRSTSEND-AB.json"
+    "docs/evidence/M0/20261124-H2323-WIN-ARM-FIRSTSEND-AB.json",
+    "docs/evidence/M0/20261124-H2327-H2331-NEGATIVE-NATIVE-AB.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2330两套67 platform+25 owner实测单元PASS，H2332 6873c98尚未原生/性能验证完成；H2327已进真实六runner，H2331排队。H2323旧42.54%范围收益不重复计入。600–800、P1/P2、最终Game Windows及物理资格仍OPEN。"
+  "partial_summary": "H2323单组累计正收益仍保留；H2326/H2330四真实triplet不支持独立收益，已撤出；H2335精确native PASS；H2339独立branch已创建。P0全局600–800、P1/P2、最终Game Windows及物理资格OPEN。"
 }
