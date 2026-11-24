@@ -27,6 +27,8 @@ ROOT=core.ROOT
 PORT=core.PORT
 NET=core.TAIL
 MAX_BUFFER=2*1024*1024
+if os.environ.get("WBD_H2359_SUPPLY")=="1":
+    tcp.BULK_FLOWS,MAX_BUFFER=tcp.supply_profile("high")
 
 
 def require(ok, label):

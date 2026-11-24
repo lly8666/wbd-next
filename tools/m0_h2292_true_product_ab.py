@@ -47,12 +47,13 @@ def path_ab_axis():
     axis=os.environ.get("WBD_PATH_AB_AXIS",PATH_AB_AXES[path_ab_baseline()])
     if axis not in (PATH_AB_AXES[path_ab_baseline()],
                     "native_off_loan" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else "",
-                    "tx16_npf64_profile" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else ""):
+                    "tx16_npf64_profile" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else "",
+                    "application_supply" if path_ab_baseline()==PATH_AB_LOAN_BASELINE else ""):
         raise ValueError("invalid comparison axis for baseline")
     return axis
 
 def path_ab_candidate_source():
-    return path_ab_baseline() if path_ab_axis()=="tx16_npf64_profile" else CANDIDATE_BUILD_SHA
+    return path_ab_baseline() if path_ab_axis() in ("tx16_npf64_profile","application_supply") else CANDIDATE_BUILD_SHA
 
 def path_ab_candidate_features():
     return PATH_AB_FEATURES+(",h2291_windows_tx_service" if path_ab_axis()=="tx16_npf64_profile" else "")
@@ -203,7 +204,9 @@ def verify_binary_archive():
                             (BINARY.parent/"wbd-client-embedded.exe",frozen["sha256"]["exe"])):
             require(hashlib.sha256(path.read_bytes()).hexdigest()==digest,
                     "H2321_ACTUAL_BINARY_HASH")
-        require(default["dll_sha256"]!=src["dll_sha256"] and
+        same_dll=path_ab_axis()=="application_supply"
+        require((default["dll_sha256"]==src["dll_sha256"] if same_dll else
+                default["dll_sha256"]!=src["dll_sha256"]) and
                 frozen["sha256"]["dll"]==src["dll_sha256"] and
                 not ACTIVE_MANIFEST.exists(),"H2321_DISTINCT_DLL_PAIR")
         shutil.copy2(BINARY,ORIGINAL)
@@ -250,6 +253,8 @@ def win_trial(group,relay,arm,ready):
     try:
         for tag in ordered_legs(group):
             tuned=is_candidate(tag)
+            if os.environ.get("WBD_H2359_SUPPLY")=="1":
+                os.environ["WBD_H2359_STAGE"]="high" if tuned else "base"
             chosen=CANDIDATE if tuned else ORIGINAL
             shutil.copy2(chosen,BINARY)
             if tuned:
@@ -351,6 +356,14 @@ def win_trial(group,relay,arm,ready):
                "h2313_npf_batch_shape":(shape if factor!="legacy" else None),
                "original_go_tls_rust_wal_stop":"PASS",
                "stage_elapsed_s_including_tls_setup":round(time.monotonic()-started,3)}
+            if os.environ.get("WBD_H2359_SUPPLY")=="1":
+                flows,buf=core.tcp.supply_profile(os.environ["WBD_H2359_STAGE"])
+                actual=receipt["product_tcp"]
+                require(actual["bulk_flows"]==flows and len(actual["client_bulk_buffers_os"])==flows and
+                    all(x["requested_bytes"]==buf and x["sndbuf_os"]>=buf and x["rcvbuf_os"]>=buf
+                        for x in actual["client_bulk_buffers_os"]),"H2359_ACTUAL_WIN_SOCKET_PROFILE")
+                r["application_supply"]=dict(bulk_flows=flows,requested_bytes=buf,
+                    client_bulk_buffers_os=actual["client_bulk_buffers_os"])
             results.append(r)
             core.save(ROOT/(tag+"-receipt.json"),r)
             print("H2292_REAL_ORIGINAL_GO_RUST_LEG_PASS "+json.dumps(r),flush=True)
@@ -420,6 +433,8 @@ def arm_trial(group):
     core.verify(own,relay,"relay")
     all_stages=[]
     for i,tag in enumerate(ordered_legs(group)):
+        if os.environ.get("WBD_H2359_SUPPLY")=="1":
+            os.environ["WBD_H2359_STAGE"]="high" if is_candidate(tag) else "base"
         if i:
             arm_restart_original_tun_udp(tag,own)
         stage=stage_control(relay,"h2292_arm_stage_ready",tag)

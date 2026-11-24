@@ -47,6 +47,15 @@ if os.environ.get("WBD_H2286_PRODUCT_FULL_WIN_ARM") == "1":
         WINDOW_TEST_BYTES = chosen
 
 
+# Test workload only. Never select a product MTU, protocol or TCP CC.
+def supply_profile(stage):
+    if stage=="base":return (4,2*1024*1024)
+    if stage=="high":return (8,8*1024*1024)
+    raise ValueError("H2359 unknown application supply profile")
+
+if os.environ.get("WBD_H2359_SUPPLY")=="1" and os.environ.get("WBD_H2359_STAGE"):
+    BULK_FLOWS,WINDOW_TEST_BYTES=supply_profile(os.environ["WBD_H2359_STAGE"])
+
 def _read_socket_buffers(sock):
     return {"requested_bytes": WINDOW_TEST_BYTES,
             "sndbuf_os": sock.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF),

@@ -289,6 +289,7 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
     udp=None
     clientlog=ROOT/"original-win-client.log"
     prev_window=tcp.WINDOW_TEST_BYTES
+    prev_flows=tcp.BULK_FLOWS
     prev_bytes=tcp.BULK_MAX_BYTES
     prev_seconds=tcp.BULK_SEND_S
     prev_timeout=tcp.TIMEOUT_S
@@ -350,6 +351,8 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
                 if os.environ.get("WBD_H2302_WINDOW_ABA")=="1" else 2*1024*1024)
         require(chosen in (2*1024*1024,8*1024*1024,16*1024*1024),"H2302_INVALID_TEST_WINDOW")
         tcp.WINDOW_TEST_BYTES=chosen
+        if os.environ.get("WBD_H2359_SUPPLY")=="1":
+            tcp.BULK_FLOWS,tcp.WINDOW_TEST_BYTES=tcp.supply_profile(os.environ["WBD_H2359_STAGE"])
         tcp.BULK_MAX_BYTES=512*1024*1024
         tcp.BULK_SEND_S=25
         tcp.TIMEOUT_S=180
@@ -485,6 +488,7 @@ def true_windows_product(group,relay_path,server_peer_path,server_ready_path):
     finally:
         tcp.PORT=prev_inner_tcp_port
         tcp.WINDOW_TEST_BYTES=prev_window
+        tcp.BULK_FLOWS=prev_flows
         tcp.BULK_MAX_BYTES=prev_bytes
         tcp.BULK_SEND_S=prev_seconds
         tcp.TIMEOUT_S=prev_timeout

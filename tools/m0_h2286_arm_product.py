@@ -95,7 +95,7 @@ def build_network(own,relay):
             cmd("sysctl","-n",key)+"\n")
         root("sysctl","-w",key+"=16777216")
     root("ip","netns","add",NETNS)
-    if os.environ.get("WBD_H2302_WINDOW_ABA")=="1":
+    if os.environ.get("WBD_H2302_WINDOW_ABA")=="1" or os.environ.get("WBD_H2359_SUPPLY")=="1":
         # Test-owned netns only. Ensure a 16MiB TCP receive request can be
         # realized inside the actual ARM socket namespace, not just host sysctl.
         # This namespace is destroyed by the existing owned Stop.
@@ -299,6 +299,8 @@ def check_server_and_run_app(group):
                                "WBD_H2302_WINDOW_ABA="+os.environ.get("WBD_H2302_WINDOW_ABA","0"),
                                "WBD_H2302_INNER_TCP_TEST_BYTES="+os.environ.get("WBD_H2302_INNER_TCP_TEST_BYTES","2097152"),
                                "WBD_H2306_TCP_PROGRESS="+os.environ.get("WBD_H2306_TCP_PROGRESS","0"),
+                               "WBD_H2359_SUPPLY="+os.environ.get("WBD_H2359_SUPPLY","0"),
+                               "WBD_H2359_STAGE="+os.environ.get("WBD_H2359_STAGE",""),
                                sys.executable,"-u","tools/m0_wl_loss_tcp_probe.py",
                                "server",APP_IP,APP_PEER,own["source_sha"]],
                               stdout=(ROOT/"tcp-inner-server.log").open("w"),
@@ -389,6 +391,17 @@ def check_server_and_run_app(group):
               "native_true_arm_tun_udp":udp_receipt,
               "arm_host_allcore_cpu_percent":core.cpu_busy_percent(before,core.os_host_cpu()),
               "tcp_server_log_tail":(ROOT/"tcp-inner-server.log").read_text(errors="replace")[-1200:]}
+        if os.environ.get("WBD_H2359_SUPPLY")=="1":
+            flows,buf=tcp.supply_profile(os.environ["WBD_H2359_STAGE"])
+            rows=[json.loads(x.split(tcp.MARK+"SERVER_DONE ",1)[1]) for x in
+                (ROOT/"tcp-inner-server.log").read_text(errors="replace").splitlines()
+                if tcp.MARK+"SERVER_DONE " in x]
+            require(len(rows)==1 and rows[0]["bulk_flows"]==flows and
+                len(rows[0]["accepted_bulk_buffers_os"])==flows and
+                all(x["sndbuf_os"]>=buf and x["rcvbuf_os"]>=buf for x in rows[0]["accepted_bulk_buffers_os"]),
+                "H2359_ACTUAL_ARM_SOCKET_PROFILE")
+            proof["application_supply"]=dict(bulk_flows=flows,requested_bytes=buf,
+                actual_server=rows[0])
         core.save(ROOT/"server-result.json",proof)
         print("H2286_ARM_ORIGINAL_PRODUCT_TRUE_TUN_TCP_DELIVERED",flush=True)
     finally:tcp.WINDOW_TEST_BYTES=previous

@@ -17,8 +17,12 @@ def comparison(bare,product):
     rate=bare["delivered"]["bulk_receiver_goodput_mbps"]
     if rate<=0:raise ValueError("H2343 nonpositive reference")
     stages=product["h2292_same_vm_original_product_abaprime"]["stages"]
+    flows=bare["delivered"].get("bulk_flows",4)
+    buffers=bare["delivered"].get("client_bulk_buffers_os",[])
+    requested=buffers[0]["requested_bytes"] if buffers else 2*1024*1024
     return dict(source_sha=product["source_sha"],group=product["group"],run_id=product["run_id"],
-        scope="same three VMs, WSL2/ARM relay, bare before product, 4x25s 2MiB, no added loss",
+        scope=f"same three VMs, WSL2/ARM relay, bare before product, {flows}x25s {requested//(2**20)}MiB, no added loss",
+        bare_bulk_flows=flows,bare_requested_buffer_bytes=requested,
         bare_mbps=rate,bare_p99_ms=bare["delivered"]["sparse_tcp_rtt_p99_ms"],
         reference_at_least_600=rate>=600,reference_at_least_800=rate>=800,
         product_legs=[dict(stage=s["stage"],mbps=s["tcp_mbps"],relative_to_bare_reference=round(s["tcp_mbps"]/rate,4)) for s in stages],
