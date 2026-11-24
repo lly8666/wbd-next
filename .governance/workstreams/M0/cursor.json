@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2385,
-  "checkpoint_sha": "1d3c73fa2bd677cf7b115854baa434d8ec8d1eea",
-  "progress": "in_progress",
+  "sequence": 2387,
+  "checkpoint_sha": "9b8bed18ac621bc9e840d1240ec9dbb37ffb7142",
+  "progress": "verifying",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030 用户授权开发，首批CLI/systemd/真实在线快照/双ISA包实现已推 experiment/m0-030-server-cli，PR73 Draft。",
+  "current_task": "PLAN030 PR73：初批和第二批双ISA各6/6 PASS，已推第三批管理快照端口/固定账号租约、Windows原生域名重连组合与同机watch。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "先收 Actions 45341676019 (SOURCE b0775de27edf3bd8692f605fc7eec8fcb39ae1f3) 两ISA构建及四独立功能job结果，针对实际失败修复同一PR；补缺失快照字段及组合验证，不重复旧性能矩阵。",
+  "next_action": "收第三批 SOURCE 1d6081c7b54e2804236072007fde1d73986ff3cb Action 45344159343 及其独立Windows域名重连dispatch结果，核治理45344159311。正常功能失败只修实际原因；确认最终包与源码后再交付，未验边界明确。",
   "unverified": true,
-  "last_tested_source": "f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad",
+  "last_tested_source": "81c393b4274f136473534db546ae153b36ae9e97",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
@@ -21,5 +21,5 @@
     "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
   ],
   "open_requests": [],
-  "partial_summary": "初始实现已推，native Action 45341676019 in_progress，非PASS；PR73 Draft。休眠、每向MTU、真实业务速率、Windows域名重连、watch成本尚未验/接齐；未合main。"
+  "partial_summary": "Action 45341676019、45342878694 各6/6，真实已安装systemd三设备不同mode/cipher/MTU，每ISA48 UDP。第三批1d6081c在途；修正功能卡枚举。证据在实验分支；独立artifact下载未完成。休眠/方向MTU/业务字节/质量年龄没有现有可靠接口，不伪造。PR73未合main。"
 }
