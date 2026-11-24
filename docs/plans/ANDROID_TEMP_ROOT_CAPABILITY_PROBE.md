@@ -1,3 +1,9 @@
+## B90｜B89 真实结果收口；Android 内核及 DNS 专项（当前）
+
+B89 SOURCE `3cba0860e93606a5559955bd74eff4b4263d2ffe` [Action 45406291224](https://github.com/lly8666/wbd-next/actions/runs/45406291224) 9 SUCCESS/2 FAILURE/6 SKIPPED；[KSU Job](https://github.com/lly8666/wbd-next/actions/runs/45406291224/job/138490237533) 七模式 preauth/cleanup 7/7 PASS，独立 Bionic 原 TLS PASS，peer TLS/lease/M4 NOT_PROVEN。两失败为同一 CI oracle 脚本重复插入与引号，B90 修复。
+
+B90一次 KSU boot 使用原 Go TUN/rootjournal/真实内核与普通 App UID UDP 验证 single/group/all+排除/CN/Stop；真实 PhysicalNetwork+原 Bionic DNS dialer 对本地 fixture 验证 UDP、TC→同 Network TCP。测试 /32 非认证租约。系统 Resolver、隧道 DNS、认证后 native handoff 与切网后续单独验证。B90 待实测，不再重复七模式或跑性能基准。详见 [B90 devlog](../devlog/android-root-probe/20261124-b90-android-kernel-specialty.md)。
+
 ## B89｜用户验收范围更新：停止性能测试，集中 Android 接线
 
 B88 SOURCE `5a286b6bfa9f6094e24d2d162ccf097d116a2d0c` [Action 45401336748](https://github.com/lly8666/wbd-next/actions/runs/45401336748) 6 SUCCESS / 1 FAILURE / 10 SKIPPED。构建失败为 PLAN030 Linux management_snapshot_linux.go 在 GOOS=android（同时满足 linux build tag）引用仅 Linux/FEC build 的 V4LinuxGameCohortID。B89对三份 Linux 服务管理文件加 !android，Android只保留共享入口的冷编译适配；手机不接入服务器管理。修正H2408 SYN/TLS独立期限的过期静态测试。B88治理/维护亦失败：main H2409 M0 cursor last_tested_source 与既有 evidence_refs 不一致，保留真实红灯，不修改M0 cursor或放宽治理。B88性能矩阵在依赖失败后SKIPPED，不重跑。

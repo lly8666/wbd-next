@@ -179,6 +179,7 @@ jobs:
     timeout-minutes: 30
     env:
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -406,6 +407,7 @@ jobs:
       WBD_D2_ORIGINAL: '1'
       WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -427,6 +429,7 @@ jobs:
           bash -n android/root-app/ci/x86-kvm-ksu-native.sh
           bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
           bash -n android/root-app/ci/x86-seven-mode-wiring.sh
+          bash -n android/root-app/ci/x86-android-specialty.sh
           bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
           python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
           python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
@@ -441,6 +444,7 @@ jobs:
           bash experiments/android-root-probe/ci/build-app.sh
           test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
           rm -f out/apk/host-tls.key
+          if [[ "$WBD_ANDROID_SPECIALTY" == 1 ]];then bash android/root-app/ci/traffic-fixture/build.sh;fi
       - name: D2-S1 prepare pinned x86 Android16 KSU3.3.1 emulator
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
@@ -458,6 +462,7 @@ jobs:
             out/android-x86-d2-root/wiring/bionic-tls-status.txt
             out/android-x86-d2-root/wiring/bionic-tls.log
             out/android-x86-d2-root/wiring/*/diagnostics.txt
+            out/android-x86-d2-root/specialty/
             out/android-x86-d2-root/linux-source-sha.txt
             out/android-x86-d2-root/android-source-sha.txt
             out/android-x86-d2-root/server-started.txt
@@ -565,6 +570,7 @@ jobs:
       CGO_ENABLED: '1'
       GOTOOLCHAIN: local
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}

@@ -244,7 +244,20 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
   # instead of a Host-only Go/Rust link or a privileged-env guess.
   export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384 -Wl,-rpath,\$ORIGIN"
   (cd legacy && go build -trimpath -buildvcs=false -tags "$go_tags" -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
-  if [[ "$goarch" == amd64 && "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 ]];then
+  if [[ "$goarch" == amd64 && "${WBD_ANDROID_SPECIALTY:-0}" == 1 ]];then
+    # Only the CI adapter, linked AFTER the production ELF is built.
+    cp android/root-native/ci/b90-android-specialty.go legacy/internal/v4productcli/b90_android_specialty.go
+    mkdir -p legacy/cmd/wbd-ci-specialty
+    cat >legacy/cmd/wbd-ci-specialty/main.go <<'GO'
+package main
+import ("os"; "github.com/lly8666/wobuzhidao/internal/v4productcli")
+func main(){os.Exit(v4productcli.RunAndroidSpecialtyCI(os.Args[1:]))}
+GO
+    (cd legacy && go build -trimpath -buildvcs=false -tags "$go_tags,wbd_android_specialty_test" -o "$GITHUB_WORKSPACE/out/android-product-a1/wiring-specialty-amd64" ./cmd/wbd-ci-specialty)
+    rm -f legacy/internal/v4productcli/b90_android_specialty.go
+    rm -rf legacy/cmd/wbd-ci-specialty
+  fi
+  if [[ "$goarch" == amd64 && "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 && "${WBD_ANDROID_SPECIALTY:-0}" != 1 ]];then
     # CI-only native Bionic Go TLS/admission test executable; never in APK.
     if (cd legacy && CGO_LDFLAGS="-Wl,-z,max-page-size=16384" go test -c -trimpath \
         -o "$GITHUB_WORKSPACE/out/android-product-a1/wiring-bionic-tls-amd64.test" ./internal/realityfront) \

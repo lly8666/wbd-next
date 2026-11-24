@@ -13,6 +13,16 @@ public final class TrafficInstrumentation extends Instrumentation {
     @Override public void onStart(){
         Bundle result=new Bundle();
         try{
+            if("1".equals(args.getString("uid_probe"))){
+                byte[] payload="WBD_B90_UID".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+                try(java.net.DatagramSocket socket=new java.net.DatagramSocket()){
+                    socket.send(new java.net.DatagramPacket(payload,payload.length,
+                        java.net.InetAddress.getByName("192.0.2.1"),43999));
+                }
+                result.putString("report","uid_probe_sent="+Process.myUid());
+                finish(Activity.RESULT_OK,result);
+                return;
+            }
             String report=TrafficProbe.run(args.getString("host"),
                 Integer.parseInt(args.getString("port","18080")),
                 Integer.parseInt(args.getString("samples","32")),

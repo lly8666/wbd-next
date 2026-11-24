@@ -42,7 +42,7 @@ public final class X86CiOriginalStartActivity extends Activity {
                 event("ORIGINAL_ROOT_SERVICE_STOP_REQUESTED");
                 return;
             }
-            if(!"start".equals(command))
+            if(!"start".equals(command)&&!"specialty_scope".equals(command))
                 throw new IllegalArgumentException("CI exact step required");
             NativePayload.stage(this);
             event("ORIGINAL_SIGNED_GO_RUST_ASSETS_VERIFIED");
@@ -53,6 +53,11 @@ public final class X86CiOriginalStartActivity extends Activity {
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                  chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("physical Network changed");
+            if("specialty_scope".equals(command)){
+                event("B90_SCOPE "+Long.toUnsignedString(chosen.handle)+" "+
+                    chosen.interfaceName+" "+chosen.ifindex+" "+chosen.mtu+" "+chosen.address);
+                return;
+            }
             // CI-only fixed enum: this is the actually selected
             // ConnectivityManager Network interface, not a guessed TAP link.
             if("wlan0".equals(chosen.interfaceName))

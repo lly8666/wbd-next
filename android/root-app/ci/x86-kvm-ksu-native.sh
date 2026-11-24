@@ -549,5 +549,9 @@ if [[ "${WBD_D2_ORIGINAL:-0}" == 1 ]];then
       exit 30
     fi
   fi
-  bash android/root-app/ci/x86-d2-original-root-preauth.sh
+  if [[ "${WBD_ANDROID_SPECIALTY:-0}" == 1 ]];then
+    bash android/root-app/ci/x86-android-specialty.sh
+  else
+    bash android/root-app/ci/x86-d2-original-root-preauth.sh
+  fi
 fi
