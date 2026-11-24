@@ -818,6 +818,7 @@ fn tun_worker(
     // slots and scratch, not a parallel reader or a Go/JNI data callback.
     let mut physical_flows=
         crate::v4_android_dns_physical_flow::PhysicalDnsUdpFlows::default();
+    let mut physical_tcp=crate::v4_android_dns_tcp_fallback::PhysicalDnsTcpFallbacks::default();
     let mut physical_wire=[0u8;
         crate::v4_android_dns_physical_flow::MAX_DNS_WIRE];
     let mut physical_packet=[0u8;
@@ -1048,9 +1049,16 @@ fn tun_worker(
         }
         let timeout=((due.saturating_sub(at.0)+999_999)/1_000_000)
             .min(1_000).max(1) as i32;
+        let (mut tcp_interest,tcp_count)=physical_tcp.interests();
+        let timeout=physical_tcp.limit_timeout(timeout,now().0/1_000_000);
         let readiness=if let Some(socket)=dns.as_ref(){
-            wake.wait_tun_and_physical_dns(
-                tun.readiness_fd(),socket.readiness_fd(),timeout)
+            if tcp_count==0{
+                wake.wait_tun_and_physical_dns(
+                    tun.readiness_fd(),socket.readiness_fd(),timeout)
+            }else{
+                wake.wait_tun_and_physical_dns_tcp(tun.readiness_fd(),socket.readiness_fd(),
+                    &mut tcp_interest[..tcp_count],timeout)
+            }
         }else{
             wake.wait_readable(tun.readiness_fd(),timeout).map(|v|(v,false))
         };
@@ -1063,22 +1071,33 @@ fn tun_worker(
                 break
             }
         };
-        if dns_ready{
+        let mut completed=physical_tcp.ready(&tcp_interest[..tcp_count],now().0/1_000_000);
+        if dns_ready||!completed.is_empty(){
             if let Some(socket)=dns.as_ref(){
-                // This is NOT an authenticated remote WBD packet. Only a
-                // physically connected 223.5.5.5 socket, an original owned
-                // query ID/QNAME and the exact original lease may deliver.
-                for _ in 0..8{
+                // Physical UDP and same-endpoint TCP replies share the
+                // original query/lease inverse map and one TUN writer.
+                let mut udp_budget=8;
+                for _ in 0..(8+completed.len()){
                     if shutdown.load(Ordering::Acquire){break}
-                    let n=match socket.read_answer(
-                        tun.generation(),&mut physical_wire){
-                        Ok(n)=>n,
-                        Err(err) if err.kind()==std::io::ErrorKind::WouldBlock=>break,
-                        Err(_)=>{
-                            stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
-                            shutdown.store(true,Ordering::Release);
-                            break
-                        }
+                    let at_ms=now().0/1_000_000;
+                    let n=if let Some(done)=completed.pop(){
+                        let Some(wire)=physical_flows.tcp_completion_wire(done.ticket,
+                            done.full.as_deref(),&done.truncated,at_ms)else{continue};
+                        physical_wire[..wire.len()].copy_from_slice(wire);wire.len()
+                    }else{
+                        if !dns_ready||udp_budget==0{break}
+                        udp_budget-=1;
+                        let n=match socket.read_answer(tun.generation(),&mut physical_wire){
+                            Ok(n)=>n,
+                            Err(err) if err.kind()==std::io::ErrorKind::WouldBlock=>break,
+                            Err(_)=>{
+                                stats.dns_physical_error.fetch_add(1,Ordering::Relaxed);
+                                shutdown.store(true,Ordering::Release);
+                                break
+                            }
+                        };
+                        if physical_tcp.try_start(socket,&physical_flows,&physical_wire[..n],at_ms){continue}
+                        n
                     };
                     let Ok(e)=cell.lock()else{
                         shutdown.store(true,Ordering::Release);break
@@ -1494,6 +1513,7 @@ fn tun_worker(
             }
         }
     }
+    physical_tcp.stop();
     physical_flows.stop();
     if let Some(socket)=dns.as_ref(){socket.begin_stop()}
     clock.stopped();

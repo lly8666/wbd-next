@@ -159,6 +159,7 @@ impl AndroidGameWorkers{
                 // Original M4 owns both the app TUN and selected-Network
                 // physical DNS socket; no extra socket reader or worker.
                 let mut physical_flows=PhysicalDnsUdpFlows::default();
+                let mut physical_tcp=crate::v4_android_dns_tcp_fallback::PhysicalDnsTcpFallbacks::default();
                 let mut physical_wire=[0u8;MAX_DNS_WIRE];
                 let mut physical_packet=[0u8;MAX_DNS_REPLY_IPV4];
                 // B59: original Game TX thread also returns large DNS
@@ -396,10 +397,17 @@ impl AndroidGameWorkers{
                     let poll_now=origin.elapsed().as_nanos()
                         .min(u128::from(u64::MAX)) as u64;
                     let wait_ms=wait_ms(poll_now,health.next_deadline(),game_due);
-                    // Same eventfd and physically bound DNS socket.
+                    let (mut tcp_interest,tcp_count)=physical_tcp.interests();
+                    let wait_ms=physical_tcp.limit_timeout(wait_ms,origin.elapsed().as_millis() as u64);
+                    // Same eventfd and physical DNS, plus live TCP fallback FDs only.
                     let ready=if let Some(socket)=tx_physical.as_ref(){
-                        tx_wake.wait_tun_and_physical_dns(
-                            tx_tun.readiness_fd(),socket.readiness_fd(),wait_ms)
+                        if tcp_count==0{
+                            tx_wake.wait_tun_and_physical_dns(
+                                tx_tun.readiness_fd(),socket.readiness_fd(),wait_ms)
+                        }else{
+                            tx_wake.wait_tun_and_physical_dns_tcp(tx_tun.readiness_fd(),
+                                socket.readiness_fd(),&mut tcp_interest[..tcp_count],wait_ms)
+                        }
                     }else{
                         tx_wake.wait_readable(tx_tun.readiness_fd(),wait_ms)
                             .map(|v|(v,false))
@@ -412,18 +420,33 @@ impl AndroidGameWorkers{
                             break
                         }
                     };
-                    if dns_ready{
+                    if tx_stop.load(Ordering::Acquire){break}
+                    let mut completed=physical_tcp.ready(&tcp_interest[..tcp_count],
+                        origin.elapsed().as_millis() as u64);
+                    if dns_ready||!completed.is_empty(){
                         if let Some(socket)=tx_physical.as_ref(){
-                            for _ in 0..8{
-                                let n=match socket.read_answer(
-                                    generation,&mut physical_wire){
-                                    Ok(n)=>n,
-                                    Err(err) if err.kind()==io::ErrorKind::WouldBlock=>break,
-                                    Err(_)=>{
-                                        tx_physical_errors.fetch_add(1,Ordering::Relaxed);
-                                        tx_stop.store(true,Ordering::Release);
-                                        break
-                                    }
+                            let mut udp_budget=8;
+                            for _ in 0..(8+completed.len()){
+                                if tx_stop.load(Ordering::Acquire){break}
+                                let at_ms=origin.elapsed().as_millis() as u64;
+                                let n=if let Some(done)=completed.pop(){
+                                    let Some(wire)=physical_flows.tcp_completion_wire(done.ticket,
+                                        done.full.as_deref(),&done.truncated,at_ms)else{continue};
+                                    physical_wire[..wire.len()].copy_from_slice(wire);wire.len()
+                                }else{
+                                    if !dns_ready||udp_budget==0{break}
+                                    udp_budget-=1;
+                                    let n=match socket.read_answer(generation,&mut physical_wire){
+                                        Ok(n)=>n,
+                                        Err(err) if err.kind()==io::ErrorKind::WouldBlock=>break,
+                                        Err(_)=>{
+                                            tx_physical_errors.fetch_add(1,Ordering::Relaxed);
+                                            tx_stop.store(true,Ordering::Release);
+                                            break
+                                        }
+                                    };
+                                    if physical_tcp.try_start(socket,&physical_flows,&physical_wire[..n],at_ms){continue}
+                                    n
                                 };
                                 let result=physical_flows.receive(
                                     &physical_wire[..n],&mut physical_packet,
@@ -459,6 +482,7 @@ impl AndroidGameWorkers{
                         }
                     }
                 }
+                physical_tcp.stop();
                 physical_flows.stop();
                 if let Some(socket)=tx_physical.as_ref(){socket.begin_stop();}
             }).map_err(|_|())?;

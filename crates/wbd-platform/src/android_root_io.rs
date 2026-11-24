@@ -24,6 +24,7 @@ const SO_BINDTODEVICE: c_int = 25;
 const AF_INET: c_int = 2;
 const SOCK_RAW: c_int = 3;
 const SOCK_DGRAM: c_int = 2;
+const SOCK_STREAM: c_int = 1;
 const IPPROTO_UDP: c_int = 17;
 const SOCK_NONBLOCK: c_int = 0x800;
 const SOCK_CLOEXEC: c_int = 0x80000;
@@ -40,6 +41,7 @@ unsafe extern "C" {
     fn setsockopt(fd: c_int, level: c_int, option: c_int, value: *const c_void, len: u32) -> c_int;
     fn socket(domain: c_int, kind: c_int, protocol: c_int) -> c_int;
     fn connect(fd: c_int, addr: *const c_void, length: u32) -> c_int;
+    fn bind(fd: c_int, addr: *const c_void, length: u32) -> c_int;
     fn getsockname(fd: c_int, addr: *mut c_void, length: *mut u32) -> c_int;
     fn getsockopt(fd: c_int, level: c_int, opt: c_int,
         data: *mut c_void, length: *mut u32) -> c_int;
@@ -697,6 +699,8 @@ pub struct AndroidBoundPhysicalDnsUdp {
     fd:OwnedFd,
     generation:u32,
     mtu:u32,
+    network_handle:u64,interface:String,ifindex:u32,
+    source_ipv4:[u8;4],upstream_ipv4:[u8;4],
     stopping:AtomicBool,
     borrow:BorrowFence,
 }
@@ -759,8 +763,36 @@ impl AndroidBoundPhysicalDnsUdp {
             return Err(io::Error::new(io::ErrorKind::InvalidData,
                 "physical DNS socket local source differs from original Go network"))
         }
-        Ok(Self{fd,generation,mtu,
+        Ok(Self{fd,generation,mtu,network_handle,interface:interface.to_owned(),ifindex,
+            source_ipv4,upstream_ipv4,
             stopping:AtomicBool::new(false),borrow:BorrowFence::default()})
+    }
+    // B63: DNS-only nonblocking TCP to this exact UDP owner's physical
+    // endpoint, opened lazily on genuine TC=1. Kernel owns TCP reliability.
+    pub fn open_tcp(&self)->io::Result<std::net::TcpStream>{
+        if self.stopping.load(Ordering::Acquire){
+            return Err(io::ErrorKind::BrokenPipe.into())
+        }
+        let _loan=self.borrow.try_enter_ready().map_err(|_|io::ErrorKind::BrokenPipe)?;
+        let raw=unsafe{socket(AF_INET,SOCK_STREAM|SOCK_NONBLOCK|SOCK_CLOEXEC,IPPROTO_TCP)};
+        if raw<0{return Err(io::Error::last_os_error())}
+        let fd=unsafe{OwnedFd::from_raw_fd(raw)};
+        let index=bind_underlay_socket(fd.as_raw_fd(),self.network_handle,&self.interface)?;
+        if index!=self.ifindex{return Err(io::ErrorKind::InvalidData.into())}
+        check_bound_interface_mtu(fd.as_raw_fd(),&self.interface,self.ifindex,self.mtu)?;
+        let local=AndroidSockAddrIn{family:AF_INET as u16,port:0,
+            ip_be:u32::from_ne_bytes(self.source_ipv4),zero:[0;8]};
+        let peer=AndroidSockAddrIn{family:AF_INET as u16,port:53u16.to_be(),
+            ip_be:u32::from_ne_bytes(self.upstream_ipv4),zero:[0;8]};
+        let size=std::mem::size_of::<AndroidSockAddrIn>() as u32;
+        if unsafe{bind(fd.as_raw_fd(),(&local as *const AndroidSockAddrIn).cast(),size)}!=0{
+            return Err(io::Error::last_os_error())
+        }
+        if unsafe{connect(fd.as_raw_fd(),(&peer as *const AndroidSockAddrIn).cast(),size)}!=0{
+            let err=io::Error::last_os_error();
+            if err.raw_os_error()!=Some(115){return Err(err)} // Bionic EINPROGRESS
+        }
+        Ok(std::net::TcpStream::from(fd))
     }
     pub fn readiness_fd(&self)->RawFd{self.fd.as_raw_fd()}
     pub fn recheck(&self,interface:&str,ifindex:u32)->io::Result<()>{
@@ -820,7 +852,12 @@ impl AndroidBoundPhysicalDnsUdp {
 const EFD_NONBLOCK:c_int=0x800;
 const EFD_CLOEXEC:c_int=0x80000;
 const POLLIN:i16=1;
+const POLLOUT:i16=4;
+pub const MAX_DNS_TCP_FALLBACKS:usize=8;
+#[derive(Clone,Copy,Default)]
+pub struct AndroidDnsTcpInterest{pub fd:RawFd,pub writable:bool,pub ready:bool}
 #[repr(C)]
+#[derive(Clone,Copy)]
 struct AndroidPollFd {fd:c_int,events:i16,revents:i16}
 unsafe extern "C" {
     fn eventfd(initial:c_uint,flags:c_int)->c_int;
@@ -856,20 +893,29 @@ impl AndroidWorkerWake{
     pub fn wait_tun_and_physical_dns(
         &self,tun_fd:RawFd,dns_fd:RawFd,timeout_ms:i32
     )->io::Result<(bool,bool)>{
-        if tun_fd<0||dns_fd<0||timeout_ms<0{
+        self.wait_tun_and_physical_dns_tcp(tun_fd,dns_fd,&mut [],timeout_ms)
+    }
+    // Same original eventfd, TUN and UDP FD. Additional FDs exist only
+    // during actual DNS TCP transactions, never for normal business.
+    pub fn wait_tun_and_physical_dns_tcp(
+        &self,tun_fd:RawFd,dns_fd:RawFd,tcp:&mut [AndroidDnsTcpInterest],timeout_ms:i32
+    )->io::Result<(bool,bool)>{
+        if tun_fd<0||dns_fd<0||timeout_ms<0||tcp.len()>MAX_DNS_TCP_FALLBACKS{
             return Err(io::ErrorKind::InvalidInput.into())
         }
-        let mut fds=[
-            AndroidPollFd{fd:tun_fd,events:POLLIN,revents:0},
-            AndroidPollFd{fd:dns_fd,events:POLLIN,revents:0},
-            AndroidPollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0},
-        ];
-        let n=unsafe{poll(fds.as_mut_ptr(),fds.len(),timeout_ms)};
+        let mut fds=[AndroidPollFd{fd:-1,events:0,revents:0};3+MAX_DNS_TCP_FALLBACKS];
+        fds[0]=AndroidPollFd{fd:tun_fd,events:POLLIN,revents:0};
+        fds[1]=AndroidPollFd{fd:dns_fd,events:POLLIN,revents:0};
+        fds[2]=AndroidPollFd{fd:self.fd.as_raw_fd(),events:POLLIN,revents:0};
+        for (i,interest) in tcp.iter_mut().enumerate(){
+            interest.ready=false;
+            fds[i+3]=AndroidPollFd{fd:interest.fd,
+                events:if interest.writable{POLLOUT}else{POLLIN},revents:0};
+        }
+        let n=unsafe{poll(fds.as_mut_ptr(),3+tcp.len(),timeout_ms)};
         if n<0{
             let err=io::Error::last_os_error();
-            return if err.kind()==io::ErrorKind::Interrupted{
-                Ok((false,false))
-            }else{Err(err)}
+            return if err.kind()==io::ErrorKind::Interrupted{Ok((false,false))}else{Err(err)}
         }
         if n==0{return Ok((false,false))}
         if fds[2].revents!=0{
@@ -879,6 +925,10 @@ impl AndroidWorkerWake{
         if fds[0].revents & !POLLIN!=0||fds[1].revents & !POLLIN!=0{
             return Err(io::Error::new(io::ErrorKind::BrokenPipe,
                 "original Android TUN/physical DNS poll invalid"))
+        }
+        for (i,interest) in tcp.iter_mut().enumerate(){
+            // A single failed TCP DNS connection is not a TUN/RAW failure.
+            interest.ready=fds[i+3].revents!=0;
         }
         Ok((fds[0].revents&POLLIN!=0,fds[1].revents&POLLIN!=0))
     }

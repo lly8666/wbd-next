@@ -68,6 +68,9 @@ mod v4_android_dns_udp_flow;
 // inverse IPv4 reply path; physical replies are not remote-AEAD payloads.
 #[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_dns_physical_flow;
+// B63 original native DNS same-physical-endpoint TCP fallback.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_dns_tcp_fallback;
 // B5 cold-compiled CN8503 match at the one original Rust M4 UDP53 read.
 #[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
 mod v4_android_cn_dns;

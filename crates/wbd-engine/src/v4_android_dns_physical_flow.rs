@@ -20,13 +20,18 @@ pub(crate) enum PhysicalDnsError{Malformed,Capacity,Unowned,Expired,QuestionMism
 struct Original {
     local:[u8;4],resolver:[u8;4],source_port:u16,
     id:u16,qname_len:u16,qname:[u8;260],until_ms:u64,
+    serial:u64,udp_cap:usize,
 }
+#[derive(Clone,Copy,Debug,Eq,PartialEq)]
+pub(crate) struct TcpFallbackTicket{id:u16,serial:u64}
 pub(crate) struct PhysicalDnsUdpFlows{
     entries:[Option<Original>;CAP],
-    next:usize,
+    questions:[Option<Vec<u8>>;CAP],
+    next:usize,serial:u64,
 }
 impl Default for PhysicalDnsUdpFlows{
-    fn default()->Self{Self{entries:[None;CAP],next:0}}
+    fn default()->Self{Self{entries:[None;CAP],
+        questions:std::array::from_fn(|_|None),next:0,serial:0}}
 }
 fn be16(b:&[u8])->u16{u16::from_be_bytes([b[0],b[1]])}
 fn checksum(data:&[u8],initial:u32)->u16{
@@ -106,6 +111,7 @@ impl PhysicalDnsUdpFlows{
     }
     pub(crate) fn stop(&mut self){
         self.entries.fill(None);
+        self.questions.iter_mut().for_each(|q|*q=None);
         self.next=0;
     }
     /// Prepare only a DNS wire question to send through the pre-bound
@@ -147,12 +153,25 @@ impl PhysicalDnsUdpFlows{
         let synthetic=FIRST_DNS_ID+slot as u16;
         wire[..dns.len()].copy_from_slice(dns);
         wire[..2].copy_from_slice(&synthetic.to_be_bytes());
+        // The validated ingress grammar admits either no OPT or one
+        // complete EDNS OPT. Respect the App's advertised UDP answer size.
+        let udp_cap=if be16(&dns[10..12])==1{
+            let end=12+usize::from(qname_len);
+            usize::from(be16(&dns[end+3..end+5])).clamp(512,MAX_DNS_WIRE)
+        }else{512};
         if new_slot{
+            self.serial=self.serial.wrapping_add(1);
             self.entries[slot]=Some(Original{
                 local,resolver,source_port,id,qname_len,qname,
                 until_ms:now_ms.saturating_add(MAX_AGE_MS),
+                serial:self.serial,udp_cap,
             });
             self.next=(slot+1)%CAP;
+        }else if let Some(flow)=self.entries[slot].as_mut(){flow.udp_cap=udp_cap;}
+        // Only physical DNS questions need this original-wire snapshot.
+        // An identical App retransmit does not allocate another buffer.
+        if self.questions[slot].as_deref()!=Some(&wire[..dns.len()]){
+            self.questions[slot]=Some(wire[..dns.len()].to_vec());
         }
         // A failed retransmit must NOT erase the still-valid earlier
         // outbound request. The owner cancels only a newly reserved slot.
@@ -162,18 +181,13 @@ impl PhysicalDnsUdpFlows{
     /// may be retried by the application, not transparently via Tunnel DNS.
     pub(crate) fn cancel(&mut self,synthetic:u16){
         if let Some(idx)=synthetic.checked_sub(FIRST_DNS_ID).map(usize::from){
-            if idx<CAP{self.entries[idx]=None}
+            if idx<CAP{self.entries[idx]=None;self.questions[idx]=None}
         }
     }
-    /// Exactly one OS UDP datagram from the physically connected socket.
-    /// The caller must validate generation/physical scope before writing
-    /// the resulting packet into the SAME owned TUN FD.
-    pub(crate) fn receive(
-        &mut self,wire:&[u8],packet:&mut [u8],now_ms:u64
-    )->Result<usize,PhysicalDnsError>{
+    fn matching_reply(&self,wire:&[u8],now_ms:u64)
+        ->Result<(usize,Original),PhysicalDnsError>{
         let (id,len,qname)=dns_question(wire,true)?;
-        let idx=usize::from(id.checked_sub(FIRST_DNS_ID).ok_or(
-            PhysicalDnsError::Unowned)?);
+        let idx=usize::from(id.checked_sub(FIRST_DNS_ID).ok_or(PhysicalDnsError::Unowned)?);
         if idx>=CAP{return Err(PhysicalDnsError::Unowned)}
         let flow=self.entries[idx].ok_or(PhysicalDnsError::Unowned)?;
         if flow.until_ms<=now_ms{return Err(PhysicalDnsError::Expired)}
@@ -181,6 +195,40 @@ impl PhysicalDnsUdpFlows{
            flow.qname[..usize::from(len)]!=qname[..usize::from(len)]{
             return Err(PhysicalDnsError::QuestionMismatch)
         }
+        Ok((idx,flow))
+    }
+    // B63: a real TC reply can replay ONLY its original question on
+    // the same selected physical TCP endpoint, while the original UDP
+    // transaction remains owned. No destination/QNAME policy change.
+    pub(crate) fn fallback_question(&self,wire:&[u8],now_ms:u64)
+        ->Option<(TcpFallbackTicket,&[u8])>{
+        if wire.get(2).is_none_or(|flags|flags&2==0){return None}
+        let (idx,flow)=self.matching_reply(wire,now_ms).ok()?;
+        Some((TcpFallbackTicket{id:be16(&wire[..2]),serial:flow.serial},
+            self.questions[idx].as_deref()?))
+    }
+    pub(crate) fn tcp_completion_wire<'a>(&self,ticket:TcpFallbackTicket,
+        full:Option<&'a [u8]>,tc:&'a [u8],now_ms:u64)->Option<&'a [u8]>{
+        let (idx,flow)=self.matching_reply(tc,now_ms).ok()?;
+        if flow.serial!=ticket.serial||be16(&tc[..2])!=ticket.id{return None}
+        if let Some(answer)=full{
+            if answer.len()<=flow.udp_cap&&answer.get(2).is_some_and(|flags|flags&2==0)&&
+               self.matching_reply(answer,now_ms).is_ok_and(|(other,_)|other==idx){
+                return Some(answer)
+            }
+        }
+        // Failed/oversized TCP answer: retain original genuine TC reply;
+        // the App may use its existing ordinary TCP/53 tunnel flow.
+        Some(tc)
+    }
+    /// Exactly one OS UDP datagram or a completed same-physical TCP fallback from the physically connected socket.
+    /// The caller must validate generation/physical scope before writing
+    /// the resulting packet into the SAME owned TUN FD.
+    pub(crate) fn receive(
+        &mut self,wire:&[u8],packet:&mut [u8],now_ms:u64
+    )->Result<usize,PhysicalDnsError>{
+        let (idx,flow)=self.matching_reply(wire,now_ms)?;
+        let id=be16(&wire[..2]);
         let size=28+wire.len();
         if packet.len()<size||size>65535{return Err(PhysicalDnsError::Malformed)}
         let out=&mut packet[..size];
@@ -207,6 +255,7 @@ impl PhysicalDnsUdpFlows{
         if udp_sum==0{udp_sum=0xffff}
         out[26..28].copy_from_slice(&udp_sum.to_be_bytes());
         self.entries[idx]=None;
+        self.questions[idx]=None;
         Ok(size)
     }
 }
@@ -273,6 +322,39 @@ mod tests{
         p[22..24].copy_from_slice(&53u16.to_be_bytes());
         p[24..26].copy_from_slice(&((n-20) as u16).to_be_bytes());
         p[28..].copy_from_slice(dns);p
+    }
+    #[test]
+    fn b63_physical_dns_tcp_fallback_exact_udp_ticket_and_size(){
+        let mut query=make_query(0x1001);
+        query[11]=1;
+        query.extend_from_slice(&[0,0,41,4,208,0,0,0,0,0,0]); // EDNS 1232
+        let mut flows=PhysicalDnsUdpFlows::default();
+        let mut wire=[0u8;MAX_DNS_WIRE];
+        let (n,_,_)=flows.prepare(&ip_query(&query),&mut wire,1).unwrap();
+        let mut tc=wire[..n].to_vec();tc[2]=0x83;tc[3]=0x80;
+        let (ticket,original)=flows.fallback_question(&tc,2).unwrap();
+        assert_eq!(original,&wire[..n]);
+        let mut full=make_query(be16(&tc[..2]));
+        full[2]=0x81;full[3]=0x80;full[7]=32;
+        for _ in 0..32{
+            full.extend_from_slice(&[0xc0,12,0,1,0,1,0,0,0,60,0,4,1,2,3,4]);
+        }
+        assert!(full.len()>512&&full.len()<1232);
+        assert_eq!(flows.tcp_completion_wire(ticket,Some(&full),&tc,3),Some(full.as_slice()));
+        let mut wrong=full.clone();wrong[1]^=1;
+        assert_eq!(flows.tcp_completion_wire(ticket,Some(&wrong),&tc,3),Some(tc.as_slice()));
+        let mut ip=[0u8;MAX_DNS_REPLY_IPV4];
+        let size=flows.receive(&full,&mut ip,3).unwrap();
+        assert_eq!(size,28+full.len());
+        assert_eq!(&ip[28..30],&0x1001u16.to_be_bytes());
+        assert!(flows.tcp_completion_wire(ticket,Some(&full),&tc,4).is_none());
+        let (n,_,_)=flows.prepare(&ip_query(&make_query(0x1002)),&mut wire,5).unwrap();
+        let mut tc=wire[..n].to_vec();tc[2]=0x83;tc[3]=0x80;
+        let (ticket,_)=flows.fallback_question(&tc,6).unwrap();
+        full[..2].copy_from_slice(&tc[..2]);
+        assert_eq!(flows.tcp_completion_wire(ticket,Some(&full),&tc,6),Some(tc.as_slice()));
+        flows.stop();
+        assert!(flows.tcp_completion_wire(ticket,None,&tc,7).is_none());
     }
     #[test]
     fn b2c2b3_physical_owned_ipv4_udp53_real_question_reply_checksum(){

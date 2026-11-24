@@ -33,6 +33,10 @@ cargo +1.85.1 test --locked -p wbd-engine --lib b57_android_game_ -- --nocapture
 # to the SAME original TUN in Normal and Game2/4; no TCP DNS proxy.
 cargo +1.85.1 test --locked -p wbd-engine --lib b59_physical_dns_ \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
+# B63: standard TCP DNS framing over real loopback and exact original
+# physical UDP transaction completion, no synthetic device claim.
+cargo +1.85.1 test --locked -p wbd-engine --lib b63_physical_dns_ \
+  -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 # B16: the same production IPv4 fragment and local ICMP codec runs on Host.
 cargo +1.85.1 test --locked -p wbd-engine --lib b16_ \
   -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
@@ -175,6 +179,12 @@ assert 'bind_underlay_socket(fd.as_raw_fd(),network_handle,interface)?' in platf
 assert 'getsockopt(' in platform and 'getsockname(' in platform
 assert 'actual[expected.as_bytes().len()]!=0' in platform
 assert 'pub fn write_scoped_physical_dns_ip(' in platform
+# B63 original TX owners both use the same physical TCP fallback.
+assert 'test v4_android_dns_tcp_fallback::tests::b63_physical_dns_tcp_real_loopback_framing ... ok' in log
+assert 'test v4_android_dns_physical_flow::tests::b63_physical_dns_tcp_fallback_exact_udp_ticket_and_size ... ok' in log
+assert 'pub fn open_tcp(&self)' in platform
+assert 'bind_underlay_socket(fd.as_raw_fd(),self.network_handle,&self.interface)?' in platform
+assert 'pub fn wait_tun_and_physical_dns_tcp(' in platform
 # B59 original generation produces IPv4 DNS fragments only after the
 # owned physical socket plus original App ID/QNAME/lease have matched.
 game=Path("crates/wbd-engine/src/v4_android_game_m4.rs").read_text()
@@ -182,6 +192,11 @@ assert 'pub(crate) fn emit_physical_dns_tun_reply<' in physical
 assert 'crate::v4_android_ipv4_mtu::fragment(' in physical
 assert m4.count("emit_physical_dns_tun_reply(")==1
 assert game.count("emit_physical_dns_tun_reply(")==1
+for worker in (m4,game):
+ assert 'physical_tcp.try_start(socket,&physical_flows,&physical_wire[..n],at_ms)' in worker
+ assert 'physical_flows.tcp_completion_wire(done.ticket,' in worker
+ assert 'physical_tcp.stop();' in worker
+ assert 'wait_tun_and_physical_dns_tcp(' in worker
 assert 'frame.single_business_payload_mtu' in m4
 assert 'inner_mtu,&mut physical_fragment' in game
 assert 'pub fn write_scoped_physical_dns_ipv4_fragment(' in platform
