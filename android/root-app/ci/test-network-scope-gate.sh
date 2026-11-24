@@ -211,7 +211,8 @@ assert 'connectProfile.setOnClickListener(v->connectSelectedSavedProfile())' in 
 assert 'RootClientService.STOP' in app
 assert 'if(loadNamedProfile(slot))start();' in app
 assert 'refreshNamedProfileChoices();' in app
-assert 'connect.setOnClickListener(v->{coldSwitch.cancel();start();})' in app
+assert 'homeConnect=action("连接",true,()->{coldSwitch.cancel();start();refreshHome();})' in app
+assert 'quickChooseServer()' in app and 'connectSelectedSavedProfile();' in app
 print("ANDROID_B52_NAMED_PROFILE_ORIGINAL_GO_RUST_SINGLE_ACTION_SWITCH_SOURCE_PASS")
 # B53: original B50 4-slot nonsecret profile codec + SAF import/export.
 bundle=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionProfileBundle.java").read_text()

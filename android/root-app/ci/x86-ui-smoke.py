@@ -50,7 +50,14 @@ def main():
     p=argparse.ArgumentParser();p.add_argument("--out",type=Path,required=True);a=p.parse_args()
     result={}
     try:
-        find("未连接");find("全局普通应用",contains=True)
+        # Wait for a genuine resumed Activity after asynchronous am start.
+        for _ in range(8):
+            try:
+                find("未连接");break
+            except RuntimeError:
+                time.sleep(1)
+        else:raise RuntimeError("production home not visible")
+        find("全局普通应用",contains=True)
         shot(a.out,"home");result["home"]="PASS"
         tap("选择 / 切换服务器");find("选择服务器");adb("shell","input","keyevent","4");time.sleep(.4)
         tap("服务器");find("已保存服务器");shot(a.out,"servers");result["servers"]="PASS"
@@ -62,7 +69,15 @@ def main():
         find("按目标分流",contains=True,scroll=True)
         shot(a.out,"apps-split");result["selected_app_cn_split"]="PASS"
         tap("连接");tap("应用")
+        tap("全量隧道",scroll=True)
+        find("仅选定应用 / 全量隧道",contains=True,scroll=True)
+        shot(a.out,"apps-selected-full");result["selected_app_full"]="PASS"
+        tap("连接");tap("应用")
         tap("全局接管普通应用（默认）")
+        tap("CN 分流（国内直连）",scroll=True)
+        find("全局普通应用 / 按目标分流",contains=True,scroll=True)
+        shot(a.out,"apps-global-split");result["global_cn_split"]="PASS"
+        tap("连接");tap("应用")
         tap("全量隧道",scroll=True);find("全量隧道（下次连接生效）",contains=True,scroll=True)
         shot(a.out,"apps-full");result["global_full"]="PASS"
         tap("设置");find("传输参数");shot(a.out,"settings");result["settings"]="PASS"

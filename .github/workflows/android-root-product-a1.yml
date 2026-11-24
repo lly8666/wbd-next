@@ -277,7 +277,7 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
   android-x86-kvm-ksu-original-native:
-    if: ${{ always() && needs.arm64-native.result == 'success' && needs.b2-authentic-cn-geosite-host.result == 'success' && ((github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[android-cold-suite]'))) }}
+    if: ${{ always() && needs.arm64-native.result == 'success' && needs.b2-authentic-cn-geosite-host.result == 'success' && ((github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-cold-suite]') || contains(github.event.head_commit.message, '[android-parallel-test]')))) }}
     # One controlled guest after the actual same-SOURCE signed product APK.
     # Historical static assertion failure does not block real Android tests.
     needs: [arm64-native, b2-authentic-cn-geosite-host, root-arm64-app]
@@ -305,8 +305,9 @@ jobs:
           mkdir -p out/android-root-release
           gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
             --name "android-root-original-arm64-app-$GITHUB_SHA" --dir out/android-root-release
-          test "$(cat out/android-root-release/SOURCE)" = "$GITHUB_SHA"
-          test -s out/android-root-release/wbd-root-arm64-debug.apk
+          test "$(cat out/android-root-release/android-root-app/SOURCE)" = "$GITHUB_SHA"
+          (cd out/android-root-release/android-root-app && sha256sum -c SHA256SUMS)
+          test -s out/android-root-release/android-root-app/wbd-root-arm64-debug.apk
       # Existing same-source host/production APK jobs run the static gate.
       # A stale source-string assertion must not block real ART/KSU tests.
       - name: Build same-Java original Go/Rust x86_64 signed CI-only APK
@@ -387,7 +388,7 @@ jobs:
           if-no-files-found: warn
 
   android-x86-kvm-ksu-original-d2-s1:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[android-parallel-test]')) }}
     # Separate red/green gate: ORIGINAL Linux server runs on the same x86
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic
@@ -401,6 +402,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       WBD_KSU_PRODUCT_X86_CI: '1'
       WBD_D2_ORIGINAL: '1'
+      WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -424,7 +426,8 @@ jobs:
           bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
           python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
           python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
-          bash android/root-app/ci/test-network-scope-gate.sh
+          # Static gate is already executed in root-arm64-app; do not block
+          # real preauth on an unrelated historical source-string failure.
       - name: D2-S1 build signed x86 CI-only APK using production Java + original Go/Rust
         shell: bash
         run: bash android/root-app/ci/build-x86-ci-locked.sh
@@ -578,6 +581,92 @@ jobs:
             fixed-kernel-result/public-v4-normal-business.log
           retention-days: 14
           if-no-files-found: warn
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-linux-arm64-native-bundle-${{ github.sha }}
+          path: |
+            out/android-a3-linux/wbd-v4-client
+            out/android-a3-linux/wbd-v4-server
+            out/android-a3-linux/libwbd_engine.so
+            out/android-a3-linux/manifest.json
+            out/android-a3-linux/SHA256SUMS
+          retention-days: 14
+          if-no-files-found: warn
+
+  android-stock-ui-and-ordinary-uid:
+    if: ${{ always() && needs.root-arm64-app.result != 'cancelled' && needs.root-arm64-app.result != 'skipped' && github.event_name == 'push' && contains(github.event.head_commit.message, '[android-parallel-test]') }}
+    needs: [root-arm64-app]
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        api: [35, 36]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: out/android-root-release
+      - name: Real stock Android API ${{ matrix.api }} - production signed APK UI and ordinary UID socket fixture
+        env:
+          WBD_ANDROID_API: ${{ matrix.api }}
+        run: bash android/root-app/ci/stock-ui-traffic.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-stock-api${{ matrix.api }}-${{ github.sha }}
+          path: out/android-stock-suite/
+          retention-days: 14
+          if-no-files-found: warn
+
+  linux-seven-mode-native-parallel:
+    # Reuse the SAME two Linux CLI bundles already built above. No per-mode
+    # recompilation, no Windows/Android runtime claim, no duplicate M0 CI.
+    if: ${{ always() && needs.linux-x86-original-server-d2-s0.result == 'success' && needs.linux-original-server-normal-off.result != 'cancelled' && github.event_name == 'push' && contains(github.event.head_commit.message, '[android-parallel-test]') }}
+    needs: [linux-x86-original-server-d2-s0, linux-original-server-normal-off]
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        arch: [amd64, arm64]
+        mode: [normal_off, normal_maximum6, normal_auto, game2_off, game2_fixed6, game4_off, game4_fixed6]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ matrix.arch == 'arm64' && format('android-linux-arm64-native-bundle-{0}', github.sha) || format('android-d2-s0-original-linux-x86-server-{0}', github.sha) }}
+          path: out/android-linux-bundle
+      - name: Verify exact source and native architecture, run real original protocol case
+        env:
+          TEST_ARCH: ${{ matrix.arch }}
+          TEST_MODE: ${{ matrix.mode }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool tcpdump
+          test -c /dev/net/tun
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,TEST_ARCH,TEST_MODE \
+            python3 -m tools.network_harness.android_parallel_native \
+            --bundle out/android-linux-bundle --out out/android-linux-case
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-linux-${{ matrix.arch }}-${{ matrix.mode }}-${{ github.sha }}
+          path: |
+            out/android-linux-case/result.json
+            out/android-linux-case/*/result.json
+            out/android-linux-case/*/network-snapshots.json
+            out/android-linux-case/*/summary.md
+          retention-days: 14
+          if-no-files-found: warn
+
   arm64-cuttlefish-host-admission:
     # Host-only KVM audit; successful job means receipt generated,
     # NOT that Android guest or App/root protocol was executed.

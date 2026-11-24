@@ -174,6 +174,8 @@ m={"schema":"android-root-a3-original-linux-oracle/v1","source":os.environ["GITH
    "physical_device":"DEFERRED_ACTIONS_FIRST"}
 (p/"manifest.json").write_text(json.dumps(m,indent=2,sort_keys=True)+"\n")
 PY
+# Publish exactly the binaries this native oracle is about to execute.
+(cd out/android-a3-linux && sha256sum wbd-v4-client wbd-v4-server libwbd_engine.so > SHA256SUMS)
 sudo apt-get update -qq
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl tcpdump
 test -c /dev/net/tun

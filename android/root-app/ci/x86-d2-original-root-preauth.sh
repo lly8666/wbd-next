@@ -314,6 +314,11 @@ for i in $(seq 1 80);do
     raw_first="$i"
     echo "D2_S1_REAL_ORIGINAL_ANDROID_TUN_RAW_CONFIGURED_PASS"
   fi
+  if [[ "${WBD_D2_PREAUTH_ONLY:-0}" == 1 && "$raw_first" != 0 ]] &&
+     grep -Fq 'ORIGINAL_GO_TUN_KERNEL_CONFIGURED' "$out/app-diagnostic-enums.txt";then
+    echo "D2_S1_PREAUTH_ONLY_REACHED_REAL_TUN_RAW_NO_RETRY"
+    break
+  fi
   if grep -Fq 'NATIVE_M4_AND_UID_READY' "$out/app-diagnostic-enums.txt";then
     echo "D2_S1_AUTHENTICATED_ORIGINAL_RUST_M4_AND_UID_READY_OBSERVED"
     break

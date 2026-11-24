@@ -1,3 +1,16 @@
+## B85 并行批量模拟（本轮显式触发）
+
+B84 实际 [Action 45373452414](https://github.com/lly8666/wbd-next/actions/runs/45373452414)：ARM64/x86 native、签名 ARM64 APK（[artifact 14910378010](https://github.com/lly8666/wbd-next/actions/runs/45373452414/artifacts/14910378010)）、APK wiring、官方更新器逐条8472条、Host DNS/Rust、原 Linux oracle、维护/功能目录均实际PASS；root-app 最后历史UI源码字符串断言FAIL；KSU job在下载产物目录校验FAIL（未启动模拟器）。B85修正两处，不把前次失败改成PASS。
+
+同SOURCE 构建产物共享：ARM64正式APK+普通UID fixture（构建一次）；Android x86/ARM64 native assets（构建一次）；原 Linux x86/ARM64 CLI+Rust（各构建一次）。提交标记 [android-parallel-test] 自动开启独立场景，fail-fast false：
+- 2个 stock x86 KVM guest Android API35/API36：安装真正签名ARM64 APK（Java UI，不执行ARM64独立Go），真实四页导航和四种接管/分流组合截图；实际独立普通UID TCP/UDP回显夹具，经10.0.2.2仅验证模拟器普通网络/夹具，不冒称WBD。
+- 1个 Android16 KSU 冷套件：x86原Go/Rust、普通App Root、ART七类cold helper、NativeBridge ARM64实际Rust MTU与原Go c-shared CLI。UI、ART、转译独立收据。若UI/ART失败继续尝试翻译，不修改正式ELF。
+- 1个 Android16 KSU D2-S1：复用已证明原 RootService 到原 Go TUN/AF_PACKET，自动批次仅到真实 preauth 立即停止；不反复试已知SLIRP/TAP握手阻塞，不将成功归为M4或认证Stop通过。
+- 14个独立原生 Linux 场景（x86/ARM64 × 7模式）：复用原 W167 LinuxExperiment 真实两端 Go TLS/Rust M4/内核 TUN 和 UDP 业务/owned namespace cleanup。20s、10Mbps每方向、1% IID、75ms 标准轻弱网，最大7并行，不做极端容量测试；保存每场景原始指标/独立结论。它们属于共享Linux协议验证，不是Android E2E或手机性能。
+- 原有 Host / 源码门 / M3 / DNS / CN / Linux normal wire / 治理保留；旧NativeBridge ELF139、Cuttlefish、TAP不自动重试。
+
+总计18个增强场景（4 Android guests + 14 Linux模式参考），其中原KSU冷job与D2 job为既有job复用。全部新SOURCE未运行前NOT_RUN；不要跨SOURCE或跨平台迁移PASS。用户明确授权Actions模拟，不部署真实手机或外部服务。
+
 **2026-11-24 B84 用户要求：APK UI 收口重构。** 四个常驻页面：连接（真实M4+UID状态、当前服务器/下次配置、连接/断开/选服务器）、服务器（4个命名槽、独立凭据/CA、备份与冷切换）、应用（默认全局普通App或仅选定App，统一选择全量隧道或CN/自定义分流，未接管App保持系统路由）、设置（原传输/Health/IPv6/热点/恢复/诊断）。全量按钮清除CN/物理DNS/IPv4/IPv6/自动LAN直连例外，CN分流按钮启用已有CN IPv4+域名策略；选定App共享当前FIB策略，不声称每个UID独立不同规则。默认全局普通IPv4（原服务端、Root/系统/WBD/Manager绕过，IPv6与普通系统DNS显式选择）。配置变化只在下一次START生效；命名服务器切换复用原B49/B52完整Stop→新认证。显式手动联网更新官方CN域名库已接候选：下载v2fly最新release、核上游SHA、同四类protobuf提取、原Go/Rust冷规则解析；成功原子替换，不自动更新或改变已运行会话。主体新增功能冻结，转入测试。真实APK先构建，然后本轮一次x86 KSU guest跑新四页UI截图/交互、ART原生冷参数、Root及ARM64 NativeBridge Rust MTU/Go c-shared；不重跑TAP/旧直接ARM64 Go SIGSEGV。B84 CI和真机未验。
 
 **2026-11-24 B83 用户范围冻结（当前最高优先级）**：除手机端显式手动联网更新官方 CN 域名列表（唯一功能待办；已有内置8472、文件导入/恢复）外，所有 Android 主体功能标记为基本完成开发、转入验证；未实现的高级功能冻结不开发，不把它们说成已接线。只修实际测试发现的业务/性能问题，不扩极端工况。高级 CN FakeIP 仍 OUT_OF_SCOPE。优先复用一次 Android16 x86 KVM/KSU guest 跑 ART 冷控制、x86 原生原Go/Rust、ARM64 NativeBridge 真 Rust MTU 和原Go c-shared help；原 ARM64 独立 Go ELF139 与 hosted SLIRP/TAP RAW 路径阻塞保持历史，不为冷测试重开这些诊断；ARM64 真机集中验证真实业务、内核设备差异和性能。

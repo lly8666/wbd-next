@@ -498,7 +498,8 @@ if [[ "${WBD_ANDROID_COLD_SUITE:-0}" == 1 ]];then
   phase=COMBINED_ANDROID_COLD_SUITE
   # Same emulator session; no second KSU boot, no raw networking experiment.
   # ART logs were emitted before the final App->su PASS.
-  grep -Fq ANDROID_ART_COLD_CONTROLS_PASS "$out/app-su-logcat-filtered.txt"
+  art_rc=0
+  grep -Fq ANDROID_ART_COLD_CONTROLS_PASS "$out/app-su-logcat-filtered.txt" || art_rc=1
   n=out/android-root-app-native
   adb push "$n/ksu-arm64-ndk-probe" /data/local/tmp/wbd-cold-arm64-probe >/dev/null
   adb push "$n/libwbd_engine-arm64.so" /data/local/tmp/libwbd_engine.so >/dev/null
@@ -522,6 +523,10 @@ if [[ "${WBD_ANDROID_COLD_SUITE:-0}" == 1 ]];then
   if [[ "$mturc" == 0 && "$gocshrc" == 0 ]] &&
       grep -Fq WBD_TRANSLATED_ARM64_RUST_MTU_BUDGET_PASS "$out/translated-mtu.txt" &&
       grep -Fq WBD_ANDROID_ARM64_ORIGINAL_GO_CSHARED_HELP_PASS "$out/translated-go-help.txt";then
+    if [[ "${art_rc:-1}" != 0 ]];then
+      echo ANDROID_ART_COLD_CONTROLS_NOT_PROVEN
+      exit 33
+    fi
     if [[ "${ui_rc:-1}" != 0 ]];then
       echo ANDROID_UI_NAVIGATION_NOT_PROVEN
       exit 32
