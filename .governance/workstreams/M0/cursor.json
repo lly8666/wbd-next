@@ -14,9 +14,7 @@
   "next_action": "继续独立 PLAN029 TCP吞吐性能试验分支 experiment/m0-029-throughput-arm-fair 的 Windows/ARM 真实容量与CPU/GiB源锁三runner；游戏外层修复已范围收口，仅在新实际回归失效或用户要求补完整 Windows/物理资格时重开。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
-  "evidence_refs": [
-    "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json"
-  ],
+  "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
     "docs/evidence/M0/PLAN029-TCP-PERFORMANCE-EXPERIMENT-AUDIT-20261121-20261122.md",
