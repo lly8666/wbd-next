@@ -5,3 +5,5 @@ User report: disconnect Normal -> Game2/4 connected but reverse injection zero u
 ```feature-impact
 {"kind":"updated","ids":["game-lanes","linux-raw-tun"],"reason":"Correct cross-mode cold shared-TUN owner publication and retire only predecessors of the same authenticated /32; no new user option or protocol."}
 ```
+
+Exact native dual-ISA fixture: persistent installation ID, same one443 shared server, reverse-first TCP/UDP each whole-owner switch, same-account separate auto lease, Game4 hot selected-lane, original Health90 and exact joined Stop. Deliver only after real Linux receipt; same SOURCE Windows GUI via existing H2216 complete package job (GUI/owner self tests, physical Windows mixed switch NOT_RUN). No product tests have run yet.
