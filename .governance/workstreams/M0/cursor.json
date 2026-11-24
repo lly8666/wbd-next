@@ -4,23 +4,27 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2316,
-  "checkpoint_sha": "8d8b5522ca685fc5c4e241cb029c28ebb18fc536",
+  "sequence": 2317,
+  "checkpoint_sha": "889bf9adb4f87a957f27353fe53e122256ef766a",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "M0 PLAN029 三关实际进度。P0 H2312/H2313 TX/NPF分开真Windows2025→ARM双组三runner已9/9原生Success、队列TX16 >99%满却Mbps收益双组相反，600–800Mbps NOT_QUALIFIED。P1 FEC OFF原密文一次机会修复1%真9/9通过、5%另一组第三腿relay失联红；真实Rust Stop核接受7/5和12/13次补发。P2原Windows Fixed Maximum 20parity服务H2314内核单元2Job Pass，原生FEC Maximum真外网测试尚NOT_RUN，PR68 Draft，产品默认不变。main PLAN012/020旧红源锁修复中。",
-  "why_now": "过去H2292联合TX16/NPF64不明归因；H2313两组实际NPF每batch 16帧占比99.55/99.38%，网络表现仍−17.9%/+47.5%，应先独立物理direct和relay容量/Windows CPU，不能默认晋级。P1旧夹具用pre-Stop周期快照错误报外层补发为0，原Rust joined Stop原工件证实1% 7/5次、5% 12/13次，已由H2316修计数源。5%组b A′的UDP relay control失联，整体FAIL不可造PASS。",
+  "current_task": "M0 PLAN029 TCP吞吐独立性能关口继续进行；2026-11-24 用户指定的 Game2/Game4 外层机会式重传修复专项已按 Linux 真原生及历史 Windows 原生范围收口并合入 main、同步 TCP throughput 实验分支。",
+  "why_now": "专项源码/日志/功能卡和历史反例已按双分支非强制合入；两分支专项治理与主线维护自测通过。PLAN029 P0高线真实Windows/ARM容量、P1弱网、P2 maximum及最终 Windows原生 Game CPU、物理WAN仍另立未验范围。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "先核收 main PLAN012原Go真实完整 Action45034182690（旧WB-R1已删、V2routekey正式完整源+Go单元补入）与PLAN020 WinWAL Action45034182656（原Go TLS verify flag编译已修，GUI Source后级首失败有精确断言），以真实SOURCE状态结算不造绿。P1 5% H2294 Action45032406637 整轮FAIL：b组第三腿relay control失联，Stop确证12/13冻结密文接受副本，禁止当真实对端恢复；其失联需要先定位再重试。P2 H2314原生单元2/2 PASS但fixed maximum真实两组3runner仍NOT_RUN。",
+  "next_action": "继续独立 PLAN029 TCP吞吐性能试验分支 experiment/m0-029-throughput-arm-fair 的 Windows/ARM 真实容量与CPU/GiB源锁三runner；游戏外层修复已范围收口，仅在新实际回归失效或用户要求补完整 Windows/物理资格时重开。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
-  "evidence_refs": [],
+  "evidence_refs": [
+    "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json"
+  ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
     "docs/evidence/M0/PLAN029-TCP-PERFORMANCE-EXPERIMENT-AUDIT-20261121-20261122.md",
     "docs/devlog/M0/20261122-MAIN-GOVERNANCE-NATIVE-GO-ACTIONS-RED-REPAIR.md",
-    "docs/prompts/M0.md"
+    "docs/prompts/M0.md",
+    "docs/devlog/M0/20261124-OUTER-REPAIR-SCOPED-CLOSEOUT.md",
+    "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json"
   ],
   "open_requests": [],
-  "partial_summary": "P0 H2313双组Action45031290436 9/9原生成功，TX16队列>99%满却吞吐变动两组−17.9%/+47.5%，600–800未资格；P1 1% FEC OFF H2294 Action45031628979 9/9成功，实际joinedStop接受7/5次机会修复；5% Action45032406637 组a 3/3、组b 2/3真实客户端腿成功但b A′中继控制失联，整体FAIL，joinedStop12/13次，不信旧周期快照0；H2316修正Stop对账。P2 H2314 20Parity原Windows Unit Action45030957556 2/2成功，最高档真实WAN NOT_RUN。main先前Fixed/Normal实际绿，本轮PLAN012和PLAN020新Actions测试仍在跑。"
+  "partial_summary": "P0 H2313双组Action45031290436 9/9原生成功，TX16队列>99%满却吞吐变动两组−17.9%/+47.5%，600–800未资格；P1 1% FEC OFF H2294 Action45031628979 9/9成功，实际joinedStop接受7/5次机会修复；5% Action45032406637 组a 3/3、组b 2/3真实客户端腿成功但b A′中继控制失联，整体FAIL，joinedStop12/13次，不信旧周期快照0；H2316修正Stop对账。P2 H2314 20Parity原Windows Unit Action45030957556 2/2成功，最高档真实WAN NOT_RUN。main先前Fixed/Normal实际绿，本轮PLAN012和PLAN020新Actions测试仍在跑。 2026-11-24 用户指定范围收口：main和实验分支均已同步 Game Normal-v3 / SOURCE9d2a323；最新Linux7场、历史Windows签名7场、CPU2%双反向ABBA有源锁依据；Windows最终CPU和PLAN029吞吐门未验（详见新收口 evidence）。"
 }

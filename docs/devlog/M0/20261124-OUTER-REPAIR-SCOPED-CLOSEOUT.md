@@ -33,3 +33,10 @@
 ```feature-impact
 {"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Archive full 37-row source-locked history without loss; keep active feature card within strict 16KiB repository catalog limit and preserve final-version Windows NOT_RUN scope."}
 ```
+
+## 2026-11-24 两分支实际集成回执
+
+- **main** 首次按用户授权、严格非强制快进纳入 [`1acd158e2b7ab4536cdf369230ca4a96bb8f20d6`](https://github.com/lly8666/wbd-next/commit/1acd158e2b7ab4536cdf369230ca4a96bb8f20d6)，原 [PR#71](https://github.com/lly8666/wbd-next/pull/71) GitHub 已确认 Merged/Closed。随后 [`889bf9adb4f87a957f27353fe53e122256ef766a`](https://github.com/lly8666/wbd-next/commit/889bf9adb4f87a957f27353fe53e122256ef766a) 归档全部 37 条历史功能卡 SOURCE 验证、满足 16KiB 目录约束，并更新过时的 H2229 测试断言；[主线 Governance+Feature catalog 成功](https://github.com/lly8666/wbd-next/actions/runs/45299165893)，[维护自测成功](https://github.com/lly8666/wbd-next/actions/runs/45299165816)。
+- **吞吐实验分支** `experiment/m0-029-throughput-arm-fair` 原 HEAD `7576830` 的 271 条本地历史全部保留；以双亲 commit [`12341395c30b5fcafa4adb651c06f611d6b0fbe1`](https://github.com/lly8666/wbd-next/commit/12341395c30b5fcafa4adb651c06f611d6b0fbe1) 合入主线 33 项专项文件、场景和历史测试工作流。在与吞吐项目共改的 `v4_embedded_go.rs`、`linux_raw_carrier.rs`、`game_linux.go` 上使用完整原 PR 补丁 + 旧 main 重放校验做三方无损合成；Go assembly manifest `result_blob` 精确改为合成后 blob。
+- [`ffb19f0744ed36da29d82701a99413be8cf8d324`](https://github.com/lly8666/wbd-next/commit/ffb19f0744ed36da29d82701a99413be8cf8d324) 用第二双亲合入主线目录尺寸与 H2229 修正；[吞吐原生单元 x86+ARM 成功](https://github.com/lly8666/wbd-next/actions/runs/45298489007)、[Feature catalog 通过](https://github.com/lly8666/wbd-next/actions/runs/45299214351)、[维护自测通过](https://github.com/lly8666/wbd-next/actions/runs/45299214420)。这里只认证已完成的工作流，其他自动启动的 PLAN012/028 长期 CI 不随本专项收口自动晋级。
+- **现役两分支** 的功能卡仍为 `experimental`，仅表示已合入可用源码和测试入口，不代表所有 Windows 最新 SOURCE 原生吞吐、真实物理 WAN、PLAN029 P0/P1/P2 已达独立推广门。所有旧历史 FAIL、CPU 反证及未测事实均由本 devlog / evidence 原样保留。
