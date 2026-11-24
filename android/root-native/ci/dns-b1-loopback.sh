@@ -18,9 +18,10 @@ grep -Fq "TestConcurrentQueriesCoalesceWithoutBackgroundTimers" out/android-b1-d
 grep -Fq -- "--- PASS: TestB64ActualAppTCPDNSPhysicalTunnelAndCN" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "PASS" out/android-b1-dnsnative/wire-tests.log
 go test -count=1 -timeout=45s -v ./r0/go_overlay/internal/v4productcli/rootjournal \
-  -run '^TestB64OwnedTCPDNSSelectedAndAllAppRoutesRestore$' \
+  -run '^TestB6(4OwnedTCPDNSSelectedAndAllAppRoutesRestore|5TetherOwnedForwardingAndRestore)$' \
   | tee out/android-b1-dnsnative/app-tcp-owner-tests.log
 grep -Fq -- "--- PASS: TestB64OwnedTCPDNSSelectedAndAllAppRoutesRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
+grep -Fq -- "--- PASS: TestB65TetherOwnedForwardingAndRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
 python3 - <<'PY'
 import hashlib,json,os,pathlib
 out=pathlib.Path("out/android-b1-dnsnative")

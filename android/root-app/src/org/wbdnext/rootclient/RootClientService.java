@@ -77,6 +77,15 @@ public final class RootClientService extends Service {
     private volatile Process root;
     private volatile PhysicalNetwork selection;
     private volatile String ownerToken;
+    private RootTetherScope tetherWatch;
+    private void watchTether(RootTetherScope scope)throws Exception{
+        final String generation=ownerToken;
+        tetherWatch=RootTetherScope.watch(this,scopes->{
+            if(generation==null||!generation.equals(ownerToken))return;
+            for(RootTetherScope current:scopes)if(scope.same(current))return;
+            requestStop("TETHER_DOWNSTREAM_CHANGED");
+        });
+    }
     private volatile String ownerExecutable="wbd-v4-client-arm64";
     private ConnectivityManager watchedManager;
     private ConnectivityManager.NetworkCallback watchedCallback;
@@ -148,6 +157,8 @@ public final class RootClientService extends Service {
         }
     }
     private void stopWatchingPhysicalNetwork(){
+        RootTetherScope oldTether=tetherWatch;tetherWatch=null;
+        if(oldTether!=null)oldTether.close();
         ConnectivityManager cm;
         ConnectivityManager.NetworkCallback cb;
         synchronized(this){
@@ -358,6 +369,12 @@ public final class RootClientService extends Service {
             boolean physicalDNS=intent.getBooleanExtra("physical_dns",false);
             boolean cnSplitDNS=intent.getBooleanExtra("cn_dns_split",false);
             final boolean appTcpDNS=intent.getBooleanExtra("app_tcp_dns",false);
+            final String tetherIface=intent.getStringExtra("tether_iface");
+            final RootTetherScope tether=tetherIface==null?null:RootTetherScope.read(tetherIface);
+            if(tetherIface!=null&&(tether==null||tether.iface.equals(chosen.interfaceName)||
+                tether.index!=intent.getIntExtra("tether_index",0)||
+                !tether.subnet.equals(intent.getStringExtra("tether_subnet"))))
+                throw new IllegalArgumentException("热点下游已变化");
             if(hasCA&&!verifyTLS)throw new IllegalArgumentException("CA requires strict TLS verification");
             boolean validatedScope=allApps
                 ? targetUids==null&&targetPackages==null&&
@@ -380,6 +397,7 @@ public final class RootClientService extends Service {
             selection=chosen;
             ownerToken=newOwnerToken();
             watchPhysicalNetwork(chosen);
+            if(tether!=null)watchTether(tether);
             watchSelectedPackages(allApps
                 ?watchedAllAppPackages(managerPackages,bypassPackages):targetPackages);
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
@@ -402,7 +420,7 @@ public final class RootClientService extends Service {
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,targetPackages,allApps,excludedAppIDs,
                 managerPackages,bypassPackages,bypassUIDs,
-                hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS),"wbd-native-root-owner");
+                hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             cancelRotation();
@@ -425,7 +443,7 @@ public final class RootClientService extends Service {
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
-                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS){
+                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether){
         // The host-tested argv is also the exact argv passed to original Go.
         // Secret *values* never appear here, only app-private file paths.
         List<String> args=OriginalGoCommandArgs.build(
@@ -441,6 +459,11 @@ public final class RootClientService extends Service {
         List<String> quotedArgs=new ArrayList<>();
         for(String a:args)quotedArgs.add(q(a));
         if(appTcpDNS)quotedArgs.add(q("--android-app-tcp-dns"));
+        if(tether!=null){
+            quotedArgs.add(q("--android-tether-interface="+tether.iface));
+            quotedArgs.add(q("--android-tether-subnet="+tether.subnet));
+            quotedArgs.add(q("--android-tether-ifindex="+tether.index));
+        }
         StringBuilder shell=new StringBuilder("set -eu; umask 077; ");
         shell.append("echo WBD_PUBLIC_ROOT_SHELL_ENTERED; ");
         // Fail closed even if a su provider returned an unprivileged shell:
@@ -493,7 +516,7 @@ public final class RootClientService extends Service {
                          int port,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
                          String[] bypassPackages,int[] bypassUIDs,
-                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS){
+                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
@@ -539,7 +562,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS))
+                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);

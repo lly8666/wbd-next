@@ -99,6 +99,7 @@ func androidRootRouteAfterNative(
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
     if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
+    if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
     if c.androidRouteAllApps{
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
             ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
@@ -109,6 +110,8 @@ func androidRootRouteAfterNative(
         })
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,full.Stop)
+        if e!=nil{return nil,e}
+        stop,e=startAndroidTether(c,tun,lease,runner,stop)
         if e!=nil{return nil,e}
         // Exact server-IP exclusion in the private FIB is verified,
         // but the next Android netd physical route is not yet qualified.
@@ -132,6 +135,8 @@ func androidRootRouteAfterNative(
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,group.Stop)
         if e!=nil{return nil,e}
+        stop,e=startAndroidTether(c,tun,lease,runner,stop)
+        if e!=nil{return nil,e}
         originalAndroidSelectedUIDRouteGet(runner,c.androidRouteUIDs,tun.name)
         // This receipt is printed only AFTER the entire owned kernel
         // group receives positive readback. Not a fake per-App ACK.
@@ -154,6 +159,8 @@ func androidRootRouteAfterNative(
     })
     if e!=nil{return nil,e}
     stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,session.Stop)
+    if e!=nil{return nil,e}
+    stop,e=startAndroidTether(c,tun,lease,runner,stop)
     if e!=nil{return nil,e}
     originalAndroidSelectedUIDRouteGet(runner,[]int{c.androidRouteUID},tun.name)
     // This exact root-only rule is the sole route grant. The kernel
@@ -231,3 +238,33 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  },nil
 }
 
+
+const androidTetherJournal="/data/local/tmp/wbd-next-root/tether-journal.json"
+func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error)(func()error,error){
+ if c.androidTetherInterface==""{return stop,nil}
+ fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
+ d,e:=net.InterfaceByName(c.androidTetherInterface)
+ if e!=nil||d==nil||d.Index!=c.androidTetherIfindex||d.Flags&net.FlagUp==0||d.Name==c.rawInterface||d.Name==tun.name{
+  return fail(fmt.Errorf("tether downstream changed"))
+ }
+ prefix,e:=netip.ParsePrefix(c.androidTetherSubnet)
+ if e!=nil{return fail(e)}
+ addrs,e:=d.Addrs();if e!=nil{return fail(e)}
+ matched:=false
+ for _,a:=range addrs{p,e:=netip.ParsePrefix(a.String());if e==nil&&p.Masked()==prefix{matched=true}}
+ if !matched||prefix.Contains(c.localIP)||prefix.Contains(c.peerIP){return fail(fmt.Errorf("tether subnet changed or overlaps carrier"))}
+ forward,e:=os.ReadFile("/proc/sys/net/ipv4/ip_forward")
+ if e!=nil||strings.TrimSpace(string(forward))!="1"{return fail(fmt.Errorf("enable existing Android tethering first"))}
+ // Do not change Android offload settings or bypass its BPF ownership.
+ // Only an explicitly software-forwarded downstream is supported here.
+ ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
+ offload,e:=exec.CommandContext(ctx,"settings","get","global","tether_offload_disabled").Output()
+ if e!=nil||strings.TrimSpace(string(offload))!="1"{return fail(fmt.Errorf("software tether requires hardware offload disabled"))}
+ dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
+ if e!=nil||!strings.Contains(string(dump),"mIsBpfEnabled: false"){return fail(fmt.Errorf("software tether requires verified inactive BPF offload"))}
+ owner,e:=rootjournal.NewTether(runner,androidDNSFirewall,androidTetherJournal,
+  rootjournal.TetherPlan{Tun:tun.name,Downstream:d.Name,Subnet:prefix.String(),Lease:lease.String()})
+ if e!=nil{return fail(e)}
+ fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_READY role=client software_ipv4=1")
+ return func()error{return errors.Join(owner.Stop(),stop())},nil
+}

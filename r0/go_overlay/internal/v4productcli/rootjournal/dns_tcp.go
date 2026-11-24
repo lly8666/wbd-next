@@ -84,9 +84,12 @@ type DNSOwner struct{
  plan DNSPlan
 }
 func dnsLock(path string)(*os.File,error){
- if filepath.Base(path)!=dnsJournalName{return nil,fmt.Errorf("invalid DNS journal path")}
+ return scopedOwnerLock(path,dnsJournalName,"dns-tcp-owner.lock")
+}
+func scopedOwnerLock(path,journalName,lockName string)(*os.File,error){
+ if filepath.Base(path)!=journalName{return nil,fmt.Errorf("invalid scoped journal path")}
  if e:=ownedDirectory(filepath.Join(filepath.Dir(path),"route-journal.json"));e!=nil{return nil,e}
- f,e:=openNoFollow(filepath.Join(filepath.Dir(path),"dns-tcp-owner.lock"),
+ f,e:=openNoFollow(filepath.Join(filepath.Dir(path),lockName),
   syscall.O_RDWR|syscall.O_CREAT,0600)
  if e!=nil{return nil,e}
  st,e:=f.Stat()

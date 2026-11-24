@@ -62,3 +62,7 @@
 B31已补服务端IPv4 /32例外；B32a已补完整普通App选取。**B33**进一步批量施工显式最多4个IPv4 CIDR的真实内核FIB直连例外：原Root Activity设置（可本机保存及SAF导入/导出）、原Service手动START、原Go冷参数、single/group/all原journal路由安装/读回/Stop、Host原伪ip内核命令回归，全部同一SOURCE。默认输入空保持原WBD全隧道，无新增Go/Rust逐包控制器。最新B33c SOURCE dd2292c8f9ca [#44975823370](https://github.com/lly8666/wbd-next/actions/runs/44975823370) 11 SUCCESS/4 SKIPPED，正式签名APK/Host/原Linux Oracle均PASS。真实手机netd/实际物理出站、应用E2E及性能仍NOT_RUN。
 
 维护：本台账是**进度标记**，不是独立竞争执行方案；每批以SOURCE/Action更新行，既往NOT_RUN/FAIL不删。
+
+### B65 — software tether IPv4 (source wired; device NOT_RUN)
+
+Opt-in active Android 16 downstream, exact original lease forwarding/SNAT, separate owned table and Stop/Restore, software-only prerequisite. System DNS and IPv6/464XLAT remain open. See [B65 devlog](../devlog/android-root-probe/20261124-b65-software-tether-ipv4.md).
