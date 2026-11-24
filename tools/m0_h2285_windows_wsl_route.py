@@ -27,8 +27,11 @@ ROOT=core.ROOT
 PORT=core.PORT
 NET=core.TAIL
 MAX_BUFFER=2*1024*1024
-if os.environ.get("WBD_H2359_SUPPLY")=="1":
-    tcp.BULK_FLOWS,MAX_BUFFER=tcp.supply_profile("high")
+
+def bare_application_profile():
+    if os.environ.get("WBD_H2359_SUPPLY")=="1":
+        return tcp.supply_profile("high")
+    return (tcp.BULK_FLOWS,MAX_BUFFER)
 
 
 def require(ok, label):
@@ -129,14 +132,16 @@ def server(own,relay):
     t0=time.monotonic()
     cpu0=core.os_host_cpu()
     previous_tcp_buffer=tcp.WINDOW_TEST_BYTES
+    previous_tcp_flows=tcp.BULK_FLOWS
     try:
         for key in original:
             core.run("sudo","-n","sysctl","-w",key+"=16777216")
-        tcp.WINDOW_TEST_BYTES=MAX_BUFFER
+        tcp.BULK_FLOWS,tcp.WINDOW_TEST_BYTES=bare_application_profile()
         print("H2285_REAL_ARM_TCP_SERVER_STAGE_READY",flush=True)
         tcp.server(own["tail_ip"],relay["relay_ip"],own["source_sha"])
     finally:
         tcp.WINDOW_TEST_BYTES=previous_tcp_buffer
+        tcp.BULK_FLOWS=previous_tcp_flows
         for key,val in original.items():
             core.run("sudo","-n","sysctl","-w",key+"="+val)
     output=dict(group=own["group"],source_sha=own["source_sha"],
@@ -179,6 +184,7 @@ def client(own,relay,arm):
                   off_host_arm_server=arm["tail_ip"])
     original_forward=wsl("sysctl","-n","net.ipv4.ip_forward").stdout.strip()
     previous_tcp_buffer=tcp.WINDOW_TEST_BYTES
+    previous_tcp_flows=tcp.BULK_FLOWS
     rules=nat_rules(local,guest,endpoint)
     applied=[]
     try:
@@ -187,7 +193,7 @@ def client(own,relay,arm):
             wsl("iptables","-w",*rule)
             applied.append(rule)
         shape=core.remote_shape(relay,-1)
-        tcp.WINDOW_TEST_BYTES=MAX_BUFFER
+        tcp.BULK_FLOWS,tcp.WINDOW_TEST_BYTES=bare_application_profile()
         buffer=io.StringIO()
         host_before=core.os_host_cpu()
         t=time.monotonic()
@@ -226,6 +232,7 @@ def client(own,relay,arm):
         raise
     finally:
         tcp.WINDOW_TEST_BYTES=previous_tcp_buffer
+        tcp.BULK_FLOWS=previous_tcp_flows
         for rule in reversed(applied):
             wsl("iptables","-w",*reversible_rule(rule))
         wsl("sysctl","-w","net.ipv4.ip_forward="+original_forward)

@@ -1,0 +1,3 @@
+# H2360 — isolate high-supply fixture from legacy imports
+
+H2359 45321300779 failed static only (60/61 tests, H2280 original probe expected 4 got 8). Bare WSL helper selected high profile during module import; it shares the original TCP module. Scope selection to real bare server/client call and restore original flow count/window in finally, like existing buffer scope. Add test verifying high profile function and unchanged original module. No product source change, no fake network evidence. Retry same explicit high-supply request.
