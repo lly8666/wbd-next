@@ -1,3 +1,7 @@
+## B95｜真实前台 UID 与 DNS dump 默认属性（当前）
+
+B94 `881e543e16958478e9f3d975d4997eecfa5d6292` [Action 45427547974](https://github.com/lly8666/wbd-next/actions/runs/45427547974) 11/9/6；七模式真实 TLS/Admission/lease/原 Android native M4/group/Stop PASS，FEC pending PASS，不是远端 wire；普通 App group Java/all AF_INET 双向 TUN 各一次 PASS，其余及物理 baseline EPERM；系统 DNS 规则/NAT/dummy 已装入，kernel dump attr14 导致 readback/cleanup 未证。B95 仅接受内核 disabled suppressor sentinel，非默认仍拒绝；真实普通 App 可见 Activity + foreground importance、UID 两轮 socket + 物理前后、逐 socket native TX 和 DNS owner/query/Stop receipts。九专项隔离并行，详见 [B95 devlog](../devlog/android-root-probe/20261124-b95-foreground-uid-and-dns-dump.md)。不冒称远端 M4/READY 自动恢复/实体 ARM64。
+
 ## B94｜真实 Android DNS netlink / UID socket / 冷 ACK（当前）
 
 B93 `860f78d17944167754aaa8064584d84fc9b02b47` [Action 45422304796](https://github.com/lly8666/wbd-next/actions/runs/45422304796) 12/9/5；真实 WiFi loss callback/Stop/恢复手动 START/Stop PASS；三 UID 5500 CN prefixes+peer throw 和 route-get/排除/Stop PASS，普通 App UDP EPERM；七模式原 MSS+Association PASS，TLS deadline；DNS exact netlink ADD/GET/DEL PASS，Android ip 不支持 ipproto 且读回丢字段。B94 正式系统 DNS 仅 cold netlink rule I/O（同 journal/NAT/Stop/Restore）；原 server CI ACK dispatch、Java/AF_INET UDP + 物理对照及独立 native stage receipt。9个隔离 guest 并行，B93生命周期不重复。详见 [B94 devlog](../devlog/android-root-probe/20261124-b94-android-dns-netlink-and-cold-ack.md)。未证明 remote M4/READY 自动恢复/ARM64手机。

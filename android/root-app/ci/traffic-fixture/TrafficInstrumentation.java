@@ -7,6 +7,34 @@ import android.os.Process;
 
 public final class TrafficInstrumentation extends Instrumentation {
     private Bundle args;
+    private Activity foreground;
+    public static final class Foreground extends Activity {
+        @Override protected void onCreate(Bundle state){
+            super.onCreate(state);
+            android.widget.TextView v=new android.widget.TextView(this);
+            v.setText("Ordinary UID traffic test");setContentView(v);
+        }
+    }
+    private void enterForeground()throws Exception{
+        android.content.Intent i=new android.content.Intent(getTargetContext(),Foreground.class);
+        i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+        foreground=startActivitySync(i);waitForIdleSync();
+        android.app.ActivityManager.RunningAppProcessInfo info=new android.app.ActivityManager.RunningAppProcessInfo();
+        for(int n=0;n<30;n++){
+            android.app.ActivityManager.getMyMemoryState(info);
+            if(info.importance==android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+                    &&foreground.hasWindowFocus()){
+                android.util.Log.i("WBD_UID_TEST","B95_FOREGROUND_UID "+Process.myUid()+" importance="+info.importance);
+                return;
+            }
+            android.os.SystemClock.sleep(100);
+        }
+        throw new IllegalStateException("ordinary foreground admission not proven importance="+info.importance);
+    }
+    private void finishProbe(int code,Bundle result){
+        if(foreground!=null){runOnMainSync(()->foreground.finish());foreground=null;}
+        finish(code,result);
+    }
     @Override public void onCreate(Bundle arguments){
         super.onCreate(arguments);args=arguments;start();
     }
@@ -34,11 +62,12 @@ public final class TrafficInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         try{
             String probe=args.getString("uid_probe","");
+            if(!probe.isEmpty()||"system".equals(args.getString("dns_probe")))enterForeground();
             if("echo4".equals(probe)||"send4".equals(probe)||"baseline4".equals(probe)){
                 String dest="baseline4".equals(probe)?"10.0.2.2":"192.0.2.1";
                 udp4(dest,"WBD_B94_UID4".getBytes(java.nio.charset.StandardCharsets.US_ASCII),!"send4".equals(probe));
-                result.putString("report","uid_probe_sent="+Process.myUid()+" socket=AF_INET probe="+probe);
-                finish(Activity.RESULT_OK,result);return;
+                result.putString("report","uid_probe_sent="+Process.myUid()+" socket=AF_INET probe="+probe+" foreground=1");
+                finishProbe(Activity.RESULT_OK,result);return;
             }
             if("1".equals(probe)||"echo".equals(probe)||"baseline".equals(probe)){
                 String dest="baseline".equals(probe)?"10.0.2.2":"192.0.2.1";
@@ -57,8 +86,8 @@ public final class TrafficInstrumentation extends Instrumentation {
                             throw new IllegalStateException("UID TUN echo mismatch");
                     }
                 }
-                result.putString("report","uid_probe_sent="+Process.myUid());
-                finish(Activity.RESULT_OK,result);
+                result.putString("report","uid_probe_sent="+Process.myUid()+" foreground=1");
+                finishProbe(Activity.RESULT_OK,result);
                 return;
             }
             if("system".equals(args.getString("dns_probe"))){
@@ -69,8 +98,8 @@ public final class TrafficInstrumentation extends Instrumentation {
                 for(java.net.InetAddress ip:network.getAllByName(args.getString("dns_name")))
                     if(expected.equals(ip.getHostAddress()))found=true;
                 if(!found)throw new IllegalStateException("Android Resolver A answer mismatch");
-                result.putString("report","dns_probe_uid="+Process.myUid()+" dns_answer="+expected);
-                finish(Activity.RESULT_OK,result);
+                result.putString("report","dns_probe_uid="+Process.myUid()+" dns_answer="+expected+" foreground=1");
+                finishProbe(Activity.RESULT_OK,result);
                 return;
             }
             String report=TrafficProbe.run(args.getString("host"),
@@ -78,9 +107,9 @@ public final class TrafficInstrumentation extends Instrumentation {
                 Integer.parseInt(args.getString("samples","32")),
                 Integer.parseInt(args.getString("mib","4")));
             result.putString("report","uid="+Process.myUid()+" "+report+TrafficProbe.resolve(args.getString("dns","")));
-            finish(Activity.RESULT_OK,result);
+            finishProbe(Activity.RESULT_OK,result);
         }catch(Exception e){
-            result.putString("error","uid="+Process.myUid()+" probe="+args.getString("uid_probe","")+" "+e);finish(Activity.RESULT_CANCELED,result);
+            result.putString("error","uid="+Process.myUid()+" probe="+args.getString("uid_probe","")+" "+e);finishProbe(Activity.RESULT_CANCELED,result);
         }
     }
 }

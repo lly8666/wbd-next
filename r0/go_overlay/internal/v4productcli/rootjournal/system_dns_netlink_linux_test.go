@@ -13,7 +13,14 @@ func TestB94ExactSystemDNSNetlinkRoundtrip(t *testing.T){
   family,table,e:=dnsNLFamily(p.family());if e!=nil{t.Fatal(e)}
   for _,r:=range p.rules("add"){
    data,e:=systemDNSNetlinkPayload(r);if e!=nil{t.Fatal(e)}
-   line,e:=systemDNSNetlinkRow(data,family,table);if e!=nil{t.Fatal(e)}
+   // Match actual Linux/Android dump metadata: all ones means no suppressor.
+   dump:=append(append([]byte(nil),data...),dnsNLAttr(dnsFRASuppressPrefixlen,dnsNL32(^uint32(0)))...)
+   dump=append(dump,dnsNLAttr(dnsFRASuppressIfgroup,dnsNL32(^uint32(0)))...)
+   line,e:=systemDNSNetlinkRow(dump,family,table);if e!=nil{t.Fatal(e)}
+   for _,kind:=range []uint16{dnsFRASuppressPrefixlen,dnsFRASuppressIfgroup}{
+    bad:=append(append([]byte(nil),data...),dnsNLAttr(kind,dnsNL32(0))...)
+    if _,e=systemDNSNetlinkRow(bad,family,table);e==nil{t.Fatal("enabled suppressor accepted")}
+   }
    got,e:=systemRuleKey(strings.Fields(line),p.table());if e!=nil{t.Fatal(e)}
    expected,e:=systemRuleKey(append([]string{r[4]+":","from","all"},r[5:]...),p.table())
    if e!=nil||got!=expected{t.Fatalf("kernel rule differs %s %s %v",got,expected,e)}

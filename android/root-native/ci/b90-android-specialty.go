@@ -45,7 +45,7 @@ func b91Instrument(ctx context.Context,uid int,extras ...string)error{
  args=append(args,extras...)
  args=append(args,"org.wbdnext.testtraffic/.TrafficInstrumentation")
  out,e:=exec.CommandContext(ctx,"/system/bin/am",args...).CombinedOutput()
- if e!=nil||!strings.Contains(string(out),"INSTRUMENTATION_CODE: -1")||
+ if e!=nil||!strings.Contains(string(out),"INSTRUMENTATION_CODE: -1")||!strings.Contains(string(out),"foreground=1")||
    !(strings.Contains(string(out),fmt.Sprintf("uid_probe_sent=%d",uid))||strings.Contains(string(out),fmt.Sprintf("dns_probe_uid=%d ",uid))){
   return fmt.Errorf("ordinary App instrumentation: %v: %s",e,out)
  }
@@ -111,9 +111,14 @@ func b94PacketOnce(tun *ownedTun,uid int,probe,payload string)error{
  return e
 }
 func b90Packet(tun *ownedTun,uid int)error{
- a:=b94PacketOnce(tun,uid,"echo","WBD_B90_UID")
- b:=b94PacketOnce(tun,uid,"echo4","WBD_B94_UID4")
- return errors.Join(a,b)
+ var ret error
+ for i:=1;i<=2;i++{
+  fmt.Println("B95_UID_ECHO_TRIAL",i)
+  a:=b94PacketOnce(tun,uid,"echo","WBD_B90_UID")
+  b:=b94PacketOnce(tun,uid,"echo4","WBD_B94_UID4")
+  ret=errors.Join(ret,a,b)
+ }
+ return ret
 }
 func b94BaselineUID(uid int)error{
  var ret error
@@ -177,7 +182,9 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
    if e=b90UsesTun(id,dest,dev,false);e!=nil{return fmt.Errorf("%s restored lookup: %w",mode,e)}
   }
   fmt.Printf("B90_ROUTE_%s_STOP_PASS\n",strings.ToUpper(mode))
-  if check!=nil||baseline!=nil{return fmt.Errorf("%s kernel/packet: %w",mode,errors.Join(check,baseline))}
+  fmt.Println("B95_UID_RESTORED_PHYSICAL_BEGIN",mode)
+  restored:=b94BaselineUID(uid)
+  if check!=nil||baseline!=nil||restored!=nil{return fmt.Errorf("%s kernel/packet: %w",mode,errors.Join(check,baseline,restored))}
   fmt.Printf("B90_ROUTE_%s_UID_PACKET_CN_PASS prefixes=%d\n",strings.ToUpper(mode),len(cidrs))
  }
  return nil
@@ -267,7 +274,8 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
  }
  stop,e:=startAndroidAppTCPDNS(c,tun,netip.MustParsePrefix(lease),b90IP,owner.Stop)
  if e!=nil{return e}
- defer func(){ret=errors.Join(ret,stop());if ret==nil{fmt.Println("B91_SYSTEM_DNS_STOP_PASS",mode)}}()
+ fmt.Println("B95_SYSTEM_DNS_OWNER_READY",mode)
+ defer func(){e:=stop();ret=errors.Join(ret,e);if e==nil{fmt.Println("B91_SYSTEM_DNS_STOP_PASS",mode)}}()
  ctx,cancel:=context.WithTimeout(context.Background(),25*time.Second)
  defer cancel()
  var done chan error
@@ -330,15 +338,11 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
   Tun:tun.f,TunName:dev,ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
   HealthSeconds:15,PhysicalDNSUpstream:c.androidPhysicalDNSUpstream}
- ctx,cancel:=context.WithTimeout(context.Background(),60*time.Second);defer cancel()
- route:=func(lease string)(func()error,error){return androidRootRouteAfterNative(c,tun,lease)}
- send:=func()error{
-  qctx,qcancel:=context.WithTimeout(ctx,10*time.Second);defer qcancel()
-  a:=b91Instrument(qctx,uid,"-e","uid_probe","1")
-  if a==nil{fmt.Println("B94_NATIVE_APP_JAVA_SEND_PASS",mode)}else{fmt.Println("B94_NATIVE_APP_JAVA_SEND_FAIL",mode,a)}
-  b:=b91Instrument(qctx,uid,"-e","uid_probe","send4")
-  if b==nil{fmt.Println("B94_NATIVE_APP_INET4_SEND_PASS",mode)}else{fmt.Println("B94_NATIVE_APP_INET4_SEND_FAIL",mode,b)}
-  return errors.Join(a,b)
+ ctx,cancel:=context.WithTimeout(context.Background(),75*time.Second);defer cancel()
+ route:func(lease string)(func()error,error){return androidRootRouteAfterNative(c,tun,lease)}
+ send:=func(probe string)error{
+  qctx,qcancel:=context.WithTimeout(ctx,12*time.Second);defer qcancel()
+  return b91Instrument(qctx,uid,"-e","uid_probe",probe)
  }
  return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,route,send)
 }

@@ -22,6 +22,8 @@ const (
  dnsFRAIIF=3
  dnsFRAPriority=6
  dnsFRAFwmark=10
+ dnsFRASuppressIfgroup=13
+ dnsFRASuppressPrefixlen=14
  dnsFRATable=15
  dnsFRAFwMask=16
  dnsFRAUID=20
@@ -101,8 +103,13 @@ func systemDNSNetlinkRow(data []byte,family byte,table uint32)(string,error){
  }
  for t,v:=range a{
   switch t{case dnsFRAIIF,dnsFRAPriority,dnsFRAFwmark,dnsFRATable,dnsFRAFwMask,dnsFRAUID,dnsFRAIPProto,dnsFRADport:
-  case dnsFRAProtocol:if len(v)!=1||v[0]!=0{return "",fmt.Errorf("foreign DNS rule origin")}
-  default:return "",fmt.Errorf("foreign DNS selector %d",t)}
+  // The kernel dump emits disabled suppress_prefixlength (-1) even
+  // when the original request did not carry a suppressor. This is not
+  // a selector. An enabled suppressor must still never be owned.
+  case dnsFRASuppressPrefixlen,dnsFRASuppressIfgroup:
+   if len(v)!=4||binary.NativeEndian.Uint32(v)!=^uint32(0){return "",fmt.Errorf("foreign DNS suppressor %d: %x",t,v)}
+  case dnsFRAProtocol:if len(v)!=1||v[0]!=0{return "",fmt.Errorf("foreign DNS rule origin %x",v)}
+  default:return "",fmt.Errorf("foreign DNS selector %d length=%d",t,len(v))}
  }
  ports:=a[dnsFRADport]
  if binary.NativeEndian.Uint16(ports[:2])!=53||binary.NativeEndian.Uint16(ports[2:])!=53{return "",fmt.Errorf("foreign DNS port")}

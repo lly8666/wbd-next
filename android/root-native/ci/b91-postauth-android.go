@@ -97,7 +97,7 @@ func b91WaitTX(ctx context.Context,read func()(uint64,error),before uint64)error
  return fmt.Errorf("original Android native TX did not increase")
 }
 func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit uint16,
- route func(string)(func()error,error),send func()error)(ret error){
+ route func(string)(func()error,error),send func(string)error)(ret error){
  cert,roots,e:=b91Cert();if e!=nil{return e}
  routeKey:=[]byte("0123456789abcdef0123456789abcdef")
  store,e:=NewV4EpochStore(8);if e!=nil{return e}
@@ -162,9 +162,14 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  fmt.Println("B91_NATIVE_M4_STARTED",mode,"lanes",n,"actual_fixture_tls_lease",lease)
  undo,e:=route(lease);if e!=nil{return e};if undo==nil{return ErrAdmissionUnsupported}
  defer func(){e:=undo();ret=errors.Join(ret,e);if e==nil{fmt.Println("B91_NATIVE_UID_STOP_PASS",mode)}}()
- before,e:=tx();if e!=nil{return e}
- if e=send();e!=nil{return e}
- if e=b91WaitTX(ctx,tx,before);e!=nil{return e}
+ var probeErr error
+ for _,probe:=range []string{"1","send4"}{
+  before,e:=tx();if e!=nil{return e}
+  if e=send(probe);e!=nil{fmt.Println("B95_NATIVE_SOCKET_SEND_FAIL",mode,probe,e);probeErr=errors.Join(probeErr,e);continue}
+  if e=b91WaitTX(ctx,tx,before);e!=nil{fmt.Println("B95_NATIVE_SOCKET_TX_FAIL",mode,probe,e);probeErr=errors.Join(probeErr,e);continue}
+  fmt.Println("B95_NATIVE_SOCKET_TX_PASS",mode,probe)
+ }
+ if probeErr!=nil{return probeErr}
  fmt.Println("B91_NATIVE_APP_TX_PASS",mode,"remote_m4_NOT_PROVEN")
  return nil
 }

@@ -1,0 +1,11 @@
+# B95｜真实前台 ordinary UID 与 DNS dump 默认属性
+
+B94 SOURCE `881e543e16958478e9f3d975d4997eecfa5d6292` [Action 45427547974](https://github.com/lly8666/wbd-next/actions/runs/45427547974) 11 SUCCESS/9 FAILURE/6 SKIPPED。七模式原 Association / 双端标准 TLS (cert verify ENABLED) / protected admission / 真实 lease / Android Rust M4 start / 原 UID route+Stop / native Stop / TUN close 全部 PASS；[normal/fec 138565550732](https://github.com/lly8666/wbd-next/actions/runs/45427547974/job/138565550732) FEC fixed maximum 与 auto strong pending revision1，未证明 applied/repair；[Game2 138565550596](https://github.com/lly8666/wbd-next/actions/runs/45427547974/job/138565550596) 与 [Game4 138565550775](https://github.com/lly8666/wbd-next/actions/runs/45427547974/job/138565550775) 原 native 2/4 lane group start/stop PASS。冷报文进程内 transport，不是实际 peer wire。七模式普通 App Java/AF_INET send EPERM，没有 native business TX 证明。
+
+UID [single 138565550964](https://github.com/lly8666/wbd-next/actions/runs/45427547974/job/138565550964) 两 socket 失败；[group 138565551694](https://github.com/lly8666/wbd-next/actions/runs/45427547974/job/138565551694) Java TUN echo PASS；[all 138565550718](https://github.com/lly8666/wbd-next/actions/runs/45427547974/job/138565550718) AF_INET TUN echo PASS。均有真实 CN FIB/route-get/Stop。三组两 socket 的物理 baseline 均 EPERM，不能把错误归因于 WBD TUN。B95 CI 普通 App 显式可见 Activity + window focus + foreground importance；同 UID、同原网络权限、不改 BPF/netd/SELinux；每类 UID Java/AF_INET 两轮，物理 before/after 两种 socket，任一失败不抹去；native 每种 socket 分别检查原 TX delta、独立收据。
+
+DNS [physical 138565550770](https://github.com/lly8666/wbd-next/actions/runs/45427547974/job/138565550770) / tunnel / CN：真实两条 rule、dummy route、两 NAT 已安装，kernel dump foreign selector 14 阻止 readback 和 rollback；清理 NOT_PROVEN，不能称完整 PASS。FRA_SUPPRESS_PREFIXLEN=14 是 kernel dump 的默认属性，Linux 本地只读 RTM_GETRULE 实际返回 ffffffff。仅接受 13/14 的精确 disabled sentinel，任何生效 suppressor 仍拒绝；Host test 覆盖默认值和非默认负向。保持原 journal、rule、NAT，三系统 DNS 继续真实 resolver query、分阶段 owner/Stop receipt。B95 共九专项 guest，B93生命周期已通过不重跑；不更改 main/协议/Rust热路径，不访问物理手机或外部服务器。新 SOURCE 构建和 guest 待执行。remote M4 双向/FEC修复/READY自动恢复仍 NOT_PROVEN。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"Record B94 seven-mode real authenticated native startup and two UID TUN echo passes; accept kernel disabled suppressor metadata and test foreground ordinary UID."}
+```

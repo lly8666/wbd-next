@@ -1,5 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.wbdnext.testtraffic">
     <uses-permission android:name="android.permission.INTERNET"/>
-    <application android:label="WBD Traffic Test" android:hasCode="true"/>
+    <application android:label="WBD Traffic Test" android:hasCode="true">
+        <activity android:name=".TrafficInstrumentation$Foreground" android:exported="false"/>
+    </application>
     <instrumentation android:name=".TrafficInstrumentation" android:targetPackage="org.wbdnext.testtraffic" android:label="WBD ordinary UID traffic"/>
 </manifest>

@@ -63,7 +63,7 @@ if [[ "$shard" == dns-physical || "$shard" == dns-cn || "$shard" == all ]];then
  for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
 fi
 if [[ "$shard" == route-* || "$shard" == routes || "$shard" == all ]];then
- timeout 240s python3 -u android/root-app/ci/b94-uid-echo.py >"$out/uid-host.log" 2>&1 &
+ timeout 300s python3 -u android/root-app/ci/b94-uid-echo.py >"$out/uid-host.log" 2>&1 &
  uid_pid=$!
  for i in $(seq 1 20);do grep -Fq B94_UID_FIXTURE_READY "$out/uid-host.log" && break;sleep .2;done
 fi
@@ -91,7 +91,7 @@ if ! clean_kernel baseline;then clean=0;fi
 for scene in "${scenes[@]}";do
  if [[ "$clean" != 1 ]];then record "$scene" NOT_RUN;continue;fi
  if [[ "$scene" == system-physical || "$scene" == system-cn ]] && ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
- limit=85s
+ limit=100s
  if [[ "$scene" == route-* ]];then limit=180s;fi
  status=FAIL
  if invoke "$limit" "$scene" >"$out/$scene.log" 2>&1;then
@@ -114,7 +114,7 @@ for scene in "${scenes[@]}";do
    printf "READBACK %s\n" "$cmd"
    "$adb" shell "su -c '$cmd'" || true
   done >"$out/$scene-egress.txt" 2>&1
-  "$adb" shell logcat -d -b all | grep -E "avc: denied|netd.*(deny|reject|blocked)|TrafficController" | tail -60 >"$out/$scene-egress-logcat.txt" || true
+  "$adb" shell logcat -d -b all | grep -E "B95_FOREGROUND_UID|avc: denied|netd.*(deny|reject|blocked)|TrafficController" | tail -60 >"$out/$scene-egress-logcat.txt" || true
   cat "$out/uid-host.log"
   sed -n '1,90p' "$out/$scene-egress.txt"
  fi
@@ -132,12 +132,22 @@ import json, os, pathlib, sys
 p=pathlib.Path(sys.argv[1])
 rows=dict(line.split("\t") for line in (p/"results.tsv").read_text().splitlines())
 native={}
+uid_stages={}
+dns_stages={}
+for scene in rows:
+ f=p/(scene+".log")
+ if not f.exists():continue
+ t=f.read_text(errors="replace")
+ if scene.startswith("route-"):
+  uid_stages[scene]={"java_echo_passes":t.count("B94_UID_SOCKET_ROUNDTRIP_PASS echo\n"),"inet4_echo_passes":t.count("B94_UID_SOCKET_ROUNDTRIP_PASS echo4\n"),"physical_java_passes":t.count("B94_UID_PHYSICAL_BASELINE_PASS baseline\n"),"physical_inet4_passes":t.count("B94_UID_PHYSICAL_BASELINE_PASS baseline4\n"),"trials_per_socket":2}
+ if scene.startswith("system-"):
+  dns_stages[scene]={"owner":"PASS" if "B95_SYSTEM_DNS_OWNER_READY "+scene in t else "NOT_PROVEN","query":"PASS" if "B91_SYSTEM_DNS_QUERY_PASS "+scene in t else "NOT_PROVEN","stop":"PASS" if "B91_SYSTEM_DNS_STOP_PASS "+scene in t else "NOT_PROVEN"}
 for scene in ("normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"):
  f=p/(scene+".log")
  if not f.exists():continue
  t=f.read_text(errors="replace")
- native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN"}
-r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
+ native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN","java_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" 1\n" in t else "NOT_PROVEN","inet4_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" send4\n" in t else "NOT_PROVEN"}
+r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))
 PY
