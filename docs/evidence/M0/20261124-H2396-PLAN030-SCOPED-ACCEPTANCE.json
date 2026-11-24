@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
+  "result": "FUNCTIONAL_PASS",
+  "scope": "user-authorized scoped acceptance from actual source-locked raw artifacts, original Actions result preserved; no repeat of false red",
+  "linux": {
+    "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+    "run_id": 45357895146,
+    "result": "PASS",
+    "prior_all_cli": {
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "run_id": 45349315041,
+      "result": "PASS"
+    },
+    "artifacts": [
+      {
+        "id": 14903755861,
+        "arch": "amd64",
+        "zip_sha256": "24f34cfe741af3a578da956c9d3e67c64c5a8b7d816a9a2c96af7ded1ed01e39",
+        "package_sha256": "22e67942cdd55afd87812e79b7aff78c9200dc332789a04ad3170cc1e801c97a",
+        "elf_machine": 62
+      },
+      {
+        "id": 14903108093,
+        "arch": "arm64",
+        "zip_sha256": "868dcf228c8dee328a4fa95a4c3b3be0eb6c93e602a6d73d0e44b63d27562868",
+        "package_sha256": "3081d45d79c649a17d45216c553c3996548967a70695a54217b4d04fa62c98cf",
+        "elf_machine": 183
+      }
+    ],
+    "checks": "ZIP SHA/CRC, package manifest and every SHA256SUMS file verified independently; both ELF binaries match ISA",
+    "mixed_receipts": [
+      14902344477,
+      14902029962
+    ],
+    "watch": {
+      "artifact_id": 14903417324,
+      "delivery": [
+        1200,
+        1200
+      ],
+      "server_cpu_seconds": [
+        0.39,
+        0.41
+      ],
+      "server_rss_peak_bytes": [
+        61079552,
+        61210624
+      ],
+      "p99_ms": [
+        0.464587,
+        0.454356
+      ],
+      "first_echo_ms": [
+        0.499011,
+        0.332752
+      ],
+      "watch_snapshots": 6,
+      "assessment": "no observed material regression in scoped ordinary workload; not a general performance guarantee"
+    }
+  },
+  "domain": {
+    "source_sha": "153a2fed9c7af6b491f5e5528c8d9e5a5ca78229",
+    "run_id": 45361122389,
+    "job_id": 138334318670,
+    "original_action": "FAIL",
+    "artifact_id": 14905631371,
+    "sha256": "7b2ea5be1da1ad7a9fa7b2ecb62402ed4d7d40de07e748ca5e41fa24969ce92b",
+    "crc": "PASS",
+    "product_assessment": "PASS_SCOPED_FALSE_RED_LEGACY_STOP_MARKER",
+    "real_dns_generations": 2,
+    "windows_ports": [
+      41031,
+      41032
+    ],
+    "windows_inner": [
+      1389,
+      1389
+    ],
+    "linux_inner": 1389,
+    "client_received_synack_mss": [
+      1420,
+      1420
+    ],
+    "server_synack_bytes": "NOT_LOGGED",
+    "snapshot": {
+      "state": "online",
+      "remote_port": 41032,
+      "mode": "normal",
+      "fec": "off",
+      "negotiated_inner_cap": 1389,
+      "tunnel_ip": "10.66.0.2/32"
+    },
+    "business": {
+      "tunnel_udp": "PASS_ACTUAL_TWO_OS_KERNEL_UDP",
+      "tunnel_tcp": "PASS_REAL_WINDOWS_TO_LINUX_TUNNEL_TCP",
+      "direct_udp": "PASS",
+      "direct_tcp_bytes": 32768,
+      "noncn_dns": "PASS",
+      "dns_blackhole": "PASS_ZERO_DIRECT_FALLBACK",
+      "cn_ip_converse": "PASS_EXACT_ROUTE_ALIAS_CLEANUP"
+    },
+    "stop": {
+      "windows": "2 native Stop success + first/final GUI WAL absent markers; process returncode gate passed before Linux stop",
+      "server_native": [
+        "same-protected-normal-grace-expired remaining_flows=1",
+        "server-close remaining_flows=0"
+      ],
+      "shared_tun": "reader_joined=1",
+      "masquerade": "owned_rule_deleted=1",
+      "linux_process_exit_code": "not separately retained in artifact; original guard could also fail on nonzero exit, no claim that value was observed",
+      "post_stop_fixture_checks": "NOT_RUN after false legacy marker; original GUI marker follows receipt write and WAL checks in C#; raw GUI JSON not separately archived; no claim post-stop fixture executed"
+    },
+    "failure": "expected V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server absent; real mixed server emits V4_PUBLIC_SHARED_TUN_STOP generation=1 ... reader_joined=1. All actual business and owned cleanup receipts present. Correct oracle retains process exit guard and exact real Stop receipts; no product change."
+  },
+  "windows_recovery": {
+    "merged_pr": 74,
+    "merge_sha": "12d0e8af989ff3e8b5ed926f0187970d62835268",
+    "run_id": 45357787794,
+    "result": "PASS",
+    "main_native_regression": 45360802123,
+    "main_routed_regression": 45360802269
+  },
+  "not_run_or_unknown": [
+    "physical Windows user's retest",
+    "physical OS reboot",
+    "OpenWrt",
+    "full public internet",
+    "remote outer setting/directional effective outer, client OS MTU in server snapshot, business bytes/rates, dormant lease roster, sample age unavailable; no invented fields",
+    "independent Linux process exit code and post-stop fixture receipt checks not retained/executed; scoped product acceptance not full original Action PASS"
+  ]
+}

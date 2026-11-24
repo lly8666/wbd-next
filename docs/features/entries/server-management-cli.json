@@ -2,12 +2,13 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "PLAN030 9ff0ed0双ISA构建/systemd/混合设备/watch通过；两次真实Windows域名第二代及managed快照通过，旧server MSS/Stop日志判据不适用，完整业务未达。",
+  "summary": "PLAN030 限定功能验收通过：双ISA真实全CLI、安装混合设备、watch及真实Windows域名重连/设备快照/业务/owned Stop；旧Stop日志判据假红保留。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
   "available_on": [
-    "experiment/m0-030-server-cli"
+    "experiment/m0-030-server-cli",
+    "main"
   ],
   "defaults": {
     "planned_listen": "0.0.0.0:443",
@@ -15,7 +16,7 @@
     "planned_watch_interval": "2s，仅主动watch时读取已有统计"
   },
   "usage": {
-    "cli": "实验包 wbd-next help；install/config/status/clients/start/stop/restart/logs/uninstall/serve；尚未验收。",
+    "cli": "wbd-next help；install/config/status/clients/start/stop/restart/logs/uninstall/serve；双ISA普通CLI真实验收通过。",
     "config": "listen/server-name/users，route-key-hex-file；可选 raw-interface、tun-name、tun-ipv4、lease-pool、decoy、public-address；仍由现有shared服务器parse校验。；高级可选 manual-client-leases（复用028固定账号/32）、peer-persona。",
     "gui": "服务端仅终端菜单，不新建Web或桌面GUI。"
   },
@@ -99,11 +100,25 @@
       "status": "FAIL",
       "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
       "evidence": "docs/evidence/M0/20261124-H2395-PLAN030-MANAGED-RECONNECT-RECEIPTS.json"
+    },
+    {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "实际包校验、原生构建、systemd/混合设备/watch，普通CLI历史同源资格",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+      "evidence": "docs/evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux WSL2 amd64",
+      "scope": "用户授权假红限定验收：真实两代域名、快照、内核TCP/UDP、DNS与两端owned Stop原始回执；原Action FAIL保留，未执行后置夹具不冒称通过",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "153a2fed9c7af6b491f5e5528c8d9e5a5ca78229",
+      "evidence": "docs/evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json"
     }
   ],
   "limitations": [
     "方向外层设置/有效外层、客户端OS应用及真实业务字节、休眠租约、样本年龄未由原有生产接口提供，明确未知；不另造wire字段和热路径统计。",
-    "Windows DNS域名重连组合待验；机器重启、OpenWrt及物理公网不由runner资格推断。"
+    "真实Windows DNS域名重连、业务及owned Stop已限定验收；原Action假红，Linux进程退出码和后置夹具未单独采集，机器重启、OpenWrt、物理公网未验。"
   ],
   "promotion": null
 }

@@ -2943,9 +2943,13 @@ print(json.dumps(result),flush=True)
  if p030_managed:wsl("rm","-f",cfg_guest,sock_guest)
  stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and plan028_owned_switch else
   "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
+  "V4_PUBLIC_SHARED_TUN_STOP generation=" if p030_managed else
   "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else
   "V4_PUBLIC_NATIVE_STOP_DRAINED role=server")
- if s.returncode or stop_marker not in (out/"server.log").read_text():raise RuntimeError("Linux original Rust Stop missing")
+ server_stop_text=(out/"server.log").read_text()
+ if s.returncode or stop_marker not in server_stop_text:raise RuntimeError("Linux original Rust Stop missing; exit="+str(s.returncode)+" expected="+stop_marker)
+ if p030_managed and ("V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason=server-close remaining_flows=0" not in server_stop_text or not re.search(r"V4_PUBLIC_SHARED_TUN_STOP generation=[^\n]*reader_joined=1",server_stop_text) or "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED owned_rule_deleted=1" not in server_stop_text):
+  raise RuntimeError("Linux managed native Stop receipts missing")
  report["stop"]="PASS_BOTH_OWNED"
  if p029b_b4:
   # Signed source-locked proof: no synthetic OS/Ready, no single- or
