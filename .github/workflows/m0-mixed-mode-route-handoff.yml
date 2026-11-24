@@ -9,6 +9,7 @@ on:
       - 'r0/go_overlay/internal/v4productcli/game_linux.go'
       - 'r0/go_overlay/internal/realityfront/bridge_v4_linux_game_product.go'
       - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - 'crates/wbd-engine/src/v4_windows_game_native_runtime.rs'
   workflow_dispatch:
 permissions: {contents: read}
 jobs:
@@ -151,6 +152,8 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'Windows Rust production DLL failed'}
           cargo +1.85.1 test --locked -p wbd-engine --features $features --lib v4_windows_owner -- --test-threads=1
           if($LASTEXITCODE -ne 0){throw 'Windows Rust owner regression failed'}
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib game_native_client_cold_health_uses_existing_ready_before_server_gate
+          if($LASTEXITCODE -ne 0){throw 'Windows Game actual cold Health initializer regression failed'}
           New-Item -ItemType Directory -Force delivery/windows-amd64 | Out-Null
           Copy-Item wbd-client.exe delivery/windows-amd64/wbd-client.exe
           Copy-Item target/release/wbd_engine.dll delivery/windows-amd64/wbd_engine.dll
