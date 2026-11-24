@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: '1.23.12', cache: false}
       - name: Assemble and build current original Go and native recovery test
+        id: build
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -40,6 +41,7 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'native recovery tests failed to compile'}
           }finally{Pop-Location}
       - name: Reuse unchanged Rust and signed Wintun from final 029 delivery
+        id: frozen
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
@@ -66,8 +68,10 @@ jobs:
             & ./recovery-test.exe '-test.v' '-test.count=1' '-test.timeout=4m' '-test.run=^(TestM0CrashV2NativeRecovery|TestPLAN010OriginalNativeRecoveryNoShellOrLegacyFallback|TestPlan029NoWFPV2)' 2>&1 | Tee-Object ../../native-recovery.log
             if($LASTEXITCODE -ne 0){throw 'actual native recovery failed'}
           }finally{Pop-Location}
-          if((Get-Content native-recovery.log -Raw) -notmatch 'M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS'){throw 'real crash test did not execute'}
+          $log=Get-Content native-recovery.log -Raw
+          foreach($marker in @('M0_REAL_V2_NORMAL_STOP_PASS','M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS scene=partial','M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS scene=full')){if($log -notmatch [regex]::Escape($marker)){throw "missing $marker"}}
       - name: Real WinForms portable GUI self-test including stopped child window close
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.frozen.outcome == 'success' }}
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'

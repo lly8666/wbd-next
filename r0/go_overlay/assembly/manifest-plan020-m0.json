@@ -2079,7 +2079,7 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_persisted_recover_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_persisted_recover_windows_test.go",
-      "result_blob": "b1a3351637f0970f0591624cc6aeb35c46c6c31c"
+      "result_blob": "a45eadd96cbc95dcf3774132caed59cfa4c50e0a"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
