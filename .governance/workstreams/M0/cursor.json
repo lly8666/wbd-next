@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2391,
-  "checkpoint_sha": "9070b54a096ab799fcc15ade183fd59d65f76c21",
+  "sequence": 2392,
+  "checkpoint_sha": "9e2ce46bb026f9fb61db566f94a8c8da9c001e7e",
   "progress": "verifying",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030 Linux双ISA全CLI/真实混合设备/watch PASS，Windows域名组合仍待；独立PR74真实正常/partial/full Wintun崩溃恢复、433项GUI PASS。",
+  "current_task": "PLAN030 Linux双ISA CLI限定通过；Windows域名重连双重复FAIL；PR74旧版v2升级PASS但用户真实客户端恢复报route is not owned，待定位。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "收030域名组合45349332671及同源重复45349327390（600d541），实际旧版升级恢复45349844112（固定新产品f867845、旧产品f0e8e5a）。只针对实际失败修复。两PR最终验收后再合入/交付；保留未接齐快照字段未知。",
+  "next_action": "先取用户真实客户端版本、完整恢复stderr、原生v2 WAL/route sidecar及对应Windows实际路由读回；区分原Wintun身份、路由metric/protocol等属性变化和真实外部路由。不要盲删路由或WAL；在PR74针对实际失败最小修复；再补030真实域名重连及服务端设备快照组合。PR73/74暂不合并。",
   "unverified": true,
   "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
   "evidence_refs": [],
@@ -21,5 +21,5 @@
     "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2391：030 all-CLI 45349315041双ISA真实PTY和账号增改删/安装配置检查、日志/status/clients、启停自启卸载、重装均PASS；watch45345811457 1200/1200每轮；Linux原包两ZIP实际下载及nested tar SHA/各文件hash/ELF e_machine已验，证据PR73 b02cb82。030旧域名组合45345844201实际第一代Ready/Stop，未发第二SYN，重测暴露MainForm真实异常。Win PR74 f867845 Action45349201214真实正常Stop、partial/full崩溃恢复及433项WinForms PASS，原包实际下载CRC/SHA/PE核验；17d8feb只增证据和旧版CLI真实升级验证。PR73/74未合main。"
+  "partial_summary": "H2392：收取原在途结果，无重复dispatch。45349332671/45349327390 同fixture 600d541 均completed/failure，原生native-public-two-os分别在SECOND_APPLIED process exited 1/not observed失败；真实旧版升级45349844112 completed/success，原始job138293247724确认旧版实际FAIL、新版实际PASS。用户报告最新Windows客户端网络恢复未完成 route is not owned refuse to replace，实体失败未定位；PR74恢复仍依赖原有严格route lookup匹配，也可能在原Wintun身份或其他恢复阶段报同错误。远程终端授权未获，未读取实体机状态。Linux CLI/watch限定通过；未接齐快照字段保留未知。未更改生产代码，未启动新测试。"
 }
