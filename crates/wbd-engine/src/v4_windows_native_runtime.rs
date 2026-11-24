@@ -571,6 +571,7 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
      let mut lens=[0usize;BATCH];
      let mut prepared=None;
+     let mut native_off_loan=None;
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          if fixed{
@@ -611,13 +612,19 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
              // into Npcap's own final queue, not an intermediate frame slab.
              for i in 0..count{lens[i]=FRAME_RECORD_OFFSET+meta[i].2;}
              prepared=npf.prepare_batch(&lens[..count]);
-             v3_drain_sources(&mut e,now,&meta[..count],|i,wire|{
+             let keep_pending=!v3_native_off_loan(&e);
+             let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
                  let frame=if let Some(batch)=prepared.as_mut(){
                      batch.frame_mut(i)
                  }else{&mut frames[i][..]};
                  frame[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
                      .copy_from_slice(wire);
              })?;
+             if keep_pending{
+                 e.tx_scratch=loan.recycle();
+             }else{
+                 native_off_loan=Some(loan);
+             }
          }
      }
      let ack=counters.ack.load(Ordering::Acquire);
@@ -654,11 +661,17 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      }
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         let settled_native_off=if let Some(loan)=native_off_loan{
+             v3_finish_native_off_loan(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,loan)?;
+             true
+         }else{false};
          let mut fresh_bytes=0u64;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
              let status=kernel_result(result,count,i)?;
-             m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                 pn,seq,used,status)?;
+             if !settled_native_off{
+                 m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                     pn,seq,used,status)?;
+             }
              if status==1{
                  fresh_bytes+=lens[i] as u64;
                  counters.tx_copied.fetch_add(1,Ordering::Relaxed);
