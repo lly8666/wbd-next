@@ -91,9 +91,14 @@ class LinuxNonWindowsCapabilities(unittest.TestCase):
 
     def test_original_raw_kernel_copy_statistics_only_after_send_success(self):
         native=read("crates/wbd-engine/src/v4_game_public_kernel.rs")
-        self.assertIn("game.drain_for_linux_native",native)
-        self.assertIn("let ok=sent.is_ok();",native)
-        self.assertIn("if pad>0",native)
+        self.assertIn("game.stage_for_windows_native",native)
+        send=native.index("let report=item.raw.send_kernel_multimsg")
+        prefix=native.index("let copied=report.outcome.accepted_prefix.min(records.len());",send)
+        credit=native.index("for (frozen,&(id,pad)) in records.iter().zip(ids.iter()).take(copied)",prefix)
+        self.assertLess(send,prefix)
+        self.assertLess(prefix,credit)
+        self.assertIn("if pad>0",native[credit:])
+        self.assertIn("game.note_windows_native_m4_copy(id)",native[credit:])
         self.assertIn("tx_pad_records.fetch_add(1,Ordering::Relaxed)",native)
         self.assertIn("tx_pad_bytes.fetch_add(pad as u64,Ordering::Relaxed)",native)
         self.assertIn("padding_copied_counters",native)
