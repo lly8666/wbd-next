@@ -15,7 +15,7 @@ import java.util.TreeSet;
  * only after its package AND current installed UID still match.
  */
 final class RootConnectionSettings {
-    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream,ipv6Gateway,ipv6DirectCIDRs;
+    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream,ipv6Gateway,ipv6DirectCIDRs,tunnelDNSUpstream;
     final int port,outerMTU,tunQueue,profile,nativeHealthSeconds,recoveryMode,rotationMinutes;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     final Map<String,Integer> selected,bypass;
@@ -166,6 +166,19 @@ final class RootConnectionSettings {
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
         boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,recoveryMode,rotationMinutes,appTcpDNS,tetherSharing,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,RootPhysicalDNSUpstream.TUNNEL_DEFAULT);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,String tunnelDNSUpstream) {
+        this.tunnelDNSUpstream=RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstream);
         this.ipv6Gateway=ipv6Gateway(ipv6Gateway);
         this.ipv6DirectCIDRs=ipv6DirectCIDRs(ipv6DirectCIDRs);
         this.systemDNS=systemDNS;
@@ -257,6 +270,7 @@ final class RootConnectionSettings {
         p.setProperty("all_apps",Boolean.toString(allApps));
         p.setProperty("direct_cidrs",directCIDRs);
         p.setProperty("physical_dns_upstream",physicalDNSUpstream);
+        p.setProperty("tunnel_dns_upstream",tunnelDNSUpstream);
         p.setProperty("physical_dns_follow_network",Boolean.toString(physicalDNSFollowNetwork));
         p.setProperty("native_health_seconds",Integer.toString(nativeHealthSeconds));
         p.setProperty("direct_lan_auto",Boolean.toString(autoConnectedDirect));
@@ -334,7 +348,7 @@ final class RootConnectionSettings {
                 p.containsKey("app_tcp_dns")&&flag(p,"app_tcp_dns"),
                 p.containsKey("tether_sharing")&&flag(p,"tether_sharing"),
                 p.containsKey("system_dns")&&flag(p,"system_dns"),
-                p.containsKey("system_dns6")&&flag(p,"system_dns6"),p.getProperty("ipv6_gateway",""),p.getProperty("ipv6_direct_cidrs",""));
+                p.containsKey("system_dns6")&&flag(p,"system_dns6"),p.getProperty("ipv6_gateway",""),p.getProperty("ipv6_direct_cidrs",""),p.getProperty("tunnel_dns_upstream",RootPhysicalDNSUpstream.TUNNEL_DEFAULT));
         }catch(IllegalArgumentException invalid){
             return null;
         }

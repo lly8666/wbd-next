@@ -21,6 +21,8 @@ type AppTCPDNS struct {
  udp net.PacketConn
  downstreamTCP net.Listener
  downstreamUDP net.PacketConn
+ downstream6TCP []net.Listener
+ downstream6UDP []net.PacketConn
  ipv6TCP net.Listener
  ipv6UDP net.PacketConn
  resolver *Resolver
@@ -35,11 +37,12 @@ type AppTCPDNS struct {
 // One original fixed DNS mode per cold generation. Physical and tunnel
 // endpoints are literal, and every socket uses the supplied scoped dialer.
 func StartAppTCPDNS(dial DialFunc, match CNMatch, split, allPhysical bool,
- physical string)(*AppTCPDNS,error){
+ physical string,tunnel ...string)(*AppTCPDNS,error){
  if split&&allPhysical{return nil,ErrInvalid}
  r,e:=New(dial,match,split)
  if e!=nil{return nil,e}
  r.direct=physical
+ if len(tunnel)>0{r.tunnel=tunnel[0]}
  l,e:=net.Listen("tcp4","127.0.0.1:0")
  if e!=nil{return nil,e}
  ctx,cancel:=context.WithCancel(context.Background())
@@ -108,6 +111,8 @@ func (s *AppTCPDNS) Close()error{
  if s.downstreamUDP!=nil{e=errors.Join(e,s.downstreamUDP.Close())}
  if s.ipv6TCP!=nil{e=errors.Join(e,s.ipv6TCP.Close())}
  if s.ipv6UDP!=nil{e=errors.Join(e,s.ipv6UDP.Close())}
+ for _,l:=range s.downstream6TCP{e=errors.Join(e,l.Close())}
+ for _,p:=range s.downstream6UDP{e=errors.Join(e,p.Close())}
  s.mu.Lock()
  for c:=range s.clients{c.Close()}
  s.mu.Unlock()

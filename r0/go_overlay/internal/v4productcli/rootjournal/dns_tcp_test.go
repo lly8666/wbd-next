@@ -13,9 +13,9 @@ type b64DNSKernel struct{p DNSPlan;route,rule bool;rows []string}
 func(k *b64DNSKernel) ip(args ...string)(string,error){
  switch{
  case reflect.DeepEqual(args,[]string{"-4","route","show","table","all"}):
-  if k.route{return "1.1.1.1 dev "+k.p.Tun+" table 19843 scope link\n",nil};return "",nil
+  if k.route{return strings.TrimSuffix(k.p.upstream(),"/32")+" dev "+k.p.Tun+" table 19843 scope link\n",nil};return "",nil
  case reflect.DeepEqual(args,[]string{"-4","rule","show"}):
-  if k.rule{return "9599: from "+k.p.Lease+" to 1.1.1.1 uidrange 0-0 lookup 19843\n",nil};return "",nil
+  if k.rule{return "9599: from "+k.p.Lease+" to "+strings.TrimSuffix(k.p.upstream(),"/32")+" uidrange 0-0 lookup 19843\n",nil};return "",nil
  case reflect.DeepEqual(args,dnsRoute(k.p,"add")):k.route=true
  case reflect.DeepEqual(args,dnsRoute(k.p,"del")):k.route=false
  case reflect.DeepEqual(args,dnsRule(k.p,"add")):k.rule=true
@@ -42,7 +42,7 @@ func TestB64OwnedTCPDNSSelectedAndAllAppRoutesRestore(t *testing.T){
  for _,all:=range []bool{false,true}{
   p:=DNSPlan{Version:1,Tun:"wbdv40",Lease:"10.66.0.8/32",Port:43210,Tunnel:true,
    UIDs:[]int{11200,11201},All:all}
-  if all{p.UIDs=nil;p.ExcludedAppIDs=[]int{11200,11201,11500}}
+  if all{p.UIDs=nil;p.ExcludedAppIDs=[]int{11200,11201,11500};p.TunnelUpstream="9.9.9.9"}
   k:=&b64DNSKernel{p:p}
   path:=filepath.Join(t.TempDir(),"owned","dns-tcp-journal.json")
   owner,e:=NewDNS(k.ip,k.fw,k.batch,path,p);if e!=nil{t.Fatal(e)}

@@ -3854,9 +3854,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     tunnel_dns:u32,health_seconds:u32,
     physical_dns:u32,upstream:*const u8,
     cn_raw:*const u8,cn_len:usize,
-    game_fec_profile:u32,
+    game_fec_profile:u32,tunnel_upstream:*const u8,
 )->i32{
-    if fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
+    if tunnel_upstream.is_null()||fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
        tunnel_dns>1||physical_dns>1||upstream.is_null()||
        !matches!(health_seconds,15|30)||cn_len>1024*1024||
        (game_fec_profile!=255&&game_fec_profile>6)||
@@ -3874,6 +3874,10 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     physical_upstream.copy_from_slice(unsafe{
         std::slice::from_raw_parts(upstream,4)
     });
+    let mut tunnel_dns_upstream=[0u8;4];
+    tunnel_dns_upstream.copy_from_slice(unsafe{std::slice::from_raw_parts(tunnel_upstream,4)});
+    if tunnel_dns_upstream[0]==0||tunnel_dns_upstream[0]==127||tunnel_dns_upstream[0]>=224||
+       (tunnel_dns_upstream[0]==169&&tunnel_dns_upstream[1]==254){return INVALID}
     let Ok(name)=std::str::from_utf8(unsafe{
         std::slice::from_raw_parts(tun_name,tun_len)
     })else{return INVALID};
@@ -3892,7 +3896,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     let workers=android_game_m4::AndroidGameWorkers::start(
         Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
         lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds,
-        physical_dns==1,physical_upstream,cn,
+        physical_dns==1,physical_upstream,cn,tunnel_dns_upstream,
         (game_fec_profile!=255).then_some(game_fec_profile as u8)
     );
     let Ok(workers)=workers else{return BAD_STAGE};
@@ -4853,6 +4857,21 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_upstream_effect
     let Ok(e)=cell.lock()else{return BAD_STAGE};
     if e.phase!=PH_ACTIVE||e.server_side||e.android_workers.is_some(){return BAD_STAGE}
     unsafe{std::ptr::copy_nonoverlapping(e.android_dns_physical_upstream.as_ptr(),output,4);}
+    OK
+}
+// B73: set the same generation's native tunnel DNS endpoint once before M4.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_upstream_set(h:u64,input:*const u8,len:usize)->i32{
+    if input.is_null()||len!=4{return INVALID}
+    let mut ip=[0u8;4];ip.copy_from_slice(unsafe{std::slice::from_raw_parts(input,4)});
+    if ip[0]==0||ip[0]==127||ip[0]>=224||(ip[0]==169&&ip[1]==254){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       !android_dns_original_m4_ready(&e)||e.android_workers.is_some()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{return BAD_STAGE}
+    e.android_dns_flows.set_upstream(ip);
     OK
 }
 // B4: explicit App UDP53 -> physically bound user-selected IPv4 mode.

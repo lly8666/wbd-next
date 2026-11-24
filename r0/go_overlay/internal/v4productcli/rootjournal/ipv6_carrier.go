@@ -36,6 +36,7 @@ type IPv6Plan struct{
  // Optional real existing Android downstream global IPv6 /64 addresses.
  Downstream string
  Downstream6 []string
+ DownstreamDNSPorts []int `json:",omitempty"`
  DirectCIDRs []string `json:",omitempty"`
 }
 // Direct prefixes fall through to Android's later routing policy; they never
@@ -98,11 +99,13 @@ func(p IPv6Plan) valid()bool{
  if p.Version!=1||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||
     e!=nil||f!=nil||!local.Is4()||!peer.Is4()||!local.IsPrivate()||!peer.IsPrivate()||
     !p.relay().Contains(local)||p.MTU<1280||p.MTU>1480{return false}
- if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0&&p.Downstream==""&&len(p.Downstream6)==0&&len(p.DirectCIDRs)==0}
+ if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0&&p.Downstream==""&&len(p.Downstream6)==0&&len(p.DirectCIDRs)==0&&len(p.DownstreamDNSPorts)==0}
  if local==peer||p.Egress!=""{return false}
  direct,e:=mergeIPv6DirectCIDRs(nil,p.DirectCIDRs)
  if e!=nil||strings.Join(direct,",")!=strings.Join(p.DirectCIDRs,","){return false}
  if (p.Downstream=="")!=(len(p.Downstream6)==0)||len(p.Downstream6)>4{return false}
+ if len(p.DownstreamDNSPorts)!=0&&len(p.DownstreamDNSPorts)!=len(p.Downstream6){return false}
+ for _,port:=range p.DownstreamDNSPorts{if port<1||port>65535{return false}}
  if p.Downstream!=""{
   if !nameOK(p.Downstream)||p.Downstream==p.Tun||p.Downstream==ipv6CarrierIface{return false}
   seen:=map[netip.Prefix]bool{}
@@ -145,12 +148,20 @@ func(p IPv6Plan) commands()[]carrierCmd{
   route("-6",IPv6CarrierPrefix,ipv6CarrierIface,p.local6())
   rule("-6",ipv6UIDPref,"to",IPv6CarrierPrefix)
  }else{
-  for _,raw:=range p.Downstream6{
+  for i,raw:=range p.Downstream6{
    q:=netip.MustParsePrefix(raw);subnet:=q.Masked().String()
    fw("fw6","filter","FORWARD","-i",p.Downstream,"-o",ipv6CarrierIface,"-s",subnet,"-m","conntrack","--ctstate","NEW,ESTABLISHED,RELATED","-j","ACCEPT")
    fw("fw6","filter","FORWARD","-i",ipv6CarrierIface,"-o",p.Downstream,"-d",subnet,"-m","conntrack","--ctstate","ESTABLISHED,RELATED","-j","ACCEPT")
    fw("fw6","nat","POSTROUTING","-s",subnet,"-o",ipv6CarrierIface,"-j","SNAT") // exact source inserted below
    last:=&out[len(out)-1];last.args=append(last.args,"--to-source",p.local6())
+   if len(p.DownstreamDNSPorts)!=0{
+    port:=strconv.Itoa(p.DownstreamDNSPorts[i])
+    for _,proto:=range []string{"udp","tcp"}{
+     fw("fw6","filter","INPUT","-i",p.Downstream,"-s",subnet,"-d",q.Addr().String()+"/128","-p",proto,"-m",proto,"--dport",port,"-m","conntrack","--ctstate","DNAT","-j","ACCEPT")
+     fw("fw6","nat","PREROUTING","-i",p.Downstream,"-s",subnet,"-p",proto,"-m",proto,"--dport","53","-j","DNAT")
+     rule:=&out[len(out)-1];rule.args=append(rule.args,"--to-destination","["+q.Addr().String()+"]:"+port)
+    }
+   }
   }
   route("-4",p.Gateway4+"/32",p.Tun,p.Local4)
   rule("-4",ipv6OuterPref,"from",p.Local4+"/32","to",p.Gateway4+"/32","ipproto","41")
@@ -289,7 +300,8 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
    }
   }
  }
- for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"}}{
+ for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"},{"fw6","nat","PREROUTING"}}{
+  if pair[2]=="PREROUTING"&&len(p.DownstreamDNSPorts)==0{continue}
   if !p.Server&&len(p.Downstream6)==0&&pair[0]=="fw6"{continue}
   fw:=s.fw4;if pair[0]=="fw6"{fw=s.fw6}
   lines,e:=fw("-w","2","-t",pair[1],"-S",pair[2]);if e!=nil{return x,e}

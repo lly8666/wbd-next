@@ -2082,7 +2082,7 @@ impl ProtectedScopedOwner{
                         let mut inverted_dns=false;
                         if dns_capture_enabled &&
                            crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::
-                               is_tunnel_reply_candidate(business){
+                               is_tunnel_reply_candidate_for(business,dns_flows.upstream()){
                             if business.len()>
                                crate::v4_android_dns_udp_flow::MAX_DNS_IPV4_PACKET{
                                 failed=failed.saturating_add(1);

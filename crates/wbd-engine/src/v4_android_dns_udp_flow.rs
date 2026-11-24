@@ -36,9 +36,10 @@ struct Flow {
 pub(crate) struct TunnelDnsUdpFlows {
     slots:[Option<Flow>;CAP],
     next:usize,
+    upstream:[u8;4],
 }
 impl Default for TunnelDnsUdpFlows {
-    fn default()->Self{Self{slots:[None;CAP],next:0}}
+    fn default()->Self{Self{slots:[None;CAP],next:0,upstream:TUNNEL_DNS}}
 }
 fn be16(b:&[u8])->u16{u16::from_be_bytes([b[0],b[1]])}
 fn sum_words(data:&[u8],sum:&mut u32){
@@ -129,9 +130,13 @@ impl TunnelDnsUdpFlows {
     /// before an authenticated IP packet reaches the actual TUN writer.
     /// A candidate with a bad length/checksum/question must be rejected by
     /// rewrite_reply, never transparently delivered as another DNS server.
-    pub(crate) fn is_tunnel_reply_candidate(packet:&[u8])->bool{
+    #[cfg(test)]
+    pub(crate) fn is_tunnel_reply_candidate(packet:&[u8])->bool{Self::is_tunnel_reply_candidate_for(packet,TUNNEL_DNS)}
+    pub(crate) fn upstream(&self)->[u8;4]{self.upstream}
+    pub(crate) fn set_upstream(&mut self,upstream:[u8;4]){self.stop();self.upstream=upstream;}
+    pub(crate) fn is_tunnel_reply_candidate_for(packet:&[u8],upstream:[u8;4])->bool{
         if packet.len()<28||packet[0]>>4!=4||packet[9]!=17||
-           packet[12..16]!=TUNNEL_DNS{return false}
+           packet[12..16]!=upstream{return false}
         let ihl=usize::from(packet[0]&15)*4;
         if ihl<20||ihl>60||ihl+8>packet.len(){return false}
         let port=be16(&packet[ihl+2..ihl+4]);
@@ -177,7 +182,7 @@ impl TunnelDnsUdpFlows {
             .ok_or(FlowError::Capacity)?;
         let expiry=now_ms.saturating_add(MAX_AGE_MS);
         // All validation and capacity checks precede the first mutation.
-        packet[16..20].copy_from_slice(&TUNNEL_DNS);
+        packet[16..20].copy_from_slice(&self.upstream);
         packet[ihl..ihl+2].copy_from_slice(&(FIRST_PORT+free as u16).to_be_bytes());
         set_checksums(packet,ihl);
         self.slots[free]=Some(Flow{
@@ -195,7 +200,7 @@ impl TunnelDnsUdpFlows {
         &mut self,packet:&mut [u8],now_ms:u64
     )->Result<(),FlowError>{
         let ihl=udp_ipv4(packet)?;
-        if packet[12..16]!=TUNNEL_DNS||
+        if packet[12..16]!=self.upstream||
            be16(&packet[ihl..ihl+2])!=53{return Err(FlowError::Unowned)}
         let dest:[u8;4]=packet[16..20].try_into().map_err(|_|FlowError::Malformed)?;
         let port=be16(&packet[ihl+2..ihl+4]);
@@ -258,6 +263,24 @@ mod tests {
         d[2]=0x81;d[3]=0x80; // QR=1, recursion requested/available
         packet(&d,TUNNEL_DNS,translated[12..16].try_into().unwrap(),
             53,be16(&translated[20..22]))
+    }
+    #[test]
+    fn b73_tunnel_dns_configured_upstream_inverse(){
+        let mut t=TunnelDnsUdpFlows::default();
+        let upstream=[9,9,9,9];
+        t.set_upstream(upstream);
+        let local=[10,0,0,7];
+        let original=[8,8,4,4];
+        let mut req=packet(&dns_query("example.org",0x7321),local,original,41555,53);
+        t.rewrite_query(&mut req,1).unwrap();
+        assert_eq!(&req[16..20],&upstream);
+        let mut reply=reply_for(&req,"example.org");
+        reply[12..16].copy_from_slice(&upstream);set_checksums(&mut reply,20);
+        assert!(TunnelDnsUdpFlows::is_tunnel_reply_candidate_for(&reply,t.upstream()));
+        assert!(!TunnelDnsUdpFlows::is_tunnel_reply_candidate(&reply));
+        t.rewrite_reply(&mut reply,2).unwrap();
+        assert_eq!(&reply[12..16],&original);
+        assert!(good_checksums(&reply));
     }
     #[test]
     fn b2c2b1_rust_udp53_tunnel_real_ipv4_packet_pair_inverse_and_checksums(){

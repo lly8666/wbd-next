@@ -27,11 +27,13 @@ type DNSPlan struct{
  Tun,Lease string
  Port int
  Tunnel,All bool
+ TunnelUpstream string `json:",omitempty"`
  // Tether DNS can own the original root-to-tunnel route without
  // changing ordinary application TCP53 policy. Old journal defaults false.
  NoAppNAT bool
  UIDs,ExcludedAppIDs []int
 }
+func(p DNSPlan) upstream()string{if p.TunnelUpstream==""{return dnsUpstream};return p.TunnelUpstream+"/32"}
 func(p DNSPlan) ranges()[]allRange{
  if p.All{return (AllAppPlan{ExcludedAppIDs:p.ExcludedAppIDs}).ranges()}
  out:=make([]allRange,0,len(p.UIDs))
@@ -40,6 +42,7 @@ func(p DNSPlan) ranges()[]allRange{
 }
 func(p DNSPlan) valid()bool{
  lease,e:=netip.ParsePrefix(p.Lease)
+ if p.TunnelUpstream!=""{a,err:=netip.ParseAddr(p.TunnelUpstream);if err!=nil||!a.Is4()||a.IsUnspecified()||a.IsLoopback()||a.IsMulticast()||a.IsLinkLocalUnicast()||a.As4()[0]>=224||a.String()!=p.TunnelUpstream{return false}}
  if p.Version!=1||!nameOK(p.Tun)||p.Port<1||p.Port>65535||
   e!=nil||lease.Bits()!=32||!lease.Addr().Is4()||lease.Addr().IsUnspecified()||
   lease.Addr().IsMulticast(){return false}
@@ -53,11 +56,11 @@ func(p DNSPlan) appRanges()[]allRange{
  return p.ranges()
 }
 func dnsRoute(p DNSPlan,action string)[]string{
- return []string{"-4","route",action,dnsUpstream,"dev",p.Tun,"table",dnsTable}
+ return []string{"-4","route",action,p.upstream(),"dev",p.Tun,"table",dnsTable}
 }
 func dnsRule(p DNSPlan,action string)[]string{
  return []string{"-4","rule",action,"pref",dnsPriority,"from",p.Lease,
-  "to",dnsUpstream,"uidrange","0-0","lookup",dnsTable}
+  "to",p.upstream(),"uidrange","0-0","lookup",dnsTable}
 }
 func dnsNAT(p DNSPlan,r allRange,action string)[]string{
  uid:=strconv.Itoa(r.from)
@@ -145,7 +148,7 @@ func(s *DNSOwner) state(p DNSPlan)(dnsState,error){
   for i:=0;i+1<len(w);i++{if w[i]=="table"&&w[i+1]==dnsTable{at=i;break}}
   if at<0{continue}
   if state.route||!p.Tunnel||at!=3||len(w)<5||
-   strings.TrimSuffix(w[0],"/32")!="1.1.1.1"||w[1]!="dev"||w[2]!=p.Tun{
+   strings.TrimSuffix(w[0],"/32")!=strings.TrimSuffix(p.upstream(),"/32")||w[1]!="dev"||w[2]!=p.Tun{
    return state,fmt.Errorf("foreign DNS upstream route")
   }
   for i:=5;i<len(w);i+=2{
@@ -164,7 +167,7 @@ func(s *DNSOwner) state(p DNSPlan)(dnsState,error){
   if !owns{continue}
   if state.rule||!p.Tunnel||len(w)!=9||w[0]!=dnsPriority+":"||
    w[1]!="from"||strings.TrimSuffix(w[2],"/32")!=strings.TrimSuffix(p.Lease,"/32")||
-   w[3]!="to"||strings.TrimSuffix(w[4],"/32")!="1.1.1.1"||
+   w[3]!="to"||strings.TrimSuffix(w[4],"/32")!=strings.TrimSuffix(p.upstream(),"/32")||
    w[5]!="uidrange"||w[6]!="0-0"||
    (w[7]!="lookup"&&w[7]!="table")||w[8]!=dnsTable{
    return state,fmt.Errorf("foreign DNS source policy rule")

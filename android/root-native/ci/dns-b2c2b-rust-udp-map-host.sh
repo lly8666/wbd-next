@@ -7,6 +7,7 @@ test "$(git rev-parse HEAD)" = "${GITHUB_SHA:?missing SHA}"
 mkdir -p out/android-b2c2b-dns-flow
 cargo +1.85.1 test --locked -p wbd-engine --lib b2c2b \
   -- --nocapture 2>&1 | tee out/android-b2c2b-dns-flow/test.log
+cargo +1.85.1 test --locked -p wbd-engine --lib b73_tunnel_dns_configured_upstream_inverse -- --nocapture 2>&1 | tee -a out/android-b2c2b-dns-flow/test.log
 # B3 source-locked genuine original flow: two independent captured App DNS
 # resolver IPs are tunneled and inverted without cross-transaction leakage.
 cargo +1.85.1 test --locked -p wbd-engine --lib \
@@ -67,6 +68,7 @@ for test in names:
          else "v4_android_dns_udp_flow")
  assert f"test {module}::tests::{test} ... ok" in log,test
 assert "test result: ok. 8 passed;" in log,log[-1500:]
+assert "test v4_android_dns_udp_flow::tests::b73_tunnel_dns_configured_upstream_inverse ... ok" in log
 assert "test v4_android_dns_udp_flow::tests::b3_real_m4_captured_app_dns_two_resolvers_inverse_and_stop ... ok" in log
 assert "test result: ok. 1 passed;" in log
 assert 'test v4_android_dns_route::tests::b6_original_m4_dns_three_compat_modes_and_tcp53_passthrough ... ok' in log

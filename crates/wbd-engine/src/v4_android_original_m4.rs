@@ -524,7 +524,7 @@ fn raw_worker(
                                             let mut ip=frame;
                                             let mut rewritten=false;
                                             if dns_capture&&crate::v4_android_dns_udp_flow::
-                                                TunnelDnsUdpFlows::is_tunnel_reply_candidate(frame){
+                                                TunnelDnsUdpFlows::is_tunnel_reply_candidate_for(frame,android_dns_flows.upstream()){
                                                 if frame.len()>crate::v4_android_dns_udp_flow::
                                                     MAX_DNS_IPV4_PACKET{
                                                     failed=failed.saturating_add(1);

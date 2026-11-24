@@ -31,6 +31,7 @@ type V4LinuxClientProductConfig struct {
     // Android original M3 TUN UDP/53 only; normal/off, not Android system
     // Resolver/netd, CN physical split, or FakeIP. Default disabled for CLI.
     AndroidTunnelDNS bool
+    AndroidTunnelDNSUpstream netip.Addr
     // Explicit ordinary-App UDP53 physical 223.5.5.5 compatibility mode.
     AndroidPhysicalDNS bool
     AndroidPhysicalDNSUpstream netip.Addr // original Rust bound UDP53 destination
@@ -242,13 +243,20 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         err=bridge.setAndroidPhysicalDNSUpstream(upstream)
         if err!=nil{originalAndroidPostauth("PHYSICAL_DNS_FAILED")}
     }
+    if err==nil&&runtime.GOOS=="android"&&(p.cfg.AndroidTunnelDNS||len(p.cfg.AndroidCN8503Raw)>0){
+        upstream:=p.cfg.AndroidTunnelDNSUpstream
+        if !upstream.IsValid(){upstream=netip.MustParseAddr("1.1.1.1")}
+        p.cfg.AndroidTunnelDNSUpstream=upstream
+        err=bridge.setAndroidTunnelDNSUpstream(upstream)
+        if err!=nil{originalAndroidPostauth("TUNNEL_DNS_FAILED")}
+    }
     if err==nil&&runtime.GOOS=="android"&&len(p.cfg.AndroidCN8503Raw)>0{
         err=bridge.enableAndroidCNDNSSplit(p.cfg.AndroidCN8503Raw)
         if err!=nil{
             originalAndroidPostauth("CN_DNS_SPLIT_FAILED")
         }else{
             originalAndroidPostauth("CN_DNS_SPLIT_ENABLED")
-            log.Printf("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=8503 cn=%s noncn=1.1.1.1 system_resolver=NOT_CAPTURED",p.cfg.AndroidPhysicalDNSUpstream.String())
+            log.Printf("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=8503 cn=%s noncn=%s system_resolver=NOT_CAPTURED",p.cfg.AndroidPhysicalDNSUpstream.String(),p.cfg.AndroidTunnelDNSUpstream.String())
         }
     }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidPhysicalDNS{
         // Separate explicit all-App TUN UDP53 physical mode, not CN split

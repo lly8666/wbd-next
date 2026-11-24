@@ -9,7 +9,7 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_bind(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_state(uint64_t,uint32_t *);
-extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t,uint32_t);
+extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t,uint32_t,const unsigned char *);
 extern int32_t wbd_m0_embedded_go_android_game_group_m4_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_fec_network_game_group_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
@@ -46,6 +46,7 @@ type V4AndroidGameConfig struct{
     ConfigureTunnelMTU func(peerMSS,clientLimit,serverLimit uint16)error
     ConfigureLeaseIPv4 func(string)error
     TunnelDNS bool
+    TunnelDNSUpstream netip.Addr
     HealthSeconds uint32
     PhysicalDNS bool
     PhysicalDNSUpstream netip.Addr
@@ -211,6 +212,10 @@ func (p *V4AndroidGameProduct) bindAndStartOriginalM4()error{
     physical:=C.uint32_t(0)
     if p.cfg.PhysicalDNS||len(p.cfg.CN8503Raw)>0{physical=1}
     upstream:=p.cfg.PhysicalDNSUpstream.As4()
+    tunnelUpstream:=p.cfg.TunnelDNSUpstream
+    if !tunnelUpstream.IsValid(){tunnelUpstream=netip.MustParseAddr("1.1.1.1")}
+    if !tunnelUpstream.Is4(){return ErrAdmissionParams}
+    tunnelRaw:=tunnelUpstream.As4()
     var cn *C.uchar
     if len(p.cfg.CN8503Raw)>0{
         cn=(*C.uchar)(unsafe.Pointer(&p.cfg.CN8503Raw[0]))
@@ -222,7 +227,8 @@ func (p *V4AndroidGameProduct) bindAndStartOriginalM4()error{
         (*C.uchar)(unsafe.Pointer(&name[0])),C.size_t(len(name)),
         dns,C.uint32_t(p.cfg.HealthSeconds),physical,
         (*C.uchar)(unsafe.Pointer(&upstream[0])),cn,
-        C.size_t(len(p.cfg.CN8503Raw)),fec)
+        C.size_t(len(p.cfg.CN8503Raw)),fec,(*C.uchar)(unsafe.Pointer(&tunnelRaw[0])))
+    runtime.KeepAlive(tunnelRaw)
     runtime.KeepAlive(name)
     runtime.KeepAlive(upstream)
     runtime.KeepAlive(p.cfg.CN8503Raw)

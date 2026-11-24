@@ -15,7 +15,8 @@ grep -Fq -- "--- PASS: TestB2c3BootstrapRejectsMalformedNameOrUnavailablePhysica
 grep -Fq "TestTruncatedUDPOnlyTCP53SameEndpointAndPath" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "TestRefuseCrossFallbackIfSelectedPathFails" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "TestConcurrentQueriesCoalesceWithoutBackgroundTimers" out/android-b1-dnsnative/wire-tests.log
-grep -Fq -- "--- PASS: TestB69IPv6DestinationRealUDPTCPSharedIPv4Upstream" out/android-b1-dnsnative/wire-tests.log
+grep -Fq -- "--- PASS: TestB74IPv6DownstreamWithConfiguredTunnelUpstream" out/android-b1-dnsnative/wire-tests.log
+ grep -Fq -- "--- PASS: TestB69IPv6DestinationRealUDPTCPSharedIPv4Upstream" out/android-b1-dnsnative/wire-tests.log
 grep -Fq -- "--- PASS: TestB68DownstreamDNSRealSharedUDPTCPAndStop" out/android-b1-dnsnative/wire-tests.log
 grep -Fq -- "--- PASS: TestB66SystemDNSRealUDPTCPModeAndStop" out/android-b1-dnsnative/wire-tests.log
 grep -Fq -- "--- PASS: TestB64ActualAppTCPDNSPhysicalTunnelAndCN" out/android-b1-dnsnative/wire-tests.log
@@ -41,7 +42,7 @@ receipt={
  "source":os.environ["GITHUB_SHA"],
  "component_sha256":hashlib.sha256(source).hexdigest(),
  "host_udp_tcp_loopback_wire":"PASS_FROM_REAL_GO_TEST",
- "fixed_production_upstreams":["223.5.5.5:53","1.1.1.1:53"],
+ "default_production_upstreams":["223.5.5.5:53","1.1.1.1:53"],
  "local_loopback_ports":"EPHEMERAL_NOT_PORT_53",
  "selected_path_dialer":"DEPENDENCY_INJECTION_TEST_ONLY",
  "android_physical_network_and_tun_binding":"COMPILED_NETD_PHYSICAL_BOOTSTRAP_NOT_DEVICE_RUN",

@@ -10,7 +10,9 @@ import java.net.InetAddress;
 // Resolver and the authenticated TLS/M3 protocol remain unchanged.
 final class RootPhysicalDNSUpstream {
     static final String DEFAULT="223.5.5.5";
+    static final String TUNNEL_DEFAULT="1.1.1.1";
     private RootPhysicalDNSUpstream(){}
+    static String tunnel(String raw){return raw==null||raw.trim().isEmpty()?TUNNEL_DEFAULT:canonical(raw);}
     // B36: consume the DNS list of the explicitly selected Network once
     // per START; no additional DNS resolver or per-packet processing.
     static String firstSelectedIPv4(Iterable<InetAddress> addresses){

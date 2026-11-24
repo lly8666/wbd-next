@@ -52,7 +52,7 @@ public final class RootClientActivity extends Activity {
     // the OS Network handle and any root route are never restored.
     private final Map<String,Integer> restoredSelection=new TreeMap<>();
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
-    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField,ipv6GatewayField,ipv6DirectCIDRsField;
+    private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField,ipv6GatewayField,ipv6DirectCIDRsField,tunnelDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     private Spinner tetherChoices;
@@ -676,7 +676,7 @@ public final class RootClientActivity extends Activity {
             autoConnectedDirect.isChecked(),
             backgroundNetworkRecovery.isChecked()?2:autoNetworkRecovery.isChecked()?1:0,
             Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()),
-            appTcpDNS.isChecked(),tetherSharing.isChecked(),systemDNS.isChecked(),systemDNS6.isChecked(),RootConnectionSettings.ipv6Gateway(ipv6GatewayField.getText().toString()),RootConnectionSettings.ipv6DirectCIDRs(ipv6DirectCIDRsField.getText().toString()));
+            appTcpDNS.isChecked(),tetherSharing.isChecked(),systemDNS.isChecked(),systemDNS6.isChecked(),RootConnectionSettings.ipv6Gateway(ipv6GatewayField.getText().toString()),RootConnectionSettings.ipv6DirectCIDRs(ipv6DirectCIDRsField.getText().toString()),RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstreamField.getText().toString()));
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -691,6 +691,7 @@ public final class RootClientActivity extends Activity {
         directCIDRsField.setText(s.directCIDRs);
         autoConnectedDirect.setChecked(s.autoConnectedDirect);
         physicalDNSUpstreamField.setText(s.physicalDNSUpstream);
+        tunnelDNSUpstreamField.setText(s.tunnelDNSUpstream);
         physicalDNSFollowNetwork.setChecked(s.physicalDNSFollowNetwork);
         selectSpinner(nativeHealthIntervals,Integer.toString(s.nativeHealthSeconds));
         selectSpinner(coldRotationMinutes,Integer.toString(s.rotationMinutes));
@@ -1041,6 +1042,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("background_network_recovery",backgroundNetworkRecovery.isChecked());
             request.putExtra("direct_lan_auto",autoConnectedDirect.isChecked());
             request.putExtra("physical_dns_upstream",physicalDnsIPv4);
+            request.putExtra("tunnel_dns_upstream",RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstreamField.getText().toString()));
             request.putExtra("physical_dns_follow_network",physicalDNSFollowNetwork.isChecked());
             if(allApps){
                 request.putExtra("exclude_appids",entire.excludedAppIDs);
@@ -1311,9 +1313,11 @@ public final class RootClientActivity extends Activity {
         allAppsDefault.setChecked(true);
         pane.addView(allAppsDefault);
         tunnelDNS=new CheckBox(this);
-        tunnelDNS.setText("隧道DNS：已进入WBD TUN的普通App UDP/53走1.1.1.1并还原原解析器回包（不接管Android系统DNS / CN分流）");
+        tunnelDNS.setText("隧道DNS：普通App UDP/53走配置的隧道上游并还原原解析器回包（系统DNS另选）");
         tunnelDNS.setChecked(true);
         pane.addView(tunnelDNS);
+        tunnelDNSUpstreamField=input(pane,"隧道DNS IPv4上游（默认1.1.1.1；Normal/Fixed/Auto/Game、CN非CN域名及可选系统/热点DNS共用）",InputType.TYPE_CLASS_TEXT);
+        tunnelDNSUpstreamField.setText(RootPhysicalDNSUpstream.TUNNEL_DEFAULT);
         physicalDNS=new CheckBox(this);
         physicalDNS.setText("可选物理DNS：进入WBD TUN的普通App UDP/53直接通过当前物理Network发送到223.5.5.5（全部域名，不是CN域名分流或Android系统DNS）");
         physicalDNS.setChecked(false);
@@ -1335,7 +1339,7 @@ public final class RootClientActivity extends Activity {
             "默认223.5.5.5，系统netd DNS不受影响。");
         pane.addView(upstreamHint);
         cnSplitDNS=new CheckBox(this);
-        cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走WBD隧道1.1.1.1（不接管Android系统DNS）");
+        cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走配置的WBD隧道DNS（不接管Android系统DNS）");
         cnSplitDNS.setChecked(false);
         pane.addView(cnSplitDNS);
         appTcpDNS=new CheckBox(this);

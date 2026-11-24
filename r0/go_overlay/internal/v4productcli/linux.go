@@ -139,6 +139,7 @@ type config struct{
     // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
     // System resolver/netd and CN physical split are NOT enabled by this.
     androidTunnelDNS bool
+    androidTunnelDNSUpstream netip.Addr
     androidAppTCPDNS bool // explicit kernel App TCP53 DNS listener
     androidSystemDNS bool // selected UID + selected netId plaintext IPv4 DNS
     androidSystemDNS6 bool // optional IPv6 destination plaintext DNS
@@ -298,6 +299,7 @@ func parse(role string,args []string)(config,error){
     tetherIndex:=flags.Int("android-tether-ifindex",0,"Android Root: exact downstream ifindex")
     androidNativeHealth:=flags.Uint("android-native-health-seconds",15,
          "Android Root: actual Rust authenticated native Health interval 15 or 30 seconds, 90s dead unchanged")
+    androidTunnelDNSUpstream:=flags.String("android-tunnel-dns-upstream-ipv4","1.1.1.1","Android Root: tunnel IPv4 DNS upstream for all original modes")
     androidPhysicalDNSUpstream:=flags.String("android-physical-dns-upstream-ipv4","223.5.5.5",
         "Android Root: selected-Network physical DNS IPv4 for captured App UDP/53 and original Go peer-host cold UDP/TCP53 bootstrap; default 223.5.5.5; not system Resolver")
     androidCNDNSSplit:=flags.Bool("android-cn-dns-split",false,
@@ -418,6 +420,8 @@ func parse(role string,args []string)(config,error){
             return c,fmt.Errorf("App TCP DNS requires one selected DNS mode")
         }
         var e error
+        c.androidTunnelDNSUpstream,e=dnsnative.ParsePhysicalDNSUpstreamIPv4(*androidTunnelDNSUpstream)
+        if e!=nil{return c,fmt.Errorf("Android tunnel DNS upstream rejected: %w",e)}
         c.androidPhysicalDNSUpstream,e=dnsnative.ParsePhysicalDNSUpstreamIPv4(*androidPhysicalDNSUpstream)
         if e!=nil{return c,fmt.Errorf("Android physical DNS upstream rejected: %w",e)}
         if *androidPhysicalDNSUpstream!="223.5.5.5"&&
@@ -448,7 +452,7 @@ func parse(role string,args []string)(config,error){
     }else if *androidNet!=0||*androidRouteUID!=0||
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
-              *androidPhysicalDNSUpstream!="223.5.5.5"||
+              *androidPhysicalDNSUpstream!="223.5.5.5"||*androidTunnelDNSUpstream!="1.1.1.1"||
               *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidIPv6Gateway!=""||*androidIPv6DirectCIDRs!=""||*androidIPv6DirectLAN||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
@@ -2120,6 +2124,7 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
             AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
             AndroidPhysicalMTU:c.androidPhysicalMTU,
             AndroidTunnelDNS:c.androidTunnelDNS,
+            AndroidTunnelDNSUpstream:c.androidTunnelDNSUpstream,
             AndroidPhysicalDNS:c.androidPhysicalDNS,
             AndroidPhysicalDNSUpstream:c.androidPhysicalDNSUpstream,
             AndroidCN8503Raw:cn8503Raw,

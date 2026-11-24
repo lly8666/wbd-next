@@ -7,6 +7,7 @@ import (
  "fmt"
  "io"
  "net"
+ "net/netip"
  "testing"
  "time"
 )
@@ -40,4 +41,34 @@ func TestB69IPv6DestinationRealUDPTCPSharedIPv4Upstream(t *testing.T){
  if !bytes.Equal(reply[:2],q[:2])||!bytes.Equal(reply[n-4:n],[]byte{5,6,7,8}){t.Fatal("wrong tunnel answer")}
  if e=s.Close();e!=nil{t.Fatal(e)}
  if _,e=tcp.Read(reply[:1]);e==nil{t.Fatal("IPv6 DNS stream survived Stop")}
+}
+
+func TestB74IPv6DownstreamWithConfiguredTunnelUpstream(t *testing.T){
+ tunnel:=serveDNS(t,[4]byte{9,8,7,6})
+ const configured="9.9.9.9:53"
+ dial:=func(ctx context.Context,path Path,network,endpoint string)(net.Conn,error){
+  if path!=Tunnel||endpoint!=configured{return nil,ErrUnbound}
+  return (&net.Dialer{}).DialContext(ctx,network,tunnel.addr)
+ }
+ s,e:=StartAppTCPDNS(dial,nil,false,false,ChinaDNS,configured)
+ if e!=nil{t.Fatal(e)};defer s.Close()
+ port,e:=s.EnableDownstream6(netip.IPv6Loopback(),netip.MustParsePrefix("::1/128"))
+ if e!=nil{t.Fatal(e)}
+ addr:=fmt.Sprintf("[::1]:%d",port)
+ udp,e:=net.Dial("udp6",addr);if e!=nil{t.Fatal(e)};defer udp.Close()
+ udp.SetDeadline(time.Now().Add(3*time.Second))
+ q:=makeQuery("global.example",0x7401)
+ if _,e=udp.Write(q);e!=nil{t.Fatal(e)}
+ var reply [MaxReply]byte
+ n,e:=udp.Read(reply[:]);if e!=nil||n<4||!bytes.Equal(reply[n-4:n],[]byte{9,8,7,6}){t.Fatal("wrong configured UDP answer",e)}
+ tcp,e:=net.Dial("tcp6",addr);if e!=nil{t.Fatal(e)};defer tcp.Close()
+ tcp.SetDeadline(time.Now().Add(3*time.Second))
+ q=makeQuery("global.example",0x7402)
+ var size [2]byte;binary.BigEndian.PutUint16(size[:],uint16(len(q)))
+ if _,e=tcp.Write(append(size[:],q...));e!=nil{t.Fatal(e)}
+ if _,e=io.ReadFull(tcp,size[:]);e!=nil{t.Fatal(e)}
+ n=int(binary.BigEndian.Uint16(size[:]));if n<4||n>len(reply){t.Fatal("bad TCP frame")}
+ if _,e=io.ReadFull(tcp,reply[:n]);e!=nil||!bytes.Equal(reply[n-4:n],[]byte{9,8,7,6}){t.Fatal("wrong configured TCP answer",e)}
+ if e=s.Close();e!=nil{t.Fatal(e)}
+ if _,e=tcp.Read(reply[:1]);e==nil{t.Fatal("IPv6 downstream TCP survived Stop")}
 }

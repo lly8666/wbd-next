@@ -39,6 +39,7 @@ extern int32_t wbd_m0_embedded_go_state(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_attach_raw_rx_on_interface(uint64_t,uint32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_attach_tun(uint64_t,int32_t,const unsigned char *,size_t);
 extern int32_t wbd_m0_embedded_go_android_tunnel_dns_enable(uint64_t);
+extern int32_t wbd_m0_embedded_go_android_tunnel_dns_upstream_set(uint64_t,const uint8_t *,size_t);
 extern int32_t wbd_m0_embedded_go_android_tunnel_dns_effective(uint64_t,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_physical_dns_upstream_set(uint64_t,const uint8_t *,size_t);
 extern int32_t wbd_m0_embedded_go_android_physical_dns_upstream_effective(uint64_t,uint8_t *,size_t);
@@ -395,6 +396,14 @@ func (b *v4EmbeddedNativeBridge) enableAndroidTunnelDNS()error{
 // B34: exact original Android physical-Network DNS IPv4 destination is
 // granted after TLS, native RAW/TUN and /32. No user-controlled fd/route is
 // accepted; this changes only Rust's already-owned UDP53 connected socket.
+func (b *v4EmbeddedNativeBridge) setAndroidTunnelDNSUpstream(ip netip.Addr)error{
+    if b==nil||b.handle==0||!b.committed||b.serverSide||!ip.Is4(){return errV4Embedded}
+    raw:=ip.As4()
+    rc:=C.wbd_m0_embedded_go_android_tunnel_dns_upstream_set(C.uint64_t(b.handle),(*C.uint8_t)(unsafe.Pointer(&raw[0])),C.size_t(len(raw)))
+    runtime.KeepAlive(raw)
+    if rc!=0{return fmt.Errorf("%w: original Android tunnel DNS upstream cold=%d",errV4Embedded,int(rc))}
+    return nil
+}
 func (b *v4EmbeddedNativeBridge) setAndroidPhysicalDNSUpstream(ip netip.Addr)error{
     if b==nil||b.handle==0||!b.committed||b.serverSide||!ip.IsValid()||!ip.Is4()||
        ip.IsUnspecified()||ip.IsLoopback()||ip.IsMulticast()||ip.IsLinkLocalUnicast(){

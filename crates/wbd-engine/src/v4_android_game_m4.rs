@@ -46,7 +46,7 @@ impl AndroidGameWorkers{
         lanes:&[OriginalGameColdLane],raw:&[AndroidGameRawLane],
         lease:[u8;4],fd:OwnedFd,tun_name:&str,generation:u32,
         tunnel_dns:bool,health_seconds:u32,
-        physical_dns:bool,upstream:[u8;4],cn:Option<CNDnsMatcher>,
+        physical_dns:bool,upstream:[u8;4],cn:Option<CNDnsMatcher>,tunnel_upstream:[u8;4],
         game_fec_profile:Option<u8>,
     )->Result<Self,()>{
         // Original Game2/4 off and fixed Game FEC share ONE M4 worker.
@@ -114,7 +114,7 @@ impl AndroidGameWorkers{
         // Reuse Normal's bounded DNS transaction map with the original
         // single Game2 TUN reader and two authenticated RAW receivers.
         let dns_flows=(tunnel_dns||cn.is_some())
-            .then(||Arc::new(Mutex::new(TunnelDnsUdpFlows::default())));
+            .then(||{let mut table=TunnelDnsUdpFlows::default();table.set_upstream(tunnel_upstream);Arc::new(Mutex::new(table))});
         let dns_queries=Arc::new(AtomicU64::new(0));
         let dns_replies=Arc::new(AtomicU64::new(0));
         let physical_tx=Arc::new(AtomicU64::new(0));
@@ -567,7 +567,7 @@ impl AndroidGameWorkers{
                                                         }
                                                         if let Some(flows)=rx_dns.as_ref(){
                                                             if TunnelDnsUdpFlows::
-                                                                is_tunnel_reply_candidate(frame){
+                                                                is_tunnel_reply_candidate_for(frame,tunnel_upstream){
                                                                 if frame.len()>MAX_DNS_IPV4_PACKET{
                                                                     valid=false;break
                                                                 }
@@ -661,8 +661,8 @@ impl AndroidGameWorkers{
                                                 let mut dns_len=0usize;
                                                 if accepted{
                                                     if let Some(ref flows)=rx_dns{
-                                                        if TunnelDnsUdpFlows::is_tunnel_reply_candidate(
-                                                            packet.payload()){
+                                                        if TunnelDnsUdpFlows::is_tunnel_reply_candidate_for(
+                                                            packet.payload(),tunnel_upstream){
                                                             let frame=packet.payload();
                                                             if frame.len()>dns_reply.len(){accepted=false}
                                                             else{
