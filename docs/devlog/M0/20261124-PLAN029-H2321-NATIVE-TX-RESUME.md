@@ -35,3 +35,17 @@ H2326 原生完整 owner 回归 [45310696203](https://github.com/lly8666/wbd-nex
 ### P0全局容量边界及后续决策
 
 当前H2286真实签名产品夹具仍用Windows WSL2转发 + ARM relay + ARM TUN，外层1280（不是项目默认1460）。历史H2285裸Windows经WSL2同类链路两组468.211/496.194Mbps，H2284不经WSL2的裸8流relay两组680.275/995.493Mbps；不同runner/日期，不能作为本次精确上限或产品相对损耗。但足以说明600–800目标必须做同VM同路由裸链路容量校准，不能把当前夹具的较低容量变成产品结论。后续高线资格应先用H2285真实裸OS路径与同VM产品路径对照，在达到实际目标的下层路径上测产品，而非改MTU破坏现有underlay；若达不到则环境未资格。四流2MiB场景继续用于独立热路径增量比较，不与新的高线供给/MTU/route因素混合。先结算H2327、H2331、H2332，只保留有净收益且不牺牲真实业务的增量。之后进一步研究Wintun到M1明文重复复制（现有Arena由owner独占，不能简单拆共享所有权或持Wintun借用跨锁等待）、repair ON每包global credit lock及固定FEC保护效率。不得重复已否决参数扫描，也不把候选源层面操作减少说成实测收益。
+
+## H2335–H2340：实测淘汰与四轴并行
+
+H2327 [45310787767](https://github.com/lly8666/wbd-next/actions/runs/45310787767) 两组三腿和H2331 [45311438312](https://github.com/lly8666/wbd-next/actions/runs/45311438312) 两组三腿均实际完成，各9/9 jobs。H2326 g-a 206.258/166.317/163.362、g-b 167.361/154.146/86.072 Mbps，B vs baseline mean -10.0%/+21.6%，CPU/GiB方向不一致；H2330 g-a 197.394/112.456/127.022、g-b149.938/122.992/116.335，-30.7%/-7.6%，一组CPU/GiB明显恶化。全部160 echo、zero late>1s、NPF short=0、ownedStop。不得把9/9 green写成吞吐PASS。原日志四组三腿含DLL/source完整字段归档 docs/evidence/M0/20261124-H2327-H2331-NEGATIVE-NATIVE-AB.json。H2332先前原生 [45311680513](https://github.com/lly8666/wbd-next/actions/runs/45311680513) 26 owner/两套67 platform PASS。
+
+[H2335 a1b0e94](https://github.com/lly8666/wbd-next/commit/a1b0e941b15b4f396858b32cdea8961fe2dd1b8c) 恢复H2323原生产路径，仅重构H2332同步OFF loan，撤出H2326/H2330活跃候选，未擦除历史。对比H2323的git diff仅Windows owner/runtime两文件。精确native [45315690512](https://github.com/lly8666/wbd-next/actions/runs/45315690512) PASS，25 owner和两套66 platform；[45315690493](https://github.com/lly8666/wbd-next/actions/runs/45315690493) maximum PASS，governance 45315690546 PASS。
+
+当前独立轴并行，不共享串行workflow槽：
+- H2336 [45315865690](https://github.com/lly8666/wbd-next/actions/runs/45315865690)，冻结bc87909a7aaa7a31bd70e85f2efa56af23f092df，对H2323仅同步OFF loan，双组三runner、TX8/16KiB。静态PASS、构建在途。首个45315780724仅静态测试继承axis环境错误，未网络，已修复独立静态环境并定向重试。
+- H2337 [45315781102](https://github.com/lly8666/wbd-next/actions/runs/45315781102)，冻结7a9d231f40e0c3d486506d35e08f1f6fba5f35e5，裸Winsock经WSL2+ARM中继，4流2MiB/25s，两组，静态PASS/联网在途。只校准当前同类环境，不当同VM产品差值。
+- H2338 [45315865745](https://github.com/lly8666/wbd-next/actions/runs/45315865745)，冻结bc87909，双方Rust均真正编译H2323 6fa10d7，仅TX8/16KiB vs TX16/64KiB联合参数，双组。静态PASS、构建在途。H2292联合曾正向；不重刷TX16单因素。双DLL同worktree/target目录复用依赖构建。[H2340 84d4ef2](https://github.com/lly8666/wbd-next/commit/84d4ef27fc988dd0b51075ccd68912fd6be41914) 修正未来top-level candidate_binary_source_sha；冻结H2338旧汇总字段仍是workflow SHA，须以每腿compiled_rust_source_sha及真实DLL manifest为准，不重跑。
+- H2339 新独立分支 experiment/m0-029-rx-borrow，冻结[2fbb9b9](https://github.com/lly8666/wbd-next/commit/2fbb9b91bc8ce5dd54c73672dc429876634a7d65)，生产基线H2323精确diff仅platform/windows_native_io及engine/v4_windows_native_runtime；无H2335 TX loan。借用Npcap原捕获帧至现有M1复制/AEAD，删中间64KiB scratch和每帧复制，Repair OFF无消费的outer ACK hint不再组块和加锁；保留原presentation ACK/SACK验证与业务开包。单组初始AB [45316077520](https://github.com/lly8666/wbd-next/actions/runs/45316077520)，native [45316077361](https://github.com/lly8666/wbd-next/actions/runs/45316077361)、maximum [45316077458](https://github.com/lly8666/wbd-next/actions/runs/45316077458)，在途。与TX和参数独立；正向后再做组合，不默认相加。
+
+当前主实验branch HEAD 84d4ef2；另有RX独立候选2fbb9b9。四轴最多21个真实联网runner任务；不重复派发或无限加并发。后续进一步压缩Actions关键路径：同源同profile的Rust基线及相同Go/ARM产品构建共享一次，候选profile分别并行构建，网络矩阵按axis取精确artifact/manifest；不同源码不可借PASS。先读当前各run，淘汰无收益，保留原H2323已测收益，完成高线同VM容量校准，再推进P1/P2。main产品未变。
