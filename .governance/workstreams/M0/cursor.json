@@ -4,28 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2407,
-  "checkpoint_sha": "ca034e2d0d22ca79562d66ea93e03f6634122663",
+  "sequence": 2409,
+  "checkpoint_sha": "6fccef245fd9b63f064d93a01809954582fc53c0",
   "progress": "verifying",
   "task_id": "M0-PLAN029-WINDOWS-GAME-COLD",
-  "current_task": "H2405 Linux Game 冷建链/热换lane推广：并行SYN、最终ACK、冷候选故障隔离、短重试，NAT公网源IP/端口不再阻止同认证Game4热换。H2406 Windows Game Health90接入既有冷重建控制。H2407修正H2405旧程序集blob，待新源码原生验收。",
+  "current_task": "H2408 Normal OFF/Fixed/Auto 复用Game最终ACK修复及Detach迟到RST隔离；Linux SYN/TLS独立超时，Windows SYN重传超时进入已有fresh tuple retry。Normal NAT逻辑身份本来不依赖公网IP/端口。",
   "why_now": "用户追问各模式、各端换lane是否受NAT影响，要求建链成功率修复覆盖换lane。",
   "done_when": "Windows与Linux现有冷重建入口复用原有可靠冷TLS；Linux Game4同组单lane允许NAT地址及端口变化、失败不拖累健康lane；普通Game日志不刷屏；实际物理与原生验收分开记录。",
-  "next_action": "检查H2407精确源程序集、双ISA原生Game混合、Game4单lane轮换/物理变更，以及Windows Game真实四组合、NAT失联恢复；H2405旧blob阻塞为构建问题非产品PASS。",
+  "next_action": "收H2408 source 6fccef2 Windows/Linux 45398627358、ARM64 routed NAT 45398627191、MSS 45398627275及Windows build 45398627406；H2405/06 Game热换/NAT死链回归仍未获得物理资格。",
   "unverified": true,
-  "last_tested_source": "3fb6fdd3d106c0c6ff8da118dffa51990460bda1",
+  "last_tested_source": "2e580afb2466a89cc81fed74408a292b7a9d7ec9",
   "evidence_refs": [
     "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
     "docs/devlog/M0/20261124-H2400-WINDOWS-GAME-COLD-RELIABILITY.md",
     "docs/devlog/M0/20261124-H2401-GAME-NAT-COLD-ATTEMPT.md",
     "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md",
     "docs/devlog/M0/20261124-H2405-GAME-NAT-HOT-LANE.md",
-    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md"
+    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md",
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
     "docs/devlog/M0/20261121-H2223-WINDOWS-GAME2-GAME4-IDLE-READY-PARITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2402 45378100342 Windows/Linux Normal原生通过；Linux双ISA原生混合H1151/H1157 45378100628/45378100305通过。H2405/H2406源已进main，未获最新原生资格；H2405首轮旧game_linux blob导致组装失败，H2407只纠正依赖。物理NAT换lane和Windows Game成功率未实测。"
+  "partial_summary": "H2407 Windows/Linux原生45386542255与QA H2216 45386542274 ARM64真实双NAT三客户端及12 TLS场景通过，Windows field-trial构建通过但物理Windows未测；H2408 Normal冷层推广入main，程序集blob核对0不匹配，新源原生回归未收。"
 }

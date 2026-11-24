@@ -48,7 +48,8 @@
     "docs/decisions/M0-PLAN029B-H2206-NAT-IFACE-ROUTEKEY-20261119.md",
     "docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-128-64-20261121.json",
     "docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json",
-    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
+    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
   ],
   "verification": [
     {
@@ -160,7 +161,8 @@
     "H2206 AF_PACKET不是TCP 0.0.0.0监听；本机NIC自动唯一IPv4，多地址失败，网关DNAT与实体跨ISA NOT_RUN。",
     "H2224公网出口和崩溃残留NOT_RUN；ip_forward及iptables权限归宿主。",
     "历史H2372仅Normal/off客户端；H2397候选全端全模式，待真实回归。",
-    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。"
+    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。",
+    "H2408 Normal OFF/Fixed/Auto 冷TLS最终ACK、Detach迟到报文及冷超时修复已进main；当前源码原生回归待验，未更改已有认证身份、NAT路由或稳态数据面。"
   ],
   "promotion": null
 }

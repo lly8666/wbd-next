@@ -59,7 +59,8 @@
     "docs/evidence/M0/20261124-H2397-windows-native-transport-history.json",
     "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
     "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md",
-    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md"
+    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md",
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
   ],
   "verification": [
     {
@@ -150,7 +151,8 @@
     "H2077旧Normal三场原生PASS_SCOPED；H2082新B0 DNS-only无Direct业务NAT/Win IPv6混包仅源码单测候选，实网NOT_RUN。",
     "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-windows-native-transport-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。",
     "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。",
-    "H2406 Windows Game native Health90明确返回与Normal一致的终止状态，完成原有owned Stop后由同一Go supervisor用新端口组重建。未实现Windows独立单lane热换；新源真实物理NAT blackhole恢复待验。"
+    "H2406 Windows Game native Health90明确返回与Normal一致的终止状态，完成原有owned Stop后由同一Go supervisor用新端口组重建。未实现Windows独立单lane热换；新源真实物理NAT blackhole恢复待验。",
+    "H2408 Normal OFF/Fixed/Auto 冷TLS最终ACK、Detach迟到报文及冷超时修复已进main；当前源码原生回归待验，未更改已有认证身份、NAT路由或稳态数据面。"
   ],
   "promotion": null,
   "legacy_branch_reason": "旧M4/集成分支为冻结历史；M0现只在main接线和验收，旧SOURCE原始证据均保留。",
