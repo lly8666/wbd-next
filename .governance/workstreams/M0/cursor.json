@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2393,
-  "checkpoint_sha": "5b1311c0748452c1c8dac66fc2a6e517777529fa",
+  "sequence": 2394,
+  "checkpoint_sha": "3820d0c298815bb4c758424824449fac1afa32fa",
   "progress": "verifying",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030 Linux双ISA全CLI范围PASS；两次真实域名重连组合失败的原始ZIP已审计，WinForms真实STA消息循环夹具修正后单场景复验进行中；Win实体旧v2网卡消失但WAL残留的GUID识别候选已提交，真实删除网卡恢复复验进行中。",
+  "current_task": "PLAN030真实第二代域名重连和服务端设备快照已达，Normal/off快照漏FEC导致协商内层预算null，候选已修；Windows v2恢复新测试GUID字面格式失败，实际恢复未达，夹具已修。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "收取45355353310（PLAN030真实域名、第二代原生Ready/GUI/managed snapshot/Stop）与45355056087（Windows v2 GUID缺失/实际Wintun删除/WinGUI）。只修实际失败，不重跑已通过CLI/watch或吞吐；按确切SOURCE与功能卡验收后合并PR73/74，处理共享装配manifest的正常合并，未接齐快照字段保持未知。",
+  "next_action": "收PR73 9ff0ed0 的定向派发45357894991及其原生domain_reconnect子Action（完整第二代真实业务、快照、Stop）；收PR74 988d669 原生恢复45357787794。核对新构建产品包、实际原生标记及治理，合并时处理共享装配manifest，不重跑无关数据面或性能。",
   "unverified": true,
   "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
   "evidence_refs": [],
@@ -22,5 +22,5 @@
     "docs/evidence/M0/20261124-H2393-PLAN030-GUI-RECONNECT-ARTIFACT-AUDIT.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2393：原始组合失败ZIP 14900436230/14900446315/14899520067下载核实；45349332671实际第二代TLS/OS Applied/Ready、持续真实RX/TX、两次Stop均完成，但GUI状态/MTU判据失败；45349327390和旧45345844201第二代未启动；managed snapshot均未达。PR73 2c71307以真实Application.Run外层消息循环修正直接async夹具，保留原判据和异常状态诊断；dispatch45355310265成功，真实45355353310在途，治理45355310346通过。用户实体WAL v2 active四owned、旧ifIndex27/MTU1329/租约10.66.0.198/32、原网卡和WBD路由已无、无Defender sidecar、版本dev/unknown；PR74 ce7622c仅v2恢复以原GUID判定缺失，跳过消失网卡局部写，仍恢复实际物理逃逸路由，补真实索引碰撞与已删除Wintun场景；45355056087编译/装配通过、原生恢复和GUI验收在途。未确认实体根因唯一性、未合main、未扩数据面/安全框架。"
+  "partial_summary": "H2394：45355353310真实第二代Windows Ready已达，server roster account/device/session/lease 10.66.0.2/32/remote_port41032/online/Normal/ChaCha/1420双向记录限制/RX172 TX180，assert negotiated_inner_cap==1389 FAIL，actual fec空、cap null；原Normal/off无FEC owner，OriginalFECReadback不支持，9ff0ed0仅管理按需快照复用已认证Normal OFF标记及Rust预算，新增1389回归，派发45357894991 queued。45355056087实际装配编译PASS，四个child在新stale GUID前置测试因非规范字符串journal conflict退出，未执行实际恢复；988d669用Windows GUIDFromString.String构造，生产不变，45357787794 in_progress。两PR仍OPEN，未声称PASS/merge。"
 }
