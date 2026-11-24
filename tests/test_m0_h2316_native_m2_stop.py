@@ -35,4 +35,16 @@ class ExactStop(unittest.TestCase):
         self.assertIsNone(parse_native_m2_stop(a.replace("fifo_left=0","fifo_left=12")))
         self.assertIsNone(parse_native_m2_stop(a+a))
         self.assertIsNone(parse_native_m2_stop(a.splitlines()[0]))
+    def test_real_copy_after_shadow_retirement_requires_explicit_cause(self):
+        a=self.row({"candidate_first":3,"repair_polls":11,"repair_accepted":1})
+        a=a.replace("repair_packets=1","repair_packets=2")
+        self.assertIsNone(parse_native_m2_stop(a))
+        a=a.replace("queued=0 joined=true","queued=0 repair_copied_shadow_stale=1 repair_broker_unresolved=0 joined=true")
+        got=parse_native_m2_stop(a)
+        self.assertEqual(got["kernel_accepted_repair_packets"],2)
+        self.assertEqual(got["repair_copied_shadow_stale"],1)
+        self.assertEqual(got["repair_accepted"],1)
+        self.assertIsNone(parse_native_m2_stop(a.replace("repair_copied_shadow_stale=1","repair_copied_shadow_stale=0")))
+        self.assertIsNone(parse_native_m2_stop(a.replace(" repair_broker_unresolved=0","")))
+
 if __name__=="__main__":unittest.main()

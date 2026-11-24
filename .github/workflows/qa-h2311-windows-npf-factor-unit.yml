@@ -43,6 +43,8 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           if ((git rev-parse HEAD) -ne $env:GITHUB_SHA) { throw "H2311_SOURCE_MISMATCH" }
+          cargo +1.85.1 test --locked -p wbd-recovery --lib
+          if ($LASTEXITCODE -ne 0) { throw "H2370_RECOVERY_SETTLEMENT_REGRESSION_FAILED" }
           cargo +1.85.1 test --locked -p wbd-platform --features h2311_windows_npf_trace
           if ($LASTEXITCODE -ne 0) { throw "H2311_ORIGINAL_NPF_8_16_TEST_FAILED" }
           cargo +1.85.1 test --locked -p wbd-platform --features h2311_windows_npf_trace,h2311_windows_npf64_only

@@ -92,6 +92,8 @@ struct WindowsOriginalM2 {
     repair_polls:u64,
     repair_preflight_stale:u64,
     repair_quota_rejected:u64,
+    repair_copied_shadow_stale:u64,
+    repair_broker_unresolved:u64,
     // Feedback comes ONLY from this original M3 opener's unique reverse PN.
     // At most one immutable original-M1 kind1 draft is awaiting real NPF send.
     feedback:RxFeedbackState,
@@ -375,6 +377,7 @@ fn m2_arm_entry(e:&mut Entry,epoch:[u8;16],luid:u64,ifindex:u32)->Result<(),i32>
         ready_repairs:VecDeque::with_capacity(32),
         reverse_authenticated_receipts:0,repair_polls:0,
         repair_preflight_stale:0,repair_quota_rejected:0,
+        repair_copied_shadow_stale:0,repair_broker_unresolved:0,
         repair_retry_after_ns:None,repair_burst_deferred:0,
         feedback,feedback_pending:None,
         quality_receive,quality_due:VecDeque::with_capacity(4),
@@ -837,13 +840,20 @@ fn m2_complete_repair_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     let settled=complete_driver_prefix(
         &mut g,&[(held.reservation_id,m.route)],observation,now
     );
-    let status=match settled{
+    let broker_status=match settled{
         Ok(v)=>v.shadow_result(0).unwrap_or(RepairSendResult::Uncertain),
-        Err(_)=>RepairSendResult::Uncertain,
+        Err(_)=>{
+            m.repair_broker_unresolved+=1;
+            RepairSendResult::Uncertain
+        },
     };
-    // If a real authenticated reverse ACK arrived between polls, the
-    // candidate is now stale and must never resurrect a retired shadow.
-    let _=m.shadow.on_send_result(&held.candidate,status,now);
+    // A definite native copy is factual even if its budget reservation
+    // expired while the driver was running. The allocator already holds
+    // that charge; do not refund it or resurrect a retired shadow.
+    let status=if sent==1{RepairSendResult::Accepted}else{broker_status};
+    if m.shadow.on_send_result(&held.candidate,status,now).is_err() && sent==1{
+        m.repair_copied_shadow_stale+=1;
+    }
     let _=g.revoke(held.lease,now);
     Ok(m.shadow.outstanding() as u32)
 }
@@ -1226,12 +1236,13 @@ fn stop(r:&mut Registry,h:u64)->i32{
         // One sparse joined Stop receipt exposes causal M2 state. No
         // per-packet timers/logging, no dump of keys/PN/ciphertext.
         let d=m.shadow.diagnostic_snapshot();
-        eprintln!("WBD_WINDOWS_NATIVE_M2_OPPORTUNITY_STOP authenticated_reverse_reports={} repair_polls={} shadow_outstanding={} candidate_first={} expired_first={} acked_first={} repair_accepted={} repair_abandoned={} preflight_stale={} quota_rejected={} queued={} joined=true",
+        eprintln!("WBD_WINDOWS_NATIVE_M2_OPPORTUNITY_STOP authenticated_reverse_reports={} repair_polls={} shadow_outstanding={} candidate_first={} expired_first={} acked_first={} repair_accepted={} repair_abandoned={} preflight_stale={} quota_rejected={} queued={} repair_copied_shadow_stale={} repair_broker_unresolved={} joined=true",
             m.reverse_authenticated_receipts,m.repair_polls,
             m.shadow.outstanding(),d.candidate_first,d.expired_attempt0,
             d.acked_attempt0,d.repair_accepted_retired,
             d.repair_abandoned_retired,m.repair_preflight_stale,
-            m.repair_quota_rejected,m.ready_repairs.len());
+            m.repair_quota_rejected,m.ready_repairs.len(),
+            m.repair_copied_shadow_stale,m.repair_broker_unresolved);
         eprintln!("WBD_WINDOWS_NATIVE_OUTER_CURSOR unique_candidates={} unique_candidate_cipher_bytes={} checked_once={} burst_wait={} fifo_left={}",
             d.cosmetic_candidates,d.cosmetic_candidate_bytes,
             m.outer_ack.gap_scanned_once(),

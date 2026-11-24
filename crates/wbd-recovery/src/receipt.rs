@@ -670,12 +670,15 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     /// passing the original frozen handle to the driver (and then record the
     /// actual Accepted/NotSent/Uncertain result).
     pub fn preflight(&self, candidate: &RepairCandidate<H>, now: MonoNs) -> bool {
+        self.matches_queued(candidate, Some(now))
+    }
+
+    fn matches_queued(&self, candidate: &RepairCandidate<H>, dispatch_at: Option<MonoNs>) -> bool {
         self.entries.get(&candidate.pn).is_some_and(|e| {
             e.frozen.origin() == candidate.origin
                 && e.queued.as_ref().is_some_and(|q|
-                    q.epoch == candidate.retry_epoch
-                        && q.until == candidate.dispatch_by
-                        && now <= q.until && now < e.hard_expiry)
+                    q.epoch == candidate.retry_epoch && q.until == candidate.dispatch_by
+                        && dispatch_at.is_none_or(|now|now <= q.until && now < e.hard_expiry))
                 && candidate.repair_attempt_stage == 0
                 && e.repair_attempts < OUTER_REPAIR_ATTEMPT_LIMIT as u8
         })
@@ -702,8 +705,12 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
     pub fn on_send_result(&mut self, candidate: &RepairCandidate<H>,
         result: RepairSendResult, now: MonoNs) -> Result<(), DataError>
     {
-        if !self.preflight(candidate, now) { return Err(DataError::Stale); }
-        let entry=self.entries.remove(&candidate.pn).expect("preflight verified");
+        // A dispatch deadline gates the start, not the result of an already
+        // submitted driver call. Retire the same live queue identity even
+        // when the syscall returned after its deadline. An ACK/expiry that
+        // already removed the entry stays terminal; never resurrect it.
+        if !self.matches_queued(candidate, None) { return Err(DataError::Stale); }
+        let entry=self.entries.remove(&candidate.pn).expect("queued identity verified");
         self.remove_indexes(candidate.pn,&entry,false);
         let started=entry.queued.as_ref().map_or(now,|q|q.started);
         self.diagnostics.max_queue_age_ns=self.diagnostics.max_queue_age_ns
@@ -1119,6 +1126,21 @@ mod tests {
         assert_eq!(s.diagnostic_snapshot().repair_abandoned_retired,1);
         // Never creates a second repaired packet when the queue expires.
         assert!(s.on_timer(MonoNs(310_000_000)).candidates.is_empty());
+    }
+
+    #[test]
+    fn h2370_dispatched_completion_after_deadline_retires_once(){
+        let mut s=state(2,10);
+        add(&mut s,4,0,100_000_000);
+        let c=s.on_timer(MonoNs(10)).candidates.remove(0);
+        let late=MonoNs(c.dispatch_by().0+1);
+        assert!(s.preflight(&c,MonoNs(c.dispatch_by().0-1)));
+        assert!(!s.preflight(&c,late));
+        s.on_send_result(&c,RepairSendResult::Accepted,late).unwrap();
+        assert_eq!(s.outstanding(),0);
+        assert_eq!(s.diagnostic_snapshot().repair_accepted_retired,1);
+        assert_eq!(s.on_send_result(&c,RepairSendResult::Accepted,late),Err(DataError::Stale));
+        assert!(s.on_timer(MonoNs(100_000_001)).candidates.is_empty());
     }
 
     #[test]

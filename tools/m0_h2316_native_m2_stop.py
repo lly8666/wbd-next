@@ -40,13 +40,20 @@ def parse_native_m2_stop(text:str):
     c=_one(text,CURSOR,CURSOR_FIELDS)
     r=_one(text,OUTER_REPAIR,REPAIR_FIELDS)
     if m is None or c is None or r is None:return None
-    # These are two genuine, independent Stop perspectives on the
-    # EXACT SAME accepted immutable packet; check their agreement.
+    # Driver-copy count is independent of the shadow retirement count.
+    # A real RX ACK may retire the shadow while TX is inside the driver.
+    # Current sources explicitly account for those copies; old receipts
+    # retain the original strict equality, never guess a missing cause.
+    extra=_one(text,TAG,("repair_copied_shadow_stale","repair_broker_unresolved"))
+    if extra is None:
+        if "repair_copied_shadow_stale=" in text or "repair_broker_unresolved=" in text:
+            return None
+        extra={"repair_copied_shadow_stale":0,"repair_broker_unresolved":0}
     if (m["queued"]!=c["fifo_left"] or
-        m["repair_accepted"]!=r["repair_packets"] or
+        m["repair_accepted"]+extra["repair_copied_shadow_stale"]!=r["repair_packets"] or
         (r["repair_packets"]>0 and r["repair_accepted_wire_bytes"]==0)):
         return None
-    return {**m,**c,
+    return {**m,**c,**extra,
             "kernel_accepted_repair_packets":r["repair_packets"],
             "kernel_accepted_repair_wire_bytes":r["repair_accepted_wire_bytes"],
             "kernel_uncertain_repair_wire_bytes":r["repair_uncertain_wire_bytes"],
