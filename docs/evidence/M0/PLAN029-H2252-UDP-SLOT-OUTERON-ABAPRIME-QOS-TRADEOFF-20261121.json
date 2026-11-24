@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "NO_DEFAULT_PROMOTION_SPARSE_UDP_IMPROVED_TCP_SURVIVOR_P99_WORSE_AND_BASELINE_DRIFT",
+  "scenario": "original Go TLS + Rust nonprobe, 3 native netns + original raw/TUN, 4 genuine kernel TCP heavy streams plus 160 application UDP and 160 small TCP same-period synchronized sends; zero artificial loss; outer repair ON client/server (not required Normal/off), outer IP MTU explicitly 1160B, Linux FQ default600",
+  "source_sha": "1b9d9cbd0d28163bf397859efca038d6eb25af63",
+  "run_id": 44880485442,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44880485442",
+  "result": "SUCCESS execution and A/B/Aprime metrics on both ISAs; product timely delivery NOT_QUALIFIED and candidate DEFAULT REJECT/INCONCLUSIVE",
+  "mechanism": "B uses internal opt-in WBD_M0_029_UDP_RESERVE_TEST=1, within one authenticated lease's 8-slot unsealed pending queue displaces latest TCP for one <=512B IPv4 UDP; A and Aprime flag OFF on exact same native SOURCE and binary. No second M3, no extra DATA PTO, no shared route control.",
+  "data": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14697498624,
+      "same_release_binary_sha256": {
+        "wbd-v4-client": "4da45d8e9fe55d926badb87ce454a5a9111a2904b4dbe81bd3d1bdc1fe5d0e3c",
+        "wbd-v4-server": "28bdec30462b62681e151069a462628d7bd6ff24768b3a2c4f8c577c32c8729d",
+        "libwbd_engine.so": "d3aa1483aa468b95f9656ad490382f9190087bcb04d97184f0ac21b261c7a136"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1093.533,
+          "client_cpu_s_per_gib": 12.02823,
+          "server_cpu_s_per_gib": 10.80303,
+          "udp_requested": 160,
+          "udp_missing": 26,
+          "udp_new_pending_rejected": 25,
+          "tcp_requested": 160,
+          "tcp_missing": 0,
+          "tcp_survivor_p99_ms": 696.977,
+          "tcp_pending_displaced": 0
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1100.5,
+          "client_cpu_s_per_gib": 11.86285,
+          "server_cpu_s_per_gib": 10.83656,
+          "udp_requested": 160,
+          "udp_missing": 0,
+          "udp_new_pending_rejected": 0,
+          "tcp_requested": 160,
+          "tcp_missing": 0,
+          "tcp_survivor_p99_ms": 1480.1273,
+          "tcp_pending_displaced": 39
+        },
+        {
+          "leg": "Aprime",
+          "receiver_mbps": 1098.679,
+          "client_cpu_s_per_gib": 11.98429,
+          "server_cpu_s_per_gib": 10.75303,
+          "udp_requested": 160,
+          "udp_missing": 31,
+          "udp_new_pending_rejected": 31,
+          "tcp_requested": 160,
+          "tcp_missing": 0,
+          "tcp_survivor_p99_ms": 619.5427,
+          "tcp_pending_displaced": 0
+        }
+      ]
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14698017127,
+      "same_release_binary_sha256": {
+        "wbd-v4-client": "5f284c6486c110305481cbe7e47e8af974ee46864389d3d17c7c5edaa41884aa",
+        "wbd-v4-server": "dea3add9c3b2c93121aaebfa73b478f17c3fe687bbc299826b867e05651c87a7",
+        "libwbd_engine.so": "4863598f8bc2a6ea9e244b913bd358bf200c673d2009d9614cfd649b6a97c89b"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1405.899,
+          "client_cpu_s_per_gib": 8.68491,
+          "server_cpu_s_per_gib": 8.50045,
+          "udp_requested": 160,
+          "udp_missing": 27,
+          "udp_new_pending_rejected": 27,
+          "tcp_requested": 160,
+          "tcp_missing": 0,
+          "tcp_survivor_p99_ms": 287.0182,
+          "tcp_pending_displaced": 0
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1411.111,
+          "client_cpu_s_per_gib": 8.72519,
+          "server_cpu_s_per_gib": 8.57911,
+          "udp_requested": 160,
+          "udp_missing": 1,
+          "udp_new_pending_rejected": 0,
+          "tcp_requested": 160,
+          "tcp_missing": 0,
+          "tcp_survivor_p99_ms": 4080.6444,
+          "tcp_pending_displaced": 24
+        },
+        {
+          "leg": "Aprime",
+          "receiver_mbps": 1408.205,
+          "client_cpu_s_per_gib": 8.64508,
+          "server_cpu_s_per_gib": 8.3221,
+          "udp_requested": 160,
+          "udp_missing": 30,
+          "udp_new_pending_rejected": 30,
+          "tcp_requested": 160,
+          "tcp_missing": 0,
+          "tcp_survivor_p99_ms": 2288.7973,
+          "tcp_pending_displaced": 0
+        }
+      ]
+    }
+  ],
+  "correctness": "All three legs independently reuse exact same original-Go source and per-ISA Rust/Go build artifacts within their runner. Authentic bidirectional Stop in each. Original owner accepts only definite unsealed packet swap, maintains pending count/bytes/age and separate victim vs new reject. CPU derived from actual full-process native report.",
+  "reason_not_promoted": "B nearly eliminates UDP requests missed on both ISAs while goodput and CPU/GiB roughly steady, but same concurrent TCP application's survivor p99 worsens substantially on ARM and x86. x86 A→Aprime TCP p99 itself drifts 287→2289ms, defeating clean TCP causality. Do not infer a universal TCP regression from one pair or claim QoS PASS. Timely delivery and missing deadlines measured separately. Under this source zero-loss and ON setup no robust combined benefit.",
+  "new_discriminating_hypothesis": "The concurrent UDP/TCP echo probe code schedules their senders at identical start_mono+i*gap_ms, so evicting *newest pending TCP* when UDP arrives can preferentially evict co-scheduled small TCP rather than bulk; this is a plausible explanation, NOT measured victim identity. Next single-factor candidate can permit eviction only of verified bulk TCP payload (not small new control/echo); test first Normal/off and real source-specific Stop.",
+  "scope_exclusions": [
+    "This is outer repair ON (server default and client explicit), NOT Normal/off; old outer MTU=1160 explicit not public default 1460",
+    "New source OFF/server readback unresolved run44880746790 remains FAIL due missing server Go Stop outer metrics; do not import old ON PASS",
+    "A/B/Aprime toggles flag inside identical NEW compiled source, not old-vs-new binary source CPU proof",
+    "No physical WAN/Windows real TCP 80-200Mbps or ~3s outage, cross-lease or Game QoS qualification"
+  ]
+}

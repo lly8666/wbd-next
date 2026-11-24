@@ -3,8 +3,8 @@
 
 The seven production FakeTCP Go files are manifest-verified by
 m0_install_public_faketcp.py. This file NEVER touches their compiled sources.
-It replaces the old donor tests' removed faketcp.DefaultMSS symbol with a
-named 1460-outside/1420-SYN fixture, then initializes the one current FakeTCP
+It replaces the remaining old donor tests' removed faketcp.DefaultMSS symbol
+with a named 1460-outside/1420-SYN fixture, then initializes the one current FakeTCP
 MSS owner for those tests. No legacy/modern mode or production fallback.
 """
 from pathlib import Path
@@ -15,7 +15,8 @@ FIXTURE = "m0CurrentV4MSSFixture"
 # caller of DefaultMSS cannot be silently accepted by a mass replace.
 EXPECTED = {
     # Admission V4 fixture now directly pins 1460 outer / MSS1420.
-    "bridge_v4_probe_linux_test.go": 7,
+    # Current overlay already uses explicit PublicV4AdvertisedMSS(), not DefaultMSS.
+    "bridge_v4_probe_linux_test.go": 0,
     "tls_test.go": 1,
     "wire_qualification_test.go": 2,
 }
@@ -46,6 +47,8 @@ def prepare(root: Path) -> None:
     for name, count in EXPECTED.items():
         file = target / name
         source = file.read_text(encoding="utf-8")
+        if name == "bridge_v4_probe_linux_test.go" and source.count("faketcp.PublicV4AdvertisedMSS()") != 7:
+            raise ValueError("current original Go bridge MSS association test references changed")
         if source.count(REMOVED) != count:
             raise ValueError(f"frozen original Go MSS test reference count changed: {name}")
         changed[file] = source.replace(REMOVED, FIXTURE)

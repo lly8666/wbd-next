@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "GE1_SCOPED_REAL_MEASURED_NO_GAIN_INCONCLUSIVE_WITH_DIRECT_CAPACITY_DRIFT",
+  "scenario": "ARM64_REAL_GILBERT_ELLIOTT_GE1_400MS_RTT_CLIENT_ONLY_INBOX64_256_64",
+  "source_sha": "0440b719c0134ebadd58539969f679b5f8e587c0",
+  "run_id": 44869215178,
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44869215178",
+  "artifact": {
+    "id": 14692359830,
+    "name": "m0-029-arm-client-inbox-ge1-aba-44869215178-1",
+    "sha256": "82eeebaaa98eb9caf591b9d699fc804262e0cc40f72c572653c8ffad65c5c77b"
+  },
+  "frozen_base_fixture_git_blob_sha": "b1094391ec9729931979c5158357ef2cbf72b84e",
+  "native": {
+    "architecture": "aarch64",
+    "kernel": "7.0.0-1017-azure",
+    "run": "one native same-VM original Go TLS/Rust production release build, 3 router/client/server netns & 3 separate real TLS owners, exact owned Stop both directions",
+    "binary_sha256": {
+      "libwbd_engine.so": "26ae05786050ba0acd18b53188d62480fd6ece716770b37fcced5e2a22e3e8e6",
+      "wbd-v4-client": "1ed739db0f8c63b8f251e82e9d7658025ba2897e6d898176e79eda0661bd5d2c",
+      "wbd-v4-server": "0a910dc677f0753445c2765fcece3eb5bcfaa0327ee3c107727df81cd4c7de38"
+    },
+    "impairment": {
+      "profile": "stationary_Gilbert_Elliott",
+      "good_to_bad_pct": 0.252809,
+      "bad_to_good_pct": 25,
+      "bad_loss_pct": 90,
+      "good_loss_pct": 0.1,
+      "expected_mean_loss_pct": 1,
+      "added_oneway_delay_ms": 200,
+      "router_only_egress": true
+    },
+    "workload": "20s four real kernel TCP upload streams + simultaneous 160 UDP/160 TCP application echo per phase",
+    "only_changing_factor": "authenticated client Rust shared TUN M1 inbox 64→256→64 via m0_v4_probe cold; server always 64; both exact Rust generation-side capacity readbacks"
+  },
+  "phases": [
+    {
+      "name": "original_before",
+      "client_slots": 64,
+      "server_slots": 64,
+      "receiver_tcp_mbps": 85.31866,
+      "receiver_bytes": 217579520,
+      "original_tcp_retrans": 2092,
+      "calibration_direct_5s_mbps": 43.48252,
+      "client_cpu_s_per_gib": 21.86178,
+      "server_cpu_s_per_gib": 19.83846,
+      "local_full_drops": {
+        "client": 0,
+        "server": 0
+      },
+      "local_backpressure": {
+        "client": 0,
+        "server": 0
+      },
+      "udp": {
+        "offered": 160,
+        "replies": 157,
+        "missing": 3,
+        "p99_ms_survivors": 400.7997
+      },
+      "tcp": {
+        "offered": 160,
+        "replies": 160,
+        "missing": 0,
+        "p99_ms_survivors": 1144.5592
+      },
+      "qdisc_skb": {
+        "router_client_egress": {
+          "emitted": 50516,
+          "dropped": 394
+        },
+        "router_server_egress": {
+          "emitted": 218200,
+          "dropped": 2181
+        }
+      },
+      "native_cold_readback_both_sides": true,
+      "original_owned_stop_both_sides": true
+    },
+    {
+      "name": "client256_candidate",
+      "client_slots": 256,
+      "server_slots": 64,
+      "receiver_tcp_mbps": 79.40913,
+      "receiver_bytes": 202506240,
+      "original_tcp_retrans": 2037,
+      "calibration_direct_5s_mbps": 11.84141,
+      "client_cpu_s_per_gib": 22.26951,
+      "server_cpu_s_per_gib": 20.20163,
+      "local_full_drops": {
+        "client": 0,
+        "server": 0
+      },
+      "local_backpressure": {
+        "client": 0,
+        "server": 0
+      },
+      "udp": {
+        "offered": 160,
+        "replies": 157,
+        "missing": 3,
+        "p99_ms_survivors": 400.6979
+      },
+      "tcp": {
+        "offered": 160,
+        "replies": 160,
+        "missing": 0,
+        "p99_ms_survivors": 1043.6554
+      },
+      "qdisc_skb": {
+        "router_client_egress": {
+          "emitted": 50199,
+          "dropped": 432
+        },
+        "router_server_egress": {
+          "emitted": 205713,
+          "dropped": 2088
+        }
+      },
+      "native_cold_readback_both_sides": true,
+      "original_owned_stop_both_sides": true
+    },
+    {
+      "name": "original_after",
+      "client_slots": 64,
+      "server_slots": 64,
+      "receiver_tcp_mbps": 82.59435,
+      "receiver_bytes": 210632704,
+      "original_tcp_retrans": 1969,
+      "calibration_direct_5s_mbps": 38.24777,
+      "client_cpu_s_per_gib": 21.97108,
+      "server_cpu_s_per_gib": 20.28884,
+      "local_full_drops": {
+        "client": 0,
+        "server": 0
+      },
+      "local_backpressure": {
+        "client": 0,
+        "server": 0
+      },
+      "udp": {
+        "offered": 160,
+        "replies": 157,
+        "missing": 3,
+        "p99_ms_survivors": 400.7477
+      },
+      "tcp": {
+        "offered": 160,
+        "replies": 160,
+        "missing": 0,
+        "p99_ms_survivors": 965.4755
+      },
+      "qdisc_skb": {
+        "router_client_egress": {
+          "emitted": 49997,
+          "dropped": 469
+        },
+        "router_server_egress": {
+          "emitted": 209361,
+          "dropped": 2028
+        }
+      },
+      "native_cold_readback_both_sides": true,
+      "original_owned_stop_both_sides": true
+    }
+  ],
+  "paired_interpretation": {
+    "candidate_goodput_vs_A_Aprime_mean_pct": -5.41635,
+    "A_to_Aprime_goodput_drift_pct": -3.1931,
+    "client_cpu_s_per_gib_candidate_vs_A_Aprime_mean_pct": 1.61103,
+    "server_cpu_s_per_gib_candidate_vs_A_Aprime_mean_pct": 0.68771,
+    "candidate_redistributed_local_pending_full_drops": false,
+    "underlay_direct_5s_mbps": [
+      43.48252,
+      11.84141,
+      38.24777
+    ],
+    "false_causal_inference_guard": "5s Direct reference varied far more than original WBD 20s throughput; don't attribute -5.42% uniquely to inbox slots without a more stable independent control",
+    "scope_conclusion": "NO_EVIDENCE_256_INBOX_HELPFUL_UNDER_THIS_GE1_LOW_SUPPLY; all three legs had zero local SharedTun full; retain64 default; no global production promotion",
+    "separate_positive_0pct_reference": {
+      "run": 44868667527,
+      "source_sha": "aeed826fd175b580a5225003e1e97adf4ceebe0c",
+      "candidate_goodput_gain_pct": 9.75103,
+      "distinct_scenario_not_cross_runner_cpu_control": true
+    }
+  },
+  "limits": [
+    "0% actual host-local data pressure/overflow is not equivalent to injected GE1% under 400ms RTT.",
+    "Only one 20s four-flow case per leg, separate cold TLS owners and substantial short Direct calibration variation.",
+    "Netem counts skb not unique IPv4 packets; 5s Direct reference may not overlap exact 20s WBD load, so no direct causal normalization.",
+    "160 UDP echo has non-zero missing each phase; survivor p99 is not all-request delivery quality.",
+    "No physical Windows, ARM board, WAN/DERP or x86 client performance qualification.",
+    "Client256 developer-only; worst-case +192 65KiB packet buffers approx12MiB per lease, remains unqualified for production default."
+  ]
+}

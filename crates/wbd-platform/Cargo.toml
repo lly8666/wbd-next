@@ -7,3 +7,7 @@ license.workspace = true
 
 [dependencies]
 wbd-types = { path = "../wbd-types" }
+
+# H2291 explicit native Windows TX-service experiment; OFF by default.
+[features]
+h2291_windows_tx_service = []

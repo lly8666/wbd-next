@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2272",
+  "date": "2026-11-21",
+  "status": "LINUX_NATIVE_APP_NAGLE_CAUSAL_CONTRIBUTION_PASS_SCOPED__TCP_GOODPUT_P99_PRODUCT_OPEN",
+  "git": {
+    "source_sha": "7e7df34174c12b1a1e0f72f4e463ec5b7da25dcb",
+    "experiment_branch": "experiment/m0-029-throughput-arm-fair",
+    "main_source_not_changed": true
+  },
+  "action": {
+    "run_id": 44922352895,
+    "attempt": 1,
+    "conclusion": "success",
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44922352895",
+    "jobs": {
+      "1%": 136900921956,
+      "5%": 136900921626
+    },
+    "artifacts": {
+      "1%": {
+        "id": 14714052454,
+        "sha256": "686c072649fb3449d7ed23cede19c69689153d84ee55ace149b443ead77beecd"
+      },
+      "5%": {
+        "id": 14714128517,
+        "sha256": "247736e92cc3a694f65bb19e52c971b429aaecce0657c7408b8e07e209492a50"
+      }
+    }
+  },
+  "native_manifest": {
+    "arch": "aarch64",
+    "m0_probe_compiled": false,
+    "artifacts_sha256": {
+      "libwbd_engine.so": "058dda46c52da6a2792c3527ada247396463ed8711d1ce217f730283144ae981",
+      "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+      "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+    }
+  },
+  "setup": "Original no-probe Go TLS/Rust three native netns and true TUN/raw/inner kernel TCP4+160 TCP echo+160 UDP; netem bidirectional IID 1% or 5%, 200ms one-way; intentional outer1160/physical1200, original fixed fq600; same VM A(server echo TCP_NODELAY=0)->B(1)->A_prime(0), verified OS getsockopt, original opportunistic repair OFF ALL legs and owned Stop both ends",
+  "result": {
+    "1%": [
+      {
+        "leg": "A",
+        "server_tcp_nodelay": 0,
+        "goodput_mbps": 79.76791735533949,
+        "client_cpu_seconds_per_received_gib": 21.90515,
+        "server_cpu_seconds_per_received_gib": 20.1633,
+        "tcp_p50_ms": 584.9163,
+        "tcp_p99_ms": 1223.6321,
+        "tcp_bulk_retransmissions": 2055,
+        "tcp_echo_retransmitted_segments": 3,
+        "udp_missing_of160": 2,
+        "client_shared_tun_full": 0
+      },
+      {
+        "leg": "B",
+        "server_tcp_nodelay": 1,
+        "goodput_mbps": 68.76838724385209,
+        "client_cpu_seconds_per_received_gib": 23.38822,
+        "server_cpu_seconds_per_received_gib": 21.85758,
+        "tcp_p50_ms": 400.4256,
+        "tcp_p99_ms": 823.6524,
+        "tcp_bulk_retransmissions": 1726,
+        "tcp_echo_retransmitted_segments": 0,
+        "udp_missing_of160": 2,
+        "client_shared_tun_full": 0
+      },
+      {
+        "leg": "A_prime",
+        "server_tcp_nodelay": 0,
+        "goodput_mbps": 74.06308438105042,
+        "client_cpu_seconds_per_received_gib": 24.33155,
+        "server_cpu_seconds_per_received_gib": 22.96716,
+        "tcp_p50_ms": 641.0391,
+        "tcp_p99_ms": 1709.2641,
+        "tcp_bulk_retransmissions": 1849,
+        "tcp_echo_retransmitted_segments": 1,
+        "udp_missing_of160": 2,
+        "client_shared_tun_full": 0
+      }
+    ],
+    "5%": [
+      {
+        "leg": "A",
+        "server_tcp_nodelay": 0,
+        "goodput_mbps": 42.6600871927991,
+        "client_cpu_seconds_per_received_gib": 32.8667,
+        "server_cpu_seconds_per_received_gib": 30.99142,
+        "tcp_p50_ms": 921.4291,
+        "tcp_p99_ms": 2320.2815,
+        "tcp_bulk_retransmissions": 5772,
+        "tcp_echo_retransmitted_segments": 15,
+        "udp_missing_of160": 15,
+        "client_shared_tun_full": 0
+      },
+      {
+        "leg": "B",
+        "server_tcp_nodelay": 1,
+        "goodput_mbps": 38.136508636579684,
+        "client_cpu_seconds_per_received_gib": 31.57563,
+        "server_cpu_seconds_per_received_gib": 29.58836,
+        "tcp_p50_ms": 687.4064,
+        "tcp_p99_ms": 1407.2539,
+        "tcp_bulk_retransmissions": 5274,
+        "tcp_echo_retransmitted_segments": 11,
+        "udp_missing_of160": 15,
+        "client_shared_tun_full": 0
+      },
+      {
+        "leg": "A_prime",
+        "server_tcp_nodelay": 0,
+        "goodput_mbps": 44.0469311290661,
+        "client_cpu_seconds_per_received_gib": 28.58119,
+        "server_cpu_seconds_per_received_gib": 27.72089,
+        "tcp_p50_ms": 903.2126,
+        "tcp_p99_ms": 2448.3751,
+        "tcp_bulk_retransmissions": 5921,
+        "tcp_echo_retransmitted_segments": 11,
+        "udp_missing_of160": 18,
+        "client_shared_tun_full": 0
+      }
+    ]
+  },
+  "judgement": {
+    "root_cause_supported": "Old echo server Nagle/delayed ACK interaction materially elevates measured sparse TCP P50 and tail; restoring server TCP_NODELAY test-only B brings 1% P50 close to physical RTT floor and reduces 5% P99, with repeated A_prime regression.",
+    "not_product_fix": "No Go/Rust runtime change and no new product performance gain; original underlay 400ms plus kernel retransmissions and source-level losses remain; 5% B p99 1407ms and bulk goodput B lower than both A/A_prime",
+    "metrics_not_proof": [
+      "160 echo survivor P99 not complete deadline SLA; UDP missing is separate",
+      "5% A/A_prime drift, do not attribute exact percentage changes to OS socket flag alone",
+      "No Windows same-source TCP P99, physical WAN, Game or full 029 release qualification",
+      "A/B/A_prime use same compiled binary, only test app socket behavior; no OS TCP global tuning or product default change"
+    ]
+  }
+}

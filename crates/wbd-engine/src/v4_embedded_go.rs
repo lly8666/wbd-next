@@ -505,6 +505,102 @@ impl OriginalOuterRepair{
         *slot=slot.saturating_add(1);
     }
 }
+// H2270: PLAN027 retired the per-record M2 Receipt on the ordinary live
+// path. These bounded, unauthenticated TCP-like ACK/SACK appearance hints
+// ONLY nominate an existing immutable one-shot shadow from actual kernel
+// copied original DATA. They never grant delivery, authenticated peer
+// activity, RTT samples, fresh bytes, FEC credit or replay admission.
+// Keep the same per-lane/epoch index and original <=10% global repair budget
+// already used by signed Windows Normal; do not resurrect M2 Receipt.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn apply_original_outer_presentation_feedback<H:
+    wbd_types::buffer_contract::FrozenRecordHandle>(
+    index:&mut wbd_recovery::outer_ack::OuterAckIndex,
+    shadow:&mut wbd_recovery::ReceiptState<H>,
+    lane:wbd_types::LaneKey,epoch:[u8;16],
+    ack32:u32,sacks:&[wbd_recovery::outer_ack::SackRange32],
+    now:MonoNs,
+)->(usize,usize){
+    // Index scope and cumulative bounds are checked before ANY shadow
+    // changes. A forged/stale/out-of-range raw ACK is harmless optional
+    // metadata, never an authenticated receipt or packet failure.
+    let Ok(update)=index.on_feedback(lane,epoch,ack32,sacks,
+        now,20_000_000)else{return(0,0)};
+    let mut retired=0;
+    for pn in update.retired{
+        retired+=usize::from(shadow.discard_outer_ack_hint(pn).is_some());
+    }
+    let mut nominated=0;
+    for pn in update.gap_candidates{
+        nominated+=usize::from(shadow.on_outer_gap_hint(pn,now));
+    }
+    (retired,nominated)
+}
+
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn h2270_original_linux_presentation_ack_restores_one_shot_repair_without_m2_receipt(){
+    use wbd_types::{TunnelKey,RecordPn,SeqOffset};
+    use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
+    let lane=wbd_types::LaneKey{
+        tunnel:TunnelKey{slot:11,generation:6},slot:2,generation:7,
+    };
+    let epoch=[0x77;16];
+    let mut index=wbd_recovery::outer_ack::OuterAckIndex::new(
+        lane,epoch,1000,16).unwrap();
+    let mut shadow=wbd_recovery::ReceiptState::new(
+        lane,wbd_recovery::ReceiptConfig{
+            max_shadow_entries:16,pto_ns:810_000_000,
+            reorder_window_ns:20_000_000,
+        }).unwrap();
+    shadow.enable_adaptive_timing(600_000_000,50_000_000).unwrap();
+    shadow.enable_opportunistic_v3().unwrap();
+    let mut arena=Arena::new(113,8,256,8,4096).unwrap();
+    for i in 0..4u64{
+        let mut loan=arena.allocate().unwrap();
+        loan.writable()[..10].copy_from_slice(&[i as u8;10]);
+        let pn=RecordPn(i+1);
+        let at=MonoNs(i*1_000_000);
+        let frozen=loan.freeze(0..10,FrozenMetadata{
+            lane,pn,seq:SeqOffset(1000+i*10),carrier_snapshot:12,
+        }).unwrap();
+        assert!(index.on_definitely_sent(pn,1000+i*10,10,at).unwrap());
+        shadow.on_sent_adaptive_with_floor(frozen,at,1_200_000_000)
+            .unwrap();
+    }
+    // No blind DATA PTO and no live per-record M2 Receipt:
+    assert!(shadow.on_timer(MonoNs(490_000_000)).candidates.is_empty());
+    // A checked true first-send range and subsequent SACK positive span
+    // can nominate only original missing ciphertext, never re-seal a PN.
+    let hint=wbd_recovery::outer_ack::SackRange32{start:1030,end:1040};
+    assert_eq!(apply_original_outer_presentation_feedback(
+        &mut index,&mut shadow,lane,[0x66;16],1000,&[hint],
+        MonoNs(500_000_000)),(0,0)); // stale/wrong epoch
+    assert_eq!(shadow.outstanding(),4);
+    let (retired,nominated)=apply_original_outer_presentation_feedback(
+        &mut index,&mut shadow,lane,epoch,1000,&[hint],
+        MonoNs(500_000_000));
+    assert_eq!(retired,1); // positive SACK retires PN4 shadow
+    assert!(nominated>0); // real original gap can now be nominated
+    assert!(shadow.diagnostic_snapshot().cosmetic_candidates>0);
+    assert_eq!(shadow.outstanding(),3);
+    assert_eq!(shadow.on_timer(MonoNs(519_999_999)).candidates.len(),0);
+    let due=shadow.on_timer(MonoNs(520_000_000)).candidates;
+    assert!(!due.is_empty());
+    assert!(due.iter().all(|c|c.pn().0<=3));
+    // A stale ACK outside original M4 copied boundaries cannot advance
+    // optional state or create a false retransmission.
+    assert_eq!(apply_original_outer_presentation_feedback(
+        &mut index,&mut shadow,lane,epoch,1050,&[],
+        MonoNs(530_000_000)),(0,0));
+    drop(due);
+    drop(shadow);
+    arena.drain_returns();
+    assert_eq!(arena.report().loaned,0);
+}
+
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_process_repair_quota()->&'static Mutex<wbd_recovery::GlobalRepairAllocator>{
@@ -3732,10 +3828,10 @@ pub extern "C" fn wbd_fec_network_game_group_outer_policy_set(
     e.outer_repair_enabled=enabled!=0;
     OK
 }
-// Readback is from the real installed Game M4 driver, not the CLI flag.
-// [enabled, outer DATA retry copies, rejected duplicate logical copies,
-//  accepted first lane copies including independently generated FEC parity].
-// No outer retransmit producer exists for Game; Normal V3 remains untouched.
+// Readback is from the original installed Game M4 RAW driver, not a CLI flag.
+// Legacy n=4 preserves [enabled, accepted retry count, blocked, first count].
+// Extended n=6 appends actual first DATA wire F and actual copied retry R;
+// both are accepted original RAW bytes including IPv4+TCP headers.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),
     any(target_env="gnu",target_env="musl")))]
@@ -3743,14 +3839,16 @@ pub extern "C" fn wbd_fec_network_game_group_outer_policy_set(
 pub unsafe extern "C" fn wbd_fec_network_game_group_outer_policy_read(
     group:u64,out:*mut u64,n:usize
 )->i32{
-    if out.is_null()||n!=4{return INVALID}
+    if out.is_null()||(n!=4&&n!=6){return INVALID}
     let Ok(r)=registry().lock()else{return BAD_STAGE};
     let Some(e)=r.game_groups.get(&group)else{return UNKNOWN};
     if e.stopped{return BAD_STAGE}
     let Some(driver)=e.drivers.as_ref()else{return BAD_STAGE};
-    let (repeated,blocked,first)=driver.outer_policy_counters();
-    let values=[u64::from(e.outer_repair_enabled),repeated,blocked,first];
-    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,4)};
+    let (repeated,blocked,first,first_wire,repair_wire)=
+        driver.outer_policy_counters();
+    let values=[u64::from(e.outer_repair_enabled),repeated,blocked,
+        first,first_wire,repair_wire];
+    unsafe{std::ptr::copy_nonoverlapping(values.as_ptr(),out,n)};
     OK
 }
 // PLAN028: a complete, credential-protected Game group may attach to the
@@ -4168,7 +4266,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
             let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
             if router.stop.load(Ordering::Acquire){return BAD_STAGE}
             let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-            let candidate=SharedTunRoute{
+            let candidate=SharedTunRoute{flow_fair:false,
                 generation:shared.generation,alive:Arc::clone(&shared.alive),
                 send:shared.sender.clone(),
             };
@@ -4226,7 +4324,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let candidate=SharedTunRoute{
+    let candidate=SharedTunRoute{flow_fair:false,
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),
     };
@@ -4257,7 +4355,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_server_promote_after_client_heal
     let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
     let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-    let candidate=SharedTunRoute{
+    let candidate=SharedTunRoute{flow_fair:false,
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),
     };
@@ -5310,6 +5408,7 @@ pub(crate) enum OriginalTunIngress{
 #[derive(Clone)]
 struct SharedTunRoute{
     generation:u32,alive:Arc<AtomicBool>,send:SyncSender<OriginalTunIngress>,
+    flow_fair:bool,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 struct SharedTunReader{
@@ -5419,6 +5518,7 @@ struct PendingSharedTunRoute{
 #[derive(Default,Debug)]
 struct SharedTunDispatchDelta{
     delivered:u64,backpressure:u64,overflow:u64,byte_limit:u64,expired:u64,retired:u64,
+    flow_evicted:u64,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn same_shared_tun_route(a:&SharedTunRoute,b:&SharedTunRoute)->bool{
@@ -5428,6 +5528,51 @@ fn same_shared_tun_route(a:&SharedTunRoute,b:&SharedTunRoute)->bool{
 fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
     key:[u8;4],route:SharedTunRoute,bytes:usize,make:F
+)->SharedTunDispatchDelta{
+    enqueue_shared_tun_flow(pending,key,route,bytes,None,make)
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+// H2372: classify only a full per-lease pending queue. No port priority,
+// separate quota, extra buffer, per-flow map or packet hot-path allocation.
+// IPv4 TCP/UDP first-class flows are exact 5-tuples; do not classify fragments.
+fn shared_tun_flow_key(ip:&[u8])->Option<[u8;13]>{
+    if ip.len()<24||ip[0]>>4!=4||!matches!(ip[9],6|17){return None}
+    let h=usize::from(ip[0]&15)*4;
+    if h<20||ip.len()<h+4||u16::from_be_bytes([ip[6],ip[7]])&0x3fff!=0{return None}
+    let mut k=[0;13];
+    k[0]=ip[9];k[1..9].copy_from_slice(&ip[12..20]);
+    k[9..13].copy_from_slice(&ip[h..h+4]);
+    Some(k)
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_tun_flow_victim(q:&PendingSharedTunRoute,incoming:&[u8],bytes:usize)->Option<usize>{
+    let key=shared_tun_flow_key(incoming)?;
+    let mut keys=[None;SHARED_TUN_PENDING_PER_ROUTE];
+    for (i,p) in q.packets.iter().enumerate(){
+        keys[i]=match &p.packet{
+            OriginalTunIngress::Shared(v)=>shared_tun_flow_key(v.as_slice()),
+            _=>None,
+        };
+    }
+    let incoming_count=keys.iter().filter(|k|**k==Some(key)).count();
+    let mut best_count=incoming_count+1;
+    let mut best=None;
+    // Newest member of the most represented flow. Never evict an equal
+    // share or an unknown/fragment flow. Same-flow surviving FIFO is intact.
+    for (i,k) in keys.iter().enumerate().rev(){
+        let Some(k)=k else{continue};
+        if *k==key{continue}
+        let count=keys.iter().filter(|v|**v==Some(*k)).count();
+        if count>best_count&&q.queued_bytes-q.packets[i].bytes+bytes<=SHARED_TUN_PENDING_BYTES_PER_ROUTE{
+            best=Some(i);best_count=count;
+        }
+    }
+    best
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn enqueue_shared_tun_flow<F:FnOnce()->OriginalTunIngress>(
+    pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
+    key:[u8;4],route:SharedTunRoute,bytes:usize,fair_ip:Option<&[u8]>,make:F
 )->SharedTunDispatchDelta{
     let mut d=SharedTunDispatchDelta::default();
     if !route.alive.load(Ordering::Acquire){d.retired+=1;return d}
@@ -5505,7 +5650,12 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
             }
         }
         if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE{
-            d.overflow+=1;return d
+            let Some(victim)=fair_ip.and_then(|ip|shared_tun_flow_victim(q,ip,bytes)) else{
+                d.overflow+=1;return d
+            };
+            let old=q.packets.remove(victim).expect("selected pending flow member");
+            q.queued_bytes-=old.bytes;
+            d.flow_evicted+=1;
         }
         if q.queued_bytes.saturating_add(bytes)>SHARED_TUN_PENDING_BYTES_PER_ROUTE{
             d.overflow+=1;d.byte_limit+=1;return d
@@ -5586,7 +5736,8 @@ impl SharedTunReader{
     fn note_dispatch(&self,d:SharedTunDispatchDelta){
         if d.delivered!=0{self.delivered.fetch_add(d.delivered,Ordering::Relaxed);}
         if d.backpressure!=0{self.backpressure.fetch_add(d.backpressure,Ordering::Relaxed);}
-        if d.overflow!=0{self.queue_full_drops.fetch_add(d.overflow,Ordering::Relaxed);}
+        let full=d.overflow+d.flow_evicted;
+        if full!=0{self.queue_full_drops.fetch_add(full,Ordering::Relaxed);}
         if d.byte_limit!=0{self.queue_byte_drops.fetch_add(d.byte_limit,Ordering::Relaxed);}
         if d.expired!=0{self.queue_age_drops.fetch_add(d.expired,Ordering::Relaxed);}
         if d.retired!=0{self.retired_drops.fetch_add(d.retired,Ordering::Relaxed);}
@@ -5603,7 +5754,7 @@ fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
     let alive_b=Arc::new(AtomicBool::new(true));
     let ip=[10,66,0,194];
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
         generation:17,alive:Arc::clone(&alive_a),send:atx,
     }));
     // Group B local TLS/native M4 starts; neither its own first TX
@@ -5613,7 +5764,7 @@ fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
     client.record_batch(100,0,None);
     assert!(!client.has_verified_peer_health());
     assert!(!shared_route_promote_authenticated_client(&mut routes,ip,
-        SharedTunRoute{generation:18,alive:Arc::clone(&alive_b),send:btx.clone()},
+        SharedTunRoute{flow_fair:false,generation:18,alive:Arc::clone(&alive_b),send:btx.clone()},
         u64::from(client.has_verified_peer_health())));
     assert_eq!(routes[&ip].generation,17);
     assert!(alive_a.load(Ordering::Acquire));
@@ -5622,7 +5773,7 @@ fn m0_plan028_game_server_b_preserves_a_until_authenticated_client_cold_m4(){
     client.record_batch(120,0,Some((120,0)));
     assert!(client.has_verified_peer_health());
     assert!(shared_route_promote_authenticated_client(&mut routes,ip,
-        SharedTunRoute{generation:18,alive:Arc::clone(&alive_b),send:btx},
+        SharedTunRoute{flow_fair:false,generation:18,alive:Arc::clone(&alive_b),send:btx},
         u64::from(client.has_verified_peer_health())));
     assert_eq!(routes[&ip].generation,18);
     assert!(alive_a.load(Ordering::Acquire));
@@ -5642,13 +5793,13 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     let next_live=Arc::new(AtomicBool::new(true));
     let ip=[0u8;4];
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
         generation:24,alive:Arc::clone(&old_live),send:old_tx.clone(),
     }));
     assert!(shared_route_defer_live_replacement(&routes,ip,25));
     assert!(!shared_route_defer_live_replacement(&routes,ip,24));
     assert!(!shared_route_promote_authenticated_client(
-        &mut routes,ip,SharedTunRoute{
+        &mut routes,ip,SharedTunRoute{flow_fair:false,
             generation:25,alive:Arc::clone(&next_live),send:new_tx.clone(),
         },0
     ));
@@ -5668,7 +5819,7 @@ fn m0_plan028_normal_client_no_revocation_until_authenticated_reverse_m4(){
     assert!(verified.has_verified_peer_health());
     let confirmed=Arc::new(AtomicBool::new(true));
     assert!(shared_route_promote_authenticated_client(
-        &mut routes,ip,SharedTunRoute{
+        &mut routes,ip,SharedTunRoute{flow_fair:false,
             generation:26,alive:Arc::clone(&confirmed),send:new_tx,
         },u64::from(verified.has_verified_peer_health())
     ));
@@ -5689,12 +5840,12 @@ fn m0_plan028_server_b_waits_real_client_cold_health_before_replacing_a(){
     let old_live=Arc::new(AtomicBool::new(true));
     let new_live=Arc::new(AtomicBool::new(true));
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
         generation:7,alive:Arc::clone(&old_live),send:old_tx,
     }));
     assert!(shared_route_defer_live_replacement(&routes,ip,8));
     let evidence=crate::v4_native_health::AuthenticatedActivity::default();
-    let b=SharedTunRoute{
+    let b=SharedTunRoute{flow_fair:false,
         generation:8,alive:Arc::clone(&new_live),send:new_tx,
     };
     // B's local TLS/RAW Start without client B's M4 response cannot
@@ -5730,12 +5881,12 @@ fn m0_plan028_old_exact_m4_stop_after_route_promotion_preserves_one_tun_owner(){
     let old_live=Arc::new(AtomicBool::new(true));
     let new_live=Arc::new(AtomicBool::new(true));
     let mut routes=HashMap::new();
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
         generation:41,alive:Arc::clone(&old_live),send:old_tx,
     }));
     // This is already owned by the old original M4 prior to handoff.
     assert!(routes[&ip].send.try_send(make(41)).is_ok());
-    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{
+    assert!(shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
         generation:42,alive:Arc::clone(&new_live),send:new_tx,
     }));
     assert_eq!(routes.len(),1);
@@ -5760,7 +5911,7 @@ fn m0_plan028_old_exact_m4_stop_after_route_promotion_preserves_one_tun_owner(){
     assert!(new_live.load(Ordering::Acquire));
     let (late,_late_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let stale=Arc::new(AtomicBool::new(true));
-    assert!(!shared_route_publish(&mut routes,ip,SharedTunRoute{
+    assert!(!shared_route_publish(&mut routes,ip,SharedTunRoute{flow_fair:false,
         generation:41,alive:Arc::clone(&stale),send:late,
     }));
     assert!(!stale.load(Ordering::Acquire));
@@ -5781,8 +5932,8 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
     assert!(a_tx.try_send(packet(0)).is_ok());
     let a=Arc::new(AtomicBool::new(true));
     let b=Arc::new(AtomicBool::new(true));
-    let ra=SharedTunRoute{generation:10,alive:Arc::clone(&a),send:a_tx};
-    let rb=SharedTunRoute{generation:20,alive:Arc::clone(&b),send:b_tx};
+    let ra=SharedTunRoute{flow_fair:false,generation:10,alive:Arc::clone(&a),send:a_tx};
+    let rb=SharedTunRoute{flow_fair:false,generation:20,alive:Arc::clone(&b),send:b_tx};
     let ka=[10,66,0,1];let kb=[10,66,0,2];
     let mut pending=HashMap::new();
     assert_eq!(enqueue_shared_tun(&mut pending,ka,ra.clone(),1,||packet(1)).backpressure,1);
@@ -5807,7 +5958,7 @@ fn m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop(){
     assert_eq!(flush_shared_tun(&mut pending).retired,(SHARED_TUN_PENDING_PER_ROUTE-1) as u64);
     assert!(pending.is_empty());
     let (new_tx,new_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
-    let newer=SharedTunRoute{
+    let newer=SharedTunRoute{flow_fair:false,
         generation:11,alive:Arc::new(AtomicBool::new(true)),send:new_tx,
     };
     assert_eq!(enqueue_shared_tun(&mut pending,ka,newer,1,||packet(101)).delivered,1);
@@ -5825,7 +5976,7 @@ fn m0_plan028_shared_tun_partial_backlog_eager_oldest_fifo_before_full(){
     });
     let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     tx.try_send(packet(0)).unwrap();
-    let route=SharedTunRoute{generation:101,
+    let route=SharedTunRoute{flow_fair:false,generation:101,
         alive:Arc::new(AtomicBool::new(true)),send:tx};
     let key=[10,66,0,101];let mut pending=HashMap::new();
     let first=enqueue_shared_tun(&mut pending,key,route.clone(),1,||packet(1));
@@ -5869,7 +6020,7 @@ fn m0_plan028_full_lease_opportunistic_oldest_drain_before_drop(){
     });
     let (tx,rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     tx.try_send(packet(0)).unwrap();
-    let route=SharedTunRoute{
+    let route=SharedTunRoute{flow_fair:false,
         generation:20,alive:Arc::new(AtomicBool::new(true)),send:tx,
     };
     let key=[10,66,0,42];let mut pending=HashMap::new();
@@ -5917,10 +6068,10 @@ fn m0_plan028_shared_tun_a_recovers_b_continuous_backlog_drain(){
     let (b_tx,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(8);
     for n in 0..8{a_tx.try_send(packet(n)).unwrap();}
     let ka=[10,66,0,1];let kb=[10,66,0,2];
-    let ra=SharedTunRoute{
+    let ra=SharedTunRoute{flow_fair:false,
         generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_tx,
     };
-    let rb=SharedTunRoute{
+    let rb=SharedTunRoute{flow_fair:false,
         generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_tx,
     };
     let mut pending=HashMap::new();
@@ -5998,8 +6149,8 @@ fn m0_plan028_h1461_peak75_urgent_fifo_drain_without_larger_queue(){
     for i in 0..8{a_tx.try_send(packet(i)).unwrap();}
     let (ka,kb)=([10,66,0,2],[10,66,0,3]);
     let (ra,rb)=(
-        SharedTunRoute{generation:10,alive:a_live,send:a_tx},
-        SharedTunRoute{generation:20,alive:b_live,send:b_tx},
+        SharedTunRoute{flow_fair:false,generation:10,alive:a_live,send:a_tx},
+        SharedTunRoute{flow_fair:false,generation:20,alive:b_live,send:b_tx},
     );
     let mut pending=HashMap::new();
     for i in 8..16{
@@ -6056,8 +6207,8 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
     let (a_send,_a_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let (b_send,b_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     assert!(a_send.try_send(packet(0,1)).is_ok());
-    let ra=SharedTunRoute{generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_send};
-    let rb=SharedTunRoute{generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_send};
+    let ra=SharedTunRoute{flow_fair:false,generation:10,alive:Arc::new(AtomicBool::new(true)),send:a_send};
+    let rb=SharedTunRoute{flow_fair:false,generation:20,alive:Arc::new(AtomicBool::new(true)),send:b_send};
     let ka=[10,66,0,1];let kb=[10,66,0,2];
     let mut pending=HashMap::new();
     let made=std::cell::Cell::new(0u64);
@@ -6094,7 +6245,7 @@ fn m0_plan028_shared_tun_precopy_4096_a_b_fair_age_bytes(){
     let (large_send,_large_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     assert!(large_send.try_send(packet(0,1)).is_ok());
     let large=[10,66,0,3];
-    let largeroute=SharedTunRoute{
+    let largeroute=SharedTunRoute{flow_fair:false,
         generation:30,alive:Arc::new(AtomicBool::new(true)),send:large_send,
     };
     assert_eq!(enqueue_shared_tun(&mut pending,large,largeroute.clone(),40*1024,
@@ -6118,10 +6269,10 @@ fn m0_plan028_shared_tun_real_generation_scope_and_sibling_fence(){
     let ip_a=[10,66,0,154];
     let ip_b=[10,66,0,155];
     let mut routes=HashMap::<[u8;4],SharedTunRoute>::new();
-    shared_route_publish(&mut routes,ip_a,SharedTunRoute{
+    shared_route_publish(&mut routes,ip_a,SharedTunRoute{flow_fair:false,
         generation:10,alive:Arc::clone(&a),send:a_send,
     });
-    shared_route_publish(&mut routes,ip_b,SharedTunRoute{
+    shared_route_publish(&mut routes,ip_b,SharedTunRoute{flow_fair:false,
         generation:20,alive:Arc::clone(&b),send:b_send,
     });
     assert_eq!(routes.len(),2);
@@ -6129,7 +6280,7 @@ fn m0_plan028_shared_tun_real_generation_scope_and_sibling_fence(){
     // share one ingress channel or Rust generation.
     assert_eq!(routes[&ip_a].generation,10);
     assert_eq!(routes[&ip_b].generation,20);
-    shared_route_publish(&mut routes,ip_a,SharedTunRoute{
+    shared_route_publish(&mut routes,ip_a,SharedTunRoute{flow_fair:false,
         generation:11,alive:Arc::clone(&new),send:new_send,
     });
     assert!(a.load(Ordering::Acquire));
@@ -6153,7 +6304,7 @@ fn m0_plan028_client_shared_tun_default_generation_fence(){
     let a=Arc::new(AtomicBool::new(true));
     let b=Arc::new(AtomicBool::new(true));
     let default=[0u8;4];
-    shared_route_publish(&mut routes,default,SharedTunRoute{
+    shared_route_publish(&mut routes,default,SharedTunRoute{flow_fair:false,
         generation:1,alive:Arc::clone(&a),send:a_send,
     });
     for destination in [[10,66,0,1],[8,8,8,8],[192,168,1,200]]{
@@ -6161,7 +6312,7 @@ fn m0_plan028_client_shared_tun_default_generation_fence(){
             .expect("verified client default route");
         assert_eq!(selected.generation,1);
     }
-    shared_route_publish(&mut routes,default,SharedTunRoute{
+    shared_route_publish(&mut routes,default,SharedTunRoute{flow_fair:false,
         generation:2,alive:Arc::clone(&b),send:b_send,
     });
     assert!(a.load(Ordering::Acquire));
@@ -6187,14 +6338,14 @@ fn m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop(){
     let a1=Arc::new(AtomicBool::new(true));
     let b1=Arc::new(AtomicBool::new(true));
     let a2=Arc::new(AtomicBool::new(true));
-    shared_route_publish(&mut routes,a,SharedTunRoute{
+    shared_route_publish(&mut routes,a,SharedTunRoute{flow_fair:false,
         generation:10,alive:Arc::clone(&a1),send:a1tx,
     });
-    shared_route_publish(&mut routes,b,SharedTunRoute{
+    shared_route_publish(&mut routes,b,SharedTunRoute{flow_fair:false,
         generation:20,alive:Arc::clone(&b1),send:btx,
     });
     assert_eq!(routes.len(),2);
-    shared_route_publish(&mut routes,a,SharedTunRoute{
+    shared_route_publish(&mut routes,a,SharedTunRoute{flow_fair:false,
         generation:30,alive:Arc::clone(&a2),send:a2tx,
     });
     assert!(a1.load(Ordering::Acquire));
@@ -6207,7 +6358,7 @@ fn m0_plan028_game_groups_share_one_tun_lease_routes_and_exact_stop(){
     // A late old group cannot overtake the protected newer lease owner.
     let (late_tx,_late_rx)=mpsc::sync_channel::<OriginalTunIngress>(1);
     let late=Arc::new(AtomicBool::new(true));
-    assert!(!shared_route_publish(&mut routes,a,SharedTunRoute{
+    assert!(!shared_route_publish(&mut routes,a,SharedTunRoute{flow_fair:false,
         generation:10,alive:Arc::clone(&late),send:late_tx,
     }));
     assert!(!late.load(Ordering::Acquire));
@@ -6237,6 +6388,49 @@ struct SharedTunLeaseQueueDiag {
     offered:u64,direct_delivered:u64,downstream_full:u64,
     pending_overflow:u64,pending_byte_limit:u64,
     pending_peak_packets:usize,pending_peak_bytes:usize,
+    flow_evicted:u64,
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn h2372_shared_tun_flow_fair_full_only_preserves_fifo_and_equal_share(){
+    fn datagram(port:u16,proto:u8,seq:u8)->Vec<u8>{
+        let mut ip=vec![0;40];ip[0]=0x45;ip[9]=proto;
+        ip[2..4].copy_from_slice(&40u16.to_be_bytes());
+        ip[12..16].copy_from_slice(&[10,0,0,1]);ip[16..20].copy_from_slice(&[10,0,0,2]);
+        ip[20..22].copy_from_slice(&port.to_be_bytes());ip[22..24].copy_from_slice(&443u16.to_be_bytes());
+        ip[39]=seq;ip
+    }
+    let (send,_recv)=mpsc::sync_channel::<OriginalTunIngress>(0);
+    let (recycle,_buffers)=mpsc::sync_channel::<Vec<u8>>(16);
+    let route=SharedTunRoute{flow_fair:false,generation:1,alive:Arc::new(AtomicBool::new(true)),send};
+    let key=[10,0,0,2];let mut pending=HashMap::new();
+    for i in 0..8{
+        let ip=datagram(1000+u16::from(i/2),6,i);
+        let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),ip.len(),Some(&ip),||
+            OriginalTunIngress::Shared(SharedTunPacket{bytes:ip.clone(),recycle:recycle.clone()}));
+        assert_eq!((d.overflow,d.flow_evicted),(0,0));
+    }
+    let small=datagram(9000,6,9);
+    let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),small.len(),Some(&small),||
+        OriginalTunIngress::Shared(SharedTunPacket{bytes:small.clone(),recycle:recycle.clone()}));
+    assert_eq!((d.overflow,d.flow_evicted),(0,1));
+    let q=&pending[&key];assert_eq!(q.packets.len(),8);assert_eq!(q.queued_bytes,320);
+    let order:Vec<_>=q.packets.iter().map(|p|match &p.packet{
+        OriginalTunIngress::Shared(v)=>v.as_slice()[39],_=>unreachable!(),
+    }).collect();
+    assert_eq!(order,vec![0,1,2,3,4,5,6,9]);
+    let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),small.len(),Some(&small),||
+        panic!("equal share must not materialize"));
+    assert_eq!((d.overflow,d.flow_evicted),(1,0));
+    let udp=datagram(9000,17,10);
+    let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),udp.len(),Some(&udp),||
+        OriginalTunIngress::Shared(SharedTunPacket{bytes:udp.clone(),recycle:recycle.clone()}));
+    assert_eq!((d.overflow,d.flow_evicted),(0,1));
+    let mut fragment=udp.clone();fragment[6]=0x20;
+    assert!(shared_tun_flow_key(&fragment).is_none());
+    let d=enqueue_shared_tun_flow(&mut pending,key,route,fragment.len(),Some(&fragment),||
+        panic!("fragment must not evict"));
+    assert_eq!((d.overflow,d.flow_evicted),(1,0));
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u8>>){
@@ -6289,7 +6483,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 continue
             };
             // Reject saturated/stale A BEFORE any Vec allocation or copy.
-            let delta=enqueue_shared_tun(&mut pending,key,route,len,||{
+            let fair_ip=route.flow_fair.then_some(&scratch[i][..len]);
+            let delta=enqueue_shared_tun_flow(&mut pending,key,route,len,fair_ip,||{
                 let mut bytes=recycle_recv.try_recv()
                     .unwrap_or_else(|_|Vec::with_capacity(2048));
                 bytes.clear();
@@ -6303,7 +6498,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 stats.offered+=1;
                 stats.direct_delivered+=delta.delivered;
                 stats.downstream_full+=delta.backpressure;
-                stats.pending_overflow+=delta.overflow;
+                stats.pending_overflow+=delta.overflow+delta.flow_evicted;
+                stats.flow_evicted+=delta.flow_evicted;
                 stats.pending_byte_limit+=delta.byte_limit;
                 if let Some(q)=pending.get(&key){
                     stats.pending_peak_packets=stats.pending_peak_packets.max(q.packets.len());
@@ -6315,10 +6511,10 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     }
     if lease_diag_enabled{
         for (ip,st) in lease_diag{
-            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={}",
+            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={} flow_evicted={}",
                 ip[0],ip[1],ip[2],ip[3],st.offered,st.direct_delivered,
                 st.downstream_full,st.pending_overflow,st.pending_byte_limit,
-                st.pending_peak_packets,st.pending_peak_bytes);
+                st.pending_peak_packets,st.pending_peak_bytes,st.flow_evicted);
         }
     }
     let remaining:usize=pending.values().map(|q|q.packets.len()).sum();
@@ -6400,6 +6596,22 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
     registry.remove(&handle);
     OK
 }
+// PLAN029: Zero-loss original GoTLS/Rust client-only M1 shared-TUN
+// 64→128 A/B/A' improved actual receiver goodput (ARM +7.70%)
+// with reduced local full drops and CPU/GiB. Server and Game remain 64.
+// This one bounded, per-authenticated-generation cold capacity setting
+// never changes TCP, AEAD/PN, pacing, or cross-lease admission.
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn normal_shared_tun_product_inbox_slots(server_side:bool)->usize{
+    if server_side{64}else{128}
+}
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn m0_plan029_linux_normal_client_default_128_server_64(){
+    assert_eq!(normal_shared_tun_product_inbox_slots(false),128);
+    assert_eq!(normal_shared_tun_product_inbox_slots(true),64);
+}
+
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
@@ -6419,7 +6631,12 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     // all destinations without a second destructive TUN reader.
     let Some(lease)=e.client_lease_ipv4 else{return BAD_STAGE};
     let ip=if e.server_side{lease}else{[0u8;4]};
-    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
+    // Cold readback confirms the exact Normal client/server queue size once,
+    // before native M4 activation; no per-DATA probe or heap growth loop.
+    let inbox_slots=normal_shared_tun_product_inbox_slots(e.server_side);
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0",
+        if e.server_side{"server"}else{"client"},e.generation,inbox_slots);
+    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);
     e.shared_tun=Some(SharedTunSession{
         router:router_handle,generation:e.generation,ip,
         alive:Arc::new(AtomicBool::new(true)),
@@ -6576,6 +6793,18 @@ fn drain_data_turn_returns(arena:&mut Arena)->usize{
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP)
 }
 
+// Pure presentation policy: a duplicate cumulative ACK is allowed only
+// after a new authenticated future interval in this RX batch. It is a
+// low-rate TCP-like appearance hint, never a business delivery receipt.
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[inline]
+fn original_cosmetic_ack_due(changed:bool,authenticated_future:bool,
+    sack_negotiated:bool,has_sack:bool,abandoned:bool)->bool{
+    changed||authenticated_future||abandoned||(sack_negotiated&&has_sack)
+}
+
 // Only original M3 authenticated contiguous TCP spans may advance the
 // presentation ACK, never the unauthenticated highest raw seq32.
 #[cfg(all(feature="fec2_product_record",target_os="linux",
@@ -6644,7 +6873,20 @@ impl OriginalPresentationAck{
 }
 #[cfg(all(test,feature="fec2_product_record",target_os="linux"))]
 mod original_presentation_ack_tests{
-    use super::OriginalPresentationAck;
+    use super::{OriginalPresentationAck,original_cosmetic_ack_due};
+    #[test]
+    fn r1_m0_cumulative_duplicate_ack_requires_new_authenticated_future(){
+        let mut p=OriginalPresentationAck::new(100);
+        assert!(!original_cosmetic_ack_due(false,false,false,false,false));
+        assert_eq!(p.verified(140,20),100); // unique accepted M3 later
+        assert!(original_cosmetic_ack_due(false,true,false,false,false));
+        assert!(!original_cosmetic_ack_due(false,false,false,false,false));
+        assert!(original_cosmetic_ack_due(false,false,true,true,false));
+        assert!(original_cosmetic_ack_due(true,false,false,false,false));
+        assert_eq!(p.verified(100,40),160);
+        assert!(p.future.is_empty());
+        assert!(!original_cosmetic_ack_due(false,false,false,false,false));
+    }
     #[test]
     fn h501_unique_crypto_contiguous_only_not_raw_highwater(){
         let mut x=OriginalPresentationAck::new(1000);
@@ -6794,9 +7036,16 @@ fn background_raw_once(
     #[cfg(feature="fec2_product_record")]
     let mut outer_only_valid=false;
     #[cfg(feature="fec2_product_record")]
+    let mut authenticated_future_in_batch=false;
+    #[cfg(feature="fec2_product_record")]
     let mut outer_hint=None::<u32>;
     #[cfg(feature="fec2_product_record")]
-    let mut outer_sack_hint=Vec::<wbd_recovery::outer_ack::SackRange32>::with_capacity(4);
+    // Reuse four stack slots instead of allocating a Vec on EVERY raw RX
+    // batch, including ordinary DATA-only batches with no outer SACK.
+    let mut outer_sack_hint=[
+        wbd_recovery::outer_ack::SackRange32{start:0,end:0};4
+    ];
+    let mut outer_sack_count=0usize;
     #[cfg(feature="fec2_product_record")]
     let(mut authenticated_at,mut business_at,mut peer_idle_hint,mut peer_retire_at)=(0u64,0u64,None,0u64);
     // Unused preposted original M1 slabs persist in this RX worker; used
@@ -6811,7 +7060,7 @@ fn background_raw_once(
                 // Strict TCP checksum/tuple ACK-only is a legitimate carrier
                 // turn, never a crypto failure or peer Health witness.
                 outer_only_valid=true;
-                if outer_sack_hint.is_empty(){outer_hint=Some(ack32);}
+                if outer_sack_count==0{outer_hint=Some(ack32);}
                 drop(slab);continue
             },
             #[cfg(feature="fec2_product_record")]
@@ -6820,11 +7069,17 @@ fn background_raw_once(
             })=>{
                 outer_only_valid=true;
                 outer_hint=Some(ack32);
-                outer_sack_hint.clear();
-                outer_sack_hint.extend(sacks[..usize::from(count)].iter().map(|s|
-                    wbd_recovery::outer_ack::SackRange32{
-                        start:s.start,end:s.end
-                    }));
+                outer_sack_count=usize::from(count);
+                if outer_sack_count>outer_sack_hint.len(){
+                    invalid_seen=true;
+                    drop(slab);continue
+                }
+                for (dst,src) in outer_sack_hint.iter_mut()
+                    .zip(sacks[..outer_sack_count].iter()){
+                    *dst=wbd_recovery::outer_ack::SackRange32{
+                        start:src.start,end:src.end
+                    };
+                }
                 drop(slab);continue
             },
             _=>{drop(slab);continue},
@@ -6849,7 +7104,10 @@ fn background_raw_once(
         }
         #[cfg(feature="fec2_product_record")]
         if receipt.authenticated_link>0||receipt.authenticated_control{
-            if outer_sack_hint.is_empty(){outer_hint=Some(ack32);}
+            // Only an authenticated later interval gives a genuine reason
+            // for another cumulative ACK when SACK was not negotiated.
+            authenticated_future_in_batch|=absolute>presentation_ack.next;
+            if outer_sack_count==0{outer_hint=Some(ack32);}
             let contiguous=presentation_ack.verified(absolute,len);
             fec_stats.outer_presentation_ack.store(contiguous,Ordering::Release);
         }
@@ -6951,11 +7209,16 @@ fn background_raw_once(
         // Keep a bounded 10ms coalescing interval; no per-packet ACK storm,
         // cloned PN, or wait for a missing outer byte. Data can be out of
         // order at its original TUN writer throughout.
-        if (ack32!=*last_ack_sent32 || sack_negotiated || abandoned) &&
-            (now.saturating_sub(*last_sack_tx_ns)>=10_000_000) {
+        // The old no-SACK path suppressed duplicate ACKs even when truly
+        // authenticated later DATA arrived behind a gap. Publish at most
+        // one ACK per 10ms on such *new* positive evidence; no PTO, synthetic
+        // loss, periodic idle ACK or extra per-record control transport.
+        if now.saturating_sub(*last_sack_tx_ns)>=10_000_000 {
             let sacks=if sack_negotiated{presentation_ack.sacks()}
                 else{Vec::new()};
-            if ack32!=*last_ack_sent32 || !sacks.is_empty() || abandoned{
+            if original_cosmetic_ack_due(
+                ack32!=*last_ack_sent32,authenticated_future_in_batch,
+                sack_negotiated,!sacks.is_empty(),abandoned){
                 let seq=outer.and_then(|own|own.lock().ok().map(|o|
                     o.outer_ack.highest_sent_end() as u32));
                 if let Some(seq32)=seq{
@@ -6993,6 +7256,18 @@ fn background_raw_once(
         // Exactly once per native RX batch; no per-packet cross-thread lock.
         activity.record_batch(authenticated_at,business_at,peer_idle_hint);
         if peer_retire_at!=0{activity.record_peer_retire(peer_retire_at)}
+    }
+    #[cfg(feature="fec2_product_record")]
+    if let (Some(outer),Some(ack32))=(outer,outer_hint){
+        if let Ok(mut own)=outer.lock(){
+            let lane=own.route.outbound_lane();
+            let epoch=own.epoch;
+            let now=loop_now();
+            let own=&mut *own;
+            let _=apply_original_outer_presentation_feedback(
+                &mut own.outer_ack,&mut own.shadow,lane,epoch,
+                ack32,&outer_sack_hint[..outer_sack_count],now);
+        }
     }
     arena.drain_returns_bounded(M0_DATA_RETURN_TURN_CAP);
     // A unique authenticated LINK shard with no completed datagram is
@@ -8067,22 +8342,35 @@ fn background_tun_once(cell:&Mutex<Entry>,tun:&ScopedTunSink,
         let mut fresh_bytes=0u64;
         for record in frozen_for_outer.iter().take(real_copied){
             let meta=record.metadata();
-            let _=original.outer_ack.on_definitely_sent(
-                meta.pn,meta.seq.0,record.bytes().len() as u32,now);
-            fresh_bytes=fresh_bytes.saturating_add((record.bytes().len()+
+            let cipher_len=record.bytes().len();
+            // Cosmetic repair is optional: OFF or an unsampled first-send
+            // only advances the genuine TCP sequence bound (O(1)); it must
+            // not allocate an ACK BTree node or optional frozen payload.
+            let selected=allow_repair&&v3_admit_shadow(meta.pn.0,meta.lane,now);
+            let indexed=if selected{
+                original.outer_ack.on_definitely_sent(
+                    meta.pn,meta.seq.0,cipher_len as u32,now).unwrap_or(false)
+            }else{
+                let _=original.outer_ack.on_definitely_sent_untracked(
+                    meta.seq.0,cipher_len as u32,now);
+                false
+            };
+            fresh_bytes=fresh_bytes.saturating_add((cipher_len+
                 wbd_platform::ipv4_tcp::BASE_OVERHEAD) as u64);
             original.sent_fresh=original.sent_fresh.saturating_add(1);
-            if allow_repair && v3_admit_shadow(meta.pn.0,meta.lane,now){
-                // A selected once-repair must never pin the shared source
-                // M1 slab for a whole RTT. Copy ciphertext exactly once into
-                // bounded process-shared repair-only backing after M4 copy.
-                // No new PN, AEAD or business HOL on admission failure.
+            if indexed{
+                // Optional: one exact immutable snapshot after actual M4
+                // copy; failed admission is invisible to original DATA.
                 let tracked=record.try_v3_repair_snapshot().is_some_and(|frozen|
                     original.shadow.on_sent_adaptive_with_floor(
                         frozen,now,LINUX_ORIGINAL_V3_RETAIN_FLOOR_NS).is_ok());
                 if !tracked{
                     original.note_block(OriginalRepairBlockReason::FreshShadow);
                 }
+            }else if selected{
+                // Index saturation or invalid optional metadata cannot
+                // consume a slab for a repair that has no ACK hint path.
+                original.note_block(OriginalRepairBlockReason::Capacity);
             }
         }
         original.sent_first_wire_bytes=original.sent_first_wire_bytes
@@ -9496,11 +9784,15 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(target_os="linux")]
     {
         let server=e.server_side;
+        // Qualified H2372 scope: Normal/off client only. Cold publication
+        // selects the policy; Game, Fixed/Auto and server remain unchanged.
+        let flow_fair=!server&&!e.auto_low_rate_mode
+            &&e.fixed_pending.is_none()&&e.fixed_applied.is_none();
         if let Some(sh)=e.shared_tun.as_mut(){
             let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
             if router.stop.load(Ordering::Acquire){return BAD_STAGE}
             let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-            let new=SharedTunRoute{
+            let new=SharedTunRoute{flow_fair,
                 generation:sh.generation,alive:Arc::clone(&sh.alive),
                 send:sh.sender.clone(),
             };
@@ -9559,6 +9851,7 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
     #[cfg(not(feature="fec2_product_record"))]
     let authenticated_health=false;
     let proven=received>0||authenticated_health;
+    let flow_fair=!e.auto_low_rate_mode&&e.fixed_pending.is_none()&&e.fixed_applied.is_none();
     let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
     let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
@@ -9574,7 +9867,7 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let candidate=SharedTunRoute{
+    let candidate=SharedTunRoute{flow_fair,
         generation:sh.generation,alive:Arc::clone(&sh.alive),
         send:sh.sender.clone(),
     };
@@ -9614,7 +9907,7 @@ pub extern "C" fn wbd_m0_embedded_go_server_shared_tun_promote_after_rx(handle:u
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let next=SharedTunRoute{
+    let next=SharedTunRoute{flow_fair:false,
         generation:sh.generation,alive:Arc::clone(&sh.alive),
         send:sh.sender.clone(),
     };

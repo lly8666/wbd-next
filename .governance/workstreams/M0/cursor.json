@@ -4,23 +4,22 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2245,
-  "checkpoint_sha": "0387b054f2e936c2f8288ab9d3c2f79f605a84fc",
-  "progress": "planned",
-  "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "029 吞吐与效率。已发布永久提示词、研究原文和 ARM64 优先施工方案。首增量预登记 experiment/m0-029-throughput-arm-fair，尚未施工。",
-  "why_now": "1% 四流突发与 0% 满核是不同瓶颈。H2244 固定整形降 Rust 丢包却损耗吞吐或 CPU/GiB。",
-  "done_when": "ARM 同机分离公平顺序与总速率，核真实交付、CPU/有效GiB和稀疏流首响应；按计划继续服务能力、x86/Windows移植与出口，保留各端未验项。",
-  "next_action": "查询预登记分支及 PR；若已有则接续其 HEAD/在途run，否则从首次发布本 task_id 的 main cursor-only H 创建该分支，完成 ARM64 Normal/off 公平顺序单因素 GE1% 原/候选/恢复对照。",
+  "sequence": 2392,
+  "checkpoint_sha": "9e2ce46bb026f9fb61db566f94a8c8da9c001e7e",
+  "progress": "verifying",
+  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
+  "current_task": "PLAN030 Linux双ISA CLI限定通过；Windows域名重连双重复FAIL；PR74旧版v2升级PASS但用户真实客户端恢复报route is not owned，待定位。",
+  "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
+  "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
+  "next_action": "先取用户真实客户端版本、完整恢复stderr、原生v2 WAL/route sidecar及对应Windows实际路由读回；区分原Wintun身份、路由metric/protocol等属性变化和真实外部路由。不要盲删路由或WAL；在PR74针对实际失败最小修复；再补030真实域名重连及服务端设备快照组合。PR73/74暂不合并。",
   "unverified": true,
-  "last_tested_source": null,
+  "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
   "evidence_refs": [],
   "context_refs": [
-    "docs/decisions/M0-PLAN029-THROUGHPUT.md",
-    "docs/devlog/M0/20261121-PLAN029-THROUGHPUT-HANDOFF.md",
-    "docs/evidence/M0/PLAN029-H2229-AUTHENTICATED-ACK10-WINDOW65535-NOHOL-20261120.json",
-    "docs/evidence/M0/PLAN029-H2228-THREE-ARM-RELAY-GE200-REAL-TCP-20261120.json"
+    "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
+    "docs/prompts/M0-PLAN030.md",
+    "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
   ],
   "open_requests": [],
-  "partial_summary": "新施工包产品 NOT_RUN。旧 H2230、H2244 限域结果仅背景，实体 Windows 3 秒上行与 80–200 Mbps 仍 OPEN。无本包性能 dispatch。"
+  "partial_summary": "H2392：收取原在途结果，无重复dispatch。45349332671/45349327390 同fixture 600d541 均completed/failure，原生native-public-two-os分别在SECOND_APPLIED process exited 1/not observed失败；真实旧版升级45349844112 completed/success，原始job138293247724确认旧版实际FAIL、新版实际PASS。用户报告最新Windows客户端网络恢复未完成 route is not owned refuse to replace，实体失败未定位；PR74恢复仍依赖原有严格route lookup匹配，也可能在原Wintun身份或其他恢复阶段报同错误。远程终端授权未获，未读取实体机状态。Linux CLI/watch限定通过；未接齐快照字段保留未知。未更改生产代码，未启动新测试。"
 }

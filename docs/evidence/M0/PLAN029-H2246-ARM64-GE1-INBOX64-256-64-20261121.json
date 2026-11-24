@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "scenario": "ARM64_REAL_GE1_SAME_VM_SINGLE_LEASE_INBOX64_256_64",
+  "status": "MEASURED_INCONCLUSIVE_NOT_PRODUCT_GAIN",
+  "conclusion": "NO_DEFAULT_PROMOTION_BEFORE_0PCT_AND_LOCAL_PRESSURE_CAUSAL_EVIDENCE",
+  "source_sha": "693cf4ffb23d0634896c12ff06a530fed22190de",
+  "run_id": 44867774597,
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44867774597",
+  "artifact": {
+    "id": 14691749492,
+    "name": "m0-029-arm-ge1-real-inbox-aba-44867774597-1",
+    "sha256": "3ea88427294111ea62d1656ae4e783d6fc4f6a9b91a8c46f9953fb458c526624"
+  },
+  "native": {
+    "arch": "aarch64",
+    "kernel": "7.0.0-1017-azure",
+    "one_runner": true,
+    "topology": "three real Linux namespaces with original Go TLS and Rust TUN/AF_PACKET, original owner Stop per phase",
+    "same_release_binary_hashes": {
+      "libwbd_engine.so": "26ae05786050ba0acd18b53188d62480fd6ece716770b37fcced5e2a22e3e8e6",
+      "wbd-v4-client": "1ed739db0f8c63b8f251e82e9d7658025ba2897e6d898176e79eda0661bd5d2c",
+      "wbd-v4-server": "0a910dc677f0753445c2765fcece3eb5bcfaa0327ee3c107727df81cd4c7de38"
+    },
+    "qdisc": "200ms each direction + netem stationary GE: good->bad 0.252809%, bad->good 25%, bad loss 90%, good loss 0.1%",
+    "nominal_loss_pct": 1,
+    "flow": "4 real kernel TCP iperf3 upload for 20s plus simultaneous 160 UDP+160 TCP echo requests per phase",
+    "comparison": "same source and binary hashes; server authenticated Rust M1 inbox64 -> 256 -> 64, independent cold startup readbacks, no fair lease switch",
+    "feature_flag": "m0_v4_probe developer-only WBD_M0_029_INBOX_SLOTS_TEST=64|256; default and ordinary release stay 64"
+  },
+  "phase_stats": [
+    {
+      "name": "original_before",
+      "slots": 64,
+      "receiver_mbps": 80.28298,
+      "receiver_bytes": 204734464,
+      "direct_5s_mbps": 30.6711,
+      "cpu_seconds_per_receiver_gib": {
+        "client": 18.4084,
+        "server": 17.51682
+      },
+      "small_echo": {
+        "udp": {
+          "sent": 160,
+          "replied": 158,
+          "missing": 2,
+          "p99_ms_among_replies": 400.5605
+        },
+        "tcp": {
+          "sent": 160,
+          "replied": 160,
+          "missing": 0,
+          "p99_ms_among_replies": 1729.6019
+        }
+      },
+      "netem_skb": {
+        "rcli0": {
+          "emitted": 50141,
+          "dropped": 607
+        },
+        "rsrv0": {
+          "emitted": 209493,
+          "dropped": 2224
+        }
+      },
+      "shared_tun_stop": {
+        "client_pending_full_drops": 0,
+        "server_pending_full_drops": 0,
+        "client_backpressure": 0,
+        "server_backpressure": 0,
+        "reader_joined": true
+      }
+    },
+    {
+      "name": "inbox256_candidate",
+      "slots": 256,
+      "receiver_mbps": 82.2879,
+      "receiver_bytes": 209846272,
+      "direct_5s_mbps": 29.5088,
+      "cpu_seconds_per_receiver_gib": {
+        "client": 18.31815,
+        "server": 17.14129
+      },
+      "small_echo": {
+        "udp": {
+          "sent": 160,
+          "replied": 158,
+          "missing": 2,
+          "p99_ms_among_replies": 400.6307
+        },
+        "tcp": {
+          "sent": 160,
+          "replied": 160,
+          "missing": 0,
+          "p99_ms_among_replies": 1716.8445
+        }
+      },
+      "netem_skb": {
+        "rcli0": {
+          "emitted": 50297,
+          "dropped": 560
+        },
+        "rsrv0": {
+          "emitted": 212290,
+          "dropped": 1967
+        }
+      },
+      "shared_tun_stop": {
+        "client_pending_full_drops": 0,
+        "server_pending_full_drops": 0,
+        "client_backpressure": 0,
+        "server_backpressure": 0,
+        "reader_joined": true
+      }
+    },
+    {
+      "name": "original_after",
+      "slots": 64,
+      "receiver_mbps": 77.4037,
+      "receiver_bytes": 197394432,
+      "direct_5s_mbps": 33.3887,
+      "cpu_seconds_per_receiver_gib": {
+        "client": 18.33137,
+        "server": 16.97147
+      },
+      "small_echo": {
+        "udp": {
+          "sent": 160,
+          "replied": 155,
+          "missing": 5,
+          "p99_ms_among_replies": 400.6251
+        },
+        "tcp": {
+          "sent": 160,
+          "replied": 160,
+          "missing": 0,
+          "p99_ms_among_replies": 1143.9033
+        }
+      },
+      "netem_skb": {
+        "rcli0": {
+          "emitted": 46006,
+          "dropped": 425
+        },
+        "rsrv0": {
+          "emitted": 199098,
+          "dropped": 1939
+        }
+      },
+      "shared_tun_stop": {
+        "client_pending_full_drops": 0,
+        "server_pending_full_drops": 0,
+        "client_backpressure": 0,
+        "server_backpressure": 0,
+        "reader_joined": true
+      }
+    }
+  ],
+  "paired_interpretation": {
+    "candidate_mbps_vs_mean_original_pct": 4.37,
+    "original_A_to_Aprime_receiver_drift_pct": -3.59,
+    "server_cpu_per_gib_candidate_within_original_range": true,
+    "rust_shared_tun_pending_overflow_seen": false,
+    "competing_explanations": [
+      "Measurement variation / separate cold TLS generations",
+      "Kernel TCP congestion and GE skb impairment, not demonstrated local SharedTun admission limit",
+      "Different load realization across legs despite a frozen same-host source"
+    ],
+    "stop_conditions": "No product/default promotion; require independent 0% high-supply falsification plus identifiable local bottleneck under true source pressure"
+  },
+  "limits": [
+    "Single 20s native ARM64 VM, not physical WAN or Windows",
+    "The 5s Direct reference differs from the 20s WBD duration; not a qualified capacity or CPU causal baseline",
+    "Kernel qdisc counters count skb and do not establish independent packet losses",
+    "Echo p99 computed among replies, missing counts displayed separately",
+    "SharedTun pending full=0 does not rule out downstream Rust M1 or driver queue pressure",
+    "Nominal 256 inbox slots add up to 192 * 65535 bytes (~12MiB) worst-case jumbo storage per lease; no RAM safety qualification",
+    "Historical Action 44867623059 at source 3668c2d uses p_goodbad0.16%, theoretical mean ~0.672%, invalid for GE1 scope"
+  ]
+}

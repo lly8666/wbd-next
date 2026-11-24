@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2259",
+  "disposition": "PASS_SCOPED_REAL_APP_TCP_DIRECTIONAL_160_SAMPLES_BOTH_NATIVE_ISA__NO_FIRST_DELIVERY_QOS_PASS",
+  "source_sha": "af6ca59b051c0b209ef057a233548fe0d8ea0ef3",
+  "run_id": 44893090584,
+  "attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44893090584",
+  "pr": 68,
+  "preceding_invalid_parser": {
+    "source_sha": "c55cdcc51a466fa3e9894bc723bc9b1875bf6fc0",
+    "run_id": 44892997160,
+    "status": "FAIL",
+    "root_cause": "test-only overescaped server TCP trace regex; not a product DATA-plane failure"
+  },
+  "unrelated_ge1_auto_trigger": {
+    "run_id": 44892997143,
+    "source_sha": "c55cdcc51a466fa3e9894bc723bc9b1875bf6fc0",
+    "status": "SUCCESS_OTHER_METHOD_NOT_H2259_QUALIFICATION"
+  },
+  "method": "Each Linux native runner same single non-probe original Go TLS/Rust release manifest across A no Rust observer, B original independent stage+syscpu+1/128 RAW sendmmsg timing, A-prime no Rust observer. Original 5 dedicated dual endpoint modes plus one authenticated Normal/off client128/server64 shared TUN real four TCP bulk and concurrently 160 UDP/160 TCP app echoes at original 80ms interval, no artificial netem loss, explicit outer IP MTU1160 and original Rust off effective readback both endpoints/owned Stop. Opt-in test-only echo app logs numeric same-host CLOCK_MONOTONIC timestamps with original unchanged 16-byte nonce/seq application frame: client before sendall, client after sendall, server socket recv complete frame, server after sendall, client reply recv; exact matched 160/160 per leg, no synthetic ACK or packet-content logs.",
+  "results": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14703236193,
+      "binary_sha256": {
+        "libwbd_engine.so": "89b3fa0b5e52eaf57311ceaacff9ee4770ed50da6905de9ab2b24947fbff188d",
+        "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+        "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1165.71,
+          "client_cpu_s_per_received_gib": 11.45392,
+          "udp_missing_of160": 31,
+          "tcp_replies_of160": 160,
+          "tcp_total_app_latency_ms": {
+            "p50": 2.409,
+            "p99": 294.0881
+          },
+          "client_send_to_server_tcp_app_recv_ms": {
+            "p50": 1.6205,
+            "p99": 292.3982
+          },
+          "server_app_recv_to_sendall_done_p99_ms": 0.2674,
+          "server_app_send_done_to_client_reply_ms": {
+            "p50": 0.4848,
+            "p99": 159.8809
+          },
+          "client_sendall_wall_p99_ms": 0.3636
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1176.68,
+          "client_cpu_s_per_received_gib": 11.32659,
+          "udp_missing_of160": 33,
+          "tcp_replies_of160": 160,
+          "tcp_total_app_latency_ms": {
+            "p50": 3.473,
+            "p99": 696.7934
+          },
+          "client_send_to_server_tcp_app_recv_ms": {
+            "p50": 2.1838,
+            "p99": 696.0729
+          },
+          "server_app_recv_to_sendall_done_p99_ms": 0.17,
+          "server_app_send_done_to_client_reply_ms": {
+            "p50": 0.6124,
+            "p99": 78.7384
+          },
+          "client_sendall_wall_p99_ms": 0.5048
+        },
+        {
+          "leg": "A_prime",
+          "receiver_mbps": 1182.52,
+          "client_cpu_s_per_received_gib": 11.08903,
+          "udp_missing_of160": 29,
+          "tcp_replies_of160": 160,
+          "tcp_total_app_latency_ms": {
+            "p50": 2.2261,
+            "p99": 537.7173
+          },
+          "client_send_to_server_tcp_app_recv_ms": {
+            "p50": 1.464,
+            "p99": 536.9844
+          },
+          "server_app_recv_to_sendall_done_p99_ms": 0.2848,
+          "server_app_send_done_to_client_reply_ms": {
+            "p50": 0.5387,
+            "p99": 144.0728
+          },
+          "client_sendall_wall_p99_ms": 0.3223
+        }
+      ]
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14702667680,
+      "binary_sha256": {
+        "libwbd_engine.so": "64f879a8b037d68e09e8c9b7aa4662f6690f74f1c6bdaf7548ad077944780c9d",
+        "wbd-v4-client": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+        "wbd-v4-server": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343"
+      },
+      "legs": [
+        {
+          "leg": "A",
+          "receiver_mbps": 1454.96,
+          "client_cpu_s_per_received_gib": 8.53881,
+          "udp_missing_of160": 30,
+          "tcp_replies_of160": 160,
+          "tcp_total_app_latency_ms": {
+            "p50": 1.7582,
+            "p99": 616.9971
+          },
+          "client_send_to_server_tcp_app_recv_ms": {
+            "p50": 1.3197,
+            "p99": 615.8879
+          },
+          "server_app_recv_to_sendall_done_p99_ms": 0.1404,
+          "server_app_send_done_to_client_reply_ms": {
+            "p50": 0.2221,
+            "p99": 80.3661
+          },
+          "client_sendall_wall_p99_ms": 0.6188
+        },
+        {
+          "leg": "B",
+          "receiver_mbps": 1421.41,
+          "client_cpu_s_per_received_gib": 8.8434,
+          "udp_missing_of160": 30,
+          "tcp_replies_of160": 160,
+          "tcp_total_app_latency_ms": {
+            "p50": 2.1777,
+            "p99": 1456.4998
+          },
+          "client_send_to_server_tcp_app_recv_ms": {
+            "p50": 1.4824,
+            "p99": 1455.5161
+          },
+          "server_app_recv_to_sendall_done_p99_ms": 0.1491,
+          "server_app_send_done_to_client_reply_ms": {
+            "p50": 0.2054,
+            "p99": 79.7013
+          },
+          "client_sendall_wall_p99_ms": 0.4284
+        },
+        {
+          "leg": "A_prime",
+          "receiver_mbps": 1451.09,
+          "client_cpu_s_per_received_gib": 8.53796,
+          "udp_missing_of160": 19,
+          "tcp_replies_of160": 160,
+          "tcp_total_app_latency_ms": {
+            "p50": 1.8001,
+            "p99": 618.3341
+          },
+          "client_send_to_server_tcp_app_recv_ms": {
+            "p50": 1.3513,
+            "p99": 616.9206
+          },
+          "server_app_recv_to_sendall_done_p99_ms": 0.2225,
+          "server_app_send_done_to_client_reply_ms": {
+            "p50": 0.237,
+            "p99": 42.7824
+          },
+          "client_sendall_wall_p99_ms": 1.0631
+        }
+      ],
+      "forward_stall_examples": [
+        {
+          "seq": 123,
+          "total_ms": 1535.4939,
+          "forward_ms": 1535.4051,
+          "server_app_ms": 0.0152,
+          "reverse_ms": 0.0736,
+          "client_sendall_ms": 0.019
+        },
+        {
+          "seq": 124,
+          "total_ms": 1456.4998,
+          "forward_ms": 1455.5161,
+          "server_app_ms": 0.0021,
+          "reverse_ms": 0.9815,
+          "client_sendall_ms": 0.0933
+        },
+        {
+          "seq": 125,
+          "total_ms": 1376.457,
+          "forward_ms": 1376.1873,
+          "server_app_ms": 0.0025,
+          "reverse_ms": 0.2672,
+          "client_sendall_ms": 0.0345
+        }
+      ]
+    }
+  ],
+  "important_negative": "Prior H2258 (run44892114676) x86 A-prime uninstrumented app TCP p50=5154.83ms,p99=11473.54ms while UDP p50~1.07ms; NOT_REPRODUCED in this new source but remains a true negative historical observation and full no-HOL gate OPEN.",
+  "observations": [
+    "All six legs successful with unchanged authentic original Go TLS/Rust product, per-leg client and server owned Stop. Original TCP request arrives at server's Python socket late during burst stalls; server app recv→sendall p99 always below 0.3ms. Forward app-observed end-to-end p99 nearly equals total p99 for both ISA and all three legs.",
+    "x86 B seq123-125 end-to-end delays decline by approximately original 80ms send interval (1535/1456/1376ms), consistent with queued TCP request(s) released after common pause. This is NOT proof of exact kernel/Rust stall ownership.",
+    "Actual UDP missing persists 19-33 of 160 despite final 160/160 TCP. Timely first delivery, cross-flow no-HOL and CPU/GiB improvement NOT QUALIFIED."
+  ],
+  "limits": [
+    "Server Python socket recv timestamp is after Linux TCP and Rust M3/TUN, so cannot distinguish client Linux TCP, shared TUN, original Rust M1/TX/M4, underlay, native RX/M3/TUN or server Linux TCP.",
+    "Client sendall returning only means local kernel accepted application bytes, not original PN, remote TCP ACK or delivery. No unauthenticated ACK is counted.",
+    "Application-layer stamps share host CLOCK_MONOTONIC namespaces but are not per-packet WBD kernel trace; TCP stream segmentation/coalescing may alter delivery batching.",
+    "Same-runner A/B/A-prime measured for direction of latency only, not proof that observer caused or fixed variability. Exact source/attempt and all 160 numeric per-seq samples remain in Action ZIP artifacts.",
+    "Explicit MTU1160/zero-injected-loss only, no default1460/GE1%/physical/WAN/Windows/3-second upstream outage or full performance qualification."
+  ],
+  "next_action": "Add read-only bounded client Linux TCP_INFO (total retransmission, RTO, unacked, cwnd) snapshots to the true echo socket, time-aligned to existing 160 frame and four-bulk original Go TLS/Rust windows, to distinguish inner TCP retransmission/backoff versus Rust/RAW/TUN service stall. No product DATA modifications."
+}

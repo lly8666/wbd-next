@@ -1,0 +1,169 @@
+{
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "schema_version": 1,
+  "study": "H2261",
+  "source_sha": "9b1c77bd95bd76a54d54bddd01a128510816164e",
+  "run_id": 44896277984,
+  "attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44896277984",
+  "status": "PASS_SCOPED_NATIVE_TRUE_ORIGINAL_SHARED_TUN_FIRST_OBSERVABLE_BULK_SOURCE_REJECTION__NOT_SPECIFIC_TCP_SEQ_FIRST_LOSS_OR_QOS_PASS",
+  "method": "Both native ISA original Go TLS/Rust nonprobe release; native original five modes and true shared /32 Normal client128/server64 four TCP bulk+160 UDP/160 TCP sparse echo, owned Stop. Same ISA immutable product binary A uninstrumented, B explicit preexisting independent Rust 500ms counter observer with true original Linux /proc worker and raw cost, A-prime uninstrumented. True client/server application seq timestamps and inner Linux TCP_INFO aligned by CLOCK_MONOTONIC to existing SharedTun router delivered/full/backpressure/age/byte/unrouted, M1 staged, M4 definitely kernel copied, and original RX observed/tuple/unique/TUN cumulative. These counters aggregate all carrier records, not per TCP seq.",
+  "legs": [
+    "A",
+    "B",
+    "A_prime"
+  ],
+  "native": [
+    {
+      "isa": "aarch64",
+      "artifact_id": 14704058150,
+      "binary_sha256": {
+        "libwbd_engine.so": "2f2065899639bd2cc7937b253039400044736a720b05c091d780bf4bea697189",
+        "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+        "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+      },
+      "receiver_mbps": [
+        1160.98,
+        1161.88,
+        1159.01
+      ],
+      "client_cpu_seconds_per_rx_gib_b": 11.59831,
+      "udp_missing_of160": [
+        36,
+        24,
+        34
+      ],
+      "tcp_missing_of160": [
+        0,
+        0,
+        0
+      ],
+      "tcp_p99_ms": [
+        367.9239,
+        288.3373,
+        620.0234
+      ],
+      "tcp_forward_p99_ms": [
+        367.0426,
+        287.9442,
+        618.4161
+      ],
+      "inner_tcp_max_rto_ms": [
+        227,
+        203,
+        404
+      ],
+      "inner_tcp_retrans_segments_delta": [
+        34,
+        33,
+        39
+      ],
+      "b_echo_500ms_intervals": 30,
+      "b_client": {
+        "shared_full_delta": 549121,
+        "shared_full_positive_intervals": 30,
+        "shared_delivered_delta": 2109195,
+        "shared_backpressure_delta": 835587,
+        "shared_age_delta": 0,
+        "shared_byte_delta": 0,
+        "shared_unrouted_delta": 0,
+        "tx_tcp_seen_delta": 0,
+        "tx_tcp_staged_delta": 2109126,
+        "m4_kernel_copied_delta": 2109263,
+        "raw_rx_kernel_observed_delta": 462872,
+        "rx_tun_delivered_delta": 461379
+      },
+      "b_server": {
+        "shared_full_delta": 1482,
+        "shared_full_positive_intervals": 28,
+        "shared_delivered_delta": 461516,
+        "m4_kernel_copied_delta": 461507,
+        "raw_rx_kernel_observed_delta": 2111023,
+        "rx_tun_delivered_delta": 2109543
+      }
+    },
+    {
+      "isa": "x86_64",
+      "artifact_id": 14704715762,
+      "binary_sha256": {
+        "libwbd_engine.so": "b2a873e86a14af5e392fc82e369a211d17b56323e1ae31729d167f6088f38594",
+        "wbd-v4-client": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+        "wbd-v4-server": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343"
+      },
+      "receiver_mbps": [
+        1488.67,
+        1415.4,
+        1454.01
+      ],
+      "client_cpu_seconds_per_rx_gib_b": 8.77487,
+      "udp_missing_of160": [
+        25,
+        30,
+        12
+      ],
+      "tcp_missing_of160": [
+        0,
+        0,
+        0
+      ],
+      "tcp_p99_ms": [
+        289.1309,
+        321.6725,
+        290.2264
+      ],
+      "tcp_forward_p99_ms": [
+        288.2308,
+        296.0853,
+        289.946
+      ],
+      "inner_tcp_max_rto_ms": [
+        203,
+        202,
+        402
+      ],
+      "inner_tcp_retrans_segments_delta": [
+        30,
+        30,
+        19
+      ],
+      "b_echo_500ms_intervals": 30,
+      "b_client": {
+        "shared_full_delta": 569336,
+        "shared_full_positive_intervals": 30,
+        "shared_delivered_delta": 2560251,
+        "shared_backpressure_delta": 878928,
+        "shared_age_delta": 0,
+        "shared_byte_delta": 0,
+        "shared_unrouted_delta": 0,
+        "tx_tcp_seen_delta": 0,
+        "tx_tcp_staged_delta": 2560126,
+        "m4_kernel_copied_delta": 2560255,
+        "raw_rx_kernel_observed_delta": 719962,
+        "rx_tun_delivered_delta": 718465
+      },
+      "b_server": {
+        "shared_full_delta": 1078,
+        "shared_full_positive_intervals": 20,
+        "shared_delivered_delta": 718697,
+        "m4_kernel_copied_delta": 718698,
+        "raw_rx_kernel_observed_delta": 2562740,
+        "rx_tun_delivered_delta": 2561246
+      }
+    }
+  ],
+  "conclusions": [
+    "The earliest instrumented aggregation-level local rejection in the tested forward chain is genuine client SharedTun bounded queue overflow during actual high supply. Every sampled 500ms B echo interval for both native ISAs has new client source overflow, prior to M4.",
+    "Original Rust M4 and server RX/TUN still make progress in every interval. This does not prove an absence of short packet starvation/HOL within an interval.",
+    "The ARM H2260 RTO escalation to 808ms was not reproduced in B of current SOURCE. Small TCP still has 30-33 inner TCP retransmitted segments, but no exact same RTO episode to diagnose.",
+    "The original tx_chain tx_tcp_seen counter is zero in this shared TUN path despite >2million staged TCP packets: it is not a valid source TCP ingress denominator for the shared path.",
+    "The exact first lost 16B TCP application seq, original FrozenRecord PN or AF_PACKET kernel packet identity is NOT traced; no causal attribution of specific missing TCP segment to shared queue overflow. No default acceptance."
+  ],
+  "limits": [
+    "Original SharedTun counters are protocol-aggregated (4 bulk TCP streams plus sparse UDP/TCP); all 30 windows have bulk-induced full drops, so no discriminatory event-control interval.",
+    "500ms snapshots and 150ms Linux TCP_INFO are observational; no per-flow / per-sequence proof, no injected netem, no independent alternate lane, and no causal A/B/A-prime goodput claim.",
+    "Kernel copied M4, RX observed, and TUN delivered counts cannot be compared as unique peer TCP application records or ACKs.",
+    "Only native ARM64 and x86_64 same-kernel namespace 1160 MTU no artificial loss; original Five modes and Stop scoped PASS, Windows, physical, default 1460, WAN GE1%, 3s upstream loss, cross-flow HOL QoS remain OPEN.",
+    "Source artifacts contain full per-500ms time series, all 160 real original test app sequence timestamps and 116 TCP_INFO samples per B leg. Preserve negative RTO not reproduced in this source."
+  ],
+  "next_action": "Seek strictly scoped, privacy-preserving original Linux TUN ingress first-drop attribution for the single sparse TCP test flow versus four bulk TCP flow packets, without changing per-packet hot path or queue policy; verify at least one true RTO-backoff episode and precise stop/readback before any product optimization."
+}

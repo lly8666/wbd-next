@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "PLAN029-THROUGHPUT",
+  "date": "2026-11-24",
+  "source_sha": "3b187ea1a701fdf4d14738369e0d40f6b57f2c20",
+  "fairness": {
+    "run_id": 45333966600,
+    "status": "PASS_SCOPED_NATIVE_REAL_SAME_VM_TWO_ISA",
+    "groups": [
+      {
+        "isa": "aarch64",
+        "job_id": 138241566126,
+        "legs": [
+          {
+            "leg": "A",
+            "evicted": 0,
+            "receiver_mbps": 1170.58017771348,
+            "client_cpu_s_per_gib": 11.43138,
+            "server_cpu_s_per_gib": 10.45186,
+            "udp_missing": 28,
+            "tcp_missing": 0,
+            "tcp_p99_ms": 286.9735,
+            "sparse_tcp_offered": 347,
+            "sparse_tcp_refused": 50,
+            "client_full_drops": 681232
+          },
+          {
+            "leg": "B",
+            "evicted": 39859,
+            "receiver_mbps": 1183.1845665046021,
+            "client_cpu_s_per_gib": 11.51983,
+            "server_cpu_s_per_gib": 10.47818,
+            "udp_missing": 0,
+            "tcp_missing": 0,
+            "tcp_p99_ms": 7.6964,
+            "sparse_tcp_offered": 324,
+            "sparse_tcp_refused": 0,
+            "client_full_drops": 731203
+          },
+          {
+            "leg": "A_prime",
+            "evicted": 0,
+            "receiver_mbps": 1175.424775692919,
+            "client_cpu_s_per_gib": 11.42229,
+            "server_cpu_s_per_gib": 10.40593,
+            "udp_missing": 40,
+            "tcp_missing": 0,
+            "tcp_p99_ms": 616.4337,
+            "sparse_tcp_offered": 355,
+            "sparse_tcp_refused": 66,
+            "client_full_drops": 767470
+          }
+        ],
+        "relative_to_mean_of_controls_percent": {
+          "receiver_mbps": 0.8680365134453805,
+          "client_cpu_s_per_gib": 0.8138299012806272,
+          "server_cpu_s_per_gib": 0.4725812274454677,
+          "tcp_p99_ms": -98.29613932676207
+        }
+      },
+      {
+        "isa": "x86_64",
+        "job_id": 138241566357,
+        "legs": [
+          {
+            "leg": "A",
+            "evicted": 0,
+            "receiver_mbps": 1204.8977110910448,
+            "client_cpu_s_per_gib": 10.23338,
+            "server_cpu_s_per_gib": 9.30885,
+            "udp_missing": 27,
+            "tcp_missing": 0,
+            "tcp_p99_ms": 696.4276,
+            "sparse_tcp_offered": 340,
+            "sparse_tcp_refused": 66,
+            "client_full_drops": 792417
+          },
+          {
+            "leg": "B",
+            "evicted": 43542,
+            "receiver_mbps": 1207.9940476633863,
+            "client_cpu_s_per_gib": 10.35198,
+            "server_cpu_s_per_gib": 9.47391,
+            "udp_missing": 0,
+            "tcp_missing": 0,
+            "tcp_p99_ms": 3.0331,
+            "sparse_tcp_offered": 324,
+            "sparse_tcp_refused": 0,
+            "client_full_drops": 773250
+          },
+          {
+            "leg": "A_prime",
+            "evicted": 0,
+            "receiver_mbps": 1205.0009189627988,
+            "client_cpu_s_per_gib": 10.38834,
+            "server_cpu_s_per_gib": 9.50097,
+            "udp_missing": 27,
+            "tcp_missing": 0,
+            "tcp_p99_ms": 696.5352,
+            "sparse_tcp_offered": 341,
+            "sparse_tcp_refused": 62,
+            "client_full_drops": 823836
+          }
+        ],
+        "relative_to_mean_of_controls_percent": {
+          "receiver_mbps": 0.2526855361046021,
+          "client_cpu_s_per_gib": 0.3988028156720169,
+          "server_cpu_s_per_gib": 0.733659333263148,
+          "tcp_p99_ms": -99.56451098335147
+        }
+      }
+    ],
+    "scope": "Original Go TLS Rust shared TUN Normal/off client, native same-host Linux netns, 4 bulk TCP + 160 TCP/160 UDP, explicit outer1160, no artificial loss. Only client fairness switched. Native source 586d133f prior 14/14 each ISA; H2374 product same source bytes. No physical WAN/Windows/multi-lease or other-mode performance qualification.",
+    "decision": "accept tested algorithm for Linux Normal/off client only; selective main integration; main distinct source needs functional regression."
+  },
+  "fec": {
+    "run_id": 45333966595,
+    "job_id": 138241656704,
+    "status": "PASS_SCOPED_REAL_NATIVE_ISAL",
+    "codec_grades": 7,
+    "original_owner_grades": 7,
+    "maximum_20_row_settlement": "PASS",
+    "source_service_arithmetic": "PASS",
+    "remote_maximum": "NOT_RUN",
+    "decision": "end codec optimization; no default maximum service promotion or claim remote throughput"
+  },
+  "P0": "PAUSED_NOT_PERFORMANCE_PASS",
+  "P1": "1pct functional mechanism pass; no stable throughput improvement, stop optimization",
+  "closeout": "end proactive performance research; one integration regression only; leave explicit Windows, multi-lease, physical and Maximum remote performance residuals"
+}

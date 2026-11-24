@@ -1,0 +1,11 @@
+# M0 PLAN029 H2292 完整原 Windows 产品 TX16 双组三Runner因果对照完成（2026-11-22）
+
+**任务仍 OPEN，PR#68 Draft，产品默认保持OFF。** main只写实质治理收据，不把原产品代码或试验分支不相关文件提前直接合入main。最新合格产品 SOURCE `13d391cbb64ef06c55b046c6d73a2d69e096c54d`、[Action44951274107](https://github.com/lly8666/wbd-next/actions/runs/44951274107) **9/9全成功**。精确编译Rust DLL来源 `dc2da4b98ecc419a67e3e2ee6530f944b78d88ef`，两个真实Windows DLL检验SHA/ABI并由GIT源对比证实到当前实验SOURCE未改变 `crates`、`r0/go_overlay`、`Cargo.toml/Cargo.lock`。原Windows GoTLS.exe来自c5066db，原独立ARM bundle来自97db898；未伪称重编译。完整结构化收据在分支 `docs/evidence/M0/PLAN029-H2292-DUAL-FULL-WINDOWS-ARM-TX16-ABA-20261122.json`，证据commit `dc4e0fdabed841d7a383185e2e251f3a378cefd7`。
+
+## 两组三Runner按用户要求相同工作量，同机同源码旧→新→旧
+每组三台相互独立的真Runner分别为Windows2025签名 Npcap+Wintun+GoTLS+Rust 原客户端、独立ARM Linux kernel relay、另一 ARM original GoTLS/Rust AF_PACKET/TUN 服务端，实际每腿4条25s TCP＋160小TCP，TLS真实认证、TUN交付、Windows原Owned WAL Stop和原Arm所有业务受理。B唯一相较A/A′变更为原Rust编译opt-in `h2291_windows_tx_service`（TX service burst16 + NPF sendqueue16×64KiB），原版8×16KiB；B的真实NPF生效readback，A/A′不生效，Rust SHA逐腿校验，原Go/ARM不变。各6腿业务超1秒迟回均0。
+- **A组三腿**：ARM真收417087488/602554368/401588224B，吞吐129.189/**189.617**/125.835Mbps，原Win进程CPU秒/实收GiB44.5287/**28.1498**/45.9966，P99266/**188**/250ms。B相对两个原版均值：吞吐**+48.7%**、Win CPU成本**-37.8%**、P99较最差原版低78ms。
+- **B组三腿**：ARM真收384385024/443301888/352272384B，吞吐119.277/**139.332**/110.180Mbps，Win CPU秒/实收GiB48.7536/**39.4356**/52.1978，P99297/**313**/375ms。B相对两个原版均值：吞吐**+21.4%**、Win CPU成本**-21.9%**、P99较最差原版低62ms（但比第一个A高16ms）；不能只报有利延迟边界。
+- 三机网络曾被错误夹具短流/小TCP socket窗口压到8Mbps；H2284已按8流、真实大SO buffer做过两组千兆级裸TCP环境校准，H2292现在终于是完整Windows GoTLS/Rust原协议，不是Winsock/Python替代。H2292第一次c3c0745 Action44943590620 B未启动是候选manifest未放live目录；第二次dc2da4 Action44949570906 B真三腿SUCCESS、A Windows WSL2长启动未及时发布peer导致ARM等待9min超时；本次H2292有意义修复先发布真实Windows Tailnet peer、WSL2有界启动与构件复用，避免再因准备阶段失败消费ARM。
+- **可采纳判断**：TX16/NPF64KiB候选在两套真正完整原Windows/ARM跨机无附加丢包工况下均提高goodput、降低原Windows CPU/GiB且无超1秒晚回，支持保留候选并推进，而不是从不同runner的H2290/H2291成绩推因果。仍没有覆盖1%/5%双向200ms原内核丢包、FEC2固定轻/中档、Rust/Go其他模式及所有生产配置，不能立刻把默认改为ON。
+- **下一步 H2293**：在同两套独立三Runner、完整原Windows Wintun+Npcap GoTLS/Rust→ARM真TUN，真实内核netem双向每向200ms loss1%/5%各运行两个相同组、同机同源A原FEC2关闭→B已有fixed/light(1%)或mild(5%)→A′关闭，外层机会修复独立保持off；核真实内核两个方向drop、原Rust FEC2 Applied、ARM真接收、TCP retrans、Windows/ARM/relay CPU/GiB、P99/晚回、原Stop及0本机M1/M4不可恢复丢包。若候选因CPU和P99恶化则记录否决，不靠无限本机队列掩盖。之后才决定TX16候选跨弱网及affected modes晋级和PR合并。

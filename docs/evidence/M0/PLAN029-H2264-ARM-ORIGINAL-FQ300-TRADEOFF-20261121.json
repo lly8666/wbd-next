@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2264",
+  "source_sha": "19d8b8899dc422ab6022bcfab026568066c9a341",
+  "run_id": 44902672857,
+  "run_attempt": 1,
+  "run_url": "https://github.com/lly8666/wbd-next/actions/runs/44902672857",
+  "workflow_conclusion": "SUCCESS",
+  "evidence_status": "PASS_SCOPED_TRUE_NATIVE_ARM64_FQ300_SAME_VM_ABAPRIME__SCREEN_REJECT_DUE_UDP_SOURCE_REFUSALS_AND_SERVER_CPU_PER_GIB",
+  "artifact": {
+    "id": 14706761197,
+    "name": "m0-029-h2263-h2264-arm-fq-44902672857-1",
+    "zip_sha256": "cc89c0120248a61344aa63027f59dee078ffd193a59a397f0ba5086ee7b58082",
+    "in_original_zip_report_study_field": "H2263",
+    "field_error": "generic comparator header label only; exact run/SOURCE and true qdisc rate are H2264=300"
+  },
+  "source_scope": {
+    "isa": "native aarch64",
+    "same_runner_vm": true,
+    "same_one_original_Go_TLS_Rust_nonprobe_release_bundle": true,
+    "genuine_three_netns_kernel_TCP_four_bulk_160_sparse_UDP_TCP_each_leg": true,
+    "original_auth_session_and_owner_Stop_all_legs": true,
+    "outer_mtu_explicit_bytes": 1160,
+    "netem_injected_loss": 0,
+    "physical_WAN": false,
+    "Windows": false,
+    "default_1460_mode_NOT_RUN": true,
+    "one_factor": "test-only ephemeral client TUN kernel fq flow_limit256 maxrate 600/300/600Mbps with Go originally applying 600 each leg, original server remains600; no product config extension or runtime change",
+    "same_test_only_53222_port_classifier_each_leg": true,
+    "independent_500ms_observer_off_all_legs": true,
+    "actual_tun_qdisc_readback_confirmed_all_legs": true
+  },
+  "binary_sha256": {
+    "libwbd_engine.so": "829e94098d09fb8d9787d89bd0317e0b24d09189010d711341fc55c92eb1a6b7",
+    "wbd-v4-client": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+    "wbd-v4-server": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0"
+  },
+  "legs": [
+    {
+      "leg": "A",
+      "client_fq_mbps": 600,
+      "receiver_mbps": 1192.23675471,
+      "client_cpu_seconds_per_rx_gib": 11.10444,
+      "server_cpu_seconds_per_rx_gib": 10.30843,
+      "udp_missing_of160": 30,
+      "tcp_missing_of160": 0,
+      "small_tcp_p99_ms": 296.8372,
+      "client_sparse_tcp_53222_source_offered": 341,
+      "client_sparse_tcp_53222_source_refused": 46,
+      "server_sparse_tcp_source_reverse_refused": 0,
+      "client_shared_tun_total_full": 739067,
+      "iperf_kernel_tcp_retransmissions": 738870,
+      "inner_tcp_INFO_rto_p95_us": 203000,
+      "inner_tcp_INFO_retrans_segments_delta": 25,
+      "owned_stop": true
+    },
+    {
+      "leg": "B",
+      "client_fq_mbps": 300,
+      "receiver_mbps": 1086.30293068,
+      "client_cpu_seconds_per_rx_gib": 11.29454,
+      "server_cpu_seconds_per_rx_gib": 11.45662,
+      "udp_missing_of160": 6,
+      "tcp_missing_of160": 0,
+      "small_tcp_p99_ms": 94.4781,
+      "client_sparse_tcp_53222_source_offered": 334,
+      "client_sparse_tcp_53222_source_refused": 12,
+      "server_sparse_tcp_source_reverse_refused": 1,
+      "client_shared_tun_total_full": 57388,
+      "iperf_kernel_tcp_retransmissions": 59062,
+      "inner_tcp_INFO_rto_p95_us": 2173000,
+      "inner_tcp_INFO_retrans_segments_delta": 8,
+      "owned_stop": true
+    },
+    {
+      "leg": "A_prime",
+      "client_fq_mbps": 600,
+      "receiver_mbps": 1177.95050884,
+      "client_cpu_seconds_per_rx_gib": 11.24714,
+      "server_cpu_seconds_per_rx_gib": 10.28466,
+      "udp_missing_of160": 28,
+      "tcp_missing_of160": 0,
+      "small_tcp_p99_ms": 294.5153,
+      "client_sparse_tcp_53222_source_offered": 345,
+      "client_sparse_tcp_53222_source_refused": 57,
+      "server_sparse_tcp_source_reverse_refused": 1,
+      "client_shared_tun_total_full": 700054,
+      "iperf_kernel_tcp_retransmissions": 699741,
+      "inner_tcp_INFO_rto_p95_us": 203000,
+      "inner_tcp_INFO_retrans_segments_delta": 34,
+      "owned_stop": true
+    }
+  ],
+  "compared_to_A_Aprime_mean": {
+    "B_goodput_change_percent": -8.336,
+    "B_client_cpu_seconds_per_rx_gib_change_percent": 1.063,
+    "B_server_cpu_seconds_per_rx_gib_change_percent": 11.267,
+    "B_sparse_TCP_source_refused_change_percent": -76.699,
+    "B_client_shared_tun_full_change_percent": -92.025,
+    "A_Aprime_goodput_drift_percent": -1.198,
+    "A_Aprime_tcp_p99_drift_percent": -0.782
+  },
+  "predeclared_exploratory_gate": {
+    "B_receiver_mbps_min": 1050,
+    "B_client_sparse_TCP_refusals_max": 5,
+    "B_udp_missing_of160_max": 5,
+    "B_small_TCP_p99_ms_max_exclusive": 200,
+    "B_client_CPU_GiB_increase_max_percent": 5,
+    "B_server_CPU_GiB_increase_max_percent": 10,
+    "gate_results": {
+      "B_receiver_pass": true,
+      "B_sparse_refusals_pass": false,
+      "B_udp_missing_pass": false,
+      "B_tcp_p99_pass": true,
+      "B_client_CPU_GiB_pass": true,
+      "B_server_CPU_GiB_pass": false,
+      "combined_pass": false
+    }
+  },
+  "findings": [
+    "The original client per-flow FQ cap at 300Mbps (experiment-only on ephemeral TUN) reduces true sparse TCP first-fragment source refusals and missed UDP, preserving receiver goodput closer to original600 than FQ250; independent real original TLS/Rust/Stop is verified in each leg.",
+    "It does not meet the predeclared combined quality/efficiency screen. Even without sample-level drift, the result cannot justify fixed fq300 as a public product default or platform-wide equivalence. Original Go public CLI 0/600/900 allowance and kernel fq600 remain unchanged.",
+    "H2264 original ZIP comparator JSON mislabels its generic study field H2263; run name, exact source SHA, qdisc readback and artifact identities are authoritative. Correction is report-only and does not rerun H2264.",
+    "Original client inner TCP RTO estimator p95 is 2173ms in candidate but app response p99~94ms; do not equate them or claim RTO never grows under candidate."
+  ],
+  "limits": [
+    "Only original native ARM same-host netns true no-probe Go TLS+Rust Normal/off 4 bulk TCP plus 160 UDP/TCP and two endpoint real owned Stop. Default MTU1460, GE1%, Windows, true WAN, two clients/lanes, run-to-run reproducibility and full QoS exits remain NOT_RUN.",
+    "Four bulk TCP per-flow 300Mbps nominal sum1200Mbps does not prove actual wire goodput; binary full build source, fixed packet path and real Go fq600 readback distinguish fixture qdisc from product config.",
+    "Original first-fragment source refused is count of real TCP segments, not original authenticated DATA PN or unique 16B application frame losses.",
+    "TCP p99 only among received responses and must be paired with UDP missed and all-flow loss; original existing A/Aprime are within~1% goodput drift but other first-delivery targets not fully qualified."
+  ],
+  "next_action": "Stop fixed fq250/300 scanning; investigate work-conserving same-lease source fairness or original service-capacity bottleneck with per-flow first delivery and controlled CPU/GiB, without reviving rejected H2254 UDP eviction or adding production packet hot-path overhead; keep main fq600 and experiment Draft."
+}

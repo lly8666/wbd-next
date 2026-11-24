@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "study": "H2255",
+  "conclusion": "PASS_SCOPED_AUTHENTIC_MIXED_NORMAL_OUTER_OFF_NATIVE_READY__PERFORMANCE_AND_TIMELY_DELIVERY_NOT_QUALIFIED",
+  "source_sha": "596ff3d71589fa1199012cad9283b7cdb29cc988",
+  "run_id": 44886936260,
+  "attempt": 1,
+  "url": "https://github.com/lly8666/wbd-next/actions/runs/44886936260",
+  "governance_run": 44886936226,
+  "artifacts": [
+    {
+      "isa": "aarch64",
+      "id": 14700645881,
+      "lib_sha256": "553c356a2fcd06ff94e761957fa2a7ba5832b7604adb5836651751bb0ded3f0e",
+      "client_sha256": "d7ce8ba9c8520c653dbb777efb61391243ce37dafc61024278e0a782d351961d",
+      "server_sha256": "8a689e70d553888bf7cda4db20149f3fa4b2236f1240705aaa594d83073e85d0",
+      "receiver_mbps": 1150.894565,
+      "client_cpu_sec_per_received_gib": 11.43955,
+      "server_cpu_sec_per_received_gib": 10.45701,
+      "udp_missing_of160": 34,
+      "client_new_udp_rejected": 33,
+      "tcp_missing_of160": 0,
+      "tcp_survivor_p99_ms": 615.4937
+    },
+    {
+      "isa": "x86_64",
+      "id": 14700452774,
+      "lib_sha256": "12e8d257532d4cb5fab12ad258c9ac5b2f4fa763dcb8ebeec060abe3a718ae20",
+      "client_sha256": "660b9b17e39df307b866d2d9820b8ed0fc481f4c7ff09b5d8cc62904f5da67c1",
+      "server_sha256": "c628430f6ddfdebd2d4a6d893d99b01fc50fa1b5063126e4f8cefa8739ecb343",
+      "receiver_mbps": 746.999,
+      "client_cpu_sec_per_received_gib": 17.21276,
+      "server_cpu_sec_per_received_gib": 16.22235,
+      "udp_missing_of160": 31,
+      "client_new_udp_rejected": 31,
+      "tcp_missing_of160": 0,
+      "tcp_survivor_p99_ms": 2914.8676
+    }
+  ],
+  "native_readback": {
+    "client_go_original_stop_repair_enabled": 0,
+    "server_mixed_authenticated_normal_ready_repair_enabled": 0,
+    "server_client_port": 44100,
+    "proof": "rec.product.OriginalOuterCounters after protected original Go TLS and Rust M4",
+    "server_old_style_stop_outer_marker": "NOT_EMITTED_UNVERIFIED",
+    "normal_client_shared_tun_slots": 128,
+    "normal_server_shared_tun_slots": 64
+  },
+  "scope": "two native Linux ISAs; original Go TLS + Rust release no dev probe; real 5 dedicated modes, original authenticated one /32 shared Normal client/server, four-stream kernel TCP bulk with 160 inner UDP and 160 small TCP replies, real raw/TUN and owned Stop; outer repair OFF client and server, explicit outer MTU1160, zero artificially added netem loss",
+  "limits": [
+    "Functionally valid but UDP loss and TCP tail latency disqualify timely-delivery and no-HOL claims.",
+    "The server per-owner old Stop-style outer metric is NOT_EMITTED; one authenticated per-owner effective Rust READY readback is validated instead.",
+    "ARM and x86 were different native CI runners, not paired old/new performance. X86 747Mbps versus other-source x86 ~1.49Gbps is NOT proof of code effect; first isolate runner demand and M1->M4 stage.",
+    "No physical hardware/WAN/Windows/GE1% or default MTU1460 performance qualification.",
+    "Native metrics opt-in WBD_SHARED_TUN_ROUTE_DIAG=1: this is diagnostic source not comparable to no-diagnostic CPU as causal performance measurement."
+  ],
+  "next_action": "Use existing independent low-frequency Rust external stage observer in the real product fixture for time-aligned M1/M4 copied+CPU/tun-delivery windows, same native binaries, no public default changes."
+}

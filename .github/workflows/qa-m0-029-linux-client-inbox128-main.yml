@@ -1,0 +1,52 @@
+name: M0 PLAN029 Linux native default Normal client M1 inbox128
+on:
+  push:
+    branches:
+      - integration/m0-029-linux-client-inbox128-20261122
+    paths:
+      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - '.github/workflows/qa-m0-029-linux-client-inbox128-main.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-two-isa:
+    name: Original Linux Native Normal queue 128 / 64 scoped unit ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Compile original native Rust feature combination and exact 128/64 regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record --lib m0_plan029_linux_normal_client_default_128_server_64 -- --nocapture
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record --lib m0_plan028_shared_tun_full_a_keeps_b_and_bounded_drop -- --nocapture
+          echo M0_PLAN029_LINUX_INBOX128_NATIVE_2ISA_SOURCE_TEST_PASS
+  static-scope:
+    name: Scope invariant Normal client 128 server and Game 64
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,re
+          s=pathlib.Path('crates/wbd-engine/src/v4_embedded_go.rs').read_text()
+          assert 'if server_side{64}else{128}' in s
+          assert 'sync_channel::<OriginalTunIngress>(inbox_slots)' in s
+          assert 'sync_channel::<OriginalTunIngress>(64)' in s
+          assert s.count('normal_shared_tun_product_inbox_slots(e.server_side)')==1
+          assert 'M0_PLAN029_NATIVE_INBOX_BOUND role={}' in s
+          print('M0_PLAN029_LINUX_INBOX128_NORMAL_ONLY_GAME64_STATIC_PASS')
+          PY

@@ -195,6 +195,10 @@ def assemble(legacy: Path, overlay: Path, manifest: Path, receipt: Path, dry_run
                 stream.flush()
                 os.fsync(stream.fileno())
             os.replace(tmp, dst)
+        # The real Windows command embeds only one pinned official group.
+        if any(dst.name=="m0_plan029_cn_domains_windows.go" for dst,_ in writes):
+            from cn_domain_snapshot import install
+            result["cn_domain_snapshot"]=install(legacy/"cmd/wbd-client/cn_domains_builtin.dat")
         result["result"] = "APPLIED_TO_PINNED_TEMP_CLONE"
     receipt.parent.mkdir(parents=True, exist_ok=True)
     receipt.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

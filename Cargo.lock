@@ -246,6 +246,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "regex-lite"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d942b98df5e658f56f20d592c7f868833fe38115e65c33003d8cd224b0155da"
+
+[[package]]
 name = "regex-automata"
 version = "0.4.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -267,6 +273,7 @@ name = "wbd-engine"
 version = "0.1.0"
 dependencies = [
  "regex",
+ "regex-lite",
  "rtrb",
  "wbd-codec",
  "wbd-platform",

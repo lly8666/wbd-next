@@ -7,3 +7,4 @@
 5. Go保留成熟TLS/OS/GUI冷控制，**标准TLS建链/报文外观为红线**，禁止ClientHello前私有前导/交换或套伪TLS头；允许预共享route-key，唯一规范见 [TLS_HANDSHAKE_CONTRACT](docs/architecture/TLS_HANDSHAKE_CONTRACT.md)。Rust稳态，禁止Go逐包FFI/空轮询/双控制器。普通实现自主决策，不叠防御通用框架。
 6. 完整同批改双方/配置/夹具/功能卡后冻结SOURCE；一Action一场景，不同场景可并行，同VM A/B顺序，一次构建按SOURCE/manifest/hash复用；不刷seed、不把不同OS/VM结果当因果CPU增益。
 7. main不reset/force、不覆盖未知变更。短devlog、证据、功能卡、cursor及时更新；旧SOURCE PASS≠新SOURCE PASS，失败/未验/物理资格原样记录。用户普通入口外层完整IPv4 IP MTU固定默认 **1460B、不含L2**，1500B仅显式最大；内层Rust预算自动推导、OS读回，不回写外层用户设置。无凭据/大pcap入库，不擅自部署物理机或发其他会话消息。
+8. **2026-11-22 用户重申：旧 M2 逐 record Receipt/独立反馈控制已废弃**；所有 agent 禁止复活、依赖或重复施工。现用的 TCP-like ACK/SACK 外观提示与 Rust owner 原冻结密文**最多一次机会式外层重传**仍须保留，归 M0 集成；`m2` 目录/变量名不代表旧功能可重新启用。

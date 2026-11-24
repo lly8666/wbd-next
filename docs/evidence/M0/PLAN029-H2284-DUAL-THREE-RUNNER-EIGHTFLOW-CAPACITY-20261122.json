@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "plan": "PLAN029",
+  "checkpoint": "H2284",
+  "date": "2026-11-22",
+  "source_sha": "8b37f34e2158108ee0aa5a9d7fff462ea2d28a93",
+  "github_action": {
+    "run_id": 44932436553,
+    "run_attempt": 1,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/44932436553",
+    "conclusion": "success",
+    "jobs": "7/7-success"
+  },
+  "topology": "two physically independent triplets, each Windows2025 native Winsock client + ARM64 Linux kernel DNAT/SNAT and 2x egress netem relay + separate ARM64 Linux kernel TCP server",
+  "scope": "NATIVE_WINDOWS_WINSOCK_TO_ARM_LINUX_KERNEL_TCP_NOT_ORIGINAL_WBD_GO_TLS_RUST_WINTUN_NPCAP",
+  "test_app": {
+    "bulk_flows": 8,
+    "per_flow_max_bytes": 536870912,
+    "offer_s": 25,
+    "sparse_tcp_echoes": 160,
+    "sparse_period_ms": 80,
+    "windows_bulk_so_sndbuf_rcvbuf_actual": 8388608,
+    "linux_server_listener_so_rcvbuf_actual": 16777216
+  },
+  "old_h2228": {
+    "run_id": 44705243325,
+    "source": "2a2f809592856411daa70b3c043b2f6430774ce8",
+    "clean_0ms_eight_iperf3_BBR_upload_mbps": 848.551,
+    "download_mbps": 861.757,
+    "topology": "Linux x86 client + ARM relay dual VXLAN L3 (no NAT) + Linux x86 server",
+    "transport": "BBR and 64MiB TCP r/wmem max",
+    "note": "OLD OS/route/mode/CC not comparable directly with Windows/ARM; old WBD full matrix failed"
+  },
+  "groups": {
+    "a": {
+      "client_result_artifact": 14718690622,
+      "arm_server_artifact": 14717668915,
+      "client_server_tailscale": "DIRECT_CANDIDATE",
+      "client_relay_tailscale": "DIRECT_CANDIDATE",
+      "clean_800mbps_both": "UNQUALIFIED_CLEAN_RELAY_BELOW_800",
+      "stages": [
+        {
+          "stage": "clean_direct",
+          "real_received_bytes": 4117544960,
+          "mbps": 1286.23,
+          "p99_ms": 79,
+          "windows_allcore_busy_pct": 63.336,
+          "arm_allcore_busy_pct": 32.322
+        },
+        {
+          "stage": "clean_relay",
+          "real_received_bytes": 2264039424,
+          "mbps": 680.275,
+          "p99_ms": 250,
+          "windows_allcore_busy_pct": 35.59,
+          "arm_allcore_busy_pct": 32.699,
+          "relay_allcore_busy_pct": 39.986,
+          "relay_hottest_core_busy_pct": 48.032,
+          "relay_tailscaled_cpu_pct_of_one_core": 152.566
+        },
+        {
+          "stage": "wan_relay",
+          "real_received_bytes": 1645281280,
+          "mbps": 492.618,
+          "p99_ms": 532,
+          "windows_allcore_busy_pct": 21.737,
+          "arm_allcore_busy_pct": 19.943,
+          "relay_allcore_busy_pct": 29.06,
+          "relay_hottest_core_busy_pct": 34.081,
+          "relay_tailscaled_cpu_pct_of_one_core": 106.188
+        }
+      ],
+      "clean_kernel_relay_to_direct_ratio": 0.5289,
+      "over_1s_sparse": 0,
+      "bidir_relay_qdisc_packets_actual_positive": true
+    },
+    "b": {
+      "client_result_artifact": 14718356878,
+      "arm_server_artifact": 14717089884,
+      "client_server_tailscale": "DIRECT_CANDIDATE",
+      "client_relay_tailscale": "DIRECT_CANDIDATE",
+      "clean_800mbps_both": "QUALIFIED",
+      "stages": [
+        {
+          "stage": "clean_direct",
+          "real_received_bytes": 3417784320,
+          "mbps": 1067.682,
+          "p99_ms": 94,
+          "windows_allcore_busy_pct": 81.49,
+          "arm_allcore_busy_pct": 24.795
+        },
+        {
+          "stage": "clean_relay",
+          "real_received_bytes": 3184705536,
+          "mbps": 995.493,
+          "p99_ms": 94,
+          "windows_allcore_busy_pct": 74.699,
+          "arm_allcore_busy_pct": 39.635,
+          "relay_allcore_busy_pct": 49.137,
+          "relay_hottest_core_busy_pct": 57.58,
+          "relay_tailscaled_cpu_pct_of_one_core": 187.733
+        },
+        {
+          "stage": "wan_relay",
+          "real_received_bytes": 2090483712,
+          "mbps": 599.637,
+          "p99_ms": 485,
+          "windows_allcore_busy_pct": 48.003,
+          "arm_allcore_busy_pct": 23.053,
+          "relay_allcore_busy_pct": 34.419,
+          "relay_hottest_core_busy_pct": 39.906,
+          "relay_tailscaled_cpu_pct_of_one_core": 127.952
+        }
+      ],
+      "clean_kernel_relay_to_direct_ratio": 0.9324,
+      "over_1s_sparse": 0,
+      "bidir_relay_qdisc_packets_actual_positive": true
+    }
+  },
+  "joint_verdict": {
+    "real_native_8tcp_sustained_data_and_160_echoes_each_stage": "PASS_SCOPED_BOTH_GROUPS",
+    "tcp_clean_direct_both_above_old_h2228_eight_flow_upload": true,
+    "clean_kernel_relay_reached_800_in_group_b_only": true,
+    "relay_native_linux_cpu_not_full_on_any_host": true,
+    "relay_tailscaled_active_cpu_cost_of_two_encrypt_decrypt_hops_measured": true,
+    "cross_group_relay_drift_large": true,
+    "underlying_capacity_unqualified_for_all_groups": false,
+    "one_group_unqualified": true,
+    "wbd_go_rust_product_goodput": "NOT_RUN",
+    "original_windows_wintun_npcap_to_arm_server": "NOT_RUN",
+    "sender_receiver_direction": "CLIENT_TO_SERVER_ONLY",
+    "next": "Instrument per-hop/single-core stalls or return path packet queueing; exploit source-locked H2284 high-capacity baseline for genuine WBD end-to-end product with real Windows Wintun/Npcap+ARM Go TLS/Rust, 1%/5% FEC2 and P99, original Stop"
+  }
+}

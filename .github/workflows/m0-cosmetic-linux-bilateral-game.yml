@@ -1,0 +1,134 @@
+# H2335 exact-source requalify Linux original Go/Rust client+server both directions after optional ACK-index low-CPU patch; older 60a PASS not inherited.
+# H2334: rerun strict source-frozen Linux client/server Normal6+Game12; zero-loss flood now mandatory FAIL.
+# H2332 rearm: real Game 0% client/server per-owner first-copy ratio is fail-closed.
+# H2331: Game real 5/30% source must include authenticated stall and 1/2 sample, not legacy zero appearance.
+# H2330 ARM: real Linux original GoTLS+Rust clients and servers, both directions, 18 loss/Game combinations.
+# H2330 staging: new genuine current-source Linux client and Linux server Normal/Game2/Game4 OFF/fixed6 18-case matrix.
+# H2325 arm exact source-frozen one-time bilateral native matrix; no runtime product change.
+name: M0 current-source Linux client AND server Normal/Game cosmetic outer repair
+run-name: "M0-LINUX-CLIENT-SERVER-COSMETIC|${{ github.sha }}"
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/m0-cosmetic-linux-bilateral-game.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  native-bundle-once:
+    if: contains(github.event.head_commit.message, '[m0-cosmetic-linux-bidirectional-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Build exact original Go TLS client AND server plus Rust native shared M4 once
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          python3 - <<'PY'
+          from pathlib import Path
+          game=Path("crates/wbd-engine/src/v4_game_cosmetic_outer.rs").read_text()
+          assert "const SAMPLE_MASK:u64=1;" in game
+          assert "const INITIAL_ACK_STALL_NS:u64=1_000_000_000;" in game
+          assert "l.dup_acks>=3 && later_actual_copy" in game
+          assert "COSMETIC_MAX_AGE_NS" in game
+          assert "next_bytes.saturating_mul(10)<=l.first_record_wire_bytes" in game
+          print("M0_GAME_GENUINE_STALLED_ACK_COSMETIC_PRECHECK_PASS")
+          PY
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm
+          sed -e 's/aarch64/x86_64/g' -e 's/arm64/amd64/g' tools/arm64_public_go_rust_bundle.sh > "$RUNNER_TEMP/m0-linux-native-amd64.sh"
+          bash "$RUNNER_TEMP/m0-linux-native-amd64.sh"
+          test -s amd64-public-bundle/manifest.json
+          (cd amd64-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open("amd64-public-bundle/manifest.json"))
+          assert m["source_sha"]==os.environ["GITHUB_SHA"]
+          assert m["architecture"]=="x86_64"
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-cosmetic-linux-original-product-${{ github.sha }}
+          path: amd64-public-bundle/
+          retention-days: 30
+          if-no-files-found: error
+  one-genuine-linux-client-and-server-scenario:
+    needs: native-bundle-once
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {mode: normal, loss: 0}
+          - {mode: normal, loss: 1}
+          - {mode: normal, loss: 5}
+          - {mode: normal, loss: 10}
+          - {mode: normal, loss: 20}
+          - {mode: normal, loss: 30}
+          - {mode: game2, loss: 0}
+          - {mode: game2, loss: 5}
+          - {mode: game2, loss: 30}
+          - {mode: game4, loss: 0}
+          - {mode: game4, loss: 5}
+          - {mode: game4, loss: 30}
+          - {mode: game2-fec, loss: 0}
+          - {mode: game2-fec, loss: 5}
+          - {mode: game2-fec, loss: 30}
+          - {mode: game4-fec, loss: 0}
+          - {mode: game4-fec, loss: 5}
+          - {mode: game4-fec, loss: 30}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    env:
+      SCENARIO: scenarios/m0-cosmetic-${{ matrix.mode }}-loss${{ matrix.loss }}-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: m0-cosmetic-linux-original-product-${{ github.sha }}
+          path: native-bundle
+      - name: Source locked exact binaries and Linux kernel namespace preflight
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path("native-bundle")
+          m=json.loads((root/"manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"] and m["architecture"]=="x86_64"
+          lines=(root/"SHA256SUMS").read_text().splitlines()
+          for line in lines:
+              hash,name=line.split(maxsplit=1)
+              assert hashlib.sha256((root/name.strip().removeprefix("*")).read_bytes()).hexdigest()==hash
+          PY
+          # actions/download-artifact normalizes file modes. Restore
+          # executable bits after BYTE-HASH verification, before native
+          # original-Go client/server launch. W168 established this step.
+          chmod +x native-bundle/wbd-v4-client native-bundle/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Real original Linux Go TLS Rust client AND server bidirectional cosmetic 60s Game/Normal
+        run: |
+          set -euo pipefail
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB \
+            python3 -m tools.network_harness.m0_029_cosmetic_linux_dual_game \
+            --bundle "$GITHUB_WORKSPACE/native-bundle" \
+            --scenario "$SCENARIO" --mode "${{ matrix.mode }}" --out "$GITHUB_WORKSPACE/linux-dual-scene"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-linux-cosmetic-${{ matrix.mode }}-loss${{ matrix.loss }}
+          path: |
+            linux-dual-scene/result.json
+            linux-dual-scene/*/result.json
+            linux-dual-scene/*/network-snapshots.json
+            linux-dual-scene/*/summary.md
+          retention-days: 30
+          if-no-files-found: warn

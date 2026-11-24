@@ -1,0 +1,39 @@
+# M0 WIP: specifically close Game4 OFF 0/5/30 genuine signed Windows NPF/WSL2 gap.
+# Dispatch an immutable, independently pinned SOURCE. The dispatch job itself
+# is NOT native success; only downstream exact-source run can qualify.
+name: M0 Game Normal outer signed Windows dispatch once
+run-name: "M0-GAME-NORMAL-WINDOWS-SIGNED-DISPATCH|${{ github.sha }}"
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-normal-win-signed-once.yml]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch-one:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      FROZEN_REF: experiment/m0-game-normal-final-game4off-8dbda7d
+      FROZEN_SHA: 8dbda7d425ec3e5322f79729b5c5a285d323416d
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Dispatch frozen signed Game4 OFF 0/5/30pct original two-OS cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/git/ref/heads/$FROZEN_REF" --jq '.object.sha')" = "$FROZEN_SHA"
+          for spec in game4:0 game4:5 game4:30; do
+            mode="${spec%%:*}"
+            loss="${spec##*:}"
+            scenario="scenarios/m0-cosmetic-${mode}-loss${loss}-60s.json"
+            test -f "$scenario"
+            gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$FROZEN_REF" \
+              -f "public_mode=$mode" -f native_outer_mtu=legacy1400 \
+              -f outer_repair=on -f "perf_scenario_file=$scenario"
+            echo "WINDOWS_SIGNED_DISPATCHED_NOT_PASS frozen=$FROZEN_SHA mode=$mode scenario=$scenario"
+          done

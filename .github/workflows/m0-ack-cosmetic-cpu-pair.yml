@@ -1,0 +1,148 @@
+# H2324 armed after GitHub registered the workflow; only the fenced marker can run this native pair.
+name: M0 source-locked cosmetic 30pct OFF ON Windows CPU pair
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-ack-cosmetic-cpu-pair.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  pair:
+    if: contains(github.event.head_commit.message, '[m0-ack-cpu-pair-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 46
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      WORKFLOW: m0-wl-public-normal-full.yml
+      PRODUCT_SOURCE: 92920fb96f2d77ca11abcfdf4a4069d24731f62b
+      PRODUCT_RUN: "45111958268"
+      SCENARIO: scenarios/wl-outer-repair-10m-250ms-loss30-60s.json
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze exact product, both signed files, and scenario before pair
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          git fetch --quiet --depth=1 origin "$PRODUCT_SOURCE"
+          delta="$(git diff --name-only "$PRODUCT_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          test -z "$delta" || { echo "M0_PAIR_PRODUCT_DRIFT $delta"; exit 1; }
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .head_sha)" = "$PRODUCT_SOURCE"
+          test "$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN" --jq .conclusion)" = success
+          names="$(gh api "repos/$GH_REPO/actions/runs/$PRODUCT_RUN/artifacts?per_page=100" --jq '.artifacts[].name')"
+          grep -Fxq "m0-wl-windows-product-binaries-$PRODUCT_SOURCE" <<< "$names"
+          grep -Fxq m0-plan024-linux-product <<< "$names"
+          test -f "$SCENARIO"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          import os
+          v=read_scenario(os.environ["SCENARIO"])
+          assert v["public_mode"]=="normal" and v["seed"]==20261030
+          assert v["duration_s"]==60 and v["tun_mtu"]==1400
+          assert all(v[k]["loss_pct"]==30 and v[k]["offered_mbps"]==10
+                     for k in ("windows_to_linux","linux_to_windows"))
+          print("M0_CPU_PAIR_SCENARIO_FROZEN",v["scenario_sha256"])
+          PY
+      - name: Dispatch one signed same-VM 30pct pair and monitor bounded guest
+        id: pairrun
+        shell: bash
+        run: |
+          set -euo pipefail
+          find_run() {
+            gh api "repos/$GH_REPO/actions/workflows/$WORKFLOW/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg sha "$GITHUB_SHA" --arg scene "$SCENARIO" '[.workflow_runs[] | select(.head_sha==$sha and (.name|contains($scene)))] | sort_by(.created_at) | last | .id // empty'
+          }
+          id="$(find_run)"
+          if [ -z "$id" ]; then
+            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+            gh workflow run "$WORKFLOW" --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f native_outer_mtu=legacy1400 \
+              -f outer_repair=on -f outer_pair=true \
+              -f "perf_scenario_file=$SCENARIO" \
+              -f "perf_reuse_run_id=$PRODUCT_RUN" \
+              -f "perf_binary_source_sha=$PRODUCT_SOURCE"
+          fi
+          for i in $(seq 1 80); do
+            id="$(find_run)"
+            if [ -n "$id" ]; then break; fi
+            sleep 10
+          done
+          test -n "$id" || { echo M0_PAIR_DISPATCH_NOT_OBSERVED >&2; exit 1; }
+          echo "run_id=$id" >>"$GITHUB_OUTPUT"
+          echo "M0_REAL_SIGNED_30PCT_OFF_ON_PAIR_STARTED_NOT_PASS id=$id fixture=$GITHUB_SHA product=$PRODUCT_SOURCE"
+          outcome=""
+          for i in $(seq 1 148); do
+            state="$(gh api "repos/$GH_REPO/actions/runs/$id")"
+            if [ "$(jq -r .status <<<"$state")" = completed ]; then
+              outcome="$(jq -r .conclusion <<<"$state")"
+              break
+            fi
+            if (( i % 4 == 0 )); then
+              boot="$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+                jq -r '[.jobs[] | select(.name=="native-public-two-os") | .steps[]? |
+                select(.name=="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)" and .status=="in_progress") | .started_at] | first // empty')"
+              if [ -n "$boot" ]; then
+                age=$(( $(date -u +%s)-$(date -u -d "$boot" +%s) ))
+                if (( age > 840 )); then
+                  echo "M0_PAIR_ENV_BLOCKED_STALE_WSL2 run=$id seconds=$age" >&2
+                  gh api -X POST "repos/$GH_REPO/actions/runs/$id/cancel" >/dev/null || :
+                  exit 1
+                fi
+              fi
+            fi
+            sleep 15
+          done
+          echo "M0_PAIR_NATIVE_JOB_FINAL id=$id conclusion=$outcome"
+          test "$outcome" = success || exit 1
+          gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+            jq -e '.jobs | any(.name=="native-public-two-os" and .conclusion=="success")' | grep -Fxq true
+      - name: Read real OFF and ON CPU, actual original ciphertext and Stop
+        if: steps.pairrun.outputs.run_id != ''
+        shell: bash
+        env:
+          RUN_ID: ${{ steps.pairrun.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          artifact="m0-wl-full-public-normal-direct-h1506-legacy-$RUN_ID"
+          gh run download "$RUN_ID" --repo "$GH_REPO" --name "$artifact" --dir out
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path("out/outer-pair/result.json")
+          assert p.is_file(), "actual original signed Windows pair receipt missing"
+          v=json.loads(p.read_text())
+          assert v["schema"]=="plan027-original-native-outer-pair/v1"
+          assert v["source_sha"]==os.environ["PRODUCT_SOURCE"]
+          assert v["fixture_source_sha"]==os.environ["GITHUB_SHA"]
+          assert v["order"]=="OFF_ON" and v["result"]=="PASS_TWO_TRUE_NATIVE_LEGS"
+          assert len(v["legs"])==2 and [x["policy"] for x in v["legs"]]==["off","on"]
+          off,on=v["legs"]
+          for leg in (off,on):
+            assert leg["result"]=="PASS" and leg["owned_stop"]=="PASS_BOTH_OWNED"
+            assert leg["source_sha"]==os.environ["PRODUCT_SOURCE"]
+            assert leg["kernel_loss_applied"]
+            assert all(leg["actual_tc_netem_drops"][d]>0 for d in ("eth0","ifb"))
+            assert leg["frc"]["ledger_verified"]
+            assert leg["windows_process_cpu_s"]>0
+          assert off["windows_cli_sha256"]==on["windows_cli_sha256"]
+          assert off["linux_server_sha256"]==on["linux_server_sha256"]
+          assert off["frc"]["repair_packets"]==0, "OFF must not retransmit"
+          assert on["frc"]["repair_packets"]>0, "ON must exhibit real appearance"
+          assert 0<on["frc"]["R_over_F"]<=0.1
+          print("M0_TRUE_SIGNED_SAME_VM_CPU_PAIR_SCOPED",json.dumps({
+             "source":v["source_sha"],"off_cpu_s":off["windows_process_cpu_s"],
+             "on_cpu_s":on["windows_process_cpu_s"],
+             "on_minus_off_cpu_s":v["comparison"]["cpu_on_minus_off_s"],
+             "off_R/F":off["frc"]["R_over_F"],"on_R/F":on["frc"]["R_over_F"],
+             "same_binary":True,"tc_drops":v["comparison"]["actual_tc_netem_drops"],
+             "attribution":v["attribution"]},sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-ack-cosmetic-30pct-cpu-pair-${{ github.sha }}
+          path: out/outer-pair/result.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "PLAN029-THROUGHPUT",
+  "date": "2026-11-24",
+  "user_instruction": "expedite final closeout, no additional speculative optimization",
+  "H2372": {
+    "source_sha": "586d133f73ae723b84aca79516c213c059ea30ae",
+    "native": {
+      "run_id": 45333379458,
+      "arm_job": 138239570111,
+      "x86_job": 138239570446,
+      "tests_per_isa": 14,
+      "status": "PASS"
+    },
+    "product": {
+      "run_id": 45333379561,
+      "arm_job": 138239570170,
+      "x86_job": 138239570405,
+      "arm_artifact": 14893085758,
+      "x86_artifact": 14892658639,
+      "status": "both FAIL before workload after current native build",
+      "first_error": "H2272_BOTH_TEST_SWITCHES_REQUIRED",
+      "decision": "test-only missing explicit force-repair OFF with existing TCP_NODELAY switch, not product performance evidence"
+    }
+  },
+  "H2374": {
+    "source_sha": "3b187ea1a701fdf4d14738369e0d40f6b57f2c20",
+    "fairness_run": 45333966600,
+    "maximum_native_isal_run": 45333966595,
+    "status": "in progress",
+    "product_source_changed": false,
+    "scope": "same fairness candidate corrected existing fixture preflight; pinned historical ISA-L native build with current Maximum owner and existing 20 parity settlement tests, no actual remote Maximum qualification"
+  },
+  "closeout": "P0 PAUSED not performance pass; P1 scoped 1% mechanism PASS no stable goodput; no further scalar/SIMD/FEC algorithm tuning. Fairness accept only real timely-delivery and cost benefit; otherwise revert candidate and close proactive work, preserve unresolved real product/physical limits. Maximum real wire qualification remains NOT_RUN unless actually measured; no speculative additional runs or default promotion."
+}

@@ -403,7 +403,10 @@ impl<H: FrozenRecordHandle> ReceiptState<H> {
             indexed_wake: None,
         });
         self.expiry_index.insert((hard_expiry.0, meta.pn));
-        self.refresh_wake(meta.pn);
+        // Fresh v3 DATA has no authenticated negative hint or queued repair:
+        // wake_at() is provably None until a later gap reports it. Avoid
+        // three BTree lookups for every eligible initial frozen shadow.
+        if !self.opportunistic_v3 {self.refresh_wake(meta.pn);}
         Ok(())
     }
 

@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "执行 docs/decisions/M0-PLAN029-THROUGHPUT.md。M0 在 main 登记与集成，产品按已登记短分支推进。先 ARM64 原生 Normal/off，再验 x86 与 Windows。既有 029/029B 分流、配置、隔离、Stop 与未验边界沿用，030 未启动。",
-      "done_when": "按该计划验收系统接收吞吐、CPU/有效GiB、及时交付率、无HOL及受影响入口；实测分别归属平台与SOURCE。否决/未测保留；本包完成后回到029/029B余项。",
-      "assigned_task": "M0-PLAN029-THROUGHPUT"
+      "goal": "用户2026-11-24启动 PLAN030，基线 c0166202af7fb3f70baf15a749df664c04502305；登记 experiment/m0-030-server-cli。复用当前 Go/Rust shared 服务、native dual ISA 构建与真实夹具；一次集中开发后独立功能测试并行。029用户限定交付已收口，不继续性能扫描。",
+      "done_when": "中文菜单与同后端CLI、配置验证及连接资料、systemd服务、真实设备快照、安装卸载与amd64/arm64包；同源真实功能测试与组合证据，未验如实登记，不扩极端工况或新增防御框架。",
+      "assigned_task": "M0-PLAN030-SERVER-CLI-DELIVERY"
     },
     {
       "id": "M1",

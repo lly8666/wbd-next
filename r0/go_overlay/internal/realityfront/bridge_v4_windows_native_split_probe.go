@@ -61,7 +61,7 @@ func(c *V4WindowsColdSplitConfig)wire()(v4WindowsColdSplitWireV1,error){
  if c==nil||c.RouteMode>2||c.PhysicalIfIndex==0||
   c.InnerMTU<576||c.InnerMTU>1500||c.DirectHard==0||
   c.DirectHard>16384||len(c.CN)>32768||len(c.LAN)>32768||
-  len(c.Direct)>32768||len(c.Domains)>1<<20||
+  len(c.Direct)>32768||len(c.Domains)>4<<20||
   len(c.FakeJournalPath)>4096||c.PolicyFlags&^uint32(1)!=0||
   c.TCPOwned{ // NEVER arm before OS Apply and exact Defender proof.
   return w,errV4WindowsOwner

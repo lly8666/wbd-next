@@ -1,0 +1,123 @@
+{
+  "schema": "m0-outer-opportunistic-v3-scoped-closeout/1",
+  "date": "2026-11-24",
+  "owner": "M0",
+  "user_decision": "Synchronize scoped completed repair specialization with main and prior M0 TCP throughput experimental branch",
+  "scoped_delivery": "Game2/Game4 Linux and Windows Normal-v3-compatible opportunistic presentation repair; real original PN/Seq/ciphertext at most once, 9% pacing/10% wire quota, no old M2 DATA PTO or new workers; historical evidence retained",
+  "accepted_product_source": "9d2a3230a84b1581e1f7abbf7f3d0d4fccfea347",
+  "scope": {
+    "linux_original_product": "PASS_EXACT_SOURCE",
+    "windows_signed_original": "PASS_HISTORICAL_PRE_FINAL_SOURCE_ONLY",
+    "windows_final_source_native_performance": "NOT_RUN",
+    "windows_final_source_unit": "PASS",
+    "physical_wan_qualification": "NOT_RUN",
+    "global_throughput_qualification": "NOT_CLAIMED"
+  },
+  "linux_executions": [
+    {
+      "run": 45209632283,
+      "source": "9d2a3230a84b1581e1f7abbf7f3d0d4fccfea347",
+      "result": "SUCCESS",
+      "scope": "Original Go TLS/Rust x86-64 Linux dual netns build + seven 60s cases: Game2 OFF0/5/30, Game4 OFF0/5/30, Game4 fixedFEC30; both real R/F, unique first delivery and owned Stop"
+    },
+    {
+      "run": 45217366326,
+      "source": "9d2a3230a84b1581e1f7abbf7f3d0d4fccfea347",
+      "result": "SUCCESS",
+      "scope": "Original Game4 fixed FEC0/FEC5 4-leg ON/OFF native same-runner ABBA with exact kernel drops and CPU, R/F0≈0.000022%, R/F5≈3.6%"
+    },
+    {
+      "run": 45229060432,
+      "source": "9d2a3230a84b1581e1f7abbf7f3d0d4fccfea347",
+      "result": "SUCCESS",
+      "scope": "Same-runner same-binary Game4 OFF/FEC5 F/R-first copy counts, physical parity and original netem receipts; OFF R/F≈2.4%, FEC R/F≈3.6–3.7%"
+    },
+    {
+      "run": 45231713451,
+      "source": "d0a4cf305363a663e004ad9f96d9bcee442a0043",
+      "result": "SUCCESS",
+      "scope": "Isolated diagnostic binary ONLY. Actual on_outer_gap_hint nominations by PN: OFF5 SACK≈9.2k vs FEC5≈36.6k; duplicate ACK ≈350–400 both. Probe not merged to product."
+    }
+  ],
+  "windows_signed_historical": [
+    {
+      "run": 45176682065,
+      "source": "c6f48286d1bacbccb0b877dabfb74781d14c5c83",
+      "mode": "Game2 OFF5"
+    },
+    {
+      "run": 45176686641,
+      "source": "c6f48286d1bacbccb0b877dabfb74781d14c5c83",
+      "mode": "Game2 OFF30"
+    },
+    {
+      "run": 45176691464,
+      "source": "c6f48286d1bacbccb0b877dabfb74781d14c5c83",
+      "mode": "Game4 fixedFEC30"
+    },
+    {
+      "run": 45181672649,
+      "source": "8dbda7d425ec3e5322f79729b5c5a285d323416d",
+      "mode": "Game4 OFF0"
+    },
+    {
+      "run": 45181676755,
+      "source": "8dbda7d425ec3e5322f79729b5c5a285d323416d",
+      "mode": "Game4 OFF5"
+    },
+    {
+      "run": 45181680575,
+      "source": "8dbda7d425ec3e5322f79729b5c5a285d323416d",
+      "mode": "Game4 OFF30"
+    },
+    {
+      "run": 45182116799,
+      "source": "8dbda7d425ec3e5322f79729b5c5a285d323416d",
+      "mode": "Game2 fixedFEC30"
+    }
+  ],
+  "performance": {
+    "thread_cpu_run": 45195689153,
+    "classification": "firstsend/ACK indices dominate added TX work; standalone RAW duplicate ≈2.3us, not a 22us syscall",
+    "phase_sample_run": 45202957306,
+    "repair_on_off_runs": [
+      45194110138,
+      45195689153
+    ],
+    "inference": "At Game4 fixedFEC30 extra outer repair costs ≈1.7–2.2 CPU seconds over 60 seconds per endpoint, source-dependent.",
+    "retained_optimization": "Skip guaranteed-empty initial v3 wake reindex in ReceiptState; no change to real later gap wake",
+    "retained_abba": [
+      45206294548,
+      45207945974
+    ],
+    "benefit": "Both directions and both endpoints ≈1.7–2.35% same-runner CPU reduction",
+    "rejected_and_reverted": [
+      {
+        "kind": "lazy idle candidate Vec allocation",
+        "run": 45188200851,
+        "cause": "CPU increased client +2.88%, server +3.22%"
+      },
+      {
+        "kind": "single BTree entry insertion lookup",
+        "runs": [
+          45219767098,
+          45221348662
+        ],
+        "cause": "reverse-order ABBA failed to reproduce first ~3% gain; fell to ~0.2–0.34%"
+      }
+    ]
+  },
+  "constraints": [
+    "Do not conflate first source/parity F with actual repair R.",
+    "Do not claim per-PN physical drop based only on SACK; SACK means as-yet-unacknowledged.",
+    "Do not confuse generator CPU with WBD process CPU.",
+    "Do not extrapolate historical Windows signed success to final 9d2a323 source Windows-native performance.",
+    "No old M2 per-record recovery restart, new workers, blind DATA PTO, new per-PN encryption, or weakened R/F."
+  ],
+  "evidence_links": [
+    "docs/devlog/M0/20261123-GAME-NORMAL-OUTER-REWRITE-WIP.md",
+    "https://github.com/lly8666/wbd-next/pull/71"
+  ],
+  "status": "SCOPED_ENGINEERING_CLOSEOUT_WITH_OPEN_PLATFORM_QUALIFICATION",
+  "integration_note": "User authorized direct source and documentation synchronization into main and experiment/m0-029-throughput-arm-fair. Branch updates and follow-up CI are verified separately by actual target branch HEADs; this record does not assert unobserved results."
+}

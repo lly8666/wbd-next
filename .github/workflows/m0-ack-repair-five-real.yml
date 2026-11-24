@@ -1,0 +1,280 @@
+# M0/H2324: exact signed baseline manifest proved m0_v4_probe+native_fec_acceleration with pinned ISA-L.
+# Native reuse verifies the *actual* same-source feature set and BOTH EXE/DLL SHA256, not obsolete two-feature expectation.
+# This one-shot push re-arms the guarded original Windows-to-Linux six-tier gate.
+name: M0 Windows-to-Linux original ACK repair 0 then five loss tiers
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/m0-ack-repair-five-real.yml]
+permissions: {contents: read, actions: write}
+jobs:
+  once:
+    if: contains(github.event.head_commit.message, '[m0-ack-repair-five-once]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      WORKFLOW: m0-wl-public-normal-full.yml
+      BASE_SOURCE: a482cbac836fa3039cc40da7434204dfce3961fe
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify same immutable product and exact six 10M 250ms scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          git fetch --quiet --depth=1 origin "$BASE_SOURCE"
+          test -z "$(git diff --name-only "$BASE_SOURCE" "$GITHUB_SHA" -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)"
+          python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          from pathlib import Path
+          scenes = {
+              0: "plan027-h539-normal-10m-250ms-loss0-60s.json",
+              1: "plan027-h539-normal-10m-250ms-loss1-60s.json",
+              5: "plan027-h539-normal-10m-250ms-loss5-60s.json",
+              10: "m0-ack-normal-10m-250ms-loss10-60s.json",
+              20: "m0-ack-normal-10m-250ms-loss20-60s.json",
+              30: "wl-outer-repair-10m-250ms-loss30-60s.json",
+          }
+          for loss, filename in scenes.items():
+              c=read_scenario(Path("scenarios")/filename)
+              assert c["public_mode"]=="normal" and c["seed"]==20261030
+              assert (c["duration_s"],c["warmup_s"],c["drain_s"],c["tun_mtu"])==(60,5,10,1400)
+              for direction in ("windows_to_linux","linux_to_windows"):
+                  d=c[direction]
+                  assert (d["offered_mbps"],d["delay_ms"],d["loss_pct"],d["tc_rate_mbps"])==(10,250,loss,None)
+                  assert [r["udp_payload_bytes"] for r in d["packet_mix"]]==[64,128,512,1200]
+              print("ACK_FROZEN_SCENE",loss,filename,c["scenario_sha256"])
+          src=Path("crates/wbd-engine/src/v4_windows_native_runtime.rs").read_text()
+          assert "ack_interval_elapsed:bool" in src and "last_pure_ack=Some(Instant::now())" in src
+          PY
+      - name: One exact-SOURCE signed Windows Linux no-loss native baseline
+        id: zero
+        shell: bash
+        run: |
+          set -euo pipefail
+          scene=scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json
+          find_run() {
+            gh api "repos/$GH_REPO/actions/workflows/$WORKFLOW/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg sha "$GITHUB_SHA" --arg scene "$1" '[.workflow_runs[] | select(.head_sha==$sha and (.name|contains($scene)))] | sort_by(.created_at) | last | .id // empty'
+          }
+          id="$(find_run "$scene")"
+          if [ -z "$id" ]; then
+            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+            gh workflow run "$WORKFLOW" --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f native_outer_mtu=legacy1400 -f outer_repair=on \
+              -f "perf_scenario_file=$scene"
+          fi
+          for i in $(seq 1 60); do
+            id="$(find_run "$scene")"
+            if [ -n "$id" ]; then break; fi
+            sleep 10
+          done
+          test -n "$id" || { echo ACK_ZERO_DISPATCH_NOT_OBSERVED >&2; exit 1; }
+          echo "ACK_ZERO_NATIVE_RUN=$id SOURCE=$GITHUB_SHA"
+          final=""
+          for i in $(seq 1 132); do
+            row="$(gh api "repos/$GH_REPO/actions/runs/$id")"
+            status="$(jq -r .status <<<"$row")"
+            if [ "$status" = completed ]; then
+              final="$(jq -r .conclusion <<<"$row")"
+              break
+            fi
+            # GitHub Windows-hosted WSL may ignore its own 8min step limit.
+            # A separate Linux controller must not leave that runner stuck.
+            if (( i % 4 == 0 )); then
+              boot_start="$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+                jq -r '[.jobs[] | select(.name=="native-public-two-os") | .steps[]? |
+                  select(.name=="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)" and .status=="in_progress") | .started_at] | first // empty')"
+              if [ -n "$boot_start" ]; then
+                age=$(( $(date -u +%s) - $(date -u -d "$boot_start" +%s) ))
+                if (( age > 840 )); then
+                  echo "ACK_ZERO_ENVIRONMENT_BLOCKED_WSL_STALE run=$id step_seconds=$age" >&2
+                  gh api -X POST "repos/$GH_REPO/actions/runs/$id/cancel" >/dev/null || :
+                  exit 1
+                fi
+              fi
+            fi
+            sleep 15
+          done
+          test "$final" = success || { echo "ACK_ZERO_UNQUALIFIED run=$id conclusion=$final" >&2; exit 1; }
+          gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+            jq -e '.jobs | any(.name=="native-public-two-os" and .conclusion=="success")' | grep -Fxq true
+          names="$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100" --jq '.artifacts[].name')"
+          grep -Fxq "m0-wl-windows-product-binaries-$GITHUB_SHA" <<<"$names"
+          grep -Fxq m0-plan024-linux-product <<<"$names"
+          # In the live legacy branch the native artifact name includes
+          # the H1506 scene and exact run id; the unsuffixed label never exists.
+          evidence_name="m0-wl-full-public-normal-direct-h1506-legacy-$id"
+          grep -Fxq "$evidence_name" <<<"$names"
+          mkdir -p "$RUNNER_TEMP/ack-zero"
+          gh run download "$id" --repo "$GH_REPO" --name "$evidence_name" --dir "$RUNNER_TEMP/ack-zero"
+          ACK_REPORT_DIR="$RUNNER_TEMP/ack-zero" python3 - <<'PY'
+          from tools.m0_wl_perf_v2_config import read_scenario
+          from pathlib import Path
+          import json,os,re
+          path=Path(os.environ["ACK_REPORT_DIR"])
+          report=json.loads((path/"report.json").read_text())
+          expected=read_scenario("scenarios/plan027-h539-normal-10m-250ms-loss0-60s.json")
+          assert report["source"]==os.environ["GITHUB_SHA"]
+          assert report["linux_binary_source"]==os.environ["GITHUB_SHA"]
+          assert report["stop"]=="PASS_BOTH_OWNED"
+          assert report["mode_public"].endswith("_normal")
+          v=report["WL_V2"]
+          assert v["status"]=="MEASURED_BOTH_OS_KERNEL"
+          assert v["scenario_sha256"]==expected["scenario_sha256"]
+          assert all(v["first_delivery_fraction"][side]>=.999 for side in ("windows","linux"))
+          log=(path/"mode-results/normal/client.log").read_text(errors="replace")
+          hits=re.findall(r"WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+)",log)
+          positive=[tuple(map(int,row)) for row in hits if int(row[0])>0]
+          assert positive, "genuine positive-source Windows frozen-repair ledger missing"
+          f,r,u=positive[-1]
+          assert f>0 and (r+u)/f<=.0005, "unjustified lossless repair >0.05%"
+          print("ACK_ZERO_REAL_OS_SCOPED_PASS",{"F":f,"R":r,"uncertain":u,"WindowsFirst":v["first_delivery_fraction"]["windows"],"LinuxFirst":v["first_delivery_fraction"]["linux"]})
+          PY
+          echo "run_id=$id" >>"$GITHUB_OUTPUT"
+      - name: Dispatch five independent exact-binary Windows to Linux loss cases
+        shell: bash
+        env:
+          ZERO_RUN: ${{ steps.zero.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+          find_run() {
+            gh api "repos/$GH_REPO/actions/workflows/$WORKFLOW/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg sha "$GITHUB_SHA" --arg scene "$1" '[.workflow_runs[] | select(.head_sha==$sha and (.name|contains($scene)))] | sort_by(.created_at) | last | .id // empty'
+          }
+          for tuple in \
+            1:plan027-h539-normal-10m-250ms-loss1-60s.json \
+            5:plan027-h539-normal-10m-250ms-loss5-60s.json \
+            10:m0-ack-normal-10m-250ms-loss10-60s.json \
+            20:m0-ack-normal-10m-250ms-loss20-60s.json \
+            30:wl-outer-repair-10m-250ms-loss30-60s.json; do
+            rate="${tuple%%:*}"
+            scene="scenarios/${tuple#*:}"
+            existing="$(find_run "$scene")"
+            if [ -n "$existing" ]; then
+              echo "ACK_RATE_ALREADY_DISPATCHED rate=$rate run=$existing"
+              continue
+            fi
+            test "$(gh api "repos/$GH_REPO/branches/main" --jq .commit.sha)" = "$GITHUB_SHA"
+            gh workflow run "$WORKFLOW" --repo "$GH_REPO" --ref main \
+              -f public_mode=normal -f native_outer_mtu=legacy1400 -f outer_repair=on \
+              -f "perf_scenario_file=$scene" \
+              -f "perf_reuse_run_id=$ZERO_RUN" -f "perf_binary_source_sha=$GITHUB_SHA"
+            echo "ACK_RATE_DISPATCHED_NOT_PASS rate=$rate scene=$scene source=$GITHUB_SHA binary_source=$GITHUB_SHA reused_run=$ZERO_RUN"
+          done
+      - name: Collect five actual native results without inventing green
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          printf 'rate,run_id,conclusion,native_job,report_verified,windows_first,linux_first,windows_r_over_f\n' >out/ack-repair-five.csv
+          find_run() {
+            gh api "repos/$GH_REPO/actions/workflows/$WORKFLOW/runs?event=workflow_dispatch&per_page=100" |
+              jq -r --arg sha "$GITHUB_SHA" --arg scene "$1" '[.workflow_runs[] | select(.head_sha==$sha and (.name|contains($scene)))] | sort_by(.created_at) | last | .id // empty'
+          }
+          failed=0
+          for tuple in \
+            1:plan027-h539-normal-10m-250ms-loss1-60s.json \
+            5:plan027-h539-normal-10m-250ms-loss5-60s.json \
+            10:m0-ack-normal-10m-250ms-loss10-60s.json \
+            20:m0-ack-normal-10m-250ms-loss20-60s.json \
+            30:wl-outer-repair-10m-250ms-loss30-60s.json; do
+            rate="${tuple%%:*}"
+            scene="scenarios/${tuple#*:}"
+            id=""
+            for i in $(seq 1 60); do
+              id="$(find_run "$scene")"
+              if [ -n "$id" ]; then break; fi
+              sleep 10
+            done
+            if [ -z "$id" ]; then
+              echo "ACK_RATE_NOT_STARTED rate=$rate"; failed=1; continue
+            fi
+            outcome=""
+            for i in $(seq 1 132); do
+              statusrow="$(gh api "repos/$GH_REPO/actions/runs/$id")"
+              if [ "$(jq -r .status <<<"$statusrow")" = completed ]; then
+                outcome="$(jq -r .conclusion <<<"$statusrow")"
+                break
+              fi
+              if (( i % 4 == 0 )); then
+                boot_start="$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+                  jq -r '[.jobs[] | select(.name=="native-public-two-os") | .steps[]? |
+                    select(.name=="Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)" and .status=="in_progress") | .started_at] | first // empty')"
+                if [ -n "$boot_start" ]; then
+                  age=$(( $(date -u +%s) - $(date -u -d "$boot_start" +%s) ))
+                  if (( age > 840 )); then
+                    echo "ACK_RATE_ENVIRONMENT_BLOCKED_WSL_STALE rate=$rate run=$id seconds=$age" >&2
+                    gh api -X POST "repos/$GH_REPO/actions/runs/$id/cancel" >/dev/null || :
+                    outcome="environment_blocked"
+                    break
+                  fi
+                fi
+              fi
+              sleep 15
+            done
+            native=0
+            if gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100" |
+              jq -e '.jobs | any(.name=="native-public-two-os" and .conclusion=="success")' | grep -Fxq true; then
+              native=1
+            fi
+            if [ "$outcome" != success ] || [ "$native" != 1 ]; then
+              echo "ACK_RATE_UNQUALIFIED rate=$rate run=$id conclusion=$outcome native=$native"
+              echo "$rate,$id,$outcome,$native,0,,," >>out/ack-repair-five.csv
+              failed=1
+              continue
+            fi
+            dir="out/rate-$rate"
+            mkdir -p "$dir"
+            evidence_name="m0-wl-full-public-normal-direct-h1506-legacy-$id"
+            if ! gh run download "$id" --repo "$GH_REPO" --name "$evidence_name" --dir "$dir"; then
+              echo "$rate,$id,$outcome,$native,0,,," >>out/ack-repair-five.csv
+              failed=1
+              continue
+            fi
+            if ! ACK_REPORT_DIR="$dir" ACK_RATE="$rate" ACK_RUN="$id" python3 - <<'PY'
+          from pathlib import Path
+          from tools.m0_wl_perf_v2_config import read_scenario
+          import json,os,re
+          root=Path(os.environ["ACK_REPORT_DIR"])
+          rate=int(os.environ["ACK_RATE"])
+          names={1:"plan027-h539-normal-10m-250ms-loss1-60s.json",5:"plan027-h539-normal-10m-250ms-loss5-60s.json",10:"m0-ack-normal-10m-250ms-loss10-60s.json",20:"m0-ack-normal-10m-250ms-loss20-60s.json",30:"wl-outer-repair-10m-250ms-loss30-60s.json"}
+          scene=read_scenario(Path("scenarios")/names[rate])
+          r=json.loads((root/"report.json").read_text())
+          assert r["source"]==os.environ["GITHUB_SHA"] and r["linux_binary_source"]==os.environ["GITHUB_SHA"]
+          assert r["stop"]=="PASS_BOTH_OWNED" and r["mode_public"].endswith("_normal")
+          v=r["WL_V2"]
+          assert v["status"]=="MEASURED_BOTH_OS_KERNEL" and v["scenario_sha256"]==scene["scenario_sha256"]
+          assert all(v["first_delivery_fraction"][s]>0 for s in ("windows","linux"))
+          log=(root/"mode-results/normal/client.log").read_text(errors="replace")
+          hits=re.findall(r"WBD_WINDOWS_NATIVE_OUTER_REPAIR source_wire_bytes=(\d+) repair_accepted_wire_bytes=(\d+) repair_uncertain_wire_bytes=(\d+)",log)
+          assert len(hits)==1
+          f,rep,u=map(int,hits[0])
+          assert f>0
+          ratio=(rep+u)/f
+          assert ratio<=.102, "combined accepted plus uncertain exceeds allowed repair cap (burst tolerance)"
+          print("ACK_RATE_REAL_NATIVE_SCOPED",{"rate":rate,"F":f,"R":rep,"uncertain":u,"R/F":ratio,"first":v["first_delivery_fraction"],"stop":r["stop"]})
+          with Path("out/ack-repair-five.csv").open("a") as w:
+              w.write(f'{rate},{os.environ["ACK_RUN"]},success,1,1,{v["first_delivery_fraction"]["windows"]},{v["first_delivery_fraction"]["linux"]},{ratio:.8f}\n')
+          PY
+            then
+              echo "$rate,$id,$outcome,$native,0,,," >>out/ack-repair-five.csv
+              failed=1
+            fi
+          done
+          cat out/ack-repair-five.csv
+          test "$failed" = 0 || { echo ACK_SOME_RATE_NOT_QUALIFIED_OR_ENVIRONMENT_BLOCKED >&2; exit 1; }
+      - name: Preserve same-SOURCE result ledger
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: m0-ack-repair-real-five-${{ github.sha }}
+          path: out/ack-repair-five.csv
+          if-no-files-found: warn
+          retention-days: 30

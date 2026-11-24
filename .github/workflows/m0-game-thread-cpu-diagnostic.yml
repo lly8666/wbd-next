@@ -1,0 +1,123 @@
+name: M0 Game Normal-v3 thread CPU attribution (same-product)
+run-name: "M0-THREAD-CPU|${{ github.sha }}"
+on:
+  push:
+    branches: [work/m0-game-normal-outer-20261123]
+    paths: [.github/workflows/m0-game-thread-cpu-diagnostic.yml]
+permissions: {contents: read, actions: read}
+jobs:
+  thread-profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE: 4762fa9c61dfad540fd4e04349001cfb0eda54df
+      BASE_RUN: '45181693979'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Freeze byte-identical real original GoTLS Rust product, diagnostic harness only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          gh api "repos/$GH_REPO/compare/$SOURCE...$GITHUB_SHA" | jq -e '
+            .status=="ahead" and
+            ([.files[].filename | select(startswith("crates/") or startswith("r0/go_overlay/") or .=="Cargo.toml" or .=="Cargo.lock" or startswith("scenarios/"))] | length)==0
+          ' >/dev/null
+          test "$(gh api "repos/$GH_REPO/actions/runs/$BASE_RUN" --jq .head_sha)" = "$SOURCE"
+          gh run download "$BASE_RUN" --repo "$GH_REPO" \
+            --name "m0-cosmetic-linux-original-product-$SOURCE" --dir native
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          root=pathlib.Path('native'); m=json.loads((root/'manifest.json').read_text())
+          assert m['source_sha']==os.environ['SOURCE'] and m['architecture']=='x86_64'
+          for line in (root/'SHA256SUMS').read_text().splitlines():
+              digest,name=line.split(maxsplit=1)
+              assert hashlib.sha256((root/name.removeprefix('*')).read_bytes()).hexdigest()==digest
+          print('M0_SAME_PRODUCT_HASH_QUALIFIED',m['source_sha'])
+          PY
+          chmod +x native/wbd-v4-client native/wbd-v4-server
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool
+          test -c /dev/net/tun
+      - name: Original product Normal30 then Game4 OFF30 then Game4 fixed FEC30, 1Hz thread CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          for mode in normal game4 game4-fec; do
+            echo "M0_THREAD_DIAG_CASE_START $mode SOURCE=$SOURCE"
+            sudo -n env WBD_M0_GAME_THREAD_CPU_DIAG=1 GITHUB_SHA="$SOURCE" \
+              GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_ACTIONS="$GITHUB_ACTIONS" \
+              GITHUB_WORKSPACE="$GITHUB_WORKSPACE" RUNNER_TEMP="$RUNNER_TEMP" GITHUB_JOB="$GITHUB_JOB" \
+              python3 -m tools.network_harness.m0_029_cosmetic_linux_dual_game \
+              --bundle "$GITHUB_WORKSPACE/native" \
+              --scenario "scenarios/m0-cosmetic-$mode-loss30-60s.json" \
+              --mode "$mode" --out "$GITHUB_WORKSPACE/out/$mode"
+          done
+      - name: Attribute observed native CPU ticks to original product threads
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p out
+          python3 - <<'PY'
+          import collections,json,os,pathlib
+          report={'schema':'m0-normal-v3-original-linux-task-cpu-1hz/v1',
+              'product_source':os.environ['SOURCE'],'diag_harness_source':os.environ['GITHUB_SHA'],
+              'measurement':'1Hz /proc/{pid}/task/{tid}/stat; process and network CPU not identical'}
+          complete=True
+          for mode in ('normal','game4','game4-fec'):
+              base=pathlib.Path('out')/mode
+              result=base/'result.json'
+              if not result.is_file():
+                  report[mode]={'status':'NOT_RUN'}; complete=False; continue
+              data=json.loads(result.read_text())
+              case=next((p for p in base.iterdir() if p.is_dir() and p.name.startswith('M0_COSMETIC_')),None)
+              if case is None: report[mode]={'status':'NO_ORIGINAL_CASE'}; complete=False; continue
+              file=case/'host-samples.json'; snaps=case/'network-snapshots.json'
+              if not file.is_file() or not snaps.is_file():
+                  report[mode]={'status':'NO_DIAG_SAMPLES'};complete=False;continue
+              samples=json.loads(file.read_text()); events=json.loads(snaps.read_text())
+              before=next(p for p in events if p['name']=='before-iid')
+              after=next(p for p in events if p['name']=='measurement-end')
+              use=[x for x in samples if before['end_ns']<=x['ns']<=after['ns']]
+              case_out={'status':data['status'],'process_cpu_s':data['process_measurement_cpu_s'],
+                  'repair_ratio':{r:data['repair'][r].get('R_F') for r in ('client','server')},
+                  'first_delivery':data['measured_app'],'n_samples':len(use),'sides':{}}
+              if len(use)<40: complete=False
+              for role in ('client','server'):
+                  tasks={}; names={}
+                  for sample in use:
+                      for t in sample.get('fec_cpu_irq',{}).get('product_threads',{}).get(role,[]):
+                          key=t['tid']; tick=t['cpu_ticks']; name=t['name']
+                          if key not in tasks: tasks[key]=[tick,tick]
+                          else: tasks[key][1]=tick
+                          names[key]=name
+                  ticks_per_sec=os.sysconf('SC_CLK_TCK')
+                  by_name=collections.defaultdict(float)
+                  for tid,(first,last) in tasks.items():
+                      by_name[names[tid]]+=max(0,last-first)/ticks_per_sec
+                  total=sum(by_name.values())
+                  case_out['sides'][role]={'named_cpu_s':dict(sorted(by_name.items(),key=lambda x:-x[1])),
+                      'observed_thread_cpu_s':round(total,4),'observed_tids':len(tasks),
+                      'sampled_cpu_fraction':round(total/data['process_measurement_cpu_s'][role],4)
+                          if data['process_measurement_cpu_s'][role] else None}
+                  if total<=0: complete=False
+              report[mode]=case_out
+              print('M0_THREAD_CPU_ATTRIBUTION',json.dumps({'mode':mode,**case_out},sort_keys=True),flush=True)
+          (pathlib.Path('out')/'thread-cpu-summary.json').write_text(json.dumps(report,indent=2)+'\n')
+          assert complete, 'missing original product or insufficient native /proc task samples'
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-game-normal-thread-cpu-${{ github.sha }}
+          path: |
+            out/thread-cpu-summary.json
+            out/*/result.json
+            out/*/M0_COSMETIC_*/host-samples.json
+            out/*/M0_COSMETIC_*/network-snapshots.json
+          retention-days: 30
+          if-no-files-found: warn

@@ -198,6 +198,7 @@ func (g *v4NativeGameJoined) copyScheduleRead()([21]uint64,error){
 type V4GameOuterPolicy struct {
     RepairEnabled bool
     DataRetransmitted,BlockedDuplicate,FirstLaneCopied uint64
+    FirstWireBytes,RepairWireBytes uint64
 }
 func (g *v4NativeGameJoined) configureOuterRepair(enabled bool)error{
     if g==nil||g.handle==0||g.stopped||g.verified==nil{return ErrAdmissionUnsupported}
@@ -209,12 +210,13 @@ func (g *v4NativeGameJoined) configureOuterRepair(enabled bool)error{
 }
 func (g *v4NativeGameJoined) originalGameOuterPolicy()(V4GameOuterPolicy,error){
     if g==nil||g.handle==0||g.stopped{return V4GameOuterPolicy{},ErrAdmissionUnsupported}
-    var data [4]C.uint64_t
-    rc:=C.wbd_fec_network_game_group_outer_policy_read(C.uint64_t(g.handle),&data[0],4)
+    var data [6]C.uint64_t
+    rc:=C.wbd_fec_network_game_group_outer_policy_read(C.uint64_t(g.handle),&data[0],6)
     if rc!=0{return V4GameOuterPolicy{},fmt.Errorf("%w: Game outer M4 readback=%d",errV4Embedded,int(rc))}
     return V4GameOuterPolicy{RepairEnabled:data[0]!=0,
         DataRetransmitted:uint64(data[1]),BlockedDuplicate:uint64(data[2]),
-        FirstLaneCopied:uint64(data[3])},nil
+        FirstLaneCopied:uint64(data[3]),FirstWireBytes:uint64(data[4]),
+        RepairWireBytes:uint64(data[5])},nil
 }
 // The already validated Linux original-Go peer persona is shared by
 // all authenticated Game lanes; no new Game packet encoder is added.

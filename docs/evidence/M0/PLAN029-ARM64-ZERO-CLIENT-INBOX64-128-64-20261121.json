@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "task_id": "M0-PLAN029-THROUGHPUT",
+  "status": "SCOPED_POSITIVE_ARM64_CLIENT_128_ZERO_HIGH_SUPPLY_NOT_UNIVERSAL_DEFAULT_PASS",
+  "source_sha": "4490c09a97b2df18482c33c9300d0dae4716a529",
+  "run_id": 44869556627,
+  "run_attempt": 1,
+  "workflow_url": "https://github.com/lly8666/wbd-next/actions/runs/44869556627",
+  "artifact": {
+    "id": 14693601754,
+    "name": "m0-029-arm-client-inbox-128-zero-aba-44869556627-1",
+    "sha256": "226af3c9008ebea742707c1bc305d4cbad34af152cb4fd8c52a46db9e3b50bed"
+  },
+  "pinned_original_fixture_blob_sha": "b1094391ec9729931979c5158357ef2cbf72b84e",
+  "scope": {
+    "platform": "native aarch64 Linux runner; 3 separate kernel netns, same native job",
+    "product": "original Go TLS and Rust raw/TUN/AF_PACKET both endpoints, no test data-plane bypass, five-second original Direct reference separate",
+    "workload": "each leg 20s four concurrent real kernel TCP upload + 160 UDP and 160 TCP true TUN app echo",
+    "network": "zero artificial netem drop, zero added delay; local Rust shared TUN losses measured separately",
+    "independent_variable": "client only authenticated Rust M1 inbox 64/128/64, server fixed64; m0_v4_probe test-only cold switch",
+    "frozen_binary_hashes_all_legs": {
+      "libwbd_engine.so": "26ae05786050ba0acd18b53188d62480fd6ece716770b37fcced5e2a22e3e8e6",
+      "wbd-v4-client": "1ed739db0f8c63b8f251e82e9d7658025ba2897e6d898176e79eda0661bd5d2c",
+      "wbd-v4-server": "0a910dc677f0753445c2765fcece3eb5bcfaa0327ee3c107727df81cd4c7de38"
+    },
+    "original_go_source": "a7a82db31fe736ffedee330795a3234d358f1984",
+    "owned_stop": "real generation each leg both sides, true Rust SharedTun reader joined verified by original frozen fixture"
+  },
+  "phases": [
+    {
+      "name": "original_before",
+      "client_inbox_slots": 64,
+      "server_inbox_slots": 64,
+      "actual_rust_cold_readback_both": true,
+      "receiver_mbps": 988.0678646,
+      "client_cpu_seconds_per_received_gib": 12.69936,
+      "server_cpu_seconds_per_received_gib": 12.27779,
+      "client_shared_tun_full_drops": 737746,
+      "client_shared_tun_backpressure": 1107852,
+      "server_shared_tun_full_drops": 3146,
+      "udp": {
+        "offered": 160,
+        "unique_replies": 121,
+        "missing": 39,
+        "survivor_only_p99_ms": 5.9485
+      },
+      "tcp": {
+        "offered": 160,
+        "unique_replies": 160,
+        "missing": 0,
+        "survivor_only_p99_ms": 618.8318
+      },
+      "real_kernel_tcp_retransmissions": 736588,
+      "router_netem_drops_skb": 0,
+      "real_stop_both": true
+    },
+    {
+      "name": "inbox128_candidate",
+      "client_inbox_slots": 128,
+      "server_inbox_slots": 64,
+      "actual_rust_cold_readback_both": true,
+      "receiver_mbps": 1064.355979,
+      "client_cpu_seconds_per_received_gib": 12.49538,
+      "server_cpu_seconds_per_received_gib": 12.06771,
+      "client_shared_tun_full_drops": 698798,
+      "client_shared_tun_backpressure": 1064873,
+      "server_shared_tun_full_drops": 2946,
+      "udp": {
+        "offered": 160,
+        "unique_replies": 132,
+        "missing": 28,
+        "survivor_only_p99_ms": 5.7182
+      },
+      "tcp": {
+        "offered": 160,
+        "unique_replies": 160,
+        "missing": 0,
+        "survivor_only_p99_ms": 293.2327
+      },
+      "real_kernel_tcp_retransmissions": 698374,
+      "router_netem_drops_skb": 0,
+      "real_stop_both": true
+    },
+    {
+      "name": "original_after",
+      "client_inbox_slots": 64,
+      "server_inbox_slots": 64,
+      "actual_rust_cold_readback_both": true,
+      "receiver_mbps": 988.4951821,
+      "client_cpu_seconds_per_received_gib": 12.89815,
+      "server_cpu_seconds_per_received_gib": 12.51586,
+      "client_shared_tun_full_drops": 778176,
+      "client_shared_tun_backpressure": 1163946,
+      "server_shared_tun_full_drops": 2126,
+      "udp": {
+        "offered": 160,
+        "unique_replies": 130,
+        "missing": 30,
+        "survivor_only_p99_ms": 4.7746
+      },
+      "tcp": {
+        "offered": 160,
+        "unique_replies": 160,
+        "missing": 0,
+        "survivor_only_p99_ms": 699.3371
+      },
+      "real_kernel_tcp_retransmissions": 777434,
+      "router_netem_drops_skb": 0,
+      "real_stop_both": true
+    }
+  ],
+  "paired_interpretation": {
+    "candidate_goodput_vs_baseline_mean_pct": 7.6977,
+    "baseline_A_Aprime_goodput_drift_pct": 0.0432,
+    "candidate_client_cpu_seconds_per_gib_vs_baseline_mean_pct": -2.3703,
+    "candidate_server_cpu_seconds_per_gib_vs_baseline_mean_pct": -2.6548,
+    "candidate_client_full_drops_vs_baseline_mean_pct": -7.8055,
+    "candidate_udp_missing": [
+      39,
+      28,
+      30
+    ],
+    "decision": "PROMISING_LOWER_MEMORY_LINUX_CLIENT_OPTION; retain default64 until GE1 and native x86/affected modes and memory risk verified",
+    "memory_128": "One additional 64 slots vs original 64: 64*65535=4,194,240 bytes ~4MiB worst-case jumbo payloads per lease",
+    "memory_256": "One additional 192 slots vs64: 192*65535=12,582,720 bytes ~12MiB, 3x worse worst-case than128",
+    "separate_256_reference": {
+      "forward_zero_run_id": 44868667527,
+      "forward_gain_pct": 9.75103,
+      "reverse_zero_run_id": 44869362804,
+      "reverse_gain_pct": 9.43373,
+      "not_same_VM_runner_direct_comparison": true
+    }
+  },
+  "limitations": [
+    "20s per-leg same-native-VM performance screen; 160 sparse UDP/TCP requests not reliable p99 SLA.",
+    "0 artificial loss does not imply zero local TUN/driver loss; still hundreds thousands client pending full drops even at128.",
+    "CPU samples count original Go+Rust product PID, not pure Rust TX or kernel syscall CPU split.",
+    "Client 128 candidate currently m0_v4_probe developer-only; no product default changed.",
+    "Correct 400ms RTT GE1 client128 experiment not yet completed.",
+    "No physical ARM device, Windows 3s uplink, x86 product goodput, or >8 authentic lease fairness proof.",
+    "True source, run, attempt and all binary hashes must be inspected for product qualification."
+  ],
+  "artifact_metadata_warning": {
+    "source_sha": "4490c09a97b2df18482c33c9300d0dae4716a529",
+    "original_summary_field": "only_changed_setting",
+    "original_summary_value": "authenticated client Rust M1 inbox 64→256→64; server fixed64",
+    "status": "WRONG_STALE_LABEL_NOT_ACTUAL_PARAM_OR_DELIVERY_PROOF",
+    "accurate_proven_identity": "Each original phase has native Rust generation/side readback client slots [64,128,64], server slots [64,64,64], with frozen stage metadata [64,256,64]; user-visible summary `only_changed_setting` was overwritten by inherited stale string.",
+    "corrected_fixture_source_commit": "635553ebb3dbfd87a04ebadc7d4f238722dfdce2",
+    "evidence_handling": "Retain original artifact unchanged. Numeric source-specific results are valid conditional on exact per-phase native cold readback. Do not quote incorrect top-level changed-setting label as proof. Future x86 and native runs use corrected fixture."
+  }
+}
