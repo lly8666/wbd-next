@@ -19,3 +19,6 @@ Two balanced real groups ABBA/BAAB, A exact retained H2336 bc87909, B H2348; onl
 
 ## H2358 verified fixture retry of H2349
 Original H2348 candidate unchanged; H2353 confirmed corrected same-VM calibration. Re-run full groups with corrected artifact path.
+
+## H2364 H2361 checksum product qualification
+A exact retained H2336 bc87909; B only the already native-tested H2361 outbound checksum file from 17ade976. H2348 arena and copied-counter candidate removed from the active product source; no H2326/H2330/H2358 delta. Reuse H2349 calibrated two-group ABBA/BAAB, same Windows NPF8/16KiB, current shared Go and ARM, zero added loss. Assess receiver goodput, CPU/GiB, P99 and exact Stop, not absolute target qualification unless the bare reference allows it. H2361 native arithmetic tests and microbench already succeeded (45321513988). This push is the sole run intent; do not dispatch again.

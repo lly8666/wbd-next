@@ -47,7 +47,8 @@ def path_ab_axis():
     axis=os.environ.get("WBD_PATH_AB_AXIS",PATH_AB_AXES[path_ab_baseline()])
     if axis not in (PATH_AB_AXES[path_ab_baseline()],
                     "native_off_loan" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else "",
-                    "tx16_npf64_profile" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else ""):
+                    "tx16_npf64_profile" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else "",
+                    "outbound_checksum_wide" if path_ab_baseline()==PATH_AB_LOAN_BASELINE else ""):
         raise ValueError("invalid comparison axis for baseline")
     return axis
 

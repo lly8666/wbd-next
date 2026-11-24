@@ -13,8 +13,8 @@ class CurrentPathAB(unittest.TestCase):
         self.assertIn("docs/requests/M0/qa-h2321-current-win-arm-path-ab.md",w)
         self.assertEqual(w.count("group: [a, b]"),3)
         self.assertIn(ab.PATH_AB_LOAN_BASELINE,w)
-        self.assertIn("$allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-engine/src/v4_windows_owner.rs','crates/wbd-engine/src/memory/mod.rs')",w)
-        self.assertIn("arena_ready_batch",w)
+        self.assertIn("$allowed=@('crates/wbd-platform/src/ipv4_tcp.rs')",w)
+        self.assertIn("outbound_checksum_wide",w)
         self.assertIn("git worktree add --detach h2321-baseline",w)
         self.assertIn("tools/prepare_windows_wiring.py",w)
         self.assertIn("tools/m0_plan029_linux_dual_native_build.sh",w)
@@ -71,6 +71,10 @@ class CurrentPathAB(unittest.TestCase):
             self.assertTrue(ab.path_ab_candidate_features().endswith(",h2291_windows_tx_service"))
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_LOAN_BASELINE},clear=True):
             self.assertEqual(ab.path_ab_axis(),"arena_ready_batch")
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_LOAN_BASELINE,"WBD_PATH_AB_AXIS":"outbound_checksum_wide"},clear=True):
+            self.assertEqual(ab.path_ab_axis(),"outbound_checksum_wide")
+            self.assertEqual(ab.path_ab_candidate_source(),ab.CANDIDATE_BUILD_SHA)
+            self.assertEqual(ab.path_ab_candidate_features(),ab.PATH_AB_FEATURES)
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":"unapproved"},clear=True):
             with self.assertRaises(ValueError):
                 ab.path_ab_baseline()

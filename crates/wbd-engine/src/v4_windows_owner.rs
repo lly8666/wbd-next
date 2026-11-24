@@ -1498,19 +1498,13 @@ fn v3_seal_entry_with_padding(e:&mut Entry,epoch:[u8;16],luid:u64,
 fn v3_queue_source(e:&mut Entry,ipv4:&[u8],budget:FrameBudget,
     now:MonoNs,padding:usize,out_capacity:usize
 )->Result<(u64,u32,usize),i32>{
-    v3_queue_source_ready(e,ipv4,budget,now,padding,out_capacity,false)
-}
-fn v3_queue_source_ready(e:&mut Entry,ipv4:&[u8],budget:FrameBudget,
-    now:MonoNs,padding:usize,out_capacity:usize,returns_drained:bool
-)->Result<(u64,u32,usize),i32>{
     if padding>500||ipv4.len()<20||ipv4.len()>2048||
         ipv4[0]>>4!=4||ipv4[0]&15<5||
         ipv4.len()>budget.single_business_payload_mtu||
         ipv4.len().saturating_add(FIXED_WIRE_OVERHEAD).saturating_add(padding)>out_capacity{
         return Err(INVALID)
     }
-    let mut slab=if returns_drained{e.arena.allocate_after_return_drain()}
-        else{e.arena.allocate()}.map_err(|_|FULL)?;
+    let mut slab=e.arena.allocate().map_err(|_|FULL)?;
     slab.writable()[14..14+ipv4.len()].copy_from_slice(ipv4);
     if padding==0{
         e.owner.seal_normal_off_one(slab,ipv4.len(),budget,0,now)
@@ -2957,12 +2951,11 @@ mod tests {
         frame[8]=64;frame[9]=17;
         for count in [16usize,1,8]{
             let now=m2_clock();
-            e.arena.drain_returns_bounded(64);
             let mut meta=[(0u64,0u32,0usize);16];
             let mut wire=[[0u8;2048];16];
             for (i,row) in meta[..count].iter_mut().enumerate(){
                 frame[20]=i as u8;
-                *row=v3_queue_source_ready(&mut e,&frame,budget,now,0,2048,true).unwrap();
+                *row=v3_queue_source(&mut e,&frame,budget,now,0,2048).unwrap();
             }
             let loan=v3_drain_source_loan(&mut e,now,&meta[..count],false,|i,bytes|{
                 wire[i][..bytes.len()].copy_from_slice(bytes);
