@@ -7,3 +7,7 @@ Remove the intermediate ciphertext slab on the original Windows native TX path. 
 Expected: one fewer full ciphertext copy and no three full slab clears per source batch. With BATCH=8 the old three arrays total 51200 bytes per stage call; with BATCH=16 they total 102400 bytes. These are source-level buffer extents, not measured memory traffic. At 400Mbps source payload the eliminated copy is approximately 50 MB/s payload movement plus record overhead. This is a CPU-path simplification, not evidence that the NPF/kernel bottleneck is removed or that 600–800Mbps is attained.
 
 Validation: existing native Windows source-locked unit/check workflow is triggered by the runtime file change. Added byte-for-byte carrier equivalence test covering odd/even lengths, maximum default MTU, and scratch reuse. Real throughput NOT_RUN. For paired real product tests compile current DLLs and ARM baseline, rather than reuse frozen H2292 older DLLs; compare same batch/NPF settings before/after, not TX8 vs TX16. Main remains unchanged.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Internal Windows native TX scratch lifetime and redundant ciphertext copy only. Existing feature behavior and protocol unchanged; no new performance qualification or default feature promotion."}
+```
