@@ -4,22 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2414,
-  "checkpoint_sha": "9ef076479af8653af15ad00566055cdeb1a3af37",
-  "progress": "in_progress",
+  "sequence": 2415,
+  "checkpoint_sha": "55c58136cbeccecab696c770126405ce152f1949",
+  "progress": "verifying",
   "task_id": "M0-MIXED-MODE-ROUTE-HANDOFF",
   "current_task": "用户授权修复断开Normal后Game2/4回注0及反向切换，experiment/m0-mixed-mode-route-handoff；docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md。现有Health接管，按认证/32跨模式寻找owner；不增协议状态/热路径/心跳，不动Health90和Game4单lane热换。",
   "why_now": "用户实机Normal断开后切Game2/4可连但回注0，90s后重连恢复",
   "done_when": "原生双ISA真实同一服务端同一虚拟IP跨模式切换<90s双向TCP/UDP、异租约独立、原退役/Health90/单lane热换边界，精确SOURCE Linux glibc2.31完整包及Win GUI完整包；限域记录。",
-  "next_action": "短分支最小冷交接修复、原生双ISA同租约实测、Win完整GUI构建，成功后合入",
+  "next_action": "收 PR77 SOURCE271e81c23d6809bc3e4ef3761938e0007ec053b4 Action45427455799 双ISA实网回归+Win完整包；旧Action45427122913仅作辅助证据，不能重复dispatch；按真实结果修复、合main、交付。",
   "unverified": true,
   "last_tested_source": null,
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md",
     "docs/evidence/M0/20261124-LINUX-GLIBC231-DUAL-ISA-SCOPED-PASS.json",
-    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md"
+    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
+    "docs/devlog/M0/20261124-H2415-MIXED-MODE-ROUTE-WIP.md"
   ],
   "open_requests": [],
-  "partial_summary": "源码定位Go同模式active查找与Rust跨模式/32路由不一致；现场因果待复验；原H2413兼容交付保留。"
+  "partial_summary": "冷交接修复已推，语义不变；精确双ISA+Win回归Action45427455799在途，治理和维护通过。产品/成品未验。"
 }
