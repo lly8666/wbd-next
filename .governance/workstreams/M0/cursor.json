@@ -4,22 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2392,
-  "checkpoint_sha": "9e2ce46bb026f9fb61db566f94a8c8da9c001e7e",
+  "sequence": 2393,
+  "checkpoint_sha": "5b1311c0748452c1c8dac66fc2a6e517777529fa",
   "progress": "verifying",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030 Linux双ISA CLI限定通过；Windows域名重连双重复FAIL；PR74旧版v2升级PASS但用户真实客户端恢复报route is not owned，待定位。",
+  "current_task": "PLAN030 Linux双ISA全CLI范围PASS；两次真实域名重连组合失败的原始ZIP已审计，WinForms真实STA消息循环夹具修正后单场景复验进行中；Win实体旧v2网卡消失但WAL残留的GUID识别候选已提交，真实删除网卡恢复复验进行中。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "先取用户真实客户端版本、完整恢复stderr、原生v2 WAL/route sidecar及对应Windows实际路由读回；区分原Wintun身份、路由metric/protocol等属性变化和真实外部路由。不要盲删路由或WAL；在PR74针对实际失败最小修复；再补030真实域名重连及服务端设备快照组合。PR73/74暂不合并。",
+  "next_action": "收取45355353310（PLAN030真实域名、第二代原生Ready/GUI/managed snapshot/Stop）与45355056087（Windows v2 GUID缺失/实际Wintun删除/WinGUI）。只修实际失败，不重跑已通过CLI/watch或吞吐；按确切SOURCE与功能卡验收后合并PR73/74，处理共享装配manifest的正常合并，未接齐快照字段保持未知。",
   "unverified": true,
   "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
     "docs/prompts/M0-PLAN030.md",
-    "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
+    "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json",
+    "docs/evidence/M0/20261124-H2393-PLAN030-GUI-RECONNECT-ARTIFACT-AUDIT.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2392：收取原在途结果，无重复dispatch。45349332671/45349327390 同fixture 600d541 均completed/failure，原生native-public-two-os分别在SECOND_APPLIED process exited 1/not observed失败；真实旧版升级45349844112 completed/success，原始job138293247724确认旧版实际FAIL、新版实际PASS。用户报告最新Windows客户端网络恢复未完成 route is not owned refuse to replace，实体失败未定位；PR74恢复仍依赖原有严格route lookup匹配，也可能在原Wintun身份或其他恢复阶段报同错误。远程终端授权未获，未读取实体机状态。Linux CLI/watch限定通过；未接齐快照字段保留未知。未更改生产代码，未启动新测试。"
+  "partial_summary": "H2393：原始组合失败ZIP 14900436230/14900446315/14899520067下载核实；45349332671实际第二代TLS/OS Applied/Ready、持续真实RX/TX、两次Stop均完成，但GUI状态/MTU判据失败；45349327390和旧45345844201第二代未启动；managed snapshot均未达。PR73 2c71307以真实Application.Run外层消息循环修正直接async夹具，保留原判据和异常状态诊断；dispatch45355310265成功，真实45355353310在途，治理45355310346通过。用户实体WAL v2 active四owned、旧ifIndex27/MTU1329/租约10.66.0.198/32、原网卡和WBD路由已无、无Defender sidecar、版本dev/unknown；PR74 ce7622c仅v2恢复以原GUID判定缺失，跳过消失网卡局部写，仍恢复实际物理逃逸路由，补真实索引碰撞与已删除Wintun场景；45355056087编译/装配通过、原生恢复和GUI验收在途。未确认实体根因唯一性、未合main、未扩数据面/安全框架。"
 }
