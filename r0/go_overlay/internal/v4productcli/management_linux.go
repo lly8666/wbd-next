@@ -15,6 +15,7 @@ import (
  "os"
  "os/exec"
  "path/filepath"
+ "runtime"
  "strconv"
  "strings"
  "time"
@@ -35,6 +36,7 @@ type managedServerConfig struct{
  TLSKey string `json:"tls-key,omitempty"`
  Users []managedUser `json:"users"`
  RawInterface string `json:"raw-interface,omitempty"`
+ TunName string `json:"tun-name,omitempty"`
  TunIPv4 string `json:"tun-ipv4,omitempty"`
  LeasePool string `json:"lease-pool,omitempty"`
  Decoy string `json:"decoy,omitempty"`
@@ -86,6 +88,7 @@ func managedArgs(c managedServerConfig)([]string,func(),error){
  path:=filepath.Join(tmp,"users.json")
  if e=os.WriteFile(path,roster,0600);e!=nil{clean();return nil,noop,e}
  args:=[]string{"--mode","shared","--raw-interface",iface,"--local-ip",host,"--local-port",port,"--server-name",c.ServerName,"--route-key-hex-file",c.RouteKeyFile,"--tls-cert",c.TLSCert,"--tls-key",c.TLSKey,"--users-file",path}
+ if c.TunName!=""{args=append(args,"--tun-name",c.TunName)}
  if c.TunIPv4!=""{args=append(args,"--tun-ipv4",c.TunIPv4)}
  if c.LeasePool!=""{args=append(args,"--lease-pool",c.LeasePool)}
  if c.Decoy!=""{args=append(args,"--decoy",c.Decoy)}
@@ -127,13 +130,13 @@ func prepareManagedNetwork(c config)(func()error,error){
 }
 const managedHelp=`WBD Next 服务端管理
   wbd-next                   中文菜单（终端）
-  wbd-next install           安装并开机启动（当前完整包）
+  wbd-next install [--config PATH]  安装并开机启动（当前完整包）
   wbd-next config [--file PATH]  修改配置 / 导入配置，保存后重启生效
   wbd-next config check [--config PATH]
   wbd-next config export USER [--output PATH]  导出连接资料
   wbd-next status [--json]
   wbd-next clients [--json] [--watch]
-  wbd-next start | stop | restart | logs
+  wbd-next start | stop | restart | logs\n  wbd-next enable | disable   开启/关闭开机启动，不改变当前服务
   wbd-next uninstall [--yes]
   wbd-next serve --config PATH  前台原生 Go TLS/Rust 服务
 `
@@ -164,7 +167,9 @@ func editManagedConfig(r *bufio.Reader)error{
   }
  }
  if e=saveManagedConfig(managedConfigPath,c);e!=nil{return e}
- fmt.Println("配置已保存；重启服务生效。客户端连接资料如有变化请重新导出。");return nil
+ fmt.Println("配置已保存；重启服务生效。客户端连接资料如有变化请重新导出。")
+ if answer,e:=prompt(r,"开机启动 enable/disable/keep","keep");e==nil&&(answer=="enable"||answer=="disable"){if _,x:=os.Stat(managedUnit);x==nil{return systemctl(answer,"wbd-next.service")}}
+ return nil
 }
 func argValue(args []string,key,def string)string{for i:=0;i+1<len(args);i++{if args[i]==key{return args[i+1]}};return def}
 func hasArg(args []string,key string)bool{for _,v:=range args{if v==key{return true}};return false}
@@ -174,18 +179,20 @@ func getUnitState()string{
 }
 func showManagedStatus(asJSON bool)error{
  unit:=getUnitState();c,b,e:=loadManagedConfig(managedConfigPath)
- v:=map[string]any{"service":unit,"installed":!os.IsNotExist(e)}
+ enabled,_:=exec.Command("systemctl","is-enabled","wbd-next.service").Output()
+ v:=map[string]any{"service":unit,"installed":!os.IsNotExist(e),"autostart":strings.TrimSpace(string(enabled))}
  if e==nil{sum:=sha256.Sum256(b);v["listen"]=c.Listen;v["server_name"]=c.ServerName;v["disk_revision"]=hex.EncodeToString(sum[:])}
  if s,e:=readManagedSnapshot(managedSocket);e==nil{v["running_revision"]=s.ConfigRevision;v["online_devices"]=len(s.Clients);v["native_ready"]=true}else{v["native_ready"]=false}
  if asJSON{return json.NewEncoder(os.Stdout).Encode(v)}
- fmt.Printf("WBD Next 服务端：%s；监听 %s；借站域名 %s\n",unit,c.Listen,c.ServerName)
+ label:=map[string]string{"active":"运行中","inactive":"已停止","failed":"启动失败","activating":"启动中"}[unit];if label==""{label="未安装"}
+ fmt.Printf("WBD Next 服务端：%s；监听 %s；借站域名 %s；自启 %s\n",label,c.Listen,c.ServerName,strings.TrimSpace(string(enabled)))
  if n,ok:=v["online_devices"];ok{fmt.Printf("在线设备：%v\n",n)}
  if v["disk_revision"]!=nil&&v["running_revision"]!=nil&&v["disk_revision"]!=v["running_revision"]{fmt.Println("磁盘配置已变化，需重启服务。")}
  return nil
 }
 func showManagedClients(args []string)error{
  for{
-  s,e:=readManagedSnapshot(managedSocket);if e!=nil{return fmt.Errorf("读取运行中的服务失败: %w",e)}
+  s,e:=readManagedSnapshot(argValue(args,"--socket",managedSocket));if e!=nil{return fmt.Errorf("读取运行中的服务失败: %w",e)}
   if hasArg(args,"--json"){if e=json.NewEncoder(os.Stdout).Encode(s);e!=nil{return e}}else{
    fmt.Printf("在线设备 %d；服务端外层上限 %d；TUN OS MTU %d\n",len(s.Clients),s.ServerOuterLimit,s.TunOSMTU)
    for _,r:=range s.Clients{fmt.Printf("%s/%s  %s  %s  %s %d lane  %s  FEC=%s/%d  %ds\n",r.Account,r.Device,r.TunnelIP,r.RemoteIP,r.Mode,r.Lanes,r.Cipher,r.FEC,r.FECProfile,r.ConnectedSeconds)}
@@ -231,6 +238,11 @@ func installManaged(r *bufio.Reader,args []string)error{
  exe,e:=os.Executable();if e!=nil{return e};dir:=filepath.Dir(exe)
  if dir!=managedOpt{
   if _,e=commandOutput("sh","-c","cd \"$1\" && sha256sum -c SHA256SUMS","wbd-next",dir);e!=nil{return e}
+  b,e:=os.ReadFile(filepath.Join(dir,"manifest.json"));if e!=nil{return e}
+  var manifest struct{Source string `json:"source_sha"`;Architecture string `json:"architecture"`}
+  if e=json.Unmarshal(b,&manifest);e!=nil{return e}
+  want:=map[string]string{"amd64":"x86_64","arm64":"aarch64"}[runtime.GOARCH]
+  if want==""||manifest.Architecture!=want||len(manifest.Source)!=40{return fmt.Errorf("安装包架构或SOURCE不匹配")}
   if e=os.MkdirAll(managedOpt,0755);e!=nil{return e}
   for _,f:=range []string{"wbd-v4-server","libwbd_engine.so","manifest.json","SHA256SUMS","wbd-next"}{mode:=os.FileMode(0644);if f=="wbd-v4-server"||f=="wbd-next"{mode=0755};if e=copyManagedFile(filepath.Join(dir,f),filepath.Join(managedOpt,f),mode);e!=nil{return e}}
  }
@@ -267,6 +279,7 @@ func manageCommand(r *bufio.Reader,args []string)error{
  case "status":return showManagedStatus(hasArg(args,"--json"))
  case "clients":return showManagedClients(args[1:])
  case "start","stop","restart":return systemctl(args[0],"wbd-next.service")
+ case "enable","disable":return systemctl(args[0],"wbd-next.service")
  case "logs":cmd:=exec.Command("journalctl","-u","wbd-next.service","-n","80","--no-pager");cmd.Stdout=os.Stdout;cmd.Stderr=os.Stderr;return cmd.Run()
  case "uninstall":return uninstallManaged(r,args[1:])
  default:return fmt.Errorf("未知命令: %s",args[0])

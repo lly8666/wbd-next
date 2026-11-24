@@ -1090,7 +1090,7 @@ func runGameMultiServer(
     }()
     if c.management!=nil {
         if e:=c.management.listen(runCtx);e!=nil{return e}
-        defer c.management.close()
+        defer func(){cancel();c.management.close()}()
         if e:=notifyManagedReady();e!=nil{return e}
     }
     if c.mixedModes{

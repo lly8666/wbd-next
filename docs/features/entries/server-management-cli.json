@@ -6,7 +6,9 @@
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
-  "available_on": [],
+  "available_on": [
+    "experiment/m0-030-server-cli"
+  ],
   "defaults": {
     "planned_listen": "0.0.0.0:443",
     "planned_server_name": "www.cisco.com",
@@ -14,7 +16,7 @@
   },
   "usage": {
     "cli": "实验包 wbd-next help；install/config/status/clients/start/stop/restart/logs/uninstall/serve；尚未验收。",
-    "config": "PLANNED: listen、server-name、users；网卡/地址池等高级可选，客户端独立协商参数由既有认证功能接入。",
+    "config": "listen/server-name/users，route-key-hex-file；可选 raw-interface、tun-name、tun-ipv4、lease-pool、decoy、public-address；仍由现有shared服务器parse校验。",
     "gui": "服务端仅终端菜单，不新建Web或桌面GUI。"
   },
   "code_refs": [
@@ -39,7 +41,8 @@
   "limitations": [
     "未完成同源测试，不作formal资格。",
     "尚无物理重启/OpenWrt资格。",
-    "现有真实快照未提供的指标标未知，不新增探针。"
+    "现有真实快照未提供的指标标未知，不新增探针。",
+    "当前快照为已发布的真实在线owner，休眠租约、按方向有效外层MTU、应用字节/速率及样本年龄尚未接齐，不得显示为0或假定值。"
   ],
   "promotion": null
 }

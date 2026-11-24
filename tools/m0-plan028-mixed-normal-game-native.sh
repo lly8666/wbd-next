@@ -48,7 +48,9 @@ for item in \
   sudo -n ip link set "$guest" netns "$ns"
   sudo -n ip -n "$ns" addr add "$cidr" dev "$guest"
   sudo -n ip -n "$ns" link set "$guest" up
-  sudo -n ip netns exec "$ns" iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP
+  if [[ "${WBD_PLAN030_MANAGED:-0}" != 1 || "$ns" != "$NSS" ]];then
+    sudo -n ip netns exec "$ns" iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP
+  fi
 done
 openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
   -keyout "$TMP/key.pem" -out "$TMP/cert.pem" \
@@ -59,6 +61,24 @@ cat >"$TMP/users.json" <<'JSON'
 JSON
 chmod 0600 "$TMP/users.json" "$TMP/key.pem"
 env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --init-route-key-file "$TMP/route-key.hex"
+if [[ "${WBD_PLAN030_MANAGED:-0}" == 1 ]];then
+  python3 - "$TMP" <<'PY'
+import json,pathlib,sys
+p=pathlib.Path(sys.argv[1])
+users=json.loads((p/"users.json").read_text())
+data={"listen":"10.25.0.1:443","server-name":"wbd-v4.example.test",
+      "raw-interface":"mxs0","tun-name":"mxs4","tun-ipv4":"10.66.0.1/24",
+      "lease-pool":"10.66.0.128/25","route-key-hex-file":str(p/"route-key.hex"),
+      "tls-cert":str(p/"cert.pem"),"tls-key":str(p/"key.pem"),
+      "users":[{"username":u,"password":v} for u,v in users.items()]}
+(p/"managed.json").write_text(json.dumps(data))
+PY
+  chmod 0600 "$TMP/managed.json"
+  sudo -n ip netns exec "$NSS" bash -c "
+    echo \$\$ > '$TMP/server.pid'
+    exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' --manage serve --config '$TMP/managed.json' --socket '$TMP/clients.sock'
+  " >"$TMP/server.log" 2>&1 &
+else
 sudo -n ip netns exec "$NSS" bash -c "
  echo \$\$ > '$TMP/server.pid'
  exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-server' \
@@ -68,6 +88,7 @@ sudo -n ip netns exec "$NSS" bash -c "
    --users-file '$TMP/users.json' --lease-pool 10.66.0.128/25 \
    --tls-cert '$TMP/cert.pem' --tls-key '$TMP/key.pem' --mode shared
 " >"$TMP/server.log" 2>&1 &
+fi
 PIDS+=("$!")
 for i in {1..100};do
  if grep -Fq "V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443" "$TMP/server.log";then break;fi
@@ -94,13 +115,18 @@ PIDS+=("$!")
 
 start_client(){
  local ns="$1" guest="$2" ip="$3" tun="$4" port="$5" who="$6" secret="$7" mode="$8" extra="$9"
+ local account="$who"
+ if [[ "${WBD_PLAN030_MANAGED:-0}" == 1 ]];then
+  if [[ "$who" == bob ]];then account=alice;secret=alice-mixed-protected;fi
+  extra="$extra --tls-verify-server"
+ fi
  sudo -n ip netns exec "$ns" bash -c "
  echo \$\$ > '$TMP/$who.pid'
  exec env LD_LIBRARY_PATH='$ROOT' '$ROOT/wbd-v4-client' \
   --raw-interface '$guest' --local-ip '$ip' --local-port '$port' \
   --peer-ip 10.25.0.1 --peer-port 443 --tun-name '$tun' \
   --server-name wbd-v4.example.test --route-key-hex-file '$TMP/route-key.hex' \
-  --tls-ca-pem '$TMP/cert.pem' --username '$who' --password '$secret' \
+  --tls-ca-pem '$TMP/cert.pem' --username '$account' --password '$secret' \
   --auto-ip --installation-id-file '$TMP/install-$who' --mode '$mode' $extra
  " >"$TMP/$who.log" 2>&1 &
  PIDS+=("$!")
@@ -173,6 +199,25 @@ PB=$!
 send_udp "$NSC" "$IPC" NORMAL_AUTO_C 12 "$TMP/C-udp.log" &
 PC=$!
 wait "$PA" "$PB" "$PC"
+if [[ "${WBD_PLAN030_MANAGED:-0}" == 1 ]];then
+  sudo -n env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" --manage clients --json --socket "$TMP/clients.sock" >fixed-kernel-result/plan030-clients.json
+  python3 - "$IPA" "$IPB" "$IPC" <<'PY'
+import json,sys
+s=json.load(open("fixed-kernel-result/plan030-clients.json"))
+rows={r["mode"]:r for r in s["clients"]}
+assert s["state"]=="ready" and len(s["clients"])==3 and len(rows)==3,s
+assert len({r["device"] for r in rows.values()})==3
+assert rows["game2"]["account"]==rows["game4"]["account"]=="alice"
+assert rows["normal"]["account"]=="carol"
+for mode,lanes,cipher,ip in zip(("game2","game4","normal"),(2,4,1),("chacha20-poly1305","aes-256-gcm","aes-128-gcm"),sys.argv[1:]):
+    r=rows[mode]
+    assert r["lanes"]==lanes and r["cipher"]==cipher and r["tunnel_ip"].split("/")[0]==ip,r
+    assert r["client_record_limit"]>0 and r["server_record_limit"]>0 and r["session"]!="0000000000000000",r
+assert rows["game4"]["fec"]=="fixed" and rows["game4"]["fec_profile"]==6
+assert rows["normal"]["fec"]=="auto"
+print("PLAN030_REAL_THREE_DEVICE_MANAGED_CLIENT_SNAPSHOT_PASS")
+PY
+fi
 grep -Fq "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/bob.log"
 # Client A only stops; independent Game4 and Normal still deliver traffic.
 sudo -n kill -TERM "$(cat "$TMP/alice.pid")"

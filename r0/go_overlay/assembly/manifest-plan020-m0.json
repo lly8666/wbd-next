@@ -1730,7 +1730,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "a10244cb22cc7063bfa61c006544aaf3d3a3a7ca"
+      "result_blob": "ac5c4abeda3a229832a66f6c0fb224f403e54806"
     },
     {
       "kind": "replace",
@@ -1811,7 +1811,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "5063d187f1c42906b6187f41259d95e12da9fc29"
+      "result_blob": "0933d9040561cf26027697ced6d5962638c4b0a6"
     },
     {
       "kind": "create",
@@ -2016,6 +2016,24 @@
       "path": "cmd/wbd-client/m0_plan029_cn_domains_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cn_domains_windows_test.go",
       "result_blob": "b0293a44df08f554e6b005d9439e6c5d4a506d7c"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/management_linux.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/management_linux.go",
+      "result_blob": "be2b4636076922d6be1b81d780c6493e8065a214"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/management_snapshot_linux.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/management_snapshot_linux.go",
+      "result_blob": "cbdc465f6cb08a5bf4d07834bd1cc5ef5541a85e"
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/management_linux_test.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/management_linux_test.go",
+      "result_blob": "d296372d6c171ab002772b1cedb5476b3388e5c1"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

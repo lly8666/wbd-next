@@ -459,6 +459,7 @@ func (p *V4LinuxServerProduct) closeLocked()error{
 // metadata. No key, password or new per-packet counter is exported.
 type ManagementSessionIdentity struct {
     Principal, Lease string
+    Epoch [16]byte
     Cipher uint8
     ClientRecordLimit, ServerRecordLimit uint16
 }
@@ -467,7 +468,7 @@ func managementSessionIdentity(s *V4ServerSession)(ManagementSessionIdentity,err
     cold,e:=s.ColdSnapshot();if e!=nil{return ManagementSessionIdentity{},e}
     lease,e:=s.AuthenticatedLeaseIPv4();if e!=nil{return ManagementSessionIdentity{},e}
     cl,sl:=cold.RecordLimits()
-    return ManagementSessionIdentity{cold.Principal(),lease,cold.Cipher(),cl,sl},nil
+    return ManagementSessionIdentity{cold.Principal(),lease,cold.Epoch(),cold.Cipher(),cl,sl},nil
 }
 func(p *V4LinuxServerProduct) ManagementIdentity()(ManagementSessionIdentity,error){
     p.mu.Lock();defer p.mu.Unlock()

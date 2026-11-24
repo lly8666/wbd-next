@@ -45,8 +45,8 @@ func managedClientFor(key realityfront.V4LinuxGameCohortID,ip [4]byte,lease stri
  return managedClient{Account:key.Principal,Device:hex.EncodeToString(key.TunnelID[:8]),Session:hex.EncodeToString(key.Epoch[:8]),TunnelIP:lease,RemoteIP:netip.AddrFrom4(ip).String(),State:"online",Mode:mode,Lanes:key.Lanes,ConnectedSeconds:sec,FEC:"",Cipher:"unknown"}
 }
 func(r *managedClient)applyIdentity(i realityfront.ManagementSessionIdentity){
- r.Account=i.Principal;r.TunnelIP=i.Lease;r.ClientRecordLimit=i.ClientRecordLimit;r.ServerRecordLimit=i.ServerRecordLimit
- switch i.Cipher{case realityfront.CipherChaCha:r.Cipher="chacha20-poly1305";case realityfront.CipherAES256:r.Cipher="aes-256-gcm";default:r.Cipher="aes-128-gcm"}
+ r.Account=i.Principal;r.TunnelIP=i.Lease;r.Session=hex.EncodeToString(i.Epoch[:8]);r.ClientRecordLimit=i.ClientRecordLimit;r.ServerRecordLimit=i.ServerRecordLimit
+ switch i.Cipher{case realityfront.CipherChaCha:r.Cipher="chacha20-poly1305";case realityfront.CipherAES256:r.Cipher="aes-256-gcm";case realityfront.CipherAES128:r.Cipher="aes-128-gcm"}
 }
 type managementSnapshot struct {
  State string `json:"state"`
