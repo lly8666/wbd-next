@@ -16,7 +16,7 @@
  use std::ffi::c_void;
  use wbd_platform::windows_native_io::{
      self as io, NpcapFns, NpcapRx, NpcapTx, WintunFns,
-     WintunRx, WintunTx, WakeEvent, ReadResult, WaitResult,
+     WintunRx, WintunTx, WakeEvent, ReadResult, BorrowedCapture, WaitResult,
  };
  use wbd_platform::ipv4_tcp::{
      build_bytes, finish_bytes_in_place, BASE_OVERHEAD, build_presentation_ack, build_presentation_ack_sack,
@@ -152,7 +152,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
  const MAX_IPV4:usize=2048;
  const MAX_LINK:usize=2304;
  const FRAME_RECORD_OFFSET:usize=14+BASE_OVERHEAD;
- const MAX_NPF:usize=65535+64;
  const IDLE_WAIT:u32=u32::MAX;
  // Rust HealthClock only: never coalesce authenticated dead with BAD_STAGE=3.
  const AUTHENTICATED_PEER_DEAD:i32=6;
@@ -569,7 +568,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
-     let mut native_off_loan=None;
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
          if fixed{
@@ -591,8 +589,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
              let budget=normal_off_windows_budget(&e)?;
              let pad_enabled=split.as_ref().is_some_and(|s|s.startup_padding_enabled());
              let now=m2_clock();
-             let keep_pending=!v3_native_off_loan(&e);
-             if !keep_pending{e.arena.drain_returns_bounded(64);}
              // Queue only the packets already captured by this turn. M1's
              // 32-entry ready queue accommodates the existing 8/16 batch.
              // No new delay, second queue, worker or PN allocator.
@@ -605,15 +601,12 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
                          .unwrap_or(0)
                  }else{0};
                  staged_pad[i]=pad;
-                 meta[i]=v3_queue_source_ready(&mut e,source,budget,now,pad,MAX_IPV4,!keep_pending)?;
+                 meta[i]=v3_queue_source(&mut e,source,budget,now,pad,MAX_IPV4)?;
              }
-             let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
+             v3_drain_sources(&mut e,now,&meta[..count],|i,wire|{
                  frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
                      .copy_from_slice(wire);
              })?;
-             if keep_pending{e.tx_scratch=loan.recycle();}
-             else{native_off_loan=Some(loan);}
-
          }
      }
      let mut lens=[0usize;BATCH];
@@ -643,47 +636,31 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      }
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         let settled_native_off=if let Some(loan)=native_off_loan{
-             v3_finish_native_off_loan(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,loan)?;
-             true
-         }else{false};
          let mut fresh_bytes=0u64;
-         let mut copied=0u64;
-         let mut after_rx=0u64;
-         let mut pad_bytes=0u64;
-         let mut pad_records=0u64;
          for (i,&(pn,seq,used)) in meta[..count].iter().enumerate(){
              let status=kernel_result(result,count,i)?;
-             if !settled_native_off{
-                 m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     pn,seq,used,status)?;
-             }
+             m2_kernel_firstsend_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,
+                 pn,seq,used,status)?;
              if status==1{
                  fresh_bytes+=lens[i] as u64;
-                 copied+=1;
+                 counters.tx_copied.fetch_add(1,Ordering::Relaxed);
+                 #[cfg(feature="h2314_windows_fixed_max_burst")]
+                 if fixed{
+                     counters.fixed_parity_source_rows.fetch_add(1,Ordering::Relaxed);
+                 }
                  // Never count an M1 proposal on failed or partially
                  // accepted Npcap prefix. No shadow/repair double count.
                  if staged_pad[i]>0{
-                     pad_bytes+=staged_pad[i] as u64;
-                     pad_records+=1;
+                     counters.startup_pad_npf_bytes.fetch_add(
+                         staged_pad[i] as u64,Ordering::Relaxed);
+                     counters.startup_pad_npf_records.fetch_add(
+                         1,Ordering::Relaxed);
                  }
                  if counters.rx_delivered.load(Ordering::Acquire)>0{
-                     after_rx+=1;
+                     counters.tx_after_rx.fetch_add(1,Ordering::Relaxed);
                  }
              }
          }
-         // Publish only the original actual copied prefix, once per
-         // service batch, while retaining per-packet receipt decisions.
-         if copied>0{counters.tx_copied.fetch_add(copied,Ordering::Relaxed);}
-         #[cfg(feature="h2314_windows_fixed_max_burst")]
-         if fixed && copied>0{
-             counters.fixed_parity_source_rows.fetch_add(copied,Ordering::Relaxed);
-         }
-         if pad_records>0{
-             counters.startup_pad_npf_bytes.fetch_add(pad_bytes,Ordering::Relaxed);
-             counters.startup_pad_npf_records.fetch_add(pad_records,Ordering::Relaxed);
-         }
-         if after_rx>0{counters.tx_after_rx.fetch_add(after_rx,Ordering::Relaxed);}
          counters.fresh_outer_bytes.fetch_add(fresh_bytes,Ordering::Relaxed);
          if fresh_bytes>0{
              // Only true Npcap-copied business resets local idle; a staged
@@ -1541,7 +1518,7 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      mut tun:WintunTx,mut npf:NpcapRx,stop:Arc<WakeEvent>,
      tx_notify:Arc<WakeEvent>,early_notify:Arc<WakeEvent>,
      early:Arc<Mutex<VecDeque<(u32,Vec<u8>)>>>,
-     counters:Arc<Counters>,fixed:bool,sack_negotiated:bool,
+     counters:Arc<Counters>,fixed:bool,sack_negotiated:bool,outer_repair_enabled:bool,
      direct_returns:Option<Receiver<Vec<u8>>>,
      tunnel_dns:Option<Arc<Mutex<TunnelDnsMap>>>)->i32{
      let event=match npf.event(){Ok(e)=>e,Err(_)=>return BAD_STAGE};
@@ -1551,7 +1528,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
          persona:PacketPersona::Legacy,mtu:cfg.path_mtu as usize,
          authenticated_options:None,
      };
-     let mut frame=[0u8;MAX_NPF];
      let mut plain=[0u8;MAX_IPV4];
      let mut ack=PresentationAck::new(cfg.initial_rx_seq);
      let mut last_sack_publish=Instant::now();
@@ -1649,23 +1625,24 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
          let mut last_outer_ack=None::<(u32,[WireSack;4],usize)>;
          for _ in 0..RX_WAKE_BATCH{
              if counters.stopping.load(Ordering::Acquire){return OK}
-             let n=match npf.read(&mut frame){
-                 Ok(ReadResult::Frame(n))=>n,
-                 Ok(ReadResult::NoPacket)=>break,
-                 Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>continue,
-                 Ok(ReadResult::EndOfStream)=>return BAD_STAGE,
-                 Err(_)=>return BAD_STAGE,
+             let frame=match npf.read_borrowed(){
+                 Ok(BorrowedCapture::Frame(frame))=>frame,
+                 Ok(BorrowedCapture::NoPacket)=>break,
+                 Ok(BorrowedCapture::Skipped)=>continue,
+                 Ok(BorrowedCapture::EndOfStream)|Err(_)=>return BAD_STAGE,
              };
-             let Some(packet)=io::ethernet_ipv4(&frame[..n])else{continue};
+             let Some(packet)=io::ethernet_ipv4(frame)else{continue};
              // Optional SACK only after actual original Go protected
              // FakeTCP SYN/SYN-ACK; packet checksum is NOT crypto proof.
              if packet.len()>=40 && packet[0]==0x45 && packet[33]==0x10 {
                if let Ok(outer)=parse_ack_packet(packet,trusted,sack_negotiated){
-                 let mut blocks=[WireSack{start:0,end:0};4];
-                 blocks[..outer.sacks().len()].copy_from_slice(outer.sacks());
-                 if !outer.sacks().is_empty()||
-                     !last_outer_ack.as_ref().is_some_and(|x|x.2>0){
-                     last_outer_ack=Some((outer.ack32,blocks,outer.sacks().len()));
+                 if outer_repair_enabled{
+                     let mut blocks=[WireSack{start:0,end:0};4];
+                     blocks[..outer.sacks().len()].copy_from_slice(outer.sacks());
+                     if !outer.sacks().is_empty()||
+                         !last_outer_ack.as_ref().is_some_and(|x|x.2>0){
+                         last_outer_ack=Some((outer.ack32,blocks,outer.sacks().len()));
+                     }
                  }
                  continue
                }
@@ -1680,7 +1657,7 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
              };
              if verified{
                   verified_batch=true;
-                  if !last_outer_ack.as_ref().is_some_and(|x|x.2>0){
+                  if outer_repair_enabled && !last_outer_ack.as_ref().is_some_and(|x|x.2>0){
                       last_outer_ack=Some((sealed.presentation_ack32,
                           [WireSack{start:0,end:0};4],0));
                   }
@@ -1912,13 +1889,14 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      // Arm existing five AEAD/PN Health controls after genuine Wintun/NPF
      // validation and before the first native TX turn; the server still
      // requires an authenticated peer Health to promote its shared /32.
-     {
+     let outer_repair_enabled={
          let mut e=match lane.lock(){Ok(v)=>v,Err(_)=>return BAD_STAGE};
          if !v3_ready(&e,config.epoch,config.luid,config.ifindex)
              ||e.role_server{return BAD_STAGE}
          let Some(m)=e.m2.as_mut()else{return BAD_STAGE};
          m.health.arm_client_cold_ready(m2_clock().0);
-     }
+         m.outer_repair_enabled
+     };
      let tx_lane=Arc::clone(&lane);let tx_stop=Arc::clone(&stop);
      let tx_notify=Arc::clone(&notify);let tx_counters=Arc::clone(&counters);
      let rx_notify_for_tx=Arc::clone(&rx_notify);
@@ -1943,7 +1921,7 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
          eprintln!("WBD_WINDOWS_RUST_NATIVE_WORKER_TID role=RX tid={}",unsafe{GetCurrentThreadId()});
          let rc=rx_loop(config,rx_lane,wrx,capture,Arc::clone(&rx_stop),tx_notify_for_rx,
              rx_event,rx_early,Arc::clone(&rx_counters),fixed,sack_negotiated,
-             direct_receiver,tunnel_dns_map);
+             outer_repair_enabled,direct_receiver,tunnel_dns_map);
          if rc!=OK{
              rx_counters.worker_error.store(rc,Ordering::Release);
              let _=rx_stop.wake();

@@ -71,6 +71,8 @@ class CurrentPathAB(unittest.TestCase):
             self.assertTrue(ab.path_ab_candidate_features().endswith(",h2291_windows_tx_service"))
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_LOAN_BASELINE},clear=True):
             self.assertEqual(ab.path_ab_axis(),"arena_ready_batch")
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"rx_borrowed_capture"},clear=True):
+            self.assertEqual(ab.path_ab_axis(),"rx_borrowed_capture")
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":"unapproved"},clear=True):
             with self.assertRaises(ValueError):
                 ab.path_ab_baseline()
