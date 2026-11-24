@@ -1,0 +1,190 @@
+name: M0 exact packaged Windows to shared Linux mixed mode
+run-name: "M0 mixed switch signed Windows native | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/m0-mixed-mode-route-handoff]
+    paths:
+      - '.github/workflows/m0-mixed-mode-windows-pair.yml'
+      - 'tools/m0_mixed_mode_windows_pair.py'
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  native-pair:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    env:
+      WBD_MIXED_BINARY_SOURCE: 'a4c5c97591e9b9ed6fa16221e6666c531d1909cc'
+      WBD_MIXED_BINARY_RUN: '45428320586'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Verify exact product source reuse
+        shell: pwsh
+        run: |
+          git diff --exit-code $env:WBD_MIXED_BINARY_SOURCE HEAD -- crates r0/go_overlay Cargo.lock Cargo.toml tools/prepare_windows_wiring.py tools/m0_plan029_linux_dual_native_build.sh
+          if($LASTEXITCODE -ne 0){throw 'product source differs from exact build'}
+      - name: Full public-run signed original Npcap and Wintun driver install
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
+          $drv=Join-Path $root 'npcap'
+          $usr=Join-Path $root 'user'
+          New-Item -ItemType Directory -Force $root,$drv,$usr,result/wl-public | Out-Null
+          $zip=Join-Path $root 'npcap-test.zip'
+          # External vendor/CDN 504s must not be interpreted as native
+          # Npcap/Wintun product failures. Retry only byte downloads; exact
+          # pinned SHA256 plus original Authenticode checks remain unchanged.
+          function Get-PinnedPublicNativeDriverPackage([string]$Uri,[string]$Destination){
+            for($attempt=1;$attempt -le 5;$attempt++){
+              try {
+                Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Destination -TimeoutSec 65 -ErrorAction Stop
+                if(-not (Test-Path -LiteralPath $Destination)){throw 'signed package download absent'}
+                return
+              }catch{
+                Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
+                Write-Output ('PLAN028_EXTERNAL_SIGNED_DRIVER_DOWNLOAD_RETRY attempt='+$attempt+' status='+$_.Exception.GetType().Name)
+                if($attempt -eq 5){throw}
+                Start-Sleep -Seconds ([Math]::Min(24,4*$attempt))
+              }
+            }
+          }
+          Get-PinnedPublicNativeDriverPackage 'https://github.com/user-attachments/files/32200327/npcap.zip' $zip
+          if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'approved old driver package hash changed'}
+          Expand-Archive $zip $drv -Force
+          $installer=Join-Path $root 'npcap-1.88.exe'
+          Get-PinnedPublicNativeDriverPackage 'https://npcap.com/dist/npcap-1.88.exe' $installer
+          if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'official Npcap hash changed'}
+          $sg=Get-AuthenticodeSignature $installer
+          if($sg.Status -ne 'Valid' -or $sg.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'official Npcap invalid signature'}
+          & 7z x -y "-o$usr" $installer | Out-File result/wl-public/npcap-extract.log
+          if($LASTEXITCODE -ne 0){throw 'Npcap DLL extraction failed'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr 2>&1 |
+            Tee-Object result/wl-public/npcap-install.log
+          if((Get-Service npcap -ErrorAction Stop).Status -ne 'Running'){throw 'Npcap real kernel service not running'}
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/wpcap.dll" -Destination result/wl-public/wpcap.dll
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/Packet.dll" -Destination result/wl-public/Packet.dll
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Get-PinnedPublicNativeDriverPackage 'https://www.wintun.net/builds/wintun-0.14.1.zip' $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
+          Copy-Item $dll result/wl-public/wintun.dll
+      - name: Real WSL2 Ubuntu kernel boot and TUN prerequisite (independent bounded stage)
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          Write-Output ('WL_WSL2_BOOT_STAGE_SOURCE '+$env:GITHUB_SHA)
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'bounded WSL2 distribution listing failed'}
+          if($known -notmatch 'Ubuntu'){
+            # Old WSL Store/network launcher hung until the full product
+            # step timed out. Import real Ubuntu 24.04.5 WSL rootfs directly
+            # from Ubuntu's official release, pinning its published digest.
+            # This remains a genuine Ubuntu WSL2 guest/kernel, never a mock.
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            try {
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img -ErrorAction Stop
+          } catch {
+            if($env:WBD_PLAN028_WIN_NEAR_MTU_SMOKE -ne '1'){throw}
+            # H1606 only: temporary hosted-runner Ubuntu DNS failure. Mirror
+            # is an official Ubuntu release mirror; the exact original SHA
+            # is STILL verified below before WSL imports any byte.
+            Write-Output 'H1606_WSL_UPSTREAM_DNS_BLOCKED_OFFICIAL_MIRROR_WITH_SAME_SHA256'
+            Remove-Item -LiteralPath $img -Force -ErrorAction SilentlyContinue
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://mirror.cpsc.ucalgary.ca/mirror/ubuntu.com/releases/24.04.5/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img -ErrorAction Stop
+          }
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'official Ubuntu WSL image integrity mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 |
+              Tee-Object result/wl-public/wsl-import.log
+            if($LASTEXITCODE -ne 0){throw 'actual Ubuntu WSL2 distribution import failed'}
+            $installed=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+            if($LASTEXITCODE -ne 0){throw 'bounded post-import WSL2 distribution listing failed'}
+            if($installed -notmatch 'Ubuntu'){throw 'real Ubuntu WSL2 distribution not registered after import'}
+            Write-Output 'WL_REAL_PINNED_UBUNTU_24045_WSL2_IMPORTED'
+          }
+          # One real Linux-kernel preflight, now bounded: past SOURCE bdf574
+          # imported Ubuntu but its first guest command hung until 22m timeout.
+          # A failed precondition is ENVIRONMENT_BLOCKED, not product FAIL.
+          Write-Output 'WL_WSL2_STAGE_BEGIN real_guest_kernel_probe'
+          & python tools/m0_wl_real_wsl2_guest_probe.py
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 native guest boot ENVIRONMENT_BLOCKED; see bounded probe JSON'}
+          Write-Output 'WL_WSL2_STAGE_PASS real_guest_kernel_probe'
+          Write-Output 'WL_WSL2_BOOT_STAGE_COMPLETE_REAL_KERNEL'
+      - name: Download exact same-source delivery bundles
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          $run=$env:WBD_MIXED_BINARY_RUN
+          for($i=0;$i -lt 40;$i++){
+            $a=gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$run/artifacts" | ConvertFrom-Json
+            if(@($a.artifacts | Where-Object {$_.name -eq 'wbd-mixed-mode-linux-x86_64'}).Count -eq 1 -and @($a.artifacts | Where-Object {$_.name -eq 'wbd-mixed-mode-windows-amd64-gui'}).Count -eq 1){break}
+            Start-Sleep -Seconds 15
+          }
+          gh run download $run -n wbd-mixed-mode-linux-x86_64 -D pair-linux
+          if($LASTEXITCODE -ne 0){throw 'Linux artifact unavailable'}
+          gh run download $run -n wbd-mixed-mode-windows-amd64-gui -D pair-win
+          if($LASTEXITCODE -ne 0){throw 'Windows artifact unavailable'}
+          New-Item -ItemType Directory -Force linux-product | Out-Null
+          $tar=Get-ChildItem pair-linux -Recurse -Filter 'wbd-linux-x86_64-glibc231-mixed-mode.tar.gz' | Select-Object -First 1
+          if(-not $tar){throw 'Linux qualified tar absent'}
+          tar -xzf $tar.FullName -C linux-product
+          if($LASTEXITCODE -ne 0){throw 'tar unpack failed'}
+          $zip=Get-ChildItem pair-win -Recurse -Filter 'wbd-mixed-mode-windows-amd64-GUI.zip' | Select-Object -First 1
+          if(-not $zip){throw 'Windows complete package absent'}
+          Expand-Archive $zip.FullName -DestinationPath pair-win-final -Force
+          $bin=Get-ChildItem pair-win-final -Recurse -Filter wbd-client.exe | Select-Object -First 1
+          Copy-Item "$($bin.Directory.FullName)\*" result/wl-public -Force
+          python -c "import json,os,pathlib,hashlib; s=os.environ['WBD_MIXED_BINARY_SOURCE']; w=pathlib.Path('result/wl-public'); l=pathlib.Path('linux-product'); p=json.loads((w/'windows-provenance.json').read_text(encoding='utf-8-sig')); m=json.loads((l/'manifest.json').read_text()); assert p['qa_source_sha']==m['source_sha']==s; assert all(hashlib.sha256((w/n).read_bytes()).hexdigest()==h for n,h in p['sha256'].items()); print('PACKAGED_SOURCE_WINDOWS_LINUX_MATCH',s)"
+          if($LASTEXITCODE -ne 0){throw 'source/hash verification failed'}
+      - name: Actual Windows Wintun Npcap normal Game2 normal Game4 normal same server
+        shell: pwsh
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference='Stop'
+          $guestText=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 | Out-String)
+          $guestIP=[regex]::Match($guestText,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/').Groups[1].Value
+          if(-not $guestIP){throw 'WSL guest address absent'}
+          $nic=@(Get-NetAdapter -IncludeHidden | Where-Object {$_.Name -match '^vEthernet \(WSL' -and $_.Status -eq 'Up'})
+          if($nic.Count -ne 1){throw 'WSL adapter ambiguous'}
+          $hostIP=@(Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex | Where-Object {$_.IPAddress -notmatch '^169\.254\.'})
+          $creator=@(Get-NetFirewallHyperVVMCreator | Where-Object {$_.FriendlyName -eq 'WSL'})
+          if($hostIP.Count -ne 1 -or $creator.Count -ne 1){throw 'WSL test endpoints ambiguous'}
+          $name='WBD-M0-MIXED-'+$env:GITHUB_RUN_ID
+          $rst=$false
+          try{
+            & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
+            if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
+            & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
+            if($LASTEXITCODE -ne 0){throw 'test RST suppression failed'}
+            $rst=$true
+            $ports=@()
+            for($i=0;$i -lt 5;$i++){for($j=0;$j -lt 4;$j++){$ports+= [string](41031+16*$i+$j)}}
+            New-NetFirewallHyperVRule -Name $name -DisplayName $name -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('443') -RemotePorts $ports | Out-Null
+            New-NetFirewallRule -Name ($name+'-tcp') -DisplayName ($name+'-tcp') -Direction Inbound -Action Allow -Protocol TCP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort 47001-47020 | Out-Null
+            New-NetFirewallRule -Name ($name+'-udp') -DisplayName ($name+'-udp') -Direction Inbound -Action Allow -Protocol UDP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort 47001-47020 | Out-Null
+            & python -u tools/m0_mixed_mode_windows_pair.py $guestIP
+            if($LASTEXITCODE -ne 0){throw 'Windows shared mode switch failed'}
+          } finally {
+            Remove-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
+            Remove-NetFirewallRule -Name ($name+'-tcp'),($name+'-udp') -ErrorAction SilentlyContinue
+            if($rst){& wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP}
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: mixed-mode-windows-native-pair
+          path: |
+            result/wl-public/mixed-*.log
+            result/wl-public/mixed-pair-receipt.json
+            result/wl-public/wsl2-real-guest-probe.json
+            result/wl-public/npcap-install.log
+          if-no-files-found: warn

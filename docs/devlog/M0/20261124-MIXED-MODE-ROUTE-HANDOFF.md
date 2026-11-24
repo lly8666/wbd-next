@@ -17,3 +17,6 @@ ARM64 and x86 quick Action45427122913: initial Normal and immediate Normal->Game
 ```feature-impact
 {"kind":"updated","ids":["game-lanes","windows-native-transport"],"reason":"Complete existing Windows Game cold Health proof wiring to make mixed-mode server owner handoff work with real Windows client, unchanged steady Health and lane lifecycle."}
 ```
+
+
+Add an independent signed Windows2025 Npcap/Wintun → WSL2 real peer fixture using the exact already-running a4c5c975 product artifacts, no duplicate build. Same authenticated manual lease, one server, Normal/Game2/Normal/Game4/Normal, reverse TCP/UDP first, existing grace then next cold switch. Physical deployment remains out of scope.
