@@ -486,7 +486,7 @@ impl GameKernelOwner{
                             }
                         }
                     }
-                    // One authenticated Game4+FEC session may empty up to eight
+                    // Every authenticated Game session may empty up to eight
                     // already-ready original shared-TUN ingress slots per
                     // owner turn, matching the actual reader's eight-packet
                     // batch. The old one-source-per-turn path coupled
@@ -499,7 +499,7 @@ impl GameKernelOwner{
                     // Exceptional oversized DF0 follows its original
                     // fragment/ICMP branch on the NEXT turn; do not overtake
                     // an already pending fragment.
-                    if fec_enabled&&lanes.len()==4&&pending_ip_fragments.is_empty(){
+                    if pending_ip_fragments.is_empty(){
                         if let Some(ingress)=shared_ingress.as_ref(){
                             let mut extra_accepted=0u64;
                             for _ in 0..GAME4_FEC_SHARED_TUN_MAX_SOURCES_PER_TURN-1{

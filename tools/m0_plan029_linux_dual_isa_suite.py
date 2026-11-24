@@ -41,6 +41,9 @@ cases=[
     ("game2","game2",None,False),
     ("game4-fixed6","game4","6",False),
 ]
+all_modes=os.environ.get("WBD_PLAN029_ALL_MODES")=="1"
+if all_modes:
+    cases.extend([("game4-off","game4",None,False),("game2-fixed6","game2","6",False)])
 OUT.mkdir(exist_ok=False)
 result={
     "schema_version":1,"source_sha":SOURCE,"native_isa":ARCH,
@@ -52,7 +55,7 @@ result={
     "cases":[],"status":"NOT_RUN",
     "scope_exclusions":["Windows WinGUI/Direct/FakeIP/WFP/Npcap",
         "Linux host-global IPv6/AAAA resolver; only newly owned TUN IPv6 off",
-        "game4-off, game2-fixed and extra FEC profiles",
+        ("extra FEC profiles" if all_modes else "game4-off, game2-fixed and extra FEC profiles"),
         "Linux throughput or p99/CPU causality; physical ARM board",
         "inter-ISA cross-link and Windows inbound TCP"]
 }
@@ -154,6 +157,6 @@ for label,mode,fec,mtu_boundary in cases:
                 r"\\1=[REDACTED]",x) for x in tail),file=sys.stderr)
         print(f"PLAN029_LINUX_NATIVE_CASE_FAIL isa={ARCH} case={label} "+str(exc),flush=True)
         raise SystemExit(1)
-result["status"]="PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES"
+result["status"]=("PASS_SCOPED_SEVEN_REAL_LINUX_CLIENT_SERVER_MODES" if all_modes else "PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES")
 save()
-print(f"PLAN029_LINUX_NATIVE_FIVE_MODES_PASS isa={ARCH} source={SOURCE}",flush=True)
+print(f"PLAN029_LINUX_NATIVE_{'SEVEN' if all_modes else 'FIVE'}_MODES_PASS isa={ARCH} source={SOURCE}",flush=True)

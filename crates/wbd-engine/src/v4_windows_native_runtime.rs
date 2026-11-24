@@ -43,10 +43,8 @@
  fn set_native_thread_name(name:&[u16;14]) {
      let _=unsafe { SetThreadDescription(GetCurrentThread(),name.as_ptr()) };
  }
- // Source-qualified H2292 2×3Runner zero-loss TX16 trial. Disabled in
- // ordinary builds pending first main-source compiled and regression gates.
- // Original-NPF driver short-prefix/uncertain handling is unchanged.
- const BATCH:usize=if cfg!(feature="h2291_windows_tx_service"){16}else{8};
+ // H2397: same default quantum as every native NPF owner.
+ const BATCH:usize=io::NPF_QUEUE_PACKETS;
  // H1977 original signed Win32-QPC for 1024-byte translated TCP DATA.
  // TCP ACK/FIN/fragment packets are excluded, duplicates are RETAINED.
  // The rewritten kernel-local proxy port is joined to original source port
@@ -549,6 +547,10 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          }
      }
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
+     let order=if count==BATCH{
+         crate::v4_ingress_fair::ready_order(std::array::from_fn(|i|
+             crate::v4_ingress_fair::flow_key(&sources[i][..source_len[i]])),count)
+     }else{std::array::from_fn(|i|i)};
      let mut wire=[[0u8;MAX_IPV4];BATCH];
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
@@ -562,31 +564,32 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
              Some(normal_off_windows_budget(&e)?.record_wire_mtu.min(MAX_IPV4))
          }else{None};
          for i in 0..count {
+             let j=order[i];
              let (used,seq,pn)=if fixed{
                  #[cfg(feature="fec2_product_record")]
                  {
                      fec2::stage_fixed_source_entry(
                          &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                         &sources[i][..source_len[i]],&mut wire[i]
+                         &sources[j][..source_len[j]],&mut wire[i]
                      )?
                  }
                  #[cfg(not(feature="fec2_product_record"))]
                  {return Err(BAD_STAGE)}
              }else if let Some(max_record)=pad_wire_limit{
                  let room=max_record.saturating_sub(
-                     source_len[i].saturating_add(FIXED_WIRE_OVERHEAD));
+                     source_len[j].saturating_add(FIXED_WIRE_OVERHEAD));
                  let pad=split.as_mut().map(|s|s.propose_tunnel_padding(
-                     &sources[i][..source_len[i]],now_ms,room)).unwrap_or(0);
+                     &sources[j][..source_len[j]],now_ms,room)).unwrap_or(0);
                  let result=v3_seal_entry_with_padding(
                      &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     &sources[i][..source_len[i]],&mut wire[i],pad
+                     &sources[j][..source_len[j]],&mut wire[i],pad
                  )?;
                  staged_pad[i]=pad;
                  result
              }else{
                  v3_seal_entry(
                      &mut e,cfg.epoch,cfg.luid,cfg.ifindex,
-                     &sources[i][..source_len[i]],&mut wire[i]
+                     &sources[j][..source_len[j]],&mut wire[i]
                  )?
              };
              meta[i]=(pn,seq,used);
@@ -1079,7 +1082,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                  if reverse_count==DIRECT_RETURN_QUANTUM{still_ready=true}
                  } // reverse work genuinely pending
              }
-             for _ in 0..4 {
+             for _ in 0..RX_WAKE_BATCH/BATCH {
                  if counters.stopping.load(Ordering::Acquire){return Ok(true)}
                  let staged=stage_sources(&cfg,&lane,&mut tun,&mut npf,
                      &counters,&mut ip_id,fixed,&mut split,now_ms)?;
@@ -1145,11 +1148,16 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
                      }
                  }
              }
-             // A bounded <=4-row parity quantum follows ready fresh sources.
-             // In Fixed/Auto there is never an extra native parity worker.
+             // At most 10 already-due four-row quanta (32 sources ×125%).
+             // Each original driver prefix settles before the next quantum.
              #[cfg(feature="fec2_product_record")]
              let parity=if fixed{
-                 send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?
+                 let mut sent=false;
+                 for _ in 0..10{
+                     if !send_fixed_parity(&cfg,&lane,&mut npf,&counters,&mut ip_id)?{break}
+                     sent=true;
+                 }
+                 sent
              }else{false};
              #[cfg(not(feature="fec2_product_record"))]
              let parity=false;
@@ -2179,7 +2187,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
      #[test]
      fn plan029_direct_return_quantum_covers_wintun_ingress() {
          assert_eq!(DIRECT_RETURN_QUANTUM,RX_WAKE_BATCH);
-         assert_eq!(DIRECT_RETURN_QUANTUM,4*BATCH);
+         assert_eq!(DIRECT_RETURN_QUANTUM,2*BATCH);
      }
      #[test]
      fn plan029_full_direct_rx_quantum_never_parks_on_coalesced_auto_wake(){

@@ -7,6 +7,11 @@ name: PLAN029 native Linux x86_64 and ARM64 dual-endpoint scoped
 run-name: "PLAN029 Linux native two ISA | ${{ github.sha }}"
 on:
   workflow_dispatch:
+    inputs:
+      all_modes:
+        type: boolean
+        default: false
+        description: "Seven ordinary functional modes; no A/B"
   push:
     branches: [main]
     paths:
@@ -36,6 +41,7 @@ jobs:
       CGO_ENABLED: "1"
       GOTOOLCHAIN: local
       WBD_PLAN029_LINUX_DUAL_ISA: "1"
+      WBD_PLAN029_ALL_MODES: ${{ inputs.all_modes && '1' || '0' }}
       WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -96,8 +102,9 @@ jobs:
           d=json.loads(pathlib.Path("linux-plan029-result/summary.json").read_text())
           assert d["source_sha"]==os.environ["GITHUB_SHA"]
           assert d["native_isa"]==platform.machine()
-          assert d["status"]=="PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES"
-          assert len(d["cases"])==5
+          full=os.environ.get("WBD_PLAN029_ALL_MODES")=="1"
+          assert d["status"]==("PASS_SCOPED_SEVEN_REAL_LINUX_CLIENT_SERVER_MODES" if full else "PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES")
+          assert len(d["cases"])==(7 if full else 5)
           assert all(c["status"]=="PASS_SCOPED_NATIVE_LINUX_TWO_ENDPOINTS" for c in d["cases"])
           print("PLAN029_LINUX_NATIVE_FIVE_MODES_SIGNED_PASS arch="+platform.machine(),flush=True)
           PY
