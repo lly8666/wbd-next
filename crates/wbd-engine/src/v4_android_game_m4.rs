@@ -47,7 +47,7 @@ impl AndroidGameWorkers{
         lease:[u8;4],fd:OwnedFd,tun_name:&str,generation:u32,
         tunnel_dns:bool,health_seconds:u32,
         physical_dns:bool,upstream:[u8;4],cn:Option<CNDnsMatcher>,tunnel_upstream:[u8;4],
-        game_fec_profile:Option<u8>,
+        game_fec_profile:Option<u8>,stagger:u32,
     )->Result<Self,()>{
         // Original Game2/4 off and fixed Game FEC share ONE M4 worker.
         // No new packet protocol, TLS lane, or rotation owner.
@@ -72,8 +72,8 @@ impl AndroidGameWorkers{
             // Original Linux Game4/off wide stagger: 0/4/50/140ms,
             // configured BEFORE the original Rust M4 takes its M3 owners.
             // B45 also drains due copies while TUN is otherwise idle.
-            if lane_count==4{
-                game.configure_game4_stagger_mode(2).map_err(|_|())?;
+            if lane_count==4&&stagger!=0{
+                game.configure_game4_stagger_mode(stagger).map_err(|_|())?;
             }
             let (origin,evidence)=game.health_context();
             (game.receiver_handle(),game.inner_mtu(),origin,evidence)

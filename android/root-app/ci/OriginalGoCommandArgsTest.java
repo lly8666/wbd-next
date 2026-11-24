@@ -157,7 +157,8 @@ public final class OriginalGoCommandArgsTest {
                 "--android-physical-dns","--android-cn-dns-split"}[mode]))
                 throw new AssertionError("Game4 original DNS mode not wired");
         }
-        rejected(()->withFec("game4",1,"flows"));
+        for(String mode:new String[]{"normal","fec-fixed","fec-auto","game2","game4","game2-fixed","game4-fixed"})
+            for(String pad:new String[]{"off","tls","flows"})value(withFec(mode,1,pad),"--startup-padding",pad);
         for(String mode:new String[]{"game2-fixed","game4-fixed"}){
             for(int profile:new int[]{0,3,6}){
                 List<String> fixed=withFec(mode,profile,"off");

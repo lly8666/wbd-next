@@ -35,10 +35,9 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
     tun *ownedTun,connected *bool,
 )(retErr error){
     if (c.gameLanes!=2&&c.gameLanes!=4)||
-       c.startupPaddingMode!=0||c.rotationInterval!=0||
-       !c.autoIP||c.androidNetworkHandle==0||
-       (c.gameLanes==4&&(!c.game4CopyStagger||!c.game4CopyWideStagger)){
-        return fmt.Errorf("Android original Game2/4 requires padding/rotation off and wide Game4 stagger")
+       c.rotationInterval!=0||
+       !c.autoIP||c.androidNetworkHandle==0{
+        return fmt.Errorf("Android original Game2/4 requires original auto lease and cold Android lifecycle")
     }
     // Check the entire consecutive source-port group before any rule/socket.
     if _,e:=androidGamePort(c.localPort,int(c.gameLanes)-1);e!=nil{return e}
@@ -169,6 +168,8 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
         realityfront.V4AndroidGameConfig{
             Lanes:c.gameLanes,
             GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+            StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:c.outerMTU,
+            Game4CopyStagger:c.game4CopyStagger,Game4CopyWideStagger:c.game4CopyWideStagger,
             NetworkInterface:c.rawInterface,NetworkIfIndex:ifindex,
             AndroidPhysicalNetworkHandle:c.androidNetworkHandle,
             AndroidPhysicalMTU:c.androidPhysicalMTU,

@@ -27,6 +27,7 @@ const (
     Priority = 9600
     version = 1
     maxJournalBytes = 2048
+    maxRouteJournalBytes = 256 << 10
 )
 
 // Runner executes ip(8) without shell interpolation; every call is cold-only.
@@ -47,6 +48,7 @@ type Plan struct {
 
 type Session struct {
     run Runner
+    directBatch DirectBatch
     journal string
     plan Plan
     active bool
@@ -213,10 +215,10 @@ func journalRead(path string)(Plan,bool,error){
     owner,ok:=st.Sys().(*syscall.Stat_t)
     if !ok||!st.Mode().IsRegular()||st.Mode().Perm()!=0600||
         owner.Uid!=uint32(os.Geteuid())||st.Size()<2||
-        st.Size()>maxJournalBytes{
+        st.Size()>maxRouteJournalBytes{
         return Plan{},false,fmt.Errorf("foreign/invalid root journal")
     }
-    raw,err:=io.ReadAll(io.LimitReader(f,maxJournalBytes+1))
+    raw,err:=io.ReadAll(io.LimitReader(f,maxRouteJournalBytes+1))
     if err!=nil{return Plan{},false,err}
     var p Plan
     decoder:=json.NewDecoder(strings.NewReader(string(raw)))
@@ -233,7 +235,7 @@ func journalCreate(path string,p Plan)error{
     raw,err:=json.Marshal(p)
     if err!=nil{return err}
     raw=append(raw,'\n')
-    if len(raw)>maxJournalBytes{return fmt.Errorf("journal over capacity")}
+    if len(raw)>maxRouteJournalBytes{return fmt.Errorf("journal over capacity")}
     f,err:=openNoFollow(path,syscall.O_WRONLY|syscall.O_CREAT|syscall.O_EXCL,0600)
     if err!=nil{return err}
     n,writeErr:=f.Write(raw)
@@ -264,7 +266,7 @@ func openOwnerLock(path string)(*os.File,error){
     }
     return f,nil
 }
-func New(run Runner,path string,original Plan)(session *Session,retErr error){
+func New(run Runner,path string,original Plan,batches ...DirectBatch)(session *Session,retErr error){
     if run==nil{return nil,fmt.Errorf("missing kernel route runner")}
     if err:=ownedDirectory(path);err!=nil{return nil,err}
     lock,err:=openOwnerLock(path)
@@ -277,7 +279,7 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
     if _,err:=rand.Read(nonce[:]);err!=nil{return nil,err}
     original.Nonce=hex.EncodeToString(nonce[:])
     if !original.valid(){return nil,fmt.Errorf("invalid verified root UID /32 / Network scope")}
-    s:=&Session{run:run,journal:path,plan:original,lock:lock}
+    s:=&Session{run:run,journal:path,plan:original,lock:lock,directBatch:optionalDirectBatch(batches)}
     kind,exists,err:=readOwnedJournalVersion(path)
     if err!=nil{return nil,err}
     if exists{
@@ -288,7 +290,7 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
                !hasUID(group.UIDs,original.UID){
                 return nil,fmt.Errorf("foreign previous group generation: manual recovery required")
             }
-            gs:=&GroupSession{run:run,journal:path,plan:group,lock:lock}
+            gs:=&GroupSession{run:run,journal:path,plan:group,lock:lock,directBatch:s.directBatch}
             if err=gs.removeExact(group);err!=nil{return nil,err}
         }else{
             old,ok,e:=journalRead(path)
@@ -322,10 +324,8 @@ func New(run Runner,path string,original Plan)(session *Session,retErr error){
     }
     // B58: batch ordinary LAN/direct prefixes, then confirm the entire
     // private FIB once before the one selected App UID is installed.
-    for _,cidr:=range original.DirectCIDRs{
-        if _,err=s.run(directArgs("add",cidr)...);err!=nil{
-            return nil,errors.Join(err,s.removeExact(original))
-        }
+    if err=changeDirectRoutes(s.run,s.directBatch,"add",original.DirectCIDRs,nil);err!=nil{
+        return nil,errors.Join(err,s.removeExact(original))
     }
     if len(original.DirectCIDRs)>0{
         route,peer,direct,rule,readErr:=s.query(original)
@@ -393,11 +393,7 @@ func (s *Session) removeExact(p Plan)error{
     if rule{
         if _,err=s.run(ruleDel(p.UID)...);err!=nil{return err}
     }
-    for i:=len(direct)-1;i>=0;i--{
-        if direct[i]{
-            if _,err=s.run(directArgs("del",p.DirectCIDRs[i])...);err!=nil{return err}
-        }
-    }
+    if err=changeDirectRoutes(s.run,s.directBatch,"del",p.DirectCIDRs,direct);err!=nil{return err}
     if peer{
         if _,err=s.run(peerThrowArgs("del",p.ServerIP)...);err!=nil{return err}
     }

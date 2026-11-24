@@ -86,6 +86,26 @@ cp r0/go_overlay/cmd/wbd-v4-server/main.go legacy/cmd/wbd-v4-server/
 # Auto shares original Rust FEC2/Quality + low-rate Go policy.
 # Game remains unavailable; native build is not physical E2E.
 features=m0_v4_probe,m0_v4_embedded_go,fec2_product_record
+# B78: same pinned ISA-L as the main Linux/Windows release, cross-built
+# with Bionic NDK clang, not a GNU/Linux library reused on Android.
+isal_rev=c387163fcbca62701d646149564c550c78a4f985
+isal_src="$RUNNER_TEMP/wbd-android-isal-$isal_rev"
+isal_prefix="$RUNNER_TEMP/wbd-android-arm64-isal"
+mkdir -p "$isal_src" "$isal_prefix"
+curl --fail --location --silent --show-error --retry 2 \
+  "https://codeload.github.com/intel/isa-l/tar.gz/$isal_rev" | tar xz --strip-components=1 -C "$isal_src"
+(
+ cd "$isal_src"
+ ./autogen.sh
+ CC="$tool/aarch64-linux-android28-clang" AR="$tool/llvm-ar" RANLIB="$tool/llvm-ranlib" \
+ CFLAGS="-O2 -fPIC" ./configure --host=aarch64-linux-gnu --prefix="$isal_prefix" --disable-shared --enable-static
+ make -j2
+ make install
+) >out/android-product-a1/arm64-isal-build.log 2>&1 || { tail -100 out/android-product-a1/arm64-isal-build.log >&2; exit 1; }
+test -s "$isal_prefix/lib/libisal.a"
+"$tool/llvm-nm" -g "$isal_prefix/lib/libisal.a" >out/android-product-a1/arm64-isal-symbols.txt
+grep -Eq ' [TW] ec_encode_data$' out/android-product-a1/arm64-isal-symbols.txt
+sha256sum "$isal_prefix/lib/libisal.a" >out/android-product-a1/arm64-isal-archive.sha256
 go_tags=wbd_v4_embedded_go
 for pair in "aarch64 arm64" "x86_64 amd64"; do
   read -r triple goarch <<< "$pair"
@@ -93,7 +113,14 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
   cc="$tool/${rust_target}28-clang"
   test -x "$cc"
   "$cc" -c -std=c11 -Wall -Wextra -Werror android/root-native/android_abi.c -o "out/android-product-a1/abi-$goarch.o"
-  cargo +1.85.1 build --release --locked --target "$rust_target" -p wbd-engine --features "$features"
+  selected_features="$features"
+  if [[ "$goarch" == arm64 ]];then
+    export WBD_ISAL_PREFIX="$isal_prefix" WBD_ISAL_SOURCE_SHA="$isal_rev" WBD_ISAL_ARTIFACT_TARGET="$rust_target"
+    selected_features="$features,native_fec_acceleration"
+  else
+    unset WBD_ISAL_PREFIX WBD_ISAL_SOURCE_SHA WBD_ISAL_ARTIFACT_TARGET
+  fi
+  cargo +1.85.1 build --release --locked --target "$rust_target" -p wbd-engine --features "$selected_features"
   lib="target/$rust_target/release/libwbd_engine.so"
   test -s "$lib"
   cp "$lib" "out/android-product-a1/libwbd_engine-$goarch.so"
@@ -318,7 +345,7 @@ def elf(path):
     return {"type":e_type,"machine":e_machine,"min_pt_load_align":min(aligns)}
 result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_SHA"],
 "donor_go":"a7a82db31fe736ffedee330795a3234d358f1984",
-"rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record","mode":"NORMAL_FIXED_AUTO_AND_GAME2_OFF_NATIVE_COMPILED",
+"rust_features":"m0_v4_probe,m0_v4_embedded_go,fec2_product_record,native_fec_acceleration","native_fec_backend":"pinned Android ARM64 ISA-L cross-linked; runtime NOT_RUN","native_isal_source":"c387163fcbca62701d646149564c550c78a4f985","mode":"NORMAL_FIXED_AUTO_AND_GAME2_GAME4_OFF_FIXED_NATIVE_COMPILED",
 "android_abis":["arm64"],"ci_only_abis":["x86_64"],"go_os":"android","android_api":28,
 "go_build_tags":"wbd_v4_embedded_go","go_fec_game_native":"GAME2_OFF_REAL_GO_TLS_RUST_M4_COMPILED_DEVICE_NOT_RUN",
 "artifacts":{x.name:{"sha256":hashlib.sha256(x.read_bytes()).hexdigest(),
@@ -331,6 +358,9 @@ result={"schema":"android-root-product-a1-build/v1","source":os.environ["GITHUB_
 ci=dict(result)
 ci["android_abis"]=["x86_64"]
 ci["release"]=False
+ci["rust_features"]="m0_v4_probe,m0_v4_embedded_go,fec2_product_record"
+ci["native_fec_backend"]="scalar CI-only"
+ci.pop("native_isal_source",None)
 ci["artifacts"]={name:result["artifacts"][name] for name in ("wbd-v4-client-amd64","libwbd_engine-amd64.so")}
 assert {ci["artifacts"][name]["elf"]["machine"] for name in ci["artifacts"]}=={62}
 (p/"manifest-ci-x86_64.json").write_text(json.dumps(ci,indent=2,sort_keys=True)+"\n")

@@ -557,7 +557,7 @@ func (b *v4EmbeddedNativeBridge) configureOriginalOuterRepair(_ bool)error{retur
 // Original Go protected cold selection; original Rust M4 owns all DATA.
 func (b *v4EmbeddedNativeBridge) configureNormalStartupPadding(mode uint8,outer int)error{
     if b==nil||!b.committed||b.stopped||b.handle==0||
-       b.protectedEpoch==[16]byte{}||b.protectedFeatures!=3||
+       b.protectedEpoch==[16]byte{}||(b.protectedFeatures!=3&&b.protectedFeatures!=7)||
        mode>2||outer<576||outer>1500{return errV4Embedded}
     rc:=C.wbd_m0_embedded_go_normal_startup_padding_set(
         C.uint64_t(b.handle),C.uint32_t(mode),C.uint32_t(outer))

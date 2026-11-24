@@ -181,3 +181,20 @@ func TestB58AllAppsSixteenDirectPrefixesSingleFIB(t *testing.T){
  if reads>14{t.Fatalf("full-app startup still quadratic: %d",reads)}
  b33CheckedStop(t,owner,fake,path)
 }
+
+func TestB79CountryDirectKernelBatchAndStop(t *testing.T){
+ _,path,p:=fixture(t)
+ p.ServerIP="203.0.113.9"
+ var rows []string
+ for i:=0;i<256;i++{rows=append(rows,fmt.Sprintf("36.1.%d.0/24",i))}
+ var e error
+ p.DirectCIDRs,e=MergeCountryDirectCIDRs([]string{"192.168.7.0/24"},strings.Join(rows,"\n"),p.ServerIP)
+ if e!=nil||len(p.DirectCIDRs)!=257{t.Fatal(len(p.DirectCIDRs),e)}
+ f:=b33Fake(t);batches:=0
+ batch:=func(rows [][]string)error{batches++;for _,row:=range rows{if _,e:=f.run(row...);e!=nil{return e}};return nil}
+ owner,e:=New(f.run,path,p,batch)
+ if e!=nil{t.Fatal(e)}
+ if batches!=1||len(f.throws)!=258{t.Fatal("country FIB not batch installed",batches,len(f.throws))}
+ b33CheckedStop(t,owner,f,path)
+ if batches!=2{t.Fatal("country FIB not batch removed",batches)}
+}

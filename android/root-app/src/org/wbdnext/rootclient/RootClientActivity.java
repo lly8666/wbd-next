@@ -53,8 +53,8 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredSelection=new TreeMap<>();
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField,ipv6GatewayField,ipv6DirectCIDRsField,tunnelDNSUpstreamField;
-    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
+    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes,game4CopySchedules;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,cnIPDirect,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     private Spinner tetherChoices;
     private RootTetherScope tetherWatch;
     private final java.util.List<RootTetherScope> tetherScopes=new java.util.ArrayList<>();
@@ -676,7 +676,7 @@ public final class RootClientActivity extends Activity {
             autoConnectedDirect.isChecked(),
             backgroundNetworkRecovery.isChecked()?2:autoNetworkRecovery.isChecked()?1:0,
             Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()),
-            appTcpDNS.isChecked(),tetherSharing.isChecked(),systemDNS.isChecked(),systemDNS6.isChecked(),RootConnectionSettings.ipv6Gateway(ipv6GatewayField.getText().toString()),RootConnectionSettings.ipv6DirectCIDRs(ipv6DirectCIDRsField.getText().toString()),RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstreamField.getText().toString()));
+            appTcpDNS.isChecked(),tetherSharing.isChecked(),systemDNS.isChecked(),systemDNS6.isChecked(),RootConnectionSettings.ipv6Gateway(ipv6GatewayField.getText().toString()),RootConnectionSettings.ipv6DirectCIDRs(ipv6DirectCIDRsField.getText().toString()),RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstreamField.getText().toString()),game4CopySchedules.getSelectedItem().toString(),cnIPDirect.isChecked());
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -700,12 +700,14 @@ public final class RootClientActivity extends Activity {
         selectSpinner(recordCiphers,s.cipher);
         selectSpinner(tunQueueSizes,Integer.toString(s.tunQueue));
         selectSpinner(startupPaddingModes,s.padding);
+        selectSpinner(game4CopySchedules,s.game4CopySchedule);
         selectSpinner(fecModes,s.mode);
         selectSpinner(fecProfiles,Integer.toString(s.profile));
         tlsVerifyServer.setChecked(s.verifyTLS);
         tunnelDNS.setChecked(s.tunnelDNS);
         physicalDNS.setChecked(s.physicalDNS);
         cnSplitDNS.setChecked(s.cnSplitDNS);
+        cnIPDirect.setChecked(s.cnIPDirect);
         appTcpDNS.setChecked(s.appTcpDNS);
         tetherSharing.setChecked(s.tetherSharing);
         systemDNS.setChecked(s.systemDNS);
@@ -922,8 +924,6 @@ public final class RootClientActivity extends Activity {
             String fecMode=fecModes.getSelectedItem().toString();
             int fecProfile=Integer.parseInt(fecProfiles.getSelectedItem().toString());
             int nativeHealthSeconds=Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString());
-            if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
-                throw new IllegalArgumentException("Fixed/Auto/Game2/Game4 and fixed Game FEC require startup padding off");
             // B44: Game2/off now uses the existing Normal physical and CN
             // UDP53 owner in the original Rust single-TUN M4.
             int requestedTunQueue=Integer.parseInt(tunQueueSizes.getSelectedItem().toString());
@@ -1013,6 +1013,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("record_cipher",recordCipher);
             request.putExtra("tun_txqlen",requestedTunQueue);
             request.putExtra("startup_padding",paddingMode);
+            request.putExtra("game4_copy_schedule",game4CopySchedules.getSelectedItem().toString());
             request.putExtra("fec_mode",fecMode);
             request.putExtra("fec_profile",fecProfile);
             request.putExtra("native_health_seconds",nativeHealthSeconds);
@@ -1024,6 +1025,7 @@ public final class RootClientActivity extends Activity {
             request.putExtra("tunnel_dns",tunnelDNS.isChecked());
             request.putExtra("physical_dns",physicalDNS.isChecked());
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
+            request.putExtra("cn_ip_direct",cnIPDirect.isChecked());
             request.putExtra("app_tcp_dns",appTcpDNS.isChecked()&&
                 (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
             request.putExtra("system_dns",systemDNS.isChecked()&&
@@ -1219,13 +1221,20 @@ public final class RootClientActivity extends Activity {
             new String[]{"500","2048"}));
         pane.addView(tunQueueSizes);
         TextView padLabel=new TextView(this);
-        padLabel.setText("原 Normal 隧道启动填充（默认off；tls仅TLS、flows普通TCP/UDP；不等于FEC）");
+        padLabel.setText("原生七模式隧道启动填充（默认off；tls仅TLS、flows普通TCP/UDP；不等于FEC）");
         pane.addView(padLabel);
         startupPaddingModes=new Spinner(this);
         startupPaddingModes.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
             new String[]{"off","tls","flows"}));
         pane.addView(startupPaddingModes);
+        TextView game4ScheduleLabel=new TextView(this);
+        game4ScheduleLabel.setText("Game4副本策略（默认宽错峰；仅Game4生效）");
+        pane.addView(game4ScheduleLabel);
+        game4CopySchedules=new Spinner(this);
+        game4CopySchedules.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,new String[]{"stagger-4-50-140","stagger-4-20-60","immediate"}));
+        pane.addView(game4CopySchedules);
         user=input(pane,"Authenticated account",InputType.TYPE_CLASS_TEXT);
         password=input(pane,"Password (app-private file, not argv)",
             InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
@@ -1342,6 +1351,10 @@ public final class RootClientActivity extends Activity {
         cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走配置的WBD隧道DNS（不接管Android系统DNS）");
         cnSplitDNS.setChecked(false);
         pane.addView(cnSplitDNS);
+        cnIPDirect=new CheckBox(this);
+        cnIPDirect.setText("普通CN业务分流：按签名APK内APNIC中国IPv4分配网段直连；域名仍按上述DNS模式，海外实际IP仍走隧道");
+        cnIPDirect.setChecked(false);
+        pane.addView(cnIPDirect);
         appTcpDNS=new CheckBox(this);
         appTcpDNS.setText("可选App TCP/53 DNS：进入WBD的应用TCP查询也按上面选定的DNS模式处理（内核TCP，不接管系统netd）");
         appTcpDNS.setChecked(false);
@@ -1381,9 +1394,9 @@ public final class RootClientActivity extends Activity {
                    "game4".equals(fecModes.getSelectedItem().toString())||
                    "game2-fixed".equals(fecModes.getSelectedItem().toString())||
                    "game4-fixed".equals(fecModes.getSelectedItem().toString())){
-                    // Keep whichever of Normal's three DNS modes was
-                    // selected; Game2 retains no startup padding.
-                    startupPaddingModes.setSelection(0);
+                    // Game uses the same authenticated padding selection as Normal.
+                    game4CopySchedules.setEnabled("game4".equals(fecModes.getSelectedItem().toString())||
+                        "game4-fixed".equals(fecModes.getSelectedItem().toString()));
                 }
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent){}

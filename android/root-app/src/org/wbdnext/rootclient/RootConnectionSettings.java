@@ -15,7 +15,8 @@ import java.util.TreeSet;
  * only after its package AND current installed UID still match.
  */
 final class RootConnectionSettings {
-    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream,ipv6Gateway,ipv6DirectCIDRs,tunnelDNSUpstream;
+    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream,ipv6Gateway,ipv6DirectCIDRs,tunnelDNSUpstream,game4CopySchedule;
+    final boolean cnIPDirect;
     final int port,outerMTU,tunQueue,profile,nativeHealthSeconds,recoveryMode,rotationMinutes;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     final Map<String,Integer> selected,bypass;
@@ -178,6 +179,32 @@ final class RootConnectionSettings {
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
         boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,String tunnelDNSUpstream) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,recoveryMode,rotationMinutes,appTcpDNS,tetherSharing,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,tunnelDNSUpstream,"stagger-4-50-140");
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,String tunnelDNSUpstream,String game4CopySchedule) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,recoveryMode,rotationMinutes,appTcpDNS,tetherSharing,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,tunnelDNSUpstream,game4CopySchedule,false);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,String tunnelDNSUpstream,String game4CopySchedule,boolean cnIPDirect) {
+        this.cnIPDirect=cnIPDirect;
+        this.game4CopySchedule=game4CopySchedule(game4CopySchedule);
         this.tunnelDNSUpstream=RootPhysicalDNSUpstream.tunnel(tunnelDNSUpstream);
         this.ipv6Gateway=ipv6Gateway(ipv6Gateway);
         this.ipv6DirectCIDRs=ipv6DirectCIDRs(ipv6DirectCIDRs);
@@ -203,6 +230,11 @@ final class RootConnectionSettings {
         this.selected=new TreeMap<>(selected);
         if(!valid())throw new IllegalArgumentException("invalid connection settings");
     }
+    static String game4CopySchedule(String value){
+        if(value==null||value.isEmpty())return "stagger-4-50-140";
+        if(!oneOf(value,"immediate","stagger-4-20-60","stagger-4-50-140"))throw new IllegalArgumentException("invalid Game4 schedule");
+        return value;
+    }
     private static boolean oneOf(String value,String... options){
         if(value==null)return false;
         for(String x:options)if(x.equals(value))return true;
@@ -220,7 +252,6 @@ final class RootConnectionSettings {
            !oneOf(padding,"off","tls","flows")||
            !oneOf(mode,"normal","fec-fixed","fec-auto","game2","game4",
                "game2-fixed","game4-fixed")||
-           (!"normal".equals(mode)&&!"off".equals(padding))||
            (tunnelDNS?1:0)+(physicalDNS?1:0)+(cnSplitDNS?1:0)>1||
            selected.size()>SelectedAppGroup.MAX_PACKAGES||
            (allApps&&!selected.isEmpty())||
@@ -271,6 +302,8 @@ final class RootConnectionSettings {
         p.setProperty("direct_cidrs",directCIDRs);
         p.setProperty("physical_dns_upstream",physicalDNSUpstream);
         p.setProperty("tunnel_dns_upstream",tunnelDNSUpstream);
+        p.setProperty("game4_copy_schedule",game4CopySchedule);
+        p.setProperty("cn_ip_direct",Boolean.toString(cnIPDirect));
         p.setProperty("physical_dns_follow_network",Boolean.toString(physicalDNSFollowNetwork));
         p.setProperty("native_health_seconds",Integer.toString(nativeHealthSeconds));
         p.setProperty("direct_lan_auto",Boolean.toString(autoConnectedDirect));
@@ -348,7 +381,7 @@ final class RootConnectionSettings {
                 p.containsKey("app_tcp_dns")&&flag(p,"app_tcp_dns"),
                 p.containsKey("tether_sharing")&&flag(p,"tether_sharing"),
                 p.containsKey("system_dns")&&flag(p,"system_dns"),
-                p.containsKey("system_dns6")&&flag(p,"system_dns6"),p.getProperty("ipv6_gateway",""),p.getProperty("ipv6_direct_cidrs",""),p.getProperty("tunnel_dns_upstream",RootPhysicalDNSUpstream.TUNNEL_DEFAULT));
+                p.containsKey("system_dns6")&&flag(p,"system_dns6"),p.getProperty("ipv6_gateway",""),p.getProperty("ipv6_direct_cidrs",""),p.getProperty("tunnel_dns_upstream",RootPhysicalDNSUpstream.TUNNEL_DEFAULT),p.getProperty("game4_copy_schedule","stagger-4-50-140"),p.containsKey("cn_ip_direct")&&flag(p,"cn_ip_direct"));
         }catch(IllegalArgumentException invalid){
             return null;
         }

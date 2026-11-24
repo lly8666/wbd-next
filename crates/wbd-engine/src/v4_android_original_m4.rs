@@ -232,10 +232,23 @@ fn send_android_fixed_source(
             ticket.block_id,ticket.index,plain,frame.record_payload_mtu,
             &mut record.writable()[14..end]
         ).ok()!=Some(len){return false}
-        let (pn,_,_)=match e.owner.seal_fec2_product_one(
-            record,len,2,frame,u64::from(physical),epoch,at
+        let pad=if let Some(policy)=e.android_startup_padding.as_mut(){
+            let ms=at.0/1_000_000;
+            if ms.saturating_sub(e.android_startup_pad_gc_ms)>=30_000{
+                policy.expire_coarse(ms);e.android_startup_pad_gc_ms=ms;
+            }
+            let room=frame.record_wire_mtu.min(e.android_startup_pad_wire_limit)
+                .min(record.writable().len()).saturating_sub(len.saturating_add(31));
+            policy.propose(plain,ms,room)
+        }else{0};
+        let (pn,_,_)=match e.owner.seal_fec2_product_one_padded(
+            record,len,2,frame,u64::from(physical),epoch,at,pad
         ){Ok(x)=>x,Err(_)=>return false};
         let copied=send_staged(e,raw,stats,storage,scratch,at)==Some(pn);
+        if copied&&pad>0{
+            stats.startup_padding_copied_records.fetch_add(1,Ordering::Relaxed);
+            stats.startup_padding_copied_bytes.fetch_add(pad as u64,Ordering::Relaxed);
+        }
         if let Some(q)=e.quality_tx.as_mut(){
             // Register the very same original kind2 PN AFTER real RAW M4
             // settlement. Unsent never becomes first-send or loss=zero.
@@ -1649,7 +1662,7 @@ pub(super) fn start(handle:u64,ifindex:u32)->i32{
     });
     OK
 }
-// Real Go TLS/cold owner only; this cannot enable Fixed/Auto/Game.
+// Real Go TLS/cold owner, shared Normal and Fixed/Auto source padding.
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_normal_startup_padding_set(
     h:u64,mode:u32,outer_path_mtu:u32
@@ -1662,7 +1675,7 @@ pub extern "C" fn wbd_m0_embedded_go_normal_startup_padding_set(
     if !(576..=1500).contains(&outer_path_mtu){return INVALID}
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(mut e)=cell.lock()else{return BAD_STAGE};
-    if e.phase!=PH_ACTIVE||e.server_side||e.protected_features!=3||
+    if e.phase!=PH_ACTIVE||e.server_side||!matches!(e.protected_features,3|7)||
        e.android_workers.is_some()||e.android_joining{return BAD_STAGE}
     let Some((_,epoch))=e.owner.normal_firstsend_identity()else{return BAD_STAGE};
     let directional=crate::v4_client_startup_padding::linux_tx_padding_epoch(epoch,false);
@@ -1687,7 +1700,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_normal_startup_padding_counters(
     if mode.is_null()||records.is_null()||bytes.is_null(){return INVALID}
     let Ok(cell)=session(h)else{return UNKNOWN};
     let Ok(e)=cell.lock()else{return BAD_STAGE};
-    if e.phase!=PH_ACTIVE||e.server_side||e.protected_features!=3{return BAD_STAGE}
+    if e.phase!=PH_ACTIVE||e.server_side||!matches!(e.protected_features,3|7){return BAD_STAGE}
     unsafe{
         mode.write(e.android_startup_pad_mode);
         records.write(e.android_metrics.startup_padding_copied_records.load(Ordering::Relaxed));

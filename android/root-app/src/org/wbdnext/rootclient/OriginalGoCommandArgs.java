@@ -223,8 +223,6 @@ final class OriginalGoCommandArgs {
             throw new IllegalArgumentException("Android original Go supports Normal/FEC and Game2/4 off/fixed");
         if(fecProfile<0||fecProfile>6)
             throw new IllegalArgumentException("FEC2 Fixed profile must be 0..6");
-        if(!"normal".equals(fecMode)&&!"off".equals(paddingMode))
-            throw new IllegalArgumentException("Fixed/Auto/Game2/Game4 require startup padding off");
         if(!"off".equals(paddingMode)&&!"tls".equals(paddingMode)&&
            !"flows".equals(paddingMode))
             throw new IllegalArgumentException("unsupported original startup padding");

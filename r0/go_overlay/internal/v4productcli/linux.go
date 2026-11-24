@@ -136,6 +136,7 @@ type config struct{
     androidRouteAllApps bool // ordinary app UID ranges, no root/system/main FIB
     androidRouteExcludeAppIDs []int // own + KernelSU manager per-user app ID exclusions
     androidDirectCIDRs []string // opt-in real kernel throw routes in SAME UID table
+    androidCNIPv4Snapshot string // signed allocation snapshot, cold-only
     // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
     // System resolver/netd and CN physical split are NOT enabled by this.
     androidTunnelDNS bool
@@ -276,6 +277,7 @@ func parse(role string,args []string)(config,error){
         "Android all-apps: mandatory canonical excluded controller+root-manager app IDs (10000..19999)")
     androidDirectCIDRs:=flags.String("android-direct-cidrs","",
         "Android Root: up to sixteen explicit IPv4 CIDRs to bypass the WBD private UID table; empty keeps original full tunnel")
+    cnIPv4File:=flags.String("android-cn-ipv4-file","","Android Root: signed APNIC CN IPv4 prefixes for ordinary business direct routing")
     cnGeositeFile:=flags.String("android-cn-geosite-file","",
         "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
     androidTunnelDNS:=flags.Bool("android-tunnel-dns",false,
@@ -432,13 +434,19 @@ func parse(role string,args []string)(config,error){
         if e!=nil{return c,e}
         c.androidDirectCIDRs,e=rootjournal.ParseDirectCIDRs(*androidDirectCIDRs)
         if e!=nil{return c,fmt.Errorf("Android cold direct IPv4 CIDRs rejected: %w",e)}
-        if len(c.androidDirectCIDRs)>0&&!(*androidRouteAll||*androidRouteUID!=0||*androidRouteGroup!=""){
+        if (len(c.androidDirectCIDRs)>0||*cnIPv4File!="")&&!(*androidRouteAll||*androidRouteUID!=0||*androidRouteGroup!=""){
             return c,fmt.Errorf("Android direct IPv4 CIDRs need selected or all-App UID scope")
         }
         if *androidRouteAll{
             c.androidRouteExcludeAppIDs,e=parseAndroidExcludedAppIDsArg(*androidRouteExclude)
             if e!=nil{return c,e}
             c.androidRouteAllApps=true
+        }
+        if *cnIPv4File!=""{
+            data,err:=os.ReadFile(*cnIPv4File)
+            if err!=nil{return c,err}
+            if _,err=rootjournal.MergeCountryDirectCIDRs(nil,string(data),"");err!=nil{return c,err}
+            c.androidCNIPv4Snapshot=string(data)
         }
         if *cnGeositeFile!=""{
             c.androidCNSnapshot,e=dnsnative.ReadPinnedCNFile(*cnGeositeFile)
@@ -451,7 +459,7 @@ func parse(role string,args []string)(config,error){
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
-              *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
+              *androidDirectCIDRs!=""||*cnIPv4File!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||*androidTunnelDNSUpstream!="1.1.1.1"||
               *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidIPv6Gateway!=""||*androidIPv6DirectCIDRs!=""||*androidIPv6DirectLAN||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
@@ -1209,7 +1217,7 @@ func recoverOriginalAndroidRootOwned()error{
         c,cancel:=context.WithTimeout(context.Background(),3*time.Second)
         defer cancel()
         b,e:=exec.CommandContext(c,"ip",args...).CombinedOutput()
-        if len(b)>256<<10{return "",fmt.Errorf("owned ip readback oversized")}
+        if len(b)>1024<<10{return "",fmt.Errorf("owned ip readback oversized")}
         if e!=nil{return "",fmt.Errorf("owned ip mutation/readback failed")}
         return string(b),nil
     }
@@ -1239,7 +1247,7 @@ func recoverOriginalAndroidRootOwned()error{
     systemDNS6Err:=rootjournal.RecoverSystemDNS6(runIP,runFirewall6,nil,nil,root+"system-dns6-journal.json")
     systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json")
     dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")
-    _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
+    _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json",originalIPv6Batch)
     routeErr=errors.Join(ipv6Err,systemDNS6Err,systemDNSErr,dnsErr,tetherErr,routeErr)
     if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
         log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")
@@ -1297,12 +1305,6 @@ func Run(role string,args []string)(retErr error){
            !cfg.disableOuterRepair||
            !cfg.autoIP||cfg.rotationInterval!=0{
             return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/4 fixed/off only; rotation/outer-repair unavailable")
-        }
-        if cfg.gameLanes!=0&&(cfg.startupPaddingMode!=0||
-           (cfg.gameLanes==4&&(!cfg.game4CopyStagger||!cfg.game4CopyWideStagger))){
-            // Original Game FEC fixed profiles use the existing Linux
-            // codec, and the same Android Rust 1-TUN 2/4-RAW owner.
-            return fmt.Errorf("Android Game2/4 requires padding off and default Game4 schedule")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
         if cfg.androidClatParent!=""||cfg.androidClatPrefix!=""{

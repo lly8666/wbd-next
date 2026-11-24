@@ -15,14 +15,15 @@ final class NativePayload {
     final File client;
     final File engine;
     final File cnGeosite;
+    final File cnIPv4;
     final String source;
     final String executableName;
     private static final String PINNED_CN_SHA256=
         "45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6";
     private static final String PINNED_CN_SOURCE=
         "41504eae2a11f305fe88cfc605cf6c105a80bf5a";
-    private NativePayload(File c,File e,File g,String s,String binary){
-        client=c;engine=e;cnGeosite=g;source=s;executableName=binary;
+    private NativePayload(File c,File e,File g,File ipv4,String s,String binary){
+        client=c;engine=e;cnGeosite=g;cnIPv4=ipv4;source=s;executableName=binary;
     }
     private static boolean hasAsset(Context ctx,String path){
         try(InputStream in=ctx.getAssets().open(path)){
@@ -107,7 +108,8 @@ final class NativePayload {
             "device-selftest-arm64",hash,1024*1024);
     }
 
-    static NativePayload stage(Context ctx)throws Exception{
+    static NativePayload stage(Context ctx)throws Exception{return stage(ctx,false);}
+    static NativePayload stage(Context ctx,boolean cnIPDirect)throws Exception{
         // Signed APK may contain one and ONLY one supported 64-bit Bionic ABI.
         // Release bundles ARM64; CI-only test bundles x86_64. The same Java
         // controller/Go/Rust source is used by both, never a native fallback.
@@ -170,6 +172,11 @@ final class NativePayload {
             "libwbd_engine.so",rustSha,40*1024*1024);
         File cn=checkedCopy(ctx,prefix,"wbd-cn-geosite.txt",root,
             "wbd-cn-geosite.txt",PINNED_CN_SHA256,6000000);
-        return new NativePayload(go,rust,cn,source,executable);
+        File cnIP=null;
+        if(cnIPDirect){
+            JSONObject ipMeta=new JSONObject(new String(load(ctx,prefix+"cn-ipv4-provenance.json",65536),java.nio.charset.StandardCharsets.UTF_8));
+            cnIP=checkedCopy(ctx,prefix,"wbd-cn-ipv4.txt",root,"wbd-cn-ipv4.txt",ipMeta.getString("cidr_sha256"),256*1024);
+        }
+        return new NativePayload(go,rust,cn,cnIP,source,executable);
     }
 }

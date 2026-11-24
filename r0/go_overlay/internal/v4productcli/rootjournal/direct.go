@@ -9,6 +9,40 @@ import (
 )
 
 const MaxDirectIPv4CIDRs=16
+// A signed country allocation snapshot is a separate cold input. Keep the
+// user's manual limit at 16; the combined FIB can contain thousands of rows.
+const MaxCountryIPv4CIDRs=8192
+type DirectBatch func([][]string)error
+
+func MergeCountryDirectCIDRs(manual []string,snapshot,peer string)([]string,error){
+    if len(snapshot)>256<<10{return nil,fmt.Errorf("country prefix snapshot too large")}
+    lines:=strings.Fields(snapshot)
+    if len(lines)==0||len(lines)>MaxCountryIPv4CIDRs{return nil,fmt.Errorf("country prefix count")}
+    seen:=map[string]bool{}
+    for _,s:=range append(append([]string(nil),manual...),lines...){
+        p,e:=ParseDirectCIDRs(s)
+        if e!=nil||len(p)!=1{return nil,fmt.Errorf("invalid country/direct prefix: %q",s)}
+        if p[0]!=peer+"/32"{seen[p[0]]=true}
+    }
+    out:=make([]string,0,len(seen))
+    for s:=range seen{out=append(out,s)}
+    sort.Strings(out)
+    return out,nil
+}
+func changeDirectRoutes(run Runner,batch DirectBatch,action string,cidrs []string,flags []bool)error{
+    rows:=make([][]string,0,len(cidrs))
+    for i,cidr:=range cidrs{
+        if flags!=nil&&!flags[i]{continue}
+        rows=append(rows,directArgs(action,cidr))
+    }
+    if len(rows)==0{return nil}
+    if batch!=nil{return batch(rows)}
+    for _,row:=range rows{if _,e:=run(row...);e!=nil{return e}}
+    return nil
+}
+func optionalDirectBatch(batch []DirectBatch)DirectBatch{
+    if len(batch)>0{return batch[0]};return nil
+}
 
 // ParseDirectCIDRs is a cold-only explicit user route selection. The real
 // Android kernel policy still belongs to the existing UID table owner.
@@ -36,7 +70,7 @@ func ParseDirectCIDRs(raw string)([]string,error){
     return result,nil
 }
 func validDirectCIDRs(routes []string,peer string)bool{
-    if len(routes)>MaxDirectIPv4CIDRs{return false}
+    if len(routes)>MaxDirectIPv4CIDRs+MaxCountryIPv4CIDRs{return false}
     previous:=""
     for _,s:=range routes{
         canonical,e:=ParseDirectCIDRs(s)
@@ -53,15 +87,14 @@ func validDirectCIDRs(routes []string,peer string)bool{
 func routeWithDirect(out,tun,peer string,direct []string)(bool,bool,[]bool,error){
     found:=make([]bool,len(direct))
     stripped:=make([]string,0,2)
+    indexes:=make(map[string]int,len(direct))
+    for i,cidr:=range direct{indexes[cidr]=i;if strings.HasSuffix(cidr,"/32"){indexes[strings.TrimSuffix(cidr,"/32")]=i}}
     for _,line:=range strings.Split(strings.TrimSpace(out),"\n"){
         fields:=strings.Fields(line)
         if len(fields)==0{continue}
         matched:=-1
         if len(fields)>=2&&fields[0]=="throw"{
-            for i,cidr:=range direct{
-                if fields[1]==cidr||strings.HasSuffix(cidr,"/32")&&
-                    fields[1]==strings.TrimSuffix(cidr,"/32"){matched=i;break}
-            }
+            if i,ok:=indexes[fields[1]];ok{matched=i}
         }
         if matched<0{stripped=append(stripped,line);continue}
         if found[matched]{return false,false,nil,fmt.Errorf("duplicate direct route")}

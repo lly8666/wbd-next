@@ -44,6 +44,7 @@ type AllAppPlan struct {
 type allRange struct{ from,to int }
 type AllAppSession struct {
  run Runner
+ directBatch DirectBatch
  journal string
  plan AllAppPlan
  lock *os.File
@@ -204,11 +205,7 @@ func (s *AllAppSession) removeExact(p AllAppPlan)error{
    if _,e=s.run(allRuleArgs("del",rs[i],i)...);e!=nil{return e}
   }
  }
- for i:=len(direct)-1;i>=0;i--{
-  if direct[i]{
-   if _,e=s.run(directArgs("del",p.DirectCIDRs[i])...);e!=nil{return e}
-  }
- }
+ if e=changeDirectRoutes(s.run,s.directBatch,"del",p.DirectCIDRs,direct);e!=nil{return e}
  if peer{
   if _,e=s.run(peerThrowArgs("del",p.ServerIP)...);e!=nil{return e}
  }
@@ -228,8 +225,8 @@ func readAllAppJournal(path string)(AllAppPlan,bool,error){
  owner,ok:=st.Sys().(*syscall.Stat_t)
  if !ok||!st.Mode().IsRegular()||st.Mode().Perm()!=0600||
     owner.Uid!=uint32(os.Geteuid())||st.Size()<2||
-    st.Size()>maxJournalBytes{return AllAppPlan{},false,fmt.Errorf("foreign all-app journal")}
- raw,e:=io.ReadAll(io.LimitReader(f,maxJournalBytes+1))
+    st.Size()>maxRouteJournalBytes{return AllAppPlan{},false,fmt.Errorf("foreign all-app journal")}
+ raw,e:=io.ReadAll(io.LimitReader(f,maxRouteJournalBytes+1))
  if e!=nil{return AllAppPlan{},false,e}
  dec:=json.NewDecoder(strings.NewReader(string(raw)))
  dec.DisallowUnknownFields()
@@ -241,7 +238,7 @@ func readAllAppJournal(path string)(AllAppPlan,bool,error){
 func writeAllAppJournal(path string,p AllAppPlan)error{
  raw,e:=json.Marshal(p);if e!=nil{return e}
  raw=append(raw,'\n')
- if len(raw)>maxJournalBytes{return fmt.Errorf("all-app journal too large")}
+ if len(raw)>maxRouteJournalBytes{return fmt.Errorf("all-app journal too large")}
  f,e:=openNoFollow(path,syscall.O_WRONLY|syscall.O_CREAT|syscall.O_EXCL,0600)
  if e!=nil{return e}
  n,e:=f.Write(raw)
@@ -263,7 +260,7 @@ func sameAllAppOwner(a,b AllAppPlan)bool{
 }
 // NewAllApps is intentionally incompatible with prior single/group owner
 // journals. Fail closed rather than hijack/reinterpret old UID rules.
-func NewAllApps(run Runner,path string,original AllAppPlan)(session *AllAppSession,retErr error){
+func NewAllApps(run Runner,path string,original AllAppPlan,batches ...DirectBatch)(session *AllAppSession,retErr error){
  if run==nil{return nil,fmt.Errorf("missing root kernel runner")}
  if e:=ownedDirectory(path);e!=nil{return nil,e}
  lock,e:=openOwnerLock(path);if e!=nil{return nil,e}
@@ -273,7 +270,7 @@ func NewAllApps(run Runner,path string,original AllAppPlan)(session *AllAppSessi
  if _,e=rand.Read(nonce[:]);e!=nil{return nil,e}
  original.Nonce=hex.EncodeToString(nonce[:])
  if !original.valid(){return nil,fmt.Errorf("invalid bounded all-app UID/Network scope")}
- s:=&AllAppSession{run:run,journal:path,plan:original,lock:lock}
+ s:=&AllAppSession{run:run,journal:path,plan:original,lock:lock,directBatch:optionalDirectBatch(batches)}
  version,exists,e:=readOwnedJournalVersion(path)
  if e!=nil{return nil,e}
  if exists{
@@ -309,10 +306,8 @@ func NewAllApps(run Runner,path string,original AllAppPlan)(session *AllAppSessi
  // before any App UID rule can route new business.
  // B58: Install all direct CIDRs before publishing any UID route.
  // One full FIB check replaces per-prefix readbacks.
- for _,cidr:=range original.DirectCIDRs{
-  if _,e=s.run(directArgs("add",cidr)...);e!=nil{
-   return nil,errors.Join(e,s.removeExact(original))
-  }
+ if e=changeDirectRoutes(s.run,s.directBatch,"add",original.DirectCIDRs,nil);e!=nil{
+  return nil,errors.Join(e,s.removeExact(original))
  }
  if len(original.DirectCIDRs)>0{
   route,peer,direct,rules,e=s.query(original)

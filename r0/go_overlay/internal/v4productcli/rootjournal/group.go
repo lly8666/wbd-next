@@ -35,6 +35,7 @@ type GroupPlan struct {
 
 type GroupSession struct {
  run Runner
+ directBatch DirectBatch
  journal string
  plan GroupPlan
  active bool
@@ -116,8 +117,8 @@ func groupRead(path string)(GroupPlan,bool,error){
  owner,ok:=st.Sys().(*syscall.Stat_t)
  if !ok||!st.Mode().IsRegular()||st.Mode().Perm()!=0600||
   owner.Uid!=uint32(os.Geteuid())||st.Size()<2||
-  st.Size()>maxJournalBytes{return GroupPlan{},false,fmt.Errorf("foreign group journal")}
- raw,err:=io.ReadAll(io.LimitReader(f,maxJournalBytes+1))
+  st.Size()>maxRouteJournalBytes{return GroupPlan{},false,fmt.Errorf("foreign group journal")}
+ raw,err:=io.ReadAll(io.LimitReader(f,maxRouteJournalBytes+1))
  if err!=nil{return GroupPlan{},false,err}
  dec:=json.NewDecoder(strings.NewReader(string(raw)))
  dec.DisallowUnknownFields()
@@ -134,7 +135,7 @@ func groupWrite(path string,p GroupPlan)error{
  raw,err:=json.Marshal(p)
  if err!=nil{return err}
  raw=append(raw,'\n')
- if len(raw)>maxJournalBytes{return fmt.Errorf("group journal too large")}
+ if len(raw)>maxRouteJournalBytes{return fmt.Errorf("group journal too large")}
  f,err:=openNoFollow(path,syscall.O_WRONLY|syscall.O_CREAT|syscall.O_EXCL,0600)
  if err!=nil{return err}
  n,writeErr:=f.Write(raw)
@@ -204,11 +205,7 @@ func (s *GroupSession) removeExact(p GroupPlan)error{
    if _,err=s.run(groupRuleArgs("del",p.UIDs[i],i)...);err!=nil{return err}
   }
  }
- for i:=len(direct)-1;i>=0;i--{
-  if direct[i]{
-   if _,err=s.run(directArgs("del",p.DirectCIDRs[i])...);err!=nil{return err}
-  }
- }
+ if err=changeDirectRoutes(s.run,s.directBatch,"del",p.DirectCIDRs,direct);err!=nil{return err}
  if peer{
   if _,err=s.run(peerThrowArgs("del",p.ServerIP)...);err!=nil{return err}
  }
@@ -228,10 +225,10 @@ func readOwnedJournalVersion(path string)(int,bool,error){
  if err!=nil{return 0,false,err}
  owner,ok:=st.Sys().(*syscall.Stat_t)
  if !ok||!st.Mode().IsRegular()||st.Mode().Perm()!=0600||
-  owner.Uid!=uint32(os.Geteuid())||st.Size()<2||st.Size()>maxJournalBytes{
+  owner.Uid!=uint32(os.Geteuid())||st.Size()<2||st.Size()>maxRouteJournalBytes{
   return 0,false,fmt.Errorf("invalid root route journal ownership")}
  var envelope struct{Version int `json:"version"`}
- raw,err:=io.ReadAll(io.LimitReader(f,maxJournalBytes+1))
+ raw,err:=io.ReadAll(io.LimitReader(f,maxRouteJournalBytes+1))
  if err!=nil{return 0,false,err}
  if err=json.Unmarshal(raw,&envelope);err!=nil{return 0,false,err}
  if envelope.Version!=version&&envelope.Version!=groupVersion&&
@@ -242,7 +239,7 @@ func readOwnedJournalVersion(path string)(int,bool,error){
 // NewGroup performs all-or-nothing (with durable crash recovery) for a
 // canonical group of 2..8 distinct Android application UIDs. It is mutually
 // exclusive with single-UID New by the SAME owner.lock and journal path.
-func NewGroup(run Runner,path string,original GroupPlan)(session *GroupSession,retErr error){
+func NewGroup(run Runner,path string,original GroupPlan,batches ...DirectBatch)(session *GroupSession,retErr error){
  if run==nil{return nil,fmt.Errorf("missing kernel runner")}
  if err:=ownedDirectory(path);err!=nil{return nil,err}
  lock,err:=openOwnerLock(path)
@@ -253,7 +250,7 @@ func NewGroup(run Runner,path string,original GroupPlan)(session *GroupSession,r
  if _,err=rand.Read(nonce[:]);err!=nil{return nil,err}
  original.Nonce=hex.EncodeToString(nonce[:])
  if !original.valid(){return nil,fmt.Errorf("invalid canonical Android UID group")}
- s:=&GroupSession{run:run,journal:path,plan:original,lock:lock}
+ s:=&GroupSession{run:run,journal:path,plan:original,lock:lock,directBatch:optionalDirectBatch(batches)}
  kind,exists,err:=readOwnedJournalVersion(path)
  if err!=nil{return nil,err}
  if exists {
@@ -263,7 +260,7 @@ func NewGroup(run Runner,path string,original GroupPlan)(session *GroupSession,r
    if old.Tun!=original.Tun||old.Underlay!=original.Underlay||
     !hasUID(original.UIDs,old.UID){
     return nil,fmt.Errorf("foreign previous single UID route generation")}
-   legacy:=&Session{run:run,journal:path,plan:old,lock:lock}
+   legacy:=&Session{run:run,journal:path,plan:old,lock:lock,directBatch:s.directBatch}
    if e=legacy.removeExact(old);e!=nil{return nil,e}
   }else{
    old,found,e:=groupRead(path)
@@ -291,10 +288,8 @@ func NewGroup(run Runner,path string,original GroupPlan)(session *GroupSession,r
  }
  // B58: Every direct prefix is in the existing FIB before any UID is added.
  // A single exact snapshot replaces one route/rule show per prefix.
- for _,cidr:=range original.DirectCIDRs{
-  if _,err=s.run(directArgs("add",cidr)...);err!=nil{
-   return nil,errors.Join(err,s.removeExact(original))
-  }
+ if err=changeDirectRoutes(s.run,s.directBatch,"add",original.DirectCIDRs,nil);err!=nil{
+  return nil,errors.Join(err,s.removeExact(original))
  }
  if len(original.DirectCIDRs)>0{
   route,peer,direct,rules,checkErr:=s.query(original)

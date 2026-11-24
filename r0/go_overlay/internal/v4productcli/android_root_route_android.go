@@ -101,6 +101,12 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
+    directCIDRs:=c.androidDirectCIDRs
+    if c.androidCNIPv4Snapshot!=""{
+        directCIDRs,err=rootjournal.MergeCountryDirectCIDRs(directCIDRs,c.androidCNIPv4Snapshot,c.peerIP.String())
+        if err!=nil{return nil,err}
+        fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_CN_IPV4_PREFIXES role=client count=%d source=apnic\n",len(directCIDRs))
+    }
     if e:=rootjournal.RecoverIPv6CarrierBatch(runner,androidDNSFirewall,androidDNSFirewall6,originalIPv6Batch,androidIPv6CarrierJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal);e!=nil{return nil,e}
@@ -110,10 +116,10 @@ func androidRootRouteAfterNative(
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
             ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
             Tun:tun.name,Lease:lease.String(),ServerIP:c.peerIP.String(),
-            DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...),
+            DirectCIDRs:append([]string(nil),directCIDRs...),
             Underlay:c.rawInterface,
             NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
-        })
+        },androidDNSIPBatch)
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,full.Stop)
         if e!=nil{return nil,e}
@@ -133,9 +139,9 @@ func androidRootRouteAfterNative(
         group,e:=rootjournal.NewGroup(runner,rootOnlyJournal,rootjournal.GroupPlan{
             UIDs:append([]int(nil),c.androidRouteUIDs...),
             Tun:tun.name,Lease:lease.String(),ServerIP:c.peerIP.String(),
-            DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...),
+            DirectCIDRs:append([]string(nil),directCIDRs...),
             Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
-        })
+        },androidDNSIPBatch)
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,group.Stop)
         if e!=nil{return nil,e}
@@ -155,10 +161,10 @@ func androidRootRouteAfterNative(
     }
     session,e:=rootjournal.New(runner,rootOnlyJournal,rootjournal.Plan{
         UID:c.androidRouteUID,Tun:tun.name,Lease:lease.String(),
-        ServerIP:c.peerIP.String(),DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...),
+        ServerIP:c.peerIP.String(),DirectCIDRs:append([]string(nil),directCIDRs...),
         Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,
         IfIndex:physical.Index,
-    })
+    },androidDNSIPBatch)
     if e!=nil{return nil,e}
     stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,session.Stop)
     if e!=nil{return nil,e}

@@ -3855,8 +3855,9 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
     physical_dns:u32,upstream:*const u8,
     cn_raw:*const u8,cn_len:usize,
     game_fec_profile:u32,tunnel_upstream:*const u8,
+    startup_padding:u32,outer_path_mtu:u32,stagger:u32,
 )->i32{
-    if tunnel_upstream.is_null()||fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
+    if startup_padding>2||!(576..=1500).contains(&outer_path_mtu)||stagger>2||tunnel_upstream.is_null()||fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
        tunnel_dns>1||physical_dns>1||upstream.is_null()||
        !matches!(health_seconds,15|30)||cn_len>1024*1024||
        (game_fec_profile!=255&&game_fec_profile>6)||
@@ -3893,11 +3894,23 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
         .filter(|v|v.len()==g.android_lanes.len())
         else{return BAD_STAGE};
     let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
+    let mode=match startup_padding{
+        0=>crate::v4_client_startup_padding::StartupMode::Off,
+        1=>crate::v4_client_startup_padding::StartupMode::Tls,
+        _=>crate::v4_client_startup_padding::StartupMode::Flows,
+    };
+    if g.android_lanes.len()!=4&&stagger!=0{return INVALID}
+    {
+        let Ok(mut adapter)=g.adapter.lock()else{return BAD_STAGE};
+        let directional=crate::v4_client_startup_padding::linux_tx_padding_epoch(
+            g.original_identity.logical_epoch,g.server);
+        adapter.set_native_startup_padding(mode,directional,outer_path_mtu as usize);
+    }
     let workers=android_game_m4::AndroidGameWorkers::start(
         Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
         lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds,
         physical_dns==1,physical_upstream,cn,tunnel_dns_upstream,
-        (game_fec_profile!=255).then_some(game_fec_profile as u8)
+        (game_fec_profile!=255).then_some(game_fec_profile as u8),stagger
     );
     let Ok(workers)=workers else{return BAD_STAGE};
     g.android_workers=Some(workers);

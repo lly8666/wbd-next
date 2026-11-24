@@ -304,7 +304,7 @@ assert 'let lane_count=lanes.len();' in m4
 assert 'for i in 0..lane_count' in m4
 assert 'for id in 1..=lane_count' in m4
 assert 'let mut outer=[[0u8;2048];4];' in m4
-assert 'game.configure_game4_stagger_mode(2)' in m4
+assert 'game.configure_game4_stagger_mode(stagger)' in m4
 assert 'game.game4_next_due_ns()' in m4
 assert 'drain_original_game!(game,when)' in m4
 assert 'Game4 bool' in guard
@@ -320,8 +320,8 @@ assert 'GameFecEnabled:c.gameFecEnabled' in g
 assert 'GameFecProfile:c.gameFecProfile' in g
 assert 'extension.GameFec!=opt.GameFec' in Path(
     "r0/go_overlay/internal/realityfront/admission_v4.go").read_text()
-assert 'GameFec:negotiatedFec,StartupPadding:0' in bridge
-assert 'GameFec:negotiatedFec,StartupPadding:0' in bridge
+assert 'GameFec:negotiatedFec,StartupPadding:p.cfg.StartupPaddingMode' in bridge
+assert 'GameFec:negotiatedFec,StartupPadding:p.cfg.StartupPaddingMode' in bridge
 assert 'OriginalGameFecCounters()' in g
 assert 'C.wbd_fec_network_game_group_counters(' in bridge
 assert 'game.enable_game_fec(profile,false)' in m4
@@ -872,7 +872,7 @@ assert "fn send_android_fixed_due(" in fec_worker
 assert "stream.offer_source(slab,14..14+n,at" in fec_worker
 assert "wbd_codec::fec_v2::source_into(" in fec_worker
 assert "stream.poll_parity_quanta(at,1," in fec_worker
-assert "e.owner.seal_fec2_product_one(" in fec_worker
+assert "e.owner.seal_fec2_product_one_padded(" in fec_worker
 assert "send_staged(e,raw,stats,storage,scratch,at)==Some(pn)" in fec_worker
 assert "e.android_fec2_tx=Some(stream);" in fec_worker
 assert "!(e.protected_features==3||fixed_ready)" in fec_worker
@@ -924,7 +924,7 @@ assert "android_fixed_cold_and_m4_reservation_share_exact_14_bytes" in Path(
 ).read_text()
 # B17/B19 original Go Fixed/Auto -> native FEC2, Normal default.
 client=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
-assert 'v4ProductFecEnabled(p.cfg.FECMode)&&p.cfg.StartupPaddingMode!=0' in client
+assert 'v4ProductFecEnabled(p.cfg.FECMode)&&p.cfg.StartupPaddingMode!=0' not in client
 assert 'runtime.GOOS!="android"||mode==FecV2Off' in client
 assert 'if p.fec!=nil&&(runtime.GOOS!="android"||mode==FecV2Auto)' in client
 assert 'String fecMode=fecModes.getSelectedItem().toString()' in a
@@ -968,7 +968,9 @@ b33_ui=Path("android/root-app/src/org/wbdnext/rootclient/RootClientActivity.java
 b33_svc=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
 b33_argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
 assert 'flags.String("android-direct-cidrs"' in b33_go and 'rootjournal.ParseDirectCIDRs(' in b33_go
-assert b33_root.count('DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...)')==3
+assert b33_root.count('DirectCIDRs:append([]string(nil),directCIDRs...)')==3
+assert 'DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...)' in b33_root
+assert 'rootjournal.MergeCountryDirectCIDRs(directCIDRs,c.androidCNIPv4Snapshot,c.peerIP.String())' in b33_root
 assert 'routeWithDirect(' in b33_route and 'directArgs(' in b33_route
 assert 'direct_cidrs' in b33_ui and 'direct_cidrs' in b33_svc
 assert '--android-direct-cidrs' in b33_argv and 'RootDirectIPv4.canonicalCSV(' in b33_argv

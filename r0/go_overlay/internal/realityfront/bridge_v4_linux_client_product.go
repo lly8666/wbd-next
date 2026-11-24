@@ -120,8 +120,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     // original Rust feature7 FEC2 M4. FEC2 never uses Normal-only pad.
     if runtime.GOOS=="android" &&
        (!p.cfg.DisableOuterRepair||p.cfg.SharedTun!=nil||
-        !cfg.AutoLease||
-        (v4ProductFecEnabled(p.cfg.FECMode)&&p.cfg.StartupPaddingMode!=0)){
+        !cfg.AutoLease){
         return nil,ErrAdmissionUnsupported
     }
     conn:=assoc.BootstrapConn()
@@ -294,10 +293,8 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         if err!=nil{originalAndroidPostauth("HEALTH_FAILED")}
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
-    if err==nil&&p.cfg.OuterIPMTU!=0&&
-        (runtime.GOOS!="android"||mode==FecV2Off){
-        // Fixed's original FEC2 source budget is independent of
-        // Android Normal-only startup padding; Fixed requires off.
+    if err==nil&&p.cfg.OuterIPMTU!=0{
+        // Android and Linux use the same authenticated source-only padding.
         err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
     }
     // Source-locked Android feature3/off does not advertise the unported

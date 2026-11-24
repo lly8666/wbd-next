@@ -9,7 +9,7 @@ extern int32_t wbd_m0_embedded_go_game_group_join(const uint64_t *,size_t,uint32
 extern int32_t wbd_m0_embedded_go_game_group_state(uint64_t,uint32_t *,uint32_t *);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_bind(uint64_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_raw_state(uint64_t,uint32_t *);
-extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t,uint32_t,const unsigned char *);
+extern int32_t wbd_m0_embedded_go_android_game_group_m4_start(uint64_t,int32_t,const unsigned char *,size_t,uint32_t,uint32_t,uint32_t,const unsigned char *,const unsigned char *,size_t,uint32_t,const unsigned char *,uint32_t,uint32_t,uint32_t);
 extern int32_t wbd_m0_embedded_go_android_game_group_m4_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_fec_network_game_group_counters(uint64_t,uint64_t *,size_t);
 extern int32_t wbd_m0_embedded_go_game_group_stop(uint64_t);
@@ -37,6 +37,9 @@ type V4AndroidGameConfig struct{
     Lanes uint8
     GameFecEnabled bool
     GameFecProfile uint8
+    StartupPaddingMode uint8
+    OuterIPMTU int
+    Game4CopyStagger,Game4CopyWideStagger bool
     NetworkInterface string
     NetworkIfIndex uint32
     AndroidPhysicalNetworkHandle uint64
@@ -66,6 +69,8 @@ type V4AndroidGameProduct struct{
 func NewV4AndroidGameProduct(cfg V4AndroidGameConfig)(*V4AndroidGameProduct,error){
     if (cfg.Lanes!=2&&cfg.Lanes!=4)||
         (cfg.GameFecEnabled&&cfg.GameFecProfile>6)||
+        cfg.StartupPaddingMode>2||cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500||
+        (cfg.Game4CopyWideStagger&&!cfg.Game4CopyStagger)||
         cfg.Tun==nil||cfg.ConfigureLeaseIPv4==nil||
         cfg.NetworkInterface==""||len(cfg.NetworkInterface)>15||
         cfg.NetworkIfIndex==0||cfg.AndroidPhysicalNetworkHandle==0||
@@ -116,7 +121,7 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
         // Same real Go TLS policy and exporter as Linux Game2/off.
         session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),laneCfg,V4ClientOptions{
             DataPlaneReady:true,Epoch:epoch,fec2Product:true,
-            GameFec:negotiatedFec,StartupPadding:0,
+            GameFec:negotiatedFec,StartupPadding:p.cfg.StartupPaddingMode,
         })
         if e!=nil{return "",e}
         // EstablishClientV4 already compares the protected reply's
@@ -222,12 +227,16 @@ func (p *V4AndroidGameProduct) bindAndStartOriginalM4()error{
     }
     fec:=C.uint32_t(255) // off; 0..6 = original fixed Game FEC
     if p.cfg.GameFecEnabled{fec=C.uint32_t(p.cfg.GameFecProfile)}
+    stagger:=C.uint32_t(0)
+    if p.cfg.Game4CopyStagger{stagger=1;if p.cfg.Game4CopyWideStagger{stagger=2}}
+    outer:=p.cfg.OuterIPMTU
+    if int(p.cfg.AndroidPhysicalMTU)<outer{outer=int(p.cfg.AndroidPhysicalMTU)}
     rc=C.wbd_m0_embedded_go_android_game_group_m4_start(
         C.uint64_t(p.native),C.int32_t(p.cfg.Tun.Fd()),
         (*C.uchar)(unsafe.Pointer(&name[0])),C.size_t(len(name)),
         dns,C.uint32_t(p.cfg.HealthSeconds),physical,
         (*C.uchar)(unsafe.Pointer(&upstream[0])),cn,
-        C.size_t(len(p.cfg.CN8503Raw)),fec,(*C.uchar)(unsafe.Pointer(&tunnelRaw[0])))
+        C.size_t(len(p.cfg.CN8503Raw)),fec,(*C.uchar)(unsafe.Pointer(&tunnelRaw[0])),C.uint32_t(p.cfg.StartupPaddingMode),C.uint32_t(outer),stagger)
     runtime.KeepAlive(tunnelRaw)
     runtime.KeepAlive(name)
     runtime.KeepAlive(upstream)

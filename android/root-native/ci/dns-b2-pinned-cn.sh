@@ -13,6 +13,13 @@ curl --fail --location --silent --show-error --retry 2 --connect-timeout 15 \
  -o "$archive"
 python3 experiments/android-root-probe/ci/cn-geosite-snapshot.py \
  "$archive" out/android-b2-cn-geosite >out/android-b2-cn-geosite/import-log.json
+# Reuse the previous Android Root probe's dated APNIC allocation importer.
+# This is allocation registration, not definitive IP geolocation.
+curl --fail --location --silent --show-error --retry 2 --connect-timeout 15 \
+ --max-time 90 "https://ftp.apnic.net/stats/apnic/delegated-apnic-20261116" \
+ -o out/android-b2-cn-geosite/delegated-apnic-20261116
+python3 experiments/android-root-probe/ci/cn-ipv4-snapshot.py \
+ out/android-b2-cn-geosite/delegated-apnic-20261116 out/android-b2-cn-geosite
 python3 - <<'PY'
 import hashlib,json,pathlib
 out=pathlib.Path("out/android-b2-cn-geosite")

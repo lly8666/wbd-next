@@ -42,6 +42,16 @@ cp "$n/manifest-ci-x86_64.json" "$assets/manifest.json"
 cp "$n/SOURCE" "$n/wbd-v4-client-amd64" "$n/libwbd_engine-amd64.so" "$assets/"
 cp "$cn/wbd-cn-geosite.txt" "$cn/wbd-cn-geosite-license.txt" \
    "$cn/cn-geosite-provenance.json" "$assets/"
+python3 - "$cn" <<'PY'
+import hashlib,json,pathlib,sys
+p=pathlib.Path(sys.argv[1])
+meta=json.loads((p/"cn-ipv4-provenance.json").read_text())
+raw=(p/"wbd-cn-ipv4.txt").read_bytes()
+assert meta["source_date_utc"]=="2026-11-16"
+assert 1000<meta["cn_collapsed_prefixes"]<=8192
+assert len(raw)<=256*1024 and hashlib.sha256(raw).hexdigest()==meta["cidr_sha256"]
+PY
+cp "$cn/wbd-cn-ipv4.txt" "$cn/cn-ipv4-provenance.json" "$assets/"
 sdk="$ANDROID_HOME"
 bt="$(find "$sdk/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
 for tool in aapt2 d8 apksigner zipalign aapt;do test -x "$bt/$tool";done

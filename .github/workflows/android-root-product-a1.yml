@@ -89,6 +89,8 @@ jobs:
           name: android-b2-pinned-cn-geosite-${{ github.sha }}
           path: |
             out/android-b2-cn-geosite/cn-geosite-provenance.json
+            out/android-b2-cn-geosite/wbd-cn-ipv4.txt
+            out/android-b2-cn-geosite/cn-ipv4-provenance.json
             out/android-b2-cn-geosite/wbd-cn-geosite.txt
             out/android-b2-cn-geosite/wbd-cn-geosite-license.txt
             out/android-b2-cn-geosite/import-log.json

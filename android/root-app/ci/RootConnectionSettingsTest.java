@@ -165,12 +165,11 @@ public final class RootConnectionSettingsTest {
                 false,true,false,false,true,new TreeMap<>());
             throw new AssertionError("invalid server accepted");
         }catch(IllegalArgumentException expected){}
-        try{
-            new RootConnectionSettings("198.51.100.7","tls.example.test","acct",443,
-                1460,500,"chacha20-poly1305","flows","fec-auto",1,
-                false,true,false,false,true,new TreeMap<>());
-            throw new AssertionError("Auto startup padding accepted");
-        }catch(IllegalArgumentException expected){}
+        RootConnectionSettings autoPad=new RootConnectionSettings("198.51.100.7","tls.example.test","acct",443,
+            1460,500,"chacha20-poly1305","flows","fec-auto",1,
+            false,true,false,false,true,new TreeMap<>());
+        check("flows".equals(read(stored(autoPad)).padding),"Auto source padding roundtrip");
+        check("stagger-4-50-140".equals(autoPad.game4CopySchedule),"Game4 schedule legacy default");
         // B33: same user-selected real IPv4 direct prefixes survive SAF and
         // private local settings in the exact original Root App codec.
         RootConnectionSettings direct=new RootConnectionSettings(
@@ -263,13 +262,14 @@ public final class RootConnectionSettingsTest {
             "lan.example.test","tls.example.test","acct",443,1460,500,
             "chacha20-poly1305","off","normal",1,false,false,true,false,true,
             new TreeMap<>(),"192.168.1.0/24",new TreeMap<>(),"192.168.1.1",
-            true,30,true,2,15,true,true,true,true,"10.219.0.1","fd12:3456::/48,2001:db8:abcd::/64","9.9.9.9");
+            true,30,true,2,15,true,true,true,true,"10.219.0.1","fd12:3456::/48,2001:db8:abcd::/64","9.9.9.9","immediate",true);
         RootConnectionSettings again=read(stored(reconnect));
         check(again!=null&&again.recoveryMode==2&&again.rotationMinutes==15&&again.appTcpDNS&&again.tetherSharing&&again.systemDNS&&again.systemDNS6&&"10.219.0.1".equals(again.ipv6Gateway),
             "background recovery and rotation must survive the actual settings codec");
         check("fd12:3456::/48,2001:db8:abcd::/64".equals(again.ipv6DirectCIDRs)&&b.ipv6DirectCIDRs.isEmpty(),
             "B72 IPv6 direct CIDRs must roundtrip, legacy defaults empty");
         check("9.9.9.9".equals(again.tunnelDNSUpstream)&&"1.1.1.1".equals(b.tunnelDNSUpstream),"B73 tunnel DNS preset and legacy default");
+        check(again.cnIPDirect&&!b.cnIPDirect&&"immediate".equals(again.game4CopySchedule),"CN IP and Game4 policy roundtrip");
         check(b.recoveryMode==0&&b.rotationMinutes==0&&!b.appTcpDNS&&!b.tetherSharing&&!b.systemDNS&&!b.systemDNS6&&b.ipv6Gateway.isEmpty(),
             "legacy presets do not enable automatic recovery or rotation");
         System.out.println("ANDROID_B62_COLD_RECOVERY_ROTATION_PRESET_HOST_PASS");

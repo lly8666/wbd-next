@@ -1147,9 +1147,9 @@ impl ProtectedScopedOwner {
     }
     // Source kind2 only: authentication envelope trailing zeros, no changes
     // to FEC source bytes, block index, parity, revision or frozen repair.
-    #[cfg(all(feature="fec2_product_record",target_os="linux",
+    #[cfg(all(feature="fec2_product_record",any(target_os="android",all(target_os="linux",
         any(target_arch="x86_64",target_arch="aarch64"),
-        any(target_env="gnu",target_env="musl")))]
+        any(target_env="gnu",target_env="musl")))))]
     pub(crate) fn seal_fec2_product_one_padded(
         &mut self,buffer:UniqueBuffer,payload_len:usize,kind:u8,
         budget:FrameBudget,carrier_snapshot:u64,epoch:[u8;16],now:MonoNs,

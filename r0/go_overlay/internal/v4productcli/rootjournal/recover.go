@@ -12,7 +12,7 @@ import (
 // RecoverOwned must be called by the real rooted original Go client only
 // AFTER the exact native process has stopped/joined. The cross-process flock
 // rejects a concurrent real owner even if the app supervisor died.
-func RecoverOwned(run Runner,path string)(recovered bool,retErr error){
+func RecoverOwned(run Runner,path string,batches ...DirectBatch)(recovered bool,retErr error){
  if run==nil{return false,fmt.Errorf("missing root route runner")}
  if err:=ownedDirectory(path);err!=nil{return false,err}
  lock,err:=openOwnerLock(path)
@@ -25,15 +25,15 @@ func RecoverOwned(run Runner,path string)(recovered bool,retErr error){
   case version:
    p,ok,e:=journalRead(path)
    if e!=nil||!ok{return false,fmt.Errorf("invalid single-route recovery journal: %w",e)}
-   if e=(&Session{run:run,journal:path,plan:p}).removeExact(p);e!=nil{return false,e}
+   if e=(&Session{run:run,journal:path,plan:p,directBatch:optionalDirectBatch(batches)}).removeExact(p);e!=nil{return false,e}
   case groupVersion:
    p,ok,e:=groupRead(path)
    if e!=nil||!ok{return false,fmt.Errorf("invalid group-route recovery journal: %w",e)}
-   if e=(&GroupSession{run:run,journal:path,plan:p}).removeExact(p);e!=nil{return false,e}
+   if e=(&GroupSession{run:run,journal:path,plan:p,directBatch:optionalDirectBatch(batches)}).removeExact(p);e!=nil{return false,e}
   case legacyAllAppsVersion,allAppsVersion:
    p,ok,e:=readAllAppJournal(path)
    if e!=nil||!ok{return false,fmt.Errorf("invalid all-app-route recovery journal: %w",e)}
-   if e=(&AllAppSession{run:run,journal:path,plan:p}).removeExact(p);e!=nil{return false,e}
+   if e=(&AllAppSession{run:run,journal:path,plan:p,directBatch:optionalDirectBatch(batches)}).removeExact(p);e!=nil{return false,e}
   default:return false,fmt.Errorf("foreign route journal version")
   }
   recovered=true
