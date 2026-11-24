@@ -50,6 +50,8 @@ p029_three_case=os.environ.get("WBD_PLAN029_THREE_CASE","none")
 if p029_three_case not in ("none","gui_reconnect","domain_reconnect","dns_ttl_restart"):
  raise RuntimeError("unknown bounded PLAN029 ordinary scene")
 p029_boot_reconnect=p029_three_case=="domain_reconnect"
+p030_managed=os.environ.get("WBD_PLAN030_MANAGED_COMBO")=="1"
+if p030_managed and not p029_boot_reconnect:raise RuntimeError("PLAN030 requires original domain reconnect scene")
 p029_dns_ttl=p029_three_case=="dns_ttl_restart"
 p029_server_rx_diag=os.environ.get("WBD_PLAN029_SERVER_RX_DIAG")=="1"
 if p029_server_rx_diag and not (p029_gui_reconnect and p029_three_case=="gui_reconnect"):
@@ -544,6 +546,20 @@ try:
  # per *actual* source port, before tuple/AEAD. No unfiltered RX fallback,
  # no debug packet capture or new product thread in release defaults.
  server_rx_diag=" WBD_PLAN028_EXTERNAL_STAGE_DIAG=1" if p029_server_rx_diag else ""
+ if p030_managed:
+  managed_cfg={"listen":peer+":443","server-name":"wbd-v4.example.test","raw-interface":"eth0",
+      "tun-name":"wbdwl4","tun-ipv4":"10.66.0.1/24","lease-pool":"10.66.0.128/25",
+      "route-key-hex-file":route_guest,"tls-cert":result+"/cert.pem","tls-key":result+"/key.pem",
+      "users":[{"username":user,"password":password}],"manual-client-leases":{user:"10.66.0.2/32"},
+      "peer-persona":"windows11"}
+  cfg_local=out/"plan030-private-config.json"
+  cfg_local.write_text(json.dumps(managed_cfg),encoding="utf-8")
+  cfg_guest="/run/wbd-plan030-"+os.environ["GITHUB_RUN_ID"]+".json"
+  sock_guest="/run/wbd-plan030-"+os.environ["GITHUB_RUN_ID"]+".sock"
+  wsl("install","-m","600",unix(cfg_local),cfg_guest)
+  cfg_local.unlink()
+  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' '"+server+"/wbd-v4-server' --manage serve --config '"+cfg_guest+"' --socket '"+sock_guest+"'\n").encode("utf-8"))
+ else:
  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
@@ -886,6 +902,22 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
        ("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED"
         if p029_gui_reconnect else "WBD_WINDOWS_CLIENT_READY"),
        w,110 if p029_gui_reconnect else 30)
+ if p030_managed:
+  # GUI second native READY may precede server-side authenticated B
+  # publication; wait only for the real management snapshot, not a marker.
+  until=time.monotonic()+12
+  while True:
+   snapshot=json.loads(wsl("env","LD_LIBRARY_PATH="+server,server+"/wbd-v4-server","--manage","clients","--json","--socket",sock_guest))
+   rows=snapshot["clients"]
+   if len(rows)==1 and rows[0]["remote_port"]==41032 and rows[0]["state"]=="online":break
+   if time.monotonic()>=until:raise RuntimeError("PLAN030 second actual native owner not published "+repr(snapshot))
+   time.sleep(.2)
+  row=rows[0]
+  assert row["account"]==user and row["tunnel_ip"].split("/")[0]=="10.66.0.2" and row["mode"]=="normal" and row["lanes"]==1,row
+  assert row["negotiated_inner_cap"]==1389 and row["session"]!="0000000000000000",row
+  report["plan030_actual_second_gui_managed_snapshot"]=snapshot
+  (out/"plan030-domain-snapshot.json").write_text(json.dumps(snapshot,indent=2)+"\n")
+  print("PLAN030_WINDOWS_DOMAIN_RECONNECT_MANAGED_SNAPSHOT_PASS",flush=True)
  if p029b_b0:
   # A real Windows Winsock application probes the original Wintun lease.
   # Only its two A tickets reach the genuine Linux kernel TUN resolver;
@@ -1114,6 +1146,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     "direct_tunnel_business":"PENDING","owned_stop":"PENDING"}
   print("PLAN029_H1840_REAL_PRODUCT_NONCI_EXPLICIT_CN_SPLIT_OWNED_OS_APPLIED_PRE_BUSINESS",flush=True)
  ready(out/"server.log",("V4_ORIGINAL_GO_GAME_NATIVE_READY" if is_game else
+   "V4_PUBLIC_MIXED_NORMAL_READY role=server" if p030_managed else
    "V4_PUBLIC_MULTI_SESSION_READY role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) and not is_game else
    "V4_ORIGINAL_GO_SERVER_NATIVE_READY"),s,8)
  if tls_wire:
@@ -1353,7 +1386,7 @@ sys.exit(0 if ready_since is not None and sent>=24 and len(seen)>=12 else 8)
     # A singleton one() MSS auditor is not capable of proving this case.
     from m0_wl_public_mss_contract import verified_plan029_gui_two_child_shared_manual_mss
     budget_and_wire=verified_plan029_gui_two_child_shared_manual_mss(
-     winlog,linux_log,configured_mtu)
+     winlog,linux_log,configured_mtu,managed=p030_managed)
     report["plan029_two_gui_child_real_syn_synack_mss"]=budget_and_wire
    else:
     budget_and_wire=verified_current_v4_mss(winlog,linux_log,configured_mtu)
@@ -2907,6 +2940,7 @@ print(json.dumps(result),flush=True)
     print("WL_GAME_ORIGINAL_STOP_FAILURE_"+role.upper()+"_TAIL "+content,flush=True)
   raise RuntimeError("Windows native owned WAL Stop missing")
  stop_linux();s.wait(timeout=10)
+ if p030_managed:wsl("rm","-f",cfg_guest,sock_guest)
  stop_marker=("V4_PUBLIC_GAME_GROUP_STOP_DRAINED reason=server-close" if is_game and plan028_owned_switch else
   "V4_PUBLIC_GAME_NATIVE_STOP_DRAINED role=server" if is_game else
   "V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else
@@ -3107,6 +3141,8 @@ print(json.dumps(result),flush=True)
      "native_stop":server_text.count("V4_PUBLIC_MULTI_NATIVE_STOP_DRAINED reason="),
      "shared_tun_stop":server_text.count("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server"),
     }
+    if p030_managed:
+     server_markers.update(listener_ready=server_text.count("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443"),authenticated_sessions=server_text.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")+server_text.count("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server"),native_stop=server_text.count("V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason="))
     selected_ports=re.findall(
      r"WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=1 configured_port=41031 source_port=(\d+) original_peer_port=443 same_ip_reauth_safe_tuple=(?:true|false)",
      client_text)
@@ -3118,7 +3154,7 @@ print(json.dumps(result),flush=True)
     report["plan029_server_continuous_accept"]={
      "status":"PASS_REAL_ONE_AF_PACKET_LISTENER_TWO_NEW_SOURCE_PORT_SYNACK_TLS_M4_AND_OLD_NEW_STOP",
      "product_binary_source":report["product_binary_source"],
-     "server_mode":"NORMAL_ORIGINAL_SHARED_MANUAL_AUTHENTICATED_32",
+     "server_mode":"MANAGED_SHARED_MANUAL_ACCOUNT" if p030_managed else "NORMAL_ORIGINAL_SHARED_MANUAL_AUTHENTICATED_32",
      "original_kernel_listener_count":1,
      "windows_source_ports":[41031,41032],
      "physical_synack_count":2,

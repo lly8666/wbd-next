@@ -24,6 +24,7 @@ type managedClient struct {
  Session string `json:"session"`
  TunnelIP string `json:"tunnel_ip"`
  RemoteIP string `json:"remote_ip"`
+ RemotePort uint16 `json:"remote_port"`
  State string `json:"state"`
  Mode string `json:"mode"`
  Lanes uint8 `json:"lanes"`

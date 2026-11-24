@@ -41,6 +41,8 @@ type managedServerConfig struct{
  TunName string `json:"tun-name,omitempty"`
  TunIPv4 string `json:"tun-ipv4,omitempty"`
  LeasePool string `json:"lease-pool,omitempty"`
+ ManualClientLeases map[string]string `json:"manual-client-leases,omitempty"`
+ PeerPersona string `json:"peer-persona,omitempty"`
  Decoy string `json:"decoy,omitempty"`
  PublicAddress string `json:"public-address,omitempty"`
 }
@@ -93,6 +95,12 @@ func managedArgs(c managedServerConfig)([]string,func(),error){
  if c.TunName!=""{args=append(args,"--tun-name",c.TunName)}
  if c.TunIPv4!=""{args=append(args,"--tun-ipv4",c.TunIPv4)}
  if c.LeasePool!=""{args=append(args,"--lease-pool",c.LeasePool)}
+ if len(c.ManualClientLeases)>0{
+  b,e:=json.Marshal(c.ManualClientLeases);if e!=nil{clean();return nil,noop,e}
+  p:=filepath.Join(tmp,"manual-leases.json");if e=os.WriteFile(p,b,0600);e!=nil{clean();return nil,noop,e}
+  args=append(args,"--manual-client-leases-file",p)
+ }
+ if c.PeerPersona!=""{args=append(args,"--peer-persona",c.PeerPersona)}
  if c.Decoy!=""{args=append(args,"--decoy",c.Decoy)}
  return args,clean,nil
 }
@@ -181,7 +189,7 @@ func editManagedConfig(r *bufio.Reader)error{
  action,e:=prompt(r,"账号操作 add/replace/delete/keep","keep");if e!=nil{return e}
  if action!="keep"||len(c.Users)==0{
   name,e:=prompt(r,"账号","user1");if e!=nil{return e}
-  if action=="delete"{for i,u:=range c.Users{if u.Username==name{c.Users=append(c.Users[:i],c.Users[i+1:]...);break}}}else{
+  if action=="delete"{for i,u:=range c.Users{if u.Username==name{c.Users=append(c.Users[:i],c.Users[i+1:]...);delete(c.ManualClientLeases,name);break}}}else{
    pass,e:=passwordPrompt(r);if e!=nil{return e}
    found:=false;for i,u:=range c.Users{if u.Username==name{c.Users[i].Password=pass;found=true}}
    if !found{c.Users=append(c.Users,managedUser{name,pass})}

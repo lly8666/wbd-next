@@ -12,6 +12,16 @@ on:
 permissions:
   contents: read
 jobs:
+  dispatch-windows-domain:
+    runs-on: ubuntu-24.04
+    permissions: {contents: read, actions: write}
+    steps:
+      - name: Dispatch one original signed domain reconnect scene on this branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=normal -f native_outer_mtu=default1460 -f outer_repair=on -f run_n0=false -f plan029_case=domain_reconnect
+          echo "Dispatched original Windows domain reconnect; not a PASS"
   build:
     strategy:
       fail-fast: false
@@ -55,6 +65,9 @@ jobs:
       matrix:
         arch: [x86_64, aarch64]
         scenario: [systemd, mixed-clients]
+        include:
+          - arch: x86_64
+            scenario: watch-pair
     runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 18
     steps:
@@ -87,7 +100,8 @@ jobs:
           if [[ "${{ matrix.scenario }}" == systemd ]];then
             bash tools/plan030_systemd_smoke.sh "$PWD/wbd-next" 2>&1 | tee plan030-functional.log
           else
-            WBD_PLAN030_MANAGED=1 WBD_PLAN030_SYSTEMD=1 WBD_PLAN030_PACKAGE="$PWD/wbd-next" bash tools/m0-plan028-mixed-normal-game-native.sh "$PWD/linux-plan029-public-bundle" 2>&1 | tee plan030-functional.log
+            watch=0; [[ "${{ matrix.scenario }}" != watch-pair ]] || watch=1
+            WBD_PLAN030_WATCH="$watch" WBD_PLAN030_MANAGED=1 WBD_PLAN030_SYSTEMD=1 WBD_PLAN030_PACKAGE="$PWD/wbd-next" bash tools/m0-plan028-mixed-normal-game-native.sh "$PWD/linux-plan029-public-bundle" 2>&1 | tee plan030-functional.log
           fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

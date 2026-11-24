@@ -60,3 +60,17 @@ func TestPLAN030WatchCountersAndNegotiatedBudget(t *testing.T){
  if r.NegotiatedInnerCap==nil||*r.NegotiatedInnerCap!=1298{t.Fatalf("expected canonical Game FEC budget: %+v",r)}
  if r.ClientOuterSetting!=nil||r.ClientOSInnerMTU!=nil{t.Fatal("guessed remote MTU")}
 }
+
+func TestPLAN030ManualAccountLeaseUsesOriginalParser(t *testing.T){
+ dir:=t.TempDir();c:=defaultManagedConfig()
+ c.ServerName="wbd.example.test";c.RawInterface="lo"
+ c.TunIPv4="10.66.0.1/24";c.LeasePool="10.66.0.128/25"
+ c.RouteKeyFile=filepath.Join(dir,"route.hex");c.TLSCert=filepath.Join(dir,"cert.pem");c.TLSKey=filepath.Join(dir,"key.pem")
+ c.Users=[]managedUser{{"one","password"}}
+ c.ManualClientLeases=map[string]string{"one":"10.66.0.2/32"}
+ c.PeerPersona="windows11"
+ if e:=managedMaterial(c);e!=nil{t.Fatal(e)}
+ args,clean,e:=managedArgs(c);if e!=nil{t.Fatal(e)};defer clean()
+ cfg,e:=parse("server",args);if e!=nil{t.Fatal(e)}
+ if cfg.manualClientLeases4["one"]!="10.66.0.2/32"||!cfg.mixedModes{t.Fatal("manual account not routed through original parser")}
+}

@@ -77,7 +77,7 @@ def verified_plan028_shared_manual_two_generation_v4_mss(win,linux,outer):
  return proof
 
 
-def verified_plan029_gui_two_child_shared_manual_mss(win,linux,outer):
+def verified_plan029_gui_two_child_shared_manual_mss(win,linux,outer,managed=False):
  """Two distinct WinForms child PIDs both report internal generation=1.
  The authenticated Linux shared server proves two 443 SYNACK and M4 Ready;
  never interpret those two separate processes as one Go generation 1+2.
@@ -92,8 +92,9 @@ def verified_plan029_gui_two_child_shared_manual_mss(win,linux,outer):
  prep=one(linux,r"V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=\d+ outer_config=(\d+) interface=(\d+) advertised_mss=(\d+) record_offer=(\d+) tun_planned=(\d+)","Linux shared original MTU")
  if (len(cold)!=2 or ports!=[("41031","false"),("41032","true")] or
      len(syn)!=2 or len(seen)!=2 or len(server_syn)!=2 or
-     server_ready!=[("443","1"),("443","2")] or
-     len(re.findall(r"V4_PUBLIC_MULTI_SESSION_READY[^\n]*",linux))!=2):
+     (not managed and (server_ready!=[("443","1"),("443","2")] or
+      len(re.findall(r"V4_PUBLIC_MULTI_SESSION_READY[^\n]*",linux))!=2)) or
+     (managed and (len(re.findall(r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443[^\n]*",linux))+len(re.findall(r"V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server[^\n]*",linux))!=2))):
   raise ValueError("two distinct true GUI child SYN/SYNACK/M4 proof absent")
  so,sp,sm,sr,si=map(int,prep)
  if (so!=outer or sp<576 or sm!=min(outer,sp)-40 or

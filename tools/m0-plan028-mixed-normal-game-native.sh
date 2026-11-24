@@ -124,7 +124,7 @@ s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.bind((\"10.66.0.1\",45901))
 s.settimeout(60)
 try:
-  for i in range(160):
+  for i in range(10000):
     data,addr=s.recvfrom(4096)
     assert data.startswith(b\"WBD_MIXED443/\")
     s.sendto(b\"WBD_MIXED_ECHO/\"+data,addr)
@@ -240,6 +240,10 @@ assert rows["game4"]["negotiated_inner_cap"]<rows["game2"]["negotiated_inner_cap
 assert all(r["client_outer_setting"] is None and r["client_os_inner_mtu"] is None for r in rows.values())
 print("PLAN030_REAL_THREE_DEVICE_MANAGED_CLIENT_SNAPSHOT_PASS")
 PY
+fi
+if [[ "${WBD_PLAN030_WATCH:-0}" == 1 ]];then
+  sudo -n ip netns exec "$NSC" env LD_LIBRARY_PATH="$ROOT" python3 "$GITHUB_WORKSPACE/tools/plan030_watch_pair.py" "$ROOT/wbd-v4-server" "$managed_socket" "$(cat "$TMP/server.pid")" "$IPC" >fixed-kernel-result/plan030-watch.json
+  cat fixed-kernel-result/plan030-watch.json
 fi
 grep -Fq "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/bob.log"
 # Client A only stops; independent Game4 and Normal still deliver traffic.

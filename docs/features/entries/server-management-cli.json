@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "PLAN030：首批 native 双ISA构建、systemd 生命周期及真实三设备测试 PASS_SCOPED；补齐组合与展示候选待验证。",
+  "summary": "PLAN030 双ISA实际安装、真实混合设备及生命周期已测；第三批独立Windows域名与watch候选待验证。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
@@ -16,7 +16,7 @@
   },
   "usage": {
     "cli": "实验包 wbd-next help；install/config/status/clients/start/stop/restart/logs/uninstall/serve；尚未验收。",
-    "config": "listen/server-name/users，route-key-hex-file；可选 raw-interface、tun-name、tun-ipv4、lease-pool、decoy、public-address；仍由现有shared服务器parse校验。",
+    "config": "listen/server-name/users，route-key-hex-file；可选 raw-interface、tun-name、tun-ipv4、lease-pool、decoy、public-address；仍由现有shared服务器parse校验。；高级可选 manual-client-leases（复用028固定账号/32）、peer-persona。",
     "gui": "服务端仅终端菜单，不新建Web或桌面GUI。"
   },
   "code_refs": [
@@ -33,13 +33,20 @@
     {
       "platform": "linux/amd64 + linux/arm64",
       "scope": "b0775de 初批原生构建、systemd生命周期、三设备前台真实管理快照",
-      "status": "PASS_SCOPED",
+      "status": "FUNCTIONAL_PASS",
       "source_sha": "b0775de27edf3bd8692f605fc7eec8fcb39ae1f3",
       "evidence": "docs/evidence/M0/20261124-H2386-PLAN030-INITIAL-NATIVE.json"
     },
     {
       "platform": "linux/amd64 + linux/arm64 systemd",
-      "scope": "安装后真实混合客户端、MTU协商预算和版本展示第二批",
+      "scope": "81c393b实际安装服务、三设备不同模式/MTU/cipher、48 UDP echoes each、生命周期",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "81c393b4274f136473534db546ae153b36ae9e97",
+      "evidence": "docs/evidence/M0/20261124-H2387-PLAN030-COMBINED-NATIVE.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64, Linux amd64",
+      "scope": "第三批原生域名重连组合与watch同机测量",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null

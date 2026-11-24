@@ -1109,6 +1109,7 @@ func runGameMultiServer(
             rows:=make([]managedClient,0,len(activeNormal)+len(active))
             for key,rec:=range activeNormal {
                 row:=managedClientFor(key,rec.peer.IP,rec.lease,rec.managedAt)
+                row.RemotePort=rec.peer.Port
                 if normalPending[key]!=nil{row.State="rebuilding"}
                 if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
                 if f,e:=rec.product.OriginalFECReadback();e==nil {row.FEC=string(f.Mode);row.FECProfile=int(f.Profile)}
@@ -1118,6 +1119,7 @@ func runGameMultiServer(
             }
             for key,rec:=range active {
                 row:=managedClientFor(key,rec.peers[0].IP,"",rec.managedAt)
+                row.RemotePort=rec.peers[0].Port
                 for k:=range gameProofPending{if k.Principal==key.Principal&&k.TunnelID==key.TunnelID{row.State="rebuilding";break}}
                 if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
                 if row.FEC=="" {row.FEC="off"}; if rec.gameFec {row.FEC="fixed";row.FECProfile=int(rec.managedFECProfile)}

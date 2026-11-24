@@ -1194,6 +1194,7 @@ jobs:
       WBD_PLAN029_DNS_TTL_RESTART_SCENE: ${{ inputs.plan029_case == 'dns_ttl_restart' && '1' || '0' }}
       WBD_PLAN029_SERVER_RX_DIAG: ${{ inputs.plan029_server_rx_diag && '1' || '0' }}
       WBD_PLAN029_THREE_CASE: ${{ inputs.plan029_case || 'none' }}
+      WBD_PLAN030_MANAGED_COMBO: ${{ github.ref_name == 'experiment/m0-030-server-cli' && inputs.plan029_case == 'domain_reconnect' && '1' || '0' }}
       # D4 read-only real Windows IPv6 route/Stop policy witness, same
       # explicit CN product as the existing signed Normal scene.
       WBD_PLAN029_D4_IPV6_SCENE: ${{ github.ref_name == 'main' && contains(github.event.head_commit.message, '[plan029-d4-ipv6-probe]') && '1' || '0' }}
