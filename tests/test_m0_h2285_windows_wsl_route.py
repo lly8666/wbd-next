@@ -73,6 +73,10 @@ class H2285NativeWindowsWSL2Routing(unittest.TestCase):
         self.assertEqual(len([args for args in commands if
                               any("=16777216" in str(x) for x in args)]),2)
 
+    def test_lso_balanced_order(self):
+        self.assertEqual(h.lso_order('a'),(True,False,False,True))
+        self.assertEqual(h.lso_order('b'),(False,True,True,False))
+
     def test_source_identical_two_independent_groups_reuse_original_core_artifacts(self):
         p=(ROOT/".github/workflows/qa-h2285-dual-wsl2-arm-route.yml").read_text()
         self.assertEqual(p.count("group: [a, b]"),3)

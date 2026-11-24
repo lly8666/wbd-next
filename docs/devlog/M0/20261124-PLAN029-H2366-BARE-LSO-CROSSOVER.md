@@ -1,0 +1,9 @@
+# H2366 — bare IPv4 LSO causal control, no product wire change
+
+H2364 45323267739 nine jobs success, actual groups a/b B throughput -15.78/-2.86%, Win CPU/GiB +27.19/-0.94%; bare 329.55/493.362 Mbps below target. A local checksum win does not qualify whole product; do not promote H2364 or rerun blindly. User raised ordinary TCP offload as missing structural comparison. Windows Wintun -> M1/M3 frozen records -> full IPv4/TCP checksum -> Npcap raw frames has no LSOv2 OOB per-frame metadata; NPF queue batching is not TCP segmentation offload. Microsoft NDIS OOB docs and Npcap sendqueue API: https://learn.microsoft.com/en-us/windows-hardware/drivers/network/accessing-tcp-ip-offload-net-buffer-list-information ; https://npcap.com/guide/npcap-api.html . Virtual adapter offload is not proof of physical NIC execution.
+
+Reuse H2285 bare Windows Winsock/WSL2/ARM relay/ARM receiver, same 4x25s 2MiB +160 echo, no added delay/loss. Only hosted Windows WSL vEthernet route IPv4 LSOv2 changes; V1 remains disabled, IPv6 unchanged. Counterbalanced ON OFF OFF ON / OFF ON ON OFF, readback per stage, actual receiver bytes/P99/host CPU, qdisc counts, restore initial adapter setting. No user physical host or WBD config touched. This isolates one cause of bare capacity rather than trying to prove full bare-vs-product causal difference; no LSO support/route change means unqualified, no invented result. If effect large, investigate viable carrier/driver segmentation without changing PN/Seq/record boundaries; if small, prioritize RX/NPF service and remaining path costs. P1 existing workflow still pins obsolete artifact and must be updated to current source before dispatch.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Test-only bare Windows adapter LSO comparison, no product feature or default change."}
+```

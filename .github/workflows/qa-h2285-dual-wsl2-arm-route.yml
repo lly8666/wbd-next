@@ -1,8 +1,8 @@
 # H2276: TWO simultaneous isolated triplets, same exact source/scenario.
 # This first run is real Windows Winsock -> Linux tc kernel relay -> ARM Linux
 # end-to-end TCP capacity/p99 preflight; WBD Npcap/Wintun is NOT measured here.
-name: H2285 dual native Windows WSL2 kernel TCP route through ARM relay to independent ARM Linux server
-run-name: "M0 H2285 dual Win WSL2 kernel forwarding via ARM relay to ARM TCP | ${{ github.sha }}"
+name: H2366 bare Windows IPv4 LSO ON OFF balanced crossover
+run-name: "M0 H2366 bare Windows LSO ABBA-BAAB | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
@@ -17,6 +17,7 @@ env:
   WBD_H2282_TCP_WINDOW_AB: "0"
   WBD_H2283_B_BYTES: "2097152"
   WBD_H2284_EIGHT_TCP_CAPACITY: "0"
+  WBD_H2366_BARE_LSO_AB: "1"
 concurrency:
   group: h2285-dual-three-runner-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
@@ -103,6 +104,11 @@ jobs:
           assert d['original_wbd_go_tls_rust_npcap_wintun']=='NOT_RUN_ROUTE_FEASIBILITY_ONLY'
           assert d['delivered']['sparse_echo_received']==160
           assert d['delivered']['bulk_remote_received_bytes']>0
+          crossover=d["h2366_bare_lso_crossover"]
+          legs=crossover["legs"]
+          assert [x["lso_ipv4_enabled"] for x in legs]==([True,False,False,True] if os.environ["GROUP"]=="a" else [False,True,True,False])
+          assert crossover["initial"]["IPv4Enabled"]==crossover["restored"]["IPv4Enabled"]
+          assert all(x["delivered"]["sparse_echo_received"]==160 and x["delivered"]["bulk_remote_received_bytes"]>0 for x in legs)
           assert d['two_relay_kernel_egress_packet_directions']['status']=='REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED'
           assert all(
               d['two_relay_kernel_egress_packet_directions']['per_direction'][dr]['egress_packets']>0

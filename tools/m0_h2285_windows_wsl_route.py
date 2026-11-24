@@ -27,6 +27,9 @@ ROOT=core.ROOT
 PORT=core.PORT
 NET=core.TAIL
 MAX_BUFFER=2*1024*1024
+H2366_LSO_AB=os.environ.get("WBD_H2366_BARE_LSO_AB")=="1"
+if H2366_LSO_AB:
+    tcp.LISTENER_ACCEPT_TIMEOUT_S=120  # adapter restart + real route readback, test only
 
 
 def require(ok, label):
@@ -119,6 +122,74 @@ def nat_live_receipt(rows):
             "scope":"ORIGINAL_WINDOWS_HOST_TO_GUEST_KERNEL_L3_ONLY_NO_WBD"}
 
 
+def lso_order(group):
+    # A = LSOv2 IPv4 ON, B = OFF. Keep LSOv1 disabled/unchanged.
+    return (True,False,False,True) if group=="a" else (False,True,True,False)
+
+
+def windows_lso(local, enabled=None):
+    # Only the disposable GitHub-hosted WSL vEthernet route under test.
+    require(os.name=="nt" and os.environ.get("GITHUB_ACTIONS")=="true",
+            "H2366_ONLY_HOSTED_WINDOWS_TEST")
+    ip=str(ipaddress.IPv4Address(local))
+    script=("$ErrorActionPreference='Stop'; "
+            "$ip=Get-NetIPAddress -AddressFamily IPv4 -IPAddress '"+ip+"'; "
+            "$name=$ip.InterfaceAlias; "
+            "if ($name -notlike 'vEthernet (WSL*') {throw 'H2366_NOT_WSL_VETHERNET'}; ")
+    if enabled is not None:
+        value="$true" if enabled else "$false"
+        script+=("Set-NetAdapterLso -Name $name -IPv4Enabled "+value+" -ErrorAction Stop | Out-Null; ")
+    script+=("Get-NetAdapterLso -Name $name -ErrorAction Stop | "
+             "Select-Object Name,IPv4Enabled,V1IPv4Enabled,IPv6Enabled,MaximumLsoVersionSupported,"
+             "LargeSendOffloadV2HardwareCapabilities | ConvertTo-Json -Compress")
+    p=subprocess.run(["powershell.exe","-NoProfile","-NonInteractive","-Command",script],
+                     capture_output=True,text=True,timeout=90,check=True)
+    row=json.loads(p.stdout)
+    require(isinstance(row["IPv4Enabled"],bool) and row["V1IPv4Enabled"] is False,
+            "H2366_LSOV2_READBACK_OR_V1_CONFOUNDED")
+    if enabled is not None:
+        require(row["IPv4Enabled"]==enabled,"H2366_LSO_ACTUAL_READBACK_MISMATCH")
+    return row
+
+
+def bare_lso_stages(own,relay,local,guest):
+    initial=windows_lso(local)
+    rows=[]
+    try:
+        for i,enabled in enumerate(lso_order(own["group"])):
+            current=windows_lso(local)
+            if current["IPv4Enabled"]!=enabled:
+                current=windows_lso(local,enabled)
+            require(guest_eth0()==guest and windows_guest_source(guest)==local,
+                    "H2366_WSL_ROUTE_CHANGED")
+            shape=core.remote_shape(relay,-1)
+            buffer=io.StringIO()
+            before=core.os_host_cpu()
+            with contextlib.redirect_stdout(buffer):
+                tcp.client(local,guest,own["source_sha"])
+            hits=[json.loads(x.split(tcp.MARK+"CLIENT_DONE ",1)[1])
+                  for x in buffer.getvalue().splitlines()
+                  if tcp.MARK+"CLIENT_DONE " in x]
+            require(len(hits)==1 and hits[0]["sparse_echo_received"]==160 and
+                    hits[0]["bulk_remote_received_bytes"]>0 and
+                    hits[0]["bind"]==local and hits[0]["peer"]==guest,
+                    "H2366_REAL_RECEIVER_INCOMPLETE")
+            qdisc=core.netem_phase_receipt(shape["netem"]["qdisc"],
+                        core.remote_diag(relay)["kernel_tc"],-1)
+            after=windows_lso(local)
+            require(after["IPv4Enabled"]==enabled and after["Name"]==initial["Name"],
+                    "H2366_LSO_CHANGED_DURING_LEG")
+            row=dict(leg=i+1,lso_ipv4_enabled=enabled,adapter=after,delivered=hits[0],
+                     windows_host_allcore_busy_pct=core.cpu_busy_percent(before,core.os_host_cpu()),
+                     two_relay_kernel_egress_packet_directions=qdisc)
+            rows.append(row)
+            print("H2366_REAL_BARE_LSO_LEG "+json.dumps(row),flush=True)
+    finally:
+        if windows_lso(local)["IPv4Enabled"]!=initial["IPv4Enabled"]:
+            windows_lso(local,initial["IPv4Enabled"])
+    return dict(initial=initial,restored=windows_lso(local),legs=rows)
+
+
 def server(own,relay):
     core.verify(own,relay,"relay")
     require(os.name=="posix","NATIVE_ARM_SERVER")
@@ -132,7 +203,8 @@ def server(own,relay):
             core.run("sudo","-n","sysctl","-w",key+"=16777216")
         tcp.WINDOW_TEST_BYTES=MAX_BUFFER
         print("H2285_REAL_ARM_TCP_SERVER_STAGE_READY",flush=True)
-        tcp.server(own["tail_ip"],relay["relay_ip"],own["source_sha"])
+        for _ in range(4 if H2366_LSO_AB else 1):
+            tcp.server(own["tail_ip"],relay["relay_ip"],own["source_sha"])
     finally:
         tcp.WINDOW_TEST_BYTES=previous_tcp_buffer
         for key,val in original.items():
@@ -184,6 +256,18 @@ def client(own,relay,arm):
         for rule in rules:
             wsl("iptables","-w",*rule)
             applied.append(rule)
+        if H2366_LSO_AB:
+            tcp.WINDOW_TEST_BYTES=MAX_BUFFER
+            crossover=bare_lso_stages(own,relay,local,guest)
+            output["h2366_bare_lso_crossover"]=crossover
+            last=crossover["legs"][-1]
+            guest_counts=guest_counters(local,guest,endpoint)
+            output.update(status="PASS_H2285_NATIVE_WSL2_L3_FORWARD_TO_INDEPENDENT_ARM_TCP_SCOPED",
+                real_tailscale_route_not_wbd_product=True,
+                wsl_l3_owned_tcp_nat=nat_live_receipt(guest_counts),guest_tcp_nat_counters=guest_counts,
+                delivered=last["delivered"],two_relay_kernel_egress_packet_directions=last["two_relay_kernel_egress_packet_directions"])
+            core.save(ROOT/"client-result.json",output)
+            return
         shape=core.remote_shape(relay,-1)
         tcp.WINDOW_TEST_BYTES=MAX_BUFFER
         buffer=io.StringIO()
