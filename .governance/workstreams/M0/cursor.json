@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2357,
-  "checkpoint_sha": "a1d0a99c06da035aa467cf64a12ec88ec326f7d8",
+  "sequence": 2363,
+  "checkpoint_sha": "9f572c629e05c203de1e1a6297b60ff87caab8f5",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2348精确native/maximum PASS；H2347/H2349校准后首腿ARM超时，H2352夹具修正；H2353历史RX与H2355累计首发独立复验在途；H2354本地slab归还独立候选。",
-  "why_now": "历史runner漂移不能当确定代码负收益；用修正校准与已成功旧联网夹具独立比较，继续同步原M1真实热路径开发。",
+  "current_task": "PLAN029 P0 H2353/H2355交叉完整通过，校准修复实证；H2339不集成，H2323收益预期修订。H2347/H2349/H2358重新真实对照，高供给H2359/H2360与checksum H2361独立。",
+  "why_now": "按实测保留、复验和淘汰；分离端点供给与产品成本；纯CPU工作先本机配对筛选，节约真网资源。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "查H2347 45318051744/H2349 45318234104 Windows首个失败；H2353 45319542287、H2355 45319776413实际腿；H2354 native45319638991/maximum45319638790。用已证夹具复验原H2326/H2348，不重复无效派发。",
+  "next_action": "查45321088128/45321102114/45321120476三个源码轴、45321409323高供给及H2361 45321513988，取实际四腿、bare reference、单位CPU与微基准。保留净收益再组合，推进P1/P2。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
@@ -25,8 +25,9 @@
     "docs/devlog/M0/20261124-PLAN029-H2321-NATIVE-TX-RESUME.md",
     "docs/evidence/M0/20261124-H2323-WIN-ARM-FIRSTSEND-AB.json",
     "docs/evidence/M0/20261124-H2327-H2331-NEGATIVE-NATIVE-AB.json",
-    "docs/evidence/M0/20261124-H2336-H2338-H2339-PARALLEL-NATIVE-AB.json"
+    "docs/evidence/M0/20261124-H2336-H2338-H2339-PARALLEL-NATIVE-AB.json",
+    "docs/evidence/M0/20261124-H2353-H2355-BALANCED-NATIVE-AB.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2336仍保留实验基线；H2348原生PASS性能未资格，H2347/H2349首腿未完成；H2352静态PASS，H2353/H2355真网在途，H2354独立原生在途。P0高线/P1/P2/物理资格OPEN。"
+  "partial_summary": "H2336 retained；H2326/H2348/H2354 real pending、原生PASS；H2339复验无稳健收益；H2323单组42.5%不普遍，复验+9.53%/-0.99%；main产品不变；600–800/P1/P2/物理资格OPEN。"
 }
