@@ -1,0 +1,7 @@
+# H2348 — original ready-batch arena reuse and copied-prefix counter publication
+
+Base retained H2336 frozen bc87909; no H2326/H2330/H2339 delta. Native Normal/off synchronous loan already demonstrated lower CPU/GiB in both real groups. Existing Arena::allocate() drains channel/backlog even when the same owner holds the lock and all ready source slots are immediately available; new owner-local method consumes free slots after one original bounded return drain per native OFF batch, only repeats drain on real shortage. Original allocate/allocate_preserving, return ownership/generation, reserve and repair/Fixed/Go ABI paths preserved. No additional pool/queue or worker. Existing actual copied-prefix per-source dispositions unchanged, publish TX copied, pad, after-RX and Fixed source row counters in one sum per original service batch; per-source RX observation retained. If an actual owner settlement error aborts mid-loop, existing worker fails; prior per-source diagnostic timing is not a delivery contract. No driver/API/security policy change. Existing synchronous loan test now exercises this actual allocation path, new arena test verifies free reuse, returned generation, true shortage, drain/Stop. Native and performance NOT_RUN at commit. Compare only this combined increment against H2336 with calibrated balanced crossover.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Internal ready-batch arena return polling and actual driver receipt counter aggregation; existing owner, protocol and feature behavior retained."}
+```

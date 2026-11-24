@@ -263,6 +263,17 @@ impl FrozenRecordHandle for FrozenRecord {
          -> Result<UniqueBuffer, BufferContractError> {
          if self.stopping { return Err(BufferContractError::OwnerStopping); }
          self.drain_returns_bounded(64);
+         self.take_free_preserving(reserve)
+     }
+     // The existing owner has drained returns once for its ready batch.
+     // Reuse free slots without polling the return channel/backlog per
+     // packet; only an actual shortage needs another bounded drain.
+     pub(crate) fn allocate_after_return_drain(&mut self)->Result<UniqueBuffer,BufferContractError>{
+         if self.stopping { return Err(BufferContractError::OwnerStopping); }
+         if self.free.is_empty(){self.drain_returns_bounded(64);}
+         self.take_free_preserving(0)
+     }
+     fn take_free_preserving(&mut self,reserve:usize)->Result<UniqueBuffer,BufferContractError>{
          if self.free.len() <= reserve { return Err(BufferContractError::NoCapacity); }
          let idx = self.free.pop().ok_or(BufferContractError::NoCapacity)?;
          let slot = &mut self.slots[idx];
@@ -359,6 +370,30 @@ impl FrozenRecordHandle for FrozenRecord {
      }
      fn arena(count: usize, return_size: usize) -> Arena {
          Arena::new(7, count, 256, return_size, 1_000_000).unwrap()
+     }
+     #[test]
+     fn native_ready_batch_uses_free_slots_then_drains_real_shortage(){
+         let mut a=arena(3,2);
+         let first=a.allocate().unwrap();
+         let key=first.origin().key;
+         drop(first);
+         assert_eq!(a.drain_returns_bounded(64),1);
+         let x=a.allocate_after_return_drain().unwrap();
+         assert_eq!(x.origin().key.slot,key.slot);
+         assert_ne!(x.origin().key.generation,key.generation);
+         let y=a.allocate_after_return_drain().unwrap();
+         drop(x);
+         // A free slot still exists: no second return scan needed.
+         let z=a.allocate_after_return_drain().unwrap();
+         assert_eq!(a.loaned,3);
+         // True shortage consumes the posted returned slot.
+         let w=a.allocate_after_return_drain().unwrap();
+         assert_eq!(w.origin().key.slot,key.slot);
+         assert!(matches!(a.allocate_after_return_drain(),Err(BufferContractError::NoCapacity)));
+         drop((y,z,w));
+         assert_eq!(a.report().loaned,0);
+         a.stop();
+         assert!(matches!(a.allocate_after_return_drain(),Err(BufferContractError::OwnerStopping)));
      }
      #[test]
      fn v3_detached_repair_keeps_ciphertext_and_frees_source_m1(){
