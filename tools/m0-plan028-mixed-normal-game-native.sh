@@ -242,7 +242,7 @@ print("PLAN030_REAL_THREE_DEVICE_MANAGED_CLIENT_SNAPSHOT_PASS")
 PY
 fi
 if [[ "${WBD_PLAN030_WATCH:-0}" == 1 ]];then
-  sudo -n ip netns exec "$NSC" env LD_LIBRARY_PATH="$ROOT" python3 "$GITHUB_WORKSPACE/tools/plan030_watch_pair.py" "$ROOT/wbd-v4-server" "$managed_socket" "$(cat "$TMP/server.pid")" "$IPC" >fixed-kernel-result/plan030-watch.json
+  sudo -n ip netns exec "$NSC" env GITHUB_SHA="${WBD_PLAN030_BINARY_SOURCE:-$GITHUB_SHA}" LD_LIBRARY_PATH="$ROOT" python3 "$GITHUB_WORKSPACE/tools/plan030_watch_pair.py" "$ROOT/wbd-v4-server" "$managed_socket" "$(cat "$TMP/server.pid")" "$IPC" >fixed-kernel-result/plan030-watch.json
   cat fixed-kernel-result/plan030-watch.json
 fi
 grep -Fq "V4_PUBLIC_GAME_FEC_APPLIED role=client lanes=4 mode=fixed profile=6" "$TMP/bob.log"

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "PLAN030 双ISA实际安装、真实混合设备及生命周期已测；第三批独立Windows域名与watch候选待验证。",
+  "summary": "PLAN030 第三批双ISA构建和真实管理功能通过；仅重试两个实际夹具失败。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
@@ -45,11 +45,25 @@
       "evidence": "docs/evidence/M0/20261124-H2387-PLAN030-COMBINED-NATIVE.json"
     },
     {
-      "platform": "Windows amd64 + Linux amd64, Linux amd64",
-      "scope": "第三批原生域名重连组合与watch同机测量",
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "1d6081c 双ISA原生构建及systemd真实三设备与生命周期",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2388-PLAN030-PARALLEL-RESULT.json"
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "watch同机对照报告夹具失败，非产品性能结论",
+      "status": "FAIL",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2388-PLAN030-PARALLEL-RESULT.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64",
+      "scope": "域名重连前置PID测试夹具失败，真实网络未运行",
       "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2388-PLAN030-PARALLEL-RESULT.json"
     }
   ],
   "limitations": [
