@@ -13,13 +13,35 @@ public final class TrafficInstrumentation extends Instrumentation {
     @Override public void onStart(){
         Bundle result=new Bundle();
         try{
-            if("1".equals(args.getString("uid_probe"))){
+            if("1".equals(args.getString("uid_probe"))||"echo".equals(args.getString("uid_probe"))){
                 byte[] payload="WBD_B90_UID".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
                 try(java.net.DatagramSocket socket=new java.net.DatagramSocket()){
                     socket.send(new java.net.DatagramPacket(payload,payload.length,
                         java.net.InetAddress.getByName("192.0.2.1"),43999));
+                    if("echo".equals(args.getString("uid_probe"))){
+                        socket.setSoTimeout(4000);
+                        byte[] reply=new byte[64];
+                        java.net.DatagramPacket packet=new java.net.DatagramPacket(reply,reply.length);
+                        socket.receive(packet);
+                        if(packet.getLength()!=payload.length||packet.getPort()!=43999||
+                           !packet.getAddress().getHostAddress().equals("192.0.2.1")||
+                           !java.util.Arrays.equals(payload,java.util.Arrays.copyOf(reply,packet.getLength())))
+                            throw new IllegalStateException("UID TUN echo mismatch");
+                    }
                 }
                 result.putString("report","uid_probe_sent="+Process.myUid());
+                finish(Activity.RESULT_OK,result);
+                return;
+            }
+            if("system".equals(args.getString("dns_probe"))){
+                android.net.Network network=android.net.Network.fromNetworkHandle(
+                    Long.parseUnsignedLong(args.getString("network_handle")));
+                String expected=args.getString("expected_ip");
+                boolean found=false;
+                for(java.net.InetAddress ip:network.getAllByName(args.getString("dns_name")))
+                    if(expected.equals(ip.getHostAddress()))found=true;
+                if(!found)throw new IllegalStateException("Android Resolver A answer mismatch");
+                result.putString("report","dns_probe_uid="+Process.myUid()+" dns_answer="+expected);
                 finish(Activity.RESULT_OK,result);
                 return;
             }

@@ -14,14 +14,15 @@ def answer(q, tcp):
         labels.append(q[i+1:i+1+n])
         i += n+1
     name = b".".join(labels)
-    if name not in (b"udp.wbd-b90.test", b"tc.wbd-b90.test"):
+    if name not in (b"udp.wbd-b90.test", b"tc.wbd-b90.test", b"system.wbd-b91.test", b"cn.wbd-b91.test"):
         raise ValueError("unexpected query")
     question = q[12:i+5]
     truncated = name == b"tc.wbd-b90.test" and not tcp
     flags = 0x8380 if truncated else 0x8180
-    head = q[:2] + struct.pack("!HHHHH", flags, 1, 0 if truncated else 1, 0, 0)
+    has_a = not truncated and struct.unpack("!H", question[-4:-2])[0] == 1
+    head = q[:2] + struct.pack("!HHHHH", flags, 1, int(has_a), 0, 0)
     print("B90_FIXTURE", name.decode(), "TCP" if tcp else "UDP", flush=True)
-    return head + question + (b"" if truncated else bytes.fromhex("c00c000100010000003c0004c0000237"))
+    return head + question + (b"" if not has_a else bytes.fromhex("c00c000100010000003c0004c0000237"))
 
 def readn(c, n):
     b = b""

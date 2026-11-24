@@ -1,3 +1,7 @@
+## B91｜真实 Android 内核、系统 DNS 与认证后 native 接管（当前）
+
+B90 SOURCE `0d710fd6e39abb4d85c6935f56b09756d28c47ea` [Action 45409736062](https://github.com/lly8666/wbd-next/actions/runs/45409736062) 11 SUCCESS/1 FAILURE/5 SKIPPED；正式 APK/双 ABI/Host 原 TLS/Game/Rust PASS；KSU 在文件 mv/chmod staging 权限失败，专项未运行。B91复用真实 D1 root-owned cp、修正 route-journal.json，独立验收原 UID/CN FIB、普通 App UDP↔真实 TUN、Android Network Resolver 物理/隧道/CN DNS（隔离 TUN DNS fixture）、原 Stop；原双端 Go FakeTCP association 进程内 cold wire → 真实标准 TLS、原认证/租约 → 正式 Go/Rust Android Normal/Game 七模式真实 TUN/RAW/native M4 startup、UID 发包/native TX/Stop。非 Android↔Linux 物理 peer E2E，不测性能，不加产品防御。各场景保留真实结果，旧 owner 未清理不继续。真实 RootService 切网/配置与最终 ARM64 仍待验。详见 [B91 devlog](../devlog/android-root-probe/20261124-b91-postauth-native-and-system-dns.md)。
+
 ## B90｜B89 真实结果收口；Android 内核及 DNS 专项（当前）
 
 B89 SOURCE `3cba0860e93606a5559955bd74eff4b4263d2ffe` [Action 45406291224](https://github.com/lly8666/wbd-next/actions/runs/45406291224) 9 SUCCESS/2 FAILURE/6 SKIPPED；[KSU Job](https://github.com/lly8666/wbd-next/actions/runs/45406291224/job/138490237533) 七模式 preauth/cleanup 7/7 PASS，独立 Bionic 原 TLS PASS，peer TLS/lease/M4 NOT_PROVEN。两失败为同一 CI oracle 脚本重复插入与引号，B90 修复。
