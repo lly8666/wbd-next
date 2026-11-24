@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2342,
-  "checkpoint_sha": "74dbf0238d557958fdb6e370a6ce942f965daba0",
+  "sequence": 2345,
+  "checkpoint_sha": "44ada7e61a929ba9dd8df02ca57552cf7aa242b7",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2326/H2330真网无稳定收益已撤出；H2335重构同步OFF loan原生PASS；H2336/H2337/H2338及H2339独立RX并行验证。",
+  "current_task": "PLAN029 P0 三独立真实产品轴H2336/H2338/H2339在途；H2337裸路径双组520.999/192.568Mbps已完成；H2343同VM裸容量校准夹具已提交。",
   "why_now": "多轴同时间开发测试，不混源码/参数/underlay；保存真实收益和失败证据。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "查H2336 45315865690、H2337 45315781102、H2338 45315865745、H2339 45316077520及其原生45316077361/45316077458；先结算真实数据或首个失败，保留有收益轴，再做组合与同VM高线校准。",
+  "next_action": "先读H2336 45315865690、H2338 45315865745、H2339 45316077520，分别取每组真实腿/CPU/P99/Stop；查H2343 contract 45316447844。仅有收益轴组合并用同VM裸校准下一轮，不重复dispatch。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
@@ -27,5 +27,5 @@
     "docs/evidence/M0/20261124-H2327-H2331-NEGATIVE-NATIVE-AB.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2323单组累计正收益仍保留；H2326/H2330四真实triplet不支持独立收益，已撤出；H2335精确native PASS；H2339独立branch已创建。P0全局600–800、P1/P2、最终Game Windows及物理资格OPEN。"
+  "partial_summary": "H2335和H2339精确native/maximum均PASS；H2337裸容量双组未示范600，H2343夹具真网NOT_RUN；H2323累计收益保留，H2326/H2330不保留；P0高线、P1/P2及最终Game Windows物理资格OPEN。"
 }
