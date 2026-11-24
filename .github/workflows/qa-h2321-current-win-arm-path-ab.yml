@@ -1,8 +1,8 @@
 # H2321: current-source Windows Normal/off first-send path A/B/A-prime.
-# H2327: two independent triplets; A/A-prime = measured H2323; B = H2326.
+# H2331: two independent triplets; A/A-prime = frozen H2327; B = H2330.
 # Both DLLs have identical TX8/NPF16KiB features; Go/ARM builds are shared.
-name: H2327 current Windows ARM incremental settlement comparison
-run-name: "M0 H2327 incremental TX settlement A-B-Aprime | ${{ github.sha }}"
+name: H2331 current Windows ARM direct NPF queue comparison
+run-name: "M0 H2331 direct NPF queue A-B-Aprime | ${{ github.sha }}"
 on:
   workflow_dispatch:
   push:
@@ -21,7 +21,7 @@ env:
   WBD_H2292_TRUE_PRODUCT_ABA: "1"
   WBD_H2292_COMPILED_SOURCE_SHA: ${{ github.sha }}
   WBD_H2312_FACTOR: path_ab
-  WBD_H2321_BASELINE_SOURCE: 6fa10d75e3b7f23f909252e2737948911d3eb64c
+  WBD_H2321_BASELINE_SOURCE: c828c4561917151f82385edfbe21ada60849c6df
 concurrency:
   group: h2321-current-path-ab-${{ github.ref }}
   cancel-in-progress: false
@@ -113,7 +113,7 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'H2321_BASELINE_FETCH_FAILED'}
           $diff=@(& git diff --name-only $baseline $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)
           if($LASTEXITCODE -ne 0){throw 'H2321_SOURCE_DIFF_FAILED'}
-          $allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-engine/src/v4_windows_owner.rs')
+          $allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-platform/src/windows_native_io.rs')
           if(@($diff | Where-Object {$_ -notin $allowed}).Count -ne 0 -or $diff.Count -ne $allowed.Count){throw ('H2321_NOT_ISOLATED_TX_SOURCE_DELTA '+($diff -join ','))}
           & git worktree add --detach h2321-baseline $baseline
           if($LASTEXITCODE -ne 0 -or (git -C h2321-baseline rev-parse HEAD).Trim() -ne $baseline){throw 'H2321_BASELINE_WORKTREE_FAILED'}
@@ -238,7 +238,7 @@ jobs:
           stages=d['h2292_same_vm_original_product_abaprime']['stages']
           factor=os.environ.get('WBD_H2312_FACTOR','legacy')
           assert factor=='path_ab'
-          assert all(x['h2312_factor']==factor and x['comparison_axis']=='firstsend_settlement_and_control_poll' for x in stages)
+          assert all(x['h2312_factor']==factor and x['comparison_axis']=='direct_npf_queue_staging' for x in stages)
           assert [x['compiled_rust_source_sha'] for x in stages]==[
               os.environ['WBD_H2321_BASELINE_SOURCE'],os.environ['GITHUB_SHA'],os.environ['WBD_H2321_BASELINE_SOURCE']]
           assert all(x['h2312_npf_service']['npf_queue_packets']==8 and

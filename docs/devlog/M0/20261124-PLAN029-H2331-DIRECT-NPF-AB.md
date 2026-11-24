@@ -1,0 +1,3 @@
+# H2331 — independent direct NPF queue path comparison
+
+Freeze H2330 0530730161a5ebf0dd2bca34b25ae972837447b5 and compare only it with H2327 c828c4561917151f82385edfbe21ada60849c6df. Same explicit workflow concurrency group; queued behind existing H2327 rather than concurrently launching duplicate pairs. Two independent real three-runner groups. Both fresh source DLLs and one current Go/ARM build, exact same TX8/NPF16KiB; FEC/repair OFF. No capacity/profile scan. If H2326 or H2330 lacks a consistent benefit, keep recorded results and drop that increment without discarding the independently proven H2323. H2330 original native unit action 45311324747 and governance 45311324738; at request creation unit running, governance PASS. H2331 NOT_RUN.

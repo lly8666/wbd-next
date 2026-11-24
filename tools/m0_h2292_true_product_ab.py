@@ -28,17 +28,21 @@ LEGS=("A_default","B_tx16","A_prime")  # legacy relay stage IDs; B is path candi
 PATH_AB_BASELINE="7222b4739443dbb7ff9b322f186dcf651b54490f"
 PATH_AB_FEATURES="m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_npf_trace"
 PATH_AB_SETTLEMENT_BASELINE="6fa10d75e3b7f23f909252e2737948911d3eb64c"
+PATH_AB_QUEUE_BASELINE="c828c4561917151f82385edfbe21ada60849c6df"
+PATH_AB_AXES={
+    PATH_AB_BASELINE:"firstsend_copy_and_M1_ready_batch",
+    PATH_AB_SETTLEMENT_BASELINE:"firstsend_settlement_and_control_poll",
+    PATH_AB_QUEUE_BASELINE:"direct_npf_queue_staging",
+}
 
 def path_ab_baseline():
     source=os.environ.get("WBD_H2321_BASELINE_SOURCE",PATH_AB_BASELINE)
-    if source not in (PATH_AB_BASELINE,PATH_AB_SETTLEMENT_BASELINE):
+    if source not in PATH_AB_AXES:
         raise ValueError("unapproved native path A/B baseline")
     return source
 
 def path_ab_axis():
-    return ("firstsend_settlement_and_control_poll" if
-            path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else
-            "firstsend_copy_and_M1_ready_batch")
+    return PATH_AB_AXES[path_ab_baseline()]
 
 ROOT=pathlib.Path("h2292-out")
 H2286=pathlib.Path("h2286-out")
