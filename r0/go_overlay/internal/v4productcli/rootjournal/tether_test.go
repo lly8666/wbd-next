@@ -29,7 +29,7 @@ func TestB65TetherOwnedForwardingAndRestore(t *testing.T){
   for i,c:=range cmds{if c.kind==a[3]&&strings.Join(c.args," ")==strings.Join(row," "){present[i]=a[4]=="-I";return "",nil}}
   return "",fmt.Errorf("unexpected firewall %v",a)
  }
- path:=filepath.Join(t.TempDir(),"tether-journal.json")
+ path:=filepath.Join(t.TempDir(),"owned","tether-journal.json")
  owner,e:=NewTether(ip,fw,path,p);if e!=nil{t.Fatal(e)}
  for i,v:=range present{if !v{t.Fatalf("missing command %d",i)}}
  if e=owner.Stop();e!=nil{t.Fatal(e)}

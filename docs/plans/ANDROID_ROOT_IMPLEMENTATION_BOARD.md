@@ -63,6 +63,6 @@ B31已补服务端IPv4 /32例外；B32a已补完整普通App选取。**B33**进�
 
 维护：本台账是**进度标记**，不是独立竞争执行方案；每批以SOURCE/Action更新行，既往NOT_RUN/FAIL不删。
 
-### B65 — software tether IPv4 (source wired; device NOT_RUN)
+### B65 — 软件热点 IPv4（WIRED_CANDIDATE；实体 NOT_RUN）
 
 Opt-in active Android 16 downstream, exact original lease forwarding/SNAT, separate owned table and Stop/Restore, software-only prerequisite. System DNS and IPv6/464XLAT remain open. See [B65 devlog](../devlog/android-root-probe/20261124-b65-software-tether-ipv4.md).
