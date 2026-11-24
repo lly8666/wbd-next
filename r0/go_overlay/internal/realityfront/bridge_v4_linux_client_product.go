@@ -8,11 +8,15 @@ package realityfront
 // ciphertext under a V3 owner. New FEC2/Game capability promotion requires
 // separate actual native client parity/independent-lane owner integrations.
 import (
+    "bytes"
     "context"
     "errors"
     "fmt"
+    "log"
     "net"
+    "net/netip"
     "os"
+    "runtime"
     "sync"
 
     "github.com/lly8666/wobuzhidao/internal/faketcp"
@@ -20,6 +24,20 @@ import (
 type V4LinuxClientProductConfig struct {
     NetworkInterface string
     NetworkIfIndex uint32
+    // Required only on Android: the real ConnectivityManager Network handle
+    // and link MTU are supplied by the root App's cold controller. Zero is
+    // never interpreted as the default/physical network on Bionic.
+    AndroidPhysicalNetworkHandle uint64
+    AndroidPhysicalMTU uint32
+    // Android original M3 TUN UDP/53 only; normal/off, not Android system
+    // Resolver/netd, CN physical split, or FakeIP. Default disabled for CLI.
+    AndroidTunnelDNS bool
+    AndroidTunnelDNSUpstream netip.Addr
+    // Explicit ordinary-App UDP53 physical 223.5.5.5 compatibility mode.
+    AndroidPhysicalDNS bool
+    AndroidPhysicalDNSUpstream netip.Addr // original Rust bound UDP53 destination
+    // Cold Go-verified CN8503 snapshot only. No per-query Go callback.
+    AndroidCN8503Raw []byte
     Tun *os.File
     TunName string
     // Only original Go authenticated AUTO /32 client mode uses one shared
@@ -60,6 +78,11 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
     if err!=nil||iface==nil||uint32(iface.Index)!=cfg.NetworkIfIndex{
         return nil,ErrAdmissionParams
     }
+    if runtime.GOOS=="android" && (cfg.AndroidPhysicalNetworkHandle==0||
+        cfg.AndroidPhysicalMTU<68||cfg.AndroidPhysicalMTU>65535||
+        uint32(iface.MTU)!=cfg.AndroidPhysicalMTU){
+        return nil,ErrAdmissionParams
+    }
     if _,err:=cfg.Tun.Stat();err!=nil{return nil,errors.Join(ErrAdmissionParams,err)}
     if cfg.FECMode!=""&&cfg.FECMode!=FecV2Off&&
         !v4ProductFecEnabled(cfg.FECMode){return nil,ErrAdmissionUnsupported}
@@ -68,7 +91,19 @@ func NewV4LinuxClientProduct(cfg V4LinuxClientProductConfig)(*V4LinuxClientProdu
        (cfg.StartupPaddingMode!=0&&(cfg.OuterIPMTU<576||cfg.OuterIPMTU>1500)){
         return nil,ErrAdmissionParams
     }
+    // Go's Android target also satisfies Linux build constraints.
+    // Native original M4 now owns TLS-selected Normal padding on both.
+    if runtime.GOOS!="android"&&(cfg.AndroidTunnelDNS||cfg.AndroidPhysicalDNS||len(cfg.AndroidCN8503Raw)>0){
+        return nil,ErrAdmissionUnsupported
+    }
     return &V4LinuxClientProduct{cfg:cfg},nil
+}
+// A40 stages are emitted by real original client transitions after protected
+// TLS admission; not synthetic M4/lease evidence.
+func originalAndroidPostauth(stage string){
+    if runtime.GOOS=="android"{
+        log.Printf("V4_PUBLIC_ANDROID_POSTAUTH role=client class=%s",stage)
+    }
 }
 // ConnectAuthenticatedPeer is the real TLS client public product half:
 // original Go FakeTCP SYN/SYNACK must be established and receive handling
@@ -82,6 +117,12 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     p.mu.Lock()
     defer p.mu.Unlock()
     if p.owner!=nil||p.session!=nil||p.stopped{return nil,ErrAdmissionUnsupported}
+    // Android uses its own Bionic TUN/RAW owner and original cold lease.
+    // The shared opportunistic-v3 policy is configured below on every mode.
+    if runtime.GOOS=="android" &&
+       (p.cfg.SharedTun!=nil||!cfg.AutoLease){
+        return nil,ErrAdmissionUnsupported
+    }
     conn:=assoc.BootstrapConn()
     if conn==nil{return nil,ErrAdmissionParams}
     // One TLS exporter binds the requested FEC mode to the same
@@ -104,15 +145,29 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     })
     if err!=nil{return nil,err}
     cold,err:=session.ColdSnapshot()
-    if err!=nil{return nil,err}
-    if cold.ServerSide(){return nil,ErrAdmissionParams}
+    if err!=nil||cold.ServerSide(){
+        originalAndroidPostauth("COLD_FAILED")
+        if err!=nil{return nil,err}
+        return nil,ErrAdmissionParams
+    }
+    originalAndroidPostauth("COLD_OK")
     handoff,err:=assoc.Detach()
-    if err!=nil{return nil,err}
+    if err!=nil{
+        originalAndroidPostauth("DETACH_FAILED")
+        return nil,err
+    }
+    originalAndroidPostauth("DETACH_OK")
     for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
     bridge:=&v4EmbeddedNativeBridge{}
     if err=bridge.prepareAuthenticatedClient(session,handoff,assoc.Flow());err!=nil{
+        switch V4OriginalNativeM4FailureStage(err){
+        case "original_native_prepare":originalAndroidPostauth("NATIVE_PREPARE_FAILED")
+        case "original_native_commit":originalAndroidPostauth("NATIVE_COMMIT_FAILED")
+        default:originalAndroidPostauth("NATIVE_OTHER_FAILED")
+        }
         return nil,fmt.Errorf("V4 genuine Go client TLS/native owner: %w",err)
     }
+    originalAndroidPostauth("NATIVE_COMMIT_OK")
     p.owner=bridge
     p.session=session
     p.association=assoc
@@ -121,18 +176,34 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if cfg.AutoLease {
         lease,leaseErr:=session.AuthenticatedLeaseIPv4()
         if leaseErr!=nil||lease==""||p.cfg.ConfigureLeaseIPv4==nil {
+            originalAndroidPostauth("LEASE_FIELD_FAILED")
             return nil,errors.Join(ErrAdmissionParams,leaseErr,p.closeLocked())
         }
+        originalAndroidPostauth("LEASE_FIELD_OK")
         if leaseErr=p.cfg.ConfigureLeaseIPv4(lease);leaseErr!=nil {
+            originalAndroidPostauth("LEASE_OS_FAILED")
             return nil,errors.Join(leaseErr,p.closeLocked())
+        }
+        originalAndroidPostauth("LEASE_OS_OK")
+        if runtime.GOOS=="android"{
+            // The real Go-authenticated installed /32 must also restrict
+            // the native ARM64 TUN reverse-destination, even without the
+            // Linux SharedTun process-wide reader.
+            if leaseErr=bridge.bindAuthenticatedClientIPv4(lease);leaseErr!=nil{
+                originalAndroidPostauth("NATIVE_IP_BIND_FAILED")
+                return nil,errors.Join(leaseErr,p.closeLocked())
+            }
+            originalAndroidPostauth("NATIVE_IP_BOUND")
         }
         if p.cfg.SharedTun!=nil {
             // Original protected lease has ALREADY been installed and
             // verified by the actual OS before the client may bind the
             // process-wide default Rust M1 ingress. A forged mutable
             // admission result or pre-TLS configuration is never authority.
-            if leaseErr=bridge.bindAuthenticatedClientIPv4(lease);leaseErr!=nil {
-                return nil,errors.Join(leaseErr,p.closeLocked())
+            if runtime.GOOS!="android"{
+                if leaseErr=bridge.bindAuthenticatedClientIPv4(lease);leaseErr!=nil{
+                    return nil,errors.Join(leaseErr,p.closeLocked())
+                }
             }
             if leaseErr=bridge.bindAuthenticatedSharedTun(p.cfg.SharedTun);leaseErr!=nil {
                 return nil,errors.Join(leaseErr,p.closeLocked())
@@ -144,30 +215,100 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
     if p.cfg.ConfigureTunnelMTU!=nil {
         clientLimit,serverLimit:=cold.RecordLimits()
         if err=p.cfg.ConfigureTunnelMTU(handoff.Peer.MSS,clientLimit,serverLimit);err!=nil{
+            originalAndroidPostauth("MTU_FAILED")
             return nil,errors.Join(err,p.closeLocked())
         }
     }
-    if err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex);err==nil{
+    // Android cannot inherit Linux's implicit physical interface binding.
+    // Fail closed if the OS Network handle/MTU cannot be pinned to this
+    // specific Go-authenticated Rust generation before either FD is opened.
+    err=v4BindPlatformUnderlay(bridge,p.cfg)
+    if err!=nil{originalAndroidPostauth("UNDERLAY_FAILED")
+    }else{originalAndroidPostauth("UNDERLAY_OK")}
+    if err==nil{
+        err=bridge.attachRawRxOnInterface(p.cfg.NetworkInterface,p.cfg.NetworkIfIndex)
+        if err!=nil{originalAndroidPostauth("RAW_FAILED")
+        }else{originalAndroidPostauth("RAW_ATTACHED")}
+    }
+    if err==nil{
         err=bridge.attachKernelTun(p.cfg.Tun.Fd(),p.cfg.TunName)
+        if err!=nil{originalAndroidPostauth("TUN_FAILED")
+        }else{originalAndroidPostauth("TUN_ATTACHED")}
+    }
+    if err==nil&&runtime.GOOS=="android"&&
+       (len(p.cfg.AndroidCN8503Raw)>0||p.cfg.AndroidPhysicalDNS){
+        upstream:=p.cfg.AndroidPhysicalDNSUpstream
+        if !upstream.IsValid(){upstream=netip.MustParseAddr("223.5.5.5")}
+        p.cfg.AndroidPhysicalDNSUpstream=upstream
+        err=bridge.setAndroidPhysicalDNSUpstream(upstream)
+        if err!=nil{originalAndroidPostauth("PHYSICAL_DNS_FAILED")}
+    }
+    if err==nil&&runtime.GOOS=="android"&&(p.cfg.AndroidTunnelDNS||len(p.cfg.AndroidCN8503Raw)>0){
+        upstream:=p.cfg.AndroidTunnelDNSUpstream
+        if !upstream.IsValid(){upstream=netip.MustParseAddr("1.1.1.1")}
+        p.cfg.AndroidTunnelDNSUpstream=upstream
+        err=bridge.setAndroidTunnelDNSUpstream(upstream)
+        if err!=nil{originalAndroidPostauth("TUNNEL_DNS_FAILED")}
+    }
+    if err==nil&&runtime.GOOS=="android"&&len(p.cfg.AndroidCN8503Raw)>0{
+        err=bridge.enableAndroidCNDNSSplit(p.cfg.AndroidCN8503Raw)
+        if err!=nil{
+            originalAndroidPostauth("CN_DNS_SPLIT_FAILED")
+        }else{
+            originalAndroidPostauth("CN_DNS_SPLIT_ENABLED")
+            log.Printf("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=%d cn=%s noncn=%s system_resolver=NOT_CAPTURED",bytes.Count(p.cfg.AndroidCN8503Raw,[]byte{'\n'}),p.cfg.AndroidPhysicalDNSUpstream.String(),p.cfg.AndroidTunnelDNSUpstream.String())
+        }
+    }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidPhysicalDNS{
+        // Separate explicit all-App TUN UDP53 physical mode, not CN split
+        // and never an Android system Resolver/netd takeover.
+        err=bridge.enableAndroidPhysicalDNS()
+        if err!=nil{
+            originalAndroidPostauth("PHYSICAL_DNS_FAILED")
+        }else{
+            originalAndroidPostauth("PHYSICAL_DNS_ENABLED")
+            log.Printf("V4_PUBLIC_ANDROID_PHYSICAL_DNS_EFFECTIVE role=client cold=1 app_tun_udp53=1 upstream=%s cn_split=NOT_ACTIVE system_resolver=NOT_CAPTURED",p.cfg.AndroidPhysicalDNSUpstream.String())
+        }
+    }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidTunnelDNS{
+        // Real original-Go cold grant after true TLS/lease/RAW/TUN binding.
+        // The original Rust worker, M3, inverse map and owned Stop already
+        // exist; neither Go nor Java processes any DNS DATA packet.
+        err=bridge.enableAndroidTunnelDNS()
+        if err!=nil{
+            originalAndroidPostauth("TUNNEL_DNS_FAILED")
+        }else{
+            originalAndroidPostauth("TUNNEL_DNS_ENABLED")
+            log.Print("V4_PUBLIC_ANDROID_TUNNEL_DNS_EFFECTIVE role=client enabled=1 original_m3=1 system_resolver=NOT_CAPTURED cn_split=NOT_ACTIVE")
+        }
     }
     if err==nil{
         p.fec,err=v4ConfigureProductFec(bridge,mode,p.cfg.FECProfile,cold)
     }
-    if err==nil{err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)}
+    if err==nil{
+        err=bridge.configureOriginalOuterRepair(!p.cfg.DisableOuterRepair)
+    }
     if err==nil{
         keepalive,dead:=p.cfg.HealthKeepaliveSeconds,p.cfg.HealthDeadAfterSeconds
         if keepalive==0{keepalive=15}
         if dead==0{dead=90}
         err=bridge.configureOriginalNativeHealth(keepalive,dead,p.cfg.HealthIdleDormantSeconds)
+        if err!=nil{originalAndroidPostauth("HEALTH_FAILED")}
     }
     if err==nil&&mode==FecV2Auto{err=bridge.enableOriginalLowRateAuto()}
     if err==nil&&p.cfg.OuterIPMTU!=0{
-        // The original TLS reply echoed the selected mode; ColdSnapshot
-        // rejects any post-handshake edit before this native M4 cold call.
+        // Android and Linux use the same authenticated source-only padding.
         err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)
     }
-    if err==nil{err=bridge.armOriginalPublicM2Feedback(0)} // public Linux client always expects original Legacy peer
-    if err==nil{err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)}
+    // Linux's historical ABI name arms its native presentation path.
+    // Android uses the shared v3 controller above, not retired per-record M2.
+    // Original TLS/AEAD/replay and encrypted Health remain independent.
+    if err==nil&&runtime.GOOS!="android"{
+        err=bridge.armOriginalPublicM2Feedback(0)
+    }
+    if err==nil{
+        err=bridge.startRustOwnerLoop(p.cfg.NetworkIfIndex)
+        if err!=nil{originalAndroidPostauth("M4_START_FAILED")
+        }else{originalAndroidPostauth("M4_STARTED")}
+    }
     if err!=nil{
         shutdown:=p.closeLocked()
         return nil,errors.Join(
@@ -175,7 +316,11 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
             shutdown,
         )
     }
-    if p.fec!=nil{p.fec.start(bridge)}
+    // Fixed uses only native Quality. Android Auto alone starts the
+    // original 2Hz Go policy readback, never a per-DATA Go callback.
+    if p.fec!=nil&&(runtime.GOOS!="android"||mode==FecV2Auto){
+        p.fec.start(bridge)
+    }
     return session,nil
 }
 // Only numeric true original M2 counters, once before Stop; never changes

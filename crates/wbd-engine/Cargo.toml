@@ -40,3 +40,6 @@ wbd-platform = { path = "../wbd-platform" }
 wbd-recovery = { path = "../wbd-recovery" }
 rtrb = { workspace = true }
 regex-lite = { version = "=0.1.8", optional = true }
+
+# Android full cold-compiled geosite regexp semantics.
+regex = "=1.12.2"

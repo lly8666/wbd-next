@@ -1,0 +1,127 @@
+name: Android temp-root isolated policy route (one SOURCE build reuse)
+run-name: "android-routegate|${{ github.sha }}"
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-routegate-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  canaries:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: {api: ['28', '36']}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ANDROID_PROBE_API: ${{ matrix.api }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: KVM and exact-source single build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/build out/routegate
+          test -c /dev/kvm || { echo "KVM missing"; exit 2; }
+          sudo chmod a+rw /dev/kvm
+          build_id=""
+          for attempt in $(seq 1 40); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=experiment%2Fandroid-temp-root-probe&per_page=100" >out/routegate/build-runs.json
+            build_id="$(python3 - <<'PY'
+          import json,os
+          runs=json.load(open("out/routegate/build-runs.json"))["workflow_runs"]
+          match=[r for r in runs if r.get("head_sha")==os.environ["GITHUB_SHA"]
+              and r.get("path")==".github/workflows/android-root-probe-build.yml"]
+          if any(r.get("conclusion") in ("failure","cancelled","timed_out") for r in match):
+              raise SystemExit("SOURCE build failed; do not retry")
+          ok=[r for r in match if r.get("conclusion")=="success"]
+          print(ok[0]["id"] if ok else "")
+          PY
+            )"
+            if [[ -n "$build_id" ]]; then break; fi
+            sleep 15
+          done
+          test -n "$build_id" || { echo "SOURCE build absent"; exit 3; }
+          echo "$build_id" >out/routegate/build-run-id.txt
+          gh run download "$build_id" --repo "$GITHUB_REPOSITORY" --name "android-root-probe-$GITHUB_SHA" --dir out/build
+          (cd out/build; sha256sum -c SHA256SUMS)
+          test "$(cat out/build/SOURCE)" = "$GITHUB_SHA"
+      - uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: ${{ matrix.api }}
+          target: default
+          arch: x86_64
+          emulator-boot-timeout: 300
+          disable-animations: true
+          force-avd-creation: true
+          emulator-options: -no-snapshot -wipe-data -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on
+          script: bash experiments/android-root-probe/ci/routegate.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: routegate-api${{ matrix.api }}-${{ github.sha }}
+          path: out/routegate/
+          retention-days: 21
+          if-no-files-found: warn
+  middle:
+    needs: canaries
+    runs-on: ubuntu-24.04
+    timeout-minutes: 27
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ANDROID_PROBE_API: '32'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: KVM and same exact-source build
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/build out/routegate
+          test -c /dev/kvm || { echo "KVM missing"; exit 2; }
+          sudo chmod a+rw /dev/kvm
+          build_id=""
+          for attempt in $(seq 1 40); do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=experiment%2Fandroid-temp-root-probe&per_page=100" >out/routegate/build-runs.json
+            build_id="$(python3 - <<'PY'
+          import json,os
+          runs=json.load(open("out/routegate/build-runs.json"))["workflow_runs"]
+          match=[r for r in runs if r.get("head_sha")==os.environ["GITHUB_SHA"]
+              and r.get("path")==".github/workflows/android-root-probe-build.yml"]
+          if any(r.get("conclusion") in ("failure","cancelled","timed_out") for r in match):
+              raise SystemExit("SOURCE build failed; do not retry")
+          ok=[r for r in match if r.get("conclusion")=="success"]
+          print(ok[0]["id"] if ok else "")
+          PY
+            )"
+            if [[ -n "$build_id" ]]; then break; fi
+            sleep 15
+          done
+          test -n "$build_id" || { echo "SOURCE build absent"; exit 3; }
+          echo "$build_id" >out/routegate/build-run-id.txt
+          gh run download "$build_id" --repo "$GITHUB_REPOSITORY" --name "android-root-probe-$GITHUB_SHA" --dir out/build
+          (cd out/build; sha256sum -c SHA256SUMS)
+          test "$(cat out/build/SOURCE)" = "$GITHUB_SHA"
+      - uses: reactivecircus/android-emulator-runner@v2.38.0
+        with:
+          api-level: '32'
+          target: default
+          arch: x86_64
+          emulator-boot-timeout: 300
+          disable-animations: true
+          force-avd-creation: true
+          emulator-options: -no-snapshot -wipe-data -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -accel on
+          script: bash experiments/android-root-probe/ci/routegate.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: routegate-api32-${{ github.sha }}
+          path: out/routegate/
+          retention-days: 21
+          if-no-files-found: warn

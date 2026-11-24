@@ -184,6 +184,23 @@ mod tests{
         assert_eq!(a.verified(1400,100),66300);
     }
     #[test]
+    fn a52_android_normal_off_ack_never_skips_authenticated_gap(){
+        // The Android RAW M3 opener may authenticate 0x10 before the
+        // earlier 0xfffffff0 span. Neither an out-of-order DATA nor a
+        // replayed span may manufacture a cumulative presentation ACK.
+        let mut ack=NativePresentationAck::new(0xffff_fff0);
+        assert_eq!(ack.verified(0x10,40),0xffff_fff0);
+        assert_eq!(ack.verified(0x30,8),0xffff_fff0);
+        assert_eq!(ack.verified(0xffff_fff0,32),0x38);
+        assert_eq!(ack.verified(0x10,40),0x38);
+        // A 10ms coalescing deadline belongs to the same original TX
+        // worker; no ACK-only loop without changed authenticated bytes.
+        assert!(!presentation_ack_only_due(5_000_000,1,ack.ack(),0xffff_fff0));
+        assert!(presentation_ack_only_due(10_000_001,1,ack.ack(),0xffff_fff0));
+        assert!(!presentation_ack_only_due(30_000_000,10_000_001,
+            ack.ack(),ack.ack()));
+    }
+    #[test]
     fn h2229_wrap_and_rekey_fenced(){
         let mut a=NativePresentationAck::new(0xffff_fff0);
         assert_eq!(a.verified(0xffff_fff0,32),0x10);

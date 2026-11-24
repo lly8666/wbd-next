@@ -116,7 +116,7 @@ impl TunnelStartupPadding {
 // their startup-pad length streams MUST NOT share a PRNG seed. Domain-split
 // only the non-cryptographic padding policy (not KDF, AEAD, PN or on-wire
 // epoch). This is invoked cold once by each Linux Rust original TX owner.
-#[cfg(any(target_os="linux",test))]
+#[cfg(any(target_os="linux",target_os="android",test))]
 pub(crate) fn linux_tx_padding_epoch(epoch:[u8;16],server_side:bool)->[u8;16]{
     const CLIENT_TX_SALT:[u8;8]=*b"WBCLPAD1";
     const SERVER_TX_SALT:[u8;8]=*b"WBSVPAD1";

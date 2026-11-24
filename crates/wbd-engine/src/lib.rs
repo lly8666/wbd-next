@@ -12,16 +12,22 @@ pub mod fec2_staged;
 /// Independent Go TLS/M4 integration still gates all real product capability.
 mod v4_fixed_stream;
 /// Shared event-driven authenticated Health/dead/FIN/idle clock for both native owners.
+// H2229 authenticated cosmetic Game ACK parity across native Windows/Linux.
+// No per-record receipt and no modification to original outer repair policy.
+// H2229 main ACK ledger also drives Android Original Normal/off only
+// after original M3 authentication; no new FEC mode is enabled.
+#[cfg(any(feature="fec2_product_record",target_os="android"))]
+mod v4_presentation_ack;
 mod v4_native_health;
 /// M0 one-owner adapter around frozen M1 GameTx/Rx with per-lane AEAD/PN.
 /// Not a public Go product grant until real lanes are bound.
 mod v4_game_lane;
-// H2229 authenticated cosmetic Game ACK parity across native Windows/Linux.
-// No per-record receipt and no modification to original outer repair policy.
 #[cfg(any(feature="m0_v4_embedded_go",test))]
 mod v4_ingress_fair;
-#[cfg(feature="fec2_product_record")]
-mod v4_presentation_ack;
+// Real original-Go Game2/4 physical-lane cold tuple layout; host unit
+// tests execute this same code as Android, before M4 kernel workers exist.
+#[cfg(any(test,target_os="android"))]
+mod v4_android_game_cold;
 #[cfg(feature="fec2_product_record")]
 mod v4_game_fec;
 // Sparse immutable outer TCP appearance only; shared by original Game FEC
@@ -50,6 +56,37 @@ pub mod cold_v4;
 mod v4_owner_crypto;
 /// PLAN028 authenticated per-device inner source gate before native TUN write.
 mod v4_session_address;
+// B2c2a: no-copy IPv4 UDP/TCP53 observation at the existing single
+// Android original Rust TUN reader. Host parser tests are source-locked;
+// no DNS redirect, fake-IP, second TUN consumer or packet mutation.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_dns_ingress;
+// B2c2b1 bounded UDP DNS53 5-tuple transaction inverse NAT. Android ARM64
+// original Rust-only candidate; never arm before BOTH authenticated reply
+// and scoped physical/tunnel DNS lifecycle are independently proven.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_dns_udp_flow;
+// B2c2c: the original Android Rust M4-only physical socket's bounded
+// inverse IPv4 reply path; physical replies are not remote-AEAD payloads.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_dns_physical_flow;
+// B63 original native DNS same-physical-endpoint TCP fallback.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_dns_tcp_fallback;
+// B5 cold-compiled CN8503 match at the one original Rust M4 UDP53 read.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_cn_dns;
+// B6 one deterministic UDP53/CN/physical/tunnel and TCP53-pass-through
+// decision for BOTH small and jumbo original M4 TUN packets.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_dns_route;
+// B16 one original Android M4 IPv4 DF0 / local DF1 PMTU codec, with
+// Host tests executing the exact same production encoder.
+#[cfg(any(test,all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))))]
+mod v4_android_ipv4_mtu;
+// B55 game readiness schedule, pure host tests and Android original worker.
+#[cfg(any(test,all(target_os="android",feature="fec2_product_record")))]
+mod v4_android_game_schedule;
 // Versioned actual owner Prepare is in ordinary builds; test FFI only routes
 // the already authenticated private Go callback into this same code.
 mod v4_protected_handoff;
@@ -61,7 +98,7 @@ mod v4_mtu_budget_ffi;
 mod windows_lane_lifecycle;
 // PLAN029 bounded cold-compiled IPv4/CN-domain split decisions shared by
 // Normal and Game; product Wintun/direct binding is qualified separately.
-#[cfg(any(target_os="windows",target_os="linux",test))]
+#[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
 mod v4_client_split;
 // PLAN029: typed wire/query decision, owned by the ONE Rust Wintun ingress.
 // Does not create a second packet reader or authorize a Direct backend.
@@ -70,7 +107,7 @@ mod v4_client_split_wire;
 // PLAN029: bounded startup padding budget source in Rust, not yet a
 // product effect until cold CLI/GUI and authenticated original LINK seal
 // wire it. Off has no newly allocated tracking table.
-#[cfg(any(target_os="windows",target_os="linux",test))]
+#[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
 mod v4_client_startup_padding;
 // PLAN029 sparse DNS-only answer parsing and bounded query coalescing;
 // no second Wintun reader, no Go per-query pump or product owner claim.
@@ -124,7 +161,12 @@ mod v4_windows_native_dns_tcp;
 // listener); no second Wintun reader or per-query background thread.
 #[cfg(target_os="windows")]
 mod v4_windows_native_dns_client_tcp;
-#[cfg(all(feature = "m0_v4_embedded_go", target_os = "linux"))]
+// Keep ONE original protected Go↔Rust V4 generation/AEAD owner for Linux
+// and Android. The platform-specific raw/TUN M4 worker stays separately
+// gated; including this module alone does NOT enable Android data delivery.
+#[cfg(all(feature = "m0_v4_embedded_go",
+          any(target_os = "linux",
+              all(target_os = "android", target_pointer_width = "64"))))]
 mod v4_embedded_go;
 // M0-shared private original-Go Windows lifecycle ABI. No Windows M4 device
 // lease, OS applied status or product activation is granted by this module.

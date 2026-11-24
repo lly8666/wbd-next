@@ -4,7 +4,8 @@ ROOT=pathlib.Path(__file__).resolve().parents[1]
 class LinuxNativeInitialReady(unittest.TestCase):
  def test_initial_and_reauth_syn_same_frozen_original_retry(self):
   text=(ROOT/"r0/go_overlay/internal/v4productcli/linux.go").read_text()
-  self.assertIn("err=waitForOriginalColdSYN(dialCtx,assoc)",text)
+  self.assertIn("err=waitForOriginalColdSYN(synCtx,assoc)",text)
+  self.assertLess(text.index("cancelSYN()\n    if err!=nil{return err}"),text.index("dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)",text.index("err=waitForOriginalColdSYN(synCtx,assoc)")))
   self.assertNotIn("err=assoc.WaitEstablished(dialCtx)",text)
   self.assertIn("V4_PUBLIC_RAW_AF_PACKET_READY role=%s",text)
   self.assertIn("assoc.EmitRetransmitDue(time.Now())",text)

@@ -1,0 +1,10 @@
+# 2026-11-16 — manual restore UI tap occluded, synthetic tether confirmed
+
+- SOURCE `00a7bd66229da81087e82d2b8afaf3e2c81404d8`; [KSU Action43871859506](https://github.com/lly8666/wbd-next/actions/runs/43871859506) FAILED in new UI case, artifact `14228701630`, ZIP SHA256 `7af9c34f512a4fb3aa9961c403de7d5c158b7efca84543e661c251fe97453238`. Old App UDP/DNS/TLS1.3 and SIGKILL cleanup remained true PASS in this SOURCE.
+- **NEW POSITIVE:** `tethergate` `SUPPORTED_IN_SCOPE`, two synthetic Wi-Fi IPv4 clients (10.128.11.10:43001 and 10.128.11.11:43002) plus synthetic USB (10.128.12.10:43003); all 3 sent real kernel-forwarded UDP to owned TUN, source SNAT translated to single `198.18.253.1`, independent conntrack reverse mapping delivered correct replies (42/49,42/49,41/48 bytes). Native root KSU UID0, private netns before `net:[4026531840]` after `net:[4026533055]`, main-netns rules/routes byte-equal. This is **NOT real Wi-Fi hotspot or USB tether**.
+- `recover-seed` produced exact owned priority8200 UID10218 rule; subsequent actual UI rendered unique Button with bounds **`[24,24][296,72]`**, but framework ActionBar container overlapped **`[0,0][320,80]`**. UI tap targeted `y=48` in ActionBar, so app never created `files/recovery-result.json` and Action failed. It is not root permissions or native recovery proof. Seed remained on the disposable AVD until runner teardown; user-visible physical system unchanged.
+- Affected fixture-only correction: move button below ActionBar by padding top=112px; test now validates button does not overlap ActionBar before UI tap and waits up to 27s for root command, then checks App private evidence. One same-branch single-AVD rerun on new SOURCE. Prior source remains FAIL for UI, NAT component retains its own SOURCE PASS.
+
+```feature-impact
+{"kind":"updated","ids":["android-temp-root-probe"],"reason":"Preserve 3 synthetic Wi-Fi/USB SNAT+conntrack positives and first App restore UI FAIL due overlapped ActionBar; repair only click visibility test."}
+```

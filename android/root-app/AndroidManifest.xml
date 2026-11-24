@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="org.wbdnext.rootclient">
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="35"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- B32: rooted sideload selector lists ordinary installed apps even without launcher/share/view activities. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Android11+ rooted selector needs installed ordinary App visibility.
+         KernelSU manager queries remain explicit for existing UID exclusions. -->
+    <queries>
+        <!-- Narrow visibility for root manager bypass: the app MUST NOT
+             capture KernelSU Manager traffic in all-app route mode. -->
+        <package android:name="me.weishu.kernelsu"/>
+        <package android:name="com.rifsxd.ksunext"/>
+        <package android:name="com.sukisu.ultra"/>
+        <intent>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
+        </intent>
+        <!-- B26 narrowly include non-launcher apps that expose normal
+             text-sharing or HTTPS-opening entry points. No blanket scan. -->
+        <intent>
+            <action android:name="android.intent.action.SEND"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+    </queries>
+    <application android:label="WBD"
+                 android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                 android:usesCleartextTraffic="false"
+                 android:allowBackup="false">
+        <activity android:name=".RootClientActivity"
+                  android:windowSoftInputMode="adjustResize"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- NOT a VpnService, never requests BIND_VPN_SERVICE. -->
+        <service android:name=".RootClientService"
+                 android:exported="false"
+                 android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                      android:value="User-initiated rooted original WBD Go/Rust raw TUN owner with joined Stop"/>
+        </service>
+    </application>
+</manifest>

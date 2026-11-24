@@ -1,0 +1,80 @@
+{
+  "schema": "android-root-no-fakeip-split/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source_sha": "75b5596e0bfdddce0b340a901f996bcacf70493f",
+  "CI": {
+    "run": 43909181856,
+    "job": 133446091413,
+    "conclusion": "success",
+    "artifact_id": 14248485146,
+    "zip_sha256": "1c2ab9e5f85b8a2d88bdcfaca2ae12cce59aef92d5794a898ef005e5926b3827"
+  },
+  "APK": {
+    "size": 1717060,
+    "sha256": "7df7800f58b7028171a2547b25ef074e6aadb1adff682cc4beac6d7f19c45a9b",
+    "package": "org.wbdnext.rootprobe",
+    "target_sdk": 37,
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "signing": "disposable CI"
+  },
+  "KSU_AVD": {
+    "android_api": 36,
+    "abi": "x86_64",
+    "root": "KernelSU3.3.1, UID0, Enforcing",
+    "status": "EMBEDDED_APK_DEVICE_DIAGNOSTIC_PASS",
+    "split_policy": "PASS_18_OF_18",
+    "isolated_uid_route": "PASS_10_OF_10",
+    "app_ui": "PASS_REAL_TOUCH",
+    "disk_json": "PASS",
+    "native_su_validate": "PASS",
+    "existing_core_net_tests": "PASS",
+    "main_fib_unchanged": true
+  },
+  "CN_snapshot": {
+    "source": "https://ftp.apnic.net/stats/apnic/delegated-apnic-20261116",
+    "sha256": "f5bc4f8969b76afce7622820711e446db09da71c981cdf1f6cf49c3573fbc557",
+    "allocation_records": 8798,
+    "collapsed_prefixes": 5500,
+    "compiled_merged_intervals": 4119,
+    "serialized_sha256": "34d4bed7c72789ed6bd6ff5372e4a222cda1cdc47d5b553615486cb61f8c9959",
+    "not_authoritative_geolocation": true
+  },
+  "UI": {
+    "default_mode": "split",
+    "per_app_uid": 10502,
+    "per_app_mode": "global",
+    "direct_dns": "223.5.5.5",
+    "tunnel_dns": "1.1.1.1",
+    "fakeip": false,
+    "server_bootstrap": "DIRECT_IN_ALL_MODES",
+    "route_installed": false
+  },
+  "domain_scope": {
+    "default_suffixes": [
+      "cn"
+    ],
+    "custom_exact_suffix": true,
+    "full_geolocation_cn_snapshot": "NOT_RUN"
+  },
+  "not_run": [
+    "real netd UID routing",
+    "real DNS packet dispatcher",
+    "WBD Go authenticated control/TLS",
+    "WBD Rust DATA/TUN",
+    "physical per-app traffic",
+    "arm64 physical runtime",
+    "physical Wi-Fi hotspot/USB tether",
+    "BPF/hardware offload",
+    "IPv6 physical policy/CLAT",
+    "owned production main-route journal/manual restore"
+  ],
+  "historical_fail_runs": [
+    43897451393,
+    43897727775,
+    43898866446,
+    43900940103
+  ]
+}

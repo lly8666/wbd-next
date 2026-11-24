@@ -1,5 +1,7 @@
 # Linux ARM64 first: native client/server, hardware-auto FEC and product verification
 
+> 2026-11-16 scope update: the user authorized a separate [Android temporary-root capability probe](ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md), with its [own continuation prompt](../prompts/ANDROID_TEMP_ROOT_PROBE.md). This narrow probe supersedes the Android deferral below only for feasibility tooling/Actions; it does not qualify or authorize a full Android client. All historical results below retain their original SOURCE/scope.
+
 **Latest same-source checkpoint:** [Linux ARM64 native evidence](../evidence/arm64-linux-native-checkpoint-20261022.md). Normal/Fixed/Auto/Game4 kernel functional and Normal 60-second 10 Mbps discovery passed; Game2 scoped logs passed but workflow failed its final harness predicate. Remaining: actual FEC loss recovery, hardware backend CPU A/B, physical Linux ARM64. Android and OpenWrt remain deferred.
 
 ## Recovery update — Linux ARM64 scoped product functional

@@ -31,6 +31,7 @@ fn main() {
 
     let (file, libname, family) = match target.as_str() {
         "x86_64-unknown-linux-gnu" => ("libisal.a", "isal", "linux-x64-dispatch"),
+        "aarch64-linux-android" => ("libisal.a", "isal", "android-arm64-neon-capable"),
         "aarch64-unknown-linux-gnu" => ("libisal.a", "isal", "linux-arm64-neon-capable"),
         "aarch64-unknown-linux-musl" => ("libisal.a", "isal", "linux-arm64-musl-neon-capable"),
         "x86_64-pc-windows-msvc" => ("isa-l_static.lib", "isa-l_static", "windows-x64-msvc"),

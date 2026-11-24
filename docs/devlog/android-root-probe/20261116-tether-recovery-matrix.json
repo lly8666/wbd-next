@@ -1,0 +1,77 @@
+{
+  "schema": "android-tether-recovery/v1",
+  "branch": "experiment/android-temp-root-probe",
+  "source": "a5cca542f93e7c256145e07d7432b4dfa388e7c7",
+  "action": 43872821388,
+  "job": 133318119993,
+  "conclusion": "success",
+  "artifact_id": 14229385474,
+  "artifact_zip_sha256": "9d6c57a88acee55a43dbd4829fe5f5bb4f7df445e78d65bf6b7f85bee399ecea",
+  "native_binary_sha256": "2dae1256f7db73e1515099f2d8f801cbba7e6c94a3acfb3848038c2fd0204622",
+  "apk_sha256": "8cacc2b0172a0ccf1ad87558365b0761a2e3e637e367e9cec1898173281e665b",
+  "env": {
+    "android": "16/API36",
+    "abi": "x86_64",
+    "kernel_root": "real KernelSU3.3.1 LKM prepatched-ramdisk AVD, not DirtyFrag",
+    "app_uid": 10218,
+    "root_uid": 0,
+    "target_sdk": 37,
+    "selinux": "Enforcing"
+  },
+  "results": {
+    "app_tun": "APP_UID_TUN_ROUNDTRIP_PASS",
+    "dns_tcp_tls": "MAINSTREAM_DNS_TLS_PASS",
+    "sigkill": "SIGKILL_WATCHDOG_CLEANUP_PASS",
+    "tether_private_netns": "SUPPORTED_IN_SCOPE",
+    "app_button_first": "RESTORED",
+    "app_button_second": "ALREADY_CLEAN",
+    "global_routes_equal": true,
+    "global_rules_equal": true
+  },
+  "synthetic_clients": [
+    {
+      "label": "Wi-Fi synthetic 1",
+      "src": "10.128.11.10:43001",
+      "snat": "198.18.253.1:43001",
+      "udp_out_bytes": 42,
+      "udp_back_bytes": 49,
+      "conntrack_pass": true
+    },
+    {
+      "label": "Wi-Fi synthetic 2",
+      "src": "10.128.11.11:43002",
+      "snat": "198.18.253.1:43002",
+      "udp_out_bytes": 42,
+      "udp_back_bytes": 49,
+      "conntrack_pass": true
+    },
+    {
+      "label": "USB synthetic",
+      "src": "10.128.12.10:43003",
+      "snat": "198.18.253.1:43003",
+      "udp_out_bytes": 41,
+      "udp_back_bytes": 48,
+      "conntrack_pass": true
+    }
+  ],
+  "not_tested": [
+    "actual hotspot",
+    "actual USB tether",
+    "hardware/eBPF tether offload bypass",
+    "physical Wi-Fi/cellular switching",
+    "IPv6-only/CLAT",
+    "production Android Bionic WBD core",
+    "foreground service/Doze",
+    "production owned journal and real-phone recovery",
+    "DirtyFrag EoP temporary Root"
+  ],
+  "historical_ui_failure": {
+    "source": "00a7bd66229da81087e82d2b8afaf3e2c81404d8",
+    "action": 43871859506,
+    "conclusion": "failure",
+    "reason": "Android ActionBar obscured button; no App output despite private-netns NAT PASS",
+    "artifact_id": 14228701630,
+    "artifact_sha256": "7af9c34f512a4fb3aa9961c403de7d5c158b7efca84543e661c251fe97453238"
+  },
+  "scope": "Existing KSU AVD in isolated test; NO actual tethered downstream or hardware offload qualification."
+}

@@ -50,6 +50,18 @@ use crate::runtime::early_rx::EarlyAccepted;
 use crate::runtime::RxPacket;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use crate::runtime::TxDispatch;
+#[cfg(target_os="android")]
+use wbd_platform::android_root_io::{AndroidOwnedTun,AndroidBoundRawRx,AndroidBoundRawTx};
+#[cfg(target_os="android")]
+use std::os::fd::BorrowedFd;
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+#[path="v4_android_original_m4.rs"]
+mod android_original_m4;
+// B45 true Game2/4-off native M4, one Android TUN TX and 2/4 original
+// authenticated Game M3 RAW RX workers. Go App mode still separately gated.
+#[cfg(all(target_os="android",feature="fec2_product_record"))]
+#[path="v4_android_game_m4.rs"]
+mod android_game_m4;
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 use std::time::Duration;
 const OK:i32=0;
@@ -666,9 +678,11 @@ impl LinuxQualityRx{
     fn has_report(&self)->bool{!self.reports.is_empty()}
 }
 
-#[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-struct LinuxQualityTx{
+#[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
+struct OriginalQualityTx{
     lane:wbd_types::LaneKey,epoch:[u8;16],direction:wbd_recovery::WireDirection,
     sender:Option<wbd_recovery::quality_window::SendWindowSampler>,
     history:wbd_recovery::quality_window::SendHistory,
@@ -679,9 +693,11 @@ struct LinuxQualityTx{
     last_open_gate_pn:Option<u64>,
     slow:VecDeque<(u64,wbd_recovery::quality_window::LossBounds)>,
 }
-#[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-impl LinuxQualityTx{
+#[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
+impl OriginalQualityTx{
     fn new(lane:wbd_types::LaneKey,epoch:[u8;16],
         direction:wbd_recovery::WireDirection)->Self{
         Self{lane,epoch,direction,sender:None,
@@ -819,6 +835,59 @@ impl LinuxQualityTx{
         }
     }
 }
+// Only a matched quality report from a NEW first-send window can
+// certify the current original Auto revision. Prior-PN reports, no
+// copied source or no copied current parity are not new APPLIED.
+#[cfg(feature="fec2_product_record")]
+fn android_auto_report_is_revision_positive(
+    report_first:u64,new_source_first:u64,positives:u64,baseline:u64,
+    current_source_copied:bool,current_repair_copied:bool,
+)->bool{
+    new_source_first!=0&&report_first>=new_source_first&&
+    positives>baseline&&current_source_copied&&current_repair_copied
+}
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn b19_original_android_auto_report_scopes_each_revision(){
+    assert!(!android_auto_report_is_revision_positive(90,100,8,7,true,true));
+    assert!(!android_auto_report_is_revision_positive(100,100,7,7,true,true));
+    assert!(!android_auto_report_is_revision_positive(100,100,8,7,true,false));
+    assert!(!android_auto_report_is_revision_positive(100,100,8,7,false,true));
+    assert!(android_auto_report_is_revision_positive(100,100,8,7,true,true));
+}
+// One original Rust PLAN027 30-slot observation for Linux and Android.
+// Index 0..13: matched SendWindow history; 14..29: actual FEC2 source k.
+#[cfg(feature="fec2_product_record")]
+fn original_fixed_mature_snapshot(
+    quality:&OriginalQualityTx,stream:&crate::v4_fixed_stream::FixedStream
+)->[u64;30]{
+    let mut v=[0u64;30];
+    v[..14].copy_from_slice(&quality.counters);
+    for cl in &stream.report().classes{
+        for k in 1..=16{
+            v[13+k]=v[13+k].saturating_add(cl.k_hist[k]);
+        }
+    }
+    v
+}
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn b18_original_linux_android_quality_30_field_mapping(){
+    let lane=wbd_types::LaneKey{
+        tunnel:wbd_types::TunnelKey{slot:1,generation:2},
+        slot:1,generation:2,
+    };
+    let mut q=OriginalQualityTx::new(
+        lane,[7u8;16],wbd_recovery::WireDirection::ClientToServer
+    );
+    for (i,n) in q.counters.iter_mut().enumerate(){*n=(i as u64)+1}
+    let stream=crate::v4_fixed_stream::FixedStream::new(1,1,1400).unwrap();
+    let got=original_fixed_mature_snapshot(&q,&stream);
+    assert_eq!(&got[..14],&(1u64..=14).collect::<Vec<_>>()[..]);
+    assert_eq!(&got[14..],[0u64;16]);
+}
 #[cfg(all(test,feature="fec2_product_record",target_os="linux",
     any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
@@ -827,7 +896,7 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
     use wbd_recovery::WireDirection;
     let lane=wbd_types::LaneKey{
         tunnel:wbd_types::TunnelKey{slot:1,generation:3},slot:2,generation:3};
-    let mut tx=LinuxQualityTx::new(lane,[7;16],WireDirection::ClientToServer);
+    let mut tx=OriginalQualityTx::new(lane,[7;16],WireDirection::ClientToServer);
     assert!(!tx.due(MonoNs(1)), "idle sender has no quality work");
     tx.last_settled=Some(40); // one actual first-copy observation
     assert!(tx.due(MonoNs(1)));
@@ -863,6 +932,66 @@ fn plan027_linux_auto_sender_window_real_kernel_census_and_matched_maturity(){
     assert_eq!(tx.counters[11],1);
     let _=QualityError::Unknown;
 }
+// Same PLAN027 sender implementation on Linux and Android. This is a
+// deterministic proof of the *matching predicate*, not a network receipt.
+#[cfg(all(test,feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),
+    any(target_env="gnu",target_env="musl")))]
+#[test]
+fn original_fixed_quality_requires_copied_source_not_repair_or_uncertain(){
+    use wbd_recovery::{WireDirection,quality_window::WireReport};
+    use wbd_types::{LaneKey,TunnelKey,RecordPn};
+    let lane=LaneKey{tunnel:TunnelKey{slot:3,generation:7},
+        slot:1,generation:7};
+    let mut tx=OriginalQualityTx::new(
+        lane,[8;16],WireDirection::ClientToServer);
+    assert_eq!(tx.counters[10],0);
+    // A genuinely earlier source PN is the only START trigger.
+    tx.last_settled=Some(20);
+    let start=tx.next_signal(21,MonoNs(0)).unwrap().unwrap();
+    assert_eq!(start.first,22);
+    tx.complete_signal(start,true,MonoNs(1)).unwrap();
+    // Parity is NOT counted as source F even when the driver copied it.
+    tx.settle_batch(&[(RecordPn(22),128)],1,0,false,true,
+        &[(22,2,1)]);
+    tx.settle_batch(&[(RecordPn(23),128)],1,0,false,true,
+        &[(23,3,1)]);
+    let close=tx.next_signal(24,MonoNs(2_000_000_000))
+        .unwrap().unwrap();
+    assert_eq!(close.first_sent,1);
+    assert!(close.complete);
+    tx.complete_signal(close,true,MonoNs(2_000_000_001)).unwrap();
+    // Peer report without authentication would NEVER reach accept_report.
+    // Once the moved M3 opener authenticates it, original local source
+    // history must also match exact id/PN range/count/maturity.
+    let correct=WireReport{id:close.id,first:close.first,last:close.last,
+        first_sent:1,received_unique:1,possibly_repaired:0,
+        mature:true,complete:true,capacity_limited:false};
+    tx.accept_report(WireReport{first_sent:0,..correct},
+        MonoNs(5_000_000_000));
+    tx.accept_report(WireReport{mature:false,..correct},
+        MonoNs(5_000_000_000));
+    tx.accept_report(WireReport{id:999,..correct},
+        MonoNs(5_000_000_000));
+    assert_eq!(tx.counters[10],0);
+    assert_eq!(tx.counters[1],0);
+    tx.accept_report(correct,MonoNs(5_000_000_000));
+    assert_eq!(tx.counters[10],1);
+    assert_eq!(tx.counters[1],1);
+    tx.accept_report(correct,MonoNs(5_000_000_000));
+    assert_eq!(tx.counters[10],1, "replayed summary is not new M2");
+}
+
+// Android64 only: the exact physical Network and interface are a cold Go
+// credential-bound scope, not a root-UID-wide fwmark or a global fallback.
+#[cfg(target_os="android")]
+#[derive(Clone,PartialEq,Eq)]
+struct AndroidPhysicalScope {
+    network_handle:u64,
+    interface:String,
+    ifindex:u32,
+    mtu:u32,
+}
 struct Entry{
     generation:u32,
     server_side:bool,
@@ -895,6 +1024,93 @@ struct Entry{
     // route, MTU and worker turn. Never accept a different device at Stop.
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     raw_ifname:Option<String>,
+    #[cfg(target_os="android")]
+    android_physical:Option<AndroidPhysicalScope>,
+    #[cfg(target_os="android")]
+    android_raw_rx:Option<Arc<AndroidBoundRawRx>>,
+    #[cfg(target_os="android")]
+    android_raw_tx:Option<Arc<AndroidBoundRawTx>>,
+    #[cfg(target_os="android")]
+    android_tun:Option<Arc<AndroidOwnedTun>>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows,
+    // Fail-closed until physical and Tunnel DNS, CN policy, TCP53 and
+    // Android system Resolver ingress have one authenticated owned lifecycle.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_hijack_ready:bool,
+    // The separate physical-DNS owner is NOT peer-AEAD-authenticated.
+    // Do not arm before verified CN/Resolver/TCP53 generation admission.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_physical_ready:bool,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_dns_physical_upstream:[u8;4],
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_cn_dns:Option<Arc<crate::v4_android_cn_dns::CNDnsMatcher>>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_workers:Option<android_original_m4::AndroidOriginalWorkers>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_joining:bool,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_seq_anchor:u64,
+    // H2229 main cumulative ACK ledger: unlike the M1 high-water extension
+    // anchor, only contiguous M3-authenticated bytes may appear ACKed.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_ack_pending:bool,
+    #[cfg(all(feature="fec2_product_record",target_os="android"))]
+    android_outer:Option<crate::v4_game_cosmetic_outer::CosmeticOuter>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_outer_sack:bool,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_ack_sent32:u32,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_ack_tx_ns:u64,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_last_copied_seq32:u32,
+    // Authenticated original Go feature3 Normal/off revision, not FEC APPLIED.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_off_applied_revision:u64,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_metrics:Arc<android_original_m4::AndroidOriginalStats>,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_rx:Option<(
+        crate::v4_fec2_live_rx::VerifiedReceiveEpoch,
+        crate::v4_fec2_live_rx::Fec2LiveRx,
+        u64, // only true original M2 APPLIED, never a desired Fixed flag
+    )>,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_pending:Option<(u8,u64)>,
+    // A real Go Auto NEXT revision waits for an original new source turn;
+    // old source+parity remain with their previous original FEC owner.
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_auto_requested:Option<(u8,u64)>,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_revision_min_source_pn:u64,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_revision_source_copied:bool,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_revision_repair_copied:bool,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_quality_positive_baseline:u64,
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    android_fec2_tx:Option<crate::v4_fixed_stream::FixedStream>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_padding:Option<crate::v4_client_startup_padding::TunnelStartupPadding>,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_pad_mode:u32,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_pad_wire_limit:usize,
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    android_startup_pad_gc_ms:u64,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     normal_firstsend_m2:Option<Arc<Mutex<NormalFirstSendM2>>>,
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -915,9 +1131,11 @@ struct Entry{
         any(target_arch="x86_64",target_arch="aarch64"),
         any(target_env="gnu",target_env="musl")))]
     quality_rx:Option<Arc<Mutex<LinuxQualityRx>>>,
-    #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-    quality_tx:Option<LinuxQualityTx>,
+    #[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
+    quality_tx:Option<OriginalQualityTx>,
     #[cfg(feature="fec2_product_record")]
     original_public_feedback_armed:bool,
     #[cfg(all(feature="fec2_product_record",target_os="linux"))]
@@ -952,7 +1170,8 @@ struct Entry{
     native_retire_notice_sent:bool,
     #[cfg(feature="fec2_product_record")]
     native_retire_notice_attempts:u8,
-    #[cfg(feature="fec2_product_record")]
+    #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     original_outer:Option<Arc<Mutex<OriginalOuterRepair>>>,
     // One authenticated, immutable-per-worker public policy. V3 ON remains
     // unchanged; OFF cannot hold repair ciphertext or send outer DATA copies.
@@ -962,7 +1181,8 @@ struct Entry{
     normal_off_applied_revision:u64,
     // Ordinary non-probe owner: only Go verified TLS feature7 may stage FEC2
     // Fixed. This is an intent, NEVER an applied claim before kernel FEC.
-    #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),
+    any(all(target_os="linux",any(target_env="gnu",target_env="musl")),target_os="android")))]
     protected_features:u16,
     // One original credential-checked Go TLS GoLane snapshot. This remains
     // dormant until a complete original 2/4 lane set consumes it exactly
@@ -1021,7 +1241,7 @@ struct Entry{
     // The fixed Go bootstrap boundary cannot serve as the seq32 anchor forever.
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     rx_seq_anchor:u64,
-    #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+    #[cfg(any(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),target_os="android"))]
     flow:crate::v4_protected_handoff::GoFlow,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     raw_rx:Option<Arc<ScopedRawIpv4Rx>>,
@@ -1029,6 +1249,11 @@ struct Entry{
     raw_tx:Option<Arc<ScopedRawIpv4Tx>>,
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     tun_sink:Option<Arc<ScopedTunSink>>,
+}
+// Android original Game2/4 real per-lane physical RAW FD pair, not M4.
+#[cfg(all(target_os="android",feature="fec2_product_record"))]
+struct AndroidGameRawLane{
+    rx:Arc<AndroidBoundRawRx>,tx:Arc<AndroidBoundRawTx>,
 }
 // Global registry only handles lifetime lookup. Once the original
 // authenticated Go control starts perpetual workers, RX's actual AEAD+PN,
@@ -1039,6 +1264,14 @@ struct GameGroupNative{
     handles:Vec<u64>,stopped:bool,stopping:bool,
     original_identity:ColdIdentity,
     client_lease_ipv4:Option<[u8;4]>,
+    #[cfg(target_os="android")]
+    android_physical:AndroidPhysicalScope,
+    #[cfg(target_os="android")]
+    android_lanes:Vec<crate::v4_android_game_cold::OriginalGameColdLane>,
+    #[cfg(target_os="android")]
+    android_raw:Option<Vec<AndroidGameRawLane>>,
+    #[cfg(target_os="android")]
+    android_workers:Option<android_game_m4::AndroidGameWorkers>,
     // Game server's optional shared single-reader route is an authenticated
     // /32. One Game group owns its private receiver and Stop fence only.
     #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
@@ -1162,6 +1395,22 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         .checked_sub(FIXED_WIRE_OVERHEAD).ok_or(INVALID)?;
     let normal=NormalOffReceive::new_for_owner(&owner,link_mtu,link_mtu)
         .map_err(|_|INVALID)?;
+    // Original Go TLS feature7 may prepare a BOUNDED FEC cache only.
+    // The ONLY AEAD/PN replay opener stays in owner.crypto.rx, and no
+    // Android Go/native APPLIED grant exists in B12a.
+    #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+    let android_fec2_rx=if !server_side&&handoff.negotiated_features==7{
+        let exact=crate::v4_fec2_live_rx::VerifiedReceiveEpoch{
+            generation,epoch:data.identity().logical_epoch,
+            negotiated_features:handoff.negotiated_features,
+            direction_s2c:true,
+        };
+        let blocks=crate::v4_fec2_live_rx::Fec2LiveRx::from_authenticated_scope(
+            exact,usize::from(data.identity().client_limit)
+        ).map_err(|_|INVALID)?;
+        Some((exact,blocks,0u64))
+    }else{None};
     // The genuine FEC2 owner keeps one original M1 plaintext loan until
     // its short parity job retires PLUS a separate immutable ciphertext loan
     // in the <=2s M2 receipt/repair shadow. At ~100+ actual outer first
@@ -1229,12 +1478,88 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         rx_seq_anchor:u64::from(handoff.rx_boundary),
         wire_limit:if server_side{data.identity().server_limit}else{data.identity().client_limit},
         staged_count:0,staged_bytes:0,
-        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        #[cfg(any(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),target_os="android"))]
         flow:handoff.flow,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         tx_route:None,
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         raw_ifname:None,
+        #[cfg(target_os="android")]
+        android_physical:None,
+        #[cfg(target_os="android")]
+        android_raw_rx:None,
+        #[cfg(target_os="android")]
+        android_raw_tx:None,
+        #[cfg(target_os="android")]
+        android_tun:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_flows:crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::default(),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_hijack_ready:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_physical_ready:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_dns_physical_upstream:[223,5,5,5],
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_cn_dns:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_workers:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_joining:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_seq_anchor:u64::from(handoff.rx_boundary),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_presentation_ack:crate::v4_presentation_ack::NativePresentationAck::new(
+            handoff.rx_boundary
+        ),
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_ack_pending:false,
+        #[cfg(all(feature="fec2_product_record",target_os="android"))]
+        android_outer:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_outer_sack:false,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_ack_sent32:handoff.rx_boundary,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_ack_tx_ns:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_last_copied_seq32:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_off_applied_revision:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_metrics:Arc::new(android_original_m4::AndroidOriginalStats::default()),
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+            any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_rx,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+            any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_pending:None,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_auto_requested:None,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_revision_min_source_pn:0,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_revision_source_copied:false,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_revision_repair_copied:false,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_quality_positive_baseline:0,
+        #[cfg(all(feature="fec2_product_record",target_os="android",
+        any(target_arch="aarch64",target_arch="x86_64")))]
+        android_fec2_tx:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_padding:None,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_pad_mode:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_pad_wire_limit:0,
+        #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+        android_startup_pad_gc_ms:0,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_firstsend_m2:None,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -1253,8 +1578,10 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
             any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         quality_rx:None,
-        #[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        #[cfg(all(feature="fec2_product_record",
+    any(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
+        any(target_env="gnu",target_env="musl")),
+        all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))))]
         quality_tx:None,
         #[cfg(feature="fec2_product_record")]
         original_public_feedback_armed:false,
@@ -1288,13 +1615,15 @@ fn prepare_side(cold:&[u8],command:&[u8],server_side:bool)->Result<u64,i32>{
         native_retire_notice_sent:false,
         #[cfg(feature="fec2_product_record")]
         native_retire_notice_attempts:0,
-        #[cfg(feature="fec2_product_record")]
+        #[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         original_outer:None,
         #[cfg(feature="fec2_product_record")]
         outer_repair_enabled:true,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         normal_off_applied_revision:0,
-        #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+        #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),
+    any(all(target_os="linux",any(target_env="gnu",target_env="musl")),target_os="android")))]
         protected_features:handoff.negotiated_features,
         #[cfg(feature="fec2_product_record")]
         game_pending_cold:if handoff.negotiated_features==7{Some(data)}else{None},
@@ -1372,6 +1701,10 @@ fn commit(handle:u64,count:u32,bytes:u32,tx_boundary:u32)->i32{
     // Only Go's private callback after protected reply and successful
     // DetachTransition knows the exact post-reply SenderNext boundary.
     if e.owner.commit_after_detach(tx_boundary).is_err(){return BAD_STAGE}
+    // Original Go Detach is the ONLY authority for Android's starting
+    // appearance SEQ; never generate pure ACK with an invented zero SEQ.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    {e.android_last_copied_seq32=tx_boundary;}
     #[cfg(feature="fec2_product_record")]
     {e.game_tx_boundary=tx_boundary;}
     e.phase=PH_ACTIVE;
@@ -2839,6 +3172,34 @@ fn abort(handle:u64)->i32{
 fn stop(handle:u64)->i32{
     // Leave registry unlocked while joining. Driver handles and owner slabs
     // cannot be released while either Rust worker still references them.
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    {
+        let Ok(cell)=session(handle)else{return UNKNOWN};
+        let workers={
+            let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+            if e.phase==PH_STOPPED{return OK}
+            if e.phase!=PH_ACTIVE&&e.phase!=PH_STOPPING{return BAD_STAGE}
+            if e.android_joining{return STOP_INCOMPLETE}
+            let workers=e.android_workers.take();
+            if workers.is_some(){
+                e.android_joining=true;
+                e.phase=PH_STOPPING;
+            }
+            workers
+        };
+        if let Some(workers)=workers{
+            // Kernel eventfd wakes both original M4 threads. Synchronize
+            // their join before stopping the original M1/M3 crypto owner,
+            // closing RAW/TUN, releasing the original Go generation.
+            let joined=workers.stop_and_join();
+            let Ok(mut e)=cell.lock()else{return STOP_INCOMPLETE};
+            if !joined{
+                e.phase=PH_STOPPING;
+                return STOP_INCOMPLETE
+            }
+            e.android_joining=false;
+        }
+    }
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
     {
         let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -2899,6 +3260,40 @@ fn stop(handle:u64)->i32{
         e.fec2_live_tx=None;
         e.fec2_staged_pns.clear();
     }
+    #[cfg(target_os="android")]
+    {
+        // On Android ARM64, the real M4 Normal/off threads have already
+        // signaled and joined, or this entry only had cold handles.
+        // Only after that join may the original protected owner retire.
+        if let Some(raw)=e.android_raw_rx.as_ref(){raw.begin_stop()}
+        if let Some(raw)=e.android_raw_tx.as_ref(){raw.begin_stop()}
+        if let Some(tun)=e.android_tun.as_ref(){tun.begin_stop()}
+    }
+    #[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+    {
+        // Both M4 kernel threads are joined. Retire every outstanding DNS
+        // reverse-map slot before crypto/TUN FD retirement of this generation.
+        e.android_dns_hijack_ready=false;
+        e.android_dns_physical_ready=false;
+        e.android_cn_dns=None;
+        e.android_dns_flows.stop();
+        #[cfg(feature="fec2_product_record")]
+        {
+            if let Some(stream)=e.android_fec2_tx.as_mut(){stream.stop()}
+            e.android_fec2_tx=None;
+            e.android_fec2_pending=None;
+            e.android_fec2_auto_requested=None;
+            e.android_fec2_revision_min_source_pn=0;
+            e.android_fec2_revision_source_copied=false;
+            e.android_fec2_revision_repair_copied=false;
+        }
+        #[cfg(feature="fec2_product_record")]
+        if let Some((_,blocks,applied))=e.android_fec2_rx.as_mut(){
+            *applied=0;blocks.stop();
+        }
+        #[cfg(feature="fec2_product_record")]
+        {e.android_fec2_rx=None;}
+    }
     let Ok(retired)=e.owner.stop()else{return BAD_STAGE};
     let mut drained=retired.ready.batch_handles_released();
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -2918,8 +3313,35 @@ fn stop(handle:u64)->i32{
             drained &= tun.stop_until(Instant::now())==StopResult::Drained;
         }
     }
+    #[cfg(target_os="android")]
+    {
+        // Existing wbd-platform::r1 BorrowFence gates Bionic RAW/TUN
+        // syscalls. Actual M4 threads were joined before owner crypto Stop.
+        let deadline=std::time::Instant::now();
+        for result in [
+            e.android_raw_rx.as_ref().map(|x|x.stop_until(deadline)),
+            e.android_raw_tx.as_ref().map(|x|x.stop_until(deadline)),
+            e.android_tun.as_ref().map(|x|x.stop_until(deadline)),
+        ]{
+            if result.is_some_and(|v|v!=wbd_platform::r1::StopResult::Drained){
+                drained=false
+            }
+        }
+        drained &= e.android_raw_rx.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
+        drained &= e.android_raw_tx.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
+        drained &= e.android_tun.as_ref().is_none_or(|x|Arc::strong_count(x)==1);
+    }
     if !drained{
         e.phase=PH_STOPPING;return STOP_INCOMPLETE
+    }
+    #[cfg(target_os="android")]
+    {
+        e.android_raw_rx.take();
+        e.android_raw_tx.take();
+        e.android_tun.take();
+        e.android_physical.take();
+        #[cfg(feature="fec2_product_record")]
+        {e.android_outer.take();}
     }
     #[cfg(all(feature="fec2_product_record",target_os="linux",
         any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3008,6 +3430,37 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         epoch=Some(id.logical_epoch);tunnel=Some(id.tunnel_id);
     }
     if seen!=((1u8<<handles.len())-1){return Err(INVALID)}
+    // B39 Android: same protected Go TLS incarnation group on one Bionic
+    // physical Network, one lease and independent actual FakeTCP lane ports.
+    // This is COLD, no per-packet Go/TLS or second M3/PN owner.
+    #[cfg(target_os="android")]
+    let (android_physical,android_lanes)={
+        if server{return Err(BAD_STAGE)} // Android Root is client-only.
+        let mut scope:Option<AndroidPhysicalScope>=None;
+        let mut lanes=Vec::with_capacity(handles.len());
+        for e in &locks{
+            if e.android_joining||e.android_workers.is_some()||
+               e.android_raw_rx.is_some()||e.android_raw_tx.is_some()||
+               e.android_tun.is_some()||e.client_lease_ipv4.is_none(){
+                return Err(BAD_STAGE)
+            }
+            let Some(physical)=e.android_physical.as_ref()else{
+                return Err(BAD_STAGE)
+            };
+            if scope.as_ref().is_some_and(|old|old!=physical){
+                return Err(INVALID)
+            }
+            if scope.is_none(){scope=Some(physical.clone())}
+            let id=e.game_pending_cold.as_ref().ok_or(BAD_STAGE)?.identity();
+            lanes.push(crate::v4_android_game_cold::OriginalGameColdLane{
+                lane:id.go_lane_id,flow:e.flow,
+                tx_seq:u64::from(e.game_tx_boundary),rx_seq:e.rx_boundary
+            });
+        }
+        let lanes=crate::v4_android_game_cold::canonical_original_game_lanes(
+            &lanes).ok_or(INVALID)?;
+        (scope.ok_or(BAD_STAGE)?,lanes)
+    };
     let mut r=registry().lock().map_err(|_|BAD_STAGE)?;
     if r.game_groups.len()>=MAX_SESSIONS/2{return Err(FULL)}
     let generation=r.generation;
@@ -3053,6 +3506,14 @@ fn game_group_join_original(handles:&[u64],server:bool)->Result<u64,i32>{
         original_identity,
         stopped:false,stopping:false,outer_repair_enabled:true,
         client_lease_ipv4:client_lease.flatten(),
+        #[cfg(target_os="android")]
+        android_physical,
+        #[cfg(target_os="android")]
+        android_lanes,
+        #[cfg(target_os="android")]
+        android_raw:None,
+        #[cfg(target_os="android")]
+        android_workers:None,
         #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),
             any(target_env="gnu",target_env="musl")))]
         shared_tun:None,
@@ -3098,7 +3559,12 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
         lanes.write(e.handles.len() as u32);
         #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
         drivers_installed.write(u32::from(e.drivers.is_some()));
-        #[cfg(not(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))))]
+        #[cfg(target_os="android")]
+        drivers_installed.write(u32::from(e.android_workers.as_ref()
+            .is_some_and(|w|w.is_live())));
+        #[cfg(not(any(target_os="android",
+            all(any(target_arch="x86_64",target_arch="aarch64"),
+                any(target_env="gnu",target_env="musl")))))]
         drivers_installed.write(0);
     }
     // Explicit zero is critical: this is authenticated shared crypto owner
@@ -3114,9 +3580,17 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_state(
 ///  M1 parity planned,M1 parity copied,retained source bytes].
 /// Candidate is NOT yet actual TUN delivered; final delivery uses native
 /// V4_PUBLIC_GAME_KERNEL.delivered on the ORIGINAL kernel sink.
-#[cfg(all(feature="fec2_product_record",target_os="linux",
-    any(target_arch="x86_64",target_arch="aarch64"),
-    any(target_env="gnu",target_env="musl")))]
+// The *same* original Game FEC counters are read by Android's existing
+// low-rate Go ticker, never a fabricated second mobile decoder.
+#[cfg(all(feature="fec2_product_record",
+    any(
+        all(target_os="linux",
+            any(target_arch="x86_64",target_arch="aarch64"),
+            any(target_env="gnu",target_env="musl")),
+        all(target_os="android",
+            any(target_arch="x86_64",target_arch="aarch64"))
+    )
+))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_fec_network_game_group_counters(
     group:u64,out:*mut u64,len:usize
@@ -3422,10 +3896,161 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
     });
     OK
 }
+// B39 Android's actual physical Game2/4 RAW lane FDs. These are opened
+// only AFTER all original-Go TLS identities joined into ONE Rust adapter.
+// This installs one Bionic Network-bound exact 5-tuple RX/TX pair PER lane.
+// It intentionally does not start TUN, AEAD worker loops or claim Game M4.
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_game_group_raw_bind(group:u64)->i32{
+    let (scope,lanes)={
+        let Ok(r)=registry().lock()else{return BAD_STAGE};
+        let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+        if g.stopped||g.stopping||g.android_raw.is_some(){return BAD_STAGE}
+        (g.android_physical.clone(),g.android_lanes.clone())
+    };
+    if !matches!(lanes.len(),2|4){return INVALID}
+    let generation=(group>>32) as u32;
+    let mut exact=Vec::with_capacity(lanes.len());
+    for lane in lanes{
+        let f=lane.flow;
+        // RX is FROM the original real Go server 443 TO this unique client
+        // FakeTCP port. TX is the opposite. No wildcard RAW listener.
+        let Ok(rx)=AndroidBoundRawRx::open_exact(
+            scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
+            generation,f.server_ip,f.client_ip,f.server_port,f.client_port
+        )else{return BAD_STAGE};
+        let Ok(tx)=AndroidBoundRawTx::open(
+            scope.network_handle,&scope.interface,scope.ifindex,scope.mtu,
+            generation,f.client_ip,f.server_ip,f.client_port,f.server_port
+        )else{return BAD_STAGE};
+        exact.push(AndroidGameRawLane{rx:Arc::new(rx),tx:Arc::new(tx)});
+    }
+    // Raw sockets were created outside the process registry lock. Stop may
+    // have begun concurrently; in that case FDs drop without publication.
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping||g.android_raw.is_some(){return BAD_STAGE}
+    g.android_raw=Some(exact);
+    OK
+}
+// Read-only physical RAW descriptor ownership, NOT an M4-ready receipt.
+// Game group state reports true workers only after B40's real TUN/RAW start.
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_raw_state(
+    group:u64,lanes:*mut u32
+)->i32{
+    if lanes.is_null(){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping{return BAD_STAGE}
+    let count=g.android_raw.as_ref().filter(|raw|raw.len()==g.android_lanes.len()&&
+        raw.iter().all(|lane|lane.rx.readiness_fd()>2&&lane.tx.readiness_fd()>2&&
+            lane.rx.generation()==(group>>32) as u32&&
+            lane.tx.generation()==(group>>32) as u32&&
+            !lane.rx.is_stopping()&&!lane.tx.is_stopping()))
+        .map_or(0,|raw|raw.len() as u32);
+    unsafe{lanes.write(count)};
+    OK
+}
+// Real original TLS Game2/4-off Bionic M4: one Go-owned TUN FD,
+// 2/4 exact authenticated M3 RX RAW FDs and one GameAdapter TX scheduler.
+// Original Game4 wide stagger runs without a second TUN or Go DATA worker.
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_start(
+    group:u64,fd:i32,tun_name:*const u8,tun_len:usize,
+    tunnel_dns:u32,health_seconds:u32,
+    physical_dns:u32,upstream:*const u8,
+    cn_raw:*const u8,cn_len:usize,
+    game_fec_profile:u32,tunnel_upstream:*const u8,
+    startup_padding:u32,outer_path_mtu:u32,stagger:u32,
+    outer_enabled:u32,sack_mask:u32,
+)->i32{
+    if outer_enabled>1||sack_mask>15||startup_padding>2||!(576..=1500).contains(&outer_path_mtu)||stagger>2||tunnel_upstream.is_null()||fd<3||tun_name.is_null()||tun_len==0||tun_len>15||
+       tunnel_dns>1||physical_dns>1||upstream.is_null()||
+       !matches!(health_seconds,15|30)||cn_len>1024*1024||
+       (game_fec_profile!=255&&game_fec_profile>6)||
+       (cn_len>0&&cn_raw.is_null())||
+       (cn_len>0&&physical_dns==0)||
+       (physical_dns==1&&tunnel_dns==1){return INVALID}
+    // Reuse original pinned CN8503 cold matcher; no Go packet callbacks.
+    let cn=if cn_len>0{
+        let cold=unsafe{std::slice::from_raw_parts(cn_raw,cn_len)};
+        match crate::v4_android_cn_dns::CNDnsMatcher::from_go_cold(cold){
+            Ok(m)=>Some(m),Err(_)=>return INVALID
+        }
+    }else{None};
+    let mut physical_upstream=[0u8;4];
+    physical_upstream.copy_from_slice(unsafe{
+        std::slice::from_raw_parts(upstream,4)
+    });
+    let mut tunnel_dns_upstream=[0u8;4];
+    tunnel_dns_upstream.copy_from_slice(unsafe{std::slice::from_raw_parts(tunnel_upstream,4)});
+    if tunnel_dns_upstream[0]==0||tunnel_dns_upstream[0]==127||tunnel_dns_upstream[0]>=224||
+       (tunnel_dns_upstream[0]==169&&tunnel_dns_upstream[1]==254){return INVALID}
+    let Ok(name)=std::str::from_utf8(unsafe{
+        std::slice::from_raw_parts(tun_name,tun_len)
+    })else{return INVALID};
+    let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+        else{return INVALID};
+    let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping||g.android_workers.is_some()||
+       !matches!(g.android_lanes.len(),2|4){return BAD_STAGE}
+    // B46: B45 cold authenticated four-lane RAW group MUST reach M4.
+    // This had been hardcoded to 2 despite the 2|4 group ownership gate.
+    let Some(raw)=g.android_raw.as_ref()
+        .filter(|v|v.len()==g.android_lanes.len())
+        else{return BAD_STAGE};
+    let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
+    let mode=match startup_padding{
+        0=>crate::v4_client_startup_padding::StartupMode::Off,
+        1=>crate::v4_client_startup_padding::StartupMode::Tls,
+        _=>crate::v4_client_startup_padding::StartupMode::Flows,
+    };
+    if g.android_lanes.len()!=4&&stagger!=0{return INVALID}
+    {
+        let Ok(mut adapter)=g.adapter.lock()else{return BAD_STAGE};
+        let directional=crate::v4_client_startup_padding::linux_tx_padding_epoch(
+            g.original_identity.logical_epoch,g.original_identity.server);
+        adapter.set_native_startup_padding(mode,directional,outer_path_mtu as usize);
+    }
+    let workers=android_game_m4::AndroidGameWorkers::start(
+        Arc::clone(&g.adapter),&g.android_physical,&g.android_lanes,raw,
+        lease,dup,name,(group>>32) as u32,tunnel_dns==1,health_seconds,
+        physical_dns==1,physical_upstream,cn,tunnel_dns_upstream,
+        (game_fec_profile!=255).then_some(game_fec_profile as u8),stagger,
+        outer_enabled==1,sack_mask,g.original_identity.logical_epoch
+    );
+    let Ok(workers)=workers else{return BAD_STAGE};
+    g.android_workers=Some(workers);
+    OK
+}
+// These counters are actual native TUN/RAW syscall and M3 TUN delivery
+// receipts, not optimistic TLS READY: [raw TX copied, RAW RX parsed,
+// authenticated unique IP written to TUN, rejected].
+#[cfg(all(feature="fec2_product_record",target_os="android"))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_game_group_m4_counters(
+    group:u64,out:*mut u64,len:usize,
+)->i32{
+    if out.is_null()||!matches!(len,9|13){return INVALID}
+    let Ok(r)=registry().lock()else{return BAD_STAGE};
+    let Some(g)=r.game_groups.get(&group)else{return UNKNOWN};
+    if g.stopped||g.stopping{return BAD_STAGE}
+    let Some(w)=g.android_workers.as_ref()else{return BAD_STAGE};
+    unsafe{
+        std::ptr::copy_nonoverlapping(w.counters().as_ptr(),out,9);
+        if len==13{std::ptr::copy_nonoverlapping(w.outer_counters().as_ptr(),out.add(9),4);}
+    };
+    OK
+}
 #[cfg(feature="fec2_product_record")]
 #[no_mangle]
 pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
-    let (adapter,mut driver)={
+    let (adapter,mut driver,mut android_workers,mut android_raw)={
         let Ok(mut r)=registry().lock()else{return BAD_STAGE};
         let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
         if e.stopped{return OK}
@@ -3442,6 +4067,16 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
              {e.drivers.take()}
              #[cfg(not(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl"))))]
              {None::<()>}
+         },{
+             #[cfg(target_os="android")]
+             {e.android_workers.take()}
+             #[cfg(not(target_os="android"))]
+             {None::<()>}
+         },{
+             #[cfg(target_os="android")]
+             {e.android_raw.take()}
+             #[cfg(not(target_os="android"))]
+             {None::<()>}
          })
     };
     #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -3453,6 +4088,45 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_stop(group:u64)->i32{
             return STOP_INCOMPLETE
         }
     }
+    // Stop the ONE original Game2/4 TUN TX plus every original per-lane M3 worker
+    // before closing physically bound RAW FDs or the GameAdapter.
+    #[cfg(target_os="android")]
+    if let Some(ref mut workers)=android_workers{
+        if workers.stop_and_drain().is_err(){
+            let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+            let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+            e.android_workers=android_workers;
+            e.android_raw=android_raw;
+            e.stopping=false;
+            return STOP_INCOMPLETE
+        }
+    }
+    #[cfg(not(target_os="android"))]
+    let _=&android_workers;
+    // Original owned Stop joins every Bionic kernel borrow before
+    // releasing either lane. The GameAdapter is stopped only afterward.
+    #[cfg(target_os="android")]
+    if let Some(ref mut lanes)=android_raw{
+        for lane in lanes.iter(){
+            lane.rx.begin_stop();
+            lane.tx.begin_stop();
+        }
+        let deadline=std::time::Instant::now()+
+            std::time::Duration::from_secs(3);
+        let drained=lanes.iter().all(|lane|
+            lane.rx.stop_until(deadline)==wbd_platform::r1::StopResult::Drained&&
+            lane.tx.stop_until(deadline)==wbd_platform::r1::StopResult::Drained);
+        if !drained{
+            let Ok(mut r)=registry().lock()else{return BAD_STAGE};
+            let Some(e)=r.game_groups.get_mut(&group)else{return UNKNOWN};
+            e.android_raw=android_raw;
+            e.android_workers=android_workers;
+            e.stopping=false;
+            return STOP_INCOMPLETE
+        }
+    }
+    #[cfg(not(target_os="android"))]
+    let _=&android_raw;
     let Ok(mut game)=adapter.lock()else{return STOP_INCOMPLETE};
     game.stop();drop(game);
     let Ok(mut r)=registry().lock()else{return BAD_STAGE};
@@ -4167,6 +4841,274 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_read_public_outer_repair(
     }
 }
 
+
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_bind_physical(
+    h:u64,network_handle:u64,ifindex:u32,physical_mtu:u32,
+    name:*const u8,len:usize,
+)->i32{
+    if name.is_null()||len==0||len>15||network_handle==0||
+        ifindex==0||!(68..=65535).contains(&physical_mtu){return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(interface)=std::str::from_utf8(bytes)else{return INVALID};
+    if !interface.bytes().all(|b|b.is_ascii_alphanumeric()||b==b'_'||b==b'-'){
+        return INVALID
+    }
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    // Only the Go-authenticated client generation may configure this scope;
+    // the original interface/mtu are checked AGAIN when opening both FDs.
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_physical.is_some()||
+        e.android_raw_rx.is_some()||e.android_raw_tx.is_some()||
+        e.android_tun.is_some(){return BAD_STAGE}
+    e.android_physical=Some(AndroidPhysicalScope{
+        network_handle,interface:interface.to_owned(),ifindex,mtu:physical_mtu,
+    });
+    OK
+}
+
+// ARM64 Android M1/M3 method adapters have been added to the original
+// ProtectedScopedOwner; continuous M4 runtime Health/MTU/worker join remains
+// a genuine missing integration, NOT an empty ABI placeholder.
+// Original CGo attaches after verified TLS credentials, Detach and lease.
+// No second transport owner: these RAII FDs are parked on the same Entry;
+// the original Rust M3/M4 workloop still must consume them (NOT_RUN).
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_attach_raw_rx_on_interface(
+    h:u64,ifindex:u32,name:*const u8,len:usize,
+)->i32{
+    if name.is_null()||len==0||len>15||ifindex==0{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(ifname)=std::str::from_utf8(bytes)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_raw_rx.is_some()||
+        e.android_raw_tx.is_some(){return BAD_STAGE}
+    let Some(scope)=e.android_physical.as_ref()else{return BAD_STAGE};
+    if scope.interface!=ifname||scope.ifindex!=ifindex{return BAD_STAGE}
+    let f=e.flow;
+    let generation=e.generation;
+    let (source,destination,source_port,destination_port)=
+        (f.server_ip,f.client_ip,f.server_port,f.client_port);
+    let Ok(rx)=AndroidBoundRawRx::open_exact(
+        scope.network_handle,ifname,ifindex,scope.mtu,generation,
+        source,destination,source_port,destination_port,
+    )else{return INVALID};
+    let Ok(tx)=AndroidBoundRawTx::open(
+        scope.network_handle,ifname,ifindex,scope.mtu,generation,
+        f.client_ip,f.server_ip,f.client_port,f.server_port,
+    )else{return INVALID};
+    // Publish only the complete pair. Any failure before this point closes
+    // both exact-owned sockets via RAII; no loose unfiltered RAW RX survives.
+    e.android_raw_rx=Some(Arc::new(rx));
+    e.android_raw_tx=Some(Arc::new(tx));
+    OK
+}
+
+// B29: feature3 Normal and feature7 Fixed/Auto share the original M4
+// TUN/DNS owner. The protected TLS handoff prepares the feature7 FEC2 RX;
+// Go stages its Fixed/Auto PENDING revision later, before M4 starts.
+#[cfg(target_os="android")]
+fn android_dns_original_m4_ready(e:&Entry)->bool{
+    let fec2_ready={
+        #[cfg(feature="fec2_product_record")]
+        {e.android_fec2_rx.is_some()}
+        #[cfg(not(feature="fec2_product_record"))]
+        {false}
+    };
+    crate::v4_android_dns_route::original_m4_dns_feature_allowed(
+        e.protected_features,fec2_ready
+    )
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_enable(h:u64)->i32{
+    // Only the original authenticated client lease with its fully attached
+    // RAW pair + one owned TUN may switch on the already-implemented M3
+    // tunnel UDP/53 inverse path. No CN physical DNS or Android netd grant.
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       !android_dns_original_m4_ready(&e)||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_dns_hijack_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_effective(
+    h:u64,enabled:*mut u32
+)->i32{
+    if enabled.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    // Tunnel-only UDP admission, not system Resolver or CN split proof.
+    unsafe{enabled.write(u32::from(e.android_dns_hijack_ready &&
+        !e.android_dns_physical_ready));}
+    OK
+}
+// B34: native cold physical IPv4 upstream for the existing physically
+// Network-bound original Rust M4 UDP53 owner. Source is original Go verified
+// IPv4 after REAL TLS/lease and underlay scope, never a DATA callback.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_upstream_set(
+    h:u64,input:*const u8,len:usize,
+)->i32{
+    if input.is_null()||len!=4{return INVALID}
+    let ip=unsafe{std::slice::from_raw_parts(input,4)};
+    if ip[0]==0||ip[0]==127||ip[0]>=224||
+       (ip[0]==169&&ip[1]==254){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       !android_dns_original_m4_ready(&e)||
+       e.android_workers.is_some()||e.android_dns_hijack_ready||
+       e.android_dns_physical_ready{return BAD_STAGE}
+    e.android_dns_physical_upstream.copy_from_slice(ip);
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_upstream_effective(
+    h:u64,output:*mut u8,len:usize,
+)->i32{
+    if output.is_null()||len!=4{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_workers.is_some(){return BAD_STAGE}
+    unsafe{std::ptr::copy_nonoverlapping(e.android_dns_physical_upstream.as_ptr(),output,4);}
+    OK
+}
+// B73: set the same generation's native tunnel DNS endpoint once before M4.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_tunnel_dns_upstream_set(h:u64,input:*const u8,len:usize)->i32{
+    if input.is_null()||len!=4{return INVALID}
+    let mut ip=[0u8;4];ip.copy_from_slice(unsafe{std::slice::from_raw_parts(input,4)});
+    if ip[0]==0||ip[0]==127||ip[0]>=224||(ip[0]==169&&ip[1]==254){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       !android_dns_original_m4_ready(&e)||e.android_workers.is_some()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{return BAD_STAGE}
+    e.android_dns_flows.set_upstream(ip);
+    OK
+}
+// B4: explicit App UDP53 -> physically bound user-selected IPv4 mode.
+// Independent of the legacy tunnel DNS default; not geosite split or netd.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub extern "C" fn wbd_m0_embedded_go_android_physical_dns_enable(h:u64)->i32{
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       !android_dns_original_m4_ready(&e)||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_dns_hijack_ready=true;
+    e.android_dns_physical_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_physical_dns_effective(
+    h:u64,enabled:*mut u32
+)->i32{
+    if enabled.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    unsafe{enabled.write(u32::from(e.android_dns_hijack_ready &&
+        e.android_dns_physical_ready));}
+    OK
+}
+// B5 whole pinned CN8503 domain/full/regexp classification is cold,
+// then ONLY original Rust M4 asks the matcher per captured App DNS query.
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_enable(
+    h:u64,rule_bytes:*const u8,rule_len:usize
+)->i32{
+    if rule_bytes.is_null()||rule_len==0||rule_len>=6_000_000{return INVALID}
+    let raw=unsafe{std::slice::from_raw_parts(rule_bytes,rule_len)};
+    let Ok(matcher)=crate::v4_android_cn_dns::CNDnsMatcher::from_go_cold(raw)
+        else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_joining||
+       !android_dns_original_m4_ready(&e)||e.client_lease_ipv4.is_none()||
+       e.android_physical.is_none()||e.android_raw_rx.is_none()||
+       e.android_raw_tx.is_none()||e.android_tun.is_none()||
+       e.android_workers.is_some()||e.normal.is_none()||
+       e.android_cn_dns.is_some()||
+       e.android_dns_hijack_ready||e.android_dns_physical_ready{
+        return BAD_STAGE
+    }
+    e.android_dns_flows.stop();
+    e.android_cn_dns=Some(Arc::new(matcher));
+    e.android_dns_hijack_ready=true;
+    e.android_dns_physical_ready=true;
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_android_cn_dns_split_effective(
+    h:u64,enabled:*mut u32,rule_count:*mut u32
+)->i32{
+    if enabled.is_null()||rule_count.is_null(){return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.client_lease_ipv4.is_none(){
+        return BAD_STAGE
+    }
+    unsafe{
+        enabled.write(u32::from(e.android_dns_hijack_ready&&
+            e.android_dns_physical_ready&&e.android_cn_dns.is_some()));
+        rule_count.write(e.android_cn_dns.as_ref().map_or(0,|m|m.total() as u32));
+    }
+    OK
+}
+#[cfg(target_os="android")]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_attach_tun(
+    h:u64,fd:i32,name:*const u8,len:usize,
+)->i32{
+    if fd<3||name.is_null()||len==0||len>15{return INVALID}
+    let bytes=unsafe{std::slice::from_raw_parts(name,len)};
+    let Ok(tun_name)=std::str::from_utf8(bytes)else{return INVALID};
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(mut e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||e.android_tun.is_some()||
+        e.android_raw_rx.is_none()||e.android_raw_tx.is_none(){return BAD_STAGE}
+    // Rust owns a duplicate, Go retains its original. Do not assume the
+    // diagnostic probe fd is a production TUN; TUNGETIFF validates the mode.
+    let Ok(dup)=unsafe{BorrowedFd::borrow_raw(fd)}.try_clone_to_owned()
+        else{return INVALID};
+    let Ok(tun)=AndroidOwnedTun::adopt(dup,tun_name,e.generation)
+        else{return INVALID};
+    e.android_tun=Some(Arc::new(tun));
+    OK
+}
+
 // The same non-_test Go-verified owner now owns BOTH actual M4 device
 // handles. No shadow/test engine, no alternate AEAD/PN or delivery route.
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -4190,13 +5132,16 @@ fn attach_raw(handle:u64,ifindex:u32,ifname:&str)->i32{
     e.raw_rx=Some(Arc::new(driver));
     e.raw_ifname=Some(ifname.to_owned());OK
 }
-#[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[cfg(any(
+    all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")),
+    all(target_os="android",any(target_arch="aarch64",target_arch="x86_64"))
+))]
 // PLAN028: bind the original Go protected and credential-checked /32 before
 // any native M4 worker writes an inner IPv4 datagram to the server TUN.
 // This C call is package-private original-Go VERIFIED cold control,
 // not a public IP setter. Server uses it as inbound source ownership;
 // client uses its verified OS-installed /32 as default M1 TUN authority.
-#[cfg(target_os="linux")]
+#[cfg(any(target_os="linux",target_os="android"))]
 #[no_mangle]
 pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     handle:u64,ip:*const u8,len:usize
@@ -4212,8 +5157,11 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     // original-Go verified client lease authorizes the process-level
     // default TUN reader after that address was installed/read back.
     // Manual-IP/product callers never reach this protected cold binding.
-    if e.phase!=PH_ACTIVE||
-       e.workers.is_some()||e.client_lease_ipv4.is_some(){return BAD_STAGE}
+    if e.phase!=PH_ACTIVE||e.client_lease_ipv4.is_some(){return BAD_STAGE}
+    #[cfg(target_os="linux")]
+    if e.workers.is_some(){return BAD_STAGE}
+    #[cfg(target_os="android")]
+    if e.android_raw_rx.is_some()||e.android_tun.is_some(){return BAD_STAGE}
     #[cfg(feature="fec2_product_record")]
     if e.game_joined{
         return BAD_STAGE
@@ -4221,6 +5169,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_bind_authenticated_client_ipv4(
     e.client_lease_ipv4=Some(expected);
     OK
 }
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn attach_tun(handle:u64,fd:i32,name:&str)->i32{
     if fd<3{return INVALID}
     let Ok(cell)=session(handle)else{return UNKNOWN};
@@ -4391,7 +5340,8 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_tun_to_raw(
 struct PollFd {fd:c_int,events:i16,revents:i16}
 #[cfg(all(any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {fn poll(fds:*mut PollFd,count:usize,timeout:c_int)->c_int;}
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 unsafe extern "C" {
     fn ppoll(fds:*mut PollFd,count:usize,timeout:*const ClockTimespec,
         sigmask:*const core::ffi::c_void)->c_int;
@@ -5810,7 +6760,8 @@ fn loop_now()->MonoNs{
 /// Developer original-Go/Rust Linux Normal/FEC cold socket A/B only.
 /// An effective buffer must be read from the SAME raw TX fd; Linux wmem_max
 /// may clamp a request. This never changes FEC, PN or sendmmsg retry policy.
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn configure_original_raw_tx_ab(tx:&mut ScopedRawIpv4Tx,server:bool)
     ->Result<(),i32>
 {
@@ -7695,7 +8646,8 @@ fn m0_fec_native_m4_quanta_control_and_source_fairness_budget(){
     assert_eq!((remaining.saturating_sub(1)/4).min(5),2);
     assert_eq!(remaining-8,1);
 }
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -7706,7 +8658,8 @@ fn loop_readiness_ns(fd:i32,stop:&AtomicBool,timeout_ns:u64)->bool{
     let got=unsafe{ppoll(&mut p,1,&ts,std::ptr::null())};
     got>0 && p.revents&1!=0
 }
-#[cfg(feature="fec2_product_record")]
+#[cfg(all(feature="fec2_product_record",target_os="linux",
+    any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn original_raw_rx_stage_snapshot(c:&LoopCounts)->(u64,u64,u64,u64){
     (
         c.rx_chain[0].load(Ordering::Relaxed), // native observed raw L3 entries
@@ -7729,6 +8682,7 @@ fn m0_plan028_original_raw_rx_true_kernel_vs_delivery_counter_contract(){
     c.rx.store(0,Ordering::Relaxed);
     assert_eq!(original_raw_rx_stage_snapshot(&c),(37,21,9,0));
 }
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn loop_readiness(fd:i32,stop:&AtomicBool,timeout_ms:c_int)->bool{
     if stop.load(Ordering::Acquire){return false}
     let mut p=PollFd{fd,events:1,revents:0};
@@ -8085,7 +9039,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // installation is separate from mature network-quality observation.
     if e.original_public_feedback_armed && e.protected_features==7 &&
         e.auto_low_rate_mode{
-        e.quality_tx=Some(LinuxQualityTx::new(
+        e.quality_tx=Some(OriginalQualityTx::new(
             first.lane,first.epoch,first.route.outbound_direction()));
     }
     let mature=Arc::new(Mutex::new(first));
@@ -8096,7 +9050,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     // authenticated Go health sender; no duplicate two-sender race.
     #[cfg(feature="fec2_product_record")]
     let quality_rx=if e.original_public_feedback_armed &&
-        e.protected_features==7 && e.auto_low_rate_mode{
+        e.protected_features==7 && (e.auto_low_rate_mode || e.server_side){
         let (lane,exact_epoch)=match e.owner.normal_firstsend_identity(){
             Some(v)=>v,None=>return BAD_STAGE};
         let direction=if e.server_side{wbd_recovery::WireDirection::ClientToServer}
@@ -8518,7 +9472,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
                                     tx.last_open_gate_pn.is_none_or(|last|p>last)))
                             .map(|tx|MonoNs(tx.next_open));
                         // Exactly the same executable predicate as
-                        // LinuxQualityTx::due/next_signal; no overdue START
+                        // OriginalQualityTx::due/next_signal; no overdue START
                         // deadline can busy-loop before the first DATA PN.
                         let low_close=e.quality_tx.as_ref()
                             .and_then(|tx|tx.next_close_deadline());
@@ -9432,9 +10386,13 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_public_fec2_mature_quality(
             v[13]=b.positive_confirmation_samples;
         }
         let Some(stream)=e.fec2_live_tx.as_ref()else{return BAD_STAGE};
-        for cl in &stream.report().classes {
-            for k in 1..=16 {
-                v[13+k]=v[13+k].saturating_add(cl.k_hist[k]);
+        if let Some(q)=e.quality_tx.as_ref(){
+            v=original_fixed_mature_snapshot(q,stream);
+        }else{
+            for cl in &stream.report().classes{
+                for k in 1..=16{
+                    v[13+k]=v[13+k].saturating_add(cl.k_hist[k]);
+                }
             }
         }
         unsafe{std::ptr::copy_nonoverlapping(v.as_ptr(),out,30)}
@@ -9509,6 +10467,32 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
     let Ok(route)=route else{return INVALID};
     let Ok(limit)=u32::try_from(route.frame.single_business_payload_mtu)
     else{return INVALID};
+    if limit<28{return INVALID}
+    unsafe{out.write(limit)};
+    OK
+}
+// Android ARM64 same protected Go original client IPv4/32 and original
+// Rust peer-MSS/record/LINK FrameBudget. Recheck real bound RAW TX socket
+// ifindex+MTU before reporting the effective single-inner IPv4 budget.
+#[cfg(all(target_os="android",any(target_arch="aarch64",target_arch="x86_64")))]
+#[no_mangle]
+pub unsafe extern "C" fn wbd_m0_embedded_go_observed_tx_ipv4_mtu(
+    h:u64,ifindex:u32,out:*mut u32
+)->i32{
+    if out.is_null()||ifindex==0{return INVALID}
+    let Ok(cell)=session(h)else{return UNKNOWN};
+    let Ok(e)=cell.lock()else{return BAD_STAGE};
+    if e.phase!=PH_ACTIVE||e.server_side||
+       e.android_raw_rx.is_none()||e.android_tun.is_none()||
+       e.client_lease_ipv4.is_none(){return BAD_STAGE}
+    let Some(scope)=e.android_physical.as_ref()else{return BAD_STAGE};
+    if scope.ifindex!=ifindex{return BAD_STAGE}
+    let Some(tx)=e.android_raw_tx.as_ref()else{return BAD_STAGE};
+    if tx.check_scope(&scope.interface,ifindex).is_err(){return INVALID}
+    let Ok(frame)=e.owner.android_normal_off_frame_budget(scope.mtu)
+        else{return INVALID};
+    let Ok(limit)=u32::try_from(frame.single_business_payload_mtu)
+        else{return INVALID};
     if limit<28{return INVALID}
     unsafe{out.write(limit)};
     OK

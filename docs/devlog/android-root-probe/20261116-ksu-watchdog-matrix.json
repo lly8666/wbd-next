@@ -1,0 +1,71 @@
+{
+  "schema": "wbd-android-ksu-sigkill-watchdog/v1",
+  "source_sha": "d07da32f8afd8d03ce5df2f5cdbe3a54cfd7b14b",
+  "branch": "experiment/android-temp-root-probe",
+  "run": {
+    "id": 43828757323,
+    "url": "https://github.com/lly8666/wbd-next/actions/runs/43828757323",
+    "status": "success",
+    "artifact_id": 14208026577,
+    "zip_sha256": "a4d4f51c3129844a0041bc620d9a873260921a3411a7ebd9e2213d9ff932a219",
+    "file_count": 97
+  },
+  "environment": {
+    "android": "16/API36",
+    "abi": "x86_64",
+    "selinux": "Enforcing",
+    "root_manager": "KernelSU 3.3.1 LKM",
+    "app_target_sdk": 37,
+    "app_uid": 10218,
+    "app_context": "u:r:untrusted_app:s0:c218,c256,c512,c768"
+  },
+  "native": {
+    "source_sha": "d07da32f8afd8d03ce5df2f5cdbe3a54cfd7b14b",
+    "binary_sha256": "210596706fd0702780e42c9af0757ff543f913eb4e2305d7f074c07b2fe14ce9"
+  },
+  "normal": {
+    "status": "APP_UID_TUN_ROUNDTRIP_PASS",
+    "app_su_exit": 0,
+    "app_to_tun_bytes": 68,
+    "tun_reply_injected_bytes": 70,
+    "app_received_reply_bytes": 42,
+    "cleanup_ok": true,
+    "summary_sha256": "91374441c38380917fa84e737921499a63e3eb8680c431096ee3d0ca1ef8214d"
+  },
+  "sigkill": {
+    "mode": "appflow-kill",
+    "source": "KSU shell real su fixture",
+    "worker_exit_code": 137,
+    "ready_token": "killd07da32f8afd8d03",
+    "route_scope": {
+      "uidrange": "10218-10218",
+      "destination": "198.18.254.2/32",
+      "priority": 8200,
+      "table": 235
+    },
+    "watchdog_process_separate": true,
+    "watchdog_status": "CLEANED",
+    "rule_seen_after_owner_exit": true,
+    "rule_removed_by_watchdog": true,
+    "rule_absent": true,
+    "table235_empty": true,
+    "route_seen_after_owner_exit": false,
+    "route_removed_by_watchdog": false,
+    "route_auto_removed_by_linux_tun_fd_close": true,
+    "rule_snapshots_equal": true,
+    "route_snapshots_equal": true,
+    "errors": [],
+    "status": "SIGKILL_WATCHDOG_CLEANUP_PASS",
+    "summary_sha256": "f558f90a8a140e991b08ef890c4d3114c490f6cf4472e38c07f1139a65960b65",
+    "watchdog_json_sha256": "3bf424fdbff873b66dcd52f227619ec651fccbe0a9392eecd6481abdbb7dba18"
+  },
+  "not_run": [
+    "Android App force-stop",
+    "watchdog simultaneous kill",
+    "entire KSU process group kill",
+    "reboot/power loss",
+    "production netd/underlay",
+    "NAT/conntrack/hotspot/USB",
+    "physical ARM64/OEM/FGS/IPv6"
+  ]
+}

@@ -22,7 +22,7 @@ use wbd_types::buffer_contract::UniqueSealable;
 use wbd_codec::record_crypto::{DirectionKeys,LaneTxCrypto,RecordSuite};
 use wbd_codec::record_replay::{ReplayProtectedLaneRx,ReplayWindowConfig,UniqueOpenError};
 use wbd_codec::record_crypto::CryptoError;
-#[cfg(any(target_os="windows",target_os="linux",test))]
+#[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
 use crate::v4_client_startup_padding::{StartupMode,TunnelStartupPadding};
 pub struct ScopedKeys{pub lane:QualifiedLane,pub tx:DirectionKeys,pub rx:DirectionKeys}
 struct TxLane{key:LaneKey,tx:LaneTxCrypto}
@@ -101,6 +101,10 @@ pub(crate) struct PreparedGameFecBatch{
 #[cfg(feature="fec2_product_record")]
 impl PreparedGameFecBatch{
     pub(crate) fn frames(&self)->&[Vec<u8>]{&self.frames}
+    // Android original TUN ingress reuses Normal UDP53 response
+    // translation directly on authenticated FEC-recovered IP frames,
+    // without allocating/copying a second packet batch.
+    pub(crate) fn frames_mut(&mut self)->&mut [Vec<u8>]{&mut self.frames}
 }
 pub(crate) struct GameReceiveOwner{
     rx:GameRx,rx_scope:GameScope,lanes:Vec<RxLane>,
@@ -333,11 +337,11 @@ pub struct GameAdapter{
     original_suite:RecordSuite,
     wire_scratch:[u8;2048],
     // Windows original Game native only: no table or parsing when OFF.
-    #[cfg(any(target_os="windows",target_os="linux",test))]
+    #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
     startup_padding:Option<TunnelStartupPadding>,
-    #[cfg(any(target_os="windows",target_os="linux",test))]
+    #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
     startup_pad_wire_limit:usize,
-    #[cfg(any(target_os="windows",target_os="linux",test))]
+    #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
     startup_pad_last_gc_ms:u64,
     health_origin:Instant,health:Arc<AuthenticatedActivity>,
     #[cfg(feature="fec2_product_record")]
@@ -408,11 +412,11 @@ impl GameAdapter{
         Ok(Self{tx,rx_owner,lanes,arena,stopped:false,inner_mtu,
             original_suite:suite,
             wire_scratch:[0u8;2048],
-            #[cfg(any(target_os="windows",target_os="linux",test))]
+            #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
             startup_padding:None,
-            #[cfg(any(target_os="windows",target_os="linux",test))]
+            #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
             startup_pad_wire_limit:0,
-            #[cfg(any(target_os="windows",target_os="linux",test))]
+            #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
             startup_pad_last_gc_ms:0,
             health_origin,health,
             #[cfg(feature="fec2_product_record")]
@@ -557,7 +561,7 @@ impl GameAdapter{
     pub(crate) fn inner_mtu(&self)->usize{self.inner_mtu}
     // Only an already authenticated Windows or Linux Game native attach calls this
     // once before starting either kernel worker. No extra lane crypto/PN.
-    #[cfg(any(target_os="windows",target_os="linux",test))]
+    #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
     pub(crate) fn set_native_startup_padding(&mut self,mode:StartupMode,
         epoch:[u8;16],outer_path_mtu:usize){
         if mode==StartupMode::Off{
@@ -574,7 +578,7 @@ impl GameAdapter{
         self.startup_pad_wire_limit=outer_path_mtu.saturating_sub(40)
             .min(self.inner_mtu+31+16).min(1536);
     }
-    #[cfg(any(target_os="windows",target_os="linux",test))]
+    #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
     pub(crate) fn native_startup_padding_mode(&self)->&'static str{
         self.startup_padding.as_ref().map_or("off",|p|p.mode_name())
     }
@@ -741,7 +745,7 @@ impl GameAdapter{
     }
     // Game logical sources carry a 16B envelope. FEC wraps the original
     // IPv4 within a typed source symbol; parity has no business flow key.
-    #[cfg(any(target_os="windows",target_os="linux",test))]
+    #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
     fn startup_source<'a>(game_payload:&'a [u8],inner_mtu:usize,
         fec_enabled:bool)->Option<&'a [u8]>{
         let (_,body)=wbd_codec::decode_game(game_payload,inner_mtu+16).ok()?;
@@ -754,7 +758,7 @@ impl GameAdapter{
         copied_by_native_kernel:bool,mut kernel_copy:F)->usize
     where F:FnMut(LaneKey,LogicalPacketId,u64,&[u8],usize)->bool{
         if self.stopped{return 0}
-        #[cfg(any(target_os="windows",target_os="linux",test))]
+        #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
         if let Some(p)=self.startup_padding.as_mut(){
             let ms=now.0/1_000_000;
             if ms.saturating_sub(self.startup_pad_last_gc_ms)>=1000{
@@ -764,10 +768,10 @@ impl GameAdapter{
         }
         let lanes=&mut self.lanes;
         let scratch=&mut self.wire_scratch;
-        #[cfg(any(target_os="windows",target_os="linux",test))]
+        #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
         let (padding,pad_wire_limit,inner_mtu)=(&mut self.startup_padding,
             self.startup_pad_wire_limit,self.inner_mtu);
-        #[cfg(any(target_os="windows",target_os="linux",test))]
+        #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
         let fec_enabled={
             #[cfg(feature="fec2_product_record")]
             {self.fec.is_some()}
@@ -788,13 +792,13 @@ impl GameAdapter{
             // Only TUNNEL Game DATA may consume flow startup slots. Game4
             // copies count as genuine lane records; parity/health never do.
             // The 0-room proposal still advances the existing finite window.
-            #[cfg(any(target_os="windows",target_os="linux",test))]
+            #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
             let pad=if let Some(state)=padding.as_mut(){
                 let room=pad_wire_limit.saturating_sub(end).min(scratch.len()-end);
                 Self::startup_source(view.common_payload,inner_mtu,fec_enabled)
                     .map_or(0,|ipv4|state.propose(ipv4,now.0/1_000_000,room))
             }else{0};
-            #[cfg(not(any(target_os="windows",target_os="linux",test)))]
+            #[cfg(not(any(target_os="windows",target_os="linux",target_os="android",test)))]
             let pad=0usize;
             let wire=&mut scratch[..end+pad];
             wire[14..14+len].copy_from_slice(view.common_payload);
@@ -842,7 +846,7 @@ impl GameAdapter{
         #[cfg(feature="fec2_product_record")]
         if let Some(f)=self.fec.as_mut(){f.stop()}
         self.tx.stop();self.arena.stop();self.arena.drain_returns();
-        #[cfg(any(target_os="windows",target_os="linux",test))]
+        #[cfg(any(target_os="windows",target_os="linux",target_os="android",test))]
         {self.startup_padding=None;self.startup_pad_wire_limit=0;}
         if let Ok(mut receiver)=self.rx_owner.lock(){receiver.stop();}
     }

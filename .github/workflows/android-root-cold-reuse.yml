@@ -1,0 +1,78 @@
+name: Android cold suite reuse existing same-source artifacts
+run-name: "android-cold-reuse|${{ github.sha }}|source-run-${{ inputs.source_run_id }}"
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Completed Android dual64 product run ID for THIS exact selected branch SHA'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: android-cold-reuse-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  android-x86-ksu-cold-suite:
+    if: github.ref == 'refs/heads/experiment/android-temp-root-probe'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 38
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_ANDROID_COLD_SUITE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Confirm same-source completed product run (native and CN jobs successful)
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID" > /tmp/wbd-cold-source.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/jobs?per_page=100" > /tmp/wbd-cold-jobs.json
+          python3 - <<'PY'
+          import json,os
+          r=json.load(open("/tmp/wbd-cold-source.json"))
+          assert r["head_sha"]==os.environ["GITHUB_SHA"]
+          assert r["status"]=="completed" and r["path"].split("@")[0]==".github/workflows/android-root-product-a1.yml"
+          j={x["name"]:x["conclusion"] for x in json.load(open("/tmp/wbd-cold-jobs.json"))["jobs"]}
+          assert j["arm64-native"]==j["b2-authentic-cn-geosite-host"]=="success"
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run_id }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.source_run_id }}
+      - name: Build only same-Java x86 CI test APK from existing native assets
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: Reuse pinned Android16 KVM and KernelSU preparation
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: Run one combined ordinary UID ART and native/translated cold suite
+        run: timeout --signal=TERM --kill-after=8s 1020s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-cold-reuse-${{ github.sha }}
+          path: |
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/app-su-receipt.txt
+            out/android-x86-ksu-native/physical-network-receipt.txt
+            out/android-x86-ksu-native/app-su-logcat-filtered.txt
+            out/android-x86-ksu-native/translated-*.txt
+            out/android-x86-ksu-native/ui-*.txt
+            out/android-x86-ksu-native/ui-*.png
+            out/android-x86-ksu-native/ui-*.json
+            out/android-x86-ksu-native/go-help*.txt
+            out/ksu/grant-ui-result.json
+          retention-days: 14
+          if-no-files-found: warn

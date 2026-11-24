@@ -1,0 +1,30 @@
+name: Android x86 TAP host networking admission (experimental, no Android guest)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment/android-temp-root-probe
+    paths:
+      - .github/workflows/android-root-x86-tap-host-admission.yml
+      - android/root-app/ci/x86-tap-host-admission.sh
+permissions:
+  contents: read
+jobs:
+  x86-tap-host:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Check exact source and isolated Linux KVM/TAP host capability
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/x86-tap-host-admission.sh
+          bash android/root-app/ci/x86-tap-host-admission.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-x86-tap-host-admission-${{ github.sha }}
+          path: out/android-x86-tap-admission/receipt.json
+          retention-days: 14
+          if-no-files-found: warn

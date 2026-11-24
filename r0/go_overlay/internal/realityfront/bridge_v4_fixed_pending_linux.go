@@ -1,4 +1,4 @@
-//go:build linux && cgo && wbd_v4_embedded_go
+//go:build linux && !android && cgo && wbd_v4_embedded_go
 
 // M0 original-Go protected Fixed mode control bridge. This does NOT
 // activate FEC: only TLS-bound Rust REQUEST/PENDING exists while the

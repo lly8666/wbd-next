@@ -1,0 +1,300 @@
+//go:build android && cgo && wbd_v4_embedded_go && wbd_android_specialty_test
+
+// CI only: calls original Go TUN, rootjournal and Bionic DNS. Test /32 is
+// an isolated kernel component input, not a fabricated server admission.
+package v4productcli
+
+import (
+ "bytes"
+ "context"
+ "encoding/binary"
+ "errors"
+ "fmt"
+ "net"
+ "net/netip"
+ "os"
+ "os/exec"
+ "path/filepath"
+ "sort"
+ "strconv"
+ "strings"
+ "syscall"
+ "time"
+
+ "github.com/lly8666/wobuzhidao/internal/realityfront"
+ "github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative"
+ "github.com/lly8666/wobuzhidao/internal/v4productcli/rootjournal"
+)
+
+func b90IP(args ...string)(string,error){
+ b,e:=exec.Command("/system/bin/ip",args...).CombinedOutput()
+ if e!=nil{return string(b),fmt.Errorf("ip %v: %w: %s",args,e,b)}
+ return string(b),nil
+}
+func b90UsesTun(uid int,dest,tun string,want bool)error{
+ out,e:=b90IP("-4","route","get",dest,"uid",strconv.Itoa(uid))
+ if e!=nil{return e}
+ if rootjournal.SelectedUIDRouteGetUsesTun(out,tun)!=want{
+  return fmt.Errorf("uid=%d dest=%s want_tun=%t: %s",uid,dest,want,out)
+ }
+ return nil
+}
+func b91Instrument(ctx context.Context,uid int,extras ...string)error{
+ args:=[]string{"instrument","-w","-r"}
+ args=append(args,extras...)
+ args=append(args,"org.wbdnext.testtraffic/.TrafficInstrumentation")
+ out,e:=exec.CommandContext(ctx,"/system/bin/am",args...).CombinedOutput()
+ if e!=nil||!strings.Contains(string(out),"INSTRUMENTATION_CODE: -1")||
+   !(strings.Contains(string(out),fmt.Sprintf("uid_probe_sent=%d",uid))||strings.Contains(string(out),fmt.Sprintf("dns_probe_uid=%d ",uid))){
+  return fmt.Errorf("ordinary App instrumentation: %v: %s",e,out)
+ }
+ return nil
+}
+// The reply is only an isolated TUN/kernel fixture, never a WBD M4 peer.
+func b91UDPReply(ip []byte,h int,payload []byte)[]byte{
+ n:=20+8+len(payload)
+ out:=make([]byte,n)
+ out[0]=0x45;out[8]=64;out[9]=17
+ binary.BigEndian.PutUint16(out[2:4],uint16(n))
+ copy(out[12:16],ip[16:20]);copy(out[16:20],ip[12:16])
+ copy(out[20:22],ip[h+2:h+4]);copy(out[22:24],ip[h:h+2])
+ binary.BigEndian.PutUint16(out[24:26],uint16(8+len(payload)))
+ copy(out[28:],payload)
+ var sum uint32
+ for i:=0;i<20;i+=2{sum+=uint32(binary.BigEndian.Uint16(out[i:i+2]))}
+ for sum>>16!=0{sum=(sum&65535)+(sum>>16)}
+ binary.BigEndian.PutUint16(out[10:12],^uint16(sum))
+ // IPv4 UDP allows checksum zero; the IP header checksum is real.
+ return out
+}
+func b91ServeTUN(ctx context.Context,tun *ownedTun,dest [4]byte,port uint16,
+ reply func([]byte)([]byte,bool))error{
+ if e:=syscall.SetNonblock(int(tun.f.Fd()),true);e!=nil{return e}
+ buf:=make([]byte,2048)
+ for ctx.Err()==nil{
+  n,e:=syscall.Read(int(tun.f.Fd()),buf)
+  if e==syscall.EAGAIN||e==syscall.EINTR{time.Sleep(10*time.Millisecond);continue}
+  if e!=nil{return e}
+  if n<28||buf[0]>>4!=4||buf[9]!=17{continue}
+  h:=int(buf[0]&15)*4
+  if h<20||n<h+8||!bytes.Equal(buf[16:20],dest[:])||binary.BigEndian.Uint16(buf[h+2:h+4])!=port{continue}
+  size:=int(binary.BigEndian.Uint16(buf[h+4:h+6]))
+  if size<8||h+size>n{continue}
+  payload,ok:=reply(buf[h+8:h+size]);if !ok{continue}
+  packet:=b91UDPReply(buf[:n],h,payload)
+  written,e:=syscall.Write(int(tun.f.Fd()),packet)
+  if e!=nil||written!=len(packet){return fmt.Errorf("real TUN reply: %d/%d %v",written,len(packet),e)}
+ }
+ return nil
+}
+func b90Packet(tun *ownedTun,uid int)error{
+ ctx,cancel:=context.WithTimeout(context.Background(),15*time.Second);defer cancel()
+ done:=make(chan error,1)
+ seen:=make(chan struct{},1)
+ go func(){done<-b91ServeTUN(ctx,tun,[4]byte{192,0,2,1},43999,func(q []byte)([]byte,bool){
+  if !bytes.Equal(q,[]byte("WBD_B90_UID")){return nil,false}
+  select{case seen<-struct{}{}:default:}
+  return q,true
+ })}()
+ e:=b91Instrument(ctx,uid,"-e","uid_probe","echo")
+ cancel()
+ e=errors.Join(e,<-done)
+ if len(seen)!=1{return errors.Join(e,fmt.Errorf("ordinary UID datagram absent on original TUN"))}
+ return e
+}
+type b90Stop interface{Stop()error}
+func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot []byte,mode string) (ret error){
+ const dev="wbdb90"
+ const lease="198.18.0.1/32"
+ const peer="10.0.2.2"
+ const dest="192.0.2.1"
+ if _,e:=b90IP("link","show","dev",dev);e==nil{return fmt.Errorf("test TUN exists")}
+ dir,e:=os.MkdirTemp("/data/local/tmp","wbd-b90-");if e!=nil{return e}
+ defer func(){if ret==nil{_ = os.RemoveAll(dir)}}()
+ tun,e:=openTun(dev,lease,1389);if e!=nil{return e}
+ defer func(){if e:=tun.Close();ret==nil{ret=e}}()
+ actual,e:=readOwnedTunIPv4(dev);if e!=nil||actual.String()!=lease{return fmt.Errorf("test TUN /32: %v %v",actual,e)}
+ cidrs,e:=rootjournal.MergeCountryDirectCIDRs(nil,string(snapshot),peer);if e!=nil{return e}
+ if len(cidrs)<100{return fmt.Errorf("CN snapshot too small")}
+ cn,e:=netip.ParsePrefix(cidrs[0]);if e!=nil{return e}
+ path:=filepath.Join(dir,"route-journal.json")
+ group:=[]int{uid,bypass};sort.Ints(group)
+ exclusions:=[]int{own%100000,manager%100000,bypass%100000};sort.Ints(exclusions)
+ if uid==bypass||!rootjournal.ValidAllAppExclusions(exclusions){return fmt.Errorf("invalid fixture UIDs")}
+ for _,id:=range []int{uid,bypass,own,manager,0}{
+  if e=b90UsesTun(id,dest,dev,false);e!=nil{return fmt.Errorf("baseline: %w",e)}
+ }
+ fmt.Println("B90_ROUTE_BASELINE_PASS")
+ for _,mode:=range []string{mode}{
+  var owner b90Stop
+  switch mode{
+  case "single":
+   owner,e=rootjournal.New(b90IP,path,rootjournal.Plan{UID:uid,Tun:dev,Lease:lease,ServerIP:peer,DirectCIDRs:cidrs,Underlay:scope.InterfaceName,NetworkHandle:scope.NetworkHandle,IfIndex:scope.IfIndex},androidDNSIPBatch)
+  case "group":
+   owner,e=rootjournal.NewGroup(b90IP,path,rootjournal.GroupPlan{UIDs:group,Tun:dev,Lease:lease,ServerIP:peer,DirectCIDRs:cidrs,Underlay:scope.InterfaceName,NetworkHandle:scope.NetworkHandle,IfIndex:scope.IfIndex},androidDNSIPBatch)
+  case "all":
+   owner,e=rootjournal.NewAllApps(b90IP,path,rootjournal.AllAppPlan{ExcludedAppIDs:exclusions,Tun:dev,Lease:lease,ServerIP:peer,DirectCIDRs:cidrs,Underlay:scope.InterfaceName,NetworkHandle:scope.NetworkHandle,IfIndex:scope.IfIndex},androidDNSIPBatch)
+  }
+  if e!=nil{return fmt.Errorf("%s owner: %w",mode,e)}
+  check:=func()error{
+   for _,c:=range []struct{id int; dest string; tun bool}{
+    {uid,dest,true},{bypass,dest,mode=="group"},{own,dest,false},{manager,dest,false},{0,dest,false},
+    {uid,peer,false},{uid,cn.Addr().String(),false},
+   }{if e:=b90UsesTun(c.id,c.dest,dev,c.tun);e!=nil{return e}}
+   return b90Packet(tun,uid)
+  }()
+  if e=owner.Stop();e!=nil{return fmt.Errorf("%s Stop: %w",mode,e)}
+  for _,id:=range []int{uid,bypass,own,manager,0}{
+   if e=b90UsesTun(id,dest,dev,false);e!=nil{return fmt.Errorf("%s restored lookup: %w",mode,e)}
+  }
+  fmt.Printf("B90_ROUTE_%s_STOP_PASS\n",strings.ToUpper(mode))
+  if check!=nil{return fmt.Errorf("%s kernel/packet: %w",mode,check)}
+  fmt.Printf("B90_ROUTE_%s_UID_PACKET_CN_PASS prefixes=%d\n",strings.ToUpper(mode),len(cidrs))
+ }
+ return nil
+}
+func b90DNS(scope dnsnative.PhysicalScope)error{
+ upstream:=netip.MustParseAddr("10.0.2.2")
+ dial,e:=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(scope,upstream);if e!=nil{return e}
+ for _,name:=range []string{"udp.wbd-b90.test","tc.wbd-b90.test"}{
+  ctx,cancel:=context.WithTimeout(context.Background(),6*time.Second)
+  ip,e:=dnsnative.ResolveBootstrapIPv4WithUpstream(ctx,name,dial,upstream);cancel()
+  if e!=nil||ip.String()!="192.0.2.55"{return fmt.Errorf("%s physical DNS: %v %v",name,ip,e)}
+  fmt.Printf("B90_PHYSICAL_DNS_%s_PASS\n",strings.ToUpper(strings.Split(name,".")[0]))
+ }
+ return nil
+}
+func RunAndroidSpecialtyCI(a []string)int{
+ if len(a)!=11||os.Geteuid()!=0{fmt.Println("B90_INPUT_FAIL");return 2}
+ handle,e:=strconv.ParseUint(a[1],10,64);if e!=nil{return 2}
+ index,e:=strconv.Atoi(a[3]);if e!=nil{return 2}
+ mtu,e:=strconv.Atoi(a[4]);if e!=nil{return 2}
+ local,e:=netip.ParseAddr(a[5]);if e!=nil{return 2}
+ scope:=dnsnative.PhysicalScope{NetworkHandle:handle,InterfaceName:a[2],IfIndex:index,MTU:mtu,LocalIPv4:local}
+ switch a[0]{
+ case "dns":
+  if e=b90DNS(scope);e!=nil{fmt.Println("B90_DNS_FAIL",e);return 1}
+ case "route-single","route-group","route-all":
+  ids:=make([]int,4);for i:=range ids{ids[i],e=strconv.Atoi(a[6+i]);if e!=nil||ids[i]<10000{return 2}}
+  raw,e:=os.ReadFile(a[10]);if e!=nil{fmt.Println("B90_CN_INPUT_FAIL",e);return 1}
+  if e=b90Routes(scope,ids[0],ids[1],ids[2],ids[3],raw,strings.TrimPrefix(a[0],"route-"));e!=nil{fmt.Println("B90_ROUTES_FAIL",e);return 1}
+  if _,e=b90IP("link","show","dev","wbdb90");e==nil{fmt.Println("B90_TUN_CLOSE_FAIL");return 1}
+  fmt.Println("B90_TUN_CLOSE_PASS")
+ case "system-physical","system-tunnel","system-cn":
+  uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
+  if e=b91SystemDNS(scope,uid,a[0]);e!=nil{fmt.Println("B91_SYSTEM_DNS_FAIL",e);return 1}
+ case "normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed":
+  uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
+  if e=b91Native(scope,uid,a[0]);e!=nil{fmt.Println("B91_NATIVE_FAIL",e);return 1}
+ default:return 2
+ }
+ return 0
+}
+
+// The actual system DNS ingress/relay component runs independently of the
+// remote WBD path. A local test /32 is never called an authenticated lease.
+func b91DNSAnswer(q []byte)([]byte,bool){
+ if len(q)<17||binary.BigEndian.Uint16(q[4:6])!=1{return nil,false}
+ i:=12;var labels []string
+ for i<len(q)&&q[i]!=0{
+  n:=int(q[i]);i++;if n>63||i+n>len(q){return nil,false}
+  labels=append(labels,string(q[i:i+n]));i+=n
+ }
+ if i+5>len(q){return nil,false}
+ name:=strings.Join(labels,".")
+ if name!="tunnel.wbd-b91.test"&&name!="noncn.wbd-b91.test"{return nil,false}
+ a:=binary.BigEndian.Uint16(q[i+1:i+3])==1
+ out:=append([]byte(nil),q[:i+5]...)
+ binary.BigEndian.PutUint16(out[2:4],0x8180)
+ for j:=6;j<12;j++{out[j]=0}
+ if a{out[7]=1;out=append(out,0xc0,0x0c,0,1,0,1,0,0,0,60,0,4,192,0,2,56)}
+ return out,true
+}
+func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
+ const dev="wbdb91dns"
+ const lease="198.18.0.2/32"
+ dir,e:=os.MkdirTemp("/data/local/tmp","wbd-b91-dns-");if e!=nil{return e}
+ defer func(){if ret==nil{_ = os.RemoveAll(dir)}}()
+ tun,e:=openTun(dev,lease,1389);if e!=nil{return e}
+ defer func(){ret=errors.Join(ret,tun.Close())}()
+ owner,e:=rootjournal.New(b90IP,filepath.Join(dir,"route-journal.json"),
+  rootjournal.Plan{UID:uid,Tun:dev,Lease:lease,ServerIP:"10.0.2.2",Underlay:scope.InterfaceName,NetworkHandle:scope.NetworkHandle,IfIndex:scope.IfIndex},androidDNSIPBatch)
+ if e!=nil{return e}
+ defer func(){ret=errors.Join(ret,owner.Stop())}()
+ c:=config{androidRouteUID:uid,androidNetworkHandle:scope.NetworkHandle,
+  androidAppTCPDNS:true,androidSystemDNS:true,
+  androidPhysicalDNSUpstream:netip.MustParseAddr("10.0.2.2"),
+  androidTunnelDNSUpstream:netip.MustParseAddr("192.0.2.53")}
+ c.androidPhysicalDNS=mode=="system-physical"
+ c.androidTunnelDNS=mode=="system-tunnel"
+ c.androidCNDNSSplit=mode=="system-cn"
+ if c.androidPhysicalDNS||c.androidCNDNSSplit{
+  c.androidPhysicalDNSDial,e=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(scope,c.androidPhysicalDNSUpstream)
+  if e!=nil{return e}
+ }
+ if c.androidCNDNSSplit{
+  c.androidCNSnapshot,e=dnsnative.LoadCN([]byte("domain:cn.wbd-b91.test\n"))
+  if e!=nil{return e}
+ }
+ stop,e:=startAndroidAppTCPDNS(c,tun,netip.MustParsePrefix(lease),b90IP,owner.Stop)
+ if e!=nil{return e}
+ defer func(){ret=errors.Join(ret,stop());if ret==nil{fmt.Println("B91_SYSTEM_DNS_STOP_PASS",mode)}}()
+ ctx,cancel:=context.WithTimeout(context.Background(),25*time.Second)
+ defer cancel()
+ var done chan error
+ if c.androidTunnelDNS||c.androidCNDNSSplit{
+  done=make(chan error,1)
+  go func(){done<-b91ServeTUN(ctx,tun,[4]byte{192,0,2,53},53,b91DNSAnswer)}()
+  defer func(){cancel();ret=errors.Join(ret,<-done)}()
+ }
+ query:=func(name,expected string)error{
+  qctx,qcancel:=context.WithTimeout(ctx,10*time.Second);defer qcancel()
+  return b91Instrument(qctx,uid,"-e","dns_probe","system","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_name",name,"-e","expected_ip",expected)
+ }
+ if c.androidPhysicalDNS{if e=query("system.wbd-b91.test","192.0.2.55");e!=nil{return e}}
+ if c.androidTunnelDNS{if e=query("tunnel.wbd-b91.test","192.0.2.56");e!=nil{return e}}
+ if c.androidCNDNSSplit{
+  if e=query("cn.wbd-b91.test","192.0.2.55");e!=nil{return e}
+  if e=query("noncn.wbd-b91.test","192.0.2.56");e!=nil{return e}
+ }
+ fmt.Println("B91_SYSTEM_DNS_QUERY_PASS",mode)
+ return nil
+}
+
+// Exact production openTun, lease/MTU callbacks, original UID route owner,
+// and original product Connect/Close. Only the cold wire is in-process.
+func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
+ const dev="wbdb91m4"
+ tun,e:=openTun(dev,"198.18.0.3/32",1389);if e!=nil{return e}
+ defer func(){ret=errors.Join(ret,tun.Close())
+  if _,e:=net.InterfaceByName(dev);e==nil{ret=errors.Join(ret,fmt.Errorf("native TUN still exists"))}
+  if ret==nil{fmt.Println("B91_NATIVE_TUN_CLOSE_PASS",mode)}
+ }()
+ c:=config{role:"client",rawInterface:scope.InterfaceName,localIP:scope.LocalIPv4,
+  peerIP:netip.MustParseAddr("10.0.2.2"),peerPort:443,outerMTU:1460,recordLimit:1400,
+  androidNetworkHandle:scope.NetworkHandle,androidPhysicalMTU:uint32(scope.MTU),androidRouteUID:uid,
+  fecMode:realityfront.FecV2Off,disableOuterRepair:true,androidNativeHealthSeconds:15,
+  androidPhysicalDNSUpstream:netip.MustParseAddr("223.5.5.5")}
+ switch mode{
+ case "fec-fixed":c.fecMode=realityfront.FecV2Fixed;c.fecProfile=realityfront.FecV2Profile(6)
+ case "fec-auto":c.fecMode=realityfront.FecV2Auto
+ case "game2","game2-fixed":c.gameLanes=2;c.gameFecEnabled=mode=="game2-fixed";c.gameFecProfile=6
+ case "game4","game4-fixed":c.gameLanes=4;c.gameFecEnabled=mode=="game4-fixed";c.gameFecProfile=6
+ }
+ normal:=realityfront.V4LinuxClientProductConfig{
+  NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
+  Tun:tun.f,TunName:dev,CleanupOwnedNetwork:func()error{return nil},ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
+  FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:true,OuterIPMTU:1460,HealthKeepaliveSeconds:15,HealthDeadAfterSeconds:90}
+ game:=realityfront.V4AndroidGameConfig{Lanes:c.gameLanes,GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
+  OuterIPMTU:1460,DisableOuterRepair:true,NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),
+  AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
+  Tun:tun.f,TunName:dev,ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
+  HealthSeconds:15,PhysicalDNSUpstream:c.androidPhysicalDNSUpstream}
+ ctx,cancel:=context.WithTimeout(context.Background(),35*time.Second);defer cancel()
+ route:=func(lease string)(func()error,error){return androidRootRouteAfterNative(c,tun,lease)}
+ send:=func()error{
+  qctx,qcancel:=context.WithTimeout(ctx,10*time.Second);defer qcancel()
+  return b91Instrument(qctx,uid,"-e","uid_probe","1")
+ }
+ return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,route,send)
+}

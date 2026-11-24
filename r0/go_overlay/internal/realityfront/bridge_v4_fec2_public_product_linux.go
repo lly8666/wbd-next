@@ -8,6 +8,7 @@ package realityfront
 // authenticated opposite-direction kind1 can publish fixed/auto startup ACK.
 import (
     "log"
+    "runtime"
     "sync"
     "time"
 )
@@ -259,7 +260,10 @@ func (m *v4ProductFecMonitor)tick(
     if m.state.AppliedRevision!=m.state.RequestedRevision{
         // Native M4 definitely copied source+parity plus authenticated
         // reverse M2 are the ONLY authority to mark this revision applied.
-        if v4PublicMatureFixedNative(bridge,m.epoch,m.state.RequestedRevision)!=nil {
+        // Android M4 itself owns the real mature Quality/APPLIED;
+        // Linux retains its separate native M2 maturity commit.
+        if runtime.GOOS!="android" &&
+            v4PublicMatureFixedNative(bridge,m.epoch,m.state.RequestedRevision)!=nil {
             return
         }
         applied,_,err:=bridge.readbackOriginalFixedPending(m.state,m.epoch)

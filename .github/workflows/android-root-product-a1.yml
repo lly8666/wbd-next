@@ -1,0 +1,866 @@
+name: Android root product same-source dual-64 Bionic Go/Rust gate
+run-name: "android-dual64|Bionic-Go-Rust|${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/android-temp-root-probe]
+    paths:
+      - ".github/workflows/android-root-product-a1.yml"
+      - "android/root-native/**"
+      - "android/root-app/**"
+      - "crates/wbd-platform/src/android_root_io.rs"
+      - "crates/wbd-platform/src/lib.rs"
+      - "crates/wbd-engine/src/lib.rs"
+      - "crates/wbd-engine/src/v4_embedded_go.rs"
+      - "crates/wbd-engine/src/v4_android_original_m4.rs"
+      - "crates/wbd-engine/src/v4_android_game_*.rs"
+      - "crates/wbd-engine/src/v4_android_dns_*.rs"
+      - "crates/wbd-engine/src/v4_owner_crypto.rs"
+      - "crates/wbd-codec/src/link_fec_wire.rs"
+      - "crates/wbd-engine/src/v4_session_address.rs"
+      - "crates/wbd-platform/src/ipv4_tcp.rs"
+      - "crates/wbd-platform/src/rx_ipv4_tcp.rs"
+      - "crates/wbd-engine/Cargo.toml"
+      - "crates/wbd-codec/Cargo.toml"
+      - "Cargo.lock"
+      - "r0/go_overlay/internal/realityfront/**"
+      - "r0/go_overlay/internal/faketcp/raw_android_network_*.go"
+      - "r0/go_overlay/internal/v4productcli/linux.go"
+      - "r0/go_overlay/internal/v4productcli/**"
+      - "r0/go_overlay/cmd/wbd-v4-client/*.go"
+      - "tools/m0_install_public_faketcp.py"
+      - "tools/m0_install_public_realityfront_tests.py"
+  workflow_dispatch:
+    inputs:
+      run_legacy_nativebridge:
+        description: 'Run obsolete ARM64-ELF-on-x86-NativeBridge diagnostic (known SIGSEGV 139)'
+        type: boolean
+        required: false
+        default: false
+      run_tap_guest_pilot:
+        description: 'Explicit opt-in for historical TAP guest diagnostic; not run during APK wiring work'
+        type: boolean
+        required: false
+        default: false
+      run_x86_guest:
+        description: 'One x86 KSU boot: Android ART cold controls, original x86 ELF and translated ARM64 cold suite'
+        type: boolean
+        required: false
+        default: false
+      run_x86_d2_network:
+        description: 'Separate historical D2 SLIRP network experiment; known ENV_BLOCKED, not part of cold suite'
+        type: boolean
+        required: false
+        default: false
+permissions: {contents: read}
+concurrency:
+  group: android-product-a1-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  b1-dns-wire-loopback:
+    # Host real DNS wire on local UDP/TCP; never an Android runtime test.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Test CN/tunnel UDP DNS, bounded TTL and same-upstream TCP fallback
+        shell: bash
+        run: bash android/root-native/ci/dns-b1-loopback.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b1-dns-real-loopback-${{ github.sha }}
+          path: out/android-b1-dnsnative/
+          retention-days: 14
+          if-no-files-found: warn
+  b2-authentic-cn-geosite-host:
+    # The EXACT upstream revision, original include/attr/affiliation importer,
+    # genuine 8503-rule SHA and real Go DNS socket tests. Host only.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Import immutable v2fly CN8503 and run full-typed Go matcher / real host DNS wire
+        shell: bash
+        run: bash android/root-native/ci/dns-b2-pinned-cn.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: |
+            out/android-b2-cn-geosite/cn-geosite-provenance.json
+            out/android-b2-cn-geosite/official-cn.dat
+            out/android-b2-cn-geosite/wbd-cn-ipv4.txt
+            out/android-b2-cn-geosite/cn-ipv4-provenance.json
+            out/android-b2-cn-geosite/wbd-cn-geosite.txt
+            out/android-b2-cn-geosite/wbd-cn-geosite-license.txt
+            out/android-b2-cn-geosite/import-log.json
+            out/android-b2-cn-geosite/go-matcher-wire.log
+            out/android-b2-cn-geosite/receipt.json
+          retention-days: 14
+          if-no-files-found: warn
+  b2c-physical-scoped-dns-host:
+    # Real Linux socket callback order and source IPv4/TCP/UDP scope.
+    # Actual NDK netd binding is in the original Android ARM64 cgo build,
+    # but is NOT runnable on this host without an Android guest.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Exercise real scoped UDP/TCP sockets and fail-closed netd-bind callback
+        shell: bash
+        run: bash android/root-native/ci/dns-b2c-physical-host.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2c-scoped-physical-dns-${{ github.sha }}
+          path: out/android-b2c-physical/
+          retention-days: 14
+          if-no-files-found: warn
+  b2c2-original-rust-tun-dns-ingress-host:
+    # Original Rust one-TUN reader transparent DNS53 observation, host only.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Rust one-readv IPv4 DNS53 byte-level test and unchanged AEAD owner gate
+        shell: bash
+        run: bash android/root-native/ci/dns-b2c2-rust-ingress-host.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2c2a-rust-single-tun-dns53-${{ github.sha }}
+          path: out/android-b2c2-rust-ingress/
+          retention-days: 14
+          if-no-files-found: warn
+  b2c2b-rust-dns-udp-inverse-map:
+    # Fixed-capacity 5-tuple/ID mapping on real IPv4/UDP packet bytes,
+    # host only; neither a second TUN reader nor an active DNS hijacker.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Test original Rust bounded DNS53 inverse five-tuple and checksum
+        shell: bash
+        run: bash android/root-native/ci/dns-b2c2b-rust-udp-map-host.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b2c2b-rust-dns-udp-map-${{ github.sha }}
+          path: out/android-b2c2b-dns-flow/
+          retention-days: 14
+          if-no-files-found: warn
+  original-m3-wire-oracle:
+    # This is a pure M3 wire unit-test host: NO Android x86 target and
+    # no second app/crypto implementation. Runs independently of NDK link.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Assert zero-allocation M3 LINK20 bytes match original Go fixture
+        shell: bash
+        run: cargo +1.85.1 test --locked -p wbd-codec arm64_original_m4_slab_link_plan_is_byte_identical_and_capacity_fail_closed
+      - name: Verify exact original Go Game2/4 cold lane layout (real Rust unit tests)
+        shell: bash
+        run: cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record android_game_cold_
+  arm64-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: D0 Build same-source ARM64 release and x86_64 CI-only original Go/Rust
+        shell: bash
+        run: bash android/root-native/build-source-locked.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-product-a1/
+          retention-days: 14
+          if-no-files-found: warn
+  root-arm64-app:
+    # A signed APK must contain B2 source-locked CN TXT+MIT provenance from
+    # the SAME workflow SHA, not a fixture or stale AVD/probe asset.
+    needs: [arm64-native, b2-authentic-cn-geosite-host]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Fetch immutable original Go/Rust ARM64 binaries from SAME source run
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/android-root-app-native
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "android-root-product-a1-$GITHUB_SHA" \
+            --dir out/android-root-app-native
+          test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
+          (cd out/android-root-app-native && sha256sum -c SHA256SUMS)
+      - name: Fetch authenticated pinned CN8503/MIT assets from SAME SOURCE run
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out/android-root-app-cn
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "android-b2-pinned-cn-geosite-$GITHUB_SHA" \
+            --dir out/android-root-app-cn
+          test -s out/android-root-app-cn/wbd-cn-geosite.txt
+          test -s out/android-root-app-cn/wbd-cn-geosite-license.txt
+          test -s out/android-root-app-cn/cn-geosite-provenance.json
+          test -s out/android-root-app-cn/receipt.json
+      - name: Build reusable ordinary-App TCP UDP test fixture and run its host loopback
+        shell: bash
+        run: bash android/root-app/ci/traffic-fixture/build.sh
+      - name: Build independent no-VpnService Root ARM64 APK
+        shell: bash
+        run: bash android/root-app/ci/build-source-locked.sh
+      - name: Verify signed APK original Go/Rust CLI and loader wiring (host-only; no emulator)
+        shell: bash
+        run: python3 android/root-app/ci/test-apk-native-wiring.py
+      - name: Verify Android official CN updater against the exact shared upstream group
+        shell: bash
+        run: |
+          set -euo pipefail
+          jar="$ANDROID_HOME/platforms/android-36/android.jar"
+          test -f "$jar" || jar="$ANDROID_HOME/platforms/android-35/android.jar"
+          mkdir -p out/android-cn-update-test
+          javac -source 8 -target 8 -encoding UTF-8 -classpath "$jar" -d out/android-cn-update-test \
+            android/root-app/src/org/wbdnext/rootclient/RootCnDomainUpdate.java \
+            android/root-app/ci/RootCnDomainUpdateTest.java
+          java -cp "out/android-cn-update-test:$jar" org.wbdnext.rootclient.RootCnDomainUpdateTest \
+            out/android-root-app-cn/official-cn.dat out/android-root-app-cn/wbd-cn-geosite.txt
+      - name: Test exact selected Network event gate (pure Java)
+        if: always()
+        shell: bash
+        run: bash android/root-app/ci/test-network-scope-gate.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: |
+            out/android-root-app/wbd-root-arm64-debug.apk
+            out/android-root-app/wbd-root-lite-arm64-debug.apk
+            out/android-root-app/SOURCE
+            out/android-root-app/SHA256SUMS
+            out/android-root-app/manifest.json
+            out/android-root-app/wiring-receipt.json
+            out/android-root-app/manifest-tree.txt
+            out/android-root-app/badging.txt
+            out/android-traffic-fixture/traffic-fixture.apk
+            out/android-traffic-fixture/host-smoke.txt
+          retention-days: 14
+          if-no-files-found: warn
+  android-x86-kvm-ksu-original-native:
+    if: ${{ always() && needs.arm64-native.result == 'success' && needs.b2-authentic-cn-geosite-host.result == 'success' && ((github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-cold-suite]') || contains(github.event.head_commit.message, '[android-parallel-test]')))) }}
+    # One controlled guest after the actual same-SOURCE signed product APK.
+    # Historical static assertion failure does not block real Android tests.
+    needs: [arm64-native, b2-authentic-cn-geosite-host, root-arm64-app]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 38
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_ANDROID_COLD_SUITE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+      - name: Require the signed ARM64 APK from the completed build first
+        shell: bash
+        run: |
+          mkdir -p out/android-root-release
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "android-root-original-arm64-app-$GITHUB_SHA" --dir out/android-root-release
+          test "$(cat out/android-root-release/android-root-app/SOURCE)" = "$GITHUB_SHA"
+          (cd out/android-root-release/android-root-app && sha256sum -c SHA256SUMS)
+          test -s out/android-root-release/android-root-app/wbd-root-arm64-debug.apk
+      # Existing same-source host/production APK jobs run the static gate.
+      # A stale source-string assertion must not block real ART/KSU tests.
+      - name: Build same-Java original Go/Rust x86_64 signed CI-only APK
+        shell: bash
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: Verify pinned KernelSU 3.3.1 and prepare Android16 x86 KVM
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: D1 combined Android ART and original x86 Go plus translated ARM64 cold checks
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 1020s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-x86-original-native-ksu-${{ github.sha }}
+          path: |
+            out/android-x86-ci-app/wbd-root-x86-ci-only.apk
+            out/android-x86-ci-app/manifest.json
+            out/android-x86-ci-app/SOURCE
+            out/android-x86-ci-app/SHA256SUMS
+            out/android-x86-ci-app/badging.txt
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/*.txt
+            out/android-x86-ksu-native/ui-*.png
+            out/android-x86-ksu-native/ui-*.json
+            out/ksu/grant-ui-result.json
+            out/ksu/sdk-install.txt
+            out/ksu/patch-log.txt
+            out/ksu/helper-sha.txt
+            out/ksu/manager-hash-verified.txt
+            out/ksu/native-source-mode.txt
+          retention-days: 14
+          if-no-files-found: warn
+
+  linux-x86-original-server-d2-s0:
+    # D2-S0: original Linux server + shared Rust, built for the SAME ISA as
+    # the x86 Android16 KSU guest host. This tests server CLI startup only.
+    # It is NOT an Android TLS/auth/M4/TCP/UDP or route-Stop test.
+    needs: [arm64-native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - name: D2-S0 build exact pinned Linux original x86_64 server and run real CLI help
+        shell: bash
+        run: bash android/root-app/ci/x86-original-linux-server-prep.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-d2-s0-original-linux-x86-server-${{ github.sha }}
+          path: |
+            out/android-x86-original-linux/wbd-v4-server
+            out/android-x86-original-linux/wbd-v4-client
+            out/android-x86-original-linux/libwbd_engine.so
+            out/android-x86-original-linux/SOURCE
+            out/android-x86-original-linux/manifest.json
+            out/android-x86-original-linux/SHA256SUMS
+            out/android-x86-original-linux/elf-*.txt
+            out/android-x86-original-linux/linker-*.txt
+            out/android-x86-original-linux/help-*-rc.txt
+          retention-days: 7
+          if-no-files-found: warn
+
+  android-x86-kvm-ksu-original-d2-s1:
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-guest-retry]'))) }}
+    # Separate red/green gate: ORIGINAL Linux server runs on the same x86
+    # KVM host as the real Android16 KernelSU App. Run production Java
+    # RootClientService -> original Android Go/Rust, require authentic
+    # TUN + AF_PACKET readiness, report SYNACK/TLS/lease/M4 separately.
+    # This is NOT the D2 true TCP+UDP end-to-end gate yet.
+    needs: [arm64-native, b2-authentic-cn-geosite-host, linux-x86-original-server-d2-s0]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_D2_ORIGINAL: '1'
+      WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && !contains(github.event.head_commit.message, '[android-specialty-parallel]') && '1' || '0' }}
+      WBD_ANDROID_LIFECYCLE: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-lifecycle-test]') && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-d2-s0-original-linux-x86-server-${{ github.sha }}
+          path: out/android-x86-original-linux
+      - name: D2-S1 admit exact Java and safe Linux/Android script syntax
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/x86-kvm-ksu-native.sh
+          bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
+          bash -n android/root-app/ci/x86-seven-mode-wiring.sh
+          bash -n android/root-app/ci/x86-android-specialty.sh
+          bash -n android/root-app/ci/x86-root-lifecycle.sh
+          bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
+          python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
+          python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
+          # Static gate is already executed in root-arm64-app; do not block
+          # real preauth on an unrelated historical source-string failure.
+      - name: D2-S1 build signed x86 CI-only APK using production Java + original Go/Rust
+        shell: bash
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: D2-S1 build an isolated ordinary App UID traffic target (never KernelSU Manager)
+        shell: bash
+        run: |
+          bash experiments/android-root-probe/ci/build-app.sh
+          test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
+          rm -f out/apk/host-tls.key
+          if [[ "$WBD_ANDROID_SPECIALTY" == 1 ]];then bash android/root-app/ci/traffic-fixture/build.sh;fi
+      - name: D2-S1 prepare pinned x86 Android16 KSU3.3.1 emulator
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: D2-S1 real Linux original server and production Android KSU RootService TUN/RAW
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 1350s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-d2-s1-original-x86-root-${{ github.sha }}
+          path: |
+            out/android-x86-d2-root/receipt.json
+            out/android-x86-d2-root/wiring/receipt.json
+            out/android-x86-d2-root/wiring/results.tsv
+            out/android-x86-d2-root/wiring/bionic-tls-status.txt
+            out/android-x86-d2-root/wiring/bionic-tls.log
+            out/android-x86-d2-root/wiring/*/diagnostics.txt
+            out/android-x86-d2-root/specialty/
+            out/android-x86-d2-root/lifecycle/
+            out/android-x86-d2-root/linux-source-sha.txt
+            out/android-x86-d2-root/android-source-sha.txt
+            out/android-x86-d2-root/server-started.txt
+            out/android-x86-d2-root/secret-stage-enum.txt
+            out/android-x86-d2-root/host-rst-rule-enum.txt
+            out/android-x86-d2-root/server-stage-enums.txt
+            out/android-x86-d2-root/app-diagnostic-enums.txt
+            out/android-x86-d2-root/host-wire-summary.json
+            out/android-x86-d2-root/guest-wire-summary.json
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/app-su-receipt.txt
+            out/android-x86-ksu-native/physical-network-receipt.txt
+            out/ksu/grant-ui-result.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  android-x86-specialty-parallel:
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-parallel]') }}
+    # Each shard owns its own Android kernel, TUN, RPDB/NAT and KSU boot.
+    # Shared native artifacts, no Linux server dependency.
+    needs: [arm64-native, b2-authentic-cn-geosite-host]
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        shard: [routes, normal, game2, game4, dns-physical, dns-tunnel, dns-cn]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_D2_ORIGINAL: '1'
+      WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: '1'
+      WBD_ANDROID_SPECIALTY_SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+      - name: D2-S1 admit exact Java and safe Linux/Android script syntax
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/x86-kvm-ksu-native.sh
+          bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
+          bash -n android/root-app/ci/x86-seven-mode-wiring.sh
+          bash -n android/root-app/ci/x86-android-specialty.sh
+          bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
+          python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
+          python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
+          # Static gate is already executed in root-arm64-app; do not block
+          # real preauth on an unrelated historical source-string failure.
+      - name: D2-S1 build signed x86 CI-only APK using production Java + original Go/Rust
+        shell: bash
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: D2-S1 build an isolated ordinary App UID traffic target (never KernelSU Manager)
+        shell: bash
+        run: |
+          bash experiments/android-root-probe/ci/build-app.sh
+          test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
+          rm -f out/apk/host-tls.key
+          if [[ "$WBD_ANDROID_SPECIALTY" == 1 ]];then bash android/root-app/ci/traffic-fixture/build.sh;fi
+      - name: D2-S1 prepare pinned x86 Android16 KSU3.3.1 emulator
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: Real Android specialty ${{ matrix.shard }} (isolated guest)
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 1350s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-specialty-${{ matrix.shard }}-${{ github.sha }}
+          path: |
+            out/android-x86-d2-root/receipt.json
+            out/android-x86-d2-root/wiring/receipt.json
+            out/android-x86-d2-root/wiring/results.tsv
+            out/android-x86-d2-root/wiring/bionic-tls-status.txt
+            out/android-x86-d2-root/wiring/bionic-tls.log
+            out/android-x86-d2-root/wiring/*/diagnostics.txt
+            out/android-x86-d2-root/specialty/
+            out/android-x86-d2-root/linux-source-sha.txt
+            out/android-x86-d2-root/android-source-sha.txt
+            out/android-x86-d2-root/server-started.txt
+            out/android-x86-d2-root/secret-stage-enum.txt
+            out/android-x86-d2-root/host-rst-rule-enum.txt
+            out/android-x86-d2-root/server-stage-enums.txt
+            out/android-x86-d2-root/app-diagnostic-enums.txt
+            out/android-x86-d2-root/host-wire-summary.json
+            out/android-x86-d2-root/guest-wire-summary.json
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/app-su-receipt.txt
+            out/android-x86-ksu-native/physical-network-receipt.txt
+            out/ksu/grant-ui-result.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  android-x86-kvm-ksu-original-d2-tap-guest-pilot:
+    # One source-locked experimental TAP guest scenario, never a release ABI.
+    # Run only with a one-time push marker or explicit manual request.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_tap_guest_pilot == true }}
+    # Separate red/green gate: ORIGINAL Linux server runs on the same x86
+    # KVM host as the real Android16 KernelSU App. Run production Java
+    # RootClientService -> original Android Go/Rust, require authentic
+    # TUN + AF_PACKET readiness, report SYNACK/TLS/lease/M4 separately.
+    # This is NOT the D2 true TCP+UDP end-to-end gate yet.
+    needs: [arm64-native, b2-authentic-cn-geosite-host, linux-x86-original-server-d2-s0]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_D2_ORIGINAL: '1'
+      WBD_D2_TAP_GUEST_PILOT: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-d2-s0-original-linux-x86-server-${{ github.sha }}
+          path: out/android-x86-original-linux
+      - name: D2-TAP admit exact Java and safe Linux/Android script syntax
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/x86-kvm-ksu-native.sh
+          bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
+          bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
+          python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
+          python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
+          bash android/root-app/ci/test-network-scope-gate.sh
+      - name: D2-TAP build signed x86 CI-only APK using production Java + original Go/Rust
+        shell: bash
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: D2-TAP build an isolated ordinary App UID traffic target (never KernelSU Manager)
+        shell: bash
+        run: |
+          bash experiments/android-root-probe/ci/build-app.sh
+          test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
+          rm -f out/apk/host-tls.key
+      - name: D2-TAP prepare pinned x86 Android16 KSU3.3.1 emulator
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: D2-TAP real Linux original server and production Android KSU RootService TUN/RAW
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 1350s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-d2-tap-guest-original-x86-root-${{ github.sha }}
+          path: |
+            out/android-x86-tap-guest/receipt.json
+            out/android-x86-d2-root/receipt.json
+            out/android-x86-d2-root/linux-source-sha.txt
+            out/android-x86-d2-root/android-source-sha.txt
+            out/android-x86-d2-root/server-started.txt
+            out/android-x86-d2-root/secret-stage-enum.txt
+            out/android-x86-d2-root/host-rst-rule-enum.txt
+            out/android-x86-d2-root/server-stage-enums.txt
+            out/android-x86-d2-root/app-diagnostic-enums.txt
+            out/android-x86-d2-root/host-wire-summary.json
+            out/android-x86-d2-root/guest-wire-summary.json
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/app-su-receipt.txt
+            out/android-x86-ksu-native/physical-network-receipt.txt
+            out/ksu/grant-ui-result.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  linux-original-server-normal-off:
+    # Genuine original Linux Go/Rust server + Linux peer: NOT Android E2E.
+    needs: [arm64-native]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Test original real Linux server oracle against source-locked Android ARM64 binaries
+        shell: bash
+        run: bash android/root-native/ci/linux-original-oracle.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-a3-real-linux-server-oracle-${{ github.sha }}
+          path: |
+            out/android-a3-linux/manifest.json
+            out/android-a3-linux/assembly.json
+            out/android-a3-linux/host-cold-receipt.json
+            out/android-a3-linux/live-original-linux.log
+            fixed-kernel-result/plan028-tls-wire-audit.json
+            fixed-kernel-result/public-v4-normal-business.log
+          retention-days: 14
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: ${{ always() && env.WBD_ANDROID_WIRING_MATRIX != '1' }}
+        with:
+          name: android-linux-arm64-native-bundle-${{ github.sha }}
+          path: |
+            out/android-a3-linux/wbd-v4-client
+            out/android-a3-linux/wbd-v4-server
+            out/android-a3-linux/libwbd_engine.so
+            out/android-a3-linux/manifest.json
+            out/android-a3-linux/SHA256SUMS
+          retention-days: 14
+          if-no-files-found: warn
+
+  android-stock-ui-and-ordinary-uid:
+    if: ${{ always() && needs.root-arm64-app.result != 'cancelled' && needs.root-arm64-app.result != 'skipped' && github.event_name == 'push' && contains(github.event.head_commit.message, '[android-parallel-test]') }}
+    needs: [root-arm64-app]
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        api: [35, 36]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: out/android-root-release
+      - name: Real stock Android API ${{ matrix.api }} - production signed APK UI and ordinary UID socket fixture
+        env:
+          WBD_ANDROID_API: ${{ matrix.api }}
+        run: bash android/root-app/ci/stock-ui-traffic.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-stock-api${{ matrix.api }}-${{ github.sha }}
+          path: out/android-stock-suite/
+          retention-days: 14
+          if-no-files-found: warn
+
+  linux-seven-mode-native-parallel:
+    # Reuse the SAME two Linux CLI bundles already built above. No per-mode
+    # recompilation, no Windows/Android runtime claim, no duplicate M0 CI.
+    if: ${{ always() && needs.linux-x86-original-server-d2-s0.result == 'success' && needs.linux-original-server-normal-off.result != 'cancelled' && github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-native-matrix]')) }}
+    needs: [linux-x86-original-server-d2-s0, linux-original-server-normal-off]
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        arch: [amd64, arm64]
+        mode: [normal_off, normal_maximum6, normal_auto, game2_off, game2_fixed6, game4_off, game4_fixed6]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ matrix.arch == 'arm64' && format('android-linux-arm64-native-bundle-{0}', github.sha) || format('android-d2-s0-original-linux-x86-server-{0}', github.sha) }}
+          path: out/android-linux-bundle
+      - name: Verify exact source and native architecture, run real original protocol case
+        env:
+          TEST_ARCH: ${{ matrix.arch }}
+          TEST_MODE: ${{ matrix.mode }}
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool tcpdump
+          test -c /dev/net/tun
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,TEST_ARCH,TEST_MODE \
+            python3 -m tools.network_harness.android_parallel_native \
+            --bundle out/android-linux-bundle --out out/android-linux-case
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-linux-${{ matrix.arch }}-${{ matrix.mode }}-${{ github.sha }}
+          path: |
+            out/android-linux-case/result.json
+            out/android-linux-case/*/result.json
+            out/android-linux-case/*/network-snapshots.json
+            out/android-linux-case/*/summary.md
+          retention-days: 14
+          if-no-files-found: warn
+
+  arm64-cuttlefish-host-admission:
+    # Host-only KVM audit; successful job means receipt generated,
+    # NOT that Android guest or App/root protocol was executed.
+    needs: [root-arm64-app]
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 8
+    permissions: {contents: read, actions: read}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: out/android-a3-guest
+      - name: Check ARM64 KVM host preconditions without booting an Android guest
+        shell: bash
+        run: bash android/root-app/ci/arm64-cuttlefish-admission.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-a3-arm64-cuttlefish-host-admission-${{ github.sha }}
+          path: out/android-a3-guest-admission/admission.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  android-x86-kvm-ksu-arm64-nativebridge:
+    # Historical ARM64 translation experiment, not the A15 x86-native gate.
+    # Never silently re-run its unsupported ARM64 Go ELF on each product push.
+    # Explicit manual opt-in retains the real red failure when requested.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_legacy_nativebridge == true }}
+    # The actual older KernelSU environment (x86_64 KVM Android16 API36)
+    # is NOT equivalent to an ARM64 guest. This job must launch the exact
+    # Android ARM64 signed APK and actually execve its original-Go AArch64
+    # ELF before claiming NativeBridge supports the product. Otherwise FAIL
+    # with a source-locked evidence receipt; never silently claim P2/P3.
+    needs: [root-arm64-app]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_ARM64: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-original-arm64-app-${{ github.sha }}
+          path: out/android-root-app
+      - name: Enforce exact SOURCE and signed APK ARM64 native asset hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(cat out/android-root-app-native/SOURCE)" = "$GITHUB_SHA"
+          test "$(cat out/android-root-app/SOURCE)" = "$GITHUB_SHA"
+          (cd out/android-root-app-native && sha256sum -c SHA256SUMS)
+          (cd out/android-root-app && sha256sum -c SHA256SUMS)
+      - name: Check historical KSU setup and ARM64 guest execution script syntax
+        shell: bash
+        run: |
+          bash -n experiments/android-root-probe/ci/ksu-prepare-avd.sh
+          bash -n android/root-app/ci/x86-kvm-ksu-arm64-nativebridge.sh
+          test -c /dev/kvm
+      - name: Reuse pinned historical KernelSU 3.3.1 Android16 x86_64 KVM image
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: Boot real KSU twice, inspect native bridge, execute exact ARM64 Go and launch product APK
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 970s bash android/root-app/ci/x86-kvm-ksu-arm64-nativebridge.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-x86-kvm-ksu-arm64-nativebridge-${{ github.sha }}
+          path: |
+            out/android-ksu-arm64/*.txt
+            out/android-ksu-arm64/*.json
+            out/android-ksu-arm64/*.log
+            out/ksu/sdk-install.txt
+            out/ksu/patch-log.txt
+            out/ksu/helper-sha.txt
+            out/ksu/manager-hash-verified.txt
+            out/ksu/native-source-mode.txt
+          retention-days: 14
+          if-no-files-found: warn
