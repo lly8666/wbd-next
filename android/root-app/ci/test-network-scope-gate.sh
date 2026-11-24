@@ -10,6 +10,11 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/NetworkScopeGate.java \
   android/root-app/ci/NetworkScopeGateTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.NetworkScopeGateTest
+# B60 real production JVM decision, not a simulated Android network.
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootForegroundAutoReconnect.java \
+  android/root-app/ci/RootForegroundAutoReconnectTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootForegroundAutoReconnectTest
 # B27: execute exact production physical-underlay policy in plain JVM.
 # INTERNET capability is deliberately not an input to this function;
 # actual native socket+LinkProperties checks remain in PhysicalNetwork.
@@ -1751,4 +1756,19 @@ assert 'pub(crate) fn emit_physical_dns_tun_reply<' in dns
 assert 'crate::v4_android_ipv4_mtu::fragment(' in dns
 assert 'pub fn write_scoped_physical_dns_ipv4_fragment(' in io
 print("ANDROID_B59_NORMAL_GAME_PHYSICAL_EDNS_ORIGINAL_TUN_RFC791_SOURCE_PASS")
+PY
+
+python3 - <<'PY'
+from pathlib import Path
+p=Path("android/root-app/src/org/wbdnext/rootclient")
+a=(p/"RootClientActivity.java").read_text()
+s=(p/"RootClientService.java").read_text()
+for token in ("completeAutomaticColdSwitchIfReady();","RootClientService.networkStopRequested",
+              "autoHandover.complete(true,","networks.setSelection(matched);",
+              "autoHandover.cancel();","start();"):
+    assert token in a,token
+for token in ('networkStopRequested=why.startsWith("PHYSICAL_NETWORK_")',
+              "previousOwnerStopConfirmed=readyRecorded&&","watchPhysicalNetwork(chosen)"):
+    assert token in s,token
+print("ANDROID_B60_ORIGINAL_FOREGROUND_AUTO_COLD_RECONNECT_SOURCE_PASS")
 PY

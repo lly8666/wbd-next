@@ -44,6 +44,9 @@ public final class RootClientService extends Service {
     static volatile boolean sessionOwnerActive=false;
     static final AtomicBoolean startDispatchPending=new AtomicBoolean(false);
     static volatile boolean previousOwnerStopConfirmed=false;
+    // B60: only the original selected-Network callback may request
+    // a foreground cold handover; no background Root worker.
+    static volatile boolean networkStopRequested=false;
     private final AtomicBoolean running=new AtomicBoolean(false);
     private final AtomicBoolean stopping=new AtomicBoolean(false);
     private final AtomicBoolean stopSignalDispatched=new AtomicBoolean(false);
@@ -199,11 +202,13 @@ public final class RootClientService extends Service {
     @Override public int onStartCommand(Intent intent,int flags,int startId){
         if(intent==null){requestStop("Android restarted without original cold authorization");return START_NOT_STICKY;}
         if(STOP.equals(intent.getAction())){
+            networkStopRequested=false;
             requestStop("USER_REQUESTED");
             if(!running.get()&&!restoring.get())stopSelf(startId);
             return START_NOT_STICKY;
         }
         if(RESTORE.equals(intent.getAction())){
+            networkStopRequested=false;
             if(restoring.compareAndSet(false,true)){
                 notification();
                 trace(RootDiagnosticReceipt.Event.ROOT_RESTORE_REQUESTED);
@@ -222,6 +227,7 @@ public final class RootClientService extends Service {
         // asynchronous START reservation; the new Root is not READY yet.
         startDispatchPending.set(false);
         previousOwnerStopConfirmed=false;
+        networkStopRequested=false;
         stopping.set(false);
         stopSignalDispatched.set(false);
         trace(RootDiagnosticReceipt.Event.START_REQUESTED);
@@ -1038,6 +1044,7 @@ public final class RootClientService extends Service {
     }
     private void requestStop(String why){
         if(!running.get()||!stopping.compareAndSet(false,true))return;
+        networkStopRequested=why.startsWith("PHYSICAL_NETWORK_");
         trace(RootDiagnosticReceipt.Event.STOP_REQUESTED);
         status="STOP_REQUESTED ("+why+") — waiting for original Go/Rust joined Stop";
         // Before su launch: runRoot cancels at ownerLaunchLock.

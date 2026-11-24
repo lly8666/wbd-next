@@ -1,3 +1,13 @@
+## B60 · Optional foreground automatic cold Network recovery
+
+When the user opts in for this foreground Activity, the existing selected
+Network callback first stops the original Go/Rust owner and owned UID routes.
+After real joined Stop, the Activity chooses the currently available Android
+physical Wi-Fi/cellular/Ethernet Network and reuses its full native START.
+No background root restart, new packet worker or seamless hot migration.
+The option defaults OFF and cancels on manual Stop or Activity pause.
+Host/APK build success is not actual phone handover/E2E evidence.
+
 # Original Go/Rust Android ARM64 Root App — A5 experimental
 
 This is a **separate Android package** `org.wbdnext.rootclient`, NOT the

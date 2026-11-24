@@ -11,6 +11,8 @@ import android.os.Looper;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.os.Build;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,6 +42,9 @@ public final class RootClientActivity extends Activity {
     private final List<PhysicalNetwork> physical=new ArrayList<>();
     // B49: one foreground user-triggered cold reselect, never background Root restart.
     private final RootColdNetworkSwitch coldSwitch=new RootColdNetworkSwitch();
+    // B60: the existing foreground UI refresh owns this decision only.
+    private final RootForegroundAutoReconnect autoHandover=
+        new RootForegroundAutoReconnect();
     private final List<InstalledAppTarget> installedApps=new ArrayList<>();
     private final Map<String,CheckBox> checkedApps=new TreeMap<>();
     private final Map<String,CheckBox> checkedBypassApps=new TreeMap<>();
@@ -49,7 +54,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
     private TextView selectedAppsSummary,bypassSummary,presetResult,profileResult;
@@ -381,6 +386,7 @@ public final class RootClientActivity extends Activity {
     private final Runnable refreshStatus=new Runnable(){
         @Override public void run(){
             completeUserColdSwitchIfReady();
+            completeAutomaticColdSwitchIfReady();
             if(status!=null)status.setText(RootClientService.status);
             if(fecStatusText!=null)fecStatusText.setText(RootClientService.fecStatus);
             ui.postDelayed(this,1000);
@@ -417,6 +423,39 @@ public final class RootClientActivity extends Activity {
         // Original Activity start() owns all UID/secret/Network validation,
         // original FakeTCP/TLS/lease, Rust M4 and kernel journal.
         start();
+    }
+    // B60: exact Service Network loss -> existing original joined Stop ->
+    // real Android physical selection -> original Activity.start().
+    private void completeAutomaticColdSwitchIfReady(){
+        if(coldSwitch.pending()||autoNetworkRecovery==null||
+           !autoNetworkRecovery.isChecked())return;
+        if(autoHandover.armed()&&RootClientService.networkStopRequested)
+            autoHandover.onNetworkStop(true);
+        if(!autoHandover.pending()||RootClientService.sessionOwnerActive||
+           RootClientService.startDispatchPending.get())return;
+        chooseNetworks();
+        ConnectivityManager cm=getSystemService(ConnectivityManager.class);
+        Network active=cm==null?null:cm.getActiveNetwork();
+        long activeHandle=active==null?0:active.getNetworkHandle();
+        int matched=-1,only=-1,count=0;
+        for(int i=0;i<physical.size();i++){
+            PhysicalNetwork n=physical.get(i);
+            if(PhysicalNetwork.exact(this,n.handle,n.interfaceName,
+                n.ifindex,n.mtu,n.address)==null)continue;
+            count++;only=i;
+            if(activeHandle!=0&&n.handle==activeHandle)matched=i;
+        }
+        // LAN-only Network may have no system activeNetwork but can be
+        // unambiguous when it is the sole real physical underlay.
+        if(matched<0&&count==1)matched=only;
+        boolean ready=autoHandover.complete(true,
+            RootClientService.previousOwnerStopConfirmed,matched>=0);
+        if(!ready){
+            RootClientService.status="自动冷重连未执行：旧Go/Rust Stop未确认或没有唯一可用的实体Network；请手动选择并START";
+            return;
+        }
+        networks.setSelection(matched);
+        start(); // original Go FakeTCP/TLS/lease, Rust M4 and UID route
     }
     private EditText input(LinearLayout view,String label,int kind){
         TextView title=new TextView(this);
@@ -664,6 +703,7 @@ public final class RootClientActivity extends Activity {
         if(selected>=0&&selected<labels.length)profileSlots.setSelection(selected);
     }
     private void connectSelectedSavedProfile(){
+        autoHandover.cancel();
         final int slot=chosenProfileSlot();
         if(RootClientService.startDispatchPending.get()){
             profileResult.setText("当前已有原Root START在派发，请等完成后再切换");
@@ -960,6 +1000,8 @@ public final class RootClientActivity extends Activity {
             traceUi(RootDiagnosticReceipt.Event.UI_START_DISPATCH_REQUESTED);
             startForegroundService(request);
             traceUi(RootDiagnosticReceipt.Event.UI_START_DISPATCHED);
+            if(autoNetworkRecovery!=null&&autoNetworkRecovery.isChecked())
+                autoHandover.arm();
             // Save only validated non-secret UI settings. Physical Network
             // and authorized UID routing remain scoped to THIS Start.
             boolean remembered=true;
@@ -974,6 +1016,7 @@ public final class RootClientActivity extends Activity {
             // Preserve on-screen values for another Start in this Activity.
             // The keystore-backed snapshot also restores them after restart.
         }catch(Exception e){
+            autoHandover.cancel();
             if(claimedStart)RootClientService.startDispatchPending.set(false);
             traceUi(dispatchRequested
                 ?RootDiagnosticReceipt.Event.UI_START_DISPATCH_FAILED
@@ -1397,11 +1440,12 @@ public final class RootClientActivity extends Activity {
         presetResult.setTextIsSelectable(true);
         pane.addView(presetResult);
         Button connect=new Button(this);connect.setText("START — ROOT / ORIGINAL Go+Rust");
-        connect.setOnClickListener(v->{coldSwitch.cancel();start();});
+        connect.setOnClickListener(v->{coldSwitch.cancel();autoHandover.cancel();start();});
         pane.addView(connect);
         Button stop=new Button(this);stop.setText("STOP — WITHDRAW UID ROUTE / NATIVE JOIN");
         stop.setOnClickListener(v->{
             coldSwitch.cancel();
+            autoHandover.cancel();
             Intent i=new Intent(this,RootClientService.class);
             i.setAction(RootClientService.STOP);
             startService(i);
@@ -1415,6 +1459,7 @@ public final class RootClientActivity extends Activity {
         reselect.setText("切换实体Network：STOP旧会话，再刷新并手动START");
         reselect.setOnClickListener(v->{
             coldSwitch.cancel();
+            autoHandover.cancel();
             if(RootClientService.sessionOwnerActive||
                RootClientService.startDispatchPending.get()){
                 new AlertDialog.Builder(this)
@@ -1443,6 +1488,7 @@ public final class RootClientActivity extends Activity {
         Button oneShotSwitch=new Button(this);
         oneShotSwitch.setText("切换到选中Network：旧会话Stop完成后自动START一次");
         oneShotSwitch.setOnClickListener(v->{
+            autoHandover.cancel();
             if(!RootClientService.sessionOwnerActive||
                RootClientService.startDispatchPending.get()){
                 status.setText("没有可切换的活跃会话；请选择Network后手动START");
@@ -1473,9 +1519,21 @@ public final class RootClientActivity extends Activity {
             }
         });
         pane.addView(oneShotSwitch);
+        autoNetworkRecovery=new CheckBox(this);
+        autoNetworkRecovery.setText("前台自动冷重连（可选）：Network变化后完整STOP，再选当前真实物理网络重新认证；失败不循环，离开本页面即取消");
+        autoNetworkRecovery.setChecked(false);
+        autoNetworkRecovery.setOnCheckedChangeListener((button,checked)->{
+            if(!checked)autoHandover.cancel();
+            else if(RootClientService.sessionOwnerActive&&
+                    !RootClientService.networkStopRequested)
+                autoHandover.arm();
+        });
+        pane.addView(autoNetworkRecovery);
         Button restore=new Button(this);
         restore.setText("恢复网络（WBD临时Root防火墙/UID路由）");
-        restore.setOnClickListener(v->new AlertDialog.Builder(this)
+        restore.setOnClickListener(v->{
+            autoHandover.cancel();
+            new AlertDialog.Builder(this)
             .setTitle("恢复 WBD 临时Root网络")
             .setMessage("将停止当前原 Go/Rust owner，并只按私有root journal"+
                 "回滚WBD拥有的精确 OUTPUT RST防火墙规则、UID路由及私有表。"+
@@ -1487,7 +1545,8 @@ public final class RootClientActivity extends Activity {
                 i.setAction(RootClientService.RESTORE);
                 startForegroundService(i);
                 status.setText("已请求恢复；等待原Go精确内核读回");
-            }).show());
+            }).show();
+        });
         pane.addView(restore);
         Button inspectDNS=new Button(this);
         inspectDNS.setText("查看本会话DNS收发（本机脱敏收据，无Root/联网）");
@@ -1565,10 +1624,15 @@ public final class RootClientActivity extends Activity {
         chooseNetworks();
         chooseInstalledApplications();
         refreshNamedProfileChoices();
+        if(autoNetworkRecovery!=null&&autoNetworkRecovery.isChecked()&&
+           RootClientService.sessionOwnerActive&&
+           !RootClientService.networkStopRequested)
+            autoHandover.arm();
         ui.post(refreshStatus);
     }
     @Override protected void onPause(){
         coldSwitch.cancel(); // explicit authorization ends with foreground Activity
+        autoHandover.cancel();
         ui.removeCallbacks(refreshStatus);super.onPause();
     }
 }
