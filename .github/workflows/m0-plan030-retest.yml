@@ -1,0 +1,67 @@
+name: PLAN030 targeted fixture-only retest
+run-name: "PLAN030 H2395 mixed owner receipts after verified Windows integration | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/m0-030-server-cli]
+    paths: [.github/workflows/m0-plan030-retest.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  watch-pair:
+    # Already qualified; retain the old explicit manual reproduction only.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_PLAN030_BINARY_SOURCE: 1d6081c7b54e2804236072007fde1d73986ff3cb
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Reuse exact previous native x86_64 build; no product rebuild
+        run: |
+          set -euo pipefail
+          git diff --exit-code "$WBD_PLAN030_BINARY_SOURCE" HEAD -- crates Cargo.toml Cargo.lock r0 deploy/plan030 tools/m0_plan029_linux_dual_native_build.sh tools/plan030_package.py
+          gh run download 45344159343 --repo "$GITHUB_REPOSITORY" --name plan030-native-x86_64 --dir frozen
+          tar -xzf frozen/plan030-native-bundle.tar.gz
+          tar -xzf frozen/wbd-next-plan030-server.tar.gz
+          python3 - <<'PY'
+          import json,os,platform
+          for p in ("linux-plan029-public-bundle/manifest.json","wbd-next/manifest.json"):
+              m=json.load(open(p))
+              assert m["source_sha"]==os.environ["WBD_PLAN030_BINARY_SOURCE"]
+              assert m["architecture"]==platform.machine()
+          PY
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          (cd wbd-next && sha256sum -c SHA256SUMS)
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping iptables openssl python3
+      - name: Ordinary same-live-server watch A/B
+        run: |
+          set -o pipefail
+          mkdir -p fixed-kernel-result
+          WBD_PLAN030_WATCH=1 WBD_PLAN030_MANAGED=1 WBD_PLAN030_SYSTEMD=1 WBD_PLAN030_PACKAGE="$PWD/wbd-next" bash tools/m0-plan028-mixed-normal-game-native.sh "$PWD/linux-plan029-public-bundle" 2>&1 | tee plan030-functional.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan030-watch-pair-retest
+          path: |
+            plan030-functional.log
+            fixed-kernel-result/
+          if-no-files-found: warn
+  dispatch-windows-domain:
+    runs-on: ubuntu-24.04
+    permissions: {contents: read, actions: write}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify fixed PID contract before dispatch
+        run: python3 -m unittest tests.test_m0_wl_native_os_deadline tests.test_m0_wl_public_mss_contract tests.test_m4_frozen_windows_main_import -v
+      - name: Dispatch one original signed domain reconnect scenario
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=normal -f native_outer_mtu=default1460 -f outer_repair=on -f run_n0=false -f plan029_case=domain_reconnect
+          echo "Dispatched, not a functional PASS"

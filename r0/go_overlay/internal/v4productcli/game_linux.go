@@ -749,6 +749,8 @@ type originalGameCohortLive struct{
     gameFec bool // actual protected per-cohort Game fixed setting
     stopped bool
     laneRotations [4]uint64
+    managedAt time.Time
+    managedFECProfile uint8
 }
 func stageOriginalAuthenticatedGameLane(
     groups map[originalGameColdFlowKey]*originalGameCohortPending,
@@ -1086,6 +1088,11 @@ func runGameMultiServer(
             mu.Unlock()
         }
     }()
+    if c.management!=nil {
+        if e:=c.management.listen(runCtx);e!=nil{return e}
+        defer func(){cancel();c.management.close()}()
+        if e:=notifyManagedReady();e!=nil{return e}
+    }
     if c.mixedModes{
         log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=%d rust_native_slots=%d shared_rust_tun=1 decoy_max_splices=%d",c.localPort,originalV4ColdAssociationSlots,originalV4NativeLaneSlots,cap(cfg.FallbackSlots))
     }else{
@@ -1098,6 +1105,28 @@ func runGameMultiServer(
         select{
         case <-runCtx.Done():return nil
         case e:=<-failed:return e
+        case request:=<-managedRequests(c.management):
+            rows:=make([]managedClient,0,len(activeNormal)+len(active))
+            for key,rec:=range activeNormal {
+                row:=managedClientFor(key,rec.peer.IP,rec.lease,rec.managedAt)
+                row.RemotePort=rec.peer.Port
+                if normalPending[key]!=nil{row.State="rebuilding"}
+                if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
+                if f,e:=rec.product.OriginalFECReadback();e==nil {row.FEC=string(f.Mode);row.FECProfile=int(f.Profile)}
+                if p,e:=rec.product.OriginalLoopPulse();e==nil {row.RxRecords=&p.RxRecords;row.TxRecords=&p.TxRecords}
+                if o,e:=rec.product.OriginalOuterCounters();e==nil {row.FirstWireBytes=&o.FirstWireBytes}
+                rows=append(rows,row)
+            }
+            for key,rec:=range active {
+                row:=managedClientFor(key,rec.peers[0].IP,"",rec.managedAt)
+                row.RemotePort=rec.peers[0].Port
+                for k:=range gameProofPending{if k.Principal==key.Principal&&k.TunnelID==key.TunnelID{row.State="rebuilding";break}}
+                if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
+                if row.FEC=="" {row.FEC="off"}; if rec.gameFec {row.FEC="fixed";row.FECProfile=int(rec.managedFECProfile)}
+                if p,e:=rec.product.KernelCounters();e==nil {row.GameCopied=&p.Copied;row.GameDelivered=&p.Delivered}
+                rows=append(rows,row)
+            }
+            request<-managedSnapshot(c,tun.name,rows)
         case a:=<-established:
             if a==nil{continue}
             tlsWG.Add(1)
@@ -1231,7 +1260,7 @@ func runGameMultiServer(
                 }
                 rec:=&originalV4MultiRecord{
                     assoc:result.assoc,product:product,lease:lease,
-                    peer:peer,ready:true,
+                    peer:peer,ready:true,managedAt:time.Now(),
                 }
                 detached[result.assoc]=peer
                 if older!=nil{
@@ -1487,7 +1516,7 @@ func runGameMultiServer(
             }
             rec:=&originalGameCohortLive{
                 key:key,product:product,members:complete,peers:newPeers,
-                gameFec:gameCfg.GameFecEnabled,
+                gameFec:gameCfg.GameFecEnabled,managedAt:time.Now(),managedFECProfile:gameCfg.GameFecProfile,
             }
             for i,l:=range complete{
                 detached[l.Association()]=newPeers[i]
@@ -1564,6 +1593,7 @@ func runGameMultiServer(
             // One event-loop owner publishes the exact confirmed B. Later
             // Stop of A is generation-fenced in the existing shared TUN.
             olderSameEpoch:=active[proof.key]
+            for k,old:=range active{if k.Principal==proof.key.Principal&&k.TunnelID==proof.key.TunnelID&&old.managedAt.Before(rec.managedAt){rec.managedAt=old.managedAt}}
             active[proof.key]=rec
             *connected=true
             if olderSameEpoch!=nil{scheduleGameRetire(olderSameEpoch)}
@@ -1596,6 +1626,7 @@ func runGameMultiServer(
                 continue
             }
             older:=activeNormal[proof.key]
+            if older!=nil{rec.managedAt=older.managedAt}
             activeNormal[proof.key]=rec
             *connected=true
             log.Printf("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=%d source=authenticated_client_native_Health promoted=1 active_normal=%d old_route_preserved_until_proof=1",

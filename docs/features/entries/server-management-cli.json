@@ -2,23 +2,29 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "规划wbd-next中文菜单及同源子命令，管理持久安装、配置、客户端信息、启停和完整卸载；尚未实现。",
+  "summary": "PLAN030 限定功能验收通过：双ISA真实全CLI、安装混合设备、watch及真实Windows域名重连/设备快照/业务/owned Stop；旧Stop日志判据假红保留。",
   "owner": "M0",
   "stage": "experimental",
-  "development_branch": "main",
-  "main_development_reason": "用户2026-11-02授权规划后续服务端管理；按既有M0 main开发机制登记，当前不替换PLAN027任务。",
-  "available_on": [],
+  "development_branch": "experiment/m0-030-server-cli",
+  "available_on": [
+    "experiment/m0-030-server-cli",
+    "main"
+  ],
   "defaults": {
     "planned_listen": "0.0.0.0:443",
     "planned_server_name": "www.cisco.com",
     "planned_watch_interval": "2s，仅主动watch时读取已有统计"
   },
   "usage": {
-    "cli": "PLANNED: wbd-next无参数中文菜单，install/config/status/clients/start/stop/restart/logs/uninstall；当前二进制不可据此使用。",
-    "config": "PLANNED: listen、server-name、users；网卡/地址池等高级可选，客户端独立协商参数由既有认证功能接入。",
+    "cli": "wbd-next help；install/config/status/clients/start/stop/restart/logs/uninstall/serve；双ISA普通CLI真实验收通过。",
+    "config": "listen/server-name/users，route-key-hex-file；可选 raw-interface、tun-name、tun-ipv4、lease-pool、decoy、public-address；仍由现有shared服务器parse校验。；高级可选 manual-client-leases（复用028固定账号/32）、peer-persona。",
     "gui": "服务端仅终端菜单，不新建Web或桌面GUI。"
   },
-  "code_refs": [],
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/management_linux.go",
+    "r0/go_overlay/internal/v4productcli/management_snapshot_linux.go",
+    "deploy/plan030/wbd-next"
+  ],
   "doc_refs": [
     "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
     "docs/decisions/M0-LEGACY-ROLLOUT-20261102.md",
@@ -26,19 +32,93 @@
   ],
   "verification": [
     {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "b0775de 初批原生构建、systemd生命周期、三设备前台真实管理快照",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b0775de27edf3bd8692f605fc7eec8fcb39ae1f3",
+      "evidence": "docs/evidence/M0/20261124-H2386-PLAN030-INITIAL-NATIVE.json"
+    },
+    {
       "platform": "linux/amd64 + linux/arm64 systemd",
-      "scope": "简化配置、真实安装/启停/客户端快照/owned卸载及打包",
-      "status": "PLANNED",
-      "source_sha": null,
-      "evidence": null
+      "scope": "81c393b实际安装服务、三设备不同模式/MTU/cipher、48 UDP echoes each、生命周期",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "81c393b4274f136473534db546ae153b36ae9e97",
+      "evidence": "docs/evidence/M0/20261124-H2387-PLAN030-COMBINED-NATIVE.json"
+    },
+    {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "1d6081c 双ISA原生构建及systemd真实三设备与生命周期",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2388-PLAN030-PARALLEL-RESULT.json"
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "watch同机对照报告夹具失败，非产品性能结论",
+      "status": "FAIL",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2388-PLAN030-PARALLEL-RESULT.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64",
+      "scope": "域名重连前置PID测试夹具失败，真实网络未运行",
+      "status": "NOT_RUN",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2388-PLAN030-PARALLEL-RESULT.json"
+    },
+    {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "实际系统安装、全部普通CLI、真实PTY菜单账号增改删、日志、重装、卸载取消/确认；原产品包不变",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2390-PLAN030-CLI-WATCH-PASS.json"
+    },
+    {
+      "platform": "linux/amd64",
+      "scope": "相同原生服务和三设备实际100pps A/B watch，1200/1200每轮、CPU/RSS/p99实测，无显著异常",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+      "evidence": "docs/evidence/M0/20261124-H2390-PLAN030-CLI-WATCH-PASS.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64",
+      "scope": "两次真实域名组合；原始产物审计确认第二代Ready/GUI判据失败或第二代未发起；快照未达",
+      "status": "FAIL",
+      "source_sha": "600d541b9d7ce63d11409562bad8f40ad41457fd",
+      "evidence": "docs/evidence/M0/20261124-H2393-PLAN030-GUI-RECONNECT-ARTIFACT-AUDIT.json"
+    },
+    {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "9ff0ed0实际双ISA构建、systemd、混合客户端、watch复验",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+      "evidence": "docs/evidence/M0/20261124-H2395-PLAN030-MANAGED-RECONNECT-RECEIPTS.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64",
+      "scope": "两独立真实GUI域名重连、第二代managed snapshot FEC off/协商1389、两代OS MTU与Stop，完整组合后续旧MSS判据FAIL，业务未达",
+      "status": "FAIL",
+      "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+      "evidence": "docs/evidence/M0/20261124-H2395-PLAN030-MANAGED-RECONNECT-RECEIPTS.json"
+    },
+    {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "实际包校验、原生构建、systemd/混合设备/watch，普通CLI历史同源资格",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+      "evidence": "docs/evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux WSL2 amd64",
+      "scope": "用户授权假红限定验收：真实两代域名、快照、内核TCP/UDP、DNS与两端owned Stop原始回执；原Action FAIL保留，未执行后置夹具不冒称通过",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "153a2fed9c7af6b491f5e5528c8d9e5a5ca78229",
+      "evidence": "docs/evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json"
     }
   ],
   "limitations": [
-    "仅设计预登记，非IMPLEMENTED或PASS；当前认证/多客户端配置接线能力不得从菜单方案推断。",
-    "不含在线升级平台；OpenWrt复用独立procd工作，不从systemd资格推断。",
-    "当前M0 PLAN027和在途Actions不变，后续实施按原任务机制接续。",
-    "原独立CLI提案已撤回并由PLAN030吸收，依赖PLAN028真实会话/config接口；本卡仍仅PLANNED。",
-    "PLAN030后续约定：无新增必填server MTU/内层字段；沿client外层意图与本地约束自动派生，clients分列外层设置/有效外层/自动内层。仍仅PLANNED。"
+    "方向外层设置/有效外层、客户端OS应用及真实业务字节、休眠租约、样本年龄未由原有生产接口提供，明确未知；不另造wire字段和热路径统计。",
+    "真实Windows DNS域名重连、业务及owned Stop已限定验收；原Action假红，Linux进程退出码和后置夹具未单独采集，机器重启、OpenWrt、物理公网未验。"
   ],
   "promotion": null
 }

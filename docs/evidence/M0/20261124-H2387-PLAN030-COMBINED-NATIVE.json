@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "source_sha": "81c393b4274f136473534db546ae153b36ae9e97",
+  "role_id": "M0",
+  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
+  "result": "PASS_SCOPED",
+  "artifact_verified": false,
+  "scope": "Native dual ISA build; installed systemd actual 3 devices with distinct MTU/cipher/modes, 48 genuine UDP echoes per ISA and owned lifecycle; inspected job log markers; no independent artifact download claim",
+  "run_id": 45342878694,
+  "run_attempt": 1,
+  "jobs": [
+    138270436475,
+    138270436979,
+    138271747680,
+    138271747736,
+    138271747811,
+    138271747817
+  ],
+  "artifacts": [
+    {
+      "id": 14896907438,
+      "architecture": "x86_64",
+      "digest": "sha256:2fa9f6522bc3596d0fd3ca13ab25bc41630c114fbecfb621b4e468debb81d53c"
+    },
+    {
+      "id": 14896154331,
+      "architecture": "aarch64",
+      "digest": "sha256:8bb5bdb374aa27d6bc93cb686d4e5c095826b939494a41bab9761728c6be9d18"
+    }
+  ],
+  "limitations": [
+    "Windows domain reconnect and watch pending",
+    "not physical machine reboot",
+    "unavailable remote OS and business telemetry remain explicitly unknown"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
+  "source_sha": "600d541b9d7ce63d11409562bad8f40ad41457fd",
+  "result": "FAIL",
+  "runs": [
+    {
+      "id": 45349332671,
+      "job_id": 138293849183,
+      "artifact_id": 14900436230,
+      "actual": "first Stop PASS, second genuine TLS/OS Applied/READY and ongoing native TX/RX; GUI second state/MTU predicate FAIL, second Stop PASS; managed snapshot not reached"
+    },
+    {
+      "id": 45349327390,
+      "job_id": 138293904257,
+      "artifact_id": 14900446315,
+      "actual": "first genuine OS Applied/READY and owned Stop PASS; no second SYN/GUI receipt; managed snapshot not reached"
+    }
+  ],
+  "older": {
+    "id": 45345844201,
+    "artifact_id": 14899520067,
+    "actual": "first original Ready and Stop; second generation absent"
+  },
+  "diagnostic": "Downloaded original ZIPs and read client.log/report.json. Existing fixture uses Application.DoEvents without outer Application.Run and direct asynchronous MainForm calls in managed scene; possible lost STA synchronization context. Repair fixture to run on actual WinForms message loop, retain all original real Ready/MTU/Stop, remote snapshot and business gates; failure diagnostic includes state/MTU and booleans. No claim of product root cause or new pass."
+}

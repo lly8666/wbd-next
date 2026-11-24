@@ -1,6 +1,6 @@
 # PLAN030｜服务端管理CLI、打包与组合交付
 
-PLANNED；吸收并替代已撤回的独立 `M0-SERVER-CLI-SIMPLIFICATION-20261102.md`，不是另一项同时施工任务。读[总入口](M0-LEGACY-ROLLOUT-20261102.md)、[提示词](../prompts/M0-PLAN030.md)。配置/账号/IP/单端口语义归028，域名客户端与GUI归029；本包提供薄管理层，不复制业务控制器。
+2026-11-24 H2396 限定范围功能验收通过并批准集成；原始Action假红不重测，详细证据见[限定收口](../evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json)。吸收并替代已撤回的独立 `M0-SERVER-CLI-SIMPLIFICATION-20261102.md`，不是另一项同时施工任务。读[总入口](M0-LEGACY-ROLLOUT-20261102.md)、[提示词](../prompts/M0-PLAN030.md)。配置/账号/IP/单端口语义归028，域名客户端与GUI归029；本包提供薄管理层，不复制业务控制器。
 
 ## 1. 最小配置与中文入口
 

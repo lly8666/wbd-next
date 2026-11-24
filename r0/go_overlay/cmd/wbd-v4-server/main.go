@@ -5,4 +5,4 @@ import (
  "os"
  "github.com/lly8666/wobuzhidao/internal/v4productcli"
 )
-func main(){if err:=v4productcli.Run("server",os.Args[1:]);err!=nil{log.Fatal(err)}}
+func main(){args:=os.Args[1:];var err error;if len(args)>0&&args[0]=="--manage"{err=v4productcli.ManageServer(args[1:])}else{err=v4productcli.Run("server",args)};if err!=nil{log.Fatal(err)}}

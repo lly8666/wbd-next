@@ -107,11 +107,25 @@ public static class Plan029GuiReal {
   throw new IOException("real CN DNS reply after TTL/reconnect missing");
  }
  [STAThread]public static int Main(string[] argv){
+  Application.EnableVisualStyles();
+  Application.SetCompatibleTextRenderingDefault(false);
+  // Use the actual outer WinForms message loop. Standalone DoEvents can
+  // uninstall the synchronization context between direct async UI actions.
+  int result=1;
+  using(var launch=new System.Windows.Forms.Timer{Interval=1}){
+   launch.Tick+=(sender,e)=>{
+    launch.Stop();
+    try{result=RunScene(argv);}finally{Application.ExitThread();}
+   };
+   launch.Start();
+   Application.Run();
+  }
+  return result;
+ }
+ static int RunScene(string[] argv){
   MainForm form=null;ClientSession client=null;
   try{
    Need(argv.Length==2,"expected protected portable root and seed file");
-   Application.EnableVisualStyles();
-   Application.SetCompatibleTextRenderingDefault(false);
    string dir=Path.GetFullPath(argv[0]);
    string file=Path.GetFullPath(argv[1]);
    Need(file.StartsWith(dir.TrimEnd(Path.DirectorySeparatorChar)+
@@ -181,7 +195,13 @@ public static class Plan029GuiReal {
    if(normalReconnect){
     // Normal user-disconnect then user-connect only. No power cut,
     // forced process kill, new service, injected network fault or timer.
-    Click(form,"断开连接");
+    if(Environment.GetEnvironmentVariable("WBD_PLAN030_MANAGED_COMBO")=="1"){
+     // Invoke the same real MainForm action; expose exceptions instead of
+     // leaving a modal dialog blocking the unattended test runner.
+     var stopFirst=form.DisconnectAsync();
+     clock.Restart();while(!stopFirst.IsCompleted && clock.ElapsedMilliseconds<34000)Tick();
+     Need(stopFirst.IsCompleted,"managed combination first GUI Stop did not return");stopFirst.GetAwaiter().GetResult();
+    }else Click(form,"断开连接");
     clock.Restart();
     while(clock.ElapsedMilliseconds<34000){
      Tick();
@@ -198,7 +218,10 @@ public static class Plan029GuiReal {
     Console.WriteLine("PLAN029_H2061_NORMAL_GUI_FIRST_DISCONNECT_WAL_ABSENT_PASS");
     Console.Out.Flush();
     ready=false;applied=false;inner=false;
-    Click(form,"连接 / 切换");
+    if(Environment.GetEnvironmentVariable("WBD_PLAN030_MANAGED_COMBO")=="1"){
+     var second=form.ConnectSelectedAsync();clock.Restart();while(!second.IsCompleted&&clock.ElapsedMilliseconds<25000)Tick();
+     Need(second.IsCompleted,"managed combination second GUI Connect did not return");second.GetAwaiter().GetResult();
+    }else Click(form,"连接 / 切换");
     Console.WriteLine("PLAN029_H2064_SECOND_REAL_GUI_ENABLED_BUTTON_CLICKED");
     Console.Out.Flush();
     clock.Restart();
@@ -215,7 +238,9 @@ public static class Plan029GuiReal {
      Label(form,"state").Contains("系统 Applied") &&
      Label(form,"mtuStatus").Contains("1460B") &&
      Label(form,"mtuStatus").Contains("1389B"),
-     "second normal GUI original Go/Rust OS Applied missing");
+     "second normal GUI original Go/Rust OS Applied missing; ready="+ready+
+     " applied="+applied+" inner="+inner+" active="+client.Active+
+     " state="+Label(form,"state")+" mtu="+Label(form,"mtuStatus"));
     Console.WriteLine("PLAN029_H2061_NORMAL_GUI_RECONNECT_SECOND_APPLIED");
     Console.Out.Flush();
     if(dnsTtl)QueryRealCnDns(3);
@@ -260,7 +285,7 @@ public static class Plan029GuiReal {
    Console.WriteLine("PLAN029_REAL_GUI_WINFORMS_BUTTON_STOP_WAL_ABSENT_PASS");Console.Out.Flush();
    return 0;
   }catch(Exception e){
-   Console.Error.WriteLine("PLAN029_REAL_GUI_FIRST_FAILURE "+e.GetType().Name+" "+e.Message);
+   Console.Error.WriteLine("PLAN029_REAL_GUI_FIRST_FAILURE "+e.GetType().Name+" "+e.Message+" "+e.StackTrace);
    return 1;
   }finally{
    if(form!=null){
