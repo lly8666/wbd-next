@@ -32,6 +32,12 @@ func TestM0CrashV2NativeRecovery(t *testing.T){
   if _,err=rand.Read(id.Installation[:]);err!=nil{t.Fatal(err)}
   if _,err=rand.Read(id.Generation[:]);err!=nil{t.Fatal(err)}
   pin,err:=n4ProbeOriginalWintunPnP(ctx,id);if err!=nil{t.Fatal(err)};id.PnPInstanceSHA256=pin.InstanceSHA256
+  // A stale GUID with a real currently occupied interface index/LUID is
+  // absent for v2 recovery; it must not adopt the other adapter.
+  stale:=id
+  stale.WintunGUID="{0f853251-6cf5-49a7-9884-7f93d0782413}"
+  state,err:=n4InspectOriginalWintunForRecovery(ctx,stale)
+  if err!=nil||state!=N4UnifiedAbsent{t.Fatal("stale GUID with reused index",state,err)}
   owner:=N4WindowsCreatedWintunReservation{Tunnel:tun,Installation:id.Installation,Generation:id.Generation}
   // Reuse H1697's real original compact plan and stage assembler; a
   // one-route fake plan is not accepted by production route grammar.
@@ -52,6 +58,10 @@ func TestM0CrashV2NativeRecovery(t *testing.T){
    if err=txn.Apply(ctx);!errors.Is(err,m0CrashDNSFailure){t.Fatal("partial",err)}
   }else{
    if err=txn.Apply(ctx);err!=nil{t.Fatal("actual full compact Apply",err)}
+   if scene=="gone"{
+    // Emulate OS removal before WAL retirement, leaving the physical escape receipt.
+    if err=tun.Close();err!=nil{t.Fatal("remove original Wintun",err)}
+   }
    if scene=="normal"{
     if err=txn.Recover(ctx);err!=nil{t.Fatal(err)}
     if err=txn.VerifyLiveOSDisconnected(ctx);err!=nil{t.Fatal(err)}
@@ -63,7 +73,7 @@ func TestM0CrashV2NativeRecovery(t *testing.T){
   for{time.Sleep(time.Second)}
  }
  if os.Getenv("WBD_M0_CRASH_REAL")!="1"||os.Getenv("GITHUB_ACTIONS")!="true"{t.Skip("requires disposable Windows runner and signed Wintun")}
- for _,scene:=range []string{"normal","partial","full"}{t.Run(scene,func(t *testing.T){m0CrashScenario(t,scene)})}
+ for _,scene:=range []string{"normal","partial","full","gone"}{t.Run(scene,func(t *testing.T){m0CrashScenario(t,scene)})}
 }
 func m0CrashScenario(t *testing.T,scene string){
  var salt [8]byte;if _,err:=rand.Read(salt[:]);err!=nil{t.Fatal(err)}
@@ -77,7 +87,7 @@ func m0CrashScenario(t *testing.T,scene string){
  until:=time.Now().Add(40*time.Second)
  for{if _,err:=os.Stat(path+".ready");err==nil{break};if time.Now().After(until){t.Fatal("real child not ready")};time.Sleep(100*time.Millisecond)}
  j,err:=n4UnifiedRead(path+".n4-owned-wal");if err!=nil{t.Fatal(err)}
- if scene=="full"&&(len(j.Records)!=4||j.Phase!="active"){t.Fatal("real four stages not active")}
+ if (scene=="full"||scene=="gone")&&(len(j.Records)!=4||j.Phase!="active"){t.Fatal("real four stages not active")}
  if scene=="partial"&&(len(j.Records)!=3||j.Records[2].State!="intent"){t.Fatal("real partial state missing")}
  if err=child.Process.Kill();err!=nil{t.Fatal(err)}
  if err=child.Wait();err==nil{t.Fatal("child did not crash")};stopped=true

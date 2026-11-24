@@ -69,7 +69,7 @@ jobs:
             if($LASTEXITCODE -ne 0){throw 'actual native recovery failed'}
           }finally{Pop-Location}
           $log=Get-Content native-recovery.log -Raw
-          foreach($marker in @('M0_REAL_V2_NORMAL_STOP_PASS','M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS scene=partial','M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS scene=full')){if($log -notmatch [regex]::Escape($marker)){throw "missing $marker"}}
+          foreach($marker in @('M0_REAL_V2_NORMAL_STOP_PASS','M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS scene=partial','M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS scene=full','M0_REAL_V2_WINTUN_CHILD_CRASH_NATIVE_RECOVERY_PASS scene=gone')){if($log -notmatch [regex]::Escape($marker)){throw "missing $marker"}}
       - name: Real WinForms portable GUI self-test including stopped child window close
         if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.frozen.outcome == 'success' }}
         shell: pwsh

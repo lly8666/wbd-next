@@ -2073,13 +2073,29 @@
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_persisted_recover_windows.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_persisted_recover_windows.go",
-      "result_blob": "01e9ddef049ef4c4fef5c432f33975dd111abf0c"
+      "result_blob": "f5b6796d588f4613339d4564bdc9c3640c181875"
     },
     {
       "kind": "create",
       "path": "internal/windowsclient/native_plan029_persisted_recover_windows_test.go",
       "overlay_path": "r0/go_overlay/internal/windowsclient/native_plan029_persisted_recover_windows_test.go",
-      "result_blob": "a45eadd96cbc95dcf3774132caed59cfa4c50e0a"
+      "result_blob": "cb2cea97bcee629c7bf3b9ea2252dbef34f5702a"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/native_orphan_empty_wal_windows.go",
+      "original_blob": "90ddd12af25504da0c2732bae0df0ae31e0b44ec",
+      "result_blob": "0f00b40fafd9f07fdaf0bc648b03537bff3a8fd7",
+      "patches": [
+        {
+          "find": "func n4InspectOriginalWintun(ctx context.Context,id N4UnifiedIdentity)(N4UnifiedState,error){",
+          "replace": "func n4InspectOriginalWintun(ctx context.Context,id N4UnifiedIdentity)(N4UnifiedState,error){\n return n4InspectOriginalWintunMode(ctx,id,false)\n}\n\n// V2 recovery identifies a disappeared adapter by its durable GUID, not\n// by historical interface indices that Windows may recycle independently.\nfunc n4InspectOriginalWintunForRecovery(ctx context.Context,id N4UnifiedIdentity)(N4UnifiedState,error){\n return n4InspectOriginalWintunMode(ctx,id,true)\n}\nfunc n4InspectOriginalWintunMode(ctx context.Context,id N4UnifiedIdentity,recovery bool)(N4UnifiedState,error){"
+        },
+        {
+          "find": "   hit:=observed==guid || row.IfIndex==id.WintunIndex ||",
+          "replace": "   if recovery && observed!=guid {continue}\n   hit:=observed==guid || row.IfIndex==id.WintunIndex ||"
+        }
+      ]
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

@@ -30,13 +30,12 @@ type n4StoppedNoWFPRoutes struct{
 }
 func(b n4StoppedNoWFPRoutes) Lookup(ctx context.Context,key NativeRouteKey)(bool,bool,error){
  if b.gone&&key.Interface==b.id.WintunIndex{
-  if err:=n4OriginalWintunAbsent(ctx,b.id);err!=nil{return false,false,err}
   return false,false,nil
  }
  return b.N4WindowsRouteBackend.Lookup(ctx,key)
 }
 func(b n4StoppedNoWFPRoutes) RemoveOwned(ctx context.Context,key NativeRouteKey)error{
- if b.gone&&key.Interface==b.id.WintunIndex{return n4OriginalWintunAbsent(ctx,b.id)}
+ if b.gone&&key.Interface==b.id.WintunIndex{return nil}
  return b.N4WindowsRouteBackend.RemoveOwned(ctx,key)
 }
 
@@ -52,17 +51,17 @@ func n4RecoverNoWFPPersisted(ctx context.Context,path string)error{
  if err!=nil{return err}
  if j.Schema!=n4UnifiedSchemaNoWFP{return ErrN4JournalConflict}
  id:=j.Identity
- original,err:=n4InspectOriginalWintun(ctx,id)
- if err!=nil{return err}
+ original,err:=n4InspectOriginalWintunForRecovery(ctx,id)
+ if err!=nil{return fmt.Errorf("inspect original Wintun: %w",err)}
  if original!=N4UnifiedOwned&&original!=N4UnifiedAbsent{return ErrN4ForeignRoute}
  gone:=original==N4UnifiedAbsent
  missingIP:=gone
  if !gone {
   // A common TerminateProcess result is an exact original ghost adapter
   // with no IPv4 row. Do not require restoring an MTU on a vanished row.
-  if _,err:=n4ProbePinnedOriginalWintunPnP(ctx,id);err!=nil{return err}
+  if _,err:=n4ProbePinnedOriginalWintunPnP(ctx,id);err!=nil{return fmt.Errorf("inspect original Wintun PnP: %w",err)}
   rows,err:=n4ProbeOriginalIPRows(ctx,id)
-  if err!=nil{return err}
+  if err!=nil{return fmt.Errorf("inspect original Wintun IP rows: %w",err)}
   missingIP=rows.IPv4=="MISSING_1168"
  }
  owner:=n4StoppedNoWFPOwner{id}
