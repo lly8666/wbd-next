@@ -1876,6 +1876,29 @@ mod m0_fec2_full_mtu_repair_body_contract {
         parse_repair,BackendChoice,Profile,Rs16,RECORD_RESERVATION,REPAIR_HEADER,
     };
     #[test]
+    fn b97_android_fec2_inner_and_record_budget_do_not_double_reserve(){
+        use wbd_codec::path_budget::{FrameBudget,FrameBudgetInput,FecReservation};
+        let input=FrameBudgetInput{connection_mtu:1460,local_packet_mtu:1500,
+            ipv4_header_len:20,tcp_header_len:20,peer_mss:Some(1420),
+            record_wire_limit:1420,fec:FecReservation::V3Fec2Fixed,game:false};
+        let inner=FrameBudget::derive(input).unwrap();
+        let record=FrameBudget::derive(FrameBudgetInput{fec:FecReservation::FixedOff,..input}).unwrap();
+        assert_eq!(inner.single_business_payload_mtu,1375);
+        assert_eq!(inner.fec_overhead,14);
+        assert_eq!(record.fec_overhead,0);
+        assert_eq!(inner.record_payload_mtu,record.record_payload_mtu);
+        assert_eq!(inner.record_wire_mtu,record.record_wire_mtu);
+        assert_eq!(inner.peer_mss,record.peer_mss);
+        let packet=vec![0x6a;inner.single_business_payload_mtu];
+        let (encoded,_)=Rs16::new().encode_owned(
+            1,&[packet.as_slice()],Profile::Maximum,0,1,
+            record.record_payload_mtu,BackendChoice::Scalar,
+        ).expect("same full sized original FEC repair");
+        assert_eq!(encoded[0].len(),record.record_payload_mtu);
+        let repair=parse_repair(&encoded[0],record.record_payload_mtu).unwrap();
+        assert!(original_fec2_repair_symbol_fits(repair.body.len(),record.record_payload_mtu));
+    }
+    #[test]
     fn m0_fec2_kind3_full_mtu_repair_budget_invariant(){
         // Outer 1500 / auth record budget for Fixed: one genuine near-TUN-MTU
         // source reaches maximum, and protected repair length adds 2B.

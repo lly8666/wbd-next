@@ -216,7 +216,7 @@ func RunAndroidSpecialtyCI(a []string)int{
   if e=b90Routes(scope,ids[0],ids[1],ids[2],ids[3],raw,strings.TrimPrefix(a[0],"route-"));e!=nil{fmt.Println("B90_ROUTES_FAIL",e);return 1}
   if _,e=b90IP("link","show","dev","wbdb90");e==nil{fmt.Println("B90_TUN_CLOSE_FAIL");return 1}
   fmt.Println("B90_TUN_CLOSE_PASS")
- case "system-physical","system-tunnel","system-cn":
+ case "system-physical","system-physical-tc","system-tunnel","system-cn":
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
   if e=b91SystemDNS(scope,uid,a[0]);e!=nil{fmt.Println("B91_SYSTEM_DNS_FAIL",e);return 1}
  case "normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed":
@@ -261,7 +261,7 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   androidAppTCPDNS:true,androidSystemDNS:true,
   androidPhysicalDNSUpstream:netip.MustParseAddr("10.0.2.2"),
   androidTunnelDNSUpstream:netip.MustParseAddr("192.0.2.53")}
- c.androidPhysicalDNS=mode=="system-physical"
+ c.androidPhysicalDNS=mode=="system-physical"||mode=="system-physical-tc"
  c.androidTunnelDNS=mode=="system-tunnel"
  c.androidCNDNSSplit=mode=="system-cn"
  if c.androidPhysicalDNS||c.androidCNDNSSplit{
@@ -288,7 +288,10 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   qctx,qcancel:=context.WithTimeout(ctx,10*time.Second);defer qcancel()
   return b91Instrument(qctx,uid,"-e","dns_probe","system","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_name",name,"-e","expected_ip",expected)
  }
- if c.androidPhysicalDNS{if e=query("system.wbd-b91.test","192.0.2.55");e!=nil{return e}}
+ if c.androidPhysicalDNS{
+  name:="system.wbd-b91.test";if mode=="system-physical-tc"{name="tc.wbd-b90.test"}
+  if e=query(name,"192.0.2.55");e!=nil{return e}
+ }
  if c.androidTunnelDNS{if e=query("tunnel.wbd-b91.test","192.0.2.56");e!=nil{return e}}
  if c.androidCNDNSSplit{
   if e=query("cn.wbd-b91.test","192.0.2.55");e!=nil{return e}

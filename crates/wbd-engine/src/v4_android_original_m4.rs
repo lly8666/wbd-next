@@ -894,16 +894,25 @@ fn tun_worker(
     #[cfg(feature="fec2_product_record")]
     let mut pending_fixed=None::<PendingAndroidFixedIpv4>;
     let mut next_packet_id=1u32;
-    let frame=match cell.lock(){
+    // Derive both views once from the SAME negotiated owner, MTU and MSS.
+    // The FEC view reserves 14 bytes for the inner IP. The record view
+    // is passed to the shared M3 kind2/3 sealer AFTER encoding the FEC
+    // header. Passing the reserved view there was rejected (fec_overhead!=0).
+    let (frame,record_frame)=match cell.lock(){
         Ok(e)=>match e.android_physical.as_ref() {
-            Some(s)=>match if e.protected_features==7{
+            Some(s)=>{
+                let Ok(record)=e.owner.android_normal_off_frame_budget(s.mtu)
+                    else{shutdown.store(true,Ordering::Release);return};
                 #[cfg(feature="fec2_product_record")]
-                {e.owner.android_fixed_frame_budget(s.mtu)}
+                {
+                    if e.protected_features==7{
+                        let Ok(inner)=e.owner.android_fixed_frame_budget(s.mtu)
+                            else{shutdown.store(true,Ordering::Release);return};
+                        (inner,record)
+                    }else{(record,record)}
+                }
                 #[cfg(not(feature="fec2_product_record"))]
-                {e.owner.android_normal_off_frame_budget(s.mtu)}
-            }else{e.owner.android_normal_off_frame_budget(s.mtu)}{
-                Ok(value)=>value,
-                Err(_)=>{shutdown.store(true,Ordering::Release);return}
+                { (record,record) }
             },
             None=>{shutdown.store(true,Ordering::Release);return}
         },
@@ -1007,7 +1016,7 @@ fn tun_worker(
                     retire=true;break
                 };
                 let sent=send_android_fixed_source(
-                    &mut e,slab,n,frame,plan.physical_mtu,&raw,&stats,
+                    &mut e,slab,n,record_frame,plan.physical_mtu,&raw,&stats,
                     &mut storage,&mut wire_scratch,now(),
                     plan.offset==0
                 );
@@ -1220,7 +1229,7 @@ fn tun_worker(
                 if e.phase==PH_ACTIVE{
                     if e.protected_features==7{
                         if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
-                            send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
+                            send_android_fixed_due(&mut e,record_frame,mtu,&raw,&stats,
                                 &mut storage,&mut wire_scratch,now());
                         }
                     }
@@ -1366,7 +1375,7 @@ fn tun_worker(
                 #[cfg(feature="fec2_product_record")]
                 if e.protected_features==7{
                     if send_android_fixed_source(
-                        &mut e,slab,n,frame,physical,&raw,&stats,
+                        &mut e,slab,n,record_frame,physical,&raw,&stats,
                         &mut storage,&mut wire_scratch,at,true
                     ){
                         clock.on_local_business(at.0);
@@ -1580,7 +1589,7 @@ fn tun_worker(
             if e.phase==PH_ACTIVE{
                 if e.protected_features==7{
                     if let Some(mtu)=e.android_physical.as_ref().map(|x|x.mtu){
-                        send_android_fixed_due(&mut e,frame,mtu,&raw,&stats,
+                        send_android_fixed_due(&mut e,record_frame,mtu,&raw,&stats,
                             &mut storage,&mut wire_scratch,now());
                     }
                 }

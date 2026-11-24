@@ -1,3 +1,7 @@
+## B97｜Fixed/Auto record budget 与 FEC source/parity（当前）
+
+B96 `bae7a69c2d47a91ea0fd3813474e8985b38a4677` [Action 45503675129](https://github.com/lly8666/wbd-next/actions/runs/45503675129) 19/1/6，8/9 guest完整PASS，9/9 cleanup；24/24 UID回显、3/3 Resolver DNS/Stop、7/7原TLS/M4/Stop、5/7实际 App TX。Fixed/Auto App socket成功而 RAW copy不增，源码发现14B reserved inner budget被共享M3已编码record入口拒绝。B97仅同owner冷态分离两视图、保持原MTU/PN/AEAD/Stop；两FEC独立guest及32包真实source/parity，另DNS TC→TCP新guest。详见 [B97 devlog](../devlog/android-root-probe/20261125-b97-fixed-record-budget.md)。remote M4/repair/M2 APPLIED及READY自动恢复未证。
+
 ## B96｜专项编译解阻与同源 fixture 复用（当前）
 
 B95 `6545a6940d7973fd8b56d6e6beebb2a67fe8380a` [Action 45432269092](https://github.com/lly8666/wbd-next/actions/runs/45432269092) 6/1/10，CI adapter `route:func` 误写导致编译失败，全部 guest NOT_RUN。B96 修正声明并增加早期 AST/bash/Python/Java fixture admission；九 guest 复用同 SOURCE+SHA256 的普通 App APK；原 B95 DNS/前台 UID/7模式逐 socket TX/Stop 验收继续执行。生产路径不变。详见 [B96 devlog](../devlog/android-root-probe/20261125-b96-specialty-build-unblock.md)。

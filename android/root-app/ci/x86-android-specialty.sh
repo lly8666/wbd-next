@@ -39,10 +39,12 @@ shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
  routes) scenes=(route-single route-group route-all);;
  route-single|route-group|route-all) scenes=("$shard");;
- normal) scenes=(normal fec-fixed fec-auto);;
+ normal) scenes=(normal);;
+ fec-fixed|fec-auto) scenes=("$shard");;
  game2) scenes=(game2 game2-fixed);;
  game4) scenes=(game4 game4-fixed);;
  dns-physical) scenes=(system-physical);;
+ dns-tc) scenes=(system-physical-tc);;
  dns-tunnel) scenes=(system-tunnel);;
  dns-cn) scenes=(system-cn);;
  all) scenes=(system-physical system-tunnel system-cn route-single route-group route-all normal fec-fixed fec-auto game2 game2-fixed game4 game4-fixed);;
@@ -57,7 +59,7 @@ cleanup(){
 }
 trap cleanup EXIT
 # Real local DNS fixture; a failure cannot block independent native tests.
-if [[ "$shard" == dns-physical || "$shard" == dns-cn || "$shard" == all ]];then
+if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == all ]];then
  sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
  dns_pid=$!
  for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
@@ -90,7 +92,7 @@ clean=1
 if ! clean_kernel baseline;then clean=0;fi
 for scene in "${scenes[@]}";do
  if [[ "$clean" != 1 ]];then record "$scene" NOT_RUN;continue;fi
- if [[ "$scene" == system-physical || "$scene" == system-cn ]] && ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
+ if [[ "$scene" == system-physical || "$scene" == system-physical-tc || "$scene" == system-cn ]] && ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
  limit=100s
  if [[ "$scene" == route-* ]];then limit=180s;fi
  status=FAIL
@@ -108,6 +110,10 @@ for scene in "${scenes[@]}";do
  fi
  if [[ "$scene" == system-physical ]] && ! grep -Fq "B90_FIXTURE system.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
  if [[ "$scene" == system-cn ]] && ! grep -Fq "B90_FIXTURE cn.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
+ if [[ "$scene" == system-physical-tc ]];then
+  for wire in UDP TCP;do if ! grep -Fq "B90_FIXTURE tc.wbd-b90.test $wire" "$out/dns-host.log";then status=FAIL;fi;done
+ fi
+ if [[ "$scene" == fec-fixed || "$scene" == fec-auto ]] && ! grep -Fq "B97_FEC_SOURCE_PARITY_PASS $scene" "$out/$scene.log";then status=FAIL;fi
  if [[ "$scene" == route-* && "$status" != PASS ]];then
   # Read-only guest diagnostics; never disable netd/BPF/SELinux or change App permissions.
   for cmd in "iptables -w 2 -nvxL OUTPUT" "iptables -w 2 -t mangle -nvxL OUTPUT" "ip -4 rule show" "ip -4 route get 192.0.2.1 uid $uid" "dumpsys netpolicy";do
@@ -146,7 +152,7 @@ for scene in ("normal","fec-fixed","fec-auto","game2","game2-fixed","game4","gam
  f=p/(scene+".log")
  if not f.exists():continue
  t=f.read_text(errors="replace")
- native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN","java_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" 1\n" in t else "NOT_PROVEN","inet4_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" send4\n" in t else "NOT_PROVEN"}
+ native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN","java_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" 1\n" in t else "NOT_PROVEN","inet4_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" send4\n" in t else "NOT_PROVEN","fec_source_parity":"PASS" if "B97_FEC_SOURCE_PARITY_PASS "+scene+" " in t else "NOT_PROVEN"}
 r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))

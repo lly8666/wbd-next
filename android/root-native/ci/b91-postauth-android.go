@@ -134,6 +134,8 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  var lease string
  var closeProduct func()error
  var tx func()(uint64,error)
+ var fecCounters func()([9]uint64,error)
+ var pulse func()(V4PublicLoopPulse,error)
  if n==1{
   p,e:=NewV4LinuxClientProduct(normal);if e!=nil{return e}
   s,e:=p.ConnectAuthenticatedPeer(ctx,assocs[0],cfg);if e!=nil{return e}
@@ -144,7 +146,13 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
    f,e:=p.OriginalFECReadback()
    if e!=nil||f.RequestedRevision!=1||f.AppliedRevision!=0||!f.Pending{return fmt.Errorf("original FEC pending: %+v %v",f,e)}
    fmt.Println("B91_NATIVE_FEC_PENDING_PASS",mode,f.Profile,f.RequestedRevision)
+   // Existing Android read-only ABI. No production diagnostic or packet hook.
+   fecCounters=func()([9]uint64,error){
+    p.mu.Lock();defer p.mu.Unlock()
+    return p.owner.originalAndroidFixedM4Counters()
+   }
   }
+  pulse=p.OriginalLoopPulse
   tx=func()(uint64,error){v,e:=p.OriginalLoopPulse();return v.BusinessRawCopied,e}
  }else{
   p,e:=NewV4AndroidGameProduct(game);if e!=nil{return e}
@@ -166,8 +174,30 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  for _,probe:=range []string{"1","send4"}{
   before,e:=tx();if e!=nil{return e}
   if e=send(probe);e!=nil{fmt.Println("B95_NATIVE_SOCKET_SEND_FAIL",mode,probe,e);probeErr=errors.Join(probeErr,e);continue}
-  if e=b91WaitTX(ctx,tx,before);e!=nil{fmt.Println("B95_NATIVE_SOCKET_TX_FAIL",mode,probe,e);probeErr=errors.Join(probeErr,e);continue}
+  if e=b91WaitTX(ctx,tx,before);e!=nil{
+   fmt.Println("B95_NATIVE_SOCKET_TX_FAIL",mode,probe,e)
+   if pulse!=nil{v,err:=pulse();fmt.Printf("B97_NATIVE_PULSE mode=%s tun=%d rejected=%d raw=%d txerr=%d tx=%d udp=%d err=%v\n",mode,v.TunIPv4Admitted,v.TunIPv4Rejected,v.BusinessRawCopied,v.TxErrors,v.TxRecords,v.TunUDPSeen,err)}
+   if fecCounters!=nil{v,err:=fecCounters();fmt.Println("B97_FEC_COUNTERS_FAIL",mode,v,err)}
+   probeErr=errors.Join(probeErr,e);continue
+  }
   fmt.Println("B95_NATIVE_SOCKET_TX_PASS",mode,probe)
+ }
+ if fecCounters!=nil{
+  before,e:=fecCounters();if e!=nil{return errors.Join(probeErr,e)}
+  e=send("burst4")
+  if e!=nil{probeErr=errors.Join(probeErr,e)}else{
+   deadline:=time.Now().Add(6*time.Second)
+   var after [9]uint64
+   for time.Now().Before(deadline){
+    after,e=fecCounters();if e!=nil{return errors.Join(probeErr,e)}
+    if after[0]>=before[0]+32&&after[1]>before[1]{break}
+    select{case <-ctx.Done():return errors.Join(probeErr,ctx.Err());case <-time.After(50*time.Millisecond):}
+   }
+   fmt.Printf("B97_FEC_BURST_COUNTERS mode=%s source_before=%d source_after=%d parity_before=%d parity_after=%d mature=%d applied=%d\n",mode,before[0],after[0],before[1],after[1],after[7],after[8])
+   if after[0]>=before[0]+32&&after[1]>before[1]&&after[7]==0&&after[8]==0{
+    fmt.Println("B97_FEC_SOURCE_PARITY_PASS",mode,"remote_m2_NOT_PROVEN")
+   }else{probeErr=errors.Join(probeErr,fmt.Errorf("FEC source/parity burst or pending evidence incomplete"))}
+  }
  }
  if probeErr!=nil{return probeErr}
  fmt.Println("B91_NATIVE_APP_TX_PASS",mode,"remote_m4_NOT_PROVEN")

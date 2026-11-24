@@ -43,13 +43,16 @@ public final class TrafficInstrumentation extends Instrumentation {
     }
     // A second real AF_INET UDP socket, independent of Java dual-stack
     // DatagramSocket. Never alter App permissions, fwmark or netd policy.
-    private void udp4(String dest,byte[] payload,boolean echo)throws Exception{
+    private void udp4(String dest,byte[] payload,boolean echo,int count)throws Exception{
         java.io.FileDescriptor fd=android.system.Os.socket(android.system.OsConstants.AF_INET,
             android.system.OsConstants.SOCK_DGRAM,android.system.OsConstants.IPPROTO_UDP);
         try{
             android.system.Os.connect(fd,java.net.InetAddress.getByName(dest),43999);
-            if(android.system.Os.write(fd,payload,0,payload.length)!=payload.length)
-                throw new java.io.IOException("short AF_INET write");
+            for(int n=0;n<count;n++){
+                if(android.system.Os.write(fd,payload,0,payload.length)!=payload.length)
+                    throw new java.io.IOException("short AF_INET write");
+                if(count>1)android.os.SystemClock.sleep(5);
+            }
             if(echo){
                 android.system.StructPollfd poll=new android.system.StructPollfd();
                 poll.fd=fd;poll.events=(short)android.system.OsConstants.POLLIN;
@@ -66,9 +69,9 @@ public final class TrafficInstrumentation extends Instrumentation {
         try{
             String probe=args.getString("uid_probe","");
             if(!probe.isEmpty()||"system".equals(args.getString("dns_probe")))enterForeground();
-            if("echo4".equals(probe)||"send4".equals(probe)||"baseline4".equals(probe)){
+            if("echo4".equals(probe)||"send4".equals(probe)||"baseline4".equals(probe)||"burst4".equals(probe)){
                 String dest="baseline4".equals(probe)?"10.0.2.2":"192.0.2.1";
-                udp4(dest,"WBD_B94_UID4".getBytes(java.nio.charset.StandardCharsets.US_ASCII),!"send4".equals(probe));
+                udp4(dest,"WBD_B94_UID4".getBytes(java.nio.charset.StandardCharsets.US_ASCII),!"send4".equals(probe)&&!"burst4".equals(probe),"burst4".equals(probe)?32:1);
                 result.putString("report","uid_probe_sent="+Process.myUid()+" socket=AF_INET probe="+probe+" foreground=1");
                 finishProbe(Activity.RESULT_OK,result);return;
             }
