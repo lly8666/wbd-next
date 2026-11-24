@@ -21,4 +21,4 @@ jobs:
           test "$(gh api "repos/$GH_REPO/git/ref/heads/$REF" --jq .object.sha)" = "$GITHUB_SHA"
           gh workflow run m0-plan029-linux-dual-isa-native.yml --repo "$GH_REPO" --ref "$REF" -f all_modes=true
           gh workflow run m0-wl-public-normal-full.yml --repo "$GH_REPO" --ref "$REF" -f public_mode=all -f native_outer_mtu=default1460 -f outer_repair=on -f run_n0=false
-          echo "H2397_REAL_FUNCTIONAL_DISPATCHED_FIXED_SOURCE source=$GITHUB_SHA"
+          echo "H2397_REAL_FUNCTIONAL_DISPATCHED_FINAL_SOURCE source=$GITHUB_SHA"

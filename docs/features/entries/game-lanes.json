@@ -15,7 +15,8 @@
     "modes": "game2/game4",
     "game-fec": "off（默认）",
     "game2-copies": "immediate",
-    "--outer-repair": "on (default), off for genuine Rust Game2/4 outer DATA only"
+    "--outer-repair": "on (default), off for genuine Rust Game2/4 outer DATA only",
+    "native ready TX": "Linux per-lane sendmmsg / Windows NPF16；H2397候选"
   },
   "usage": {
     "cli": "Windows isolated --native-v4-product --lanes 2|4 --fec.mode off|fixed, independent Npcap lanes original TLS; requires actual all-lane authentication, Wintun native copy and owned Stop. Rust Game cold --outer-repair on|off; source effective readback before native steady RX/TX. Linux Game2/4 shared TUN channel-wake enabled; no new flag.",

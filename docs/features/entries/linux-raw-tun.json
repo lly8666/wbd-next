@@ -15,7 +15,7 @@
     "--tun-fq-maxrate-mbps": "600（0禁用）",
     "IPv6": "在owned Linux V4 TUN禁用",
     "--tun-txqlen-packets": "2048（只对本进程原始 Go 新建 Linux V4 TUN 生效；显式 500 回退）",
-    "Normal客户端M1 inbox": "128；server/Game 64"
+    "Normal/Game 客户端与服务端 M1 inbox": "128；同一满队列五元组公平准入，H2397候选"
   },
   "usage": {
     "cli": "Linux --raw-interface --local-ip --tun-ipv4 --tun-name；需要CAP_NET_RAW和/dev/net/tun；Linux --tun-txqlen-packets 2048|500：只修改已绑定的自身 TUN H2206 server --raw-interface eth0 --local-ip 0.0.0.0（或省略本参数）从网卡冷解析唯一IPv4；NAT网关TCP443映射需手动配置。多个IPv4要求显式地址，客户端拒绝零地址。",

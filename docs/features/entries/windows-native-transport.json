@@ -16,7 +16,8 @@
     "plan028_physical_mtu_only": "Original Windows Go cold selected IPv4 MTU changes by NotifyIpInterfaceChange + 1Hz OS liveness/coalescer, exact old Stop and new TLS/Rust. H1347 same source OS1500→1280 native functional PASS; original same-socket hot PMTU unverified.",
     "native-entry": "--native-v4-product=true（CLI默认；GUI显式加同一开关）",
     "record-cipher": "chacha20-poly1305（AES128/256均需显式选择）",
-    "lease4": "留空=原始TLS按设备身份申请自动 /32；显式 IPv4/32=手动；OS仅使用TLS鉴权后的 /32"
+    "lease4": "留空=原始TLS按设备身份申请自动 /32；显式 IPv4/32=手动；OS仅使用TLS鉴权后的 /32",
+    "native TX": "16帧/64KiB；Normal/Game ready-only，H2397候选"
   },
   "usage": {
     "cli": "wbd-client.exe --config xxx.json（默认 native-v4-product=true）；可显式 --native-v4-product；--record-cipher 三选一、lease4 留空/显式、lanes 与 FEC；不可用组合拒绝，无旧V3静默回落。",

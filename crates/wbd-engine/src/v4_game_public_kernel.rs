@@ -22,10 +22,11 @@ use crate::v4_native_health::{HealthClock,HealthPolicy,ControlDue};
 use crate::runtime::game_shared::GameError;
 use crate::v4_protected_handoff::GoFlow;
 use crate::v4_presentation_ack::{NativePresentationAck,presentation_game_ack_due};
-use crate::memory::Arena;
-use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey};
+use crate::memory::{Arena,FrozenRecord};
+use wbd_types::{MonoNs,RecordPn,SeqOffset,LaneKey,TunnelKey,LogicalPacketId};
 use wbd_types::buffer_contract::{FrozenMetadata,UniqueSealable};
-use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx,RawTxError};
+use wbd_platform::linux_raw_carrier::{ScopedRawIpv4Tx,ScopedRawIpv4Rx};
+use wbd_platform::linux_batch::KernelSendSignal;
 use wbd_platform::linux_tun_sink::{ScopedTunSink,TunReadyEntry};
 use wbd_platform::ipv4_tcp::{Ipv4Tuple,PacketPersona,Presentation,SackRange32};
 fn pack_game_sack(sack:Option<SackRange32>)->u64{
@@ -295,6 +296,11 @@ impl GameKernelOwner{
                 // 64KiB per arena slab. A 2048B read irreversibly truncated
                 // actual oversized DF0 datagrams into false small packets.
                 let mut inbound=[0u8;65_535];
+                // Original one TX owner reuses fixed per-lane ready lists; at most
+                // 32 total staged copies per adapter turn, no new queue/worker.
+                let mut ready_records:[Vec<FrozenRecord>;4]=std::array::from_fn(|_|Vec::with_capacity(32));
+                let mut ready_ids:[Vec<(LogicalPacketId,usize)>;4]=std::array::from_fn(|_|Vec::with_capacity(32));
+                let mut ready_presentations:[Vec<Presentation>;4]=std::array::from_fn(|_|Vec::with_capacity(32));
                 // One bounded exceptional datagram; ordinary small IP goes
                 // first on every loop, then at most 4 IP fragments per turn.
                 let mut pending_ip_fragments=VecDeque::<Vec<u8>>::new();
@@ -560,113 +566,110 @@ impl GameKernelOwner{
                     // Single TX owner first drains source copies to M4 before
                     // any FEC parity quantum can enqueue additional work.
                     let mut flush=|game:&mut GameAdapter,due_now:MonoNs|{
-                        game.drain_for_linux_native(due_now,|lane,id,pn,wire,pad|{
-                            // The genuine original TLS group builds
-                            // physical lanes in slots 1..N. Avoid a
-                            // linear scan on each Game4 × fixed6 copy,
-                            // but still validate the entire scoped lane
-                            // key (generation/epoch/slot) before dispatch.
-                            let Some(index)=lane.slot.checked_sub(1)
-                                .map(|v|v as usize)else{
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                return false
+                        // The existing adapter's native staging path already
+                        // separates immutable ciphertext from actual M4 proof.
+                        // The historical method name is shared with Windows.
+                        let mut next_seq:[u64;4]=std::array::from_fn(|i|
+                            lanes.get(i).map_or(0,|l|l.seq));
+                        let mut last_id:[Option<u64>;4]=std::array::from_fn(|i|
+                            lanes.get(i).and_then(|l|l.last_initial_id));
+                        game.stage_for_windows_native(due_now,|lane,id,pn,wire,pad|{
+                            let Some(index)=lane.slot.checked_sub(1).map(|v|v as usize)else{
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);return false
                             };
-                            let Some(item)=lanes.get_mut(index).filter(|v|v.key==lane)else{
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                return false
-                            };
-                            if !outer_repair_enabled &&
-                                !game_first_lane_copy(item.last_initial_id,id.0){
+                            if !lanes.get(index).is_some_and(|v|v.key==lane){
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);return false
+                            }
+                            if !outer_repair_enabled&&!game_first_lane_copy(last_id[index],id.0){
                                 tx_fail.policy.fetch_add(1,Ordering::Relaxed);
                                 outer_denied.fetch_add(1,Ordering::Relaxed);
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                return false
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);return false
                             }
                             let Ok(mut slab)=arena.allocate()else{
                                 tx_fail.slab.fetch_add(1,Ordering::Relaxed);
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                return false
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);return false
                             };
                             if wire.len()>slab.writable().len(){
                                 tx_fail.record.fetch_add(1,Ordering::Relaxed);
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                return false
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);return false
                             }
                             slab.writable()[..wire.len()].copy_from_slice(wire);
                             let Ok(frozen)=slab.freeze(0..wire.len(),FrozenMetadata{
-                                lane,seq:SeqOffset(item.seq),pn:RecordPn(pn),
+                                lane,seq:SeqOffset(next_seq[index]),pn:RecordPn(pn),
                                 carrier_snapshot:1
                             })else{
                                 tx_fail.record.fetch_add(1,Ordering::Relaxed);
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                return false
+                                tx_rejected.fetch_add(1,Ordering::Relaxed);return false
                             };
+                            ready_records[index].push(frozen);
+                            ready_ids[index].push((id,pad));
+                            ready_presentations[index].push(Presentation{
+                                ack32:tx_ack[index].load(Ordering::Acquire),
+                                advertised_window:65_535,ip_id:(pn as u16).wrapping_add(75),
+                                persona:peer_persona,
+                            });
+                            next_seq[index]=next_seq[index].saturating_add(wire.len() as u64);
+                            last_id[index]=Some(id.0);
+                            true
+                        });
+                        for (index,item) in lanes.iter_mut().enumerate(){
+                            let records=&mut ready_records[index];
+                            let ids=&mut ready_ids[index];
+                            let presentations=&mut ready_presentations[index];
+                            if records.is_empty(){continue}
                             let f=item.flow;
                             let (src,dst,sp,dp)=if server{
                                 (f.server_ip,f.client_ip,f.server_port,f.client_port)
                             }else{
                                 (f.client_ip,f.server_ip,f.client_port,f.server_port)
                             };
-                            let tuple=Ipv4Tuple{
-                                src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp
-                            };
-                            let presentation=Presentation{
-                                ack32:tx_ack[index].load(Ordering::Acquire),advertised_window:65_535,ip_id:(pn as u16).wrapping_add(75),
-                                persona:peer_persona
-                            };
-                            let sent=item.raw.send_one(generation,&frozen,tuple,presentation);
-                            let ok=sent.is_ok();
-                            if ok {
-                                // One real Linux RAW first DATA copy; no FEC
-                                // symbol/repeat misattribution. Original TCP
-                                // DATA has exactly 40 bytes outer overhead.
-                                tx_outer_first_bytes.fetch_add(
-                                    wire.len() as u64+40,Ordering::Relaxed);
+                            let tuple=Ipv4Tuple{src_ip:&src,dst_ip:&dst,src_port:sp,dst_port:dp};
+                            // One actual RAW sendmmsg per ready lane, no fill wait.
+                            // Only its definite copied prefix earns any credit.
+                            let report=item.raw.send_kernel_multimsg(generation,
+                                records.as_slice(),tuple,presentations.as_slice());
+                            let copied=report.outcome.accepted_prefix.min(records.len());
+                            for (frozen,&(id,pad)) in records.iter().zip(ids.iter()).take(copied){
+                                let meta=frozen.metadata();
+                                let wire=frozen.bytes();
+                                tx_outer_first_bytes.fetch_add(wire.len() as u64+40,Ordering::Relaxed);
                                 if pad>0{
                                     tx_pad_records.fetch_add(1,Ordering::Relaxed);
                                     tx_pad_bytes.fetch_add(pad as u64,Ordering::Relaxed);
                                 }
-                                // Only the real raw first copied PN/SEQ is
-                                // eligible; most packets pay one mask test.
-                                if outer_repair_enabled{
-                                    // Genuine first raw kernel success only.
-                                    // Normal ACK metadata is sparse; a
-                                    // lost optional hint never changes M4/FEC
-                                    // copied result or original sender credit.
-                                    if cosmetic.on_firstsend(index,pn,item.seq,
-                                        wire,due_now.0).is_err(){
-                                        eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane={} reason=sparse_index",index+1);
-                                    }
+                                if outer_repair_enabled&&cosmetic.on_firstsend(index,meta.pn.0,
+                                    meta.seq.0,wire,due_now.0).is_err(){
+                                    eprintln!("WBD_GAME_NORMAL_OUTER_HINT_DROP lane={} reason=sparse_index",index+1);
                                 }
                                 item.seq=item.seq.saturating_add(wire.len() as u64);
-                                // Count ACTUAL successful same-lane repeat
-                                // sends, not a fake zero returned by FFI.
-                                // OFF rejects this situation before send_one;
-                                // another lane's independent first is valid.
                                 if !game_first_lane_copy(item.last_initial_id,id.0){
                                     outer_repeated.fetch_add(1,Ordering::Relaxed);
                                 }
                                 item.last_initial_id=Some(id.0);
                                 tx_copy.fetch_add(1,Ordering::Relaxed);
-                                true
-                            }else{
-                                tx_fail.raw.fetch_add(1,Ordering::Relaxed);
-                                match sent {
-                                    Err(RawTxError::Kernel(11)|RawTxError::NoCapacity)=>{
-                                        tx_fail.raw_backpressure.fetch_add(1,Ordering::Relaxed);
+                                game.note_windows_native_m4_copy(id);
+                            }
+                            let missed=(records.len()-copied) as u64;
+                            if missed>0{
+                                tx_fail.raw.fetch_add(missed,Ordering::Relaxed);
+                                match report.signal{
+                                    KernelSendSignal::Backpressure=>{
+                                        tx_fail.raw_backpressure.fetch_add(missed,Ordering::Relaxed);
                                     },
-                                    Err(RawTxError::RouteStale|RawTxError::RouteUnavailable)=>{
-                                        tx_fail.raw_route.fetch_add(1,Ordering::Relaxed);
+                                    KernelSendSignal::RouteUnavailable=>{
+                                        tx_fail.raw_route.fetch_add(missed,Ordering::Relaxed);
                                     },
-                                    Err(RawTxError::PacketExceedsBudget|RawTxError::BoundedMtu)=>{
-                                        tx_fail.raw_mtu.fetch_add(1,Ordering::Relaxed);
+                                    KernelSendSignal::MtuExceeded=>{
+                                        tx_fail.raw_mtu.fetch_add(missed,Ordering::Relaxed);
                                     },
                                     _=>{},
                                 }
-                                tx_rejected.fetch_add(1,Ordering::Relaxed);
-                                false
+                                tx_rejected.fetch_add(missed,Ordering::Relaxed);
                             }
-                        });
+                            records.clear();ids.clear();presentations.clear();
+                        }
+                        game.settle_windows_native_m4_batch();
+                        arena.drain_returns();
                     };
                     flush(&mut game,now);
                     let mut parity_ready=false;
