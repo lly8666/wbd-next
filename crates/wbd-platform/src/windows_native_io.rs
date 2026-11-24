@@ -264,6 +264,14 @@ impl NpcapTx {
         let queue = fns.queue_alloc
             .filter(|_| fns.queue_transmit.is_some() && fns.queue_destroy.is_some())
             .and_then(|allocate| NonNull::new(unsafe { allocate(NPF_QUEUE_BYTES as u32) }));
+        // Npcap owns this allocation. Initialize it once so later Rust
+        // frame slices are valid even before their exact prefixes are written.
+        if let Some(ptr)=queue {
+            let q=unsafe { ptr.as_ref() };
+            if !q.buffer.is_null() && q.max_len as usize>=NPF_QUEUE_BYTES {
+                unsafe { ptr::write_bytes(q.buffer,0,NPF_QUEUE_BYTES); }
+            }
+        }
         #[cfg(feature="h2291_windows_tx_service")]
         eprintln!(
             "H2291_ORIGINAL_WINDOWS_RUST_NPF_TX_SERVICE_PROFILE nqueue={} queue_bytes={} max_frames={} ready_only=1",
@@ -274,6 +282,97 @@ impl NpcapTx {
             trace: NpfServiceTrace::default(),
         })
     }
+    // Both the original copy builder and the directly prepared batch use
+    // exactly the same native syscall, trace, and copied-prefix classifier.
+    fn submit_queue(&mut self, queue_ptr: *mut NpcapSendQueue,
+        transmit: unsafe extern "C" fn(*mut c_void,*mut NpcapSendQueue,i32)->u32,
+        ends: &[usize], bytes: usize, accepted: usize,
+    ) -> TxBatchOutcome {
+        let n=ends.len();
+        unsafe { (*queue_ptr).len = bytes as u32; }
+        #[cfg(feature="h2311_windows_npf_trace")]
+        {
+            self.trace.queue_calls += 1;
+            match n {
+                2..=7=>self.trace.queue_calls_2_7+=1,
+                8=>self.trace.queue_calls_8+=1,
+                9..=15=>self.trace.queue_calls_9_15+=1,
+                16=>self.trace.queue_calls_16+=1,
+                _=>unreachable!("NPF ready queue is at most 16 frames"),
+            }
+            self.trace.queue_frames_submitted += n as u64;
+            self.trace.queue_bytes_submitted += bytes as u64;
+        }
+        let copied = unsafe {
+            transmit(self.handle.as_ptr(), queue_ptr, 0)
+        } as usize;
+        unsafe { (*queue_ptr).len = 0; }
+        #[cfg(feature="h2311_windows_npf_trace")]
+        {
+            self.trace.queue_bytes_copied += copied.min(bytes) as u64;
+            if copied != bytes { self.trace.queue_short_calls += 1; }
+        }
+        if copied != bytes {
+            // A driver result beyond the submitted buffer is
+            // invalid: do not credit a fabricated prefix.
+            if copied > bytes {
+                return TxBatchOutcome {
+                    accepted_prefix: accepted,
+                    uncertain_index: Some(accepted),
+                    error: Some(TxError::IoUncertain),
+                };
+            }
+            let mut confirmed = 0;
+            while confirmed < n && ends[confirmed] <= copied {
+                confirmed += 1;
+            }
+            let total = accepted + confirmed;
+            if confirmed > 0 && ends[confirmed - 1] == copied {
+                return TxBatchOutcome {
+                    accepted_prefix: total,
+                    uncertain_index: None,
+                    error: Some(TxError::IoFailed),
+                };
+            }
+            return TxBatchOutcome {
+                accepted_prefix: total,
+                uncertain_index: Some(total),
+                error: Some(TxError::IoUncertain),
+            };
+        }
+        TxBatchOutcome::copied_all(accepted+n)
+    }
+
+    /// Borrow the existing Npcap queue for a known, already-ready batch.
+    /// A single frame or a batch exceeding this profile keeps the original
+    /// direct/multi-queue path. No coalescing or extra queue allocation.
+    pub fn prepare_batch(&mut self, lengths:&[usize]) -> Option<PreparedNpcapBatch<'_>> {
+        if lengths.len()<2 || lengths.len()>NPF_QUEUE_PACKETS { return None; }
+        let queue=self.queue?;
+        let transmit=self.fns.queue_transmit?;
+        let q=unsafe { queue.as_ref() };
+        if q.buffer.is_null() || (q.max_len as usize)<NPF_QUEUE_BYTES { return None; }
+        let mut ends=[0usize;NPF_QUEUE_PACKETS];
+        let mut bytes=0usize;
+        for (i,&len) in lengths.iter().enumerate() {
+            if len==0 || len>MAX_NPF_FRAME || len+16>NPF_QUEUE_BYTES-bytes { return None; }
+            bytes+=16+len;
+            ends[i]=bytes;
+        }
+        // Npcap's timeval is zero (unsynchronized transmit); caplen/len
+        // are native-endian Windows u32. Payload is filled by the caller.
+        let scratch=unsafe { std::slice::from_raw_parts_mut(q.buffer,bytes) };
+        let mut start=0;
+        for (&len,&end) in lengths.iter().zip(&ends) {
+            scratch[start..start+8].fill(0);
+            let len=(len as u32).to_ne_bytes();
+            scratch[start+8..start+12].copy_from_slice(&len);
+            scratch[start+12..start+16].copy_from_slice(&len);
+            start=end;
+        }
+        Some(PreparedNpcapBatch{tx:self,queue,transmit,ends,n:lengths.len(),bytes})
+    }
+
     /// Drive all READY Ethernet frames without waiting to fill a queue.
     /// At most the profile's bounded 8/16 packet and 16/64KiB queue in one
     /// NPF sendqueue call. The default release profile remains 8/16KiB; a short
@@ -319,58 +418,9 @@ impl NpcapTx {
                         n += 1;
                     }
                     if n >= 2 {
-                        queue.len = bytes as u32;
-                        #[cfg(feature="h2311_windows_npf_trace")]
-                        {
-                            self.trace.queue_calls += 1;
-                            match n {
-                                2..=7=>self.trace.queue_calls_2_7+=1,
-                                8=>self.trace.queue_calls_8+=1,
-                                9..=15=>self.trace.queue_calls_9_15+=1,
-                                16=>self.trace.queue_calls_16+=1,
-                                _=>unreachable!("NPF ready queue is at most 16 frames"),
-                            }
-                            self.trace.queue_frames_submitted += n as u64;
-                            self.trace.queue_bytes_submitted += bytes as u64;
-                        }
-                        let copied = unsafe {
-                            transmit(self.handle.as_ptr(), queue_ptr, 0)
-                        } as usize;
-                        queue.len = 0;
-                        #[cfg(feature="h2311_windows_npf_trace")]
-                        {
-                            self.trace.queue_bytes_copied += copied.min(bytes) as u64;
-                            if copied != bytes { self.trace.queue_short_calls += 1; }
-                        }
-                        if copied != bytes {
-                            // A driver result beyond the submitted buffer is
-                            // invalid: do not credit a fabricated prefix.
-                            if copied > bytes {
-                                return TxBatchOutcome {
-                                    accepted_prefix: accepted,
-                                    uncertain_index: Some(accepted),
-                                    error: Some(TxError::IoUncertain),
-                                };
-                            }
-                            let mut confirmed = 0;
-                            while confirmed < n && ends[confirmed] <= copied {
-                                confirmed += 1;
-                            }
-                            let total = accepted + confirmed;
-                            if confirmed > 0 && ends[confirmed - 1] == copied {
-                                return TxBatchOutcome {
-                                    accepted_prefix: total,
-                                    uncertain_index: None,
-                                    error: Some(TxError::IoFailed),
-                                };
-                            }
-                            return TxBatchOutcome {
-                                accepted_prefix: total,
-                                uncertain_index: Some(total),
-                                error: Some(TxError::IoUncertain),
-                            };
-                        }
-                        accepted += n;
+                        let outcome = self.submit_queue(queue_ptr, transmit, &ends[..n], bytes, accepted);
+                        if outcome.error.is_some() { return outcome; }
+                        accepted = outcome.accepted_prefix;
                         sent_by_queue = true;
                     }
                 }
@@ -409,6 +459,28 @@ impl NpcapTx {
             accepted += 1;
         }
         TxBatchOutcome::copied_all(accepted)
+    }
+}
+/// Exclusive loan of the existing TX owner's native queue. It cannot be
+/// used concurrently with NpcapTx, and dropping it never transmits anything.
+pub struct PreparedNpcapBatch<'a> {
+    tx:&'a mut NpcapTx,
+    queue:NonNull<NpcapSendQueue>,
+    transmit:unsafe extern "C" fn(*mut c_void,*mut NpcapSendQueue,i32)->u32,
+    ends:[usize;NPF_QUEUE_PACKETS],
+    n:usize,
+    bytes:usize,
+}
+impl PreparedNpcapBatch<'_> {
+    pub fn frame_mut(&mut self,i:usize)->&mut [u8] {
+        let end=self.ends[..self.n][i];
+        let start=if i==0{16}else{self.ends[i-1]+16};
+        unsafe { std::slice::from_raw_parts_mut(
+            self.queue.as_ref().buffer.add(start),end-start) }
+    }
+    pub fn send(self)->TxBatchOutcome {
+        self.tx.submit_queue(self.queue.as_ptr(),self.transmit,
+            &self.ends[..self.n],self.bytes,0)
     }
 }
 impl Drop for NpcapTx {
@@ -796,6 +868,50 @@ mod tests {
         QUEUE_BYTES.store(len as usize,Ordering::SeqCst);
         QUEUE_COPIES.fetch_add(1,Ordering::SeqCst);
         len
+    }
+    unsafe extern "C" fn prepared_mixed_queue(
+        handle:*mut c_void, queue:*mut NpcapSendQueue, _:i32
+    )->u32 {
+        let q=unsafe{&*queue};
+        let bytes=unsafe{std::slice::from_raw_parts(q.buffer,q.len as usize)};
+        let mut expected=Vec::new();
+        for (len,byte) in [(20usize,0x31u8),(53,0x52),(1460,0x73)] {
+            expected.extend_from_slice(&[0u8;8]);
+            expected.extend_from_slice(&(len as u32).to_ne_bytes());
+            expected.extend_from_slice(&(len as u32).to_ne_bytes());
+            expected.extend(std::iter::repeat(byte).take(len));
+        }
+        if bytes!=expected.as_slice(){return 0}
+        match handle as usize{
+            2=>q.len,
+            3=>36,
+            _=>39,
+        }
+    }
+    unsafe extern "C" fn prepared_queue_destroy(queue:*mut NpcapSendQueue) {
+        let q=unsafe{Box::from_raw(queue)};
+        unsafe{drop(Box::from_raw(q.buffer.cast::<[u8;NPF_QUEUE_BYTES]>()));}
+    }
+    #[test]
+    fn direct_prepared_npf_queue_matches_wire_and_exact_short_prefix() {
+        let fns=NpcapFns{next_ex,send_packet,get_event,
+            queue_alloc:Some(queue_alloc),queue_transmit:Some(prepared_mixed_queue),
+            queue_destroy:Some(prepared_queue_destroy)};
+        for (handle,prefix,uncertain) in [(2,3,None),(3,1,None),(4,1,Some(1))]{
+            let mut tx=unsafe{NpcapTx::from_borrowed(handle,fns).unwrap()};
+            assert!(tx.prepare_batch(&[20]).is_none());
+            assert!(tx.prepare_batch(&[NPF_QUEUE_BYTES,20]).is_none());
+            for _ in 0..2{
+                let mut ready=tx.prepare_batch(&[20,53,1460]).unwrap();
+                for (i,byte) in [0x31u8,0x52,0x73].into_iter().enumerate(){
+                    ready.frame_mut(i).fill(byte);
+                }
+                let outcome=ready.send();
+                assert_eq!(outcome.accepted_prefix,prefix);
+                assert_eq!(outcome.uncertain_index,uncertain);
+                assert_eq!(outcome.error.is_none(),handle==2);
+            }
+        }
     }
     #[test]
     fn native_sendqueue_partial_bytes_map_to_one_uncertain_packet() {
