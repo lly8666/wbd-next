@@ -1,3 +1,4 @@
+- **B64 直接App TCP53三DNS模式 WIRED_CANDIDATE**：显式可选，原UID FIB进入WBD TUN的TCP53由精确UID OUTPUT NAT→内核loopback listener；原Go DNS frame/QNAME→同Network物理TCP或原认证lease/TUN-bound 1.1.1.1 TCP→原Rust M4，CN8503分流；原Stop/Restore撤专有NAT与19843/9599路由、join DNS stream。四槽/SAF/冷恢复保存，普通DATA不新增Go路径。实体NOT_RUN，系统netd/DoT/DoH仍未接。[B64](../devlog/android-root-probe/20261124-b64-original-app-tcp-dns-kernel-listener.md)
 - **B63 原Normal/Fixed/Auto/Game物理DNS同Network TCP上游回退 WIRED_CANDIDATE**：原UDP TC匹配原事务后，同Network/源IPv4/上游TCP53非阻塞真实kernel socket，最多8并发短事务加入原TX/eventfd，回原UDP逆映射与B59 TUN分片；尊重原EDNS cap，TCP失败保留真实TC；无新线程。直接App TCP53、系统netd未接，设备NOT_RUN。[B63](../devlog/android-root-probe/20261124-b63-physical-dns-tc-same-network-tcp.md)
 - **B62 后台事件式冷恢复＋定时轮换配置＋原通知状态 WIRED_CANDIDATE**：仅用户START选择后台模式后，原Network失效→真实M4/UID joined Stop→当前有效物理Network重新原START；无网订阅系统callback等待，不周期轮询；恢复重算DNS和LAN subnet，保留原手工CIDR/账号。四槽/SAF保存恢复模式和轮换间隔（旧预设关闭），通知原M4/UID READY/等待网及STOP。真机NOT_RUN。[B62](../devlog/android-root-probe/20261124-b62-background-cold-recovery-and-profile-lifecycle.md)
 - **B61 原Root Service定时冷轮换/通知STOP WIRED_CANDIDATE**：本次START选0/5/15/30min，原M4/UID READY后一次低频deadline；原Go/Rust owned Stop+退出、同一真实Network、冻结连接快照→同一START；非热迁移，无新数据线程/唤醒锁。B60a [#45303190692](https://github.com/lly8666/wbd-next/actions/runs/45303190692) 9 SUCCESS/1 FAIL/5 SKIPPED，B60 JVM实测PASS，旧B24 onResume源码断言阻止APK编译，本批调整顺序；同源CI待判，设备NOT_RUN。[B61](../devlog/android-root-probe/20261124-b61-original-service-cold-rotation.md)
@@ -48,7 +49,7 @@
 | Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
 | Android Game2/Game4 原多lane TLS→Rust Game M4双向 | WIRED（B48/B56/B57） | B48同源双ABI/签名APK/Oracle PASS；B56/57补原M4 burst/MTU | 实机Game2/4 off/fixed TCP/UDP/DNS统一后验 |
 | Android应用TCP/UDP双端逐字节E2E、切网恢复、低CPU/吞吐/首包 | NOT_RUN | 旧API36只有内核数据收据与用户主观“数据通了” | 必须有设备授权后验；此期不假造 |
-| Android物理TCP53、原生业务IP直连例外 | **B33 HOST_PASS / BUILD_PASS** | 同源原Root私有table 19842最多4个真实CIDR throw，单UID/组UID/all-App同原journal/Stop；App→Service→Go CLI→真实ip规则命令Host PASS；签名APK PASS | **Android实体netd后续物理路由NOT_RUN**，物理TCP53仍MISSING |
+| Android直接App TCP53 / 原生业务IP直连例外 | WIRED_CANDIDATE（B64）/ B33/B58已接 | B64可选三DNS QNAME kernel TCP listener、原UID NAT与固定原隧道/物理socket、Stop/Restore；CIDR原私有FIB | App TCP53真机NOT_RUN；系统netd独立未接 |
 | Android动态换物理Network/定时轮换 | WIRED_CANDIDATE（B49/B60/B61/B62） | 手动/前台/后台事件冷切网、定时原生冷轮换、配置保存；非Linux shared-TUN热迁移 | 实机统一后验 |
 | Android热点共享/Tether | MISSING | 目前普通UID路由不接forwarded IP | 独立root forwarding/NAT/Stop所有权，不宣称已实现 |
 

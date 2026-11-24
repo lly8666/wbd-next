@@ -54,7 +54,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery;
+    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
     private TextView selectedAppsSummary,bypassSummary,presetResult,profileResult;
@@ -649,7 +649,8 @@ public final class RootClientActivity extends Activity {
             Integer.parseInt(nativeHealthIntervals.getSelectedItem().toString()),
             autoConnectedDirect.isChecked(),
             backgroundNetworkRecovery.isChecked()?2:autoNetworkRecovery.isChecked()?1:0,
-            Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()));
+            Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()),
+            appTcpDNS.isChecked());
     }
     private void saveConnectionSettings()throws Exception{
         RootConnectionSettingsStore.save(this,connectionSettingsFromUi());
@@ -678,6 +679,7 @@ public final class RootClientActivity extends Activity {
         tunnelDNS.setChecked(s.tunnelDNS);
         physicalDNS.setChecked(s.physicalDNS);
         cnSplitDNS.setChecked(s.cnSplitDNS);
+        appTcpDNS.setChecked(s.appTcpDNS);
         allAppsDefault.setChecked(s.allApps);
         // B50: replacing a preset must REPLACE checked package/UID pairs,
         // not union with the old UI selection (which changes Root routes).
@@ -989,6 +991,8 @@ public final class RootClientActivity extends Activity {
             request.putExtra("tunnel_dns",tunnelDNS.isChecked());
             request.putExtra("physical_dns",physicalDNS.isChecked());
             request.putExtra("cn_dns_split",cnSplitDNS.isChecked());
+            request.putExtra("app_tcp_dns",appTcpDNS.isChecked()&&
+                (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
             request.putExtra("direct_cidrs",directCIDRs);
             request.putExtra("direct_cidrs_manual",manualDirectCIDRs);
             request.putExtra("background_network_recovery",backgroundNetworkRecovery.isChecked());
@@ -1291,6 +1295,10 @@ public final class RootClientActivity extends Activity {
         cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走WBD隧道1.1.1.1（不接管Android系统DNS）");
         cnSplitDNS.setChecked(false);
         pane.addView(cnSplitDNS);
+        appTcpDNS=new CheckBox(this);
+        appTcpDNS.setText("可选App TCP/53 DNS：进入WBD的应用TCP查询也按上面选定的DNS模式处理（内核TCP，不接管系统netd）");
+        appTcpDNS.setChecked(false);
+        pane.addView(appTcpDNS);
         tunnelDNS.setOnCheckedChangeListener((button,checked)->{
             if(checked){physicalDNS.setChecked(false);cnSplitDNS.setChecked(false);}
         });

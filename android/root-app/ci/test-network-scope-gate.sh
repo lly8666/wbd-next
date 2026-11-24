@@ -1824,3 +1824,20 @@ assert 'RootColdRotation.recoveryIndex(' in n
 assert 'p.setProperty("cold_recovery_mode"' in c and 'p.setProperty("cold_rotation_minutes"' in c
 print("ANDROID_B62_ORIGINAL_BACKGROUND_RECOVERY_PROFILE_NOTIFICATION_SOURCE_PASS")
 PY
+
+python3 - <<'PY'
+from pathlib import Path
+g=Path("r0/go_overlay/internal/v4productcli")
+a=Path("android/root-app/src/org/wbdnext/rootclient")
+service=(a/"RootClientService.java").read_text()
+route=(g/"android_root_route_android.go").read_text()
+go=(g/"linux.go").read_text()
+assert 'request.putExtra("app_tcp_dns",' in (a/"RootClientActivity.java").read_text()
+assert 'quotedArgs.add(q("--android-app-tcp-dns"))' in service
+assert 'flags.Bool("android-app-tcp-dns",false' in go
+assert route.count('startAndroidAppTCPDNS(c,tun,lease,runner,')==3
+assert 'dnsnative.StartAppTCPDNS(' in route and 'rootjournal.NewDNS(' in route
+assert 'rootjournal.RecoverDNS(runIP,runFirewall,nil,' in go
+assert 'errors.Join(owner.Stop(),relay.Close(),stopUID())' in route
+print("ANDROID_B64_ORIGINAL_APP_TCP_DNS_UID_KERNEL_LISTENER_STOP_SOURCE_PASS")
+PY

@@ -138,6 +138,7 @@ type config struct{
     // Cold-authorized original M4 TUN UDP/53 rewrite to 1.1.1.1 only.
     // System resolver/netd and CN physical split are NOT enabled by this.
     androidTunnelDNS bool
+    androidAppTCPDNS bool // explicit kernel App TCP53 DNS listener, no system netd
     // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
     androidPhysicalDNS bool
     androidPhysicalDNSUpstream netip.Addr // original Rust M4 real bound UDP53 upstream
@@ -271,6 +272,8 @@ func parse(role string,args []string)(config,error){
         "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
     androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
         "Android Root optional: ordinary captured App TUN UDP/53 to physical 223.5.5.5; takes priority over tunnel DNS, not CN split/system Resolver")
+    androidAppTCPDNS:=flags.Bool("android-app-tcp-dns",false,
+        "Android Root: optional ordinary App TCP53 follows the selected DNS mode through kernel TCP")
     androidNativeHealth:=flags.Uint("android-native-health-seconds",15,
          "Android Root: actual Rust authenticated native Health interval 15 or 30 seconds, 90s dead unchanged")
     androidPhysicalDNSUpstream:=flags.String("android-physical-dns-upstream-ipv4","223.5.5.5",
@@ -362,6 +365,10 @@ func parse(role string,args []string)(config,error){
         c.androidTunnelDNS=*androidTunnelDNS&&!*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidCNDNSSplit=*androidCNDNSSplit
+        c.androidAppTCPDNS=*androidAppTCPDNS
+        if c.androidAppTCPDNS&&!c.androidTunnelDNS&&!c.androidPhysicalDNS&&!c.androidCNDNSSplit{
+            return c,fmt.Errorf("App TCP DNS requires one selected DNS mode")
+        }
         var e error
         c.androidPhysicalDNSUpstream,e=dnsnative.ParsePhysicalDNSUpstreamIPv4(*androidPhysicalDNSUpstream)
         if e!=nil{return c,fmt.Errorf("Android physical DNS upstream rejected: %w",e)}
@@ -394,7 +401,7 @@ func parse(role string,args []string)(config,error){
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||
-              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit{
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1158,7 +1165,9 @@ func recoverOriginalAndroidRootOwned()error{
         return string(b),nil
     }
     const root="/data/local/tmp/wbd-next-root/"
+    dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")
     _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
+    routeErr=errors.Join(dnsErr,routeErr)
     if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
         log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")
     }

@@ -17,7 +17,7 @@ import java.util.TreeSet;
 final class RootConnectionSettings {
     final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
     final int port,outerMTU,tunQueue,profile,nativeHealthSeconds,recoveryMode,rotationMinutes;
-    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect;
+    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect,appTcpDNS;
     final Map<String,Integer> selected,bypass;
     RootConnectionSettings(String peer,String sni,String account,
         int port,int outerMTU,int tunQueue,String cipher,String padding,
@@ -94,6 +94,19 @@ final class RootConnectionSettings {
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
         boolean autoConnectedDirect,int recoveryMode,int rotationMinutes) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,recoveryMode,rotationMinutes,false);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS) {
+        this.appTcpDNS=appTcpDNS;
         this.recoveryMode=recoveryMode;
         this.rotationMinutes=rotationMinutes;
         this.autoConnectedDirect=autoConnectedDirect;
@@ -185,6 +198,7 @@ final class RootConnectionSettings {
         // Saved preferences authorize nothing until the user presses START.
         p.setProperty("cold_recovery_mode",Integer.toString(recoveryMode));
         p.setProperty("cold_rotation_minutes",Integer.toString(rotationMinutes));
+        p.setProperty("app_tcp_dns",Boolean.toString(appTcpDNS));
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -246,7 +260,8 @@ final class RootConnectionSettings {
                 Integer.parseInt(p.getProperty("native_health_seconds","15")),
                 p.containsKey("direct_lan_auto")&&flag(p,"direct_lan_auto"),
                 Integer.parseInt(p.getProperty("cold_recovery_mode","0")),
-                Integer.parseInt(p.getProperty("cold_rotation_minutes","0")));
+                Integer.parseInt(p.getProperty("cold_rotation_minutes","0")),
+                p.containsKey("app_tcp_dns")&&flag(p,"app_tcp_dns"));
         }catch(IllegalArgumentException invalid){
             return null;
         }

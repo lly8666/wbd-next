@@ -4,6 +4,10 @@ package v4productcli
 
 import (
     "fmt"
+    "context"
+    "errors"
+    "syscall"
+    "time"
     "net"
     "net/netip"
     "os"
@@ -12,6 +16,7 @@ import (
     "strings"
 
     "github.com/lly8666/wobuzhidao/internal/v4productcli/rootjournal"
+    "github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative"
 )
 
 // Read-only route-get for each selected App UID; never changes kernel state.
@@ -93,6 +98,7 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
+    if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
     if c.androidRouteAllApps{
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
             ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
@@ -101,6 +107,8 @@ func androidRootRouteAfterNative(
             Underlay:c.rawInterface,
             NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         })
+        if e!=nil{return nil,e}
+        stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,full.Stop)
         if e!=nil{return nil,e}
         // Exact server-IP exclusion in the private FIB is verified,
         // but the next Android netd physical route is not yet qualified.
@@ -112,7 +120,7 @@ func androidRootRouteAfterNative(
             "V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED mode=all_apps table=%d lease=%s physical_ifindex=%d network_handle=%s\n",
             rootjournal.Table,lease,physical.Index,
             strconv.FormatUint(c.androidNetworkHandle,10))
-        return full.Stop,nil
+        return stop,nil
     }
     if len(c.androidRouteUIDs)>0{
         group,e:=rootjournal.NewGroup(runner,rootOnlyJournal,rootjournal.GroupPlan{
@@ -121,6 +129,8 @@ func androidRootRouteAfterNative(
             DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...),
             Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         })
+        if e!=nil{return nil,e}
+        stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,group.Stop)
         if e!=nil{return nil,e}
         originalAndroidSelectedUIDRouteGet(runner,c.androidRouteUIDs,tun.name)
         // This receipt is printed only AFTER the entire owned kernel
@@ -134,7 +144,7 @@ func androidRootRouteAfterNative(
             strings.Join(uidText,","),rootjournal.Table,rootjournal.Priority,
             rootjournal.Priority+len(c.androidRouteUIDs)-1,
             lease,physical.Index,strconv.FormatUint(c.androidNetworkHandle,10))
-        return group.Stop,nil
+        return stop,nil
     }
     session,e:=rootjournal.New(runner,rootOnlyJournal,rootjournal.Plan{
         UID:c.androidRouteUID,Tun:tun.name,Lease:lease.String(),
@@ -143,6 +153,8 @@ func androidRootRouteAfterNative(
         IfIndex:physical.Index,
     })
     if e!=nil{return nil,e}
+    stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,session.Stop)
+    if e!=nil{return nil,e}
     originalAndroidSelectedUIDRouteGet(runner,[]int{c.androidRouteUID},tun.name)
     // This exact root-only rule is the sole route grant. The kernel
     // readback and fsync'd journal are complete before a positive log.
@@ -150,5 +162,72 @@ func androidRootRouteAfterNative(
         "V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED uid=%d table=%d priority=%d lease=%s physical_ifindex=%d network_handle=%s\n",
         c.androidRouteUID,rootjournal.Table,rootjournal.Priority,
         lease,physical.Index,strconv.FormatUint(c.androidNetworkHandle,10))
-    return session.Stop,nil
+    return stop,nil
 }
+const androidDNSJournal="/data/local/tmp/wbd-next-root/dns-tcp-journal.json"
+func androidDNSFirewall(args ...string)(string,error){
+ ctx,cancel:=context.WithTimeout(context.Background(),3*time.Second);defer cancel()
+ b,e:=exec.CommandContext(ctx,"iptables",args...).CombinedOutput()
+ if e!=nil{return "",fmt.Errorf("owned TCP DNS NAT: %w",e)}
+ return string(b),nil
+}
+func androidDNSBatch(rows [][]string)error{
+ // Batch all exact UID ranges in one cold kernel transaction where
+ // Android exposes iptables-restore; otherwise use the same exact rules.
+ restore,e:=exec.LookPath("iptables-restore")
+ if e!=nil{
+  for _,row:=range rows{
+   if _,e=androidDNSFirewall(append([]string{"-w","2","-t","nat"},row...)...);e!=nil{return e}
+  }
+  return nil
+ }
+ var input strings.Builder;input.WriteString("*nat\n")
+ for _,row:=range rows{input.WriteString(strings.Join(row," "));input.WriteByte('\n')}
+ input.WriteString("COMMIT\n")
+ ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
+ command:=exec.CommandContext(ctx,restore,"-w","2","--noflush")
+ command.Stdin=strings.NewReader(input.String())
+ if _,e=command.CombinedOutput();e!=nil{return fmt.Errorf("owned TCP DNS batch: %w",e)}
+ return nil
+}
+func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
+ runner rootjournal.Runner,stopUID func()error)(func()error,error){
+ if !c.androidAppTCPDNS{return stopUID,nil}
+ tunnel:=c.androidTunnelDNS||c.androidCNDNSSplit
+ physicalEndpoint:=net.JoinHostPort(c.androidPhysicalDNSUpstream.String(),"53")
+ dial:=func(ctx context.Context,path dnsnative.Path,network,endpoint string)(net.Conn,error){
+  if network!="tcp"{return nil,dnsnative.ErrUnbound}
+  if path==dnsnative.Physical{
+   return c.androidPhysicalDNSDial(ctx,path,network,endpoint)
+  }
+  if !tunnel||path!=dnsnative.Tunnel||endpoint!=dnsnative.TunnelDNS{return nil,dnsnative.ErrUnbound}
+  // Exact original authenticated lease, TUN interface and a separate
+  // root-only source/destination rule to the fixed 1.1.1.1/32. This is
+  // ordinary TCP entering the existing Rust M4, not a second TUN reader.
+  d:=net.Dialer{LocalAddr:&net.TCPAddr{IP:net.IP(lease.Addr().AsSlice())}}
+  d.ControlContext=func(ctx context.Context,network,address string,raw syscall.RawConn)error{
+   var bindErr error
+   e:=raw.Control(func(fd uintptr){
+    bindErr=syscall.SetsockoptString(int(fd),syscall.SOL_SOCKET,syscall.SO_BINDTODEVICE,tun.name)
+   })
+   return errors.Join(e,bindErr)
+  }
+  return d.DialContext(ctx,"tcp4",endpoint)
+ }
+ var match dnsnative.CNMatch
+ if c.androidCNDNSSplit{match=c.androidCNSnapshot.Match}
+ relay,e:=dnsnative.StartAppTCPDNS(dial,match,c.androidCNDNSSplit,c.androidPhysicalDNS,physicalEndpoint)
+ if e!=nil{return nil,errors.Join(e,stopUID())}
+ uids:=append([]int(nil),c.androidRouteUIDs...)
+ if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
+ owner,e:=rootjournal.NewDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal,
+  rootjournal.DNSPlan{Tun:tun.name,Lease:lease.String(),Port:relay.Port(),Tunnel:tunnel,
+   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs})
+ if e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
+ fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")
+ return func()error{
+  // Withdraw capture first; join DNS streams before the original M4 Stop.
+  return errors.Join(owner.Stop(),relay.Close(),stopUID())
+ },nil
+}
+
