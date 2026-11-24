@@ -1,3 +1,7 @@
+## B94｜真实 Android DNS netlink / UID socket / 冷 ACK（当前）
+
+B93 `860f78d17944167754aaa8064584d84fc9b02b47` [Action 45422304796](https://github.com/lly8666/wbd-next/actions/runs/45422304796) 12/9/5；真实 WiFi loss callback/Stop/恢复手动 START/Stop PASS；三 UID 5500 CN prefixes+peer throw 和 route-get/排除/Stop PASS，普通 App UDP EPERM；七模式原 MSS+Association PASS，TLS deadline；DNS exact netlink ADD/GET/DEL PASS，Android ip 不支持 ipproto 且读回丢字段。B94 正式系统 DNS 仅 cold netlink rule I/O（同 journal/NAT/Stop/Restore）；原 server CI ACK dispatch、Java/AF_INET UDP + 物理对照及独立 native stage receipt。9个隔离 guest 并行，B93生命周期不重复。详见 [B94 devlog](../devlog/android-root-probe/20261124-b94-android-dns-netlink-and-cold-ack.md)。未证明 remote M4/READY 自动恢复/ARM64手机。
+
 ## B93｜真实故障分层及隔离并行（当前）
 
 B92 `982bad849468b1cb59faaabd3861ab3f4d7c33d7` [Action 45416465988](https://github.com/lly8666/wbd-next/actions/runs/45416465988)：真实 RootService 前后台/Stop/Normal→Fixed 冷启动 PASS；WiFi loss 未证；七模式夹具缺 Rust SYN MSS 初值 panic；CN UID 已安装5501 throw 和规则但超时未清理；系统 DNS UID batch exit255、原清理 PASS。B93同正式 Run Rust MSS/record cap、TUN FD nonblock 修复与逐阶段 receipt；三个 UID 独立 guest；系统 DNS 冷 stderr 与 exact rtnetlink capability probe；独立真 NetworkCallback/恢复手动 START。九专项+一 lifecycle guest，保留原安全/性能契约、无基准，不冒称 peer M4/READY 自动恢复。详见 [B93 devlog](../devlog/android-root-probe/20261124-b93-real-failures-isolated-next.md)。

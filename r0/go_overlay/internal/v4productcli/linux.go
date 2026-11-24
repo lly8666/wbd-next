@@ -1245,8 +1245,8 @@ func recoverOriginalAndroidRootOwned()error{
         return string(b),nil
     }
     ipv6Err:=rootjournal.RecoverIPv6CarrierBatch(runIP,runFirewall,runFirewall6,originalIPv6Batch,root+"ipv6-carrier-journal.json")
-    systemDNS6Err:=rootjournal.RecoverSystemDNS6(runIP,runFirewall6,nil,nil,root+"system-dns6-journal.json")
-    systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json")
+    systemDNS6Err:=rootjournal.RecoverSystemDNS6(runIP,runFirewall6,nil,nil,root+"system-dns6-journal.json",rootjournal.PlatformSystemDNSRuleIO())
+    systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json",rootjournal.PlatformSystemDNSRuleIO())
     dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")
     _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json",originalIPv6Batch)
     routeErr=errors.Join(ipv6Err,systemDNS6Err,systemDNSErr,dnsErr,tetherErr,routeErr)

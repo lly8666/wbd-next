@@ -91,23 +91,39 @@ func b91ServeTUN(ctx context.Context,tun *ownedTun,dest [4]byte,port uint16,
  }
  return nil
 }
-func b90Packet(tun *ownedTun,uid int)error{
+func b94PacketOnce(tun *ownedTun,uid int,probe,payload string)error{
  ctx,cancel:=context.WithTimeout(context.Background(),15*time.Second);defer cancel()
  done:=make(chan error,1)
  seen:=make(chan struct{},1)
  go func(){done<-b91ServeTUN(ctx,tun,[4]byte{192,0,2,1},43999,func(q []byte)([]byte,bool){
-  if !bytes.Equal(q,[]byte("WBD_B90_UID")){return nil,false}
+  if !bytes.Equal(q,[]byte(payload)){return nil,false}
   select{case seen<-struct{}{}:default:}
   return q,true
  })}()
- fmt.Println("B93_UID_ECHO_BEGIN")
- e:=b91Instrument(ctx,uid,"-e","uid_probe","echo")
+ fmt.Println("B94_UID_ECHO_BEGIN",probe)
+ e:=b91Instrument(ctx,uid,"-e","uid_probe",probe)
  fmt.Println("B93_UID_INSTRUMENT_END",e)
  cancel()
  e=errors.Join(e,<-done)
  fmt.Println("B93_UID_TUN_READER_JOINED")
  if len(seen)!=1{return errors.Join(e,fmt.Errorf("ordinary UID datagram absent on original TUN"))}
+ if e==nil{fmt.Println("B94_UID_SOCKET_ROUNDTRIP_PASS",probe)}
  return e
+}
+func b90Packet(tun *ownedTun,uid int)error{
+ a:=b94PacketOnce(tun,uid,"echo","WBD_B90_UID")
+ b:=b94PacketOnce(tun,uid,"echo4","WBD_B94_UID4")
+ return errors.Join(a,b)
+}
+func b94BaselineUID(uid int)error{
+ var ret error
+ for _,probe:=range []string{"baseline","baseline4"}{
+  ctx,cancel:=context.WithTimeout(context.Background(),10*time.Second)
+  e:=b91Instrument(ctx,uid,"-e","uid_probe",probe);cancel()
+  if e==nil{fmt.Println("B94_UID_PHYSICAL_BASELINE_PASS",probe)}else{fmt.Println("B94_UID_PHYSICAL_BASELINE_FAIL",probe,e)}
+  ret=errors.Join(ret,e)
+ }
+ return ret
 }
 type b90Stop interface{Stop()error}
 func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot []byte,mode string) (ret error){
@@ -132,6 +148,7 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
   if e=b90UsesTun(id,dest,dev,false);e!=nil{return fmt.Errorf("baseline: %w",e)}
  }
  fmt.Println("B90_ROUTE_BASELINE_PASS")
+ baseline:=b94BaselineUID(uid)
  for _,mode:=range []string{mode}{
   var owner b90Stop
   switch mode{
@@ -160,7 +177,7 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
    if e=b90UsesTun(id,dest,dev,false);e!=nil{return fmt.Errorf("%s restored lookup: %w",mode,e)}
   }
   fmt.Printf("B90_ROUTE_%s_STOP_PASS\n",strings.ToUpper(mode))
-  if check!=nil{return fmt.Errorf("%s kernel/packet: %w",mode,check)}
+  if check!=nil||baseline!=nil{return fmt.Errorf("%s kernel/packet: %w",mode,errors.Join(check,baseline))}
   fmt.Printf("B90_ROUTE_%s_UID_PACKET_CN_PASS prefixes=%d\n",strings.ToUpper(mode),len(cidrs))
  }
  return nil
@@ -194,7 +211,6 @@ func RunAndroidSpecialtyCI(a []string)int{
   fmt.Println("B90_TUN_CLOSE_PASS")
  case "system-physical","system-tunnel","system-cn":
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
-  if a[0]=="system-physical"{if e=b93ProbeDNSRule(scope,uid);e!=nil{fmt.Println("B93_DNS_NETLINK_PROBE_FAIL",e);return 1}}
   if e=b91SystemDNS(scope,uid,a[0]);e!=nil{fmt.Println("B91_SYSTEM_DNS_FAIL",e);return 1}
  case "normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed":
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
@@ -318,7 +334,11 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
  route:=func(lease string)(func()error,error){return androidRootRouteAfterNative(c,tun,lease)}
  send:=func()error{
   qctx,qcancel:=context.WithTimeout(ctx,10*time.Second);defer qcancel()
-  return b91Instrument(qctx,uid,"-e","uid_probe","1")
+  a:=b91Instrument(qctx,uid,"-e","uid_probe","1")
+  if a==nil{fmt.Println("B94_NATIVE_APP_JAVA_SEND_PASS",mode)}else{fmt.Println("B94_NATIVE_APP_JAVA_SEND_FAIL",mode,a)}
+  b:=b91Instrument(qctx,uid,"-e","uid_probe","send4")
+  if b==nil{fmt.Println("B94_NATIVE_APP_INET4_SEND_PASS",mode)}else{fmt.Println("B94_NATIVE_APP_INET4_SEND_FAIL",mode,b)}
+  return errors.Join(a,b)
  }
  return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,route,send)
 }

@@ -50,7 +50,9 @@ case "$shard" in
 esac
 : >"$out/results.tsv"
 dns_pid=""
+uid_pid=""
 cleanup(){
+ if [[ -n "$uid_pid" ]];then kill "$uid_pid" 2>/dev/null || true;wait "$uid_pid" 2>/dev/null || true;fi
  if [[ -n "$dns_pid" ]];then sudo -n kill "$dns_pid" 2>/dev/null || true;wait "$dns_pid" 2>/dev/null || true;fi
 }
 trap cleanup EXIT
@@ -59,6 +61,11 @@ if [[ "$shard" == dns-physical || "$shard" == dns-cn || "$shard" == all ]];then
  sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
  dns_pid=$!
  for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
+fi
+if [[ "$shard" == route-* || "$shard" == routes || "$shard" == all ]];then
+ timeout 240s python3 -u android/root-app/ci/b94-uid-echo.py >"$out/uid-host.log" 2>&1 &
+ uid_pid=$!
+ for i in $(seq 1 20);do grep -Fq B94_UID_FIXTURE_READY "$out/uid-host.log" && break;sleep .2;done
 fi
 failed=0
 record(){ printf '%s\t%s\n' "$1" "$2" >>"$out/results.tsv";echo "B92_RESULT $shard $1 $2";if [[ "$2" != PASS ]];then failed=1;fi; }
@@ -101,6 +108,16 @@ for scene in "${scenes[@]}";do
  fi
  if [[ "$scene" == system-physical ]] && ! grep -Fq "B90_FIXTURE system.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
  if [[ "$scene" == system-cn ]] && ! grep -Fq "B90_FIXTURE cn.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
+ if [[ "$scene" == route-* && "$status" != PASS ]];then
+  # Read-only guest diagnostics; never disable netd/BPF/SELinux or change App permissions.
+  for cmd in "iptables -w 2 -nvxL OUTPUT" "iptables -w 2 -t mangle -nvxL OUTPUT" "ip -4 rule show" "ip -4 route get 192.0.2.1 uid $uid" "dumpsys netpolicy";do
+   printf "READBACK %s\n" "$cmd"
+   "$adb" shell "su -c '$cmd'" || true
+  done >"$out/$scene-egress.txt" 2>&1
+  "$adb" shell logcat -d -b all | grep -E "avc: denied|netd.*(deny|reject|blocked)|TrafficController" | tail -60 >"$out/$scene-egress-logcat.txt" || true
+  cat "$out/uid-host.log"
+  sed -n '1,90p' "$out/$scene-egress.txt"
+ fi
  if [[ "$scene" == system-* && "$status" != PASS ]];then
   "$adb" shell "su -c 'ip -4 rule help'" >"$out/$scene-ip-rule-help.txt" 2>&1 || true
   cat "$out/$scene-ip-rule-help.txt"
@@ -114,7 +131,13 @@ python3 - "$out" <<'PY'
 import json, os, pathlib, sys
 p=pathlib.Path(sys.argv[1])
 rows=dict(line.split("\t") for line in (p/"results.tsv").read_text().splitlines())
-r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
+native={}
+for scene in ("normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"):
+ f=p/(scene+".log")
+ if not f.exists():continue
+ t=f.read_text(errors="replace")
+ native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN"}
+r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))
 PY

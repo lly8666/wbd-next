@@ -68,11 +68,16 @@ func b91NewPair(parent context.Context,flow faketcp.ClientFlow,ordinal int)(*b91
  if e=p.client.WaitEstablished(ctx);e!=nil{return fail(e)}
  p.wg.Add(2)
  go func(){defer p.wg.Done();for{select{
- case seg:=<-c2s:_,_=p.server.HandleSegment(seg,time.Now())
+ case seg:=<-c2s:
+  result,e:=p.server.HandleSegment(seg,time.Now())
+  if e!=nil{fmt.Println("B94_COLD_SERVER_SEGMENT",e);continue}
+  // The original server reader owns this explicit ACK dispatch. Without
+  // it BootstrapStream.Write waits forever for its final cumulative ACK.
+  if result.AckNeeded{if e=emit(s2c)(p.server.ACKSegment(result.Ack));e!=nil{return}}
  case <-ctx.Done():return
  }}}()
  go func(){defer p.wg.Done();for{select{
- case seg:=<-s2c:_=p.client.HandleSegment(seg,time.Now())
+ case seg:=<-s2c:if e:=p.client.HandleSegment(seg,time.Now());e!=nil&&!errors.Is(e,faketcp.ErrClientDetached){fmt.Println("B94_COLD_CLIENT_SEGMENT",e)}
  case <-ctx.Done():return
  }}}()
  return p,nil
@@ -118,6 +123,7 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
     ExpectedUsername:"b91-ci",ExpectedPassword:"b91-fixture",ServerLimit:recordLimit,
     AllocateLease:func(req AdmissionRequest)(string,error){return V4AllocateAutomaticLease(leases,req)},
    },V4ServerOptions{DataPlaneReady:true,Epochs:store,perClientMixedMode:true})
+   if e!=nil{fmt.Println("B94_ORIGINAL_SERVER_ADMISSION_FAIL",e)}else{fmt.Println("B94_ORIGINAL_SERVER_ADMISSION_PASS")}
    p.result<-e
   }(p)
  }

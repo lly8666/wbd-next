@@ -112,8 +112,8 @@ func androidRootRouteAfterNative(
     c.androidDirectCIDRs=directCIDRs
     if e:=rootjournal.RecoverIPv6CarrierBatch(runner,androidDNSFirewall,androidDNSFirewall6,originalIPv6Batch,androidIPv6CarrierJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal,originalIPv6Batch);e!=nil{return nil,e}
-    if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal);e!=nil{return nil,e}
-    if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal);e!=nil{return nil,e}
+    if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal,rootjournal.PlatformSystemDNSRuleIO());e!=nil{return nil,e}
+    if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal,rootjournal.PlatformSystemDNSRuleIO());e!=nil{return nil,e}
     if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
     if c.androidRouteAllApps{
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
@@ -291,7 +291,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   // Android Network.getNetworkHandle stores netId in its high 32 bits.
   // No root/system wildcard rule and no modification of netd configuration.
   systemOwner,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,
-   androidSystemDNSJournal,rootjournal.SystemDNSPlan{DNSPlan:plan,NetID:uint32(c.androidNetworkHandle>>32)})
+   androidSystemDNSJournal,rootjournal.SystemDNSPlan{DNSPlan:plan,NetID:uint32(c.androidNetworkHandle>>32)},rootjournal.PlatformSystemDNSRuleIO())
   if e!=nil{return nil,errors.Join(e,owner.Stop(),relay.Close(),stopUID())}
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client uid_netid_port53=1")
  }
@@ -300,7 +300,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   if err!=nil{return nil,errors.Join(err,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
   plan6:=plan;plan6.Port=port
   systemOwner6,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall6,androidDNSIPBatch,nil,
-   androidSystemDNS6Journal,rootjournal.SystemDNSPlan{DNSPlan:plan6,NetID:uint32(c.androidNetworkHandle>>32),IPv6:true})
+   androidSystemDNS6Journal,rootjournal.SystemDNSPlan{DNSPlan:plan6,NetID:uint32(c.androidNetworkHandle>>32),IPv6:true},rootjournal.PlatformSystemDNSRuleIO())
   if e!=nil{return nil,errors.Join(e,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client uid_netid_port53=1 ipv4_upstream=1")
  }

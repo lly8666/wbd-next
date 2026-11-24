@@ -60,8 +60,16 @@ func(p SystemDNSPlan) nat(action string)[][]string{
  return rows
 }
 type systemDNSState struct{link,route,addr bool;rules,nat [][]string}
+// Optional exact kernel rule transport; the host fake runners retain the
+// original textual path. Only system DNS uses this cold control interface.
+type SystemDNSRuleIO struct {
+ Read func(string)(string,error)
+ Change func([][]string)error
+}
+func systemDNSIO(v []*SystemDNSRuleIO)*SystemDNSRuleIO{if len(v)>0{return v[0]};return nil}
 type SystemDNSOwner struct{
  ip,fw Runner
+ ruleIO *SystemDNSRuleIO
  batchIP func([][]string)error
  batchNAT func([][]string)error
  lock *os.File
@@ -146,7 +154,9 @@ func(s *SystemDNSOwner) state(p SystemDNSPlan)(systemDNSState,error){
   row:=append([]string{r[4]+":","from","all"},r[5:]...)
   key,e:=systemRuleKey(row,p.table());if e!=nil{return x,e};expected[key]=r
  }
- rules,e:=s.ip(p.family(),"rule","show");if e!=nil{return x,e}
+ var rules string
+ if s.ruleIO!=nil{rules,e=s.ruleIO.Read(p.family())}else{rules,e=s.ip(p.family(),"rule","show")}
+ if e!=nil{return x,e}
  for _,line:=range strings.Split(rules,"\n"){
   w:=strings.Fields(line);if len(w)==0{continue}
   n,_:=strconv.Atoi(strings.TrimSuffix(w[0],":"))
@@ -174,6 +184,7 @@ func(s *SystemDNSOwner) changeRules(rows [][]string,action string)error{
  for _,row:=range rows{
   copyRow:=append([]string(nil),row...);copyRow[2]=action;cmds=append(cmds,copyRow)
  }
+ if s.ruleIO!=nil{return s.ruleIO.Change(cmds)}
  if s.batchIP!=nil{return s.batchIP(cmds)}
  for _,row:=range cmds{if _,e:=s.ip(row...);e!=nil{return e}}
  return nil
@@ -212,24 +223,24 @@ func(s *SystemDNSOwner) remove(p SystemDNSPlan)error{
  if x.link||x.route||x.addr||len(x.rules)!=0||len(x.nat)!=0{return fmt.Errorf("system DNS Stop readback incomplete")}
  if e=os.Remove(s.path);e!=nil{return e};return parentSync(s.path)
 }
-func RecoverSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string)error{
- return recoverSystemDNS(ip,fw,batchIP,batchNAT,path,false)
+func RecoverSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string,ruleIO ...*SystemDNSRuleIO)error{
+ return recoverSystemDNS(ip,fw,batchIP,batchNAT,path,false,ruleIO...)
 }
-func RecoverSystemDNS6(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string)error{
- return recoverSystemDNS(ip,fw,batchIP,batchNAT,path,true)
+func RecoverSystemDNS6(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string,ruleIO ...*SystemDNSRuleIO)error{
+ return recoverSystemDNS(ip,fw,batchIP,batchNAT,path,true,ruleIO...)
 }
-func recoverSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string,v6 bool)error{
+func recoverSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string,v6 bool,ruleIO ...*SystemDNSRuleIO)error{
  scope:=SystemDNSPlan{IPv6:v6}
  l,e:=scopedOwnerLock(path,scope.journal(),scope.lockName());if e!=nil{return e};defer l.Close()
  p,found,e:=readSystemDNS(path);if e!=nil||!found{return e}
  if p.IPv6!=v6{return fmt.Errorf("system DNS journal family mismatch")}
- return (&SystemDNSOwner{ip:ip,fw:fw,batchIP:batchIP,batchNAT:batchNAT,path:path}).remove(p)
+ return (&SystemDNSOwner{ip:ip,fw:fw,batchIP:batchIP,batchNAT:batchNAT,path:path,ruleIO:systemDNSIO(ruleIO)}).remove(p)
 }
-func NewSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string,p SystemDNSPlan)(*SystemDNSOwner,error){
+func NewSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string,p SystemDNSPlan,ruleIO ...*SystemDNSRuleIO)(*SystemDNSOwner,error){
  p.Version=1
  if ip==nil||fw==nil||!p.valid(){return nil,fmt.Errorf("invalid system DNS scope")}
  l,e:=scopedOwnerLock(path,p.journal(),p.lockName());if e!=nil{return nil,e}
- s:=&SystemDNSOwner{ip:ip,fw:fw,batchIP:batchIP,batchNAT:batchNAT,path:path,lock:l,plan:p}
+ s:=&SystemDNSOwner{ip:ip,fw:fw,batchIP:batchIP,batchNAT:batchNAT,path:path,lock:l,plan:p,ruleIO:systemDNSIO(ruleIO)}
  fail:=func(e error)(*SystemDNSOwner,error){l.Close();return nil,e}
  old,found,e:=readSystemDNS(path);if e!=nil{return fail(e)}
  if found{if old.IPv6!=p.IPv6{return fail(fmt.Errorf("system DNS journal family mismatch"))};if e=s.remove(old);e!=nil{return fail(e)}}

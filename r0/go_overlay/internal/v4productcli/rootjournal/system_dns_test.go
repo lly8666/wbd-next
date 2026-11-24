@@ -6,9 +6,10 @@ import (
  "strings"
  "testing"
 )
-func TestB66SystemDNSSelectedUIDRouteAndRestore(t *testing.T){testSystemDNSOwner(t,false)}
-func TestB69SystemDNS6SelectedUIDRouteAndRestore(t *testing.T){testSystemDNSOwner(t,true)}
-func testSystemDNSOwner(t *testing.T,v6 bool){
+func TestB66SystemDNSSelectedUIDRouteAndRestore(t *testing.T){testSystemDNSOwner(t,false,false)}
+func TestB69SystemDNS6SelectedUIDRouteAndRestore(t *testing.T){testSystemDNSOwner(t,true,false)}
+func TestB94SystemDNSRuleIOOwnerRestore(t *testing.T){for _,v6:=range []bool{false,true}{testSystemDNSOwner(t,v6,true)}}
+func testSystemDNSOwner(t *testing.T,v6,binaryRules bool){
  p:=SystemDNSPlan{DNSPlan:DNSPlan{Version:1,Tun:"wbdv40",Lease:"10.66.0.8/32",Port:43210,
   Tunnel:true,All:true,ExcludedAppIDs:[]int{11200,11201}},NetID:105,IPv6:v6}
  var link,route,addr,alias bool
@@ -51,8 +52,11 @@ func testSystemDNSOwner(t *testing.T,v6 bool){
    if r[0]=="-A"{nat[key]=strings.Join(row," ")}else{delete(nat,key)}
   };return nil
  }
+ var transport *SystemDNSRuleIO
+ var reads,changes int
+ if binaryRules{transport=&SystemDNSRuleIO{Read:func(family string)(string,error){reads++;return ip(family,"rule","show")},Change:func(rows [][]string)error{changes++;return batchIP(rows)}}}
  path:=filepath.Join(t.TempDir(),"owned",p.journal())
- s,e:=NewSystemDNS(ip,fw,batchIP,batchNAT,path,p);if e!=nil{t.Fatal(e)}
+ s,e:=NewSystemDNS(ip,fw,batchIP,batchNAT,path,p,transport);if e!=nil{t.Fatal(e)}
  if !link||!alias||!route||addr!=p.IPv6||len(nat)!=2||len(rules)!=2*len(p.ranges()){t.Fatal("missing exact kernel capture")}
  for _,line:=range rules{
   if !strings.Contains(line,"fwmark 0x69/0xffff")||!strings.Contains(line,"dport 53")||
@@ -60,8 +64,9 @@ func testSystemDNSOwner(t *testing.T,v6 bool){
  }
  if e=s.Stop();e!=nil{t.Fatal(e)}
  if link||route||addr||len(nat)!=0||len(rules)!=0{t.Fatal("Stop leaked")}
- s,e=NewSystemDNS(ip,fw,batchIP,batchNAT,path,p);if e!=nil{t.Fatal(e)}
+ s,e=NewSystemDNS(ip,fw,batchIP,batchNAT,path,p,transport);if e!=nil{t.Fatal(e)}
  s.lock.Close();s.lock=nil
- if e=recoverSystemDNS(ip,fw,batchIP,batchNAT,path,v6);e!=nil{t.Fatal(e)}
+ if e=recoverSystemDNS(ip,fw,batchIP,batchNAT,path,v6,transport);e!=nil{t.Fatal(e)}
  if link||route||addr||len(nat)!=0||len(rules)!=0{t.Fatal("Restore leaked")}
+ if binaryRules&&(reads==0||changes!=4){t.Fatalf("exact rule transport not used for Start/Stop/Restore: %d %d",reads,changes)}
 }
