@@ -67,7 +67,7 @@ def assert_original_binaries():
     factor=os.environ.get("WBD_H2312_FACTOR","legacy")
     require(factor in ("legacy","npf_only","tx_only","path_ab"),"H2312_ALLOWED_PRODUCT_SELECTOR")
     if factor=="path_ab":
-        from m0_h2292_true_product_ab import path_ab_baseline,PATH_AB_FEATURES
+        from m0_h2292_true_product_ab import path_ab_baseline,path_ab_candidate_features,path_ab_candidate_source,PATH_AB_FEATURES
         go_source=os.environ["GITHUB_SHA"]
     else:
         go_source="c5066db61fc51bafd7c2ad2def3029e615efa777"
@@ -87,13 +87,13 @@ def assert_original_binaries():
             "h2291_windows_tx_service" if factor=="legacy" else (
             "h2311_windows_npf64_only" if factor=="npf_only" else "h2311_windows_tx16_only"))
         if factor=="path_ab":
-            require(c["feature_set"]==PATH_AB_FEATURES and
+            require(c["feature_set"]==path_ab_candidate_features() and
                     c["dll_sha256"]==m["sha256"]["dll"],"H2321_CANDIDATE_BUILD_PROFILE")
         require(c["source_sha"]==approved_source and
                 c["trial_feature"]==expected and
                 c["original_go_exe_source_sha"]==m["source_sha"] and
                 (factor=="legacy" or (c.get("h2312_factor")==factor and
-                    approved_source==os.environ["GITHUB_SHA"])),
+                    approved_source==(path_ab_candidate_source() if factor=="path_ab" else os.environ["GITHUB_SHA"]))),
                 "H2291_EXACT_RUST_SOURCE_AND_ORIGINAL_GO_ABI_MANIFEST")
     original_ab=os.environ.get("WBD_H2292_TRUE_PRODUCT_ABA")=="1"
     baseline=None

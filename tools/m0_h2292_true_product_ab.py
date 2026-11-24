@@ -42,7 +42,18 @@ def path_ab_baseline():
     return source
 
 def path_ab_axis():
-    return PATH_AB_AXES[path_ab_baseline()]
+    axis=os.environ.get("WBD_PATH_AB_AXIS",PATH_AB_AXES[path_ab_baseline()])
+    if axis not in (PATH_AB_AXES[path_ab_baseline()],
+                    "native_off_loan" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else "",
+                    "tx16_npf64_profile" if path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else ""):
+        raise ValueError("invalid comparison axis for baseline")
+    return axis
+
+def path_ab_candidate_source():
+    return path_ab_baseline() if path_ab_axis()=="tx16_npf64_profile" else CANDIDATE_BUILD_SHA
+
+def path_ab_candidate_features():
+    return PATH_AB_FEATURES+(",h2291_windows_tx_service" if path_ab_axis()=="tx16_npf64_profile" else "")
 
 ROOT=pathlib.Path("h2292-out")
 H2286=pathlib.Path("h2286-out")
@@ -143,12 +154,13 @@ def verify_binary_archive():
         frozen=json.loads((BINARY.parent/"windows-binary-manifest.json").read_text())
         default=json.loads((BINARY.parent/"h2292-baseline-dll-manifest.json").read_text())
         current=os.environ["GITHUB_SHA"]
-        require(CANDIDATE_BUILD_SHA==current==src["source_sha"]==
-                src["original_go_exe_source_sha"]==frozen["source_sha"] and
+        require(CANDIDATE_BUILD_SHA==current==src["original_go_exe_source_sha"]==frozen["source_sha"] and
+                src["source_sha"]==path_ab_candidate_source() and
                 default["source_sha"]==path_ab_baseline() and
                 src["trial_feature"]=="H2321_READY_PATH" and
                 default["feature"]=="H2321_PRE_OPTIMIZATION" and
-                src["feature_set"]==default["feature_set"]==PATH_AB_FEATURES and
+                src["feature_set"]==path_ab_candidate_features() and
+                default["feature_set"]==PATH_AB_FEATURES and
                 src["h2312_factor"]==default["h2312_factor"]=="path_ab",
                 "H2321_EXACT_CURRENT_GO_AND_BASELINE_CANDIDATE_SOURCES")
         for path,digest in ((BINARY,default["dll_sha256"]),
@@ -219,7 +231,8 @@ def win_trial(group,relay,arm,ready):
                     "ACTUAL_DLL_AND_CANDIDATE_MANIFEST_NOT_AT_ACTIVE_LOCATION")
             os.environ["WBD_H2291_WINDOWS_TX_CANDIDATE"]="1" if tuned else "0"
             if tuned:
-                os.environ["WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA"]=CANDIDATE_BUILD_SHA
+                os.environ["WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA"]=(path_ab_candidate_source()
+                    if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA)
             else:
                 os.environ.pop("WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA",None)
             # The previous real Win32 Go/Rust client must have FINISHED its
@@ -264,8 +277,9 @@ def win_trial(group,relay,arm,ready):
                         shape["queue_9_15"]+shape["queue_16"]==trace["queue_calls"] and
                         shape["direct_le256"]+shape["direct_gt256"]==trace["direct_calls"],
                         "H2313_ORIGINAL_NPF_REAL_BATCH_HISTOGRAM_INCONSISTENT")
-                expect_bytes=65536 if (factor=="tx_only" or (tuned and factor!="path_ab")) else 16384
-                expect_frames=16 if (factor=="tx_only" or (tuned and factor!="path_ab")) else 8
+                profile_b=factor=="path_ab" and path_ab_axis()=="tx16_npf64_profile" and tuned
+                expect_bytes=65536 if (factor=="tx_only" or (tuned and factor!="path_ab") or profile_b) else 16384
+                expect_frames=16 if (factor=="tx_only" or (tuned and factor!="path_ab") or profile_b) else 8
                 require(trace is not None and
                         trace["npf_queue_bytes"]==expect_bytes and
                         trace["npf_queue_packets"]==expect_frames and
@@ -273,8 +287,9 @@ def win_trial(group,relay,arm,ready):
                         trace["queue_frames_submitted"]>0 and
                         trace["queue_bytes_copied"]>0 and
                         trace["queue_bytes_copied"]<=trace["queue_bytes_submitted"] and
-                        not has_profile and
-                        receipt.get("h2291_original_windows_npf_queue_verified") is None,
+                        has_profile==profile_b and
+                        receipt.get("h2291_original_windows_npf_queue_verified") in (None,True) and
+                        (profile_b or receipt.get("h2291_original_windows_npf_queue_verified") is None),
                         "H2312_ORIGINAL_DRIVER_REAL_ACTUAL_TRACE_NOT_MATCHED")
             for n in ("client-result.json","original-win-client.log",
                       "original-win-cpu.jsonl","win-inner-udp.log",
@@ -282,7 +297,8 @@ def win_trial(group,relay,arm,ready):
                 maybe_copy(H2286/n,ROOT/tag/n)
             r={"stage":tag,"candidate_enabled":tuned,
                "compiled_rust_dll_sha256":new_sha if tuned else old_sha,
-               "compiled_rust_source_sha":(CANDIDATE_BUILD_SHA if tuned or factor!="path_ab" else path_ab_baseline()),
+               "compiled_rust_source_sha":((path_ab_candidate_source() if tuned else path_ab_baseline())
+                                           if factor=="path_ab" else CANDIDATE_BUILD_SHA),
                "comparison_axis":path_ab_axis() if factor=="path_ab" else factor,
                "arm_rx_bytes":receipt["product_tcp"]["bulk_remote_received_bytes"],
                "tcp_mbps":receipt["product_tcp"]["bulk_receiver_goodput_mbps"],

@@ -12,9 +12,9 @@ class CurrentPathAB(unittest.TestCase):
         w=(ROOT/".github/workflows/qa-h2321-current-win-arm-path-ab.yml").read_text()
         self.assertIn("docs/requests/M0/qa-h2321-current-win-arm-path-ab.md",w)
         self.assertEqual(w.count("group: [a, b]"),3)
-        self.assertIn(ab.PATH_AB_QUEUE_BASELINE,w)
-        self.assertIn("$allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-platform/src/windows_native_io.rs')",w)
-        self.assertIn("direct_npf_queue_staging",w)
+        self.assertIn(ab.PATH_AB_SETTLEMENT_BASELINE,w)
+        self.assertIn("$allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-engine/src/v4_windows_owner.rs')",w)
+        self.assertIn("native_off_loan",w)
         self.assertIn("git worktree add --detach h2321-baseline",w)
         self.assertIn("tools/prepare_windows_wiring.py",w)
         self.assertIn("tools/m0_plan029_linux_dual_native_build.sh",w)
@@ -38,6 +38,11 @@ class CurrentPathAB(unittest.TestCase):
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_QUEUE_BASELINE}):
             self.assertEqual(ab.path_ab_baseline(),ab.PATH_AB_QUEUE_BASELINE)
             self.assertEqual(ab.path_ab_axis(),"direct_npf_queue_staging")
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"native_off_loan"}):
+            self.assertEqual(ab.path_ab_axis(),"native_off_loan")
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"tx16_npf64_profile"}):
+            self.assertEqual(ab.path_ab_candidate_source(),ab.PATH_AB_SETTLEMENT_BASELINE)
+            self.assertTrue(ab.path_ab_candidate_features().endswith(",h2291_windows_tx_service"))
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":"unapproved"}):
             with self.assertRaises(ValueError):
                 ab.path_ab_baseline()
