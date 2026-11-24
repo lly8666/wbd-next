@@ -90,10 +90,36 @@ func V4WindowsEstablishOriginalGameClientGroup(
   if e!=nil{return fail(e)}
   cfg:=base
   cfg.LaneID=uint8(i+1)
+  // The SYN loop has finished, but each lane still has real TLS DATA
+  // in the original FakeTCP Sender. Drive its RTO until TLS returns,
+  // then join before Detach so no Go send can race the Rust owner.
+  pumpCtx,stopPump:=context.WithCancel(ctx)
+  type coldResult struct{copied uint64;err error}
+  pumpDone:=make(chan coldResult,1)
+  go func(){
+   ticker:=time.NewTicker(100*time.Millisecond)
+   defer ticker.Stop()
+   var copied uint64
+   for{
+    select{
+    case <-pumpCtx.Done():pumpDone<-coldResult{copied:copied};return
+    case <-ticker.C:
+     if assoc.State()!=faketcp.ClientAssociationEstablished{
+      pumpDone<-coldResult{copied:copied};return
+     }
+     sent,err:=assoc.EmitRetransmitDue(time.Now())
+     if err!=nil{assoc.Close();pumpDone<-coldResult{copied,err};return}
+     if sent{copied++}
+    }
+   }
+  }()
   session,e:=EstablishClientV4(ctx,assoc.BootstrapConn(),cfg,
    V4ClientOptions{DataPlaneReady:true,Epoch:g.epoch,
     fec2Product:true,GameFec:g.gameFec,StartupPadding:g.paddingMode})
-  if e!=nil{return fail(e)}
+  stopPump()
+  pump:=<-pumpDone
+  fmt.Printf("WBD_WINDOWS_GAME_COLD_TLS_LANE lane=%d rto_copied=%d joined=1 result=%t\n",i+1,pump.copied,e==nil&&pump.err==nil)
+  if e!=nil||pump.err!=nil{return fail(fmt.Errorf("Game lane %d original TLS: %w",i+1,errors.Join(e,pump.err)))}
   if i==0{g.epoch=session.Epoch}
   if session.Epoch!=g.epoch||g.epoch==[16]byte{}{return fail(ErrAdmissionUnsupported)}
   lease,leaseErr:=session.AuthenticatedLeaseIPv4()

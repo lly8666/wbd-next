@@ -712,9 +712,9 @@ all detached DATA. No new transport, FEC or per-packet Go forwarding.
 // authenticated lane pending while a later generation starts with the SAME
 // principal/tunnel/epoch. Grouping only by the protected owner could pair
 // stale lane 1 with a new lane 2 and announce a false native M4 cohort.
-// Original Linux and Windows Game2/4 clients bind n consecutive source
-// ports for ONE attempt. Use that observed TCP tuple as an additional
-// *joining constraint*, never as authentication or native owner authority.
+// Original clients bind consecutive local ports, but NAT may rewrite
+// each independently. The tuple is only a useful exact-match hint;
+// a protected fresh lane1 anchors the current incomplete cohort.
 type originalGameColdFlowKey struct {
     cohort realityfront.V4LinuxGameCohortID
     clientIP [4]byte
@@ -755,6 +755,7 @@ type originalGameCohortLive struct{
 func stageOriginalAuthenticatedGameLane(
     groups map[originalGameColdFlowKey]*originalGameCohortPending,
     lane *realityfront.V4LinuxGameAuthenticatedLane,now time.Time,
+    retireIncomplete func(*realityfront.V4LinuxGameAuthenticatedLane),
 )(realityfront.V4LinuxGameCohortID,[]*realityfront.V4LinuxGameAuthenticatedLane,error){
     var zero realityfront.V4LinuxGameCohortID
     if lane==nil{return zero,nil,realityfront.ErrAdmissionParams}
@@ -762,11 +763,36 @@ func stageOriginalAuthenticatedGameLane(
     if err!=nil{return zero,nil,err}
     n:=int(key.Lanes)
     if n!=2&&n!=4{return zero,nil,realityfront.ErrAdmissionUnsupported}
-    // Different source-port generations MUST NOT share this pending slot,
-    // even if their already-protected epoch and principal are identical.
-    // A stale lane may expire independently without poisoning a fresh pair.
-    cold,err:=originalGameColdFlowIdentity(key,id,lane.Association().Flow())
-    if err!=nil{return key,nil,err}
+    flow:=lane.Association().Flow()
+    cold,err:=originalGameColdFlowIdentity(key,id,flow)
+    if err!=nil{
+        // A NAT can even map a sibling to a port at the numerical edge.
+        cold=originalGameColdFlowKey{cohort:key,clientIP:flow.ClientIP,
+            serverIP:flow.ServerIP,serverPort:flow.ServerPort,firstClientPort:flow.ClientPort}
+    }
+    fresh,e:=lane.ProtectedFreshGroupRequested()
+    if e!=nil{return key,nil,e}
+    // A newly authenticated lane1 supersedes incomplete earlier attempts;
+    // the live native group is not in this map and is never retired here.
+    if id==1&&fresh{
+        for k,g:=range groups{
+            if k.cohort!=key||k.serverIP!=flow.ServerIP||k.serverPort!=flow.ServerPort||g.lanes[1]==nil{continue}
+            delete(groups,k)
+            for _,old:=range g.lanes{retireIncomplete(old)}
+        }
+    }
+    // Preserve the exact tuple hint when available. If NAT broke
+    // adjacency, use the unique matching protected pending cohort.
+    // No unauthenticated port or SYN grants a lane membership.
+    if groups[cold]==nil{
+        var candidate originalGameColdFlowKey
+        matches:=0
+        for k,g:=range groups{
+            if k.cohort!=key||k.serverIP!=flow.ServerIP||k.serverPort!=flow.ServerPort||g.lanes[id]!=nil{continue}
+            candidate=k;matches++
+        }
+        if matches==1{cold=candidate}
+    }
     group:=groups[cold]
     if group==nil{
         group=&originalGameCohortPending{
@@ -1409,7 +1435,7 @@ func runGameMultiServer(
             log.Printf("V4_PUBLIC_GAME_MULTI_PROTECTED_LANE_STAGED role=server lanes=%d lane=%d client_port=%d",
                 coldKey.Lanes,laneID,lane.Association().Flow().ClientPort)
             key,complete,e:=stageOriginalAuthenticatedGameLane(
-                pending,lane,time.Now(),
+                pending,lane,time.Now(),rejectLane,
             )
             if e!=nil{
                 rejectLane(lane)

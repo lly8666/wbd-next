@@ -114,7 +114,7 @@ func m0WindowsInitialTransportRetryAllowed(
  if applied||failedAttempts>=2||err==nil||
   errors.Is(err,context.Canceled)||errors.Is(err,realityfront.ErrAdmissionAuth)||
   !errors.Is(err,errM0OriginalColdTransportTimeout){return false}
- return mode==m0WinModeNormal||mode==m0WinModeFixed||mode==m0WinModeAuto
+ return mode==m0WinModeNormal||mode==m0WinModeFixed||mode==m0WinModeAuto||mode==m0WinModeGame2||mode==m0WinModeGame4
 }
 // Cold record offer is resolved by Rust's versioned full-IP budget ABI.
 // No separate Windows 1400 cap or Go framing arithmetic is authoritative.
@@ -290,6 +290,10 @@ type m0WindowsColdTupleOrdinal struct{
  Next uint64 `json:"next"`
 }
 func m0WindowsReserveColdTupleOrdinal(statePath string)(uint64,error){
+ return m0WindowsReserveColdTupleOrdinals(statePath,1)
+}
+// Reserve the entire cold Game tuple group in one existing state update.
+func m0WindowsReserveColdTupleOrdinals(statePath string,count uint64)(uint64,error){
  if statePath==""{return 0,windowsclient.ErrN4NativeGuard}
  dir:=filepath.Dir(filepath.Clean(statePath))
  name:=filepath.Join(dir,".wbd-next-cold-tuple-ordinal.json")
@@ -304,8 +308,7 @@ func m0WindowsReserveColdTupleOrdinal(statePath string)(uint64,error){
   }
   current=state.Next
  }else if !errors.Is(err,os.ErrNotExist){return 0,err}
- next:=current+1
- if next>65535{next=1}
+ next:=(current-1+count)%65535+1
  payload,err:=json.Marshal(m0WindowsColdTupleOrdinal{Schema:1,Next:next})
  if err!=nil{return 0,err}
  tmp,err:=os.CreateTemp(dir,".wbd-next-cold-tuple-*.tmp")
@@ -650,24 +653,21 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  fmt.Printf("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=%d mode=%v configured_outer_mtu=%d physical_outer_mtu=%d effective_outer_mtu=%d local_advertised_mss=%d inner_mtu_planned=%d limiting_reason=%s source=RUST_V1_REAL_OS\n",
   generation,o.Mode,o.ConnectionMTU,physical,cold.EffectiveOuterIPMTU,
   cold.AdvertisedSynMSS,o.TunnelMTU,reason)
- // A successor with the same source IPv4 cannot reuse the exact old
- // detached Linux raw 4-tuple. Game already manages its own multi-lane
- // local tuple set, so only Normal/Fixed/Auto use this cold port.
- coldSourcePort:=o.SourcePort
- if o.Mode!=m0WinModeGame2&&o.Mode!=m0WinModeGame4{
-  // Every *actual* cold original TLS start reserves one new tuple,
-  // including same-process cold reauth and new GUI Go child processes.
-  // A failed pre-TLS attempt consumes one ordinal; it cannot revive an
-  // old authenticated server-side 4-tuple from the previous session.
-  ordinal,portErr:=m0WindowsReserveColdTupleOrdinal(o.StatePath)
-  if portErr!=nil{return fmt.Errorf("PLAN029 cold tuple ordinal: %w",portErr)}
-  coldSourcePort,err=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal)
-  if err!=nil{return err}
-  fmt.Printf("WBD_PLAN029_COLD_TLS_PROCESS_PORT_ORDINAL ordinal=%d configured_port=%d source=portable_cold_state\n",
-   ordinal,o.SourcePort)
-  fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=%t\n",
-   generation,o.SourcePort,coldSourcePort,o.ServerPort,coldSourcePort!=o.SourcePort)
- }
+ // Every cold attempt consumes fresh tuples, including Game across GUI
+ // processes. Reserve a complete contiguous group; leave wrap headroom.
+ gameLanes:=1
+ if o.Mode==m0WinModeGame2{gameLanes=2}else if o.Mode==m0WinModeGame4{gameLanes=4}
+ slots:=uint64(1)
+ if gameLanes>1{slots=uint64(gameLanes+4)}
+ ordinal,portErr:=m0WindowsReserveColdTupleOrdinals(o.StatePath,slots)
+ if portErr!=nil{return fmt.Errorf("PLAN029 cold tuple ordinal: %w",portErr)}
+ coldSourcePort,err:=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal)
+ if err!=nil{return err}
+ if int(coldSourcePort)+gameLanes-1>65535{coldSourcePort=49152}
+ fmt.Printf("WBD_PLAN029_COLD_TLS_PROCESS_PORT_ORDINAL ordinal=%d configured_port=%d source=portable_cold_state\n",
+  ordinal,o.SourcePort)
+ fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=%t lanes=%d\n",
+  generation,o.SourcePort,coldSourcePort,o.ServerPort,coldSourcePort!=o.SourcePort,gameLanes)
  ncfg,err:=underlay.NpcapConfig(coldSourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
  if err!=nil{return err}
  // PLAN024 original public Windows↔WSL2 real-NPF correction. Genuine
@@ -776,7 +776,8 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
     StatePath:o.StatePath,
    })
   }
-  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,open,planForGame,pathChanged)
+  o.SourcePort=coldSourcePort
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,open,planForGame,pathChanged,applied)
  }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}
