@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2397,
-  "checkpoint_sha": "39cf1aefde05398a9755e0e49f06f4c2d74d7488",
-  "progress": "in_progress",
+  "sequence": 2398,
+  "checkpoint_sha": "2a4d8931ae025a48eeaa4ecf36995e748b1e2619",
+  "progress": "verifying",
   "task_id": "M0-PLAN029-ALL-MODE-NATIVE-PARITY",
-  "current_task": "一次性补齐029已确认优化覆盖；不重开性能研究。",
+  "current_task": "PR75全端七模式原生性能设施已接线，等待最终同源码功能验收。",
   "why_now": "用户授权跨端、跨模式默认启用及功能回归。",
   "done_when": "当前支持的原生七模式在Linux双ISA和Windows客户端/Linux服务端实际TCP/UDP/Stop功能回归，默认TX16/NPF64KiB、Linux全端公平准入及Windows原生有界公平ready入口、Game parser和批处理接线；不跑性能AB、不新增防御框架。",
-  "next_action": "在登记短分支集中改动后，复用原生七模式功能夹具；收真实回执再合main。",
+  "next_action": "收f21ea508原生双ISA 45368300106及Windows/Linux七模式45368304554真实业务回执；仅修真失败，证据齐后合PR75。分支35ccc286仅记录devlog，不再重复触发。",
   "unverified": true,
-  "last_tested_source": "153a2fed9c7af6b491f5e5528c8d9e5a5ca78229",
+  "last_tested_source": "9890686a8cf5e061c2bca467861030892ca461d3",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
@@ -21,5 +21,5 @@
     "docs/evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2397 只读源码审计确认Linux Normal 128与OFF-only公平门、Game64/公平关、Windows Game旧DATA parser、TX16/64KiB未默认。Windows Wintun内核FIFO不能替换未读包，复用五元组公平原则于ready批次，不人为造丢包。旧任务已收口。"
+  "partial_summary": "H2398 初始候选9890686双ISA各6模式实际双向TCP/UDP与Stop通过，第七Game2 Fixed6旧夹具退出2。修夹具、Windows旧注释判据，补Linux Game真实sendmmsg及FrozenRecordHandle import。最终产品f21ea508已派发两套功能测试，未合main。Windows实际客户端，无正式Windows服务端产品。Windows ready五元组公平不等同Linux满队列替换。未跑性能AB。"
 }
