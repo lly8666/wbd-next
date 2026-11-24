@@ -25,3 +25,11 @@
 - 吞吐实验分支的 TCP ACK/NPF/queue/window 业务优化不因为本专项合入而自动取得源锁性能资格；独立优化需要自己的 A/B 和 Windows/ARM 原生证据。
 
 **权威结构化索引**：[`docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json`](../../evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json)。全部历史过程仍在 [20261123 WIP 开发日志](20261123-GAME-NORMAL-OUTER-REWRITE-WIP.md)（其各时点“仍 Draft/尚不合入 main”属于历史过程，不作为本次用户批准后的当前决策）。
+
+## 2026-11-24 集成后 Feature catalog 有界历史归档
+
+原 `outer-opportunistic-repair` 功能卡包含 37 条精确 SOURCE 关联验证记录，超过仓库单卡 16KiB 上限。**逐字节归档**完整 37 条于 [历史完整功能卡](../../evidence/M0/20261124-OUTER-REPAIR-FEATURE-VERIFICATION-ARCHIVE.json)，活跃卡保留最近 29 条与本次收口及 Windows 未验说明，未删除或改写旧 PASS/FAIL。维护自测同步更新到 Normal-v3 当前 AEAD-open 后 ACK/SACK 入账接口，既有 STOP、鉴权与无跨流 HOL 约束不降低。
+
+```feature-impact
+{"kind":"updated","ids":["outer-opportunistic-repair"],"reason":"Archive full 37-row source-locked history without loss; keep active feature card within strict 16KiB repository catalog limit and preserve final-version Windows NOT_RUN scope."}
+```
