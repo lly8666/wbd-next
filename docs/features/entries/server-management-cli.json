@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "server-management-cli",
   "name": "Linux服务端简化配置与统一管理CLI",
-  "summary": "PLAN030 双ISA真实全CLI、三设备及watch PASS；两次Windows域名组合FAIL（一次第二代原生Ready实际成功但GUI判据未过，一次未启动第二代），只补真实GUI组合。",
+  "summary": "PLAN030 9ff0ed0双ISA构建/systemd/混合设备/watch通过；两次真实Windows域名第二代及managed快照通过，旧server MSS/Stop日志判据不适用，完整业务未达。",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-030-server-cli",
@@ -85,6 +85,20 @@
       "status": "FAIL",
       "source_sha": "600d541b9d7ce63d11409562bad8f40ad41457fd",
       "evidence": "docs/evidence/M0/20261124-H2393-PLAN030-GUI-RECONNECT-ARTIFACT-AUDIT.json"
+    },
+    {
+      "platform": "linux/amd64 + linux/arm64",
+      "scope": "9ff0ed0实际双ISA构建、systemd、混合客户端、watch复验",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+      "evidence": "docs/evidence/M0/20261124-H2395-PLAN030-MANAGED-RECONNECT-RECEIPTS.json"
+    },
+    {
+      "platform": "Windows amd64 + Linux amd64",
+      "scope": "两独立真实GUI域名重连、第二代managed snapshot FEC off/协商1389、两代OS MTU与Stop，完整组合后续旧MSS判据FAIL，业务未达",
+      "status": "FAIL",
+      "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+      "evidence": "docs/evidence/M0/20261124-H2395-PLAN030-MANAGED-RECONNECT-RECEIPTS.json"
     }
   ],
   "limitations": [

@@ -1,5 +1,5 @@
 name: PLAN030 targeted fixture-only retest
-run-name: "PLAN030 H2394 Normal/off management snapshot and Windows domain | ${{ github.sha }}"
+run-name: "PLAN030 H2395 mixed owner receipts after verified Windows integration | ${{ github.sha }}"
 on:
   push:
     branches: [experiment/m0-030-server-cli]
@@ -58,7 +58,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
       - name: Verify fixed PID contract before dispatch
-        run: python3 -m unittest tests.test_m0_wl_native_os_deadline -v
+        run: python3 -m unittest tests.test_m0_wl_native_os_deadline tests.test_m0_wl_public_mss_contract tests.test_m4_frozen_windows_main_import -v
       - name: Dispatch one original signed domain reconnect scenario
         env:
           GH_TOKEN: ${{ github.token }}

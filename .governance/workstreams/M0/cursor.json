@@ -4,22 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2385,
-  "checkpoint_sha": "1d3c73fa2bd677cf7b115854baa434d8ec8d1eea",
-  "progress": "in_progress",
+  "sequence": 2394,
+  "checkpoint_sha": "3820d0c298815bb4c758424824449fac1afa32fa",
+  "progress": "verifying",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030 用户授权开发，首批CLI/systemd/真实在线快照/双ISA包实现已推 experiment/m0-030-server-cli，PR73 Draft。",
+  "current_task": "PLAN030真实第二代域名重连和服务端设备快照已达，Normal/off快照漏FEC导致协商内层预算null，候选已修；Windows v2恢复新测试GUID字面格式失败，实际恢复未达，夹具已修。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "先收 Actions 45341676019 (SOURCE b0775de27edf3bd8692f605fc7eec8fcb39ae1f3) 两ISA构建及四独立功能job结果，针对实际失败修复同一PR；补缺失快照字段及组合验证，不重复旧性能矩阵。",
+  "next_action": "收PR73 9ff0ed0 的定向派发45357894991及其原生domain_reconnect子Action（完整第二代真实业务、快照、Stop）；收PR74 988d669 原生恢复45357787794。核对新构建产品包、实际原生标记及治理，合并时处理共享装配manifest，不重跑无关数据面或性能。",
   "unverified": true,
-  "last_tested_source": "f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad",
+  "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
     "docs/prompts/M0-PLAN030.md",
-    "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
+    "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json",
+    "docs/evidence/M0/20261124-H2393-PLAN030-GUI-RECONNECT-ARTIFACT-AUDIT.json"
   ],
   "open_requests": [],
-  "partial_summary": "初始实现已推，native Action 45341676019 in_progress，非PASS；PR73 Draft。休眠、每向MTU、真实业务速率、Windows域名重连、watch成本尚未验/接齐；未合main。"
+  "partial_summary": "H2394：45355353310真实第二代Windows Ready已达，server roster account/device/session/lease 10.66.0.2/32/remote_port41032/online/Normal/ChaCha/1420双向记录限制/RX172 TX180，assert negotiated_inner_cap==1389 FAIL，actual fec空、cap null；原Normal/off无FEC owner，OriginalFECReadback不支持，9ff0ed0仅管理按需快照复用已认证Normal OFF标记及Rust预算，新增1389回归，派发45357894991 queued。45355056087实际装配编译PASS，四个child在新stale GUID前置测试因非规范字符串journal conflict退出，未执行实际恢复；988d669用Windows GUIDFromString.String构造，生产不变，45357787794 in_progress。两PR仍OPEN，未声称PASS/merge。"
 }

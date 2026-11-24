@@ -16,13 +16,14 @@ import (
 // WAL must hold an exact stage intent and independently read the OS row.
 type n4WindowsNoWFPMTUStage struct {
  Target uint32
- Owner N4WindowsCreatedWintunReservation
+ Owner N4UnifiedOwner
  WALPath string
 }
 func(s n4WindowsNoWFPMTUStage) Name()string{return "mtu"}
 func(s n4WindowsNoWFPMTUStage) check(ctx context.Context,id N4UnifiedIdentity)error{
  if err:=ctx.Err();err!=nil{return err}
  if s.WALPath==""||!id.valid(){return ErrN4JournalConflict}
+ if s.Owner==nil{return ErrN4NativeGuard}
  if err:=s.Owner.Verify(ctx,id);err!=nil{return err}
  pnp,err:=n4ProbeOriginalWintunPnP(ctx,id)
  if err!=nil{return err}

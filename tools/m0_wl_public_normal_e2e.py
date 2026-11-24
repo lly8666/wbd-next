@@ -3142,7 +3142,7 @@ print(json.dumps(result),flush=True)
      "shared_tun_stop":server_text.count("V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=server"),
     }
     if p030_managed:
-     server_markers.update(listener_ready=server_text.count("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443"),authenticated_sessions=server_text.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")+server_text.count("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server"),native_stop=server_text.count("V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason="))
+     server_markers.update(listener_ready=server_text.count("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443"),real_synack=len(re.findall(r"^WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=1 peer_advertised_mss=1420 local_advertised_mss=1420$",client_text,re.MULTILINE)),authenticated_sessions=server_text.count("V4_PUBLIC_MIXED_NORMAL_READY role=server port=443")+server_text.count("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server"),native_stop=server_text.count("V4_PUBLIC_MIXED_NORMAL_STOP_DRAINED reason="),shared_tun_stop=server_text.count("V4_PUBLIC_SHARED_TUN_STOP generation="))
     selected_ports=re.findall(
      r"WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=1 configured_port=41031 source_port=(\d+) original_peer_port=443 same_ip_reauth_safe_tuple=(?:true|false)",
      client_text)
@@ -3157,7 +3157,9 @@ print(json.dumps(result),flush=True)
      "server_mode":"MANAGED_SHARED_MANUAL_ACCOUNT" if p030_managed else "NORMAL_ORIGINAL_SHARED_MANUAL_AUTHENTICATED_32",
      "original_kernel_listener_count":1,
      "windows_source_ports":[41031,41032],
-     "physical_synack_count":2,
+     "physical_synack_count":None if p030_managed else 2,
+     "client_received_synack_count":2,
+     "synack_evidence":"ORIGINAL_CLIENT_DECODED_PEER_MSS" if p030_managed else "ORIGINAL_SERVER_TCP_OPTION_BYTES",
      "authenticated_server_native_sessions":2,
      "generation_scoped_server_native_stop":2,
      "one_shared_tun_stop":True}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "source_sha": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
+  "result": "FAIL",
+  "linux_run": 45357895146,
+  "linux_result": "FUNCTIONAL_PASS dual ISA systemd/mixed/watch",
+  "domain_runs": [
+    45357942950,
+    45357907987
+  ],
+  "artifact": {
+    "id": 14904810179,
+    "sha256": "35d6864a7ad1c4e00b7fd6ef9d9661f5661b176301779e1bdb422427d5d254bf",
+    "crc": "PASS"
+  },
+  "observed": {
+    "real_dns_udp_tc_tcp_a_count": 2,
+    "windows_ports": [
+      41031,
+      41032
+    ],
+    "actual_os_mtu": [
+      1389,
+      1389
+    ],
+    "snapshot": {
+      "remote_port": 41032,
+      "state": "online",
+      "mode": "normal",
+      "fec": "off",
+      "negotiated_inner_cap": 1389
+    },
+    "client_ready": 2,
+    "client_owned_stop": 2,
+    "server_normal_ready_first": 1,
+    "server_authenticated_promoted_second": 1,
+    "server_normal_stop": 2,
+    "shared_tun_stop": 1
+  },
+  "first_failure": "legacy shared-manual server SYNACK log absent in mixed server; actual original client received peer MSS twice. Subsequent business/terminal oracle not reached, NOT_RUN",
+  "governance_failures": [
+    "45357895116 feature card not updated",
+    "45357895020 stale reviewed assemble.py hash"
+  ],
+  "integrated_windows_main": "12d0e8af989ff3e8b5ed926f0187970d62835268"
+}

@@ -68,11 +68,15 @@ func N4NativeRecoverState(ctx context.Context, statePath string) error {
     }
     journal,err:=n4UnifiedRead(nativePath)
     if err!=nil{return err}
-    // A v2 WAL never has an old WFP guard. Never hand it to the legacy v1
-    // guard recovery constructor or pretend disk-only state is proof of a
-    // still-live Wintun generation; retain it until qualified v2 OS recovery.
     if journal.Schema==n4UnifiedSchemaNoWFP {
-        return fmt.Errorf("%w: no-WFP v2 WAL requires live generation-owned four-stage recovery",ErrN4NativeGuard)
+        if err:=n4RecoverNoWFPPersisted(ctx,nativePath);err!=nil{return err}
+        // The original per-generation Defender rule is separate from the
+        // four stages. Use the existing exact orphan cleanup after routes.
+        defender:=n4Plan029DefenderSidecarPath(statePath)
+        if _,err:=os.Lstat(defender);err==nil {
+            return n4Plan029DefenderRecoverOrphan(ctx,defender,n4Plan029DefenderCOM{})
+        }else if !errors.Is(err,os.ErrNotExist){return err}
+        return nil
     }
     // Legacy v1 journal still requires its actual old WFP owner; migration
     // removes only exact-owned objects and never widens the cleanup scope.

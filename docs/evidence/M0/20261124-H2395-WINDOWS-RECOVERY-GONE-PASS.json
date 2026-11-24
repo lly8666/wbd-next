@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "source_sha": "988d66998444396a6ab30ba2aeaeea5ad2b6a773",
+  "run_id": 45357787794,
+  "job_id": 138319846833,
+  "result": "FUNCTIONAL_PASS",
+  "scope": "real signed Wintun normal Stop, partial/full native crash recovery, full Apply with actual Wintun removal before WAL retirement, stale GUID with occupied index/LUID, repeated recovery; compiled WinForms 433 checks",
+  "artifacts": [
+    {
+      "id": 14902328849,
+      "digest": "sha256:b93fe8364d3e18d9583ff50887ca5782daae96c822bec1301166d5cbda464418"
+    },
+    {
+      "id": 14902024716,
+      "digest": "sha256:f7f664e1a773746d7dbf31f9ff4cb5155121fe538ad358e2ddc6ccf8949c5685"
+    }
+  ],
+  "independent_download": "Both ZIPs downloaded, exact API digest and CRC verified; WBD.exe, wbd-client.exe, wbd_engine.dll, wintun.dll PE machine 0x8664; GUI result source SHA exact, PASS, 433 checks",
+  "previous_upgrade": {
+    "run_id": 45349844112,
+    "source_sha": "17d8feb555ed7c990c85e0569a5263934f892cc3",
+    "result": "PASS",
+    "scope": "actual prior version v2 upgrade on earlier candidate"
+  },
+  "not_run": [
+    "user physical host with this binary",
+    "v1 script migration",
+    "power loss or physical reboot"
+  ]
+}

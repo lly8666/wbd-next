@@ -91,10 +91,10 @@ def verified_plan029_gui_two_child_shared_manual_mss(win,linux,outer,managed=Fal
  server_ready=re.findall(r"V4_PUBLIC_MULTI_SESSION_READY role=server one_port=(\d+) active_detached_flows=(\d+) auto_lease=0 original_TLS=1 Rust_M4=1",linux)
  prep=one(linux,r"V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=\d+ outer_config=(\d+) interface=(\d+) advertised_mss=(\d+) record_offer=(\d+) tun_planned=(\d+)","Linux shared original MTU")
  if (len(cold)!=2 or ports!=[("41031","false"),("41032","true")] or
-     len(syn)!=2 or len(seen)!=2 or len(server_syn)!=2 or
+     len(syn)!=2 or len(seen)!=2 or (not managed and len(server_syn)!=2) or
      (not managed and (server_ready!=[("443","1"),("443","2")] or
       len(re.findall(r"V4_PUBLIC_MULTI_SESSION_READY[^\n]*",linux))!=2)) or
-     (managed and (len(re.findall(r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443[^\n]*",linux))+len(re.findall(r"V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server[^\n]*",linux))!=2))):
+     (managed and (len(re.findall(r"V4_PUBLIC_MIXED_NORMAL_READY role=server port=443[^\n]*client_port=41031[^\n]*protected_TLS=1 Rust_M4=1",linux))!=1 or len(re.findall(r"V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=41032 source=authenticated_client_native_Health promoted=1",linux))!=1))):
   raise ValueError("two distinct true GUI child SYN/SYNACK/M4 proof absent")
  so,sp,sm,sr,si=map(int,prep)
  if (so!=outer or sp<576 or sm!=min(outer,sp)-40 or
@@ -108,19 +108,25 @@ def verified_plan029_gui_two_child_shared_manual_mss(win,linux,outer,managed=Fal
       inner!=mss-31 or
       reason!=("physical_interface_ipv4" if physical<outer else "configured_outer_ipv4")):
    raise ValueError("real GUI child physical MSS budget mismatch")
-  ws,wb=syn[i];peer,peer_local=seen[i];svr,svr_bytes=server_syn[i]
+  ws,wb=syn[i];peer,peer_local=seen[i]
+  # The mixed server has no legacy per-SYNACK byte log. Both actual
+  # client-side inbound peer MSS receipts are still required, along with
+  # the port-specific authenticated server Ready/promotion above.
   if (int(ws)!=mss or wb.lower()!="0204"+format(mss,"04x") or
-      int(peer)!=sm or int(peer_local)!=mss or int(svr)!=sm or
-      svr_bytes.lower()!="0204"+format(sm,"04x")):
+      int(peer)!=sm or int(peer_local)!=mss):
+   raise ValueError("real per-child SYN or received peer SYNACK mismatch")
+  if not managed and (int(server_syn[i][0])!=sm or
+      server_syn[i][1].lower()!="0204"+format(sm,"04x")):
    raise ValueError("real per-child original TCP SYN vs Linux SYNACK mismatch")
   rows.append({"windows_child_ordinal":i+1,"source_port":int(ports[i][0]),
     "windows_cold_internal_generation":1,"windows_local_syn_mss":mss,
-    "linux_local_synack_mss":sm,"windows_physical_ip_mtu":physical,
+    "linux_local_synack_mss":None if managed else sm,"windows_received_peer_synack_mss":int(peer),"windows_physical_ip_mtu":physical,
     "windows_inner_planned":inner,"linux_physical_ip_mtu":sp,
     "linux_record_offer":sr,
-    "proof":"TWO_REAL_GUI_CHILDREN_TWO_LINUX_AUTHENTICATED_M4_TCP_OPTION_BYTES"})
+    "proof":"TWO_REAL_GUI_CHILDREN_RECEIVED_SYNACK_MSS_MIXED_AUTHENTICATED_M4" if managed else "TWO_REAL_GUI_CHILDREN_TWO_LINUX_AUTHENTICATED_M4_TCP_OPTION_BYTES"})
  return {"generations":rows,"shared_original_server_port":443,
-   "source_port_distinct":True,"real_server_synack_count":2,
+   "source_port_distinct":True,"real_server_synack_count":None if managed else 2,
+   "windows_received_synack_count":2,
    "real_server_m4_ready_count":2,
    "linux_peer_syn_mss":"NOT_LOGGED_SHARED_MANUAL"}
 
