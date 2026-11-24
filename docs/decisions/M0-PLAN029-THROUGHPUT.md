@@ -31,3 +31,9 @@
 - 测前写明本增量首要指标、旧版漂移带及可接受代价。无损高线、低损竞争各有绝对接收吞吐和单位成本。只改善一个计数、把损失挪层或以慢流饥饿换峰值则拒绝默认；有真实成本取舍按用户的性能优先级报告。每个增量只补受影响场景，累计完整资格后再推进默认。收到否证即保留旧路径和失败依据；完整出口还包括合格跨机、真实 Windows、独立小流和精确 Stop。合理候选均被配对反例否决且没有可区分的新假设时，交付约束点、负结果、可重开条件并结束该研究增量。
 
 当前第一动作是登记并恢复 ARM64 公平候选的单工作线。历史测试证据与工具见 [H2244 汇总](https://github.com/lly8666/wbd-next/pull/65)。本文件和旧 PR 均不构成新产品 PASS。
+
+## 2026-11-24 M0 外层机会重传专项已同步，不等于 TCP 吞吐资格
+
+用户授权后，该实验分支已经用 [`12341395`](https://github.com/lly8666/wbd-next/commit/12341395c30b5fcafa4adb651c06f611d6b0fbe1) / [`ffb19f07`](https://github.com/lly8666/wbd-next/commit/ffb19f0744ed36da29d82701a99413be8cf8d324) 两次非强制双亲合并接收 main 的 Game Normal-v3 原密文机会式外层重传实现、源锁验证、失败试验与完整历史证据。所有本分支既有 ARM/Windows NPF/GoTCP 高吞吐、服务公平、窗口、CPU/容量研究保留，不因同源导入取得额外真实性能PASS。
+
+专项权威收口记录：[`docs/devlog/M0/20261124-OUTER-REPAIR-SCOPED-CLOSEOUT.md`](../devlog/M0/20261124-OUTER-REPAIR-SCOPED-CLOSEOUT.md) 与 [结构化证据](../evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json)。回归 CPU 只承认各自同 VM 真正配对；最终 Windows 原生共享 ReceiptState 和物理WAN仍是独立 OPEN。后续 PLAN029 仍按本文的真实业务 goodput、CPU/GiB、P99 与容量关口验收。
