@@ -407,7 +407,8 @@ jobs:
       WBD_D2_ORIGINAL: '1'
       WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
-      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && !contains(github.event.head_commit.message, '[android-specialty-parallel]') && '1' || '0' }}
+      WBD_ANDROID_LIFECYCLE: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-lifecycle-test]') && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -430,6 +431,7 @@ jobs:
           bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
           bash -n android/root-app/ci/x86-seven-mode-wiring.sh
           bash -n android/root-app/ci/x86-android-specialty.sh
+          bash -n android/root-app/ci/x86-root-lifecycle.sh
           bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
           python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
           python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
@@ -455,6 +457,95 @@ jobs:
         if: always()
         with:
           name: android-d2-s1-original-x86-root-${{ github.sha }}
+          path: |
+            out/android-x86-d2-root/receipt.json
+            out/android-x86-d2-root/wiring/receipt.json
+            out/android-x86-d2-root/wiring/results.tsv
+            out/android-x86-d2-root/wiring/bionic-tls-status.txt
+            out/android-x86-d2-root/wiring/bionic-tls.log
+            out/android-x86-d2-root/wiring/*/diagnostics.txt
+            out/android-x86-d2-root/specialty/
+            out/android-x86-d2-root/lifecycle/
+            out/android-x86-d2-root/linux-source-sha.txt
+            out/android-x86-d2-root/android-source-sha.txt
+            out/android-x86-d2-root/server-started.txt
+            out/android-x86-d2-root/secret-stage-enum.txt
+            out/android-x86-d2-root/host-rst-rule-enum.txt
+            out/android-x86-d2-root/server-stage-enums.txt
+            out/android-x86-d2-root/app-diagnostic-enums.txt
+            out/android-x86-d2-root/host-wire-summary.json
+            out/android-x86-d2-root/guest-wire-summary.json
+            out/android-x86-ksu-native/receipt.json
+            out/android-x86-ksu-native/app-su-receipt.txt
+            out/android-x86-ksu-native/physical-network-receipt.txt
+            out/ksu/grant-ui-result.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  android-x86-specialty-parallel:
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-parallel]') }}
+    # Each shard owns its own Android kernel, TUN, RPDB/NAT and KSU boot.
+    # Shared native artifacts, no Linux server dependency.
+    needs: [arm64-native, b2-authentic-cn-geosite-host]
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        shard: [routes, normal, game2, game4, dns-physical, dns-tunnel, dns-cn]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions: {contents: read, actions: read}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_D2_ORIGINAL: '1'
+      WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_ANDROID_SPECIALTY: '1'
+      WBD_ANDROID_SPECIALTY_SHARD: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-root-product-a1-${{ github.sha }}
+          path: out/android-root-app-native
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-b2-pinned-cn-geosite-${{ github.sha }}
+          path: out/android-root-app-cn
+      - name: D2-S1 admit exact Java and safe Linux/Android script syntax
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/x86-kvm-ksu-native.sh
+          bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
+          bash -n android/root-app/ci/x86-seven-mode-wiring.sh
+          bash -n android/root-app/ci/x86-android-specialty.sh
+          bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
+          python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
+          python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
+          # Static gate is already executed in root-arm64-app; do not block
+          # real preauth on an unrelated historical source-string failure.
+      - name: D2-S1 build signed x86 CI-only APK using production Java + original Go/Rust
+        shell: bash
+        run: bash android/root-app/ci/build-x86-ci-locked.sh
+      - name: D2-S1 build an isolated ordinary App UID traffic target (never KernelSU Manager)
+        shell: bash
+        run: |
+          bash experiments/android-root-probe/ci/build-app.sh
+          test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
+          rm -f out/apk/host-tls.key
+          if [[ "$WBD_ANDROID_SPECIALTY" == 1 ]];then bash android/root-app/ci/traffic-fixture/build.sh;fi
+      - name: D2-S1 prepare pinned x86 Android16 KSU3.3.1 emulator
+        shell: bash
+        run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
+      - name: Real Android specialty ${{ matrix.shard }} (isolated guest)
+        shell: bash
+        run: timeout --signal=TERM --kill-after=8s 1350s bash android/root-app/ci/x86-kvm-ksu-native.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-specialty-${{ matrix.shard }}-${{ github.sha }}
           path: |
             out/android-x86-d2-root/receipt.json
             out/android-x86-d2-root/wiring/receipt.json

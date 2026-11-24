@@ -271,7 +271,7 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   if ret==nil{fmt.Println("B91_NATIVE_TUN_CLOSE_PASS",mode)}
  }()
  c:=config{role:"client",rawInterface:scope.InterfaceName,localIP:scope.LocalIPv4,
-  peerIP:netip.MustParseAddr("10.0.2.2"),peerPort:443,outerMTU:1500,recordLimit:1400,
+  peerIP:netip.MustParseAddr("10.0.2.2"),peerPort:443,outerMTU:1460,recordLimit:1400,
   androidNetworkHandle:scope.NetworkHandle,androidPhysicalMTU:uint32(scope.MTU),androidRouteUID:uid,
   fecMode:realityfront.FecV2Off,disableOuterRepair:true,androidNativeHealthSeconds:15,
   androidPhysicalDNSUpstream:netip.MustParseAddr("223.5.5.5")}
@@ -284,9 +284,9 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
  normal:=realityfront.V4LinuxClientProductConfig{
   NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
   Tun:tun.f,TunName:dev,CleanupOwnedNetwork:func()error{return nil},ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
-  FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:true,OuterIPMTU:1500,HealthKeepaliveSeconds:15,HealthDeadAfterSeconds:90}
+  FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:true,OuterIPMTU:1460,HealthKeepaliveSeconds:15,HealthDeadAfterSeconds:90}
  game:=realityfront.V4AndroidGameConfig{Lanes:c.gameLanes,GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
-  OuterIPMTU:1500,DisableOuterRepair:true,NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),
+  OuterIPMTU:1460,DisableOuterRepair:true,NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),
   AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
   Tun:tun.f,TunName:dev,ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
   HealthSeconds:15,PhysicalDNSUpstream:c.androidPhysicalDNSUpstream}

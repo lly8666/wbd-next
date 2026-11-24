@@ -11,15 +11,16 @@ func TestB69SystemDNS6SelectedUIDRouteAndRestore(t *testing.T){testSystemDNSOwne
 func testSystemDNSOwner(t *testing.T,v6 bool){
  p:=SystemDNSPlan{DNSPlan:DNSPlan{Version:1,Tun:"wbdv40",Lease:"10.66.0.8/32",Port:43210,
   Tunnel:true,All:true,ExcludedAppIDs:[]int{11200,11201}},NetID:105,IPv6:v6}
- var link,route,addr bool
+ var link,route,addr,alias bool
  rules,nat:=map[string]string{},map[string]string{}
  ip:=func(args ...string)(string,error){
   k:=strings.Join(args," ")
   switch k{
-  case "-d -o link show":if link{return "9: "+p.iface()+": <UP> mtu 1500 alias "+p.marker()+" dummy ",nil};return "",nil
-  case "link add name "+p.iface()+" alias "+p.marker()+" type dummy":link=true;return "",nil
+  case "-d -o link show":if link{marker:="";if alias{marker=" alias "+p.marker()};return "9: "+p.iface()+": <UP> mtu 1500"+marker+" dummy ",nil};return "",nil
+  case "link add name "+p.iface()+" type dummy":link=true;return "",nil
+  case "link set dev "+p.iface()+" alias "+p.marker():if !link{return "",fmt.Errorf("no dummy")};alias=true;return "",nil
   case "link set dev "+p.iface()+" up":return "",nil
-  case "link del dev "+p.iface():link=false;addr=false;return "",nil
+  case "link del dev "+p.iface():link=false;addr=false;alias=false;return "",nil
   case "-6 -o addr show":if addr{return "9: "+p.iface()+" inet6 "+systemDNS6Address+"/128 scope global nodad noprefixroute",nil};return "",nil
   case "-6 addr add "+systemDNS6Address+"/128 dev "+p.iface()+" nodad noprefixroute":addr=true;return "",nil
   case p.family()+" route show table all":
@@ -52,7 +53,7 @@ func testSystemDNSOwner(t *testing.T,v6 bool){
  }
  path:=filepath.Join(t.TempDir(),"owned",p.journal())
  s,e:=NewSystemDNS(ip,fw,batchIP,batchNAT,path,p);if e!=nil{t.Fatal(e)}
- if !link||!route||addr!=p.IPv6||len(nat)!=2||len(rules)!=2*len(p.ranges()){t.Fatal("missing exact kernel capture")}
+ if !link||!alias||!route||addr!=p.IPv6||len(nat)!=2||len(rules)!=2*len(p.ranges()){t.Fatal("missing exact kernel capture")}
  for _,line:=range rules{
   if !strings.Contains(line,"fwmark 0x69/0xffff")||!strings.Contains(line,"dport 53")||
      strings.Contains(line,"uidrange 0-0"){t.Fatal("scope escaped selected DNS",line)}

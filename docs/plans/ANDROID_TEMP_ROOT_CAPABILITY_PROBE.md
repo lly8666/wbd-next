@@ -1,3 +1,7 @@
+## B92｜隔离并行 Android 专项（当前）
+
+B91 `2b6b904b874065dd7a03f1152ed836662e606e05` [Action 45412992618](https://github.com/lly8666/wbd-next/actions/runs/45412992618) 真 Bionic 物理 UDP 与 TC→同 Network TCP DNS PASS；系统 DNS dummy 创建语法 FAIL、后续12项 NOT_RUN。B92修原 cold ip dummy/alias 顺序；7个隔离 KSU guest 并行 UID、Normal、Game2、Game4、系统物理/隧道/CN DNS，共用 native/CN artifacts，不等 Linux server。独立第8个 guest 验收生产 RootService preauth 前后台/Stop/模式重启/真实 WiFi loss与恢复手动 START；不冒称 READY 自动恢复/配置冷切或远端双向 M4。独立结果和清理 readback，guest 间不互相阻断，不重复既有物理 DNS/七模式 preauth，无性能基准。详见 [B92 devlog](../devlog/android-root-probe/20261124-b92-isolated-parallel-android-acceptance.md)。
+
 ## B91｜真实 Android 内核、系统 DNS 与认证后 native 接管（当前）
 
 B90 SOURCE `0d710fd6e39abb4d85c6935f56b09756d28c47ea` [Action 45409736062](https://github.com/lly8666/wbd-next/actions/runs/45409736062) 11 SUCCESS/1 FAILURE/5 SKIPPED；正式 APK/双 ABI/Host 原 TLS/Game/Rust PASS；KSU 在文件 mv/chmod staging 权限失败，专项未运行。B91复用真实 D1 root-owned cp、修正 route-journal.json，独立验收原 UID/CN FIB、普通 App UDP↔真实 TUN、Android Network Resolver 物理/隧道/CN DNS（隔离 TUN DNS fixture）、原 Stop；原双端 Go FakeTCP association 进程内 cold wire → 真实标准 TLS、原认证/租约 → 正式 Go/Rust Android Normal/Game 七模式真实 TUN/RAW/native M4 startup、UID 发包/native TX/Stop。非 Android↔Linux 物理 peer E2E，不测性能，不加产品防御。各场景保留真实结果，旧 owner 未清理不继续。真实 RootService 切网/配置与最终 ARM64 仍待验。详见 [B91 devlog](../devlog/android-root-probe/20261124-b91-postauth-native-and-system-dns.md)。

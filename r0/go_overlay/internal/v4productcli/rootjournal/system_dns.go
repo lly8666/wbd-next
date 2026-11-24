@@ -237,7 +237,13 @@ func NewSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path strin
  if x.link||x.route||x.addr||len(x.rules)!=0||len(x.nat)!=0{return fail(fmt.Errorf("system DNS state without journal"))}
  if e=writeSystemDNS(path,p);e!=nil{return fail(e)}
  rollback:=func(e error)(*SystemDNSOwner,error){return fail(errors.Join(e,s.remove(p)))}
- if _,e=ip("link","add","name",p.iface(),"alias",p.marker(),"type","dummy");e!=nil{return rollback(e)}
+ // Android ip requires the dummy type during creation. Set the existing
+ // alias before installing routes/NAT; this remains cold-only.
+ if _,e=ip("link","add","name",p.iface(),"type","dummy");e!=nil{return rollback(e)}
+ if _,e=ip("link","set","dev",p.iface(),"alias",p.marker());e!=nil{
+  _,removeErr:=ip("link","del","dev",p.iface())
+  return rollback(errors.Join(e,removeErr))
+ }
  if _,e=ip("link","set","dev",p.iface(),"up");e!=nil{return rollback(e)}
  if p.IPv6{
   if _,e=ip("-6","addr","add",systemDNS6Address+"/128","dev",p.iface(),"nodad","noprefixroute");e!=nil{return rollback(e)}

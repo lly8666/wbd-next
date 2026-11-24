@@ -35,6 +35,13 @@ public final class X86CiOriginalStartActivity extends Activity {
         try{
             if(!isX86App())throw new IllegalStateException("CI requires ordinary x86 App UID");
             String command=getIntent().getStringExtra("ci_step");
+            if("lifecycle_state".equals(command)){
+                event("B92_LIFECYCLE_STATE active="+RootClientService.sessionOwnerActive+
+                    " ready="+RootClientService.sessionUiReady+
+                    " physical_stop="+RootClientService.networkStopRequested+
+                    " old_stop_verified="+RootClientService.previousOwnerStopConfirmed);
+                return;
+            }
             if("stop".equals(command)){
                 Intent intent=new Intent(this,RootClientService.class);
                 intent.setAction(RootClientService.STOP);

@@ -35,6 +35,18 @@ guest=/data/local/tmp/wbd-x86-ci
 "$adb" shell su -c 'sha256sum /data/local/tmp/wbd-x86-ci/wiring-specialty /data/local/tmp/wbd-x86-ci/libwbd_engine.so /data/local/tmp/wbd-x86-ci/cn.txt' >"$out/guest-sha.txt"
 for f in "$n/wiring-specialty-amd64" "$n/libwbd_engine-amd64.so" out/android-root-app-cn/wbd-cn-ipv4.txt;do grep -Fq "$(sha256sum "$f" | cut -d' ' -f1)" "$out/guest-sha.txt";done
 echo B91_TEST_STAGE_PASS
+shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
+case "$shard" in
+ routes) scenes=(route-single route-group route-all);;
+ normal) scenes=(normal fec-fixed fec-auto);;
+ game2) scenes=(game2 game2-fixed);;
+ game4) scenes=(game4 game4-fixed);;
+ dns-physical) scenes=(system-physical);;
+ dns-tunnel) scenes=(system-tunnel);;
+ dns-cn) scenes=(system-cn);;
+ all) scenes=(system-physical system-tunnel system-cn route-single route-group route-all normal fec-fixed fec-auto game2 game2-fixed game4 game4-fixed);;
+ *) echo "unknown specialty shard: $shard";exit 2;;
+esac
 : >"$out/results.tsv"
 dns_pid=""
 cleanup(){
@@ -42,27 +54,30 @@ cleanup(){
 }
 trap cleanup EXIT
 # Real local DNS fixture; a failure cannot block independent native tests.
-sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
-dns_pid=$!
-for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
+if [[ "$shard" == dns-physical || "$shard" == dns-cn || "$shard" == all ]];then
+ sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
+ dns_pid=$!
+ for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
+fi
 failed=0
-record(){ printf '%s\t%s\n' "$1" "$2" >>"$out/results.tsv";echo "B91_RESULT $1 $2";if [[ "$2" != PASS ]];then failed=1;fi; }
+record(){ printf '%s\t%s\n' "$1" "$2" >>"$out/results.tsv";echo "B92_RESULT $shard $1 $2";if [[ "$2" != PASS ]];then failed=1;fi; }
 invoke(){ timeout "$1" "$adb" shell su -c "$guest/wiring-specialty $2 $scope $uid $bypass $own $manager $guest/cn.txt"; }
 clean_kernel(){
- local name="$1"
- "$adb" shell su -c 'ip -4 rule show; ip -4 route show table all; ip -o link show; iptables -t nat -S OUTPUT' >"$out/$name-kernel.txt" 2>&1 || return 1
- ! grep -E 'lookup (19842|19843|19845)( |$)|table (19842|19843|19845)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbd_dns0:|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/$name-kernel.txt"
+ local name="$1" rc=0
+ {
+ for cmd in 'ip -4 rule show' 'ip -4 route show table all' 'ip -o link show' 'iptables -w 2 -t nat -S OUTPUT';do
+  printf 'READBACK %s\n' "$cmd"
+  "$adb" shell "su -c '$cmd'" || rc=1
+ done
+ } >"$out/$name-kernel.txt" 2>&1
+ if [[ "$rc" != 0 ]];then cat "$out/$name-kernel.txt";return 1;fi
+ if grep -E 'lookup (19842|19843|19845)( |$)|table (19842|19843|19845)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbd_dns0:|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/$name-kernel.txt";then return 1;fi
+ return 0
 }
-if grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then
- if invoke 30s dns >"$out/dns-android.log" 2>&1 &&
-    grep -Fq B90_PHYSICAL_DNS_UDP_PASS "$out/dns-android.log" &&
-    grep -Fq B90_PHYSICAL_DNS_TC_PASS "$out/dns-android.log" &&
-    grep -Fq "B90_FIXTURE udp.wbd-b90.test UDP" "$out/dns-host.log" &&
-    grep -Fq "B90_FIXTURE tc.wbd-b90.test UDP" "$out/dns-host.log" &&
-    grep -Fq "B90_FIXTURE tc.wbd-b90.test TCP" "$out/dns-host.log";then record physical-bootstrap PASS;else record physical-bootstrap FAIL;fi
-else record physical-bootstrap ENV_BLOCKED;fi
+# B91 physical UDP/TC TCP already passed; no standalone repeat.
 clean=1
-for scene in system-physical system-tunnel system-cn route-single route-group route-all normal fec-fixed fec-auto game2 game2-fixed game4 game4-fixed;do
+if ! clean_kernel baseline;then clean=0;fi
+for scene in "${scenes[@]}";do
  if [[ "$clean" != 1 ]];then record "$scene" NOT_RUN;continue;fi
  if [[ "$scene" == system-physical || "$scene" == system-cn ]] && ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
  limit=65s
@@ -86,12 +101,12 @@ for scene in system-physical system-tunnel system-cn route-single route-group ro
  record "$scene" "$status"
  cat "$out/$scene.log"
 done
-export B91_CLEAN="$clean"
+export B91_CLEAN="$clean" B92_SHARD="$shard"
 python3 - "$out" <<'PY'
 import json, os, pathlib, sys
 p=pathlib.Path(sys.argv[1])
 rows=dict(line.split("\t") for line in (p/"results.tsv").read_text().splitlines())
-r={"source":os.environ["GITHUB_SHA"],"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
+r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))
 PY

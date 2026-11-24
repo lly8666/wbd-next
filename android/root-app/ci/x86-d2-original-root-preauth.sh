@@ -297,6 +297,11 @@ adb shell su -c '/system/bin/sh /data/local/tmp/wbd-x86-ci/wbd-d2-cred-stage.sh'
 grep -Fxq 'D2_CI_APP_PRIVATE_SECRET_STAGING_PASS' "$out/android-private-credential-stage.txt"
 echo D2_CI_APP_PRIVATE_SECRET_STAGING_PASS >"$out/secret-stage-enum.txt"
 echo D2_S1_CI_EPHEMERAL_APP_SECRET_STAGE_PASS
+if [[ "${WBD_ANDROID_LIFECYCLE:-0}" == 1 ]];then
+  phase=D2_ANDROID_ROOT_LIFECYCLE
+  source android/root-app/ci/x86-root-lifecycle.sh
+  exit
+fi
 if [[ "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 ]];then
   phase=D2_ANDROID_SEVEN_MODE_WIRING
   source android/root-app/ci/x86-seven-mode-wiring.sh
