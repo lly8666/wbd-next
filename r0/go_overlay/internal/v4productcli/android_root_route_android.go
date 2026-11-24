@@ -98,9 +98,9 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
+    if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
-    if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
     if c.androidRouteAllApps{
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
             ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
@@ -111,8 +111,6 @@ func androidRootRouteAfterNative(
         })
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,full.Stop)
-        if e!=nil{return nil,e}
-        stop,e=startAndroidTether(c,tun,lease,runner,stop)
         if e!=nil{return nil,e}
         // Exact server-IP exclusion in the private FIB is verified,
         // but the next Android netd physical route is not yet qualified.
@@ -136,8 +134,6 @@ func androidRootRouteAfterNative(
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,group.Stop)
         if e!=nil{return nil,e}
-        stop,e=startAndroidTether(c,tun,lease,runner,stop)
-        if e!=nil{return nil,e}
         originalAndroidSelectedUIDRouteGet(runner,c.androidRouteUIDs,tun.name)
         // This receipt is printed only AFTER the entire owned kernel
         // group receives positive readback. Not a fake per-App ACK.
@@ -160,8 +156,6 @@ func androidRootRouteAfterNative(
     })
     if e!=nil{return nil,e}
     stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,session.Stop)
-    if e!=nil{return nil,e}
-    stop,e=startAndroidTether(c,tun,lease,runner,stop)
     if e!=nil{return nil,e}
     originalAndroidSelectedUIDRouteGet(runner,[]int{c.androidRouteUID},tun.name)
     // This exact root-only rule is the sole route grant. The kernel
@@ -212,11 +206,12 @@ func androidDNSBatch(rows [][]string)error{
 }
 func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  runner rootjournal.Runner,stopUID func()error)(func()error,error){
- if !c.androidAppTCPDNS{return stopUID,nil}
+ tetherDNS:=c.androidTetherInterface!=""&&(c.androidTunnelDNS||c.androidPhysicalDNS||c.androidCNDNSSplit)
+ if !c.androidAppTCPDNS&&!tetherDNS{return startAndroidTether(c,tun,lease,runner,stopUID,nil)}
  tunnel:=c.androidTunnelDNS||c.androidCNDNSSplit
  physicalEndpoint:=net.JoinHostPort(c.androidPhysicalDNSUpstream.String(),"53")
  dial:=func(ctx context.Context,path dnsnative.Path,network,endpoint string)(net.Conn,error){
-  if network!="tcp"&&!(c.androidSystemDNS&&network=="udp"){return nil,dnsnative.ErrUnbound}
+  if network!="tcp"&&!((c.androidSystemDNS||tetherDNS)&&network=="udp"){return nil,dnsnative.ErrUnbound}
   if path==dnsnative.Physical{
    return c.androidPhysicalDNSDial(ctx,path,network,endpoint)
   }
@@ -243,7 +238,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  uids:=append([]int(nil),c.androidRouteUIDs...)
  if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
  plan:=rootjournal.DNSPlan{Tun:tun.name,Lease:lease.String(),Port:relay.Port(),Tunnel:tunnel,
-   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs}
+   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs,NoAppNAT:!c.androidAppTCPDNS}
  if c.androidSystemDNS{
   if e=relay.EnableUDP();e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
  }
@@ -258,18 +253,19 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   if e!=nil{return nil,errors.Join(e,owner.Stop(),relay.Close(),stopUID())}
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client uid_netid_port53=1")
  }
- fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")
- return func()error{
+ if c.androidAppTCPDNS{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")}
+ stopDNS:=func()error{
   // Withdraw capture first; join DNS streams before the original M4 Stop.
   var systemErr error
   if systemOwner!=nil{systemErr=systemOwner.Stop()}
   return errors.Join(systemErr,errors.Join(owner.Stop(),relay.Close(),stopUID()))
- },nil
+ }
+ return startAndroidTether(c,tun,lease,runner,stopDNS,relay)
 }
 
 
 const androidTetherJournal="/data/local/tmp/wbd-next-root/tether-journal.json"
-func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error)(func()error,error){
+func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
  if c.androidTetherInterface==""{return stop,nil}
  fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
  d,e:=net.InterfaceByName(c.androidTetherInterface)
@@ -279,9 +275,15 @@ func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjou
  prefix,e:=netip.ParsePrefix(c.androidTetherSubnet)
  if e!=nil{return fail(e)}
  addrs,e:=d.Addrs();if e!=nil{return fail(e)}
- matched:=false
- for _,a:=range addrs{p,e:=netip.ParsePrefix(a.String());if e==nil&&p.Masked()==prefix{matched=true}}
- if !matched||prefix.Contains(c.localIP)||prefix.Contains(c.peerIP){return fail(fmt.Errorf("tether subnet changed or overlaps carrier"))}
+ var gateway netip.Addr
+ for _,a:=range addrs{
+  p,e:=netip.ParsePrefix(a.String())
+  if e==nil&&p.Masked()==prefix{
+   if gateway.IsValid(){return fail(fmt.Errorf("ambiguous tether gateway"))}
+   gateway=p.Addr()
+  }
+ }
+ if !gateway.IsValid()||prefix.Contains(c.localIP)||prefix.Contains(c.peerIP){return fail(fmt.Errorf("tether subnet changed or overlaps carrier"))}
  forward,e:=os.ReadFile("/proc/sys/net/ipv4/ip_forward")
  if e!=nil||strings.TrimSpace(string(forward))!="1"{return fail(fmt.Errorf("enable existing Android tethering first"))}
  // Do not change Android offload settings or bypass its BPF ownership.
@@ -291,9 +293,15 @@ func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjou
  if e!=nil||strings.TrimSpace(string(offload))!="1"{return fail(fmt.Errorf("software tether requires hardware offload disabled"))}
  dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
  if e!=nil||!strings.Contains(string(dump),"mIsBpfEnabled: false"){return fail(fmt.Errorf("software tether requires verified inactive BPF offload"))}
- owner,e:=rootjournal.NewTether(runner,androidDNSFirewall,androidTetherJournal,
-  rootjournal.TetherPlan{Tun:tun.name,Downstream:d.Name,Subnet:prefix.String(),Lease:lease.String()})
+ plan:=rootjournal.TetherPlan{Tun:tun.name,Downstream:d.Name,Subnet:prefix.String(),Lease:lease.String()}
+ if relay!=nil{
+  port,err:=relay.EnableDownstream(gateway,prefix)
+  if err!=nil{return fail(err)}
+  plan.DNSAddress,plan.DNSPort=gateway.String(),port
+ }
+ owner,e:=rootjournal.NewTether(runner,androidDNSFirewall,androidTetherJournal,plan)
  if e!=nil{return fail(e)}
+ if plan.DNSPort!=0{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_DNS_READY role=client udp_tcp53=1")}
  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_READY role=client software_ipv4=1")
  return func()error{return errors.Join(owner.Stop(),stop())},nil
 }

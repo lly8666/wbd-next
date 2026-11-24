@@ -6,8 +6,23 @@ import (
  "strings"
  "testing"
 )
-func TestB65TetherOwnedForwardingAndRestore(t *testing.T){
+func TestB65TetherOwnedForwardingAndRestore(t *testing.T){testTetherOwner(t,false)}
+func TestB68TetherDNSExactDownstreamAndRestore(t *testing.T){testTetherOwner(t,true)}
+func testTetherOwner(t *testing.T,withDNS bool){
  p:=TetherPlan{Version:1,Tun:"wbd0",Downstream:"ap0",Subnet:"192.168.43.0/24",Lease:"10.9.0.2/32"}
+ if withDNS{p.DNSAddress="192.168.43.1";p.DNSPort=43210}
+ if withDNS{
+  count:=0
+  for _,c:=range p.commands(){
+   if c.args[0]!="PREROUTING"{continue}
+   if !strings.Contains(strings.Join(c.args," "),"-i ap0 -s 192.168.43.0/24")||
+      !strings.Contains(strings.Join(c.args," "),"--dport 53")||
+      !strings.Contains(strings.Join(c.args," "),"--to-destination 192.168.43.1:43210"){
+    t.Fatal("DNS capture escaped exact tether scope")
+   };count++
+  }
+  if count!=2{t.Fatal("missing UDP or TCP DNS")}
+ }
  cmds:=p.commands();present:=make([]bool,len(cmds))
  ip:=func(a ...string)(string,error){
   if a[2]=="show"{

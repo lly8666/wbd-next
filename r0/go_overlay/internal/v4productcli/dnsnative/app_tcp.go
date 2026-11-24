@@ -9,6 +9,7 @@ import (
  "errors"
  "io"
  "net"
+ "net/netip"
  "sync"
  "time"
 )
@@ -18,6 +19,8 @@ const maxAppTCP=64
 type AppTCPDNS struct {
  listener net.Listener
  udp net.PacketConn
+ downstreamTCP net.Listener
+ downstreamUDP net.PacketConn
  resolver *Resolver
  allPhysical bool
  ctx context.Context
@@ -40,15 +43,23 @@ func StartAppTCPDNS(dial DialFunc, match CNMatch, split, allPhysical bool,
  ctx,cancel:=context.WithCancel(context.Background())
  s:=&AppTCPDNS{listener:l,resolver:r,allPhysical:allPhysical,
   ctx:ctx,cancel:cancel,clients:make(map[net.Conn]struct{})}
- s.wg.Add(1);go s.accept()
+ s.wg.Add(1);go s.accept(l,netip.Prefix{})
  return s,nil
 }
 func (s *AppTCPDNS) Port()int{return s.listener.Addr().(*net.TCPAddr).Port}
-func (s *AppTCPDNS) accept(){
+func allowedDNSPeer(addr net.Addr,scope netip.Prefix)bool{
+ if !scope.IsValid(){return true}
+ var ip net.IP
+ switch a:=addr.(type){case *net.TCPAddr:ip=a.IP;case *net.UDPAddr:ip=a.IP;default:return false}
+ peer,ok:=netip.AddrFromSlice(ip)
+ return ok&&scope.Contains(peer.Unmap())
+}
+func (s *AppTCPDNS) accept(l net.Listener,scope netip.Prefix){
  defer s.wg.Done()
  for{
-  c,e:=s.listener.Accept()
+  c,e:=l.Accept()
   if e!=nil{return}
+  if !allowedDNSPeer(c.RemoteAddr(),scope){c.Close();continue}
   s.mu.Lock()
   if s.ctx.Err()!=nil||len(s.clients)>=maxAppTCP{
    s.mu.Unlock();c.Close();continue
@@ -91,6 +102,8 @@ func (s *AppTCPDNS) Close()error{
  s.cancel()
  e:=s.listener.Close()
  if s.udp!=nil{e=errors.Join(e,s.udp.Close())}
+ if s.downstreamTCP!=nil{e=errors.Join(e,s.downstreamTCP.Close())}
+ if s.downstreamUDP!=nil{e=errors.Join(e,s.downstreamUDP.Close())}
  s.mu.Lock()
  for c:=range s.clients{c.Close()}
  s.mu.Unlock()

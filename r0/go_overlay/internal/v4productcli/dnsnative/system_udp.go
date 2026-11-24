@@ -5,6 +5,7 @@ import (
  "encoding/binary"
  "fmt"
  "net"
+ "net/netip"
  "time"
 )
 
@@ -17,7 +18,7 @@ func(s *AppTCPDNS) EnableUDP()error{
  if e!=nil{return e}
  s.udp=p
  s.wg.Add(1)
- go s.serveUDP(p)
+ go s.serveUDP(p,netip.Prefix{})
  return nil
 }
 func udpReplyLimit(query []byte,q question)int{
@@ -36,14 +37,14 @@ func udpQuestionReply(query []byte,q question,flags uint16)[]byte{
  for i:=6;i<12;i++{out[i]=0}
  return out
 }
-func(s *AppTCPDNS) serveUDP(p net.PacketConn){
+func(s *AppTCPDNS) serveUDP(p net.PacketConn,scope netip.Prefix){
  defer s.wg.Done()
  slots:=make(chan struct{},maxAppTCP)
  var scratch [MaxQuery+1]byte
  for{
   n,peer,e:=p.ReadFrom(scratch[:])
   if e!=nil{return}
-  if n>MaxQuery||s.ctx.Err()!=nil{continue}
+  if n>MaxQuery||s.ctx.Err()!=nil||!allowedDNSPeer(peer,scope){continue}
   q,e:=parseQuery(scratch[:n]);if e!=nil{continue}
   select{case slots<-struct{}{}:default:continue}
   query:=append([]byte(nil),scratch[:n]...)

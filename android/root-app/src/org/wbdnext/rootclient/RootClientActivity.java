@@ -1340,7 +1340,7 @@ public final class RootClientActivity extends Activity {
         systemDNS.setChecked(false);
         pane.addView(systemDNS);
         tetherSharing=new CheckBox(this);
-        tetherSharing.setText("可选：共享 WBD IPv4 到现有热点/USB（仅软件转发，Android 16）");
+        tetherSharing.setText("可选：共享 WBD IPv4 到现有热点/USB（软件转发，Android 16；普通UDP/TCP DNS跟随上面模式）");
         tetherSharing.setChecked(false);
         pane.addView(tetherSharing);
         tetherChoices=new Spinner(this);

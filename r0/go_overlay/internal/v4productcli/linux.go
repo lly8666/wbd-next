@@ -1187,10 +1187,10 @@ func recoverOriginalAndroidRootOwned()error{
         return string(b),nil
     }
     const root="/data/local/tmp/wbd-next-root/"
+    tetherErr:=rootjournal.RecoverTether(runIP,runFirewall,root+"tether-journal.json")
     systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json")
     dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")
     _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
-    tetherErr:=rootjournal.RecoverTether(runIP,runFirewall,root+"tether-journal.json")
     routeErr=errors.Join(systemDNSErr,dnsErr,tetherErr,routeErr)
     if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
         log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")

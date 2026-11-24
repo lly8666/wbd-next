@@ -8,6 +8,7 @@ import (
  "net/netip"
  "os"
  "sort"
+ "strconv"
  "strings"
  "syscall"
 )
@@ -19,10 +20,16 @@ const tetherJournal="tether-journal.json"
 type TetherPlan struct {
  Version int
  Tun,Downstream,Subnet,Lease string
+ DNSAddress string
+ DNSPort int
 }
 func(p TetherPlan) valid()bool{
  s,e:=netip.ParsePrefix(p.Subnet)
  l,f:=netip.ParsePrefix(p.Lease)
+ if p.DNSPort!=0||p.DNSAddress!=""{
+  a,err:=netip.ParseAddr(p.DNSAddress)
+  if err!=nil||p.DNSPort<1||p.DNSPort>65535||!a.Is4()||!s.Contains(a)||a==s.Addr(){return false}
+ }
  return p.Version==1&&nameOK(p.Tun)&&nameOK(p.Downstream)&&p.Tun!=p.Downstream&&
  e==nil&&f==nil&&s.Addr().Is4()&&s.Addr().IsPrivate()&&s==s.Masked()&&s.Bits()>=8&&s.Bits()<=30&&
  l.Addr().Is4()&&l.Bits()==32&&!l.Addr().IsUnspecified()&&!l.Addr().IsMulticast()&&!s.Contains(l.Addr())
@@ -30,7 +37,7 @@ func(p TetherPlan) valid()bool{
 type tetherCommand struct{ kind string; args []string }
 func(p TetherPlan) commands()[]tetherCommand{
  lease:=strings.TrimSuffix(p.Lease,"/32")
- return []tetherCommand{
+ out:=[]tetherCommand{
   {"route",[]string{"default","dev",p.Tun,"table",tetherTable}},
   {"route",[]string{p.Subnet,"dev",p.Downstream,"table",tetherTable}},
   {"filter",[]string{"FORWARD","-i",p.Downstream,"-o",p.Tun,"-s",p.Subnet,"-m","conntrack","--ctstate","NEW,ESTABLISHED,RELATED","-m","comment","--comment",tetherMarker,"-j","ACCEPT"}},
@@ -39,6 +46,20 @@ func(p TetherPlan) commands()[]tetherCommand{
   {"rule",[]string{"pref","9581","to",p.Subnet,"iif",p.Tun,"lookup",tetherTable}},
   {"rule",[]string{"pref","9580","from",p.Subnet,"iif",p.Downstream,"lookup",tetherTable}},
  }
+ if p.DNSPort!=0{
+  port:=strconv.Itoa(p.DNSPort)
+  for _,proto:=range []string{"udp","tcp"}{
+   // Explicit destination rather than REDIRECT's interface-first address
+   // heuristic. Conntrack performs the original DNS destination inverse.
+   out=append(out,tetherCommand{"filter",[]string{"INPUT","-i",p.Downstream,"-s",p.Subnet,
+    "-d",p.DNSAddress+"/32","-p",proto,"-m",proto,"--dport",port,
+    "-m","conntrack","--ctstate","DNAT","-m","comment","--comment",tetherMarker,"-j","ACCEPT"}})
+   out=append(out,tetherCommand{"nat",[]string{"PREROUTING","-i",p.Downstream,"-s",p.Subnet,
+    "-p",proto,"-m",proto,"--dport","53","-m","comment","--comment",tetherMarker,
+    "-j","DNAT","--to-destination",p.DNSAddress+":"+port}})
+  }
+ }
+ return out
 }
 type TetherOwner struct{ip,fw Runner;path string;lock *os.File;plan TetherPlan}
 func tetherFWKey(words []string)string{
@@ -46,6 +67,7 @@ func tetherFWKey(words []string)string{
  parts:=[]string{}
  for i:=1;i<len(words);i+=2{
   v:=strings.Trim(words[i+1],"\"")
+  if words[i]=="-d"||words[i]=="-s"{if ip,e:=netip.ParseAddr(v);e==nil&&ip.Is4(){v+="/32"}}
   if words[i]=="--ctstate"{a:=strings.Split(v,",");sort.Strings(a);v=strings.Join(a,",")}
   parts=append(parts,words[i]+" "+v)
  }
@@ -91,14 +113,14 @@ func(s *TetherOwner) state(p TetherPlan)([]bool,error){
   if match<0||seen[match]{return nil,fmt.Errorf("foreign tether policy rule")}
   seen[match]=true
  }
- for _,kind:=range []string{"filter","nat"}{
-  chain:="FORWARD";if kind=="nat"{chain="POSTROUTING"}
+ for _,pair:=range [][2]string{{"filter","FORWARD"},{"nat","POSTROUTING"},{"filter","INPUT"},{"nat","PREROUTING"}}{
+  kind,chain:=pair[0],pair[1]
   out,e:=s.fw("-w","2","-t",kind,"-S",chain);if e!=nil{return nil,e}
   for _,line:=range strings.Split(out,"\n"){
    if !strings.Contains(line,tetherMarker){continue}
    w:=strings.Fields(line);if len(w)<2||w[0]!="-A"{return nil,fmt.Errorf("invalid tether firewall readback")}
    key:=tetherFWKey(w[1:]);match:=-1
-   for i:=2;i<5;i++{if cmds[i].kind==kind&&key==tetherFWKey(cmds[i].args){match=i}}
+   for i,c:=range cmds{if c.kind==kind&&c.args[0]==chain&&key==tetherFWKey(c.args){match=i}}
    if match<0||seen[match]{return nil,fmt.Errorf("foreign tether firewall entry")}
    seen[match]=true
   }

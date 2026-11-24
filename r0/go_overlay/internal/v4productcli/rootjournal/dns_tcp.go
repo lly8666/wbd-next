@@ -27,6 +27,9 @@ type DNSPlan struct{
  Tun,Lease string
  Port int
  Tunnel,All bool
+ // Tether DNS can own the original root-to-tunnel route without
+ // changing ordinary application TCP53 policy. Old journal defaults false.
+ NoAppNAT bool
  UIDs,ExcludedAppIDs []int
 }
 func(p DNSPlan) ranges()[]allRange{
@@ -44,6 +47,10 @@ func(p DNSPlan) valid()bool{
  if len(p.ExcludedAppIDs)!=0||len(p.UIDs)==0{return false}
  if len(p.UIDs)==1{return p.UIDs[0]>=10000&&p.UIDs[0]<=1999999}
  return ValidGroupUIDs(p.UIDs)
+}
+func(p DNSPlan) appRanges()[]allRange{
+ if p.NoAppNAT{return nil}
+ return p.ranges()
 }
 func dnsRoute(p DNSPlan,action string)[]string{
  return []string{"-4","route",action,dnsUpstream,"dev",p.Tun,"table",dnsTable}
@@ -165,7 +172,7 @@ func(s *DNSOwner) state(p DNSPlan)(dnsState,error){
   state.rule=true
  }
  expected:=make(map[string][]string)
- for _,r:=range p.ranges(){
+ for _,r:=range p.appRanges(){
   row:=dnsNAT(p,r,"-A");key,_:=dnsNATKey(row);expected[key]=row
  }
  lines,e:=s.firewall("-w","2","-t","nat","-S","OUTPUT");if e!=nil{return state,e}
@@ -225,7 +232,7 @@ func NewDNS(ip,fw Runner,batch func([][]string)error,path string,p DNSPlan)(*DNS
   if _,e=ip(dnsRule(p,"add")...);e!=nil{return rollback(e)}
  }
  var rows [][]string
- for _,r:=range p.ranges(){rows=append(rows,dnsNAT(p,r,"-A"))}
+ for _,r:=range p.appRanges(){rows=append(rows,dnsNAT(p,r,"-A"))}
  if e=s.changeNAT(rows,"-A");e!=nil{return rollback(e)}
  state,e=s.state(p)
  if e!=nil||state.route!=p.Tunnel||state.rule!=p.Tunnel||len(state.nat)!=len(rows){

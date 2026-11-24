@@ -1792,7 +1792,7 @@ assert 'return startOriginalOwner(intent,startId);' in s
 assert 'startOriginalOwner(snapshot.request,startId);' in s
 assert 'networkEvents.post(()->scheduleRotation(generation));' in s
 assert 'requestStop("PERIODIC_ROTATION");' in s
-assert 'RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null)' in s
+assert 'RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null&&oldNet.same(same))' in s
 assert s.index('trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED)') < s.index('networkEvents.post(()->finishOwner(net));')
 assert 'RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.ROUTE)' in s
 assert 'RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.ROUTE,snapshot.route)' in s
@@ -1857,4 +1857,17 @@ assert 'rootjournal.ValidCLATScope(' in g
 assert 'V4_PUBLIC_ANDROID_CLAT_ROUTE_READBACK' in g
 assert g.index('V4_PUBLIC_ANDROID_CLAT_ROUTE_READBACK')<g.index('V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED')
 print("ANDROID_B67_ORIGINAL_EXISTING_CLAT_COLD_SCOPE_SOURCE_PASS")
+PY
+
+python3 - <<'PY'
+from pathlib import Path
+g=Path("r0/go_overlay/internal/v4productcli")
+r=(g/"android_root_route_android.go").read_text()
+d=(g/"dnsnative/downstream.go").read_text()
+t=(g/"rootjournal/tether.go").read_text()
+assert 'relay.EnableDownstream(gateway,prefix)' in r
+assert 'NoAppNAT:!c.androidAppTCPDNS' in r
+assert 'go s.accept(l,subnet)' in d and 'go s.serveUDP(p,subnet)' in d
+assert 'p.DNSAddress+":"+port' in t and '"PREROUTING","-i",p.Downstream,"-s",p.Subnet' in t
+print("ANDROID_B68_TETHER_DNS_SHARED_RELAY_OWNED_NAT_SOURCE_PASS")
 PY
