@@ -1,3 +1,7 @@
+**2026-11-24 B82**：B82 WIRED_CANDIDATE / feature-freeze candidate：CN IPv4 直连同一已合并 CIDR 表覆盖普通 App 与显式软件热点（真实内核 throw，冷批量路由和索引读回，Stop/Restore）；独立普通 UID TCP/UDP 字节回显测试 APK、双向流式 echo/RTT、可选 Android 系统 DNS、同 SOURCE fixture Host loopback，现有 CI 先产 APK 再执行历史源码门。无新 WBD 协议/数据线程/防御框架。B81 官方 8472 条 Go/Rust Host、双 ABI、两个 Linux Oracle PASS；APK 旧 send_staged 断言、维护旧 regex-lite graph FAIL，已按实际源修候选。B82 CI/设备/性能尚未验。主线先测七模式、UID/直连/DNS、IPv6/热点、冷切网/轮换，再短性能 A/B；不扩大热迁移/idle dormant/在线规则下载等非当前主体测试前提。
+
+[集中测试方案](../../docs/plans/ANDROID_ROOT_TEST_MATRIX.md)
+
 **2026-11-24 B81**：B81 WIRED_CANDIDATE: Android uses main's official flattened CN domain snapshot via shared build-time importer, typed Go cold normalization and existing Rust M4 matcher (all four types); App local import/reset applies on next START, no runtime fetch or FakeIP, disabled CN split skips Go rule parsing. Legacy 8503 host evidence stays historical. B80 exact ACK/SACK test crate and obsolete source assertion repaired; assembler pin matches actual merged main blob. CI/device/performance not yet verified.
 
 **2026-11-24 最新用户决定（B80）**：每次从 main 同步已正式合入的全部源码、功能/优化与历史（真实双亲 merge，保留 Android 专有代码），平台差异只在 Android Bionic RAW/TUN、Root/Network、App 冷设置等适配层处理。优先复用 main 共享核心，不复制一套协议/算法；main 的 Windows/服务端专有逻辑保留源码而不误启用在 Android。Android 必须适配原表演式/机会式外层重传，旧逐 record M2 Receipt 已废弃，禁止复活。高级 CN FakeIP 仍明确 OUT_OF_SCOPE；普通 CN DNS 与真实 IPv4 内核直连保留。

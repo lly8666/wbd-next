@@ -107,8 +107,11 @@ func androidRootRouteAfterNative(
         if err!=nil{return nil,err}
         fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_CN_IPV4_PREFIXES role=client count=%d source=apnic\n",len(directCIDRs))
     }
+    // All subsequent cold routing (including software tether) consumes
+    // the same merged manual + country CIDRs. No second per-packet matcher.
+    c.androidDirectCIDRs=directCIDRs
     if e:=rootjournal.RecoverIPv6CarrierBatch(runner,androidDNSFirewall,androidDNSFirewall6,originalIPv6Batch,androidIPv6CarrierJournal);e!=nil{return nil,e}
-    if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
+    if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal,originalIPv6Batch);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
@@ -343,7 +346,7 @@ func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjou
   if err!=nil{return fail(err)}
   plan.DNSAddress,plan.DNSPort=gateway.String(),port
  }
- owner,e:=rootjournal.NewTether(runner,androidDNSFirewall,androidTetherJournal,plan)
+ owner,e:=rootjournal.NewTether(runner,androidDNSFirewall,androidTetherJournal,plan,originalIPv6Batch)
  if e!=nil{return fail(e)}
  if plan.DNSPort!=0{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_DNS_READY role=client udp_tcp53=1")}
  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_READY role=client software_ipv4=1")

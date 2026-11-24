@@ -71,7 +71,7 @@ func(p TetherPlan) commands()[]tetherCommand{
  }
  return out
 }
-type TetherOwner struct{ip,fw Runner;path string;lock *os.File;plan TetherPlan}
+type TetherOwner struct{ip,fw Runner;batch DirectBatch;path string;lock *os.File;plan TetherPlan}
 func tetherFWKey(words []string)string{
  if len(words)<1||len(words)%2!=1{return ""}
  parts:=[]string{}
@@ -88,23 +88,27 @@ func tetherFWKey(words []string)string{
 // occupants; never flush Android's tether chains or any shared route table.
 func(s *TetherOwner) state(p TetherPlan)([]bool,error){
  cmds:=p.commands();seen:=make([]bool,len(cmds))
+ routeIndexes:=make(map[string]int)
+ for i,c:=range cmds{
+  if c.kind!="route"{continue}
+  a:=append([]string(nil),c.args...)
+  if len(a)==4&&a[0]=="throw"{a[1]=carrierIP(a[1])}
+  routeIndexes[strings.Join(a," ")]=i
+ }
  routes,e:=s.ip("-4","route","show","table","all");if e!=nil{return nil,e}
  for _,line:=range strings.Split(routes,"\n"){
   w:=strings.Fields(line);owned:=false
   for i:=0;i+1<len(w);i++{if w[i]=="table"&&w[i+1]==tetherTable{owned=true}}
   if !owned{continue}
   match:=-1
-  for i,c:=range cmds{
-   if c.kind!="route"{continue}
-   a:=c.args
-   expected:=append([]string(nil),a...)
-   actual:=append([]string(nil),w...)
-   if len(a)==4&&a[0]=="throw"&&len(actual)>=2{
-    actual[1]=carrierIP(actual[1]);expected[1]=carrierIP(expected[1])
-   }
-   if len(actual)>=len(expected)&&strings.Join(actual[:len(expected)]," ")==strings.Join(expected," "){
+  n:=5
+  if len(w)>0&&w[0]=="throw"{n=4}
+  if len(w)>=n{
+   a:=append([]string(nil),w[:n]...)
+   if n==4{a[1]=carrierIP(a[1])}
+   if i,ok:=routeIndexes[strings.Join(a," ")];ok{
     good:=true
-    for k:=len(expected);k<len(w);k+=2{
+    for k:=n;k<len(w);k+=2{
      if k+1>=len(w)||!((w[k]=="scope"&&w[k+1]=="link")||(w[k]=="proto"&&w[k+1]=="boot")){good=false;break}
     }
     if good{match=i}
@@ -152,14 +156,28 @@ func(s *TetherOwner) change(c tetherCommand,add bool)error{
  if add{a=append([]string{"-w","2","-t",c.kind,"-I",c.args[0],"1"},c.args[1:]...)}
  _,e:=s.fw(a...);return e
 }
+// Install the complete cold FIB in a single ip -batch before publishing
+// forwarding rules. Stop removes the forwarding rules before the FIB.
+func(s *TetherOwner) changeRoutes(cmds []tetherCommand,seen []bool,add bool)error{
+ rows:=make([][]string,0)
+ action:="del";if add{action="add"}
+ for i,c:=range cmds{
+  if c.kind!="route"||(seen!=nil&&!seen[i]){continue}
+  rows=append(rows,append([]string{"-4","route",action},c.args...))
+ }
+ if len(rows)==0{return nil}
+ if s.batch!=nil{return s.batch(rows)}
+ for _,row:=range rows{if _,e:=s.ip(row...);e!=nil{return e}}
+ return nil
+}
 func readTether(path string)(TetherPlan,bool,error){
  var p TetherPlan
  f,e:=openNoFollow(path,syscall.O_RDONLY,0);if errors.Is(e,syscall.ENOENT){return p,false,nil}
  if e!=nil{return p,false,e};defer f.Close()
  st,e:=f.Stat();if e!=nil{return p,false,e}
  owner,ok:=st.Sys().(*syscall.Stat_t)
- if !ok||owner.Uid!=uint32(os.Geteuid())||!st.Mode().IsRegular()||st.Mode().Perm()!=0600||st.Size()>maxJournalBytes{return p,false,fmt.Errorf("invalid tether journal")}
- d:=json.NewDecoder(io.LimitReader(f,maxJournalBytes+1));d.DisallowUnknownFields()
+ if !ok||owner.Uid!=uint32(os.Geteuid())||!st.Mode().IsRegular()||st.Mode().Perm()!=0600||st.Size()>maxRouteJournalBytes{return p,false,fmt.Errorf("invalid tether journal")}
+ d:=json.NewDecoder(io.LimitReader(f,maxRouteJournalBytes+1));d.DisallowUnknownFields()
  if d.Decode(&p)!=nil||!p.valid()||d.Decode(&struct{}{})!=io.EOF{return p,false,fmt.Errorf("invalid tether record")}
  return p,true,nil
 }
@@ -172,28 +190,35 @@ func writeTether(path string,p TetherPlan)error{
 func(s *TetherOwner) remove(p TetherPlan)error{
  seen,e:=s.state(p);if e!=nil{return e}
  cmds:=p.commands()
- for i:=len(cmds)-1;i>=0;i--{if seen[i]{if e=s.change(cmds[i],false);e!=nil{return e}}}
+ for _,kind:=range []string{"rule","nat","filter"}{
+  for i:=len(cmds)-1;i>=0;i--{if seen[i]&&cmds[i].kind==kind{if e=s.change(cmds[i],false);e!=nil{return e}}}
+ }
+ if e=s.changeRoutes(cmds,seen,false);e!=nil{return e}
  seen,e=s.state(p);if e!=nil{return e}
  for _,v:=range seen{if v{return fmt.Errorf("tether Stop readback incomplete")}}
  if e=os.Remove(s.path);e!=nil{return e};return parentSync(s.path)
 }
-func RecoverTether(ip,fw Runner,path string)error{
+func RecoverTether(ip,fw Runner,path string,batches ...DirectBatch)error{
  l,e:=scopedOwnerLock(path,tetherJournal,"tether-owner.lock");if e!=nil{return e};defer l.Close()
  p,found,e:=readTether(path);if e!=nil||!found{return e}
- return (&TetherOwner{ip:ip,fw:fw,path:path}).remove(p)
+ return (&TetherOwner{ip:ip,fw:fw,path:path,batch:optionalDirectBatch(batches)}).remove(p)
 }
-func NewTether(ip,fw Runner,path string,p TetherPlan)(*TetherOwner,error){
+func NewTether(ip,fw Runner,path string,p TetherPlan,batches ...DirectBatch)(*TetherOwner,error){
  p.Version=1
  if ip==nil||fw==nil||!p.valid(){return nil,fmt.Errorf("invalid tether scope")}
  l,e:=scopedOwnerLock(path,tetherJournal,"tether-owner.lock");if e!=nil{return nil,e}
- s:=&TetherOwner{ip:ip,fw:fw,path:path,lock:l,plan:p}
+ s:=&TetherOwner{ip:ip,fw:fw,path:path,lock:l,plan:p,batch:optionalDirectBatch(batches)}
  fail:=func(e error)(*TetherOwner,error){l.Close();return nil,e}
  old,found,e:=readTether(path);if e!=nil{return fail(e)}
  if found{if e=s.remove(old);e!=nil{return fail(e)}}
  seen,e:=s.state(p);if e!=nil{return fail(e)}
  for _,v:=range seen{if v{return fail(fmt.Errorf("tether kernel state without journal"))}}
  if e=writeTether(path,p);e!=nil{return fail(e)}
- for _,c:=range p.commands(){if e=s.change(c,true);e!=nil{return fail(errors.Join(e,s.remove(p)))}}
+ cmds:=p.commands()
+ if e=s.changeRoutes(cmds,nil,true);e!=nil{return fail(errors.Join(e,s.remove(p)))}
+ for _,kind:=range []string{"filter","nat","rule"}{
+  for _,c:=range cmds{if c.kind==kind{if e=s.change(c,true);e!=nil{return fail(errors.Join(e,s.remove(p)))}}}
+ }
  seen,e=s.state(p);if e!=nil{return fail(errors.Join(e,s.remove(p)))}
  for _,v:=range seen{if !v{return fail(errors.Join(fmt.Errorf("tether readback incomplete"),s.remove(p)))}}
  return s,nil

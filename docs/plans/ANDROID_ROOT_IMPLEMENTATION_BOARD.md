@@ -1,3 +1,7 @@
+**2026-11-24 B82**：B82 WIRED_CANDIDATE / feature-freeze candidate：CN IPv4 直连同一已合并 CIDR 表覆盖普通 App 与显式软件热点（真实内核 throw，冷批量路由和索引读回，Stop/Restore）；独立普通 UID TCP/UDP 字节回显测试 APK、双向流式 echo/RTT、可选 Android 系统 DNS、同 SOURCE fixture Host loopback，现有 CI 先产 APK 再执行历史源码门。无新 WBD 协议/数据线程/防御框架。B81 官方 8472 条 Go/Rust Host、双 ABI、两个 Linux Oracle PASS；APK 旧 send_staged 断言、维护旧 regex-lite graph FAIL，已按实际源修候选。B82 CI/设备/性能尚未验。主线先测七模式、UID/直连/DNS、IPv6/热点、冷切网/轮换，再短性能 A/B；不扩大热迁移/idle dormant/在线规则下载等非当前主体测试前提。
+
+[集中测试方案](ANDROID_ROOT_TEST_MATRIX.md)
+
 **2026-11-24 B81**：B81 WIRED_CANDIDATE: Android uses main's official flattened CN domain snapshot via shared build-time importer, typed Go cold normalization and existing Rust M4 matcher (all four types); App local import/reset applies on next START, no runtime fetch or FakeIP, disabled CN split skips Go rule parsing. Legacy 8503 host evidence stays historical. B80 exact ACK/SACK test crate and obsolete source assertion repaired; assembler pin matches actual merged main blob. CI/device/performance not yet verified.
 
 **2026-11-24 最新用户决定（B80）**：每次从 main 同步已正式合入的全部源码、功能/优化与历史（真实双亲 merge，保留 Android 专有代码），平台差异只在 Android Bionic RAW/TUN、Root/Network、App 冷设置等适配层处理。优先复用 main 共享核心，不复制一套协议/算法；main 的 Windows/服务端专有逻辑保留源码而不误启用在 Android。Android 必须适配原表演式/机会式外层重传，旧逐 record M2 Receipt 已废弃，禁止复活。高级 CN FakeIP 仍明确 OUT_OF_SCOPE；普通 CN DNS 与真实 IPv4 内核直连保留。
@@ -63,13 +67,13 @@
 | App选择、设置持久化/SAF导入导出、凭据加密保存、TLS CA选配、诊断 | WIRED；B32完整已安装普通App枚举HOST_PASS | B32a同SOURCE双ABI＋签名APK/Linux Oracle 11 SUCCESS/4 SKIPPED，仍非手机可见性验收 | B33增加可保存/导出非秘密直连CIDR冷表单 |
 | 全App额外按已安装普通App绕过 | **B34 HOST_PASS / BUILD_PASS** | 同源B34a原Go/Rust双ABI+签名ARM64 Root APK+Linux Oracle **11 SUCCESS/4 SKIPPED**；复用原20 profile UID FIB/8排除AppID配额（必含本App/KernelSU Manager），用户额外最多6包；App/SAF→Service双UID冷核验→原Go/journal精确Stop | **Android真机NOT_RUN**；跨profile同AppID可能共同绕过，实际物理出口未验 |
 | 物理DNS可选IPv4上游 | **B34 HOST_PASS / BUILD_PASS** | 同源B34a 11 SUCCESS/4 SKIPPED；App/SAF→Service→Go冷参数→原Go/Rust M4冷设置/逐字节读回→已有Android绑定Network UDP53 Socket；默认223.5.5.5，可选LAN路由器IPv4 | **实体UDP53查询/E2E NOT_RUN**；系统netd/DoH、原Go冷服务器引导、物理TCP53均非此路径 |
-| Android系统Resolver/netd UDP/TCP/DoH交付 | MISSING | 普通App TUN DNS ≠ netd DNS | 需要独立准确方案，不能声明已经全局拦截 |
-| Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
+| Android系统Resolver/netd 普通 UDP/TCP53 | B66/B69/B75 WIRED_CANDIDATE | IPv4/IPv6 目的、选定netId及UID，实际设备NOT_RUN；Private DNS/DoH不接管 | 集中普通DNS验收，不开发额外加密DNS拦截 |
+| Android IPv6/464XLAT/IPv6 DNS | B67/B69–B75 WIRED_CANDIDATE | 原真实CLAT及可选双端SIT/6rd IPv6-in-IPv4；非裸IPv6 M3，实体NOT_RUN | 实际设备内核支持和双向业务集中验收 |
 | Android Game2/Game4 原多lane TLS→Rust Game M4双向 | WIRED（B48/B56/B57） | B48同源双ABI/签名APK/Oracle PASS；B56/57补原M4 burst/MTU | 实机Game2/4 off/fixed TCP/UDP/DNS统一后验 |
 | Android应用TCP/UDP双端逐字节E2E、切网恢复、低CPU/吞吐/首包 | NOT_RUN | 旧API36只有内核数据收据与用户主观“数据通了” | 必须有设备授权后验；此期不假造 |
 | Android直接App TCP53 / 原生业务IP直连例外 | WIRED_CANDIDATE（B64）/ B33/B58已接 | B64可选三DNS QNAME kernel TCP listener、原UID NAT与固定原隧道/物理socket、Stop/Restore；CIDR原私有FIB | App TCP53真机NOT_RUN；系统netd独立未接 |
 | Android动态换物理Network/定时轮换 | WIRED_CANDIDATE（B49/B60/B61/B62） | 手动/前台/后台事件冷切网、定时原生冷轮换、配置保存；非Linux shared-TUN热迁移 | 实机统一后验 |
-| Android热点共享/Tether | MISSING | 目前普通UID路由不接forwarded IP | 独立root forwarding/NAT/Stop所有权，不宣称已实现 |
+| Android热点共享/Tether | B65/B68/B71/B74/B76/B82 WIRED_CANDIDATE | 软件热点IPv4/IPv6、普通DNS、手工/CN IPv4直连、批量FIB与Stop；硬件offload非当前范围 | 实体下游TCP/UDP/DNS/直连验收 |
 
 ## B34 本批执行选择
 

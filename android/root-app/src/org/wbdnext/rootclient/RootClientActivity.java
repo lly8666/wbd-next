@@ -1399,7 +1399,7 @@ public final class RootClientActivity extends Activity {
         });
         pane.addView(resetCN);
         cnIPDirect=new CheckBox(this);
-        cnIPDirect.setText("普通CN业务分流：按签名APK内APNIC中国IPv4分配网段直连；域名仍按上述DNS模式，海外实际IP仍走隧道");
+        cnIPDirect.setText("普通CN业务分流：按签名APK内APNIC中国IPv4分配网段直连（普通App及已开启软件热点）；域名仍按上述DNS模式，海外实际IP仍走隧道");
         cnIPDirect.setChecked(false);
         pane.addView(cnIPDirect);
         outerRepair=new CheckBox(this);

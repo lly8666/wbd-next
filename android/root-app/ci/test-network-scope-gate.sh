@@ -876,7 +876,7 @@ assert "stream.offer_source(slab,14..14+n,at" in fec_worker
 assert "wbd_codec::fec_v2::source_into(" in fec_worker
 assert "stream.poll_parity_quanta(at,1," in fec_worker
 assert "e.owner.seal_fec2_product_one_padded(" in fec_worker
-assert "send_staged(e,raw,stats,storage,scratch,at)==Some(pn)" in fec_worker
+assert "send_staged(e,raw,stats,storage,scratch,at,true)==Some(pn)" in fec_worker
 assert "e.android_fec2_tx=Some(stream);" in fec_worker
 assert "!(e.protected_features==3||fixed_ready)" in fec_worker
 assert "let fixed_ready=e.protected_features==7&&" in fec_worker

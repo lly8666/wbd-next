@@ -1235,7 +1235,7 @@ func recoverOriginalAndroidRootOwned()error{
         return string(b),nil
     }
     const root="/data/local/tmp/wbd-next-root/"
-    tetherErr:=rootjournal.RecoverTether(runIP,runFirewall,root+"tether-journal.json")
+    tetherErr:=rootjournal.RecoverTether(runIP,runFirewall,root+"tether-journal.json",originalIPv6Batch)
     runFirewall6:=func(args ...string)(string,error){
         c,cancel:=context.WithTimeout(context.Background(),3*time.Second)
         defer cancel()

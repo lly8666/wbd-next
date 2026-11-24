@@ -228,15 +228,19 @@ jobs:
           test -s out/android-root-app-cn/wbd-cn-geosite-license.txt
           test -s out/android-root-app-cn/cn-geosite-provenance.json
           test -s out/android-root-app-cn/receipt.json
-      - name: Test exact selected Network event gate (pure Java)
+      - name: Build reusable ordinary-App TCP UDP test fixture and run its host loopback
         shell: bash
-        run: bash android/root-app/ci/test-network-scope-gate.sh
+        run: bash android/root-app/ci/traffic-fixture/build.sh
       - name: Build independent no-VpnService Root ARM64 APK
         shell: bash
         run: bash android/root-app/ci/build-source-locked.sh
       - name: Verify signed APK original Go/Rust CLI and loader wiring (host-only; no emulator)
         shell: bash
         run: python3 android/root-app/ci/test-apk-native-wiring.py
+      - name: Test exact selected Network event gate (pure Java)
+        if: always()
+        shell: bash
+        run: bash android/root-app/ci/test-network-scope-gate.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -250,6 +254,8 @@ jobs:
             out/android-root-app/wiring-receipt.json
             out/android-root-app/manifest-tree.txt
             out/android-root-app/badging.txt
+            out/android-traffic-fixture/traffic-fixture.apk
+            out/android-traffic-fixture/host-smoke.txt
           retention-days: 14
           if-no-files-found: warn
   android-x86-kvm-ksu-original-native:
