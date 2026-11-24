@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2375,
-  "checkpoint_sha": "a0811e9502d5ed5373886ecf2d6739d3a02610aa",
+  "sequence": 2377,
+  "checkpoint_sha": "ca80e2ab3aa563d7b0742e9e6ebd2eb42ea89d47",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "H2374最后收尾：H2372 ARM/x86原生各14/14 PASS；两真网build后因旧夹具缺显式repair off在业务前失败；已修夹具，原产品公平候选不变；Maximum当前真实ISA-L及已有owner单元并行验证。",
-  "why_now": "用户要求尽快收口，不再扩展研究；仅完成已有公平候选与FEC原生资格复核，未达到的实网/物理性能如实保留。",
-  "done_when": "收口P0保留性能未达标；P1当前1%两组及原生真实PASS、不宣称吞吐增益；FEC剩余仅按实际native backend与Maximum服务/恢复/成本证据收口，不重造算法；公平候选真实小TCP/UDP及时交付、bulk/CPU无实质退化、拒绝/淘汰分列、原生Stop，跨租约独立验证，不能假称全部平台/物理PASS。没有新判别依据则停止主动优化、保留未达标边界。",
-  "next_action": "仅收45333966600双ISA公平业务和45333966595 Windows Maximum真实ISA-L原生结果；公平有联合作用才保留候选，若无则恢复旧产品路径并记录；不主动启动新优化/参数扫描。真实Maximum跨机未验、其他平台/物理未验、P0未达标均留明确边界；完成现有结果判定后收主动研究，不冒充整个029完成。",
+  "current_task": "H2376主动性能优化收口：双ISA公平准入真实A/B/A′正收益，已选择性整合main仅Linux Normal/off客户端；Maximum当前Windows真实ISA-L与owner单元PASS；主线集成回归在途。",
+  "why_now": "双ISA真实小TCP P99降98.30/99.56%，UDP漏回及小TCP入口拒绝降0，吞吐+0.87/+0.25%，CPU/GiB约1%内，满足实际公平候选接受条件；用户要求结束主动优化。",
+  "done_when": "主动P0/P1/FEC数学研究已收口，公平实验正收益已选择性集成；仅收main实际集成原生功能/Stop回归，未验Maximum跨机/Windows公平/跨租约/实体及P0绝对性能保留NOT_RUN或未达标，不宣称独立029全完成。",
+  "next_action": "仅收main SOURCE130555c806e4c32bf34075883321f366d5912a5c 的45335657114双ISA集成回归及其必要治理；若集成红只定位本次选择性移植缺陷并定向修复，不开启新性能研究。完成后终止本轮主动优化。",
   "unverified": true,
-  "last_tested_source": "586d133f73ae723b84aca79516c213c059ea30ae",
+  "last_tested_source": "3b187ea1a701fdf4d14738369e0d40f6b57f2c20",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -21,9 +21,9 @@
     "docs/prompts/M0.md",
     "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json",
     "docs/evidence/M0/20261124-H2370-REPAIR-COMPLETION-RESUME.json",
-    "docs/evidence/M0/20261124-H2372-ZERO-PAUSE-FEC-HISTORY-FAIR-RESUME.json",
-    "docs/evidence/M0/20261124-H2374-FINAL-SCOPED-VERIFICATION.json"
+    "docs/evidence/M0/20261124-H2374-FINAL-SCOPED-VERIFICATION.json",
+    "docs/evidence/M0/20261124-H2376-FAIRNESS-FEC-CLOSEOUT.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2372 native14/14 each ISA；real两组NOT_RUN（H2272 paired switch）；H2374 source3b187ea1a701fdf4d14738369e0d40f6b57f2c20，公平45333966600、Maximum ISA-L45333966595在途。P0 PAUSED，P1 1%机制PASS无稳定吞吐，FEC数学收口，实网Maximum仍未验。"
+  "partial_summary": "H2374 45333966600 ARM/x86真实对照PASS，P99 7.70/3.03ms，UDP漏回0/0，吞吐+0.87/+0.25%；45333966595 Windows native ISA-L七档及Maximum PASS，远端Maximum NOT_RUN。main 130555c 仅Linux Normal/off client公平，集成45335657114在途，主动性能研究收口，非029整体完成。"
 }
