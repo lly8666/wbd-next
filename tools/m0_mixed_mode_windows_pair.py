@@ -1,6 +1,20 @@
 #!/usr/bin/env python3
 """Actual packaged Windows native owner to one WSL shared server. No new wire."""
-import json, os, pathlib, re, secrets, subprocess, sys, time
+import json, os, pathlib, re, secrets, socket, subprocess, sys, time
+if sys.argv[1]=="ports":
+    # Hosted Windows can reserve arbitrary TCP port ranges for Hyper-V.
+    # Use actually bindable ports for independent test applications only.
+    available=[]
+    for p in range(45902,46900):
+        try:
+            with socket.socket(socket.AF_INET,socket.SOCK_STREAM) as t, socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as u:
+                t.bind(("0.0.0.0",p));u.bind(("0.0.0.0",p))
+                available.append(p)
+        except OSError:continue
+        if len(available)==20:break
+    assert len(available)==20
+    print(",".join(map(str,available)))
+    sys.exit(0)
 from m0_plan028_h1415_windows_linux_independent_clients import marker, stopwin, linux_kill, guestpath, wsl
 ROOT=pathlib.Path.cwd()
 OUT=ROOT/"result/wl-public"
@@ -35,11 +49,10 @@ def wait_count(pattern,before,p,seconds):
         time.sleep(.1)
     raise RuntimeError("missing server promotion/retirement "+pattern)
 wslbase=["wsl.exe","-d","Ubuntu","-u","root","--"]
-port=47000
+ports=iter(map(int,sys.argv[2].split(",")))
 def probe(tag):
-    global port
     for direction in ("s2c","c2s"):
-        port+=1
+        port=next(ports)
         if direction=="s2c":
             lbase=[sys.executable,"-u",str(app)]
             sbase=wslbase+["python3","-u",guest_app]
@@ -82,7 +95,7 @@ try:
         p0=count(promotion);r0=count(retire)
         if win is not None:stop_client(win,winlog,prev)
         t0=time.monotonic()
-        args=[OUT/"wbd-client.exe","--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port",str(41031+16*i),"--server-name","wbd-v4.example.test","--route-key-hex-file",route,"--tls-ca-pem",cert,"--username",user,"--password",password,"--tunnel-id","102030405060708090a0b0c0d0e0f001","--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",OUT/"mixed-owner.json","--mtu","1460","--lanes",str(lanes),"--fec-mode","off","--fec-parity","0","--fec.mode","off","--fec.profile","strong","--route-mode","all","--outer-repair","on"]
+        args=[OUT/"wbd-client.exe","--native-v4-product","--control-stdin","--server-ip",peer,"--server-port","443","--source-port","41031","--server-name","wbd-v4.example.test","--route-key-hex-file",route,"--tls-ca-pem",cert,"--username",user,"--password",password,"--tunnel-id","102030405060708090a0b0c0d0e0f001","--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDWLMAIN","--state-path",OUT/"mixed-owner.json","--mtu","1460","--lanes",str(lanes),"--fec-mode","off","--fec-parity","0","--fec.mode","off","--fec.profile","strong","--route-mode","all","--outer-repair","on"]
         win,winlog=spawn("mixed-win-"+str(i)+"-lanes-"+str(lanes),args,stdin=True)
         marker(winlog,"WBD_WINDOWS_OS_APPLIED",win,30)
         probe("switch-"+str(i))

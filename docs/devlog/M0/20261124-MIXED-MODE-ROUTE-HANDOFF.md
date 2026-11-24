@@ -23,3 +23,5 @@ Add an independent signed Windows2025 Npcap/Wintun → WSL2 real peer fixture us
 
 
 Windows pair Action45429168582 initial fixture failed before first Normal TLS: repeated SYN, server no auth, same known WSL MAC/SendARP fixture omission as original public native workflow. Actual failure artifact14939450781. Reuse existing exact WSL neighbor binding and verified MAC/IP/ifindex FFI test handoff, no product rebuild/change. Windows binary a4c5c975 owner 91/91 and explicit cold Health initializer 1/1, GUI 433/433. Linux same SOURCE both native jobs PASS. Retest exact existing packaged bytes.
+
+Windows pair Action45430196116 initial Normal real Npcap TLS/M4/Wintun OS_APPLIED and joined Stop PASS. Test application before switching failed Windows TCP bind 47001 WinError10013 (artifact14938322452). Choose actual bindable application-only TCP+UDP ports in fixture; preserve one configured 41031 and allow the original persisted ordinal's bounded consecutive test tuples rather than wrong per-mode fixed port windows. No product change; same exact three packages.

@@ -167,11 +167,16 @@ jobs:
             & wsl.exe -d Ubuntu -u root -- iptables -I OUTPUT 1 -p tcp --tcp-flags RST RST --sport 443 -j DROP
             if($LASTEXITCODE -ne 0){throw 'test RST suppression failed'}
             $rst=$true
-            $ports=@()
-            for($i=0;$i -lt 5;$i++){for($j=0;$j -lt 4;$j++){$ports+= [string](41031+16*$i+$j)}}
+            # Same configured source port for all modes. Original persisted
+            # cold tuple ordinal reserves successive lane/retry slots.
+            $ports=@(41031..41094 | ForEach-Object {[string]$_})
+            $appCSV=(& python tools/m0_mixed_mode_windows_pair.py ports | Out-String).Trim()
+            if($LASTEXITCODE -ne 0){throw 'Windows app bindable ports missing'}
+            $appPorts=@($appCSV.Split(','))
+            if($appPorts.Count -ne 20){throw 'test app port selection failed'}
             New-NetFirewallHyperVRule -Name $name -DisplayName $name -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('443') -RemotePorts $ports | Out-Null
-            New-NetFirewallRule -Name ($name+'-tcp') -DisplayName ($name+'-tcp') -Direction Inbound -Action Allow -Protocol TCP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort 47001-47020 | Out-Null
-            New-NetFirewallRule -Name ($name+'-udp') -DisplayName ($name+'-udp') -Direction Inbound -Action Allow -Protocol UDP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort 47001-47020 | Out-Null
+            New-NetFirewallRule -Name ($name+'-tcp') -DisplayName ($name+'-tcp') -Direction Inbound -Action Allow -Protocol TCP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort $appPorts | Out-Null
+            New-NetFirewallRule -Name ($name+'-udp') -DisplayName ($name+'-udp') -Direction Inbound -Action Allow -Protocol UDP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort $appPorts | Out-Null
             # Real NPF header showed original product SYN destination MAC equals
             # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
             # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
@@ -198,7 +203,7 @@ jobs:
             $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$hostIP[0].IPAddress
             $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
             Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
-            & python -u tools/m0_mixed_mode_windows_pair.py $guestIP
+            & python -u tools/m0_mixed_mode_windows_pair.py $guestIP $appCSV
             if($LASTEXITCODE -ne 0){throw 'Windows shared mode switch failed'}
           } finally {
             if($neighbor){& netsh.exe interface ipv4 delete neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "store=active" | Out-Null}
