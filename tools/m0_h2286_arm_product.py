@@ -367,6 +367,8 @@ def check_server_and_run_app(group):
                     "listening on wbds0" in
                     (ROOT/"tcpdump-stderr.log").read_text(errors="replace"),
                     "H2288_ARM_TUN_TRUE_READ_ONLY_TCPDUMP_NOT_RUNNING")
+            if rc!=0:
+                print((ROOT/"tcp-inner-server.log").read_text(errors="replace")[-1600:],flush=True)
             require(rc==0,"REAL_WBD_INNER_APPLICATION_FAILED")
         (ROOT/"udp-stop.flag").write_text(own["source_sha"]+"\n")
         for tick in range(80):

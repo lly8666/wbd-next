@@ -1,0 +1,5 @@
+# H2352 — first real calibrated crossover exposed a fixture transition failure
+
+H2348 native 45318175791 PASS (2x66 platform, 25 owner, arena test 1/1) and maximum 45318176279 PASS. H2347 45318051744 both Windows/ARM build PASS, bare ARM server phases finished, then both product ARM first inner listeners exited at ~120s (jobs 138191794904/138191794998). Windows still waiting/working in original product step at inspection; client logs not yet accessible. No candidate performance conclusion.
+
+Identified concrete harness defect: bare client downloads relay-ready into h2276-peer/relay, then product step downloads same artifact into same directory again. Avoid duplicate extraction into existing destination by separating bare receipt into h2343-capacity/relay; same exact source/run/group verified by existing tools. Also print actual inner-server log tail on application nonzero, not just wrapper assertion. This addresses a real duplicate-download risk; exact client-side first failure is still to be verified, not presumed. H2349 frozen in-flight run unchanged. No expensive re-dispatch on this fixture-only commit. Next explicit retries use corrected path.

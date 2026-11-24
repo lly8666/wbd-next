@@ -20,4 +20,7 @@ class Calibration(unittest.TestCase):
             self.assertLess(w.index("H2343 real bare Windows WSL2 TCP calibration"),w.index("m0_h2292_true_product_ab.py client"))
             self.assertIn("Move-Item h2276-out/client-result.json h2343-capacity/client-bare.json",w)
             self.assertIn("h2343_same_vm_bare_capacity",w)
+            self.assertIn('"h2276-$env:GROUP-relay-ready" h2343-capacity/relay',w)
+            self.assertIn('"h2276-$env:GROUP-relay-ready" h2276-peer/relay',w)
+            self.assertIn("h2343-capacity/relay/relay-ready.json h2343-capacity/server/server-ready.json",w)
 if __name__=="__main__":unittest.main()
