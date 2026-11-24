@@ -96,6 +96,8 @@ public final class X86CiOriginalStartActivity extends Activity {
             request.putExtra("target_uids",uidGroup.uids);
             request.putExtra("target_packages",uidGroup.packages);
             request.putExtra("has_ca",true);
+            // Match the production Activity contract for the fixture CA.
+            request.putExtra("tls_verify_server",true);
             startForegroundService(request);
             event("ORIGINAL_ROOT_SERVICE_START_REQUESTED");
         }catch(Exception blocked){

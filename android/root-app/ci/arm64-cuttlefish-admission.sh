@@ -2,7 +2,7 @@
 # Preflight on ACTUAL ARM64 Linux host; does NOT run Android or claim P2/P3.
 set -euo pipefail
 cd "$GITHUB_WORKSPACE"
-p=out/android-a3-guest
+p=out/android-a3-guest/android-root-app
 test "$(cat "$p/SOURCE")" = "$GITHUB_SHA"
 (cd "$p" && sha256sum -c SHA256SUMS)
 test -s "$p/wbd-root-arm64-debug.apk"
