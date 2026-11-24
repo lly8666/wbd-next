@@ -4,26 +4,28 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2404,
-  "checkpoint_sha": "c5cddb5f1367febe65116dd7ef33c44225a6d030",
+  "sequence": 2407,
+  "checkpoint_sha": "ca034e2d0d22ca79562d66ea93e03f6634122663",
   "progress": "verifying",
   "task_id": "M0-PLAN029-WINDOWS-GAME-COLD",
-  "current_task": "H2400-H2402 Windows Game 冷TLS重传、超时重试、新端口组、final ACK和服务端NAT无关冷尝试分组已按用户授权直接合main；普通Game packet telemetry改显式诊断。",
-  "why_now": "用户物理Windows所有Game组合多次尝试才能建链，要求简化提高各lane成功率并修每秒日志。",
-  "done_when": "每条Game lane冷TLS可恢复丢包，新尝试不复用源端口组，服务端不以NAT端口连续为条件，新旧尝试不混拼；普通日志不刷packet telemetry；原生回归与用户物理复测分别记录。",
-  "next_action": "收H2402 source 3fb6fdd 原生Windows/Linux 45378100342、Linux x86 45378100628/ARM 45378100305和源码回归；H2401 f459b32双ISA一443真实48 UDP+Stop已PASS，不冒称最新源物理成功率；H2400旧连续端口字符串、H2401旧ifindex调用形状和feature卡红已更正。",
+  "current_task": "H2405 Linux Game 冷建链/热换lane推广：并行SYN、最终ACK、冷候选故障隔离、短重试，NAT公网源IP/端口不再阻止同认证Game4热换。H2406 Windows Game Health90接入既有冷重建控制。H2407修正H2405旧程序集blob，待新源码原生验收。",
+  "why_now": "用户追问各模式、各端换lane是否受NAT影响，要求建链成功率修复覆盖换lane。",
+  "done_when": "Windows与Linux现有冷重建入口复用原有可靠冷TLS；Linux Game4同组单lane允许NAT地址及端口变化、失败不拖累健康lane；普通Game日志不刷屏；实际物理与原生验收分开记录。",
+  "next_action": "检查H2407精确源程序集、双ISA原生Game混合、Game4单lane轮换/物理变更，以及Windows Game真实四组合、NAT失联恢复；H2405旧blob阻塞为构建问题非产品PASS。",
   "unverified": true,
-  "last_tested_source": "f459b32722f16fa8f7286e4e85d84c4c3298b1d1",
+  "last_tested_source": "3fb6fdd3d106c0c6ff8da118dffa51990460bda1",
   "evidence_refs": [
     "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
     "docs/devlog/M0/20261124-H2400-WINDOWS-GAME-COLD-RELIABILITY.md",
     "docs/devlog/M0/20261124-H2401-GAME-NAT-COLD-ATTEMPT.md",
-    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md"
+    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md",
+    "docs/devlog/M0/20261124-H2405-GAME-NAT-HOT-LANE.md",
+    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md"
   ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
     "docs/devlog/M0/20261121-H2223-WINDOWS-GAME2-GAME4-IDLE-READY-PARITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "PR75已合4fb6ba3，旧精确源f21ea508功能21/21；H2401 f459b32 ARM 45377588045/x86 45377588243实际一443 Normal+Game2+Game4 FEC6及48 UDP/Stop PASS，Windows源码构建45377587963 PASS。H2402最新产品回归未收，真实公网建链耗时/成功率未测。"
+  "partial_summary": "H2402 45378100342 Windows/Linux Normal原生通过；Linux双ISA原生混合H1151/H1157 45378100628/45378100305通过。H2405/H2406源已进main，未获最新原生资格；H2405首轮旧game_linux blob导致组装失败，H2407只纠正依赖。物理NAT换lane和Windows Game成功率未实测。"
 }
