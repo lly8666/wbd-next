@@ -4,22 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2398,
-  "checkpoint_sha": "2a4d8931ae025a48eeaa4ecf36995e748b1e2619",
+  "sequence": 2404,
+  "checkpoint_sha": "c5cddb5f1367febe65116dd7ef33c44225a6d030",
   "progress": "verifying",
-  "task_id": "M0-PLAN029-ALL-MODE-NATIVE-PARITY",
-  "current_task": "PR75全端七模式原生性能设施已接线，等待最终同源码功能验收。",
-  "why_now": "用户授权跨端、跨模式默认启用及功能回归。",
-  "done_when": "当前支持的原生七模式在Linux双ISA和Windows客户端/Linux服务端实际TCP/UDP/Stop功能回归，默认TX16/NPF64KiB、Linux全端公平准入及Windows原生有界公平ready入口、Game parser和批处理接线；不跑性能AB、不新增防御框架。",
-  "next_action": "收f21ea508原生双ISA 45368300106及Windows/Linux七模式45368304554真实业务回执；仅修真失败，证据齐后合PR75。分支35ccc286仅记录devlog，不再重复触发。",
+  "task_id": "M0-PLAN029-WINDOWS-GAME-COLD",
+  "current_task": "H2400-H2402 Windows Game 冷TLS重传、超时重试、新端口组、final ACK和服务端NAT无关冷尝试分组已按用户授权直接合main；普通Game packet telemetry改显式诊断。",
+  "why_now": "用户物理Windows所有Game组合多次尝试才能建链，要求简化提高各lane成功率并修每秒日志。",
+  "done_when": "每条Game lane冷TLS可恢复丢包，新尝试不复用源端口组，服务端不以NAT端口连续为条件，新旧尝试不混拼；普通日志不刷packet telemetry；原生回归与用户物理复测分别记录。",
+  "next_action": "收H2402 source 3fb6fdd 原生Windows/Linux 45378100342、Linux x86 45378100628/ARM 45378100305和源码回归；H2401 f459b32双ISA一443真实48 UDP+Stop已PASS，不冒称最新源物理成功率；H2400旧连续端口字符串、H2401旧ifindex调用形状和feature卡红已更正。",
   "unverified": true,
-  "last_tested_source": "9890686a8cf5e061c2bca467861030892ca461d3",
-  "evidence_refs": [],
+  "last_tested_source": "f459b32722f16fa8f7286e4e85d84c4c3298b1d1",
+  "evidence_refs": [
+    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
+    "docs/devlog/M0/20261124-H2400-WINDOWS-GAME-COLD-RELIABILITY.md",
+    "docs/devlog/M0/20261124-H2401-GAME-NAT-COLD-ATTEMPT.md",
+    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md"
+  ],
   "context_refs": [
     "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
-    "docs/evidence/M0/20261124-H2376-FAIRNESS-FEC-CLOSEOUT.json",
-    "docs/evidence/M0/20261124-H2396-PLAN030-SCOPED-ACCEPTANCE.json"
+    "docs/devlog/M0/20261121-H2223-WINDOWS-GAME2-GAME4-IDLE-READY-PARITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2398 初始候选9890686双ISA各6模式实际双向TCP/UDP与Stop通过，第七Game2 Fixed6旧夹具退出2。修夹具、Windows旧注释判据，补Linux Game真实sendmmsg及FrozenRecordHandle import。最终产品f21ea508已派发两套功能测试，未合main。Windows实际客户端，无正式Windows服务端产品。Windows ready五元组公平不等同Linux满队列替换。未跑性能AB。"
+  "partial_summary": "PR75已合4fb6ba3，旧精确源f21ea508功能21/21；H2401 f459b32 ARM 45377588045/x86 45377588243实际一443 Normal+Game2+Game4 FEC6及48 UDP/Stop PASS，Windows源码构建45377587963 PASS。H2402最新产品回归未收，真实公网建链耗时/成功率未测。"
 }
