@@ -50,6 +50,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "H2311_RUST_TX16_ONLY_COMPILE_FAILED" }
           cargo +1.85.1 check --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_npf64_only
           if ($LASTEXITCODE -ne 0) { throw "H2311_RUST_NPF64_ONLY_COMPILE_FAILED" }
-          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_tx16_only --lib m0_windows_native_m1_ready_batch_sixteen_then_sparse -- --test-threads=1
-          if ($LASTEXITCODE -ne 0) { throw "H2320_M1_READY_BATCH_TEST_FAILED" }
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_tx16_only --lib v4_windows_owner::tests -- --test-threads=1
+          if ($LASTEXITCODE -ne 0) { throw "H2326_WINDOWS_OWNER_REGRESSION_FAILED" }
           Write-Output "H2311_SCOPED_FEATURE_MATRIX_NATIVE_COMPILE_AND_PREFIX_TEST_PASS_NOT_REAL_PRODUCT"

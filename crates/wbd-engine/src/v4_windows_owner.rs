@@ -654,10 +654,14 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if !v3_ready(e,epoch,luid,ifindex)||sent>2{return Err(INVALID)}
     let m=e.m2.as_mut().ok_or(BAD_STAGE)?;
     let key=RecordPn(pn);
-    let row=m.pending.get(&key).ok_or(INVALID)?;
-    if row.metadata().pn!=key||row.metadata().seq.0 as u32!=seq
-        ||row.bytes().len()!=wire_len {return Err(INVALID)}
-    let frozen=m.pending.remove(&key).ok_or(INVALID)?;
+    // Validate through the occupied entry before consuming it. Invalid
+    // receipts leave the original frozen record in place; a valid receipt
+    // needs only one tree search rather than get followed by remove.
+    let std::collections::btree_map::Entry::Occupied(row)=m.pending.entry(key)
+        else{return Err(INVALID)};
+    if row.get().metadata().pn!=key||row.get().metadata().seq.0 as u32!=seq
+        ||row.get().bytes().len()!=wire_len {return Err(INVALID)}
+    let frozen=row.remove();
     if sent==1 && m.outer_repair_enabled{
         // Optional index contention or capacity never blocks fresh data.
         let _=m.outer_ack.on_definitely_sent(key,
@@ -682,9 +686,9 @@ fn m2_kernel_firstsend_entry(e:&mut Entry,epoch:[u8;16],luid:u64,
     if sent!=1{return Ok(m.shadow.outstanding() as u32)}
     // The caller's synchronous pcap_sendpacket success is a copied
     // kernel submission, NEVER proof of remote peer delivery.
+    if !m.outer_repair_enabled{return Ok(0)}
     let now=m2_clock();
     let bytes=wire_len.checked_add(54).ok_or(INVALID)? as u64;
-    if !m.outer_repair_enabled{return Ok(0)}
     let mut global=m2_global().lock().map_err(|_|BAD_STAGE)?;
     global.on_fresh_accepted(m.direction,bytes,now).map_err(|_|BAD_STAGE)?;
     // Every successful NPF submission counts as a first send. Repair
@@ -2899,6 +2903,44 @@ mod tests {
         assert_eq!(release(&mut r,h),OK);
     }
 
+    #[test]
+    fn m0_windows_firstsend_off_validates_before_single_remove(){
+        let mut r=Registry{generation:613,entries:BTreeMap::new(),
+            game_groups:BTreeMap::new()};
+        let h=allocate(&mut r,&cold(false),&cmd(),false).unwrap();
+        assert_eq!(commit(&mut r,h,0,0,500),OK);
+        let ep=[2u8;16];
+        assert_eq!(bind_wintun(&mut r,h,ep,81,18),OK);
+        assert!(set_path_mtu(&mut r,h,ep,81,18,1400).is_ok());
+        let mut e=r.entries[&h].lock().unwrap();
+        m2_arm_entry(&mut e,ep,81,18).unwrap();
+        m2_set_outer_repair_entry(&mut e,ep,81,18,false).unwrap();
+        let mut frame=[0u8;90];frame[0]=0x45;
+        frame[2..4].copy_from_slice(&90u16.to_be_bytes());
+        frame[8]=64;frame[9]=17;
+        let mut wire=[0u8;2048];
+        for outcome in [1,0,2]{
+            let (used,seq,pn)=v3_seal_entry(&mut e,ep,81,18,&frame,&mut wire).unwrap();
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,ep,81,18,pn,
+                seq.wrapping_add(1),used,outcome),Err(INVALID));
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,ep,81,18,pn,
+                seq,used+1,outcome),Err(INVALID));
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,ep,81,18,pn,
+                seq,used,3),Err(INVALID));
+            assert_eq!(e.m2.as_ref().unwrap().pending.len(),1);
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,ep,81,18,pn,
+                seq,used,outcome),Ok(0));
+            assert!(e.m2.as_ref().unwrap().pending.is_empty());
+            assert_eq!(e.m2.as_ref().unwrap().shadow.outstanding(),0);
+            assert_eq!(m2_kernel_firstsend_entry(&mut e,ep,81,18,pn,
+                seq,used,outcome),Err(INVALID));
+        }
+        assert_eq!(m2_next_repair_entry(&mut e,ep,81,18,&mut wire),Ok(None));
+        drop(e);
+        assert_eq!(quiesce_wintun(&mut r,h,ep,81,18),OK);
+        assert_eq!(stop(&mut r,h),OK);
+        assert_eq!(release(&mut r,h),OK);
+    }
     #[test]
     fn m0_windows_m2_batch_validates_entire_original_seq_and_uncertain_once(){
         assert_eq!(std::mem::size_of::<WbdWindowsM2FirstsendResult>(),24);

@@ -804,9 +804,17 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
  )->Result<bool,i32>{
      let mut wire=[0u8;MAX_IPV4];
      let ack=counters.ack.load(Ordering::Acquire);
-     let feedback={
+     // Both polls belong to the same original owner. Preserve feedback
+     // priority; only if no feedback was staged may repair be considered.
+     // Neither the NPF syscall nor its settlement runs under this guard.
+     let (feedback,repair)={
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         m2_next_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
+         let feedback=m2_next_feedback_entry(
+             &mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?;
+         let repair=if feedback.is_none(){
+             m2_next_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
+         }else{None};
+         (feedback,repair)
      };
      if let Some((used,seq,pn))=feedback{
          let mut frame=[0u8;MAX_LINK];
@@ -826,10 +834,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
          if outcome.error.is_some(){return Err(BAD_STAGE)}
          return Ok(true)
      }
-     let repair={
-         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         m2_next_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
-     };
      if let Some((used,seq,pn))=repair{
          let mut frame=[0u8;MAX_LINK];
          let raw=packet_frame(cfg,seq,ack,
