@@ -1,3 +1,4 @@
+- **B70 IPv6-in-IPv4 双端内核兼容承载 WIRED_CANDIDATE**：原IPv4认证租约＋Linux SIT/6rd、同原UID范围IPv6 FIB、原shared-TUN返程、IPv6 NAT66、独立Stop/Restore/配置。默认关，双方显式配置，非裸IPv6 M3；实体NOT_RUN。[B70](../devlog/android-root-probe/20261124-b70-ipv6-kernel-carrier.md)
 - **B69 系统IPv6目的普通DNS WIRED_CANDIDATE**：独立可选、UID/netId/53 IPv6 RPDB 19846和ip6tables→本地IPv6 UDP/TCP入口，共用原三模式IPv4上游；不是IPv6业务转发。实体NOT_RUN。[B69](../devlog/android-root-probe/20261124-b69-system-dns-ipv6-destination.md)
 - **B68 软件热点 IPv4 DNS WIRED_CANDIDATE**：同B64/B66 resolver，真实下游网关TCP/UDP listener、精确PREROUTING/INPUT、原物理/隧道/CN分流、Stop/Restore；实体NOT_RUN。[B68](../devlog/android-root-probe/20261124-b68-tether-dns-shared-relay.md)
 - **B67 已有Android 464XLAT IPv4承载 WIRED_CANDIDATE**：IPv6-only实体Network public NAT64 /96 + 实际CLAT /32、ifindex/MTU，原Go route-get/RAW/TLS与Rust M4，自动切网/轮换与LAN CIDR区分；不创建translator。内层IPv6/实体PLAT仍未验。[B67](../devlog/android-root-probe/20261124-b67-existing-464xlat-android-underlay.md)

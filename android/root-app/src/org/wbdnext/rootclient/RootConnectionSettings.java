@@ -15,7 +15,7 @@ import java.util.TreeSet;
  * only after its package AND current installed UID still match.
  */
 final class RootConnectionSettings {
-    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
+    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream,ipv6Gateway;
     final int port,outerMTU,tunQueue,profile,nativeHealthSeconds,recoveryMode,rotationMinutes;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     final Map<String,Integer> selected,bypass;
@@ -142,6 +142,19 @@ final class RootConnectionSettings {
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
         boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,recoveryMode,rotationMinutes,appTcpDNS,tetherSharing,systemDNS,systemDNS6,"");
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway) {
+        this.ipv6Gateway=ipv6Gateway(ipv6Gateway);
         this.systemDNS=systemDNS;
         this.systemDNS6=systemDNS6;
         this.tetherSharing=tetherSharing;
@@ -241,6 +254,7 @@ final class RootConnectionSettings {
         p.setProperty("tether_sharing",Boolean.toString(tetherSharing));
         p.setProperty("system_dns",Boolean.toString(systemDNS));
         p.setProperty("system_dns6",Boolean.toString(systemDNS6));
+        p.setProperty("ipv6_gateway",ipv6Gateway);
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -306,9 +320,20 @@ final class RootConnectionSettings {
                 p.containsKey("app_tcp_dns")&&flag(p,"app_tcp_dns"),
                 p.containsKey("tether_sharing")&&flag(p,"tether_sharing"),
                 p.containsKey("system_dns")&&flag(p,"system_dns"),
-                p.containsKey("system_dns6")&&flag(p,"system_dns6"));
+                p.containsKey("system_dns6")&&flag(p,"system_dns6"),p.getProperty("ipv6_gateway",""));
         }catch(IllegalArgumentException invalid){
             return null;
         }
+    }
+    static String ipv6Gateway(String raw){
+        if(raw==null||raw.trim().isEmpty())return "";
+        String ip=raw.trim();
+        if(!ServerAddress.isIPv4Literal(ip))
+            throw new IllegalArgumentException("IPv6兼容承载需要服务端私有TUN IPv4");
+        String[] v=ip.split("\\.");
+        int a=Integer.parseInt(v[0]),b=Integer.parseInt(v[1]);
+        if(!(a==10||a==172&&b>=16&&b<=31||a==192&&b==168))
+            throw new IllegalArgumentException("IPv6兼容承载需要服务端私有TUN IPv4");
+        return ip;
     }
 }

@@ -371,6 +371,7 @@ public final class RootClientService extends Service {
             final boolean appTcpDNS=intent.getBooleanExtra("app_tcp_dns",false);
             final boolean systemDNS=intent.getBooleanExtra("system_dns",false);
             final boolean systemDNS6=intent.getBooleanExtra("system_dns6",false);
+            final String ipv6Gateway=RootConnectionSettings.ipv6Gateway(intent.getStringExtra("ipv6_gateway"));
             final String tetherIface=intent.getStringExtra("tether_iface");
             final RootTetherScope tether=tetherIface==null?null:RootTetherScope.read(tetherIface);
             if(tetherIface!=null&&(tether==null||tether.iface.equals(chosen.interfaceName)||
@@ -422,7 +423,7 @@ public final class RootClientService extends Service {
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
                 port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,targetPackages,allApps,excludedAppIDs,
                 managerPackages,bypassPackages,bypassUIDs,
-                hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6),"wbd-native-root-owner");
+                hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
             cancelRotation();
@@ -445,7 +446,7 @@ public final class RootClientService extends Service {
                                  PhysicalNetwork net,String peer,String sni,
                                  String user,int peerPort,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,
                                  boolean allApps,int[] excludedAppIDs,
-                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6){
+                                 boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String token,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6,String ipv6Gateway){
         // The host-tested argv is also the exact argv passed to original Go.
         // Secret *values* never appear here, only app-private file paths.
         List<String> args=OriginalGoCommandArgs.build(
@@ -467,6 +468,7 @@ public final class RootClientService extends Service {
         if(appTcpDNS)quotedArgs.add(q("--android-app-tcp-dns"));
         if(systemDNS)quotedArgs.add(q("--android-system-dns"));
         if(systemDNS6)quotedArgs.add(q("--android-system-dns6"));
+        if(!ipv6Gateway.isEmpty())quotedArgs.add(q("--android-ipv6-gateway="+ipv6Gateway));
         if(tether!=null){
             quotedArgs.add(q("--android-tether-interface="+tether.iface));
             quotedArgs.add(q("--android-tether-subnet="+tether.subnet));
@@ -524,7 +526,7 @@ public final class RootClientService extends Service {
                          int port,int requestedOuterMTU,String recordCipher,int requestedTunQueue,String paddingMode,String fecMode,int fecProfile,int[] targetUids,String[] targetPackages,
                          boolean allApps,int[] excludedAppIDs,String[] managerPackages,
                          String[] bypassPackages,int[] bypassUIDs,
-                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6){
+                         boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6,String ipv6Gateway){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
@@ -570,7 +572,7 @@ public final class RootClientService extends Service {
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
                 p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6))
+                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway))
                     .redirectErrorStream(true).start();
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);

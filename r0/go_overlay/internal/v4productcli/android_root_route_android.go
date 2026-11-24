@@ -98,6 +98,7 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
+    if e:=rootjournal.RecoverIPv6Carrier(runner,androidDNSFirewall,androidDNSFirewall6,androidIPv6CarrierJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal);e!=nil{return nil,e}
@@ -112,6 +113,8 @@ func androidRootRouteAfterNative(
         })
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,full.Stop)
+        if e!=nil{return nil,e}
+        stop,e=startOriginalAndroidIPv6Carrier(c,tun,lease,runner,stop)
         if e!=nil{return nil,e}
         // Exact server-IP exclusion in the private FIB is verified,
         // but the next Android netd physical route is not yet qualified.
@@ -135,6 +138,8 @@ func androidRootRouteAfterNative(
         if e!=nil{return nil,e}
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,group.Stop)
         if e!=nil{return nil,e}
+        stop,e=startOriginalAndroidIPv6Carrier(c,tun,lease,runner,stop)
+        if e!=nil{return nil,e}
         originalAndroidSelectedUIDRouteGet(runner,c.androidRouteUIDs,tun.name)
         // This receipt is printed only AFTER the entire owned kernel
         // group receives positive readback. Not a fake per-App ACK.
@@ -157,6 +162,8 @@ func androidRootRouteAfterNative(
     })
     if e!=nil{return nil,e}
     stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,session.Stop)
+    if e!=nil{return nil,e}
+    stop,e=startOriginalAndroidIPv6Carrier(c,tun,lease,runner,stop)
     if e!=nil{return nil,e}
     originalAndroidSelectedUIDRouteGet(runner,[]int{c.androidRouteUID},tun.name)
     // This exact root-only rule is the sole route grant. The kernel
@@ -327,5 +334,22 @@ func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjou
  if e!=nil{return fail(e)}
  if plan.DNSPort!=0{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_DNS_READY role=client udp_tcp53=1")}
  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_READY role=client software_ipv4=1")
+ return func()error{return errors.Join(owner.Stop(),stop())},nil
+}
+
+func startOriginalAndroidIPv6Carrier(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error)(func()error,error){
+ if c.androidIPv6Gateway==""{return stop,nil}
+ fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
+ gateway,e:=netip.ParseAddr(c.androidIPv6Gateway)
+ if e!=nil||gateway==c.peerIP||gateway==c.localIP{return fail(fmt.Errorf("IPv6 carrier gateway must be server TUN IPv4, not physical peer"))}
+ mtu,e:=originalIPv6CarrierMTU(tun);if e!=nil{return fail(e)}
+ uids:=append([]int(nil),c.androidRouteUIDs...)
+ if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
+ owner,e:=rootjournal.NewIPv6Carrier(runner,androidDNSFirewall,androidDNSFirewall6,androidIPv6CarrierJournal,
+  rootjournal.IPv6Plan{Tun:tun.name,Local4:lease.Addr().String(),Gateway4:gateway.String(),MTU:mtu,
+   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs})
+ if e!=nil{return fail(e)}
+ fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_IPV6_CARRIER_LOCAL_READY role=client lease6=%s mtu=%d kernel_sit=1 peer_configured=1\n",
+  rootjournal.IPv6LeaseAddress(lease.Addr()),mtu)
  return func()error{return errors.Join(owner.Stop(),stop())},nil
 }

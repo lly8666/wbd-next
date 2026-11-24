@@ -142,6 +142,8 @@ type config struct{
     androidAppTCPDNS bool // explicit kernel App TCP53 DNS listener
     androidSystemDNS bool // selected UID + selected netId plaintext IPv4 DNS
     androidSystemDNS6 bool // optional IPv6 destination plaintext DNS
+    androidIPv6Gateway string // explicitly provisioned server TUN IPv4 for SIT carrier
+    serverIPv6Carrier bool // Linux server kernel 6rd/SIT, default off
     androidTetherInterface,androidTetherSubnet string
     androidTetherIfindex int
     // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
@@ -281,6 +283,8 @@ func parse(role string,args []string)(config,error){
         "Android Root: optional ordinary App TCP53 follows the selected DNS mode through kernel TCP")
     androidClatParent:=flags.String("android-clat-parent","","Android Root: existing CLAT IPv6 parent interface")
     androidClatPrefix:=flags.String("android-clat-prefix","","Android Root: selected Network NAT64 /96")
+    androidIPv6Gateway:=flags.String("android-ipv6-gateway","","Android Root: opt-in IPv6-in-IPv4, provisioned WBD server TUN private IPv4")
+    serverIPv6Carrier:=flags.Bool("inner-ipv6",false,"Linux server: opt-in kernel SIT/6rd IPv6 business over authenticated IPv4; requires IPv6 forwarding and egress")
     androidSystemDNS6:=flags.Bool("android-system-dns6",false,
         "Android Root: additionally capture selected Network/UID IPv6 UDP/TCP53 to existing DNS owner")
     androidSystemDNS:=flags.Bool("android-system-dns",false,
@@ -380,6 +384,13 @@ func parse(role string,args []string)(config,error){
         c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidCNDNSSplit=*androidCNDNSSplit
         c.androidClatParent,c.androidClatPrefix=*androidClatParent,*androidClatPrefix
+        if *androidIPv6Gateway!=""{
+            gateway,e:=netip.ParseAddr(*androidIPv6Gateway)
+            if e!=nil||!gateway.Is4()||!gateway.IsPrivate()||(!*androidRouteAll&&*androidRouteUID==0&&*androidRouteGroup==""){
+                return c,fmt.Errorf("IPv6 carrier needs private server TUN IPv4 and selected App route scope")
+            }
+            c.androidIPv6Gateway=gateway.String()
+        }
         c.androidSystemDNS6=*androidSystemDNS6
         c.androidSystemDNS=*androidSystemDNS||c.androidSystemDNS6
         c.androidAppTCPDNS=*androidAppTCPDNS||c.androidSystemDNS
@@ -427,9 +438,13 @@ func parse(role string,args []string)(config,error){
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||
-              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidIPv6Gateway!=""||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
+    if *serverIPv6Carrier&&(role!="server"||runtime.GOOS=="android"){
+        return c,fmt.Errorf("inner-ipv6 is Linux server-only; use explicit Android gateway on client")
+    }
+    c.serverIPv6Carrier=*serverIPv6Carrier
     c.androidNetworkHandle=*androidNet
     c.androidRouteUID=*androidRouteUID
     modeGiven,autoGiven:=false,false
@@ -694,6 +709,9 @@ func parse(role string,args []string)(config,error){
     }
     tunPrefix,e:=netip.ParsePrefix(*tunCIDR)
     if e!=nil||!tunPrefix.Addr().Is4(){return c,fmt.Errorf("invalid tun-ipv4")}
+    if c.serverIPv6Carrier&&(!tunPrefix.Addr().IsPrivate()||tunPrefix.Bits()<16||tunPrefix.Bits()>30){
+        return c,fmt.Errorf("IPv6 carrier requires server private IPv4 TUN /16..30, same /16 as authenticated clients")
+    }
     if role=="server"&&c.mixedModes&&!c.leasePool.IsValid(){
         c.leasePool,e=defaultV4ServerLeasePool(tunPrefix,c.manualClientLeases4)
         if e!=nil{return c,e}
@@ -714,6 +732,9 @@ func parse(role string,args []string)(config,error){
                 return c,fmt.Errorf("manual account /32 collides with automatic pool")
             }
         }
+    }
+    if c.serverIPv6Carrier&&!c.leasePool.IsValid()&&!c.manualClientLease4.IsValid()&&len(c.manualClientLeases4)==0{
+        return c,fmt.Errorf("IPv6 carrier requires server-owned authenticated IPv4 lease pool or manual lease")
     }
     if role=="server"&&c.leasePool.IsValid(){
         if !tunPrefix.Contains(c.leasePool.Addr())||
@@ -1199,11 +1220,12 @@ func recoverOriginalAndroidRootOwned()error{
         if len(b)>256<<10||e!=nil{return "",fmt.Errorf("scoped IPv6 firewall command failed")}
         return string(b),nil
     }
+    ipv6Err:=rootjournal.RecoverIPv6Carrier(runIP,runFirewall,runFirewall6,root+"ipv6-carrier-journal.json")
     systemDNS6Err:=rootjournal.RecoverSystemDNS6(runIP,runFirewall6,nil,nil,root+"system-dns6-journal.json")
     systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json")
     dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")
     _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
-    routeErr=errors.Join(systemDNS6Err,systemDNSErr,dnsErr,tetherErr,routeErr)
+    routeErr=errors.Join(ipv6Err,systemDNS6Err,systemDNSErr,dnsErr,tetherErr,routeErr)
     if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
         log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")
     }
@@ -1356,6 +1378,11 @@ func Run(role string,args []string)(retErr error){
         nat,e:=installOwnedServerMasquerade(cfg,linuxMasqueradeCommand)
         if e!=nil{return e}
         defer func(){retErr=errors.Join(retErr,nat.Close())}()
+    }
+    if cfg.serverIPv6Carrier{
+        owner,e:=startOriginalServerIPv6Carrier(cfg,tun)
+        if e!=nil{return e}
+        defer func(){retErr=errors.Join(retErr,owner.Stop())}()
     }
     if err=setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets);err!=nil{return err}
     log.Printf("V4_PUBLIC_TUN_TXQLEN role=%s interface=%s packets=%d readback=REAL_ORIGINAL_LINUX_TUN",cfg.role,tun.name,cfg.tunTxQLenPackets)
