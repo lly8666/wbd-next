@@ -21,6 +21,8 @@ type AppTCPDNS struct {
  udp net.PacketConn
  downstreamTCP net.Listener
  downstreamUDP net.PacketConn
+ ipv6TCP net.Listener
+ ipv6UDP net.PacketConn
  resolver *Resolver
  allPhysical bool
  ctx context.Context
@@ -104,6 +106,8 @@ func (s *AppTCPDNS) Close()error{
  if s.udp!=nil{e=errors.Join(e,s.udp.Close())}
  if s.downstreamTCP!=nil{e=errors.Join(e,s.downstreamTCP.Close())}
  if s.downstreamUDP!=nil{e=errors.Join(e,s.downstreamUDP.Close())}
+ if s.ipv6TCP!=nil{e=errors.Join(e,s.ipv6TCP.Close())}
+ if s.ipv6UDP!=nil{e=errors.Join(e,s.ipv6UDP.Close())}
  s.mu.Lock()
  for c:=range s.clients{c.Close()}
  s.mu.Unlock()

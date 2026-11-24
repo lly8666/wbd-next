@@ -141,6 +141,7 @@ type config struct{
     androidTunnelDNS bool
     androidAppTCPDNS bool // explicit kernel App TCP53 DNS listener
     androidSystemDNS bool // selected UID + selected netId plaintext IPv4 DNS
+    androidSystemDNS6 bool // optional IPv6 destination plaintext DNS
     androidTetherInterface,androidTetherSubnet string
     androidTetherIfindex int
     // Explicit TUN-App UDP53 physical 223.5.5.5 compatibility mode.
@@ -280,6 +281,8 @@ func parse(role string,args []string)(config,error){
         "Android Root: optional ordinary App TCP53 follows the selected DNS mode through kernel TCP")
     androidClatParent:=flags.String("android-clat-parent","","Android Root: existing CLAT IPv6 parent interface")
     androidClatPrefix:=flags.String("android-clat-prefix","","Android Root: selected Network NAT64 /96")
+    androidSystemDNS6:=flags.Bool("android-system-dns6",false,
+        "Android Root: additionally capture selected Network/UID IPv6 UDP/TCP53 to existing DNS owner")
     androidSystemDNS:=flags.Bool("android-system-dns",false,
         "Android Root: selected UID and selected Network ordinary IPv4 UDP/TCP53 system DNS (no Private DNS/DoH)")
     tetherInterface:=flags.String("android-tether-interface","","Android Root: explicitly selected existing software tether interface")
@@ -377,7 +380,8 @@ func parse(role string,args []string)(config,error){
         c.androidPhysicalDNS=*androidPhysicalDNS&&!*androidCNDNSSplit
         c.androidCNDNSSplit=*androidCNDNSSplit
         c.androidClatParent,c.androidClatPrefix=*androidClatParent,*androidClatPrefix
-        c.androidSystemDNS=*androidSystemDNS
+        c.androidSystemDNS6=*androidSystemDNS6
+        c.androidSystemDNS=*androidSystemDNS||c.androidSystemDNS6
         c.androidAppTCPDNS=*androidAppTCPDNS||c.androidSystemDNS
         if *tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
             subnet,e:=netip.ParsePrefix(*tetherSubnet)
@@ -423,7 +427,7 @@ func parse(role string,args []string)(config,error){
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||
-              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     c.androidNetworkHandle=*androidNet
@@ -1188,10 +1192,18 @@ func recoverOriginalAndroidRootOwned()error{
     }
     const root="/data/local/tmp/wbd-next-root/"
     tetherErr:=rootjournal.RecoverTether(runIP,runFirewall,root+"tether-journal.json")
+    runFirewall6:=func(args ...string)(string,error){
+        c,cancel:=context.WithTimeout(context.Background(),3*time.Second)
+        defer cancel()
+        b,e:=exec.CommandContext(c,"ip6tables",args...).CombinedOutput()
+        if len(b)>256<<10||e!=nil{return "",fmt.Errorf("scoped IPv6 firewall command failed")}
+        return string(b),nil
+    }
+    systemDNS6Err:=rootjournal.RecoverSystemDNS6(runIP,runFirewall6,nil,nil,root+"system-dns6-journal.json")
     systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json")
     dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")
     _,routeErr:=rootjournal.RecoverOwned(runIP,root+"route-journal.json")
-    routeErr=errors.Join(systemDNSErr,dnsErr,tetherErr,routeErr)
+    routeErr=errors.Join(systemDNS6Err,systemDNSErr,dnsErr,tetherErr,routeErr)
     if routeErr!=nil{log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_FAILED role=client")}else{
         log.Print("V4_PUBLIC_ANDROID_RESTORE_ROUTE_CLEARED role=client")
     }

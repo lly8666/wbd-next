@@ -263,11 +263,11 @@ public final class RootConnectionSettingsTest {
             "lan.example.test","tls.example.test","acct",443,1460,500,
             "chacha20-poly1305","off","normal",1,false,false,true,false,true,
             new TreeMap<>(),"192.168.1.0/24",new TreeMap<>(),"192.168.1.1",
-            true,30,true,2,15,true,true,true);
+            true,30,true,2,15,true,true,true,true);
         RootConnectionSettings again=read(stored(reconnect));
-        check(again!=null&&again.recoveryMode==2&&again.rotationMinutes==15&&again.appTcpDNS&&again.tetherSharing&&again.systemDNS,
+        check(again!=null&&again.recoveryMode==2&&again.rotationMinutes==15&&again.appTcpDNS&&again.tetherSharing&&again.systemDNS&&again.systemDNS6,
             "background recovery and rotation must survive the actual settings codec");
-        check(b.recoveryMode==0&&b.rotationMinutes==0&&!b.appTcpDNS&&!b.tetherSharing&&!b.systemDNS,
+        check(b.recoveryMode==0&&b.rotationMinutes==0&&!b.appTcpDNS&&!b.tetherSharing&&!b.systemDNS&&!b.systemDNS6,
             "legacy presets do not enable automatic recovery or rotation");
         System.out.println("ANDROID_B62_COLD_RECOVERY_ROTATION_PRESET_HOST_PASS");
         System.out.println("ANDROID_B58_MULTIPROFILE_LARGE_APP_AND_DIRECT_PRESET_HOST_PASS");

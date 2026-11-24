@@ -99,6 +99,7 @@ func androidRootRouteAfterNative(
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
     if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
+    if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
     if c.androidRouteAllApps{
@@ -168,13 +169,20 @@ func androidRootRouteAfterNative(
 }
 const androidDNSJournal="/data/local/tmp/wbd-next-root/dns-tcp-journal.json"
 const androidSystemDNSJournal="/data/local/tmp/wbd-next-root/system-dns-journal.json"
+const androidSystemDNS6Journal="/data/local/tmp/wbd-next-root/system-dns6-journal.json"
 // iproute2 batch is cold-only. On a partial failure exact journal state
 // is read back and withdrawn; never replay a partially executed batch.
 func androidDNSIPBatch(rows [][]string)error{
+ if len(rows)==0{return nil}
+ family:=rows[0][0]
+ if family!="-4"&&family!="-6"{return fmt.Errorf("invalid system DNS route family")}
  var input strings.Builder
- for _,row:=range rows{input.WriteString(strings.Join(row[1:]," "));input.WriteByte('\n')}
+ for _,row:=range rows{
+  if len(row)<2||row[0]!=family{return fmt.Errorf("mixed system DNS route family")}
+  input.WriteString(strings.Join(row[1:]," "));input.WriteByte('\n')
+ }
  ctx,cancel:=context.WithTimeout(context.Background(),8*time.Second);defer cancel()
- command:=exec.CommandContext(ctx,"ip","-4","-batch","-")
+ command:=exec.CommandContext(ctx,"ip",family,"-batch","-")
  command.Stdin=strings.NewReader(input.String())
  if _,e:=command.CombinedOutput();e!=nil{return fmt.Errorf("system DNS UID route batch: %w",e)}
  return nil
@@ -183,6 +191,12 @@ func androidDNSFirewall(args ...string)(string,error){
  ctx,cancel:=context.WithTimeout(context.Background(),3*time.Second);defer cancel()
  b,e:=exec.CommandContext(ctx,"iptables",args...).CombinedOutput()
  if e!=nil{return "",fmt.Errorf("owned TCP DNS NAT: %w",e)}
+ return string(b),nil
+}
+func androidDNSFirewall6(args ...string)(string,error){
+ ctx,cancel:=context.WithTimeout(context.Background(),3*time.Second);defer cancel()
+ b,e:=exec.CommandContext(ctx,"ip6tables",args...).CombinedOutput()
+ if e!=nil{return "",fmt.Errorf("owned IPv6 DNS NAT: %w",e)}
  return string(b),nil
 }
 func androidDNSBatch(rows [][]string)error{
@@ -244,7 +258,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  }
  owner,e:=rootjournal.NewDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal,plan)
  if e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
- var systemOwner *rootjournal.SystemDNSOwner
+ var systemOwner,systemOwner6 *rootjournal.SystemDNSOwner
  if c.androidSystemDNS{
   // Android Network.getNetworkHandle stores netId in its high 32 bits.
   // No root/system wildcard rule and no modification of netd configuration.
@@ -253,12 +267,22 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   if e!=nil{return nil,errors.Join(e,owner.Stop(),relay.Close(),stopUID())}
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client uid_netid_port53=1")
  }
+ if c.androidSystemDNS6{
+  port,err:=relay.EnableIPv6()
+  if err!=nil{return nil,errors.Join(err,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
+  plan6:=plan;plan6.Port=port
+  systemOwner6,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall6,androidDNSIPBatch,nil,
+   androidSystemDNS6Journal,rootjournal.SystemDNSPlan{DNSPlan:plan6,NetID:uint32(c.androidNetworkHandle>>32),IPv6:true})
+  if e!=nil{return nil,errors.Join(e,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
+  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client uid_netid_port53=1 ipv4_upstream=1")
+ }
  if c.androidAppTCPDNS{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")}
  stopDNS:=func()error{
   // Withdraw capture first; join DNS streams before the original M4 Stop.
-  var systemErr error
+  var systemErr,error6 error
+  if systemOwner6!=nil{error6=systemOwner6.Stop()}
   if systemOwner!=nil{systemErr=systemOwner.Stop()}
-  return errors.Join(systemErr,errors.Join(owner.Stop(),relay.Close(),stopUID()))
+  return errors.Join(error6,systemErr,errors.Join(owner.Stop(),relay.Close(),stopUID()))
  }
  return startAndroidTether(c,tun,lease,runner,stopDNS,relay)
 }

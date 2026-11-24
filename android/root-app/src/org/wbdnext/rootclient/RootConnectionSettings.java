@@ -17,7 +17,7 @@ import java.util.TreeSet;
 final class RootConnectionSettings {
     final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream;
     final int port,outerMTU,tunQueue,profile,nativeHealthSeconds,recoveryMode,rotationMinutes;
-    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect,appTcpDNS,tetherSharing,systemDNS;
+    final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     final Map<String,Integer> selected,bypass;
     RootConnectionSettings(String peer,String sni,String account,
         int port,int outerMTU,int tunQueue,String cipher,String padding,
@@ -130,7 +130,20 @@ final class RootConnectionSettings {
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
         boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,recoveryMode,rotationMinutes,appTcpDNS,tetherSharing,systemDNS,false);
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6) {
         this.systemDNS=systemDNS;
+        this.systemDNS6=systemDNS6;
         this.tetherSharing=tetherSharing;
         this.appTcpDNS=appTcpDNS;
         this.recoveryMode=recoveryMode;
@@ -227,6 +240,7 @@ final class RootConnectionSettings {
         p.setProperty("app_tcp_dns",Boolean.toString(appTcpDNS));
         p.setProperty("tether_sharing",Boolean.toString(tetherSharing));
         p.setProperty("system_dns",Boolean.toString(systemDNS));
+        p.setProperty("system_dns6",Boolean.toString(systemDNS6));
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -291,7 +305,8 @@ final class RootConnectionSettings {
                 Integer.parseInt(p.getProperty("cold_rotation_minutes","0")),
                 p.containsKey("app_tcp_dns")&&flag(p,"app_tcp_dns"),
                 p.containsKey("tether_sharing")&&flag(p,"tether_sharing"),
-                p.containsKey("system_dns")&&flag(p,"system_dns"));
+                p.containsKey("system_dns")&&flag(p,"system_dns"),
+                p.containsKey("system_dns6")&&flag(p,"system_dns6"));
         }catch(IllegalArgumentException invalid){
             return null;
         }

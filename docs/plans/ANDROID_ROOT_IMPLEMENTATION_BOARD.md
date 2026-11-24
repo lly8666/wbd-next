@@ -1,3 +1,4 @@
+- **B69 系统IPv6目的普通DNS WIRED_CANDIDATE**：独立可选、UID/netId/53 IPv6 RPDB 19846和ip6tables→本地IPv6 UDP/TCP入口，共用原三模式IPv4上游；不是IPv6业务转发。实体NOT_RUN。[B69](../devlog/android-root-probe/20261124-b69-system-dns-ipv6-destination.md)
 - **B68 软件热点 IPv4 DNS WIRED_CANDIDATE**：同B64/B66 resolver，真实下游网关TCP/UDP listener、精确PREROUTING/INPUT、原物理/隧道/CN分流、Stop/Restore；实体NOT_RUN。[B68](../devlog/android-root-probe/20261124-b68-tether-dns-shared-relay.md)
 - **B67 已有Android 464XLAT IPv4承载 WIRED_CANDIDATE**：IPv6-only实体Network public NAT64 /96 + 实际CLAT /32、ifindex/MTU，原Go route-get/RAW/TLS与Rust M4，自动切网/轮换与LAN CIDR区分；不创建translator。内层IPv6/实体PLAT仍未验。[B67](../devlog/android-root-probe/20261124-b67-existing-464xlat-android-underlay.md)
 - **B66 系统普通 IPv4 DNS WIRED_CANDIDATE**：现代resolver socket sk_uid＋所选netId＋UDP/TCP53 RPDB，专有dummy输出→原B64同端口DNS服务，三模式与原隧道/物理绑定，四槽/冷恢复/Stop/Restore。Private DNS/DoH、IPv6目的不接管，实体NOT_RUN。[B66](../devlog/android-root-probe/20261124-b66-system-ipv4-dns-uid-rpdb.md)
