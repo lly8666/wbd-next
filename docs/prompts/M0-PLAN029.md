@@ -1,5 +1,8 @@
 # M0｜PLAN029长期接续提示词
 
+> **2026-11-24 最新用户定案（覆盖下面旧三关顺序）**：P0 零损主动优化 PAUSED，性能绝对目标未达标，不再扫描常规参数/微优化，仅保留公平/FEC回归。P1 已验证1%真实结算，未证吞吐收益；不再追逐FEC OFF吞吐。FEC 先核历史 ISA-L 与 Maximum 实际服务余量，不重写编码器；最后集中公平调度（同租约流公平、跨租约不饥饿）。见[最新 PLAN029 决策](../decisions/M0-PLAN029-THROUGHPUT.md)。M0 按真实证据收口，非默认晋级、非完整029关闭。
+
+
 
 > **2026-11-22 追加：M0-PLAN029-THROUGHPUT 专项的新用户顺序，优先于本页旧的吞吐实施暗示。** M0执行时先读 [新版完整三关方案](../decisions/M0-PLAN029-THROUGHPUT.md) 与 [永久 M0 提示词中的逐关操作](M0.md)。顺序必须是 **0% 真 Windows 原生数据面TX瓶颈／同源A-B-A′→FEC OFF、最多一次外层修复 OFF-ON-OFF 在1%后5%→固定 FEC maximum 应发/实发/吞吐1%后5%**。优先复用 PR #68 内 H2292/H2294/H2307/H2309 原始6runner、单runner和本机读回夹具，不能假定 PR #68 已合入 main。本页的 CN/FakeIP/029B 等原有独立出口**未被取消或判完成**，registry/cursor 精确 assigned_task 决定正在施工的 scope；旧材料保留作为相关功能和历史交付事实，不越权同时重启所有工作流。任务要求真实双端、首次交付、F/R预算、parity实发和真实 Stop；旧假红/5%真实失败分别归档。只有在真实物理/容量与源码资格满足时才宣称 performance PASS，不对5% FEC OFF 预置不现实的400Mbps/全bulk门槛。
 
