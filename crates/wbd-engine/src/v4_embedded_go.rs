@@ -4589,6 +4589,7 @@ struct PendingSharedTunRoute{
 #[derive(Default,Debug)]
 struct SharedTunDispatchDelta{
     delivered:u64,backpressure:u64,overflow:u64,byte_limit:u64,expired:u64,retired:u64,
+    flow_evicted:u64,
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn same_shared_tun_route(a:&SharedTunRoute,b:&SharedTunRoute)->bool{
@@ -4598,6 +4599,51 @@ fn same_shared_tun_route(a:&SharedTunRoute,b:&SharedTunRoute)->bool{
 fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
     key:[u8;4],route:SharedTunRoute,bytes:usize,make:F
+)->SharedTunDispatchDelta{
+    enqueue_shared_tun_flow(pending,key,route,bytes,None,make)
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+// H2372: classify only a full per-lease pending queue. No port priority,
+// separate quota, extra buffer, per-flow map or packet hot-path allocation.
+// IPv4 TCP/UDP first-class flows are exact 5-tuples; do not classify fragments.
+fn shared_tun_flow_key(ip:&[u8])->Option<[u8;13]>{
+    if ip.len()<24||ip[0]>>4!=4||!matches!(ip[9],6|17){return None}
+    let h=usize::from(ip[0]&15)*4;
+    if h<20||ip.len()<h+4||u16::from_be_bytes([ip[6],ip[7]])&0x3fff!=0{return None}
+    let mut k=[0;13];
+    k[0]=ip[9];k[1..9].copy_from_slice(&ip[12..20]);
+    k[9..13].copy_from_slice(&ip[h..h+4]);
+    Some(k)
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn shared_tun_flow_victim(q:&PendingSharedTunRoute,incoming:&[u8],bytes:usize)->Option<usize>{
+    let key=shared_tun_flow_key(incoming)?;
+    let mut keys=[None;SHARED_TUN_PENDING_PER_ROUTE];
+    for (i,p) in q.packets.iter().enumerate(){
+        keys[i]=match &p.packet{
+            OriginalTunIngress::Shared(v)=>shared_tun_flow_key(v.as_slice()),
+            _=>None,
+        };
+    }
+    let incoming_count=keys.iter().filter(|k|**k==Some(key)).count();
+    let mut best_count=incoming_count+1;
+    let mut best=None;
+    // Newest member of the most represented flow. Never evict an equal
+    // share or an unknown/fragment flow. Same-flow surviving FIFO is intact.
+    for (i,k) in keys.iter().enumerate().rev(){
+        let Some(k)=k else{continue};
+        if *k==key{continue}
+        let count=keys.iter().filter(|v|**v==Some(*k)).count();
+        if count>best_count&&q.queued_bytes-q.packets[i].bytes+bytes<=SHARED_TUN_PENDING_BYTES_PER_ROUTE{
+            best=Some(i);best_count=count;
+        }
+    }
+    best
+}
+#[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+fn enqueue_shared_tun_flow<F:FnOnce()->OriginalTunIngress>(
+    pending:&mut HashMap<[u8;4],PendingSharedTunRoute>,
+    key:[u8;4],route:SharedTunRoute,bytes:usize,fair_ip:Option<&[u8]>,make:F
 )->SharedTunDispatchDelta{
     let mut d=SharedTunDispatchDelta::default();
     if !route.alive.load(Ordering::Acquire){d.retired+=1;return d}
@@ -4675,7 +4721,12 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
             }
         }
         if q.packets.len()>=SHARED_TUN_PENDING_PER_ROUTE{
-            d.overflow+=1;return d
+            let Some(victim)=fair_ip.and_then(|ip|shared_tun_flow_victim(q,ip,bytes)) else{
+                d.overflow+=1;return d
+            };
+            let old=q.packets.remove(victim).expect("selected pending flow member");
+            q.queued_bytes-=old.bytes;
+            d.flow_evicted+=1;
         }
         if q.queued_bytes.saturating_add(bytes)>SHARED_TUN_PENDING_BYTES_PER_ROUTE{
             d.overflow+=1;d.byte_limit+=1;return d
@@ -4842,7 +4893,8 @@ impl SharedTunReader{
     fn note_dispatch(&self,d:SharedTunDispatchDelta){
         if d.delivered!=0{self.delivered.fetch_add(d.delivered,Ordering::Relaxed);}
         if d.backpressure!=0{self.backpressure.fetch_add(d.backpressure,Ordering::Relaxed);}
-        if d.overflow!=0{self.queue_full_drops.fetch_add(d.overflow,Ordering::Relaxed);}
+        let full=d.overflow+d.flow_evicted;
+        if full!=0{self.queue_full_drops.fetch_add(full,Ordering::Relaxed);}
         if d.byte_limit!=0{self.queue_byte_drops.fetch_add(d.byte_limit,Ordering::Relaxed);}
         if d.expired!=0{self.queue_age_drops.fetch_add(d.expired,Ordering::Relaxed);}
         if d.retired!=0{self.retired_drops.fetch_add(d.retired,Ordering::Relaxed);}
@@ -5606,6 +5658,7 @@ struct SharedTunLeaseQueueDiag {
     pending_peak_packets:usize,pending_peak_bytes:usize,
     tcp_offered:u64,udp_offered:u64,other_offered:u64,
     tcp_new_dropped:u64,udp_new_dropped:u64,other_new_dropped:u64,
+    flow_evicted:u64,
     sparse_forward_offered:u64,sparse_forward_dropped:u64,
     sparse_reverse_offered:u64,sparse_reverse_dropped:u64,
 }
@@ -5691,6 +5744,48 @@ fn m0_plan029_shared_tun_protocol_ingress_diagnostic_is_source_scoped() {
     assert_eq!((diag.tcp_offered,diag.udp_offered,diag.other_offered),(1,2,1));
     assert_eq!((diag.tcp_new_dropped,diag.udp_new_dropped,diag.other_new_dropped),(0,1,1));
 }
+#[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
+#[test]
+fn h2372_shared_tun_flow_fair_full_only_preserves_fifo_and_equal_share(){
+    fn datagram(port:u16,proto:u8,seq:u8)->Vec<u8>{
+        let mut ip=vec![0;40];ip[0]=0x45;ip[9]=proto;
+        ip[2..4].copy_from_slice(&40u16.to_be_bytes());
+        ip[12..16].copy_from_slice(&[10,0,0,1]);ip[16..20].copy_from_slice(&[10,0,0,2]);
+        ip[20..22].copy_from_slice(&port.to_be_bytes());ip[22..24].copy_from_slice(&443u16.to_be_bytes());
+        ip[39]=seq;ip
+    }
+    let (send,_recv)=mpsc::sync_channel::<OriginalTunIngress>(0);
+    let (recycle,_buffers)=mpsc::sync_channel::<Vec<u8>>(16);
+    let route=SharedTunRoute{generation:1,alive:Arc::new(AtomicBool::new(true)),send};
+    let key=[10,0,0,2];let mut pending=HashMap::new();
+    for i in 0..8{
+        let ip=datagram(1000+u16::from(i/2),6,i);
+        let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),ip.len(),Some(&ip),||
+            OriginalTunIngress::Shared(SharedTunPacket{bytes:ip.clone(),recycle:recycle.clone()}));
+        assert_eq!((d.overflow,d.flow_evicted),(0,0));
+    }
+    let small=datagram(9000,6,9);
+    let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),small.len(),Some(&small),||
+        OriginalTunIngress::Shared(SharedTunPacket{bytes:small.clone(),recycle:recycle.clone()}));
+    assert_eq!((d.overflow,d.flow_evicted),(0,1));
+    let q=&pending[&key];assert_eq!(q.packets.len(),8);assert_eq!(q.queued_bytes,320);
+    let order:Vec<_>=q.packets.iter().map(|p|match &p.packet{
+        OriginalTunIngress::Shared(v)=>v.as_slice()[39],_=>unreachable!(),
+    }).collect();
+    assert_eq!(order,vec![0,1,2,3,4,5,6,9]);
+    let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),small.len(),Some(&small),||
+        panic!("equal share must not materialize"));
+    assert_eq!((d.overflow,d.flow_evicted),(1,0));
+    let udp=datagram(9000,17,10);
+    let d=enqueue_shared_tun_flow(&mut pending,key,route.clone(),udp.len(),Some(&udp),||
+        OriginalTunIngress::Shared(SharedTunPacket{bytes:udp.clone(),recycle:recycle.clone()}));
+    assert_eq!((d.overflow,d.flow_evicted),(0,1));
+    let mut fragment=udp.clone();fragment[6]=0x20;
+    assert!(shared_tun_flow_key(&fragment).is_none());
+    let d=enqueue_shared_tun_flow(&mut pending,key,route,fragment.len(),Some(&fragment),||
+        panic!("fragment must not evict"));
+    assert_eq!((d.overflow,d.flow_evicted),(1,0));
+}
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u8>>){
     // Existing native nonblocking TUN batch API: at most 8 ready frames,
@@ -5698,6 +5793,10 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
     let mut scratch:[Vec<u8>;8]=std::array::from_fn(|_|vec![0u8;M0_TUN_IPV4_MAX]);
     let mut pending=HashMap::<[u8;4],PendingSharedTunRoute>::new();
     let mut fair=SharedTunFairTurn::default();
+    // Cold experiment only; production default unchanged. No new work on
+    // empty/non-full queues. Run the same non-probe binary in A/B/A'.
+    let flow_setting=std::env::var("WBD_M0_029_H2372_FLOW_FAIR").ok();
+    let flow_fair=flow_setting.as_deref()==Some("1");
     // Both candidate switches are developer-only and read at native-owner
     // startup. Default product behavior stays the same as clean main.
     // This one controls *cross-lease* fairness, not single-lease flow order.
@@ -5751,7 +5850,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 continue
             };
             // Reject saturated/stale A BEFORE any Vec allocation or copy.
-            let delta=enqueue_shared_tun(&mut pending,key,route,len,||{
+            let delta=enqueue_shared_tun_flow(&mut pending,key,route,len,
+                if flow_fair{Some(&scratch[i][..len])}else{None},||{
                 let mut bytes=recycle_recv.try_recv()
                     .unwrap_or_else(|_|Vec::with_capacity(2048));
                 bytes.clear();
@@ -5767,7 +5867,8 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
                 if sparse_echo_diag{stats.note_sparse_tcp_echo(&scratch[i][..len],delta.overflow);}
                 stats.direct_delivered+=delta.delivered;
                 stats.downstream_full+=delta.backpressure;
-                stats.pending_overflow+=delta.overflow;
+                stats.pending_overflow+=delta.overflow+delta.flow_evicted;
+                stats.flow_evicted+=delta.flow_evicted;
                 stats.pending_byte_limit+=delta.byte_limit;
                 if let Some(q)=pending.get(&key){
                     stats.pending_peak_packets=stats.pending_peak_packets.max(q.packets.len());
@@ -5777,14 +5878,18 @@ fn run_shared_tun_reader(router:Arc<SharedTunReader>,recycle_recv:Receiver<Vec<u
             router.note_dispatch(delta);
         }
     }
+    if flow_setting.is_some(){
+        eprintln!("H2372_SHARED_TUN_FLOW_FAIR enabled={} evicted={}",
+            u8::from(flow_fair),lease_diag.values().map(|s|s.flow_evicted).sum::<u64>());
+    }
     if lease_diag_enabled{
         for (ip,st) in lease_diag{
-            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={} tcp_offered={} udp_offered={} other_offered={} tcp_new_dropped={} udp_new_dropped={} other_new_dropped={}",
+            eprintln!("M0_SHARED_TUN_LEASE_QUEUE_DIAG ip={}.{}.{}.{} offered={} direct_delivered={} downstream_full={} pending_overflow={} pending_byte_limit={} pending_peak_packets={} pending_peak_bytes={} tcp_offered={} udp_offered={} other_offered={} tcp_new_dropped={} udp_new_dropped={} other_new_dropped={} flow_evicted={}",
                 ip[0],ip[1],ip[2],ip[3],st.offered,st.direct_delivered,
                 st.downstream_full,st.pending_overflow,st.pending_byte_limit,
                 st.pending_peak_packets,st.pending_peak_bytes,
                 st.tcp_offered,st.udp_offered,st.other_offered,
-                st.tcp_new_dropped,st.udp_new_dropped,st.other_new_dropped);
+                st.tcp_new_dropped,st.udp_new_dropped,st.other_new_dropped,st.flow_evicted);
             if sparse_echo_diag{
                 eprintln!("M0_SHARED_TUN_SPARSE_TCP_DIAG ip={}.{}.{}.{} forward_offered={} forward_dropped={} reverse_offered={} reverse_dropped={} scope=original_inner_tcp_53222",
                     ip[0],ip[1],ip[2],ip[3],

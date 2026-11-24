@@ -99,13 +99,17 @@ if H2274_FEC and not (
         H2272_FORCE_REPAIR=="off" and H2272_NODELAY=="1" and
         H2274_FEC in (("off","fixed0") if LOSS_REPAIR_PCT=="1" else ("off","fixed1"))):
     raise RuntimeError("H2274_NATIVE_SAME_LOSS_NO_NAGLE_REPAIR_OFF_ONLY")
+FLOW_FAIR_LEG=os.environ.get("WBD_M0_029_H2372_FLOW_FAIR_LEG","")
+if FLOW_FAIR_LEG not in ("","A","B","A_prime") or (
+        FLOW_FAIR_LEG and (LOSS_REPAIR_LEG or MTU_TRIAL_LEG or PRIO_TRIAL_LEG or FQ_TRIAL_LEG or STAGE or SERVICE or RAWCOST or RECOVERY or FIRSTDROP)):
+    raise RuntimeError("H2372_EXCLUSIVE_FLOW_FAIR_LEGS")
 SPARSEFLOW=os.environ.get("WBD_M0_029_SPARSE_TCP_DIAG","0")
 if SPARSEFLOW not in ("0","1"):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_SWITCH_INVALID")
 SPARSEFLOW=SPARSEFLOW=="1"
 if SPARSEFLOW and dict(re.findall(r"([a-z_]+)=(\d+)","forward_offered=2 forward_dropped=1")) != {"forward_offered":"2","forward_dropped":"1"}:
     raise RuntimeError("M029_H2262_SPARSE_PARSE_SELF_CHECK_FAILED")
-if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG or MTU_TRIAL_LEG or LOSS_REPAIR_LEG) and TCP_TIMELINE and TCP_INFO):
+if SPARSEFLOW and not ((STAGE or FQ_TRIAL_LEG or PRIO_TRIAL_LEG or MTU_TRIAL_LEG or LOSS_REPAIR_LEG or FLOW_FAIR_LEG) and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2262_SPARSE_FLOW_REQUIRES_REAL_APP_AND_TCP_INFO")
 if FIRSTDROP and not (STAGE and TCP_TIMELINE and TCP_INFO):
     raise RuntimeError("M029_H2261_REQUIRES_STAGE_REAL_TCP_INFO")
@@ -141,6 +145,7 @@ def main():
     original=runpy.run_path(str(ROOT/SOURCE),run_name="m029_real_fixture_reuse")
     G=original["main"].__globals__
     suffix=("loss"+LOSS_REPAIR_PCT+"-"+LOSS_REPAIR_LEG.lower()) if LOSS_REPAIR_LEG else ("mtu-"+MTU_TRIAL_LEG.lower()) if MTU_TRIAL_LEG else (("prio-"+PRIO_TRIAL_LEG.lower()) if PRIO_TRIAL_LEG else (("fq-"+FQ_TRIAL_LEG.lower()) if FQ_TRIAL_LEG else ("recovery" if RECOVERY else "stage" if STAGE else "noprobe")))
+    if FLOW_FAIR_LEG:suffix="flow-fair-"+FLOW_FAIR_LEG.lower()
     G["OUT"]=ROOT/("m029-product-shared-"+suffix)
     G["TMP"]=Path(os.environ["RUNNER_TEMP"])/(
         "m029-product-shared-"+RUN+"-"+ATTEMPT+"-"+suffix)
@@ -223,6 +228,7 @@ def main():
                 raise RuntimeError("M029_PRODUCT_ORIGINAL_ECHO_SERVER_NOT_READY")
             self.spawn("client",self.client,["env","LD_LIBRARY_PATH="+str(BUNDLE),
                 "WBD_SHARED_TUN_ROUTE_DIAG=1",
+                *(["WBD_M0_029_H2372_FLOW_FAIR="+("1" if FLOW_FAIR_LEG=="B" else "0")] if FLOW_FAIR_LEG else []),
                 *(["WBD_PLAN028_EXTERNAL_STAGE_DIAG=1"] if STAGE else []),
                 *(["WBD_M0_029_TX_SYSCPU_DIAG=1"] if SERVICE else []),
                 *(["WBD_M0_029_RAW_CALL_COST=1"] if RAWCOST else []),
@@ -580,6 +586,12 @@ def main():
         # Explicit source-only diagnostic: UDP/TCP entering the authenticated
         # /32 shared reader versus NEW pending drops. Neither a M4 copied
         # prefix nor AEAD/PN verification nor a timed delivery receipt.
+        if FLOW_FAIR_LEG:
+            real=node.logs["client"].read_text(errors="replace")
+            rows=re.findall(r"H2372_SHARED_TUN_FLOW_FAIR enabled=(\d+) evicted=(\d+)",real)
+            if len(rows)!=1 or int(rows[0][0])!=int(FLOW_FAIR_LEG=="B"):
+                raise RuntimeError("H2372_REAL_NATIVE_FLOW_FAIR_READBACK_MISSING")
+            result["h2372_flow_fair"]={"leg":FLOW_FAIR_LEG,"enabled":FLOW_FAIR_LEG=="B","evicted":int(rows[0][1])}
         result["shared_tun_protocol_ingress"]={}
         expected={"offered","tcp_offered","udp_offered","other_offered",
                   "tcp_new_dropped","udp_new_dropped","other_new_dropped"}
@@ -597,11 +609,11 @@ def main():
                 if any(fields[k+"_new_dropped"]>fields[k+"_offered"]
                        for k in ("tcp","udp","other")):
                     raise RuntimeError("M029_INGRESS_PROTOCOL_DROP_EXCEEDS_OFFERED_"+role)
-                rows.append({k:fields[k] for k in sorted(expected)})
+                rows.append({**{k:fields[k] for k in sorted(expected)},"flow_evicted":fields.get("flow_evicted",0)})
             if not rows or sum(x["offered"] for x in rows)==0:
                 raise RuntimeError("M029_TRUE_SHARED_TUN_INGRESS_DIAG_NOT_OBSERVED_"+role)
             if (sum(row["tcp_new_dropped"]+row["udp_new_dropped"]+
-                    row["other_new_dropped"] for row in rows)
+                    row["other_new_dropped"]+row["flow_evicted"] for row in rows)
                     !=result["owned_stop"][role]["queue_full_drops"]):
                 raise RuntimeError("M029_NEW_SOURCE_DROP_ACCOUNTING_MISMATCH_"+role)
             result["shared_tun_protocol_ingress"][role]=rows
