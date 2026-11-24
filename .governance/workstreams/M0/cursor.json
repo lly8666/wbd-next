@@ -4,26 +4,26 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2373,
-  "checkpoint_sha": "8528a24d0fba36ae259e93d314d8e2126a3cae09",
+  "sequence": 2375,
+  "checkpoint_sha": "a0811e9502d5ed5373886ecf2d6739d3a02610aa",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "用户最新范围：P0零损主动优化PAUSED（非达标），P1 1%机制与结算完成/吞吐无稳定收益，不再追逐；FEC仅核Maximum实发和真实native构件；最后公平调度。H2372同租约流公平候选双ISA原生与真网在途。",
-  "why_now": "历史ISA-L编码/缺源恢复已充分优化；确定缺陷是同租约小TCP首包入口拒绝，UDP优先/固定限速无联合作用，按公平准入解决而非再挖微优化。",
+  "current_task": "H2374最后收尾：H2372 ARM/x86原生各14/14 PASS；两真网build后因旧夹具缺显式repair off在业务前失败；已修夹具，原产品公平候选不变；Maximum当前真实ISA-L及已有owner单元并行验证。",
+  "why_now": "用户要求尽快收口，不再扩展研究；仅完成已有公平候选与FEC原生资格复核，未达到的实网/物理性能如实保留。",
   "done_when": "收口P0保留性能未达标；P1当前1%两组及原生真实PASS、不宣称吞吐增益；FEC剩余仅按实际native backend与Maximum服务/恢复/成本证据收口，不重造算法；公平候选真实小TCP/UDP及时交付、bulk/CPU无实质退化、拒绝/淘汰分列、原生Stop，跨租约独立验证，不能假称全部平台/物理PASS。没有新判别依据则停止主动优化、保留未达标边界。",
-  "next_action": "收H2372 45333379458/45333379561 双ISA原生及真实A/B/A′，若有红先读首异常；审H2314 Maximum与历史H1411 native 构件差异，最小实际service/恢复验证，不进行数学内核重复扫描。公平调度通过才考虑默认、跨租约和Win对应范围；失败不无限刷。",
+  "next_action": "仅收45333966600双ISA公平业务和45333966595 Windows Maximum真实ISA-L原生结果；公平有联合作用才保留候选，若无则恢复旧产品路径并记录；不主动启动新优化/参数扫描。真实Maximum跨机未验、其他平台/物理未验、P0未达标均留明确边界；完成现有结果判定后收主动研究，不冒充整个029完成。",
   "unverified": true,
-  "last_tested_source": "37e96bf47beb5c5b06c673cf862345157165e51e",
+  "last_tested_source": "586d133f73ae723b84aca79516c213c059ea30ae",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
     "docs/evidence/M0/PLAN029-TCP-PERFORMANCE-EXPERIMENT-AUDIT-20261121-20261122.md",
     "docs/prompts/M0.md",
     "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json",
-    "docs/evidence/M0/20261124-H2368-LSO-RESULTS-P1-RESUME.json",
     "docs/evidence/M0/20261124-H2370-REPAIR-COMPLETION-RESUME.json",
-    "docs/evidence/M0/20261124-H2372-ZERO-PAUSE-FEC-HISTORY-FAIR-RESUME.json"
+    "docs/evidence/M0/20261124-H2372-ZERO-PAUSE-FEC-HISTORY-FAIR-RESUME.json",
+    "docs/evidence/M0/20261124-H2374-FINAL-SCOPED-VERIFICATION.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2370真实1% 9/9 PASS与112/112 recovery PASS，copied 0/2/0、0/6/0，settle anomaly 0，goodput不稳定。P0 PAUSED，5%当前源未测/停止追逐。H2372 SOURCE586d133f73ae723b84aca79516c213c059ea30ae，native45333379458/product45333379561在途，公平非默认，FEC Maximum实发未验。"
+  "partial_summary": "H2372 native14/14 each ISA；real两组NOT_RUN（H2272 paired switch）；H2374 source3b187ea1a701fdf4d14738369e0d40f6b57f2c20，公平45333966600、Maximum ISA-L45333966595在途。P0 PAUSED，P1 1%机制PASS无稳定吞吐，FEC数学收口，实网Maximum仍未验。"
 }
