@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2325,
-  "checkpoint_sha": "d06836da6df5b218c2cfaa80fd7c561deee30629",
+  "sequence": 2329,
+  "checkpoint_sha": "ac1ed0019b890b1629382ab918d97110eb35af1d",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2318/H2320原生编译单元通过；H2321首次真网前Go构建失败，H2323恢复main已有CLI装配声明并定向重试；H2319已收束49历史实验自动触发。",
-  "why_now": "H2312/H2313已否证稳定TX16单因素收益；转向减少原M1热路径每包复制和LoanBatch处理。真实吞吐尚未取得新证据。",
+  "current_task": "PLAN029 P0 H2323累计Windows首发优化真三runner一组A/B/A′通过，H2326继续减少首发结算与控制锁，H2327双组独立对照在途。",
+  "why_now": "H2323 B真实吞吐及CPU/GiB均优于两侧A，继续降原路径固定成本；单组漂移尚不能默认推广。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "先查实验分支冻结SOURCE 6fa10d75e3b7f23f909252e2737948911d3eb64c 的 Action 45308263564；读取首个失败或完整真实A/B/A′数据，不重复派发，再决定P0集成/改进。",
+  "next_action": "查实验分支冻结SOURCE c828c4561917151f82385edfbe21ada60849c6df 的 Action 45310787767 及 e85c63b 原生单元；两组分别对照，归档真实结果或首个失败，不重复派发。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
@@ -22,8 +22,9 @@
     "docs/prompts/M0.md",
     "docs/devlog/M0/20261124-OUTER-REPAIR-SCOPED-CLOSEOUT.md",
     "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json",
-    "docs/devlog/M0/20261124-PLAN029-H2321-NATIVE-TX-RESUME.md"
+    "docs/devlog/M0/20261124-PLAN029-H2321-NATIVE-TX-RESUME.md",
+    "docs/evidence/M0/20261124-H2323-WIN-ARM-FIRSTSEND-AB.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2318/H2320原生Windows编译及实际单元通过；H2319治理维护PASS；H2321首次Go装配失败非性能结果，H2323恢复main精确patch后重试pending。600–800Mbps、P1/P2及最终Windows Game CPU/物理资格仍OPEN。旧专项和历史负结果不改写。"
+  "partial_summary": "H2323单组累计优化真实通过；H2326治理维护通过、完整原生owner测试在途；H2327静态通过且构建在途。600–800Mbps、P1/P2及最终Windows Game CPU/物理资格仍OPEN，不默认推广。"
 }
