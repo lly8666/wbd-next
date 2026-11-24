@@ -29,10 +29,12 @@ PATH_AB_BASELINE="7222b4739443dbb7ff9b322f186dcf651b54490f"
 PATH_AB_FEATURES="m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_npf_trace"
 PATH_AB_SETTLEMENT_BASELINE="6fa10d75e3b7f23f909252e2737948911d3eb64c"
 PATH_AB_QUEUE_BASELINE="c828c4561917151f82385edfbe21ada60849c6df"
+PATH_AB_LOAN_BASELINE="bc87909a7aaa7a31bd70e85f2efa56af23f092df"
 PATH_AB_AXES={
     PATH_AB_BASELINE:"firstsend_copy_and_M1_ready_batch",
     PATH_AB_SETTLEMENT_BASELINE:"firstsend_settlement_and_control_poll",
     PATH_AB_QUEUE_BASELINE:"direct_npf_queue_staging",
+    PATH_AB_LOAN_BASELINE:"arena_ready_batch",
 }
 
 def path_ab_baseline():

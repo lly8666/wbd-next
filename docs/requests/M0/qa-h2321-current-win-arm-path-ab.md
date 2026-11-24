@@ -13,3 +13,6 @@ A/A-prime freeze c828c4561917151f82385edfbe21ada60849c6df (H2327 candidate), B a
 A/A′ exact H2323 6fa10d7; B H2335 isolated loan only. Two independent groups. Same TX8/NPF16KiB, Go/ARM current. No H2326 or H2330 product changes. Separate run concurrency identity.
 
 H2336 retry: isolate static test environment from selected axis; same product delta. Do not count failed static attempt as network evidence.
+
+## H2349 ready-batch arena + copied counters
+Two balanced real groups ABBA/BAAB, A exact retained H2336 bc87909, B H2348; only native runtime, Windows owner and original Arena implementation differ. Same TX8/16KiB; same-triplet bare preflight; no H2326 or H2330/RX delta. Compare actual adjacent pair and within-version spread, CPU/GiB, P99.

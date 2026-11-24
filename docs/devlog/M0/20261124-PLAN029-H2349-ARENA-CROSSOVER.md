@@ -1,0 +1,3 @@
+# H2349 — independent incremental true native arena crossover
+
+H2348 candidate (82a8b05) compared only to retained H2336 bc87909. Four actual legs per group, ABBA/BAAB; bare WSL2 calibration on same three VMs before product. Source exact three files, fresh baseline/current DLLs, same Go/ARM product. H2347 original H2326 recheck runs independently on separate branch and cannot change this candidate. No default promotion or claim of new throughput benefit until receipts.

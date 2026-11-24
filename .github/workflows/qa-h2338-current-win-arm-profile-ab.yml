@@ -115,7 +115,7 @@ jobs:
           if($LASTEXITCODE -ne 0){throw 'H2321_BASELINE_FETCH_FAILED'}
           $diff=@(& git diff --name-only $baseline $env:GITHUB_SHA -- crates r0/go_overlay Cargo.toml Cargo.lock tools/prepare_windows_wiring.py)
           if($LASTEXITCODE -ne 0){throw 'H2321_SOURCE_DIFF_FAILED'}
-          $allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-engine/src/v4_windows_owner.rs')
+          $allowed=@('crates/wbd-engine/src/v4_windows_native_runtime.rs','crates/wbd-engine/src/v4_windows_owner.rs','crates/wbd-engine/src/memory/mod.rs')
           if(@($diff | Where-Object {$_ -notin $allowed}).Count -ne 0 -or $diff.Count -ne $allowed.Count){throw ('H2321_NOT_ISOLATED_TX_SOURCE_DELTA '+($diff -join ','))}
           & git worktree add --detach h2321-baseline $baseline
           if($LASTEXITCODE -ne 0 -or (git -C h2321-baseline rev-parse HEAD).Trim() -ne $baseline){throw 'H2321_BASELINE_WORKTREE_FAILED'}
