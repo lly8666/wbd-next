@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2377,
-  "checkpoint_sha": "ca80e2ab3aa563d7b0742e9e6ebd2eb42ea89d47",
+  "sequence": 2382,
+  "checkpoint_sha": "415aa5e02239d757fb40d068a2247144a76fc4de",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "H2376主动性能优化收口：双ISA公平准入真实A/B/A′正收益，已选择性整合main仅Linux Normal/off客户端；Maximum当前Windows真实ISA-L与owner单元PASS；主线集成回归在途。",
-  "why_now": "双ISA真实小TCP P99降98.30/99.56%，UDP漏回及小TCP入口拒绝降0，吞吐+0.87/+0.25%，CPU/GiB约1%内，满足实际公平候选接受条件；用户要求结束主动优化。",
-  "done_when": "主动P0/P1/FEC数学研究已收口，公平实验正收益已选择性集成；仅收main实际集成原生功能/Stop回归，未验Maximum跨机/Windows公平/跨租约/实体及P0绝对性能保留NOT_RUN或未达标，不宣称独立029全完成。",
-  "next_action": "仅收main SOURCE130555c806e4c32bf34075883321f366d5912a5c 的45335657114双ISA集成回归及其必要治理；若集成红只定位本次选择性移植缺陷并定向修复，不开启新性能研究。完成后终止本轮主动优化。",
+  "current_task": "用户最终交付：中国域名离线内置+GUI手动更新/导入，Windows amd64 GUI完整包与Linux ARM64 server。H2376主线双ISA原生通过，性能和多线程不再开发。H2379产品SOURCE f0e8e5a2，PR72，双平台发布在途。",
+  "why_now": "用户明确只补中国域名最终缺口并简单测试，交付同源两端实际构件。",
+  "done_when": "内置规则真实来源及离线加载、手动更新失败保留、Rust规则语义、GUI自测、ARM64短功能验证、同源真实发布包与SHA；集成PR72，交付可验证下载。不要重开性能/线程研究。",
+  "next_action": "仅收45338373098 Windows/ARM64发布结果和45338590404治理；若失败修首个实际功能/构建缺陷，成功后核真实ZIP/TAR并选择性集成PR72，交付用户。",
   "unverified": true,
-  "last_tested_source": "3b187ea1a701fdf4d14738369e0d40f6b57f2c20",
+  "last_tested_source": "130555c806e4c32bf34075883321f366d5912a5c",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -21,9 +21,9 @@
     "docs/prompts/M0.md",
     "docs/evidence/M0/20261124-M0-OUTER-OPPORTUNISTIC-V3-SCOPED-CLOSEOUT.json",
     "docs/evidence/M0/20261124-H2370-REPAIR-COMPLETION-RESUME.json",
-    "docs/evidence/M0/20261124-H2374-FINAL-SCOPED-VERIFICATION.json",
-    "docs/evidence/M0/20261124-H2376-FAIRNESS-FEC-CLOSEOUT.json"
+    "docs/evidence/M0/20261124-H2376-FAIRNESS-FEC-CLOSEOUT.json",
+    "docs/evidence/M0/20261124-H2381-CN-FINAL-DELIVERY-RESUME.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2374 45333966600 ARM/x86真实对照PASS，P99 7.70/3.03ms，UDP漏回0/0，吞吐+0.87/+0.25%；45333966595 Windows native ISA-L七档及Maximum PASS，远端Maximum NOT_RUN。main 130555c 仅Linux Normal/off client公平，集成45335657114在途，主动性能研究收口，非029整体完成。"
+  "partial_summary": "H2376 main双ISA PASS。CN final branch PR72，H2378初版Windows未用fmt编译失败，H2379已修；同源f0e8e5a2 release45338373098，两个平台在途；H2380/H2381仅文档治理修订，未冒充构件发布。"
 }
