@@ -1782,7 +1782,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "e988017a3769573135f85e21078f47e72b339aa1"
+      "result_blob": "7ba9b8cb3bd573a5170c91eb030422ac8a3e27b4"
     },
     {
       "kind": "replace",
@@ -2073,19 +2073,19 @@
       "kind": "create",
       "path": "internal/v4productcli/management_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_linux.go",
-      "result_blob": "5049b169e6a4733f1f06c56d50275b23c71cb96e"
+      "result_blob": "405653fc67a5e33e318665216cd4b0a8483bbf91"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/management_snapshot_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_snapshot_linux.go",
-      "result_blob": "a960008eb132075d9e64f233771d86939ee1b025"
+      "result_blob": "be1a66c32da93d1541cf9f25a8bbe3896e38843d"
     },
     {
       "kind": "create",
       "path": "internal/v4productcli/management_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/management_linux_test.go",
-      "result_blob": "d2ef29adc82c7f5794c7c0dddebccd202fdbb4bf"
+      "result_blob": "8c063615d01e3d64c5374867759ef4e74923b8a7"
     },
     {
       "kind": "create",

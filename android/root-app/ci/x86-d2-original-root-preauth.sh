@@ -228,6 +228,9 @@ openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
   -addext 'subjectAltName=DNS:wbd-v4.example.test' \
   >"$tmp/openssl.log" 2>&1
 chmod 600 "$tmp/server-key.pem" "$tmp/server-cert.pem"
+# One original listener for all seven requested modes in the wiring matrix.
+server_mode=normal
+if [[ "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 ]];then server_mode=shared;fi
 phase=D2_S1_ORIGINAL_LINUX_SERVER
 # Android Emulator 10.0.2.2 maps to host loopback. Whether its user-mode
 # NAT preserves raw FakeTCP SYN/SYNACK is explicitly unproven; never call it
@@ -239,7 +242,7 @@ timeout --signal=TERM --kill-after=5s 180s sudo -n env \
   --server-name wbd-v4.example.test \
   --route-key-hex-file "$tmp/route.hex" --users-file "$tmp/users.json" \
   --lease-pool 10.66.0.128/25 --tls-cert "$tmp/server-cert.pem" \
-  --tls-key "$tmp/server-key.pem" --mode normal --fec-profile 1 \
+  --tls-key "$tmp/server-key.pem" --mode "$server_mode" --fec-profile 1 \
   >"$tmp/server.log" 2>&1 &
 server_pid=$!
 for i in $(seq 1 40);do
@@ -294,6 +297,11 @@ adb shell su -c '/system/bin/sh /data/local/tmp/wbd-x86-ci/wbd-d2-cred-stage.sh'
 grep -Fxq 'D2_CI_APP_PRIVATE_SECRET_STAGING_PASS' "$out/android-private-credential-stage.txt"
 echo D2_CI_APP_PRIVATE_SECRET_STAGING_PASS >"$out/secret-stage-enum.txt"
 echo D2_S1_CI_EPHEMERAL_APP_SECRET_STAGE_PASS
+if [[ "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 ]];then
+  phase=D2_ANDROID_SEVEN_MODE_WIRING
+  source android/root-app/ci/x86-seven-mode-wiring.sh
+  exit
+fi
 phase=D2_S1_PRODUCTION_ROOT_SERVICE
 adb shell logcat -c >"$out/logcat-reset.txt" 2>&1 || true
 adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity \

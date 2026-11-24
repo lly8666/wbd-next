@@ -95,9 +95,22 @@ public final class X86CiOriginalStartActivity extends Activity {
             request.putExtra("user","wbd-ci-session");
             request.putExtra("target_uids",uidGroup.uids);
             request.putExtra("target_packages",uidGroup.packages);
-            request.putExtra("has_ca",true);
-            // Match the production Activity contract for the fixture CA.
-            request.putExtra("tls_verify_server",true);
+            // The normal historical fixture uses its CA. Wiring matrix
+            // explicitly follows the earlier physical Normal/off defaults.
+            String mode=getIntent().getStringExtra("ci_mode");
+            boolean verify=mode==null;
+            if(mode==null)mode="normal";
+            if(!java.util.Arrays.asList("normal","fec-fixed","fec-auto","game2",
+                "game2-fixed","game4","game4-fixed").contains(mode))
+                throw new IllegalArgumentException("unknown CI mode");
+            request.putExtra("fec_mode",mode);
+            request.putExtra("fec_profile",6);
+            request.putExtra("has_ca",verify);
+            request.putExtra("tls_verify_server",verify);
+            request.putExtra("tunnel_dns",false);
+            request.putExtra("physical_dns",false);
+            request.putExtra("cn_dns_split",false);
+            request.putExtra("outer_repair",false);
             startForegroundService(request);
             event("ORIGINAL_ROOT_SERVICE_START_REQUESTED");
         }catch(Exception blocked){

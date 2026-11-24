@@ -1,4 +1,4 @@
-//go:build linux && cgo && wbd_v4_embedded_go
+//go:build linux && !android && cgo && wbd_v4_embedded_go
 
 package v4productcli
 

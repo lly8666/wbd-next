@@ -549,6 +549,10 @@ public final class RootClientService extends Service {
         boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
+        int modeLanes=RootGameSessionStatus.expectedLanes(fecMode);
+        final String modeReadback="V4_PUBLIC_ANDROID_MODE_READBACK role=client mode="+fecMode+
+            " profile="+(fecMode.endsWith("-fixed")?fecProfile:-1)+
+            " lanes="+(modeLanes==0?1:modeLanes);
         final String generation=ownerToken;
         try{
             // The app-private Android file mode is checked BEFORE asking su
@@ -659,6 +663,8 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_PARSE_OTHER);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_ARGS_ACCEPTED);
+                    if(OriginalGoMilestones.matches(line,modeReadback)&&line.endsWith(modeReadback))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_MODE_READBACK_MATCHED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_INTERFACE_FOUND);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client"))

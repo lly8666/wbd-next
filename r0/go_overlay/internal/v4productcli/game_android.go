@@ -115,6 +115,9 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
         raws=append(raws,raw)
         if e=raw.BindAndroidNetwork(c.androidNetworkHandle,
             c.rawInterface,iface.Index,iface.MTU);e!=nil{return e}
+        // Same cold milestone as Normal: first real bound RAW, NOT all
+        // lanes or an authenticated Game group.
+        if lane==0{log.Print("V4_PUBLIC_RAW_AF_PACKET_READY role=client")}
         flow:=faketcp.ClientFlow{
             LocalIP:c.localIP.As4(),PeerIP:c.peerIP.As4(),
             LocalPort:local,PeerPort:c.peerPort,
@@ -151,6 +154,7 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
             }
         }(assoc,raw,flow)
         if e=assoc.Start(time.Now());e!=nil{return e}
+        if lane==0{log.Print("V4_PUBLIC_ANDROID_COLD_SYN_TX_OK role=client source=original_go_raw")}
         synCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
         e=waitForOriginalColdSYN(synCtx,assoc)
         cancel()

@@ -1288,6 +1288,21 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
     }
     if runtime.GOOS=="android"&&role=="client"{
         log.Print("V4_PUBLIC_ANDROID_GO_ARGS_ACCEPTED role=client")
+        // Once per cold START, report the actual parsed mode, not the Java
+        // request. No per-packet work and no credentials/addresses.
+        mode:="normal"
+        profile:=-1
+        lanes:=1
+        switch cfg.fecMode{
+        case realityfront.FecV2Fixed:mode="fec-fixed";profile=int(cfg.fecProfile)
+        case realityfront.FecV2Auto:mode="fec-auto"
+        }
+        if cfg.gameLanes!=0{
+            lanes=int(cfg.gameLanes)
+            mode=fmt.Sprintf("game%d",lanes)
+            if cfg.gameFecEnabled{mode+="-fixed";profile=int(cfg.gameFecProfile)}
+        }
+        log.Printf("V4_PUBLIC_ANDROID_MODE_READBACK role=client mode=%s profile=%d lanes=%d",mode,profile,lanes)
     }
     if runtime.GOOS=="android"&&cfg.androidCNSnapshot!=nil{
         // Verified file/typed rules only; NOT real Android system DNS.

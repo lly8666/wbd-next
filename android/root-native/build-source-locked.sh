@@ -244,6 +244,18 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
   # instead of a Host-only Go/Rust link or a privileged-env guess.
   export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/$rust_target/release -lwbd_engine -Wl,-z,max-page-size=16384 -Wl,-rpath,\$ORIGIN"
   (cd legacy && go build -trimpath -buildvcs=false -tags "$go_tags" -o "$GITHUB_WORKSPACE/out/android-product-a1/wbd-v4-client-$goarch" ./cmd/wbd-v4-client)
+  if [[ "$goarch" == amd64 && "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 ]];then
+    # CI-only native Bionic Go TLS/admission test executable; never in APK.
+    if (cd legacy && CGO_LDFLAGS="-Wl,-z,max-page-size=16384" go test -c -trimpath \
+        -o "$GITHUB_WORKSPACE/out/android-product-a1/wiring-bionic-tls-amd64.test" ./internal/realityfront) \
+        >out/android-product-a1/wiring-bionic-tls-build.log 2>&1;then
+      echo PASS >out/android-product-a1/wiring-bionic-tls-build-status.txt
+    else
+      rm -f out/android-product-a1/wiring-bionic-tls-amd64.test
+      echo BUILD_FAIL >out/android-product-a1/wiring-bionic-tls-build-status.txt
+      tail -40 out/android-product-a1/wiring-bionic-tls-build.log
+    fi
+  fi
   # Test actual source-locked linked ELF rather than checking only flags.
   readelf -d "out/android-product-a1/wbd-v4-client-$goarch" \
     >"out/android-product-a1/linker-$goarch.txt"

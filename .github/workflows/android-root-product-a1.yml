@@ -177,6 +177,8 @@ jobs:
   arm64-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -403,6 +405,7 @@ jobs:
       WBD_KSU_PRODUCT_X86_CI: '1'
       WBD_D2_ORIGINAL: '1'
       WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -423,6 +426,7 @@ jobs:
         run: |
           bash -n android/root-app/ci/x86-kvm-ksu-native.sh
           bash -n android/root-app/ci/x86-d2-original-root-preauth.sh
+          bash -n android/root-app/ci/x86-seven-mode-wiring.sh
           bash -n android/root-app/ci/x86-d2-install-credentials-android.sh
           python3 -m py_compile android/root-app/ci/x86-d2-cold-wire-observer.py
           python3 android/root-app/ci/x86-d2-cold-wire-observer.py selftest
@@ -449,6 +453,11 @@ jobs:
           name: android-d2-s1-original-x86-root-${{ github.sha }}
           path: |
             out/android-x86-d2-root/receipt.json
+            out/android-x86-d2-root/wiring/receipt.json
+            out/android-x86-d2-root/wiring/results.tsv
+            out/android-x86-d2-root/wiring/bionic-tls-status.txt
+            out/android-x86-d2-root/wiring/bionic-tls.log
+            out/android-x86-d2-root/wiring/*/diagnostics.txt
             out/android-x86-d2-root/linux-source-sha.txt
             out/android-x86-d2-root/android-source-sha.txt
             out/android-x86-d2-root/server-started.txt
@@ -555,6 +564,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       CGO_ENABLED: '1'
       GOTOOLCHAIN: local
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -576,13 +586,14 @@ jobs:
           path: |
             out/android-a3-linux/manifest.json
             out/android-a3-linux/assembly.json
+            out/android-a3-linux/host-cold-receipt.json
             out/android-a3-linux/live-original-linux.log
             fixed-kernel-result/plan028-tls-wire-audit.json
             fixed-kernel-result/public-v4-normal-business.log
           retention-days: 14
           if-no-files-found: warn
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
+        if: ${{ always() && env.WBD_ANDROID_WIRING_MATRIX != '1' }}
         with:
           name: android-linux-arm64-native-bundle-${{ github.sha }}
           path: |
