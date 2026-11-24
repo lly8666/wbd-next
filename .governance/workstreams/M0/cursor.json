@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2363,
-  "checkpoint_sha": "9f572c629e05c203de1e1a6297b60ff87caab8f5",
+  "sequence": 2365,
+  "checkpoint_sha": "b39f51bb9d3686eac97374db9dd348f922cffc06",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2353/H2355交叉完整通过，校准修复实证；H2339不集成，H2323收益预期修订。H2347/H2349/H2358重新真实对照，高供给H2359/H2360与checksum H2361独立。",
-  "why_now": "按实测保留、复验和淘汰；分离端点供给与产品成本；纯CPU工作先本机配对筛选，节约真网资源。",
+  "current_task": "PLAN029 P0 H2364：H2347拒绝，H2349撤回，H2358不叠加，H2359供给不晋级；H2361已证实checksum CPU收益，已迁入主实验分支并启动真实对照。",
+  "why_now": "有稳定局部证据立即推进，保留负结果不再重复参数扫描；真实服务能力与供给和链路容量分别判断。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "查45321088128/45321102114/45321120476三个源码轴、45321409323高供给及H2361 45321513988，取实际四腿、bare reference、单位CPU与微基准。保留净收益再组合，推进P1/P2。",
+  "next_action": "收H2364 45323267739及同SOURCE原生45323267818/45323267772、静态与治理；如编译/业务红先修首个故障；根据实际成本保留或修正。转P1单次原密文修复与P2 maximum实际parity资格，继续定位原生服务路径，勿复活负优化。",
   "unverified": true,
-  "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
+  "last_tested_source": "17ade976bb33010d7341f5561985189a0e97f066",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -26,8 +26,9 @@
     "docs/evidence/M0/20261124-H2323-WIN-ARM-FIRSTSEND-AB.json",
     "docs/evidence/M0/20261124-H2327-H2331-NEGATIVE-NATIVE-AB.json",
     "docs/evidence/M0/20261124-H2336-H2338-H2339-PARALLEL-NATIVE-AB.json",
-    "docs/evidence/M0/20261124-H2353-H2355-BALANCED-NATIVE-AB.json"
+    "docs/evidence/M0/20261124-H2353-H2355-BALANCED-NATIVE-AB.json",
+    "docs/evidence/M0/20261124-H2364-PARALLEL-RESULTS-CHECKSUM-RESUME.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2336 retained；H2326/H2348/H2354 real pending、原生PASS；H2339复验无稳健收益；H2323单组42.5%不普遍，复验+9.53%/-0.99%；main产品不变；600–800/P1/P2/物理资格OPEN。"
+  "partial_summary": "H2364实验SOURCE 7a3e3099f73b6603a370e88fa754f65161ca4ea4；PR68 draft；相对H2336仅checksum产品差异，H2361双ISA原生通过、H2364静态容量通过、真实网测待定。main产品不变，P0性能/P1/P2仍OPEN。"
 }
