@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2388,
-  "checkpoint_sha": "27dbdf717e235af367527202a747a50a17e26ef7",
+  "sequence": 2389,
+  "checkpoint_sha": "c8c67bd0f7bf7f374a31a666d8df894600c34072",
   "progress": "verifying",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030 PR73：三批双ISA原生构建/安装/真实混合设备共18/18；H2388仅修watch报告env与Windows PID前置夹具，未改产品。",
+  "current_task": "PLAN030 PR73继续；用户并行授权Windows崩溃/升级残留恢复修复，独立PR74。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "收 H2388 Action 45345811457 及其Windows dispatch；watch复用1d6081c的amd64原包，不重跑已过的双ISA功能。确认真实结果、包与交付范围再定收口。",
+  "next_action": "收独立Windows修复 Action45347863728 SOURCE ab8f8923807145796ced7f92eccde199b3fa38b7（真实v2 Wintun child crash、GUI关闭）；030 watch复测已PASS，域名组合45345844201真实GUI第二代Applied未出现，查首错不归咎于DNS或WAL前先证实；两PR独立收口。",
   "unverified": true,
   "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
   "evidence_refs": [],
@@ -21,5 +21,5 @@
     "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
   ],
   "open_requests": [],
-  "partial_summary": "第三批Action45344159343六产品job PASS；watch两phase结束后报告KeyError GITHUB_SHA，数值未保存；Windows45344178585 PID unittest失败，未真实运行。修复fixture SOURCE 5cf064e7e2062f0f2c1b2d3fca9bcaf4ccc31e2d，第三批原产物继续有效。治理目录45344159311 PASS。未合main，未声称休眠/方向MTU/真实业务字节/质量样本年龄等未接齐项通过。"
+  "partial_summary": "030第三批1d6081c双ISA六产品job PASS，H2388 watch复用同包1200/1200 each、CPU 0.35/0.36s、p99 .419/.443ms、RSS61218816/61480960B，6次快照；Windows组合前置修好后实际native-public-two-os未见第二次GUI Applied，需具体日志。用户报GUI退出和v2原生恢复死锁，已定位直接拒绝v2恢复、GUI退出耦合WAL；独立fix/m0-windows-crash-recovery PR74实现待Action，不动Rust热路径。两PR未合main。"
 }
