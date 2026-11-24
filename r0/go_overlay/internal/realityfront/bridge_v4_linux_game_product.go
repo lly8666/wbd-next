@@ -915,3 +915,10 @@ func (p *V4LinuxGameProduct) Close()error{
     if p.stopped{return nil}
     return p.abortLocked()
 }
+
+
+func(p *V4LinuxGameProduct) ManagementIdentity()(ManagementSessionIdentity,error){
+    p.mu.Lock();defer p.mu.Unlock()
+    if len(p.serverSessions)==0{return ManagementSessionIdentity{},ErrAdmissionUnsupported}
+    return managementSessionIdentity(p.serverSessions[0])
+}

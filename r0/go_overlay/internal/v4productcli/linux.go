@@ -74,6 +74,7 @@ func readPrivateArgFile(path string)(string,error){
 
 type config struct{
     role string
+    management *serverManagement
     rawInterface string
     localIP netip.Addr
     peerIP netip.Addr
@@ -872,12 +873,14 @@ func chooseUnderlayIPv4(addrs []net.Addr)(netip.Addr,error){
     return found,nil
 }
 
-func Run(role string,args []string)(retErr error){
+func Run(role string,args []string)error{return runManagedProduct(role,args,nil)}
+func runManagedProduct(role string,args []string,management *serverManagement)(retErr error){
  if role=="server"&&len(args)==2&&args[0]=="--init-route-key-file"{
    return initServerRouteKeyFile(args[1])
  }
  cfg,err:=parse(role,args)
     if err!=nil{return err}
+    cfg.management=management
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
     if role=="server"&&cfg.localIP.IsUnspecified(){
@@ -887,6 +890,11 @@ func Run(role string,args []string)(retErr error){
         if e!=nil{return e}
         log.Printf("V4_PUBLIC_SERVER_UNDERLAY_BIND interface=%s local_ip=%s mode=auto_interface_ipv4 port=%d nat_port_forward_required_if_behind_gateway",
                    cfg.rawInterface,cfg.localIP,cfg.localPort)
+    }
+    if management!=nil {
+        cleanup,e:=prepareManagedNetwork(cfg)
+        if e!=nil{return e}
+        defer func(){retErr=errors.Join(retErr,cleanup())}()
     }
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
@@ -1768,6 +1776,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
 // No Go steady-state plaintext/record loop is introduced here. Each admitted
 // association owns its own original-Go TLS -> Rust AEAD/PN M1/M4 generation.
 type originalV4MultiRecord struct {
+    managedAt time.Time
     assoc *faketcp.ServerAssociation
     product *realityfront.V4LinuxServerProduct
     lease string // server verified protected TLS /32, never client claimed

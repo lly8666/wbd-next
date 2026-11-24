@@ -1,0 +1,7 @@
+#!/bin/sh
+# Portable package entry or installed system-wide entry.
+set -eu
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ ! -x "$here/wbd-v4-server" ]; then here=/opt/wbd-next; fi
+export LD_LIBRARY_PATH="$here"
+exec "$here/wbd-v4-server" --manage "$@"
