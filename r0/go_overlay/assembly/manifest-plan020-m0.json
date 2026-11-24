@@ -27,7 +27,7 @@
       "kind": "replace",
       "path": "cmd/wbd-client/main_windows.go",
       "original_blob": "57f0e5a2d9d3187f36edfa77ec5da8031e9e5cbc",
-      "result_blob": "3238f8819563c51bc34c33f5e884f9d36c421231",
+      "result_blob": "ab2eb721c017d49a7bff002cf0b551b10ca9fb9e",
       "patches": [
         {
           "find": "\tflag.Parse()",
@@ -312,6 +312,18 @@
         {
           "find": "\t\tserverName         = flag.String(\"server-name\", \"\", \"recognized TLS server name\")",
           "replace": "\t\tserverName         = flag.String(\"server-name\", \"\", \"recognized TLS server name\")\n\t\ttlsVerifyServer = flag.Bool(\"tls-verify-server\", false, \"opt-in original TLS server certificate verification; default OFF; requires trusted CA PEM\")"
+        },
+        {
+          "find": "func main() {",
+          "replace": "func main() {\n\tif m0Plan029DomainCommand(os.Args[1:]) { return }"
+        },
+        {
+          "find": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && (*cnRulesFile==\"\" || !filepath.IsAbs(*cnRulesFile)) {return errors.New(\"CN split requires an absolute --cn-rules-file (saved configuration)\")}",
+          "replace": "if *splitEnable && *routeMode==\"bypass-lan-cn\" && *cnRulesFile!=\"\" && !filepath.IsAbs(*cnRulesFile) {return errors.New(\"CN rule override requires an absolute --cn-rules-file; empty uses built-in snapshot\")}"
+        },
+        {
+          "find": "absolute owned CN domain rules snapshot used only at split cold start",
+          "replace": "optional absolute CN domain snapshot; empty uses built-in geolocation-cn"
         }
       ]
     },
@@ -347,7 +359,7 @@
       "kind": "replace",
       "path": "windows/gui/fields.json",
       "original_blob": "eab96b7a72a2ee46175c27e0b846b9f787768a38",
-      "result_blob": "64ffdd34832f9b8d5122bd03fcba50053f2da2a9",
+      "result_blob": "e20b93072b007fd65372bc49d461c49d4ed8c9cb",
       "patches": [
         {
           "find": "  \"fec-mode\": [",
@@ -484,6 +496,10 @@
         {
           "find": "  \"route-key-hex\": [",
           "replace": "  \"route-key\": [\n    \"服务器\",\n    \"简化 RouteKey（推荐）\",\n    \"8–32位英数字；派生32字节后存储复用，建议随机24–32位。使用时旧十六进制Key保持空白\"\n  ],\n  \"route-key-hex\": ["
+        },
+        {
+          "find": "CN模式启用时必填本文件夹内的相对规则路径，例如 data/cn-rules.txt；不识别加密DNS/SNI，不可用旧CI环境变量代替",
+          "replace": "留空使用内置 geolocation-cn；可手动更新或导入本地规则文件，重连生效；不识别加密DNS/SNI"
         }
       ]
     },
@@ -491,7 +507,7 @@
       "kind": "replace",
       "path": "windows/gui/MainForm.cs",
       "original_blob": "6cbb0d782122afe1a0bcb0bb3855fff7fcf7d182",
-      "result_blob": "de90802463f282fa7230f3bc0a194b8e1164b456",
+      "result_blob": "2f0ab5210e6723a454ad94a7e5b8d9d2c047cad3",
       "patches": [
         {
           "find": "f.Key == \"fec-mode\" ||",
@@ -716,6 +732,14 @@
         {
           "find": "                // A live client process or a READY log line is not Windows\n                // Applied: only the independently verified four-stage no-old-WFP OS\n                // receipt AND same-generation authenticated Rust owner may\n                // cause the product to emit WBD_WINDOWS_OS_APPLIED.\n                if (line == \"WBD_WINDOWS_CLIENT_READY\") {\n                    if (connectedId != null && session.Active) ShowState(\"待验证 · 原生系统 Applied 未确认\");\n                    line = \"进程已启动，但不能代替 路由/DNS/MTU 原生内核回读。\";\n                }\n                if (line == \"WBD_WINDOWS_OS_APPLIED\") {\n                    // The Go producer must first verify real no-old-WFP four-stage\n                    // state and authenticated Rust/kernel first delivery.\n                    if (connectedId != null && session.Active)\n                        ShowState(\"已连接 · 系统 Applied · \" +\n                            (store.Book.Profiles.FirstOrDefault(p => p.Id == connectedId)?.Name ?? \"服务器\"));\n                    line = \"客户端报告系统 Applied；停止时还必须验证 WAL/CAS 全部清理。\";\n                }",
           "replace": "                // Original Go prints OS Applied first and READY second;\n                // accept either sequence without downgrading a valid pair.\n                if (ApplyActivationReceiptLine(line)) {\n                    line = osAppliedReceipt && clientReadyReceipt ?\n                        \"原生 TLS/Rust READY 且 OS/WAL Applied 已验。\" :\n                        \"已收到部分启动回执；等待另一项同代回执。\";\n                }"
+        },
+        {
+          "find": "                    bar.Controls.Add(Button(\"使用内置 IP 表\", () => Try(() => { editors[\"china-ip-file\"].Text = \"\"; SaveEditor(); })));",
+          "replace": "                    bar.Controls.Add(Button(\"使用内置 IP 表\", () => Try(() => { editors[\"china-ip-file\"].Text = \"\"; SaveEditor(); })));\n                    bar.Controls.Add(Button(\"导入中国域名表\", () => Try(ImportCNDomainDialog)));\n                    bar.Controls.Add(Button(\"手动更新域名表\", async () => await RunAsync(UpdateCNDomainAsync)));\n                    bar.Controls.Add(Button(\"使用内置域名表\", () => Try(() => { editors[\"cn-rules-file\"].Text = \"\"; SaveEditor(); Enqueue(\"已选择内置中国域名表，重连后生效。\"); })));"
+        },
+        {
+          "find": "        public async Task UpdateChinaAsync() {",
+          "replace": "        void ImportCNDomainDialog() {\n            using (var d = new OpenFileDialog { Filter = \"中国域名规则 (*.txt)|*.txt|所有文件 (*.*)|*.*\", RestoreDirectory = true }) if (d.ShowDialog(this) == DialogResult.OK) {\n                string rel = \"data/cn-rules-\" + editing.Id + \".txt\";\n                store.WriteAtomic(rel, PortableStore.ReadBounded(d.FileName));\n                editors[\"cn-rules-file\"].Text = rel; SaveEditor(); Enqueue(\"域名表已导入，重连后生效。\");\n            }\n        }\n        public async Task UpdateCNDomainAsync() {\n            string target = store.InRoot(\"data/cn-domains-updated.txt\");\n            var info = new ProcessStartInfo(store.InRoot(\"wbd-client.exe\"), \"--update-cn-domains \" + ClientSession.Quote(target)) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = store.Root, RedirectStandardOutput = true, RedirectStandardError = true };\n            using (var p = Process.Start(info)) {\n                Task<string> err = p.StandardError.ReadToEndAsync(), output = p.StandardOutput.ReadToEndAsync();\n                await Task.Run(() => { if (!p.WaitForExit(60000)) { p.Kill(); throw new IOException(\"更新超时，保留原域名表。\"); } });\n                if (p.ExitCode != 0) throw new IOException(\"更新失败，保留原域名表。\" + await err);\n                Enqueue(await output);\n            }\n            editors[\"cn-rules-file\"].Text = \"data/cn-domains-updated.txt\"; SaveEditor(); Enqueue(\"中国域名表已更新，重连后生效。\");\n        }\n        public async Task UpdateChinaAsync() {"
         }
       ]
     },
@@ -903,7 +927,7 @@
       "kind": "replace",
       "path": "docs/PARAMETERS.json",
       "original_blob": "49bac68aaa1b5bbce001d009db2ded16b7f09192",
-      "result_blob": "9be728d58361688340304b0793bdf79ff58d983f",
+      "result_blob": "cc8f13126c25451e6c8106dd8545c40beb120052",
       "patches": [
         {
           "find": "      \"fec-parity\": {",
@@ -970,6 +994,10 @@
         {
           "find": "      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n",
           "replace": "      \"route-key\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"8..32 ASCII letters/digits, case-sensitive; mobile-friendly v2 derived once then cached; prefer 24..32 random\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n      \"route-key-hex\": {\n        \"type\": \"String\",\n        \"default_expression\": \"\\\"\\\"\",\n        \"help\": \"hex route key\",\n        \"source\": \"cmd/wbd-client/main_windows.go\",\n        \"json\": true\n      },\n"
+        },
+        {
+          "find": "        \"help\": \"absolute owned CN domain rule snapshot for cold split startup; no hot update\",",
+          "replace": "        \"help\": \"optional absolute CN domain snapshot; empty uses built-in geolocation-cn; reconnect after manual update\","
         }
       ]
     },
@@ -1891,19 +1919,19 @@
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows.go",
-      "result_blob": "42131ff2855556c6c01a27a42dd5863848d51b2e"
+      "result_blob": "4044ab7b8e7ebfb4061f779913813ed986f16f3b"
     },
     {
       "kind": "create",
       "path": "cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
       "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cold_split_windows_test.go",
-      "result_blob": "4097f533b7c88e8a2389edacae1a96e1e8a2fc56"
+      "result_blob": "84e00c65803113811033bd92ba0d2c750833610a"
     },
     {
       "kind": "create",
       "path": "internal/realityfront/bridge_v4_windows_native_split_probe.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/bridge_v4_windows_native_split_probe.go",
-      "result_blob": "6ebc92b6dd93348ac168e647b9c605e659acd0ef"
+      "result_blob": "3569a107d40f753608cfaf1d090758dcc6a58d1e"
     },
     {
       "kind": "create",
@@ -1976,6 +2004,18 @@
       "path": "internal/v4productcli/server_nat_bind_linux_test.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/server_nat_bind_linux_test.go",
       "result_blob": "a8892e9d0576a51c15548258763324fadc050271"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_plan029_cn_domains_windows.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cn_domains_windows.go",
+      "result_blob": "1d086536a8d0dcfecdc2a92e09f79a7e3c7730b0"
+    },
+    {
+      "kind": "create",
+      "path": "cmd/wbd-client/m0_plan029_cn_domains_windows_test.go",
+      "overlay_path": "r0/go_overlay/cmd/wbd-client/m0_plan029_cn_domains_windows_test.go",
+      "result_blob": "b0293a44df08f554e6b005d9439e6c5d4a506d7c"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

@@ -1,0 +1,266 @@
+name: H2378 paired final Windows GUI and Linux ARM64 delivery
+run-name: "H2378 final paired release | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/m0-029-cn-domain-release]
+    paths:
+      - '.github/workflows/qa-h2378-cn-domain-release.yml'
+      - 'docs/requests/M0/qa-h2378-cn-domain-release.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-arm64:
+    name: Linux ARM64 server native release and short functional checks
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    env:
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Actual native build and short original product checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm python3 iproute2 iputils-ping iptables openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2378-arm64-build.log 2>&1 || { tail -n 100 h2378-arm64-build.log; exit 1; }
+          python3 -u tools/m0_plan029_linux_dual_isa_suite.py >h2378-arm64-network.log 2>&1 || { tail -n 100 h2378-arm64-network.log; exit 1; }
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open('linux-plan029-public-bundle/manifest.json'))
+          d=json.load(open('linux-plan029-result/summary.json'))
+          assert m['source_sha']==d['source_sha']==os.environ['GITHUB_SHA']
+          assert m['architecture']==d['native_isa']=='aarch64'
+          assert m['rust_native_fec_acceleration'] is True
+          assert d['status']=='PASS_SCOPED_FIVE_REAL_LINUX_CLIENT_SERVER_MODES'
+          PY
+      - name: Deployable ARM64 server archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p delivery/linux-arm64-server
+          cp linux-plan029-public-bundle/{wbd-v4-server,libwbd_engine.so,manifest.json} delivery/linux-arm64-server/
+          printf 'Source: %s\nNative ARM64 five real original product modes: PASS_SCOPED\nPhysical Windows-ARM64: NOT_RUN\nKeep the .so beside the server; use LD_LIBRARY_PATH=. ./wbd-v4-server --help\n' "$GITHUB_SHA" >delivery/linux-arm64-server/BUILD_INFO.txt
+          (cd delivery/linux-arm64-server && sha256sum wbd-v4-server libwbd_engine.so manifest.json BUILD_INFO.txt >SHA256SUMS)
+          tar -czf delivery/wbd-h2378-linux-arm64-server.tar.gz -C delivery linux-arm64-server
+          (cd delivery && sha256sum wbd-h2378-linux-arm64-server.tar.gz >SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: h2378-linux-arm64-server
+          path: |
+            delivery/wbd-h2378-linux-arm64-server.tar.gz
+            delivery/SHA256SUMS
+            linux-plan029-result/summary.json
+          if-no-files-found: error
+          retention-days: 30
+  original-windows:
+    name: Native Windows amd64 original Go Rust ISA-L GUI driver SHA and TLS unit
+    runs-on: windows-2025
+    timeout-minutes: 48
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Assemble current exact donor and authenticated V4 native Windows product
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          python tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'source locked Windows assembly failed'}
+          $env:WBD_H2378_CN_TEST_EXPORT=Join-Path $env:GITHUB_WORKSPACE 'h2378-cn-canonical.txt'
+          Push-Location legacy
+          try{
+            go test -count=1 -v -tags wbd_v4_embedded_go -run '^(TestH2378|TestPlan029GoColdDomains|TestPlan029ExplicitProductSplit|TestPlan029GoV3TrialOnly)' ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'H2378 CN domain default/update/import regression failed'}
+            go build -trimpath -tags wbd_v4_embedded_go -o ../wbd-client.exe ./cmd/wbd-client
+            if($LASTEXITCODE -ne 0){throw 'Win64 actual original-Go V4 native CLI build failed'}
+            go test -count=1 -tags wbd_v4_embedded_go -run '^TestM0WindowsGameFecProtectedExtensionBounds$' ./internal/realityfront
+            if($LASTEXITCODE -ne 0){throw 'H2378 strict V2 FEC/padding negative regression failed'}
+            go test -count=1 -tags wbd_v4_embedded_go -run '^TestH2202' ./internal/realityfront
+            if($LASTEXITCODE -ne 0){throw 'H2202 encrypted control version and crypto-padding tests failed'}
+          } finally {Pop-Location}
+      - name: Build official pinned ISA-L MSVC native static dependency
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          choco install nasm -y --no-progress
+          if($LASTEXITCODE -ne 0){throw 'NASM install failed'}
+          $nasm=@('C:\Program Files\NASM','C:\ProgramData\chocolatey\bin')|Where-Object {Test-Path (Join-Path $_ 'nasm.exe')}|Select-Object -First 1
+          if(-not $nasm){throw 'NASM not installed'}
+          Add-Content -Path $env:GITHUB_PATH -Value $nasm
+          $env:PATH="$nasm;$env:PATH"
+          git clone --quiet https://github.com/intel/isa-l.git isa-l
+          if($LASTEXITCODE -ne 0){throw 'ISA-L source unavailable'}
+          git -C isa-l checkout --quiet c387163fcbca62701d646149564c550c78a4f985
+          if($LASTEXITCODE -ne 0){throw 'ISA-L pinned source unavailable'}
+          $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $vsroot=& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath|Select-Object -First 1
+          if(-not $vsroot){throw 'Windows MSVC x64 tools missing'}
+          $vcvars=Join-Path $vsroot 'VC\Auxiliary\Build\vcvars64.bat'
+          if(-not (Test-Path $vcvars)){throw 'MSVC x64 vcvars missing'}
+          $cmd='call "'+$vcvars+'" && cd isa-l && nmake /f Makefile.nmake'
+          cmd.exe /d /s /c $cmd
+          if($LASTEXITCODE -ne 0){throw 'official pinned ISA-L MSVC build failed'}
+      - name: Current exact source native Rust DLL export and Windows owner regression
+        shell: pwsh
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference='Stop'
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          rustup target add x86_64-pc-windows-msvc --toolchain 1.85.1
+          $lib=Get-ChildItem isa-l -Recurse -Filter isa-l_static.lib -File|Select-Object -First 1
+          if(-not $lib){throw 'missing signed-source ISA-L static library'}
+          $env:WBD_ISAL_PREFIX=$lib.Directory.FullName
+          $env:WBD_ISAL_SOURCE_SHA='c387163fcbca62701d646149564c550c78a4f985'
+          $features='m0_v4_embedded_go,m0_v4_probe,fec2_product_record,native_fec_acceleration'
+          cargo +1.85.1 build --locked --release -p wbd-engine --features $features
+          if($LASTEXITCODE -ne 0){throw 'Windows Rust production DLL failed'}
+          $env:WBD_H2378_CN_TEST_EXPORT=Join-Path $env:GITHUB_WORKSPACE 'h2378-cn-canonical.txt'
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib h2378_actual_embedded_cn_snapshot_native_trie_and_regex -- --nocapture
+          if($LASTEXITCODE -ne 0){throw 'H2378 actual Rust CN rules failed'}
+          cargo +1.85.1 test --locked -p wbd-engine --features $features --lib plan029_split_domain_trie_exact_and_boundary_no_guess_sni
+          if($LASTEXITCODE -ne 0){throw 'H2378 Rust domain semantic regression failed'}
+          New-Item -ItemType Directory -Force delivery/windows-amd64 | Out-Null
+          Copy-Item wbd-client.exe delivery/windows-amd64/wbd-client.exe
+          Copy-Item target/release/wbd_engine.dll delivery/windows-amd64/wbd_engine.dll
+          Copy-Item legacy/cmd/wbd-client/cn_domains_builtin.json delivery/windows-amd64/CN-DOMAIN-SNAPSHOT.json
+          Copy-Item r0/go_overlay/assembly/CN-DOMAIN-LICENSE.txt delivery/windows-amd64/CN-DOMAIN-LICENSE.txt
+          python -c 'import ctypes,os; d=ctypes.WinDLL(os.path.abspath("delivery/windows-amd64/wbd_engine.dll")); getattr(d,"wbd_m0_win_native_v3_start");print("V4_WINDOWS_REAL_DLL_EXPORT_PASS")'
+          if($LASTEXITCODE -ne 0){throw 'Windows native Rust V3 ABI missing'}
+      - name: Build modern current V4v2 GUI from original WinForms donor and exercise real GUI self tests
+        shell: pwsh
+        timeout-minutes: 12
+        run: |
+          $ErrorActionPreference='Stop'
+          & ./tools/m0_plan028_h1640_win_gui_compile.ps1 -LegacyRoot legacy -OutputDirectory delivery/windows-amd64 -SourceSHA $env:GITHUB_SHA -Version 'H2378-v2-QA'
+          if($LASTEXITCODE -ne 0){throw 'WinForms current V4v2 GUI build failed'}
+          $gui=Join-Path (Resolve-Path delivery/windows-amd64).Path 'WBD.exe'
+          # A /target:winexe GUI process is asynchronous to the PowerShell
+          # native invocation. Wait for the actual process and its receipt.
+          $proc=Start-Process -FilePath $gui -ArgumentList @('--self-test') -WorkingDirectory (Split-Path $gui -Parent) -Wait -PassThru
+          Write-Output ('H2378_GUI_PROCESS_EXIT='+$proc.ExitCode)
+          # A WinForms /target:winexe process can return before PowerShell
+          # observes the real child result. The source-locked GUI self-test
+          # receipt is authoritative; never promote a failed fixture from
+          # an unrelated zero exit code.
+          $report=Join-Path (Resolve-Path delivery/windows-amd64).Path 'gui-test-result.json'
+          if(-not (Test-Path -LiteralPath $report)){throw 'GUI self-test receipt missing: NOT_RUN'}
+          $self=Get-Content -LiteralPath $report -Raw | ConvertFrom-Json
+          if($proc.ExitCode -ne 0){Write-Host (Get-Content $report -Raw);throw 'GUI self-test process returned failure'}
+          if($self.source_sha -ne $env:GITHUB_SHA -or $self.result -ne 'PASS' -or @($self.checks).Count -lt 20){
+            Write-Host ('H2378_GUI_SELFTEST_NOT_PASS '+($self | ConvertTo-Json -Depth 4 -Compress))
+            throw 'GUI self-test report is not PASS, release forbidden'
+          }
+          Write-Output ('H2378_GUI_SELFTEST_TRUE_PASS checks='+@($self.checks).Count)
+      - name: Official signed Wintun 0.14.1 AMD64 and redistributable license proof
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $zip=Join-Path $env:RUNNER_TEMP 'wintun-0.14.1.zip'
+          Invoke-WebRequest -Uri 'https://www.wintun.net/builds/wintun-0.14.1.zip' -OutFile $zip -TimeoutSec 120
+          if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official signed Wintun archive SHA mismatch'}
+          Expand-Archive -Path $zip -DestinationPath wintun-extracted -Force
+          $dll='wintun-extracted/wintun/bin/amd64/wintun.dll'
+          if(-not (Test-Path $dll) -or (Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun driver missing or unsigned'}
+          if((Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'e5da8447dc2c320edc0fc52fa01885c103de8c118481f683643cacc3220dafce'){throw 'Wintun runtime pinned DLL SHA mismatch'}
+          Copy-Item $dll delivery/windows-amd64/wintun.dll
+          $license='wintun-extracted/wintun/LICENSE'
+          if(Test-Path $license){Copy-Item $license delivery/windows-amd64/WINTUN-LICENSE.txt}
+          @'
+          Npcap is not bundled: the Npcap Free license prohibits unauthorized
+          redistribution. Each end user downloads and installs the signed
+          installer at https://npcap.com/#download on their own computer.
+          Use Administrator PowerShell; check service: Get-Service npcap
+          Check usermode DLL: Test-Path "$env:WINDIR\System32\Npcap\wpcap.dll"
+          No unattended install and no driver bypass are implemented here.
+          '@ | Set-Content -Encoding utf8 delivery/windows-amd64/INSTALL-NPCAP-DRIVER.txt
+          # The original native V4 GUI no longer runs PowerShell route/DNS scripts.
+          # Never ship the retired legacy network script or test profile data.
+          @'
+          H2378 V4 extension v2. Windows amd64 native product + WinForms.
+          GUI: WBD.exe (run as Administrator).
+          Native client: wbd-client.exe. Rust native driver: wbd_engine.dll.
+          China domain rules are embedded offline. Network tab: update/import/use built-in; reconnect to apply.
+          CN-DOMAIN-SNAPSHOT.json records the pinned upstream source and embedded hash.
+          Wintun DLL: official 0.14.1 Microsoft-signed.
+          Npcap: open the GUI "便携与驱动" tab; click "Npcap 官方下载",
+          download directly from npcap.com, then click "Npcap 安装（本地官方包）"
+          to verify Microsoft Authenticode + official publisher and launch its
+          interactive install wizard. No OEM/silent installer is distributed.
+          Wintun: click "Wintun 驱动安装" to verify pinned SHA256 and perform
+          a temporary owned PnP adapter create+close. No foreign adapter
+          or route/DNS changes are allowed by this setup button.
+          Exact product source: see windows-provenance.json
+          New QA source: see windows-provenance.json.
+          Windows GUI and signed drivers loaded: test evidence scoped; Windows to physical ARM64: NOT_RUN.
+          '@ | Set-Content -Encoding utf8 delivery/windows-amd64/README_FIRST.txt
+      - name: Product hashes and independent Windows zip
+        shell: pwsh
+        if: success()
+        run: |
+          $ErrorActionPreference='Stop'
+          $p='delivery/windows-amd64'
+          $files=@('WBD.exe','WBD.exe.config','gui-fields.json','PARAMETERS.json','wbd-client.exe','wbd_engine.dll','wintun.dll','CN-DOMAIN-SNAPSHOT.json','CN-DOMAIN-LICENSE.txt')
+          foreach($f in $files){if(-not (Test-Path (Join-Path $p $f))){throw "missing Windows full delivery file: $f"}}
+          $sha=[ordered]@{}
+          foreach($f in $files){$sha[$f]=(Get-FileHash (Join-Path $p $f) -Algorithm SHA256).Hash.ToLowerInvariant()}
+          [ordered]@{
+            schema_version=1;product_main_sha=$env:GITHUB_SHA;
+            qa_source_sha=$env:GITHUB_SHA;architecture='windows/amd64';
+            windows_native_owner_build='PASS';gui_v2_build='PASS';
+            gui_self_tests='PASS';cn_domain_offline_update_rust='PASS_SCOPED';wintun_authenticode='VALID';
+            npcap_bundled=$false;npcap_reason='OEM redistribution license required';
+            gui_npcap_official_download_and_signed_interactive_install='PASS_SOURCE_AND_GUI_SELFTEST_ONLY';
+            gui_wintun_pinned_owned_bootstrap='PASS_SOURCE_AND_GUI_SELFTEST_ONLY';
+            physical_windows_linux_arm64_pair='NOT_RUN';sha256=$sha
+          } | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $p 'windows-provenance.json')
+          # GUI self-tests intentionally write fake profiles and active
+          # configurations under $p. NEVER publish that directory wholesale.
+          # The release ZIP is a sealed allowlist assembled after test PASS.
+          $stage='delivery/wbd-h2378-windows-amd64-GUI'
+          if(Test-Path $stage){throw 'release staging directory unexpectedly already exists'}
+          New-Item -ItemType Directory $stage | Out-Null
+          $allow=@($files)+@('README_FIRST.txt','INSTALL-NPCAP-DRIVER.txt','windows-provenance.json')
+          if(Test-Path (Join-Path $p 'WINTUN-LICENSE.txt')){$allow+= 'WINTUN-LICENSE.txt'}
+          foreach($f in $allow){
+            if(-not (Test-Path (Join-Path $p $f))){throw "missing publish allowlist file: $f"}
+            Copy-Item -LiteralPath (Join-Path $p $f) -Destination (Join-Path $stage $f)
+          }
+          (Get-ChildItem $stage -File|Sort-Object Name|ForEach-Object {
+            (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()+'  '+$_.Name
+          }) | Set-Content -Encoding utf8 (Join-Path $stage 'SHA256SUMS')
+          Compress-Archive -Path $stage -DestinationPath delivery/wbd-h2378-windows-amd64-GUI.zip -CompressionLevel Optimal
+          python -c 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); names=[s.filename.lower() for s in z.infolist()]; assert len(names)==len(set(names)); assert not any("/data/" in v or "profiles.json" in v or "gui-test-result.json" in v or "windows_client_network.ps1" in v for v in names); assert any(s.endswith("/wbd.exe") for s in names); assert any(s.endswith("/wintun.dll") for s in names); print("H2378_WINDOWS_RELEASE_ALLOWLIST_NO_TEST_SECRETS_PASS")' delivery/wbd-h2378-windows-amd64-GUI.zip
+          if($LASTEXITCODE -ne 0){throw 'release zip contains self-test/private data or missing GUI/driver'}
+          (Get-FileHash delivery/wbd-h2378-windows-amd64-GUI.zip -Algorithm SHA256).Hash.ToLowerInvariant() | Set-Content delivery/WINDOWS-ZIP-SHA256.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: h2378-windows-amd64-gui
+          path: |
+            delivery/wbd-h2378-windows-amd64-GUI.zip
+            delivery/WINDOWS-ZIP-SHA256.txt
+          if-no-files-found: error
+          retention-days: 30

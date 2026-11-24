@@ -74,8 +74,8 @@ func TestPlan029GoColdDomainsIDNAAndRejectUnsupportedGeosite(t *testing.T){
  b,e:=m0Plan029CanonicalDomains([]byte("Example.CN.\n=例子.cn\n"))
  if e!=nil||!strings.Contains(string(b),"example.cn\n")||
   !strings.Contains(string(b),"=xn--fsqu00a.cn\n"){t.Fatalf("%q %v",b,e)}
- for _,s:=range []string{"include:cn","regexp:^.*\\.cn$",
-   "keyword:cn","example.cn @cn","bad..cn","example.cn&ads"}{
+ for _,s:=range []string{"include:cn","regexp:[",
+   "keyword:","example.cn @cn","bad..cn","example.cn&ads"}{
   if _,e:=m0Plan029CanonicalDomains([]byte(s));e==nil{
    t.Fatalf("unsupported %q silently accepted",s)
   }

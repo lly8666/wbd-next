@@ -25,8 +25,8 @@ use crate::v4_client_split::FlowKey;
 use crate::v4_client_startup_padding::{StartupMode,TunnelStartupPadding};
 
 const MAX_PREFIXES:usize=32_768;
-const MAX_DOMAIN_BYTES:usize=1<<20;
-const MAX_DOMAIN_RULES:usize=20_000;
+const MAX_DOMAIN_BYTES:usize=4<<20;
+const MAX_DOMAIN_RULES:usize=100_000;
 const DEFAULT_SOFT_FLOWS:usize=4_096;
 const STEADY_TCP_DST_PORT:u16=46119;
 const STEADY_INGRESS_MAX:usize=8192;
@@ -222,6 +222,10 @@ impl NativeSplitWorker {
                 if rule_count>MAX_DOMAIN_RULES{return Err(())}
                 let (rule,kind)=if let Some(exact)=line.strip_prefix('='){
                     (exact,DomainRuleType::Exact)
+                }else if let Some(v)=line.strip_prefix("keyword:"){
+                    (v,DomainRuleType::Keyword)
+                }else if let Some(v)=line.strip_prefix("regexp:"){
+                    (v,DomainRuleType::Regex)
                 }else{(line,DomainRuleType::Suffix)};
                 domains.insert(rule,kind).map_err(|_|())?;
             }
