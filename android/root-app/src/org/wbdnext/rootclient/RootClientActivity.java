@@ -1440,7 +1440,7 @@ public final class RootClientActivity extends Activity {
         presetResult.setTextIsSelectable(true);
         pane.addView(presetResult);
         Button connect=new Button(this);connect.setText("START — ROOT / ORIGINAL Go+Rust");
-        connect.setOnClickListener(v->{coldSwitch.cancel();autoHandover.cancel();start();});
+        connect.setOnClickListener(v->{coldSwitch.cancel();start();});
         pane.addView(connect);
         Button stop=new Button(this);stop.setText("STOP — WITHDRAW UID ROUTE / NATIVE JOIN");
         stop.setOnClickListener(v->{

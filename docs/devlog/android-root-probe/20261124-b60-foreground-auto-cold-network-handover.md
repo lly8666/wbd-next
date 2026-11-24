@@ -9,3 +9,11 @@
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"B60原Root App可选前台自动冷Network恢复，复用Service原NetworkCallback、owned Go/Rust Stop与完整Activity START；仅Host/正式APK软件门，无新数据面。"}
 ```
+
+## B60a｜保留原 B52 START 按钮的确切生产接线
+
+B60首版给原普通 START 按钮额外写了 `autoHandover.cancel()`；现有 `start()` 在实际成功派发时已经按前台选项 `arm()`，失败时也会 `cancel()`，因此该调用重复，并让旧 B52 源锁断言 `connect.setOnClickListener(v->{coldSwitch.cancel();start();})` 无谓失败。本次只去掉一个冗余 Java 调用，自动冷重连接线和原 Go/Rust 完全不动；原 SOURCE 保留，CI 仅采新 SOURCE 实际状态。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"B60a消除原普通START处多余的自动重连取消调用，兼容B52已有生产按钮源码门，B60重连策略及Go/Rust路径不变。"}
+```
