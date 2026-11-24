@@ -48,7 +48,8 @@
     "docs/decisions/M0-PLAN029B-OPTIONAL-SPLIT-FAKEIP-IPV6-20261116.md",
     "docs/evidence/M0/PLAN029B-H2205-H2204-WIN-GUI-DRIVERS-ARM64-SCOPED-RELEASE-20261118.json",
     "docs/devlog/M0/20261119-PLAN029B-H2205-H2204-RELEASE-MAIN-INTEGRATION.md",
-    "docs/devlog/M0/20261120-H2226-WIN-GUI-LOWRATE-V2-NO-M2-GENERATION-HEALTH.md"
+    "docs/devlog/M0/20261120-H2226-WIN-GUI-LOWRATE-V2-NO-M2-GENERATION-HEALTH.md",
+    "docs/evidence/M0/20261124-H2395-GUI-HISTORICAL-LIMITATIONS.json"
   ],
   "verification": [
     {
@@ -216,25 +217,7 @@
   "limitations": [
     "保存或校验成功不是Native FEC Applied；组装后的旧GUI配置完整参数未逐个核验。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "PLAN029仅规划域名/DNS及统一参数的真实UI/effective接线；不将旧fake-child UI资格推广到原生网络。",
-    "PLAN029后续约定：只编辑外层MTU，默认1460；有效外层、自动内层与OS应用状态只读，保存/重连不得把内层值写回外层配置。本次未实现UI。",
-    "GUI AES显示更新为V3已验/V4原生待验；V4真实GUI credential/租约/内核Apply/Disconnect和全部平台组合尚无当前SOURCE端到端证据，不能凭配置回显宣称已生效。",
-    "H1638发现并补齐GUI原生outer-repair显式on/off配置映射；正式装配参数表默认MTU1460已存在，原始donor 1500非正式GUI。H1638 VM原生编译/全部字段CLI只读校验/WinForms按钮事件与native真实连接必须按各自结果分账，当前尚未测出结果，不冒充PASS。",
-    "H1643定位真实GUI问题：旧Go cold check-config对已准入V4 Fixed/Auto误报fec.status=rejected，MainForm因此阻止连接；本批正式装配改为pending_native_auth（不冒充Applied），并删除未支持Game3选择。H1642 Windows VM GUI失败来自旧测试用16B route-key被V4正确拒绝；正式VM测试结果未出，不能宣称全部按钮实际执行成功或真实GUI起网。",
-    "H1645真实GUI selftest在已完成251条字段/七模式检查后发现AES128选中配旧legacy/off carrier被旧V3校验拒绝。当前原生V4只为legacy parity0+显式AES选择已有Off policy，并回显原载体有效模式；尚待真实Windows VM新版Go/GUI以及原生签名网络新SOURCE验收，不能标PASS。",
-    "H1647 GUI精简：四个旧fec-mode/fec-parity/fec-min-parity/fec-start-parity不再展示为可调项；原生Rust固定档7级ratio依次1/8、1/4、3/8、1/2、3/4、1、5/4，r=ceil(k*rho)且受MAX_R上限，比例非实际带宽占比；关闭FEC仍是默认。正式Windows VM编译/CLI全档及按钮结果需按最终Action验证，不等价物理GUI-origin signed network。",
-    "H1648完整Windows2025 VM compiled GUI Action43160679063 SUCCESS，原始artifact13917194780 CRC验证；354项字段/真实Go CLI/按钮为范围内PASS，GUI起网真Npcap/Wintun与同源码真实应用流仍未验。H1649仅UI可用性标签与少数读操作/导入按钮补烟，新的测试结果需再收集。",
-    "H1650 接手核对最新Action43161652534及7项原始ZIP CRC、354项GUI自检全PASS（含49可见配置、21原生固定档、三AEAD）和真实read-only Win32/WAL按钮事件。功能目录verification只能用FUNCTIONAL_PASS等固定枚举，状态的限定scope不包含GUI起真实签名网络；旧 H1648 PASS_SCOPED 标签纠正为合法FUNCTIONAL_PASS，原Action和旧错误均保留。",
-    "H1653发现正式GUI VM打包曾使用旧SOURCE8a Rust DLL SHA7c8ddd，虽然GUI Go同当前正式edbb；H1653将WinForms产物绑到SOURCE527正式签名产品Action43161652596的Go edbb及Rust ISA-L DLL SHA3973cd，加入源码目录/二进制双hash硬门。当前改装配的Windows VM终端结果待核实，禁止把旧H1649签名DLL说成最新。真实GUI-origin Npcap/Wintun业务依旧NOT_RUN。",
-    "PLAN029 H1661 仅将server-ip GUI catalog标为IPv4/域名、MTU改写为外层字节上限，均已经过原Go assembly，未重新编译 PLAN029 WinForms，也未验证 GUI 读取原生 OS 应用外层/自动内层只读状态；不能借旧H1650 354项 PASS 冒充当前SOURCE的GUI实网。",
-    "PLAN029 H1664: 当前源码 WinForms 传输页新增有效外层/自动内层/OS回执只读Label与原物理域名解析阶段显示；仅已有真实原Go原生回执驱动显示，不修改outer 1460配置。当前 SOURCE 独立WinForms构建尚待 H1664 Action；无 signed GUI-origin L3 PASS。",
-    "PLAN029 2026-11-12增量：DNS UI改成直连/隧道各一个值并迁移取消备用；中国分流显示IP＋域名及实际规则来源。设计已确定，UI/CLI/owner/真实出口尚未取得该增量PASS。",
-    "PLAN029 H1667 WinForms将旧dns4迁移为新dns.tunnel并隐藏旧键，新界面可编辑单一dns.direct和dns.tunnel；真实GUI检查/当前有效原生DNS出口尚未通过Actions，不以保存为Applied。",
-    "H1670新增现有真实WinForms+Go CLI两个单DNS值及dns4首项迁移/冲突拒绝/portable reopen独立验收；仅测试准备，待当前SOURCE Windows Action返回，不代表两个DNS真实网络出口。",
-    "H1686 H1663 GUI workflow previous fixed Rust DLL source mismatch was an inappropriate precondition for WinForms/Go config-only test. The new SOURCE will build current Go and real WinForms without linking Rust DLL, with explicit NOT_BUILT_OR_LINKED; signed Rust GUI and actual applied owner remain NOT_RUN until new Action result.",
-    "H1686 true GUI compile succeeded but real Go --check-config requires Rust DLL; lack of DLL caused Action43239063021 FAIL at config validation (original source pin, not GUI labels). H1687 builds same-source Rust ABI release DLL before rerun; signed GUI packet path still NOT_RUN.",
-    "H1688 collects H1687 Action43240195695 success with exact-source Go/Rust SHA256 and real WinForms/Go config readback. This does not qualify actual OS Applied, signed Wintun, Rust DNS direct/tunnel exits, Direct TCP/UDP or startup-padding. Original H1686 missing Rust DLL FAIL remains.",
-    "H1692 read-only product preflight removes obsolete WFP layer probe/blocker, keeps legacy JSON flags false, reports actual no-WFP 4-stage and authenticated Stop qualification as blocker. No network Applied or GUI product lifecycle claim.",
+    "H1638–H1692及早期PLAN029逐项历史限制原样归档：docs/evidence/M0/20261124-H2395-GUI-HISTORICAL-LIMITATIONS.json；旧证据不推广至当前SOURCE。",
     "H2065旧0e57 Normal四元组复用FAIL（非GUI按钮）；后续H2077/H2135真网络PASS。",
     "H2077原生两代WinForms/Health/双出口及Stop真实PASS_SCOPED；扩展矩阵未测。",
     "029B新cn-domain-direct的GUI/旧配置迁移和B0–B5尚NOT_RUN；H2077原GUI PASS保留。",

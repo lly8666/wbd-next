@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2394,
-  "checkpoint_sha": "3820d0c298815bb4c758424824449fac1afa32fa",
+  "sequence": 2395,
+  "checkpoint_sha": "12d0e8af989ff3e8b5ed926f0187970d62835268",
   "progress": "verifying",
   "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030真实第二代域名重连和服务端设备快照已达，Normal/off快照漏FEC导致协商内层预算null，候选已修；Windows v2恢复新测试GUID字面格式失败，实际恢复未达，夹具已修。",
+  "current_task": "WinGUI v2实际四场景恢复和433项GUI通过，PR74已合main；PLAN030双ISA、真实第二代域名/管理快照PASS，完整组合旧日志判据FAIL，已同步Win修复并修正夹具，待定向复验。",
   "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
   "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "收PR73 9ff0ed0 的定向派发45357894991及其原生domain_reconnect子Action（完整第二代真实业务、快照、Stop）；收PR74 988d669 原生恢复45357787794。核对新构建产品包、实际原生标记及治理，合并时处理共享装配manifest，不重跑无关数据面或性能。",
+  "next_action": "收PR73 153a2fe 定向派发45361093079及其原生domain_reconnect子Action（完整双向业务与Stop），核对治理和最终产物，合并PR73；不重复Linux/watch/吞吐。用户实体新Win包复测尚未做。",
   "unverified": true,
-  "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+  "last_tested_source": "9ff0ed0c121ffd459a3ab64200be764b53c1d178",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
     "docs/prompts/M0-PLAN030.md",
     "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json",
-    "docs/evidence/M0/20261124-H2393-PLAN030-GUI-RECONNECT-ARTIFACT-AUDIT.json"
+    "docs/evidence/M0/20261124-H2395-WINDOWS-RECOVERY-GONE-PASS.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2394：45355353310真实第二代Windows Ready已达，server roster account/device/session/lease 10.66.0.2/32/remote_port41032/online/Normal/ChaCha/1420双向记录限制/RX172 TX180，assert negotiated_inner_cap==1389 FAIL，actual fec空、cap null；原Normal/off无FEC owner，OriginalFECReadback不支持，9ff0ed0仅管理按需快照复用已认证Normal OFF标记及Rust预算，新增1389回归，派发45357894991 queued。45355056087实际装配编译PASS，四个child在新stale GUID前置测试因非规范字符串journal conflict退出，未执行实际恢复；988d669用Windows GUIDFromString.String构造，生产不变，45357787794 in_progress。两PR仍OPEN，未声称PASS/merge。"
+  "partial_summary": "H2395：PR74 988d669 Action45357787794真实normal/partial/full/gone全部PASS，433项GUI、两ZIP SHA/CRC及4 PE amd64独立验；PR74证据495721a经merge 12d0e8a合main。PR73 9ff0ed0 Action45357895146双ISA build/systemd/mixed/watch全PASS；45357942950/45357907987真实两代域名、OS1389、第二代managed FEC off/1389均达，后置legacy server SYNACK/M4 oracle FAIL，实际混合server无旧SYNACK日志但客户端两次真实peer MSS，旧新原生Stop及shared TUN Stop有实际回执；业务完整组合尚未达。153a2fe已同步main Windows修复，operation级合并manifest无冲突，修混合server oracle及stale live source pin，派发45361093079在途。main治理发现GUI历史卡超16KiB、旧cursor分支路径引用和两项实时SHA pin过期；本次归档旧限制、移除未合分支路径引用、更新准确live pin，不改变产品。"
 }
