@@ -1,3 +1,4 @@
+- **B61 原Root Service定时冷轮换/通知STOP WIRED_CANDIDATE**：本次START选0/5/15/30min，原M4/UID READY后一次低频deadline；原Go/Rust owned Stop+退出、同一真实Network、冻结连接快照→同一START；非热迁移，无新数据线程/唤醒锁。B60a [#45303190692](https://github.com/lly8666/wbd-next/actions/runs/45303190692) 9 SUCCESS/1 FAIL/5 SKIPPED，B60 JVM实测PASS，旧B24 onResume源码断言阻止APK编译，本批调整顺序；同源CI待判，设备NOT_RUN。[B61](../devlog/android-root-probe/20261124-b61-original-service-cold-rotation.md)
 - **B60 前台自动冷 Network 切换 WIRED_CANDIDATE（手机NOT_RUN）**：可选当前前台会话自动恢复；原 `NetworkCallback` 仍请求原 Go/Rust owned Stop，只有 Rust M4+UID真实join、旧owner退出，才按 Android 当前物理 Network 重新原 Activity START（TLS/租约/M4/UID）；失败/离开前台即停止，无背景Root/新packet处理。新SOURCE Host/双ABI/签名ARM64 APK/原Linux Oracle按实际 CI 判定，真实切网及性能未验。[B60](../devlog/android-root-probe/20261124-b60-foreground-auto-cold-network-handover.md)
 - **B59 原Normal/Game物理DNS大EDNS答案按原TUN MTU分片 BUILD_PASS/HOST_PASS（实体NOT_RUN）**：原64槽物理UDP53 ID/QNAME逆映射后，超过本会话inner MTU的4080B级DNS回答由B16 `fragment` 构建RFC791 IPv4碎片写回同一TUN BorrowFence/代际；原小答原样单写，完整组成功才计数。无第二TUN、TCP53代理/热路径轮询。RustHost含576/1260/1460重组与部分写失败，B59a同源 [Dual64 #45220240360](https://github.com/lly8666/wbd-next/actions/runs/45220240360) 11 SUCCESS/4 SKIPPED，Android实体DNS/系统netd仍NOT_RUN。[B59](../devlog/android-root-probe/20261124-b59-physical-edns-original-tun-fragments.md)
 - **B58 原Root选定App16UID/32包、IPv4直连16CIDR与全部UID表批量安装 WIRED_CANDIDATE**：原Go single/group/all-app Root journal和Java/Android App同步同一生产上限；每条`ip rule add`仍走旧真实内核，去掉每条之后的完整route/rule show重复子进程，保留直连在UID前完整确认与最后精确整表读回/Stop，预计明显缩短20-profile all-app冷启动（未测因果耗时）；没有新安全门、daemon或Rust热路径，真机有效UID路由/应用DNS/性能NOT_RUN。[B58](../devlog/android-root-probe/20261123-b58-bulk-app-cidr-root-route.md)
@@ -43,10 +44,11 @@
 | 物理DNS可选IPv4上游 | **B34 HOST_PASS / BUILD_PASS** | 同源B34a 11 SUCCESS/4 SKIPPED；App/SAF→Service→Go冷参数→原Go/Rust M4冷设置/逐字节读回→已有Android绑定Network UDP53 Socket；默认223.5.5.5，可选LAN路由器IPv4 | **实体UDP53查询/E2E NOT_RUN**；系统netd/DoH、原Go冷服务器引导、物理TCP53均非此路径 |
 | Android系统Resolver/netd UDP/TCP/DoH交付 | MISSING | 普通App TUN DNS ≠ netd DNS | 需要独立准确方案，不能声明已经全局拦截 |
 | Android IPv6/464XLAT/IPv6 DNS全链 | MISSING | 当前TUN/租约/内核规则为IPv4 | 独立双栈架构；不要将AAAA解析误作IPv6可用 |
-| Android Game2/Game4 原多lane TLS→Rust Game M4双向 | MISSING | Linux/Windows已有原Game，不等于Android端口 | 真正端口并接共享TUN后再开放App选项 |
+| Android Game2/Game4 原多lane TLS→Rust Game M4双向 | WIRED（B48/B56/B57） | B48同源双ABI/签名APK/Oracle PASS；B56/57补原M4 burst/MTU | 实机Game2/4 off/fixed TCP/UDP/DNS统一后验 |
 | Android应用TCP/UDP双端逐字节E2E、切网恢复、低CPU/吞吐/首包 | NOT_RUN | 旧API36只有内核数据收据与用户主观“数据通了” | 必须有设备授权后验；此期不假造 |
 | Android物理TCP53、原生业务IP直连例外 | **B33 HOST_PASS / BUILD_PASS** | 同源原Root私有table 19842最多4个真实CIDR throw，单UID/组UID/all-App同原journal/Stop；App→Service→Go CLI→真实ip规则命令Host PASS；签名APK PASS | **Android实体netd后续物理路由NOT_RUN**，物理TCP53仍MISSING |
-| Android轮换/动态换物理Network、热点共享/Tether | BLOCKED | 原Go Linux rotation存在，Android明确禁用；Network loss只Stop | 后续独立源路径；不因可选参数存在而宣称实现 |
+| Android动态换物理Network/定时轮换 | WIRED_CANDIDATE（B49/B60/B61） | 手动/前台自动冷切网；B61同Service定时冷轮换，非Linux shared-TUN热迁移 | 实机统一后验；后台跨Network恢复仍待接 |
+| Android热点共享/Tether | MISSING | 目前普通UID路由不接forwarded IP | 独立root forwarding/NAT/Stop所有权，不宣称已实现 |
 
 ## B34 本批执行选择
 

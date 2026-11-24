@@ -15,6 +15,10 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootForegroundAutoReconnect.java \
   android/root-app/ci/RootForegroundAutoReconnectTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootForegroundAutoReconnectTest
+javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
+  android/root-app/src/org/wbdnext/rootclient/RootColdRotation.java \
+  android/root-app/ci/RootColdRotationTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootColdRotationTest
 # B27: execute exact production physical-underlay policy in plain JVM.
 # INTERNET capability is deliberately not an input to this function;
 # actual native socket+LinkProperties checks remain in PhysicalNetwork.
@@ -657,7 +661,10 @@ for method in ("registerNetworkCallback(", "unregisterNetworkCallback(",
  "onLost(", "onLinkPropertiesChanged(", "onCapabilitiesChanged(",
  "onBlockedStatusChanged("):
  assert method in s, method
-assert "postDelayed(" not in s, "no 1-second steady Network watcher"
+# One opted-in long cold deadline; Network watcher remains callback-only.
+assert s.count("postDelayed(")==1 and "networkEvents.postDelayed(rotationDeadline,snapshot.delayMillis)" in s
+watch=s.split("private void watchPhysicalNetwork(",1)[1].split("private void stopWatchingPhysicalNetwork(",1)[0]
+assert "postDelayed(" not in watch
 assert "getNetworkCapabilities(" not in s and "getLinkProperties(" not in s, "no synchronous ConnectivityManager lookup inside callback"
 assert 'read oldpid oldstart oldgeneration <' in s, "owner.pid has 3 fields; never fold generation into oldstart"
 # A30: user's real Android API36 EXIT_1 PRE_TUN receipt must be
@@ -1771,4 +1778,25 @@ for token in ('networkStopRequested=why.startsWith("PHYSICAL_NETWORK_")',
               "previousOwnerStopConfirmed=readyRecorded&&","watchPhysicalNetwork(chosen)"):
     assert token in s,token
 print("ANDROID_B60_ORIGINAL_FOREGROUND_AUTO_COLD_RECONNECT_SOURCE_PASS")
+PY
+
+python3 - <<'PY'
+from pathlib import Path
+p=Path("android/root-app/src/org/wbdnext/rootclient")
+a=(p/"RootClientActivity.java").read_text()
+s=(p/"RootClientService.java").read_text()
+assert 'request.putExtra("cold_rotation_minutes",' in a
+assert 'new String[]{"0","5","15","30"}' in a
+assert 'intent.getIntExtra("cold_rotation_minutes",0)' in s
+assert 'return startOriginalOwner(intent,startId);' in s
+assert 'startOriginalOwner(snapshot.request,startId);' in s
+assert 'networkEvents.post(()->scheduleRotation(generation));' in s
+assert 'requestStop("PERIODIC_ROTATION");' in s
+assert 'RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null)' in s
+assert s.index('trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED)') < s.index('networkEvents.post(()->finishOwner(net));')
+assert 'RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.ROUTE)' in s
+assert 'RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.ROUTE,snapshot.route)' in s
+assert 'PendingIntent.getService(this,5403,' in s
+assert 'new Intent(this,RootClientService.class).setAction(STOP)' in s
+print("ANDROID_B61_ORIGINAL_SERVICE_COLD_ROTATION_AND_NOTIFICATION_STOP_SOURCE_PASS")
 PY

@@ -53,7 +53,7 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredSelection=new TreeMap<>();
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField;
-    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots;
+    private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes;
     private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery;
     private LinearLayout appChoices,selectedAppControls,bypassAppControls,bypassChoices;
     private EditText appSearch,bypassSearch;
@@ -975,6 +975,8 @@ public final class RootClientActivity extends Activity {
             request.putExtra("fec_mode",fecMode);
             request.putExtra("fec_profile",fecProfile);
             request.putExtra("native_health_seconds",nativeHealthSeconds);
+            request.putExtra("cold_rotation_minutes",
+                Integer.parseInt(coldRotationMinutes.getSelectedItem().toString()));
             request.putExtra("sni",sni);
             request.putExtra("user",account);
             request.putExtra("all_apps",allApps);
@@ -1140,6 +1142,13 @@ public final class RootClientActivity extends Activity {
         nativeHealthIntervals.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,new String[]{"15","30"}));
         pane.addView(nativeHealthIntervals);
+        TextView rotationHint=new TextView(this);
+        rotationHint.setText("原生定时冷轮换（分钟）：0关闭 / 5 / 15 / 30。仅本次START，原会话完整STOP后按本次连接参数重新认证同一实体Network；会暂时断流，不是热迁移。");
+        pane.addView(rotationHint);
+        coldRotationMinutes=new Spinner(this);
+        coldRotationMinutes.setAdapter(new ArrayAdapter<>(this,
+            android.R.layout.simple_spinner_dropdown_item,new String[]{"0","5","15","30"}));
+        pane.addView(coldRotationMinutes);
         TextView cipherHint=new TextView(this);
         cipherHint.setText("原WBD受认证M3记录AEAD（默认ChaCha20）；AES-128/256为原协议已支持选项。" +
             "不同ARM64设备性能取决于CPU硬件与网络，请以实际测速选择。");
@@ -1621,13 +1630,13 @@ public final class RootClientActivity extends Activity {
         super.onResume();
         // UI-only snapshot refresh; Service's already-owned Network,
         // route and generation are NEVER implicitly switched.
-        chooseNetworks();
-        chooseInstalledApplications();
-        refreshNamedProfileChoices();
         if(autoNetworkRecovery!=null&&autoNetworkRecovery.isChecked()&&
            RootClientService.sessionOwnerActive&&
            !RootClientService.networkStopRequested)
             autoHandover.arm();
+        chooseNetworks();
+        chooseInstalledApplications();
+        refreshNamedProfileChoices();
         ui.post(refreshStatus);
     }
     @Override protected void onPause(){

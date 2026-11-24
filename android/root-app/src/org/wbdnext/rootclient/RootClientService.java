@@ -3,6 +3,7 @@ package org.wbdnext.rootclient;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -53,6 +54,20 @@ public final class RootClientService extends Service {
     private final AtomicBoolean restoring=new AtomicBoolean(false);
     private final Object ownerLaunchLock=new Object();
     private final Handler networkEvents=new Handler(Looper.getMainLooper());
+    // A single optional cold deadline, never a packet worker or network poll.
+    private static final class RotationSnapshot {
+        final Intent request;
+        final String password,route,ca;
+        final long delayMillis;
+        RotationSnapshot(Intent request,String password,String route,String ca,long delay){
+            this.request=new Intent(request);
+            this.password=password;this.route=route;this.ca=ca;this.delayMillis=delay;
+        }
+    }
+    private volatile RotationSnapshot rotationSnapshot;
+    private Runnable rotationDeadline;
+    private boolean rotationRequested;
+    private int ownerStartId;
     private volatile Process root;
     private volatile PhysicalNetwork selection;
     private volatile String ownerToken;
@@ -192,10 +207,19 @@ public final class RootClientService extends Service {
         nm.createNotificationChannel(new NotificationChannel(
             CHANNEL,"WBD Root original Go/Rust",
             NotificationManager.IMPORTANCE_LOW));
+        PendingIntent open=PendingIntent.getActivity(this,5401,
+            new Intent(this,RootClientActivity.class),
+            PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent stop=PendingIntent.getService(this,5403,
+            new Intent(this,RootClientService.class).setAction(STOP),
+            PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
         Notification n=new Notification.Builder(this,CHANNEL)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setContentTitle("WBD Root Native")
             .setContentText("Authenticating original Go / supervising Rust M4")
+            .setContentIntent(open)
+            .addAction(new Notification.Action.Builder(
+                android.R.drawable.ic_menu_close_clear_cancel,"STOP",stop).build())
             .setOngoing(true).build();
         startForeground(5402,n);
     }
@@ -217,12 +241,17 @@ public final class RootClientService extends Service {
             }
             return START_NOT_STICKY;
         }
+        return startOriginalOwner(intent,startId);
+    }
+    private int startOriginalOwner(Intent intent,int startId){
         if(!START.equals(intent.getAction())||restoring.get()||
            !running.compareAndSet(false,true)){
             if(START.equals(intent.getAction()))startDispatchPending.set(false);
             return START_NOT_STICKY;
         }
         sessionOwnerActive=true;
+        ownerStartId=startId;
+        cancelRotation();
         // The active native owner now supersedes the Activity's short
         // asynchronous START reservation; the new Root is not READY yet.
         startDispatchPending.set(false);
@@ -337,6 +366,16 @@ public final class RootClientService extends Service {
             if(PhysicalNetwork.exact(this,chosen.handle,chosen.interfaceName,
                 chosen.ifindex,chosen.mtu,chosen.address)==null)
                 throw new IllegalStateException("Physical Network changed during callback registration");
+            long rotationDelay=RootColdRotation.delayMillis(
+                intent.getIntExtra("cold_rotation_minutes",0));
+            if(rotationDelay>0){
+                RootPrivateCredentialFiles.verifyAtStart(this,hasCA);
+                rotationSnapshot=new RotationSnapshot(intent,
+                    RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.PASSWORD),
+                    RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.ROUTE),
+                    hasCA?RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.CA):null,
+                    rotationDelay);
+            }
             trace(RootDiagnosticReceipt.Event.ROOT_STAGE_REQUESTED);
             status="AUTHORIZING_ROOT — native credentials not yet verified";
             Thread owner=new Thread(()->runRoot(chosen,peer,sni,user,
@@ -345,6 +384,7 @@ public final class RootClientService extends Service {
                 hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,directCIDRs,physicalDnsIPv4,nativeHealthSeconds),"wbd-native-root-owner");
             owner.start();
         }catch(Exception e){
+            cancelRotation();
             trace(RootDiagnosticReceipt.Event.START_REFUSED);
             status="START_REFUSED: "+e.getMessage();
             running.set(false);
@@ -436,6 +476,7 @@ public final class RootClientService extends Service {
         boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
+        final String generation=ownerToken;
         try{
             // The app-private Android file mode is checked BEFORE asking su
             // to exec the real Go ELF. No secret bytes enter receipts.
@@ -892,6 +933,8 @@ public final class RootClientService extends Service {
                         String gameBrief=RootGameSessionStatus.readyBrief(fecMode);
                         status=gameBrief!=null?gameBrief:
                             "NATIVE_M4_READY + VERIFIED_UID_ROUTE_READBACK; real Android traffic unverified";
+                        if(rotationSnapshot!=null)
+                            networkEvents.post(()->scheduleRotation(generation));
                     }
                     // Deliberately don't echo username, auth errors, route
                     // key, password, TLS transcript or full native stdout.
@@ -945,19 +988,64 @@ public final class RootClientService extends Service {
             selection=null;
             ownerToken=null;
             fecStatus="会话已结束；"+fecStatus;
-            running.set(false);
-            stopping.set(false);
             stopWatchingPhysicalNetwork();
             stopWatchingSelectedPackage();
             trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED);
-            if(!restoring.get()){
-                stopForeground(true);
-                stopSelf();
-            }
-            // Last: UI cannot stage new cold credentials until this
-            // owner has been joined, files removed and watchers released.
-            sessionOwnerActive=false;
+            networkEvents.post(()->finishOwner(net));
         }
+    }
+    private void cancelRotation(){
+        if(rotationDeadline!=null)networkEvents.removeCallbacks(rotationDeadline);
+        rotationDeadline=null;
+        rotationRequested=false;
+        rotationSnapshot=null;
+    }
+    private void scheduleRotation(String generation){
+        final RotationSnapshot snapshot=rotationSnapshot;
+        if(snapshot==null||generation==null||!generation.equals(ownerToken)||
+           !running.get()||stopping.get())return;
+        if(rotationDeadline!=null)networkEvents.removeCallbacks(rotationDeadline);
+        rotationDeadline=()->{
+            rotationDeadline=null;
+            if(rotationSnapshot!=snapshot||!generation.equals(ownerToken)||
+               !running.get()||stopping.get())return;
+            rotationRequested=true;
+            requestStop("PERIODIC_ROTATION");
+        };
+        // One deadline per READY generation; no wake lock or Network poll.
+        networkEvents.postDelayed(rotationDeadline,snapshot.delayMillis);
+    }
+    private void finishOwner(PhysicalNetwork oldNet){
+        final RotationSnapshot snapshot=rotationSnapshot;
+        final boolean requested=rotationRequested;
+        final int startId=ownerStartId;
+        cancelRotation();
+        running.set(false);
+        stopping.set(false);
+        if(snapshot!=null&&requested&&!restoring.get()){
+            PhysicalNetwork same=PhysicalNetwork.exact(this,oldNet.handle,oldNet.interfaceName,
+                oldNet.ifindex,oldNet.mtu,oldNet.address);
+            if(RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null)){
+                try{
+                    RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.PASSWORD,snapshot.password);
+                    RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.ROUTE,snapshot.route);
+                    if(snapshot.ca!=null)
+                        RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.CA,snapshot.ca);
+                    startOriginalOwner(snapshot.request,startId);
+                    return;
+                }catch(Exception failure){
+                    new File(getFilesDir(),RootPrivateCredentialFiles.PASSWORD).delete();
+                    new File(getFilesDir(),RootPrivateCredentialFiles.ROUTE).delete();
+                    status="ROTATION_START_REFUSED — original owner stopped; manual START required";
+                }
+            }else status="ROTATION_CANCELLED — old Stop or original physical Network changed";
+        }
+        if(!restoring.get()){
+            stopForeground(true);
+            stopSelf();
+        }
+        // Last: old owner and watchers are gone, no rotation will run.
+        sessionOwnerActive=false;
     }
     // The Restore button never changes the firewall in Java. It stops
     // the exact old owner, then executes the same signed original-Go ELF
@@ -1043,6 +1131,7 @@ public final class RootClientService extends Service {
         },"wbd-root-stop-signal").start();
     }
     private void requestStop(String why){
+        if(!"PERIODIC_ROTATION".equals(why))cancelRotation();
         if(!running.get()||!stopping.compareAndSet(false,true))return;
         networkStopRequested=why.startsWith("PHYSICAL_NETWORK_");
         trace(RootDiagnosticReceipt.Event.STOP_REQUESTED);

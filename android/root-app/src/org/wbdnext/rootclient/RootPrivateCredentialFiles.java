@@ -64,6 +64,14 @@ final class RootPrivateCredentialFiles {
                name,st.st_mode,st.st_uid,st.st_nlink,st.st_size,uid))
             throw new SecurityException("original Go private credentials failed 0600 readback");
     }
+    // Rotation opt-in only: retain the current generation's exact
+    // private inputs in the still-running Service, not a new file or Intent.
+    static String readForColdRestart(Context ctx,String name)throws Exception{
+        File dir=ctx.getFilesDir();
+        verifyFile(dir,name,Process.myUid());
+        return new String(java.nio.file.Files.readAllBytes(
+            new File(dir,name).toPath()),StandardCharsets.UTF_8);
+    }
     static void verifyAtStart(Context ctx,boolean hasCA)throws Exception{
         if(ctx==null)throw new IllegalArgumentException("missing private app context");
         File dir=ctx.getFilesDir();
