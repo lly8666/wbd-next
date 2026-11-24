@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2411,
-  "checkpoint_sha": "d78a6279ecc2ea1ce35c9ec71da04c82db03c595",
+  "sequence": 2412,
+  "checkpoint_sha": "83d8383a6d975116041a5b7519ba0fcfe25aa80a",
   "progress": "verifying",
   "task_id": "M0-LINUX-GLIBC231",
   "current_task": "Linux x86_64/aarch64统一glibc2.31发行基线，完整客户端/服务端+Rust SO；experiment/m0-linux-glibc231",
   "why_now": "用户报告Ubuntu20.04 ARM64无法加载，明确要求双ISA双端一次解决及简单性能对照",
   "done_when": "两ISA三ELF<=GLIBC_2.31、Focal用户态真实业务及Stop、同机TCP A/B/A及CPU证据；不动数据面",
-  "next_action": "收PR76 experiment/m0-linux-glibc231 SOURCE f38cfc218926b4aea206d88a5ecf2a836ce7be88 Action45411847411 双ISA三ELF、Focal真实业务与TCP A/B/A；禁止重复dispatch，失败定位首异常，资格未定不合main。",
+  "next_action": "收 PR76 SOURCE f722381ca5d3ba6781f80a1561a0e1012a5e105f Action45414127999；双ISA编译/ELF/Focal/同机TCP A/B/A；未完成不得合入。",
   "unverified": true,
-  "last_tested_source": "2e580afb2466a89cc81fed74408a292b7a9d7ec9",
-  "evidence_refs": [
-    "docs/devlog/M0/20261124-H2411-LINUX-GLIBC231-HANDOFF.md",
-    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
-  ],
+  "last_tested_source": null,
+  "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-LINUX-GLIBC231-20261124.md",
-    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md"
+    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
+    "docs/devlog/M0/20261124-H2411-LINUX-GLIBC231-HANDOFF.md",
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md",
+    "docs/devlog/M0/20261124-H2412-LINUX-GLIBC231-ISAL-BUILD.md"
   ],
   "open_requests": [],
-  "partial_summary": "已推PR76兼容构建候选；首次Action45411561914双ISA镜像依赖404，未编译。归档镜像修复f38cfc2，新Action45411847411；兼容/性能未验，旧任务失败不销账。"
+  "partial_summary": "第二轮双ISA成功安装ISA-L，归档检查附近退出，未编译Rust；完整nm输出修复已推。第三轮Action45414127999在途；修正cursor证据/上下文分类，未伪造PASS。"
 }
