@@ -16,12 +16,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-m0-029-arm-native-smoke.yml'
-      - 'tools/m0_plan029_linux_dual_native_build.sh'
-      - 'tools/m0_plan029_linux_dual_isa_suite.py'
-      - 'tools/m0_plan029_linux_native_app.py'
-      - 'tools/arm64_linux_netns_smoke.sh'
-      - 'tests/test_m0_plan029_linux_dual_native_scope.py'
+      - 'docs/requests/M0/qa-m0-029-arm-native-smoke.md'
 permissions:
   contents: read
 jobs:

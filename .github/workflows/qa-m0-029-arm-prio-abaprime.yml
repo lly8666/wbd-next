@@ -12,8 +12,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-m0-029-arm-prio-abaprime.yml'
-      - 'tools/m0_029_product_shared_tun_noprobe.py'
+      - 'docs/requests/M0/qa-m0-029-arm-prio-abaprime.md'
 permissions:
   contents: read
 jobs:

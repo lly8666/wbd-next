@@ -7,15 +7,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-h2284-old8-flow-capacity.yml'
-      - 'tools/m0_h2276_three_runner_tcp.py'
-      - 'tools/m0_wl_loss_tcp_probe.py'
-      - 'tests/test_m0_h2276_three_runner_tcp.py'
-      - 'tests/test_m0_h2280_bidir_netem_tcp.py'
-      - 'tests/test_m0_h2281_sustained_tcp.py'
-      - 'tests/test_m0_h2282_window_ab_tcp.py'
-      - 'tests/test_m0_h2283_window2m_ab_tcp.py'
-      - 'tests/test_m0_h2284_old_eight_flow_capacity.py'
+      - 'docs/requests/M0/qa-h2284-old8-flow-capacity.md'
   workflow_dispatch:
 permissions:
   contents: read

@@ -7,8 +7,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-m0-029-arm-client-inbox-zero-bab.yml'
-      - 'tools/m0_029_native_client_inbox_zero_bab.py'
+      - 'docs/requests/M0/qa-m0-029-arm-client-inbox-zero-bab.md'
   workflow_dispatch: {}
 permissions: {contents: read}
 concurrency:

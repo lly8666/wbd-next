@@ -8,28 +8,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-h2286-dual-original-windows-arm.yml'
-      - 'tools/m0_h2286_full_windows_product.py'
-      - 'tools/m0_h2290_windows_hotpath_cpu.py'
-      - 'tools/m0_wl_native_resource_sampler.py'
-      - 'tools/m0_h2286_arm_product.py'
-      - 'tools/m0_h2286_inner_udp.py'
-      - 'tools/m0_h2287_tun_tcp_trace.py'
-      - 'tools/m0_h2286_windows_npf_owner.ps1'
-      - 'tools/m0_plan029_linux_dual_native_build.sh'
-      - 'tests/test_m0_h2286_full_product_path.py'
-      - 'tests/test_m0_h2290_windows_hotpath_cpu.py'
-      - 'tests/test_m0_h2287_tun_tcp_trace.py'
-      - 'tools/m0_h2276_three_runner_tcp.py'
-      - 'tools/m0_wl_loss_tcp_probe.py'
-      - 'tests/test_m0_h2276_three_runner_tcp.py'
-      - 'tests/test_m0_h2280_bidir_netem_tcp.py'
-      - 'tests/test_m0_h2281_sustained_tcp.py'
-      - 'tests/test_m0_h2282_window_ab_tcp.py'
-      - 'tests/test_m0_h2283_window2m_ab_tcp.py'
-      - 'tests/test_m0_h2284_old_eight_flow_capacity.py'
-      - 'tools/m0_h2285_windows_wsl_route.py'
-      - 'tests/test_m0_h2285_windows_wsl_route.py'
+      - 'docs/requests/M0/qa-h2286-dual-original-windows-arm.md'
   workflow_dispatch:
 permissions:
   contents: read

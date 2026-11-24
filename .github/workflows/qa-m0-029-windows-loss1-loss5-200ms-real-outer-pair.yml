@@ -14,11 +14,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-m0-029-windows-loss1-loss5-200ms-real-outer-pair.yml'
-      - 'tools/m0_wl_loss_tcp_probe.py'
-      - 'tools/m0_wl_outer_pair.py'
-      - 'tests/test_m0_h2278_loss_tcp_archive.py'
-      - 'tools/m0_wl_public_normal_e2e.py'
+      - 'docs/requests/M0/qa-m0-029-windows-loss1-loss5-200ms-real-outer-pair.md'
   workflow_dispatch:
 permissions:
   contents: read

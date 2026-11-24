@@ -9,10 +9,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-m0-029-arm-nagle-loss-real.yml'
-      - 'tools/m0_h2244_smallflow_echo.py'
-      - 'tools/m0_029_product_shared_tun_noprobe.py'
-      - 'docs/devlog/M0/20261121-H2272-LINUX-TCP-NAGLE-DIAG.md'
+      - 'docs/requests/M0/qa-m0-029-arm-nagle-loss-real.md'
 permissions:
   contents: read
 jobs:

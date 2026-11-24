@@ -9,9 +9,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-m0-029-arm-loss1-loss5-200ms-outer-repair.yml'
-      - 'tools/m0_029_product_shared_tun_noprobe.py'
-      - 'crates/wbd-engine/src/v4_embedded_go.rs'
+      - 'docs/requests/M0/qa-m0-029-arm-loss1-loss5-200ms-outer-repair.md'
 permissions:
   contents: read
 jobs:

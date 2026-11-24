@@ -8,8 +8,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-m0-029-arm-zero-abca.yml'
-      - 'tools/m0_029_native_inbox_zero_abca.py'
+      - 'docs/requests/M0/qa-m0-029-arm-zero-abca.md'
   workflow_dispatch: {}
 permissions: {contents: read}
 concurrency:

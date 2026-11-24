@@ -7,10 +7,7 @@ on:
   push:
     branches: ['experiment/m0-029-throughput-arm-fair']
     paths:
-      - '.github/workflows/qa-h2294-wsl-keeper-only.yml'
-      - 'tools/m0_h2294_wsl_lifecycle_probe.py'
-      - 'tools/m0_h2293_true_product_fec_loss.py'
-      - 'docs/devlog/M0/20261122-H2294-FEC-OFF-OUTER-REPAIR-3RUNNER.md'
+      - 'docs/requests/M0/qa-h2294-wsl-keeper-only.md'
 jobs:
   windows-native-keeper:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[m0-029-h2294-wsl-keeper]')
