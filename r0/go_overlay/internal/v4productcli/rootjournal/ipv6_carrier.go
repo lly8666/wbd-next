@@ -36,6 +36,42 @@ type IPv6Plan struct{
  // Optional real existing Android downstream global IPv6 /64 addresses.
  Downstream string
  Downstream6 []string
+ DirectCIDRs []string `json:",omitempty"`
+}
+// Direct prefixes fall through to Android's later routing policy; they never
+// create a second packet path. Keep the carrier address space on its SIT link.
+func ParseIPv6DirectCIDRs(raw string)([]string,error){
+ if strings.TrimSpace(raw)==""{return nil,nil}
+ items:=strings.Split(raw,",")
+ if len(items)>16{return nil,fmt.Errorf("at most 16 IPv6 direct CIDRs")}
+ return mergeIPv6DirectCIDRs(nil,items)
+}
+func mergeIPv6DirectCIDRs(a,b []string)([]string,error){
+ var out []string
+ seen:=map[netip.Prefix]bool{}
+ carrier:=netip.MustParsePrefix(IPv6CarrierPrefix)
+ for _,items:=range [][]string{a,b}{
+  for _,raw:=range items{
+   p,e:=netip.ParsePrefix(strings.TrimSpace(raw))
+   if e!=nil||!p.Addr().Is6()||p.Addr().Is4In6()||p.Bits()==0||carrier.Overlaps(p){return nil,fmt.Errorf("invalid IPv6 direct CIDR %q",raw)}
+   p=p.Masked()
+   if !seen[p]{seen[p]=true;out=append(out,p.String())}
+  }
+ }
+ if len(out)>32{return nil,fmt.Errorf("too many IPv6 direct CIDRs")}
+ return out,nil
+}
+// Merge current physical interface prefixes with explicit settings at each
+// cold connection, so switching Network never reuses the old LAN routes.
+func IPv6DirectLAN(manual []string,addrs []string)([]string,error){
+ lan:=[]string{"fe80::/10","ff00::/8"}
+ carrier:=netip.MustParsePrefix(IPv6CarrierPrefix)
+ for _,raw:=range addrs{
+  p,e:=netip.ParsePrefix(raw)
+  if e!=nil||!p.Addr().Is6()||p.Addr().Is4In6()||!p.Addr().IsGlobalUnicast()||p.Bits()==128||carrier.Overlaps(p){continue}
+  lan=append(lan,p.Masked().String())
+ }
+ return mergeIPv6DirectCIDRs(manual,lan)
 }
 func IPv6LeaseAddress(ip netip.Addr)netip.Addr{
  if !ip.Is4(){return netip.Addr{}}
@@ -62,8 +98,10 @@ func(p IPv6Plan) valid()bool{
  if p.Version!=1||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||
     e!=nil||f!=nil||!local.Is4()||!peer.Is4()||!local.IsPrivate()||!peer.IsPrivate()||
     !p.relay().Contains(local)||p.MTU<1280||p.MTU>1480{return false}
- if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0&&p.Downstream==""&&len(p.Downstream6)==0}
+ if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0&&p.Downstream==""&&len(p.Downstream6)==0&&len(p.DirectCIDRs)==0}
  if local==peer||p.Egress!=""{return false}
+ direct,e:=mergeIPv6DirectCIDRs(nil,p.DirectCIDRs)
+ if e!=nil||strings.Join(direct,",")!=strings.Join(p.DirectCIDRs,","){return false}
  if (p.Downstream=="")!=(len(p.Downstream6)==0)||len(p.Downstream6)>4{return false}
  if p.Downstream!=""{
   if !nameOK(p.Downstream)||p.Downstream==p.Tun||p.Downstream==ipv6CarrierIface{return false}
@@ -117,6 +155,12 @@ func(p IPv6Plan) commands()[]carrierCmd{
   route("-4",p.Gateway4+"/32",p.Tun,p.Local4)
   rule("-4",ipv6OuterPref,"from",p.Local4+"/32","to",p.Gateway4+"/32","ipproto","41")
   route("-6","default",ipv6CarrierIface,p.local6())
+  // Downstream return routes must win over an identical direct prefix.
+  downstream:=map[string]bool{}
+  for _,raw:=range p.Downstream6{downstream[netip.MustParsePrefix(raw).Masked().String()]=true}
+  for _,cidr:=range p.DirectCIDRs{
+   if !downstream[cidr]{out=append(out,carrierCmd{"ip","-6",[]string{"route","throw",cidr,"table",ipv6CarrierTable}})}
+  }
   // Cold, actual peer echo from root. This cannot route other root traffic.
   rule("-6",ipv6ProofPref,"from",p.local6()+"/128","to",p.gateway6()+"/128","uidrange","0-0")
   for i,raw:=range p.Downstream6{
@@ -145,6 +189,20 @@ func carrierFWKey(w []string)string{
  return tetherFWKey(w)
 }
 func carrierRouteMatch(w,a []string)bool{
+ if len(a)==5&&a[1]=="throw"{
+  if len(w)<4||w[0]!="throw"||carrierIP(w[1])!=carrierIP(a[2])||!hasPair(w,"table",ipv6CarrierTable){return false}
+  for i:=2;i<len(w);i+=2{
+   if i+1>=len(w){return false}
+   switch w[i]{
+   case "table":if w[i+1]!=ipv6CarrierTable{return false}
+   case "proto":if w[i+1]!="boot"&&w[i+1]!="static"{return false}
+   case "metric":if w[i+1]!="1024"{return false}
+   case "pref":if w[i+1]!="medium"{return false}
+   default:return false
+   }
+  }
+  return true
+ }
  if len(w)<5||len(a)!=8||carrierIP(w[0])!=carrierIP(a[1])||
     !hasPair(w,"dev",a[3])||!hasPair(w,"src",a[5])||!hasPair(w,"table",ipv6CarrierTable){return false}
  for i:=1;i<len(w);i+=2{

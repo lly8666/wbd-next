@@ -263,10 +263,12 @@ public final class RootConnectionSettingsTest {
             "lan.example.test","tls.example.test","acct",443,1460,500,
             "chacha20-poly1305","off","normal",1,false,false,true,false,true,
             new TreeMap<>(),"192.168.1.0/24",new TreeMap<>(),"192.168.1.1",
-            true,30,true,2,15,true,true,true,true,"10.219.0.1");
+            true,30,true,2,15,true,true,true,true,"10.219.0.1","fd12:3456::/48,2001:db8:abcd::/64");
         RootConnectionSettings again=read(stored(reconnect));
         check(again!=null&&again.recoveryMode==2&&again.rotationMinutes==15&&again.appTcpDNS&&again.tetherSharing&&again.systemDNS&&again.systemDNS6&&"10.219.0.1".equals(again.ipv6Gateway),
             "background recovery and rotation must survive the actual settings codec");
+        check("fd12:3456::/48,2001:db8:abcd::/64".equals(again.ipv6DirectCIDRs)&&b.ipv6DirectCIDRs.isEmpty(),
+            "B72 IPv6 direct CIDRs must roundtrip, legacy defaults empty");
         check(b.recoveryMode==0&&b.rotationMinutes==0&&!b.appTcpDNS&&!b.tetherSharing&&!b.systemDNS&&!b.systemDNS6&&b.ipv6Gateway.isEmpty(),
             "legacy presets do not enable automatic recovery or rotation");
         System.out.println("ANDROID_B62_COLD_RECOVERY_ROTATION_PRESET_HOST_PASS");

@@ -15,7 +15,7 @@ import java.util.TreeSet;
  * only after its package AND current installed UID still match.
  */
 final class RootConnectionSettings {
-    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream,ipv6Gateway;
+    final String peer,sni,account,cipher,padding,mode,directCIDRs,physicalDNSUpstream,ipv6Gateway,ipv6DirectCIDRs;
     final int port,outerMTU,tunQueue,profile,nativeHealthSeconds,recoveryMode,rotationMinutes;
     final boolean verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,physicalDNSFollowNetwork,autoConnectedDirect,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     final Map<String,Integer> selected,bypass;
@@ -154,7 +154,20 @@ final class RootConnectionSettings {
         Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
         String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
         boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway) {
+        this(peer,sni,account,port,outerMTU,tunQueue,cipher,padding,mode,profile,
+            verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,allApps,selected,directCIDRs,
+            bypass,physicalDNSUpstream,followSelectedNetworkDNS,healthSeconds,
+            autoConnectedDirect,recoveryMode,rotationMinutes,appTcpDNS,tetherSharing,systemDNS,systemDNS6,ipv6Gateway,"");
+    }
+    RootConnectionSettings(String peer,String sni,String account,
+        int port,int outerMTU,int tunQueue,String cipher,String padding,
+        String mode,int profile,boolean verifyTLS,boolean tunnelDNS,
+        boolean physicalDNS,boolean cnSplitDNS,boolean allApps,
+        Map<String,Integer> selected,String directCIDRs,Map<String,Integer> bypass,
+        String physicalDNSUpstream,boolean followSelectedNetworkDNS,int healthSeconds,
+        boolean autoConnectedDirect,int recoveryMode,int rotationMinutes,boolean appTcpDNS,boolean tetherSharing,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs) {
         this.ipv6Gateway=ipv6Gateway(ipv6Gateway);
+        this.ipv6DirectCIDRs=ipv6DirectCIDRs(ipv6DirectCIDRs);
         this.systemDNS=systemDNS;
         this.systemDNS6=systemDNS6;
         this.tetherSharing=tetherSharing;
@@ -255,6 +268,7 @@ final class RootConnectionSettings {
         p.setProperty("system_dns",Boolean.toString(systemDNS));
         p.setProperty("system_dns6",Boolean.toString(systemDNS6));
         p.setProperty("ipv6_gateway",ipv6Gateway);
+        p.setProperty("ipv6_direct_cidrs",ipv6DirectCIDRs);
         p.setProperty("selected_count",Integer.toString(selected.size()));
         p.setProperty("bypass_count",Integer.toString(bypass.size()));
         int bypassNumber=0;
@@ -320,10 +334,30 @@ final class RootConnectionSettings {
                 p.containsKey("app_tcp_dns")&&flag(p,"app_tcp_dns"),
                 p.containsKey("tether_sharing")&&flag(p,"tether_sharing"),
                 p.containsKey("system_dns")&&flag(p,"system_dns"),
-                p.containsKey("system_dns6")&&flag(p,"system_dns6"),p.getProperty("ipv6_gateway",""));
+                p.containsKey("system_dns6")&&flag(p,"system_dns6"),p.getProperty("ipv6_gateway",""),p.getProperty("ipv6_direct_cidrs",""));
         }catch(IllegalArgumentException invalid){
             return null;
         }
+    }
+    // Numeric IPv6 only; Go owns canonical kernel prefix construction.
+    static String ipv6DirectCIDRs(String raw){
+        if(raw==null||raw.trim().isEmpty())return "";
+        String[] entries=raw.trim().split(",",-1);
+        if(entries.length>16)throw new IllegalArgumentException("最多16条IPv6直连CIDR");
+        java.util.LinkedHashSet<String> prefixes=new java.util.LinkedHashSet<>();
+        for(String item:entries){
+            String[] pair=item.trim().split("/",-1);
+            if(pair.length!=2||!pair[0].contains(":")||!pair[0].matches("[0-9a-fA-F:]+")||!pair[1].matches("[0-9]{1,3}"))
+                throw new IllegalArgumentException("请输入IPv6 CIDR");
+            int bits=Integer.parseInt(pair[1]);
+            if(bits<1||bits>128)throw new IllegalArgumentException("IPv6 CIDR前缀长度须为1..128");
+            try{
+                if(!(java.net.InetAddress.getByName(pair[0]) instanceof java.net.Inet6Address))
+                    throw new IllegalArgumentException("请输入IPv6 CIDR");
+            }catch(java.net.UnknownHostException invalid){throw new IllegalArgumentException("请输入IPv6 CIDR",invalid);}
+            prefixes.add(pair[0]+"/"+bits);
+        }
+        return String.join(",",prefixes);
     }
     static String ipv6Gateway(String raw){
         if(raw==null||raw.trim().isEmpty())return "";

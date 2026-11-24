@@ -143,6 +143,8 @@ type config struct{
     androidSystemDNS bool // selected UID + selected netId plaintext IPv4 DNS
     androidSystemDNS6 bool // optional IPv6 destination plaintext DNS
     androidIPv6Gateway string // explicitly provisioned server TUN IPv4 for SIT carrier
+    androidIPv6DirectCIDRs []string
+    androidIPv6DirectLAN bool
     serverIPv6Carrier bool // Linux server kernel 6rd/SIT, default off
     androidTetherInterface,androidTetherSubnet string
     androidTetherIfindex int
@@ -284,6 +286,8 @@ func parse(role string,args []string)(config,error){
     androidClatParent:=flags.String("android-clat-parent","","Android Root: existing CLAT IPv6 parent interface")
     androidClatPrefix:=flags.String("android-clat-prefix","","Android Root: selected Network NAT64 /96")
     androidIPv6Gateway:=flags.String("android-ipv6-gateway","","Android Root: opt-in IPv6-in-IPv4, provisioned WBD server TUN private IPv4")
+    androidIPv6DirectCIDRs:=flags.String("android-ipv6-direct-cidrs","","Android Root: comma-separated IPv6 direct CIDRs within IPv6 carrier")
+    androidIPv6DirectLAN:=flags.Bool("android-ipv6-direct-lan",false,"Android Root: direct selected physical Network IPv6 on-link prefixes")
     serverIPv6Carrier:=flags.Bool("inner-ipv6",false,"Linux server: opt-in kernel SIT/6rd IPv6 business over authenticated IPv4; requires IPv6 forwarding and egress")
     androidSystemDNS6:=flags.Bool("android-system-dns6",false,
         "Android Root: additionally capture selected Network/UID IPv6 UDP/TCP53 to existing DNS owner")
@@ -391,6 +395,13 @@ func parse(role string,args []string)(config,error){
             }
             c.androidIPv6Gateway=gateway.String()
         }
+        if *androidIPv6DirectCIDRs!=""||*androidIPv6DirectLAN{
+            if c.androidIPv6Gateway==""{return c,fmt.Errorf("IPv6 direct routes require IPv6 carrier")}
+            var e error
+            c.androidIPv6DirectCIDRs,e=rootjournal.ParseIPv6DirectCIDRs(*androidIPv6DirectCIDRs)
+            if e!=nil{return c,e}
+            c.androidIPv6DirectLAN=*androidIPv6DirectLAN
+        }
         c.androidSystemDNS6=*androidSystemDNS6
         c.androidSystemDNS=*androidSystemDNS||c.androidSystemDNS6
         c.androidAppTCPDNS=*androidAppTCPDNS||c.androidSystemDNS
@@ -438,7 +449,7 @@ func parse(role string,args []string)(config,error){
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||
-              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidIPv6Gateway!=""||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidIPv6Gateway!=""||*androidIPv6DirectCIDRs!=""||*androidIPv6DirectLAN||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     if *serverIPv6Carrier&&(role!="server"||runtime.GOOS=="android"){

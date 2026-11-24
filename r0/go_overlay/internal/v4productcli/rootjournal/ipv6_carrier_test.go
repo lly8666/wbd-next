@@ -9,11 +9,18 @@ import (
 )
 func TestB70IPv6OwnedCarrierAndRestore(t *testing.T){testIPv6Carrier(t,false)}
 func TestB71IPv6TetherAndColdPeerScope(t *testing.T){testIPv6Carrier(t,true)}
+func TestB72IPv6DirectCIDRsAndLAN(t *testing.T){
+ manual,e:=ParseIPv6DirectCIDRs("fd12:3456::1/48,2001:db8:1234::/64")
+ if e!=nil||strings.Join(manual,",")!="fd12:3456::/48,2001:db8:1234::/64"{t.Fatal(manual,e)}
+ got,e:=IPv6DirectLAN(manual,[]string{"192.168.1.2/24","2001:db8:1234::2/64","2001:db8:abcd::2/64","fe80::1/64"})
+ if e!=nil||strings.Join(got,",")!="fd12:3456::/48,2001:db8:1234::/64,fe80::/10,ff00::/8,2001:db8:abcd::/64"{t.Fatal(got,e)}
+ testIPv6Carrier(t,true)
+}
 func testIPv6Carrier(t *testing.T,tether bool){
  if got:=IPv6LeaseAddress(netip.MustParseAddr("10.219.17.2")).String();got!="fd65:5742:7636:1102::1"{t.Fatal(got)}
  for _,server:=range []bool{false,true}{
   p:=IPv6Plan{Version:1,Tun:"wbd0",Local4:"10.219.17.2",Gateway4:"10.219.0.1",MTU:1280,UIDs:[]int{11200,11201}}
-  if server{p.Server=true;p.Local4=p.Gateway4;p.Egress="eth0";p.UIDs=nil}else if tether{p.Downstream="ap0";p.Downstream6=[]string{"2001:db8:1234::1/64","fd12:3456:789a::1/64"}}
+  if server{p.Server=true;p.Local4=p.Gateway4;p.Egress="eth0";p.UIDs=nil}else if tether{p.Downstream="ap0";p.Downstream6=[]string{"2001:db8:1234::1/64","fd12:3456:789a::1/64"};p.DirectCIDRs=[]string{"2001:db8:1234::/64","fd12:3456::/48","fe80::/10"}}
   if !p.valid(){t.Fatal("valid carrier refused",p)}
   cmds:=p.commands();present:=make([]bool,len(cmds));var link,addr bool
   ip:=func(a ...string)(string,error){
@@ -62,14 +69,16 @@ func testIPv6Carrier(t *testing.T,tether bool){
   for i,v:=range present{if !v{t.Fatal("missing",i)}}
   if !server{
    if !strings.Contains(strings.Join(cmds[len(cmds)-1].args," "),"uidrange 11201-11201"){t.Fatal("wrong UID")}
-   proof,forward,nat:=false,0,0
+   proof,forward,nat,direct:=false,0,0,0
    for _,c:=range cmds{
     line:=strings.Join(c.args," ")
     if strings.Contains(line,"pref 9597 from "+p.local6()+"/128 to "+p.gateway6()+"/128 uidrange 0-0"){proof=true}
     if strings.Contains(line,"from 2001:db8:1234::/64 iif ap0")||strings.Contains(line,"from fd12:3456:789a::/64 iif ap0"){forward++}
     if strings.Contains(line,"--to-source "+p.local6()){nat++}
+    if strings.HasPrefix(line,"route throw "){direct++;if strings.Contains(line,"2001:db8:1234::/64"){t.Fatal("throw replaced downstream route")}}
    }
    if !proof{t.Fatal("missing exact cold root peer route")}
+   if tether&&direct!=2{t.Fatal("missing IPv6 direct routes",direct)}
    if tether&&(forward!=2||nat!=2){t.Fatal("missing IPv6 downstream prefixes",forward,nat)}
    if !tether&&(forward!=0||nat!=0){t.Fatal("unselected downstream captured")}
   }

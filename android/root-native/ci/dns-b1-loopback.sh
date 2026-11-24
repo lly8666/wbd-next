@@ -21,7 +21,7 @@ grep -Fq -- "--- PASS: TestB66SystemDNSRealUDPTCPModeAndStop" out/android-b1-dns
 grep -Fq -- "--- PASS: TestB64ActualAppTCPDNSPhysicalTunnelAndCN" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "PASS" out/android-b1-dnsnative/wire-tests.log
 go test -count=1 -timeout=45s -v ./r0/go_overlay/internal/v4productcli/rootjournal \
-  -run '^(TestB6(4OwnedTCPDNSSelectedAndAllAppRoutesRestore|5TetherOwnedForwardingAndRestore|6SystemDNSSelectedUIDRouteAndRestore|7CLATScopeOriginalIPv4OnIPv6Underlay|8TetherDNSExactDownstreamAndRestore|9SystemDNS6SelectedUIDRouteAndRestore)|TestB70IPv6OwnedCarrierAndRestore|TestB71IPv6TetherAndColdPeerScope)$' \
+  -run '^(TestB6(4OwnedTCPDNSSelectedAndAllAppRoutesRestore|5TetherOwnedForwardingAndRestore|6SystemDNSSelectedUIDRouteAndRestore|7CLATScopeOriginalIPv4OnIPv6Underlay|8TetherDNSExactDownstreamAndRestore|9SystemDNS6SelectedUIDRouteAndRestore)|TestB70IPv6OwnedCarrierAndRestore|TestB71IPv6TetherAndColdPeerScope|TestB72IPv6DirectCIDRsAndLAN)$' \
   | tee out/android-b1-dnsnative/app-tcp-owner-tests.log
 grep -Fq -- "--- PASS: TestB64OwnedTCPDNSSelectedAndAllAppRoutesRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
 grep -Fq -- "--- PASS: TestB65TetherOwnedForwardingAndRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
@@ -31,6 +31,7 @@ grep -Fq -- "--- PASS: TestB68TetherDNSExactDownstreamAndRestore" out/android-b1
 grep -Fq -- "--- PASS: TestB69SystemDNS6SelectedUIDRouteAndRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
 grep -Fq -- "--- PASS: TestB70IPv6OwnedCarrierAndRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
 grep -Fq -- "--- PASS: TestB71IPv6TetherAndColdPeerScope" out/android-b1-dnsnative/app-tcp-owner-tests.log
+ grep -Fq -- "--- PASS: TestB72IPv6DirectCIDRsAndLAN" out/android-b1-dnsnative/app-tcp-owner-tests.log
 python3 - <<'PY'
 import hashlib,json,os,pathlib
 out=pathlib.Path("out/android-b1-dnsnative")

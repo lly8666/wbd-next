@@ -349,7 +349,20 @@ func startOriginalAndroidIPv6Carrier(c config,tun *ownedTun,lease netip.Prefix,r
  uids:=append([]int(nil),c.androidRouteUIDs...)
  if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
  plan:=rootjournal.IPv6Plan{Tun:tun.name,Local4:lease.Addr().String(),Gateway4:gateway.String(),MTU:mtu,
-   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs}
+   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs,
+   DirectCIDRs:append([]string(nil),c.androidIPv6DirectCIDRs...)}
+ if c.androidIPv6DirectLAN{
+  physical:=c.rawInterface
+  if c.androidClatParent!=""{physical=c.androidClatParent}
+  iface,e:=net.InterfaceByName(physical)
+  if e!=nil{return fail(e)}
+  addrs,e:=iface.Addrs()
+  if e!=nil{return fail(e)}
+  raw:=make([]string,0,len(addrs))
+  for _,a:=range addrs{raw=append(raw,a.String())}
+  plan.DirectCIDRs,e=rootjournal.IPv6DirectLAN(plan.DirectCIDRs,raw)
+  if e!=nil{return fail(e)}
+ }
  if c.androidTetherInterface!=""{
   prefixes,e:=originalAndroidTetherIPv6(c)
   if e!=nil{return fail(e)}
