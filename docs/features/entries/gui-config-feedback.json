@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "gui-config-feedback",
   "name": "配置/CLI/WinForms状态回执",
-  "summary": "H2205 V4v2 WinForms/Go/Rust+Npcap官网下载/签名交互安装/Wintun定版初始化，409项真GUI自检PASS_SCOPED；H2135真GUI/Stop历史证据保留。",
+  "summary": "H2205 V4v2 WinForms/Go/Rust+Npcap官网下载/签名交互安装/Wintun定版初始化，409项真GUI自检PASS_SCOPED；H2135真GUI/Stop历史证据保留。 2026-11-24新版真实433项自检及原生恢复通过。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
   "development_branch": "work/m4-r1-platform",
@@ -204,6 +204,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f8678455e69c6d47ffa7aef7e43a469de89689e0",
       "evidence": "docs/evidence/M0/20261124-WINDOWS-CRASH-RECOVERY-NATIVE-PASS.json"
+    },
+    {
+      "platform": "Windows2025 actual signed Wintun and WinForms",
+      "scope": "real signed Wintun normal Stop, partial/full native crash recovery, full Apply with actual Wintun removal before WAL retirement, stale GUID with occupied index/LUID, repeated recovery; compiled WinForms 433 checks",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "988d66998444396a6ab30ba2aeaeea5ad2b6a773",
+      "evidence": "docs/evidence/M0/20261124-H2395-WINDOWS-RECOVERY-GONE-PASS.json"
     }
   ],
   "limitations": [
@@ -238,7 +245,8 @@
     "H2205 Npcap Free不捆绑官方安装器；GUI验证签名并启动原厂交互安装。Wintun定版SHA/临时PnP GUI已通过负例，不代表实际设备安装成功。",
     "H2224公网长稳、真实Auto S2C档位、RTT/p99 NOT_RUN。",
     "H2226：复用已有V2与认证低频Quality粗估质量；无逐包M2；Auto下行实档仍未知，实机NOT_RUN。",
-    "2026-11-24 用户实际报告崩溃后退出/升级v2恢复死锁；独立 fix/m0-windows-crash-recovery 改动待真实WinForms与签名Wintun子进程崩溃验证，不改变数据面。"
+    "2026-11-24 用户实际报告崩溃后退出/升级v2恢复死锁；独立 fix/m0-windows-crash-recovery 改动待真实WinForms与签名Wintun子进程崩溃验证，不改变数据面。",
+    "H2395：最新真实网卡消失恢复与GUI通过；用户实体机器新包复测、v1迁移及物理重启未测。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"

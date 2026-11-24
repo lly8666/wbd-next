@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "windows-network-wal",
   "name": "Windows owned WAL/WFP/网络恢复",
-  "summary": "四阶段no-old-WFP owned Win32 OS/WAL；H1809签名Wintun真实lease/MTU前缀加DNS写前失败反序恢复已PASS_SCOPED，掉电/IPv6与产品完整业务独立OPEN。",
+  "summary": "四阶段no-old-WFP owned Win32 OS/WAL；H1809签名Wintun真实lease/MTU前缀加DNS写前失败反序恢复已PASS_SCOPED，掉电/IPv6与产品完整业务独立OPEN。 2026-11-24真实v2正常/partial/full/gone恢复通过。",
   "owner": "M0 takeover/历史M4",
   "stage": "experimental",
   "development_branch": "work/m4-r1-platform",
@@ -142,6 +142,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "f8678455e69c6d47ffa7aef7e43a469de89689e0",
       "evidence": "docs/evidence/M0/20261124-WINDOWS-CRASH-RECOVERY-NATIVE-PASS.json"
+    },
+    {
+      "platform": "Windows2025 actual signed Wintun and WinForms",
+      "scope": "real signed Wintun normal Stop, partial/full native crash recovery, full Apply with actual Wintun removal before WAL retirement, stale GUID with occupied index/LUID, repeated recovery; compiled WinForms 433 checks",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "988d66998444396a6ab30ba2aeaeea5ad2b6a773",
+      "evidence": "docs/evidence/M0/20261124-H2395-WINDOWS-RECOVERY-GONE-PASS.json"
     }
   ],
   "limitations": [
@@ -164,7 +171,8 @@
     "H1714 original-TLS product no-WFP four-concrete-writer admission after bound native Wintun and authenticated peer proof staged. Removes obsolete assemblyOnly circular reject, but requires same-generation full real Win32 Apply/readback/first+reverse/owned Stop; source untested and formal product still NOT_RUN.",
     "H1715 adds missing Go time import; pending source-locked Windows compile and real production Apply/readback. No product OS Applied inference from H1697 isolated stage test.",
     "H1717 code selects exact Win32 MTU stage v1[2] or v2 no-WFP[1] after actual same-generation machine-gated WAL. No fake Applied; signed Windows readback pending.",
-    "2026-11-24 用户实际报告崩溃后退出/升级v2恢复死锁；独立 fix/m0-windows-crash-recovery 改动待真实WinForms与签名Wintun子进程崩溃验证，不改变数据面。"
+    "2026-11-24 用户实际报告崩溃后退出/升级v2恢复死锁；独立 fix/m0-windows-crash-recovery 改动待真实WinForms与签名Wintun子进程崩溃验证，不改变数据面。",
+    "H2395：最新真实网卡消失恢复与GUI通过；用户实体机器新包复测、v1迁移及物理重启未测。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
