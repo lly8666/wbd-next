@@ -160,6 +160,7 @@ jobs:
           if($hostIP.Count -ne 1 -or $creator.Count -ne 1){throw 'WSL test endpoints ambiguous'}
           $name='WBD-M0-MIXED-'+$env:GITHUB_RUN_ID
           $rst=$false
+          $neighbor=$false
           try{
             & python tools/m0_wl_windows_bounded_cmd.py 120 wsl.exe -d Ubuntu -u root -- sh -c 'command -v iptables >/dev/null || (apt-get update -qq && apt-get install -y -qq iptables)'
             if($LASTEXITCODE -ne 0){throw 'Linux kernel underlay RST control unavailable'}
@@ -171,9 +172,36 @@ jobs:
             New-NetFirewallHyperVRule -Name $name -DisplayName $name -Direction Inbound -Action Allow -Enabled True -Profiles Any -VMCreatorId $creator[0].VMCreatorId -Protocol TCP -LocalAddresses $guestIP -RemoteAddresses $hostIP[0].IPAddress -LocalPorts @('443') -RemotePorts $ports | Out-Null
             New-NetFirewallRule -Name ($name+'-tcp') -DisplayName ($name+'-tcp') -Direction Inbound -Action Allow -Protocol TCP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort 47001-47020 | Out-Null
             New-NetFirewallRule -Name ($name+'-udp') -DisplayName ($name+'-udp') -Direction Inbound -Action Allow -Protocol UDP -LocalAddress 10.66.0.2 -RemoteAddress 10.66.0.1 -LocalPort 47001-47020 | Out-Null
+            # Real NPF header showed original product SYN destination MAC equals
+            # Windows vEthernet own source MAC. Resolve ONLY this actual WSL2
+            # Linux eth0 MAC, never fabricate an IP/TLS/ACK or replace Npcap.
+            $guestLink=(& python tools/m0_wl_windows_bounded_cmd.py 25 wsl.exe -d Ubuntu -u root -- ip -j link show dev eth0 | ConvertFrom-Json)
+            if($LASTEXITCODE -ne 0){throw 'bounded WSL2 eth0 MAC lookup failed'}
+            $guestMAC=[string]$guestLink.address
+            $hostMAC=([string]$nic[0].MacAddress).Replace('-',':')
+            if(@($guestMAC.Split(':')).Count -ne 6 -or $guestMAC -eq $hostMAC){throw 'actual WSL2 guest Ethernet MAC invalid or same as Windows host'}
+            $existing=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction SilentlyContinue)
+            if(@($existing|Where-Object {$_.State -eq 'Permanent'}).Count -gt 0){throw 'foreign WSL neighbor present, refusing overwrite'}
+            [ordered]@{owner=$name;interface_index=$nic[0].InterfaceIndex;guest_ip=$guestIP;guest_mac=$guestMAC;source_host_mac=$hostMAC} |
+              ConvertTo-Json | Set-Content result/wl-public/native-wsl-neighbor-owner.json
+            & netsh.exe interface ipv4 set neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "neighbor=$($guestMAC.Replace(':','-'))" "store=active"
+            if($LASTEXITCODE -ne 0){throw 'native WSL2 exact Linux eth0 neighbor install failed'}
+            $neighbor=$true
+            $entry=@(Get-NetNeighbor -AddressFamily IPv4 -InterfaceIndex $nic[0].InterfaceIndex -IPAddress $guestIP -ErrorAction Stop)
+            if($entry.Count -ne 1 -or $entry[0].LinkLayerAddress.Replace('-',':') -ne $guestMAC){throw 'real WSL2 guest neighbor MAC readback mismatch'}
+            Write-Output ('WL_REAL_GUEST_MAC_NEIGHBOR_BOUND mac='+$guestMAC)
+            # Pass only the exact MAC already read from ACTUAL Linux eth0 and
+            # verified by Windows NetNeighbor into this public Go/Npcap child.
+            # SendARP alone returned the host self MAC (proven wrong SYN L2).
+            $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_MAC=$guestMAC
+            $env:WBD_PLAN024_NATIVE_VERIFIED_GUEST_IP4=$guestIP
+            $env:WBD_PLAN024_NATIVE_VERIFIED_HOST_IP4=[string]$hostIP[0].IPAddress
+            $env:WBD_PLAN024_NATIVE_VERIFIED_IFINDEX=[string]$nic[0].InterfaceIndex
+            Write-Output 'WL_REAL_ORIGINAL_GO_SCOPED_LINUX_GUEST_MAC_FFI_HANDOFF_ARMED'
             & python -u tools/m0_mixed_mode_windows_pair.py $guestIP
             if($LASTEXITCODE -ne 0){throw 'Windows shared mode switch failed'}
           } finally {
+            if($neighbor){& netsh.exe interface ipv4 delete neighbors "interface=$($nic[0].InterfaceIndex)" "address=$guestIP" "store=active" | Out-Null}
             Remove-NetFirewallHyperVRule -Name $name -ErrorAction SilentlyContinue
             Remove-NetFirewallRule -Name ($name+'-tcp'),($name+'-udp') -ErrorAction SilentlyContinue
             if($rst){& wsl.exe -d Ubuntu -u root -- iptables -D OUTPUT -p tcp --tcp-flags RST RST --sport 443 -j DROP}
@@ -187,4 +215,5 @@ jobs:
             result/wl-public/mixed-pair-receipt.json
             result/wl-public/wsl2-real-guest-probe.json
             result/wl-public/npcap-install.log
+            result/wl-public/native-wsl-neighbor-owner.json
           if-no-files-found: warn

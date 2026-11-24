@@ -20,3 +20,6 @@ ARM64 and x86 quick Action45427122913: initial Normal and immediate Normal->Game
 
 
 Add an independent signed Windows2025 Npcap/Wintun → WSL2 real peer fixture using the exact already-running a4c5c975 product artifacts, no duplicate build. Same authenticated manual lease, one server, Normal/Game2/Normal/Game4/Normal, reverse TCP/UDP first, existing grace then next cold switch. Physical deployment remains out of scope.
+
+
+Windows pair Action45429168582 initial fixture failed before first Normal TLS: repeated SYN, server no auth, same known WSL MAC/SendARP fixture omission as original public native workflow. Actual failure artifact14939450781. Reuse existing exact WSL neighbor binding and verified MAC/IP/ifindex FFI test handoff, no product rebuild/change. Windows binary a4c5c975 owner 91/91 and explicit cold Health initializer 1/1, GUI 433/433. Linux same SOURCE both native jobs PASS. Retest exact existing packaged bytes.
