@@ -4,7 +4,16 @@ ROOT=pathlib.Path(__file__).resolve().parents[1]
 class LinuxNativeInitialReady(unittest.TestCase):
  def test_initial_and_reauth_syn_same_frozen_original_retry(self):
   text=(ROOT/"r0/go_overlay/internal/v4productcli/linux.go").read_text()
-  self.assertIn("err=waitForOriginalColdSYN(dialCtx,assoc)",text)
+  # H2408 separated the SYN timeout from the TLS timeout. Keep the
+  # original retry assertion and verify the two actual deadline scopes.
+  syn=text.index("synCtx,cancelSYN:=context.WithTimeout(ctx,20*time.Second)")
+  retry=text.index("err=waitForOriginalColdSYN(synCtx,assoc)",syn)
+  cancel=text.index("cancelSYN()",retry)
+  tls=text.index("dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)",cancel)
+  self.assertLess(syn,retry)
+  self.assertLess(retry,cancel)
+  self.assertLess(cancel,tls)
+  self.assertNotIn("err=assoc.WaitEstablished(synCtx)",text)
   self.assertNotIn("err=assoc.WaitEstablished(dialCtx)",text)
   self.assertIn("V4_PUBLIC_RAW_AF_PACKET_READY role=%s",text)
   self.assertIn("assoc.EmitRetransmitDue(time.Now())",text)

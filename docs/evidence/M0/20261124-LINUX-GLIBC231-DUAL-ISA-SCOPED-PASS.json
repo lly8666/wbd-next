@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "M0-LINUX-GLIBC231",
+  "source_sha": "32193483a9f5bb962d2ec2ddfa1ea84d2f60b6b6",
+  "result": "PASS",
+  "artifact_verified": true,
+  "scope": "DUAL_NATIVE_ISA_GLIBC231_FOCAL_USERLAND_NORMAL_TCP_UDP_STOP_AND_SAME_VM_TCP_ABA",
+  "run_id": 45415625160,
+  "run_attempt": 1,
+  "workflow": ".github/workflows/m0-linux-glibc231.yml",
+  "original_go_sha": "a7a82db31fe736ffedee330795a3234d358f1984",
+  "isa_l_source": "c387163fcbca62701d646149564c550c78a4f985",
+  "rust": "1.85.1",
+  "go": "1.23.12",
+  "build_glibc": "2.31",
+  "old_H2408_both_isa_elf_glibc_max": {
+    "client": "2.34",
+    "server": "2.34",
+    "rust_so": "2.38"
+  },
+  "measurement": {
+    "mode": "normal",
+    "mtu": 1460,
+    "flows": 4,
+    "seconds_per_leg": 10,
+    "order": [
+      "A",
+      "B",
+      "A2"
+    ],
+    "A": "modern host build",
+    "B": "glibc 2.31 build",
+    "runtime": "same modern host kernel and glibc for A/B/A on each ISA",
+    "metric_cpu": "both WBD processes user+kernel seconds per receiver GiB; not system CPU"
+  },
+  "architectures": {
+    "x86_64": {
+      "job_id": 138520914050,
+      "artifact_id": 14931382530,
+      "artifact_sha256": "4c64f4beabc0b6f55a2aaba088092d40757ad54be91d5b586c0a0ec7eac6cf15",
+      "tar_sha256": "f5fa0c8fb9aed3a5bb87e63f514105897681a99074623949c05ef98c7609fcb4",
+      "elf_max": {
+        "client": "2.3.2",
+        "server": "2.3.2",
+        "rust_so": "2.28"
+      },
+      "elf_sha256": {
+        "client": "ccad2e74a68db3d51a5385f2f75df139e7bb702b35675b6ce6f76341621f3119",
+        "server": "d8f8067142a227943f775f59da080f23c6987fb017bf13e75de22922e46f3427",
+        "rust_so": "a7f72c45c9ccef911383a8cc36e69140a1644ac15b8b539281c51803f039c7b9"
+      },
+      "focal_tcp_udp_stop": "PASS",
+      "cpu_model": "Intel Xeon 6975P-C",
+      "native_symbols": [
+        "ec_encode_data",
+        "gf_vect_dot_prod_avx2",
+        "gf_vect_dot_prod_avx512",
+        "gf_vect_mad_sse"
+      ],
+      "goodput_mbps": [
+        1606.8078284670912,
+        1605.8734641382864,
+        1590.0502600681411
+      ],
+      "receiver_bytes": [
+        2011037696,
+        2010120192,
+        1990328320
+      ],
+      "cpu_s_per_gib": [
+        13.737871341980057,
+        13.96849243609807,
+        13.832260783668094
+      ],
+      "goodput_delta_pct": 0.4657335211323943,
+      "cpu_delta_pct": 1.3306165704106698,
+      "goodput_baseline_drift_pct": 1.0483773714602527,
+      "cpu_baseline_drift_pct": 0.6847224471603278
+    },
+    "aarch64": {
+      "job_id": 138520913630,
+      "artifact_id": 14932502316,
+      "artifact_sha256": "c339b218896483ad923cb9aa634f15a31b59d48bdc763f1be0289b8de51923fe",
+      "tar_sha256": "d7fbe1c3fe53e2a3f4a196aa672e0813f27051fa05b83bdf8376505a2c9b53b1",
+      "elf_max": {
+        "client": "2.17",
+        "server": "2.17",
+        "rust_so": "2.28"
+      },
+      "elf_sha256": {
+        "client": "c77667b756b576e437dd5e57f07d994ab68090f2778b4726144e35523d64d89d",
+        "server": "2ebd27bd1949f5193bf190ad2c44181df75d247c1183bc1b2befd7de57385674",
+        "rust_so": "60fa3a0bd3c70758036b8579a775d2d7754e3f1eab52444dac489b07b1f5013f"
+      },
+      "focal_tcp_udp_stop": "PASS",
+      "cpu_model": "Neoverse-N2",
+      "native_symbols": [
+        "ec_encode_data",
+        "gf_vect_dot_prod_neon",
+        "gf_vect_dot_prod_sve",
+        "gf_vect_mad_neon"
+      ],
+      "goodput_mbps": [
+        1062.2048178762234,
+        1072.3385959427158,
+        1076.9350092991392
+      ],
+      "receiver_bytes": [
+        1329201152,
+        1341915136,
+        1347813376
+      ],
+      "cpu_s_per_gib": [
+        20.671854846662065,
+        20.35597577651885,
+        20.354526889040162
+      ],
+      "goodput_delta_pct": 0.2588594088017704,
+      "cpu_delta_pct": -0.7664097328644148,
+      "goodput_baseline_drift_pct": 1.3772069722404614,
+      "cpu_baseline_drift_pct": 1.5469458635966198
+    }
+  },
+  "review": "Downloaded both artifact ZIPs, checked GitHub digest, tar digest, each ELF hash, readelf version needs and native ISA-L symbols; recomputed per-leg goodput/CPU using iperf receiver bytes/process ticks summary and checked both-direction TCP/UDP and owned Stop receipt for all six legs.",
+  "not_run": [
+    "physical Ubuntu 20.04 kernel 5.4",
+    "FEC performance under loss",
+    "Game/Auto full matrix",
+    "P99",
+    "system-wide CPU",
+    "cross-ISA link"
+  ],
+  "judgment": "No material Normal TCP throughput regression observed; small x86 CPU +1.33% and ARM -0.77% not an exact zero-cost guarantee. Shared dual ISA release builder approved for glibc2.31 scope only."
+}
