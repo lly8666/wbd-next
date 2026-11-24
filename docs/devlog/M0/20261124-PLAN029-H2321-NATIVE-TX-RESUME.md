@@ -12,3 +12,7 @@
 H2321 A/A′为7222b4739443dbb7ff9b322f186dcf651b54490f，B为bb063c9932ef3d4a7873c99a6f4bb38248acbd9a；全部TX8/NPF16KiB，FEC OFF、repair OFF、0%loss，旧夹具B_tx16仅历史stage ID。先读取在途 Action 首个异常或完整远端有效字节/CPU/GiB/P99/Stop，禁止重复dispatch、跨SOURCE借PASS。旧H2292等归档工作流仍保持各自旧源锁；新H2321不依赖旧二进制。H2321只比较累计优化，不是单项归因或600–800Mbps物理资格。P1/P2及Game最终Windows CPU仍未验，原专项范围收口不重开。
 
 下一生产增量依据结果再决定：原生TX空控制重复owner锁、firstsend settlement逐包时钟与pending操作、NPF最终队列复制。优先解决证实的处理成本，不重刷TX16参数。已有窗口、FEC与Linux准入反例照旧。
+
+## H2323：实际构建故障及定向重试
+
+H2321 首次 Action 45307927201 static PASS，但 Windows fresh Go EXE 构建在 H2214 CLI flag 声明检查失败，未执行网络腿，非性能 FAIL。核对分支 manifest 的 main_windows.go 70 个 patch 与 main 的前70个完全相同，遗漏第71个原有 TLSVerifyServer flag 声明；直接复用 main 已有第71个 patch 与 result_blob 3238f8819563c51bc34c33f5e884f9d36c421231，不变更默认行为或另设机制。实验分支 H2323 [6fa10d75](https://github.com/lly8666/wbd-next/commit/6fa10d75e3b7f23f909252e2737948911d3eb64c) 修复装配，并限定 A/B 共享该同一当前 Go EXE、原三 Rust 文件仍为唯一 Rust 差异。独立 request path 已触发 [45308263564](https://github.com/lly8666/wbd-next/actions/runs/45308263564)，当前 pending；只查此 run，不重复派发。旧 ARM 构建结果不借给新源。真实吞吐未验。
