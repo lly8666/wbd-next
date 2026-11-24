@@ -325,7 +325,7 @@ def win_trial(group,relay,arm,ready):
         middle_cpu=(a["windows_original_process_cpu_s_per_gib"]+
                     c["windows_original_process_cpu_s_per_gib"])/2
         result={"group":group,"source_sha":os.environ["GITHUB_SHA"],
-                "candidate_binary_source_sha":CANDIDATE_BUILD_SHA,
+                "candidate_binary_source_sha":(path_ab_candidate_source() if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA),
                 "original_go_exe_source_sha":(os.environ["GITHUB_SHA"] if h2312_mode()=="path_ab"
                     else "c5066db61fc51bafd7c2ad2def3029e615efa777"),
                 "baseline_binary_source_sha":(path_ab_baseline() if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA),

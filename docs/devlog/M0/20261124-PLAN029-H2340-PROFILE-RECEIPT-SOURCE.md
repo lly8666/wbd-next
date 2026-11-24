@@ -1,0 +1,3 @@
+# H2340 — true candidate source in summary
+
+H2338 current run 45315865745 compiles both DLLs from exact H2323 6fa10d7; its per-leg compiled_rust_source_sha and both actual binary manifests are correct and verified. The legacy top-level candidate_binary_source_sha field still uses workflow source in frozen bc87909 and must not be used as compiled DLL identity for that run. Correct only the shared summary field for future runs to path_ab_candidate_source; no re-dispatch or product change. Read per-leg and manifest SHA on in-flight H2338, retain mismatch annotation.
