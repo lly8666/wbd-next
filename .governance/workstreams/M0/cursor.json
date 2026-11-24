@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2322,
-  "checkpoint_sha": "c10a820b1263d7aff9f0329577eb5833358090a9",
+  "sequence": 2325,
+  "checkpoint_sha": "d06836da6df5b218c2cfaa80fd7c561deee30629",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 Windows 原生首发路径优化H2318/H2320已提交实验分支、原生单元和编译通过；H2321当前源双DLL真Windows/ARM A/B/A′运行中。H2319已收束49历史实验自动触发。",
+  "current_task": "PLAN029 P0 H2318/H2320原生编译单元通过；H2321首次真网前Go构建失败，H2323恢复main已有CLI装配声明并定向重试；H2319已收束49历史实验自动触发。",
   "why_now": "H2312/H2313已否证稳定TX16单因素收益；转向减少原M1热路径每包复制和LoanBatch处理。真实吞吐尚未取得新证据。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "先查实验分支冻结SOURCE bb063c9932ef3d4a7873c99a6f4bb38248acbd9a 的 Action 45307927201；读取首个失败或完整真实A/B/A′数据，不重复派发，再决定P0集成/改进。",
+  "next_action": "先查实验分支冻结SOURCE 6fa10d75e3b7f23f909252e2737948911d3eb64c 的 Action 45308263564；读取首个失败或完整真实A/B/A′数据，不重复派发，再决定P0集成/改进。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
@@ -25,5 +25,5 @@
     "docs/devlog/M0/20261124-PLAN029-H2321-NATIVE-TX-RESUME.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2318/H2320原生Windows编译和实际单元通过，H2319治理维护PASS；H2321真网未完成，600–800Mbps、P1弱网、P2 maximum与最终Windows Game CPU/物理资格仍OPEN。旧专项和历史负结果不改写。精确run/source和后续入口见H2321接续devlog。"
+  "partial_summary": "H2318/H2320原生Windows编译及实际单元通过；H2319治理维护PASS；H2321首次Go装配失败非性能结果，H2323恢复main精确patch后重试pending。600–800Mbps、P1/P2及最终Windows Game CPU/物理资格仍OPEN。旧专项和历史负结果不改写。"
 }
