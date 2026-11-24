@@ -68,7 +68,13 @@ find android/root-app/src -name '*.java' -print0 |
 # the release ARM64 signed APK, never handles a WBD data packet.
 javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar:$out/classes" \
   -d "$out/classes" android/root-app/ci/X86CiAppSuActivity.java \
-    android/root-app/ci/X86CiOriginalStartActivity.java
+    android/root-app/ci/X86CiOriginalStartActivity.java \
+    android/root-app/ci/RootConnectionSettingsTest.java \
+    android/root-app/ci/RootConnectionProfileBundleTest.java \
+    android/root-app/ci/OriginalGoCommandArgsTest.java \
+    android/root-app/ci/RootColdRotationTest.java \
+    android/root-app/ci/RootForegroundAutoReconnectTest.java \
+    android/root-app/ci/NetworkScopeGateTest.java
 python3 - <<'PYCI'
 import xml.etree.ElementTree as ET
 from pathlib import Path

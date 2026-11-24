@@ -74,6 +74,22 @@ public final class X86CiAppSuActivity extends Activity {
                 }else{
                     p.destroy();
                 }
+                if(passed){
+                    // Run the existing real production helper tests on Android
+                    // ART, in this ordinary App UID, after actual KSU grant.
+                    // These verify cold controls, not actual network events.
+                    try{
+                        RootConnectionSettingsTest.main(new String[0]);
+                        RootConnectionProfileBundleTest.main(new String[0]);
+                        OriginalGoCommandArgsTest.main(new String[0]);
+                        RootColdRotationTest.main(new String[0]);
+                        RootForegroundAutoReconnectTest.main(new String[0]);
+                        NetworkScopeGateTest.main(new String[0]);
+                        Log.i(TAG,"ANDROID_ART_COLD_CONTROLS_PASS");
+                    }catch(Throwable failure){
+                        Log.e(TAG,"ANDROID_ART_COLD_CONTROLS_FAIL");
+                    }
+                }
             }catch(Exception ignored){
                 // Never print subprocess output, package identity or secrets.
             }finally{

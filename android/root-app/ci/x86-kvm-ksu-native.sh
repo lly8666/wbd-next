@@ -54,6 +54,9 @@ d={"schema":"wbd-android-x86-kvm-ksu-original-native-d1-admission/v1",
    else ("NOT_PROVEN" if read("grant-ui.txt") else "NOT_RUN"),
  "physical_network_app_readback":("PASS" if "PHYSICAL_NETWORK_EXACT_READBACK_PASS" in read("physical-network-receipt.txt") else
     ("ENV_BLOCKED" if "PHYSICAL_NETWORK_ENV_BLOCKED" in read("physical-network-receipt.txt") else "NOT_PROVEN")),
+ "android_art_cold_controls":"PASS" if "ANDROID_ART_COLD_CONTROLS_PASS" in read("app-su-logcat-filtered.txt") else ("FAIL" if "ANDROID_ART_COLD_CONTROLS_FAIL" in read("app-su-logcat-filtered.txt") else "NOT_RUN"),
+ "translated_arm64_rust_mtu":"PASS" if "WBD_TRANSLATED_ARM64_RUST_MTU_BUDGET_PASS" in read("translated-mtu.txt") and read("translated-mtu-code.txt").strip()=="0" else ("NOT_PROVEN" if read("translated-mtu-code.txt") else "NOT_RUN"),
+ "translated_original_go_cshared_help":"PASS" if "WBD_ANDROID_ARM64_ORIGINAL_GO_CSHARED_HELP_PASS" in read("translated-go-help.txt") and read("translated-go-help-code.txt").strip()=="0" else ("NOT_PROVEN" if read("translated-go-help-code.txt") else "NOT_RUN"),
  "original_tls_auth_lease":"NOT_RUN","real_m3_m4_tcp_udp":"NOT_RUN",
  "owned_stop_route_rollback":"NOT_RUN",
  "system_dns_takeover":"NOT_RUN"}
@@ -480,6 +483,40 @@ if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
   tap_phase=TAP_GUEST_REAL_NETWORK_EXACT_EGRESS_NOT_PROVEN
 fi
 echo "D1_REAL_ORIGINAL_CLIENT_TLS_M4_NOT_RUN"
+if [[ "${WBD_ANDROID_COLD_SUITE:-0}" == 1 ]];then
+  phase=COMBINED_ANDROID_COLD_SUITE
+  # Same emulator session; no second KSU boot, no raw networking experiment.
+  # ART logs were emitted before the final App->su PASS.
+  grep -Fq ANDROID_ART_COLD_CONTROLS_PASS "$out/app-su-logcat-filtered.txt"
+  n=out/android-root-app-native
+  adb push "$n/ksu-arm64-ndk-probe" /data/local/tmp/wbd-cold-arm64-probe >/dev/null
+  adb push "$n/libwbd_engine-arm64.so" /data/local/tmp/libwbd_engine.so >/dev/null
+  adb push "$n/libksu-arm64-original-go-cshared-midr.so" /data/local/tmp/libwbd-original-go-cshared-midr.so >/dev/null
+  adb shell su -c 'chmod 755 /data/local/tmp/wbd-cold-arm64-probe; chmod 644 /data/local/tmp/libwbd_engine.so /data/local/tmp/libwbd-original-go-cshared-midr.so' >/dev/null
+  adb shell su -c 'sha256sum /data/local/tmp/wbd-cold-arm64-probe /data/local/tmp/libwbd_engine.so /data/local/tmp/libwbd-original-go-cshared-midr.so' >"$out/translated-sha.txt"
+  for name in ksu-arm64-ndk-probe libwbd_engine-arm64.so libksu-arm64-original-go-cshared-midr.so;do
+    grep -Fq "$(sha256sum "$n/$name" | cut -d ' ' -f1)" "$out/translated-sha.txt"
+  done
+  set +e
+  adb shell su -c '/data/local/tmp/wbd-cold-arm64-probe --mtu-budget /data/local/tmp/libwbd_engine.so' >"$out/translated-mtu.txt" 2>&1
+  mturc=$?
+  adb shell su -c '/data/local/tmp/wbd-cold-arm64-probe --original-go-help /data/local/tmp/libwbd-original-go-cshared-midr.so' >"$out/translated-go-help.txt" 2>&1
+  gocshrc=$?
+  set -e
+  printf '%s\n' "$mturc" >"$out/translated-mtu-code.txt"
+  printf '%s\n' "$gocshrc" >"$out/translated-go-help-code.txt"
+  # Keep these as separate real results. No direct ARM64 Go ELF rerun,
+  # no TLS or ISA-L performance claim. An unavailable translator is a
+  # test-environment limitation rather than a production phone failure.
+  if [[ "$mturc" == 0 && "$gocshrc" == 0 ]] &&
+      grep -Fq WBD_TRANSLATED_ARM64_RUST_MTU_BUDGET_PASS "$out/translated-mtu.txt" &&
+      grep -Fq WBD_ANDROID_ARM64_ORIGINAL_GO_CSHARED_HELP_PASS "$out/translated-go-help.txt";then
+    echo ANDROID_COMBINED_COLD_SUITE_PASS
+  else
+    echo ANDROID_TRANSLATED_COLD_SUITE_NOT_PROVEN
+    exit 31
+  fi
+fi
 if [[ "${WBD_D2_ORIGINAL:-0}" == 1 ]];then
   # The separate D2-S1 job reuses this exact proven Android/KSU/App admission.
   # Start the REAL Linux server and production Android RootClientService,

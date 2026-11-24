@@ -42,7 +42,12 @@ on:
         required: false
         default: false
       run_x86_guest:
-        description: 'Explicit opt-in for x86 Android16/KSU guest diagnostics; host-only APK wiring does not run guests'
+        description: 'One x86 KSU boot: Android ART cold controls, original x86 ELF and translated ARM64 cold suite'
+        type: boolean
+        required: false
+        default: false
+      run_x86_d2_network:
+        description: 'Separate historical D2 SLIRP network experiment; known ENV_BLOCKED, not part of cold suite'
         type: boolean
         required: false
         default: false
@@ -269,6 +274,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       WBD_KSU_PRODUCT_X86_CI: '1'
+      WBD_ANDROID_COLD_SUITE: '1'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -280,16 +286,15 @@ jobs:
         with:
           name: android-b2-pinned-cn-geosite-${{ github.sha }}
           path: out/android-root-app-cn
-      - name: Test original Root Stop contract and Android app source (host JVM)
-        shell: bash
-        run: bash android/root-app/ci/test-network-scope-gate.sh
+      # Existing same-source host/production APK jobs run the static gate.
+      # A stale source-string assertion must not block real ART/KSU tests.
       - name: Build same-Java original Go/Rust x86_64 signed CI-only APK
         shell: bash
         run: bash android/root-app/ci/build-x86-ci-locked.sh
       - name: Verify pinned KernelSU 3.3.1 and prepare Android16 x86 KVM
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
-      - name: D1 real x86 original Go ELF help and same CI App UID to official KernelSU su
+      - name: D1 combined Android ART and original x86 Go plus translated ARM64 cold checks
         shell: bash
         run: timeout --signal=TERM --kill-after=8s 1020s bash android/root-app/ci/x86-kvm-ksu-native.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -359,7 +364,7 @@ jobs:
           if-no-files-found: warn
 
   android-x86-kvm-ksu-original-d2-s1:
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_x86_guest == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true }}
     # Separate red/green gate: ORIGINAL Linux server runs on the same x86
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic

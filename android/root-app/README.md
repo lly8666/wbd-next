@@ -1,3 +1,5 @@
+**2026-11-24 B83 用户范围冻结（当前最高优先级）**：除手机端显式手动联网更新官方 CN 域名列表（唯一功能待办；已有内置8472、文件导入/恢复）外，所有 Android 主体功能标记为基本完成开发、转入验证；未实现的高级功能冻结不开发，不把它们说成已接线。只修实际测试发现的业务/性能问题，不扩极端工况。高级 CN FakeIP 仍 OUT_OF_SCOPE。优先复用一次 Android16 x86 KVM/KSU guest 跑 ART 冷控制、x86 原生原Go/Rust、ARM64 NativeBridge 真 Rust MTU 和原Go c-shared help；原 ARM64 独立 Go ELF139 与 hosted SLIRP/TAP RAW 路径阻塞保持历史，不为冷测试重开这些诊断；ARM64 真机集中验证真实业务、内核设备差异和性能。
+
 **2026-11-24 B82**：B82 WIRED_CANDIDATE / feature-freeze candidate：CN IPv4 直连同一已合并 CIDR 表覆盖普通 App 与显式软件热点（真实内核 throw，冷批量路由和索引读回，Stop/Restore）；独立普通 UID TCP/UDP 字节回显测试 APK、双向流式 echo/RTT、可选 Android 系统 DNS、同 SOURCE fixture Host loopback，现有 CI 先产 APK 再执行历史源码门。无新 WBD 协议/数据线程/防御框架。B81 官方 8472 条 Go/Rust Host、双 ABI、两个 Linux Oracle PASS；APK 旧 send_staged 断言、维护旧 regex-lite graph FAIL，已按实际源修候选。B82 CI/设备/性能尚未验。主线先测七模式、UID/直连/DNS、IPv6/热点、冷切网/轮换，再短性能 A/B；不扩大热迁移/idle dormant/在线规则下载等非当前主体测试前提。
 
 [集中测试方案](../../docs/plans/ANDROID_ROOT_TEST_MATRIX.md)

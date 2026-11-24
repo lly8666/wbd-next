@@ -2,6 +2,7 @@
 // not a FakeTCP peer, and never included in the production Root APK.
 #include <dlfcn.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 int main(int argc, char **argv) {
@@ -13,7 +14,8 @@ int main(int argc, char **argv) {
     }
     if (argc != 3 || (strcmp(argv[1], "--dlopen") != 0 &&
                       strcmp(argv[1], "--go-shared") != 0 &&
-                      strcmp(argv[1], "--original-go-help") != 0)) {
+                      strcmp(argv[1], "--original-go-help") != 0 &&
+                      strcmp(argv[1], "--mtu-budget") != 0)) {
         fputs("usage: probe --self | --dlopen /absolute/path/libwbd_engine.so | --go-shared /absolute/path/libgo.so | --original-go-help /absolute/path/liboriginal-go.so\n", stderr);
         return 2;
     }
@@ -26,6 +28,30 @@ int main(int argc, char **argv) {
     if (h == NULL) {
         fprintf(stderr, "WBD_ANDROID_ARM64_RUST_DLOPEN_FAIL: %s\n", dlerror());
         return 4;
+    }
+    if (strcmp(argv[1], "--mtu-budget") == 0) {
+        // Exact production cold Rust C ABI; no invented owner or TLS state.
+        // Compare with shared Rust default_1460_outer_ip... golden test.
+        typedef struct {uint32_t version, size, outer, physical, peer,
+                         record, ip, tcp, mode;} Input;
+        typedef struct {uint32_t version, size, outer, syn, wire,
+                         payload, inner, fragment;} Output;
+        int (*budget)(const Input *,uint32_t,Output *,uint32_t) =
+            (int (*)(const Input *,uint32_t,Output *,uint32_t))
+                dlsym(h,"wbd_m0_v4_mtu_budget_v1");
+        if (!budget) return 10;
+        const uint32_t inner[4]={1389,1375,1373,1358};
+        for (uint32_t mode=0;mode<4;mode++) {
+            Input in={1,sizeof(Input),1460,1500,1420,0,20,20,mode};
+            Output out={0};
+            if(budget(&in,sizeof(in),&out,sizeof(out))!=0 ||
+               out.version!=1 || out.size!=sizeof(out) ||
+               out.outer!=1460 || out.syn!=1420 ||
+               out.wire!=1420 || out.inner!=inner[mode]) return 11;
+            printf("WBD_TRANSLATED_RUST_MTU mode=%u inner=%u\n",mode,out.inner);
+        }
+        puts("WBD_TRANSLATED_ARM64_RUST_MTU_BUDGET_PASS");
+        return 0;
     }
     if (strcmp(argv[1], "--go-shared") == 0) {
         puts("WBD_ANDROID_ARM64_GO_CSHARED_DLOPEN_PASS");

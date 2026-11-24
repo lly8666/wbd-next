@@ -928,7 +928,8 @@ assert "android_fixed_cold_and_m4_reservation_share_exact_14_bytes" in Path(
 # B17/B19 original Go Fixed/Auto -> native FEC2, Normal default.
 client=Path("r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go").read_text()
 assert 'v4ProductFecEnabled(p.cfg.FECMode)&&p.cfg.StartupPaddingMode!=0' not in client
-assert 'runtime.GOOS!="android"||mode==FecV2Off' in client
+# B77/B80: all single-lane modes use the original authenticated padding path.
+assert 'err=bridge.configureNormalStartupPadding(cold.StartupPaddingMode(),p.cfg.OuterIPMTU)' in client
 assert 'if p.fec!=nil&&(runtime.GOOS!="android"||mode==FecV2Auto)' in client
 assert 'String fecMode=fecModes.getSelectedItem().toString()' in a
 assert 'request.putExtra("fec_mode",fecMode);' in a
