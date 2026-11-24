@@ -135,6 +135,13 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
+    },
+    {
+      "platform": "Windows2025 actual native and GUI",
+      "scope": "真实四阶段Stop、partial/full child crash，原生恢复及433项WinForms自检；旧版跨版本CLI组合另测",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f8678455e69c6d47ffa7aef7e43a469de89689e0",
+      "evidence": "docs/evidence/M0/20261124-WINDOWS-CRASH-RECOVERY-NATIVE-PASS.json"
     }
   ],
   "limitations": [
