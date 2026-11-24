@@ -347,6 +347,13 @@ fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
     }
     Ok(())
 }
+// Identical existing cold-ready Health kind0 as Normal. This constructor
+// is used once per whole native Game client, never by a lane or DATA loop.
+fn game_client_health_clock(at:u64)->HealthClock{
+    let mut clock=HealthClock::new(HealthPolicy::default_connected(),at);
+    clock.arm_client_cold_ready(at);
+    clock
+}
 fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     group:Arc<Mutex<game::WinGameGroup>>,
     outer:Arc<Mutex<outer::GameOuter>>,
@@ -368,7 +375,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
         let g=match group.lock(){Ok(g)=>g,Err(_)=>return BAD_STAGE};
         game::native_game_health_context(&g)
     };
-    let mut health=HealthClock::new(HealthPolicy::default_connected(),
+    let mut health=game_client_health_clock(
         health_origin.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64);
     loop{
         if c.stop.load(Ordering::Acquire){return OK}
@@ -1146,17 +1153,9 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
     let tx_lanes=lanes.clone();
     let direct_wake=Arc::clone(&rx_wake);
     let tx_clock=split_clock;
-    let tx=match thread::Builder::new().name("wbd-game-native-tx".into()).spawn(move||{
-        let rc=tx_loop(cfg,tx_lanes,tx_group,tx_outer,tun_rx,senders,
-            Arc::clone(&tx_stop),tx_notify,Arc::clone(&tx_counters),
-            split,direct_sender,direct_wake,tcp_receiver,tx_clock);
-        if rc!=OK{
-            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=worker_exit rc={rc}");
-            tx_counters.err.store(rc,Ordering::Release);
-            let _=tx_stop.wake();
-        }
-        rc
-    }){Ok(t)=>t,Err(_)=>return BAD_STAGE};
+    // All real Wintun/NPF handles have been validated above. Start RX
+    // before TX so the existing cold Health proof never precedes its
+    // receive worker. Same two native workers; no readiness state/loop.
     let rx_stop=Arc::clone(&stop);
     let rx_group=Arc::clone(&group);
     let rx_notify=Arc::clone(&rx_wake);
@@ -1174,11 +1173,22 @@ fn start_game_native(cfg:WbdWinGameNativeAttachV3,
             let _=rx_stop.wake();
         }
         rc
+    }){Ok(t)=>t,Err(_)=>return BAD_STAGE};
+    let tx=match thread::Builder::new().name("wbd-game-native-tx".into()).spawn(move||{
+        let rc=tx_loop(cfg,tx_lanes,tx_group,tx_outer,tun_rx,senders,
+            Arc::clone(&tx_stop),tx_notify,Arc::clone(&tx_counters),
+            split,direct_sender,direct_wake,tcp_receiver,tx_clock);
+        if rc!=OK{
+            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=worker_exit rc={rc}");
+            tx_counters.err.store(rc,Ordering::Release);
+            let _=tx_stop.wake();
+        }
+        rc
     }){
         Ok(t)=>t,Err(_)=>{
             counters.stop.store(true,Ordering::Release);
             let _=stop.wake();
-            let _=tx.join();
+            let _=rx.join();
             return BAD_STAGE
         }
     };
@@ -1328,6 +1338,26 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
 #[cfg(test)]
 mod tests{
     use super::*;
+    #[test]
+    fn game_native_client_cold_health_uses_existing_ready_before_server_gate(){
+        let at=10_000_000_000;
+        let mut clock=game_client_health_clock(at);
+        assert_eq!(clock.policy().interval_ns(),15_000_000_000);
+        assert_eq!(clock.policy().dead_ns(),90_000_000_000);
+        let mut now=at;
+        let mut copies=0;
+        loop{
+            assert_eq!(clock.control_due(now),ControlDue::Health);
+            copies+=1;
+            clock.on_health_send_result(now,true);
+            let due=clock.next_tx_deadline().unwrap();
+            if due>at+5_000_000_000{break}
+            assert!(copies<7);
+            now=due;
+        }
+        assert!((4..=7).contains(&copies));
+        assert!(now-at<=3_500_000_000);
+    }
     #[test]
     fn game_native_stop_wait_preserves_unfinished_workers_and_allows_later_true_join(){
         // A synthetic parked worker tests only the native Stop ownership

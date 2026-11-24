@@ -34,3 +34,21 @@ func TestPLAN028OriginalGame4ColdPortCohortAndForeignScope(t *testing.T){
     other=group;other.attempt[0]++
     if other==group{t.Fatal("different cold attempt joined")}
 }
+
+func TestMixedRouteExistsAcrossModeAndLease(t *testing.T){
+    normal:=map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord{
+        {Principal:"alice",TunnelID:[16]byte{1},Lanes:1}:{lease:"10.66.0.129/32"},
+    }
+    game:=map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive{
+        {Principal:"alice",TunnelID:[16]byte{2},Lanes:4,Epoch:[16]byte{9}}:{lease:"10.66.0.130/32"},
+    }
+    if !originalMixedRouteExists("10.66.0.129/32",normal,game)||
+       !originalMixedRouteExists("10.66.0.130/32",normal,game)||
+       originalMixedRouteExists("10.66.0.131/32",normal,game){
+        t.Fatal("route ownership must match effective /32 across both modes, not principal")
+    }
+    if originalMixedRouteExists("10.66.0.129/32",nil,game)||
+       originalMixedRouteExists("10.66.0.130/32",normal,nil){
+        t.Fatal("different lease is not predecessor")
+    }
+}

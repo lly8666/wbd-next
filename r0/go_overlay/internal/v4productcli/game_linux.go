@@ -749,11 +749,22 @@ type originalGameCohortLive struct{
     product *realityfront.V4LinuxGameProduct
     members []*realityfront.V4LinuxGameAuthenticatedLane
     peers []faketcp.DetachedPeer
+    lease string // authenticated effective /32, same key as Rust shared TUN
     gameFec bool // actual protected per-cohort Game fixed setting
     stopped bool
     laneRotations [4]uint64
     managedAt time.Time
     managedFECProfile uint8
+}
+// Cold-only lookup: the /32 is the single downlink authority, independent
+// of transport, lane count, epoch and outer tuple. Reuse the existing maps.
+func originalMixedRouteExists(lease string,
+    normal map[realityfront.V4LinuxGameCohortID]*originalV4MultiRecord,
+    game map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive,
+)bool{
+    for _,rec:=range normal{if rec.lease==lease{return true}}
+    for _,rec:=range game{if rec.lease==lease{return true}}
+    return false
 }
 func stageOriginalAuthenticatedGameLane(
     groups map[originalGameColdAttemptKey]*originalGameCohortPending,
@@ -1004,6 +1015,24 @@ func runGameMultiServer(
         normalRetiring=append(normalRetiring,oldNormalRetirement{rec,time.Now().Add(grace)})
         log.Printf("V4_PUBLIC_NORMAL_OLD_SERVER_RETIRE_SCHEDULED role=server grace_ms=%d old_m4_rx_preserved=1",grace.Milliseconds())
     }
+    // Called only by the existing event loop AFTER the new native route
+    // is published. The prior worker retains the ordinary RX grace; exact
+    // generation Stop cannot remove the new route. Never retire another /32.
+    retireRoutePredecessors:=func(lease string,at time.Time)time.Time{
+        for k,old:=range activeNormal{
+            if old.lease!=lease{continue}
+            if old.managedAt.Before(at){at=old.managedAt}
+            scheduleNormalRetire(old)
+            delete(activeNormal,k)
+        }
+        for k,old:=range active{
+            if old.lease!=lease{continue}
+            if old.managedAt.Before(at){at=old.managedAt}
+            scheduleGameRetire(old)
+            delete(active,k)
+        }
+        return at
+    }
     defer func(){
         stopping.Store(true)
         cancel()
@@ -1119,7 +1148,7 @@ func runGameMultiServer(
             for key,rec:=range activeNormal {
                 row:=managedClientFor(key,rec.peer.IP,rec.lease,rec.managedAt)
                 row.RemotePort=rec.peer.Port
-                if normalPending[key]!=nil{row.State="rebuilding"}
+                if originalMixedRouteExists(rec.lease,normalPending,gameProofPending){row.State="rebuilding"}
                 if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
                 if f,e:=rec.product.OriginalFECReadback();e==nil {row.FEC=string(f.Mode);row.FECProfile=int(f.Profile)}
                 if p,e:=rec.product.OriginalLoopPulse();e==nil {row.RxRecords=&p.RxRecords;row.TxRecords=&p.TxRecords}
@@ -1127,9 +1156,9 @@ func runGameMultiServer(
                 rows=append(rows,row)
             }
             for key,rec:=range active {
-                row:=managedClientFor(key,rec.peers[0].IP,"",rec.managedAt)
+                row:=managedClientFor(key,rec.peers[0].IP,rec.lease,rec.managedAt)
                 row.RemotePort=rec.peers[0].Port
-                for k:=range gameProofPending{if k.Principal==key.Principal&&k.TunnelID==key.TunnelID{row.State="rebuilding";break}}
+                if originalMixedRouteExists(rec.lease,normalPending,gameProofPending){row.State="rebuilding"}
                 if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
                 if row.FEC=="" {row.FEC="off"}; if rec.gameFec {row.FEC="fixed";row.FECProfile=int(rec.managedFECProfile)}
                 if p,e:=rec.product.KernelCounters();e==nil {row.GameCopied=&p.Copied;row.GameDelivered=&p.Delivered}
@@ -1205,6 +1234,14 @@ func runGameMultiServer(
                 // not a second listener or Go DATA path.
                 key,e:=lane.NormalOwnerKey()
                 if e!=nil{rejectLane(lane);continue}
+                lease,e:=lane.AuthenticatedLeaseIPv4()
+                if e!=nil||lease==""{rejectLane(lane);continue}
+                if originalMixedRouteExists(lease,normalPending,gameProofPending){
+                    rejectLane(lane)
+                    log.Printf("V4_PUBLIC_MIXED_NORMAL_B_REJECT reason=candidate_already_pending client_port=%d old_route_preserved=1",result.assoc.Flow().ClientPort)
+                    continue
+                }
+                hasA:=originalMixedRouteExists(lease,activeNormal,active)
                 // Mixed one443 has Windows AND Linux original SYN styles.
                 // Never apply one process-global NPF persona to every
                 // independently authenticated Normal native Rust owner.
@@ -1247,21 +1284,11 @@ func runGameMultiServer(
                         peerIP[0],peerIP[1],peerIP[2],peerIP[3],port)
                     continue
                 }
-                lease,e:=session.AuthenticatedLeaseIPv4()
+                confirmedLease,e:=session.AuthenticatedLeaseIPv4()
                 peer,peerErr:=lane.DetachedPeer()
-                if e!=nil||peerErr!=nil||lease==""{
+                if e!=nil||peerErr!=nil||confirmedLease!=lease{
                     _=product.Close()
                     return realityfront.ErrAdmissionParams
-                }
-                older:=activeNormal[key]
-                if normalPending[key]!=nil{
-                    // One cold B per authenticated logical Normal owner.
-                    // Do not let a later TLS candidate supersede pending B
-                    // or withdraw A while the first B proves real peer RX.
-                    _=product.Close()
-                    forget(result.assoc)
-                    log.Printf("V4_PUBLIC_MIXED_NORMAL_B_REJECT reason=candidate_already_pending client_port=%d old_route_preserved=1",peer.Port)
-                    continue
                 }
                 if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{peer}));e!=nil{
                     _=product.Close()
@@ -1272,8 +1299,8 @@ func runGameMultiServer(
                     peer:peer,ready:true,managedAt:time.Now(),
                 }
                 detached[result.assoc]=peer
-                if older!=nil{
-                    // Rust kept A's only /32 send route. Client B may be
+                if hasA{
+                    // Rust kept A's only /32 send route across modes. Client B may be
                     // receiving this server's authenticated Health, but a
                     // local B TLS/M4 START is NOT proof of client B's native
                     // RX socket. Wait off this listener's event loop: a
@@ -1458,6 +1485,19 @@ func runGameMultiServer(
                 gameCfg.Game4CopyStagger=key.Lanes==4
                 gameCfg.Game4CopyWideStagger=key.Lanes==4
             }
+            lease,e:=complete[0].AuthenticatedLeaseIPv4()
+            if e!=nil||lease==""{
+                for _,l:=range complete{rejectLane(l)}
+                continue
+            }
+            // All members have independently authenticated the same lease;
+            // group adoption also verifies this in the existing native join.
+            if originalMixedRouteExists(lease,normalPending,gameProofPending){
+                for _,l:=range complete{rejectLane(l)}
+                log.Printf("V4_PUBLIC_GAME_B_REJECT role=server reason=candidate_pending old_route_preserved=1")
+                continue
+            }
+            hasA:=originalMixedRouteExists(lease,activeNormal,active)
             product,e:=realityfront.NewV4LinuxGameServerProduct(gameCfg)
             if e!=nil{
                 for _,l:=range complete{rejectLane(l)}
@@ -1507,7 +1547,7 @@ func runGameMultiServer(
             }
             rec:=&originalGameCohortLive{
                 key:key,attempt:attempt,product:product,members:complete,peers:newPeers,
-                gameFec:gameCfg.GameFecEnabled,managedAt:time.Now(),managedFECProfile:gameCfg.GameFecProfile,
+                lease:lease,gameFec:gameCfg.GameFecEnabled,managedAt:time.Now(),managedFECProfile:gameCfg.GameFecProfile,
             }
             for i,l:=range complete{
                 detached[l.Association()]=newPeers[i]
@@ -1520,23 +1560,6 @@ func runGameMultiServer(
             // candidate's client Health is AEAD/PN verified on server M4.
             // The old B remains the only TUN sender, and its RX grace is
             // unchanged. Do not tie Game4 hot one-lane rekeys to this gate.
-            duplicatePending:=false
-            for existing:=range gameProofPending{
-                if existing.Principal==key.Principal&&existing.TunnelID==key.TunnelID{
-                    duplicatePending=true;break
-                }
-            }
-            if duplicatePending{
-                if err:=retire(rec,"Game-B-already-pending");err!=nil{return err}
-                log.Printf("V4_PUBLIC_GAME_B_REJECT role=server reason=candidate_pending old_route_preserved=1")
-                continue
-            }
-            hasA:=false
-            for oldKey:=range active{
-                if oldKey.Principal==key.Principal&&oldKey.TunnelID==key.TunnelID{
-                    hasA=true;break
-                }
-            }
             if hasA{
                 gameProofPending[key]=rec
                 tlsWG.Add(1)
@@ -1583,19 +1606,11 @@ func runGameMultiServer(
             }
             // One event-loop owner publishes the exact confirmed B. Later
             // Stop of A is generation-fenced in the existing shared TUN.
-            olderSameEpoch:=active[proof.key]
-            for k,old:=range active{if k.Principal==proof.key.Principal&&k.TunnelID==proof.key.TunnelID&&old.managedAt.Before(rec.managedAt){rec.managedAt=old.managedAt}}
+            rec.managedAt=retireRoutePredecessors(rec.lease,rec.managedAt)
             active[proof.key]=rec
             *connected=true
-            if olderSameEpoch!=nil{scheduleGameRetire(olderSameEpoch)}
             log.Printf("V4_PUBLIC_GAME_SERVER_B_CLIENT_READY role=server lanes=%d source=authenticated_client_native_Health promoted=1 old_route_preserved_until_proof=1",
                 proof.key.Lanes)
-            for oldKey,oldGroup:=range active{
-                if oldKey==proof.key||oldKey.Principal!=proof.key.Principal||
-                    oldKey.TunnelID!=proof.key.TunnelID{continue}
-                scheduleGameRetire(oldGroup)
-                delete(active,oldKey)
-            }
         case proof:=<-normalProofReady:
             rec:=normalPending[proof.key]
             if rec==nil||rec!=proof.rec{continue}
@@ -1616,13 +1631,11 @@ func runGameMultiServer(
                 if stopErr:=retireNormal(rec,"client-B-M4-proof-rejected");stopErr!=nil{return stopErr}
                 continue
             }
-            older:=activeNormal[proof.key]
-            if older!=nil{rec.managedAt=older.managedAt}
+            rec.managedAt=retireRoutePredecessors(rec.lease,rec.managedAt)
             activeNormal[proof.key]=rec
             *connected=true
             log.Printf("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=%d source=authenticated_client_native_Health promoted=1 active_normal=%d old_route_preserved_until_proof=1",
                 rec.peer.Port,len(activeNormal))
-            if older!=nil{scheduleNormalRetire(older)}
         case <-ticker.C:
             now:=time.Now()
             for i:=0;i<len(gameRetiring);{

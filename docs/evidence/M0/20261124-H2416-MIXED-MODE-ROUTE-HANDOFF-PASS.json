@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-MIXED-MODE-ROUTE-HANDOFF",
+  "source_sha": "a4c5c97591e9b9ed6fa16221e6666c531d1909cc",
+  "pr": 77,
+  "result": "FUNCTIONAL_PASS",
+  "scope": "Actual native Linux x86_64/aarch64 same shared server, one authenticated auto-lease across nine modes, sibling same-account independent lease, native TCP/UDP reverse first, exact old owner grace and Stop, Game4 hot lane, independent Health90. Windows2025 signed Npcap/Wintun -> same WSL2 server same manual /32 Normal/Game2/Normal/Game4/Normal exact released bytes; physical WAN/physical Windows machine and performance A/B not run. Existing two-incarnation overlap cap unchanged.",
+  "linux": {
+    "run_id": 45428320586,
+    "architectures": [
+      {
+        "isa": "x86_64",
+        "job_id": 138566345210,
+        "artifact_id": 14938972144,
+        "seconds_to_business": [
+          0.332,
+          1.235,
+          0.332,
+          1.585,
+          1.535,
+          1.586,
+          0.333,
+          0.333,
+          1.585
+        ],
+        "sha256": "326f1f79a35aad8d2c5de52db0e45f1c56f012561d39be17ff4f14287a95efe2"
+      },
+      {
+        "isa": "aarch64",
+        "job_id": 138566344676,
+        "artifact_id": 14938797316,
+        "seconds_to_business": [
+          0.333,
+          1.535,
+          0.333,
+          1.585,
+          0.333,
+          0.383,
+          0.333,
+          0.333,
+          1.585
+        ],
+        "sha256": "b7a2f0f6d3d82eca5ae586be585a90e5f27e7864e70a06dd394091bea9df4af2"
+      }
+    ],
+    "modes": [
+      "normal",
+      "game2",
+      "normal",
+      "game4-fixed6",
+      "game2-fixed6",
+      "game4",
+      "fec-fixed",
+      "normal",
+      "game4"
+    ],
+    "promotions_each": 8,
+    "actual_tcp_udp_directions_each": 96,
+    "hot_lane": "PASS",
+    "old_grace": "PASS",
+    "independent_health90": "PASS",
+    "owned_stop": "PASS",
+    "glibc_build": "2.31",
+    "max_glibc_symbols": "2.28",
+    "native_isa_l": true
+  },
+  "windows": {
+    "build_run_id": 45428320586,
+    "job_id": 138566344099,
+    "artifact_id": 14937716788,
+    "sha256": "2b4834954657482b995243f2fa3fd7bc602bb0f4a3c760d7f4b6823570e6455f",
+    "owner_unit_pass": 91,
+    "cold_health_specific_pass": 1,
+    "gui_selftest_pass": 433,
+    "real_pair_run_id": 45430747305,
+    "real_pair_job_id": 138575059514,
+    "real_pair_artifact_id": 14938828722,
+    "fixture_source_sha": "06e7d706ab7b74b6a6cf2a9cd3677156960801d7",
+    "same_authenticated_lease": "10.66.0.2/32",
+    "modes": [
+      1,
+      2,
+      1,
+      4,
+      1
+    ],
+    "seconds_to_real_duplex": [
+      5.328,
+      6.688,
+      5.156,
+      4.687,
+      4.922
+    ],
+    "promotion_delta": [
+      0,
+      1,
+      1,
+      1,
+      1
+    ],
+    "tcp_udp": "PASS",
+    "old_grace": "PASS",
+    "owned_stop": "PASS",
+    "wintun_signed": true,
+    "npcap_bundled": false,
+    "physical_windows_linux_arm64_pair": "NOT_RUN"
+  },
+  "known_fixture_failures": [
+    {
+      "run": 45429168582,
+      "artifact": 14939450781,
+      "stage": "WSL underlay before TLS",
+      "reason": "Missing pre-existing WSL guest MAC test fixture handoff"
+    },
+    {
+      "run": 45430196116,
+      "artifact": 14938322452,
+      "stage": "Initial Normal real TLS/M4 and Wintun applied, app listener before switch",
+      "reason": "Windows excluded TCP port bind WinError10013"
+    }
+  ],
+  "all_inner_sha256_independently_verified": true
+}
