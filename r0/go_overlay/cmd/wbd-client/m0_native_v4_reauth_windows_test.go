@@ -319,13 +319,17 @@ func TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOr
    }
   }
  }
- // The existing authenticated-dead90 retries for Normal/FEC are intact,
- // while Game health90 remains its own separate managed health policy.
- if !m0WindowsColdPathRetryAllowed(m0WinModeNormal,true,false,false,0,timeout){
-  t.Fatal("prior authenticated Normal dead90 recovery stopped working")
- }
- if m0WindowsColdPathRetryAllowed(m0WinModeGame4,true,false,false,0,timeout){
-  t.Fatal("Game dead90 retry authorization widened without OS event")
+ // An actual terminal Rust Health90 on any supported mode can
+ // reestablish the original transport even without a local NIC change.
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto,m0WinModeGame2,m0WinModeGame4}{
+  if !m0WindowsColdPathRetryAllowed(mode,true,false,false,0,timeout){
+   t.Fatalf("authenticated dead90 recovery unavailable: %v",mode)
+  }
+  if m0WindowsColdPathRetryAllowed(mode,true,false,true,0,timeout)||
+     m0WindowsColdPathRetryAllowed(mode,true,false,false,2,timeout)||
+     m0WindowsColdPathRetryAllowed(mode,true,false,false,0,realityfront.ErrAdmissionAuth){
+   t.Fatalf("invalid cold retry after native dead: %v",mode)
+  }
  }
 }
 
@@ -445,7 +449,7 @@ func TestH2223WindowsIdleAuthenticatedRustNativeStartupDoesNotRequireApplication
 
 
 func TestH2223InitialColdRetryOnlyBeforeRustM4ForTransientOriginalTransport(t *testing.T){
- for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto}{
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto,m0WinModeGame2,m0WinModeGame4}{
   for _,timeout:=range []error{context.DeadlineExceeded,syscall.ETIMEDOUT,faketcp.ErrBootstrapTimeout}{
    tagged:=m0WindowsTagOriginalColdTransport(timeout)
    if !errors.Is(tagged,errM0OriginalColdTransportTimeout){t.Fatalf("not tagged: %v",tagged)}
@@ -467,12 +471,6 @@ func TestH2223InitialColdRetryOnlyBeforeRustM4ForTransientOriginalTransport(t *t
   if m0WindowsInitialTransportRetryAllowed(m0WinModeNormal,false,0,
     m0WindowsTagOriginalColdTransport(err)){
    t.Fatalf("permanent, auth, or Stop failure retried: %v",err)
-  }
- }
- for _,mode:=range []m0WindowsV4Mode{m0WinModeGame2,m0WinModeGame4}{
-  if m0WindowsInitialTransportRetryAllowed(mode,false,0,
-    m0WindowsTagOriginalColdTransport(context.DeadlineExceeded)){
-   t.Fatalf("Game multi-lane cold state machine widened: %v",mode)
   }
  }
  // Even a 45s post-TLS M4/OS deadline cannot restart a new TLS session
@@ -540,5 +538,15 @@ func TestH2226LowRateQualityGuiUsesOnlyMatchedMatureSummary(t *testing.T){
  old:=after;old.Counters[12]=2_999_999_999
  if _,_,ok:=m0WindowsLowRateGuiEstimate(before,old);ok{
   t.Fatal("sub-three-second immature quality was treated as RTT")
+ }
+}
+
+func TestH2400WindowsGameColdTupleGroupsDoNotOverlap(t *testing.T){
+ path:=filepath.Join(t.TempDir(),"network-state.json")
+ for _,want:=range []uint64{1,9,17}{
+  ordinal,err:=m0WindowsReserveColdTupleOrdinals(path,8)
+  if err!=nil||ordinal!=want{t.Fatalf("Game4 reservation ordinal=%d want=%d err=%v",ordinal,want,err)}
+  base,err:=m0WindowsOriginalColdClientPort(41031,ordinal)
+  if err!=nil||base!=uint16(41030+want){t.Fatalf("Game4 base=%d err=%v",base,err)}
  }
 }

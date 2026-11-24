@@ -96,7 +96,7 @@ fi
 game_fec_args=()
 if [ -n "${WBD_ARM64_GAME_FEC_PROFILE:-}" ]; then
   if [ "$WBD_ARM64_GAME_FEC_PROFILE" != 6 ] || {
-    [ "$mode" != game4 ] && ! { [ "$mode" = game2 ] && [ "${WBD_PLAN029_LINUX_COVERAGE:-0}" = 1 ]; };
+    [ "$mode" != game4 ] && ! { [ "$mode" = game2 ] && { [ "${WBD_PLAN029_LINUX_COVERAGE:-0}" = 1 ] || [ "${WBD_PLAN029_ALL_MODES:-0}" = 1 ]; }; };
   }; then
     echo 'ARM64_GAME_FEC_TEST_ONLY_FIXED6_GAME4_OR_SCOPED_GAME2' >&2; exit 2
   fi

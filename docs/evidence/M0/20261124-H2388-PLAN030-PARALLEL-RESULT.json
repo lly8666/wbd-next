@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
+  "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+  "result": "PASS_SCOPED_NATIVE_FUNCTIONS_PENDING_COMBO",
+  "native_action": 45344159343,
+  "windows_action": 45344178585,
+  "governance_action": 45344159311,
+  "successful_jobs": [
+    138274584414,
+    138274584552,
+    138275682975,
+    138275683030,
+    138275683060,
+    138275683067
+  ],
+  "failures": [
+    {
+      "job_id": 138275683069,
+      "stage": "watch report serialization after both phases returned",
+      "error": "KeyError: GITHUB_SHA (sudo env)",
+      "measurement": "NOT_AVAILABLE",
+      "classification": "FIXTURE_FAILURE"
+    },
+    {
+      "job_id": 138274648661,
+      "stage": "preflight unittest",
+      "error": "test_owned_linux_pid_script_expands_shell_pid: malformed echo $",
+      "classification": "FIXTURE_FAILURE_NO_NATIVE_NETWORK_RUN"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14896654500,
+      "arch": "x86_64",
+      "digest": "sha256:2781a022c80c24025e3d69eb74127cd748336648feb1c316ece01d2792ae7ede"
+    },
+    {
+      "id": 14897691117,
+      "arch": "aarch64",
+      "digest": "sha256:1b9ce082f3cfd78e39747517a2d84b5cc03dbf6b5ccd00f2eb99c78260514a5d"
+    }
+  ],
+  "artifact_verified": false
+}

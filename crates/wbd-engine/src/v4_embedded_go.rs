@@ -3886,7 +3886,9 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
     let Some(lease)=g.client_lease_ipv4 else{return BAD_STAGE};
     let ip=if g.server{lease}else{[0u8;4]};
     let generation=(group>>32) as u32;
-    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(64);
+    let inbox_slots=shared_tun_product_inbox_slots();
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0 flow_fair=1",if g.server{"server"}else{"client"},generation,inbox_slots);
+    let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);
     g.shared_tun=Some(SharedTunSession{
         router:router_handle,generation,ip,
         alive:Arc::new(AtomicBool::new(true)),sender,
@@ -4190,10 +4192,14 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_lane_replace(
         id.server_limit!=base.server_limit||
         id.incarnation==base.incarnation||
         lease!=g.client_lease_ipv4||
-        new_flow.client_ip!=g.flows[slot].client_ip||
+        // A server observes NAT's public client tuple, not the client's
+        // selected physical NIC. The authenticated new lane may use a
+        // different egress address; only an unchanged full tuple is stale.
+        (!g.server&&new_flow.client_ip!=g.flows[slot].client_ip)||
         new_flow.server_ip!=g.flows[slot].server_ip||
         new_flow.server_port!=g.flows[slot].server_port||
-        new_flow.client_port==g.flows[slot].client_port{
+        (new_flow.client_ip==g.flows[slot].client_ip&&
+         new_flow.client_port==g.flows[slot].client_port){
         return INVALID
     }
     let prepared={
@@ -4281,7 +4287,7 @@ pub unsafe extern "C" fn wbd_m0_embedded_go_game_group_loop_start(
             let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
             if router.stop.load(Ordering::Acquire){return BAD_STAGE}
             let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-            let candidate=SharedTunRoute{flow_fair:false,
+            let candidate=SharedTunRoute{flow_fair:true,
                 generation:shared.generation,alive:Arc::clone(&shared.alive),
                 send:shared.sender.clone(),
             };
@@ -4339,7 +4345,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_promote_after_rx(grou
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let candidate=SharedTunRoute{flow_fair:false,
+    let candidate=SharedTunRoute{flow_fair:true,
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),
     };
@@ -4370,7 +4376,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_server_promote_after_client_heal
     let Ok(router)=shared_tun_reader(shared.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
     let Ok(mut routes)=router.routes.lock()else{return BAD_STAGE};
-    let candidate=SharedTunRoute{flow_fair:false,
+    let candidate=SharedTunRoute{flow_fair:true,
         generation:shared.generation,alive:Arc::clone(&shared.alive),
         send:shared.sender.clone(),
     };
@@ -5547,18 +5553,7 @@ fn enqueue_shared_tun<F:FnOnce()->OriginalTunIngress>(
     enqueue_shared_tun_flow(pending,key,route,bytes,None,make)
 }
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-// H2372: classify only a full per-lease pending queue. No port priority,
-// separate quota, extra buffer, per-flow map or packet hot-path allocation.
-// IPv4 TCP/UDP first-class flows are exact 5-tuples; do not classify fragments.
-fn shared_tun_flow_key(ip:&[u8])->Option<[u8;13]>{
-    if ip.len()<24||ip[0]>>4!=4||!matches!(ip[9],6|17){return None}
-    let h=usize::from(ip[0]&15)*4;
-    if h<20||ip.len()<h+4||u16::from_be_bytes([ip[6],ip[7]])&0x3fff!=0{return None}
-    let mut k=[0;13];
-    k[0]=ip[9];k[1..9].copy_from_slice(&ip[12..20]);
-    k[9..13].copy_from_slice(&ip[h..h+4]);
-    Some(k)
-}
+use crate::v4_ingress_fair::flow_key as shared_tun_flow_key;
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn shared_tun_flow_victim(q:&PendingSharedTunRoute,incoming:&[u8],bytes:usize)->Option<usize>{
     let key=shared_tun_flow_key(incoming)?;
@@ -6611,20 +6606,13 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
     registry.remove(&handle);
     OK
 }
-// PLAN029: Zero-loss original GoTLS/Rust client-only M1 shared-TUN
-// 64→128 A/B/A' improved actual receiver goodput (ARM +7.70%)
-// with reduced local full drops and CPU/GiB. Server and Game remain 64.
-// This one bounded, per-authenticated-generation cold capacity setting
-// never changes TCP, AEAD/PN, pacing, or cross-lease admission.
+// H2397: one per-generation capacity for every native Normal/Game role.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
-fn normal_shared_tun_product_inbox_slots(server_side:bool)->usize{
-    if server_side{64}else{128}
-}
+fn shared_tun_product_inbox_slots()->usize{128}
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
-fn m0_plan029_linux_normal_client_default_128_server_64(){
-    assert_eq!(normal_shared_tun_product_inbox_slots(false),128);
-    assert_eq!(normal_shared_tun_product_inbox_slots(true),64);
+fn m0_plan029_linux_all_roles_default_128(){
+    assert_eq!(shared_tun_product_inbox_slots(),128);
 }
 
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
@@ -6648,8 +6636,8 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     let ip=if e.server_side{lease}else{[0u8;4]};
     // Cold readback confirms the exact Normal client/server queue size once,
     // before native M4 activation; no per-DATA probe or heap growth loop.
-    let inbox_slots=normal_shared_tun_product_inbox_slots(e.server_side);
-    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0",
+    let inbox_slots=shared_tun_product_inbox_slots();
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0 flow_fair=1",
         if e.server_side{"server"}else{"client"},e.generation,inbox_slots);
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);
     e.shared_tun=Some(SharedTunSession{
@@ -9799,10 +9787,8 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
     #[cfg(target_os="linux")]
     {
         let server=e.server_side;
-        // Qualified H2372 scope: Normal/off client only. Cold publication
-        // selects the policy; Game, Fixed/Auto and server remain unchanged.
-        let flow_fair=!server&&!e.auto_low_rate_mode
-            &&e.fixed_pending.is_none()&&e.fixed_applied.is_none();
+        // H2397: the same pre-encryption full-queue admission for every role/mode.
+        let flow_fair=true;
         if let Some(sh)=e.shared_tun.as_mut(){
             let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
             if router.stop.load(Ordering::Acquire){return BAD_STAGE}
@@ -9866,7 +9852,7 @@ pub extern "C" fn wbd_m0_embedded_go_client_shared_tun_promote_after_rx(handle:u
     #[cfg(not(feature="fec2_product_record"))]
     let authenticated_health=false;
     let proven=received>0||authenticated_health;
-    let flow_fair=!e.auto_low_rate_mode&&e.fixed_pending.is_none()&&e.fixed_applied.is_none();
+    let flow_fair=true;
     let Some(sh)=e.shared_tun.as_mut()else{return BAD_STAGE};
     let Ok(router)=shared_tun_reader(sh.router)else{return BAD_STAGE};
     if router.stop.load(Ordering::Acquire){return BAD_STAGE}
@@ -9922,7 +9908,7 @@ pub extern "C" fn wbd_m0_embedded_go_server_shared_tun_promote_after_rx(handle:u
             r.alive.load(Ordering::Acquire)
         ){OK}else{BAD_STAGE}
     }
-    let next=SharedTunRoute{flow_fair:false,
+    let next=SharedTunRoute{flow_fair:true,
         generation:sh.generation,alive:Arc::clone(&sh.alive),
         send:sh.sender.clone(),
     };

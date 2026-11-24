@@ -80,17 +80,13 @@ func m0WindowsOriginalColdRetryAllowed(authorized,applied bool,retries int,err e
  return errors.As(err,&ne)&&ne.Timeout()
 }
 
-// Filtered native source IPv4/ifindex change after exact owned Stop
-// authorizes a bounded cold TLS transport retry even for Game. It does not
-// make wrong credentials, user Stop, initial connect or an applied OS owner
-// eligible. No extra watcher, periodic probe or second recovery controller.
+// All native modes share the original cold supervisor after exact Stop.
+// NAT can invalidate remote mappings without a local NIC/IP event;
+// Game's own Rust HealthClock now reports the same terminal-dead status.
 func m0WindowsColdPathRetryAllowed(
- mode m0WindowsV4Mode,authenticatedDead,pathChanged,applied bool,
+ _ m0WindowsV4Mode,authenticatedDead,pathChanged,applied bool,
  retries int,err error,
 )bool{
- if (mode==m0WinModeGame2||mode==m0WinModeGame4)&&!pathChanged{
-  return false // keep original Game dead90 retry policy unchanged
- }
  return m0WindowsOriginalColdRetryAllowed(
   authenticatedDead||pathChanged,applied,retries,err)
 }
@@ -114,7 +110,7 @@ func m0WindowsInitialTransportRetryAllowed(
  if applied||failedAttempts>=2||err==nil||
   errors.Is(err,context.Canceled)||errors.Is(err,realityfront.ErrAdmissionAuth)||
   !errors.Is(err,errM0OriginalColdTransportTimeout){return false}
- return mode==m0WinModeNormal||mode==m0WinModeFixed||mode==m0WinModeAuto
+ return mode==m0WinModeNormal||mode==m0WinModeFixed||mode==m0WinModeAuto||mode==m0WinModeGame2||mode==m0WinModeGame4
 }
 // Cold record offer is resolved by Rust's versioned full-IP budget ABI.
 // No separate Windows 1400 cap or Go framing arithmetic is authoritative.
@@ -290,6 +286,10 @@ type m0WindowsColdTupleOrdinal struct{
  Next uint64 `json:"next"`
 }
 func m0WindowsReserveColdTupleOrdinal(statePath string)(uint64,error){
+ return m0WindowsReserveColdTupleOrdinals(statePath,1)
+}
+// Reserve the entire cold Game tuple group in one existing state update.
+func m0WindowsReserveColdTupleOrdinals(statePath string,count uint64)(uint64,error){
  if statePath==""{return 0,windowsclient.ErrN4NativeGuard}
  dir:=filepath.Dir(filepath.Clean(statePath))
  name:=filepath.Join(dir,".wbd-next-cold-tuple-ordinal.json")
@@ -304,8 +304,7 @@ func m0WindowsReserveColdTupleOrdinal(statePath string)(uint64,error){
   }
   current=state.Next
  }else if !errors.Is(err,os.ErrNotExist){return 0,err}
- next:=current+1
- if next>65535{next=1}
+ next:=(current-1+count)%65535+1
  payload,err:=json.Marshal(m0WindowsColdTupleOrdinal{Schema:1,Next:next})
  if err!=nil{return 0,err}
  tmp,err:=os.CreateTemp(dir,".wbd-next-cold-tuple-*.tmp")
@@ -650,24 +649,21 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
  fmt.Printf("WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=%d mode=%v configured_outer_mtu=%d physical_outer_mtu=%d effective_outer_mtu=%d local_advertised_mss=%d inner_mtu_planned=%d limiting_reason=%s source=RUST_V1_REAL_OS\n",
   generation,o.Mode,o.ConnectionMTU,physical,cold.EffectiveOuterIPMTU,
   cold.AdvertisedSynMSS,o.TunnelMTU,reason)
- // A successor with the same source IPv4 cannot reuse the exact old
- // detached Linux raw 4-tuple. Game already manages its own multi-lane
- // local tuple set, so only Normal/Fixed/Auto use this cold port.
- coldSourcePort:=o.SourcePort
- if o.Mode!=m0WinModeGame2&&o.Mode!=m0WinModeGame4{
-  // Every *actual* cold original TLS start reserves one new tuple,
-  // including same-process cold reauth and new GUI Go child processes.
-  // A failed pre-TLS attempt consumes one ordinal; it cannot revive an
-  // old authenticated server-side 4-tuple from the previous session.
-  ordinal,portErr:=m0WindowsReserveColdTupleOrdinal(o.StatePath)
-  if portErr!=nil{return fmt.Errorf("PLAN029 cold tuple ordinal: %w",portErr)}
-  coldSourcePort,err=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal)
-  if err!=nil{return err}
-  fmt.Printf("WBD_PLAN029_COLD_TLS_PROCESS_PORT_ORDINAL ordinal=%d configured_port=%d source=portable_cold_state\n",
-   ordinal,o.SourcePort)
-  fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=%t\n",
-   generation,o.SourcePort,coldSourcePort,o.ServerPort,coldSourcePort!=o.SourcePort)
- }
+ // Every cold attempt consumes fresh tuples, including Game across GUI
+ // processes. Reserve a complete contiguous group; leave wrap headroom.
+ gameLanes:=1
+ if o.Mode==m0WinModeGame2{gameLanes=2}else if o.Mode==m0WinModeGame4{gameLanes=4}
+ slots:=uint64(1)
+ if gameLanes>1{slots=uint64(gameLanes+4)}
+ ordinal,portErr:=m0WindowsReserveColdTupleOrdinals(o.StatePath,slots)
+ if portErr!=nil{return fmt.Errorf("PLAN029 cold tuple ordinal: %w",portErr)}
+ coldSourcePort,err:=m0WindowsOriginalColdClientPort(o.SourcePort,ordinal)
+ if err!=nil{return err}
+ if int(coldSourcePort)+gameLanes-1>65535{coldSourcePort=49152}
+ fmt.Printf("WBD_PLAN029_COLD_TLS_PROCESS_PORT_ORDINAL ordinal=%d configured_port=%d source=portable_cold_state\n",
+  ordinal,o.SourcePort)
+ fmt.Printf("WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=%d configured_port=%d source_port=%d original_peer_port=%d same_ip_reauth_safe_tuple=%t lanes=%d\n",
+  generation,o.SourcePort,coldSourcePort,o.ServerPort,coldSourcePort!=o.SourcePort,gameLanes)
  ncfg,err:=underlay.NpcapConfig(coldSourcePort,o.ServerPort,1,faketcp.PacketPersonaWindows11)
  if err!=nil{return err}
  // PLAN024 original public Windows↔WSL2 real-NPF correction. Genuine
@@ -776,7 +772,8 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
     StatePath:o.StatePath,
    })
   }
-  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,open,planForGame,pathChanged)
+  o.SourcePort=coldSourcePort
+  return runM0NativeV4WindowsGame(ctx,o,underlay.Source4.As4(),physical,selected.ifindex,open,planForGame,pathChanged,applied)
  }
  endpoint,err:=faketcp.OpenNpcapEndpoint(ncfg)
  if err!=nil{return err}
@@ -819,34 +816,33 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    if e!=nil{
     select{case <-rustHandoff:return;default:}
     select{case failure<-fmt.Errorf("native NPF ReadSegment failed: %w",e):default:}
+    if assoc.State()!=faketcp.ClientAssociationDetached{assoc.Close()}
     return
    }
-   if assoc.State()==faketcp.ClientAssociationDetached{
-    // Fixed 64-slot original NPF ingress, Rust M3 remains the sole authenticator.
-    // A full pre-auth queue is an explicit LOCAL packet drop, not a valid
-    // Rust receipt, TCP carrier acknowledgement or connection-wide Stop.
-    select{case nativeFrames<-seg:
-    default:
-     if seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{
-      select{case failure<-fmt.Errorf("%w: real peer FIN/RST on saturated original NPF ingress",windowsclient.ErrN4NativeGuard):default:}
+   if assoc.State()!=faketcp.ClientAssociationDetached{
+    if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
+     if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
+      select{case failure<-windowsclient.ErrN4NativeGuard:default:}
+      assoc.Close()
       return
      }
-     ingressLocalDrops.Add(1)
+     fmt.Printf("WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=%d peer_advertised_mss=%d local_advertised_mss=%d\n",
+      generation,seg.MSS,cold.AdvertisedSynMSS)
     }
-    continue
-   }
-   if seg.Flags&(faketcp.FlagSYN|faketcp.FlagACK)==(faketcp.FlagSYN|faketcp.FlagACK){
-    if !seg.MSSSet||seg.MSS<536||seg.MSS>1460{
-     select{case failure<-windowsclient.ErrN4NativeGuard:default:}
+    e=assoc.HandleSegment(seg,time.Now())
+    if !errors.Is(e,faketcp.ErrClientDetached){
+     if e==nil||errors.Is(e,faketcp.ErrClientHandshake)&&assoc.State()==faketcp.ClientAssociationSYNSent{continue}
+     select{case failure<-e:default:}
+     assoc.Close()
      return
     }
-    fmt.Printf("WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=%d peer_advertised_mss=%d local_advertised_mss=%d\n",
-     generation,seg.MSS,cold.AdvertisedSynMSS)
    }
-   if e=assoc.HandleSegment(seg,time.Now());e!=nil{
-    select{case failure<-e:default:}
-    return
-   }
+   // Same detached cold handoff as Game: old TLS bytes only recover
+   // their cumulative ACK, pure late TCP control is not a native failure.
+   if handled,_:=assoc.RepeatGameColdFinalACK(&seg);handled{continue}
+   if len(seg.Payload)==0{continue}
+   select{case nativeFrames<-seg:default:ingressLocalDrops.Add(1)}
+
   }
  }()
  defer func(){ _=endpoint.Close();readers.Wait() }()
@@ -864,7 +860,7 @@ func runM0NativeV4WindowsGeneration(ctx context.Context,o m0NativeV4Options,
    if e!=nil{return m0WindowsTagOriginalColdTransport(e)}
    break waitHandshake
   case <-ticker.C:
-   if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return e}
+   if _,e:=assoc.EmitRetransmitDue(time.Now());e!=nil{return m0WindowsTagOriginalColdTransport(e)}
   }
  }
  // Original pinned TLS handshake, protected credentials, exact

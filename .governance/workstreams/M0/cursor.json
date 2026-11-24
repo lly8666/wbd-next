@@ -4,22 +4,29 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2392,
-  "checkpoint_sha": "9e2ce46bb026f9fb61db566f94a8c8da9c001e7e",
+  "sequence": 2409,
+  "checkpoint_sha": "6fccef245fd9b63f064d93a01809954582fc53c0",
   "progress": "verifying",
-  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
-  "current_task": "PLAN030 Linux双ISA CLI限定通过；Windows域名重连双重复FAIL；PR74旧版v2升级PASS但用户真实客户端恢复报route is not owned，待定位。",
-  "why_now": "029用户限定交付结束，新授权030；不再做吞吐/FEC优化。",
-  "done_when": "真实同源 amd64/arm64 服务安装管理卸载、客户端配置与快照、组合与适用低频快照成本验证、实际包交付；未验明确保留。",
-  "next_action": "先取用户真实客户端版本、完整恢复stderr、原生v2 WAL/route sidecar及对应Windows实际路由读回；区分原Wintun身份、路由metric/protocol等属性变化和真实外部路由。不要盲删路由或WAL；在PR74针对实际失败最小修复；再补030真实域名重连及服务端设备快照组合。PR73/74暂不合并。",
+  "task_id": "M0-PLAN029-WINDOWS-GAME-COLD",
+  "current_task": "H2408 Normal OFF/Fixed/Auto 复用Game最终ACK修复及Detach迟到RST隔离；Linux SYN/TLS独立超时，Windows SYN重传超时进入已有fresh tuple retry。Normal NAT逻辑身份本来不依赖公网IP/端口。",
+  "why_now": "用户追问各模式、各端换lane是否受NAT影响，要求建链成功率修复覆盖换lane。",
+  "done_when": "Windows与Linux现有冷重建入口复用原有可靠冷TLS；Linux Game4同组单lane允许NAT地址及端口变化、失败不拖累健康lane；普通Game日志不刷屏；实际物理与原生验收分开记录。",
+  "next_action": "收H2408 source 6fccef2 Windows/Linux 45398627358、ARM64 routed NAT 45398627191、MSS 45398627275及Windows build 45398627406；H2405/06 Game热换/NAT死链回归仍未获得物理资格。",
   "unverified": true,
-  "last_tested_source": "1d6081c7b54e2804236072007fde1d73986ff3cb",
-  "evidence_refs": [],
+  "last_tested_source": "2e580afb2466a89cc81fed74408a292b7a9d7ec9",
+  "evidence_refs": [
+    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
+    "docs/devlog/M0/20261124-H2400-WINDOWS-GAME-COLD-RELIABILITY.md",
+    "docs/devlog/M0/20261124-H2401-GAME-NAT-COLD-ATTEMPT.md",
+    "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md",
+    "docs/devlog/M0/20261124-H2405-GAME-NAT-HOT-LANE.md",
+    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md",
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
+  ],
   "context_refs": [
-    "docs/decisions/M0-PLAN030-SERVER-CLI-DELIVERY-20261102.md",
-    "docs/prompts/M0-PLAN030.md",
-    "docs/evidence/M0/20261124-H2383-CN-FINAL-DELIVERY-PASS.json"
+    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
+    "docs/devlog/M0/20261121-H2223-WINDOWS-GAME2-GAME4-IDLE-READY-PARITY.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2392：收取原在途结果，无重复dispatch。45349332671/45349327390 同fixture 600d541 均completed/failure，原生native-public-two-os分别在SECOND_APPLIED process exited 1/not observed失败；真实旧版升级45349844112 completed/success，原始job138293247724确认旧版实际FAIL、新版实际PASS。用户报告最新Windows客户端网络恢复未完成 route is not owned refuse to replace，实体失败未定位；PR74恢复仍依赖原有严格route lookup匹配，也可能在原Wintun身份或其他恢复阶段报同错误。远程终端授权未获，未读取实体机状态。Linux CLI/watch限定通过；未接齐快照字段保留未知。未更改生产代码，未启动新测试。"
+  "partial_summary": "H2407 Windows/Linux原生45386542255与QA H2216 45386542274 ARM64真实双NAT三客户端及12 TLS场景通过，Windows field-trial构建通过但物理Windows未测；H2408 Normal冷层推广入main，程序集blob核对0不匹配，新源原生回归未收。"
 }

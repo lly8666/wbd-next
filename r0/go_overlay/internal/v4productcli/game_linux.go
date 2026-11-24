@@ -175,7 +175,6 @@ func runGameClient(
     lingerCtx,lingerCancel:=context.WithCancel(ctx)
     var lingerWG sync.WaitGroup
     defer func(){lingerCancel();lingerWG.Wait()}()
-    fail:=make(chan error,n)
     retiredRX:=make([]chan struct{},0,n)
     startRX:=func(a *faketcp.ClientAssociation,r *faketcp.RawIPv4Endpoint,
         f faketcp.ClientFlow,retired <-chan struct{}){
@@ -188,16 +187,22 @@ func runGameClient(
                     case <-retired:return
                     default:
                     }
-                    select{case fail<-readErr:default:}
+                    // This is the Go cold observer, not the live Rust RX.
+                    // A failed candidate must unblock only its own TLS.
+                    if a.State()!=faketcp.ClientAssociationDetached{a.Close()}
+                    log.Printf("V4_PUBLIC_GAME_COLD_RX_END role=client port=%d error=%v",f.LocalPort,readErr)
                     return
                 }
                 if !f.MatchesInbound(seg){continue}
                 if a.State()!=faketcp.ClientAssociationDetached{
-                    if err:=a.HandleSegment(seg,time.Now());err!=nil&&
-                        !errors.Is(err,faketcp.ErrClientDetached){
-                        select{case fail<-err:default:}
+                    e:=a.HandleSegment(seg,time.Now())
+                    if !errors.Is(e,faketcp.ErrClientDetached){
+                        if a.State()==faketcp.ClientAssociationClosed{return}
+                        continue // unrelated or duplicate cold segments are not group failures
                     }
-                }else if len(seg.Payload)!=0&&handoffCommitted.Load(){
+                }
+                if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
+                if len(seg.Payload)!=0&&handoffCommitted.Load(){
                     goPostHandoffDataCopies.Add(1)
                 }
             }
@@ -227,11 +232,22 @@ func runGameClient(
         retiredRX=append(retiredRX,make(chan struct{}))
         startRX(assoc,raw,flow,retiredRX[i])
         if e=assoc.Start(time.Now());e!=nil{return e}
-        establish,cancel:=context.WithTimeout(ctx,20*time.Second)
-        e=waitForOriginalColdSYN(establish,assoc)
-        cancel()
-        if e!=nil{return e}
-        coldRTOStops=append(coldRTOStops,driveOriginalClientColdBootstrapRTO(ctx,assoc))
+    }
+    // Every lane starts SYN before we wait for any lane. A lost SYN/ACK
+    // cannot consume the deadline of the remaining 1/3 associations.
+    establish,cancelSYN:=context.WithTimeout(ctx,20*time.Second)
+    synResults:=make(chan error,n)
+    for _,a:=range assocs{
+        go func(a *faketcp.ClientAssociation){synResults<-waitForOriginalColdSYN(establish,a)}(a)
+    }
+    var synErr error
+    for range assocs{
+        if e:=<-synResults;e!=nil&&synErr==nil{synErr=e;cancelSYN()}
+    }
+    cancelSYN()
+    if synErr!=nil{return synErr}
+    for _,a:=range assocs{
+        coldRTOStops=append(coldRTOStops,driveOriginalClientColdBootstrapRTO(ctx,a))
     }
     log.Printf("V4_PUBLIC_GAME_SINGLE_SERVER_PORT role=client lanes=%d server_port=%d distinct_local_ports=%d",
         n,c.peerPort,len(flows))
@@ -457,10 +473,19 @@ func runGameClient(
         return lane,local,nil
     }
     draining:=false
+    // Read the existing Rust M4 verdict, as the shared server already
+    // does. The cold Go reader is no longer an authority on live lanes.
+    nativeStatus:=time.NewTicker(time.Second)
+    defer nativeStatus.Stop()
     for !draining{
         select{
         case <-ctx.Done():draining=true
-        case err=<-fail:draining=true
+        case <-nativeStatus.C:
+            live,e:=native.NativeM4Alive()
+            if e!=nil{err=e;draining=true}else if !live{
+                err=fmt.Errorf("Game native M4 stopped")
+                draining=true
+            }
         case turn,ok:=<-rotation:
             if !ok{rotation=nil;continue}
             lane,local,rotateErr:=rotateOne()
@@ -707,35 +732,12 @@ many independently authenticated groups. All untrusted packets are still
 delivered only to the original Go FakeTCP cold handler; native Rust owns
 all detached DATA. No new transport, FEC or per-packet Go forwarding.
 */
-// A protected epoch identifies the logical Game owner, not a cold attempt.
-// After a lossy original TLS reply a former attempt may leave a single
-// authenticated lane pending while a later generation starts with the SAME
-// principal/tunnel/epoch. Grouping only by the protected owner could pair
-// stale lane 1 with a new lane 2 and announce a false native M4 cohort.
-// Original Linux and Windows Game2/4 clients bind n consecutive source
-// ports for ONE attempt. Use that observed TCP tuple as an additional
-// *joining constraint*, never as authentication or native owner authority.
-type originalGameColdFlowKey struct {
+// A logical epoch survives a reconnect. The existing authenticated lane1
+// incarnation instead identifies this exact cold group. NAT may rewrite
+// every source port/IP; no tuple arithmetic is needed for group admission.
+type originalGameColdAttemptKey struct {
     cohort realityfront.V4LinuxGameCohortID
-    clientIP [4]byte
-    serverIP [4]byte
-    serverPort uint16
-    firstClientPort uint16
-}
-func originalGameColdFlowIdentity(
-    cohort realityfront.V4LinuxGameCohortID,id uint8,flow faketcp.ServerFlow,
-)(originalGameColdFlowKey,error){
-    n:=int(cohort.Lanes)
-    ordinal:=int(id)
-    first:=int(flow.ClientPort)-ordinal+1
-    if (n!=2&&n!=4)||ordinal<1||ordinal>n||
-        first<1||first+n-1>65535||flow.ServerPort==0 {
-        return originalGameColdFlowKey{},realityfront.ErrAdmissionParams
-    }
-    return originalGameColdFlowKey{
-        cohort:cohort,clientIP:flow.ClientIP,serverIP:flow.ServerIP,
-        serverPort:flow.ServerPort,firstClientPort:uint16(first),
-    },nil
+    attempt [16]byte
 }
 type originalGameCohortPending struct{
     created time.Time
@@ -743,16 +745,20 @@ type originalGameCohortPending struct{
 }
 type originalGameCohortLive struct{
     key realityfront.V4LinuxGameCohortID
+    attempt [16]byte
     product *realityfront.V4LinuxGameProduct
     members []*realityfront.V4LinuxGameAuthenticatedLane
     peers []faketcp.DetachedPeer
     gameFec bool // actual protected per-cohort Game fixed setting
     stopped bool
     laneRotations [4]uint64
+    managedAt time.Time
+    managedFECProfile uint8
 }
 func stageOriginalAuthenticatedGameLane(
-    groups map[originalGameColdFlowKey]*originalGameCohortPending,
+    groups map[originalGameColdAttemptKey]*originalGameCohortPending,
     lane *realityfront.V4LinuxGameAuthenticatedLane,now time.Time,
+    retireIncomplete func(*realityfront.V4LinuxGameAuthenticatedLane),
 )(realityfront.V4LinuxGameCohortID,[]*realityfront.V4LinuxGameAuthenticatedLane,error){
     var zero realityfront.V4LinuxGameCohortID
     if lane==nil{return zero,nil,realityfront.ErrAdmissionParams}
@@ -760,11 +766,18 @@ func stageOriginalAuthenticatedGameLane(
     if err!=nil{return zero,nil,err}
     n:=int(key.Lanes)
     if n!=2&&n!=4{return zero,nil,realityfront.ErrAdmissionUnsupported}
-    // Different source-port generations MUST NOT share this pending slot,
-    // even if their already-protected epoch and principal are identical.
-    // A stale lane may expire independently without poisoning a fresh pair.
-    cold,err:=originalGameColdFlowIdentity(key,id,lane.Association().Flow())
-    if err!=nil{return key,nil,err}
+    attempt,e:=lane.GameColdAttempt()
+    if e!=nil{return key,nil,e}
+    cold:=originalGameColdAttemptKey{cohort:key,attempt:attempt}
+    // A current authenticated fresh attempt can retire only the incomplete
+    // groups from older attempts of the same logical tunnel. The live
+    // native group is stored separately and never retired here.
+    for k,g:=range groups{
+        if k.cohort.Principal!=key.Principal||k.cohort.TunnelID!=key.TunnelID||
+            k.cohort.Epoch!=key.Epoch||k.attempt==attempt{continue}
+        delete(groups,k)
+        for _,old:=range g.lanes{retireIncomplete(old)}
+    }
     group:=groups[cold]
     if group==nil{
         group=&originalGameCohortPending{
@@ -772,9 +785,7 @@ func stageOriginalAuthenticatedGameLane(
         }
         groups[cold]=group
     }
-    // A simultaneous same-identity successor carrying an already occupied
-    // lane cannot be distinguished using SYN order. Reject the ambiguity,
-    // NEVER mix old/new exporter incarnations into one GameAdapter.
+    // One authenticated member per lane in this exact cold attempt.
     if group.lanes[id]!=nil{return key,nil,realityfront.ErrAdmissionParams}
     group.lanes[id]=lane
     if len(group.lanes)!=n{return key,nil,nil}
@@ -874,7 +885,7 @@ func runGameMultiServer(
     failed:=make(chan error,1)
     var mu sync.Mutex
     seen:=make(map[*faketcp.ServerAssociation]bool,32)
-    pending:=make(map[originalGameColdFlowKey]*originalGameCohortPending)
+    pending:=make(map[originalGameColdAttemptKey]*originalGameCohortPending)
     active:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
     // Normal and Game share THIS listener, table and native TUN reader.
     // Normal keys deliberately exclude epoch (successor replaces only same
@@ -1086,6 +1097,11 @@ func runGameMultiServer(
             mu.Unlock()
         }
     }()
+    if c.management!=nil {
+        if e:=c.management.listen(runCtx);e!=nil{return e}
+        defer func(){cancel();c.management.close()}()
+        if e:=notifyManagedReady();e!=nil{return e}
+    }
     if c.mixedModes{
         log.Printf("V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=%d policy=protected_normal_game2_game4 cold_slots=%d rust_native_slots=%d shared_rust_tun=1 decoy_max_splices=%d",c.localPort,originalV4ColdAssociationSlots,originalV4NativeLaneSlots,cap(cfg.FallbackSlots))
     }else{
@@ -1098,6 +1114,28 @@ func runGameMultiServer(
         select{
         case <-runCtx.Done():return nil
         case e:=<-failed:return e
+        case request:=<-managedRequests(c.management):
+            rows:=make([]managedClient,0,len(activeNormal)+len(active))
+            for key,rec:=range activeNormal {
+                row:=managedClientFor(key,rec.peer.IP,rec.lease,rec.managedAt)
+                row.RemotePort=rec.peer.Port
+                if normalPending[key]!=nil{row.State="rebuilding"}
+                if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
+                if f,e:=rec.product.OriginalFECReadback();e==nil {row.FEC=string(f.Mode);row.FECProfile=int(f.Profile)}
+                if p,e:=rec.product.OriginalLoopPulse();e==nil {row.RxRecords=&p.RxRecords;row.TxRecords=&p.TxRecords}
+                if o,e:=rec.product.OriginalOuterCounters();e==nil {row.FirstWireBytes=&o.FirstWireBytes}
+                rows=append(rows,row)
+            }
+            for key,rec:=range active {
+                row:=managedClientFor(key,rec.peers[0].IP,"",rec.managedAt)
+                row.RemotePort=rec.peers[0].Port
+                for k:=range gameProofPending{if k.Principal==key.Principal&&k.TunnelID==key.TunnelID{row.State="rebuilding";break}}
+                if info,e:=rec.product.ManagementIdentity();e==nil {row.applyIdentity(info)}
+                if row.FEC=="" {row.FEC="off"}; if rec.gameFec {row.FEC="fixed";row.FECProfile=int(rec.managedFECProfile)}
+                if p,e:=rec.product.KernelCounters();e==nil {row.GameCopied=&p.Copied;row.GameDelivered=&p.Delivered}
+                rows=append(rows,row)
+            }
+            request<-managedSnapshot(c,tun.name,rows)
         case a:=<-established:
             if a==nil{continue}
             tlsWG.Add(1)
@@ -1231,7 +1269,7 @@ func runGameMultiServer(
                 }
                 rec:=&originalV4MultiRecord{
                     assoc:result.assoc,product:product,lease:lease,
-                    peer:peer,ready:true,
+                    peer:peer,ready:true,managedAt:time.Now(),
                 }
                 detached[result.assoc]=peer
                 if older!=nil{
@@ -1281,10 +1319,9 @@ func runGameMultiServer(
             // Physical IP/MTU changes remain an independent full-group hint.
             freshGroup,e:=lane.ProtectedFreshGroupRequested()
             if e!=nil{rejectLane(lane);continue}
-            fullGroupPending:=false
-            for candidate:=range pending{
-                if candidate.cohort==coldKey{fullGroupPending=true;break}
-            }
+            attempt,e:=lane.GameColdAttempt()
+            if e!=nil{rejectLane(lane);continue}
+            fullGroupPending:=pending[originalGameColdAttemptKey{cohort:coldKey,attempt:attempt}]!=nil
             if freshGroup&&coldKey.Lanes==4{
                 log.Printf("V4_PUBLIC_GAME_FULL_GROUP_PROTECTED_EPOCH_ZERO role=server lane=%d client_port=%d old_group_preserved=1",
                     laneID,lane.Association().Flow().ClientPort)
@@ -1294,7 +1331,7 @@ func runGameMultiServer(
                     laneID,lane.Association().Flow().ClientPort)
             }
             if group:=active[coldKey];group!=nil&&coldKey.Lanes==4&&
-                !freshGroup&&!fullGroupPending{
+                group.attempt==attempt&&!freshGroup&&!fullGroupPending{
                 if laneID<1||laneID>4{
                     rejectLane(lane)
                     continue
@@ -1305,73 +1342,56 @@ func runGameMultiServer(
                     rejectLane(lane)
                     continue
                 }
-                // A new complete A→B physical Game4 generation shares the
-                // authenticated principal/tunnel/EPOCH with the old group.
-                // It is NOT a one-lane hot swap just because its first TLS
-                // lane arrives while the old cohort is still active.
-                // Distinguish using the independently observed real TCP
-                // source IP and the AUTHENTICATED cold record/MSS budgets,
-                // never a client-supplied unprotected path-change flag.
+                // H2401's protected attempt identity already separates a
+                // fresh group from an explicit same-group hot lane. NAT
+                // may choose a different public IP as well as a new port.
+                // It must not turn a single replacement into a four-lane wait.
                 newFlow:=lane.Association().Flow()
-                oldFlow:=previous.Association().Flow()
                 oldCL,oldSL,eOld:=previous.AuthenticatedRecordLimits()
                 newCL,newSL,eNew:=lane.AuthenticatedRecordLimits()
-                if eOld!=nil||eNew!=nil{
+                if eOld!=nil||eNew!=nil||newCL!=oldCL||newSL!=oldSL{
+                    rejectLane(lane)
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_COLD_DEFERRED role=server lane=%d owner_preserved=1 class=record_budget",laneID)
+                    continue
+                }
+                if !group.product.MatchesProtectedGameFec(gameFec){
                     rejectLane(lane)
                     continue
                 }
-                physicalGroupCandidate:=
-                    newFlow.ClientIP!=oldFlow.ClientIP||
-                    newFlow.ServerIP!=oldFlow.ServerIP||
-                    newFlow.ServerPort!=oldFlow.ServerPort||
-                    newCL!=oldCL||newSL!=oldSL
-                if physicalGroupCandidate{
-                    log.Printf("V4_PUBLIC_GAME_PHYSICAL_GROUP_CANDIDATE role=server lane=%d mode=authenticated_new_source_or_record_budget same_epoch=1 old_group_untouched=1",
-                        laneID)
-                    // Fall through into the EXISTING four-lane complete
-                    // cohort staging below. Only after all four original
-                    // protected TLS/M1 owners commit can the old GameAdapter
-                    // receive an exact Stop. One lane never retires it.
-                }else{
-                    if !group.product.MatchesProtectedGameFec(gameFec){
-                        rejectLane(lane)
-                        continue
-                    }
-                    newPeer,e:=lane.DetachedPeer()
-                    if e!=nil||newFlow.ServerIP!=c.localIP.As4()||
-                        newFlow.ServerPort!=c.localPort{
-                        rejectLane(lane)
-                        continue
-                    }
-                    if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{newPeer}));e!=nil{
-                        rejectLane(lane)
-                        return fmt.Errorf("Game4 fresh one-lane TLS raw filter: %w",e)
-                    }
-                    if e=group.product.ReplaceServerGameLane(lane,laneID);e!=nil{
-                        // A possibly partially committed native crypto/RX
-                        // switch still fails closed: do not classify it as
-                        // a harmless candidate rejection.
-                        log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_NATIVE_REKEY_FAILED role=server class=uncertain_native_or_stop lane=%d",
-                            laneID)
-                        if err=retire(group,"one-lane-native-rekey-failed");err!=nil{return err}
-                        delete(active,coldKey)
-                        rejectLane(lane)
-                        continue
-                    }
-                    oldAssoc:=previous.Association()
-                    hotGrace:=originalLaneRetirementGrace()
-                    hotRetiring[oldAssoc]=time.Now().Add(hotGrace)
-                    log.Printf("V4_PUBLIC_GAME_OLD_COLD_TUPLE_RETIRE_SCHEDULED role=server lane=%d old_port=%d delay_ms=%d same_M4_slot=1",
-                        laneID,oldAssoc.Flow().ClientPort,hotGrace.Milliseconds())
-                    detached[lane.Association()]=newPeer
-                    group.members[idx]=lane
-                    group.peers[idx]=newPeer
-                    group.laneRotations[idx]++
-                    if e=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
-                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=%d rotation=%d client_port=%d server_port=%d same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
-                        laneID,group.laneRotations[idx],newFlow.ClientPort,newFlow.ServerPort)
+                newPeer,e:=lane.DetachedPeer()
+                if e!=nil||newFlow.ServerIP!=c.localIP.As4()||
+                    newFlow.ServerPort!=c.localPort{
+                    rejectLane(lane)
                     continue
                 }
+                if e=raw.ExcludeDetachedDataSet(peers([]faketcp.DetachedPeer{newPeer}));e!=nil{
+                    rejectLane(lane)
+                    return fmt.Errorf("Game4 fresh one-lane TLS raw filter: %w",e)
+                }
+                if e=group.product.ReplaceServerGameLane(lane,laneID);e!=nil{
+                    // A possibly partially committed native crypto/RX
+                    // switch still fails closed: do not classify it as
+                    // a harmless candidate rejection.
+                    log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_NATIVE_REKEY_FAILED role=server class=uncertain_native_or_stop lane=%d",
+                        laneID)
+                    if err=retire(group,"one-lane-native-rekey-failed");err!=nil{return err}
+                    delete(active,coldKey)
+                    rejectLane(lane)
+                    continue
+                }
+                oldAssoc:=previous.Association()
+                hotGrace:=originalLaneRetirementGrace()
+                hotRetiring[oldAssoc]=time.Now().Add(hotGrace)
+                log.Printf("V4_PUBLIC_GAME_OLD_COLD_TUPLE_RETIRE_SCHEDULED role=server lane=%d old_port=%d delay_ms=%d same_M4_slot=1",
+                    laneID,oldAssoc.Flow().ClientPort,hotGrace.Milliseconds())
+                detached[lane.Association()]=newPeer
+                group.members[idx]=lane
+                group.peers[idx]=newPeer
+                group.laneRotations[idx]++
+                if e=raw.ExcludeDetachedDataSet(peers(nil));e!=nil{return e}
+                log.Printf("V4_PUBLIC_GAME_SINGLE_LANE_READY role=server lane=%d rotation=%d client_port=%d server_port=%d same_game_adapter=1 sibling_lane_restarts=0 original_TLS=1 Rust_M4=1",
+                    laneID,group.laneRotations[idx],newFlow.ClientPort,newFlow.ServerPort)
+                continue
             }
             // A client M4 local READY cannot prove this second server
             // lane arrived. Make each independently protected arrival
@@ -1380,7 +1400,7 @@ func runGameMultiServer(
             log.Printf("V4_PUBLIC_GAME_MULTI_PROTECTED_LANE_STAGED role=server lanes=%d lane=%d client_port=%d",
                 coldKey.Lanes,laneID,lane.Association().Flow().ClientPort)
             key,complete,e:=stageOriginalAuthenticatedGameLane(
-                pending,lane,time.Now(),
+                pending,lane,time.Now(),rejectLane,
             )
             if e!=nil{
                 rejectLane(lane)
@@ -1486,8 +1506,8 @@ func runGameMultiServer(
                 return fmt.Errorf("Game multi-group shared-port DATA filter: %w",e)
             }
             rec:=&originalGameCohortLive{
-                key:key,product:product,members:complete,peers:newPeers,
-                gameFec:gameCfg.GameFecEnabled,
+                key:key,attempt:attempt,product:product,members:complete,peers:newPeers,
+                gameFec:gameCfg.GameFecEnabled,managedAt:time.Now(),managedFECProfile:gameCfg.GameFecProfile,
             }
             for i,l:=range complete{
                 detached[l.Association()]=newPeers[i]
@@ -1564,6 +1584,7 @@ func runGameMultiServer(
             // One event-loop owner publishes the exact confirmed B. Later
             // Stop of A is generation-fenced in the existing shared TUN.
             olderSameEpoch:=active[proof.key]
+            for k,old:=range active{if k.Principal==proof.key.Principal&&k.TunnelID==proof.key.TunnelID&&old.managedAt.Before(rec.managedAt){rec.managedAt=old.managedAt}}
             active[proof.key]=rec
             *connected=true
             if olderSameEpoch!=nil{scheduleGameRetire(olderSameEpoch)}
@@ -1596,6 +1617,7 @@ func runGameMultiServer(
                 continue
             }
             older:=activeNormal[proof.key]
+            if older!=nil{rec.managedAt=older.managedAt}
             activeNormal[proof.key]=rec
             *connected=true
             log.Printf("V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=%d source=authenticated_client_native_Health promoted=1 active_normal=%d old_route_preserved_until_proof=1",

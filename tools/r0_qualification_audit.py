@@ -119,6 +119,12 @@ def audit():
               "ad8388ea1a9e0ea807e442e8263a699e7edcb320ecbcd21b4fa8ff859acce3ba"
             and not by_name["rtrb"].get("dependencies"),
             "M1 bounded SPSC rtrb version, provenance or transitive closure drift")
+    # PLAN029 CN cold domain rules added this exact optional engine-only leaf.
+    require(by_name.get("regex-lite",{}).get("version") == "0.1.8" and
+            by_name["regex-lite"].get("checksum") ==
+              "8d942b98df5e658f56f20d592c7f868833fe38115e65c33003d8cd224b0155da"
+            and not by_name["regex-lite"].get("dependencies"),
+            "PLAN029 cold domain regex dependency pin drift")
     for crate in members:
         c = tomllib.loads(Path(f"crates/{crate}/Cargo.toml").read_text())
         require(c["package"]["name"] == crate, f"crate package mismatch: {crate}")

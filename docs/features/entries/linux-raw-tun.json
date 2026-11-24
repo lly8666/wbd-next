@@ -1,1 +1,168 @@
-{"schema_version":1,"id":"linux-raw-tun","name":"Linux Raw IPv4/TUN产品驱动","summary":"Linux Go/Rust原生raw/TUN；H2372双ISA公平准入实测正收益，main集成回归待验。","owner":"M4/M0 + FEC实验","stage":"experimental","development_branch":"experiment/fec-network-tuning","available_on":["integration/w168-freeze-windows-adapter-20261026","main"],"defaults":{"--tun-name":"wbdv40","--tun-fq-maxrate-mbps":"600（0禁用）","IPv6":"在owned Linux V4 TUN禁用","--tun-txqlen-packets":"2048（只对本进程原始 Go 新建 Linux V4 TUN 生效；显式 500 回退）","Normal客户端M1 inbox":"128；server/Game 64"},"usage":{"cli":"Linux --raw-interface --local-ip --tun-ipv4 --tun-name；需要CAP_NET_RAW和/dev/net/tun；Linux --tun-txqlen-packets 2048|500：只修改已绑定的自身 TUN H2206 server --raw-interface eth0 --local-ip 0.0.0.0（或省略本参数）从网卡冷解析唯一IPv4；NAT网关TCP443映射需手动配置。多个IPv4要求显式地址，客户端拒绝零地址。","config":"公开CLI拥有TUN及FQ；不是通用Go配置字段","gui":"无官方Linux V4前端GUI本次同源证据"},"code_refs":["r0/go_overlay/internal/v4productcli/linux.go","crates/wbd-platform/src/linux_raw_carrier.rs","crates/wbd-platform/src/linux_tun_sink.rs","crates/wbd-engine/src/v4_native_health.rs","r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go","r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go","r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go","crates/wbd-engine/src/v4_embedded_go.rs","r0/go_overlay/internal/v4productcli/server_nat_bind_linux_test.go"],"doc_refs":["docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json","docs/architecture/MIGRATION.md","docs/devlog/M0/20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION.md","docs/devlog/M0/20261028-PLAN026-RUST-150M-LINUX-UDP-FIXTURE-BACKPRESSURE.md","docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md","docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md","docs/devlog/M0/20261107-PLAN028-H1298-ERIN-SOCKET-ADAPT.md","docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json","docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json","docs/devlog/M0/20261109-PLAN028-H1461-NATIVE-PATCH-AND-TWO-TRUE-SOAKS.md","docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json","docs/decisions/M0-PLAN029B-H2206-NAT-IFACE-ROUTEKEY-20261119.md","docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-128-64-20261121.json"],"verification":[{"platform":"linux/amd64","scope":"原Go TLS与Rust真实raw/TUN：真实Linux TUN/raw产品Game/Fixed/Auto组合（旧L源码，非本次审阅SHA）","status":"FUNCTIONAL_PASS","source_sha":"c81838f10371d9ecb6a88fd3cabb8692fd8fff85","evidence":"docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"},{"platform":"linux/arm64 + linux/amd64","scope":"F实验分支W168：F实验 ARM64/AMD64 受限真内核观测，仅观察/特定case通过，非全平台质量门","status":"FUNCTIONAL_PASS","source_sha":"0776fc4ede72fabd711e8333568eb88a58e8a6ea","evidence":"docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"},{"platform":"Windows amd64 + Linux amd64 WSL2","scope":"Rust Normal/off真实双向UDP 100Mbps各方向、300ms单程、0% netem、60s；Linux raw RX SO_RCVBUF4MiB请求/8MiB内核生效，raw socket drops0，首次交付100.000%/99.9877%，两端owned Stop PASS；仅此SOURCE/场景","status":"PERFORMANCE_PASS","source_sha":"0abd1b04ee7a39d8aa426963564a079523c1036a","evidence":"docs/evidence/M0/PLAN026-SOURCE0ABD-RAW-RXBUF-100M-ACTUAL-PASS-20261028.json"},{"platform":"Windows amd64 + Linux amd64 WSL2","scope":"Rust Normal/off 150Mbps each direction, 300ms one-way, 0% injected loss, 60s; original signed drivers/TLS/TUN, bounded per-raw RX 8MiB and test UDP receiver 8MiB kernel actual, no local socket/netem drops, first delivery 100% / 99.9988%, both Stop PASS. 15 consecutive Windows-receiver missing packets means absolute zero-loss NOT_MET.","status":"PERFORMANCE_PASS","source_sha":"0abd1b04ee7a39d8aa426963564a079523c1036a","evidence":"docs/evidence/M0/PLAN026-SOURCEB3A6-RUST-150M-300MS-0LOSS-PASS-20261028.json"},{"platform":"linux/arm64","scope":"物理发行版权限/多路由IPv6","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"physical","scope":"原生路由器用户应用","status":"NOT_RUN","source_sha":null,"evidence":null},{"platform":"Windows amd64 + Linux WSL2 amd64","scope":"H527 原Go Linux TUN txqlen2048读回、Win↔WSL2 signed TLS 60s Normal/Auto/Fixed6及Stop；原范围见证据。","status":"FUNCTIONAL_PASS","source_sha":"787ad4c900f3bae867c5c9556c4702339deef8cb","evidence":"docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"},{"platform":"Windows2025 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust","scope":"source787ad4 real C50 Normal/off 50Mbps each,25ms/0%,60s actual bidirectional first exact and owned Stop; 100M strict-zero and new-source 300s not proven","status":"PERFORMANCE_PASS","source_sha":"787ad4c900f3bae867c5c9556c4702339deef8cb","evidence":"docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json"},{"platform":"Linux WSL2 original Rust raw/TUN ↔ Windows2025 signed NPF/Wintun","scope":"H566 源525 原Go/Linux内核0/1/5/15/30%损失、50Mbps60s、Fixed/Auto及Stop；逐档首次交付与修复率见原证据。","status":"FUNCTIONAL_PASS","source_sha":"52566af216edf9dee4068f0bb8bfd0fb8d18dfcb","evidence":"docs/evidence/M0/PLAN027-H566-SOURCE525-RECOVERED-TWELVE-SCENES-20261031.json"},{"platform":"native Linux x86_64 original Go TLS443/Rust M4 five clients same 443 shared TUN","scope":"H1355 180s source6c5 true five native leases, Game2 Fixed6/other modes, 4 whole-owner 2 authentic turnovers and Dave Game4 2 confirmed independent slots, per-lease overflow0+offered=delivered, exact 5 client+server TUN Stop, duplex UDP/TCP. H1356 only corrects old Game2 Off counter reporter marker.","status":"FUNCTIONAL_PASS","source_sha":"6c5fd909b9f42d1af89c698cdaabc79bbb72e589","evidence":"docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json"},{"platform":"Linux x86_64","scope":"H1609: prebuilt Normal Off + Game4 FEC6, real OS path/MTU, TLS/M4, 5+5 kernel UDP, exact Stop.","status":"FUNCTIONAL_PASS","source_sha":"8a31375e36bb6a93860c5579e64b4a39d0b6e346","evidence":"docs/evidence/M0/PLAN028-H1609-SOURCE196D-PARALLEL-PREBUILT-NORMAL-GAME4-PATH-20261111.json"},{"platform":"Native Ubuntu x86_64 + aarch64, original Linux Go TLS client/server and Rust M4","scope":"H2177 Linux双ISA各五原生模式及双向kernel TCP/UDP/ICMP、MTU1460、FEC拷贝/Stop；历史范围见源锁证据。","status":"FUNCTIONAL_PASS","source_sha":"3cc095e38d98fd1a9b2a8f00835b113bc434c9e1","evidence":"docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"},{"platform":"native Ubuntu 24.04 x86_64 and aarch64 original Linux Go TLS/Rust AF_PACKET + owned TUN, client/server","scope":"H2186 Linux x86/ARM各8场原Go TLS/Rust真AF_PACKET/TUN双向TCP/UDP/Stop SUCCESS；Game pad真raw收据、AES128/256、外MTU1460/1280、内1209允许sysctl缺但IPv6地址/路由=0；无实体ARM、全宿主IPv6/性能结论。","status":"FUNCTIONAL_PASS","source_sha":"e174235872d32cca69bf921fb59904f9bcaee889","evidence":"docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"},{"platform":"Linux native x86_64/aarch64 Normal original Go TLS/Rust","scope":"H2193 SOURCE 06bd63f5 x86_64/ARM64 each two Normal tls/flows original Go TLS/Rust real kernel TCP/UDP, raw M4 pad copied and owned Stop 4/4 PASS_SCOPED; FEC Fixed/Auto padding remains UNWIRED.","status":"FUNCTIONAL_PASS","source_sha":"06bd63f5facfc006b4cdc05726ab4351aaa931d2","evidence":"docs/evidence/M0/PLAN029-H2193-LINUX-NORMAL-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"},{"platform":"Linux native Ubuntu x86_64/aarch64","scope":"H2206 Go TLS v2+Rust AF_PACKET/TUN Normal tls/Game2 flows，zero/omitted映射v4as唯一IPv4，原生TCP/UDP双向/Stop两场每ISA，含歧义负例","status":"FUNCTIONAL_PASS","source_sha":"039b88c4eda1edac24d4a9510373f4d127aea74d","evidence":"docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json"},{"platform":"Linux ARM64","scope":"H2224服务端owned VPN子网MASQUERADE增/验/删，原Go/Rust三客户端真双NAT/TUN/Stop。","status":"FUNCTIONAL_PASS","source_sha":"26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2","evidence":"docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json"}],"limitations":["仅修改自己新建的TUN，不自动改宿主全局网络；内核write成功≠对端送达。","本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。","PLAN026 SOURCE0abd 100Mbps/300ms/0% netem 60s 原生Windows↔WSL2 Rust Normal/off 已真实验证：SO_RCVBUF请求4MiB、有效8MiB，raw socket drops0、业务首次交付两方向>=99.9%及Stop PASS；但Linux→Windows仍有101唯一包缺失，绝对零丢包未达成；150Mbps/物理/其他模式尚未验证。","PLAN026 low-cost candidate only changes Linux Auto Go observation scheduler from 200ms to the existing two-second decision cadence. No change to Linux Rust raw/TUN kernel path or FEC codec. New source and CPU/no-latency regression remain NOT_RUN, and this does not implement merged Rust Keepalive/server Dormant.","PLAN026 Linux original Rust raw/TUN M3 unique AEAD+PN now admits authenticated Health-only or Receipt+Health/Quality as control without fabricating business delivery or M2 ACK. Native timed Keepalive TX, server FIN Dormant and physical qualification still NOT_RUN.","PLAN026 client/server real native Rust raw/TUN TX owner now includes 15s Health due/one merged M2 Receipt control and real sendmmsg copied/uncertain/NotSent settlement, no new Go packet pump; liveness remote data aggregation, dead/FIN Dormant effective config, representative V2 network and CPU qualification remain NOT_RUN.","PLAN026 Linux original Go/TLS Rust RX shares post-auth unique M3 activity once per recvmmsg batch with native TX 15s Health and 90s dead-after, no new worker or per-packet Go callback. Server FIN-bound Dormant/Wake and effective configuration still pending, zero network/CPU qualification implied.","PLAN026 Linux会话Health已接线，但旧CLI、FIN/Dormant/Wake/CPU及真网仍按旧证据范围。","SOURCE787ad4 H497 native C100 60s Linux→Windows 11 first-missing although Linux owner TUN TX and fq drops0, owned Stop PASS; OLD f838 independent q2048 300s exact-zero is not new-source qualification. H498 C10/Fixed30/Auto short tests do not certify 120s Auto, all B lifecycle, 5min new-source, calibrated one-way, or physical.","H515 Rust original Linux M4 raw TCP may now emit bounded optional ACK-only SACK from authenticated future M3 spans via Go's actual negotiated cold bit. No new business ACK/PN, no Go steady path. New SOURCE real native verification pending; earlier TUN/queue witnesses do not transfer automatically.","H533 source08069b cosmetic original Linux Rust RX ACK gap >600ms abandoned only after authenticated future data, existing ACK/SACK reused, new source live 0/30% pending, M3 business delivery and driver/Stop unchanged.","H552 SOURCEf031 Linux 1/5/15/30% R/F=0.1174/1.1446/4.2179/4.8735%，首发/Stop PASS，1/5/30%目标FAIL、15% PASS；新Rust候选未核真网。","H555 SOURCEd765 bounded positive SACK mature-gap cursor + 50% PN sample, per-direction 32 FIFO/BurstPaced20ms; new native 0/1/5/15/30 CPU/Stop NOT_RUN at that source, old SOURCEf031 ratios FAIL. Game lifecycle/control CPU still open.","H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.","H1267 Linux RAW TX SO_SNDBUF默认/1MiB开发读回采样（<=128次EAGAIN）；120s原生A/B NOT_RUN，非产品修复。","H1267 SOURCEdae5 native two 120s arms: RAW SO_SNDBUF effective212992→2097152, Fixed630% EAGAIN4521→0, UL93.82→99.984% but DL recovery99.99→92.66%. One VM/both peers; not global default, H1268 client-only A/B separate.","H1270 x86 raw RX cold diagnostic after H1268 source22c2: client TX EAGAIN0 but raw RX flat1.007s and S2C blackout1.27s. Default-OFF worker timing/cpu only; no packet, kernel-buffer, crypto, FEC or default dataplane tuning.","H1271 x86 SOURCE31da 120s RAW RX no >=750ms plateau; loop gap<=10.671ms and Fixed630% DL unique99.967/99.977/99.959%. H1268 1.007s S2C and H1259 7s outages remain. Old raw_batches mislabeled delivery count; SOURCE376f Action42158532358 unit1/1, new high-pressure and p99 NOT_QUALIFIED.","H1276 SOURCE226b ARM64 pending retest: H1274 3×1800s per-lease overflow Bob52/Alice87/Dave2461. Candidate FIFO oldest-drain under 8pkts/64KiB/100ms. Prior Game2 83–106s, Normal70s, Game4 high-loss cold failures and overhead remain UNVERIFIED.","H1278 SOURCE1e4 after real TLS/M4 cutover bounded cumulative ACK replay80..4480ms to preserve original server ACK barrier; no post-handoff Go DATA or new wire, Stop gated. ARM64 30min native pending; H1277 Game2 gaps103/95s, Game4 overflow6031, Fixed630% gaps4–5s remained FAIL.","H1285: H1284 16包共享TUN队列压力溢出751/2356/6/9734/38，回退原8包；64KiB/100ms与独立租约硬界不变；不声称可修吞吐。","H1292 candidate: H1290 ARM64 native pressure source622653仍FAIL3(Erin下行1270ms、Bob24和Dave46共享TUN每/32队列溢出)；标量压力FAIL4；异构native PASS0。原共享TUN仅队列达到8才尝试把最老包送入已腾空的真实M1接收器，容易让低于8的瞬时积压持续到下一批。H1292在存在积压的每次新TUN到来前最多try_send一次最老包，保持8包/64KiB/100ms、每租约FIFO/独立隔离，不增线程/缓存；ARM64源码锁定180秒短测待验，不声称已通过。","H1295: same /32 shared native Rust TUN has EXACTLY ONE newest authenticated route; no old worker premature alive=false on route publication. Go owns OLD native M4 RX/TX grace until exact joined Stop; old generation cannot get NEW TUN, stale cannot republish. Native five-client pressure/MTU short retest pending.","H1298 candidate after H1297 SOURCEe410 Action42332967232 Erin DL2160ms/EAGAIN1047/M4 plateau: after eight consecutive genuine FEC2 Backpressure increase that one RAW SO_SNDBUF to 1MiB (effective<=2MiB). H1267 all-socket AB failed universal downlink; no global default; causal native proof required.","H1298 ARM64 SOURCE1729010e Action42334170992 five-client 180s PASS0 alerts/5 TLS rotations/Stop/overflow0, Erin max UL250ms/DL120ms, adaptive SO_SNDBUF NOT_TRIGGERED; H1295 and H1297 FAIL remain, H1299 separate.","H2177 native x86_64/ARM64 current-SOURCE 5-mode short functional PASS_SCOPED. ARM physical board, stress/perf/long capacity, host-wide IPv6 and p99 NOT_RUN; older H1355 source-specific L1 remains.","PLAN028 H1461 SOURCE66fb6b44 bounded Rust per-lease 8pkts/64KiB/100ms FIFO repair candidate; 600/1800 native five-client Action42578056120 in_progress. Historical SOURCE548 Normal75 28 UDP missing/5 overflow FAIL_SCOPED retained; Windows-hosted official 1800 NOT_QUALIFIED.","H2186 H2185 earlier outer1280 case failed because fixture unconditionally read per-interface IPv6 sysctl even though inner1209 < IPv6 min1280; true new source each native ISA verifies missing sysctl only under inner<1280 AND zero IPv6 addr/routes. Host global IPv6 remains NOT_RUN.","H2206 AF_PACKET不是TCP 0.0.0.0监听；本机NIC自动唯一IPv4，多地址失败，网关DNAT与实体跨ISA NOT_RUN。","H2224公网出口和崩溃残留NOT_RUN；ip_forward及iptables权限归宿主。","Normal客户端128槽；H2372满队列公平准入仅Normal/off客户端，main回归待验。"],"promotion":null}
+{
+  "schema_version": 1,
+  "id": "linux-raw-tun",
+  "name": "Linux Raw IPv4/TUN产品驱动",
+  "summary": "Linux Go/Rust原生raw/TUN；H2372双ISA公平准入实测正收益，已集成。 H2397已集成统一128及全部角色/模式公平准入。",
+  "owner": "M4/M0 + FEC实验",
+  "stage": "experimental",
+  "development_branch": "experiment/fec-network-tuning",
+  "available_on": [
+    "integration/w168-freeze-windows-adapter-20261026",
+    "main"
+  ],
+  "defaults": {
+    "--tun-name": "wbdv40",
+    "--tun-fq-maxrate-mbps": "600（0禁用）",
+    "IPv6": "在owned Linux V4 TUN禁用",
+    "--tun-txqlen-packets": "2048（只对本进程原始 Go 新建 Linux V4 TUN 生效；显式 500 回退）",
+    "Normal/Game 客户端与服务端 M1 inbox": "128；同一满队列五元组公平准入，H2397已合main"
+  },
+  "usage": {
+    "cli": "Linux --raw-interface --local-ip --tun-ipv4 --tun-name；需要CAP_NET_RAW和/dev/net/tun；Linux --tun-txqlen-packets 2048|500：只修改已绑定的自身 TUN H2206 server --raw-interface eth0 --local-ip 0.0.0.0（或省略本参数）从网卡冷解析唯一IPv4；NAT网关TCP443映射需手动配置。多个IPv4要求显式地址，客户端拒绝零地址。",
+    "config": "公开CLI拥有TUN及FQ；不是通用Go配置字段",
+    "gui": "无官方Linux V4前端GUI本次同源证据"
+  },
+  "code_refs": [
+    "r0/go_overlay/internal/v4productcli/linux.go",
+    "crates/wbd-platform/src/linux_raw_carrier.rs",
+    "crates/wbd-platform/src/linux_tun_sink.rs",
+    "crates/wbd-engine/src/v4_native_health.rs",
+    "r0/go_overlay/internal/realityfront/bridge_v4_embedded_linux.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_client_product.go",
+    "r0/go_overlay/internal/realityfront/bridge_v4_linux_server_product.go",
+    "crates/wbd-engine/src/v4_embedded_go.rs",
+    "r0/go_overlay/internal/v4productcli/server_nat_bind_linux_test.go"
+  ],
+  "doc_refs": [
+    "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json",
+    "docs/architecture/MIGRATION.md",
+    "docs/devlog/M0/20261028-PLAN026-RUST-LINUX-RAW-RXBUF-4M-REGRESSION.md",
+    "docs/devlog/M0/20261028-PLAN026-RUST-150M-LINUX-UDP-FIXTURE-BACKPRESSURE.md",
+    "docs/devlog/M0/20261030-PLAN027-H494-TUN-2048-REAL-PRODUCT-COLD-FIX.md",
+    "docs/devlog/M0/20261030-PLAN027-H498-NEW-SOURCE-A-SHORT-TRUE-NATIVE.md",
+    "docs/devlog/M0/20261107-PLAN028-H1298-ERIN-SOCKET-ADAPT.md",
+    "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json",
+    "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json",
+    "docs/devlog/M0/20261109-PLAN028-H1461-NATIVE-PATCH-AND-TWO-TRUE-SOAKS.md",
+    "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json",
+    "docs/decisions/M0-PLAN029B-H2206-NAT-IFACE-ROUTEKEY-20261119.md",
+    "docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-128-64-20261121.json",
+    "docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json",
+    "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
+    "docs/devlog/M0/20261124-H2408-NORMAL-NAT-COLD-PARITY.md"
+  ],
+  "verification": [
+    {
+      "platform": "Windows amd64 + Linux WSL2 amd64",
+      "scope": "H527 原Go Linux TUN txqlen2048读回、Win↔WSL2 signed TLS 60s Normal/Auto/Fixed6及Stop；原范围见证据。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+      "evidence": "docs/evidence/M0/PLAN027-H498-NEW-SOURCE-A-C10-FIXED30-AUTO-20261030.json"
+    },
+    {
+      "platform": "Windows2025 signed Npcap/Wintun + WSL2 Linux original Go TLS/Rust",
+      "scope": "source787ad4 real C50 Normal/off 50Mbps each,25ms/0%,60s actual bidirectional first exact and owned Stop; 100M strict-zero and new-source 300s not proven",
+      "status": "PERFORMANCE_PASS",
+      "source_sha": "787ad4c900f3bae867c5c9556c4702339deef8cb",
+      "evidence": "docs/evidence/M0/PLAN027-H500-A4-A5-C50-OFF30-NEW-SOURCE-20261030.json"
+    },
+    {
+      "platform": "Linux WSL2 original Rust raw/TUN ↔ Windows2025 signed NPF/Wintun",
+      "scope": "H566 源525 原Go/Linux内核0/1/5/15/30%损失、50Mbps60s、Fixed/Auto及Stop；逐档首次交付与修复率见原证据。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "52566af216edf9dee4068f0bb8bfd0fb8d18dfcb",
+      "evidence": "docs/evidence/M0/PLAN027-H566-SOURCE525-RECOVERED-TWELVE-SCENES-20261031.json"
+    },
+    {
+      "platform": "native Linux x86_64 original Go TLS443/Rust M4 five clients same 443 shared TUN",
+      "scope": "H1355 180s source6c5 true five native leases, Game2 Fixed6/other modes, 4 whole-owner 2 authentic turnovers and Dave Game4 2 confirmed independent slots, per-lease overflow0+offered=delivered, exact 5 client+server TUN Stop, duplex UDP/TCP. H1356 only corrects old Game2 Off counter reporter marker.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "6c5fd909b9f42d1af89c698cdaabc79bbb72e589",
+      "evidence": "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json"
+    },
+    {
+      "platform": "Linux x86_64",
+      "scope": "H1609: prebuilt Normal Off + Game4 FEC6, real OS path/MTU, TLS/M4, 5+5 kernel UDP, exact Stop.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "8a31375e36bb6a93860c5579e64b4a39d0b6e346",
+      "evidence": "docs/evidence/M0/PLAN028-H1609-SOURCE196D-PARALLEL-PREBUILT-NORMAL-GAME4-PATH-20261111.json"
+    },
+    {
+      "platform": "Native Ubuntu x86_64 + aarch64, original Linux Go TLS client/server and Rust M4",
+      "scope": "H2177 Linux双ISA各五原生模式及双向kernel TCP/UDP/ICMP、MTU1460、FEC拷贝/Stop；历史范围见源锁证据。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "3cc095e38d98fd1a9b2a8f00835b113bc434c9e1",
+      "evidence": "docs/evidence/M0/PLAN029-H2177-LINUX-X86-ARM64-TWO-ENDPOINT-FIVE-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "native Ubuntu 24.04 x86_64 and aarch64 original Linux Go TLS/Rust AF_PACKET + owned TUN, client/server",
+      "scope": "H2186 Linux x86/ARM各8场原Go TLS/Rust真AF_PACKET/TUN双向TCP/UDP/Stop SUCCESS；Game pad真raw收据、AES128/256、外MTU1460/1280、内1209允许sysctl缺但IPv6地址/路由=0；无实体ARM、全宿主IPv6/性能结论。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "e174235872d32cca69bf921fb59904f9bcaee889",
+      "evidence": "docs/evidence/M0/PLAN029-H2186-LINUX-X86-ARM64-EIGHT-CROSSPLATFORM-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "Linux native x86_64/aarch64 Normal original Go TLS/Rust",
+      "scope": "H2193 SOURCE 06bd63f5 x86_64/ARM64 each two Normal tls/flows original Go TLS/Rust real kernel TCP/UDP, raw M4 pad copied and owned Stop 4/4 PASS_SCOPED; FEC Fixed/Auto padding remains UNWIRED.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "06bd63f5facfc006b4cdc05726ab4351aaa931d2",
+      "evidence": "docs/evidence/M0/PLAN029-H2193-LINUX-NORMAL-PADDING-X86-ARM64-FOUR-NATIVE-PASS-20261118.json"
+    },
+    {
+      "platform": "Linux native Ubuntu x86_64/aarch64",
+      "scope": "H2206 Go TLS v2+Rust AF_PACKET/TUN Normal tls/Game2 flows，zero/omitted映射v4as唯一IPv4，原生TCP/UDP双向/Stop两场每ISA，含歧义负例",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "039b88c4eda1edac24d4a9510373f4d127aea74d",
+      "evidence": "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json"
+    },
+    {
+      "platform": "Linux ARM64",
+      "scope": "H2224服务端owned VPN子网MASQUERADE增/验/删，原Go/Rust三客户端真双NAT/TUN/Stop。",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "26fd4cd59bc53a97e2991215ad2ec1ddcae8d0f2",
+      "evidence": "docs/evidence/M0/PLAN029-H2224-LINUX-SERVER-NAT-WIN-GUI-COLD-HEALTH-NATIVE-SCOPED-PASS-20261119.json"
+    },
+    {
+      "platform": "Linux x86_64/aarch64 original native",
+      "scope": "H2397 seven-mode scoped original TCP/UDP/owned Stop; not physical WAN or performance.",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "f21ea508ab58b92a72c902d0b3e1121e26d1a17d",
+      "evidence": "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json"
+    }
+  ],
+  "limitations": [
+    "仅修改自己新建的TUN，不自动改宿主全局网络；内核write成功≠对端送达。",
+    "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
+    "PLAN026 low-cost candidate only changes Linux Auto Go observation scheduler from 200ms to the existing two-second decision cadence. No change to Linux Rust raw/TUN kernel path or FEC codec. New source and CPU/no-latency regression remain NOT_RUN, and this does not implement merged Rust Keepalive/server Dormant.",
+    "PLAN026 Linux original Rust raw/TUN M3 unique AEAD+PN now admits authenticated Health-only or Receipt+Health/Quality as control without fabricating business delivery or M2 ACK. Native timed Keepalive TX, server FIN Dormant and physical qualification still NOT_RUN.",
+    "PLAN026 client/server real native Rust raw/TUN TX owner now includes 15s Health due/one merged M2 Receipt control and real sendmmsg copied/uncertain/NotSent settlement, no new Go packet pump; liveness remote data aggregation, dead/FIN Dormant effective config, representative V2 network and CPU qualification remain NOT_RUN.",
+    "PLAN026 Linux original Go/TLS Rust RX shares post-auth unique M3 activity once per recvmmsg batch with native TX 15s Health and 90s dead-after, no new worker or per-packet Go callback. Server FIN-bound Dormant/Wake and effective configuration still pending, zero network/CPU qualification implied.",
+    "PLAN026 Linux会话Health已接线，但旧CLI、FIN/Dormant/Wake/CPU及真网仍按旧证据范围。",
+    "SOURCE787ad4 H497 native C100 60s Linux→Windows 11 first-missing although Linux owner TUN TX and fq drops0, owned Stop PASS; OLD f838 independent q2048 300s exact-zero is not new-source qualification. H498 C10/Fixed30/Auto short tests do not certify 120s Auto, all B lifecycle, 5min new-source, calibrated one-way, or physical.",
+    "H515 Rust original Linux M4 raw TCP may now emit bounded optional ACK-only SACK from authenticated future M3 spans via Go's actual negotiated cold bit. No new business ACK/PN, no Go steady path. New SOURCE real native verification pending; earlier TUN/queue witnesses do not transfer automatically.",
+    "H533 source08069b cosmetic original Linux Rust RX ACK gap >600ms abandoned only after authenticated future data, existing ACK/SACK reused, new source live 0/30% pending, M3 business delivery and driver/Stop unchanged.",
+    "H552 SOURCEf031 Linux 1/5/15/30% R/F=0.1174/1.1446/4.2179/4.8735%，首发/Stop PASS，1/5/30%目标FAIL、15% PASS；新Rust候选未核真网。",
+    "H555 SOURCEd765 bounded positive SACK mature-gap cursor + 50% PN sample, per-direction 32 FIFO/BurstPaced20ms; new native 0/1/5/15/30 CPU/Stop NOT_RUN at that source, old SOURCEf031 ratios FAIL. Game lifecycle/control CPU still open.",
+    "H566 SOURCE525 genuine 9 real business/Stop positives recorded with exact artifact and ratios; cancelled Game highestFEC and failed A5 remain separately NOT_VERIFIED, C100/300s initially IN_FLIGHT, p99 one-way NOT_MEASURED, old SOURCEf031 failure retained. No sameVM CPU speedup inference.",
+    "H1267 Linux RAW TX SO_SNDBUF默认/1MiB开发读回采样（<=128次EAGAIN）；120s原生A/B NOT_RUN，非产品修复。",
+    "H1267 SOURCEdae5 native two 120s arms: RAW SO_SNDBUF effective212992→2097152, Fixed630% EAGAIN4521→0, UL93.82→99.984% but DL recovery99.99→92.66%. One VM/both peers; not global default, H1268 client-only A/B separate.",
+    "H1270 x86 raw RX cold diagnostic after H1268 source22c2: client TX EAGAIN0 but raw RX flat1.007s and S2C blackout1.27s. Default-OFF worker timing/cpu only; no packet, kernel-buffer, crypto, FEC or default dataplane tuning.",
+    "H1271 x86 SOURCE31da 120s RAW RX no >=750ms plateau; loop gap<=10.671ms and Fixed630% DL unique99.967/99.977/99.959%. H1268 1.007s S2C and H1259 7s outages remain. Old raw_batches mislabeled delivery count; SOURCE376f Action42158532358 unit1/1, new high-pressure and p99 NOT_QUALIFIED.",
+    "H1276 SOURCE226b ARM64 pending retest: H1274 3×1800s per-lease overflow Bob52/Alice87/Dave2461. Candidate FIFO oldest-drain under 8pkts/64KiB/100ms. Prior Game2 83–106s, Normal70s, Game4 high-loss cold failures and overhead remain UNVERIFIED.",
+    "H1278 SOURCE1e4 after real TLS/M4 cutover bounded cumulative ACK replay80..4480ms to preserve original server ACK barrier; no post-handoff Go DATA or new wire, Stop gated. ARM64 30min native pending; H1277 Game2 gaps103/95s, Game4 overflow6031, Fixed630% gaps4–5s remained FAIL.",
+    "H1285: H1284 16包共享TUN队列压力溢出751/2356/6/9734/38，回退原8包；64KiB/100ms与独立租约硬界不变；不声称可修吞吐。",
+    "H1292 candidate: H1290 ARM64 native pressure source622653仍FAIL3(Erin下行1270ms、Bob24和Dave46共享TUN每/32队列溢出)；标量压力FAIL4；异构native PASS0。原共享TUN仅队列达到8才尝试把最老包送入已腾空的真实M1接收器，容易让低于8的瞬时积压持续到下一批。H1292在存在积压的每次新TUN到来前最多try_send一次最老包，保持8包/64KiB/100ms、每租约FIFO/独立隔离，不增线程/缓存；ARM64源码锁定180秒短测待验，不声称已通过。",
+    "H1295: same /32 shared native Rust TUN has EXACTLY ONE newest authenticated route; no old worker premature alive=false on route publication. Go owns OLD native M4 RX/TX grace until exact joined Stop; old generation cannot get NEW TUN, stale cannot republish. Native five-client pressure/MTU short retest pending.",
+    "H1298 candidate after H1297 SOURCEe410 Action42332967232 Erin DL2160ms/EAGAIN1047/M4 plateau: after eight consecutive genuine FEC2 Backpressure increase that one RAW SO_SNDBUF to 1MiB (effective<=2MiB). H1267 all-socket AB failed universal downlink; no global default; causal native proof required.",
+    "H1298 ARM64 SOURCE1729010e Action42334170992 five-client 180s PASS0 alerts/5 TLS rotations/Stop/overflow0, Erin max UL250ms/DL120ms, adaptive SO_SNDBUF NOT_TRIGGERED; H1295 and H1297 FAIL remain, H1299 separate.",
+    "H2177 native x86_64/ARM64 current-SOURCE 5-mode short functional PASS_SCOPED. ARM physical board, stress/perf/long capacity, host-wide IPv6 and p99 NOT_RUN; older H1355 source-specific L1 remains.",
+    "PLAN028 H1461 SOURCE66fb6b44 bounded Rust per-lease 8pkts/64KiB/100ms FIFO repair candidate; 600/1800 native five-client Action42578056120 in_progress. Historical SOURCE548 Normal75 28 UDP missing/5 overflow FAIL_SCOPED retained; Windows-hosted official 1800 NOT_QUALIFIED.",
+    "H2186 H2185 earlier outer1280 case failed because fixture unconditionally read per-interface IPv6 sysctl even though inner1209 < IPv6 min1280; true new source each native ISA verifies missing sysctl only under inner<1280 AND zero IPv6 addr/routes. Host global IPv6 remains NOT_RUN.",
+    "H2206 AF_PACKET不是TCP 0.0.0.0监听；本机NIC自动唯一IPv4，多地址失败，网关DNAT与实体跨ISA NOT_RUN。",
+    "H2224公网出口和崩溃残留NOT_RUN；ip_forward及iptables权限归宿主。",
+    "历史H2372仅Normal/off客户端；H2397候选全端全模式，待真实回归。",
+    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。",
+    "H2408 Normal OFF/Fixed/Auto 冷TLS最终ACK、Detach迟到报文及冷超时修复已进main；当前源码原生回归待验，未更改已有认证身份、NAT路由或稳态数据面。"
+  ],
+  "promotion": null
+}

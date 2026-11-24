@@ -53,5 +53,23 @@ class Plan029TwoTrueGuiChildrenMss(unittest.TestCase):
    with self.assertRaises(ValueError):
     verified_plan029_gui_two_child_shared_manual_mss(win,invalid,1460)
 
+class Plan030MixedGuiChildrenMss(unittest.TestCase):
+ def test_real_mixed_log_shape_without_legacy_server_synack(self):
+  cold="WBD_WINDOWS_COLD_MSS_BUDGET_V1 side=client generation=1 mode=normal configured_outer_mtu=1460 physical_outer_mtu=1500 effective_outer_mtu=1460 local_advertised_mss=1420 inner_mtu_planned=1389 limiting_reason=configured_outer_ipv4 source=RUST_V1_REAL_OS\n"
+  def child(port,flag):
+   return cold+f"WBD_WINDOWS_COLD_TLS_CLIENT_PORT generation=1 configured_port=41031 source_port={port} original_peer_port=443 same_ip_reauth_safe_tuple={flag}\n"+"WBD_WINDOWS_ACTUAL_SYN_MSS_V1 side=client generation=1 local_advertised_mss=1420 tcp_option_bytes=0204058c\n"+"WBD_WINDOWS_PEER_SYNACK_MSS_V1 side=client generation=1 peer_advertised_mss=1420 local_advertised_mss=1420\n"
+  win=child(41031,"false")+child(41032,"true")
+  linux=("V4_PUBLIC_MTU_PREPARE role=server mtu_budget_version=3 outer_config=1460 interface=1500 advertised_mss=1420 record_offer=1420 tun_planned=1389\n"
+   "V4_PUBLIC_MIXED_NORMAL_READY role=server port=443 client_ipv4=172.24.208.1 client_port=41031 active_normal=1 active_game_groups=0 detached_flows=1 protected_TLS=1 Rust_M4=1\n"
+   "V4_PUBLIC_MIXED_NORMAL_B_CLIENT_READY role=server client_port=41032 source=authenticated_client_native_Health promoted=1 active_normal=1 old_route_preserved_until_proof=1\n")
+  p=verified_plan029_gui_two_child_shared_manual_mss(win,linux,1460,managed=True)
+  self.assertIsNone(p["real_server_synack_count"])
+  self.assertEqual(p["windows_received_synack_count"],2)
+  self.assertEqual(p["real_server_m4_ready_count"],2)
+  for bad in (win.replace("peer_advertised_mss=1420","peer_advertised_mss=1240",1),win.replace("source_port=41032","source_port=41031")):
+   with self.assertRaises(ValueError):verified_plan029_gui_two_child_shared_manual_mss(bad,linux,1460,managed=True)
+  for bad in (linux.replace("promoted=1","promoted=0"),linux.replace("client_port=41032","client_port=41031")):
+   with self.assertRaises(ValueError):verified_plan029_gui_two_child_shared_manual_mss(win,bad,1460,managed=True)
+
 from tests.test_m0_plan028_shared_manual_mss import SharedMssTest
 if __name__=="__main__":unittest.main()

@@ -1,0 +1,119 @@
+name: M0 Windows actual previous-version v2 WAL upgrade
+on:
+  push:
+    branches: [fix/m0-windows-crash-recovery]
+    paths: [.github/workflows/m0-windows-recovery-upgrade.yml]
+  workflow_dispatch:
+permissions: {contents: read, actions: read}
+jobs:
+  actual-upgrade:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OLD_SOURCE: f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad
+      NEW_SOURCE: f8678455e69c6d47ffa7aef7e43a469de89689e0
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: f0e8e5a2152d05ecd2ec1308eb650e0d0142ebad
+          path: old-src
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: old-src/legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Restore both actual delivered old and current verified candidate binaries
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          git diff --exit-code $env:NEW_SOURCE HEAD -- crates Cargo.toml Cargo.lock r0
+          if($LASTEXITCODE -ne 0){throw 'new product changed since native PASS'}
+          gh run download 45349201214 --repo $env:GITHUB_REPOSITORY --name m0-win-recovery-candidate --dir current
+          if($LASTEXITCODE -ne 0){throw 'current candidate unavailable'}
+          if((Get-FileHash current/wbd-client.exe -Algorithm SHA256).Hash.ToLowerInvariant() -ne '0cfed8bb572fa610520b3404e6ea2e983f3372c86772f678f497d0ddd24508f0'){throw 'new CLI hash drift'}
+          gh run download 45338373098 --repo $env:GITHUB_REPOSITORY --name h2378-windows-amd64-gui --dir old
+          if($LASTEXITCODE -ne 0){throw 'old actual package unavailable'}
+          $zip=Get-ChildItem old -Recurse -Filter 'wbd-h2378-windows-amd64-GUI.zip'|Select-Object -First 1
+          if(!$zip -or (Get-FileHash $zip.FullName -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'f0853a41d5981843808b8d548a29bf7c39db707795d773e52cfcc06b7a1f849a'){throw 'old package hash drift'}
+          Expand-Archive $zip.FullName old/unpacked
+          $previous=(Get-ChildItem old/unpacked -Recurse -Filter wbd-client.exe|Select-Object -First 1).Directory.FullName
+          $previous | Set-Content old-dir.txt
+          if((Get-AuthenticodeSignature current/wintun.dll).Status -ne 'Valid'){throw 'Wintun signature invalid'}
+      - name: Build only old-source real WAL-producing test child, not new product
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $fixture=Join-Path $PWD 'r0/go_overlay/internal/windowsclient/native_plan029_persisted_recover_windows_test.go'
+          $old=(Get-Content old-dir.txt -Raw).Trim()
+          $fixtureSource=(Get-Content $fixture -Raw)
+          $env:GITHUB_SHA=$env:OLD_SOURCE
+          Push-Location old-src
+          try{
+            python tools/prepare_windows_wiring.py
+            if($LASTEXITCODE -ne 0){throw 'old exact-source assembly failed'}
+            Copy-Item $fixture legacy/internal/windowsclient/native_upgrade_child_windows_test.go
+            Push-Location legacy
+            try{
+              go test -c -tags wbd_v4_embedded_go -o (Join-Path $old 'old-wal-child.exe') ./internal/windowsclient
+              if($LASTEXITCODE -ne 0){throw 'old native stage fixture build failed'}
+            }finally{Pop-Location}
+          }finally{Pop-Location}
+      - name: Real old-version owned WAL, reproduce original failure then recover with current actual CLI
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $old=(Get-Content old-dir.txt -Raw).Trim()
+          $new=(Resolve-Path current).Path
+          $state=Join-Path $env:RUNNER_TEMP 'wbd-real-upgrade-state.json'
+          $env:WBD_M0_CRASH_CHILD='1'
+          $env:WBD_M0_CRASH_SCENE='full'
+          $env:WBD_M0_CRASH_PATH=$state
+          $env:WBD_M0_CRASH_ALIAS='WBD-REAL-UPGRADE-'+$env:GITHUB_RUN_ID
+          $p=Start-Process (Join-Path $old 'old-wal-child.exe') -ArgumentList @('-test.run=^TestM0CrashV2NativeRecovery$','-test.v','-test.timeout=3m') -WorkingDirectory $old -PassThru -RedirectStandardOutput old-child.log -RedirectStandardError old-child.err
+          try{
+            $deadline=(Get-Date).AddSeconds(40)
+            while(!(Test-Path "$state.ready")){
+              if($p.HasExited -or (Get-Date) -gt $deadline){Get-Content old-child.log,old-child.err;throw 'old actual native child failed'}
+              Start-Sleep -Milliseconds 100
+            }
+            $wal=Get-Content "$state.n4-owned-wal" -Raw | ConvertFrom-Json
+            if($wal.data.schema -ne 'wbd-n4-native-network-txn/v2' -or $wal.data.phase -ne 'active' -or @($wal.data.records).Count -ne 4){throw 'old actual v2 Apply not complete'}
+            Stop-Process -Id $p.Id -Force
+            $p.WaitForExit()
+            Remove-Item Env:WBD_M0_CRASH_CHILD
+            # Run exact OLD released CLI; expected known user-visible failure.
+            $bad=Start-Process (Join-Path $old 'wbd-client.exe') -ArgumentList @('--recover-network','--state-path',('"' + $state + '"')) -WorkingDirectory $old -Wait -PassThru -RedirectStandardOutput old-cli.out -RedirectStandardError old-cli.err
+            $msg=Get-Content old-cli.err -Raw
+            if($bad.ExitCode -eq 0 -or $msg -notmatch 'no-WFP v2 WAL requires live generation-owned four-stage recovery' -or !(Test-Path "$state.n4-owned-wal")){throw 'old release error did not reproduce'}
+            Write-Output 'M0_OLD_RELEASE_REAL_V2_RECOVERY_FAILURE_REPRODUCED'
+            $ok=Start-Process (Join-Path $new 'wbd-client.exe') -ArgumentList @('--recover-network','--state-path',('"' + $state + '"')) -WorkingDirectory $new -Wait -PassThru -RedirectStandardOutput new-cli.out -RedirectStandardError new-cli.err
+            if($ok.ExitCode -ne 0){Get-Content new-cli.err;throw 'new CLI actual upgrade recovery failed'}
+            foreach($suffix in @('.n4-owned-wal','.n4-owned-wal.routes','.plan029-defender-tcp')){if(Test-Path "$state$suffix"){throw "residual $suffix"}}
+            & (Join-Path $new 'wbd-client.exe') --recover-network --state-path $state
+            if($LASTEXITCODE -ne 0){throw 'new recovery repeated failed'}
+            Write-Output 'M0_REAL_PREVIOUS_VERSION_V2_WAL_UPGRADE_RECOVERY_PASS'
+            [ordered]@{old_source=$env:OLD_SOURCE;new_source=$env:NEW_SOURCE;old_release_error_reproduced=$true;actual_new_cli_recovery=$true;repeated_recovery=$true;real_old_four_stage_apply=$true} | ConvertTo-Json | Set-Content upgrade-receipt.json
+          }finally{
+            if(!$p.HasExited){Stop-Process -Id $p.Id -Force}
+            if(Test-Path "$state.n4-owned-wal"){& (Join-Path $new 'wbd-client.exe') --recover-network --state-path $state}
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: m0-win-actual-upgrade-receipt
+          path: |
+            old-child.log
+            old-child.err
+            old-cli.out
+            old-cli.err
+            new-cli.out
+            new-cli.err
+            upgrade-receipt.json
+          if-no-files-found: warn

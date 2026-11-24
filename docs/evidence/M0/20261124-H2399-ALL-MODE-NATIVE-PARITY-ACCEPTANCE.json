@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-PLAN029-ALL-MODE-NATIVE-PARITY",
+  "source_sha": "f21ea508ab58b92a72c902d0b3e1121e26d1a17d",
+  "merge_sha": "4fb6ba3d0431a27970c5ef10aec336bb6c4cbe3e",
+  "pr": 75,
+  "result": "FUNCTIONAL_PASS",
+  "linux": {
+    "run_id": 45368300106,
+    "x86_job": 138355685724,
+    "arm_job": 138355686211,
+    "modes_each": 7
+  },
+  "windows": {
+    "run_id": 45368304554,
+    "job_id": 138358766234,
+    "modes": 7
+  },
+  "scope": "Exact source native ordinary functional TCP/UDP/owned Stop. PR head differs only in devlog. No performance A/B, physical WAN not qualified."
+}

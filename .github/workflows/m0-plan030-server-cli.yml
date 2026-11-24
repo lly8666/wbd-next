@@ -1,0 +1,113 @@
+name: PLAN030 native server CLI and service delivery
+run-name: "PLAN030 native build and functional qualification | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/m0-030-server-cli]
+    paths:
+      - '.github/workflows/m0-plan030-server-cli.yml'
+      - 'r0/go_overlay/internal/v4productcli/**'
+      - 'tools/plan030*'
+      - 'deploy/plan030/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dispatch-windows-domain:
+    runs-on: ubuntu-24.04
+    permissions: {contents: read, actions: write}
+    steps:
+      - name: Dispatch one original signed domain reconnect scene on this branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=normal -f native_outer_mtu=default1460 -f outer_repair=on -f run_n0=false -f plan029_case=domain_reconnect
+          echo "Dispatched original Windows domain reconnect; not a PASS"
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 45
+    env:
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Native original Go Rust build and tests
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm python3 iproute2 iputils-ping iptables openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >plan030-build.log 2>&1 || { tail -n 150 plan030-build.log; exit 1; }
+          python3 tools/plan030_package.py
+          tar -czf plan030-native-bundle.tar.gz linux-plan029-public-bundle
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: plan030-native-${{ matrix.arch }}
+          path: |
+            plan030-native-bundle.tar.gz
+            wbd-next-plan030-server.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan030-build-log-${{ matrix.arch }}
+          path: plan030-build.log
+  functional:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+        scenario: [systemd, mixed-clients]
+        include:
+          - arch: x86_64
+            scenario: watch-pair
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/download-artifact@v4
+        with:
+          name: plan030-native-${{ matrix.arch }}
+      - name: Exact source and native package readback
+        run: |
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          tar -xzf plan030-native-bundle.tar.gz
+          tar -xzf wbd-next-plan030-server.tar.gz
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import json,os,platform
+          for p in ("linux-plan029-public-bundle/manifest.json","wbd-next/manifest.json"):
+              m=json.load(open(p))
+              assert m["source_sha"]==os.environ["GITHUB_SHA"]
+              assert m["architecture"]==platform.machine()
+          PY
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          (cd wbd-next && sha256sum -c SHA256SUMS)
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iputils-ping iptables openssl python3
+      - name: Run one independent real function scenario
+        run: |
+          set -o pipefail
+          mkdir -p fixed-kernel-result
+          if [[ "${{ matrix.scenario }}" == systemd ]];then
+            bash tools/plan030_systemd_smoke.sh "$PWD/wbd-next" 2>&1 | tee plan030-functional.log
+          else
+            watch=0; [[ "${{ matrix.scenario }}" != watch-pair ]] || watch=1
+            WBD_PLAN030_WATCH="$watch" WBD_PLAN030_MANAGED=1 WBD_PLAN030_SYSTEMD=1 WBD_PLAN030_PACKAGE="$PWD/wbd-next" bash tools/m0-plan028-mixed-normal-game-native.sh "$PWD/linux-plan029-public-bundle" 2>&1 | tee plan030-functional.log
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: plan030-${{ matrix.arch }}-${{ matrix.scenario }}-receipt
+          path: |
+            plan030-functional.log
+            fixed-kernel-result/
+          if-no-files-found: warn

@@ -22,6 +22,8 @@ mod v4_native_health;
 /// M0 one-owner adapter around frozen M1 GameTx/Rx with per-lane AEAD/PN.
 /// Not a public Go product grant until real lanes are bound.
 mod v4_game_lane;
+#[cfg(any(feature="m0_v4_embedded_go",test))]
+mod v4_ingress_fair;
 // Real original-Go Game2/4 physical-lane cold tuple layout; host unit
 // tests execute this same code as Android, before M4 kernel workers exist.
 #[cfg(any(test,target_os="android"))]

@@ -132,6 +132,7 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
         if i==0{epoch=session.Epoch}
         handoff,e:=assoc.Detach()
         if e!=nil{return "",e}
+        for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
         owner:=&v4EmbeddedNativeBridge{}
         if e=owner.prepareAuthenticatedClient(session,handoff,assoc.Flow());e!=nil{
             return "",e

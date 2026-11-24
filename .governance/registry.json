@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "用户2026-11-24启动 PLAN030，基线 c0166202af7fb3f70baf15a749df664c04502305；登记 experiment/m0-030-server-cli。复用当前 Go/Rust shared 服务、native dual ISA 构建与真实夹具；一次集中开发后独立功能测试并行。029用户限定交付已收口，不继续性能扫描。",
-      "done_when": "中文菜单与同后端CLI、配置验证及连接资料、systemd服务、真实设备快照、安装卸载与amd64/arm64包；同源真实功能测试与组合证据，未验如实登记，不扩极端工况或新增防御框架。",
-      "assigned_task": "M0-PLAN030-SERVER-CLI-DELIVERY"
+      "goal": "用户授权直接main修复Windows Game2/4 OFF/FEC物理冷建链成功率与耗时、普通每秒日志；兼顾Linux共享服务端NAT建链，复用既有Go TLS与Rust原生owner。",
+      "done_when": "每条Game lane真实冷TLS可恢复丢包，跨尝试新端口、NAT不依赖连续端口、旧组不混拼，READY无业务门槛；普通日志不刷packet telemetry；真实原生回归及物理用户复测分别记录。",
+      "assigned_task": "M0-PLAN029-WINDOWS-GAME-COLD"
     },
     {
       "id": "M1",

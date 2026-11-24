@@ -143,8 +143,11 @@ func runAndroidGame(ctx context.Context,c config,ifindex uint32,
                 }
                 if !flow.MatchesInbound(seg){continue}
                 if a.State()!=faketcp.ClientAssociationDetached{
-                    _=a.HandleSegment(seg,time.Now())
+                    if e:=a.HandleSegment(seg,time.Now());!errors.Is(e,faketcp.ErrClientDetached){continue}
                 }
+                // Same original cold ACK recovery as main; before Go RAW
+                // receive is quiesced, never an additional M4 data path.
+                _,_=a.RepeatGameColdFinalACK(&seg)
             }
         }(assoc,raw,flow)
         if e=assoc.Start(time.Now());e!=nil{return e}

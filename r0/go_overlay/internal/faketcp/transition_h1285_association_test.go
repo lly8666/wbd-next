@@ -41,3 +41,33 @@ func TestPLAN028OriginalServerFakeTCPDetachAfterBoundedM4Burst(t *testing.T){
         t.Fatalf("original server not detached: state=%d ok=%t",state,ok)
     }
 }
+
+// Final ACK repair must preserve the frozen original sequence boundary
+// without feeding a duplicate TLS payload into Rust.
+func TestH2402GameColdFinalACKRespondsOnlyBelowDetachedBoundary(t *testing.T){
+    flow:=ClientFlow{LocalIP:[4]byte{10,0,0,2},PeerIP:[4]byte{10,0,0,1},LocalPort:41031,PeerPort:443}
+    var emitted []Segment
+    a,err:=NewClientAssociation(flow,100,time.Second,func(s Segment)error{emitted=append(emitted,s);return nil})
+    if err!=nil{t.Fatal(err)}
+    defer a.Close()
+    if err=a.Start(time.Now());err!=nil{t.Fatal(err)}
+    synack:=Segment{SrcIP:flow.PeerIP,DstIP:flow.LocalIP,SrcPort:flow.PeerPort,DstPort:flow.LocalPort,Seq:200,Ack:101,Flags:FlagSYN|FlagACK,Window:65535}
+    if err=a.HandleSegment(synack,time.Now());err!=nil{t.Fatal(err)}
+    data:=synack;data.Flags=FlagACK|FlagPSH;data.Seq=201;data.Payload=[]byte{1,2,3}
+    if err=a.HandleSegment(data,time.Now());err!=nil{t.Fatal(err)}
+    h,err:=a.Detach();if err!=nil{t.Fatal(err)}
+    before:=len(emitted)
+    ok,err:=a.RepeatGameColdFinalACK(&data)
+    if !ok||err!=nil||len(emitted)!=before+1{t.Fatalf("duplicate ACK handled=%t err=%v",ok,err)}
+    ack:=emitted[len(emitted)-1]
+    if ack.Flags!=FlagACK||ack.Seq!=h.SendNext||ack.Ack!=h.ReceiveNext||ack.Window!=h.AdvertisedWindow||len(ack.Payload)!=0{t.Fatalf("wrong frozen ACK %+v",ack)}
+    data.Seq=h.ReceiveNext
+    if ok,err=a.RepeatGameColdFinalACK(&data);ok||err!=nil{t.Fatalf("fresh native DATA mistaken for TLS duplicate")}
+    // Same association code serves Normal and Game. Detach may race the
+    // cold observer's State check; late RST must not destroy the handoff.
+    rst:=synack;rst.Flags=FlagRST
+    if err=a.HandleSegment(rst,time.Now());!errors.Is(err,ErrClientDetached){
+        t.Fatalf("late cold RST err=%v",err)
+    }
+    if a.State()!=ClientAssociationDetached{t.Fatal("late cold RST closed detached owner")}
+}

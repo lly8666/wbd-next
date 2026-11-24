@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "role_id": "M0",
+  "task_id": "M0-PLAN030-SERVER-CLI-DELIVERY",
+  "source_sha": "1d6081c7b54e2804236072007fde1d73986ff3cb",
+  "fixture_sha": "600d541b9d7ce63d11409562bad8f40ad41457fd",
+  "result": "FUNCTIONAL_PASS_SCOPED_ALL_LINUX_CLI",
+  "run_id": 45349315041,
+  "jobs": [
+    {
+      "id": 138291490028,
+      "arch": "x86_64",
+      "result": "PASS",
+      "receipt_id": 14899083197
+    },
+    {
+      "id": 138291490408,
+      "arch": "aarch64",
+      "result": "PASS",
+      "receipt_id": 14900080237
+    }
+  ],
+  "actual_commands": [
+    "help",
+    "non-TTY pipe help",
+    "interactive menu",
+    "install",
+    "config interactive add/replace/delete",
+    "config check",
+    "config --file valid/invalid",
+    "config export",
+    "status",
+    "status --json",
+    "clients",
+    "clients --json",
+    "clients --watch --json",
+    "start",
+    "stop",
+    "restart",
+    "enable",
+    "disable",
+    "logs",
+    "uninstall cancel",
+    "uninstall --yes",
+    "reinstall",
+    "serve via systemd"
+  ],
+  "watch": {
+    "run_id": 45345811457,
+    "job_id": 138279960583,
+    "offered_each": 1200,
+    "delivered_each": 1200,
+    "server_cpu_seconds": [
+      0.35,
+      0.36
+    ],
+    "server_rss_peak_bytes": [
+      61218816,
+      61480960
+    ],
+    "p99_ms": [
+      0.4193449999547738,
+      0.44259200001306453
+    ],
+    "watch_snapshots": 6,
+    "scope": "single capacity-ordinary same VM A/B, not broad performance qualification"
+  },
+  "packages": [
+    {
+      "arch": "x86_64",
+      "artifact_id": 14896654500,
+      "zip_sha256": "2781a022c80c24025e3d69eb74127cd748336648feb1c316ece01d2792ae7ede",
+      "tar_sha256": "33e3f802cc0306beaed266144f4c60b4d72816261f6a0274c90ef4736f767356",
+      "bytes": 7530693
+    },
+    {
+      "arch": "aarch64",
+      "artifact_id": 14897691117,
+      "zip_sha256": "1b9ce082f3cfd78e39747517a2d84b5cc03dbf6b5ccd00f2eb99c78260514a5d",
+      "tar_sha256": "0ae389a916a9f18f77b963c4857296116b96445d9aeb56b8e2c5bd1697917ad5",
+      "bytes": 6932604
+    }
+  ],
+  "artifact_verified": true,
+  "verification": "both downloaded actual ZIP CRC, nested tar SHA and each file SHA256SUMS, exact manifest/source/architecture, ELF e_machine amd64/arm64",
+  "remaining": [
+    "Windows domain reconnect managed combination: actual first generation Ready and Stop from previous action, second generation absent",
+    "unavailable snapshot fields explicitly unknown",
+    "physical host reboot, OpenWrt not run"
+  ]
+}

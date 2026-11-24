@@ -1,3 +1,11 @@
+## B88｜B87集中软件验证收口；同步 main H2409
+
+B87 SOURCE `eeaa60b4b6d02ff97c1cee03ab282d1cd500ea0a` [Action 45385768439](https://github.com/lly8666/wbd-next/actions/runs/45385768439) **12 SUCCESS / 0 FAILURE / 5 SKIPPED**；正式ARM64 APK、两ABI、Host及原Linux oracle PASS，功能目录PASS。D2真实Android16 KSU [job 138418781855](https://github.com/lly8666/wbd-next/actions/runs/45385768439/job/138418781855) 和 [artifact 14916392463](https://github.com/lly8666/wbd-next/actions/runs/45385768439/artifacts/14916392463)：普通App su、exact Network、正式RootService→原Go、真实TUN+AF_PACKET和SYN sendto PASS，按preauth范围停止。SYNACK/TLS/lease/M4未证明。ARM64 host [job 138418589714](https://github.com/lly8666/wbd-next/actions/runs/45385768439/job/138418589714) 真实收据为 aarch64 KVM_NOT_ACCESSIBLE/ENV_BLOCKED，不是 guest PASS。B85/B86a/B87累计18/18增强场景按各SOURCE和各自范围收口，不跨SOURCE迁移PASS。
+
+B88冻结 main `6b8617626648a6ebed6ecad3e3be63016a3249bb` (H2409)，旧共同祖先 `5b1311c0748452c1c8dac66fc2a6e517777529fa`；46 commits、118 changed files，11个双方变化文件按三方精确补丁及实际合成blob合并，真实双亲提交。H2397–99全模式Linux/Windows native公平、ready service、Linux Game sendmmsg，H2394 Normal off协商MTU，H2400–09 原冷TLS RTO/tuple/NAT cohort/最终ACK、Normal分离SYN/TLS期限和Detach竞争修复。Android保留原Bionic direct TUN、RAW、DNS、Root及设备特化；Normal采用main独立SYN/TLS期限和原Detach竞争/冷ACK，Android Game在每lane真实Detach时复用同一原ACK方法并在旧Go RAW接收窗口处理旧TLS重复段，已有最终ACK收尾保留。main Linux SharedTun公平队列和Windows Wintun ready-order不等同于Android直接TUN路径，未另加队列/防御框架；Android Game4实际CPU/sendmmsg适配另据设备/原worker数据决定。Linux服务器管理完整同步但手机不进入其非nil管理入口。未实现Android热迁移，不部署实体或外部服务。
+
+新SOURCE改变共享协议/数据面，使用 [android-native-matrix] 重新并行两ABI七模式（与B85同标准弱网，便于观察性能变化），[android-guest-retry]仅D2原生新SOURCE preauth；保留标准构建/host/oracle，旧stock UI、ART冷套件不重跑，不开TAP/SLIRP握手/独立旧ELF139。全部新SOURCE结果待CI，ARM64真机端到端及性能未验。
+
 ## B87｜真实 KSU 冷套件收口，定向补 D2 preauth
 
 B86a SOURCE `15f2969f89e72f9573243e0122f68bb5ced43ac5` [Action 45381240919](https://github.com/lly8666/wbd-next/actions/runs/45381240919) **11 SUCCESS / 2 FAILURE / 4 SKIPPED**；双ABI、正式ARM64签名APK及完整Host源码门、两Linux oracle、功能目录和维护均PASS。正式APK [14912914468](https://github.com/lly8666/wbd-next/actions/runs/45381240919/artifacts/14912914468)。Android16 KSU实际综合冷套件 [14914477279](https://github.com/lly8666/wbd-next/actions/runs/45381240919/artifacts/14914477279) 的 receipt.json 实证：普通App→KSU su、x86原Go help、实际PhysicalNetwork、ART七类生产helper、四页和四种分流接管UI、ARM64转译原Rust MTU 1389/1375/1373/1358、原Go c-shared help均PASS；不是正式ARM64 ELF或业务E2E。

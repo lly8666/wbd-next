@@ -20,7 +20,7 @@ import (
 // Not yet wired to the production product entry; no OS Applied claim.
 type n4WindowsNoWFPLeaseStage struct {
  Lease N4NativeLeaseIntent
- Owner N4WindowsCreatedWintunReservation
+ Owner N4UnifiedOwner
  WALPath string
 }
 func (s n4WindowsNoWFPLeaseStage) Name()string{return "lease"}
@@ -46,6 +46,7 @@ func (s n4WindowsNoWFPLeaseStage) check(ctx context.Context,id N4UnifiedIdentity
   s.Lease.InterfaceIndex!=id.WintunIndex{
   return ErrNetworkPlan
  }
+ if s.Owner==nil{return ErrN4NativeGuard}
  if err:=s.Owner.Verify(ctx,id);err!=nil{return err}
  observed,err:=n4ProbeOriginalWintunPnP(ctx,id)
  if err!=nil{return err}

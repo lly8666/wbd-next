@@ -48,6 +48,7 @@ func V4WindowsEstablishOriginalFEC2ClientOwner(
  if err!=nil{return nil,nil,err}
  handoff,err:=assoc.Detach()
  if err!=nil{return nil,nil,err}
+ for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
  if err=native.prepareAuthenticatedClient(session,handoff,assoc.Flow());err!=nil{
   return nil,nil,errors.Join(errV4WindowsOwner,err)
  }

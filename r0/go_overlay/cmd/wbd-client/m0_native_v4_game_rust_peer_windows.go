@@ -156,10 +156,8 @@ func(p *m0WinRustGamePeer) BindNativeRing(ctx context.Context,
   select{
   case rec:=<-p.inbound:
    if rec.lane<0||rec.lane>=len(p.endpoints){return windowsclient.ErrN4NativeGuard}
-   if rec.segment.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{
-    return fmt.Errorf("real Game peer FIN/RST lane%d",rec.lane+1)
-   }
-   if len(rec.segment.Payload)==0{continue}
+   // A late pure cold TCP control is not an authenticated native failure.
+   if len(rec.segment.Payload)==0||rec.segment.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
    if err=p.group.OfferNativeGameEarly(ctx,uint32(rec.lane+1),
        rec.segment.Seq,rec.segment.Payload);err!=nil{return err}
   default:return nil
@@ -214,7 +212,7 @@ func(p *m0WinRustGamePeer) HealthError(ctx context.Context)error{
  s,e:=p.group.NativeGameIOStats(ctx)
  if e!=nil{return e}
  p.last=s
- if s.WorkerError!=0{return fmt.Errorf("Game native Rust worker rc=%d",s.WorkerError)}
+ if s.WorkerError!=0{return m0WindowsRustNativeWorkerError(s.WorkerError)}
  mtu,e:=p.group.RefreshGamePayloadMTU(ctx)
  if e!=nil{return e}
  if mtu!=p.maxIPv4{return fmt.Errorf("Game Rust native effective MTU changed from %d to %d: require new authenticated native attach",p.maxIPv4,mtu)}

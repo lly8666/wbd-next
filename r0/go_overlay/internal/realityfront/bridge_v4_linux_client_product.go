@@ -157,6 +157,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
         return nil,err
     }
     originalAndroidPostauth("DETACH_OK")
+    for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
     bridge:=&v4EmbeddedNativeBridge{}
     if err=bridge.prepareAuthenticatedClient(session,handoff,assoc.Flow());err!=nil{
         switch V4OriginalNativeM4FailureStage(err){

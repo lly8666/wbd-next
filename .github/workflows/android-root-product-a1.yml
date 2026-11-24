@@ -626,7 +626,7 @@ jobs:
   linux-seven-mode-native-parallel:
     # Reuse the SAME two Linux CLI bundles already built above. No per-mode
     # recompilation, no Windows/Android runtime claim, no duplicate M0 CI.
-    if: ${{ always() && needs.linux-x86-original-server-d2-s0.result == 'success' && needs.linux-original-server-normal-off.result != 'cancelled' && github.event_name == 'push' && contains(github.event.head_commit.message, '[android-parallel-test]') }}
+    if: ${{ always() && needs.linux-x86-original-server-d2-s0.result == 'success' && needs.linux-original-server-normal-off.result != 'cancelled' && github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-native-matrix]')) }}
     needs: [linux-x86-original-server-d2-s0, linux-original-server-normal-off]
     strategy:
       fail-fast: false

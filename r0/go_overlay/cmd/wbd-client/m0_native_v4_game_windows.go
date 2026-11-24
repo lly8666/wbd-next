@@ -13,6 +13,7 @@ import(
  "errors"
  "fmt"
  "net/netip"
+ "os"
  "path/filepath"
  "sync"
  "time"
@@ -84,7 +85,7 @@ func runM0NativeV4WindowsGame(
  physicalMTU uint32,physicalIfIndex uint32,
  open func(uint16,uint16)(*faketcp.NpcapEndpoint,error),
  makePlan func(netip.Prefix)(windowsclient.NetworkPlan,error),
- pathChanged <-chan struct{},
+ pathChanged <-chan struct{},applied *bool,
 )error{
  count:=2;if o.Mode==m0WinModeGame4{count=4}
  assocs:=make([]*faketcp.ClientAssociation,0,count)
@@ -142,9 +143,21 @@ func runM0NativeV4WindowsGame(
      return
     }
     if a.State()==faketcp.ClientAssociationDetached{
+     if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
+     if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
      _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
     }else if err=a.HandleSegment(seg,time.Now());err!=nil{
+     // Detach may win after the reader's State snapshot. Treat the
+     // already-read segment as early native input, not a failed reader.
+     if errors.Is(err,faketcp.ErrClientDetached){
+      if handled,_:=a.RepeatGameColdFinalACK(&seg);handled{continue}
+      if len(seg.Payload)==0||seg.Flags&(faketcp.FlagFIN|faketcp.FlagRST)!=0{continue}
+      _=offerGameColdInbound(inbound,m0GameInbound{lane:index,segment:seg})
+      continue
+     }
+     if errors.Is(err,faketcp.ErrClientHandshake)&&a.State()==faketcp.ClientAssociationSYNSent{continue}
      if ctx.Err()==nil{select{case failed<-err:default:}}
+     a.Close() // unblock a TLS read if this cold association really died
      return
     }
    }
@@ -169,9 +182,9 @@ func runM0NativeV4WindowsGame(
  for remaining:=count;remaining>0;{
   select{
   case <-established.Done():
-   return fmt.Errorf("original Game%d lanes TCP: %w",count,established.Err())
+   return fmt.Errorf("original Game%d lanes TCP: %w",count,m0WindowsTagOriginalColdTransport(established.Err()))
   case res:=<-handshaked:
-   if res.err!=nil{return fmt.Errorf("original Game%d lane%d TCP: %w",count,res.index+1,res.err)}
+   if res.err!=nil{return fmt.Errorf("original Game%d lane%d TCP: %w",count,res.index+1,m0WindowsTagOriginalColdTransport(res.err))}
    remaining--
   case readErr:=<-failed:
    return fmt.Errorf("original Game%d NPF prehandoff: %w",count,readErr)
@@ -179,7 +192,7 @@ func runM0NativeV4WindowsGame(
    now:=time.Now()
    for i,a:=range assocs{
     if _,err:=a.EmitRetransmitDue(now);err!=nil{
-     return fmt.Errorf("original Game%d lane%d TCP retransmit: %w",count,i+1,err)
+     return fmt.Errorf("original Game%d lane%d TCP retransmit: %w",count,i+1,m0WindowsTagOriginalColdTransport(err))
     }
    }
   }
@@ -209,7 +222,7 @@ func runM0NativeV4WindowsGame(
  if paddingErr!=nil{return paddingErr}
  group,err:=realityfront.V4WindowsEstablishOriginalGameClientGroup(
   ctx,filepath.Join(windowsExecutableDir(),"wbd_engine.dll"),assocs,cfg,fecMode,paddingMode)
- if err!=nil{return err}
+ if err!=nil{return m0WindowsTagOriginalColdTransport(err)}
  trustedLease,appliedCipher,selectionErr:=group.AuthenticatedNetworkSelection()
  if selectionErr!=nil||appliedCipher!=o.RecordCipher{
   return fmt.Errorf("%w: Game protected group network selection invalid: %v",windowsclient.ErrN4NativeGuard,selectionErr)
@@ -351,7 +364,13 @@ func runM0NativeV4WindowsGame(
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_APPLIED lanes=%d fec=%d tls=1 rust=1 native_os_wal=1\n",count,fecMode)
  fmt.Println("WBD_WINDOWS_OS_APPLIED")
  fmt.Println("WBD_WINDOWS_CLIENT_READY")
- ticker:=time.NewTicker(time.Second);defer ticker.Stop()
+ if applied!=nil{*applied=true}
+ // Same diagnostic policy as Normal. Keep the GUI's light status
+ // stream, but only emit heavy packet telemetry when explicitly requested.
+ diagnostic:=os.Getenv("GITHUB_ACTIONS")=="true"||os.Getenv("WBD_NATIVE_TELEMETRY")=="1"
+ interval:=2*time.Second
+ if diagnostic{interval=time.Second}
+ ticker:=time.NewTicker(interval);defer ticker.Stop()
  var runtimeErr error
 outer:
  for{
@@ -377,11 +396,12 @@ outer:
    }
    snapshot:=packet.Stats()
    m0WindowsGameQualitySnapshot(fecMode,snapshot)
-   fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+snapshot)
+   if diagnostic{fmt.Println("WBD_WINDOWS_NATIVE_PACKET_TELEMETRY "+snapshot)}
   }
  }
  stopErr:=stop()
- if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
+ // A true dead verdict may authorize a new generation only after owned Stop.
+ if stopErr!=nil{return fmt.Errorf("Game native owned Stop failed after %v: %w",runtimeErr,stopErr)}
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes=%d wal_restored=1 rust_stopped=1\n",count)
  return runtimeErr
 }

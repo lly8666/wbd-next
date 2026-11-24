@@ -22,12 +22,17 @@ use wbd_platform::windows_native_io::{
 use wbd_platform::ipv4_tcp::{
     build_bytes,build_presentation_ack_sack,Ipv4Tuple,Presentation,PacketPersona,SackRange32,
 };
-use wbd_platform::rx_ipv4_tcp::{parse_data_packet,TrustedRx};
+use wbd_platform::rx_ipv4_tcp::{parse_data_packet_fast,TrustedRx};
+#[cfg(test)]
+use wbd_platform::rx_ipv4_tcp::parse_data_packet;
 use super::native_runtime::{WbdWinNativeAttachV1,WbdWinNativeStatsV1};
 const FRAME_CAP:usize=2304;
 const NPF_CAP:usize=65535+64;
 const MAX_IPV4:usize=2048;
 const EARLY_CAP:usize=256;
+const BATCH:usize=io::NPF_QUEUE_PACKETS;
+// Same cold-control status as the original Normal native owner.
+const AUTHENTICATED_PEER_DEAD:i32=6;
 // An idle Game2/4 tunnel has no periodic TX timer. Only real Game4/FEC
 // deadlines, Npcap-derived ACK wake, new Wintun sources or Stop wake TX.
 fn game_wait_timeout_ms(now_ns:u64,next_due_ns:Option<u64>)->u32{
@@ -224,66 +229,73 @@ fn send_records(group:u64,cfg:&WbdWinNativeAttachV1,
         eprintln!("M0_PLAN027_GAME_DUE_FAULT stage=send_records_entry origin=due batch={} lane={} pn={} cipher_len={} path_mtu={} logical_id={}",
             total,first.lane,first.pn,first.length,cfg.path_mtu,first.logical_id);
     }
-    for r in records{
-        let idx=match usize::try_from(r.lane).ok().and_then(|v|v.checked_sub(1)){
-            Some(i) if i<lanes.len()=>i,
-            _=>return Err(game_send_failure(c,"lane",INVALID,&r,cfg,origin)),
-        };
-        let l=&lanes[idx];
+    for r in &records{
+        if r.lane==0||r.lane as usize>lanes.len(){
+            return Err(game_send_failure(c,"lane",INVALID,r,cfg,origin))
+        }
         if r.length<32||r.length>1536{
-            return Err(game_send_failure(c,"cipher_length",INVALID,&r,cfg,origin))
-        }
-        let seq=c.tx_seq[idx].load(Ordering::Acquire);
-        let ack=c.ack[idx].load(Ordering::Acquire);
-        let mut scratch=[0u8;FRAME_CAP];
-        let frame=match wire_frame(cfg,l,seq,ack,
-            &r.wire[..r.length as usize],*ip_id,&mut scratch){
-            Ok(frame)=>frame,
-            Err(rc)=>return Err(game_send_failure(c,"wire_frame",rc,&r,cfg,origin)),
-        };
-        *ip_id=ip_id.wrapping_add(1);
-        let outcome=if active[idx]{
-            Some(npf[idx].send_batch(&[frame]))
-        }else{None};
-        let copied=outcome.as_ref().is_some_and(|x|x.accepted_prefix==1);
-        // Settle this exact original Linux GameAdapter staged ticket
-        // AFTER the real Npcap success/unknown/not-sent result. No Go
-        // fake receipt, no inferred application ACK.
-        let rc={
-            let mut g=owner.lock().map_err(|_|game_send_failure(c,"m4_owner_lock",BAD_STAGE,&r,cfg,origin))?;
-            game::game_m4_result_group(&mut g,group,r.lane,r.logical_id,r.pn,copied)
-        };
-        if rc!=OK{
-            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=game_m4_receipt rc={rc} lane={} copied={copied}",r.lane);
-            return Err(game_send_failure(c,"m4_receipt",rc,&r,cfg,origin))
-        }
-        if copied{
-            // Use the exact original GameAdapter PN/ciphertext AFTER NPF.
-            // Same Normal ReceiptState/OuterAckIndex/global M2 budget.
-            let first_result=outer.lock().map_err(|_|BAD_STAGE)
-                .and_then(|mut m|m.on_firstsend(idx,r.pn,seq,&r.wire[..r.length as usize]));
-            if let Err(rc)=first_result{
-                return Err(game_send_failure(c,"on_firstsend",rc,&r,cfg,origin))
-            }
-            c.tx_seq[idx].fetch_add(r.length,Ordering::Release);
-            c.ack_sent[idx].store(ack,Ordering::Release);
-            c.tx.fetch_add(1,Ordering::Relaxed);
-            if c.rx.load(Ordering::Acquire)>0{c.after.fetch_add(1,Ordering::Relaxed);}
-        }
-        if let Some(outcome)=outcome{
-            if outcome.error.is_some()||outcome.uncertain_index.is_some(){
-                // Only this NPF TX endpoint is untrustworthy. The original
-                // staged ticket was already settled using its REAL copied
-                // prefix. Keep 2/4-lane siblings sending; all dead is fatal.
-                eprintln!("M0_PLAN026_GAME_NATIVE_TX_LANE_RETIRED lane={} stage=npcap_send_driver accepted_prefix={} uncertain_index={:?} error={:?}",r.lane,outcome.accepted_prefix,outcome.uncertain_index,outcome.error);
-                let _=retire_game_tx_lane(active,idx);
-            }
-        }
-        if !active.iter().any(|&ok|ok){
-            eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=all_npcap_send_lanes_retired");
-            return Err(BAD_STAGE)
+            return Err(game_send_failure(c,"cipher_length",INVALID,r,cfg,origin))
         }
     }
+    // Preserve order within each original physical lane; all input rows
+    // are already ready. No waiting for another lane or future FEC row.
+    for idx in 0..lanes.len(){
+        let mut next=records.iter().filter(|r|r.lane as usize==idx+1);
+        loop{
+            let mut selected:[Option<&game::WbdWindowsGameRecordV4>;BATCH]=[None;BATCH];
+            let mut count=0usize;
+            for slot in &mut selected{
+                if let Some(r)=next.next(){*slot=Some(r);count+=1;}else{break}
+            }
+            if count==0{break}
+            let ack=c.ack[idx].load(Ordering::Acquire);
+            let mut seq=c.tx_seq[idx].load(Ordering::Acquire);
+            let mut seqs=[0u32;BATCH];
+            let mut lengths=[0usize;BATCH];
+            let mut frames=[[0u8;FRAME_CAP];BATCH];
+            if active[idx]{
+                for i in 0..count{
+                    let r=selected[i].unwrap();
+                    seqs[i]=seq;
+                    lengths[i]=wire_frame(cfg,&lanes[idx],seq,ack,&r.wire[..r.length as usize],
+                        *ip_id,&mut frames[i])
+                        .map_err(|rc|game_send_failure(c,"wire_frame",rc,r,cfg,origin))?.len();
+                    *ip_id=ip_id.wrapping_add(1);
+                    seq=seq.wrapping_add(r.length);
+                }
+            }
+            let outcome=if active[idx]{
+                let ready:[&[u8];BATCH]=std::array::from_fn(|i|&frames[i][..lengths[i]]);
+                Some(npf[idx].send_batch(&ready[..count]))
+            }else{None};
+            let copied_prefix=outcome.as_ref().map_or(0,|x|x.accepted_prefix);
+            for i in 0..count{
+                let r=selected[i].unwrap();
+                let copied=i<copied_prefix;
+                let rc={
+                    let mut g=owner.lock().map_err(|_|game_send_failure(c,"m4_owner_lock",BAD_STAGE,r,cfg,origin))?;
+                    game::game_m4_result_group(&mut g,group,r.lane,r.logical_id,r.pn,copied)
+                };
+                if rc!=OK{return Err(game_send_failure(c,"m4_receipt",rc,r,cfg,origin))}
+                if copied{
+                    outer.lock().map_err(|_|BAD_STAGE)?
+                        .on_firstsend(idx,r.pn,seqs[i],&r.wire[..r.length as usize])
+                        .map_err(|rc|game_send_failure(c,"on_firstsend",rc,r,cfg,origin))?;
+                    c.tx_seq[idx].fetch_add(r.length,Ordering::Release);
+                    c.ack_sent[idx].store(ack,Ordering::Release);
+                    c.tx.fetch_add(1,Ordering::Relaxed);
+                    if c.rx.load(Ordering::Acquire)>0{c.after.fetch_add(1,Ordering::Relaxed);}
+                }
+            }
+            if let Some(outcome)=outcome{
+                if outcome.error.is_some()||outcome.uncertain_index.is_some(){
+                    eprintln!("M0_PLAN026_GAME_NATIVE_TX_LANE_RETIRED lane={} stage=npcap_send_driver accepted_prefix={} uncertain_index={:?} error={:?}",idx+1,outcome.accepted_prefix,outcome.uncertain_index,outcome.error);
+                    let _=retire_game_tx_lane(active,idx);
+                }
+            }
+        }
+    }
+    if !active.iter().any(|&ok|ok){return Err(BAD_STAGE)}
     Ok(total)
 }
 fn send_ack(cfg:&WbdWinNativeAttachV1,lanes:&[LaneConfig],
@@ -346,7 +358,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
     tcp_control:Option<Receiver<GameTcpColdCommand>>,
     split_clock:Instant,
 )->i32{
-    let mut bytes=[0u8;MAX_IPV4];let mut id=1u16;
+    let mut id=1u16;
     // TX and RX capture endpoints have distinct native failure lifetimes.
     // Retiring one local TX handle must never stop another lane's NPF send.
     let mut active=vec![true;npf.len()];
@@ -408,9 +420,13 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             }
         }
         let mut did_work=direct_progress;
-        for _ in 0..8{
+        let mut sources=[[0u8;MAX_IPV4];BATCH];
+        let mut lengths=[0usize;BATCH];
+        let mut count=0usize;
+        for _ in 0..BATCH{
             if c.stop.load(Ordering::Acquire){return OK}
-            match tun.read(&mut bytes){
+            let bytes=&mut sources[count];
+            match tun.read(bytes){
                 Ok(ReadResult::Frame(n))=>{
                     if let Some(actor)=split.as_mut(){
                         match actor.on_packet(&bytes[..n],now_ms){
@@ -428,36 +444,44 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                             },
                         }
                     }
-                    let records=match group.lock(){
-                        Ok(mut g)=>game::offer_records_native(&mut g,cfg.group,&bytes[..n]),
-                        Err(_)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_lock");return BAD_STAGE},
-                    };
-                    let rows=match records{Ok(v)=>v,Err(INVALID)=>{
-                        c.rejected.fetch_add(1,Ordering::Relaxed);continue
-                    },Err(e)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_result rc={e}");return e}};
-                    if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,&mut npf,
-                        &c,rows,&mut id,&mut active,"offer"){eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=offer_send_records rc={rc}");return rc}
-                    health.on_local_business(health_origin.elapsed().as_nanos()
-                        .min(u128::from(u64::MAX)) as u64);
-                    did_work=true;
-                }
+                    lengths[count]=n;count+=1;
+                    if count==BATCH{break}
+                },
                 Ok(ReadResult::NoPacket|ReadResult::EndOfStream)=>break,
                 Ok(ReadResult::Skipped|ReadResult::SkippedIpv6)=>{
-                    // Original Game Wintun loan already released and
-                    // consumed this bounded read turn. Never enter Game
-                    // FEC/Direct/Tunnel, continue fair next packet.
                     c.rejected.fetch_add(1,Ordering::Relaxed);
-                }
+                },
                 Err(err)=>{
                     eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=wintun_read reason={err:?}");
                     return BAD_STAGE
                 },
             }
         }
+        if count>0{
+            let order:[usize;BATCH]=if count==BATCH{
+                crate::v4_ingress_fair::ready_order(std::array::from_fn(|i|
+                    crate::v4_ingress_fair::flow_key(&sources[i][..lengths[i]])),count)
+            }else{std::array::from_fn(|i|i)};
+            let ready:[&[u8];BATCH]=std::array::from_fn(|i|{
+                let j=order[i];&sources[j][..lengths[j]]
+            });
+            let (rows,accepted)=match group.lock(){
+                Ok(mut g)=>match game::native_game_offer_batch(&mut g,cfg.group,&ready[..count]){
+                    Ok(v)=>v,Err(e)=>return e
+                },
+                Err(_)=>return BAD_STAGE,
+            };
+            if accepted<count{c.rejected.fetch_add((count-accepted) as u64,Ordering::Relaxed);}
+            if let Err(rc)=send_records(cfg.group,&cfg.first,&group,&outer,&lanes,&mut npf,
+                &c,rows,&mut id,&mut active,"offer"){return rc}
+            if accepted>0{health.on_local_business(health_origin.elapsed().as_nanos()
+                .min(u128::from(u64::MAX)) as u64);}
+            did_work=true;
+        }
         // Same Game4 scheduler/FEC parity owner as original Linux.
         // One bounded due pass, no Go per-packet polling.
         let due=match group.lock(){
-            Ok(mut g)=>game::native_game_due(&mut g,cfg.group,16),
+            Ok(mut g)=>game::native_game_due(&mut g,cfg.group,32),
             Err(_)=>{eprintln!("M0_PLAN026_GAME_NATIVE_FIRST_ERROR role=TX stage=due_lock");return BAD_STAGE},
         };
         match due{
@@ -515,7 +539,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             ControlDue::DeadPeer=>{
                 eprintln!("M0_GAME_NATIVE_HEALTH_DEAD age_ns={} threshold_ns={}",
                     now_health,health.policy().dead_ns());
-                return BAD_STAGE
+                return AUTHENTICATED_PEER_DEAD
             },
             ControlDue::Health=>{
                 let Some(index)=active.iter().position(|v|*v)else{return BAD_STAGE};
@@ -979,7 +1003,7 @@ fn rx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
                     if changed{let _=tx_wake.wake();}
                     continue
                 }
-                let Ok(p)=parse_data_packet(ipv4,trusted)else{continue};
+                let Ok(p)=parse_data_packet_fast(ipv4,trusted)else{continue};
                 match receive_one(&cfg,&group,&mut tun,&c,&mut ledgers,
                     &mut deferred,i,p.seq32,p.ciphertext,tunnel_dns.as_ref(),
                     split_clock.elapsed().as_millis() as u64){
@@ -1297,7 +1321,7 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
     let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
     let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
     eprintln!("M0_PLAN027_GAME_NATIVE_STOP_JOIN group={h} tx_finished=true rx_finished=true tx_rc={tx} rx_rc={rx}");
-    if tx!=OK&&tx!=BAD_STAGE{return tx}
+    if tx!=OK&&tx!=BAD_STAGE&&tx!=AUTHENTICATED_PEER_DEAD{return tx}
     if rx!=OK&&rx!=BAD_STAGE{return rx}
     OK // Both native workers ended before Wintun/NPF loans return to Go.
 }

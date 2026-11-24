@@ -161,6 +161,7 @@ func (b *v4WindowsNativeOwnerBridge) connectVerifiedClient(
     if _,err=session.ColdSnapshot();err!=nil{return nil,err}
     handoff,err:=assoc.Detach()
     if err!=nil{return nil,err}
+    for j:=0;j<2;j++{_,_=assoc.RepeatGameColdFinalACK(nil)}
     if err=b.prepareAuthenticatedClient(session,handoff,assoc.Flow());err!=nil{
         return nil,fmt.Errorf("%w: real original-Go client Detach/Rust owner: %v",
             errV4WindowsOwner,err)

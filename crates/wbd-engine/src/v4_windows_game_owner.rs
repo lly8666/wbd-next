@@ -217,6 +217,32 @@ pub(super) fn offer_records_native(
     offer_group(group,h,ipv4,capacity)
 }
 #[cfg(feature="fec2_product_record")]
+pub(super) fn native_game_offer_batch(
+    group:&mut WinGameGroup,h:u64,frames:&[&[u8]],
+)->Result<(Vec<WbdWindowsGameRecordV4>,usize),i32>{
+    let cap=game_effective_payload_mtu(group,h)?;
+    if !group.staged.is_empty(){return Err(BAD_STAGE)}
+    let mut accepted=0usize;
+    for &payload in frames{
+        if payload.len()<20||payload.len()>cap||payload[0]>>4!=4||payload[0]&15<5{continue}
+        group.tick=group.tick.checked_add(1).ok_or(FULL)?;
+        let now=game_monotonic_now(group);
+        if group.adapter.offer(payload,now).is_ok(){accepted+=1;}
+    }
+    let now=game_monotonic_now(group);
+    let mut out=Vec::with_capacity(32);
+    let mut pads=Vec::with_capacity(32);
+    let _=group.adapter.stage_for_windows_native(MonoNs(now.0.saturating_add(1)),|lane,id,pn,wire,pad|{
+        if let Some(record)=game_record(lane,id,pn,wire){
+            out.push(record);pads.push(pad as u16);true
+        }else{false}
+    });
+    group.staged.extend(out.iter().zip(pads).map(|(r,pad)|WinGameStagedRecord{
+        lane:r.lane,id:r.logical_id,pn:r.pn,pad,
+    }));
+    Ok((out,accepted))
+}
+#[cfg(feature="fec2_product_record")]
 pub(super) fn native_game_due(
     group:&mut WinGameGroup,h:u64,capacity:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
@@ -349,7 +375,7 @@ fn offer_group(
 pub(super) fn game_fec_poll_group(
     game:&mut WinGameGroup,h:u64,capacity:usize,
 )->Result<Vec<WbdWindowsGameRecordV4>,i32>{
-    if capacity==0||capacity>16{
+    if capacity==0||capacity>32{
         return Err(INVALID)
     }
     if game.lanes.iter().any(|lane|lane.lock().ok().is_none_or(|e|

@@ -78,6 +78,7 @@ func readPrivateArgFile(path string)(string,error){
 
 type config struct{
     role string
+    management *serverManagement
     rawInterface string
     localIP netip.Addr
     peerIP netip.Addr
@@ -1263,7 +1264,8 @@ func recoverOriginalAndroidRootOwned()error{
     return nil
 }
 
-func Run(role string,args []string)(retErr error){
+func Run(role string,args []string)error{return runManagedProduct(role,args,nil)}
+func runManagedProduct(role string,args []string,management *serverManagement)(retErr error){
  if runtime.GOOS=="android"&&role=="client"{
   // Actual original Go Bionic ELF entry, NOT an emulated TLS/Root stage.
   log.Print("V4_PUBLIC_ANDROID_GO_ENTRY role=client")
@@ -1292,6 +1294,7 @@ func Run(role string,args []string)(retErr error){
         stats:=cfg.androidCNSnapshot.Stats()
         log.Printf("V4_PUBLIC_ANDROID_CN_DOMAIN_COLD_FILE_VERIFIED count=%d sha256=%s dns_capture=NOT_CONNECTED",stats.Total,stats.SHA256)
     }
+    cfg.management=management
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}
     if runtime.GOOS=="android"&&role=="client"{
@@ -1359,6 +1362,11 @@ func Run(role string,args []string)(retErr error){
         if e!=nil{return e}
         log.Printf("V4_PUBLIC_SERVER_UNDERLAY_BIND interface=%s local_ip=%s mode=auto_interface_ipv4 port=%d nat_port_forward_required_if_behind_gateway",
                    cfg.rawInterface,cfg.localIP,cfg.localPort)
+    }
+    if management!=nil {
+        cleanup,e:=prepareManagedNetwork(cfg)
+        if e!=nil{return e}
+        defer func(){retErr=errors.Join(retErr,cleanup())}()
     }
     // Product SYN MSS and initial record offer are computed from the same
     // real cold outer/interface envelope. No inherited 1360/1280 ceiling.
@@ -2041,11 +2049,17 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
                 log.Printf("V4_PUBLIC_ACTUAL_PEER_SYNACK_MSS_V1 side=client peer_advertised_mss=%d",seg.MSS)
             }
             if assoc.State()!=faketcp.ClientAssociationDetached{
-                if e:=assoc.HandleSegment(seg,time.Now());e!=nil &&
-                   !errors.Is(e,faketcp.ErrClientDetached){
-                    select{case errs<-e:default:}
+                e:=assoc.HandleSegment(seg,time.Now())
+                if !errors.Is(e,faketcp.ErrClientDetached){
+                    if e!=nil&&!(errors.Is(e,faketcp.ErrClientHandshake)&&
+                        assoc.State()==faketcp.ClientAssociationSYNSent){
+                        select{case errs<-e:default:}
+                    }
+                    continue
                 }
-            }else if handoffCommitted.Load()&&len(seg.Payload)!=0{
+            }
+            if handled,_:=assoc.RepeatGameColdFinalACK(&seg);handled{continue}
+            if handoffCommitted.Load()&&len(seg.Payload)!=0{
                 goPostHandoffDataCopies.Add(1)
             }
         }
@@ -2081,14 +2095,18 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     if runtime.GOOS=="android"{
         log.Printf("V4_PUBLIC_ANDROID_COLD_SYN_TX_OK role=client source=original_go_raw")
     }
-    dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
-    defer cancel()
+    synCtx,cancelSYN:=context.WithTimeout(ctx,20*time.Second)
+    defer cancelSYN()
     // A first SYN may precede server AF_PACKET bind just as a post-dead
     // SYN can. Drive the SAME original bounded FakeTCP RTO/MaxSYNRetries
     // at initial connect and cold reauth. Association freezes local MSS at
     // creation; retries cannot change SYN TCP options or skip TLS admission.
-    err=waitForOriginalColdSYN(dialCtx,assoc)
+    err=waitForOriginalColdSYN(synCtx,assoc)
+    cancelSYN()
     if err!=nil{return err}
+    // SYN loss must not consume the following independent TLS deadline.
+    dialCtx,cancel:=context.WithTimeout(ctx,20*time.Second)
+    defer cancel()
     if runtime.GOOS=="android"{
         // Unlike a raw SYNACK candidate this proves the ORIGINAL client
         // Association accepted its sequence/flow and reached Established.
@@ -2603,6 +2621,7 @@ func runServer(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
 // No Go steady-state plaintext/record loop is introduced here. Each admitted
 // association owns its own original-Go TLS -> Rust AEAD/PN M1/M4 generation.
 type originalV4MultiRecord struct {
+    managedAt time.Time
     assoc *faketcp.ServerAssociation
     product *realityfront.V4LinuxServerProduct
     lease string // server verified protected TLS /32, never client claimed
