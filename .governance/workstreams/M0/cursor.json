@@ -4,16 +4,16 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2367,
-  "checkpoint_sha": "57eb4ce1fcfbe0359ba2f23220ea627b0c4fff96",
+  "sequence": 2369,
+  "checkpoint_sha": "5b4e8310b62413f7d6d80d5a4248ba8816542342",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2364真网完成但无整机收益；用户提出裸TCP硬件/虚拟卸载差异，H2366独立真实LSOv2对照已推送，P1需刷新旧构件。",
-  "why_now": "普通OS TCP与逐帧NPF存在结构性差异，分离LSO条件和原生服务路径；不要继续微优化盲测。",
+  "current_task": "PLAN029 H2368：LSO对照7/7完成，OFF两组均可超800Mbps；撤回H2364 checksum，恢复H2336产品源码；P1 1%双组当前源重建与真实重传对照已启动。",
+  "why_now": "LSO缺失不足以解释产品吞吐差距；旧弱网构件不含最新Normal-v3，优先消除源错配推进P1，再推进P2。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "收H2366 45326185486四腿实际LSO读回、原始远端字节、CPU及恢复状态；如果无支持标环境限制。H2364不晋级；P1更新H2294旧构件/manifest及joined Stop以当前Normal-v3真源做1%后5%，P2按现有Maximum原生单测PASS推进真实parity。",
+  "next_action": "收H2368 45328644632 静态/构建/真网各阶段、joined Stop R/F与远端吞吐/P99/CPU；若有红先查首个故障，不重复无信息网测。完成1%后再触发已更新5%入口；P2检查实际maximum parity/source与deadline，保留P0未达目标事实。",
   "unverified": true,
-  "last_tested_source": "7a3e3099f73b6603a370e88fa754f65161ca4ea4",
+  "last_tested_source": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
   "evidence_refs": [],
   "context_refs": [
     "docs/decisions/M0-PLAN029-THROUGHPUT.md",
@@ -28,8 +28,9 @@
     "docs/evidence/M0/20261124-H2336-H2338-H2339-PARALLEL-NATIVE-AB.json",
     "docs/evidence/M0/20261124-H2353-H2355-BALANCED-NATIVE-AB.json",
     "docs/evidence/M0/20261124-H2364-PARALLEL-RESULTS-CHECKSUM-RESUME.json",
-    "docs/evidence/M0/20261124-H2366-CHECKSUM-PRODUCT-LSO-RESEARCH.json"
+    "docs/evidence/M0/20261124-H2366-CHECKSUM-PRODUCT-LSO-RESEARCH.json",
+    "docs/evidence/M0/20261124-H2368-LSO-RESULTS-P1-RESUME.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2364 9/9功能PASS，B吞吐-15.78/-2.86%，CPU/GiB+27.19/-0.94%，容量不足，不晋级；H2314/H2311同源原生PASS。H2366 SOURCE ff2b2b83401f1e42248b3ca3341ff82bc8449e23，run45326185486在途，产品无新变化。P1/P2/物理资格OPEN。"
+  "partial_summary": "H2366 LSO ON相对OFF -9.75/+10.81%，OFF峰值818.674/826.710；H2368 SOURCE dabe812654896a93ae6e0b4bcad741f3c0ec8441 run45328644632在途，H2336生产源完全一致，1%仅Windows发送方repair切换，ARM固定OFF，5%未发，P0/P1/P2未完。"
 }
