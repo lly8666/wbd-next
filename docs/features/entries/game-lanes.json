@@ -60,114 +60,10 @@
     "docs/devlog/M0/20261107-PLAN028-H1304-GAME4-PEER-M4-COLD-COMMIT.md",
     "docs/evidence/M0/PLAN028-H1355-SOURCE6C5-X86-GAME2-FIXED6-REAL-ROTATION-SCOPED-PASS-20261108.json",
     "docs/evidence/M0/PLAN028-H1354-H1353-X86-CORRELATED-GAME4-RAW-REPLAY-SCOPED-PASS-20261108.json",
-    "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json"
+    "docs/evidence/M0/PLAN028-H1356-H1355-SOURCE6C5-ORIGINAL-FEC6-OUTER-COUNTERS-OFFLINE-PASS-20261108.json",
+    "docs/evidence/M0/20261124-H2397-game-lanes-history.json"
   ],
   "verification": [
-    {
-      "platform": "linux/amd64",
-      "scope": "原Go TLS与Rust真实raw/TUN：Game2/4真实各2/4 lane、UDP单lane受损、Stop（旧L源码，非本次审阅SHA）",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
-      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
-    },
-    {
-      "platform": "linux/arm64 + linux/amd64",
-      "scope": "F实验分支W168：Game相关限定case范围观察，仅观察/特定case通过，非全平台质量门",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
-      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
-    },
-    {
-      "platform": "windows/x64",
-      "scope": "undefined；候选源 8e0daba5，不是Linux或Normal的通过",
-      "status": "FAIL",
-      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
-      "evidence": "docs/devlog/M0/PLAN024-W168-Windows-whole-product-wiring-recovered-20261027.md"
-    },
-    {
-      "platform": "physical",
-      "scope": "多链路质量",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "windows/x64",
-      "scope": "original Windows Game2/4 genuine multi-NPF FakeTCP/TLS lanes+one Wintun kernel and Stop",
-      "status": "FAIL",
-      "source_sha": "8e0daba50b793b4b38d64ccb094f9547a96374b5",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source8e0daba-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "PLAN024 original Go Game2 2 authenticated TLS Npcap lanes ↔ Linux Rust M4 signed Wintun, duplex UDP/TCP + Stop PASS; see evidence.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "PLAN024 original Go Game4 4 authenticated TLS Npcap lanes ↔ Linux Rust M4 signed Wintun, duplex UDP/TCP + Stop PASS; see evidence.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "350199f9885d6310b71181b25bee2308b462557c",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source350199f-20261027.json"
-    },
-    {
-      "platform": "windows/x64 + linux/amd64 WSL2",
-      "scope": "PLAN024 W168 Win/Linux original protected Game2/4 both modes, independent authenticated TLS lanes, real UDP/TCP and owned Stop PASS; details in evidence.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "4977f1200daec7c9f9fb6fd47810a1a372fd1e78",
-      "evidence": "docs/evidence/M0/PLAN024-W168-Windows-seven-mode-original-native-source4977f-20261027.json"
-    },
-    {
-      "platform": "linux/aarch64 native GitHub-hosted two-netns raw/TUN",
-      "scope": "ARM64 original TLS Rust Game2 and Game4 real Linux netns 20 ICMP each direction, owned Stop; Game2 MTU1500 budget1413, Game4 MTU1280 budget1193 and DF+1 rejected; no loss/p99/GameFEC",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
-      "evidence": "docs/evidence/M0/PLAN025-ARM64-native-and-9-mtu-f7ee097e-20261028.json"
-    },
-    {
-      "platform": "windows/x64 signed Npcap+Wintun original Go TLS Rust ↔ linux/amd64 WSL2 raw/TUN",
-      "scope": "H307 Game2/4 signed Win/Linux two-way UDP/TCP and owned Stop PASS, current SOURCE then; N0 capacity/Auto/physical not granted.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "b6b964afa7ffec5795f2c11c6e0620f223e684ac",
-      "evidence": "docs/evidence/M0/PLAN025-H307-main-source-b6b964-seven-mode-native-20261028.json"
-    },
-    {
-      "platform": "windows/x64 signed Npcap Wintun ↔ linux/amd64 WSL2 true kernel",
-      "scope": "Main S61 exact Game2 and Game4 native true Windows/Linux real duplex UDP/TCP and Stop, independent source locked",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "33ed20b4717dac23a2d70c02da170a57daeb02e1",
-      "evidence": "docs/evidence/M0/PLAN025-H309-main-S61-33ed-seven-modes-20261028.json"
-    },
-    {
-      "platform": "linux/arm64 original-Go TLS Rust native raw/TUN 2 netns under authentic tc netem",
-      "scope": "H313 original Game4 4 TLS/Rust lanes ARM64, 30%/200ms native netem, 60s logical3Mbps each dir; residual real loss and FEC6 quantified. See evidence.",
-      "status": "PERFORMANCE_PASS",
-      "source_sha": "f7ee097e116ab813f9ba23514df01a3f0f9d342a",
-      "evidence": "docs/evidence/M0/PLAN025-H313-ARM64-30pct-200ms-FEC6-Game4-20261028.json"
-    },
-    {
-      "platform": "Windows-2022 x64 true signed Wintun, scoped original Go credential TLS/Rust M3-M4 native kernel",
-      "scope": "SOURCEb222 signed Wintun Game2/4 lane1 loss isolation, healthy first-UDP/Stop PASS, original 47 Windows Rust owner unit; details in evidence.",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "b222744cc37df3d560fa2d9b9ee81deb678c715e",
-      "evidence": "docs/evidence/M0/PLAN026-WINDOWS-GAME-DEADLINE-SOURCEB222-20261029.json"
-    },
-    {
-      "platform": "windows/2025 signed Npcap+Wintun ↔ Ubuntu WSL2 kernel",
-      "scope": "PLAN026 SOURCE578e00 Game2 native WSL2↔Windows NPF FAIL: authenticated traffic seen, Windows native TX/ACK mismatch and zero UDP app.",
-      "status": "FAIL",
-      "source_sha": "578e00d0c4e67746132fc8c64d28bdff100ac2ed",
-      "evidence": "docs/devlog/M0/20261029-PLAN026-GAME2-NATIVE-PURE-ACK-EMPTY-RECORD-FIX.md"
-    },
-    {
-      "platform": "Windows2025 signed Npcap/Wintun ↔ actual Ubuntu WSL2 Linux",
-      "scope": "PLAN026 SOURCE768 original native Game2 FAIL: Windows READY yet genuine UDP0/385; Linux side copied/delivered; duplex/Stop incomplete.",
-      "status": "FAIL",
-      "source_sha": "768b1e0f363b2ecdbe5fe24a1f96dcecacedbb46",
-      "evidence": "docs/devlog/M0/20261029-PLAN026-GAME2-WINDOWS-RUST-NPF-PEER-PERSONA-REPAIR.md"
-    },
     {
       "platform": "Windows2025 x64 signed Npcap 1.88/Wintun ↔ real Ubuntu WSL2 Linux x64 raw/TUN",
       "scope": "PLAN026 Game2 2 independently authenticated TLS lanes Windows Npcap ↔ Linux Rust FEC Off, real UDP/TCP/Stop PASS; limitation in evidence.",
@@ -259,7 +155,8 @@
     "H1234 x86 netem5 hot-lane FAIL; H1235 precommit TLS retry NOT_RUN.",
     "H1277：保护内 epoch=0 区分Game4整组和单lane热换代；H1276旧上行775.9s FAIL，H1277 baseline恢复但异构/高压FAIL。",
     "H1295: 新Rust /32 TUN路由独占，旧Rust M4 worker仍活至Go随机10–20s exact Stop；此前新路由publish即使旧alive=false，提前取消宽限。原始TLS/AEAD、旧代无新TUN、反抢回守卫不变。短测待验。",
-    "H1354 all four Game4 lanes share ONE true physical double-blackholed veth, not independent routes; 8s outage expected. Original H1353 CI report FAIL preserved. H1355 actual Carol fixed6 false counter alert only corrected offline H1356."
+    "H1354 all four Game4 lanes share ONE true physical double-blackholed veth, not independent routes; 8s outage expected. Original H1353 CI report FAIL preserved. H1355 actual Carol fixed6 false counter alert only corrected offline H1356.",
+    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-game-lanes-history.json。H2397新候选功能待验，历史性能不推广。"
   ],
   "promotion": null
 }

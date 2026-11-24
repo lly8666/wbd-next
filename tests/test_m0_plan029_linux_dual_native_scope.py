@@ -25,6 +25,8 @@ class Plan029LinuxDualIsaTest(unittest.TestCase):
         self.assertIn('("auto","fec-auto",None,False)',suite)
         self.assertIn('("game2","game2",None,False)',suite)
         self.assertIn('("game4-fixed6","game4","6",False)',suite)
+        self.assertIn('("game4-off","game4",None,False)',suite)
+        self.assertIn('("game2-fixed6","game2","6",False)',suite)
         # A non-Game-FEC original Linux run emits empty selector rather
         # than string "off"; keep mode equality exact, never bypass FEC6.
         self.assertIn('proof.get("game_fec_profile")!=(fec or "")',suite)

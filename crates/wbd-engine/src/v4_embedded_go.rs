@@ -3413,7 +3413,7 @@ pub extern "C" fn wbd_m0_embedded_go_game_group_shared_tun_bind(
     let ip=if g.server{lease}else{[0u8;4]};
     let generation=(group>>32) as u32;
     let inbox_slots=shared_tun_product_inbox_slots();
-    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} flow_fair=1 probe_only=0",if g.server{"server"}else{"client"},generation,inbox_slots);
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0 flow_fair=1",if g.server{"server"}else{"client"},generation,inbox_slots);
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);
     g.shared_tun=Some(SharedTunSession{
         router:router_handle,generation,ip,
@@ -5683,7 +5683,7 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     // Cold readback confirms the exact Normal client/server queue size once,
     // before native M4 activation; no per-DATA probe or heap growth loop.
     let inbox_slots=shared_tun_product_inbox_slots();
-    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} flow_fair=1 probe_only=0",
+    eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0 flow_fair=1",
         if e.server_side{"server"}else{"client"},e.generation,inbox_slots);
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);
     e.shared_tun=Some(SharedTunSession{

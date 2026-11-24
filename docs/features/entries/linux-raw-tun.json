@@ -46,51 +46,10 @@
     "docs/devlog/M0/20261109-PLAN028-H1461-NATIVE-PATCH-AND-TWO-TRUE-SOAKS.md",
     "docs/evidence/M0/PLAN029B-H2206-NAT-RAW-IFACE-LINUX-X86-ARM64-PASS-20261119.json",
     "docs/decisions/M0-PLAN029B-H2206-NAT-IFACE-ROUTEKEY-20261119.md",
-    "docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-128-64-20261121.json"
+    "docs/evidence/M0/PLAN029-ARM64-ZERO-CLIENT-INBOX64-128-64-20261121.json",
+    "docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json"
   ],
   "verification": [
-    {
-      "platform": "linux/amd64",
-      "scope": "原Go TLS与Rust真实raw/TUN：真实Linux TUN/raw产品Game/Fixed/Auto组合（旧L源码，非本次审阅SHA）",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "c81838f10371d9ecb6a88fd3cabb8692fd8fff85",
-      "evidence": "docs/evidence/M0/PLAN019-one-exact-binary-source-Fixed-Auto-Game2-Game4-20261020.json"
-    },
-    {
-      "platform": "linux/arm64 + linux/amd64",
-      "scope": "F实验分支W168：F实验 ARM64/AMD64 受限真内核观测，仅观察/特定case通过，非全平台质量门",
-      "status": "FUNCTIONAL_PASS",
-      "source_sha": "0776fc4ede72fabd711e8333568eb88a58e8a6ea",
-      "evidence": "docs/evidence/fec-network-work/20261026-W168-56case-UDP-ARM64-AMD64-Matrix-Completed.json"
-    },
-    {
-      "platform": "Windows amd64 + Linux amd64 WSL2",
-      "scope": "Rust Normal/off真实双向UDP 100Mbps各方向、300ms单程、0% netem、60s；Linux raw RX SO_RCVBUF4MiB请求/8MiB内核生效，raw socket drops0，首次交付100.000%/99.9877%，两端owned Stop PASS；仅此SOURCE/场景",
-      "status": "PERFORMANCE_PASS",
-      "source_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
-      "evidence": "docs/evidence/M0/PLAN026-SOURCE0ABD-RAW-RXBUF-100M-ACTUAL-PASS-20261028.json"
-    },
-    {
-      "platform": "Windows amd64 + Linux amd64 WSL2",
-      "scope": "Rust Normal/off 150Mbps each direction, 300ms one-way, 0% injected loss, 60s; original signed drivers/TLS/TUN, bounded per-raw RX 8MiB and test UDP receiver 8MiB kernel actual, no local socket/netem drops, first delivery 100% / 99.9988%, both Stop PASS. 15 consecutive Windows-receiver missing packets means absolute zero-loss NOT_MET.",
-      "status": "PERFORMANCE_PASS",
-      "source_sha": "0abd1b04ee7a39d8aa426963564a079523c1036a",
-      "evidence": "docs/evidence/M0/PLAN026-SOURCEB3A6-RUST-150M-300MS-0LOSS-PASS-20261028.json"
-    },
-    {
-      "platform": "linux/arm64",
-      "scope": "物理发行版权限/多路由IPv6",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
-    {
-      "platform": "physical",
-      "scope": "原生路由器用户应用",
-      "status": "NOT_RUN",
-      "source_sha": null,
-      "evidence": null
-    },
     {
       "platform": "Windows amd64 + Linux WSL2 amd64",
       "scope": "H527 原Go Linux TUN txqlen2048读回、Win↔WSL2 signed TLS 60s Normal/Auto/Fixed6及Stop；原范围见证据。",
@@ -165,7 +124,6 @@
   "limitations": [
     "仅修改自己新建的TUN，不自动改宿主全局网络；内核write成功≠对端送达。",
     "本卡审阅产品SOURCE为 fcf33b14489b46d37aa29d5d9304d1e5a3fe010b；verification已注明的旧Action/旧SHA不代表本次HEAD重测，未列PASS的平台和模式保持未验证。",
-    "PLAN026 SOURCE0abd 100Mbps/300ms/0% netem 60s 原生Windows↔WSL2 Rust Normal/off 已真实验证：SO_RCVBUF请求4MiB、有效8MiB，raw socket drops0、业务首次交付两方向>=99.9%及Stop PASS；但Linux→Windows仍有101唯一包缺失，绝对零丢包未达成；150Mbps/物理/其他模式尚未验证。",
     "PLAN026 low-cost candidate only changes Linux Auto Go observation scheduler from 200ms to the existing two-second decision cadence. No change to Linux Rust raw/TUN kernel path or FEC codec. New source and CPU/no-latency regression remain NOT_RUN, and this does not implement merged Rust Keepalive/server Dormant.",
     "PLAN026 Linux original Rust raw/TUN M3 unique AEAD+PN now admits authenticated Health-only or Receipt+Health/Quality as control without fabricating business delivery or M2 ACK. Native timed Keepalive TX, server FIN Dormant and physical qualification still NOT_RUN.",
     "PLAN026 client/server real native Rust raw/TUN TX owner now includes 15s Health due/one merged M2 Receipt control and real sendmmsg copied/uncertain/NotSent settlement, no new Go packet pump; liveness remote data aggregation, dead/FIN Dormant effective config, representative V2 network and CPU qualification remain NOT_RUN.",
@@ -193,7 +151,8 @@
     "H2186 H2185 earlier outer1280 case failed because fixture unconditionally read per-interface IPv6 sysctl even though inner1209 < IPv6 min1280; true new source each native ISA verifies missing sysctl only under inner<1280 AND zero IPv6 addr/routes. Host global IPv6 remains NOT_RUN.",
     "H2206 AF_PACKET不是TCP 0.0.0.0监听；本机NIC自动唯一IPv4，多地址失败，网关DNAT与实体跨ISA NOT_RUN。",
     "H2224公网出口和崩溃残留NOT_RUN；ip_forward及iptables权限归宿主。",
-    "Normal客户端128槽；H2372满队列公平准入仅Normal/off客户端，main回归待验。"
+    "历史H2372仅Normal/off客户端；H2397候选全端全模式，待真实回归。",
+    "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-linux-raw-tun-history.json。H2397新候选功能待验，历史性能不推广。"
   ],
   "promotion": null
 }

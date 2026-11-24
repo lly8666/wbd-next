@@ -547,7 +547,7 @@ const DIRECT_RETURN_QUANTUM:usize=RX_WAKE_BATCH;
          }
      }
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
-     let order=if count==BATCH{
+     let order:[usize;BATCH]=if count==BATCH{
          crate::v4_ingress_fair::ready_order(std::array::from_fn(|i|
              crate::v4_ingress_fair::flow_key(&sources[i][..source_len[i]])),count)
      }else{std::array::from_fn(|i|i)};
