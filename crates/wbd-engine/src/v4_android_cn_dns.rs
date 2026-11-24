@@ -6,6 +6,7 @@ use std::collections::HashSet;
 pub(crate) struct CNDnsMatcher{
     suffix:HashSet<String>,
     exact:HashSet<String>,
+    keywords:Vec<String>,
     regex:Option<RegexSet>,
     total:usize,
 }
@@ -23,6 +24,7 @@ impl CNDnsMatcher{
         let mut suffix=HashSet::new();
         let mut exact=HashSet::new();
         let mut patterns=Vec::new();
+        let mut keywords=Vec::new();
         let mut total=0usize;
         for line in text.lines(){
             let (kind,value)=line.split_once(':').ok_or(())?;
@@ -36,16 +38,11 @@ impl CNDnsMatcher{
                     if !exact.insert(value.to_owned()){return Err(())}
                 },
                 "regexp"=>patterns.push(value.to_owned()),
-                // The pinned original dataset contains zero keywords.
-                // Reject a future format change rather than misclassify it.
+                "keyword"=>keywords.push(value.to_owned()),
                 _=>return Err(()),
             }
         }
-        let is_fixture=cfg!(test)&&total<100;
-        if !is_fixture&&
-           (total!=8503||suffix.len()!=8431||exact.len()!=69||patterns.len()!=3){
-            return Err(())
-        }
+        if total==0||total>150_000{return Err(())}
         let regex=if patterns.is_empty(){None}else{
             Some(RegexSetBuilder::new(patterns)
                 .case_insensitive(true)
@@ -53,7 +50,7 @@ impl CNDnsMatcher{
                 .dfa_size_limit(16*1024*1024)
                 .build().map_err(|_|())?)
         };
-        Ok(Self{suffix,exact,regex,total})
+        Ok(Self{suffix,exact,keywords,regex,total})
     }
     pub(crate) fn total(&self)->usize{self.total}
     pub(crate) fn is_cn_name(&self,name:&str)->bool{
@@ -65,6 +62,7 @@ impl CNDnsMatcher{
             let Some(dot)=suffix.find('.')else{break};
             suffix=&suffix[dot+1..];
         }
+        self.keywords.iter().any(|word|name.contains(word.as_str()))||
         self.regex.as_ref().is_some_and(|rx|rx.is_match(name))
     }
     /// Small ordinary IPv4/UDP53 (or already gathered jumbo) packet.
@@ -133,6 +131,19 @@ mod tests{
         }
         for q in ["notbaidu.com","only.example.net","ads.cn","www.example.net"]{
             assert!(!m.is_cn_ipv4_query(&query(q)), "{q} is not CN");
+        }
+    }
+    #[test]fn b81_cn_main_official_and_keyword(){
+        let m=CNDnsMatcher::from_go_cold(b"keyword:wallet\n").unwrap();
+        assert!(m.is_cn_ipv4_query(&query("mywallet.net")));
+        assert!(!m.is_cn_ipv4_query(&query("example.net")));
+        if let Ok(path)=std::env::var("WBD_ACTIVE_CN_GEOSITE"){
+            let raw=std::fs::read(path).unwrap();
+            let m=CNDnsMatcher::from_go_cold(&raw).unwrap();
+            assert!(m.total()>1000);
+            assert!(m.is_cn_ipv4_query(&query("www.baidu.com")));
+            assert!(m.is_cn_ipv4_query(&query("www.qq.com")));
+            assert!(!m.is_cn_ipv4_query(&query("baidu.com.evil.example")));
         }
     }
     #[test]fn b5_cn8503_cold_actual_pinned_rules_full_typed_when_supplied(){

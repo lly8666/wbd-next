@@ -14,6 +14,7 @@ import (
  "os"
  "syscall"
  "regexp"
+ "sort"
  "strings"
 )
 
@@ -54,7 +55,7 @@ func validDNSName(s string)bool{
 func validKeyword(s string)bool{
  if s==""||len(s)>512{return false}
  for _,b:=range []byte(s){
-  if !((b>='a'&&b<='z')||(b>='0'&&b<='9')||b=='-'||b=='.'){return false}
+  if b<33||b>126||b=='@'||b=='&'{return false}
  }
  return true
 }
@@ -67,8 +68,40 @@ func LoadPinnedCN(raw []byte)(*CNRules,error){
  expected,_:=hex.DecodeString(PinnedCNSHA256)
  sum:=sha256.Sum256(raw)
  if !bytes.Equal(sum[:],expected){return nil,fmt.Errorf("CN geosite SHA256 mismatch: fail closed")}
- if raw[len(raw)-1]!='\n'{return nil,fmt.Errorf("CN rules missing final newline")}
- r:=&CNRules{suffix:make(map[string]struct{}),exact:make(map[string]struct{}),digest:PinnedCNSHA256}
+ return loadTypedCN(raw,true)
+}
+
+// LoadCN accepts main's canonical text (suffix, =exact, keyword:, regexp:)
+// and legacy Android typed text. Normalize once before the Rust M4 handoff.
+func LoadCN(raw []byte)(*CNRules,error){
+ if len(raw)==0||len(raw)>=MaxCNSnapshotBytes{return nil,fmt.Errorf("CN rules size invalid")}
+ seen:=make(map[string]struct{})
+ for _,line:=range strings.Split(string(raw),"\n"){
+  s:=strings.TrimSpace(line)
+  if s==""{continue}
+  kind,value:="domain",s
+  if strings.HasPrefix(s,"="){kind,value="full",s[1:]}else if i:=strings.IndexByte(s,':');i>=0{kind,value=s[:i],s[i+1:]}
+  if kind!="regexp"{value=strings.ToLower(value);if kind=="domain"||kind=="full"{value=strings.TrimSuffix(value,".")}}
+  seen[kind+":"+value]=struct{}{}
+ }
+ if len(seen)==0||len(seen)>150000{return nil,fmt.Errorf("CN rule count invalid")}
+ lines:=make([]string,0,len(seen))
+ for line:=range seen{lines=append(lines,line)}
+ sort.Strings(lines)
+ return loadTypedCN([]byte(strings.Join(lines,"\n")+"\n"),false)
+}
+func ReadCNFile(path string)(*CNRules,error){
+ f,err:=os.Open(path)
+ if err!=nil{return nil,err}
+ defer f.Close()
+ raw,err:=io.ReadAll(io.LimitReader(f,MaxCNSnapshotBytes+1))
+ if err!=nil{return nil,err}
+ return LoadCN(raw)
+}
+func loadTypedCN(raw []byte,pinned bool)(*CNRules,error){
+ if len(raw)==0||len(raw)>=MaxCNSnapshotBytes||raw[len(raw)-1]!='\n'{return nil,fmt.Errorf("CN rules size or format invalid")}
+ sum:=sha256.Sum256(raw)
+ r:=&CNRules{suffix:make(map[string]struct{}),exact:make(map[string]struct{}),digest:hex.EncodeToString(sum[:])}
  var previous string
  for _,line:=range strings.Split(string(raw[:len(raw)-1]),"\n"){
   if line==""||len(line)>530||line<=previous{return nil,fmt.Errorf("CN rules empty, unordered or duplicated")}
@@ -94,8 +127,8 @@ func LoadPinnedCN(raw []byte)(*CNRules,error){
   default:return nil,fmt.Errorf("unknown CN rule type %q",kind)
   }
  }
- if r.total!=PinnedCNRuleCount||len(r.suffix)!=8431||
-  len(r.exact)!=69||len(r.regex)!=3||len(r.keywords)!=0{
+ if pinned&&(r.total!=PinnedCNRuleCount||len(r.suffix)!=8431||
+  len(r.exact)!=69||len(r.regex)!=3||len(r.keywords)!=0){
   return nil,fmt.Errorf("CN geosite type/count differs from pinned source")
  }
  r.raw=append([]byte(nil),raw...)

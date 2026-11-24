@@ -1,3 +1,5 @@
+**2026-11-24 B81**：B81 WIRED_CANDIDATE: Android uses main's official flattened CN domain snapshot via shared build-time importer, typed Go cold normalization and existing Rust M4 matcher (all four types); App local import/reset applies on next START, no runtime fetch or FakeIP, disabled CN split skips Go rule parsing. Legacy 8503 host evidence stays historical. B80 exact ACK/SACK test crate and obsolete source assertion repaired; assembler pin matches actual merged main blob. CI/device/performance not yet verified.
+
 **2026-11-24 最新用户决定（B80）**：每次从 main 同步已正式合入的全部源码、功能/优化与历史（真实双亲 merge，保留 Android 专有代码），平台差异只在 Android Bionic RAW/TUN、Root/Network、App 冷设置等适配层处理。优先复用 main 共享核心，不复制一套协议/算法；main 的 Windows/服务端专有逻辑保留源码而不误启用在 Android。Android 必须适配原表演式/机会式外层重传，旧逐 record M2 Receipt 已废弃，禁止复活。高级 CN FakeIP 仍明确 OUT_OF_SCOPE；普通 CN DNS 与真实 IPv4 内核直连保留。
 
 **2026-11-24 最新用户决定：Android 高级 CN FakeIP = OUT_OF_SCOPE（明确不实现，不是待办）。** 保留普通 CN8503 域名 DNS 分流、真实 IPv4 CN 内核 FIB 直连、手工 CIDR；不引入合成 IP、FakeIP 映射、对应路由、UI/CLI 开关、代理数据路径或验收任务。按大类功能并行研读/合批接线，复用原 Go 冷控制及原 Rust 数据面；不展开极端工况、额外防御性安全开发或重复历史 SYN/TAP 探针。

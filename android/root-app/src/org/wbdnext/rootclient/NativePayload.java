@@ -18,10 +18,9 @@ final class NativePayload {
     final File cnIPv4;
     final String source;
     final String executableName;
-    private static final String PINNED_CN_SHA256=
-        "45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6";
-    private static final String PINNED_CN_SOURCE=
-        "41504eae2a11f305fe88cfc605cf6c105a80bf5a";
+    static File customCN(Context ctx){
+        return new File(ctx.getNoBackupFilesDir(),"wbd-cn-domains-user.txt");
+    }
     private NativePayload(File c,File e,File g,File ipv4,String s,String binary){
         client=c;engine=e;cnGeosite=g;cnIPv4=ipv4;source=s;executableName=binary;
     }
@@ -152,13 +151,8 @@ final class NativePayload {
         JSONObject provenance=new JSONObject(new String(load(ctx,
             prefix+"cn-geosite-provenance.json",65536),
             java.nio.charset.StandardCharsets.UTF_8));
-        if(!PINNED_CN_SOURCE.equals(provenance.getString("source_commit"))||
-           !PINNED_CN_SHA256.equals(provenance.getString("text_sha256"))||
-           provenance.getInt("output_distinct_rules")!=8503||
-           provenance.getJSONObject("kinds").getInt("domain")!=8431||
-           provenance.getJSONObject("kinds").getInt("full")!=69||
-           provenance.getJSONObject("kinds").getInt("regexp")!=3){
-            throw new SecurityException("signed CN8503 source provenance mismatch");
+        if(provenance.getInt("output_distinct_rules")<1000){
+            throw new IllegalStateException("missing built-in CN domain rules");
         }
         String license=new String(load(ctx,
             prefix+"wbd-cn-geosite-license.txt",65536),
@@ -171,7 +165,9 @@ final class NativePayload {
         File rust=checkedCopy(ctx,prefix,rustFile,root,
             "libwbd_engine.so",rustSha,40*1024*1024);
         File cn=checkedCopy(ctx,prefix,"wbd-cn-geosite.txt",root,
-            "wbd-cn-geosite.txt",PINNED_CN_SHA256,6000000);
+            "wbd-cn-geosite.txt",provenance.getString("text_sha256"),6000000);
+        File custom=customCN(ctx);
+        if(custom.isFile())cn=custom;
         File cnIP=null;
         if(cnIPDirect){
             JSONObject ipMeta=new JSONObject(new String(load(ctx,prefix+"cn-ipv4-provenance.json",65536),java.nio.charset.StandardCharsets.UTF_8));

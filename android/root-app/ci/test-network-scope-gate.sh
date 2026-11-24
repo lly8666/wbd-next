@@ -396,7 +396,7 @@ assert 'Physical UDP only uses scoped socket, never GameAdapter/M3.' in m
 assert 'if tun_burst.inline_next(received_business){continue}' in m
 # B56 original Game RAW RX: no sidecar and no extra packet queues.
 assert 'let mut raw_burst=GameTunBurst::default();' in m
-assert 'let raw_received=matches!(&read,Ok((n,_)) if *n>0);' in m
+assert 'let raw_received=read.is_ok();' in m and 'read_original_record_with_ack(' in m
 assert 'if raw_burst.inline_next(raw_received){continue}' in m
 assert 'rx_raw.readiness_fd(),RAW_RX_IDLE_MAX_MS' in m
 assert 'pub(crate) const RAW_RX_IDLE_MAX_MS:i32=30_000' in schedule
@@ -1090,9 +1090,9 @@ assert 'func NewGroup(' in j and 'readOwnedJournalVersion(' in j and 'groupRuleS
 # app-private path to the ORIGINAL Go cold parser, not a Java fake packet
 # handler or claimed Android DNS network state.
 payload=Path("android/root-app/src/org/wbdnext/rootclient/NativePayload.java").read_text()
-assert 'PINNED_CN_SHA256' in payload and 'cn-geosite-provenance.json' in payload
-assert '"wbd-cn-geosite.txt",PINNED_CN_SHA256,6000000' in payload
-assert 'new NativePayload(go,rust,cn,source,executable)' in payload
+assert 'customCN(Context ctx)' in payload and 'cn-geosite-provenance.json' in payload
+assert '"wbd-cn-geosite.txt",provenance.getString("text_sha256"),6000000' in payload
+assert 'new NativePayload(go,rust,cn,cnIP,source,executable)' in payload
 assert 'armAssets==x86Assets' in payload, 'only one signed ABI allowed'
 assert '(!armAssets&&m.optBoolean("release",true))' in payload, 'x86 must be CI-only'
 assert 'signed native ABI not supported by OS' in payload
@@ -1101,7 +1101,7 @@ assert 'ownerExecutable=code.executableName' in s, 'exact original GO executable
 assert 'nativeCode.cnGeosite.getAbsolutePath()' in s and '"--android-cn-geosite-file"' in argv
 cold=Path("r0/go_overlay/internal/v4productcli/linux.go").read_text()
 assert 'cnGeositeFile:=flags.String("android-cn-geosite-file"' in cold
-assert 'dnsnative.ReadPinnedCNFile(*cnGeositeFile)' in cold
+assert 'dnsnative.ReadCNFile(*cnGeositeFile)' in cold
 assert 'dns_capture=NOT_CONNECTED' in cold
 assert 'peerHost:=flags.String("peer-host"' in cold
 assert 'dnsnative.ResolveBootstrapIPv4WithUpstream(' in cold

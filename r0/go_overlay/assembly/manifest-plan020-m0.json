@@ -1730,7 +1730,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "9f822faa11226961f215686c029cac07738e2b80"
+      "result_blob": "a790b0a476565db3b29525db697b5b76eeedf280"
     },
     {
       "kind": "replace",

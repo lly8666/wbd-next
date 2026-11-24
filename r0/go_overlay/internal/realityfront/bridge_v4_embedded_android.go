@@ -87,6 +87,7 @@ extern int32_t wbd_m0_embedded_go_observed_tx_ipv4_mtu(uint64_t,uint32_t,uint32_
 */
 import "C"
 import (
+    "bytes"
     "errors"
     "fmt"
     "net/netip"
@@ -455,7 +456,7 @@ func (b *v4EmbeddedNativeBridge) enableAndroidCNDNSSplit(raw []byte)error{
     var enabled,count C.uint32_t
     rc=C.wbd_m0_embedded_go_android_cn_dns_split_effective(
         C.uint64_t(b.handle),&enabled,&count)
-    if rc!=0||enabled!=1||count!=8503{return fmt.Errorf(
+    if rc!=0||enabled!=1||uint32(count)!=uint32(bytes.Count(raw,[]byte{'\n'})){return fmt.Errorf(
         "%w: original Android CN split effective=%d/%d rules=%d",
         errV4Embedded,int(rc),uint32(enabled),uint32(count))}
     return nil

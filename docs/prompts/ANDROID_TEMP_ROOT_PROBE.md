@@ -12,7 +12,7 @@
 
 **B80 WIRED_CANDIDATE**：冻结 main `5b1311c0748452c1c8dac66fc2a6e517777529fa`，双亲 merge `a0d31730e772dea9d1884076c945c7c810b879c9`（Android 原父 `1997efa2d89b52e11f21037c7972deee9139a0c0`）；206 个 main 变化文件完整同步，两个 Rust 重叠文件三方无损重放、Cargo 双依赖合成、Go manifest 按实际合成 blob 更新。Android Normal/Fixed/Auto 单 lane 与 Game2/4 off/fixed 复用 main `CosmeticOuter` 的 Normal-v3 `OuterAckIndex`/`ReceiptState`/9% pacing/10% quota，按真实 kernel copy 保留原密文一次，RAW ACK/SACK 元数据、Go 已协商 SACK、Game 物理 AEAD 后 ACK、现有 TX owner due/readback 和 Stop。Android 单 lane 使用同一个 main Game v3 控制器，不冒称已移植 Linux Normal process-global allocator。App/Go 显式 ON/OFF，旧 Android 预设默认 OFF 至实体资格，七模式开关可用性仍须同源构建和实体验证。main 8472 官方 CN 域名快照/手动更新源码已同步，Android 现役仍是经验证的 8503 typed snapshot，普通 CN 数据资产与冷导入适配另续；Linux H2376 满队列公平算法同步，Android 直接 TUN 不凭空加 Linux SharedTun 队列。旧 B79a 9 SUCCESS/1 FAIL/5 SKIPPED，APK 旧七模式 padding 拒绝断言已全部改正并补 App 开关往返正向用例。当前 SOURCE CI/实体/性能 NOT_RUN，不把接线当 PASS。
 
-先读取本 SOURCE CI，按实际失败修复，继续把 main 正式成果做 Android 原生平台适配。独立模块可并行、合批冻结一次 SOURCE；不为极端工况反复扩展测试。
+B81：复用 main 官方 CN 域名发布数据、原 Go 冷规范化与原 Rust 四类型匹配，App 导入/恢复下次 START 生效；不引入 FakeIP 或新增热路径。先读取本 SOURCE CI，按实际失败修复，继续把 main 正式成果做 Android 原生平台适配。独立模块可并行、合批冻结一次 SOURCE；不为极端工况反复扩展测试。
 
 ## 3. 原产品边界
 Go 保留标准 TLS/认证、租约、OS/Root/Network 冷控制，Rust 唯一 TUN 与 RAW 长寿命 DATA；不引入 Java/Go 逐包转发、第二 TUN、重复检查、额外防御框架。原 M3 AEAD/PN、FEC 首交付去重、MTU/PMTU、generation 和 owned Stop 保留正常业务语义，证书验证沿 A54 用户选项；不自行加强。ARM64 唯一发布 ABI，x86_64 仅 CI 诊断，原生同源构建。真实设备/服务器另授权，默认不启动 KSU/TAP guest，不将 Linux oracle 或签名 APK 当 Android E2E。

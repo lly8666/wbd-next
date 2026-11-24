@@ -8,6 +8,7 @@ package realityfront
 // ciphertext under a V3 owner. New FEC2/Game capability promotion requires
 // separate actual native client parity/independent-lane owner integrations.
 import (
+    "bytes"
     "context"
     "errors"
     "fmt"
@@ -254,7 +255,7 @@ func (p *V4LinuxClientProduct) ConnectAuthenticatedPeer(
             originalAndroidPostauth("CN_DNS_SPLIT_FAILED")
         }else{
             originalAndroidPostauth("CN_DNS_SPLIT_ENABLED")
-            log.Printf("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=8503 cn=%s noncn=%s system_resolver=NOT_CAPTURED",p.cfg.AndroidPhysicalDNSUpstream.String(),p.cfg.AndroidTunnelDNSUpstream.String())
+            log.Printf("V4_PUBLIC_ANDROID_CN_DNS_SPLIT_EFFECTIVE role=client rules=%d cn=%s noncn=%s system_resolver=NOT_CAPTURED",bytes.Count(p.cfg.AndroidCN8503Raw,[]byte{'\n'}),p.cfg.AndroidPhysicalDNSUpstream.String(),p.cfg.AndroidTunnelDNSUpstream.String())
         }
     }else if err==nil&&runtime.GOOS=="android"&&p.cfg.AndroidPhysicalDNS{
         // Separate explicit all-App TUN UDP53 physical mode, not CN split

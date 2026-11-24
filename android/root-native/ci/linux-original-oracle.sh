@@ -97,12 +97,9 @@ PY
 rustup toolchain install 1.85.1 --profile minimal
 # A52: run the EXACT main H2229 cumulative appearance ACK ledger on host,
 # including Android out-of-order wrap and 10ms deadline negative cases.
-# Pure rustc --test compiles only the original shared file; Android's Bionic
-# link and actual owned RAW sendto remain separate native/phone qualifications.
-rustc +1.85.1 --edition=2021 --test \
-  crates/wbd-engine/src/v4_presentation_ack.rs \
-  -o out/android-a3-linux/a52-h2229-ack-ledger
-out/android-a3-linux/a52-h2229-ack-ledger
+# Use the shared crate because ACK/SACK now consumes wbd-platform types.
+# Android Bionic/owned RAW sendto remain separate device qualifications.
+cargo +1.85.1 test --locked -p wbd-engine --lib --features fec2_product_record v4_presentation_ack::tests
 echo ANDROID_A52_MAIN_H2229_AUTH_CUMULATIVE_ACK_RUST_HOST_PASS
 # A46: run EXACT main/Windows H2216 IPv4 TTL NAT fixture against the
 # same Rust wbd-platform source used by Android and Linux. Public DATA and

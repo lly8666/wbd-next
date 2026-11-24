@@ -94,6 +94,7 @@ public final class RootClientActivity extends Activity {
     private static final int CONNECTION_PRESET_IMPORT=2045;
     private static final int PROFILE_BUNDLE_EXPORT=2046;
     private static final int PROFILE_BUNDLE_IMPORT=2047;
+    private static final int CN_DOMAIN_IMPORT=2048;
     // START can fail before any Service exists. Persist fixed app-only
     // stages so a 0-event TXT is no longer the only device-side evidence.
     private void traceUi(RootDiagnosticReceipt.Event event){
@@ -344,8 +345,40 @@ public final class RootClientActivity extends Activity {
                 "未触发Root/TLS/内核UID路由");
         }
     }
+    private void importCNDomainRules(){
+        Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        pick.addCategory(Intent.CATEGORY_OPENABLE);
+        pick.setType("*/*");
+        try{startActivityForResult(pick,CN_DOMAIN_IMPORT);}
+        catch(Exception e){status.setText("无法打开域名规则文件选择器");}
+    }
+    private void acceptCNDomainRules(Intent data){
+        if(data==null||data.getData()==null)return;
+        File target=NativePayload.customCN(this);
+        File tmp=null;
+        try(InputStream in=getContentResolver().openInputStream(data.getData())){
+            if(in==null)throw new java.io.IOException("no input");
+            tmp=File.createTempFile("cn-domains-",".txt",getNoBackupFilesDir());
+            try(FileOutputStream out=new FileOutputStream(tmp)){
+                byte[] buf=new byte[8192];int n,total=0;
+                while((n=in.read(buf))!=-1){
+                    total+=n;
+                    if(total>=6000000)throw new java.io.IOException("规则文件过大");
+                    out.write(buf,0,n);
+                }
+                if(total==0)throw new java.io.IOException("规则文件为空");
+            }
+            java.nio.file.Files.move(tmp.toPath(),target.toPath(),java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            status.setText("已保存自定义CN域名规则；下次连接时由原Go/Rust冷加载");
+        }catch(Exception e){status.setText("导入CN域名规则失败："+e.getMessage());}
+        finally{if(tmp!=null)tmp.delete();}
+    }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data){
         super.onActivityResult(requestCode,resultCode,data);
+        if(requestCode==CN_DOMAIN_IMPORT){
+            if(resultCode==RESULT_OK)acceptCNDomainRules(data);
+            return;
+        }
         if(requestCode==LOCAL_TLS_CA_IMPORT){
             if(resultCode==RESULT_OK)acceptTLSCA(data);
             return;
@@ -1350,9 +1383,21 @@ public final class RootClientActivity extends Activity {
             "默认223.5.5.5，系统netd DNS不受影响。");
         pane.addView(upstreamHint);
         cnSplitDNS=new CheckBox(this);
-        cnSplitDNS.setText("可选CN8503域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走配置的WBD隧道DNS（不接管Android系统DNS）");
+        cnSplitDNS.setText("可选CN域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走配置的WBD隧道DNS（不接管Android系统DNS）");
         cnSplitDNS.setChecked(false);
         pane.addView(cnSplitDNS);
+        Button importCN=new Button(this);
+        importCN.setText("导入CN域名规则（main兼容文本，下次连接生效）");
+        importCN.setOnClickListener(v->importCNDomainRules());
+        pane.addView(importCN);
+        Button resetCN=new Button(this);
+        resetCN.setText("恢复APK内置官方CN域名规则");
+        resetCN.setOnClickListener(v->{
+            File custom=NativePayload.customCN(this);
+            if(!custom.exists()||custom.delete())status.setText("已恢复内置CN域名规则，下次连接生效");
+            else status.setText("未能移除自定义CN域名规则");
+        });
+        pane.addView(resetCN);
         cnIPDirect=new CheckBox(this);
         cnIPDirect.setText("普通CN业务分流：按签名APK内APNIC中国IPv4分配网段直连；域名仍按上述DNS模式，海外实际IP仍走隧道");
         cnIPDirect.setChecked(false);

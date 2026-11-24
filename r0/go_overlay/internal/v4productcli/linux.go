@@ -279,7 +279,7 @@ func parse(role string,args []string)(config,error){
         "Android Root: up to sixteen explicit IPv4 CIDRs to bypass the WBD private UID table; empty keeps original full tunnel")
     cnIPv4File:=flags.String("android-cn-ipv4-file","","Android Root: signed APNIC CN IPv4 prefixes for ordinary business direct routing")
     cnGeositeFile:=flags.String("android-cn-geosite-file","",
-        "Android Root cold source-lock: APK verified owner-only CN8503 file (not DNS interception)")
+        "Android Root cold CN domain snapshot or user-imported rule file")
     androidTunnelDNS:=flags.Bool("android-tunnel-dns",false,
         "Android Root: after real protected TLS/lease and Rust M4, redirect captured ordinary App UDP/53 via authenticated 1.1.1.1 tunnel; not system Resolver or CN split")
     androidPhysicalDNS:=flags.Bool("android-physical-dns",false,
@@ -448,14 +448,14 @@ func parse(role string,args []string)(config,error){
             if _,err=rootjournal.MergeCountryDirectCIDRs(nil,string(data),"");err!=nil{return c,err}
             c.androidCNIPv4Snapshot=string(data)
         }
-        if *cnGeositeFile!=""{
-            c.androidCNSnapshot,e=dnsnative.ReadPinnedCNFile(*cnGeositeFile)
+        if *androidCNDNSSplit&&*cnGeositeFile!=""{
+            c.androidCNSnapshot,e=dnsnative.ReadCNFile(*cnGeositeFile)
             if e!=nil{
-                return c,fmt.Errorf("signed Android CN8503 cold source rejected: %w",e)
+                return c,fmt.Errorf("Android CN domain cold source rejected: %w",e)
             }
         }
         if c.androidCNDNSSplit&&c.androidCNSnapshot==nil{
-            return c,fmt.Errorf("Android CN DNS split requires the original pinned geosite file")
+            return c,fmt.Errorf("Android CN DNS split requires a CN domain rule file")
         }
     }else if *androidNet!=0||*androidRouteUID!=0||
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
@@ -1167,7 +1167,7 @@ func originalAndroidColdParseClass(err error)string{
   return "ROUTE_KEY_VALUE"
  case strings.HasPrefix(s,"installation-id-file:"):
   return "INSTALLATION_ID"
- case strings.HasPrefix(s,"signed Android CN8503 cold source rejected:"):
+ case strings.HasPrefix(s,"Android CN domain cold source rejected:"):
   return "CN_GEOSITE_FILE"
  case strings.HasPrefix(s,"load server TLS trust PEM:")||
       strings.HasPrefix(s,"invalid TLS trust PEM")||
@@ -1290,7 +1290,7 @@ func Run(role string,args []string)(retErr error){
     if runtime.GOOS=="android"&&cfg.androidCNSnapshot!=nil{
         // Verified file/typed rules only; NOT real Android system DNS.
         stats:=cfg.androidCNSnapshot.Stats()
-        log.Printf("V4_PUBLIC_ANDROID_CN8503_COLD_FILE_VERIFIED count=%d sha256=%s dns_capture=NOT_CONNECTED",stats.Total,stats.SHA256)
+        log.Printf("V4_PUBLIC_ANDROID_CN_DOMAIN_COLD_FILE_VERIFIED count=%d sha256=%s dns_capture=NOT_CONNECTED",stats.Total,stats.SHA256)
     }
     iface,err:=net.InterfaceByName(cfg.rawInterface)
     if err!=nil{return err}

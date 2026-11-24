@@ -81,3 +81,10 @@ receipt={
 (out/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
 print("ANDROID_B2_PINNED_CN_8503_GO_DNS_REAL_HOST_LOOPBACK_PASS")
 PY
+
+# B81: historical B2 fixture above remains exact. Package the current shared
+# main official flattened release, not the historical fixture.
+python3 android/root-native/ci/cn-domain-official.py out/android-b2-cn-geosite
+export WBD_ACTIVE_CN_GEOSITE="$GITHUB_WORKSPACE/out/android-b2-cn-geosite/wbd-cn-geosite.txt"
+go test -count=1 -v ./r0/go_overlay/internal/v4productcli/dnsnative -run '^TestB81CN'
+cargo +1.85.1 test --locked -p wbd-engine --lib b81_cn_main_official_and_keyword -- --nocapture

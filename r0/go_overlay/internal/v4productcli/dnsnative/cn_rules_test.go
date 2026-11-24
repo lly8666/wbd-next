@@ -136,3 +136,20 @@ func TestB2bSignedAPKRuleColdFileRequires0600NoSymlinkAndPinnedHash(t *testing.T
   t.Fatal("directory accepted instead of private CN asset")
  }
 }
+
+func TestB81CNMainCanonicalAndLegacyText(t *testing.T){
+ r,err:=LoadCN([]byte("BAIDU.COM.\n=only.example\nkeyword:wallet\nregexp:^ads[0-9]+[.]cn$\ndomain:baidu.com\n"))
+ if err!=nil{t.Fatal(err)}
+ if r.Stats().Total!=4{t.Fatal(r.Stats())}
+ for _,name:=range []string{"www.baidu.com","only.example","mywallet.net","ads12.cn"}{if !r.Match(name){t.Fatal(name)}}
+ for _,name:=range []string{"notbaidu.com","only.example.net","ads.cn"}{if r.Match(name){t.Fatal(name)}}
+ if _,err:=LoadCN(r.PinnedWire());err!=nil{t.Fatal(err)}
+}
+func TestB81CNOfficialSnapshot(t *testing.T){
+ path:=os.Getenv("WBD_ACTIVE_CN_GEOSITE")
+ if path==""{t.Skip("official release asset not supplied")}
+ r,err:=ReadCNFile(path)
+ if err!=nil{t.Fatal(err)}
+ if r.Stats().Total<1000||!r.Match("www.baidu.com")||!r.Match("www.qq.com")||r.Match("baidu.com.evil.example"){t.Fatal(r.Stats())}
+ t.Logf("official typed rules: %+v",r.Stats())
+}

@@ -48,17 +48,16 @@ cn=Path("out/android-root-app-cn")
 receipt=json.loads((cn/"receipt.json").read_text())
 meta=json.loads((cn/"cn-geosite-provenance.json").read_text())
 source=os.environ["GITHUB_SHA"]
-rev="41504eae2a11f305fe88cfc605cf6c105a80bf5a"
-expected="45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6"
+expected=meta["text_sha256"]
 raw=(cn/"wbd-cn-geosite.txt").read_bytes()
 license=(cn/"wbd-cn-geosite-license.txt").read_text()
 assert receipt["schema"]=="wbd-android-b2-pinned-cn-geosite-go-loopback/v1"
-assert receipt["source"]==source and receipt["pinned_rules_sha256"]==expected
-assert meta["source_commit"]==rev and meta["source"]=="v2fly/domain-list-community"
-assert meta["output_distinct_rules"]==8503
+assert receipt["source"]==source and receipt["active_cn"]==meta
+assert meta["source"]=="v2fly/domain-list-community"
+assert meta["output_distinct_rules"]>1000
 assert meta["text_sha256"]==expected==hashlib.sha256(raw).hexdigest()
 assert len(raw)>10000 and len(raw)<6000000 and raw.endswith(b"\n")
-assert meta["kinds"]=={"domain":8431,"full":69,"regexp":3}
+assert sum(meta["kinds"].values())==meta["output_distinct_rules"]
 assert "MIT License" in license and "V2Ray" in license
 print("ANDROID_B2B_SIGNED_ROOT_APP_RULES_SOURCE_SHA_LICENSE_VERIFIED",source)
 PY
@@ -193,10 +192,8 @@ with zipfile.ZipFile(apk) as z:
     geosite=z.read("assets/native-arm64/wbd-cn-geosite.txt")
     license=z.read("assets/native-arm64/wbd-cn-geosite-license.txt")
     provenance=json.loads(z.read("assets/native-arm64/cn-geosite-provenance.json"))
-    assert hashlib.sha256(geosite).hexdigest()=="45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6"
-    assert provenance["source_commit"]=="41504eae2a11f305fe88cfc605cf6c105a80bf5a"
     assert provenance["text_sha256"]==hashlib.sha256(geosite).hexdigest()
-    assert provenance["output_distinct_rules"]==8503
+    assert provenance["output_distinct_rules"]>1000
     assert b"MIT License" in license and b"V2Ray" in license
     diag=z.read("assets/native-arm64/device-selftest-arm64")
     assert hashlib.sha256(diag).hexdigest()==z.read(
@@ -212,7 +209,7 @@ summary={"schema":"wbd-android-arm64-root-app-source-locked/v1",
     "short_key_v2_java_and_cache":"COMPILED_HOST_TESTED_DEVICE_NOT_RUN",
     "target_sdk":35,"minimum_sdk":28,
     "go_rust_apk_assets_verified":True,
-    "pinned_cn_8503_in_signed_apk_verified":True,
+    "official_cn_domain_in_signed_apk_verified":True,
     "pinned_cn_original_go_cold_loader":"COMPILED_NOT_ANDROID_EXECUTED",
     "android_system_dns_interception":"NOT_CONNECTED",
     "no_vpn_service_manifest_verified":True,

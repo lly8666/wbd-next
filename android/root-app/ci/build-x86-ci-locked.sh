@@ -31,9 +31,10 @@ cn=Path("out/android-root-app-cn")
 receipt=json.loads((cn/"receipt.json").read_text())
 p=json.loads((cn/"cn-geosite-provenance.json").read_text())
 assert receipt["source"]==os.environ["GITHUB_SHA"]
-sha="45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6"
+sha=p["text_sha256"]
+assert receipt["active_cn"]==p
 assert p["text_sha256"]==sha==hashlib.sha256((cn/"wbd-cn-geosite.txt").read_bytes()).hexdigest()
-assert p["output_distinct_rules"]==8503
+assert p["output_distinct_rules"]>1000
 assert "MIT License" in (cn/"wbd-cn-geosite-license.txt").read_text()
 PY
 mkdir -p "$out/classes" "$out/dex" "$out/assets/native-amd64"
@@ -151,7 +152,8 @@ with zipfile.ZipFile(apk) as z:
         b=z.read("assets/native-amd64/"+n)
         assert hashlib.sha256(b).hexdigest()==m["artifacts"][n]["sha256"]
         assert struct.unpack_from("<H",b,18)[0]==62
-    assert hashlib.sha256(z.read("assets/native-amd64/wbd-cn-geosite.txt")).hexdigest()=="45496d28e7a90472274fdf6c23afd43a0e478f9127dea241b628ca730863b1d6"
+    cn_meta=json.loads(z.read("assets/native-amd64/cn-geosite-provenance.json"))
+    assert hashlib.sha256(z.read("assets/native-amd64/wbd-cn-geosite.txt")).hexdigest()==cn_meta["text_sha256"]
     assert b"MIT License" in z.read("assets/native-amd64/wbd-cn-geosite-license.txt")
 summary={"schema":"wbd-android-x86-ci-only-original-go-rust/v1",
  "source":os.environ["GITHUB_SHA"],"release":False,"android_abi":"x86_64",
