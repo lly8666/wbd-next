@@ -1,0 +1,808 @@
+{
+  "schema": "m0-plan029-bare-lso-crossover/1",
+  "date": "2026-11-24",
+  "owner": "M0",
+  "H2366": {
+    "run_id": 45326185486,
+    "source": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+    "status": "7/7 success",
+    "groups": [
+      {
+        "job_id": 138216322865,
+        "group": "a",
+        "legs": [
+          {
+            "leg": 1,
+            "lso_ipv4_enabled": true,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": true,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "192.168.96.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 808.464,
+              "bulk_remote_received_bytes": 2147483648,
+              "bulk_wall_s": 21.25,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "192.168.104.166",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 78,
+              "sparse_tcp_rtt_p95_ms": 79,
+              "sparse_tcp_rtt_p99_ms": 79
+            },
+            "windows_host_allcore_busy_pct": 74.67,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1831889,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 146386,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          },
+          {
+            "leg": 2,
+            "lso_ipv4_enabled": false,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": false,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "192.168.96.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 818.089,
+              "bulk_remote_received_bytes": 2147483648,
+              "bulk_wall_s": 21,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "192.168.104.166",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 78,
+              "sparse_tcp_rtt_p95_ms": 94,
+              "sparse_tcp_rtt_p99_ms": 94
+            },
+            "windows_host_allcore_busy_pct": 72.874,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1834102,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 151123,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          },
+          {
+            "leg": 3,
+            "lso_ipv4_enabled": false,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": false,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "192.168.96.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 818.674,
+              "bulk_remote_received_bytes": 2147483648,
+              "bulk_wall_s": 20.985,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "192.168.104.166",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 78,
+              "sparse_tcp_rtt_p95_ms": 79,
+              "sparse_tcp_rtt_p99_ms": 94
+            },
+            "windows_host_allcore_busy_pct": 74.771,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1833958,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 153030,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          },
+          {
+            "leg": 4,
+            "lso_ipv4_enabled": true,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": true,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "192.168.96.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 668.65,
+              "bulk_remote_received_bytes": 2098724864,
+              "bulk_wall_s": 25.11,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "192.168.104.166",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 78,
+              "sparse_tcp_rtt_p95_ms": 94,
+              "sparse_tcp_rtt_p99_ms": 94
+            },
+            "windows_host_allcore_busy_pct": 57.266,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1757867,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 148763,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          }
+        ],
+        "mean_on_mbps": 738.557,
+        "mean_off_mbps": 818.3815,
+        "on_vs_off_pct": -9.753947272757257
+      },
+      {
+        "job_id": 138216322875,
+        "group": "b",
+        "legs": [
+          {
+            "leg": 1,
+            "lso_ipv4_enabled": false,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": false,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "172.21.208.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 826.71,
+              "bulk_remote_received_bytes": 2147483648,
+              "bulk_wall_s": 20.781,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "172.21.222.194",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 78,
+              "sparse_tcp_rtt_p95_ms": 94,
+              "sparse_tcp_rtt_p99_ms": 94
+            },
+            "windows_host_allcore_busy_pct": 89.535,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1827945,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 243524,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          },
+          {
+            "leg": 2,
+            "lso_ipv4_enabled": true,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": true,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "172.21.208.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 682.03,
+              "bulk_remote_received_bytes": 2139357184,
+              "bulk_wall_s": 25.094,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "172.21.222.194",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 78,
+              "sparse_tcp_rtt_p95_ms": 79,
+              "sparse_tcp_rtt_p99_ms": 94
+            },
+            "windows_host_allcore_busy_pct": 76.029,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1796025,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 233436,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          },
+          {
+            "leg": 3,
+            "lso_ipv4_enabled": true,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": true,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "172.21.208.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 809.036,
+              "bulk_remote_received_bytes": 2147483648,
+              "bulk_wall_s": 21.235,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "172.21.222.194",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 78,
+              "sparse_tcp_rtt_p95_ms": 94,
+              "sparse_tcp_rtt_p99_ms": 109
+            },
+            "windows_host_allcore_busy_pct": 90.29,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1829013,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 242621,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          },
+          {
+            "leg": 4,
+            "lso_ipv4_enabled": false,
+            "adapter": {
+              "Name": "vEthernet (WSL (Hyper-V firewall))",
+              "IPv4Enabled": false,
+              "V1IPv4Enabled": false,
+              "IPv6Enabled": true,
+              "MaximumLsoVersionSupported": 2,
+              "LargeSendOffloadV2HardwareCapabilities": {
+                "CimClass": {
+                  "CimSuperClassName": null,
+                  "CimSuperClass": null,
+                  "CimClassProperties": "IPv4Encapsulation IPv4MaxOffloadSizeSupported IPv4MinSegmentCountSupported IPv6Encapsulation IPv6IpExtensionHeadersSupported IPv6MaxOffLoadSizeSupported IPv6MinSegmentCountSupported IPv6TcpOptionsSupported",
+                  "CimClassQualifiers": "ClassVersion = \"1.0.0\" dynamic = True locale = 1033 provider = \"NetAdapterCim\"",
+                  "CimClassMethods": "",
+                  "CimSystemProperties": "Microsoft.Management.Infrastructure.CimSystemProperties"
+                },
+                "CimInstanceProperties": [
+                  "IPv4Encapsulation = ...",
+                  "IPv4MaxOffloadSizeSupported = 62780",
+                  "IPv4MinSegmentCountSupported = 2",
+                  "IPv6Encapsulation = ...",
+                  "IPv6IpExtensionHeadersSupported = True",
+                  "IPv6MaxOffLoadSizeSupported = 62780",
+                  "IPv6MinSegmentCountSupported = 2",
+                  "IPv6TcpOptionsSupported = True"
+                ],
+                "CimSystemProperties": {
+                  "Namespace": "ROOT/StandardCimv2",
+                  "ServerName": "runnervmbpeip",
+                  "ClassName": "MSFT_NetAdapterLargeSendOffloadV2Capabilities",
+                  "Path": null
+                }
+              }
+            },
+            "delivered": {
+              "bind": "172.21.208.1",
+              "bulk_flows": 4,
+              "bulk_receiver_goodput_mbps": 518.845,
+              "bulk_remote_received_bytes": 1636630528,
+              "bulk_wall_s": 25.235,
+              "client_bulk_buffers_os": [
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                },
+                {
+                  "rcvbuf_os": 2097152,
+                  "requested_bytes": 2097152,
+                  "sndbuf_os": 2097152
+                }
+              ],
+              "outer_loss_injected_by_owned_linux_tc": true,
+              "peer": "172.21.222.194",
+              "real_kernel_tcp": true,
+              "scope": "REAL_OS_TUNNEL_TCP_NOT_GENERATOR_UDP_OR_DIRECT_FAKEIP",
+              "source_sha": "ff2b2b83401f1e42248b3ca3341ff82bc8449e23",
+              "sparse_echo_received": 160,
+              "sparse_echo_sent": 160,
+              "sparse_tcp_late_1000ms": 0,
+              "sparse_tcp_late_2000ms": 0,
+              "sparse_tcp_rtt_p50_ms": 63,
+              "sparse_tcp_rtt_p95_ms": 79,
+              "sparse_tcp_rtt_p99_ms": 94
+            },
+            "windows_host_allcore_busy_pct": 67.664,
+            "two_relay_kernel_egress_packet_directions": {
+              "status": "REAL_TWO_KERNEL_NETEM_EGRESS_DIRECTIONS_CONFIRMED",
+              "stage_id": -1,
+              "per_direction": {
+                "win_to_arm": {
+                  "egress_packets": 1358477,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                },
+                "arm_to_win": {
+                  "egress_packets": 205790,
+                  "intentional_netem_drops": 0,
+                  "drop_percent_observed": 0
+                }
+              },
+              "scope": "ACTUAL_RELAY_KERNEL_EGRESS_NOT_WBD_OR_APP_DROP"
+            }
+          }
+        ],
+        "mean_on_mbps": 745.5329999999999,
+        "mean_off_mbps": 672.7775,
+        "on_vs_off_pct": 10.814199345251563
+      }
+    ],
+    "decision": "LSOv2 OFF >800 Mbps in both groups, no robust ON benefit; runner drift and 512 MiB per-flow cap limit effect estimates. Not physical NIC proof; do not attribute WBD gap solely to LSO."
+  },
+  "H2368": {
+    "source": "dabe812654896a93ae6e0b4bcad741f3c0ec8441",
+    "branch": "experiment/m0-029-throughput-arm-fair",
+    "run_id": 45328644632,
+    "scope": "1% per direction, 200ms each way, Windows sender repair OFF/ON/OFF, FEC OFF, same current-source TX16/NPF64KiB DLL, original ARM peer repair OFF; fresh compiled both platforms",
+    "state": "running, no performance result",
+    "product_delta_vs_H2336": [],
+    "decision": "Restore scalar checksum, retain H2336. P1 source lock repaired; 5% updated but not dispatched until 1% readback."
+  }
+}
