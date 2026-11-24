@@ -1,3 +1,7 @@
+## B93｜真实故障分层及隔离并行（当前）
+
+B92 `982bad849468b1cb59faaabd3861ab3f4d7c33d7` [Action 45416465988](https://github.com/lly8666/wbd-next/actions/runs/45416465988)：真实 RootService 前后台/Stop/Normal→Fixed 冷启动 PASS；WiFi loss 未证；七模式夹具缺 Rust SYN MSS 初值 panic；CN UID 已安装5501 throw 和规则但超时未清理；系统 DNS UID batch exit255、原清理 PASS。B93同正式 Run Rust MSS/record cap、TUN FD nonblock 修复与逐阶段 receipt；三个 UID 独立 guest；系统 DNS 冷 stderr 与 exact rtnetlink capability probe；独立真 NetworkCallback/恢复手动 START。九专项+一 lifecycle guest，保留原安全/性能契约、无基准，不冒称 peer M4/READY 自动恢复。详见 [B93 devlog](../devlog/android-root-probe/20261124-b93-real-failures-isolated-next.md)。
+
 ## B92｜隔离并行 Android 专项（当前）
 
 B91 `2b6b904b874065dd7a03f1152ed836662e606e05` [Action 45412992618](https://github.com/lly8666/wbd-next/actions/runs/45412992618) 真 Bionic 物理 UDP 与 TC→同 Network TCP DNS PASS；系统 DNS dummy 创建语法 FAIL、后续12项 NOT_RUN。B92修原 cold ip dummy/alias 顺序；7个隔离 KSU guest 并行 UID、Normal、Game2、Game4、系统物理/隧道/CN DNS，共用 native/CN artifacts，不等 Linux server。独立第8个 guest 验收生产 RootService preauth 前后台/Stop/模式重启/真实 WiFi loss与恢复手动 START；不冒称 READY 自动恢复/配置冷切或远端双向 M4。独立结果和清理 readback，guest 间不互相阻断，不重复既有物理 DNS/七模式 preauth，无性能基准。详见 [B92 devlog](../devlog/android-root-probe/20261124-b92-isolated-parallel-android-acceptance.md)。

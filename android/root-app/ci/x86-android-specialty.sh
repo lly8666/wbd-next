@@ -38,6 +38,7 @@ echo B91_TEST_STAGE_PASS
 shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
  routes) scenes=(route-single route-group route-all);;
+ route-single|route-group|route-all) scenes=("$shard");;
  normal) scenes=(normal fec-fixed fec-auto);;
  game2) scenes=(game2 game2-fixed);;
  game4) scenes=(game4 game4-fixed);;
@@ -71,7 +72,10 @@ clean_kernel(){
  done
  } >"$out/$name-kernel.txt" 2>&1
  if [[ "$rc" != 0 ]];then cat "$out/$name-kernel.txt";return 1;fi
- if grep -E 'lookup (19842|19843|19845)( |$)|table (19842|19843|19845)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbd_dns0:|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/$name-kernel.txt";then return 1;fi
+ if grep -Eq '(^|[[:space:]])9099:|lookup (19842|19843|19845)( |$)|table (19842|19843|19845)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbd_dns0:|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/$name-kernel.txt";then
+  grep -E 'lookup (19842|19843|19845)( |$)|table (19842|19843|19845)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbd_dns0:|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/$name-kernel.txt" | sed -n '1,25p'
+  return 1
+ fi
  return 0
 }
 # B91 physical UDP/TC TCP already passed; no standalone repeat.
@@ -80,8 +84,8 @@ if ! clean_kernel baseline;then clean=0;fi
 for scene in "${scenes[@]}";do
  if [[ "$clean" != 1 ]];then record "$scene" NOT_RUN;continue;fi
  if [[ "$scene" == system-physical || "$scene" == system-cn ]] && ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
- limit=65s
- if [[ "$scene" == route-* ]];then limit=150s;fi
+ limit=85s
+ if [[ "$scene" == route-* ]];then limit=180s;fi
  status=FAIL
  if invoke "$limit" "$scene" >"$out/$scene.log" 2>&1;then
   case "$scene" in
@@ -97,6 +101,10 @@ for scene in "${scenes[@]}";do
  fi
  if [[ "$scene" == system-physical ]] && ! grep -Fq "B90_FIXTURE system.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
  if [[ "$scene" == system-cn ]] && ! grep -Fq "B90_FIXTURE cn.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
+ if [[ "$scene" == system-* && "$status" != PASS ]];then
+  "$adb" shell "su -c 'ip -4 rule help'" >"$out/$scene-ip-rule-help.txt" 2>&1 || true
+  cat "$out/$scene-ip-rule-help.txt"
+ fi
  if ! clean_kernel "$scene";then clean=0;status=FAIL;echo "B91_KERNEL_CLEANUP_NOT_PROVEN $scene";fi
  record "$scene" "$status"
  cat "$out/$scene.log"

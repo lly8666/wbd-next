@@ -197,7 +197,12 @@ func androidDNSIPBatch(rows [][]string)error{
  ctx,cancel:=context.WithTimeout(context.Background(),8*time.Second);defer cancel()
  command:=exec.CommandContext(ctx,"ip",family,"-batch","-")
  command.Stdin=strings.NewReader(input.String())
- if _,e:=command.CombinedOutput();e!=nil{return fmt.Errorf("system DNS UID route batch: %w",e)}
+ if out,e:=command.CombinedOutput();e!=nil{
+  // Cold kernel error, not a packet-path diagnostic. Preserve actual ip
+  // parser/netlink failure instead of an opaque exit status.
+  if len(out)>4096{out=out[:4096]}
+  return fmt.Errorf("system DNS UID route batch: %w: %s",e,strings.TrimSpace(string(out)))
+ }
  return nil
 }
 func androidDNSFirewall(args ...string)(string,error){

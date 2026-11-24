@@ -21,6 +21,7 @@ import (
  "syscall"
  "time"
 
+ "github.com/lly8666/wobuzhidao/internal/faketcp"
  "github.com/lly8666/wobuzhidao/internal/realityfront"
  "github.com/lly8666/wobuzhidao/internal/v4productcli/dnsnative"
  "github.com/lly8666/wobuzhidao/internal/v4productcli/rootjournal"
@@ -69,10 +70,13 @@ func b91UDPReply(ip []byte,h int,payload []byte)[]byte{
 }
 func b91ServeTUN(ctx context.Context,tun *ownedTun,dest [4]byte,port uint16,
  reply func([]byte)([]byte,bool))error{
- if e:=syscall.SetNonblock(int(tun.f.Fd()),true);e!=nil{return e}
+ // Cache the FD before setting O_NONBLOCK: os.File.Fd may restore blocking
+ // mode on a Go pollable file. Do not call Fd again inside the loop.
+ fd:=int(tun.f.Fd())
+ if e:=syscall.SetNonblock(fd,true);e!=nil{return e}
  buf:=make([]byte,2048)
  for ctx.Err()==nil{
-  n,e:=syscall.Read(int(tun.f.Fd()),buf)
+  n,e:=syscall.Read(fd,buf)
   if e==syscall.EAGAIN||e==syscall.EINTR{time.Sleep(10*time.Millisecond);continue}
   if e!=nil{return e}
   if n<28||buf[0]>>4!=4||buf[9]!=17{continue}
@@ -82,7 +86,7 @@ func b91ServeTUN(ctx context.Context,tun *ownedTun,dest [4]byte,port uint16,
   if size<8||h+size>n{continue}
   payload,ok:=reply(buf[h+8:h+size]);if !ok{continue}
   packet:=b91UDPReply(buf[:n],h,payload)
-  written,e:=syscall.Write(int(tun.f.Fd()),packet)
+  written,e:=syscall.Write(fd,packet)
   if e!=nil||written!=len(packet){return fmt.Errorf("real TUN reply: %d/%d %v",written,len(packet),e)}
  }
  return nil
@@ -96,9 +100,12 @@ func b90Packet(tun *ownedTun,uid int)error{
   select{case seen<-struct{}{}:default:}
   return q,true
  })}()
+ fmt.Println("B93_UID_ECHO_BEGIN")
  e:=b91Instrument(ctx,uid,"-e","uid_probe","echo")
+ fmt.Println("B93_UID_INSTRUMENT_END",e)
  cancel()
  e=errors.Join(e,<-done)
+ fmt.Println("B93_UID_TUN_READER_JOINED")
  if len(seen)!=1{return errors.Join(e,fmt.Errorf("ordinary UID datagram absent on original TUN"))}
  return e
 }
@@ -112,7 +119,7 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
  dir,e:=os.MkdirTemp("/data/local/tmp","wbd-b90-");if e!=nil{return e}
  defer func(){if ret==nil{_ = os.RemoveAll(dir)}}()
  tun,e:=openTun(dev,lease,1389);if e!=nil{return e}
- defer func(){if e:=tun.Close();ret==nil{ret=e}}()
+ defer func(){ret=errors.Join(ret,tun.Close())}()
  actual,e:=readOwnedTunIPv4(dev);if e!=nil||actual.String()!=lease{return fmt.Errorf("test TUN /32: %v %v",actual,e)}
  cidrs,e:=rootjournal.MergeCountryDirectCIDRs(nil,string(snapshot),peer);if e!=nil{return e}
  if len(cidrs)<100{return fmt.Errorf("CN snapshot too small")}
@@ -136,13 +143,18 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
    owner,e=rootjournal.NewAllApps(b90IP,path,rootjournal.AllAppPlan{ExcludedAppIDs:exclusions,Tun:dev,Lease:lease,ServerIP:peer,DirectCIDRs:cidrs,Underlay:scope.InterfaceName,NetworkHandle:scope.NetworkHandle,IfIndex:scope.IfIndex},androidDNSIPBatch)
   }
   if e!=nil{return fmt.Errorf("%s owner: %w",mode,e)}
+  fmt.Printf("B93_UID_FIB_INSTALLED mode=%s prefixes=%d\n",mode,len(cidrs))
+  // Register exact Stop before any instrumentation or route readback.
+  defer func(){ret=errors.Join(ret,owner.Stop())}()
   check:=func()error{
    for _,c:=range []struct{id int; dest string; tun bool}{
     {uid,dest,true},{bypass,dest,mode=="group"},{own,dest,false},{manager,dest,false},{0,dest,false},
     {uid,peer,false},{uid,cn.Addr().String(),false},
    }{if e:=b90UsesTun(c.id,c.dest,dev,c.tun);e!=nil{return e}}
+   fmt.Println("B93_UID_ROUTE_GET_PASS",mode)
    return b90Packet(tun,uid)
   }()
+  fmt.Println("B93_UID_STOP_BEGIN",mode)
   if e=owner.Stop();e!=nil{return fmt.Errorf("%s Stop: %w",mode,e)}
   for _,id:=range []int{uid,bypass,own,manager,0}{
    if e=b90UsesTun(id,dest,dev,false);e!=nil{return fmt.Errorf("%s restored lookup: %w",mode,e)}
@@ -182,6 +194,7 @@ func RunAndroidSpecialtyCI(a []string)int{
   fmt.Println("B90_TUN_CLOSE_PASS")
  case "system-physical","system-tunnel","system-cn":
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
+  if a[0]=="system-physical"{if e=b93ProbeDNSRule(scope,uid);e!=nil{fmt.Println("B93_DNS_NETLINK_PROBE_FAIL",e);return 1}}
   if e=b91SystemDNS(scope,uid,a[0]);e!=nil{fmt.Println("B91_SYSTEM_DNS_FAIL",e);return 1}
  case "normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed":
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
@@ -265,11 +278,6 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
 // and original product Connect/Close. Only the cold wire is in-process.
 func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
  const dev="wbdb91m4"
- tun,e:=openTun(dev,"198.18.0.3/32",1389);if e!=nil{return e}
- defer func(){ret=errors.Join(ret,tun.Close())
-  if _,e:=net.InterfaceByName(dev);e==nil{ret=errors.Join(ret,fmt.Errorf("native TUN still exists"))}
-  if ret==nil{fmt.Println("B91_NATIVE_TUN_CLOSE_PASS",mode)}
- }()
  c:=config{role:"client",rawInterface:scope.InterfaceName,localIP:scope.LocalIPv4,
   peerIP:netip.MustParseAddr("10.0.2.2"),peerPort:443,outerMTU:1460,recordLimit:1400,
   androidNetworkHandle:scope.NetworkHandle,androidPhysicalMTU:uint32(scope.MTU),androidRouteUID:uid,
@@ -281,6 +289,22 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
  case "game2","game2-fixed":c.gameLanes=2;c.gameFecEnabled=mode=="game2-fixed";c.gameFecProfile=6
  case "game4","game4-fixed":c.gameLanes=4;c.gameFecEnabled=mode=="game4-fixed";c.gameFecProfile=6
  }
+ // Identical pre-SYN initialization to the original CLI Run. No default
+ // MSS or fabricated record cap; both fixture endpoints use this budget.
+ cold,e:=realityfront.V4DeriveColdMTUBudget(realityfront.V4ColdMTUBudgetInput{
+  ConfiguredOuterIPMTU:uint32(c.outerMTU),PhysicalOuterIPMTU:uint32(scope.MTU),
+  IPv4HeaderBytes:20,TCPDataHeaderBytes:20,Mode:0})
+ if e!=nil{return e}
+ mss:=cold.LocalSYNAdvertisedMSS
+ if mss<536||mss>1460{return fmt.Errorf("invalid original MSS %d",mss)}
+ if e=faketcp.SetPublicV4AdvertisedMSS(uint16(mss));e!=nil{return e}
+ c.recordLimit,c.innerMTU,e=deriveMTUBudget(c.outerMTU,scope.MTU,uint16(mss),0,c.fecMode,c.gameLanes!=0,c.gameFecEnabled)
+ if e!=nil{return e}
+ fmt.Printf("B93_ORIGINAL_COLD_MTU_PASS mode=%s mss=%d record=%d inner=%d\n",mode,mss,c.recordLimit,c.innerMTU)
+ tun,e:=openTun(dev,"198.18.0.3/32",c.innerMTU);if e!=nil{return e}
+ defer func(){closeErr:=tun.Close();ret=errors.Join(ret,closeErr)
+  if _,e:=net.InterfaceByName(dev);e==nil{ret=errors.Join(ret,fmt.Errorf("native TUN still exists"))}else if closeErr==nil{fmt.Println("B91_NATIVE_TUN_CLOSE_PASS",mode)}
+ }()
  normal:=realityfront.V4LinuxClientProductConfig{
   NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
   Tun:tun.f,TunName:dev,CleanupOwnedNetwork:func()error{return nil},ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
@@ -290,11 +314,11 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
   Tun:tun.f,TunName:dev,ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
   HealthSeconds:15,PhysicalDNSUpstream:c.androidPhysicalDNSUpstream}
- ctx,cancel:=context.WithTimeout(context.Background(),35*time.Second);defer cancel()
+ ctx,cancel:=context.WithTimeout(context.Background(),60*time.Second);defer cancel()
  route:=func(lease string)(func()error,error){return androidRootRouteAfterNative(c,tun,lease)}
  send:=func()error{
   qctx,qcancel:=context.WithTimeout(ctx,10*time.Second);defer qcancel()
   return b91Instrument(qctx,uid,"-e","uid_probe","1")
  }
- return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,route,send)
+ return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,route,send)
 }

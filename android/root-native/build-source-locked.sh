@@ -248,6 +248,7 @@ for pair in "aarch64 arm64" "x86_64 amd64"; do
     # Only the CI adapter, linked AFTER the production ELF is built.
     cp android/root-native/ci/b90-android-specialty.go legacy/internal/v4productcli/b90_android_specialty.go
     cp android/root-native/ci/b91-postauth-android.go legacy/internal/realityfront/b91_postauth_android.go
+    cp android/root-native/ci/b93-netlink-rule-android.go legacy/internal/v4productcli/b93_netlink_rule_android.go
     mkdir -p legacy/cmd/wbd-ci-specialty
     cat >legacy/cmd/wbd-ci-specialty/main.go <<'GO'
 package main
@@ -255,7 +256,7 @@ import ("os"; "github.com/lly8666/wobuzhidao/internal/v4productcli")
 func main(){os.Exit(v4productcli.RunAndroidSpecialtyCI(os.Args[1:]))}
 GO
     (cd legacy && go build -trimpath -buildvcs=false -tags "$go_tags,wbd_android_specialty_test" -o "$GITHUB_WORKSPACE/out/android-product-a1/wiring-specialty-amd64" ./cmd/wbd-ci-specialty)
-    rm -f legacy/internal/v4productcli/b90_android_specialty.go legacy/internal/realityfront/b91_postauth_android.go
+    rm -f legacy/internal/v4productcli/b90_android_specialty.go legacy/internal/realityfront/b91_postauth_android.go legacy/internal/v4productcli/b93_netlink_rule_android.go
     rm -rf legacy/cmd/wbd-ci-specialty
   fi
   if [[ "$goarch" == amd64 && "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 && "${WBD_ANDROID_SPECIALTY:-0}" != 1 ]];then

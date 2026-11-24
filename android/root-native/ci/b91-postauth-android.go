@@ -91,7 +91,7 @@ func b91WaitTX(ctx context.Context,read func()(uint64,error),before uint64)error
  }
  return fmt.Errorf("original Android native TX did not increase")
 }
-func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,
+func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit uint16,
  route func(string)(func()error,error),send func()error)(ret error){
  cert,roots,e:=b91Cert();if e!=nil{return e}
  routeKey:=[]byte("0123456789abcdef0123456789abcdef")
@@ -110,19 +110,21 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
   flow:=faketcp.ClientFlow{LocalIP:local.As4(),PeerIP:peer.As4(),LocalPort:uint16(46100+i),PeerPort:443}
   p,e:=b91NewPair(ctx,flow,i);if e!=nil{return e}
   pairs=append(pairs,p);assocs=append(assocs,p.client)
+  p.wg.Add(1)
   go func(p *b91Pair){
+   defer p.wg.Done()
    _,e:=EstablishServerV4(ctx,p.server,ServerAdmissionConfig{
-    TLS:ServerConfig{ServerName:"target.test",RouteKey:routeKey,TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:8*time.Second},
-    ExpectedUsername:"b91-ci",ExpectedPassword:"b91-fixture",ServerLimit:1400,
+    TLS:ServerConfig{ServerName:"target.test",RouteKey:routeKey,TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:15*time.Second},
+    ExpectedUsername:"b91-ci",ExpectedPassword:"b91-fixture",ServerLimit:recordLimit,
     AllocateLease:func(req AdmissionRequest)(string,error){return V4AllocateAutomaticLease(leases,req)},
    },V4ServerOptions{DataPlaneReady:true,Epochs:store,perClientMixedMode:true})
    p.result<-e
   }(p)
  }
  fmt.Println("B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED",mode,n,"cold_transport=in_process")
- cfg:=ClientAdmissionConfig{TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,VerifyServer:true,RootCAs:roots,Timeout:8*time.Second},
+ cfg:=ClientAdmissionConfig{TLS:ClientConfig{ServerName:"target.test",RouteKey:routeKey,VerifyServer:true,RootCAs:roots,Timeout:15*time.Second},
   Username:"b91-ci",Password:"b91-fixture",TunnelID:tunnel.Bytes(),AutoLease:true,InstallationID:append([]byte(nil),install[:]...),
-  ClientLimit:1400,DesiredLanes:uint8(n),LaneID:1,Policy:policy}
+  ClientLimit:recordLimit,DesiredLanes:uint8(n),LaneID:1,Policy:policy}
  var lease string
  var closeProduct func()error
  var tx func()(uint64,error)

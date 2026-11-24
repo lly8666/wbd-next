@@ -489,9 +489,9 @@ jobs:
     needs: [arm64-native, b2-authentic-cn-geosite-host]
     strategy:
       fail-fast: false
-      max-parallel: 7
+      max-parallel: 9
       matrix:
-        shard: [routes, normal, game2, game4, dns-physical, dns-tunnel, dns-cn]
+        shard: [route-single, route-group, route-all, normal, game2, game4, dns-physical, dns-tunnel, dns-cn]
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions: {contents: read, actions: read}

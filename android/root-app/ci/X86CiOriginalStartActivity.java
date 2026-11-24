@@ -35,6 +35,30 @@ public final class X86CiOriginalStartActivity extends Activity {
         try{
             if(!isX86App())throw new IllegalStateException("CI requires ordinary x86 App UID");
             String command=getIntent().getStringExtra("ci_step");
+            if("lifecycle_watch".equals(command)){
+                final android.net.ConnectivityManager cm=getSystemService(android.net.ConnectivityManager.class);
+                final List<PhysicalNetwork> nets=PhysicalNetwork.available(this);
+                if(cm==null||nets.isEmpty())throw new IllegalStateException("no selected Network");
+                final long selected=nets.get(0).handle;
+                final android.net.ConnectivityManager.NetworkCallback cb=new android.net.ConnectivityManager.NetworkCallback(){
+                    @Override public void onLost(android.net.Network n){
+                        if(n.getNetworkHandle()==selected)event("B93_SELECTED_NETWORK_LOST");
+                    }
+                    @Override public void onAvailable(android.net.Network n){
+                        event(n.getNetworkHandle()==selected?"B93_SELECTED_NETWORK_AVAILABLE":"B93_OTHER_NETWORK_AVAILABLE");
+                    }
+                };
+                android.net.NetworkRequest req=new android.net.NetworkRequest.Builder()
+                    .addTransportType(android.net.NetworkCapabilities.TRANSPORT_WIFI)
+                    .addTransportType(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)
+                    .addTransportType(android.net.NetworkCapabilities.TRANSPORT_ETHERNET).build();
+                cm.registerNetworkCallback(req,cb);
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(()->{
+                    try{cm.unregisterNetworkCallback(cb);}catch(IllegalArgumentException ignored){}
+                },45000);
+                event("B93_NETWORK_WATCH_ARMED "+Long.toUnsignedString(selected));
+                return;
+            }
             if("lifecycle_state".equals(command)){
                 event("B92_LIFECYCLE_STATE active="+RootClientService.sessionOwnerActive+
                     " ready="+RootClientService.sessionUiReady+

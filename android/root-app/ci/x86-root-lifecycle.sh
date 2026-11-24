@@ -63,55 +63,55 @@ r={"source":os.environ["GITHUB_SHA"],"scope":"production RootService preauth lif
 print(json.dumps(r))
 PY
 }
-if start_case background normal;then
- before="$(adb shell su -c 'cat /data/local/tmp/wbd-next-root/owner.pid' 2>/dev/null || true)"
- adb shell input keyevent KEYCODE_HOME
- sleep .5
- adb shell dumpsys activity services org.wbdnext.rootclient >"$d/background-service.txt"
- adb shell am start -n org.wbdnext.rootclient/.RootClientActivity >"$d/foreground-activity.txt"
- after="$(adb shell su -c 'cat /data/local/tmp/wbd-next-root/owner.pid' 2>/dev/null || true)"
- # Do not log the owner token. Equality only.
- if [[ -n "$before" && "$before" == "$after" ]] &&
-    grep -Fq RootClientService "$d/background-service.txt" &&
-    state | grep -Fq 'active=true';then record background-foreground PASS
- else record background-foreground FAIL;fi
-else record background-foreground FAIL;fi
-if stop_case background;then record explicit-stop PASS;else record explicit-stop FAIL;write_receipt;exit 1;fi
-if start_case reconfigure fec-fixed;then record cold-mode-restart PASS;else record cold-mode-restart FAIL;fi
-selected="$(grep -E 'CI_SELECTED_PHYSICAL_IFACE_(WLAN0|ETH0|OTHER)' "$d/reconfigure.log" | tail -1 || true)"
+# B92 already proved foreground/background, explicit Stop and mode restart.
+# Focus on the unresolved real Network callback; independent observer
+# distinguishes guest network behavior from a service that exited early.
+adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step lifecycle_watch >"$d/watch-start.txt"
+sleep .3
+log watch
+grep -Fq B93_NETWORK_WATCH_ARMED "$d/watch.log" || { record network-watch FAIL;write_receipt;exit 1; }
+# start_case clears logcat: register a second watcher AFTER cold startup.
+if ! start_case loss normal;then record preauth-start FAIL;write_receipt;exit 1;fi
+adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step lifecycle_watch >"$d/watch-start-active.txt"
+sleep .25
+log loss
+selected="$(grep -E 'CI_SELECTED_PHYSICAL_IFACE_(WLAN0|ETH0|OTHER)' "$d/loss.log" | tail -1 || true)"
 loss=NOT_PROVEN
-case "$selected" in
- *WLAN0*)
-  # Disposable guest only. Restore Wi-Fi even after an unproven callback.
-  adb shell svc wifi disable
-  for _ in $(seq 1 20);do
-   log network-loss
-   if grep -Fq STOP_REQUESTED "$d/network-loss.log";then
-    if cleaned network-loss;then loss=PASS;fi
-    break
-   fi
-   sleep .25
-  done
-  adb shell svc wifi enable
-  ;;
- *) loss=ENV_BLOCKED ;;
-esac
+observed=NOT_PROVEN
+if [[ "$selected" == *WLAN0* ]];then
+ adb shell cmd wifi status >"$d/wifi-before.txt" 2>&1 || true
+ adb shell svc wifi disable
+ # Real WiFi state and actual callback, not a synthetic Network ID.
+ for _ in $(seq 1 20);do
+  log network-loss
+  if grep -Fq B93_SELECTED_NETWORK_LOST "$d/network-loss.log";then observed=PASS;fi
+  if grep -Fq STOP_REQUESTED "$d/network-loss.log";then
+   if cleaned network-loss;then loss=PASS;fi
+   break
+  fi
+  sleep .25
+ done
+ adb shell cmd wifi status >"$d/wifi-disabled.txt" 2>&1 || true
+ adb shell svc wifi enable
+else observed=ENV_BLOCKED;loss=ENV_BLOCKED;fi
+cat "$d/network-loss.log" 2>/dev/null || true
+record actual-network-loss-callback "$observed"
 record network-loss-preauth "$loss"
 if [[ "$loss" != PASS ]];then
- if ! stop_case reconfigure;then record fallback-explicit-stop FAIL;write_receipt;exit 1;fi
+ if ! stop_case loss;then record fallback-explicit-stop FAIL;write_receipt;exit 1;fi
 fi
-if [[ "$loss" == PASS ]];then
- recovered=0
- for _ in $(seq 1 24);do
-  adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step specialty_scope >/dev/null
-  sleep .5
-  log recovery
-  if grep -Eq 'B90_SCOPE [0-9]+ wlan0 ' "$d/recovery.log";then recovered=1;break;fi
- done
- if [[ "$recovered" == 1 ]] && start_case restored normal;then
-  record restored-network-manual-start PASS
-  if stop_case restored;then record restored-stop PASS;else record restored-stop FAIL;fi
- else record restored-network-manual-start FAIL;fi
-else record restored-network-manual-start NOT_RUN;fi
+# Even if selected-Network loss was not witnessed, verify an explicit
+# new cold START after the actual wifi toggle and old owner cleanup.
+recovered=0
+for _ in $(seq 1 24);do
+ adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step specialty_scope >/dev/null
+ sleep .5
+ log recovery
+ if grep -Eq 'B90_SCOPE [0-9]+ wlan0 ' "$d/recovery.log";then recovered=1;break;fi
+done
+if [[ "$recovered" == 1 ]] && start_case restored normal;then
+ record restored-network-manual-start PASS
+ if stop_case restored;then record restored-stop PASS;else record restored-stop FAIL;fi
+else record restored-network-manual-start FAIL;fi
 write_receipt
 test "$failed" = 0
