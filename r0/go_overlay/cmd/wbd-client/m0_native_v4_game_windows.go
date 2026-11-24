@@ -400,7 +400,8 @@ outer:
   }
  }
  stopErr:=stop()
- if stopErr!=nil{return errors.Join(runtimeErr,stopErr)}
+ // A true dead verdict may authorize a new generation only after owned Stop.
+ if stopErr!=nil{return fmt.Errorf("Game native owned Stop failed after %v: %w",runtimeErr,stopErr)}
  fmt.Printf("WBD_WINDOWS_GAME_NATIVE_DISCONNECTED lanes=%d wal_restored=1 rust_stopped=1\n",count)
  return runtimeErr
 }

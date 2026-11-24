@@ -65,7 +65,8 @@
     "docs/evidence/M0/20261124-H2397-game-lanes-history.json",
     "docs/evidence/M0/20261124-H2399-ALL-MODE-NATIVE-PARITY-ACCEPTANCE.json",
     "docs/devlog/M0/20261124-H2402-GAME-COLD-FINAL-ACK.md",
-    "docs/devlog/M0/20261124-H2405-GAME-NAT-HOT-LANE.md"
+    "docs/devlog/M0/20261124-H2405-GAME-NAT-HOT-LANE.md",
+    "docs/devlog/M0/20261124-H2406-WINDOWS-GAME-NAT-DEAD-RECOVERY.md"
   ],
   "verification": [
     {
@@ -169,7 +170,8 @@
     "H1354 all four Game4 lanes share ONE true physical double-blackholed veth, not independent routes; 8s outage expected. Original H1353 CI report FAIL preserved. H1355 actual Carol fixed6 false counter alert only corrected offline H1356.",
     "完整旧SOURCE资格原样归档：docs/evidence/M0/20261124-H2397-game-lanes-history.json。H2397精确源f21ea508双ISA/Windows七模式功能通过并合入main；不宣称全模式性能。",
     "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。",
-    "H2405 main：Linux Game2/4 冷SYN并行、每lane最终ACK修复、候选冷读故障不停止旧组；Game4同认证尝试热换允许NAT源IP/端口改变，真实MTU预算变更仍需整组。新源码原生NAT热换资格待验。"
+    "H2405 main：Linux Game2/4 冷SYN并行、每lane最终ACK修复、候选冷读故障不停止旧组；Game4同认证尝试热换允许NAT源IP/端口改变，真实MTU预算变更仍需整组。新源码原生NAT热换资格待验。",
+    "H2406 Windows Game native Health90明确返回与Normal一致的终止状态，完成原有owned Stop后由同一Go supervisor用新端口组重建。未实现Windows独立单lane热换；新源真实物理NAT blackhole恢复待验。"
   ],
   "promotion": null
 }

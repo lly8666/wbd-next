@@ -212,7 +212,7 @@ func(p *m0WinRustGamePeer) HealthError(ctx context.Context)error{
  s,e:=p.group.NativeGameIOStats(ctx)
  if e!=nil{return e}
  p.last=s
- if s.WorkerError!=0{return fmt.Errorf("Game native Rust worker rc=%d",s.WorkerError)}
+ if s.WorkerError!=0{return m0WindowsRustNativeWorkerError(s.WorkerError)}
  mtu,e:=p.group.RefreshGamePayloadMTU(ctx)
  if e!=nil{return e}
  if mtu!=p.maxIPv4{return fmt.Errorf("Game Rust native effective MTU changed from %d to %d: require new authenticated native attach",p.maxIPv4,mtu)}

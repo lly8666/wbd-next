@@ -31,6 +31,8 @@ const NPF_CAP:usize=65535+64;
 const MAX_IPV4:usize=2048;
 const EARLY_CAP:usize=256;
 const BATCH:usize=io::NPF_QUEUE_PACKETS;
+// Same cold-control status as the original Normal native owner.
+const AUTHENTICATED_PEER_DEAD:i32=6;
 // An idle Game2/4 tunnel has no periodic TX timer. Only real Game4/FEC
 // deadlines, Npcap-derived ACK wake, new Wintun sources or Stop wake TX.
 fn game_wait_timeout_ms(now_ns:u64,next_due_ns:Option<u64>)->u32{
@@ -537,7 +539,7 @@ fn tx_loop(cfg:WbdWinGameNativeAttachV3,lanes:Vec<LaneConfig>,
             ControlDue::DeadPeer=>{
                 eprintln!("M0_GAME_NATIVE_HEALTH_DEAD age_ns={} threshold_ns={}",
                     now_health,health.policy().dead_ns());
-                return BAD_STAGE
+                return AUTHENTICATED_PEER_DEAD
             },
             ControlDue::Health=>{
                 let Some(index)=active.iter().position(|v|*v)else{return BAD_STAGE};
@@ -1319,7 +1321,7 @@ pub extern "C" fn wbd_m0_win_game_native_v3_stop(h:u64)->i32{
     let tx=session.tx.join().unwrap_or(STOP_INCOMPLETE);
     let rx=session.rx.join().unwrap_or(STOP_INCOMPLETE);
     eprintln!("M0_PLAN027_GAME_NATIVE_STOP_JOIN group={h} tx_finished=true rx_finished=true tx_rc={tx} rx_rc={rx}");
-    if tx!=OK&&tx!=BAD_STAGE{return tx}
+    if tx!=OK&&tx!=BAD_STAGE&&tx!=AUTHENTICATED_PEER_DEAD{return tx}
     if rx!=OK&&rx!=BAD_STAGE{return rx}
     OK // Both native workers ended before Wintun/NPF loans return to Go.
 }

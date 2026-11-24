@@ -319,13 +319,17 @@ func TestM0PLAN028WindowsVerifiedPhysicalIPv4ColdTimeoutRetryDoesNotReviveStopOr
    }
   }
  }
- // The existing authenticated-dead90 retries for Normal/FEC are intact,
- // while Game health90 remains its own separate managed health policy.
- if !m0WindowsColdPathRetryAllowed(m0WinModeNormal,true,false,false,0,timeout){
-  t.Fatal("prior authenticated Normal dead90 recovery stopped working")
- }
- if m0WindowsColdPathRetryAllowed(m0WinModeGame4,true,false,false,0,timeout){
-  t.Fatal("Game dead90 retry authorization widened without OS event")
+ // An actual terminal Rust Health90 on any supported mode can
+ // reestablish the original transport even without a local NIC change.
+ for _,mode:=range []m0WindowsV4Mode{m0WinModeNormal,m0WinModeFixed,m0WinModeAuto,m0WinModeGame2,m0WinModeGame4}{
+  if !m0WindowsColdPathRetryAllowed(mode,true,false,false,0,timeout){
+   t.Fatalf("authenticated dead90 recovery unavailable: %v",mode)
+  }
+  if m0WindowsColdPathRetryAllowed(mode,true,false,true,0,timeout)||
+     m0WindowsColdPathRetryAllowed(mode,true,false,false,2,timeout)||
+     m0WindowsColdPathRetryAllowed(mode,true,false,false,0,realityfront.ErrAdmissionAuth){
+   t.Fatalf("invalid cold retry after native dead: %v",mode)
+  }
  }
 }
 

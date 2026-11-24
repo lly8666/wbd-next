@@ -80,17 +80,13 @@ func m0WindowsOriginalColdRetryAllowed(authorized,applied bool,retries int,err e
  return errors.As(err,&ne)&&ne.Timeout()
 }
 
-// Filtered native source IPv4/ifindex change after exact owned Stop
-// authorizes a bounded cold TLS transport retry even for Game. It does not
-// make wrong credentials, user Stop, initial connect or an applied OS owner
-// eligible. No extra watcher, periodic probe or second recovery controller.
+// All native modes share the original cold supervisor after exact Stop.
+// NAT can invalidate remote mappings without a local NIC/IP event;
+// Game's own Rust HealthClock now reports the same terminal-dead status.
 func m0WindowsColdPathRetryAllowed(
- mode m0WindowsV4Mode,authenticatedDead,pathChanged,applied bool,
+ _ m0WindowsV4Mode,authenticatedDead,pathChanged,applied bool,
  retries int,err error,
 )bool{
- if (mode==m0WinModeGame2||mode==m0WinModeGame4)&&!pathChanged{
-  return false // keep original Game dead90 retry policy unchanged
- }
  return m0WindowsOriginalColdRetryAllowed(
   authenticatedDead||pathChanged,applied,retries,err)
 }
