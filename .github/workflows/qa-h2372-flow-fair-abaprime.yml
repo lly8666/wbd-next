@@ -49,6 +49,8 @@ jobs:
           test -c /dev/net/tun
           sudo -n true
           python3 -m py_compile tools/m0_029_product_shared_tun_noprobe.py
+          # Exercise actual import-time fixture switches before expensive build.
+          WBD_M0_029_H2372_FLOW_FAIR_LEG=A WBD_M0_029_H2272_FORCE_REPAIR=off WBD_M0_029_ECHO_SERVER_NODELAY=1 WBD_M0_029_ECHO_TIMELINE=1 WBD_M0_029_TCP_INFO=1 WBD_M0_029_SPARSE_TCP_DIAG=1 python3 -c 'import runpy; runpy.run_path("tools/m0_029_product_shared_tun_noprobe.py",run_name="h2374_preflight")'
           bash -n tools/m0_plan029_linux_dual_native_build.sh
       - name: Single original Go TLS Rust no-probe build for all three legs
         shell: bash
@@ -82,6 +84,7 @@ jobs:
             WBD_M0_029_H2372_FLOW_FAIR_LEG="$leg" \
             WBD_M0_029_ECHO_TIMELINE=1 \
             WBD_M0_029_TCP_INFO=1 \
+            WBD_M0_029_H2272_FORCE_REPAIR=off \
             WBD_M0_029_ECHO_SERVER_NODELAY=1 \
             WBD_M0_029_SPARSE_TCP_DIAG=1 \
               python3 -u tools/m0_029_product_shared_tun_noprobe.py
