@@ -410,6 +410,14 @@ def observed_relay_counters(own):
             "qdisc_permitted_counters_only": True}
 
 
+def native_path_order(group):
+    """Balanced order cancels first-order time drift; legacy three legs unchanged."""
+    if os.environ.get("WBD_PATH_AB_CROSSOVER")!="1":
+        return ("A_default","B_tx16","A_prime")
+    if group=="a":return ("A_default","B_tx16","B_prime","A_prime")
+    if group=="b":return ("B_tx16","A_default","A_prime","B_prime")
+    raise ValueError("native path crossover group")
+
 def control_service(own):
     """UDP 4789 Tailscale control, separate from ACL-proven TCP 18727 data.
 
@@ -432,7 +440,7 @@ def control_service(own):
                  if os.environ.get("WBD_H2307_FEC_FIXED_FIRST")=="1" else
                  ("A_off","B_fixed","A_prime_off")
                  if os.environ.get("WBD_H2293_FEC_ABA")=="1" else
-                 ("A_default","B_tx16","A_prime"))
+                 native_path_order(own["group"]))
     h2292_next=-1
     h2292_ready=load(ROOT/"relay-ready.json") if os.environ.get(
         "WBD_H2292_TRUE_PRODUCT_ABA")=="1" else None

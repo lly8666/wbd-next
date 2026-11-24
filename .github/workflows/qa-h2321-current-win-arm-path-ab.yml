@@ -23,6 +23,7 @@ env:
   WBD_H2312_FACTOR: path_ab
   WBD_H2321_BASELINE_SOURCE: 6fa10d75e3b7f23f909252e2737948911d3eb64c
   WBD_PATH_AB_AXIS: native_off_loan
+  WBD_PATH_AB_CROSSOVER: "1"
 concurrency:
   group: h2336-off-loan-${{ github.run_id }}
   cancel-in-progress: false
@@ -235,13 +236,15 @@ jobs:
           assert d['true_go_tls_rust_windows_arm']
           assert d['client_original_authenticated_ready']
           assert d['h2292_same_vm_original_product_abaprime']['status']=='PASS_H2292_SAME_WINDOWS_VM_ORIGINAL_GO_TLS_RUST_A_B_A_PRIME_SCOPED'
-          assert [x['stage'] for x in d['h2292_same_vm_original_product_abaprime']['stages']]==['A_default','B_tx16','A_prime']
+          order=['A_default','B_tx16','B_prime','A_prime'] if os.environ['GROUP']=='a' else ['B_tx16','A_default','A_prime','B_prime']
           stages=d['h2292_same_vm_original_product_abaprime']['stages']
+          assert [x['stage'] for x in stages]==order
+          assert [x['candidate_enabled'] for x in stages]==[tag.startswith('B_') for tag in order]
           factor=os.environ.get('WBD_H2312_FACTOR','legacy')
           assert factor=='path_ab'
           assert all(x['h2312_factor']==factor and x['comparison_axis']=='native_off_loan' for x in stages)
           assert [x['compiled_rust_source_sha'] for x in stages]==[
-              os.environ['WBD_H2321_BASELINE_SOURCE'],os.environ['GITHUB_SHA'],os.environ['WBD_H2321_BASELINE_SOURCE']]
+              os.environ['GITHUB_SHA'] if tag.startswith('B_') else os.environ['WBD_H2321_BASELINE_SOURCE'] for tag in order]
           assert all(x['h2312_npf_service']['npf_queue_packets']==8 and
                      x['h2312_npf_service']['npf_queue_bytes']==16384 and
                      x['h2312_npf_service']['queue_calls']>0 and
@@ -408,7 +411,8 @@ jobs:
           assert d['real_original_arm_go_tls_rust_tun_native_tcp']
           assert d['tcp_inner_arm_server_finished']
           assert d['h2292_same_arm_original_go_tls_rust_server']
-          assert [s['stage'] for s in d['h2292_arm_server_three_original_tcp_stages']]==['A_default','B_tx16','A_prime']
+          order=['A_default','B_tx16','B_prime','A_prime'] if os.environ['GROUP']=='a' else ['B_tx16','A_default','A_prime','B_prime']
+          assert [s['stage'] for s in d['h2292_arm_server_three_original_tcp_stages']]==order
           assert d['native_true_arm_tun_udp']['real_native_os_udp_received']>=12
           print('H2286_REAL_ARM_GO_RUST_PRODUCT_TUN_NATIVE_TCP_RECEIVED')
           PY
@@ -555,6 +559,7 @@ jobs:
           path: h2276-out/client-peer.json
           retention-days: 3
       - name: H2343 real bare Windows WSL2 TCP calibration on these same three VMs
+        env: {WBD_H2286_PRODUCT_FULL_WIN_ARM: "1"}
         shell: pwsh
         timeout-minutes: 12
         run: |

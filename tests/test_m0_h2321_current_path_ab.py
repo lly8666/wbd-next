@@ -33,10 +33,26 @@ class CurrentPathAB(unittest.TestCase):
         self.assertIn("h2338-profile-",w)
         self.assertIn("WBD_PATH_AB_AXIS: tx16_npf64_profile",w)
         self.assertEqual(w.count("--manifest-path h2321-baseline/Cargo.toml"),2)
-        self.assertIn("[16384,65536,16384]",w)
-        self.assertIn("[8,16,8]",w)
+        self.assertIn("[65536 if tag.startswith('B_') else 16384 for tag in order]",w)
+        self.assertIn("[16 if tag.startswith('B_') else 8 for tag in order]",w)
         self.assertIn("bb=dict(source_sha=base",w)
         self.assertIn("h2291_windows_tx_service",w)
+
+    def test_counterbalanced_order_and_drift_receipt(self):
+        with patch.dict("os.environ",{},clear=True):
+            self.assertEqual(ab.ordered_legs("a"),ab.LEGS)
+        with patch.dict("os.environ",{"WBD_PATH_AB_CROSSOVER":"1"},clear=True):
+            self.assertEqual(ab.ordered_legs("a"),("A_default","B_tx16","B_prime","A_prime"))
+            self.assertEqual(ab.ordered_legs("b"),("B_tx16","A_default","A_prime","B_prime"))
+            def row(tag,rate):
+                return dict(candidate_enabled=ab.is_candidate(tag),tcp_mbps=rate,p99_ms=200,
+                    windows_original_process_cpu_s_per_gib=20,windows_original_rust_tx_cpu_lower_bound=10,
+                    arm_rx_bytes=2**30)
+            for group,rates in (("a",[200,220,180,160]),("b",[220,200,160,180])):
+                s=ab.summarize_legs([row(tag,r) for tag,r in zip(ab.ordered_legs(group),rates)])
+                self.assertEqual(s["B_vs_same_vm_baseline_goodput_pct"],11.111)
+                self.assertEqual(s["baseline_goodput_spread_pct"],22.222)
+                self.assertEqual(s["paired_adjacent_goodput_pct"],[10.0,12.5])
 
     def test_historical_and_incremental_baselines_remain_exact(self):
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_BASELINE},clear=True):

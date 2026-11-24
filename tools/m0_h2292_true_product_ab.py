@@ -76,10 +76,43 @@ def maybe_copy(src,dst):
         shutil.copy2(src,dst)
 
 
+def ordered_legs(group):
+    return core.native_path_order(group)
+
+def is_candidate(tag):
+    return tag in ("B_tx16","B_prime")
+
+def summarize_legs(results):
+    baseline=[r for r in results if not r["candidate_enabled"]]
+    candidate=[r for r in results if r["candidate_enabled"]]
+    if len(baseline)!=2 or len(candidate) not in (1,2):
+        raise ValueError("invalid native paired sample count")
+    def mean(rows,key):return sum(r[key] for r in rows)/len(rows)
+    def pct(key):return round(100*(mean(candidate,key)/mean(baseline,key)-1),3)
+    # Report dispersion separately rather than let a deteriorated A′
+    # silently inflate the candidate mean. No invented acceptance threshold.
+    def spread(rows,key):
+        vals=[r[key] for r in rows]
+        return round(100*(max(vals)-min(vals))/mean(rows,key),3)
+    return dict(B_vs_same_vm_baseline_goodput_pct=pct("tcp_mbps"),
+        B_vs_same_vm_baseline_cpu_s_per_gib_pct=pct("windows_original_process_cpu_s_per_gib"),
+        B_vs_worse_A_P99_ms=max(r["p99_ms"] for r in candidate)-max(r["p99_ms"] for r in baseline),
+        baseline_goodput_spread_pct=spread(baseline,"tcp_mbps"),
+        candidate_goodput_spread_pct=spread(candidate,"tcp_mbps") if len(candidate)==2 else None,
+        baseline_cpu_per_gib_spread_pct=spread(baseline,"windows_original_process_cpu_s_per_gib"),
+        candidate_cpu_per_gib_spread_pct=spread(candidate,"windows_original_process_cpu_s_per_gib") if len(candidate)==2 else None,
+        candidate_tx_cpu_s_per_gib=[round(r["windows_original_rust_tx_cpu_lower_bound"]*2**30/r["arm_rx_bytes"],4) for r in candidate],
+        baseline_tx_cpu_s_per_gib=[round(r["windows_original_rust_tx_cpu_lower_bound"]*2**30/r["arm_rx_bytes"],4) for r in baseline],
+        paired_adjacent_goodput_pct=([round(100*(results[i+(0 if results[i]["candidate_enabled"] else 1)]["tcp_mbps"]/
+            results[i+(1 if results[i]["candidate_enabled"] else 0)]["tcp_mbps"]-1),3) for i in (0,2)]
+            if len(results)==4 else None),
+        default_go_rust_product_promoted=False,original_arm_server_same_vm=True,
+        repeated_stop_per_leg=True,unqualified_weak_loss_modes="NOT_RUN")
+
 def stage_control(relay,op,tag):
     """Use only pre-existing group-authenticated UDP control (no new Runner)."""
     require(op in ("h2292_arm_stage_ready","h2292_query_stage") and
-            tag in LEGS,"STAGE_CONTROL_INPUT")
+            tag in ordered_legs(relay["group"]),"STAGE_CONTROL_INPUT")
     payload={"token":relay["control_token"],"op":op,"stage":tag}
     with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as sock:
         sock.settimeout(3)
@@ -109,7 +142,7 @@ def wait_arm_stage(relay,tag):
         # A later/foreign stage cannot count as our expected original ARM
         # TCP listener. Fail rather than quietly skip a product generation.
         require(r["stage"] is None or
-                LEGS.index(r["stage"])<=LEGS.index(tag),
+                ordered_legs(relay["group"]).index(r["stage"])<=ordered_legs(relay["group"]).index(tag),
                 "H2292_ARM_STAGE_PASSED_BEFORE_CLIENT_READY")
         time.sleep(.5)
     raise RuntimeError("H2292_ARM_REAL_TUN_TCP_STAGE_NOT_READY")
@@ -213,8 +246,8 @@ def win_trial(group,relay,arm,ready):
     original_candidate=os.environ.get("WBD_H2291_WINDOWS_TX_CANDIDATE")
     original_sha=os.environ.get("WBD_H2291_CANDIDATE_BINARY_SOURCE_SHA")
     try:
-        for tag in LEGS:
-            tuned=tag=="B_tx16"
+        for tag in ordered_legs(group):
+            tuned=is_candidate(tag)
             chosen=CANDIDATE if tuned else ORIGINAL
             shutil.copy2(chosen,BINARY)
             if tuned:
@@ -319,27 +352,15 @@ def win_trial(group,relay,arm,ready):
             results.append(r)
             core.save(ROOT/(tag+"-receipt.json"),r)
             print("H2292_REAL_ORIGINAL_GO_RUST_LEG_PASS "+json.dumps(r),flush=True)
-        a,b,c=results
-        baseline=(a["tcp_mbps"]+c["tcp_mbps"])/2
-        require(baseline>0,"A_PRIME_ZERO_RX")
-        middle_cpu=(a["windows_original_process_cpu_s_per_gib"]+
-                    c["windows_original_process_cpu_s_per_gib"])/2
         result={"group":group,"source_sha":os.environ["GITHUB_SHA"],
                 "candidate_binary_source_sha":(path_ab_candidate_source() if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA),
                 "original_go_exe_source_sha":(os.environ["GITHUB_SHA"] if h2312_mode()=="path_ab"
                     else "c5066db61fc51bafd7c2ad2def3029e615efa777"),
                 "baseline_binary_source_sha":(path_ab_baseline() if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA),
                 "status":"PASS_H2292_SAME_WINDOWS_VM_ORIGINAL_GO_TLS_RUST_A_B_A_PRIME_SCOPED",
-                "stages":results,"comparison":{
-                    "B_vs_same_vm_baseline_goodput_pct":round(
-                        100*(b["tcp_mbps"]/baseline-1),3),
-                    "B_vs_same_vm_baseline_cpu_s_per_gib_pct":round(
-                        100*(b["windows_original_process_cpu_s_per_gib"]/middle_cpu-1),3),
-                    "B_vs_worse_A_P99_ms":b["p99_ms"]-max(a["p99_ms"],c["p99_ms"]),
-                    "default_go_rust_product_promoted":False,
-                    "original_arm_server_same_vm":True,
-                    "repeated_stop_per_leg":True,
-                    "unqualified_weak_loss_modes":"NOT_RUN"}}
+                "stages":results,"comparison":summarize_legs(results),
+                "execution_order":list(ordered_legs(group)),
+                "cross_over":len(results)==4}
         core.save(ROOT/"three-leg-result.json",result)
         # Cross-runner ARM/relay consumers still receive their original
         # scoped true TCP/CPU/Stop receipt, plus all three actual stage facts.
@@ -396,7 +417,7 @@ def arm_trial(group):
     relay=core.load(pathlib.Path("h2276-peer/relay/relay-ready.json"))
     core.verify(own,relay,"relay")
     all_stages=[]
-    for i,tag in enumerate(LEGS):
+    for i,tag in enumerate(ordered_legs(group)):
         if i:
             arm_restart_original_tun_udp(tag,own)
         stage=stage_control(relay,"h2292_arm_stage_ready",tag)
