@@ -1,0 +1,1981 @@
+{
+  "schema": "m0-plan029-native-crossover-receipts/1",
+  "date": "2026-11-24",
+  "owner": "M0",
+  "source": "actual GitHub Actions job logs; not independent artifact recomputation",
+  "runs": [
+    {
+      "run_id": 45321088128,
+      "job_id": 138201095945,
+      "group": "a",
+      "axis": "settlement_control",
+      "legs": [
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "cbac4d2187cd8aca10c1f5321320d74aae9e5f960cad6181cd5a02bb613d71bf",
+          "compiled_rust_source_sha": "6fa10d75e3b7f23f909252e2737948911d3eb64c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 633569280,
+          "tcp_mbps": 200.243,
+          "p99_ms": 234,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 27.6986,
+          "windows_original_rust_tx_cpu_lower_bound": 12.3906,
+          "relay_tailscaled_cpu_of_one_core_pct": 162.251,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 68017,
+            "queue_frames_submitted": 543881,
+            "queue_bytes_submitted": 710229318,
+            "queue_bytes_copied": 710229318,
+            "queue_short_calls": 0,
+            "direct_calls": 2385,
+            "direct_bytes_submitted": 181517,
+            "direct_frames_accepted": 2385,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 72,
+            "queue_8": 67945,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2347,
+            "direct_gt256": 38
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.703
+        },
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a3b1b2ff08d3c1b8b3f7caaacaac9df9d6ca51fff72c9322284502e07a208bf2",
+          "compiled_rust_source_sha": "ca52a739649041e19e7e5cf8e18264baf7d3997c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 512802816,
+          "tcp_mbps": 161.672,
+          "p99_ms": 266,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 37.8205,
+          "windows_original_rust_tx_cpu_lower_bound": 13.1406,
+          "relay_tailscaled_cpu_of_one_core_pct": 159.444,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 55154,
+            "queue_frames_submitted": 441059,
+            "queue_bytes_submitted": 574977086,
+            "queue_bytes_copied": 574977086,
+            "queue_short_calls": 0,
+            "direct_calls": 2408,
+            "direct_bytes_submitted": 161524,
+            "direct_frames_accepted": 2408,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 55,
+            "queue_8": 55099,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2388,
+            "direct_gt256": 20
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.75
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a3b1b2ff08d3c1b8b3f7caaacaac9df9d6ca51fff72c9322284502e07a208bf2",
+          "compiled_rust_source_sha": "ca52a739649041e19e7e5cf8e18264baf7d3997c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 511393792,
+          "tcp_mbps": 161.228,
+          "p99_ms": 406,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 35.5626,
+          "windows_original_rust_tx_cpu_lower_bound": 12.5781,
+          "relay_tailscaled_cpu_of_one_core_pct": 156.751,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 54876,
+            "queue_frames_submitted": 438813,
+            "queue_bytes_submitted": 573201267,
+            "queue_bytes_copied": 573201267,
+            "queue_short_calls": 0,
+            "direct_calls": 2397,
+            "direct_bytes_submitted": 220957,
+            "direct_frames_accepted": 2397,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 52,
+            "queue_8": 54824,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2331,
+            "direct_gt256": 66
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.328
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "cbac4d2187cd8aca10c1f5321320d74aae9e5f960cad6181cd5a02bb613d71bf",
+          "compiled_rust_source_sha": "6fa10d75e3b7f23f909252e2737948911d3eb64c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 514392064,
+          "tcp_mbps": 162.077,
+          "p99_ms": 266,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 38.4864,
+          "windows_original_rust_tx_cpu_lower_bound": 13.5938,
+          "relay_tailscaled_cpu_of_one_core_pct": 156.69,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 55204,
+            "queue_frames_submitted": 441502,
+            "queue_bytes_submitted": 576642351,
+            "queue_bytes_copied": 576642351,
+            "queue_short_calls": 0,
+            "direct_calls": 2368,
+            "direct_bytes_submitted": 144527,
+            "direct_frames_accepted": 2368,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 41,
+            "queue_8": 55163,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2361,
+            "direct_gt256": 7
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.828
+        }
+      ],
+      "bare": {
+        "source_sha": "ca52a739649041e19e7e5cf8e18264baf7d3997c",
+        "group": "a",
+        "run_id": "45321088128",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 4x25s 2MiB, no added loss",
+        "bare_mbps": 658.989,
+        "bare_p99_ms": 125,
+        "reference_at_least_600": true,
+        "reference_at_least_800": false,
+        "product_legs": [
+          {
+            "stage": "A_default",
+            "mbps": 200.243,
+            "relative_to_bare_reference": 0.3039
+          },
+          {
+            "stage": "B_tx16",
+            "mbps": 161.672,
+            "relative_to_bare_reference": 0.2453
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 161.228,
+            "relative_to_bare_reference": 0.2447
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 162.077,
+            "relative_to_bare_reference": 0.2459
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": -10.87988518436741,
+      "b_cpu_per_gib_pct": 10.875727128503442
+    },
+    {
+      "run_id": 45321088128,
+      "job_id": 138201095904,
+      "group": "b",
+      "axis": "settlement_control",
+      "legs": [
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a3b1b2ff08d3c1b8b3f7caaacaac9df9d6ca51fff72c9322284502e07a208bf2",
+          "compiled_rust_source_sha": "ca52a739649041e19e7e5cf8e18264baf7d3997c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 386646016,
+          "tcp_mbps": 121.153,
+          "p99_ms": 313,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 43.9992,
+          "windows_original_rust_tx_cpu_lower_bound": 11.7656,
+          "relay_tailscaled_cpu_of_one_core_pct": 147.457,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 42399,
+            "queue_frames_submitted": 339058,
+            "queue_bytes_submitted": 434457414,
+            "queue_bytes_copied": 434457414,
+            "queue_short_calls": 0,
+            "direct_calls": 2308,
+            "direct_bytes_submitted": 130418,
+            "direct_frames_accepted": 2308,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 45,
+            "queue_8": 42354,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2307,
+            "direct_gt256": 1
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.281
+        },
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "cbac4d2187cd8aca10c1f5321320d74aae9e5f960cad6181cd5a02bb613d71bf",
+          "compiled_rust_source_sha": "6fa10d75e3b7f23f909252e2737948911d3eb64c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 463634432,
+          "tcp_mbps": 145.814,
+          "p99_ms": 266,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 41.4333,
+          "windows_original_rust_tx_cpu_lower_bound": 13.4844,
+          "relay_tailscaled_cpu_of_one_core_pct": 154.651,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 49820,
+            "queue_frames_submitted": 398413,
+            "queue_bytes_submitted": 519795347,
+            "queue_bytes_copied": 519795347,
+            "queue_short_calls": 0,
+            "direct_calls": 2421,
+            "direct_bytes_submitted": 178351,
+            "direct_frames_accepted": 2421,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 44,
+            "queue_8": 49776,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2386,
+            "direct_gt256": 35
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.109
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "cbac4d2187cd8aca10c1f5321320d74aae9e5f960cad6181cd5a02bb613d71bf",
+          "compiled_rust_source_sha": "6fa10d75e3b7f23f909252e2737948911d3eb64c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 416382976,
+          "tcp_mbps": 130.63,
+          "p99_ms": 297,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 43.7579,
+          "windows_original_rust_tx_cpu_lower_bound": 12.2969,
+          "relay_tailscaled_cpu_of_one_core_pct": 147.917,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 44686,
+            "queue_frames_submitted": 357399,
+            "queue_bytes_submitted": 466780494,
+            "queue_bytes_copied": 466780494,
+            "queue_short_calls": 0,
+            "direct_calls": 2312,
+            "direct_bytes_submitted": 130911,
+            "direct_frames_accepted": 2312,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 33,
+            "queue_8": 44653,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2311,
+            "direct_gt256": 1
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.687
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a3b1b2ff08d3c1b8b3f7caaacaac9df9d6ca51fff72c9322284502e07a208bf2",
+          "compiled_rust_source_sha": "ca52a739649041e19e7e5cf8e18264baf7d3997c",
+          "comparison_axis": "firstsend_settlement_and_control_poll",
+          "arm_rx_bytes": 449855488,
+          "tcp_mbps": 141.481,
+          "p99_ms": 266,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 42.404,
+          "windows_original_rust_tx_cpu_lower_bound": 13.5781,
+          "relay_tailscaled_cpu_of_one_core_pct": 151.298,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 48635,
+            "queue_frames_submitted": 388945,
+            "queue_bytes_submitted": 504705338,
+            "queue_bytes_copied": 504705338,
+            "queue_short_calls": 0,
+            "direct_calls": 2301,
+            "direct_bytes_submitted": 130198,
+            "direct_frames_accepted": 2301,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 42,
+            "queue_8": 48593,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2301,
+            "direct_gt256": 0
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.266
+        }
+      ],
+      "bare": {
+        "source_sha": "ca52a739649041e19e7e5cf8e18264baf7d3997c",
+        "group": "b",
+        "run_id": "45321088128",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 4x25s 2MiB, no added loss",
+        "bare_mbps": 461.744,
+        "bare_p99_ms": 156,
+        "reference_at_least_600": false,
+        "reference_at_least_800": false,
+        "product_legs": [
+          {
+            "stage": "B_tx16",
+            "mbps": 121.153,
+            "relative_to_bare_reference": 0.2624
+          },
+          {
+            "stage": "A_default",
+            "mbps": 145.814,
+            "relative_to_bare_reference": 0.3158
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 130.63,
+            "relative_to_bare_reference": 0.2829
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 141.481,
+            "relative_to_bare_reference": 0.3064
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": -4.995586809625074,
+      "b_cpu_per_gib_pct": 1.4226821549643498
+    },
+    {
+      "run_id": 45321102114,
+      "job_id": 138201627396,
+      "group": "a",
+      "axis": "arena_ready_batch",
+      "legs": [
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "c38a5244df2bb214ccaa17ed423d5f15d7766146f39560df8e45659cb5864d92",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 391102464,
+          "tcp_mbps": 122.253,
+          "p99_ms": 313,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 44.3987,
+          "windows_original_rust_tx_cpu_lower_bound": 11.875,
+          "relay_tailscaled_cpu_of_one_core_pct": 144.217,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 42021,
+            "queue_frames_submitted": 335714,
+            "queue_bytes_submitted": 438476681,
+            "queue_bytes_copied": 438476681,
+            "queue_short_calls": 0,
+            "direct_calls": 2345,
+            "direct_bytes_submitted": 152341,
+            "direct_frames_accepted": 2345,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 132,
+            "queue_8": 41889,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2328,
+            "direct_gt256": 17
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.125
+        },
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "0309d8f824ac1891506efa1665ea35845c09299c78846bee047d807f8fbfe66d",
+          "compiled_rust_source_sha": "7dac22ab18b7cb89f3f925ee2a33e5a4bcd23049",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 416694272,
+          "tcp_mbps": 130.805,
+          "p99_ms": 312,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 39.7795,
+          "windows_original_rust_tx_cpu_lower_bound": 11.6406,
+          "relay_tailscaled_cpu_of_one_core_pct": 150.657,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 44763,
+            "queue_frames_submitted": 357821,
+            "queue_bytes_submitted": 467192331,
+            "queue_bytes_copied": 467192331,
+            "queue_short_calls": 0,
+            "direct_calls": 2335,
+            "direct_bytes_submitted": 135190,
+            "direct_frames_accepted": 2335,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 75,
+            "queue_8": 44688,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2332,
+            "direct_gt256": 3
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.172
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "0309d8f824ac1891506efa1665ea35845c09299c78846bee047d807f8fbfe66d",
+          "compiled_rust_source_sha": "7dac22ab18b7cb89f3f925ee2a33e5a4bcd23049",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 437567488,
+          "tcp_mbps": 137.357,
+          "p99_ms": 282,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 43.9783,
+          "windows_original_rust_tx_cpu_lower_bound": 13.5,
+          "relay_tailscaled_cpu_of_one_core_pct": 151.887,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 46956,
+            "queue_frames_submitted": 375473,
+            "queue_bytes_submitted": 490518253,
+            "queue_bytes_copied": 490518253,
+            "queue_short_calls": 0,
+            "direct_calls": 2416,
+            "direct_bytes_submitted": 150234,
+            "direct_frames_accepted": 2416,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 49,
+            "queue_8": 46907,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2404,
+            "direct_gt256": 12
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.844
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "c38a5244df2bb214ccaa17ed423d5f15d7766146f39560df8e45659cb5864d92",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 420528128,
+          "tcp_mbps": 132.008,
+          "p99_ms": 282,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 39.8956,
+          "windows_original_rust_tx_cpu_lower_bound": 11.5625,
+          "relay_tailscaled_cpu_of_one_core_pct": 153.625,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 45136,
+            "queue_frames_submitted": 360953,
+            "queue_bytes_submitted": 471464142,
+            "queue_bytes_copied": 471464142,
+            "queue_short_calls": 0,
+            "direct_calls": 2330,
+            "direct_bytes_submitted": 136606,
+            "direct_frames_accepted": 2330,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 41,
+            "queue_8": 45095,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2326,
+            "direct_gt256": 4
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.969
+        }
+      ],
+      "bare": {
+        "source_sha": "7dac22ab18b7cb89f3f925ee2a33e5a4bcd23049",
+        "group": "a",
+        "run_id": "45321102114",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 4x25s 2MiB, no added loss",
+        "bare_mbps": 451.729,
+        "bare_p99_ms": 140,
+        "reference_at_least_600": false,
+        "reference_at_least_800": false,
+        "product_legs": [
+          {
+            "stage": "A_default",
+            "mbps": 122.253,
+            "relative_to_bare_reference": 0.2706
+          },
+          {
+            "stage": "B_tx16",
+            "mbps": 130.805,
+            "relative_to_bare_reference": 0.2896
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 137.357,
+            "relative_to_bare_reference": 0.3041
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 132.008,
+            "relative_to_bare_reference": 0.2922
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": 5.467216757583748,
+      "b_cpu_per_gib_pct": -0.6364605910482601
+    },
+    {
+      "run_id": 45321102114,
+      "job_id": 138201627448,
+      "group": "b",
+      "axis": "arena_ready_batch",
+      "legs": [
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "0309d8f824ac1891506efa1665ea35845c09299c78846bee047d807f8fbfe66d",
+          "compiled_rust_source_sha": "7dac22ab18b7cb89f3f925ee2a33e5a4bcd23049",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 546488320,
+          "tcp_mbps": 172.401,
+          "p99_ms": 266,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 27.3844,
+          "windows_original_rust_tx_cpu_lower_bound": 10.2656,
+          "relay_tailscaled_cpu_of_one_core_pct": 155.738,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 58686,
+            "queue_frames_submitted": 469258,
+            "queue_bytes_submitted": 612656801,
+            "queue_bytes_copied": 612656801,
+            "queue_short_calls": 0,
+            "direct_calls": 2430,
+            "direct_bytes_submitted": 202963,
+            "direct_frames_accepted": 2430,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 61,
+            "queue_8": 58625,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2376,
+            "direct_gt256": 54
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.843
+        },
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "c38a5244df2bb214ccaa17ed423d5f15d7766146f39560df8e45659cb5864d92",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 539705344,
+          "tcp_mbps": 169.213,
+          "p99_ms": 250,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 32.7956,
+          "windows_original_rust_tx_cpu_lower_bound": 12.3906,
+          "relay_tailscaled_cpu_of_one_core_pct": 152.397,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 57999,
+            "queue_frames_submitted": 463171,
+            "queue_bytes_submitted": 604951257,
+            "queue_bytes_copied": 604951257,
+            "queue_short_calls": 0,
+            "direct_calls": 2438,
+            "direct_bytes_submitted": 204951,
+            "direct_frames_accepted": 2438,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 200,
+            "queue_8": 57799,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2383,
+            "direct_gt256": 55
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.11
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "c38a5244df2bb214ccaa17ed423d5f15d7766146f39560df8e45659cb5864d92",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 728383488,
+          "tcp_mbps": 230.492,
+          "p99_ms": 266,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 18.588,
+          "windows_original_rust_tx_cpu_lower_bound": 9.4219,
+          "relay_tailscaled_cpu_of_one_core_pct": 166.497,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 81163,
+            "queue_frames_submitted": 624243,
+            "queue_bytes_submitted": 815745825,
+            "queue_bytes_copied": 815745825,
+            "queue_short_calls": 0,
+            "direct_calls": 3438,
+            "direct_bytes_submitted": 916534,
+            "direct_frames_accepted": 3438,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 6233,
+            "queue_8": 74930,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2851,
+            "direct_gt256": 587
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.704
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "0309d8f824ac1891506efa1665ea35845c09299c78846bee047d807f8fbfe66d",
+          "compiled_rust_source_sha": "7dac22ab18b7cb89f3f925ee2a33e5a4bcd23049",
+          "comparison_axis": "arena_ready_batch",
+          "arm_rx_bytes": 553484288,
+          "tcp_mbps": 174.608,
+          "p99_ms": 265,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 31.2214,
+          "windows_original_rust_tx_cpu_lower_bound": 12.1094,
+          "relay_tailscaled_cpu_of_one_core_pct": 155.67,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 59407,
+            "queue_frames_submitted": 475022,
+            "queue_bytes_submitted": 620417663,
+            "queue_bytes_copied": 620417663,
+            "queue_short_calls": 0,
+            "direct_calls": 2351,
+            "direct_bytes_submitted": 183447,
+            "direct_frames_accepted": 2351,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 62,
+            "queue_8": 59345,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2310,
+            "direct_gt256": 41
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.844
+        }
+      ],
+      "bare": {
+        "source_sha": "7dac22ab18b7cb89f3f925ee2a33e5a4bcd23049",
+        "group": "b",
+        "run_id": "45321102114",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 4x25s 2MiB, no added loss",
+        "bare_mbps": 601.324,
+        "bare_p99_ms": 187,
+        "reference_at_least_600": true,
+        "reference_at_least_800": false,
+        "product_legs": [
+          {
+            "stage": "B_tx16",
+            "mbps": 172.401,
+            "relative_to_bare_reference": 0.2867
+          },
+          {
+            "stage": "A_default",
+            "mbps": 169.213,
+            "relative_to_bare_reference": 0.2814
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 230.492,
+            "relative_to_bare_reference": 0.3833
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 174.608,
+            "relative_to_bare_reference": 0.2904
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": -13.183722995709324,
+      "b_cpu_per_gib_pct": 14.055457383289616
+    },
+    {
+      "run_id": 45321120476,
+      "job_id": 138201664658,
+      "group": "a",
+      "axis": "native_local_reclaim",
+      "legs": [
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "f6719af5f209984d9fd540d4bc41d9c557e592db1bb4e5b4a41ec3aef3a0e267",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 956907520,
+          "tcp_mbps": 304.687,
+          "p99_ms": 188,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 18.9704,
+          "windows_original_rust_tx_cpu_lower_bound": 13.5781,
+          "relay_tailscaled_cpu_of_one_core_pct": 212.286,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 102766,
+            "queue_frames_submitted": 821713,
+            "queue_bytes_submitted": 1072675210,
+            "queue_bytes_copied": 1072675210,
+            "queue_short_calls": 0,
+            "direct_calls": 2691,
+            "direct_bytes_submitted": 253199,
+            "direct_frames_accepted": 2691,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 108,
+            "queue_8": 102658,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2608,
+            "direct_gt256": 83
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 35.562
+        },
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "d62a797a8f94a3ce5ecad0b34f5fdd61ee6a2d10c7ea0428b02315070ef8c174",
+          "compiled_rust_source_sha": "10c5a82d381eac074105d08281a91c8d9df8d57f",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 994525184,
+          "tcp_mbps": 315.685,
+          "p99_ms": 188,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 18.0842,
+          "windows_original_rust_tx_cpu_lower_bound": 13.3594,
+          "relay_tailscaled_cpu_of_one_core_pct": 213.048,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 106699,
+            "queue_frames_submitted": 853269,
+            "queue_bytes_submitted": 1114781908,
+            "queue_bytes_copied": 1114781908,
+            "queue_short_calls": 0,
+            "direct_calls": 2723,
+            "direct_bytes_submitted": 213243,
+            "direct_frames_accepted": 2723,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 84,
+            "queue_8": 106615,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2674,
+            "direct_gt256": 49
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 36.031
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "d62a797a8f94a3ce5ecad0b34f5fdd61ee6a2d10c7ea0428b02315070ef8c174",
+          "compiled_rust_source_sha": "10c5a82d381eac074105d08281a91c8d9df8d57f",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 1103364096,
+          "tcp_mbps": 349.788,
+          "p99_ms": 172,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 17.4103,
+          "windows_original_rust_tx_cpu_lower_bound": 14.4844,
+          "relay_tailscaled_cpu_of_one_core_pct": 221.087,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 120178,
+            "queue_frames_submitted": 961088,
+            "queue_bytes_submitted": 1238785667,
+            "queue_bytes_copied": 1238785667,
+            "queue_short_calls": 0,
+            "direct_calls": 2708,
+            "direct_bytes_submitted": 252906,
+            "direct_frames_accepted": 2708,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 93,
+            "queue_8": 120085,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2626,
+            "direct_gt256": 82
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 35.843
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "f6719af5f209984d9fd540d4bc41d9c557e592db1bb4e5b4a41ec3aef3a0e267",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 1002094592,
+          "tcp_mbps": 317.886,
+          "p99_ms": 203,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 18.6173,
+          "windows_original_rust_tx_cpu_lower_bound": 13.9531,
+          "relay_tailscaled_cpu_of_one_core_pct": 214.643,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 108204,
+            "queue_frames_submitted": 865032,
+            "queue_bytes_submitted": 1123986698,
+            "queue_bytes_copied": 1123986698,
+            "queue_short_calls": 0,
+            "direct_calls": 2608,
+            "direct_bytes_submitted": 234949,
+            "direct_frames_accepted": 2608,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 146,
+            "queue_8": 108058,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2536,
+            "direct_gt256": 72
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 35.875
+        }
+      ],
+      "bare": {
+        "source_sha": "10c5a82d381eac074105d08281a91c8d9df8d57f",
+        "group": "a",
+        "run_id": "45321120476",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 4x25s 2MiB, no added loss",
+        "bare_mbps": 757.757,
+        "bare_p99_ms": 94,
+        "reference_at_least_600": true,
+        "reference_at_least_800": false,
+        "product_legs": [
+          {
+            "stage": "A_default",
+            "mbps": 304.687,
+            "relative_to_bare_reference": 0.4021
+          },
+          {
+            "stage": "B_tx16",
+            "mbps": 315.685,
+            "relative_to_bare_reference": 0.4166
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 349.788,
+            "relative_to_bare_reference": 0.4616
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 317.886,
+            "relative_to_bare_reference": 0.4195
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": 6.890758192211965,
+      "b_cpu_per_gib_pct": -5.568842999172596
+    },
+    {
+      "run_id": 45321120476,
+      "job_id": 138201664660,
+      "group": "b",
+      "axis": "native_local_reclaim",
+      "legs": [
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "d62a797a8f94a3ce5ecad0b34f5fdd61ee6a2d10c7ea0428b02315070ef8c174",
+          "compiled_rust_source_sha": "10c5a82d381eac074105d08281a91c8d9df8d57f",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 477954048,
+          "tcp_mbps": 150.318,
+          "p99_ms": 610,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 35.0319,
+          "windows_original_rust_tx_cpu_lower_bound": 11.0156,
+          "relay_tailscaled_cpu_of_one_core_pct": 165.186,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 51300,
+            "queue_frames_submitted": 410243,
+            "queue_bytes_submitted": 535805442,
+            "queue_bytes_copied": 535805442,
+            "queue_short_calls": 0,
+            "direct_calls": 2354,
+            "direct_bytes_submitted": 133110,
+            "direct_frames_accepted": 2354,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 50,
+            "queue_8": 51250,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2353,
+            "direct_gt256": 1
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.312
+        },
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "f6719af5f209984d9fd540d4bc41d9c557e592db1bb4e5b4a41ec3aef3a0e267",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 535035904,
+          "tcp_mbps": 168.681,
+          "p99_ms": 281,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 38.8516,
+          "windows_original_rust_tx_cpu_lower_bound": 14.1094,
+          "relay_tailscaled_cpu_of_one_core_pct": 178.45,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 57420,
+            "queue_frames_submitted": 459224,
+            "queue_bytes_submitted": 599757091,
+            "queue_bytes_copied": 599757091,
+            "queue_short_calls": 0,
+            "direct_calls": 2484,
+            "direct_bytes_submitted": 174943,
+            "direct_frames_accepted": 2484,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 48,
+            "queue_8": 57372,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2456,
+            "direct_gt256": 28
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.141
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "f6719af5f209984d9fd540d4bc41d9c557e592db1bb4e5b4a41ec3aef3a0e267",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 484540416,
+          "tcp_mbps": 152.665,
+          "p99_ms": 391,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 32.5821,
+          "windows_original_rust_tx_cpu_lower_bound": 10.8594,
+          "relay_tailscaled_cpu_of_one_core_pct": 166.552,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 53158,
+            "queue_frames_submitted": 425138,
+            "queue_bytes_submitted": 544488182,
+            "queue_bytes_copied": 544488182,
+            "queue_short_calls": 0,
+            "direct_calls": 2374,
+            "direct_bytes_submitted": 135920,
+            "direct_frames_accepted": 2374,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 38,
+            "queue_8": 53120,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2373,
+            "direct_gt256": 1
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.109
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "d62a797a8f94a3ce5ecad0b34f5fdd61ee6a2d10c7ea0428b02315070ef8c174",
+          "compiled_rust_source_sha": "10c5a82d381eac074105d08281a91c8d9df8d57f",
+          "comparison_axis": "native_local_reclaim",
+          "arm_rx_bytes": 546127872,
+          "tcp_mbps": 172.077,
+          "p99_ms": 281,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 37.6631,
+          "windows_original_rust_tx_cpu_lower_bound": 13.875,
+          "relay_tailscaled_cpu_of_one_core_pct": 180.198,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 58653,
+            "queue_frames_submitted": 468916,
+            "queue_bytes_submitted": 612205960,
+            "queue_bytes_copied": 612205960,
+            "queue_short_calls": 0,
+            "direct_calls": 2519,
+            "direct_bytes_submitted": 190346,
+            "direct_frames_accepted": 2519,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 86,
+            "queue_8": 58567,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2480,
+            "direct_gt256": 39
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.984
+        }
+      ],
+      "bare": {
+        "source_sha": "10c5a82d381eac074105d08281a91c8d9df8d57f",
+        "group": "b",
+        "run_id": "45321120476",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 4x25s 2MiB, no added loss",
+        "bare_mbps": 582.012,
+        "bare_p99_ms": 141,
+        "reference_at_least_600": false,
+        "reference_at_least_800": false,
+        "product_legs": [
+          {
+            "stage": "B_tx16",
+            "mbps": 150.318,
+            "relative_to_bare_reference": 0.2583
+          },
+          {
+            "stage": "A_default",
+            "mbps": 168.681,
+            "relative_to_bare_reference": 0.2898
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 152.665,
+            "relative_to_bare_reference": 0.2623
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 172.077,
+            "relative_to_bare_reference": 0.2957
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": 0.3264394142139526,
+      "b_cpu_per_gib_pct": 1.765693223226572
+    },
+    {
+      "run_id": 45321409323,
+      "job_id": 138201754804,
+      "group": "a",
+      "axis": "application_supply",
+      "legs": [
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 372178944,
+          "tcp_mbps": 116.406,
+          "p99_ms": 360,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 50.7131,
+          "windows_original_rust_tx_cpu_lower_bound": 12.9688,
+          "relay_tailscaled_cpu_of_one_core_pct": 152.604,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 40479,
+            "queue_frames_submitted": 323590,
+            "queue_bytes_submitted": 417808962,
+            "queue_bytes_copied": 417808962,
+            "queue_short_calls": 0,
+            "direct_calls": 2433,
+            "direct_bytes_submitted": 136637,
+            "direct_frames_accepted": 2433,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 64,
+            "queue_8": 40415,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2433,
+            "direct_gt256": 0
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 39.422,
+          "application_supply": {
+            "bulk_flows": 4,
+            "requested_bytes": 2097152,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              }
+            ]
+          }
+        },
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 428163072,
+          "tcp_mbps": 115.743,
+          "p99_ms": 578,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 42.5148,
+          "windows_original_rust_tx_cpu_lower_bound": 12.5469,
+          "relay_tailscaled_cpu_of_one_core_pct": 147.533,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 46296,
+            "queue_frames_submitted": 367641,
+            "queue_bytes_submitted": 479973945,
+            "queue_bytes_copied": 479973945,
+            "queue_short_calls": 0,
+            "direct_calls": 2759,
+            "direct_bytes_submitted": 197795,
+            "direct_frames_accepted": 2759,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 621,
+            "queue_8": 45675,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2724,
+            "direct_gt256": 35
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 43.172,
+          "application_supply": {
+            "bulk_flows": 8,
+            "requested_bytes": 8388608,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              }
+            ]
+          }
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 402604032,
+          "tcp_mbps": 105.928,
+          "p99_ms": 406,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 52.7148,
+          "windows_original_rust_tx_cpu_lower_bound": 14.8281,
+          "relay_tailscaled_cpu_of_one_core_pct": 149.067,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 43876,
+            "queue_frames_submitted": 346300,
+            "queue_bytes_submitted": 451618463,
+            "queue_bytes_copied": 451618463,
+            "queue_short_calls": 0,
+            "direct_calls": 3046,
+            "direct_bytes_submitted": 248914,
+            "direct_frames_accepted": 3046,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 1074,
+            "queue_8": 42802,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2983,
+            "direct_gt256": 63
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 43.906,
+          "application_supply": {
+            "bulk_flows": 8,
+            "requested_bytes": 8388608,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              }
+            ]
+          }
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 397066240,
+          "tcp_mbps": 124.341,
+          "p99_ms": 344,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 41.4501,
+          "windows_original_rust_tx_cpu_lower_bound": 11.2969,
+          "relay_tailscaled_cpu_of_one_core_pct": 155.141,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 42667,
+            "queue_frames_submitted": 341139,
+            "queue_bytes_submitted": 445123228,
+            "queue_bytes_copied": 445123228,
+            "queue_short_calls": 0,
+            "direct_calls": 2359,
+            "direct_bytes_submitted": 181693,
+            "direct_frames_accepted": 2359,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 57,
+            "queue_8": 42610,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2319,
+            "direct_gt256": 40
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.547,
+          "application_supply": {
+            "bulk_flows": 4,
+            "requested_bytes": 2097152,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              }
+            ]
+          }
+        }
+      ],
+      "bare": {
+        "source_sha": "5a7ac278cf2031d998df9e50d5ba68495ade0889",
+        "group": "a",
+        "run_id": "45321409323",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 8x25s 8MiB, no added loss",
+        "bare_bulk_flows": 8,
+        "bare_requested_buffer_bytes": 8388608,
+        "bare_mbps": 538.307,
+        "bare_p99_ms": 203,
+        "reference_at_least_600": false,
+        "reference_at_least_800": false,
+        "product_legs": [
+          {
+            "stage": "A_default",
+            "mbps": 116.406,
+            "relative_to_bare_reference": 0.2162
+          },
+          {
+            "stage": "B_tx16",
+            "mbps": 115.743,
+            "relative_to_bare_reference": 0.215
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 105.928,
+            "relative_to_bare_reference": 0.1968
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 124.341,
+            "relative_to_bare_reference": 0.231
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": -7.923670907633329,
+      "b_cpu_per_gib_pct": 3.327141418700763
+    },
+    {
+      "run_id": 45321409323,
+      "job_id": 138201755047,
+      "group": "b",
+      "axis": "application_supply",
+      "legs": [
+        {
+          "stage": "B_tx16",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 1173487616,
+          "tcp_mbps": 350.53,
+          "p99_ms": 171,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 14.9545,
+          "windows_original_rust_tx_cpu_lower_bound": 13.5469,
+          "relay_tailscaled_cpu_of_one_core_pct": 204.997,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 126101,
+            "queue_frames_submitted": 1006250,
+            "queue_bytes_submitted": 1315631552,
+            "queue_bytes_copied": 1315631552,
+            "queue_short_calls": 0,
+            "direct_calls": 2786,
+            "direct_bytes_submitted": 216363,
+            "direct_frames_accepted": 2786,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 612,
+            "queue_8": 125489,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2737,
+            "direct_gt256": 49
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 37.063,
+          "application_supply": {
+            "bulk_flows": 8,
+            "requested_bytes": 8388608,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              }
+            ]
+          }
+        },
+        {
+          "stage": "A_default",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 1032273920,
+          "tcp_mbps": 327.875,
+          "p99_ms": 203,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 18.4955,
+          "windows_original_rust_tx_cpu_lower_bound": 14.4375,
+          "relay_tailscaled_cpu_of_one_core_pct": 205.053,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 110970,
+            "queue_frames_submitted": 887388,
+            "queue_bytes_submitted": 1157892656,
+            "queue_bytes_copied": 1157892656,
+            "queue_short_calls": 0,
+            "direct_calls": 2631,
+            "direct_bytes_submitted": 176906,
+            "direct_frames_accepted": 2631,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 92,
+            "queue_8": 110878,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2607,
+            "direct_gt256": 24
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 35.625,
+          "application_supply": {
+            "bulk_flows": 4,
+            "requested_bytes": 2097152,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              }
+            ]
+          }
+        },
+        {
+          "stage": "A_prime",
+          "candidate_enabled": false,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 1233240064,
+          "tcp_mbps": 391.458,
+          "p99_ms": 141,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 14.1892,
+          "windows_original_rust_tx_cpu_lower_bound": 13.625,
+          "relay_tailscaled_cpu_of_one_core_pct": 216.416,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 134488,
+            "queue_frames_submitted": 1075001,
+            "queue_bytes_submitted": 1384745744,
+            "queue_bytes_copied": 1384745744,
+            "queue_short_calls": 0,
+            "direct_calls": 2711,
+            "direct_bytes_submitted": 258737,
+            "direct_frames_accepted": 2711,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 221,
+            "queue_8": 134267,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2626,
+            "direct_gt256": 85
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 35.766,
+          "application_supply": {
+            "bulk_flows": 4,
+            "requested_bytes": 2097152,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              },
+              {
+                "rcvbuf_os": 2097152,
+                "requested_bytes": 2097152,
+                "sndbuf_os": 2097152
+              }
+            ]
+          }
+        },
+        {
+          "stage": "B_prime",
+          "candidate_enabled": true,
+          "compiled_rust_dll_sha256": "a0b7f95786e6a24625fd916cab4b9206ba6202a18c33db5b1c5026244ca4aff1",
+          "compiled_rust_source_sha": "bc87909a7aaa7a31bd70e85f2efa56af23f092df",
+          "comparison_axis": "application_supply",
+          "arm_rx_bytes": 1105215488,
+          "tcp_mbps": 322.608,
+          "p99_ms": 172,
+          "late_over_1s": 0,
+          "windows_original_process_cpu_s_per_gib": 17.7606,
+          "windows_original_rust_tx_cpu_lower_bound": 14.9062,
+          "relay_tailscaled_cpu_of_one_core_pct": 204.005,
+          "valid_160_echo": true,
+          "real_windows_npcap_64k_16_profile": false,
+          "h2312_factor": "path_ab",
+          "h2312_npf_service": {
+            "queue_calls": 119121,
+            "queue_frames_submitted": 947971,
+            "queue_bytes_submitted": 1239099095,
+            "queue_bytes_copied": 1239099095,
+            "queue_short_calls": 0,
+            "direct_calls": 2916,
+            "direct_bytes_submitted": 279134,
+            "direct_frames_accepted": 2916,
+            "direct_errors": 0,
+            "npf_queue_bytes": 16384,
+            "npf_queue_packets": 8
+          },
+          "h2313_npf_batch_shape": {
+            "queue_2_7": 1174,
+            "queue_8": 117947,
+            "queue_9_15": 0,
+            "queue_16": 0,
+            "direct_le256": 2824,
+            "direct_gt256": 92
+          },
+          "original_go_tls_rust_wal_stop": "PASS",
+          "stage_elapsed_s_including_tls_setup": 38.125,
+          "application_supply": {
+            "bulk_flows": 8,
+            "requested_bytes": 8388608,
+            "client_bulk_buffers_os": [
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              },
+              {
+                "rcvbuf_os": 8388608,
+                "requested_bytes": 8388608,
+                "sndbuf_os": 8388608
+              }
+            ]
+          }
+        }
+      ],
+      "bare": {
+        "source_sha": "5a7ac278cf2031d998df9e50d5ba68495ade0889",
+        "group": "b",
+        "run_id": "45321409323",
+        "scope": "same three VMs, WSL2/ARM relay, bare before product, 8x25s 8MiB, no added loss",
+        "bare_bulk_flows": 8,
+        "bare_requested_buffer_bytes": 8388608,
+        "bare_mbps": 1184.901,
+        "bare_p99_ms": 110,
+        "reference_at_least_600": true,
+        "reference_at_least_800": true,
+        "product_legs": [
+          {
+            "stage": "B_tx16",
+            "mbps": 350.53,
+            "relative_to_bare_reference": 0.2958
+          },
+          {
+            "stage": "A_default",
+            "mbps": 327.875,
+            "relative_to_bare_reference": 0.2767
+          },
+          {
+            "stage": "A_prime",
+            "mbps": 391.458,
+            "relative_to_bare_reference": 0.3304
+          },
+          {
+            "stage": "B_prime",
+            "mbps": 322.608,
+            "relative_to_bare_reference": 0.2723
+          }
+        ],
+        "note": "Temporal drift and protocol/MSS differences remain; reference is not a product qualification."
+      },
+      "b_goodput_pct": -6.421921418870003,
+      "b_cpu_per_gib_pct": 0.0930098792401246
+    }
+  ],
+  "checksum": {
+    "run_id": 45321513988,
+    "source": "17ade976bb33010d7341f5561985189a0e97f066",
+    "jobs": [
+      {
+        "job_id": 138200935003,
+        "rows": [
+          "H2361_CHECKSUM_CPU len=40 scalar_ns=11.038 wide_ns=9.082 delta_pct=-17.719 scalar_samples=[10.9885, 11.032, 11.0345, 11.041, 11.077, 11.163] wide_samples=[9.019, 9.0695, 9.0785, 9.0855, 9.0885, 9.108]",
+          "H2361_CHECKSUM_CPU len=64 scalar_ns=15.384 wide_ns=12.229 delta_pct=-20.507 scalar_samples=[15.272, 15.282, 15.38, 15.3875, 15.397, 15.4965] wide_samples=[12.1005, 12.1585, 12.2045, 12.2535, 12.2765, 12.374]",
+          "H2361_CHECKSUM_CPU len=128 scalar_ns=27.271 wide_ns=17.540 delta_pct=-35.682 scalar_samples=[27.141, 27.2505, 27.2585, 27.2835, 27.3105, 27.3315] wide_samples=[17.4915, 17.4955, 17.5325, 17.548, 17.661, 18.6765]",
+          "H2361_CHECKSUM_CPU len=512 scalar_ns=96.865 wide_ns=52.801 delta_pct=-45.491 scalar_samples=[96.616, 96.69, 96.8535, 96.877, 97.25, 97.6325] wide_samples=[52.538, 52.6355, 52.716, 52.8855, 52.9355, 56.4375]",
+          "H2361_CHECKSUM_CPU len=1200 scalar_ns=231.273 wide_ns=121.712 delta_pct=-47.373 scalar_samples=[227.2885, 229.339, 229.6385, 232.907, 243.948, 265.1825] wide_samples=[118.847, 119.6635, 120.5265, 122.8975, 125.5105, 130.3425]",
+          "H2361_CHECKSUM_CPU len=1421 scalar_ns=268.154 wide_ns=137.763 delta_pct=-48.626 scalar_samples=[266.9785, 267.7425, 268.012, 268.296, 270.0345, 272.412] wide_samples=[137.4225, 137.6205, 137.702, 137.8235, 137.964, 138.018]",
+          "H2361_CHECKSUM_CPU len=1460 scalar_ns=275.031 wide_ns=141.515 delta_pct=-48.546 scalar_samples=[273.924, 274.4825, 274.945, 275.118, 280.588, 313.72249999999997] wide_samples=[140.75, 141.258, 141.4525, 141.5775, 146.554, 146.95]"
+        ],
+        "test_results": [
+          "test result: ok. 22 passed; 0 failed; 1 ignored; 0 measured; 44 filtered out; finished in 0.01s",
+          "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 2.01s",
+          "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+        ]
+      },
+      {
+        "job_id": 138200935190,
+        "rows": [
+          "H2361_CHECKSUM_CPU len=40 scalar_ns=10.567 wide_ns=7.012 delta_pct=-33.643 scalar_samples=[9.942955, 10.299805, 10.552775, 10.58089, 10.63481, 10.63509] wide_samples=[6.92007, 6.93607, 6.999875, 7.023755, 7.069315, 7.15532]",
+          "H2361_CHECKSUM_CPU len=64 scalar_ns=15.439 wide_ns=8.122 delta_pct=-47.389 scalar_samples=[15.23218, 15.27178, 15.421785, 15.455225, 15.785515, 15.850035] wide_samples=[7.8943, 7.91442, 8.080705, 8.164145, 8.216265, 8.35499]",
+          "H2361_CHECKSUM_CPU len=128 scalar_ns=24.804 wide_ns=11.036 delta_pct=-55.510 scalar_samples=[24.792965, 24.795325, 24.798685, 24.81, 24.814645, 25.30454] wide_samples=[11.016545, 11.019545, 11.032185, 11.038865, 11.054025, 11.187305]",
+          "H2361_CHECKSUM_CPU len=512 scalar_ns=71.041 wide_ns=30.199 delta_pct=-57.490 scalar_samples=[70.902515, 70.951675, 71.02476, 71.05664, 71.45545, 71.615615] wide_samples=[30.08251, 30.123795, 30.16343, 30.235435, 30.277195, 30.331075]",
+          "H2361_CHECKSUM_CPU len=1200 scalar_ns=155.090 wide_ns=67.197 delta_pct=-56.672 scalar_samples=[154.995675, 155.018195, 155.089, 155.09108, 155.108555, 155.15808] wide_samples=[67.04533, 67.11221, 67.169015, 67.22585, 67.287935, 67.43114]",
+          "H2361_CHECKSUM_CPU len=1421 scalar_ns=178.270 wide_ns=80.433 delta_pct=-54.882 scalar_samples=[177.67366, 178.115835, 178.192635, 178.348315, 178.490565, 178.49656] wide_samples=[79.8672, 80.261535, 80.42250000000001, 80.442615, 80.49265999999999, 81.101915]",
+          "H2361_CHECKSUM_CPU len=1460 scalar_ns=190.799 wide_ns=82.917 delta_pct=-56.542 scalar_samples=[190.6983, 190.74374, 190.76478, 190.8341, 191.013385, 191.142315] wide_samples=[82.23859, 82.40974999999999, 82.444835, 83.38949999999998, 83.823235, 84.19128]"
+        ],
+        "test_results": [
+          "test result: ok. 22 passed; 0 failed; 1 ignored; 0 measured; 110 filtered out; finished in 0.02s",
+          "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 132 filtered out; finished in 1.31s",
+          "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s"
+        ]
+      }
+    ]
+  },
+  "decision": {
+    "H2347": "reject",
+    "H2349": "remove active candidate; unstable cross-group effect",
+    "H2358": "do not integrate; mixed QoS and CPU",
+    "H2359": "do not increase application supply as product optimization",
+    "H2361": "retain exact checksum in experimental product",
+    "H2364": {
+      "branch": "experiment/m0-029-throughput-arm-fair",
+      "source": "7a3e3099f73b6603a370e88fa754f65161ca4ea4",
+      "run_id": 45323267739,
+      "scope": "only platform ipv4_tcp.rs differs from H2336 product baseline",
+      "state": "running; no product performance PASS",
+      "baseline": "bc87909a7aaa7a31bd70e85f2efa56af23f092df"
+    }
+  }
+}
