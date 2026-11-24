@@ -7,3 +7,5 @@ User report: disconnect Normal -> Game2/4 connected but reverse injection zero u
 ```
 
 Exact native dual-ISA fixture: persistent installation ID, same one443 shared server, reverse-first TCP/UDP each whole-owner switch, same-account separate auto lease, Game4 hot selected-lane, original Health90 and exact joined Stop. Deliver only after real Linux receipt; same SOURCE Windows GUI via existing H2216 complete package job (GUI/owner self tests, physical Windows mixed switch NOT_RUN). No product tests have run yet.
+
+First test Action45426955665 Linux jobs failed before checkout: setup-go pin could not resolve. Use GitHub verified v5 commit 40f1582b2485089dde7abd97c1529aa768e1baff. Feature catalog exceeded 16KiB UTF-8 bound after new entries; compact JSON without changing fields. Product results still NOT_RUN.
