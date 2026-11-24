@@ -40,6 +40,8 @@ jobs:
       - name: Native same-source prerequisites
         run: |
           set -euo pipefail
+          bash -n tools/m0_plan029_linux_dual_native_build.sh tools/m0_linux_glibc231_build.sh tools/arm64_linux_netns_smoke.sh
+          python3 -m py_compile tools/m0_linux_glibc_abi.py tools/m0_linux_glibc231_perf.py
           test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm cmake binutils help2man iproute2 iptables iputils-ping iperf3 openssl

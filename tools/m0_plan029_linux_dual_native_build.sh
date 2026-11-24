@@ -95,61 +95,7 @@ export WBD_ISAL_SOURCE_SHA="$ISA_SOURCE"
   make -j2 && make install)
 test -s "$WBD_ISAL_PREFIX/lib/libisal.a"
 nm -g "$WBD_ISAL_PREFIX/lib/libisal.a" > "$WBD_ISAL_PREFIX/isal-symbols.txt"
-grep -E ' [TW] ec_encode_data
-rustup toolchain install 1.85.1 --profile minimal
-features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
-cargo +1.85.1 build --release --locked -p wbd-engine --features "$features"
-cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_game_lane::tests
-cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_fec2_live_rx::tests
-# Shared Linux protocol/core and bounded source policy, no Windows GUI/Direct claim.
-cargo +1.85.1 test --locked -p wbd-engine --features "$features" --lib v4_client_startup_padding::tests
-test -s target/release/libwbd_engine.so
-mkdir -p linux-plan029-public-bundle
-export CGO_ENABLED=1 GOOS=linux GOARCH="$GO_ARCH" GOTOOLCHAIN=local
-export CGO_LDFLAGS="-L$GITHUB_WORKSPACE/target/release -lwbd_engine"
-export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
-# Run ORIGINAL real Go TLS/crypto tests for both encrypted config
-# directions, bounded/truncated framing, v1 fail-closed and verified mode.
-# Pure original-Go protected TLS tests intentionally exclude the native
-# embedded-Go test tag: its unrelated raw-kernel probes require additional
-# fixture helpers. The real tagged native product still compiles/tests below.
-(cd legacy && go test -count=1 ./internal/realityfront -run '^TestH2202')
-(cd legacy && go test -count=1 -tags wbd_v4_embedded_go,wbd_v4_fec2_product ./internal/v4productcli)
-(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-plan029-public-bundle/wbd-v4-client" ./cmd/wbd-v4-client)
-(cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-plan029-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
-cp target/release/libwbd_engine.so linux-plan029-public-bundle/libwbd_engine.so
-(cd linux-plan029-public-bundle && sha256sum wbd-v4-client wbd-v4-server libwbd_engine.so > SHA256SUMS)
-if [[ "${WBD_LINUX_GLIBC_BUILD_BASELINE:-}" == 2.31-inner ]]; then
-  python3 tools/m0_linux_glibc_abi.py linux-plan029-public-bundle 2.31
-else
-  python3 tools/m0_linux_glibc_abi.py linux-plan029-public-bundle
-fi
-export WBD_BUILD_GLIBC="$(getconf GNU_LIBC_VERSION)"
-python3 - <<'PY'
-import hashlib,json,os,pathlib,platform
-p=pathlib.Path("linux-plan029-public-bundle")
-names=("wbd-v4-client","wbd-v4-server","libwbd_engine.so")
-hashes={n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in names}
-assert all((p/n).stat().st_size>100000 for n in names)
-assert platform.machine() in ("aarch64","x86_64")
-assert platform.machine()==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
-d={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
-   "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
-   "isa_l_source":"c387163fcbca62701d646149564c550c78a4f985",
-   "rust":"1.85.1","go":"1.23.12",
-   "build_glibc":os.environ["WBD_BUILD_GLIBC"],
-   "elf_version_needs":json.loads((p/"glibc-abi.json").read_text()),
-   "architecture":platform.machine(),"sha256":hashes,
-   "rust_native_fec_acceleration":True,
-   "original_go_faketcp":"11-source-locked-records",
-   "original_go_native_client_and_server":"all-current-v4productcli-overlay-files",
-   "native_server_cold_cohort":"exact protected epoch PLUS original adjacent 5tuple",
-   "scope":"NATIVE_LINUX_DUAL_ISA_BINARY_BUILD_ONLY",
-   "raw_tun_tls_app_stop":"NOT_RUN","android_vpn":"NOT_RUN","openwrt_device":"NOT_RUN"}
-p.joinpath("manifest.json").write_text(json.dumps(d,indent=2)+"\n")
-print("PLAN029_LINUX_GO_RUST_SOURCE_LOCKED_BUILD_ONLY_PASS arch="+platform.machine(),flush=True)
-PY
- "$WBD_ISAL_PREFIX/isal-symbols.txt"
+grep -E ' [TW] ec_encode_data$' "$WBD_ISAL_PREFIX/isal-symbols.txt"
 echo "PLAN029_NATIVE_ISAL_ARCHIVE_SYMBOL_PASS"
 rustup toolchain install 1.85.1 --profile minimal
 features=m0_v4_probe,m0_v4_embedded_go,m0_fec2_owner_probe,fec2_product_record,native_fec_acceleration
