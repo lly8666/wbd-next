@@ -569,8 +569,6 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
      if count==0{return Ok(StageWork{tunnel:0,captured,direct})}
      let mut meta=[(0u64,0u32,0usize);BATCH];
      let mut staged_pad=[0usize;BATCH]; // stack-only, exact source index
-     let mut lens=[0usize;BATCH];
-     let mut prepared=None;
      let mut native_off_loan=None;
      {
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
@@ -607,55 +605,38 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
                  staged_pad[i]=pad;
                  meta[i]=v3_queue_source(&mut e,source,budget,now,pad,MAX_IPV4)?;
              }
-             // The original M1 record lengths are now known. For a fitting
-             // multi-frame Normal batch, write the frozen bytes straight
-             // into Npcap's own final queue, not an intermediate frame slab.
-             for i in 0..count{lens[i]=FRAME_RECORD_OFFSET+meta[i].2;}
-             prepared=npf.prepare_batch(&lens[..count]);
              let keep_pending=!v3_native_off_loan(&e);
              let loan=v3_drain_source_loan(&mut e,now,&meta[..count],keep_pending,|i,wire|{
-                 let frame=if let Some(batch)=prepared.as_mut(){
-                     batch.frame_mut(i)
-                 }else{&mut frames[i][..]};
-                 frame[FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
+                 frames[i][FRAME_RECORD_OFFSET..FRAME_RECORD_OFFSET+wire.len()]
                      .copy_from_slice(wire);
              })?;
-             if keep_pending{
-                 e.tx_scratch=loan.recycle();
-             }else{
-                 native_off_loan=Some(loan);
-             }
+             if keep_pending{e.tx_scratch=loan.recycle();}
+             else{native_off_loan=Some(loan);}
+
          }
      }
+     let mut lens=[0usize;BATCH];
      let ack=counters.ack.load(Ordering::Acquire);
      for i in 0..count {
          let (_,seq,used)=meta[i];
-         let frame=if let Some(batch)=prepared.as_mut(){
-             batch.frame_mut(i)
-         }else{&mut frames[i][..]};
          let bytes=finish_bytes_in_place(Ipv4Tuple{
              src_ip:&cfg.local_ip,dst_ip:&cfg.peer_ip,
              src_port:cfg.local_port,dst_port:cfg.peer_port,
          },Presentation{ack32:ack,advertised_window:65535,
              ip_id:*ip_id,persona:PacketPersona::Windows11},
-             u64::from(seq),used,cfg.path_mtu as usize,&mut frame[14..])
+             u64::from(seq),used,cfg.path_mtu as usize,&mut frames[i][14..])
              .map_err(|_|INVALID)?;
          lens[i]=14+bytes.len();
-         frame[..6].copy_from_slice(&cfg.next_hop_mac);
-         frame[6..12].copy_from_slice(&cfg.source_mac);
-         frame[12..14].copy_from_slice(&0x0800u16.to_be_bytes());
+         frames[i][..6].copy_from_slice(&cfg.next_hop_mac);
+         frames[i][6..12].copy_from_slice(&cfg.source_mac);
+         frames[i][12..14].copy_from_slice(&0x0800u16.to_be_bytes());
          *ip_id=ip_id.wrapping_add(1);
      }
      let (_,last_seq,last_used)=meta[count-1];
      counters.tx_seq.store(last_seq.wrapping_add(last_used as u32),Ordering::Release);
-     let result=if let Some(batch)=prepared{
-         batch.send()
-     }else{
-         let mut ready:[&[u8];BATCH]=[&[];BATCH];
-         for i in 0..count {ready[i]=&frames[i][..lens[i]];}
-         let result=npf.send_batch(&ready[..count]);
-         result
-     };
+     let mut ready:[&[u8];BATCH]=[&[];BATCH];
+     for i in 0..count {ready[i]=&frames[i][..lens[i]];}
+     let result=npf.send_batch(&ready[..count]);
      if result.accepted_prefix>0{
          counters.ack_sent.store(ack,Ordering::Release);
      }
@@ -834,17 +815,9 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
  )->Result<bool,i32>{
      let mut wire=[0u8;MAX_IPV4];
      let ack=counters.ack.load(Ordering::Acquire);
-     // Both polls belong to the same original owner. Preserve feedback
-     // priority; only if no feedback was staged may repair be considered.
-     // Neither the NPF syscall nor its settlement runs under this guard.
-     let (feedback,repair)={
+     let feedback={
          let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
-         let feedback=m2_next_feedback_entry(
-             &mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?;
-         let repair=if feedback.is_none(){
-             m2_next_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
-         }else{None};
-         (feedback,repair)
+         m2_next_feedback_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
      };
      if let Some((used,seq,pn))=feedback{
          let mut frame=[0u8;MAX_LINK];
@@ -864,6 +837,10 @@ const POST_INGRESS_RETURN_QUANTUM:usize=8;
          if outcome.error.is_some(){return Err(BAD_STAGE)}
          return Ok(true)
      }
+     let repair={
+         let mut e=lock_owner(lane,counters,LockDirection::Tx)?;
+         m2_next_repair_entry(&mut e,cfg.epoch,cfg.luid,cfg.ifindex,&mut wire)?
+     };
      if let Some((used,seq,pn))=repair{
          let mut frame=[0u8;MAX_LINK];
          let raw=packet_frame(cfg,seq,ack,
