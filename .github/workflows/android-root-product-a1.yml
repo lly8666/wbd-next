@@ -191,6 +191,30 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: D0 early specialty fixture admission before expensive native builds
+        if: env.WBD_ANDROID_SPECIALTY == '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          go run android/root-native/ci/check-specialty-source.go -- \
+            android/root-native/ci/b90-android-specialty.go \
+            android/root-native/ci/b91-postauth-android.go
+          bash -n android/root-app/ci/x86-android-specialty.sh
+          python3 -m py_compile android/root-app/ci/b90-dns-fixture.py android/root-app/ci/b94-uid-echo.py
+          bash android/root-app/ci/traffic-fixture/build.sh
+          printf '%s\n' "$GITHUB_SHA" >out/android-traffic-fixture/SOURCE
+          (cd out/android-traffic-fixture && sha256sum traffic-fixture.apk host-smoke.txt SOURCE >SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: env.WBD_ANDROID_SPECIALTY == '1'
+        with:
+          name: android-specialty-traffic-fixture-${{ github.sha }}
+          path: |
+            out/android-traffic-fixture/traffic-fixture.apk
+            out/android-traffic-fixture/host-smoke.txt
+            out/android-traffic-fixture/SOURCE
+            out/android-traffic-fixture/SHA256SUMS
+          retention-days: 14
+          if-no-files-found: error
       - name: D0 Build same-source ARM64 release and x86_64 CI-only original Go/Rust
         shell: bash
         run: bash android/root-native/build-source-locked.sh
@@ -514,6 +538,15 @@ jobs:
         with:
           name: android-b2-pinned-cn-geosite-${{ github.sha }}
           path: out/android-root-app-cn
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: android-specialty-traffic-fixture-${{ github.sha }}
+          path: out/android-traffic-fixture
+      - name: D2-S1 verify shared ordinary App fixture from this exact SHA
+        shell: bash
+        run: |
+          test "$(cat out/android-traffic-fixture/SOURCE)" = "$GITHUB_SHA"
+          (cd out/android-traffic-fixture && sha256sum -c SHA256SUMS)
       - name: D2-S1 admit exact Java and safe Linux/Android script syntax
         shell: bash
         run: |
@@ -535,7 +568,6 @@ jobs:
           bash experiments/android-root-probe/ci/build-app.sh
           test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
           rm -f out/apk/host-tls.key
-          if [[ "$WBD_ANDROID_SPECIALTY" == 1 ]];then bash android/root-app/ci/traffic-fixture/build.sh;fi
       - name: D2-S1 prepare pinned x86 Android16 KSU3.3.1 emulator
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh

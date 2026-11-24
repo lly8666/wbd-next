@@ -1,3 +1,7 @@
+## B96｜专项编译解阻与同源 fixture 复用（当前）
+
+B95 `6545a6940d7973fd8b56d6e6beebb2a67fe8380a` [Action 45432269092](https://github.com/lly8666/wbd-next/actions/runs/45432269092) 6/1/10，CI adapter `route:func` 误写导致编译失败，全部 guest NOT_RUN。B96 修正声明并增加早期 AST/bash/Python/Java fixture admission；九 guest 复用同 SOURCE+SHA256 的普通 App APK；原 B95 DNS/前台 UID/7模式逐 socket TX/Stop 验收继续执行。生产路径不变。详见 [B96 devlog](../devlog/android-root-probe/20261125-b96-specialty-build-unblock.md)。
+
 ## B95｜真实前台 UID 与 DNS dump 默认属性（当前）
 
 B94 `881e543e16958478e9f3d975d4997eecfa5d6292` [Action 45427547974](https://github.com/lly8666/wbd-next/actions/runs/45427547974) 11/9/6；七模式真实 TLS/Admission/lease/原 Android native M4/group/Stop PASS，FEC pending PASS，不是远端 wire；普通 App group Java/all AF_INET 双向 TUN 各一次 PASS，其余及物理 baseline EPERM；系统 DNS 规则/NAT/dummy 已装入，kernel dump attr14 导致 readback/cleanup 未证。B95 仅接受内核 disabled suppressor sentinel，非默认仍拒绝；真实普通 App 可见 Activity + foreground importance、UID 两轮 socket + 物理前后、逐 socket native TX 和 DNS owner/query/Stop receipts。九专项隔离并行，详见 [B95 devlog](../devlog/android-root-probe/20261124-b95-foreground-uid-and-dns-dump.md)。不冒称远端 M4/READY 自动恢复/实体 ARM64。

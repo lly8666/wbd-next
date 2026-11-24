@@ -339,7 +339,7 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   Tun:tun.f,TunName:dev,ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
   HealthSeconds:15,PhysicalDNSUpstream:c.androidPhysicalDNSUpstream}
  ctx,cancel:=context.WithTimeout(context.Background(),75*time.Second);defer cancel()
- route:func(lease string)(func()error,error){return androidRootRouteAfterNative(c,tun,lease)}
+ route:=func(lease string)(func()error,error){return androidRootRouteAfterNative(c,tun,lease)}
  send:=func(probe string)error{
   qctx,qcancel:=context.WithTimeout(ctx,12*time.Second);defer qcancel()
   return b91Instrument(qctx,uid,"-e","uid_probe",probe)

@@ -22,8 +22,11 @@ public final class TrafficInstrumentation extends Instrumentation {
         android.app.ActivityManager.RunningAppProcessInfo info=new android.app.ActivityManager.RunningAppProcessInfo();
         for(int n=0;n<30;n++){
             android.app.ActivityManager.getMyMemoryState(info);
+            // Read the real window state on its UI thread, not the instrumentation worker.
+            final boolean[] focused={false};
+            runOnMainSync(()->focused[0]=foreground.hasWindowFocus());
             if(info.importance==android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
-                    &&foreground.hasWindowFocus()){
+                    &&focused[0]){
                 android.util.Log.i("WBD_UID_TEST","B95_FOREGROUND_UID "+Process.myUid()+" importance="+info.importance);
                 return;
             }
