@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2351,
-  "checkpoint_sha": "c3ba889a55067bb96c5af599d1f902877aef9bab",
+  "sequence": 2357,
+  "checkpoint_sha": "a1d0a99c06da035aa467cf64a12ec88ec326f7d8",
   "progress": "verifying",
   "task_id": "M0-PLAN029-THROUGHPUT",
-  "current_task": "PLAN029 P0 H2336同步OFF loan两组CPU/GiB下降已保留实验基线；H2338参数不全局默认，H2339不集成。H2347原H2326独立复验及H2349 ready-batch arena并行校准交叉对照。",
-  "why_now": "H2326原A′严重漂移，不能断言负优化；同VM裸校准、ABBA/BAAB减少一阶时间漂移，继续真实数据驱动开发。",
+  "current_task": "PLAN029 P0 H2348精确native/maximum PASS；H2347/H2349校准后首腿ARM超时，H2352夹具修正；H2353历史RX与H2355累计首发独立复验在途；H2354本地slab归还独立候选。",
+  "why_now": "历史runner漂移不能当确定代码负收益；用修正校准与已成功旧联网夹具独立比较，继续同步原M1真实热路径开发。",
   "done_when": "继续锁真实Source与原GoTLS/Rust/签名Npcap Wintun ARM native TUN，P0独立CPU/容量/首瓶颈达真实稳定有用速率和QoS才考虑默认；P1 FEC OFF 1/5%单次修复候选/实际copied及对端字节/P99/ownedStop并留无效5%重测边界；P2最高固定Maximum真实parity送达/恢复/外层带宽头寸，1/5%目标与0%真实容量单独验；未证实不得把性能或网络写成PASS。",
-  "next_action": "查H2347 45318051744、H2349 45318234104、H2348 native 45318175791/maximum 45318176279；首个失败或完整四腿+bare capacity分别归档；保留实测收益后推进高线供给/P1/P2。",
+  "next_action": "查H2347 45318051744/H2349 45318234104 Windows首个失败；H2353 45319542287、H2355 45319776413实际腿；H2354 native45319638991/maximum45319638790。用已证夹具复验原H2326/H2348，不重复无效派发。",
   "unverified": true,
   "last_tested_source": "7d651fcd5c897d5c2178db10b93e13b6ed14f9d5",
   "evidence_refs": [],
@@ -28,5 +28,5 @@
     "docs/evidence/M0/20261124-H2336-H2338-H2339-PARALLEL-NATIVE-AB.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2336已保留实验基线bc87909，H2348候选叠加其上；H2326 INCONCLUSIVE非确定负优化，H2338 opt-in、H2339未集成；main产品不变，600–800/弱网/maximum/物理资格仍OPEN。"
+  "partial_summary": "H2336仍保留实验基线；H2348原生PASS性能未资格，H2347/H2349首腿未完成；H2352静态PASS，H2353/H2355真网在途，H2354独立原生在途。P0高线/P1/P2/物理资格OPEN。"
 }
