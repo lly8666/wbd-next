@@ -3,7 +3,7 @@
 name: H2314 Windows Fixed maximum 20 parity original owner unit
 on:
   push:
-    branches: ['experiment/m0-029-throughput-arm-fair']
+    branches: ['experiment/m0-029-throughput-arm-fair','experiment/m0-029-rx-borrow']
     paths:
       - '.github/workflows/qa-h2314-windows-fixed-maximum-service-unit.yml'
       - 'tests/test_m0_h2314_maximum_service.py'

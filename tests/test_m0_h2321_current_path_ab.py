@@ -53,6 +53,9 @@ class CurrentPathAB(unittest.TestCase):
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"tx16_npf64_profile"},clear=True):
             self.assertEqual(ab.path_ab_candidate_source(),ab.PATH_AB_SETTLEMENT_BASELINE)
             self.assertTrue(ab.path_ab_candidate_features().endswith(",h2291_windows_tx_service"))
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"rx_borrowed_capture"},clear=True):
+            self.assertEqual(ab.path_ab_axis(),"rx_borrowed_capture")
+            self.assertEqual(ab.path_ab_candidate_features(),ab.PATH_AB_FEATURES)
         with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":"unapproved"},clear=True):
             with self.assertRaises(ValueError):
                 ab.path_ab_baseline()

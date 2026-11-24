@@ -194,6 +194,15 @@ struct NpfServiceTrace {
     direct_errors: u64,
 }
 
+/// The capture pointer is valid until the next read on the same pcap_t.
+/// The mutable receiver borrow makes retaining it across that read impossible.
+pub enum BorrowedCapture<'a> {
+    Frame(&'a [u8]),
+    NoPacket,
+    Skipped,
+    EndOfStream,
+}
+
 /// Single RX-worker use only; raw pcap_t and DLL remain owned by the Go
 /// scoped handoff. The Go reader MUST have stopped before construction.
 /// The struct is Send but deliberately not Sync.
@@ -215,30 +224,39 @@ impl NpcapRx {
         let h = unsafe { (self.fns.get_event)(self.handle.as_ptr()) } as usize;
         if h == 0 { Err(NativeIoError::UnsupportedEvent) } else { Ok(h) }
     }
-    /// One ready packet maximum. Copies only caplen into the owner's reused
-    /// slab; never retains pcap_next_ex's temporary pointer across calls.
-    pub fn read(&mut self, out: &mut [u8]) -> Result<ReadResult, NativeIoError> {
+    /// Loan one ready frame until the next call on this single RX handle.
+    /// Parsing and the M1 copy can consume it without an intermediate slab.
+    pub fn read_borrowed(&mut self) -> Result<BorrowedCapture<'_>, NativeIoError> {
         let mut header: *const PcapHeader = ptr::null();
         let mut frame: *const u8 = ptr::null();
-        let rc = unsafe {
-            (self.fns.next_ex)(self.handle.as_ptr(), &mut header, &mut frame)
-        };
+        let rc = unsafe { (self.fns.next_ex)(self.handle.as_ptr(), &mut header, &mut frame) };
         match rc {
-            0 => Ok(ReadResult::NoPacket),
-            -2 => Ok(ReadResult::EndOfStream),
+            0 => Ok(BorrowedCapture::NoPacket),
+            -2 => Ok(BorrowedCapture::EndOfStream),
             -1 => Err(NativeIoError::CaptureFailed),
             1 => {
-                if header.is_null() || frame.is_null() { return Ok(ReadResult::Skipped); }
-                let meta = unsafe { &*header };
-                let len = meta.caplen as usize;
-                if len == 0 || len > MAX_NPF_FRAME || meta.caplen > meta.len {
-                    return Ok(ReadResult::Skipped);
+                if header.is_null() || frame.is_null() { return Ok(BorrowedCapture::Skipped); }
+                let meta=unsafe{&*header};
+                let len=meta.caplen as usize;
+                if len==0 || len>MAX_NPF_FRAME || meta.caplen>meta.len {
+                    return Ok(BorrowedCapture::Skipped);
                 }
-                if len > out.len() { return Err(NativeIoError::BufferTooSmall); }
-                unsafe { ptr::copy_nonoverlapping(frame, out.as_mut_ptr(), len) };
-                Ok(ReadResult::Frame(len))
+                Ok(BorrowedCapture::Frame(unsafe{std::slice::from_raw_parts(frame,len)}))
             }
             _ => Err(NativeIoError::CaptureFailed),
+        }
+    }
+    /// Existing copying interface for other owners, with the same receipt.
+    pub fn read(&mut self, out: &mut [u8]) -> Result<ReadResult, NativeIoError> {
+        match self.read_borrowed()? {
+            BorrowedCapture::Frame(frame) => {
+                if frame.len()>out.len(){return Err(NativeIoError::BufferTooSmall)}
+                out[..frame.len()].copy_from_slice(frame);
+                Ok(ReadResult::Frame(frame.len()))
+            }
+            BorrowedCapture::NoPacket=>Ok(ReadResult::NoPacket),
+            BorrowedCapture::Skipped=>Ok(ReadResult::Skipped),
+            BorrowedCapture::EndOfStream=>Ok(ReadResult::EndOfStream),
         }
     }
 }
@@ -818,6 +836,22 @@ mod tests {
         assert_eq!(QUEUE_BYTES.load(Ordering::SeqCst),3*(16+IPV4.len()));
         drop(tx);
         assert_eq!(QUEUE_FREES.load(Ordering::SeqCst),1);
+    }
+    #[test]
+    fn native_rx_borrowed_capture_uses_original_bytes_and_copy_wrapper() {
+        let fns=NpcapFns {next_ex,send_packet,get_event,
+            queue_alloc:None,queue_transmit:None,queue_destroy:None};
+        let mut rx=unsafe{NpcapRx::from_borrowed(1,fns).unwrap()};
+        match rx.read_borrowed().unwrap(){
+            BorrowedCapture::Frame(frame)=>{
+                assert_eq!(frame,&IPV4);
+                assert_eq!(frame.as_ptr(),IPV4.as_ptr());
+            }
+            _=>panic!("expected original captured frame"),
+        }
+        let mut out=[0u8;100];
+        assert_eq!(rx.read(&mut out),Ok(ReadResult::Frame(IPV4.len())));
+        assert_eq!(&out[..IPV4.len()],&IPV4);
     }
     #[test]
     fn captured_frame_copied_into_owner_scratch_and_send_prefix() {

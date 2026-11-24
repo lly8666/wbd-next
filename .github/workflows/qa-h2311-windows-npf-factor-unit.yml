@@ -2,7 +2,7 @@
 name: H2311 Windows NPF/TX two-factor isolation native unit
 on:
   push:
-    branches: ['experiment/m0-029-throughput-arm-fair']
+    branches: ['experiment/m0-029-throughput-arm-fair','experiment/m0-029-rx-borrow']
     paths:
       - '.github/workflows/qa-h2311-windows-npf-factor-unit.yml'
       - 'crates/wbd-platform/src/windows_native_io.rs'
