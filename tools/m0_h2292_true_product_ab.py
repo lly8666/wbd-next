@@ -27,6 +27,18 @@ LEGS=("A_default","B_tx16","A_prime")  # legacy relay stage IDs; B is path candi
 # use the same TX8/NPF16KiB and the same current Go executable/ARM peer.
 PATH_AB_BASELINE="7222b4739443dbb7ff9b322f186dcf651b54490f"
 PATH_AB_FEATURES="m0_v4_embedded_go,m0_v4_probe,m0_fec2_owner_probe,fec2_product_record,h2311_windows_npf_trace"
+PATH_AB_SETTLEMENT_BASELINE="6fa10d75e3b7f23f909252e2737948911d3eb64c"
+
+def path_ab_baseline():
+    source=os.environ.get("WBD_H2321_BASELINE_SOURCE",PATH_AB_BASELINE)
+    if source not in (PATH_AB_BASELINE,PATH_AB_SETTLEMENT_BASELINE):
+        raise ValueError("unapproved native path A/B baseline")
+    return source
+
+def path_ab_axis():
+    return ("firstsend_settlement_and_control_poll" if
+            path_ab_baseline()==PATH_AB_SETTLEMENT_BASELINE else
+            "firstsend_copy_and_M1_ready_batch")
 
 ROOT=pathlib.Path("h2292-out")
 H2286=pathlib.Path("h2286-out")
@@ -129,7 +141,7 @@ def verify_binary_archive():
         current=os.environ["GITHUB_SHA"]
         require(CANDIDATE_BUILD_SHA==current==src["source_sha"]==
                 src["original_go_exe_source_sha"]==frozen["source_sha"] and
-                default["source_sha"]==PATH_AB_BASELINE and
+                default["source_sha"]==path_ab_baseline() and
                 src["trial_feature"]=="H2321_READY_PATH" and
                 default["feature"]=="H2321_PRE_OPTIMIZATION" and
                 src["feature_set"]==default["feature_set"]==PATH_AB_FEATURES and
@@ -266,8 +278,8 @@ def win_trial(group,relay,arm,ready):
                 maybe_copy(H2286/n,ROOT/tag/n)
             r={"stage":tag,"candidate_enabled":tuned,
                "compiled_rust_dll_sha256":new_sha if tuned else old_sha,
-               "compiled_rust_source_sha":(CANDIDATE_BUILD_SHA if tuned or factor!="path_ab" else PATH_AB_BASELINE),
-               "comparison_axis":"firstsend_copy_and_M1_ready_batch" if factor=="path_ab" else factor,
+               "compiled_rust_source_sha":(CANDIDATE_BUILD_SHA if tuned or factor!="path_ab" else path_ab_baseline()),
+               "comparison_axis":path_ab_axis() if factor=="path_ab" else factor,
                "arm_rx_bytes":receipt["product_tcp"]["bulk_remote_received_bytes"],
                "tcp_mbps":receipt["product_tcp"]["bulk_receiver_goodput_mbps"],
                "p99_ms":receipt["product_tcp"]["sparse_tcp_rtt_p99_ms"],
@@ -296,7 +308,7 @@ def win_trial(group,relay,arm,ready):
                 "candidate_binary_source_sha":CANDIDATE_BUILD_SHA,
                 "original_go_exe_source_sha":(os.environ["GITHUB_SHA"] if h2312_mode()=="path_ab"
                     else "c5066db61fc51bafd7c2ad2def3029e615efa777"),
-                "baseline_binary_source_sha":(PATH_AB_BASELINE if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA),
+                "baseline_binary_source_sha":(path_ab_baseline() if h2312_mode()=="path_ab" else CANDIDATE_BUILD_SHA),
                 "status":"PASS_H2292_SAME_WINDOWS_VM_ORIGINAL_GO_TLS_RUST_A_B_A_PRIME_SCOPED",
                 "stages":results,"comparison":{
                     "B_vs_same_vm_baseline_goodput_pct":round(

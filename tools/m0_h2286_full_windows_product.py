@@ -67,7 +67,7 @@ def assert_original_binaries():
     factor=os.environ.get("WBD_H2312_FACTOR","legacy")
     require(factor in ("legacy","npf_only","tx_only","path_ab"),"H2312_ALLOWED_PRODUCT_SELECTOR")
     if factor=="path_ab":
-        from m0_h2292_true_product_ab import PATH_AB_BASELINE,PATH_AB_FEATURES
+        from m0_h2292_true_product_ab import path_ab_baseline,PATH_AB_FEATURES
         go_source=os.environ["GITHUB_SHA"]
     else:
         go_source="c5066db61fc51bafd7c2ad2def3029e615efa777"
@@ -104,7 +104,7 @@ def assert_original_binaries():
             "H2312_NPF8_16_TRACE" if factor=="npf_only" else "H2312_NPF16_64_TRACE")
         if factor=="path_ab":
             expected_base="H2321_PRE_OPTIMIZATION"
-            compiled_source=PATH_AB_BASELINE
+            compiled_source=path_ab_baseline()
             require(baseline["feature_set"]==PATH_AB_FEATURES,"H2321_BASELINE_BUILD_PROFILE")
         require(baseline["source_sha"]==compiled_source and
                 baseline["feature"]==expected_base and
