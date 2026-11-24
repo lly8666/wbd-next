@@ -1776,7 +1776,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4.go",
-      "result_blob": "cacf48971fa94f1f436793a3a4fb1b07c1eecafa"
+      "result_blob": "99950ebbdeb816497852d83bf5c5a9608aa26492"
     },
     {
       "kind": "create",
@@ -1795,7 +1795,7 @@
       "kind": "create",
       "path": "internal/realityfront/admission_v4_test.go",
       "overlay_path": "r0/go_overlay/internal/realityfront/admission_v4_test.go",
-      "result_blob": "86fce82e7eba6947e448589369faed881eeebf34"
+      "result_blob": "a9156b5061e3b5c20510f1bf4740d5edb318b67c"
     },
     {
       "kind": "create",
@@ -1863,7 +1863,7 @@
       "kind": "create",
       "path": "internal/v4productcli/game_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/game_linux.go",
-      "result_blob": "e55e553a28949c8b55ed75079cb5946848ea6e02"
+      "result_blob": "7dad8ed70f4e03a7c8d0d72599ea26de0c38d43b"
     },
     {
       "kind": "create",

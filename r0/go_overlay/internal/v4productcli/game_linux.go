@@ -707,35 +707,12 @@ many independently authenticated groups. All untrusted packets are still
 delivered only to the original Go FakeTCP cold handler; native Rust owns
 all detached DATA. No new transport, FEC or per-packet Go forwarding.
 */
-// A protected epoch identifies the logical Game owner, not a cold attempt.
-// After a lossy original TLS reply a former attempt may leave a single
-// authenticated lane pending while a later generation starts with the SAME
-// principal/tunnel/epoch. Grouping only by the protected owner could pair
-// stale lane 1 with a new lane 2 and announce a false native M4 cohort.
-// Original clients bind consecutive local ports, but NAT may rewrite
-// each independently. The tuple is only a useful exact-match hint;
-// a protected fresh lane1 anchors the current incomplete cohort.
-type originalGameColdFlowKey struct {
+// A logical epoch survives a reconnect. The existing authenticated lane1
+// incarnation instead identifies this exact cold group. NAT may rewrite
+// every source port/IP; no tuple arithmetic is needed for group admission.
+type originalGameColdAttemptKey struct {
     cohort realityfront.V4LinuxGameCohortID
-    clientIP [4]byte
-    serverIP [4]byte
-    serverPort uint16
-    firstClientPort uint16
-}
-func originalGameColdFlowIdentity(
-    cohort realityfront.V4LinuxGameCohortID,id uint8,flow faketcp.ServerFlow,
-)(originalGameColdFlowKey,error){
-    n:=int(cohort.Lanes)
-    ordinal:=int(id)
-    first:=int(flow.ClientPort)-ordinal+1
-    if (n!=2&&n!=4)||ordinal<1||ordinal>n||
-        first<1||first+n-1>65535||flow.ServerPort==0 {
-        return originalGameColdFlowKey{},realityfront.ErrAdmissionParams
-    }
-    return originalGameColdFlowKey{
-        cohort:cohort,clientIP:flow.ClientIP,serverIP:flow.ServerIP,
-        serverPort:flow.ServerPort,firstClientPort:uint16(first),
-    },nil
+    attempt [16]byte
 }
 type originalGameCohortPending struct{
     created time.Time
@@ -753,7 +730,7 @@ type originalGameCohortLive struct{
     managedFECProfile uint8
 }
 func stageOriginalAuthenticatedGameLane(
-    groups map[originalGameColdFlowKey]*originalGameCohortPending,
+    groups map[originalGameColdAttemptKey]*originalGameCohortPending,
     lane *realityfront.V4LinuxGameAuthenticatedLane,now time.Time,
     retireIncomplete func(*realityfront.V4LinuxGameAuthenticatedLane),
 )(realityfront.V4LinuxGameCohortID,[]*realityfront.V4LinuxGameAuthenticatedLane,error){
@@ -763,35 +740,17 @@ func stageOriginalAuthenticatedGameLane(
     if err!=nil{return zero,nil,err}
     n:=int(key.Lanes)
     if n!=2&&n!=4{return zero,nil,realityfront.ErrAdmissionUnsupported}
-    flow:=lane.Association().Flow()
-    cold,err:=originalGameColdFlowIdentity(key,id,flow)
-    if err!=nil{
-        // A NAT can even map a sibling to a port at the numerical edge.
-        cold=originalGameColdFlowKey{cohort:key,clientIP:flow.ClientIP,
-            serverIP:flow.ServerIP,serverPort:flow.ServerPort,firstClientPort:flow.ClientPort}
-    }
-    fresh,e:=lane.ProtectedFreshGroupRequested()
+    attempt,e:=lane.GameColdAttempt()
     if e!=nil{return key,nil,e}
-    // A newly authenticated lane1 supersedes incomplete earlier attempts;
-    // the live native group is not in this map and is never retired here.
-    if id==1&&fresh{
-        for k,g:=range groups{
-            if k.cohort!=key||k.serverIP!=flow.ServerIP||k.serverPort!=flow.ServerPort||g.lanes[1]==nil{continue}
-            delete(groups,k)
-            for _,old:=range g.lanes{retireIncomplete(old)}
-        }
-    }
-    // Preserve the exact tuple hint when available. If NAT broke
-    // adjacency, use the unique matching protected pending cohort.
-    // No unauthenticated port or SYN grants a lane membership.
-    if groups[cold]==nil{
-        var candidate originalGameColdFlowKey
-        matches:=0
-        for k,g:=range groups{
-            if k.cohort!=key||k.serverIP!=flow.ServerIP||k.serverPort!=flow.ServerPort||g.lanes[id]!=nil{continue}
-            candidate=k;matches++
-        }
-        if matches==1{cold=candidate}
+    cold:=originalGameColdAttemptKey{cohort:key,attempt:attempt}
+    // A current authenticated fresh attempt can retire only the incomplete
+    // groups from older attempts of the same logical tunnel. The live
+    // native group is stored separately and never retired here.
+    for k,g:=range groups{
+        if k.cohort.Principal!=key.Principal||k.cohort.TunnelID!=key.TunnelID||
+            k.cohort.Epoch!=key.Epoch||k.attempt==attempt{continue}
+        delete(groups,k)
+        for _,old:=range g.lanes{retireIncomplete(old)}
     }
     group:=groups[cold]
     if group==nil{
@@ -800,9 +759,7 @@ func stageOriginalAuthenticatedGameLane(
         }
         groups[cold]=group
     }
-    // A simultaneous same-identity successor carrying an already occupied
-    // lane cannot be distinguished using SYN order. Reject the ambiguity,
-    // NEVER mix old/new exporter incarnations into one GameAdapter.
+    // One authenticated member per lane in this exact cold attempt.
     if group.lanes[id]!=nil{return key,nil,realityfront.ErrAdmissionParams}
     group.lanes[id]=lane
     if len(group.lanes)!=n{return key,nil,nil}
@@ -902,7 +859,7 @@ func runGameMultiServer(
     failed:=make(chan error,1)
     var mu sync.Mutex
     seen:=make(map[*faketcp.ServerAssociation]bool,32)
-    pending:=make(map[originalGameColdFlowKey]*originalGameCohortPending)
+    pending:=make(map[originalGameColdAttemptKey]*originalGameCohortPending)
     active:=make(map[realityfront.V4LinuxGameCohortID]*originalGameCohortLive)
     // Normal and Game share THIS listener, table and native TUN reader.
     // Normal keys deliberately exclude epoch (successor replaces only same
@@ -1336,10 +1293,9 @@ func runGameMultiServer(
             // Physical IP/MTU changes remain an independent full-group hint.
             freshGroup,e:=lane.ProtectedFreshGroupRequested()
             if e!=nil{rejectLane(lane);continue}
-            fullGroupPending:=false
-            for candidate:=range pending{
-                if candidate.cohort==coldKey{fullGroupPending=true;break}
-            }
+            attempt,e:=lane.GameColdAttempt()
+            if e!=nil{rejectLane(lane);continue}
+            fullGroupPending:=pending[originalGameColdAttemptKey{cohort:coldKey,attempt:attempt}]!=nil
             if freshGroup&&coldKey.Lanes==4{
                 log.Printf("V4_PUBLIC_GAME_FULL_GROUP_PROTECTED_EPOCH_ZERO role=server lane=%d client_port=%d old_group_preserved=1",
                     laneID,lane.Association().Flow().ClientPort)

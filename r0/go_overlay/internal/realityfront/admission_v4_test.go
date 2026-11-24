@@ -1341,3 +1341,25 @@ func TestH2216RealV4TLSCertificateVerifySwitch(t *testing.T) {
         }
     }
 }
+
+// Exercise the real epoch reservation, not source-port heuristics. The
+// first protected reply can precede its outer ACK, and fresh attempts
+// sharing the logical epoch must acquire a different server-local marker.
+func TestH2401GameColdAttemptTracksFreshLane1BeforeReply(t *testing.T){
+ store,err:=NewV4EpochStore(8)
+ if err!=nil{t.Fatal(err)}
+ tunnel:=bytes.Repeat([]byte{1},16)
+ zero:=[16]byte{}
+ var first,sibling,retry,next [16]byte
+ epoch,nonce,commit1,err:=store.prepare("game",tunnel,1,zero,bytes.NewReader(bytes.Repeat([]byte{2},32)),true,&first)
+ if err!=nil||first!=nonce||first==zero{t.Fatalf("first attempt=%x nonce=%x err=%v",first,nonce,err)}
+ _,_,commit2,err:=store.prepare("game",tunnel,2,epoch,bytes.NewReader(bytes.Repeat([]byte{3},16)),true,&sibling)
+ if err!=nil||sibling!=first{t.Fatalf("sibling before lane1 final ACK: %x err=%v",sibling,err)}
+ commit1(true);commit2(true)
+ epoch2,_,finish,err:=store.prepare("game",tunnel,1,zero,bytes.NewReader(bytes.Repeat([]byte{4},16)),true,&retry)
+ if err!=nil||epoch2!=epoch||retry==first||retry==zero{t.Fatalf("retry marker=%x epoch=%x err=%v",retry,epoch2,err)}
+ finish(true)
+ _,_,finish2,err:=store.prepare("game",tunnel,2,epoch,bytes.NewReader(bytes.Repeat([]byte{5},16)),true,&next)
+ if err!=nil||next!=retry{t.Fatalf("retry sibling=%x err=%v",next,err)}
+ finish2(true)
+}

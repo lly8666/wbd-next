@@ -336,6 +336,7 @@ type V4ServerSession struct {
     // admission; single-lane Game4 reauth explicitly offers its old Epoch.
     // Freeze this at successful protected TLS+M1 Commit for cohort routing.
     verifiedRequestedFreshEpoch bool
+    verifiedGameAttempt [16]byte // server-local first-lane incarnation; never serialized
     verifiedCold V4ColdSessionSnapshot
     verifiedPolicy AdmissionPolicy // original verified TLS policy, not caller-mutable Negotiated
     negotiatedFeatures uint16
@@ -393,6 +394,7 @@ type v4IdentityKey struct{
 }
 type v4Entry struct {
     epoch [16]byte
+    gameAttempt [16]byte // current cold Game group, from its fresh lane1 reservation
     active bool
     lanes uint8 // 1<<lane (IDs 1..4)
     pending uint8
@@ -486,7 +488,7 @@ func (s *V4EpochStore) HasLiveTunnel(id logicaltunnel.TunnelID)bool{
 // as the immutable generation-fencing token for its exact Stop callback.
 func (s *V4EpochStore) prepare(
     username string,tunnelID []byte,lane uint8,want [16]byte,
-    rng io.Reader,allowReplacement bool,
+    rng io.Reader,allowReplacement bool,gameAttempt ...*[16]byte,
 )([16]byte,[16]byte,func(bool),error) {
     var zero [16]byte
     if s==nil || rng==nil || !validAdmissionLaneID(lane) ||
@@ -496,6 +498,8 @@ func (s *V4EpochStore) prepare(
     s.mu.Lock()
     defer s.mu.Unlock()
     e,found:=s.entries[key]
+    var attemptOut *[16]byte
+    if len(gameAttempt)!=0{attemptOut=gameAttempt[0]}
     // A fresh original-Go TLS request intentionally carries zero epoch.
     // Only the SERVER may authorize overlap for the exact authenticated
     // principal+derived installation/TunnelID+lane that is already active.
@@ -509,14 +513,19 @@ func (s *V4EpochStore) prepare(
         if epoch==zero{return zero,zero,nil,ErrAdmissionParams}
         e=&v4Entry{epoch:epoch}
     } else {
-        if !found || !e.active || e.pending&bit!=0 ||
+        // Lane1's protected reply may reach the client before its final
+        // outer ACK reaches this server. An explicit matching Game sibling
+        // can reserve now; group activation still waits for every TLS owner.
+        pendingFirst:=found&&attemptOut!=nil&&lane!=1&&want!=zero&&
+            e.gameAttempt!=zero&&e.pending&(1<<1)!=0
+        if !found || (!e.active&&!pendingFirst) || e.pending&bit!=0 ||
            (want!=zero && e.epoch!=want) {
             return zero,zero,nil,ErrAdmissionParams
         }
         n:=len(e.instances[lane])
         // Zero-epoch reconnect is ONLY an exact 1->2 same-lane handoff.
         // Explicit-epoch Game lane joins remain on their prior contract.
-        if want==zero && (!allowReplacement || n!=1) {
+        if want==zero && (!allowReplacement || (n!=1&&!(attemptOut!=nil&&lane==1&&n==0))) {
             return zero,zero,nil,ErrAdmissionParams
         }
         if n>0 && (!allowReplacement || n>=2) {
@@ -529,6 +538,10 @@ func (s *V4EpochStore) prepare(
     for _,old:=range e.instances[lane] {
         if old==nonce {return zero,zero,nil,ErrAdmissionParams}
     }
+    previousAttempt:=e.gameAttempt
+    startsGame:=attemptOut!=nil&&lane==1&&want==zero
+    if startsGame{e.gameAttempt=nonce}
+    if attemptOut!=nil{*attemptOut=e.gameAttempt}
     e.pending|=bit
     if newTunnel {s.entries[key]=e}
     actual:=e.epoch
@@ -541,6 +554,7 @@ func (s *V4EpochStore) prepare(
         current:=s.entries[key]
         if current!=e{return}
         e.pending &^= bit
+        if !commit&&startsGame&&e.gameAttempt==nonce{e.gameAttempt=previousAttempt}
         if commit {
             if len(e.instances[lane])!=0 {e.fenced[lane]=true}
             e.instances[lane]=append(e.instances[lane],nonce)
@@ -1015,7 +1029,10 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
     }
     source:=cfg.Random
     if source==nil {source=rand.Reader}
-    epoch,nonce,finish,err:=opt.Epochs.prepare(req.Username,req.TunnelID,req.LaneID,offered.Epoch,source,opt.AllowLaneReplacement)
+    var gameAttempt [16]byte
+    var gameAttemptOut *[16]byte
+    if req.Policy.Transport==TransportGame{gameAttemptOut=&gameAttempt}
+    epoch,nonce,finish,err:=opt.Epochs.prepare(req.Username,req.TunnelID,req.LaneID,offered.Epoch,source,opt.AllowLaneReplacement,gameAttemptOut)
     if err!=nil {
         _=v4WriteFailure(tlsConn,admissionParamFail)
         return nil,fmt.Errorf("%w: %w",ErrV4ServerEpochReserve,err)
@@ -1126,7 +1143,7 @@ func EstablishServerV4(ctx context.Context,assoc *faketcp.ServerAssociation,cfg 
         verifiedNormalFec:selectedNormalFec,verifiedGameFec:selectedGameFec,
         verifiedStartupPadding:ext.StartupPadding,verifiedCold:frozen,
         verifiedPolicy:result.Policy,negotiatedFeatures:ext.Features,
-        verifiedRequestedFreshEpoch:offered.Epoch==[16]byte{},
+        verifiedRequestedFreshEpoch:offered.Epoch==[16]byte{},verifiedGameAttempt:gameAttempt,
     },nil
 }
 

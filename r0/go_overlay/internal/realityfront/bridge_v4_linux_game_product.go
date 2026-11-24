@@ -361,6 +361,22 @@ func (l *V4LinuxGameAuthenticatedLane) Cohort()(
         Epoch:cold.Epoch(),Lanes:uint8(n),
     },cold.LaneID(),nil
 }
+// GameColdAttempt is the already authenticated fresh lane1 incarnation
+// captured by the epoch store before it sends the protected TLS reply.
+// It is independent of NAT ports and the order completed TLS jobs arrive.
+func (l *V4LinuxGameAuthenticatedLane) GameColdAttempt()([16]byte,error){
+    var zero [16]byte
+    key,_,err:=l.Cohort()
+    if err!=nil{return zero,err}
+    attempt:=l.session.verifiedGameAttempt
+    if attempt==zero||l.epochs==nil{return zero,ErrAdmissionParams}
+    l.epochs.mu.Lock()
+    entry:=l.epochs.entries[v4Identity(key.Principal,key.TunnelID[:])]
+    current:=entry!=nil&&entry.epoch==key.Epoch&&entry.gameAttempt==attempt
+    l.epochs.mu.Unlock()
+    if !current{return zero,ErrAdmissionParams}
+    return attempt,nil
+}
 // The client's ORIGINAL offered epoch is already inside credential-verified
 // protected TLS. A ZERO request starts a full fresh Game group, including
 // same-IP/MTU recovery after an old Game4 group dies. A nonzero request
