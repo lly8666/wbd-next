@@ -18,9 +18,9 @@
       ],
       "prompt": "docs/prompts/M0.md",
       "cursor": ".governance/workstreams/M0/cursor.json",
-      "goal": "用户授权Linux双ISA客户端/服务端统一glibc 2.31发行基线，无数据面降级；docs/decisions/M0-LINUX-GLIBC231-20261124.md，短分支 experiment/m0-linux-glibc231，基线 6b8617626648a6ebed6ecad3e3be63016a3249bb 后登记提交。",
-      "done_when": "x86_64/aarch64原生三ELF的GLIBC需求不超过2.31、Ubuntu 20.04用户态真实加载及业务/Stop、同runner相同源码正常TCP吞吐和进程CPU对照；证据不足不晋级。",
-      "assigned_task": "M0-LINUX-GLIBC231"
+      "goal": "用户授权修复断开Normal后Game2/4回注0及反向切换，experiment/m0-mixed-mode-route-handoff；docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md。现有Health接管，按认证/32跨模式寻找owner；不增协议状态/热路径/心跳，不动Health90和Game4单lane热换。",
+      "done_when": "原生双ISA真实同一服务端同一虚拟IP跨模式切换<90s双向TCP/UDP、异租约独立、原退役/Health90/单lane热换边界，精确SOURCE Linux glibc2.31完整包及Win GUI完整包；限域记录。",
+      "assigned_task": "M0-MIXED-MODE-ROUTE-HANDOFF"
     },
     {
       "id": "M1",
