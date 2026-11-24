@@ -21,7 +21,7 @@ import (
 // machine-wide allow rule. The Rust DNS dispatcher owns query-level policy.
 type n4WindowsNoWFPDNSStage struct {
  Servers []netip.Addr
- Owner N4WindowsCreatedWintunReservation
+ Owner N4UnifiedOwner
  WALPath string
 }
 func(s n4WindowsNoWFPDNSStage) Name()string{return "dns"}
@@ -29,6 +29,7 @@ func(s n4WindowsNoWFPDNSStage) check(ctx context.Context,id N4UnifiedIdentity)er
  if err:=ctx.Err();err!=nil{return err}
  if s.WALPath==""||!id.valid()||len(s.Servers)!=1{return ErrNetworkPlan}
  if _,_,err:=n4StaticDNSRequest(s.Servers);err!=nil{return err}
+ if s.Owner==nil{return ErrN4NativeGuard}
  if err:=s.Owner.Verify(ctx,id);err!=nil{return err}
  pnp,err:=n4ProbeOriginalWintunPnP(ctx,id)
  if err!=nil{return err}

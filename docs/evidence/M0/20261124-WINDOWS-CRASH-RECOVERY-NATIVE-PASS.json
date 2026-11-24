@@ -1,0 +1,23 @@
+{
+  "source_sha": "f8678455e69c6d47ffa7aef7e43a469de89689e0",
+  "run_id": 45349201214,
+  "job_id": 138291110076,
+  "scope": "real signed Wintun normal four-stage Stop, real partial DNS prewrite crash, real full four-stage crash, repeated native Recover, real compiled WinForms 433 checks including closing with unresolved recovery",
+  "result": "FUNCTIONAL_PASS",
+  "artifacts": [
+    {
+      "id": 14899003622,
+      "digest": "sha256:da151f2f0cdb5c98bf9c5b9c91a7b6ac037ed68cb4553bdeb826ad3eb"
+    },
+    {
+      "id": 14898764239,
+      "digest": "sha256:40e5b7554ba533399963308d1fd62b43ea60ee6d1a1dd4432be64ef5e8ef9f56"
+    }
+  ],
+  "independent_download": "ZIP CRC, API digests, actual PE amd64, GUI receipt 433 checks verified",
+  "not_run": [
+    "actual previous-version v2 WAL upgrade CLI before/after",
+    "actual physical user machine",
+    "legacy v1/PowerShell migration"
+  ]
+}
