@@ -8,6 +8,12 @@ import (
 
 // Inbound DNS destination family is independent of QTYPE and original
 // IPv4 upstream transport. Never listen on an IPv6 wildcard address.
+// Ordinary IPv6 App DNS and system DNS share the same local listener.
+func(s *AppTCPDNS) IPv6Port()(int,error){
+ if s.ctx.Err()!=nil{return 0,ErrInvalid}
+ if s.ipv6TCP!=nil{return s.ipv6TCP.Addr().(*net.TCPAddr).Port,nil}
+ return s.EnableIPv6()
+}
 func(s *AppTCPDNS) EnableIPv6() (int,error){
  if s.ctx.Err()!=nil||s.ipv6TCP!=nil{return 0,ErrInvalid}
  l,e:=net.Listen("tcp6","[::1]:0")

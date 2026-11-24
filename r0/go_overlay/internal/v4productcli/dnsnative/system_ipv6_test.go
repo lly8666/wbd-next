@@ -21,6 +21,7 @@ func TestB69IPv6DestinationRealUDPTCPSharedIPv4Upstream(t *testing.T){
  s,e:=StartAppTCPDNS(dial,func(name string)bool{return name=="cn.example"},true,false,direct.addr)
  if e!=nil{t.Fatal(e)};defer s.Close()
  port,e:=s.EnableIPv6();if e!=nil{t.Fatal(e)}
+ if again,e:=s.IPv6Port();e!=nil||again!=port{t.Fatal("App and system IPv6 DNS must share listener",again,e)}
  addr:=fmt.Sprintf("[::1]:%d",port)
  if s.ipv6TCP.Addr().String()!=addr{t.Fatal("not exact IPv6 local listener")}
  c,e:=net.Dial("udp6",addr);if e!=nil{t.Fatal(e)};defer c.Close()

@@ -16,11 +16,13 @@ func TestB72IPv6DirectCIDRsAndLAN(t *testing.T){
  if e!=nil||strings.Join(got,",")!="fd12:3456::/48,2001:db8:1234::/64,fe80::/10,ff00::/8,2001:db8:abcd::/64"{t.Fatal(got,e)}
  testIPv6Carrier(t,true)
 }
-func testIPv6Carrier(t *testing.T,tether bool){
+func TestB75IPv6AppDNSSharedCarrierAndRestore(t *testing.T){testIPv6Carrier(t,false,true);testIPv6Carrier(t,true,true)}
+func testIPv6Carrier(t *testing.T,tether bool,appDNS ...bool){
  if got:=IPv6LeaseAddress(netip.MustParseAddr("10.219.17.2")).String();got!="fd65:5742:7636:1102::1"{t.Fatal(got)}
  for _,server:=range []bool{false,true}{
   p:=IPv6Plan{Version:1,Tun:"wbd0",Local4:"10.219.17.2",Gateway4:"10.219.0.1",MTU:1280,UIDs:[]int{11200,11201}}
   if server{p.Server=true;p.Local4=p.Gateway4;p.Egress="eth0";p.UIDs=nil}else if tether{p.Downstream="ap0";p.Downstream6=[]string{"2001:db8:1234::1/64","fd12:3456:789a::1/64"};p.DirectCIDRs=[]string{"2001:db8:1234::/64","fd12:3456::/48","fe80::/10"};p.DownstreamDNSPorts=[]int{43501,43502}}
+  if !server&&len(appDNS)!=0&&appDNS[0]{p.AppDNSPort=43500;p.AppDNSTCP=tether}
   if !p.valid(){t.Fatal("valid carrier refused",p)}
   cmds:=p.commands();present:=make([]bool,len(cmds));var link,addr bool
   ip:=func(a ...string)(string,error){
@@ -69,16 +71,19 @@ func testIPv6Carrier(t *testing.T,tether bool){
   for i,v:=range present{if !v{t.Fatal("missing",i)}}
   if !server{
    if !strings.Contains(strings.Join(cmds[len(cmds)-1].args," "),"uidrange 11201-11201"){t.Fatal("wrong UID")}
-   proof,forward,nat,direct,dns:=false,0,0,0,0
+   proof,forward,nat,direct,dns,app:=false,0,0,0,0,0
    for _,c:=range cmds{
     line:=strings.Join(c.args," ")
     if strings.Contains(line,"pref 9597 from "+p.local6()+"/128 to "+p.gateway6()+"/128 uidrange 0-0"){proof=true}
     if strings.Contains(line,"from 2001:db8:1234::/64 iif ap0")||strings.Contains(line,"from fd12:3456:789a::/64 iif ap0"){forward++}
     if strings.Contains(line,"--to-source "+p.local6()){nat++}
     if strings.Contains(line,"--to-destination [")&&strings.Contains(line,"--dport 53"){dns++}
+    if strings.HasPrefix(line,"OUTPUT -o wbd_sit0 ")&&strings.Contains(line,"--to-ports 43500"){app++}
     if strings.HasPrefix(line,"route throw "){direct++;if strings.Contains(line,"2001:db8:1234::/64"){t.Fatal("throw replaced downstream route")}}
    }
    if !proof{t.Fatal("missing exact cold root peer route")}
+   expectedApp:=0;if p.AppDNSPort!=0{expectedApp=1;if p.AppDNSTCP{expectedApp=2}}
+   if app!=expectedApp{t.Fatal("wrong ordinary IPv6 App DNS capture",app,expectedApp)}
    if tether&&dns!=4{t.Fatal("missing IPv6 downstream DNS UDP/TCP routes",dns)}
    if tether&&direct!=2{t.Fatal("missing IPv6 direct routes",direct)}
    if tether&&(forward!=2||nat!=2){t.Fatal("missing IPv6 downstream prefixes",forward,nat)}

@@ -1012,9 +1012,9 @@ b29_route=Path("crates/wbd-engine/src/v4_android_dns_route.rs").read_text()
 # The 4th pre-existing match belongs to native FEC quality readback,
 # not a newly permitted DNS cold grant.
 assert b29_go.count('b.protectedFeatures!=(v4RequiredFeatures|v4FeatureFEC2)')==4
-# B34 keeps all prior 3 DNS M4 cold gates and adds one exact authenticated
-# physical UDP53 upstream setter; this MUST be the fourth cold-ready check.
-assert b29_rust.count('!android_dns_original_m4_ready(&e)')==4
+# B73 adds the configured tunnel upstream setter beside the B34 physical setter.
+assert b29_rust.count('!android_dns_original_m4_ready(&e)')==5
+assert 'e.android_dns_flows.set_upstream(ip);' in b29_rust
 assert 'original_m4_dns_feature_allowed(' in b29_rust
 assert 'features==3||(features==7&&fec2_rx_ready)' in b29_route
 assert 'tunnelDNS.setChecked(true)' in a
@@ -1523,7 +1523,7 @@ assert "DnsRoute::PhysicalUDP" in nativeworker
 assert 'e.android_dns_flows.rewrite_query(' in nativeworker
 # Rust formats the owner type and its method on separate source lines.
 assert 'crate::v4_android_dns_udp_flow::TunnelDnsUdpFlows::' in owner
-assert 'is_tunnel_reply_candidate(business)' in owner
+assert 'is_tunnel_reply_candidate_for(business,dns_flows.upstream())' in owner
 assert 'dns_flows.rewrite_reply(' in owner
 assert 'pub(crate) fn rewrite_query(' in backend
 assert 'pub(crate) fn rewrite_reply(' in backend

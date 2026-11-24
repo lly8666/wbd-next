@@ -37,6 +37,8 @@ type IPv6Plan struct{
  Downstream string
  Downstream6 []string
  DownstreamDNSPorts []int `json:",omitempty"`
+ AppDNSPort int `json:",omitempty"`
+ AppDNSTCP bool `json:",omitempty"`
  DirectCIDRs []string `json:",omitempty"`
 }
 // Direct prefixes fall through to Android's later routing policy; they never
@@ -99,8 +101,8 @@ func(p IPv6Plan) valid()bool{
  if p.Version!=1||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||
     e!=nil||f!=nil||!local.Is4()||!peer.Is4()||!local.IsPrivate()||!peer.IsPrivate()||
     !p.relay().Contains(local)||p.MTU<1280||p.MTU>1480{return false}
- if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0&&p.Downstream==""&&len(p.Downstream6)==0&&len(p.DirectCIDRs)==0&&len(p.DownstreamDNSPorts)==0}
- if local==peer||p.Egress!=""{return false}
+ if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0&&p.Downstream==""&&len(p.Downstream6)==0&&len(p.DirectCIDRs)==0&&len(p.DownstreamDNSPorts)==0&&p.AppDNSPort==0&&!p.AppDNSTCP}
+ if local==peer||p.Egress!=""||p.AppDNSPort<0||p.AppDNSPort>65535||p.AppDNSTCP&&p.AppDNSPort==0{return false}
  direct,e:=mergeIPv6DirectCIDRs(nil,p.DirectCIDRs)
  if e!=nil||strings.Join(direct,",")!=strings.Join(p.DirectCIDRs,","){return false}
  if (p.Downstream=="")!=(len(p.Downstream6)==0)||len(p.Downstream6)>4{return false}
@@ -148,6 +150,17 @@ func(p IPv6Plan) commands()[]carrierCmd{
   route("-6",IPv6CarrierPrefix,ipv6CarrierIface,p.local6())
   rule("-6",ipv6UIDPref,"to",IPv6CarrierPrefix)
  }else{
+  if p.AppDNSPort!=0{
+   // The original selected-UID IPv6 FIB has already selected SIT.
+   // Ordinary UDP DNS shares the kernel relay; TCP follows the existing
+   // App TCP53 preference. Neither other interfaces nor forwarded IP
+   // can hit this OUTPUT rule.
+   protos:=[]string{"udp"};if p.AppDNSTCP{protos=append(protos,"tcp")}
+   for _,proto:=range protos{
+    fw("fw6","nat","OUTPUT","-o",ipv6CarrierIface,"-p",proto,"-m",proto,"--dport","53","-j","REDIRECT")
+    last:=&out[len(out)-1];last.args=append(last.args,"--to-ports",strconv.Itoa(p.AppDNSPort))
+   }
+  }
   for i,raw:=range p.Downstream6{
    q:=netip.MustParsePrefix(raw);subnet:=q.Masked().String()
    fw("fw6","filter","FORWARD","-i",p.Downstream,"-o",ipv6CarrierIface,"-s",subnet,"-m","conntrack","--ctstate","NEW,ESTABLISHED,RELATED","-j","ACCEPT")
@@ -167,10 +180,14 @@ func(p IPv6Plan) commands()[]carrierCmd{
   rule("-4",ipv6OuterPref,"from",p.Local4+"/32","to",p.Gateway4+"/32","ipproto","41")
   route("-6","default",ipv6CarrierIface,p.local6())
   // Downstream return routes must win over an identical direct prefix.
-  downstream:=map[string]bool{}
-  for _,raw:=range p.Downstream6{downstream[netip.MustParsePrefix(raw).Masked().String()]=true}
   for _,cidr:=range p.DirectCIDRs{
-   if !downstream[cidr]{out=append(out,carrierCmd{"ip","-6",[]string{"route","throw",cidr,"table",ipv6CarrierTable}})}
+   direct:=netip.MustParsePrefix(cidr)
+   local:=false
+   for _,raw:=range p.Downstream6{
+    subnet:=netip.MustParsePrefix(raw).Masked()
+    if subnet.Contains(direct.Addr())&&direct.Bits()>=subnet.Bits(){local=true;break}
+   }
+   if !local{out=append(out,carrierCmd{"ip","-6",[]string{"route","throw",cidr,"table",ipv6CarrierTable}})}
   }
   // Cold, actual peer echo from root. This cannot route other root traffic.
   rule("-6",ipv6ProofPref,"from",p.local6()+"/128","to",p.gateway6()+"/128","uidrange","0-0")
@@ -300,9 +317,10 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
    }
   }
  }
- for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"},{"fw6","nat","PREROUTING"}}{
+ for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"},{"fw6","nat","PREROUTING"},{"fw6","nat","OUTPUT"}}{
   if pair[2]=="PREROUTING"&&len(p.DownstreamDNSPorts)==0{continue}
-  if !p.Server&&len(p.Downstream6)==0&&pair[0]=="fw6"{continue}
+  if pair[2]=="OUTPUT"&&p.AppDNSPort==0{continue}
+  if !p.Server&&len(p.Downstream6)==0&&pair[0]=="fw6"&&pair[2]!="OUTPUT"{continue}
   fw:=s.fw4;if pair[0]=="fw6"{fw=s.fw6}
   lines,e:=fw("-w","2","-t",pair[1],"-S",pair[2]);if e!=nil{return x,e}
   for _,line:=range strings.Split(lines,"\n"){

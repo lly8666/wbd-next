@@ -1,3 +1,5 @@
+> **B75/B76 2026-11-24 批量接线**：B73/B74 [产品 #45334679723](https://github.com/lly8666/wbd-next/actions/runs/45334679723) 9 SUCCESS/1 FAIL/5 SKIPPED，旧B29源码断言固定4处cold DNS检查，B73新增第5处；Feature catalog SUCCESS。B75普通App IPv6 DNS走原系统IPv6 DNS relay（UDP，TCP随原开关），B76热点IPv4直连CIDR与IPv6一致、保留实际下游路由；CI同源待验，真机后续统一。
+
 > **B73/B74 2026-11-24 用户要求一次性大类功能合批接线**：B72 [#45328655906](https://github.com/lly8666/wbd-next/actions/runs/45328655906) 11 SUCCESS/4 SKIPPED。B73完成可配置隧道DNS在原Normal/Fixed/Auto/Game和App/系统/热点DNS的共同入口；B74补IPv6热点普通UDP/TCP DNS共用原三DNS模式。源码、设置及Stop同批；新CI待验，真实设备以后集中验收。不扩极端工况/防御开发。
 
 > **2026-11-24 B72（用户指令：继续大类功能接线、并行批量开发，不展开极端工况或额外安全加固）**：B71 `992f77f4e81b` [Dual64 #45324658533](https://github.com/lly8666/wbd-next/actions/runs/45324658533) 11 SUCCESS/4 SKIPPED，签名ARM64 APK及原Linux Oracle通过。B72在原SIT/6rd IPv6 UID FIB中接手工直连CIDR与选定Network自动LAN IPv6直连，复用批量内核路由和原冷启动/配置/Stop；本SOURCE待CI，Android真机未验。旧D2/SYN探针不是现行阻塞。

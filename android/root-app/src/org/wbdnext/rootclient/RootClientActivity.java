@@ -1354,12 +1354,12 @@ public final class RootClientActivity extends Activity {
         systemDNS6.setText("可选系统 DNS IPv6/53：普通IPv6地址DNS也进入上述模式（同时启用系统IPv4 DNS；不等于IPv6业务隧道）");
         systemDNS6.setChecked(false);
         pane.addView(systemDNS6);
-        ipv6GatewayField=input(pane,"可选 IPv6 业务兼容承载：服务端 WBD TUN IPv4（如10.219.0.1；服务端须启用 --inner-ipv6；留空关闭）",InputType.TYPE_CLASS_TEXT);
+        ipv6GatewayField=input(pane,"可选 IPv6 业务兼容承载：服务端 WBD TUN IPv4（如10.219.0.1；服务端须启用 --inner-ipv6；普通App IPv6 DNS跟随上述模式；留空关闭）",InputType.TYPE_CLASS_TEXT);
         ipv6GatewayField.setText("");
         ipv6DirectCIDRsField=input(pane,"IPv6直连CIDR（逗号分隔，最多16条；IPv6承载开启时生效；自动LAN直连同时覆盖所选Network的IPv6子网）",InputType.TYPE_CLASS_TEXT);
         ipv6DirectCIDRsField.setText("");
         tetherSharing=new CheckBox(this);
-        tetherSharing.setText("可选：共享 WBD 到现有热点/USB（软件转发，Android 16；DNS跟随上面模式；IPv6兼容承载且有实际下游/64时同时转发IPv6）");
+        tetherSharing.setText("可选：共享 WBD 到现有热点/USB（软件转发，Android 16；共享上述CIDR直连及DNS模式；IPv6承载且有实际下游/64时同时转发IPv6）");
         tetherSharing.setChecked(false);
         pane.addView(tetherSharing);
         tetherChoices=new Spinner(this);

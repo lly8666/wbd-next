@@ -22,6 +22,7 @@ type TetherPlan struct {
  Tun,Downstream,Subnet,Lease string
  DNSAddress string
  DNSPort int
+ DirectCIDRs []string `json:",omitempty"`
 }
 func(p TetherPlan) valid()bool{
  s,e:=netip.ParsePrefix(p.Subnet)
@@ -30,7 +31,7 @@ func(p TetherPlan) valid()bool{
   a,err:=netip.ParseAddr(p.DNSAddress)
   if err!=nil||p.DNSPort<1||p.DNSPort>65535||!a.Is4()||!s.Contains(a)||a==s.Addr(){return false}
  }
- return p.Version==1&&nameOK(p.Tun)&&nameOK(p.Downstream)&&p.Tun!=p.Downstream&&
+ return validDirectCIDRs(p.DirectCIDRs,"")&&p.Version==1&&nameOK(p.Tun)&&nameOK(p.Downstream)&&p.Tun!=p.Downstream&&
  e==nil&&f==nil&&s.Addr().Is4()&&s.Addr().IsPrivate()&&s==s.Masked()&&s.Bits()>=8&&s.Bits()<=30&&
  l.Addr().Is4()&&l.Bits()==32&&!l.Addr().IsUnspecified()&&!l.Addr().IsMulticast()&&!s.Contains(l.Addr())
 }
@@ -45,6 +46,15 @@ func(p TetherPlan) commands()[]tetherCommand{
   {"nat",[]string{"POSTROUTING","-s",p.Subnet,"-o",p.Tun,"-m","comment","--comment",tetherMarker,"-j","SNAT","--to-source",lease}},
   {"rule",[]string{"pref","9581","to",p.Subnet,"iif",p.Tun,"lookup",tetherTable}},
   {"rule",[]string{"pref","9580","from",p.Subnet,"iif",p.Downstream,"lookup",tetherTable}},
+ }
+ // Reuse the same explicit App bypass list for the shared IPv4
+ // downstream, matching the IPv6 carrier's FIB throw semantics.
+ // Android's later RPDB/tethering rules retain physical routing.
+ subnet:=netip.MustParsePrefix(p.Subnet)
+ for _,cidr:=range p.DirectCIDRs{
+  direct:=netip.MustParsePrefix(cidr)
+  if subnet.Contains(direct.Addr())&&direct.Bits()>=subnet.Bits(){continue}
+  out=append(out,tetherCommand{"route",[]string{"throw",cidr,"table",tetherTable}})
  }
  if p.DNSPort!=0{
   port:=strconv.Itoa(p.DNSPort)
@@ -84,11 +94,17 @@ func(s *TetherOwner) state(p TetherPlan)([]bool,error){
   for i:=0;i+1<len(w);i++{if w[i]=="table"&&w[i+1]==tetherTable{owned=true}}
   if !owned{continue}
   match:=-1
-  for i:=0;i<2;i++{
-   a:=cmds[i].args
-   if len(w)>=5&&strings.Join(w[:5]," ")==strings.Join(a," "){
+  for i,c:=range cmds{
+   if c.kind!="route"{continue}
+   a:=c.args
+   expected:=append([]string(nil),a...)
+   actual:=append([]string(nil),w...)
+   if len(a)==4&&a[0]=="throw"&&len(actual)>=2{
+    actual[1]=carrierIP(actual[1]);expected[1]=carrierIP(expected[1])
+   }
+   if len(actual)>=len(expected)&&strings.Join(actual[:len(expected)]," ")==strings.Join(expected," "){
     good:=true
-    for k:=5;k<len(w);k+=2{
+    for k:=len(expected);k<len(w);k+=2{
      if k+1>=len(w)||!((w[k]=="scope"&&w[k+1]=="link")||(w[k]=="proto"&&w[k+1]=="boot")){good=false;break}
     }
     if good{match=i}

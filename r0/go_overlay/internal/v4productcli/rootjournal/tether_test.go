@@ -8,9 +8,11 @@ import (
 )
 func TestB65TetherOwnedForwardingAndRestore(t *testing.T){testTetherOwner(t,false)}
 func TestB68TetherDNSExactDownstreamAndRestore(t *testing.T){testTetherOwner(t,true)}
-func testTetherOwner(t *testing.T,withDNS bool){
+func TestB76TetherIPv4DirectCIDRsAndRestore(t *testing.T){testTetherOwner(t,true,true)}
+func testTetherOwner(t *testing.T,withDNS bool,direct ...bool){
  p:=TetherPlan{Version:1,Tun:"wbd0",Downstream:"ap0",Subnet:"192.168.43.0/24",Lease:"10.9.0.2/32"}
  if withDNS{p.DNSAddress="192.168.43.1";p.DNSPort=43210}
+ if len(direct)>0&&direct[0]{p.DirectCIDRs=[]string{"10.0.0.0/8","192.168.43.0/24","192.168.43.7/32","192.168.50.0/24"}}
  if withDNS{
   count:=0
   for _,c:=range p.commands(){
@@ -24,6 +26,7 @@ func testTetherOwner(t *testing.T,withDNS bool){
   if count!=2{t.Fatal("missing UDP or TCP DNS")}
  }
  cmds:=p.commands();present:=make([]bool,len(cmds))
+ if len(direct)>0&&direct[0]{count:=0;for _,c:=range cmds{if c.kind=="route"&&c.args[0]=="throw"{count++;if strings.HasPrefix(c.args[1],"192.168.43."){t.Fatal("downstream return route bypassed")}}};if count!=2{t.Fatal("missing shared IPv4 direct route",count)}}
  ip:=func(a ...string)(string,error){
   if a[2]=="show"{
    var lines []string

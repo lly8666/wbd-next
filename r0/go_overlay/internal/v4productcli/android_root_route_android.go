@@ -224,26 +224,28 @@ func androidDNSBatch(rows [][]string)error{
 }
 func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  runner rootjournal.Runner,stopUID func()error)(func()error,error){
- tetherDNS:=c.androidTetherInterface!=""&&(c.androidTunnelDNS||c.androidPhysicalDNS||c.androidCNDNSSplit)
+ dnsMode:=c.androidTunnelDNS||c.androidPhysicalDNS||c.androidCNDNSSplit
+ tetherDNS:=c.androidTetherInterface!=""&&dnsMode
+ appIPv6DNS:=c.androidIPv6Gateway!=""&&dnsMode
  finish:=func(stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
   next,e:=startAndroidTether(c,tun,lease,runner,stop,relay)
   if e!=nil{return nil,e}
   return startOriginalAndroidIPv6Carrier(c,tun,lease,runner,next,relay)
  }
- if !c.androidAppTCPDNS&&!tetherDNS{return finish(stopUID,nil)}
+ if !c.androidAppTCPDNS&&!tetherDNS&&!appIPv6DNS{return finish(stopUID,nil)}
  tunnel:=c.androidTunnelDNS||c.androidCNDNSSplit
  physicalEndpoint:=net.JoinHostPort(c.androidPhysicalDNSUpstream.String(),"53")
  tunnelIP:=c.androidTunnelDNSUpstream
  if !tunnelIP.IsValid(){tunnelIP=netip.MustParseAddr("1.1.1.1")}
  tunnelEndpoint:=net.JoinHostPort(tunnelIP.String(),"53")
  dial:=func(ctx context.Context,path dnsnative.Path,network,endpoint string)(net.Conn,error){
-  if network!="tcp"&&!((c.androidSystemDNS||tetherDNS)&&network=="udp"){return nil,dnsnative.ErrUnbound}
+  if network!="tcp"&&!((c.androidSystemDNS||tetherDNS||appIPv6DNS)&&network=="udp"){return nil,dnsnative.ErrUnbound}
   if path==dnsnative.Physical{
    return c.androidPhysicalDNSDial(ctx,path,network,endpoint)
   }
   if !tunnel||path!=dnsnative.Tunnel||endpoint!=tunnelEndpoint{return nil,dnsnative.ErrUnbound}
   // Exact original authenticated lease, TUN interface and a separate
-  // root-only source/destination rule to the fixed 1.1.1.1/32. This is
+  // root-only source/destination rule to the configured upstream /32. This is
   // ordinary TCP entering the existing Rust M4, not a second TUN reader.
   var local net.Addr=&net.TCPAddr{IP:net.IP(lease.Addr().AsSlice())}
   if network=="udp"{local=&net.UDPAddr{IP:net.IP(lease.Addr().AsSlice())}}
@@ -329,7 +331,7 @@ func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjou
  if e!=nil||strings.TrimSpace(string(offload))!="1"{return fail(fmt.Errorf("software tether requires hardware offload disabled"))}
  dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
  if e!=nil||!strings.Contains(string(dump),"mIsBpfEnabled: false"){return fail(fmt.Errorf("software tether requires verified inactive BPF offload"))}
- plan:=rootjournal.TetherPlan{Tun:tun.name,Downstream:d.Name,Subnet:prefix.String(),Lease:lease.String()}
+ plan:=rootjournal.TetherPlan{Tun:tun.name,Downstream:d.Name,Subnet:prefix.String(),Lease:lease.String(),DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...)}
  if relay!=nil{
   port,err:=relay.EnableDownstream(gateway,prefix)
   if err!=nil{return fail(err)}
@@ -353,6 +355,11 @@ func startOriginalAndroidIPv6Carrier(c config,tun *ownedTun,lease netip.Prefix,r
  plan:=rootjournal.IPv6Plan{Tun:tun.name,Local4:lease.Addr().String(),Gateway4:gateway.String(),MTU:mtu,
    All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs,
    DirectCIDRs:append([]string(nil),c.androidIPv6DirectCIDRs...)}
+ if relay!=nil{
+  port,e:=relay.IPv6Port()
+  if e!=nil{return fail(e)}
+  plan.AppDNSPort,plan.AppDNSTCP=port,c.androidAppTCPDNS
+ }
  if c.androidIPv6DirectLAN{
   physical:=c.rawInterface
   if c.androidClatParent!=""{physical=c.androidClatParent}
@@ -388,6 +395,7 @@ func startOriginalAndroidIPv6Carrier(c config,tun *ownedTun,lease netip.Prefix,r
  // permanent timer/socket. A legacy IPv4-only server cannot satisfy it.
  if e=originalAndroidIPv6PeerEcho(local6,peer6);e!=nil{return fail(errors.Join(e,owner.Stop()))}
  fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_IPV6_CARRIER_PEER_ECHO_READY role=client lease6=%s mtu=%d kernel_sit=1\n",local6,mtu)
+ if plan.AppDNSPort!=0{fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_APP_IPV6_DNS_READY role=client udp53=1 tcp53=%t\n",plan.AppDNSTCP)}
  if len(plan.DownstreamDNSPorts)!=0{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_IPV6_DNS_READY role=client udp_tcp53=1")}
  if len(plan.Downstream6)!=0{
   fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_IPV6_READY role=client prefixes=%d kernel_snat66=1\n",len(plan.Downstream6))
