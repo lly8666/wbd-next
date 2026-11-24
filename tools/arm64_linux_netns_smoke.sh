@@ -465,6 +465,10 @@ receipt={"source":os.environ.get("WBD_ARM64_FROZEN_SOURCE",os.environ["GITHUB_SH
 print("ARM64_NORMAL_UDP_BIDIRECTIONAL_CAPACITY_TRIAL_RECORDED")
 PY
 fi
+if [[ "${WBD_LINUX_GLIBC_TCP_PERF:-0}" == 1 ]]; then
+  test "$mode" = normal
+  python3 "$GITHUB_WORKSPACE/tools/m0_linux_glibc231_perf.py" "$client_ns" "$server_ns" "$out"
+fi
 # Fixed's Go monitor cadence=200ms but authenticated maturity=2s.
 # Give exactly one quiet maturity opportunity after the real 20+20 sources.
 if [ "$mode" = fec-fixed ] || [ "$mode" = fec-auto ]; then sleep 3; fi

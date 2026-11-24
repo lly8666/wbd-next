@@ -1,0 +1,135 @@
+name: M0 Linux native glibc 2.31 client server delivery
+run-name: "M0 glibc 2.31 dual ISA | ${{ github.sha }}"
+on:
+  push:
+    branches: [experiment/m0-linux-glibc231, main]
+    paths:
+      - '.github/workflows/m0-linux-glibc231.yml'
+      - 'tools/linux-glibc231.Dockerfile'
+      - 'tools/m0_linux_glibc231_build.sh'
+      - 'tools/m0_linux_glibc_abi.py'
+      - 'tools/m0_linux_glibc231_perf.py'
+      - 'tools/m0_plan029_linux_dual_native_build.sh'
+      - 'tools/arm64_linux_netns_smoke.sh'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, aarch64]
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    timeout-minutes: 60
+    env:
+      WBD_PLAN029_LINUX_DUAL_ISA: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      WBD_PLAN029_LINUX_COVERAGE: '1'
+      WBD_ARM64_OUTER_MTU: '1460'
+      WBD_ARM64_SERVER_OUTER_MTU: '1460'
+      WBD_PLAN029_LINUX_STARTUP_PADDING: 'off'
+      WBD_PLAN029_LINUX_OUTER_REPAIR: 'on'
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Native same-source prerequisites
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm cmake binutils iproute2 iptables iputils-ping iperf3 openssl
+          test -c /dev/net/tun
+          lscpu > native-cpu.txt
+      - name: Build glibc 2.31 original Go Rust ISA-L products
+        run: |
+          set -euo pipefail
+          bash tools/m0_plan029_linux_dual_native_build.sh > compatible-build.log 2>&1 || { tail -100 compatible-build.log; exit 1; }
+          python3 tools/m0_linux_glibc_abi.py linux-plan029-public-bundle 2.31
+      - name: Ubuntu 20.04 userland native ISA real client and server smoke
+        run: |
+          set -euo pipefail
+          mkdir -p focal-normal "$RUNNER_TEMP/glibc-focal-tmp"
+          rc=0
+          docker run --rm --privileged --device /dev/net/tun \
+            -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v "$RUNNER_TEMP:$RUNNER_TEMP" -w "$GITHUB_WORKSPACE" \
+            -e GITHUB_WORKSPACE -e RUNNER_TEMP="$RUNNER_TEMP/glibc-focal-tmp" -e GITHUB_SHA -e GITHUB_RUN_ID \
+            -e WBD_PLAN029_LINUX_DUAL_ISA -e WBD_PLAN029_LINUX_EXPECTED_ARCH -e WBD_PLAN029_LINUX_COVERAGE \
+            -e WBD_ARM64_OUTER_MTU -e WBD_ARM64_SERVER_OUTER_MTU -e WBD_PLAN029_LINUX_STARTUP_PADDING -e WBD_PLAN029_LINUX_OUTER_REPAIR \
+            ubuntu:20.04 bash -c '
+              set -euo pipefail
+              test "$(getconf GNU_LIBC_VERSION)" = "glibc 2.31"
+              apt-get update -qq
+              DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sudo iproute2 iptables iputils-ping openssl python3 procps
+              export WBD_PLAN029_LINUX_BUNDLE="$GITHUB_WORKSPACE/linux-plan029-public-bundle"
+              export LD_LIBRARY_PATH="$WBD_PLAN029_LINUX_BUNDLE"
+              for f in wbd-v4-client wbd-v4-server libwbd_engine.so; do
+                ldd "$WBD_PLAN029_LINUX_BUNDLE/$f" | tee "focal-normal/$f.ldd"
+                ! grep -E "not found|version .* not found" "focal-normal/$f.ldd"
+              done
+              getconf GNU_LIBC_VERSION > focal-normal/glibc.txt
+              uname -a > focal-normal/kernel.txt
+              export WBD_PLAN029_LINUX_OUTPUT="$GITHUB_WORKSPACE/focal-normal"
+              bash tools/arm64_linux_netns_smoke.sh
+            ' > focal-smoke.log 2>&1 || rc=$?
+          sudo chown -R "$(id -u):$(id -g)" focal-normal
+          if [[ "$rc" != 0 ]]; then tail -100 focal-smoke.log; exit "$rc"; fi
+      - name: Package same-source compatible client server and library
+        run: |
+          set -euo pipefail
+          mkdir -p delivery
+          tar -czf "delivery/wbd-linux-${WBD_PLAN029_LINUX_EXPECTED_ARCH}-glibc231.tar.gz" -C linux-plan029-public-bundle .
+          (cd delivery && sha256sum *.tar.gz > SHA256SUMS)
+      - name: Build modern host baseline with identical production source and features
+        run: |
+          set -euo pipefail
+          baseline="$RUNNER_TEMP/glibc-host"
+          mkdir -p "$RUNNER_TEMP/glibc-host-tmp"
+          git worktree add --detach "$baseline" "$GITHUB_SHA"
+          (cd "$baseline" && GITHUB_WORKSPACE="$baseline" RUNNER_TEMP="$RUNNER_TEMP/glibc-host-tmp" WBD_LINUX_GLIBC_BUILD_BASELINE=host bash tools/m0_plan029_linux_dual_native_build.sh) > host-build.log 2>&1 || { tail -100 host-build.log; exit 1; }
+      - name: Same VM sequential normal TCP A B A comparison
+        run: |
+          set -euo pipefail
+          export WBD_LINUX_GLIBC_TCP_PERF=1 WBD_V4_MODE=normal
+          for leg in A B A2; do
+            if [[ "$leg" == B ]]; then bundle="$GITHUB_WORKSPACE/linux-plan029-public-bundle"; else bundle="$RUNNER_TEMP/glibc-host/linux-plan029-public-bundle"; fi
+            WBD_PLAN029_LINUX_BUNDLE="$bundle" WBD_PLAN029_LINUX_OUTPUT="$GITHUB_WORKSPACE/perf-$leg" bash tools/arm64_linux_netns_smoke.sh > "perf-$leg.log" 2>&1 || { tail -100 "perf-$leg.log"; exit 1; }
+          done
+          python3 - <<'PY'
+          import json,pathlib
+          rows={k:json.loads(pathlib.Path("perf-"+k,"tcp-perf.json").read_text()) for k in ("A","B","A2")}
+          a,b,a2=(rows[k] for k in ("A","B","A2"))
+          for k in ("goodput_mbps","cpu_s_per_gib"):
+              mean=(a[k]+a2[k])/2
+              rows[k+"_delta_pct"]=100*(b[k]/mean-1)
+              rows[k+"_baseline_drift_pct"]=100*abs(a[k]-a2[k])/mean
+          pathlib.Path("perf-summary.json").write_text(json.dumps(rows,indent=2)+"\n")
+          print(json.dumps(rows,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: wbd-linux-glibc231-${{ matrix.arch }}-${{ github.run_id }}
+          path: |
+            delivery/
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-public-bundle/glibc-abi.json
+            native-cpu.txt
+            compatible-build.log
+            host-build.log
+            focal-smoke.log
+            focal-normal/receipt.json
+            focal-normal/*.ldd
+            focal-normal/glibc.txt
+            focal-normal/kernel.txt
+            perf-*.log
+            perf-*/tcp-perf.json
+            perf-*/tcp-iperf.json
+            perf-*/receipt.json
+            perf-summary.json
+          if-no-files-found: warn
+          retention-days: 30

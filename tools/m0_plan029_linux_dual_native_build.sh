@@ -6,6 +6,12 @@
 # x86 production build; a second stale hand-written list is not a release.
 # BUILD ONLY: real application delivery, Stop and physical remain NOT_RUN.
 set -euo pipefail
+case "${WBD_LINUX_GLIBC_BUILD_BASELINE:-2.31}" in
+  2.31) exec bash tools/m0_linux_glibc231_build.sh ;;
+  2.31-inner) test "$(getconf GNU_LIBC_VERSION)" = "glibc 2.31" ;;
+  host) ;; # Explicit host baseline for same-SOURCE A/B only.
+  *) exit 2 ;;
+esac
 : "${GITHUB_SHA:?exact source required}"
 : "${GITHUB_WORKSPACE:?Actions workspace required}"
 : "${RUNNER_TEMP:?Actions temp required}"
@@ -112,6 +118,12 @@ export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/target/release:${LD_LIBRARY_PATH:-}"
 (cd legacy && go build -trimpath -buildvcs=false -tags wbd_v4_embedded_go,wbd_v4_fec2_product -o "$GITHUB_WORKSPACE/linux-plan029-public-bundle/wbd-v4-server" ./cmd/wbd-v4-server)
 cp target/release/libwbd_engine.so linux-plan029-public-bundle/libwbd_engine.so
 (cd linux-plan029-public-bundle && sha256sum wbd-v4-client wbd-v4-server libwbd_engine.so > SHA256SUMS)
+if [[ "${WBD_LINUX_GLIBC_BUILD_BASELINE:-}" == 2.31-inner ]]; then
+  python3 tools/m0_linux_glibc_abi.py linux-plan029-public-bundle 2.31
+else
+  python3 tools/m0_linux_glibc_abi.py linux-plan029-public-bundle
+fi
+export WBD_BUILD_GLIBC="$(getconf GNU_LIBC_VERSION)"
 python3 - <<'PY'
 import hashlib,json,os,pathlib,platform
 p=pathlib.Path("linux-plan029-public-bundle")
@@ -124,6 +136,8 @@ d={"schema_version":1,"source_sha":os.environ["GITHUB_SHA"],
    "original_go_sha":"a7a82db31fe736ffedee330795a3234d358f1984",
    "isa_l_source":"c387163fcbca62701d646149564c550c78a4f985",
    "rust":"1.85.1","go":"1.23.12",
+   "build_glibc":os.environ["WBD_BUILD_GLIBC"],
+   "elf_version_needs":json.loads((p/"glibc-abi.json").read_text()),
    "architecture":platform.machine(),"sha256":hashes,
    "rust_native_fec_acceleration":True,
    "original_go_faketcp":"11-source-locked-records",
