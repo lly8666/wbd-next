@@ -25,6 +25,24 @@ func originalIPv6Command(tool string)rootjournal.Runner{
   return string(b),nil
  }
 }
+func originalIPv6Batch(rows [][]string)error{
+ for from:=0;from<len(rows);{
+  family:=rows[from][0]
+  if family!="-4"&&family!="-6"{return fmt.Errorf("invalid IPv6 carrier FIB family")}
+  var input strings.Builder
+  to:=from
+  for to<len(rows)&&rows[to][0]==family{
+   input.WriteString(strings.Join(rows[to][1:]," "));input.WriteByte('\n');to++
+  }
+  ctx,cancel:=context.WithTimeout(context.Background(),8*time.Second)
+  command:=exec.CommandContext(ctx,"ip",family,"-batch","-")
+  command.Stdin=strings.NewReader(input.String())
+  b,e:=command.CombinedOutput();cancel()
+  if e!=nil||len(b)>256<<10{return fmt.Errorf("IPv6 carrier FIB batch failed: %v",e)}
+  from=to
+ }
+ return nil
+}
 func originalIPv6CarrierMTU(tun *ownedTun)(int,error){
  mtu,e:=readOwnedTunMTU(tun.name);if e!=nil{return 0,e}
  mtu-=20 // exact IPv4 encapsulation header, not outer FakeTCP overhead
@@ -34,7 +52,7 @@ func originalIPv6CarrierMTU(tun *ownedTun)(int,error){
 }
 func startOriginalServerIPv6Carrier(c config,tun *ownedTun)(*rootjournal.IPv6Owner,error){
  ip,fw4,fw6:=originalIPv6Command("ip"),originalIPv6Command("iptables"),originalIPv6Command("ip6tables")
- if e:=rootjournal.RecoverIPv6Carrier(ip,fw4,fw6,serverIPv6CarrierJournal);e!=nil{return nil,e}
+ if e:=rootjournal.RecoverIPv6CarrierBatch(ip,fw4,fw6,originalIPv6Batch,serverIPv6CarrierJournal);e!=nil{return nil,e}
  forward,e:=os.ReadFile("/proc/sys/net/ipv6/conf/all/forwarding")
  if e!=nil||strings.TrimSpace(string(forward))!="1"{return nil,fmt.Errorf("enable server IPv6 forwarding before --inner-ipv6")}
  // No host-global forwarding/sysctl or default route mutation.
@@ -44,7 +62,7 @@ func startOriginalServerIPv6Carrier(c config,tun *ownedTun)(*rootjournal.IPv6Own
  }
  local,e:=netip.ParsePrefix(tun.cidr);if e!=nil{return nil,e}
  mtu,e:=originalIPv6CarrierMTU(tun);if e!=nil{return nil,e}
- owner,e:=rootjournal.NewIPv6Carrier(ip,fw4,fw6,serverIPv6CarrierJournal,
+ owner,e:=rootjournal.NewIPv6CarrierBatch(ip,fw4,fw6,originalIPv6Batch,serverIPv6CarrierJournal,
   rootjournal.IPv6Plan{Server:true,Tun:tun.name,Local4:local.Addr().String(),Gateway4:local.Addr().String(),Egress:c.rawInterface,MTU:mtu})
  if e!=nil{return nil,e}
  fmt.Fprintf(os.Stderr,"V4_PUBLIC_SERVER_IPV6_CARRIER_READY gateway4=%s gateway6=%s mtu=%d kernel_sit_6rd=1\n",

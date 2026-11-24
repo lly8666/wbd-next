@@ -22,6 +22,8 @@ const ipv6CarrierTable="19847"
 const ipv6CarrierMarker="wbd-next-ipv6-carrier-v1"
 const ipv6CarrierJournal="ipv6-carrier-journal.json"
 const ipv6OuterPref=9598
+const ipv6ProofPref=9597
+const ipv6TetherPref=9580
 const ipv6UIDPref=9600
 
 type IPv6Plan struct{
@@ -31,6 +33,9 @@ type IPv6Plan struct{
  MTU int
  All bool
  UIDs,ExcludedAppIDs []int
+ // Optional real existing Android downstream global IPv6 /64 addresses.
+ Downstream string
+ Downstream6 []string
 }
 func IPv6LeaseAddress(ip netip.Addr)netip.Addr{
  if !ip.Is4(){return netip.Addr{}}
@@ -44,6 +49,7 @@ func(p IPv6Plan) relay()netip.Prefix{
  return netip.PrefixFrom(a,16).Masked()
 }
 func(p IPv6Plan) local6()string{return IPv6LeaseAddress(netip.MustParseAddr(p.Local4)).String()}
+func(p IPv6Plan) gateway6()string{return IPv6LeaseAddress(netip.MustParseAddr(p.Gateway4)).String()}
 func(p IPv6Plan) remote4()string{if p.Server{return "any"};return p.Gateway4}
 func(p IPv6Plan) ranges()[]allRange{
  if p.All{return (AllAppPlan{ExcludedAppIDs:p.ExcludedAppIDs}).ranges()}
@@ -56,8 +62,20 @@ func(p IPv6Plan) valid()bool{
  if p.Version!=1||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||
     e!=nil||f!=nil||!local.Is4()||!peer.Is4()||!local.IsPrivate()||!peer.IsPrivate()||
     !p.relay().Contains(local)||p.MTU<1280||p.MTU>1480{return false}
- if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0}
+ if p.Server{return local==peer&&nameOK(p.Egress)&&p.Egress!=p.Tun&&p.Egress!=ipv6CarrierIface&&!p.All&&len(p.UIDs)==0&&len(p.ExcludedAppIDs)==0&&p.Downstream==""&&len(p.Downstream6)==0}
  if local==peer||p.Egress!=""{return false}
+ if (p.Downstream=="")!=(len(p.Downstream6)==0)||len(p.Downstream6)>4{return false}
+ if p.Downstream!=""{
+  if !nameOK(p.Downstream)||p.Downstream==p.Tun||p.Downstream==ipv6CarrierIface{return false}
+  seen:=map[netip.Prefix]bool{}
+  for _,raw:=range p.Downstream6{
+   q,e:=netip.ParsePrefix(raw)
+   if e!=nil||q.Bits()!=64||!q.Addr().Is6()||q.Addr().Is4In6()||
+      !q.Addr().IsGlobalUnicast()||q.Addr()==q.Masked().Addr()||
+      netip.MustParsePrefix(IPv6CarrierPrefix).Overlaps(q)||seen[q.Masked()]{return false}
+   seen[q.Masked()]=true
+  }
+ }
  if p.All{return len(p.UIDs)==0&&ValidAllAppExclusions(p.ExcludedAppIDs)}
  if len(p.ExcludedAppIDs)!=0{return false}
  if len(p.UIDs)==1{return p.UIDs[0]>=10000&&p.UIDs[0]<=1999999}
@@ -89,9 +107,24 @@ func(p IPv6Plan) commands()[]carrierCmd{
   route("-6",IPv6CarrierPrefix,ipv6CarrierIface,p.local6())
   rule("-6",ipv6UIDPref,"to",IPv6CarrierPrefix)
  }else{
+  for _,raw:=range p.Downstream6{
+   q:=netip.MustParsePrefix(raw);subnet:=q.Masked().String()
+   fw("fw6","filter","FORWARD","-i",p.Downstream,"-o",ipv6CarrierIface,"-s",subnet,"-m","conntrack","--ctstate","NEW,ESTABLISHED,RELATED","-j","ACCEPT")
+   fw("fw6","filter","FORWARD","-i",ipv6CarrierIface,"-o",p.Downstream,"-d",subnet,"-m","conntrack","--ctstate","ESTABLISHED,RELATED","-j","ACCEPT")
+   fw("fw6","nat","POSTROUTING","-s",subnet,"-o",ipv6CarrierIface,"-j","SNAT") // exact source inserted below
+   last:=&out[len(out)-1];last.args=append(last.args,"--to-source",p.local6())
+  }
   route("-4",p.Gateway4+"/32",p.Tun,p.Local4)
   rule("-4",ipv6OuterPref,"from",p.Local4+"/32","to",p.Gateway4+"/32","ipproto","41")
   route("-6","default",ipv6CarrierIface,p.local6())
+  // Cold, actual peer echo from root. This cannot route other root traffic.
+  rule("-6",ipv6ProofPref,"from",p.local6()+"/128","to",p.gateway6()+"/128","uidrange","0-0")
+  for i,raw:=range p.Downstream6{
+   q:=netip.MustParsePrefix(raw);subnet:=q.Masked().String()
+   route("-6",subnet,p.Downstream,q.Addr().String())
+   rule("-6",ipv6TetherPref+2*i,"to",subnet,"iif",ipv6CarrierIface)
+   rule("-6",ipv6TetherPref+2*i+1,"from",subnet,"iif",p.Downstream)
+  }
   for i,r:=range p.ranges(){rule("-6",ipv6UIDPref+i,"uidrange",fmt.Sprintf("%d-%d",r.from,r.to))}
  }
  return out
@@ -143,8 +176,8 @@ func carrierRuleMatch(w,a []string)bool{
  for k,v:=range expected{if k=="from"||k=="to"{v=carrierIP(v)};if got[k]!=v{return false}}
  return true
 }
-type carrierState struct{link,addr bool;rows []bool}
-type IPv6Owner struct{ip,fw4,fw6 Runner;path string;lock *os.File;plan IPv6Plan}
+type carrierState struct{link,addr,ready bool;rows []bool}
+type IPv6Owner struct{ip,fw4,fw6 Runner;batchIP func([][]string)error;path string;lock *os.File;plan IPv6Plan}
 func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
  cmds:=p.commands();x:=carrierState{rows:make([]bool,len(cmds))}
  links,e:=s.ip("-d","-o","link","show");if e!=nil{return x,e}
@@ -152,13 +185,17 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
   w:=strings.Fields(line)
   if len(w)<2||strings.Split(strings.TrimSuffix(w[1],":"),"@")[0]!=ipv6CarrierIface{continue}
   if x.link||!hasPair(w,"alias",ipv6CarrierMarker)||!hasPair(w,"local",p.Local4)||
-    !hasPair(w,"remote",p.remote4())||!hasPair(w,"6rd-prefix",IPv6CarrierPrefix)||
-    !hasPair(w,"6rd-relay_prefix",p.relay().String()){
-   return x,fmt.Errorf("foreign or incomplete SIT identity")
+    !(hasPair(w,"remote",p.remote4())||p.Server&&hasPair(w,"remote","0.0.0.0")){
+   return x,fmt.Errorf("foreign SIT identity")
   }
-  // ip -d -o renders the bound lower device in name@dev on some builds.
-  if !hasPair(w,"dev",p.Tun)&&!strings.Contains(w[1],"@"+p.Tun+":"){return x,fmt.Errorf("SIT lower device differs")}
+  // The exact marker and tuple survive partial installation or a dead
+  // lower TUN. Readiness (6rd, lower device, MTU) is required to publish,
+  // not to remove this exact journal-owned link after a crash.
   x.link=true
+  x.ready=hasPair(w,"6rd-prefix",IPv6CarrierPrefix)&&
+   hasPair(w,"6rd-relay_prefix",p.relay().String())&&
+   hasPair(w,"mtu",strconv.Itoa(p.MTU))&&
+   (hasPair(w,"dev",p.Tun)||strings.Contains(w[1],"@"+p.Tun+":"))
  }
  addrs,e:=s.ip("-6","-o","addr","show");if e!=nil{return x,e}
  for _,line:=range strings.Split(addrs,"\n"){
@@ -179,7 +216,7 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
     owned:=hasPair(w,"table",ipv6CarrierTable)||hasPair(w,"lookup",ipv6CarrierTable)
     if kind=="rule"{
      n,_:=strconv.Atoi(strings.TrimSuffix(w[0],":"))
-     if family=="-6"&&n>=ipv6UIDPref&&n<ipv6UIDPref+AllMaxRules||family=="-4"&&n==ipv6OuterPref{owned=true}
+     if family=="-6"&&(n>=ipv6UIDPref&&n<ipv6UIDPref+AllMaxRules||n==ipv6ProofPref||n>=ipv6TetherPref&&n<ipv6TetherPref+8)||family=="-4"&&n==ipv6OuterPref{owned=true}
     }
     if !owned{continue}
     found:=-1
@@ -195,7 +232,7 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
   }
  }
  for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"}}{
-  if !p.Server&&pair[0]=="fw6"{continue}
+  if !p.Server&&len(p.Downstream6)==0&&pair[0]=="fw6"{continue}
   fw:=s.fw4;if pair[0]=="fw6"{fw=s.fw6}
   lines,e:=fw("-w","2","-t",pair[1],"-S",pair[2]);if e!=nil{return x,e}
   for _,line:=range strings.Split(lines,"\n"){
@@ -219,6 +256,28 @@ func(s *IPv6Owner) change(c carrierCmd,add bool)error{
  if add{a=append([]string{"-w","2","-t",c.kind,"-I",c.args[0],"1"},c.args[1:]...)}
  _,e:=fw(a...);return e
 }
+// One family-specific ip -batch for contiguous cold FIB operations,
+// with exact readback and journal rollback on any partially applied batch.
+func(s *IPv6Owner) changeAll(cmds []carrierCmd,present []bool,add bool)error{
+ var pending [][]string
+ flush:=func()error{
+  if len(pending)==0{return nil}
+  e:=s.batchIP(pending);pending=nil;return e
+ }
+ for pos:=0;pos<len(cmds);pos++{
+  i:=pos;if !add{i=len(cmds)-1-pos}
+  if present!=nil&&!present[i]{continue}
+  c:=cmds[i]
+  if s.batchIP!=nil&&c.tool=="ip"{
+   op:="del";if add{op="add"}
+   pending=append(pending,append([]string{c.kind,c.args[0],op},c.args[1:]...))
+   continue
+  }
+  if e:=flush();e!=nil{return e}
+  if e:=s.change(c,add);e!=nil{return e}
+ }
+ return flush()
+}
 func readIPv6Carrier(path string)(IPv6Plan,bool,error){
  var p IPv6Plan
  f,e:=openNoFollow(path,syscall.O_RDONLY,0);if errors.Is(e,syscall.ENOENT){return p,false,nil}
@@ -239,7 +298,7 @@ func writeIPv6Carrier(path string,p IPv6Plan)error{
 func(s *IPv6Owner) remove(p IPv6Plan)error{
  x,e:=s.state(p);if e!=nil{return e}
  cmds:=p.commands()
- for i:=len(cmds)-1;i>=0;i--{if x.rows[i]{if e=s.change(cmds[i],false);e!=nil{return e}}}
+ if e=s.changeAll(cmds,x.rows,false);e!=nil{return e}
  if x.link{if _,e=s.ip("link","del","dev",ipv6CarrierIface);e!=nil{return e}}
  x,e=s.state(p);if e!=nil{return e}
  if x.link||x.addr{return fmt.Errorf("SIT Stop retained link/address")}
@@ -247,15 +306,21 @@ func(s *IPv6Owner) remove(p IPv6Plan)error{
  if e=os.Remove(s.path);e!=nil{return e};return parentSync(s.path)
 }
 func RecoverIPv6Carrier(ip,fw4,fw6 Runner,path string)error{
+ return RecoverIPv6CarrierBatch(ip,fw4,fw6,nil,path)
+}
+func RecoverIPv6CarrierBatch(ip,fw4,fw6 Runner,batch func([][]string)error,path string)error{
  l,e:=scopedOwnerLock(path,ipv6CarrierJournal,"ipv6-carrier-owner.lock");if e!=nil{return e};defer l.Close()
  p,found,e:=readIPv6Carrier(path);if e!=nil||!found{return e}
- return (&IPv6Owner{ip:ip,fw4:fw4,fw6:fw6,path:path}).remove(p)
+ return (&IPv6Owner{ip:ip,fw4:fw4,fw6:fw6,batchIP:batch,path:path}).remove(p)
 }
 func NewIPv6Carrier(ip,fw4,fw6 Runner,path string,p IPv6Plan)(*IPv6Owner,error){
+ return NewIPv6CarrierBatch(ip,fw4,fw6,nil,path,p)
+}
+func NewIPv6CarrierBatch(ip,fw4,fw6 Runner,batch func([][]string)error,path string,p IPv6Plan)(*IPv6Owner,error){
  p.Version=1
  if ip==nil||fw4==nil||fw6==nil||!p.valid()||filepath.Base(path)!=ipv6CarrierJournal{return nil,fmt.Errorf("invalid IPv6 carrier scope")}
  l,e:=scopedOwnerLock(path,ipv6CarrierJournal,"ipv6-carrier-owner.lock");if e!=nil{return nil,e}
- s:=&IPv6Owner{ip:ip,fw4:fw4,fw6:fw6,path:path,plan:p,lock:l}
+ s:=&IPv6Owner{ip:ip,fw4:fw4,fw6:fw6,batchIP:batch,path:path,plan:p,lock:l}
  fail:=func(e error)(*IPv6Owner,error){l.Close();return nil,e}
  old,found,e:=readIPv6Carrier(path);if e!=nil{return fail(e)}
  if found{if e=s.remove(old);e!=nil{return fail(e)}}
@@ -269,8 +334,8 @@ func NewIPv6Carrier(ip,fw4,fw6 Runner,path string,p IPv6Plan)(*IPv6Owner,error){
    "6rd-prefix",IPv6CarrierPrefix,"6rd-relay_prefix",p.relay().String());e!=nil{return rollback(e)}
  if _,e=ip("link","set","dev",ipv6CarrierIface,"mtu",strconv.Itoa(p.MTU),"up");e!=nil{return rollback(e)}
  if _,e=ip("-6","addr","add",p.local6()+"/128","dev",ipv6CarrierIface,"nodad","noprefixroute");e!=nil{return rollback(e)}
- for _,c:=range p.commands(){if e=s.change(c,true);e!=nil{return rollback(e)}}
- x,e=s.state(p);if e!=nil||!x.link||!x.addr{return rollback(errors.Join(e,fmt.Errorf("SIT link/address readback incomplete")))}
+ if e=s.changeAll(p.commands(),nil,true);e!=nil{return rollback(e)}
+ x,e=s.state(p);if e!=nil||!x.link||!x.ready||!x.addr{return rollback(errors.Join(e,fmt.Errorf("SIT link/address readback incomplete")))}
  for _,v:=range x.rows{if !v{return rollback(fmt.Errorf("SIT FIB/firewall readback incomplete"))}}
  return s,nil
 }

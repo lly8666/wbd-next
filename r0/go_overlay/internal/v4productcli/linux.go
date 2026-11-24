@@ -1220,7 +1220,7 @@ func recoverOriginalAndroidRootOwned()error{
         if len(b)>256<<10||e!=nil{return "",fmt.Errorf("scoped IPv6 firewall command failed")}
         return string(b),nil
     }
-    ipv6Err:=rootjournal.RecoverIPv6Carrier(runIP,runFirewall,runFirewall6,root+"ipv6-carrier-journal.json")
+    ipv6Err:=rootjournal.RecoverIPv6CarrierBatch(runIP,runFirewall,runFirewall6,originalIPv6Batch,root+"ipv6-carrier-journal.json")
     systemDNS6Err:=rootjournal.RecoverSystemDNS6(runIP,runFirewall6,nil,nil,root+"system-dns6-journal.json")
     systemDNSErr:=rootjournal.RecoverSystemDNS(runIP,runFirewall,nil,nil,root+"system-dns-journal.json")
     dnsErr:=rootjournal.RecoverDNS(runIP,runFirewall,nil,root+"dns-tcp-journal.json")

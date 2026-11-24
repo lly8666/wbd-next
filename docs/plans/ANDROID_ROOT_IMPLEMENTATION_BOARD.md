@@ -1,3 +1,4 @@
+- **B71 IPv6冷网关Echo / 软件热点IPv6 / FIB批量 WIRED_CANDIDATE**：显式carrier真实peer reply，已有下游global /64→原SIT和SNAT66；原IPv4不变、Stop/Restore、冷批量，实体NOT_RUN。[B71](../devlog/android-root-probe/20261124-b71-ipv6-peer-tether-batch.md)
 - **B70 IPv6-in-IPv4 双端内核兼容承载 WIRED_CANDIDATE**：原IPv4认证租约＋Linux SIT/6rd、同原UID范围IPv6 FIB、原shared-TUN返程、IPv6 NAT66、独立Stop/Restore/配置。默认关，双方显式配置，非裸IPv6 M3；实体NOT_RUN。[B70](../devlog/android-root-probe/20261124-b70-ipv6-kernel-carrier.md)
 - **B69 系统IPv6目的普通DNS WIRED_CANDIDATE**：独立可选、UID/netId/53 IPv6 RPDB 19846和ip6tables→本地IPv6 UDP/TCP入口，共用原三模式IPv4上游；不是IPv6业务转发。实体NOT_RUN。[B69](../devlog/android-root-probe/20261124-b69-system-dns-ipv6-destination.md)
 - **B68 软件热点 IPv4 DNS WIRED_CANDIDATE**：同B64/B66 resolver，真实下游网关TCP/UDP listener、精确PREROUTING/INPUT、原物理/隧道/CN分流、Stop/Restore；实体NOT_RUN。[B68](../devlog/android-root-probe/20261124-b68-tether-dns-shared-relay.md)

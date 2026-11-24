@@ -4,6 +4,9 @@ package v4productcli
 
 import (
     "fmt"
+    "bytes"
+    "crypto/rand"
+    "sort"
     "context"
     "errors"
     "syscall"
@@ -98,7 +101,7 @@ func androidRootRouteAfterNative(
         return string(data),nil
     }
     const rootOnlyJournal="/data/local/tmp/wbd-next-root/route-journal.json"
-    if e:=rootjournal.RecoverIPv6Carrier(runner,androidDNSFirewall,androidDNSFirewall6,androidIPv6CarrierJournal);e!=nil{return nil,e}
+    if e:=rootjournal.RecoverIPv6CarrierBatch(runner,androidDNSFirewall,androidDNSFirewall6,originalIPv6Batch,androidIPv6CarrierJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal);e!=nil{return nil,e}
     if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal);e!=nil{return nil,e}
@@ -345,11 +348,78 @@ func startOriginalAndroidIPv6Carrier(c config,tun *ownedTun,lease netip.Prefix,r
  mtu,e:=originalIPv6CarrierMTU(tun);if e!=nil{return fail(e)}
  uids:=append([]int(nil),c.androidRouteUIDs...)
  if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
- owner,e:=rootjournal.NewIPv6Carrier(runner,androidDNSFirewall,androidDNSFirewall6,androidIPv6CarrierJournal,
-  rootjournal.IPv6Plan{Tun:tun.name,Local4:lease.Addr().String(),Gateway4:gateway.String(),MTU:mtu,
-   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs})
+ plan:=rootjournal.IPv6Plan{Tun:tun.name,Local4:lease.Addr().String(),Gateway4:gateway.String(),MTU:mtu,
+   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs}
+ if c.androidTetherInterface!=""{
+  prefixes,e:=originalAndroidTetherIPv6(c)
+  if e!=nil{return fail(e)}
+  if len(prefixes)!=0{
+   plan.Downstream,plan.Downstream6=c.androidTetherInterface,prefixes
+  }
+ }
+ owner,e:=rootjournal.NewIPv6CarrierBatch(runner,androidDNSFirewall,androidDNSFirewall6,originalIPv6Batch,androidIPv6CarrierJournal,plan)
  if e!=nil{return fail(e)}
- fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_IPV6_CARRIER_LOCAL_READY role=client lease6=%s mtu=%d kernel_sit=1 peer_configured=1\n",
-  rootjournal.IPv6LeaseAddress(lease.Addr()),mtu)
+ local6,peer6:=rootjournal.IPv6LeaseAddress(lease.Addr()),rootjournal.IPv6LeaseAddress(gateway)
+ // Local link/rule readback alone is not remote IPv6 readiness.
+ // One cold kernel Echo via original authenticated M4, no new TLS or
+ // permanent timer/socket. A legacy IPv4-only server cannot satisfy it.
+ if e=originalAndroidIPv6PeerEcho(local6,peer6);e!=nil{return fail(errors.Join(e,owner.Stop()))}
+ fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_IPV6_CARRIER_PEER_ECHO_READY role=client lease6=%s mtu=%d kernel_sit=1\n",local6,mtu)
+ if len(plan.Downstream6)!=0{
+  fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_IPV6_READY role=client prefixes=%d kernel_snat66=1\n",len(plan.Downstream6))
+ }
  return func()error{return errors.Join(owner.Stop(),stop())},nil
 }
+// Read only actual addresses on the previously B65-verified software
+// downstream. No router advertisement, new prefix allocation or Android
+// tether configuration change. No IPv6 scope => retain IPv4-only tether.
+func originalAndroidTetherIPv6(c config)([]string,error){
+ nic,e:=net.InterfaceByName(c.androidTetherInterface)
+ if e!=nil||nic==nil||nic.Index!=c.androidTetherIfindex||nic.Flags&net.FlagUp==0{return nil,fmt.Errorf("tether downstream changed before IPv6 grant")}
+ addresses,e:=nic.Addrs();if e!=nil{return nil,e}
+ byPrefix:=map[netip.Prefix]netip.Addr{}
+ for _,a:=range addresses{
+  p,e:=netip.ParsePrefix(a.String())
+  if e!=nil||p.Bits()!=64||!p.Addr().Is6()||p.Addr().Is4In6()||!p.Addr().IsGlobalUnicast()||
+   p.Addr()==p.Masked().Addr(){continue}
+  if netip.MustParsePrefix(rootjournal.IPv6CarrierPrefix).Overlaps(p){return nil,fmt.Errorf("tether IPv6 prefix overlaps WBD carrier")}
+  old,ok:=byPrefix[p.Masked()]
+  if !ok||p.Addr().Compare(old)<0{byPrefix[p.Masked()]=p.Addr()}
+ }
+ if len(byPrefix)==0{return nil,nil}
+ if len(byPrefix)>4{return nil,fmt.Errorf("too many active IPv6 downstream prefixes")}
+ forwarding,e:=os.ReadFile("/proc/sys/net/ipv6/conf/all/forwarding")
+ if e!=nil||strings.TrimSpace(string(forwarding))!="1"{return nil,fmt.Errorf("existing Android tether IPv6 forwarding not enabled")}
+ var out []string
+ for _,ip:=range byPrefix{out=append(out,netip.PrefixFrom(ip,64).String())}
+ sort.Strings(out)
+ return out,nil
+}
+func originalAndroidIPv6PeerEcho(local,peer netip.Addr)error{
+ ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
+ d:=net.Dialer{LocalAddr:&net.IPAddr{IP:net.IP(local.AsSlice())}}
+ d.ControlContext=func(ctx context.Context,network,address string,raw syscall.RawConn)error{
+  var bindErr error
+  e:=raw.Control(func(fd uintptr){bindErr=syscall.SetsockoptString(int(fd),syscall.SOL_SOCKET,syscall.SO_BINDTODEVICE,"wbd_sit0")})
+  return errors.Join(e,bindErr)
+ }
+ conn,e:=d.DialContext(ctx,"ip6:58",peer.String())
+ if e!=nil{return fmt.Errorf("IPv6 carrier peer probe socket: %w",e)}
+ defer conn.Close()
+ var request [24]byte
+ request[0]=128 // ICMPv6 Echo Request; kernel supplies checksum
+ if _,e=rand.Read(request[4:]);e!=nil{return e}
+ var reply [256]byte
+ for attempt:=0;attempt<2;attempt++{
+  deadline:=time.Now().Add(2*time.Second)
+  if end,ok:=ctx.Deadline();ok&&deadline.After(end){deadline=end}
+  if e=conn.SetDeadline(deadline);e!=nil{return e}
+  if _,e=conn.Write(request[:]);e!=nil{continue}
+  for{
+   n,e:=conn.Read(reply[:]);if e!=nil{break}
+   if n==len(request)&&reply[0]==129&&reply[1]==0&&bytes.Equal(reply[4:n],request[4:]){return nil}
+  }
+ }
+ return fmt.Errorf("IPv6 carrier peer did not answer: verify Linux --inner-ipv6 and actual server TUN IPv4")
+}
+

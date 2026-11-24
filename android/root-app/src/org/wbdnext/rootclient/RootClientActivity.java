@@ -1351,7 +1351,7 @@ public final class RootClientActivity extends Activity {
         ipv6GatewayField=input(pane,"可选 IPv6 业务兼容承载：服务端 WBD TUN IPv4（如10.219.0.1；服务端须启用 --inner-ipv6；留空关闭）",InputType.TYPE_CLASS_TEXT);
         ipv6GatewayField.setText("");
         tetherSharing=new CheckBox(this);
-        tetherSharing.setText("可选：共享 WBD IPv4 到现有热点/USB（软件转发，Android 16；普通UDP/TCP DNS跟随上面模式）");
+        tetherSharing.setText("可选：共享 WBD 到现有热点/USB（软件转发，Android 16；DNS跟随上面模式；IPv6兼容承载且有实际下游/64时同时转发IPv6）");
         tetherSharing.setChecked(false);
         pane.addView(tetherSharing);
         tetherChoices=new Spinner(this);
