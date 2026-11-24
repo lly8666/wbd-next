@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           test "$(uname -m)" = "$WBD_PLAN029_LINUX_EXPECTED_ARCH"
           sudo apt-get update -qq
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm cmake binutils iproute2 iptables iputils-ping iperf3 openssl
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc g++ nasm cmake binutils help2man iproute2 iptables iputils-ping iperf3 openssl
           test -c /dev/net/tun
           lscpu > native-cpu.txt
       - name: Build glibc 2.31 original Go Rust ISA-L products

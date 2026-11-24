@@ -7,3 +7,5 @@ Registered increment: docs/decisions/M0-LINUX-GLIBC231-20261124.md. Use the same
 ```
 
 First SOURCE 23a73e8c23e289d5f5c898faf15560c97a761dac Action 45411561914 ARM64 failed in Docker image preparation: bullseye-security package downloads HTTP404 after LTS EOL, before product compilation. Replace removed floating mirrors with signed Debian archive and final security snapshot. Functional/performance NOT_RUN for that failed leg.
+
+Second SOURCE f38cfc218926b4aea206d88a5ecf2a836ce7be88 Action45411847411: both ISAs passed apt and built/installed libisal.a; last log was make install, no Rust invocation. The immediate next command is nm | grep -q under pipefail; old binutils can receive SIGPIPE on a successful early match. Preserve actual nm result in file then grep it; add missing help2man (make reported ignored errors). Failure mechanism is a candidate until next run; no product or performance PASS.
