@@ -388,7 +388,7 @@ jobs:
           if-no-files-found: warn
 
   android-x86-kvm-ksu-original-d2-s1:
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[android-parallel-test]')) }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-guest-retry]')))) }}
     # Separate red/green gate: ORIGINAL Linux server runs on the same x86
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic

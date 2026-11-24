@@ -787,7 +787,7 @@ assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections
 assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android applications are the product UI default"
 assert 'AllAppRouteScope.snapshot(this,bypassPackages,bypassUIDs)' in a and 'all_apps' in a, "default mode must pass verified scopes not fake overlay"
 
-assert 'ServerAddress.valid(peer)' in a and 'Server underlay IPv4 or DNS name' in a
+assert 'ServerAddress.valid(peer)' in a  # validate real server input, not historical UI copy
 assert 'RootRouteKeyCache.resolve(this,sni,keyInput)' in a
 # B8: Activity -> Service -> original Go -> existing Rust MTU budget.
 assert 'outerMTUField.setText("1460")' in a

@@ -60,7 +60,7 @@ public final class X86CiOriginalStartActivity extends Activity {
             else if("eth0".equals(chosen.interfaceName))
                 event("CI_SELECTED_PHYSICAL_IFACE_ETH0");
             else event("CI_SELECTED_PHYSICAL_IFACE_OTHER");
-            List<InstalledAppTarget> applications=InstalledAppCatalog.launchable(this);
+            List<InstalledAppTarget> applications=InstalledAppCatalog.discoverable(this);
             InstalledAppTarget ciTarget=null;
             for(InstalledAppTarget app:applications){
                 if("org.wbdnext.rootprobe".equals(app.packageName)){
