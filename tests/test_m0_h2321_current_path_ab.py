@@ -28,22 +28,32 @@ class CurrentPathAB(unittest.TestCase):
         self.assertEqual(ab.LEGS,("A_default","B_tx16","A_prime"))
         self.assertTrue(ab.PATH_AB_FEATURES.endswith(",h2311_windows_npf_trace"))
 
+    def test_parallel_profile_source_and_feature_isolation(self):
+        w=(ROOT/".github/workflows/qa-h2338-current-win-arm-profile-ab.yml").read_text()
+        self.assertIn("h2338-profile-",w)
+        self.assertIn("WBD_PATH_AB_AXIS: tx16_npf64_profile",w)
+        self.assertEqual(w.count("--manifest-path h2321-baseline/Cargo.toml"),2)
+        self.assertIn("[16384,65536,16384]",w)
+        self.assertIn("[8,16,8]",w)
+        self.assertIn("bb=dict(source_sha=base",w)
+        self.assertIn("h2291_windows_tx_service",w)
+
     def test_historical_and_incremental_baselines_remain_exact(self):
-        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_BASELINE}):
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_BASELINE},clear=True):
             self.assertEqual(ab.path_ab_baseline(),ab.PATH_AB_BASELINE)
             self.assertEqual(ab.path_ab_axis(),"firstsend_copy_and_M1_ready_batch")
-        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE}):
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE},clear=True):
             self.assertEqual(ab.path_ab_baseline(),ab.PATH_AB_SETTLEMENT_BASELINE)
             self.assertEqual(ab.path_ab_axis(),"firstsend_settlement_and_control_poll")
-        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_QUEUE_BASELINE}):
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_QUEUE_BASELINE},clear=True):
             self.assertEqual(ab.path_ab_baseline(),ab.PATH_AB_QUEUE_BASELINE)
             self.assertEqual(ab.path_ab_axis(),"direct_npf_queue_staging")
-        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"native_off_loan"}):
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"native_off_loan"},clear=True):
             self.assertEqual(ab.path_ab_axis(),"native_off_loan")
-        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"tx16_npf64_profile"}):
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":ab.PATH_AB_SETTLEMENT_BASELINE,"WBD_PATH_AB_AXIS":"tx16_npf64_profile"},clear=True):
             self.assertEqual(ab.path_ab_candidate_source(),ab.PATH_AB_SETTLEMENT_BASELINE)
             self.assertTrue(ab.path_ab_candidate_features().endswith(",h2291_windows_tx_service"))
-        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":"unapproved"}):
+        with patch.dict("os.environ",{"WBD_H2321_BASELINE_SOURCE":"unapproved"},clear=True):
             with self.assertRaises(ValueError):
                 ab.path_ab_baseline()
 

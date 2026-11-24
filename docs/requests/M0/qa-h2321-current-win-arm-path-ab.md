@@ -11,3 +11,5 @@ A/A-prime freeze c828c4561917151f82385edfbe21ada60849c6df (H2327 candidate), B a
 
 ## H2336 isolated OFF loan after negative increments
 A/A′ exact H2323 6fa10d7; B H2335 isolated loan only. Two independent groups. Same TX8/NPF16KiB, Go/ARM current. No H2326 or H2330 product changes. Separate run concurrency identity.
+
+H2336 retry: isolate static test environment from selected axis; same product delta. Do not count failed static attempt as network evidence.
