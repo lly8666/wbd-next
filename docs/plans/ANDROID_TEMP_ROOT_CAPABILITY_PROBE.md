@@ -1,3 +1,7 @@
+## B98｜原 MTU 审计与7模式边界矩阵（当前）
+
+B97 `94cb981fa71affb20c462f7a105310b0be3dd98d` [Action 45506419874](https://github.com/lly8666/wbd-next/actions/runs/45506419874) 14/0/6；Fixed/Auto实际 source+parity PASS，累计7/7 App TX；DNS TC PASS。main 共享 path_budget.rs/测试及 M3 FEC seal 实现完全相同，Android接线错误而非自动MTU公式。B98 7 guest × 4场景（1280/1460/1500/1500+server record1200），真实TLS+OS TUN、MTU-1/MTU UDP DF、MTU+1 EMSGSIZE、真实RAW计数/Stop。详见 [B98 devlog](../devlog/android-root-probe/20261125-b98-mtu-boundary-matrix.md)。未证明远端双向或实体ARM64。
+
 ## B97｜Fixed/Auto record budget 与 FEC source/parity（当前）
 
 B96 `bae7a69c2d47a91ea0fd3813474e8985b38a4677` [Action 45503675129](https://github.com/lly8666/wbd-next/actions/runs/45503675129) 19/1/6，8/9 guest完整PASS，9/9 cleanup；24/24 UID回显、3/3 Resolver DNS/Stop、7/7原TLS/M4/Stop、5/7实际 App TX。Fixed/Auto App socket成功而 RAW copy不增，源码发现14B reserved inner budget被共享M3已编码record入口拒绝。B97仅同owner冷态分离两视图、保持原MTU/PN/AEAD/Stop；两FEC独立guest及32包真实source/parity，另DNS TC→TCP新guest。详见 [B97 devlog](../devlog/android-root-probe/20261125-b97-fixed-record-budget.md)。remote M4/repair/M2 APPLIED及READY自动恢复未证。

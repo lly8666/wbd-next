@@ -69,6 +69,33 @@ public final class TrafficInstrumentation extends Instrumentation {
         try{
             String probe=args.getString("uid_probe","");
             if(!probe.isEmpty()||"system".equals(args.getString("dns_probe")))enterForeground();
+            if("mtu-minus".equals(probe)||"mtu-edge".equals(probe)||"mtu-over".equals(probe)){
+                int size=Integer.parseInt(args.getString("ip_size"));
+                if(size<576||size>1501)throw new IllegalArgumentException("invalid fixture IP size");
+                byte[] payload=new byte[size-28];
+                java.io.FileDescriptor fd=android.system.Os.socket(android.system.OsConstants.AF_INET,
+                    android.system.OsConstants.SOCK_DGRAM,android.system.OsConstants.IPPROTO_UDP);
+                try{
+                    // Linux IP_MTU_DISCOVER=10, IP_PMTUDISC_DO=2; ordinary socket DF.
+                    android.system.Os.setsockoptInt(fd,android.system.OsConstants.IPPROTO_IP,10,2);
+                    android.system.Os.connect(fd,java.net.InetAddress.getByName("192.0.2.1"),43999);
+                    boolean reject="mtu-over".equals(probe);
+                    for(int j=0;j<(reject?1:4);j++){
+                        payload[0]=(byte)j;
+                        try{
+                            if(android.system.Os.write(fd,payload,0,payload.length)!=payload.length)
+                                throw new java.io.IOException("short MTU UDP write");
+                            if(reject)throw new IllegalStateException("oversize DF datagram unexpectedly accepted");
+                        }catch(android.system.ErrnoException error){
+                            if(!reject||error.errno!=android.system.OsConstants.EMSGSIZE)throw error;
+                            result.putString("report","uid_probe_rejected="+Process.myUid()+" errno=EMSGSIZE foreground=1 ip_size="+size);
+                            finishProbe(Activity.RESULT_OK,result);return;
+                        }
+                    }
+                    result.putString("report","uid_probe_sent="+Process.myUid()+" foreground=1 ip_size="+size+" datagrams=4");
+                    finishProbe(Activity.RESULT_OK,result);return;
+                }finally{android.system.Os.close(fd);}
+            }
             if("echo4".equals(probe)||"send4".equals(probe)||"baseline4".equals(probe)||"burst4".equals(probe)){
                 String dest="baseline4".equals(probe)?"10.0.2.2":"192.0.2.1";
                 udp4(dest,"WBD_B94_UID4".getBytes(java.nio.charset.StandardCharsets.US_ASCII),!"send4".equals(probe)&&!"burst4".equals(probe),"burst4".equals(probe)?32:1);

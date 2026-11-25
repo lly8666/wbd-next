@@ -37,6 +37,9 @@ for f in "$n/wiring-specialty-amd64" "$n/libwbd_engine-amd64.so" out/android-roo
 echo B91_TEST_STAGE_PASS
 shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
+ mtu-*)
+  m="${shard#mtu-}"
+  scenes=("mtu-$m-1280" "mtu-$m-1460" "mtu-$m-1500" "mtu-$m-peer1200");;
  routes) scenes=(route-single route-group route-all);;
  route-single|route-group|route-all) scenes=("$shard");;
  normal) scenes=(normal);;
@@ -99,6 +102,13 @@ for scene in "${scenes[@]}";do
  if invoke "$limit" "$scene" >"$out/$scene.log" 2>&1;then
   case "$scene" in
    system-*) if grep -Fq "B91_SYSTEM_DNS_QUERY_PASS $scene" "$out/$scene.log" && grep -Fq "B91_SYSTEM_DNS_STOP_PASS $scene" "$out/$scene.log";then status=PASS;fi ;;
+   mtu-*) if grep -Fq "B98_MTU_SCENE_PASS $scene" "$out/$scene.log" &&
+       grep -Fq B98_MTU_OS_READBACK_PASS "$out/$scene.log" &&
+       [[ "$(grep -c B98_MTU_BOUNDARY_TX_PASS "$out/$scene.log")" == 2 ]] &&
+       grep -Fq B98_MTU_DF_OVERSIZE_REJECT_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_UID_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_TUN_CLOSE_PASS "$out/$scene.log";then status=PASS;fi ;;
    route-*) m="$(printf '%s' "$scene" | cut -d- -f2 | tr 'a-z' 'A-Z')"
      if grep -Fq "B90_ROUTE_$m"_"UID_PACKET_CN_PASS" "$out/$scene.log" && grep -Fq "B90_ROUTE_$m"_"STOP_PASS" "$out/$scene.log" && grep -Fq B90_TUN_CLOSE_PASS "$out/$scene.log";then status=PASS;fi ;;
    *) if grep -Fq "B91_NATIVE_M4_STARTED $scene" "$out/$scene.log" &&
@@ -140,10 +150,13 @@ rows=dict(line.split("\t") for line in (p/"results.tsv").read_text().splitlines(
 native={}
 uid_stages={}
 dns_stages={}
+mtu_stages={}
 for scene in rows:
  f=p/(scene+".log")
  if not f.exists():continue
  t=f.read_text(errors="replace")
+ if scene.startswith("mtu-"):
+  mtu_stages[scene]={"os_readback":"PASS" if "B98_MTU_OS_READBACK_PASS " in t else "NOT_PROVEN","boundary_tx_checks":t.count("B98_MTU_BOUNDARY_TX_PASS "),"df_oversize":"PASS" if "B98_MTU_DF_OVERSIZE_REJECT_PASS " in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS " in t else "NOT_PROVEN","scope":"ordinary IPv4 UDP and native counter evidence; no independent raw wire capture"}
  if scene.startswith("route-"):
   uid_stages[scene]={"java_echo_passes":t.count("B94_UID_SOCKET_ROUNDTRIP_PASS echo\n"),"inet4_echo_passes":t.count("B94_UID_SOCKET_ROUNDTRIP_PASS echo4\n"),"physical_java_passes":t.count("B94_UID_PHYSICAL_BASELINE_PASS baseline\n"),"physical_inet4_passes":t.count("B94_UID_PHYSICAL_BASELINE_PASS baseline4\n"),"trials_per_socket":2}
  if scene.startswith("system-"):
@@ -153,7 +166,7 @@ for scene in ("normal","fec-fixed","fec-auto","game2","game2-fixed","game4","gam
  if not f.exists():continue
  t=f.read_text(errors="replace")
  native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN","java_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" 1\n" in t else "NOT_PROVEN","inet4_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" send4\n" in t else "NOT_PROVEN","fec_source_parity":"PASS" if "B97_FEC_SOURCE_PARITY_PASS "+scene+" " in t else "NOT_PROVEN"}
-r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
+r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"mtu_stages":mtu_stages,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))
 PY

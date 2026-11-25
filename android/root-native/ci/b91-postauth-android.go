@@ -96,7 +96,7 @@ func b91WaitTX(ctx context.Context,read func()(uint64,error),before uint64)error
  }
  return fmt.Errorf("original Android native TX did not increase")
 }
-func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit uint16,
+func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary bool,
  route func(string)(func()error,error),send func(string)error)(ret error){
  cert,roots,e:=b91Cert();if e!=nil{return e}
  routeKey:=[]byte("0123456789abcdef0123456789abcdef")
@@ -120,7 +120,7 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
    defer p.wg.Done()
    _,e:=EstablishServerV4(ctx,p.server,ServerAdmissionConfig{
     TLS:ServerConfig{ServerName:"target.test",RouteKey:routeKey,TLSConfig:&tls.Config{Certificates:[]tls.Certificate{cert}},Timeout:15*time.Second},
-    ExpectedUsername:"b91-ci",ExpectedPassword:"b91-fixture",ServerLimit:recordLimit,
+    ExpectedUsername:"b91-ci",ExpectedPassword:"b91-fixture",ServerLimit:serverLimit,
     AllocateLease:func(req AdmissionRequest)(string,error){return V4AllocateAutomaticLease(leases,req)},
    },V4ServerOptions{DataPlaneReady:true,Epochs:store,perClientMixedMode:true})
    if e!=nil{fmt.Println("B94_ORIGINAL_SERVER_ADMISSION_FAIL",e)}else{fmt.Println("B94_ORIGINAL_SERVER_ADMISSION_PASS")}
@@ -171,6 +171,30 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  undo,e:=route(lease);if e!=nil{return e};if undo==nil{return ErrAdmissionUnsupported}
  defer func(){e:=undo();ret=errors.Join(ret,e);if e==nil{fmt.Println("B91_NATIVE_UID_STOP_PASS",mode)}}()
  var probeErr error
+ if boundary{
+  for _,probe:=range []string{"mtu-minus","mtu-edge"}{
+   before,e:=tx();if e!=nil{return e}
+   var fecBefore [9]uint64
+   if fecCounters!=nil{fecBefore,e=fecCounters();if e!=nil{return e}}
+   if e=send(probe);e!=nil{return e}
+   deadline:=time.Now().Add(6*time.Second)
+   copied:=false
+   for time.Now().Before(deadline){
+    after,e:=tx();if e!=nil{return e}
+    copied=after>=before+4
+    if fecCounters!=nil{
+     f,e:=fecCounters();if e!=nil{return e}
+     copied=copied&&f[0]>=fecBefore[0]+4&&f[1]>fecBefore[1]&&f[7]==0&&f[8]==0
+    }
+    if copied{fmt.Println("B98_MTU_BOUNDARY_TX_PASS",mode,probe,"four_datagrams");break}
+    select{case <-ctx.Done():return ctx.Err();case <-time.After(50*time.Millisecond):}
+   }
+   if !copied{return fmt.Errorf("MTU boundary original native TX incomplete mode=%s probe=%s",mode,probe)}
+  }
+  if e=send("mtu-over");e!=nil{return e}
+  fmt.Println("B98_MTU_DF_OVERSIZE_REJECT_PASS",mode)
+  return nil
+ }
  for _,probe:=range []string{"1","send4"}{
   before,e:=tx();if e!=nil{return e}
   if e=send(probe);e!=nil{fmt.Println("B95_NATIVE_SOCKET_SEND_FAIL",mode,probe,e);probeErr=errors.Join(probeErr,e);continue}
