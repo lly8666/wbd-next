@@ -1,0 +1,8 @@
+# H2430 source-paced target and H2429 receipt
+
+
+H2430 user-directed capacity target supersedes chasing peak throughput: source-only offered 200/400/600 Mbps staircase at 400ms RTT (200ms each direction assumption), no middle rate cap. Prior H2428 at four paced 200Mbps streams delivered ~800 but 305609–429735 server full drops per leg; not a healthy working point. H2429 corrected optional proxy listener/epoll lifecycle dual ISA 4/4 functional incl 8 concurrent, half-close/UDP/scope/Stop and x86 ABBA 455.67/570.05/570.16/457.22 Mbps; source 8800edefbb45a690bbe572a58f7a9ea54b0a47b9 verified scoped only. Both evidence docs/evidence/M0/20261125-H2428-H2429-FQ-LIFECYCLE.json. H2430 source dadb01fcd816f07db51bb410ba04d2a60702a2f7, [run45566751681](https://github.com/lly8666/wbd-next/actions/runs/45566751681), two shared exact native builds and 20 independent scenario jobs/111 requested diagnostic legs; per job source load steps UDP then TCP, splice TCP-only. 0/1/2/5/10/15/30% IID, FEC matched diagnostic choices, off controls 1/5%, maximum at 0% cost isolation, ARM 0/off 0/max 5/mild 30/max, x86 upload and proxy down 0/5/30. Actual tx/rx, all link/qdisc/netstat/softnet, socket/CPU/native FEC Stop. Pre/post bare TCP>=2Gbps is basic infrastructure check, not packet-rate qualification. Distinguish offered600 vs delivered600, overhead125% requires >1.35Gbps wire. No production or default changes; NAT default/optional splice architecture holds. Follow docs/requests/M0/h2430-source-paced-600-target.md.
+
+```feature-impact
+{"kind":"updated","ids":["linux-tcp-splice-proxy"],"reason":"Record actual scoped H2429 functional evidence, new target; no code/default promotion."}
+```

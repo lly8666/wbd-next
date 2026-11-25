@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "8800edefbb45a690bbe572a58f7a9ea54b0a47b9",
+  "result": "MEASURED_SCOPED_NATIVE_LOCAL",
+  "artifact_verified": true,
+  "scope": "Ten actual ZIPs downloaded and examined. H2428 32 legs uses harness 4cbe20756a8a96f3ea48c0fb1b571e4cc577e1a0 and frozen 559f2093857919c6293ee6f85622b55f198251fc binary. H2429 different exact product source 8800edefbb45a690bbe572a58f7a9ea54b0a47b9 native functional 4 legs and x86 clean ABBA 4 legs. Local four kernel netns, no independent 3-runner or physical qualification.",
+  "h2428": {
+    "runs": [
+      {
+        "scenario": "uncapped",
+        "arch": "x86_64",
+        "order": "ABBA",
+        "run_id": 45563752440,
+        "artifact_id": 14998913603,
+        "ordered_leg_mbps": [
+          1506.76,
+          1703.94,
+          1718.89,
+          1505.58
+        ],
+        "server_queue_full_drops": [
+          464910,
+          686375,
+          755863,
+          436451
+        ],
+        "effect_pct": 13.6268558
+      },
+      {
+        "scenario": "uncapped",
+        "arch": "x86_64",
+        "order": "BAAB",
+        "run_id": 45563752390,
+        "artifact_id": 14999141629,
+        "ordered_leg_mbps": [
+          1812.86,
+          1530.71,
+          1565.67,
+          1819.09
+        ],
+        "server_queue_full_drops": [
+          641833,
+          369596,
+          418765,
+          636405
+        ],
+        "effect_pct": 17.2964226
+      },
+      {
+        "scenario": "uncapped",
+        "arch": "aarch64",
+        "order": "ABBA",
+        "run_id": 45563752341,
+        "artifact_id": 14998489768,
+        "ordered_leg_mbps": [
+          1291.39,
+          1345.44,
+          1356.83,
+          1198.55
+        ],
+        "server_queue_full_drops": [
+          527558,
+          804993,
+          807148,
+          509461
+        ],
+        "effect_pct": 8.5277411
+      },
+      {
+        "scenario": "uncapped",
+        "arch": "aarch64",
+        "order": "BAAB",
+        "run_id": 45563752332,
+        "artifact_id": 14998659319,
+        "ordered_leg_mbps": [
+          1368.61,
+          1223.35,
+          1215.93,
+          1371.18
+        ],
+        "server_queue_full_drops": [
+          819716,
+          507696,
+          507251,
+          794582
+        ],
+        "effect_pct": 12.319672
+      },
+      {
+        "scenario": "paced800",
+        "arch": "x86_64",
+        "order": "ABBA",
+        "run_id": 45563752384,
+        "artifact_id": 14998639484,
+        "ordered_leg_mbps": [
+          798.44,
+          793.89,
+          797.44,
+          800.4
+        ],
+        "server_queue_full_drops": [
+          325425,
+          369048,
+          363935,
+          326757
+        ],
+        "effect_pct": -0.4695501
+      },
+      {
+        "scenario": "paced800",
+        "arch": "x86_64",
+        "order": "BAAB",
+        "run_id": 45563752296,
+        "artifact_id": 14998813916,
+        "ordered_leg_mbps": [
+          798.06,
+          799.27,
+          798.51,
+          798.71
+        ],
+        "server_queue_full_drops": [
+          400398,
+          305609,
+          325789,
+          429735
+        ],
+        "effect_pct": -0.0630484
+      },
+      {
+        "scenario": "paced800",
+        "arch": "aarch64",
+        "order": "ABBA",
+        "run_id": 45563752435,
+        "artifact_id": 14998853822,
+        "ordered_leg_mbps": [
+          789.92,
+          801.83,
+          800.57,
+          803.22
+        ],
+        "server_queue_full_drops": [
+          336381,
+          394088,
+          389148,
+          350042
+        ],
+        "effect_pct": 0.5810455
+      },
+      {
+        "scenario": "paced800",
+        "arch": "aarch64",
+        "order": "BAAB",
+        "run_id": 45563752417,
+        "artifact_id": 14999690335,
+        "ordered_leg_mbps": [
+          797.56,
+          793.9,
+          802.08,
+          799.03
+        ],
+        "server_queue_full_drops": [
+          408519,
+          326351,
+          341621,
+          363549
+        ],
+        "effect_pct": 0.0382066
+      }
+    ],
+    "notes": [
+      "A both TUN fq600, B only server uncapped fq flow_limit256. 4 streams unlimited or iperf3 -b 200M each, 0 added RTT. Paced actual ~789.92–803.22 Mbps, server queue full drops 305609–429735 each leg despite delivery near target. Uncapped pressure throughput increases, full drops also increase. Do not promote defaults from saturation."
+    ]
+  },
+  "h2429": {
+    "run_id": 45563850692,
+    "artifacts": [
+      {
+        "id": 14998739052,
+        "arch": "x86_64"
+      },
+      {
+        "id": 14999775380,
+        "arch": "aarch64"
+      }
+    ],
+    "functional": {
+      "legs": 4,
+      "exact_duplex": true,
+      "eight_concurrent": true,
+      "delayed_receiver_seconds": 1,
+      "half_close": true,
+      "udp_nat": true,
+      "wan_refused": true,
+      "direct_loopback_closed": true,
+      "stop": true
+    },
+    "x86_clean_abba_mbps": [
+      455.67,
+      570.05,
+      570.16,
+      457.22
+    ],
+    "notes": [
+      "New listener and readiness lifecycle verified scoped functionality, not performance comparison of before/after change. Concurrent test does have some local TUN drops but complete application data."
+    ]
+  }
+}

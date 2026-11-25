@@ -29,14 +29,14 @@
   "verification": [
     {
       "platform": "linux/x86_64",
-      "scope": "H2423 prior source finite duplex/half-close/UDP and Stop, H2429 listener/lifecycle candidate not yet measured",
+      "scope": "H2429 exact candidate native finite duplex, 8 concurrent, delayed receiver, half-close, UDP NAT, listener scope and Stop observed PASS; full product/remote/Windows qualification NOT_RUN",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     },
     {
       "platform": "linux/aarch64",
-      "scope": "H2423 prior source finite duplex/half-close/UDP and Stop, H2429 listener/lifecycle candidate not yet measured",
+      "scope": "H2429 exact candidate native finite duplex, 8 concurrent, delayed receiver, half-close, UDP NAT, listener scope and Stop observed PASS; full product/remote/Windows qualification NOT_RUN",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
@@ -47,7 +47,8 @@
     "End-to-end TCP acknowledgement becomes two real TCP segments",
     "No custom CC algorithm implemented; old-kernel and physical paths not verified",
     "H2417 did forward real TCP, but 21Mbps DERP-limited path and incomplete matrix preclude performance qualification; see docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json",
-    "H2426 matched FEC 30% default fq_codel splice -11% both orders; no general performance gain. H2427 fixed fq maxrate is a separate bottleneck. H2429 correctness candidate unqualified."
+    "H2426 matched FEC 30% default fq_codel splice -11% both orders; no general performance gain. H2427 fixed fq maxrate is a separate bottleneck. H2429 correctness candidate unqualified.",
+    "H2429 native functional scope passed on x86 and ARM; full qualification still NOT_RUN. H2430 source-paced capacity target supersedes saturation comparisons."
   ],
   "promotion": null
 }
