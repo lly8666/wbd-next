@@ -547,6 +547,10 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
       echo B111_ORIGINAL_FEC_RECOVERED_TUN_PASS
       if grep -Eq ' reports=[1-9][0-9]* ' "$out/b112-native-fec-final.txt";then echo B112_REAL_REVERSE_QUALITY_PASS;fi
       if grep -Eq ' mature=[1-9][0-9]* applied=[1-9][0-9]*$' "$out/b112-native-fec-final.txt";then echo B112_NATIVE_MATURE_APPLIED_PASS;fi
+      if [[ "${WBD_B114_FINAL_REGRESSION:-0}" == 1 ]];then
+        grep -Eq ' reports=[1-9][0-9]* ' "$out/b112-native-fec-final.txt"
+        grep -Eq ' mature=[1-9][0-9]* applied=[1-9][0-9]*$' "$out/b112-native-fec-final.txt"
+      fi
     else
       grep -Fq ORIGINAL_GAME_FEC_RECOVERED_CANDIDATE_OBSERVED "$out/app-diagnostic-enums.txt" || { echo B111_GAME_FEC_CANDIDATE_NOT_PROVEN;exit 53; }
       echo B111_ORIGINAL_GAME_FEC_CANDIDATE_AND_BUSINESS_PASS

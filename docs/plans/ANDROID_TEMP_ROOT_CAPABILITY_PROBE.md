@@ -1,3 +1,7 @@
+## B114｜最终同源普通业务回归（当前）
+
+B113 `e4bdc007ffcaf3345e67c60b8122717591af513c` [Action 45571116221](https://github.com/lly8666/wbd-next/actions/runs/45571116221) 13/0/9；Auto真实drop97/recovered_tun76/reports4/mature4/applied1、五轮真实业务及Stop PASS；生产自主二次认证/READY/业务与Stop PASS；ARM64签名APK/Host审计PASS，ARM64 KVM不可用。B114一次8guest同源收口：七模式含Normal隧道DNS、Fixed/Auto轻损恢复和成熟生效、Game4 Fixed轻损候选及真实业务、独立Normal自动重连。不改生产代码，不扩展已过矩阵。详见 [B114 devlog](../devlog/android-root-probe/20261125-b114-final-same-source-regression.md)。实体ARM64/热点/IPv6/真实性能及Game恢复交付归因仍未证。
+
 ## B113｜Fixed真实恢复已证，Auto及自动重连收口（当前）
 
 B112 `f349892be173d21453551b8ccfb2f232ae540533` [Action 45567171745](https://github.com/lly8666/wbd-next/actions/runs/45567171745) 10/3/10；Fixed五轮业务、111实际drop、77恢复TUN、4成熟反馈、applied1 PASS；Auto carrier前置NOT_RUN；生产自动重连第二START/SYN已证但WiFi重建后CI载体未转接，未证第二READY。B113 2 guest：Auto原反馈及重连CI重挂tc、真实二次业务；修B61静态审计旧lambda引用。不改生产代码，详见 [B113 devlog](../devlog/android-root-probe/20261125-b113-final-lifecycle.md)。实体ARM64/热点/性能及Game恢复交付归因仍待验。

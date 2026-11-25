@@ -221,7 +221,7 @@ jobs:
           if-no-files-found: warn
 
   b108-carrier-linux-admission:
-    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]')
+    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && !contains(github.event.head_commit.message, '[android-b114-final-regression]')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -498,15 +498,16 @@ jobs:
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic
     # TUN + AF_PACKET readiness, report SYNACK/TLS/lease/M4 separately.
-    # This is NOT the D2 true TCP+UDP end-to-end gate yet.
+    # B108+ carrier runs additionally require true remote TCP/UDP and owned Stop.
+    # CI carrier is not a physical Android network or performance qualification.
     needs: [arm64-native, b2-authentic-cn-geosite-host, linux-x86-original-server-d2-s0]
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     strategy:
       fail-fast: false
-      max-parallel: 7
+      max-parallel: 8
       matrix:
-        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
+        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b114-final-regression]') && '["normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game2","game2-fixed","game4","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
     permissions: {contents: read, actions: read}
     env:
       GH_TOKEN: ${{ github.token }}
@@ -514,6 +515,7 @@ jobs:
       WBD_D2_ORIGINAL: '1'
       WBD_B109_MODE: ${{ startsWith(matrix.mode, 'normal-') && 'normal' || matrix.mode == 'fec-fixed-loss' && 'fec-fixed' || matrix.mode == 'fec-auto-loss' && 'fec-auto' || matrix.mode == 'game4-fixed-loss' && 'game4-fixed' || matrix.mode }}
       WBD_B110_SCENE: ${{ matrix.mode }}
+      WBD_B114_FINAL_REGRESSION: ${{ contains(github.event.head_commit.message, '[android-b114-final-regression]') && '1' || '0' }}
       WBD_B108_CARRIER: ${{ contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && !contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
