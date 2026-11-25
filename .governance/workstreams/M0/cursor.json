@@ -4,23 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2427,
-  "checkpoint_sha": "1890640745c50f0c9d4ac92fd05048c67beb2723",
+  "sequence": 2429,
+  "checkpoint_sha": "0c99aa25ddf6447e3b1f03887d3468035b0c4093",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收H2427十组：独立分辨fq maxrate与两端调度影响、双ISA四大流混合小业务。若两序及双ISA稳定，评估最小可落地fq调整；仍需真实跨机/Windows和模式资格。",
+  "next_action": "收H2428双ISA仅服务端uncapped fq（unlimited/4×200Mbps）与H2429双ISA生命周期修正；核真实丢包/小业务/Stop，不再扩大无关单流矩阵。选定架构已落文档，生产默认保持。",
   "unverified": true,
-  "last_tested_source": "8b991a2e127afa03b2d3329f7da274283060f270",
+  "last_tested_source": "4a1149592edf2a1f94d59180396ed470c8ff1f9a",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2426-SPLICE-DECISION-GAPS.json"
+    "docs/evidence/M0/20261125-H2427-FQ-MECHANISM.json"
   ],
   "context_refs": [
+    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md",
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/evidence/M0/20261125-H2425-MATCHED-FEC-HIGH-LOSS.json"
+    "docs/evidence/M0/20261125-H2426-SPLICE-DECISION-GAPS.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2426 32/32八ZIP，默认fq_codel后30% split两序-11%，5%不稳定；fq600混合单大流去除显式fq+24/25%且800TCP/3200UDP全部完成。代理保留可选不晋级。H2427十组冻结产品机理及双ISA四流混合在途。"
+  "partial_summary": "H2427 40/40十ZIP：fq maxrate主因，服务端-only +25%，客户端-only无益；四流队列满大量增加且2探针miss。H2428确定NAT默认/可选splice/原FEC/服务端uncapped fq候选。H2429 listener及idle epoll实际修正，待原生验证。未晋级。"
 }
