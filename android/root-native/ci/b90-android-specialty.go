@@ -261,6 +261,11 @@ func RunAndroidSpecialtyCI(a []string)int{
  mtu,e:=strconv.Atoi(a[4]);if e!=nil{return 2}
  local,e:=netip.ParseAddr(a[5]);if e!=nil{return 2}
  scope:=dnsnative.PhysicalScope{NetworkHandle:handle,InterfaceName:a[2],IfIndex:index,MTU:mtu,LocalIPv4:local}
+ if strings.HasPrefix(a[0],"cycle-"){
+  uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
+  if e=b103Cycle(scope,uid,a[0]);e!=nil{fmt.Println("B103_CYCLE_FAIL",a[0],e);return 1}
+  fmt.Println("B103_CYCLE_PASS",a[0]);return 0
+ }
  if strings.HasPrefix(a[0],"daily-dns-"){
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
   if e=b91Native(scope,uid,a[0],1460,0,false,false,"");e!=nil{fmt.Println("B102_DAILY_DNS_FAIL",a[0],e);return 1}
@@ -414,8 +419,30 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
 
 // Exact production openTun, lease/MTU callbacks, original UID route owner,
 // and original product Connect/Close. Only the cold wire is in-process.
+// Ordinary explicit disconnect/reconnect in one actual Bionic process.
+// The existing in-process cold transport is not the Android RootService
+// or an external server, and does not claim automatic reconnect.
+func b103Cycle(scope dnsnative.PhysicalScope,uid int,scene string)error{
+ var modes []string
+ switch scene{
+ case "cycle-normal":modes=[]string{"steady-daily-dns-physical-normal","normal","daily-dns-physical-normal"}
+ case "cycle-fec":modes=[]string{"steady-daily-dns-physical-fec-fixed","daily-dns-physical-fec-auto","daily-dns-physical-normal"}
+ case "cycle-game":modes=[]string{"steady-daily-dns-physical-game2","daily-dns-physical-game4-fixed","daily-dns-cn-normal"}
+ default:return fmt.Errorf("unknown normal usage cycle")
+ }
+ for i,mode:=range modes{
+  fmt.Println("B103_CYCLE_CONNECT",scene,i+1,mode,"pid",os.Getpid())
+  if e:=b91Native(scope,uid,mode,1460,0,false,false,"");e!=nil{return e}
+  if e:=b90UsesTun(uid,"192.0.2.1","wbdb91m4",false);e!=nil{return e}
+  if e:=b94BaselineUID(uid);e!=nil{return e}
+  fmt.Println("B103_CYCLE_STOP_AND_PHYSICAL_PASS",scene,i+1,mode,"pid",os.Getpid())
+ }
+ return nil
+}
 func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerCap uint16,boundary,wireWitness bool,mixedOrder string)(ret error){
  const dev="wbdb91m4"
+ steady:=strings.HasPrefix(mode,"steady-")
+ mode=strings.TrimPrefix(mode,"steady-")
  dnsScene:=""
  if strings.HasPrefix(mode,"daily-dns-"){
   spec:=strings.TrimPrefix(mode,"daily-dns-")
@@ -516,11 +543,14 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
   return androidRootRouteAfterNative(c,tun,lease)
  }
  send:=func(probe string)error{
-  qctx,qcancel:=context.WithTimeout(ctx,12*time.Second);defer qcancel()
+  limit:=12*time.Second
+  if probe=="daily-dns-steady"{limit=40*time.Second}
+  qctx,qcancel:=context.WithTimeout(ctx,limit);defer qcancel()
   if strings.HasPrefix(probe,"daily-dns-"){
    name:="system.wbd-b91.test";transport:="udp"
    if dnsScene=="cn"{name="cn.wbd-b91.test"}
    if probe=="daily-dns-tcp"{transport="tcp"}
+   if probe=="daily-dns-steady"{transport="steady"}
    if probe=="daily-dns-tunnel"{name="noncn.wbd-b91.test";transport="send"}
    return b91Instrument(qctx,uid,"-e","dns_probe","daily4","-e","dns_name",name,"-e","dns_transport",transport)
   }
@@ -534,13 +564,13 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
   }
   return b91Instrument(qctx,uid,"-e","uid_probe",probe)
  }
- if !wireWitness{return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,peerMSSes,route,send)}
+ if !wireWitness{return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,peerMSSes,route,send)}
  captureLimit:=int(serverLimit)
  if mixedOrder!=""{captureLimit=int(expectedMSS)}
  stopCapture,e:=b99ObserveWire(scope,c.peerIP,outer,captureLimit,expectedMTU,int(c.gameLanes))
  if e!=nil{return e}
  defer func(){ret=errors.Join(ret,stopCapture())}()
- return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,peerMSSes,route,send)
+ return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,peerMSSes,route,send)
 }
 
 // Independent CI-only AF_PACKET L3 witness. Unlike Rust counters this

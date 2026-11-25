@@ -89,6 +89,42 @@ public final class TrafficInstrumentation extends Instrumentation {
                 query.writeByte(0);query.writeShort(1);query.writeShort(1);
                 byte[] q=raw.toByteArray(),answer=null;
                 java.net.InetSocketAddress dest=new java.net.InetSocketAddress("192.0.2.53",53);
+                if("steady".equals(transport)){
+                    // Same ordinary UDP socket throughout. Move the actual
+                    // Activity to the background midway (not a synthetic
+                    // process-state flag); instrumentation may retain its
+                    // own OS importance, which is recorded rather than assumed.
+                    int backgroundImportance=-1;
+                    try(java.net.DatagramSocket s=new java.net.DatagramSocket()){
+                        s.connect(dest);s.setSoTimeout(4000);
+                        for(int j=0;j<5;j++){
+                            if(j==2){
+                                final boolean[] moved={false},focused={true};
+                                runOnMainSync(()->moved[0]=foreground.moveTaskToBack(true));
+                                for(int k=0;k<30;k++){
+                                    runOnMainSync(()->focused[0]=foreground.hasWindowFocus());
+                                    if(!focused[0])break;
+                                    android.os.SystemClock.sleep(100);
+                                }
+                                if(!moved[0]||focused[0])throw new IllegalStateException("Activity did not move to background");
+                                android.app.ActivityManager.RunningAppProcessInfo info=new android.app.ActivityManager.RunningAppProcessInfo();
+                                android.app.ActivityManager.getMyMemoryState(info);backgroundImportance=info.importance;
+                            }
+                            q[1]=(byte)(0x72+j);
+                            s.send(new java.net.DatagramPacket(q,q.length,dest));
+                            java.net.DatagramPacket packet=new java.net.DatagramPacket(new byte[512],512);
+                            s.receive(packet);
+                            byte[] a=java.util.Arrays.copyOf(packet.getData(),packet.getLength());
+                            if(a.length<16||a[0]!=q[0]||a[1]!=q[1]||(a[2]&128)==0||a[7]!=1||
+                               !java.util.Arrays.equals(java.util.Arrays.copyOfRange(a,a.length-4,a.length),new byte[]{(byte)192,0,2,55}))
+                                throw new IllegalStateException("steady DNS answer mismatch at "+j);
+                            if(j<4)android.os.SystemClock.sleep(4000);
+                        }
+                    }
+                    result.putString("report","dns_probe_uid="+Process.myUid()+" foreground=1 steady_answers=5 background_focus_lost=1 background_importance="+backgroundImportance);
+                    android.util.Log.i("WBD_UID_TEST","B103_ACTIVITY_BACKGROUND_IMPORTANCE "+backgroundImportance);
+                    finishProbe(Activity.RESULT_OK,result);return;
+                }
                 if("tcp".equals(transport)){
                     try(java.net.Socket s=new java.net.Socket()){
                         s.connect(dest,4000);s.setSoTimeout(4000);

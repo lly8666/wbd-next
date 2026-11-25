@@ -99,7 +99,7 @@ func b91WaitTX(ctx context.Context,read func()(uint64,error),before uint64)error
  }
  return fmt.Errorf("original Android native TX did not increase")
 }
-func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary bool,peerMSSes []uint16,
+func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary,steady bool,peerMSSes []uint16,
  route func(string)(func()error,error),send func(string)error)(ret error){
  cert,roots,e:=b91Cert();if e!=nil{return e}
  routeKey:=[]byte("0123456789abcdef0123456789abcdef")
@@ -194,6 +194,13 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  tunnelDNS:=normal.AndroidTunnelDNS||len(normal.AndroidCN8503Raw)>0
  if physicalDNS||tunnelDNS{
   if physicalDNS{
+   if steady{
+    before,e:=dnsRead();if e!=nil{return e}
+    if e=send("daily-dns-steady");e!=nil{return e}
+    after,e:=dnsRead();if e!=nil{return e}
+    if after[0]<before[0]+5||after[1]<before[1]+5||after[2]!=before[2]{return fmt.Errorf("steady DNS native replies incomplete: %v -> %v",before,after)}
+    fmt.Println("B103_STEADY_DNS_AND_ACTIVITY_SWITCH_PASS",mode,before,after)
+   }
    before,e:=dnsRead();if e!=nil{return e}
    if e=send("daily-dns-udp");e!=nil{return e}
    after,e:=dnsRead();if e!=nil{return e}

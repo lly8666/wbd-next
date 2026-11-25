@@ -31,12 +31,34 @@ def main():
     cfg=_config(label,mode,gfec,profile,1,src,int(os.environ["GITHUB_RUN_ID"]),arch,traffic_mbps=10)
     # Reuse existing proven 20s 10Mbps per direction, 1% IID, 75ms
     # normal weak-network scenario, not an extreme stress sweep.
+    daily=os.environ.get("TEST_DAILY")=="1"
+    if daily:
+        # One everyday mixed workload, no edge-case sweep. Both genuine
+        # Linux endpoints carry concurrent TCP and UDP through original M4.
+        cfg["id"]="B103_"+arch+"_"+label+"_mixed"
+        cfg["traffic"]["udp_share"]=0.5
+        cfg["traffic"]["observe_size_classes"]=False
+        cfg["traffic"]["observe_independent_flows"]=True
+        for direction in ("c2s","s2c"):
+            cfg["phases"][0][direction]["delay_ms"]=20
     case=out/cfg["id"]
     report={"source":src,"arch":arch,"mode":label,"binary_hashes":hashes,"scope":"original Linux native shared protocol; not Android runtime","status":"NOT_RUN"}
     try:
         leg=LinuxExperiment(cfg,out/"bundle-A",case,"A").run()
         report.update(analyze(case,leg))
         report["status"]=leg.get("result","NOT_PROVEN")
+        if daily:
+            rows=leg.get("observed",[])
+            expected={(d,p) for d in ("c2s","s2c") for p in ("tcp","udp")}
+            real={(row["direction"],row["protocol"]) for row in rows
+                  if row["sent"]>0 and row["delivered"]>0}
+            tcp_complete=all(row["missing_after_drain"]==0 for row in rows if row["protocol"]=="tcp")
+            report["daily_mixed"]={"positive_flows":sorted(real),"tcp_drained_without_missing":tcp_complete,
+                "fec_final_readback":leg.get("telemetry",{}).get("fec_final_readback","NOT_OBSERVED"),
+                "scope":"Linux original real TCP/UDP both directions; 1% IID, 20ms one-way; not Android RX"}
+            if real!=expected or not tcp_complete:
+                report["status"]="FAIL"
+                report["daily_mixed"]["error"]="missing real directional traffic or TCP delivery"
     except Exception as e:
         report["status"]="FAIL";report["error"]=str(e)[:400]
         raise

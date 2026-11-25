@@ -541,7 +541,7 @@ jobs:
       max-parallel: 9
       matrix:
         # Focused B97 marker avoids replaying eight fully green B96 guests.
-        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-daily-usage]') && '["daily-normal","daily-fixed","daily-auto","daily-game2","daily-game4","daily-route-single","daily-route-group","daily-route-all"]' || contains(github.event.head_commit.message, '[android-recovery-mss-dns6]') && '["crash-single","crash-group","crash-all","crash-dns","mixed-game2","mixed-game2-fixed","mixed-game4","mixed-game4-fixed"]' || contains(github.event.head_commit.message, '[android-wire-uid-dns6]') && '["wire-normal","wire-fec-fixed","wire-fec-auto","wire-game2","wire-game2-fixed","wire-game4","wire-game4-fixed","route-single","route-group","route-all","dns6"]' || contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
+        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-normal-cycle]') && '["cycle-normal","cycle-fec","cycle-game"]' || contains(github.event.head_commit.message, '[android-daily-usage]') && '["daily-normal","daily-fixed","daily-auto","daily-game2","daily-game4","daily-route-single","daily-route-group","daily-route-all"]' || contains(github.event.head_commit.message, '[android-recovery-mss-dns6]') && '["crash-single","crash-group","crash-all","crash-dns","mixed-game2","mixed-game2-fixed","mixed-game4","mixed-game4-fixed"]' || contains(github.event.head_commit.message, '[android-wire-uid-dns6]') && '["wire-normal","wire-fec-fixed","wire-fec-auto","wire-game2","wire-game2-fixed","wire-game4","wire-game4-fixed","route-single","route-group","route-all","dns6"]' || contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions: {contents: read, actions: read}
@@ -792,13 +792,13 @@ jobs:
   linux-seven-mode-native-parallel:
     # Reuse the SAME two Linux CLI bundles already built above. No per-mode
     # recompilation, no Windows/Android runtime claim, no duplicate M0 CI.
-    if: ${{ always() && needs.linux-x86-original-server-d2-s0.result == 'success' && needs.linux-original-server-normal-off.result != 'cancelled' && github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-native-matrix]')) }}
+    if: ${{ always() && needs.linux-x86-original-server-d2-s0.result == 'success' && needs.linux-original-server-normal-off.result != 'cancelled' && github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-native-matrix]') || contains(github.event.head_commit.message, '[android-normal-cycle]')) }}
     needs: [linux-x86-original-server-d2-s0, linux-original-server-normal-off]
     strategy:
       fail-fast: false
       max-parallel: 7
       matrix:
-        arch: [amd64, arm64]
+        arch: ${{ fromJSON(contains(github.event.head_commit.message, '[android-normal-cycle]') && '["amd64"]' || '["amd64","arm64"]') }}
         mode: [normal_off, normal_maximum6, normal_auto, game2_off, game2_fixed6, game4_off, game4_fixed6]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     timeout-minutes: 15
@@ -813,12 +813,13 @@ jobs:
         env:
           TEST_ARCH: ${{ matrix.arch }}
           TEST_MODE: ${{ matrix.mode }}
+          TEST_DAILY: ${{ contains(github.event.head_commit.message, '[android-normal-cycle]') && '1' || '0' }}
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables openssl ethtool tcpdump
           test -c /dev/net/tun
-          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,TEST_ARCH,TEST_MODE \
+          sudo -n --preserve-env=GITHUB_SHA,GITHUB_RUN_ID,GITHUB_ACTIONS,GITHUB_WORKSPACE,RUNNER_TEMP,GITHUB_JOB,TEST_ARCH,TEST_MODE,TEST_DAILY \
             python3 -m tools.network_harness.android_parallel_native \
             --bundle out/android-linux-bundle --out out/android-linux-case
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

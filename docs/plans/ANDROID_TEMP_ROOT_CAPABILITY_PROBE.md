@@ -1,3 +1,7 @@
+## B103｜正常连接周期及混合业务（当前）
+
+B102 `559dcdb22782c64af33d65d68547e522e36d45bd` [Action 45535658071](https://github.com/lly8666/wbd-next/actions/runs/45535658071) 19/0/7；14/14场景、8/8 cleanup、七模式原M4物理UDP DNS与TCP53、11/11 DNS后普通业务、12次真实直连TCP/UDP含1MiB/方向逐字节PASS。B103 3 Android guest×3同进程原native Connect/Stop/配置切换，首连接同socket持续DNS和实际Activity后台；7个独立x86原Linux双端混合TCP/UDP参考（20s、20ms、1% IID）。详见 [B103 devlog](../devlog/android-root-probe/20261125-b103-normal-connection-cycles.md)。非Android远端RX或生产READY自动重连；不再扩展特殊边界。
+
 ## B102｜正常工况优先（当前）
 
 B101 `0ff84b89e71ae023d048c17d4990a6182fd1badd` [Action 45532853139](https://github.com/lly8666/wbd-next/actions/runs/45532853139) 20/0/6；12/12 Game共同MTU、579线上包0超限、4/4实际crash Restore、8/8 cleanup，Linux DNS6 NAT PASS（非Android NAT）。用户明确停止罕见工况防御性扩测。B102 8guest：11场真实TLS后原M4物理UDP DNS/原App TCP DNS、CN/隧道DNS发送及普通业务；3真实UID场各4次普通TCP/UDP直接业务及Stop恢复。详见 [B102 devlog](../devlog/android-root-probe/20261125-b102-ordinary-usage.md)。远端双向、READY切网/后台、热点、实体ARM64仍待验。
