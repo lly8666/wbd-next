@@ -17,6 +17,7 @@ import (
  "fmt"
  "math/big"
  "net/netip"
+ "strings"
  "sync"
  "time"
 
@@ -204,8 +205,8 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  undo,e:=route(lease);if e!=nil{return e};if undo==nil{return ErrAdmissionUnsupported}
  defer func(){e:=undo();ret=errors.Join(ret,e);if e==nil{fmt.Println("B91_NATIVE_UID_STOP_PASS",mode)}}()
  if combined{
-  probes:=[]string{"options-resolver","send4","tcp-connect","direct-cn"}
-  if combinedGroup{probes=append(probes,"second-options-resolver","second-send4","second-tcp-connect","second-direct-cn")}else{probes=append(probes,"direct-excluded")}
+  probes:=[]string{"options-resolver","default-resolver","send4","tcp-connect","direct-cn"}
+  if combinedGroup{probes=append(probes,"second-options-resolver","second-default-resolver","second-send4","second-tcp-connect","second-direct-cn")}else{probes=append(probes,"direct-excluded")}
   for _,probe:=range probes{
    before,e:=tx();if e!=nil{return e}
    var tcpBefore uint64

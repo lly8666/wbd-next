@@ -199,7 +199,7 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
   b104-forwarding-real-namespace:
-    if: contains(github.event.head_commit.message, '[android-forwarding-ui]') || contains(github.event.head_commit.message, '[android-options-sit]') || contains(github.event.head_commit.message, '[android-active-scope]')
+    if: contains(github.event.head_commit.message, '[android-forwarding-ui]') || contains(github.event.head_commit.message, '[android-options-sit]')  
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:

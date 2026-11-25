@@ -533,6 +533,15 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
   snapshot,e:=os.ReadFile(s.cnPath);if e!=nil{return e}
   c.androidCNIPv4Snapshot=string(snapshot)
   c.androidSystemDNS=true
+  // Ordinary hostname input: real selected Network DNS before association,
+  // identical resolver to production Run. The isolated runner owns the
+  // returned emulator host address; no external DNS or WBD server.
+  qctx,cancel:=context.WithTimeout(context.Background(),5*time.Second)
+  resolved,e:=dnsnative.ResolveBootstrapIPv4WithUpstream(qctx,"target.test",c.androidPhysicalDNSDial,c.androidPhysicalDNSUpstream)
+  cancel()
+  if e!=nil||resolved!=c.peerIP{return fmt.Errorf("actual server hostname bootstrap: %v %v",resolved,e)}
+  c.peerHost="target.test";c.peerIP=resolved
+  fmt.Println("B107_SERVER_HOSTNAME_BOOTSTRAP_PASS",c.peerHost,resolved)
  }
  var cnWire []byte
  if c.androidCNSnapshot!=nil{cnWire=c.androidCNSnapshot.PinnedWire()}
@@ -622,6 +631,11 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
    if e!=nil{return e}
    if !strings.Contains(string(b),"B93_SELECTED_NETWORK_LOST"){return fmt.Errorf("selected Network callback not yet seen")}
    return nil
+  }
+  if probe=="default-resolver"{
+   name:="default1.wbd-b107.test"
+   if selectedUID!=uid{name="default2.wbd-b107.test"}
+   return b91Instrument(qctx,selectedUID,"-e","dns_probe","default","-e","dns_name",name,"-e","expected_ip","192.0.2.55")
   }
   if probe=="options-resolver"{
    return b91Instrument(qctx,selectedUID,"-e","dns_probe","system","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_name","system.wbd-b91.test","-e","expected_ip","192.0.2.55")

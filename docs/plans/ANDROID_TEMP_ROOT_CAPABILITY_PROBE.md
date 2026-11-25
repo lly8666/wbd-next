@@ -1,3 +1,7 @@
+## B107｜普通域名启动与默认 Resolver（当前）
+
+B106 `a0d72bc6ffc5b74dbec7c4653580a9d97a1e26a2` [Action 45549418682](https://github.com/lly8666/wbd-next/actions/runs/45549418682) 7/1/12；真实Linux IPv6 SIT/普通UID/下游TCP+UDP/DNS/Stop全部PASS；CI-only b91 strings导入缺失导致3 guest NOT_RUN。B107修编译、两guest加真实hostname bootstrap及默认Resolver；原network guest继续验证同handle onLost/Stop/显式重连，独立收据。不重跑green IPv6。详见 [B107 devlog](../devlog/android-root-probe/20261125-b107-default-dns-and-active-scope.md)。真实Android远端RX/生产READY自动恢复仍未证。
+
 ## B106｜活跃 M4 多/全 App 组合及 Network callback（当前）
 
 B105 `4957c16ec9cc03ac1a2ace274a447907fac713b0` [Action 45545657277](https://github.com/lly8666/wbd-next/actions/runs/45545657277) 18/2/7；七模式普通选项/Resolver/业务TX PASS，8/8 cleanup；SIT双端安装/ICMP6 PASS但普通UID读checkout拒绝，Wi-Fi新handle重连PASS但native scope flag未观察。B106 3 guest+1 host：真实多/全App CN/Resolver/TCP SYN/UDP TX与物理直连，真实Network onLost后原Stop及显式重连，IPv6普通UID业务恢复测试。详见 [B106 devlog](../devlog/android-root-probe/20261125-b106-active-scope.md)。非远端E2E/生产READY自动恢复。

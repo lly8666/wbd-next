@@ -263,6 +263,17 @@ public final class TrafficInstrumentation extends Instrumentation {
                 finishProbe(Activity.RESULT_OK,result);
                 return;
             }
+            if("default".equals(args.getString("dns_probe"))){
+                // Everyday application API, no explicit Network or socket
+                // binding. Unique names make the two UID queries observable.
+                String expected=args.getString("expected_ip");
+                boolean found=false;
+                for(java.net.InetAddress ip:java.net.InetAddress.getAllByName(args.getString("dns_name")))
+                    if(expected.equals(ip.getHostAddress()))found=true;
+                if(!found)throw new IllegalStateException("default Android Resolver A answer mismatch");
+                result.putString("report","dns_probe_uid="+Process.myUid()+" default_dns_answer="+expected+" foreground=1");
+                finishProbe(Activity.RESULT_OK,result);return;
+            }
             if("system".equals(args.getString("dns_probe"))){
                 android.net.Network network=android.net.Network.fromNetworkHandle(
                     Long.parseUnsignedLong(args.getString("network_handle")));

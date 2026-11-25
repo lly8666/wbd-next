@@ -223,8 +223,14 @@ for scene in "${scenes[@]}";do
       grep -Fq B106_ACTIVE_UID_CN_FIB_PASS "$out/$scene.log" &&
       grep -Fq B91_NATIVE_STOP_PASS "$out/$scene.log" &&
       grep -Fq B91_NATIVE_TUN_CLOSE_PASS "$out/$scene.log";then
-       expected=5;if [[ "$scene" == combined-group ]];then expected=8;fi
-       if [[ "$(grep -c B106_ACTIVE_COMBINED_PROBE_PASS "$out/$scene.log")" == "$expected" ]];then status=PASS;fi
+       expected=6;if [[ "$scene" == combined-group ]];then expected=10;fi
+       if [[ "$(grep -c B106_ACTIVE_COMBINED_PROBE_PASS "$out/$scene.log")" == "$expected" ]] &&
+          grep -Fq B107_SERVER_HOSTNAME_BOOTSTRAP_PASS "$out/$scene.log" &&
+          grep -Fq "B90_FIXTURE target.test UDP" "$out/dns-host.log" &&
+          grep -Fq "B90_FIXTURE default1.wbd-b107.test" "$out/dns-host.log";then
+         status=PASS
+         if [[ "$scene" == combined-group ]];then grep -Fq "B90_FIXTURE default2.wbd-b107.test" "$out/dns-host.log" || status=FAIL;fi
+       fi
      fi ;;
    options-*) if grep -Fq "B105_OPTIONS_PASS $scene" "$out/$scene.log" &&
        grep -Fq B105_AUTH_OPTIONS_PASS "$out/$scene.log" &&
@@ -342,10 +348,15 @@ dns6_relay={}
 mixed_mss={}
 daily={}
 cycles={}
+active_scope={}
 for scene in rows:
  f=p/(scene+".log")
  if not f.exists():continue
  t=f.read_text(errors="replace")
+ if scene.startswith("combined-"):
+  active_scope[scene]={"hostname_bootstrap":"PASS" if "B107_SERVER_HOSTNAME_BOOTSTRAP_PASS " in t else "NOT_PROVEN","actual_probes":[x for x in t.splitlines() if x.startswith("B106_ACTIVE_COMBINED_PROBE_PASS ")],"remote_tcp_udp":"NOT_PROVEN"}
+ if scene=="network-normal":
+  active_scope[scene]={"selected_network_lost":"PASS" if "B106_ACTIVE_SELECTED_NETWORK_LOST_PASS " in t else "NOT_PROVEN","native_scope_invalid":"PASS" if "B105_NATIVE_PHYSICAL_SCOPE_INVALID_PASS" in t else "NOT_PROVEN","explicit_reconnect":"PASS" if "B105_MANUAL_NEW_NETWORK_RECONNECT_PASS" in t else "NOT_PROVEN","production_rootservice_auto_reconnect":"NOT_PROVEN"}
  if scene.startswith("cycle-"):
   cycles[scene]={"connections":t.count("B103_CYCLE_CONNECT "),"stop_and_physical":t.count("B103_CYCLE_STOP_AND_PHYSICAL_PASS "),"steady_dns_activity_switch":"PASS" if "B103_STEADY_DNS_AND_ACTIVITY_SWITCH_PASS " in t else "NOT_PROVEN","production_rootservice_auto_reconnect":"NOT_PROVEN"}
  if scene.startswith("daily-"):
@@ -369,7 +380,7 @@ for scene in ("normal","fec-fixed","fec-auto","game2","game2-fixed","game4","gam
  if not f.exists():continue
  t=f.read_text(errors="replace")
  native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN","java_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" 1\n" in t else "NOT_PROVEN","inet4_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" send4\n" in t else "NOT_PROVEN","fec_source_parity":"PASS" if "B97_FEC_SOURCE_PARITY_PASS "+scene+" " in t else "NOT_PROVEN"}
-r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"mtu_stages":mtu_stages,"wire_stages":wire_stages,"mixed_mss":mixed_mss,"daily":daily,"cycles":cycles,"recovery_stages":recovery_stages,"dns6_relay":dns6_relay,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
+r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"mtu_stages":mtu_stages,"wire_stages":wire_stages,"mixed_mss":mixed_mss,"daily":daily,"cycles":cycles,"active_scope":active_scope,"recovery_stages":recovery_stages,"dns6_relay":dns6_relay,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))
 PY
