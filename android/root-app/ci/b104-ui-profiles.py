@@ -4,7 +4,11 @@ import argparse
 import importlib.util
 import json
 import re
+import struct
+import subprocess
+import tempfile
 import time
+from io import BytesIO
 from pathlib import Path
 
 spec=importlib.util.spec_from_file_location("ui",Path(__file__).with_name("x86-ui-smoke.py"))
@@ -12,35 +16,57 @@ ui=importlib.util.module_from_spec(spec);spec.loader.exec_module(ui)
 adb,dump=ui.adb,ui.dump
 PKG="org.wbdnext.rootclient"
 
-def swipe():
-    w,h=map(int,re.findall(r"(\d+)x(\d+)",adb("shell","wm","size").decode())[-1])
-    adb("shell","input","swipe",str(w//2),str(h*3//4),str(w//2),str(h//3),"300")
+def bounds(n):
+    return tuple(map(int,re.findall(r"\d+",n.get("bounds",""))))
+
+def scrollable(root):
+    nodes=[n for n in root.iter("node") if n.get("scrollable")=="true" and len(bounds(n))==4]
+    return next((n for n in nodes if n.get("class")=="android.widget.ScrollView"),nodes[0] if nodes else None)
+
+def swipe(view,down):
+    if view is None:
+        w,h=map(int,re.findall(r"(\d+)x(\d+)",adb("shell","wm","size").decode())[-1])
+        a,b,c,d=0,h//4,w,h*9//10
+    else:
+        a,b,c,d=bounds(view)
+    x=(a+c)//2
+    low,high=b+(d-b)*3//4,b+(d-b)//4
+    y1,y2=(low,high) if down else (high,low)
+    adb("shell","input","swipe",str(x),str(y1),str(x),str(y2),"350")
     time.sleep(.25)
+
+def find_scrolled(match,error):
+    # A prior edit can leave the viewport partway down the page.
+    for down in (True,False):
+        previous=None
+        for _ in range(20):
+            root=dump()
+            for n in root.iter("node"):
+                rect=bounds(n)
+                if match(n) and len(rect)==4 and rect[2]>rect[0] and rect[3]-rect[1]>=24:
+                    return n
+            view=scrollable(root)
+            signature=tuple((n.get("class"),n.get("bounds"),n.get("content-desc"),n.get("text"))
+                            for n in (view if view is not None else root).iter("node"))
+            if signature==previous:break
+            previous=signature
+            swipe(view,down)
+    raise RuntimeError(error)
+
 def locate(text,partial=False):
-    for _ in range(22):
-        root=dump()
-        for n in root.iter("node"):
-            value=n.get("text","")
-            if (text in value if partial else value==text):return n
-        swipe()
-    raise RuntimeError("UI control not found: "+text)
+    return find_scrolled(lambda n: text in n.get("text","") if partial else n.get("text","")==text,
+                         "UI control not found: "+text)
 def click(n):
     a,b,c,d=map(int,re.findall(r"\d+",n.get("bounds","")))
     adb("shell","input","tap",str((a+c)//2),str((b+d)//2));time.sleep(.3)
 def tap(text,partial=False):click(locate(text,partial))
 def page(text):
-    # Bottom tabs remain visible; page action resets the ScrollView.
+    # Navigation tabs remain visible; page action clears the old edit focus.
     ui.tap(text);time.sleep(.3)
 def field(label):
-    for _ in range(22):
-        nodes=list(dump().iter("node"))
-        for i,n in enumerate(nodes):
-            if n.get("text")==label:
-                for v in nodes[i+1:]:
-                    if v.get("class")=="android.widget.EditText":return v
-                    if v.get("class")=="android.widget.TextView" and v.get("text"):break
-        swipe()
-    raise RuntimeError("edit field not visible: "+label)
+    return find_scrolled(lambda n: n.get("class")=="android.widget.EditText" and
+                         n.get("content-desc")==label,
+                         "edit field not visible: "+label)
 def fill(label,value):
     n=field(label);old=n.get("text","");click(n)
     adb("shell","input","keyevent","KEYCODE_MOVE_END")
@@ -79,33 +105,91 @@ def open_downloads():
             return
     click(picker_find(["Show roots","Open navigation drawer","显示根目录"],True))
     click(picker_find(["Downloads","下载"]))
-def complete_backup_roundtrip():
-    name="wbd-root-ten-profiles.wbpb"
-    page("服务器");tap("导出全部服务器")
-    open_downloads()
-    click(picker_find(["Save","保存"]))
-    time.sleep(1)
-    locate("全部服务器已导出",True)
-    raw=adb("exec-out","cat","/sdcard/Download/"+name)
-    if raw[:4]!=b"WBPC":raise RuntimeError("wrong complete backup format")
-    for value in (b"NormalDaily",b"GameDaily",b"TenthDaily",b"ExamplePass123",b"ExampleKey123",
-                  b"SecondExamplePass123",b"SecondExampleKey123"):
-        if value not in raw:raise RuntimeError("missing complete profile field")
-    page("服务器");tap("删除服务器配置");locate("已删除槽位10",True)
-    page("服务器");tap("导入服务器备份")
-    open_downloads()
-    click(picker_find([name],True))
-    time.sleep(1);locate("服务器导入完成",True)
-    page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
-    page("设置");check_field("外层 MTU（576–1500，默认1460）","1400")
-    # Re-export to a fresh filename after import and compare every byte.
-    adb("shell","mv","/sdcard/Download/"+name,"/sdcard/Download/original-"+name)
+def complete_slots(raw):
+    """Decode actual WBPC slots; Properties.store adds a timestamp comment."""
+    stream=BytesIO(raw)
+    def take(n):
+        data=stream.read(n)
+        if len(data)!=n:raise RuntimeError("truncated server backup")
+        return data
+    def u32():return struct.unpack(">I",take(4))[0]
+    def utf():return take(struct.unpack(">H",take(2))[0])
+    if take(4)!=b"WBPC" or u32()!=10:raise RuntimeError("wrong complete backup format")
+    slots=[]
+    for _ in range(10):
+        present=take(1)
+        if present==b"\x00":slots.append(None);continue
+        if present!=b"\x01":raise RuntimeError("wrong slot marker")
+        profile=BytesIO(take(u32()))
+        if profile.read(4)!=b"WBP2":raise RuntimeError("wrong server profile format")
+        label=profile.read(struct.unpack(">H",profile.read(2))[0])
+        length=struct.unpack(">I",profile.read(4))[0]
+        settings=profile.read(length)
+        if len(settings)!=length or profile.read():raise RuntimeError("wrong settings length")
+        # Ignore only Properties.store comment/empty lines and iteration order.
+        fields=tuple(sorted(line for line in settings.splitlines()
+                            if line and not line.startswith((b"#",b"!"))))
+        slots.append((label,fields,utf(),utf(),take(u32())))
+    if stream.read():raise RuntimeError("trailing server backup bytes")
+    return slots
+
+def import_fixture_ca():
+    name="wbd-b124-fixture-ca.pem"
+    remote="/sdcard/Download/"+name
+    with tempfile.TemporaryDirectory() as tmp:
+        cert=Path(tmp)/name
+        subprocess.run(["openssl","req","-x509","-newkey","rsa:2048","-nodes","-days","2",
+                        "-subj","/CN=WBD B124 CI only","-keyout",str(Path(tmp)/"key.pem"),
+                        "-out",str(cert)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        expected=cert.read_bytes().strip()
+        adb("push",str(cert),remote)
+    try:
+        page("服务器");tap("导入 CA 证书");open_downloads()
+        click(picker_find([name],True));time.sleep(1)
+        locate("已导入 1 张证书",True)
+    finally:
+        adb("shell","rm","-f",remote)
+    return expected
+
+def export_backup(name):
     page("服务器");tap("导出全部服务器");open_downloads()
+    if name!="wbd-root-ten-profiles.wbpb":
+        n=next((n for n in dump().iter("node") if n.get("class")=="android.widget.EditText"
+                and n.get("resource-id","").endswith(":id/filename")),None)
+        if n is None:raise RuntimeError("system file picker filename not visible")
+        click(n)
+        adb("shell","input","keyevent","KEYCODE_MOVE_END")
+        adb("shell","input","keyevent",*(["KEYCODE_DEL"]*80))
+        adb("shell","input","text",name)
+        adb("shell","input","keyevent","4")
     click(picker_find(["Save","保存"]));time.sleep(1)
     locate("全部服务器已导出",True)
-    actual=adb("exec-out","cat","/sdcard/Download/"+name)
-    if actual!=raw:raise RuntimeError("complete backup changed after restore")
-    adb("shell","rm","-f","/sdcard/Download/"+name,"/sdcard/Download/original-"+name)
+    return adb("exec-out","cat","/sdcard/Download/"+name)
+
+def complete_backup_roundtrip(expected_ca):
+    name="wbd-root-ten-profiles.wbpb"
+    restored_name="wbd-root-ten-profiles-restored.wbpb"
+    try:
+        slots=complete_slots(export_backup(name))
+        expected={0:(b"NormalDaily",b"ExamplePass123",b"ExampleKey123",expected_ca),
+                  1:(b"GameDaily",b"SecondExamplePass123",b"SecondExampleKey123",b""),
+                  9:(b"TenthDaily",b"SecondExamplePass123",b"SecondExampleKey123",b"")}
+        for i,slot in enumerate(slots):
+            if i not in expected:
+                if slot is not None:raise RuntimeError("unexpected saved server slot")
+            elif slot is None or (slot[0],*slot[2:])!=expected[i]:
+                raise RuntimeError("complete saved server mismatch at slot "+str(i+1))
+        page("服务器");tap("删除服务器配置");locate("已删除槽位10",True)
+        page("服务器");tap("导入服务器备份");open_downloads()
+        click(picker_find([name],True));time.sleep(1)
+        locate("服务器导入完成",True)
+        page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
+        page("设置");check_field("外层 MTU（576–1500，默认1460）","1400")
+        if complete_slots(export_backup(restored_name))!=slots:
+            raise RuntimeError("complete backup fields changed after restore")
+    finally:
+        adb("shell","rm","-f","/sdcard/Download/"+name,"/sdcard/Download/"+restored_name)
+
 def main(out):
     report={}
     try:
@@ -115,6 +199,7 @@ def main(out):
         fill("用户名","daily-ci")
         fill("密码","ExamplePass123")
         fill("Route Key（8–32 位字母数字 / 64 位 Hex）","ExampleKey123")
+        expected_ca=import_fixture_ca()
         page("应用");setcheck("全部直连 DNS",True)
         page("服务器");fill("服务器名称","NormalDaily")
         tap("保存全部设置 · 槽",True);locate("已保存槽位1：NormalDaily",True)
@@ -123,8 +208,10 @@ def main(out):
         page("应用");setcheck("CN 分流 DNS",True)
         page("服务器");fill("服务器地址（IPv4 / 域名）","192.0.2.20")
         fill("TLS 服务器名称（SNI）","game.example.test")
+        fill("用户名","daily-game-ci")
         fill("密码","SecondExamplePass123")
         fill("Route Key（8–32 位字母数字 / 64 位 Hex）","SecondExampleKey123")
+        tap("清空证书")
         choose_slot("配置槽1 · NormalDaily","配置槽2（空）")
         # spinner and profile fields share the saved-server section.
         fill("服务器名称","GameDaily")
@@ -169,7 +256,7 @@ def main(out):
         locate("已保存槽位10：TenthDaily",True)
         page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field(mtu,"1400")
-        complete_backup_roundtrip();report["complete_saf_export_import"]="PASS"
+        complete_backup_roundtrip(expected_ca);report["complete_saf_export_import"]="PASS"
         page("设置");tap("诊断与恢复");locate("导出诊断");report["diagnostics_menu"]="PASS"
         page("连接");locate("未连接")
         tap("关闭程序");time.sleep(.5)

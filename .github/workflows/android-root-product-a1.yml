@@ -258,7 +258,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      WBD_B117_TETHER_BPF: ${{ contains(github.event.head_commit.message, '[android-b117-live-bpf]') && '1' || '0' }}
+      WBD_B117_TETHER_BPF: ${{ (contains(github.event.head_commit.message, '[android-b117-live-bpf]') || contains(github.event.head_commit.message, '[android-b124-ui-full]')) && '1' || '0' }}
       WBD_B108_CARRIER: ${{ contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
       WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}

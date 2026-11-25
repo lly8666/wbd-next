@@ -1692,7 +1692,7 @@ assert 'real_app_dns_answer_bytes_and_latency": "NOT_RUN"' in device_accept
 print("ANDROID_B7_LOSSY_PHYSICAL_DNS_RETRANSMIT_AND_OPERATOR_RECEIPT_SOURCE_PASS")
 assert 'RootDNSStatusBrief.fromReport(report)' in root_ui
 assert 'dnsStatusBrief.setText(' in root_ui
-assert '查看本会话DNS收发' in root_ui
+assert 'inspectDNS.setText("DNS 状态")' in root_ui
 brief=Path("android/root-app/src/org/wbdnext/rootclient/RootDNSStatusBrief.java").read_text()
 assert 'system_netd_dns_capture' in brief
 assert '不代表浏览器DNS' in brief

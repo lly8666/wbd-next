@@ -88,6 +88,14 @@ public final class RootClientActivity extends Activity {
         b.setOnClickListener(v->action.run());return b;
     }
     private void showPage(int page){
+        // Release the old input focus before changing the visible page.
+        View focused=getCurrentFocus();
+        if(focused instanceof EditText){
+            android.view.inputmethod.InputMethodManager keyboard=
+                (android.view.inputmethod.InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            if(keyboard!=null)keyboard.hideSoftInputFromWindow(focused.getWindowToken(),0);
+        }
+        pageScroll.requestFocus();
         currentPage=page;
         for(int i=0;i<pages.length;i++){
             pages[i].setVisibility(i==page?View.VISIBLE:View.GONE);
@@ -96,6 +104,7 @@ public final class RootClientActivity extends Activity {
             tabs[i].setSelected(i==page);
         }
         pageScroll.scrollTo(0,0);
+        pageScroll.post(()->{if(currentPage==page)pageScroll.scrollTo(0,0);});
         refreshHome();
     }
     private void polish(View v){
@@ -357,7 +366,7 @@ public final class RootClientActivity extends Activity {
         }
     }
     // B53: one explicit SAF transaction for all ten named slots.
-    // No Root permission, credential plaintext, CA or physical Network handle.
+    // Explicit portable backup includes saved credentials and CA, not a live Network handle.
     private void exportAllProfiles(){
         try{
             RootConnectionProfileBundle.Entry[] profiles=
@@ -636,6 +645,7 @@ public final class RootClientActivity extends Activity {
         EditText field=new EditText(this);
         field.setSingleLine(kind!=InputType.TYPE_CLASS_TEXT + InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         field.setInputType(kind);
+        field.setContentDescription(label);
         view.addView(field);
         return field;
     }
@@ -1261,6 +1271,8 @@ public final class RootClientActivity extends Activity {
         }
         shell.addView(navigation);
         pageScroll=new ScrollView(this);pageScroll.setFillViewport(true);
+        pageScroll.setFocusableInTouchMode(true);
+        pageScroll.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
         pageHost=vertical();pageScroll.addView(pageHost);
         shell.addView(pageScroll,new LinearLayout.LayoutParams(-1,0,1));
         for(int i=0;i<pages.length;i++){pages[i]=vertical();pageHost.addView(pages[i]);}

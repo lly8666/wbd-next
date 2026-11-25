@@ -1,3 +1,9 @@
+## B124a｜当前唯一工位：重构 APK 定向收口（2026-11-26）
+
+B124 `d162770c2582e093f97acc30fea33558776691b1` [Action 45655760338](https://github.com/lly8666/wbd-next/actions/runs/45655760338) 18/4/8。七模式真实Android x86 KSU↔独立原Linux原TLS/lease/M4普通App双向TCP/UDP/Stop、Normal受管DNS与自动重连均已证。四个FAIL为APK旧DNS按钮断言、API35/36密码控件定位、BPF ELF未构建。当前只修复日常APK完整服务器保存及可移植备份回归、同步已有夹具；定向原APK/两UI/Normal+BPF，不复跑已通过七模式。原Go/Rust、协议、MTU、B123 IPv4-only及用户TLS配置保持不变，不增加额外防御性开发。新SOURCE待CI，ARM64正式真机及物理性能仍待独立授权验收。详见 [B124a devlog](../devlog/android-root-probe/20261126-b124a-apk-ui-roundtrip.md)。
+
+以下为历史证据，不再是并列当前工位。
+
 ## B120｜统一 DNS 与默认 IPv6 入口丢弃（当前）
 
 B118用户确认实机正常，缺Root授权为前次启动问题。保留B118选定下游共享，冻结BPF/HAL/IPv4转发。统一三个DNS模式、自动受管UDP/TCP53、IPv4/IPv6目的地址；默认AAAA NODATA，IPv6走自有TUN入口丢弃，MTU不足1280用同表blackhole，显式SIT兼容保留。热点IPv6 DNS不再依赖SIT。新SOURCE CI/实体待验。见 [B120 devlog](../devlog/android-root-probe/20261125-b120-managed-dns-ipv6-entry.md)。
