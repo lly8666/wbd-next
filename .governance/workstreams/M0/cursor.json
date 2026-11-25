@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2425,
-  "checkpoint_sha": "e37a977faf13f4b71ff88942c365299f738d5e85",
+  "sequence": 2426,
+  "checkpoint_sha": "9acf956af2cef739220063c060fc02ccb95dc830",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收H2425十个独立Actions，核同机NAT fq、同FEC NAT/splice与10%冗余收益，15/30%保留真实失败。基于残余损伤和主机服务压力决定是否值得自研CC。",
+  "next_action": "收H2426八组：同FEC默认qdisc、600Mbps高损伤限速、NAT fq混合小TCP/UDP。根据真实结果判断代理独立收益和fq默认策略，仍需跨机/Windows/多业务/旧内核等资格。",
   "unverified": true,
-  "last_tested_source": "3b06a3da30cc5bd3d2121087286ad8584f711635",
+  "last_tested_source": "55b9864e4902b2187b8230f39ad24b8ba477c20a",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2424-MECHANISMS.json"
+    "docs/evidence/M0/20261125-H2425-MATCHED-FEC-HIGH-LOSS.json"
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/evidence/M0/20261125-H2423-LOCAL-COUNTERBALANCE.json"
+    "docs/evidence/M0/20261125-H2424-MECHANISMS.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2424 32/32、8 ZIP审查；无fq后splice收益约1%，5% OFF split负收益，mild FEC +796/+1176%，慢runner有队列满，拥塞CUBIC吞吐+5.4/5.6%但RTT+68ms。H2425十组固定产品匹配对照在途，未晋级。"
+  "partial_summary": "H2425 40/40十ZIP核验；NAT fq600→默认fq_codel同机+25%，5% matched FEC split不稳定、15/30%两序正收益，10%提高FEC正收益；H2426八组补决策缺口在途。默认NAT/fq600未变，自研CC暂缓，未晋级。"
 }
