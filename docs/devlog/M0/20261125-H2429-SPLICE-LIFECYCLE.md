@@ -1,0 +1,7 @@
+# H2429
+
+H2429 minimal correctness changes to optional proxy, no protocol/default/CC changes. TPROXY --on-ip 127.0.0.1 listener now bound to that address, direct loopback target equal listener closes instead of recursively connecting; normal forwarded original destination remains real accepted getsockname. Zero-interest socket is removed from epoll and re-added when useful work resumes, because Linux EPOLLHUP/ERR are delivered even for zero mask. No additional threads, no payload copy, no busy polling or queue expansion. Native dual-ISA product build and BBR/CUBIC finite duplex, 8 concurrent half-closed streams incl delayed reader, UDP NAT, ordinary WAN refusal, direct loopback close, owned stop. x86 also clean ABBA functional regression; no comparison of old/new hot path CPU qualification. Go assembly manifest updated to exact blob. H2428 frozen tests run at prior commit; do not mix their source identity.
+
+```feature-impact
+{"kind":"updated","ids":["linux-tcp-splice-proxy"],"reason":"Correct transparent listener binding and zero-interest epoll lifecycle; optional experimental behavior only."}
+```

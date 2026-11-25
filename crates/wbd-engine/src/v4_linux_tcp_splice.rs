@@ -2,7 +2,7 @@
  //! single readiness owner. No WBD packet reader or user-space payload copy.
 use std::{collections::HashMap, ffi::{c_int,c_void}, io, net::{TcpListener,TcpStream,SocketAddr},
     os::fd::{AsRawFd,FromRawFd,OwnedFd,RawFd}, thread::{self,JoinHandle}};
-const IN:u32=1; const OUT:u32=4; const ERR:u32=8; const HUP:u32=16; const RDHUP:u32=0x2000;
+const IN:u32=1; const OUT:u32=4; const ERR:u32=8; const RDHUP:u32=0x2000;
 const NB:i32=0x800; const CE:i32=0x80000;
 const EINTR:i32=4; const EAGAIN:i32=11; const EINPROGRESS:i32=115;
 const QUANTUM:usize=65536;
@@ -111,12 +111,17 @@ impl Flow{
         self.up.pump(c,r)?;self.down.pump(r,c)?;
         Ok(!(self.up.eof&&self.down.eof))
     }
-    fn update(&mut self,ep:RawFd,id:u64,first:bool)->io::Result<()>{
+    fn update(&mut self,ep:RawFd,id:u64)->io::Result<()>{
         let wanted=self.desired();
         for (i,s) in self.sockets().into_iter().enumerate(){
-            if first||wanted[i]!=self.interest[i]{
-                change(ep,if first{1}else{3},s,id*2+i as u64,wanted[i])?;
-                self.interest[i]=wanted[i];
+            let old=self.interest[i];let new=wanted[i];
+            if old!=new{
+                // EPOLLHUP and EPOLLERR are reported even with interest=0.
+                // A parked endpoint must be absent from epoll; its peer's
+                // progress re-registers it as soon as there is useful work.
+                let op=if old==0{1}else if new==0{2}else{3};
+                change(ep,op,s,id*2+i as u64,new)?;
+                self.interest[i]=new;
             }
         }
         Ok(())
@@ -124,6 +129,7 @@ impl Flow{
 }
 fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>)->io::Result<()>{
     let e=ep.as_raw_fd();
+    let local_listener=listener.local_addr()?;
     let mut flows=HashMap::<u64,Flow>::new();let mut id=1u64;
     let mut events=[Event{events:0,token:0};128];
     loop{
@@ -141,12 +147,15 @@ fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>)->io::Result<()>{
                     if let Err(x)=(|| ->io::Result<()>{
                         c.set_nonblocking(true)?;
                         let target=c.local_addr()?;
+                        // Only original nonlocal destinations should reach the transparent owner.
+                        // A direct localhost connection must not connect back into this listener.
+                        if target==local_listener{return Ok(())}
                         set_cc(c.as_raw_fd(),&cc)?;
                         let actual=read_cc(c.as_raw_fd())?;
                         let (remote,ready)=connect_target(target)?;
                         let mut f=Flow{client:c,remote,ready,up:Pipe::new()?,down:Pipe::new()?,interest:[0;2]};
                         id+=1;
-                        f.update(e,id,true)?;
+                        f.update(e,id)?;
                         eprintln!("WBD_TCP_SPLICE_ACCEPT target={} cc={}",target,actual);
                         flows.insert(id,f);Ok(())
                     })(){eprintln!("WBD_TCP_SPLICE_CONNECT_ERROR {x}")}
@@ -157,7 +166,7 @@ fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>)->io::Result<()>{
             let outcome=match flows.get_mut(&key){
                 None=>continue,
                 Some(f)=>f.service((token%2) as usize,bits).and_then(|live|{
-                    if live{f.update(e,key,false)?}Ok(live)
+                    if live{f.update(e,key)?}Ok(live)
                 }),
             };
             if !matches!(outcome,Ok(true)){

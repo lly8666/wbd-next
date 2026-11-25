@@ -55,7 +55,7 @@ func startOwnedTCPSplice(c config)(*ownedTCPSplice,error){
             if e==nil{e=syscall.SetsockoptString(int(fd),syscall.IPPROTO_TCP,syscall.TCP_CONGESTION,c.tcpProxyCC)}
         });er!=nil{return er};return e
     }}
-    l,e:=lc.Listen(context.Background(),"tcp4","0.0.0.0:"+strconv.Itoa(c.tcpProxyPort))
+    l,e:=lc.Listen(context.Background(),"tcp4","127.0.0.1:"+strconv.Itoa(c.tcpProxyPort))
     if e!=nil{return nil,e}
     f,e:=l.(*net.TCPListener).File();l.Close()
     if e!=nil{return nil,e};defer f.Close()

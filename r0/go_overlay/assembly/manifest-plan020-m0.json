@@ -2119,7 +2119,7 @@
       "kind": "create",
       "path": "internal/v4productcli/tcp_splice_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/tcp_splice_linux.go",
-      "result_blob": "78a7f0e2b55a1e26f3b45ae47e3b4a40d6ec5acf"
+      "result_blob": "3c3469cea5d894a458236c690710377158048b7a"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

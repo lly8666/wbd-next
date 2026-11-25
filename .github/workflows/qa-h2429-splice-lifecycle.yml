@@ -1,0 +1,66 @@
+name: H2429 native WBD smoke-gated clean ABBA
+run-name: "H2429 dual-ISA functionality and clean ABBA | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2429-splice-lifecycle.yml']
+permissions:
+  contents: read
+concurrency:
+  group: h2429-smoke-clean-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  native:
+    name: ${{ matrix.arch }} original-product smoke and x86 clean comparison
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64}
+          - {runner: ubuntu-24.04-arm, arch: aarch64}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Build original product once per ISA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          python3 -m py_compile tools/m0_h2429_splice_local.py tools/m0_h2429_splice_app.py tools/m0_h2429_scope_probe.py
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2429-build.log 2>&1 || { tail -n 150 h2429-build.log; exit 2; }
+      - name: Functional smoke with BBR and CUBIC finite duplex, half-close and UDP
+        shell: bash
+        run: |
+          mkdir -p h2429-smoke
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2421_SCENE=functional H2421_ORDER=AB H2421_OUT=h2429-smoke python3 -u tools/m0_h2429_splice_local.py
+      - name: Single-flow no-loss NAT versus BBR splice ABBA on same x86 VM
+        if: matrix.arch == 'x86_64'
+        shell: bash
+        run: |
+          mkdir -p h2429-clean
+          lscpu >h2429-clean/lscpu.txt
+          uname -a >h2429-clean/uname.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2421_SCENE=clean H2421_ORDER=ABBA H2421_OUT=h2429-clean python3 -u tools/m0_h2429_splice_local.py
+      - name: Preserve readable owned evidence
+        if: always()
+        shell: bash
+        run: |
+          for d in h2429-smoke h2429-clean;do
+            if test -d "$d";then sudo find "$d" -type f -name install -delete;sudo chown -R "$(id -u):$(id -g)" "$d";fi
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2429-${{ matrix.arch }}
+          path: |
+            h2429-smoke/
+            h2429-clean/
+            h2429-build.log
+          retention-days: 14
