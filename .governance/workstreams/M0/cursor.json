@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2420,
-  "checkpoint_sha": "6978f1c71afa767d62525d3403f7831fc923c74f",
+  "sequence": 2421,
+  "checkpoint_sha": "6deca87260a35408a6188135f74b4c73a49bf5f4",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收 H2420 正反序 run45550224579/45550224545，核前后裸TCP容量、实际业务、CPU与各组漂移。若无稳定产品瓶颈，进入拥塞策略对照。",
+  "next_action": "收H2421八个Action，先定位首个失败，核真实socket方向、容量、TUN/netem损失、窗口和Stop；按同机正反序相对效果判断策略。",
   "unverified": true,
-  "last_tested_source": "3cfe6ba118d1075f1bca24187d07b61b34adf198",
+  "last_tested_source": "7abe8296517a9d10b091a83ab0a32e242ad4fc9c",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2419-NATIVE-SPLICE-CAPACITY.json"
+    "docs/evidence/M0/20261125-H2420-THREE-RUNNER-INFRA-UNQUALIFIED.json"
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
     "docs/evidence/M0/20261125-H2418-LINUX-TCP-SPLICE-DIAG.json",
-    "docs/devlog/M0/20261124-OUTER-REPAIR-SCOPED-CLOSEOUT.md"
+    "docs/evidence/M0/20261125-H2419-NATIVE-SPLICE-CAPACITY.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2419真实原生代理ABBA平均39.146Gbps，NAT50.313Gbps，整机单位流量成本高约94%，绝非物理WAN资格；当前不动splice热路径。H2420无损完整WBD正反序在途，未晋级。"
+  "partial_summary": "H2420双三runner均20Mbps级DERP容量不足，0业务腿。H2421真实原生四netns独立场景八Action在途：无损正反序、1/5% BBR/CUBIC正反序、实际100Mbps瓶颈、双ISA功能。BBR下载方向源码及实际ss确认，H2418服务端队列满丢包2857。未晋级。"
 }
