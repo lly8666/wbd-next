@@ -73,33 +73,6 @@ assert 1000<meta["cn_collapsed_prefixes"]<=8192
 assert len(raw)<=256*1024 and hashlib.sha256(raw).hexdigest()==meta["cidr_sha256"]
 PY
 cp "$cn/wbd-cn-ipv4.txt" "$cn/cn-ipv4-provenance.json" "$assets/"
-# This DEBUG-only helper tests actual kernel TUN, AF_PACKET and underlay
-# without implementing any alternate WBD TLS, Rust AEAD or packet loop.
-# Unlike the KSU x86 Bridge test libraries, it is an AArch64 Bionic ELF,
-# separate from the production client, signed into this debug APK only.
-ndk="$(find "$ANDROID_HOME/ndk" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
-tool="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin"
-test -x "$tool/aarch64-linux-android28-clang"
-"$tool/aarch64-linux-android28-clang" -std=c11 -O2 -fPIE -pie \
-  -Wall -Wextra -Werror -Wl,-z,max-page-size=16384 \
-  android/root-app/ci/device-selftest-arm64.c \
-  -o "$assets/device-selftest-arm64"
-sha256sum "$assets/device-selftest-arm64" | awk '{print $1}' \
-  > "$assets/device-selftest-sha256.txt"
-python3 - <<'PY'
-from pathlib import Path
-import struct,hashlib
-p=Path("out/android-root-app/assets/native-arm64/device-selftest-arm64")
-b=p.read_bytes()
-assert b[:5]==b"\x7fELF\x02" and struct.unpack_from("<H",b,18)[0]==183
-po=struct.unpack_from("<Q",b,32)[0]
-es,num=struct.unpack_from("<HH",b,54)
-aligns=[struct.unpack_from("<Q",b,po+i*es+48)[0]
- for i in range(num) if struct.unpack_from("<I",b,po+i*es)[0]==1]
-assert aligns and min(aligns)>=16384
-assert hashlib.sha256(b).hexdigest()==(p.parent/"device-selftest-sha256.txt").read_text().strip()
-print("ANDROID_ARM64_ROOT_DEBUG_ONLY_TUN_RAW_SELFTEST_ABI_SHA_PASS")
-PY
 sdk="$ANDROID_HOME"
 bt="$(find "$sdk/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)"
 for name in aapt2 d8 apksigner zipalign aapt; do test -x "$bt/$name"; done
@@ -110,7 +83,7 @@ elif test -f "$sdk/platforms/android-35/android.jar";then
 else
   echo "ANDROID_ARM64_ROOT_APP_NEEDS_API35_ANDROID_SDK" >&2;exit 2
 fi
-find android/root-app/src -name '*.java' -print0 |
+find android/root-app/src -name '*.java' ! -name 'RootDeviceSelfTest.java' ! -name 'RootUidTunPacketScript.java' -print0 |
   xargs -0 javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar" \
     -d out/android-root-app/classes
 "$bt/d8" --min-api 28 --lib "$jar" \
@@ -180,9 +153,7 @@ with zipfile.ZipFile(apk) as z:
         "assets/native-arm64/libwbd_engine-arm64.so",
         "assets/native-arm64/wbd-cn-geosite.txt",
         "assets/native-arm64/wbd-cn-geosite-license.txt",
-        "assets/native-arm64/cn-geosite-provenance.json",
-        "assets/native-arm64/device-selftest-arm64",
-        "assets/native-arm64/device-selftest-sha256.txt"]
+        "assets/native-arm64/cn-geosite-provenance.json"]
     for name in expected:assert name in z.namelist(),name
     assert z.read("assets/native-arm64/SOURCE").decode().strip()==os.environ["GITHUB_SHA"]
     m=json.loads(z.read("assets/native-arm64/manifest.json"))
@@ -195,10 +166,7 @@ with zipfile.ZipFile(apk) as z:
     assert provenance["text_sha256"]==hashlib.sha256(geosite).hexdigest()
     assert provenance["output_distinct_rules"]>1000
     assert b"MIT License" in license and b"V2Ray" in license
-    diag=z.read("assets/native-arm64/device-selftest-arm64")
-    assert hashlib.sha256(diag).hexdigest()==z.read(
-        "assets/native-arm64/device-selftest-sha256.txt").decode().strip()
-    assert diag[:5]==b"\x7fELF\x02" and int.from_bytes(diag[18:20],"little")==183
+    assert not any("device-selftest" in name for name in z.namelist())
     assert not any("x86" in name for name in z.namelist())
 summary={"schema":"wbd-android-arm64-root-app-source-locked/v1",
     "source":os.environ["GITHUB_SHA"],
@@ -213,8 +181,8 @@ summary={"schema":"wbd-android-arm64-root-app-source-locked/v1",
     "pinned_cn_original_go_cold_loader":"COMPILED_NOT_ANDROID_EXECUTED",
     "android_system_dns_interception":"NOT_CONNECTED",
     "no_vpn_service_manifest_verified":True,
-    "debug_only_tun_raw_uid_routing_selftest_asset":True,
-    "device_kernel_selftest_execution":"NOT_RUN",
+    "debug_only_tun_raw_uid_routing_selftest_asset":False,
+    "device_kernel_selftest_execution":"RETIRED",
     "root_phone_installed":"NOT_RUN","real_tls_data_stop":"NOT_RUN",
     "apk_sha256":hashlib.sha256(apk.read_bytes()).hexdigest()}
 (out/"manifest.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")

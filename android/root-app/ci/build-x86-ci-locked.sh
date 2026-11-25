@@ -61,7 +61,7 @@ if test -f "$sdk/platforms/android-36/android.jar";then
 else
   jar="$sdk/platforms/android-35/android.jar"
 fi
-find android/root-app/src -name '*.java' -print0 |
+find android/root-app/src -name '*.java' ! -name 'RootDeviceSelfTest.java' ! -name 'RootUidTunPacketScript.java' -print0 |
   xargs -0 javac -encoding UTF-8 -source 8 -target 8 -classpath "$jar" \
     -d "$out/classes"
 # CI ONLY: a bounded app-UID KernelSU authorization test; never built into

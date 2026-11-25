@@ -244,7 +244,7 @@ assert 'RootConnectionProfileCAStore.clearSlot(this,slot)' in app
 assert 'RootConnectionProfileCAStore.saveCurrent(this,pem)' in app
 assert 'RootPrivateCredentialContract.maxBytes(RootPrivateCredentialFiles.CA)' in profile_ca
 assert 'getNoBackupFilesDir()' in profile_ca
-assert 'RootPrivateCredentialFiles.CA,pem+' in app
+assert 'if(verifyTLS&&!pem.isEmpty())privateText("wbd-server-ca.pem",pem+' in app
 assert 'tls_verify_server' in app
 print("ANDROID_B54_OPTIONAL_PER_PROFILE_ORIGINAL_GO_TLS_CA_COLD_SOURCE_PASS")
 
@@ -1272,8 +1272,8 @@ assert 'UI_START_TAPPED' in a and 'UI_START_DISPATCHED' in a
 assert 'UI_START_VALIDATION_REJECTED' in a and 'UI_START_DISPATCH_FAILED' in a
 assert 'UI_CREDENTIAL_SAVE_FAILED' in a
 assert 'RootEncryptedCredentialStore.load(this)' in a
-assert 'RootEncryptedCredentialStore.clear(this)' in a
-assert 'password.setText("")' in a and 'routeKey.setText("")' in a
+assert 'RootEncryptedCredentialStore.clear(this)' not in a
+assert 'RootEncryptedCredentialStore.clearProfile(this,slot)' in a
 assert 'request.putExtra("password"' not in a and 'request.putExtra("route_key"' not in a
 assert 'cipher.init(Cipher.ENCRYPT_MODE,key);' in codec
 assert 'cipher.getIV()' in codec
@@ -1751,7 +1751,7 @@ assert 'const GroupMaxUIDs = 16' in group
 assert 'const MaxDirectIPv4CIDRs=16' in direct
 assert 'if len(parts)<2||len(parts)>16{' in cli
 assert '2..16 ordinary App UIDs' in cli
-assert '最多16个不同UID、32个包' in app
+assert '最多 16 UID、32 个应用' in app
 assert '最多16个IPv4直连网段' in routes
 # Keep the final full-table readback; avoid quadratic re-queries inside UID
 # loops and keep one aggregate direct FIB gate BEFORE the first UID add.

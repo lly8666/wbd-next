@@ -74,7 +74,7 @@ public final class RootClientActivity extends Activity {
         l.setBackground(rounded(SURFACE,16));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);
         lp.bottomMargin=dp(12);page.addView(l,lp);
-        l.addView(text(title,17,INK,true));
+        TextView heading=text(title,17,INK,true);heading.setTag("section-heading");l.addView(heading);
         if(!hint.isEmpty()){
             TextView h=text(hint,13,MUTED,false);h.setPadding(0,dp(5),0,dp(9));l.addView(h);
         }
@@ -116,7 +116,7 @@ public final class RootClientActivity extends Activity {
             ((Spinner)v).setMinimumHeight(dp(48));
             v.setBackgroundTintList(ColorStateList.valueOf(MUTED));
         }else if(v instanceof TextView && v!=homeTitle&&v!=homeSummary&&v!=routeSummary&&v!=status){
-            TextView t=(TextView)v;t.setTextColor(MUTED);
+            TextView t=(TextView)v;if("section-heading".equals(t.getTag()))return;t.setTextColor(MUTED);
             t.setPadding(t.getPaddingLeft(),Math.max(t.getPaddingTop(),dp(5)),t.getPaddingRight(),Math.max(t.getPaddingBottom(),dp(5)));
         }
         if(v instanceof ViewGroup){
@@ -724,7 +724,7 @@ public final class RootClientActivity extends Activity {
             CheckBox cb=checkedApps.get(app.packageName);
             if(cb!=null&&cb.isChecked()){count++;uids.add(app.uid);}
         }
-        selectedAppsSummary.setText("已选 "+count+" 个应用 / "+uids.size()+" 个 UID");
+        selectedAppsSummary.setText("已选 "+count+" 个应用 / "+uids.size()+" 个 UID（最多 16 UID、32 个应用）");
         if(bypassSummary!=null){
             int packages=0;
             java.util.Set<Integer> appIds=new java.util.TreeSet<>();
@@ -735,7 +735,7 @@ public final class RootClientActivity extends Activity {
                     appIds.add(app.uid%AllAppUIDPolicy.PER_USER);
                 }
             }
-            bypassSummary.setText("绕过 "+packages+" 个应用");
+            bypassSummary.setText("绕过 "+packages+" 个应用（最多 6 个）");
         }
     }
     private void applyAppSearch(){
@@ -1269,8 +1269,12 @@ public final class RootClientActivity extends Activity {
         homeSummary=text("",14,MUTED,false);pane.addView(homeSummary);
         homeConnect=action("连接",true,()->{coldSwitch.cancel();start();refreshHome();});
         pane.addView(homeConnect,new LinearLayout.LayoutParams(-1,dp(56)));
-        homeStop=action("断开",false,()->requestStop());pane.addView(homeStop);
-        pane.addView(action("关闭程序",false,()->requestExit()));
+        LinearLayout homeActions=new LinearLayout(this);
+        homeStop=action("断开",false,()->requestStop());
+        homeActions.addView(homeStop,new LinearLayout.LayoutParams(0,dp(48),1));
+        Button exit=action("关闭程序",false,()->requestExit());
+        LinearLayout.LayoutParams exitLp=new LinearLayout.LayoutParams(0,dp(48),1);exitLp.leftMargin=dp(8);
+        homeActions.addView(exit,exitLp);pane.addView(homeActions);
         pane.addView(action("选择 / 切换服务器",false,()->quickChooseServer()));
         serviceDetail=text("",12,MUTED,false);
         pane=section(pages[0],"网络与传输","");
