@@ -1,4 +1,8 @@
-## B124b｜当前唯一工位：CA 与完整服务器备份实际 UI 回归（2026-11-26）
+## B124c｜当前唯一工位：固定 CA 编辑器与真实完整 UI（2026-11-26）
+
+B124b `f5a3c9e3113f881a70550b720cfc3de3bc9c526f` [Action 45664009603](https://github.com/lly8666/wbd-next/actions/runs/45664009603) 11/2/10；签名APK、原生接线、完整Java备份编解码PASS；API35/36实际CA导入及第一槽保存通过，第二槽在“清空证书”按钮定位失败，现场PEM撑满整个ScrollView。B124c将证书操作置于固定120dp编辑器上方，实际清空、槽位读回及完整SAF备份验收继续；只定向两套真实stock UI。原数据面及TLS选择不变。详见 [B124c devlog](../devlog/android-root-probe/20261126-b124c-ca-bounded-editor.md)。
+
+## B124b｜历史证据：CA 与完整服务器备份实际 UI 回归（2026-11-26）
 
 B124a `d71c557cb7578739fb9ab10f7b570bcdce3a1c4b` [Action 45659951126](https://github.com/lly8666/wbd-next/actions/runs/45659951126) 14/2/8，签名ARM64 APK/源码检查、原Normal真实SYN/SYNACK/TLS/lease/M4业务/Stop及Android BPF实际挂钩暂停/恢复均PASS；API35/36未完成第一槽保存，卡在CA导入状态提示定位。当前唯一剩余CI工位是完整UI：直接CA字段、真实SAF文件、恢复槽及每项数据读回，仅触发两套UI，不复跑已通过的业务guest。生产源码不改，ARM64实体及性能仍未验。详见 [B124b devlog](../devlog/android-root-probe/20261126-b124b-ca-ui-readback.md)。
 

@@ -29,7 +29,9 @@ def swipe(view,down):
         a,b,c,d=0,h//4,w,h*9//10
     else:
         a,b,c,d=bounds(view)
-    x=(a+c)//2
+    # The production page cards have 16dp of inner padding. Start the
+    # page gesture in that gutter, not inside an EditText/PEM editor.
+    x=a+max(2,(c-a)//40) if view is not None and view.get("class")=="android.widget.ScrollView" else (a+c)//2
     low,high=b+(d-b)*3//4,b+(d-b)//4
     y1,y2=(low,high) if down else (high,low)
     adb("shell","input","swipe",str(x),str(y1),str(x),str(y2),"350")
@@ -151,6 +153,10 @@ def pick_document(name):
 
 def check_ca(expected):
     n=field("自定义 CA（PEM）")
+    density=int(re.findall(r"(\d+)",adb("shell","wm","density").decode())[-1])
+    a,b,c,d=bounds(n)
+    if d-b>round(120*density/160)+2:
+        raise RuntimeError("CA editor expands beyond its bounded viewport")
     # UI hierarchy XML may normalize line breaks; the actual exported CA
     # bytes below must still match the original certificate exactly.
     if "".join(n.get("text","").split())!="".join(expected.decode("ascii").split()):
@@ -213,6 +219,23 @@ def complete_backup_roundtrip(expected_ca):
                 if slot is not None:raise RuntimeError("unexpected saved server slot")
             elif slot is None or (slot[0],*slot[2:])!=expected[i]:
                 raise RuntimeError("complete saved server mismatch at slot "+str(i+1))
+            else:
+                normal=i==0
+                fields=dict(line.split(b"=",1) for line in slot[1])
+                required={
+                    b"peer":b"192.0.2.10" if normal else b"192.0.2.20",
+                    b"sni":b"normal.example.test" if normal else b"game.example.test",
+                    b"account":b"daily-ci" if normal else b"daily-game-ci",
+                    b"fec_mode":b"normal" if normal else b"game4-fixed",
+                    b"physical_dns":b"true" if normal else b"false",
+                    b"cn_split_dns":b"false" if normal else b"true",
+                    b"tunnel_dns":b"false",
+                    b"outer_mtu":{0:b"1460",1:b"1380",9:b"1400"}[i],
+                    b"native_health_seconds":b"15" if normal else b"30",
+                }
+                for key,value in required.items():
+                    if fields.get(key)!=value:
+                        raise RuntimeError("saved server setting mismatch at slot "+str(i+1)+": "+key.decode())
         page("服务器");tap("删除服务器配置");locate("已删除槽位10",True)
         page("服务器");tap("导入服务器备份");open_downloads()
         pick_document(name)
@@ -248,6 +271,8 @@ def main(out):
         fill("密码","SecondExamplePass123")
         fill("Route Key（8–32 位字母数字 / 64 位 Hex）","SecondExampleKey123")
         tap("清空证书")
+        check_ca(b"")
+        report["ca_clear_readback"]="PASS"
         choose_slot("配置槽1 · NormalDaily","配置槽2（空）")
         # spinner and profile fields share the saved-server section.
         fill("服务器名称","GameDaily")
@@ -283,7 +308,8 @@ def main(out):
         page("连接");locate("game4-fixed")
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.20")
         page("应用");checkcheck("CN 分流 DNS",True)
-        page("服务器")
+        page("服务器");check_field("用户名","daily-game-ci")
+        check_ca(b"")
         # Actual unmasked values are verified via the portable backup below.
         report["load_game"]="PASS"
         choose_slot("配置槽2 · GameDaily","配置槽10 · TenthDaily")

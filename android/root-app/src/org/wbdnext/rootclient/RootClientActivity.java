@@ -1399,9 +1399,7 @@ public final class RootClientActivity extends Activity {
         tlsVerifyServer.setText("验证服务器证书");
         tlsVerifyServer.setChecked(false);
         pane.addView(tlsVerifyServer);
-        caPEM=input(pane,"自定义 CA（PEM）",
-            InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        caPEM.setMinLines(3);
+        // Keep the actions above the multiline editor, even with a long PEM chain.
         Button importCa=new Button(this);
         importCa.setText("导入 CA 证书");
         importCa.setOnClickListener(v->importTLSCA());
@@ -1413,6 +1411,23 @@ public final class RootClientActivity extends Activity {
             status.setText("证书已清空");
         });
         pane.addView(clearCa);
+        caPEM=input(pane,"自定义 CA（PEM）",
+            InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        // A certificate may contain hundreds of lines; never let its editor
+        // expand the whole page. Its full text is still used by Save/START.
+        caPEM.setLayoutParams(new LinearLayout.LayoutParams(-1,dp(120)));
+        caPEM.setGravity(Gravity.TOP|Gravity.START);
+        caPEM.setVerticalScrollBarEnabled(true);
+        caPEM.setOnTouchListener((v,event)->{
+            int action=event.getActionMasked();
+            if(action==android.view.MotionEvent.ACTION_DOWN)
+                v.getParent().requestDisallowInterceptTouchEvent(
+                    v.canScrollVertically(1)||v.canScrollVertically(-1));
+            else if(action==android.view.MotionEvent.ACTION_UP||
+                    action==android.view.MotionEvent.ACTION_CANCEL)
+                v.getParent().requestDisallowInterceptTouchEvent(false);
+            return false;
+        });
         pane=section(pages[2],"应用范围","默认全局普通应用。关闭全局后勾选要接管的应用。");
         TextView targetHelp=new TextView(this);
         targetHelp.setText("系统、WBD 与 Root 管理器保持直连。");
