@@ -70,13 +70,16 @@ public final class TrafficInstrumentation extends Instrumentation {
             String probe=args.getString("uid_probe","");
             if(!probe.isEmpty()||!args.getString("dns_probe","").isEmpty())enterForeground();
             if("explicit6".equals(args.getString("dns_probe"))){
-                android.net.Network network=android.net.Network.fromNetworkHandle(Long.parseUnsignedLong(args.getString("network_handle")));
-                java.net.InetAddress dest=java.net.InetAddress.getByName("fd00::53");
+                String localPort=args.getString("dns_loopback_port","");
+                boolean loopback=!localPort.isEmpty();
+                int port=loopback?Integer.parseInt(localPort):53;
+                android.net.Network network=loopback?null:android.net.Network.fromNetworkHandle(Long.parseUnsignedLong(args.getString("network_handle")));
+                java.net.InetAddress dest=java.net.InetAddress.getByName(loopback?"::1":"fd00::53");
                 byte[] q=java.util.Base64.getDecoder().decode("mZkBAAABAAAAAAAABnN5c3RlbQd3YmQtYjkxBHRlc3QAAAEAAQ==");
                 byte[] answer;
                 if("tcp".equals(args.getString("dns_transport"))){
                     try(java.net.Socket s=new java.net.Socket()){
-                        network.bindSocket(s);s.connect(new java.net.InetSocketAddress(dest,53),4000);s.setSoTimeout(4000);
+                        if(network!=null)network.bindSocket(s);s.connect(new java.net.InetSocketAddress(dest,port),4000);s.setSoTimeout(4000);
                         java.io.DataOutputStream o=new java.io.DataOutputStream(s.getOutputStream());
                         o.writeShort(q.length);o.write(q);o.flush();
                         java.io.DataInputStream in=new java.io.DataInputStream(s.getInputStream());
@@ -84,8 +87,8 @@ public final class TrafficInstrumentation extends Instrumentation {
                     }
                 }else{
                     try(java.net.DatagramSocket s=new java.net.DatagramSocket(null)){
-                        network.bindSocket(s);s.bind(new java.net.InetSocketAddress(java.net.InetAddress.getByName("::"),0));
-                        s.setSoTimeout(4000);s.send(new java.net.DatagramPacket(q,q.length,dest,53));
+                        if(network!=null)network.bindSocket(s);s.bind(new java.net.InetSocketAddress(java.net.InetAddress.getByName("::"),0));
+                        s.setSoTimeout(4000);s.send(new java.net.DatagramPacket(q,q.length,dest,port));
                         java.net.DatagramPacket a=new java.net.DatagramPacket(new byte[512],512);s.receive(a);
                         answer=java.util.Arrays.copyOf(a.getData(),a.getLength());
                     }

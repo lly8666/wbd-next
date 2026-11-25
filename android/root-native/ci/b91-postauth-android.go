@@ -42,7 +42,7 @@ type b91Pair struct{
  cancel context.CancelFunc
  wg sync.WaitGroup
 }
-func b91NewPair(parent context.Context,flow faketcp.ClientFlow,ordinal int)(*b91Pair,error){
+func b91NewPair(parent context.Context,flow faketcp.ClientFlow,ordinal int,peerMSS uint16)(*b91Pair,error){
  ctx,cancel:=context.WithCancel(parent)
  p:=&b91Pair{cancel:cancel,result:make(chan error,1)}
  c2s:=make(chan faketcp.Segment,256);s2c:=make(chan faketcp.Segment,256)
@@ -59,8 +59,11 @@ func b91NewPair(parent context.Context,flow faketcp.ClientFlow,ordinal int)(*b91
  if e=p.client.Start(time.Now());e!=nil{return fail(e)}
  var syn faketcp.Segment
  select{case syn=<-c2s:case <-ctx.Done():return fail(ctx.Err())}
+ localMSS:=faketcp.PublicV4AdvertisedMSS()
+ if peerMSS!=0{if e=faketcp.SetPublicV4AdvertisedMSS(peerMSS);e!=nil{return fail(e)}}
  p.server,e=faketcp.NewServerAssociation(syn,uint32(500000+ordinal*10000),time.Second,emit(s2c))
- if e!=nil{return fail(e)}
+ restore:=faketcp.SetPublicV4AdvertisedMSS(localMSS)
+ if e!=nil||restore!=nil{return fail(errors.Join(e,restore))}
  synack,e:=p.server.SYNACKSegment();if e!=nil{return fail(e)}
  if e=p.client.HandleSegment(synack,time.Now());e!=nil{return fail(e)}
  select{case ack:=<-c2s:if _,e=p.server.HandleSegment(ack,time.Now());e!=nil{return fail(e)}
@@ -96,7 +99,7 @@ func b91WaitTX(ctx context.Context,read func()(uint64,error),before uint64)error
  }
  return fmt.Errorf("original Android native TX did not increase")
 }
-func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary bool,
+func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary bool,peerMSSes []uint16,
  route func(string)(func()error,error),send func(string)error)(ret error){
  cert,roots,e:=b91Cert();if e!=nil{return e}
  routeKey:=[]byte("0123456789abcdef0123456789abcdef")
@@ -113,7 +116,8 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  defer func(){for _,p:=range pairs{p.close()}}()
  for i:=0;i<n;i++{
   flow:=faketcp.ClientFlow{LocalIP:local.As4(),PeerIP:peer.As4(),LocalPort:uint16(46100+i),PeerPort:443}
-  p,e:=b91NewPair(ctx,flow,i);if e!=nil{return e}
+  peerMSS:=uint16(0);if len(peerMSSes)==n{peerMSS=peerMSSes[i]}
+  p,e:=b91NewPair(ctx,flow,i,peerMSS);if e!=nil{return e}
   pairs=append(pairs,p);assocs=append(assocs,p.client)
   p.wg.Add(1)
   go func(p *b91Pair){

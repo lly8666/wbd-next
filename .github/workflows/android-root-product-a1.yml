@@ -181,6 +181,23 @@ jobs:
         shell: bash
         run: |
           cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record 'v4_mtu_budget_ffi::'
+  b100-dns6-real-namespace:
+    if: contains(github.event.head_commit.message, '[android-recovery-mss-dns6]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Run original DNS6 owner against real isolated Linux kernel
+        shell: bash
+        run: bash android/root-native/ci/b100-dns6-real-namespace.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b100-dns6-host-${{ github.sha }}
+          path: out/android-b100-dns6-host/
+          retention-days: 14
+          if-no-files-found: warn
   arm64-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -524,7 +541,7 @@ jobs:
       max-parallel: 9
       matrix:
         # Focused B97 marker avoids replaying eight fully green B96 guests.
-        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-wire-uid-dns6]') && '["wire-normal","wire-fec-fixed","wire-fec-auto","wire-game2","wire-game2-fixed","wire-game4","wire-game4-fixed","route-single","route-group","route-all","dns6"]' || contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
+        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-recovery-mss-dns6]') && '["crash-single","crash-group","crash-all","crash-dns","mixed-game2","mixed-game2-fixed","mixed-game4","mixed-game4-fixed","dns6-relay"]' || contains(github.event.head_commit.message, '[android-wire-uid-dns6]') && '["wire-normal","wire-fec-fixed","wire-fec-auto","wire-game2","wire-game2-fixed","wire-game4","wire-game4-fixed","route-single","route-group","route-all","dns6"]' || contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions: {contents: read, actions: read}

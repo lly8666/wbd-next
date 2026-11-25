@@ -1,3 +1,7 @@
+## B100｜真实 crash journal 恢复、异构lane MSS、DNS6分层（当前）
+
+B99 `9d40a9b2a2b90744af9a706062153af1f5e95530` [Action 45527391628](https://github.com/lly8666/wbd-next/actions/runs/45527391628) 21/1/6，7/7独立线上长度239包0超限、3/3真实双UID/CN；DNS6 guest kernel无nat表NOT_RUN。B100 9 guest+1 host：4场实际退出/原journal恢复，8场Game异构MSS（最小lane先/后），原Bionic IPv6 loopback relay+Linux netns实际DNS6 RPDB/NAT独立验收。详见 [B100 devlog](../devlog/android-root-probe/20261125-b100-recovery-mixed-mss-dns6.md)。新SOURCE待验，不称远端M4/READY恢复。
+
 ## B99｜实际 RAW wire、双 UID 及 DNS6（当前）
 
 B98a `9f3d93a86d99a013de349bd485655d8ecf4d7f2e` [Action 45521294719](https://github.com/lly8666/wbd-next/actions/runs/45521294719) 18/0/6；28/28 OS MTU+DF超限+Stop、56/56临界TX检查，7/7 guest cleanup；4原MTU ABI tests PASS。B99新增11 guest（最多9并行）：7模式独立AF_PACKET wire长度，single/group/all两个普通UID实际业务/真实CN快照路径（隔离host本地别名），IPv6 DNS原owner显式UDP/TCP和恢复。详见 [B99 devlog](../devlog/android-root-probe/20261125-b99-wire-multiuid-dns6.md)。未证明真正远端RX/READY恢复。

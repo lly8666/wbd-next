@@ -38,6 +38,9 @@ for f in "$n/wiring-specialty-amd64" "$n/libwbd_engine-amd64.so" out/android-roo
 echo B91_TEST_STAGE_PASS
 shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
+ mixed-*) m="${shard#mixed-}";scenes=("mixed-$m-lowfirst" "mixed-$m-lowlast");;
+ crash-*) scenes=("$shard");;
+ dns6-relay) scenes=(dns6-relay);;
  wire-*) scenes=("$shard");;
  dns6) scenes=(system-dns6);;
  mtu-*)
@@ -67,12 +70,12 @@ cleanup(){
 }
 trap cleanup EXIT
 # Real local DNS fixture; a failure cannot block independent native tests.
-if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == all ]];then
+if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == dns6-relay || "$shard" == crash-dns || "$shard" == all ]];then
  sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
  dns_pid=$!
  for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
 fi
-if [[ "$shard" == route-* || "$shard" == routes || "$shard" == all ]];then
+if [[ "$shard" == route-* || "$shard" == routes || "$shard" == crash-* || "$shard" == all ]];then
  # The host owns these exact /32s ONLY during this isolated runner test.
  # No request can be intentionally sent to the external CN endpoint.
  for address in 192.0.2.1 1.0.1.1;do
@@ -98,8 +101,8 @@ clean_kernel(){
  done
  } >"$out/$name-kernel.txt" 2>&1
  if [[ "$rc" != 0 ]];then cat "$out/$name-kernel.txt";return 1;fi
- if grep -Eq '(^|[[:space:]])9099:|lookup (19842|19843|19845|19846)( |$)|table (19842|19843|19845|19846)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbd_dns0:|wbd_dns6:|wbd-next-root-(app-tcp-dns|system-dns|system-dns6)-v1' "$out/$name-kernel.txt";then
-  grep -E 'lookup (19842|19843|19845|19846)( |$)|table (19842|19843|19845|19846)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbd_dns0:|wbd_dns6:|wbd-next-root-(app-tcp-dns|system-dns|system-dns6)-v1' "$out/$name-kernel.txt" | sed -n '1,25p'
+ if grep -Eq '(^|[[:space:]])9099:|lookup (19842|19843|19845|19846)( |$)|table (19842|19843|19845|19846)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbdb100:|wbd_dns0:|wbd_dns6:|wbd-next-root-(app-tcp-dns|system-dns|system-dns6)-v1' "$out/$name-kernel.txt";then
+  grep -E 'lookup (19842|19843|19845|19846)( |$)|table (19842|19843|19845|19846)( |$)|wbdb90:|wbdb91dns:|wbdb91m4:|wbdb100:|wbd_dns0:|wbd_dns6:|wbd-next-root-(app-tcp-dns|system-dns|system-dns6)-v1' "$out/$name-kernel.txt" | sed -n '1,25p'
   return 1
  fi
  return 0
@@ -109,6 +112,25 @@ clean=1
 if ! clean_kernel baseline;then clean=0;fi
 for scene in "${scenes[@]}";do
  if [[ "$clean" != 1 ]];then record "$scene" NOT_RUN;continue;fi
+ if [[ "$scene" == crash-* ]];then
+  status=FAIL
+  code=0
+  invoke 120s "$scene" >"$out/$scene.log" 2>&1 || code=$?
+  recovery="recover-${scene#crash-}"
+  echo "B100_CRASH_PROCESS_EXIT $scene $code" | tee -a "$out/$scene.log"
+  "$adb" shell su -c 'ip -4 rule show; ip -4 route show table all; ip -o link show; iptables -w 2 -t nat -S OUTPUT; ls -l /data/local/tmp/wbd-x86-ci/b100-recovery' >"$out/$scene-after-exit.txt" 2>&1 || true
+  if [[ "$code" == 86 ]] && grep -Fq B100_CRASH_ARMED "$out/$scene.log" &&
+     grep -Fq route-journal.json "$out/$scene-after-exit.txt" &&
+     grep -Eq 'lookup 19842( |$)' "$out/$scene-after-exit.txt";then
+   if invoke 120s "$recovery" >>"$out/$scene.log" 2>&1 &&
+      grep -Fq "B100_RECOVER_PASS $recovery" "$out/$scene.log" &&
+      grep -Fq B100_CRASH_IDEMPOTENT_RESTORE_PASS "$out/$scene.log";then status=PASS;fi
+  fi
+  if ! clean_kernel "$scene";then clean=0;status=FAIL;fi
+  cat "$out/$scene-after-exit.txt" "$out/$scene.log"
+  record "$scene" "$status"
+  continue
+ fi
  if [[ "$scene" == system-physical || "$scene" == system-physical-tc || "$scene" == system-cn || "$scene" == system-dns6 ]] && ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
  limit=100s
  if [[ "$scene" == route-* ]];then
@@ -119,6 +141,14 @@ for scene in "${scenes[@]}";do
  if invoke "$limit" "$scene" >"$out/$scene.log" 2>&1;then
   case "$scene" in
    system-*) if grep -Fq "B91_SYSTEM_DNS_QUERY_PASS $scene" "$out/$scene.log" && grep -Fq "B91_SYSTEM_DNS_STOP_PASS $scene" "$out/$scene.log";then status=PASS;fi ;;
+   dns6-relay) if grep -Fq B100_DNS6_RELAY_PASS "$out/$scene.log" &&
+       grep -Fq B100_DNS6_RELAY_STOP_PASS "$out/$scene.log" &&
+       [[ "$(grep -c B100_DNS6_RELAY_SOCKET_PASS "$out/$scene.log")" == 2 ]];then status=PASS;fi ;;
+   mixed-*) if grep -Fq "B100_MIXED_MSS_PASS $scene" "$out/$scene.log" &&
+       grep -Fq B99_RAW_WIRE_WITNESS "$out/$scene.log" &&
+       grep -Fq B98_MTU_OS_READBACK_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_TUN_CLOSE_PASS "$out/$scene.log";then status=PASS;fi ;;
    wire-*) if grep -Fq "B99_WIRE_SCENE_PASS $scene" "$out/$scene.log" &&
        grep -Fq B99_RAW_WIRE_WITNESS "$out/$scene.log" &&
        grep -Fq B98_MTU_DF_OVERSIZE_REJECT_PASS "$out/$scene.log" &&
@@ -142,6 +172,9 @@ for scene in "${scenes[@]}";do
   esac
  fi
  if [[ "$scene" == system-physical ]] && ! grep -Fq "B90_FIXTURE system.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
+ if [[ "$scene" == dns6-relay ]];then
+  for proto in UDP TCP;do grep -Fq "B90_FIXTURE system.wbd-b91.test $proto" "$out/dns-host.log" || status=FAIL;done
+ fi
  if [[ "$scene" == system-dns6 ]];then
   for proto in udp tcp;do grep -Fq "B99_DNS6_EXPLICIT_SOCKET_PASS $proto" "$out/$scene.log" || status=FAIL;done
   for proto in UDP TCP;do grep -Fq "B90_FIXTURE system.wbd-b91.test $proto" "$out/dns-host.log" || status=FAIL;done
@@ -186,10 +219,19 @@ uid_stages={}
 dns_stages={}
 mtu_stages={}
 wire_stages={}
+recovery_stages={}
+dns6_relay={}
+mixed_mss={}
 for scene in rows:
  f=p/(scene+".log")
  if not f.exists():continue
  t=f.read_text(errors="replace")
+ if scene.startswith("crash-"):
+  recovery_stages[scene]={"exit86":"PASS" if "B100_CRASH_PROCESS_EXIT "+scene+" 86" in t else "NOT_PROVEN","recover":"PASS" if "B100_RECOVER_PASS " in t else "NOT_PROVEN","idempotent":"PASS" if "B100_CRASH_IDEMPOTENT_RESTORE_PASS " in t else "NOT_PROVEN"}
+ if scene=="dns6-relay":
+  dns6_relay={"socket_passes":t.count("B100_DNS6_RELAY_SOCKET_PASS "),"stop":"PASS" if "B100_DNS6_RELAY_STOP_PASS" in t else "NOT_PROVEN","nat_capture":"ENV_BLOCKED_B99"}
+ if scene.startswith("mixed-"):
+  mixed_mss[scene]={"readback":"PASS" if "B98_MTU_OS_READBACK_PASS " in t else "NOT_PROVEN","wire":"PASS" if "B100_MIXED_MSS_PASS " in t else "NOT_PROVEN","witness":[x for x in t.splitlines() if x.startswith("B99_RAW_WIRE_WITNESS ")],"stop":"PASS" if "B91_NATIVE_STOP_PASS " in t else "NOT_PROVEN"}
  if scene.startswith("wire-"):
   wire_stages[scene]={"wire":"PASS" if "B99_WIRE_SCENE_PASS " in t else "NOT_PROVEN","witness":[x for x in t.splitlines() if x.startswith("B99_RAW_WIRE_WITNESS ")],"native_stop":"PASS" if "B91_NATIVE_STOP_PASS " in t else "NOT_PROVEN"}
  if scene.startswith("mtu-"):
@@ -203,7 +245,7 @@ for scene in ("normal","fec-fixed","fec-auto","game2","game2-fixed","game4","gam
  if not f.exists():continue
  t=f.read_text(errors="replace")
  native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN","java_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" 1\n" in t else "NOT_PROVEN","inet4_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" send4\n" in t else "NOT_PROVEN","fec_source_parity":"PASS" if "B97_FEC_SOURCE_PARITY_PASS "+scene+" " in t else "NOT_PROVEN"}
-r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"mtu_stages":mtu_stages,"wire_stages":wire_stages,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
+r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"mtu_stages":mtu_stages,"wire_stages":wire_stages,"mixed_mss":mixed_mss,"recovery_stages":recovery_stages,"dns6_relay":dns6_relay,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))
 PY
