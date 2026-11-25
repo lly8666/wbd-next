@@ -28,6 +28,19 @@ func allowed(p []byte,src,dst net.IP,server bool)bool{
  at:=h+2;if server{at=h}
  return binary.BigEndian.Uint16(p[at:at+2])==443
 }
+// Observe only genuine SYN/SYNACK on each distinct TCP flow; no bytes
+// are changed and no response is generated here. Each map belongs to
+// one relay direction; ordinals are CI-local counts, not credentials.
+func observeCold(p []byte,server bool,seen map[uint16]bool,role,direction string){
+ h:=int(p[0]&15)*4
+ flags:=p[h+13]
+ if (!server&&flags&0x12!=0x02)||(server&&flags&0x12!=0x12){return}
+ at:=h;if server{at=h+2}
+ port:=binary.BigEndian.Uint16(p[at:at+2])
+ if seen[port]{return};seen[port]=true
+ kind:="SYN";if server{kind="SYNACK"}
+ fmt.Printf("B110_WIRE_%s role=%s direction=%s distinct=%d\n",kind,role,direction,len(seen))
+}
 func run()error{
  if len(os.Args)!=6{return fmt.Errorf("usage: host|guest interface client-ip server-ip destination-mac")}
  host:=os.Args[1]=="host"
@@ -58,6 +71,7 @@ func run()error{
  go func(){
   b:=make([]byte,65536)
   var hdr [2]byte
+  seen:=make(map[uint16]bool)
   for {
    n,a,e:=syscall.Recvfrom(fd,b,0);if e!=nil{done<-e;return}
    link,ok:=a.(*syscall.SockaddrLinklayer)
@@ -69,6 +83,7 @@ func run()error{
    binary.BigEndian.PutUint16(hdr[:],uint16(total))
    if _,e=io.Copy(c,io.MultiReader(bytes.NewReader(hdr[:]),bytes.NewReader(p)));e!=nil{done<-e;return}
    if tx.Add(1)==1{fmt.Println("B108_RELAY_FIRST_TX",os.Args[1])}
+   observeCold(p,host,seen,os.Args[1],"tx")
   }
  }()
  go func(){
@@ -77,6 +92,7 @@ func run()error{
   copy(b[:6],mac);copy(b[6:12],iface.HardwareAddr);binary.BigEndian.PutUint16(b[12:14],0x0800)
   addr:=&syscall.SockaddrLinklayer{Protocol:ethIP,Ifindex:iface.Index,Halen:6}
   copy(addr.Addr[:],mac)
+  seen:=make(map[uint16]bool)
   for {
    if _,e:=io.ReadFull(c,hdr[:]);e!=nil{done<-e;return}
    n:=int(binary.BigEndian.Uint16(hdr[:]))
@@ -85,6 +101,7 @@ func run()error{
    if !allowed(b[14:14+n],to,from,!host){done<-fmt.Errorf("wrong original tuple");return}
    if e:=syscall.Sendto(fd,b[:14+n],0,addr);e!=nil{done<-e;return}
    if rx.Add(1)==1{fmt.Println("B108_RELAY_FIRST_RX",os.Args[1])}
+   observeCold(b[14:14+n],!host,seen,os.Args[1],"rx")
   }
  }()
  sig:=make(chan os.Signal,1);signal.Notify(sig,syscall.SIGTERM,syscall.SIGINT)

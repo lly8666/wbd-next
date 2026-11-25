@@ -1,3 +1,7 @@
+## B110｜Game真实远端、隧道DNS及生产自动重连（当前）
+
+B109 `18a687c75a038856c86232d6992bd9dd4ce0bbe3` [Action 45557921405](https://github.com/lly8666/wbd-next/actions/runs/45557921405) 14/5/8；Normal/Fixed/Auto真实独立远端普通App双向TCP/UDP+1MiB/方向及Stop PASS；四Game实际lease/M4+UID和server 12/12 lane commit，但误要求Normal SYNACK枚举，业务NOT_RUN。B110 6guest并行：四Game原wire各lane双向计数/真实业务/Stop、Normal真实隧道DNS UDP+TCP、Normal正式Service Wi-Fi自动恢复（无手动START）。不重跑已通过3模式基本矩阵及失败的非产品普通kernel TCP carrier额外试验。详见 [B110 devlog](../devlog/android-root-probe/20261125-b110-game-dns-reconnect.md)。物理ARM64、真实FEC恢复及热点未证。
+
 ## B109｜真实独立远端七模式（当前）
 
 B108 `6f63538348aabfeff6eaca39fac63cf53050b6be` [Action 45553595090](https://github.com/lly8666/wbd-next/actions/runs/45553595090) 11/2/8；Android独立原peer实际SYNACK/lease/M4 READY，33双向原包；server gate要求互斥singleton marker故App业务NOT_RUN，独立Linux普通TCP carrier connect FAIL。B109修正原Normal auto-lease multi-session和Game group验收分支，七独立Android实际peer业务、独立Linux carrier诊断。详见 [B109 devlog](../devlog/android-root-probe/20261125-b109-real-peer-seven-modes.md)。无生产改动、未证明远端E2E或性能。

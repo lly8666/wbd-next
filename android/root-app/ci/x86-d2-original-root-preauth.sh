@@ -114,12 +114,16 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
   "host_tap_syn_to_original_server":wire_status("host-wire-summary.json","syn") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")=="1" else "NOT_RUN",
   "host_tap_synack_from_server":wire_status("host-wire-summary.json","synack") if os.environ.get("WBD_D2_TAP_GUEST_PILOT")=="1" else "NOT_RUN",
  "original_android_unauth_rst_observed":"OBSERVED" if has("ORIGINAL_GO_COLD_UNAUTH_RST_RX") else "NOT_PROVEN",
- "real_peer_synack":"PASS" if has("ORIGINAL_GO_TCP_SYNACK_SEEN") else "NOT_PROVEN",
+ "real_peer_synack":"PASS" if has("ORIGINAL_GO_TCP_SYNACK_SEEN") or (p/"b110-game-wire-pass.txt").exists() else "NOT_PROVEN",
+ "game_wire_and_native_ready":"PASS" if (p/"b110-game-wire-pass.txt").exists() else "NOT_PROVEN",
+ "tunnel_dns_udp_tcp":"PASS" if (p/"b110-tunnel-dns-pass.txt").exists() else "NOT_RUN_OR_NOT_PROVEN",
+ "production_network_auto_reconnect":"PASS" if (p/"b110-reconnect-pass.txt").exists() else "NOT_RUN_OR_NOT_PROVEN",
  "tls_authenticated_32_lease":"PASS" if has("AUTHENTICATED_LEASE_OS_READBACK") and
     ("V4_ORIGINAL_GO_SERVER_NATIVE_READY" in server or "V4_PUBLIC_MULTI_SESSION_READY" in server or (p/"b109-remote-auth-result.txt").exists()) else "NOT_PROVEN",
  "original_rust_m4_and_uid_ready":"PASS" if has("NATIVE_M4_AND_UID_READY") else "NOT_PROVEN",
  "test_carrier":"CI_ADB_VETH_TC" if os.environ.get("WBD_B108_CARRIER")=="1" else "EMULATOR_DEFAULT",
  "mode":os.environ.get("WBD_B109_MODE","normal"),
+ "scene":os.environ.get("WBD_B110_SCENE",""),
  "b109_independent_peer_auth":"PASS" if (p/"b109-remote-auth-result.txt").exists() else "NOT_PROVEN",
  "b108_carrier_admission":"PASS" if (p/"b108-carrier-admission.txt").exists() else "NOT_PROVEN",
  "b108_joined_stop_kernel":"PASS" if (p/"b108-stop-result.txt").exists() else "NOT_PROVEN",
@@ -194,6 +198,9 @@ trap cleanup EXIT
 umask 077
 if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   phase=B108_CARRIER_ADMISSION
+  if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then
+    adb shell svc data disable
+  fi
   b108_setup
 fi
 # The proven original Linux netns FakeTCP oracle drops kernel-generated
@@ -264,7 +271,7 @@ phase=D2_S1_ORIGINAL_LINUX_SERVER
 # Android Emulator 10.0.2.2 maps to host loopback. Whether its user-mode
 # NAT preserves raw FakeTCP SYN/SYNACK is explicitly unproven; never call it
 # a TLS PASS until BOTH original server and Android receipts prove it.
-timeout --signal=TERM --kill-after=5s 180s sudo -n env \
+timeout --signal=TERM --kill-after=5s 240s sudo -n env \
   LD_LIBRARY_PATH="$GITHUB_WORKSPACE/$p" "$GITHUB_WORKSPACE/$p/wbd-v4-server" \
   --raw-interface "$raw_iface" --local-ip "$raw_ip" --local-port 443 \
   --tun-name wbdvs4 --tun-ipv4 10.66.0.1/24 \
@@ -342,7 +349,11 @@ fi
 phase=D2_S1_PRODUCTION_ROOT_SERVICE
 adb shell logcat -c >"$out/logcat-reset.txt" 2>&1 || true
 start_args=()
-if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then start_args=(--es ci_target traffic --es ci_mode "${WBD_B109_MODE:-normal}");fi
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  start_args=(--es ci_target traffic --es ci_mode "${WBD_B109_MODE:-normal}")
+  if [[ "${WBD_B110_SCENE:-}" == normal-dns ]];then start_args+=(--es ci_scenario tunnel_dns);fi
+  if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then start_args+=(--es ci_scenario auto_reconnect);fi
+fi
 adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity \
   --es ci_step start "${start_args[@]}" >"$out/start-activity.txt" 2>&1
 grep -q 'Starting: Intent' "$out/start-activity.txt"
@@ -440,22 +451,33 @@ phase=D2_S1_PRODUCTION_TUN_RAW_PASS
 echo "D2_S1_ORIGINAL_ANDROID_PRODUCTION_ROOT_SERVICE_TUN_RAW_PASS"
 if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   phase=B108_ORIGINAL_REMOTE_AUTH
-  for marker in ORIGINAL_GO_MODE_READBACK_MATCHED ORIGINAL_GO_TCP_SYNACK_SEEN AUTHENTICATED_LEASE_OS_READBACK NATIVE_M4_AND_UID_READY;do
+  for marker in ORIGINAL_GO_MODE_READBACK_MATCHED AUTHENTICATED_LEASE_OS_READBACK NATIVE_M4_AND_UID_READY;do
     grep -Fq "$marker" "$out/app-diagnostic-enums.txt" || { echo "B108_NOT_PROVEN $marker";exit 50; }
   done
   # Normal auto-lease uses the original multi-session Normal owner.
   # Game shared mode has its own original committed group/lane receipts.
   if (( expected_lanes == 0 ));then
+    grep -Fq ORIGINAL_GO_TCP_SYNACK_SEEN "$out/app-diagnostic-enums.txt" || { echo B110_NORMAL_SYNACK_NOT_PROVEN;exit 50; }
     for marker in V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK V4_PUBLIC_MULTI_SESSION_READY;do
       grep -Fqx "$marker" "$out/server-stage-enums.txt" || { echo "B109_SERVER_NOT_PROVEN $marker";exit 50; }
     done
   else
+    # Game does not emit Normal's standalone SYNACK MSS log. Require
+    # the real Game-specific production READY plus each actual cold wire
+    # direction on both relay sides, and the original peer lane commits.
+    grep -Fq ORIGINAL_GO_GAME_NATIVE_READY "$out/app-diagnostic-enums.txt" || { echo B110_GAME_CLIENT_READY_NOT_PROVEN;exit 50; }
+    for spec in "host SYN rx" "host SYNACK tx" "guest SYN tx" "guest SYNACK rx";do
+      read -r side kind direction <<<"$spec"
+      grep -Fqx "B110_WIRE_$kind role=$side direction=$direction distinct=$expected_lanes" "$out/b108-$side-relay.log" || { echo "B110_GAME_WIRE_NOT_PROVEN $spec";exit 50; }
+    done
     for marker in V4_PUBLIC_GAME_MULTI_GROUP_READY "V4_ORIGINAL_GO_GAME_NATIVE_READY lanes=$expected_lanes";do
       grep -Fqx "$marker" "$out/server-stage-enums.txt" || { echo "B109_SERVER_NOT_PROVEN $marker";exit 50; }
     done
     for lane in $(seq 1 "$expected_lanes");do
       grep -Fqx "B109_SERVER_COMMITTED_LANE $lane" "$out/server-stage-enums.txt" || { echo "B109_SERVER_LANE_NOT_PROVEN $lane";exit 50; }
     done
+    printf 'PASS\n' >"$out/b110-game-wire-pass.txt"
+    echo "B110_GAME_REAL_WIRE_AND_AUTH_PASS lanes=$expected_lanes"
   fi
   for side in host guest;do
     grep -Fq "B108_RELAY_FIRST_TX $side" "$out/b108-$side-relay.log"
@@ -466,15 +488,25 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   phase=B108_ORIGINAL_REMOTE_APP_BUSINESS
   b108_traffic
   printf 'PASS\n' >"$out/b108-remote-app-result.txt"
+  case "${WBD_B110_SCENE:-}" in
+    normal-dns) phase=B110_TUNNEL_DNS;b110_dns;;
+    normal-reconnect) phase=B110_PRODUCTION_RECONNECT;b110_reconnect;;
+  esac
   adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step stop >"$out/stop-activity.txt"
-  for _ in $(seq 1 30);do
+  stop_count=1
+  if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then stop_count=2;fi
+  for _ in $(seq 1 40);do
     adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' >"$out/app-diagnostic-enums.txt"
-    if grep -Fq OWNER_CLEANUP_FINISHED "$out/app-diagnostic-enums.txt";then break;fi
+    if [[ "$(grep -c OWNER_CLEANUP_FINISHED "$out/app-diagnostic-enums.txt" || true)" -ge "$stop_count" ]];then break;fi
     sleep .5
   done
+  [[ "$(grep -c OWNER_CLEANUP_FINISHED "$out/app-diagnostic-enums.txt" || true)" -ge "$stop_count" ]]
   for marker in ORIGINAL_GO_RUST_STOP_JOINED ORIGINAL_GO_UID_ROUTE_STOP_DRAINED OWNER_CLEANUP_FINISHED;do
-    grep -Fq "$marker" "$out/app-diagnostic-enums.txt" || { echo "B108_STOP_NOT_PROVEN $marker";exit 51; }
+    if [[ "$(grep -c "$marker" "$out/app-diagnostic-enums.txt" || true)" -lt "$stop_count" ]];then echo "B108_STOP_NOT_PROVEN $marker";exit 51;fi
   done
+  if (( expected_lanes > 0 ));then
+    grep -Fq ORIGINAL_GO_GAME_GROUP_STOP_JOINED "$out/app-diagnostic-enums.txt" || { echo B110_GAME_JOINED_STOP_NOT_PROVEN;exit 51; }
+  fi
   adb shell "su -c 'test ! -e /sys/class/net/wbdv40 && test ! -e /data/local/tmp/wbd-next-root/route-journal.json'"
   adb shell "su -c 'ip -4 rule show'" >"$out/b108-stop-rules.txt"
   adb shell "su -c 'ip -4 route show table all'" >>"$out/b108-stop-rules.txt"

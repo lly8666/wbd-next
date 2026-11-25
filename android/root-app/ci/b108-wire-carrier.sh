@@ -5,6 +5,11 @@
 b108_root(){ adb shell "su -c '$*'"; }
 b108_cleanup(){
  set +e
+ if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then
+  adb shell svc wifi enable >/dev/null 2>&1
+  adb shell svc data enable >/dev/null 2>&1
+ fi
+ if [[ -n "${b110_dns_pid:-}" ]];then sudo -n kill "$b110_dns_pid" 2>/dev/null || true;wait "$b110_dns_pid" 2>/dev/null || true;fi
  if [[ "${b108_guest_filter:-0}" == 1 ]];then
   b108_root tc filter del dev "$b108_iface" egress pref 49152 protocol ip
  fi
@@ -83,10 +88,12 @@ b108_setup(){
 }
 b108_traffic(){
  # Actual server TUN IP only, no direct physical listener.
- python3 -u android/root-app/ci/traffic-fixture/server.py --bind 10.66.0.1 --port 18080 >"$out/b108-echo.log" 2>&1 &
- b108_echo_pid=$!
- for _ in $(seq 1 30);do grep -Fq "WBD test echo TCP+UDP" "$out/b108-echo.log" && break;sleep .2;done
- grep -Fq "WBD test echo TCP+UDP" "$out/b108-echo.log"
+ if [[ -z "${b108_echo_pid:-}" ]];then
+  python3 -u android/root-app/ci/traffic-fixture/server.py --bind 10.66.0.1 --port 18080 >"$out/b108-echo.log" 2>&1 &
+  b108_echo_pid=$!
+  for _ in $(seq 1 30);do grep -Fq "WBD test echo TCP+UDP" "$out/b108-echo.log" && break;sleep .2;done
+  grep -Fq "WBD test echo TCP+UDP" "$out/b108-echo.log"
+ fi
  # Allow the real application transfer to complete on the CI-only carrier,
  # without changing ordinary socket timeouts or native product policy.
  local rc=0
@@ -101,4 +108,60 @@ b108_traffic(){
   grep -Fq "B108_RELAY_FIRST_RX $side" "$out/b108-$side-relay.log"
  done
  echo B108_REAL_ANDROID_REMOTE_TCP_UDP_PASS
+}
+
+b110_dns(){
+ # Only the original server TUN address has a DNS listener, never host
+ # loopback or a public resolver. Ordinary App destination is the same
+ # non-CN test IP used by B102; native tunnel DNS rewrites it.
+ sudo -n python3 -u android/root-app/ci/b90-dns-fixture.py --bind 10.66.0.1 >"$out/b110-dns-host.log" 2>&1 &
+ b110_dns_pid=$!
+ for _ in $(seq 1 30);do grep -Fq B90_DNS_FIXTURE_READY "$out/b110-dns-host.log" && break;sleep .2;done
+ grep -Fq B90_DNS_FIXTURE_READY "$out/b110-dns-host.log"
+ for transport in udp tcp;do
+  adb shell am instrument -w -e dns_probe daily4 -e dns_name system.wbd-b91.test -e dns_transport "$transport" org.wbdnext.testtraffic/.TrafficInstrumentation >"$out/b110-dns-$transport.txt"
+  cat "$out/b110-dns-$transport.txt"
+  grep -Fq "daily_dns=$transport" "$out/b110-dns-$transport.txt"
+  grep -Fq "INSTRUMENTATION_CODE: -1" "$out/b110-dns-$transport.txt"
+  grep -Fq "B90_FIXTURE system.wbd-b91.test $(echo "$transport" | tr a-z A-Z)" "$out/b110-dns-host.log"
+ done
+ printf 'PASS\n' >"$out/b110-tunnel-dns-pass.txt"
+ echo B110_REAL_TUNNEL_DNS_UDP_TCP_PASS
+}
+b110_reconnect(){
+ [[ "$b108_iface" == wlan0 ]] || { echo B110_RECONNECT_ENV_BLOCKED_NOT_WIFI;return 1; }
+ cp "$out/b108-traffic.txt" "$out/b110-first-traffic.txt"
+ # Real production NetworkCallback must stop the first owner. No CI STOP
+ # or START is sent before the second business check.
+ adb shell svc wifi disable
+ for _ in $(seq 1 50);do
+  adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' >"$out/b110-first-stop.txt"
+  if grep -Fq ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED "$out/b110-first-stop.txt" &&
+     grep -Fq OWNER_CLEANUP_FINISHED "$out/b110-first-stop.txt";then break;fi
+  sleep .5
+ done
+ for marker in STOP_REQUESTED ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED OWNER_CLEANUP_FINISHED;do
+  grep -Fq "$marker" "$out/b110-first-stop.txt" || { echo "B110_AUTO_STOP_NOT_PROVEN $marker";return 1; }
+ done
+ b108_root test ! -e /sys/class/net/wbdv40
+ adb shell svc wifi enable
+ for _ in $(seq 1 70);do
+  adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' >"$out/b110-reconnect-enums.txt"
+  if [[ "$(grep -c NATIVE_M4_AND_UID_READY "$out/b110-reconnect-enums.txt" || true)" -ge 2 ]];then break;fi
+  sleep .5
+ done
+ [[ "$(grep -c NATIVE_M4_AND_UID_READY "$out/b110-reconnect-enums.txt" || true)" -ge 2 ]] || { echo B110_SECOND_READY_NOT_PROVEN;return 1; }
+ [[ "$(grep -c ROOT_PROCESS_LAUNCHED "$out/b110-reconnect-enums.txt" || true)" -ge 2 ]]
+ [[ "$(grep -c AUTHENTICATED_LEASE_OS_READBACK "$out/b110-reconnect-enums.txt" || true)" -ge 2 ]]
+ # Read real new Network after the service's independent restart.
+ adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step specialty_scope >/dev/null
+ sleep 1
+ local fresh new_handle new_iface new_index new_mtu new_ip extra
+ fresh="$(adb shell logcat -d -s WBD_X86_CI_ORIGINAL:I '*:S' | tr -d '\r' | sed -n 's/.*B90_SCOPE //p' | tail -1)"
+ read -r new_handle new_iface new_index new_mtu new_ip extra <<<"$fresh"
+ [[ "$new_handle" =~ ^[0-9]+$ && "$new_handle" != "$b108_handle" && "$new_iface" == "$b108_iface" && "$new_ip" == "$b108_ip" && -z "$extra" ]] || { echo B110_NEW_NETWORK_OR_CARRIER_NOT_PROVEN;return 1; }
+ b108_traffic
+ cp "$out/b108-traffic.txt" "$out/b110-second-traffic.txt"
+ printf 'PASS\n' >"$out/b110-reconnect-pass.txt"
+ echo "B110_PRODUCTION_AUTO_RECONNECT_BUSINESS_PASS $b108_handle $new_handle"
 }

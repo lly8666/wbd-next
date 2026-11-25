@@ -221,7 +221,7 @@ jobs:
           if-no-files-found: warn
 
   b108-carrier-linux-admission:
-    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]')
+    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -506,13 +506,14 @@ jobs:
       fail-fast: false
       max-parallel: 7
       matrix:
-        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
+        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
     permissions: {contents: read, actions: read}
     env:
       GH_TOKEN: ${{ github.token }}
       WBD_KSU_PRODUCT_X86_CI: '1'
       WBD_D2_ORIGINAL: '1'
-      WBD_B109_MODE: ${{ matrix.mode }}
+      WBD_B109_MODE: ${{ startsWith(matrix.mode, 'normal-') && 'normal' || matrix.mode }}
+      WBD_B110_SCENE: ${{ matrix.mode }}
       WBD_B108_CARRIER: ${{ contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && !contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
@@ -570,6 +571,8 @@ jobs:
             out/android-x86-d2-root/receipt.json
             out/android-x86-d2-root/b108-*.log
             out/android-x86-d2-root/b108-*.txt
+            out/android-x86-d2-root/b110-*.log
+            out/android-x86-d2-root/b110-*.txt
             out/android-x86-d2-root/b109-*.txt
             out/android-x86-d2-root/wiring/receipt.json
             out/android-x86-d2-root/wiring/results.tsv

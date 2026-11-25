@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Real local UDP/TCP DNS fixture, no external network."""
+import argparse
 import select
 import socket
 import struct
@@ -34,10 +35,13 @@ def readn(c, n):
         b += chunk
     return b
 
+parser=argparse.ArgumentParser()
+parser.add_argument("--bind",default="127.0.0.1")
+args=parser.parse_args()
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp, socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp:
     tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    udp.bind(("127.0.0.1", 53))
-    tcp.bind(("127.0.0.1", 53))
+    udp.bind((args.bind, 53))
+    tcp.bind((args.bind, 53))
     tcp.listen(4)
     print("B90_DNS_FIXTURE_READY", flush=True)
     while True:

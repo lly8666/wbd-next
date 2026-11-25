@@ -145,7 +145,10 @@ public final class X86CiOriginalStartActivity extends Activity {
             request.putExtra("fec_profile",6);
             request.putExtra("has_ca",verify);
             request.putExtra("tls_verify_server",verify);
-            request.putExtra("tunnel_dns",false);
+            String scenario=getIntent().getStringExtra("ci_scenario");
+            request.putExtra("tunnel_dns","tunnel_dns".equals(scenario));
+            if("tunnel_dns".equals(scenario))request.putExtra("tunnel_dns_upstream","10.66.0.1");
+            request.putExtra("background_network_recovery","auto_reconnect".equals(scenario));
             request.putExtra("physical_dns",false);
             request.putExtra("cn_dns_split",false);
             request.putExtra("outer_repair",false);
