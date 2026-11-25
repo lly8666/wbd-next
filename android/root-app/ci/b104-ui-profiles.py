@@ -44,7 +44,9 @@ def field(label):
 def fill(label,value):
     n=field(label);old=n.get("text","");click(n)
     adb("shell","input","keyevent","KEYCODE_MOVE_END")
-    for _ in old:adb("shell","input","keyevent","KEYCODE_DEL")
+    if n.get("password")=="true":adb("shell","input","keyevent",*(["KEYCODE_DEL"]*80))
+    else:
+        for _ in old:adb("shell","input","keyevent","KEYCODE_DEL")
     adb("shell","input","text",value);adb("shell","input","keyevent","4")
     time.sleep(.3)
 def check_field(label,value):
@@ -60,6 +62,50 @@ def select_mode(old,new):
 def choose_slot(current,target):
     page("服务器");tap(current,True);tap(target,True)
 
+def picker_find(values,partial=False):
+    for _ in range(12):
+        for n in dump().iter("node"):
+            text=n.get("text","").casefold()
+            desc=n.get("content-desc","").casefold()
+            if any((v.casefold() in text or v.casefold() in desc) if partial else
+                   (v.casefold()==text or v.casefold()==desc) for v in values):
+                return n
+        time.sleep(.4)
+    raise RuntimeError("system file picker control not found: "+"/".join(values))
+def open_downloads():
+    for n in dump().iter("node"):
+        if n.get("text","").casefold() in ("downloads","下载") and n.get("class","").endswith("TextView"):
+            if n.get("clickable")=="true":click(n)
+            return
+    click(picker_find(["Show roots","Open navigation drawer","显示根目录"],True))
+    click(picker_find(["Downloads","下载"]))
+def complete_backup_roundtrip():
+    name="wbd-root-ten-profiles.wbpb"
+    page("服务器");tap("导出全部服务器")
+    open_downloads()
+    click(picker_find(["Save","保存"]))
+    time.sleep(1)
+    locate("全部服务器已导出",True)
+    raw=adb("exec-out","cat","/sdcard/Download/"+name)
+    if raw[:4]!=b"WBPC":raise RuntimeError("wrong complete backup format")
+    for value in (b"NormalDaily",b"GameDaily",b"TenthDaily",b"ExamplePass123",b"ExampleKey123",
+                  b"SecondExamplePass123",b"SecondExampleKey123"):
+        if value not in raw:raise RuntimeError("missing complete profile field")
+    page("服务器");tap("删除服务器配置");locate("已删除槽位10",True)
+    page("服务器");tap("导入服务器备份")
+    open_downloads()
+    click(picker_find([name],True))
+    time.sleep(1);locate("服务器导入完成",True)
+    page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
+    page("设置");check_field("外层 MTU（576–1500，默认1460）","1400")
+    # Re-export to a fresh filename after import and compare every byte.
+    adb("shell","mv","/sdcard/Download/"+name,"/sdcard/Download/original-"+name)
+    page("服务器");tap("导出全部服务器");open_downloads()
+    click(picker_find(["Save","保存"]));time.sleep(1)
+    locate("全部服务器已导出",True)
+    actual=adb("exec-out","cat","/sdcard/Download/"+name)
+    if actual!=raw:raise RuntimeError("complete backup changed after restore")
+    adb("shell","rm","-f","/sdcard/Download/"+name,"/sdcard/Download/original-"+name)
 def main(out):
     report={}
     try:
@@ -106,7 +152,7 @@ def main(out):
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.10")
         page("应用");checkcheck("全部直连 DNS",True)
         page("服务器");check_field("用户名","daily-ci")
-        if len(field("密码").get("text",""))!=len("ExamplePass123"):raise RuntimeError("slot password not recalled")
+        # Actual unmasked values are verified via the portable backup below.
         report["load_normal"]="PASS"
         choose_slot("配置槽1 · NormalDaily","配置槽2 · GameDaily")
         tap("载入并编辑");locate("已载入槽位2：GameDaily",True)
@@ -114,7 +160,7 @@ def main(out):
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.20")
         page("应用");checkcheck("CN 分流 DNS",True)
         page("服务器")
-        if len(field("密码").get("text",""))!=len("SecondExamplePass123"):raise RuntimeError("slot password not recalled")
+        # Actual unmasked values are verified via the portable backup below.
         report["load_game"]="PASS"
         choose_slot("配置槽2 · GameDaily","配置槽10 · TenthDaily")
         tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
@@ -123,6 +169,7 @@ def main(out):
         locate("已保存槽位10：TenthDaily",True)
         page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field(mtu,"1400")
+        complete_backup_roundtrip();report["complete_saf_export_import"]="PASS"
         page("设置");tap("诊断与恢复");locate("导出诊断");report["diagnostics_menu"]="PASS"
         page("连接");locate("未连接")
         tap("关闭程序");time.sleep(.5)
@@ -133,6 +180,7 @@ def main(out):
         page("连接");locate("未连接")
         report["close_and_reopen"]="PASS"
         report["load_tenth_and_save_parameters"]="PASS";report["no_start"]="PASS"
+        print("B124_UI_COMPLETE_SERVER_SAVE_AND_SAF_ROUNDTRIP_PASS")
         print("B115_UI_TEN_SLOTS_SAVE_MTU_RESTART_PASS")
         print("B104_UI_TWO_PROFILES_RESTART_PASS")
     finally:

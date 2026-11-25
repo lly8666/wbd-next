@@ -51,9 +51,14 @@ adb install "$fixture" >"$out/install-fixture.txt"
 adb shell am start -W -n org.wbdnext.rootclient/.RootClientActivity >"$out/activity.txt"
 set +e
 if [[ "${WBD_B104_UI:-0}" == 1 ]];then
- python3 android/root-app/ci/b104-ui-profiles.py --out "$out" >"$out/ui-smoke.txt" 2>&1
+ python3 android/root-app/ci/x86-ui-smoke.py --out "$out" >"$out/ui-navigation.txt" 2>&1
  ui_rc=$?
- cat "$out/ui-smoke.txt"
+ cat "$out/ui-navigation.txt"
+ if [[ "$ui_rc" == 0 ]];then
+   python3 android/root-app/ci/b104-ui-profiles.py --out "$out" >"$out/ui-smoke.txt" 2>&1
+   ui_rc=$?
+   cat "$out/ui-smoke.txt"
+ fi
 else
  python3 android/root-app/ci/x86-ui-smoke.py --out "$out" >"$out/ui-smoke.txt" 2>&1
  ui_rc=$?
