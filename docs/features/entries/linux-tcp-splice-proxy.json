@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "linux-tcp-splice-proxy",
+  "name": "Linux TCP splice transparent acceleration",
+  "summary": "Opt-in TCP split at Linux TUN egress with native splice and selectable tunnel-side kernel CC.",
+  "owner": "M0",
+  "stage": "experimental",
+  "development_branch": "experiment/m0-linux-tcp-splice",
+  "available_on": [
+    "experiment/m0-linux-tcp-splice"
+  ],
+  "defaults": {
+    "tcp-proxy-cc": "",
+    "tcp-proxy-port": 46180
+  },
+  "usage": {
+    "cli": "wbd-v4-server --tcp-proxy-cc bbr --tcp-proxy-port 46180 (omit cc for original NAT)",
+    "config": "Experimental server CLI only",
+    "gui": "Not applicable"
+  },
+  "code_refs": [
+    "https://github.com/lly8666/wbd-next/blob/f6ccc4409ac7419a65302bf3228210166a041158/crates/wbd-engine/src/v4_linux_tcp_splice.rs",
+    "https://github.com/lly8666/wbd-next/blob/f6ccc4409ac7419a65302bf3228210166a041158/r0/go_overlay/internal/v4productcli/tcp_splice_linux.go"
+  ],
+  "doc_refs": [
+    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md"
+  ],
+  "verification": [
+    {
+      "platform": "linux/x86_64",
+      "scope": "H2417 native proxy BBR functional evidence; performance infrastructure unqualified; H2418 in flight",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    }
+  ],
+  "limitations": [
+    "IPv4 forwarded TCP only; local server services and UDP unchanged",
+    "End-to-end TCP acknowledgement becomes two real TCP segments",
+    "No custom CC algorithm implemented; old-kernel and physical paths not verified",
+    "H2417 did forward real TCP, but 21Mbps DERP-limited path and incomplete matrix preclude performance qualification; see docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json"
+  ],
+  "promotion": null
+}
