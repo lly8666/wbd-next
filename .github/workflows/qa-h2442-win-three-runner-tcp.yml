@@ -1,4 +1,4 @@
-name: H2442 three runner Windows single TCP matrix
+name: H2443 Windows single TCP matrix argv repair
 run-name: "H2442 Windows native TCP 400ms 300-600 | ${{ github.sha }}"
 on:
   push:
@@ -223,7 +223,7 @@ jobs:
             & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object result/h1706-ubuntu-import.log
             if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
           }
-          $lines=(& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe -d Ubuntu -u root -- ip -4 -o addr show dev eth0 2>&1 | Out-String)
+          $lines=(& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe -d Ubuntu -u root --exec ip -4 -o addr show dev eth0 2>&1 | Out-String)
           if($LASTEXITCODE -ne 0){throw 'real independent Linux eth0 unavailable'}
           $m=[regex]::Match($lines,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
           if(-not $m.Success){throw 'real Linux guest does not have its own IPv4'}
@@ -303,8 +303,8 @@ jobs:
             }
             if(!(Test-Path "h2228-$role-ready/$role-ready.json")){throw "missing $role readiness"}
           }
-          $path=((& wsl.exe -d Ubuntu -u root -- wslpath -a "$pwd" | Out-String).Trim())
-          & wsl.exe -d Ubuntu -u root -- env "GITHUB_SHA=$env:GITHUB_SHA" "GITHUB_RUN_ID=$env:GITHUB_RUN_ID" WBD_H2417_SPLICE=1 WBD_H2418_DIAG=1 WBD_H2442_ARM_SERVER=1 python3 "$path/tools/m0_h2442_topology.py" windows-gateway "$path/h2228-peer/relay.json" "$path/h2442-out/gateway.json"
+          $path=((& wsl.exe -d Ubuntu -u root --exec wslpath -a "$pwd" | Out-String).Trim())
+          & wsl.exe -d Ubuntu -u root --exec env "GITHUB_SHA=$env:GITHUB_SHA" "GITHUB_RUN_ID=$env:GITHUB_RUN_ID" WBD_H2417_SPLICE=1 WBD_H2418_DIAG=1 WBD_H2442_ARM_SERVER=1 python3 "$path/tools/m0_h2442_topology.py" windows-gateway "$path/h2228-peer/relay.json" "$path/h2442-out/gateway.json"
           if($LASTEXITCODE -ne 0){throw 'WSL gateway failed'}
           Get-NetTCPSetting | Select-Object SettingName,CongestionProvider,AutoTuningLevelLocal | ConvertTo-Json | Set-Content h2442-out/windows-tcp-settings.json
           Get-NetAdapter | Select-Object Name,InterfaceIndex,LinkSpeed,Status | ConvertTo-Json | Set-Content h2442-out/windows-adapters.json
@@ -335,7 +335,7 @@ jobs:
         run: |
           if(!(Test-Path h2442-out/summary.json)){
             New-Item -ItemType Directory -Force h2442-out | Out-Null
-            @{source_sha=$env:GITHUB_SHA;run_id=$env:GITHUB_RUN_ID;real_three_runner_l3_relay=$true;all_three_distinct_native_machines=$true;status='PRECONDITION_FAILED_NOT_MEASURED';rows=@()} | ConvertTo-Json | Set-Content -Encoding ascii h2442-out/summary.json
+            @{source_sha=$env:GITHUB_SHA;run_id=$env:GITHUB_RUN_ID;real_three_runner_l3_relay=$false;all_three_distinct_native_machines=$false;status='PRECONDITION_FAILED_NOT_MEASURED';rows=@()} | ConvertTo-Json | Set-Content -Encoding ascii h2442-out/summary.json
           }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

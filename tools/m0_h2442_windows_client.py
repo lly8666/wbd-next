@@ -8,7 +8,7 @@ CASES=json.loads((ROOT/"tools/m0_h2442_matrix.json").read_text())
 def wpath(p):
     p=p.resolve();return "/mnt/"+p.drive[0].lower()+"/"+"/".join(p.relative_to(p.anchor).parts)
 def wsl(*a,timeout=30):
-    p=subprocess.run(["wsl.exe","-d","Ubuntu","-u","root","--",*map(str,a)],capture_output=True,text=True,timeout=timeout)
+    p=subprocess.run(["wsl.exe","-d","Ubuntu","-u","root","--exec",*map(str,a)],capture_output=True,text=True,timeout=timeout)
     if p.returncode:raise RuntimeError((p.stderr+p.stdout)[-600:])
     return p.stdout.strip()
 def read(p):return json.loads(p.read_text(encoding="utf-8-sig"))
