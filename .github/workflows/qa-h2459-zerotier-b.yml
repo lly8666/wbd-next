@@ -1,4 +1,4 @@
-name: H2459 native ZeroTier three runner B
+name: H2459 native ZeroTier three runner B (identity phase fix)
 run-name: "H2459 400ms zero-loss native ZeroTier B | ${{ github.sha }}"
 on:
   push:

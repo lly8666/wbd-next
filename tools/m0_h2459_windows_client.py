@@ -206,6 +206,11 @@ def finish(rows,status):
 if __name__=="__main__":
     action=sys.argv[1]
     if action=="baseline":
+        # Warm the real two-hop route before starting the cold TCP clock.
+        # Control requests use the same routed ZeroTier Ethernet, not a fallback.
+        control("relay","/snapshot")
+        control("server","/sample")
+        save(OUT/"direct-path-before-baseline.json",direct_peers())
         if H2452:
             rows=[]
             for i in DIRECT:

@@ -18,11 +18,14 @@ def save(p,obj):h.save(p,obj)
 def read(p):return z.load(p)
 def identity(role):
     v=z.identity()
-    assert v.get("zt",{}).get("online"),v
+    # A local node identity exists before the service reaches ONLINE.
+    # Actual network status is checked by zt_wait after joining; direct
+    # paths are qualified independently during business measurements.
+    assert v.get("zt",{}).get("address"),v
     arch=platform.machine().lower()
     assert arch in (("amd64","x86_64") if role=="client" else ("aarch64","arm64"))
     assert (os.name=="nt")== (role=="client")
-    row={"role":role,"source_sha":v["sha"],"run_id":v["run"],"node_id":v["zt"]["address"],"arch":arch}
+    row={"role":role,"source_sha":v["sha"],"run_id":v["run"],"node_id":v["zt"]["address"],"arch":arch,"online_at_identity":v["zt"].get("online")}
     save(META/(role+".json"),row)
     return row
 
