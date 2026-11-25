@@ -244,6 +244,8 @@ def impair(loss,delay,model):
                 "25%","90%","0.1%"]
     delay_terms=["delay","0ms"] if delay==0 else [
         "delay","200ms","15ms","25%","distribution","normal"]
+    if delay and os.environ.get("WBD_H2418_DIAG")=="1":
+        delay_terms=["delay","200ms"] # isolate IID loss from jitter-induced reordering
     receipts={}
     for role in ("client","server"):
         device=RDEV[role]
@@ -254,7 +256,7 @@ def impair(loss,delay,model):
               "QDISC_READBACK_NOT_NETEM_"+device)
         receipts[device]=q
     return {"loss_target_pct":loss,"one_way_added_delay_ms":delay,
-        "jitter_ms":15 if delay else 0,"jitter_correlation_pct":25 if delay else 0,
+        "jitter_ms":15 if delay and os.environ.get("WBD_H2418_DIAG")!="1" else 0,"jitter_correlation_pct":25 if delay and os.environ.get("WBD_H2418_DIAG")!="1" else 0,
         "loss_model":model,"gilbert":ge,"qdisc_packet_limit":65536,
         "bandwidth_rate_cap":"NONE","apply_to":"RELAY_ROUTER_ONLY_EGRESS_BOTH_DIRECTIONS",
         "qdiscs":receipts,"no_tailscale_or_endpoint_qdisc_changed":True}
@@ -363,7 +365,7 @@ def real_native_worker_alive(pidfile):
 
 def iperf(kind,duration,streams,direction,out,pidfile=None):
     guard(kind in ("direct","wbd") and
-          duration in (3,12,18,20) and streams in (1,4,8) and
+          duration in ((3,12,18,20,30) if os.environ.get("WBD_H2418_DIAG")=="1" else (3,12,18,20)) and streams in (1,4,8) and
           direction in ("upload","download"),"BAD_IPERF_REQUEST")
     guard(pidfile is None or kind=="wbd","PID_ONLY_SCOPED_TO_WBD")
     host=LAN["server"] if kind=="direct" else "10.66.0.1"
@@ -371,10 +373,10 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
     if kind=="wbd" and os.environ.get("WBD_H2417_SPLICE")=="1":
         host="198.18.77.2"
         port=int(os.environ["WBD_H2417_TARGET_PORT"])
-        guard(port in (5201,5202),"SPLICE_TARGET_PORT")
+        guard(port in (5201,5202) or (os.environ.get("WBD_H2418_DIAG")=="1" and (5300<=port<=5307 or 5400<=port<=5403)),"SPLICE_TARGET_PORT")
     args=["sudo","-n","ip","netns","exec",NODE,"iperf3","-J","-C","bbr",
           "-c",host,"-p",str(port),"-P",str(streams),"-t",str(duration),
-          "-O","2"]
+          "-O","8" if os.environ.get("WBD_H2418_DIAG")=="1" and kind=="wbd" else "2"]
     if direction=="download":args.append("-R")
     wall_start=time.time()
     t=time.monotonic()

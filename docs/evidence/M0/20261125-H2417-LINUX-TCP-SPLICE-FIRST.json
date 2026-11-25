@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "f6ccc4409ac7419a65302bf3228210166a041158",
+  "run_id": 45544116278,
+  "result": "MEASURED_INCOMPLETE_INFRA_UNQUALIFIED",
+  "artifact_verified": true,
+  "artifacts": {
+    "summary": 14990893431,
+    "client": 14991137734,
+    "server": 14991780245,
+    "relay": 14991517082
+  },
+  "scope": "H2417 real x86/ARM/x86 Normal/off, outer1160, outer repair on; actual TCP proxy BBR and origin NAT BBR; 400ms added RTT, 15ms jitter, IID symmetric loss, 20s reverse single-stream. No absolute performance qualification.",
+  "direct_capacity_mbps": {
+    "upload": 20.883,
+    "download": 21.059
+  },
+  "tail_path": {
+    "client": "DIRECT_CANDIDATE",
+    "server": "UNKNOWN_NOT_QUALIFIED; initial ping via DERP only"
+  },
+  "rows_mbps": [
+    [
+      0,
+      16.043,
+      15.362,
+      17.879
+    ],
+    [
+      1,
+      10.748,
+      3.775,
+      10.066
+    ],
+    [
+      2,
+      12.53,
+      0.682,
+      10.695
+    ],
+    [
+      5,
+      2.726,
+      3.041,
+      1.206
+    ],
+    [
+      10,
+      0.891,
+      0.996,
+      0.524
+    ],
+    [
+      15,
+      null,
+      0.367,
+      1.101
+    ],
+    [
+      30,
+      0.105,
+      0.105,
+      0.157
+    ]
+  ],
+  "columns": [
+    "loss_pct",
+    "nat_a",
+    "splice_bbr",
+    "nat_a2"
+  ],
+  "nat_15_a_failure": "iperf3 server busy; not zero throughput",
+  "splice_median_samples": [
+    {
+      "loss": 0,
+      "cwnd": 2050,
+      "pacing_bps": 20116472,
+      "notsent_bytes": 13719510,
+      "rtt_ms": 748.434
+    },
+    {
+      "loss": 1,
+      "cwnd": 508,
+      "pacing_bps": 4825836,
+      "notsent_bytes": 2035123,
+      "rtt_ms": 477.914
+    },
+    {
+      "loss": 2,
+      "cwnd": 63,
+      "pacing_bps": 818376,
+      "notsent_bytes": 354135.5,
+      "rtt_ms": 483.2815
+    },
+    {
+      "loss": 5,
+      "cwnd": 410,
+      "pacing_bps": 3807112,
+      "notsent_bytes": 1567696,
+      "rtt_ms": 478.311
+    }
+  ],
+  "native_stop": "server/client original shared TUN joined, zero queue_full_drops, proxy stop error nil; time-based iperf data sockets closed with EPIPE/ECONNRESET after reporting",
+  "limitations": [
+    "No isolated diagnosis of BBR startup vs jitter vs underlay bottleneck; no proof proxy itself improves throughput.",
+    "No CUBIC or custom CC performance measured.",
+    "Old Governance failed prior H2416 cursor evidence schema (FUNCTIONAL_PASS lacks artifact_verified)."
+  ]
+}
