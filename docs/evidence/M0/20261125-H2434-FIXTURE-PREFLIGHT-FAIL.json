@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "9d5a3dd297e052661916c58aecc15b8d2829ca9d",
+  "run_id": 45572579387,
+  "result": "FIXTURE_PRE_BUSINESS_FAILURE",
+  "artifact_verified": false,
+  "actual_measured_legs": 0,
+  "smoke_jobs": [
+    {
+      "job_id": 139062592318,
+      "artifact_id": 15003281588
+    },
+    {
+      "job_id": 139062592840,
+      "artifact_id": 15002517486
+    }
+  ],
+  "cause": "cat: /sys/fs/cgroup/cpu.max: No such file or directory; both frozen product checksums OK; no business executed, measure skipped",
+  "verification": "Actual both job logs reviewed, no measurement ZIP contents claimed. H2433 raw CPU samples revisited: x86 900 cap host busy32.2–44.6%, PSI some4.5–8.2%; ARM900 host busy38.0–56.9%, PSI7.9–15.4%. Aggregate is not evidence of all-core saturation; inspect per-core/thread/softirq/SMT."
+}
