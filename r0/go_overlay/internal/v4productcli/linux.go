@@ -1478,6 +1478,7 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
         // both lane Detach/readback. No Go DATA worker and no Game4.
         ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
         defer stop()
+        stopWatch,e:=startOriginalAndroidTetherWatch(cfg,stop);if e!=nil{return e};defer stopWatch()
         return runAndroidGame(ctx,cfg,uint32(iface.Index),tun,&connected)
     }
     if cfg.gameLanes!=0||(role=="server"&&cfg.mixedModes){
@@ -1492,6 +1493,9 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
     }
     ctx,stop:=signal.NotifyContext(context.Background(),os.Interrupt,syscall.SIGTERM)
     defer stop()
+    if role=="client"&&runtime.GOOS=="android"{
+        stopWatch,e:=startOriginalAndroidTetherWatch(cfg,stop);if e!=nil{return e};defer stopWatch()
+    }
     if role=="client"&&cfg.autoIP&&runtime.GOOS!="android"{
         // PLAN028 only for real protected automatic IPv4 on Linux Normal.
         // The one process-shared Rust TUN reader already exists above and

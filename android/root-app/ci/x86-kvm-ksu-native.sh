@@ -549,7 +549,22 @@ if [[ "${WBD_D2_ORIGINAL:-0}" == 1 ]];then
       exit 30
     fi
   fi
-  if [[ "${WBD_ANDROID_SPECIALTY:-0}" == 1 ]];then
+  if [[ "${WBD_B110_SCENE:-}" == normal-bpf-kernel ]];then
+    mkdir -p out/android-x86-d2-root
+    n=out/android-root-app-native
+    test "$(cat "$n/SOURCE")" = "$GITHUB_SHA"
+    (cd "$n" && sha256sum -c SHA256SUMS) >out/android-x86-d2-root/b117-sha.txt
+    adb push "$n/b117-tether-bpf-android.test" /data/local/tmp/b117-tether-bpf.test
+    adb shell "su -c 'chmod 700 /data/local/tmp/b117-tether-bpf.test'"
+    set +e
+    adb shell "su -c 'WBD_B117_KERNEL=1 TMPDIR=/data/local/tmp /data/local/tmp/b117-tether-bpf.test -test.v -test.run ^TestB117AndroidKernelTetherBPFPause$'" | tee out/android-x86-d2-root/b117-kernel.txt
+    kernel_rc=${PIPESTATUS[0]}
+    set -e
+    adb shell "su -c 'rm -f /data/local/tmp/b117-tether-bpf.test'"
+    test "$kernel_rc" = 0
+    grep -Fq B117_ANDROID_REAL_TETHER_PROGRAMS_DETACHED out/android-x86-d2-root/b117-kernel.txt
+    grep -Fq B117_ANDROID_REAL_TETHER_PROGRAMS_RESTORED out/android-x86-d2-root/b117-kernel.txt
+  elif [[ "${WBD_ANDROID_SPECIALTY:-0}" == 1 ]];then
     bash android/root-app/ci/x86-android-specialty.sh
   else
     bash android/root-app/ci/x86-d2-original-root-preauth.sh

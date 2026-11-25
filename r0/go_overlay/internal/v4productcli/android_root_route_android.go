@@ -322,7 +322,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
 const androidTetherJournal="/data/local/tmp/wbd-next-root/tether-journal.json"
 // Check existing software downstream before opening TUN or sending SYN;
 // repeat at route grant because the actual downstream may change during TLS.
-// This is read-only: no global offload setting or BPF/netd mutation.
+// Scope readback; the session owns only hardware preference and exact tether hooks.
 func androidTetherFailure(class string,e error)error{
  fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=%s\n",class)
  return e
@@ -349,20 +349,20 @@ func androidTetherPreflight(c config,requireHardwareDisabled bool)(netip.Addr,er
  forward,e:=os.ReadFile("/proc/sys/net/ipv4/ip_forward")
  if e!=nil||strings.TrimSpace(string(forward))!="1"{return fail("FORWARDING",fmt.Errorf("enable existing Android tethering first"))}
  ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
- if requireHardwareDisabled{
-  offload,e:=rootjournal.ReadTetherOffload(androidTetherSettings)
-  if e!=nil||offload!="1"{return fail("HARDWARE_OFFLOAD",fmt.Errorf("software tether requires hardware offload disabled"))}
- }
+ if !requireHardwareDisabled{return gateway,nil}
+ offload,e:=rootjournal.ReadTetherOffload(androidTetherSettings)
+ if e!=nil||offload!="1"{return fail("HARDWARE_OFFLOAD",fmt.Errorf("software tether requires hardware offload disabled"))}
  dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
  if e!=nil{return fail("BPF_UNKNOWN",fmt.Errorf("tethering dump unavailable"))}
- switch rootjournal.TetherBPFState(string(dump)){
- case "enabled":return fail("BPF_ENABLED",fmt.Errorf("tether BPF offload is enabled"))
- case "disabled":
- default:return fail("BPF_UNKNOWN",fmt.Errorf("tether BPF offload state unverified"))
+ if rootjournal.TetherBPFState(string(dump))!="disabled"{
+  if e=rootjournal.VerifyTetherBPFPause(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal,c.androidTetherInterface);e!=nil{
+   return fail("BPF_PAUSE",e)
+  }
  }
  return gateway,nil
 }
 const androidTetherOffloadJournal="/data/local/tmp/wbd-next-root/tether-offload-journal"
+const androidTetherBPFJournal="/data/local/tmp/wbd-next-root/tether-bpf-journal.json"
 func androidTetherSettings(args ...string)(string,error){
  ctx,cancel:=context.WithTimeout(context.Background(),3*time.Second);defer cancel()
  b,e:=exec.CommandContext(ctx,"settings",args...).CombinedOutput()
@@ -370,29 +370,43 @@ func androidTetherSettings(args ...string)(string,error){
  return string(b),nil
 }
 func recoverOriginalAndroidTetherOffload()error{
- return rootjournal.RecoverTetherOffload(androidTetherSettings,androidTetherOffloadJournal)
+ return errors.Join(rootjournal.RecoverTetherBPF(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal),
+  rootjournal.RecoverTetherOffload(androidTetherSettings,androidTetherOffloadJournal))
 }
 func checkOriginalAndroidTether(c config)(func()error,error){
  if c.androidTetherInterface==""{return nil,nil}
- // BPF is checked before any global preference write. Unsupported
- // devices must not change even the hardware setting on a failed START.
+ // Only an explicit sharing session owns hardware preference and
+ // actual AOSP tether-specific ingress attachments.
+ if _,e:=os.Lstat(androidTetherBPFJournal);!os.IsNotExist(e){
+  return nil,androidTetherFailure("BPF_RESTORE",fmt.Errorf("previous tether BPF session needs Restore"))
+ }
  if _,e:=androidTetherPreflight(c,false);e!=nil{return nil,e}
  ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
  dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
  if e!=nil{return nil,androidTetherFailure("HARDWARE_OFFLOAD",e)}
  owner,e:=rootjournal.NewTetherOffload(androidTetherSettings,androidTetherOffloadJournal,rootjournal.TetherHALInactive(string(dump)))
  if e!=nil{return nil,androidTetherFailure("HARDWARE_OFFLOAD",e)}
+ var bpf *rootjournal.TetherBPFOwner
  cleanup:=func()error{
   cleared:=true
   for _,path:=range []string{androidTetherJournal,androidIPv6CarrierJournal}{
    if _,e:=os.Lstat(path);!os.IsNotExist(e){cleared=false}
   }
+  var bpfErr error
+  if bpf!=nil{
+   bpfErr=bpf.Stop(cleared)
+   if bpfErr!=nil{bpfErr=androidTetherFailure("BPF_RESTORE",bpfErr)}else{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_BPF_RESTORED role=client")}
+  }
   e:=owner.Stop(cleared)
-  if e!=nil{return androidTetherFailure("HARDWARE_RESTORE",e)}
-  if owner.Changed(){fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_RESTORED role=client")}
-  return nil
+  if e!=nil{e=androidTetherFailure("HARDWARE_RESTORE",e)}else if owner.Changed(){fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_RESTORED role=client")}
+  return errors.Join(bpfErr,e)
  }
  if owner.Changed(){fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_DISABLED role=client")}
+ if rootjournal.TetherBPFState(string(dump))!="disabled"{
+  bpf,e=rootjournal.NewTetherBPFPause(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal,c.androidTetherInterface)
+  if e!=nil{return nil,errors.Join(androidTetherFailure("BPF_PAUSE",e),cleanup())}
+  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_BPF_PAUSED role=client")
+ }
  if _,e=androidTetherPreflight(c,true);e!=nil{return nil,errors.Join(e,cleanup())}
  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_PREFLIGHT_READY role=client")
  return cleanup,nil
@@ -529,3 +543,13 @@ func originalAndroidIPv6PeerEcho(local,peer netip.Addr)error{
  return fmt.Errorf("IPv6 carrier peer did not answer: verify Linux --inner-ipv6 and actual server TUN IPv4")
 }
 
+
+func startOriginalAndroidTetherWatch(c config,stop context.CancelFunc)(func(),error){
+ if c.androidTetherInterface==""{return func(){},nil}
+ if _,e:=os.Lstat(androidTetherBPFJournal);os.IsNotExist(e){return func(){},nil}else if e!=nil{return nil,e}
+ closeWatch,e:=rootjournal.WatchTetherBPFPause(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal,c.androidTetherInterface,func(){
+  androidTetherFailure("BPF_PAUSE",fmt.Errorf("tether topology changed during session"));stop()
+ })
+ if e!=nil{return nil,androidTetherFailure("BPF_PAUSE",e)}
+ return closeWatch,nil
+}

@@ -199,7 +199,7 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
   b116-offload-lifecycle-host:
-    if: contains(github.event.head_commit.message, '[android-b116-tether-offload]')
+    if: contains(github.event.head_commit.message, '[android-b116-tether-offload]') || contains(github.event.head_commit.message, '[android-b117-live-bpf]')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -207,7 +207,7 @@ jobs:
         with: {persist-credentials: false}
       - name: Verify actual production hardware preference owner and independent BPF classifier
         run: |
-          GO111MODULE=off GOTOOLCHAIN=local go test -count=1 -v ./r0/go_overlay/internal/v4productcli/rootjournal -run '^TestB116'
+          GO111MODULE=off GOTOOLCHAIN=local go test -count=1 -v ./r0/go_overlay/internal/v4productcli/rootjournal -run '^TestB11[67]'
   b104-forwarding-real-namespace:
     if: contains(github.event.head_commit.message, '[android-forwarding-ui]') || contains(github.event.head_commit.message, '[android-options-sit]')  
     runs-on: ubuntu-24.04
@@ -231,7 +231,7 @@ jobs:
           if-no-files-found: warn
 
   b108-carrier-linux-admission:
-    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && !contains(github.event.head_commit.message, '[android-b114-final-regression]') && !contains(github.event.head_commit.message, '[android-b115-device-feedback]') && !contains(github.event.head_commit.message, '[android-b116-tether-offload]')
+    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && !contains(github.event.head_commit.message, '[android-b114-final-regression]') && !contains(github.event.head_commit.message, '[android-b115-device-feedback]') && !contains(github.event.head_commit.message, '[android-b116-tether-offload]') && !contains(github.event.head_commit.message, '[android-b117-live-bpf]')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -258,6 +258,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
+      WBD_B117_TETHER_BPF: ${{ contains(github.event.head_commit.message, '[android-b117-live-bpf]') && '1' || '0' }}
       WBD_B108_CARRIER: ${{ contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
       WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
@@ -517,7 +518,7 @@ jobs:
       fail-fast: false
       max-parallel: 8
       matrix:
-        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b116-tether-offload]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b115-device-feedback]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b114-final-regression]') && '["normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game2","game2-fixed","game4","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
+        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b117-live-bpf]') && '["normal-bpf-kernel","normal"]' || contains(github.event.head_commit.message, '[android-b116-tether-offload]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b115-device-feedback]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b114-final-regression]') && '["normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game2","game2-fixed","game4","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
     permissions: {contents: read, actions: read}
     env:
       GH_TOKEN: ${{ github.token }}
@@ -588,6 +589,7 @@ jobs:
             out/android-x86-d2-root/b111-*.txt
             out/android-x86-d2-root/b112-*.txt
             out/android-x86-d2-root/b113-*.txt
+            out/android-x86-d2-root/b117-*.txt
             out/android-x86-d2-root/b109-*.txt
             out/android-x86-d2-root/wiring/receipt.json
             out/android-x86-d2-root/wiring/results.tsv

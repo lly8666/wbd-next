@@ -1,3 +1,7 @@
+## B117｜共享 BPF 实际挂钩会话暂停（当前）
+
+B116 `38419091fa94ab86ab8fe1f71e259f6a7ca16ce0` [Action 45588147383](https://github.com/lly8666/wbd-next/actions/runs/45588147383) 13/0/9；硬件设置owner、ARM64签名构建和Normal真实远端通过。B115 API35/36十槽及MTU保存通过。用户授权自动暂停/恢复共享BPF：原Go通过NETLINK_ROUTE实际查找并摘除AOSP tethering ingress classifier，保存原程序ID及附着参数，Stop/Restore归还，不改程序/map、其他BPF或数据面。仅明确共享会话；已关闭则不改；未知OEM/XDP/不可重新打开pin及运行中HAL仍不宣称支持。事件订阅检测正常拓扑重挂，不轮询。新增host owner及x86 KSU真实Android pin+veth摘除/重挂事件/恢复测试，Normal实际业务回归；非真机热点端到端，待CI。详见 [B117 devlog](../devlog/android-root-probe/20261125-b117-live-tether-bpf.md)。
+
 ## B116｜真机共享 offload 独立问题（当前）
 
 B115 `18c618aa49e82ecf5c70913e675b1e9903ef7224` [Action 45583719117](https://github.com/lly8666/wbd-next/actions/runs/45583719117) 全绿；真机共享先 HARDWARE_OFFLOAD、再 BPF_OFFLOAD。B116仅在BPF明确关闭及HAL明确未启动的兼容条件下会话级关闭/读回/恢复硬件设置0或null，原1不改；已运行HAL不假定可热停，BPF_ENABLED/UNKNOWN分别诊断，不修改BPF/netd或绕过转发。真机共享未证。详见 [B116 devlog](../devlog/android-root-probe/20261125-b116-tether-offload.md)。

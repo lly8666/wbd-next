@@ -281,6 +281,9 @@ GO
     GOOS=android GOARCH=amd64 CGO_ENABLED=1 CGO_LDFLAGS="-Wl,-z,max-page-size=16384" go build -trimpath -buildvcs=false -o out/android-product-a1/b108-wire-relay-android-amd64 android/root-native/ci/b108-wire-relay.go
     GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -buildvcs=false -o out/android-product-a1/b108-wire-relay-linux-amd64 android/root-native/ci/b108-wire-relay.go
   fi
+  if [[ "$goarch" == amd64 && "${WBD_B117_TETHER_BPF:-0}" == 1 ]];then
+    (cd legacy && go test -c -o "$GITHUB_WORKSPACE/out/android-product-a1/b117-tether-bpf-android.test" ./internal/v4productcli/rootjournal)
+  fi
   # Quarantined ARM64 NativeBridge diagnosis; x86 native product is built above.
   if [[ "$goarch" == "arm64" ]]; then
   # Exact-SHA Android ARM64 diagnosis ONLY: distinguish Bionic/native
