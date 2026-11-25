@@ -1,0 +1,7 @@
+# H2439 research registration
+
+H2439 user asks representative poor-network and aggressive BBR research. No new product code; preserve accepted H2437. Official BBRv3 source/draft and community BBRplus examples reviewed; kernel names do not establish versions or gains. Uncapped stock BBR is not BBRplus. No third-party kernel code installed. Native ARM frozen build run45585194668 artifact15008292420, harness 9a93bdcdfabeff2fd3c123063774a24cc51926b7, [run45592176753](https://github.com/lly8666/wbd-next/actions/runs/45592176753) in progress, two smoke jobs gate 20 paired jobs/80 planned WBD legs: 100ms RTT jitter+1% IID, 400ms Gilbert-Elliott burst ~4.76%, asymmetric down-only and ACK-only5%, 100Mbps shared bottleneck with direct CUBIC competitor and WAN ping. Stock BBR uncapped vs weak-leg socket cap, separate splice CUBIC vs BBR equal cap. Same origin CUBIC, fixed FEC, readbacks of native congestion algorithm and kernel inventory. Shared WAN bytes include competitor; distinguish capacity-limited congestion from host overload. CPU PSI, worker/core, actual qdisc/drop, EOF and FEC receipts. Not BBRv3/BBRplus experiment; verified alternative kernel required, no arbitrary rate aggression or product default changes. Dynamic capacity and Auto FEC still open. See docs/requests/M0/h2439-realistic-weak-links.md. H2437 scoped acceptance unchanged; no real-network prevalence claim.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Frozen accepted product research only; no product changes."}
+```
