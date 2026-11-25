@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2433,
-  "checkpoint_sha": "18eb6a47bdd2dcfe50f58f1f6e9d9a6c6568924e",
+  "sequence": 2434,
+  "checkpoint_sha": "84c6294a06ae4562340fca369d1f0c0ed5c18764",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收H2433 run45570805865，核900/540同机128/1024实际队列/CPU/外层/裸TCP。若仍堵先修实际TX服务而非无限扩容；随后无源pacing突发验证。",
+  "next_action": "收H2434 run45572579387 smoke及50组；按实际origin CC、同机正反序、FEC、wire预算、本地丢包、CPU环境判断架构。BBR origin容量组独立，先修真正服务瓶颈；保留异常/未完成，不默认晋级。",
   "unverified": true,
-  "last_tested_source": "758d28ebf4455850373a4f931e8dd59f0f4a1392",
+  "last_tested_source": "3971bbca8fd5e2d40497be313251df64e186136e",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2432-CLEAN-TCP-PACING.json"
+    "docs/evidence/M0/20261125-H2433-INBOX-HEADROOM.json"
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md",
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/requests/M0/h2433-native-headroom.md"
+    "docs/requests/M0/h2434-architecture-matrix.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2432 24/24六ZIP，400ms零损真实发送socket pacing下WBD近裸TCP，10/12服务端零满丢，另24/152；H2433用户允许更多CPU内存/900M余量，Normal服务端128→1024冷opt-in候选，六job36腿在途，默认未变。"
+  "partial_summary": "H2433 36/36六ZIP，ARM900 inbox1024无满丢近裸TCP，慢x86仍6.7–9.9万满丢；x86两物理核SMT vs ARM四核不能直接归因代码。H2434按用户公网CUBIC假设，50组200腿+双ISA smoke/容量对照在途。默认未变。"
 }
