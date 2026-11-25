@@ -25,6 +25,10 @@ if H2453:
     CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in rates]
     DIRECT={-5:(0,0),**{i:(200,67108864) for i in (-4,-3,-2,-1)}}
     DIRECT_RATES=dict(zip((-4,-3,-2,-1),rates))
+if os.environ.get("WBD_H2458_TARGETED")=="1":
+    CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in (250,600,250)]
+    DIRECT={-5:(0,0),-2:(200,67108864)}
+    DIRECT_RATES={-2:600}
 
 NODE=h.NODE;ORIGIN="h2442origin";procs={};logs={};current=None;folder=None
 def spawn(key,ns,args,folder):

@@ -26,6 +26,10 @@ if H2453:
     CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in rates]
     DIRECT={-5:(0,0),**{i:(200,67108864) for i in (-4,-3,-2,-1)}}
     DIRECT_RATES=dict(zip((-4,-3,-2,-1),rates))
+if os.environ.get("WBD_H2458_TARGETED")=="1":
+    CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in (250,600,250)]
+    DIRECT={-5:(0,0),-2:(200,67108864)}
+    DIRECT_RATES={-2:600}
 
 def wpath(p):
     p=p.resolve();return "/mnt/"+p.drive[0].lower()+"/"+"/".join(p.relative_to(p.anchor).parts)
@@ -106,9 +110,9 @@ def isolate_background(d,physical,owned):
     if any(check[h]["InterfaceAlias"]!="WBDH2442" for h in ("192.0.2.2","10.66.0.1")) or check["8.8.8.8"]["InterfaceIndex"]!=physical["InterfaceIndex"]:
         raise RuntimeError("fixture isolation route selection mismatch")
 def sample_connected(d,workers):
-    def collect():
+    def sample_worker():
         t=time.monotonic()
-        for delay in ((12,30,45) if H2452 else (12,22)):
+        for delay in ((2,12,30,45) if os.environ.get("WBD_H2458_TARGETED")=="1" else (12,30,45) if H2452 else (12,22)):
             time.sleep(max(0,t+delay-time.monotonic()))
             try:
                 if H2455:
@@ -118,7 +122,7 @@ def sample_connected(d,workers):
                 save(d/("active-server-"+str(delay)+".json"),data)
                 print("H2450_ACTIVE_SS "+json.dumps({"delay":delay,"ss":data.get("ss","")}),flush=True)
             except Exception as e:save(d/("active-server-"+str(delay)+".json"),{"error":repr(e)})
-    worker=threading.Thread(target=collect,daemon=True);workers.append(worker);worker.start()
+    worker=threading.Thread(target=sample_worker,daemon=True);workers.append(worker);worker.start()
 def probe():
     t=time.monotonic()+55
     while time.monotonic()<t:

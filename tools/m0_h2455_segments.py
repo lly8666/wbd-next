@@ -6,7 +6,13 @@ def command(args):
 def linux_snapshot(namespace=None):
     prefix=["sudo","-n","ip","netns","exec",namespace] if namespace else []
     commands={"links":["ip","-s","-j","link","show"],"qdisc":["tc","-s","-j","qdisc","show"],"nstat":["nstat","-az"],"softnet":["cat","/proc/net/softnet_stat"]}
-    return {k:command(prefix+v) for k,v in commands.items()}
+    d={k:command(prefix+v) for k,v in commands.items()}
+    if namespace is None:
+        try:
+            ts=json.loads(command(["tailscale","status","--json"])["stdout"])
+            d["tail_peers"]=[{k:p.get(k) for k in ("TailscaleIPs","CurAddr","Relay","PeerRelay","Active","RxBytes","TxBytes")} for p in (ts.get("Peer") or {}).values() if p.get("Active")]
+        except Exception as e:d["tail_error"]=repr(e)
+    return d
 def collect(folder,tag,readers):
     def timed(fn):
         d={"start_ns":time.monotonic_ns(),"wall_start_ns":time.time_ns()}
