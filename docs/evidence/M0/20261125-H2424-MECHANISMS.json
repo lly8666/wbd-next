@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "3b06a3da30cc5bd3d2121087286ad8584f711635",
+  "product_source_sha": "559f2093857919c6293ee6f85622b55f198251fc",
+  "artifact_verified": true,
+  "result": "MEASURED_SCOPED_NATIVE_LOCAL",
+  "scope": "Eight actual raw ZIPs; local four native netns, frozen x86 product, no three-runner or physical WAN qualification. 32/32 measured. Mbps rounded 3 decimals.",
+  "runs": [
+    {
+      "scene": "clean_no_fq",
+      "order": "ABBA",
+      "run_id": 45557726367,
+      "artifact_id": 14996955894,
+      "mbps": [
+        568.162,
+        573.277,
+        573.781,
+        568.035
+      ],
+      "effect_pct": 0.9560511272430183,
+      "pre_post_direct_mbps": [
+        8185.391,
+        8057.739
+      ],
+      "server_queue_full_drops": [
+        0,
+        450,
+        0,
+        0
+      ],
+      "server_cpu_s_per_gib": [
+        15.71,
+        17.87,
+        17.82,
+        16.48
+      ]
+    },
+    {
+      "scene": "clean_no_fq",
+      "order": "BAAB",
+      "run_id": 45557726433,
+      "artifact_id": 14996437053,
+      "mbps": [
+        572.489,
+        565.906,
+        566.152,
+        573.74
+      ],
+      "effect_pct": 1.2517884926116052,
+      "pre_post_direct_mbps": [
+        10763.711,
+        10972.935
+      ],
+      "server_queue_full_drops": [
+        133,
+        0,
+        0,
+        0
+      ],
+      "server_cpu_s_per_gib": [
+        15,
+        12.88,
+        13.17,
+        15.14
+      ]
+    },
+    {
+      "scene": "loss5_split",
+      "order": "ABBA",
+      "run_id": 45557726380,
+      "artifact_id": 14997006056,
+      "mbps": [
+        58.636,
+        8.389,
+        15.267,
+        26.256
+      ],
+      "effect_pct": -72.13436275357572,
+      "pre_post_direct_mbps": [
+        12665.934,
+        12911.221
+      ],
+      "server_queue_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server_cpu_s_per_gib": [
+        31,
+        45.88,
+        38.48,
+        40.96
+      ]
+    },
+    {
+      "scene": "loss5_split",
+      "order": "BAAB",
+      "run_id": 45557726317,
+      "artifact_id": 14996387409,
+      "mbps": [
+        51.422,
+        77.637,
+        14.932,
+        10.318
+      ],
+      "effect_pct": -33.30313412987136,
+      "pre_post_direct_mbps": [
+        13549.966,
+        13552.277
+      ],
+      "server_queue_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server_cpu_s_per_gib": [
+        18.38,
+        32.71,
+        47.17,
+        42.63
+      ]
+    },
+    {
+      "scene": "loss5_fec",
+      "order": "ABBA",
+      "run_id": 45557726339,
+      "artifact_id": 14996831234,
+      "mbps": [
+        31.458,
+        220.025,
+        182.207,
+        13.422
+      ],
+      "effect_pct": 796.2356558491555,
+      "pre_post_direct_mbps": [
+        5505.744,
+        5483.602
+      ],
+      "server_queue_full_drops": [
+        0,
+        15399,
+        17584,
+        0
+      ],
+      "server_cpu_s_per_gib": [
+        35.72,
+        24.42,
+        27.51,
+        54.02
+      ]
+    },
+    {
+      "scene": "loss5_fec",
+      "order": "BAAB",
+      "run_id": 45557726453,
+      "artifact_id": 14996986075,
+      "mbps": [
+        238.698,
+        21.139,
+        17.993,
+        260.677
+      ],
+      "effect_pct": 1176.1182258180443,
+      "pre_post_direct_mbps": [
+        12925.593,
+        13259.485
+      ],
+      "server_queue_full_drops": [
+        120,
+        0,
+        0,
+        577
+      ],
+      "server_cpu_s_per_gib": [
+        9.13,
+        26.33,
+        27.88,
+        9.32
+      ]
+    },
+    {
+      "scene": "congestion",
+      "order": "ABBA",
+      "run_id": 45557726732,
+      "artifact_id": 14996601624,
+      "mbps": [
+        84.433,
+        90.513,
+        90.513,
+        87.326
+      ],
+      "effect_pct": 5.395864722339616,
+      "pre_post_direct_mbps": [
+        13196.451,
+        13015.453
+      ],
+      "server_queue_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server_cpu_s_per_gib": [
+        20.63,
+        21.98,
+        21.52,
+        20.7
+      ]
+    },
+    {
+      "scene": "congestion",
+      "order": "BAAB",
+      "run_id": 45557726426,
+      "artifact_id": 14996244060,
+      "mbps": [
+        90.513,
+        87.241,
+        84.222,
+        90.557
+      ],
+      "effect_pct": 5.603449512042991,
+      "pre_post_direct_mbps": [
+        13166.701,
+        13208.223
+      ],
+      "server_queue_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "server_cpu_s_per_gib": [
+        18.94,
+        18.35,
+        18.93,
+        19.16
+      ]
+    }
+  ],
+  "notes": [
+    "No-fq NAT vs splice effect +0.96/+1.25%; server CPU/GiB increased ~11–16%; previous fq600 gains not solely attributable to splice. Cross-run comparison suggests fq interaction, same-run NAT fq toggle needed.",
+    "5% split vs NAT no FEC negative both orders, high within-group variance; no default promotion.",
+    "5% BBR fixed mild vs off +796/+1176%; client recovered_tun counts 20653/19779/32738/34710, actual client parity TX planned==sent per run. Server queue full drops 15399/17584 on slower runner vs 120/577 on faster runner; do not assume all residual loss is netem or all FEC is beneficial.",
+    "100Mbps congestion corrected pre/post >13Gbps; CUBIC throughput +5.4/+5.6%, actual median RTT ~469ms vs BBR ~401ms, genuine delay tradeoff. No fairness claim."
+  ]
+}
