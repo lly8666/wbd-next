@@ -4,17 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2445,
-  "checkpoint_sha": "fe5fc8796e5f461182901f7088f3fc562d1ef4ee",
+  "sequence": 2446,
+  "checkpoint_sha": "b37b41ae48ce39bb8d35a02e18ef902703bfb979",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "核H2445 run45616469208裸容量/Windows owned route与native smoke，首轮真实TCP确认后矩阵；600不足留阻塞，不绕产品所有权检查。",
+  "next_action": "Inspect actual Windows native ingress, Wintun route selection, return path and session health; prove single cold TCP and Stop before matrix; separately qualify 600 Mbps physical underlay.",
   "unverified": true,
   "last_tested_source": "9a93bdcdfabeff2fd3c123063774a24cc51926b7",
   "evidence_refs": [
+    "docs/evidence/M0/20261125-H2445-WINDOWS-NATIVE-SMOKE-BLOCKED.json",
     "docs/evidence/M0/20261125-H2444-DIRECT-TCP-ROUTE-OWNERSHIP.json"
   ],
   "context_refs": [
@@ -22,5 +23,5 @@
     "docs/requests/M0/h2442-windows-three-runner-tcp.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2444三runner裸TCP358/262Mbps exact EOF，TLS/Rust native认证通过但Windows route ownership阻断业务；H2445夹具/32→专用/24，三job启动，未验。"
+  "partial_summary": "H2445裸TCP367/271Mbps exact EOF，Windows READY但首个业务TCP失败，server routed0、health90超时、client Stop false；正式矩阵0/20，600未资格。停止盲重跑，先定位原生首包。"
 }
