@@ -1,6 +1,8 @@
 """Real Windows client and Winsock application. WSL transports test routing only."""
 import os,sys,time,json,pathlib,subprocess,socket,threading,hashlib
 from m0_h2442_tcp import sink
+from m0_h2455_segments import collect,windows_readers
+H2455=os.environ.get("WBD_H2455_SEGMENTS")=="windows"
 from m0_wl_native_resource_sampler import sample_windows_original_process
 ROOT=pathlib.Path.cwd();OUT=ROOT/"h2442-out";OUT.mkdir(exist_ok=True)
 BIN=ROOT/"result/wl-public"
@@ -37,7 +39,7 @@ def control(role,path,body=None):
     p=ROOT/"h2228-peer"/(role+".json")
     relay=ROOT/"h2228-peer/relay.json"
     # Reuse same authorized private control transport from the gateway.
-    code="import json,sys,http.client; p=json.load(open(sys.argv[1])); r=json.load(open(sys.argv[2])); c=http.client.HTTPConnection(p['tail_ip'],18727,timeout=75); c.request('POST',sys.argv[3],sys.argv[4],{'X-H2228-Token':r['control_token'],'Content-Type':'application/json'}); s=c.getresponse(); b=s.read(); assert s.status==200,(s.status,b[:500]);print(b.decode())"
+    code="import json,sys,http.client; p=json.load(open(sys.argv[1])); r=json.load(open(sys.argv[2])); c=http.client.HTTPConnection(p['tail_ip'],18727,timeout=75); c.request('GET' if sys.argv[3]=='/snapshot' else 'POST',sys.argv[3],None if sys.argv[3]=='/snapshot' else sys.argv[4],{'X-H2228-Token':r['control_token'],'Content-Type':'application/json'}); s=c.getresponse(); b=s.read(); assert s.status==200,(s.status,b[:500]);print(b.decode())"
     return json.loads(wsl("python3","-c",code,wpath(p),wpath(relay),path,json.dumps(body or {}),timeout=85))
 def shape(loss,delay):
     return control("relay","/impair",{"loss_pct":loss,"delay_ms":delay,"model":"iid"})
@@ -109,7 +111,10 @@ def sample_connected(d,workers):
         for delay in ((12,30,45) if H2452 else (12,22)):
             time.sleep(max(0,t+delay-time.monotonic()))
             try:
-                data=control("server","/sample")
+                if H2455:
+                    row=collect(d,str(delay),windows_readers(ROOT,wsl,wpath,ps,control))
+                    data=row["server"]["value"]
+                else:data=control("server","/sample")
                 save(d/("active-server-"+str(delay)+".json"),data)
                 print("H2450_ACTIVE_SS "+json.dumps({"delay":delay,"ss":data.get("ss","")}),flush=True)
             except Exception as e:save(d/("active-server-"+str(delay)+".json"),{"error":repr(e)})
@@ -160,6 +165,8 @@ def case(i):
         result["status"]="RECEIVED" if result["end"]=="eof" else "INCOMPLETE"
     except Exception as e:result["error"]=repr(e)
     finally:
+        if H2455:
+            collect(d,"preclear",windows_readers(ROOT,wsl,wpath,ps,control))
         # Clean link before owned Stop, never kill as success.
         try:shape(0,0)
         except Exception as e:result["shape_clear_error"]=repr(e)

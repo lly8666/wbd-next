@@ -1,6 +1,7 @@
 """ARM server: source-locked preset case control, no arbitrary command endpoint."""
 import os,sys,json,pathlib,subprocess,time,signal,http.server,threading,hashlib
 import m0_h2228_three_runner_relay as h
+from m0_h2455_segments import linux_snapshot
 ROOT=pathlib.Path.cwd();OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 TMP=pathlib.Path(os.environ["RUNNER_TEMP"])/("h2442-"+os.environ["GITHUB_RUN_ID"]);TMP.mkdir(exist_ok=True)
 BUNDLE=ROOT/"linux-plan029-public-bundle";APP=ROOT/"tools/m0_h2442_tcp.py"
@@ -59,7 +60,12 @@ def setup():
     (TMP/"users.json").write_text(json.dumps({"bench":"H2442-ONLY"}));(TMP/"leases.json").write_text(json.dumps({"bench":"10.66.0.2/32"}))
     for p in (TMP/"key.pem",TMP/"route-key.hex",TMP/"users.json",TMP/"leases.json"):p.chmod(0o600)
 def sample():
-    return {"host_stat":pathlib.Path("/proc/stat").read_text(),"psi":pathlib.Path("/proc/pressure/cpu").read_text(),"wan":json.loads(h.ns(NODE,"ip","-s","-j","link","show","dev","wan0").stdout),"ss":h.ns(NODE,"ss","-tinm").stdout,"wan_qdisc":h.ns(NODE,"tc","-s","qdisc","show","dev","wan0").stdout,"tun_qdisc":h.ns(NODE,"tc","-s","qdisc","show","dev","wbds0",allow_fail=True).stdout}
+    d={"host_stat":pathlib.Path("/proc/stat").read_text(),"psi":pathlib.Path("/proc/pressure/cpu").read_text(),"wan":json.loads(h.ns(NODE,"ip","-s","-j","link","show","dev","wan0").stdout),"ss":h.ns(NODE,"ss","-tinm").stdout,"wan_qdisc":h.ns(NODE,"tc","-s","qdisc","show","dev","wan0").stdout,"tun_qdisc":h.ns(NODE,"tc","-s","qdisc","show","dev","wbds0",allow_fail=True).stdout}
+    if os.environ.get("WBD_H2455_SEGMENTS"):
+        d["node_segments"]=linux_snapshot(NODE)
+        d["host_segments"]=linux_snapshot()
+        d["origin_segments"]=linux_snapshot(ORIGIN)
+    return d
 def start(i):
     global current,folder
     assert current is None and (i in DIRECT or 0<=i<len(CASES))
@@ -68,7 +74,7 @@ def start(i):
         spawn("source",NODE,[sys.executable,APP,"source","10.248.82.2",5202,DIRECT_RATES.get(i,0),"bbr",DIRECT_SECONDS],folder);waitmark("source","SOURCE_READY")
     else:
         c=CASES[i];cap=c["rate"]*125000
-        spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1","WBD_M0_SPLICE_PACING_AB="+str(cap),BUNDLE/"wbd-v4-server","--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","windows11","--outer-repair","on","--outer-mtu","1160","--tun-fq-maxrate-mbps","0","--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"],folder)
+        spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1","WBD_M0_SPLICE_PACING_AB="+str(cap),BUNDLE/"wbd-v4-server","--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","legacy" if os.environ.get("WBD_H2455_SEGMENTS")=="linux" else "windows11","--outer-repair","on","--outer-mtu","1160","--tun-fq-maxrate-mbps","0","--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"],folder)
         waitmark("server","V4_PUBLIC_MIXED_MULTI_SERVER_READY");waitmark("server","WBD_TCP_SPLICE_READY")
         h.ns(NODE,"tc","qdisc","replace","dev","wbds0","root","fq","flow_limit","256")
         h.save(folder/"origin-route.json",{"route":h.ns(NODE,"ip","route","get","192.0.2.2").stdout})

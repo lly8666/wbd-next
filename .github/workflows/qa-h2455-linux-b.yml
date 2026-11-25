@@ -1,0 +1,256 @@
+name: H2455 Linux segment diagnosis replica B
+run-name: "H2455 Linux 400ms zero-loss segments B | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2455-linux-b.yml']
+permissions: {contents: read, actions: read}
+env:
+  WBD_H2417_SPLICE: '1'
+  WBD_H2418_DIAG: '1'
+  WBD_H2442_ARM_SERVER: '1'
+  WBD_H2450_RX_DIAG: '0'
+  WBD_H2452_RATE: '400'
+  WBD_H2453_PACING: '1'
+  WBD_H2455_SEGMENTS: 'linux'
+jobs:
+  relay-arm64:
+    name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'experiment/m0-linux-tcp-splice' }}
+    permissions: {contents: read, actions: read, id-token: write}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 130
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: relay
+      WBD_H2228_MODE: normal
+      WBD_H2228_LOSS_MODEL: iid
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Require authorized OIDC tailnet credentials (no real-test fallback)
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD" || { echo H2228_REAL_ARM_RELAY_BLOCKED_NO_TAILNET_OIDC;exit 2; }
+          test "$(uname -m)" = aarch64
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h228-arm-relay-${{ github.run_id }}
+      - name: Relay source and run bound ephemeral identity
+        shell: bash
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta relay h2228-meta/relay.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-peer
+          path: h2228-meta/relay.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Wait BOTH distinct endpoint VMs (x86 + x86), same run/commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2228-peer
+          for role in client server;do
+            found=0
+            for i in $(seq 1 150);do
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+                  -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1;then found=1;break;fi
+              sleep 5
+            done
+            test "$found" = 1 && test -s "h2228-peer/$role.json" ||
+                { echo "H2228_MISSING_DISTINCT_$role";exit 2; }
+          done
+          cp h2228-meta/relay.json h2228-peer/relay.json
+      - name: Install real Linux bridge/route/qdisc utilities in ARM relay
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump
+      - name: Create TWO actual VXLAN L2 segments and kernel L3 forwarding (no app proxy)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh relay-start
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-ready
+          path: h2228-out/relay-ready.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Keep ARM forwarding and netem alive through Windows client measurements
+        shell: bash
+        timeout-minutes: 100
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh relay-wait
+      - name: Cleanup ONLY owned middle namespace and VXLAN (never Tailscale)
+        if: always()
+        shell: bash
+        run: |
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2228-arm-relay-evidence
+          path: h2228-out/
+          if-no-files-found: warn
+          retention-days: 14
+  server-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 130
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: server
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2442-arm-server-${{ github.run_id }}
+      - name: Publish actual server identity
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta server h2228-meta/server.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2228-server-peer, path: h2228-meta/server.json, retention-days: 3}
+      - name: Reuse checked H2437 ARM native product
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq iproute2 iptables openssl iputils-ping
+          bash tools/m0_h2439_fetch_frozen.sh
+          mkdir -p h2228-out h2228-peer
+          cp h2439-out/build-identity.json h2228-out/
+          for role in client server relay;do
+            for i in $(seq 1 180);do
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1 && break
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1;then echo H2444_CLIENT_FAILED_BEFORE_JOIN;exit 2;fi
+              sleep 5
+            done
+            test -s "h2228-peer/$role.json"
+          done
+          for i in $(seq 1 180);do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-relay-ready -D h2228-relay-ready >/dev/null 2>&1 && break
+            sleep 5
+          done
+          test -s h2228-relay-ready/relay-ready.json
+          python3 tools/m0_h2228_three_runner_relay.py node-net server h2228-peer/relay.json h2228-out/server-topology.json
+      - name: Start actual ARM preset case service
+        run: |
+          set -euo pipefail
+          nohup python3 -u tools/m0_h2442_server.py >h2228-out/controller.log 2>&1 </dev/null &
+          echo $! >h2228-out/controller.pid
+          for i in $(seq 1 100);do
+            test ! -s h2228-out/server-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/server-ready.json || { cat h2228-out/controller.log;exit 2; }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-server-ready
+          path: |
+            h2228-out/server-ready.json
+            h2228-out/cert.pem
+          retention-days: 3
+      - name: Hold ARM server for sequential Windows TCP cases
+        timeout-minutes: 105
+        run: |
+          set -euo pipefail
+          while kill -0 "$(cat h2228-out/controller.pid)" 2>/dev/null && ! grep -q '^Z' /proc/$(cat h2228-out/controller.pid)/stat 2>/dev/null;do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1;then break;fi
+            sleep 5
+          done
+          for i in $(seq 1 24);do
+            test ! -s h2228-client-result/summary.json || break
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1 && break
+            sleep 5
+          done
+          test -s h2228-client-result/summary.json
+      - name: Cleanup only owned namespaces
+        if: always()
+        run: |
+          test ! -s h2228-out/controller.pid || kill "$(cat h2228-out/controller.pid)" || true
+          sudo ip netns del h2442origin || true
+          python3 tools/m0_h2228_three_runner_relay.py clean server
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2442-arm-server-evidence, path: h2228-out/, retention-days: 14}
+  client-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 130
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Verify experiment scripts parse
+        run: python3 -m py_compile tools/m0_h2455_segments.py tools/m0_h2455_linux_client.py tools/m0_h2442_server.py tools/m0_h2228_three_runner_relay.py
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2455-linux-client-${{ github.run_id }}
+      - name: Publish distinct x86 Linux endpoint
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta client h2228-meta/client.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2228-client-peer, path: h2228-meta/client.json, retention-days: 3}
+      - name: Reuse exact frozen native Linux product and join routed path
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq iproute2 iptables ethtool iputils-ping
+          bash tools/m0_h2439_fetch_frozen.sh
+          mkdir -p h2228-peer h2442-out
+          cp h2439-out/build-identity.json h2442-out/
+          cp h2228-meta/client.json h2228-peer/client.json
+          for role in relay server;do
+            for i in $(seq 1 180);do
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1 && break
+              sleep 5
+            done
+            test -s "h2228-peer/$role.json"
+            for i in $(seq 1 180);do
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2228-$role-ready" -D "h2228-$role-ready" >/dev/null 2>&1 && break
+              sleep 5
+            done
+            test -s "h2228-$role-ready/$role-ready.json"
+          done
+          python3 tools/m0_h2228_three_runner_relay.py node-net client h2228-peer/relay.json h2442-out/client-topology.json
+      - name: Real bare TCP and native Linux 250-400-600-250 ladder
+        run: python3 -u tools/m0_h2455_linux_client.py matrix
+      - name: Preserve incomplete receipt
+        if: always()
+        run: |
+          mkdir -p h2442-out
+          if test ! -s h2442-out/summary.json;then
+            python3 -c 'import os,json;print(json.dumps({"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"status":"INCOMPLETE_NOT_QUALIFIED","rows":[]}))' >h2442-out/summary.json
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2228-client-result, path: h2442-out/summary.json, retention-days: 14}
+      - name: Cleanup owned client network
+        if: always()
+        run: python3 tools/m0_h2228_three_runner_relay.py clean client
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2455-linux-client-evidence, path: h2442-out/, retention-days: 14}

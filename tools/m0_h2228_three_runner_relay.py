@@ -276,6 +276,9 @@ def local_relay_snapshot(tag):
         path=pathlib.Path("h2228-out")/("tail-to-"+role+".json")
         if path.is_file():
             d["tail_to_"+role]=json.loads(path.read_text())
+    if os.environ.get("WBD_H2455_SEGMENTS"):
+        from m0_h2455_segments import linux_snapshot
+        d["host_segments"]=linux_snapshot()
     d["tag"]=tag
     return d
 
