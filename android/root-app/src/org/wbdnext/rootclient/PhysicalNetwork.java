@@ -245,17 +245,15 @@ final class PhysicalNetwork {
                                String peer)throws UnknownHostException{
         if(selected==null||!ServerAddress.valid(peer))
             throw new UnknownHostException("invalid original peer identity");
-        if(ServerAddress.isIPv4Literal(peer)||selected.validatedByAndroid)
-            return peer;
+        if(ServerAddress.isIPv4Literal(peer))return peer;
         ConnectivityManager cm=(ConnectivityManager)context.getSystemService(
             Context.CONNECTIVITY_SERVICE);
         if(cm==null)throw new UnknownHostException("Android ConnectivityManager unavailable");
         for(Network network:cm.getAllNetworks()){
             if(network.getNetworkHandle()!=selected.handle)continue;
-            // Preserve the original-Go physical 223.5.5.5 hostname
-            // bootstrap when this optional scoped LAN DNS has no answer.
-            // Only a confirmed local A record changes the cold peer to
-            // --peer-ip; never use the default Android Network resolver.
+            // Resolve public or LAN hostnames on the chosen Network; use its A
+            // record exactly as manual IPv4 input. Preserve the original
+            // Go physical DNS fallback when no A record is returned.
             String ip=null;
             try{
                 ip=PhysicalPeerIPv4Choice.select(network.getAllByName(peer));

@@ -1,3 +1,7 @@
+## B119｜真机 Root 启动与域名引导（当前）
+
+用户确认B117用IP本机及Wi-Fi共享实际可用。B118a收据四次ROOT_GRANT_REQUESTED后ROOT_LAUNCH_FAILED，未见su子进程启动；不可归因共享。B119默认域名使用选定Android Network解析A记录，保留原Go fallback/显式自定义DNS及SNI；区分原argv构造和su exec errno，修旧UI源码/文案断言。保持B118a最小下游共享、原Go/Rust/内核转发不动。B118a Normal和BPF fixture通过，ARM64 host旧断言/API35/36 UI失败；实体B119待验。见 [B119 devlog](../devlog/android-root-probe/20261125-b119-device-root-launch-and-hostname.md)。
+
 ## B118｜真机pre-TUN回归与最小共享入口（当前）
 
 B117真机勾选/取消共享均失败，收据六次原Go接口找到后exit1、RAW/TUN未到；原错误未记录。优先普通真实连接恢复：字面IPv4不依赖可选Go物理DNS冷构造，实际物理/CN relay按需初始化，固定失败阶段。共享仅选定下游上行TC tether hook，保留其他接口与回程，复用原内核转发、原硬件设置owner，旧journal恢复；不宣称所有OEM硬件HAL兼容。UI关闭程序、完整保存、仅Fixed显示FEC档位、共享网卡刷新。新SOURCE CI及实体均待验，不扩大矩阵。见 [B118 devlog](../devlog/android-root-probe/20261125-b118-device-pre-tun-and-scoped-sharing.md)。

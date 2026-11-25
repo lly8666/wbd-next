@@ -551,6 +551,7 @@ public final class RootClientService extends Service {
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         String tetherFailure=null;
         String coldFailure=null;
+        String launchFailure=null;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         int modeLanes=RootGameSessionStatus.expectedLanes(fecMode);
         final String modeReadback="V4_PUBLIC_ANDROID_MODE_READBACK role=client mode="+fecMode+
@@ -574,9 +575,8 @@ public final class RootClientService extends Service {
                   net.mtu,net.address)==null){
                 throw new IllegalStateException("physical Android Network changed during staging");
             }
-            // B28: only when Android does NOT validate this LAN as
-            // Internet, resolve peer hostname using the SELECTED
-            // Network's local DNS (off UI, before Root), not netd default.
+            // Resolve a default-DNS hostname on the SELECTED physical
+            // Network (public or LAN), off UI before Root; never change SNI.
             // The original Go FakeTCP/TLS gets a literal --peer-ip;
             // its protected SessionID SNI, credentials, M3/PN unchanged.
             // A configured physical DNS server belongs to this selected Network.
@@ -585,6 +585,8 @@ public final class RootClientService extends Service {
             final String peerForGo=!RootPhysicalDNSUpstream.DEFAULT.equals(physicalDnsIPv4)
                 &&!ServerAddress.isIPv4Literal(peer)
                 ?peer:PhysicalNetwork.coldPeerIPv4(this,net,peer);
+            if(!ServerAddress.isIPv4Literal(peer)&&ServerAddress.isIPv4Literal(peerForGo))
+                trace(RootDiagnosticReceipt.Event.SERVER_BOOTSTRAP_SELECTED_NETWORK_IPV4);
             status="ROOT_STARTING — exact native SOURCE "+code.source.substring(0,12);
             Process p;
             synchronized(ownerLaunchLock){
@@ -595,10 +597,31 @@ public final class RootClientService extends Service {
                        bypassPackages,bypassUIDs)
                    : InstalledAppCatalog.stillSameGroup(this,targetPackages,targetUids)))
                     throw new IllegalStateException("Verified Android UID scope changed before Root grant");
+                final String command;
+                try{
+                    command=launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,ipv6AutoDirect,tunnelDnsIPv4,game4CopySchedule,cnIPDirect,outerRepair);
+                }catch(RuntimeException badArgv){
+                    launchFailure="ROOT_ARGV_BUILD_FAILED";
+                    trace(RootDiagnosticReceipt.Event.ROOT_ARGV_BUILD_FAILED);
+                    throw badArgv;
+                }
                 trace(RootDiagnosticReceipt.Event.ROOT_GRANT_REQUESTED);
-                p=new ProcessBuilder("su","-c",
-                    launchCommand(code,net,peerForGo,sni,user,port,requestedOuterMTU,recordCipher,requestedTunQueue,paddingMode,fecMode,fecProfile,targetUids,allApps,excludedAppIDs,hasCA,verifyTLS,tunnelDNS,physicalDNS,cnSplitDNS,ownerToken,directCIDRs,physicalDnsIPv4,nativeHealthSeconds,appTcpDNS,tether,systemDNS,systemDNS6,ipv6Gateway,ipv6DirectCIDRs,ipv6AutoDirect,tunnelDnsIPv4,game4CopySchedule,cnIPDirect,outerRepair))
-                    .redirectErrorStream(true).start();
+                try{
+                    p=new ProcessBuilder("su","-c",command).redirectErrorStream(true).start();
+                }catch(java.io.IOException unavailable){
+                    String detail=unavailable.getMessage();
+                    if(detail!=null&&(detail.contains("error=13,")||detail.contains("error=13 ")||detail.contains("Permission denied")))
+                        launchFailure="ROOT_SU_EXEC_PERMISSION_DENIED";
+                    else if(detail!=null&&(detail.contains("error=2,")||detail.contains("error=2 ")||detail.contains("No such file")))
+                        launchFailure="ROOT_SU_EXEC_NOT_FOUND";
+                    else launchFailure="ROOT_SU_EXEC_IO_FAILED";
+                    trace(RootDiagnosticReceipt.Event.valueOf(launchFailure));
+                    throw unavailable;
+                }catch(SecurityException denied){
+                    launchFailure="ROOT_SU_EXEC_PERMISSION_DENIED";
+                    trace(RootDiagnosticReceipt.Event.ROOT_SU_EXEC_PERMISSION_DENIED);
+                    throw denied;
+                }
                 root=p;
                 trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_LAUNCHED);
             }
@@ -1156,7 +1179,11 @@ public final class RootClientService extends Service {
             }
         }catch(Exception e){
             trace(RootDiagnosticReceipt.Event.ROOT_LAUNCH_FAILED);
-            if(e instanceof java.net.UnknownHostException){
+            if(launchFailure!=null){
+                status=launchFailure.equals("ROOT_ARGV_BUILD_FAILED")
+                    ?"原Go启动参数构造失败（未执行su）"
+                    :launchFailure+" — 请在KernelSU管理器确认本应用Root授权；尚未启动Go";
+            }else if(e instanceof java.net.UnknownHostException){
                 status="LAN_SELECTED_NETWORK_CHANGED — 请检查同链路可达"+
                     "的服务器IPv4，并单独设置TLS SNI；未发起Root/TLS";
             }else{

@@ -97,7 +97,9 @@ assert 'C.wbd_m0_embedded_go_android_game_group_m4_start(' in bridge
 service=Path("android/root-app/src/org/wbdnext/rootclient/RootClientService.java").read_text()
 argv=Path("android/root-app/src/org/wbdnext/rootclient/OriginalGoCommandArgs.java").read_text()
 settings=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java").read_text()
-assert '"game2".equals(fecModes.getSelectedItem().toString())' in app
+assert 'String mode=fecModes.getSelectedItem().toString();' in app
+assert 'boolean fixed=mode.endsWith("-fixed");' in app
+assert 'fecProfiles.setVisibility(fixed?View.VISIBLE:View.GONE)' in app
 assert 'request.putExtra("fec_mode",fecMode);' in app
 assert '!"fec-auto".equals(fecMode)&&!"game2".equals(fecMode)&&' in service
 assert '!"game4".equals(fecMode)' in service
@@ -316,7 +318,7 @@ assert 'Game4 bool' in guard
 assert 'TestGame4OriginalFourPortOneOwnedRSTRule' in guardtest
 assert 'V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client' in g
 assert 'V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client' in fec_status
-assert '"game4".equals(fecModes.getSelectedItem().toString())' in app
+assert 'game4CopySchedules.setEnabled("game4".equals(mode)||"game4-fixed".equals(mode))' in app
 # B46: restore the REAL B45 Game4 M4 gate (previously hardcoded
 # raw v.len()==2), plus reuse original Linux Game fixed FEC for Android.
 assert '.filter(|v|v.len()==g.android_lanes.len())' in rust_group
@@ -734,7 +736,10 @@ assert 'PhysicalPeerIPv4Choice.select(network.getAllByName(peer))' in physical
 assert 'network.getNetworkHandle()!=selected.handle' in physical
 assert 'PhysicalNetwork.coldPeerIPv4(this,net,peer)' in s
 assert 'launchCommand(code,net,peerForGo,sni' in s
-assert 'ServerAddress.isIPv4Literal(peer)||selected.validatedByAndroid' in physical
+assert 'if(ServerAddress.isIPv4Literal(peer))return peer;' in physical
+assert 'ServerAddress.isIPv4Literal(peer)||selected.validatedByAndroid' not in physical
+assert 'SERVER_BOOTSTRAP_SELECTED_NETWORK_IPV4' in s
+assert 'ROOT_ARGV_BUILD_FAILED' in s and 'ROOT_SU_EXEC_PERMISSION_DENIED' in s
 assert 'LAN_SELECTED_NETWORK_CHANGED' in s
 assert 'android.intent' not in physical
 print("ANDROID_B28_EXACT_SELECTED_LAN_NETWORK_DNS_SERVER_BOOTSTRAP_SOURCE_PASS")

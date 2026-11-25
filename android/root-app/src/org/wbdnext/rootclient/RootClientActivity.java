@@ -1372,7 +1372,7 @@ public final class RootClientActivity extends Activity {
         TextView lanHelp=new TextView(this);
         lanHelp.setText("支持没有公网互联网的真实 Wi-Fi/USB Ethernet 局域网，"+
             "但服务器必须在该链路上可达。未获Android互联网验证的局域网"+
-            "服务器域名会在START前由已选Network做一次本地DNS解析；无结果时继续原Go物理DNS引导；"+
+            "服务器域名默认由已选Network做一次IPv4 DNS解析；无结果时继续原Go物理DNS引导；"+
             "若局域网没有DNS可直接填服务器IPv4，TLS SNI仍单独填写。"+
             "不会自动切换当前Root会话的网卡。");
         pane.addView(lanHelp);
@@ -1434,8 +1434,8 @@ public final class RootClientActivity extends Activity {
                 }
                 RootConnectionProfileStore.save(this,slot,new RootConnectionProfile(old.label,settings));
                 RootConnectionSettingsStore.save(this,settings);
-                parameterSaved.setText("已保存全部设置到槽"+slot+" · "+old.label+" · MTU "+settings.outerMTU+
-                    " B · "+settings.mode+" · "+settings.cipher+"；下次载入/连接该槽生效。");
+                parameterSaved.setText("已保存槽"+slot+" · "+old.label+" · MTU "+settings.outerMTU+
+                    " B · "+settings.mode+" · "+settings.cipher+"；全部设置已保存，下次载入/连接该槽生效。");
             }catch(Exception failure){
                 parameterSaved.setText("保存未完整成功，请检查参数后重试。");
             }

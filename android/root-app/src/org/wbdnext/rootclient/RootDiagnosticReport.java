@@ -83,6 +83,10 @@ final class RootDiagnosticReport {
         if(has(session,"ROOT_RESTORE_REQUESTED"))return "ROOT_RESTORE_REQUESTED_NOT_VERIFIED";
         // This is a last-proven-boundary classification, not an assumed
         // errno or a promise of physical network/TLS success.
+        for(String launchFailure:new String[]{"ROOT_ARGV_BUILD_FAILED","ROOT_SU_EXEC_PERMISSION_DENIED",
+                "ROOT_SU_EXEC_NOT_FOUND","ROOT_SU_EXEC_IO_FAILED"}){
+            if(has(session,launchFailure))return launchFailure;
+        }
         if(has(session,"START_DIAGNOSTIC_STAGES_V2")&&
            has(session,"ROOT_PROCESS_EXIT_NONZERO")){
             for(String tetherFailure:new String[]{
@@ -99,6 +103,10 @@ final class RootDiagnosticReport {
                 "ORIGINAL_TETHER_FAILED_KERNEL_RULES",
                 "ORIGINAL_TETHER_FAILED_POSTAUTH_ROUTE"
             })if(has(session,tetherFailure))return tetherFailure;
+            for(String coldFailure:new String[]{"NETWORK","MODE","CLAT","PHYSICAL_DNS","BOOTSTRAP_DNS","CLAT_ROUTE","MTU"}){
+                String event="ORIGINAL_GO_PRE_TUN_FAILED_"+coldFailure;
+                if(has(session,event))return event;
+            }
             if(has(session,"ORIGINAL_GO_PARSE_FLAG_SYNTAX"))
                 return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_FLAG_SYNTAX";
             if(has(session,"ORIGINAL_GO_PARSE_PASSWORD_FILE"))
