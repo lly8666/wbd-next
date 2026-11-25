@@ -4,26 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2416,
-  "checkpoint_sha": "e8e344782e89f5c96201869a549e1c546bf34748",
-  "progress": "paused",
-  "task_id": "M0-MIXED-MODE-ROUTE-HANDOFF",
-  "current_task": "用户授权修复断开Normal后Game2/4回注0及反向切换，experiment/m0-mixed-mode-route-handoff；docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md。现有Health接管，按认证/32跨模式寻找owner；不增协议状态/热路径/心跳，不动Health90和Game4单lane热换。",
-  "why_now": "用户实机Normal断开后切Game2/4可连但回注0，90s后重连恢复",
-  "done_when": "原生双ISA真实同一服务端同一虚拟IP跨模式切换<90s双向TCP/UDP、异租约独立、原退役/Health90/单lane热换边界，精确SOURCE Linux glibc2.31完整包及Win GUI完整包；限域记录。",
-  "next_action": "本任务已限域验收并合main PR77；用户下载同SOURCE Windows GUI与Linux双ISA glibc2.31成品，实际物理WAN/旧内核及性能A/B未测，勿扩张PASS。原H2413兼容基线及H2409未决实机边界保留；等待用户新授权。",
-  "unverified": false,
-  "last_tested_source": "a4c5c97591e9b9ed6fa16221e6666c531d1909cc",
+  "sequence": 2418,
+  "checkpoint_sha": "1ee5c920b345c5d82b74fbb42f66d3a56b21cdf1",
+  "progress": "partial",
+  "task_id": "M0-LINUX-TCP-SPLICE",
+  "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
+  "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
+  "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
+  "next_action": "收 H2418 run45546953037，先审容量/真实丢包/实际TCP状态，再决定是否做CC对照；不重复无新信息的DERP实验。",
+  "unverified": true,
+  "last_tested_source": "f6ccc4409ac7419a65302bf3228210166a041158",
   "evidence_refs": [
-    "docs/evidence/M0/20261124-H2416-MIXED-MODE-ROUTE-HANDOFF-PASS.json"
+    "docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-MIXED-MODE-ROUTE-HANDOFF-20261124.md",
-    "docs/evidence/M0/20261124-LINUX-GLIBC231-DUAL-ISA-SCOPED-PASS.json",
-    "docs/decisions/M0-PLAN029-ALL-MODE-NATIVE-PARITY-20261124.md",
-    "docs/devlog/M0/20261124-H2415-MIXED-MODE-ROUTE-WIP.md",
-    "docs/devlog/M0/20261124-MIXED-MODE-ROUTE-HANDOFF.md"
+    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
+    "docs/evidence/M0/20261124-H2416-MIXED-MODE-ROUTE-HANDOFF-PASS.json"
   ],
   "open_requests": [],
-  "partial_summary": "跨模式/32 owner交接冷路径修复及Windows Game已有Health ready接线；双ISA同租约8次切换+Game4热lane+旧退役+独立Health90真实业务PASS，签名Windows→同WSL共享服务器四次切换PASS，三完整包哈希独立核验；PR77已合main。"
+  "partial_summary": "H2417真实splice转发与Stop已观察，20/21测量成功但21Mbps DERP容量不合格，BBR pacing在2%下约0.82Mbps；H2418固定延迟、fresh origin及容量门在途。未晋级。"
 }
