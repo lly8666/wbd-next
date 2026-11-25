@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "4a1149592edf2a1f94d59180396ed470c8ff1f9a",
+  "product_source_sha": "559f2093857919c6293ee6f85622b55f198251fc",
+  "artifact_verified": true,
+  "result": "MEASURED_SCOPED_NATIVE_LOCAL",
+  "scope": "Ten ZIP summary.json and actual tc qdisc readbacks inspected, 40/40 native legs; local four netns, no independent three runner or physical qualification.",
+  "runs": [
+    {
+      "scene": "fq_uncapped",
+      "order": "ABBA",
+      "run_id": 45562122282,
+      "job_id": 139028080408,
+      "artifact_id": 14998577097,
+      "ordered_leg_mbps": [
+        452.106,
+        567.28,
+        568.035,
+        452.396
+      ],
+      "effect_pct": 25.5183264755,
+      "server_full_drops": [
+        0,
+        8,
+        0,
+        0
+      ]
+    },
+    {
+      "scene": "fq_uncapped",
+      "order": "BAAB",
+      "run_id": 45562122435,
+      "job_id": 139028080940,
+      "artifact_id": 14998128168,
+      "ordered_leg_mbps": [
+        567.784,
+        452.9,
+        452.357,
+        568.203
+      ],
+      "effect_pct": 25.4878658254,
+      "server_full_drops": [
+        16,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scene": "fq_server_default",
+      "order": "ABBA",
+      "run_id": 45562122265,
+      "job_id": 139028080378,
+      "artifact_id": 14998647097,
+      "ordered_leg_mbps": [
+        452.901,
+        567.748,
+        567.783,
+        453.02
+      ],
+      "effect_pct": 25.3454255887,
+      "server_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scene": "fq_server_default",
+      "order": "BAAB",
+      "run_id": 45562122309,
+      "job_id": 139028080279,
+      "artifact_id": 14997783846,
+      "ordered_leg_mbps": [
+        567.154,
+        451.472,
+        451.015,
+        568.119
+      ],
+      "effect_pct": 25.7938960772,
+      "server_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scene": "fq_client_default",
+      "order": "ABBA",
+      "run_id": 45562122268,
+      "job_id": 139028080734,
+      "artifact_id": 14997978387,
+      "ordered_leg_mbps": [
+        453.238,
+        453.824,
+        453.405,
+        453.489
+      ],
+      "effect_pct": 0.0554172123,
+      "server_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scene": "fq_client_default",
+      "order": "BAAB",
+      "run_id": 45562122371,
+      "job_id": 139028080851,
+      "artifact_id": 14997778879,
+      "ordered_leg_mbps": [
+        452.523,
+        453.531,
+        454.157,
+        453.573
+      ],
+      "effect_pct": -0.175396694,
+      "server_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scene": "mixed4_nat_fq_x86",
+      "order": "ABBA",
+      "run_id": 45562122409,
+      "job_id": 139028080697,
+      "artifact_id": 14998921221,
+      "A_B_mean_mbps": [
+        998.18,
+        1109.41
+      ],
+      "effect_pct": 11.143,
+      "server_full_drops": [
+        483680,
+        843871,
+        832744,
+        478918
+      ]
+    },
+    {
+      "scene": "mixed4_nat_fq_x86",
+      "order": "BAAB",
+      "run_id": 45562122434,
+      "job_id": 139028081044,
+      "artifact_id": 14998652000,
+      "A_B_mean_mbps": [
+        1074.02,
+        1214.47
+      ],
+      "effect_pct": 13.077,
+      "server_full_drops": [
+        909994,
+        486234,
+        473302,
+        894763
+      ]
+    },
+    {
+      "scene": "mixed4_nat_fq_arm",
+      "order": "ABBA",
+      "run_id": 45562122407,
+      "job_id": 139028080812,
+      "artifact_id": 14998043332,
+      "ordered_leg_mbps": [
+        1203.553,
+        1396.2,
+        1393.859,
+        1235.561
+      ],
+      "effect_pct": 14.3882264,
+      "server_full_drops": [
+        511259,
+        838761,
+        847248,
+        498669
+      ]
+    },
+    {
+      "scene": "mixed4_nat_fq_arm",
+      "order": "BAAB",
+      "run_id": 45562122235,
+      "job_id": 139028080678,
+      "artifact_id": 14999100337,
+      "ordered_leg_mbps": [
+        1336.508,
+        1180.22,
+        1164.296,
+        1331.604
+      ],
+      "effect_pct": 13.8022321,
+      "server_full_drops": [
+        863615,
+        507627,
+        492191,
+        846784
+      ]
+    }
+  ],
+  "notes": [
+    "Removing maxrate alone with fq flow_limit256 restores +25.52/+25.49%; server-only default +25.35/+25.79%, client-only +0.055/-0.175%. Server CPU/GiB ~30.4 to10.9, actual fq throttled 1378573→0, qdisc dropped108→0 in one representative pair. Shared-TUN 0→8, not source of clean single-flow benefit.",
+    "Four flow default fq_codel mixed improves x86 +11.14/+13.08%, ARM +14.39/+13.80%; service full drops 473302–511259 vs 832744–909994, one ARM TCP miss and one UDP miss (same leg, UDP late schedule2). A zero misses. Offered probes 1600 TCP/6400 UDP across 16 mixed legs. Not acceptable to promote default based on throughput alone."
+  ]
+}

@@ -1,0 +1,13 @@
+# M0 retained TCP exit architecture — H2428 decision
+
+Design selected (not release qualification or main code promotion):
+- Keep original WBD transport, real inner TCP/UDP OS reliability, Go cold TLS and OS setup, Rust native RAW/TUN/queues/FEC and existing one-shot outer repair; no second reliability layer, no new wire, no client modification for optional Linux server proxy.
+- NAT remains default for all business. Optional IPv4 forwarded TCP TPROXY -> kernel client-facing socket with selected TCP_CONGESTION -> two kernel splice pipes -> kernel remote socket; one event-driven native owner, no payload copy or per-connection thread; UDP remains NAT. BBR is research default when explicitly choosing proxy; CUBIC available but unsuitable for high RTT IID damage. Split ACK semantics explicitly different; upload CC remains client OS. Do not default-enable proxy or claim universal gain.
+- Keep original FEC profile and wire contract. Use existing fixed profiles or existing Auto, no new algorithm or default policy on this evidence. No custom CC until a residual TCP-specific bottleneck is demonstrated after actual loss and host capacity separated.
+- Keep server/client fq600 default pending candidate qualification. Candidate is **server-only fq without artificial maxrate, same flow_limit256**, retaining client behavior. H2427 disproves need to change client or replace scheduler. OS default fq_codel is not deterministic cross deployment. No separate hard-coded global controller or queue expansion.
+- Host saturation is a measured remaining problem: retain existing fairness; do not mask drops with deeper queues. Compare capped and uncapped offered demand and small-flow delivery before default decisions. Physical/remote/Windows, multiple leases, Game modes and old kernel not qualified. Optional proxy correctness scope: listener bound to intended local TPROXY address and no zero-interest epoll spin; test before any release. No speculative hot path rewrite.
+H2427 actual evidence docs/evidence/M0/20261125-H2427-FQ-MECHANISM.json. H2428 eight independent same-host ABBA/BAAB tests on x86 and ARM using exact frozen H2423 binaries: only server changes fq600→uncapped fq/flow_limit256, client fq600 unchanged; four reverse streams with mixed probes at unlimited offered demand or 200Mbps per stream explicit app pacing. Distinguish saturation from matched load. Actual qdisc, all misses/late schedules, CPU, TUN full drops, direct capacity and source identity. No default change. Local namespaces are not remote qualification.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Architecture decision and frozen product experiment only; no product defaults changed."}
+```
