@@ -21,6 +21,50 @@ def control(role,path,body=None):
     return json.loads(wsl("python3","-c",code,wpath(p),wpath(relay),path,json.dumps(body or {}),timeout=85))
 def shape(loss,delay):
     return control("relay","/impair",{"loss_pct":loss,"delay_ms":delay,"model":"iid"})
+def ps(code):
+    p=subprocess.run(["pwsh","-NoProfile","-NonInteractive","-Command","$ErrorActionPreference='Stop'; "+code],capture_output=True,text=True,timeout=15)
+    if p.returncode:raise RuntimeError(p.stderr.strip())
+    return p.stdout.strip()
+def route_for(host):
+    return json.loads(ps("Find-NetRoute -RemoteIPAddress '"+host+"' | Where-Object {$_.DestinationPrefix} | Select-Object -First 1 InterfaceIndex,InterfaceAlias,DestinationPrefix,NextHop,RouteMetric | ConvertTo-Json -Compress"))
+def direct_peers():
+    import ipaddress
+    roles={role:read(ROOT/"h2228-peer"/(role+".json"))["tail_ip"] for role in ("relay","server")}
+    for role,peer in roles.items():
+        wsl("tailscale","ping","--c=5","--timeout=3s",peer,timeout=22)
+    st=json.loads(wsl("tailscale","status","--json",timeout=8))
+    out=[]
+    for role,peer in roles.items():
+        p=next(x for x in st["Peer"].values() if peer in x.get("TailscaleIPs",[]))
+        endpoint=p.get("CurAddr","")
+        if not endpoint:raise RuntimeError("no direct Tailscale endpoint for "+role)
+        host=str(ipaddress.IPv4Address(endpoint.rsplit(":",1)[0]))
+        out.append({"role":role,"endpoint":endpoint,"host":host,"route":route_for(host),"rx_bytes":p.get("RxBytes"),"tx_bytes":p.get("TxBytes")})
+    return out
+def pin_underlay(d,owned):
+    rows=direct_peers()
+    save(d/"underlay-before.json",rows)
+    for row in rows:
+        host=row["host"];r=row["route"];prefix=host+"/32"
+        if r["DestinationPrefix"]==prefix:continue
+        if r["InterfaceAlias"]=="WBDH2442":raise RuntimeError("underlay already captured before Apply")
+        idx=int(r["InterfaceIndex"]);hop=r["NextHop"]
+        ps(f"New-NetRoute -DestinationPrefix '{prefix}' -InterfaceIndex {idx} -NextHop '{hop}' -RouteMetric 1 -PolicyStore ActiveStore | Out-Null")
+        owned.append((prefix,idx,hop))
+    save(d/"underlay-pins.json",owned)
+    rows=direct_peers()
+    save(d/"underlay-pinned.json",rows)
+    if any(r["route"]["DestinationPrefix"]!=r["host"]+"/32" for r in rows):raise RuntimeError("direct endpoint changed before Apply")
+    return {r["role"]:r["route"]["InterfaceIndex"] for r in rows}
+def check_underlay(d,expected):
+    rows=direct_peers()
+    save(d/"underlay-after-apply.json",rows)
+    if any(r["route"]["InterfaceIndex"]!=expected[r["role"]] or r["route"]["DestinationPrefix"]!=r["host"]+"/32" for r in rows):
+        raise RuntimeError("Tailscale direct endpoint not on pinned physical path after Apply")
+    print("H2448_UNDERLAY_AFTER_APPLY "+json.dumps(rows),flush=True)
+def unpin_underlay(owned):
+    for prefix,idx,hop in reversed(owned):
+        ps(f"Remove-NetRoute -DestinationPrefix '{prefix}' -InterfaceIndex {idx} -NextHop '{hop}' -PolicyStore ActiveStore -Confirm:$false")
 def probe():
     t=time.monotonic()+55
     while time.monotonic()<t:
@@ -32,7 +76,7 @@ def probe():
 def case(i):
     d=OUT/("case-"+str(i));d.mkdir(exist_ok=False)
     shape(0,0);control("server","/start",{"case":i})
-    p=None;worker=None;event=threading.Event();f=None
+    p=None;worker=None;event=threading.Event();f=None;owned=[]
     result={"case":i,"status":"INCOMPLETE"}
     try:
         if i<0:
@@ -43,13 +87,16 @@ def case(i):
             c=CASES[i];prof=c["profile"]
             route=d/"route-key.hex";route.write_text(hashlib.sha256(("H2442-TEST-ONLY/"+os.environ["GITHUB_RUN_ID"]+"/"+os.environ["GITHUB_SHA"]).encode()).hexdigest()+"\n")
             args=[str(BIN/"wbd-client-embedded.exe"),"--native-v4-product","--control-stdin","--server-ip","10.248.82.2","--server-port","443","--source-port",str(41031+2*i),"--server-name","wbd-h2228.example.test","--route-key-hex-file",str(route),"--tls-ca-pem",str(ROOT/"h2228-server-ready/cert.pem"),"--username","bench","--password","H2442-ONLY","--tunnel-id","102030405060708090a0b0c0d0e0f001","--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDH2442","--state-path",str(d/"owned-wal.json"),"--mtu","1160","--lanes","1","--fec-mode","fixed" if prof>=0 else "off","--fec-parity","4" if prof>=0 else "0","--fec.mode","fixed" if prof>=0 else "off","--fec.profile",["light","mild","medium","balanced","high","strong","maximum"][max(0,prof)],"--route-mode","all","--outer-repair","on"]
+            expected=pin_underlay(d,owned)
             f=(d/"client.log").open("w");p=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=f,stderr=subprocess.STDOUT,text=True,cwd=BIN)
             worker=threading.Thread(target=sample_windows_original_process,args=(p,d/"windows-cpu.jsonl",event),daemon=True);worker.start()
-            probe()
             t=time.monotonic()+30
             while "WBD_WINDOWS_CLIENT_READY" not in (d/"client.log").read_text(errors="replace"):
                 if p.poll() is not None or time.monotonic()>t:raise RuntimeError("actual Windows native READY absent")
                 time.sleep(.2)
+            check_underlay(d,expected)
+            probe()
+            print("H2448_NATIVE_COLD_PROBE_PASS case="+str(i),flush=True)
             save(d/"shape.json",shape(c["loss"],200));time.sleep(1)
             result.update(sink("198.18.77.2",5400,"10.66.0.2",35))
             result.update(c)
@@ -71,8 +118,10 @@ def case(i):
             (d/"route-key.hex").unlink(missing_ok=True)
         try:result["server"]=control("server","/stop")
         except Exception as e:result["server_error"]=repr(e)
+        try:unpin_underlay(owned)
+        except Exception as e:result["underlay_cleanup_error"]=repr(e)
         src=result.get("server",{}).get("source") or {}
-        if result["status"]=="RECEIVED" and result.get("bytes")==src.get("bytes") and src.get("end")=="deadline" and (i<0 or (result.get("client_stop") and result.get("client_ready") and not result.get("client_panic") and result["server"].get("proxy_accept") and result["server"].get("proxy_pacing") and result["server"].get("stop") and not result["server"].get("panic"))):result["status"]="MEASURED_EXACT"
+        if not result.get("underlay_cleanup_error") and result["status"]=="RECEIVED" and result.get("bytes")==src.get("bytes") and src.get("end")=="deadline" and (i<0 or (result.get("client_stop") and result.get("client_ready") and not result.get("client_panic") and result["server"].get("proxy_accept") and result["server"].get("proxy_pacing") and result["server"].get("stop") and not result["server"].get("panic"))):result["status"]="MEASURED_EXACT"
         else:result["status"]="INCOMPLETE"
         save(d/"result.json",result);print("H2442_CASE "+json.dumps(result),flush=True)
     return result
@@ -86,7 +135,9 @@ if __name__=="__main__":
     elif action=="smoke":
         base=read(OUT/"baseline.json")
         if base[0]["status"]!="MEASURED_EXACT" or base[0].get("rx_mbps",0)<285:
-            finish(base,"INFRA_CAPACITY_UNQUALIFIED");raise SystemExit("direct routed capacity <285Mbps or incomplete")
+            # Still perform the clean native probe; do not interpret unqualified capacity as performance.
+            x=case(0);save(OUT/"smoke.json",x)
+            finish(base+[x],"INFRA_CAPACITY_UNQUALIFIED");raise SystemExit("direct routed capacity <285Mbps or incomplete")
         x=case(0);save(OUT/"smoke.json",x)
         if x["status"]!="MEASURED_EXACT":
             finish(base+[x],"NATIVE_SMOKE_FAILED");raise SystemExit(2)
