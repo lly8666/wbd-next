@@ -109,7 +109,7 @@ PY
   grep -Fq 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$OUT/server.log"
   if [[ "${WBD_H2417_SPLICE:-0}" == 1 ]];then
     grep -Fq WBD_TCP_SPLICE_READY "$OUT/server.log"
-    if [[ "${WBD_H2418_DIAG:-0}" == 1 ]];then bash tools/m0_h2418_splice_diag.sh server "$NS" "$TMP" "$OUT";else bash tools/m0_h2417_splice_exit.sh server "$NS" "$TMP" "$OUT";fi
+    if [[ -n "${WBD_H2420_ORDER:-}" ]];then bash tools/m0_h2420_splice_clean.sh server "$NS" "$TMP" "$OUT";elif [[ "${WBD_H2418_DIAG:-0}" == 1 ]];then bash tools/m0_h2418_splice_diag.sh server "$NS" "$TMP" "$OUT";else bash tools/m0_h2417_splice_exit.sh server "$NS" "$TMP" "$OUT";fi
   fi
   sudo -n ip netns exec "$NS" iperf3 -s -B 10.248.82.2 -p 5202 >"$OUT/iperf-direct.log" 2>&1 &
   echo "$!" >"$TMP/iperf-direct.pid"
@@ -193,7 +193,7 @@ client_run(){
   measure clear-zero direct 12 8 download
   relay_read clear-after
   if [[ "${WBD_H2417_SPLICE:-0}" == 1 ]];then
-    if [[ "${WBD_H2418_DIAG:-0}" == 1 ]];then bash tools/m0_h2418_splice_diag.sh client "$NS" "$TMP" "$OUT";else bash tools/m0_h2417_splice_exit.sh client "$NS" "$TMP" "$OUT";fi
+    if [[ -n "${WBD_H2420_ORDER:-}" ]];then bash tools/m0_h2420_splice_clean.sh client "$NS" "$TMP" "$OUT";elif [[ "${WBD_H2418_DIAG:-0}" == 1 ]];then bash tools/m0_h2418_splice_diag.sh client "$NS" "$TMP" "$OUT";else bash tools/m0_h2417_splice_exit.sh client "$NS" "$TMP" "$OUT";fi
     return
   fi
   local scenario_index=0
@@ -311,7 +311,7 @@ PY
 }
 cleanup(){
   if [[ "${WBD_H2417_SPLICE:-0}" == 1 && "${WBD_H2228_ROLE:-}" == server ]];then
-    if [[ "${WBD_H2418_DIAG:-0}" == 1 ]];then bash tools/m0_h2418_splice_diag.sh cleanup "$NS" "$TMP" "$OUT" || true;else bash tools/m0_h2417_splice_exit.sh cleanup "$NS" "$TMP" "$OUT" || true;fi
+    if [[ -n "${WBD_H2420_ORDER:-}" ]];then bash tools/m0_h2420_splice_clean.sh cleanup "$NS" "$TMP" "$OUT" || true;elif [[ "${WBD_H2418_DIAG:-0}" == 1 ]];then bash tools/m0_h2418_splice_diag.sh cleanup "$NS" "$TMP" "$OUT" || true;else bash tools/m0_h2417_splice_exit.sh cleanup "$NS" "$TMP" "$OUT" || true;fi
   fi
   for f in control.pid client.pid server.pid iperf-direct.pid iperf-wbd.pid;do
     test ! -s "$TMP/$f" || sudo -n kill -TERM "$(cat "$TMP/$f")" 2>/dev/null || true
