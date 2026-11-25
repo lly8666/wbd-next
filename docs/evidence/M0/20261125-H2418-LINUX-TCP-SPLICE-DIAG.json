@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "bf4c328ab7be34e6221f8a35f8830a5662f0a41e",
+  "run_id": 45546953037,
+  "result": "MEASURED_SCOPED_DIAGNOSTIC",
+  "artifact_verified": true,
+  "artifacts": {
+    "summary": 14992656712,
+    "client": 14992277522,
+    "server": 14992387340,
+    "relay": 14992566985
+  },
+  "scope": "Real x86/ARM/x86 fixed 400ms added RTT IID 0/1/2/5, one reverse TCP, Normal/off, MTU1160, repair on, 30s omit8. Both paths direct; 641.587/836.853Mbps capacity, diagnostic only.",
+  "rows_mbps": [
+    [
+      0,
+      267.212,
+      298.316,
+      302.689
+    ],
+    [
+      1,
+      83.325,
+      57.219,
+      8.284
+    ],
+    [
+      2,
+      62.251,
+      46.383,
+      40.057
+    ],
+    [
+      5,
+      11.954,
+      24.957,
+      6.047
+    ]
+  ],
+  "columns": [
+    "loss_pct",
+    "nat_a",
+    "splice_bbr",
+    "nat_a2"
+  ],
+  "zero_loss_process_cpu_s_per_gib_approx": [
+    15.7,
+    15.09,
+    15.59
+  ],
+  "zero_loss_proxy_copied_down_bytes": 1310270240,
+  "limitations": [
+    "No stable gain claim, 1% baseline drift ~10x.",
+    "Process CPU only, not total system network CPU.",
+    "No absolute 800Mbps qualification; no CUBIC comparison, no Windows or physical WAN."
+  ]
+}
