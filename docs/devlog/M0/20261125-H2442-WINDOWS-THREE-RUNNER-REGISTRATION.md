@@ -1,0 +1,6 @@
+# H2442
+
+H2442 supersedes H2441 same-host matrix per explicit user request; H2441 seven actual target runs completed failure, one reviewed native cold TLS timeout (run45603546655) before business; Windows full product build artifact15016679927 archived. H2442 actual three-runner run 45614418615, source 53e1acc87d7ecb6d4fa9ba73ad323bbaede3d5cc, Windows native EXE/DLL H2441 build exact product diff vs H2437, ARM server frozen H2437. Prior H2228 VXLAN routed L3 ARM middle; WSL gateway ONLY on Windows runner (not actual client/app). 20 single TCP download legs 300/600 outer budget, RTT added400, IID0/1/2/5/10/15/30, OFF low losses plus matched FEC, actual CUBIC origin and socket BBR pacing. Old 1160 outer MTU retained. Capacity gate direct single TCP, no artificial relay rate limit. Actual Windows CPU, EOF/bytes, Stop and proxy accept/pacing receipts. Three jobs confirmed started, ARM relay/server identity published, Windows binary verified and WSL boot in progress, no business qualification yet. See docs/requests/M0/h2442-windows-three-runner-tcp.md, [run](https://github.com/lly8666/wbd-next/actions/runs/45614418615). No main product change.
+```feature-impact
+{"kind":"none","ids":[],"reason":"Register source-frozen genuine Windows native three-runner single-TCP test; no product change."}
+```
