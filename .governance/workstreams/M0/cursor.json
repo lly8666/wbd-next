@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2436,
-  "checkpoint_sha": "971a6cd8b3a08a176bb3e17d084ad554e4a837c7",
+  "sequence": 2437,
+  "checkpoint_sha": "d7e25025b85dda338109565569ff9fab1476bc44",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "P0 复现并修复H2435 client TX StreamCipherError panic（terminal counter仅假设）；Go wire兼容与长传/Stop；随后ARM实际弱腿pacing/队列同机0%及2%复验，再远端/Windows/旧内核资格。选定架构，暂不晋级。",
+  "next_action": "核H2437 run45585194668/45585194620：Go/Rust terminal HP oracle、双端1024、双ISA4GiB hash/EOF/Stop、原失败BAAB、ARM pacing0/2%本地drop/实际外层/CPU与Windows8MiB真实Wintun。若收益不足撤pacing诊断，不继续无依据优化；推进剩余资格/其他问题。",
   "unverified": true,
   "last_tested_source": "0ac5b1f94e007a437344dbac73b7436907776fbd",
   "evidence_refs": [
@@ -19,9 +19,9 @@
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md",
-    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md",
-    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md"
+    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
+    "docs/requests/M0/h2437-selected-fixes.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2435 60 ZIP、232完整+3 partial，57/58矩阵；ARM公网CUBIC matched FEC多数弱网两序BBR split明显优势，2% NAT胜；选主TCP BBR split，NAT可选/UDP NAT，1024保留。900 cap ARM外层805–852零队列满；0% split仍局部drop/超预算。实际TX panic/Stop和28 deadline阻断交付。"
+  "partial_summary": "H2437实际source 5e1b683，Linux Normal双端1024，非shared1024，Win Wintun8MiB，NPF与Game不变；终端HP单块修复候选，Go/Rust边界及双ISA长传/ARM pacing定向测试、Windows真实Wintun已触发，待结果；main产品未变。"
 }
