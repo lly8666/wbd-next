@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2438,
-  "checkpoint_sha": "73cebe53061197d189259f3439f9a0da70d36767",
+  "sequence": 2439,
+  "checkpoint_sha": "ccde11dfb53ed1b643449888c9db7daaa9cda52f",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "H2437 scoped acceptance complete; base performance work stop. Next product config parity pacing/qdisc, multi-flow Auto FEC and remote/full Windows/old-kernel qualification when needed; no speculative hot path or stream transport redesign. Other user priorities can proceed.",
+  "next_action": "收H2439 run45592176753 smoke/20组，核实际CC版本证据、突发/抖动/不对称/竞争、FEC/队列/CPU PSI；确定是否值得独立BBRv3内核测试，不把uncapped原版当BBRplus。",
   "unverified": true,
   "last_tested_source": "5e1b68331a4b666287ee28219f30a6b7c70df0dd",
   "evidence_refs": [
@@ -19,9 +19,9 @@
   ],
   "context_refs": [
     "docs/decisions/M0-TCP-SPLICE-INTEGRATION-H2438.md",
-    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md",
-    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md"
+    "docs/requests/M0/h2439-realistic-weak-links.md",
+    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2437 24/24 Linux EOF/count/Stop，4GiB×4 hash，Go/Rust边界通过；Windows8MiB scoped signed driver/WSL TCP PASS。paced10/10双端零队列满，2%吞吐+26–28%，0%预算内。H2438源审查确认splice已native，控制层整合可行；不重构传输，main仍NAT，full product未验。"
+  "partial_summary": "H2439冻结已验收H2437 ARM二进制，5类复杂工况，两种配对、20job80腿+4smoke在途；BBRv3/社区plus只研究未实测，main产品无修改。"
 }
