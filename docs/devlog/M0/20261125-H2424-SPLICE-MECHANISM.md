@@ -1,0 +1,7 @@
+# H2424
+
+H2424 product SOURCE frozen H2423 559f2093857919c6293ee6f85622b55f198251fc / build 45556602991 x86 artifact14995813926; new harness source explicitly separate. Eight independent single-scenario ABBA/BAAB jobs with same binary; clean NAT vs BBR splice TUN fq disabled both ends (origin fq600 retained), test local pacing mechanism; 5% 400ms NAT BBR vs splice BBR to separate split effect; 5% 400ms splice BBR Normal OFF vs fixed mild profile1 (k16/r4, 25% nominal) to see residual loss contribution; 100Mbps rate-limited no random loss repeat BBR/CUBIC after explicit netem delete/add, post-direct >=800. Collect actual weak-leg socket, per-thread CPU, TUN qdisc end counters and per-leg netem deltas. No new CC, no product changes, local namespace not physical qualification. H2423 all 8 performance/2 functional artifacts reviewed. Historical congestion post-capacity unqualified retained. User prioritizes parallel useful experiments rather than premature algorithm.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Mechanism diagnostic fixture with frozen previous product; no production changes."}
+```

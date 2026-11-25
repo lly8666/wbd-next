@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "559f2093857919c6293ee6f85622b55f198251fc",
+  "result": "MEASURED_SCOPED_NATIVE_LOCAL",
+  "artifact_verified": true,
+  "scope": "All ten measurement ZIPs reviewed (8 performance,2 functional). One local VM four real netns, original native WBD, MTU1460, repair on; no physical WAN/three-runner qualification. x86 exact build artifact14995813926, arm14995863939, build run45556602991. CPU numerator includes omit, denominator measured bytes.",
+  "runs": [
+    {
+      "scene": "clean",
+      "order": "ABBA",
+      "run": 45556603084,
+      "artifact": 14995614920,
+      "mbps": [
+        452.82,
+        569.84,
+        569.88,
+        454.75
+      ],
+      "effect_pct": 25.579817221066236,
+      "pre_post_direct": [
+        13233.654,
+        11495.998
+      ]
+    },
+    {
+      "scene": "clean",
+      "order": "BAAB",
+      "run": 45556602921,
+      "artifact": 14995719484,
+      "mbps": [
+        570.24,
+        455.79,
+        455.54,
+        570.51
+      ],
+      "effect_pct": 25.173277905153647,
+      "pre_post_direct": [
+        13158.92,
+        13077.323
+      ]
+    },
+    {
+      "scene": "loss1",
+      "order": "ABBA",
+      "run": 45556602996,
+      "artifact": 14996043868,
+      "mbps": [
+        117.36,
+        0.8,
+        0.55,
+        127.55
+      ],
+      "effect_pct": -99.45196350339552
+    },
+    {
+      "scene": "loss1",
+      "order": "BAAB",
+      "run": 45556602869,
+      "artifact": 14996307039,
+      "mbps": [
+        0.84,
+        68.24,
+        119.62,
+        0.8
+      ],
+      "effect_pct": -99.12927834206333
+    },
+    {
+      "scene": "loss5",
+      "order": "ABBA",
+      "run": 45556602844,
+      "artifact": 14995544733,
+      "mbps": [
+        41.48,
+        0.25,
+        0.34,
+        6.25
+      ],
+      "effect_pct": -98.76978921778812
+    },
+    {
+      "scene": "loss5",
+      "order": "BAAB",
+      "run": 45556602922,
+      "artifact": 14995629610,
+      "mbps": [
+        0.17,
+        9.77,
+        43.25,
+        0.21
+      ],
+      "effect_pct": -99.28799020801156
+    },
+    {
+      "scene": "congestion",
+      "order": "ABBA",
+      "run": 45556602937,
+      "artifact": 14996425983,
+      "mbps": [
+        87.28,
+        90.56,
+        90.51,
+        84.39
+      ],
+      "effect_pct": 5.472270169508087,
+      "pre_post_direct": [
+        12304.746,
+        96.045
+      ],
+      "qualification": "post capacity unqualified; rate likely retained by netem replace"
+    },
+    {
+      "scene": "congestion",
+      "order": "BAAB",
+      "run": 45556602949,
+      "artifact": 14996416031,
+      "mbps": [
+        90.51,
+        87.29,
+        87.24,
+        90.51
+      ],
+      "effect_pct": 3.723383611509612,
+      "pre_post_direct": [
+        13114.582,
+        95.84
+      ],
+      "qualification": "post capacity unqualified; rate likely retained by netem replace"
+    }
+  ],
+  "functional": {
+    "run": 45556603089,
+    "artifacts": [
+      14996267320,
+      14995444418
+    ],
+    "rows": 4,
+    "duplex_halfclose_udp_stop": "PASS"
+  },
+  "notes": [
+    "All performance legs MEASURED; clean both orders stable <0.5% spreads; server CPU/GiB means ~30.58→12.31 and 30.87→12.47.",
+    "CUBIC weak leg actual cwnd median 24–39 at 1%; BBR 4897–22362, both have notsent. 5% BBR widely variable.",
+    "Queue full drops near zero except 8 at one 1% leg. Do not conflate iperf origin retransmits with weak-leg proxy retransmits.",
+    "Congestion post-direct ~96Mbps, likely qdisc rate not cleared; recheck after explicit delete/add."
+  ]
+}

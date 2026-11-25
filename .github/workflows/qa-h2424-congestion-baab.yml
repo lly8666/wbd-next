@@ -1,0 +1,54 @@
+name: H2424 congestion BAAB
+run-name: "H2424 clean ABBA | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2424-congestion-baab.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: h2424-congestion-baab-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      H2421_SCENE: congestion
+      H2421_ORDER: BAAB
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Retrieve exact SOURCE shared native build and verify hash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          bash tools/m0_h2424_fetch_frozen.sh
+      - name: Real original WBD native routed local fixture
+        shell: bash
+        run: |
+          mkdir -p h2424-out
+          cp h2423-build-identity.json h2424-out/
+          lscpu >h2424-out/lscpu.txt
+          uname -a >h2424-out/uname.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2421_SCENE="$H2421_SCENE" H2421_ORDER="$H2421_ORDER" H2421_PRODUCT_SOURCE=559f2093857919c6293ee6f85622b55f198251fc H2421_OUT=h2424-out python3 -u tools/m0_h2424_splice_local.py
+      - name: Preserve only owned readable evidence, not installation identities
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2424-out;then
+            sudo find h2424-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2424-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2424-clean-abba-${{ env.WBD_PLAN029_LINUX_EXPECTED_ARCH }}
+          path: h2424-out/
+          retention-days: 14
