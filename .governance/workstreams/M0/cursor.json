@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2437,
-  "checkpoint_sha": "d7e25025b85dda338109565569ff9fab1476bc44",
+  "sequence": 2438,
+  "checkpoint_sha": "73cebe53061197d189259f3439f9a0da70d36767",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "核H2437 run45585194668/45585194620：Go/Rust terminal HP oracle、双端1024、双ISA4GiB hash/EOF/Stop、原失败BAAB、ARM pacing0/2%本地drop/实际外层/CPU与Windows8MiB真实Wintun。若收益不足撤pacing诊断，不继续无依据优化；推进剩余资格/其他问题。",
+  "next_action": "H2437 scoped acceptance complete; base performance work stop. Next product config parity pacing/qdisc, multi-flow Auto FEC and remote/full Windows/old-kernel qualification when needed; no speculative hot path or stream transport redesign. Other user priorities can proceed.",
   "unverified": true,
-  "last_tested_source": "0ac5b1f94e007a437344dbac73b7436907776fbd",
+  "last_tested_source": "5e1b68331a4b666287ee28219f30a6b7c70df0dd",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2435-ARM-FIRST-ARCHITECTURE.json"
+    "docs/evidence/M0/20261125-H2437-SELECTED-FIXES-ACCEPTANCE.json"
   ],
   "context_refs": [
+    "docs/decisions/M0-TCP-SPLICE-INTEGRATION-H2438.md",
     "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md",
-    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/requests/M0/h2437-selected-fixes.md"
+    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2437实际source 5e1b683，Linux Normal双端1024，非shared1024，Win Wintun8MiB，NPF与Game不变；终端HP单块修复候选，Go/Rust边界及双ISA长传/ARM pacing定向测试、Windows真实Wintun已触发，待结果；main产品未变。"
+  "partial_summary": "H2437 24/24 Linux EOF/count/Stop，4GiB×4 hash，Go/Rust边界通过；Windows8MiB scoped signed driver/WSL TCP PASS。paced10/10双端零队列满，2%吞吐+26–28%，0%预算内。H2438源审查确认splice已native，控制层整合可行；不重构传输，main仍NAT，full product未验。"
 }
