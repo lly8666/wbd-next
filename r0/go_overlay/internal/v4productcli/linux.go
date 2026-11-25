@@ -1260,6 +1260,7 @@ func recoverOriginalAndroidRootOwned()error{
     if routeErr!=nil||rstErr!=nil{
         return fmt.Errorf("original Root Restore not fully verified; owned journal retained on uncertain state")
     }
+    if e:=recoverOriginalAndroidTetherOffload();e!=nil{return e}
     log.Print("V4_PUBLIC_ANDROID_RESTORE_NATIVE_KERNEL_CLEARED role=client")
     return nil
 }
@@ -1355,7 +1356,13 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
             cfg.peerIP=resolved
             log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=%s udp_tcp53_original_go=1",cfg.peerHost,cfg.androidPhysicalDNSUpstream)
         }
-        if err=checkOriginalAndroidTether(cfg);err!=nil{return err}
+        tetherOffloadStop,tetherErr:=checkOriginalAndroidTether(cfg)
+        if tetherErr!=nil{return tetherErr}
+        if tetherOffloadStop!=nil{
+            // Registered before TUN/RAW/route owners; executed after their
+            // normal Stop and also on cold START failure.
+            defer func(){retErr=errors.Join(retErr,tetherOffloadStop())}()
+        }
         if cfg.androidClatParent!=""{
             // Read the actual selected Network route before any FakeTCP
             // SYN. The original RAW bind and M4 still own all traffic.

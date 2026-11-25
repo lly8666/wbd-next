@@ -9,4 +9,5 @@ func androidRootRouteAfterNative(
     _ config,_ *ownedTun,_ string,
 )(func()error,error){return nil,nil}
 
-func checkOriginalAndroidTether(_ config)error{return nil}
+func checkOriginalAndroidTether(_ config)(func()error,error){return nil,nil}
+func recoverOriginalAndroidTetherOffload()error{return nil}

@@ -198,6 +198,16 @@ jobs:
           path: out/android-b100-dns6-host/
           retention-days: 14
           if-no-files-found: warn
+  b116-offload-lifecycle-host:
+    if: contains(github.event.head_commit.message, '[android-b116-tether-offload]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Verify actual production hardware preference owner and independent BPF classifier
+        run: |
+          GO111MODULE=off GOTOOLCHAIN=local go test -count=1 -v ./r0/go_overlay/internal/v4productcli/rootjournal -run '^TestB116'
   b104-forwarding-real-namespace:
     if: contains(github.event.head_commit.message, '[android-forwarding-ui]') || contains(github.event.head_commit.message, '[android-options-sit]')  
     runs-on: ubuntu-24.04
@@ -221,7 +231,7 @@ jobs:
           if-no-files-found: warn
 
   b108-carrier-linux-admission:
-    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && !contains(github.event.head_commit.message, '[android-b114-final-regression]') && !contains(github.event.head_commit.message, '[android-b115-device-feedback]')
+    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && !contains(github.event.head_commit.message, '[android-b114-final-regression]') && !contains(github.event.head_commit.message, '[android-b115-device-feedback]') && !contains(github.event.head_commit.message, '[android-b116-tether-offload]')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -507,7 +517,7 @@ jobs:
       fail-fast: false
       max-parallel: 8
       matrix:
-        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b115-device-feedback]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b114-final-regression]') && '["normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game2","game2-fixed","game4","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
+        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b116-tether-offload]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b115-device-feedback]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b114-final-regression]') && '["normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game2","game2-fixed","game4","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
     permissions: {contents: read, actions: read}
     env:
       GH_TOKEN: ${{ github.token }}

@@ -894,6 +894,9 @@ public final class RootDiagnosticReportTest {
             RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_FORWARDING,
             RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_HARDWARE_OFFLOAD,
             RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_OFFLOAD,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_ENABLED,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_UNKNOWN,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_HARDWARE_RESTORE,
             RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_DNS_BIND,
             RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_KERNEL_RULES
         }){

@@ -1036,8 +1036,24 @@ public final class RootClientService extends Service {
                     }
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=HARDWARE_OFFLOAD")){
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_HARDWARE_OFFLOAD);
-                        if(tetherFailure==null)tetherFailure="系统热点硬件加速未明确关闭；请检查开发者选项中的网络共享硬件加速";
+                        if(tetherFailure==null)tetherFailure="硬件加速仍运行、状态不明或设置失败；请先停用共享，关闭开发者选项中的网络共享硬件加速，再开启共享";
                     }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=BPF_ENABLED")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_ENABLED);
+                        if(tetherFailure==null)tetherFailure="Android热点BPF转发仍启用；与硬件加速开关独立，当前软件共享路径尚不支持";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=BPF_UNKNOWN")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_UNKNOWN);
+                        if(tetherFailure==null)tetherFailure="无法确认Android热点BPF转发状态；未修改系统加速设置";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=HARDWARE_RESTORE")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_HARDWARE_RESTORE);
+                        if(tetherFailure==null)tetherFailure="硬件加速原设置尚未恢复，请先执行恢复网络";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_DISABLED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_HARDWARE_DISABLED);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_RESTORED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_HARDWARE_RESTORED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=BPF_OFFLOAD")){
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_OFFLOAD);
                         if(tetherFailure==null)tetherFailure="此设备的热点BPF加速仍启用或无法确认软件转发；当前版本不支持该共享路径";

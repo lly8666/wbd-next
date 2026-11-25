@@ -1687,7 +1687,7 @@ public final class RootClientActivity extends Activity {
         tetherSharing.setChecked(false);
         pane.addView(tetherSharing);
         TextView tetherRequirement=new TextView(this);
-        tetherRequirement.setText("请先开启系统热点或USB共享并选择活动下游。当前仅支持软件转发；若系统硬件/BPF加速仍活跃，启动会明确提示，不自动修改系统设置或绕过共享。");
+        tetherRequirement.setText("请先开启系统热点或USB共享并选择活动下游。仅支持软件转发；BPF已关闭且硬件HAL未运行时，WBD可临时关闭硬件加速设置，断开后恢复原值。不会修改BPF或绕过共享。");
         pane.addView(tetherRequirement);
         tetherChoices=new Spinner(this);
         pane.addView(tetherChoices);

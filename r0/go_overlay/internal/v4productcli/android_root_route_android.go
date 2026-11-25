@@ -327,7 +327,7 @@ func androidTetherFailure(class string,e error)error{
  fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=%s\n",class)
  return e
 }
-func androidTetherPreflight(c config)(netip.Addr,error){
+func androidTetherPreflight(c config,requireHardwareDisabled bool)(netip.Addr,error){
  if c.androidTetherInterface==""{return netip.Addr{},nil}
  fail:=func(class string,e error)(netip.Addr,error){return netip.Addr{},androidTetherFailure(class,e)}
  d,e:=net.InterfaceByName(c.androidTetherInterface)
@@ -349,23 +349,59 @@ func androidTetherPreflight(c config)(netip.Addr,error){
  forward,e:=os.ReadFile("/proc/sys/net/ipv4/ip_forward")
  if e!=nil||strings.TrimSpace(string(forward))!="1"{return fail("FORWARDING",fmt.Errorf("enable existing Android tethering first"))}
  ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
- offload,e:=exec.CommandContext(ctx,"settings","get","global","tether_offload_disabled").Output()
- if e!=nil||strings.TrimSpace(string(offload))!="1"{return fail("HARDWARE_OFFLOAD",fmt.Errorf("software tether requires hardware offload disabled"))}
+ if requireHardwareDisabled{
+  offload,e:=rootjournal.ReadTetherOffload(androidTetherSettings)
+  if e!=nil||offload!="1"{return fail("HARDWARE_OFFLOAD",fmt.Errorf("software tether requires hardware offload disabled"))}
+ }
  dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
- if e!=nil||!strings.Contains(string(dump),"mIsBpfEnabled: false"){return fail("BPF_OFFLOAD",fmt.Errorf("software tether requires verified inactive BPF offload"))}
+ if e!=nil{return fail("BPF_UNKNOWN",fmt.Errorf("tethering dump unavailable"))}
+ switch rootjournal.TetherBPFState(string(dump)){
+ case "enabled":return fail("BPF_ENABLED",fmt.Errorf("tether BPF offload is enabled"))
+ case "disabled":
+ default:return fail("BPF_UNKNOWN",fmt.Errorf("tether BPF offload state unverified"))
+ }
  return gateway,nil
 }
-func checkOriginalAndroidTether(c config)error{
- if c.androidTetherInterface==""{return nil}
- _,e:=androidTetherPreflight(c)
- if e==nil{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_PREFLIGHT_READY role=client")}
- return e
+const androidTetherOffloadJournal="/data/local/tmp/wbd-next-root/tether-offload-journal"
+func androidTetherSettings(args ...string)(string,error){
+ ctx,cancel:=context.WithTimeout(context.Background(),3*time.Second);defer cancel()
+ b,e:=exec.CommandContext(ctx,"settings",args...).CombinedOutput()
+ if e!=nil{return "",fmt.Errorf("hardware offload setting command failed: %w",e)}
+ return string(b),nil
+}
+func recoverOriginalAndroidTetherOffload()error{
+ return rootjournal.RecoverTetherOffload(androidTetherSettings,androidTetherOffloadJournal)
+}
+func checkOriginalAndroidTether(c config)(func()error,error){
+ if c.androidTetherInterface==""{return nil,nil}
+ // BPF is checked before any global preference write. Unsupported
+ // devices must not change even the hardware setting on a failed START.
+ if _,e:=androidTetherPreflight(c,false);e!=nil{return nil,e}
+ ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
+ dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
+ if e!=nil{return nil,androidTetherFailure("HARDWARE_OFFLOAD",e)}
+ owner,e:=rootjournal.NewTetherOffload(androidTetherSettings,androidTetherOffloadJournal,rootjournal.TetherHALInactive(string(dump)))
+ if e!=nil{return nil,androidTetherFailure("HARDWARE_OFFLOAD",e)}
+ cleanup:=func()error{
+  cleared:=true
+  for _,path:=range []string{androidTetherJournal,androidIPv6CarrierJournal}{
+   if _,e:=os.Lstat(path);!os.IsNotExist(e){cleared=false}
+  }
+  e:=owner.Stop(cleared)
+  if e!=nil{return androidTetherFailure("HARDWARE_RESTORE",e)}
+  if owner.Changed(){fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_RESTORED role=client")}
+  return nil
+ }
+ if owner.Changed(){fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_DISABLED role=client")}
+ if _,e=androidTetherPreflight(c,true);e!=nil{return nil,errors.Join(e,cleanup())}
+ fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_PREFLIGHT_READY role=client")
+ return cleanup,nil
 }
 
 func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
  if c.androidTetherInterface==""{return stop,nil}
  fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
- gateway,e:=androidTetherPreflight(c)
+ gateway,e:=androidTetherPreflight(c,true)
  if e!=nil{return fail(e)}
  prefix,e:=netip.ParsePrefix(c.androidTetherSubnet);if e!=nil{return fail(e)}
  if c.androidTetherInterface==tun.name{return fail(androidTetherFailure("DOWNSTREAM",fmt.Errorf("tether equals tun")))}

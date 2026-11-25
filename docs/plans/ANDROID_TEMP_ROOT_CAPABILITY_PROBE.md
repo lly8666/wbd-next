@@ -1,3 +1,7 @@
+## B116｜真机共享 offload 独立问题（当前）
+
+B115 `18c618aa49e82ecf5c70913e675b1e9903ef7224` [Action 45583719117](https://github.com/lly8666/wbd-next/actions/runs/45583719117) 全绿；真机共享先 HARDWARE_OFFLOAD、再 BPF_OFFLOAD。B116仅在BPF明确关闭及HAL明确未启动的兼容条件下会话级关闭/读回/恢复硬件设置0或null，原1不改；已运行HAL不假定可热停，BPF_ENABLED/UNKNOWN分别诊断，不修改BPF/netd或绕过转发。真机共享未证。详见 [B116 devlog](../devlog/android-root-probe/20261125-b116-tether-offload.md)。
+
 ## B115｜真机反馈（当前）
 
 B114 `d89db3b13c4de73773a55822fe25671b4bc14813` [Action 45577319665](https://github.com/lly8666/wbd-next/actions/runs/45577319665) 19/0/8，8/8同源guest PASS。用户B113真机初测主链路/分流正常，热点/USB勾选连接失败。B115设置页明确保存、十槽及旧4槽备份兼容、共享软件转发准入提前/固定故障原因；实体共享具体根因未证，未改变BPF/netd/offload或绕过流量。API35/36 UI及Normal同源回归待CI。详见 [B115 devlog](../devlog/android-root-probe/20261125-b115-device-feedback.md)。
