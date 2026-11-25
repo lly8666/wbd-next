@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "5e1b68331a4b666287ee28219f30a6b7c70df0dd",
+  "result": "PASS_SCOPED_LOCAL_ACCEPTANCE_RELEASE_NOT_RUN",
+  "artifact_verified": true,
+  "run_id": 45585194668,
+  "scope": "Seven Linux measurement ZIPs and one Windows ZIP reviewed, plus crypto job log; 24 Linux native legs, all 24 EOF/count equality/Stop and both Normal inbox1024, 4 finite 4GiB hash equality. Same host local netns, not independent remote. Windows scoped signed Wintun actual kernel TCP to WSL2 Linux guest, not authenticated full product.",
+  "crypto": {
+    "job_id": 139104890704,
+    "original_go_terminal_mask": "PASS",
+    "rust_terminal_regression": "PASS",
+    "rust_codec_tests": {
+      "passed": 156,
+      "failed": 0,
+      "ignored": 1
+    },
+    "notes": "Deterministic old wrapper rejection reproduced at u32 max and exact fixed vectors pass. Failed H2435 BAAB repeated 4/4, no panic. Original incident had no sampled counter, exact incident root cause remains inferred, real boundary defect fixed."
+  },
+  "linux": [
+    {
+      "arch": "aarch64",
+      "pair": "pacing",
+      "loss_pct": 0,
+      "order": "ABBA",
+      "artifact_id": 15009190610,
+      "rx_mbps": [
+        536.03,
+        510.27,
+        510.79,
+        544.46
+      ],
+      "server_wan_mbps": [
+        604.36,
+        558.75,
+        559.2,
+        614.61
+      ],
+      "server_drops": [
+        6977,
+        0,
+        0,
+        6863
+      ],
+      "client_drops": [
+        0,
+        0,
+        0,
+        200
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "pair": "pacing",
+      "loss_pct": 0,
+      "order": "BAAB",
+      "artifact_id": 15008747763,
+      "rx_mbps": [
+        510.75,
+        548.28,
+        544.25,
+        510.86
+      ],
+      "server_wan_mbps": [
+        561.67,
+        609.18,
+        611.18,
+        561.8
+      ],
+      "server_drops": [
+        0,
+        6406,
+        7841,
+        0
+      ],
+      "client_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "pair": "pacing",
+      "loss_pct": 2,
+      "order": "ABBA",
+      "artifact_id": 15009870392,
+      "rx_mbps": [
+        306.96,
+        402.2,
+        407.87,
+        337.77
+      ],
+      "server_wan_mbps": [
+        402.71,
+        568.34,
+        587.58,
+        440.64
+      ],
+      "server_drops": [
+        17615,
+        0,
+        0,
+        16064
+      ],
+      "client_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "pair": "pacing",
+      "loss_pct": 2,
+      "order": "BAAB",
+      "artifact_id": 15009815667,
+      "rx_mbps": [
+        395.05,
+        309.04,
+        318.46,
+        406.88
+      ],
+      "server_wan_mbps": [
+        567.28,
+        430.82,
+        433.26,
+        578.42
+      ],
+      "server_drops": [
+        0,
+        5974,
+        6368,
+        0
+      ],
+      "client_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "pair": "cubic-bbr",
+      "loss_pct": 0,
+      "order": "BAAB",
+      "artifact_id": 15009626290,
+      "rx_mbps": [
+        540.26,
+        540,
+        540,
+        545.63
+      ],
+      "server_wan_mbps": [
+        603.9,
+        595.37,
+        595.38,
+        609.12
+      ],
+      "server_drops": [
+        4706,
+        4704,
+        0,
+        4489
+      ],
+      "client_drops": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "pair": "pacing-finite",
+      "loss_pct": 0,
+      "order": "AB",
+      "artifact_id": 15010165044,
+      "rx_mbps": [
+        531.21,
+        510.79
+      ],
+      "server_wan_mbps": [
+        595.38,
+        559.02
+      ],
+      "server_drops": [
+        12871,
+        0
+      ],
+      "client_drops": [
+        0,
+        0
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "pair": "pacing-finite",
+      "loss_pct": 0,
+      "order": "AB",
+      "artifact_id": 15009202851,
+      "rx_mbps": [
+        531.47,
+        525
+      ],
+      "server_wan_mbps": [
+        595.64,
+        576.99
+      ],
+      "server_drops": [
+        6142,
+        0
+      ],
+      "client_drops": [
+        0,
+        0
+      ]
+    }
+  ],
+  "finite": {
+    "bytes_each": 4294967296,
+    "sha256": "124e808a28154d5510e7085adb321bc073185f55c706b2bd3514bc0227a86555",
+    "legs": 4,
+    "exact_match": true
+  },
+  "windows": {
+    "run_id": 45585194620,
+    "artifact_id": 15007539924,
+    "scope": "PASS_SCOPED_WINTUN_RUST_KERNEL_TCP_NAT_TO_SEPARATE_LINUX_GUEST",
+    "assembly_ring_8MiB_checked_by_job": true,
+    "full_product_ready": "NOT_RUN",
+    "authenticated_tls": "NOT_RUN",
+    "normal_game4": "NOT_RUN"
+  },
+  "notes": [
+    "All 10 paced legs zero server/client local queue drops. ARM0 steady ~510.5–510.8 vs540.2–546.3; wire ~559–562 vs604–615 Mbps. ARM2% mild paced ~401–405 vs314–322, wire ~568–588, local drops zero; not equal actual wire comparison. Pacing per accepted socket experimental env cap, no default or aggregate/multi-flow control. Unpaced local drops persist. Previous H2435 ARM data-plane capacity805–852 outer with zero full drops; stop speculative hot path optimization. Product default actual fq600 and NAT unchanged, harness explicitly uncapped fq; release still needs product config parity, full Windows and remote."
+  ]
+}
