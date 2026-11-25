@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2443,
-  "checkpoint_sha": "4c7f5925f5534fe39b1e25409b290942f1c1e708",
+  "sequence": 2444,
+  "checkpoint_sha": "062fb5aa14b41364c378f6939f4d0d5b79adc7e3",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "核H2443 run45614862277实际三runner路由、裸TCP、首个Windows WBD TCP；不把启动当成合格，后续20腿仅在容量达标时运行。",
+  "next_action": "核H2444 run45615492146真实三runner路由与裸TCP容量、native smoke及矩阵。不能以握手/启动当性能，未达容量即记录阻塞。",
   "unverified": true,
   "last_tested_source": "9a93bdcdfabeff2fd3c123063774a24cc51926b7",
   "evidence_refs": [
@@ -19,10 +19,10 @@
     "docs/evidence/M0/20261125-H2437-SELECTED-FIXES-ACCEPTANCE.json"
   ],
   "context_refs": [
-    "docs/evidence/M0/20261125-H2441-H2442-FIXTURE-FAIL.json",
+    "docs/evidence/M0/20261125-H2443-RELAY-PATH-PRECONDITION.json",
     "docs/requests/M0/h2442-windows-three-runner-tcp.md",
     "docs/decisions/M0-TCP-SPLICE-INTEGRATION-H2438.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2441服务端错误fq参数导致7组冷连接超时；H2442 WSL argv网关失败0测量；H2443修复--exec及失败receipt，重新三runner同矩阵。"
+  "partial_summary": "H2443三端认证身份齐，relay ping client55s超时0测量；H2444 bounded WSL keepalive/超时诊断，实际容量gate不变，三job启动。"
 }
