@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2434,
-  "checkpoint_sha": "84c6294a06ae4562340fca369d1f0c0ed5c18764",
+  "sequence": 2435,
+  "checkpoint_sha": "bcaaf6ef78a25a87a583653c376ac01208972460",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收H2434 run45572579387 smoke及50组；按实际origin CC、同机正反序、FEC、wire预算、本地丢包、CPU环境判断架构。BBR origin容量组独立，先修真正服务瓶颈；保留异常/未完成，不默认晋级。",
+  "next_action": "收H2435 run45573918774双ISA build/ARM smoke及58组；优先ARM正反序，核逐核/线程CPU、PSI、调度等待、cgroup throttling、内外层流量及本地drop，再决定架构。若smoke失败先定位原始日志。",
   "unverified": true,
   "last_tested_source": "3971bbca8fd5e2d40497be313251df64e186136e",
   "evidence_refs": [
@@ -20,8 +20,9 @@
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md",
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/requests/M0/h2434-architecture-matrix.md"
+    "docs/requests/M0/h2435-arm-first-cpu-pressure.md",
+    "docs/evidence/M0/20261125-H2434-FIXTURE-PREFLIGHT-FAIL.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2433 36/36六ZIP，ARM900 inbox1024无满丢近裸TCP，慢x86仍6.7–9.9万满丢；x86两物理核SMT vs ARM四核不能直接归因代码。H2434按用户公网CUBIC假设，50组200腿+双ISA smoke/容量对照在途。默认未变。"
+  "partial_summary": "H2434零业务测量，cgroup v2固定路径失败；用户选1024和ARM优先，H2435实验Normal服务端默认1024、CPU采样增强，42ARM/16x86共232腿+16裸TCP+4smoke，双ISA已开始构建，main生产未变。"
 }
