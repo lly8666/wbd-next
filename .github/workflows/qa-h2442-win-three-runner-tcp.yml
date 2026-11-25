@@ -1,5 +1,5 @@
-name: H2444 Windows single TCP matrix gateway lifetime and path observation
-run-name: "H2444 Windows native TCP 400ms 300-600 | ${{ github.sha }}"
+name: H2445 Windows single TCP matrix route ownership
+run-name: "H2445 Windows native TCP 400ms 300-600 | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-linux-tcp-splice']

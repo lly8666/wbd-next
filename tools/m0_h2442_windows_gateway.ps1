@@ -20,9 +20,9 @@ $route=Find-NetRoute -RemoteIPAddress $ip
 $addr=@($route | Where-Object {$_.IPAddress -and $_.InterfaceIndex}) | Select-Object -First 1
 if(!$addr -or $addr.IPAddress -eq $ip){throw 'Windows native access route missing'}
 $hostip=$addr.IPAddress;$idx=$addr.InterfaceIndex
-if(Get-NetRoute -DestinationPrefix '10.248.82.2/32' -ErrorAction SilentlyContinue){throw 'foreign exact route'}
-New-NetRoute -DestinationPrefix '10.248.82.2/32' -InterfaceIndex $idx -NextHop $ip -PolicyStore ActiveStore | Out-Null
-@{guest=$ip;host=$hostip;index=$idx;route='10.248.82.2/32'} | ConvertTo-Json | Set-Content -Encoding utf8 h2442-out/windows-access.json
+if(Get-NetRoute -DestinationPrefix '10.248.82.0/24' -ErrorAction SilentlyContinue){throw 'foreign access-subnet route'}
+New-NetRoute -DestinationPrefix '10.248.82.0/24' -InterfaceIndex $idx -NextHop $ip -PolicyStore ActiveStore | Out-Null
+@{guest=$ip;host=$hostip;index=$idx;route='10.248.82.0/24'} | ConvertTo-Json | Set-Content -Encoding utf8 h2442-out/windows-access.json
 $creator=@(Get-NetFirewallHyperVVMCreator -ErrorAction Stop | Where-Object {$_.FriendlyName -eq 'WSL'})
 if($creator.Count -ne 1){throw 'WSL HyperV creator not uniquely owned'}
 $name='WBD-H2442-'+$env:GITHUB_RUN_ID
