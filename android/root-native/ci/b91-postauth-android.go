@@ -140,6 +140,8 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  var tx func()(uint64,error)
  var fecCounters func()([9]uint64,error)
  var pulse func()(V4PublicLoopPulse,error)
+ // Physical and tunnel DNS readbacks are existing product ABI fields.
+ var dnsRead func()([4]uint64,error)
  if n==1{
   p,e:=NewV4LinuxClientProduct(normal);if e!=nil{return e}
   s,e:=p.ConnectAuthenticatedPeer(ctx,assocs[0],cfg);if e!=nil{return e}
@@ -157,6 +159,7 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
    }
   }
   pulse=p.OriginalLoopPulse
+  dnsRead=func()([4]uint64,error){v,e:=p.OriginalLoopPulse();return [4]uint64{v.DnsPhysicalTx,v.DnsPhysicalRx,v.DnsPhysicalError,v.DnsTunnelRawCopied},e}
   tx=func()(uint64,error){v,e:=p.OriginalLoopPulse();return v.BusinessRawCopied,e}
  }else{
   p,e:=NewV4AndroidGameProduct(game);if e!=nil{return e}
@@ -179,6 +182,7 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
   if e!=nil||!ready||lanes!=uint32(n){return fmt.Errorf("real Game native group state %d %t %v",lanes,ready,e)}
   if game.GameFecEnabled{if _,e=p.OriginalGameFecCounters();e!=nil{return e}}
   tx=func()(uint64,error){v,e:=p.OriginalM4Counters();return v.RawCopied,e}
+  dnsRead=func()([4]uint64,error){v,e:=p.OriginalM4Counters();return [4]uint64{v.PhysicalDnsQueries,v.PhysicalDnsReplies,v.PhysicalDnsErrors,v.TunnelDnsQueries},e}
  }
  for _,p:=range pairs{select{case e:=<-p.result:if e!=nil{return fmt.Errorf("original server TLS/lease: %w",e)}
  case <-ctx.Done():return ctx.Err()}}
@@ -186,6 +190,36 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  fmt.Println("B91_NATIVE_M4_STARTED",mode,"lanes",n,"actual_fixture_tls_lease",lease)
  undo,e:=route(lease);if e!=nil{return e};if undo==nil{return ErrAdmissionUnsupported}
  defer func(){e:=undo();ret=errors.Join(ret,e);if e==nil{fmt.Println("B91_NATIVE_UID_STOP_PASS",mode)}}()
+ physicalDNS:=normal.AndroidPhysicalDNS||len(normal.AndroidCN8503Raw)>0
+ tunnelDNS:=normal.AndroidTunnelDNS||len(normal.AndroidCN8503Raw)>0
+ if physicalDNS||tunnelDNS{
+  if physicalDNS{
+   before,e:=dnsRead();if e!=nil{return e}
+   if e=send("daily-dns-udp");e!=nil{return e}
+   after,e:=dnsRead();if e!=nil{return e}
+   if after[0]<=before[0]||after[1]<=before[1]||after[2]!=before[2]{return fmt.Errorf("native physical DNS reply missing: %v -> %v",before,after)}
+   fmt.Println("B102_NATIVE_DNS_UDP_ROUNDTRIP_PASS",mode,before,after)
+   // TCP53 relay is the existing actual kernel capture and Bionic dialer.
+   if e=send("daily-dns-tcp");e!=nil{return e}
+   fmt.Println("B102_APP_DNS_TCP_ROUNDTRIP_PASS",mode)
+  }
+  if tunnelDNS{
+   before,e:=dnsRead();if e!=nil{return e}
+   txBefore,e:=tx();if e!=nil{return e}
+   if e=send("daily-dns-tunnel");e!=nil{return e}
+   if e=b91WaitTX(ctx,tx,txBefore);e!=nil{return e}
+   after,e:=dnsRead();if e!=nil{return e}
+   if after[3]<=before[3]||after[0]!=before[0]{return fmt.Errorf("tunnel DNS classification missing: %v -> %v",before,after)}
+   fmt.Println("B102_NATIVE_DNS_TUNNEL_TX_PASS",mode,"remote_reply_NOT_PROVEN",before,after)
+  }
+  // One ordinary business packet after DNS proves the sole worker still
+  // handles non-DNS; no expectation of remote echo in this fixture.
+  before,e:=tx();if e!=nil{return e}
+  if e=send("send4");e!=nil{return e}
+  if e=b91WaitTX(ctx,tx,before);e!=nil{return e}
+  fmt.Println("B102_NATIVE_DNS_AND_BUSINESS_PASS",mode)
+  return nil
+ }
  var probeErr error
  if boundary{
   for _,probe:=range []string{"mtu-minus","mtu-edge"}{

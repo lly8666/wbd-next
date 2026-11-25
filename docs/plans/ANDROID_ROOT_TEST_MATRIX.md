@@ -1,3 +1,7 @@
+## B102｜正常工况优先（当前）
+
+B101 `0ff84b89e71ae023d048c17d4990a6182fd1badd` [Action 45532853139](https://github.com/lly8666/wbd-next/actions/runs/45532853139) 20/0/6；12/12 Game共同MTU、579线上包0超限、4/4实际crash Restore、8/8 cleanup，Linux DNS6 NAT PASS（非Android NAT）。用户明确停止罕见工况防御性扩测。B102 8guest：11场真实TLS后原M4物理UDP DNS/原App TCP DNS、CN/隧道DNS发送及普通业务；3真实UID场各4次普通TCP/UDP直接业务及Stop恢复。详见 [B102 devlog](../devlog/android-root-probe/20261125-b102-ordinary-usage.md)。远端双向、READY切网/后台、热点、实体ARM64仍待验。
+
 ## B101｜异构Game共同预算 / crash recovery / DNS6（当前）
 
 B100 `471f9406b09d581e61ddc0c7e6f88cfc58b6e124` [Action 45530309154](https://github.com/lly8666/wbd-next/actions/runs/45530309154) 11/9/6；mixed 4/8（末lane小MSS PASS，首lane小MSS失败）；crash真实exit86、原Restore因CI su引号未执行；Bionic IPv6 relay UDP/TCP PASS，Host DNS6 attr29失败。B101同原Rust oracle在TLS前汇总最小lane MSS到共同offer，认证后仅一次TUN MTU，12 mixed含中间/双低MSS；四crash修读回，DNS6 exact dport mask兼容，8guest+1host并行。详见 [B101 devlog](../devlog/android-root-probe/20261125-b101-group-cold-budget-recovery.md)。无remote E2E/READY自动恢复新证据。

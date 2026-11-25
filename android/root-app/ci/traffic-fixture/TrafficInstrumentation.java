@@ -69,6 +69,52 @@ public final class TrafficInstrumentation extends Instrumentation {
         try{
             String probe=args.getString("uid_probe","");
             if(!probe.isEmpty()||!args.getString("dns_probe","").isEmpty())enterForeground();
+            if("daily-direct".equals(probe)){
+                String report=TrafficProbe.run(args.getString("host"),18080,8,1);
+                if(!report.contains("tcp_ok=8 udp_ok=8 samples=8")||!report.contains("echo_bytes_each_direction=1048576"))
+                    throw new IllegalStateException("ordinary direct traffic mismatch: "+report);
+                result.putString("report","uid_probe_sent="+Process.myUid()+" foreground=1 "+report);
+                finishProbe(Activity.RESULT_OK,result);return;
+            }
+            if("daily4".equals(args.getString("dns_probe"))){
+                String transport=args.getString("dns_transport");
+                java.io.ByteArrayOutputStream raw=new java.io.ByteArrayOutputStream();
+                java.io.DataOutputStream query=new java.io.DataOutputStream(raw);
+                query.writeShort(0x6972);query.writeShort(0x0100);query.writeShort(1);
+                query.writeShort(0);query.writeShort(0);query.writeShort(0);
+                for(String label:args.getString("dns_name").split("\\.")){
+                    byte[] b=label.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+                    query.writeByte(b.length);query.write(b);
+                }
+                query.writeByte(0);query.writeShort(1);query.writeShort(1);
+                byte[] q=raw.toByteArray(),answer=null;
+                java.net.InetSocketAddress dest=new java.net.InetSocketAddress("192.0.2.53",53);
+                if("tcp".equals(transport)){
+                    try(java.net.Socket s=new java.net.Socket()){
+                        s.connect(dest,4000);s.setSoTimeout(4000);
+                        java.io.DataOutputStream out=new java.io.DataOutputStream(s.getOutputStream());
+                        out.writeShort(q.length);out.write(q);out.flush();
+                        java.io.DataInputStream in=new java.io.DataInputStream(s.getInputStream());
+                        answer=new byte[in.readUnsignedShort()];in.readFully(answer);
+                    }
+                }else{
+                    try(java.net.DatagramSocket s=new java.net.DatagramSocket()){
+                        s.connect(dest);s.setSoTimeout(4000);
+                        s.send(new java.net.DatagramPacket(q,q.length,dest));
+                        if(!"send".equals(transport)){
+                            java.net.DatagramPacket a=new java.net.DatagramPacket(new byte[512],512);
+                            s.receive(a);
+                            answer=java.util.Arrays.copyOf(a.getData(),a.getLength());
+                        }
+                    }
+                }
+                if(!"send".equals(transport)&&(answer==null||answer.length<16||answer[0]!=q[0]||answer[1]!=q[1]||
+                   (answer[2]&128)==0||answer[7]!=1||
+                   !java.util.Arrays.equals(java.util.Arrays.copyOfRange(answer,answer.length-4,answer.length),new byte[]{(byte)192,0,2,55})))
+                    throw new IllegalStateException("actual DNS answer mismatch");
+                result.putString("report","dns_probe_uid="+Process.myUid()+" foreground=1 daily_dns="+transport);
+                finishProbe(Activity.RESULT_OK,result);return;
+            }
             if("explicit6".equals(args.getString("dns_probe"))){
                 String localPort=args.getString("dns_loopback_port","");
                 boolean loopback=!localPort.isEmpty();

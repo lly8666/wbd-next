@@ -38,6 +38,12 @@ for f in "$n/wiring-specialty-amd64" "$n/libwbd_engine-amd64.so" out/android-roo
 echo B91_TEST_STAGE_PASS
 shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
+ daily-normal) scenes=(daily-dns-physical-normal daily-dns-cn-normal daily-dns-tunnel-normal);;
+ daily-fixed) scenes=(daily-dns-physical-fec-fixed);;
+ daily-auto) scenes=(daily-dns-physical-fec-auto);;
+ daily-game2) scenes=(daily-dns-physical-game2 daily-dns-physical-game2-fixed daily-dns-tunnel-game2);;
+ daily-game4) scenes=(daily-dns-physical-game4 daily-dns-physical-game4-fixed daily-dns-cn-game4);;
+ daily-route-*) scenes=("$shard");;
  mixed-*) m="${shard#mixed-}";scenes=("mixed-$m-lowfirst" "mixed-$m-lowlast")
   if [[ "$m" == game4* ]];then scenes+=("mixed-$m-lowmiddle" "mixed-$m-two");fi;;
  crash-*) scenes=("$shard");;
@@ -63,20 +69,22 @@ esac
 : >"$out/results.tsv"
 dns_pid=""
 uid_pid=""
+tcp_pids=()
 local_aliases=()
 cleanup(){
  if [[ -n "$uid_pid" ]];then kill "$uid_pid" 2>/dev/null || true;wait "$uid_pid" 2>/dev/null || true;fi
  if [[ -n "$dns_pid" ]];then sudo -n kill "$dns_pid" 2>/dev/null || true;wait "$dns_pid" 2>/dev/null || true;fi
+ for pid in "${tcp_pids[@]}";do kill "$pid" 2>/dev/null || true;wait "$pid" 2>/dev/null || true;done
  for address in "${local_aliases[@]}";do sudo -n ip addr del "$address/32" dev lo || true;done
 }
 trap cleanup EXIT
 # Real local DNS fixture; a failure cannot block independent native tests.
-if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == dns6-relay || "$shard" == crash-dns || "$shard" == all ]];then
+if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == dns6-relay || "$shard" == crash-dns || "$shard" == daily-normal || "$shard" == daily-fixed || "$shard" == daily-auto || "$shard" == daily-game2 || "$shard" == daily-game4 || "$shard" == all ]];then
  sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
  dns_pid=$!
  for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
 fi
-if [[ "$shard" == route-* || "$shard" == routes || "$shard" == crash-* || "$shard" == all ]];then
+if [[ "$shard" == route-* || "$shard" == routes || "$shard" == crash-* || "$shard" == daily-route-* || "$shard" == all ]];then
  # The host owns these exact /32s ONLY during this isolated runner test.
  # No request can be intentionally sent to the external CN endpoint.
  for address in 192.0.2.1 1.0.1.1;do
@@ -87,6 +95,14 @@ if [[ "$shard" == route-* || "$shard" == routes || "$shard" == crash-* || "$shar
  timeout 300s python3 -u android/root-app/ci/b94-uid-echo.py >"$out/uid-host.log" 2>&1 &
  uid_pid=$!
  for i in $(seq 1 20);do grep -Fq B94_UID_FIXTURE_READY "$out/uid-host.log" && break;sleep .2;done
+fi
+if [[ "$shard" == daily-route-* ]];then
+ for address in 192.0.2.1 1.0.1.1;do
+  timeout 290s python3 -u android/root-app/ci/traffic-fixture/server.py --bind "$address" --port 18080 >"$out/tcp-$address.log" 2>&1 &
+  tcp_pids+=("$!")
+  for i in $(seq 1 25);do grep -Fq "WBD test echo TCP+UDP" "$out/tcp-$address.log" && break;sleep .2;done
+  grep -Fq "WBD test echo TCP+UDP" "$out/tcp-$address.log"
+ done
 fi
 failed=0
 record(){ printf '%s\t%s\n' "$1" "$2" >>"$out/results.tsv";echo "B92_RESULT $shard $1 $2";if [[ "$2" != PASS ]];then failed=1;fi; }
@@ -143,6 +159,11 @@ for scene in "${scenes[@]}";do
  fi
  if [[ "$scene" == system-physical || "$scene" == system-physical-tc || "$scene" == system-cn || "$scene" == system-dns6 ]] && ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
  limit=100s
+ if [[ "$scene" == daily-route-* ]];then limit=260s;fi
+ if [[ "$scene" == daily-dns-* ]];then
+  limit=100s
+  if ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
+ fi
  if [[ "$scene" == route-* ]];then
   limit=240s
   if ! grep -Fq B94_UID_FIXTURE_READY "$out/uid-host.log";then record "$scene" ENV_BLOCKED;continue;fi
@@ -150,6 +171,20 @@ for scene in "${scenes[@]}";do
  status=FAIL
  if invoke "$limit" "$scene" >"$out/$scene.log" 2>&1;then
   case "$scene" in
+   daily-route-*) if grep -Fq "B102_DAILY_ROUTE_PASS $scene" "$out/$scene.log" &&
+       [[ "$(grep -c B102_DIRECT_TCP_UDP_PASS "$out/$scene.log")" == 4 ]];then status=PASS;fi ;;
+   daily-dns-*) if grep -Fq "B102_DAILY_DNS_PASS $scene" "$out/$scene.log" &&
+       grep -Fq B102_NATIVE_DNS_AND_BUSINESS_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_UID_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_TUN_CLOSE_PASS "$out/$scene.log";then
+        status=PASS
+        case "$scene" in
+          daily-dns-physical-*) for stage in B102_NATIVE_DNS_UDP_ROUNDTRIP_PASS B102_APP_DNS_TCP_ROUNDTRIP_PASS;do grep -Fq "$stage" "$out/$scene.log" || status=FAIL;done;;
+          daily-dns-cn-*) for stage in B102_NATIVE_DNS_UDP_ROUNDTRIP_PASS B102_APP_DNS_TCP_ROUNDTRIP_PASS B102_NATIVE_DNS_TUNNEL_TX_PASS;do grep -Fq "$stage" "$out/$scene.log" || status=FAIL;done;;
+          daily-dns-tunnel-*) grep -Fq B102_NATIVE_DNS_TUNNEL_TX_PASS "$out/$scene.log" || status=FAIL;;
+        esac
+     fi ;;
    system-*) if grep -Fq "B91_SYSTEM_DNS_QUERY_PASS $scene" "$out/$scene.log" && grep -Fq "B91_SYSTEM_DNS_STOP_PASS $scene" "$out/$scene.log";then status=PASS;fi ;;
    dns6-relay) if grep -Fq B100_DNS6_RELAY_PASS "$out/$scene.log" &&
        grep -Fq B100_DNS6_RELAY_STOP_PASS "$out/$scene.log" &&
@@ -180,6 +215,10 @@ for scene in "${scenes[@]}";do
        grep -Fq "B91_NATIVE_STOP_PASS $scene" "$out/$scene.log" &&
        grep -Fq "B91_NATIVE_TUN_CLOSE_PASS $scene" "$out/$scene.log";then status=PASS;fi ;;
   esac
+ fi
+ if [[ "$scene" == daily-dns-physical-* || "$scene" == daily-dns-cn-* ]];then
+  name=system.wbd-b91.test;if [[ "$scene" == daily-dns-cn-* ]];then name=cn.wbd-b91.test;fi
+  for proto in UDP TCP;do grep -Fq "B90_FIXTURE $name $proto" "$out/dns-host.log" || status=FAIL;done
  fi
  if [[ "$scene" == system-physical ]] && ! grep -Fq "B90_FIXTURE system.wbd-b91.test" "$out/dns-host.log";then status=FAIL;fi
  if [[ "$scene" == dns6-relay ]];then
@@ -232,10 +271,13 @@ wire_stages={}
 recovery_stages={}
 dns6_relay={}
 mixed_mss={}
+daily={}
 for scene in rows:
  f=p/(scene+".log")
  if not f.exists():continue
  t=f.read_text(errors="replace")
+ if scene.startswith("daily-"):
+  daily[scene]={"physical_dns_udp":"PASS" if "B102_NATIVE_DNS_UDP_ROUNDTRIP_PASS " in t else "NOT_RUN_OR_NOT_PROVEN","physical_dns_tcp":"PASS" if "B102_APP_DNS_TCP_ROUNDTRIP_PASS " in t else "NOT_RUN_OR_NOT_PROVEN","tunnel_dns_tx":"PASS" if "B102_NATIVE_DNS_TUNNEL_TX_PASS " in t else "NOT_RUN_OR_NOT_PROVEN","direct_tcp_udp_trials":t.count("B102_DIRECT_TCP_UDP_PASS "),"remote_m4":"NOT_PROVEN"}
  if scene.startswith("crash-"):
   recovery_stages[scene]={"exit86":"PASS" if "B100_CRASH_PROCESS_EXIT "+scene+" 86" in t else "NOT_PROVEN","durable_readback":"PASS" if "B101_CRASH_DURABLE_READBACK_PASS" in t else "NOT_PROVEN","recover":"PASS" if "B100_RECOVER_PASS " in t else "NOT_PROVEN","idempotent":"PASS" if "B100_CRASH_IDEMPOTENT_RESTORE_PASS " in t else "NOT_PROVEN"}
  if scene=="dns6-relay":
@@ -255,7 +297,7 @@ for scene in ("normal","fec-fixed","fec-auto","game2","game2-fixed","game4","gam
  if not f.exists():continue
  t=f.read_text(errors="replace")
  native[scene]={"cold_association":"PASS" if "B91_ORIGINAL_ASSOCIATIONS_ESTABLISHED "+scene in t else "NOT_PROVEN","authenticated_native_started":"PASS" if "B91_NATIVE_M4_STARTED "+scene in t else "NOT_PROVEN","native_stop":"PASS" if "B91_NATIVE_STOP_PASS "+scene in t else "NOT_PROVEN","ordinary_app_tx":"PASS" if "B91_NATIVE_APP_TX_PASS "+scene in t else "NOT_PROVEN","java_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" 1\n" in t else "NOT_PROVEN","inet4_tx":"PASS" if "B95_NATIVE_SOCKET_TX_PASS "+scene+" send4\n" in t else "NOT_PROVEN","fec_source_parity":"PASS" if "B97_FEC_SOURCE_PARITY_PASS "+scene+" " in t else "NOT_PROVEN"}
-r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"mtu_stages":mtu_stages,"wire_stages":wire_stages,"mixed_mss":mixed_mss,"recovery_stages":recovery_stages,"dns6_relay":dns6_relay,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
+r={"source":os.environ["GITHUB_SHA"],"shard":os.environ["B92_SHARD"],"native_stages":native,"uid_stages":uid_stages,"dns_stages":dns_stages,"mtu_stages":mtu_stages,"wire_stages":wire_stages,"mixed_mss":mixed_mss,"daily":daily,"recovery_stages":recovery_stages,"dns6_relay":dns6_relay,"scope":"Android real kernel/Resolver and real original Go TLS+native M4; cold association frames exchanged in-process, no remote WBD M4 peer", "scenes":rows,"kernel_cleanup":"PASS" if os.environ["B91_CLEAN"]=="1" else "NOT_PROVEN","physical_network_lifecycle":"NOT_RUN","peer_raw_syn_tls_m4":"NOT_PROVEN","arm64_physical":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(r,indent=2)+"\n")
 print(json.dumps(r))
 PY
