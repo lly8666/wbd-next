@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "6f61a0fa3af3f924751614f5c1bcf03b1948ccbf",
+  "result": "FIXTURE_PRE_BUSINESS_FAILURE",
+  "artifact_verified": true,
+  "scope": "All nine native jobs built original product and failed at first server readiness; independently inspected three original ZIPs x86 clean and x86/ARM functional. No performance or functional legs completed.",
+  "runs": [
+    45551606908,
+    45551606793,
+    45551606489,
+    45551606562,
+    45551606464,
+    45551606459,
+    45551606461,
+    45551606508
+  ],
+  "reviewed_artifacts": [
+    14993987095,
+    14994660826,
+    14994132142
+  ],
+  "first_error": "invalid route-key-hex-file: secret must be a regular owner-only file",
+  "cause": "New H2421 fixture wrote route-key.hex and users.json with default permissions instead of existing 0600 contract.",
+  "product_changed": false
+}

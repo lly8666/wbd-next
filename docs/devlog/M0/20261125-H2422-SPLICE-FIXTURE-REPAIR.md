@@ -1,0 +1,7 @@
+# H2422
+
+H2422 correct H2421 fixture (not product): create route-key/users files with 0600 and key.pem 0600, preserve actual early process log and command failure, verify TPROXY cleanup. All nine original H2421 jobs built and failed pre-business; three raw artifacts inspected. To avoid repeating identical failure on eight parallel actions, build once per ISA and gate the x86 clean ABBA measurement on successful functional smoke in the same job; ARM functional only. No changes to proxy, wire, CC, or product default. Weak-net comparison resumes only after this fixture proves actual business. Historical H2418 both TUN queue_full_drops server2857/client1692.
+
+```feature-impact
+{"kind":"none","ids":[],"reason":"Fix test fixture credential file mode and smoke-gate measurement; production code unchanged."}
+```

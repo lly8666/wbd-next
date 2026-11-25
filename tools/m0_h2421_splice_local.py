@@ -3,7 +3,7 @@
 Each invocation one scenario, one VM, sequential four legs. Functional is separate.
 """
 import hashlib,json,os,pathlib,re,signal,subprocess,sys,time,statistics
-O=pathlib.Path("h2421-out").resolve(); O.mkdir(exist_ok=True)
+O=pathlib.Path(os.environ.get("H2421_OUT","h2421-out")).resolve(); O.mkdir(exist_ok=True)
 ROOT=pathlib.Path("linux-plan029-public-bundle").resolve()
 C,R,S,T="h21client","h21router","h21server","h21origin"
 N=(C,R,S,T)
@@ -13,18 +13,24 @@ LOSS={"clean":0,"loss1":1,"loss5":5,"congestion":0,"functional":0}[SCENE]
 DELAY=0 if SCENE in ("clean","functional") else 200
 RATE=100 if SCENE=="congestion" else 0
 def run(*args):
-    return subprocess.check_output(args,stderr=subprocess.STDOUT,text=True)
+    try:return subprocess.check_output(args,stderr=subprocess.STDOUT,text=True)
+    except subprocess.CalledProcessError as e:
+        print(f"COMMAND_FAILED {args[0]} rc={e.returncode}: {e.output}",file=sys.stderr,flush=True)
+        raise
 def ns(n,*args):return run("ip","netns","exec",n,*args)
 def save(p,d):p.write_text(json.dumps(d,indent=2)+"\n")
 def spawn(n,path,*args):
     with path.open("w") as f:
-        return subprocess.Popen(["ip","netns","exec",n,*map(str,args)],stdout=f,stderr=subprocess.STDOUT)
+        p=subprocess.Popen(["ip","netns","exec",n,*map(str,args)],stdout=f,stderr=subprocess.STDOUT)
+    p.fixture_log=path
+    return p
 def until(p,pred):
     for i in range(240):
-        if p.poll() is not None:raise RuntimeError("early exit "+str(p.returncode))
+        if p.poll() is not None:
+            raise RuntimeError(f"early exit {p.returncode}: {p.fixture_log}\n{p.fixture_log.read_text()[-3500:]}")
         if pred():return
         time.sleep(.25)
-    raise RuntimeError("readiness timeout")
+    raise RuntimeError(f"readiness timeout: {p.fixture_log}\n{p.fixture_log.read_text()[-3500:]}")
 def stop(p):
     if p and p.poll() is None:
         p.send_signal(signal.SIGTERM)
@@ -147,6 +153,9 @@ def leg(i,k):
         sl=(d/"server.log").read_text();cl=(d/"client.log").read_text()
         assert "V4_PUBLIC_SHARED_TUN_STOP" in sl and "reader_joined=1" in sl
         assert "V4_PUBLIC_SERVER_MASQUERADE_STOP_DRAINED" in sl
+        (d/"after-stop-mangle.txt").write_text(ns(S,"iptables","-t","mangle","-S"))
+        (d/"after-stop-routes.txt").write_text(ns(S,"ip","rule","show"))
+        assert "TPROXY" not in (d/"after-stop-mangle.txt").read_text()
         assert "V4_PUBLIC_SHARED_TUN_STOP" in cl or "V4_PUBLIC_NATIVE_STOP_DRAINED" in cl
         copies=[int(x) for x in re.findall(r"WBD_TCP_SPLICE_DONE .*?down=(\d+)",sl)]
         if cc:
@@ -159,13 +168,16 @@ def leg(i,k):
         return row
     finally:
         shape(False)
-        for p in (app,client,server):stop(p)
+        for p in (app,client,server):
+            if p and p.poll() is None:stop(p)
 try:
     make()
     # Fixture-only credential; not a user secret, omit from uploaded evidence.
     (O/"route-key.hex").write_text(hashlib.sha256(("H2421"+os.environ["GITHUB_RUN_ID"]).encode()).hexdigest()+"\n")
     (O/"users.json").write_text(json.dumps({"bench":"H2421-ONLY"}))
+    for name in ("route-key.hex","users.json"):(O/name).chmod(0o600)
     run("openssl","req","-x509","-newkey","rsa:2048","-sha256","-days","1","-nodes","-keyout",str(O/"key.pem"),"-out",str(O/"cert.pem"),"-subj","/CN=wbd-h2228.example.test","-addext","subjectAltName=DNS:wbd-h2228.example.test")
+    (O/"key.pem").chmod(0o600)
     baseline=None if SCENE=="functional" else direct("pre-direct")
     rows=[leg(i,k) for i,k in enumerate(ORDER)]
     after=None if SCENE=="functional" else direct("post-direct")
