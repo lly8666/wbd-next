@@ -272,7 +272,7 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
   if len(w)<2||strings.Split(strings.TrimSuffix(w[1],":"),"@")[0]!=ipv6CarrierIface{continue}
   if x.link||!hasPair(w,"alias",ipv6CarrierMarker)||!hasPair(w,"local",p.Local4)||
     !(hasPair(w,"remote",p.remote4())||p.Server&&hasPair(w,"remote","0.0.0.0")){
-   return x,fmt.Errorf("foreign SIT identity")
+   return x,fmt.Errorf("foreign SIT identity: %s",line)
   }
   // The exact marker and tuple survive partial installation or a dead
   // lower TUN. Readiness (6rd, lower device, MTU) is required to publish,
@@ -417,9 +417,15 @@ func NewIPv6CarrierBatch(ip,fw4,fw6 Runner,batch func([][]string)error,path stri
  for _,v:=range x.rows{if v{return fail(fmt.Errorf("unowned SIT rule"))}}
  if e=writeIPv6Carrier(path,p);e!=nil{return fail(e)}
  rollback:=func(e error)(*IPv6Owner,error){return fail(errors.Join(e,s.remove(p)))}
- if _,e=ip("link","add","name",ipv6CarrierIface,"alias",ipv6CarrierMarker,"type","sit",
+ if _,e=ip("link","add","name",ipv6CarrierIface,"type","sit",
    "local",p.Local4,"remote",p.remote4(),"dev",p.Tun,"ttl","inherit","nopmtudisc",
    "6rd-prefix",IPv6CarrierPrefix,"6rd-relay_prefix",p.relay().String());e!=nil{return rollback(e)}
+ // Linux RTM_NEWLINK create does not apply IFLA_IFALIAS. Set it on the
+ // exact newly created interface before the existing owner readback.
+ if _,e=ip("link","set","dev",ipv6CarrierIface,"alias",ipv6CarrierMarker);e!=nil{
+  _,delErr:=ip("link","del","dev",ipv6CarrierIface)
+  return rollback(errors.Join(e,delErr))
+ }
  if _,e=ip("link","set","dev",ipv6CarrierIface,"mtu",strconv.Itoa(p.MTU),"up");e!=nil{return rollback(e)}
  if _,e=ip("-6","addr","add",p.local6()+"/128","dev",ipv6CarrierIface,"nodad","noprefixroute");e!=nil{return rollback(e)}
  if e=s.changeAll(p.commands(),nil,true);e!=nil{return rollback(e)}

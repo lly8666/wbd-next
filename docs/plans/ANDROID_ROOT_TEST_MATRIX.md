@@ -1,3 +1,7 @@
+## B105｜普通选项与实际 Wi-Fi 恢复（当前）
+
+B104 `968bd6509ca60d42bee21590180232e8bdc764d1` [Action 45543122668](https://github.com/lly8666/wbd-next/actions/runs/45543122668) 14/1/7；IPv4真实下游转发/DNS/Stop与API35/36 UI配置持久化PASS；IPv6 SIT identity失败。B105冷态独立设置alias，真实IPv6重验；7 Android模式常用AES/flows/outer/Health30及系统Resolver+活跃M4；另1 guest真实Wi-Fi关闭、native scope invalid及新handle显式重连。详见 [B105 devlog](../devlog/android-root-probe/20261125-b105-options-sit-network.md)。无远端M4 RX或生产READY自动恢复结论。
+
 ## B104｜正常工况：热点转发、IPv6承载、UI配置保存（当前）
 
 B103 `30a78c44a1998b76f1a9c6623596d376966dc8f7` [Action 45538321422](https://github.com/lly8666/wbd-next/actions/runs/45538321422) 21/0/6；9/9同进程连接Stop/物理恢复，15/15同socket持续DNS/Activity切换，7/7 Linux原协议混合TCP/UDP scoped PASS。B104 2个真实Linux内核netns组件任务（IPv4下游SNAT/CIDR直连/DNS/Stop，IPv6双SIT owner及普通UID/下游业务/DNS/Stop），2个stock Android API35/36正式APK UI两配置保存、重开载入。详见 [B104 devlog](../devlog/android-root-probe/20261125-b104-forwarding-ui.md)。不冒称实体热点、Android远端RX、生产READY自动重连或手机性能。

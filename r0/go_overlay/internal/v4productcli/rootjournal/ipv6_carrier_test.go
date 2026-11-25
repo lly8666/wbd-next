@@ -24,16 +24,17 @@ func testIPv6Carrier(t *testing.T,tether bool,appDNS ...bool){
   if server{p.Server=true;p.Local4=p.Gateway4;p.Egress="eth0";p.UIDs=nil}else if tether{p.Downstream="ap0";p.Downstream6=[]string{"2001:db8:1234::1/64","fd12:3456:789a::1/64"};p.DirectCIDRs=[]string{"2001:db8:1234::/64","fd12:3456::/48","fe80::/10"};p.DownstreamDNSPorts=[]int{43501,43502}}
   if !server&&len(appDNS)!=0&&appDNS[0]{p.AppDNSPort=43500;p.AppDNSTCP=tether}
   if !p.valid(){t.Fatal("valid carrier refused",p)}
-  cmds:=p.commands();present:=make([]bool,len(cmds));var link,addr bool
+  cmds:=p.commands();present:=make([]bool,len(cmds));var link,addr,alias bool
   ip:=func(a ...string)(string,error){
    key:=strings.Join(a," ")
    switch key{
    case "-d -o link show":
-    if link{return fmt.Sprintf("9: wbd_sit0@%s: <UP> mtu 1280 alias %s sit remote %s local %s 6rd-prefix %s 6rd-relay_prefix %s",p.Tun,ipv6CarrierMarker,p.remote4(),p.Local4,IPv6CarrierPrefix,p.relay()),nil};return "",nil
+    if link{marker:="";if alias{marker="alias "+ipv6CarrierMarker};return fmt.Sprintf("9: wbd_sit0@%s: <UP> mtu 1280 %s sit remote %s local %s 6rd-prefix %s 6rd-relay_prefix %s",p.Tun,marker,p.remote4(),p.Local4,IPv6CarrierPrefix,p.relay()),nil};return "",nil
    case "-6 -o addr show":if addr{return "9: wbd_sit0 inet6 "+p.local6()+"/128 scope global nodad",nil};return "",nil
-   case "link del dev wbd_sit0":link=false;addr=false;return "",nil
+   case "link del dev wbd_sit0":link=false;addr=false;alias=false;return "",nil
    }
    if strings.HasPrefix(key,"link add name wbd_sit0 "){link=true;return "",nil}
+   if key=="link set dev wbd_sit0 alias "+ipv6CarrierMarker{alias=true;return "",nil}
    if strings.HasPrefix(key,"link set dev wbd_sit0 "){return "",nil}
    if strings.HasPrefix(key,"-6 addr add "+p.local6()+"/128 "){addr=true;return "",nil}
    if len(a)>2&&a[2]=="show"{

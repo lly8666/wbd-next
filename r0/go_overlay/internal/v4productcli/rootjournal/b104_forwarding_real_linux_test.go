@@ -36,6 +36,9 @@ func(x *b104Topology) runner(ns,tool string)Runner{
  return func(args ...string)(string,error){
   b,e:=exec.Command("ip",append([]string{"netns","exec",ns,tool},args...)...).CombinedOutput()
   if e!=nil{return string(b),fmt.Errorf("%s %v: %w: %s",tool,args,e,b)}
+  if tool=="ip"&&strings.Join(args," ")=="-d -o link show"{
+   for _,line:=range strings.Split(string(b),"\n"){if strings.Contains(line,"wbd_sit0"){x.t.Log("B105_SIT_KERNEL_READBACK",ns,line)}}
+  }
   return string(b),nil
  }
 }

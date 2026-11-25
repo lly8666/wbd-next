@@ -99,7 +99,7 @@ func b91WaitTX(ctx context.Context,read func()(uint64,error),before uint64)error
  }
  return fmt.Errorf("original Android native TX did not increase")
 }
-func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary,steady bool,peerMSSes []uint16,
+func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary,steady,options,networkSwitch bool,cipher uint8,peerMSSes []uint16,
  route func(string)(func()error,error),send func(string)error)(ret error){
  cert,roots,e:=b91Cert();if e!=nil{return e}
  routeKey:=[]byte("0123456789abcdef0123456789abcdef")
@@ -111,7 +111,7 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  policyMode:="off";parity:=0
  if n>1||normal.FECMode==FecV2Fixed{policyMode="fixed";parity=4}
  if n==1&&normal.FECMode==FecV2Auto{policyMode="auto"}
- policy,e:=PolicyForClientWithInitialAndCipher(n,policyMode,parity,4,20,CipherChaCha);if e!=nil{return e}
+ policy,e:=PolicyForClientWithInitialAndCipher(n,policyMode,parity,4,20,cipher);if e!=nil{return e}
  pairs:=make([]*b91Pair,0,n);assocs:=make([]*faketcp.ClientAssociation,0,n)
  defer func(){for _,p:=range pairs{p.close()}}()
  for i:=0;i<n;i++{
@@ -142,11 +142,22 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  var pulse func()(V4PublicLoopPulse,error)
  // Physical and tunnel DNS readbacks are existing product ABI fields.
  var dnsRead func()([4]uint64,error)
+ var padRead func()(string,uint64,uint64,error)
+ var outerRead func()(bool,error)
+ checkCold:=func(s *V4ClientSession)error{
+  cold,e:=s.ColdSnapshot();if e!=nil{return e}
+  if cold.Cipher()!=cipher||cold.StartupPaddingMode()!=normal.StartupPaddingMode{return fmt.Errorf("authenticated options mismatch cipher=%d padding=%d",cold.Cipher(),cold.StartupPaddingMode())}
+  fmt.Println("B105_AUTH_OPTIONS_PASS",mode,cold.Cipher(),cold.StartupPaddingMode())
+  return nil
+ }
  if n==1{
   p,e:=NewV4LinuxClientProduct(normal);if e!=nil{return e}
   s,e:=p.ConnectAuthenticatedPeer(ctx,assocs[0],cfg);if e!=nil{return e}
   closeProduct=p.Close
   defer func(){stop:=closeProduct();ret=errors.Join(ret,stop);if stop==nil{fmt.Println("B91_NATIVE_STOP_PASS",mode)}}()
+  if options{if e=checkCold(s);e!=nil{return e}}
+  padRead=p.OriginalNormalStartupPaddingCounters
+  outerRead=func()(bool,error){v,e:=p.OriginalOuterCounters();return v.OuterRepairEnabled,e}
   lease,e=s.AuthenticatedLeaseIPv4();if e!=nil{return e}
   if normal.FECMode!=FecV2Off{
    f,e:=p.OriginalFECReadback()
@@ -178,6 +189,8 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
     fmt.Printf("B101_GAME_AUTH_RECORD_PASS lane=%d client=%d server=%d\n",i+1,cl,sl)
    }
   }
+  if options{for _,s:=range p.sessions{if e=checkCold(s);e!=nil{return e}}}
+  outerRead=func()(bool,error){v,e:=p.OriginalM4Counters();return v.OuterEnabled,e}
   lanes,ready,e:=p.OriginalNativeState()
   if e!=nil||!ready||lanes!=uint32(n){return fmt.Errorf("real Game native group state %d %t %v",lanes,ready,e)}
   if game.GameFecEnabled{if _,e=p.OriginalGameFecCounters();e!=nil{return e}}
@@ -190,6 +203,21 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  fmt.Println("B91_NATIVE_M4_STARTED",mode,"lanes",n,"actual_fixture_tls_lease",lease)
  undo,e:=route(lease);if e!=nil{return e};if undo==nil{return ErrAdmissionUnsupported}
  defer func(){e:=undo();ret=errors.Join(ret,e);if e==nil{fmt.Println("B91_NATIVE_UID_STOP_PASS",mode)}}()
+ if options{
+  enabled,e:=outerRead();if e!=nil||!enabled{return fmt.Errorf("original outer repair enable readback %t %v",enabled,e)}
+  fmt.Println("B105_OUTER_ENABLED_PASS",mode)
+  if e=send("options-resolver");e!=nil{return e}
+  fmt.Println("B105_SYSTEM_RESOLVER_WITH_M4_PASS",mode)
+  before,e:=tx();if e!=nil{return e}
+  if e=send("send4");e!=nil{return e}
+  if e=b91WaitTX(ctx,tx,before);e!=nil{return e}
+  if padRead!=nil{
+   name,records,bytes,e:=padRead();if e!=nil||name!="flows"{return fmt.Errorf("native startup padding readback %s %d %d %v",name,records,bytes,e)}
+   fmt.Println("B105_NATIVE_PADDING_READBACK",mode,name,records,bytes)
+  }
+  fmt.Println("B105_ORDINARY_BUSINESS_WITH_OPTIONS_PASS",mode)
+  return nil
+ }
  physicalDNS:=normal.AndroidPhysicalDNS||len(normal.AndroidCN8503Raw)>0
  tunnelDNS:=normal.AndroidTunnelDNS||len(normal.AndroidCN8503Raw)>0
  if physicalDNS||tunnelDNS{
@@ -225,6 +253,24 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
   if e=send("send4");e!=nil{return e}
   if e=b91WaitTX(ctx,tx,before);e!=nil{return e}
   fmt.Println("B102_NATIVE_DNS_AND_BUSINESS_PASS",mode)
+  if networkSwitch{
+   if pulse==nil{return fmt.Errorf("no original native scope readback")}
+   if e=send("network-down");e!=nil{return e}
+   deadline:=time.Now().Add(15*time.Second)
+   for time.Now().Before(deadline){
+    v,e:=pulse();if e!=nil{return e}
+    if v.PhysicalScopeInvalid{
+     fmt.Println("B105_NATIVE_PHYSICAL_SCOPE_INVALID_PASS")
+     return nil
+    }
+    // One ordinary application UDP attempt wakes the actual native TX
+    // worker; loss of the Network may also cause Android send failure.
+    // Do not infer native invalidation from that application error.
+    if e=send("send4");e!=nil{fmt.Println("B105_NETWORK_DOWN_APP_SEND",e)}
+    select{case <-ctx.Done():return ctx.Err();case <-time.After(time.Second):}
+   }
+   return fmt.Errorf("actual native physical scope invalidation not observed")
+  }
   return nil
  }
  var probeErr error

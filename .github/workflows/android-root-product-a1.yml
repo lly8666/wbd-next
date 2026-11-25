@@ -199,13 +199,13 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
   b104-forwarding-real-namespace:
-    if: contains(github.event.head_commit.message, '[android-forwarding-ui]')
+    if: contains(github.event.head_commit.message, '[android-forwarding-ui]') || contains(github.event.head_commit.message, '[android-options-sit]')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        family: [ipv4, ipv6]
+        family: ${{ fromJSON(contains(github.event.head_commit.message, '[android-options-sit]') && '["ipv6"]' || '["ipv4","ipv6"]') }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with: {persist-credentials: false}
@@ -563,7 +563,7 @@ jobs:
       max-parallel: 9
       matrix:
         # Focused B97 marker avoids replaying eight fully green B96 guests.
-        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-normal-cycle]') && '["cycle-normal","cycle-fec","cycle-game"]' || contains(github.event.head_commit.message, '[android-daily-usage]') && '["daily-normal","daily-fixed","daily-auto","daily-game2","daily-game4","daily-route-single","daily-route-group","daily-route-all"]' || contains(github.event.head_commit.message, '[android-recovery-mss-dns6]') && '["crash-single","crash-group","crash-all","crash-dns","mixed-game2","mixed-game2-fixed","mixed-game4","mixed-game4-fixed"]' || contains(github.event.head_commit.message, '[android-wire-uid-dns6]') && '["wire-normal","wire-fec-fixed","wire-fec-auto","wire-game2","wire-game2-fixed","wire-game4","wire-game4-fixed","route-single","route-group","route-all","dns6"]' || contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
+        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-options-sit]') && '["options-normal","options-fec-fixed","options-fec-auto","options-game2","options-game2-fixed","options-game4","options-game4-fixed","network-normal"]' || contains(github.event.head_commit.message, '[android-normal-cycle]') && '["cycle-normal","cycle-fec","cycle-game"]' || contains(github.event.head_commit.message, '[android-daily-usage]') && '["daily-normal","daily-fixed","daily-auto","daily-game2","daily-game4","daily-route-single","daily-route-group","daily-route-all"]' || contains(github.event.head_commit.message, '[android-recovery-mss-dns6]') && '["crash-single","crash-group","crash-all","crash-dns","mixed-game2","mixed-game2-fixed","mixed-game4","mixed-game4-fixed"]' || contains(github.event.head_commit.message, '[android-wire-uid-dns6]') && '["wire-normal","wire-fec-fixed","wire-fec-auto","wire-game2","wire-game2-fixed","wire-game4","wire-game4-fixed","route-single","route-group","route-all","dns6"]' || contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions: {contents: read, actions: read}

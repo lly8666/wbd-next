@@ -261,6 +261,17 @@ func RunAndroidSpecialtyCI(a []string)int{
  mtu,e:=strconv.Atoi(a[4]);if e!=nil{return 2}
  local,e:=netip.ParseAddr(a[5]);if e!=nil{return 2}
  scope:=dnsnative.PhysicalScope{NetworkHandle:handle,InterfaceName:a[2],IfIndex:index,MTU:mtu,LocalIPv4:local}
+ if a[0]=="network-normal"{
+  if scope.InterfaceName!="wlan0"{fmt.Println("B105_NETWORK_ENV_BLOCKED",scope.InterfaceName);return 3}
+  uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
+  if e=b91Native(scope,uid,a[0],1460,0,false,false,"");e!=nil{fmt.Println("B105_NETWORK_FAIL",e);return 1}
+  fmt.Println("B105_ACTIVE_SCOPE_STOP_PASS");return 0
+ }
+ if strings.HasPrefix(a[0],"options-"){
+  uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
+  if e=b91Native(scope,uid,a[0],1460,0,false,false,"");e!=nil{fmt.Println("B105_OPTIONS_FAIL",a[0],e);return 1}
+  fmt.Println("B105_OPTIONS_PASS",a[0]);return 0
+ }
  if strings.HasPrefix(a[0],"cycle-"){
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
   if e=b103Cycle(scope,uid,a[0]);e!=nil{fmt.Println("B103_CYCLE_FAIL",a[0],e);return 1}
@@ -441,6 +452,10 @@ func b103Cycle(scope dnsnative.PhysicalScope,uid int,scene string)error{
 }
 func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerCap uint16,boundary,wireWitness bool,mixedOrder string)(ret error){
  const dev="wbdb91m4"
+ networkSwitch:=mode=="network-normal"
+ if networkSwitch{mode="daily-dns-physical-normal"}
+ options:=strings.HasPrefix(mode,"options-")
+ mode=strings.TrimPrefix(mode,"options-")
  steady:=strings.HasPrefix(mode,"steady-")
  mode=strings.TrimPrefix(mode,"steady-")
  dnsScene:=""
@@ -462,6 +477,17 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
  case "game2","game2-fixed":c.gameLanes=2;c.gameFecEnabled=mode=="game2-fixed";c.gameFecProfile=6
  case "game4","game4-fixed":c.gameLanes=4;c.gameFecEnabled=mode=="game4-fixed";c.gameFecProfile=6
  default:return fmt.Errorf("invalid mode %s",mode)
+ }
+ cipher:=uint8(realityfront.CipherChaCha)
+ if options{
+  // One representative everyday configuration per mode, not a cross-product.
+  cipher=realityfront.CipherAES128
+  if mode=="fec-auto"||mode=="game2-fixed"||mode=="game4-fixed"{cipher=realityfront.CipherAES256}
+  c.startupPaddingMode=2
+  c.disableOuterRepair=false
+  c.androidNativeHealthSeconds=30
+  c.androidSystemDNS=true
+  dnsScene="physical"
  }
  if dnsScene!=""{
   c.androidPhysicalDNS=dnsScene=="physical"
@@ -524,14 +550,15 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
  normal:=realityfront.V4LinuxClientProductConfig{
   NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
   Tun:tun.f,TunName:dev,CleanupOwnedNetwork:func()error{return nil},ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
-  FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:true,OuterIPMTU:outer,HealthKeepaliveSeconds:15,HealthDeadAfterSeconds:90,
+  FECMode:c.fecMode,FECProfile:c.fecProfile,DisableOuterRepair:c.disableOuterRepair,StartupPaddingMode:c.startupPaddingMode,OuterIPMTU:outer,HealthKeepaliveSeconds:c.androidNativeHealthSeconds,HealthDeadAfterSeconds:90,
   AndroidTunnelDNS:c.androidTunnelDNS,AndroidTunnelDNSUpstream:c.androidTunnelDNSUpstream,
   AndroidPhysicalDNS:c.androidPhysicalDNS,AndroidPhysicalDNSUpstream:c.androidPhysicalDNSUpstream,AndroidCN8503Raw:cnWire}
  game:=realityfront.V4AndroidGameConfig{Lanes:c.gameLanes,GameFecEnabled:c.gameFecEnabled,GameFecProfile:c.gameFecProfile,
-  OuterIPMTU:outer,DisableOuterRepair:true,NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),
+  OuterIPMTU:outer,DisableOuterRepair:c.disableOuterRepair,StartupPaddingMode:c.startupPaddingMode,
+  Game4CopyStagger:options&&c.gameLanes==4,Game4CopyWideStagger:options&&c.gameLanes==4,NetworkInterface:c.rawInterface,NetworkIfIndex:uint32(scope.IfIndex),
   AndroidPhysicalNetworkHandle:c.androidNetworkHandle,AndroidPhysicalMTU:c.androidPhysicalMTU,
   Tun:tun.f,TunName:dev,ConfigureTunnelMTU:configureTunnelMTU(c,tun),ConfigureLeaseIPv4:configureAuthenticatedClientIPv4(tun),
-  HealthSeconds:15,PhysicalDNSUpstream:c.androidPhysicalDNSUpstream,PhysicalDNS:c.androidPhysicalDNS,
+  HealthSeconds:c.androidNativeHealthSeconds,PhysicalDNSUpstream:c.androidPhysicalDNSUpstream,PhysicalDNS:c.androidPhysicalDNS,
   TunnelDNS:c.androidTunnelDNS,TunnelDNSUpstream:c.androidTunnelDNSUpstream,CN8503Raw:cnWire}
  ctx,cancel:=context.WithTimeout(context.Background(),75*time.Second);defer cancel()
  route:=func(lease string)(func()error,error){
@@ -546,6 +573,15 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
   limit:=12*time.Second
   if probe=="daily-dns-steady"{limit=40*time.Second}
   qctx,qcancel:=context.WithTimeout(ctx,limit);defer qcancel()
+  if probe=="network-down"{
+   b,e:=exec.CommandContext(qctx,"/system/bin/svc","wifi","disable").CombinedOutput()
+   if e!=nil{return fmt.Errorf("actual wifi disable: %w %s",e,b)}
+   fmt.Println("B105_WIFI_DISABLE_REQUESTED")
+   return nil
+  }
+  if probe=="options-resolver"{
+   return b91Instrument(qctx,uid,"-e","dns_probe","system","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_name","system.wbd-b91.test","-e","expected_ip","192.0.2.55")
+  }
   if strings.HasPrefix(probe,"daily-dns-"){
    name:="system.wbd-b91.test";transport:="udp"
    if dnsScene=="cn"{name="cn.wbd-b91.test"}
@@ -564,13 +600,13 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
   }
   return b91Instrument(qctx,uid,"-e","uid_probe",probe)
  }
- if !wireWitness{return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,peerMSSes,route,send)}
+ if !wireWitness{return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,options,networkSwitch,cipher,peerMSSes,route,send)}
  captureLimit:=int(serverLimit)
  if mixedOrder!=""{captureLimit=int(expectedMSS)}
  stopCapture,e:=b99ObserveWire(scope,c.peerIP,outer,captureLimit,expectedMTU,int(c.gameLanes))
  if e!=nil{return e}
  defer func(){ret=errors.Join(ret,stopCapture())}()
- return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,peerMSSes,route,send)
+ return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,options,networkSwitch,cipher,peerMSSes,route,send)
 }
 
 // Independent CI-only AF_PACKET L3 witness. Unlike Rust counters this

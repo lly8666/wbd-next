@@ -38,6 +38,8 @@ for f in "$n/wiring-specialty-amd64" "$n/libwbd_engine-amd64.so" out/android-roo
 echo B91_TEST_STAGE_PASS
 shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
+ options-*) scenes=("$shard");;
+ network-normal) scenes=(network-normal);;
  cycle-*) scenes=("$shard");;
  daily-normal) scenes=(daily-dns-physical-normal daily-dns-cn-normal daily-dns-tunnel-normal);;
  daily-fixed) scenes=(daily-dns-physical-fec-fixed);;
@@ -73,6 +75,7 @@ uid_pid=""
 tcp_pids=()
 local_aliases=()
 cleanup(){
+ if [[ "$shard" == network-normal && "$iface" == wlan0 ]];then "$adb" shell svc wifi enable >/dev/null 2>&1 || true;fi
  if [[ -n "$uid_pid" ]];then kill "$uid_pid" 2>/dev/null || true;wait "$uid_pid" 2>/dev/null || true;fi
  if [[ -n "$dns_pid" ]];then sudo -n kill "$dns_pid" 2>/dev/null || true;wait "$dns_pid" 2>/dev/null || true;fi
  for pid in "${tcp_pids[@]}";do kill "$pid" 2>/dev/null || true;wait "$pid" 2>/dev/null || true;done
@@ -80,7 +83,7 @@ cleanup(){
 }
 trap cleanup EXIT
 # Real local DNS fixture; a failure cannot block independent native tests.
-if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == dns6-relay || "$shard" == crash-dns || "$shard" == daily-normal || "$shard" == daily-fixed || "$shard" == daily-auto || "$shard" == daily-game2 || "$shard" == daily-game4 || "$shard" == cycle-* || "$shard" == all ]];then
+if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == dns6-relay || "$shard" == crash-dns || "$shard" == daily-normal || "$shard" == daily-fixed || "$shard" == daily-auto || "$shard" == daily-game2 || "$shard" == daily-game4 || "$shard" == cycle-* || "$shard" == options-* || "$shard" == network-normal || "$shard" == all ]];then
  sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
  dns_pid=$!
  for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
@@ -130,6 +133,39 @@ clean=1
 if ! clean_kernel baseline;then clean=0;fi
 for scene in "${scenes[@]}";do
  if [[ "$clean" != 1 ]];then record "$scene" NOT_RUN;continue;fi
+ if [[ "$scene" == network-normal ]];then
+  status=FAIL
+  if [[ "$iface" != wlan0 ]];then record "$scene" ENV_BLOCKED;continue;fi
+  if ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
+  old_handle="$handle"
+  rc=0
+  invoke 95s network-normal >"$out/$scene.log" 2>&1 || rc=$?
+  "$adb" shell svc wifi enable >"$out/network-enable.txt" 2>&1
+  recovered=0
+  for _ in $(seq 1 30);do
+   "$adb" shell logcat -c
+   "$adb" shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step specialty_scope >/dev/null
+   sleep .5
+   fresh="$("$adb" shell logcat -d -s WBD_X86_CI_ORIGINAL:I '*:S' | tr -d '\r' | sed -n 's/.*B90_SCOPE //p' | tail -1)"
+   read -r new_handle new_iface new_index new_mtu new_local new_extra <<<"$fresh"
+   if [[ "$new_handle" =~ ^[0-9]+$ && "$new_handle" != "$old_handle" && "$new_iface" == wlan0 && "$new_index" =~ ^[0-9]+$ && "$new_mtu" =~ ^[0-9]+$ && "$new_local" =~ ^[0-9.]+$ && -z "$new_extra" ]];then
+    scope="$fresh";recovered=1;break
+   fi
+  done
+  if ! clean_kernel network-before-reconnect;then clean=0;fi
+  if [[ "$recovered" == 1 && "$clean" == 1 ]];then
+   echo "B105_NEW_PHYSICAL_NETWORK_PASS $old_handle $new_handle" >>"$out/$scene.log"
+   if invoke 80s daily-dns-physical-normal >>"$out/$scene.log" 2>&1 &&
+      grep -Fq B102_DAILY_DNS_PASS "$out/$scene.log";then
+    echo B105_MANUAL_NEW_NETWORK_RECONNECT_PASS >>"$out/$scene.log"
+    if [[ "$rc" == 0 ]] && grep -Fq B105_ACTIVE_SCOPE_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B105_NATIVE_PHYSICAL_SCOPE_INVALID_PASS "$out/$scene.log";then status=PASS;fi
+   fi
+  fi
+  if ! clean_kernel "$scene";then clean=0;status=FAIL;fi
+  cat "$out/$scene.log";record "$scene" "$status"
+  continue
+ fi
  if [[ "$scene" == crash-* ]];then
   status=FAIL
   code=0
@@ -176,6 +212,15 @@ for scene in "${scenes[@]}";do
  status=FAIL
  if invoke "$limit" "$scene" >"$out/$scene.log" 2>&1;then
   case "$scene" in
+   options-*) if grep -Fq "B105_OPTIONS_PASS $scene" "$out/$scene.log" &&
+       grep -Fq B105_AUTH_OPTIONS_PASS "$out/$scene.log" &&
+       grep -Fq B105_OUTER_ENABLED_PASS "$out/$scene.log" &&
+       grep -Fq B105_SYSTEM_RESOLVER_WITH_M4_PASS "$out/$scene.log" &&
+       grep -Fq B105_ORDINARY_BUSINESS_WITH_OPTIONS_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_UID_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_STOP_PASS "$out/$scene.log" &&
+       grep -Fq B91_NATIVE_TUN_CLOSE_PASS "$out/$scene.log" &&
+       grep -Fq "B90_FIXTURE system.wbd-b91.test" "$out/dns-host.log";then status=PASS;fi ;;
    cycle-*) if grep -Fq "B103_CYCLE_PASS $scene" "$out/$scene.log" &&
       [[ "$(grep -c B103_CYCLE_STOP_AND_PHYSICAL_PASS "$out/$scene.log")" == 3 ]] &&
       [[ "$(grep -c B91_NATIVE_STOP_PASS "$out/$scene.log")" == 3 ]] &&
