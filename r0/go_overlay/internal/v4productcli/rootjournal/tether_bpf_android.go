@@ -128,19 +128,6 @@ func tetherTCChange(h TetherBPFHook,add bool)error{
  }
  _,e:=tetherTCRequest(typ,flags,b);return e
 }
-func tetherXDPActive(indices map[int]bool)error{
- data,e:=syscall.NetlinkRIB(syscall.RTM_GETLINK,syscall.AF_UNSPEC);if e!=nil{return e}
- msgs,e:=syscall.ParseNetlinkMessage(data);if e!=nil{return e}
- for _,m:=range msgs{
-  if m.Header.Type!=syscall.RTM_NEWLINK||len(m.Data)<16{continue}
-  index:=int(tetherTC32(m.Data[4:8]));if !indices[index]{continue}
-  a,e:=tetherTCAttrs(m.Data[16:]);if e!=nil{return e}
-  if len(a[43])==0{continue}
-  x,e:=tetherTCAttrs(a[43]);if e!=nil{return e}
-  if len(x[2])!=1||x[2][0]!=0{return fmt.Errorf("XDP present or unreadable on tether interface")}
- }
- return nil
-}
 func androidTetherBPFIO(only map[string]bool)TetherBPFIO{
  return TetherBPFIO{
   Read:func()([]TetherBPFHook,error){

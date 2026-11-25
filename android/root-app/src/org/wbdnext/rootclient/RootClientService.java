@@ -701,6 +701,7 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_MODE_READBACK_MATCHED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_INTERFACE_FOUND);
+                    if(line.contains("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class="))
                     for(String stage:new String[]{"NETWORK","MODE","CLAT","PHYSICAL_DNS","BOOTSTRAP_DNS","CLAT_ROUTE","MTU"}){
                         if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class="+stage)){
                             coldFailure=stage;

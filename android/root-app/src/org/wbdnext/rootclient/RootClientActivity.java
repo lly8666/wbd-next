@@ -630,6 +630,7 @@ public final class RootClientActivity extends Activity {
                 if(!RootClientService.sessionOwnerActive&&!RootClientService.startDispatchPending.get()){
                     finishAndRemoveTask();return;
                 }
+                if(status!=null)setTextIfChanged(status,"正在断开并退出 · "+RootClientService.status);
                 ui.postDelayed(this,1000);return;
             }
             completeUserColdSwitchIfReady();

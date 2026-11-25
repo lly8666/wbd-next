@@ -80,10 +80,11 @@ def main(out):
         fill("配置名称（例：家里Wi-Fi／游戏）","GameDaily")
         tap("保存服务器配置");locate("已保存槽位2：GameDaily",True)
         report["save_game"]="PASS"
-        # Settings tab now explicitly saves changed MTU and persists across restart.
+        # Explicitly save more than MTU: change Health too and read both after restart.
         mtu="外层完整 IPv4 IP MTU（576–1500 字节；默认1460，非TUN MTU）"
-        page("设置");fill(mtu,"1380");tap("保存参数（下次连接生效）")
-        locate("已保存 · 外层 MTU 1380 B",True)
+        page("设置");fill(mtu,"1380");tap("15");tap("30")
+        tap("保存全部设置（下次连接生效）")
+        locate("全部设置已保存 · MTU 1380 B",True)
         page("服务器");choose_slot("配置槽2 · GameDaily","配置槽10（空）")
         fill("配置名称（例：家里Wi-Fi／游戏）","TenthDaily")
         tap("保存服务器配置");locate("已保存槽位10：TenthDaily",True)
@@ -91,7 +92,7 @@ def main(out):
         adb("shell","am","force-stop",PKG)
         adb("shell","am","start","-W","-n",PKG+"/.RootClientActivity");time.sleep(1)
         page("连接");locate("game4-fixed")
-        page("设置");check_field(mtu,"1380")
+        page("设置");check_field(mtu,"1380");locate("30")
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.20")
         page("应用");checkcheck("可选CN域名DNS分流：",True)
         report["ordinary_settings_process_restart"]="PASS"
@@ -115,6 +116,13 @@ def main(out):
         page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field(mtu,"1400")
         page("连接");locate("未连接")
+        tap("关闭程序");time.sleep(.5)
+        activities=adb("shell","dumpsys","activity","activities").decode()
+        if any(PKG in line for line in activities.splitlines() if "topResumedActivity" in line or "mResumedActivity" in line):
+            raise RuntimeError("close button left WBD foreground activity running")
+        adb("shell","am","start","-W","-n",PKG+"/.RootClientActivity");time.sleep(1)
+        page("连接");locate("未连接")
+        report["close_and_reopen"]="PASS"
         report["load_tenth_and_save_parameters"]="PASS";report["no_start"]="PASS"
         print("B115_UI_TEN_SLOTS_SAVE_MTU_RESTART_PASS")
         print("B104_UI_TWO_PROFILES_RESTART_PASS")

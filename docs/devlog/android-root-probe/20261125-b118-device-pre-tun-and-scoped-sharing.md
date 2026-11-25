@@ -8,7 +8,7 @@ Go只在域名引导真实需要时在SYN前构造物理DNS dialer；字面IPv4�
 
 App：关闭程序先取消自动恢复并请求原Stop，owner结束后退出task；Fixed才显示FEC档位和真实比例；全部保存按钮移到设置尾部、显示完整保存含义；共享网卡显式刷新注册。复用原完整SettingsStore及10槽。不擅自终止系统进程或操作实体机。
 
-新SOURCE待Actions：复用B117普通真实远端与Android真实BPF fixture，验证保留非选中挂钩；ARM64签名APK、API35/36 UI。实体共享及普通真机回归 NOT_RUN；main不改，PR36 Draft。
+B118a同步真实UI脚本到新按钮名称，实际设置MTU与Health后重启读回、空闲关闭与重开；删已不调用的全机XDP检查实现。新SOURCE待Actions：复用B117普通真实远端与Android真实BPF fixture，验证保留非选中挂钩；ARM64签名APK、API35/36 UI。实体共享及普通真机回归 NOT_RUN；main不改，PR36 Draft。
 
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"Device pre-TUN failure, optional DNS cold dependency removal, selected downstream only sharing and settings/exit/FEC/refresh UI."}
