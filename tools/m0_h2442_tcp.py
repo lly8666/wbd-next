@@ -22,8 +22,19 @@ def source(host,port,rate,cc,seconds):
             try:c.shutdown(socket.SHUT_WR)
             except OSError as e:end=repr(e)
             print(json.dumps({"bytes":n,"end":end,"actual_cc":cc,"pacing_bytes_per_s":actual}),flush=True)
-def sink(host,port,local,seconds):
-    with socket.create_connection((host,port),timeout=30,source_address=(local,0)) as c:
+def sink(host,port,local,seconds,rcvbuf=0,connected=None):
+    if rcvbuf:
+        sock=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,rcvbuf)
+            sock.settimeout(30);sock.bind((local,0));sock.connect((host,port))
+        except BaseException:
+            sock.close();raise
+    else:
+        sock=socket.create_connection((host,port),timeout=30,source_address=(local,0))
+    with sock as c:
+        actual_rcvbuf=c.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF)
+        if connected:connected()
         assert c.getsockname()[0]==local;c.sendall(b"R");c.settimeout(.5)
         n=steady=0;t=time.monotonic();end="deadline";b=bytearray(256*1024);last=t;lastn=0
         while time.monotonic()-t<seconds+80:
@@ -36,8 +47,8 @@ def sink(host,port,local,seconds):
                 n+=q
                 if 10<=elapsed<seconds-5:steady+=q
             if now-last>=5:
-                print("TCP_PROGRESS "+json.dumps({"elapsed":round(elapsed,2),"bytes":n,"recent_mbps":(n-lastn)*8/(now-last)/1e6}),flush=True);last=now;lastn=n
-        row={"bytes":n,"end":end,"rx_mbps":steady*8/(seconds-15)/1e6,"elapsed":time.monotonic()-t,"local":local}
+                print("TCP_PROGRESS "+json.dumps({"elapsed":round(elapsed,2),"bytes":n,"recent_mbps":(n-lastn)*8/(now-last)/1e6,"socket_rcvbuf":c.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF)}),flush=True);last=now;lastn=n
+        row={"bytes":n,"end":end,"rx_mbps":steady*8/(seconds-15)/1e6,"elapsed":time.monotonic()-t,"local":local,"requested_rcvbuf":rcvbuf,"socket_rcvbuf_at_connect":actual_rcvbuf,"socket_rcvbuf_end":c.getsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF)}
         print(json.dumps(row),flush=True);return row
 def probe(host,port):
     with socket.socket() as l:

@@ -5,6 +5,9 @@ ROOT=pathlib.Path.cwd();OUT=ROOT/"h2228-out";OUT.mkdir(exist_ok=True)
 TMP=pathlib.Path(os.environ["RUNNER_TEMP"])/("h2442-"+os.environ["GITHUB_RUN_ID"]);TMP.mkdir(exist_ok=True)
 BUNDLE=ROOT/"linux-plan029-public-bundle";APP=ROOT/"tools/m0_h2442_tcp.py"
 CASES=json.loads((ROOT/"tools/m0_h2442_matrix.json").read_text())
+DIAG=os.environ.get("WBD_H2450_RX_DIAG")=="1"
+if DIAG:
+    CASES=[dict(CASES[0],isolate=iso,rcvbuf=buf) for iso,buf in [(False,0),(True,0),(True,16777216),(True,0),(False,0)]]
 NODE=h.NODE;ORIGIN="h2442origin";procs={};logs={};current=None;folder=None
 def spawn(key,ns,args,folder):
     f=(folder/(key+".log")).open("w");logs[key]=f
