@@ -4,18 +4,18 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2422,
-  "checkpoint_sha": "85412ad55c5e1cac0b59a9f17cb7c5b4ff256a8d",
+  "sequence": 2423,
+  "checkpoint_sha": "04c44869cd22a0b204611393cd8859c5afe0f448",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收 H2422 run45553574906，核 x86/ARM 真实双向字节/UDP/半关闭与 x86 clean ABBA；若失败取第一实际进程日志，成功后再并行同场景正反序 CC。",
+  "next_action": "收H2423共享构建及各独立Actions，复核原始socket/netem/CPU/Stop，先判断无损正反序与CC随机损伤/限速差异；不跨runner混比绝对值。",
   "unverified": true,
-  "last_tested_source": "6f61a0fa3af3f924751614f5c1bcf03b1948ccbf",
+  "last_tested_source": "59685d7af35d005711a1a92605af378d8d1f998f",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2421-LOCAL-FIXTURE-FAIL.json"
+    "docs/evidence/M0/20261125-H2422-LOG-ONLY-BUSINESS.json"
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
@@ -23,5 +23,5 @@
     "docs/evidence/M0/20261125-H2419-NATIVE-SPLICE-CAPACITY.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2421九job均构建成功，route-key.hex权限夹具错误导致0业务腿，3原始artifact审查。H2422只修夹具0600/诊断/Stop回读，双ISA功能后x86同机clean ABBA，未晋级。"
+  "partial_summary": "H2422真实双ISA功能4/4、x86 clean ABBA 453.153/569.624/570.133/453.908 Mbps，日志已存，artifact上传EACCES未保留原始证据。H2423仅修测试证据和共享构建，八独立性能Action+双ISA功能在途。未晋级。"
 }
