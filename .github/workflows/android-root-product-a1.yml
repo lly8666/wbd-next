@@ -221,7 +221,7 @@ jobs:
           if-no-files-found: warn
 
   b108-carrier-linux-admission:
-    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]')
+    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -506,7 +506,7 @@ jobs:
       fail-fast: false
       max-parallel: 7
       matrix:
-        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
+        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
     permissions: {contents: read, actions: read}
     env:
       GH_TOKEN: ${{ github.token }}
@@ -575,6 +575,7 @@ jobs:
             out/android-x86-d2-root/b110-*.txt
             out/android-x86-d2-root/b111-*.txt
             out/android-x86-d2-root/b112-*.txt
+            out/android-x86-d2-root/b113-*.txt
             out/android-x86-d2-root/b109-*.txt
             out/android-x86-d2-root/wiring/receipt.json
             out/android-x86-d2-root/wiring/results.tsv

@@ -1,0 +1,11 @@
+# B113｜Fixed真实恢复通过，Auto及自动重连载体收口
+
+B112 SOURCE `f349892be173d21453551b8ccfb2f232ae540533` [Action 45567171745](https://github.com/lly8666/wbd-next/actions/runs/45567171745) 10 SUCCESS/3 FAIL/10 SKIP。Fixed [139047127050](https://github.com/lly8666/wbd-next/actions/runs/45567171745/job/139047127050) 五轮真实App TCP/UDP 40+40、5MiB/方向、原Stop PASS，11137 payload帧中实际drop111，Android原M4 source_raw5742 parity_raw3912 source_tun4840 recovered_tun77 unique10953 reports4 signals0 mature4 applied1；真实恢复交付、反馈及APPLIED全证，不将77/111称为恢复率（丢帧种类不同）。B111 Game4 Fixed恢复候选+实际业务通过，未独立归因恢复TUN；Auto B112 [139047127042](https://github.com/lly8666/wbd-next/actions/runs/45567171745/job/139047127042) 在B108_CARRIER_ADMISSION前置失败，[artifact 15000593074](https://github.com/lly8666/wbd-next/actions/runs/45567171745/artifacts/15000593074) 无scope和carrier收据，不归因生产Auto。B113等待真实scope并记录活动启动及scope，不改变内核准入；重试相同真实Auto五轮1%下行丢包及原9计数反馈。
+
+B112 [reconnect 139047127005](https://github.com/lly8666/wbd-next/actions/runs/45567171745/job/139047127005) [artifact 15000826587](https://github.com/lly8666/wbd-next/actions/runs/45567171745/artifacts/15000826587)：07:28:17原UID+M4 joined Stop、native loss drained、真实onLost、exit0、旧owner已确认并原生交接PASS；07:28:23生产Service自主START、第二原process/网络读回，07:28:24真实SYN发送但收到未认证RST，relay仍仅一组SYN/SYNACK。WiFi关闭后原tc挂接未保持，cleanup显示RTNETLINK No such file；高度指向CI carrier重建缺口，非已证服务端或认证缺陷。B113在独立guest临时veth载体上，在WiFi enable前启动仅CI脚本等待wlan0新ifindex/缺失filter，重挂原精确tc ingress/egress并读回；不得调用生产START/STOP或延迟正式服务，真实Network回调决定时序。必须新真实handle、第二原TLS/lease/READY、两端第二组原wire、第二普通业务和最终Stop/cleanup；若载体仍失败按阶段保留。B112 ARM64 signed APK构建和host wiring已通过，但 [root-arm64-app 139046472713](https://github.com/lly8666/wbd-next/actions/runs/45567171745/job/139046472713) B61静态脚本引用被B112替换的旧lambda字串，ValueError；同步核查新lambda顺序及真实handoff条件，不删除原约束。
+
+仅CI及文档变更，不改生产/协议/数据面。2个独立guest，Auto和Normal reconnect；不重跑已绿Fixed、Game、DNS及基础矩阵。main未改，最新核验3b5c0335bc4a；PR36 Draft，历史治理和额外Linux普通TCP载体FAIL保留。CI carrier非真实性能/实体网络，ARM64/热点/IPv6设备验收仍需授权。新SOURCE待CI。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"Accept actual Fixed recovered TUN and mature applied; restore CI carrier across Wi-Fi recreation, retry Auto admission, update lifecycle source audit."}
+```

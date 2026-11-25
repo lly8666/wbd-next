@@ -6,7 +6,9 @@ b108_root(){ adb shell "su -c '$*'"; }
 b108_cleanup(){
  set +e
  if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then
+  if [[ -n "${b113_rebind_pid:-}" ]];then kill "$b113_rebind_pid" 2>/dev/null || true;wait "$b113_rebind_pid" 2>/dev/null || true;fi
   adb shell svc wifi enable >/dev/null 2>&1
+  b108_root rm -f /data/local/tmp/wbd-x86-ci/b113-carrier-rebind.sh /data/local/tmp/b113-carrier-rebind.sh >/dev/null 2>&1 || true
  fi
  if [[ -n "${b110_dns_pid:-}" ]];then sudo -n kill "$b110_dns_pid" 2>/dev/null || true;wait "$b110_dns_pid" 2>/dev/null || true;fi
  if [[ "${b108_guest_filter:-0}" == 1 ]];then
@@ -24,12 +26,17 @@ b108_cleanup(){
 }
 b108_setup(){
  adb shell logcat -c
- adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step specialty_scope >/dev/null
- sleep 1
- local scope
- scope="$(adb shell logcat -d -s WBD_X86_CI_ORIGINAL:I '*:S' | tr -d '\r' | sed -n 's/.*B90_SCOPE //p' | tail -1)"
- read -r b108_handle b108_iface b108_index b108_mtu b108_ip extra <<<"$scope"
- [[ "$b108_iface" =~ ^(wlan0|eth0)$ && "$b108_ip" =~ ^10\.0\.2\.[0-9]+$ && "$b108_ip" != 10.0.2.2 && -z "$extra" ]]
+ local scope extra attempt
+ # Wait for actual ConnectivityManager + kernel scope, not a fixed sleep.
+ for attempt in $(seq 1 20);do
+  adb shell am start -W -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step specialty_scope >"$out/b113-scope-activity.txt" 2>&1 || true
+  scope="$(adb shell logcat -d -s WBD_X86_CI_ORIGINAL:I '*:S' | tr -d '\r' | sed -n 's/.*B90_SCOPE //p' | tail -1)"
+  read -r b108_handle b108_iface b108_index b108_mtu b108_ip extra <<<"$scope"
+  if [[ "$b108_handle" =~ ^[0-9]+$ && "$b108_iface" =~ ^(wlan0|eth0)$ && "$b108_index" =~ ^[0-9]+$ && "$b108_ip" =~ ^10\.0\.2\.[0-9]+$ && "$b108_ip" != 10.0.2.2 && -z "$extra" ]];then break;fi
+  sleep .5
+ done
+ printf '%s\n' "$scope" >"$out/b113-initial-scope.txt"
+ [[ "$b108_handle" =~ ^[0-9]+$ && "$b108_iface" =~ ^(wlan0|eth0)$ && "$b108_index" =~ ^[0-9]+$ && "$b108_ip" =~ ^10\.0\.2\.[0-9]+$ && "$b108_ip" != 10.0.2.2 && -z "$extra" ]] || { echo B113_INITIAL_SCOPE_NOT_PROVEN;return 1; }
  b108_root ip link show dev "$b108_iface"
  local mac
  mac="$(b108_root cat "/sys/class/net/$b108_iface/address" | tr -d '\r')"
@@ -156,7 +163,22 @@ b110_reconnect(){
   grep -Fq "$marker" "$out/b110-first-stop.txt" || { echo "B110_AUTO_STOP_NOT_PROVEN $marker";return 1; }
  done
  b108_root test ! -e /sys/class/net/wbdv40
+ # CI-only tc filter on the recreated netdevice, before normal DHCP.
+ # No production START, STOP, packet injection or service gating.
+ b108_root tc filter show dev wbdrg0 ingress >"$out/b113-ingress-after-loss.txt"
+ adb push android/root-app/ci/b113-carrier-rebind.sh /data/local/tmp/b113-carrier-rebind.sh >/dev/null
+ b108_root cp /data/local/tmp/b113-carrier-rebind.sh /data/local/tmp/wbd-x86-ci/b113-carrier-rebind.sh
+ b108_guest_qdisc=0
+ timeout --signal=TERM --kill-after=3s 45s "$ANDROID_HOME/platform-tools/adb" shell "su -c '/system/bin/sh /data/local/tmp/wbd-x86-ci/b113-carrier-rebind.sh $b108_ip $b108_index'" >"$out/b113-rebind.txt" 2>&1 &
+ b113_rebind_pid=$!
+ for _ in $(seq 1 30);do grep -Fq B113_CARRIER_REBIND_ARMED "$out/b113-rebind.txt" && break;sleep .1;done
+ grep -Fq B113_CARRIER_REBIND_ARMED "$out/b113-rebind.txt"
  adb shell svc wifi enable
+ wait "$b113_rebind_pid"
+ b113_rebind_pid=""
+ cat "$out/b113-rebind.txt"
+ grep -Fq B113_CARRIER_REBOUND "$out/b113-rebind.txt"
+ if grep -Fq B113_OWNED_NEW_CLSACT "$out/b113-rebind.txt";then b108_guest_qdisc=1;fi
  for _ in $(seq 1 70);do
   adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' >"$out/b110-reconnect-enums.txt"
   if [[ "$(grep -c NATIVE_M4_AND_UID_READY "$out/b110-reconnect-enums.txt" || true)" -ge 2 ]];then break;fi
@@ -172,6 +194,13 @@ b110_reconnect(){
  fresh="$(adb shell logcat -d -s WBD_X86_CI_ORIGINAL:I '*:S' | tr -d '\r' | sed -n 's/.*B90_SCOPE //p' | tail -1)"
  read -r new_handle new_iface new_index new_mtu new_ip extra <<<"$fresh"
  [[ "$new_handle" =~ ^[0-9]+$ && "$new_handle" != "$b108_handle" && "$new_iface" == "$b108_iface" && "$new_ip" == "$b108_ip" && -z "$extra" ]] || { echo B110_NEW_NETWORK_OR_CARRIER_NOT_PROVEN;return 1; }
+ grep -Fq "B113_CARRIER_REBOUND index=$new_index" "$out/b113-rebind.txt"
+ [[ "$(grep -c ORIGINAL_GO_TLS_HANDSHAKE_VERIFIED "$out/b110-reconnect-enums.txt" || true)" -ge 2 ]]
+ [[ "$(grep -c ORIGINAL_ROOT_SERVICE_START_REQUESTED "$out/b110-reconnect-enums.txt" || true)" == 1 ]]
+ for spec in "host SYN rx" "host SYNACK tx" "guest SYN tx" "guest SYNACK rx";do
+  read -r side kind direction <<<"$spec"
+  grep -Fqx "B110_WIRE_$kind role=$side direction=$direction distinct=2" "$out/b108-$side-relay.log"
+ done
  b108_traffic
  cp "$out/b108-traffic.txt" "$out/b110-second-traffic.txt"
  printf 'PASS\n' >"$out/b110-reconnect-pass.txt"

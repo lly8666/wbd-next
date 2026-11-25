@@ -1,3 +1,7 @@
+## B113｜Fixed真实恢复已证，Auto及自动重连收口（当前）
+
+B112 `f349892be173d21453551b8ccfb2f232ae540533` [Action 45567171745](https://github.com/lly8666/wbd-next/actions/runs/45567171745) 10/3/10；Fixed五轮业务、111实际drop、77恢复TUN、4成熟反馈、applied1 PASS；Auto carrier前置NOT_RUN；生产自动重连第二START/SYN已证但WiFi重建后CI载体未转接，未证第二READY。B113 2 guest：Auto原反馈及重连CI重挂tc、真实二次业务；修B61静态审计旧lambda引用。不改生产代码，详见 [B113 devlog](../devlog/android-root-probe/20261125-b113-final-lifecycle.md)。实体ARM64/热点/性能及Game恢复交付归因仍待验。
+
 ## B112｜FEC真实读回及原生先感知物理丢失恢复（当前）
 
 B111 `3c97a97597beff6f54ffe8a0a40293cc8bfeaec6` [Action 45562169772](https://github.com/lly8666/wbd-next/actions/runs/45562169772) 14/3/9；默认/显式隧道DNS UDP/TCP PASS，Fixed/Auto/Game4 Fixed真实1%下行丢包业务PASS，Game4恢复候选PASS；Fixed/Auto通用诊断未启用，恢复交付未证；WiFi后原生先joined Stop但exit1，自动恢复未触发。B112三guest：Android原9计数真实读回、五次普通业务burst、原生明确物理丢失且完整清理后交给现有Java自动恢复，保留实际原Network验证与真实二次业务。详见 [B112 devlog](../devlog/android-root-probe/20261125-b112-fec-recovery-handoff.md)。不改变数据面/协议/MTU，不重跑DNS/基础七模式，实体ARM64待验。

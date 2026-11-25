@@ -1811,7 +1811,14 @@ assert 'startOriginalOwner(snapshot.request,startId);' in s
 assert 'networkEvents.post(()->scheduleRotation(generation));' in s
 assert 'requestStop("PERIODIC_ROTATION");' in s
 assert 'RootColdRotation.mayRestart(requested,previousOwnerStopConfirmed,same!=null&&oldNet.same(same))' in s
-assert s.index('trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED)') < s.index('networkEvents.post(()->finishOwner(net));')
+cleanup=s.index('trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED)')
+handoff=s.index('final boolean nativeLost=nativePhysicalLossDrained;',cleanup)
+post=s.index('networkEvents.post(()->{',handoff)
+finish=s.index('finishOwner(net);',post)
+assert cleanup < handoff < post < finish
+assert 'previousOwnerStopConfirmed&&rotationSnapshot!=null' in s[post:finish]
+assert 'PhysicalNetwork.exact(this,net.handle,net.interfaceName,net.ifindex,net.mtu,net.address)==null' in s[post:finish]
+assert 'networkStopRequested=true;' in s[post:finish]
 assert 'RootPrivateCredentialFiles.readForColdRestart(this,RootPrivateCredentialFiles.ROUTE)' in s
 assert 'RootPrivateCredentialFiles.write(this,RootPrivateCredentialFiles.ROUTE,snapshot.route)' in s
 assert 'PendingIntent.getService(this,5403,' in s
