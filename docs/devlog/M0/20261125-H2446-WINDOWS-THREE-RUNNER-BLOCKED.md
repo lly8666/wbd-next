@@ -1,0 +1,3 @@
+# H2446 Windows three-runner blocked
+
+H2446 checkpoint: H2445 [run 45616469208](https://github.com/lly8666/wbd-next/actions/runs/45616469208) verified direct TCP 366.832/270.849152 Mbps (0/400ms added RTT), exact bytes and EOF. Windows client READY now true, but cold TCP probe fails, server routed0/proxy_accept=false, native health90 timeout, client Stop false. No formal matrix rows (0/20), 600 underlay unqualified. Full Windows artifact pending at checkpoint; root cause not established. docs/evidence/M0/20261125-H2445-WINDOWS-NATIVE-SMOKE-BLOCKED.json. Stop repeated blind retries; isolate native first packet/return and Stop before rerunning performance. No product modifications or promotion.

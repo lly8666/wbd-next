@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "run_id": 45616469208,
+  "source": "bc1f6ad694dbd3f6f7ca74e9facb12eec21c0cba",
+  "product_changed": false,
+  "status": "BLOCKED_NATIVE_BUSINESS",
+  "direct": {
+    "artifact": 15023410887,
+    "no_added_delay_mbps": 366.832,
+    "added_rtt_400ms_mbps": 270.849152,
+    "exact_bytes_and_eof": true,
+    "qualifies_600": false
+  },
+  "smoke": {
+    "artifact": 15022094182,
+    "server_artifact": 15022492363,
+    "client_ready": true,
+    "error": "Windows TCP cold probe not connected",
+    "client_stop": false,
+    "server_stop": true,
+    "server_inbox": 1024,
+    "server_routed": 0,
+    "proxy_accept": false,
+    "health_timeout_seconds": 90
+  },
+  "formal_matrix": {
+    "planned": 20,
+    "measured": 0,
+    "skipped": true
+  },
+  "limitation": "Full Windows logs not yet uploaded at checkpoint. Root cause of native first business packet failure not established. No native throughput result. Do not attribute direct capacity to WBD.",
+  "next": "Inspect actual Windows native ingress, Wintun route selection, return path and session health; prove single cold TCP and Stop before matrix; separately qualify 600 Mbps physical underlay."
+}
