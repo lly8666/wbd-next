@@ -1,0 +1,133 @@
+name: H2431 source paced outer 600M budget
+run-name: "H2431 outer budget 200/400/600 | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2431-outer-budget.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  smoke:
+    name: UDP and TCP sender smoke ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64}
+          - {runner: ubuntu-24.04-arm, arch: aarch64}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2430_LOSS: '0'
+      H2430_PROFILE: '-1'
+      H2430_EXIT: nat
+      H2430_DIRECTION: download
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Reuse exact H2430 corrected native product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          python3 -m py_compile tools/m0_h2431_outer_budget.py
+          bash tools/m0_h2431_fetch_frozen.sh
+      - name: Native sender-paced outer budget diagnostic
+        shell: bash
+        run: |
+          mkdir -p h2431-out
+          cp h2431-build-identity.json h2431-out/
+          lscpu >h2431-out/lscpu.txt
+          uname -a >h2431-out/uname.txt
+          iperf3 --version >h2431-out/iperf-version.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2431_PRODUCT_SOURCE=dadb01fcd816f07db51bb410ba04d2a60702a2f7 H2431_SMOKE=1 H2430_LOSS="$H2430_LOSS" H2430_PROFILE="$H2430_PROFILE" H2430_EXIT="$H2430_EXIT" H2430_DIRECTION="$H2430_DIRECTION" H2421_OUT=h2431-out python3 -u tools/m0_h2431_outer_budget.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2431-out;then
+            sudo find h2431-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2431-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2431-smoke-${{ matrix.arch }}
+          path: h2431-out/
+          retention-days: 14
+  measure:
+    needs: smoke
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {label: "x86_64-nat-download-loss0-fec-1", runner: ubuntu-24.04, arch: x86_64, loss: "0", profile: "-1", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss0-fec6", runner: ubuntu-24.04, arch: x86_64, loss: "0", profile: "6", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss1-fec-1", runner: ubuntu-24.04, arch: x86_64, loss: "1", profile: "-1", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss1-fec0", runner: ubuntu-24.04, arch: x86_64, loss: "1", profile: "0", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss2-fec1", runner: ubuntu-24.04, arch: x86_64, loss: "2", profile: "1", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss5-fec-1", runner: ubuntu-24.04, arch: x86_64, loss: "5", profile: "-1", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss5-fec1", runner: ubuntu-24.04, arch: x86_64, loss: "5", profile: "1", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss10-fec3", runner: ubuntu-24.04, arch: x86_64, loss: "10", profile: "3", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss15-fec3", runner: ubuntu-24.04, arch: x86_64, loss: "15", profile: "3", exit: nat, direction: download}
+          - {label: "x86_64-nat-download-loss30-fec6", runner: ubuntu-24.04, arch: x86_64, loss: "30", profile: "6", exit: nat, direction: download}
+          - {label: "aarch64-nat-download-loss0-fec-1", runner: ubuntu-24.04-arm, arch: aarch64, loss: "0", profile: "-1", exit: nat, direction: download}
+          - {label: "aarch64-nat-download-loss0-fec6", runner: ubuntu-24.04-arm, arch: aarch64, loss: "0", profile: "6", exit: nat, direction: download}
+          - {label: "aarch64-nat-download-loss5-fec1", runner: ubuntu-24.04-arm, arch: aarch64, loss: "5", profile: "1", exit: nat, direction: download}
+          - {label: "aarch64-nat-download-loss30-fec6", runner: ubuntu-24.04-arm, arch: aarch64, loss: "30", profile: "6", exit: nat, direction: download}
+          - {label: "x86_64-nat-upload-loss0-fec-1", runner: ubuntu-24.04, arch: x86_64, loss: "0", profile: "-1", exit: nat, direction: upload}
+          - {label: "x86_64-nat-upload-loss5-fec1", runner: ubuntu-24.04, arch: x86_64, loss: "5", profile: "1", exit: nat, direction: upload}
+          - {label: "x86_64-nat-upload-loss30-fec6", runner: ubuntu-24.04, arch: x86_64, loss: "30", profile: "6", exit: nat, direction: upload}
+          - {label: "x86_64-splice-download-loss0-fec-1", runner: ubuntu-24.04, arch: x86_64, loss: "0", profile: "-1", exit: splice, direction: download}
+          - {label: "x86_64-splice-download-loss5-fec1", runner: ubuntu-24.04, arch: x86_64, loss: "5", profile: "1", exit: splice, direction: download}
+          - {label: "x86_64-splice-download-loss30-fec6", runner: ubuntu-24.04, arch: x86_64, loss: "30", profile: "6", exit: splice, direction: download}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2430_LOSS: ${{ matrix.loss }}
+      H2430_PROFILE: ${{ matrix.profile }}
+      H2430_EXIT: ${{ matrix.exit }}
+      H2430_DIRECTION: ${{ matrix.direction }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Reuse exact H2430 corrected native product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          python3 -m py_compile tools/m0_h2431_outer_budget.py
+          bash tools/m0_h2431_fetch_frozen.sh
+      - name: Native sender-paced outer budget diagnostic
+        shell: bash
+        run: |
+          mkdir -p h2431-out
+          cp h2431-build-identity.json h2431-out/
+          lscpu >h2431-out/lscpu.txt
+          uname -a >h2431-out/uname.txt
+          iperf3 --version >h2431-out/iperf-version.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2431_PRODUCT_SOURCE=dadb01fcd816f07db51bb410ba04d2a60702a2f7 H2431_SMOKE=0 H2430_LOSS="$H2430_LOSS" H2430_PROFILE="$H2430_PROFILE" H2430_EXIT="$H2430_EXIT" H2430_DIRECTION="$H2430_DIRECTION" H2421_OUT=h2431-out python3 -u tools/m0_h2431_outer_budget.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2431-out;then
+            sudo find h2431-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2431-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2431-${{ matrix.label }}
+          path: h2431-out/
+          retention-days: 14

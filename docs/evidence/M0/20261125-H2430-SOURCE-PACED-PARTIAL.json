@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "dadb01fcd816f07db51bb410ba04d2a60702a2f7",
+  "run_id": 45566751681,
+  "result": "PARTIAL_MEASURED_UDP_FIXTURE_FAILURE",
+  "artifact_verified": true,
+  "scope": "All 20 scenario jobs success; actual job log rows show 60 TCP measured and 51 UDP INCOMPLETE. Four actual ZIPs inspected (clean,5%,30%,upload5), UDP iperf.json explicit socket buffer size not set correctly before stream connected. Do not infer UDP capacity. Other ZIPs not independently inspected in this turn.",
+  "reviewed_artifacts": [
+    15001295079,
+    15000323651,
+    15000701344,
+    15000244201
+  ],
+  "tcp_rows": [
+    {
+      "case": "x86 NAT down 0/off",
+      "rx_mbps": [
+        224.521,
+        317.171,
+        359.425
+      ],
+      "server_tun_drops": [
+        24853,
+        24295,
+        24353
+      ]
+    },
+    {
+      "case": "ARM NAT down 0/off",
+      "rx_mbps": [
+        200.027,
+        445.31,
+        520.82
+      ],
+      "server_tun_drops": [
+        6864,
+        9265,
+        5443
+      ]
+    },
+    {
+      "case": "x86 NAT down 1/light",
+      "rx_mbps": [
+        214.541,
+        345.274,
+        349.431
+      ]
+    },
+    {
+      "case": "x86 NAT down 5/mild",
+      "rx_mbps": [
+        223.854,
+        211.846,
+        238.615
+      ],
+      "server_tun_drops": [
+        1578,
+        4402,
+        2169
+      ]
+    },
+    {
+      "case": "x86 NAT down 10/balanced",
+      "rx_mbps": [
+        221.459,
+        328.197,
+        327.828
+      ]
+    },
+    {
+      "case": "x86 NAT down 30/maximum",
+      "rx_mbps": [
+        220.452,
+        221.208,
+        227.586
+      ],
+      "server_tun_drops": [
+        3830,
+        1508,
+        1383
+      ]
+    }
+  ],
+  "limitations": [
+    "Old offered rate is application bitrate, not outer wire budget; actual TX/RX may exceed offered due to interval timing, TCP control, batching.",
+    "H2430 summary marked MEASURED at aggregate despite incomplete UDP; not performance qualification.",
+    "No direct packet-rate qualification, no physical or 3runner qualification."
+  ]
+}
