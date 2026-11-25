@@ -38,6 +38,7 @@ for f in "$n/wiring-specialty-amd64" "$n/libwbd_engine-amd64.so" out/android-roo
 echo B91_TEST_STAGE_PASS
 shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
+ combined-*) scenes=("$shard");;
  options-*) scenes=("$shard");;
  network-normal) scenes=(network-normal);;
  cycle-*) scenes=("$shard");;
@@ -83,12 +84,12 @@ cleanup(){
 }
 trap cleanup EXIT
 # Real local DNS fixture; a failure cannot block independent native tests.
-if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == dns6-relay || "$shard" == crash-dns || "$shard" == daily-normal || "$shard" == daily-fixed || "$shard" == daily-auto || "$shard" == daily-game2 || "$shard" == daily-game4 || "$shard" == cycle-* || "$shard" == options-* || "$shard" == network-normal || "$shard" == all ]];then
+if [[ "$shard" == dns-physical || "$shard" == dns-tc || "$shard" == dns-cn || "$shard" == dns6 || "$shard" == dns6-relay || "$shard" == crash-dns || "$shard" == daily-normal || "$shard" == daily-fixed || "$shard" == daily-auto || "$shard" == daily-game2 || "$shard" == daily-game4 || "$shard" == cycle-* || "$shard" == options-* || "$shard" == combined-* || "$shard" == network-normal || "$shard" == all ]];then
  sudo -n timeout 190s python3 -u android/root-app/ci/b90-dns-fixture.py >"$out/dns-host.log" 2>&1 &
  dns_pid=$!
  for i in $(seq 1 20);do grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" && break;sleep 0.2;done
 fi
-if [[ "$shard" == route-* || "$shard" == routes || "$shard" == crash-* || "$shard" == daily-route-* || "$shard" == cycle-* || "$shard" == all ]];then
+if [[ "$shard" == route-* || "$shard" == routes || "$shard" == crash-* || "$shard" == daily-route-* || "$shard" == combined-* || "$shard" == cycle-* || "$shard" == all ]];then
  # The host owns these exact /32s ONLY during this isolated runner test.
  # No request can be intentionally sent to the external CN endpoint.
  for address in 192.0.2.1 1.0.1.1;do
@@ -100,7 +101,7 @@ if [[ "$shard" == route-* || "$shard" == routes || "$shard" == crash-* || "$shar
  uid_pid=$!
  for i in $(seq 1 20);do grep -Fq B94_UID_FIXTURE_READY "$out/uid-host.log" && break;sleep .2;done
 fi
-if [[ "$shard" == daily-route-* ]];then
+if [[ "$shard" == daily-route-* || "$shard" == combined-* ]];then
  for address in 192.0.2.1 1.0.1.1;do
   timeout 290s python3 -u android/root-app/ci/traffic-fixture/server.py --bind "$address" --port 18080 >"$out/tcp-$address.log" 2>&1 &
   tcp_pids+=("$!")
@@ -138,6 +139,11 @@ for scene in "${scenes[@]}";do
   if [[ "$iface" != wlan0 ]];then record "$scene" ENV_BLOCKED;continue;fi
   if ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
   old_handle="$handle"
+  "$adb" shell logcat -c
+  "$adb" shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step lifecycle_watch >"$out/network-watch.txt"
+  sleep .5
+  "$adb" shell logcat -d -s WBD_X86_CI_ORIGINAL:I '*:S' | tr -d '\r' >"$out/network-watch-log.txt"
+  if ! grep -Fq "B93_NETWORK_WATCH_ARMED $old_handle" "$out/network-watch-log.txt";then record "$scene" ENV_BLOCKED;continue;fi
   rc=0
   invoke 95s network-normal >"$out/$scene.log" 2>&1 || rc=$?
   "$adb" shell svc wifi enable >"$out/network-enable.txt" 2>&1
@@ -159,7 +165,7 @@ for scene in "${scenes[@]}";do
       grep -Fq B102_DAILY_DNS_PASS "$out/$scene.log";then
     echo B105_MANUAL_NEW_NETWORK_RECONNECT_PASS >>"$out/$scene.log"
     if [[ "$rc" == 0 ]] && grep -Fq B105_ACTIVE_SCOPE_STOP_PASS "$out/$scene.log" &&
-       grep -Fq B105_NATIVE_PHYSICAL_SCOPE_INVALID_PASS "$out/$scene.log";then status=PASS;fi
+       grep -Fq B106_ACTIVE_SELECTED_NETWORK_LOST_PASS "$out/$scene.log";then status=PASS;fi
    fi
   fi
   if ! clean_kernel "$scene";then clean=0;status=FAIL;fi
@@ -201,6 +207,7 @@ for scene in "${scenes[@]}";do
   if ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log" || ! grep -Fq B94_UID_FIXTURE_READY "$out/uid-host.log";then record "$scene" ENV_BLOCKED;continue;fi
  fi
  if [[ "$scene" == daily-route-* ]];then limit=260s;fi
+ if [[ "$scene" == combined-* ]];then limit=110s;fi
  if [[ "$scene" == daily-dns-* ]];then
   limit=100s
   if ! grep -Fq B90_DNS_FIXTURE_READY "$out/dns-host.log";then record "$scene" ENV_BLOCKED;continue;fi
@@ -212,6 +219,13 @@ for scene in "${scenes[@]}";do
  status=FAIL
  if invoke "$limit" "$scene" >"$out/$scene.log" 2>&1;then
   case "$scene" in
+   combined-*) if grep -Fq "B106_COMBINED_PASS $scene" "$out/$scene.log" &&
+      grep -Fq B106_ACTIVE_UID_CN_FIB_PASS "$out/$scene.log" &&
+      grep -Fq B91_NATIVE_STOP_PASS "$out/$scene.log" &&
+      grep -Fq B91_NATIVE_TUN_CLOSE_PASS "$out/$scene.log";then
+       expected=5;if [[ "$scene" == combined-group ]];then expected=8;fi
+       if [[ "$(grep -c B106_ACTIVE_COMBINED_PROBE_PASS "$out/$scene.log")" == "$expected" ]];then status=PASS;fi
+     fi ;;
    options-*) if grep -Fq "B105_OPTIONS_PASS $scene" "$out/$scene.log" &&
        grep -Fq B105_AUTH_OPTIONS_PASS "$out/$scene.log" &&
        grep -Fq B105_OUTER_ENABLED_PASS "$out/$scene.log" &&

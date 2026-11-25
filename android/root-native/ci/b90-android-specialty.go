@@ -261,6 +261,12 @@ func RunAndroidSpecialtyCI(a []string)int{
  mtu,e:=strconv.Atoi(a[4]);if e!=nil{return 2}
  local,e:=netip.ParseAddr(a[5]);if e!=nil{return 2}
  scope:=dnsnative.PhysicalScope{NetworkHandle:handle,InterfaceName:a[2],IfIndex:index,MTU:mtu,LocalIPv4:local}
+ if strings.HasPrefix(a[0],"combined-"){
+  ids:=make([]int,4);for i:=range ids{ids[i],e=strconv.Atoi(a[6+i]);if e!=nil||ids[i]<10000{return 2}}
+  if e=b91Native(scope,ids[0],a[0],1460,0,false,false,"",b106Scope{second:ids[1],own:ids[2],manager:ids[3],cnPath:a[10]});e!=nil{fmt.Println("B106_COMBINED_FAIL",a[0],e);return 1}
+  if e=errors.Join(b94BaselineUID(ids[0]),b94BaselineUID(ids[1]));e!=nil{fmt.Println("B106_RESTORED_FAIL",e);return 1}
+  fmt.Println("B106_COMBINED_PASS",a[0]);return 0
+ }
  if a[0]=="network-normal"{
   if scope.InterfaceName!="wlan0"{fmt.Println("B105_NETWORK_ENV_BLOCKED",scope.InterfaceName);return 3}
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
@@ -450,8 +456,15 @@ func b103Cycle(scope dnsnative.PhysicalScope,uid int,scene string)error{
  }
  return nil
 }
-func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerCap uint16,boundary,wireWitness bool,mixedOrder string)(ret error){
+type b106Scope struct{second,own,manager int;cnPath string}
+func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerCap uint16,boundary,wireWitness bool,mixedOrder string,scopes ...b106Scope)(ret error){
  const dev="wbdb91m4"
+ combined:=strings.HasPrefix(mode,"combined-")
+ combinedGroup:=mode=="combined-group"
+ if combined{
+  if len(scopes)!=1{return fmt.Errorf("missing actual UID scope")}
+  if combinedGroup{mode="daily-dns-physical-normal"}else{mode="daily-dns-physical-game4-fixed"}
+ }
  networkSwitch:=mode=="network-normal"
  if networkSwitch{mode="daily-dns-physical-normal"}
  options:=strings.HasPrefix(mode,"options-")
@@ -507,6 +520,19 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
    c.androidCNSnapshot,e=dnsnative.LoadCN([]byte("domain:cn.wbd-b91.test\n"))
    if e!=nil{return e}
   }
+ }
+ if combined{
+  s:=scopes[0]
+  c.androidRouteUID=0
+  if combinedGroup{
+   c.androidRouteUIDs=[]int{uid,s.second};sort.Ints(c.androidRouteUIDs)
+  }else{
+   c.androidRouteAllApps=true
+   c.androidRouteExcludeAppIDs=[]int{s.own%100000,s.manager%100000,s.second%100000};sort.Ints(c.androidRouteExcludeAppIDs)
+  }
+  snapshot,e:=os.ReadFile(s.cnPath);if e!=nil{return e}
+  c.androidCNIPv4Snapshot=string(snapshot)
+  c.androidSystemDNS=true
  }
  var cnWire []byte
  if c.androidCNSnapshot!=nil{cnWire=c.androidCNSnapshot.PinnedWire()}
@@ -567,20 +593,38 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
    if e!=nil||actual!=expectedMTU||tun.mtu!=expectedMTU{return nil,fmt.Errorf("authenticated TUN MTU actual=%d owner=%d want=%d: %v",actual,tun.mtu,expectedMTU,e)}
    fmt.Printf("B98_MTU_OS_READBACK_PASS mode=%s actual=%d\n",mode,actual)
   }
-  return androidRootRouteAfterNative(c,tun,lease)
+  stop,e:=androidRootRouteAfterNative(c,tun,lease);if e!=nil{return nil,e}
+  if combined{
+   if e=errors.Join(b90UsesTun(uid,"192.0.2.1",dev,true),b90UsesTun(scopes[0].second,"192.0.2.1",dev,combinedGroup),b90UsesTun(uid,"1.0.1.1",dev,false));e!=nil{return nil,errors.Join(e,stop())}
+   fmt.Println("B106_ACTIVE_UID_CN_FIB_PASS")
+  }
+  return stop,nil
  }
  send:=func(probe string)error{
   limit:=12*time.Second
   if probe=="daily-dns-steady"{limit=40*time.Second}
   qctx,qcancel:=context.WithTimeout(ctx,limit);defer qcancel()
+  selectedUID:=uid
+  if strings.HasPrefix(probe,"second-"){
+   if !combined{return fmt.Errorf("unexpected second UID probe")}
+   selectedUID=scopes[0].second;probe=strings.TrimPrefix(probe,"second-")
+  }
+  if probe=="direct-excluded"{return b102DirectTraffic(scopes[0].second,"192.0.2.1")}
+  if probe=="direct-cn"{return b102DirectTraffic(selectedUID,"1.0.1.1")}
   if probe=="network-down"{
    b,e:=exec.CommandContext(qctx,"/system/bin/svc","wifi","disable").CombinedOutput()
    if e!=nil{return fmt.Errorf("actual wifi disable: %w %s",e,b)}
    fmt.Println("B105_WIFI_DISABLE_REQUESTED")
    return nil
   }
+  if probe=="network-lost-callback"{
+   b,e:=exec.CommandContext(qctx,"/system/bin/logcat","-d","-s","WBD_X86_CI_ORIGINAL:I","*:S").CombinedOutput()
+   if e!=nil{return e}
+   if !strings.Contains(string(b),"B93_SELECTED_NETWORK_LOST"){return fmt.Errorf("selected Network callback not yet seen")}
+   return nil
+  }
   if probe=="options-resolver"{
-   return b91Instrument(qctx,uid,"-e","dns_probe","system","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_name","system.wbd-b91.test","-e","expected_ip","192.0.2.55")
+   return b91Instrument(qctx,selectedUID,"-e","dns_probe","system","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_name","system.wbd-b91.test","-e","expected_ip","192.0.2.55")
   }
   if strings.HasPrefix(probe,"daily-dns-"){
    name:="system.wbd-b91.test";transport:="udp"
@@ -598,15 +642,15 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
    if e==nil{fmt.Printf("B98_MTU_APP_RESULT mode=%s probe=%s ip_size=%d\n",mode,probe,size)}
    return e
   }
-  return b91Instrument(qctx,uid,"-e","uid_probe",probe)
+  return b91Instrument(qctx,selectedUID,"-e","uid_probe",probe)
  }
- if !wireWitness{return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,options,networkSwitch,cipher,peerMSSes,route,send)}
+ if !wireWitness{return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,options,networkSwitch,combined,combinedGroup,cipher,peerMSSes,route,send)}
  captureLimit:=int(serverLimit)
  if mixedOrder!=""{captureLimit=int(expectedMSS)}
  stopCapture,e:=b99ObserveWire(scope,c.peerIP,outer,captureLimit,expectedMTU,int(c.gameLanes))
  if e!=nil{return e}
  defer func(){ret=errors.Join(ret,stopCapture())}()
- return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,options,networkSwitch,cipher,peerMSSes,route,send)
+ return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,steady,options,networkSwitch,combined,combinedGroup,cipher,peerMSSes,route,send)
 }
 
 // Independent CI-only AF_PACKET L3 witness. Unlike Rust counters this

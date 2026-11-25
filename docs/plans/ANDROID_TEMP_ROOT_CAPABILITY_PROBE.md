@@ -1,3 +1,7 @@
+## B106｜活跃 M4 多/全 App 组合及 Network callback（当前）
+
+B105 `4957c16ec9cc03ac1a2ace274a447907fac713b0` [Action 45545657277](https://github.com/lly8666/wbd-next/actions/runs/45545657277) 18/2/7；七模式普通选项/Resolver/业务TX PASS，8/8 cleanup；SIT双端安装/ICMP6 PASS但普通UID读checkout拒绝，Wi-Fi新handle重连PASS但native scope flag未观察。B106 3 guest+1 host：真实多/全App CN/Resolver/TCP SYN/UDP TX与物理直连，真实Network onLost后原Stop及显式重连，IPv6普通UID业务恢复测试。详见 [B106 devlog](../devlog/android-root-probe/20261125-b106-active-scope.md)。非远端E2E/生产READY自动恢复。
+
 ## B105｜普通选项与实际 Wi-Fi 恢复（当前）
 
 B104 `968bd6509ca60d42bee21590180232e8bdc764d1` [Action 45543122668](https://github.com/lly8666/wbd-next/actions/runs/45543122668) 14/1/7；IPv4真实下游转发/DNS/Stop与API35/36 UI配置持久化PASS；IPv6 SIT identity失败。B105冷态独立设置alias，真实IPv6重验；7 Android模式常用AES/flows/outer/Health30及系统Resolver+活跃M4；另1 guest真实Wi-Fi关闭、native scope invalid及新handle显式重连。详见 [B105 devlog](../devlog/android-root-probe/20261125-b105-options-sit-network.md)。无远端M4 RX或生产READY自动恢复结论。

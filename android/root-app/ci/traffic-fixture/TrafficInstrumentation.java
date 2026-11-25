@@ -69,6 +69,17 @@ public final class TrafficInstrumentation extends Instrumentation {
         try{
             String probe=args.getString("uid_probe","");
             if(!probe.isEmpty()||!args.getString("dns_probe","").isEmpty())enterForeground();
+            if("tcp-connect".equals(probe)){
+                // Ordinary TCP SYN into selected TUN. No remote peer is
+                // available in this fixture; timeout is expected, not E2E.
+                try(java.net.Socket socket=new java.net.Socket()){
+                    try{socket.connect(new java.net.InetSocketAddress("192.0.2.1",18081),1600);
+                        throw new IllegalStateException("unexpected remote TCP connection");
+                    }catch(java.net.SocketTimeoutException expected){}
+                }
+                result.putString("report","uid_probe_sent="+Process.myUid()+" foreground=1 tcp_connect_attempt=1 remote_reply=NOT_PROVEN");
+                finishProbe(Activity.RESULT_OK,result);return;
+            }
             if("daily-direct".equals(probe)){
                 String report=TrafficProbe.run(args.getString("host"),18080,8,1);
                 if(!report.contains("tcp_ok=8 udp_ok=8 samples=8")||!report.contains("echo_bytes_each_direction=1048576"))

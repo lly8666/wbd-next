@@ -99,7 +99,7 @@ func b91WaitTX(ctx context.Context,read func()(uint64,error),before uint64)error
  }
  return fmt.Errorf("original Android native TX did not increase")
 }
-func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary,steady,options,networkSwitch bool,cipher uint8,peerMSSes []uint16,
+func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClientProductConfig,game V4AndroidGameConfig,mode string,recordLimit,serverLimit uint16,boundary,steady,options,networkSwitch,combined,combinedGroup bool,cipher uint8,peerMSSes []uint16,
  route func(string)(func()error,error),send func(string)error)(ret error){
  cert,roots,e:=b91Cert();if e!=nil{return e}
  routeKey:=[]byte("0123456789abcdef0123456789abcdef")
@@ -203,6 +203,22 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
  fmt.Println("B91_NATIVE_M4_STARTED",mode,"lanes",n,"actual_fixture_tls_lease",lease)
  undo,e:=route(lease);if e!=nil{return e};if undo==nil{return ErrAdmissionUnsupported}
  defer func(){e:=undo();ret=errors.Join(ret,e);if e==nil{fmt.Println("B91_NATIVE_UID_STOP_PASS",mode)}}()
+ if combined{
+  probes:=[]string{"options-resolver","send4","tcp-connect","direct-cn"}
+  if combinedGroup{probes=append(probes,"second-options-resolver","second-send4","second-tcp-connect","second-direct-cn")}else{probes=append(probes,"direct-excluded")}
+  for _,probe:=range probes{
+   before,e:=tx();if e!=nil{return e}
+   var tcpBefore uint64
+   if strings.HasSuffix(probe,"tcp-connect")&&pulse!=nil{v,e:=pulse();if e!=nil{return e};tcpBefore=v.TunTCPSeen}
+   if e=send(probe);e!=nil{return e}
+   if strings.HasSuffix(probe,"send4")||strings.HasSuffix(probe,"tcp-connect"){
+    if e=b91WaitTX(ctx,tx,before);e!=nil{return e}
+    if strings.HasSuffix(probe,"tcp-connect")&&pulse!=nil{v,e:=pulse();if e!=nil||v.TunTCPSeen<=tcpBefore{return fmt.Errorf("native TCP intake not observed: %v",e)}}
+   }
+   fmt.Println("B106_ACTIVE_COMBINED_PROBE_PASS",mode,probe)
+  }
+  return nil
+ }
  if options{
   enabled,e:=outerRead();if e!=nil||!enabled{return fmt.Errorf("original outer repair enable readback %t %v",enabled,e)}
   fmt.Println("B105_OUTER_ENABLED_PASS",mode)
@@ -259,8 +275,12 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
    deadline:=time.Now().Add(15*time.Second)
    for time.Now().Before(deadline){
     v,e:=pulse();if e!=nil{return e}
-    if v.PhysicalScopeInvalid{
-     fmt.Println("B105_NATIVE_PHYSICAL_SCOPE_INVALID_PASS")
+    if v.PhysicalScopeInvalid{fmt.Println("B105_NATIVE_PHYSICAL_SCOPE_INVALID_PASS")}
+    // Android Network loss and a Linux interface's identity are distinct.
+    // Actual ConnectivityManager callback is the production service's
+    // cold lifecycle trigger. No claim of automatic RootService recovery.
+    if e=send("network-lost-callback");e==nil{
+     fmt.Println("B106_ACTIVE_SELECTED_NETWORK_LOST_PASS","native_scope_invalid",v.PhysicalScopeInvalid)
      return nil
     }
     // One ordinary application UDP attempt wakes the actual native TX
@@ -269,7 +289,7 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
     if e=send("send4");e!=nil{fmt.Println("B105_NETWORK_DOWN_APP_SEND",e)}
     select{case <-ctx.Done():return ctx.Err();case <-time.After(time.Second):}
    }
-   return fmt.Errorf("actual native physical scope invalidation not observed")
+   return fmt.Errorf("actual selected Network loss callback not observed")
   }
   return nil
  }

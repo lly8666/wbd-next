@@ -158,7 +158,11 @@ func TestB104IPv6CarrierRealDownstream(t *testing.T){
  defer co.Stop()
  x.in(c,"ping","-6","-I","fd65:5742:7636:2::1","-c","2","-W","2","fd65:5742:7636:1::1")
  // Ordinary non-root local socket plus an actual independent downstream.
- out:=x.in(c,"setpriv","--reuid=10220","--regid=10220","--clear-groups","python3",x.fixture,"client","fd12:56::2","18080","business")
+ // Read the same source as root, then execute it as the actual ordinary
+ // UID. The Actions checkout parent is private; do not chmod it or run
+ // the ordinary client as root just to make the test pass.
+ code,e:=os.ReadFile(x.fixture);if e!=nil{t.Fatal(e)}
+ out:=x.in(c,"setpriv","--reuid=10220","--regid=10220","--clear-groups","python3","-c",string(code),"client","fd12:56::2","18080","business")
  if !strings.Contains(out,"B104_SOCKET_ROUNDTRIP_PASS"){t.Fatal(out)}
  t.Log(strings.TrimSpace(out))
  x.client(down,"fd12:56::2","18080","business")
