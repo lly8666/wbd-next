@@ -50,8 +50,14 @@ adb install "$app/wbd-root-arm64-debug.apk" >"$out/install-product.txt"
 adb install "$fixture" >"$out/install-fixture.txt"
 adb shell am start -W -n org.wbdnext.rootclient/.RootClientActivity >"$out/activity.txt"
 set +e
-python3 android/root-app/ci/x86-ui-smoke.py --out "$out" >"$out/ui-smoke.txt" 2>&1
-ui_rc=$?
+if [[ "${WBD_B104_UI:-0}" == 1 ]];then
+ python3 android/root-app/ci/b104-ui-profiles.py --out "$out" >"$out/ui-smoke.txt" 2>&1
+ ui_rc=$?
+ cat "$out/ui-smoke.txt"
+else
+ python3 android/root-app/ci/x86-ui-smoke.py --out "$out" >"$out/ui-smoke.txt" 2>&1
+ ui_rc=$?
+fi
 set -e
 # No WBD session was started: this is an Android instrumentation admission.
 python3 -u android/root-app/ci/traffic-fixture/server.py --bind 127.0.0.1 --port 18080 >"$out/echo.txt" 2>&1 &

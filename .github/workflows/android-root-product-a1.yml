@@ -198,6 +198,28 @@ jobs:
           path: out/android-b100-dns6-host/
           retention-days: 14
           if-no-files-found: warn
+  b104-forwarding-real-namespace:
+    if: contains(github.event.head_commit.message, '[android-forwarding-ui]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [ipv4, ipv6]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - name: Run real original downstream forwarding and socket tests
+        shell: bash
+        run: bash android/root-native/ci/b104-forwarding-real.sh '${{ matrix.family }}'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b104-forwarding-${{ matrix.family }}-${{ github.sha }}
+          path: out/android-b104-forwarding/test.log
+          retention-days: 14
+          if-no-files-found: warn
+
   arm64-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -761,7 +783,7 @@ jobs:
           if-no-files-found: warn
 
   android-stock-ui-and-ordinary-uid:
-    if: ${{ always() && needs.root-arm64-app.result != 'cancelled' && needs.root-arm64-app.result != 'skipped' && github.event_name == 'push' && contains(github.event.head_commit.message, '[android-parallel-test]') }}
+    if: ${{ always() && needs.root-arm64-app.result != 'cancelled' && needs.root-arm64-app.result != 'skipped' && github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-forwarding-ui]')) }}
     needs: [root-arm64-app]
     strategy:
       fail-fast: false
@@ -780,6 +802,7 @@ jobs:
       - name: Real stock Android API ${{ matrix.api }} - production signed APK UI and ordinary UID socket fixture
         env:
           WBD_ANDROID_API: ${{ matrix.api }}
+          WBD_B104_UI: ${{ contains(github.event.head_commit.message, '[android-forwarding-ui]') && '1' || '0' }}
         run: bash android/root-app/ci/stock-ui-traffic.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

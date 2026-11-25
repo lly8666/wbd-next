@@ -1,3 +1,7 @@
+## B104｜正常工况：热点转发、IPv6承载、UI配置保存（当前）
+
+B103 `30a78c44a1998b76f1a9c6623596d376966dc8f7` [Action 45538321422](https://github.com/lly8666/wbd-next/actions/runs/45538321422) 21/0/6；9/9同进程连接Stop/物理恢复，15/15同socket持续DNS/Activity切换，7/7 Linux原协议混合TCP/UDP scoped PASS。B104 2个真实Linux内核netns组件任务（IPv4下游SNAT/CIDR直连/DNS/Stop，IPv6双SIT owner及普通UID/下游业务/DNS/Stop），2个stock Android API35/36正式APK UI两配置保存、重开载入。详见 [B104 devlog](../devlog/android-root-probe/20261125-b104-forwarding-ui.md)。不冒称实体热点、Android远端RX、生产READY自动重连或手机性能。
+
 ## B103｜正常连接周期及混合业务（当前）
 
 B102 `559dcdb22782c64af33d65d68547e522e36d45bd` [Action 45535658071](https://github.com/lly8666/wbd-next/actions/runs/45535658071) 19/0/7；14/14场景、8/8 cleanup、七模式原M4物理UDP DNS与TCP53、11/11 DNS后普通业务、12次真实直连TCP/UDP含1MiB/方向逐字节PASS。B103 3 Android guest×3同进程原native Connect/Stop/配置切换，首连接同socket持续DNS和实际Activity后台；7个独立x86原Linux双端混合TCP/UDP参考（20s、20ms、1% IID）。详见 [B103 devlog](../devlog/android-root-probe/20261125-b103-normal-connection-cycles.md)。非Android远端RX或生产READY自动重连；不再扩展特殊边界。
