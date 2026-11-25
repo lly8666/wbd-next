@@ -19,13 +19,14 @@
     "gui": "Not applicable"
   },
   "code_refs": [
-    "https://github.com/lly8666/wbd-next/blob/8800edefbb45a690bbe572a58f7a9ea54b0a47b9/crates/wbd-engine/src/v4_linux_tcp_splice.rs",
-    "https://github.com/lly8666/wbd-next/blob/8800edefbb45a690bbe572a58f7a9ea54b0a47b9/r0/go_overlay/internal/v4productcli/tcp_splice_linux.go"
+    "https://github.com/lly8666/wbd-next/blob/5e1b68331a4b666287ee28219f30a6b7c70df0dd/crates/wbd-engine/src/v4_linux_tcp_splice.rs",
+    "https://github.com/lly8666/wbd-next/blob/5e1b68331a4b666287ee28219f30a6b7c70df0dd/r0/go_overlay/internal/v4productcli/tcp_splice_linux.go"
   ],
   "doc_refs": [
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
     "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md",
-    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md"
+    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md",
+    "docs/requests/M0/h2437-selected-fixes.md"
   ],
   "verification": [
     {
@@ -50,7 +51,8 @@
     "H2417 did forward real TCP, but 21Mbps DERP-limited path and incomplete matrix preclude performance qualification; see docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json",
     "H2426 matched FEC 30% default fq_codel splice -11% both orders; no general performance gain. H2427 fixed fq maxrate is a separate bottleneck. H2429 correctness candidate unqualified.",
     "H2429 native functional scope passed on x86 and ARM; full qualification still NOT_RUN. H2430 source-paced capacity target supersedes saturation comparisons.",
-    "H2435 broad ARM-first CUBIC-origin evidence selects BBR split as intended primary TCP design, not universal speedup; 2% mild NAT wins, 0-loss split local drops and wire overshoot. Client Rust TX StreamCipherError panic and incomplete Stop block release; 28 receiver deadlines. Main default remains NAT pending gates."
+    "H2435 broad ARM-first CUBIC-origin evidence selects BBR split as intended primary TCP design, not universal speedup; 2% mild NAT wins, 0-loss split local drops and wire overshoot. Client Rust TX StreamCipherError panic and incomplete Stop block release; 28 receiver deadlines. Main default remains NAT pending gates.",
+    "H2437 dual Normal1024/Windows Wintun8MiB and terminal HP candidate on experiment source 5e1b68331a4b666287ee28219f30a6b7c70df0dd; actual native/Go/Windows results pending. Pacing option diagnostic only; no default changes in main."
   ],
   "promotion": null
 }
