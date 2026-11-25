@@ -1,0 +1,141 @@
+name: H2439 realistic weak links BBR evidence
+run-name: "H2439 burst jitter asymmetry competing flow | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2439-realistic-weak-links.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  smoke:
+    name: ${{ matrix.label }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {label: "burst-pacing-AB", scene: 'burst', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'pacing', order: 'AB'}
+          - {label: "shared-pacing-AB", scene: 'shared', rtt: '400', loss: '0', profile: '-1', rate: '540', cap: '85', pair: 'pacing', order: 'AB'}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      H2432_ORDER: ${{ matrix.order }}
+      H2432_RATE: ${{ matrix.rate }}
+      H2434_PAIR: ${{ matrix.pair }}
+      H2434_RTT: ${{ matrix.rtt }}
+      H2434_LOSS: ${{ matrix.loss }}
+      H2434_PROFILE: ${{ matrix.profile }}
+      H2439_SCENE: ${{ matrix.scene }}
+      H2439_WEAK_CAP: ${{ matrix.cap }}
+      H2434_ORIGIN_CC: cubic
+      H2434_INBOX: '1024'
+      H2437_FINITE: '0'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Reuse accepted native H2437 product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          python3 -m py_compile tools/m0_h2439_realistic_loss.py
+          bash tools/m0_h2439_fetch_frozen.sh
+      - name: Isolated native WBD adverse-link contrast
+        shell: bash
+        run: |
+          lscpu >h2439-out/lscpu.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2439_PRODUCT_SOURCE=5e1b68331a4b666287ee28219f30a6b7c70df0dd H2432_ORDER="$H2432_ORDER" H2432_RATE="$H2432_RATE" H2434_PAIR="$H2434_PAIR" H2434_RTT="$H2434_RTT" H2434_LOSS="$H2434_LOSS" H2434_PROFILE="$H2434_PROFILE" H2439_SCENE="$H2439_SCENE" H2439_WEAK_CAP="$H2439_WEAK_CAP" H2434_ORIGIN_CC="$H2434_ORIGIN_CC" H2434_INBOX=1024 H2437_FINITE=0 H2421_OUT=h2439-out python3 -u tools/m0_h2439_realistic_loss.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2439-out;then
+            sudo find h2439-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2439-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2439-${{ matrix.label }}
+          path: h2439-out/
+          retention-days: 14
+  measure:
+    needs: smoke
+    name: ${{ matrix.label }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - {label: "jitter-pacing-ABBA", scene: 'jitter', rtt: '100', loss: '1', profile: '0', rate: '480', cap: '480', pair: 'pacing', order: 'ABBA'}
+          - {label: "jitter-pacing-BAAB", scene: 'jitter', rtt: '100', loss: '1', profile: '0', rate: '480', cap: '480', pair: 'pacing', order: 'BAAB'}
+          - {label: "jitter-cubic-bbr-ABBA", scene: 'jitter', rtt: '100', loss: '1', profile: '0', rate: '480', cap: '480', pair: 'cubic-bbr', order: 'ABBA'}
+          - {label: "jitter-cubic-bbr-BAAB", scene: 'jitter', rtt: '100', loss: '1', profile: '0', rate: '480', cap: '480', pair: 'cubic-bbr', order: 'BAAB'}
+          - {label: "burst-pacing-ABBA", scene: 'burst', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'pacing', order: 'ABBA'}
+          - {label: "burst-pacing-BAAB", scene: 'burst', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'pacing', order: 'BAAB'}
+          - {label: "burst-cubic-bbr-ABBA", scene: 'burst', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'cubic-bbr', order: 'ABBA'}
+          - {label: "burst-cubic-bbr-BAAB", scene: 'burst', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'cubic-bbr', order: 'BAAB'}
+          - {label: "down-only-pacing-ABBA", scene: 'down-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'pacing', order: 'ABBA'}
+          - {label: "down-only-pacing-BAAB", scene: 'down-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'pacing', order: 'BAAB'}
+          - {label: "down-only-cubic-bbr-ABBA", scene: 'down-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'cubic-bbr', order: 'ABBA'}
+          - {label: "down-only-cubic-bbr-BAAB", scene: 'down-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'cubic-bbr', order: 'BAAB'}
+          - {label: "ack-only-pacing-ABBA", scene: 'ack-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'pacing', order: 'ABBA'}
+          - {label: "ack-only-pacing-BAAB", scene: 'ack-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'pacing', order: 'BAAB'}
+          - {label: "ack-only-cubic-bbr-ABBA", scene: 'ack-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'cubic-bbr', order: 'ABBA'}
+          - {label: "ack-only-cubic-bbr-BAAB", scene: 'ack-only', rtt: '400', loss: '5', profile: '1', rate: '432', cap: '432', pair: 'cubic-bbr', order: 'BAAB'}
+          - {label: "shared-pacing-ABBA", scene: 'shared', rtt: '400', loss: '0', profile: '-1', rate: '540', cap: '85', pair: 'pacing', order: 'ABBA'}
+          - {label: "shared-pacing-BAAB", scene: 'shared', rtt: '400', loss: '0', profile: '-1', rate: '540', cap: '85', pair: 'pacing', order: 'BAAB'}
+          - {label: "shared-cubic-bbr-ABBA", scene: 'shared', rtt: '400', loss: '0', profile: '-1', rate: '540', cap: '85', pair: 'cubic-bbr', order: 'ABBA'}
+          - {label: "shared-cubic-bbr-BAAB", scene: 'shared', rtt: '400', loss: '0', profile: '-1', rate: '540', cap: '85', pair: 'cubic-bbr', order: 'BAAB'}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      H2432_ORDER: ${{ matrix.order }}
+      H2432_RATE: ${{ matrix.rate }}
+      H2434_PAIR: ${{ matrix.pair }}
+      H2434_RTT: ${{ matrix.rtt }}
+      H2434_LOSS: ${{ matrix.loss }}
+      H2434_PROFILE: ${{ matrix.profile }}
+      H2439_SCENE: ${{ matrix.scene }}
+      H2439_WEAK_CAP: ${{ matrix.cap }}
+      H2434_ORIGIN_CC: cubic
+      H2434_INBOX: '1024'
+      H2437_FINITE: '0'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Reuse accepted native H2437 product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          python3 -m py_compile tools/m0_h2439_realistic_loss.py
+          bash tools/m0_h2439_fetch_frozen.sh
+      - name: Isolated native WBD adverse-link contrast
+        shell: bash
+        run: |
+          lscpu >h2439-out/lscpu.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2439_PRODUCT_SOURCE=5e1b68331a4b666287ee28219f30a6b7c70df0dd H2432_ORDER="$H2432_ORDER" H2432_RATE="$H2432_RATE" H2434_PAIR="$H2434_PAIR" H2434_RTT="$H2434_RTT" H2434_LOSS="$H2434_LOSS" H2434_PROFILE="$H2434_PROFILE" H2439_SCENE="$H2439_SCENE" H2439_WEAK_CAP="$H2439_WEAK_CAP" H2434_ORIGIN_CC="$H2434_ORIGIN_CC" H2434_INBOX=1024 H2437_FINITE=0 H2421_OUT=h2439-out python3 -u tools/m0_h2439_realistic_loss.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2439-out;then
+            sudo find h2439-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2439-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2439-${{ matrix.label }}
+          path: h2439-out/
+          retention-days: 14
