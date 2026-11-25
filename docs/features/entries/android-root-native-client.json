@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "B124a：统一十槽完整保存和可移植备份，修复切页与真实UI回归；保留B123 IPv4-only及原Go/Rust。",
+  "summary": "B124b：日常 APK 完整配置回归收口，CA 与备份使用真实字段/文件读回；原Go/Rust不变。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -66,7 +66,8 @@
     "docs/devlog/android-root-probe/20261125-b123-ipv4-only-tether-ra.md",
     "docs/devlog/android-root-probe/20261126-b124-complete-server-ui.md",
     "docs/devlog/android-root-probe/20261126-b124a-apk-ui-roundtrip.md",
-    "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md"
+    "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
+    "docs/devlog/android-root-probe/20261126-b124b-ca-ui-readback.md"
   ],
   "verification": [
     {
@@ -98,11 +99,11 @@
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45655760338"
     },
     {
-      "platform": "B124a complete server UI and BPF targeted retry",
-      "scope": "Page focus, actual SAF full slot/credential/CA semantic roundtrip, original signed APK and existing BPF kernel scenario; results pending new SOURCE.",
-      "status": "IMPLEMENTED_NOT_TESTED",
-      "source_sha": null,
-      "evidence": "docs/devlog/android-root-probe/20261126-b124a-apk-ui-roundtrip.md"
+      "platform": "B124a signed APK / original Normal and Android BPF",
+      "scope": "ARM64 signed APK and source gate PASS; x86 Android real original Normal SYN/SYNACK/TLS/lease/M4 TCP+UDP and Stop PASS; separate BPF actual detach/reattach/restore PASS (not physical tether).",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "d71c557cb7578739fb9ab10f7b570bcdce3a1c4b",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45659951126"
     },
     {
       "platform": "ARM64 physical device",
@@ -110,6 +111,20 @@
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": "docs/devlog/android-root-probe/20261125-b119-device-root-launch-and-hostname.md"
+    },
+    {
+      "platform": "B124a API35/36 UI",
+      "scope": "Navigation and ordinary UID socket fixture run; both complete UI tests failed at CA import status lookup before first save; actual CA value not evidenced. Product run 14 SUCCESS/2 FAIL/8 SKIPPED.",
+      "status": "FAIL",
+      "source_sha": "d71c557cb7578739fb9ab10f7b570bcdce3a1c4b",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45659951126"
+    },
+    {
+      "platform": "B124b API35/36 complete profile UI",
+      "scope": "Actual CA field readback, per-slot credentials/CA and full backup file restoration; new SOURCE UI pending.",
+      "status": "IMPLEMENTED_NOT_TESTED",
+      "source_sha": null,
+      "evidence": "docs/devlog/android-root-probe/20261126-b124b-ca-ui-readback.md"
     }
   ],
   "limitations": [

@@ -133,6 +133,29 @@ def complete_slots(raw):
     if stream.read():raise RuntimeError("trailing server backup bytes")
     return slots
 
+def pick_document(name):
+    click(picker_find([name]))
+    # ACTION_OPEN_DOCUMENT normally returns on a single file tap. Some
+    # DocumentsUI layouts present a separate Open button after selection.
+    for _ in range(12):
+        root=dump()
+        if any(n.get("package")==PKG for n in root.iter("node")):
+            return
+        for n in root.iter("node"):
+            if (n.get("text","").casefold() in ("open","打开") and
+                n.get("enabled")=="true" and n.get("clickable")=="true"):
+                click(n)
+                break
+        time.sleep(.4)
+    raise RuntimeError("system document selection did not return to WBD")
+
+def check_ca(expected):
+    n=field("自定义 CA（PEM）")
+    # UI hierarchy XML may normalize line breaks; the actual exported CA
+    # bytes below must still match the original certificate exactly.
+    if "".join(n.get("text","").split())!="".join(expected.decode("ascii").split()):
+        raise RuntimeError("selected server CA field does not match fixture")
+
 def import_fixture_ca():
     name="wbd-b124-fixture-ca.pem"
     remote="/sdcard/Download/"+name
@@ -145,8 +168,9 @@ def import_fixture_ca():
         adb("push",str(cert),remote)
     try:
         page("服务器");tap("导入 CA 证书");open_downloads()
-        click(picker_find([name],True));time.sleep(1)
-        locate("已导入 1 张证书",True)
+        pick_document(name)
+        page("服务器")
+        check_ca(expected)
     finally:
         adb("shell","rm","-f",remote)
     return expected
@@ -155,16 +179,26 @@ def export_backup(name):
     page("服务器");tap("导出全部服务器");open_downloads()
     if name!="wbd-root-ten-profiles.wbpb":
         n=next((n for n in dump().iter("node") if n.get("class")=="android.widget.EditText"
-                and n.get("resource-id","").endswith(":id/filename")),None)
+                and (n.get("resource-id","").endswith(":id/filename") or
+                     n.get("text")=="wbd-root-ten-profiles.wbpb")),None)
         if n is None:raise RuntimeError("system file picker filename not visible")
         click(n)
         adb("shell","input","keyevent","KEYCODE_MOVE_END")
         adb("shell","input","keyevent",*(["KEYCODE_DEL"]*80))
         adb("shell","input","text",name)
-        adb("shell","input","keyevent","4")
-    click(picker_find(["Save","保存"]));time.sleep(1)
-    locate("全部服务器已导出",True)
-    return adb("exec-out","cat","/sdcard/Download/"+name)
+    click(picker_find(["Save","保存"]))
+    # Real file bytes, rather than an Activity status message, qualify
+    # export. A successful picker return without a file is still a failure.
+    for _ in range(12):
+        root=dump()
+        if any(n.get("package")==PKG for n in root.iter("node")):
+            try:
+                raw=adb("exec-out","cat","/sdcard/Download/"+name)
+                if raw[:4]==b"WBPC":return raw
+            except subprocess.CalledProcessError:
+                pass
+        time.sleep(.4)
+    raise RuntimeError("complete backup file not written: "+name)
 
 def complete_backup_roundtrip(expected_ca):
     name="wbd-root-ten-profiles.wbpb"
@@ -181,8 +215,9 @@ def complete_backup_roundtrip(expected_ca):
                 raise RuntimeError("complete saved server mismatch at slot "+str(i+1))
         page("服务器");tap("删除服务器配置");locate("已删除槽位10",True)
         page("服务器");tap("导入服务器备份");open_downloads()
-        click(picker_find([name],True));time.sleep(1)
-        locate("服务器导入完成",True)
+        pick_document(name)
+        # The deleted slot must actually be restored; no status-only pass.
+        page("服务器");locate("配置槽10 · TenthDaily",True)
         page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field("外层 MTU（576–1500，默认1460）","1400")
         if complete_slots(export_backup(restored_name))!=slots:
@@ -200,6 +235,7 @@ def main(out):
         fill("密码","ExamplePass123")
         fill("Route Key（8–32 位字母数字 / 64 位 Hex）","ExampleKey123")
         expected_ca=import_fixture_ca()
+        report["ca_saf_import_readback"]="PASS"
         page("应用");setcheck("全部直连 DNS",True)
         page("服务器");fill("服务器名称","NormalDaily")
         tap("保存全部设置 · 槽",True);locate("已保存槽位1：NormalDaily",True)
@@ -239,6 +275,7 @@ def main(out):
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.10")
         page("应用");checkcheck("全部直连 DNS",True)
         page("服务器");check_field("用户名","daily-ci")
+        check_ca(expected_ca)
         # Actual unmasked values are verified via the portable backup below.
         report["load_normal"]="PASS"
         choose_slot("配置槽1 · NormalDaily","配置槽2 · GameDaily")
@@ -270,6 +307,14 @@ def main(out):
         print("B124_UI_COMPLETE_SERVER_SAVE_AND_SAF_ROUNDTRIP_PASS")
         print("B115_UI_TEN_SLOTS_SAVE_MTU_RESTART_PASS")
         print("B104_UI_TWO_PROFILES_RESTART_PASS")
+    except Exception:
+        # This fresh CI guest contains only disposable fixture credentials.
+        # Capture the failed view before cleanup, not an unrelated home shot.
+        try:
+            (out/"ui-profile-failure.png").write_bytes(adb("exec-out","screencap","-p"))
+        except Exception:
+            pass
+        raise
     finally:
         (out/"b104-ui-profiles.json").write_text(json.dumps(report,indent=2)+"\n")
 if __name__=="__main__":

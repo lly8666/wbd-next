@@ -1,4 +1,8 @@
-## B124a｜当前唯一工位：重构 APK 定向收口（2026-11-26）
+## B124b｜当前唯一工位：CA 与完整服务器备份实际 UI 回归（2026-11-26）
+
+B124a `d71c557cb7578739fb9ab10f7b570bcdce3a1c4b` [Action 45659951126](https://github.com/lly8666/wbd-next/actions/runs/45659951126) 14/2/8，签名ARM64 APK/源码检查、原Normal真实SYN/SYNACK/TLS/lease/M4业务/Stop及Android BPF实际挂钩暂停/恢复均PASS；API35/36未完成第一槽保存，卡在CA导入状态提示定位。当前唯一剩余CI工位是完整UI：直接CA字段、真实SAF文件、恢复槽及每项数据读回，仅触发两套UI，不复跑已通过的业务guest。生产源码不改，ARM64实体及性能仍未验。详见 [B124b devlog](../devlog/android-root-probe/20261126-b124b-ca-ui-readback.md)。
+
+## B124a｜历史证据：重构 APK 定向收口（2026-11-26）
 
 B124 `d162770c2582e093f97acc30fea33558776691b1` [Action 45655760338](https://github.com/lly8666/wbd-next/actions/runs/45655760338) 18/4/8。七模式真实Android x86 KSU↔独立原Linux原TLS/lease/M4普通App双向TCP/UDP/Stop、Normal受管DNS与自动重连均已证。四个FAIL为APK旧DNS按钮断言、API35/36密码控件定位、BPF ELF未构建。当前只修复日常APK完整服务器保存及可移植备份回归、同步已有夹具；定向原APK/两UI/Normal+BPF，不复跑已通过七模式。原Go/Rust、协议、MTU、B123 IPv4-only及用户TLS配置保持不变，不增加额外防御性开发。新SOURCE待CI，ARM64正式真机及物理性能仍待独立授权验收。详见 [B124a devlog](../devlog/android-root-probe/20261126-b124a-apk-ui-roundtrip.md)。
 
