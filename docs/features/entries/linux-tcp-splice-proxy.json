@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "linux-tcp-splice-proxy",
   "name": "Linux TCP splice transparent acceleration",
-  "summary": "Opt-in TCP split at Linux TUN egress with native splice and selectable tunnel-side kernel CC.",
+  "summary": "Experimental opt-in forwarded IPv4 TCP split on Linux TUN egress with native splice and selectable client-facing kernel CC; not a generic acceleration claim.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-linux-tcp-splice",
@@ -19,16 +19,24 @@
     "gui": "Not applicable"
   },
   "code_refs": [
-    "https://github.com/lly8666/wbd-next/blob/f6ccc4409ac7419a65302bf3228210166a041158/crates/wbd-engine/src/v4_linux_tcp_splice.rs",
-    "https://github.com/lly8666/wbd-next/blob/f6ccc4409ac7419a65302bf3228210166a041158/r0/go_overlay/internal/v4productcli/tcp_splice_linux.go"
+    "https://github.com/lly8666/wbd-next/blob/8800edefbb45a690bbe572a58f7a9ea54b0a47b9/crates/wbd-engine/src/v4_linux_tcp_splice.rs",
+    "https://github.com/lly8666/wbd-next/blob/8800edefbb45a690bbe572a58f7a9ea54b0a47b9/r0/go_overlay/internal/v4productcli/tcp_splice_linux.go"
   ],
   "doc_refs": [
-    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md"
+    "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
+    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md"
   ],
   "verification": [
     {
       "platform": "linux/x86_64",
-      "scope": "H2417 native proxy BBR functional evidence; performance infrastructure unqualified; H2418 in flight",
+      "scope": "H2423 prior source finite duplex/half-close/UDP and Stop, H2429 listener/lifecycle candidate not yet measured",
+      "status": "NOT_RUN",
+      "source_sha": null,
+      "evidence": null
+    },
+    {
+      "platform": "linux/aarch64",
+      "scope": "H2423 prior source finite duplex/half-close/UDP and Stop, H2429 listener/lifecycle candidate not yet measured",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
@@ -38,7 +46,8 @@
     "IPv4 forwarded TCP only; local server services and UDP unchanged",
     "End-to-end TCP acknowledgement becomes two real TCP segments",
     "No custom CC algorithm implemented; old-kernel and physical paths not verified",
-    "H2417 did forward real TCP, but 21Mbps DERP-limited path and incomplete matrix preclude performance qualification; see docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json"
+    "H2417 did forward real TCP, but 21Mbps DERP-limited path and incomplete matrix preclude performance qualification; see docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json",
+    "H2426 matched FEC 30% default fq_codel splice -11% both orders; no general performance gain. H2427 fixed fq maxrate is a separate bottleneck. H2429 correctness candidate unqualified."
   ],
   "promotion": null
 }
