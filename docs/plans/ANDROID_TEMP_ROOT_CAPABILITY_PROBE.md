@@ -1,3 +1,7 @@
+## B111｜七模式远端业务收口，轻损恢复及DNS/自动重连（当前）
+
+B110 `9e3c2e95b56e51b976bb0af75d4532c890746e25` [Action 45560632409](https://github.com/lly8666/wbd-next/actions/runs/45560632409) 15/2/9；四Game真实双向业务及Stop PASS，累计7/7。真实隧道UDP53 PASS，默认TCP透传请求未绑定上游而超时；重连guest缺phone服务未执行。B111六guest：默认TCP透传、显式App TCP DNS relay、原Service自动重连、Fixed/Auto/Game4 Fixed真实1%下行丢包与原恢复计数。详见 [B111 devlog](../devlog/android-root-probe/20261125-b111-loss-dns.md)。不修改协议或数据热路径、不宣称Game候选等于恢复交付、实体ARM64仍待验。
+
 ## B110｜Game真实远端、隧道DNS及生产自动重连（当前）
 
 B109 `18a687c75a038856c86232d6992bd9dd4ce0bbe3` [Action 45557921405](https://github.com/lly8666/wbd-next/actions/runs/45557921405) 14/5/8；Normal/Fixed/Auto真实独立远端普通App双向TCP/UDP+1MiB/方向及Stop PASS；四Game实际lease/M4+UID和server 12/12 lane commit，但误要求Normal SYNACK枚举，业务NOT_RUN。B110 6guest并行：四Game原wire各lane双向计数/真实业务/Stop、Normal真实隧道DNS UDP+TCP、Normal正式Service Wi-Fi自动恢复（无手动START）。不重跑已通过3模式基本矩阵及失败的非产品普通kernel TCP carrier额外试验。详见 [B110 devlog](../devlog/android-root-probe/20261125-b110-game-dns-reconnect.md)。物理ARM64、真实FEC恢复及热点未证。

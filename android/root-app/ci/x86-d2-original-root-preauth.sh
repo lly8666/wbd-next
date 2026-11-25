@@ -124,6 +124,9 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "test_carrier":"CI_ADB_VETH_TC" if os.environ.get("WBD_B108_CARRIER")=="1" else "EMULATOR_DEFAULT",
  "mode":os.environ.get("WBD_B109_MODE","normal"),
  "scene":os.environ.get("WBD_B110_SCENE",""),
+ "loss_business_and_fec":"PASS" if (p/"b111-loss-result.txt").exists() else "NOT_PROVEN",
+ "normal_fec_recovered_tun":"OBSERVED" if has("ORIGINAL_FEC_RECOVERED_TUN_OBSERVED") else "NOT_PROVEN",
+ "game_fec_recovered_candidate":"OBSERVED" if has("ORIGINAL_GAME_FEC_RECOVERED_CANDIDATE_OBSERVED") else "NOT_PROVEN",
  "b109_independent_peer_auth":"PASS" if (p/"b109-remote-auth-result.txt").exists() else "NOT_PROVEN",
  "b108_carrier_admission":"PASS" if (p/"b108-carrier-admission.txt").exists() else "NOT_PROVEN",
  "b108_joined_stop_kernel":"PASS" if (p/"b108-stop-result.txt").exists() else "NOT_PROVEN",
@@ -198,9 +201,6 @@ trap cleanup EXIT
 umask 077
 if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   phase=B108_CARRIER_ADMISSION
-  if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then
-    adb shell svc data disable
-  fi
   b108_setup
 fi
 # The proven original Linux netns FakeTCP oracle drops kernel-generated
@@ -352,6 +352,7 @@ start_args=()
 if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   start_args=(--es ci_target traffic --es ci_mode "${WBD_B109_MODE:-normal}")
   if [[ "${WBD_B110_SCENE:-}" == normal-dns ]];then start_args+=(--es ci_scenario tunnel_dns);fi
+  if [[ "${WBD_B110_SCENE:-}" == normal-dns-relay ]];then start_args+=(--es ci_scenario tunnel_dns_relay);fi
   if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then start_args+=(--es ci_scenario auto_reconnect);fi
 fi
 adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity \
@@ -486,10 +487,16 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   printf 'PASS\n' >"$out/b109-remote-auth-result.txt"
   echo B109_REAL_ORIGINAL_REMOTE_AUTH_PASS "${WBD_B109_MODE:-normal}"
   phase=B108_ORIGINAL_REMOTE_APP_BUSINESS
+  if [[ "${WBD_B110_SCENE:-}" == *-loss ]];then
+    # Only this disposable host helper receives the test loss signal.
+    sudo -n pkill -USR1 -x b108-wire-relay
+    for _ in $(seq 1 20);do grep -Fq B111_DOWNLINK_LOSS_ARMED "$out/b108-host-relay.log" && break;sleep .2;done
+    grep -Fq B111_DOWNLINK_LOSS_ARMED "$out/b108-host-relay.log"
+  fi
   b108_traffic
   printf 'PASS\n' >"$out/b108-remote-app-result.txt"
   case "${WBD_B110_SCENE:-}" in
-    normal-dns) phase=B110_TUNNEL_DNS;b110_dns;;
+    normal-dns|normal-dns-relay) phase=B110_TUNNEL_DNS;b110_dns;;
     normal-reconnect) phase=B110_PRODUCTION_RECONNECT;b110_reconnect;;
   esac
   adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step stop >"$out/stop-activity.txt"
@@ -515,6 +522,20 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   if grep -Eq 'lookup 19842( |$)|table 19842( |$)|wbd-next-root-rst-v1|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/b108-stop-rules.txt";then exit 52;fi
   activity_requested=0
   printf 'PASS\n' >"$out/b108-stop-result.txt"
+  if [[ "${WBD_B110_SCENE:-}" == *-loss ]];then
+    phase=B111_FEC_RECOVERY
+    sudo -n pkill -TERM -x b108-wire-relay
+    for _ in $(seq 1 20);do grep -Eq 'B111_DOWNLINK_LOSS_COUNTS eligible=[0-9]+ dropped=[1-9][0-9]*' "$out/b108-host-relay.log" && break;sleep .2;done
+    grep -E 'B111_DOWNLINK_LOSS_COUNTS eligible=[0-9]+ dropped=[1-9][0-9]*' "$out/b108-host-relay.log"
+    if (( expected_lanes == 0 ));then
+      grep -Fq ORIGINAL_FEC_RECOVERED_TUN_OBSERVED "$out/app-diagnostic-enums.txt" || { echo B111_FEC_RECOVERED_TUN_NOT_PROVEN;exit 53; }
+      echo B111_ORIGINAL_FEC_RECOVERED_TUN_PASS
+    else
+      grep -Fq ORIGINAL_GAME_FEC_RECOVERED_CANDIDATE_OBSERVED "$out/app-diagnostic-enums.txt" || { echo B111_GAME_FEC_CANDIDATE_NOT_PROVEN;exit 53; }
+      echo B111_ORIGINAL_GAME_FEC_CANDIDATE_AND_BUSINESS_PASS
+    fi
+    printf 'PASS\n' >"$out/b111-loss-result.txt"
+  fi
   phase=B108_ORIGINAL_REMOTE_APP_AND_STOP_PASS
   echo "$phase"
 else

@@ -603,6 +603,7 @@ public final class RootClientService extends Service {
             try(BufferedReader lines=new BufferedReader(
                 new InputStreamReader(p.getInputStream()))){
                 String line;
+                boolean recoveredTunSeen=false,gameRecoveredCandidateSeen=false;
                 while((line=lines.readLine())!=null){
                     if(line.length()>4096)line=line.substring(0,4096);
                     int forensic=line.indexOf("V4_PUBLIC_ANDROID_M4_DIAG role=client kind=");
@@ -613,6 +614,18 @@ public final class RootClientService extends Service {
                         diagnostics.recordDNSB6Snapshot(line.substring(dnsB6));
                     // B20: native FEC revision is read from the same
                     // original Go session, not the user's UI selection.
+                    // Original native counters are emitted by Go; expose only
+                    // fixed observations, not raw stdout or payloads.
+                    if(!recoveredTunSeen&&OriginalGoMilestones.matches(line,"V4_PUBLIC_FEC2_RX_PROOF role=client")&&
+                       line.matches(".* recovered_tun=[1-9][0-9]* .*")){
+                        recoveredTunSeen=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_FEC_RECOVERED_TUN_OBSERVED);
+                    }
+                    if(!gameRecoveredCandidateSeen&&OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GAME_FEC_COUNTERS role=client")&&
+                       line.matches(".* recovered=[1-9][0-9]* .*")){
+                        gameRecoveredCandidateSeen=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GAME_FEC_RECOVERED_CANDIDATE_OBSERVED);
+                    }
                     String fecBrief=RootFecStateBrief.fromGoLine(line);
                     if(fecBrief!=null)fecStatus=fecBrief;
                     // Fixed allowlisted shell/Go entry markers expose only

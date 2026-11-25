@@ -65,6 +65,13 @@ func run()error{
  c.(*net.TCPConn).SetNoDelay(true)
  fmt.Println("B108_RELAY_CONNECTED",os.Args[1])
  var tx,rx atomic.Uint64
+ var lossArmed atomic.Bool
+ var eligible,dropped atomic.Uint64
+ if host{
+  lossSignal:=make(chan os.Signal,1)
+  signal.Notify(lossSignal,syscall.SIGUSR1)
+  go func(){<-lossSignal;lossArmed.Store(true);fmt.Println("B111_DOWNLINK_LOSS_ARMED") }()
+ }
  done:=make(chan error,2)
  // Direction is defined by the original IP tuple, not TCP stream contents.
  from,to:=client,server;if host{from,to=server,client}
@@ -80,6 +87,13 @@ func run()error{
    if total<40||total>n-14{continue}
    p:=b[14:14+total]
    if !allowed(p,from,to,host){continue}
+   // Test only: drop every 100th established payload-bearing frame
+   // after authenticated READY, downlink only. Never edit or forge bytes.
+   h:=int(p[0]&15)*4
+   th:=int(p[h+12]>>4)*4
+   if host&&lossArmed.Load()&&th>=20&&h+th<len(p)&&p[h+13]&7==0{
+    if eligible.Add(1)%100==0{dropped.Add(1);continue}
+   }
    binary.BigEndian.PutUint16(hdr[:],uint16(total))
    if _,e=io.Copy(c,io.MultiReader(bytes.NewReader(hdr[:]),bytes.NewReader(p)));e!=nil{done<-e;return}
    if tx.Add(1)==1{fmt.Println("B108_RELAY_FIRST_TX",os.Args[1])}
@@ -107,6 +121,7 @@ func run()error{
  sig:=make(chan os.Signal,1);signal.Notify(sig,syscall.SIGTERM,syscall.SIGINT)
  select{case e=<-done:case <-sig:e=nil}
  fmt.Printf("B108_RELAY_COUNTS role=%s tx=%d rx=%d\n",os.Args[1],tx.Load(),rx.Load())
+ if host&&lossArmed.Load(){fmt.Printf("B111_DOWNLINK_LOSS_COUNTS eligible=%d dropped=%d\n",eligible.Load(),dropped.Load())}
  return e
 }
 

@@ -99,7 +99,7 @@ public final class TrafficInstrumentation extends Instrumentation {
                 }
                 query.writeByte(0);query.writeShort(1);query.writeShort(1);
                 byte[] q=raw.toByteArray(),answer=null;
-                java.net.InetSocketAddress dest=new java.net.InetSocketAddress("192.0.2.53",53);
+                java.net.InetSocketAddress dest=new java.net.InetSocketAddress(args.getString("dns_host","192.0.2.53"),53);
                 if("steady".equals(transport)){
                     // Same ordinary UDP socket throughout. Move the actual
                     // Activity to the background midway (not a synthetic

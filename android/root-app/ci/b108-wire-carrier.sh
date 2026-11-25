@@ -7,7 +7,6 @@ b108_cleanup(){
  set +e
  if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then
   adb shell svc wifi enable >/dev/null 2>&1
-  adb shell svc data enable >/dev/null 2>&1
  fi
  if [[ -n "${b110_dns_pid:-}" ]];then sudo -n kill "$b110_dns_pid" 2>/dev/null || true;wait "$b110_dns_pid" 2>/dev/null || true;fi
  if [[ "${b108_guest_filter:-0}" == 1 ]];then
@@ -119,7 +118,11 @@ b110_dns(){
  for _ in $(seq 1 30);do grep -Fq B90_DNS_FIXTURE_READY "$out/b110-dns-host.log" && break;sleep .2;done
  grep -Fq B90_DNS_FIXTURE_READY "$out/b110-dns-host.log"
  for transport in udp tcp;do
-  adb shell am instrument -w -e dns_probe daily4 -e dns_name system.wbd-b91.test -e dns_transport "$transport" org.wbdnext.testtraffic/.TrafficInstrumentation >"$out/b110-dns-$transport.txt"
+  local dest=192.0.2.53
+  # Default TCP53 is transparent, not rewritten. Only explicit App
+  # TCP DNS interception can redirect an arbitrary destination.
+  if [[ "$transport" == tcp && "${WBD_B110_SCENE:-}" == normal-dns ]];then dest=10.66.0.1;fi
+  adb shell am instrument -w -e dns_probe daily4 -e dns_name system.wbd-b91.test -e dns_transport "$transport" -e dns_host "$dest" org.wbdnext.testtraffic/.TrafficInstrumentation >"$out/b110-dns-$transport.txt"
   cat "$out/b110-dns-$transport.txt"
   grep -Fq "daily_dns=$transport" "$out/b110-dns-$transport.txt"
   grep -Fq "INSTRUMENTATION_CODE: -1" "$out/b110-dns-$transport.txt"
