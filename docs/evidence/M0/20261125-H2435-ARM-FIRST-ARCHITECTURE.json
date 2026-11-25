@@ -1,0 +1,959 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "0ac5b1f94e007a437344dbac73b7436907776fbd",
+  "run_id": 45573918774,
+  "result": "ARCHITECTURE_SELECTED_RELEASE_BLOCKED",
+  "artifact_verified": true,
+  "scope": "All 60 measurement ZIPs inspected; 59 complete summaries (57 matrix jobs, 2 smoke), 232 complete measured rows (228 matrix +4 smoke), 3 additional partial rows in failed matrix job, 16 direct 400ms capacity controls. Both native builds pass. Actual throughput measured over fixed 30s window; 28 of 232 rows did not drain before receiver deadline, all 204 EOF rows byte-count match. Native local four netns on one VM, not physical or independent remote 3-runner qualification. Same origin CUBIC for architecture, separate BBR-origin data-plane capacity controls.",
+  "artifact_index": [
+    {
+      "id": 15006130108,
+      "name": "h2435-x86_64-cubic-bbr-rtt400-loss1-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15005661147,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-ABBA"
+    },
+    {
+      "id": 15005646250,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-BAAB"
+    },
+    {
+      "id": 15005605751,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15005450504,
+      "name": "h2435-aarch64-nat-bbr-rtt100-loss1-fec0-rate480-cubic-BAAB"
+    },
+    {
+      "id": 15005346198,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-BAAB"
+    },
+    {
+      "id": 15005280861,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15005275455,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss0-fec-1-rate0-cubic-BAAB"
+    },
+    {
+      "id": 15005272770,
+      "name": "h2435-x86_64-cubic-bbr-rtt400-loss5-fec1-rate432-cubic-BAAB"
+    },
+    {
+      "id": 15005266995,
+      "name": "h2435-x86_64-capacity-rtt400-loss0-fec-1-rate900-bbr-BAAB"
+    },
+    {
+      "id": 15005140328,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss1-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15005123111,
+      "name": "h2435-x86_64-capacity-rtt400-loss0-fec-1-rate900-bbr-ABBA"
+    },
+    {
+      "id": 15005086704,
+      "name": "h2435-aarch64-capacity-rtt400-loss0-fec-1-rate540-bbr-BAAB"
+    },
+    {
+      "id": 15005085839,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss30-fec6-rate240-cubic-ABBA"
+    },
+    {
+      "id": 15004975292,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss0-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15004952301,
+      "name": "h2435-aarch64-capacity-rtt400-loss0-fec-1-rate540-bbr-ABBA"
+    },
+    {
+      "id": 15004878037,
+      "name": "h2435-aarch64-capacity-rtt400-loss0-fec-1-rate900-bbr-BAAB"
+    },
+    {
+      "id": 15004872113,
+      "name": "h2435-aarch64-nat-bbr-rtt800-loss5-fec1-rate432-cubic-BAAB"
+    },
+    {
+      "id": 15004860963,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss10-fec3-rate360-cubic-ABBA"
+    },
+    {
+      "id": 15004851057,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-BAAB"
+    },
+    {
+      "id": 15004849065,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-ABBA"
+    },
+    {
+      "id": 15004825762,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss1-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004801048,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-ABBA"
+    },
+    {
+      "id": 15004735759,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss5-fec1-rate432-cubic-ABBA"
+    },
+    {
+      "id": 15004710066,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004703298,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-BAAB"
+    },
+    {
+      "id": 15004666318,
+      "name": "h2435-aarch64-nat-bbr-rtt0-loss0-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004608361,
+      "name": "h2435-x86_64-cubic-bbr-rtt400-loss1-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004594551,
+      "name": "h2435-x86_64-cubic-bbr-rtt400-loss5-fec1-rate432-cubic-ABBA"
+    },
+    {
+      "id": 15004565572,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-ABBA"
+    },
+    {
+      "id": 15004500737,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004448190,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss0-fec-1-rate900-cubic-ABBA"
+    },
+    {
+      "id": 15004394101,
+      "name": "h2435-aarch64-capacity-rtt400-loss0-fec-1-rate0-bbr-ABBA"
+    },
+    {
+      "id": 15004388004,
+      "name": "h2435-aarch64-nat-bbr-rtt800-loss5-fec1-rate432-cubic-ABBA"
+    },
+    {
+      "id": 15004383923,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-ABBA"
+    },
+    {
+      "id": 15004378423,
+      "name": "h2435-aarch64-capacity-rtt400-loss0-fec-1-rate0-bbr-BAAB"
+    },
+    {
+      "id": 15004352935,
+      "name": "h2435-aarch64-nat-bbr-rtt100-loss1-fec0-rate480-cubic-ABBA"
+    },
+    {
+      "id": 15004300061,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss1-fec0-rate480-cubic-AB"
+    },
+    {
+      "id": 15004249356,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004232155,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-BAAB"
+    },
+    {
+      "id": 15004231259,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss5-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004229358,
+      "name": "h2435-aarch64-capacity-rtt400-loss0-fec-1-rate900-bbr-ABBA"
+    },
+    {
+      "id": 15004193416,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss0-fec-1-rate900-cubic-BAAB"
+    },
+    {
+      "id": 15004146858,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss5-fec1-rate432-cubic-BAAB"
+    },
+    {
+      "id": 15004127319,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss0-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15004116135,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss2-fec1-rate432-cubic-BAAB"
+    },
+    {
+      "id": 15004083324,
+      "name": "h2435-aarch64-nat-bbr-rtt0-loss0-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15004068342,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss0-fec-1-rate0-cubic-ABBA"
+    },
+    {
+      "id": 15004044394,
+      "name": "h2435-x86_64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-BAAB"
+    },
+    {
+      "id": 15003996717,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-BAAB"
+    },
+    {
+      "id": 15003811699,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss1-fec0-rate480-cubic-BAAB"
+    },
+    {
+      "id": 15003797488,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss10-fec3-rate360-cubic-BAAB"
+    },
+    {
+      "id": 15003771951,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss5-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15003747739,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-ABBA"
+    },
+    {
+      "id": 15003679139,
+      "name": "h2435-aarch64-cubic-bbr-rtt400-loss30-fec6-rate240-cubic-BAAB"
+    },
+    {
+      "id": 15003622971,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15003452628,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-AB"
+    },
+    {
+      "id": 15003319769,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss1-fec0-rate480-cubic-ABBA"
+    },
+    {
+      "id": 15003014877,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-ABBA"
+    },
+    {
+      "id": 15002759413,
+      "name": "h2435-aarch64-nat-bbr-rtt400-loss2-fec1-rate432-cubic-ABBA"
+    }
+  ],
+  "arm_400ms_nat_vs_splice_bbr": {
+    "columns": [
+      "loss_pct",
+      "fec_profile",
+      "origin_cap_mbps",
+      "order",
+      "artifact_id",
+      "A_rx_mbps",
+      "B_rx_mbps",
+      "A_server_wan_tx_mbps",
+      "B_server_wan_tx_mbps",
+      "A_server_tun_drops_sum",
+      "B_server_tun_drops_sum",
+      "A_client_tun_drops_sum",
+      "B_client_tun_drops_sum",
+      "A_host_busy_mean_pct",
+      "B_host_busy_mean_pct",
+      "A_cpu_psi_some_mean_pct",
+      "B_cpu_psi_some_mean_pct"
+    ],
+    "rows": [
+      [
+        0,
+        -1,
+        540,
+        "ABBA",
+        15003014877,
+        540,
+        543,
+        595.4,
+        609.2,
+        0,
+        12544,
+        0,
+        167,
+        48.6,
+        49.8,
+        8.3,
+        9.5
+      ],
+      [
+        0,
+        -1,
+        540,
+        "BAAB",
+        15004500737,
+        540,
+        542.9,
+        595.4,
+        613.8,
+        0,
+        10336,
+        0,
+        383,
+        49,
+        53.1,
+        6.4,
+        10.2
+      ],
+      [
+        1,
+        -1,
+        540,
+        "ABBA",
+        15003622971,
+        1.1,
+        103.9,
+        1.2,
+        119.7,
+        0,
+        0,
+        0,
+        0,
+        1.4,
+        9.4,
+        0.1,
+        2.3
+      ],
+      [
+        1,
+        -1,
+        540,
+        "BAAB",
+        15004710066,
+        0.7,
+        132.2,
+        0.8,
+        150.7,
+        0,
+        0,
+        0,
+        0,
+        1.3,
+        8.8,
+        11.3,
+        0.5
+      ],
+      [
+        1,
+        0,
+        480,
+        "ABBA",
+        15003319769,
+        48.4,
+        336.9,
+        59.1,
+        421.5,
+        0,
+        14624,
+        0,
+        0,
+        9.9,
+        24.2,
+        0.6,
+        2.7
+      ],
+      [
+        1,
+        0,
+        480,
+        "BAAB",
+        15003811699,
+        46.9,
+        337.7,
+        57.3,
+        421.2,
+        0,
+        13684,
+        0,
+        17,
+        10.1,
+        25.6,
+        0.7,
+        8.8
+      ],
+      [
+        2,
+        1,
+        432,
+        "ABBA",
+        15002759413,
+        371.1,
+        306.3,
+        528,
+        407.7,
+        0,
+        17716,
+        0,
+        0,
+        42.8,
+        24,
+        9.2,
+        2.4
+      ],
+      [
+        2,
+        1,
+        432,
+        "BAAB",
+        15004116135,
+        407.3,
+        349.3,
+        580.5,
+        476.3,
+        0,
+        21057,
+        0,
+        0,
+        45.3,
+        27.7,
+        11.3,
+        3.2
+      ],
+      [
+        5,
+        -1,
+        540,
+        "ABBA",
+        15003771951,
+        0.2,
+        24,
+        0.3,
+        31.4,
+        0,
+        0,
+        0,
+        0,
+        1,
+        5.8,
+        0.1,
+        0.4
+      ],
+      [
+        5,
+        -1,
+        540,
+        "BAAB",
+        15004231259,
+        0.1,
+        10.1,
+        0.2,
+        13.3,
+        0,
+        0,
+        0,
+        0,
+        0.9,
+        4,
+        0.1,
+        0.3
+      ],
+      [
+        5,
+        1,
+        432,
+        "ABBA",
+        15004565572,
+        15.3,
+        242.2,
+        21.5,
+        338.8,
+        0,
+        10707,
+        0,
+        0,
+        5.6,
+        18.4,
+        0.4,
+        1.5
+      ],
+      [
+        5,
+        1,
+        432,
+        "BAAB",
+        15003996717,
+        12.7,
+        212.9,
+        18.5,
+        294.5,
+        0,
+        3429,
+        0,
+        0,
+        4.9,
+        15.9,
+        11.1,
+        1.2
+      ],
+      [
+        10,
+        3,
+        360,
+        "ABBA",
+        15004860963,
+        0.8,
+        239.1,
+        1.5,
+        402.1,
+        0,
+        7323,
+        0,
+        95,
+        1.3,
+        22.3,
+        0.1,
+        2
+      ],
+      [
+        10,
+        3,
+        360,
+        "BAAB",
+        15003797488,
+        0.6,
+        239.6,
+        1.1,
+        372.8,
+        0,
+        18227,
+        0,
+        0,
+        1.5,
+        24.3,
+        0.1,
+        10.7
+      ],
+      [
+        15,
+        3,
+        360,
+        "ABBA",
+        15004801048,
+        0.3,
+        171.4,
+        0.6,
+        289.6,
+        0,
+        1348,
+        0,
+        155,
+        1,
+        16.6,
+        0.1,
+        1.3
+      ],
+      [
+        15,
+        3,
+        360,
+        "BAAB",
+        15004232155,
+        0.3,
+        175.2,
+        0.6,
+        294.7,
+        0,
+        548,
+        0,
+        0,
+        1,
+        17.1,
+        0.1,
+        1.4
+      ],
+      [
+        30,
+        6,
+        240,
+        "ABBA",
+        15003747739,
+        0.4,
+        170.7,
+        1.4,
+        406.1,
+        0,
+        124,
+        0,
+        0,
+        1.3,
+        23,
+        0.1,
+        2.3
+      ],
+      [
+        30,
+        6,
+        240,
+        "BAAB",
+        15004851057,
+        37.4,
+        185.2,
+        94.2,
+        436.1,
+        0,
+        2561,
+        0,
+        0,
+        8.3,
+        24.6,
+        0.6,
+        7.1
+      ]
+    ],
+    "notes": "A/B per-job means, drop counts summed across each arm's two legs. Server WAN L2 interface counter; source cap on origin is NOT cap on proxy downstream. Rounded values; refer to raw summaries. 2% FEC matched NAT wins both orders; actual client FEC recovery recorded and B has 17716/21057 local server drops vs A zero."
+  },
+  "arm_splice_cubic_vs_bbr": {
+    "columns": [
+      "loss_pct",
+      "fec_profile",
+      "order",
+      "artifact_id",
+      "A_rx_mbps",
+      "B_rx_mbps"
+    ],
+    "rows": [
+      [
+        0,
+        -1,
+        "ABBA",
+        15004975292,
+        540,
+        542.8
+      ],
+      [
+        1,
+        -1,
+        "ABBA",
+        15005140328,
+        0.5,
+        101.1
+      ],
+      [
+        1,
+        -1,
+        "BAAB",
+        15004825762,
+        1,
+        117.1
+      ],
+      [
+        5,
+        1,
+        "ABBA",
+        15004735759,
+        18.6,
+        209.9
+      ],
+      [
+        5,
+        1,
+        "BAAB",
+        15004146858,
+        11.5,
+        247.5
+      ],
+      [
+        30,
+        6,
+        "ABBA",
+        15005085839,
+        48.3,
+        171.8
+      ],
+      [
+        30,
+        6,
+        "BAAB",
+        15003679139,
+        0.5,
+        189.2
+      ]
+    ]
+  },
+  "arm_capacity": {
+    "columns": [
+      "source_cap_mbps",
+      "order",
+      "artifact_id",
+      "ordered_WBD_rx_mbps",
+      "ordered_server_WAN_tx_mbps",
+      "ordered_server_client_tun_drops",
+      "direct_before_after_mbps"
+    ],
+    "rows": [
+      [
+        540,
+        "ABBA",
+        15004952301,
+        [
+          510.8,
+          510.8,
+          510.8,
+          511
+        ],
+        [
+          559.1,
+          559.4,
+          559.1,
+          559.4
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          510.8,
+          525.5
+        ]
+      ],
+      [
+        540,
+        "BAAB",
+        15005086704,
+        [
+          510.8,
+          510.7,
+          510.6,
+          510.7
+        ],
+        [
+          561.7,
+          561.5,
+          561.5,
+          561.7
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          510.4,
+          510.9
+        ]
+      ],
+      [
+        900,
+        "ABBA",
+        15004229358,
+        [
+          732.2,
+          752.3,
+          752.6,
+          752.1
+        ],
+        [
+          805.5,
+          828.2,
+          828.6,
+          828.2
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          779.7,
+          801.4
+        ]
+      ],
+      [
+        900,
+        "BAAB",
+        15004878037,
+        [
+          739.2,
+          752.1,
+          772.7,
+          752.2
+        ],
+        [
+          820.2,
+          826.4,
+          852.1,
+          852.2
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          801.4,
+          758
+        ]
+      ],
+      [
+        0,
+        "ABBA",
+        15004394101,
+        [
+          716.1,
+          731.1,
+          731.8,
+          714.2
+        ],
+        [
+          786.6,
+          803.7,
+          804.9,
+          804.4
+        ],
+        [
+          [
+            232,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        [
+          801.5,
+          798.4
+        ]
+      ],
+      [
+        0,
+        "BAAB",
+        15004378423,
+        [
+          752,
+          720.7,
+          731.7,
+          731.7
+        ],
+        [
+          828.1,
+          804,
+          804.6,
+          804.7
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            7
+          ]
+        ],
+        [
+          801.7,
+          761.1
+        ]
+      ]
+    ],
+    "notes": "ARM 900 host mean busy ~58–61%, PSI ~15–18%, highest worker P95 ~68%, core ~71%; no all-core saturation shown. All 232 completed rows lack cgroup throttle data: cannot assert zero throttling. x86 capacity 900 also 722–754 Mbps group means and zero local full drops. No 900 Mbps delivered qualification."
+  },
+  "failed_job": {
+    "job_id": 139069868202,
+    "artifact_id": 15004127319,
+    "case": "ARM splice CUBIC vs BBR, 0% loss OFF, BAAB",
+    "partial_rows": [
+      {
+        "arm": "B",
+        "rx_mbps": 544.0408392
+      },
+      {
+        "arm": "A",
+        "rx_mbps": 539.9978962666667
+      },
+      {
+        "arm": "A",
+        "rx_mbps": 539.993712
+      }
+    ],
+    "fourth_leg_raw_rx_mbps": 43.1231288,
+    "failure": "client wbd-original-m4-tx panic cipher-0.4.4/src/stream.rs:120:39 StreamCipherError; native Stop missing, shared TUN Close refused, receiver deadline, total bytes unequal; not performance-qualified; source inspection points at record_crypto.rs chacha_hp_mask seek(sample u32 counter) + infallible apply_keystream, terminal-counter edge hypothesis only, reproduce before repair."
+  },
+  "other_notes": [
+    "ARM zero RTT 540 NAT 540/540, split 538.3/539.1, local drops 0; 100ms 1% light split ~477 vs 80–91, wire ~607–613 and large local drops; 800ms 5% mild split109–115 vs5–8 with zero local drops; ARM 900 CUBIC origin NAT772.8–772.9 vs split721.8–741.4. Unpaced zero-loss mixed sign; no universal proxy speedup.",
+    "Architecture decision: select Linux forwarded IPv4 TCP split BBR primary intended product design; preserve NAT selectable and UDP NAT; no automatic mid-connection fallback. Existing defaults unchanged until release blockers close. FEC and native WBD wire unchanged; separate queue/pacing work; no new custom CC."
+  ]
+}

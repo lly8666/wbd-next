@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "linux-tcp-splice-proxy",
   "name": "Linux TCP splice transparent acceleration",
-  "summary": "Experimental opt-in forwarded IPv4 TCP split on Linux TUN egress with native splice and selectable client-facing kernel CC; not a generic acceleration claim.",
+  "summary": "Selected intended primary Linux forwarded IPv4 TCP exit: native transparent split/splice with client-facing kernel BBR; release blocked, original NAT still actual default.",
   "owner": "M0",
   "stage": "experimental",
   "development_branch": "experiment/m0-linux-tcp-splice",
@@ -24,19 +24,20 @@
   ],
   "doc_refs": [
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md"
+    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md",
+    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md"
   ],
   "verification": [
     {
       "platform": "linux/x86_64",
-      "scope": "H2429 exact candidate native finite duplex, 8 concurrent, delayed receiver, half-close, UDP NAT, listener scope and Stop observed PASS; full product/remote/Windows qualification NOT_RUN",
+      "scope": "H2435 native scoped performance evidence reviewed; full remote/Windows/old-kernel/lifecycle qualification NOT_RUN; ARM one failed Stop/panic, see docs/evidence/M0/20261125-H2435-ARM-FIRST-ARCHITECTURE.json",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
     },
     {
       "platform": "linux/aarch64",
-      "scope": "H2429 exact candidate native finite duplex, 8 concurrent, delayed receiver, half-close, UDP NAT, listener scope and Stop observed PASS; full product/remote/Windows qualification NOT_RUN",
+      "scope": "H2435 native scoped performance evidence reviewed; full remote/Windows/old-kernel/lifecycle qualification NOT_RUN; ARM one failed Stop/panic, see docs/evidence/M0/20261125-H2435-ARM-FIRST-ARCHITECTURE.json",
       "status": "NOT_RUN",
       "source_sha": null,
       "evidence": null
@@ -48,7 +49,8 @@
     "No custom CC algorithm implemented; old-kernel and physical paths not verified",
     "H2417 did forward real TCP, but 21Mbps DERP-limited path and incomplete matrix preclude performance qualification; see docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json",
     "H2426 matched FEC 30% default fq_codel splice -11% both orders; no general performance gain. H2427 fixed fq maxrate is a separate bottleneck. H2429 correctness candidate unqualified.",
-    "H2429 native functional scope passed on x86 and ARM; full qualification still NOT_RUN. H2430 source-paced capacity target supersedes saturation comparisons."
+    "H2429 native functional scope passed on x86 and ARM; full qualification still NOT_RUN. H2430 source-paced capacity target supersedes saturation comparisons.",
+    "H2435 broad ARM-first CUBIC-origin evidence selects BBR split as intended primary TCP design, not universal speedup; 2% mild NAT wins, 0-loss split local drops and wire overshoot. Client Rust TX StreamCipherError panic and incomplete Stop block release; 28 receiver deadlines. Main default remains NAT pending gates."
   ],
   "promotion": null
 }
