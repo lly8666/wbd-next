@@ -1,0 +1,173 @@
+name: H2434 architecture CUBIC origin matched FEC matrix
+run-name: "H2434 architecture decision | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2434-architecture-matrix.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  smoke:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {label: "x86_64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-AB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: AB}
+          - {label: "aarch64-cubic-bbr-rtt400-loss1-fec0-rate480-cubic-AB", runner: ubuntu-24.04-arm, arch: aarch64, pair: cubic-bbr, rtt: '400', loss: '1', profile: '0', rate: '480', cc: cubic, inbox: '1024', order: AB}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2432_ORDER: ${{ matrix.order }}
+      H2432_RATE: ${{ matrix.rate }}
+      H2434_PAIR: ${{ matrix.pair }}
+      H2434_RTT: ${{ matrix.rtt }}
+      H2434_LOSS: ${{ matrix.loss }}
+      H2434_PROFILE: ${{ matrix.profile }}
+      H2434_ORIGIN_CC: ${{ matrix.cc }}
+      H2434_INBOX: ${{ matrix.inbox }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Retrieve exact H2433 native product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          python3 -m py_compile tools/m0_h2434_architecture.py tools/m0_h2434_tcp_source.py
+          bash tools/m0_h2434_fetch_frozen.sh
+      - name: Actual same-origin single TCP architecture contrast
+        shell: bash
+        run: |
+          mkdir -p h2434-out
+          cp h2434-build-identity.json h2434-out/
+          lscpu >h2434-out/lscpu.txt
+          uname -a >h2434-out/uname.txt
+          cat /sys/fs/cgroup/cpu.max >h2434-out/cpu-max.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2434_PRODUCT_SOURCE=3971bbca8fd5e2d40497be313251df64e186136e H2432_ORDER="$H2432_ORDER" H2432_RATE="$H2432_RATE" H2434_PAIR="$H2434_PAIR" H2434_RTT="$H2434_RTT" H2434_LOSS="$H2434_LOSS" H2434_PROFILE="$H2434_PROFILE" H2434_ORIGIN_CC="$H2434_ORIGIN_CC" H2434_INBOX="$H2434_INBOX" H2421_OUT=h2434-out python3 -u tools/m0_h2434_architecture.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2434-out;then
+            sudo find h2434-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2434-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2434-${{ matrix.label }}
+          path: h2434-out/
+          retention-days: 14
+  measure:
+    needs: smoke
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        include:
+          - {label: "x86_64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '1', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '1', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss1-fec0-rate480-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '1', profile: '0', rate: '480', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss1-fec0-rate480-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '1', profile: '0', rate: '480', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss2-fec1-rate432-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '2', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss2-fec1-rate432-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '2', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss5-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '5', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss5-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '5', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss10-fec3-rate360-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '10', profile: '3', rate: '360', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss10-fec3-rate360-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '10', profile: '3', rate: '360', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '15', profile: '3', rate: '360', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '15', profile: '3', rate: '360', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '30', profile: '6', rate: '240', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '30', profile: '6', rate: '240', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "aarch64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "aarch64-nat-bbr-rtt400-loss0-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "aarch64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '1', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "aarch64-nat-bbr-rtt400-loss1-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '1', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "aarch64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-ABBA", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "aarch64-nat-bbr-rtt400-loss5-fec1-rate432-cubic-BAAB", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "aarch64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-ABBA", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '15', profile: '3', rate: '360', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "aarch64-nat-bbr-rtt400-loss15-fec3-rate360-cubic-BAAB", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '15', profile: '3', rate: '360', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "aarch64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-ABBA", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '30', profile: '6', rate: '240', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "aarch64-nat-bbr-rtt400-loss30-fec6-rate240-cubic-BAAB", runner: ubuntu-24.04-arm, arch: aarch64, pair: nat-bbr, rtt: '400', loss: '30', profile: '6', rate: '240', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-cubic-bbr-rtt400-loss0-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-cubic-bbr-rtt400-loss0-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-cubic-bbr-rtt400-loss1-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '1', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-cubic-bbr-rtt400-loss1-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '1', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-cubic-bbr-rtt400-loss5-fec1-rate432-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-cubic-bbr-rtt400-loss5-fec1-rate432-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-cubic-bbr-rtt400-loss30-fec6-rate240-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '30', profile: '6', rate: '240', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-cubic-bbr-rtt400-loss30-fec6-rate240-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: cubic-bbr, rtt: '400', loss: '30', profile: '6', rate: '240', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt0-loss0-fec-1-rate540-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '0', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt0-loss0-fec-1-rate540-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '0', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt100-loss1-fec0-rate480-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '100', loss: '1', profile: '0', rate: '480', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt100-loss1-fec0-rate480-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '100', loss: '1', profile: '0', rate: '480', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt800-loss5-fec1-rate432-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '800', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt800-loss5-fec1-rate432-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '800', loss: '5', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss0-fec-1-rate0-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '0', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss0-fec-1-rate0-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '0', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-nat-bbr-rtt400-loss0-fec-1-rate900-cubic-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '900', cc: cubic, inbox: '1024', order: ABBA}
+          - {label: "x86_64-nat-bbr-rtt400-loss0-fec-1-rate900-cubic-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: nat-bbr, rtt: '400', loss: '0', profile: '-1', rate: '900', cc: cubic, inbox: '1024', order: BAAB}
+          - {label: "x86_64-inbox-rtt400-loss0-fec-1-rate0-bbr-ABBA", runner: ubuntu-24.04, arch: x86_64, pair: inbox, rtt: '400', loss: '0', profile: '-1', rate: '0', cc: bbr, inbox: '1024', order: ABBA}
+          - {label: "x86_64-inbox-rtt400-loss0-fec-1-rate0-bbr-BAAB", runner: ubuntu-24.04, arch: x86_64, pair: inbox, rtt: '400', loss: '0', profile: '-1', rate: '0', cc: bbr, inbox: '1024', order: BAAB}
+          - {label: "aarch64-inbox-rtt400-loss0-fec-1-rate0-bbr-ABBA", runner: ubuntu-24.04-arm, arch: aarch64, pair: inbox, rtt: '400', loss: '0', profile: '-1', rate: '0', cc: bbr, inbox: '1024', order: ABBA}
+          - {label: "aarch64-inbox-rtt400-loss0-fec-1-rate0-bbr-BAAB", runner: ubuntu-24.04-arm, arch: aarch64, pair: inbox, rtt: '400', loss: '0', profile: '-1', rate: '0', cc: bbr, inbox: '1024', order: BAAB}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2432_ORDER: ${{ matrix.order }}
+      H2432_RATE: ${{ matrix.rate }}
+      H2434_PAIR: ${{ matrix.pair }}
+      H2434_RTT: ${{ matrix.rtt }}
+      H2434_LOSS: ${{ matrix.loss }}
+      H2434_PROFILE: ${{ matrix.profile }}
+      H2434_ORIGIN_CC: ${{ matrix.cc }}
+      H2434_INBOX: ${{ matrix.inbox }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Retrieve exact H2433 native product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          python3 -m py_compile tools/m0_h2434_architecture.py tools/m0_h2434_tcp_source.py
+          bash tools/m0_h2434_fetch_frozen.sh
+      - name: Actual same-origin single TCP architecture contrast
+        shell: bash
+        run: |
+          mkdir -p h2434-out
+          cp h2434-build-identity.json h2434-out/
+          lscpu >h2434-out/lscpu.txt
+          uname -a >h2434-out/uname.txt
+          cat /sys/fs/cgroup/cpu.max >h2434-out/cpu-max.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2434_PRODUCT_SOURCE=3971bbca8fd5e2d40497be313251df64e186136e H2432_ORDER="$H2432_ORDER" H2432_RATE="$H2432_RATE" H2434_PAIR="$H2434_PAIR" H2434_RTT="$H2434_RTT" H2434_LOSS="$H2434_LOSS" H2434_PROFILE="$H2434_PROFILE" H2434_ORIGIN_CC="$H2434_ORIGIN_CC" H2434_INBOX="$H2434_INBOX" H2421_OUT=h2434-out python3 -u tools/m0_h2434_architecture.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2434-out;then
+            sudo find h2434-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2434-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2434-${{ matrix.label }}
+          path: h2434-out/
+          retention-days: 14

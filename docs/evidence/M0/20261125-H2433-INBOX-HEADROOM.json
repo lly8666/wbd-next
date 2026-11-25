@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "3971bbca8fd5e2d40497be313251df64e186136e",
+  "run_id": 45570805865,
+  "artifact_verified": true,
+  "result": "MEASURED_SCOPED_NATIVE_LOCAL",
+  "scope": "All six raw ZIPs inspected. 24 WBD+12 direct, same native product, 400ms zero injected loss Normal OFF NAT, actual BBR source socket. 128/1024 server inbox only.",
+  "runs": [
+    {
+      "arch": "aarch64",
+      "order": "ABBA",
+      "cap_mbps": 900,
+      "artifact_id": 15002102744,
+      "ordered_rx_mbps": [
+        624.88,
+        723.76,
+        748.43,
+        550.61
+      ],
+      "server_full_drops": [
+        124,
+        0,
+        0,
+        501
+      ],
+      "direct_pre_post_mbps": [
+        749.85,
+        776.09
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "order": "BAAB",
+      "cap_mbps": 900,
+      "artifact_id": 15003385041,
+      "ordered_rx_mbps": [
+        723.65,
+        544.35,
+        604.34,
+        724.39
+      ],
+      "server_full_drops": [
+        0,
+        920,
+        318,
+        0
+      ],
+      "direct_pre_post_mbps": [
+        749.3,
+        775.44
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "order": "ABBA",
+      "cap_mbps": 900,
+      "artifact_id": 15003136304,
+      "ordered_rx_mbps": [
+        301.18,
+        380.18,
+        359.47,
+        316.68
+      ],
+      "server_full_drops": [
+        91097,
+        98736,
+        88838,
+        89269
+      ],
+      "direct_pre_post_mbps": [
+        749.43,
+        775.52
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "order": "BAAB",
+      "cap_mbps": 900,
+      "artifact_id": 15002496466,
+      "ordered_rx_mbps": [
+        368.12,
+        316.8,
+        310.63,
+        342.93
+      ],
+      "server_full_drops": [
+        93547,
+        94633,
+        81382,
+        66784
+      ],
+      "direct_pre_post_mbps": [
+        775.46,
+        749.52
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "order": "ABBA",
+      "cap_mbps": 540,
+      "artifact_id": 15003015504,
+      "ordered_rx_mbps": [
+        426.21,
+        505.24,
+        497.13,
+        448.85
+      ],
+      "server_full_drops": [
+        3072,
+        0,
+        359,
+        1253
+      ],
+      "direct_pre_post_mbps": [
+        505.09,
+        505.28
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "order": "BAAB",
+      "cap_mbps": 540,
+      "artifact_id": 15002237284,
+      "ordered_rx_mbps": [
+        504.99,
+        504.94,
+        504.78,
+        504.85
+      ],
+      "server_full_drops": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "direct_pre_post_mbps": [
+        513.62,
+        522.55
+      ]
+    }
+  ],
+  "notes": [
+    "ARM900 B zero full drops and ~95% direct; x86 EPYC7763 900 B still 66784–98736 full drops. 4 logical CPUs/2 physical cores with SMT x86, ARM 4 physical cores; same VM runs both ends, router and apps; host competition plausible, not proven sole cause. At 540 ARM both clean, x86 one B clean one 359 full drops. 1024 candidate not promoted. Direct 900 cap only ~750–776 Mbps, no 900 qualification."
+  ]
+}
