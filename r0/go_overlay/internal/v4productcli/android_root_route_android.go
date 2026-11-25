@@ -47,6 +47,8 @@ func originalAndroidSelectedUIDRouteGet(runner rootjournal.Runner,uids []int,tun
 func androidRootRouteAfterNative(
     c config,tun *ownedTun,authenticatedLease string,
 )(undo func()error,retErr error){
+    routeStage:="SCOPE"
+    defer func(){if retErr!=nil&&routeStage!=""{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_POSTAUTH_ROUTE_FAILED role=client class="+routeStage)}}()
     if c.androidTetherInterface!=""{
         defer func(){if retErr!=nil{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=POSTAUTH_ROUTE")}}()
     }
@@ -113,11 +115,17 @@ func androidRootRouteAfterNative(
     // All subsequent cold routing (including software tether) consumes
     // the same merged manual + country CIDRs. No second per-packet matcher.
     c.androidDirectCIDRs=directCIDRs
+    routeStage="RECOVER_IPV6"
     if e:=rootjournal.RecoverIPv6CarrierBatch(runner,androidDNSFirewall,androidDNSFirewall6,originalIPv6Batch,androidIPv6CarrierJournal);e!=nil{return nil,e}
+    routeStage="RECOVER_TETHER"
     if e:=rootjournal.RecoverTether(runner,androidDNSFirewall,androidTetherJournal,originalIPv6Batch);e!=nil{return nil,e}
+    routeStage="RECOVER_DNS6"
     if e:=rootjournal.RecoverSystemDNS6(runner,androidDNSFirewall6,androidDNSIPBatch,nil,androidSystemDNS6Journal,rootjournal.PlatformSystemDNSRuleIO());e!=nil{return nil,e}
+    routeStage="RECOVER_DNS4"
     if e:=rootjournal.RecoverSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,androidSystemDNSJournal,rootjournal.PlatformSystemDNSRuleIO());e!=nil{return nil,e}
+    routeStage="RECOVER_DNS_RELAY"
     if e:=rootjournal.RecoverDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal);e!=nil{return nil,e}
+    routeStage="UID_IPV4"
     if c.androidRouteAllApps{
         full,e:=rootjournal.NewAllApps(runner,rootOnlyJournal,rootjournal.AllAppPlan{
             ExcludedAppIDs:append([]int(nil),c.androidRouteExcludeAppIDs...),
@@ -127,6 +135,7 @@ func androidRootRouteAfterNative(
             NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         },androidDNSIPBatch)
         if e!=nil{return nil,e}
+        routeStage="" // nested owner reports its exact stage
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,full.Stop)
         if e!=nil{return nil,e}
         // Exact server-IP exclusion in the private FIB is verified,
@@ -149,6 +158,7 @@ func androidRootRouteAfterNative(
             Underlay:c.rawInterface,NetworkHandle:c.androidNetworkHandle,IfIndex:physical.Index,
         },androidDNSIPBatch)
         if e!=nil{return nil,e}
+        routeStage="" // nested owner reports its exact stage
         stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,group.Stop)
         if e!=nil{return nil,e}
         originalAndroidSelectedUIDRouteGet(runner,c.androidRouteUIDs,tun.name)
@@ -172,6 +182,7 @@ func androidRootRouteAfterNative(
         IfIndex:physical.Index,
     },androidDNSIPBatch)
     if e!=nil{return nil,e}
+    routeStage=""
     stop,e:=startAndroidAppTCPDNS(c,tun,lease,runner,session.Stop)
     if e!=nil{return nil,e}
     originalAndroidSelectedUIDRouteGet(runner,[]int{c.androidRouteUID},tun.name)
@@ -240,13 +251,17 @@ func androidDNSBatch(rows [][]string)error{
  return nil
 }
 func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
- runner rootjournal.Runner,stopUID func()error)(func()error,error){
+ runner rootjournal.Runner,stopUID func()error)(undo func()error,retErr error){
+ routeStage:="DNS_RELAY"
+ defer func(){if retErr!=nil{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_POSTAUTH_ROUTE_FAILED role=client class="+routeStage)}}()
  dnsMode:=c.androidTunnelDNS||c.androidPhysicalDNS||c.androidCNDNSSplit
  tetherDNS:=c.androidTetherInterface!=""&&dnsMode
  appIPv6DNS:=(c.androidIPv6Gateway!=""||c.androidIPv6Drop)&&dnsMode
  finish:=func(stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
+  routeStage="TETHER"
   next,e:=startAndroidTether(c,tun,lease,runner,stop,relay)
   if e!=nil{return nil,e}
+  routeStage="IPV6"
   return startOriginalAndroidIPv6Carrier(c,tun,lease,runner,next,relay)
  }
  if !c.androidAppTCPDNS&&!c.androidSystemDNS&&!tetherDNS&&!appIPv6DNS{return finish(stopUID,nil)}
@@ -298,10 +313,12 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  if c.androidSystemDNS{
   if e=relay.EnableUDP();e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
  }
+ routeStage="DNS_RELAY_ROUTE"
  owner,e:=rootjournal.NewDNS(runner,androidDNSFirewall,androidDNSBatch,androidDNSJournal,plan)
  if e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
  var systemOwner,systemOwner6 *rootjournal.SystemDNSOwner
  if c.androidSystemDNS{
+  routeStage="DNS4"
   // Android Network.getNetworkHandle stores netId in its high 32 bits.
   // No root/system wildcard rule and no modification of netd configuration.
   systemOwner,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,
@@ -310,6 +327,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client uid_netid_port53=1")
  }
  if c.androidSystemDNS6{
+  routeStage="DNS6"
   port,err:=relay.EnableIPv6()
   if err!=nil{return nil,errors.Join(err,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
   plan6:=plan;plan6.Port=port

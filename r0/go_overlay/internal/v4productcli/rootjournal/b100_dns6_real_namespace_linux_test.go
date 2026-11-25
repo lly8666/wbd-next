@@ -142,6 +142,14 @@ func TestB120IPv6EntryRealNamespace(t *testing.T){
  p.MTU=1200
  owner,e=NewIPv6Carrier(ip,runner("iptables"),runner("ip6tables"),path,p);if e!=nil{t.Fatal(e)}
  if got,e:=ip("-6","route","show","table",ipv6CarrierTable);e!=nil||!strings.Contains(got,"blackhole default"){t.Fatal(got,e)}
+ // Reproduce the previous release leaving its journal and low-MTU
+ // route installed after its readback mismatch; recover using new code.
+ if e=owner.lock.Close();e!=nil{t.Fatal(e)};owner.lock=nil
+ if e=RecoverIPv6Carrier(ip,runner("iptables"),runner("ip6tables"),path);e!=nil{t.Fatal(e)}
+ if _,e=os.Stat(path);!os.IsNotExist(e){t.Fatal("old journal survived recovery",e)}
+ if got,e:=ip("-6","rule","show");e!=nil||strings.Contains(got,ipv6CarrierTable){t.Fatalf("IPv6 rule survived recovery %s %v",got,e)}
+ owner,e=NewIPv6Carrier(ip,runner("iptables"),runner("ip6tables"),path,p);if e!=nil{t.Fatal(e)}
  if e=owner.Stop();e!=nil{t.Fatal(e)}
+ t.Log("B121_HOST_BLACKHOLE_OLD_JOURNAL_RECOVERY_AND_RESTART_PASS")
  t.Log("B120_HOST_REAL_TUN_IPV6_ENTRY_AND_LOW_MTU_DROP_STOP_PASS")
 }

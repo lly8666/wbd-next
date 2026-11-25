@@ -355,6 +355,7 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   start_args=(--es ci_target traffic --es ci_mode "${WBD_B109_MODE:-normal}")
   if [[ "${WBD_B110_SCENE:-}" == normal-dns ]];then start_args+=(--es ci_scenario tunnel_dns);fi
   if [[ "${WBD_B110_SCENE:-}" == normal-dns-relay ]];then start_args+=(--es ci_scenario tunnel_dns_relay);fi
+  if [[ "${WBD_B110_SCENE:-}" == normal-managed ]];then start_args+=(--es ci_scenario managed_default);fi
   if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then start_args+=(--es ci_scenario auto_reconnect);fi
 fi
 adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity \
@@ -511,6 +512,13 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   printf 'PASS\n' >"$out/b108-remote-app-result.txt"
   case "${WBD_B110_SCENE:-}" in
     normal-dns|normal-dns-relay) phase=B110_TUNNEL_DNS;b110_dns;;
+    normal-managed)
+      phase=B121_MANAGED_DEFAULT
+      for marker in ROUTE_SCOPE_ALL_ORDINARY_APPS_IPV4 ORIGINAL_GO_POSTAUTH_DNS4_READY ORIGINAL_GO_POSTAUTH_DNS6_READY ORIGINAL_GO_POSTAUTH_IPV6_DROP_READY;do
+        grep -Fq "$marker" "$out/app-diagnostic-enums.txt" || { echo "B121_MANAGED_NOT_READY $marker";exit 54; }
+      done
+      b110_dns
+      echo B121_MANAGED_ALL_APPS_REAL_AUTH_BUSINESS_DNS_PASS;;
     normal-reconnect) phase=B110_PRODUCTION_RECONNECT;b110_reconnect;;
   esac
   adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step stop >"$out/stop-activity.txt"
@@ -534,6 +542,12 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   adb shell "su -c 'iptables -w 2 -t nat -S OUTPUT'" >>"$out/b108-stop-rules.txt"
   adb shell "su -c 'iptables -w 2 -S OUTPUT'" >>"$out/b108-stop-rules.txt"
   if grep -Eq 'lookup 19842( |$)|table 19842( |$)|wbd-next-root-rst-v1|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/b108-stop-rules.txt";then exit 52;fi
+  if [[ "${WBD_B110_SCENE:-}" == normal-managed ]];then
+    adb shell "su -c 'test ! -e /data/local/tmp/wbd-next-root/ipv6-carrier-journal.json && test ! -e /data/local/tmp/wbd-next-root/system-dns-journal.json && test ! -e /data/local/tmp/wbd-next-root/system-dns6-journal.json && test ! -e /sys/class/net/wbd_dns0 && test ! -e /sys/class/net/wbd_dns6'"
+    adb shell "su -c 'ip -6 rule show; ip -6 route show table all; ip6tables -w 2 -t nat -S OUTPUT'" >>"$out/b108-stop-rules.txt"
+    if grep -Eq "(lookup|table) 1984[567]( |$)|wbd-next-root-system-dns6-v1" "$out/b108-stop-rules.txt";then exit 54;fi
+    echo B121_MANAGED_ALL_APPS_STOP_PASS
+  fi
   activity_requested=0
   printf 'PASS\n' >"$out/b108-stop-result.txt"
   if [[ "${WBD_B110_SCENE:-}" == *-loss ]];then

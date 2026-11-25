@@ -89,6 +89,10 @@ final class RootDiagnosticReport {
         }
         if(has(session,"START_DIAGNOSTIC_STAGES_V2")&&
            has(session,"ROOT_PROCESS_EXIT_NONZERO")){
+            for(String routeFailure:new String[]{"SCOPE","RECOVER_IPV6","RECOVER_TETHER","RECOVER_DNS6","RECOVER_DNS4","RECOVER_DNS_RELAY","UID_IPV4","DNS_RELAY","DNS_RELAY_ROUTE","DNS4","DNS6","TETHER","IPV6"}){
+                String event="ORIGINAL_GO_POSTAUTH_ROUTE_FAILED_"+routeFailure;
+                if(has(session,event))return event;
+            }
             for(String tetherFailure:new String[]{
                 "ORIGINAL_TETHER_FAILED_DOWNSTREAM",
                 "ORIGINAL_TETHER_FAILED_FORWARDING",

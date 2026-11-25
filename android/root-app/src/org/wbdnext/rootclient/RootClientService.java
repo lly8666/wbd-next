@@ -555,6 +555,7 @@ public final class RootClientService extends Service {
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         String tetherFailure=null;
         String coldFailure=null;
+        String routeFailure=null;
         String launchFailure=null;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         int modeLanes=RootGameSessionStatus.expectedLanes(fecMode);
@@ -984,6 +985,20 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_M4_START_FAILED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH role=client class=UID_ROUTE_FAILED"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_UID_ROUTE_FAILED);
+                    if(line.contains("V4_PUBLIC_ANDROID_POSTAUTH_ROUTE_FAILED role=client class=")){
+                        for(String stage:new String[]{"SCOPE","RECOVER_IPV6","RECOVER_TETHER","RECOVER_DNS6","RECOVER_DNS4","RECOVER_DNS_RELAY","UID_IPV4","DNS_RELAY","DNS_RELAY_ROUTE","DNS4","DNS6","TETHER","IPV6"}){
+                            if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_POSTAUTH_ROUTE_FAILED role=client class="+stage)&&line.endsWith("class="+stage)){
+                                routeFailure=stage;
+                                trace(RootDiagnosticReceipt.Event.valueOf("ORIGINAL_GO_POSTAUTH_ROUTE_FAILED_"+stage));
+                            }
+                        }
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DNS4_READY);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DNS6_READY);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_IPV6_ENTRY_DROP_READY role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_IPV6_DROP_READY);
                     if(!leaseReadback&&OriginalGoMilestones.matches(
                         line,"V4_PUBLIC_LEASE_APPLIED role=client")){
                         leaseReadback=true;
@@ -1173,6 +1188,8 @@ public final class RootClientService extends Service {
                 status="OWNED_STOP_VERIFIED — 原Go/Rust与UID路由已归还；可手动重选Network并START（业务未验）";
             }else if(coldFailure!=null){
                 status="本机 Go 建链前退出："+coldFailure+"（尚未发送 SYN）；请导出诊断。";
+            }else if(routeFailure!=null){
+                status="服务器认证成功，本地路由接管失败："+routeFailure+"；请导出诊断。";
             }else if(tetherFailure!=null){
                 status="热点/USB共享未启动："+tetherFailure+"。若仅需本机联网，请取消共享后连接。";
             }else{

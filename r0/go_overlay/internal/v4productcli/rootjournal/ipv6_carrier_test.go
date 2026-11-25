@@ -99,3 +99,9 @@ func testIPv6Carrier(t *testing.T,tether bool,appDNS ...bool){
   for _,v:=range present{if v{t.Fatal("Restore retained rule")}}
  }
 }
+
+func TestB121IPv6BlackholeKernelLoopbackReadback(t *testing.T){
+ a:=strings.Fields("route blackhole default table 19847")
+ for _,row:=range []string{"blackhole default table 19847","blackhole default dev lo table 19847 metric 1024 pref medium"}{if !carrierRouteMatch(strings.Fields(row),a){t.Fatal(row)}}
+ for _,row:=range []string{"blackhole default dev wlan0 table 19847 metric 1024 pref medium","blackhole default dev lo table 19848","unreachable default dev lo table 19847"}{if carrierRouteMatch(strings.Fields(row),a){t.Fatal("wrong route",row)}}
+}

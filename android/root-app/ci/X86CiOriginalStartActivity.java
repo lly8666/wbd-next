@@ -131,8 +131,17 @@ public final class X86CiOriginalStartActivity extends Activity {
             request.putExtra("port",443);
             request.putExtra("sni","wbd-v4.example.test");
             request.putExtra("user","wbd-ci-session");
-            request.putExtra("target_uids",uidGroup.uids);
-            request.putExtra("target_packages",uidGroup.packages);
+            String scenario=getIntent().getStringExtra("ci_scenario");
+            boolean managed="managed_default".equals(scenario);
+            if(managed){
+                AllAppRouteScope full=AllAppRouteScope.snapshot(this);
+                request.putExtra("all_apps",true);
+                request.putExtra("exclude_appids",full.excludedAppIDs);
+                request.putExtra("manager_packages",full.managerPackages);
+            }else{
+                request.putExtra("target_uids",uidGroup.uids);
+                request.putExtra("target_packages",uidGroup.packages);
+            }
             // The normal historical fixture uses its CA. Wiring matrix
             // explicitly follows the earlier physical Normal/off defaults.
             String mode=getIntent().getStringExtra("ci_mode");
@@ -145,11 +154,12 @@ public final class X86CiOriginalStartActivity extends Activity {
             request.putExtra("fec_profile",6);
             request.putExtra("has_ca",verify);
             request.putExtra("tls_verify_server",verify);
-            String scenario=getIntent().getStringExtra("ci_scenario");
-            boolean tunnelDNS="tunnel_dns".equals(scenario)||"tunnel_dns_relay".equals(scenario);
+            boolean tunnelDNS=managed||"tunnel_dns".equals(scenario)||"tunnel_dns_relay".equals(scenario);
             request.putExtra("tunnel_dns",tunnelDNS);
             if(tunnelDNS)request.putExtra("tunnel_dns_upstream","10.66.0.1");
-            request.putExtra("app_tcp_dns","tunnel_dns_relay".equals(scenario));
+            request.putExtra("app_tcp_dns",managed||"tunnel_dns_relay".equals(scenario));
+            request.putExtra("system_dns",managed);
+            request.putExtra("system_dns6",managed);
             request.putExtra("background_network_recovery","auto_reconnect".equals(scenario));
             request.putExtra("physical_dns",false);
             request.putExtra("cn_dns_split",false);

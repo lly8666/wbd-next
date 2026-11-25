@@ -249,8 +249,20 @@ func carrierFWKey(w []string)string{
 func carrierRouteMatch(w,a []string)bool{
  if len(a)==5&&a[1]=="blackhole"{
   if len(w)<4||w[0]!="blackhole"||w[1]!="default"||!hasPair(w,"table",ipv6CarrierTable){return false}
-  for i:=2;i+1<len(w);i+=2{if w[i]!="table"&&w[i]!="metric"&&w[i]!="pref"&&w[i]!="proto"{return false}}
-  return len(w)%2==0
+  // IPv6 blackhole routes may print the kernel loopback device even
+  // when no device was supplied. This is the exact same owned route.
+  for i:=2;i<len(w);i+=2{
+   if i+1>=len(w){return false}
+   switch w[i]{
+   case "dev":if w[i+1]!="lo"{return false}
+   case "table":if w[i+1]!=ipv6CarrierTable{return false}
+   case "metric":if w[i+1]!="1024"{return false}
+   case "pref":if w[i+1]!="medium"{return false}
+   case "proto":if w[i+1]!="boot"&&w[i+1]!="static"{return false}
+   default:return false
+   }
+  }
+  return true
  }
  if len(a)==5&&a[1]=="throw"{
   if len(w)<4||w[0]!="throw"||carrierIP(w[1])!=carrierIP(a[2])||!hasPair(w,"table",ipv6CarrierTable){return false}
