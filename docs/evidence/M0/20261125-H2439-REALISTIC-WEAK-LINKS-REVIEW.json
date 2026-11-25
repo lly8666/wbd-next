@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "9a93bdcdfabeff2fd3c123063774a24cc51926b7",
+  "product_source_sha": "5e1b68331a4b666287ee28219f30a6b7c70df0dd",
+  "run_id": 45592176753,
+  "result": "PASS_SCOPED_STABILITY_RETAIN_ARCHITECTURE_JITTER_LIMITATION_OPEN",
+  "scope": "22 successful jobs, all 84 measured log rows individually reviewed (80 formal, 4 smoke), all drain_verified true. Four original ZIPs separately downloaded and reviewed: jitter both CC orders, burst CC ABBA, shared CC ABBA. Other artifacts not independently unpacked. Native ARM same-VM four netns, fixed FEC, no full remote/Windows qualification.",
+  "artifact_verified": true,
+  "reviewed_artifact_ids": [
+    15010893721,
+    15012161727,
+    15012802189,
+    15012366689
+  ],
+  "jobs": [
+    {
+      "id": 139128913375,
+      "name": "burst-pacing-AB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15011867115
+    },
+    {
+      "id": 139128913986,
+      "name": "shared-pacing-AB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15011787168
+    },
+    {
+      "id": 139130588730,
+      "name": "down-only-pacing-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15011504585
+    },
+    {
+      "id": 139130588734,
+      "name": "jitter-cubic-bbr-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012161727
+    },
+    {
+      "id": 139130588742,
+      "name": "ack-only-pacing-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15010684727
+    },
+    {
+      "id": 139130588743,
+      "name": "shared-pacing-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15013111052
+    },
+    {
+      "id": 139130588754,
+      "name": "jitter-pacing-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012366593
+    },
+    {
+      "id": 139130588770,
+      "name": "burst-pacing-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012386074
+    },
+    {
+      "id": 139130588774,
+      "name": "down-only-pacing-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012396638
+    },
+    {
+      "id": 139130588789,
+      "name": "burst-cubic-bbr-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012366689
+    },
+    {
+      "id": 139130588813,
+      "name": "shared-pacing-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012049274
+    },
+    {
+      "id": 139130588850,
+      "name": "ack-only-pacing-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15011958003
+    },
+    {
+      "id": 139130588874,
+      "name": "burst-pacing-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012660339
+    },
+    {
+      "id": 139130588885,
+      "name": "down-only-cubic-bbr-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012057709
+    },
+    {
+      "id": 139130588887,
+      "name": "ack-only-cubic-bbr-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012277877
+    },
+    {
+      "id": 139130588891,
+      "name": "ack-only-cubic-bbr-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15013060360
+    },
+    {
+      "id": 139130588894,
+      "name": "down-only-cubic-bbr-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15013065376
+    },
+    {
+      "id": 139130588908,
+      "name": "jitter-cubic-bbr-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15010893721
+    },
+    {
+      "id": 139130588936,
+      "name": "burst-cubic-bbr-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012351280
+    },
+    {
+      "id": 139130589213,
+      "name": "jitter-pacing-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15011803666
+    },
+    {
+      "id": 139130591379,
+      "name": "shared-cubic-bbr-ABBA",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012802189
+    },
+    {
+      "id": 139130591672,
+      "name": "shared-cubic-bbr-BAAB",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_id": 15012417702
+    }
+  ],
+  "pairs": {
+    "columns": [
+      "scene",
+      "order",
+      "equal_cap_cubic_mbps",
+      "equal_cap_bbr_mbps",
+      "bbr_no_explicit_cap_mbps",
+      "bbr_explicit_cap_mbps",
+      "no_cap_server_full_drops_sum",
+      "cap_server_full_drops_sum"
+    ],
+    "rows": [
+      [
+        "burst",
+        "ABBA",
+        0.4997412,
+        105.3069191,
+        105.5913163,
+        88.1800908,
+        0,
+        0
+      ],
+      [
+        "burst",
+        "BAAB",
+        0.456876,
+        95.7426563,
+        107.4324808,
+        113.1104413,
+        0,
+        0
+      ],
+      [
+        "down-only",
+        "ABBA",
+        0.9370368,
+        258.2093171,
+        278.6800403,
+        210.432652,
+        4017,
+        0
+      ],
+      [
+        "down-only",
+        "BAAB",
+        7.1096256,
+        257.1079588,
+        242.5912583,
+        259.4248657,
+        8360,
+        0
+      ],
+      [
+        "ack-only",
+        "ABBA",
+        431.9976024,
+        408.5120592,
+        437.5665571,
+        414.4821408,
+        0,
+        0
+      ],
+      [
+        "ack-only",
+        "BAAB",
+        431.9963676,
+        414.428868,
+        437.7481481,
+        420.2613576,
+        20171,
+        0
+      ],
+      [
+        "jitter",
+        "ABBA",
+        2.6024292,
+        4.283874,
+        3.451702,
+        3.9739309,
+        0,
+        0
+      ],
+      [
+        "jitter",
+        "BAAB",
+        5.6956864,
+        3.3459044,
+        4.1165249,
+        3.3882388,
+        0,
+        0
+      ],
+      [
+        "shared",
+        "ABBA",
+        58.8901751,
+        66.1655569,
+        71.6824705,
+        65.7757015,
+        0,
+        0
+      ],
+      [
+        "shared",
+        "BAAB",
+        58.8395873,
+        66.8607697,
+        73.2652047,
+        66.9656951,
+        0,
+        0
+      ]
+    ],
+    "notes": "Rounded/derived per-job two-leg means, not raw cross-runner pooling. All explicit-cap BBR rows and all client local full drops zero. Uncapped BBR server full drops in down-only and ACK-only. Shared scenario uses 85Mbps weak-leg cap, other caps 432/480."
+  },
+  "shared": {
+    "bbr_uncapped_wbd_mbps": "71.68–73.27",
+    "bbr_uncapped_competitor_mbps": "11.48–12.41",
+    "bbr_capped_wbd_mbps": "65.78–66.97",
+    "bbr_capped_competitor_mbps": "20.01–20.32",
+    "equal_cap_cubic_competitor_mbps": "33.55–33.73",
+    "wan_ping_p95_ms": "540–551",
+    "notes": "Aggregate WAN includes competitor; fixed cap not equal shares, no general fairness or delay guarantee. BBR own throughput gain over CUBIC partly comes from lower competing throughput."
+  },
+  "jitter": {
+    "configuration": "100ms nominal RTT, 20ms per-direction packet delay jitter, 25% correlation, 1% IID, FEC12.5%; netem time-order queue can reorder packets",
+    "observed": "both algorithms ~2–7Mbps individual legs, no local TUN full drops, CPU low, ss reord_seen/DSACK/retrans elevated, representative BBR mrtt 2.308ms and nominal RTT100, ICMP median near100. Eight CC-comparison legs FEC source_seen minus source_accepted roughly11–13%; not infer actual residual packet loss from decoder_rejected alone (could be duplicate/recovered/late). Root cause unproven; compare bare TCP and controlled delay-only ordered vs reordered path before changing code.",
+    "status": "OPEN_PERFORMANCE_LIMITATION_DEFERRED"
+  },
+  "cc_inventory": "Reviewed ZIPs report 7.0.0-1017-azure aarch64, reno cubic bbr, in-tree tcp_bbr srcversion 5B6C12777290291DF28F230. No v3/plus kernel tested; do not assert exact algorithm generation from name alone.",
+  "decision": "Retain transparent split BBR, selectable CUBIC/NAT, dual Normal1024, existing FEC/repair/wire and optional pacing ability. No new product code, no additional runs, stop this research phase; jitter limitation retained, release gates H2438 remain."
+}
