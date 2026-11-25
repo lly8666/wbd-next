@@ -1,0 +1,47 @@
+{
+  "status": "DIRECT_TCP_PASS_NATIVE_BUSINESS_NOT_MEASURED",
+  "source_sha": "cbce1720d44a498920efe8a2567904749da47be8",
+  "run_id": 45615492146,
+  "verified_artifacts": [
+    15021868376,
+    15020449879,
+    15022945365,
+    15021258882,
+    15022745672
+  ],
+  "direct": [
+    {
+      "added_rtt_ms": 0,
+      "rx_mbps": 358.073088,
+      "bytes": 1341233136,
+      "eof": true,
+      "source_cc": "bbr"
+    },
+    {
+      "added_rtt_ms": 400,
+      "rx_mbps": 262.2224,
+      "bytes": 706090704,
+      "eof": true,
+      "source_cc": "bbr"
+    }
+  ],
+  "tailnet_both": "DIRECT_CANDIDATE",
+  "native": {
+    "authenticated_TLS": true,
+    "normal_off_rust_M4": true,
+    "server_inbox1024": true,
+    "client_ready": false,
+    "server_routed": 0,
+    "proxy_accept": false,
+    "client_stop": false,
+    "server_stop": true,
+    "error": "Windows TCP cold probe not connected; Windows client log: route is not owned; refuse to replace"
+  },
+  "hypothesis": "Fixture exact 10.248.82.2/32 route conflicts with product-owned server host route; not proven until retry.",
+  "retry": {
+    "source_sha": "bc1f6ad694dbd3f6f7ca74e9facb12eec21c0cba",
+    "run_id": 45616469208,
+    "change": "dedicated access subnet /24 instead of exact host /32; keep product ownership checks unchanged",
+    "status": "RUNNING_NO_MEASUREMENT_YET"
+  }
+}
