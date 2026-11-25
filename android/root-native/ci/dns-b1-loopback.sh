@@ -22,7 +22,7 @@ grep -Fq -- "--- PASS: TestB66SystemDNSRealUDPTCPModeAndStop" out/android-b1-dns
 grep -Fq -- "--- PASS: TestB64ActualAppTCPDNSPhysicalTunnelAndCN" out/android-b1-dnsnative/wire-tests.log
 grep -Fq "PASS" out/android-b1-dnsnative/wire-tests.log
 go test -count=1 -timeout=45s -v ./r0/go_overlay/internal/v4productcli/rootjournal \
-  -run '^(TestB6(4OwnedTCPDNSSelectedAndAllAppRoutesRestore|5TetherOwnedForwardingAndRestore|6SystemDNSSelectedUIDRouteAndRestore|7CLATScopeOriginalIPv4OnIPv6Underlay|8TetherDNSExactDownstreamAndRestore|9SystemDNS6SelectedUIDRouteAndRestore)|TestB70IPv6OwnedCarrierAndRestore|TestB71IPv6TetherAndColdPeerScope|TestB72IPv6DirectCIDRsAndLAN|TestB75IPv6AppDNSSharedCarrierAndRestore|TestB76TetherIPv4DirectCIDRsAndRestore|TestB79CountryDirectKernelBatchAndStop|TestB120ManagedDNSNetlink|TestB122DNS6NATCapabilityReadOnly)$' \
+  -run '^(TestB6(4OwnedTCPDNSSelectedAndAllAppRoutesRestore|5TetherOwnedForwardingAndRestore|6SystemDNSSelectedUIDRouteAndRestore|7CLATScopeOriginalIPv4OnIPv6Underlay|8TetherDNSExactDownstreamAndRestore|9SystemDNS6SelectedUIDRouteAndRestore)|TestB70IPv6OwnedCarrierAndRestore|TestB71IPv6TetherAndColdPeerScope|TestB72IPv6DirectCIDRsAndLAN|TestB75IPv6AppDNSSharedCarrierAndRestore|TestB76TetherIPv4DirectCIDRsAndRestore|TestB79CountryDirectKernelBatchAndStop|TestB120ManagedDNSNetlink)$' \
   | tee out/android-b1-dnsnative/app-tcp-owner-tests.log
 grep -Fq -- "--- PASS: TestB64OwnedTCPDNSSelectedAndAllAppRoutesRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
 grep -Fq -- "--- PASS: TestB65TetherOwnedForwardingAndRestore" out/android-b1-dnsnative/app-tcp-owner-tests.log
@@ -61,5 +61,3 @@ PY
 
 grep -Fq -- "--- PASS: TestB120ManagedAAAAIsLocalNoData" out/android-b1-dnsnative/wire-tests.log
 grep -Fq -- "--- PASS: TestB120ManagedDNSNetlink" out/android-b1-dnsnative/app-tcp-owner-tests.log
-
-grep -Fq -- "--- PASS: TestB122DNS6NATCapabilityReadOnly" out/android-b1-dnsnative/app-tcp-owner-tests.log

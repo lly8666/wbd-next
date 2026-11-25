@@ -357,8 +357,6 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   if [[ "${WBD_B110_SCENE:-}" == normal-dns-relay ]];then start_args+=(--es ci_scenario tunnel_dns_relay);fi
   if [[ "${WBD_B110_SCENE:-}" == normal-managed ]];then
     start_args+=(--es ci_scenario managed_default)
-    if adb shell "su -c 'ip6tables -w 2 -t nat -S OUTPUT'" >"$out/b108-ipv6-nat-capability.txt" 2>&1;then dns6_nat=1;else dns6_nat=0;fi
-    echo B122_ANDROID_IPV6_NAT_AVAILABLE "$dns6_nat"
   fi
   if [[ "${WBD_B110_SCENE:-}" == normal-reconnect ]];then start_args+=(--es ci_scenario auto_reconnect);fi
 fi
@@ -522,13 +520,11 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
       for marker in ROUTE_SCOPE_ALL_ORDINARY_APPS_IPV4 ORIGINAL_GO_POSTAUTH_DNS4_READY ORIGINAL_GO_POSTAUTH_IPV6_DROP_READY;do
         grep -Fq "$marker" "$out/app-diagnostic-enums.txt" || { echo "B121_MANAGED_NOT_READY $marker";exit 54; }
       done
-      if [[ "$dns6_nat" == 1 ]];then
-        grep -Fq ORIGINAL_GO_POSTAUTH_DNS6_READY "$out/app-diagnostic-enums.txt" || { echo B122_DNS6_SUPPORTED_BUT_NOT_READY;exit 54; }
-      else
-        grep -Fq ORIGINAL_GO_DNS6_UNAVAILABLE_NAT_PROBE "$out/app-diagnostic-enums.txt" || { echo B122_EXPECTED_NAT6_UNAVAILABLE_NOT_PROVEN;exit 54; }
-      fi
+      if grep -Eq "ORIGINAL_GO_POSTAUTH_DNS6_READY|ORIGINAL_GO_DNS6_(START_FAILED|UNAVAILABLE)_" "$out/app-diagnostic-enums.txt";then echo B123_UNEXPECTED_DNS6;exit 54;fi
+      adb shell "su -c 'test ! -e /sys/class/net/wbd_dns6 && test ! -e /data/local/tmp/wbd-next-root/system-dns6-journal.json'"
+      echo B123_IPV4_ONLY_NO_DNS6_OWNER_PASS
       b110_dns
-      echo B122_MANAGED_ALL_APPS_REAL_AUTH_BUSINESS_DNS_PASS;;
+      echo B123_MANAGED_ALL_APPS_REAL_AUTH_BUSINESS_DNS_PASS;;
     normal-reconnect) phase=B110_PRODUCTION_RECONNECT;b110_reconnect;;
   esac
   adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step stop >"$out/stop-activity.txt"
@@ -555,7 +551,6 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   if [[ "${WBD_B110_SCENE:-}" == normal-managed ]];then
     adb shell "su -c 'test ! -e /data/local/tmp/wbd-next-root/ipv6-carrier-journal.json && test ! -e /data/local/tmp/wbd-next-root/system-dns-journal.json && test ! -e /data/local/tmp/wbd-next-root/system-dns6-journal.json && test ! -e /sys/class/net/wbd_dns0 && test ! -e /sys/class/net/wbd_dns6'"
     adb shell "su -c 'ip -6 rule show; ip -6 route show table all'" >>"$out/b108-stop-rules.txt"
-    if [[ "$dns6_nat" == 1 ]];then adb shell "su -c 'ip6tables -w 2 -t nat -S OUTPUT'" >>"$out/b108-stop-rules.txt";fi
     if grep -Eq "(lookup|table) 1984[567]( |$)|wbd-next-root-system-dns6-v1" "$out/b108-stop-rules.txt";then exit 54;fi
     echo B121_MANAGED_ALL_APPS_STOP_PASS
   fi

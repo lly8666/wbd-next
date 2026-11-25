@@ -159,7 +159,6 @@ public final class X86CiOriginalStartActivity extends Activity {
             if(tunnelDNS)request.putExtra("tunnel_dns_upstream","10.66.0.1");
             request.putExtra("app_tcp_dns",managed||"tunnel_dns_relay".equals(scenario));
             request.putExtra("system_dns",managed);
-            request.putExtra("system_dns6",managed);
             request.putExtra("background_network_recovery","auto_reconnect".equals(scenario));
             request.putExtra("physical_dns",false);
             request.putExtra("cn_dns_split",false);

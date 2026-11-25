@@ -480,8 +480,8 @@ public final class RootClientService extends Service {
         }
         if(appTcpDNS)quotedArgs.add(q("--android-app-tcp-dns"));
         if(systemDNS)quotedArgs.add(q("--android-system-dns"));
-        if(systemDNS6)quotedArgs.add(q("--android-system-dns6"));
-        if(systemDNS6&&systemDNS&&appTcpDNS){
+        if(systemDNS6&&!ipv6Gateway.isEmpty())quotedArgs.add(q("--android-system-dns6"));
+        if(systemDNS&&appTcpDNS){
             quotedArgs.add(q("--android-managed-dns"));
             if(ipv6Gateway.isEmpty())quotedArgs.add(q("--android-ipv6-drop"));
         }
@@ -556,7 +556,6 @@ public final class RootClientService extends Service {
         String tetherFailure=null;
         String coldFailure=null;
         String routeFailure=null;
-        String dns6Unavailable=null;
         String launchFailure=null;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         int modeLanes=RootGameSessionStatus.expectedLanes(fecMode);
@@ -996,18 +995,8 @@ public final class RootClientService extends Service {
                     }
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DNS4_READY);
-                    if(line.contains("V4_PUBLIC_ANDROID_SYSTEM_DNS6_")){
-                        for(String stage:new String[]{"NAT_PROBE","LISTEN","LINK","ADDRESS","ROUTE","NAT","RULES","READBACK"}){
-                            if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_SYSTEM_DNS6_UNAVAILABLE role=client class="+stage)&&line.endsWith("class="+stage)){
-                                dns6Unavailable=stage;
-                                trace(RootDiagnosticReceipt.Event.valueOf("ORIGINAL_GO_DNS6_UNAVAILABLE_"+stage));
-                            }
-                        }
-                        for(String stage:new String[]{"LINK","ADDRESS","ROUTE","NAT","RULES","READBACK"}){
-                            if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_SYSTEM_DNS6_START_FAILED role=client class="+stage)&&line.endsWith("class="+stage))
-                                trace(RootDiagnosticReceipt.Event.valueOf("ORIGINAL_GO_DNS6_START_FAILED_"+stage));
-                        }
-                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_RA_SUPPRESSED role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TETHER_RA_SUPPRESSED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_POSTAUTH_DNS6_READY);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_IPV6_ENTRY_DROP_READY role=client"))
@@ -1169,7 +1158,6 @@ public final class RootClientService extends Service {
                         String gameBrief=RootGameSessionStatus.readyBrief(fecMode);
                         status=gameBrief!=null?gameBrief:
                             "NATIVE_M4_READY + VERIFIED_UID_ROUTE_READBACK; real Android traffic unverified";
-                        if(dns6Unavailable!=null)status+="；IPv6 DNS接管不可用("+dns6Unavailable+")，保留IPv4 DNS与IPv6入口丢弃。";
                         networkEvents.post(()->scheduleRotation(generation));
                     }
                     // Deliberately don't echo username, auth errors, route

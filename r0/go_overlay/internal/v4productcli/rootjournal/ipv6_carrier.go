@@ -30,6 +30,7 @@ type IPv6Plan struct{
  Version int
  Server bool
  Drop bool `json:",omitempty"` // default IPv6 entry drop, no SIT
+ SuppressRA bool `json:",omitempty"` // only the selected shared downstream; old journals default false
  Tun,Local4,Gateway4,Egress string
  MTU int
  All bool
@@ -102,11 +103,13 @@ func(p IPv6Plan) valid()bool{
   local,e:=netip.ParseAddr(p.Local4)
   if p.Version!=1||p.Server||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||e!=nil||!local.Is4()||local.IsUnspecified()||p.Gateway4!=""||p.Egress!=""||p.MTU<1||p.MTU>1500||len(p.DirectCIDRs)!=0||p.AppDNSPort!=0||p.AppDNSTCP{return false}
   if p.Downstream!=""&&(!nameOK(p.Downstream)||p.Downstream==p.Tun){return false}
+  if p.SuppressRA&&(p.Downstream==""||len(p.DownstreamDNSPorts)!=0){return false}
   if len(p.Downstream6)!=len(p.DownstreamDNSPorts)||len(p.Downstream6)>1||len(p.Downstream6)>0&&p.Downstream==""{return false}
   for i,raw:=range p.Downstream6{q,e:=netip.ParsePrefix(raw);if e!=nil||q.Bits()!=128||!q.Addr().Is6()||q.Addr().Is4In6()||!(q.Addr().IsGlobalUnicast()||q.Addr().IsLinkLocalUnicast())||p.DownstreamDNSPorts[i]<1||p.DownstreamDNSPorts[i]>65535{return false}}
   if p.All{return len(p.UIDs)==0&&ValidAllAppExclusions(p.ExcludedAppIDs)}
   return len(p.ExcludedAppIDs)==0&&(len(p.UIDs)==1&&p.UIDs[0]>=10000&&p.UIDs[0]<=1999999||ValidGroupUIDs(p.UIDs))
  }
+ if p.SuppressRA{return false}
  local,e:=netip.ParseAddr(p.Local4);peer,f:=netip.ParseAddr(p.Gateway4)
  if p.Version!=1||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||
     e!=nil||f!=nil||!local.Is4()||!peer.Is4()||!local.IsPrivate()||!peer.IsPrivate()||
@@ -145,8 +148,8 @@ func(p IPv6Plan) commands()[]carrierCmd{
  }
  fw:=func(family,table string,args ...string){out=append(out,carrierCmd{family,table,append(append([]string(nil),args[:len(args)-2]...),append([]string{"-m","comment","--comment",ipv6CarrierMarker},args[len(args)-2:]...)...)})}
  if p.Drop{
-  // DNS DNAT precedes IPv6 routing. Scope by selected interface,
-  // including link-local queries rather than only global /64 sources.
+  // Decode old B120-B122 journals for exact removal only. New drop
+  // plans never create DNS6 DNAT or listeners.
   for i,raw:=range p.Downstream6{
    ip:=netip.MustParsePrefix(raw).Addr().String();port:=strconv.Itoa(p.DownstreamDNSPorts[i])
    for _,proto:=range []string{"udp","tcp"}{
@@ -158,6 +161,9 @@ func(p IPv6Plan) commands()[]carrierCmd{
   // Do not raise the actual IPv4 MTU merely to support IPv6 capture.
   if p.MTU>=1280{route("-6","default",p.Tun,p.local6())}else{out=append(out,carrierCmd{"ip","-6",[]string{"route","blackhole","default","table",ipv6CarrierTable}})}
   if p.Downstream!=""{
+   // AOSP RA daemon sends raw ICMPv6 through local OUTPUT. Stop only
+   // router advertisements on this downstream, not ND or IPv4 DHCP.
+   if p.SuppressRA{fw("fw6","filter","OUTPUT","-o",p.Downstream,"-p","ipv6-icmp","-m","icmp6","--icmpv6-type","134","-j","DROP")}
    if p.MTU>=1280{fw("fw6","filter","FORWARD","-i",p.Downstream,"-o",p.Tun,"-j","ACCEPT")}
    rule("-6",ipv6TetherPref,"iif",p.Downstream)
   }
@@ -242,7 +248,9 @@ func carrierFWKey(w []string)string{
  for i:=1;i+1<len(w);i+=2{
   if w[i]=="-s"||w[i]=="-d"{w[i+1]=carrierIP(w[i+1])}
   if w[i]=="-p"&&(w[i+1]=="ipv6"||w[i+1]=="41"){w[i+1]="41"}
-  if w[i]=="-p"&&w[i+1]=="icmpv6"{w[i+1]="ipv6-icmp"}
+  if w[i]=="-p"&&(w[i+1]=="icmpv6"||w[i+1]=="icmp6"||w[i+1]=="58"){w[i+1]="ipv6-icmp"}
+  if w[i]=="-m"&&(w[i+1]=="icmpv6"||w[i+1]=="ipv6-icmp"){w[i+1]="icmp6"}
+  if w[i]=="--icmpv6-type"&&w[i+1]=="router-advertisement"{w[i+1]="134"}
  }
  return tetherFWKey(w)
 }
@@ -365,10 +373,11 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
    }
   }
  }
- for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"},{"fw6","nat","PREROUTING"},{"fw6","nat","OUTPUT"}}{
-  if p.Drop&&(pair[0]=="fw4"||pair[2]!="INPUT"&&pair[2]!="PREROUTING"&&pair[2]!="FORWARD"){continue}
+ for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","filter","OUTPUT"},{"fw6","nat","POSTROUTING"},{"fw6","nat","PREROUTING"},{"fw6","nat","OUTPUT"}}{
+  if pair[1]=="filter"&&pair[2]=="OUTPUT"&&!p.SuppressRA{continue}
+  if p.Drop&&(pair[0]=="fw4"||pair[2]!="INPUT"&&pair[2]!="PREROUTING"&&pair[2]!="FORWARD"&&!(pair[1]=="filter"&&pair[2]=="OUTPUT"&&p.SuppressRA)){continue}
   if pair[2]=="PREROUTING"&&len(p.DownstreamDNSPorts)==0{continue}
-  if pair[2]=="OUTPUT"&&p.AppDNSPort==0{continue}
+  if pair[1]=="nat"&&pair[2]=="OUTPUT"&&p.AppDNSPort==0{continue}
   if !p.Server&&!p.Drop&&len(p.Downstream6)==0&&pair[0]=="fw6"&&pair[2]!="OUTPUT"{continue}
   if p.Drop&&pair[2]=="INPUT"&&len(p.DownstreamDNSPorts)==0{continue}
   if p.Drop&&pair[2]=="FORWARD"&&(p.Downstream==""||p.MTU<1280){continue}

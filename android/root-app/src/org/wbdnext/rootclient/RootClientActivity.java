@@ -939,7 +939,7 @@ public final class RootClientActivity extends Activity {
         appTcpDNS.setChecked(true);
         tetherSharing.setChecked(s.tetherSharing);
         systemDNS.setChecked(true);
-        systemDNS6.setChecked(true);
+        systemDNS6.setChecked(false);
         ipv6GatewayField.setText(s.ipv6Gateway);
         ipv6DirectCIDRsField.setText(s.ipv6DirectCIDRs);
         allAppsDefault.setChecked(s.allApps);
@@ -1259,8 +1259,6 @@ public final class RootClientActivity extends Activity {
             request.putExtra("app_tcp_dns",appTcpDNS.isChecked()&&
                 (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
             request.putExtra("system_dns",systemDNS.isChecked()&&
-                (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
-            request.putExtra("system_dns6",systemDNS6.isChecked()&&
                 (tunnelDNS.isChecked()||physicalDNS.isChecked()||cnSplitDNS.isChecked()));
             request.putExtra("ipv6_gateway",RootConnectionSettings.ipv6Gateway(ipv6GatewayField.getText().toString()));
             request.putExtra("ipv6_direct_cidrs",RootConnectionSettings.ipv6DirectCIDRs(ipv6DirectCIDRsField.getText().toString()));
@@ -1676,7 +1674,7 @@ public final class RootClientActivity extends Activity {
         // Preserve profile codec; managed DNS ingress is now automatic.
         appTcpDNS=new CheckBox(this);appTcpDNS.setChecked(true);
         systemDNS=new CheckBox(this);systemDNS.setChecked(true);
-        systemDNS6=new CheckBox(this);systemDNS6.setChecked(true);
+        systemDNS6=new CheckBox(this);systemDNS6.setChecked(false);
         pane=section(pages[3],"IPv6 与网络共享","默认接管受管IPv6并在WBD入口丢弃，AAAA本地空答；不关闭手机系统IPv6。");
         ipv6GatewayField=input(pane,"高级兼容：IPv6 承载服务端 TUN IPv4（留空＝默认 IPv4-only；仅已有 --inner-ipv6 服务端需要）",InputType.TYPE_CLASS_TEXT);
         ipv6GatewayField.setText("");

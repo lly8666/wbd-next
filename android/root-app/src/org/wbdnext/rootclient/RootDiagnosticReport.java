@@ -319,7 +319,9 @@ final class RootDiagnosticReport {
         String dns6State=has(session,"ORIGINAL_GO_POSTAUTH_DNS6_READY")?"KERNEL_CAPTURE_INSTALLED":"NOT_OBSERVED";
         for(String reason:new String[]{"NAT_PROBE","LISTEN","LINK","ADDRESS","ROUTE","NAT","RULES","READBACK"})
             if(has(session,"ORIGINAL_GO_DNS6_UNAVAILABLE_"+reason))dns6State="UNAVAILABLE_"+reason;
+        if(has(session,"ORIGINAL_GO_POSTAUTH_IPV6_DROP_READY")&&"NOT_OBSERVED".equals(dns6State))dns6State="NOT_REQUESTED_IPV4_ONLY";
         out.append("dns6_capture=").append(dns6State).append('\n');
+        out.append("tether_ipv6_ra=").append(has(session,"ORIGINAL_GO_TETHER_RA_SUPPRESSED")?"OUTPUT_SUPPRESSION_INSTALLED":"NOT_OBSERVED").append('\n');
         out.append("ipv6_entry_drop=").append(has(session,"ORIGINAL_GO_POSTAUTH_IPV6_DROP_READY")?"INSTALLED":"NOT_OBSERVED").append('\n');
         // Real Go logs TUNNEL_DNS_ENABLED only after original Rust cold
         // effective readback returned 1; this is not system netd capture or

@@ -413,8 +413,10 @@ func parse(role string,args []string)(config,error){
         c.androidManagedDNS=*androidManagedDNS
         c.androidIPv6Drop=*androidIPv6Drop
         if c.androidIPv6Drop&&(c.androidIPv6Gateway!=""||!c.androidManagedDNS){return c,fmt.Errorf("IPv6 drop requires managed DNS and no SIT gateway")}
-        c.androidSystemDNS6=*androidSystemDNS6||c.androidManagedDNS
-        c.androidSystemDNS=*androidSystemDNS||c.androidSystemDNS6
+        // Managed IPv4-only DNS never constructs a DNS6/NAT6 owner.
+        // Keep the explicit legacy opt-in only outside IPv4-only mode.
+        c.androidSystemDNS6=*androidSystemDNS6&&!c.androidIPv6Drop
+        c.androidSystemDNS=*androidSystemDNS||c.androidSystemDNS6||c.androidManagedDNS
         c.androidAppTCPDNS=*androidAppTCPDNS||c.androidSystemDNS
         if *tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
             subnet,e:=netip.ParsePrefix(*tetherSubnet)
