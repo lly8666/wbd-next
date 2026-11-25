@@ -210,13 +210,14 @@ jobs:
           python3 -m py_compile android/root-app/ci/b90-dns-fixture.py android/root-app/ci/b94-uid-echo.py
           bash android/root-app/ci/traffic-fixture/build.sh
           printf '%s\n' "$GITHUB_SHA" >out/android-traffic-fixture/SOURCE
-          (cd out/android-traffic-fixture && sha256sum traffic-fixture.apk host-smoke.txt SOURCE >SHA256SUMS)
+          (cd out/android-traffic-fixture && sha256sum traffic-fixture.apk traffic-fixture2.apk host-smoke.txt SOURCE >SHA256SUMS)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: env.WBD_ANDROID_SPECIALTY == '1'
         with:
           name: android-specialty-traffic-fixture-${{ github.sha }}
           path: |
             out/android-traffic-fixture/traffic-fixture.apk
+            out/android-traffic-fixture/traffic-fixture2.apk
             out/android-traffic-fixture/host-smoke.txt
             out/android-traffic-fixture/SOURCE
             out/android-traffic-fixture/SHA256SUMS
@@ -523,7 +524,7 @@ jobs:
       max-parallel: 9
       matrix:
         # Focused B97 marker avoids replaying eight fully green B96 guests.
-        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
+        shard: ${{ fromJSON(contains(github.event.head_commit.message, '[android-wire-uid-dns6]') && '["wire-normal","wire-fec-fixed","wire-fec-auto","wire-game2","wire-game2-fixed","wire-game4","wire-game4-fixed","route-single","route-group","route-all","dns6"]' || contains(github.event.head_commit.message, '[android-mtu-focused]') && '["mtu-normal","mtu-fec-fixed","mtu-fec-auto","mtu-game2","mtu-game2-fixed","mtu-game4","mtu-game4-fixed"]' || contains(github.event.head_commit.message, '[android-fec-focused]') && '["fec-fixed","fec-auto","dns-tc"]' || '["route-single","route-group","route-all","normal","fec-fixed","fec-auto","game2","game4","dns-physical","dns-tunnel","dns-cn"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions: {contents: read, actions: read}

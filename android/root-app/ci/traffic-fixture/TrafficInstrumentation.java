@@ -68,7 +68,51 @@ public final class TrafficInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         try{
             String probe=args.getString("uid_probe","");
-            if(!probe.isEmpty()||"system".equals(args.getString("dns_probe")))enterForeground();
+            if(!probe.isEmpty()||!args.getString("dns_probe","").isEmpty())enterForeground();
+            if("explicit6".equals(args.getString("dns_probe"))){
+                android.net.Network network=android.net.Network.fromNetworkHandle(Long.parseUnsignedLong(args.getString("network_handle")));
+                java.net.InetAddress dest=java.net.InetAddress.getByName("fd00::53");
+                byte[] q=java.util.Base64.getDecoder().decode("mZkBAAABAAAAAAAABnN5c3RlbQd3YmQtYjkxBHRlc3QAAAEAAQ==");
+                byte[] answer;
+                if("tcp".equals(args.getString("dns_transport"))){
+                    try(java.net.Socket s=new java.net.Socket()){
+                        network.bindSocket(s);s.connect(new java.net.InetSocketAddress(dest,53),4000);s.setSoTimeout(4000);
+                        java.io.DataOutputStream o=new java.io.DataOutputStream(s.getOutputStream());
+                        o.writeShort(q.length);o.write(q);o.flush();
+                        java.io.DataInputStream in=new java.io.DataInputStream(s.getInputStream());
+                        answer=new byte[in.readUnsignedShort()];in.readFully(answer);
+                    }
+                }else{
+                    try(java.net.DatagramSocket s=new java.net.DatagramSocket(null)){
+                        network.bindSocket(s);s.bind(new java.net.InetSocketAddress(java.net.InetAddress.getByName("::"),0));
+                        s.setSoTimeout(4000);s.send(new java.net.DatagramPacket(q,q.length,dest,53));
+                        java.net.DatagramPacket a=new java.net.DatagramPacket(new byte[512],512);s.receive(a);
+                        answer=java.util.Arrays.copyOf(a.getData(),a.getLength());
+                    }
+                }
+                if(answer.length<16||answer[0]!=q[0]||answer[1]!=q[1]||(answer[2]&128)==0||
+                   answer[7]!=1||!java.util.Arrays.equals(java.util.Arrays.copyOfRange(answer,answer.length-4,answer.length),new byte[]{(byte)192,0,2,55}))
+                    throw new IllegalStateException("IPv6 DNS exact A answer missing");
+                result.putString("report","dns_probe_uid="+Process.myUid()+" foreground=1 dns6_answer=192.0.2.55");
+                finishProbe(Activity.RESULT_OK,result);return;
+            }
+            if("physical-excluded".equals(probe)||"physical-cn".equals(probe)){
+                String dest="physical-cn".equals(probe)?args.getString("dest"):"192.0.2.1";
+                // Different response bytes from the isolated TUN fixture.
+                byte[] question=("WBD_B99_"+Process.myUid()).getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+                byte[] expected=("HOST_"+new String(question,java.nio.charset.StandardCharsets.US_ASCII)).getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+                try(java.net.DatagramSocket socket=new java.net.DatagramSocket()){
+                    socket.setSoTimeout(4000);
+                    socket.send(new java.net.DatagramPacket(question,question.length,java.net.InetAddress.getByName(dest),43999));
+                    byte[] buf=new byte[128];java.net.DatagramPacket reply=new java.net.DatagramPacket(buf,buf.length);
+                    socket.receive(reply);
+                    if(!reply.getAddress().getHostAddress().equals(dest)||reply.getPort()!=43999||
+                       !java.util.Arrays.equals(expected,java.util.Arrays.copyOf(buf,reply.getLength())))
+                        throw new IllegalStateException("physical-only host witness mismatch");
+                }
+                result.putString("report","uid_probe_sent="+Process.myUid()+" foreground=1 host_witness=1");
+                finishProbe(Activity.RESULT_OK,result);return;
+            }
             if("mtu-minus".equals(probe)||"mtu-edge".equals(probe)||"mtu-over".equals(probe)){
                 int size=Integer.parseInt(args.getString("ip_size"));
                 if(size<576||size>1501)throw new IllegalArgumentException("invalid fixture IP size");

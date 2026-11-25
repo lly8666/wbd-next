@@ -19,4 +19,14 @@ javac -source 8 -target 8 -classpath "$jar" -d "$out/classes" "$src/TrafficProbe
 keytool -genkeypair -alias traffic -keystore "$out/test.jks" -storepass android -keypass android -dname "CN=WBD Test Traffic" -keyalg RSA -keysize 2048 -validity 365 -noprompt >/dev/null 2>&1
 "$bt/apksigner" sign --ks "$out/test.jks" --ks-key-alias traffic --ks-pass pass:android --key-pass pass:android --out "$out/traffic-fixture.apk" "$out/aligned.apk"
 "$bt/apksigner" verify "$out/traffic-fixture.apk"
-rm -f "$out/test.jks" "$out/unsigned.apk" "$out/aligned.apk"
+# A second independently installed ordinary UID, reusing the exact same dex.
+sed -e 's/package="org.wbdnext.testtraffic"/package="org.wbdnext.testtraffic2"/' \
+    -e 's/android:targetPackage="org.wbdnext.testtraffic"/android:targetPackage="org.wbdnext.testtraffic2"/' \
+    -e 's/android:name="\.TrafficInstrumentation/android:name="org.wbdnext.testtraffic.TrafficInstrumentation/g' \
+    "$src/AndroidManifest.xml" >"$out/secondary-manifest.xml"
+"$bt/aapt2" link -I "$jar" --manifest "$out/secondary-manifest.xml" --min-sdk-version 28 --target-sdk-version 35 -o "$out/secondary-unsigned.apk"
+(cd "$out/dex" && zip -q -j ../secondary-unsigned.apk classes.dex)
+"$bt/zipalign" -f 4 "$out/secondary-unsigned.apk" "$out/secondary-aligned.apk"
+"$bt/apksigner" sign --ks "$out/test.jks" --ks-key-alias traffic --ks-pass pass:android --key-pass pass:android --out "$out/traffic-fixture2.apk" "$out/secondary-aligned.apk"
+"$bt/apksigner" verify "$out/traffic-fixture2.apk"
+rm -f "$out/test.jks" "$out/unsigned.apk" "$out/aligned.apk" "$out/secondary-unsigned.apk" "$out/secondary-aligned.apk" "$out/secondary-manifest.xml"

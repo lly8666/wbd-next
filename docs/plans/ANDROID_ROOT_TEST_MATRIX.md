@@ -1,3 +1,7 @@
+## B99｜实际 RAW wire、双 UID 及 DNS6（当前）
+
+B98a `9f3d93a86d99a013de349bd485655d8ecf4d7f2e` [Action 45521294719](https://github.com/lly8666/wbd-next/actions/runs/45521294719) 18/0/6；28/28 OS MTU+DF超限+Stop、56/56临界TX检查，7/7 guest cleanup；4原MTU ABI tests PASS。B99新增11 guest（最多9并行）：7模式独立AF_PACKET wire长度，single/group/all两个普通UID实际业务/真实CN快照路径（隔离host本地别名），IPv6 DNS原owner显式UDP/TCP和恢复。详见 [B99 devlog](../devlog/android-root-probe/20261125-b99-wire-multiuid-dns6.md)。未证明真正远端RX/READY恢复。
+
 ## B98｜原 MTU 审计与7模式边界矩阵（当前）
 
 B97 `94cb981fa71affb20c462f7a105310b0be3dd98d` [Action 45506419874](https://github.com/lly8666/wbd-next/actions/runs/45506419874) 14/0/6；Fixed/Auto实际 source+parity PASS，累计7/7 App TX；DNS TC PASS。main 共享 path_budget.rs/测试及 M3 FEC seal 实现完全相同，Android接线错误而非自动MTU公式。B98 7 guest × 4场景（1280/1460/1500/1500+server record1200），真实TLS+OS TUN、MTU-1/MTU UDP DF、MTU+1 EMSGSIZE、真实RAW计数/Stop。详见 [B98 devlog](../devlog/android-root-probe/20261125-b98-mtu-boundary-matrix.md)。未证明远端双向或实体ARM64。

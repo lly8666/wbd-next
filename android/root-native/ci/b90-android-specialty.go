@@ -43,7 +43,14 @@ func b90UsesTun(uid int,dest,tun string,want bool)error{
 func b91Instrument(ctx context.Context,uid int,extras ...string)error{
  args:=[]string{"instrument","-w","-r"}
  args=append(args,extras...)
- args=append(args,"org.wbdnext.testtraffic/.TrafficInstrumentation")
+ pkg:="org.wbdnext.testtraffic"
+ // Select actual package by installed UID; never run the second probe as root.
+ listed,e:=exec.Command("/system/bin/pm","list","packages","-U","--user","0").Output()
+ if e!=nil{return e}
+ for _,line:=range strings.Split(string(listed),"\n"){
+  if strings.TrimSpace(line)==fmt.Sprintf("package:org.wbdnext.testtraffic2 uid:%d",uid){pkg="org.wbdnext.testtraffic2"}
+ }
+ args=append(args,pkg+"/org.wbdnext.testtraffic.TrafficInstrumentation")
  out,e:=exec.CommandContext(ctx,"/system/bin/am",args...).CombinedOutput()
  if e!=nil||!strings.Contains(string(out),"INSTRUMENTATION_CODE: -1")||!strings.Contains(string(out),"foreground=1")||
    !(strings.Contains(string(out),fmt.Sprintf("uid_probe_sent=%d",uid))||strings.Contains(string(out),fmt.Sprintf("dns_probe_uid=%d ",uid))||strings.Contains(string(out),fmt.Sprintf("uid_probe_rejected=%d errno=EMSGSIZE",uid))){
@@ -153,7 +160,7 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
   if e=b90UsesTun(id,dest,dev,false);e!=nil{return fmt.Errorf("baseline: %w",e)}
  }
  fmt.Println("B90_ROUTE_BASELINE_PASS")
- baseline:=b94BaselineUID(uid)
+ baseline:=errors.Join(b94BaselineUID(uid),b94BaselineUID(bypass))
  for _,mode:=range []string{mode}{
   var owner b90Stop
   switch mode{
@@ -174,7 +181,28 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
     {uid,peer,false},{uid,cn.Addr().String(),false},
    }{if e:=b90UsesTun(c.id,c.dest,dev,c.tun);e!=nil{return e}}
    fmt.Println("B93_UID_ROUTE_GET_PASS",mode)
-   return b90Packet(tun,uid)
+   if e:=b90Packet(tun,uid);e!=nil{return e}
+   if mode=="group"{
+    if e:=b90Packet(tun,bypass);e!=nil{return e}
+    fmt.Println("B99_SECOND_SELECTED_UID_ECHO_PASS",bypass)
+   }else{
+    ctx,cancel:=context.WithTimeout(context.Background(),12*time.Second)
+    e:=b91Instrument(ctx,bypass,"-e","uid_probe","physical-excluded");cancel()
+    if e!=nil{return e}
+    fmt.Println("B99_EXCLUDED_UID_HOST_ECHO_PASS",bypass)
+   }
+   // The CN address is hosted ONLY on the disposable CI host loopback.
+   // Require it to be covered by the unmodified authentic CN snapshot.
+   cnDest:=netip.MustParseAddr("1.0.1.1")
+   covered:=false
+   for _,row:=range cidrs{if prefix,e:=netip.ParsePrefix(row);e==nil&&prefix.Contains(cnDest){covered=true;break}}
+   if !covered{return fmt.Errorf("CN fixture address absent from authentic snapshot")}
+   if e:=b90UsesTun(uid,cnDest.String(),dev,false);e!=nil{return e}
+   ctx,cancel:=context.WithTimeout(context.Background(),12*time.Second)
+   e:=b91Instrument(ctx,uid,"-e","uid_probe","physical-cn","-e","dest",cnDest.String());cancel()
+   if e!=nil{return e}
+   fmt.Println("B99_CN_UID_HOST_ECHO_PASS",uid)
+   return nil
   }()
   fmt.Println("B93_UID_STOP_BEGIN",mode)
   if e=owner.Stop();e!=nil{return fmt.Errorf("%s Stop: %w",mode,e)}
@@ -183,7 +211,7 @@ func b90Routes(scope dnsnative.PhysicalScope,uid,bypass,own,manager int,snapshot
   }
   fmt.Printf("B90_ROUTE_%s_STOP_PASS\n",strings.ToUpper(mode))
   fmt.Println("B95_UID_RESTORED_PHYSICAL_BEGIN",mode)
-  restored:=b94BaselineUID(uid)
+  restored:=errors.Join(b94BaselineUID(uid),b94BaselineUID(bypass))
   if check!=nil||baseline!=nil||restored!=nil{return fmt.Errorf("%s kernel/packet: %w",mode,errors.Join(check,baseline,restored))}
   fmt.Printf("B90_ROUTE_%s_UID_PACKET_CN_PASS prefixes=%d\n",strings.ToUpper(mode),len(cidrs))
  }
@@ -207,6 +235,12 @@ func RunAndroidSpecialtyCI(a []string)int{
  mtu,e:=strconv.Atoi(a[4]);if e!=nil{return 2}
  local,e:=netip.ParseAddr(a[5]);if e!=nil{return 2}
  scope:=dnsnative.PhysicalScope{NetworkHandle:handle,InterfaceName:a[2],IfIndex:index,MTU:mtu,LocalIPv4:local}
+ if strings.HasPrefix(a[0],"wire-"){
+  mode:=strings.TrimPrefix(a[0],"wire-")
+  uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
+  if e=b91Native(scope,uid,mode,1500,1200,true,true);e!=nil{fmt.Println("B99_WIRE_FAIL",a[0],e);return 1}
+  fmt.Println("B99_WIRE_SCENE_PASS",a[0]);return 0
+ }
  if strings.HasPrefix(a[0],"mtu-"){
   spec:=strings.TrimPrefix(a[0],"mtu-")
   cut:=strings.LastIndexByte(spec,'-');if cut<0{return 2}
@@ -214,7 +248,7 @@ func RunAndroidSpecialtyCI(a []string)int{
   outer,cap:=0,uint16(0)
   switch setting{case "1280":outer=1280;case "1460":outer=1460;case "1500":outer=1500;case "peer1200":outer=1500;cap=1200;default:return 2}
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
-  if e=b91Native(scope,uid,mode,outer,cap,true);e!=nil{fmt.Println("B98_MTU_FAIL",a[0],e);return 1}
+  if e=b91Native(scope,uid,mode,outer,cap,true,false);e!=nil{fmt.Println("B98_MTU_FAIL",a[0],e);return 1}
   fmt.Println("B98_MTU_SCENE_PASS",a[0])
   return 0
  }
@@ -227,12 +261,12 @@ func RunAndroidSpecialtyCI(a []string)int{
   if e=b90Routes(scope,ids[0],ids[1],ids[2],ids[3],raw,strings.TrimPrefix(a[0],"route-"));e!=nil{fmt.Println("B90_ROUTES_FAIL",e);return 1}
   if _,e=b90IP("link","show","dev","wbdb90");e==nil{fmt.Println("B90_TUN_CLOSE_FAIL");return 1}
   fmt.Println("B90_TUN_CLOSE_PASS")
- case "system-physical","system-physical-tc","system-tunnel","system-cn":
+ case "system-physical","system-physical-tc","system-tunnel","system-cn","system-dns6":
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
   if e=b91SystemDNS(scope,uid,a[0]);e!=nil{fmt.Println("B91_SYSTEM_DNS_FAIL",e);return 1}
  case "normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed":
   uid,e:=strconv.Atoi(a[6]);if e!=nil{return 2}
-  if e=b91Native(scope,uid,a[0],1460,0,false);e!=nil{fmt.Println("B91_NATIVE_FAIL",e);return 1}
+  if e=b91Native(scope,uid,a[0],1460,0,false,false);e!=nil{fmt.Println("B91_NATIVE_FAIL",e);return 1}
  default:return 2
  }
  return 0
@@ -272,7 +306,8 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   androidAppTCPDNS:true,androidSystemDNS:true,
   androidPhysicalDNSUpstream:netip.MustParseAddr("10.0.2.2"),
   androidTunnelDNSUpstream:netip.MustParseAddr("192.0.2.53")}
- c.androidPhysicalDNS=mode=="system-physical"||mode=="system-physical-tc"
+ c.androidPhysicalDNS=mode=="system-physical"||mode=="system-physical-tc"||mode=="system-dns6"
+ c.androidSystemDNS6=mode=="system-dns6"
  c.androidTunnelDNS=mode=="system-tunnel"
  c.androidCNDNSSplit=mode=="system-cn"
  if c.androidPhysicalDNS||c.androidCNDNSSplit{
@@ -299,7 +334,14 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
   qctx,qcancel:=context.WithTimeout(ctx,10*time.Second);defer qcancel()
   return b91Instrument(qctx,uid,"-e","dns_probe","system","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_name",name,"-e","expected_ip",expected)
  }
- if c.androidPhysicalDNS{
+ if mode=="system-dns6"{
+  for _,transport:=range []string{"udp","tcp"}{
+   qctx,qcancel:=context.WithTimeout(ctx,10*time.Second)
+   e=b91Instrument(qctx,uid,"-e","dns_probe","explicit6","-e","network_handle",strconv.FormatUint(scope.NetworkHandle,10),"-e","dns_transport",transport)
+   qcancel();if e!=nil{return e}
+   fmt.Println("B99_DNS6_EXPLICIT_SOCKET_PASS",transport)
+  }
+ }else if c.androidPhysicalDNS{
   name:="system.wbd-b91.test";if mode=="system-physical-tc"{name="tc.wbd-b90.test"}
   if e=query(name,"192.0.2.55");e!=nil{return e}
  }
@@ -314,7 +356,7 @@ func b91SystemDNS(scope dnsnative.PhysicalScope,uid int,mode string)(ret error){
 
 // Exact production openTun, lease/MTU callbacks, original UID route owner,
 // and original product Connect/Close. Only the cold wire is in-process.
-func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerCap uint16,boundary bool)(ret error){
+func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerCap uint16,boundary,wireWitness bool)(ret error){
  const dev="wbdb91m4"
  c:=config{role:"client",rawInterface:scope.InterfaceName,localIP:scope.LocalIPv4,
   peerIP:netip.MustParseAddr("10.0.2.2"),peerPort:443,outerMTU:outer,recordLimit:0,
@@ -380,5 +422,62 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
   }
   return b91Instrument(qctx,uid,"-e","uid_probe",probe)
  }
+ if !wireWitness{return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,route,send)}
+ stopCapture,e:=b99ObserveWire(scope,c.peerIP,outer,int(serverLimit),expectedMTU,int(c.gameLanes))
+ if e!=nil{return e}
+ defer func(){ret=errors.Join(ret,stopCapture())}()
  return realityfront.B91RunNativeCI(ctx,scope.LocalIPv4,c.peerIP,normal,game,mode,c.recordLimit,serverLimit,boundary,route,send)
+}
+
+// Independent CI-only AF_PACKET L3 witness. Unlike Rust counters this
+// observes actual outgoing IP bytes at the selected Android interface.
+// No injected peer, no packet mutation, no product hot-path hook.
+func b99ObserveWire(scope dnsnative.PhysicalScope,peer netip.Addr,outer,record,inner,lanes int)(func()error,error){
+ const ethAll=0x0300 // htons(ETH_P_ALL), Android supported ABIs little endian
+ fd,e:=syscall.Socket(syscall.AF_PACKET,syscall.SOCK_DGRAM|syscall.SOCK_NONBLOCK|syscall.SOCK_CLOEXEC,ethAll)
+ if e!=nil{return nil,e}
+ if e=syscall.Bind(fd,&syscall.SockaddrLinklayer{Protocol:ethAll,Ifindex:scope.IfIndex});e!=nil{syscall.Close(fd);return nil,e}
+ ctx,cancel:=context.WithCancel(context.Background())
+ done:=make(chan error,1)
+ src,dst:=scope.LocalIPv4.As4(),peer.As4()
+ nlanes:=lanes;if nlanes==0{nlanes=1}
+ go func(){
+  defer syscall.Close(fd)
+  buf:=make([]byte,65536)
+  count,near,maxWire,maxIP,oversize:=0,0,0,0,0
+  laneCounts:=make([]int,nlanes)
+  var draining time.Time
+  for {
+   if ctx.Err()!=nil{
+    if draining.IsZero(){draining=time.Now()}
+    if time.Since(draining)>time.Second{break}
+   }
+   n,from,e:=syscall.Recvfrom(fd,buf,0)
+   if e==syscall.EAGAIN||e==syscall.EINTR{
+    if ctx.Err()!=nil{break}
+    time.Sleep(5*time.Millisecond);continue
+   }
+   if e!=nil{done<-e;return}
+   link,ok:=from.(*syscall.SockaddrLinklayer)
+   if !ok||link.Pkttype!=4||n<40||buf[0]>>4!=4||buf[9]!=6||
+      !bytes.Equal(buf[12:16],src[:])||!bytes.Equal(buf[16:20],dst[:]){continue}
+   ihl:=int(buf[0]&15)*4
+   if ihl<20||n<ihl+20{continue}
+   sport:=int(binary.BigEndian.Uint16(buf[ihl:ihl+2]))
+   if sport<46100||sport>=46100+nlanes||binary.BigEndian.Uint16(buf[ihl+2:ihl+4])!=443{continue}
+   total:=int(binary.BigEndian.Uint16(buf[2:4]))
+   thl:=int(buf[ihl+12]>>4)*4
+   if thl<20||total<ihl+thl||total>n{continue}
+   wire:=total-ihl-thl
+   if wire==0{continue}
+   count++;laneCounts[sport-46100]++
+   if wire>maxWire{maxWire=wire};if total>maxIP{maxIP=total}
+   if wire>record||total>outer||total>scope.MTU{oversize++}
+   if wire>=inner+31{near++}
+  }
+  fmt.Printf("B99_RAW_WIRE_WITNESS records=%d near_boundary=%d max_record=%d max_outer=%d cap=%d oversize=%d lanes=%v\n",count,near,maxWire,maxIP,record,oversize,laneCounts)
+  if count<4||near<2||oversize!=0{done<-fmt.Errorf("independent RAW wire evidence incomplete");return}
+  done<-nil
+ }()
+ return func()error{cancel();return <-done},nil
 }
