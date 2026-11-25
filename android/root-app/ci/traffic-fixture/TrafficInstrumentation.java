@@ -97,7 +97,8 @@ public final class TrafficInstrumentation extends Instrumentation {
                     byte[] b=label.getBytes(java.nio.charset.StandardCharsets.US_ASCII);
                     query.writeByte(b.length);query.write(b);
                 }
-                query.writeByte(0);query.writeShort(1);query.writeShort(1);
+                boolean aaaa="AAAA".equals(args.getString("dns_qtype","A"));
+                query.writeByte(0);query.writeShort(aaaa?28:1);query.writeShort(1);
                 byte[] q=raw.toByteArray(),answer=null;
                 java.net.InetSocketAddress dest=new java.net.InetSocketAddress(args.getString("dns_host","192.0.2.53"),53);
                 if("steady".equals(transport)){
@@ -154,6 +155,14 @@ public final class TrafficInstrumentation extends Instrumentation {
                             answer=java.util.Arrays.copyOf(a.getData(),a.getLength());
                         }
                     }
+                }
+                if(aaaa){
+                    if(answer==null||answer.length!=q.length||answer[0]!=q[0]||answer[1]!=q[1]||
+                        (answer[2]&128)==0||(answer[3]&15)!=0||answer[6]!=0||answer[7]!=0||
+                        !java.util.Arrays.equals(java.util.Arrays.copyOfRange(answer,12,answer.length),java.util.Arrays.copyOfRange(q,12,q.length)))
+                        throw new IllegalStateException("expected local AAAA NOERROR/NODATA");
+                    result.putString("report","dns_probe_uid="+Process.myUid()+" foreground=1 aaaa_nodata="+transport);
+                    finishProbe(Activity.RESULT_OK,result);return;
                 }
                 if(!"send".equals(transport)&&(answer==null||answer.length<16||answer[0]!=q[0]||answer[1]!=q[1]||
                    (answer[2]&128)==0||answer[7]!=1||

@@ -391,7 +391,8 @@ for i in $(seq 1 80);do
   fi
   if grep -Eq 'ROOT_PROCESS_EXIT_(NONZERO|139|132)|ROOT_LAUNCH_FAILED|START_REFUSED|ORIGINAL_ROOT_SERVICE_CI_START_BLOCKED' \
       "$out/app-diagnostic-enums.txt";then
-    echo "D2_S1_ORIGINAL_GO_EARLY_EXIT_BEFORE_AUTH_HANDSHAKE"
+    echo "D2_S1_ORIGINAL_GO_EXIT_BEFORE_READY"
+    grep -E "ORIGINAL_GO_POSTAUTH_ROUTE_FAILED_|ORIGINAL_GO_DNS6_(START_FAILED|UNAVAILABLE)_|ORIGINAL_GO_POSTAUTH_DNS[46]_READY|ORIGINAL_GO_POSTAUTH_IPV6_DROP_READY" "$out/app-diagnostic-enums.txt" || true
     break
   fi
   # 45s after first true RAW ready: original retries had meaningful time,

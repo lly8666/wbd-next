@@ -135,6 +135,23 @@ b110_dns(){
   grep -Fq "INSTRUMENTATION_CODE: -1" "$out/b110-dns-$transport.txt"
   grep -Fq "B90_FIXTURE system.wbd-b91.test $(echo "$transport" | tr a-z A-Z)" "$out/b110-dns-host.log"
  done
+ if [[ "${WBD_B110_SCENE:-}" == normal-managed ]];then
+  for transport in udp tcp;do
+   adb shell am instrument -w -e dns_probe daily4 -e dns_name aaaa.wbd-b122.test -e dns_qtype AAAA -e dns_transport "$transport" -e dns_host 192.0.2.53 org.wbdnext.testtraffic/.TrafficInstrumentation >"$out/b110-aaaa-$transport.txt"
+   grep -Fq "aaaa_nodata=$transport" "$out/b110-aaaa-$transport.txt"
+   grep -Fq "INSTRUMENTATION_CODE: -1" "$out/b110-aaaa-$transport.txt"
+  done
+  if grep -Fq "aaaa.wbd-b122.test" "$out/b110-dns-host.log";then echo B122_AAAA_UPSTREAM_UNEXPECTED;return 1;fi
+  echo B122_ANDROID_MANAGED_AAAA_LOCAL_NODATA_UDP_TCP_PASS
+  if [[ "$dns6_nat" == 1 ]];then
+   for transport in udp tcp;do
+    adb shell am instrument -w -e dns_probe explicit6 -e network_handle "$b108_handle" -e dns_transport "$transport" org.wbdnext.testtraffic/.TrafficInstrumentation >"$out/b110-ipv6-dns-$transport.txt"
+    grep -Fq "dns6_answer=192.0.2.55" "$out/b110-ipv6-dns-$transport.txt"
+    grep -Fq "INSTRUMENTATION_CODE: -1" "$out/b110-ipv6-dns-$transport.txt"
+   done
+   echo B122_ANDROID_IPV6_DESTINATION_DNS_UDP_TCP_PASS
+  fi
+ fi
  printf 'PASS\n' >"$out/b110-tunnel-dns-pass.txt"
  echo B110_REAL_TUNNEL_DNS_UDP_TCP_PASS
 }
