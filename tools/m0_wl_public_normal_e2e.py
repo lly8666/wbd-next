@@ -546,6 +546,20 @@ try:
  # per *actual* source port, before tuple/AEAD. No unfiltered RX fallback,
  # no debug packet capture or new product thread in release defaults.
  server_rx_diag=" WBD_PLAN028_EXTERNAL_STAGE_DIAG=1" if p029_server_rx_diag else ""
+ # H2441: explicit isolated Windows forwarded TCP qualification only.
+ h2441_scene=pathlib.Path(os.environ.get("WBD_WL_V2_SCENARIO","")).stem
+ h2441=h2441_scene.startswith("h2441-win-")
+ h2441_cc="bbr" if h2441 and "-bbr-" in h2441_scene else ""
+ h2441_flags=""
+ if h2441:
+  assert mode in ("normal","auto") and not p030_managed
+  if h2441_cc:
+   try:wsl("modprobe","tcp_bbr",timeout=10)
+   except RuntimeError:pass
+  inventory=wsl("sysctl","-n","net.ipv4.tcp_available_congestion_control")
+  report["h2441_server_kernel"]={"uname":wsl("uname","-a"),"registered_cc":inventory,"requested_proxy":h2441_cc or "nat"}
+  if h2441_cc and h2441_cc not in inventory.split():raise RuntimeError("H2441_ENVIRONMENT_BBR_UNAVAILABLE_NO_FALLBACK")
+  h2441_flags=" --tun-fq-maxrate 0"+(" --tcp-proxy-cc bbr --tcp-proxy-port 46180" if h2441_cc else "")
  if p030_managed:
   managed_cfg={"listen":peer+":443","server-name":"wbd-v4.example.test","raw-interface":"eth0",
       "tun-name":"wbdwl4","tun-ipv4":"10.66.0.1/24","lease-pool":"10.66.0.128/25",
@@ -560,7 +574,7 @@ try:
   cfg_local.unlink()
   linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' '"+server+"/wbd-v4-server' --manage serve --config '"+cfg_guest+"' --socket '"+sock_guest+"'\n").encode("utf-8"))
  else:
-  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
+  linux.write_bytes(("#!/bin/sh\nset -eu\necho $$ > '"+result+"/linux-server.pid'\nexec env LD_LIBRARY_PATH='"+server+"' WBD_WL_RX_TUPLE_DIAG=1"+egress_diag+server_rx_diag+" '"+server+"/wbd-v4-server' --raw-interface eth0 --local-ip "+peer+" --local-port 443 --tun-name wbdwl4 --tun-ipv4 10.66.0.1/24 --server-name wbd-v4.example.test --route-key-hex-file "+route_guest+" --username "+user+" --password "+password+" --tunnel-id "+tunnel+(" --manual-client-lease4 10.66.0.2/32" if (plan028_owned_switch or p029_gui_reconnect or p029b_b4) else "")+" --tls-cert '"+result+"/cert.pem' --tls-key '"+result+"/key.pem' --mode "+server_mode+" --outer-repair "+outer_repair+peer_persona+h2441_flags+(" --outer-mtu "+str(configured_mtu) if native_outer in ("1280","1460","1500") else "")+"\n").encode("utf-8"))
  log=(out/"server.log").open("w");logs.append(log)
  s=subprocess.Popen(["wsl.exe","-d","Ubuntu","-u","root","--","sh",unix(linux)],stdout=log,stderr=subprocess.STDOUT)
  if p029_direct or p029_p1_policy or p029_game4_cn or p029b_b2 or p029b_b4 or p029b_game_case:
@@ -2801,6 +2815,10 @@ print(json.dumps(result),flush=True)
    finally:
     for p in (linuxrate,windowsrate):
      if p.poll() is None:p.terminate()
+   if h2441:
+    from m0_h2441_windows_forwarded_tcp import measure
+    report["h2441_forwarded_tcp"]=measure(root,out,wsl,unix,w,s,h2441_cc,scenario)
+    print("H2441_REAL_FORWARDED_TCP "+json.dumps(report["h2441_forwarded_tcp"],sort_keys=True),flush=True)
    print(netem("snapshot"),flush=True)
    if scenario:
     tun_fq_after=tun_fq_snapshot("after")
@@ -3671,6 +3689,9 @@ print(json.dumps(result),flush=True)
    if copied_count is None or copied_count<1:
     raise RuntimeError("H814_REAL_WINDOWS_GAMEFEC_NORMAL_OUTER_ZERO_NPF_COPIES")
    print("H814_REAL_WINDOWS_GAMEFEC_NORMAL_OUTER_NPF_COPIED="+str(copied_count),flush=True)
+ if h2441:
+  if h2441_cc and "WBD_TCP_SPLICE_STOP error=<nil>" not in server_stop_text:raise RuntimeError("H2441 proxy Stop missing")
+  if not all(x.get("status")=="MEASURED_EXACT" for x in report.get("h2441_forwarded_tcp",[])) or len(report.get("h2441_forwarded_tcp",[]))!=2:raise RuntimeError("H2441 forwarded TCP transfer incomplete; inspect measured report")
  report["mode_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE_"+mode
  if mode=="normal":report["normal_public"]="PASS_ACTUAL_WINDOWS_LINUX_NATIVE"
  print("WBD_WL_TRUE_PUBLIC_MODE_WIN_LINUX_DUPLEX_STOP_PASS "+mode)

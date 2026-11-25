@@ -1,0 +1,46 @@
+name: H2441 Windows actual product qualification dispatch
+run-name: "H2441 signed Windows client matrix | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2441-win-product-dispatch.yml']
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Frozen product and genuine Windows scenario contract
+        run: |
+          set -euo pipefail
+          git diff --exit-code 5e1b68331a4b666287ee28219f30a6b7c70df0dd HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py
+          python3 -m py_compile tools/m0_wl_public_normal_e2e.py tools/m0_h2441_windows_forwarded_tcp.py
+          python3 - <<'PY'
+          from pathlib import Path
+          from tools.m0_wl_perf_v2_config import read_scenario
+          for p in sorted(Path("scenarios").glob("h2441-win-*.json")):
+              d=read_scenario(p);print(p,d["scenario_sha256"])
+          PY
+      - name: Dispatch source-locked original signed Windows Wintun Npcap and Linux native product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=normal -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f perf_scenario_file=scenarios/h2441-win-nat-clean.json
+          echo "DISPATCHED_NOT_MEASURED nat-clean"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=normal -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f perf_scenario_file=scenarios/h2441-win-bbr-clean.json
+          echo "DISPATCHED_NOT_MEASURED bbr-clean"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=normal -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f perf_scenario_file=scenarios/h2441-win-bbr-loss1.json
+          echo "DISPATCHED_NOT_MEASURED bbr-loss1"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=auto -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f perf_scenario_file=scenarios/h2441-win-bbr-loss5.json
+          echo "DISPATCHED_NOT_MEASURED bbr-loss5"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=auto -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f perf_scenario_file=scenarios/h2441-win-bbr-loss15.json
+          echo "DISPATCHED_NOT_MEASURED bbr-loss15"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=auto -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f perf_scenario_file=scenarios/h2441-win-nat-loss30.json
+          echo "DISPATCHED_NOT_MEASURED nat-loss30"
+          gh workflow run m0-wl-public-normal-full.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f public_mode=normal -f native_outer_mtu=default1460 -f run_n0=false -f outer_repair=on -f perf_scenario_file=scenarios/h2441-win-bbr-lowrtt.json
+          echo "DISPATCHED_NOT_MEASURED bbr-lowrtt"
