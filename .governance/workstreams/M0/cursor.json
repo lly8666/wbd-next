@@ -4,14 +4,14 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2440,
-  "checkpoint_sha": "98638fa6a8130318aeaa4ebdbea209fea9868825",
+  "sequence": 2441,
+  "checkpoint_sha": "417cd5aa3f9fa4f663bb812e5dcb48a09cc69b18",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "按用户指令结束本阶段性能/CC研究，转其他工作。保留严重乱序jitter低吞吐待实际需求触发复查；产品配置、多流Auto FEC、完整Windows/跨机/旧内核资格仍按H2438，暂不晋级。",
+  "next_action": "收H2441 dispatch45603493397及7个目标原生Windows runs；核真实签名驱动/认证/UDP/TCP代理accept/CC/双向hash/EOF/Stop和NPF/CPU。只修实证缺陷，环境BBR缺失或夹具问题独立记录，达标则收口。",
   "unverified": true,
   "last_tested_source": "9a93bdcdfabeff2fd3c123063774a24cc51926b7",
   "evidence_refs": [
@@ -19,10 +19,10 @@
     "docs/evidence/M0/20261125-H2437-SELECTED-FIXES-ACCEPTANCE.json"
   ],
   "context_refs": [
-    "docs/decisions/M0-H2440-WEAK-LINK-RESEARCH-CLOSE.md",
+    "docs/requests/M0/h2441-windows-product-close.md",
     "docs/decisions/M0-TCP-SPLICE-INTEGRATION-H2438.md",
-    "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2436.md"
+    "docs/decisions/M0-H2440-WEAK-LINK-RESEARCH-CLOSE.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2439 22/22 jobs、84/84测量排空，逐job日志及4 ZIP复核。BBR突发/下载损伤优势明确，paced本地满丢0；共享竞争有代价，抖动乱序两算法几Mbps待查。H2440收口，不改代码不加测试；main生产未变。"
+  "partial_summary": "H2441冻结H2437产品，实际Windows2025客户端+WSL2 Linux server+独立origin namespace七场景，400ms0/1/5/15/30及50ms0，分发已触发，待目标原生结果。无产品代码变更。"
 }
