@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "android-root-native-client",
   "name": "Android Root 原生 WBD 客户端（无 VpnService / FakeIP）",
-  "summary": "B124c：限制 CA 编辑框显示高度、证书按钮置顶；日常完整配置保存/备份实际UI回归。",
+  "summary": "B124d：CA 实际导入、清空及前两槽保存通过；跨页保存改实际槽读回，完整备份待验。",
   "owner": "Android 原生客户端适配（用户独立授权，非M0）",
   "stage": "experimental",
   "development_branch": "experiment/android-temp-root-probe",
@@ -68,7 +68,8 @@
     "docs/devlog/android-root-probe/20261126-b124a-apk-ui-roundtrip.md",
     "docs/plans/ANDROID_TEMP_ROOT_CAPABILITY_PROBE.md",
     "docs/devlog/android-root-probe/20261126-b124b-ca-ui-readback.md",
-    "docs/devlog/android-root-probe/20261126-b124c-ca-bounded-editor.md"
+    "docs/devlog/android-root-probe/20261126-b124c-ca-bounded-editor.md",
+    "docs/devlog/android-root-probe/20261126-b124d-cross-page-save-readback.md"
   ],
   "verification": [
     {
@@ -136,10 +137,17 @@
     },
     {
       "platform": "B124c API35/36 complete profile UI",
-      "scope": "Bounded CA editor, actual clear/readback, per-slot known settings/credential/CA, full portable backup restore; signed APK and real stock emulator pending.",
+      "scope": "Both stock API35/36 real CA import/clear readback and slot1/2 save PASS; ordinary UID socket PASS. Both then failed locating the short footer confirmation on Settings (API35 screenshot shows saved slot2, MTU 1380 and Health 30). Full saved settings readback and SAF restore still NOT_RUN. 11 SUCCESS/2 FAIL/10 SKIPPED.",
+      "status": "FAIL",
+      "source_sha": "00d7d62f5a18ed874a1913d9679facb77967ef52",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45710294156"
+    },
+    {
+      "platform": "B124d API35/36 complete profile UI",
+      "scope": "Cross-page save followed by deliberate unsaved MTU change, actual slot reload and persisted MTU/Health check; deleted empty slot and full SAF file comparisons; pending.",
       "status": "IMPLEMENTED_NOT_TESTED",
       "source_sha": null,
-      "evidence": "docs/devlog/android-root-probe/20261126-b124c-ca-bounded-editor.md"
+      "evidence": "docs/devlog/android-root-probe/20261126-b124d-cross-page-save-readback.md"
     }
   ],
   "limitations": [

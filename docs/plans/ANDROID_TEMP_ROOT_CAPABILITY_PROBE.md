@@ -1,4 +1,8 @@
-## B124c｜当前唯一工位：固定 CA 编辑器与真实完整 UI（2026-11-26）
+## B124d｜当前唯一工位：跨页保存真实读回与完整 SAF（2026-11-26）
+
+B124c `00d7d62f5a18ed874a1913d9679facb77967ef52` [Action 45710294156](https://github.com/lly8666/wbd-next/actions/runs/45710294156) 11/2/10，API35/36实际CA导入、清空、槽1/2保存及普通UID fixture均PASS；设置页截图显示已保存槽2、MTU1380、Health30，短状态栏文字定位假红，后续备份尚未执行。B124d仅改测试：先实际保存，再改未保存MTU，载入槽核验持久值；继续实际SAF全字段还原。不改生产源码及M0，不复跑已通过guest。详见 [B124d devlog](../devlog/android-root-probe/20261126-b124d-cross-page-save-readback.md)。
+
+## B124c｜历史证据：固定 CA 编辑器与真实完整 UI（2026-11-26）
 
 B124b `f5a3c9e3113f881a70550b720cfc3de3bc9c526f` [Action 45664009603](https://github.com/lly8666/wbd-next/actions/runs/45664009603) 11/2/10；签名APK、原生接线、完整Java备份编解码PASS；API35/36实际CA导入及第一槽保存通过，第二槽在“清空证书”按钮定位失败，现场PEM撑满整个ScrollView。B124c将证书操作置于固定120dp编辑器上方，实际清空、槽位读回及完整SAF备份验收继续；只定向两套真实stock UI。原数据面及TLS选择不变。详见 [B124c devlog](../devlog/android-root-probe/20261126-b124c-ca-bounded-editor.md)。
 

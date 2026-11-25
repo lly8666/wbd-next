@@ -236,7 +236,7 @@ def complete_backup_roundtrip(expected_ca):
                 for key,value in required.items():
                     if fields.get(key)!=value:
                         raise RuntimeError("saved server setting mismatch at slot "+str(i+1)+": "+key.decode())
-        page("服务器");tap("删除服务器配置");locate("已删除槽位10",True)
+        page("服务器");tap("删除服务器配置");locate("配置槽10（空）")
         page("服务器");tap("导入服务器备份");open_downloads()
         pick_document(name)
         # The deleted slot must actually be restored; no status-only pass.
@@ -282,8 +282,14 @@ def main(out):
         mtu="外层 MTU（576–1500，默认1460）"
         page("设置");fill(mtu,"1380");tap("15");tap("30")
         tap("保存全部设置 · 槽2")
-        locate("已保存槽位2：GameDaily",True)
-        page("服务器");choose_slot("配置槽2 · GameDaily","配置槽10（空）")
+        # The footer can be shorter than a tappable control on stock Android.
+        # Reload the persisted slot after changing the unsaved MTU, so the
+        # real cross-page Save is tested rather than the footer's text.
+        fill(mtu,"1390")
+        page("服务器");tap("载入并编辑");locate("已载入槽位2：GameDaily",True)
+        page("设置");check_field(mtu,"1380");locate("30")
+        report["cross_page_save_slot2_readback"]="PASS"
+        choose_slot("配置槽2 · GameDaily","配置槽10（空）")
         fill("服务器名称","TenthDaily")
         tap("保存全部设置 · 槽",True);locate("已保存槽位10：TenthDaily",True)
         report["save_tenth"]="PASS"
@@ -316,7 +322,7 @@ def main(out):
         tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field(mtu,"1380")
         fill(mtu,"1400");tap("保存全部设置 · 槽10")
-        locate("已保存槽位10：TenthDaily",True)
+        fill(mtu,"1390")
         page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field(mtu,"1400")
         complete_backup_roundtrip(expected_ca);report["complete_saf_export_import"]="PASS"
