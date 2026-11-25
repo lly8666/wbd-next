@@ -885,6 +885,31 @@ public final class RootDiagnosticReportTest {
         System.out.println("ANDROID_A33_SYNACK_TLS_ADMISSION_STAGE_PRIORITY_HOST_PASS");
         System.out.println("ANDROID_A32_PRE_SU_CREDENTIAL_0600_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_ROOT_A31_PARSE_REASON_SAFE_HOST_PASS");
+        // Actual fixed receipt classifier: a Game group can verify TLS
+        // and lease without emitting the standalone Normal SYNACK marker.
+        File tetherDir=Files.createTempDirectory("wbd-tether-report").toFile();
+        RootDiagnosticReceipt tw=new RootDiagnosticReceipt(new File(tetherDir,"wbd-root-diagnostic.txt"));
+        for(RootDiagnosticReceipt.Event failure:new RootDiagnosticReceipt.Event[]{
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_DOWNSTREAM,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_FORWARDING,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_HARDWARE_OFFLOAD,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_OFFLOAD,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_DNS_BIND,
+            RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_KERNEL_RULES
+        }){
+            tw.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+            tw.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+            tw.record(failure);
+            tw.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+            contains(RootDiagnosticReport.build(tetherDir,source,36),"last_session_stage="+failure.name());
+        }
+        tw.record(RootDiagnosticReceipt.Event.START_REQUESTED);
+        tw.record(RootDiagnosticReceipt.Event.START_DIAGNOSTIC_STAGES_V2);
+        tw.record(RootDiagnosticReceipt.Event.ORIGINAL_GO_ADMISSION_VERIFIED);
+        tw.record(RootDiagnosticReceipt.Event.AUTHENTICATED_LEASE_OS_READBACK);
+        tw.record(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_NONZERO);
+        contains(RootDiagnosticReport.build(tetherDir,source,36),"last_session_stage=LEASE_APPLIED_M4_UID_UNPROVEN");
+        System.out.println("ANDROID_B115_TETHER_FAILURE_AND_GAME_LEASE_RECEIPT_HOST_PASS");
         System.out.println("ANDROID_ROOT_SAFE_DIAGNOSTIC_EXPORT_HOST_PASS");
     }
 }

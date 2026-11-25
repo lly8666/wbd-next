@@ -68,12 +68,12 @@ final class RootEncryptedCredentialStore {
             }
         }
     }
-    // The four named B50 profiles reuse the EXACT existing Keystore key,
+    // The ten named B50 profiles reuse the EXACT existing Keystore key,
     // AES-GCM record codec and 0600 Android AtomicFile persistence.
     // No new credentials, native format, TLS or network engine.
     private static File profileFile(Context ctx,int slot){
         if(slot<1||slot>RootConnectionProfile.SLOTS)
-            throw new IllegalArgumentException("profile slot 1..4");
+            throw new IllegalArgumentException("profile slot 1.."+RootConnectionProfile.SLOTS);
         return new File(ctx.getNoBackupFilesDir(),
             "wbd-root-ui-credentials-profile-"+slot+".gcm");
     }

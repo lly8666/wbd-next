@@ -8,3 +8,5 @@ package v4productcli
 func androidRootRouteAfterNative(
     _ config,_ *ownedTun,_ string,
 )(func()error,error){return nil,nil}
+
+func checkOriginalAndroidTether(_ config)error{return nil}

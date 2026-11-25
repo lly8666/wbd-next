@@ -221,7 +221,7 @@ jobs:
           if-no-files-found: warn
 
   b108-carrier-linux-admission:
-    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && !contains(github.event.head_commit.message, '[android-b114-final-regression]')
+    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && !contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && !contains(github.event.head_commit.message, '[android-b111-loss-dns]') && !contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && !contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && !contains(github.event.head_commit.message, '[android-b114-final-regression]') && !contains(github.event.head_commit.message, '[android-b115-device-feedback]')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -507,7 +507,7 @@ jobs:
       fail-fast: false
       max-parallel: 8
       matrix:
-        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b114-final-regression]') && '["normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game2","game2-fixed","game4","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
+        mode: ${{ fromJSON(contains(github.event.head_commit.message, '[android-b115-device-feedback]') && '["normal"]' || contains(github.event.head_commit.message, '[android-b114-final-regression]') && '["normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game2","game2-fixed","game4","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b113-final-lifecycle]') && '["normal-reconnect","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b112-fec-recovery]') && '["normal-reconnect","fec-fixed-loss","fec-auto-loss"]' || contains(github.event.head_commit.message, '[android-b111-loss-dns]') && '["normal-dns","normal-dns-relay","normal-reconnect","fec-fixed-loss","fec-auto-loss","game4-fixed-loss"]' || contains(github.event.head_commit.message, '[android-b110-game-lifecycle]') && '["game2","game2-fixed","game4","game4-fixed","normal-dns","normal-reconnect"]' || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '["normal","fec-fixed","fec-auto","game2","game2-fixed","game4","game4-fixed"]' || '["normal"]') }}
     permissions: {contents: read, actions: read}
     env:
       GH_TOKEN: ${{ github.token }}
@@ -832,7 +832,7 @@ jobs:
           if-no-files-found: warn
 
   android-stock-ui-and-ordinary-uid:
-    if: ${{ always() && needs.root-arm64-app.result != 'cancelled' && needs.root-arm64-app.result != 'skipped' && github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-forwarding-ui]')) }}
+    if: ${{ always() && needs.root-arm64-app.result != 'cancelled' && needs.root-arm64-app.result != 'skipped' && github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-forwarding-ui]') || contains(github.event.head_commit.message, '[android-b115-device-feedback]')) }}
     needs: [root-arm64-app]
     strategy:
       fail-fast: false
@@ -851,7 +851,7 @@ jobs:
       - name: Real stock Android API ${{ matrix.api }} - production signed APK UI and ordinary UID socket fixture
         env:
           WBD_ANDROID_API: ${{ matrix.api }}
-          WBD_B104_UI: ${{ contains(github.event.head_commit.message, '[android-forwarding-ui]') && '1' || '0' }}
+          WBD_B104_UI: ${{ (contains(github.event.head_commit.message, '[android-forwarding-ui]') || contains(github.event.head_commit.message, '[android-b115-device-feedback]')) && '1' || '0' }}
         run: bash android/root-app/ci/stock-ui-traffic.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()

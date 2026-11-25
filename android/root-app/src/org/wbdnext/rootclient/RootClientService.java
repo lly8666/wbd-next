@@ -549,6 +549,7 @@ public final class RootClientService extends Service {
         boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
         boolean nativePhysicalLossDrained=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
+        String tetherFailure=null;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         int modeLanes=RootGameSessionStatus.expectedLanes(fecMode);
         final String modeReadback="V4_PUBLIC_ANDROID_MODE_READBACK role=client mode="+fecMode+
@@ -1025,6 +1026,38 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_TUN_TCP_SEEN);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_BUSINESS role=client class=TUN_UDP_SEEN"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_RUST_TUN_UDP_SEEN);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=DOWNSTREAM")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_DOWNSTREAM);
+                        if(tetherFailure==null)tetherFailure="热点/USB下游已变化、地址冲突或不可用，请重新选择活动共享接口";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=FORWARDING")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_FORWARDING);
+                        if(tetherFailure==null)tetherFailure="请先开启系统热点或USB网络共享";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=HARDWARE_OFFLOAD")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_HARDWARE_OFFLOAD);
+                        if(tetherFailure==null)tetherFailure="系统热点硬件加速未明确关闭；请检查开发者选项中的网络共享硬件加速";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=BPF_OFFLOAD")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_BPF_OFFLOAD);
+                        if(tetherFailure==null)tetherFailure="此设备的热点BPF加速仍启用或无法确认软件转发；当前版本不支持该共享路径";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=DNS_BIND")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_DNS_BIND);
+                        if(tetherFailure==null)tetherFailure="热点DNS监听启动失败";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=KERNEL_RULES")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_KERNEL_RULES);
+                        if(tetherFailure==null)tetherFailure="热点转发路由/NAT安装或读回失败";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=POSTAUTH_ROUTE")){
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_FAILED_POSTAUTH_ROUTE);
+                        if(tetherFailure==null)tetherFailure="热点连接认证后路由配置失败";
+                    }
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_PREFLIGHT_READY role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_PREFLIGHT_READY);
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_TETHER_READY role=client"))
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_TETHER_READY);
                     if(!uidReady&&OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_UID_ROUTE_INSTALLED")){
                         uidReady=true;
                         trace(RootDiagnosticReceipt.Event.UID_ROUTE_RECEIPT);
@@ -1060,7 +1093,7 @@ public final class RootClientService extends Service {
             if(exit==132)trace(RootDiagnosticReceipt.Event.ROOT_PROCESS_EXIT_132);
             if(exit!=0&&!rawReady)
                 trace(RootDiagnosticReceipt.Event.ROOT_EXIT_BEFORE_GO_RAW);
-            if(exit!=0&&coldSynTxRecorded&&!synackSeen)
+            if(exit!=0&&coldSynTxRecorded&&!synackSeen&&!leaseReadback)
                 trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_EXIT_BEFORE_PEER_SYNACK);
             // Only the LAST observed genuine original-Go stage. Never
             // imply that missing TLS, app packets or joined Stop passed.
@@ -1075,6 +1108,8 @@ public final class RootClientService extends Service {
             if(previousOwnerStopConfirmed){
                 trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED);
                 status="OWNED_STOP_VERIFIED — 原Go/Rust与UID路由已归还；可手动重选Network并START（业务未验）";
+            }else if(tetherFailure!=null){
+                status="热点/USB共享未启动："+tetherFailure+"。若仅需本机联网，请取消共享后连接。";
             }else{
                 status=exit==0
                     ?"ORIGINAL_NATIVE_EXITED_ZERO — 完整Stop收据未确认；请核查后手动START"

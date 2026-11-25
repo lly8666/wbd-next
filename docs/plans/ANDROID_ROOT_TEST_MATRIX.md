@@ -1,3 +1,7 @@
+## B115｜真机反馈（当前）
+
+B114 `d89db3b13c4de73773a55822fe25671b4bc14813` [Action 45577319665](https://github.com/lly8666/wbd-next/actions/runs/45577319665) 19/0/8，8/8同源guest PASS。用户B113真机初测主链路/分流正常，热点/USB勾选连接失败。B115设置页明确保存、十槽及旧4槽备份兼容、共享软件转发准入提前/固定故障原因；实体共享具体根因未证，未改变BPF/netd/offload或绕过流量。API35/36 UI及Normal同源回归待CI。详见 [B115 devlog](../devlog/android-root-probe/20261125-b115-device-feedback.md)。
+
 ## B114｜最终同源普通业务回归（当前）
 
 B113 `e4bdc007ffcaf3345e67c60b8122717591af513c` [Action 45571116221](https://github.com/lly8666/wbd-next/actions/runs/45571116221) 13/0/9；Auto真实drop97/recovered_tun76/reports4/mature4/applied1、五轮真实业务及Stop PASS；生产自主二次认证/READY/业务与Stop PASS；ARM64签名APK/Host审计PASS，ARM64 KVM不可用。B114一次8guest同源收口：七模式含Normal隧道DNS、Fixed/Auto轻损恢复和成熟生效、Game4 Fixed轻损候选及真实业务、独立Normal自动重连。不改生产代码，不扩展已过矩阵。详见 [B114 devlog](../devlog/android-root-probe/20261125-b114-final-same-source-regression.md)。实体ARM64/热点/IPv6/真实性能及Game恢复交付归因仍未证。

@@ -46,7 +46,10 @@ func originalAndroidSelectedUIDRouteGet(runner rootjournal.Runner,uids []int,tun
 // NEVER applies to root/system or this original Go FakeTCP socket.
 func androidRootRouteAfterNative(
     c config,tun *ownedTun,authenticatedLease string,
-)(func()error,error){
+)(undo func()error,retErr error){
+    if c.androidTetherInterface!=""{
+        defer func(){if retErr!=nil{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=POSTAUTH_ROUTE")}}()
+    }
     if !c.androidRouteAllApps&&c.androidRouteUID==0&&len(c.androidRouteUIDs)==0{return nil,nil}
     if os.Geteuid()!=0{return nil,fmt.Errorf("Android root route requires effective uid 0")}
     if tun==nil||tun.f==nil||c.androidNetworkHandle==0||
@@ -317,42 +320,63 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
 
 
 const androidTetherJournal="/data/local/tmp/wbd-next-root/tether-journal.json"
-func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
- if c.androidTetherInterface==""{return stop,nil}
- fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
+// Check existing software downstream before opening TUN or sending SYN;
+// repeat at route grant because the actual downstream may change during TLS.
+// This is read-only: no global offload setting or BPF/netd mutation.
+func androidTetherFailure(class string,e error)error{
+ fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_FAILED role=client class=%s\n",class)
+ return e
+}
+func androidTetherPreflight(c config)(netip.Addr,error){
+ if c.androidTetherInterface==""{return netip.Addr{},nil}
+ fail:=func(class string,e error)(netip.Addr,error){return netip.Addr{},androidTetherFailure(class,e)}
  d,e:=net.InterfaceByName(c.androidTetherInterface)
- if e!=nil||d==nil||d.Index!=c.androidTetherIfindex||d.Flags&net.FlagUp==0||d.Name==c.rawInterface||d.Name==tun.name{
-  return fail(fmt.Errorf("tether downstream changed"))
+ if e!=nil||d==nil||d.Index!=c.androidTetherIfindex||d.Flags&net.FlagUp==0||d.Name==c.rawInterface||d.Name==c.tunName{
+  return fail("DOWNSTREAM",fmt.Errorf("tether downstream changed"))
  }
  prefix,e:=netip.ParsePrefix(c.androidTetherSubnet)
- if e!=nil{return fail(e)}
- addrs,e:=d.Addrs();if e!=nil{return fail(e)}
+ if e!=nil{return fail("DOWNSTREAM",e)}
+ addrs,e:=d.Addrs();if e!=nil{return fail("DOWNSTREAM",e)}
  var gateway netip.Addr
  for _,a:=range addrs{
   p,e:=netip.ParsePrefix(a.String())
   if e==nil&&p.Masked()==prefix{
-   if gateway.IsValid(){return fail(fmt.Errorf("ambiguous tether gateway"))}
+   if gateway.IsValid(){return fail("DOWNSTREAM",fmt.Errorf("ambiguous tether gateway"))}
    gateway=p.Addr()
   }
  }
- if !gateway.IsValid()||prefix.Contains(c.localIP)||prefix.Contains(c.peerIP){return fail(fmt.Errorf("tether subnet changed or overlaps carrier"))}
+ if !gateway.IsValid()||prefix.Contains(c.localIP)||prefix.Contains(c.peerIP){return fail("DOWNSTREAM",fmt.Errorf("tether subnet changed or overlaps carrier"))}
  forward,e:=os.ReadFile("/proc/sys/net/ipv4/ip_forward")
- if e!=nil||strings.TrimSpace(string(forward))!="1"{return fail(fmt.Errorf("enable existing Android tethering first"))}
- // Do not change Android offload settings or bypass its BPF ownership.
- // Only an explicitly software-forwarded downstream is supported here.
+ if e!=nil||strings.TrimSpace(string(forward))!="1"{return fail("FORWARDING",fmt.Errorf("enable existing Android tethering first"))}
  ctx,cancel:=context.WithTimeout(context.Background(),5*time.Second);defer cancel()
  offload,e:=exec.CommandContext(ctx,"settings","get","global","tether_offload_disabled").Output()
- if e!=nil||strings.TrimSpace(string(offload))!="1"{return fail(fmt.Errorf("software tether requires hardware offload disabled"))}
+ if e!=nil||strings.TrimSpace(string(offload))!="1"{return fail("HARDWARE_OFFLOAD",fmt.Errorf("software tether requires hardware offload disabled"))}
  dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
- if e!=nil||!strings.Contains(string(dump),"mIsBpfEnabled: false"){return fail(fmt.Errorf("software tether requires verified inactive BPF offload"))}
- plan:=rootjournal.TetherPlan{Tun:tun.name,Downstream:d.Name,Subnet:prefix.String(),Lease:lease.String(),DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...)}
+ if e!=nil||!strings.Contains(string(dump),"mIsBpfEnabled: false"){return fail("BPF_OFFLOAD",fmt.Errorf("software tether requires verified inactive BPF offload"))}
+ return gateway,nil
+}
+func checkOriginalAndroidTether(c config)error{
+ if c.androidTetherInterface==""{return nil}
+ _,e:=androidTetherPreflight(c)
+ if e==nil{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_PREFLIGHT_READY role=client")}
+ return e
+}
+
+func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
+ if c.androidTetherInterface==""{return stop,nil}
+ fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
+ gateway,e:=androidTetherPreflight(c)
+ if e!=nil{return fail(e)}
+ prefix,e:=netip.ParsePrefix(c.androidTetherSubnet);if e!=nil{return fail(e)}
+ if c.androidTetherInterface==tun.name{return fail(androidTetherFailure("DOWNSTREAM",fmt.Errorf("tether equals tun")))}
+ plan:=rootjournal.TetherPlan{Tun:tun.name,Downstream:c.androidTetherInterface,Subnet:prefix.String(),Lease:lease.String(),DirectCIDRs:append([]string(nil),c.androidDirectCIDRs...)}
  if relay!=nil{
   port,err:=relay.EnableDownstream(gateway,prefix)
-  if err!=nil{return fail(err)}
+  if err!=nil{return fail(androidTetherFailure("DNS_BIND",err))}
   plan.DNSAddress,plan.DNSPort=gateway.String(),port
  }
  owner,e:=rootjournal.NewTether(runner,androidDNSFirewall,androidTetherJournal,plan,originalIPv6Batch)
- if e!=nil{return fail(e)}
+ if e!=nil{return fail(androidTetherFailure("KERNEL_RULES",e))}
  if plan.DNSPort!=0{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_DNS_READY role=client udp_tcp53=1")}
  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_READY role=client software_ipv4=1")
  return func()error{return errors.Join(owner.Stop(),stop())},nil

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-/** One SAF file for all four existing NONSECRET connection slots.
+/** One SAF file for all ten NONSECRET connection slots.
  * It wraps their exact production codec; never holds credentials or Root state.
  */
 final class RootConnectionProfileBundle {
@@ -20,7 +20,7 @@ final class RootConnectionProfileBundle {
     static void write(OutputStream output,RootConnectionProfile[] profiles)
         throws IOException {
         if(profiles==null||profiles.length!=RootConnectionProfile.SLOTS)
-            throw new IllegalArgumentException("four profile slots required");
+            throw new IllegalArgumentException("ten profile slots required");
         DataOutputStream stream=new DataOutputStream(output);
         stream.writeInt(MAGIC);
         stream.writeInt(RootConnectionProfile.SLOTS);
@@ -49,12 +49,14 @@ final class RootConnectionProfileBundle {
             raw.write(chunk,0,n);
         }
         byte[] bytes=raw.toByteArray();
-        if(bytes.length<8+4*RootConnectionProfile.SLOTS)return null;
+        if(bytes.length<8+4*4)return null;
         DataInputStream stream=new DataInputStream(new ByteArrayInputStream(bytes));
-        if(stream.readInt()!=MAGIC||stream.readInt()!=RootConnectionProfile.SLOTS)
-            return null;
-        RootConnectionProfile[] result=
-            new RootConnectionProfile[RootConnectionProfile.SLOTS];
+        if(stream.readInt()!=MAGIC)return null;
+        int slots=stream.readInt();
+        // Original four-slot v1 backups restore only slots 1–4.
+        // Never clear newly added slots 5–10 on legacy import.
+        if((slots!=4&&slots!=RootConnectionProfile.SLOTS)||bytes.length<8+4*slots)return null;
+        RootConnectionProfile[] result=new RootConnectionProfile[slots];
         for(int i=0;i<result.length;i++){
             int length=stream.readInt();
             if(length<0||length>RootConnectionProfile.MAX_FILE_BYTES||

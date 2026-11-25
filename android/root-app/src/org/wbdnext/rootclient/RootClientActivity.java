@@ -344,7 +344,7 @@ public final class RootClientActivity extends Activity {
             status.setText("CA导入或本机保存失败；请核对PEM并重新导入");
         }
     }
-    // B53: one explicit SAF transaction for all four existing named slots.
+    // B53: one explicit SAF transaction for all ten named slots.
     // No Root permission, credential plaintext, CA or physical Network handle.
     private void exportAllProfiles(){
         try{
@@ -356,18 +356,18 @@ public final class RootClientActivity extends Activity {
                 if(profiles[i]!=null)count++;
             }
             if(count==0){
-                profileResult.setText("四个配置槽均为空，请先保存连接配置");
+                profileResult.setText("十个配置槽均为空，请先保存连接配置");
                 return;
             }
             pendingBundleExport=profiles;
             Intent select=new Intent(Intent.ACTION_CREATE_DOCUMENT);
             select.addCategory(Intent.CATEGORY_OPENABLE);
             select.setType("application/octet-stream");
-            select.putExtra(Intent.EXTRA_TITLE,"wbd-root-four-profiles.wbpb");
+            select.putExtra(Intent.EXTRA_TITLE,"wbd-root-ten-profiles.wbpb");
             startActivityForResult(select,PROFILE_BUNDLE_EXPORT);
         }catch(Exception unavailable){
             pendingBundleExport=null;
-            profileResult.setText("无法读取当前四个配置槽，导出未开始");
+            profileResult.setText("无法读取当前十个配置槽，导出未开始");
         }
     }
     private void importAllProfiles(){
@@ -383,28 +383,28 @@ public final class RootClientActivity extends Activity {
             pendingBundleExport=null;
             if(result!=RESULT_OK||data==null||data.getData()==null||
                snapshot==null){
-                profileResult.setText("四槽配置导出已取消");
+                profileResult.setText("十槽配置导出已取消");
                 return;
             }
             try(OutputStream out=getContentResolver().openOutputStream(
                 data.getData(),"wt")){
                 if(out==null)throw new java.io.IOException("No profile export output");
                 RootConnectionProfileBundle.write(out,snapshot);
-                profileResult.setText("四槽普通连接设置已导出；不含密码、RouteKey、CA及Network");
+                profileResult.setText("十槽普通连接设置已导出；不含密码、RouteKey、CA及Network");
             }catch(Exception unavailable){
-                profileResult.setText("四槽导出失败：未完整写入文件");
+                profileResult.setText("十槽导出失败：未完整写入文件");
             }
             return;
         }
         if(result!=RESULT_OK||data==null||data.getData()==null){
-            profileResult.setText("四槽导入已取消");
+            profileResult.setText("十槽导入已取消");
             return;
         }
         coldSwitch.cancel();
         try(InputStream in=getContentResolver().openInputStream(data.getData())){
             RootConnectionProfile[] restored=RootConnectionProfileBundle.read(in);
-            if(restored==null)throw new IllegalArgumentException("not four WBD profiles");
-            // Import replaces the four cold slots only. Reusing old slot
+            if(restored==null)throw new IllegalArgumentException("invalid WBD profiles");
+            // Import replaces the slots contained in the bundle only. Reusing old slot
             // credentials for another server would select the wrong account.
             // The active Go/Rust process owns separate staged files already.
             for(int i=0;i<restored.length;i++){
@@ -415,11 +415,11 @@ public final class RootClientActivity extends Activity {
                 else RootConnectionProfileStore.save(this,slot,restored[i]);
             }
             refreshNamedProfileChoices();
-            profileResult.setText("四槽设置已恢复。各槽密码/RouteKey需在本机重新填写保存；"+
+            profileResult.setText("已恢复"+restored.length+"个配置槽"+(restored.length==4?"（旧版备份，槽5–10保留）":"")+"。导入槽密码/RouteKey需在本机重新填写保存；"+
                 "当前Root会话和选定物理Network不变");
         }catch(Exception failed){
             refreshNamedProfileChoices();
-            profileResult.setText("四槽导入未完整成功；若已有部分槽写入请检查后重试。"+
+            profileResult.setText("十槽导入未完整成功；若已有部分槽写入请检查后重试。"+
                 "未触发Root连接或内核路由");
         }
     }
@@ -934,7 +934,7 @@ public final class RootClientActivity extends Activity {
         restoredSelection.putAll(s.selected);
         restoredBypass.putAll(s.bypass);
     }
-    // Only four cold files, read at an explicit UI lifecycle/user action.
+    // Only ten cold files, read at an explicit UI lifecycle/user action.
     // Do not poll profiles or modify the native owner in the 1Hz refresh.
     private void refreshNamedProfileChoices(){
         if(profileSlots==null)return;
@@ -1021,7 +1021,7 @@ public final class RootClientActivity extends Activity {
                 caPEM.getText().toString());
             refreshNamedProfileChoices();
             // The optional per-profile login is just the existing encrypted
-            // AndroidKeyStore record, now keyed by one of the four UI slots.
+            // AndroidKeyStore record, now keyed by one of the ten UI slots.
             // An incomplete login must not reuse the previous slot's key.
             boolean credentialsSaved=RootStartCredentialSave.attempt(()->
                 RootEncryptedCredentialStore.saveProfile(this,slot,
@@ -1383,6 +1383,46 @@ public final class RootClientActivity extends Activity {
         outerMTUField=input(pane,"外层完整 IPv4 IP MTU（576–1500 字节；默认1460，非TUN MTU）",
             InputType.TYPE_CLASS_NUMBER);
         outerMTUField.setText("1460");
+        TextView parameterSaved=new TextView(this);
+        parameterSaved.setText("保存到本机当前连接；下次手动连接使用。已运行会话不变。");
+        Button saveParameters=new Button(this);
+        saveParameters.setText("保存参数（下次连接生效）");
+        saveParameters.setOnClickListener(v->{
+            try{
+                RootConnectionSettings settings=connectionSettingsFromUi();
+                RootConnectionSettingsStore.save(this,settings);
+                parameterSaved.setText("已保存 · 外层 MTU "+settings.outerMTU+" B · "+settings.mode+
+                    "；下次连接生效。当前会话不变。");
+            }catch(Exception failure){
+                parameterSaved.setText("保存失败：请检查服务器、账号和传输参数。");
+            }
+        });
+        pane.addView(saveParameters);
+        // A named server is a separate frozen profile; update only the
+        // explicitly selected matching server, preserving its own credentials/CA.
+        Button saveSlotParameters=new Button(this);
+        saveSlotParameters.setText("保存参数到所选服务器槽");
+        saveSlotParameters.setOnClickListener(v->{
+            try{
+                int slot=chosenProfileSlot();
+                RootConnectionProfile old=RootConnectionProfileStore.load(this,slot);
+                RootConnectionSettings settings=connectionSettingsFromUi();
+                if(old==null||!old.settings.peer.equals(settings.peer)||
+                   !old.settings.sni.equals(settings.sni)||old.settings.port!=settings.port||
+                   !old.settings.account.equals(settings.account)){
+                    parameterSaved.setText("请选择并载入对应服务器槽，再修改参数保存；不会覆盖其他服务器。");
+                    return;
+                }
+                RootConnectionProfileStore.save(this,slot,new RootConnectionProfile(old.label,settings));
+                RootConnectionSettingsStore.save(this,settings);
+                parameterSaved.setText("已保存槽"+slot+" · "+old.label+" · 外层 MTU "+settings.outerMTU+
+                    " B；下次载入/连接该槽生效。");
+            }catch(Exception failure){
+                parameterSaved.setText("保存未完整成功，请检查参数后重试。");
+            }
+        });
+        pane.addView(saveSlotParameters);
+        pane.addView(parameterSaved);
         pane=section(pages[2],"直连例外","分流模式可以按 CN 地址与自定义网段直接连接。");
         directCIDRsField=input(pane,
             "自定义 IPv4 直连网段（最多16条）",
@@ -1491,10 +1531,10 @@ public final class RootClientActivity extends Activity {
         });
         pane.addView(saveSecrets);
         Button clearSecrets=new Button(this);
-        clearSecrets.setText("清除所有已保存密码 / RouteKey（含4套配置）");
+        clearSecrets.setText("清除所有已保存密码 / RouteKey（含10套配置）");
         clearSecrets.setOnClickListener(v->new AlertDialog.Builder(this)
             .setTitle("清除保存的登录凭据")
-            .setMessage("删除本APK默认及4个配置槽的已保存密码/RouteKey和共用Keystore密钥，不影响当前Root会话或其他客户端。")
+            .setMessage("删除本APK默认及10个配置槽的已保存密码/RouteKey和共用Keystore密钥，不影响当前Root会话或其他客户端。")
             .setNegativeButton("取消",null)
             .setPositiveButton("清除",(dialog,which)->{
                 try{
@@ -1646,6 +1686,9 @@ public final class RootClientActivity extends Activity {
         tetherSharing.setText("可选：共享 WBD 到现有热点/USB（软件转发，Android 16；共享上述CIDR直连及DNS模式；IPv6承载且有实际下游/64时同时转发IPv6）");
         tetherSharing.setChecked(false);
         pane.addView(tetherSharing);
+        TextView tetherRequirement=new TextView(this);
+        tetherRequirement.setText("请先开启系统热点或USB共享并选择活动下游。当前仅支持软件转发；若系统硬件/BPF加速仍活跃，启动会明确提示，不自动修改系统设置或绕过共享。");
+        pane.addView(tetherRequirement);
         tetherChoices=new Spinner(this);
         pane.addView(tetherChoices);
         tunnelDNS.setOnCheckedChangeListener((button,checked)->{
@@ -1751,16 +1794,17 @@ public final class RootClientActivity extends Activity {
         refreshApps.setText("刷新应用名单");
         refreshApps.setOnClickListener(v->chooseInstalledApplications());
         pane.addView(refreshApps);
-        // B50: four named daily connection profiles, all using the
+        // B50: ten named daily connection profiles, all using the
         // existing B22 settings serializer and selected app UID recheck.
-        pane=section(pages[1],"已保存服务器","四个命名配置槽；连接或切换会使用该槽的独立凭据和设置。");
+        pane=section(pages[1],"已保存服务器","十个命名配置槽；连接或切换会使用该槽的独立凭据和设置。");
         TextView namedProfileHint=new TextView(this);
-        namedProfileHint.setText("本机最多4套服务器/模式/UID配置；密码/RouteKey用现有Keystore分槽保存，可选本地TLS CA也随槽切换；真实物理Network始终手选。");
+        namedProfileHint.setText("本机最多10套服务器/模式/UID配置；密码/RouteKey用现有Keystore分槽保存，可选本地TLS CA也随槽切换；真实物理Network始终手选。");
         pane.addView(namedProfileHint);
         profileSlots=new Spinner(this);
+        String[] initialSlots=new String[RootConnectionProfile.SLOTS];
+        for(int i=0;i<initialSlots.length;i++)initialSlots[i]="配置槽"+(i+1);
         profileSlots.setAdapter(new ArrayAdapter<>(this,
-            android.R.layout.simple_spinner_dropdown_item,
-            new String[]{"配置槽1","配置槽2","配置槽3","配置槽4"}));
+            android.R.layout.simple_spinner_dropdown_item,initialSlots));
         pane.addView(profileSlots);
         profileLabel=input(pane,"配置名称（例：家里Wi-Fi／游戏）",InputType.TYPE_CLASS_TEXT);
         profileLabel.setText("常用连接");
@@ -1781,11 +1825,11 @@ public final class RootClientActivity extends Activity {
         deleteProfile.setOnClickListener(v->deleteNamedProfile());
         pane.addView(deleteProfile);
         Button exportAllProfiles=new Button(this);
-        exportAllProfiles.setText("导出全部4套配置（单个文件，不含凭据）");
+        exportAllProfiles.setText("导出全部10套配置（单个文件，不含凭据）");
         exportAllProfiles.setOnClickListener(v->exportAllProfiles());
         pane.addView(exportAllProfiles);
         Button importAllProfiles=new Button(this);
-        importAllProfiles.setText("恢复全部4套配置（需重新填写本机凭据）");
+        importAllProfiles.setText("恢复全部10套配置（需重新填写本机凭据）");
         importAllProfiles.setOnClickListener(v->importAllProfiles());
         pane.addView(importAllProfiles);
         profileResult=new TextView(this);

@@ -1355,6 +1355,7 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
             cfg.peerIP=resolved
             log.Printf("V4_PUBLIC_ANDROID_SERVER_BOOTSTRAP_PHYSICAL_RESOLVED host=%s dns=%s udp_tcp53_original_go=1",cfg.peerHost,cfg.androidPhysicalDNSUpstream)
         }
+        if err=checkOriginalAndroidTether(cfg);err!=nil{return err}
         if cfg.androidClatParent!=""{
             // Read the actual selected Network route before any FakeTCP
             // SYN. The original RAW bind and M4 still own all traffic.

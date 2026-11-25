@@ -16,7 +16,7 @@ final class RootConnectionProfileCAStore {
     private static final String ACTIVE="wbd-current-ui-ca.pem";
     private static File slotFile(Context ctx,int slot){
         if(slot<1||slot>RootConnectionProfile.SLOTS)
-            throw new IllegalArgumentException("profile slot 1..4");
+            throw new IllegalArgumentException("profile slot 1.."+RootConnectionProfile.SLOTS);
         return new File(ctx.getNoBackupFilesDir(),"wbd-profile-"+slot+"-ca.pem");
     }
     private static File current(Context ctx){

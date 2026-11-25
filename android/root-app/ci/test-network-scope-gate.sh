@@ -565,6 +565,8 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootConnectionProfile.java \
   android/root-app/ci/RootConnectionProfileTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionProfileTest
+javac -source 8 -target 8 -encoding UTF-8 -cp out/android-root-app/network-scope-test -d out/android-root-app/network-scope-test android/root-app/src/org/wbdnext/rootclient/RootColdNetworkSwitch.java android/root-app/ci/RootColdNetworkSwitchTest.java
+java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootColdNetworkSwitchTest
 # B53: one actual SAF codec for all four named original Go/Rust profiles.
 javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test \
   android/root-app/src/org/wbdnext/rootclient/ServerAddress.java \
@@ -638,8 +640,7 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/ci/OriginalGoMilestonesTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.OriginalGoMilestonesTest
 # B49 production pure-JVM one-shot Network decision.
-javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-test android/root-app/src/org/wbdnext/rootclient/RootColdNetworkSwitch.java android/root-app/ci/RootColdNetworkSwitchTest.java
-java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootColdNetworkSwitchTest
+# B49 test is compiled after the shared profile codec below.
 
 # B47 signed-App original Game2/4 connection READY + owned Stop receipt.
 # These are exact markers from real Go/Rust, never UI mode fake-ready.

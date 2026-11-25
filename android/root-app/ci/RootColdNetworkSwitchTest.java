@@ -39,6 +39,8 @@ public final class RootColdNetworkSwitchTest {
         s.arm(23L,"wlan0",9,1500,"192.0.2.3");
         ok(s.profileSlot()==0&&s.matches(23L,"wlan0",9,1500,"192.0.2.3"),
             "explicit B49 Network switch replaces prior profile request");
+        s.armProfile(10,22L,"rmnet_data0",4,1428,"10.21.0.2");
+        ok(s.profileSlot()==10&&s.complete(true,true),"tenth server cold switch");
         System.out.println("ANDROID_B52_SAVED_PROFILE_COLD_SWITCH_HOST_PASS");
     }
 }

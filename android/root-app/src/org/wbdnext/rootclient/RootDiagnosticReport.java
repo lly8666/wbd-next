@@ -85,6 +85,15 @@ final class RootDiagnosticReport {
         // errno or a promise of physical network/TLS success.
         if(has(session,"START_DIAGNOSTIC_STAGES_V2")&&
            has(session,"ROOT_PROCESS_EXIT_NONZERO")){
+            for(String tetherFailure:new String[]{
+                "ORIGINAL_TETHER_FAILED_DOWNSTREAM",
+                "ORIGINAL_TETHER_FAILED_FORWARDING",
+                "ORIGINAL_TETHER_FAILED_HARDWARE_OFFLOAD",
+                "ORIGINAL_TETHER_FAILED_BPF_OFFLOAD",
+                "ORIGINAL_TETHER_FAILED_DNS_BIND",
+                "ORIGINAL_TETHER_FAILED_KERNEL_RULES",
+                "ORIGINAL_TETHER_FAILED_POSTAUTH_ROUTE"
+            })if(has(session,tetherFailure))return tetherFailure;
             if(has(session,"ORIGINAL_GO_PARSE_FLAG_SYNTAX"))
                 return "ORIGINAL_GO_ARGUMENT_PARSE_REJECTED_FLAG_SYNTAX";
             if(has(session,"ORIGINAL_GO_PARSE_PASSWORD_FILE"))
@@ -200,6 +209,8 @@ final class RootDiagnosticReport {
             }){
                 if(has(session,done))return done+"_NEXT_STAGE_UNPROVEN";
             }
+            if(has(session,"AUTHENTICATED_LEASE_OS_READBACK"))
+                return "LEASE_APPLIED_M4_UID_UNPROVEN";
             if(has(session,"ORIGINAL_GO_ADMISSION_VERIFIED"))
                 return "PROTECTED_ADMISSION_VERIFIED_LEASE_UNPROVEN";
             if(has(session,"ORIGINAL_GO_PROTECTED_REPLY_PARSED"))

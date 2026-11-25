@@ -6,15 +6,15 @@ final class RootColdNetworkSwitch {
     private long handle;
     private String iface,local;
     private int index,mtu,profileSlot;
-    // Slot zero is the B49 same-profile Network switch; 1..4 are B52
+    // Slot zero is the B49 same-profile Network switch; 1..10 are
     // user-selected saved connections. No change to Go/Rust owner.
     void arm(long h,String n,int i,int m,String ip){
         profileSlot=0;
         setTarget(h,n,i,m,ip);
     }
     void armProfile(int slot,long h,String n,int i,int m,String ip){
-        if(slot<1||slot>4) // same four fixed App UI slots
-            throw new IllegalArgumentException("profile slot 1..4");
+        if(slot<1||slot>RootConnectionProfile.SLOTS)
+            throw new IllegalArgumentException("profile slot 1.."+RootConnectionProfile.SLOTS);
         profileSlot=slot;
         setTarget(h,n,i,m,ip);
     }

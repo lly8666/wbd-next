@@ -10,7 +10,7 @@ import java.io.OutputStream;
 
 /** A named cold UI configuration; no credential or Root/Network ownership. */
 final class RootConnectionProfile {
-    static final int SLOTS=4;
+    static final int SLOTS=10;
     static final int MAX_FILE_BYTES=9000;
     private static final int MAGIC=0x57425032; // local profile v1, not a wire format
     final String label;

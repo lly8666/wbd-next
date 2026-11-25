@@ -6,12 +6,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-/** Four named local UI profiles. Native credentials remain in existing store. */
+/** Ten named local UI profiles. Native credentials remain in existing store. */
 final class RootConnectionProfileStore {
     private RootConnectionProfileStore(){}
     private static File file(Context context,int slot){
         if(slot<1||slot>RootConnectionProfile.SLOTS)
-            throw new IllegalArgumentException("profile slot 1..4");
+            throw new IllegalArgumentException("profile slot 1.."+RootConnectionProfile.SLOTS);
         return new File(context.getNoBackupFilesDir(),"wbd-profile-"+slot+".bin");
     }
     static RootConnectionProfile load(Context context,int slot)throws IOException {

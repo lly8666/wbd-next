@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import java.util.TreeMap;
 
-/** Real settings codec nested in new local 4-slot named profile. */
+/** Real settings codec nested in local 10-slot named profile. */
 public final class RootConnectionProfileTest {
     private static void ok(boolean b,String msg){if(!b)throw new AssertionError(msg);}
     public static void main(String[] args)throws Exception {
@@ -38,8 +38,9 @@ public final class RootConnectionProfileTest {
             ok(!raw.contains("password=")&&!raw.contains("route_key=")&&
                 !raw.contains("network_handle="),"no native credentials or stale Network");
         }
+        ok(RootConnectionProfile.SLOTS==10,"ten slots");
         for(int slot=1;slot<=RootConnectionProfile.SLOTS;slot++)
-            ok(slot>0&&slot<=4,"four persistent slots");
+            ok(slot>0&&slot<=10,"ten persistent slots");
         ok(RootConnectionProfile.read(new ByteArrayInputStream(
             new byte[]{0,0,0,0}))==null,"unknown local profile magic");
         System.out.println("ANDROID_B50_NAMED_ORIGINAL_ROOT_CONNECTION_PROFILES_HOST_PASS");

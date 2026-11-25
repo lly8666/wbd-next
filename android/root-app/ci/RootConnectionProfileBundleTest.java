@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TreeMap;
 
-/** Host-execute the actual four-slot SAF codec, no fake Root or packets. */
+/** Host-execute the actual ten-slot SAF codec, no fake Root or packets. */
 public final class RootConnectionProfileBundleTest {
     private static void ok(boolean value,String why){
         if(!value)throw new AssertionError(why);
@@ -21,7 +21,7 @@ public final class RootConnectionProfileBundleTest {
             apps.put("org.example.app"+i,10001+i);
             RootConnectionSettings settings=new RootConnectionSettings(
                 "server"+i+".example.test","sni.example.test","account",
-                443+i,1460,500,"aes-128-gcm","off",modes[i],i,
+                443+i,1460-i,500,"aes-128-gcm","off",modes[i%modes.length],i%7,
                 false,true,false,false,false,apps,"10.42.0.0/16",
                 new TreeMap<String,Integer>(),"192.168.1.1",false,30,true);
             slots[i]=new RootConnectionProfile("配置"+i,settings);
@@ -32,17 +32,29 @@ public final class RootConnectionProfileBundleTest {
         ok(encoded.length<RootConnectionProfileBundle.MAX_BYTES,"bounded");
         RootConnectionProfile[] restored=RootConnectionProfileBundle.read(
             new ByteArrayInputStream(encoded));
-        ok(restored!=null&&restored.length==4,"all four slots");
+        ok(restored!=null&&restored.length==10,"all ten slots");
         for(int i=0;i<restored.length;i++){
             if(i==2){ok(restored[i]==null,"empty slot");continue;}
             ok(restored[i]!=null&&restored[i].label.equals("配置"+i),
                 "name restored");
-            ok(restored[i].settings.mode.equals(modes[i])&&
-                restored[i].settings.port==443+i&&
+            ok(restored[i].settings.mode.equals(modes[i%modes.length])&&
+                restored[i].settings.port==443+i&&restored[i].settings.outerMTU==1460-i&&
                 restored[i].settings.nativeHealthSeconds==30&&
                 restored[i].settings.selected.equals(slots[i].settings.selected),
                 "real Go/Rust cold settings and app UIDs restored");
         }
+        // Original four-slot v1 file is still readable and does not
+        // describe or overwrite the six newly added slots.
+        ByteArrayOutputStream legacyRaw=new ByteArrayOutputStream();
+        java.io.DataOutputStream legacy=new java.io.DataOutputStream(legacyRaw);
+        legacy.writeInt(0x57425042);legacy.writeInt(4);
+        for(int i=0;i<4;i++){
+            if(slots[i]==null){legacy.writeInt(0);continue;}
+            ByteArrayOutputStream one=new ByteArrayOutputStream();
+            slots[i].write(one);legacy.writeInt(one.size());one.writeTo(legacy);
+        }
+        RootConnectionProfile[] old=RootConnectionProfileBundle.read(new ByteArrayInputStream(legacyRaw.toByteArray()));
+        ok(old!=null&&old.length==4&&old[0].label.equals(slots[0].label)&&old[2]==null,"old four-slot backup");
         String content=new String(encoded,StandardCharsets.ISO_8859_1);
         ok(!content.contains("password=")&&
            !content.contains("route_key=")&&
