@@ -39,7 +39,7 @@ VXID={"client":"2281","server":"2282"}
 # Reuse the already-proven H2227 tailnet CI ACL control port.
 CONTROL_PORT=18727
 LOSSES=(0.0,1.0,2.0,5.0,10.0,15.0,30.0) if os.environ.get('WBD_H2417_SPLICE')=='1' else (0.0,1.0,5.0,10.0,20.0)
-ROLES={"client":"x86_64","server":"x86_64","relay":"aarch64"}
+ROLES={"client":"x86_64","server":("aarch64" if os.environ.get("WBD_H2442_ARM_SERVER")=="1" else "x86_64"),"relay":"aarch64"}
 TAILNET=ipaddress.ip_network("100.64.0.0/10")
 
 def guard(expr,message):
