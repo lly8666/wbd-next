@@ -98,7 +98,10 @@ def case(i):
             probe()
             print("H2448_NATIVE_COLD_PROBE_PASS case="+str(i),flush=True)
             save(d/"shape.json",shape(c["loss"],200));time.sleep(1)
-            result.update(sink("198.18.77.2",5400,"10.66.0.2",35))
+            origin_route=route_for("192.0.2.2")
+            save(d/"origin-route.json",origin_route)
+            print("H2449_ORIGIN_ROUTE "+json.dumps(origin_route),flush=True)
+            result.update(sink("192.0.2.2",5400,"10.66.0.2",35))
             result.update(c)
         result["status"]="RECEIVED" if result["end"]=="eof" else "INCOMPLETE"
     except Exception as e:result["error"]=repr(e)

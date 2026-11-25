@@ -26,8 +26,8 @@ def setup():
     h.root("ip","netns","add",ORIGIN)
     h.root("ip","link","add","h2442exit","type","veth","peer","name","h2442app")
     h.root("ip","link","set","h2442exit","netns",NODE);h.root("ip","link","set","h2442app","netns",ORIGIN)
-    h.ns(NODE,"ip","addr","add","198.18.77.1/24","dev","h2442exit");h.ns(NODE,"ip","link","set","h2442exit","up")
-    for a in (("link","set","lo","up"),("addr","add","198.18.77.2/24","dev","h2442app"),("link","set","h2442app","up"),("route","add","default","via","198.18.77.1")):h.ns(ORIGIN,"ip",*a)
+    h.ns(NODE,"ip","addr","add","192.0.2.1/24","dev","h2442exit");h.ns(NODE,"ip","link","set","h2442exit","up")
+    for a in (("link","set","lo","up"),("addr","add","192.0.2.2/24","dev","h2442app"),("link","set","h2442app","up"),("route","add","default","via","192.0.2.1")):h.ns(ORIGIN,"ip",*a)
     h.ns(NODE,"sysctl","-qw","net.ipv4.ip_forward=1")
     for ns in (NODE,ORIGIN):
         for k,v in (("net.ipv4.tcp_rmem","4096 87380 67108864"),("net.ipv4.tcp_wmem","4096 65536 67108864"),("net.core.rmem_max","67108864"),("net.core.wmem_max","67108864")):h.ns(ns,"sysctl","-qw",k+"="+v)
@@ -51,8 +51,9 @@ def start(i):
         spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1","WBD_M0_SPLICE_PACING_AB="+str(cap),BUNDLE/"wbd-v4-server","--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","windows11","--outer-repair","on","--outer-mtu","1160","--tun-fq-maxrate-mbps","0","--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"],folder)
         waitmark("server","V4_PUBLIC_MIXED_MULTI_SERVER_READY");waitmark("server","WBD_TCP_SPLICE_READY")
         h.ns(NODE,"tc","qdisc","replace","dev","wbds0","root","fq","flow_limit","256")
+        h.save(folder/"origin-route.json",{"route":h.ns(NODE,"ip","route","get","192.0.2.2").stdout})
         spawn("probe",NODE,[sys.executable,APP,"probe","10.66.0.1",45901],folder);waitmark("probe","PROBE_READY")
-        spawn("source",ORIGIN,[sys.executable,APP,"source","198.18.77.2",5400,c["rate"],"cubic",35],folder);waitmark("source","SOURCE_READY")
+        spawn("source",ORIGIN,[sys.executable,APP,"source","192.0.2.2",5400,c["rate"],"cubic",35],folder);waitmark("source","SOURCE_READY")
     h.save(folder/"before.json",sample());return {"case":i,"ready":True}
 def close():
     global current
@@ -68,7 +69,7 @@ def close():
     except Exception:result["source"]=None
     if current>=0:
         s=(folder/"server.log").read_text(errors="replace")
-        result.update(proxy_accept="WBD_TCP_SPLICE_ACCEPT target=198.18.77.2:5400 cc=bbr" in s,proxy_pacing="bytes_per_s="+str(CASES[current]["rate"]*125000) in s,stop="V4_PUBLIC_NATIVE_STOP_DRAINED" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s,panic="panicked at" in s,inbox1024="slots=1024 " in s)
+        result.update(proxy_accept="WBD_TCP_SPLICE_ACCEPT target=192.0.2.2:5400 cc=bbr" in s,proxy_pacing="bytes_per_s="+str(CASES[current]["rate"]*125000) in s,stop="V4_PUBLIC_NATIVE_STOP_DRAINED" in s or "V4_PUBLIC_SHARED_TUN_STOP" in s,panic="panicked at" in s,inbox1024="slots=1024 " in s)
     h.save(folder/"result.json",result);current=None;return result
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self,*args):pass
