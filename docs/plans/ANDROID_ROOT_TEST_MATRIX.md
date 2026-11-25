@@ -1,3 +1,7 @@
+## B112｜FEC真实读回及原生先感知物理丢失恢复（当前）
+
+B111 `3c97a97597beff6f54ffe8a0a40293cc8bfeaec6` [Action 45562169772](https://github.com/lly8666/wbd-next/actions/runs/45562169772) 14/3/9；默认/显式隧道DNS UDP/TCP PASS，Fixed/Auto/Game4 Fixed真实1%下行丢包业务PASS，Game4恢复候选PASS；Fixed/Auto通用诊断未启用，恢复交付未证；WiFi后原生先joined Stop但exit1，自动恢复未触发。B112三guest：Android原9计数真实读回、五次普通业务burst、原生明确物理丢失且完整清理后交给现有Java自动恢复，保留实际原Network验证与真实二次业务。详见 [B112 devlog](../devlog/android-root-probe/20261125-b112-fec-recovery-handoff.md)。不改变数据面/协议/MTU，不重跑DNS/基础七模式，实体ARM64待验。
+
 ## B111｜七模式远端业务收口，轻损恢复及DNS/自动重连（当前）
 
 B110 `9e3c2e95b56e51b976bb0af75d4532c890746e25` [Action 45560632409](https://github.com/lly8666/wbd-next/actions/runs/45560632409) 15/2/9；四Game真实双向业务及Stop PASS，累计7/7。真实隧道UDP53 PASS，默认TCP透传请求未绑定上游而超时；重连guest缺phone服务未执行。B111六guest：默认TCP透传、显式App TCP DNS relay、原Service自动重连、Fixed/Auto/Game4 Fixed真实1%下行丢包与原恢复计数。详见 [B111 devlog](../devlog/android-root-probe/20261125-b111-loss-dns.md)。不修改协议或数据热路径、不宣称Game候选等于恢复交付、实体ARM64仍待验。

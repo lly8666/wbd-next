@@ -547,6 +547,7 @@ public final class RootClientService extends Service {
                          boolean hasCA,boolean verifyTLS,boolean tunnelDNS,boolean physicalDNS,boolean cnSplitDNS,String directCIDRs,String physicalDnsIPv4,int nativeHealthSeconds,boolean appTcpDNS,RootTetherScope tether,boolean systemDNS,boolean systemDNS6,String ipv6Gateway,String ipv6DirectCIDRs,boolean ipv6AutoDirect,String tunnelDnsIPv4,String game4CopySchedule,boolean cnIPDirect,boolean outerRepair){
         boolean nativeReady=false,uidReady=false,readyRecorded=false;
         boolean nativeStopSeen=false,routeStopSeen=false,gameStopSeen=false;
+        boolean nativePhysicalLossDrained=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         int modeLanes=RootGameSessionStatus.expectedLanes(fecMode);
@@ -614,6 +615,24 @@ public final class RootClientService extends Service {
                         diagnostics.recordDNSB6Snapshot(line.substring(dnsB6));
                     // B20: native FEC revision is read from the same
                     // original Go session, not the user's UI selection.
+                    if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PHYSICAL_LOSS_DRAINED role=client")){
+                        nativePhysicalLossDrained=true;
+                        trace(RootDiagnosticReceipt.Event.ORIGINAL_NATIVE_PHYSICAL_LOSS_DRAINED);
+                    }
+                    // Android's native FEC counter ABI is separate from the
+                    // Linux diagnostic tag. Forward only this typed final snapshot.
+                    String fixedMarker="V4_PUBLIC_ANDROID_FIXED_M4_FINAL role=client ";
+                    int fixedAt=line.indexOf(fixedMarker);
+                    if(fixedAt>=0&&OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_FIXED_M4_FINAL role=client")){
+                        String counts=line.substring(fixedAt+fixedMarker.length());
+                        if(counts.matches("source_raw=[0-9]{1,20} parity_raw=[0-9]{1,20} source_tun=[0-9]{1,20} recovered_tun=[0-9]{1,20} unique=[0-9]{1,20} reports=[0-9]{1,20} signals=[0-9]{1,20} mature=[0-9]{1,20} applied=[0-9]{1,20}")){
+                            Log.i("WBD_ROOT_DIAG","ORIGINAL_ANDROID_FIXED_M4_FINAL "+counts);
+                            if(!recoveredTunSeen&&counts.matches(".* recovered_tun=[1-9][0-9]* .*")){
+                                recoveredTunSeen=true;
+                                trace(RootDiagnosticReceipt.Event.ORIGINAL_FEC_RECOVERED_TUN_OBSERVED);
+                            }
+                        }
+                    }
                     // Original native counters are emitted by Go; expose only
                     // fixed observations, not raw stdout or payloads.
                     if(!recoveredTunSeen&&OriginalGoMilestones.matches(line,"V4_PUBLIC_FEC2_RX_PROOF role=client")&&
@@ -1084,7 +1103,20 @@ public final class RootClientService extends Service {
             stopWatchingPhysicalNetwork();
             stopWatchingSelectedPackage();
             trace(RootDiagnosticReceipt.Event.OWNER_CLEANUP_FINISHED);
-            networkEvents.post(()->finishOwner(net));
+            final boolean nativeLost=nativePhysicalLossDrained;
+            networkEvents.post(()->{
+                // A native-first loss is only equivalent to a physical
+                // callback when the exact old Network is actually absent
+                // and the full original process exited cleanly.
+                if(nativeLost&&previousOwnerStopConfirmed&&rotationSnapshot!=null&&
+                   rotationSnapshot.recoverNetwork&&
+                   PhysicalNetwork.exact(this,net.handle,net.interfaceName,net.ifindex,net.mtu,net.address)==null){
+                    networkStopRequested=true;
+                    recoveryExcludedHandle=net.handle;
+                    trace(RootDiagnosticReceipt.Event.ORIGINAL_NATIVE_LOSS_RECOVERY_HANDOFF);
+                }
+                finishOwner(net);
+            });
         }
     }
     private void cancelRotation(){

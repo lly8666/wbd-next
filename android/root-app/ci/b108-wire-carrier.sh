@@ -134,16 +134,25 @@ b110_dns(){
 b110_reconnect(){
  [[ "$b108_iface" == wlan0 ]] || { echo B110_RECONNECT_ENV_BLOCKED_NOT_WIFI;return 1; }
  cp "$out/b108-traffic.txt" "$out/b110-first-traffic.txt"
+ adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step lifecycle_watch >"$out/b112-watch.txt"
+ sleep .5
+ adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' >"$out/b112-before-loss.txt"
+ grep -Fq "B93_NETWORK_WATCH_ARMED $b108_handle" "$out/b112-before-loss.txt"
+ adb shell cmd wifi status >"$out/b112-wifi-before.txt"
  # Real production NetworkCallback must stop the first owner. No CI STOP
  # or START is sent before the second business check.
  adb shell svc wifi disable
  for _ in $(seq 1 50);do
   adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' >"$out/b110-first-stop.txt"
   if grep -Fq ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED "$out/b110-first-stop.txt" &&
-     grep -Fq OWNER_CLEANUP_FINISHED "$out/b110-first-stop.txt";then break;fi
+     grep -Fq OWNER_CLEANUP_FINISHED "$out/b110-first-stop.txt" &&
+    grep -Eq 'STOP_REQUESTED|ORIGINAL_NATIVE_LOSS_RECOVERY_HANDOFF' "$out/b110-first-stop.txt";then break;fi
   sleep .5
  done
- for marker in STOP_REQUESTED ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED OWNER_CLEANUP_FINISHED;do
+ adb shell cmd wifi status >"$out/b112-wifi-disabled.txt" || true
+ grep -E 'B93_SELECTED_NETWORK_LOST|ORIGINAL_NATIVE_PHYSICAL_LOSS_DRAINED|ORIGINAL_NATIVE_LOSS_RECOVERY_HANDOFF|STOP_REQUESTED|ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED|OWNER_CLEANUP_FINISHED|ROOT_PROCESS_EXIT_' "$out/b110-first-stop.txt" || true
+ grep -Eq 'STOP_REQUESTED|ORIGINAL_NATIVE_LOSS_RECOVERY_HANDOFF' "$out/b110-first-stop.txt" || { echo B112_AUTOMATIC_STOP_TRIGGER_NOT_PROVEN;return 1; }
+ for marker in ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED OWNER_CLEANUP_FINISHED;do
   grep -Fq "$marker" "$out/b110-first-stop.txt" || { echo "B110_AUTO_STOP_NOT_PROVEN $marker";return 1; }
  done
  b108_root test ! -e /sys/class/net/wbdv40

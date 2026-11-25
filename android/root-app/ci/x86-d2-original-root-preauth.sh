@@ -494,6 +494,18 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
     grep -Fq B111_DOWNLINK_LOSS_ARMED "$out/b108-host-relay.log"
   fi
   b108_traffic
+  if [[ "${WBD_B110_SCENE:-}" == fec-*-loss ]];then
+    # Four additional ordinary bursts at five-second intervals: the
+    # authenticated receiver quality windows can mature while real
+    # bidirectional business remains active.
+    cp "$out/b108-traffic.txt" "$out/b112-traffic-1.txt"
+    for round in 2 3 4 5;do
+      sleep 5
+      b108_traffic
+      cp "$out/b108-traffic.txt" "$out/b112-traffic-$round.txt"
+    done
+    echo B112_FIVE_ORDINARY_BURSTS_PASS
+  fi
   printf 'PASS\n' >"$out/b108-remote-app-result.txt"
   case "${WBD_B110_SCENE:-}" in
     normal-dns|normal-dns-relay) phase=B110_TUNNEL_DNS;b110_dns;;
@@ -528,8 +540,11 @@ if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
     for _ in $(seq 1 20);do grep -Eq 'B111_DOWNLINK_LOSS_COUNTS eligible=[0-9]+ dropped=[1-9][0-9]*' "$out/b108-host-relay.log" && break;sleep .2;done
     grep -E 'B111_DOWNLINK_LOSS_COUNTS eligible=[0-9]+ dropped=[1-9][0-9]*' "$out/b108-host-relay.log"
     if (( expected_lanes == 0 ));then
+      grep -F 'ORIGINAL_ANDROID_FIXED_M4_FINAL ' "$out/app-diagnostic-enums.txt" | tail -1 | tee "$out/b112-native-fec-final.txt"
       grep -Fq ORIGINAL_FEC_RECOVERED_TUN_OBSERVED "$out/app-diagnostic-enums.txt" || { echo B111_FEC_RECOVERED_TUN_NOT_PROVEN;exit 53; }
       echo B111_ORIGINAL_FEC_RECOVERED_TUN_PASS
+      if grep -Eq ' reports=[1-9][0-9]* ' "$out/b112-native-fec-final.txt";then echo B112_REAL_REVERSE_QUALITY_PASS;fi
+      if grep -Eq ' mature=[1-9][0-9]* applied=[1-9][0-9]*$' "$out/b112-native-fec-final.txt";then echo B112_NATIVE_MATURE_APPLIED_PASS;fi
     else
       grep -Fq ORIGINAL_GAME_FEC_RECOVERED_CANDIDATE_OBSERVED "$out/app-diagnostic-enums.txt" || { echo B111_GAME_FEC_CANDIDATE_NOT_PROVEN;exit 53; }
       echo B111_ORIGINAL_GAME_FEC_CANDIDATE_AND_BUSINESS_PASS

@@ -1,0 +1,13 @@
+# B112｜真实FEC恢复计数与原生先感知物理网络丢失后的自动恢复
+
+B111 SOURCE `3c97a97597beff6f54ffe8a0a40293cc8bfeaec6` [Action 45562169772](https://github.com/lly8666/wbd-next/actions/runs/45562169772) 14 SUCCESS/3 FAIL/9 SKIP。真实默认隧道UDP/TCP DNS [139030124787](https://github.com/lly8666/wbd-next/actions/runs/45562169772/job/139030124787)、显式App TCP DNS relay [139030124774](https://github.com/lly8666/wbd-next/actions/runs/45562169772/job/139030124774) 全部PASS，普通App真实远端答案及1MiB/方向业务、原Stop均通过。七模式基础E2E由B109/B110证明，不重复。
+
+真实1%下行丢包：Fixed [139030124833](https://github.com/lly8666/wbd-next/actions/runs/45562169772/job/139030124833) eligible2296/drop22，Auto [139030124840](https://github.com/lly8666/wbd-next/actions/runs/45562169772/job/139030124840) 1851/18，Game4 Fixed [139030124921](https://github.com/lly8666/wbd-next/actions/runs/45562169772/job/139030124921) 10767/107；三模式实际8 TCP/8 UDP、1MiB/方向和Stop通过。Game4 Fixed真实恢复候选>0且普通业务完整PASS，候选非特定恢复TUN交付。Fixed/Auto recovery gate失败：Android Go未启用wbd_v4_fec2_product（实际Rust已编译fec2_product_record），通用v4ReadOriginalFecRxProof走Unsupported stub，不能从缺少枚举推断Rust恢复为0。B112冷Stop前读取已存在的Android专属9计数ABI（原source/parity RAW、source/recovered TUN、unique、reverse reports/signals、mature/applied），固定数字日志，无包路径或新反馈协议。真实1%下行丢包下五次正常业务burst（每次1MiB/方向TCP、8 TCP/UDP，间隔5秒），保留原完整业务/Stop/drop>0/recovered_tun>0 gate；独立报告反馈和mature/applied，不把缺失或0当PASS，不复活旧M2。无额外极端工况。
+
+B111 [reconnect 139030124917](https://github.com/lly8666/wbd-next/actions/runs/45562169772/job/139030124917) 真实首连接业务通过，WiFi disable后无Java STOP_REQUESTED。下载 [artifact 14997834691](https://github.com/lly8666/wbd-next/actions/runs/45562169772/artifacts/14997834691) 的b110-first-stop.txt：06:49:34 READY，06:49:41 UID route stop drained、Rust joined Stop、RST guard cleared，随后ROOT_PROCESS_EXIT_1及OWNER_CLEANUP_FINISHED；未见COLD_RESELECT_STOP_CONFIRMED。说明原生可先于Network callback退出，具体Go错误未保留。B112针对真实原生物理scope失效或ENETDOWN且原UID+Rust清理成功的Normal路径，发明确loss drained枚举并按正常终止返回（外层RAW/guard/TUN清理仍必须全部成功），Java仅在上一真实READY且完整Stop/exit0、原exact Network已不存在、用户已启用background recovery的条件下交给现有事件驱动恢复。其他错误仍原样失败、不重连旧Network、不改变认证/路由/MTU/数据面或新增热路径。实际根因是否正是该错误类别需B112日志确认。重连guest加真实同handle独立watcher、wifi前后状态与原native/Java stop触发证据；必须生产自行第二次认证/READY和普通TCP/UDP业务，禁止手动START代替。
+
+B112 3个独立guest并行，Fixed、Auto、Normal auto reconnect。main未改，当前独立HEAD4771d361bee9；PR36 Draft；历史治理和Linux普通TCP载体FAIL保留。真实CI carrier不代表实体网络性能。剩余Game恢复实际交付、真实FEC反馈、自动重连、最终同源回归及实体ARM64/热点/IPv6/性能，按正常大类收口，不重复基础矩阵。新SOURCE待CI。
+
+```feature-impact
+{"kind":"updated","ids":["android-root-native-client"],"reason":"Accept real tunnel DNS and mild-loss business; expose existing Android FEC native counters and correctly hand off clean native-first physical loss to existing automatic recovery."}
+```

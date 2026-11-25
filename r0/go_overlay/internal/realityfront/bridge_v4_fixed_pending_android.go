@@ -187,3 +187,14 @@ func (b *v4EmbeddedNativeBridge) originalAndroidFixedM4Counters()([9]uint64,erro
     for i:=range result{result[i]=uint64(counters[i])}
     return result,nil
 }
+
+ // Read the existing Android-specific native M4 proof on the live
+ // authenticated product. This ABI is independent of the Linux Go
+ // wbd_v4_fec2_product diagnostic build tag.
+func (p *V4LinuxClientProduct) OriginalAndroidFixedM4Counters()([9]uint64,error){
+    if p==nil{return [9]uint64{},ErrAdmissionParams}
+    p.mu.Lock()
+    defer p.mu.Unlock()
+    if p.fec==nil||p.owner==nil||p.stopped{return [9]uint64{},ErrAdmissionUnsupported}
+    return p.owner.originalAndroidFixedM4Counters()
+}

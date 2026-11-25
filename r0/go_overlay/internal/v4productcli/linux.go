@@ -2340,6 +2340,12 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
         log.Printf("V4_PUBLIC_WORKER_CPU_UNAVAILABLE role=client reason=%v",cpuErr)
     }
     if c.fecMode!=realityfront.FecV2Off {
+        if runtime.GOOS=="android"{
+            if v,e:=native.OriginalAndroidFixedM4Counters();e==nil{
+                log.Printf("V4_PUBLIC_ANDROID_FIXED_M4_FINAL role=client source_raw=%d parity_raw=%d source_tun=%d recovered_tun=%d unique=%d reports=%d signals=%d mature=%d applied=%d",
+                    v[0],v[1],v[2],v[3],v[4],v[5],v[6],v[7],v[8])
+            }else{log.Print("V4_PUBLIC_ANDROID_FIXED_M4_FINAL_UNAVAILABLE role=client")}
+        }
         tx,txErr:=native.OriginalFecTxSnapshot()
         logAuthenticFecTx("client",tx,txErr)
         fail,failErr:=native.OriginalFecTxFailures()
@@ -2397,6 +2403,15 @@ func runClient(ctx context.Context,c config,ifindex uint32,tun *ownedTun,
     }
     closeErr:=errors.Join(routeErr,native.Close())
     if closeErr==nil{log.Printf("V4_PUBLIC_NATIVE_STOP_DRAINED role=client")}
+    // On a normal Android physical link loss the native scope/RAW reader
+    // can finish before ConnectivityManager delivers onLost. Report this
+    // specific clean end to Java; never reauthorize the old Network here.
+    // The outer Run still must close RAW, guard and TUN without error.
+    if runtime.GOOS=="android"&&undoRootRoute!=nil&&closeErr==nil&&
+       (err==errPublicNativePhysicalScopeLost||errors.Is(err,syscall.ENETDOWN)){
+        log.Print("V4_PUBLIC_ANDROID_PHYSICAL_LOSS_DRAINED role=client")
+        return nil
+    }
     if err!=nil{return errors.Join(err,closeErr)}
     return closeErr
 }
