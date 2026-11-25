@@ -29,6 +29,7 @@ const ipv6UIDPref=9600
 type IPv6Plan struct{
  Version int
  Server bool
+ Drop bool `json:",omitempty"` // default IPv6 entry drop, no SIT
  Tun,Local4,Gateway4,Egress string
  MTU int
  All bool
@@ -97,6 +98,15 @@ func(p IPv6Plan) ranges()[]allRange{
  return out
 }
 func(p IPv6Plan) valid()bool{
+ if p.Drop{
+  local,e:=netip.ParseAddr(p.Local4)
+  if p.Version!=1||p.Server||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||e!=nil||!local.Is4()||local.IsUnspecified()||p.Gateway4!=""||p.Egress!=""||p.MTU<576||p.MTU>1500||len(p.DirectCIDRs)!=0||p.AppDNSPort!=0||p.AppDNSTCP{return false}
+  if p.Downstream!=""&&(!nameOK(p.Downstream)||p.Downstream==p.Tun){return false}
+  if len(p.Downstream6)!=len(p.DownstreamDNSPorts)||len(p.Downstream6)>1||len(p.Downstream6)>0&&p.Downstream==""{return false}
+  for i,raw:=range p.Downstream6{q,e:=netip.ParsePrefix(raw);if e!=nil||q.Bits()!=128||!q.Addr().Is6()||q.Addr().Is4In6()||!(q.Addr().IsGlobalUnicast()||q.Addr().IsLinkLocalUnicast())||p.DownstreamDNSPorts[i]<1||p.DownstreamDNSPorts[i]>65535{return false}}
+  if p.All{return len(p.UIDs)==0&&ValidAllAppExclusions(p.ExcludedAppIDs)}
+  return len(p.ExcludedAppIDs)==0&&(len(p.UIDs)==1&&p.UIDs[0]>=10000&&p.UIDs[0]<=1999999||ValidGroupUIDs(p.UIDs))
+ }
  local,e:=netip.ParseAddr(p.Local4);peer,f:=netip.ParseAddr(p.Gateway4)
  if p.Version!=1||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||
     e!=nil||f!=nil||!local.Is4()||!peer.Is4()||!local.IsPrivate()||!peer.IsPrivate()||
@@ -134,6 +144,23 @@ func(p IPv6Plan) commands()[]carrierCmd{
   out=append(out,carrierCmd{"ip",family,append(append([]string{"rule","pref",strconv.Itoa(priority)},selectors...),"lookup",ipv6CarrierTable)})
  }
  fw:=func(family,table string,args ...string){out=append(out,carrierCmd{family,table,append(append([]string(nil),args[:len(args)-2]...),append([]string{"-m","comment","--comment",ipv6CarrierMarker},args[len(args)-2:]...)...)})}
+ if p.Drop{
+  // DNS DNAT precedes IPv6 routing. Scope by selected interface,
+  // including link-local queries rather than only global /64 sources.
+  for i,raw:=range p.Downstream6{
+   ip:=netip.MustParsePrefix(raw).Addr().String();port:=strconv.Itoa(p.DownstreamDNSPorts[i])
+   for _,proto:=range []string{"udp","tcp"}{
+    fw("fw6","filter","INPUT","-i",p.Downstream,"-d",ip+"/128","-p",proto,"-m",proto,"--dport",port,"-m","conntrack","--ctstate","DNAT","-j","ACCEPT")
+    fw("fw6","nat","PREROUTING","-i",p.Downstream,"-p",proto,"-m",proto,"--dport","53","-j","DNAT")
+    last:=&out[len(out)-1];last.args=append(last.args,"--to-destination","["+ip+"]:"+port)
+   }
+  }
+  // Do not raise the actual IPv4 MTU merely to support IPv6 capture.
+  if p.MTU>=1280{route("-6","default",p.Tun,p.local6())}else{out=append(out,carrierCmd{"ip","-6",[]string{"route","blackhole","default","table",ipv6CarrierTable}})}
+  if p.Downstream!=""{rule("-6",ipv6TetherPref,"iif",p.Downstream)}
+  for i,r:=range p.ranges(){rule("-6",ipv6UIDPref+i,"uidrange",fmt.Sprintf("%d-%d",r.from,r.to))}
+  return out
+ }
  // Insertion at chain head: install the drop first, then the exact
  // allow before it. Outer proto41 can reach SIT only via original TUN.
  fw("fw4","filter","INPUT","-p","41","-d",p.Local4+"/32","-j","DROP")
@@ -217,6 +244,11 @@ func carrierFWKey(w []string)string{
  return tetherFWKey(w)
 }
 func carrierRouteMatch(w,a []string)bool{
+ if len(a)==5&&a[1]=="blackhole"{
+  if len(w)<4||w[0]!="blackhole"||w[1]!="default"||!hasPair(w,"table",ipv6CarrierTable){return false}
+  for i:=2;i+1<len(w);i+=2{if w[i]!="table"&&w[i]!="metric"&&w[i]!="pref"&&w[i]!="proto"{return false}}
+  return len(w)%2==0
+ }
  if len(a)==5&&a[1]=="throw"{
   if len(w)<4||w[0]!="throw"||carrierIP(w[1])!=carrierIP(a[2])||!hasPair(w,"table",ipv6CarrierTable){return false}
   for i:=2;i<len(w);i+=2{
@@ -289,7 +321,8 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
   prefix,err:=netip.ParsePrefix(w[3]);if err!=nil{continue}
   iface:=strings.Split(strings.TrimSuffix(w[1],"\\"),"@")[0]
   if prefix.Addr().String()==p.local6(){
-   if x.addr||!x.link||iface!=ipv6CarrierIface||prefix.Bits()!=128{return x,fmt.Errorf("foreign IPv6 lease address")}
+   expected:=ipv6CarrierIface;if p.Drop{expected=p.Tun}
+   if x.addr||(!p.Drop&&!x.link)||iface!=expected||prefix.Bits()!=128{return x,fmt.Errorf("foreign IPv6 lease address")}
    x.addr=true
   }
  }
@@ -318,6 +351,7 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
   }
  }
  for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"},{"fw6","nat","PREROUTING"},{"fw6","nat","OUTPUT"}}{
+  if p.Drop&&(pair[0]=="fw4"||pair[2]!="INPUT"&&pair[2]!="PREROUTING"){continue}
   if pair[2]=="PREROUTING"&&len(p.DownstreamDNSPorts)==0{continue}
   if pair[2]=="OUTPUT"&&p.AppDNSPort==0{continue}
   if !p.Server&&len(p.Downstream6)==0&&pair[0]=="fw6"&&pair[2]!="OUTPUT"{continue}
@@ -387,6 +421,7 @@ func(s *IPv6Owner) remove(p IPv6Plan)error{
  x,e:=s.state(p);if e!=nil{return e}
  cmds:=p.commands()
  if e=s.changeAll(cmds,x.rows,false);e!=nil{return e}
+ if p.Drop&&x.addr{if _,e=s.ip("-6","addr","del",p.local6()+"/128","dev",p.Tun);e!=nil{return e}}
  if x.link{if _,e=s.ip("link","del","dev",ipv6CarrierIface);e!=nil{return e}}
  x,e=s.state(p);if e!=nil{return e}
  if x.link||x.addr{return fmt.Errorf("SIT Stop retained link/address")}
@@ -417,6 +452,13 @@ func NewIPv6CarrierBatch(ip,fw4,fw6 Runner,batch func([][]string)error,path stri
  for _,v:=range x.rows{if v{return fail(fmt.Errorf("unowned SIT rule"))}}
  if e=writeIPv6Carrier(path,p);e!=nil{return fail(e)}
  rollback:=func(e error)(*IPv6Owner,error){return fail(errors.Join(e,s.remove(p)))}
+ if p.Drop{
+  if p.MTU>=1280{if _,e=ip("-6","addr","add",p.local6()+"/128","dev",p.Tun,"nodad","noprefixroute");e!=nil{return rollback(e)}}
+  if e=s.changeAll(p.commands(),nil,true);e!=nil{return rollback(e)}
+  x,e=s.state(p);if e!=nil||x.addr!=(p.MTU>=1280){return rollback(errors.Join(e,fmt.Errorf("IPv6 entry drop readback incomplete")))}
+  for _,v:=range x.rows{if !v{return rollback(fmt.Errorf("IPv6 entry FIB/DNS readback incomplete"))}}
+  return s,nil
+ }
  if _,e=ip("link","add","name",ipv6CarrierIface,"type","sit",
    "local",p.Local4,"remote",p.remote4(),"dev",p.Tun,"ttl","inherit","nopmtudisc",
    "6rd-prefix",IPv6CarrierPrefix,"6rd-relay_prefix",p.relay().String());e!=nil{return rollback(e)}

@@ -27,6 +27,7 @@ type SystemDNSPlan struct{
  DNSPlan
  NetID uint32
  IPv6 bool // separate opt-in journal; old v4 journal defaults false
+ Managed bool `json:",omitempty"` // all selected UID DNS, independent of socket mark
 }
 func(p SystemDNSPlan) family()string{if p.IPv6{return "-6"};return "-4"}
 func(p SystemDNSPlan) iface()string{if p.IPv6{return "wbd_dns6"};return systemDNSIface}
@@ -41,9 +42,9 @@ func(p SystemDNSPlan) rules(action string)[][]string{
  var out [][]string
  for i,r:=range p.ranges(){
   for k,proto:=range []string{"udp","tcp"}{
-   out=append(out,[]string{p.family(),"rule",action,"pref",strconv.Itoa(systemDNSPref+2*i+k),
-    "iif","lo","fwmark",p.mark(),"uidrange",fmt.Sprintf("%d-%d",r.from,r.to),
-    "ipproto",proto,"dport","53","lookup",p.table()})
+   row:=[]string{p.family(),"rule",action,"pref",strconv.Itoa(systemDNSPref+2*i+k),"iif","lo"}
+   if !p.Managed{row=append(row,"fwmark",p.mark())}
+   out=append(out,append(row,"uidrange",fmt.Sprintf("%d-%d",r.from,r.to),"ipproto",proto,"dport","53","lookup",p.table()))
   }
  }
  return out
@@ -87,12 +88,13 @@ func systemRuleKey(w []string,table string)(string,error){
   if _,yes:=fields[k];yes{return "",fmt.Errorf("duplicate selector")}
   fields[k]=v
  }
- if fields["from"]!="all"||len(fields)!=7||fields["iif"]!="lo"||
+ if fields["from"]!="all"||(len(fields)!=6&&len(fields)!=7)||fields["iif"]!="lo"||
     fields["dport"]!="53"||fields["lookup"]!=table{
   return "",fmt.Errorf("foreign system DNS selector")
  }
  proto:=fields["ipproto"]
  if proto=="17"{proto="udp"};if proto=="6"{proto="tcp"}
+ if fields["fwmark"]==""&&len(fields)==6{return fmt.Sprintf("%s|any|%s|%s",pref,fields["uidrange"],proto),nil}
  mark:=strings.Split(fields["fwmark"],"/")
  if len(mark)!=2{return "",fmt.Errorf("invalid system DNS mark")}
  v,e:=strconv.ParseUint(mark[0],0,32);m,f:=strconv.ParseUint(mark[1],0,32)

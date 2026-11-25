@@ -144,6 +144,7 @@ type config struct{
     androidTunnelDNSUpstream netip.Addr
     androidAppTCPDNS bool // explicit kernel App TCP53 DNS listener
     androidSystemDNS bool // selected UID + selected netId plaintext IPv4 DNS
+    androidManagedDNS,androidIPv6Drop bool // APK managed DNS and IPv4-only business
     androidSystemDNS6 bool // optional IPv6 destination plaintext DNS
     androidIPv6Gateway string // explicitly provisioned server TUN IPv4 for SIT carrier
     androidIPv6DirectCIDRs []string
@@ -293,6 +294,8 @@ func parse(role string,args []string)(config,error){
     androidIPv6DirectCIDRs:=flags.String("android-ipv6-direct-cidrs","","Android Root: comma-separated IPv6 direct CIDRs within IPv6 carrier")
     androidIPv6DirectLAN:=flags.Bool("android-ipv6-direct-lan",false,"Android Root: direct selected physical Network IPv6 on-link prefixes")
     serverIPv6Carrier:=flags.Bool("inner-ipv6",false,"Linux server: opt-in kernel SIT/6rd IPv6 business over authenticated IPv4; requires IPv6 forwarding and egress")
+    androidManagedDNS:=flags.Bool("android-managed-dns",false,"Android managed UID UDP/TCP53 independent of network mark")
+    androidIPv6Drop:=flags.Bool("android-ipv6-drop",false,"Android IPv6 entry drop and local AAAA NODATA")
     androidSystemDNS6:=flags.Bool("android-system-dns6",false,
         "Android Root: additionally capture selected Network/UID IPv6 UDP/TCP53 to existing DNS owner")
     androidSystemDNS:=flags.Bool("android-system-dns",false,
@@ -407,7 +410,10 @@ func parse(role string,args []string)(config,error){
             if e!=nil{return c,e}
             c.androidIPv6DirectLAN=*androidIPv6DirectLAN
         }
-        c.androidSystemDNS6=*androidSystemDNS6
+        c.androidManagedDNS=*androidManagedDNS
+        c.androidIPv6Drop=*androidIPv6Drop
+        if c.androidIPv6Drop&&(c.androidIPv6Gateway!=""||!c.androidManagedDNS){return c,fmt.Errorf("IPv6 drop requires managed DNS and no SIT gateway")}
+        c.androidSystemDNS6=*androidSystemDNS6||c.androidManagedDNS
         c.androidSystemDNS=*androidSystemDNS||c.androidSystemDNS6
         c.androidAppTCPDNS=*androidAppTCPDNS||c.androidSystemDNS
         if *tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
@@ -462,7 +468,7 @@ func parse(role string,args []string)(config,error){
              *androidRouteGroup!=""||*androidRouteAll||*androidRouteExclude!=""||
               *androidDirectCIDRs!=""||*cnIPv4File!=""||*cnGeositeFile!=""||*peerHost!=""||
               *androidPhysicalDNSUpstream!="223.5.5.5"||*androidTunnelDNSUpstream!="1.1.1.1"||
-              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidIPv6Gateway!=""||*androidIPv6DirectCIDRs!=""||*androidIPv6DirectLAN||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
+              *androidTunnelDNS||*androidPhysicalDNS||*androidCNDNSSplit||*androidAppTCPDNS||*androidSystemDNS||*androidSystemDNS6||*androidManagedDNS||*androidIPv6Drop||*androidIPv6Gateway!=""||*androidIPv6DirectCIDRs!=""||*androidIPv6DirectLAN||*androidClatParent!=""||*androidClatPrefix!=""||*tetherInterface!=""||*tetherSubnet!=""||*tetherIndex!=0{
         return c,fmt.Errorf("Android Network/routing parameters are Android-only")
     }
     if *serverIPv6Carrier&&(role!="server"||runtime.GOOS=="android"){

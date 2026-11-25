@@ -48,6 +48,7 @@ type Resolver struct {
 	dial DialFunc
 	cn CNMatch
 	split bool
+	ipv4Only bool // frozen before listeners start
 	direct string
 	tunnel string
 	mu sync.Mutex
@@ -219,6 +220,10 @@ func cacheFields(reply []byte,q question)([]int,uint32,bool){
 	if min==0{return nil,0,false}
 	return fields,min,true
 }
+// NOERROR/NODATA, no upstream lookup or A-cache entry.
+func ipv4OnlyAnswer(query []byte,q question)[]byte{
+ return udpQuestionReply(query,q,0x8080|(binary.BigEndian.Uint16(query[2:4])&0x0110))
+}
 func withID(wire,query []byte)[]byte{
 	out:=append([]byte(nil),wire...)
 	copy(out[:2],query[:2])
@@ -325,6 +330,7 @@ func (r *Resolver) Resolve(ctx context.Context,query []byte,bootstrap bool)([]by
 	q,err:=parseQuery(query)
 	if err!=nil{return nil,err}
 	if err=ctx.Err();err!=nil{return nil,err}
+	if r.ipv4Only&&q.typ==28{return ipv4OnlyAnswer(query,q),nil}
 	path,addr:=r.decide(q.name,bootstrap)
 	// Includes original query bytes, flags, QTYPE, EDNS and selected path.
 	// Only the transaction ID is excluded, and it is rewritten on reply.

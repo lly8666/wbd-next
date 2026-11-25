@@ -47,6 +47,8 @@ func dnsNLParse32(s string)(uint32,error){
  n,e:=strconv.ParseUint(s,0,32);return uint32(n),e
 }
 func systemDNSNetlinkPayload(row []string)([]byte,error){
+ managed:=len(row)==15
+ if managed{row=append(append(append([]string{},row[:7]...),"fwmark","0x0/0x0"),row[7:]...)}
  if len(row)!=17||row[1]!="rule"||(row[2]!="add"&&row[2]!="del")||
  row[3]!="pref"||row[5]!="iif"||row[6]!="lo"||row[7]!="fwmark"||
  row[9]!="uidrange"||row[11]!="ipproto"||row[13]!="dport"||row[14]!="53"||row[15]!="lookup"{
@@ -59,7 +61,7 @@ func systemDNSNetlinkPayload(row []string)([]byte,error){
  if len(mark)!=2||len(uids)!=2{return nil,fmt.Errorf("invalid DNS rule range")}
  id,e:=dnsNLParse32(mark[0]);mask,f:=dnsNLParse32(mark[1])
  lo,g:=dnsNLParse32(uids[0]);hi,h:=dnsNLParse32(uids[1])
- if e!=nil||f!=nil||g!=nil||h!=nil||id==0||id>65535||mask!=65535||lo<10000||hi<lo||hi>1999999{return nil,fmt.Errorf("invalid DNS UID/netid")}
+ if e!=nil||f!=nil||g!=nil||h!=nil||(!managed&&(id==0||id>65535||mask!=65535))||(managed&&(id!=0||mask!=0))||lo<10000||hi<lo||hi>1999999{return nil,fmt.Errorf("invalid DNS UID/netid")}
  var proto byte
  switch row[12]{case "udp":proto=17;case "tcp":proto=6;default:return nil,fmt.Errorf("invalid DNS protocol")}
  payload:=make([]byte,12)
@@ -68,9 +70,10 @@ func systemDNSNetlinkPayload(row []string)([]byte,error){
  binary.NativeEndian.PutUint16(ports[:2],53);binary.NativeEndian.PutUint16(ports[2:],53)
  for _,a:=range []struct{t uint16;b []byte}{
   {dnsFRAIIF,[]byte{'l','o',0}},{dnsFRAPriority,dnsNL32(pref)},
-  {dnsFRAFwmark,dnsNL32(id)},{dnsFRATable,dnsNL32(table)},{dnsFRAFwMask,dnsNL32(mask)},
+  {dnsFRATable,dnsNL32(table)},
   {dnsFRAUID,append(dnsNL32(lo),dnsNL32(hi)...)},{dnsFRAIPProto,[]byte{proto}},{dnsFRADport,ports},
  }{payload=append(payload,dnsNLAttr(a.t,a.b)...)}
+ if !managed{payload=append(payload,dnsNLAttr(dnsFRAFwmark,dnsNL32(id))...);payload=append(payload,dnsNLAttr(dnsFRAFwMask,dnsNL32(mask))...)}
  return payload,nil
 }
 func systemDNSNetlinkAttrs(b []byte)(map[uint16][]byte,error){
@@ -99,7 +102,7 @@ func systemDNSNetlinkRow(data []byte,family byte,table uint32)(string,error){
  data[7]!=1||binary.NativeEndian.Uint32(data[8:12])!=0||tbl!=table||
  string(a[dnsFRAIIF])!="lo\x00"||len(a[dnsFRAUID])!=8||
  len(a[dnsFRAIPProto])!=1||len(a[dnsFRADport])!=4||len(a[dnsFRAPriority])!=4||
- len(a[dnsFRATable])!=4||len(a[dnsFRAFwmark])!=4||len(a[dnsFRAFwMask])!=4{
+ len(a[dnsFRATable])!=4||(len(a[dnsFRAFwmark])!=0&&len(a[dnsFRAFwmark])!=4)||(len(a[dnsFRAFwMask])!=0&&len(a[dnsFRAFwMask])!=4){
   return "",fmt.Errorf("foreign DNS netlink rule at priority %d",pref)
  }
  for t,v:=range a{
@@ -121,8 +124,10 @@ func systemDNSNetlinkRow(data []byte,family byte,table uint32)(string,error){
  proto:=""
  switch a[dnsFRAIPProto][0]{case 17:proto="udp";case 6:proto="tcp";default:return "",fmt.Errorf("foreign DNS protocol")}
  u:=a[dnsFRAUID]
- return fmt.Sprintf("%d: from all fwmark 0x%x/0x%x iif lo uidrange %d-%d ipproto %s dport 53 lookup %d",
-  pref,u32(dnsFRAFwmark),u32(dnsFRAFwMask),binary.NativeEndian.Uint32(u[:4]),binary.NativeEndian.Uint32(u[4:]),proto,tbl),nil
+ mark,mask:=u32(dnsFRAFwmark),u32(dnsFRAFwMask)
+ if mark==0&&mask==0{return fmt.Sprintf("%d: from all iif lo uidrange %d-%d ipproto %s dport 53 lookup %d",pref,binary.NativeEndian.Uint32(u[:4]),binary.NativeEndian.Uint32(u[4:]),proto,tbl),nil}
+ if mark==0||mark>65535||mask!=65535{return "",fmt.Errorf("unexpected DNS network mark")}
+ return fmt.Sprintf("%d: from all fwmark 0x%x/0x%x iif lo uidrange %d-%d ipproto %s dport 53 lookup %d",pref,mark,mask,binary.NativeEndian.Uint32(u[:4]),binary.NativeEndian.Uint32(u[4:]),proto,tbl),nil
 }
 func systemDNSNetlinkRead(s string)(string,error){
  family,table,e:=dnsNLFamily(s);if e!=nil{return "",e}

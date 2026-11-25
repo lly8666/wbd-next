@@ -243,13 +243,13 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  runner rootjournal.Runner,stopUID func()error)(func()error,error){
  dnsMode:=c.androidTunnelDNS||c.androidPhysicalDNS||c.androidCNDNSSplit
  tetherDNS:=c.androidTetherInterface!=""&&dnsMode
- appIPv6DNS:=c.androidIPv6Gateway!=""&&dnsMode
+ appIPv6DNS:=(c.androidIPv6Gateway!=""||c.androidIPv6Drop)&&dnsMode
  finish:=func(stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
   next,e:=startAndroidTether(c,tun,lease,runner,stop,relay)
   if e!=nil{return nil,e}
   return startOriginalAndroidIPv6Carrier(c,tun,lease,runner,next,relay)
  }
- if !c.androidAppTCPDNS&&!tetherDNS&&!appIPv6DNS{return finish(stopUID,nil)}
+ if !c.androidAppTCPDNS&&!c.androidSystemDNS&&!tetherDNS&&!appIPv6DNS{return finish(stopUID,nil)}
  // Construct the optional Go physical relay only for modes that use it.
  // Literal-peer normal tunnel DNS never needs this Go physical dialer.
  if (c.androidPhysicalDNS||c.androidCNDNSSplit)&&c.androidPhysicalDNSDial==nil{
@@ -289,7 +289,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  }
  var match dnsnative.CNMatch
  if c.androidCNDNSSplit{match=c.androidCNSnapshot.Match}
- relay,e:=dnsnative.StartAppTCPDNS(dial,match,c.androidCNDNSSplit,c.androidPhysicalDNS,physicalEndpoint,tunnelEndpoint)
+ relay,e:=dnsnative.StartManagedAppDNS(dial,match,c.androidCNDNSSplit,c.androidPhysicalDNS,c.androidIPv6Drop,physicalEndpoint,tunnelEndpoint)
  if e!=nil{return nil,errors.Join(e,stopUID())}
  uids:=append([]int(nil),c.androidRouteUIDs...)
  if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
@@ -305,7 +305,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   // Android Network.getNetworkHandle stores netId in its high 32 bits.
   // No root/system wildcard rule and no modification of netd configuration.
   systemOwner,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall,androidDNSIPBatch,androidDNSBatch,
-   androidSystemDNSJournal,rootjournal.SystemDNSPlan{DNSPlan:plan,NetID:uint32(c.androidNetworkHandle>>32)},rootjournal.PlatformSystemDNSRuleIO())
+   androidSystemDNSJournal,rootjournal.SystemDNSPlan{DNSPlan:plan,NetID:uint32(c.androidNetworkHandle>>32),Managed:c.androidManagedDNS},rootjournal.PlatformSystemDNSRuleIO())
   if e!=nil{return nil,errors.Join(e,owner.Stop(),relay.Close(),stopUID())}
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV4_READY role=client uid_netid_port53=1")
  }
@@ -314,7 +314,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   if err!=nil{return nil,errors.Join(err,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
   plan6:=plan;plan6.Port=port
   systemOwner6,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall6,androidDNSIPBatch,nil,
-   androidSystemDNS6Journal,rootjournal.SystemDNSPlan{DNSPlan:plan6,NetID:uint32(c.androidNetworkHandle>>32),IPv6:true},rootjournal.PlatformSystemDNSRuleIO())
+   androidSystemDNS6Journal,rootjournal.SystemDNSPlan{DNSPlan:plan6,NetID:uint32(c.androidNetworkHandle>>32),IPv6:true,Managed:c.androidManagedDNS},rootjournal.PlatformSystemDNSRuleIO())
   if e!=nil{return nil,errors.Join(e,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client uid_netid_port53=1 ipv4_upstream=1")
  }
@@ -444,6 +444,7 @@ func startAndroidTether(c config,tun *ownedTun,lease netip.Prefix,runner rootjou
 }
 
 func startOriginalAndroidIPv6Carrier(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
+ if c.androidIPv6Drop{return startAndroidIPv6EntryDrop(c,tun,lease,runner,stop,relay)}
  if c.androidIPv6Gateway==""{return stop,nil}
  fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
  gateway,e:=netip.ParseAddr(c.androidIPv6Gateway)
@@ -562,4 +563,37 @@ func startOriginalAndroidTetherWatch(c config,stop context.CancelFunc)(func(),er
  })
  if e!=nil{return nil,androidTetherFailure("BPF_PAUSE",e)}
  return closeWatch,nil
+}
+
+func startAndroidIPv6EntryDrop(c config,tun *ownedTun,lease netip.Prefix,runner rootjournal.Runner,stop func()error,relay *dnsnative.AppTCPDNS)(func()error,error){
+ fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
+ uids:=append([]int(nil),c.androidRouteUIDs...);if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
+ plan:=rootjournal.IPv6Plan{Drop:true,Tun:tun.name,Local4:lease.Addr().String(),MTU:tun.mtu,All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs,Downstream:c.androidTetherInterface}
+ if plan.Downstream!=""&&relay!=nil{
+  nic,e:=net.InterfaceByName(plan.Downstream);if e!=nil||nic.Index!=c.androidTetherIfindex{return fail(fmt.Errorf("IPv6 DNS downstream changed"))}
+  addrs,e:=nic.Addrs();if e!=nil{return fail(e)}
+  var gateway netip.Addr
+  for _,a:=range addrs{
+   prefix,e:=netip.ParsePrefix(a.String());if e!=nil{continue};ip:=prefix.Addr()
+   if !ip.Is6()||ip.Is4In6()||!(ip.IsGlobalUnicast()||ip.IsLinkLocalUnicast()){continue}
+   if !gateway.IsValid()||gateway.IsLinkLocalUnicast()&&ip.IsGlobalUnicast(){gateway=ip}
+  }
+  if gateway.IsValid(){
+   bind:=net.ListenConfig{Control:func(network,address string,raw syscall.RawConn)error{
+    var bindErr error
+    e:=raw.Control(func(fd uintptr){bindErr=syscall.SetsockoptString(int(fd),syscall.SOL_SOCKET,syscall.SO_BINDTODEVICE,plan.Downstream)})
+    return errors.Join(e,bindErr)
+   }}
+   address:=gateway;if address.IsLinkLocalUnicast(){address=address.WithZone(plan.Downstream)}
+   port,e:=relay.EnableManagedDownstream6(address,bind);if e!=nil{return fail(e)}
+   plan.Downstream6=[]string{netip.PrefixFrom(gateway,128).String()};plan.DownstreamDNSPorts=[]int{port}
+  }
+ }
+ if plan.MTU>=1280{
+  if e:=os.WriteFile("/proc/sys/net/ipv6/conf/"+tun.name+"/disable_ipv6",[]byte("0\n"),0);e!=nil{return fail(e)}
+ }
+ owner,e:=rootjournal.NewIPv6CarrierBatch(runner,androidDNSFirewall,androidDNSFirewall6,originalIPv6Batch,androidIPv6CarrierJournal,plan)
+ if e!=nil{return fail(e)}
+ fmt.Fprintf(os.Stderr,"V4_PUBLIC_ANDROID_IPV6_ENTRY_DROP_READY role=client tun=%t downstream_dns=%d\n",plan.MTU>=1280,len(plan.DownstreamDNSPorts))
+ return func()error{return errors.Join(owner.Stop(),stop())},nil
 }

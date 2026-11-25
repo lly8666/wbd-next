@@ -38,9 +38,16 @@ type AppTCPDNS struct {
 // endpoints are literal, and every socket uses the supplied scoped dialer.
 func StartAppTCPDNS(dial DialFunc, match CNMatch, split, allPhysical bool,
  physical string,tunnel ...string)(*AppTCPDNS,error){
+ return startAppDNS(dial,match,split,allPhysical,false,physical,tunnel...)
+}
+func StartManagedAppDNS(dial DialFunc,match CNMatch,split,allPhysical,ipv4Only bool,physical,tunnel string)(*AppTCPDNS,error){
+ return startAppDNS(dial,match,split,allPhysical,ipv4Only,physical,tunnel)
+}
+func startAppDNS(dial DialFunc,match CNMatch,split,allPhysical,ipv4Only bool,physical string,tunnel ...string)(*AppTCPDNS,error){
  if split&&allPhysical{return nil,ErrInvalid}
  r,e:=New(dial,match,split)
  if e!=nil{return nil,e}
+ r.ipv4Only=ipv4Only
  r.direct=physical
  if len(tunnel)>0{r.tunnel=tunnel[0]}
  l,e:=net.Listen("tcp4","127.0.0.1:0")
@@ -88,13 +95,16 @@ func (s *AppTCPDNS) serve(c net.Conn){
   query:=make([]byte,n)
   if _,e:=io.ReadFull(c,query);e!=nil{return}
   q,e:=parseQuery(query);if e!=nil{return}
-  path,endpoint:=s.resolver.decide(q.name,s.allPhysical)
-  ctx,cancel:=context.WithTimeout(s.ctx,3*time.Second)
-  reply,e:=s.resolver.tcp(ctx,path,endpoint,query)
-  cancel()
-  if e!=nil{return}
-  truncated,e:=validateReply(query,reply,q)
-  if e!=nil||truncated{return}
+  var reply []byte
+  if s.resolver.ipv4Only&&q.typ==28{reply=ipv4OnlyAnswer(query,q)}else{
+   path,endpoint:=s.resolver.decide(q.name,s.allPhysical)
+   ctx,cancel:=context.WithTimeout(s.ctx,3*time.Second)
+   reply,e=s.resolver.tcp(ctx,path,endpoint,query)
+   cancel()
+   if e!=nil{return}
+   truncated,e:=validateReply(query,reply,q)
+   if e!=nil||truncated{return}
+  }
   binary.BigEndian.PutUint16(size[:],uint16(len(reply)))
   if c.SetWriteDeadline(time.Now().Add(3*time.Second))!=nil{return}
   frame:=append(size[:],reply...)

@@ -42,3 +42,15 @@ func(s *AppTCPDNS) EnableDownstream6(gateway netip.Addr,subnet netip.Prefix)(int
  go s.serveUDP(p,subnet)
  return port,nil
 }
+
+// IPv6 DNS is independent of business IPv6/SIT. Both sockets use the
+// caller's selected downstream ListenConfig (SO_BINDTODEVICE on Android).
+func(s *AppTCPDNS) EnableManagedDownstream6(gateway netip.Addr,config net.ListenConfig)(int,error){
+ if s.ctx.Err()!=nil||!gateway.Is6()||gateway.Is4In6()||gateway.IsUnspecified(){return 0,ErrInvalid}
+ l,e:=config.Listen(s.ctx,"tcp6",net.JoinHostPort(gateway.String(),"0"));if e!=nil{return 0,e}
+ port:=l.Addr().(*net.TCPAddr).Port
+ u,e:=config.ListenPacket(s.ctx,"udp6",net.JoinHostPort(gateway.String(),fmt.Sprint(port)));if e!=nil{l.Close();return 0,e}
+ s.downstream6TCP=append(s.downstream6TCP,l);s.downstream6UDP=append(s.downstream6UDP,u)
+ s.wg.Add(2);go s.accept(l,netip.Prefix{});go s.serveUDP(u,netip.Prefix{})
+ return port,nil
+}

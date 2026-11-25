@@ -21,6 +21,8 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.RadioGroup;
+import android.widget.RadioButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -97,14 +99,14 @@ public final class RootClientActivity extends Activity {
         refreshHome();
     }
     private void polish(View v){
-        if(v instanceof Button && !(v instanceof CheckBox)){
+        if(v instanceof Button && !(v instanceof android.widget.CompoundButton)){
             Button b=(Button)v;b.setAllCaps(false);b.setTextSize(14);
             if(b!=homeConnect&&b!=homeStop&&v.getBackground()!=null){
                 b.setTextColor(ACCENT);b.setBackground(rounded(0xffe8f1f0,10));
                 b.setMinHeight(dp(44));
             }
-        }else if(v instanceof CheckBox){
-            CheckBox cb=(CheckBox)v;cb.setTextColor(INK);
+        }else if(v instanceof android.widget.CompoundButton){
+            android.widget.CompoundButton cb=(android.widget.CompoundButton)v;cb.setTextColor(INK);
             cb.setButtonTintList(ColorStateList.valueOf(ACCENT));
             cb.setTextSize(14);cb.setMinHeight(dp(44));
         }else if(v instanceof EditText){
@@ -129,12 +131,11 @@ public final class RootClientActivity extends Activity {
             directCIDRsField.getText().toString(),ipv6DirectCIDRsField.getText().toString());
     }
     private void chooseFullRoute(){
-        cnIPDirect.setChecked(false);cnSplitDNS.setChecked(false);physicalDNS.setChecked(false);
-        tunnelDNS.setChecked(true);autoConnectedDirect.setChecked(false);
+        cnIPDirect.setChecked(false);dnsModes.check(tunnelDNS.getId());autoConnectedDirect.setChecked(false);
         directCIDRsField.setText("");ipv6DirectCIDRsField.setText("");refreshHome();
     }
     private void chooseSplitRoute(){
-        cnIPDirect.setChecked(true);cnSplitDNS.setChecked(true);refreshHome();
+        cnIPDirect.setChecked(true);dnsModes.check(cnSplitDNS.getId());refreshHome();
     }
     private void setTextIfChanged(TextView t,String value){
         if(t!=null&&!value.contentEquals(t.getText()))t.setText(value);
@@ -209,7 +210,9 @@ public final class RootClientActivity extends Activity {
     private final Map<String,Integer> restoredBypass=new TreeMap<>();
     private EditText serverAddress,serverName,user,password,routeKey,caPEM,serverPort,outerMTUField,directCIDRsField,physicalDNSUpstreamField,ipv6GatewayField,ipv6DirectCIDRsField,tunnelDNSUpstreamField;
     private Spinner networks,recordCiphers,tunQueueSizes,startupPaddingModes,fecModes,fecProfiles,nativeHealthIntervals,profileSlots,coldRotationMinutes,game4CopySchedules;
-    private CheckBox allAppsDefault,tlsVerifyServer,tunnelDNS,physicalDNS,cnSplitDNS,cnIPDirect,outerRepair,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
+    private RadioButton tunnelDNS,physicalDNS,cnSplitDNS;
+    private RadioGroup dnsModes;
+    private CheckBox allAppsDefault,tlsVerifyServer,cnIPDirect,outerRepair,physicalDNSFollowNetwork,autoConnectedDirect,autoNetworkRecovery,backgroundNetworkRecovery,appTcpDNS,tetherSharing,systemDNS,systemDNS6;
     private Spinner tetherChoices;
     private RootTetherScope tetherWatch;
     private final java.util.List<RootTetherScope> tetherScopes=new java.util.ArrayList<>();
@@ -930,15 +933,13 @@ public final class RootClientActivity extends Activity {
         selectSpinner(fecModes,s.mode);
         selectSpinner(fecProfiles,Integer.toString(s.profile));
         tlsVerifyServer.setChecked(s.verifyTLS);
-        tunnelDNS.setChecked(s.tunnelDNS);
-        physicalDNS.setChecked(s.physicalDNS);
-        cnSplitDNS.setChecked(s.cnSplitDNS);
+        dnsModes.check(s.cnSplitDNS?cnSplitDNS.getId():s.physicalDNS?physicalDNS.getId():tunnelDNS.getId());
         cnIPDirect.setChecked(s.cnIPDirect);
         outerRepair.setChecked(s.outerRepair);
-        appTcpDNS.setChecked(s.appTcpDNS);
+        appTcpDNS.setChecked(true);
         tetherSharing.setChecked(s.tetherSharing);
-        systemDNS.setChecked(s.systemDNS);
-        systemDNS6.setChecked(s.systemDNS6);
+        systemDNS.setChecked(true);
+        systemDNS6.setChecked(true);
         ipv6GatewayField.setText(s.ipv6Gateway);
         ipv6DirectCIDRsField.setText(s.ipv6DirectCIDRs);
         allAppsDefault.setChecked(s.allApps);
@@ -1626,37 +1627,24 @@ public final class RootClientActivity extends Activity {
         LinearLayout.LayoutParams splitLp=new LinearLayout.LayoutParams(0,dp(48),1);
         splitLp.leftMargin=dp(4);policyRow.addView(routeSplitButton,splitLp);
         policyPanel.addView(policyRow);
-        pane=section(pages[2],"DNS 与域名规则","三种 DNS 路径互斥，可独立选择普通系统 DNS。");
-        tunnelDNS=new CheckBox(this);
-        tunnelDNS.setText("隧道DNS：普通App UDP/53走配置的隧道上游并还原原解析器回包（系统DNS另选）");
-        tunnelDNS.setChecked(true);
-        pane.addView(tunnelDNS);
-        tunnelDNSUpstreamField=input(pane,"隧道DNS IPv4上游（默认1.1.1.1；Normal/Fixed/Auto/Game、CN非CN域名及可选系统/热点DNS共用）",InputType.TYPE_CLASS_TEXT);
-        tunnelDNSUpstreamField.setText(RootPhysicalDNSUpstream.TUNNEL_DEFAULT);
-        physicalDNS=new CheckBox(this);
-        physicalDNS.setText("可选物理DNS：进入WBD TUN的普通App UDP/53直接通过当前物理Network发送到223.5.5.5（全部域名，不是CN域名分流或Android系统DNS）");
-        physicalDNS.setChecked(false);
-        pane.addView(physicalDNS);
-        physicalDNSUpstreamField=input(pane,
-            "物理UDP53上游IPv4（默认223.5.5.5，可填物理LAN路由器DNS如192.168.1.1）",
-            InputType.TYPE_CLASS_TEXT);
+        pane=section(pages[2],"DNS 解析","本机接管应用与已启用的热点/USB共享统一使用以下模式（普通 UDP/TCP 53）。");
+        dnsModes=new RadioGroup(this);
+        tunnelDNS=new RadioButton(this);tunnelDNS.setId(View.generateViewId());tunnelDNS.setText("全部隧道 DNS（推荐全量隧道）");
+        physicalDNS=new RadioButton(this);physicalDNS.setId(View.generateViewId());physicalDNS.setText("全部直连 DNS");
+        cnSplitDNS=new RadioButton(this);cnSplitDNS.setId(View.generateViewId());cnSplitDNS.setText("CN 分流 DNS（国内域名直连，其他走隧道）");
+        dnsModes.addView(tunnelDNS);dnsModes.addView(cnSplitDNS);dnsModes.addView(physicalDNS);
+        tunnelDNS.setChecked(true);pane.addView(dnsModes);
+        physicalDNSUpstreamField=input(pane,"直连 DNS IPv4（默认223.5.5.5）",InputType.TYPE_CLASS_TEXT);
         physicalDNSUpstreamField.setText(RootPhysicalDNSUpstream.DEFAULT);
-        physicalDNSFollowNetwork=new CheckBox(this);
-        physicalDNSFollowNetwork.setText("物理DNS跟随所选Wi-Fi/移动/有线Network的IPv4 DNS（只在START时取值）");
+        physicalDNSFollowNetwork=new CheckBox(this);physicalDNSFollowNetwork.setText("直连 DNS 跟随当前所选网络");
         physicalDNSFollowNetwork.setChecked(false);
-        physicalDNSFollowNetwork.setOnCheckedChangeListener((button,checked)->
-            physicalDNSUpstreamField.setEnabled(!checked));
+        physicalDNSFollowNetwork.setOnCheckedChangeListener((button,checked)->physicalDNSUpstreamField.setEnabled(!checked));
         pane.addView(physicalDNSFollowNetwork);
+        tunnelDNSUpstreamField=input(pane,"隧道 DNS IPv4（默认1.1.1.1）",InputType.TYPE_CLASS_TEXT);
+        tunnelDNSUpstreamField.setText(RootPhysicalDNSUpstream.TUNNEL_DEFAULT);
         TextView upstreamHint=new TextView(this);
-        upstreamHint.setText("可选物理/CN DNS模式下原Rust M4使用此UDP53；"+
-            "若WBD服务器填写域名，原Go也通过选定Network的同一DNS IPv4冷引导，"+
-            "遇截断走同端点TCP53；可选跟随所选Network IPv4 DNS，IPv6-only需手填IPv4；"+
-            "默认223.5.5.5，系统netd DNS不受影响。");
+        upstreamHint.setText("普通 A 查询按所选模式解析；默认 AAAA 本地空答。系统/应用/共享 DNS 自动接管，无需分别勾选。Private DNS 与应用 DoH 不在普通53端口范围内。");
         pane.addView(upstreamHint);
-        cnSplitDNS=new CheckBox(this);
-        cnSplitDNS.setText("可选CN域名DNS分流：普通App UDP/53 CN域名走物理223.5.5.5，其他域名走配置的WBD隧道DNS（不接管Android系统DNS）");
-        cnSplitDNS.setChecked(false);
-        pane.addView(cnSplitDNS);
         updateCNButton=new Button(this);
         updateCNButton.setText("手动更新官方中国域名库");
         updateCNButton.setOnClickListener(v->updateOfficialCN());
@@ -1685,25 +1673,17 @@ public final class RootClientActivity extends Activity {
         outerRepair.setChecked(false);
         pane.addView(outerRepair);
         pane=routingPane;
-        appTcpDNS=new CheckBox(this);
-        appTcpDNS.setText("可选App TCP/53 DNS：进入WBD的应用TCP查询也按上面选定的DNS模式处理（内核TCP，不接管系统netd）");
-        appTcpDNS.setChecked(false);
-        pane.addView(appTcpDNS);
-        systemDNS=new CheckBox(this);
-        systemDNS.setText("可选系统 DNS IPv4/53：所选应用和实体Network的普通系统UDP/TCP DNS按上述模式处理（不接管Private DNS/DoH）");
-        systemDNS.setChecked(false);
-        pane.addView(systemDNS);
-        systemDNS6=new CheckBox(this);
-        systemDNS6.setText("可选系统 DNS IPv6/53：普通IPv6地址DNS也进入上述模式（同时启用系统IPv4 DNS；不等于IPv6业务隧道）");
-        systemDNS6.setChecked(false);
-        pane.addView(systemDNS6);
-        pane=section(pages[3],"IPv6 与网络共享","可选内核兼容承载与软件热点，不影响默认 IPv4 连接。");
-        ipv6GatewayField=input(pane,"可选 IPv6 业务兼容承载：服务端 WBD TUN IPv4（如10.219.0.1；服务端须启用 --inner-ipv6；普通App IPv6 DNS跟随上述模式；留空关闭）",InputType.TYPE_CLASS_TEXT);
+        // Preserve profile codec; managed DNS ingress is now automatic.
+        appTcpDNS=new CheckBox(this);appTcpDNS.setChecked(true);
+        systemDNS=new CheckBox(this);systemDNS.setChecked(true);
+        systemDNS6=new CheckBox(this);systemDNS6.setChecked(true);
+        pane=section(pages[3],"IPv6 与网络共享","默认接管受管IPv6并在WBD入口丢弃，AAAA本地空答；不关闭手机系统IPv6。");
+        ipv6GatewayField=input(pane,"高级兼容：IPv6 承载服务端 TUN IPv4（留空＝默认 IPv4-only；仅已有 --inner-ipv6 服务端需要）",InputType.TYPE_CLASS_TEXT);
         ipv6GatewayField.setText("");
-        ipv6DirectCIDRsField=input(pane,"IPv6直连CIDR（逗号分隔，最多16条；IPv6承载开启时生效；自动LAN直连同时覆盖所选Network的IPv6子网）",InputType.TYPE_CLASS_TEXT);
+        ipv6DirectCIDRsField=input(pane,"高级兼容：IPv6直连CIDR（仅显式IPv6承载生效）",InputType.TYPE_CLASS_TEXT);
         ipv6DirectCIDRsField.setText("");
         tetherSharing=new CheckBox(this);
-        tetherSharing.setText("可选：共享 WBD 到现有热点/USB（软件转发，Android 16；共享上述CIDR直连及DNS模式；IPv6承载且有实际下游/64时同时转发IPv6）");
+        tetherSharing.setText("可选：共享 WBD 到现有热点/USB（软件转发，Android 16；自动使用上述 DNS 和 IP 分流）");
         tetherSharing.setChecked(false);
         pane.addView(tetherSharing);
         TextView tetherRequirement=new TextView(this);
@@ -1715,15 +1695,7 @@ public final class RootClientActivity extends Activity {
             if(tetherWatch!=null){tetherWatch.close();tetherWatch=null;}
             watchTetherChoices();
         }));
-        tunnelDNS.setOnCheckedChangeListener((button,checked)->{
-            if(checked){physicalDNS.setChecked(false);cnSplitDNS.setChecked(false);}
-        });
-        physicalDNS.setOnCheckedChangeListener((button,checked)->{
-            if(checked){tunnelDNS.setChecked(false);cnSplitDNS.setChecked(false);}
-        });
-        cnSplitDNS.setOnCheckedChangeListener((button,checked)->{
-            if(checked){tunnelDNS.setChecked(false);physicalDNS.setChecked(false);}
-        });
+        dnsModes.setOnCheckedChangeListener((group,checkedId)->refreshHome());
         // B42: select B41 original Go/Rust Game2 owner, not a new protocol.
         fecModes.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
             @Override public void onItemSelected(android.widget.AdapterView<?> parent,

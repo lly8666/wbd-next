@@ -1295,6 +1295,8 @@ fn tun_worker(
             let head_len=n.min(head_cap);
             let head=&slab.writable()[14..14+head_len];
             if !original_complete_ipv4_head(head,n,lease){
+                // Consume IPv6 in the existing bounded burst, never send it.
+                if head.first().is_some_and(|b|*b>>4==6){continue}
                 stats.tun_ipv4_rejected.fetch_add(1,Ordering::Relaxed);
                 e.arena.drain_returns();
                 stats.tx_error.fetch_add(1,Ordering::Relaxed);

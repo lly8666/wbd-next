@@ -481,6 +481,10 @@ public final class RootClientService extends Service {
         if(appTcpDNS)quotedArgs.add(q("--android-app-tcp-dns"));
         if(systemDNS)quotedArgs.add(q("--android-system-dns"));
         if(systemDNS6)quotedArgs.add(q("--android-system-dns6"));
+        if(systemDNS6&&systemDNS&&appTcpDNS){
+            quotedArgs.add(q("--android-managed-dns"));
+            if(ipv6Gateway.isEmpty())quotedArgs.add(q("--android-ipv6-drop"));
+        }
         if((tunnelDNS||cnSplitDNS)&&!RootPhysicalDNSUpstream.TUNNEL_DEFAULT.equals(tunnelDnsIPv4))quotedArgs.add(q("--android-tunnel-dns-upstream-ipv4="+tunnelDnsIPv4));
         if(!ipv6Gateway.isEmpty()){
             quotedArgs.add(q("--android-ipv6-gateway="+ipv6Gateway));
