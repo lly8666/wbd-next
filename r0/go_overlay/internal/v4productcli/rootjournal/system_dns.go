@@ -238,6 +238,17 @@ func recoverSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path s
  if p.IPv6!=v6{return fmt.Errorf("system DNS journal family mismatch")}
  return (&SystemDNSOwner{ip:ip,fw:fw,batchIP:batchIP,batchNAT:batchNAT,path:path,ruleIO:systemDNSIO(ruleIO)}).remove(p)
 }
+// IPv6 NAT is not part of every Android GKI. Probe the kernel before
+// allocating an interface or installing DNS6 rules.
+func ProbeSystemDNS6NAT(fw Runner)error{
+ if fw==nil{return fmt.Errorf("IPv6 NAT runner missing")}
+ _,e:=fw("-w","2","-t","nat","-S","OUTPUT")
+ return e
+}
+// A partially installed owner may be optional only after verified rollback.
+type SystemDNSStartError struct{Stage string;Clean bool;Err error}
+func(e *SystemDNSStartError) Error()string{return fmt.Sprintf("system DNS %s: %v",e.Stage,e.Err)}
+func(e *SystemDNSStartError) Unwrap()error{return e.Err}
 func NewSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path string,p SystemDNSPlan,ruleIO ...*SystemDNSRuleIO)(*SystemDNSOwner,error){
  p.Version=1
  if ip==nil||fw==nil||!p.valid(){return nil,fmt.Errorf("invalid system DNS scope")}
@@ -249,7 +260,11 @@ func NewSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path strin
  x,e:=s.state(p);if e!=nil{return fail(e)}
  if x.link||x.route||x.addr||len(x.rules)!=0||len(x.nat)!=0{return fail(fmt.Errorf("system DNS state without journal"))}
  if e=writeSystemDNS(path,p);e!=nil{return fail(e)}
- rollback:=func(e error)(*SystemDNSOwner,error){return fail(errors.Join(e,s.remove(p)))}
+ stage:="LINK"
+ rollback:=func(e error)(*SystemDNSOwner,error){
+  cleanup:=s.remove(p)
+  return fail(&SystemDNSStartError{Stage:stage,Clean:cleanup==nil,Err:errors.Join(e,cleanup)})
+ }
  // Android ip requires the dummy type during creation. Set the existing
  // alias before installing routes/NAT; this remains cold-only.
  if _,e=ip("link","add","name",p.iface(),"type","dummy");e!=nil{return rollback(e)}
@@ -259,11 +274,16 @@ func NewSystemDNS(ip,fw Runner,batchIP,batchNAT func([][]string)error,path strin
  }
  if _,e=ip("link","set","dev",p.iface(),"up");e!=nil{return rollback(e)}
  if p.IPv6{
+  stage="ADDRESS"
   if _,e=ip("-6","addr","add",systemDNS6Address+"/128","dev",p.iface(),"nodad","noprefixroute");e!=nil{return rollback(e)}
  }
+ stage="ROUTE"
  if _,e=ip(p.route("add")...);e!=nil{return rollback(e)}
+ stage="NAT"
  if e=s.changeNAT(p.nat("-A"),"-A");e!=nil{return rollback(e)}
+ stage="RULES"
  if e=s.changeRules(p.rules("add"),"add");e!=nil{return rollback(e)}
+ stage="READBACK"
  x,e=s.state(p)
  if e!=nil||!x.link||!x.route||x.addr!=p.IPv6||len(x.nat)!=2||len(x.rules)!=len(p.rules("add")){
   return rollback(errors.Join(e,fmt.Errorf("system DNS installation readback incomplete")))

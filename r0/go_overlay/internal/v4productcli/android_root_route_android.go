@@ -328,13 +328,40 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  }
  if c.androidSystemDNS6{
   routeStage="DNS6"
-  port,err:=relay.EnableIPv6()
-  if err!=nil{return nil,errors.Join(err,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
-  plan6:=plan;plan6.Port=port
-  systemOwner6,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall6,androidDNSIPBatch,nil,
-   androidSystemDNS6Journal,rootjournal.SystemDNSPlan{DNSPlan:plan6,NetID:uint32(c.androidNetworkHandle>>32),IPv6:true,Managed:c.androidManagedDNS},rootjournal.PlatformSystemDNSRuleIO())
-  if e!=nil{return nil,errors.Join(e,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
-  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client uid_netid_port53=1 ipv4_upstream=1")
+  // Default IPv4-only mode must not depend on optional IPv6 NAT.
+  // Explicit legacy IPv6 carrier stays strict. Old journal recovery
+  // has already completed before this point.
+  degraded:=""
+  if c.androidIPv6Drop{
+   if err:=rootjournal.ProbeSystemDNS6NAT(androidDNSFirewall6);err!=nil{degraded="NAT_PROBE"}
+  }
+  if degraded==""{
+   port,err:=relay.EnableIPv6()
+   if err!=nil{
+    if !c.androidIPv6Drop{return nil,errors.Join(err,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
+    degraded="LISTEN"
+   }else{
+    plan6:=plan;plan6.Port=port
+    systemOwner6,e=rootjournal.NewSystemDNS(runner,androidDNSFirewall6,androidDNSIPBatch,nil,
+     androidSystemDNS6Journal,rootjournal.SystemDNSPlan{DNSPlan:plan6,NetID:uint32(c.androidNetworkHandle>>32),IPv6:true,Managed:c.androidManagedDNS},rootjournal.PlatformSystemDNSRuleIO())
+    if e!=nil{
+     var start *rootjournal.SystemDNSStartError
+     if errors.As(e,&start){
+      fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS6_START_FAILED role=client class="+start.Stage)
+      if c.androidIPv6Drop&&start.Clean{degraded=start.Stage}
+     }
+     if degraded==""{return nil,errors.Join(e,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
+    }
+   }
+  }
+  if degraded!=""{
+   // Retain IPv4 DNS/AAAA suppression and install scoped IPv6 drop.
+   // Downstream IPv6 DNAT also needs the missing capability.
+   c.androidSystemDNS6=false
+   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS6_UNAVAILABLE role=client class="+degraded)
+  }else{
+   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client uid_netid_port53=1 ipv4_upstream=1")
+  }
  }
  if c.androidAppTCPDNS&&!c.androidManagedDNS{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")}
  stopDNS:=func()error{
@@ -587,7 +614,7 @@ func startAndroidIPv6EntryDrop(c config,tun *ownedTun,lease netip.Prefix,runner 
  fail:=func(e error)(func()error,error){return nil,errors.Join(e,stop())}
  uids:=append([]int(nil),c.androidRouteUIDs...);if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
  plan:=rootjournal.IPv6Plan{Drop:true,Tun:tun.name,Local4:lease.Addr().String(),MTU:tun.mtu,All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs,Downstream:c.androidTetherInterface}
- if plan.Downstream!=""&&relay!=nil{
+ if plan.Downstream!=""&&relay!=nil&&c.androidSystemDNS6{
   nic,e:=net.InterfaceByName(plan.Downstream);if e!=nil||nic.Index!=c.androidTetherIfindex{return fail(fmt.Errorf("IPv6 DNS downstream changed"))}
   addrs,e:=nic.Addrs();if e!=nil{return fail(e)}
   var gateway netip.Addr

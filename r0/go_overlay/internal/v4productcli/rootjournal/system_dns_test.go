@@ -1,6 +1,8 @@
 package rootjournal
 
 import (
+ "errors"
+ "os"
  "fmt"
  "path/filepath"
  "strings"
@@ -13,6 +15,7 @@ func testSystemDNSOwner(t *testing.T,v6,binaryRules bool){
  p:=SystemDNSPlan{DNSPlan:DNSPlan{Version:1,Tun:"wbdv40",Lease:"10.66.0.8/32",Port:43210,
   Tunnel:true,All:true,ExcludedAppIDs:[]int{11200,11201}},NetID:105,IPv6:v6}
  var link,route,addr,alias bool
+ failNAT:=false
  rules,nat:=map[string]string{},map[string]string{}
  ip:=func(args ...string)(string,error){
   k:=strings.Join(args," ")
@@ -49,7 +52,7 @@ func testSystemDNSOwner(t *testing.T,v6,binaryRules bool){
  batchIP:=func(rows [][]string)error{for _,row:=range rows{if _,e:=ip(row...);e!=nil{return e}};return nil}
  batchNAT:=func(rows [][]string)error{
   for _,r:=range rows{row:=append([]string(nil),r...);row[0]="-A";key,_:=dnsNATKey(row)
-   if r[0]=="-A"{nat[key]=strings.Join(row," ")}else{delete(nat,key)}
+   if r[0]=="-A"{if failNAT{return fmt.Errorf("kernel target unavailable")};nat[key]=strings.Join(row," ")}else{delete(nat,key)}
   };return nil
  }
  var transport *SystemDNSRuleIO
@@ -69,4 +72,24 @@ func testSystemDNSOwner(t *testing.T,v6,binaryRules bool){
  if e=recoverSystemDNS(ip,fw,batchIP,batchNAT,path,v6,transport);e!=nil{t.Fatal(e)}
  if link||route||addr||len(nat)!=0||len(rules)!=0{t.Fatal("Restore leaked")}
  if binaryRules&&(reads==0||changes!=4){t.Fatalf("exact rule transport not used for Start/Stop/Restore: %d %d",reads,changes)}
+ if v6{
+  failNAT=true
+  _,e=NewSystemDNS(ip,fw,batchIP,batchNAT,path,p,transport)
+  var start *SystemDNSStartError
+  if !errors.As(e,&start)||!start.Clean||start.Stage!="NAT"{t.Fatalf("expected verified DNS6 rollback: %v",e)}
+  if link||route||addr||len(nat)!=0||len(rules)!=0{t.Fatal("failed start leaked")}
+  if _,e=os.Stat(path);!os.IsNotExist(e){t.Fatal("failed journal retained",e)}
+ }
+}
+
+func TestB122DNS6NATCapabilityReadOnly(t *testing.T){
+ for _,available:=range []bool{false,true}{
+  calls:=0
+  e:=ProbeSystemDNS6NAT(func(args ...string)(string,error){
+   calls++
+   if strings.Join(args," ")!="-w 2 -t nat -S OUTPUT"{t.Fatal(args)}
+   if !available{return "",fmt.Errorf("nat table unavailable")};return "-P OUTPUT ACCEPT",nil
+  })
+  if (e==nil)!=available||calls!=1{t.Fatal("bad NAT6 probe",e,calls)}
+ }
 }
