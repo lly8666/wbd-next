@@ -1,0 +1,47 @@
+name: H2419 native transparent splice isolated capacity ABBA
+run-name: H2419 native splice capacity | ${{ github.sha }}
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2419-splice-native-capacity.yml', 'docs/requests/M0/h2419-splice-native-capacity.md']
+permissions:
+  contents: read
+concurrency:
+  group: h2419-splice-capacity-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  native-capacity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build exact production native module and cold Go owner without WBD
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq iperf3 iproute2 iptables
+          rustup toolchain install 1.85.1 --profile minimal
+          mkdir -p h2419-build h2419-out
+          rustc +1.85.1 --edition=2021 --crate-type=cdylib -C opt-level=3 crates/wbd-engine/src/v4_linux_tcp_splice.rs -o h2419-build/libwbd_engine.so
+          sed 's/^package v4productcli$/package main/' r0/go_overlay/internal/v4productcli/tcp_splice_linux.go > h2419-build/tcp_splice_linux.go
+          cp tools/m0_h2419_splice_main.go h2419-build/main.go
+          CGO_ENABLED=1 CGO_LDFLAGS="-L$PWD/h2419-build" go build -tags wbd_v4_embedded_go -o h2419-build/relay h2419-build/main.go h2419-build/tcp_splice_linux.go
+          sha256sum h2419-build/relay h2419-build/libwbd_engine.so > h2419-out/binaries.sha256
+          python3 -m py_compile tools/m0_h2419_splice_capacity.py
+          lscpu > h2419-out/lscpu.txt
+          uname -a > h2419-out/uname.txt
+      - name: Real native TPROXY and splice versus NAT, same VM sequential ABBA
+        shell: bash
+        run: |
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" LD_LIBRARY_PATH="$PWD/h2419-build" python3 -u tools/m0_h2419_splice_capacity.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2419-native-capacity
+          path: h2419-out/
+          retention-days: 14
