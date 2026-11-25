@@ -1,0 +1,17 @@
+{
+  "status": "PRE_BUSINESS_PATH_TIMEOUT",
+  "source_sha": "e0cad4a1384b7bc17f0b8297b83e495c5f6df0f6",
+  "run_id": 45614862277,
+  "relay_job_id": 139207522874,
+  "artifact_id": 15022081429,
+  "three_tailnet_identities_published": true,
+  "actual_measured_tcp": 0,
+  "verified_log": "subprocess.TimeoutExpired tailscale ping client after55s",
+  "hypothesis": "WSL2 access gateway may go idle while Windows waits for relay metadata; not confirmed",
+  "retry": {
+    "source_sha": "cbce1720d44a498920efe8a2567904749da47be8",
+    "run_id": 45615492146,
+    "changes": "owned foreground WSL sleep during test; record ping timeout explicitly; actual direct TCP capacity and native smoke mandatory",
+    "status": "RUNNING_NO_MEASUREMENT_YET"
+  }
+}
