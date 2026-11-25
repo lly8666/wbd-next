@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "2ee643b9456e1df340cb9c7a4a4b47bd9bcbe7ad",
+  "product_source_sha": "dadb01fcd816f07db51bb410ba04d2a60702a2f7",
+  "run_id": 45568498761,
+  "result": "MEASURED_ZERO_LOSS_DIAGNOSTIC_NOT_QUALIFIED",
+  "artifact_verified": true,
+  "scope": "Six original ZIPs checked in this turn; zero injection, 400ms added RTT, FEC off, local four kernel namespaces. Other H2431 scenarios not reviewed. Actual rates from summary; WAN sampled L2 counter not payload or exact L3 wire.",
+  "artifacts": [
+    15001181895,
+    15001316674,
+    15000663567,
+    15001776516,
+    15001012970,
+    15000823246
+  ],
+  "outer_budget_mbps": [
+    200,
+    400,
+    600
+  ],
+  "offered_payload_mbps": [
+    180,
+    360,
+    540
+  ],
+  "rows": [
+    {
+      "case": "x86 NAT download UDP",
+      "rx_mbps": [
+        180.0003624,
+        359.999304,
+        539.9341084
+      ],
+      "server_full_drops": [
+        0,
+        0,
+        150
+      ],
+      "client_full_drops": [
+        0,
+        0,
+        0
+      ],
+      "server_wan_tx_mbps": [
+        196.9499773,
+        393.9067373,
+        590.7403802
+      ]
+    },
+    {
+      "case": "ARM NAT download UDP",
+      "rx_mbps": [
+        179.9999568,
+        359.9657376,
+        539.4175927
+      ],
+      "server_full_drops": [
+        0,
+        108,
+        2198
+      ],
+      "client_full_drops": [
+        0,
+        0,
+        0
+      ],
+      "server_wan_tx_mbps": [
+        196.952056,
+        390.2513702,
+        590.1964505
+      ]
+    },
+    {
+      "case": "x86 NAT download TCP",
+      "rx_mbps": [
+        179.9777646,
+        385.62087,
+        609.7134855
+      ],
+      "server_full_drops": [
+        3408,
+        60,
+        150
+      ],
+      "client_full_drops": [
+        116,
+        0,
+        0
+      ],
+      "server_wan_tx_mbps": [
+        198.4735162,
+        418.8069807,
+        672.820371
+      ]
+    },
+    {
+      "case": "ARM NAT download TCP",
+      "rx_mbps": [
+        179.979586,
+        382.7300257,
+        453.866126
+      ],
+      "server_full_drops": [
+        6068,
+        11446,
+        6979
+      ],
+      "client_full_drops": [
+        0,
+        74,
+        15
+      ],
+      "server_wan_tx_mbps": [
+        198.4851203,
+        425.66398696,
+        492.9254695
+      ]
+    },
+    {
+      "case": "x86 splice download TCP",
+      "rx_mbps": [
+        200.4446897,
+        280.5544583,
+        289.9949209
+      ],
+      "server_full_drops": [
+        20227,
+        49111,
+        52258
+      ]
+    },
+    {
+      "case": "x86 NAT upload TCP",
+      "rx_mbps": [
+        168.5983945,
+        337.1048537,
+        497.5817751
+      ],
+      "server_full_drops": [
+        0,
+        0,
+        0
+      ],
+      "client_full_drops": [
+        0,
+        0,
+        2154
+      ]
+    }
+  ],
+  "notes": [
+    "Reverse iperf origin actual ss pacing 2.216Gbps at nominal 180Mbps, no confirmed actual sender cap. x86 600-budget actual outer673Mbps; not within target. ARM and x86 180 UDP no local loss, TCP creates internal drops. x86 target socket advertised window ~38.8MB, rwnd_limited ~43% in representative sample; separate window pressure from local loss. No proof of sole cause, current data-plane average UDP capacity close to design target but not loss-free at target."
+  ]
+}
