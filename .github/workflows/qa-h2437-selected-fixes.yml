@@ -1,0 +1,147 @@
+name: H2437 selected architecture minimal fixes
+run-name: "H2437 dual Normal1024 terminal HP and pacing | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2437-selected-fixes.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  crypto:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: lly8666/wobuzhidao
+          ref: a7a82db31fe736ffedee330795a3234d358f1984
+          path: legacy
+          persist-credentials: false
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: "1.23.12", cache: false}
+      - name: Independent pinned Go boundary oracle and Rust codec regression
+        run: |
+          set -euo pipefail
+          cp tools/m0_h2437_hp_boundary_test.go legacy/internal/tlsrecord/h2437_hp_boundary_test.go
+          (cd legacy && go test -count=1 ./internal/tlsrecord -run '^TestH2437TerminalHeaderMask$')
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake clang nasm
+          rustup toolchain install 1.85.1 --profile minimal --no-self-update
+          cargo +1.85.1 test --locked -p wbd-codec --lib
+  build:
+    name: build-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64}
+          - {runner: ubuntu-24.04-arm, arch: aarch64}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Build actual original product once per ISA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          python3 -m py_compile tools/m0_h2437_architecture.py tools/m0_h2435_cpu.py tools/m0_h2437_tcp_source.py
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2437-build.log 2>&1 || { tail -n 150 h2437-build.log; exit 2; }
+          cd linux-plan029-public-bundle
+          sha256sum -c SHA256SUMS
+          tar -czf ../h2437-product.tgz wbd-v4-client wbd-v4-server libwbd_engine.so SHA256SUMS manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2437-product-${{ matrix.arch }}-${{ github.sha }}
+          path: h2437-product.tgz
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2437-build-log-${{ matrix.arch }}
+          path: h2437-build.log
+          retention-days: 14
+  measure:
+    needs: [build,crypto]
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {label: "aarch64-pacing-loss0-ABBA-finite0", runner: ubuntu-24.04-arm, arch: aarch64, pair: pacing, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: ABBA, finite: '0'}
+          - {label: "aarch64-pacing-loss0-BAAB-finite0", runner: ubuntu-24.04-arm, arch: aarch64, pair: pacing, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB, finite: '0'}
+          - {label: "aarch64-pacing-loss2-ABBA-finite0", runner: ubuntu-24.04-arm, arch: aarch64, pair: pacing, rtt: '400', loss: '2', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: ABBA, finite: '0'}
+          - {label: "aarch64-pacing-loss2-BAAB-finite0", runner: ubuntu-24.04-arm, arch: aarch64, pair: pacing, rtt: '400', loss: '2', profile: '1', rate: '432', cc: cubic, inbox: '1024', order: BAAB, finite: '0'}
+          - {label: "aarch64-cubic-bbr-loss0-BAAB-finite0", runner: ubuntu-24.04-arm, arch: aarch64, pair: cubic-bbr, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: BAAB, finite: '0'}
+          - {label: "aarch64-pacing-loss0-AB-finite1", runner: ubuntu-24.04-arm, arch: aarch64, pair: pacing, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: AB, finite: '1'}
+          - {label: "x86_64-pacing-loss0-AB-finite1", runner: ubuntu-24.04, arch: x86_64, pair: pacing, rtt: '400', loss: '0', profile: '-1', rate: '540', cc: cubic, inbox: '1024', order: AB, finite: '1'}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2432_ORDER: ${{ matrix.order }}
+      H2432_RATE: ${{ matrix.rate }}
+      H2434_PAIR: ${{ matrix.pair }}
+      H2434_RTT: ${{ matrix.rtt }}
+      H2434_LOSS: ${{ matrix.loss }}
+      H2434_PROFILE: ${{ matrix.profile }}
+      H2434_ORIGIN_CC: ${{ matrix.cc }}
+      H2434_INBOX: ${{ matrix.inbox }}
+      H2437_FINITE: ${{ matrix.finite }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 1}
+      - name: Retrieve same run exact SOURCE native bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          mkdir -p h2437-download linux-plan029-public-bundle h2437-out
+          name="h2437-product-$WBD_PLAN029_LINUX_EXPECTED_ARCH-$GITHUB_SHA"
+          export ARTIFACT_NAME="$name"
+          id=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" --jq '.artifacts[] | select(.name == env.ARTIFACT_NAME and .expired == false) | .id')
+          test -n "$id"
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$name" --dir h2437-download
+          tar -xzf h2437-download/h2437-product.tgz -C linux-plan029-public-bundle
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - "$id" <<'PY'
+          import json,os,pathlib,sys
+          m=json.loads(pathlib.Path("linux-plan029-public-bundle/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"] and m["architecture"]==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
+          pathlib.Path("h2437-out/build-identity.json").write_text(json.dumps({"run":int(os.environ["GITHUB_RUN_ID"]),"artifact_id":int(sys.argv[1]),"manifest":m},indent=2)+"\n")
+          PY
+      - name: Actual same-origin single TCP architecture contrast
+        shell: bash
+        run: |
+          mkdir -p h2437-out
+          lscpu >h2437-out/lscpu.txt
+          uname -a >h2437-out/uname.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2432_ORDER="$H2432_ORDER" H2432_RATE="$H2432_RATE" H2434_PAIR="$H2434_PAIR" H2434_RTT="$H2434_RTT" H2434_LOSS="$H2434_LOSS" H2434_PROFILE="$H2434_PROFILE" H2434_ORIGIN_CC="$H2434_ORIGIN_CC" H2434_INBOX="$H2434_INBOX" H2437_FINITE="$H2437_FINITE" H2421_OUT=h2437-out python3 -u tools/m0_h2437_architecture.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2437-out;then
+            sudo find h2437-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2437-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2437-${{ matrix.label }}
+          path: h2437-out/
+          retention-days: 14

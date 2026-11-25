@@ -5664,12 +5664,12 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_close(handle:u64)->i32{
     registry.remove(&handle);
     OK
 }
-// H2397: one per-generation capacity for every native Normal/Game role.
+// H2437: Game remains latency-oriented; Normal uses 1024 on both ends.
 #[cfg(all(target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 fn shared_tun_product_inbox_slots()->usize{128}
 #[cfg(all(test,target_os="linux",any(target_arch="x86_64",target_arch="aarch64"),any(target_env="gnu",target_env="musl")))]
 #[test]
-fn m0_plan029_linux_all_roles_default_128(){
+fn m0_plan029_linux_game_default_128(){
     assert_eq!(shared_tun_product_inbox_slots(),128);
 }
 
@@ -5694,8 +5694,8 @@ pub extern "C" fn wbd_m0_embedded_go_shared_tun_bind(
     let ip=if e.server_side{lease}else{[0u8;4]};
     // Cold readback confirms the exact Normal client/server queue size once,
     // before native M4 activation; no per-DATA probe or heap growth loop.
-    // H2435: selected Normal server burst headroom; client and Game retain 128.
-    let inbox_slots=if e.server_side{1024}else{shared_tun_product_inbox_slots()};
+    // H2437: same selected burst headroom for both Normal endpoints.
+    let inbox_slots=1024;
     eprintln!("M0_PLAN029_NATIVE_INBOX_BOUND role={} generation={} slots={} probe_only=0 flow_fair=1",
         if e.server_side{"server"}else{"client"},e.generation,inbox_slots);
     let (sender,receiver)=mpsc::sync_channel::<OriginalTunIngress>(inbox_slots);
@@ -8340,7 +8340,7 @@ fn start_loop(handle:u64,ifindex:u32)->i32{
         e.fixed_applied.is_none());
     #[cfg(not(feature="fec2_product_record"))]
     let split_ingress=shared_mode;
-    let (ingress_send,normal_ingress_recv)=std::sync::mpsc::sync_channel::<OriginalTunIngress>(512);
+    let (ingress_send,normal_ingress_recv)=std::sync::mpsc::sync_channel::<OriginalTunIngress>(1024);
     #[cfg(target_os="linux")]
     let ingress_recv=if shared_mode{
         let Some(rx)=e.shared_tun.as_mut().and_then(|sh|sh.receiver.take())

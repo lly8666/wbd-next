@@ -6,8 +6,9 @@
 #![forbid(unsafe_code)]
 
 use aws_lc_rs::aead::{self, Aad, LessSafeKey, Nonce, UnboundKey};
-use chacha20::cipher::{KeyIvInit, StreamCipher, StreamCipherSeek};
-use chacha20::ChaCha20;
+use chacha20::cipher::{Block, KeyIvInit, StreamCipher, StreamCipherSeek, StreamCipherCore, StreamCipherSeekCore};
+use chacha20::{ChaCha20, ChaChaCore};
+use chacha20::cipher::consts::U10;
 use aes::{Aes128, Aes256};
 use aes::cipher::{BlockEncrypt, KeyInit, generic_array::GenericArray};
 
@@ -177,6 +178,19 @@ fn chacha_hp_mask(hp_key: &[u8; 32], ciphertext_and_tag: &[u8]) -> Result<[u8; 8
     let counter = u32::from_le_bytes(sample[..4].try_into().map_err(|_|CryptoError::InvalidLength)?);
     let mut nonce = [0u8; 12];
     nonce.copy_from_slice(&sample[4..16]);
+    // HP needs exactly 8 bytes from ONE independent block, including the
+    // last legal u32 counter. The 0.9.1 streaming wrapper rejects that last
+    // block to prevent continuing after wrap. Generate that block only and
+    // discard its core immediately; never reuse a wrapped stream state.
+    if counter == u32::MAX {
+        let mut core = ChaChaCore::<U10>::new(hp_key.into(), (&nonce).into());
+        core.set_block_pos(counter);
+        let mut block = Block::<ChaChaCore<U10>>::default();
+        core.write_keystream_block(&mut block);
+        let mut mask = [0u8; 8];
+        mask.copy_from_slice(&block[..8]);
+        return Ok(mask);
+    }
     let mut cipher = ChaCha20::new(hp_key.into(), (&nonce).into());
     cipher.seek(u64::from(counter) * 64);
     let mut mask = [0u8; 8];
@@ -359,5 +373,23 @@ impl LaneRxCrypto {
             return Err(CryptoError::InvalidKind);
         }
         Ok(OpenedRecord { pn, kind, payload:&plain[1..marker_at] })
+    }
+}
+
+#[cfg(test)]
+mod h2437_hp_counter_boundary {
+    use super::*;
+    #[test]
+    fn terminal_block_regression_and_independent_vectors() {
+        let key: [u8;32]=std::array::from_fn(|i|i as u8);
+        let nonce:[u8;12]=std::array::from_fn(|i|i as u8);
+        // Reproduce old primitive rejection; old infallible call panics.
+        let mut old=ChaCha20::new((&key).into(), (&nonce).into());
+        old.seek(u64::from(u32::MAX)*64);
+        assert!(old.try_apply_keystream(&mut [0u8;8]).is_err());
+        for (counter,expected) in [(0u32,[0x10,0x3a,0xf1,0x11,0xc1,0x8b,0x54,0x9d]),(1,[0x89,0xfb,0x08,0x00,0x29,0x17,0xa5,0x40]),(u32::MAX-1,[0x76,0xe8,0x8a,0x6c,0x6c,0x8e,0x86,0xc7]),(u32::MAX,[0x14,0xee,0xd1,0x49,0xcd,0x60,0xa4,0x56])] {
+            let mut sample=[0u8;16];sample[..4].copy_from_slice(&counter.to_le_bytes());sample[4..].copy_from_slice(&nonce);
+            assert_eq!(chacha_hp_mask(&key,&sample).unwrap(),expected,"counter {counter:#x}");
+        }
     }
 }

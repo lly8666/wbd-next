@@ -127,7 +127,7 @@ impl Flow{
         Ok(())
     }
 }
-fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>)->io::Result<()>{
+fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>,pacing:Option<u64>)->io::Result<()>{
     let e=ep.as_raw_fd();
     let local_listener=listener.local_addr()?;
     let mut flows=HashMap::<u64,Flow>::new();let mut id=1u64;
@@ -152,6 +152,14 @@ fn run(listener:TcpListener,ep:OwnedFd,stop:RawFd,cc:Vec<u8>)->io::Result<()>{
                         if target==local_listener{return Ok(())}
                         set_cc(c.as_raw_fd(),&cc)?;
                         let actual=read_cc(c.as_raw_fd())?;
+                        // Research-only actual client-facing sender cap, not a TUN cap.
+                        if let Some(cap)=pacing{
+                            ok(unsafe{setsockopt(c.as_raw_fd(),1,47,(&cap as *const u64).cast(),8)})?;
+                            let mut observed=0u64;let mut len=8u32;
+                            ok(unsafe{getsockopt(c.as_raw_fd(),1,47,(&mut observed as *mut u64).cast(),&mut len)})?;
+                            if observed!=cap{return Err(io::Error::new(io::ErrorKind::InvalidData,"pacing readback"))}
+                            eprintln!("WBD_TCP_SPLICE_PACING target={} bytes_per_s={}",target,observed);
+                        }
                         let (remote,ready)=connect_target(target)?;
                         let mut f=Flow{client:c,remote,ready,up:Pipe::new()?,down:Pipe::new()?,interest:[0;2]};
                         id+=1;
@@ -190,7 +198,12 @@ pub unsafe extern "C" fn wbd_linux_tcp_splice_start(listener:i32,cc:*const std::
         let stopfd=stop.as_raw_fd();
         change(ep.as_raw_fd(),1,listener.as_raw_fd(),0,IN)?;
         change(ep.as_raw_fd(),1,stopfd,1,IN)?;
-        let thread=thread::Builder::new().name("wbd-tcp-splice".into()).spawn(move||run(listener,ep,stopfd,cc))?;
+        let pacing=match std::env::var("WBD_M0_SPLICE_PACING_AB"){
+            Ok(v)=>Some(v.parse::<u64>().ok().filter(|n|*n>0).ok_or_else(||io::Error::new(io::ErrorKind::InvalidInput,"pacing bytes/s"))?),
+            Err(std::env::VarError::NotPresent)=>None,
+            Err(e)=>return Err(io::Error::new(io::ErrorKind::InvalidInput,e)),
+        };
+        let thread=thread::Builder::new().name("wbd-tcp-splice".into()).spawn(move||run(listener,ep,stopfd,cc,pacing))?;
         Ok(Owner{stop,thread})
     };
     match start(){Ok(o)=>Box::into_raw(Box::new(o)).cast(),Err(e)=>{eprintln!("WBD_TCP_SPLICE_START_ERROR {e}");std::ptr::null_mut()}}

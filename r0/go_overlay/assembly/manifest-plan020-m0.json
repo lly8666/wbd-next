@@ -2120,6 +2120,18 @@
       "path": "internal/v4productcli/tcp_splice_linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/tcp_splice_linux.go",
       "result_blob": "3c3469cea5d894a458236c690710377158048b7a"
+    },
+    {
+      "kind": "replace",
+      "path": "internal/windowsclient/tun_windows.go",
+      "original_blob": "ffb2b7e2e01df0924f1a3839c9508b96792ed5fa",
+      "result_blob": "58acd9b02a057fcce363a36c0567e484f66bbb9d",
+      "patches": [
+        {
+          "find": "wintunRingCapacity = 0x400000",
+          "replace": "wintunRingCapacity = 0x800000"
+        }
+      ]
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"
