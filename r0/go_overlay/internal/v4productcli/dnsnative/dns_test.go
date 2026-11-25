@@ -269,3 +269,27 @@ func TestConcurrentQueriesCoalesceWithoutBackgroundTimers(t *testing.T){
 			cn.udpCalls.Load(),tunnel.udpCalls.Load())
 	}
 }
+
+func TestB120ManagedAAAAIsLocalNoData(t *testing.T){
+ var calls atomic.Int32
+ dial:=func(context.Context,Path,string,string)(net.Conn,error){calls.Add(1);return nil,ErrUnbound}
+ relay,e:=StartManagedAppDNS(dial,nil,false,false,true,ChinaDNS,TunnelDNS);if e!=nil{t.Fatal(e)}
+ defer relay.Close()
+ if e=relay.EnableUDP();e!=nil{t.Fatal(e)}
+ port6,e:=relay.EnableIPv6();if e!=nil{t.Fatal(e)}
+ q:=makeQuery("example.test",42);q[len(q)-3]=28
+ for _,target:=range []struct{network,endpoint string}{{"udp4",fmt.Sprintf("127.0.0.1:%d",relay.Port())},{"tcp4",fmt.Sprintf("127.0.0.1:%d",relay.Port())},{"udp6",fmt.Sprintf("[::1]:%d",port6)},{"tcp6",fmt.Sprintf("[::1]:%d",port6)}}{
+  c,e:=net.DialTimeout(target.network,target.endpoint,time.Second);if e!=nil{t.Fatal(e)}
+  c.SetDeadline(time.Now().Add(2*time.Second))
+  wire:=q
+  if strings.HasPrefix(target.network,"tcp"){wire=append([]byte{byte(len(q)>>8),byte(len(q))},q...)}
+  if _,e=c.Write(wire);e!=nil{c.Close();t.Fatal(e)}
+  ans:=make([]byte,len(wire))
+  if strings.HasPrefix(target.network,"tcp"){_,e=io.ReadFull(c,ans);ans=ans[2:]}else{var n int;n,e=c.Read(ans);ans=ans[:n]}
+  c.Close()
+  if e!=nil||len(ans)!=len(q)||binary.BigEndian.Uint16(ans[:2])!=42||binary.BigEndian.Uint16(ans[2:4])!=0x8180||binary.BigEndian.Uint16(ans[6:8])!=0{t.Fatalf("%s %x %v",target.network,ans,e)}
+ }
+ if calls.Load()!=0{t.Fatal("AAAA contacted upstream")}
+ q[len(q)-3]=1
+ if _,e=relay.resolver.Resolve(context.Background(),q,false);e==nil||calls.Load()!=1{t.Fatal("A must retain upstream",e,calls.Load())}
+}

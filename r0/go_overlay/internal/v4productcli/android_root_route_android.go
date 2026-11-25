@@ -294,7 +294,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  uids:=append([]int(nil),c.androidRouteUIDs...)
  if c.androidRouteUID!=0{uids=[]int{c.androidRouteUID}}
  plan:=rootjournal.DNSPlan{Tun:tun.name,Lease:lease.String(),Port:relay.Port(),Tunnel:tunnel,TunnelUpstream:tunnelIP.String(),
-   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs,NoAppNAT:!c.androidAppTCPDNS}
+   All:c.androidRouteAllApps,UIDs:uids,ExcludedAppIDs:c.androidRouteExcludeAppIDs,NoAppNAT:!c.androidAppTCPDNS||c.androidManagedDNS}
  if c.androidSystemDNS{
   if e=relay.EnableUDP();e!=nil{return nil,errors.Join(e,relay.Close(),stopUID())}
  }
@@ -318,7 +318,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   if e!=nil{return nil,errors.Join(e,systemOwner.Stop(),owner.Stop(),relay.Close(),stopUID())}
   fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_SYSTEM_DNS_IPV6_READY role=client uid_netid_port53=1 ipv4_upstream=1")
  }
- if c.androidAppTCPDNS{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")}
+ if c.androidAppTCPDNS&&!c.androidManagedDNS{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_APP_TCP_DNS_READY role=client kernel_tcp=1 exact_uid_nat=1")}
  stopDNS:=func()error{
   // Withdraw capture first; join DNS streams before the original M4 Stop.
   var systemErr,error6 error

@@ -1,3 +1,7 @@
+## B120｜统一 DNS 与默认 IPv6 入口丢弃（当前）
+
+B118用户确认实机正常，缺Root授权为前次启动问题。保留B118选定下游共享，冻结BPF/HAL/IPv4转发。统一三个DNS模式、自动受管UDP/TCP53、IPv4/IPv6目的地址；默认AAAA NODATA，IPv6走自有TUN入口丢弃，MTU不足1280用同表blackhole，显式SIT兼容保留。热点IPv6 DNS不再依赖SIT。新SOURCE CI/实体待验。见 [B120 devlog](../devlog/android-root-probe/20261125-b120-managed-dns-ipv6-entry.md)。
+
 ## B119｜真机 Root 启动与域名引导（当前）
 
 用户确认B117用IP本机及Wi-Fi共享实际可用。B118a收据四次ROOT_GRANT_REQUESTED后ROOT_LAUNCH_FAILED，未见su子进程启动；不可归因共享。B119默认域名使用选定Android Network解析A记录，保留原Go fallback/显式自定义DNS及SNI；区分原argv构造和su exec errno，修旧UI源码/文案断言。保持B118a最小下游共享、原Go/Rust/内核转发不动。B118a Normal和BPF fixture通过，ARM64 host旧断言/API35/36 UI失败；实体B119待验。见 [B119 devlog](../devlog/android-root-probe/20261125-b119-device-root-launch-and-hostname.md)。

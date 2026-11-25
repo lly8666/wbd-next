@@ -37,3 +37,15 @@ func TestB94ExactSystemDNSNetlinkRoundtrip(t *testing.T){
   }
  }
 }
+
+func TestB120ManagedDNSNetlink(t *testing.T){
+ for _,v6:=range []bool{false,true}{
+  p:=SystemDNSPlan{DNSPlan:DNSPlan{Version:1,Tun:"wbdv40",Lease:"10.66.0.8/32",Port:43210,UIDs:[]int{11200}},NetID:105,IPv6:v6,Managed:true}
+  family,table,e:=dnsNLFamily(p.family());if e!=nil{t.Fatal(e)}
+  for _,r:=range p.rules("add"){
+   data,e:=systemDNSNetlinkPayload(r);if e!=nil{t.Fatal(e)}
+   line,e:=systemDNSNetlinkRow(data,family,table);if e!=nil||strings.Contains(line,"fwmark"){t.Fatal(line,e)}
+   got,e:=systemRuleKey(strings.Fields(line),p.table());if e!=nil||!strings.Contains(got,"|any|11200-11200|"){t.Fatal(got,e)}
+  }
+ }
+}

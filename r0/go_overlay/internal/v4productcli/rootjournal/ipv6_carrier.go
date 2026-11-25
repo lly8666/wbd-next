@@ -100,7 +100,7 @@ func(p IPv6Plan) ranges()[]allRange{
 func(p IPv6Plan) valid()bool{
  if p.Drop{
   local,e:=netip.ParseAddr(p.Local4)
-  if p.Version!=1||p.Server||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||e!=nil||!local.Is4()||local.IsUnspecified()||p.Gateway4!=""||p.Egress!=""||p.MTU<576||p.MTU>1500||len(p.DirectCIDRs)!=0||p.AppDNSPort!=0||p.AppDNSTCP{return false}
+  if p.Version!=1||p.Server||!nameOK(p.Tun)||p.Tun==ipv6CarrierIface||e!=nil||!local.Is4()||local.IsUnspecified()||p.Gateway4!=""||p.Egress!=""||p.MTU<1||p.MTU>1500||len(p.DirectCIDRs)!=0||p.AppDNSPort!=0||p.AppDNSTCP{return false}
   if p.Downstream!=""&&(!nameOK(p.Downstream)||p.Downstream==p.Tun){return false}
   if len(p.Downstream6)!=len(p.DownstreamDNSPorts)||len(p.Downstream6)>1||len(p.Downstream6)>0&&p.Downstream==""{return false}
   for i,raw:=range p.Downstream6{q,e:=netip.ParsePrefix(raw);if e!=nil||q.Bits()!=128||!q.Addr().Is6()||q.Addr().Is4In6()||!(q.Addr().IsGlobalUnicast()||q.Addr().IsLinkLocalUnicast())||p.DownstreamDNSPorts[i]<1||p.DownstreamDNSPorts[i]>65535{return false}}
@@ -157,7 +157,10 @@ func(p IPv6Plan) commands()[]carrierCmd{
   }
   // Do not raise the actual IPv4 MTU merely to support IPv6 capture.
   if p.MTU>=1280{route("-6","default",p.Tun,p.local6())}else{out=append(out,carrierCmd{"ip","-6",[]string{"route","blackhole","default","table",ipv6CarrierTable}})}
-  if p.Downstream!=""{rule("-6",ipv6TetherPref,"iif",p.Downstream)}
+  if p.Downstream!=""{
+   if p.MTU>=1280{fw("fw6","filter","FORWARD","-i",p.Downstream,"-o",p.Tun,"-j","ACCEPT")}
+   rule("-6",ipv6TetherPref,"iif",p.Downstream)
+  }
   for i,r:=range p.ranges(){rule("-6",ipv6UIDPref+i,"uidrange",fmt.Sprintf("%d-%d",r.from,r.to))}
   return out
  }
@@ -351,10 +354,12 @@ func(s *IPv6Owner) state(p IPv6Plan)(carrierState,error){
   }
  }
  for _,pair:=range [][3]string{{"fw4","filter","INPUT"},{"fw6","filter","INPUT"},{"fw6","filter","FORWARD"},{"fw6","nat","POSTROUTING"},{"fw6","nat","PREROUTING"},{"fw6","nat","OUTPUT"}}{
-  if p.Drop&&(pair[0]=="fw4"||pair[2]!="INPUT"&&pair[2]!="PREROUTING"){continue}
+  if p.Drop&&(pair[0]=="fw4"||pair[2]!="INPUT"&&pair[2]!="PREROUTING"&&pair[2]!="FORWARD"){continue}
   if pair[2]=="PREROUTING"&&len(p.DownstreamDNSPorts)==0{continue}
   if pair[2]=="OUTPUT"&&p.AppDNSPort==0{continue}
-  if !p.Server&&len(p.Downstream6)==0&&pair[0]=="fw6"&&pair[2]!="OUTPUT"{continue}
+  if !p.Server&&!p.Drop&&len(p.Downstream6)==0&&pair[0]=="fw6"&&pair[2]!="OUTPUT"{continue}
+  if p.Drop&&pair[2]=="INPUT"&&len(p.DownstreamDNSPorts)==0{continue}
+  if p.Drop&&pair[2]=="FORWARD"&&(p.Downstream==""||p.MTU<1280){continue}
   fw:=s.fw4;if pair[0]=="fw6"{fw=s.fw6}
   lines,e:=fw("-w","2","-t",pair[1],"-S",pair[2]);if e!=nil{return x,e}
   for _,line:=range strings.Split(lines,"\n"){

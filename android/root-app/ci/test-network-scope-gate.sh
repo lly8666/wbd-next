@@ -1573,9 +1573,9 @@ assert "dns_capture=NOT_CONNECTED" in nativecli
 print("ANDROID_B3_REAL_ORIGINAL_M3_TUNNEL_UDP_DNS_COLD_WIRING_SOURCE_PASS")
 print("ANDROID_B3D_REAL_M4_TUNNEL_DNS_TX_AND_AUTH_RX_WIRING_SOURCE_PASS")
 # B4: explicit physical App UDP53 mode is a distinct production path.
-assert 'physicalDNS.setChecked(false)' in root_ui
+assert 'physicalDNS=new RadioButton(this)' in root_ui
 assert 'request.putExtra("physical_dns",physicalDNS.isChecked())' in root_ui
-assert 'physicalDNS.setOnCheckedChangeListener' in root_ui
+assert 'dnsModes.setOnCheckedChangeListener' in root_ui
 assert 'intent.getBooleanExtra("physical_dns",false)' in root_svc
 assert 'verifyTLS,tunnelDNS,physicalDNS' in root_svc
 assert 'if(physicalDNS)args.add("--android-physical-dns")' in argv
@@ -1609,7 +1609,7 @@ print("ANDROID_B4_REAL_PHYSICAL_APP_UDP53_RUST_GO_JAVA_COLD_AND_LIVE_WIRING_SOUR
 root_receipt=Path("android/root-app/src/org/wbdnext/rootclient/RootDiagnosticReceipt.java").read_text()
 cn_rule=Path("crates/wbd-engine/src/v4_android_cn_dns.rs").read_text()
 go_cn=Path("r0/go_overlay/internal/v4productcli/dnsnative/cn_rules.go").read_text()
-assert 'cnSplitDNS.setChecked(false)' in root_ui
+assert 'cnSplitDNS=new RadioButton(this)' in root_ui
 assert 'request.putExtra("cn_dns_split",cnSplitDNS.isChecked())' in root_ui
 assert 'intent.getBooleanExtra("cn_dns_split",false)' in root_svc
 assert 'managerPackages,bypassPackages,bypassUIDs,' in root_svc
@@ -1867,7 +1867,7 @@ assert 'request.putExtra("app_tcp_dns",' in (a/"RootClientActivity.java").read_t
 assert 'quotedArgs.add(q("--android-app-tcp-dns"))' in service
 assert 'flags.Bool("android-app-tcp-dns",false' in go
 assert route.count('startAndroidAppTCPDNS(c,tun,lease,runner,')==3
-assert 'dnsnative.StartAppTCPDNS(' in route and 'rootjournal.NewDNS(' in route
+assert 'dnsnative.StartManagedAppDNS(' in route and 'rootjournal.NewDNS(' in route
 assert 'rootjournal.RecoverDNS(runIP,runFirewall,nil,' in go
 assert 'errors.Join(owner.Stop(),relay.Close(),stopUID())' in route
 print("ANDROID_B64_ORIGINAL_APP_TCP_DNS_UID_KERNEL_LISTENER_STOP_SOURCE_PASS")
