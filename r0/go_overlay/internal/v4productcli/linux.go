@@ -130,6 +130,8 @@ type config struct{
     // Transient generation safety: a pending new-path TLS session cannot
     // mutate an active generation's authenticated inner IPv4 address.
     leaseMustStay bool
+    tcpProxyCC string // empty keeps original NAT
+    tcpProxyPort int
     tunFqMaxrateMbps int
     tunTxQLenPackets int
 }
@@ -228,9 +230,12 @@ func parse(role string,args []string)(config,error){
     outerMTU:=flags.Int("outer-mtu",1460,"outer complete IPv4 IP-packet MTU in bytes (576..1500, no L2); inner TUN MTU automatic/read-only")
     rotateInterval:=flags.Duration("rotation-interval",0,"client: cold authenticated lane/group rotation on unchanged physical network (e.g. 5m); 0 disables")
     rotateJitter:=flags.Duration("rotation-jitter",0,"client: bounded random ±jitter for each rotation (e.g. 3s with --rotation-interval 18s); 0 preserves exact interval")
+    proxyCC:=flags.String("tcp-proxy-cc","","server-only transparent TCP splice; kernel CC name, empty keeps NAT")
+    proxyPort:=flags.Int("tcp-proxy-port",46180,"server-only transparent listener port")
     tunFqRate:=flags.Int("tun-fq-maxrate-mbps",600,"owned Linux TUN per-flow fq maxrate Mbps: default 600 in all supported modes; explicit 0 disables")
     tunTxQLen:=flags.Int("tun-txqlen-packets",2048,"owned original Linux TUN TX queue: 2048 bounded default, 500 explicit rollback")
     if err:=flags.Parse(args);err!=nil{return c,err}
+    if *proxyCC!="" {if role!="server"||*proxyPort<1024||*proxyPort>65535||len(*proxyCC)>15{return c,fmt.Errorf("invalid server TCP proxy configuration")}; c.tcpProxyCC=*proxyCC; c.tcpProxyPort=*proxyPort}
     modeGiven,autoGiven:=false,false
     flags.Visit(func(f *flag.Flag){if f.Name=="mode"{modeGiven=true};if f.Name=="auto-ip"{autoGiven=true}})
     if role=="server"&&*manualLease!=""&&!modeGiven{*mode="normal"}
@@ -924,6 +929,7 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
         nat,e:=installOwnedServerMasquerade(cfg,linuxMasqueradeCommand)
         if e!=nil{return e}
         defer func(){retErr=errors.Join(retErr,nat.Close())}()
+        if cfg.tcpProxyCC!=""{ proxy,e:=startOwnedTCPSplice(cfg); if e!=nil{return e}; defer func(){retErr=errors.Join(retErr,proxy.Close())}() }
     }
     if err=setOwnedTunTxQueue(tun.name,cfg.tunTxQLenPackets);err!=nil{return err}
     log.Printf("V4_PUBLIC_TUN_TXQLEN role=%s interface=%s packets=%d readback=REAL_ORIGINAL_LINUX_TUN",cfg.role,tun.name,cfg.tunTxQLenPackets)

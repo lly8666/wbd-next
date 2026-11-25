@@ -1,0 +1,382 @@
+name: 'H2417 Linux transparent TCP splice single-flow loss sweep'
+run-name: "H2417 TCP splice BBR NAT ABA | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths:
+      - '.github/workflows/qa-h2417-linux-tcp-splice.yml'
+      - 'docs/requests/M0/h2417-linux-tcp-splice.md'
+  workflow_dispatch:
+    inputs:
+      model:
+        description: 'Packet loss: burst=Gilbert-Elliott realistic short bursts; iid=random independent diagnostic control'
+        required: true
+        type: choice
+        options: [burst, iid]
+        default: burst
+      mode:
+        description: 'Original WBD TCP mode: Normal Off or real Fixed FEC6 (after-Stop Rust readback)'
+        required: true
+        type: choice
+        options: [normal, fec-fixed]
+        default: normal
+permissions:
+  contents: read
+env:
+  WBD_H2417_SPLICE: '1'
+concurrency:
+  group: h2228-three-runner-bbr-netns-v2-${{ github.ref }}
+  # During fixture development, replace stale runs holding three ephemeral VMs.
+  # Production main manual runs stay non-cancelling to preserve evidence.
+  cancel-in-progress: false
+jobs:
+  static:
+    name: 'H2228 3-runner source grammar and topology/loss-model negative tests (NOT a speed result)'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Compile, Bash syntax and fail-closed fixture matrix tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 -m py_compile tools/m0_h2228_three_runner_relay.py
+          bash -n tools/m0_h2228_three_runner_case.sh
+          bash -n tools/m0_h2417_splice_exit.sh
+          unset WBD_H2417_SPLICE
+          python3 -m unittest tests.test_m0_h2228_three_runner_relay -v
+          # Assert current merged H2229 cross-platform 10ms/65535 ACK
+          # and independent out-of-order TUN delivery before any H2228 run.
+          python3 -m unittest tests.test_m0_h2229_native_ack_unified -v
+          python3 - <<'PY'
+          import pathlib
+          p=pathlib.Path('tools/m0_h2228_three_runner_relay.py').read_text()
+          sh=pathlib.Path('tools/m0_h2228_three_runner_case.sh').read_text()
+          assert 'REAL_IPV4_L3_ROUTING_NO_NAT' in p
+          assert 'net.ipv4.ip_forward' in p and 'rcli0' in p and 'rsrv0' in p
+          assert 'delay","200ms","15ms","25%","distribution","normal' in p
+          assert 'loss","gemodel' in p
+          assert '"rate_cap":"NONE"' not in p
+          assert '"bandwidth_rate_cap":"NONE"' in p
+          assert '--outer-repair on' in sh
+          assert 'measure clear-zero direct 12 8 upload' in sh
+          assert 'for loss in 0 1 5 10 20' in sh
+          print("H2228_THREE_RUNNER_FIXTURE_STATIC_PASS_NOT_PRODUCT_PASS")
+          PY
+  relay-arm64:
+    name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'experiment/m0-linux-tcp-splice' }}
+    permissions: {contents: read, actions: read, id-token: write}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 100
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: relay
+      WBD_H2228_MODE: normal
+      WBD_H2228_LOSS_MODEL: iid
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Require authorized OIDC tailnet credentials (no real-test fallback)
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD" || { echo H2228_REAL_ARM_RELAY_BLOCKED_NO_TAILNET_OIDC;exit 2; }
+          test "$(uname -m)" = aarch64
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h228-arm-relay-${{ github.run_id }}
+      - name: Relay source and run bound ephemeral identity
+        shell: bash
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta relay h2228-meta/relay.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-peer
+          path: h2228-meta/relay.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Wait BOTH distinct endpoint VMs (x86 + x86), same run/commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2228-peer
+          for role in client server;do
+            found=0
+            for i in $(seq 1 150);do
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+                  -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1;then found=1;break;fi
+              sleep 5
+            done
+            test "$found" = 1 && test -s "h2228-peer/$role.json" ||
+                { echo "H2228_MISSING_DISTINCT_$role";exit 2; }
+          done
+          cp h2228-meta/relay.json h2228-peer/relay.json
+      - name: Install real Linux bridge/route/qdisc utilities in ARM relay
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump
+      - name: Create TWO actual VXLAN L2 segments and kernel L3 forwarding (no app proxy)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh relay-start
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-ready
+          path: h2228-out/relay-ready.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Keep ARM forwarding and netem alive through x86 client measurements
+        shell: bash
+        timeout-minutes: 60
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh relay-wait
+      - name: Cleanup ONLY owned middle namespace and VXLAN (never Tailscale)
+        if: always()
+        shell: bash
+        run: |
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2228-arm-relay-evidence
+          path: h2228-out/
+          if-no-files-found: warn
+          retention-days: 14
+  server-x86:
+    name: 'Independent genuine x86 original-Go TLS/Rust server and real iperf3'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'experiment/m0-linux-tcp-splice' }}
+    permissions: {contents: read, actions: read, id-token: write}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      WBD_H2228_ROLE: server
+      WBD_H2228_MODE: normal
+      WBD_H2228_LOSS_MODEL: iid
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Require actual tailnet OIDC
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD"
+          test "$(uname -m)" = x86_64
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h228-x86-server-${{ github.run_id }}
+      - name: Publish actual distinct physical VM source identity
+        shell: bash
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta server h2228-meta/server.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-server-peer
+          path: h2228-meta/server.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Build exact source original-Go TLS plus Rust native ISA-L genuine x86 server
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2228-server-build.log 2>&1 ||
+            { tail -n 160 h2228-server-build.log;exit 2; }
+      - name: Retrieve authorized ARM64 relay before joining routed L2
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2228-peer h2228-relay-ready
+          ok=0
+          for i in $(seq 1 160);do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+              -n h2228-relay-peer -D h2228-peer >/dev/null 2>&1 &&
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+              -n h2228-relay-ready -D h2228-relay-ready >/dev/null 2>&1;then ok=1;break;fi
+            sleep 5
+          done
+          test "$ok" = 1 && test -s h2228-peer/relay.json && test -s h2228-relay-ready/relay-ready.json
+          python3 - <<'PY'
+          import json,os
+          v=json.load(open('h2228-relay-ready/relay-ready.json'))
+          assert v["source_sha"]==os.environ["GITHUB_SHA"] and v["run_id"]==os.environ["GITHUB_RUN_ID"]
+          assert v["arm64_relay_ready"] and v["real_separate_layer2_segments"]
+          PY
+      - name: Create private WAN+Linux BBR and original native server behind middle ARM relay
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh server-start
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-server-ready
+          path: h2228-out/server-ready.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Hold exact original native WBD service and real iperf through all relay conditions
+        shell: bash
+        timeout-minutes: 60
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh server-wait
+          grep -Fq "WBD_TCP_SPLICE_ACCEPT target=198.18.77.2:5202 cc=bbr" h2228-out/server.log
+          grep -Eq "WBD_TCP_SPLICE_DONE .*down=[1-9][0-9]{5,}" h2228-out/server.log
+      - name: Release only owned WBD server processes + endpoint L2/netns
+        if: always()
+        shell: bash
+        run: |
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2228-x86-server-evidence
+          path: |
+            h2228-out/
+            h2228-server-build.log
+          if-no-files-found: warn
+          retention-days: 14
+  client-x86:
+    name: 'Distinct genuine x86 client BBR; routed direct vs WBD TCP 200ms x 0/1/5/10/20%'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'experiment/m0-linux-tcp-splice' }}
+    permissions: {contents: read, actions: read, id-token: write}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      WBD_H2228_ROLE: client
+      WBD_H2228_MODE: normal
+      WBD_H2228_LOSS_MODEL: iid
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Reject missing real Tailscale OIDC
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD"
+          test "$(uname -m)" = x86_64
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h228-x86-client-${{ github.run_id }}
+      - name: Publish actual client VM, same source identity
+        shell: bash
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta client h2228-meta/client.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-client-peer
+          path: h2228-meta/client.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Build source-locked real original Go and Rust x86 Linux client, no mocks
+        shell: bash
+        timeout-minutes: 24
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump \
+            autoconf automake libtool make gcc g++ nasm openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2228-client-build.log 2>&1 ||
+            { tail -n 160 h2228-client-build.log;exit 2; }
+      - name: Verify BOTH other real VMs are ready under same run source before measuring
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2228-peer h2228-server-ready h2228-relay-ready
+          for item in 'relay-peer:h2228-peer' 'relay-ready:h2228-relay-ready' 'server-ready:h2228-server-ready';do
+            IFS=: read -r what dir <<<"$item"
+            ok=0
+            for i in $(seq 1 160);do
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+                -n "h2228-$what" -D "$dir" >/dev/null 2>&1;then ok=1;break;fi
+              sleep 5
+            done
+            test "$ok" = 1 || { echo "H2228_NO_ACTUAL_VM_READY $what";exit 2; }
+          done
+          python3 - <<'PY'
+          import json,os
+          for role,key in (('relay','arm64_relay_ready'),('server','real_wbd_server_ready')):
+            d=json.load(open('h2228-'+role+'-ready/'+role+'-ready.json'))
+            assert d['source_sha']==os.environ['GITHUB_SHA'] and d['run_id']==os.environ['GITHUB_RUN_ID']
+            assert d[key]
+          PY
+      - name: Real 3-machine Linux routed kernel TCP reference and original Go/Rust WBD TCP matrix
+        shell: bash
+        timeout-minutes: 55
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh client-run
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2228-client-result
+          path: h2228-out/summary.json
+          if-no-files-found: warn
+          retention-days: 5
+      - name: Fail closed if actual one-hop router TCP/WBD measurements have missing cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open('h2228-out/summary.json'))
+          assert d['source_sha']==os.environ['GITHUB_SHA']
+          assert d['run_id']==os.environ['GITHUB_RUN_ID']
+          assert d['actual_kernel_forwarding'] and d['real_three_runner_l3_relay']
+          assert len(d['rows'])==21 and d['streams']==1
+          print('H2417 measurement status',d['status'],'capacity',d['direct_capacity_mbps'])
+          PY
+      - name: Cleanup private client namespace even if product TCP crashes
+        if: always()
+        shell: bash
+        run: |
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2228-x86-client-evidence
+          path: |
+            h2228-out/
+            h2228-client-build.log
+          if-no-files-found: warn
+          retention-days: 14

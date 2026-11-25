@@ -55,6 +55,8 @@ mod v4_session_address;
 mod v4_protected_handoff;
 /// Pure versioned V4 MTU oracle, cold pre-TLS Go ABI; no owner/token/OS mutation.
 mod v4_mtu_budget_ffi;
+#[cfg(all(target_os="linux",feature="m0_v4_embedded_go",any(target_arch="x86_64",target_arch="aarch64")))]
+mod v4_linux_tcp_splice;
 /// PLAN026 pure Make-Before-Break lane generation state for Windows NativeOwner.
 /// Unit-testable without Npcap, Wintun or Go; no new crypto owner.
 #[cfg(any(target_os="windows", test))]

@@ -38,7 +38,7 @@ CIDR={"client":"10.248.81.0/24","server":"10.248.82.0/24"}
 VXID={"client":"2281","server":"2282"}
 # Reuse the already-proven H2227 tailnet CI ACL control port.
 CONTROL_PORT=18727
-LOSSES=(0.0,1.0,5.0,10.0,20.0)
+LOSSES=(0.0,1.0,2.0,5.0,10.0,15.0,30.0) if os.environ.get('WBD_H2417_SPLICE')=='1' else (0.0,1.0,5.0,10.0,20.0)
 ROLES={"client":"x86_64","server":"x86_64","relay":"aarch64"}
 TAILNET=ipaddress.ip_network("100.64.0.0/10")
 
@@ -244,6 +244,8 @@ def impair(loss,delay,model):
                 "25%","90%","0.1%"]
     delay_terms=["delay","0ms"] if delay==0 else [
         "delay","200ms","15ms","25%","distribution","normal"]
+    if delay and os.environ.get("WBD_H2418_DIAG")=="1":
+        delay_terms=["delay","200ms"] # isolate IID loss from jitter-induced reordering
     receipts={}
     for role in ("client","server"):
         device=RDEV[role]
@@ -254,7 +256,7 @@ def impair(loss,delay,model):
               "QDISC_READBACK_NOT_NETEM_"+device)
         receipts[device]=q
     return {"loss_target_pct":loss,"one_way_added_delay_ms":delay,
-        "jitter_ms":15 if delay else 0,"jitter_correlation_pct":25 if delay else 0,
+        "jitter_ms":15 if delay and os.environ.get("WBD_H2418_DIAG")!="1" else 0,"jitter_correlation_pct":25 if delay and os.environ.get("WBD_H2418_DIAG")!="1" else 0,
         "loss_model":model,"gilbert":ge,"qdisc_packet_limit":65536,
         "bandwidth_rate_cap":"NONE","apply_to":"RELAY_ROUTER_ONLY_EGRESS_BOTH_DIRECTIONS",
         "qdiscs":receipts,"no_tailscale_or_endpoint_qdisc_changed":True}
@@ -363,15 +365,20 @@ def real_native_worker_alive(pidfile):
 
 def iperf(kind,duration,streams,direction,out,pidfile=None):
     guard(kind in ("direct","wbd") and
-          duration in (3,12,18,20) and streams in (1,4,8) and
+          duration in ((3,12,18,20,30) if os.environ.get("WBD_H2418_DIAG")=="1" else (3,12,18,20)) and streams in (1,4,8) and
           direction in ("upload","download"),"BAD_IPERF_REQUEST")
     guard(pidfile is None or kind=="wbd","PID_ONLY_SCOPED_TO_WBD")
     host=LAN["server"] if kind=="direct" else "10.66.0.1"
     port=5202 if kind=="direct" else 5201
+    if kind=="wbd" and os.environ.get("WBD_H2417_SPLICE")=="1":
+        host="198.18.77.2"
+        port=int(os.environ["WBD_H2417_TARGET_PORT"])
+        guard(port in (5201,5202) or (os.environ.get("WBD_H2418_DIAG")=="1" and (5300<=port<=5307 or 5400<=port<=5403)),"SPLICE_TARGET_PORT")
     args=["sudo","-n","ip","netns","exec",NODE,"iperf3","-J","-C","bbr",
           "-c",host,"-p",str(port),"-P",str(streams),"-t",str(duration),
-          "-O","2"]
+          "-O","8" if os.environ.get("WBD_H2418_DIAG")=="1" and kind=="wbd" else "2"]
     if direction=="download":args.append("-R")
+    wall_start=time.time()
     t=time.monotonic()
     try:
         p=subprocess.run(args,capture_output=True,text=True,timeout=duration+40)
@@ -425,6 +432,8 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
             "status":"PASS_REAL_KERNEL_IPERF3_TCP" if qualified else
               "ERROR_TCP_CRASH_ABORT_OR_UNREACHABLE",
             "mbps":speed,"elapsed_s":round(time.monotonic()-t,3),
+            "target":host,"port":port,"wall_start":wall_start,"wall_end":time.time(),
+            "received_bytes":parsed.get("end",{}).get("sum_received",{}).get("bytes") if isinstance(parsed,dict) else None,
             "seconds_requested":duration,"seconds_observed":secs,
             "kind":kind,"direction":direction,"streams":streams,
             "tcp_cc_requested":"bbr","tcp_app_not_outer_bbr":True,
