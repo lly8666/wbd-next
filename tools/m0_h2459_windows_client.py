@@ -1,0 +1,234 @@
+"""H2459 native Windows client; same H2458 measurement, native ZeroTier control."""
+import os,sys,time,json,pathlib,subprocess,socket,threading,hashlib,http.client,ipaddress
+import m0_h2459_zt as zt
+from m0_h2442_tcp import sink
+from m0_h2455_segments import collect
+H2455=os.environ.get("WBD_H2455_SEGMENTS")=="windows"
+from m0_wl_native_resource_sampler import sample_windows_original_process
+ROOT=pathlib.Path.cwd();OUT=ROOT/"h2442-out";OUT.mkdir(exist_ok=True)
+BIN=ROOT/"result/wl-public"
+CASES=json.loads((ROOT/"tools/m0_h2442_matrix.json").read_text())
+DIAG=os.environ.get("WBD_H2450_RX_DIAG")=="1"
+if DIAG:
+    CASES=[dict(CASES[0],isolate=iso,rcvbuf=buf) for iso,buf in [(False,0),(True,0),(True,16777216),(True,0),(False,0)]]
+H2452=os.environ.get("WBD_H2452_RATE")
+if H2452:
+    target=int(H2452)
+    assert target in (400,600)
+    CASES=[dict(CASES[0],budget=target,rate=target,isolate=False,rcvbuf=b) for b in (0,67108864,67108864,0)]
+DIRECT={-5:(0,0),-4:(200,0),-3:(200,67108864),-2:(200,67108864),-1:(200,0)} if H2452 else {-2:(0,0),-1:(200,0)}
+SECONDS=60 if H2452 else 35
+DIRECT_SECONDS=60 if H2452 else 25
+H2453=os.environ.get("WBD_H2453_PACING")=="1"
+DIRECT_RATES={}
+if H2453:
+    assert H2452
+    rates=(250,400,600,250)
+    CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in rates]
+    DIRECT={-5:(0,0),**{i:(200,67108864) for i in (-4,-3,-2,-1)}}
+    DIRECT_RATES=dict(zip((-4,-3,-2,-1),rates))
+if os.environ.get("WBD_H2458_TARGETED")=="1":
+    CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in (250,600,250)]
+    DIRECT={-5:(0,0),-2:(200,67108864)}
+    DIRECT_RATES={-2:600}
+
+def read(p):return json.loads(p.read_text(encoding="utf-8-sig"))
+def save(p,d):p.write_text(json.dumps(d,indent=2)+"\n")
+def control(role,path,body=None):
+    peer=read(ROOT/"h2228-peer"/(role+".json"))
+    relay=read(ROOT/"h2228-peer/relay.json")
+    c=http.client.HTTPConnection(peer["control_ip"],18727,timeout=75,source_address=(zt.LAN["client"],0))
+    try:
+        c.request("GET" if path=="/snapshot" else "POST",path,None if path=="/snapshot" else json.dumps(body or {}),{"X-H2228-Token":relay["control_token"],"Content-Type":"application/json"})
+        s=c.getresponse();b=s.read();assert s.status==200,(s.status,b[:500]);return json.loads(b)
+    finally:c.close()
+def windows_readers():
+    return {
+        "server":lambda:control("server","/sample"),
+        "relay":lambda:control("relay","/snapshot"),
+        "zt":lambda:zt.z.api("/peer"),
+        "windows":lambda:json.loads(ps("Get-NetAdapterStatistics | Select-Object Name,ReceivedBytes,SentBytes,ReceivedUnicastPackets,SentUnicastPackets,ReceivedDiscardedPackets,OutboundDiscardedPackets,ReceivedPacketErrors,OutboundPacketErrors | ConvertTo-Json -Compress"))
+    }
+def measured_sink(result,*args,**kwargs):
+    result["measure_start_unix"]=time.time()
+    try:return sink(*args,**kwargs)
+    finally:result["measure_end_unix"]=time.time()
+def shape(loss,delay):
+    return control("relay","/impair",{"loss_pct":loss,"delay_ms":delay,"model":"iid"})
+def ps(code):
+    p=subprocess.run(["pwsh","-NoProfile","-NonInteractive","-Command","$ErrorActionPreference='Stop'; "+code],capture_output=True,text=True,timeout=15)
+    if p.returncode:raise RuntimeError(p.stderr.strip())
+    return p.stdout.strip()
+def route_for(host):
+    return json.loads(ps("Find-NetRoute -RemoteIPAddress '"+host+"' | Where-Object {$_.DestinationPrefix} | Select-Object -First 1 InterfaceIndex,InterfaceAlias,DestinationPrefix,NextHop,RouteMetric | ConvertTo-Json -Compress"))
+def direct_peers():
+    relay=read(ROOT/"h2228-peer/relay.json")
+    paths=zt.z.retry(lambda:zt.public_paths(zt.z.api("/peer"),relay["node_id"]),30)
+    out=[]
+    for endpoint in paths:
+        host=ipaddress.ip_address(endpoint.rsplit("/",1)[0])
+        if host.version!=4:continue
+        out.append({"role":"relay","endpoint":endpoint,"host":str(host),"route":route_for(str(host))})
+    if len(out)!=1:raise RuntimeError("expected one preferred public IPv4 ZeroTier relay path: "+repr(paths))
+    return out
+def pin_underlay(d,owned):
+    rows=direct_peers()
+    save(d/"underlay-before.json",rows)
+    for row in rows:
+        host=row["host"];r=row["route"];prefix=host+"/32"
+        if r["DestinationPrefix"]==prefix:continue
+        if r["InterfaceAlias"]=="WBDH2442":raise RuntimeError("underlay already captured before Apply")
+        idx=int(r["InterfaceIndex"]);hop=r["NextHop"]
+        ps(f"New-NetRoute -DestinationPrefix '{prefix}' -InterfaceIndex {idx} -NextHop '{hop}' -RouteMetric 1 -PolicyStore ActiveStore | Out-Null")
+        owned.append((prefix,idx,hop))
+    save(d/"underlay-pins.json",owned)
+    rows=direct_peers()
+    save(d/"underlay-pinned.json",rows)
+    if any(r["route"]["DestinationPrefix"]!=r["host"]+"/32" for r in rows):raise RuntimeError("direct endpoint changed before Apply")
+    return {r["role"]:r["route"]["InterfaceIndex"] for r in rows}
+def check_underlay(d,expected):
+    rows=direct_peers()
+    save(d/"underlay-after-apply.json",rows)
+    if any(r["route"]["InterfaceIndex"]!=expected[r["role"]] or r["route"]["DestinationPrefix"]!=r["host"]+"/32" for r in rows):
+        raise RuntimeError("ZeroTier direct endpoint not on pinned physical path after Apply")
+    print("H2448_UNDERLAY_AFTER_APPLY "+json.dumps(rows),flush=True)
+def unpin_underlay(owned):
+    for prefix,idx,hop in reversed(owned):
+        ps(f"Remove-NetRoute -DestinationPrefix '{prefix}' -InterfaceIndex {idx} -NextHop '{hop}' -PolicyStore ActiveStore -Confirm:$false")
+def add_fixture_route(prefix,idx,hop,owned):
+    ps(f"New-NetRoute -DestinationPrefix '{prefix}' -InterfaceIndex {idx} -NextHop '{hop}' -RouteMetric 1 -PolicyStore ActiveStore | Out-Null")
+    owned.append((prefix,idx,hop))
+def isolate_background(d,physical,owned):
+    # Diagnostic only: the two actual benchmark destinations still use the
+    # original native Wintun. More-specific physical routes keep unrelated
+    # hosted-runner traffic out of this isolated experiment.
+    for host in ("192.0.2.2","10.66.0.1"):
+        r=route_for(host)
+        if r["InterfaceAlias"]!="WBDH2442":raise RuntimeError("benchmark destination not on Wintun before isolation")
+        if r["DestinationPrefix"]!=host+"/32":
+            add_fixture_route(host+"/32",int(r["InterfaceIndex"]),r["NextHop"],owned)
+    for prefix in ("0.0.0.0/2","64.0.0.0/2","128.0.0.0/2","192.0.0.0/2"):
+        add_fixture_route(prefix,int(physical["InterfaceIndex"]),physical["NextHop"],owned)
+    check={h:route_for(h) for h in ("192.0.2.2","10.66.0.1","8.8.8.8")}
+    save(d/"isolated-route-check.json",check)
+    if any(check[h]["InterfaceAlias"]!="WBDH2442" for h in ("192.0.2.2","10.66.0.1")) or check["8.8.8.8"]["InterfaceIndex"]!=physical["InterfaceIndex"]:
+        raise RuntimeError("fixture isolation route selection mismatch")
+def sample_connected(d,workers):
+    def sample_worker():
+        t=time.monotonic()
+        for delay in ((2,12,30,45) if os.environ.get("WBD_H2458_TARGETED")=="1" else (12,30,45) if H2452 else (12,22)):
+            time.sleep(max(0,t+delay-time.monotonic()))
+            try:
+                if H2455:
+                    row=collect(d,str(delay),windows_readers())
+                    data=row["server"]["value"]
+                else:data=control("server","/sample")
+                save(d/("active-server-"+str(delay)+".json"),data)
+                print("H2450_ACTIVE_SS "+json.dumps({"delay":delay,"ss":data.get("ss","")}),flush=True)
+            except Exception as e:save(d/("active-server-"+str(delay)+".json"),{"error":repr(e)})
+    worker=threading.Thread(target=sample_worker,daemon=True);workers.append(worker);worker.start()
+def probe():
+    t=time.monotonic()+55
+    while time.monotonic()<t:
+        try:c=socket.create_connection(("10.66.0.1",45901),timeout=2,source_address=("10.66.0.2",0));break
+        except OSError:time.sleep(.2)
+    else:raise RuntimeError("Windows TCP cold probe not connected")
+    with c:
+        c.settimeout(10);c.sendall(b"R");assert c.recv(1)==b"S";c.sendall(b"T");assert c.recv(1)==b"U"
+def case(i):
+    d=OUT/("case-"+str(i));d.mkdir(exist_ok=False)
+    shape(0,0);control("server","/start",{"case":i})
+    p=None;worker=None;event=threading.Event();f=None;owned=[];isolated=[];samples=[]
+    result={"case":i,"status":"INCOMPLETE"}
+    try:
+        if i<0:
+            delay,buf=DIRECT[i]
+            if delay:shape(0,delay)
+            access=read(ROOT/"h2228-peer/client.json")["windows_access_ip"]
+            result.update(measured_sink(result,"10.248.82.2",5202,access,DIRECT_SECONDS,rcvbuf=buf,connected=(lambda:sample_connected(d,samples)) if H2452 else None))
+            if H2452:result["added_rtt_ms"]=delay*2
+            if H2453:result["direct_requested_pacing_mbps"]=DIRECT_RATES.get(i,0)
+        else:
+            c=CASES[i];prof=c["profile"]
+            route=d/"route-key.hex";route.write_text(hashlib.sha256(("H2442-TEST-ONLY/"+os.environ["GITHUB_RUN_ID"]+"/"+os.environ["GITHUB_SHA"]).encode()).hexdigest()+"\n")
+            args=[str(BIN/"wbd-client-embedded.exe"),"--native-v4-product","--control-stdin","--server-ip","10.248.82.2","--server-port","443","--source-port",str(41031+2*i),"--server-name","wbd-h2228.example.test","--route-key-hex-file",str(route),"--tls-ca-pem",str(ROOT/"h2228-server-ready/cert.pem"),"--username","bench","--password","H2442-ONLY","--tunnel-id","102030405060708090a0b0c0d0e0f001","--installation-id","445566778899aabbccddeeff00112233","--lease4","10.66.0.2/32","--adapter","WBDH2442","--state-path",str(d/"owned-wal.json"),"--mtu","1160","--lanes","1","--fec-mode","fixed" if prof>=0 else "off","--fec-parity","4" if prof>=0 else "0","--fec.mode","fixed" if prof>=0 else "off","--fec.profile",["light","mild","medium","balanced","high","strong","maximum"][max(0,prof)],"--route-mode","all","--outer-repair","on"]
+            physical=route_for("192.0.2.2") if DIAG else None
+            expected=pin_underlay(d,owned)
+            f=(d/"client.log").open("w");p=subprocess.Popen(args,stdin=subprocess.PIPE,stdout=f,stderr=subprocess.STDOUT,text=True,cwd=BIN)
+            worker=threading.Thread(target=sample_windows_original_process,args=(p,d/"windows-cpu.jsonl",event),daemon=True);worker.start()
+            t=time.monotonic()+30
+            while "WBD_WINDOWS_CLIENT_READY" not in (d/"client.log").read_text(errors="replace"):
+                if p.poll() is not None or time.monotonic()>t:raise RuntimeError("actual Windows native READY absent")
+                time.sleep(.2)
+            check_underlay(d,expected)
+            if DIAG and c['isolate']:isolate_background(d,physical,isolated)
+            probe()
+            print("H2448_NATIVE_COLD_PROBE_PASS case="+str(i),flush=True)
+            save(d/"shape.json",shape(c["loss"],200));time.sleep(1)
+            origin_route=route_for("192.0.2.2")
+            save(d/"origin-route.json",origin_route)
+            print("H2449_ORIGIN_ROUTE "+json.dumps(origin_route),flush=True)
+            result.update(measured_sink(result,"192.0.2.2",5400,"10.66.0.2",SECONDS,rcvbuf=c.get("rcvbuf",0),connected=(lambda:sample_connected(d,samples)) if DIAG or H2452 else None))
+            result.update(c)
+        result["status"]="RECEIVED" if result["end"]=="eof" else "INCOMPLETE"
+    except Exception as e:result["error"]=repr(e)
+    finally:
+        if H2455:
+            collect(d,"preclear",windows_readers())
+        # Clean link before owned Stop, never kill as success.
+        try:shape(0,0)
+        except Exception as e:result["shape_clear_error"]=repr(e)
+        for sample in samples:sample.join(3)
+        try:unpin_underlay(isolated)
+        except Exception as e:result['isolation_cleanup_error']=repr(e)
+        if p:
+            if p.poll() is None:
+                try:p.stdin.write("stop\n");p.stdin.flush();p.wait(25)
+                except Exception:p.terminate();p.wait(8)
+            event.set()
+            if worker:worker.join(5)
+            if f:f.close()
+            cl=(d/"client.log").read_text(errors="replace")
+            result.update(client_stop=p.returncode==0 and "WBD_WINDOWS_NATIVE_DISCONNECTED_V1" in cl,client_ready="WBD_WINDOWS_CLIENT_READY" in cl,client_panic="panicked at" in cl)
+            (d/"route-key.hex").unlink(missing_ok=True)
+        try:result["server"]=control("server","/stop")
+        except Exception as e:result["server_error"]=repr(e)
+        try:unpin_underlay(owned)
+        except Exception as e:result["underlay_cleanup_error"]=repr(e)
+        src=result.get("server",{}).get("source") or {}
+        if not result.get("underlay_cleanup_error") and not result.get("isolation_cleanup_error") and result["status"]=="RECEIVED" and result.get("bytes")==src.get("bytes") and src.get("end")=="deadline" and (i<0 or (result.get("client_stop") and result.get("client_ready") and not result.get("client_panic") and result["server"].get("proxy_accept") and result["server"].get("proxy_pacing") and result["server"].get("stop") and not result["server"].get("panic"))):result["status"]="MEASURED_EXACT"
+        else:result["status"]="INCOMPLETE"
+        save(d/"result.json",result);print("H2442_CASE "+json.dumps(result),flush=True)
+    return result
+def finish(rows,status):
+    save(OUT/"summary.json",{"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"real_three_runner_l3_relay":True,"all_three_distinct_native_machines":True,"windows_native_client":True,"streams":1,"status":status,"rows":rows})
+    control("server","/finish")
+if __name__=="__main__":
+    action=sys.argv[1]
+    if action=="baseline":
+        if H2452:
+            rows=[]
+            for i in DIRECT:
+                rows.append(case(i));save(OUT/"baseline.json",rows)
+        else:
+            a=case(-2);b=case(-1);save(OUT/"baseline.json",[a,b])
+    elif action=="smoke":
+        base=read(OUT/"baseline.json")
+        if not H2452 and (base[0]["status"]!="MEASURED_EXACT" or base[0].get("rx_mbps",0)<285):
+            # Still perform the clean native probe; do not interpret unqualified capacity as performance.
+            x=case(0);save(OUT/"smoke.json",x)
+            finish(base+[x],"INFRA_CAPACITY_UNQUALIFIED");raise SystemExit("direct routed capacity <285Mbps or incomplete")
+        x=case(0);save(OUT/"smoke.json",x)
+        if not H2452 and x["status"]!="MEASURED_EXACT":
+            finish(base+[x],"NATIVE_SMOKE_FAILED");raise SystemExit(2)
+    elif action=="matrix":
+        base=read(OUT/"baseline.json");rows=[read(OUT/"smoke.json")]
+        for i,c in enumerate(CASES[1:],1):
+            if not H2452 and c["budget"]==600 and base[0].get("rx_mbps",0)<570:continue
+            rows.append(case(i));save(OUT/"matrix-progress.json",rows)
+        if H2452:
+            complete=len(rows)==len(CASES) and all(r["status"]=="MEASURED_EXACT" for r in base+rows)
+            capacity=base[0]["status"]=="MEASURED_EXACT" and base[0].get("rx_mbps",0)>=(600 if H2453 else int(H2452))
+            finish(base+rows,("PACING_DIAGNOSTIC_COMPLETE" if complete else "PACING_DIAGNOSTIC_INCOMPLETE") if H2453 else ("DIAGNOSTIC_COMPLETE" if complete and capacity else "DIAGNOSTIC_INCOMPLETE_OR_CAPACITY_LIMITED"))
+            if not complete:raise SystemExit(2)
+        else:finish(base+rows,"MEASURED_ALL" if len(rows)==len(CASES) and all(r["status"]=="MEASURED_EXACT" for r in rows) else "PARTIAL_OR_CAPACITY_LIMITED")
