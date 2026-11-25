@@ -1,0 +1,33 @@
+{
+  "status": "FIXTURE_FAILURES_NO_PERFORMANCE",
+  "h2441": {
+    "runs": [
+      45603542930,
+      45603546655,
+      45603550751,
+      45603555190,
+      45603559208,
+      45603562882,
+      45603566243
+    ],
+    "all_native_logs_reviewed": true,
+    "all_native_ready_timeout": true,
+    "raw_bbr_clean_artifact": 15018240344,
+    "verified_cause": "server.log: flag provided but not defined: -tun-fq-maxrate; client NPF SYNs reached guest but server never started. Exact wrong fixture flag on all H2441 cases.",
+    "no_product_conclusion": true
+  },
+  "h2442": {
+    "run": 45614418615,
+    "job": 139206009709,
+    "artifact": 15021293517,
+    "actual_measurements": 0,
+    "verified_cause": "WSL default shell parsed OIDC query argument, subsequent CLI argument treated as command; signed drivers and frozen product checksum verified",
+    "receipt_correction": "summary marked topology true before joining; actual topology unproven; H2443 fixes false precondition flags."
+  },
+  "h2443": {
+    "source_sha": "e0cad4a1384b7bc17f0b8297b83e495c5f6df0f6",
+    "run_id": 45614862277,
+    "scope": "same H2442 matrix and frozen product; WSL --exec correct argv, no product code changes",
+    "status": "RUNNING_NO_MEASUREMENT_YET"
+  }
+}
