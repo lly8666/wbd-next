@@ -167,7 +167,8 @@ public final class RootClientActivity extends Activity {
         homeConnect.setAlpha(!active&&!pending?1f:.45f);
         homeStop.setEnabled(active||pending);
         homeStop.setAlpha(active||pending?1f:.45f);
-        setTextIfChanged(serviceDetail,RootClientService.status);
+        // The home status is summarized above; full native detail lives in diagnostics.
+        if(serviceDetail!=null)setTextIfChanged(serviceDetail,RootClientService.status);
     }
     private void quickChooseServer(){
         refreshNamedProfileChoices();
@@ -182,7 +183,7 @@ public final class RootClientActivity extends Activity {
     }
     private boolean exitRequested=false;
     private void requestExit(){
-        if(cnUpdateRunning){status.setText("请先完成当前设备操作，再退出");return;}
+        if(cnUpdateRunning){status.setText("请等待域名库更新完成");return;}
         exitRequested=true;
         coldSwitch.cancel();autoHandover.cancel();
         if(RootClientService.sessionOwnerActive||RootClientService.startDispatchPending.get()){
@@ -349,10 +350,8 @@ public final class RootClientActivity extends Activity {
             // Reuse A32 production 0600 writer. A CA is public trust
             // material; unlike the password/RouteKey it needs no new
             // storage or encryption format. Go still reads it only on START.
-            privateText(RootPrivateCredentialFiles.CA,pem+"\n");
             caPEM.setText(pem);
-            RootConnectionProfileCAStore.saveCurrent(this,pem);
-            status.setText("已导入并保留 "+certs.size()+" 张本地TLS证书；勾选严格校验后原Go才使用");
+            status.setText("已导入 "+certs.size()+" 张证书");
         }catch(Exception failure){
             status.setText("CA导入或本机保存失败；请核对PEM并重新导入");
         }
@@ -441,9 +440,17 @@ public final class RootClientActivity extends Activity {
             }
             refreshNamedProfileChoices();
             int slot=chosenProfileSlot();
-            if(slot<=restored.length&&restored[slot-1]!=null)loadNamedProfile(slot);
-            profileResult.setText("服务器导入完成"+(restored.length==4?"（旧版四槽）":""));
-            status.setText("服务器导入完成");
+            if(slot>restored.length||restored[slot-1]==null){
+                for(int i=0;i<restored.length;i++)if(restored[i]!=null){slot=i+1;break;}
+            }
+            if(slot<=restored.length&&restored[slot-1]!=null){
+                profileSlots.setSelection(slot-1);
+                if(!loadNamedProfile(slot))throw new java.io.IOException("imported profile recall failed");
+            }
+            boolean missingLogin=false;
+            for(RootConnectionProfileBundle.Entry e:restored)if(e!=null&&e.password.isEmpty())missingLogin=true;
+            profileResult.setText(missingLogin?"服务器已导入；旧配置需补齐登录信息":"服务器导入完成");
+            status.setText(profileResult.getText());
         }catch(Exception failed){
             refreshNamedProfileChoices();
             profileResult.setText("十槽导入未完整成功；若已有部分槽写入请检查后重试。"+
@@ -548,7 +555,8 @@ public final class RootClientActivity extends Activity {
             completeUserColdSwitchIfReady();
             completeAutomaticColdSwitchIfReady();
             if(status!=null&&!RootClientService.status.equals(lastServiceStatus)){
-                lastServiceStatus=RootClientService.status;status.setText(lastServiceStatus);
+                lastServiceStatus=RootClientService.status;
+                status.setText(RootClientService.sessionUiReady?"已连接":lastServiceStatus);
             }
             refreshHome();
             if(fecStatusText!=null)fecStatusText.setText(RootClientService.fecStatus);
@@ -716,9 +724,7 @@ public final class RootClientActivity extends Activity {
             CheckBox cb=checkedApps.get(app.packageName);
             if(cb!=null&&cb.isChecked()){count++;uids.add(app.uid);}
         }
-        selectedAppsSummary.setText(
-            "当前已勾选 "+count+" 个应用 / "+uids.size()+" 个UID（最多16个不同UID、32个包）。"+
-            "仅在手动START且成功认证后生效");
+        selectedAppsSummary.setText("已选 "+count+" 个应用 / "+uids.size()+" 个 UID");
         if(bypassSummary!=null){
             int packages=0;
             java.util.Set<Integer> appIds=new java.util.TreeSet<>();
@@ -729,9 +735,7 @@ public final class RootClientActivity extends Activity {
                     appIds.add(app.uid%AllAppUIDPolicy.PER_USER);
                 }
             }
-            bypassSummary.setText("全App绕过："+packages+"个已安装包 / "+
-                appIds.size()+"个独立AppID；最多6个包（需与WBD/Root Manager的排除配额合计≤8）。"+
-                "只有手动START且原Go认证、Kernel UID规则已真实安装后生效");
+            bypassSummary.setText("绕过 "+packages+" 个应用");
         }
     }
     private void applyAppSearch(){
@@ -989,10 +993,8 @@ public final class RootClientActivity extends Activity {
             caPEM.setText(storedCA);
             profileLabel.setText(profile.label);
             rememberSlot(slot);
-            profileResult.setText("已载入槽位"+slot+"："+profile.label+
-                (saved==null?"；请填写此服务器的密码/RouteKey":
-                    "；本槽密码/RouteKey已从原Keystore恢复")+
-                "。选择Network后手动START，运行中的Root不变");
+            profileResult.setText("已载入槽位"+slot+"："+profile.label+(saved==null?"；请填写密码和密钥":""));
+            status.setText(profileResult.getText());
             return true;
         }catch(Exception e){
             profileResult.setText("读取配置失败；当前已运行的Root会话不受影响");
@@ -1011,7 +1013,7 @@ public final class RootClientActivity extends Activity {
             RootEncryptedCredentialStore.clearProfile(this,slot);
             RootConnectionProfileCAStore.clearSlot(this,slot);
             refreshNamedProfileChoices();
-            profileResult.setText("已删除槽位"+slot+"的连接与该槽密码/RouteKey；运行中的Root未改变");
+            profileResult.setText("已删除槽位"+slot);status.setText(profileResult.getText());
         }catch(Exception e){
             profileResult.setText("删除配置失败");
         }
@@ -1270,7 +1272,7 @@ public final class RootClientActivity extends Activity {
         homeStop=action("断开",false,()->requestStop());pane.addView(homeStop);
         pane.addView(action("关闭程序",false,()->requestExit()));
         pane.addView(action("选择 / 切换服务器",false,()->quickChooseServer()));
-        serviceDetail=text("",12,MUTED,false);pane.addView(serviceDetail);
+        serviceDetail=text("",12,MUTED,false);
         pane=section(pages[0],"网络与传输","");
         networks=new Spinner(this);
         pane.addView(networks);
@@ -1293,18 +1295,19 @@ public final class RootClientActivity extends Activity {
             "自定义 IPv4 直连网段（最多16条）",
             InputType.TYPE_CLASS_TEXT);
         TextView directHint=new TextView(this);
-        directHint.setText("仅对本次选定的普通App UID生效：原Root私有路由表将这些IPv4网段交给后续Android路由，"+
-            "不经WBD TUN。不是域名分流、系统DNS、或已证明的物理接口出站。");
+        directHint.setText("这些网段直接连接。");
         pane.addView(directHint);
         autoConnectedDirect=new CheckBox(this);
-        autoConnectedDirect.setText("可选：所选实体Network的当前IPv4直连子网自动绕过WBD（与手动CIDR合并，最多16条）");
+        autoConnectedDirect.setText("当前局域网直连");
         autoConnectedDirect.setChecked(false);
         pane.addView(autoConnectedDirect);
-        pane=section(pages[3],"加密与高级传输","保持默认即可，按需调整。");
+        LinearLayout advancedTransport=section(pages[3],"高级传输","");
+        pane=advancedTransport;
         recordCiphers=new Spinner(this);
         recordCiphers.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
             new String[]{"chacha20-poly1305","aes-128-gcm","aes-256-gcm"}));
+        pane.addView(text("加密算法",14,MUTED,false));
         pane.addView(recordCiphers);
         pane=section(pages[0],"传输模式","Normal · FEC · Game");
         TextView modeHint=new TextView(this);
@@ -1328,23 +1331,23 @@ public final class RootClientActivity extends Activity {
         pane.addView(fecProfiles);
         pane=section(pages[3],"连接维持","低频 Health 与定时冷轮换。");
         TextView healthHint=new TextView(this);
-        healthHint.setText("原Rust M4已认证Health发送间隔（秒）：15默认 / 30低频。"+
-            "90秒dead门不变；低频仅减少空闲控制包，不保证所有网络时延或续航更优。");
+        healthHint.setText("心跳间隔（秒）");
         pane.addView(healthHint);
         nativeHealthIntervals=new Spinner(this);
         nativeHealthIntervals.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,new String[]{"15","30"}));
         pane.addView(nativeHealthIntervals);
         TextView rotationHint=new TextView(this);
-        rotationHint.setText("原生定时冷轮换（分钟）：0关闭 / 5 / 15 / 30。下次START生效，可随配置保存，原会话完整STOP后按本次连接参数重新认证同一实体Network；会暂时断流，不是热迁移。");
+        rotationHint.setText("定时重连（分钟，0 为关闭）");
         pane.addView(rotationHint);
         coldRotationMinutes=new Spinner(this);
         coldRotationMinutes.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,new String[]{"0","5","15","30"}));
         pane.addView(coldRotationMinutes);
+        LinearLayout keepaliveCard=pane;
+        pane=advancedTransport;
         TextView cipherHint=new TextView(this);
-        cipherHint.setText("原WBD受认证M3记录AEAD（默认ChaCha20）；AES-128/256为原协议已支持选项。" +
-            "不同ARM64设备性能取决于CPU硬件与网络，请以实际测速选择。");
+        cipherHint.setText("默认 ChaCha20，可按设备性能选择 AES。");
         pane.addView(cipherHint);
         TextView queueLabel=new TextView(this);
         queueLabel.setText("TUN 队列（包）");
@@ -1390,29 +1393,13 @@ public final class RootClientActivity extends Activity {
         Button clearCa=new Button(this);
         clearCa.setText("清空证书");
         clearCa.setOnClickListener(v->{
-            File file=new File(getFilesDir(),RootPrivateCredentialFiles.CA);
-            if(!file.exists()||file.delete()){
-                caPEM.setText("");
-                try{RootConnectionProfileCAStore.saveCurrent(this,"");}
-                catch(Exception unavailable){/* original on-device CA already cleared */}
-                status.setText("已清除当前TLS CA；配置槽中保存的CA只会在再次载入该槽时恢复");
-            }else status.setText("无法清除本机TLS CA，请重试");
+            caPEM.setText("");
+            status.setText("证书已清空");
         });
         pane.addView(clearCa);
         pane=section(pages[2],"应用范围","默认全局普通应用。关闭全局后勾选要接管的应用。");
         TextView targetHelp=new TextView(this);
-        targetHelp.setText("全局模式接管普通应用 IPv4；系统、Root、WBD 本身和 Root 管理器保持原网络。"
-            +" 选定应用模式仅接管已勾选的应用。"
-            +" IPv6 和系统 DNS 可在设置中开启。"
-            +" 原服务器地址保持直连。");
-        /* Legacy explanation:
-        targetHelp.setText("默认接管普通应用 IPv4 流量（最多20个用户空间），不是系统全流量。"
-            +"仅在原 Go TLS/认证 /32、原 Rust M4 就绪后设置 KernelSU UID 路由。"
-            +"系统/root/隔离 UID、WBD 自身及已识别 KernelSU Manager 绕过，"
-            +"原服务器IPv4在私有路由表设置/32 throw排除，必须内核读回才放行UID路由；" 
-            +"其后Android netd是否真实走物理出口尚未真机验。"
-            +"IPv6 与系统普通 DNS 可在设置中按需开启；系统/root UID 保持绕过。"
-            +"取消全应用模式后，可选择最多 16 个实际 App UID。"); */
+        targetHelp.setText("系统、WBD 与 Root 管理器保持直连。");
         pane.addView(targetHelp);
         allAppsDefault=new CheckBox(this);
         allAppsDefault.setText("全局接管普通应用（默认）");
@@ -1468,7 +1455,7 @@ public final class RootClientActivity extends Activity {
         cnIPDirect.setChecked(false);
         pane.addView(cnIPDirect);
         LinearLayout routingPane=pane;
-        pane=section(pages[3],"外层重传","原机会式重传开关。");
+        pane=advancedTransport;
         outerRepair=new CheckBox(this);
         outerRepair.setText("外层机会式重传");
         outerRepair.setChecked(false);
@@ -1518,8 +1505,7 @@ public final class RootClientActivity extends Activity {
         selectedAppControls.setOrientation(LinearLayout.VERTICAL);
         pane.addView(selectedAppControls);
         TextView searchHint=new TextView(this);
-        searchHint.setText("应用选择：按名称、包名或UID过滤；隐藏不代表取消已勾选。"+
-            "枚举当前用户已安装普通App（含无桌面入口的游戏/服务App）；仅当前真实UID可选");
+        searchHint.setText("按名称、包名或 UID 搜索。");
         selectedAppControls.addView(searchHint);
         appSearch=input(selectedAppControls,"过滤已安装应用（仅本地）",InputType.TYPE_CLASS_TEXT);
         appSearch.addTextChangedListener(new android.text.TextWatcher(){
@@ -1554,9 +1540,7 @@ public final class RootClientActivity extends Activity {
         bypassAppControls.setOrientation(LinearLayout.VERTICAL);
         pane.addView(bypassAppControls);
         TextView bypassHint=new TextView(this);
-        bypassHint.setText("全App模式可额外排除实际已安装App，令该App按Android后续系统路由直连。"+
-            "仍仅影响IPv4；共享UID/跨用户相同AppID都会一起绕过WBD。"+
-            "必须重新手动START；不保证Android netd最终选哪个物理接口。");
+        bypassHint.setText("选择不经过 WBD 的应用。");
         bypassAppControls.addView(bypassHint);
         bypassSummary=new TextView(this);
         bypassAppControls.addView(bypassSummary);
@@ -1626,7 +1610,7 @@ public final class RootClientActivity extends Activity {
         profileResult=new TextView(this);
         profileResult.setText("");
         pane.addView(profileResult);
-        pane=section(pages[3],"切网与恢复","所有切换均等待原有会话完整退出，不做热迁移。");
+        pane=keepaliveCard;
         // Explicit two-stage cold physical Network reselection; NO
         // automatic root relaunch after Android onLost/capability changes.
         // The new START reuses the complete existing credential/UID/TLS
@@ -1664,7 +1648,8 @@ public final class RootClientActivity extends Activity {
                 status.setText("旧会话Stop请求未派发；没有启动新Root会话");
             }
         });
-        pane.addView(oneShotSwitch);
+        // Network selection and the explicit switch belong together on Home.
+        ((LinearLayout)networks.getParent()).addView(oneShotSwitch);
         autoNetworkRecovery=new CheckBox(this);
         autoNetworkRecovery.setText("前台自动重连");
         autoNetworkRecovery.setChecked(false);
@@ -1691,10 +1676,7 @@ public final class RootClientActivity extends Activity {
             autoHandover.cancel();
             new AlertDialog.Builder(this)
             .setTitle("恢复 WBD 临时Root网络")
-            .setMessage("将停止当前原 Go/Rust owner，并只按私有root journal"+
-                "回滚WBD拥有的精确 OUTPUT RST防火墙规则、UID路由及私有表。"+
-                "不会全局flush、清理其他客户端/系统规则或改变DNS。"+
-                "若仍有其他owner或外国规则，直接拒绝清理。")
+            .setMessage("断开连接并恢复 WBD 修改的网络设置。")
             .setNegativeButton("取消",null)
             .setPositiveButton("停止并恢复",(dialog,which)->{
                 Intent i=new Intent(this,RootClientService.class);
@@ -1704,15 +1686,22 @@ public final class RootClientActivity extends Activity {
             }).show();
         });
         pane.addView(restore);
-        LinearLayout diagnostics=section(pages[3],"更多","");
+        LinearLayout more=section(pages[3],"更多设置","");
+        LinearLayout advancedControls=vertical();advancedControls.setVisibility(View.GONE);
+        more.addView(action("高级传输",false,()->advancedControls.setVisibility(advancedControls.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE)));
+        more.addView(advancedControls);
+        ((ViewGroup)advancedTransport.getParent()).removeView(advancedTransport);
+        advancedControls.addView(advancedTransport);
+        LinearLayout diagnostics=more;
         diagnosticsPanel=vertical();diagnosticsPanel.setVisibility(View.GONE);
         diagnostics.addView(action("诊断与恢复",false,()->{
             diagnosticsPanel.setVisibility(diagnosticsPanel.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);
         }));
         diagnostics.addView(diagnosticsPanel);
         ((ViewGroup)legacyIPv6.getParent()).removeView(legacyIPv6);
-        diagnosticsPanel.addView(legacyIPv6);
+        advancedControls.addView(legacyIPv6);
         ((ViewGroup)restore.getParent()).removeView(restore);
+        diagnosticsPanel.addView(serviceDetail);
         diagnosticsPanel.addView(restore);
         pane=diagnosticsPanel;
         Button inspectDNS=new Button(this);
@@ -1757,7 +1746,7 @@ public final class RootClientActivity extends Activity {
         status=new TextView(this);
         status.setText("未连接");
         status.setTextColor(MUTED);status.setTextSize(12);
-        status.setMaxLines(4);status.setTextIsSelectable(true);
+        status.setMaxLines(2);status.setTextIsSelectable(true);
         status.setPadding(dp(8),dp(5),dp(8),0);shell.addView(status);
         polish(pageHost);
         // Move the server picker to the top of the server page without

@@ -36,10 +36,9 @@ for token in ("TUNSETIFF","IFF_TUN | IFF_NO_PI", "close(fd)",
 for forbidden in ("sendto(", "recvfrom(", "write(fd,", "ioctl(fd, TUNSETPERSIST",
                   "192.0.2.1", "github.com/lly8666"):
     assert forbidden not in native,forbidden
-assert 'runDeviceSelfTest()' in activity
-assert 'AlertDialog.Builder(this)' in activity
-assert '允许本机测试' in activity
-assert 'one-tap' not in activity.lower() or 'selftest' in activity.lower()
+assert 'runDeviceSelfTest()' not in activity
+assert 'RootDeviceSelfTest' not in activity
+assert '诊断与恢复' in activity
 assert 'stageDeviceSelfTest' in payload
 assert 'device-selftest-sha256.txt' in payload
 assert 'aarch64-linux-android28-clang' in build

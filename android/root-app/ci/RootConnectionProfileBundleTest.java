@@ -73,6 +73,26 @@ public final class RootConnectionProfileBundleTest {
             "invalid large import");
         ok(RootConnectionProfileBundle.read(new ByteArrayInputStream(
             new byte[0]))==null,"empty import");
+        RootConnectionProfileBundle.Entry[] full=new RootConnectionProfileBundle.Entry[10];
+        for(int i=0;i<full.length;i++)if(slots[i]!=null)
+            full[i]=new RootConnectionProfileBundle.Entry(slots[i],"密码"+i+"-example","RouteKey"+i,
+                i==0?new String(new char[100000]).replace('\0','a'):"-----BEGIN CERTIFICATE-----\nfixture"+i+"\n-----END CERTIFICATE-----");
+        ByteArrayOutputStream whole=new ByteArrayOutputStream();
+        RootConnectionProfileBundle.writeComplete(whole,full);
+        RootConnectionProfileBundle.Entry[] loaded=RootConnectionProfileBundle.readComplete(new ByteArrayInputStream(whole.toByteArray()));
+        ok(loaded!=null&&loaded.length==10&&loaded[2]==null,"full slot roundtrip");
+        for(int i=0;i<full.length;i++)if(full[i]!=null){
+            ok(loaded[i].password.equals(full[i].password)&&loaded[i].routeKey.equals(full[i].routeKey)&&
+                loaded[i].ca.equals(full[i].ca),"complete credentials and large CA restored");
+            ByteArrayOutputStream expected=new ByteArrayOutputStream(),actual=new ByteArrayOutputStream();
+            full[i].profile.write(expected);loaded[i].profile.write(actual);
+            ok(java.util.Arrays.equals(expected.toByteArray(),actual.toByteArray()),"all serialized settings equal");
+        }
+        RootConnectionProfileBundle.Entry[] legacyFull=RootConnectionProfileBundle.readComplete(new ByteArrayInputStream(legacyRaw.toByteArray()));
+        ok(legacyFull.length==4&&legacyFull[0].password.isEmpty()&&legacyFull[2]==null,"legacy migration");
+        byte[] truncated=java.util.Arrays.copyOf(whole.toByteArray(),whole.size()-1);
+        ok(RootConnectionProfileBundle.readComplete(new ByteArrayInputStream(truncated))==null,"truncated full backup");
+        System.out.println("ANDROID_B124_COMPLETE_SERVER_BACKUP_ALL_FIELDS_ROUNDTRIP_PASS");
         System.out.println("ANDROID_B53_FOUR_NAMED_ORIGINAL_PROFILE_SAF_TRANSFER_HOST_PASS");
     }
 }

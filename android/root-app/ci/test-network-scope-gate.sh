@@ -125,7 +125,7 @@ assert 'sessionOwnerActive=false;' in service
 assert 'RootGameSessionStatus.session' not in game_status
 assert 'V4_ORIGINAL_ANDROID_GAME_NATIVE_READY role=client lanes=' in game_status
 assert 'if(RootClientService.sessionOwnerActive||' in app
-assert '切换实体Network：STOP旧会话' in app
+assert '切换到所选网络' in app
 print("ANDROID_B47_GAME_NATIVE_APP_LIFECYCLE_COLD_NETWORK_RESELECT_SOURCE_PASS")
 # B48 actual group Stop: withdraw original UID policy before Rust
 # joined Stop, join the old cold RTO/RAW Go owners and clear the exact
@@ -218,14 +218,14 @@ assert 'quickChooseServer()' in app and 'connectSelectedSavedProfile();' in app
 print("ANDROID_B52_NAMED_PROFILE_ORIGINAL_GO_RUST_SINGLE_ACTION_SWITCH_SOURCE_PASS")
 # B53: original B50 4-slot nonsecret profile codec + SAF import/export.
 bundle=Path("android/root-app/src/org/wbdnext/rootclient/RootConnectionProfileBundle.java").read_text()
-assert 'RootConnectionProfileBundle.write(out,snapshot)' in app
-assert 'RootConnectionProfileBundle.read(in)' in app
+assert 'RootConnectionProfileBundle.writeComplete(out,snapshot)' in app
+assert 'RootConnectionProfileBundle.readComplete(in)' in app
 assert 'RootConnectionProfileStore.load(this,i+1)' in app
-assert 'RootConnectionProfileStore.save(this,slot,restored[i])' in app
+assert 'RootConnectionProfileStore.save(this,slot,entry.profile)' in app
 assert 'RootConnectionProfileStore.delete(this,slot)' in app
 assert 'RootEncryptedCredentialStore.clearProfile(this,slot)' in app
-assert ('RootEncryptedCredentialStore.clearProfile(this,slot);' +
-        chr(10) + '                RootConnectionProfileCAStore.clearSlot(this,slot);') in app
+assert 'RootEncryptedCredentialStore.saveProfile(this,slot,entry.password,entry.routeKey)' in app
+assert 'RootConnectionProfileCAStore.saveSlot(this,slot,entry.ca)' in app
 assert 'coldSwitch.cancel();' in app
 assert 'PROFILE_BUNDLE_EXPORT=2046' in app and 'PROFILE_BUNDLE_IMPORT=2047' in app
 assert 'profile.write(payload)' in bundle
@@ -318,7 +318,7 @@ assert 'Game4 bool' in guard
 assert 'TestGame4OriginalFourPortOneOwnedRSTRule' in guardtest
 assert 'V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client' in g
 assert 'V4_PUBLIC_ANDROID_GAME4_M4_COUNTERS role=client' in fec_status
-assert 'game4CopySchedules.setEnabled("game4".equals(mode)||"game4-fixed".equals(mode))' in app
+assert 'game4CopySchedules.setVisibility(game4?View.VISIBLE:View.GONE)' in app
 # B46: restore the REAL B45 Game4 M4 gate (previously hardcoded
 # raw v.len()==2), plus reuse original Linux Game fixed FEC for Android.
 assert '.filter(|v|v.len()==g.android_lanes.len())' in rust_group
@@ -580,6 +580,7 @@ javac -source 8 -target 8 -encoding UTF-8 -d out/android-root-app/network-scope-
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettings.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionSettingsTransfer.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionProfile.java \
+  android/root-app/src/org/wbdnext/rootclient/RootSavedCredentialRecord.java \
   android/root-app/src/org/wbdnext/rootclient/RootConnectionProfileBundle.java \
   android/root-app/ci/RootConnectionProfileBundleTest.java
 java -ea -cp out/android-root-app/network-scope-test org.wbdnext.rootclient.RootConnectionProfileBundleTest
@@ -764,8 +765,8 @@ print("ANDROID_B24_APP_PICKER_FILTER_BATCH_AND_NETWORK_REFRESH_SOURCE_PASS")
 # B23: production Activity imports, recalls and clears ONE existing
 # original Go 0600 private CA file, never changes Android system trust.
 assert 'recallSavedTLSCA();' in a
-assert 'privateText(RootPrivateCredentialFiles.CA,pem+' in a
-assert 'file.delete()' in a
+assert 'caPEM.setText(pem)' in a
+assert 'caPEM.setText("")' in a
 assert 'RootPrivateCredentialContract.maxBytes(' in a
 assert 'java.security.cert.CertificateFactory.getInstance("X.509")' in a
 print("ANDROID_B23_ORIGINAL_GO_LOCAL_CA_IMPORT_RECALL_CLEAR_SOURCE_PASS")
@@ -781,13 +782,14 @@ assert 'selected.size()>SelectedAppGroup.MAX_PACKAGES' in settings
 assert 'uids.size()>SelectedAppGroup.MAX_UIDS' in settings
 assert 'count>SelectedAppGroup.MAX_PACKAGES' in settings
 print("ANDROID_B25_PRESET_NATIVE_UID_GROUP_RANGE_SOURCE_PASS")
-assert 'RootConnectionSettingsTransfer.read(in)' in a
-assert 'value.write(out)' in a
-assert 'restoreConnectionSettings(imported)' in a
-assert 'chooseInstalledApplications();' in a
-assert 'RootConnectionSettingsStore.save(this,imported)' in a
-assert 'CONNECTION_PRESET_EXPORT=2044' in a and 'CONNECTION_PRESET_IMPORT=2045' in a
-print("ANDROID_B26_SAF_PRESET_REAL_ACTIVITY_EXPORT_IMPORT_SOURCE_PASS")
+assert 'RootConnectionProfileBundle.readComplete(in)' in a
+assert 'RootConnectionProfileBundle.writeComplete(out,snapshot)' in a
+assert 'RootEncryptedCredentialStore.saveProfile(this,slot,secret,key)' in a
+assert 'RootConnectionProfileCAStore.saveSlot(this,slot,pem)' in a
+assert 'RootConnectionProfileStore.save(this,slot,profile)' in a
+assert 'saveAllButton=action("保存全部设置",true,()->saveNamedProfile())' in a
+assert 'CONNECTION_PRESET_EXPORT' not in a and 'saveSlotParameters' not in a
+print("ANDROID_B124_UNIFIED_COMPLETE_SERVER_SAVE_AND_BACKUP_SOURCE_PASS")
 assert 'Integer.parseInt(uid.getText()' not in a, "no arbitrary hand-entered UID"
 assert 'CheckBox' in a and 'appChoices' in a, "real visible multi-App selections"
 assert 'allAppsDefault.setChecked(true)' in a, "all ordinary Android applications are the product UI default"

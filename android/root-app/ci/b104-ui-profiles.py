@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Normal signed-APK UI profile persistence, no START, no test credentials."""
+"""Signed-APK complete profile persistence, disposable fixture credentials, no START."""
 import argparse
 import importlib.util
 import json
@@ -67,27 +67,31 @@ def main(out):
         page("服务器");fill("服务器地址（IPv4 / 域名）","192.0.2.10")
         fill("TLS 服务器名称（SNI）","normal.example.test")
         fill("用户名","daily-ci")
+        fill("密码","ExamplePass123")
+        fill("Route Key（8–32 位字母数字 / 64 位 Hex）","ExampleKey123")
         page("应用");setcheck("全部直连 DNS",True)
-        page("服务器");fill("配置名称（例：家里Wi-Fi／游戏）","NormalDaily")
-        tap("保存服务器配置");locate("已保存槽位1：NormalDaily",True)
+        page("服务器");fill("服务器名称","NormalDaily")
+        tap("保存全部设置 · 槽",True);locate("已保存槽位1：NormalDaily",True)
         report["save_normal"]="PASS"
         select_mode("normal","game4-fixed")
         page("应用");setcheck("CN 分流 DNS",True)
         page("服务器");fill("服务器地址（IPv4 / 域名）","192.0.2.20")
         fill("TLS 服务器名称（SNI）","game.example.test")
+        fill("密码","SecondExamplePass123")
+        fill("Route Key（8–32 位字母数字 / 64 位 Hex）","SecondExampleKey123")
         choose_slot("配置槽1 · NormalDaily","配置槽2（空）")
         # spinner and profile fields share the saved-server section.
-        fill("配置名称（例：家里Wi-Fi／游戏）","GameDaily")
-        tap("保存服务器配置");locate("已保存槽位2：GameDaily",True)
+        fill("服务器名称","GameDaily")
+        tap("保存全部设置 · 槽",True);locate("已保存槽位2：GameDaily",True)
         report["save_game"]="PASS"
         # Explicitly save more than MTU: change Health too and read both after restart.
-        mtu="外层完整 IPv4 IP MTU（576–1500 字节；默认1460，非TUN MTU）"
+        mtu="外层 MTU（576–1500，默认1460）"
         page("设置");fill(mtu,"1380");tap("15");tap("30")
-        tap("保存全部设置（下次连接生效）")
-        locate("全部设置已保存 · MTU 1380 B",True)
+        tap("保存全部设置 · 槽2")
+        locate("已保存槽位2：GameDaily",True)
         page("服务器");choose_slot("配置槽2 · GameDaily","配置槽10（空）")
-        fill("配置名称（例：家里Wi-Fi／游戏）","TenthDaily")
-        tap("保存服务器配置");locate("已保存槽位10：TenthDaily",True)
+        fill("服务器名称","TenthDaily")
+        tap("保存全部设置 · 槽",True);locate("已保存槽位10：TenthDaily",True)
         report["save_tenth"]="PASS"
         adb("shell","am","force-stop",PKG)
         adb("shell","am","start","-W","-n",PKG+"/.RootClientActivity");time.sleep(1)
@@ -96,25 +100,30 @@ def main(out):
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.20")
         page("应用");checkcheck("CN 分流 DNS",True)
         report["ordinary_settings_process_restart"]="PASS"
-        choose_slot("配置槽1 · NormalDaily","配置槽1 · NormalDaily")
+        choose_slot("配置槽10 · TenthDaily","配置槽1 · NormalDaily")
         tap("载入并编辑");locate("已载入槽位1：NormalDaily",True)
         page("连接");locate("normal")
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.10")
         page("应用");checkcheck("全部直连 DNS",True)
+        page("服务器");check_field("用户名","daily-ci")
+        if len(field("密码").get("text",""))!=len("ExamplePass123"):raise RuntimeError("slot password not recalled")
         report["load_normal"]="PASS"
         choose_slot("配置槽1 · NormalDaily","配置槽2 · GameDaily")
         tap("载入并编辑");locate("已载入槽位2：GameDaily",True)
         page("连接");locate("game4-fixed")
         page("服务器");check_field("服务器地址（IPv4 / 域名）","192.0.2.20")
         page("应用");checkcheck("CN 分流 DNS",True)
+        page("服务器")
+        if len(field("密码").get("text",""))!=len("SecondExamplePass123"):raise RuntimeError("slot password not recalled")
         report["load_game"]="PASS"
         choose_slot("配置槽2 · GameDaily","配置槽10 · TenthDaily")
         tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field(mtu,"1380")
-        fill(mtu,"1400");tap("保存参数到所选服务器槽")
-        locate("已保存槽10",True)
+        fill(mtu,"1400");tap("保存全部设置 · 槽10")
+        locate("已保存槽位10：TenthDaily",True)
         page("服务器");tap("载入并编辑");locate("已载入槽位10：TenthDaily",True)
         page("设置");check_field(mtu,"1400")
+        page("设置");tap("诊断与恢复");locate("导出诊断");report["diagnostics_menu"]="PASS"
         page("连接");locate("未连接")
         tap("关闭程序");time.sleep(.5)
         activities=adb("shell","dumpsys","activity","activities").decode()
