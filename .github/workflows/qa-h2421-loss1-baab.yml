@@ -1,0 +1,47 @@
+name: H2421 loss1 BAAB native WBD diagnostic
+run-name: "H2421 loss1 BAAB | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2421-loss1-baab.yml']
+permissions:
+  contents: read
+concurrency:
+  group: h2421-loss1-baab-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: x86_64
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+      H2421_SCENE: loss1
+      H2421_ORDER: BAAB
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Build actual original product and native ISA-L
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          python3 -m py_compile tools/m0_h2421_splice_local.py tools/m0_h2421_splice_app.py
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2421-build.log 2>&1 || { tail -n 150 h2421-build.log; exit 2; }
+      - name: Native routed local fixture
+        shell: bash
+        run: |
+          mkdir -p h2421-out
+          lscpu >h2421-out/lscpu.txt
+          uname -a >h2421-out/uname.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2421_SCENE="$H2421_SCENE" H2421_ORDER="$H2421_ORDER" python3 -u tools/m0_h2421_splice_local.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2421-${{ env.H2421_SCENE }}-${{ env.H2421_ORDER }}-${{ env.WBD_PLAN029_LINUX_EXPECTED_ARCH }}
+          path: |
+            h2421-out/
+            h2421-build.log
+          retention-days: 14

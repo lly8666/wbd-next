@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "7abe8296517a9d10b091a83ab0a32e242ad4fc9c",
+  "result": "INFRA_CAPACITY_UNQUALIFIED_PRODUCT_NOT_RUN",
+  "artifact_verified": false,
+  "runs": [
+    {
+      "run_id": 45550224579,
+      "artifact_id": 14993302077,
+      "order": "ABBA",
+      "upload_mbps": 21.757,
+      "download_mbps": 21.496,
+      "paths": {
+        "client": "UNKNOWN_NOT_QUALIFIED",
+        "server": "DIRECT_CANDIDATE"
+      },
+      "product_legs": 0
+    },
+    {
+      "run_id": 45550224545,
+      "artifact_id": 14993586121,
+      "order": "BAAB",
+      "upload_mbps": 19.66,
+      "download_mbps": 18.874,
+      "paths": {
+        "client": "UNKNOWN_NOT_QUALIFIED",
+        "server": "UNKNOWN_NOT_QUALIFIED"
+      },
+      "product_legs": 0
+    }
+  ],
+  "scope": "Actual workflow job logs retrieved, summary identities and preflight numbers printed; raw ZIP not independently downloaded in this round. Both stopped before WBD measurement, no product failure."
+}
