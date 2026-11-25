@@ -4,24 +4,24 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2430,
-  "checkpoint_sha": "df2d46ced7c3636d10dfe44026e8c38d1e83a020",
+  "sequence": 2431,
+  "checkpoint_sha": "858f308816b4e882564a90896ef2f123aef2e647",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收H2430 run45566751681，按真实tx/rx与各层drop/queue/CPU/FEC receipts找200/400/600健康点和首个堵点；在拐点补300/500，同机复验后只修可证实瓶颈。",
+  "next_action": "收H2431 run45568498761双ISA smoke及后续20场景；按外层实际TX、UDP/TCP真实收发与各级drop定位健康点。若smoke失败先修夹具；不以600有效负载要求高冗余。",
   "unverified": true,
-  "last_tested_source": "8800edefbb45a690bbe572a58f7a9ea54b0a47b9",
+  "last_tested_source": "dadb01fcd816f07db51bb410ba04d2a60702a2f7",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2428-H2429-FQ-LIFECYCLE.json"
+    "docs/evidence/M0/20261125-H2430-SOURCE-PACED-PARTIAL.json"
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-EXIT-ARCHITECTURE-H2428.md",
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/requests/M0/h2430-source-paced-600-target.md"
+    "docs/requests/M0/h2431-outer-budget.md"
   ],
   "open_requests": [],
-  "partial_summary": "H2428 32/32，800Mbps源paced仍30–43万队列满；H2429原生双ISA生命周期4/4及x86 ABBA通过。H2430用户新600Mbps/400ms目标，源端200/400/600，无中间限速，20场景111腿在途；默认未改，未晋级。"
+  "partial_summary": "H2430 60 TCP measured/51 UDP incomplete，四ZIP证实-w16M夹具失败；无损TCP200M也有24853队列满。用户修正外层理论600M；H2431源端按FEC/10%预留折算，双ISA smoke门控，20场景111腿在途；生产不变。"
 }
