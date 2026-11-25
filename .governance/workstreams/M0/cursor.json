@@ -4,23 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2418,
-  "checkpoint_sha": "1ee5c920b345c5d82b74fbb42f66d3a56b21cdf1",
+  "sequence": 2419,
+  "checkpoint_sha": "83f9fd4fe065ccf5d5351fc33ae0690c819381fc",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收 H2418 run45546953037，先审容量/真实丢包/实际TCP状态，再决定是否做CC对照；不重复无新信息的DERP实验。",
+  "next_action": "收 H2419 run45548990238，评估native splice容量/CPU是否限制目标；再决定优化或继续CC对照。",
   "unverified": true,
-  "last_tested_source": "f6ccc4409ac7419a65302bf3228210166a041158",
+  "last_tested_source": "bf4c328ab7be34e6221f8a35f8830a5662f0a41e",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json"
+    "docs/evidence/M0/20261125-H2418-LINUX-TCP-SPLICE-DIAG.json"
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/evidence/M0/20261124-H2416-MIXED-MODE-ROUTE-HANDOFF-PASS.json"
+    "docs/evidence/M0/20261125-H2417-LINUX-TCP-SPLICE-FIRST.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2417真实splice转发与Stop已观察，20/21测量成功但21Mbps DERP容量不合格，BBR pacing在2%下约0.82Mbps；H2418固定延迟、fresh origin及容量门在途。未晋级。"
+  "partial_summary": "H2418 12/12，零损splice 298.316Mbps，NAT 267.212/302.689；1%基线漂移近10倍，不宣称稳定增益。H2419同机独立原生代理容量ABBA在途，未晋级。"
 }
