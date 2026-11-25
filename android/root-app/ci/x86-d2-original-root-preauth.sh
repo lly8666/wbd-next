@@ -116,9 +116,11 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "original_android_unauth_rst_observed":"OBSERVED" if has("ORIGINAL_GO_COLD_UNAUTH_RST_RX") else "NOT_PROVEN",
  "real_peer_synack":"PASS" if has("ORIGINAL_GO_TCP_SYNACK_SEEN") else "NOT_PROVEN",
  "tls_authenticated_32_lease":"PASS" if has("AUTHENTICATED_LEASE_OS_READBACK") and
-    "V4_ORIGINAL_GO_SERVER_NATIVE_READY" in server else "NOT_PROVEN",
+    ("V4_ORIGINAL_GO_SERVER_NATIVE_READY" in server or "V4_PUBLIC_MULTI_SESSION_READY" in server or (p/"b109-remote-auth-result.txt").exists()) else "NOT_PROVEN",
  "original_rust_m4_and_uid_ready":"PASS" if has("NATIVE_M4_AND_UID_READY") else "NOT_PROVEN",
  "test_carrier":"CI_ADB_VETH_TC" if os.environ.get("WBD_B108_CARRIER")=="1" else "EMULATOR_DEFAULT",
+ "mode":os.environ.get("WBD_B109_MODE","normal"),
+ "b109_independent_peer_auth":"PASS" if (p/"b109-remote-auth-result.txt").exists() else "NOT_PROVEN",
  "b108_carrier_admission":"PASS" if (p/"b108-carrier-admission.txt").exists() else "NOT_PROVEN",
  "b108_joined_stop_kernel":"PASS" if (p/"b108-stop-result.txt").exists() else "NOT_PROVEN",
  "tcp_udp_bidirectional_application_data":"PASS" if (p/"b108-remote-app-result.txt").exists() else "NOT_RUN",
@@ -250,6 +252,14 @@ chmod 600 "$tmp/server-key.pem" "$tmp/server-cert.pem"
 # One original listener for all seven requested modes in the wiring matrix.
 server_mode=normal
 if [[ "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 ]];then server_mode=shared;fi
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  case "${WBD_B109_MODE:-normal}" in
+    normal|fec-fixed|fec-auto) server_mode=normal;;
+    game2|game2-fixed|game4|game4-fixed) server_mode=shared;;
+    *) exit 2;;
+  esac
+  echo "B109_REMOTE_MODE ${WBD_B109_MODE:-normal} server=$server_mode"
+fi
 phase=D2_S1_ORIGINAL_LINUX_SERVER
 # Android Emulator 10.0.2.2 maps to host loopback. Whether its user-mode
 # NAT preserves raw FakeTCP SYN/SYNACK is explicitly unproven; never call it
@@ -332,7 +342,7 @@ fi
 phase=D2_S1_PRODUCTION_ROOT_SERVICE
 adb shell logcat -c >"$out/logcat-reset.txt" 2>&1 || true
 start_args=()
-if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then start_args=(--es ci_target traffic);fi
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then start_args=(--es ci_target traffic --es ci_mode "${WBD_B109_MODE:-normal}");fi
 adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity \
   --es ci_step start "${start_args[@]}" >"$out/start-activity.txt" 2>&1
 grep -q 'Starting: Intent' "$out/start-activity.txt"
@@ -383,14 +393,42 @@ if grep -Fq 'AUTHENTICATED_LEASE_OS_READBACK' "$out/app-diagnostic-enums.txt";th
 else
   echo "D2_S1_ANDROID_ORIGINAL_AUTH_LEASE_NOT_PROVEN"
 fi
-# Write only exact real original server milestone types. Do not upload
-# stdout/stderr, SNI, account, key, cert or traffic bytes.
+# Write only exact original server milestone enums, never secret-bearing
+# stdout/stderr. Auto-lease enters the shared server owner even in Normal.
+# Allow the peer's independent ready publication to follow the client.
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  for _ in $(seq 1 30);do
+    if grep -Eq 'V4_PUBLIC_MULTI_SESSION_READY|V4_ORIGINAL_GO_SERVER_NATIVE_READY|V4_PUBLIC_GAME_MULTI_GROUP_READY' "$tmp/server.log";then break;fi
+    if ! kill -0 "$server_pid" 2>/dev/null;then break;fi
+    sleep .2
+  done
+fi
 : >"$out/server-stage-enums.txt"
-for marker in V4_ORIGINAL_GO_SERVER_NATIVE_READY V4_PUBLIC_MULTI_SESSION_READY V4_PUBLIC_SHARED_TUN_STOP_DRAINED V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK;do
+for marker in V4_ORIGINAL_GO_SERVER_NATIVE_READY V4_PUBLIC_MULTI_SESSION_READY V4_PUBLIC_SHARED_TUN_STOP_DRAINED V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK V4_PUBLIC_GAME_MULTI_GROUP_READY;do
   if grep -Fq "$marker" "$tmp/server.log";then
     echo "$marker" >>"$out/server-stage-enums.txt"
   fi
 done
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  # Original Game server logs committed lane ordinals. Print only count,
+  # not endpoints or original protected session material.
+  case "${WBD_B109_MODE:-normal}" in
+    game2*) expected_lanes=2;;
+    game4*) expected_lanes=4;;
+    *) expected_lanes=0;;
+  esac
+  if (( expected_lanes > 0 ));then
+    if grep -Fq "V4_ORIGINAL_GO_GAME_NATIVE_READY role=server lanes=$expected_lanes original_tls=1 rust_m4=1" "$tmp/server.log";then
+      printf 'V4_ORIGINAL_GO_GAME_NATIVE_READY lanes=%s\n' "$expected_lanes" >>"$out/server-stage-enums.txt"
+    fi
+    for lane in $(seq 1 "$expected_lanes");do
+      if grep -Fq "V4_PUBLIC_GAME_GROUP_LANE_READY role=server lanes=$expected_lanes lane=$lane " "$tmp/server.log";then
+        printf 'B109_SERVER_COMMITTED_LANE %s\n' "$lane" >>"$out/server-stage-enums.txt"
+      fi
+    done
+  fi
+  cat "$out/server-stage-enums.txt"
+fi
 if ! grep -Fq 'ORIGINAL_ROOT_SERVICE_START_REQUESTED' "$out/app-diagnostic-enums.txt" ||
    ! grep -Fq 'ROOT_PROCESS_LAUNCHED' "$out/app-diagnostic-enums.txt" ||
    ! grep -Fq 'ORIGINAL_GO_TUN_KERNEL_CONFIGURED' "$out/app-diagnostic-enums.txt" ||
@@ -402,13 +440,29 @@ phase=D2_S1_PRODUCTION_TUN_RAW_PASS
 echo "D2_S1_ORIGINAL_ANDROID_PRODUCTION_ROOT_SERVICE_TUN_RAW_PASS"
 if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
   phase=B108_ORIGINAL_REMOTE_AUTH
-  for marker in ORIGINAL_GO_TCP_SYNACK_SEEN AUTHENTICATED_LEASE_OS_READBACK NATIVE_M4_AND_UID_READY;do
+  for marker in ORIGINAL_GO_MODE_READBACK_MATCHED ORIGINAL_GO_TCP_SYNACK_SEEN AUTHENTICATED_LEASE_OS_READBACK NATIVE_M4_AND_UID_READY;do
     grep -Fq "$marker" "$out/app-diagnostic-enums.txt" || { echo "B108_NOT_PROVEN $marker";exit 50; }
   done
-  grep -Fq V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX "$out/server-stage-enums.txt"
-  grep -Fq V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK "$out/server-stage-enums.txt"
-  grep -Fq V4_ORIGINAL_GO_SERVER_NATIVE_READY "$out/server-stage-enums.txt"
-  echo B108_REAL_ORIGINAL_REMOTE_AUTH_PASS
+  # Normal auto-lease uses the original multi-session Normal owner.
+  # Game shared mode has its own original committed group/lane receipts.
+  if (( expected_lanes == 0 ));then
+    for marker in V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK V4_PUBLIC_MULTI_SESSION_READY;do
+      grep -Fqx "$marker" "$out/server-stage-enums.txt" || { echo "B109_SERVER_NOT_PROVEN $marker";exit 50; }
+    done
+  else
+    for marker in V4_PUBLIC_GAME_MULTI_GROUP_READY "V4_ORIGINAL_GO_GAME_NATIVE_READY lanes=$expected_lanes";do
+      grep -Fqx "$marker" "$out/server-stage-enums.txt" || { echo "B109_SERVER_NOT_PROVEN $marker";exit 50; }
+    done
+    for lane in $(seq 1 "$expected_lanes");do
+      grep -Fqx "B109_SERVER_COMMITTED_LANE $lane" "$out/server-stage-enums.txt" || { echo "B109_SERVER_LANE_NOT_PROVEN $lane";exit 50; }
+    done
+  fi
+  for side in host guest;do
+    grep -Fq "B108_RELAY_FIRST_TX $side" "$out/b108-$side-relay.log"
+    grep -Fq "B108_RELAY_FIRST_RX $side" "$out/b108-$side-relay.log"
+  done
+  printf 'PASS\n' >"$out/b109-remote-auth-result.txt"
+  echo B109_REAL_ORIGINAL_REMOTE_AUTH_PASS "${WBD_B109_MODE:-normal}"
   phase=B108_ORIGINAL_REMOTE_APP_BUSINESS
   b108_traffic
   printf 'PASS\n' >"$out/b108-remote-app-result.txt"

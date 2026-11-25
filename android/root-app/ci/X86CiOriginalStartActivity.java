@@ -136,7 +136,7 @@ public final class X86CiOriginalStartActivity extends Activity {
             // The normal historical fixture uses its CA. Wiring matrix
             // explicitly follows the earlier physical Normal/off defaults.
             String mode=getIntent().getStringExtra("ci_mode");
-            boolean verify=mode==null;
+            boolean verify=mode==null||"traffic".equals(getIntent().getStringExtra("ci_target"));
             if(mode==null)mode="normal";
             if(!java.util.Arrays.asList("normal","fec-fixed","fec-auto","game2",
                 "game2-fixed","game4","game4-fixed").contains(mode))

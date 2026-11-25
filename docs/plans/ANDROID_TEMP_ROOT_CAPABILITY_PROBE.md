@@ -1,3 +1,7 @@
+## B109｜真实独立远端七模式（当前）
+
+B108 `6f63538348aabfeff6eaca39fac63cf53050b6be` [Action 45553595090](https://github.com/lly8666/wbd-next/actions/runs/45553595090) 11/2/8；Android独立原peer实际SYNACK/lease/M4 READY，33双向原包；server gate要求互斥singleton marker故App业务NOT_RUN，独立Linux普通TCP carrier connect FAIL。B109修正原Normal auto-lease multi-session和Game group验收分支，七独立Android实际peer业务、独立Linux carrier诊断。详见 [B109 devlog](../devlog/android-root-probe/20261125-b109-real-peer-seven-modes.md)。无生产改动、未证明远端E2E或性能。
+
 ## B108｜CI-only 原报文转接，真实独立远端业务（当前）
 
 B107 `da7eb919c7762afa33c763aee713fffb51a67c22` [Action 45550257467](https://github.com/lly8666/wbd-next/actions/runs/45550257467) 14/0/8；16/16多/全App probe、hostname/default DNS、实际onLost/Stop/显式新handle重连、3/3 cleanup PASS；native scope flag及生产自动重连未证。ARM64 host无KVM。B108只试一条Normal/off真独立peer路径：临时veth/tc+ADB reverse传递原IPv4/TCP字节，独立Linux内核carrier 1MiB及真实Android正式RootService→原Linux server→普通App TCP/UDP/Stop。非物理网络资格，未证阶段不得冒称PASS。详见 [B108 devlog](../devlog/android-root-probe/20261125-b108-original-remote-carrier.md)。

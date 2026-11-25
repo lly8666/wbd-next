@@ -87,7 +87,12 @@ b108_traffic(){
  b108_echo_pid=$!
  for _ in $(seq 1 30);do grep -Fq "WBD test echo TCP+UDP" "$out/b108-echo.log" && break;sleep .2;done
  grep -Fq "WBD test echo TCP+UDP" "$out/b108-echo.log"
- adb shell am instrument -w -e uid_probe daily-tunnel -e host 10.66.0.1 org.wbdnext.testtraffic/.TrafficInstrumentation >"$out/b108-traffic.txt" 2>&1
+ # Allow the real application transfer to complete on the CI-only carrier,
+ # without changing ordinary socket timeouts or native product policy.
+ local rc=0
+ timeout --signal=TERM --kill-after=3s 85s "$ANDROID_HOME/platform-tools/adb" shell am instrument -w -e uid_probe daily-tunnel -e host 10.66.0.1 org.wbdnext.testtraffic/.TrafficInstrumentation >"$out/b108-traffic.txt" 2>&1 || rc=$?
+ cat "$out/b108-traffic.txt"
+ [[ "$rc" == 0 ]]
  grep -Fq "tcp_ok=8 udp_ok=8 samples=8" "$out/b108-traffic.txt"
  grep -Fq "echo_bytes_each_direction=1048576" "$out/b108-traffic.txt"
  grep -Fq "INSTRUMENTATION_CODE: -1" "$out/b108-traffic.txt"

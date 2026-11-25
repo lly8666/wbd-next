@@ -12,10 +12,21 @@ c="wbd108-c-$$";s="wbd108-s-$$";r="wbd108-r-$$"
 pids=()
 names=()
 cleanup(){
+ local rc=$?
  set +e
+ # Capture only actual kernel counters, socket states, and relay counts.
+ # No packet payloads. Preserve the original test outcome.
+ ip netns exec "$c" tc -s filter show dev wlan0 egress >"$out/egress.txt" 2>&1
+ ip netns exec "$c" tc -s filter show dev wbdrg0 ingress >"$out/ingress.txt" 2>&1
+ for name in "$c" "$s";do
+  ip netns exec "$name" ss -nti >>"$out/socket-states.txt" 2>&1
+  ip netns exec "$name" nstat -az >>"$out/socket-states.txt" 2>&1
+ done
  for pid in "${pids[@]}";do kill "$pid" 2>/dev/null || true;done
  for pid in "${pids[@]}";do wait "$pid" 2>/dev/null || true;done
  for name in "${names[@]}";do ip netns del "$name";done
+ for f in host.log guest.log egress.txt ingress.txt;do if [[ -s "$out/$f" ]];then cat "$out/$f";fi;done
+ return "$rc"
 }
 trap cleanup EXIT
 for name in "$c" "$s" "$r";do ip netns add "$name";names+=("$name");ip -n "$name" link set lo up;done
