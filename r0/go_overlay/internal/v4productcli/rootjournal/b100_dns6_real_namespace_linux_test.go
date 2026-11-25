@@ -14,6 +14,7 @@ import (
  "path/filepath"
  "syscall"
  "strings"
+ "strconv"
  "unsafe"
  "testing"
  "time"
@@ -152,4 +153,52 @@ func TestB120IPv6EntryRealNamespace(t *testing.T){
  if e=owner.Stop();e!=nil{t.Fatal(e)}
  t.Log("B121_HOST_BLACKHOLE_OLD_JOURNAL_RECOVERY_AND_RESTART_PASS")
  t.Log("B120_HOST_REAL_TUN_IPV6_ENTRY_AND_LOW_MTU_DROP_STOP_PASS")
+}
+
+
+// Actual ICMPv6 RA packets through the selected downstream OUTPUT hook.
+// The peer veth represents a different interface, not a real device.
+func TestB123DownstreamRARealNamespace(t *testing.T){
+ if os.Getenv("WBD_B100_REAL_NS")!="1"{t.Skip("isolated netns only")}
+ if os.Geteuid()!=0{t.Fatal("root required")}
+ runner:=func(name string)Runner{return func(a ...string)(string,error){b,e:=exec.Command(name,a...).CombinedOutput();if e!=nil{return string(b),fmt.Errorf("%s %v: %w %s",name,a,e,b)};return string(b),nil}}
+ ip,fw6:=runner("ip"),runner("ip6tables")
+ run:=func(a ...string){t.Helper();if _,e:=ip(a...);e!=nil{t.Fatal(e)}}
+ run("link","add","wbd123ap","type","veth","peer","name","wbd123peer")
+ defer ip("link","del","wbd123ap")
+ run("link","set","dev","wbd123ap","up")
+ run("link","set","dev","wbd123peer","up")
+ run("-6","addr","add","fe80::123:1/64","dev","wbd123ap","nodad")
+ run("-6","addr","add","fe80::123:2/64","dev","wbd123peer","nodad")
+ // Use the low-MTU path to verify RA suppression even without a TUN
+ // IPv6 address. The existing real TUN test covers the other path.
+ p:=IPv6Plan{Drop:true,SuppressRA:true,Tun:"wbd123tun",Local4:"10.66.0.8",MTU:1200,UIDs:[]int{10220},Downstream:"wbd123ap"}
+ path:=filepath.Join(t.TempDir(),"owned",ipv6CarrierJournal)
+ owner,e:=NewIPv6Carrier(ip,runner("iptables"),fw6,path,p);if e!=nil{t.Fatal(e)}
+ defer owner.Stop()
+ send:=func(iface string,typ byte)error{
+  nic,e:=net.InterfaceByName(iface);if e!=nil{return e}
+  fd,e:=syscall.Socket(syscall.AF_INET6,syscall.SOCK_RAW,syscall.IPPROTO_ICMPV6);if e!=nil{return e};defer syscall.Close(fd)
+  if e=syscall.SetsockoptInt(fd,syscall.IPPROTO_IPV6,syscall.IPV6_MULTICAST_IF,nic.Index);e!=nil{return e}
+  if e=syscall.SetsockoptInt(fd,syscall.IPPROTO_IPV6,syscall.IPV6_MULTICAST_HOPS,255);e!=nil{return e}
+  dst:=syscall.SockaddrInet6{Addr:netip.MustParseAddr("ff02::1").As16(),ZoneId:uint32(nic.Index)}
+  msg:=make([]byte,16);msg[0]=typ
+  return syscall.Sendto(fd,msg,0,&dst)
+ }
+ count:=func()uint64{
+  t.Helper()
+  out,e:=fw6("-w","2","-t","filter","-L","OUTPUT","-v","-n","-x");if e!=nil{t.Fatal(e)}
+  for _,line:=range strings.Split(out,"\n"){if strings.Contains(line,ipv6CarrierMarker){w:=strings.Fields(line);n,e:=strconv.ParseUint(w[0],10,64);if e!=nil{t.Fatal(line,e)};return n}}
+  t.Fatal("missing owned RA counter",out);return 0
+ }
+ if got:=count();got!=0{t.Fatal("unexpected initial RA counter",got)}
+ if e=send("wbd123ap",134);e!=nil&&e!=syscall.EPERM&&e!=syscall.EACCES{t.Fatal("selected RA send",e)}
+ if got:=count();got!=1{t.Fatal("selected downstream RA not intercepted",got)}
+ if e=send("wbd123peer",134);e!=nil{t.Fatal("unselected RA send",e)}
+ if e=send("wbd123ap",133);e!=nil{t.Fatal("non-RA ICMPv6 send",e)}
+ if got:=count();got!=1{t.Fatal("rule intercepted unrelated interface or ICMPv6",got)}
+ if e=owner.Stop();e!=nil{t.Fatal(e)}
+ out,e:=fw6("-w","2","-t","filter","-S","OUTPUT");if e!=nil||strings.Contains(out,ipv6CarrierMarker){t.Fatal("RA rule survived Stop",out,e)}
+ if e=send("wbd123ap",134);e!=nil{t.Fatal("RA not restored",e)}
+ t.Log("B123_HOST_REAL_RA_SELECTED_INTERFACE_ONLY_STOP_PASS")
 }

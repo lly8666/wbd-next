@@ -11,9 +11,11 @@ sudo -n ip netns add "$ns"
 trap 'sudo -n ip netns del "$ns"' EXIT
 sudo -n ip netns exec "$ns" ip link set lo up
 sudo -n ip netns exec "$ns" ip6tables -w 2 -t nat -S OUTPUT | tee "$out/nat6-baseline.txt"
-sudo -n ip netns exec "$ns" env WBD_B100_REAL_NS=1 "$PWD/$out/rootjournal.test" -test.v -test.timeout=40s -test.run '^(TestB100IPv6SystemDNSRealNamespace|TestB120ManagedDNSRealNamespace|TestB120IPv6EntryRealNamespace)$' | tee "$out/test.log"
+sudo -n ip netns exec "$ns" env WBD_B100_REAL_NS=1 "$PWD/$out/rootjournal.test" -test.v -test.timeout=40s -test.run '^(TestB100IPv6SystemDNSRealNamespace|TestB120ManagedDNSRealNamespace|TestB120IPv6EntryRealNamespace|TestB123DownstreamRARealNamespace)$' | tee "$out/test.log"
 grep -Fq B100_HOST_IPV6_UID_MARK_UDP_TCP_REDIRECT_PASS "$out/test.log"
 grep -Fq B100_HOST_IPV6_OWNER_STOP_PASS "$out/test.log"
 
 grep -Fq B120_HOST_MANAGED_DNS6_UDP_TCP_ANY_MARK_PASS "$out/test.log"
 grep -Fq B120_HOST_REAL_TUN_IPV6_ENTRY_AND_LOW_MTU_DROP_STOP_PASS "$out/test.log"
+
+grep -Fq B123_HOST_REAL_RA_SELECTED_INTERFACE_ONLY_STOP_PASS "$out/test.log"
