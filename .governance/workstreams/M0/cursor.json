@@ -4,24 +4,23 @@
   "branch": "main",
   "reservation_revision": 4,
   "assignment_epoch": 1,
-  "sequence": 2424,
-  "checkpoint_sha": "4c0cfe7c4050977e350c3617e735d0dbf4aaf884",
+  "sequence": 2425,
+  "checkpoint_sha": "e37a977faf13f4b71ff88942c365299f738d5e85",
   "progress": "partial",
   "task_id": "M0-LINUX-TCP-SPLICE",
   "current_task": "用户授权Linux服务端TCP透明分段、Rust原生splice及可替换拥塞策略；docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md；唯一实验分支 experiment/m0-linux-tcp-splice，PR78，基线 93b249e6a332fbd971c32a5db4dcd2ef1010eec2。",
   "why_now": "用户授权开发Linux TCP透明分段，并实测各丢包率。",
   "done_when": "真实三runner单流按损伤率对照；先确认透明转发与Stop及夹具资格，再定位TCP CC、效率和性能；未验/FAIL不晋级。",
-  "next_action": "收H2424八个独立Action；检查无损fq依赖、5% split与FEC各自贡献、正确清除rate的拥塞对照。冻结产品源码，证据确认后决定CC是否需自研。",
+  "next_action": "收H2425十个独立Actions，核同机NAT fq、同FEC NAT/splice与10%冗余收益，15/30%保留真实失败。基于残余损伤和主机服务压力决定是否值得自研CC。",
   "unverified": true,
-  "last_tested_source": "559f2093857919c6293ee6f85622b55f198251fc",
+  "last_tested_source": "3b06a3da30cc5bd3d2121087286ad8584f711635",
   "evidence_refs": [
-    "docs/evidence/M0/20261125-H2423-LOCAL-COUNTERBALANCE.json"
+    "docs/evidence/M0/20261125-H2424-MECHANISMS.json"
   ],
   "context_refs": [
     "docs/decisions/M0-LINUX-TCP-SPLICE-20261125.md",
-    "docs/evidence/M0/20261125-H2419-NATIVE-SPLICE-CAPACITY.json",
-    "docs/evidence/M0/20261125-H2418-LINUX-TCP-SPLICE-DIAG.json"
+    "docs/evidence/M0/20261125-H2423-LOCAL-COUNTERBALANCE.json"
   ],
   "open_requests": [],
-  "partial_summary": "H2423 32性能+4功能完成，10原始ZIP审查；无损正反序+25%且服务端CPU/GiB约-60%；1/5% BBR显著胜CUBIC；拥塞post-direct未合格。H2424复用冻结build，八独立机理测试在途。未晋级。"
+  "partial_summary": "H2424 32/32、8 ZIP审查；无fq后splice收益约1%，5% OFF split负收益，mild FEC +796/+1176%，慢runner有队列满，拥塞CUBIC吞吐+5.4/5.6%但RTT+68ms。H2425十组固定产品匹配对照在途，未晋级。"
 }
