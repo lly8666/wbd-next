@@ -162,7 +162,7 @@ public final class RootClientActivity extends Activity {
             routeSplitButton.setSelected(split);
             }
         }
-        homeConnect.setEnabled(!active&&!pending);
+        homeConnect.setEnabled(!exitRequested&&!active&&!pending);
         homeConnect.setAlpha(!active&&!pending?1f:.45f);
         homeStop.setEnabled(active||pending);
         homeStop.setAlpha(active||pending?1f:.45f);
@@ -178,6 +178,15 @@ public final class RootClientActivity extends Activity {
                 connectSelectedSavedProfile();
             }).setNeutralButton("管理服务器",(d,w)->showPage(1))
             .setNegativeButton("取消",null).show();
+    }
+    private boolean exitRequested=false;
+    private void requestExit(){
+        if(cnUpdateRunning||deviceSelfTestActive.get()){status.setText("请先完成当前设备操作，再退出");return;}
+        exitRequested=true;
+        coldSwitch.cancel();autoHandover.cancel();
+        if(RootClientService.sessionOwnerActive||RootClientService.startDispatchPending.get()){
+            requestStop();status.setText("正在断开并退出 WBD…");
+        }else finishAndRemoveTask();
     }
     private void requestStop(){
         coldSwitch.cancel();autoHandover.cancel();
@@ -207,6 +216,7 @@ public final class RootClientActivity extends Activity {
     private void watchTetherChoices(){
         if(tetherWatch!=null)return;
         try{tetherWatch=RootTetherScope.watch(this,scopes->{
+            tetherSharing.setEnabled(true);
             Object previous=tetherChoices.getSelectedItem();
             tetherScopes.clear();tetherScopes.addAll(scopes);
             java.util.List<String> labels=new java.util.ArrayList<>();
@@ -616,6 +626,12 @@ public final class RootClientActivity extends Activity {
     }
     private final Runnable refreshStatus=new Runnable(){
         @Override public void run(){
+            if(exitRequested){
+                if(!RootClientService.sessionOwnerActive&&!RootClientService.startDispatchPending.get()){
+                    finishAndRemoveTask();return;
+                }
+                ui.postDelayed(this,1000);return;
+            }
             completeUserColdSwitchIfReady();
             completeAutomaticColdSwitchIfReady();
             if(status!=null&&!RootClientService.status.equals(lastServiceStatus)){
@@ -1092,6 +1108,7 @@ public final class RootClientActivity extends Activity {
         RootPrivateCredentialFiles.write(this,file,text);
     }
     private void start(){
+        if(exitRequested)return;
         traceUi(RootDiagnosticReceipt.Event.UI_START_TAPPED);
         boolean dispatchRequested=false;
         boolean claimedStart=false;
@@ -1337,6 +1354,7 @@ public final class RootClientActivity extends Activity {
         homeConnect=action("连接",true,()->{coldSwitch.cancel();start();refreshHome();});
         pane.addView(homeConnect,new LinearLayout.LayoutParams(-1,dp(56)));
         homeStop=action("断开",false,()->requestStop());pane.addView(homeStop);
+        pane.addView(action("关闭程序",false,()->requestExit()));
         pane.addView(action("选择 / 切换服务器",false,()->quickChooseServer()));
         serviceDetail=text("",12,MUTED,false);pane.addView(serviceDetail);
         pane=section(pages[0],"网络与传输","选择实际 Wi-Fi、移动网络或有线网络。");
@@ -1384,20 +1402,20 @@ public final class RootClientActivity extends Activity {
             InputType.TYPE_CLASS_NUMBER);
         outerMTUField.setText("1460");
         TextView parameterSaved=new TextView(this);
-        parameterSaved.setText("保存到本机当前连接；下次手动连接使用。已运行会话不变。");
+        parameterSaved.setText("保存全部连接参数：MTU、加密、队列、填充、FEC、DNS、IPv6、共享、连接维持及应用路由。下次连接生效。");
         Button saveParameters=new Button(this);
-        saveParameters.setText("保存参数（下次连接生效）");
+        saveParameters.setText("保存全部设置（下次连接生效）");
         saveParameters.setOnClickListener(v->{
             try{
                 RootConnectionSettings settings=connectionSettingsFromUi();
                 RootConnectionSettingsStore.save(this,settings);
-                parameterSaved.setText("已保存 · 外层 MTU "+settings.outerMTU+" B · "+settings.mode+
-                    "；下次连接生效。当前会话不变。");
+                parameterSaved.setText("全部设置已保存 · MTU "+settings.outerMTU+" B · "+settings.mode+" · "+settings.cipher+" · 队列 "+settings.tunQueue+
+                    " · Health "+settings.nativeHealthSeconds+" 秒 · 填充 "+settings.padding+"；DNS、IPv6、共享、路由与恢复选项也已保存。下次连接生效。");
             }catch(Exception failure){
                 parameterSaved.setText("保存失败：请检查服务器、账号和传输参数。");
             }
         });
-        pane.addView(saveParameters);
+
         // A named server is a separate frozen profile; update only the
         // explicitly selected matching server, preserving its own credentials/CA.
         Button saveSlotParameters=new Button(this);
@@ -1415,14 +1433,13 @@ public final class RootClientActivity extends Activity {
                 }
                 RootConnectionProfileStore.save(this,slot,new RootConnectionProfile(old.label,settings));
                 RootConnectionSettingsStore.save(this,settings);
-                parameterSaved.setText("已保存槽"+slot+" · "+old.label+" · 外层 MTU "+settings.outerMTU+
-                    " B；下次载入/连接该槽生效。");
+                parameterSaved.setText("已保存全部设置到槽"+slot+" · "+old.label+" · MTU "+settings.outerMTU+
+                    " B · "+settings.mode+" · "+settings.cipher+"；下次载入/连接该槽生效。");
             }catch(Exception failure){
                 parameterSaved.setText("保存未完整成功，请检查参数后重试。");
             }
         });
-        pane.addView(saveSlotParameters);
-        pane.addView(parameterSaved);
+
         pane=section(pages[2],"直连例外","分流模式可以按 CN 地址与自定义网段直接连接。");
         directCIDRsField=input(pane,
             "自定义 IPv4 直连网段（最多16条）",
@@ -1451,13 +1468,15 @@ public final class RootClientActivity extends Activity {
             new String[]{"normal","fec-fixed","fec-auto","game2","game4","game2-fixed","game4-fixed"}));
         pane.addView(fecModes);
         TextView profileHint=new TextView(this);
-        profileHint.setText("Fixed或Game2/4-fixed选择档位0–6（默认1）；Auto原质量换档；Normal/Game-off不使用档位");
+        profileHint.setText("固定 FEC 档位（修复包相对源包名义比例；不是可抵抗的丢包率）\n0 轻度 12.5% · 1 较轻 25% · 2 中度 37.5%\n3 均衡 50% · 4 较强 75% · 5 强 100% · 6 很强 125%\n满组16源包分别增加2/4/6/8/12/16/20个修复包。档位越高，带宽和编码成本通常越大。");
+        profileHint.setVisibility(View.GONE);
         pane.addView(profileHint);
         fecProfiles=new Spinner(this);
         fecProfiles.setAdapter(new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_dropdown_item,
             new String[]{"0","1","2","3","4","5","6"}));
         fecProfiles.setSelection(1);
+        fecProfiles.setVisibility(View.GONE);
         pane.addView(fecProfiles);
         pane=section(pages[3],"连接维持","低频 Health 与定时冷轮换。");
         TextView healthHint=new TextView(this);
@@ -1691,6 +1710,10 @@ public final class RootClientActivity extends Activity {
         pane.addView(tetherRequirement);
         tetherChoices=new Spinner(this);
         pane.addView(tetherChoices);
+        pane.addView(action("刷新共享网卡",false,()->{
+            if(tetherWatch!=null){tetherWatch.close();tetherWatch=null;}
+            watchTetherChoices();
+        }));
         tunnelDNS.setOnCheckedChangeListener((button,checked)->{
             if(checked){physicalDNS.setChecked(false);cnSplitDNS.setChecked(false);}
         });
@@ -1704,14 +1727,11 @@ public final class RootClientActivity extends Activity {
         fecModes.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
             @Override public void onItemSelected(android.widget.AdapterView<?> parent,
                 View view,int position,long id){
-                if("game2".equals(fecModes.getSelectedItem().toString())||
-                   "game4".equals(fecModes.getSelectedItem().toString())||
-                   "game2-fixed".equals(fecModes.getSelectedItem().toString())||
-                   "game4-fixed".equals(fecModes.getSelectedItem().toString())){
-                    // Game uses the same authenticated padding selection as Normal.
-                    game4CopySchedules.setEnabled("game4".equals(fecModes.getSelectedItem().toString())||
-                        "game4-fixed".equals(fecModes.getSelectedItem().toString()));
-                }
+                String mode=fecModes.getSelectedItem().toString();
+                boolean fixed=mode.endsWith("-fixed");
+                profileHint.setVisibility(fixed?View.VISIBLE:View.GONE);
+                fecProfiles.setVisibility(fixed?View.VISIBLE:View.GONE);
+                game4CopySchedules.setEnabled("game4".equals(mode)||"game4-fixed".equals(mode));
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent){}
         });
@@ -2022,6 +2042,8 @@ public final class RootClientActivity extends Activity {
             ViewGroup outer=(ViewGroup)savedParent.getParent();
             outer.removeView(savedParent);pages[1].addView(savedParent,0);
         }
+        LinearLayout settingsSave=section(pages[3],"保存全部设置","包括上面所有传输、DNS、IPv6、共享和连接维持选项；不改变正在运行的会话。");
+        settingsSave.addView(saveParameters);settingsSave.addView(saveSlotParameters);settingsSave.addView(parameterSaved);
         // Diagnostic tools are last, not the first settings card.
         ((ViewGroup)advancedPanel.getParent()).removeView(advancedPanel);
         pages[3].addView(advancedPanel);
@@ -2079,7 +2101,7 @@ public final class RootClientActivity extends Activity {
         watchTetherChoices();
         // UI-only snapshot refresh; Service's already-owned Network,
         // route and generation are NEVER implicitly switched.
-        if(autoNetworkRecovery!=null&&autoNetworkRecovery.isChecked()&&
+        if(!exitRequested&&autoNetworkRecovery!=null&&autoNetworkRecovery.isChecked()&&
            RootClientService.sessionOwnerActive&&
            !RootClientService.networkStopRequested)
             autoHandover.arm();

@@ -14,11 +14,11 @@ func TestB117PauseRestore(t *testing.T){
  Current:func(TetherBPFHook)bool{return true},BootID:func()(string,error){return "boot",nil},
  Change:func(h TetherBPFHook,add bool)error{if add{live=append(live,h);return nil};for i,v:=range live{if v==h{live=append(live[:i],live[i+1:]...);return nil}};return fmt.Errorf("missing")}}
  path:=filepath.Join(t.TempDir(),"owned",tetherBPFJournal)
- s,e:=NewTetherBPFPause(k,path,"ap0");if e!=nil||s.Count()!=2||len(live)!=0{t.Fatalf("pause: %v",e)}
+ s,e:=NewTetherBPFPause(k,path,"ap0");if e!=nil||s.Count()!=1||len(live)!=1||live[0]!=b{t.Fatalf("pause: %v",e)}
  if e=VerifyTetherBPFPause(k,path,"ap0");e!=nil{t.Fatal(e)}
- if e=s.Stop(true);e!=nil||len(live)!=2||live[0]!=a||live[1]!=b{t.Fatalf("restore: %v %v",e,live)}
+ if e=s.Stop(true);e!=nil||len(live)!=2||live[0]!=b||live[1]!=a{t.Fatalf("restore: %v %v",e,live)}
  if _,e=os.Stat(path);!os.IsNotExist(e){t.Fatal("journal not cleared")}
  s,e=NewTetherBPFPause(k,path,"ap0");if e!=nil{t.Fatal(e)}
- if e=s.Stop(false);e==nil||len(live)!=0{t.Fatal("restored too early")}
+ if e=s.Stop(false);e==nil||len(live)!=1||live[0]!=b{t.Fatal("restored too early")}
  if e=RecoverTetherBPF(k,path);e!=nil||len(live)!=2{t.Fatalf("restore: %v",e)}
 }

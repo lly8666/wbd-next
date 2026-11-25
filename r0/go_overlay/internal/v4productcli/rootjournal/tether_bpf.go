@@ -102,35 +102,44 @@ func NewTetherBPFPause(k TetherBPFIO,path,selected string)(*TetherBPFOwner,error
  fail:=func(e error)(*TetherBPFOwner,error){return nil,errors.Join(e,l.Close())}
  _,found,e:=readTetherBPF(path);if e!=nil{return fail(e)};if found{return fail(fmt.Errorf("previous tether BPF pause requires Restore"))}
  hooks,e:=k.Read();if e!=nil{return fail(e)}
- up,down:=false,false
+ // Only the selected downstream ingress can divert new downstream packets
+ // before the normal IP routing/NAT path. Return traffic from WBD enters
+ // via TUN, not the physical upstream BPF hook.
+ selectedHooks:=make([]TetherBPFHook,0,len(hooks))
  seen:=map[string]bool{}
  for _,h:=range hooks{
+  _,upload,_:=tetherBPFName(h.Name)
+  if h.Interface!=selected||!upload{continue}
   if !h.valid()||seen[h.key()]||!k.Current(h){return fail(fmt.Errorf("unrecognized tether BPF attachment"))}
   seen[h.key()]=true
-  _,upload,v:=tetherBPFName(h.Name)
-  if v==4&&upload&&h.Interface==selected{up=true}
-  if v==4&&!upload{down=true}
+  selectedHooks=append(selectedHooks,h)
   id,e:=k.PinID(h.Pin);if e!=nil||id!=h.ProgramID{return fail(fmt.Errorf("cannot reopen original tether BPF pin: %w",e))}
  }
- if !up||!down{return fail(fmt.Errorf("active IPv4 tether BPF upload/download hooks not both observed"))}
+ hooks=selectedHooks
+ if len(hooks)==0{return nil,l.Close()}
  boot,e:=k.BootID();if e!=nil||boot==""{return fail(fmt.Errorf("kernel boot identity unavailable"))}
  if e=writeTetherBPF(path,tetherBPFRecord{Boot:boot,Hooks:hooks});e!=nil{return fail(e)}
  for _,h:=range hooks{
   if e=k.Change(h,false);e!=nil{return fail(errors.Join(e,restoreTetherBPF(k,path)))}
  }
  current,e:=k.Read()
- if e!=nil||len(current)!=0{return fail(errors.Join(e,fmt.Errorf("tether BPF detach readback incomplete"),restoreTetherBPF(k,path)))}
+ if e!=nil||hasSelectedTetherUpload(current,selected){return fail(errors.Join(e,fmt.Errorf("tether BPF detach readback incomplete"),restoreTetherBPF(k,path)))}
  return &TetherBPFOwner{k:k,path:path,lock:l,count:len(hooks)},nil
+}
+func hasSelectedTetherUpload(hooks []TetherBPFHook,selected string)bool{
+ for _,h:=range hooks{_,upload,_:=tetherBPFName(h.Name);if h.Interface==selected&&upload{return true}}
+ return false
 }
 func VerifyTetherBPFPause(k TetherBPFIO,path,selected string)error{
  p,found,e:=readTetherBPF(path);if e!=nil{return e}
- if !found{return fmt.Errorf("no owned tether BPF pause")}
- boot,e:=k.BootID();if e!=nil||boot!=p.Boot{return fmt.Errorf("tether BPF owner changed")}
- same:=false
- for _,h:=range p.Hooks{if h.Interface==selected&&k.Current(h){same=true}}
- if !same{return fmt.Errorf("selected tether interface changed")}
+ if found{
+  boot,e:=k.BootID();if e!=nil||boot!=p.Boot{return fmt.Errorf("tether BPF owner changed")}
+  same:=false
+  for _,h:=range p.Hooks{if h.Interface==selected&&k.Current(h){same=true}}
+  if !same{return fmt.Errorf("selected tether interface changed")}
+ }
  hooks,e:=k.Read();if e!=nil{return e}
- if len(hooks)!=0{return fmt.Errorf("Android tether BPF attached again")}
+ if hasSelectedTetherUpload(hooks,selected){return fmt.Errorf("Android tether BPF attached again")}
  return nil
 }
 func(s *TetherBPFOwner)Stop(forwardingCleared bool)error{

@@ -250,6 +250,16 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
   return startOriginalAndroidIPv6Carrier(c,tun,lease,runner,next,relay)
  }
  if !c.androidAppTCPDNS&&!tetherDNS&&!appIPv6DNS{return finish(stopUID,nil)}
+ // Construct the optional Go physical relay only for modes that use it.
+ // Literal-peer normal tunnel DNS never needs this Go physical dialer.
+ if (c.androidPhysicalDNS||c.androidCNDNSSplit)&&c.androidPhysicalDNSDial==nil{
+  nic,e:=net.InterfaceByName(c.rawInterface)
+  if e!=nil{return nil,errors.Join(e,stopUID())}
+  c.androidPhysicalDNSDial,e=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(dnsnative.PhysicalScope{
+   NetworkHandle:c.androidNetworkHandle,InterfaceName:c.rawInterface,IfIndex:nic.Index,MTU:nic.MTU,LocalIPv4:c.localIP,
+  },c.androidPhysicalDNSUpstream)
+  if e!=nil{return nil,errors.Join(e,stopUID())}
+ }
  tunnel:=c.androidTunnelDNS||c.androidCNDNSSplit
  physicalEndpoint:=net.JoinHostPort(c.androidPhysicalDNSUpstream.String(),"53")
  tunnelIP:=c.androidTunnelDNSUpstream
@@ -258,6 +268,7 @@ func startAndroidAppTCPDNS(c config,tun *ownedTun,lease netip.Prefix,
  dial:=func(ctx context.Context,path dnsnative.Path,network,endpoint string)(net.Conn,error){
   if network!="tcp"&&!((c.androidSystemDNS||tetherDNS||appIPv6DNS)&&network=="udp"){return nil,dnsnative.ErrUnbound}
   if path==dnsnative.Physical{
+   if c.androidPhysicalDNSDial==nil{return nil,dnsnative.ErrUnbound}
    return c.androidPhysicalDNSDial(ctx,path,network,endpoint)
   }
   if !tunnel||path!=dnsnative.Tunnel||endpoint!=tunnelEndpoint{return nil,dnsnative.ErrUnbound}
@@ -355,7 +366,7 @@ func androidTetherPreflight(c config,requireHardwareDisabled bool)(netip.Addr,er
  dump,e:=exec.CommandContext(ctx,"dumpsys","tethering").Output()
  if e!=nil{return fail("BPF_UNKNOWN",fmt.Errorf("tethering dump unavailable"))}
  if rootjournal.TetherBPFState(string(dump))!="disabled"{
-  if e=rootjournal.VerifyTetherBPFPause(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal,c.androidTetherInterface);e!=nil{
+  if e=rootjournal.VerifyTetherBPFPause(rootjournal.AndroidTetherBPFDownstreamIO(c.androidTetherInterface),androidTetherBPFJournal,c.androidTetherInterface);e!=nil{
    return fail("BPF_PAUSE",e)
   }
  }
@@ -370,7 +381,7 @@ func androidTetherSettings(args ...string)(string,error){
  return string(b),nil
 }
 func recoverOriginalAndroidTetherOffload()error{
- return errors.Join(rootjournal.RecoverTetherBPF(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal),
+ return errors.Join(rootjournal.RecoverAndroidTetherBPF(androidTetherBPFJournal),
   rootjournal.RecoverTetherOffload(androidTetherSettings,androidTetherOffloadJournal))
 }
 func checkOriginalAndroidTether(c config)(func()error,error){
@@ -403,9 +414,9 @@ func checkOriginalAndroidTether(c config)(func()error,error){
  }
  if owner.Changed(){fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_HARDWARE_DISABLED role=client")}
  if rootjournal.TetherBPFState(string(dump))!="disabled"{
-  bpf,e=rootjournal.NewTetherBPFPause(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal,c.androidTetherInterface)
+  bpf,e=rootjournal.NewTetherBPFPause(rootjournal.AndroidTetherBPFDownstreamIO(c.androidTetherInterface),androidTetherBPFJournal,c.androidTetherInterface)
   if e!=nil{return nil,errors.Join(androidTetherFailure("BPF_PAUSE",e),cleanup())}
-  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_BPF_PAUSED role=client")
+  if bpf!=nil{fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_BPF_PAUSED role=client")}
  }
  if _,e=androidTetherPreflight(c,true);e!=nil{return nil,errors.Join(e,cleanup())}
  fmt.Fprintln(os.Stderr,"V4_PUBLIC_ANDROID_TETHER_PREFLIGHT_READY role=client")
@@ -546,8 +557,7 @@ func originalAndroidIPv6PeerEcho(local,peer netip.Addr)error{
 
 func startOriginalAndroidTetherWatch(c config,stop context.CancelFunc)(func(),error){
  if c.androidTetherInterface==""{return func(){},nil}
- if _,e:=os.Lstat(androidTetherBPFJournal);os.IsNotExist(e){return func(){},nil}else if e!=nil{return nil,e}
- closeWatch,e:=rootjournal.WatchTetherBPFPause(rootjournal.AndroidTetherBPFIO(),androidTetherBPFJournal,c.androidTetherInterface,func(){
+ closeWatch,e:=rootjournal.WatchTetherBPFPause(rootjournal.AndroidTetherBPFDownstreamIO(c.androidTetherInterface),androidTetherBPFJournal,c.androidTetherInterface,func(){
   androidTetherFailure("BPF_PAUSE",fmt.Errorf("tether topology changed during session"));stop()
  })
  if e!=nil{return nil,androidTetherFailure("BPF_PAUSE",e)}

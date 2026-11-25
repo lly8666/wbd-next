@@ -145,14 +145,13 @@ func androidTetherBPFIO(only map[string]bool)TetherBPFIO{
  return TetherBPFIO{
   Read:func()([]TetherBPFHook,error){
    interfaces,e:=net.Interfaces();if e!=nil{return nil,e}
-   out:=[]TetherBPFHook{};indices:=map[int]bool{}
+   out:=[]TetherBPFHook{}
    for _,i:=range interfaces{
     if only!=nil&&!only[i.Name]{continue}
     if i.Flags&net.FlagLoopback!=0{continue}
     hooks,e:=tetherTCRead(i);if e!=nil{return nil,e}
-    out=append(out,hooks...);indices[i.Index]=true
+    out=append(out,hooks...)
    }
-   if e=tetherXDPActive(indices);e!=nil{return nil,e}
    return out,nil
   },
   PinID:func(pin string)(uint32,error){fd,id,e:=tetherPinFD(pin);if e==nil{syscall.Close(fd)};return id,e},
@@ -162,13 +161,20 @@ func androidTetherBPFIO(only map[string]bool)TetherBPFIO{
  }
 }
 func AndroidTetherBPFIO()TetherBPFIO{return androidTetherBPFIO(nil)}
+func AndroidTetherBPFDownstreamIO(iface string)TetherBPFIO{return androidTetherBPFIO(map[string]bool{iface:true})}
+// Restore legacy B117 journals as well, but inspect only their saved interfaces.
+func RecoverAndroidTetherBPF(path string)error{
+ record,found,e:=readTetherBPF(path);if e!=nil||!found{return e}
+ scope:=map[string]bool{};for _,h:=range record.Hooks{scope[h.Interface]=true}
+ return RecoverTetherBPF(androidTetherBPFIO(scope),path)
+}
 
  // Listen for normal Android topology changes instead of adding a data-path
  // check or periodic full filter scan. Stop the session if tether offload
  // reattaches; Android remains the owner of its topology.
 func WatchTetherBPFPause(k TetherBPFIO,path,selected string,onChange func())(func(),error){
- record,found,e:=readTetherBPF(path);if e!=nil||!found{return nil,fmt.Errorf("tether BPF watch owner unavailable: %w",e)}
- indices:=map[int]bool{};for _,h:=range record.Hooks{indices[h.Index]=true}
+ iface,e:=net.InterfaceByName(selected);if e!=nil{return nil,e}
+ indices:=map[int]bool{iface.Index:true}
  fd,e:=syscall.Socket(syscall.AF_NETLINK,syscall.SOCK_RAW|syscall.SOCK_CLOEXEC|syscall.SOCK_NONBLOCK,syscall.NETLINK_ROUTE)
  if e!=nil{return nil,e}
  if e=syscall.Bind(fd,&syscall.SockaddrNetlink{Family:syscall.AF_NETLINK,Groups:9});e!=nil{syscall.Close(fd);return nil,e}
@@ -185,11 +191,11 @@ func WatchTetherBPFPause(k TetherBPFIO,path,selected string,onChange func())(fun
    msgs,e:=syscall.ParseNetlinkMessage(b[:n]);if e!=nil{changed();return}
    for _,m:=range msgs{
     if m.Header.Type==syscall.RTM_DELLINK&&len(m.Data)>=16&&indices[int(tetherTC32(m.Data[4:8]))]{changed();return}
-    if m.Header.Type!=44||len(m.Data)<20||tetherTC32(m.Data[12:16])!=tetherIngress{continue}
+    if m.Header.Type!=44||len(m.Data)<20||!indices[int(tetherTC32(m.Data[4:8]))]||tetherTC32(m.Data[12:16])!=tetherIngress{continue}
     a,e:=tetherTCAttrs(m.Data[20:]);if e!=nil{changed();return}
     if strings.TrimRight(string(a[1]),"\x00")!="bpf"{continue}
     opts,e:=tetherTCAttrs(a[2]);if e!=nil{changed();return}
-    if strings.Contains(string(opts[7]),"schedcls_tether_"){changed();return}
+    _,upload,_:=tetherBPFName(strings.TrimRight(string(opts[7]),"\x00"));if upload{changed();return}
    }
   }
  }()

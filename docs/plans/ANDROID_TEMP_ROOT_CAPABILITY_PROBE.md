@@ -1,3 +1,7 @@
+## B118｜真机pre-TUN回归与最小共享入口（当前）
+
+B117真机勾选/取消共享均失败，收据六次原Go接口找到后exit1、RAW/TUN未到；原错误未记录。优先普通真实连接恢复：字面IPv4不依赖可选Go物理DNS冷构造，实际物理/CN relay按需初始化，固定失败阶段。共享仅选定下游上行TC tether hook，保留其他接口与回程，复用原内核转发、原硬件设置owner，旧journal恢复；不宣称所有OEM硬件HAL兼容。UI关闭程序、完整保存、仅Fixed显示FEC档位、共享网卡刷新。新SOURCE CI及实体均待验，不扩大矩阵。见 [B118 devlog](../devlog/android-root-probe/20261125-b118-device-pre-tun-and-scoped-sharing.md)。
+
 ## B117｜共享 BPF 实际挂钩会话暂停（当前）
 
 B116 `38419091fa94ab86ab8fe1f71e259f6a7ca16ce0` [Action 45588147383](https://github.com/lly8666/wbd-next/actions/runs/45588147383) 13/0/9；硬件设置owner、ARM64签名构建和Normal真实远端通过。B115 API35/36十槽及MTU保存通过。用户授权自动暂停/恢复共享BPF：原Go通过NETLINK_ROUTE实际查找并摘除AOSP tethering ingress classifier，保存原程序ID及附着参数，Stop/Restore归还，不改程序/map、其他BPF或数据面。仅明确共享会话；已关闭则不改；未知OEM/XDP/不可重新打开pin及运行中HAL仍不宣称支持。事件订阅检测正常拓扑重挂，不轮询。新增host owner及x86 KSU真实Android pin+veth摘除/重挂事件/恢复测试，Normal实际业务回归；非真机热点端到端，待CI。详见 [B117 devlog](../devlog/android-root-probe/20261125-b117-live-tether-bpf.md)。

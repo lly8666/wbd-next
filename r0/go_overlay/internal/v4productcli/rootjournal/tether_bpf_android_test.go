@@ -22,7 +22,8 @@ func TestB117AndroidKernelTetherBPFPause(t *testing.T){
  path:=filepath.Join(t.TempDir(),"owned",tetherBPFJournal)
  owner,e:=NewTetherBPFPause(k,path,a);if e!=nil{t.Fatalf("live detach: %v",e)}
  defer owner.Stop(true)
- if owner.Count()!=2{t.Fatal("two actual hooks required")}
+ if owner.Count()!=1{t.Fatal("only selected downstream upload hook should be paused")}
+ remaining,e:=k.Read();if e!=nil||len(remaining)!=1||remaining[0]!=second{t.Fatalf("unrelated hook changed: %v %v",e,remaining)}
  if e=VerifyTetherBPFPause(k,path,a);e!=nil{t.Fatal(e)}
  t.Log("B117_ANDROID_REAL_TETHER_PROGRAMS_DETACHED")
  changed:=make(chan struct{},1)

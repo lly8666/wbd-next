@@ -1318,31 +1318,35 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
     }
     if runtime.GOOS=="android"{
         if role!="client"||cfg.androidNetworkHandle==0||iface.MTU<68||iface.MTU>65535{
+            log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=NETWORK")
             return fmt.Errorf("Android physical Network/MTU unavailable")
         }
         if (cfg.gameLanes!=0&&cfg.gameLanes!=2&&cfg.gameLanes!=4)||cfg.mixedModes||
            !cfg.autoIP||cfg.rotationInterval!=0{
+            log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=MODE")
             return fmt.Errorf("Android Root original Normal/Fixed/Auto and Game2/4 fixed/off only; fixed-interval rotation unavailable")
         }
         cfg.androidPhysicalMTU=uint32(iface.MTU)
         if cfg.androidClatParent!=""||cfg.androidClatPrefix!=""{
-            if err=checkOriginalAndroidCLAT(cfg);err!=nil{return err}
+            if err=checkOriginalAndroidCLAT(cfg);err!=nil{log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=CLAT");return err}
         }
-        cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(
-            dnsnative.PhysicalScope{
-                NetworkHandle:cfg.androidNetworkHandle,
-                InterfaceName:cfg.rawInterface,
-                IfIndex:iface.Index,
-                MTU:iface.MTU,
-                LocalIPv4:cfg.localIP,
-            },cfg.androidPhysicalDNSUpstream)
-        if err!=nil{
-            return fmt.Errorf("Android physical DNS cold Network scope denied: %w",err)
-        }
-        // This is scope construction, not an outbound DNS socket or proof
-        // of System Resolver interception/physical netd permission.
-        log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_COLD_SCOPE_CHECKED socket_opened=0 dns_capture=NOT_CONNECTED")
+        // A literal peer does not need the optional Go physical DNS relay
+        // before SYN. The relay creates its own dialer only when requested
+        // after admission. The original RAW binding is unchanged.
         if cfg.peerHost!=""{
+            cfg.androidPhysicalDNSDial,err=dnsnative.NewAndroidPhysicalDNSDialerWithUpstream(
+                dnsnative.PhysicalScope{
+                    NetworkHandle:cfg.androidNetworkHandle,
+                    InterfaceName:cfg.rawInterface,
+                    IfIndex:iface.Index,
+                    MTU:iface.MTU,
+                    LocalIPv4:cfg.localIP,
+                },cfg.androidPhysicalDNSUpstream)
+            if err!=nil{
+                log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=PHYSICAL_DNS")
+                return fmt.Errorf("Android physical DNS cold Network scope denied: %w",err)
+            }
+            log.Print("V4_PUBLIC_ANDROID_PHYSICAL_DNS_COLD_SCOPE_CHECKED socket_opened=0 dns_capture=NOT_CONNECTED")
             // Original Go cold DNS wire/ID/QNAME and scoped Bionic netd
             // UDP/TCP socket. Use the single configured physical upstream;
             // DNS failure aborts before the first original FakeTCP SYN.
@@ -1351,6 +1355,7 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
                 dnsCtx,cfg.peerHost,cfg.androidPhysicalDNSDial,cfg.androidPhysicalDNSUpstream)
             cancelDNS()
             if resolveErr!=nil{
+                log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=BOOTSTRAP_DNS")
                 return fmt.Errorf("Android physical server bootstrap failed before FakeTCP SYN: %w",resolveErr)
             }
             cfg.peerIP=resolved
@@ -1372,6 +1377,7 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
                 "from",cfg.localIP.String(),"oif",cfg.rawInterface,"mark",mark,"uid","0").CombinedOutput()
             cancel()
             if e!=nil||!rootjournal.SelectedUIDRouteGetUsesTun(string(output),cfg.rawInterface){
+                log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=CLAT_ROUTE")
                 return fmt.Errorf("Android CLAT route is not the selected Network IPv4 translation path")
             }
             log.Printf("V4_PUBLIC_ANDROID_CLAT_ROUTE_READBACK role=client interface=%s parent=%s ipv4_mtu=%d",
@@ -1399,13 +1405,13 @@ func runManagedProduct(role string,args []string,management *serverManagement)(r
         ConfiguredOuterIPMTU:uint32(cfg.outerMTU),PhysicalOuterIPMTU:uint32(iface.MTU),
         IPv4HeaderBytes:20,TCPDataHeaderBytes:20,Mode:0,
     })
-    if err!=nil{return err}
+    if err!=nil{if runtime.GOOS=="android"&&role=="client"{log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=MTU")};return err}
     publicMSS:=int(coldBudget.LocalSYNAdvertisedMSS)
-    if publicMSS<536||publicMSS>1460{return fmt.Errorf("unsupported public IPv4 MSS %d",publicMSS)}
-    if err=faketcp.SetPublicV4AdvertisedMSS(uint16(publicMSS));err!=nil{return err}
+    if publicMSS<536||publicMSS>1460{if runtime.GOOS=="android"&&role=="client"{log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=MTU")};return fmt.Errorf("unsupported public IPv4 MSS %d",publicMSS)}
+    if err=faketcp.SetPublicV4AdvertisedMSS(uint16(publicMSS));err!=nil{if runtime.GOOS=="android"&&role=="client"{log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=MTU")};return err}
     cfg.recordLimit,cfg.innerMTU,err=deriveMTUBudget(cfg.outerMTU,iface.MTU,
         uint16(publicMSS),0,cfg.fecMode,cfg.gameLanes!=0,cfg.gameFecEnabled)
-    if err!=nil{return err}
+    if err!=nil{if runtime.GOOS=="android"&&role=="client"{log.Print("V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class=MTU")};return err}
     log.Printf("V4_PUBLIC_MTU_PREPARE role=%s mtu_budget_version=3 outer_config=%d interface=%d advertised_mss=%d record_offer=%d tun_planned=%d",cfg.role,cfg.outerMTU,iface.MTU,publicMSS,cfg.recordLimit,cfg.innerMTU)
     if runtime.GOOS=="android"&&role=="client"{
         log.Print("V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client")

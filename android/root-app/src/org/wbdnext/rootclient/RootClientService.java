@@ -550,6 +550,7 @@ public final class RootClientService extends Service {
         boolean nativePhysicalLossDrained=false;
         boolean tunConfigured=false,rawReady=false,synackSeen=false,leaseReadback=false;
         String tetherFailure=null;
+        String coldFailure=null;
         boolean coldSynTxRecorded=false,coldUntrustedRSTSeen=false;
         int modeLanes=RootGameSessionStatus.expectedLanes(fecMode);
         final String modeReadback="V4_PUBLIC_ANDROID_MODE_READBACK role=client mode="+fecMode+
@@ -700,6 +701,12 @@ public final class RootClientService extends Service {
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_MODE_READBACK_MATCHED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_INTERFACE_FOUND role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_INTERFACE_FOUND);
+                    for(String stage:new String[]{"NETWORK","MODE","CLAT","PHYSICAL_DNS","BOOTSTRAP_DNS","CLAT_ROUTE","MTU"}){
+                        if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_PRE_TUN_FAILED role=client class="+stage)){
+                            coldFailure=stage;
+                            trace(RootDiagnosticReceipt.Event.valueOf("ORIGINAL_GO_PRE_TUN_FAILED_"+stage));
+                        }
+                    }
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_TUN_OPEN_ATTEMPTED role=client"))
                         trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_TUN_OPEN_ATTEMPTED);
                     if(OriginalGoMilestones.matches(line,"V4_PUBLIC_ANDROID_GO_TUN_OPENED role=client"))
@@ -1136,6 +1143,8 @@ public final class RootClientService extends Service {
             if(previousOwnerStopConfirmed){
                 trace(RootDiagnosticReceipt.Event.ORIGINAL_GO_COLD_RESELECT_STOP_CONFIRMED);
                 status="OWNED_STOP_VERIFIED — 原Go/Rust与UID路由已归还；可手动重选Network并START（业务未验）";
+            }else if(coldFailure!=null){
+                status="本机 Go 建链前退出："+coldFailure+"（尚未发送 SYN）；请导出诊断。";
             }else if(tetherFailure!=null){
                 status="热点/USB共享未启动："+tetherFailure+"。若仅需本机联网，请取消共享后连接。";
             }else{
