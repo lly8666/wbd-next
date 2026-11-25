@@ -179,7 +179,8 @@ jobs:
         run: cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record b97_android_fec2_inner_and_record_budget_do_not_double_reserve
       - name: Verify original cold MTU ABI, mode, peer MSS and receive-side cap
         shell: bash
-        run: cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record v4_mtu_budget_ffi::
+        run: |
+          cargo +1.85.1 test --locked -p wbd-engine --features m0_v4_embedded_go,fec2_product_record 'v4_mtu_budget_ffi::'
   arm64-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 30

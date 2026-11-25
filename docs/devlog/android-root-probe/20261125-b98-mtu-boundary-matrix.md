@@ -6,6 +6,10 @@ MTU根因对照 main 93b249e6a332fbd971c32a5db4dcd2ef1010eec2：path_budget.rs b
 
 B98 新验收 7个独立 guest，每模式 outer1280、1460、1500及1500/真实 server TLS record cap1200 四场景，共28。真实原 Go cold oracle、TLS/lease、OS TUN MTU读回，普通 App AF_INET UDP DF 在内层 MTU-1及MTU各4包，原 native RAW copied delta>=4；Normal Fixed/Auto同场实际 source delta>=4、parity delta>0且无伪造 applied；MTU+1 只接受 kernel EMSGSIZE。每场 native/UID Stop与TUN close及外部 kernel cleanup。Host执行共享原 MTU ABI全测试（包含物理/peer/header/cap等）。不改生产算法/路径，不改 main，不重跑之前UID/DNS/生命周期专项，无实体机或外部服务器。边界实验是 counter/OS/应用证据，尚无独立wire长度抓包、混合lane MSS、DF=0碎片端到端或remote M4；新SOURCE待CI。治理检查历史失败尚未修。
 
+## B98a workflow admission repair
+
+B98 `a534365f6be6cecd28483ed633799a5cf9d9d71c` [Action 45521215783](https://github.com/lly8666/wbd-next/actions/runs/45521215783) workflow parse/admission failure, zero jobs, no test evidence. New unquoted YAML run scalar ended in `::`; changed only this step to block scalar with quoted Cargo filter. New source independently executes full same-source matrix, no production change.
+
 ```feature-impact
 {"kind":"updated","ids":["android-root-native-client"],"reason":"Record B97 Fixed/Auto real source/parity TX and Resolver TC; audit original MTU and add seven-mode Android boundary matrix."}
 ```
