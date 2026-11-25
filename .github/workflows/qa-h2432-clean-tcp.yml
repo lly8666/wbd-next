@@ -1,0 +1,68 @@
+name: H2432 400ms zero-loss single TCP direct vs WBD
+run-name: "H2432 zero-loss single TCP | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2432-clean-tcp.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  measure:
+    name: ${{ matrix.arch }} ${{ matrix.order }} ${{ matrix.rate }}M
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64, order: ABBA, rate: '540'}
+          - {runner: ubuntu-24.04, arch: x86_64, order: BAAB, rate: '540'}
+          - {runner: ubuntu-24.04-arm, arch: aarch64, order: ABBA, rate: '540'}
+          - {runner: ubuntu-24.04-arm, arch: aarch64, order: BAAB, rate: '540'}
+          - {runner: ubuntu-24.04, arch: x86_64, order: ABBA, rate: '180'}
+          - {runner: ubuntu-24.04, arch: x86_64, order: ABBA, rate: '360'}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2432_ORDER: ${{ matrix.order }}
+      H2432_RATE: ${{ matrix.rate }}
+      H2430_LOSS: '0'
+      H2430_PROFILE: '-1'
+      H2430_EXIT: nat
+      H2430_DIRECTION: download
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Reuse exact H2430 corrected native product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          python3 -m py_compile tools/m0_h2432_clean_tcp.py tools/m0_h2432_tcp_source.py
+          bash tools/m0_h2431_fetch_frozen.sh
+      - name: Native sender-paced outer budget diagnostic
+        shell: bash
+        run: |
+          mkdir -p h2432-out
+          cp h2431-build-identity.json h2432-out/
+          lscpu >h2432-out/lscpu.txt
+          uname -a >h2432-out/uname.txt
+          iperf3 --version >h2432-out/iperf-version.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2431_PRODUCT_SOURCE=dadb01fcd816f07db51bb410ba04d2a60702a2f7 H2431_SMOKE=0 H2432_ORDER="$H2432_ORDER" H2432_RATE="$H2432_RATE" H2430_LOSS="$H2430_LOSS" H2430_PROFILE="$H2430_PROFILE" H2430_EXIT="$H2430_EXIT" H2430_DIRECTION="$H2430_DIRECTION" H2421_OUT=h2432-out python3 -u tools/m0_h2432_clean_tcp.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2432-out;then
+            sudo find h2432-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2432-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2432-${{ matrix.arch }}-${{ matrix.order }}-${{ matrix.rate }}
+          path: h2432-out/
+          retention-days: 14
