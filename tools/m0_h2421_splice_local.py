@@ -69,7 +69,9 @@ def make():
 def shape(active):
     for dev in ("rc0","rs0"):
         args=["tc","qdisc","replace","dev",dev,"root","netem","delay",str(DELAY if active else 0)+"ms","loss","random",str(LOSS if active else 0)+"%","limit","65536"]
-        if active and RATE:args+=["rate",str(RATE)+"mbit"]
+        if active and RATE:
+            args[args.index("limit")+1]="3000"
+            args+=["rate",str(RATE)+"mbit"]
         ns(R,*args)
 def snap(p):
     save(p,{dev:json.loads(ns(R,"tc","-s","-j","qdisc","show","dev",dev)) for dev in ("rc0","rs0")})
@@ -98,6 +100,7 @@ def appcheck(d,port):
     finally:stop(p)
 def leg(i,k):
     d=O/f"{i}-{k}";d.mkdir()
+    begin=time.monotonic_ns()
     cc=CC[k];port=5300+i;server=client=app=None
     shape(False)
     cmd=["env","LD_LIBRARY_PATH="+str(ROOT),ROOT/"wbd-v4-server",
@@ -144,7 +147,7 @@ def leg(i,k):
                 data=json.loads(raw); received=data["end"]["sum_received"];sent=data["end"]["sum_sent"]
                 assert p.returncode==0 and not data.get("error") and received["bytes"]>0 and received["seconds"]>=20
                 gib=received["bytes"]/2**30
-                row={"status":"MEASURED","mbps":received["bits_per_second"]/1e6,"received_bytes":received["bytes"],"sender_retransmits":sent.get("retransmits"),"seconds":received["seconds"],"wall_seconds":time.monotonic()-t,"server_cpu_s_per_measured_gib":(post[0]-pre[0])/tick/gib,"client_cpu_s_per_measured_gib":(post[1]-pre[1])/tick/gib,"host_cpu_s_per_measured_gib":sum(h1[j]-h0[j] for j in (0,1,2,5,6))/tick/gib,"host_steal_ticks":h1[7]-h0[7]}
+                row={"status":"MEASURED","mbps":received["bits_per_second"]/1e6,"received_bytes":received["bytes"],"iperf_origin_sender_retransmits":sent.get("retransmits"),"seconds":received["seconds"],"wall_seconds":time.monotonic()-t,"server_cpu_s_per_measured_gib":(post[0]-pre[0])/tick/gib,"client_cpu_s_per_measured_gib":(post[1]-pre[1])/tick/gib,"host_cpu_s_per_measured_gib":sum(h1[j]-h0[j] for j in (0,1,2,5,6))/tick/gib,"host_steal_ticks":h1[7]-h0[7]}
             except (ValueError,KeyError,AssertionError) as ex:
                 row={"status":"TCP_INCOMPLETE","mbps":None,"rc":p.returncode,"error":str(ex),"raw_tail":raw[-500:]}
             stop(app)
@@ -163,13 +166,14 @@ def leg(i,k):
             if row["status"]=="MEASURED" or SCENE=="functional":
                 assert f"target=198.18.77.2:{port} cc={cc}" in sl and max(copies,default=0)>=row["received_bytes"]
         else:assert not copies
-        row.update(leg=k,index=i,cc=cc or "origin-bbr-nat",source_sha=os.environ["GITHUB_SHA"],run_id=os.environ["GITHUB_RUN_ID"],splice_down_bytes=copies,server_shared_tun_stop=[x for x in sl.splitlines() if "V4_PUBLIC_SHARED_TUN_STOP" in x],client_shared_tun_stop=[x for x in cl.splitlines() if "V4_PUBLIC_SHARED_TUN_STOP" in x],server_exit=server.returncode,client_exit=client.returncode)
+        row.update(start_monotonic_ns=begin,end_monotonic_ns=time.monotonic_ns(),leg=k,index=i,cc=cc or "origin-bbr-nat",source_sha=os.environ["GITHUB_SHA"],run_id=os.environ["GITHUB_RUN_ID"],splice_down_bytes=copies,server_shared_tun_stop=[x for x in sl.splitlines() if "V4_PUBLIC_SHARED_TUN_STOP" in x],client_shared_tun_stop=[x for x in cl.splitlines() if "V4_PUBLIC_SHARED_TUN_STOP" in x],server_exit=server.returncode,client_exit=client.returncode)
         save(d/"result.json",row);print(json.dumps(row),flush=True)
         return row
     finally:
         shape(False)
         for p in (app,client,server):
             if p and p.poll() is None:stop(p)
+        (d/"install").unlink(missing_ok=True)
 try:
     make()
     # Fixture-only credential; not a user secret, omit from uploaded evidence.
@@ -181,7 +185,7 @@ try:
     baseline=None if SCENE=="functional" else direct("pre-direct")
     rows=[leg(i,k) for i,k in enumerate(ORDER)]
     after=None if SCENE=="functional" else direct("post-direct")
-    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"one VM four native kernel netns, actual original WBD Go TLS Rust RAW/TUN, NOT independent three runners or physical WAN","scene":SCENE,"order":ORDER,"loss_pct":LOSS,"added_rtt_ms":DELAY*2,"router_rate_mbps":RATE,"outer_mtu":1460,"mode":"normal/off","outer_repair":"on","origin_cc":"bbr","pre_direct_mbps":baseline,"post_direct_mbps":after,"rows":rows,"manifest":json.loads((ROOT/"manifest.json").read_text())}
+    summary={"source_sha":os.environ["GITHUB_SHA"],"run_id":os.environ["GITHUB_RUN_ID"],"scope":"one VM four native kernel netns, actual original WBD Go TLS Rust RAW/TUN, NOT independent three runners or physical WAN","scene":SCENE,"order":ORDER,"loss_pct":LOSS,"added_rtt_ms":DELAY*2,"router_rate_mbps":RATE,"netem_limit_packets":3000 if RATE else 65536,"outer_mtu":1460,"mode":"normal/off","outer_repair":"on","origin_cc":"bbr","pre_direct_mbps":baseline,"post_direct_mbps":after,"rows":rows,"manifest":json.loads((ROOT/"manifest.json").read_text())}
     if SCENE!="functional" and all(r["status"]=="MEASURED" for r in rows):
         a=[r["mbps"] for r in rows if r["leg"]=="A"];b=[r["mbps"] for r in rows if r["leg"]=="B"]
         summary.update(a_mean_mbps=statistics.mean(a),b_mean_mbps=statistics.mean(b),b_over_a_pct=100*(statistics.mean(b)/statistics.mean(a)-1),a_spread_pct=100*(max(a)-min(a))/statistics.mean(a),b_spread_pct=100*(max(b)-min(b))/statistics.mean(b))
