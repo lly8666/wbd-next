@@ -1,0 +1,713 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "8b991a2e127afa03b2d3329f7da274283060f270",
+  "product_source_sha": "559f2093857919c6293ee6f85622b55f198251fc",
+  "artifact_verified": true,
+  "result": "MEASURED_SCOPED_NATIVE_LOCAL",
+  "scope": "Eight downloaded native local four-netns ZIPs, summary and actual qdisc reviewed, job rows retained, 32/32. Not physical or independent three-runner qualification.",
+  "runs": [
+    {
+      "scene": "loss5_no_fq",
+      "order": "ABBA",
+      "run_id": 45560289857,
+      "artifact_id": 14998005826,
+      "job_id": 139022098535,
+      "rows": [
+        {
+          "leg": "A",
+          "mbps": 209.7993042712764,
+          "server_cpu_s_per_gib": 16.197297081167534,
+          "host_cpu_s_per_gib": 35.75197121151539,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=597876 unrouted=0 backpressure=411 reader_joined=1 queue_full_drops=250 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=60263 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:00 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 655622144
+        },
+        {
+          "leg": "B",
+          "mbps": 233.53241990780413,
+          "server_cpu_s_per_gib": 17.15494252873563,
+          "host_cpu_s_per_gib": 36.42850574712644,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=660489 unrouted=6 backpressure=6838 reader_joined=1 queue_full_drops=4104 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=71543 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:39 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 729808896
+        },
+        {
+          "leg": "B",
+          "mbps": 243.3118864792147,
+          "server_cpu_s_per_gib": 16.81894845716256,
+          "host_cpu_s_per_gib": 37.46487846922945,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=678298 unrouted=1 backpressure=6193 reader_joined=1 queue_full_drops=3544 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=76657 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:18 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 760348672
+        },
+        {
+          "leg": "A",
+          "mbps": 243.982897903582,
+          "server_cpu_s_per_gib": 17.026178442496132,
+          "host_cpu_s_per_gib": 36.080288808664264,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=675674 unrouted=0 backpressure=1212 reader_joined=1 queue_full_drops=613 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=65736 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:55 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 762445824
+        }
+      ]
+    },
+    {
+      "scene": "loss5_no_fq",
+      "order": "BAAB",
+      "run_id": 45560289922,
+      "artifact_id": 14998280186,
+      "job_id": 139022098547,
+      "rows": [
+        {
+          "leg": "B",
+          "mbps": 215.5454808618424,
+          "server_cpu_s_per_gib": 10.202140494259584,
+          "host_cpu_s_per_gib": 24.485137186223,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=608098 unrouted=0 backpressure=2099 reader_joined=1 queue_full_drops=1505 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=65041 unrouted=0 backpressure=238 reader_joined=1 queue_full_drops=179 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:31 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 673579008
+        },
+        {
+          "leg": "A",
+          "mbps": 249.9391452212511,
+          "server_cpu_s_per_gib": 9.856794764222185,
+          "host_cpu_s_per_gib": 24.332673267326733,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=706559 unrouted=6 backpressure=778 reader_joined=1 queue_full_drops=523 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=68306 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:10 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 781058048
+        },
+        {
+          "leg": "A",
+          "mbps": 270.23226172274747,
+          "server_cpu_s_per_gib": 9.815651094210772,
+          "host_cpu_s_per_gib": 23.369386931553624,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=739287 unrouted=1 backpressure=783 reader_joined=1 queue_full_drops=526 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=73568 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:48 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 844496896
+        },
+        {
+          "leg": "B",
+          "mbps": 254.93138789186045,
+          "server_cpu_s_per_gib": 10.1220664692333,
+          "host_cpu_s_per_gib": 25.163645936163213,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=690443 unrouted=0 backpressure=9000 reader_joined=1 queue_full_drops=7007 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=72821 unrouted=0 backpressure=356 reader_joined=1 queue_full_drops=189 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:27:27 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 1,
+          "received_bytes": 796655616
+        }
+      ]
+    },
+    {
+      "scene": "loss30_no_fq",
+      "order": "ABBA",
+      "run_id": 45560289856,
+      "artifact_id": 14997039600,
+      "job_id": 139022098680,
+      "rows": [
+        {
+          "leg": "A",
+          "mbps": 267.26245133524503,
+          "server_cpu_s_per_gib": 16.68740740740741,
+          "host_cpu_s_per_gib": 37.925925925925924,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=739082 unrouted=0 backpressure=2657 reader_joined=1 queue_full_drops=2148 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=272694 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:19 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 835190784
+        },
+        {
+          "leg": "B",
+          "mbps": 248.3468358872949,
+          "server_cpu_s_per_gib": 18.996142543489277,
+          "host_cpu_s_per_gib": 40.74554973821989,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=716485 unrouted=0 backpressure=4079 reader_joined=1 queue_full_drops=2880 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=251194 unrouted=0 backpressure=1 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:58 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 776077312
+        },
+        {
+          "leg": "B",
+          "mbps": 224.56467099080479,
+          "server_cpu_s_per_gib": 18.5903623459096,
+          "host_cpu_s_per_gib": 40.363272319760924,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=634595 unrouted=6 backpressure=4514 reader_joined=1 queue_full_drops=2980 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=220167 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:39 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 701759488
+        },
+        {
+          "leg": "A",
+          "mbps": 263.5702636734004,
+          "server_cpu_s_per_gib": 18.355085932527054,
+          "host_cpu_s_per_gib": 39.25224697644812,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=699896 unrouted=7 backpressure=5059 reader_joined=1 queue_full_drops=4014 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=273065 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:27:16 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 823656448
+        }
+      ]
+    },
+    {
+      "scene": "loss30_no_fq",
+      "order": "BAAB",
+      "run_id": 45560289798,
+      "artifact_id": 14998070605,
+      "job_id": 139022098497,
+      "rows": [
+        {
+          "leg": "B",
+          "mbps": 237.9913204025262,
+          "server_cpu_s_per_gib": 20.530532252379274,
+          "host_cpu_s_per_gib": 46.46079661614381,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=719570 unrouted=0 backpressure=6975 reader_joined=1 queue_full_drops=5139 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=266439 unrouted=0 backpressure=54 reader_joined=1 queue_full_drops=26 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:30 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 743702528
+        },
+        {
+          "leg": "A",
+          "mbps": 260.5923264175542,
+          "server_cpu_s_per_gib": 17.78691131498471,
+          "host_cpu_s_per_gib": 38.751469499436666,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=711475 unrouted=5 backpressure=3088 reader_joined=1 queue_full_drops=2349 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=275963 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:08 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 814350336
+        },
+        {
+          "leg": "A",
+          "mbps": 295.15857978518164,
+          "server_cpu_s_per_gib": 18.323444649708684,
+          "host_cpu_s_per_gib": 41.46639761261901,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=800606 unrouted=1 backpressure=5742 reader_joined=1 queue_full_drops=4557 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=330535 unrouted=0 backpressure=403 reader_joined=1 queue_full_drops=311 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:48 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 922353664
+        },
+        {
+          "leg": "B",
+          "mbps": 256.60707735582696,
+          "server_cpu_s_per_gib": 19.027185354691078,
+          "host_cpu_s_per_gib": 40.116430205949655,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=737507 unrouted=7 backpressure=11399 reader_joined=1 queue_full_drops=8602 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=264166 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:27:27 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 801898496
+        }
+      ]
+    },
+    {
+      "scene": "loss30_cap",
+      "order": "ABBA",
+      "run_id": 45560289832,
+      "artifact_id": 14997374159,
+      "job_id": 139022098455,
+      "rows": [
+        {
+          "leg": "A",
+          "mbps": 149.90463482648877,
+          "server_cpu_s_per_gib": 47.79048684946839,
+          "host_cpu_s_per_gib": 91.61562395075545,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=443421 unrouted=0 backpressure=3632 reader_joined=1 queue_full_drops=1318 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=148992 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:03 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 468451328
+        },
+        {
+          "leg": "B",
+          "mbps": 149.61091943098842,
+          "server_cpu_s_per_gib": 43.245124754695816,
+          "host_cpu_s_per_gib": 88.3505018222596,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=485890 unrouted=6 backpressure=8875 reader_joined=1 queue_full_drops=4978 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=163494 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:43 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 467533824
+        },
+        {
+          "leg": "B",
+          "mbps": 157.0773382417271,
+          "server_cpu_s_per_gib": 41.75841922563418,
+          "host_cpu_s_per_gib": 85.41991989319091,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=501160 unrouted=6 backpressure=10310 reader_joined=1 queue_full_drops=6266 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=163450 unrouted=0 backpressure=18 reader_joined=1 queue_full_drops=5 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:21 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 490864640
+        },
+        {
+          "leg": "A",
+          "mbps": 127.92407170596665,
+          "server_cpu_s_per_gib": 54.38950819672131,
+          "host_cpu_s_per_gib": 104.23984262295083,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=426400 unrouted=1 backpressure=4817 reader_joined=1 queue_full_drops=1839 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=149003 unrouted=0 backpressure=12 reader_joined=1 queue_full_drops=1 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:59 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 399769600
+        }
+      ]
+    },
+    {
+      "scene": "loss30_cap",
+      "order": "BAAB",
+      "run_id": 45560290027,
+      "artifact_id": 14998120461,
+      "job_id": 139022099350,
+      "rows": [
+        {
+          "leg": "B",
+          "mbps": 241.71796190052495,
+          "server_cpu_s_per_gib": 25.814110706229396,
+          "host_cpu_s_per_gib": 59.744882873503386,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=669585 unrouted=0 backpressure=1487 reader_joined=1 queue_full_drops=1063 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=240959 unrouted=0 backpressure=52 reader_joined=1 queue_full_drops=25 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:21 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 755367936
+        },
+        {
+          "leg": "A",
+          "mbps": 182.24350020464112,
+          "server_cpu_s_per_gib": 35.50180897583429,
+          "host_cpu_s_per_gib": 73.00212658227848,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=516861 unrouted=0 backpressure=2735 reader_joined=1 queue_full_drops=1299 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=182660 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:58 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 569507840
+        },
+        {
+          "leg": "A",
+          "mbps": 216.97159760705324,
+          "server_cpu_s_per_gib": 36.48630968490237,
+          "host_cpu_s_per_gib": 73.47937367098395,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=616983 unrouted=6 backpressure=3390 reader_joined=1 queue_full_drops=1632 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=236564 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:37 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 678035456
+        },
+        {
+          "leg": "B",
+          "mbps": 209.3025342579072,
+          "server_cpu_s_per_gib": 26.923607214428856,
+          "host_cpu_s_per_gib": 65.22408016032064,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=593017 unrouted=0 backpressure=1709 reader_joined=1 queue_full_drops=1271 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=222359 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:27:22 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": 6,
+          "received_bytes": 654049280
+        }
+      ]
+    },
+    {
+      "scene": "mixed_nat_fq",
+      "order": "ABBA",
+      "run_id": 45560289790,
+      "artifact_id": 14997741708,
+      "job_id": 139022098223,
+      "rows": [
+        {
+          "leg": "A",
+          "mbps": 455.83710458787345,
+          "server_cpu_s_per_gib": 33.29413323518587,
+          "host_cpu_s_per_gib": 63.520412219359585,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1409756 unrouted=0 backpressure=18 reader_joined=1 queue_full_drops=1 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=611597 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:24:54 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1424490496,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.8940815000073599,
+              "p99_ms": 2.659210999922834
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.23913100000072518,
+              "p99_ms": 0.9257269999807249
+            }
+          }
+        },
+        {
+          "leg": "B",
+          "mbps": 567.5026334617284,
+          "server_cpu_s_per_gib": 17.074235033259423,
+          "host_cpu_s_per_gib": 39.56742054693274,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1755058 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=774809 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:30 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1773404160,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.970502500024395,
+              "p99_ms": 2.5748849999445156
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.24639550002802935,
+              "p99_ms": 0.808645000006436
+            }
+          }
+        },
+        {
+          "leg": "B",
+          "mbps": 567.646817599665,
+          "server_cpu_s_per_gib": 16.875495788384807,
+          "host_cpu_s_per_gib": 38.986753361903354,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1755438 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=775383 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:06 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1773928448,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.9479324999688288,
+              "p99_ms": 1.6977919999590085
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.2291860000127599,
+              "p99_ms": 0.736740999968788
+            }
+          }
+        },
+        {
+          "leg": "A",
+          "mbps": 456.130742452297,
+          "server_cpu_s_per_gib": 33.0542491954023,
+          "host_cpu_s_per_gib": 62.447521839080466,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1398127 unrouted=0 backpressure=18 reader_joined=1 queue_full_drops=1 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=623267 unrouted=0 backpressure=64 reader_joined=1 queue_full_drops=30 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:42 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1425408000,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.7632830000261492,
+              "p99_ms": 1.1578359999475651
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.2266234999979133,
+              "p99_ms": 0.8569760000227689
+            }
+          }
+        }
+      ]
+    },
+    {
+      "scene": "mixed_nat_fq",
+      "order": "BAAB",
+      "run_id": 45560289777,
+      "artifact_id": 14997607927,
+      "job_id": 139022098581,
+      "rows": [
+        {
+          "leg": "B",
+          "mbps": 568.4479273582187,
+          "server_cpu_s_per_gib": 10.898086032612706,
+          "host_cpu_s_per_gib": 25.87615435696894,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1757315 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=741792 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:07 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1776418816,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.6553074999828823,
+              "p99_ms": 1.02538799998797
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.18419799999946918,
+              "p99_ms": 0.5147700000236455
+            }
+          }
+        },
+        {
+          "leg": "A",
+          "mbps": 453.1946378389276,
+          "server_cpu_s_per_gib": 30.40251735307728,
+          "host_cpu_s_per_gib": 58.84896251735308,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1401125 unrouted=0 backpressure=20 reader_joined=1 queue_full_drops=2 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=688114 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:25:43 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1416232960,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.5883044999990261,
+              "p99_ms": 2.207858000019769
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.16372449999835226,
+              "p99_ms": 0.5019909999930405
+            }
+          }
+        },
+        {
+          "leg": "A",
+          "mbps": 452.8582058495577,
+          "server_cpu_s_per_gib": 30.3795202371029,
+          "host_cpu_s_per_gib": 59.04431230897471,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1399698 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=698643 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:19 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1415184384,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.5411530000003495,
+              "p99_ms": 1.2085489999833499
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.16044449999697008,
+              "p99_ms": 0.6245590000162338
+            }
+          }
+        },
+        {
+          "leg": "B",
+          "mbps": 567.6997503476905,
+          "server_cpu_s_per_gib": 10.731005541189509,
+          "host_cpu_s_per_gib": 24.167459179903954,
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1755645 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=649790 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 06:26:55 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "fec_profile": null,
+          "received_bytes": 1774059520,
+          "mixed_probe": {
+            "tcp": {
+              "offered": 100,
+              "completed": 100,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.5502850000027593,
+              "p99_ms": 0.7794350000267514
+            },
+            "udp": {
+              "offered": 400,
+              "completed": 400,
+              "missed": 0,
+              "late_schedule": 0,
+              "p50_ms": 0.17254200000138553,
+              "p99_ms": 0.5008109999948829
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "5% mild matched default fq_codel split +5.08/-9.55%; 30% maximum matched default fq_codel split -10.91/-11.00%, no independent universal throughput gain. Explicit fq600 30% capped netem +10.39/+12.98%; netem rate configured 600Mbps with random loss in same qdisc, not a demonstrated physical 600Mbps pre-loss line budget.",
+    "Mixed no-loss explicit fq600 vs OS default fq_codel throughput +24.47/+25.40%, server CPU/GiB -48.8/-64.4%; all 800 TCP and 3200 UDP probes across 8 legs completed, no late schedule, successful P99 default TCP 0.78–2.57ms, UDP 0.50–0.81ms. Only one bulk stream per leg.",
+    "Keep splice optional, do not default-promote; prioritize fq mechanism. System default qdisc is runner-specific."
+  ]
+}
