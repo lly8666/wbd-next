@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "758d28ebf4455850373a4f931e8dd59f0f4a1392",
+  "product_source_sha": "dadb01fcd816f07db51bb410ba04d2a60702a2f7",
+  "result": "MEASURED_SCOPED_NATIVE_LOCAL",
+  "artifact_verified": true,
+  "run_id": 45569687077,
+  "scope": "All 6 ZIPs inspected; 24/24 legs, 12 WBD, zero local client full drops, 10 WBD zero server drops, 2 small full drops. Same actual TCP source socket BBR and readback pacing, 400ms RTT, no injected loss, normal OFF NAT. Local VM, not production qualification. Direct vs WBD MSS may differ.",
+  "runs": [
+    {
+      "arch": "x86_64",
+      "order": "ABBA",
+      "cap": 180,
+      "artifact_id": 15000669200,
+      "ordered_rx_mbps": [
+        168.38,
+        168.47,
+        168.38,
+        168.41
+      ],
+      "server_full_drops": [
+        null,
+        0,
+        0,
+        null
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "order": "ABBA",
+      "cap": 360,
+      "artifact_id": 15001473444,
+      "ordered_rx_mbps": [
+        336.89,
+        348.45,
+        336.79,
+        336.73
+      ],
+      "server_full_drops": [
+        null,
+        0,
+        0,
+        null
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "order": "ABBA",
+      "cap": 540,
+      "artifact_id": 15000939457,
+      "ordered_rx_mbps": [
+        505.19,
+        522.34,
+        522.41,
+        522.69
+      ],
+      "server_full_drops": [
+        null,
+        0,
+        0,
+        null
+      ]
+    },
+    {
+      "arch": "x86_64",
+      "order": "BAAB",
+      "cap": 540,
+      "artifact_id": 15001393852,
+      "ordered_rx_mbps": [
+        497.3,
+        504.95,
+        504.73,
+        505.07
+      ],
+      "server_full_drops": [
+        152,
+        null,
+        null,
+        0
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "order": "ABBA",
+      "cap": 540,
+      "artifact_id": 15002085890,
+      "ordered_rx_mbps": [
+        505.24,
+        504.85,
+        504.66,
+        505.01
+      ],
+      "server_full_drops": [
+        null,
+        0,
+        0,
+        null
+      ]
+    },
+    {
+      "arch": "aarch64",
+      "order": "BAAB",
+      "cap": 540,
+      "artifact_id": 15001373765,
+      "ordered_rx_mbps": [
+        497.14,
+        505.08,
+        505.13,
+        505.41
+      ],
+      "server_full_drops": [
+        24,
+        null,
+        null,
+        0
+      ]
+    }
+  ],
+  "notes": [
+    "True source pacing resolves most previous high RTT loss/throughput gap. At 540 cap WBD actual WAN tx ~541–564 Mbps; do not claim 600/900 capacity yet.",
+    "User authorizes substantially more CPU/memory for headroom, outer600 design target not hard peak limit. Next 900 stress, bounded server inbox candidate."
+  ]
+}
