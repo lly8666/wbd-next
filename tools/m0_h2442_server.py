@@ -16,6 +16,15 @@ if H2452:
 DIRECT={-5:(0,0),-4:(200,0),-3:(200,67108864),-2:(200,67108864),-1:(200,0)} if H2452 else {-2:(0,0),-1:(200,0)}
 SECONDS=60 if H2452 else 35
 DIRECT_SECONDS=60 if H2452 else 25
+H2453=os.environ.get("WBD_H2453_PACING")=="1"
+DIRECT_RATES={}
+if H2453:
+    assert H2452
+    rates=(250,400,600,250)
+    CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in rates]
+    DIRECT={-5:(0,0),**{i:(200,67108864) for i in (-4,-3,-2,-1)}}
+    DIRECT_RATES=dict(zip((-4,-3,-2,-1),rates))
+
 NODE=h.NODE;ORIGIN="h2442origin";procs={};logs={};current=None;folder=None
 def spawn(key,ns,args,folder):
     f=(folder/(key+".log")).open("w");logs[key]=f
@@ -50,13 +59,13 @@ def setup():
     (TMP/"users.json").write_text(json.dumps({"bench":"H2442-ONLY"}));(TMP/"leases.json").write_text(json.dumps({"bench":"10.66.0.2/32"}))
     for p in (TMP/"key.pem",TMP/"route-key.hex",TMP/"users.json",TMP/"leases.json"):p.chmod(0o600)
 def sample():
-    return {"host_stat":pathlib.Path("/proc/stat").read_text(),"psi":pathlib.Path("/proc/pressure/cpu").read_text(),"wan":json.loads(h.ns(NODE,"ip","-s","-j","link","show","dev","wan0").stdout),"ss":h.ns(NODE,"ss","-tinm").stdout}
+    return {"host_stat":pathlib.Path("/proc/stat").read_text(),"psi":pathlib.Path("/proc/pressure/cpu").read_text(),"wan":json.loads(h.ns(NODE,"ip","-s","-j","link","show","dev","wan0").stdout),"ss":h.ns(NODE,"ss","-tinm").stdout,"wan_qdisc":h.ns(NODE,"tc","-s","qdisc","show","dev","wan0").stdout,"tun_qdisc":h.ns(NODE,"tc","-s","qdisc","show","dev","wbds0",allow_fail=True).stdout}
 def start(i):
     global current,folder
     assert current is None and (i in DIRECT or 0<=i<len(CASES))
     current=i;folder=OUT/("case-"+str(i));folder.mkdir(exist_ok=False)
     if i<0:
-        spawn("source",NODE,[sys.executable,APP,"source","10.248.82.2",5202,0,"bbr",DIRECT_SECONDS],folder);waitmark("source","SOURCE_READY")
+        spawn("source",NODE,[sys.executable,APP,"source","10.248.82.2",5202,DIRECT_RATES.get(i,0),"bbr",DIRECT_SECONDS],folder);waitmark("source","SOURCE_READY")
     else:
         c=CASES[i];cap=c["rate"]*125000
         spawn("server",NODE,["env","LD_LIBRARY_PATH="+str(BUNDLE),"WBD_SHARED_TUN_ROUTE_DIAG=1","WBD_M0_SPLICE_PACING_AB="+str(cap),BUNDLE/"wbd-v4-server","--raw-interface","wan0","--local-ip","10.248.82.2","--local-port","443","--tun-name","wbds0","--tun-ipv4","10.66.0.1/24","--server-name","wbd-h2228.example.test","--route-key-hex-file",TMP/"route-key.hex","--users-file",TMP/"users.json","--lease-pool","10.66.0.128/25","--manual-client-leases-file",TMP/"leases.json","--tls-cert",OUT/"cert.pem","--tls-key",TMP/"key.pem","--mode","shared","--peer-persona","windows11","--outer-repair","on","--outer-mtu","1160","--tun-fq-maxrate-mbps","0","--tcp-proxy-cc","bbr","--tcp-proxy-port","46180"],folder)

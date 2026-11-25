@@ -16,6 +16,15 @@ if H2452:
 DIRECT={-5:(0,0),-4:(200,0),-3:(200,67108864),-2:(200,67108864),-1:(200,0)} if H2452 else {-2:(0,0),-1:(200,0)}
 SECONDS=60 if H2452 else 35
 DIRECT_SECONDS=60 if H2452 else 25
+H2453=os.environ.get("WBD_H2453_PACING")=="1"
+DIRECT_RATES={}
+if H2453:
+    assert H2452
+    rates=(250,400,600,250)
+    CASES=[dict(CASES[0],budget=rate,rate=rate,isolate=False,rcvbuf=67108864) for rate in rates]
+    DIRECT={-5:(0,0),**{i:(200,67108864) for i in (-4,-3,-2,-1)}}
+    DIRECT_RATES=dict(zip((-4,-3,-2,-1),rates))
+
 def wpath(p):
     p=p.resolve();return "/mnt/"+p.drive[0].lower()+"/"+"/".join(p.relative_to(p.anchor).parts)
 def wsl(*a,timeout=30):
@@ -125,6 +134,7 @@ def case(i):
             access=read(ROOT/"h2228-peer/client.json")["windows_access_ip"]
             result.update(sink("10.248.82.2",5202,access,DIRECT_SECONDS,rcvbuf=buf,connected=(lambda:sample_connected(d,samples)) if H2452 else None))
             if H2452:result["added_rtt_ms"]=delay*2
+            if H2453:result["direct_requested_pacing_mbps"]=DIRECT_RATES.get(i,0)
         else:
             c=CASES[i];prof=c["profile"]
             route=d/"route-key.hex";route.write_text(hashlib.sha256(("H2442-TEST-ONLY/"+os.environ["GITHUB_RUN_ID"]+"/"+os.environ["GITHUB_SHA"]).encode()).hexdigest()+"\n")
@@ -203,7 +213,7 @@ if __name__=="__main__":
             rows.append(case(i));save(OUT/"matrix-progress.json",rows)
         if H2452:
             complete=len(rows)==len(CASES) and all(r["status"]=="MEASURED_EXACT" for r in base+rows)
-            capacity=base[0]["status"]=="MEASURED_EXACT" and base[0].get("rx_mbps",0)>=int(H2452)
-            finish(base+rows,"DIAGNOSTIC_COMPLETE" if complete and capacity else "DIAGNOSTIC_INCOMPLETE_OR_CAPACITY_LIMITED")
+            capacity=base[0]["status"]=="MEASURED_EXACT" and base[0].get("rx_mbps",0)>=(600 if H2453 else int(H2452))
+            finish(base+rows,("PACING_DIAGNOSTIC_COMPLETE" if complete else "PACING_DIAGNOSTIC_INCOMPLETE") if H2453 else ("DIAGNOSTIC_COMPLETE" if complete and capacity else "DIAGNOSTIC_INCOMPLETE_OR_CAPACITY_LIMITED"))
             if not complete:raise SystemExit(2)
         else:finish(base+rows,"MEASURED_ALL" if len(rows)==len(CASES) and all(r["status"]=="MEASURED_EXACT" for r in rows) else "PARTIAL_OR_CAPACITY_LIMITED")
