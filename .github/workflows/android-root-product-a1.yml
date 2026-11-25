@@ -220,10 +220,35 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
+  b108-carrier-linux-admission:
+    if: contains(github.event.head_commit.message, '[android-wire-carrier-pilot]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: Real isolated tc and veth carrier admission
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/b108-carrier-linux-admission.sh
+          sudo -n env PATH="$PATH" GITHUB_WORKSPACE="$GITHUB_WORKSPACE" GITHUB_SHA="$GITHUB_SHA" timeout 90s bash android/root-app/ci/b108-carrier-linux-admission.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: android-b108-linux-carrier-${{ github.sha }}
+          path: |
+            out/b108-carrier-host/*.log
+            out/b108-carrier-host/*.txt
+          retention-days: 14
+          if-no-files-found: warn
+
   arm64-native:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
+      WBD_B108_CARRIER: ${{ contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
       WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && '1' || '0' }}
     steps:
@@ -237,6 +262,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
         with: {go-version: '1.23.12', check-latest: false, cache: false}
+      - name: B108 relay compile and script admission
+        if: env.WBD_B108_CARRIER == '1'
+        shell: bash
+        run: |
+          bash -n android/root-app/ci/b108-wire-carrier.sh android/root-app/ci/x86-d2-original-root-preauth.sh
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o "$RUNNER_TEMP/b108-relay" android/root-native/ci/b108-wire-relay.go
       - name: D0 early specialty fixture admission before expensive native builds
         if: env.WBD_ANDROID_SPECIALTY == '1'
         shell: bash
@@ -462,7 +493,7 @@ jobs:
           if-no-files-found: warn
 
   android-x86-kvm-ksu-original-d2-s1:
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-guest-retry]'))) }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.run_x86_d2_network == true) || (github.event_name == 'push' && (contains(github.event.head_commit.message, '[android-parallel-test]') || contains(github.event.head_commit.message, '[android-guest-retry]') || contains(github.event.head_commit.message, '[android-wire-carrier-pilot]'))) }}
     # Separate red/green gate: ORIGINAL Linux server runs on the same x86
     # KVM host as the real Android16 KernelSU App. Run production Java
     # RootClientService -> original Android Go/Rust, require authentic
@@ -476,8 +507,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       WBD_KSU_PRODUCT_X86_CI: '1'
       WBD_D2_ORIGINAL: '1'
-      WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
-      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && '1' || '0' }}
+      WBD_B108_CARRIER: ${{ contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
+      WBD_D2_PREAUTH_ONLY: ${{ github.event_name == 'push' && !contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
+      WBD_ANDROID_WIRING_MATRIX: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-wiring-acceptance]') && !contains(github.event.head_commit.message, '[android-wire-carrier-pilot]') && '1' || '0' }}
       WBD_ANDROID_SPECIALTY: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-specialty-test]') && !contains(github.event.head_commit.message, '[android-specialty-parallel]') && '1' || '0' }}
       WBD_ANDROID_LIFECYCLE: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[android-lifecycle-test]') && '1' || '0' }}
     steps:
@@ -517,7 +549,7 @@ jobs:
           bash experiments/android-root-probe/ci/build-app.sh
           test "$(cat out/apk/SOURCE)" = "${{ github.sha }}"
           rm -f out/apk/host-tls.key
-          if [[ "$WBD_ANDROID_SPECIALTY" == 1 ]];then bash android/root-app/ci/traffic-fixture/build.sh;fi
+          if [[ "$WBD_ANDROID_SPECIALTY" == 1 || "$WBD_B108_CARRIER" == 1 ]];then bash android/root-app/ci/traffic-fixture/build.sh;fi
       - name: D2-S1 prepare pinned x86 Android16 KSU3.3.1 emulator
         shell: bash
         run: bash experiments/android-root-probe/ci/ksu-prepare-avd.sh
@@ -530,6 +562,8 @@ jobs:
           name: android-d2-s1-original-x86-root-${{ github.sha }}
           path: |
             out/android-x86-d2-root/receipt.json
+            out/android-x86-d2-root/b108-*.log
+            out/android-x86-d2-root/b108-*.txt
             out/android-x86-d2-root/wiring/receipt.json
             out/android-x86-d2-root/wiring/results.tsv
             out/android-x86-d2-root/wiring/bionic-tls-status.txt

@@ -80,7 +80,7 @@ public final class TrafficInstrumentation extends Instrumentation {
                 result.putString("report","uid_probe_sent="+Process.myUid()+" foreground=1 tcp_connect_attempt=1 remote_reply=NOT_PROVEN");
                 finishProbe(Activity.RESULT_OK,result);return;
             }
-            if("daily-direct".equals(probe)){
+            if("daily-direct".equals(probe)||"daily-tunnel".equals(probe)){
                 String report=TrafficProbe.run(args.getString("host"),18080,8,1);
                 if(!report.contains("tcp_ok=8 udp_ok=8 samples=8")||!report.contains("echo_bytes_each_direction=1048576"))
                     throw new IllegalStateException("ordinary direct traffic mismatch: "+report);

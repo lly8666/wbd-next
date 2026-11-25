@@ -235,7 +235,7 @@ start_guest(){
     tap_args=(-wifi-tap wbdtapci0)
   fi
   if [[ "${WBD_D2_ORIGINAL:-0}" == 1 && "$stage" == second &&
-        "${WBD_D2_TAP_GUEST_PILOT:-0}" != 1 ]];then
+        "${WBD_D2_TAP_GUEST_PILOT:-0}" != 1 && "${WBD_B108_CARRIER:-0}" != 1 ]];then
     # Official emulator virtual-LAN capture: private, ephemeral, never
     # uploaded. Only TCP SYN/SYNACK/RST enums are extracted at D2 cleanup.
     mkdir -p out/android-x86-d2-root

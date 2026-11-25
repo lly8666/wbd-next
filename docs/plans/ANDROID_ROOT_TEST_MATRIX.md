@@ -1,3 +1,7 @@
+## B108｜CI-only 原报文转接，真实独立远端业务（当前）
+
+B107 `da7eb919c7762afa33c763aee713fffb51a67c22` [Action 45550257467](https://github.com/lly8666/wbd-next/actions/runs/45550257467) 14/0/8；16/16多/全App probe、hostname/default DNS、实际onLost/Stop/显式新handle重连、3/3 cleanup PASS；native scope flag及生产自动重连未证。ARM64 host无KVM。B108只试一条Normal/off真独立peer路径：临时veth/tc+ADB reverse传递原IPv4/TCP字节，独立Linux内核carrier 1MiB及真实Android正式RootService→原Linux server→普通App TCP/UDP/Stop。非物理网络资格，未证阶段不得冒称PASS。详见 [B108 devlog](../devlog/android-root-probe/20261125-b108-original-remote-carrier.md)。
+
 ## B107｜普通域名启动与默认 Resolver（当前）
 
 B106 `a0d72bc6ffc5b74dbec7c4653580a9d97a1e26a2` [Action 45549418682](https://github.com/lly8666/wbd-next/actions/runs/45549418682) 7/1/12；真实Linux IPv6 SIT/普通UID/下游TCP+UDP/DNS/Stop全部PASS；CI-only b91 strings导入缺失导致3 guest NOT_RUN。B107修编译、两guest加真实hostname bootstrap及默认Resolver；原network guest继续验证同handle onLost/Stop/显式重连，独立收据。不重跑green IPv6。详见 [B107 devlog](../devlog/android-root-probe/20261125-b107-default-dns-and-active-scope.md)。真实Android远端RX/生产READY自动恢复仍未证。

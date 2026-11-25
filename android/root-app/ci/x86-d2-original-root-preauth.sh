@@ -95,7 +95,7 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "linux_real_original_server":"PASS" if (p/"server-started.txt").exists() else "NOT_PROVEN",
  "ephemeral_app_private_secrets":"PASS" if (p/"secret-stage-enum.txt").exists() else "NOT_PROVEN",
  "host_loopback_port443_rst_quarantine":"SCOPED_ACTIVE" if
-   os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" and (p/"host-rst-rule-enum.txt").exists() else "NOT_RUN",
+   os.environ.get("WBD_B108_CARRIER")!="1" and os.environ.get("WBD_D2_TAP_GUEST_PILOT")!="1" and (p/"host-rst-rule-enum.txt").exists() else "NOT_RUN",
  "host_tap_port443_rst_quarantine":"SCOPED_ACTIVE" if
    os.environ.get("WBD_D2_TAP_GUEST_PILOT")=="1" and (p/"host-rst-rule-enum.txt").exists() else "NOT_RUN",
  "signed_app_requested_original_root_service":"PASS" if has("ORIGINAL_ROOT_SERVICE_START_REQUESTED") else "NOT_PROVEN",
@@ -118,10 +118,13 @@ d={"schema":"wbd-android-x86-original-root-d2-s1/v1",
  "tls_authenticated_32_lease":"PASS" if has("AUTHENTICATED_LEASE_OS_READBACK") and
     "V4_ORIGINAL_GO_SERVER_NATIVE_READY" in server else "NOT_PROVEN",
  "original_rust_m4_and_uid_ready":"PASS" if has("NATIVE_M4_AND_UID_READY") else "NOT_PROVEN",
- "tcp_udp_bidirectional_application_data":"NOT_RUN",
+ "test_carrier":"CI_ADB_VETH_TC" if os.environ.get("WBD_B108_CARRIER")=="1" else "EMULATOR_DEFAULT",
+ "b108_carrier_admission":"PASS" if (p/"b108-carrier-admission.txt").exists() else "NOT_PROVEN",
+ "b108_joined_stop_kernel":"PASS" if (p/"b108-stop-result.txt").exists() else "NOT_PROVEN",
+ "tcp_udp_bidirectional_application_data":"PASS" if (p/"b108-remote-app-result.txt").exists() else "NOT_RUN",
  "owned_stop_verified":"PASS" if has("ORIGINAL_GO_RUST_STOP_JOINED") and
     has("ORIGINAL_GO_UID_ROUTE_STOP_DRAINED") else "NOT_PROVEN",
- "route_rollback_kernel_proved":"NOT_RUN",
+ "route_rollback_kernel_proved":"PASS" if (p/"b108-stop-result.txt").exists() else "NOT_RUN",
  "system_dns_takeover":"NOT_RUN"}
 (p/"receipt.json").write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")
 print("D2_S1_ORIGINAL_ROOT_STAGED",
@@ -156,7 +159,7 @@ cleanup(){
   fi
   # The guest PCAP is NEVER uploaded. Only fixed SYN/SYNACK/RST flags are
   # extracted from the real emulator virtual Ethernet frames.
-  if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" != 1 ]];then
+  if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" != 1 && "${WBD_B108_CARRIER:-0}" != 1 ]];then
     python3 android/root-app/ci/x86-d2-cold-wire-observer.py guest \
       --input "$out/guest-ethernet.pcap" --output "$out/guest-wire-summary.json" \
       >"$tmp/guest-capture-parse.log" 2>&1 || true
@@ -173,12 +176,24 @@ cleanup(){
   # No default route/DNS/ip rule changes. Tear down only our own ephemeral
   # host TUN if original Go Stop failed; the CI host is disposable.
   sudo -n ip link del wbdvs4 >/dev/null 2>&1 || true
+  if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+    b108_cleanup
+    if [[ -s "$out/b108-host-relay.log" ]];then cat "$out/b108-host-relay.log";fi
+    if [[ -s "$out/b108-guest-relay.log" ]];then cat "$out/b108-guest-relay.log";fi
+  fi
   receipt "$rc" || true
   rm -rf "$tmp"
   exit "$rc"
 }
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  source android/root-app/ci/b108-wire-carrier.sh
+fi
 trap cleanup EXIT
 umask 077
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  phase=B108_CARRIER_ADMISSION
+  b108_setup
+fi
 # The proven original Linux netns FakeTCP oracle drops kernel-generated
 # TCP RST. In the new Android-emulator loopback transport apply ONLY an
 # exact short-lived OUTPUT/lo/443 RST rule, never a global default route,
@@ -191,6 +206,8 @@ sudo -n iptables -w -I OUTPUT 1 -o "$raw_iface" -p tcp --sport 443 --tcp-flags R
 host_rst_scope=1
 if [[ "${WBD_D2_TAP_GUEST_PILOT:-0}" == 1 ]];then
   echo D2_HOST_TAP_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
+elif [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  echo B108_HOST_VETH_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
 else
   echo D2_HOST_LOOPBACK_PORT443_RST_QUARANTINED >"$out/host-rst-rule-enum.txt"
 fi
@@ -198,6 +215,7 @@ fi
 # firewall/route/packet modifications and NEVER logs captured packet bytes.
 # Starts before original Linux server to observe both the first guest SYN
 # (if SLIRP forwards it) and authentic server SYNACK (if any).
+if [[ "${WBD_B108_CARRIER:-0}" != 1 ]];then
 sudo -n python3 android/root-app/ci/x86-d2-cold-wire-observer.py host \
   --output "$out/host-wire-summary.json" --max-seconds 150 \
   --interface "$raw_iface" --expected-ip "$raw_ip" \
@@ -207,6 +225,7 @@ sleep 0.2
 if ! kill -0 "$host_observer_pid" 2>/dev/null;then
   echo "D2_S1_READONLY_HOST_AF_PACKET_OBSERVER_UNAVAILABLE" >&2
   exit 28
+fi
 fi
 # Original CLI generates its own genuine 32-byte route secret.
 env LD_LIBRARY_PATH="$GITHUB_WORKSPACE/$p" "$p/wbd-v4-server" \
@@ -266,6 +285,9 @@ test -s out/apk/app-su.apk
 test "$(cat out/apk/SOURCE)" = "$GITHUB_SHA"
 (cd out/apk && sha256sum -c SHA256SUMS) >"$out/target-app-source-sha.txt"
 adb install -r out/apk/app-su.apk >"$out/target-app-install.txt" 2>&1
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  adb install -r out/android-traffic-fixture/traffic-fixture.apk >"$out/b108-ordinary-app-install.txt" 2>&1
+fi
 adb shell pm path org.wbdnext.rootprobe >"$out/target-app-installed.txt" 2>&1
 grep -q "^package:" "$out/target-app-installed.txt"
 adb push "$tmp/password" /data/local/tmp/wbd-d2-pass.tmp \
@@ -309,8 +331,10 @@ if [[ "${WBD_ANDROID_WIRING_MATRIX:-0}" == 1 ]];then
 fi
 phase=D2_S1_PRODUCTION_ROOT_SERVICE
 adb shell logcat -c >"$out/logcat-reset.txt" 2>&1 || true
+start_args=()
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then start_args=(--es ci_target traffic);fi
 adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity \
-  --es ci_step start >"$out/start-activity.txt" 2>&1
+  --es ci_step start "${start_args[@]}" >"$out/start-activity.txt" 2>&1
 grep -q 'Starting: Intent' "$out/start-activity.txt"
 activity_requested=1
 # Only production RootClientService fixed enums count. Actual Go/Rust
@@ -376,4 +400,37 @@ if ! grep -Fq 'ORIGINAL_ROOT_SERVICE_START_REQUESTED' "$out/app-diagnostic-enums
 fi
 phase=D2_S1_PRODUCTION_TUN_RAW_PASS
 echo "D2_S1_ORIGINAL_ANDROID_PRODUCTION_ROOT_SERVICE_TUN_RAW_PASS"
-echo "D2_ANDROID_ORIGINAL_TLS_AUTH_LEASE_M4_APP_DATA_NOT_YET_PROVEN"
+if [[ "${WBD_B108_CARRIER:-0}" == 1 ]];then
+  phase=B108_ORIGINAL_REMOTE_AUTH
+  for marker in ORIGINAL_GO_TCP_SYNACK_SEEN AUTHENTICATED_LEASE_OS_READBACK NATIVE_M4_AND_UID_READY;do
+    grep -Fq "$marker" "$out/app-diagnostic-enums.txt" || { echo "B108_NOT_PROVEN $marker";exit 50; }
+  done
+  grep -Fq V4_PUBLIC_ORIGINAL_SERVER_RAW_INITIAL_SYN_RX "$out/server-stage-enums.txt"
+  grep -Fq V4_PUBLIC_ORIGINAL_SERVER_RAW_SYNACK_TX_OK "$out/server-stage-enums.txt"
+  grep -Fq V4_ORIGINAL_GO_SERVER_NATIVE_READY "$out/server-stage-enums.txt"
+  echo B108_REAL_ORIGINAL_REMOTE_AUTH_PASS
+  phase=B108_ORIGINAL_REMOTE_APP_BUSINESS
+  b108_traffic
+  printf 'PASS\n' >"$out/b108-remote-app-result.txt"
+  adb shell am start -n org.wbdnext.rootclient/.X86CiOriginalStartActivity --es ci_step stop >"$out/stop-activity.txt"
+  for _ in $(seq 1 30);do
+    adb shell logcat -d -s WBD_ROOT_DIAG:I WBD_X86_CI_ORIGINAL:I '*:S' >"$out/app-diagnostic-enums.txt"
+    if grep -Fq OWNER_CLEANUP_FINISHED "$out/app-diagnostic-enums.txt";then break;fi
+    sleep .5
+  done
+  for marker in ORIGINAL_GO_RUST_STOP_JOINED ORIGINAL_GO_UID_ROUTE_STOP_DRAINED OWNER_CLEANUP_FINISHED;do
+    grep -Fq "$marker" "$out/app-diagnostic-enums.txt" || { echo "B108_STOP_NOT_PROVEN $marker";exit 51; }
+  done
+  adb shell "su -c 'test ! -e /sys/class/net/wbdv40 && test ! -e /data/local/tmp/wbd-next-root/route-journal.json'"
+  adb shell "su -c 'ip -4 rule show'" >"$out/b108-stop-rules.txt"
+  adb shell "su -c 'ip -4 route show table all'" >>"$out/b108-stop-rules.txt"
+  adb shell "su -c 'iptables -w 2 -t nat -S OUTPUT'" >>"$out/b108-stop-rules.txt"
+  adb shell "su -c 'iptables -w 2 -S OUTPUT'" >>"$out/b108-stop-rules.txt"
+  if grep -Eq 'lookup 19842( |$)|table 19842( |$)|wbd-next-root-rst-v1|wbd-next-root-(app-tcp-dns|system-dns)-v1' "$out/b108-stop-rules.txt";then exit 52;fi
+  activity_requested=0
+  printf 'PASS\n' >"$out/b108-stop-result.txt"
+  phase=B108_ORIGINAL_REMOTE_APP_AND_STOP_PASS
+  echo "$phase"
+else
+  echo "D2_ANDROID_ORIGINAL_TLS_AUTH_LEASE_M4_APP_DATA_NOT_YET_PROVEN"
+fi

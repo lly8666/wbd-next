@@ -98,8 +98,10 @@ public final class X86CiOriginalStartActivity extends Activity {
             else event("CI_SELECTED_PHYSICAL_IFACE_OTHER");
             List<InstalledAppTarget> applications=InstalledAppCatalog.discoverable(this);
             InstalledAppTarget ciTarget=null;
+            String target="traffic".equals(getIntent().getStringExtra("ci_target"))?
+                "org.wbdnext.testtraffic":"org.wbdnext.rootprobe";
             for(InstalledAppTarget app:applications){
-                if("org.wbdnext.rootprobe".equals(app.packageName)){
+                if(target.equals(app.packageName)){
                     ciTarget=app;
                     break;
                 }

@@ -276,6 +276,11 @@ GO
   grep -Fq 'Shared library: [libwbd_engine.so]' "out/android-product-a1/linker-$goarch.txt"
   grep -Eq 'Library runpath: \[\$ORIGIN(:\$ORIGIN)*\]' "out/android-product-a1/linker-$goarch.txt"
   unset CGO_LDFLAGS
+  if [[ "$goarch" == amd64 && "${WBD_B108_CARRIER:-0}" == 1 ]];then
+    # Test carrier executables never linked into production or signed APK.
+    GOOS=android GOARCH=amd64 CGO_ENABLED=1 CGO_LDFLAGS="-Wl,-z,max-page-size=16384" go build -trimpath -buildvcs=false -o out/android-product-a1/b108-wire-relay-android-amd64 android/root-native/ci/b108-wire-relay.go
+    GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -buildvcs=false -o out/android-product-a1/b108-wire-relay-linux-amd64 android/root-native/ci/b108-wire-relay.go
+  fi
   # Quarantined ARM64 NativeBridge diagnosis; x86 native product is built above.
   if [[ "$goarch" == "arm64" ]]; then
   # Exact-SHA Android ARM64 diagnosis ONLY: distinguish Bionic/native
