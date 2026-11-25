@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "3cfe6ba118d1075f1bca24187d07b61b34adf198",
+  "run_id": 45548990238,
+  "artifact_id": 14993137219,
+  "artifact_verified": true,
+  "result": "MEASURED_NATIVE_CAPACITY_SCOPED",
+  "scope": "Linux x86_64 same host 3 netns real native TPROXY and original Rust/Go splice code, MTU1500, cubic, 0 delay/loss, single reverse stream, ABBA, 20s+2s omit; no WBD or physical WAN",
+  "native_module_sha256": "f7aff3b7787e2c9c3369ba6fb5ce39acaa15520979298a769a7cfdfdb1efa443",
+  "go_wrapper_sha256": "2c09c6f53b603e949e2012ccee68959cf4f2563651f769aba48789faf45260f2",
+  "rows": [
+    {
+      "leg": "A",
+      "mbps": 52614.04773532118,
+      "received_bytes": 131538092032,
+      "host_cpu_s_per_gib": 0.32235578283623434
+    },
+    {
+      "leg": "B",
+      "mbps": 38988.04099701318,
+      "received_bytes": 97469595648,
+      "host_cpu_s_per_gib": 0.6556825535142288,
+      "proxy_cpu_s_per_gib": 0.22417909885777146
+    },
+    {
+      "leg": "B",
+      "mbps": 39303.98981879847,
+      "received_bytes": 98259959808,
+      "host_cpu_s_per_gib": 0.6496435736543305,
+      "proxy_cpu_s_per_gib": 0.22368719853160882
+    },
+    {
+      "leg": "A",
+      "mbps": 48011.968968012414,
+      "host_cpu_s_per_gib": 0.35031025731745136
+    }
+  ],
+  "notes": [
+    "A/B no retransmits; native splice accepted actual original destination with cubic; stop error nil; bulk reset after iperf time test, no claim of graceful arbitrary streams.",
+    "Host active CPU and proxy CPU measured over entire leg including omit, denominator measured post-omit bytes; comparison scoped only.",
+    "Native proxy capacity ~39Gbps but host active CPU/GiB about 94% higher than NAT in this saturation workload. No need to optimize for current 600-800 Mbps until full path tested."
+  ]
+}
