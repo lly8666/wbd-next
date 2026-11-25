@@ -1,0 +1,266 @@
+name: H2461 native ZeroTier bare TCP MSS and flow capacity A
+run-name: "H2461 ZeroTier Windows MSS and flow capacity A | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2461-capacity-a.yml']
+permissions: {contents: read, actions: read}
+env:
+  GH_TOKEN: ${{ github.token }}
+  WBD_H2417_SPLICE: '1'
+  WBD_H2418_DIAG: '1'
+  WBD_H2442_ARM_SERVER: '1'
+  WBD_H2450_RX_DIAG: '0'
+  WBD_H2452_RATE: '400'
+  WBD_H2453_PACING: '1'
+  WBD_H2455_SEGMENTS: 'windows'
+  WBD_H2458_TARGETED: '1'
+jobs:
+  relay:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 65
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Install native ZeroTier on isolated ARM runner
+        timeout-minutes: 5
+        run: |
+          curl -fsSL --max-time 40 https://install.zerotier.com -o "$RUNNER_TEMP/zt-install.sh"
+          sudo bash "$RUNNER_TEMP/zt-install.sh"
+          sudo systemctl start zerotier-one
+          sudo apt-get install -y -qq tcpdump
+      - name: Publish native relay identity
+        run: |
+          mkdir -p h2228-meta h2228-peer h2228-out
+          python3 -m py_compile tools/m0_h2459_zt.py tools/m0_h2461_capacity.py
+          sudo --preserve-env=GITHUB_RUN_ID,GITHUB_SHA,PATH python3 tools/m0_h2459_zt.py identity relay
+          sudo chown -R "$(id -u):$(id -g)" h2228-meta h2228-out h2228-peer
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2461-relay-identity, path: h2228-meta/relay.json, retention-days: 14, if-no-files-found: error}
+      - name: Wait both native endpoint identities, create TWO ZeroTier L2 segments
+        run: |
+          set -euo pipefail
+          for role in client server; do
+            for i in $(seq 1 60); do
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2461-$role-identity" -D h2228-meta >/dev/null 2>&1 && break
+              sleep 5
+            done
+            test -s "h2228-meta/$role.json"
+          done
+          sudo --preserve-env=GITHUB_RUN_ID,GITHUB_SHA,PATH python3 tools/m0_h2459_zt.py relay-start
+          sudo chown -R "$(id -u):$(id -g)" h2228-peer h2228-out
+      - name: Start exact H2228 zero-loss netem control
+        run: |
+          set -euo pipefail
+          nohup python3 -u tools/m0_h2461_capacity.py controller relay >h2228-out/controller.log 2>&1 </dev/null &
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/relay-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/relay-ready.json
+      - name: Record continuous native ZeroTier peer paths
+        run: |
+          nohup sudo --preserve-env=GITHUB_RUN_ID,GITHUB_SHA,PATH python3 -u tools/m0_h2459_zt.py monitor relay h2228-out/zt-paths.jsonl h2228-out/monitor-stop >h2228-out/monitor.log 2>&1 </dev/null &
+          echo $! >h2228-out/monitor.pid
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2461-topology, path: h2228-peer/, retention-days: 14, if-no-files-found: error}
+      - name: Publish relay setup failure receipt
+        if: failure()
+        run: |
+          mkdir -p h2228-out
+          printf 'relay setup failed\n' >h2228-out/setup-failure.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with: {name: h2461-relay-setup-failure, path: h2228-out/setup-failure.txt, retention-days: 14}
+      - name: Hold until exact-run Windows result artifact
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 210); do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1 && break
+            sleep 5
+          done
+          test -s h2228-client-result/summary.json
+      - name: Finish path sampling
+        if: always()
+        run: |
+          mkdir -p h2228-out
+          sudo touch h2228-out/monitor-stop
+          sleep 2
+          sudo chown -R "$(id -u):$(id -g)" h2228-out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2461-relay-evidence, path: h2228-out/, retention-days: 14, if-no-files-found: error}
+  server:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 65
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Install native ZeroTier on isolated ARM runner
+        timeout-minutes: 5
+        run: |
+          curl -fsSL --max-time 40 https://install.zerotier.com -o "$RUNNER_TEMP/zt-install.sh"
+          sudo bash "$RUNNER_TEMP/zt-install.sh"
+          sudo systemctl start zerotier-one
+          sudo apt-get install -y -qq tcpdump
+      - name: Publish native server identity
+        run: |
+          mkdir -p h2228-meta h2228-peer h2228-out
+          python3 -m py_compile tools/m0_h2459_zt.py tools/m0_h2461_capacity.py
+          sudo --preserve-env=GITHUB_RUN_ID,GITHUB_SHA,PATH python3 tools/m0_h2459_zt.py identity server
+          sudo chown -R "$(id -u):$(id -g)" h2228-meta h2228-out h2228-peer
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2461-server-identity, path: h2228-meta/server.json, retention-days: 14, if-no-files-found: error}
+      - name: Wait exact-run topology
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2461-topology -D h2228-peer >/dev/null 2>&1 && break
+            sleep 5
+          done
+          test -s h2228-peer/relay.json
+      - name: Join server Ethernet and verify real return route
+        run: |
+          sudo --preserve-env=GITHUB_RUN_ID,GITHUB_SHA,PATH python3 tools/m0_h2461_capacity.py join server
+          sudo chown -R "$(id -u):$(id -g)" h2228-meta h2228-out
+      - name: Record continuous native ZeroTier peer paths
+        run: |
+          nohup sudo --preserve-env=GITHUB_RUN_ID,GITHUB_SHA,PATH python3 -u tools/m0_h2459_zt.py monitor server h2228-out/zt-paths.jsonl h2228-out/monitor-stop >h2228-out/monitor.log 2>&1 </dev/null &
+          echo $! >h2228-out/monitor.pid
+      - name: Start native ARM bare TCP source controller
+        run: |
+          set -euo pipefail
+          nohup python3 -u tools/m0_h2461_capacity.py controller server >h2228-out/controller.log 2>&1 </dev/null &
+          echo $! >h2228-out/controller.pid
+          for i in $(seq 1 100); do
+            test ! -s h2228-out/server-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/server-ready.json || { cat h2228-out/controller.log; exit 2; }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-server-ready
+          path: |
+            h2228-out/server-ready.json
+          retention-days: 3
+      - name: Publish server setup failure receipt
+        if: failure()
+        run: |
+          mkdir -p h2228-out
+          printf 'server setup failed\n' >h2228-out/setup-failure.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with: {name: h2461-server-setup-failure, path: h2228-out/setup-failure.txt, retention-days: 14}
+      - name: Hold until exact-run Windows result artifact
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 210); do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1 && break
+            sleep 5
+          done
+          test -s h2228-client-result/summary.json
+      - name: Finish path sampling
+        if: always()
+        run: |
+          mkdir -p h2228-out
+          sudo touch h2228-out/monitor-stop
+          sleep 2
+          sudo chown -R "$(id -u):$(id -g)" h2228-out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2461-server-evidence, path: h2228-out/, retention-days: 14, if-no-files-found: error}
+  client:
+    runs-on: windows-2025
+    timeout-minutes: 65
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Install native ZeroTier on Windows (no WSL)
+        timeout-minutes: 5
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $msi=Join-Path $env:RUNNER_TEMP 'zt.msi'
+          Invoke-WebRequest -Uri 'https://download.zerotier.com/dist/ZeroTier%20One.msi' -OutFile $msi -TimeoutSec 75
+          $s=Get-AuthenticodeSignature $msi
+          if($s.Status -ne 'Valid'){throw 'ZeroTier official MSI signature not valid'}
+          $p=Start-Process msiexec.exe -ArgumentList @('/i', $msi, '/qn', '/norestart') -Wait -PassThru
+          if($p.ExitCode -notin @(0,3010)){throw "MSI exit $($p.ExitCode)"}
+      - name: Publish native Windows identity
+        shell: pwsh
+        run: |
+          python -m py_compile tools/m0_h2459_zt.py tools/m0_h2461_capacity.py
+          if($LASTEXITCODE -ne 0){throw 'fixture syntax'}
+          python tools/m0_h2459_zt.py identity client
+          if($LASTEXITCODE -ne 0){throw 'identity'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2461-client-identity, path: h2228-meta/client.json, retention-days: 14, if-no-files-found: error}
+      - name: Join native Windows Ethernet and wait for ARM server control
+        shell: pwsh
+        run: |
+          foreach($pair in @(@('h2461-topology','h2228-peer','relay.json'),@('h2228-server-ready','h2228-server-ready','server-ready.json'))){
+            New-Item -ItemType Directory -Force $pair[1] | Out-Null
+            for($i=0;$i -lt 60;$i++){
+              gh run download $env:GITHUB_RUN_ID -R $env:GITHUB_REPOSITORY -n $pair[0] -D $pair[1] 2>$null
+              if($LASTEXITCODE -eq 0){break}
+              foreach($role in @('server','relay')){
+                gh run download $env:GITHUB_RUN_ID -R $env:GITHUB_REPOSITORY -n "h2461-$role-setup-failure" -D "h2442-out/failed-$role" 2>$null
+                if($LASTEXITCODE -eq 0){throw "$role setup failed; no TCP measurement"}
+              }
+              Start-Sleep -Seconds 5
+            }
+            if(!(Test-Path (Join-Path $pair[1] $pair[2]))){throw "missing $($pair[0])"}
+          }
+          python tools/m0_h2461_capacity.py join client
+          if($LASTEXITCODE -ne 0){throw 'native client join failed'}
+          New-Item -ItemType Directory -Force h2442-out | Out-Null
+          Copy-Item h2228-out/zt-local.json h2442-out/zt-local.json
+      - name: Measure single-flow MSS A/B/A and four-flow aggregate, native Windows path monitor
+        shell: pwsh
+        run: |
+          python -u tools/m0_h2461_capacity.py client
+          if($LASTEXITCODE -ne 0){throw 'capacity matrix incomplete'}
+      - name: Preserve actual receipt including failed prerequisites
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force h2442-out | Out-Null
+          if(!(Test-Path h2442-out/summary.json)){
+            $rows=@(Get-ChildItem h2442-out -Directory -Filter 'case-*' | ForEach-Object {
+              $r=Join-Path $_.FullName 'result.json'
+              if(Test-Path $r){Get-Content $r -Raw | ConvertFrom-Json}
+            } | Sort-Object case)
+            @{source_sha=$env:GITHUB_SHA;run_id=$env:GITHUB_RUN_ID;status='INCOMPLETE_OR_PRECONDITION_FAILED';rows=$rows} | ConvertTo-Json -Depth 30 | Set-Content -Encoding ascii h2442-out/summary.json
+          }
+          New-Item -ItemType File -Force h2442-out/monitor-stop | Out-Null
+          Start-Sleep -Seconds 2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2228-client-result, path: h2442-out/summary.json, retention-days: 14, if-no-files-found: error}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2461-client-evidence, path: h2442-out/, retention-days: 14, if-no-files-found: error}
+  qualify:
+    if: always()
+    needs: [relay,server,client]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Download three independent path logs and qualify every leg
+        run: |
+          set -euo pipefail
+          for role in client relay server; do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2461-$role-evidence" -D "qualification/$role"
+          done
+          python3 tools/m0_h2461_capacity.py qualify qualification
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2461-qualification, path: h2461-qualification.json, retention-days: 14, if-no-files-found: error}
