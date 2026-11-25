@@ -17,6 +17,11 @@ func TestB94ExactSystemDNSNetlinkRoundtrip(t *testing.T){
    dump:=append(append([]byte(nil),data...),dnsNLAttr(dnsFRASuppressPrefixlen,dnsNL32(^uint32(0)))...)
    dump=append(dump,dnsNLAttr(dnsFRASuppressIfgroup,dnsNL32(^uint32(0)))...)
    line,e:=systemDNSNetlinkRow(dump,family,table);if e!=nil{t.Fatal(e)}
+   mask:=make([]byte,2);binary.NativeEndian.PutUint16(mask,^uint16(0))
+   exact,e:=systemDNSNetlinkRow(append(append([]byte(nil),dump...),dnsNLAttr(dnsFRADportMask,mask)...),family,table)
+   if e!=nil||exact!=line{t.Fatalf("exact kernel dport mask differs: %q %v",exact,e)}
+   binary.NativeEndian.PutUint16(mask,0xff00)
+   if _,e=systemDNSNetlinkRow(append(append([]byte(nil),dump...),dnsNLAttr(dnsFRADportMask,mask)...),family,table);e==nil{t.Fatal("nonexact dport mask accepted")}
    for _,kind:=range []uint16{dnsFRASuppressPrefixlen,dnsFRASuppressIfgroup}{
     bad:=append(append([]byte(nil),data...),dnsNLAttr(kind,dnsNL32(0))...)
     if _,e=systemDNSNetlinkRow(bad,family,table);e==nil{t.Fatal("enabled suppressor accepted")}

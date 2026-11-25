@@ -407,11 +407,17 @@ func b91Native(scope dnsnative.PhysicalScope,uid int,mode string,outer int,peerC
  expectedMSS:=uint16(mss)
  var peerMSSes []uint16
  if mixedOrder!=""{
-  if c.gameLanes<2||mss<1200||(mixedOrder!="lowfirst"&&mixedOrder!="lowlast"){return fmt.Errorf("invalid mixed MSS fixture")}
+  if c.gameLanes<2||mss<1200{return fmt.Errorf("invalid mixed MSS fixture")}
   peerMSSes=make([]uint16,int(c.gameLanes))
   for i:=range peerMSSes{peerMSSes[i]=uint16(mss)}
-  at:=0;if mixedOrder=="lowlast"{at=len(peerMSSes)-1}
-  peerMSSes[at]=1000;expectedMSS=1000
+  switch mixedOrder{
+  case "lowfirst":peerMSSes[0]=1000
+  case "lowlast":peerMSSes[len(peerMSSes)-1]=1000
+  case "lowmiddle":if len(peerMSSes)!=4{return fmt.Errorf("four lanes required")};peerMSSes[1]=1000
+  case "two":if len(peerMSSes)!=4{return fmt.Errorf("four lanes required")};peerMSSes[0]=1100;peerMSSes[2]=1000
+  default:return fmt.Errorf("invalid mixed MSS order")
+  }
+  expectedMSS=1000
   fmt.Println("B100_MIXED_MSS_EXPECTED",mode,mixedOrder,peerMSSes)
  }
  _,expectedMTU,e:=deriveMTUBudget(c.outerMTU,scope.MTU,expectedMSS,serverLimit,c.fecMode,c.gameLanes!=0,c.gameFecEnabled)

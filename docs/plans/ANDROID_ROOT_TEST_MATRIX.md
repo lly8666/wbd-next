@@ -1,3 +1,7 @@
+## B101｜异构Game共同预算 / crash recovery / DNS6（当前）
+
+B100 `471f9406b09d581e61ddc0c7e6f88cfc58b6e124` [Action 45530309154](https://github.com/lly8666/wbd-next/actions/runs/45530309154) 11/9/6；mixed 4/8（末lane小MSS PASS，首lane小MSS失败）；crash真实exit86、原Restore因CI su引号未执行；Bionic IPv6 relay UDP/TCP PASS，Host DNS6 attr29失败。B101同原Rust oracle在TLS前汇总最小lane MSS到共同offer，认证后仅一次TUN MTU，12 mixed含中间/双低MSS；四crash修读回，DNS6 exact dport mask兼容，8guest+1host并行。详见 [B101 devlog](../devlog/android-root-probe/20261125-b101-group-cold-budget-recovery.md)。无remote E2E/READY自动恢复新证据。
+
 ## B100｜真实 crash journal 恢复、异构lane MSS、DNS6分层（当前）
 
 B99 `9d40a9b2a2b90744af9a706062153af1f5e95530` [Action 45527391628](https://github.com/lly8666/wbd-next/actions/runs/45527391628) 21/1/6，7/7独立线上长度239包0超限、3/3真实双UID/CN；DNS6 guest kernel无nat表NOT_RUN。B100 9 guest+1 host：4场实际退出/原journal恢复，8场Game异构MSS（最小lane先/后），原Bionic IPv6 loopback relay+Linux netns实际DNS6 RPDB/NAT独立验收。详见 [B100 devlog](../devlog/android-root-probe/20261125-b100-recovery-mixed-mss-dns6.md)。新SOURCE待验，不称远端M4/READY恢复。

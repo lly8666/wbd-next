@@ -163,6 +163,18 @@ func B91RunNativeCI(ctx context.Context,local,peer netip.Addr,normal V4LinuxClie
   lease,e=p.ConnectAuthenticatedGame(ctx,assocs,cfg);if e!=nil{return e}
   closeProduct=p.Close
   defer func(){stop:=closeProduct();ret=errors.Join(ret,stop);if stop==nil{fmt.Println("B91_NATIVE_STOP_PASS",mode)}}()
+  if len(peerMSSes)==n{
+   // Inspect the actual original TLS session snapshots, not a duplicate
+   // predicted budget or a counter from the test transport.
+   want:=recordLimit
+   for _,mss:=range peerMSSes{if mss<want{want=mss}}
+   for i,s:=range p.sessions{
+    cold,e:=s.ColdSnapshot();if e!=nil{return e}
+    cl,sl:=cold.RecordLimits()
+    if cl!=want||sl!=serverLimit{return fmt.Errorf("lane %d authenticated cap client=%d server=%d expected=%d/%d",i+1,cl,sl,want,serverLimit)}
+    fmt.Printf("B101_GAME_AUTH_RECORD_PASS lane=%d client=%d server=%d\n",i+1,cl,sl)
+   }
+  }
   lanes,ready,e:=p.OriginalNativeState()
   if e!=nil||!ready||lanes!=uint32(n){return fmt.Errorf("real Game native group state %d %t %v",lanes,ready,e)}
   if game.GameFecEnabled{if _,e=p.OriginalGameFecCounters();e!=nil{return e}}

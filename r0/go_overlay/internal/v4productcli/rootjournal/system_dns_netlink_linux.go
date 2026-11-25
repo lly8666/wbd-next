@@ -30,6 +30,7 @@ const (
  dnsFRAProtocol=21
  dnsFRAIPProto=22
  dnsFRADport=24
+ dnsFRADportMask=29
 )
 func dnsNLFamily(s string)(byte,uint32,error){
  switch s{case "-4":return syscall.AF_INET,19845,nil;case "-6":return syscall.AF_INET6,19846,nil}
@@ -108,6 +109,10 @@ func systemDNSNetlinkRow(data []byte,family byte,table uint32)(string,error){
   // a selector. An enabled suppressor must still never be owned.
   case dnsFRASuppressPrefixlen,dnsFRASuppressIfgroup:
    if len(v)!=4||binary.NativeEndian.Uint32(v)!=^uint32(0){return "",fmt.Errorf("foreign DNS suppressor %d: %x",t,v)}
+  // Newer kernels include FRA_DPORT_MASK=29 for an exact single port.
+  // A full mask is equivalent to the existing 53..53 range.
+  case dnsFRADportMask:
+   if len(v)!=2||binary.NativeEndian.Uint16(v)!=^uint16(0){return "",fmt.Errorf("unexpected DNS port mask %x",v)}
   case dnsFRAProtocol:if len(v)!=1||v[0]!=0{return "",fmt.Errorf("foreign DNS rule origin %x",v)}
   default:return "",fmt.Errorf("foreign DNS selector %d length=%d",t,len(v))}
  }

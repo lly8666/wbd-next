@@ -38,7 +38,8 @@ for f in "$n/wiring-specialty-amd64" "$n/libwbd_engine-amd64.so" out/android-roo
 echo B91_TEST_STAGE_PASS
 shard="${WBD_ANDROID_SPECIALTY_SHARD:-all}"
 case "$shard" in
- mixed-*) m="${shard#mixed-}";scenes=("mixed-$m-lowfirst" "mixed-$m-lowlast");;
+ mixed-*) m="${shard#mixed-}";scenes=("mixed-$m-lowfirst" "mixed-$m-lowlast")
+  if [[ "$m" == game4* ]];then scenes+=("mixed-$m-lowmiddle" "mixed-$m-two");fi;;
  crash-*) scenes=("$shard");;
  dns6-relay) scenes=(dns6-relay);;
  wire-*) scenes=("$shard");;
@@ -118,10 +119,19 @@ for scene in "${scenes[@]}";do
   invoke 120s "$scene" >"$out/$scene.log" 2>&1 || code=$?
   recovery="recover-${scene#crash-}"
   echo "B100_CRASH_PROCESS_EXIT $scene $code" | tee -a "$out/$scene.log"
-  "$adb" shell su -c 'ip -4 rule show; ip -4 route show table all; ip -o link show; iptables -w 2 -t nat -S OUTPUT; ls -l /data/local/tmp/wbd-x86-ci/b100-recovery' >"$out/$scene-after-exit.txt" 2>&1 || true
-  if [[ "$code" == 86 ]] && grep -Fq B100_CRASH_ARMED "$out/$scene.log" &&
+  # Each command is one fully quoted remote su invocation, exactly as
+  # clean_kernel. B100 split the command at ';' in the adb remote shell.
+  readback=0
+  {
+   for cmd in 'ip -4 rule show' 'ip -4 route show table all' 'ip -o link show' 'iptables -w 2 -t nat -S OUTPUT' 'ls -l /data/local/tmp/wbd-x86-ci/b100-recovery';do
+    printf 'READBACK %s\n' "$cmd"
+    "$adb" shell "su -c '$cmd'" || readback=1
+   done
+  } >"$out/$scene-after-exit.txt" 2>&1
+  if [[ "$code" == 86 && "$readback" == 0 ]] && grep -Fq B100_CRASH_ARMED "$out/$scene.log" &&
      grep -Fq route-journal.json "$out/$scene-after-exit.txt" &&
      grep -Eq 'lookup 19842( |$)' "$out/$scene-after-exit.txt";then
+   echo B101_CRASH_DURABLE_READBACK_PASS >>"$out/$scene.log"
    if invoke 120s "$recovery" >>"$out/$scene.log" 2>&1 &&
       grep -Fq "B100_RECOVER_PASS $recovery" "$out/$scene.log" &&
       grep -Fq B100_CRASH_IDEMPOTENT_RESTORE_PASS "$out/$scene.log";then status=PASS;fi
@@ -227,7 +237,7 @@ for scene in rows:
  if not f.exists():continue
  t=f.read_text(errors="replace")
  if scene.startswith("crash-"):
-  recovery_stages[scene]={"exit86":"PASS" if "B100_CRASH_PROCESS_EXIT "+scene+" 86" in t else "NOT_PROVEN","recover":"PASS" if "B100_RECOVER_PASS " in t else "NOT_PROVEN","idempotent":"PASS" if "B100_CRASH_IDEMPOTENT_RESTORE_PASS " in t else "NOT_PROVEN"}
+  recovery_stages[scene]={"exit86":"PASS" if "B100_CRASH_PROCESS_EXIT "+scene+" 86" in t else "NOT_PROVEN","durable_readback":"PASS" if "B101_CRASH_DURABLE_READBACK_PASS" in t else "NOT_PROVEN","recover":"PASS" if "B100_RECOVER_PASS " in t else "NOT_PROVEN","idempotent":"PASS" if "B100_CRASH_IDEMPOTENT_RESTORE_PASS " in t else "NOT_PROVEN"}
  if scene=="dns6-relay":
   dns6_relay={"socket_passes":t.count("B100_DNS6_RELAY_SOCKET_PASS "),"stop":"PASS" if "B100_DNS6_RELAY_STOP_PASS" in t else "NOT_PROVEN","nat_capture":"ENV_BLOCKED_B99"}
  if scene.startswith("mixed-"):

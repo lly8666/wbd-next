@@ -110,6 +110,30 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
             err=errors.Join(err,p.stopLocked())
         }
     }()
+    // All real SYNs have completed before the first protected admission.
+    // The existing Game adapter uses one authenticated Record cap for all
+    // lanes. Derive its common offer once with the original Rust oracle,
+    // including the smallest actual peer MSS (not the last lane's MSS).
+    var minPeer uint16
+    for _,assoc:=range assocs{
+        if assoc==nil||assoc.BootstrapConn()==nil{return "",ErrAdmissionParams}
+        mss:=assoc.PeerTCPProfile().MSS
+        if mss==0{return "",ErrAdmissionParams}
+        if minPeer==0||mss<minPeer{minPeer=mss}
+    }
+    mode:=uint32(2)
+    if p.cfg.GameFecEnabled{mode=3}
+    budget,e:=V4DeriveColdMTUBudget(V4ColdMTUBudgetInput{
+        ConfiguredOuterIPMTU:uint32(p.cfg.OuterIPMTU),
+        PhysicalOuterIPMTU:p.cfg.AndroidPhysicalMTU,
+        PeerAdvertisedMSS:uint32(minPeer),
+        AgreedRecordWireCap:uint32(base.ClientLimit),
+        IPv4HeaderBytes:20,TCPDataHeaderBytes:20,Mode:mode,
+    })
+    if e!=nil{return "",e}
+    if budget.SingleInnerIPCap<576{return "",ErrAdmissionParams}
+    base.ClientLimit=uint16(budget.RecordWireCap)
+    var groupClientLimit,groupServerLimit uint16
     var epoch [16]byte
     var negotiatedFec uint8
     if p.cfg.GameFecEnabled{negotiatedFec=p.cfg.GameFecProfile+1}
@@ -149,12 +173,11 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
             return "",ErrAdmissionUnsupported
         }
         if e=owner.bindAuthenticatedClientIPv4(current);e!=nil{return "",e}
-        if p.cfg.ConfigureTunnelMTU!=nil{
-            cold,e:=session.ColdSnapshot()
-            if e!=nil{return "",e}
-            cl,sl:=cold.RecordLimits()
-            if e=p.cfg.ConfigureTunnelMTU(handoff.Peer.MSS,cl,sl);e!=nil{return "",e}
-        }
+        cold,e:=session.ColdSnapshot()
+        if e!=nil{return "",e}
+        cl,sl:=cold.RecordLimits()
+        if i==0||cl<groupClientLimit{groupClientLimit=cl}
+        if i==0||sl<groupServerLimit{groupServerLimit=sl}
         // One selected ConnectivityManager Network, exact client source
         // interface/ifindex/MTU, applied BEFORE any Game RAW fd is opened.
         e=v4BindPlatformUnderlay(owner,V4LinuxClientProductConfig{
@@ -168,6 +191,11 @@ func (p *V4AndroidGameProduct) ConnectAuthenticatedGame(
     verified,e:=V4LinuxGameClientVerifiedGroup(p.sessions...)
     if e!=nil{return "",e}
     p.verified=verified
+    // Apply the authenticated group budget exactly once, before joining
+    // the native group and before any worker can read the TUN.
+    if p.cfg.ConfigureTunnelMTU!=nil{
+        if e=p.cfg.ConfigureTunnelMTU(minPeer,groupClientLimit,groupServerLimit);e!=nil{return "",e}
+    }
     e=verified.withPrivateOriginalTLS(func(cold []V4ColdSessionSnapshot)error{
         if len(cold)!=int(p.cfg.Lanes){return ErrAdmissionUnsupported}
         ids:=make([]C.uint64_t,len(cold))
