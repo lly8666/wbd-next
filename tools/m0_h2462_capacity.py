@@ -33,7 +33,7 @@ def features(dev):
 def profile(role,mode):
     assert role in ("client","relay","server") and mode in ("baseline","gro")
     out=ROOT/("h2442-out" if role=="client" else "h2228-out")
-    p=out/"h2462-"+role+"-original-offload.json"
+    p=out/f"h2462-{role}-original-offload.json"
     if p.is_file():original=load(p)
     else:
         routes=json.loads(command("ip","-j","route","show","default")["stdout"])

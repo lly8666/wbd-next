@@ -1,4 +1,4 @@
-name: H2462 WSL2 Tailscale capacity replica A
+name: H2462 WSL2 Tailscale capacity retry A
 run-name: "H2462 single TCP zero-loss capacity A | ${{ github.sha }}"
 on:
   push:
@@ -221,7 +221,11 @@ jobs:
         with: {persist-credentials: false, fetch-depth: 0}
       - name: Verify experiment scripts parse
         shell: pwsh
-        run: python -m py_compile tools/m0_h2462_capacity.py tools/m0_h2462_relay.py
+        run: |
+          python -m py_compile tools/m0_h2462_capacity.py tools/m0_h2462_relay.py
+          if($LASTEXITCODE -ne 0){throw 'syntax check'}
+          python tools/test_m0_h2462_profile.py
+          if($LASTEXITCODE -ne 0){throw 'profile roundtrip test'}
       - name: Boot one independently networked real Ubuntu WSL2 guest
         shell: pwsh
         timeout-minutes: 9
