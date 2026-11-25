@@ -8,6 +8,14 @@ CASES=json.loads((ROOT/"tools/m0_h2442_matrix.json").read_text())
 DIAG=os.environ.get("WBD_H2450_RX_DIAG")=="1"
 if DIAG:
     CASES=[dict(CASES[0],isolate=iso,rcvbuf=buf) for iso,buf in [(False,0),(True,0),(True,16777216),(True,0),(False,0)]]
+H2452=os.environ.get("WBD_H2452_RATE")
+if H2452:
+    target=int(H2452)
+    assert target in (400,600)
+    CASES=[dict(CASES[0],budget=target,rate=target,isolate=False,rcvbuf=b) for b in (0,67108864,67108864,0)]
+DIRECT={-5:(0,0),-4:(200,0),-3:(200,67108864),-2:(200,67108864),-1:(200,0)} if H2452 else {-2:(0,0),-1:(200,0)}
+SECONDS=60 if H2452 else 35
+DIRECT_SECONDS=60 if H2452 else 25
 def wpath(p):
     p=p.resolve();return "/mnt/"+p.drive[0].lower()+"/"+"/".join(p.relative_to(p.anchor).parts)
 def wsl(*a,timeout=30):
@@ -89,7 +97,7 @@ def isolate_background(d,physical,owned):
 def sample_connected(d,workers):
     def collect():
         t=time.monotonic()
-        for delay in (12,22):
+        for delay in ((12,30,45) if H2452 else (12,22)):
             time.sleep(max(0,t+delay-time.monotonic()))
             try:
                 data=control("server","/sample")
@@ -112,9 +120,11 @@ def case(i):
     result={"case":i,"status":"INCOMPLETE"}
     try:
         if i<0:
-            if i==-1:shape(0,200)
+            delay,buf=DIRECT[i]
+            if delay:shape(0,delay)
             access=read(ROOT/"h2228-peer/client.json")["windows_access_ip"]
-            result.update(sink("10.248.82.2",5202,access,25))
+            result.update(sink("10.248.82.2",5202,access,DIRECT_SECONDS,rcvbuf=buf,connected=(lambda:sample_connected(d,samples)) if H2452 else None))
+            if H2452:result["added_rtt_ms"]=delay*2
         else:
             c=CASES[i];prof=c["profile"]
             route=d/"route-key.hex";route.write_text(hashlib.sha256(("H2442-TEST-ONLY/"+os.environ["GITHUB_RUN_ID"]+"/"+os.environ["GITHUB_SHA"]).encode()).hexdigest()+"\n")
@@ -135,7 +145,7 @@ def case(i):
             origin_route=route_for("192.0.2.2")
             save(d/"origin-route.json",origin_route)
             print("H2449_ORIGIN_ROUTE "+json.dumps(origin_route),flush=True)
-            result.update(sink("192.0.2.2",5400,"10.66.0.2",35,rcvbuf=c.get("rcvbuf",0),connected=(lambda:sample_connected(d,samples)) if DIAG else None))
+            result.update(sink("192.0.2.2",5400,"10.66.0.2",SECONDS,rcvbuf=c.get("rcvbuf",0),connected=(lambda:sample_connected(d,samples)) if DIAG or H2452 else None))
             result.update(c)
         result["status"]="RECEIVED" if result["end"]=="eof" else "INCOMPLETE"
     except Exception as e:result["error"]=repr(e)
@@ -171,19 +181,29 @@ def finish(rows,status):
 if __name__=="__main__":
     action=sys.argv[1]
     if action=="baseline":
-        a=case(-2);b=case(-1);save(OUT/"baseline.json",[a,b])
+        if H2452:
+            rows=[]
+            for i in DIRECT:
+                rows.append(case(i));save(OUT/"baseline.json",rows)
+        else:
+            a=case(-2);b=case(-1);save(OUT/"baseline.json",[a,b])
     elif action=="smoke":
         base=read(OUT/"baseline.json")
-        if base[0]["status"]!="MEASURED_EXACT" or base[0].get("rx_mbps",0)<285:
+        if not H2452 and (base[0]["status"]!="MEASURED_EXACT" or base[0].get("rx_mbps",0)<285):
             # Still perform the clean native probe; do not interpret unqualified capacity as performance.
             x=case(0);save(OUT/"smoke.json",x)
             finish(base+[x],"INFRA_CAPACITY_UNQUALIFIED");raise SystemExit("direct routed capacity <285Mbps or incomplete")
         x=case(0);save(OUT/"smoke.json",x)
-        if x["status"]!="MEASURED_EXACT":
+        if not H2452 and x["status"]!="MEASURED_EXACT":
             finish(base+[x],"NATIVE_SMOKE_FAILED");raise SystemExit(2)
     elif action=="matrix":
         base=read(OUT/"baseline.json");rows=[read(OUT/"smoke.json")]
         for i,c in enumerate(CASES[1:],1):
-            if c["budget"]==600 and base[0].get("rx_mbps",0)<570:continue
+            if not H2452 and c["budget"]==600 and base[0].get("rx_mbps",0)<570:continue
             rows.append(case(i));save(OUT/"matrix-progress.json",rows)
-        finish(base+rows,"MEASURED_ALL" if len(rows)==len(CASES) and all(r["status"]=="MEASURED_EXACT" for r in rows) else "PARTIAL_OR_CAPACITY_LIMITED")
+        if H2452:
+            complete=len(rows)==len(CASES) and all(r["status"]=="MEASURED_EXACT" for r in base+rows)
+            capacity=base[0]["status"]=="MEASURED_EXACT" and base[0].get("rx_mbps",0)>=int(H2452)
+            finish(base+rows,"DIAGNOSTIC_COMPLETE" if complete and capacity else "DIAGNOSTIC_INCOMPLETE_OR_CAPACITY_LIMITED")
+            if not complete:raise SystemExit(2)
+        else:finish(base+rows,"MEASURED_ALL" if len(rows)==len(CASES) and all(r["status"]=="MEASURED_EXACT" for r in rows) else "PARTIAL_OR_CAPACITY_LIMITED")

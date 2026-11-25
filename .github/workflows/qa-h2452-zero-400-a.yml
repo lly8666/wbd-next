@@ -1,0 +1,357 @@
+name: H2452 Windows zero loss 400M socket buffer replica A
+run-name: "H2452 Windows 400ms zero-loss 400M socket ABBA A | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2452-zero-400-a.yml']
+permissions: {contents: read, actions: read}
+env:
+  WBD_H2417_SPLICE: '1'
+  WBD_H2418_DIAG: '1'
+  WBD_H2442_ARM_SERVER: '1'
+  WBD_H2450_RX_DIAG: '0'
+  WBD_H2452_RATE: '400'
+jobs:
+  relay-arm64:
+    name: 'Real ARM64 middle L3 kernel router: ONLY netem egress per direction'
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == 'experiment/m0-linux-tcp-splice' }}
+    permissions: {contents: read, actions: read, id-token: write}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 130
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: relay
+      WBD_H2228_MODE: normal
+      WBD_H2228_LOSS_MODEL: iid
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Require authorized OIDC tailnet credentials (no real-test fallback)
+        shell: bash
+        env:
+          TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          TS_AUD: ${{ secrets.TS_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          test -n "$TS_ID" && test -n "$TS_AUD" || { echo H2228_REAL_ARM_RELAY_BLOCKED_NO_TAILNET_OIDC;exit 2; }
+          test "$(uname -m)" = aarch64
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h228-arm-relay-${{ github.run_id }}
+      - name: Relay source and run bound ephemeral identity
+        shell: bash
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta relay h2228-meta/relay.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-peer
+          path: h2228-meta/relay.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Wait BOTH distinct endpoint VMs (x86 + x86), same run/commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p h2228-peer
+          for role in client server;do
+            found=0
+            for i in $(seq 1 150);do
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" \
+                  -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1;then found=1;break;fi
+              sleep 5
+            done
+            test "$found" = 1 && test -s "h2228-peer/$role.json" ||
+                { echo "H2228_MISSING_DISTINCT_$role";exit 2; }
+          done
+          cp h2228-meta/relay.json h2228-peer/relay.json
+      - name: Install real Linux bridge/route/qdisc utilities in ARM relay
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+            iproute2 iptables iperf3 iputils-ping ethtool tcpdump
+      - name: Create TWO actual VXLAN L2 segments and kernel L3 forwarding (no app proxy)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh relay-start
+          python3 tools/m0_h2442_topology.py relay-route h2228-peer/client.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-relay-ready
+          path: h2228-out/relay-ready.json
+          if-no-files-found: error
+          retention-days: 3
+      - name: Keep ARM forwarding and netem alive through Windows client measurements
+        shell: bash
+        timeout-minutes: 100
+        run: |
+          set -euo pipefail
+          bash tools/m0_h2228_three_runner_case.sh relay-wait
+      - name: Cleanup ONLY owned middle namespace and VXLAN (never Tailscale)
+        if: always()
+        shell: bash
+        run: |
+          bash tools/m0_h2228_three_runner_case.sh cleanup || true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2228-arm-relay-evidence
+          path: h2228-out/
+          if-no-files-found: warn
+          retention-days: 14
+  server-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 130
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WBD_H2228_ROLE: server
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: h2442-arm-server-${{ github.run_id }}
+      - name: Publish actual server identity
+        run: |
+          mkdir -p h2228-meta
+          python3 tools/m0_h2228_three_runner_relay.py meta server h2228-meta/server.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2228-server-peer, path: h2228-meta/server.json, retention-days: 3}
+      - name: Reuse checked H2437 ARM native product
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq iproute2 iptables openssl iputils-ping
+          bash tools/m0_h2439_fetch_frozen.sh
+          mkdir -p h2228-out h2228-peer
+          cp h2439-out/build-identity.json h2228-out/
+          for role in client server relay;do
+            for i in $(seq 1 180);do
+              gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1 && break
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1;then echo H2444_CLIENT_FAILED_BEFORE_JOIN;exit 2;fi
+              sleep 5
+            done
+            test -s "h2228-peer/$role.json"
+          done
+          for i in $(seq 1 180);do
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-relay-ready -D h2228-relay-ready >/dev/null 2>&1 && break
+            sleep 5
+          done
+          test -s h2228-relay-ready/relay-ready.json
+          python3 tools/m0_h2228_three_runner_relay.py node-net server h2228-peer/relay.json h2228-out/server-topology.json
+          python3 tools/m0_h2442_topology.py server-route h2228-peer/client.json
+      - name: Start actual ARM preset case service
+        run: |
+          set -euo pipefail
+          nohup python3 -u tools/m0_h2442_server.py >h2228-out/controller.log 2>&1 </dev/null &
+          echo $! >h2228-out/controller.pid
+          for i in $(seq 1 100);do
+            test ! -s h2228-out/server-ready.json || break
+            sleep .2
+          done
+          test -s h2228-out/server-ready.json || { cat h2228-out/controller.log;exit 2; }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2228-server-ready
+          path: |
+            h2228-out/server-ready.json
+            h2228-out/cert.pem
+          retention-days: 3
+      - name: Hold ARM server for sequential Windows TCP cases
+        timeout-minutes: 105
+        run: |
+          set -euo pipefail
+          while kill -0 "$(cat h2228-out/controller.pid)" 2>/dev/null && ! grep -q '^Z' /proc/$(cat h2228-out/controller.pid)/stat 2>/dev/null;do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1;then break;fi
+            sleep 5
+          done
+          for i in $(seq 1 24);do
+            test ! -s h2228-client-result/summary.json || break
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1 && break
+            sleep 5
+          done
+          test -s h2228-client-result/summary.json
+      - name: Cleanup only owned namespaces
+        if: always()
+        run: |
+          test ! -s h2228-out/controller.pid || kill "$(cat h2228-out/controller.pid)" || true
+          sudo ip netns del h2442origin || true
+          python3 tools/m0_h2228_three_runner_relay.py clean server
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2442-arm-server-evidence, path: h2228-out/, retention-days: 14}
+  client-windows:
+    runs-on: windows-2025
+    timeout-minutes: 130
+    permissions: {contents: read, actions: read, id-token: write}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TS_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+      TS_AUD: ${{ secrets.TS_AUDIENCE }}
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Retrieve exact-source Windows full product (H2441 built and archived before cold failure)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          git diff --exit-code db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141 HEAD -- crates r0 Cargo.toml Cargo.lock tools/prepare_windows_wiring.py
+          if($LASTEXITCODE -ne 0){throw 'product changed'}
+          New-Item -ItemType Directory -Force result/wl-public,result,h2442-out | Out-Null
+          gh run download 45603546655 -R $env:GITHUB_REPOSITORY -n m0-wl-windows-product-binaries-db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141 -D result/wl-public
+          if($LASTEXITCODE -ne 0){throw 'Windows binary archive unavailable'}
+          $m=Get-Content result/wl-public/windows-binary-manifest.json -Raw | ConvertFrom-Json
+          if($m.source_sha -ne 'db8f56e0d8094c6393dbbc2c8ab92d8db7a2c141' -or !$m.native_fec_acceleration){throw 'source/FEC mismatch'}
+          if((Get-FileHash result/wl-public/wbd-client-embedded.exe).Hash.ToLowerInvariant() -ne $m.sha256.exe -or (Get-FileHash result/wl-public/wbd_engine.dll).Hash.ToLowerInvariant() -ne $m.sha256.dll){throw 'Windows binary hash mismatch'}
+          Copy-Item result/wl-public/windows-binary-manifest.json h2442-out/
+      - name: Boot one independently networked real Ubuntu WSL2 guest
+        shell: pwsh
+        timeout-minutes: 9
+        run: |
+          $ErrorActionPreference='Stop'
+          $known=((& python tools/m0_wl_windows_bounded_cmd.py 30 wsl.exe --list --quiet 2>&1 | Out-String) -replace '[\x00]','')
+          if($LASTEXITCODE -ne 0){throw 'real WSL2 distro query unavailable'}
+          if($known -notmatch 'Ubuntu'){
+            $img=Join-Path $env:RUNNER_TEMP 'ubuntu-24.04.5-wsl-amd64.tar'
+            $vm=Join-Path $env:RUNNER_TEMP 'wbd-real-ubuntu-wsl2'
+            Invoke-WebRequest -UseBasicParsing -TimeoutSec 180 -Uri 'https://releases.ubuntu.com/noble/ubuntu-24.04.5-wsl-amd64.wsl' -OutFile $img
+            if((Get-FileHash $img -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'bb415d824822c4b878125729af451a5d18fb13d1cf5cbed9a7393ad64ac6039e'){throw 'Ubuntu real image checksum mismatch'}
+            New-Item -ItemType Directory -Force $vm | Out-Null
+            & python tools/m0_wl_windows_bounded_cmd.py 180 wsl.exe --import Ubuntu $vm $img --version 2 2>&1 | Tee-Object result/h1706-ubuntu-import.log
+            if($LASTEXITCODE -ne 0){throw 'real Ubuntu WSL2 import failed'}
+          }
+          $lines=(& python tools/m0_wl_windows_bounded_cmd.py 35 wsl.exe -d Ubuntu -u root --exec ip -4 -o addr show dev eth0 2>&1 | Out-String)
+          if($LASTEXITCODE -ne 0){throw 'real independent Linux eth0 unavailable'}
+          $m=[regex]::Match($lines,'\binet\s+(\d{1,3}(?:\.\d{1,3}){3})/')
+          if(-not $m.Success){throw 'real Linux guest does not have its own IPv4'}
+          $ip=$m.Groups[1].Value
+          if($ip -match '^(127\.|0\.)'){throw 'guest source is not a networked Linux kernel'}
+          $ip | Set-Content -Encoding ascii result/h1706-ubuntu-guest-ip.txt
+          Write-Output "PLAN029_H1706_INDEPENDENT_GUEST_READY ip=$ip topology=WSL2_vEthernet_not_off_host_internet"
+      - name: Full public-run signed original Npcap and Wintun driver install
+        shell: pwsh
+        timeout-minutes: 8
+        run: |
+          $ErrorActionPreference='Stop'
+          $root=Join-Path $env:RUNNER_TEMP 'wl-public-real'
+          $drv=Join-Path $root 'npcap'
+          $usr=Join-Path $root 'user'
+          New-Item -ItemType Directory -Force $root,$drv,$usr,result/wl-public | Out-Null
+          $zip=Join-Path $root 'npcap-test.zip'
+          # External vendor/CDN 504s must not be interpreted as native
+          # Npcap/Wintun product failures. Retry only byte downloads; exact
+          # pinned SHA256 plus original Authenticode checks remain unchanged.
+          function Get-PinnedPublicNativeDriverPackage([string]$Uri,[string]$Destination){
+            for($attempt=1;$attempt -le 5;$attempt++){
+              try {
+                Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Destination -TimeoutSec 65 -ErrorAction Stop
+                if(-not (Test-Path -LiteralPath $Destination)){throw 'signed package download absent'}
+                return
+              }catch{
+                Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
+                Write-Output ('PLAN028_EXTERNAL_SIGNED_DRIVER_DOWNLOAD_RETRY attempt='+$attempt+' status='+$_.Exception.GetType().Name)
+                if($attempt -eq 5){throw}
+                Start-Sleep -Seconds ([Math]::Min(24,4*$attempt))
+              }
+            }
+          }
+          Get-PinnedPublicNativeDriverPackage 'https://github.com/user-attachments/files/32200327/npcap.zip' $zip
+          if((Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6380ebe6d5b06bbb0dc03a43151ee05a4a25be97efebd742c463e0e466621a32'){throw 'approved old driver package hash changed'}
+          Expand-Archive $zip $drv -Force
+          $installer=Join-Path $root 'npcap-1.88.exe'
+          Get-PinnedPublicNativeDriverPackage 'https://npcap.com/dist/npcap-1.88.exe' $installer
+          if((Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'a2f4ec1e5ea353ff67efd24b2ebf081ba44532410fae8d5e146af0310aa4f56b'){throw 'official Npcap hash changed'}
+          $sg=Get-AuthenticodeSignature $installer
+          if($sg.Status -ne 'Valid' -or $sg.SignerCertificate.Subject -notmatch 'Nmap Software LLC'){throw 'official Npcap invalid signature'}
+          & 7z x -y "-o$usr" $installer | Out-File result/wl-public/npcap-extract.log
+          if($LASTEXITCODE -ne 0){throw 'Npcap DLL extraction failed'}
+          & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Install -DriverPackageDir $drv -UserlandExtractDir $usr 2>&1 |
+            Tee-Object result/wl-public/npcap-install.log
+          if((Get-Service npcap -ErrorAction Stop).Status -ne 'Running'){throw 'Npcap real kernel service not running'}
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/wpcap.dll" -Destination result/wl-public/wpcap.dll
+          Copy-Item -LiteralPath "$env:WINDIR/System32/Npcap/Packet.dll" -Destination result/wl-public/Packet.dll
+          $wzip=Join-Path $root 'wintun.zip'
+          $wdir=Join-Path $root 'wintun'
+          Get-PinnedPublicNativeDriverPackage 'https://www.wintun.net/builds/wintun-0.14.1.zip' $wzip
+          if((Get-FileHash $wzip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '07c256185d6ee3652e09fa55c0b673e2624b565e02c4b9091c79ca7d2f24ef51'){throw 'official Wintun archive hash changed'}
+          Expand-Archive $wzip $wdir -Force
+          $dll=Join-Path $wdir 'wintun/bin/amd64/wintun.dll'
+          if((Get-AuthenticodeSignature $dll).Status -ne 'Valid'){throw 'official Wintun DLL unsigned'}
+          Copy-Item $dll result/wl-public/wintun.dll
+      - name: Real Windows access route via WSL kernel gateway and private OIDC
+        shell: pwsh
+        run: ./tools/m0_h2442_windows_gateway.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: h2228-client-peer, path: h2228-meta/client.json, retention-days: 3}
+      - name: Join prior H2228 client segment and verify distinct server relay
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          Copy-Item h2228-meta/client.json h2228-peer/client.json
+          foreach($role in @('relay','server')){
+            for($i=0;$i -lt 180;$i++){
+              gh run download $env:GITHUB_RUN_ID -R $env:GITHUB_REPOSITORY -n "h2228-$role-peer" -D h2228-peer 2>$null
+              if($LASTEXITCODE -eq 0){break};Start-Sleep -Seconds 5
+            }
+            if(!(Test-Path "h2228-peer/$role.json")){throw "missing $role identity"}
+            for($i=0;$i -lt 180;$i++){
+              gh run download $env:GITHUB_RUN_ID -R $env:GITHUB_REPOSITORY -n "h2228-$role-ready" -D "h2228-$role-ready" 2>$null
+              if($LASTEXITCODE -eq 0){break};Start-Sleep -Seconds 5
+            }
+            if(!(Test-Path "h2228-$role-ready/$role-ready.json")){throw "missing $role readiness"}
+          }
+          $path=((& wsl.exe -d Ubuntu -u root --exec wslpath -a "$pwd" | Out-String).Trim())
+          & wsl.exe -d Ubuntu -u root --exec env "GITHUB_SHA=$env:GITHUB_SHA" "GITHUB_RUN_ID=$env:GITHUB_RUN_ID" WBD_H2417_SPLICE=1 WBD_H2418_DIAG=1 WBD_H2442_ARM_SERVER=1 python3 "$path/tools/m0_h2442_topology.py" windows-gateway "$path/h2228-peer/relay.json" "$path/h2442-out/gateway.json"
+          if($LASTEXITCODE -ne 0){throw 'WSL gateway failed'}
+          Get-NetTCPSetting | Select-Object SettingName,CongestionProvider,AutoTuningLevelLocal | ConvertTo-Json | Set-Content h2442-out/windows-tcp-settings.json
+          Get-NetAdapter | Select-Object Name,InterfaceIndex,LinkSpeed,Status | ConvertTo-Json | Set-Content h2442-out/windows-adapters.json
+      - name: Actual one TCP direct capacity 0 and 400ms
+        shell: pwsh
+        run: |
+          python -u tools/m0_h2442_windows_client.py baseline
+          if($LASTEXITCODE -ne 0){throw 'direct baseline failed'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2442-direct-baseline, path: h2442-out/baseline.json, retention-days: 14}
+      - name: Native Windows 400ms zero-loss first default socket leg
+        shell: pwsh
+        run: |
+          python -u tools/m0_h2442_windows_client.py smoke
+          if($LASTEXITCODE -ne 0){throw 'native smoke or underlay capacity failed'}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2442-native-smoke, path: h2442-out/smoke.json, retention-days: 14, if-no-files-found: warn}
+      - name: Remaining same-VM socket-buffer ABBA zero-loss legs
+        shell: pwsh
+        run: |
+          python -u tools/m0_h2442_windows_client.py matrix
+          if($LASTEXITCODE -ne 0){throw 'matrix incomplete'}
+      - name: Preserve final receipt including failed prerequisites
+        if: always()
+        shell: pwsh
+        run: |
+          if(!(Test-Path h2442-out/summary.json)){
+            New-Item -ItemType Directory -Force h2442-out | Out-Null
+            @{source_sha=$env:GITHUB_SHA;run_id=$env:GITHUB_RUN_ID;real_three_runner_l3_relay=$false;all_three_distinct_native_machines=$false;status='PRECONDITION_FAILED_NOT_MEASURED';rows=@()} | ConvertTo-Json | Set-Content -Encoding ascii h2442-out/summary.json
+          }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2228-client-result, path: h2442-out/summary.json, retention-days: 14}
+      - name: Clean owned Windows access and drivers
+        if: always()
+        shell: pwsh
+        run: ./tools/m0_h2442_windows_cleanup.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with: {name: h2442-windows-evidence, path: h2442-out/, retention-days: 14}
