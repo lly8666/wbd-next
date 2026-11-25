@@ -1,0 +1,120 @@
+name: H2433 Normal server inbox headroom at 900M
+run-name: "H2433 native inbox 128 vs 1024 | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-linux-tcp-splice']
+    paths: ['.github/workflows/qa-h2433-inbox-headroom.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  build:
+    name: build-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64}
+          - {runner: ubuntu-24.04-arm, arch: aarch64}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      GOTOOLCHAIN: local
+      CGO_ENABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Build actual original product once per ISA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping autoconf automake libtool make gcc g++ nasm openssl
+          python3 -m py_compile tools/m0_h2433_inbox.py tools/m0_h2432_tcp_source.py
+          bash tools/m0_plan029_linux_dual_native_build.sh >h2433-build.log 2>&1 || { tail -n 150 h2433-build.log; exit 2; }
+          cd linux-plan029-public-bundle
+          sha256sum -c SHA256SUMS
+          tar -czf ../h2433-product.tgz wbd-v4-client wbd-v4-server libwbd_engine.so SHA256SUMS manifest.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: h2433-product-${{ matrix.arch }}-${{ github.sha }}
+          path: h2433-product.tgz
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2433-build-log-${{ matrix.arch }}
+          path: h2433-build.log
+          retention-days: 14
+  measure:
+    needs: build
+    name: ${{ matrix.arch }} ${{ matrix.order }} ${{ matrix.rate }}M
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {runner: ubuntu-24.04, arch: x86_64, order: ABBA, rate: '900'}
+          - {runner: ubuntu-24.04, arch: x86_64, order: BAAB, rate: '900'}
+          - {runner: ubuntu-24.04-arm, arch: aarch64, order: ABBA, rate: '900'}
+          - {runner: ubuntu-24.04-arm, arch: aarch64, order: BAAB, rate: '900'}
+          - {runner: ubuntu-24.04, arch: x86_64, order: ABBA, rate: '540'}
+          - {runner: ubuntu-24.04-arm, arch: aarch64, order: BAAB, rate: '540'}
+    env:
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: ${{ matrix.arch }}
+      H2432_ORDER: ${{ matrix.order }}
+      H2432_RATE: ${{ matrix.rate }}
+      H2430_LOSS: '0'
+      H2430_PROFILE: '-1'
+      H2430_EXIT: nat
+      H2430_DIRECTION: download
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Retrieve same run exact SOURCE native bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq iproute2 iptables iperf3 ethtool iputils-ping openssl
+          mkdir -p h2433-download linux-plan029-public-bundle h2433-out
+          name="h2433-product-$WBD_PLAN029_LINUX_EXPECTED_ARCH-$GITHUB_SHA"
+          export ARTIFACT_NAME="$name"
+          id=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" --jq '.artifacts[] | select(.name == env.ARTIFACT_NAME and .expired == false) | .id')
+          test -n "$id"
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$name" --dir h2433-download
+          tar -xzf h2433-download/h2433-product.tgz -C linux-plan029-public-bundle
+          (cd linux-plan029-public-bundle && sha256sum -c SHA256SUMS)
+          python3 - "$id" <<'PY'
+          import json,os,pathlib,sys
+          m=json.loads(pathlib.Path("linux-plan029-public-bundle/manifest.json").read_text())
+          assert m["source_sha"]==os.environ["GITHUB_SHA"] and m["architecture"]==os.environ["WBD_PLAN029_LINUX_EXPECTED_ARCH"]
+          pathlib.Path("h2433-out/build-identity.json").write_text(json.dumps({"run":int(os.environ["GITHUB_RUN_ID"]),"artifact_id":int(sys.argv[1]),"manifest":m},indent=2)+"\n")
+          PY
+      - name: Native sender-paced outer budget diagnostic
+        shell: bash
+        run: |
+          mkdir -p h2433-out
+          lscpu >h2433-out/lscpu.txt
+          uname -a >h2433-out/uname.txt
+          iperf3 --version >h2433-out/iperf-version.txt
+          sudo env GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" H2431_SMOKE=0 H2432_ORDER="$H2432_ORDER" H2432_RATE="$H2432_RATE" H2430_LOSS="$H2430_LOSS" H2430_PROFILE="$H2430_PROFILE" H2430_EXIT="$H2430_EXIT" H2430_DIRECTION="$H2430_DIRECTION" H2421_OUT=h2433-out python3 -u tools/m0_h2433_inbox.py
+      - name: Preserve readable evidence
+        if: always()
+        shell: bash
+        run: |
+          if test -d h2433-out;then
+            sudo find h2433-out -type f -name install -delete
+            sudo chown -R "$(id -u):$(id -g)" h2433-out
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: h2433-${{ matrix.arch }}-${{ matrix.order }}-${{ matrix.rate }}
+          path: h2433-out/
+          retention-days: 14
