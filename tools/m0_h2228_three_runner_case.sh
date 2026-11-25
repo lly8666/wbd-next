@@ -45,12 +45,17 @@ from tools.m0_h2228_three_runner_relay import classify_final_tail_ping
 out=pathlib.Path(sys.argv[1])
 for role in ("client","server"):
  p=json.load(open("h2228-peer/"+role+".json"))
- result=subprocess.run(["tailscale","ping","--c","12",p["tail_ip"]],
-                       capture_output=True,text=True,timeout=55)
- raw=result.stdout+result.stderr
- label=classify_final_tail_ping(raw,result.returncode)
+ try:
+  result=subprocess.run(["tailscale","ping","--c","12",p["tail_ip"]],
+                        capture_output=True,text=True,timeout=55)
+  raw=result.stdout+result.stderr;rc=result.returncode
+  label=classify_final_tail_ping(raw,rc)
+ except subprocess.TimeoutExpired as exc:
+  if os.environ.get("WBD_H2442_ARM_SERVER")!="1":raise
+  def as_text(x):return x.decode(errors="replace") if isinstance(x,bytes) else (x or "")
+  raw=as_text(exc.stdout)+as_text(exc.stderr);rc=124;label="TAIL_PING_TIMEOUT_DIRECT_CAPACITY_NOT_YET_PROVEN"
  (out/("tail-to-"+role+".json")).write_text(json.dumps({
- "role":role,"tail_path":label,"raw_tail_ping":raw[-700:],"rc":result.returncode},indent=2)+"\n")
+ "role":role,"tail_path":label,"raw_tail_ping":raw[-700:],"rc":rc},indent=2)+"\n")
 PY
   python3 "$TOOL" control-serve h2228-peer/client.json h2228-peer/relay.json >"$OUT/control.log" 2>&1 &
   echo "$!" > "$TMP/control.pid"

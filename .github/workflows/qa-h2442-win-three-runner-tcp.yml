@@ -1,5 +1,5 @@
-name: H2443 Windows single TCP matrix argv repair
-run-name: "H2442 Windows native TCP 400ms 300-600 | ${{ github.sha }}"
+name: H2444 Windows single TCP matrix gateway lifetime and path observation
+run-name: "H2444 Windows native TCP 400ms 300-600 | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-linux-tcp-splice']
@@ -136,6 +136,7 @@ jobs:
           for role in client server relay;do
             for i in $(seq 1 180);do
               gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n "h2228-$role-peer" -D h2228-peer >/dev/null 2>&1 && break
+              if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1;then echo H2444_CLIENT_FAILED_BEFORE_JOIN;exit 2;fi
               sleep 5
             done
             test -s "h2228-peer/$role.json"
@@ -170,6 +171,11 @@ jobs:
           set -euo pipefail
           while kill -0 "$(cat h2228-out/controller.pid)" 2>/dev/null && ! grep -q '^Z' /proc/$(cat h2228-out/controller.pid)/stat 2>/dev/null;do
             if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1;then break;fi
+            sleep 5
+          done
+          for i in $(seq 1 24);do
+            test ! -s h2228-client-result/summary.json || break
+            gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n h2228-client-result -D h2228-client-result >/dev/null 2>&1 && break
             sleep 5
           done
           test -s h2228-client-result/summary.json

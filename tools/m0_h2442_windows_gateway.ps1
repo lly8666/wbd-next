@@ -1,6 +1,9 @@
 $ErrorActionPreference='Stop'
 $env:PYTHONUTF8='1'
 New-Item -ItemType Directory -Force h2228-meta,h2442-out,h2228-peer | Out-Null
+# Keep the test access VM alive for the owned run, including artifact waits.
+$hold=Start-Process -FilePath wsl.exe -ArgumentList @("-d","Ubuntu","-u","root","--exec","sleep","7200") -PassThru -WindowStyle Hidden
+$hold.Id | Set-Content -Encoding ascii h2442-out/wsl-hold.pid
 # WSL2 is a forwarding access router only. No WBD binary or TCP receiver in it.
 & wsl.exe -d Ubuntu -u root --exec bash -lc 'set -e; apt-get update -qq; apt-get install -y -qq curl ca-certificates iproute2 iptables; curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.noarmor.gpg -o /usr/share/keyrings/tailscale-archive-keyring.gpg; curl -fsSL https://pkgs.tailscale.com/stable/ubuntu/noble.tailscale-keyring.list -o /etc/apt/sources.list.d/tailscale.list; apt-get update -qq; apt-get install -y -qq tailscale; if ! tailscale status >/dev/null 2>&1; then nohup tailscaled --state=mem: >/tmp/h2442-tailscaled.log 2>&1 </dev/null & sleep 3; fi'
 if($LASTEXITCODE -ne 0){throw 'WSL gateway tailscale install failed'}

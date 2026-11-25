@@ -8,3 +8,9 @@ Remove-NetFirewallHyperVRule -Name ('WBD-H2442-'+$env:GITHUB_RUN_ID) -ErrorActio
 & wsl.exe -d Ubuntu -u root -- ip link del h228vc
 & wsl.exe -d Ubuntu -u root -- ip link del h228bc
 & ./tools/m0_wl_npcap_driver_ci.ps1 -Action Cleanup
+
+if(Test-Path h2442-out/wsl-hold.pid){
+ $ownerId=[int](Get-Content h2442-out/wsl-hold.pid -Raw)
+ $p=Get-Process -Id $ownerId -ErrorAction SilentlyContinue
+ if($p -and $p.ProcessName -eq "wsl"){Stop-Process -Id $ownerId -ErrorAction SilentlyContinue}
+}
