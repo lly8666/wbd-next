@@ -1782,7 +1782,7 @@
       "kind": "create",
       "path": "internal/v4productcli/linux.go",
       "overlay_path": "r0/go_overlay/internal/v4productcli/linux.go",
-      "result_blob": "f547e4f495f2437532c849b7f337d96c65f9d186"
+      "result_blob": "b9f861c49c357b058d488efd85db7b34700aeffa"
     },
     {
       "kind": "replace",
@@ -2114,6 +2114,12 @@
           "replace": "   if recovery && observed!=guid {continue}\n   hit:=observed==guid || row.IfIndex==id.WintunIndex ||"
         }
       ]
+    },
+    {
+      "kind": "create",
+      "path": "internal/v4productcli/tcp_splice_linux.go",
+      "overlay_path": "r0/go_overlay/internal/v4productcli/tcp_splice_linux.go",
+      "result_blob": "78a7f0e2b55a1e26f3b45ae47e3b4a40d6ec5acf"
     }
   ],
   "windows_donor_source": "6ec6b5836c2b70a85f2ef89c2f5ea4525c6ed340"

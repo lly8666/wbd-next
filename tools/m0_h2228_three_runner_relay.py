@@ -38,7 +38,7 @@ CIDR={"client":"10.248.81.0/24","server":"10.248.82.0/24"}
 VXID={"client":"2281","server":"2282"}
 # Reuse the already-proven H2227 tailnet CI ACL control port.
 CONTROL_PORT=18727
-LOSSES=(0.0,1.0,5.0,10.0,20.0)
+LOSSES=(0.0,1.0,2.0,5.0,10.0,15.0,30.0) if os.environ.get('WBD_H2417_SPLICE')=='1' else (0.0,1.0,5.0,10.0,20.0)
 ROLES={"client":"x86_64","server":"x86_64","relay":"aarch64"}
 TAILNET=ipaddress.ip_network("100.64.0.0/10")
 
@@ -368,10 +368,15 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
     guard(pidfile is None or kind=="wbd","PID_ONLY_SCOPED_TO_WBD")
     host=LAN["server"] if kind=="direct" else "10.66.0.1"
     port=5202 if kind=="direct" else 5201
+    if kind=="wbd" and os.environ.get("WBD_H2417_SPLICE")=="1":
+        host="198.18.77.2"
+        port=int(os.environ["WBD_H2417_TARGET_PORT"])
+        guard(port in (5201,5202),"SPLICE_TARGET_PORT")
     args=["sudo","-n","ip","netns","exec",NODE,"iperf3","-J","-C","bbr",
           "-c",host,"-p",str(port),"-P",str(streams),"-t",str(duration),
           "-O","2"]
     if direction=="download":args.append("-R")
+    wall_start=time.time()
     t=time.monotonic()
     try:
         p=subprocess.run(args,capture_output=True,text=True,timeout=duration+40)
@@ -425,6 +430,8 @@ def iperf(kind,duration,streams,direction,out,pidfile=None):
             "status":"PASS_REAL_KERNEL_IPERF3_TCP" if qualified else
               "ERROR_TCP_CRASH_ABORT_OR_UNREACHABLE",
             "mbps":speed,"elapsed_s":round(time.monotonic()-t,3),
+            "target":host,"port":port,"wall_start":wall_start,"wall_end":time.time(),
+            "received_bytes":parsed.get("end",{}).get("sum_received",{}).get("bytes") if isinstance(parsed,dict) else None,
             "seconds_requested":duration,"seconds_observed":secs,
             "kind":kind,"direction":direction,"streams":streams,
             "tcp_cc_requested":"bbr","tcp_app_not_outer_bbr":True,

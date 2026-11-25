@@ -92,7 +92,9 @@ import json,sys
 json.dump({"bench%d"%i:"H2228-ONLY-PASS" for i in range(20)},open(sys.argv[1],"w"))
 PY
   chmod 600 "$TMP/key.pem" "$TMP/users.json"
-  spawn "$TMP/server.pid" env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" \
+  local -a proxy_args=()
+  if [[ "${WBD_H2417_SPLICE:-0}" == 1 ]];then proxy_args=(--tcp-proxy-cc bbr --tcp-proxy-port 46180);fi
+  spawn "$TMP/server.pid" env LD_LIBRARY_PATH="$ROOT" "$ROOT/wbd-v4-server" "${proxy_args[@]}" \
     --raw-interface wan0 --local-ip 10.248.82.2 --local-port 443 \
     --tun-name wbds0 --tun-ipv4 10.66.0.1/24 \
     --server-name wbd-h2228.example.test --route-key-hex-file "$TMP/route-key.hex" \
@@ -105,6 +107,10 @@ PY
     sleep .25
   done
   grep -Fq 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$OUT/server.log"
+  if [[ "${WBD_H2417_SPLICE:-0}" == 1 ]];then
+    grep -Fq WBD_TCP_SPLICE_READY "$OUT/server.log"
+    bash tools/m0_h2417_splice_exit.sh server "$NS" "$TMP" "$OUT"
+  fi
   sudo -n ip netns exec "$NS" iperf3 -s -B 10.248.82.2 -p 5202 >"$OUT/iperf-direct.log" 2>&1 &
   echo "$!" >"$TMP/iperf-direct.pid"
   sudo -n ip netns exec "$NS" iperf3 -s -B 10.66.0.1 -p 5201 >"$OUT/iperf-wbd.log" 2>&1 &
@@ -186,6 +192,10 @@ client_run(){
   measure clear-zero direct 12 8 upload
   measure clear-zero direct 12 8 download
   relay_read clear-after
+  if [[ "${WBD_H2417_SPLICE:-0}" == 1 ]];then
+    bash tools/m0_h2417_splice_exit.sh client "$NS" "$TMP" "$OUT"
+    return
+  fi
   local scenario_index=0
   for loss in 0 1 5 10 20;do
     local label="delay200-loss${loss}-${MODEL}"
@@ -300,6 +310,9 @@ print("H2228_THREE_NODE_PAIRED_RECEIPT_REAL_NOT_PERFORMANCE_PASS")
 PY
 }
 cleanup(){
+  if [[ "${WBD_H2417_SPLICE:-0}" == 1 && "${WBD_H2228_ROLE:-}" == server ]];then
+    bash tools/m0_h2417_splice_exit.sh cleanup "$NS" "$TMP" "$OUT" || true
+  fi
   for f in control.pid client.pid server.pid iperf-direct.pid iperf-wbd.pid;do
     test ! -s "$TMP/$f" || sudo -n kill -TERM "$(cat "$TMP/$f")" 2>/dev/null || true
   done
