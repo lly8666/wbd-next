@@ -1,0 +1,243 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-LINUX-TCP-SPLICE",
+  "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+  "run_id": 45553574906,
+  "result": "BUSINESS_MEASURED_ARTIFACT_UPLOAD_FAIL",
+  "artifact_verified": false,
+  "scope": "Exact native product; one VM four local netns; x86 and aarch64 finite TCP duplex with half-close and UDP; x86 clean NAT/BBR ABBA. Actual job log JSON rows; no raw ZIP was uploaded. Not performance qualification.",
+  "jobs": [
+    {
+      "id": 139000186450,
+      "arch": "x86_64",
+      "rows": [
+        {
+          "status": "MEASURED",
+          "received_bytes": 3145728,
+          "upload_bytes": 2097152,
+          "download_sha256": "c28e4d075c2da32b38414976bfe8c8a3f9b44c80341b246049afb3ee46eb4ac8",
+          "tcp_halfclose": true,
+          "udp_nat_echo": true,
+          "leg": "A",
+          "index": 0,
+          "cc": "bbr",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [
+            3145728
+          ],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2926 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2601 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:29:20 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        },
+        {
+          "status": "MEASURED",
+          "received_bytes": 3145728,
+          "upload_bytes": 2097152,
+          "download_sha256": "c28e4d075c2da32b38414976bfe8c8a3f9b44c80341b246049afb3ee46eb4ac8",
+          "tcp_halfclose": true,
+          "udp_nat_echo": true,
+          "leg": "B",
+          "index": 1,
+          "cc": "cubic",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [
+            3145728
+          ],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2986 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2637 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:29:22 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        },
+        {
+          "status": "MEASURED",
+          "mbps": 453.1532748268467,
+          "received_bytes": 1416101888,
+          "sender_retransmits": 144,
+          "seconds": 24.999963,
+          "wall_seconds": 33.84426935099998,
+          "server_cpu_s_per_measured_gib": 30.701044057756388,
+          "client_cpu_s_per_measured_gib": 24.69580155497964,
+          "host_cpu_s_per_measured_gib": 60.41637911884488,
+          "host_steal_ticks": 0,
+          "leg": "A",
+          "index": 0,
+          "cc": "origin-bbr-nat",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1399946 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=683750 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:30:05 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        },
+        {
+          "status": "MEASURED",
+          "mbps": 569.6240515272842,
+          "received_bytes": 1780088832,
+          "sender_retransmits": 0,
+          "seconds": 25.000192,
+          "wall_seconds": 33.76842802700003,
+          "server_cpu_s_per_measured_gib": 12.588693027023048,
+          "client_cpu_s_per_measured_gib": 10.477508283631545,
+          "host_cpu_s_per_measured_gib": 27.415241882041087,
+          "host_steal_ticks": 0,
+          "leg": "B",
+          "index": 1,
+          "cc": "bbr",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [
+            2355538018,
+            337
+          ],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1768951 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=625927 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:30:41 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        },
+        {
+          "status": "MEASURED",
+          "mbps": 570.1326093215662,
+          "received_bytes": 1781661696,
+          "sender_retransmits": 0,
+          "seconds": 24.999962,
+          "wall_seconds": 33.78615546100002,
+          "server_cpu_s_per_measured_gib": 12.589632899286398,
+          "client_cpu_s_per_measured_gib": 10.474285293901271,
+          "host_cpu_s_per_measured_gib": 27.54773192084161,
+          "host_steal_ticks": 0,
+          "leg": "B",
+          "index": 2,
+          "cc": "bbr",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [
+            2359038160,
+            336
+          ],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1769759 unrouted=0 backpressure=22 reader_joined=1 queue_full_drops=11 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=623944 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:31:16 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        },
+        {
+          "status": "MEASURED",
+          "mbps": 453.90790569369204,
+          "received_bytes": 1418461184,
+          "sender_retransmits": 93,
+          "seconds": 24.999982,
+          "wall_seconds": 33.83599904900001,
+          "server_cpu_s_per_measured_gib": 31.202572537423766,
+          "client_cpu_s_per_measured_gib": 23.791772315653297,
+          "host_cpu_s_per_measured_gib": 59.72544816115321,
+          "host_steal_ticks": 0,
+          "leg": "A",
+          "index": 3,
+          "cc": "origin-bbr-nat",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=1403131 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=645781 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:31:52 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        }
+      ]
+    },
+    {
+      "id": 139000186847,
+      "arch": "aarch64",
+      "rows": [
+        {
+          "status": "MEASURED",
+          "received_bytes": 3145728,
+          "upload_bytes": 2097152,
+          "download_sha256": "c28e4d075c2da32b38414976bfe8c8a3f9b44c80341b246049afb3ee46eb4ac8",
+          "tcp_halfclose": true,
+          "udp_nat_echo": true,
+          "leg": "A",
+          "index": 0,
+          "cc": "bbr",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [
+            3145728
+          ],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2963 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2406 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:29:25 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        },
+        {
+          "status": "MEASURED",
+          "received_bytes": 3145728,
+          "upload_bytes": 2097152,
+          "download_sha256": "c28e4d075c2da32b38414976bfe8c8a3f9b44c80341b246049afb3ee46eb4ac8",
+          "tcp_halfclose": true,
+          "udp_nat_echo": true,
+          "leg": "B",
+          "index": 1,
+          "cc": "cubic",
+          "source_sha": "59685d7af35d005711a1a92605af378d8d1f998f",
+          "run_id": "45553574906",
+          "splice_down_bytes": [
+            3145728
+          ],
+          "server_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=3061 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0"
+          ],
+          "client_shared_tun_stop": [
+            "V4_PUBLIC_SHARED_TUN_STOP generation=1 routed=2490 unrouted=0 backpressure=0 reader_joined=1 queue_full_drops=0 retired_drops=0 queue_byte_drops=0 queue_age_drops=0",
+            "2026/11/25 05:29:27 V4_PUBLIC_SHARED_TUN_STOP_DRAINED role=client"
+          ],
+          "server_exit": 0,
+          "client_exit": 0
+        }
+      ]
+    }
+  ],
+  "upload_failure": "EACCES opening root-only installation-id h2422-smoke/0-A/install after actual business/Stop succeeded. Do not change product permission policy.",
+  "limitations": [
+    "No raw ss/netem/direct capacity files retained; cannot independently attribute speed or CPU changes.",
+    "CPU numerator includes warmup; denominator post-omit bytes. iperf sender retransmits refer to origin, not proxy weak leg."
+  ]
+}
