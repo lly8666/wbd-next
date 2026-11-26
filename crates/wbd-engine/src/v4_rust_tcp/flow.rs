@@ -22,6 +22,11 @@ impl Endpoint {
             .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "inner TCP MTU"))?;
         // Temporary native experiment: only middle capacity changes in the cap64 leg.
         let max_buf = if middle && std::env::var_os("WBD_M0_TCP_EXPERIMENT").as_deref() == Some(std::ffi::OsStr::new("cap64")) {64 << 20} else {16 << 20};
+        let cc = if middle { match std::env::var_os("WBD_M0_MIDDLE_CC").as_deref().and_then(|s|s.to_str()) {
+            Some("cubic") => CongestionKind::Cubic,
+            Some("bbr1") => CongestionKind::Bbr1,
+            _ => cc,
+        }} else {cc};
         let conn = Conn::new(ConnConfig {
             local_addr: Some(SocketAddr::V4(tuple.src)),
             remote_addr: Some(SocketAddr::V4(tuple.dst)),

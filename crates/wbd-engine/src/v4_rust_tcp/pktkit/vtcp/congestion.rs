@@ -160,6 +160,7 @@ pub trait CongestionController: Send {
     fn as_bbr(&self) -> Option<&super::bbr::Bbr> {
         None
     }
+    fn as_bbr1(&self) -> Option<&super::bbr1::Bbr1> { None }
     /// A loss was detected with `flight_size` bytes outstanding: set
     /// ssthresh. The connection then brings cwnd down to it.
     fn on_loss(&mut self, flight_size: u32);

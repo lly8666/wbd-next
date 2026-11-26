@@ -20,6 +20,7 @@ use std::time::Duration;
 
 use super::autotune::{self, Budget, RcvSpace};
 use super::bbr::Bbr;
+use super::bbr1::Bbr1;
 use super::congestion::{Ack, CongestionController, HighSpeed, Lost, NewReno, initial_window};
 use super::cubic::Cubic;
 use super::cwv::{self, PipeAck};
@@ -290,6 +291,8 @@ pub enum CongestionKind {
     /// from CUBIC flows, which read its losses as congestion where it does
     /// not.
     Bbr,
+    /// Experimental BBRv1-style controller; not the BBRv3 model.
+    Bbr1,
 }
 
 /// A controller of `kind` for segments of `mss` bytes, told whether
@@ -305,6 +308,7 @@ fn make_cc(
         CongestionKind::NewReno => Box::new(NewReno::new(mss)),
         CongestionKind::HighSpeed => Box::new(HighSpeed::new(mss)),
         CongestionKind::Bbr => Box::new(Bbr::new(mss, now)),
+        CongestionKind::Bbr1 => Box::new(Bbr1::new(mss, now)),
     };
     cc.set_paced(paced || cc.model_based());
     cc
@@ -1206,6 +1210,7 @@ impl Conn {
         eprintln!("WBD_M0_TCP_DETAIL wall_ns={} leg={} id={} send_available={} recv_ooo={:?} ack_causes={:?} quick_acks={} pace_credit={} pace_late_us={} pace_due_us={:?} reo_due_us={:?} pto_due_us={:?} rto_due_us={:?} delack_due_us={:?} persist_due_us={:?}",
             wall_ns,leg,id,self.send_available(),self.recv_buf.as_ref().map(|r|r.m0_ooo()),self.m0_ack_causes,self.quick_acks,self.pace_credit,self.pace_late.as_micros(),delay(self.pace_deadline),delay(self.reo_deadline),delay(self.pto_deadline),delay(self.rto_deadline),delay(self.delack_deadline),delay(self.persist_deadline));
         if let Some(bbr)=self.cc.as_bbr(){bbr.m0_probe(leg,id,wall_ns);}
+        if let Some(bbr)=self.cc.as_bbr1(){bbr.probe(leg,id,wall_ns);}
     }
 
     /// The first slow start may have just ended, for `reason`, with cwnd
