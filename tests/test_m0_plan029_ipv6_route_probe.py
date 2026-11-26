@@ -23,7 +23,7 @@ class IPv6RouteTests(unittest.TestCase):
         source=(Path(__file__).resolve().parents[1] /
                 "crates/wbd-engine/src/v4_windows_native_runtime.rs").read_text(
                     encoding="utf-8")
-        stage=source.split(" fn stage_sources(",1)[1].split(" fn send_control(",1)[0]
+        stage=source.split("fn stage_sources(",1)[1].split(" fn send_control(",1)[0]
         branch=stage.split("Ok(ReadResult::Skipped)=>{",1)[1].split("},",1)[0]
         self.assertIn("captured+=1;",branch)
         self.assertIn("counters.rejected.fetch_add(1,Ordering::Relaxed)",branch)
