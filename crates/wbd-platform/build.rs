@@ -9,8 +9,12 @@ fn main(){
     let out=PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let object=out.join("wbd_xdp_tx.obj");
     let library=out.join("wbd_xdp_tx.lib");
-    let ok=Command::new("cl.exe").args(["/nologo","/c","/O2","/MD","/std:c++17"])
-        .arg(format!("/I{sdk}")).arg(format!("/Fo{}",object.display()))
+    let mut compiler=Command::new("cl.exe");
+    compiler.args(["/nologo","/c","/O2","/MD","/std:c++17"]);
+    if env::var_os("CARGO_FEATURE_WINXDP_NATIVE_TRIAL").is_some(){
+        compiler.arg("/DWBD_XDP_NATIVE_TRIAL=1");
+    }
+    let ok=compiler.arg(format!("/I{sdk}")).arg(format!("/Fo{}",object.display()))
         .arg("native/winxdp_tx.cpp").status().expect("MSVC developer environment");
     assert!(ok.success(),"XDP SDK shim build");
     let ok=Command::new("lib.exe").arg("/nologo")

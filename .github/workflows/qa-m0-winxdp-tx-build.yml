@@ -17,7 +17,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference='Stop'
-          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.3.0 -OutputDirectory xdp-packages -NonInteractive
+          nuget install Microsoft.XDP-for-Windows.Sdk -Version 1.4.0 -OutputDirectory xdp-packages -NonInteractive
           if($LASTEXITCODE -ne 0){throw 'official XDP SDK unavailable'}
           $env:WBD_XDP_SDK_INCLUDE=(Get-ChildItem xdp-packages -Recurse -Filter xdpapi.h | Where-Object {$_.Directory.Name -eq 'include'} | Select-Object -First 1).Directory.FullName
           $vs=& "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath

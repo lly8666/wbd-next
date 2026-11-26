@@ -16,7 +16,7 @@ extern "C"{
     fn wbd_xdp_tx_close(raw:*mut c_void);
     fn wbd_xdp_rx_borrow(raw:*mut c_void,frames:*mut Frame,max:usize)->usize;
     fn wbd_xdp_rx_release(raw:*mut c_void)->i32;
-    fn wbd_xdp_rx_arm(raw:*mut c_void)->*mut c_void;
+    fn wbd_xdp_rx_events(raw:*mut c_void,events:*mut usize)->i32;
 }
 pub fn cold_open(index:u32,port:u16)->Result<(usize,usize),TxError>{
     let rx=NonNull::new(unsafe{wbd_xdp_rx_open(index,port)}).ok_or(TxError::IoFailed)?;
@@ -41,12 +41,6 @@ impl XdpRx{
         let owner=NonNull::new(raw as *mut c_void).ok_or(TxError::IoFailed)?;
         Ok(Self{owner,failed:false})
     }
-    /// One overlapped XSK wait, reused across Stop/Direct/early wakeups.
-    pub fn arm(&mut self)->Result<usize,TxError>{
-        if self.failed{return Err(TxError::IoFailed)}
-        NonNull::new(unsafe{wbd_xdp_rx_arm(self.owner.as_ptr())})
-            .map(|v|v.as_ptr() as usize).ok_or(TxError::IoFailed)
-    }
     /// Service ready descriptors before arming a driver wait. Under load
     /// this avoids one notify IOCTL + wait syscall for every RX quantum.
     /// Empty rings still use the original event/deadline wait, never poll.
@@ -55,10 +49,15 @@ impl XdpRx{
         let mut frames=[Frame{data:std::ptr::null(),len:0};BATCH];
         let mut count=unsafe{wbd_xdp_rx_borrow(self.owner.as_ptr(),frames.as_mut_ptr(),BATCH)};
         if count==0{
-            let event=self.arm()?;
-            match wait_ready(&[stop,event,early],wait_ms){
+            let mut handles=[0usize;crate::windows_native_io::MAX_WAIT_HANDLES];
+            handles[0]=stop;
+            let count=unsafe{wbd_xdp_rx_events(self.owner.as_ptr(),handles.as_mut_ptr().add(1))};
+            if count<=0{return Err(TxError::IoFailed)}
+            let count=count as usize;
+            handles[count+1]=early;
+            match wait_ready(&handles[..count+2],wait_ms){
                 Ok(WaitResult::Ready(0))=>return Ok(RxTurn::Stop),
-                Ok(WaitResult::Ready(1|2))=>{},
+                Ok(WaitResult::Ready(_))=>{},
                 Ok(WaitResult::Timeout)=>return Ok(RxTurn::Idle),
                 _=>return Err(TxError::IoFailed),
             }

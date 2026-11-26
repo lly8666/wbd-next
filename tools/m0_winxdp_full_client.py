@@ -362,7 +362,7 @@ def main():
     manifest=read(builds/"manifest.json")
     original=read(ROOT/"h2442-out/windows-binary-manifest.json")
     def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest(dll)!=original["sha256"]["dll"] or manifest["source_sha"]!="e5c3cc4ecc2d13c59e9ea1d930202bfd49e09017" or digest(BIN/"wbd-client-embedded.exe")!=manifest["exe"]:raise RuntimeError("source/DLL identity mismatch")
+    if digest(dll)!=original["sha256"]["dll"] or manifest["source_sha"]!=os.environ["GITHUB_SHA"] or digest(BIN/"wbd-client-embedded.exe")!=manifest["exe"]:raise RuntimeError("source/DLL identity mismatch")
     for arm in ("A","B"):
         if digest(builds/(arm+".dll"))!=manifest[arm]:raise RuntimeError("candidate hash mismatch "+arm)
     shutil.copyfile(dll,frozen)
@@ -389,7 +389,8 @@ def main():
         rxstop=[l for l in text.splitlines() if "WBD_XDP_RX_STOP " in l]
         row["xdp_rx_ready"]=rxready
         row["xdp_rx_stop_raw"]=rxstop
-        row["xdp_rx_stop"]={k:int(v) for k,v in re.findall(r"(received|batches|waits|dropped|truncated)=(\d+)",rxstop[-1])} if rxstop else {}
+        row["xdp_rx_stop"]={k:int(v) for k,v in re.findall(r"(received|batches|waits|dropped|truncated|queues)=(\d+)",rxstop[-1])} if rxstop else {}
+        row["xdp_rx_queues"]=[l for l in text.splitlines() if "WBD_XDP_RX_QUEUE_STOP " in l]
         handoffs=text.count("WBD_XDP_COLD_HANDOFF same_rx_tx_umem=1")
         row["same_cold_handoff"]=handoffs==1
         row["cold_attempts"]=len(rxready)
