@@ -4,6 +4,7 @@
 set -euo pipefail
 case "${ROS_SCENE:?}" in
   dnat) mode=normal; ingress= ;;
+  dnat-bbr-clean|dnat-bbr-loss|dnat-userspace-cubic-loss|dnat-native-loss) mode=normal; ingress= ;;
   dnat-fec-fixed) mode=fec-fixed; ingress= ;;
   dnat-fec-auto) mode=fec-auto; ingress= ;;
   dnat-game2) mode=game2; ingress= ;;
@@ -14,6 +15,8 @@ case "${ROS_SCENE:?}" in
   *) exit 2;;
 esac
 client_extra=()
+proxy_cc=
+case "$ROS_SCENE" in dnat-bbr-*) proxy_cc=bbr;; dnat-userspace-cubic-*) proxy_cc=cubic;; esac
 if [ "$ROS_SCENE" = dnat-game4-fec ]; then client_extra+=(--game-fec fixed1); fi
 if [ "$mode" = fec-fixed ]; then client_extra+=(--fec-profile 1); fi
 name=wbd-ros
@@ -46,6 +49,8 @@ cleanup() {
     if [ -n "$p" ]; then sudo kill -TERM "$p" 2>/dev/null; fi
   done
   if [ "$chr_started" = 1 ]; then snapshot; quickchr stop "$name" >"$out/chr-stop.txt" 2>&1; fi
+  sudo ip netns exec wbd-ros-client tc -s qdisc show dev wan0 >"$out/client-qdisc.txt" 2>&1
+  sudo tc -s qdisc show dev wbd-ros-veth >"$out/return-qdisc.txt" 2>&1
   sudo ip netns del wbd-ros-client 2>/dev/null
   sudo ip link del wbd-ros-br 2>/dev/null
   sudo ip link del wbd-ros-wan 2>/dev/null
@@ -109,6 +114,12 @@ mkdir -p "$work/image/fixture" "$work/http"
 cp tools/routeros-server/{Dockerfile,entry.sh} "$work/image/"
 cc -O2 -Wall -Wextra -o "$work/image/cap-probe" tools/routeros-server/cap-probe.c
 cp "$bundle"/{wbd-v4-server,libwbd_engine.so} "$work/image/"
+mkdir -p "$work/image/proxy"
+if [ -n "$proxy_cc" ]; then
+  cp bbr-proxy/wbd-bbr-proxy "$work/image/proxy/"
+  chmod +x "$work/image/proxy/wbd-bbr-proxy"
+  sha256sum bbr-proxy/wbd-bbr-proxy >"$out/bbr-proxy-sha256.txt"
+fi
 fixture="$work/image/fixture"
 openssl rand -hex 32 >"$fixture/route-key.hex"
 password=$(openssl rand -hex 16)
@@ -117,7 +128,7 @@ openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes -keyout "$fixture/key.
 chmod 600 "$fixture"/{key.pem,users.json,route-key.hex}
 cc=
 if [ -n "$ingress" ]; then cc=cubic; fi
-docker build --platform linux/amd64 --build-arg WBD_CC="$cc" --build-arg WBD_INGRESS="$ingress" -t wbd-ros-lab "$work/image" >"$out/image-build.txt" 2>&1
+docker build --platform linux/amd64 --build-arg WBD_CC="$cc" --build-arg WBD_INGRESS="$ingress" --build-arg WBD_BBR_PROXY_CC="$proxy_cc" -t wbd-ros-lab "$work/image" >"$out/image-build.txt" 2>&1
 docker save wbd-ros-lab | gzip -1 >"$work/http/wbd.tar.gz"
 python3 -m http.server 18080 --bind 127.0.0.1 --directory "$work/http" >"$out/http.log" 2>&1 &
 http_pid=$!
@@ -134,7 +145,8 @@ grep -Eq '^[[:space:]]*[0-9]+[[:space:]]+S[[:space:]]+wbd([[:space:]]|$)' "$out/
 ros '/container/start [find where name=wbd]'
 for i in $(seq 1 90); do
   ros '/log/print where topics~"container"' >"$out/ros-container-log.txt"
-  if grep -q 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$out/ros-container-log.txt"; then break; fi
+  if grep -q 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$out/ros-container-log.txt" &&
+     { [ -z "$proxy_cc" ] || grep -q "WBD_BBR_PROXY_ROUTED cc=$proxy_cc" "$out/ros-container-log.txt" && grep -q "WBD_BBR_PROXY_READY cc=$proxy_cc" "$out/ros-container-log.txt"; }; then break; fi
   if grep -q 'exited with status' "$out/ros-container-log.txt"; then
     cat "$out/ros-container-log.txt"
     exit 2
@@ -144,6 +156,12 @@ done
 cat "$out/ros-container-log.txt"
 grep -q 'V4_PUBLIC_MIXED_MULTI_SERVER_READY role=server port=443' "$out/ros-container-log.txt"
 if [ -n "$cc" ]; then grep -q 'WBD_TCP_SPLICE_READY tun=wbds0 port=46180 cc=cubic' "$out/ros-container-log.txt"; fi
+if [ -n "$proxy_cc" ]; then grep -q "WBD_BBR_PROXY_ROUTED cc=$proxy_cc" "$out/ros-container-log.txt"; fi
+ns ping -c 2 -W 3 10.248.81.2 >"$out/underlay-ping.txt"
+if [[ "$ROS_SCENE" == *-loss ]]; then
+  ns tc qdisc add dev wan0 root netem delay 200ms loss 5%
+  sudo tc qdisc add dev wbd-ros-veth root netem delay 200ms loss 5%
+fi
 # Verify the actual application with the H2429 finite duplex+half-close, scaled for CHR free,
 # eight concurrent streams and UDP echo fixture, not just client READY.
 sudo tcpdump -nn -l -c 80 -i wbd-ros-wan 'tcp port 443' >"$out/wire-headers.txt" 2>&1 &
@@ -165,7 +183,7 @@ for i in $(seq 1 20); do
   sleep 1
 done
 ss -ltn | grep '198.18.77.2:5300'
-ns timeout 180 python3 -u tools/routeros-server/app.py client 5300 >"$out/application.json"
+ns timeout 240 python3 -u tools/routeros-server/app.py client 5300 >"$out/application.json"
 wait "$origin_pid"
 origin_pid=
 sudo kill -TERM "$client_pid"
@@ -192,5 +210,18 @@ assert sum(a for a,b in rows)>=app["upload_bytes"]+app["concurrent_upload_bytes"
 assert sum(b for a,b in rows)>=app["received_bytes"]+app["concurrent_download_bytes"],rows
 PY
   grep -q 'WBD_TCP_SPLICE_STOP error=<nil>' "$out/ros-container-log.txt"
+fi
+if [ -n "$proxy_cc" ]; then
+  grep -q 'WBD_BBR_PROXY_STOP' "$out/ros-container-log.txt"
+  python3 - "$out/ros-container-log.txt" "$out/application.json" "$proxy_cc" <<'PY'
+import json,re,sys
+log=open(sys.argv[1]).read()
+app=json.load(open(sys.argv[2]))
+rows=re.findall(r"WBD_BBR_PROXY_DONE target=198\.18\.77\.2:5300 cc=(\w+) up=(\d+) down=(\d+) ok=true",log)
+assert len(rows)==9,rows
+assert all(c==sys.argv[3] for c,a,b in rows),rows
+assert sum(int(a) for c,a,b in rows)==app["upload_bytes"]+app["concurrent_upload_bytes"],rows
+assert sum(int(b) for c,a,b in rows)==app["received_bytes"]+app["concurrent_download_bytes"],rows
+PY
 fi
 printf "WBD_ROS_REAL_APPLICATION_AND_STOP_PASS scene=%s mode=%s ingress=%s\n" "$ROS_SCENE" "$mode" "$ingress"

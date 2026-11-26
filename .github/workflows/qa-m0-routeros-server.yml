@@ -41,15 +41,42 @@ jobs:
         with:
           name: ros-build-log
           path: ros-build.log
+  bbr-proxy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Build pinned reference BBRv3 transparent TCP endpoint
+        run: |
+          set -euo pipefail
+          mkdir -p bbr-proxy
+          git init "$RUNNER_TEMP/gvisor"
+          git -C "$RUNNER_TEMP/gvisor" fetch --depth=1 https://github.com/adios-404/gvisor.git 9b14a44348f259003600d98cdb4dbd57a8302ca7
+          git -C "$RUNNER_TEMP/gvisor" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/gvisor" rev-parse HEAD)" = 9b14a44348f259003600d98cdb4dbd57a8302ca7
+          mkdir -p "$RUNNER_TEMP/gvisor/wbd-bbr-proxy"
+          cp tools/routeros-server/bbr-proxy.go "$RUNNER_TEMP/gvisor/wbd-bbr-proxy/main.go"
+          cp tools/routeros-server/BUILD.bbr-proxy "$RUNNER_TEMP/gvisor/wbd-bbr-proxy/BUILD"
+          dest="$PWD/bbr-proxy"
+          cd "$RUNNER_TEMP/gvisor"
+          make copy TARGETS=//wbd-bbr-proxy:wbd-bbr-proxy DESTINATION="$dest"
+          test -x "$dest/wbd-bbr-proxy"
+          sha256sum "$dest/wbd-bbr-proxy"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: bbr-proxy-${{ github.sha }}
+          path: bbr-proxy/
+          if-no-files-found: error
   chr:
-    needs: build
+    needs: [build, bbr-proxy]
     name: CHR 7.24.7 ${{ matrix.scene }}
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
-        scene: [dnat, dnat-fec-fixed, dnat-fec-auto, dnat-game2, dnat-game4, dnat-game4-fec, dnat-redirect, routed-legacy-tproxy]
+        scene: [dnat-bbr-clean, dnat-bbr-loss, dnat-userspace-cubic-loss, dnat-native-loss]
     env:
       ROS_SCENE: ${{ matrix.scene }}
     steps:
@@ -58,6 +85,10 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ros-product-${{ github.sha }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: bbr-proxy-${{ github.sha }}
+          path: bbr-proxy
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: '1.4.4'

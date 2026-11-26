@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "source_sha": "57e7d124585d5524930a39090d56c1e032ac6200",
+  "owner": "M0",
+  "result": "PARTIAL",
+  "artifact_verified": false,
+  "scope": "Job log reviewed; standalone TCP reference only; no WBD BBR or throughput qualification",
+  "kernel": {
+    "job": 139772784671,
+    "artifact": 15098871142,
+    "bbr": "ENOENT",
+    "btf_file": "ENOENT",
+    "bpf_map": "PASS",
+    "btf_enumeration": "EPERM"
+  },
+  "run": 45779976167,
+  "reference": "adios-404/gvisor@9b14a44348f259003600d98cdb4dbd57a8302ca7",
+  "cases": [
+    {
+      "scene": "bbr-loss",
+      "job": 139774608453,
+      "artifact": 15098381292,
+      "result": "FUNCTIONAL_PASS",
+      "bytes": 524288,
+      "elapsed_s": 4.680775079,
+      "client_elapsed_s": 7.356847837,
+      "cwnd": 56,
+      "retrans": 18,
+      "delivery_rate_Bps": 115002
+    },
+    {
+      "scene": "cubic-loss",
+      "job": 139774608532,
+      "artifact": 15097952830,
+      "result": "FUNCTIONAL_PASS",
+      "bytes": 524288,
+      "elapsed_s": 19.971775292,
+      "client_elapsed_s": 22.692808069,
+      "cwnd": 3,
+      "retrans": 20,
+      "delivery_rate_Bps": 22005
+    },
+    {
+      "scene": "bbr-clean",
+      "job": 139774608472,
+      "artifact": 15097639356,
+      "result": "FAIL_BEFORE_TCP",
+      "reason": "No route to host"
+    }
+  ],
+  "other_run": {
+    "source": "b90f681c094834152980b0c82dc5fde201257a0a",
+    "run": 45779286105,
+    "passed": [
+      "dnat",
+      "dnat-fec-fixed",
+      "dnat-fec-auto",
+      "dnat-game2",
+      "dnat-game4",
+      "dnat-game4-fec",
+      "dnat-redirect"
+    ],
+    "failed": [
+      "routed-legacy-tproxy"
+    ]
+  }
+}

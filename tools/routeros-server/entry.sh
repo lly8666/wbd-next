@@ -81,4 +81,38 @@ if [ -n "$WBD_CC" ]; then
   set -- "$@" --tcp-proxy-cc "$WBD_CC" --tcp-proxy-port 46180
   if [ "$WBD_INGRESS" = redirect ]; then set -- "$@" --tcp-proxy-ingress redirect; fi
 fi
-exec ./wbd-v4-server "$@"
+if [ -z "$WBD_BBR_PROXY_CC" ]; then exec ./wbd-v4-server "$@"; fi
+# Experimental separate TCP endpoint. Original WBD TUN remains singly owned.
+./wbd-v4-server "$@" &
+wbd_pid=$!
+proxy_pid=
+routed=0
+cleanup_proxy() {
+  trap - EXIT
+  if [ "$routed" = 1 ]; then
+    iptables -w 3 -t mangle -D PREROUTING -i wbds0 -p tcp -m addrtype ! --dst-type LOCAL -j MARK --set-mark 0x5742b001
+    ip rule del pref 14680 iif wbds0 fwmark 0x5742b001 lookup 14680
+    ip route del default dev bbrtun table 14680
+  fi
+  if [ -n "$proxy_pid" ]; then kill -TERM "$proxy_pid" 2>/dev/null || :; wait "$proxy_pid" || :; fi
+  kill -TERM "$wbd_pid" 2>/dev/null || :
+  wait "$wbd_pid"
+}
+trap cleanup_proxy EXIT
+trap 'exit 0' TERM INT
+for i in $(seq 1 100); do
+  if ip link show wbds0 >/dev/null 2>&1; then break; fi
+  kill -0 "$wbd_pid"
+  sleep .1
+done
+ip tuntap add dev bbrtun mode tun
+ip addr add 10.249.90.1/30 dev bbrtun
+ip link set bbrtun mtu 1500 up
+./proxy/wbd-bbr-proxy "$WBD_BBR_PROXY_CC" &
+proxy_pid=$!
+ip route add default dev bbrtun table 14680
+ip rule add pref 14680 iif wbds0 fwmark 0x5742b001 lookup 14680
+iptables -w 3 -t mangle -A PREROUTING -i wbds0 -p tcp -m addrtype ! --dst-type LOCAL -j MARK --set-mark 0x5742b001
+routed=1
+echo "WBD_BBR_PROXY_ROUTED cc=$WBD_BBR_PROXY_CC"
+wait "$wbd_pid"
