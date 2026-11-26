@@ -23,7 +23,7 @@
   "usage": {
     "cli": "wbd-client.exe --config xxx.json（默认 native-v4-product=true）；可显式 --native-v4-product；--record-cipher 三选一、lease4 留空/显式、lanes 与 FEC；不可用组合拒绝，无旧V3静默回落。",
     "config": "原Go扁平JSON由 configfile.ApplyFile→requested admission policy/auto-lease→TLS→Rust冷会话核Cipher、受保护租约→Wintun OS CAS/MTU读回；缺真实原生业务证据的组合不得宣称已验。",
-    "gui": "GUI通过 Portable.cs 启动同一原生 exe --native-v4-product --control-stdin --config，字段 lease4/record-cipher/lanes/FEC；真实GUI人机驱动验收仍待测。"
+    "gui": "GUI通过 Portable.cs 启动同一原生 exe --native-v4-product --control-stdin --config，字段 lease4/record-cipher/lanes/FEC；b3c74eb 真实GUI功能通过。"
   },
   "code_refs": [
     "r0/go_overlay/cmd/wbd-client/m0_native_v4_windows.go",
@@ -159,6 +159,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "afa6461c84e36009848ee02fe95a1c9de7623dfb",
       "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45820174130"
+    },
+    {
+      "platform": "Windows2025 + Linux WSL2",
+      "scope": "9/9 installed product functional jobs: seven modes, same-endpoint DNS TC/TCP53, GUI real native network and Stop, no Npcap",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b3c74ebcfb407a5c25706f7ad78e416261ffb14a",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45823541088"
     }
   ],
   "limitations": [
@@ -173,7 +180,7 @@
     "H2400-H2402 Windows Game cold RTO/timeout retry/fresh group tuples, NAT-independent protected attempt and final TLS ACK repair已入main，当前新源原生及物理资格待验。普通Game packet telemetry仅诊断输出。",
     "H2406 Windows Game native Health90明确返回与Normal一致的终止状态，完成原有owned Stop后由同一Go supervisor用新端口组重建。未实现Windows独立单lane热换；新源真实物理NAT blackhole恢复待验。",
     "H2408 Normal OFF/Fixed/Auto 冷TLS最终ACK、Detach迟到报文及冷超时修复已进main；当前源码原生回归待验，未更改已有认证身份、NAT路由或稳态数据面。",
-    "正式清理/安装GUI后的新SOURCE待完整Action；实体NIC Native及>62 RSS未验。历史NPF记录仅历史。"
+    "b3c74eb 安装发行版真实测试9/9通过，实体NIC Native、已有系统驱动升级/卸载、历史 NPF 源码裁剪及治理验收不在本次通过范围。"
   ],
   "promotion": null,
   "legacy_branch_reason": "旧M4/集成分支为冻结历史；M0现只在main接线和验收，旧SOURCE原始证据均保留。",

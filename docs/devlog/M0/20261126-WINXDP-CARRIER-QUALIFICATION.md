@@ -88,3 +88,6 @@ Portable package build now includes exact same-source WinForms, Go, ISA-L Rust D
 ```feature-impact
 {"kind":"updated","ids":["windows-native-transport","windows-portable","gui-config-feedback"],"reason":"WinXDP becomes the active Windows carrier; original WinForms setup and portable package integrate official driver installation; scope and prior exact-source receipts updated without claiming current-source PASS."}
 ```
+
+## Installed-release acceptance
+Exact SOURCE b3c74ebcfb407a5c25706f7ad78e416261ffb14a: [45823541088](https://github.com/lly8666/wbd-next/actions/runs/45823541088) build + nine functional jobs success; every runner first real XDP install / repeat API-ready, real original mode PASS without Npcap. GUI 433 checks + original live network mode/Stop PASS. Artifact [15119775759](https://github.com/lly8666/wbd-next/actions/runs/45823541088/artifacts/15119775759). Separate governance 45823540958 failed, no role/physical upgrade/physical NIC claim. User requested ARM64 client package from current branch: reuse official native glibc2.31/ISA-L Go-Rust build and seven real netns modes; package client only after tests; no product change or m1_rtrb enablement.

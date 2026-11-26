@@ -1,0 +1,99 @@
+name: M0 Linux ARM64 complete client release
+run-name: "M0 Linux ARM64 native client glibc2.31 seven modes | ${{ github.sha }}"
+on:
+  push:
+    branches: ['experiment/m0-winxdp']
+    paths: ['.github/workflows/qa-m0-arm64-client-release.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  arm64-client:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 55
+    env:
+      CGO_ENABLED: '1'
+      GOTOOLCHAIN: local
+      WBD_PLAN029_LINUX_DUAL_ISA: '1'
+      WBD_PLAN029_LINUX_EXPECTED_ARCH: aarch64
+      WBD_LINUX_GLIBC_BUILD_BASELINE: '2.31'
+      WBD_PLAN029_ALL_MODES: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {persist-credentials: false}
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5
+        with: {go-version: '1.23.12', cache: false}
+      - name: Build exact original native ARM64 Go and Rust ISA-L product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(uname -m)" = aarch64
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq autoconf automake libtool make gcc nasm python3 iproute2 iputils-ping iptables openssl
+          bash tools/m0_plan029_linux_dual_native_build.sh >arm64-build.log 2>&1 || { tail -n 120 arm64-build.log; exit 1; }
+          tail -n 12 arm64-build.log
+      - name: Seven real original ARM64 client/server kernel TCP UDP modes and owned Stop
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u tools/m0_plan029_linux_dual_isa_suite.py >arm64-network.log 2>&1 || { tail -n 120 arm64-network.log; exit 1; }
+          cat arm64-network.log
+          python3 - <<'PY'
+          import json,os
+          m=json.load(open('linux-plan029-public-bundle/manifest.json'))
+          d=json.load(open('linux-plan029-result/summary.json'))
+          assert m['source_sha']==d['source_sha']==os.environ['GITHUB_SHA']
+          assert m['architecture']==d['native_isa']=='aarch64'
+          assert m['build_glibc']=='glibc 2.31'
+          assert m['rust_native_fec_acceleration'] is True
+          assert d['status']=='PASS_SCOPED_SEVEN_REAL_LINUX_CLIENT_SERVER_MODES'
+          assert len(d['cases'])==7
+          assert all(c['real_both_way_tcp']==c['real_both_way_udp']=='PASS' and c['owned_stop']=='PASS_BOTH' for c in d['cases'])
+          PY
+      - name: Package tested client only with native runtime and launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p delivery/linux-arm64-client
+          cp linux-plan029-public-bundle/{wbd-v4-client,libwbd_engine.so,manifest.json,glibc-abi.json} delivery/linux-arm64-client/
+          cp linux-plan029-result/summary.json delivery/linux-arm64-client/FUNCTIONAL-RESULT.json
+          cat >delivery/linux-arm64-client/wbd-client <<'SH'
+          #!/bin/sh
+          set -eu
+          root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+          export LD_LIBRARY_PATH="$root${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+          exec "$root/wbd-v4-client" "$@"
+          SH
+          chmod 0755 delivery/linux-arm64-client/{wbd-client,wbd-v4-client}
+          cat >delivery/linux-arm64-client/README.txt <<'TXT'
+          WBD Next Linux ARM64 (aarch64), glibc 2.31+
+          完整解压后运行 ./wbd-client --help 查看原生客户端参数。
+          实际连接需要 root / 原产品所需的网络权限；使用 sudo ./wbd-client 加实际配置参数。
+          wbd-client 仅定位同目录 libwbd_engine.so 并启动原生 wbd-v4-client，不改变协议、网络配置或默认值。
+          Normal/Fixed/Auto/Game2/Game4/Game2-FEC/Game4-FEC 已在同源 ARM64 Linux netns 上跑真实双向 TCP/UDP 与 Stop。
+          manifest.json 是共同构建来源（含测试使用的服务端哈希）；本包仅分发客户端和 Rust runtime。
+          FUNCTIONAL-RESULT.json 为实际测试范围；不代表物理 ARM 设备/WAN/吞吐或所有 FEC 档位验收。
+          TXT
+          (cd delivery/linux-arm64-client && sha256sum wbd-client wbd-v4-client libwbd_engine.so manifest.json glibc-abi.json FUNCTIONAL-RESULT.json README.txt > SHA256SUMS && sha256sum -c SHA256SUMS && ./wbd-client --help > /tmp/wbd-arm-client-help.log 2>&1)
+          tar -czf delivery/WBD-Linux-arm64-client.tar.gz -C delivery linux-arm64-client
+          (cd delivery && sha256sum WBD-Linux-arm64-client.tar.gz > SHA256SUMS)
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: wbd-linux-arm64-client-full
+          path: |
+            delivery/WBD-Linux-arm64-client.tar.gz
+            delivery/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: wbd-linux-arm64-client-build-and-test-evidence
+          path: |
+            arm64-build.log
+            arm64-network.log
+            linux-plan029-public-bundle/manifest.json
+            linux-plan029-result/summary.json
+          if-no-files-found: warn
+          retention-days: 30

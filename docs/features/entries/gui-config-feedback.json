@@ -21,7 +21,7 @@
   "usage": {
     "cli": "Windows wbd-client 默认原生V4，GUI同一正式 CLI 可带 --check-config（仅本地配置校验，非OS Applied）",
     "config": "H2105旧CN缺键true、新false、显式false和off/all冷校验PASS；H2135 GUI三代网络/Stop独立PASS。",
-    "gui": "原 WinForms 布局、服务器/网络/传输/状态、DNS/CN/FEC/MTU、连接/断开及恢复；驱动页仅 WinXDP/Wintun 安装与真实API检测。新GUI及全栈验证待Action。"
+    "gui": "原 WinForms 布局、服务器/网络/传输/状态、DNS/CN/FEC/MTU、连接/断开及恢复；驱动页仅 WinXDP/Wintun 安装与真实API检测。b3c74eb 原GUI 433项自检及真实网络/Stop通过。"
   },
   "code_refs": [
     "r0/go_overlay/assembly/manifest.json",
@@ -215,6 +215,13 @@
       "status": "FUNCTIONAL_PASS",
       "source_sha": "988d66998444396a6ab30ba2aeaeea5ad2b6a773",
       "evidence": "docs/evidence/M0/20261124-H2395-WINDOWS-RECOVERY-GONE-PASS.json"
+    },
+    {
+      "platform": "Windows2025 + Linux WSL2",
+      "scope": "Original WinForms 433 self-checks plus real GUI normal native business and Stop from final ZIP",
+      "status": "FUNCTIONAL_PASS",
+      "source_sha": "b3c74ebcfb407a5c25706f7ad78e416261ffb14a",
+      "evidence": "https://github.com/lly8666/wbd-next/actions/runs/45823541088"
     }
   ],
   "limitations": [
@@ -233,7 +240,7 @@
     "H2226：复用已有V2与认证低频Quality粗估质量；无逐包M2；Auto下行实档仍未知，实机NOT_RUN。",
     "2026-11-24 用户实际报告崩溃后退出/升级v2恢复死锁；独立 fix/m0-windows-crash-recovery 改动待真实WinForms与签名Wintun子进程崩溃验证，不改变数据面。",
     "H2395：最新真实网卡消失恢复与GUI通过；用户实体机器新包复测、v1迁移及物理重启未测。",
-    "旧NPF GUI/安装记录为历史；新WinXDP GUI真实按钮/安装及状态验收尚待Action。"
+    "b3c74eb 安装发行版真实测试9/9通过，实体NIC Native、已有系统驱动升级/卸载、历史 NPF 源码裁剪及治理验收不在本次通过范围。"
   ],
   "promotion": null,
   "legacy_branch_reason": "对2026-10-27之前已存在/集成的历史能力首次登记，保留研发/集成分支来源；此历史例外不是新增代码实验的授权。"
