@@ -1,5 +1,5 @@
 name: M0 WinXDP full Normal carrier functional
-run-name: "M0 WinXDP cold and steady real Normal carrier | ${{ github.sha }}"
+run-name: "M0 WinXDP 1.4 all-queue cold and steady real Normal carrier | ${{ github.sha }}"
 on:
   push:
     branches: ['experiment/m0-winxdp']

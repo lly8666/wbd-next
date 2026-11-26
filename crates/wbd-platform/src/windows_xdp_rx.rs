@@ -51,11 +51,11 @@ impl XdpRx{
         if count==0{
             let mut handles=[0usize;crate::windows_native_io::MAX_WAIT_HANDLES];
             handles[0]=stop;
-            let count=unsafe{wbd_xdp_rx_events(self.owner.as_ptr(),handles.as_mut_ptr().add(1))};
-            if count<=0{return Err(TxError::IoFailed)}
-            let count=count as usize;
-            handles[count+1]=early;
-            match wait_ready(&handles[..count+2],wait_ms){
+            let queue_count=unsafe{wbd_xdp_rx_events(self.owner.as_ptr(),handles.as_mut_ptr().add(1))};
+            if queue_count<=0{return Err(TxError::IoFailed)}
+            let queue_count=queue_count as usize;
+            handles[queue_count+1]=early;
+            match wait_ready(&handles[..queue_count+2],wait_ms){
                 Ok(WaitResult::Ready(0))=>return Ok(RxTurn::Stop),
                 Ok(WaitResult::Ready(_))=>{},
                 Ok(WaitResult::Timeout)=>return Ok(RxTurn::Idle),
