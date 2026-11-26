@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "owner": "M0",
+  "task": "M0-DUAL-RUST-TCP",
+  "source_sha": "82e6acf2f781f76576021df219279c98af557ae1",
+  "harness_sha": "08106fea43f706ac98e9ad4014153600b7f73391",
+  "run": 45825056378,
+  "native_run": 45824808606,
+  "artifact_sha256": {
+    "15119559072": "924294814cda523ad0f22702ac83490aaae5cf8ff00e8f33856a9d514a80ab30",
+    "15120877106": "0ffc610012e0099c23ad48d55ba0c3fd9c1b357a2fb0ddd47a7b4be3081c3359",
+    "15119294582": "fb58a3ae2d2a944133a373aa8232782979ebe065fc34129567624bf4a87c7f3a"
+  },
+  "scope": "All 12 measured and joined Stop with matching ACK policy probes; one real ARM triple, same instrumented binary, A=ACK2 B=ACK3. 400ms added RTT, 0/1/5% IID, one reverse TCP, 45s, MTU1160, FEC off repair on. 1732 in-window peer path samples all direct, not continuous proof; bare629.638Mbps below absolute qualification. Raw ZIP digests checked. Sample medians on data flow id2, excluding first/last 5s of iperf window.",
+  "conditions": [
+    {
+      "loss": 0,
+      "mbps_abba": [
+        17.895286668,
+        17.732179769,
+        17.708877825,
+        17.639207193
+      ],
+      "means": [
+        17.76724693,
+        17.7205288
+      ],
+      "actual_loss_abba": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "server_A": {
+        "cwnd": 2705296,
+        "send_buf": 1048576,
+        "send_queued": 0,
+        "unacked": 1048576,
+        "in_flight": 1048576,
+        "snd_wnd": 5321216,
+        "sacked": 0,
+        "app_limited_samples": 74,
+        "samples": 76
+      },
+      "server_B": {
+        "cwnd": 2699796,
+        "send_buf": 1048576,
+        "send_queued": 0,
+        "unacked": 1048576,
+        "in_flight": 1048576,
+        "snd_wnd": 5996544,
+        "sacked": 0,
+        "app_limited_samples": 74,
+        "samples": 76
+      }
+    },
+    {
+      "loss": 1,
+      "mbps_abba": [
+        9.134202368,
+        9.553472927,
+        9.274046417,
+        4.613628799
+      ],
+      "means": [
+        6.873915583,
+        9.413759672
+      ],
+      "actual_loss_abba": [
+        [
+          1.019,
+          1.042
+        ],
+        [
+          0.967,
+          1.019
+        ],
+        [
+          1.008,
+          0.998
+        ],
+        [
+          1.236,
+          0.97
+        ]
+      ],
+      "server_A": {
+        "cwnd": 449027,
+        "send_buf": 1048576,
+        "send_queued": 333564,
+        "unacked": 715011,
+        "in_flight": 330284,
+        "snd_wnd": 3706368,
+        "sacked": 284138
+      },
+      "server_B": {
+        "cwnd": 1039767,
+        "send_buf": 1048576,
+        "send_queued": 0,
+        "unacked": 1048576,
+        "in_flight": 547017,
+        "snd_wnd": 2955776,
+        "sacked": 399763
+      }
+    },
+    {
+      "loss": 5,
+      "mbps_abba": [
+        0.699034589,
+        0.885443872,
+        0.932046118,
+        0.745636961
+      ],
+      "means": [
+        0.722335775,
+        0.908744995
+      ],
+      "actual_loss_abba": [
+        [
+          4.61,
+          4.87
+        ],
+        [
+          4.689,
+          4.937
+        ],
+        [
+          4.995,
+          4.94
+        ],
+        [
+          5.108,
+          5.302
+        ]
+      ],
+      "server_A": {
+        "cwnd": 35788,
+        "send_buf": 1048576,
+        "send_queued": 995689,
+        "unacked": 52887,
+        "in_flight": 35776,
+        "snd_wnd": 1048576,
+        "sacked": 23332
+      },
+      "server_B": {
+        "cwnd": 46158,
+        "send_buf": 1048576,
+        "send_queued": 972356,
+        "unacked": 76219,
+        "in_flight": 48739,
+        "snd_wnd": 1833984,
+        "sacked": 27480
+      }
+    }
+  ],
+  "client_local": "All 12 central sample sets pending max0 and retrans bytes max0; local accepted and acknowledged bytes track middle delivered, no sustained local output backlog evidenced. Source origin rwnd_limited ~99% representative live snapshots.",
+  "mechanism": "ServerFlow reads min(send_available,budget,scratch); transfer also caps by send_available; write previously set snd_nospace only on partial write. Exact full successful writes conceal genuine send buffer backpressure from ACK-time sndbuf_expand. This explains the observed zero-loss 1MiB/430ms limit; verified source defect, repair performance still pending. 5% low cwnd and queued data independently indicate congestion model/recovery restriction; no root-cause claim for that restriction.",
+  "decision": "ACK3 not necessary for collapse; no promotion. Fix exact-fill signal, retain existing caps/CC. Further BBR model and loss algorithm compare after buffer fix.",
+  "next": {
+    "source": "850e8fffdcaf0b22d2e31e8420a84fb1f0395872",
+    "harness": "79b7780b510023b70cf316444ff8df25f4a9e581",
+    "core": 45828175933,
+    "native": 45828082595,
+    "arm": 45828175937,
+    "status": "in flight"
+  }
+}
