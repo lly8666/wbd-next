@@ -27,8 +27,11 @@ jobs:
       - name: Client process sample profile (not paired throughput qualification)
         run: |
           set -euo pipefail
-          PERF_BIN="$(find /usr/lib/linux-tools -name perf -type f | sort | tail -1)"
+          mkdir -p dual-tcp-perf-out
+          PERF_BIN="$(find -L /usr/lib/linux-tools /usr/lib/linux-tools-* -name perf -type f 2>/dev/null | sort -u | tail -1)"
+          printf '%s\n' "$PERF_BIN" | tee dual-tcp-perf-out/perf-bin.txt
           test -x "$PERF_BIN"
+          "$PERF_BIN" --version | tee dual-tcp-perf-out/perf-version.txt
           sudo env DUAL_TCP_COMPARE=profile DUAL_TCP_PERF_BIN="$PERF_BIN" GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_JOB="$GITHUB_JOB" RUNNER_NAME="$RUNNER_NAME" python3 -u tools/m0_dual_tcp_perf.py
       - name: Preserve diagnostic evidence
         if: always()
